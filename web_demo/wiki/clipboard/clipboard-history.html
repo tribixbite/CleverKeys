@@ -90,7 +90,7 @@
 <table class="w-full mb-6 border-collapse"><tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">What</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Description</th></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Purpose</strong></td><td class="px-4 py-2 border-t border-gray-700">Access previous clipboard items</td></tr></p>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Access</strong></td><td class="px-4 py-2 border-t border-gray-700">Swipe SW from Ctrl key, or add Clipboard to Extra Keys</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Capacity</strong></td><td class="px-4 py-2 border-t border-gray-700">Configurable (default 25 items)</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Capacity</strong></td><td class="px-4 py-2 border-t border-gray-700">Configurable (default 50 items)</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Accessing Clipboard History</h2>
 
@@ -113,7 +113,7 @@
 
 <p class="mb-4 text-gray-300 leading-relaxed">You can assign clipboard access to any key's short swipe:</p>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Go to <strong class="text-white">Settings > Per-Key Customization</strong></li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Go to <strong class="text-white">Settings > Activities > Per-Key Customization</strong></li>
 <li class="ml-4 text-gray-300">2. Select any key</li>
 <li class="ml-4 text-gray-300">3. Assign <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">switch_clipboard</code> to a swipe direction</li>
 </ul>
@@ -125,18 +125,10 @@
 <li class="ml-4 text-gray-300">2. <strong class="text-white">Tap</strong> any item</li>
 <li class="ml-4 text-gray-300">3. Item is pasted at cursor position</li>
 </ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Copy Item Again</h3>
-
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Open clipboard history</li>
-<li class="ml-4 text-gray-300">2. <strong class="text-white">Long-press</strong> item</li>
-<li class="ml-4 text-gray-300">3. Select <strong class="text-white">Copy</strong></li>
-<li class="ml-4 text-gray-300">4. Item moves to top of history</li>
-</ul>
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Delete Item</h3>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Open clipboard history</li>
-<li class="ml-4 text-gray-300">2. Tap the <strong class="text-white">delete button</strong> on the item</li>
-<li class="ml-4 text-gray-300">3. Or swipe left and tap delete</li>
+<li class="ml-4 text-gray-300">2. Tap the <strong class="text-white">🗑 delete button</strong> on the item</li>
 </ul>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Pin Items</h2>
 
@@ -144,32 +136,89 @@
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Pin an Item</h3>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Open clipboard history</li>
-<li class="ml-4 text-gray-300">2. <strong class="text-white">Long-press</strong> item</li>
-<li class="ml-4 text-gray-300">3. Select <strong class="text-white">Pin</strong></li>
-<li class="ml-4 text-gray-300">4. Item shows pin icon</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Open clipboard history (History tab)</li>
+<li class="ml-4 text-gray-300">2. Tap the <strong class="text-white">📌 pin button</strong> on the item</li>
+<li class="ml-4 text-gray-300">3. Item is added to the Pinned tab</li>
 </ul>
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Unpin Item</h3>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Long-press</strong> pinned item</li>
-<li class="ml-4 text-gray-300">2. Select <strong class="text-white">Unpin</strong></li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Switch to the <strong class="text-white">Pinned tab</strong> (📌)</li>
+<li class="ml-4 text-gray-300">2. Tap the <strong class="text-white">📌 pin button</strong> on the item to unpin</li>
+<li class="ml-4 text-gray-300">3. Item is removed from Pinned tab</li>
 </ul>
 <p class="mb-4 text-gray-300 leading-relaxed">Pinned items:</p>
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Stay at top of list</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Appear in the dedicated Pinned tab</li>
 <li class="ml-4 text-gray-300">&#8226; Don't auto-expire</li>
-<li class="ml-4 text-gray-300">&#8226; Don't count toward limit</li>
+<li class="ml-4 text-gray-300">&#8226; Don't count toward history limit</li>
 </ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Todo Items</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Mark clipboard items as to-do reminders:</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Add to Todos</h3>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Open clipboard (History or Pinned tab)</li>
+<li class="ml-4 text-gray-300">2. Tap the <strong class="text-white">✓ todo button</strong> on the item</li>
+<li class="ml-4 text-gray-300">3. Item is added to the Todos tab</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Mark as Done</h3>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Switch to the <strong class="text-white">Todos tab</strong> (✓)</li>
+<li class="ml-4 text-gray-300">2. Tap the <strong class="text-white">✓ todo button</strong> to remove from todos</li>
+<li class="ml-4 text-gray-300">3. Item is removed from Todos tab (still in history)</li>
+</ul>
+<p class="mb-4 text-gray-300 leading-relaxed">Todo items:</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Appear in the dedicated Todos tab</li>
+<li class="ml-4 text-gray-300">&#8226; Can also be pinned (both flags independent)</li>
+<li class="ml-4 text-gray-300">&#8226; Useful for quick reference or follow-up</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Tab System</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">The clipboard pane organizes items into three tabs:</p>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Tab</td><td class="px-4 py-2 border-t border-gray-700">Icon</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">History</strong></td><td class="px-4 py-2 border-t border-gray-700">📋</td><td class="px-4 py-2 border-t border-gray-700">Recent clipboard history (default)</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Pinned</strong></td><td class="px-4 py-2 border-t border-gray-700">📌</td><td class="px-4 py-2 border-t border-gray-700">Items you've pinned for quick access</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Todos</strong></td><td class="px-4 py-2 border-t border-gray-700">✓</td><td class="px-4 py-2 border-t border-gray-700">Items marked as to-do reminders</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Switching Tabs</h3>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Open clipboard pane</li>
+<li class="ml-4 text-gray-300">2. Tap the tab icon (📋, 📌, or ✓) in the header row</li>
+<li class="ml-4 text-gray-300">3. Active tab is fully visible (alpha 1.0), inactive tabs are dimmed (alpha 0.5)</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Item Actions by Tab</h3>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Action</td><td class="px-4 py-2 border-t border-gray-700">History Tab</td><td class="px-4 py-2 border-t border-gray-700">Pinned Tab</td><td class="px-4 py-2 border-t border-gray-700">Todos Tab</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Pin button</strong></td><td class="px-4 py-2 border-t border-gray-700">Pins item</td><td class="px-4 py-2 border-t border-gray-700">Unpins item</td><td class="px-4 py-2 border-t border-gray-700">Pins item</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Todo button</strong></td><td class="px-4 py-2 border-t border-gray-700">Adds to todos</td><td class="px-4 py-2 border-t border-gray-700">Adds to todos</td><td class="px-4 py-2 border-t border-gray-700">Removes from todos</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Delete</strong></td><td class="px-4 py-2 border-t border-gray-700">Deletes item</td><td class="px-4 py-2 border-t border-gray-700">Deletes item</td><td class="px-4 py-2 border-t border-gray-700">Deletes item</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Paste</strong></td><td class="px-4 py-2 border-t border-gray-700">Pastes to editor</td><td class="px-4 py-2 border-t border-gray-700">Pastes to editor</td><td class="px-4 py-2 border-t border-gray-700">Pastes to editor</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Pagination</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">For large clipboard histories (>100 items), pagination improves performance:</p>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Items are displayed 100 per page</li>
+<li class="ml-4 text-gray-300">&#8226; Pagination bar appears at the bottom when needed</li>
+<li class="ml-4 text-gray-300">&#8226; Shows current page / total pages (e.g., "1 / 6")</li>
+<li class="ml-4 text-gray-300">&#8226; ◀ and ▶ buttons navigate between pages</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Search still searches ALL items</strong> across all pages</li>
+</ul>
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto mb-4"><code class="language-text">┌─────────────────────────────────────┐
+<p class="mb-4 text-gray-300 leading-relaxed">│ [◀]         3 / 6              [▶]  │</p>
+<p class="mb-4 text-gray-300 leading-relaxed">└─────────────────────────────────────┘</code></pre></p>
+
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">History Panel Layout</h2>
 
 <pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto mb-4"><code class="language-text">┌─────────────────────────────────────┐
-<p class="mb-4 text-gray-300 leading-relaxed">│ Clipboard History              [X]  │</p>
+<p class="mb-4 text-gray-300 leading-relaxed">│ 📋 📌 ✓  [Search...]  📅  [▼]       │ ← Tabs + Search + Close</p>
 <p class="mb-4 text-gray-300 leading-relaxed">├─────────────────────────────────────┤</p>
-<p class="mb-4 text-gray-300 leading-relaxed">│ 📌 Pinned item text...         [🗑] │ ← Pinned</p>
-<p class="mb-4 text-gray-300 leading-relaxed">│ 📌 Another pinned item...      [🗑] │</p>
+<p class="mb-4 text-gray-300 leading-relaxed">│ Recently copied text here... [📌✓🗑]│ ← History items</p>
+<p class="mb-4 text-gray-300 leading-relaxed">│ Another clipboard item...    [📌✓🗑]│</p>
+<p class="mb-4 text-gray-300 leading-relaxed">│ More text from earlier...    [📌✓🗑]│</p>
 <p class="mb-4 text-gray-300 leading-relaxed">├─────────────────────────────────────┤</p>
-<p class="mb-4 text-gray-300 leading-relaxed">│ Recently copied text here...   [🗑] │ ← Recent</p>
-<p class="mb-4 text-gray-300 leading-relaxed">│ Another clipboard item...      [🗑] │</p>
-<p class="mb-4 text-gray-300 leading-relaxed">│ More text from earlier...      [🗑] │</p>
+<p class="mb-4 text-gray-300 leading-relaxed">│ [◀]         1 / 3              [▶]  │ ← Pagination (if &gt;100 items)</p>
 <p class="mb-4 text-gray-300 leading-relaxed">└─────────────────────────────────────┘</code></pre></p>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Privacy Features</h2>
@@ -211,18 +260,8 @@
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Clear History</h2>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Clear All Items</h3>
+<p class="mb-4 text-gray-300 leading-relaxed">To clear clipboard history, use the export/import features in Settings > Backup & Restore, or delete items individually using the delete button on each item.</p>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Open clipboard history</li>
-<li class="ml-4 text-gray-300">2. Tap <strong class="text-white">Clear All</strong></li>
-<li class="ml-4 text-gray-300">3. Confirm deletion</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Clear Unpinned Only</h3>
-
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Long-press <strong class="text-white">Clear All</strong></li>
-<li class="ml-4 text-gray-300">2. Select <strong class="text-white">Clear Unpinned</strong></li>
-<li class="ml-4 text-gray-300">3. Pinned items preserved</li>
-</ul>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Common Questions</h2>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Why don't I see clipboard history?</h3>
@@ -231,7 +270,7 @@
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: How do I access clipboard quickly?</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed">A: Swipe NW from the Ctrl key, or add a clipboard key to your Extra Keys.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">A: Swipe SW (southwest/down-left) on the Ctrl key, or add a clipboard key to your Extra Keys.</p>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Why wasn't my copied text saved?</h3>
 
@@ -251,11 +290,11 @@
         
         <!-- Prev/Next Navigation -->
         <div class="max-w-4xl mt-8 flex justify-between">
-            <a href="../settings/accessibility.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+            <a href="settings/password-fields.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
                 <span>&larr;</span>
-                <span class="text-sm text-gray-400">Accessibility</span>
+                <span class="text-sm text-gray-400">Password Field Mode</span>
             </a>
-            <a href="./text-selection.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+            <a href="clipboard/text-selection.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
                 <span class="text-sm text-gray-400">Text Selection</span>
                 <span>&rarr;</span>
             </a>

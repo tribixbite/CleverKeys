@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Punctuation - CleverKeys User Guide</title>
+    <meta name="description" content="Automatic punctuation attachment and spacing">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'ck-green': '#10b981',
+                        'ck-green-dark': '#059669',
+                        'ck-green-light': '#34d399',
+                        'ck-dark': '#0f0f1a',
+                        'ck-surface': '#1a1a2e',
+                        'ck-card': '#242438',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-text-wiki {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 50%, #10b981 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="bg-ck-dark text-gray-100 min-h-screen">
+    <!-- Nav -->
+    <nav class="sticky top-0 bg-ck-dark/95 backdrop-blur border-b border-gray-800 z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="../" class="flex items-center gap-3">
+                <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-8 h-8 rounded-lg">
+                <span class="font-bold">CleverKeys</span>
+            </a>
+            <div class="flex gap-4">
+                <a href="./" class="text-green-400 font-medium">User Guide</a>
+                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Tech Specs</a>
+                <a href="../" class="text-gray-400 hover:text-white transition-colors">Home</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Breadcrumb -->
+    <div class="container mx-auto px-6 py-4">
+        <div class="flex items-center gap-2 text-sm text-gray-500">
+            <a href="../" class="hover:text-ck-green">Home</a>
+            <span>/</span>
+            <a href="./" class="hover:text-ck-green">User Guide</a>
+            <span>/</span>
+            <a href="./?category=Typing" class="hover:text-ck-green">Typing</a>
+            <span>/</span>
+            <span class="text-gray-300">Smart Punctuation</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="container mx-auto px-6 pb-6">
+        <div class="flex items-center gap-3 mb-4">
+            <span class="px-3 py-1 text-sm rounded-full" style="background: #3b82f620; color: #3b82f6">Typing</span>
+            <span class="px-3 py-1 text-sm rounded-full bg-ck-card text-gray-400">P1</span>
+        </div>
+        <h1 class="text-4xl font-bold gradient-text-wiki mb-2">Smart Punctuation</h1>
+        <p class="text-xl text-gray-400">Automatic punctuation attachment and spacing</p>
+    </header>
+
+    <!-- Content -->
+    <main class="container mx-auto px-6 pb-12">
+        <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
+            <hr class="border-gray-700 my-6">
+<p class="mb-4 text-gray-300 leading-relaxed">title: Smart Punctuation</p>
+<p class="mb-4 text-gray-300 leading-relaxed">description: Automatic punctuation attachment and spacing behavior</p>
+<p class="mb-4 text-gray-300 leading-relaxed">category: Typing</p>
+<p class="mb-4 text-gray-300 leading-relaxed">difficulty: beginner</p>
+<p class="mb-4 text-gray-300 leading-relaxed">related_spec: ../specs/typing/smart-punctuation-spec.md</p>
+<hr class="border-gray-700 my-6">
+
+<h1 class="text-3xl font-bold mb-6 gradient-text-wiki">Smart Punctuation</h1>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Smart punctuation automatically attaches punctuation marks to the end of words, removing unnecessary spaces. This creates cleaner text without manual editing.</p>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Quick Summary</h2>
+
+<table class="w-full mb-6 border-collapse"><tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">What</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Description</th></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Purpose</strong></td><td class="px-4 py-2 border-t border-gray-700">Attach punctuation to words automatically</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Access</strong></td><td class="px-4 py-2 border-t border-gray-700">Settings > Input Behavior > Smart Punctuation</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Works with</strong></td><td class="px-4 py-2 border-t border-gray-700">Swipe typing and suggestion taps</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">How It Works</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">When you type punctuation after a word, smart punctuation checks whether the preceding space was <strong class="text-white">auto-inserted</strong> (by swipe or suggestion) or <strong class="text-white">manually typed</strong>.</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Auto-Inserted Spaces</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">If the space was auto-inserted (from swipe completion or tapping a suggestion), punctuation attaches to the previous word:</p>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto mb-4"><code class="language-text">Swipe "hello" → type "!" → Result: "hello!"</code></pre>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Manually Typed Spaces</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">If you explicitly pressed the spacebar, the punctuation stays where you typed it:</p>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto mb-4"><code class="language-text">Type "hello" → press space → type ":" → Result: "hello :"</code></pre>
+
+<p class="mb-4 text-gray-300 leading-relaxed">This respects your intent when you deliberately add a space before punctuation.</p>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Punctuation Characters</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Smart punctuation affects these characters:</p>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Character</td><td class="px-4 py-2 border-t border-gray-700">Name</td><td class="px-4 py-2 border-t border-gray-700">Behavior</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">.</code></td><td class="px-4 py-2 border-t border-gray-700">Period</td><td class="px-4 py-2 border-t border-gray-700">Attaches to word</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">,</code></td><td class="px-4 py-2 border-t border-gray-700">Comma</td><td class="px-4 py-2 border-t border-gray-700">Attaches to word</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">!</code></td><td class="px-4 py-2 border-t border-gray-700">Exclamation</td><td class="px-4 py-2 border-t border-gray-700">Attaches to word</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">?</code></td><td class="px-4 py-2 border-t border-gray-700">Question mark</td><td class="px-4 py-2 border-t border-gray-700">Attaches to word</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">;</code></td><td class="px-4 py-2 border-t border-gray-700">Semicolon</td><td class="px-4 py-2 border-t border-gray-700">Attaches to word</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">:</code></td><td class="px-4 py-2 border-t border-gray-700">Colon</td><td class="px-4 py-2 border-t border-gray-700">Attaches to word</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">)</code></td><td class="px-4 py-2 border-t border-gray-700">Close parenthesis</td><td class="px-4 py-2 border-t border-gray-700">Attaches to word</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">]</code></td><td class="px-4 py-2 border-t border-gray-700">Close bracket</td><td class="px-4 py-2 border-t border-gray-700">Attaches to word</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">}</code></td><td class="px-4 py-2 border-t border-gray-700">Close brace</td><td class="px-4 py-2 border-t border-gray-700">Attaches to word</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Quote Handling</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Quotes have special handling:</p>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Closing quotes</strong> (<code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">"</code> after odd count): Attach to word</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Opening quotes</strong> (<code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">"</code> after even count): Keep space before</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Apostrophes</strong> (<code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">'</code> after letter): Never removed (contractions)</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Examples</h2>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Swipe Typing Flow</h3>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Action</td><td class="px-4 py-2 border-t border-gray-700">Result</td><td class="px-4 py-2 border-t border-gray-700">Explanation</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Swipe "The" → swipe "quick" → type "."</td><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">The quick. </code></td><td class="px-4 py-2 border-t border-gray-700">Period attaches + space added for autocap</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700">Swipe "Hello" → type "," → swipe "world"</td><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">Hello, world</code></td><td class="px-4 py-2 border-t border-gray-700">Comma attaches to "Hello"</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700">Swipe "Hello" → type "." → swipe "world"</td><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">Hello. World</code></td><td class="px-4 py-2 border-t border-gray-700">Period adds space, next word capitalized</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Touch Typing Flow</h3>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Action</td><td class="px-4 py-2 border-t border-gray-700">Result</td><td class="px-4 py-2 border-t border-gray-700">Explanation</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Type "Note" → space → type ":" → space → type "text"</td><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">Note : text</code></td><td class="px-4 py-2 border-t border-gray-700">Manual space preserved</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700">Type "It" → type "'" → type "s"</td><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">It's</code></td><td class="px-4 py-2 border-t border-gray-700">Apostrophe handled as contraction</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Mixed Flow</h3>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Action</td><td class="px-4 py-2 border-t border-gray-700">Result</td><td class="px-4 py-2 border-t border-gray-700">Explanation</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Swipe "hello" → manual space → type "!"</td><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">hello !</code></td><td class="px-4 py-2 border-t border-gray-700">Manual space overrides auto behavior</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700">Type "hello" → tap suggestion "world" → type "."</td><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">hello world.</code></td><td class="px-4 py-2 border-t border-gray-700">Suggestion's auto-space is removed</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Configuration</h2>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Location</td><td class="px-4 py-2 border-t border-gray-700">Default</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Smart Punctuation</strong></td><td class="px-4 py-2 border-t border-gray-700">Settings > Input Behavior</td><td class="px-4 py-2 border-t border-gray-700">On</td><td class="px-4 py-2 border-t border-gray-700">Enable/disable punctuation attachment</td></tr></p>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Double-Space to Period</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A related feature: pressing space twice quickly converts to period + space:</p>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto mb-4"><code class="language-text">Type "Hello" → space → space → Result: "Hello. "</code></pre>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Location</td><td class="px-4 py-2 border-t border-gray-700">Default</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Double Space to Period</strong></td><td class="px-4 py-2 border-t border-gray-700">Settings > Gesture Tuning</td><td class="px-4 py-2 border-t border-gray-700">On</td><td class="px-4 py-2 border-t border-gray-700">Enable double-space shortcut</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Threshold</strong></td><td class="px-4 py-2 border-t border-gray-700">Settings > Gesture Tuning</td><td class="px-4 py-2 border-t border-gray-700">500ms</td><td class="px-4 py-2 border-t border-gray-700">Max time between spaces</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Tips and Tricks</h2>
+
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!TIP]</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">If you need a space before punctuation (like <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300"> :</code> in some languages), just press spacebar manually before typing the punctuation.</blockquote>
+
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!TIP]</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">Smart punctuation only activates after auto-inserted spaces. Touch-typed text always keeps your exact spacing.</blockquote>
+
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!NOTE]</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">Apostrophes in contractions (like "don't", "it's") are never affected by smart punctuation.</blockquote>
+
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!TIP]</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">Sentence-ending punctuation (. ! ?) automatically adds a space after attachment, enabling autocapitalization for the next word you type or swipe.</blockquote>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Common Questions</h2>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Why does my colon sometimes have a space before it?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: If you manually pressed spacebar before the colon, CleverKeys respects your intent and keeps the space. This is useful for formatting like <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">Note : important</code>.</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Can I disable this for specific punctuation?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Currently, smart punctuation is all-or-nothing. You can disable it entirely in Settings > Input Behavior.</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Does this work in all apps?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Yes, smart punctuation works in any text field. However, some apps may have their own auto-formatting that could interact with it.</p>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Related Features</h2>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <a href="autocorrect.html" class="text-green-400 hover:underline">Autocorrect</a> - Automatic spelling corrections</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="swipe-typing.html" class="text-green-400 hover:underline">Swipe Typing</a> - Gesture-based word input</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="special-characters.html" class="text-green-400 hover:underline">Special Characters</a> - Symbols and accents</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Technical Details</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../specs/typing/smart-punctuation-spec.html" class="text-green-400 hover:underline">Smart Punctuation Technical Specification</a>.</p>
+
+        </div>
+        
+        <!-- Prev/Next Navigation -->
+        <div class="max-w-4xl mt-8 flex justify-between">
+            <a href="typing/emoji.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+                <span>&larr;</span>
+                <span class="text-sm text-gray-400">Emoji & Symbols</span>
+            </a>
+            <a href="typing/user-dictionary.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+                <span class="text-sm text-gray-400">User Dictionary</span>
+                <span>&rarr;</span>
+            </a>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-gray-800">
+        <p>CleverKeys User Guide - Making typing smarter</p>
+    </footer>
+</body>
+</html>

@@ -76,223 +76,122 @@
         <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
             <hr class="border-gray-700 my-6">
 <p class="mb-4 text-gray-300 leading-relaxed">title: Backup & Restore</p>
-<p class="mb-4 text-gray-300 leading-relaxed">description: Save and restore your keyboard configuration</p>
+<p class="mb-4 text-gray-300 leading-relaxed">description: Export and import your keyboard configuration</p>
 <p class="mb-4 text-gray-300 leading-relaxed">category: Troubleshooting</p>
 <p class="mb-4 text-gray-300 leading-relaxed">difficulty: beginner</p>
 <hr class="border-gray-700 my-6">
 
 <h1 class="text-3xl font-bold mb-6 gradient-text-wiki">Backup & Restore</h1>
 
-<p class="mb-4 text-gray-300 leading-relaxed">Protect your keyboard configuration by creating backups that can be restored later or transferred to another device.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">Export and import your keyboard settings, dictionary, and clipboard history.</p>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Quick Summary</h2>
 
 <table class="w-full mb-6 border-collapse"><tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">What</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">How</th></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Backup</strong></td><td class="px-4 py-2 border-t border-gray-700">Settings > Profiles > Export</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Restore</strong></td><td class="px-4 py-2 border-t border-gray-700">Settings > Profiles > Import</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Format</strong></td><td class="px-4 py-2 border-t border-gray-700">JSON file</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Settings</strong></td><td class="px-4 py-2 border-t border-gray-700">Settings > Activities > Backup & Restore > Export/Import Config</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Dictionary</strong></td><td class="px-4 py-2 border-t border-gray-700">Settings > Activities > Backup & Restore > Export/Import Dictionary</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Clipboard</strong></td><td class="px-4 py-2 border-t border-gray-700">Settings > Activities > Backup & Restore > Export/Import Clipboard</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Format</strong></td><td class="px-4 py-2 border-t border-gray-700">JSON files</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">What Gets Backed Up</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Available Exports</h2>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Full Profile Backup</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Configuration Export</h3>
 
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Component</td><td class="px-4 py-2 border-t border-gray-700">Included</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Settings</strong></td><td class="px-4 py-2 border-t border-gray-700">All preferences</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Theme</strong></td><td class="px-4 py-2 border-t border-gray-700">Colors, appearance</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Customizations</strong></td><td class="px-4 py-2 border-t border-gray-700">Per-key actions</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Extra Keys</strong></td><td class="px-4 py-2 border-t border-gray-700">Bottom row setup</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Layouts</strong></td><td class="px-4 py-2 border-t border-gray-700">Installed layouts, order</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Personal Dictionary</strong></td><td class="px-4 py-2 border-t border-gray-700">Optional</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed">Exports all keyboard settings to a JSON file:</p>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Included</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">All Settings</strong></td><td class="px-4 py-2 border-t border-gray-700">Appearance, behavior, neural settings</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Theme Selection</strong></td><td class="px-4 py-2 border-t border-gray-700">Current theme choice</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Custom Subkeys</strong></td><td class="px-4 py-2 border-t border-gray-700">Per-key customizations</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Backup Contents</h3>
-
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto mb-4"><code class="language-json">{
-<p class="mb-4 text-gray-300 leading-relaxed">  "version": 1,</p>
-<p class="mb-4 text-gray-300 leading-relaxed">  "exported": "2024-12-15T10:30:00Z",</p>
-<p class="mb-4 text-gray-300 leading-relaxed">  "profile": {</p>
-<p class="mb-4 text-gray-300 leading-relaxed">    "name": "My Profile",</p>
-<p class="mb-4 text-gray-300 leading-relaxed">    "settings": { ... },</p>
-<p class="mb-4 text-gray-300 leading-relaxed">    "theme": { ... },</p>
-<p class="mb-4 text-gray-300 leading-relaxed">    "customizations": { ... },</p>
-<p class="mb-4 text-gray-300 leading-relaxed">    "layouts": [ ... ],</p>
-<p class="mb-4 text-gray-300 leading-relaxed">    "dictionary": [ ... ]  // If included</p>
-<p class="mb-4 text-gray-300 leading-relaxed">  }</p>
-<p class="mb-4 text-gray-300 leading-relaxed">}</code></pre></p>
-
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Creating a Backup</h2>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 1: Open Profiles</h3>
-
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">How to export:</strong></p>
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Open <strong class="text-white">Settings</strong></li>
-<li class="ml-4 text-gray-300">2. Navigate to <strong class="text-white">Profiles</strong></li>
-<li class="ml-4 text-gray-300">3. Tap <strong class="text-white">Export Profile</strong></li>
+<li class="ml-4 text-gray-300">2. Tap <strong class="text-white">Backup & Restore</strong> in the Activities section</li>
+<li class="ml-4 text-gray-300">3. Tap <strong class="text-white">Export Config</strong></li>
+<li class="ml-4 text-gray-300">4. Choose save location</li>
 </ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 2: Choose What to Include</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Dictionary Export</h3>
 
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Option</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Include Dictionary</strong></td><td class="px-4 py-2 border-t border-gray-700">Personal words</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Include History</strong></td><td class="px-4 py-2 border-t border-gray-700">Clipboard history</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Include Language Packs</strong></td><td class="px-4 py-2 border-t border-gray-700">Downloaded packs</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed">Exports your personal dictionary:</p>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Included</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">User Words</strong></td><td class="px-4 py-2 border-t border-gray-700">Words you've added</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Learned Words</strong></td><td class="px-4 py-2 border-t border-gray-700">Words the keyboard learned</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 3: Save File</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Clipboard Export</h3>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Choose location (Downloads, Cloud, etc.)</li>
-<li class="ml-4 text-gray-300">2. Enter filename</li>
-<li class="ml-4 text-gray-300">3. Tap <strong class="text-white">Save</strong></li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 4: Verify Backup</h3>
+<p class="mb-4 text-gray-300 leading-relaxed">Exports clipboard history:</p>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Check file exists in chosen location</li>
-<li class="ml-4 text-gray-300">&#8226; File should be several KB to MB depending on contents</li>
-</ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Restoring from Backup</h2>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 1: Access Import</h3>
-
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Open <strong class="text-white">Settings > Profiles</strong></li>
-<li class="ml-4 text-gray-300">2. Tap <strong class="text-white">Import Profile</strong></li>
-<li class="ml-4 text-gray-300">3. Browse to backup file</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 2: Choose What to Restore</h3>
-
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Option</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Replace All</strong></td><td class="px-4 py-2 border-t border-gray-700">Overwrite current config</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Merge</strong></td><td class="px-4 py-2 border-t border-gray-700">Add to existing config</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Preview</strong></td><td class="px-4 py-2 border-t border-gray-700">See contents first</td></tr>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Included</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">History</strong></td><td class="px-4 py-2 border-t border-gray-700">Recent clipboard items</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Pinned</strong></td><td class="px-4 py-2 border-t border-gray-700">Pinned items</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Todos</strong></td><td class="px-4 py-2 border-t border-gray-700">Todo items</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 3: Confirm Import</h3>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Importing</h2>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Review what will be changed</li>
-<li class="ml-4 text-gray-300">2. Tap <strong class="text-white">Import</strong></li>
-<li class="ml-4 text-gray-300">3. Restart keyboard if prompted</li>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Import Config</h3>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Open <strong class="text-white">Settings > Activities > Backup & Restore</strong></li>
+<li class="ml-4 text-gray-300">2. Tap <strong class="text-white">Import Config</strong></li>
+<li class="ml-4 text-gray-300">3. Browse to your backup JSON file</li>
+<li class="ml-4 text-gray-300">4. Settings will be applied immediately</li>
 </ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Automatic Backups</h2>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Import Dictionary</h3>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Enable Auto-Backup</h3>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Tap <strong class="text-white">Import Dictionary</strong></li>
+<li class="ml-4 text-gray-300">2. Select dictionary JSON file</li>
+<li class="ml-4 text-gray-300">3. Words are merged with existing dictionary</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Import Clipboard</h3>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Go to <strong class="text-white">Settings > Profiles</strong></li>
-<li class="ml-4 text-gray-300">2. Enable <strong class="text-white">Auto-Backup</strong></li>
-<li class="ml-4 text-gray-300">3. Choose frequency:</li>
-</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Daily</p>
-<p class="mb-4 text-gray-300 leading-relaxed">   - Weekly</p>
-<p class="mb-4 text-gray-300 leading-relaxed">   - On change</p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Backup Location</h3>
-
-<p class="mb-4 text-gray-300 leading-relaxed">Auto-backups are stored in:</p>
-
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto mb-4"><code class="language-text">/storage/emulated/0/Android/data/app.cleverkeys/backups/</code></pre>
-
-<p class="mb-4 text-gray-300 leading-relaxed">Or cloud location if configured.</p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Manage Auto-Backups</h3>
-
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Options</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Keep</strong></td><td class="px-4 py-2 border-t border-gray-700">Last 5, 10, 20 backups</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Location</strong></td><td class="px-4 py-2 border-t border-gray-700">Local, Google Drive</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Include Dictionary</strong></td><td class="px-4 py-2 border-t border-gray-700">Yes/No</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Tap <strong class="text-white">Import Clipboard</strong></li>
+<li class="ml-4 text-gray-300">2. Select clipboard JSON file</li>
+<li class="ml-4 text-gray-300">3. Items are added to history</li>
+</ul>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Transfer to New Device</h2>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Method 1: File Transfer</h3>
-
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Export profile on old device</li>
-<li class="ml-4 text-gray-300">2. Transfer file (USB, email, cloud)</li>
-<li class="ml-4 text-gray-300">3. Import on new device</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Export</strong> config, dictionary, and clipboard on old device</li>
+<li class="ml-4 text-gray-300">2. <strong class="text-white">Transfer</strong> the JSON files (USB, email, cloud storage)</li>
+<li class="ml-4 text-gray-300">3. <strong class="text-white">Import</strong> each file on new device</li>
 </ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Method 2: Cloud Storage</h3>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Data Export for ML</h2>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Export to Google Drive</li>
-<li class="ml-4 text-gray-300">2. On new device, import from Drive</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Method 3: QR Code</h3>
+<p class="mb-4 text-gray-300 leading-relaxed">CleverKeys also supports exporting swipe training data:</p>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Generate QR code from profile</li>
-<li class="ml-4 text-gray-300">2. Scan on new device</li>
-<li class="ml-4 text-gray-300">3. Profile imports automatically</li>
-</ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Backup Best Practices</h2>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Format</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">JSON</strong></td><td class="px-4 py-2 border-t border-gray-700">Structured swipe data</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">NDJSON</strong></td><td class="px-4 py-2 border-t border-gray-700">Newline-delimited JSON for ML pipelines</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<p class="mb-4 text-gray-300 leading-relaxed">Access via <strong class="text-white">Settings > Privacy & Data section > Export JSON/NDJSON</strong>.</p>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Regular backups</strong>: Weekly or after major changes</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Multiple copies</strong>: Keep backups in different locations</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Test restores</strong>: Occasionally verify backups work</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Before updates</strong>: Backup before app updates</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Before reset</strong>: Always backup before resetting</li>
-</ul>
-<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!TIP]</blockquote>
-<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">Enable auto-backup to ensure you always have a recent backup available.</blockquote>
-
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Troubleshooting Backups</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Troubleshooting</h2>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Import Fails</h3>
 
 <table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Issue</td><td class="px-4 py-2 border-t border-gray-700">Solution</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">File corrupt</strong></td><td class="px-4 py-2 border-t border-gray-700">Try different backup</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Version mismatch</strong></td><td class="px-4 py-2 border-t border-gray-700">Update app first</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Permission denied</strong></td><td class="px-4 py-2 border-t border-gray-700">Grant storage permission</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">File corrupt</strong></td><td class="px-4 py-2 border-t border-gray-700">Re-export from source device</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Wrong format</strong></td><td class="px-4 py-2 border-t border-gray-700">Ensure file is CleverKeys JSON export</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Permission denied</strong></td><td class="px-4 py-2 border-t border-gray-700">Grant storage permission to CleverKeys</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Settings Not Applied</h3>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Force stop keyboard</li>
-<li class="ml-4 text-gray-300">2. Re-enable in system settings</li>
-<li class="ml-4 text-gray-300">3. Try import again</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Close and reopen the keyboard</li>
+<li class="ml-4 text-gray-300">2. If needed, disable and re-enable CleverKeys in system settings</li>
 </ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Partial Restore</h3>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">File Locations</h2>
 
-<p class="mb-4 text-gray-300 leading-relaxed">If only some settings restored:</p>
-
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Check what was included in backup</li>
-<li class="ml-4 text-gray-300">2. Try <strong class="text-white">Replace All</strong> instead of <strong class="text-white">Merge</strong></li>
-</ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Export Individual Components</h2>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Dictionary Only</h3>
-
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Settings > Privacy</li>
-<li class="ml-4 text-gray-300">2. Export Dictionary</li>
-<li class="ml-4 text-gray-300">3. Imports as separate file</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Theme Only</h3>
-
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Settings > Theme</li>
-<li class="ml-4 text-gray-300">2. Export Theme</li>
-<li class="ml-4 text-gray-300">3. Share with others</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Customizations Only</h3>
-
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Settings > Customization</li>
-<li class="ml-4 text-gray-300">2. Export Customizations</li>
-<li class="ml-4 text-gray-300">3. Apply to other profiles</li>
-</ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Common Questions</h2>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: How large are backup files?</h3>
-
-<p class="mb-4 text-gray-300 leading-relaxed">A: Typically 10KB-1MB without dictionary, up to 5MB with large dictionary.</p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Can I share backups with others?</h3>
-
-<p class="mb-4 text-gray-300 leading-relaxed">A: Yes, but personal dictionary may contain private words.</p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Will backup work across app versions?</h3>
-
-<p class="mb-4 text-gray-300 leading-relaxed">A: Yes, backups include version info for compatibility.</p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Can I edit backup files manually?</h3>
-
-<p class="mb-4 text-gray-300 leading-relaxed">A: Yes, they're JSON. But be careful not to corrupt the format.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">Exported files are saved to the location you choose via Android's file picker (typically Downloads folder).</p>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Related Topics</h2>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <a href="../layouts/profiles.html" class="text-green-400 hover:underline">Profiles</a> - Profile management</li>
-<li class="ml-4 text-gray-300">&#8226; <a href="reset-defaults.html" class="text-green-400 hover:underline">Reset Defaults</a> - When backup isn't enough</li>
-<li class="ml-4 text-gray-300">&#8226; <a href="../settings/privacy.html" class="text-green-400 hover:underline">Privacy</a> - What data is stored</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <a href="../settings/privacy.html" class="text-green-400 hover:underline">Privacy</a> - Data collection settings</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="../customization/custom-layouts.html" class="text-green-400 hover:underline">Per-Key Customization</a> - Subkey settings</li>
 </ul>
         </div>
         
         <!-- Prev/Next Navigation -->
         <div class="max-w-4xl mt-8 flex justify-between">
-            <a href="./reset-defaults.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+            <a href="troubleshooting/reset-defaults.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
                 <span>&larr;</span>
                 <span class="text-sm text-gray-400">Reset to Defaults</span>
             </a>

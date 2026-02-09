@@ -90,7 +90,7 @@
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Quick Summary</h2>
 
 <table class="w-full mb-6 border-collapse"><tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">What</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Description</th></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Purpose</strong></td><td class="px-4 py-2 border-t border-gray-700">Quick access to subkeys without long-press</td></tr></p>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Purpose</strong></td><td class="px-4 py-2 border-t border-gray-700">Quick access to subkeys via directional flick</td></tr></p>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Gesture</strong></td><td class="px-4 py-2 border-t border-gray-700">Quick flick from key in any of 8 directions</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Directions</strong></td><td class="px-4 py-2 border-t border-gray-700">N, NE, E, SE, S, SW, W, NW</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
@@ -122,31 +122,32 @@
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Example: Typing Numbers</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed">On QWERTY layout, numbers are above letters:</p>
+<p class="mb-4 text-gray-300 leading-relaxed">On QWERTY layout, numbers are on the NORTHEAST (up-right) direction:</p>
 
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Key</td><td class="px-4 py-2 border-t border-gray-700">Flick North</td><td class="px-4 py-2 border-t border-gray-700">Result</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Q</td><td class="px-4 py-2 border-t border-gray-700">↑</td><td class="px-4 py-2 border-t border-gray-700">1</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700">W</td><td class="px-4 py-2 border-t border-gray-700">↑</td><td class="px-4 py-2 border-t border-gray-700">2</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700">E</td><td class="px-4 py-2 border-t border-gray-700">↑</td><td class="px-4 py-2 border-t border-gray-700">3</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700">R</td><td class="px-4 py-2 border-t border-gray-700">↑</td><td class="px-4 py-2 border-t border-gray-700">4</td></tr>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Key</td><td class="px-4 py-2 border-t border-gray-700">Flick NE</td><td class="px-4 py-2 border-t border-gray-700">Result</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Q</td><td class="px-4 py-2 border-t border-gray-700">↗</td><td class="px-4 py-2 border-t border-gray-700">1</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700">W</td><td class="px-4 py-2 border-t border-gray-700">↗</td><td class="px-4 py-2 border-t border-gray-700">2</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700">E</td><td class="px-4 py-2 border-t border-gray-700">↗</td><td class="px-4 py-2 border-t border-gray-700">3</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700">R</td><td class="px-4 py-2 border-t border-gray-700">↗</td><td class="px-4 py-2 border-t border-gray-700">4</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700">...</td><td class="px-4 py-2 border-t border-gray-700">...</td><td class="px-4 py-2 border-t border-gray-700">...</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!TIP]</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">Think "start from the SW corner of the key" to access the NE subkey.</blockquote>
+
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Common Subkey Layouts</h2>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Letters</h3>
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">North</strong>: Numbers (on top row)</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">South</strong>: Accented versions (é, ñ, etc.)</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">East/West</strong>: Related punctuation</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Shift Key</h3>
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">NW</strong>: Escape</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">SE</strong>: Tab</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">South</strong>: Caps Lock</li>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Letters (Top Row)</h3>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Northeast</strong>: Numbers (1-0)</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Northwest</strong>: Symbols (~, @, #, $, etc.)</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Southeast</strong>: Escape (on Q)</li>
 </ul>
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Backspace</h3>
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">West</strong>: Delete entire word</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Hold + drag</strong>: Selection delete mode</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Short swipe + hold</strong>: Selection delete mode</li>
 </ul>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!NOTE]</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">Subkey assignments vary by layout. Check Per-Key Customization to see and modify your layout's subkeys.</blockquote>
+
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Calibrating Short Swipes</h2>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Adjust sensitivity in Settings:</p>
@@ -164,7 +165,7 @@
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Practice direction</strong>: North is straight up, not diagonal</li>
 <li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Speed matters</strong>: Quick flicks work best</li>
 <li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Visual feedback</strong>: The trail shows your swipe direction</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Customize</strong>: Change subkey actions in Settings > Customization</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Customize</strong>: Change subkey actions in Settings > Activities > Per-Key Customization</li>
 </ul>
 <blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!TIP]</blockquote>
 <blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">If short swipes accidentally trigger, increase the minimum distance setting.</blockquote>
@@ -172,16 +173,16 @@
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Difference from Long Press</h2>
 
 <table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Action</td><td class="px-4 py-2 border-t border-gray-700">Short Swipe</td><td class="px-4 py-2 border-t border-gray-700">Long Press</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Speed</strong></td><td class="px-4 py-2 border-t border-gray-700">Fast (instant)</td><td class="px-4 py-2 border-t border-gray-700">Slow (wait for popup)</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Access</strong></td><td class="px-4 py-2 border-t border-gray-700">8 directions</td><td class="px-4 py-2 border-t border-gray-700">Popup menu</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Characters</strong></td><td class="px-4 py-2 border-t border-gray-700">Common ones</td><td class="px-4 py-2 border-t border-gray-700">All variations</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Speed</strong></td><td class="px-4 py-2 border-t border-gray-700">Fast (instant)</td><td class="px-4 py-2 border-t border-gray-700">Slow (wait 600ms)</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Behavior</strong></td><td class="px-4 py-2 border-t border-gray-700">Types subkey character</td><td class="px-4 py-2 border-t border-gray-700">Key repeat</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Access</strong></td><td class="px-4 py-2 border-t border-gray-700">8 directional subkeys</td><td class="px-4 py-2 border-t border-gray-700">Repeats the main key</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Settings</h2>
 
 <table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Location</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Min Distance</strong></td><td class="px-4 py-2 border-t border-gray-700">Gesture Tuning</td><td class="px-4 py-2 border-t border-gray-700">Minimum swipe length</td></tr></p>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Max Distance</strong></td><td class="px-4 py-2 border-t border-gray-700">Gesture Tuning</td><td class="px-4 py-2 border-t border-gray-700">Maximum swipe length</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Enable Short Swipes</strong></td><td class="px-4 py-2 border-t border-gray-700">Input Behavior</td><td class="px-4 py-2 border-t border-gray-700">Toggle feature on/off</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Enable Short Swipes</strong></td><td class="px-4 py-2 border-t border-gray-700">Gesture Tuning</td><td class="px-4 py-2 border-t border-gray-700">Toggle feature on/off</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Related Features</h2>
 
@@ -197,11 +198,11 @@
         
         <!-- Prev/Next Navigation -->
         <div class="max-w-4xl mt-8 flex justify-between">
-            <a href="../typing/emoji.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+            <a href="typing/user-dictionary.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
                 <span>&larr;</span>
-                <span class="text-sm text-gray-400">Emoji & Symbols</span>
+                <span class="text-sm text-gray-400">User Dictionary</span>
             </a>
-            <a href="./cursor-navigation.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+            <a href="gestures/cursor-navigation.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
                 <span class="text-sm text-gray-400">Cursor Navigation</span>
                 <span>&rarr;</span>
             </a>

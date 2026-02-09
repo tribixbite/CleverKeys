@@ -89,12 +89,40 @@
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Method 1: GitHub Releases (Recommended)</h3>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Visit the <a href="https://github.com/tribixbite/CleverKeys/releases" class="text-green-400 hover:underline">CleverKeys Releases</a> page</li>
-<li class="ml-4 text-gray-300">2. Download the latest <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">cleverkeys-vX.X.X.apk</code> file</li>
-<li class="ml-4 text-gray-300">3. Open the APK file on your device</li>
+<li class="ml-4 text-gray-300">2. Download the APK for your device architecture:</li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">CleverKeys-v1.2.9-arm64-v8a.apk</code> - Most modern phones (ARM 64-bit)</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">CleverKeys-v1.2.9-armeabi-v7a.apk</code> - Older phones (ARM 32-bit)</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">CleverKeys-v1.2.9-x86_64.apk</code> - x86 devices / emulators</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">3. Open the APK file on your device</li>
 <li class="ml-4 text-gray-300">4. If prompted, allow installation from unknown sources</li>
 <li class="ml-4 text-gray-300">5. Tap <strong class="text-white">Install</strong></li>
 </ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Method 2: Build from Source</h3>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300"><strong class="text-white">Tip:</strong> If unsure which APK to download, use <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">arm64-v8a</code> — it works on all modern Android phones.</blockquote>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Method 2: Obtainium (Auto-Updates)</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed"><a href="https://github.com/ImranR98/Obtainium" class="text-green-400 hover:underline">Obtainium</a> lets you install CleverKeys directly from GitHub with automatic update notifications:</p>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Install <a href="https://github.com/ImranR98/Obtainium/releases" class="text-green-400 hover:underline">Obtainium</a> on your device</li>
+<li class="ml-4 text-gray-300">2. Open Obtainium and tap <strong class="text-white">Add App</strong></li>
+<li class="ml-4 text-gray-300">3. Enter the URL: <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">https://github.com/tribixbite/CleverKeys</code></li>
+<li class="ml-4 text-gray-300">4. Obtainium will detect releases automatically</li>
+<li class="ml-4 text-gray-300">5. Select your preferred APK variant (arm64-v8a for most devices)</li>
+<li class="ml-4 text-gray-300">6. Tap <strong class="text-white">Install</strong></li>
+</ul>
+<p class="mb-4 text-gray-300 leading-relaxed">Obtainium will notify you when new versions are available.</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Method 3: F-Droid</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">CleverKeys is available on F-Droid for users who prefer verified open-source builds:</p>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Install <a href="https://f-droid.org/" class="text-green-400 hover:underline">F-Droid</a> if you haven't already</li>
+<li class="ml-4 text-gray-300">2. Search for <strong class="text-white">CleverKeys</strong> in the F-Droid app</li>
+<li class="ml-4 text-gray-300">3. Tap <strong class="text-white">Install</strong></li>
+</ul>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300"><strong class="text-white">Note:</strong> F-Droid builds may lag behind GitHub releases by a few days as F-Droid builds from source independently.</blockquote>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Method 4: Build from Source</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">For developers who want to build from source:</p>
 
@@ -102,7 +130,7 @@
 <p class="mb-4 text-gray-300 leading-relaxed">cd CleverKeys</p>
 <p class="mb-4 text-gray-300 leading-relaxed">./gradlew assembleRelease</code></pre></p>
 
-<p class="mb-4 text-gray-300 leading-relaxed">The APK will be in <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">app/build/outputs/apk/release/</code>.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">The APKs will be in <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">build/outputs/apk/release/</code> (one per ABI: arm64-v8a, armeabi-v7a, x86_64).</p>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">After Installation</h2>
 
@@ -118,13 +146,12 @@
 
 <p class="mb-4 text-gray-300 leading-relaxed">CleverKeys requests minimal permissions:</p>
 
-<table class="w-full mb-6 border-collapse">
-<tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">Permission</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Android Name</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Purpose</th></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700">Vibration</td><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">android.permission.VIBRATE</code></td><td class="px-4 py-2 border-t border-gray-700">Haptic feedback on key presses</td></tr>
+<table class="w-full mb-6 border-collapse"><tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">Permission</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Android Name</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Purpose</th></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Vibration</td><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">android.permission.VIBRATE</code></td><td class="px-4 py-2 border-t border-gray-700">Haptic feedback on key presses</td></tr></p>
 <tr><td class="px-4 py-2 border-t border-gray-700">User Dictionary</td><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">android.permission.READ_USER_DICTIONARY</code></td><td class="px-4 py-2 border-t border-gray-700">Reading system user dictionary for word suggestions</td></tr>
-</table>
-<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">No internet permission</strong> &#8212; CleverKeys never sends data to any server.</p>
-<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">No storage permission</strong> &#8212; Uses app-private storage and Android's Storage Access Framework (SAF) for backup/restore.</p>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">No internet permission</strong> — CleverKeys never sends data to any server.</p>
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">No storage permission</strong> — Uses app-private storage and Android's Storage Access Framework (SAF) for backup/restore.</p>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Troubleshooting</h2>
 
@@ -139,17 +166,16 @@
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Ensure you're running Android 5.0 or higher</li>
 <li class="ml-4 text-gray-300">&#8226; Try clearing app data: Settings → Apps → CleverKeys → Clear Data</li>
 </ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Next Steps</h2>
+<hr class="border-gray-700 my-6">
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <a href="./first-time-setup.html" class="text-green-400 hover:underline">First-Time Setup</a> - Complete your keyboard setup</li>
-<li class="ml-4 text-gray-300">&#8226; <a href="./basic-typing.html" class="text-green-400 hover:underline">Basic Typing</a> - Learn the fundamentals</li>
-</ul>
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Next:</strong> <a href="./first-time-setup.html" class="text-green-400 hover:underline">First-Time Setup</a> | <a href="./basic-typing.html" class="text-green-400 hover:underline">Basic Typing</a></p>
+
         </div>
         
         <!-- Prev/Next Navigation -->
         <div class="max-w-4xl mt-8 flex justify-between">
             <div></div>
-            <a href="./first-time-setup.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+            <a href="getting-started/first-time-setup.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
                 <span class="text-sm text-gray-400">First-Time Setup</span>
                 <span>&rarr;</span>
             </a>

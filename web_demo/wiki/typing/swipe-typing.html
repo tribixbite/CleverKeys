@@ -80,7 +80,6 @@
 <p class="mb-4 text-gray-300 leading-relaxed">category: Typing</p>
 <p class="mb-4 text-gray-300 leading-relaxed">difficulty: beginner</p>
 <p class="mb-4 text-gray-300 leading-relaxed">featured: true</p>
-<p class="mb-4 text-gray-300 leading-relaxed">related_spec: ../specs/typing/swipe-typing-spec.md</p>
 <hr class="border-gray-700 my-6">
 
 <h1 class="text-3xl font-bold mb-6 gradient-text-wiki">Swipe Typing</h1>
@@ -138,50 +137,42 @@
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Prediction Bar</h2>
 
-<p class="mb-4 text-gray-300 leading-relaxed">After swiping, three predictions appear:</p>
+<p class="mb-4 text-gray-300 leading-relaxed">After swiping, predictions appear in a horizontal row ordered by confidence (best match on the left). The first suggestion is auto-inserted and highlighted. Up to 6 alternatives may appear depending on beam width.</p>
 
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Position</td><td class="px-4 py-2 border-t border-gray-700">Meaning</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Center</strong></td><td class="px-4 py-2 border-t border-gray-700">Best match (auto-inserted)</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Left</strong></td><td class="px-4 py-2 border-t border-gray-700">Second best match</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Right</strong></td><td class="px-4 py-2 border-t border-gray-700">Third best match</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <p class="mb-4 text-gray-300 leading-relaxed">Tap any prediction to use it instead.</p>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Settings</h2>
 
-<p class="mb-4 text-gray-300 leading-relaxed">Tune swipe typing in Settings > Neural:</p>
+<p class="mb-4 text-gray-300 leading-relaxed">Tune swipe typing in Settings > Neural Prediction:</p>
 
 <table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Beam Width</strong></td><td class="px-4 py-2 border-t border-gray-700">More candidates = more accurate but slower</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Neural Profile</strong></td><td class="px-4 py-2 border-t border-gray-700">Balanced, Fast, or Accurate presets</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Prediction Count</strong></td><td class="px-4 py-2 border-t border-gray-700">Number of suggestions to show</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Swipe Typing</strong></td><td class="px-4 py-2 border-t border-gray-700">Enable/disable swipe input</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Beam Width</strong></td><td class="px-4 py-2 border-t border-gray-700">More candidates = more accurate but slower (default: 6, max: 20)</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Confidence Threshold</strong></td><td class="px-4 py-2 border-t border-gray-700">Minimum confidence for predictions</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Max Word Length</strong></td><td class="px-4 py-2 border-t border-gray-700">Maximum predicted word length in characters (default: 20)</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">When Swipe Typing Doesn't Work</h2>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Swipe typing may not activate when:</p>
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Typing in password fields</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Swipe typing is disabled in settings</li>
+<li class="ml-4 text-gray-300">&#8226; Typing in password fields (unless enabled in settings)</li>
 <li class="ml-4 text-gray-300">&#8226; The swipe is too short (detected as tap)</li>
-<li class="ml-4 text-gray-300">&#8226; No language pack is downloaded</li>
+<li class="ml-4 text-gray-300">&#8226; No language pack is available</li>
 </ul>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Related Features</h2>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <a href="autocorrect.html" class="text-green-400 hover:underline">Autocorrect</a> - Fix mistakes automatically</li>
-<li class="ml-4 text-gray-300">&#8226; <a href="../gestures/short-swipes.html" class="text-green-400 hover:underline">Short Swipes</a> - Quick access to subkeys</li>
-<li class="ml-4 text-gray-300">&#8226; <a href="../settings/neural-settings.html" class="text-green-400 hover:underline">Neural Settings</a> - Tune prediction</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <a href="../gestures/short-swipes.html" class="text-green-400 hover:underline">Short Swipes</a> - Quick access to subkeys</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="autocorrect.html" class="text-green-400 hover:underline">Autocorrect</a> - Fix mistakes automatically</li>
 </ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Technical Details</h2>
-
-<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../specs/typing/swipe-typing-spec.html" class="text-green-400 hover:underline">Swipe Typing Technical Specification</a> for details on the ONNX model and beam search algorithm.</p>
-
         </div>
         
         <!-- Prev/Next Navigation -->
         <div class="max-w-4xl mt-8 flex justify-between">
-            <a href="../getting-started/enabling-keyboard.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+            <a href="FAQ.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
                 <span>&larr;</span>
-                <span class="text-sm text-gray-400">Enabling the Keyboard</span>
+                <span class="text-sm text-gray-400">FAQ</span>
             </a>
-            <a href="./autocorrect.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+            <a href="typing/autocorrect.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
                 <span class="text-sm text-gray-400">Autocorrect & Predictions</span>
                 <span>&rarr;</span>
             </a>

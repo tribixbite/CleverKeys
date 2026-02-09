@@ -89,7 +89,7 @@
 
 <table class="w-full mb-6 border-collapse"><tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">Issue</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Common Cause</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Solution</th></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Slow typing</strong></td><td class="px-4 py-2 border-t border-gray-700">Neural predictions</td><td class="px-4 py-2 border-t border-gray-700">Reduce beam width</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Lag on open</strong></td><td class="px-4 py-2 border-t border-gray-700">Large dictionary</td><td class="px-4 py-2 border-t border-gray-700">Reduce history</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Lag on open</strong></td><td class="px-4 py-2 border-t border-gray-700">Large clipboard</td><td class="px-4 py-2 border-t border-gray-700">Reduce history limit</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Battery drain</strong></td><td class="px-4 py-2 border-t border-gray-700">Haptics, animations</td><td class="px-4 py-2 border-t border-gray-700">Reduce feedback</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Typing Speed Issues</h2>
@@ -106,32 +106,25 @@
 <p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Solutions:</strong></p>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Reduce beam width</strong></li>
-</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Neural > Beam Width</p>
-<p class="mb-4 text-gray-300 leading-relaxed">   - Try 3-5 instead of 8-10</p>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Neural Prediction section > Beam Width</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - Try 3-4 instead of 6+</p>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">2. <strong class="text-white">Reduce prediction count</strong></li>
-</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Predictions > Count</p>
-<p class="mb-4 text-gray-300 leading-relaxed">   - Show fewer suggestions</p>
-
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">3. <strong class="text-white">Disable unused languages</strong></li>
-</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Languages</p>
-<p class="mb-4 text-gray-300 leading-relaxed">   - Keep only languages you use</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">2. <strong class="text-white">Reduce languages</strong></li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Keep only languages you actively use</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - Each language adds processing overhead</p>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Issue: Key press feels delayed</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Solutions:</strong></p>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Reduce animations</strong></li>
-</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Appearance > Press Animation</p>
-<p class="mb-4 text-gray-300 leading-relaxed">   - Set to "None" or "Highlight"</p>
-
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">2. <strong class="text-white">Disable key popup</strong></li>
-</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Appearance > Key Pop-up</p>
-<p class="mb-4 text-gray-300 leading-relaxed">   - Set to "Off"</p>
-
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">3. <strong class="text-white">Check haptic timing</strong></li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Check haptic timing</strong></li>
 </ul><p class="mb-4 text-gray-300 leading-relaxed">   - Haptic feedback adds slight delay</p>
-<p class="mb-4 text-gray-300 leading-relaxed">   - Try reducing intensity</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Accessibility > Vibration Duration</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - Try reducing or disabling</p>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">2. <strong class="text-white">Reduce visual feedback</strong></li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - If your device has slow rendering</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - Disable key borders or reduce opacity in Appearance settings</p>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Startup Performance</h2>
 
@@ -140,35 +133,34 @@
 <p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Solutions:</strong></p>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Reduce clipboard history</strong></li>
-</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Privacy > History Size</p>
-<p class="mb-4 text-gray-300 leading-relaxed">   - Use smaller limit</p>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Clipboard section > History Limit</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - Use smaller limit (e.g., 25 instead of 50)</p>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">2. <strong class="text-white">Clear unused profiles</strong></li>
-</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Profiles</p>
-<p class="mb-4 text-gray-300 leading-relaxed">   - Delete unused profiles</p>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Activities > Backup & Restore</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - Delete unused exports</p>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">3. <strong class="text-white">Reduce installed layouts</strong></li>
-</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Layouts</p>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Activities > Layout Manager</p>
 <p class="mb-4 text-gray-300 leading-relaxed">   - Remove layouts you don't use</p>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Issue: First swipe word slow</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Explanation:</strong></p>
 
-<p class="mb-4 text-gray-300 leading-relaxed">Neural model loads on first use. This is normal.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">Neural model loads on first use. This is normal behavior.</p>
 
-<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Solutions:</strong></p>
-
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Enable background loading</strong></li>
-</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Neural > Background Processing</p>
-<p class="mb-4 text-gray-300 leading-relaxed">   - Model preloads during idle time</p>
-
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Why this happens:</strong></p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; The ONNX model is loaded into memory on first swipe</li>
+<li class="ml-4 text-gray-300">&#8226; Subsequent swipes are fast as the model is cached</li>
+<li class="ml-4 text-gray-300">&#8226; This is a one-time delay per keyboard session</li>
+</ul>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Memory Usage</h2>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Factors Affecting Memory</h3>
 
 <table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Factor</td><td class="px-4 py-2 border-t border-gray-700">Memory Impact</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Language packs</strong></td><td class="px-4 py-2 border-t border-gray-700">5-30 MB each</td></tr></p>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Language dictionaries</strong></td><td class="px-4 py-2 border-t border-gray-700">5-30 MB each</td></tr></p>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Clipboard history</strong></td><td class="px-4 py-2 border-t border-gray-700">Varies with content</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Neural model</strong></td><td class="px-4 py-2 border-t border-gray-700">~10 MB</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Personal dictionary</strong></td><td class="px-4 py-2 border-t border-gray-700">Usually < 1 MB</td></tr>
@@ -176,11 +168,11 @@
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Reduce Memory Usage</h3>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Remove unused language packs</strong></li>
-</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Language Packs > Downloaded</p>
-<p class="mb-4 text-gray-300 leading-relaxed">   - Delete unneeded packs</p>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Via Settings > Activities > Layout Manager</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - Delete unneeded layouts</p>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">2. <strong class="text-white">Reduce clipboard history</strong></li>
-</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Privacy > History Size</p>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Clipboard > History Limit</p>
 <p class="mb-4 text-gray-300 leading-relaxed">   - Smaller = less memory</p>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">3. <strong class="text-white">Clear cache periodically</strong></li>
@@ -193,90 +185,57 @@
 
 <table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Feature</td><td class="px-4 py-2 border-t border-gray-700">Battery Impact</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Haptics</strong></td><td class="px-4 py-2 border-t border-gray-700">Medium</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Animations</strong></td><td class="px-4 py-2 border-t border-gray-700">Low-Medium</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Neural predictions</strong></td><td class="px-4 py-2 border-t border-gray-700">Medium</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Background processing</strong></td><td class="px-4 py-2 border-t border-gray-700">Low</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Clipboard monitoring</strong></td><td class="px-4 py-2 border-t border-gray-700">Low</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Reduce Battery Usage</h3>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Reduce haptics</strong></li>
-</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Haptics > Intensity</p>
-<p class="mb-4 text-gray-300 leading-relaxed">   - Use "Light" or disable</p>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Accessibility > Vibration Duration</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - Use lower duration or disable</p>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">2. <strong class="text-white">Disable unneeded haptic events</strong></li>
-</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Haptics</p>
-<p class="mb-4 text-gray-300 leading-relaxed">   - Turn off events you don't need</p>
-
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">3. <strong class="text-white">Reduce animations</strong></li>
-</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Appearance > Press Animation</p>
-<p class="mb-4 text-gray-300 leading-relaxed">   - Set to "None"</p>
-
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">4. <strong class="text-white">Disable background processing</strong></li>
-</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Neural > Background Processing</p>
-<p class="mb-4 text-gray-300 leading-relaxed">   - Turn off if battery is critical</p>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Accessibility section</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - Turn off Haptic Key Press, Haptic Suggestion Tap, etc.</p>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Performance Settings</h2>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Quick Performance Profile</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed">For maximum speed:</p>
+<p class="mb-4 text-gray-300 leading-relaxed">For maximum speed on older devices:</p>
 
 <table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Value</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Beam Width</td><td class="px-4 py-2 border-t border-gray-700">3</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700">Prediction Count</td><td class="px-4 py-2 border-t border-gray-700">3</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700">Press Animation</td><td class="px-4 py-2 border-t border-gray-700">None</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700">Key Pop-up</td><td class="px-4 py-2 border-t border-gray-700">Off</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700">Haptics</td><td class="px-4 py-2 border-t border-gray-700">Off or Light</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Beam Width</td><td class="px-4 py-2 border-t border-gray-700">3-4</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700">Vibration</td><td class="px-4 py-2 border-t border-gray-700">Off or Light</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700">Clipboard Limit</td><td class="px-4 py-2 border-t border-gray-700">25 items</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Quality vs Speed</h3>
 
 <table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Priority</td><td class="px-4 py-2 border-t border-gray-700">Settings</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Speed</strong></td><td class="px-4 py-2 border-t border-gray-700">Lower beam, fewer predictions, no animations</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Quality</strong></td><td class="px-4 py-2 border-t border-gray-700">Higher beam, more predictions</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Speed</strong></td><td class="px-4 py-2 border-t border-gray-700">Lower beam width, fewer haptics</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Quality</strong></td><td class="px-4 py-2 border-t border-gray-700">Higher beam width (6-10), full haptics</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Balanced</strong></td><td class="px-4 py-2 border-t border-gray-700">Default settings</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Device-Specific Tips</h2>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Older Devices</h3>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Use lower neural settings</li>
-<li class="ml-4 text-gray-300">&#8226; Disable animations</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Use lower neural settings (Beam Width 3-4)</li>
+<li class="ml-4 text-gray-300">&#8226; Disable haptics if laggy</li>
 <li class="ml-4 text-gray-300">&#8226; Keep fewer layouts installed</li>
-<li class="ml-4 text-gray-300">&#8226; Use compact keyboard height</li>
+<li class="ml-4 text-gray-300">&#8226; Reduce clipboard history</li>
 </ul>
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Low-Memory Devices</h3>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Remove unused language packs</li>
-<li class="ml-4 text-gray-300">&#8226; Reduce clipboard history to 10 items</li>
+<li class="ml-4 text-gray-300">&#8226; Reduce clipboard history to 10-25 items</li>
 <li class="ml-4 text-gray-300">&#8226; Clear cache weekly</li>
-<li class="ml-4 text-gray-300">&#8226; Disable background processing</li>
 </ul>
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">High-Performance Devices</h3>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Can use maximum neural settings</li>
-<li class="ml-4 text-gray-300">&#8226; Enable all animations</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Can use maximum neural settings (Beam Width 10-12)</li>
+<li class="ml-4 text-gray-300">&#8226; Enable all haptics</li>
 <li class="ml-4 text-gray-300">&#8226; Keep many languages</li>
-</ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Monitoring Performance</h2>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Check Response Time</h3>
-
-<p class="mb-4 text-gray-300 leading-relaxed">Settings > About > Show Debug Info</p>
-
-<p class="mb-4 text-gray-300 leading-relaxed">Shows:</p>
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Prediction time</li>
-<li class="ml-4 text-gray-300">&#8226; Render time</li>
-<li class="ml-4 text-gray-300">&#8226; Memory usage</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Identify Issues</h3>
-
-<p class="mb-4 text-gray-300 leading-relaxed">If prediction time > 100ms:</p>
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Reduce beam width</li>
-<li class="ml-4 text-gray-300">&#8226; Disable unused languages</li>
-</ul>
-<p class="mb-4 text-gray-300 leading-relaxed">If render time > 16ms:</p>
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Reduce animations</li>
-<li class="ml-4 text-gray-300">&#8226; Simplify theme</li>
 </ul>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Tips for Best Performance</h2>
 
@@ -292,7 +251,7 @@
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Will disabling predictions make typing faster?</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed">A: Yes, but you lose a key feature. Try reducing instead of disabling.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">A: Yes, but you lose a key feature. Try reducing beam width instead of disabling.</p>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Does keyboard size affect performance?</h3>
 
@@ -309,18 +268,18 @@
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Related Topics</h2>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <a href="../settings/neural-settings.html" class="text-green-400 hover:underline">Neural Settings</a> - Prediction configuration</li>
-<li class="ml-4 text-gray-300">&#8226; <a href="../settings/appearance.html" class="text-green-400 hover:underline">Appearance</a> - Animation settings</li>
 <li class="ml-4 text-gray-300">&#8226; <a href="../settings/haptics.html" class="text-green-400 hover:underline">Haptics</a> - Vibration settings</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="common-issues.html" class="text-green-400 hover:underline">Common Issues</a> - General troubleshooting</li>
 </ul>
         </div>
         
         <!-- Prev/Next Navigation -->
         <div class="max-w-4xl mt-8 flex justify-between">
-            <a href="./common-issues.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+            <a href="troubleshooting/common-issues.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
                 <span>&larr;</span>
                 <span class="text-sm text-gray-400">Common Issues</span>
             </a>
-            <a href="./reset-defaults.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+            <a href="troubleshooting/reset-defaults.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
                 <span class="text-sm text-gray-400">Reset to Defaults</span>
                 <span>&rarr;</span>
             </a>

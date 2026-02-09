@@ -76,7 +76,7 @@
         <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
             <hr class="border-gray-700 my-6">
 <p class="mb-4 text-gray-300 leading-relaxed">title: Language Packs</p>
-<p class="mb-4 text-gray-300 leading-relaxed">description: Download language support packages</p>
+<p class="mb-4 text-gray-300 leading-relaxed">description: Add language support via file import</p>
 <p class="mb-4 text-gray-300 leading-relaxed">category: Layouts</p>
 <p class="mb-4 text-gray-300 leading-relaxed">difficulty: beginner</p>
 <p class="mb-4 text-gray-300 leading-relaxed">related_spec: ../specs/layouts/language-packs-spec.md</p>
@@ -84,142 +84,65 @@
 
 <h1 class="text-3xl font-bold mb-6 gradient-text-wiki">Language Packs</h1>
 
-<p class="mb-4 text-gray-300 leading-relaxed">Download language packs to add dictionaries, layouts, and predictions for additional languages.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">Add language dictionaries and layouts by importing language pack files.</p>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Quick Summary</h2>
 
 <table class="w-full mb-6 border-collapse"><tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">What</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Description</th></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Purpose</strong></td><td class="px-4 py-2 border-t border-gray-700">Add language support</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Access</strong></td><td class="px-4 py-2 border-t border-gray-700">Settings > Language Packs</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Contents</strong></td><td class="px-4 py-2 border-t border-gray-700">Dictionary, layout, predictions</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Access</strong></td><td class="px-4 py-2 border-t border-gray-700">Settings > Activities > Backup & Restore > Import</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Contents</strong></td><td class="px-4 py-2 border-t border-gray-700">Dictionary, contractions, layouts</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">What's in a Language Pack</h2>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Each language pack includes:</p>
 
 <table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Component</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Dictionary</strong></td><td class="px-4 py-2 border-t border-gray-700">Word list for predictions</td></tr></p>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Dictionary</strong></td><td class="px-4 py-2 border-t border-gray-700">Binary word list for predictions</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Contractions</strong></td><td class="px-4 py-2 border-t border-gray-700">Language-specific contractions (if available)</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Layout</strong></td><td class="px-4 py-2 border-t border-gray-700">Keyboard layout with special keys</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Autocorrect</strong></td><td class="px-4 py-2 border-t border-gray-700">Language-specific corrections</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Predictions</strong></td><td class="px-4 py-2 border-t border-gray-700">Neural model vocabulary</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">How to Download</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Bundled Languages</h2>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 1: Open Language Packs</h3>
+<p class="mb-4 text-gray-300 leading-relaxed">CleverKeys includes English by default. The following dictionaries are bundled in the app:</p>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; English (US) - default</li>
+<li class="ml-4 text-gray-300">&#8226; Additional layouts available via import</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Importing Language Packs</h2>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 1: Obtain the Language Pack</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Language packs are <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">.zip</code> files you can:</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Build yourself using the provided scripts</li>
+<li class="ml-4 text-gray-300">&#8226; Obtain from community resources</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 2: Import via Backup & Restore</h3>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Open <strong class="text-white">Settings</strong></li>
-<li class="ml-4 text-gray-300">2. Navigate to <strong class="text-white">Language Packs</strong></li>
-<li class="ml-4 text-gray-300">3. See list of available packs</li>
+<li class="ml-4 text-gray-300">2. Go to <strong class="text-white">Activities > Backup & Restore</strong></li>
+<li class="ml-4 text-gray-300">3. Select <strong class="text-white">Import</strong></li>
+<li class="ml-4 text-gray-300">4. Choose the language pack <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">.zip</code> file</li>
+<li class="ml-4 text-gray-300">5. The pack is extracted and installed</li>
 </ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 2: Browse Languages</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 3: Configure Language</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed">Languages are organized by region:</p>
+<p class="mb-4 text-gray-300 leading-relaxed">After import:</p>
 
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Region</td><td class="px-4 py-2 border-t border-gray-700">Languages</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">European</strong></td><td class="px-4 py-2 border-t border-gray-700">French, German, Spanish, Italian, Portuguese</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Nordic</strong></td><td class="px-4 py-2 border-t border-gray-700">Swedish, Norwegian, Danish, Finnish</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Slavic</strong></td><td class="px-4 py-2 border-t border-gray-700">Russian, Polish, Czech, Ukrainian</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Asian</strong></td><td class="px-4 py-2 border-t border-gray-700">Japanese, Korean, Chinese (Pinyin)</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Middle Eastern</strong></td><td class="px-4 py-2 border-t border-gray-700">Arabic, Hebrew, Farsi</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Indian</strong></td><td class="px-4 py-2 border-t border-gray-700">Hindi, Tamil, Bengali</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 3: Download Pack</h3>
-
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Tap the language you need</li>
-<li class="ml-4 text-gray-300">2. View pack details (size, version)</li>
-<li class="ml-4 text-gray-300">3. Tap <strong class="text-white">Download</strong></li>
-<li class="ml-4 text-gray-300">4. Wait for download to complete</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. The new layout appears in Layout Manager</li>
+<li class="ml-4 text-gray-300">2. Dictionary is automatically loaded for predictions</li>
+<li class="ml-4 text-gray-300">3. Configure in Settings > Activities > Layout Manager</li>
 </ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 4: Activate Language</h3>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Building Custom Language Packs</h2>
 
-<p class="mb-4 text-gray-300 leading-relaxed">After download:</p>
+<p class="mb-4 text-gray-300 leading-relaxed">For languages not bundled, you can create your own using the provided Python scripts:</p>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Go to <strong class="text-white">Settings > Languages</strong></li>
-<li class="ml-4 text-gray-300">2. Tap <strong class="text-white">Add Language</strong></li>
-<li class="ml-4 text-gray-300">3. Select the downloaded language</li>
-<li class="ml-4 text-gray-300">4. Configure layout association</li>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Requirements</h3>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Python 3.x</li>
+<li class="ml-4 text-gray-300">&#8226; wordfreq package (optional, for frequency data)</li>
 </ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Managing Language Packs</h2>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">View Installed Packs</h3>
-
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Go to <strong class="text-white">Settings > Language Packs</strong></li>
-<li class="ml-4 text-gray-300">2. <strong class="text-white">Downloaded</strong> tab shows installed packs</li>
-<li class="ml-4 text-gray-300">3. See version and size for each</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Update Packs</h3>
-
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Go to <strong class="text-white">Downloaded</strong> tab</li>
-<li class="ml-4 text-gray-300">2. Packs with updates show indicator</li>
-<li class="ml-4 text-gray-300">3. Tap <strong class="text-white">Update</strong> or <strong class="text-white">Update All</strong></li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Remove Packs</h3>
-
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Go to <strong class="text-white">Downloaded</strong> tab</li>
-<li class="ml-4 text-gray-300">2. Swipe left on the pack</li>
-<li class="ml-4 text-gray-300">3. Tap <strong class="text-white">Remove</strong></li>
-<li class="ml-4 text-gray-300">4. Confirm removal</li>
-</ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Pack Sizes</h2>
-
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Pack Type</td><td class="px-4 py-2 border-t border-gray-700">Approximate Size</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Basic</strong></td><td class="px-4 py-2 border-t border-gray-700">1-5 MB</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Standard</strong></td><td class="px-4 py-2 border-t border-gray-700">5-15 MB</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Enhanced</strong></td><td class="px-4 py-2 border-t border-gray-700">15-30 MB</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<p class="mb-4 text-gray-300 leading-relaxed">Enhanced packs include larger dictionaries and better prediction models.</p>
-
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Offline vs Online</h2>
-
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Feature</td><td class="px-4 py-2 border-t border-gray-700">Offline</td><td class="px-4 py-2 border-t border-gray-700">Online</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Basic typing</strong></td><td class="px-4 py-2 border-t border-gray-700">✅</td><td class="px-4 py-2 border-t border-gray-700">✅</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Autocorrect</strong></td><td class="px-4 py-2 border-t border-gray-700">✅</td><td class="px-4 py-2 border-t border-gray-700">✅</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Predictions</strong></td><td class="px-4 py-2 border-t border-gray-700">✅</td><td class="px-4 py-2 border-t border-gray-700">✅</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Updates</strong></td><td class="px-4 py-2 border-t border-gray-700">❌</td><td class="px-4 py-2 border-t border-gray-700">✅</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<p class="mb-4 text-gray-300 leading-relaxed">Once downloaded, all features work offline.</p>
-
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Tips and Tricks</h2>
-
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Download over WiFi</strong>: Packs can be large; use WiFi when possible</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Remove unused</strong>: Free storage by removing languages you don't use</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Check updates</strong>: Updated packs have improved dictionaries</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Enhanced packs</strong>: Worth it for primary languages</li>
-</ul>
-<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!TIP]</blockquote>
-<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">Download language packs before traveling to areas with limited internet.</blockquote>
-
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Settings</h2>
-
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Location</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Available Packs</strong></td><td class="px-4 py-2 border-t border-gray-700">Language Packs</td><td class="px-4 py-2 border-t border-gray-700">Browse all packs</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Downloaded</strong></td><td class="px-4 py-2 border-t border-gray-700">Language Packs</td><td class="px-4 py-2 border-t border-gray-700">Manage installed</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Auto-Update</strong></td><td class="px-4 py-2 border-t border-gray-700">Language Packs</td><td class="px-4 py-2 border-t border-gray-700">Update automatically</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Download on WiFi Only</strong></td><td class="px-4 py-2 border-t border-gray-700">Language Packs</td><td class="px-4 py-2 border-t border-gray-700">Limit data usage</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Common Questions</h2>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: How much storage do language packs use?</h3>
-
-<p class="mb-4 text-gray-300 leading-relaxed">A: Basic packs use 1-5 MB each. Enhanced packs use up to 30 MB. Check available storage before downloading.</p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Can I use a language without downloading its pack?</h3>
-
-<p class="mb-4 text-gray-300 leading-relaxed">A: Basic typing works, but you won't get predictions, autocorrect, or special layouts without the pack.</p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Why is my language not available?</h3>
-
-<p class="mb-4 text-gray-300 leading-relaxed">A: Some languages are still in development. Check back for updates or request support through feedback.</p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Do I need to download English?</h3>
-
-<p class="mb-4 text-gray-300 leading-relaxed">A: No, English is included by default. You can download enhanced English for a larger dictionary.</p>
-
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Creating Custom Language Packs</h2>
-
-<p class="mb-4 text-gray-300 leading-relaxed">For languages not yet available (Swedish, Turkish, etc.), you can create your own:</p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Using Python Scripts</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Using Build Scripts</h3>
 
 <pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto mb-4"><code class="language-bash"># Navigate to scripts directory
 <p class="mb-4 text-gray-300 leading-relaxed">cd scripts/</p>
@@ -245,17 +168,63 @@
 <pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto mb-4"><code class="language-text">langpack-{lang}.zip
 <p class="mb-4 text-gray-300 leading-relaxed">├── {lang}_enhanced.bin    # Binary dictionary</p>
 <p class="mb-4 text-gray-300 leading-relaxed">├── {lang}_enhanced.json   # Human-readable word list</p>
+<p class="mb-4 text-gray-300 leading-relaxed">├── contractions.json      # Language contractions (optional)</p>
 <p class="mb-4 text-gray-300 leading-relaxed">└── manifest.json          # Metadata</code></pre></p>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Supported by wordfreq</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Languages Supported by wordfreq</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed">Languages available through wordfreq include:</p>
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; European: Swedish (sv), Norwegian (nb), Danish (da), Finnish (fi), Polish (pl), Czech (cs)</li>
-<li class="ml-4 text-gray-300">&#8226; Asian: Japanese (ja), Korean (ko), Chinese (zh)</li>
-<li class="ml-4 text-gray-300">&#8226; Other: Russian (ru), Arabic (ar), Hebrew (he), Hindi (hi), Turkish (tr)</li>
+<p class="mb-4 text-gray-300 leading-relaxed">Languages available through the wordfreq Python package:</p>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">European</strong>: Swedish (sv), Norwegian (nb), Danish (da), Finnish (fi), Polish (pl), Czech (cs), German (de), French (fr), Spanish (es), Italian (it), Portuguese (pt)</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Asian</strong>: Japanese (ja), Korean (ko), Chinese (zh)</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Other</strong>: Russian (ru), Arabic (ar), Hebrew (he), Hindi (hi), Turkish (tr)</li>
 </ul>
-<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!TIP]</blockquote>
-<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">See the <a href="https://github.com/tribixbite/CleverKeys#creating-custom-language-packs" class="text-green-400 hover:underline">README</a> for detailed instructions.</blockquote>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Managing Language Packs</h2>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">View Installed</h3>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Go to <strong class="text-white">Settings > Activities > Layout Manager</strong></li>
+<li class="ml-4 text-gray-300">2. Installed layouts show available languages</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Remove a Language Pack</h3>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Delete the language files from the app's internal storage</li>
+<li class="ml-4 text-gray-300">2. Or use Backup & Restore to reset to defaults</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Offline Operation</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Once imported, all language features work offline:</p>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Feature</td><td class="px-4 py-2 border-t border-gray-700">Works Offline</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Typing</strong></td><td class="px-4 py-2 border-t border-gray-700">✅</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Predictions</strong></td><td class="px-4 py-2 border-t border-gray-700">✅</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Autocorrect</strong></td><td class="px-4 py-2 border-t border-gray-700">✅</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Contractions</strong></td><td class="px-4 py-2 border-t border-gray-700">✅</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Tips and Tricks</h2>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Start with English</strong>: English is fully bundled and ready to use</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Build for your language</strong>: Use the scripts to create packs for unsupported languages</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Share packs</strong>: Language pack files can be shared with other users</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Backup first</strong>: Export your settings before major imports</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Common Questions</h2>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: How do I add a new language?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Build a language pack using the provided Python scripts, then import it via Settings > Activities > Backup & Restore.</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Can I use a language without importing a pack?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Basic typing works with any layout, but predictions and autocorrect require a dictionary.</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Why is my language not available?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Build it yourself using the <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">build_langpack.py</code> script with the wordfreq package.</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Do I need to download English?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: No, English is included by default.</p>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Related Features</h2>
 
@@ -271,11 +240,11 @@
         
         <!-- Prev/Next Navigation -->
         <div class="max-w-4xl mt-8 flex justify-between">
-            <a href="./multi-language.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+            <a href="layouts/multi-language.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
                 <span>&larr;</span>
                 <span class="text-sm text-gray-400">Multi-Language Typing</span>
             </a>
-            <a href="./custom-layouts.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+            <a href="layouts/custom-layouts.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
                 <span class="text-sm text-gray-400">Custom Layouts</span>
                 <span>&rarr;</span>
             </a>

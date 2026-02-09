@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ - CleverKeys User Guide</title>
+    <meta name="description" content="Frequently asked questions">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'ck-green': '#10b981',
+                        'ck-green-dark': '#059669',
+                        'ck-green-light': '#34d399',
+                        'ck-dark': '#0f0f1a',
+                        'ck-surface': '#1a1a2e',
+                        'ck-card': '#242438',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-text-wiki {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 50%, #10b981 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="bg-ck-dark text-gray-100 min-h-screen">
+    <!-- Nav -->
+    <nav class="sticky top-0 bg-ck-dark/95 backdrop-blur border-b border-gray-800 z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="../" class="flex items-center gap-3">
+                <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-8 h-8 rounded-lg">
+                <span class="font-bold">CleverKeys</span>
+            </a>
+            <div class="flex gap-4">
+                <a href="./" class="text-green-400 font-medium">User Guide</a>
+                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Tech Specs</a>
+                <a href="../" class="text-gray-400 hover:text-white transition-colors">Home</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Breadcrumb -->
+    <div class="container mx-auto px-6 py-4">
+        <div class="flex items-center gap-2 text-sm text-gray-500">
+            <a href="../" class="hover:text-ck-green">Home</a>
+            <span>/</span>
+            <a href="./" class="hover:text-ck-green">User Guide</a>
+            <span>/</span>
+            <a href="./?category=Getting%20Started" class="hover:text-ck-green">Getting Started</a>
+            <span>/</span>
+            <span class="text-gray-300">FAQ</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="container mx-auto px-6 pb-6">
+        <div class="flex items-center gap-3 mb-4">
+            <span class="px-3 py-1 text-sm rounded-full" style="background: #10b98120; color: #10b981">Getting Started</span>
+            <span class="px-3 py-1 text-sm rounded-full bg-ck-card text-gray-400">P0</span>
+        </div>
+        <h1 class="text-4xl font-bold gradient-text-wiki mb-2">FAQ</h1>
+        <p class="text-xl text-gray-400">Frequently asked questions</p>
+    </header>
+
+    <!-- Content -->
+    <main class="container mx-auto px-6 pb-12">
+        <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
+            <h1 class="text-3xl font-bold mb-6 gradient-text-wiki">CleverKeys FAQ</h1>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Frequently asked questions about using CleverKeys keyboard.</p>
+
+<hr class="border-gray-700 my-6">
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Typing Numbers & Symbols (Subkeys / Short Swipes)</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Q: How do I type numbers and symbols quickly?</strong></p>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Use <strong class="text-white">short swipes</strong> (subkeys) on letter keys. Each key has up to 8 subkeys mapped to the cardinal directions N, NE, E, SE, S, SW, W, NW:</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Swipe NORTHEAST</strong> on <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">Q</code> for <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">1</code> (hint: start in the SW corner)</li>
+<li class="ml-4 text-gray-300">&#8226; Each direction on each key can trigger a different character or action</li>
+<li class="ml-4 text-gray-300">&#8226; Directions are determined by the angle of your swipe</li>
+</ul>
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Q: How do I customize what short swipes do?</strong></p>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Go to <strong class="text-white">Settings → Activities → Per-Key Customization</strong> to assign custom actions (characters, symbols, or commands) to each of the 8 directions on any key.</p>
+
+<hr class="border-gray-700 my-6">
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Cursor Control & Navigation</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Q: How do I move the cursor without tapping the screen?</strong></p>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: <strong class="text-white">Swipe on the spacebar</strong> to move the cursor:</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Cursor movement is <strong class="text-white">proportional to your swipe speed and distance</strong></li>
+<li class="ml-4 text-gray-300">&#8226; Faster/longer swipes move further; slow precise swipes give fine control</li>
+<li class="ml-4 text-gray-300">&#8226; Works in both directions</li>
+</ul>
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Q: What is TrackPoint Mode?</strong></p>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: TrackPoint mode provides laptop-style continuous cursor navigation:</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Long-press the nav key</strong> (between spacebar and enter) to enter trackpoint mode</li>
+<li class="ml-4 text-gray-300">&#8226; Move your finger like a joystick to control cursor direction</li>
+<li class="ml-4 text-gray-300">&#8226; Release to exit trackpoint mode</li>
+</ul>
+<hr class="border-gray-700 my-6">
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Text Selection & Deletion</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Q: How do I select and delete text?</strong></p>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: For <strong class="text-white">Selection-Delete mode</strong>:</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Short swipe on the backspace key</strong> to initiate</li>
+<li class="ml-4 text-gray-300">2. <strong class="text-white">Keep your finger held down</strong> after the swipe</li>
+<li class="ml-4 text-gray-300">3. <strong class="text-white">Move your finger like a joystick</strong> to select text (left/right for characters, up/down for lines)</li>
+<li class="ml-4 text-gray-300">4. Release to delete the selected text</li>
+</ul>
+<p class="mb-4 text-gray-300 leading-relaxed">Swipe left on backspace deletes the word before cursor.</p>
+
+<hr class="border-gray-700 my-6">
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Language & Input Options</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Q: How do I quickly switch between languages?</strong></p>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Use the <strong class="text-white">primary/secondary language toggle subkeys</strong>:</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Set your languages in <strong class="text-white">Settings → Multi-Language</strong> (Primary and Secondary)</li>
+<li class="ml-4 text-gray-300">2. The toggle subkeys cycle between them</li>
+<li class="ml-4 text-gray-300">3. Both languages contribute to swipe predictions when Multi-Language mode is enabled</li>
+</ul>
+<hr class="border-gray-700 my-6">
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Emoji & Clipboard</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Q: How do I access emojis?</strong></p>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: <strong class="text-white">Swipe SOUTHWEST on the Fn key</strong> to open the emoji picker:</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Search will auto-populate with nearby text</li>
+<li class="ml-4 text-gray-300">&#8226; Categories tab with all emoji groups</li>
+<li class="ml-4 text-gray-300">&#8226; Recents for quick access to frequently used</li>
+<li class="ml-4 text-gray-300">&#8226; Search by keyword or emoji name</li>
+<li class="ml-4 text-gray-300">&#8226; 119 text emoticons (kaomoji) also included</li>
+</ul>
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Q: How do I use the clipboard?</strong></p>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: <strong class="text-white">Swipe SOUTHWEST on the Ctrl key</strong> to open clipboard history:</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">History tab</strong>: Recent clipboard items</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Pinned tab</strong>: Items you've saved for quick access</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Todos tab</strong>: Items marked as todos</li>
+<li class="ml-4 text-gray-300">&#8226; Tap an item's content to expand it</li>
+<li class="ml-4 text-gray-300">&#8226; Use the icon buttons to paste, move to pinned, or copy as todo</li>
+<li class="ml-4 text-gray-300">&#8226; Re-copying text already in history won't duplicate or reorder it (tip: use search instead)</li>
+<li class="ml-4 text-gray-300">&#8226; Password manager and 'sensitive' flagged clippings are excluded by default</li>
+</ul>
+<hr class="border-gray-700 my-6">
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Swipe Typing (Glide Typing)</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Q: How does swipe typing work?</strong></p>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Touch the first letter of your word, slide your finger through each letter without lifting, then release on the last letter. Faster may yield better results.</p>
+
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Tip:</strong> Increase 'Length Penalty (Alpha)' for English (~1.5), decrease for other languages (and increase Vocab Frequency Weight).</p>
+
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Q: Can I swipe other languages?</strong></p>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Yes, but this currently requires using the qwerty latin layout and manually tuning several settings to achieve useable output - see FAQ entry above and Prefix Boost settings (these are very sensitive; try small changes).</p>
+
+<hr class="border-gray-700 my-6">
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Gestures Reference</h2>
+
+<table class="w-full mb-6 border-collapse"><tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">Gesture</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Action</th></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Tap</strong></td><td class="px-4 py-2 border-t border-gray-700">Type the key's main character</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Short swipe (8 directions)</strong></td><td class="px-4 py-2 border-t border-gray-700">Trigger subkey for that direction</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Swipe on spacebar</strong></td><td class="px-4 py-2 border-t border-gray-700">Move cursor (proportional to swipe speed)</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Long-press nav key</strong></td><td class="px-4 py-2 border-t border-gray-700">Enter TrackPoint mode</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Short swipe + hold on backspace</strong></td><td class="px-4 py-2 border-t border-gray-700">Selection-Delete mode</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Long swipe across keys</strong></td><td class="px-4 py-2 border-t border-gray-700">Swipe typing (glide input)</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">SW on Fn</strong></td><td class="px-4 py-2 border-t border-gray-700">Open emoji picker</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">SW on Ctrl</strong></td><td class="px-4 py-2 border-t border-gray-700">Open clipboard</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<hr class="border-gray-700 my-6">
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Troubleshooting</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Q: Swipe typing isn't working.</strong></p>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Check these settings:</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Ensure swipe typing is enabled in input settings</li>
+<li class="ml-4 text-gray-300">2. ONNX model should load automatically on first use</li>
+<li class="ml-4 text-gray-300">3. Try adjusting gesture distance thresholds in Short Swipe Calibration</li>
+</ul>
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Q: The keyboard is too tall/small.</strong></p>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Adjust in <strong class="text-white">Settings → Appearance</strong>:</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Keyboard Height</strong> percentage slider</li>
+<li class="ml-4 text-gray-300">&#8226; Separate slider for landscape mode</li>
+</ul>
+<hr class="border-gray-700 my-6">
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Privacy & Security</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Q: Does CleverKeys send my typing data anywhere?</strong></p>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: <strong class="text-white">No.</strong> CleverKeys is fully offline:</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; All prediction runs on-device via ONNX Runtime</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">No INTERNET permission</strong> in the manifest</li>
+<li class="ml-4 text-gray-300">&#8226; Your personal dictionary stays on your device</li>
+<li class="ml-4 text-gray-300">&#8226; Open source: verify the code on GitHub</li>
+</ul>
+<hr class="border-gray-700 my-6">
+
+<p class="mb-4 text-gray-300 leading-relaxed">For more detailed documentation, visit the other wiki pages.</p>
+
+        </div>
+        
+        <!-- Prev/Next Navigation -->
+        <div class="max-w-4xl mt-8 flex justify-between">
+            <a href="getting-started/quick-settings.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+                <span>&larr;</span>
+                <span class="text-sm text-gray-400">Quick Settings Tile</span>
+            </a>
+            <a href="typing/swipe-typing.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+                <span class="text-sm text-gray-400">Swipe Typing</span>
+                <span>&rarr;</span>
+            </a>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-gray-800">
+        <p>CleverKeys User Guide - Making typing smarter</p>
+    </footer>
+</body>
+</html>

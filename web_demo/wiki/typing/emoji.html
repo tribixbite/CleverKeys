@@ -76,43 +76,38 @@
         <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
             <hr class="border-gray-700 my-6">
 <p class="mb-4 text-gray-300 leading-relaxed">title: Emoji</p>
-<p class="mb-4 text-gray-300 leading-relaxed">description: Access emoji keyboard and shortcuts</p>
+<p class="mb-4 text-gray-300 leading-relaxed">description: Access emoji keyboard and emoticons</p>
 <p class="mb-4 text-gray-300 leading-relaxed">category: Typing</p>
 <p class="mb-4 text-gray-300 leading-relaxed">difficulty: beginner</p>
-<p class="mb-4 text-gray-300 leading-relaxed">related_spec: ../specs/typing/emoji-spec.md</p>
 <hr class="border-gray-700 my-6">
 
 <h1 class="text-3xl font-bold mb-6 gradient-text-wiki">Emoji</h1>
 
-<p class="mb-4 text-gray-300 leading-relaxed">CleverKeys includes a full emoji keyboard with categories, search, and recent emoji history.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">CleverKeys includes a full emoji keyboard with categories, search, recent emoji history, and 119 text emoticons.</p>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Quick Summary</h2>
 
 <table class="w-full mb-6 border-collapse"><tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">What</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Description</th></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Purpose</strong></td><td class="px-4 py-2 border-t border-gray-700">Insert emoji and emoticons</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Access</strong></td><td class="px-4 py-2 border-t border-gray-700">Emoji key or long-press Enter</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Features</strong></td><td class="px-4 py-2 border-t border-gray-700">Categories, recents, skin tones</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Access</strong></td><td class="px-4 py-2 border-t border-gray-700">Swipe SW on Fn key</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Features</strong></td><td class="px-4 py-2 border-t border-gray-700">Categories, recents, search, emoticons</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Accessing Emoji</h2>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Method 1: Emoji Key</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Primary Method: Fn Key Swipe</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed">If your layout has an emoji key (smiley face icon):</p>
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Tap the <strong class="text-white">emoji key</strong> on the bottom row</li>
-<li class="ml-4 text-gray-300">2. Browse or search emoji</li>
-<li class="ml-4 text-gray-300">3. Tap to insert</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Method 2: Long-Press Enter</h3>
-
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Long-press</strong> the Enter key</li>
-<li class="ml-4 text-gray-300">2. Select the emoji option from popup</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Find the <strong class="text-white">Fn</strong> key on the bottom row (between Ctrl and spacebar)</li>
+<li class="ml-4 text-gray-300">2. <strong class="text-white">Swipe SOUTHWEST</strong> (down-left) to trigger <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">switch_emoji</code></li>
 <li class="ml-4 text-gray-300">3. Emoji keyboard opens</li>
+<li class="ml-4 text-gray-300">4. Tap any emoji to insert</li>
 </ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Method 3: Long-Press Comma</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Alternative: Per-Key Customization</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed">On some layouts:</p>
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Long-press</strong> the comma key</li>
-<li class="ml-4 text-gray-300">2. Select emoji from the popup menu</li>
+<p class="mb-4 text-gray-300 leading-relaxed">You can assign emoji access to any key's short swipe:</p>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Go to <strong class="text-white">Settings > Activities > Per-Key Customization</strong></li>
+<li class="ml-4 text-gray-300">2. Select any key</li>
+<li class="ml-4 text-gray-300">3. Assign <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">switch_emoji</code> to a swipe direction</li>
 </ul>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Emoji Keyboard Layout</h2>
 
@@ -129,6 +124,7 @@
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Objects</strong></td><td class="px-4 py-2 border-t border-gray-700">Lightbulb</td><td class="px-4 py-2 border-t border-gray-700">Objects and tools</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Symbols</strong></td><td class="px-4 py-2 border-t border-gray-700">Heart</td><td class="px-4 py-2 border-t border-gray-700">Symbols and signs</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Flags</strong></td><td class="px-4 py-2 border-t border-gray-700">Flag</td><td class="px-4 py-2 border-t border-gray-700">Country flags</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Emoticons</strong></td><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">:)</code></td><td class="px-4 py-2 border-t border-gray-700">Text emoticons and kaomoji</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Using Emoji</h2>
 
@@ -164,38 +160,48 @@
 
 <p class="mb-4 text-gray-300 leading-relaxed">Your most recently used emoji appear in the first category (clock icon) for quick access.</p>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Skin Tone Variations</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Long-Press Emoji Name</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed">For emoji with skin tone options:</p>
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Long-press</strong> the emoji</li>
-<li class="ml-4 text-gray-300">2. Select your preferred skin tone</li>
-<li class="ml-4 text-gray-300">3. This becomes the default for that emoji</li>
+<p class="mb-4 text-gray-300 leading-relaxed">Long-press any emoji to see its name in a tooltip:</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Emoji</strong>: Shows name like "grinning face", "red heart"</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Flags</strong>: Shows country name like "japan", "united states"</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Emoticons</strong>: Shows description like "shrug", "lenny", "table flip"</li>
 </ul>
+<p class="mb-4 text-gray-300 leading-relaxed">The tooltip appears above the pressed emoji and auto-dismisses after 2 seconds.</p>
+
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Tips and Tricks</h2>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Context search</strong>: Type the word, then open emoji - instant results</li>
 <li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Recents</strong>: Check recents first for frequently used emoji</li>
 <li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Scroll</strong>: Swipe left/right to see more in each category</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Return to letters</strong>: Tap ABC or the keyboard icon</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Return to letters</strong>: Tap the close button or ABC key</li>
 <li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Multiple emoji</strong>: Stay on emoji keyboard to insert several</li>
 </ul>
 <blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!TIP]</blockquote>
 <blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">The Recent category learns your habits - frequently used emoji rise to the top.</blockquote>
 
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Emoticons vs Emoji</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Emoticons Category</h2>
 
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Type</td><td class="px-4 py-2 border-t border-gray-700">Example</td><td class="px-4 py-2 border-t border-gray-700">How to Access</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Emoji</strong></td><td class="px-4 py-2 border-t border-gray-700">😀 🎉 ❤️</td><td class="px-4 py-2 border-t border-gray-700">Emoji keyboard</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Emoticons</strong></td><td class="px-4 py-2 border-t border-gray-700">:) :D ;)</td><td class="px-4 py-2 border-t border-gray-700">Type characters directly</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed">CleverKeys includes 119 text emoticons in the last category tab:</p>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Type</td><td class="px-4 py-2 border-t border-gray-700">Examples</td><td class="px-4 py-2 border-t border-gray-700">Search Keywords</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Basic Smileys</strong></td><td class="px-4 py-2 border-t border-gray-700">:) :D ;) :P</td><td class="px-4 py-2 border-t border-gray-700">smile, grin, wink, tongue</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Kaomoji</strong></td><td class="px-4 py-2 border-t border-gray-700">¯\_(ツ)_/¯ (╯°□°)╯︵┻━┻</td><td class="px-4 py-2 border-t border-gray-700">shrug, tableflip, lenny</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Faces</strong></td><td class="px-4 py-2 border-t border-gray-700">ಠ_ಠ ( ͡° ͜ʖ ͡°) ʕ•ᴥ•ʔ</td><td class="px-4 py-2 border-t border-gray-700">disapproval, lenny, bear</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Expressions</strong></td><td class="px-4 py-2 border-t border-gray-700">(◕‿◕) (ᵔᴥᵔ) (⌐■_■)</td><td class="px-4 py-2 border-t border-gray-700">happy, cute, sunglasses</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<p class="mb-4 text-gray-300 leading-relaxed">Some apps auto-convert emoticons to emoji. CleverKeys does not do this by default.</p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Searching Emoticons</h3>
 
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Settings</h2>
+<p class="mb-4 text-gray-300 leading-relaxed">Type keywords while the emoji keyboard is open:</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">shrug</code> → ¯\_(ツ)_/¯</li>
+<li class="ml-4 text-gray-300">&#8226; <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">lenny</code> → ( ͡° ͜ʖ ͡°)</li>
+<li class="ml-4 text-gray-300">&#8226; <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">tableflip</code> → (╯°□°)╯︵┻━┻</li>
+<li class="ml-4 text-gray-300">&#8226; <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">bear</code> → ʕ•ᴥ•ʔ</li>
+<li class="ml-4 text-gray-300">&#8226; <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">kaomoji</code> → shows all kaomoji</li>
+</ul>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!NOTE]</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">Emoticons are text characters, not emoji. They work in all apps and render the same everywhere.</blockquote>
 
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Location</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Show Emoji Key</strong></td><td class="px-4 py-2 border-t border-gray-700">Layout</td><td class="px-4 py-2 border-t border-gray-700">Toggle emoji key visibility</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Emoji Style</strong></td><td class="px-4 py-2 border-t border-gray-700">Appearance</td><td class="px-4 py-2 border-t border-gray-700">System or custom emoji</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Common Questions</h2>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Why do emoji look different in some apps?</h3>
@@ -210,22 +216,18 @@
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Related Features</h2>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <a href="special-characters.html" class="text-green-400 hover:underline">Special Characters</a> - Symbols and accents</li>
-<li class="ml-4 text-gray-300">&#8226; <a href="../getting-started/basic-typing.html" class="text-green-400 hover:underline">Basic Typing</a> - Keyboard fundamentals</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="../clipboard/clipboard-history.html" class="text-green-400 hover:underline">Clipboard History</a> - Access clipboard via Ctrl SW</li>
 </ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Technical Details</h2>
-
-<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../specs/typing/emoji-spec.html" class="text-green-400 hover:underline">Emoji Technical Specification</a>.</p>
-
         </div>
         
         <!-- Prev/Next Navigation -->
         <div class="max-w-4xl mt-8 flex justify-between">
-            <a href="./special-characters.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+            <a href="typing/special-characters.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
                 <span>&larr;</span>
                 <span class="text-sm text-gray-400">Special Characters</span>
             </a>
-            <a href="../gestures/short-swipes.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
-                <span class="text-sm text-gray-400">Short Swipes</span>
+            <a href="typing/smart-punctuation.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+                <span class="text-sm text-gray-400">Smart Punctuation</span>
                 <span>&rarr;</span>
             </a>
         </div>

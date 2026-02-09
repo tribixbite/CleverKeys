@@ -79,37 +79,77 @@
 <p class="mb-4 text-gray-300 leading-relaxed">description: Configure typing behavior and text processing</p>
 <p class="mb-4 text-gray-300 leading-relaxed">category: Settings</p>
 <p class="mb-4 text-gray-300 leading-relaxed">difficulty: intermediate</p>
-<p class="mb-4 text-gray-300 leading-relaxed">related_spec: ../specs/settings/input-behavior-spec.md</p>
 <hr class="border-gray-700 my-6">
 
 <h1 class="text-3xl font-bold mb-6 gradient-text-wiki">Input Behavior Settings</h1>
 
-<p class="mb-4 text-gray-300 leading-relaxed">Configure how CleverKeys processes your input, including auto-capitalization, punctuation, and special behaviors.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">Configure how CleverKeys processes your input, including capitalization, punctuation, and gesture behavior.</p>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Quick Summary</h2>
 
 <table class="w-full mb-6 border-collapse"><tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">What</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Description</th></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Purpose</strong></td><td class="px-4 py-2 border-t border-gray-700">Control typing behavior</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Access</strong></td><td class="px-4 py-2 border-t border-gray-700">Settings > Input</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Options</strong></td><td class="px-4 py-2 border-t border-gray-700">Auto-cap, double-space, smart punct</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Access</strong></td><td class="px-4 py-2 border-t border-gray-700">Settings > Input (and related sections)</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Options</strong></td><td class="px-4 py-2 border-t border-gray-700">Auto-cap, double-space, smart punct, gestures</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Auto-Capitalization</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Word Prediction Section</h2>
 
-<p class="mb-4 text-gray-300 leading-relaxed">Automatically capitalize letters:</p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Auto-Space After Suggestion</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Automatically add a space after tapping a suggestion:</p>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Result</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Enabled</strong></td><td class="px-4 py-2 border-t border-gray-700">"hello" → "hello " (space added)</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Disabled</strong></td><td class="px-4 py-2 border-t border-gray-700">"hello" → "hello" (no space)</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Capitalize I Words</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Automatically capitalize "I" and its contractions:</p>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Words Affected</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">I, I'm, I'll, I'd, I've</td></tr></p>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Input Section</h2>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Autocapitalization</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Automatically capitalize letters after sentence-ending punctuation:</p>
 
 <table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Behavior</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Off</strong></td><td class="px-4 py-2 border-t border-gray-700">Never auto-capitalize</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Sentences</strong></td><td class="px-4 py-2 border-t border-gray-700">Capitalize after . ! ?</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Words</strong></td><td class="px-4 py-2 border-t border-gray-700">Capitalize each word (for names)</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Characters</strong></td><td class="px-4 py-2 border-t border-gray-700">All uppercase</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Enabled</strong></td><td class="px-4 py-2 border-t border-gray-700">Capitalize after . ! ?</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Disabled</strong></td><td class="px-4 py-2 border-t border-gray-700">Never auto-capitalize</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">How Auto-Cap Works</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Smart Punctuation</h3>
 
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto mb-4"><code class="language-text">Sentence mode:
-<p class="mb-4 text-gray-300 leading-relaxed">"hello world. " → next letter capitalized</p>
-<p class="mb-4 text-gray-300 leading-relaxed">"what?! " → next letter capitalized</code></pre></p>
+<p class="mb-4 text-gray-300 leading-relaxed">Automatic punctuation formatting:</p>
 
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Double-Space Period</h2>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Feature</td><td class="px-4 py-2 border-t border-gray-700">Example</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Auto-space after punct</strong></td><td class="px-4 py-2 border-t border-gray-700">"hello," → "hello, "</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Remove space before punct</strong></td><td class="px-4 py-2 border-t border-gray-700">"hello ," → "hello,"</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Long Press Timeout</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Time before long press activates:</p>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Duration</td><td class="px-4 py-2 border-t border-gray-700">Use Case</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Shorter</strong></td><td class="px-4 py-2 border-t border-gray-700">Fast access to long-press actions</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Longer</strong></td><td class="px-4 py-2 border-t border-gray-700">Avoid accidental activation</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Long Press Interval</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Repeat rate when holding a key:</p>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Effect</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Shorter</strong></td><td class="px-4 py-2 border-t border-gray-700">Faster key repeating</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Longer</strong></td><td class="px-4 py-2 border-t border-gray-700">Slower key repeating</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Double Tap Shift for Caps Lock</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Double-tap shift key to enable caps lock mode.</p>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Gesture Tuning Section</h2>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Double-Space to Period</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Insert period and space when tapping space twice:</p>
 
@@ -117,145 +157,51 @@
 <p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Enabled</strong></td><td class="px-4 py-2 border-t border-gray-700">"hello  " → "hello. "</td></tr></p>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Disabled</strong></td><td class="px-4 py-2 border-t border-gray-700">"hello  " → "hello  "</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Behavior Details</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Double-Space Timing</h3>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Works after letters, not punctuation</li>
-<li class="ml-4 text-gray-300">&#8226; Adds period and capitalizes next word</li>
-<li class="ml-4 text-gray-300">&#8226; Can be disabled per-app</li>
-</ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Smart Punctuation</h2>
+<p class="mb-4 text-gray-300 leading-relaxed">Adjust the timing window for double-space detection.</p>
 
-<p class="mb-4 text-gray-300 leading-relaxed">Automatic punctuation formatting:</p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Swipe Distance Threshold</h3>
 
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Feature</td><td class="px-4 py-2 border-t border-gray-700">Example</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Auto-space after punct</strong></td><td class="px-4 py-2 border-t border-gray-700">"hello," → "hello, "</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Remove space before punct</strong></td><td class="px-4 py-2 border-t border-gray-700">"hello ," → "hello,"</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Smart quotes</strong></td><td class="px-4 py-2 border-t border-gray-700">"test" → "test"</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Delete Behavior</h2>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Backspace Mode</h3>
-
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Option</td><td class="px-4 py-2 border-t border-gray-700">Behavior</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Character</strong></td><td class="px-4 py-2 border-t border-gray-700">Delete one character</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Selection</strong></td><td class="px-4 py-2 border-t border-gray-700">Delete selection first</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Delete Word</h3>
-
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Effect</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Whole Word</strong></td><td class="px-4 py-2 border-t border-gray-700">Delete entire word</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">To Word Boundary</strong></td><td class="px-4 py-2 border-t border-gray-700">Delete to space/punctuation</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Swipe Sensitivity</h2>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Swipe Threshold</h3>
-
-<p class="mb-4 text-gray-300 leading-relaxed">How far to swipe before registering:</p>
+<p class="mb-4 text-gray-300 leading-relaxed">How far to swipe before recognizing a short swipe gesture:</p>
 
 <table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Level</td><td class="px-4 py-2 border-t border-gray-700">Use Case</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Low</strong></td><td class="px-4 py-2 border-t border-gray-700">Very sensitive, easy activation</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Normal</strong></td><td class="px-4 py-2 border-t border-gray-700">Balanced</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">High</strong></td><td class="px-4 py-2 border-t border-gray-700">Requires intentional swipe</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Swipe Speed</h3>
-
-<p class="mb-4 text-gray-300 leading-relaxed">Minimum swipe velocity:</p>
-
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Effect</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Slow</strong></td><td class="px-4 py-2 border-t border-gray-700">Accept slow swipes</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Normal</strong></td><td class="px-4 py-2 border-t border-gray-700">Standard speed requirement</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Fast</strong></td><td class="px-4 py-2 border-t border-gray-700">Require quick swipes</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Gesture Tuning</h2>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Long Press Delay</h3>
-
-<p class="mb-4 text-gray-300 leading-relaxed">Time before long press activates:</p>
-
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Duration</td><td class="px-4 py-2 border-t border-gray-700">Use Case</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Short (200ms)</strong></td><td class="px-4 py-2 border-t border-gray-700">Fast access</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Normal (600ms)</strong></td><td class="px-4 py-2 border-t border-gray-700">Balanced</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Long (600ms)</strong></td><td class="px-4 py-2 border-t border-gray-700">Avoid accidental activation</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Short Swipe Distance</h3>
-
-<p class="mb-4 text-gray-300 leading-relaxed">How far to swipe for subkey:</p>
-
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Distance</td><td class="px-4 py-2 border-t border-gray-700">Effect</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Short</strong></td><td class="px-4 py-2 border-t border-gray-700">Easy activation, may be accidental</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Normal</strong></td><td class="px-4 py-2 border-t border-gray-700">Balanced</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Long</strong></td><td class="px-4 py-2 border-t border-gray-700">Requires intentional swipe</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Cursor Control</h2>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Cursor Movement Speed</h3>
-
-<p class="mb-4 text-gray-300 leading-relaxed">In trackpoint/cursor mode:</p>
-
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Speed</td><td class="px-4 py-2 border-t border-gray-700">Behavior</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Slow</strong></td><td class="px-4 py-2 border-t border-gray-700">Precise movement</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Normal</strong></td><td class="px-4 py-2 border-t border-gray-700">Balanced</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Fast</strong></td><td class="px-4 py-2 border-t border-gray-700">Quick navigation</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Snap to Words</h3>
-
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Effect</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Enabled</strong></td><td class="px-4 py-2 border-t border-gray-700">Cursor snaps to word boundaries</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Disabled</strong></td><td class="px-4 py-2 border-t border-gray-700">Free movement</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Lower</strong></td><td class="px-4 py-2 border-t border-gray-700">More sensitive, easier activation</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Higher</strong></td><td class="px-4 py-2 border-t border-gray-700">Requires more intentional swipes</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Tips and Tricks</h2>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Fast typing</strong>: Lower thresholds and delays</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Precision</strong>: Higher thresholds, longer delays</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">One-handed</strong>: Increase sensitivity</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Error-prone</strong>: Raise thresholds</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Fast typing</strong>: Lower thresholds and shorter timeouts</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Precision</strong>: Higher thresholds, longer timeouts</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Error-prone</strong>: Raise swipe distance threshold</li>
 </ul>
 <blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!TIP]</blockquote>
-<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">If you're getting accidental swipes, increase the swipe threshold.</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">If you're getting accidental short swipes, increase the swipe distance threshold.</blockquote>
 
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">All Input Settings</h2>
-
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Location</td><td class="px-4 py-2 border-t border-gray-700">Default</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Auto-Capitalize</strong></td><td class="px-4 py-2 border-t border-gray-700">Input</td><td class="px-4 py-2 border-t border-gray-700">Sentences</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Double-Space Period</strong></td><td class="px-4 py-2 border-t border-gray-700">Input</td><td class="px-4 py-2 border-t border-gray-700">On</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Smart Punctuation</strong></td><td class="px-4 py-2 border-t border-gray-700">Input</td><td class="px-4 py-2 border-t border-gray-700">On</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Long Press Delay</strong></td><td class="px-4 py-2 border-t border-gray-700">Input</td><td class="px-4 py-2 border-t border-gray-700">600ms</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Swipe Threshold</strong></td><td class="px-4 py-2 border-t border-gray-700">Input</td><td class="px-4 py-2 border-t border-gray-700">Normal</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Short Swipe Distance</strong></td><td class="px-4 py-2 border-t border-gray-700">Gestures</td><td class="px-4 py-2 border-t border-gray-700">Normal</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Common Questions</h2>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Why isn't auto-capitalize working?</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Why isn't autocapitalization working?</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed">A: Check if it's enabled in Settings > Input. Some apps override keyboard behavior.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">A: Check if it's enabled in Settings > Input section. Some apps may override keyboard behavior.</p>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: How do I disable double-space period?</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed">A: Settings > Input > Double-Space Period > Off.</p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Can I have different settings per app?</h3>
-
-<p class="mb-4 text-gray-300 leading-relaxed">A: Some settings (like auto-cap) respect app hints. Full per-app settings may be added in future.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">A: Settings > Gesture Tuning > Double-Space to Period > Off.</p>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Related Features</h2>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <a href="../typing/autocorrect.html" class="text-green-400 hover:underline">Autocorrect</a> - Text correction</li>
-<li class="ml-4 text-gray-300">&#8226; <a href="../gestures/short-swipes.html" class="text-green-400 hover:underline">Gestures</a> - Gesture configuration</li>
-<li class="ml-4 text-gray-300">&#8226; <a href="accessibility.html" class="text-green-400 hover:underline">Accessibility</a> - Touch accommodation</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <a href="../gestures/short-swipes.html" class="text-green-400 hover:underline">Short Swipes</a> - Gesture configuration</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="accessibility.html" class="text-green-400 hover:underline">Accessibility</a> - Haptic feedback settings</li>
 </ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Technical Details</h2>
-
-<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../specs/settings/input-behavior-spec.html" class="text-green-400 hover:underline">Input Behavior Technical Specification</a>.</p>
-
         </div>
         
         <!-- Prev/Next Navigation -->
         <div class="max-w-4xl mt-8 flex justify-between">
-            <a href="./appearance.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+            <a href="settings/appearance.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
                 <span>&larr;</span>
                 <span class="text-sm text-gray-400">Appearance</span>
             </a>
-            <a href="./haptics.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+            <a href="settings/haptics.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
                 <span class="text-sm text-gray-400">Haptics & Sound</span>
                 <span>&rarr;</span>
             </a>

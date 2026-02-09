@@ -76,157 +76,100 @@
         <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
             <hr class="border-gray-700 my-6">
 <p class="mb-4 text-gray-300 leading-relaxed">title: Cursor Navigation</p>
-<p class="mb-4 text-gray-300 leading-relaxed">description: Move cursor with spacebar or arrow keys</p>
+<p class="mb-4 text-gray-300 leading-relaxed">description: Move cursor with spacebar swipe or TrackPoint mode</p>
 <p class="mb-4 text-gray-300 leading-relaxed">category: Gestures</p>
 <p class="mb-4 text-gray-300 leading-relaxed">difficulty: intermediate</p>
-<p class="mb-4 text-gray-300 leading-relaxed">related_spec: ../specs/gestures/cursor-navigation-spec.md</p>
 <hr class="border-gray-700 my-6">
 
 <h1 class="text-3xl font-bold mb-6 gradient-text-wiki">Cursor Navigation</h1>
 
-<p class="mb-4 text-gray-300 leading-relaxed">Move the text cursor precisely using the spacebar slider or dedicated arrow keys without lifting your fingers from the keyboard.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">Move the text cursor precisely using the spacebar slider or TrackPoint mode without lifting your fingers from the keyboard.</p>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Quick Summary</h2>
 
 <table class="w-full mb-6 border-collapse"><tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">What</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Description</th></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Purpose</strong></td><td class="px-4 py-2 border-t border-gray-700">Position cursor in text without tapping screen</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Methods</strong></td><td class="px-4 py-2 border-t border-gray-700">Spacebar slider, arrow keys, TrackPoint mode</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Precision</strong></td><td class="px-4 py-2 border-t border-gray-700">Character-by-character or continuous</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Methods</strong></td><td class="px-4 py-2 border-t border-gray-700">Spacebar swipe, TrackPoint mode</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Precision</strong></td><td class="px-4 py-2 border-t border-gray-700">Proportional to swipe speed/distance</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Method 1: Spacebar Slider</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Method 1: Spacebar Swipe</h2>
 
 <p class="mb-4 text-gray-300 leading-relaxed">The most intuitive way to move the cursor:</p>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">How to Use</h3>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Touch the spacebar</strong> and hold</li>
-<li class="ml-4 text-gray-300">2. <strong class="text-white">Slide left or right</strong> while holding</li>
-<li class="ml-4 text-gray-300">3. Cursor moves in that direction</li>
-<li class="ml-4 text-gray-300">4. <strong class="text-white">Release</strong> when positioned</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Touch the spacebar</strong> and swipe left or right</li>
+<li class="ml-4 text-gray-300">2. Cursor moves proportionally to swipe distance</li>
+<li class="ml-4 text-gray-300">3. <strong class="text-white">Release</strong> when positioned</li>
 </ul>
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Features</h3>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Proportional speed</strong>: Faster slide = faster cursor movement</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Proportional speed</strong>: Faster/longer swipe = cursor moves further</li>
 <li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Visual feedback</strong>: Trail shows movement direction</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Immediate</strong>: No delay, cursor moves as you slide</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Immediate</strong>: Cursor moves as you swipe</li>
 </ul>
 <blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!TIP]</blockquote>
-<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">Short slides move one character at a time. Longer slides accelerate the cursor.</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">Slow, short swipes give fine control for precise positioning.</blockquote>
 
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Method 2: Arrow Keys</h2>
-
-<p class="mb-4 text-gray-300 leading-relaxed">For precise single-character movement:</p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Accessing Arrow Keys</h3>
-
-<p class="mb-4 text-gray-300 leading-relaxed">Arrow keys are typically subkeys on the compose key (bottom row):</p>
-
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Short swipe</strong> on compose key in direction:</li>
-</ul><p class="mb-4 text-gray-300 leading-relaxed">   - North-East: Up arrow ↑</p>
-<p class="mb-4 text-gray-300 leading-relaxed">   - South-East: Down arrow ↓</p>
-<p class="mb-4 text-gray-300 leading-relaxed">   - East: Right arrow →</p>
-<p class="mb-4 text-gray-300 leading-relaxed">   - West: Left arrow ←</p>
-
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">2. Or <strong class="text-white">long-press</strong> compose key to see arrow popup</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Single Movement</h3>
-
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Short swipe + release</strong>: Move one character/line</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Tap arrow key</strong>: Move one character/line</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Repeated Movement</h3>
-
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Short swipe + hold</strong>: Cursor repeats with acceleration</li>
-<li class="ml-4 text-gray-300">&#8226; Initial delay, then speeds up</li>
-</ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Method 3: TrackPoint Mode</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Method 2: TrackPoint Mode</h2>
 
 <p class="mb-4 text-gray-300 leading-relaxed">For continuous joystick-style control:</p>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Hold arrow key</strong> past long-press timeout</li>
-<li class="ml-4 text-gray-300">2. Feel haptic activation</li>
-<li class="ml-4 text-gray-300">3. <strong class="text-white">Move finger</strong> in any direction</li>
-<li class="ml-4 text-gray-300">4. Cursor moves continuously</li>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">How to Use</h3>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Long-press the nav key</strong> (between spacebar and enter)</li>
+<li class="ml-4 text-gray-300">2. Feel haptic activation (if enabled)</li>
+<li class="ml-4 text-gray-300">3. <strong class="text-white">Move finger</strong> in any direction like a joystick</li>
+<li class="ml-4 text-gray-300">4. Cursor moves continuously in that direction</li>
 <li class="ml-4 text-gray-300">5. <strong class="text-white">Release</strong> to stop</li>
 </ul>
 <p class="mb-4 text-gray-300 leading-relaxed">See <a href="trackpoint-mode.html" class="text-green-400 hover:underline">TrackPoint Mode</a> for full details.</p>
 
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Navigation Shortcuts</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Navigation Summary</h2>
 
 <table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Gesture</td><td class="px-4 py-2 border-t border-gray-700">Action</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Slide spacebar left</strong></td><td class="px-4 py-2 border-t border-gray-700">Move cursor left</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Slide spacebar right</strong></td><td class="px-4 py-2 border-t border-gray-700">Move cursor right</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Arrow key tap</strong></td><td class="px-4 py-2 border-t border-gray-700">Move one character/line</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Arrow key hold</strong></td><td class="px-4 py-2 border-t border-gray-700">Repeat movement</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">TrackPoint mode</strong></td><td class="px-4 py-2 border-t border-gray-700">Continuous movement</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Swipe spacebar left</strong></td><td class="px-4 py-2 border-t border-gray-700">Move cursor left</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Swipe spacebar right</strong></td><td class="px-4 py-2 border-t border-gray-700">Move cursor right</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Long-press nav key</strong></td><td class="px-4 py-2 border-t border-gray-700">Enter TrackPoint mode</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Home/End Navigation</h2>
-
-<p class="mb-4 text-gray-300 leading-relaxed">Jump to line start or end:</p>
-
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Key</td><td class="px-4 py-2 border-t border-gray-700">Location</td><td class="px-4 py-2 border-t border-gray-700">Action</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Home</strong></td><td class="px-4 py-2 border-t border-gray-700">Subkey on 'A' (NW)</td><td class="px-4 py-2 border-t border-gray-700">Jump to line start</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">End</strong></td><td class="px-4 py-2 border-t border-gray-700">Subkey on 'A' (SW)</td><td class="px-4 py-2 border-t border-gray-700">Jump to line end</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<p class="mb-4 text-gray-300 leading-relaxed">Access via short swipe on 'A' key in the respective direction.</p>
-
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Word-by-Word Navigation</h2>
-
-<p class="mb-4 text-gray-300 leading-relaxed">Move by whole words instead of characters:</p>
-
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Hold Ctrl</strong> (if available as modifier)</li>
-<li class="ml-4 text-gray-300">2. <strong class="text-white">Press arrow key</strong></li>
-<li class="ml-4 text-gray-300">3. Cursor jumps to next/previous word boundary</li>
-</ul>
-<p class="mb-4 text-gray-300 leading-relaxed">Or use the dedicated word navigation subkeys if your layout includes them.</p>
-
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Tips and Tricks</h2>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Precision</strong>: Tap text field to position roughly, then fine-tune with spacebar</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Speed</strong>: TrackPoint mode is fastest for large movements</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Accuracy</strong>: Arrow keys are most precise for small adjustments</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Speed</strong>: TrackPoint mode is good for large movements</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Accuracy</strong>: Slow spacebar swipes are most precise for small adjustments</li>
 <li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Muscle memory</strong>: Practice spacebar sliding - it becomes natural quickly</li>
 </ul>
 <blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!NOTE]</blockquote>
-<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">Cursor navigation works in all text fields, but some apps may handle arrow keys differently.</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">Cursor navigation works in all text fields, but some apps may handle input differently.</blockquote>
 
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Settings</h2>
-
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Location</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Spacebar Slider</strong></td><td class="px-4 py-2 border-t border-gray-700">Input Behavior</td><td class="px-4 py-2 border-t border-gray-700">Enable/disable spacebar cursor</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Slider Sensitivity</strong></td><td class="px-4 py-2 border-t border-gray-700">Gesture Tuning</td><td class="px-4 py-2 border-t border-gray-700">Speed of cursor movement</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Long-Press Timeout</strong></td><td class="px-4 py-2 border-t border-gray-700">Input Behavior</td><td class="px-4 py-2 border-t border-gray-700">Time for TrackPoint activation</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Common Questions</h2>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Why doesn't spacebar slider work?</h3>
-<p class="mb-4 text-gray-300 leading-relaxed">A: Check Settings > Input Behavior > Spacebar Slider is enabled. Some apps may intercept touch events.</p>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Make sure you're swiping horizontally on the spacebar. Very short swipes may be interpreted as taps.</p>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: How do I select text while moving cursor?</h3>
-<p class="mb-4 text-gray-300 leading-relaxed">A: Use <a href="selection-delete.html" class="text-green-400 hover:underline">Selection Delete</a> mode or hold Shift while using arrow keys.</p>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Use <a href="selection-delete.html" class="text-green-400 hover:underline">Selection Delete</a> mode by short-swiping on the backspace key and holding.</p>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Can I move cursor vertically?</h3>
-<p class="mb-4 text-gray-300 leading-relaxed">A: Yes, use up/down arrow keys or TrackPoint mode for vertical movement.</p>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Use TrackPoint mode for vertical cursor movement by long-pressing the nav key.</p>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Related Features</h2>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <a href="trackpoint-mode.html" class="text-green-400 hover:underline">TrackPoint Mode</a> - Joystick cursor control</li>
-<li class="ml-4 text-gray-300">&#8226; <a href="selection-delete.html" class="text-green-400 hover:underline">Selection Delete</a> - Select text with cursor</li>
-<li class="ml-4 text-gray-300">&#8226; <a href="../clipboard/text-selection.html" class="text-green-400 hover:underline">Text Selection</a> - Copy and paste</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="selection-delete.html" class="text-green-400 hover:underline">Selection Delete</a> - Select and delete text</li>
 </ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Technical Details</h2>
-
-<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../specs/gestures/cursor-navigation-spec.html" class="text-green-400 hover:underline">Cursor Navigation Technical Specification</a>.</p>
-
         </div>
         
         <!-- Prev/Next Navigation -->
         <div class="max-w-4xl mt-8 flex justify-between">
-            <a href="./short-swipes.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+            <a href="gestures/short-swipes.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
                 <span>&larr;</span>
                 <span class="text-sm text-gray-400">Short Swipes</span>
             </a>
-            <a href="./selection-delete.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+            <a href="gestures/selection-delete.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
                 <span class="text-sm text-gray-400">Selection-Delete Mode</span>
                 <span>&rarr;</span>
             </a>

@@ -49,6 +49,32 @@
     "excerpt": "Enabling the Keyboard\n\nAfter installing CleverKeys, you need to enable it in Android settings and set it as your default keyboard.\n\n Quick Summary\n\n What  Description \n-------------------\n Purpose  E"
   },
   {
+    "file": "getting-started/quick-settings.html",
+    "title": "Quick Settings Tile",
+    "description": "Fast keyboard switching from notification shade",
+    "category": "Getting Started",
+    "tags": [
+      "quick settings",
+      "tile",
+      "notification",
+      "switch keyboard"
+    ],
+    "excerpt": "Quick Settings Tile\n\nCleverKeys provides a Quick Settings tile for fast keyboard switching directly from the notification shade.\n\n Adding the Tile\n\n1. Pull down the notification shade\n2. Tap the penc"
+  },
+  {
+    "file": "FAQ.html",
+    "title": "FAQ",
+    "description": "Frequently asked questions about CleverKeys",
+    "category": "Getting Started",
+    "tags": [
+      "faq",
+      "questions",
+      "help",
+      "troubleshooting"
+    ],
+    "excerpt": "CleverKeys FAQ\n\nFrequently asked questions about using CleverKeys keyboard.\n\n Typing Numbers & Symbols (Subkeys / Short Swipes)\n\nQ: How do I type numbers and symbols quickly?"
+  },
+  {
     "file": "typing/swipe-typing.html",
     "title": "Swipe Typing",
     "description": "Draw paths through letters to type words",
@@ -97,6 +123,32 @@
       "symbols"
     ],
     "excerpt": "Emoji\n\nCleverKeys includes a full emoji keyboard with categories, search, and recent emoji history.\n\n Quick Summary\n\n What  Description \n-------------------\n Purpose  Insert emoji and emoticons \n Acc"
+  },
+  {
+    "file": "typing/smart-punctuation.html",
+    "title": "Smart Punctuation",
+    "description": "Automatic punctuation attachment and spacing",
+    "category": "Typing",
+    "tags": [
+      "punctuation",
+      "auto-space",
+      "period",
+      "comma"
+    ],
+    "excerpt": "Smart Punctuation\n\nCleverKeys automatically handles punctuation spacing, attaching periods, commas, and other marks to the preceding word without extra spaces."
+  },
+  {
+    "file": "typing/user-dictionary.html",
+    "title": "User Dictionary",
+    "description": "Add custom words and preserve capitalization",
+    "category": "Typing",
+    "tags": [
+      "dictionary",
+      "custom words",
+      "proper nouns",
+      "capitalization"
+    ],
+    "excerpt": "User Dictionary\n\nAdd custom words to your personal dictionary and preserve proper noun capitalization for swipe and tap predictions."
   },
   {
     "file": "gestures/short-swipes.html",
@@ -162,6 +214,19 @@
       "redo"
     ],
     "excerpt": "Circle Gestures\n\nCircle gestures allow you to perform actions like undo and redo by drawing circular patterns on the keyboard.\n\n Quick Summary\n\n What  Description \n-------------------\n Purpose  Quick"
+  },
+  {
+    "file": "customization/timestamp-keys.html",
+    "title": "Timestamp Keys",
+    "description": "Insert formatted date and time with a key press",
+    "category": "Customization",
+    "tags": [
+      "timestamp",
+      "date",
+      "time",
+      "insert"
+    ],
+    "excerpt": "Timestamp Keys\n\nInsert the current date or time with a single key press. Perfect for journaling, note-taking, and timestamping documents."
   },
   {
     "file": "customization/per-key-actions.html",
@@ -365,6 +430,19 @@
       "slow mode"
     ],
     "excerpt": "Accessibility Settings\n\nCleverKeys includes accessibility features for users with visual, motor, or cognitive accessibility needs.\n\n Quick Summary\n\n What  Description \n-------------------\n Purpose  A"
+  },
+  {
+    "file": "settings/password-fields.html",
+    "title": "Password Field Mode",
+    "description": "Enhanced security in password fields",
+    "category": "Settings",
+    "tags": [
+      "password",
+      "security",
+      "pin",
+      "incognito"
+    ],
+    "excerpt": "Password Field Mode\n\nCleverKeys automatically provides enhanced security when you're typing in password or PIN fields, disabling predictions and autocorrect."
   },
   {
     "file": "clipboard/clipboard-history.html",

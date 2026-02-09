@@ -90,44 +90,29 @@
 
 <table class="w-full mb-6 border-collapse"><tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">What</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Description</th></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Purpose</strong></td><td class="px-4 py-2 border-t border-gray-700">Type characters not on main keyboard</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Access</strong></td><td class="px-4 py-2 border-t border-gray-700">Long-press or short swipe on keys</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Access</strong></td><td class="px-4 py-2 border-t border-gray-700">Short swipe on keys or symbol keyboard</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Types</strong></td><td class="px-4 py-2 border-t border-gray-700">Symbols, accents, currency, punctuation</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Methods to Access Special Characters</h2>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Method 1: Long-Press</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Method 1: Short Swipe (Primary)</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed">Hold any key to see available special characters:</p>
-
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Touch and hold</strong> a key for ~600ms</li>
-<li class="ml-4 text-gray-300">2. A popup appears showing available characters</li>
-<li class="ml-4 text-gray-300">3. <strong class="text-white">Slide to select</strong> the character you want</li>
-<li class="ml-4 text-gray-300">4. <strong class="text-white">Release</strong> to type it</li>
-</ul>
-<p class="mb-4 text-gray-300 leading-relaxed">Common long-press characters:</p>
-
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Key</td><td class="px-4 py-2 border-t border-gray-700">Long-Press Options</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">a</strong></td><td class="px-4 py-2 border-t border-gray-700">à á â ã ä å æ ā</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">e</strong></td><td class="px-4 py-2 border-t border-gray-700">è é ê ë ē ė ę</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">o</strong></td><td class="px-4 py-2 border-t border-gray-700">ò ó ô õ ö ø ō œ</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">n</strong></td><td class="px-4 py-2 border-t border-gray-700">ñ ń</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">s</strong></td><td class="px-4 py-2 border-t border-gray-700">ß ś š</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">c</strong></td><td class="px-4 py-2 border-t border-gray-700">ç ć č</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Method 2: Short Swipe</h3>
-
-<p class="mb-4 text-gray-300 leading-relaxed">Faster access via quick flick gestures:</p>
+<p class="mb-4 text-gray-300 leading-relaxed">Quick flick gestures on keys to access subkeys:</p>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Touch</strong> the key</li>
 <li class="ml-4 text-gray-300">2. <strong class="text-white">Flick</strong> in the direction of the subkey</li>
 <li class="ml-4 text-gray-300">3. The character types immediately</li>
 </ul>
-<p class="mb-4 text-gray-300 leading-relaxed">Example on 'e' key:</p>
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Swipe North</strong>: Number (3)</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Swipe South</strong>: é (common accent)</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Swipe East/West</strong>: Other variations</li>
+<p class="mb-4 text-gray-300 leading-relaxed">Each key has up to 8 subkey positions (N, NE, E, SE, S, SW, W, NW). The available subkeys depend on the keyboard layout (QWERTY, AZERTY, etc.) and are defined in the layout XML files.</p>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Example on 'e' key (QWERTY):</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Swipe NE</strong>: Number (3)</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Swipe S/SW/SE</strong>: Accented variants (é, è, ê, etc.)</li>
 </ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Method 3: Symbol Keyboard</h3>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!NOTE]</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">CleverKeys does not use long-press popups for special characters. Long-press triggers key repeat instead. All special characters are accessed via short swipes.</blockquote>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Method 2: Symbol Keyboard</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">For extensive symbols:</p>
 
@@ -140,27 +125,27 @@
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Punctuation</h3>
 
 <table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Character</td><td class="px-4 py-2 border-t border-gray-700">How to Type</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">"</strong> (curly quotes)</td><td class="px-4 py-2 border-t border-gray-700">Long-press " key</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">—</strong> (em dash)</td><td class="px-4 py-2 border-t border-gray-700">Long-press - key</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">–</strong> (en dash)</td><td class="px-4 py-2 border-t border-gray-700">Long-press - key</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">…</strong> (ellipsis)</td><td class="px-4 py-2 border-t border-gray-700">Long-press . key</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">¿</strong></td><td class="px-4 py-2 border-t border-gray-700">Long-press ? key</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">¡</strong></td><td class="px-4 py-2 border-t border-gray-700">Long-press ! key</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">"</strong> (curly quotes)</td><td class="px-4 py-2 border-t border-gray-700">Subkey on " key</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">—</strong> (em dash)</td><td class="px-4 py-2 border-t border-gray-700">Subkey on - key</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">–</strong> (en dash)</td><td class="px-4 py-2 border-t border-gray-700">Subkey on - key</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">…</strong> (ellipsis)</td><td class="px-4 py-2 border-t border-gray-700">Subkey on . key</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">¿</strong></td><td class="px-4 py-2 border-t border-gray-700">Subkey on ? key</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">¡</strong></td><td class="px-4 py-2 border-t border-gray-700">Subkey on ! key</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Currency Symbols</h3>
 
 <table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Character</td><td class="px-4 py-2 border-t border-gray-700">Location</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">$</strong></td><td class="px-4 py-2 border-t border-gray-700">Main symbol keyboard</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">€</strong></td><td class="px-4 py-2 border-t border-gray-700">Long-press $ or symbol keyboard</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">£</strong></td><td class="px-4 py-2 border-t border-gray-700">Long-press $ or symbol keyboard</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">¥</strong></td><td class="px-4 py-2 border-t border-gray-700">Long-press $ or symbol keyboard</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">€</strong></td><td class="px-4 py-2 border-t border-gray-700">Subkey on $ or symbol keyboard</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">£</strong></td><td class="px-4 py-2 border-t border-gray-700">Subkey on $ or symbol keyboard</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">¥</strong></td><td class="px-4 py-2 border-t border-gray-700">Subkey on $ or symbol keyboard</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">₹</strong></td><td class="px-4 py-2 border-t border-gray-700">Symbol keyboard</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Mathematical Symbols</h3>
 
 <table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Character</td><td class="px-4 py-2 border-t border-gray-700">Location</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">×</strong></td><td class="px-4 py-2 border-t border-gray-700">Long-press *</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">÷</strong></td><td class="px-4 py-2 border-t border-gray-700">Long-press /</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">×</strong></td><td class="px-4 py-2 border-t border-gray-700">Subkey on *</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">÷</strong></td><td class="px-4 py-2 border-t border-gray-700">Subkey on /</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">±</strong></td><td class="px-4 py-2 border-t border-gray-700">Symbol keyboard</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">≠</strong></td><td class="px-4 py-2 border-t border-gray-700">Symbol keyboard</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">≤ ≥</strong></td><td class="px-4 py-2 border-t border-gray-700">Symbol keyboard</td></tr>
@@ -170,18 +155,15 @@
 <p class="mb-4 text-gray-300 leading-relaxed">For languages requiring diacritics:</p>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Acute Accent (é)</h3>
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Long-press the base letter</li>
-<li class="ml-4 text-gray-300">&#8226; Select from popup</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Short swipe on the base letter in the appropriate direction</li>
 </ul>
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Grave Accent (è)</h3>
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Long-press the base letter</li>
-<li class="ml-4 text-gray-300">&#8226; Select from popup</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Short swipe on the base letter in the appropriate direction</li>
 </ul>
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Circumflex (ê, î, ô, û, â)</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Method 1 - Long-press (all layouts):</strong></p>
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Long-press the base letter (e, i, o, u, a)</li>
-<li class="ml-4 text-gray-300">&#8226; Select the circumflex variant from popup</li>
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Method 1 - Subkey (all layouts):</strong></p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Short swipe on the base letter (e, i, o, u, a) in the direction of the circumflex variant</li>
 </ul>
 <p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Method 2 - Dead key (AZERTY):</strong></p>
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Swipe north on <strong class="text-white">j</strong> key to access circumflex dead key (^)</li>
@@ -189,16 +171,13 @@
 <li class="ml-4 text-gray-300">&#8226; The combined character appears (ê, î, ô, û, â)</li>
 </ul>
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Umlaut/Diaeresis (ë)</h3>
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Long-press the base letter</li>
-<li class="ml-4 text-gray-300">&#8226; Select from popup</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Short swipe on the base letter in the appropriate direction</li>
 </ul>
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Tilde (ñ)</h3>
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Long-press n or a/o</li>
-<li class="ml-4 text-gray-300">&#8226; Select from popup</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Short swipe on n or a/o</li>
 </ul>
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Cedilla (ç)</h3>
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Long-press c</li>
-<li class="ml-4 text-gray-300">&#8226; Select from popup</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Short swipe on c</li>
 </ul>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Tips and Tricks</h2>
 
@@ -215,7 +194,7 @@
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Settings</h2>
 
 <table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Location</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Long-Press Timeout</strong></td><td class="px-4 py-2 border-t border-gray-700">Input Behavior</td><td class="px-4 py-2 border-t border-gray-700">Time before popup appears</td></tr></p>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Long-Press Timeout</strong></td><td class="px-4 py-2 border-t border-gray-700">Input Behavior</td><td class="px-4 py-2 border-t border-gray-700">Time before key repeat starts (default: 600ms)</td></tr></p>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Short Swipe Distance</strong></td><td class="px-4 py-2 border-t border-gray-700">Gesture Tuning</td><td class="px-4 py-2 border-t border-gray-700">Sensitivity for flick gestures</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Related Features</h2>
@@ -232,11 +211,11 @@
         
         <!-- Prev/Next Navigation -->
         <div class="max-w-4xl mt-8 flex justify-between">
-            <a href="./autocorrect.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+            <a href="typing/autocorrect.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
                 <span>&larr;</span>
                 <span class="text-sm text-gray-400">Autocorrect & Predictions</span>
             </a>
-            <a href="./emoji.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+            <a href="typing/emoji.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
                 <span class="text-sm text-gray-400">Emoji & Symbols</span>
                 <span>&rarr;</span>
             </a>

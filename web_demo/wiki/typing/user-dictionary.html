@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dictionary - CleverKeys User Guide</title>
+    <meta name="description" content="Add custom words and preserve capitalization">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'ck-green': '#10b981',
+                        'ck-green-dark': '#059669',
+                        'ck-green-light': '#34d399',
+                        'ck-dark': '#0f0f1a',
+                        'ck-surface': '#1a1a2e',
+                        'ck-card': '#242438',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-text-wiki {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 50%, #10b981 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="bg-ck-dark text-gray-100 min-h-screen">
+    <!-- Nav -->
+    <nav class="sticky top-0 bg-ck-dark/95 backdrop-blur border-b border-gray-800 z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="../" class="flex items-center gap-3">
+                <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-8 h-8 rounded-lg">
+                <span class="font-bold">CleverKeys</span>
+            </a>
+            <div class="flex gap-4">
+                <a href="./" class="text-green-400 font-medium">User Guide</a>
+                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Tech Specs</a>
+                <a href="../" class="text-gray-400 hover:text-white transition-colors">Home</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Breadcrumb -->
+    <div class="container mx-auto px-6 py-4">
+        <div class="flex items-center gap-2 text-sm text-gray-500">
+            <a href="../" class="hover:text-ck-green">Home</a>
+            <span>/</span>
+            <a href="./" class="hover:text-ck-green">User Guide</a>
+            <span>/</span>
+            <a href="./?category=Typing" class="hover:text-ck-green">Typing</a>
+            <span>/</span>
+            <span class="text-gray-300">User Dictionary</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="container mx-auto px-6 pb-6">
+        <div class="flex items-center gap-3 mb-4">
+            <span class="px-3 py-1 text-sm rounded-full" style="background: #3b82f620; color: #3b82f6">Typing</span>
+            <span class="px-3 py-1 text-sm rounded-full bg-ck-card text-gray-400">P1</span>
+        </div>
+        <h1 class="text-4xl font-bold gradient-text-wiki mb-2">User Dictionary</h1>
+        <p class="text-xl text-gray-400">Add custom words and preserve capitalization</p>
+    </header>
+
+    <!-- Content -->
+    <main class="container mx-auto px-6 pb-12">
+        <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
+            <hr class="border-gray-700 my-6">
+<p class="mb-4 text-gray-300 leading-relaxed">title: User Dictionary</p>
+<p class="mb-4 text-gray-300 leading-relaxed">description: Add custom words and preserve proper noun capitalization</p>
+<p class="mb-4 text-gray-300 leading-relaxed">category: Typing</p>
+<p class="mb-4 text-gray-300 leading-relaxed">difficulty: beginner</p>
+<p class="mb-4 text-gray-300 leading-relaxed">related_spec: ../specs/typing/user-dictionary-spec.md</p>
+<hr class="border-gray-700 my-6">
+
+<h1 class="text-3xl font-bold mb-6 gradient-text-wiki">User Dictionary</h1>
+
+<p class="mb-4 text-gray-300 leading-relaxed">CleverKeys learns new words you add and preserves their original capitalization. Names, places, technical terms, and other custom words appear exactly as you entered them - both when typing and swiping.</p>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Quick Summary</h2>
+
+<table class="w-full mb-6 border-collapse"><tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">What</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Description</th></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Purpose</strong></td><td class="px-4 py-2 border-t border-gray-700">Add custom words with preserved capitalization</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Access</strong></td><td class="px-4 py-2 border-t border-gray-700">Automatic prompts or Settings > Activities > Dictionary Manager</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Works with</strong></td><td class="px-4 py-2 border-t border-gray-700">Tap typing, swipe typing, and suggestions</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">How It Works</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">When you type a word not in the dictionary:</p>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. CleverKeys prompts "Add 'Word' to dictionary?"</li>
+<li class="ml-4 text-gray-300">2. Tap to add the word with its <strong class="text-white">exact capitalization</strong></li>
+<li class="ml-4 text-gray-300">3. The word appears in predictions and swipe results</li>
+<li class="ml-4 text-gray-300">4. Capitalization is preserved automatically</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Case Preservation Examples</h3>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">You Type</td><td class="px-4 py-2 border-t border-gray-700">Stored As</td><td class="px-4 py-2 border-t border-gray-700">Predicted As</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">Boston</code></td><td class="px-4 py-2 border-t border-gray-700">Boston</td><td class="px-4 py-2 border-t border-gray-700">Boston</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">iPhone</code></td><td class="px-4 py-2 border-t border-gray-700">iPhone</td><td class="px-4 py-2 border-t border-gray-700">iPhone</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">McDONALD</code></td><td class="px-4 py-2 border-t border-gray-700">McDONALD</td><td class="px-4 py-2 border-t border-gray-700">McDONALD</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">API</code></td><td class="px-4 py-2 border-t border-gray-700">API</td><td class="px-4 py-2 border-t border-gray-700">API</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<p class="mb-4 text-gray-300 leading-relaxed">This works for:</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Proper nouns</strong>: City names, people's names</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Brand names</strong>: iPhone, McDonald's, GitHub</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Acronyms</strong>: API, URL, HTML</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Technical terms</strong>: Your project-specific vocabulary</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Adding Words</h2>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Method 1: Automatic Prompt</h3>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Type a new word and press space</li>
+<li class="ml-4 text-gray-300">2. If not autocorrected, a prompt appears</li>
+<li class="ml-4 text-gray-300">3. Tap "Add to dictionary" to save it</li>
+<li class="ml-4 text-gray-300">4. The word is saved with your capitalization</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Method 2: Dictionary Manager</h3>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Open keyboard settings (gear icon)</li>
+<li class="ml-4 text-gray-300">2. Go to <strong class="text-white">Activities > Dictionary Manager</strong></li>
+<li class="ml-4 text-gray-300">3. Tap <strong class="text-white">Custom</strong> tab</li>
+<li class="ml-4 text-gray-300">4. Use the add button to enter new words</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Using Custom Words</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Once added, custom words:</p>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Appear in predictions</strong> when you start typing them</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Show in swipe results</strong> when you swipe the pattern</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Keep their capitalization</strong> in both tap and swipe modes</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Won't be autocorrected</strong> to something else</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Swipe Typing with Custom Words</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">When you swipe a pattern matching a custom word:</p>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Neural network predicts possible words</li>
+<li class="ml-4 text-gray-300">2. Custom word case is applied from your dictionary</li>
+<li class="ml-4 text-gray-300">3. Word appears with correct capitalization</li>
+</ul>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!TIP]</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">Add names and technical terms before you need them frequently. This improves both accuracy and capitalization.</blockquote>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Managing Your Dictionary</h2>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">View Custom Words</h3>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Settings > Activities > Dictionary Manager</li>
+<li class="ml-4 text-gray-300">2. Select <strong class="text-white">Custom</strong> tab</li>
+<li class="ml-4 text-gray-300">3. Browse your added words</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Delete a Custom Word</h3>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Find the word in Dictionary Manager</li>
+<li class="ml-4 text-gray-300">2. Tap the delete icon</li>
+<li class="ml-4 text-gray-300">3. Confirm deletion</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Disable Without Deleting</h3>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Find the word in Dictionary Manager</li>
+<li class="ml-4 text-gray-300">2. Toggle it off (moves to Disabled tab)</li>
+<li class="ml-4 text-gray-300">3. Toggle back on later if needed</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Settings</h2>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Location</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Dictionary Manager</strong></td><td class="px-4 py-2 border-t border-gray-700">Settings > Activities</td><td class="px-4 py-2 border-t border-gray-700">View and manage custom words</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Personalized Learning</strong></td><td class="px-4 py-2 border-t border-gray-700">Word Prediction section</td><td class="px-4 py-2 border-t border-gray-700">Adapt to your typing patterns</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">How Capitalization Works</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">CleverKeys uses a priority system for capitalization:</p>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">User dictionary case</strong> - Your saved capitalization (highest priority)</li>
+<li class="ml-4 text-gray-300">2. <strong class="text-white">Shift state</strong> - Sentence-start capitalization</li>
+<li class="ml-4 text-gray-300">3. <strong class="text-white">I-words</strong> - Automatic "I", "I'm", "I'll" capitalization</li>
+<li class="ml-4 text-gray-300">4. <strong class="text-white">Default</strong> - Lowercase from main dictionary</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Example Flow</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">When you swipe "boston" after adding "Boston":</p>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto mb-4"><code class="language-text">Neural network output: "boston" (lowercase)
+<p class="mb-4 text-gray-300 leading-relaxed">         ↓</p>
+<p class="mb-4 text-gray-300 leading-relaxed">User dictionary check: Found "Boston"</p>
+<p class="mb-4 text-gray-300 leading-relaxed">         ↓</p>
+<p class="mb-4 text-gray-300 leading-relaxed">Apply saved case: "Boston"</p>
+<p class="mb-4 text-gray-300 leading-relaxed">         ↓</p>
+<p class="mb-4 text-gray-300 leading-relaxed">Check shift state: (if sentence start, stays "Boston")</p>
+<p class="mb-4 text-gray-300 leading-relaxed">         ↓</p>
+<p class="mb-4 text-gray-300 leading-relaxed">Final output: "Boston"</code></pre></p>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Tips and Tricks</h2>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Add proper nouns early</strong>: Prevents frustration with miscapitalization</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Include variations</strong>: Add both "API" and "APIs" if you use both</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Brand names matter</strong>: "GitHub" vs "Github" - add your preferred form</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Export settings</strong>: Use Backup & Restore to preserve your dictionary</li>
+</ul>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!NOTE]</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">Words in the main dictionary cannot have their case changed. Custom words override the main dictionary for your entries.</blockquote>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Common Questions</h2>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Why isn't my custom word appearing?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Check that:</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; The word is in the Custom tab of Dictionary Manager</li>
+<li class="ml-4 text-gray-300">&#8226; It's not disabled</li>
+<li class="ml-4 text-gray-300">&#8226; You're typing/swiping the correct pattern</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Can I change capitalization of an existing word?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Delete and re-add with new capitalization, or edit in Dictionary Manager.</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Does this work with swipe typing?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Yes! Swipe predictions apply your custom word capitalization.</p>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Related Features</h2>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <a href="autocorrect.html" class="text-green-400 hover:underline">Autocorrect</a> - Automatic spelling corrections</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="swipe-typing.html" class="text-green-400 hover:underline">Swipe Typing</a> - Neural word prediction</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="special-characters.html" class="text-green-400 hover:underline">Special Characters</a> - Accents and symbols</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Technical Details</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../specs/typing/user-dictionary-spec.html" class="text-green-400 hover:underline">User Dictionary Technical Specification</a>.</p>
+
+        </div>
+        
+        <!-- Prev/Next Navigation -->
+        <div class="max-w-4xl mt-8 flex justify-between">
+            <a href="typing/smart-punctuation.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+                <span>&larr;</span>
+                <span class="text-sm text-gray-400">Smart Punctuation</span>
+            </a>
+            <a href="gestures/short-swipes.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+                <span class="text-sm text-gray-400">Short Swipes</span>
+                <span>&rarr;</span>
+            </a>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-gray-800">
+        <p>CleverKeys User Guide - Making typing smarter</p>
+    </footer>
+</body>
+</html>

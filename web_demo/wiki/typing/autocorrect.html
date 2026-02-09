@@ -115,7 +115,7 @@
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Method 2: Backspace and Retype</h3>
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Press backspace to delete the corrected word</li>
 <li class="ml-4 text-gray-300">2. Retype your intended word</li>
-<li class="ml-4 text-gray-300">3. Press space again (it won't be corrected twice)</li>
+<li class="ml-4 text-gray-300">3. Add it to your dictionary to prevent future corrections</li>
 </ul>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Adding Words to Dictionary</h2>
 
@@ -145,18 +145,19 @@
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Autocorrect Settings</h2>
 
-<p class="mb-4 text-gray-300 leading-relaxed">Customize autocorrect behavior in Settings:</p>
+<p class="mb-4 text-gray-300 leading-relaxed">Customize autocorrect behavior in the <strong class="text-white">Word Prediction</strong> section of Settings:</p>
 
 <table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Autocorrect</strong></td><td class="px-4 py-2 border-t border-gray-700">Enable/disable automatic corrections</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Autocorrect Threshold</strong></td><td class="px-4 py-2 border-t border-gray-700">How similar words must be to trigger</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Suggest Contact Names</strong></td><td class="px-4 py-2 border-t border-gray-700">Include contact names in suggestions</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Autocorrect Min Word Length</strong></td><td class="px-4 py-2 border-t border-gray-700">Minimum characters before autocorrect applies</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Beam Autocorrect</strong></td><td class="px-4 py-2 border-t border-gray-700">Autocorrect during swipe typing</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Final Autocorrect</strong></td><td class="px-4 py-2 border-t border-gray-700">Apply correction on word completion</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Tips and Tricks</h2>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Proper nouns</strong>: Add names and places to prevent miscorrection</li>
 <li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Technical terms</strong>: Add jargon and abbreviations to your dictionary</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Disable for a word</strong>: Tap a prediction twice to never autocorrect it</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Disable a word</strong>: Add it to the Disabled list in Dictionary Manager to prevent autocorrect</li>
 <li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Language-specific</strong>: Each language has its own dictionary</li>
 </ul>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Common Questions</h2>
@@ -165,14 +166,15 @@
 <p class="mb-4 text-gray-300 leading-relaxed">A: The similar word had higher frequency. Add your word to dictionary to prevent this.</p>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Can I turn off autocorrect completely?</h3>
-<p class="mb-4 text-gray-300 leading-relaxed">A: Yes, in Settings > Input Behavior > Autocorrect.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">A: Yes, in Settings > Word Prediction section > Autocorrect toggle.</p>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Does autocorrect work with swipe typing?</h3>
-<p class="mb-4 text-gray-300 leading-relaxed">A: Swipe typing uses neural predictions instead of autocorrect.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">A: Swipe typing uses neural predictions. Use the Beam Autocorrect and Final Autocorrect settings to control this behavior.</p>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Related Features</h2>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <a href="swipe-typing.html" class="text-green-400 hover:underline">Swipe Typing</a> - Neural word prediction</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="user-dictionary.html" class="text-green-400 hover:underline">User Dictionary</a> - Add custom words</li>
 <li class="ml-4 text-gray-300">&#8226; <a href="special-characters.html" class="text-green-400 hover:underline">Special Characters</a> - Symbols and accents</li>
 </ul>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Technical Details</h2>
@@ -183,11 +185,11 @@
         
         <!-- Prev/Next Navigation -->
         <div class="max-w-4xl mt-8 flex justify-between">
-            <a href="./swipe-typing.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+            <a href="typing/swipe-typing.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
                 <span>&larr;</span>
                 <span class="text-sm text-gray-400">Swipe Typing</span>
             </a>
-            <a href="./special-characters.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+            <a href="typing/special-characters.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
                 <span class="text-sm text-gray-400">Special Characters</span>
                 <span>&rarr;</span>
             </a>

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Settings Tile - CleverKeys User Guide</title>
+    <meta name="description" content="Fast keyboard switching from notification shade">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'ck-green': '#10b981',
+                        'ck-green-dark': '#059669',
+                        'ck-green-light': '#34d399',
+                        'ck-dark': '#0f0f1a',
+                        'ck-surface': '#1a1a2e',
+                        'ck-card': '#242438',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-text-wiki {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 50%, #10b981 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="bg-ck-dark text-gray-100 min-h-screen">
+    <!-- Nav -->
+    <nav class="sticky top-0 bg-ck-dark/95 backdrop-blur border-b border-gray-800 z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="../" class="flex items-center gap-3">
+                <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-8 h-8 rounded-lg">
+                <span class="font-bold">CleverKeys</span>
+            </a>
+            <div class="flex gap-4">
+                <a href="./" class="text-green-400 font-medium">User Guide</a>
+                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Tech Specs</a>
+                <a href="../" class="text-gray-400 hover:text-white transition-colors">Home</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Breadcrumb -->
+    <div class="container mx-auto px-6 py-4">
+        <div class="flex items-center gap-2 text-sm text-gray-500">
+            <a href="../" class="hover:text-ck-green">Home</a>
+            <span>/</span>
+            <a href="./" class="hover:text-ck-green">User Guide</a>
+            <span>/</span>
+            <a href="./?category=Getting%20Started" class="hover:text-ck-green">Getting Started</a>
+            <span>/</span>
+            <span class="text-gray-300">Quick Settings Tile</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="container mx-auto px-6 pb-6">
+        <div class="flex items-center gap-3 mb-4">
+            <span class="px-3 py-1 text-sm rounded-full" style="background: #10b98120; color: #10b981">Getting Started</span>
+            <span class="px-3 py-1 text-sm rounded-full bg-ck-card text-gray-400">P1</span>
+        </div>
+        <h1 class="text-4xl font-bold gradient-text-wiki mb-2">Quick Settings Tile</h1>
+        <p class="text-xl text-gray-400">Fast keyboard switching from notification shade</p>
+    </header>
+
+    <!-- Content -->
+    <main class="container mx-auto px-6 pb-12">
+        <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
+            <h1 class="text-3xl font-bold mb-6 gradient-text-wiki">Quick Settings Tile</h1>
+
+<p class="mb-4 text-gray-300 leading-relaxed">CleverKeys provides a Quick Settings tile for fast keyboard switching directly from the notification shade.</p>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Adding the Tile</h2>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Pull down the notification shade (swipe down from top of screen)</li>
+<li class="ml-4 text-gray-300">2. Pull down again to expand Quick Settings</li>
+<li class="ml-4 text-gray-300">3. Tap the <strong class="text-white">pencil/edit icon</strong> to customize tiles</li>
+<li class="ml-4 text-gray-300">4. Find <strong class="text-white">"CleverKeys"</strong> in the available tiles</li>
+<li class="ml-4 text-gray-300">5. Drag it to your active tiles area</li>
+<li class="ml-4 text-gray-300">6. Tap outside to save</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Using the Tile</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Tap the CleverKeys tile</strong> to open the system keyboard picker. From there, select any installed keyboard.</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Tile States</h3>
+
+<table class="w-full mb-6 border-collapse"><tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">State</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Meaning</th></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Highlighted/colored</strong></td><td class="px-4 py-2 border-t border-gray-700">CleverKeys is your current keyboard</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Dimmed/gray</strong></td><td class="px-4 py-2 border-t border-gray-700">Another keyboard is currently active</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Requirements</h2>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Android 7.0 (Nougat) or higher</li>
+<li class="ml-4 text-gray-300">&#8226; CleverKeys must be enabled as an input method in system settings</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Why Use This?</h2>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Fast switching</strong> - No need to open Settings app</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">One-handed access</strong> - Swipe down and tap</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Visual status</strong> - See at a glance which keyboard is active</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Troubleshooting</h2>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Tile not appearing in available tiles?</h3>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Ensure CleverKeys is installed</li>
+<li class="ml-4 text-gray-300">&#8226; Ensure CleverKeys is enabled in <strong class="text-white">Settings > System > Languages & Input > On-screen keyboard</strong></li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Tile does nothing when tapped?</h3>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; The system keyboard picker should appear</li>
+<li class="ml-4 text-gray-300">&#8226; If it doesn't, the tile will open keyboard settings as a fallback</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Tile always shows inactive?</h3>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; This means another keyboard is currently set as default</li>
+<li class="ml-4 text-gray-300">&#8226; Tap the tile to switch to CleverKeys</li>
+</ul>
+        </div>
+        
+        <!-- Prev/Next Navigation -->
+        <div class="max-w-4xl mt-8 flex justify-between">
+            <a href="getting-started/enabling-keyboard.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+                <span>&larr;</span>
+                <span class="text-sm text-gray-400">Enabling the Keyboard</span>
+            </a>
+            <a href="FAQ.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+                <span class="text-sm text-gray-400">FAQ</span>
+                <span>&rarr;</span>
+            </a>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-gray-800">
+        <p>CleverKeys User Guide - Making typing smarter</p>
+    </footer>
+</body>
+</html>

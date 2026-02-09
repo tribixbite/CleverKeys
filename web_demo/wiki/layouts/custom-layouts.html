@@ -76,207 +76,113 @@
         <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
             <hr class="border-gray-700 my-6">
 <p class="mb-4 text-gray-300 leading-relaxed">title: Custom Layouts</p>
-<p class="mb-4 text-gray-300 leading-relaxed">description: Create and edit your own keyboard layouts</p>
+<p class="mb-4 text-gray-300 leading-relaxed">description: Create keyboard layouts using XML format</p>
 <p class="mb-4 text-gray-300 leading-relaxed">category: Layouts</p>
 <p class="mb-4 text-gray-300 leading-relaxed">difficulty: advanced</p>
 <hr class="border-gray-700 my-6">
 
 <h1 class="text-3xl font-bold mb-6 gradient-text-wiki">Custom Layouts</h1>
 
-<p class="mb-4 text-gray-300 leading-relaxed">Design your own keyboard layouts from scratch or modify existing layouts to match your preferences.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">Create custom keyboard layouts using XML syntax.</p>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Quick Summary</h2>
 
 <table class="w-full mb-6 border-collapse"><tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">What</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Description</th></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Purpose</strong></td><td class="px-4 py-2 border-t border-gray-700">Create personalized layouts</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Access</strong></td><td class="px-4 py-2 border-t border-gray-700">Settings > Layouts > Custom Layouts</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Features</strong></td><td class="px-4 py-2 border-t border-gray-700">Visual editor, templates, import/export</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Purpose</strong></td><td class="px-4 py-2 border-t border-gray-700">Define custom keyboard layouts</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Access</strong></td><td class="px-4 py-2 border-t border-gray-700">Settings > Layouts preference</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Format</strong></td><td class="px-4 py-2 border-t border-gray-700">XML-based layout definition</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Creating a Custom Layout</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">How Custom Layouts Work</h2>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 1: Open Custom Layouts</h3>
+<p class="mb-4 text-gray-300 leading-relaxed">CleverKeys supports custom layout definitions in XML format. This is an advanced feature requiring knowledge of the layout XML syntax.</p>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Open <strong class="text-white">Settings > Layouts</strong></li>
-<li class="ml-4 text-gray-300">2. Tap <strong class="text-white">Custom Layouts</strong></li>
-<li class="ml-4 text-gray-300">3. Tap <strong class="text-white">Create New Layout</strong></li>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Layout XML Syntax</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Custom layouts use the same XML format as the bundled layouts. A layout is defined by rows of keys, each key having:</p>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Primary character</strong> (<code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">c="a"</code>)</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Subkeys</strong> by direction (<code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">ne="1"</code> for northeast)</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Width</strong> (<code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">width="2.0"</code> for wider keys)</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Shift variants</strong> (<code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">shift="0.5"</code> for indent)</li>
 </ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 2: Choose Starting Point</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Example Layout Row</h3>
 
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Option</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Blank</strong></td><td class="px-4 py-2 border-t border-gray-700">Start from scratch</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Template</strong></td><td class="px-4 py-2 border-t border-gray-700">QWERTY, AZERTY, etc.</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Clone</strong></td><td class="px-4 py-2 border-t border-gray-700">Copy existing layout</td></tr>
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto mb-4"><code class="language-xml">&lt;row&gt;
+<p class="mb-4 text-gray-300 leading-relaxed">  &lt;key c="q" ne="1"/&gt;</p>
+<p class="mb-4 text-gray-300 leading-relaxed">  &lt;key c="w" ne="2"/&gt;</p>
+<p class="mb-4 text-gray-300 leading-relaxed">  &lt;key c="e" ne="3"/&gt;</p>
+<p class="mb-4 text-gray-300 leading-relaxed">  &lt;key c="r" ne="4"/&gt;</p>
+<p class="mb-4 text-gray-300 leading-relaxed">  &lt;key c="t" ne="5"/&gt;</p>
+<p class="mb-4 text-gray-300 leading-relaxed">&lt;/row&gt;</code></pre></p>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Accessing Custom Layouts</h2>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Open Settings</li>
+<li class="ml-4 text-gray-300">2. Find the <strong class="text-white">Layouts</strong> preference</li>
+<li class="ml-4 text-gray-300">3. Use the text entry dialog to specify layout XML</li>
+</ul>
+<p class="mb-4 text-gray-300 leading-relaxed">The dialog includes:</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Multi-line text entry with line numbers</li>
+<li class="ml-4 text-gray-300">&#8226; Real-time validation for syntax errors</li>
+<li class="ml-4 text-gray-300">&#8226; Option to remove custom layout</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Layout Structure</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A complete layout consists of:</p>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Element</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Rows</strong></td><td class="px-4 py-2 border-t border-gray-700">Horizontal groups of keys</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Keys</strong></td><td class="px-4 py-2 border-t border-gray-700">Individual key definitions</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Modkeys</strong></td><td class="px-4 py-2 border-t border-gray-700">Modified key layers</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 3: Design Layout</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Key Properties</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed">The visual editor shows:</p>
-
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto mb-4"><code class="language-text">┌─────────────────────────────────────────┐
-<p class="mb-4 text-gray-300 leading-relaxed">│ Layout Name: [My Custom Layout    ]     │</p>
-<p class="mb-4 text-gray-300 leading-relaxed">├─────────────────────────────────────────┤</p>
-<p class="mb-4 text-gray-300 leading-relaxed">│ ┌───┐ ┌───┐ ┌───┐ ┌───┐ ┌───┐ ...      │</p>
-<p class="mb-4 text-gray-300 leading-relaxed">│ │ Q │ │ W │ │ E │ │ R │ │ T │           │</p>
-<p class="mb-4 text-gray-300 leading-relaxed">│ └───┘ └───┘ └───┘ └───┘ └───┘           │</p>
-<p class="mb-4 text-gray-300 leading-relaxed">│   ↑ Tap to edit key                     │</p>
-<p class="mb-4 text-gray-300 leading-relaxed">├─────────────────────────────────────────┤</p>
-<p class="mb-4 text-gray-300 leading-relaxed">│ [Add Row] [Remove Row] [Key Width]      │</p>
-<p class="mb-4 text-gray-300 leading-relaxed">└─────────────────────────────────────────┘</code></pre></p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 4: Edit Individual Keys</h3>
-
-<p class="mb-4 text-gray-300 leading-relaxed">Tap any key to edit:</p>
-
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Primary</strong></td><td class="px-4 py-2 border-t border-gray-700">Main character</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Shifted</strong></td><td class="px-4 py-2 border-t border-gray-700">Shift character</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Subkeys</strong></td><td class="px-4 py-2 border-t border-gray-700">8-direction subkeys</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Width</strong></td><td class="px-4 py-2 border-t border-gray-700">Key width multiplier</td></tr>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Property</td><td class="px-4 py-2 border-t border-gray-700">Example</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">c</code></td><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">c="a"</code></td><td class="px-4 py-2 border-t border-gray-700">Primary character</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">ne</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">nw</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">se</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">sw</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">n</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">s</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">e</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">w</code></td><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">ne="1"</code></td><td class="px-4 py-2 border-t border-gray-700">Subkey directions</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">width</code></td><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">width="1.5"</code></td><td class="px-4 py-2 border-t border-gray-700">Key width multiplier</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">shift</code></td><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">shift="0.5"</code></td><td class="px-4 py-2 border-t border-gray-700">Left margin/indent</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 5: Save and Test</h3>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">For Developers</h2>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Tap <strong class="text-white">Save Layout</strong></li>
-<li class="ml-4 text-gray-300">2. Tap <strong class="text-white">Test Layout</strong> to preview</li>
-<li class="ml-4 text-gray-300">3. Make adjustments as needed</li>
-<li class="ml-4 text-gray-300">4. Tap <strong class="text-white">Done</strong> when satisfied</li>
-</ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Layout Elements</h2>
+<p class="mb-4 text-gray-300 leading-relaxed">Custom layouts use the same XML format as <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">src/main/layouts/*.xml</code> in the source code. Review existing layouts for syntax examples.</p>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Row Configuration</h3>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Limitations</h2>
 
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Row</td><td class="px-4 py-2 border-t border-gray-700">Typical Contents</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Row 1</strong></td><td class="px-4 py-2 border-t border-gray-700">Number row (optional)</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Row 2</strong></td><td class="px-4 py-2 border-t border-gray-700">QWERTY top row</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Row 3</strong></td><td class="px-4 py-2 border-t border-gray-700">Home row (ASDF...)</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Row 4</strong></td><td class="px-4 py-2 border-t border-gray-700">Bottom row (ZXCV...)</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Row 5</strong></td><td class="px-4 py-2 border-t border-gray-700">Space row</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Key Types</h3>
-
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Type</td><td class="px-4 py-2 border-t border-gray-700">Examples</td><td class="px-4 py-2 border-t border-gray-700">Properties</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Letter</strong></td><td class="px-4 py-2 border-t border-gray-700">A, B, C</td><td class="px-4 py-2 border-t border-gray-700">Has shift variant</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Number</strong></td><td class="px-4 py-2 border-t border-gray-700">1, 2, 3</td><td class="px-4 py-2 border-t border-gray-700">Symbol on shift</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Symbol</strong></td><td class="px-4 py-2 border-t border-gray-700">@, #, $</td><td class="px-4 py-2 border-t border-gray-700">May have shift variant</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Action</strong></td><td class="px-4 py-2 border-t border-gray-700">Shift, Backspace</td><td class="px-4 py-2 border-t border-gray-700">Special behavior</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Space</strong></td><td class="px-4 py-2 border-t border-gray-700">Spacebar</td><td class="px-4 py-2 border-t border-gray-700">Wide key</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Key Width</h3>
-
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Width</td><td class="px-4 py-2 border-t border-gray-700">Use Case</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">0.5x</strong></td><td class="px-4 py-2 border-t border-gray-700">Narrow keys</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">1.0x</strong></td><td class="px-4 py-2 border-t border-gray-700">Standard letters</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">1.5x</strong></td><td class="px-4 py-2 border-t border-gray-700">Shift, Tab</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">2.0x</strong></td><td class="px-4 py-2 border-t border-gray-700">Enter key</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">5.0x</strong></td><td class="px-4 py-2 border-t border-gray-700">Spacebar</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Advanced Features</h2>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Subkey Configuration</h3>
-
-<p class="mb-4 text-gray-300 leading-relaxed">For each key, define 8 subkeys:</p>
-
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto mb-4"><code class="language-text">[1]   [2]   [3]
-<p class="mb-4 text-gray-300 leading-relaxed">      \   |   /</p>
-<p class="mb-4 text-gray-300 leading-relaxed"> [4] -- [Key] -- [5]</p>
-<p class="mb-4 text-gray-300 leading-relaxed">      /   |   \</p>
-<p class="mb-4 text-gray-300 leading-relaxed">    [6]   [7]   [8]</code></pre></p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Key Actions</h3>
-
-<p class="mb-4 text-gray-300 leading-relaxed">Assign special actions to keys:</p>
-
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Action</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Switch Layout</strong></td><td class="px-4 py-2 border-t border-gray-700">Change to specific layout</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Emoji</strong></td><td class="px-4 py-2 border-t border-gray-700">Open emoji picker</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Symbols</strong></td><td class="px-4 py-2 border-t border-gray-700">Open symbol keyboard</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Voice</strong></td><td class="px-4 py-2 border-t border-gray-700">Start voice input</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Macro</strong></td><td class="px-4 py-2 border-t border-gray-700">Execute key sequence</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Import and Export</h2>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Export Layout</h3>
-
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Open your custom layout</li>
-<li class="ml-4 text-gray-300">2. Tap <strong class="text-white">Export</strong></li>
-<li class="ml-4 text-gray-300">3. Choose format (JSON or XML)</li>
-<li class="ml-4 text-gray-300">4. Share or save file</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Import Layout</h3>
-
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Go to <strong class="text-white">Custom Layouts</strong></li>
-<li class="ml-4 text-gray-300">2. Tap <strong class="text-white">Import</strong></li>
-<li class="ml-4 text-gray-300">3. Select file to import</li>
-<li class="ml-4 text-gray-300">4. Layout appears in list</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Share with Others</h3>
-
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Export your layout</li>
-<li class="ml-4 text-gray-300">2. Share the file</li>
-<li class="ml-4 text-gray-300">3. Recipients import via CleverKeys</li>
-</ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Tips and Tricks</h2>
-
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Start with template</strong>: Easier than blank canvas</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Test frequently</strong>: Use the test feature often</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Small changes</strong>: Make incremental adjustments</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Backup first</strong>: Export before major changes</li>
-</ul>
-<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!TIP]</blockquote>
-<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">Clone a layout you like and modify just the keys you want to change.</blockquote>
-
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Examples</h2>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Programming Layout</h3>
-
-<p class="mb-4 text-gray-300 leading-relaxed">Optimize for coding with symbols accessible:</p>
-
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Add <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">{</code> <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">}</code> <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">[</code> <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">]</code> as subkeys</li>
-<li class="ml-4 text-gray-300">&#8226; Place <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">=</code> and <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">;</code> in easy positions</li>
-<li class="ml-4 text-gray-300">&#8226; Add Tab key in convenient location</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">One-Handed Layout</h3>
-
-<p class="mb-4 text-gray-300 leading-relaxed">Compact layout for single-hand typing:</p>
-
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; All keys within thumb reach</li>
-<li class="ml-4 text-gray-300">&#8226; Larger key targets</li>
-<li class="ml-4 text-gray-300">&#8226; Essential keys only</li>
-</ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Settings</h2>
-
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Location</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Custom Layouts</strong></td><td class="px-4 py-2 border-t border-gray-700">Layouts</td><td class="px-4 py-2 border-t border-gray-700">Manage custom layouts</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Edit Layout</strong></td><td class="px-4 py-2 border-t border-gray-700">Custom Layouts</td><td class="px-4 py-2 border-t border-gray-700">Open editor</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Export/Import</strong></td><td class="px-4 py-2 border-t border-gray-700">Custom Layouts</td><td class="px-4 py-2 border-t border-gray-700">Share layouts</td></tr>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Feature</td><td class="px-4 py-2 border-t border-gray-700">Status</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Visual editor</strong></td><td class="px-4 py-2 border-t border-gray-700">Not available</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Layout import</strong></td><td class="px-4 py-2 border-t border-gray-700">Via text entry only</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Sharing</strong></td><td class="px-4 py-2 border-t border-gray-700">Copy/paste XML text</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Common Questions</h2>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Can I make a layout with fewer rows?</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Can I create layouts with a visual editor?</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed">A: Yes, you can remove rows for a more compact layout. Minimum is 2 rows.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">A: No, layouts are defined using XML text entry. Review existing layout files for examples.</p>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: What happens if I delete a custom layout I'm using?</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Where can I find layout examples?</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed">A: CleverKeys switches to the next available layout automatically.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">A: Check the <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">src/main/layouts/</code> directory in the source code for XML layout examples.</p>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Can I share layouts between devices?</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: How do I share a custom layout?</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed">A: Yes, export on one device and import on another.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">A: Copy the XML text and share it. Recipients paste it into their custom layout dialog.</p>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Related Features</h2>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <a href="adding-layouts.html" class="text-green-400 hover:underline">Adding Layouts</a> - Add custom layouts to keyboard</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <a href="adding-layouts.html" class="text-green-400 hover:underline">Adding Layouts</a> - Built-in layout options</li>
 <li class="ml-4 text-gray-300">&#8226; <a href="../customization/per-key-actions.html" class="text-green-400 hover:underline">Per-Key Actions</a> - Customize subkeys</li>
-<li class="ml-4 text-gray-300">&#8226; <a href="../troubleshooting/backup-restore.html" class="text-green-400 hover:underline">Profiles</a> - Save layout configurations</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="language-packs.html" class="text-green-400 hover:underline">Language Packs</a> - Download language support</li>
 </ul>
         </div>
         
         <!-- Prev/Next Navigation -->
         <div class="max-w-4xl mt-8 flex justify-between">
-            <a href="./language-packs.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+            <a href="layouts/language-packs.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
                 <span>&larr;</span>
                 <span class="text-sm text-gray-400">Language Packs</span>
             </a>
-            <a href="./profiles.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+            <a href="layouts/profiles.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
                 <span class="text-sm text-gray-400">Profiles</span>
                 <span>&rarr;</span>
             </a>
