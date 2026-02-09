@@ -15,6 +15,42 @@ data class IntentDefinition(
 ) {
     companion object {
         /**
+         * Prefix used by KeyValueParser to mark intent JSON in KeyValue strings.
+         * When a layout XML contains `intent:'json'`, parsing produces a string key
+         * with this prefix prepended. A future profile importer should strip this
+         * prefix to recover the original JSON for round-trip compatibility.
+         */
+        const val INTENT_PREFIX = "__intent__:"
+
+        /**
+         * Parse an IntentDefinition from JSON with null-safety.
+         * Gson bypasses Kotlin constructors (uses Unsafe), so fields that are absent
+         * in JSON become null rather than their Kotlin defaults. This method applies
+         * fallback defaults for non-nullable fields.
+         *
+         * @return Parsed IntentDefinition with safe defaults, or null on parse failure.
+         */
+        fun parseFromGson(json: String): IntentDefinition? {
+            return try {
+                val raw = com.google.gson.Gson().fromJson(json, IntentDefinition::class.java)
+                    ?: return null
+                // Re-apply Kotlin defaults for fields Gson may have set to null
+                IntentDefinition(
+                    name = raw.name ?: "",
+                    targetType = raw.targetType ?: IntentTargetType.ACTIVITY,
+                    action = raw.action,
+                    data = raw.data,
+                    type = raw.type,
+                    packageName = raw.packageName,
+                    className = raw.className,
+                    extras = raw.extras
+                )
+            } catch (e: Exception) {
+                null
+            }
+        }
+
+        /**
          * Common intent presets for quick selection.
          */
         val PRESETS: List<IntentDefinition> = listOf(

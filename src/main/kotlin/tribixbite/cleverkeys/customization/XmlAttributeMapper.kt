@@ -22,8 +22,8 @@ object XmlAttributeMapper {
     fun toXmlValue(mapping: ShortSwipeMapping): String {
         return when (mapping.actionType) {
             ActionType.TEXT -> {
-                // Wrap in single quotes and escape existing single quotes
-                "'${mapping.actionValue.replace("'", "'\'")}'"
+                // Wrap in single quotes, escaping ' as \' to match QUOTED_PAT regex
+                "'${mapping.actionValue.replace("'", "\\'")}'"
             }
             ActionType.COMMAND -> {
                 // Command names from CommandRegistry match KeyValue.getSpecialKeyByName()

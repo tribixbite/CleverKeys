@@ -132,15 +132,12 @@ data class ShortSwipeMapping(
 
     /**
      * Get the IntentDefinition if this is an INTENT type mapping.
+     * Uses null-safe parsing to handle Gson's constructor bypass.
      * @return Parsed IntentDefinition or null if parsing fails or wrong type.
      */
     fun getIntentDefinition(): IntentDefinition? {
         return if (actionType == ActionType.INTENT) {
-            try {
-                com.google.gson.Gson().fromJson(actionValue, IntentDefinition::class.java)
-            } catch (e: Exception) {
-                null
-            }
+            IntentDefinition.parseFromGson(actionValue)
         } else null
     }
 

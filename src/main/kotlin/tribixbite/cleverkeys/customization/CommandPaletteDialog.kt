@@ -300,7 +300,9 @@ private fun LabelConfirmationDialog(
 
                 OutlinedTextField(
                     value = currentLabel,
-                    onValueChange = { if (it.length <= 8) onLabelChange(it) },
+                    onValueChange = {
+                        if (it.length <= ShortSwipeMapping.MAX_DISPLAY_LENGTH) onLabelChange(it)
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     label = { Text("Display Label") },
                     placeholder = {
@@ -314,7 +316,7 @@ private fun LabelConfirmationDialog(
                         if (isIconMode) {
                             Text("Leave blank to use default icon. Type text for a custom label.")
                         } else {
-                            Text("What shows on the key (max 8 chars). Leave blank for default: $defaultDescription")
+                            Text("What shows on the key (max ${ShortSwipeMapping.MAX_DISPLAY_LENGTH} chars). Leave blank for default: $defaultDescription")
                         }
                     },
                     singleLine = true

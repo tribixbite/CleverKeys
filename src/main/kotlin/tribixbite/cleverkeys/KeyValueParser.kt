@@ -132,15 +132,21 @@ object KeyValueParser {
      * Parse an intent key definition.
      * Syntax: intent:'json_payload'
      * Example: intent:'{"name":"Open Browser","targetType":"ACTIVITY","action":"android.intent.action.VIEW"}'
-     * The JSON is stored as a string key and executed by CustomShortSwipeExecutor.
+     *
+     * The JSON is stored as a string key with [IntentDefinition.INTENT_PREFIX] prepended.
+     * This prefix serves as a discriminator for profile importers to recognize intent keys
+     * and route them to CustomShortSwipeExecutor rather than typing them as text.
+     *
+     * @see tribixbite.cleverkeys.customization.IntentDefinition.INTENT_PREFIX
      */
     private fun parseIntentKeydef(m: Matcher): KeyValue {
         if (!match(m, QUOTED_PAT)) {
             parseError("Expected quoted JSON for intent, e.g. intent:'{\"name\":\"...\",\"action\":\"...\"}'", m)
         }
         val json = m.group(1).replace("\\'", "'")
-        // Store as a string key with a special prefix that CustomShortSwipeExecutor recognizes
-        return KeyValue.makeStringKey("__intent__:$json", 0)
+        return KeyValue.makeStringKey(
+            tribixbite.cleverkeys.customization.IntentDefinition.INTENT_PREFIX + json, 0
+        )
     }
 
     /** Returns [true] if the next token is a comma, [false] if it is the end of the input. Throws an error otherwise. */

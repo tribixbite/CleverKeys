@@ -69,7 +69,11 @@ class CustomShortSwipeExecutor(private val context: Context) {
      */
     private fun executeIntent(intentJson: String): Boolean {
         return try {
-            val intentDef = com.google.gson.Gson().fromJson(intentJson, IntentDefinition::class.java)
+            val intentDef = IntentDefinition.parseFromGson(intentJson)
+            if (intentDef == null) {
+                Log.e(TAG, "Failed to parse intent JSON")
+                return false
+            }
 
             // Validate intent before execution
             val validationError = validateIntent(intentDef)
@@ -80,10 +84,19 @@ class CustomShortSwipeExecutor(private val context: Context) {
 
             val intent = android.content.Intent()
 
-            // Set basic fields
+            // Set basic fields - use setDataAndType when both are present to avoid
+            // mutual clearing (Intent.setData clears type, Intent.setType clears data)
             if (!intentDef.action.isNullOrBlank()) intent.action = intentDef.action
-            if (!intentDef.data.isNullOrBlank()) intent.data = android.net.Uri.parse(intentDef.data)
-            if (!intentDef.type.isNullOrBlank()) intent.type = intentDef.type
+            val hasData = !intentDef.data.isNullOrBlank()
+            val hasType = !intentDef.type.isNullOrBlank()
+            when {
+                hasData && hasType -> intent.setDataAndType(
+                    android.net.Uri.parse(intentDef.data),
+                    intentDef.type
+                )
+                hasData -> intent.data = android.net.Uri.parse(intentDef.data)
+                hasType -> intent.type = intentDef.type
+            }
             if (!intentDef.packageName.isNullOrBlank()) intent.`package` = intentDef.packageName
 
             // Set component if both package and class are provided
@@ -136,8 +149,8 @@ class CustomShortSwipeExecutor(private val context: Context) {
             return "Intent must have either an action or a package name"
         }
 
-        // If package specified, check it exists (for activities)
-        if (!intentDef.packageName.isNullOrBlank() && intentDef.targetType == IntentTargetType.ACTIVITY) {
+        // If package specified, check it exists (for all target types)
+        if (!intentDef.packageName.isNullOrBlank()) {
             try {
                 context.packageManager.getPackageInfo(intentDef.packageName, 0)
             } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
@@ -146,11 +159,11 @@ class CustomShortSwipeExecutor(private val context: Context) {
         }
 
         // Validate URI format if data is provided
+        // Uri.parse() never throws, so we check scheme presence for non-empty URIs
         if (!intentDef.data.isNullOrBlank()) {
-            try {
-                android.net.Uri.parse(intentDef.data)
-            } catch (e: Exception) {
-                return "Invalid URI: ${intentDef.data}"
+            val uri = android.net.Uri.parse(intentDef.data)
+            if (uri.scheme.isNullOrBlank()) {
+                return "Invalid URI (missing scheme): ${intentDef.data}"
             }
         }
 
@@ -378,7 +391,7 @@ class CustomShortSwipeExecutor(private val context: Context) {
         }
 
         return try {
-            when (command) {
+            val success = when (command) {
                 // Clipboard operations
                 AvailableCommand.COPY -> {
                     inputConnection.performContextMenuAction(android.R.id.copy)
@@ -467,12 +480,10 @@ class CustomShortSwipeExecutor(private val context: Context) {
                 // System commands - these return KeyValue for special handling
                 AvailableCommand.SWITCH_IME -> {
                     // This needs to be handled at a higher level (KeyEventHandler)
-                    // Return a special result that signals this
                     Log.d(TAG, "SWITCH_IME command - requires IME service handling")
-                    false // Let the caller know this needs special handling
+                    false
                 }
                 AvailableCommand.VOICE_INPUT -> {
-                    // This needs to be handled at a higher level
                     Log.d(TAG, "VOICE_INPUT command - requires IME service handling")
                     false
                 }
@@ -480,7 +491,7 @@ class CustomShortSwipeExecutor(private val context: Context) {
                 // Layout switching commands - require keyboard service handling
                 AvailableCommand.SWITCH_FORWARD -> {
                     Log.d(TAG, "SWITCH_FORWARD command - requires keyboard service handling")
-                    false // Let the caller know this needs special handling
+                    false
                 }
                 AvailableCommand.SWITCH_BACKWARD -> {
                     Log.d(TAG, "SWITCH_BACKWARD command - requires keyboard service handling")
@@ -490,17 +501,15 @@ class CustomShortSwipeExecutor(private val context: Context) {
                 // Text processing commands - require keyboard view handling
                 AvailableCommand.TEXT_ASSIST -> {
                     Log.d(TAG, "TEXT_ASSIST command - requires keyboard view handling")
-                    false // Let the caller know this needs special handling
+                    false
                 }
                 AvailableCommand.REPLACE_TEXT -> {
                     Log.d(TAG, "REPLACE_TEXT command - requires keyboard view handling")
                     false
                 }
                 AvailableCommand.SHOW_TEXT_MENU -> {
-                    // Select word under cursor to trigger floating toolbar
-                    // First, we'll select the word to make the toolbar appear
                     Log.d(TAG, "SHOW_TEXT_MENU command - selecting word to show toolbar")
-                    false // Let the caller know this needs special handling
+                    false
                 }
 
                 // Language switching commands - require keyboard service handling
@@ -513,8 +522,8 @@ class CustomShortSwipeExecutor(private val context: Context) {
                     false
                 }
             }
-            Log.d(TAG, "Executed COMMAND action: ${command.name}")
-            true
+            Log.d(TAG, "Executed COMMAND action: ${command.name} -> $success")
+            success
         } catch (e: Exception) {
             Log.e(TAG, "Failed to execute COMMAND action: ${command.name}", e)
             false

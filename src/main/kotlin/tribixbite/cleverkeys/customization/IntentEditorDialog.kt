@@ -10,13 +10,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.google.gson.Gson
 
 /**
  * Dialog for creating or editing an IntentDefinition.
@@ -168,7 +166,7 @@ fun IntentEditorDialog(
                             readOnly = true,
                             trailingIcon = {
                                 IconButton(onClick = { expandedTypeDropdown = true }) {
-                                    Icon(Icons.Filled.ArrowDropDown, contentDescription = null)
+                                    Icon(Icons.Filled.ArrowDropDown, contentDescription = "Select target type")
                                 }
                             },
                             modifier = Modifier.fillMaxWidth()
@@ -177,11 +175,11 @@ fun IntentEditorDialog(
                             expanded = expandedTypeDropdown,
                             onDismissRequest = { expandedTypeDropdown = false }
                         ) {
-                            IntentTargetType.values().forEach { type ->
+                            IntentTargetType.entries.forEach { targetTypeOption ->
                                 DropdownMenuItem(
-                                    text = { Text(type.name) },
+                                    text = { Text(targetTypeOption.name) },
                                     onClick = {
-                                        targetType = type
+                                        targetType = targetTypeOption
                                         expandedTypeDropdown = false
                                     }
                                 )
@@ -271,7 +269,9 @@ fun IntentEditorDialog(
                         IconButton(
                             onClick = {
                                 if (newExtraKey.isNotBlank()) {
-                                    extrasList = extrasList + (newExtraKey to newExtraValue)
+                                    // Replace existing key or add new one (prevents duplicates)
+                                    extrasList = extrasList.filter { it.first != newExtraKey } +
+                                        (newExtraKey to newExtraValue)
                                     newExtraKey = ""
                                     newExtraValue = ""
                                 }
