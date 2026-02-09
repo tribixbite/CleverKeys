@@ -44,6 +44,20 @@
       "priority": "P0"
     },
     {
+      "file": "getting-started/quick-settings.md",
+      "title": "Quick Settings Tile",
+      "description": "Fast keyboard switching from notification shade",
+      "category": "Getting Started",
+      "priority": "P1"
+    },
+    {
+      "file": "FAQ.md",
+      "title": "FAQ",
+      "description": "Frequently asked questions",
+      "category": "Getting Started",
+      "priority": "P0"
+    },
+    {
       "file": "typing/swipe-typing.md",
       "title": "Swipe Typing",
       "description": "How neural swipe prediction works",
@@ -70,6 +84,20 @@
       "description": "Emoji picker and symbol input",
       "category": "Typing",
       "priority": "P0"
+    },
+    {
+      "file": "typing/smart-punctuation.md",
+      "title": "Smart Punctuation",
+      "description": "Automatic punctuation attachment and spacing",
+      "category": "Typing",
+      "priority": "P1"
+    },
+    {
+      "file": "typing/user-dictionary.md",
+      "title": "User Dictionary",
+      "description": "Add custom words and preserve capitalization",
+      "category": "Typing",
+      "priority": "P1"
     },
     {
       "file": "gestures/short-swipes.md",
@@ -222,6 +250,13 @@
       "file": "settings/accessibility.md",
       "title": "Accessibility",
       "description": "Switch Access, TalkBack, large keys",
+      "category": "Settings",
+      "priority": "P1"
+    },
+    {
+      "file": "settings/password-fields.md",
+      "title": "Password Field Mode",
+      "description": "Enhanced security in password fields",
       "category": "Settings",
       "priority": "P1"
     },
