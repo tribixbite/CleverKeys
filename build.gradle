@@ -340,6 +340,17 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.BeamSearchEngineTest',
     'tribixbite.cleverkeys.PipelineIntegrationTest',
     'tribixbite.cleverkeys.ShortSwipeIntentTest',
+    'tribixbite.cleverkeys.GestureTest',
+    'tribixbite.cleverkeys.ModmapTest',
+    'tribixbite.cleverkeys.ComposeKeyPureTest',
+    'tribixbite.cleverkeys.KeyValueParserTest',
+    'tribixbite.cleverkeys.onnx.PrefixBoostTrieTest',
+    'tribixbite.cleverkeys.onnx.BroadcastSupportTest',
+    'tribixbite.cleverkeys.NeuralPredictionPureTest',
+    'tribixbite.cleverkeys.IntegrationPureTest',
+    'tribixbite.cleverkeys.CoordinateNormalizerTest',
+    'tribixbite.cleverkeys.TrajectoryFeatureCalculatorTest',
+    // SwipePrunerTest excluded: requires android.util.Log (MockK + Robolectric)
   ]
 
   mainClass = 'org.junit.runner.JUnitCore'
