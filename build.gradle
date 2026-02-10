@@ -372,6 +372,53 @@ tasks.register('runPureTests', JavaExec) {
   }
 }
 
+// MockK test runner — like runPureTests but with android.jar on classpath.
+// Allows MockK to mock Android framework classes (Log, PointF, Context, etc.)
+// without Robolectric. The android.jar stubs provide class definitions; MockK
+// intercepts all calls before the stubs' "Stub!" exceptions are hit.
+// Usage: ./gradlew runMockTests [-PtestClass=SwipePrunerTest]
+tasks.register('runMockTests', JavaExec) {
+  dependsOn 'compileDebugUnitTestKotlin'
+  group = 'verification'
+  description = 'Run MockK-based tests with android.jar stubs (works on ARM64)'
+
+  def mockTestClasses = [
+    'tribixbite.cleverkeys.SwipePrunerTest',
+    'tribixbite.cleverkeys.PrivacyManagerTest',
+    'tribixbite.cleverkeys.DebugLoggingManagerTest',
+    'tribixbite.cleverkeys.AutocapitalisationTest',
+    'tribixbite.cleverkeys.DirectBootManagerTest',
+    'tribixbite.cleverkeys.DirectBootAwarePreferencesTest',
+    'tribixbite.cleverkeys.DictionaryManagerTest',
+    'tribixbite.cleverkeys.VibratorCompatTest',
+  ]
+
+  mainClass = 'org.junit.runner.JUnitCore'
+
+  // android.jar MUST come AFTER MockK on classpath so MockK intercepts first
+  def androidJar = file("${System.getProperty('user.home')}/android-sdk/platforms/android-35/android.jar")
+  classpath = files(
+    "${buildDir}/intermediates/javac/debugUnitTest/classes",
+    "${buildDir}/tmp/kotlin-classes/debugUnitTest",
+    "${buildDir}/intermediates/javac/debug/classes",
+    "${buildDir}/tmp/kotlin-classes/debug",
+  ) + configurations.debugUnitTestRuntimeClasspath + configurations.debugRuntimeClasspath + files(androidJar)
+
+  if (project.hasProperty('testClass')) {
+    def cls = project.property('testClass')
+    args = ["tribixbite.cleverkeys.${cls}"]
+  } else {
+    args = mockTestClasses
+  }
+}
+
+// Run all tests: pure + mock
+tasks.register('runAllTests') {
+  dependsOn 'runPureTests', 'runMockTests'
+  group = 'verification'
+  description = 'Run all tests (pure JVM + MockK-based)'
+}
+
 tasks.register('buildKeyboardFont') {
   def fontFile = file("assets/special_font.ttf")
   if (fontFile.exists()) return
