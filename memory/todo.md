@@ -1,6 +1,16 @@
 # CleverKeys TODO
 
 ## Completed (2026-02-10)
+- ✅ **Instrumented gap-fill tests**: 36 new tests on emulator.wtf (391 → 427 total)
+  - PrivacyManagerInstrumentedTest (13): org.json audit trail, exportSettings JSON, full lifecycle
+  - DirectBootInstrumentedTest (11): PreferenceManager paths, device-protected storage,
+    copy_preferences all types, checkNeedMigration, DirectBootManager singleton/callback/cleanup
+  - DebugLoggingManagerInstrumentedTest (12): BroadcastReceiver register/unregister, debug mode
+    toggle via broadcast, sendDebugLog with real Intent, listener notification, full lifecycle
+  - Fixed EmojiSearchTest: testGetEmojiNameForUnknownReturnsNull was wrong — isEmoticon heuristic
+    classifies ASCII strings >2 chars as emoticons, returning "emoticon" not null
+  - All 13 MockK-excluded paths now covered by instrumented tests on real Android
+  - **Total test coverage**: 827 local (699 pure + 128 mock) + 427 instrumented = 1,254 tests
 - ✅ **MockK-based test suite**: 128 tests for Android-dependent code (699 → 827 total)
   - PrivacyManagerTest (43): consent, data collection, anonymization, retention, audit trail
   - DirectBootManagerTest (15): singleton lifecycle, unlock detection, DE preferences
@@ -363,10 +373,10 @@
 
 ### Test
 ```bash
-# Instrumented (emulator.wtf)
-ew-cli --app build/outputs/apk/debug/CleverKeys-v1.2.5-x86_64.apk \
+# Instrumented (emulator.wtf) — 427 tests
+ew-cli --app build/outputs/apk/debug/CleverKeys-v1.2.9-x86_64.apk \
        --test build/outputs/apk/androidTest/debug/CleverKeys-debug-androidTest.apk \
-       --device model=Pixel7,version=35 --use-orchestrator --clear-package-data
+       --device model=Pixel7,version=34 --use-orchestrator --clear-package-data
 
 # Local JVM (Gradle — preferred)
 ./gradlew runPureTests                           # 699 pure JVM tests
