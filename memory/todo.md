@@ -1,6 +1,21 @@
 # CleverKeys TODO
 
 ## Completed (2026-02-10)
+- ✅ **MockK-based test suite**: 128 tests for Android-dependent code (699 → 827 total)
+  - PrivacyManagerTest (43): consent, data collection, anonymization, retention, audit trail
+  - DirectBootManagerTest (15): singleton lifecycle, unlock detection, DE preferences
+  - DirectBootAwarePreferencesTest (4): copy to protected storage, API level branching
+  - DebugLoggingManagerTest (9): debug state, listener management, close safety
+  - AutocapitalisationTest (12): state machine (started/typed/event_sent/selection/pause)
+  - DictionaryManagerTest (14): user word CRUD, legacy migration, language switching, JSON format
+  - VibratorCompatTest (11): master/per-event haptic toggles, feedback constants, vibrator fallback
+  - SwipePrunerTest (20): already existed, moved from pure to mock runner
+  - Added `runMockTests` Gradle task (JavaExec + android.jar on classpath)
+  - Added `runAllTests` task combining pure (699) + MockK (128) = 827 total
+  - Key techniques: Unsafe reflection for SDK_INT on Java 21, mockkStatic with function refs
+    for @JvmStatic, direct field assignment for @JvmField var, Objenesis constructor bypass
+  - Excluded paths (require Robolectric): BroadcastReceiver anonymous subclasses,
+    Intent constructors, org.json stubs, PreferenceManager AAR dependency
 - ✅ **Comprehensive test suite upgrade**: 5-agent team, 287 new tests (412 → 699 total)
   - GestureTest: state machine directions, edge cases
   - ModmapTest: modifier key mapping (Shift/Fn/Ctrl)
@@ -354,11 +369,11 @@ ew-cli --app build/outputs/apk/debug/CleverKeys-v1.2.5-x86_64.apk \
        --device model=Pixel7,version=35 --use-orchestrator --clear-package-data
 
 # Local JVM (Gradle — preferred)
-./gradlew runPureTests                           # all 357 tests
-./gradlew runPureTests -PtestClass=ClassName     # single class
-
-# Local JVM (proot — legacy)
-./scripts/run-pure-tests.sh
+./gradlew runPureTests                           # 699 pure JVM tests
+./gradlew runMockTests                           # 128 MockK tests (needs android.jar)
+./gradlew runAllTests                            # all 827 tests
+./gradlew runPureTests -PtestClass=ClassName     # single class (pure)
+./gradlew runMockTests -PtestClass=ClassName     # single class (mock)
 ```
 
 ### Key Files
