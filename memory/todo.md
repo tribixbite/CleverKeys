@@ -1,5 +1,21 @@
 # CleverKeys TODO
 
+## Completed (2026-02-10)
+- ✅ **Comprehensive test suite upgrade**: 5-agent team, 287 new tests (412 → 699 total)
+  - GestureTest: state machine directions, edge cases
+  - ModmapTest: modifier key mapping (Shift/Fn/Ctrl)
+  - ComposeKeyPureTest: compose key sequence constants
+  - KeyValueParserTest: 73 tests for key definition parsing (named keys, keyevents, macros, flags)
+  - CoordinateNormalizerTest: coordinate normalization, key sequence extraction, QWERTY bounds
+  - TrajectoryFeatureCalculatorTest: velocity/acceleration from trajectory points
+  - NeuralPredictionPureTest: 32 tests salvaged from Robolectric (data classes, quality tiers)
+  - IntegrationPureTest: 14 tests salvaged from Robolectric (pipeline integration)
+  - onnx/PrefixBoostTrieTest: binary trie loading, prefix boost, failure links
+  - onnx/BroadcastSupportTest: tensor shape broadcasting rules
+  - SwipePrunerTest: written but excluded from pureTestClasses (requires android.util.Log + MockK)
+  - Fixed 12 test failures: parser syntax mismatches, reflection exception wrapping, dedup logic
+  - All 699 tests pass on ARM64 via `./gradlew runPureTests`
+
 ## Completed (2026-02-09)
 - ✅ **Website, Wiki & CI review and fixes**: 3-agent review + 4-agent fix team
   - Wiki: Added 6 missing pages to wiki-config.json (FAQ, quick-settings, password-fields,
