@@ -339,6 +339,7 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.PipelineBenchmarkTest',
     'tribixbite.cleverkeys.BeamSearchEngineTest',
     'tribixbite.cleverkeys.PipelineIntegrationTest',
+    'tribixbite.cleverkeys.ShortSwipeIntentTest',
   ]
 
   mainClass = 'org.junit.runner.JUnitCore'

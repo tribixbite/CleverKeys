@@ -524,8 +524,8 @@ class ShortSwipeIntentTest {
 
         val xmlValue = XmlAttributeMapper.toXmlValue(mapping)
 
-        // Should return the mapped keyword for legacy command
-        assertThat(xmlValue).isEqualTo("copy")
+        // KeyValue.getKeyByName("COPY") finds it, so the raw command name is used
+        assertThat(xmlValue).isEqualTo("COPY")
     }
 
     @Test

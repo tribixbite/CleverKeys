@@ -35,6 +35,14 @@
   - ShortSwipeCustomizations: round-trip storage format conversion
   - AvailableCommand: fromString, groupedByCategory, display properties
   - All tests follow existing patterns (Truth assertions, @Test annotations, pure JVM)
+  - Registered in build.gradle pureTestClasses list for ARM64 runner
+- ✅ **Spec updated with INTENT action type**: `docs/specs/short-swipe-customization.md`
+  - Added IntentDefinition data class, IntentTargetType enum, parseFromGson docs
+  - Added intent validation rules (action/package, installed check, URI scheme)
+  - Added execution flow (setDataAndType pitfall, dispatch by target type)
+  - Added 11 intent presets table, XML round-trip format, factory/accessor methods
+  - Updated architecture diagram, key files table, ActionType enum, storage format example
+- ✅ **Cleanup**: restored squoosh submodule to committed pointer, added `.tmp-*.sh` to .gitignore
 
 ## Completed (2026-02-04)
 - ✅ **Intent action type for short swipe customization**: complete feature implementation

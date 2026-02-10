@@ -114,6 +114,9 @@ scripts/opensub_missing.txt
 # Prefix boost debug JSON files (binary .bin files are tracked)
 src/main/assets/prefix_boosts/*.json
 
+# Temporary build scripts
+.tmp-*.sh
+
 # MCP tool generated code
 pal_generated.code
 # Temp emoji data files
