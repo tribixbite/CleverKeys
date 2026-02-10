@@ -25,6 +25,16 @@
   - IntentEditorDialog: removed unused imports, .values()→.entries, variable shadowing fix,
     added contentDescription for accessibility, deduplicate extras before add
   - Compilation verified on ARM64 Termux (1186 classes, 0 errors)
+- ✅ **Intent feature unit tests**: comprehensive pure JVM test coverage
+  - Created ShortSwipeIntentTest.kt with 55 tests covering all non-Android functionality
+  - IntentDefinition.parseFromGson: null-safety, default values, malformed JSON handling
+  - IntentDefinition.PRESETS: validation of all 11 preset intents
+  - ActionType: fromString case-insensitivity, enum values, display info
+  - ShortSwipeMapping: constants, factory methods, getIntentDefinition(), storage keys
+  - XmlAttributeMapper.toXmlValue: TEXT quotes, COMMAND mapping, KEY_EVENT prefix, INTENT JSON escaping
+  - ShortSwipeCustomizations: round-trip storage format conversion
+  - AvailableCommand: fromString, groupedByCategory, display properties
+  - All tests follow existing patterns (Truth assertions, @Test annotations, pure JVM)
 
 ## Completed (2026-02-04)
 - ✅ **Intent action type for short swipe customization**: complete feature implementation
