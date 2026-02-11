@@ -1,5 +1,21 @@
 # CleverKeys TODO
 
+## Completed (2026-02-11)
+- ✅ **Tier 2 instrumented tests**: 58 new tests on emulator.wtf (542 → 600 total)
+  - SwipeMLDataStoreTest (36): SQLite CRUD, async store/load, search, pagination, statistics,
+    batch operations, SwipeMLData model (JSON round-trip, validation, dedup, normalization)
+  - ClipboardDatabaseTest (39): add/retrieve, expiry, pin/todo management, size limits,
+    export/import round-trip, ClipboardEntry model, ordering, storage stats
+  - LanguageDetectorTest enhanced (18 → 30): detectLanguageWithConfidence,
+    detectLanguageFromWordsWithConfidence, unsupported language checks, DetectionResult data class
+- ✅ **Production bug fix**: PersonalizationManager.applyFrequencyDecay
+  - Fixed ConcurrentHashMap.Entry.setValue UnsupportedOperationException on API 34
+  - Replaced removeIf+setValue with explicit iterate+put/remove pattern
+- ✅ **OOM test failures fixed**: WordPredictorTest + SwipePredictionTest (12 failures → 0)
+  - WordPredictorTest: reflection-based 57-word test dictionary injection
+  - SwipePredictionTest: OOM guard on NeuralSwipeTypingEngine construction
+- **Total test coverage**: ~898 local (770 pure + 128 mock) + 600 instrumented = ~1,498 tests
+
 ## Completed (2026-02-10)
 - ✅ **Major feature instrumented tests**: 94 new tests on emulator.wtf (427 → 521 total)
   - SuggestionRankerTest (20): scoring formula, ranking, merge/dedup, language context, prefix boost
@@ -8,10 +24,6 @@
   - EditorInfoHelperTest (22): action extraction, label/resource mapping, swap enter flag
   - UserAdaptationManagerTest (22): singleton, selection tracking, multipliers, persistence
   - BackupRestoreManagerTest (12): config/dict export-import round-trip, metadata, screen mismatch
-  - Documented production bug: PersonalizationManager.applyFrequencyDecay throws
-    UnsupportedOperationException on API 34 (ConcurrentHashMap.Entry.setValue)
-  - **Total test coverage**: 827 local (699 pure + 128 mock) + 521 instrumented = 1,348 tests
-  - 12 pre-existing OOM failures in WordPredictorTest/SwipePredictionTest (BinaryDictionaryLoader)
 - ✅ **Instrumented gap-fill tests**: 36 new tests on emulator.wtf (391 → 427 total)
   - PrivacyManagerInstrumentedTest (13): org.json audit trail, exportSettings JSON, full lifecycle
   - DirectBootInstrumentedTest (11): PreferenceManager paths, device-protected storage,
@@ -383,15 +395,15 @@
 
 ### Test
 ```bash
-# Instrumented (emulator.wtf) — 521 tests (509 pass, 12 pre-existing OOM)
+# Instrumented (emulator.wtf) — 600 tests, 0 failures
 ew-cli --app build/outputs/apk/debug/CleverKeys-v1.2.9-x86_64.apk \
        --test build/outputs/apk/androidTest/debug/CleverKeys-debug-androidTest.apk \
-       --device model=Pixel7,version=34 --use-orchestrator --clear-package-data
+       --device model=Pixel7,version=34
 
 # Local JVM (Gradle — preferred)
-./gradlew runPureTests                           # 699 pure JVM tests
+./gradlew runPureTests                           # 770 pure JVM tests
 ./gradlew runMockTests                           # 128 MockK tests (needs android.jar)
-./gradlew runAllTests                            # all 827 tests
+./gradlew runAllTests                            # all ~898 tests
 ./gradlew runPureTests -PtestClass=ClassName     # single class (pure)
 ./gradlew runMockTests -PtestClass=ClassName     # single class (mock)
 ```
