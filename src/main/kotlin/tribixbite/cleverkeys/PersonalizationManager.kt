@@ -123,28 +123,32 @@ class PersonalizationManager(context: Context) {
      * Apply decay to reduce influence of old words
      */
     fun applyFrequencyDecay() {
-        // Decay word frequencies
-        wordFrequencies.entries.removeIf { entry ->
-            val newFreq = entry.value / DECAY_FACTOR
+        // Decay word frequencies — use explicit iterate+put/remove instead of
+        // removeIf+setValue which throws UnsupportedOperationException on API 34
+        // (ConcurrentHashMap.EntrySetView returns SimpleImmutableEntry)
+        val wordsToRemove = mutableListOf<String>()
+        for ((word, freq) in wordFrequencies) {
+            val newFreq = freq / DECAY_FACTOR
             if (newFreq > 0) {
-                entry.setValue(newFreq)
-                false
+                wordFrequencies[word] = newFreq
             } else {
-                true
+                wordsToRemove.add(word)
             }
         }
+        wordsToRemove.forEach { wordFrequencies.remove(it) }
 
         // Also decay bigrams
         for (bigramMap in bigrams.values) {
-            bigramMap.entries.removeIf { entry ->
-                val newFreq = entry.value / DECAY_FACTOR
+            val bigramsToRemove = mutableListOf<String>()
+            for ((word, freq) in bigramMap) {
+                val newFreq = freq / DECAY_FACTOR
                 if (newFreq > 0) {
-                    entry.setValue(newFreq)
-                    false
+                    bigramMap[word] = newFreq
                 } else {
-                    true
+                    bigramsToRemove.add(word)
                 }
             }
+            bigramsToRemove.forEach { bigramMap.remove(it) }
         }
 
         saveUserData()

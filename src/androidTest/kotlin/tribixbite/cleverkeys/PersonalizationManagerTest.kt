@@ -224,23 +224,27 @@ class PersonalizationManagerTest {
     // applyFrequencyDecay
     // =========================================================================
 
-    // TODO: applyFrequencyDecay has a production bug — ConcurrentHashMap.entries.removeIf
-    // calls entry.setValue() which throws UnsupportedOperationException on Android API 34+
-    // because ConcurrentHashMap.EntrySetView returns SimpleImmutableEntry objects.
-    // These tests verify the bug exists; fix would require iterating with explicit remove.
+    @Test
+    fun decayReducesFrequencies() {
+        manager.recordWordUsage("hello")
+        val freqBefore = manager.getPersonalizedFrequency("hello")
+        manager.applyFrequencyDecay()
+        val freqAfter = manager.getPersonalizedFrequency("hello")
+        assertTrue("Frequency should decrease after decay, was $freqBefore -> $freqAfter",
+            freqAfter < freqBefore)
+    }
 
     @Test
-    fun decayThrowsUnsupportedOperationOnApi34() {
-        manager.recordWordUsage("hello")
-        try {
-            manager.applyFrequencyDecay()
-            // If it doesn't throw, the bug is fixed — verify decay behavior
-            val freqAfter = manager.getPersonalizedFrequency("hello")
-            assertTrue("Frequency should decrease if decay works", freqAfter >= 0f)
-        } catch (e: UnsupportedOperationException) {
-            // Known bug: ConcurrentHashMap entry.setValue() on Android API 34
-            assertTrue("Expected UnsupportedOperationException", true)
-        }
+    fun decayRemovesLowFrequencyWords() {
+        manager.recordWordUsage("rare")
+        // FREQUENCY_INCREMENT is 10, DECAY_FACTOR is 2
+        // After one decay: 10/2=5, after two: 5/2=2, after three: 2/2=1, after four: 1/2=0 → removed
+        manager.applyFrequencyDecay()
+        manager.applyFrequencyDecay()
+        manager.applyFrequencyDecay()
+        manager.applyFrequencyDecay()
+        assertFalse("Word should be removed after multiple decays",
+            manager.isKnownWord("rare"))
     }
 
     // =========================================================================
