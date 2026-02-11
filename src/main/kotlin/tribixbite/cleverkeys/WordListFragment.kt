@@ -151,9 +151,11 @@ class WordListFragment : Fragment() {
     }
 
     private var currentSortType: DictionaryManagerActivity.SortType = DictionaryManagerActivity.SortType.FREQ
+    private var currentSearchQuery: String = ""  // #96: Track search query for refresh()
 
     fun filter(query: String, sortType: DictionaryManagerActivity.SortType = DictionaryManagerActivity.SortType.FREQ) {
         if (!::adapter.isInitialized) return
+        currentSearchQuery = query  // #96: Persist query so refresh() can reapply
         currentSortType = sortType
 
         // Cancel previous search to prevent multiple concurrent operations
@@ -245,7 +247,7 @@ class WordListFragment : Fragment() {
         lifecycleScope.launch {
             try {
                 dataSource.toggleWord(word.word, enabled)
-                loadWords()  // Reload to reflect changes
+                filter(currentSearchQuery, currentSortType)  // #96: Preserve search state
                 // Notify parent activity to refresh other tabs
                 (activity as? DictionaryManagerActivity)?.refreshAllTabs()
             } catch (e: Exception) {
@@ -267,7 +269,7 @@ class WordListFragment : Fragment() {
                 lifecycleScope.launch {
                     try {
                         dataSource.deleteWord(word.word)
-                        loadWords()
+                        filter(currentSearchQuery, currentSortType)  // #96: Preserve search state
                         // Notify parent activity to refresh predictions
                         (activity as? DictionaryManagerActivity)?.refreshAllTabs()
                     } catch (e: Exception) {
@@ -379,6 +381,7 @@ class WordListFragment : Fragment() {
     }
 
     fun refresh() {
-        loadWords()
+        // #96: Reapply current search/sort state instead of loading unfiltered
+        filter(currentSearchQuery, currentSortType)
     }
 }

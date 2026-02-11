@@ -39,8 +39,9 @@ class ConfigDefaultsTest {
     }
 
     @Test
-    fun `keyboard opacity default is 81`() {
-        assertThat(Defaults.KEYBOARD_OPACITY).isEqualTo(81)
+    fun `keyboard opacity default is 100`() {
+        // #51: Must be fully opaque by default to avoid transparent keyboard on first use
+        assertThat(Defaults.KEYBOARD_OPACITY).isEqualTo(100)
     }
 
     @Test

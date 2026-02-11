@@ -21,7 +21,7 @@ object Defaults {
     const val KEYBOARD_HEIGHT_PORTRAIT = 30
     const val KEYBOARD_HEIGHT_LANDSCAPE = 40
     const val LABEL_BRIGHTNESS = 100
-    const val KEYBOARD_OPACITY = 81
+    const val KEYBOARD_OPACITY = 100  // #51: Must be fully opaque by default
     const val KEY_OPACITY = 100
     const val KEY_ACTIVATED_OPACITY = 100
     const val CHARACTER_SIZE = 1.18f

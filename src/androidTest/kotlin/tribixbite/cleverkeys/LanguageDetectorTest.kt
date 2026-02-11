@@ -271,9 +271,10 @@ class LanguageDetectorTest {
     // =========================================================================
 
     @Test
-    fun testSupportedLanguagesCountAtLeastFive() {
+    fun testSupportedLanguagesCountAtLeastSix() {
+        // #50: Now includes Swedish (sv)
         val languages = detector.getSupportedLanguages()
-        assertTrue("Should support at least 5 languages", languages.size >= 5)
+        assertTrue("Should support at least 6 languages (en, es, fr, pt, de, sv)", languages.size >= 6)
     }
 
     @Test
@@ -282,6 +283,44 @@ class LanguageDetectorTest {
         detector.setConfidenceThreshold(0.5f)
         detector.setConfidenceThreshold(0.0f)
         detector.setConfidenceThreshold(1.0f)
+    }
+
+    // =========================================================================
+    // #50 — Swedish language support
+    // =========================================================================
+
+    @Test
+    fun testSwedishIsSupported() {
+        assertTrue("Swedish should be supported", detector.isLanguageSupported("sv"))
+    }
+
+    @Test
+    fun testDetectSwedishText() {
+        val text = "Jag gillar att läsa böcker och skriva brev till mina vänner varje dag i veckan."
+        val result = detector.detectLanguage(text)
+        // If we get a result, it should be Swedish
+        if (result != null) {
+            assertEquals("Should detect Swedish when data available", "sv", result)
+        }
+    }
+
+    @Test
+    fun testDetectLanguageFromSwedishWords() {
+        val words = listOf("och", "att", "det", "som", "har", "för", "inte", "med", "den", "av")
+        val result = detector.detectLanguageFromWords(words)
+        if (result != null) {
+            assertEquals("sv", result)
+        }
+    }
+
+    @Test
+    fun testDetectSwedishWithConfidence() {
+        val text = "Det var en gång en kung som bodde i ett slott och hade många tjänare som hjälpte honom varje dag."
+        val result = detector.detectLanguageWithConfidence(text)
+        if (result != null) {
+            assertEquals("Should detect Swedish", "sv", result.language)
+            assertTrue("Confidence should be positive", result.confidence > 0f)
+        }
     }
 
     // =========================================================================

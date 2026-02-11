@@ -45,6 +45,7 @@ class LanguageDetector {
         initializeFrenchPatterns()
         initializePortuguesePatterns()
         initializeGermanPatterns()
+        initializeSwedishPatterns()  // #50: Swedish dictionary is bundled — add detection
     }
 
     /**
@@ -172,9 +173,35 @@ class LanguageDetector {
     }
 
     /**
+     * Initialize Swedish language patterns (#50)
+     * Swedish character frequencies and common words for detection.
+     */
+    private fun initializeSwedishPatterns() {
+        val svChars = mapOf(
+            'e' to 10.1f,
+            'a' to 9.3f,
+            'n' to 8.5f,
+            't' to 7.7f,
+            'r' to 8.4f,
+            's' to 6.6f,
+            'i' to 5.8f,
+            'd' to 4.5f,
+            'l' to 5.3f,
+            'o' to 4.5f
+        )
+        languageCharFreqs["sv"] = svChars
+
+        val svWords = arrayOf(
+            "och", "att", "det", "i", "en", "som", "har", "för", "inte", "med",
+            "den", "av", "är", "på", "var", "jag", "till", "kan", "om", "vi"
+        )
+        languageCommonWords["sv"] = svWords
+    }
+
+    /**
      * Detect language from a text sample
      * @param text Input text to analyze
-     * @return Detected language code ("en", "es", "fr", "de") or null if detection fails
+     * @return Detected language code ("en", "es", "fr", "de", "sv") or null if detection fails
      */
     fun detectLanguage(text: String?): String? {
         if (text == null || text.length < MIN_TEXT_LENGTH) {
