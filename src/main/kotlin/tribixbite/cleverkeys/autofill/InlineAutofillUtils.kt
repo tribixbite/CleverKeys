@@ -140,13 +140,19 @@ object InlineAutofillUtils {
         }
 
         // Inflate each inline suggestion and add to container
-        for (suggestion in inlineSuggestions) {
+        // #48: Log inflate failures to aid debugging with password managers
+        for ((index, suggestion) in inlineSuggestions.withIndex()) {
             suggestion.inflate(
                 context,
                 Size(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT),
                 context.mainExecutor
             ) { view ->
-                view?.let { container.addView(it) }
+                if (view != null) {
+                    container.addView(view)
+                } else {
+                    android.util.Log.w("InlineAutofill",
+                        "Suggestion $index inflate returned null (may require auth unlock)")
+                }
             }
         }
 

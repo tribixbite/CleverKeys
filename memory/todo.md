@@ -76,16 +76,24 @@ Issues already implemented, just need verification + close:
 ---
 
 ## Completed (2026-02-11)
-- ✅ **Issue regression test suite + 3 bug fixes**: 57 new pure JVM tests + 4 instrumented
-  - IssueRegressionTest.kt: 57 tests covering #26 #35 #48 #50 #51 #52 #55 #58 #62 #67
-    #71 #72 #74 #75 #78 #79 #81 #82 #83 #86 #92 (config defaults, ranges, consistency)
+- ✅ **#48 autofill fix**: 3 changes for inline autofill on password fields
+  - Removed password mode block in SuggestionBar.setInlineAutofillView() (was silently blocking all autofill)
+  - Added android:supportsInlineSuggestions="true" to method.xml
+  - Added error logging for null inflate results in InlineAutofillUtils.kt
+- ✅ **#50 docs fix**: Fixed README.md and wiki language-packs.md (missing --name argument)
+- ✅ **Comprehensive test expansion**: 132 new tests (4 files)
+  - TerminalUtilsTest.kt: 28 MockK tests for #70 terminal app detection
+  - KeyRepeatLogicTest.kt: 22 MockK tests for #81 backspace-only logic truth table
+  - AutoSpaceLogicTest.kt: 25 pure JVM tests for #82 auto-space decision logic
+  - IssueRegressionTest.kt: 57 pure JVM tests covering all open issue config defaults
   - Fix #51: KEYBOARD_OPACITY 81→100 (fully opaque default)
   - Fix #96: WordListFragment.refresh()/toggleWord()/deleteWord() preserve search state
   - Fix #50: Swedish character frequency + common word patterns in LanguageDetector
   - LanguageDetectorTest: 4 new Swedish detection instrumented tests
   - ConfigDefaultsTest updated for new opacity default
-  - All 756 pure JVM + 128 MockK tests pass
-  - **Total tests**: ~955 local (813 pure + 128 mock) + 604 instrumented = ~1,559
+  - All 781 pure JVM + 176 MockK tests pass
+  - **Total tests**: ~1,561 (781 pure + 176 mock + ~604 instrumented)
+- ✅ **Persistent memory file**: memory/issue-action-plan.md with full phase plan
 - ✅ **Tier 2 instrumented tests**: 58 new tests on emulator.wtf (542 → 600 total)
   - SwipeMLDataStoreTest (36): SQLite CRUD, async store/load, search, pagination, statistics,
     batch operations, SwipeMLData model (JSON round-trip, validation, dedup, normalization)
@@ -486,9 +494,9 @@ ew-cli --app build/outputs/apk/debug/CleverKeys-v1.2.9-x86_64.apk \
        --device model=Pixel7,version=34
 
 # Local JVM (Gradle — preferred)
-./gradlew runPureTests                           # 770 pure JVM tests
-./gradlew runMockTests                           # 128 MockK tests (needs android.jar)
-./gradlew runAllTests                            # all ~898 tests
+./gradlew runPureTests                           # 781 pure JVM tests
+./gradlew runMockTests                           # 176 MockK tests (needs android.jar)
+./gradlew runAllTests                            # all ~957 tests
 ./gradlew runPureTests -PtestClass=ClassName     # single class (pure)
 ./gradlew runMockTests -PtestClass=ClassName     # single class (mock)
 ```

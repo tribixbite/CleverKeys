@@ -504,10 +504,10 @@ class SuggestionBar : LinearLayout {
             return
         }
 
-        // Don't show autofill in password mode (we have our own password display)
-        if (isPasswordMode) {
-            return
-        }
+        // #48: Allow autofill in password mode — password managers NEED to show
+        // inline suggestions on password fields. Previous code blocked this silently,
+        // causing Safe, Bitwarden, etc. to fail on login forms.
+        // isPasswordMode only hides typed characters; autofill chips are separate.
 
         // Clear existing suggestions and views
         removeAllViews()

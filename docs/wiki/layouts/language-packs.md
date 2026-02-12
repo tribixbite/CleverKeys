@@ -76,7 +76,7 @@ cd scripts/
 
 # Option 1: Generate from wordfreq (requires Python wordfreq package)
 pip install wordfreq
-python build_langpack.py --lang sv --output langpack-sv.zip
+python build_langpack.py --lang sv --name "Swedish" --output langpack-sv.zip
 
 # Option 2: Build from custom word list
 # Create a CSV file: word,frequency (one per line)

@@ -351,6 +351,7 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.CoordinateNormalizerTest',
     'tribixbite.cleverkeys.TrajectoryFeatureCalculatorTest',
     'tribixbite.cleverkeys.IssueRegressionTest',
+    'tribixbite.cleverkeys.AutoSpaceLogicTest',
     // SwipePrunerTest excluded: requires android.util.Log (MockK + Robolectric)
   ]
 
@@ -392,6 +393,8 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.DirectBootAwarePreferencesTest',
     'tribixbite.cleverkeys.DictionaryManagerTest',
     'tribixbite.cleverkeys.VibratorCompatTest',
+    'tribixbite.cleverkeys.TerminalUtilsTest',
+    'tribixbite.cleverkeys.KeyRepeatLogicTest',
   ]
 
   mainClass = 'org.junit.runner.JUnitCore'

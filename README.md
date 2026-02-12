@@ -275,7 +275,7 @@ cd scripts/
 
 # Option 1: Generate from wordfreq (requires Python wordfreq package)
 # Supported: en, es, fr, de, it, pt, nl, id, ms, tl, and 20+ more
-python build_langpack.py --lang fr --output langpack-fr.zip
+python build_langpack.py --lang fr --name "French" --output langpack-fr.zip
 
 # Option 2: Build from custom word frequency list
 # Format: word,frequency (one per line)
