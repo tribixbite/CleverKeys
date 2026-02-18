@@ -75,6 +75,16 @@ Issues already implemented, just need verification + close:
 
 ---
 
+## Completed (2026-02-17)
+- ✅ **Dictionary pipeline spec + skill**: Full architecture documentation
+  - `docs/specs/english-dictionary-pipeline.md` — build flow, contraction system, quality issues
+  - `.claude/skills/dictionary-pipeline.md` — build commands, key files, pitfalls
+  - Traced en_enhanced.bin lineage: V1 (upstream 49k) → V3 (curated 52k, 15 typos removed)
+  - Identified remaining misspellings: teh, wich, hav still in V3 dictionary
+  - Identified vestigial files: en_enhanced.txt (V1, not loaded), contractions_en.json (duplicate)
+- ✅ **Docs fix**: README + wiki langpack commands were broken (missing --input/--dict)
+  - Verified all 3 build commands actually run on Termux/ARM64
+
 ## Completed (2026-02-11)
 - ✅ **#48 autofill fix**: 3 changes for inline autofill on password fields
   - Removed password mode block in SuggestionBar.setInlineAutofillView() (was silently blocking all autofill)
