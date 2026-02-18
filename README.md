@@ -273,15 +273,21 @@ You can create dictionaries for any language using the included Python scripts:
 # Navigate to scripts directory
 cd scripts/
 
-# Option 1: Generate from wordfreq (requires Python wordfreq package)
-# Supported: en, es, fr, de, it, pt, nl, id, ms, tl, and 20+ more
-python build_langpack.py --lang fr --name "French" --output langpack-fr.zip
+# Install prerequisite
+pip install wordfreq
 
-# Option 2: Build from custom word frequency list
-# Format: word,frequency (one per line)
+# Option 1: Two-step build from wordfreq (any language wordfreq supports)
+python get_wordlist.py --lang fr --output fr_words.txt --count 50000
+python build_langpack.py --lang fr --name "French" --input fr_words.txt --use-wordfreq --output langpack-fr.zip
+
+# Option 2: Build from pre-existing binary dictionary (.bin file)
+python build_langpack.py --lang sv --name "Swedish" --dict ../src/main/assets/dictionaries/sv_enhanced.bin --output langpack-sv.zip
+
+# Option 3: Build from custom word frequency CSV (format: word,frequency per line)
 python build_dictionary.py --input my_words.csv --output my_lang.bin
+python build_langpack.py --lang xx --name "MyLang" --dict my_lang.bin --output langpack-xx.zip
 
-# Option 3: Build all supported languages at once
+# Option 4: Batch build all bundled languages (en, es, fr, de, it, pt, nl, id, ms, tl, sw)
 python build_all_languages.py
 ```
 

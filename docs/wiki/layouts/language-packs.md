@@ -74,13 +74,19 @@ For languages not bundled, you can create your own using the provided Python scr
 # Navigate to scripts directory
 cd scripts/
 
-# Option 1: Generate from wordfreq (requires Python wordfreq package)
+# Install prerequisite
 pip install wordfreq
-python build_langpack.py --lang sv --name "Swedish" --output langpack-sv.zip
 
-# Option 2: Build from custom word list
-# Create a CSV file: word,frequency (one per line)
+# Option 1: Two-step build from wordfreq (any language wordfreq supports)
+python get_wordlist.py --lang sv --output sv_words.txt --count 50000
+python build_langpack.py --lang sv --name "Swedish" --input sv_words.txt --use-wordfreq --output langpack-sv.zip
+
+# Option 2: Build from pre-existing binary dictionary (.bin file)
+python build_langpack.py --lang sv --name "Swedish" --dict ../src/main/assets/dictionaries/sv_enhanced.bin --output langpack-sv.zip
+
+# Option 3: Build from custom word list CSV (format: word,frequency per line)
 python build_dictionary.py --input my_words.csv --output custom.bin
+python build_langpack.py --lang xx --name "MyLang" --dict custom.bin --output langpack-xx.zip
 ```
 
 ### Scripts Available
