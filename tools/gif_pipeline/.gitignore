@@ -1,0 +1,8 @@
+# Large data directories - not tracked in git
+raw_data/
+processed/
+*.log
+
+# Database assets distributed via GitHub Releases, not in repo
+assets/*.db
+assets/*.db.gz

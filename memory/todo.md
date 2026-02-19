@@ -410,18 +410,51 @@ Issues already implemented, just need verification + close:
 ## In Progress
 - 🔄 Subkey System Unification (Option D) - awaiting user answers to clarifying questions
   - See: `memory/subkey-unification-research.md`
-- 🔄 **GIF Panel (Offline)** - infrastructure complete, data pipeline ready
+- 🔄 **GIF Panel (Offline)** - re-optimization in progress, pack system ready, UI pending
   - Branch: `feature/gif-panel` (git worktree at `../cleverkeys-gif-module`)
   - Spec: `docs/specs/gif-panel-spec.md`
-  - Kotlin: `gif/Gif.kt`, `gif/GifCategory.kt`, `gif/GifDatabase.kt`
-  - Python pipeline: `tools/gif_pipeline/` (download, process, build DB)
-  - Data sources: TGIF (100K), Video2GIF (100K), GIFGIF+ (23K), ReactionGIF (4K)
+  - Kotlin: `gif/Gif.kt`, `gif/GifCategory.kt`, `gif/GifDatabase.kt`,
+    `gif/GifAssetManager.kt`, `gif/GifPackManager.kt`, `gif/GifGridView.kt`
+  - Python pipeline: `tools/gif_pipeline/` (download, process, optimize, pack)
+  - Data source: Giphy API (TGIF abandoned)
+  - Collection: 119,620+ downloaded, re-optimizing 118,927 files
+  - 17 emotion categories + trending/popular/viral/universal + 300+ supplementary queries
+  - Pipeline improvements (2026-02-13):
+    - ✅ squoosh-one.sh: sharp_yuv, adaptive quality, small file skip, keep-smaller
+    - ✅ pack_builder.py: generates tar.gz packs with manifest.json for GitHub releases
+    - ✅ pipeline.py: all 6 download callsites use get_best_download_url() (fixed_width WebP)
+    - ✅ build_database.py: reads optimized/ dir, slug keywords, auto-generates missing thumbs
+    - ✅ generate_thumbs.sh: parallel first-frame extraction via webpmux
+    - ✅ pipeline.py: phase_thumbnails added (after optimize, before cleanup)
+    - ✅ 300+ supplementary queries (cats, dogs, celebrities, anime, modern memes, wholesome, etc.)
+    - ✅ .gitignore: pipeline data dirs excluded, 10K tracked binaries removed from index
+    - ✅ batch-squoosh.sh: flock-based atomic counter (replaces per-file find bottleneck)
+  - Stats (from 1,400+ re-optimized files):
+    - 55.5% avg reduction, 45KB avg output, 34KB median
+    - 85% shrunk, 14% same (under 30KB skip threshold), 0% grew
+    - Thumbnails: ~4KB avg (first-frame static WebP)
+  - GIF Panel UI wiring (2026-02-14):
+    - ✅ gif_pane.xml: search bar, GifGroupButtonsBar, GifGridView, close button
+    - ✅ GifGroupButtonsBar.kt: scrollable 18-category emotion buttons
+    - ✅ gif_bottom_row.xml: switch_back_gif row for GIF pane context
+    - ✅ SWITCH_GIF / SWITCH_BACK_GIF events in KeyValue.kt
+    - ✅ KeyboardReceiver.kt: full GIF pane handler with toggle, search, category browsing
+    - ✅ commitContent() via InputContentInfoCompat for GIF insertion
+    - ✅ FileProvider in AndroidManifest + gif_file_paths.xml
+    - ✅ getGifFile() sync method in GifAssetManager
+    - ✅ switch_gif mapped to fn key7 (north swipe) in bottom_row.xml
+    - ✅ Fixed Kotlin nested comment syntax (/*.webp → path descriptions)
+  - Running background processes (restarted 2026-02-14):
+    - batch-squoosh.sh PID 14104: 72K/122K (59%), ~50K remaining
+    - pipeline.py PID 15410: 3 supplementary cycles
   - Next steps:
-    - [ ] Download TGIF dataset from Hugging Face
-    - [ ] Process to WebP format (thumbnails + animated)
-    - [ ] Build database with FTS5 search index
-    - [ ] Create GifGridView.kt and UI components
-    - [ ] Add GIF tab to keyboard panel
+    - [ ] Wait for squoosh to complete (~10-15h remaining)
+    - [ ] Rebuild final database from completed optimized/ dir
+    - [ ] Run pack_builder.py to generate tar.gz release packs
+    - [ ] Build & install release APK to test GIF panel UI
+    - [ ] Pack download manager in GifPackManager.kt
+    - [ ] Coil/Glide image loading for memory-safe IME thumbnail rendering
+    - [ ] GIF preview on long-press (animated WebP popup)
 
 ## Completed (2026-01-25)
 - ✅ Subkey system investigation: XML subkeys, ShortSwipeCustomizationActivity, ExtraKeys

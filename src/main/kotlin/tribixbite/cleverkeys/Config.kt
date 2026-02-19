@@ -184,6 +184,12 @@ object Defaults {
     const val CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS = true  // Skip clipboard from password managers
     const val CLIPBOARD_RESPECT_SENSITIVE_FLAG = true  // #86: Respect Android 13+ IS_SENSITIVE flag
 
+    // GIF Panel — opt-in, off by default, zero data shipped in APK
+    const val GIF_ENABLED = false           // Master toggle — enables GIF key + pane
+    const val GIF_WIFI_ONLY_DOWNLOAD = true // Only download packs on WiFi
+    const val GIF_MAX_CACHE_MB = 100        // On-device cache cap for full animations
+    const val GIF_THUMBNAIL_COLUMNS = 3     // Grid columns in GIF picker
+
     // Common password manager package names (for clipboard exclusion)
     val PASSWORD_MANAGER_PACKAGES = setOf(
         // Bitwarden
@@ -403,6 +409,13 @@ class Config private constructor(
     @JvmField var clipboard_size_limit_mb = 0
     @JvmField var clipboard_exclude_password_managers = true  // Skip clipboard from password managers
     @JvmField var clipboard_respect_sensitive_flag = true  // #86: Respect Android 13+ IS_SENSITIVE flag
+
+    // GIF Panel
+    @JvmField var gif_enabled = Defaults.GIF_ENABLED
+    @JvmField var gif_wifi_only_download = Defaults.GIF_WIFI_ONLY_DOWNLOAD
+    @JvmField var gif_max_cache_mb = Defaults.GIF_MAX_CACHE_MB
+    @JvmField var gif_thumbnail_columns = Defaults.GIF_THUMBNAIL_COLUMNS
+
     @JvmField var swipe_typing_enabled = true  // Default to enabled for CleverKeys
     @JvmField var swipe_on_password_fields = false  // #39: Reenable swipe typing on password fields
     @JvmField var swipe_show_debug_scores = false
@@ -660,6 +673,12 @@ class Config private constructor(
 
         clipboard_respect_sensitive_flag = _prefs.getBoolean("clipboard_respect_sensitive_flag", Defaults.CLIPBOARD_RESPECT_SENSITIVE_FLAG)
 
+        // GIF Panel
+        gif_enabled = _prefs.getBoolean("gif_enabled", Defaults.GIF_ENABLED)
+        gif_wifi_only_download = _prefs.getBoolean("gif_wifi_only_download", Defaults.GIF_WIFI_ONLY_DOWNLOAD)
+        gif_max_cache_mb = safeGetInt(_prefs, "gif_max_cache_mb", Defaults.GIF_MAX_CACHE_MB).coerceIn(50, 500)
+        gif_thumbnail_columns = safeGetInt(_prefs, "gif_thumbnail_columns", Defaults.GIF_THUMBNAIL_COLUMNS).coerceIn(2, 5)
+
         swipe_typing_enabled = _prefs.getBoolean("swipe_typing_enabled", Defaults.SWIPE_TYPING_ENABLED)
         swipe_on_password_fields = _prefs.getBoolean("swipe_on_password_fields", Defaults.SWIPE_ON_PASSWORD_FIELDS)
         swipe_show_debug_scores = _prefs.getBoolean("swipe_show_debug_scores", Defaults.SWIPE_SHOW_DEBUG_SCORES)
@@ -808,6 +827,11 @@ class Config private constructor(
     fun set_clipboard_pane_height_percent(percent: Int) {
         clipboard_pane_height_percent = percent.coerceIn(10, 50)
         _prefs.edit().putInt("clipboard_pane_height_percent", clipboard_pane_height_percent).commit()
+    }
+
+    fun set_gif_enabled(enabled: Boolean) {
+        gif_enabled = enabled
+        _prefs.edit().putBoolean("gif_enabled", enabled).commit()
     }
 
     private fun get_dip_pref(dm: DisplayMetrics, pref_name: String, def: Float): Float {

@@ -168,6 +168,13 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var clipboardSizeLimitMb by mutableStateOf(10)
     private var clipboardExcludePasswordManagers by mutableStateOf(true)  // Privacy: skip password managers
     private var clipboardRespectSensitiveFlag by mutableStateOf(true)  // #86: Respect IS_SENSITIVE flag
+
+    // GIF Panel (opt-in, off by default)
+    private var gifEnabled by mutableStateOf(Defaults.GIF_ENABLED)
+    private var gifWifiOnlyDownload by mutableStateOf(Defaults.GIF_WIFI_ONLY_DOWNLOAD)
+    private var gifMaxCacheMb by mutableStateOf(Defaults.GIF_MAX_CACHE_MB)
+    private var gifThumbnailColumns by mutableStateOf(Defaults.GIF_THUMBNAIL_COLUMNS)
+
     private var autoCapitalizationEnabled by mutableStateOf(true)
     private var capitalizeIWords by mutableStateOf(true)  // #72: Auto-capitalize I, I'm, I'll, etc.
 
@@ -346,6 +353,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var accessibilitySectionExpanded by mutableStateOf(false)
     // v1.2.6: dictionarySectionExpanded removed - Dictionary Manager moved to Activities
     private var clipboardSectionExpanded by mutableStateOf(false)
+    private var gifSectionExpanded by mutableStateOf(false)
     private var backupRestoreSectionExpanded by mutableStateOf(false)
     private var advancedSectionExpanded by mutableStateOf(false)
     private var infoSectionExpanded by mutableStateOf(false)
@@ -405,6 +413,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         accessibilitySectionExpanded = false
         // v1.2.6: dictionarySectionExpanded removed
         clipboardSectionExpanded = false
+        gifSectionExpanded = false
         backupRestoreSectionExpanded = false
         advancedSectionExpanded = false
         infoSectionExpanded = false
@@ -536,6 +545,12 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             SearchableSetting("Clipboard Pane Height", listOf("pane", "height", "size"), "Clipboard", expandSection = { clipboardSectionExpanded = true }, settingId = "clipboard_height"),
             SearchableSetting("Exclude Password Managers", listOf("password", "exclude", "security"), "Clipboard", expandSection = { clipboardSectionExpanded = true }, settingId = "clipboard_exclude_passwords"),
             SearchableSetting("Respect Sensitive Flag", listOf("sensitive", "flag", "android", "13", "privacy"), "Clipboard", expandSection = { clipboardSectionExpanded = true }, settingId = "clipboard_sensitive_flag"),
+
+            // ==================== GIF PANEL ====================
+            SearchableSetting("GIF Panel", listOf("gif", "sticker", "animation", "meme", "reaction"), "GIF Panel", expandSection = { gifSectionExpanded = true }, settingId = "gif_enabled"),
+            SearchableSetting("GIF WiFi Only", listOf("gif", "wifi", "download", "data"), "GIF Panel", expandSection = { gifSectionExpanded = true }, gatedBy = "gif_enabled", settingId = "gif_wifi"),
+            SearchableSetting("GIF Cache Size", listOf("gif", "cache", "storage", "space"), "GIF Panel", expandSection = { gifSectionExpanded = true }, gatedBy = "gif_enabled", settingId = "gif_cache"),
+            SearchableSetting("GIF Grid Columns", listOf("gif", "grid", "columns", "layout"), "GIF Panel", expandSection = { gifSectionExpanded = true }, gatedBy = "gif_enabled", settingId = "gif_columns"),
 
             // ==================== MULTI-LANGUAGE ====================
             SearchableSetting("Enable Multi-Language", listOf("multilingual", "bilingual", "language"), "Multi-Language", expandSection = { multiLangSectionExpanded = true }, settingId = "multilang"),
@@ -755,6 +770,9 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             }
             "clipboard_history_enabled" -> {
                 clipboardHistoryEnabled = prefs.getBoolean(key, Defaults.CLIPBOARD_HISTORY_ENABLED)
+            }
+            "gif_enabled" -> {
+                gifEnabled = prefs.getBoolean(key, Defaults.GIF_ENABLED)
             }
             "autocapitalisation" -> {
                 autoCapitalizationEnabled = prefs.getBoolean(key, Defaults.AUTOCAPITALISATION)
@@ -2975,6 +2993,72 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 )
             }
 
+            // GIF Panel Section (Collapsible) — opt-in, off by default
+            CollapsibleSettingsSection(
+                title = "🎬 GIF Panel",
+                expanded = gifSectionExpanded,
+                onExpandChange = { gifSectionExpanded = it }
+            ) {
+                Text(
+                    text = "Offline GIF reactions for messaging. Requires a one-time download (~12 MB core pack).",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+
+                // Master toggle
+                SettingsSwitch(
+                    title = "Enable GIF Panel",
+                    description = "Show GIF key on keyboard and enable reaction picker",
+                    checked = gifEnabled,
+                    onCheckedChange = {
+                        gifEnabled = it
+                        saveSetting("gif_enabled", it)
+                    }
+                )
+
+                // Dependent settings only shown when enabled
+                if (gifEnabled) {
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    SettingsSwitch(
+                        title = "WiFi-Only Downloads",
+                        description = "Only download GIF packs on WiFi connections",
+                        checked = gifWifiOnlyDownload,
+                        onCheckedChange = {
+                            gifWifiOnlyDownload = it
+                            saveSetting("gif_wifi_only_download", it)
+                        }
+                    )
+
+                    SettingsSlider(
+                        title = "Cache Limit",
+                        description = "Maximum storage for cached GIF animations",
+                        value = gifMaxCacheMb.toFloat(),
+                        valueRange = 50f..500f,
+                        steps = 9,
+                        onValueChange = {
+                            gifMaxCacheMb = it.toInt()
+                            saveSetting("gif_max_cache_mb", gifMaxCacheMb)
+                        },
+                        displayValue = "${gifMaxCacheMb} MB"
+                    )
+
+                    SettingsSlider(
+                        title = "Grid Columns",
+                        description = "Number of columns in GIF picker grid",
+                        value = gifThumbnailColumns.toFloat(),
+                        valueRange = 2f..5f,
+                        steps = 3,
+                        onValueChange = {
+                            gifThumbnailColumns = it.toInt()
+                            saveSetting("gif_thumbnail_columns", gifThumbnailColumns)
+                        },
+                        displayValue = "$gifThumbnailColumns columns"
+                    )
+                }
+            }
+
             // Backup & Restore Section (Collapsible)
             CollapsibleSettingsSection(
                 title = "💾 Backup & Restore",
@@ -4551,6 +4635,13 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         clipboardSizeLimitMb = prefs.getSafeString("clipboard_size_limit_mb", Defaults.CLIPBOARD_SIZE_LIMIT_MB).toIntOrNull() ?: Defaults.CLIPBOARD_SIZE_LIMIT_MB_FALLBACK
         clipboardExcludePasswordManagers = prefs.getSafeBoolean("clipboard_exclude_password_managers", Defaults.CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS)
         clipboardRespectSensitiveFlag = prefs.getSafeBoolean("clipboard_respect_sensitive_flag", Defaults.CLIPBOARD_RESPECT_SENSITIVE_FLAG)
+
+        // GIF Panel
+        gifEnabled = prefs.getSafeBoolean("gif_enabled", Defaults.GIF_ENABLED)
+        gifWifiOnlyDownload = prefs.getSafeBoolean("gif_wifi_only_download", Defaults.GIF_WIFI_ONLY_DOWNLOAD)
+        gifMaxCacheMb = Config.safeGetInt(prefs, "gif_max_cache_mb", Defaults.GIF_MAX_CACHE_MB).coerceIn(50, 500)
+        gifThumbnailColumns = Config.safeGetInt(prefs, "gif_thumbnail_columns", Defaults.GIF_THUMBNAIL_COLUMNS).coerceIn(2, 5)
+
         autoCapitalizationEnabled = prefs.getSafeBoolean("autocapitalisation", Defaults.AUTOCAPITALISATION)
         capitalizeIWords = prefs.getSafeBoolean("autocapitalize_i_words", Defaults.AUTOCAPITALIZE_I_WORDS)
 

@@ -34,6 +34,12 @@ dependencies {
   implementation "com.microsoft.onnxruntime:onnxruntime-android:1.20.0"
   implementation "com.google.code.gson:gson:2.10.1"
 
+  // Coil: Kotlin-native image loader with animated WebP support
+  implementation "io.coil-kt:coil:2.6.0"
+
+  // WorkManager: Resilient background downloads (survives process death)
+  implementation "androidx.work:work-runtime-ktx:2.9.0"
+
   testImplementation "junit:junit:4.13.2"
   testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3"
   testImplementation "org.robolectric:robolectric:4.11.1"

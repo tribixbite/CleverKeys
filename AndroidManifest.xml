@@ -107,6 +107,17 @@
       </intent-filter>
     </activity>
 
+    <!-- FileProvider for sharing GIF files via content:// URIs (commitContent) -->
+    <provider
+        android:name="androidx.core.content.FileProvider"
+        android:authorities="${applicationId}.fileprovider"
+        android:exported="false"
+        android:grantUriPermissions="true">
+      <meta-data
+          android:name="android.support.FILE_PROVIDER_PATHS"
+          android:resource="@xml/gif_file_paths" />
+    </provider>
+
     <!-- Ghost activities removed: NeuralBrowserActivity, NeuralBrowserActivityM3, TestActivity (no source files) -->
 
     <activity android:name="tribixbite.cleverkeys.BackupRestoreActivity" android:label="Backup &amp; Restore" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true">

@@ -7,7 +7,15 @@ import android.os.Handler
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputConnection
+import android.text.Editable
+import android.text.TextWatcher
+import android.widget.EditText
+import android.widget.ImageButton
+import android.widget.TextView
 import androidx.core.view.ViewCompat
+import tribixbite.cleverkeys.gif.GifAssetManager
+import tribixbite.cleverkeys.gif.GifGridManager
+import tribixbite.cleverkeys.gif.GifGroupButtonsBar
 
 /**
  * Handles keyboard events and state changes for CleverKeysService.
@@ -59,7 +67,7 @@ class KeyboardReceiver(
     // Track which pane is currently visible for toggle behavior
     private var currentPaneType: PaneType = PaneType.NONE
 
-    private enum class PaneType { NONE, EMOJI, CLIPBOARD }
+    private enum class PaneType { NONE, EMOJI, CLIPBOARD, GIF }
 
     // #41: Emoji search manager (uses suggestion bar for status display)
     private var emojiSearchManager: EmojiSearchManager? = null
@@ -273,8 +281,110 @@ class KeyboardReceiver(
                 currentPaneType = PaneType.CLIPBOARD
             }
 
+            KeyValue.Event.SWITCH_GIF -> {
+                // GIF panel is opt-in — ignore key if disabled in settings
+                if (!Config.globalConfig().gif_enabled) return
+
+                // Toggle behavior: if GIF pane already visible, close it
+                if (currentPaneType == PaneType.GIF && isContentPaneShowing) {
+                    handle_event_key(KeyValue.Event.SWITCH_BACK_GIF)
+                    return
+                }
+
+                // Inflate fresh GIF pane layout
+                val gifPaneView = keyboard2.inflate_view(R.layout.gif_pane) as ViewGroup
+
+                // Show GIF pane in content container (keyboard stays visible below)
+                contentPaneContainer?.let { container ->
+                    container.removeAllViews()
+                    (gifPaneView.parent as? ViewGroup)?.removeView(gifPaneView)
+                    gifPaneView.layoutParams = android.widget.FrameLayout.LayoutParams(
+                        android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+                        contentPaneHeight
+                    )
+                    container.addView(gifPaneView)
+                    showContentPane()
+                } ?: run {
+                    // Fallback for when predictions disabled (no container)
+                    keyboard2.setInputView(gifPaneView)
+                }
+
+                currentPaneType = PaneType.GIF
+
+                // Wire up GIF grid with RecyclerView + Coil
+                val recyclerView = gifPaneView.findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.gif_grid)
+                val gifColumns = Config.globalConfig().gif_thumbnail_columns
+                val gifGrid = recyclerView?.let { GifGridManager(context, it, gifColumns) }
+                gifGrid?.onGifSelected = { gif ->
+                    val assetManager = GifAssetManager.getInstance(context)
+                    val gifFile = assetManager.getGifFile(gif)
+                    if (gifFile != null && gifFile.exists()) {
+                        // Insert as content:// URI via InputConnection
+                        val uri = androidx.core.content.FileProvider.getUriForFile(
+                            context,
+                            "${context.packageName}.fileprovider",
+                            gifFile
+                        )
+                        val description = android.content.ClipDescription(
+                            "GIF",
+                            arrayOf("image/webp")
+                        )
+                        val inputContentInfo = androidx.core.view.inputmethod.InputContentInfoCompat(
+                            uri, description, null
+                        )
+                        val ic = keyboard2.currentInputConnection
+                        if (ic != null) {
+                            androidx.core.view.inputmethod.InputConnectionCompat.commitContent(
+                                ic, keyboard2.currentInputEditorInfo, inputContentInfo,
+                                androidx.core.view.inputmethod.InputConnectionCompat.INPUT_CONTENT_GRANT_READ_URI_PERMISSION,
+                                null
+                            )
+                        }
+                    }
+                    // Close GIF pane after selection
+                    handle_event_key(KeyValue.Event.SWITCH_BACK_GIF)
+                }
+
+                // Wire up search bar
+                val searchInput = gifPaneView.findViewById<EditText>(R.id.gif_search_input)
+                val searchClear = gifPaneView.findViewById<ImageButton>(R.id.gif_search_clear)
+                val noResults = gifPaneView.findViewById<TextView>(R.id.gif_no_results)
+
+                searchInput?.addTextChangedListener(object : TextWatcher {
+                    override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                    override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+                    override fun afterTextChanged(s: Editable?) {
+                        val query = s?.toString()?.trim() ?: ""
+                        searchClear?.visibility = if (query.isNotEmpty()) View.VISIBLE else View.GONE
+                        gifGrid?.search(query)
+                        // Show/hide no results message
+                        val count = gifGrid?.getResultCount() ?: 0
+                        noResults?.visibility = if (query.isNotEmpty() && count == 0) View.VISIBLE else View.GONE
+                    }
+                })
+
+                searchClear?.setOnClickListener {
+                    searchInput?.text?.clear()
+                }
+
+                // Wire up close button
+                gifPaneView.findViewById<ImageButton>(R.id.gif_close_button)?.setOnClickListener {
+                    handle_event_key(KeyValue.Event.SWITCH_BACK_GIF)
+                }
+
+                // Wire up category buttons — clear search + switch grid category
+                val groupButtons = gifPaneView.findViewById<GifGroupButtonsBar>(R.id.gif_group_buttons)
+                groupButtons?.setOnCategorySelectedListener {
+                    searchInput?.text?.clear()
+                }
+                groupButtons?.onCategoryChanged = { category ->
+                    gifGrid?.setCategory(category)
+                }
+            }
+
             KeyValue.Event.SWITCH_BACK_EMOJI,
-            KeyValue.Event.SWITCH_BACK_CLIPBOARD -> {
+            KeyValue.Event.SWITCH_BACK_CLIPBOARD,
+            KeyValue.Event.SWITCH_BACK_GIF -> {
                 // Exit clipboard search mode when switching back
                 clipboardManager.resetSearchOnHide()
 

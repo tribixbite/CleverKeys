@@ -122,3 +122,13 @@ pal_generated.code
 # Temp emoji data files
 *.json
 generated_*.kt
+.env
+
+# GIF pipeline data (large binary files — only track scripts, not output)
+tools/gif_pipeline/raw_data/gifs/
+tools/gif_pipeline/raw_data/metadata/
+tools/gif_pipeline/processed/
+tools/gif_pipeline/packs/
+tools/gif_pipeline/assets/
+tools/gif_pipeline/*.log
+tools/gif_pipeline/pipeline_history.json
