@@ -64,3 +64,4 @@ build/** linguist-generated
 # Language statistics
 *.kt linguist-language=Kotlin
 *.xml linguist-language=XML
+web_demo/swipe_vocabulary.json -text
