@@ -84,6 +84,12 @@ Issues already implemented, just need verification + close:
   - Identified vestigial files: en_enhanced.txt (V1, not loaded), contractions_en.json (duplicate)
 - ✅ **Docs fix**: README + wiki langpack commands were broken (missing --input/--dict)
   - Verified all 3 build commands actually run on Termux/ARM64
+- ✅ **Misspelling detection pipeline**: `scripts/detect_misspellings.py`
+  - Multi-stage: whitelist(NLTK 239k + pyspell 160k + hunspell + British + contractions + possessives)
+    → edit-distance-1 matching → zipf frequency gap ≥1.5 → foreign language filter (15 langs)
+  - V3 scan results: ~347 wrong plurals, ~592 review candidates in `scripts/misspelling_review.txt`
+  - Consulted Gemini 2.5 Pro via PAL for approach guidance (phonetic + frequency + multi-source whitelist)
+  - Updated spec and skill with pipeline documentation
 
 ## Completed (2026-02-11)
 - ✅ **#48 autofill fix**: 3 changes for inline autofill on password fields
