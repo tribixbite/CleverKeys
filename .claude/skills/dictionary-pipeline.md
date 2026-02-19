@@ -113,8 +113,17 @@ with open('en_enhanced.bin', 'rb') as f:
 2. Rebuild binary (same command as above)
 3. Document removals in commit message and spec
 
-### Quality Pipeline (Not Yet Implemented)
-There is currently NO automated misspelling filter. Words are included by frequency rank only. See `docs/specs/english-dictionary-pipeline.md` "Known Quality Issues" section.
+### Run Misspelling Detection
+```bash
+cd scripts/
+python3 detect_misspellings.py                    # default: 4+ char, gap >= 1.5
+python3 detect_misspellings.py --min-gap 2.0      # stricter (fewer results)
+python3 detect_misspellings.py --min-len 3        # include 3-char words
+# Output: scripts/misspelling_review.txt
+```
+Dependencies: `pip install wordfreq pyspellchecker nltk metaphone`
+Pipeline: whitelist(NLTK+pyspell+hunspell+British+contractions+possessives) → edit-distance-1 → zipf gap → foreign-language filter.
+See `docs/specs/english-dictionary-pipeline.md` "Misspelling Detection Pipeline" section.
 
 ## Source Corpora
 

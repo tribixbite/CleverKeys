@@ -141,10 +141,34 @@ Suggestion bar: ["can't", "can", "cat"]
 - **Preserved**: Single letters, contractions without apostrophe, possessives, custom words (tribixbite, cleverkeys)
 - **Missed**: teh, wich, hav still present in V3
 
-## Known Quality Issues
+## Misspelling Detection Pipeline
 
-### No Misspelling Filter
-The pipeline has **no automated spell-checking step**. Words are included purely by frequency rank from wordfreq/corpus sources. Common misspellings that appear frequently on the internet make it into the dictionary.
+### Script: `scripts/detect_misspellings.py`
+
+Automated misspelling detection using a multi-stage pipeline:
+
+1. **Whitelist Build** — NLTK words/names (239k), pyspellchecker (160k), hunspell en_US (49k + affixes), wordfreq top 5k, British English suffix rules, contraction patterns, possessive forms
+2. **Edit Distance 1 Matching** — For each non-whitelisted word, check substitution, deletion, insertion, transposition, extra/missing doubles against known-good words
+3. **Frequency Gap Analysis** — Flag words where a similar known word has a much higher zipf frequency (gap >= 1.5)
+4. **Foreign Language Filter** — Remove words with high frequency in fr/de/es/it/pt/nl/sv/da/nb/pl/tr/id/fi/cs/ro
+5. **Category Separation** — Split into wrong plurals, review candidates, and foreign words
+
+```bash
+cd scripts/
+python3 detect_misspellings.py                    # default settings
+python3 detect_misspellings.py --min-gap 2.0      # stricter (fewer results)
+python3 detect_misspellings.py --min-len 3        # include 3-char words
+```
+
+**Dependencies**: `pip install wordfreq pyspellchecker nltk metaphone`
+
+### Pipeline Results (V3 dictionary, 52,042 words)
+
+| Category | Count | Action |
+|----------|-------|--------|
+| Wrong plurals (malformed possessives) | ~347 | Remove from dictionary |
+| Review candidates (possible misspellings) | ~592 | Human review needed |
+| Foreign words (auto-whitelisted) | ~363 | Keep |
 
 ### Known Remaining Misspellings in V3 (en_enhanced.bin)
 From spot-check of the 52,042 shipped words:
@@ -155,6 +179,12 @@ From spot-check of the 52,042 shipped words:
 - `lite` (rank 159) — informal for "light" (but also a valid word: "lite beer")
 - `dat` (rank 158) — informal for "that" (but also valid: data abbreviation)
 - `wat` (rank 162) — informal for "what"
+
+### Limitations
+- Words ≤3 chars are skipped by default (too many false positives with short abbreviations); use `--min-len 3` to include them
+- Edit distance 2+ misspellings (e.g. "definately"→"definitely") are not caught; these were already removed in V3 curation
+- Non-ASCII words (accented/foreign characters) are excluded from review
+- Proper nouns and brand names that don't appear in NLTK/hunspell may be flagged
 
 ### Duplicate Contraction Files
 `contractions_en.json` and `contractions_non_paired.json` are byte-identical. The per-language file (`contractions_en.json`) is loaded by `loadLanguageContractions("en")`, while the base file (`contractions_non_paired.json`) is loaded by `loadMappings()`. Both end up in the same `nonPairedContractions` map so this is harmless duplication.

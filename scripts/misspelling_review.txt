@@ -1,0 +1,1328 @@
+# CleverKeys Dictionary — Final Misspelling Review
+# Pipeline: whitelist(NLTK+pyspell+hunspell+British+contractions+possessives)
+#           + edit distance 1 matching + foreign language filter
+# Dictionary: 52,042 words
+
+## WRONG PLURALS (347)
+# Words ending in 's' that should use apostrophe or -ies
+# Action: REMOVE from dictionary (these are malformed)
+aarons
+abbotts
+abrahams
+academys
+afghanistans
+africas
+agencys
+aircrafts
+alabamas
+alaskas
+albertas
+alexs
+alices
+allens
+amys
+andersons
+andys
+annes
+annies
+anothers
+anthonys
+anybodys
+anyones
+arabias
+arizonas
+armstrongs
+armys
+arnolds
+arthurs
+ashleys
+assemblys
+atlantas
+australias
+austrias
+authoritys
+barcelonas
+barrys
+batmans
+behaviours
+belgiums
+bennetts
+bernies
+bigs
+blairs
+blakes
+bobbys
+bodys
+bradys
+brians
+britains
+bruces
+buddys
+bulgarias
+bushs
+californias
+cambodias
+camerons
+campbells
+canadas
+carsons
+castros
+catherines
+ccs
+centurys
+chairmans
+charitys
+chelseas
+chens
+chicagos
+childrens
+childs
+chloes
+christies
+chs
+churchills
+churchs
+clarkes
+clarks
+clevelands
+clintons
+cohens
+colombias
+columbias
+communitys
+companys
+corporates
+countrys
+countys
+craigs
+cruzs
+daddys
+dannys
+darwins
+dawsons
+dcs
+defences
+denmarks
+denvers
+destinys
+detroits
+dianas
+diegos
+donalds
+doyles
+drs
+duncans
+dylans
+edinburghs
+elizabeths
+elses
+emilys
+enemys
+erics
+europes
+everybodys
+everyones
+everythings
+exs
+facilitys
+familys
+ferraris
+financials
+fishermans
+floridas
+floyds
+flynns
+foxs
+franciscos
+freddys
+gagas
+gandhis
+garys
+gentlemans
+georgias
+germanys
+ghanas
+gibsons
+gordons
+gots
+greeces
+haitis
+hamiltons
+hannahs
+harbours
+harrisons
+harvards
+harveys
+hawaiis
+helens
+hendersons
+henrys
+hillarys
+historys
+hollywoods
+hondas
+houstons
+hudsons
+humanitys
+hungarys
+husseins
+ibms
+icelands
+incredibles
+indonesias
+industrys
+intels
+ipods
+iraqs
+irelands
+italys
+jacksons
+jasons
+jeffs
+jehovahs
+jerrys
+jessicas
+jimmys
+jims
+johnnys
+johnsons
+jojos
+jordans
+joshs
+julias
+jupiters
+justins
+keiths
+kelloggs
+kellys
+kennedys
+kentuckys
+kenyas
+kgs
+koreas
+labours
+lankas
+lauras
+lawrences
+lebanons
+lenins
+lennons
+leonards
+librarys
+libyas
+lifes
+lilys
+literatures
+lloyds
+logics
+lynchs
+macdonalds
+madrids
+maggies
+majestys
+malaysias
+mankinds
+mannings
+margarets
+marshalls
+marthas
+marylands
+mccains
+mccarthys
+melbournes
+michaels
+michelles
+michigans
+militarys
+ministrys
+minnesotas
+mitchells
+mommys
+monicas
+montreals
+moodys
+moores
+morrisons
+moscows
+murphys
+murrays
+nancys
+nashs
+navys
+netflixs
+newmans
+nintendos
+nixons
+noahs
+nobodys
+nolans
+norways
+nots
+nows
+obamas
+ohios
+olds
+olivers
+ontarios
+oregons
+ors
+pakistans
+pandoras
+parkers
+patricks
+pauls
+perrys
+petersons
+phds
+phils
+pms
+polands
+powells
+quebecs
+queenslands
+quinns
+rachels
+reagans
+regionals
+ridings
+rileys
+robinsons
+romanias
+romneys
+russells
+ryans
+sallys
+samsungs
+samuels
+santas
+sarahs
+saturns
+scarlets
+scotlands
+scotts
+scs
+seattles
+secretarys
+sheeps
+simons
+singhs
+societys
+solomons
+somebodys
+sooners
+sophies
+spains
+spencers
+stanleys
+steves
+stewarts
+sullivans
+supermans
+swedens
+switzerlands
+sydneys
+taiwans
+taylors
+territorys
+terrys
+thes
+thompsons
+tiffanys
+tls
+todays
+tommys
+tonights
+tonys
+torontos
+tos
+toyotas
+trudeaus
+tylers
+ugandas
+ukraines
+universitys
+utahs
+vancouvers
+vietnams
+virginias
+wallaces
+washingtons
+watsons
+waynes
+wendys
+whatevers
+whoevers
+whos
+wifes
+wilsons
+wisconsins
+witchs
+womans
+womens
+yangs
+yemens
+youngs
+youtubes
+zealands
+
+## REVIEW CANDIDATES (592)
+# Possible misspellings — needs human judgment
+# word → correction, rule, freq_gap, word_freq
+etoo	too	deletion	5.95	0.00
+nand	and	deletion	4.78	2.63
+ther	the	deletion	4.63	3.10
+marxs	marks	substitution	4.49	0.00
+thay	that	substitution	4.35	2.66
+thot	that	substitution	4.29	2.72
+nott	not	extra_double	4.14	2.55
+wasn	was	deletion	4.03	2.79
+frome	from	deletion	3.98	2.65
+skys	says	substitution	3.80	1.69
+tims	time	substitution	3.80	2.49
+hmas	has	deletion	3.77	2.60
+hibs	his	deletion	3.76	2.75
+iknow	know	deletion	3.75	2.35
+morey	more	deletion	3.74	2.62
+wwes	owes	substitution	3.72	0.00
+shae	she	deletion	3.71	2.55
+gord	good	substitution	3.69	2.43
+gops	goes	substitution	3.61	1.61
+shek	she	deletion	3.60	2.66
+maos	mass	substitution	3.57	1.30
+succ	such	substitution	3.52	2.32
+thani	than	deletion	3.51	2.62
+theon	then	deletion	3.50	2.57
+phan	than	substitution	3.49	2.64
+becuase	because	transposition	3.47	2.56
+wouldn	would	deletion	3.47	2.80
+bowies	bodies	substitution	3.46	1.23
+neds	news	substitution	3.45	1.99
+sajid	said	deletion	3.45	2.56
+asias	asian	substitution	3.42	1.27
+maxs	mass	substitution	3.41	1.46
+sonys	songs	substitution	3.40	1.44
+ewen	even	substitution	3.39	2.60
+haim	him	deletion	3.38	2.73
+worf	work	substitution	3.36	2.60
+dayz	day	deletion	3.35	2.60
+yost	most	substitution	3.34	2.66
+tafe	take	substitution	3.33	2.59
+aight	right	substitution	3.32	2.64
+couldn	could	deletion	3.32	2.74
+thang	than	deletion	3.31	2.82
+shaws	shows	substitution	3.29	1.94
+leong	long	deletion	3.29	2.52
+hirst	first	substitution	3.28	2.83
+woulda	would	deletion	3.28	2.99
+asme	same	transposition	3.27	2.53
+bday	day	deletion	3.26	2.69
+everly	every	deletion	3.26	2.53
+lsat	last	transposition	3.26	2.60
+mears	years	substitution	3.26	2.70
+latters	matters	substitution	3.25	1.47
+saif	said	substitution	3.24	2.77
+coms	come	substitution	3.21	2.57
+boing	being	substitution	3.21	2.74
+ebit	bit	deletion	3.21	2.16
+kfar	far	deletion	3.21	2.29
+aest	best	substitution	3.20	2.64
+carrs	cars	extra_double	3.19	1.70
+intl	into	substitution	3.16	2.95
+aways	always	insertion	3.15	2.61
+goode	good	deletion	3.15	2.97
+etal	metal	insertion	3.14	1.68
+coulda	could	deletion	3.14	2.92
+hott	hot	extra_double	3.13	2.03
+kree	free	substitution	3.10	2.53
+wray	way	deletion	3.10	2.91
+fajr	far	deletion	3.09	2.41
+roys	boys	substitution	3.07	1.96
+feely	feel	deletion	3.06	2.61
+kongs	songs	substitution	3.06	1.78
+shing	thing	substitution	3.06	2.66
+lotr	lot	deletion	3.05	2.56
+usaid	said	deletion	3.05	2.96
+kompany	company	substitution	3.04	2.56
+badr	bad	deletion	3.03	2.50
+carle	care	deletion	3.03	2.53
+ight	right	insertion	3.00	2.96
+russias	russian	substitution	2.98	2.03
+djing	doing	substitution	2.97	2.63
+ethers	others	substitution	2.95	2.47
+sids	side	substitution	2.93	2.57
+oreal	real	deletion	2.89	2.71
+publix	public	substitution	2.88	2.69
+starz	start	substitution	2.88	2.68
+joes	does	substitution	2.87	2.87
+lucys	lucas	substitution	2.87	1.22
+rouble	double	substitution	2.86	2.15
+shoulda	should	deletion	2.85	3.14
+goto	got	deletion	2.84	3.07
+mayes	makes	substitution	2.84	2.62
+facie	face	deletion	2.83	2.62
+seein	seen	deletion	2.83	2.69
+hiit	hit	extra_double	2.82	2.55
+ians	fans	substitution	2.82	2.21
+seaton	season	substitution	2.81	2.67
+abit	bit	deletion	2.81	2.56
+cait	wait	substitution	2.81	2.54
+larue	large	substitution	2.81	2.58
+perp	per	deletion	2.80	2.65
+woking	working	insertion	2.78	2.67
+notting	nothing	substitution	2.78	2.77
+ubers	users	substitution	2.78	2.02
+devel	level	substitution	2.76	2.65
+nics	nice	substitution	2.76	2.61
+nuys	guys	substitution	2.76	2.65
+iwatch	watch	deletion	2.75	2.59
+loew	low	deletion	2.75	2.58
+oakes	makes	substitution	2.75	2.71
+welp	well	substitution	2.73	3.30
+klay	play	substitution	2.71	2.90
+wifey	wife	deletion	2.71	2.52
+yeung	young	substitution	2.71	2.72
+eazy	easy	substitution	2.69	2.60
+kates	rates	substitution	2.69	2.19
+markey	market	substitution	2.69	2.60
+petes	peter	substitution	2.69	2.19
+reids	reads	substitution	2.69	1.56
+cias	bias	substitution	2.69	1.49
+reys	keys	substitution	2.68	1.71
+didn	did	deletion	2.67	3.29
+mish	miss	substitution	2.67	2.55
+ltte	late	substitution	2.66	2.68
+cagr	car	deletion	2.65	2.80
+eames	games	substitution	2.65	2.79
+bish	wish	substitution	2.65	2.53
+howards	towards	substitution	2.65	2.41
+kohn	john	substitution	2.64	2.74
+loudon	london	substitution	2.64	2.63
+wyman	woman	substitution	2.61	2.74
+hurd	hard	substitution	2.60	2.93
+gilad	glad	deletion	2.59	2.31
+hanes	hands	substitution	2.59	2.57
+suter	super	substitution	2.59	2.49
+wishy	wish	deletion	2.59	2.59
+surry	sorry	substitution	2.58	2.60
+janes	james	substitution	2.56	2.55
+addo	add	deletion	2.56	2.53
+anns	anna	substitution	2.56	1.81
+cking	king	deletion	2.56	2.61
+bloor	blood	substitution	2.56	2.54
+givin	given	substitution	2.55	2.86
+mayne	maybe	substitution	2.55	2.90
+farr	far	extra_double	2.55	2.95
+killa	kill	deletion	2.55	2.54
+wentz	went	deletion	2.54	2.96
+json	son	deletion	2.53	2.75
+iplayer	player	deletion	2.52	2.67
+krazy	crazy	substitution	2.52	2.55
+doesn	does	deletion	2.52	3.22
+towne	town	deletion	2.52	2.72
+boop	book	substitution	2.52	2.91
+colm	cold	substitution	2.50	2.52
+socal	local	substitution	2.50	2.93
+yorke	york	deletion	2.49	2.88
+holi	hold	substitution	2.48	2.71
+nist	list	substitution	2.48	2.80
+derp	deep	substitution	2.48	2.57
+condon	london	substitution	2.48	2.79
+comey	come	deletion	2.47	3.31
+daves	dates	substitution	2.47	2.07
+havin	having	insertion	2.47	3.12
+statin	station	insertion	2.47	2.54
+hoss	loss	substitution	2.46	2.61
+cates	cases	substitution	2.46	2.58
+whyte	white	substitution	2.46	3.05
+hearn	heart	substitution	2.45	2.86
+xtra	extra	insertion	2.44	2.54
+paget	page	deletion	2.43	2.69
+pocus	focus	substitution	2.43	2.57
+peake	peace	substitution	2.43	2.59
+lowes	lower	substitution	2.42	2.69
+lukes	likes	substitution	2.42	2.31
+australis	australia	substitution	2.42	2.64
+codec	code	deletion	2.41	2.67
+favs	fans	substitution	2.41	2.62
+marg	mark	substitution	2.41	2.64
+const	cost	deletion	2.40	2.84
+tegan	began	substitution	2.40	2.67
+cept	kept	substitution	2.40	2.60
+eoin	join	substitution	2.39	2.61
+arcy	army	substitution	2.39	2.67
+cyclo	cycle	substitution	2.39	2.21
+trask	track	substitution	2.39	2.63
+directx	direct	deletion	2.38	2.53
+holo	hold	substitution	2.38	2.81
+lanning	planning	insertion	2.38	2.52
+leavin	leaving	insertion	2.38	2.60
+serv	serve	insertion	2.38	2.47
+burtons	buttons	substitution	2.37	1.61
+darko	dark	deletion	2.37	2.67
+jameis	james	deletion	2.37	2.74
+assed	asked	substitution	2.37	2.93
+appl	app	deletion	2.36	2.50
+negan	began	substitution	2.36	2.71
+imessage	message	deletion	2.36	2.64
+plos	plus	substitution	2.35	2.60
+gopal	goal	deletion	2.35	2.71
+iaea	idea	substitution	2.34	3.02
+ricoh	rich	deletion	2.34	2.57
+camo	came	substitution	2.34	3.16
+holdin	holding	insertion	2.34	2.55
+speedo	speed	deletion	2.31	2.69
+cleary	clear	deletion	2.30	2.95
+somethin	something	insertion	2.30	3.51
+drivin	driving	insertion	2.29	2.61
+borno	born	deletion	2.29	2.80
+coun	count	insertion	2.29	2.54
+loring	losing	substitution	2.29	2.56
+watchin	watching	insertion	2.29	2.73
+appt	app	deletion	2.28	2.58
+comms	comes	substitution	2.28	3.08
+playin	playing	insertion	2.28	3.09
+cardi	card	deletion	2.27	2.77
+ryde	ride	substitution	2.27	2.58
+weeknd	weekend	insertion	2.27	2.66
+moma	mom	deletion	2.26	2.86
+mornin	morning	insertion	2.26	3.07
+gotti	gotta	substitution	2.25	2.70
+crist	christ	insertion	2.24	2.55
+handley	handle	deletion	2.24	2.55
+kanes	lanes	substitution	2.24	1.73
+segal	legal	substitution	2.24	2.84
+wooo	wood	substitution	2.24	2.54
+woot	foot	substitution	2.24	2.63
+glick	click	substitution	2.23	2.59
+ents	ends	substitution	2.23	2.52
+carb	care	substitution	2.23	3.33
+croke	broke	substitution	2.23	2.62
+darden	garden	substitution	2.23	2.54
+parris	paris	extra_double	2.21	2.61
+shootin	shooting	insertion	2.21	2.57
+eads	ends	substitution	2.21	2.54
+init	unit	substitution	2.21	2.74
+reposted	reported	substitution	2.21	2.79
+hutt	hurt	substitution	2.20	2.74
+workin	working	insertion	2.20	3.25
+shite	white	substitution	2.20	3.31
+dyck	dick	substitution	2.19	2.51
+crim	crime	insertion	2.19	2.70
+cady	lady	substitution	2.18	2.77
+telus	tells	substitution	2.18	2.60
+demar	dear	deletion	2.18	2.59
+biggar	bigger	substitution	2.17	2.57
+borat	boat	deletion	2.17	2.54
+gunna	gonna	substitution	2.17	3.12
+stott	scott	substitution	2.17	2.55
+kroll	roll	deletion	2.16	2.59
+wellcome	welcome	extra_double	2.16	2.83
+likud	liked	substitution	2.16	2.60
+magick	magic	deletion	2.16	2.60
+pooper	proper	substitution	2.16	2.56
+sucky	lucky	substitution	2.16	2.61
+faqs	fans	substitution	2.15	2.88
+breakin	breaking	insertion	2.14	2.60
+walken	walked	substitution	2.14	2.53
+ansi	anti	substitution	2.14	2.87
+massie	massive	insertion	2.14	2.58
+phaser	phase	deletion	2.14	2.50
+puttin	putting	insertion	2.13	2.73
+cnns	cans	substitution	2.12	1.68
+eval	evil	substitution	2.12	2.62
+fightin	fighting	insertion	2.12	2.80
+walla	wall	deletion	2.12	2.92
+keepin	keeping	insertion	2.12	2.72
+bodie	bodies	insertion	2.11	2.58
+syriza	syria	deletion	2.11	2.29
+dyin	dying	insertion	2.11	2.52
+livin	living	insertion	2.11	3.19
+sagar	sugar	substitution	2.11	2.57
+watters	matters	substitution	2.11	2.61
+nasas	nasal	substitution	2.10	1.39
+boyz	boy	deletion	2.10	3.07
+callin	calling	insertion	2.09	2.87
+eatin	eating	insertion	2.09	2.76
+runnin	running	insertion	2.08	3.15
+doin	down	substitution	2.08	3.80
+movin	movie	substitution	2.08	3.08
+umass	mass	deletion	2.08	2.79
+rosh	rose	substitution	2.07	2.75
+carrey	carry	deletion	2.07	2.82
+dennys	dennis	substitution	2.07	2.03
+toons	tools	substitution	2.07	2.52
+drax	draw	substitution	2.07	2.74
+commited	committed	missing_double	2.06	2.59
+hodor	honor	substitution	2.06	2.63
+asos	ass	deletion	2.06	2.94
+sayed	saved	substitution	2.06	2.61
+suprised	surprised	insertion	2.05	2.63
+mathers	matters	substitution	2.04	2.68
+pharm	harm	deletion	2.04	2.43
+asic	basic	insertion	2.03	2.86
+killin	killing	insertion	2.03	2.85
+ames	games	insertion	2.02	3.42
+foote	foot	deletion	2.02	2.85
+suny	sun	deletion	2.02	2.95
+binance	finance	substitution	2.01	2.64
+buell	bell	deletion	2.01	2.58
+notts	notes	substitution	2.01	2.83
+tryin	trying	insertion	2.01	3.46
+moller	miller	substitution	2.00	2.50
+waitin	waiting	insertion	2.00	3.06
+goin	going	insertion	1.99	3.95
+mavs	mass	substitution	1.99	2.88
+willson	wilson	extra_double	1.99	2.54
+cryo	cry	deletion	1.98	2.61
+howes	homes	substitution	1.97	2.72
+drinkin	drinking	insertion	1.97	2.74
+burnin	burning	insertion	1.96	2.54
+cnet	cent	transposition	1.96	2.87
+fucken	fucked	substitution	1.96	2.63
+saeed	speed	substitution	1.96	3.04
+uggs	eggs	substitution	1.96	2.54
+bowe	bowl	substitution	1.95	2.68
+dogg	dog	extra_double	1.95	3.15
+hemi	semi	substitution	1.95	2.56
+javed	saved	substitution	1.94	2.73
+marr	mark	substitution	1.94	3.11
+bric	eric	substitution	1.93	2.56
+burj	burn	substitution	1.93	2.60
+etsy	easy	substitution	1.93	3.36
+harker	harder	substitution	1.93	2.64
+vitaly	italy	deletion	1.93	2.73
+tshirt	shirt	deletion	1.93	2.70
+lyin	lying	insertion	1.92	2.75
+pegg	egg	deletion	1.92	2.54
+herts	hearts	insertion	1.91	2.53
+rofl	roll	substitution	1.91	2.84
+statins	stations	insertion	1.91	2.59
+famers	farmers	insertion	1.91	2.52
+foles	folks	substitution	1.91	2.68
+thinkin	thinking	insertion	1.90	3.34
+struct	struck	substitution	1.90	2.52
+coutts	courts	substitution	1.89	2.57
+nbas	bas	deletion	1.89	1.35
+deir	dear	substitution	1.89	2.88
+feelin	feeling	insertion	1.89	3.24
+charing	sharing	substitution	1.88	2.78
+deca	deck	substitution	1.88	2.53
+msps	maps	substitution	1.88	2.54
+stayin	staying	insertion	1.88	2.67
+comin	coming	insertion	1.87	3.53
+atms	arms	substitution	1.87	2.95
+nath	path	substitution	1.87	2.84
+charlize	charlie	deletion	1.87	2.56
+fallin	falling	insertion	1.86	2.80
+sittin	sitting	insertion	1.86	3.00
+charli	charlie	insertion	1.86	2.57
+nothin	nothing	insertion	1.86	3.69
+naylor	taylor	substitution	1.85	2.80
+bucs	bus	deletion	1.85	2.98
+gettin	getting	insertion	1.85	3.72
+jaye	jane	substitution	1.85	2.57
+sayin	saying	insertion	1.85	3.52
+fbis	bis	deletion	1.85	1.49
+checkin	checking	insertion	1.85	2.58
+noone	none	extra_double	1.85	3.08
+maxx	max	extra_double	1.84	2.82
+mvps	maps	substitution	1.84	2.58
+reposting	reporting	substitution	1.84	2.70
+singin	singing	insertion	1.84	2.75
+aslam	islam	substitution	1.83	2.59
+desc	desk	substitution	1.83	2.60
+wakeup	makeup	substitution	1.83	2.56
+spacex	space	deletion	1.82	3.41
+spector	sector	deletion	1.82	2.84
+walkin	walking	insertion	1.82	3.04
+usgs	uses	substitution	1.82	3.06
+lookin	looking	insertion	1.81	3.76
+tellin	telling	insertion	1.81	3.11
+xtreme	extreme	insertion	1.81	2.79
+asif	asia	substitution	1.80	2.85
+ridin	riding	insertion	1.80	2.69
+wilks	walks	substitution	1.80	2.52
+messis	messes	substitution	1.80	1.43
+dancin	dancing	insertion	1.80	2.70
+nilly	silly	substitution	1.80	2.59
+oughta	ought	deletion	1.80	2.55
+regs	legs	substitution	1.80	2.87
+thicc	thick	substitution	1.80	2.66
+hayne	wayne	substitution	1.79	2.58
+gorman	german	substitution	1.78	3.17
+cryin	crying	insertion	1.78	2.78
+dinh	dish	substitution	1.78	2.43
+glock	block	substitution	1.78	3.10
+lally	rally	substitution	1.78	2.56
+lavery	slavery	insertion	1.78	2.43
+csis	isis	substitution	1.78	2.49
+holliday	holiday	extra_double	1.76	2.90
+ings	wings	insertion	1.76	2.68
+laing	lying	substitution	1.76	2.91
+geary	gear	deletion	1.75	2.71
+chaz	chat	substitution	1.74	2.83
+crewe	crew	deletion	1.74	2.96
+neff	jeff	substitution	1.74	2.71
+palin	pain	deletion	1.74	3.29
+partick	patrick	transposition	1.74	2.63
+lawler	lawyer	substitution	1.74	2.93
+asda	asia	substitution	1.73	2.92
+healy	heavy	substitution	1.73	3.23
+gough	tough	substitution	1.73	3.04
+alderson	anderson	substitution	1.72	2.64
+brees	trees	substitution	1.71	2.98
+ruger	roger	substitution	1.71	2.68
+bromance	romance	deletion	1.70	2.62
+fics	fits	substitution	1.70	2.57
+usps	uses	substitution	1.70	3.18
+bama	obama	insertion	1.69	3.17
+emea	emma	substitution	1.69	2.54
+lewin	lewis	substitution	1.69	2.79
+vella	villa	substitution	1.69	2.51
+steph	step	deletion	1.69	3.44
+tywin	twin	deletion	1.69	2.65
+rogen	roger	substitution	1.69	2.70
+stis	sits	transposition	1.69	2.49
+jemma	emma	deletion	1.68	2.55
+thicke	thick	deletion	1.68	2.78
+bibby	bobby	substitution	1.68	2.54
+pullin	pulling	insertion	1.68	2.67
+welker	walker	substitution	1.68	2.74
+foxx	fox	extra_double	1.67	2.99
+nutt	nuts	substitution	1.67	2.63
+staley	stanley	insertion	1.66	2.53
+blowin	blown	deletion	1.66	2.55
+ghosh	ghost	substitution	1.66	2.76
+nighter	fighter	substitution	1.66	2.66
+yolo	solo	substitution	1.66	2.95
+harkness	darkness	substitution	1.66	2.64
+tedx	ted	deletion	1.66	2.60
+casted	wasted	substitution	1.65	2.54
+ieds	beds	substitution	1.65	2.52
+fredo	fred	deletion	1.64	2.57
+innes	inner	substitution	1.64	2.86
+maddison	madison	extra_double	1.64	2.53
+rebs	reds	substitution	1.64	2.27
+unix	unit	substitution	1.64	3.31
+bowes	boxes	substitution	1.64	2.70
+buxton	button	substitution	1.64	2.92
+ulta	ultra	insertion	1.63	2.60
+nfls	nils	substitution	1.63	1.18
+mawr	mar	deletion	1.62	2.57
+calum	calm	deletion	1.62	2.92
+naia	nail	substitution	1.62	2.59
+peds	beds	substitution	1.62	2.55
+epps	apps	substitution	1.62	2.73
+socialise	socialist	substitution	1.62	2.60
+bitchin	bitcoin	substitution	1.61	2.63
+improv	improve	insertion	1.61	3.18
+nacl	nail	substitution	1.61	2.60
+spurgeon	surgeon	deletion	1.60	2.53
+keating	eating	deletion	1.60	3.25
+beaton	beaten	substitution	1.59	2.62
+greig	greg	deletion	1.58	2.65
+hollins	collins	substitution	1.58	2.57
+jumpin	jumping	insertion	1.58	2.65
+pyne	pine	substitution	1.58	2.52
+pcie	pie	deletion	1.57	2.62
+hangin	hanging	insertion	1.57	2.93
+sangh	sang	deletion	1.57	2.53
+spyder	spider	substitution	1.57	2.68
+embarassing	embarrassing	missing_double	1.56	2.59
+libs	lies	substitution	1.56	3.17
+robison	robinson	insertion	1.56	2.65
+talkin	talking	insertion	1.56	3.73
+channing	changing	substitution	1.56	3.20
+bauman	batman	substitution	1.55	2.67
+nhls	nils	substitution	1.54	1.27
+auth	auto	substitution	1.53	2.95
+jizz	jazz	substitution	1.53	2.78
+mortis	morris	substitution	1.52	2.63
+oems	poems	insertion	1.52	2.59
+kazakhstani	kazakhstan	deletion	1.52	2.05
+mookie	rookie	substitution	1.52	2.61
+pissy	pussy	substitution	1.52	2.72
+smes	sees	substitution	1.52	3.07
+astley	ashley	substitution	1.51	2.60
+mins	mind	substitution	1.51	3.90
+naka	aka	deletion	1.51	2.64
+dorman	norman	substitution	1.51	2.63
+kilda	kinda	substitution	1.51	3.08
+geno	gene	substitution	1.50	2.86
+chuan	chan	deletion	1.50	2.50
+jett	jet	extra_double	1.50	2.79
+landis	lands	deletion	1.50	2.87
+tion	ton	deletion	1.50	2.79
+ginn	inn	deletion	1.47	2.60
+pham	ham	deletion	1.47	2.65
+seager	eager	deletion	1.47	2.56
+tsang	sang	deletion	1.47	2.63
+mlas	las	deletion	1.46	2.82
+cpac	pac	deletion	1.46	2.47
+batchelor	bachelor	deletion	1.44	2.53
+rahm	ram	deletion	1.44	2.75
+baskin	basin	deletion	1.43	2.65
+opie	pie	deletion	1.42	2.77
+gaap	gap	extra_double	1.42	3.05
+urgh	ugh	deletion	1.42	2.80
+venables	enables	deletion	1.42	2.52
+apac	pac	deletion	1.41	2.52
+neilson	nelson	deletion	1.41	2.83
+whalen	whale	deletion	1.41	2.57
+lambo	lamb	deletion	1.41	2.61
+subsp	subs	deletion	1.40	2.30
+backend	backed	deletion	1.40	2.86
+spca	spa	deletion	1.40	2.56
+yellen	ellen	deletion	1.39	2.66
+soren	sore	deletion	1.38	2.61
+haile	hail	deletion	1.38	2.54
+pcos	cos	deletion	1.37	2.68
+abcs	abs	deletion	1.36	2.50
+fergusson	ferguson	extra_double	1.36	2.52
+anova	nova	deletion	1.35	2.57
+hosmer	homer	deletion	1.35	2.54
+scsi	sci	deletion	1.35	2.59
+cowen	owen	deletion	1.35	2.70
+bogut	bout	deletion	1.34	2.71
+coyle	cole	deletion	1.33	2.85
+brackett	bracket	extra_double	1.32	2.52
+hazzard	hazard	extra_double	1.31	2.67
+icbm	ibm	deletion	1.30	2.63
+famer	fame	deletion	1.29	3.05
+ipso	iso	deletion	1.29	2.50
+prioritise	priorities	transposition	1.27	2.79
+isro	iso	deletion	1.26	2.53
+cmon	con	deletion	1.24	3.04
+downes	downs	deletion	1.24	2.69
+recs	res	deletion	1.24	2.55
+colvin	colin	deletion	1.24	2.85
+grindr	grind	deletion	1.24	2.70
+toews	toes	deletion	1.23	2.73
+ichi	chi	deletion	1.22	2.73
+prev	rev	deletion	1.22	2.90
+cpus	cups	transposition	1.21	2.90
+crabb	crab	extra_double	1.20	2.56
+dutchess	duchess	deletion	1.20	2.56
+molloy	molly	deletion	1.18	2.69
+ivey	ivy	deletion	1.17	2.66
+coyne	cone	deletion	1.16	2.67
+hornby	horny	deletion	1.16	2.63
+rhoades	rhodes	deletion	1.16	2.53
+galvin	gavin	deletion	1.15	2.59
+neill	neil	extra_double	1.15	3.01
+dalek	dale	deletion	1.15	2.83
+kenney	kenny	deletion	1.14	2.89
+dovey	dove	deletion	1.13	2.54
+frantz	franz	deletion	1.13	2.40
+johnstown	johnston	deletion	1.13	2.66
+emphasise	emphasis	deletion	1.12	3.07
+baghdadi	baghdad	deletion	1.12	2.52
+kaine	kane	deletion	1.12	2.83
+hoare	hare	deletion	1.11	2.55
+knott	knot	extra_double	1.11	2.61
+hbos	bos	deletion	1.11	1.96
+draymond	raymond	deletion	1.10	2.88
+saleem	salem	extra_double	1.10	2.60
+allman	allan	deletion	1.10	2.70
+chua	cha	deletion	1.08	2.62
+saxton	saxon	deletion	1.08	2.50
+ecommerce	commerce	deletion	1.07	3.30
+cornwell	cornell	deletion	1.06	2.63
+crispr	crisp	deletion	1.05	2.65
+isaf	isa	deletion	1.05	2.54
+chiu	chi	deletion	1.04	2.91
+glennon	lennon	deletion	1.03	2.53
+isha	isa	deletion	1.03	2.56
+miley	mile	deletion	1.03	3.56
+armoury	armour	deletion	1.02	2.73
+colson	colon	deletion	1.02	2.58
+cringey	cringe	deletion	1.02	2.52
+lilley	lilly	deletion	1.02	2.52
+skank	sank	deletion	1.02	2.68
+href	ref	deletion	1.01	2.94
+vmas	mas	deletion	1.01	2.52
+hamad	ahmad	transposition	0.98	2.66
+rbis	ribs	transposition	0.87	2.93
+harington	harrington	missing_double	0.85	2.52
+betts	bets	extra_double	0.81	3.04
+monson	monsoon	missing_double	0.78	2.55
+idps	dips	transposition	0.78	2.52
+ddos	dos	extra_double	0.77	2.92
+nunn	nun	extra_double	0.75	2.89
+pettit	petit	extra_double	0.75	2.52
+simms	sims	extra_double	0.73	3.05
+summarise	summaries	transposition	0.71	2.60
+tennant	tenant	extra_double	0.69	3.09
+dwyane	dwayne	transposition	0.66	2.69
+diggs	digs	extra_double	0.56	2.82
+trna	tran	transposition	0.56	2.53
+herron	heron	extra_double	0.55	2.54
+millimetre	millimeter	transposition	0.53	2.60
+sympathise	sympathies	transposition	0.52	2.71
+fibreglass	fiberglass	transposition	0.51	2.53
+
+## FOREIGN WORDS FILTERED (363)
+# These have high frequency in another language — probably keep
+satu	id	6.47
+lagi	id	6.46
+anak	id	6.32
+sama	id	6.23
+jalan	id	5.89
+taki	pl	5.75
+hadi	tr	5.52
+daca	ro	5.47
+moni	fi	5.35
+ilan	tr	5.30
+daya	id	5.25
+baca	id	5.22
+sona	tr	5.20
+emin	tr	5.18
+sami	cs	5.17
+yada	tr	5.17
+devine	ro	5.12
+nami	pl	5.11
+cale	ro	5.09
+fatih	tr	5.08
+kimi	tr	5.08
+aceh	id	5.06
+artis	id	5.03
+ince	tr	5.01
+makin	id	5.00
+tata	id	4.95
+hani	tr	4.93
+nabi	id	4.93
+alun	fi	4.88
+adama	tr	4.86
+salam	id	4.86
+roti	id	4.82
+iman	id	4.81
+sata	fi	4.81
+cristian	ro	4.81
+emre	tr	4.80
+jaya	id	4.78
+aslan	tr	4.73
+proc	pl	4.65
+yara	tr	4.61
+islami	tr	4.57
+kenan	tr	4.54
+citi	ro	4.51
+haram	id	4.51
+ivana	cs	4.42
+strat	ro	4.38
+yoon	id	4.38
+umar	id	4.37
+asean	id	4.35
+jang	id	4.34
+hyung	id	4.34
+jimi	cs	4.29
+cech	pl	4.26
+dany	pl	4.25
+iata	ro	4.25
+indi	tr	4.22
+libor	cs	4.22
+seti	tr	4.21
+mori	ro	4.18
+daly	cs	4.18
+gini	id	4.17
+okey	id	4.16
+hilal	tr	4.16
+bilal	tr	4.15
+nicu	ro	4.10
+fibre	ro	4.10
+rosen	de	4.09
+saleh	id	4.08
+baek	id	4.05
+asus	id	4.05
+manu	fi	4.04
+seok	id	4.03
+siri	nb	4.02
+suri	id	4.01
+adhd	sv	4.00
+hina	id	3.99
+hmmm	pl	3.99
+viet	nb	3.98
+lorde	pt	3.96
+sansa	ro	3.96
+heli	fi	3.93
+digi	fi	3.91
+seans	tr	3.89
+haru	id	3.89
+zadar	ro	3.89
+ebook	it	3.85
+cort	ro	3.84
+qing	id	3.84
+nino	it	3.84
+hara	id	3.83
+gallen	de	3.82
+wook	id	3.81
+gunn	nb	3.81
+leds	sv	3.79
+chae	id	3.79
+sato	fi	3.79
+saas	fi	3.78
+voss	de	3.78
+ying	id	3.77
+sooo	de	3.76
+falk	sv	3.75
+youtuber	de	3.74
+vips	sv	3.73
+abou	fr	3.72
+kool	nl	3.72
+kwang	id	3.72
+barak	id	3.72
+kwon	id	3.71
+brunner	de	3.71
+eshop	cs	3.70
+aang	id	3.70
+jelena	cs	3.70
+zhen	id	3.69
+novi	id	3.69
+gaye	tr	3.68
+aris	id	3.68
+gabor	ro	3.68
+roms	fr	3.68
+muni	fr	3.68
+pinterest	pt	3.68
+noor	id	3.67
+aren	id	3.66
+sensei	id	3.66
+imran	id	3.66
+gmail	id	3.66
+agro	ro	3.65
+jeon	id	3.64
+allahu	tr	3.64
+seong	id	3.63
+jamil	id	3.63
+chong	id	3.63
+nats	da	3.63
+tian	id	3.62
+trapp	nb	3.62
+jima	cs	3.61
+bondi	es	3.61
+romo	id	3.60
+repo	fi	3.60
+tinto	es	3.58
+rangel	pt	3.58
+rian	id	3.58
+matic	id	3.58
+dota	id	3.57
+haider	de	3.57
+karam	id	3.57
+joong	id	3.57
+rafi	id	3.57
+osce	ro	3.56
+modis	id	3.56
+coen	nl	3.56
+conf	ro	3.56
+gartner	da	3.55
+latif	tr	3.55
+puig	es	3.55
+snes	da	3.54
+willian	pt	3.54
+tripp	sv	3.54
+nang	id	3.54
+lauda	ro	3.54
+brac	pl	3.54
+josep	es	3.53
+kitt	ro	3.53
+shui	id	3.53
+sepp	de	3.53
+amit	id	3.53
+yulia	id	3.53
+stef	nl	3.52
+xing	de	3.52
+appa	id	3.50
+schott	de	3.50
+riba	id	3.49
+itis	fi	3.48
+roald	nb	3.48
+masson	fr	3.48
+bernier	fr	3.48
+duval	fr	3.48
+mariah	fi	3.48
+witten	de	3.47
+iras	fr	3.47
+evers	nl	3.46
+bossa	pt	3.46
+rino	it	3.46
+juma	ro	3.46
+riker	nb	3.46
+dietz	de	3.46
+yung	id	3.45
+fisa	ro	3.45
+zhong	id	3.45
+giga	it	3.45
+skoda	de	3.45
+wich	de	3.44
+navas	es	3.44
+lauer	de	3.43
+basf	de	3.43
+vlog	id	3.42
+memoriam	ro	3.42
+mbps	id	3.42
+potro	es	3.42
+wirth	de	3.41
+gerson	pt	3.41
+oden	sv	3.41
+miko	id	3.41
+boko	nl	3.41
+gaal	id	3.41
+jace	it	3.40
+heng	nb	3.40
+hella	fi	3.40
+neko	id	3.40
+oled	cs	3.39
+gung	id	3.39
+millar	es	3.39
+asad	cs	3.38
+ronin	fi	3.38
+dprk	id	3.37
+azam	tr	3.37
+esports	fi	3.37
+osama	fi	3.37
+fong	id	3.36
+societe	fr	3.36
+jian	id	3.36
+hannan	fi	3.36
+scheer	nl	3.36
+deen	nl	3.35
+saud	id	3.35
+chand	id	3.35
+mrsa	da	3.35
+calc	ro	3.34
+opec	nb	3.34
+minh	pt	3.34
+lamy	fr	3.33
+ladd	nb	3.33
+miri	ro	3.33
+kombat	fi	3.33
+thorne	pt	3.33
+stoll	de	3.32
+luthor	pt	3.32
+raaf	nl	3.32
+brom	nl	3.31
+zinn	de	3.31
+neuro	ro	3.31
+breen	nb	3.30
+muay	pt	3.30
+carpe	fr	3.30
+basu	cs	3.30
+favre	fr	3.30
+moby	ro	3.30
+machina	pl	3.29
+sorel	fr	3.29
+fogg	ro	3.29
+lans	nl	3.28
+carles	es	3.28
+faris	id	3.28
+nabil	fr	3.28
+fung	id	3.27
+crocs	fr	3.27
+egan	ro	3.27
+qian	id	3.27
+yuna	id	3.27
+publ	sv	3.26
+rapp	sv	3.26
+kpop	id	3.26
+icloud	tr	3.26
+kono	id	3.25
+endo	id	3.24
+crowe	ro	3.24
+callan	es	3.24
+minto	pt	3.23
+sams	sv	3.23
+siem	nb	3.23
+vids	nl	3.23
+venturi	it	3.23
+leni	de	3.23
+tris	id	3.22
+cohn	fr	3.22
+ozil	id	3.22
+wulf	de	3.22
+frick	de	3.22
+askin	fi	3.21
+berman	ro	3.21
+geun	id	3.20
+cookin	fi	3.20
+domo	es	3.20
+perf	fr	3.19
+dantes	da	3.19
+latour	fr	3.19
+miku	id	3.19
+korra	id	3.19
+xuan	id	3.19
+tada	tr	3.19
+georgi	cs	3.18
+shiro	id	3.18
+xxxx	nl	3.18
+beit	nb	3.17
+thanos	id	3.17
+mance	it	3.17
+walid	id	3.17
+amaya	es	3.17
+bamba	pt	3.17
+bakr	id	3.16
+farris	nb	3.16
+kiran	id	3.16
+chim	id	3.15
+vroom	nl	3.15
+arun	id	3.15
+fanta	sv	3.15
+jins	id	3.14
+mech	pl	3.14
+wala	id	3.14
+lecter	nb	3.13
+keyes	ro	3.13
+directv	es	3.13
+brics	pt	3.13
+divi	it	3.13
+majid	id	3.13
+lando	ro	3.12
+pusha	sv	3.12
+christo	de	3.12
+banksy	it	3.12
+jaden	fi	3.12
+ould	fr	3.11
+toth	ro	3.11
+ahold	nl	3.11
+warne	de	3.11
+imax	ro	3.11
+aung	id	3.11
+isco	id	3.11
+startin	fi	3.10
+dutt	de	3.10
+swann	ro	3.10
+hideo	id	3.09
+trac	ro	3.09
+primark	de	3.09
+smokin	tr	3.09
+goss	de	3.08
+gatt	nb	3.08
+malek	fr	3.08
+rfid	de	3.08
+horan	sv	3.08
+tarek	es	3.07
+giggs	id	3.07
+changi	id	3.06
+hendry	id	3.06
+docu	fr	3.06
+khun	id	3.06
+peeta	id	3.06
+mook	nl	3.05
+trax	id	3.05
+baer	de	3.05
+simi	id	3.05
+pubg	tr	3.05
+cmos	cs	3.05
+alon	id	3.04
+vimeo	de	3.04
+pacs	fr	3.04
+helo	id	3.03
+imac	nl	3.03
+penh	id	3.03
+toure	id	3.02
+neeson	ro	3.02
+nour	fr	3.01
+schell	de	3.01
+epub	it	3.01
+kawaii	id	3.01
