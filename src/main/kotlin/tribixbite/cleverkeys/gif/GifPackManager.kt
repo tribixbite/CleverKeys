@@ -50,7 +50,7 @@ class GifPackManager private constructor(private val context: Context) {
             description = "Database + thumbnails for 130K GIFs",
             gifCount = 130000,
             sizeBytes = 12_000_000L,
-            downloadUrl = null, // TODO: Set GitHub Releases URL when published
+            downloadUrl = "https://github.com/tribixbite/CleverKeys/releases/download/CleverKeys-GIF/gifs_v2.db.gz",
             isBundled = false
         )
     )
@@ -248,15 +248,13 @@ class GifPackDownloadWorker(
     private suspend fun downloadCorePack(): Result {
         val packsDir = File(applicationContext.filesDir, "gif_packs").also { it.mkdirs() }
 
-        // TODO: Replace with actual GitHub Releases URLs when published
-        // Step 1: Download gzipped database
+        // Step 1: Download gzipped database from GitHub Releases
         setProgress(workDataOf(KEY_PROGRESS to 0.1f, KEY_STAGE to "downloading database"))
         val dbGzFile = File(packsDir, "${GifDatabase.DATABASE_NAME}.gz")
 
-        // Placeholder: In production, download from URL
-        // downloadHttpFile(DB_DOWNLOAD_URL, dbGzFile) { progress ->
-        //     setProgress(workDataOf(KEY_PROGRESS to progress * 0.4f, KEY_STAGE to "downloading database"))
-        // }
+        downloadHttpFile(CORE_DB_URL, dbGzFile) { progress ->
+            setProgress(workDataOf(KEY_PROGRESS to progress * 0.4f, KEY_STAGE to "downloading database"))
+        }
 
         // Step 2: Decompress database
         setProgress(workDataOf(KEY_PROGRESS to 0.4f, KEY_STAGE to "installing database"))
@@ -319,7 +317,6 @@ class GifPackDownloadWorker(
     /**
      * Download a file via HTTP with progress reporting.
      */
-    @Suppress("unused") // Will be used when URLs are configured
     private suspend fun downloadHttpFile(
         url: String,
         destFile: File,
@@ -404,6 +401,11 @@ class GifPackDownloadWorker(
         const val KEY_PACK_ID = "pack_id"
         const val KEY_PROGRESS = "progress"
         const val KEY_STAGE = "stage"
+
+        // GitHub Releases asset URL for core database
+        private const val CORE_DB_URL =
+            "https://github.com/tribixbite/CleverKeys/releases/download/CleverKeys-GIF/gifs_v2.db.gz"
+        // TODO: Add thumbnails archive URL when thumbnail pack is published
     }
 }
 
