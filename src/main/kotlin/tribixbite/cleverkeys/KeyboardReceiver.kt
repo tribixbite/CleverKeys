@@ -73,6 +73,9 @@ class KeyboardReceiver(
     // #41: Emoji search manager (uses suggestion bar for status display)
     private var emojiSearchManager: EmojiSearchManager? = null
 
+    // GIF search: reference to search EditText for key routing
+    private var gifSearchInput: EditText? = null
+
     /**
      * Sets references to views for content pane management.
      *
@@ -321,35 +324,111 @@ class KeyboardReceiver(
                     // Prefer full animation; fall back to thumbnail (packs only include thumbs)
                     val gifFile = assetManager.getGifFile(gif)
                         ?: File(context.filesDir, gif.getThumbnailPath()).takeIf { it.exists() }
+                    var committed = false
                     if (gifFile != null && gifFile.exists()) {
-                        // Insert as content:// URI via InputConnection
-                        val uri = androidx.core.content.FileProvider.getUriForFile(
-                            context,
-                            "${context.packageName}.fileprovider",
-                            gifFile
-                        )
-                        val description = android.content.ClipDescription(
-                            "GIF",
-                            arrayOf("image/webp")
-                        )
-                        val inputContentInfo = androidx.core.view.inputmethod.InputContentInfoCompat(
-                            uri, description, null
-                        )
-                        val ic = keyboard2.currentInputConnection
-                        if (ic != null) {
-                            androidx.core.view.inputmethod.InputConnectionCompat.commitContent(
-                                ic, keyboard2.currentInputEditorInfo, inputContentInfo,
-                                androidx.core.view.inputmethod.InputConnectionCompat.INPUT_CONTENT_GRANT_READ_URI_PERMISSION,
-                                null
+                        try {
+                            // Insert as content:// URI via InputConnection (for apps that support rich content)
+                            val uri = androidx.core.content.FileProvider.getUriForFile(
+                                context,
+                                "${context.packageName}.fileprovider",
+                                gifFile
                             )
+                            val description = android.content.ClipDescription(
+                                "GIF",
+                                arrayOf("image/webp")
+                            )
+                            val inputContentInfo = androidx.core.view.inputmethod.InputContentInfoCompat(
+                                uri, description, null
+                            )
+                            val ic = keyboard2.currentInputConnection
+                            if (ic != null) {
+                                committed = androidx.core.view.inputmethod.InputConnectionCompat.commitContent(
+                                    ic, keyboard2.currentInputEditorInfo, inputContentInfo,
+                                    androidx.core.view.inputmethod.InputConnectionCompat.INPUT_CONTENT_GRANT_READ_URI_PERMISSION,
+                                    null
+                                )
+                            }
+                        } catch (e: Exception) {
+                            android.util.Log.w("KeyboardReceiver", "commitContent failed: ${e.message}")
                         }
                     }
-                    // Close GIF pane after selection
+                    if (!committed) {
+                        // Fallback: copy GIF file to clipboard so user can paste it
+                        if (gifFile != null && gifFile.exists()) {
+                            try {
+                                val uri = androidx.core.content.FileProvider.getUriForFile(
+                                    context,
+                                    "${context.packageName}.fileprovider",
+                                    gifFile
+                                )
+                                val clip = android.content.ClipData.newUri(
+                                    context.contentResolver,
+                                    gif.getDisplayName(),
+                                    uri
+                                )
+                                val cm = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                                cm.setPrimaryClip(clip)
+                                android.widget.Toast.makeText(context, "GIF copied to clipboard", android.widget.Toast.LENGTH_SHORT).show()
+                            } catch (e: Exception) {
+                                android.util.Log.w("KeyboardReceiver", "Clipboard copy failed: ${e.message}")
+                            }
+                        }
+                    }
+                    // Record usage and close
                     handle_event_key(KeyValue.Event.SWITCH_BACK_GIF)
                 }
 
-                // Wire up search bar
+                // Long press: show GIF title + copy to clipboard option
+                gifGrid?.onGifLongPress = { gif, view ->
+                    val assetManager = GifAssetManager.getInstance(context)
+                    val gifFile = assetManager.getGifFile(gif)
+                        ?: File(context.filesDir, gif.getThumbnailPath()).takeIf { it.exists() }
+                    val popup = android.widget.PopupMenu(context, view)
+                    popup.menu.add(0, 1, 0, gif.getDisplayName()).isEnabled = false
+                    if (gifFile != null && gifFile.exists()) {
+                        popup.menu.add(0, 2, 1, "Copy GIF to clipboard")
+                    }
+                    popup.menu.add(0, 3, 2, "Copy keywords")
+                    popup.setOnMenuItemClickListener { item ->
+                        when (item.itemId) {
+                            2 -> {
+                                // Copy GIF file URI to clipboard
+                                try {
+                                    val uri = androidx.core.content.FileProvider.getUriForFile(
+                                        context,
+                                        "${context.packageName}.fileprovider",
+                                        gifFile!!
+                                    )
+                                    val clip = android.content.ClipData.newUri(
+                                        context.contentResolver,
+                                        gif.getDisplayName(),
+                                        uri
+                                    )
+                                    val cm = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                                    cm.setPrimaryClip(clip)
+                                    android.widget.Toast.makeText(context, "GIF copied", android.widget.Toast.LENGTH_SHORT).show()
+                                } catch (e: Exception) {
+                                    android.util.Log.w("KeyboardReceiver", "Copy GIF failed: ${e.message}")
+                                }
+                                true
+                            }
+                            3 -> {
+                                // Copy keywords as text to clipboard
+                                val clip = android.content.ClipData.newPlainText("GIF keywords", gif.searchText)
+                                val cm = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                                cm.setPrimaryClip(clip)
+                                android.widget.Toast.makeText(context, "Keywords copied", android.widget.Toast.LENGTH_SHORT).show()
+                                true
+                            }
+                            else -> false
+                        }
+                    }
+                    popup.show()
+                }
+
+                // Wire up search bar — store reference for key routing
                 val searchInput = gifPaneView.findViewById<EditText>(R.id.gif_search_input)
+                gifSearchInput = searchInput
                 val searchClear = gifPaneView.findViewById<ImageButton>(R.id.gif_search_clear)
                 val noResults = gifPaneView.findViewById<TextView>(R.id.gif_no_results)
 
@@ -393,6 +472,9 @@ class KeyboardReceiver(
 
                 // #41 v4: Notify emoji search manager pane is closing
                 emojiSearchManager?.onPaneClosed()
+
+                // Clear GIF search reference when pane closes
+                gifSearchInput = null
 
                 // Reset pane tracking
                 currentPaneType = PaneType.NONE
@@ -532,5 +614,22 @@ class KeyboardReceiver(
 
     override fun backspaceEmojiSearch() {
         emojiSearchManager?.backspaceSearch()
+    }
+
+    // GIF search routing — same pattern as clipboard/emoji search
+    override fun isGifPaneOpen(): Boolean {
+        return currentPaneType == PaneType.GIF && isContentPaneShowing
+    }
+
+    override fun appendToGifSearch(text: String) {
+        gifSearchInput?.append(text)
+    }
+
+    override fun backspaceGifSearch() {
+        val input = gifSearchInput ?: return
+        val editable = input.text ?: return
+        if (editable.isNotEmpty()) {
+            editable.delete(editable.length - 1, editable.length)
+        }
     }
 }

@@ -13,6 +13,7 @@ enum class GifCategory(
     val keywords: List<String>
 ) {
     RECENTLY_USED(0, "Recent", "\uD83D\uDD59", listOf("recent", "history")),
+    ALL(-1, "All", "\uD83C\uDF10", listOf("all", "everything", "browse")),
     AMUSEMENT(1, "Funny", "\uD83D\uDE02", listOf("laughing", "happy", "funny", "lol", "haha", "laugh")),
     ANGER(2, "Angry", "\uD83D\uDE20", listOf("angry", "frustrated", "rage", "mad", "upset", "furious")),
     CONTEMPT(3, "Smug", "\uD83D\uDE0F", listOf("eye roll", "unimpressed", "smug", "whatever", "annoyed")),
@@ -40,7 +41,7 @@ enum class GifCategory(
         /**
          * Get all browsable categories (excludes RECENTLY_USED which is dynamic).
          */
-        fun browsableCategories(): List<GifCategory> = entries.filter { it != RECENTLY_USED }
+        fun browsableCategories(): List<GifCategory> = entries.filter { it != RECENTLY_USED && it != ALL }
 
         /**
          * Find categories matching a search query.

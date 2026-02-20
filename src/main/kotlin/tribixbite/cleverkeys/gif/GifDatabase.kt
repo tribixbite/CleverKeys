@@ -74,6 +74,9 @@ class GifDatabase private constructor(private val appContext: Context) {
             if (category == GifCategory.RECENTLY_USED) {
                 return@withContext getRecentlyUsedGifs(limit)
             }
+            if (category == GifCategory.ALL) {
+                return@withContext getAllGifs(limit)
+            }
 
             val results = mutableListOf<Gif>()
             val db = dbHelper.readableDatabase

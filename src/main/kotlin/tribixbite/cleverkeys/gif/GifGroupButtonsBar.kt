@@ -51,6 +51,17 @@ class GifGroupButtonsBar(context: Context, attrs: AttributeSet) : HorizontalScro
             }
         )
 
+        // Add "all" globe button
+        buttonContainer.addView(
+            GifGroupButton(context, GifCategory.ALL),
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                width = dpToPx(44)
+            }
+        )
+
         // Add a button for each browsable emotion category
         for (category in GifCategory.browsableCategories()) {
             buttonContainer.addView(
