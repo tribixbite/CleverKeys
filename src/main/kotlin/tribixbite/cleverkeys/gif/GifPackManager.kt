@@ -1,379 +1,207 @@
 package tribixbite.cleverkeys.gif
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.util.Log
-import androidx.work.*
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import org.json.JSONObject
 import java.io.File
-import java.io.FileInputStream
 import java.io.FileOutputStream
-import java.net.HttpURLConnection
-import java.net.URL
-import java.util.zip.GZIPInputStream
-import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 
 /**
- * Manages GIF pack downloads and installation using WorkManager.
+ * Manages GIF pack import, removal, and lifecycle.
  *
- * Tiered download system:
- * 1. Core pack: DB (gzipped ~6MB) + thumbnails (~6MB) = ~12MB total
- * 2. Category packs: Full animations grouped by emotion (~50MB each)
- * 3. On-demand: Individual animations fetched when user taps (lazy)
+ * No internet permission required — packs are distributed as ZIP files via
+ * GitHub Releases. Users download in their browser, then import via file picker
+ * or Android share intent.
  *
- * WorkManager ensures downloads survive process death, respect network
- * constraints, and can run while the keyboard is in background.
+ * Pack ZIP format:
+ *   manifest.json     — {pack_id, name, version, gif_count, description}
+ *   pack.db           — Mini SQLite with this pack's gifs/categories/FTS rows
+ *   thumbs/{part}/    — Thumbnails partitioned by id÷1000
  *
- * Pack format: ZIP/tar.gz archives hosted on GitHub Releases.
+ * Follows the same pattern as LanguagePackManager for consistency.
  */
 class GifPackManager private constructor(private val context: Context) {
 
-    private val assetManager = GifAssetManager.getInstance(context)
-
-    private val packsDir: File by lazy {
-        File(context.filesDir, "gif_packs").also { it.mkdirs() }
-    }
-
-    // Observable download state for UI
-    private val _downloadState = MutableStateFlow<DownloadState>(DownloadState.Idle)
-    val downloadState: StateFlow<DownloadState> = _downloadState.asStateFlow()
+    private val database: GifDatabase by lazy { GifDatabase.getInstance(context) }
+    private val assetManager: GifAssetManager by lazy { GifAssetManager.getInstance(context) }
 
     /**
-     * Available pack definitions.
-     * TODO: Fetch from manifest URL for dynamic pack list updates
+     * Import a GIF pack from a ZIP file URI (from file picker or share intent).
+     *
+     * @param uri Content URI to the ZIP file
+     * @param replaceExisting If true, removes existing pack with same ID before importing
+     * @return Import result with details
      */
-    val availablePacks = listOf(
-        PackInfo(
-            id = "core",
-            name = "Core Pack",
-            description = "Database + thumbnails for 130K GIFs",
-            gifCount = 130000,
-            sizeBytes = 12_000_000L,
-            downloadUrl = "https://github.com/tribixbite/CleverKeys/releases/download/CleverKeys-GIF/gifs_v2.db.gz",
-            isBundled = false
-        )
-    )
+    suspend fun importPackFromUri(
+        uri: Uri,
+        replaceExisting: Boolean = false
+    ): GifPackImportResult = withContext(Dispatchers.IO) {
+        Log.d(TAG, "Importing GIF pack from: $uri")
 
-    /**
-     * Check if the core database is installed.
-     */
-    fun isCoreInstalled(): Boolean {
-        val dbFile = context.getDatabasePath(GifDatabase.DATABASE_NAME)
-        return dbFile.exists() && dbFile.length() > 0
-    }
+        val tempDir = File(context.cacheDir, "gif_pack_import_${System.currentTimeMillis()}")
+        tempDir.mkdirs()
 
-    /**
-     * Check which packs are installed.
-     */
-    fun getInstalledPacks(): List<String> {
-        val installed = mutableListOf<String>()
-
-        if (isCoreInstalled() && assetManager.getThumbnailCount() > 0) {
-            installed.add("core")
-        }
-
-        // Check for downloaded category packs
-        packsDir.listFiles()?.filter { it.isDirectory }?.forEach { dir ->
-            val manifest = File(dir, "manifest.json")
-            if (manifest.exists()) {
-                installed.add(dir.name)
-            }
-        }
-
-        return installed
-    }
-
-    /**
-     * Get pack installation status.
-     */
-    fun getPackStatus(packId: String): PackStatus {
-        if (packId == "core") {
-            return if (isCoreInstalled()) {
-                PackStatus.Installed(assetManager.getThumbnailCount())
-            } else {
-                PackStatus.NotInstalled
-            }
-        }
-
-        val manifestFile = File(packsDir, "$packId/manifest.json")
-        return if (manifestFile.exists()) {
-            PackStatus.Installed(assetManager.getCachedCount())
-        } else {
-            PackStatus.NotInstalled
-        }
-    }
-
-    /**
-     * Enqueue core pack download via WorkManager.
-     * Respects WiFi-only constraint from Config.
-     */
-    fun enqueueCorePack(wifiOnly: Boolean = true): java.util.UUID {
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(
-                if (wifiOnly) NetworkType.UNMETERED else NetworkType.CONNECTED
-            )
-            .setRequiresStorageNotLow(true)
-            .build()
-
-        val workRequest = OneTimeWorkRequestBuilder<GifPackDownloadWorker>()
-            .setConstraints(constraints)
-            .setInputData(
-                workDataOf(
-                    GifPackDownloadWorker.KEY_PACK_ID to "core"
-                )
-            )
-            .addTag(WORK_TAG_GIF_DOWNLOAD)
-            .build()
-
-        WorkManager.getInstance(context)
-            .enqueueUniqueWork(
-                WORK_NAME_CORE_PACK,
-                ExistingWorkPolicy.KEEP,  // Don't restart if already running
-                workRequest
-            )
-
-        return workRequest.id
-    }
-
-    /**
-     * Observe download progress from WorkManager.
-     */
-    fun observeDownloadProgress(): LiveDataFlow {
-        return LiveDataFlow(
-            WorkManager.getInstance(context)
-                .getWorkInfosByTagLiveData(WORK_TAG_GIF_DOWNLOAD)
-        )
-    }
-
-    /**
-     * Cancel all pending/running GIF downloads.
-     */
-    fun cancelDownloads() {
-        WorkManager.getInstance(context).cancelAllWorkByTag(WORK_TAG_GIF_DOWNLOAD)
-        _downloadState.value = DownloadState.Idle
-    }
-
-    /**
-     * Delete a downloaded pack and clean up its files.
-     */
-    suspend fun deletePack(packId: String): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            if (packId == "core") {
-                // Delete DB + all thumbnails
-                context.getDatabasePath(GifDatabase.DATABASE_NAME).delete()
-                assetManager.clearAll()
-                GifDatabase.release()
-            } else {
-                File(packsDir, packId).deleteRecursively()
+            // Step 1: Extract ZIP to temp directory
+            val inputStream = context.contentResolver.openInputStream(uri)
+                ?: return@withContext GifPackImportResult.Error("Cannot open file")
+
+            extractZip(inputStream, tempDir)
+
+            // Step 2: Validate manifest.json
+            val manifestFile = File(tempDir, MANIFEST_FILE)
+            if (!manifestFile.exists()) {
+                return@withContext GifPackImportResult.Error("Missing manifest.json — not a valid GIF pack")
             }
-            Result.success(Unit)
+
+            val manifest = parseManifest(manifestFile.readText())
+                ?: return@withContext GifPackImportResult.Error("Invalid manifest.json format")
+
+            // Step 3: Validate pack.db
+            val packDbFile = File(tempDir, PACK_DB_FILE)
+            if (!packDbFile.exists() || packDbFile.length() == 0L) {
+                return@withContext GifPackImportResult.Error("Missing or empty pack.db")
+            }
+
+            // Step 4: Check for duplicate
+            if (database.isPackInstalled(manifest.packId) && !replaceExisting) {
+                return@withContext GifPackImportResult.AlreadyInstalled(
+                    manifest.packId, manifest.name
+                )
+            }
+
+            // Step 5: If replacing, remove existing pack first
+            if (replaceExisting && database.isPackInstalled(manifest.packId)) {
+                val removedIds = database.removePack(manifest.packId)
+                assetManager.removeThumbnails(removedIds)
+            }
+
+            // Step 6: Import database entries
+            val imported = database.importPack(
+                packDbFile = packDbFile,
+                packId = manifest.packId,
+                packName = manifest.name,
+                gifCount = manifest.gifCount,
+                sizeBytes = calculateExtractedSize(tempDir)
+            )
+
+            // Step 7: Copy thumbnails to app storage
+            val thumbsDir = File(tempDir, THUMBS_DIR)
+            val thumbCount = if (thumbsDir.exists()) {
+                assetManager.importThumbnails(thumbsDir)
+            } else {
+                0
+            }
+
+            Log.i(TAG, "Pack '${manifest.packId}' imported: $imported DB entries, $thumbCount thumbnails")
+
+            GifPackImportResult.Success(
+                packId = manifest.packId,
+                name = manifest.name,
+                gifCount = imported
+            )
         } catch (e: Exception) {
-            Result.failure(e)
+            Log.e(TAG, "Pack import failed", e)
+            GifPackImportResult.Error("Import failed: ${e.message}")
+        } finally {
+            // Clean up temp directory
+            tempDir.deleteRecursively()
         }
     }
 
     /**
-     * Get total storage used by GIF data.
+     * Open the browser to the GitHub Releases page for downloading packs.
+     * No INTERNET permission needed — delegates to the system browser.
+     */
+    fun openDownloadsPage(context: Context) {
+        try {
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(GITHUB_RELEASES_URL))
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            Log.e(TAG, "Cannot open browser: ${e.message}")
+        }
+    }
+
+    /**
+     * Remove a specific pack — deletes DB entries and thumbnail files.
+     */
+    suspend fun removePack(packId: String) = withContext(Dispatchers.IO) {
+        val removedIds = database.removePack(packId)
+        assetManager.removeThumbnails(removedIds)
+        Log.i(TAG, "Removed pack '$packId': ${removedIds.size} GIFs")
+    }
+
+    /**
+     * Remove ALL GIF data — database, thumbnails, everything.
+     * Resets gif_enabled to false in Config.
+     */
+    suspend fun removeAll() = withContext(Dispatchers.IO) {
+        // Delete all GIF files first
+        assetManager.clearAll()
+
+        // Delete the database
+        database.removeAllData()
+
+        // Release singletons
+        GifDatabase.release()
+        GifAssetManager.release()
+
+        // Disable GIF panel in config
+        try {
+            tribixbite.cleverkeys.Config.globalConfig().set_gif_enabled(false)
+        } catch (e: Exception) {
+            Log.w(TAG, "Could not reset gif_enabled: ${e.message}")
+        }
+
+        Log.i(TAG, "All GIF data removed")
+    }
+
+    /**
+     * Get list of installed packs.
+     */
+    fun getInstalledPacks(): List<InstalledPackInfo> {
+        return try {
+            database.getInstalledPacks()
+        } catch (e: Exception) {
+            Log.w(TAG, "Cannot read installed packs: ${e.message}")
+            emptyList()
+        }
+    }
+
+    /**
+     * Get total storage used by GIF data (database + files).
      */
     fun getTotalStorageUsed(): Long {
-        val packsDirSize = packsDir.walkTopDown().filter { it.isFile }.sumOf { it.length() }
-        val assetsSize = assetManager.getTotalStorageUsed()
         val dbSize = context.getDatabasePath(GifDatabase.DATABASE_NAME).let {
             if (it.exists()) it.length() else 0L
         }
-        return packsDirSize + assetsSize + dbSize
+        val fileSize = assetManager.getTotalStorageUsed()
+        return dbSize + fileSize
     }
+
+    // ==================== INTERNAL ====================
 
     /**
-     * Format bytes as human-readable string.
+     * Extract ZIP from InputStream to destination directory.
+     * Includes path traversal protection.
      */
-    fun formatStorageSize(bytes: Long): String = when {
-        bytes >= 1_000_000_000 -> "%.1f GB".format(bytes / 1_000_000_000.0)
-        bytes >= 1_000_000 -> "%.0f MB".format(bytes / 1_000_000.0)
-        bytes >= 1_000 -> "%.0f KB".format(bytes / 1_000.0)
-        else -> "$bytes B"
-    }
-
-    companion object {
-        private const val TAG = "GifPackManager"
-        const val WORK_TAG_GIF_DOWNLOAD = "gif_pack_download"
-        const val WORK_NAME_CORE_PACK = "gif_core_pack"
-
-        @Volatile
-        private var instance: GifPackManager? = null
-
-        fun getInstance(context: Context): GifPackManager {
-            return instance ?: synchronized(this) {
-                instance ?: GifPackManager(context.applicationContext).also { instance = it }
-            }
-        }
-
-        fun release() {
-            synchronized(this) { instance = null }
-        }
-    }
-}
-
-/**
- * WorkManager Worker for downloading and installing GIF packs.
- *
- * Handles: HTTP download → extract → install DB + thumbnails.
- * Reports progress via setProgress() for UI observation.
- */
-class GifPackDownloadWorker(
-    appContext: Context,
-    workerParams: WorkerParameters
-) : CoroutineWorker(appContext, workerParams) {
-
-    override suspend fun doWork(): Result {
-        val packId = inputData.getString(KEY_PACK_ID) ?: return Result.failure()
-
-        setProgress(workDataOf(KEY_PROGRESS to 0f, KEY_STAGE to "downloading"))
-
-        return try {
-            when (packId) {
-                "core" -> downloadCorePack()
-                else -> downloadCategoryPack(packId)
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Pack download failed: $packId", e)
-            Result.retry() // WorkManager will retry with backoff
-        }
-    }
-
-    /**
-     * Download the core pack: gzipped database + thumbnails archive.
-     */
-    private suspend fun downloadCorePack(): Result {
-        val packsDir = File(applicationContext.filesDir, "gif_packs").also { it.mkdirs() }
-
-        // Step 1: Download gzipped database from GitHub Releases
-        setProgress(workDataOf(KEY_PROGRESS to 0.1f, KEY_STAGE to "downloading database"))
-        val dbGzFile = File(packsDir, "${GifDatabase.DATABASE_NAME}.gz")
-
-        downloadHttpFile(CORE_DB_URL, dbGzFile) { progress ->
-            setProgress(workDataOf(KEY_PROGRESS to progress * 0.4f, KEY_STAGE to "downloading database"))
-        }
-
-        // Step 2: Decompress database
-        setProgress(workDataOf(KEY_PROGRESS to 0.4f, KEY_STAGE to "installing database"))
-        if (dbGzFile.exists()) {
-            val dbFile = applicationContext.getDatabasePath(GifDatabase.DATABASE_NAME)
-            dbFile.parentFile?.mkdirs()
-            GZIPInputStream(dbGzFile.inputStream().buffered()).use { gzIn ->
-                FileOutputStream(dbFile).use { out ->
-                    gzIn.copyTo(out)
-                }
-            }
-            dbGzFile.delete()
-        }
-
-        // Step 3: Download thumbnails archive
-        setProgress(workDataOf(KEY_PROGRESS to 0.5f, KEY_STAGE to "downloading thumbnails"))
-        // TODO: Download thumbnails zip from GitHub Releases
-        // val thumbsZip = File(packsDir, "thumbs.zip")
-        // downloadHttpFile(THUMBS_DOWNLOAD_URL, thumbsZip) { progress ->
-        //     setProgress(workDataOf(KEY_PROGRESS to 0.5f + progress * 0.4f, KEY_STAGE to "downloading thumbnails"))
-        // }
-
-        // Step 4: Extract thumbnails
-        setProgress(workDataOf(KEY_PROGRESS to 0.9f, KEY_STAGE to "installing thumbnails"))
-        val thumbsDir = File(applicationContext.filesDir, Gif.THUMBS_DIR).also { it.mkdirs() }
-        // TODO: Extract thumbs zip into thumbsDir
-
-        // Write manifest to mark core as installed
-        val manifest = File(packsDir, "core/manifest.json")
-        manifest.parentFile?.mkdirs()
-        manifest.writeText("""{"pack_id":"core","version":1,"installed_at":${System.currentTimeMillis()}}""")
-
-        setProgress(workDataOf(KEY_PROGRESS to 1f, KEY_STAGE to "complete"))
-        return Result.success()
-    }
-
-    /**
-     * Download a category-specific animation pack.
-     */
-    private suspend fun downloadCategoryPack(packId: String): Result {
-        val packsDir = File(applicationContext.filesDir, "gif_packs")
-        val packDir = File(packsDir, packId).also { it.mkdirs() }
-
-        // TODO: Download category pack ZIP from GitHub Releases
-        // val packZip = File(packsDir, "$packId.zip")
-        // downloadHttpFile(packUrl, packZip) { ... }
-
-        // TODO: Extract full animations to gifs/full/ directory
-        // extractZip(packZip, tempDir) { ... }
-        // Move *.webp from tempDir/full/ to gifs/full/
-        // Update is_available in database for this pack's GIFs
-
-        // Write manifest
-        val manifest = File(packDir, "manifest.json")
-        manifest.writeText("""{"pack_id":"$packId","version":1,"installed_at":${System.currentTimeMillis()}}""")
-
-        return Result.success()
-    }
-
-    /**
-     * Download a file via HTTP with progress reporting.
-     */
-    private suspend fun downloadHttpFile(
-        url: String,
-        destFile: File,
-        progressCallback: suspend (Float) -> Unit
-    ) = withContext(Dispatchers.IO) {
-        destFile.parentFile?.mkdirs()
-
-        val connection = URL(url).openConnection() as HttpURLConnection
-        connection.connectTimeout = 15_000
-        connection.readTimeout = 30_000
-        connection.connect()
-
-        if (connection.responseCode != HttpURLConnection.HTTP_OK) {
-            throw java.io.IOException("HTTP ${connection.responseCode}: ${connection.responseMessage}")
-        }
-
-        val totalSize = connection.contentLengthLong
-        var downloaded = 0L
-        val buffer = ByteArray(8192)
-
-        connection.inputStream.buffered().use { input ->
-            FileOutputStream(destFile).use { output ->
-                var bytesRead: Int
-                while (input.read(buffer).also { bytesRead = it } != -1) {
-                    output.write(buffer, 0, bytesRead)
-                    downloaded += bytesRead
-                    if (totalSize > 0) {
-                        progressCallback(downloaded.toFloat() / totalSize)
-                    }
-                }
-            }
-        }
-
-        progressCallback(1f)
-    }
-
-    /**
-     * Extract ZIP file contents to a directory.
-     */
-    @Suppress("unused") // Will be used when pack downloads are enabled
-    private suspend fun extractZip(
-        zipFile: File,
-        destDir: File,
-        progressCallback: suspend (Float) -> Unit
-    ) = withContext(Dispatchers.IO) {
-        destDir.mkdirs()
-
-        ZipInputStream(FileInputStream(zipFile)).use { zis ->
-            var entry: ZipEntry? = zis.nextEntry
-            var count = 0
-            val totalEstimate = 1000
-
+    private fun extractZip(inputStream: java.io.InputStream, destDir: File) {
+        ZipInputStream(inputStream).use { zis ->
+            var entry = zis.nextEntry
             while (entry != null) {
+                val destFile = File(destDir, entry.name)
+
                 // Path traversal protection
-                val destFile = File(destDir, entry.name).canonicalFile
-                if (!destFile.path.startsWith(destDir.canonicalPath)) {
-                    throw SecurityException("Zip entry outside target: ${entry.name}")
+                if (!destFile.canonicalFile.path.startsWith(destDir.canonicalPath)) {
+                    Log.w(TAG, "Skipping path traversal attempt: ${entry.name}")
+                    entry = zis.nextEntry
+                    continue
                 }
 
                 if (entry.isDirectory) {
@@ -385,74 +213,84 @@ class GifPackDownloadWorker(
                     }
                 }
 
-                count++
-                progressCallback(minOf(count.toFloat() / totalEstimate, 1f))
-
                 zis.closeEntry()
                 entry = zis.nextEntry
             }
         }
+    }
 
-        progressCallback(1f)
+    /**
+     * Parse manifest.json into GifPackManifest.
+     */
+    private fun parseManifest(json: String): GifPackManifest? {
+        return try {
+            val obj = JSONObject(json)
+            GifPackManifest(
+                packId = obj.getString("pack_id"),
+                name = obj.getString("name"),
+                version = obj.optInt("version", 1),
+                gifCount = obj.optInt("gif_count", 0),
+                description = obj.optString("description", "")
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to parse manifest", e)
+            null
+        }
+    }
+
+    /**
+     * Calculate total size of extracted files in a directory.
+     */
+    private fun calculateExtractedSize(dir: File): Long {
+        return dir.walkTopDown().filter { it.isFile }.sumOf { it.length() }
     }
 
     companion object {
-        const val TAG = "GifPackWorker"
-        const val KEY_PACK_ID = "pack_id"
-        const val KEY_PROGRESS = "progress"
-        const val KEY_STAGE = "stage"
+        private const val TAG = "GifPackManager"
+        private const val MANIFEST_FILE = "manifest.json"
+        private const val PACK_DB_FILE = "pack.db"
+        private const val THUMBS_DIR = "thumbs"
 
-        // GitHub Releases asset URL for core database
-        private const val CORE_DB_URL =
-            "https://github.com/tribixbite/CleverKeys/releases/download/CleverKeys-GIF/gifs_v2.db.gz"
-        // TODO: Add thumbnails archive URL when thumbnail pack is published
+        const val GITHUB_RELEASES_URL =
+            "https://github.com/tribixbite/CleverKeys/releases/tag/CleverKeys-GIF"
+
+        @Volatile
+        private var instance: GifPackManager? = null
+
+        fun getInstance(context: Context): GifPackManager {
+            return instance ?: synchronized(this) {
+                instance ?: GifPackManager(context.applicationContext).also { instance = it }
+            }
+        }
+
+        fun release() {
+            synchronized(this) {
+                instance = null
+            }
+        }
+
+        /** Format bytes as human-readable string. */
+        fun formatBytes(bytes: Long): String = when {
+            bytes >= 1_000_000_000 -> "%.1f GB".format(bytes / 1_000_000_000.0)
+            bytes >= 1_000_000 -> "%.1f MB".format(bytes / 1_000_000.0)
+            bytes >= 1_000 -> "%.0f KB".format(bytes / 1_000.0)
+            else -> "$bytes B"
+        }
     }
 }
 
-/**
- * Wrapper to observe WorkManager LiveData as a simple callback.
- * Avoids pulling in lifecycle-livedata-ktx dependency.
- */
-class LiveDataFlow(
-    val liveData: androidx.lifecycle.LiveData<List<WorkInfo>>
+/** GIF pack manifest data (from manifest.json inside ZIP). */
+data class GifPackManifest(
+    val packId: String,
+    val name: String,
+    val version: Int = 1,
+    val gifCount: Int = 0,
+    val description: String = ""
 )
 
-/**
- * Information about a GIF pack.
- */
-data class PackInfo(
-    val id: String,
-    val name: String,
-    val description: String,
-    val gifCount: Int,
-    val sizeBytes: Long,
-    val downloadUrl: String?,
-    val isBundled: Boolean
-) {
-    val sizeFormatted: String
-        get() = when {
-            sizeBytes >= 1_000_000_000 -> "%.1f GB".format(sizeBytes / 1_000_000_000.0)
-            sizeBytes >= 1_000_000 -> "%.0f MB".format(sizeBytes / 1_000_000.0)
-            else -> "%.0f KB".format(sizeBytes / 1_000.0)
-        }
-}
-
-/**
- * Pack installation status.
- */
-sealed class PackStatus {
-    object NotInstalled : PackStatus()
-    data class Installed(val gifCount: Int) : PackStatus()
-    object Unknown : PackStatus()
-}
-
-/**
- * Download state for UI observation.
- */
-sealed class DownloadState {
-    object Idle : DownloadState()
-    data class Downloading(val packId: String, val progress: Float) : DownloadState()
-    data class Installing(val packId: String) : DownloadState()
-    data class Completed(val packId: String) : DownloadState()
-    data class Error(val packId: String, val message: String) : DownloadState()
+/** Result of a pack import operation. */
+sealed class GifPackImportResult {
+    data class Success(val packId: String, val name: String, val gifCount: Int) : GifPackImportResult()
+    data class AlreadyInstalled(val packId: String, val name: String) : GifPackImportResult()
+    data class Error(val message: String) : GifPackImportResult()
 }
