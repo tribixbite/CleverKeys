@@ -2,9 +2,20 @@
 """
 pack_builder.py — Generate downloadable GIF packs for GitHub releases.
 
-Creates tar.gz archives containing optimized animated WebP GIFs, thumbnails,
-and a manifest.json with full metadata for offline search. Each pack is sized
+Creates ZIP archives containing a per-pack SQLite database (pack.db),
+partitioned thumbnails, and a simple manifest.json. Each pack is sized
 to fit within GitHub release asset limits (default 50MB).
+
+Pack ZIP format (matches GifPackManager.kt expectations):
+    pack_name.zip
+    ├── manifest.json       # {pack_id, name, version, gif_count, description}
+    ├── pack.db             # Mini SQLite — only this pack's gifs/categories/FTS
+    └── thumbs/             # Thumbnails partitioned by id÷1000
+        ├── 000/
+        │   ├── 000001.webp
+        │   └── 000002.webp
+        └── 024/
+            └── 024999.webp
 
 Pack tiers:
   - core:       Top ~2K most popular/universal reaction GIFs
@@ -16,14 +27,14 @@ Usage:
     python pack_builder.py --optimized ./processed/optimized \
                            --thumbs ./processed/thumbs \
                            --metadata ./raw_data/metadata \
+                           --processed ./processed \
                            --output ./packs
-
-    python pack_builder.py --manifest-only  # Just generate manifests, no tar
 
 Requirements:
     - Optimized WebP files in --optimized directory
     - Thumbnail WebP files in --thumbs directory
     - Metadata JSON files in --metadata directory
+    - Processed directory with processing_results.json (for build_database)
 """
 
 import argparse
@@ -31,11 +42,14 @@ import json
 import os
 import re
 import sys
-import tarfile
+import tempfile
 import time
+import zipfile
 from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
+
+from build_database import build_pack_database
 
 # Pack sizing: GitHub release max 2GB/asset, recommended <100MB
 DEFAULT_MAX_PACK_BYTES = 50 * 1024 * 1024  # 50MB per pack
@@ -321,113 +335,89 @@ def classify_emotions(entry: Dict) -> List[str]:
 
 
 def generate_manifest(pack_name: str, gifs: List[Dict],
-                      categories: List[str]) -> Dict:
-    """Generate pack manifest with embedded metadata for offline search."""
-    total_gif_bytes = sum(e["opt_size"] for e in gifs)
-    total_thumb_bytes = sum(e["thumb_size"] for e in gifs)
-
-    gif_entries = []
-    for entry in gifs:
-        keywords = extract_search_keywords(entry)
-        emotions = classify_emotions(entry)
-
-        gif_entries.append({
-            "id": entry["file_id"],
-            "keywords": keywords,
-            "categories": emotions,
-            "file_size": entry["opt_size"],
-            "thumb_size": entry["thumb_size"],
-            "frame_count": entry.get("frame_count", 0),
-        })
-
+                      description: str = "") -> Dict:
+    """
+    Generate simplified pack manifest for inclusion in the ZIP.
+    Metadata/search is handled by pack.db — manifest is just for identification.
+    """
     return {
         "pack_id": pack_name,
+        "name": pack_name.replace("-", " ").replace("_", " ").title(),
         "version": 1,
-        "created": time.strftime("%Y-%m-%d"),
         "gif_count": len(gifs),
-        "total_gif_bytes": total_gif_bytes,
-        "total_thumb_bytes": total_thumb_bytes,
-        "total_bytes": total_gif_bytes + total_thumb_bytes,
-        "categories": sorted(set(categories)),
-        "gifs": gif_entries,
+        "description": description,
     }
 
 
-def write_pack_archive(pack_name: str, gifs: List[Dict],
-                       manifest: Dict, output_dir: Path) -> Path:
-    """Create a tar.gz archive containing GIFs, thumbnails, and manifest."""
-    archive_path = output_dir / f"{pack_name}.tar.gz"
+def write_pack_zip(pack_name: str, gifs: List[Dict],
+                   processed_dir: Path, metadata_dir: Path,
+                   output_dir: Path, use_optimized: bool = True) -> Path:
+    """
+    Create a ZIP archive matching the GifPackManager.kt expected format:
+      manifest.json  — simple pack identification
+      pack.db        — per-pack SQLite with gifs/categories/FTS rows
+      thumbs/{partition}/{id}.webp — partitioned thumbnails
 
-    with tarfile.open(archive_path, "w:gz", compresslevel=1) as tar:
-        # Write manifest.json
+    Full-size GIF files are NOT included (thumbnails only for now).
+    Uses ZIP_STORED since WebP thumbnails are already compressed.
+    """
+    zip_path = output_dir / f"{pack_name}.zip"
+
+    # Collect GIF IDs for build_pack_database
+    gif_ids = [entry["file_id"] for entry in gifs]
+
+    # Build pack.db in a temporary location
+    tmp_db_fd, tmp_db_path = tempfile.mkstemp(suffix=".db", prefix=f"pack_{pack_name}_")
+    os.close(tmp_db_fd)
+    tmp_db = Path(tmp_db_path)
+
+    try:
+        print(f"  Building pack.db for {pack_name} ({len(gif_ids)} GIFs)...")
+        build_pack_database(
+            processed_dir=str(processed_dir),
+            metadata_dir=str(metadata_dir),
+            output_path=str(tmp_db),
+            gif_ids=gif_ids,
+            use_optimized=use_optimized,
+        )
+
+        # Generate simplified manifest
+        manifest = generate_manifest(pack_name, gifs)
         manifest_json = json.dumps(manifest, separators=(",", ":")).encode()
-        import io
-        manifest_info = tarfile.TarInfo(name=f"{pack_name}/manifest.json")
-        manifest_info.size = len(manifest_json)
-        manifest_info.mtime = int(time.time())
-        tar.addfile(manifest_info, io.BytesIO(manifest_json))
 
-        # Add GIF files
-        for entry in gifs:
-            file_id = entry["file_id"]
+        # Create the ZIP archive (ZIP_STORED — thumbnails are already WebP-compressed)
+        with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_STORED) as zf:
+            # 1. manifest.json
+            zf.writestr("manifest.json", manifest_json)
 
-            # Optimized WebP
-            opt_path = entry["opt_path"]
-            tar.add(opt_path, arcname=f"{pack_name}/gifs/{file_id}.webp")
+            # 2. pack.db
+            zf.write(tmp_db, "pack.db")
 
-            # Thumbnail
-            thumb_path = entry["thumb_path"]
-            tar.add(thumb_path, arcname=f"{pack_name}/thumbs/{file_id}.webp")
+            # 3. Thumbnails in partitioned layout: thumbs/{partition}/{id}.webp
+            for entry in gifs:
+                thumb_src = Path(entry["thumb_path"])
+                if not thumb_src.exists():
+                    continue
 
-    return archive_path
+                file_id_int = int(entry["file_id"])
+                # Partition by id // 1000, zero-padded to 3 digits
+                partition = "%03d" % (file_id_int // 1000)
+                # Filename is zero-padded to 6 digits
+                thumb_name = "%06d.webp" % file_id_int
+                arcname = f"thumbs/{partition}/{thumb_name}"
+                zf.write(thumb_src, arcname)
 
+    finally:
+        # Clean up temp pack.db
+        if tmp_db.exists():
+            tmp_db.unlink()
 
-def write_manifest_only(pack_name: str, manifest: Dict,
-                        output_dir: Path) -> Path:
-    """Write just the manifest JSON (no tar archive)."""
-    manifest_dir = output_dir / "manifests"
-    manifest_dir.mkdir(parents=True, exist_ok=True)
-    manifest_path = manifest_dir / f"{pack_name}.json"
-    with open(manifest_path, "w") as f:
-        json.dump(manifest, f, indent=2)
-    return manifest_path
-
-
-def build_pack_index(packs: List[Tuple[str, Dict]], output_dir: Path) -> Path:
-    """Generate a master index of all packs for the Android app to discover."""
-    index = {
-        "version": 1,
-        "created": time.strftime("%Y-%m-%d"),
-        "total_packs": len(packs),
-        "total_gifs": sum(m["gif_count"] for _, m in packs),
-        "total_bytes": sum(m["total_bytes"] for _, m in packs),
-        "packs": [],
-    }
-
-    for pack_name, manifest in packs:
-        index["packs"].append({
-            "pack_id": pack_name,
-            "gif_count": manifest["gif_count"],
-            "total_bytes": manifest["total_bytes"],
-            "categories": manifest["categories"],
-            "download_url": f"https://github.com/user/repo/releases/download/gif-packs/{pack_name}.tar.gz",
-        })
-
-    index_path = output_dir / "pack_index.json"
-    with open(index_path, "w") as f:
-        json.dump(index, f, indent=2)
-
-    print(f"\nPack index: {index_path}")
-    print(f"  Total packs: {index['total_packs']}")
-    print(f"  Total GIFs: {index['total_gifs']}")
-    print(f"  Total size: {index['total_bytes'] / 1024 / 1024:.1f} MB")
-
-    return index_path
+    return zip_path
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Generate downloadable GIF packs for GitHub releases"
+        description="Generate downloadable GIF packs as ZIP archives"
     )
     parser.add_argument(
         "--optimized", type=str, default="./processed/optimized",
@@ -442,8 +432,12 @@ def main():
         help="Directory with metadata JSON files"
     )
     parser.add_argument(
+        "--processed", type=str, default="./processed",
+        help="Root processed directory (for build_pack_database)"
+    )
+    parser.add_argument(
         "--output", type=str, default="./packs",
-        help="Output directory for pack archives"
+        help="Output directory for pack ZIP archives"
     )
     parser.add_argument(
         "--max-pack-mb", type=int, default=50,
@@ -454,8 +448,8 @@ def main():
         help="Number of GIFs in core pack (default 2000)"
     )
     parser.add_argument(
-        "--manifest-only", action="store_true",
-        help="Only generate manifests, skip creating tar archives"
+        "--use-full", action="store_true", default=False,
+        help="Use full/ directory instead of optimized/ for pack.db sizing"
     )
     parser.add_argument(
         "--dry-run", action="store_true",
@@ -467,8 +461,10 @@ def main():
     optimized_dir = Path(args.optimized)
     thumbs_dir = Path(args.thumbs)
     meta_dir = Path(args.metadata)
+    processed_dir = Path(args.processed)
     output_dir = Path(args.output)
     max_pack_bytes = args.max_pack_mb * 1024 * 1024
+    use_optimized = not args.use_full
 
     if not optimized_dir.exists():
         print(f"ERROR: Optimized directory not found: {optimized_dir}")
@@ -478,6 +474,9 @@ def main():
         sys.exit(1)
     if not meta_dir.exists():
         print(f"ERROR: Metadata directory not found: {meta_dir}")
+        sys.exit(1)
+    if not processed_dir.exists():
+        print(f"ERROR: Processed directory not found: {processed_dir}")
         sys.exit(1)
 
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -512,52 +511,40 @@ def main():
         cat_packs = split_into_packs(cat_gifs, cat_name, max_pack_bytes)
         all_packs.extend(cat_packs)
 
-    # Summary
+    # Summary — show thumbnail-only sizes (full GIFs not included in ZIP)
     print(f"\n{'=' * 60}")
-    print(f"Pack plan: {len(all_packs)} packs")
+    print(f"Pack plan: {len(all_packs)} packs (thumbnails only, no full GIFs)")
     total_gifs = 0
-    total_bytes = 0
+    total_thumb_bytes = 0
     for pack_name, gifs in all_packs:
-        pack_size = sum(e["opt_size"] + e["thumb_size"] for e in gifs)
+        pack_thumb_size = sum(e["thumb_size"] for e in gifs)
         total_gifs += len(gifs)
-        total_bytes += pack_size
-        print(f"  {pack_name:30s}  {len(gifs):5d} GIFs  {pack_size/1024/1024:6.1f} MB")
+        total_thumb_bytes += pack_thumb_size
+        print(f"  {pack_name:30s}  {len(gifs):5d} GIFs  "
+              f"{pack_thumb_size/1024/1024:6.1f} MB thumbs")
     print(f"{'=' * 60}")
-    print(f"  Total: {total_gifs} GIFs, {total_bytes/1024/1024:.1f} MB "
-          f"in {len(all_packs)} packs")
+    print(f"  Total: {total_gifs} GIFs, ~{total_thumb_bytes/1024/1024:.1f} MB thumbs "
+          f"(+ pack.db per ZIP) in {len(all_packs)} packs")
 
     if args.dry_run:
         print("\n(Dry run — no files created)")
         return
 
-    # Generate packs
-    pack_manifests: List[Tuple[str, Dict]] = []
-
+    # Generate pack ZIPs
     for pack_name, gifs in all_packs:
-        # Determine categories present in this pack
-        pack_categories = sorted(set(
-            e["category"] for e in gifs if e["category"] in EMOTION_CATEGORIES
-        ))
-        if not pack_categories:
-            pack_categories = ["mixed"]
+        zip_path = write_pack_zip(
+            pack_name=pack_name,
+            gifs=gifs,
+            processed_dir=processed_dir,
+            metadata_dir=meta_dir,
+            output_dir=output_dir,
+            use_optimized=use_optimized,
+        )
+        zip_size = zip_path.stat().st_size
+        print(f"  ZIP: {zip_path} ({zip_size/1024/1024:.1f} MB, "
+              f"{len(gifs)} GIFs)")
 
-        manifest = generate_manifest(pack_name, gifs, pack_categories)
-
-        if args.manifest_only:
-            path = write_manifest_only(pack_name, manifest, output_dir)
-            print(f"  Manifest: {path} ({manifest['gif_count']} GIFs)")
-        else:
-            path = write_pack_archive(pack_name, gifs, manifest, output_dir)
-            archive_size = path.stat().st_size
-            print(f"  Archive: {path} ({archive_size/1024/1024:.1f} MB, "
-                  f"{manifest['gif_count']} GIFs)")
-
-        pack_manifests.append((pack_name, manifest))
-
-    # Generate master index
-    build_pack_index(pack_manifests, output_dir)
-
-    print(f"\nDone! Packs written to {output_dir}")
+    print(f"\nDone! {len(all_packs)} pack ZIPs written to {output_dir}")
 
 
 if __name__ == "__main__":
