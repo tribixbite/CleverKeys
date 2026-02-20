@@ -410,30 +410,34 @@ Issues already implemented, just need verification + close:
 ## In Progress
 - 🔄 Subkey System Unification (Option D) - awaiting user answers to clarifying questions
   - See: `memory/subkey-unification-research.md`
-- 🔄 **GIF Panel (Offline, No Internet)** — file-picker import system complete, needs E2E test
+- 🔄 **GIF Panel (Offline, No Internet)** — interaction polish in progress
   - Branch: `feature/gif-panel-clean` (pushed, clean history)
   - Spec: `docs/specs/gif-panel-spec.md`
   - Release: https://github.com/tribixbite/CleverKeys/releases/tag/CleverKeys-GIF (prerelease)
   - Architecture: ZIP pack import via file picker (no INTERNET permission)
   - Completed:
-    - ✅ Gif.kt: partitioned thumbnail paths (`gifs/thumbs/{id÷1000}/{id}.webp`)
+    - ✅ Gif.kt: partitioned thumbnail paths, getGiphyId()/getGiphyUrl() from search_text
     - ✅ GifAssetManager.kt: partitioned storage, importThumbnails(), removeThumbnails()
-    - ✅ GifDatabase.kt: V3 schema (content-synced FTS5, installed_packs table, ATTACH import)
+    - ✅ GifDatabase.kt: V4 schema (FTS4, installed_packs, ATTACH import, getAllGifs)
     - ✅ GifPackManager.kt: complete rewrite — file picker import, no network code
     - ✅ Config.kt: removed GIF_WIFI_ONLY_DOWNLOAD + GIF_MAX_CACHE_MB (dead code)
     - ✅ SettingsActivity.kt: pack management UI (browser link, file picker, per-pack remove, remove-all)
     - ✅ AndroidManifest.xml: share intent filter for ZIP files on SettingsActivity
     - ✅ gif_file_paths.xml: partitioned thumbs path for FileProvider
     - ✅ build.gradle: removed work-runtime-ktx dependency
-    - ✅ build_database.py: --pack-mode for per-pack V3 SQLite (content-synced FTS5, sync triggers)
+    - ✅ build_database.py: --pack-mode for per-pack SQLite
     - ✅ pack_builder.py: ZIP format with pack.db + partitioned thumbs (replaces tar.gz)
     - ✅ Git history cleaned: squash merge eliminated 15 GB of debug APKs + raw GIFs
+    - ✅ FTS5→FTS4 migration (universal Android compatibility)
+    - ✅ GIF search: keyboard input routed to EditText (IME can't type into own views)
+    - ✅ "All" category added to GIF panel (globe icon, between Recent and emotions)
+    - ✅ Tap inserts Giphy URL as text via commitText()
+    - ✅ Long-press: IME-safe PopupWindow (title, copy URL, copy GIF file)
+    - ✅ Display name/keywords exclude trailing Giphy ID
   - Next steps:
-    - [ ] Build test ZIP pack manually (manifest.json + small pack.db + 10 thumbs)
-    - [ ] Build & install release APK to test GIF panel end-to-end
+    - [ ] E2E verify: tap inserts URL, long-press popup works in IME context
     - [ ] Run pack_builder.py to generate real packs from processed GIFs
     - [ ] Publish thumbnail packs to GitHub Releases
-    - [ ] GIF preview on long-press (animated WebP popup)
     - [ ] Legal review of GIF content redistribution
 
 ## Completed (2026-01-25)
