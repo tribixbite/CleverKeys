@@ -426,6 +426,7 @@ Issues already implemented, just need verification + close:
     - ✅ Core DB download URL wired to GitHub Releases asset
     - ✅ Git history cleaned: squash merge eliminated 15 GB of debug APKs + raw GIFs
     - ✅ build_database.py hardened (module-level STOP_WORDS, non-numeric guard, chunked gzip)
+    - ✅ build_database.py: --pack-mode for per-pack V3 SQLite (content-synced FTS5, sync triggers)
   - Next steps:
     - [ ] Build & install release APK to test GIF panel end-to-end
     - [ ] Publish thumbnail pack to GitHub Releases (gifs_v2.db only has metadata)
