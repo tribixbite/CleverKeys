@@ -16,6 +16,7 @@ import androidx.core.view.ViewCompat
 import tribixbite.cleverkeys.gif.GifAssetManager
 import tribixbite.cleverkeys.gif.GifGridManager
 import tribixbite.cleverkeys.gif.GifGroupButtonsBar
+import java.io.File
 
 /**
  * Handles keyboard events and state changes for CleverKeysService.
@@ -317,7 +318,9 @@ class KeyboardReceiver(
                 val gifGrid = recyclerView?.let { GifGridManager(context, it, gifColumns) }
                 gifGrid?.onGifSelected = { gif ->
                     val assetManager = GifAssetManager.getInstance(context)
+                    // Prefer full animation; fall back to thumbnail (packs only include thumbs)
                     val gifFile = assetManager.getGifFile(gif)
+                        ?: File(context.filesDir, gif.getThumbnailPath()).takeIf { it.exists() }
                     if (gifFile != null && gifFile.exists()) {
                         // Insert as content:// URI via InputConnection
                         val uri = androidx.core.content.FileProvider.getUriForFile(

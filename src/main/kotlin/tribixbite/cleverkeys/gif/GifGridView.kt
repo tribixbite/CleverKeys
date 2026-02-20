@@ -56,8 +56,17 @@ class GifGridManager(
         recyclerView.setHasFixedSize(true)
         recyclerView.itemAnimator = null // No animations for perf
 
-        // Load recently used on init
-        scope.launch { loadCategory(GifCategory.RECENTLY_USED) }
+        // Load recently used on init, fall back to all GIFs if empty
+        scope.launch {
+            loadCategory(GifCategory.RECENTLY_USED)
+            if (gifList.isEmpty()) {
+                // No usage history yet — show all available GIFs as overview
+                gifList = database.getAllGifs(200)
+                withContext(Dispatchers.Main) {
+                    adapter.notifyDataSetChanged()
+                }
+            }
+        }
     }
 
     /**

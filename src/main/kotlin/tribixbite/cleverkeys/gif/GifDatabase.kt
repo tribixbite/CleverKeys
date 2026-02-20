@@ -170,6 +170,33 @@ class GifDatabase private constructor(private val appContext: Context) {
     }
 
     /**
+     * Get all GIFs regardless of category (for initial overview display).
+     */
+    suspend fun getAllGifs(limit: Int = 200): List<Gif> = withContext(Dispatchers.IO) {
+        val results = mutableListOf<Gif>()
+        val db = dbHelper.readableDatabase
+
+        val cursor = db.rawQuery(
+            """
+            SELECT g.gif_id, g.width, g.height, g.duration_ms, g.file_size,
+                   g.pack_id, g.search_text
+            FROM gifs g
+            ORDER BY g.gif_id
+            LIMIT ?
+            """.trimIndent(),
+            arrayOf(limit.toString())
+        )
+
+        cursor.use {
+            while (it.moveToNext()) {
+                results.add(cursorToGif(it))
+            }
+        }
+
+        results
+    }
+
+    /**
      * Get total count of GIFs in the database.
      */
     fun getTotalGifCount(): Int {
@@ -229,18 +256,29 @@ class GifDatabase private constructor(private val appContext: Context) {
 
             db.beginTransaction()
             try {
+                // Register pack in packs lookup table to get an integer ID for gifs FK
+                db.execSQL("""
+                    INSERT OR IGNORE INTO packs (name, gif_count) VALUES (?, ?)
+                """, arrayOf(packId, gifCount))
+                val intPackIdCursor = db.rawQuery(
+                    "SELECT pack_id FROM packs WHERE name = ?", arrayOf(packId)
+                )
+                val intPackId = intPackIdCursor.use {
+                    if (it.moveToFirst()) it.getInt(0) else 0
+                }
+
                 // Merge categories (ignore duplicates)
                 db.execSQL("""
                     INSERT OR IGNORE INTO categories (category_id, name, icon, sort_order)
                     SELECT category_id, name, icon, sort_order FROM pack_db.categories
                 """)
 
-                // Import GIFs (replace if already exists from a previous import of same pack)
+                // Import GIFs with the resolved integer pack_id
                 db.execSQL("""
                     INSERT OR REPLACE INTO gifs (gif_id, width, height, duration_ms, file_size, pack_id, search_text, created_at)
-                    SELECT gif_id, width, height, duration_ms, file_size, pack_id, search_text, created_at
+                    SELECT gif_id, width, height, duration_ms, file_size, ?, search_text, created_at
                     FROM pack_db.gifs
-                """)
+                """, arrayOf(intPackId))
 
                 // Import category mappings (ignore duplicates)
                 db.execSQL("""
@@ -342,8 +380,9 @@ class GifDatabase private constructor(private val appContext: Context) {
                 }
             }
 
-            // Remove from installed_packs
+            // Remove from installed_packs and packs lookup table
             db.execSQL("DELETE FROM installed_packs WHERE pack_id = ?", arrayOf(packId))
+            db.execSQL("DELETE FROM packs WHERE name = ?", arrayOf(packId))
 
             db.setTransactionSuccessful()
             Log.i(TAG, "Removed pack '$packId': ${removedIds.size} GIFs deleted")
