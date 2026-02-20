@@ -10,18 +10,21 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 /**
- * SQLite database handler for offline GIF storage with FTS5 full-text search.
+ * SQLite database handler for offline GIF storage with FTS4 full-text search.
  *
- * V3 Schema (incremental pack import):
+ * Uses FTS4 (not FTS5) for universal Android compatibility — FTS5 is not
+ * available in android.database.sqlite on all devices/OEM builds.
+ *
+ * V4 Schema (incremental pack import):
  * - categories: Emotion category definitions (shared across packs)
- * - gifs: GIF metadata with search_text column (for content-synced FTS5)
+ * - gifs: GIF metadata with search_text column (for content-synced FTS4)
  * - gif_category_map: WITHOUT ROWID, clustered by (category_id, gif_id)
- * - gifs_fts: Content-synced FTS5 (content='gifs') — supports per-row delete
+ * - gifs_fts: Content-synced FTS4 (content="gifs") — supports per-row delete
  * - gif_usage: Usage tracking for "recently used" (created on-device)
  * - installed_packs: Tracks which packs are imported (pack_id TEXT, not integer)
  *
  * Pack import: ATTACH mini pack.db, INSERT INTO main tables in single transaction.
- * Pack removal: FTS5 delete commands per row, then DELETE from gifs/category_map.
+ * Pack removal: DELETE from gifs/category_map, then rebuild FTS4 index.
  * Asset filenames derived at runtime: String.format("%06d.webp", gif_id)
  */
 class GifDatabase private constructor(private val appContext: Context) {
@@ -29,8 +32,8 @@ class GifDatabase private constructor(private val appContext: Context) {
     private val dbHelper: GifDatabaseHelper = GifDatabaseHelper(appContext)
 
     /**
-     * Search GIFs using FTS5 full-text search.
-     * Content-synced FTS5 — joins via content_rowid='gif_id'.
+     * Search GIFs using FTS4 full-text search.
+     * Content-synced FTS4 — joins via docid matching gif_id.
      */
     suspend fun searchGifs(query: String, limit: Int = 100): List<Gif> = withContext(Dispatchers.IO) {
         if (query.isBlank()) return@withContext emptyList()
@@ -44,9 +47,8 @@ class GifDatabase private constructor(private val appContext: Context) {
             SELECT g.gif_id, g.width, g.height, g.duration_ms, g.file_size,
                    g.pack_id, g.search_text
             FROM gifs_fts fts
-            JOIN gifs g ON g.gif_id = fts.rowid
+            JOIN gifs g ON g.gif_id = fts.docid
             WHERE fts.search_text MATCH ?
-            ORDER BY rank
             LIMIT ?
             """.trimIndent(),
             arrayOf(sanitizedQuery, limit.toString())
@@ -246,8 +248,8 @@ class GifDatabase private constructor(private val appContext: Context) {
                     SELECT category_id, gif_id FROM pack_db.gif_category_map
                 """)
 
-                // Rebuild FTS5 index to include new rows
-                // Content-synced FTS5 rebuild reads from the content table (gifs)
+                // Rebuild FTS4 index to include new rows
+                // Content-synced FTS4 rebuild reads from the content table (gifs)
                 db.execSQL("INSERT INTO gifs_fts(gifs_fts) VALUES('rebuild')")
 
                 // Track installed pack
@@ -286,8 +288,7 @@ class GifDatabase private constructor(private val appContext: Context) {
      * Remove a GIF pack — deletes all its entries from the database.
      * Returns the list of gif IDs that were removed (caller uses this to delete files).
      *
-     * Uses FTS5 delete commands before row deletion since content-synced FTS5
-     * requires explicit delete notifications.
+     * Deletes rows from gifs/category_map first, then rebuilds FTS4 index.
      */
     suspend fun removePack(packId: String): List<Long> = withContext(Dispatchers.IO) {
         val db = dbHelper.writableDatabase
@@ -301,27 +302,19 @@ class GifDatabase private constructor(private val appContext: Context) {
 
         db.beginTransaction()
         try {
-            // Collect gif IDs to remove, along with search_text for FTS delete
+            // Collect gif IDs to remove
             val cursor = db.rawQuery(
-                "SELECT gif_id, search_text FROM gifs WHERE pack_id = ?",
+                "SELECT gif_id FROM gifs WHERE pack_id = ?",
                 arrayOf(intPackId.toString())
             )
             cursor.use {
                 while (it.moveToNext()) {
-                    val gifId = it.getLong(0)
-                    val searchText = it.getString(1) ?: ""
-                    removedIds.add(gifId)
-                    // Notify FTS5 about deletion (content-synced requires explicit delete)
-                    db.execSQL(
-                        "INSERT INTO gifs_fts(gifs_fts, rowid, search_text) VALUES('delete', ?, ?)",
-                        arrayOf(gifId, searchText)
-                    )
+                    removedIds.add(it.getLong(0))
                 }
             }
 
             // Delete category mappings for these GIFs
             if (removedIds.isNotEmpty()) {
-                // Batch delete in chunks to avoid SQL variable limit
                 for (chunk in removedIds.chunked(500)) {
                     val placeholders = chunk.joinToString(",") { "?" }
                     db.execSQL(
@@ -333,6 +326,10 @@ class GifDatabase private constructor(private val appContext: Context) {
 
             // Delete the GIFs
             db.execSQL("DELETE FROM gifs WHERE pack_id = ?", arrayOf(intPackId))
+
+            // Rebuild FTS4 index after row deletion
+            // Content-synced FTS4 'rebuild' re-reads all remaining rows from gifs table
+            db.execSQL("INSERT INTO gifs_fts(gifs_fts) VALUES('rebuild')")
 
             // Delete usage tracking for removed GIFs
             if (removedIds.isNotEmpty()) {
@@ -485,8 +482,8 @@ class GifDatabase private constructor(private val appContext: Context) {
 
     companion object {
         private const val TAG = "GifDatabase"
-        const val DATABASE_NAME = "gifs_v3.db"
-        const val DATABASE_VERSION = 3
+        const val DATABASE_NAME = "gifs_v4.db"
+        const val DATABASE_VERSION = 4
 
         @Volatile
         private var instance: GifDatabase? = null
@@ -517,7 +514,7 @@ data class InstalledPackInfo(
 
 /**
  * SQLiteOpenHelper for GIF database.
- * Creates V3 schema with content-synced FTS5 and installed_packs tracking.
+ * Creates V4 schema with content-synced FTS4 and installed_packs tracking.
  */
 class GifDatabaseHelper(context: Context) : SQLiteOpenHelper(
     context,
@@ -547,7 +544,7 @@ class GifDatabaseHelper(context: Context) : SQLiteOpenHelper(
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        // V2 → V3: Add search_text to gifs, switch to content-synced FTS5, add installed_packs
+        // V3 → V4: Switch from FTS5 to FTS4 (FTS5 not available on all Android devices).
         // Since GIF data comes entirely from imported packs, a clean recreation is safe.
         db.execSQL("DROP TABLE IF EXISTS gifs_fts")
         db.execSQL("DROP TABLE IF EXISTS gif_category_map")
@@ -579,7 +576,7 @@ class GifDatabaseHelper(context: Context) : SQLiteOpenHelper(
             )
         """
 
-        // V3: Added search_text column for content-synced FTS5
+        // V4: search_text column for content-synced FTS4
         private const val CREATE_GIFS_TABLE = """
             CREATE TABLE IF NOT EXISTS gifs (
                 gif_id INTEGER PRIMARY KEY,
@@ -604,12 +601,12 @@ class GifDatabaseHelper(context: Context) : SQLiteOpenHelper(
             )
         """
 
-        // V3: Content-synced FTS5 (supports per-row delete for pack removal)
+        // V4: Content-synced FTS4 — universally available on all Android versions.
+        // FTS5 is NOT reliably available in android.database.sqlite across OEM builds.
         private const val CREATE_GIFS_FTS_TABLE = """
-            CREATE VIRTUAL TABLE IF NOT EXISTS gifs_fts USING fts5(
+            CREATE VIRTUAL TABLE IF NOT EXISTS gifs_fts USING fts4(
                 search_text,
-                content='gifs',
-                content_rowid='gif_id'
+                content="gifs"
             )
         """
 

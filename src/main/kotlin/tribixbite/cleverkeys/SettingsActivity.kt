@@ -3007,7 +3007,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
             // GIF Panel Section (Collapsible) — opt-in, off by default
             CollapsibleSettingsSection(
-                title = "GIF Panel",
+                title = "\uD83C\uDFAC GIF Panel",
                 expanded = gifSectionExpanded,
                 onExpandChange = { gifSectionExpanded = it }
             ) {
