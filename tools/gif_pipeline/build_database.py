@@ -206,16 +206,18 @@ def build_pack_database(
     use_optimized: bool = True,
 ) -> Dict:
     """
-    Build a per-pack mini SQLite database (V3 schema) containing only the specified GIF entries.
+    Build a per-pack mini SQLite database containing only the specified GIF entries.
 
-    V3 schema matches GifDatabase.kt:
-    - gifs table with search_text column (no is_available, no pack_id)
-    - categories table
-    - gif_category_map (WITHOUT ROWID)
-    - content-synced FTS5: content='gifs', content_rowid='gif_id'
-    - gif_usage table (empty)
+    Plain tables only — NO FTS5 virtual tables or triggers. Android's SQLite
+    cannot ATTACH databases that contain FTS5 definitions. The main DB on-device
+    handles FTS5 indexing via 'rebuild' command after import.
 
-    Used by pack_builder.py to create self-contained pack.db files.
+    Schema (must match main DB's column names for ATTACH + INSERT ... SELECT):
+    - gifs: gif_id, width, height, duration_ms, file_size, pack_id, search_text, created_at
+    - categories: category_id, name, icon, sort_order
+    - gif_category_map: (category_id, gif_id) WITHOUT ROWID
+
+    Used by pack_builder.py to create self-contained pack.db files inside ZIPs.
     """
     processed_path = Path(processed_dir)
     metadata_path = Path(metadata_dir)
@@ -255,7 +257,9 @@ def build_pack_database(
     cursor.execute("PRAGMA synchronous = OFF")
     cursor.execute("PRAGMA page_size = 4096")
 
-    # V3 schema — matches GifDatabase.kt V3
+    # Pack DB schema — plain tables only, NO FTS5 (Android can't ATTACH DBs with FTS5).
+    # The main DB (GifDatabase.kt) handles FTS5 indexing via 'rebuild' after import.
+    # Must include pack_id column to match main DB's INSERT ... SELECT query.
     cursor.executescript("""
         -- Categories table
         CREATE TABLE categories (
@@ -265,13 +269,14 @@ def build_pack_database(
             sort_order INTEGER NOT NULL
         );
 
-        -- Main GIF metadata table (V3: includes search_text, no is_available/pack_id)
+        -- Main GIF metadata table — matches main DB's gifs schema for ATTACH import
         CREATE TABLE gifs (
             gif_id INTEGER PRIMARY KEY,
             width INTEGER NOT NULL,
             height INTEGER NOT NULL,
             duration_ms INTEGER DEFAULT 0,
             file_size INTEGER DEFAULT 0,
+            pack_id INTEGER DEFAULT 0,
             search_text TEXT DEFAULT '',
             created_at INTEGER DEFAULT 0
         );
@@ -284,34 +289,6 @@ def build_pack_database(
             FOREIGN KEY (gif_id) REFERENCES gifs(gif_id) ON DELETE CASCADE,
             FOREIGN KEY (category_id) REFERENCES categories(category_id) ON DELETE CASCADE
         ) WITHOUT ROWID;
-
-        -- Content-synced FTS5 (V3: supports per-row delete for pack removal)
-        CREATE VIRTUAL TABLE gifs_fts USING fts5(
-            search_text,
-            content='gifs',
-            content_rowid='gif_id'
-        );
-
-        -- FTS sync triggers
-        CREATE TRIGGER gifs_ai AFTER INSERT ON gifs BEGIN
-            INSERT INTO gifs_fts(rowid, search_text) VALUES (new.gif_id, new.search_text);
-        END;
-        CREATE TRIGGER gifs_ad AFTER DELETE ON gifs BEGIN
-            INSERT INTO gifs_fts(gifs_fts, rowid, search_text) VALUES('delete', old.gif_id, old.search_text);
-        END;
-        CREATE TRIGGER gifs_au AFTER UPDATE ON gifs BEGIN
-            INSERT INTO gifs_fts(gifs_fts, rowid, search_text) VALUES('delete', old.gif_id, old.search_text);
-            INSERT INTO gifs_fts(rowid, search_text) VALUES (new.gif_id, new.search_text);
-        END;
-
-        -- Usage tracking (created on-device, empty in pack DB)
-        CREATE TABLE gif_usage (
-            gif_id INTEGER PRIMARY KEY,
-            use_count INTEGER DEFAULT 0,
-            last_used INTEGER DEFAULT 0,
-            FOREIGN KEY (gif_id) REFERENCES gifs(gif_id) ON DELETE CASCADE
-        );
-        CREATE INDEX idx_gif_usage ON gif_usage(last_used DESC);
     """)
 
     # Insert categories
@@ -376,11 +353,11 @@ def build_pack_database(
         gif_id_int = int(gif_id_str.lstrip("0") or "0")
 
         try:
-            # Insert GIF record with search_text (V3 schema — no pack_id/is_available)
+            # Insert GIF record (pack_id=0 default; main DB's import copies this column)
             cursor.execute(
                 """INSERT INTO gifs
-                   (gif_id, width, height, duration_ms, file_size, search_text, created_at)
-                   VALUES (?, ?, ?, ?, ?, ?, 0)""",
+                   (gif_id, width, height, duration_ms, file_size, pack_id, search_text, created_at)
+                   VALUES (?, ?, ?, ?, ?, 0, ?, 0)""",
                 (gif_id_int, width, height, duration_ms, file_size, search_text)
             )
 
