@@ -57,17 +57,44 @@ data class Gif(
     }
 
     /**
-     * Get the primary display name (first keyword or ID).
+     * Get the display name — title-cased keywords (excluding trailing Giphy ID).
      */
     fun getDisplayName(): String {
-        return searchText.split(" ").firstOrNull()?.replaceFirstChar { it.uppercase() }
-            ?: "GIF #$id"
+        val keywords = getKeywords()
+        return if (keywords.isNotEmpty()) {
+            keywords.joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
+        } else {
+            "GIF #$id"
+        }
     }
 
     /**
-     * Get keywords as a list for display.
+     * Get keywords as a list for display (excludes trailing Giphy ID).
      */
-    fun getKeywords(): List<String> = searchText.split(" ").filter { it.isNotBlank() }
+    fun getKeywords(): List<String> {
+        val tokens = searchText.split(" ").filter { it.isNotBlank() }
+        // Last token is the Giphy ID — exclude it from display keywords
+        return if (tokens.size > 1) tokens.dropLast(1) else tokens
+    }
+
+    /**
+     * Extract the Giphy ID embedded as the last token of search_text.
+     * Pipeline stores: "keyword1 keyword2 ... giphyId" (lowercase alphanumeric).
+     * Returns null if search_text is empty or has no tokens.
+     */
+    fun getGiphyId(): String? {
+        val tokens = searchText.split(" ").filter { it.isNotBlank() }
+        return tokens.lastOrNull()?.takeIf { it.isNotEmpty() }
+    }
+
+    /**
+     * Construct the Giphy media URL from the embedded Giphy ID.
+     * Returns null if no Giphy ID is available.
+     */
+    fun getGiphyUrl(): String? {
+        val giphyId = getGiphyId() ?: return null
+        return "https://media.giphy.com/media/$giphyId/giphy.gif"
+    }
 
     /**
      * Check if this GIF matches a search query.

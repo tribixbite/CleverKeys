@@ -2,21 +2,30 @@ package tribixbite.cleverkeys
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.os.Handler
+import android.text.Editable
+import android.text.TextUtils
+import android.text.TextWatcher
+import android.util.TypedValue
+import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputConnection
-import android.text.Editable
-import android.text.TextWatcher
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.LinearLayout
+import android.widget.PopupWindow
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.view.ViewCompat
+import tribixbite.cleverkeys.gif.Gif
 import tribixbite.cleverkeys.gif.GifAssetManager
 import tribixbite.cleverkeys.gif.GifGridManager
 import tribixbite.cleverkeys.gif.GifGroupButtonsBar
-import java.io.File
 
 /**
  * Handles keyboard events and state changes for CleverKeysService.
@@ -320,110 +329,20 @@ class KeyboardReceiver(
                 val gifColumns = Config.globalConfig().gif_thumbnail_columns
                 val gifGrid = recyclerView?.let { GifGridManager(context, it, gifColumns) }
                 gifGrid?.onGifSelected = { gif ->
-                    val assetManager = GifAssetManager.getInstance(context)
-                    // Prefer full animation; fall back to thumbnail (packs only include thumbs)
-                    val gifFile = assetManager.getGifFile(gif)
-                        ?: File(context.filesDir, gif.getThumbnailPath()).takeIf { it.exists() }
-                    var committed = false
-                    if (gifFile != null && gifFile.exists()) {
-                        try {
-                            // Insert as content:// URI via InputConnection (for apps that support rich content)
-                            val uri = androidx.core.content.FileProvider.getUriForFile(
-                                context,
-                                "${context.packageName}.fileprovider",
-                                gifFile
-                            )
-                            val description = android.content.ClipDescription(
-                                "GIF",
-                                arrayOf("image/webp")
-                            )
-                            val inputContentInfo = androidx.core.view.inputmethod.InputContentInfoCompat(
-                                uri, description, null
-                            )
-                            val ic = keyboard2.currentInputConnection
-                            if (ic != null) {
-                                committed = androidx.core.view.inputmethod.InputConnectionCompat.commitContent(
-                                    ic, keyboard2.currentInputEditorInfo, inputContentInfo,
-                                    androidx.core.view.inputmethod.InputConnectionCompat.INPUT_CONTENT_GRANT_READ_URI_PERMISSION,
-                                    null
-                                )
-                            }
-                        } catch (e: Exception) {
-                            android.util.Log.w("KeyboardReceiver", "commitContent failed: ${e.message}")
-                        }
+                    // Tap inserts the Giphy URL as text into the input field
+                    val url = gif.getGiphyUrl()
+                    val ic = keyboard2.currentInputConnection
+                    if (url != null && ic != null) {
+                        ic.commitText(url, 1)
                     }
-                    if (!committed) {
-                        // Fallback: copy GIF file to clipboard so user can paste it
-                        if (gifFile != null && gifFile.exists()) {
-                            try {
-                                val uri = androidx.core.content.FileProvider.getUriForFile(
-                                    context,
-                                    "${context.packageName}.fileprovider",
-                                    gifFile
-                                )
-                                val clip = android.content.ClipData.newUri(
-                                    context.contentResolver,
-                                    gif.getDisplayName(),
-                                    uri
-                                )
-                                val cm = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-                                cm.setPrimaryClip(clip)
-                                android.widget.Toast.makeText(context, "GIF copied to clipboard", android.widget.Toast.LENGTH_SHORT).show()
-                            } catch (e: Exception) {
-                                android.util.Log.w("KeyboardReceiver", "Clipboard copy failed: ${e.message}")
-                            }
-                        }
-                    }
-                    // Record usage and close
+                    // Record usage and close GIF pane
                     handle_event_key(KeyValue.Event.SWITCH_BACK_GIF)
                 }
 
-                // Long press: show GIF title + copy to clipboard option
-                gifGrid?.onGifLongPress = { gif, view ->
-                    val assetManager = GifAssetManager.getInstance(context)
-                    val gifFile = assetManager.getGifFile(gif)
-                        ?: File(context.filesDir, gif.getThumbnailPath()).takeIf { it.exists() }
-                    val popup = android.widget.PopupMenu(context, view)
-                    popup.menu.add(0, 1, 0, gif.getDisplayName()).isEnabled = false
-                    if (gifFile != null && gifFile.exists()) {
-                        popup.menu.add(0, 2, 1, "Copy GIF to clipboard")
-                    }
-                    popup.menu.add(0, 3, 2, "Copy keywords")
-                    popup.setOnMenuItemClickListener { item ->
-                        when (item.itemId) {
-                            2 -> {
-                                // Copy GIF file URI to clipboard
-                                try {
-                                    val uri = androidx.core.content.FileProvider.getUriForFile(
-                                        context,
-                                        "${context.packageName}.fileprovider",
-                                        gifFile!!
-                                    )
-                                    val clip = android.content.ClipData.newUri(
-                                        context.contentResolver,
-                                        gif.getDisplayName(),
-                                        uri
-                                    )
-                                    val cm = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-                                    cm.setPrimaryClip(clip)
-                                    android.widget.Toast.makeText(context, "GIF copied", android.widget.Toast.LENGTH_SHORT).show()
-                                } catch (e: Exception) {
-                                    android.util.Log.w("KeyboardReceiver", "Copy GIF failed: ${e.message}")
-                                }
-                                true
-                            }
-                            3 -> {
-                                // Copy keywords as text to clipboard
-                                val clip = android.content.ClipData.newPlainText("GIF keywords", gif.searchText)
-                                val cm = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-                                cm.setPrimaryClip(clip)
-                                android.widget.Toast.makeText(context, "Keywords copied", android.widget.Toast.LENGTH_SHORT).show()
-                                true
-                            }
-                            else -> false
-                        }
-                    }
-                    popup.show()
+                // Long press: IME-safe PopupWindow with title + copy actions
+                // (PopupMenu fails in IME context — no window token)
+                gifGrid?.onGifLongPress = { gif, anchor ->
+                    showGifPopup(gif, anchor)
                 }
 
                 // Wire up search bar — store reference for key routing
@@ -549,6 +468,117 @@ class KeyboardReceiver(
             }
 
             else -> {} // Unhandled events
+        }
+    }
+
+    /**
+     * Show an IME-safe popup for GIF long-press.
+     * Uses PopupWindow (not PopupMenu) because IME views lack a window token
+     * for standard menus. Same approach as EmojiTooltipManager.
+     */
+    private fun showGifPopup(gif: Gif, anchor: View) {
+        val density = context.resources.displayMetrics.density
+        val padding = (12 * density).toInt()
+        val cornerRadius = 8 * density
+
+        val background = GradientDrawable().apply {
+            setColor(0xEE222222.toInt())
+            this.cornerRadius = cornerRadius
+        }
+
+        val container = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(padding, padding, padding, padding)
+            this.background = background
+        }
+
+        // Title: display name of the GIF
+        val titleView = TextView(context).apply {
+            text = gif.getDisplayName()
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
+            setTextColor(Color.WHITE)
+            setTypeface(null, Typeface.BOLD)
+            maxWidth = (220 * density).toInt()
+            maxLines = 2
+            ellipsize = TextUtils.TruncateAt.END
+            setPadding(0, 0, 0, (8 * density).toInt())
+        }
+        container.addView(titleView)
+
+        val popup = PopupWindow(
+            container,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply {
+            isFocusable = true
+            isTouchable = true
+            isOutsideTouchable = true
+            elevation = 8f
+        }
+
+        // Helper to create a tappable action row
+        fun addAction(label: String, onClick: () -> Unit) {
+            val actionView = TextView(context).apply {
+                text = label
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
+                setTextColor(0xFF90CAF9.toInt()) // Light blue
+                setPadding(0, (6 * density).toInt(), 0, (6 * density).toInt())
+                setOnClickListener {
+                    onClick()
+                    popup.dismiss()
+                }
+            }
+            container.addView(actionView)
+        }
+
+        // "Copy URL" action
+        val url = gif.getGiphyUrl()
+        if (url != null) {
+            addAction("Copy URL") {
+                val clip = android.content.ClipData.newPlainText("GIF URL", url)
+                val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                cm.setPrimaryClip(clip)
+                Toast.makeText(context, "URL copied", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // "Copy GIF file" action (if thumbnail file exists)
+        val thumbFile = java.io.File(context.filesDir, gif.getThumbnailPath())
+        if (thumbFile.exists()) {
+            addAction("Copy GIF file") {
+                try {
+                    val uri = androidx.core.content.FileProvider.getUriForFile(
+                        context,
+                        "${context.packageName}.fileprovider",
+                        thumbFile
+                    )
+                    val clip = android.content.ClipData.newUri(
+                        context.contentResolver,
+                        gif.getDisplayName(),
+                        uri
+                    )
+                    val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                    cm.setPrimaryClip(clip)
+                    Toast.makeText(context, "GIF copied", Toast.LENGTH_SHORT).show()
+                } catch (e: Exception) {
+                    android.util.Log.w("KeyboardReceiver", "Copy GIF file failed: ${e.message}")
+                }
+            }
+        }
+
+        // Show anchored above the tapped cell (same positioning as EmojiTooltipManager)
+        try {
+            container.measure(
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+            )
+            val popupWidth = container.measuredWidth
+            val popupHeight = container.measuredHeight
+            val offsetX = (anchor.width - popupWidth) / 2
+            val offsetY = -anchor.height - popupHeight - (8 * density).toInt()
+            popup.showAsDropDown(anchor, offsetX, offsetY, Gravity.TOP or Gravity.START)
+        } catch (e: Exception) {
+            android.util.Log.w("KeyboardReceiver", "GIF popup failed: ${e.message}")
         }
     }
 
