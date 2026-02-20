@@ -186,8 +186,6 @@ object Defaults {
 
     // GIF Panel — opt-in, off by default, zero data shipped in APK
     const val GIF_ENABLED = false           // Master toggle — enables GIF key + pane
-    const val GIF_WIFI_ONLY_DOWNLOAD = true // Only download packs on WiFi
-    const val GIF_MAX_CACHE_MB = 100        // On-device cache cap for full animations
     const val GIF_THUMBNAIL_COLUMNS = 3     // Grid columns in GIF picker
 
     // Common password manager package names (for clipboard exclusion)
@@ -412,8 +410,6 @@ class Config private constructor(
 
     // GIF Panel
     @JvmField var gif_enabled = Defaults.GIF_ENABLED
-    @JvmField var gif_wifi_only_download = Defaults.GIF_WIFI_ONLY_DOWNLOAD
-    @JvmField var gif_max_cache_mb = Defaults.GIF_MAX_CACHE_MB
     @JvmField var gif_thumbnail_columns = Defaults.GIF_THUMBNAIL_COLUMNS
 
     @JvmField var swipe_typing_enabled = true  // Default to enabled for CleverKeys
@@ -675,8 +671,6 @@ class Config private constructor(
 
         // GIF Panel
         gif_enabled = _prefs.getBoolean("gif_enabled", Defaults.GIF_ENABLED)
-        gif_wifi_only_download = _prefs.getBoolean("gif_wifi_only_download", Defaults.GIF_WIFI_ONLY_DOWNLOAD)
-        gif_max_cache_mb = safeGetInt(_prefs, "gif_max_cache_mb", Defaults.GIF_MAX_CACHE_MB).coerceIn(50, 500)
         gif_thumbnail_columns = safeGetInt(_prefs, "gif_thumbnail_columns", Defaults.GIF_THUMBNAIL_COLUMNS).coerceIn(2, 5)
 
         swipe_typing_enabled = _prefs.getBoolean("swipe_typing_enabled", Defaults.SWIPE_TYPING_ENABLED)
