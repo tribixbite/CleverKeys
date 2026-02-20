@@ -11,8 +11,8 @@ import java.io.File
  *
  * Asset filenames are derived from gif_id: String.format("%06d.webp", id)
  * Stored as WebP files:
- * - {filesDir}/gifs/thumbs/{id}.webp (static thumbnail)
- * - {filesDir}/gifs/full/{id}.webp (animated, downloaded on-demand)
+ * - {filesDir}/gifs/thumbs/{id÷1000}/{id}.webp (static thumbnail, partitioned)
+ * - {filesDir}/gifs/full/{id÷1000}/{id}.webp (animated, downloaded on-demand)
  */
 data class Gif(
     val id: Long,
@@ -30,13 +30,15 @@ data class Gif(
 
     /**
      * Get the file path for the static thumbnail (relative to app files dir).
+     * Partitioned into subdirectories by id÷1000 to keep <1000 files per dir.
      */
-    fun getThumbnailPath(): String = "$THUMBS_DIR/$fileName"
+    fun getThumbnailPath(): String = getPartitionedPath(THUMBS_DIR, id)
 
     /**
      * Get the file path for the full animated GIF (relative to app files dir).
+     * Partitioned into subdirectories by id÷1000 to keep <1000 files per dir.
      */
-    fun getFullPath(): String = "$FULL_DIR/$fileName"
+    fun getFullPath(): String = getPartitionedPath(FULL_DIR, id)
 
     /**
      * Get thumbnail as Uri for image loaders (file:// scheme).
@@ -85,6 +87,16 @@ data class Gif(
         // Storage directory paths (relative to context.filesDir)
         const val THUMBS_DIR = "gifs/thumbs"
         const val FULL_DIR = "gifs/full"
+
+        /**
+         * Build a partitioned file path: "{baseDir}/{id÷1000}/{id}.webp"
+         * Keeps each subdirectory under 1000 files for filesystem performance.
+         */
+        fun getPartitionedPath(baseDir: String, id: Long): String {
+            val partition = "%03d".format(id / 1000)
+            val fileName = "%06d.webp".format(id)
+            return "$baseDir/$partition/$fileName"
+        }
 
         /**
          * Get the file for a GIF in the cache directory.

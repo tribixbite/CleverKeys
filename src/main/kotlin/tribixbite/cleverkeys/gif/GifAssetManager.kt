@@ -11,35 +11,33 @@ import java.io.FileOutputStream
 import java.io.InputStream
 
 /**
- * Manages GIF file storage with lazy-loading support.
+ * Manages GIF file storage with partitioned subdirectory layout.
  *
- * V2 Architecture (opt-in download model):
- * - Thumbnails: Downloaded with core pack to {filesDir}/gifs/thumbs/
- * - Full animations: Downloaded on-demand to {filesDir}/gifs/full/
- * - No assets bundled in APK (zero footprint when GIF panel is disabled)
+ * Storage layout (partitioned by id÷1000 to stay under 1000 files/dir):
+ * - {filesDir}/gifs/thumbs/{partition}/{id}.webp  (static first-frame thumbnails)
+ * - {filesDir}/gifs/full/{partition}/{id}.webp    (animated WebP, cached on use)
  *
- * Storage layout:
- * - {filesDir}/gifs/thumbs/{id}.webp  (static first-frame thumbnails)
- * - {filesDir}/gifs/full/{id}.webp    (animated WebP, cached on use)
- * - {filesDir}/gif_packs/             (downloaded pack archives)
- *
- * Filenames derived from gif_id: String.format("%06d.webp", id)
+ * No assets bundled in APK — all data imported from user-downloaded pack ZIPs.
  */
 class GifAssetManager private constructor(private val context: Context) {
 
-    private val fullDir: File by lazy {
-        File(context.filesDir, Gif.FULL_DIR).also { it.mkdirs() }
+    private val gifsBaseDir: File by lazy {
+        File(context.filesDir, "gifs").also { it.mkdirs() }
     }
 
-    private val thumbsDir: File by lazy {
-        File(context.filesDir, Gif.THUMBS_DIR).also { it.mkdirs() }
-    }
+    // Resolve a partitioned file from a Gif object
+    private fun thumbFile(gif: Gif): File = File(context.filesDir, gif.getThumbnailPath())
+    private fun fullFile(gif: Gif): File = File(context.filesDir, gif.getFullPath())
+
+    // Resolve a partitioned file from a raw gif ID
+    private fun thumbFileById(id: Long): File = File(context.filesDir, Gif.getPartitionedPath(Gif.THUMBS_DIR, id))
+    private fun fullFileById(id: Long): File = File(context.filesDir, Gif.getPartitionedPath(Gif.FULL_DIR, id))
 
     /**
      * Check if a thumbnail exists on disk.
      */
     fun hasThumbnail(gif: Gif): Boolean {
-        val file = File(thumbsDir, gif.fileName)
+        val file = thumbFile(gif)
         return file.exists() && file.length() > 0
     }
 
@@ -47,7 +45,7 @@ class GifAssetManager private constructor(private val context: Context) {
      * Check if the full animation exists on disk (cached).
      */
     fun hasFullAnimation(gif: Gif): Boolean {
-        val file = File(fullDir, gif.fileName)
+        val file = fullFile(gif)
         return file.exists() && file.length() > 0
     }
 
@@ -56,7 +54,7 @@ class GifAssetManager private constructor(private val context: Context) {
      * Returns null if thumbnail not downloaded yet.
      */
     fun getThumbnailUri(gif: Gif): Uri? {
-        val file = File(thumbsDir, gif.fileName)
+        val file = thumbFile(gif)
         return if (file.exists() && file.length() > 0) Uri.fromFile(file) else null
     }
 
@@ -65,7 +63,7 @@ class GifAssetManager private constructor(private val context: Context) {
      * Returns null if not available.
      */
     fun getFullAnimationUri(gif: Gif): Uri? {
-        val file = File(fullDir, gif.fileName)
+        val file = fullFile(gif)
         return if (file.exists() && file.length() > 0) Uri.fromFile(file) else null
     }
 
@@ -74,24 +72,15 @@ class GifAssetManager private constructor(private val context: Context) {
      * Returns null if not available.
      */
     fun getGifFile(gif: Gif): File? {
-        val file = File(fullDir, gif.fileName)
+        val file = fullFile(gif)
         return if (file.exists() && file.length() > 0) file else null
-    }
-
-    /**
-     * Get the File path for the full animation (async, copies from assets fallback if needed).
-     * Returns null if not available.
-     */
-    suspend fun getFullAnimationFile(gif: Gif): File? = withContext(Dispatchers.IO) {
-        val file = File(fullDir, gif.fileName)
-        if (file.exists() && file.length() > 0) file else null
     }
 
     /**
      * Load thumbnail as Drawable (synchronous, for adapters).
      */
     fun loadThumbnailSync(gif: Gif): Drawable? {
-        val file = File(thumbsDir, gif.fileName)
+        val file = thumbFile(gif)
         return if (file.exists()) {
             try {
                 Drawable.createFromPath(file.absolutePath)
@@ -105,7 +94,7 @@ class GifAssetManager private constructor(private val context: Context) {
      * Load thumbnail as InputStream.
      */
     fun openThumbnail(gif: Gif): InputStream? {
-        val file = File(thumbsDir, gif.fileName)
+        val file = thumbFile(gif)
         return try {
             if (file.exists()) file.inputStream() else null
         } catch (e: Exception) {
@@ -117,7 +106,7 @@ class GifAssetManager private constructor(private val context: Context) {
      * Load full animation as InputStream.
      */
     fun openFullAnimation(gif: Gif): InputStream? {
-        val file = File(fullDir, gif.fileName)
+        val file = fullFile(gif)
         return try {
             if (file.exists()) file.inputStream() else null
         } catch (e: Exception) {
@@ -129,8 +118,9 @@ class GifAssetManager private constructor(private val context: Context) {
      * Save a downloaded animation to the full dir.
      */
     suspend fun cacheFullAnimation(gif: Gif, data: ByteArray): Boolean = withContext(Dispatchers.IO) {
-        val file = File(fullDir, gif.fileName)
+        val file = fullFile(gif)
         try {
+            file.parentFile?.mkdirs()
             FileOutputStream(file).use { it.write(data) }
             true
         } catch (e: Exception) {
@@ -143,8 +133,9 @@ class GifAssetManager private constructor(private val context: Context) {
      * Save a downloaded animation from InputStream.
      */
     suspend fun cacheFullAnimation(gif: Gif, input: InputStream): Boolean = withContext(Dispatchers.IO) {
-        val file = File(fullDir, gif.fileName)
+        val file = fullFile(gif)
         try {
+            file.parentFile?.mkdirs()
             FileOutputStream(file).use { output -> input.copyTo(output) }
             true
         } catch (e: Exception) {
@@ -154,56 +145,92 @@ class GifAssetManager private constructor(private val context: Context) {
     }
 
     /**
-     * Get total cache size for full animations (bytes).
+     * Import thumbnails from an extracted pack directory.
+     * Handles both flat layout (thumbs/000001.webp) and partitioned layout (thumbs/000/000001.webp).
+     *
+     * @return number of thumbnails imported
      */
-    fun getFullCacheSize(): Long {
-        return fullDir.walkTopDown()
-            .filter { it.isFile }
-            .sumOf { it.length() }
+    suspend fun importThumbnails(sourceThumbsDir: File): Int = withContext(Dispatchers.IO) {
+        if (!sourceThumbsDir.exists() || !sourceThumbsDir.isDirectory) return@withContext 0
+
+        var count = 0
+        sourceThumbsDir.walkTopDown()
+            .filter { it.isFile && it.extension == "webp" }
+            .forEach { srcFile ->
+                val idStr = srcFile.nameWithoutExtension
+                val id = idStr.toLongOrNull() ?: return@forEach
+                val destFile = thumbFileById(id)
+                destFile.parentFile?.mkdirs()
+                try {
+                    srcFile.copyTo(destFile, overwrite = true)
+                    count++
+                } catch (e: Exception) {
+                    Log.w(TAG, "Failed to import thumbnail $idStr: ${e.message}")
+                }
+            }
+        Log.i(TAG, "Imported $count thumbnails from ${sourceThumbsDir.absolutePath}")
+        count
+    }
+
+    /**
+     * Remove thumbnail and full animation files for specific GIF IDs.
+     * Cleans up empty partition directories afterward.
+     */
+    suspend fun removeThumbnails(gifIds: List<Long>) = withContext(Dispatchers.IO) {
+        val partitionDirs = mutableSetOf<File>()
+        for (id in gifIds) {
+            val thumb = thumbFileById(id)
+            if (thumb.exists()) {
+                thumb.parentFile?.let { partitionDirs.add(it) }
+                thumb.delete()
+            }
+            val full = fullFileById(id)
+            if (full.exists()) {
+                full.parentFile?.let { partitionDirs.add(it) }
+                full.delete()
+            }
+        }
+        // Clean up empty partition subdirectories
+        for (dir in partitionDirs) {
+            if (dir.exists() && dir.isDirectory && (dir.listFiles()?.isEmpty() == true)) {
+                dir.delete()
+            }
+        }
+        Log.i(TAG, "Removed files for ${gifIds.size} GIFs")
     }
 
     /**
      * Get total storage used (thumbs + full animations) in bytes.
      */
     fun getTotalStorageUsed(): Long {
-        val thumbsSize = thumbsDir.walkTopDown().filter { it.isFile }.sumOf { it.length() }
-        val fullSize = fullDir.walkTopDown().filter { it.isFile }.sumOf { it.length() }
-        return thumbsSize + fullSize
+        return gifsBaseDir.walkTopDown().filter { it.isFile }.sumOf { it.length() }
     }
 
     /**
-     * Get count of cached full animations.
-     */
-    fun getCachedCount(): Int {
-        return fullDir.listFiles()?.count { it.isFile && it.extension == "webp" } ?: 0
-    }
-
-    /**
-     * Get count of available thumbnails.
+     * Get count of available thumbnails (walks partitioned subdirectories).
      */
     fun getThumbnailCount(): Int {
-        return thumbsDir.listFiles()?.count { it.isFile && it.extension == "webp" } ?: 0
+        val thumbsBase = File(context.filesDir, Gif.THUMBS_DIR)
+        return thumbsBase.walkTopDown().filter { it.isFile && it.extension == "webp" }.count()
     }
 
     /**
-     * Clear all cached full animations (thumbnails kept).
+     * Get count of cached full animations (walks partitioned subdirectories).
      */
-    suspend fun clearFullCache() = withContext(Dispatchers.IO) {
-        fullDir.listFiles()?.forEach { it.delete() }
+    fun getCachedCount(): Int {
+        val fullBase = File(context.filesDir, Gif.FULL_DIR)
+        return fullBase.walkTopDown().filter { it.isFile && it.extension == "webp" }.count()
     }
 
     /**
-     * Clear everything (thumbnails + full animations).
-     * Called when user disables GIF panel.
+     * Clear everything — thumbnails, full animations, pack downloads.
+     * Called when user removes all GIF data.
      */
     suspend fun clearAll() = withContext(Dispatchers.IO) {
-        fullDir.listFiles()?.forEach { it.delete() }
-        thumbsDir.listFiles()?.forEach { it.delete() }
-        // Also clean pack downloads
+        gifsBaseDir.deleteRecursively()
         val packDir = File(context.filesDir, "gif_packs")
-        if (packDir.exists()) {
-            packDir.deleteRecursively()
-        }
+        if (packDir.exists()) packDir.deleteRecursively()
+        Log.i(TAG, "Cleared all GIF storage")
     }
 
     companion object {
@@ -218,9 +245,7 @@ class GifAssetManager private constructor(private val context: Context) {
             }
         }
 
-        /**
-         * Release singleton (call when GIF panel is disabled).
-         */
+        /** Release singleton (call when GIF panel is disabled or all data removed). */
         fun release() {
             synchronized(this) {
                 instance = null
