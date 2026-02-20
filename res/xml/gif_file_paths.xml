@@ -2,10 +2,10 @@
 <!-- FileProvider paths for sharing GIF files via content:// URIs.
      Required for commitContent() to insert animated WebP GIFs into apps. -->
 <paths>
-    <!-- Full animated GIFs in app-internal storage (GifAssetManager.cacheDir) -->
+    <!-- Full animated GIFs in partitioned storage (gifs/full/{partition}/{id}.webp) -->
     <files-path name="gifs_full" path="gifs/full/" />
+    <!-- Thumbnails in partitioned storage (gifs/thumbs/{partition}/{id}.webp) -->
+    <files-path name="gifs_thumbs" path="gifs/thumbs/" />
     <!-- GIF sharing cache (Gif.getCacheFile uses cacheDir/gifs/) -->
     <cache-path name="gifs_cache" path="gifs/" />
-    <!-- GIF pack storage -->
-    <files-path name="gif_packs" path="gif_packs/" />
 </paths>
