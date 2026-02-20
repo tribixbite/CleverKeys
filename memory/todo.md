@@ -410,28 +410,31 @@ Issues already implemented, just need verification + close:
 ## In Progress
 - 🔄 Subkey System Unification (Option D) - awaiting user answers to clarifying questions
   - See: `memory/subkey-unification-research.md`
-- 🔄 **GIF Panel (Offline)** - core infrastructure complete, needs UI testing + thumbnail packs
-  - Branch: `feature/gif-panel-clean` (squash-merged, pushed, clean history)
-  - Old branch: `feature/gif-panel` (30 commits, 15 GB blobs — DO NOT push)
+- 🔄 **GIF Panel (Offline, No Internet)** — file-picker import system complete, needs E2E test
+  - Branch: `feature/gif-panel-clean` (pushed, clean history)
   - Spec: `docs/specs/gif-panel-spec.md`
-  - Release: https://github.com/tribixbite/CleverKeys/releases/tag/CleverKeys-GIF
-  - Database: 130,076 GIFs, 152,446 categories, 115 packs, 17 cats (5.7 MB gzipped)
-  - Completed (2026-02-19):
-    - ✅ Config.kt: GIF_ENABLED (off by default), GIF_WIFI_ONLY_DOWNLOAD, GIF_MAX_CACHE_MB, GIF_THUMBNAIL_COLUMNS
-    - ✅ SettingsActivity.kt: full Compose UI section with master toggle + sub-settings
-    - ✅ V2 DB schema: packs table, WITHOUT ROWID category map, contentless FTS5
-    - ✅ RecyclerView + Coil 2.6.0 (GifGridManager replacing legacy GridView)
-    - ✅ WorkManager-based GifPackDownloadWorker with progress + WiFi constraint
-    - ✅ File-based GifAssetManager (zero APK assets)
-    - ✅ Core DB download URL wired to GitHub Releases asset
-    - ✅ Git history cleaned: squash merge eliminated 15 GB of debug APKs + raw GIFs
-    - ✅ build_database.py hardened (module-level STOP_WORDS, non-numeric guard, chunked gzip)
+  - Release: https://github.com/tribixbite/CleverKeys/releases/tag/CleverKeys-GIF (prerelease)
+  - Architecture: ZIP pack import via file picker (no INTERNET permission)
+  - Completed:
+    - ✅ Gif.kt: partitioned thumbnail paths (`gifs/thumbs/{id÷1000}/{id}.webp`)
+    - ✅ GifAssetManager.kt: partitioned storage, importThumbnails(), removeThumbnails()
+    - ✅ GifDatabase.kt: V3 schema (content-synced FTS5, installed_packs table, ATTACH import)
+    - ✅ GifPackManager.kt: complete rewrite — file picker import, no network code
+    - ✅ Config.kt: removed GIF_WIFI_ONLY_DOWNLOAD + GIF_MAX_CACHE_MB (dead code)
+    - ✅ SettingsActivity.kt: pack management UI (browser link, file picker, per-pack remove, remove-all)
+    - ✅ AndroidManifest.xml: share intent filter for ZIP files on SettingsActivity
+    - ✅ gif_file_paths.xml: partitioned thumbs path for FileProvider
+    - ✅ build.gradle: removed work-runtime-ktx dependency
     - ✅ build_database.py: --pack-mode for per-pack V3 SQLite (content-synced FTS5, sync triggers)
+    - ✅ pack_builder.py: ZIP format with pack.db + partitioned thumbs (replaces tar.gz)
+    - ✅ Git history cleaned: squash merge eliminated 15 GB of debug APKs + raw GIFs
   - Next steps:
+    - [ ] Build test ZIP pack manually (manifest.json + small pack.db + 10 thumbs)
     - [ ] Build & install release APK to test GIF panel end-to-end
-    - [ ] Publish thumbnail pack to GitHub Releases (gifs_v2.db only has metadata)
+    - [ ] Run pack_builder.py to generate real packs from processed GIFs
+    - [ ] Publish thumbnail packs to GitHub Releases
     - [ ] GIF preview on long-press (animated WebP popup)
-    - [ ] Category pack download URLs (when packs are built + published)
+    - [ ] Legal review of GIF content redistribution
 
 ## Completed (2026-01-25)
 - ✅ Subkey system investigation: XML subkeys, ShortSwipeCustomizationActivity, ExtraKeys
