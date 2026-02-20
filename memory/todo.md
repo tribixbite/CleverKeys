@@ -410,18 +410,45 @@ Issues already implemented, just need verification + close:
 ## In Progress
 - 🔄 Subkey System Unification (Option D) - awaiting user answers to clarifying questions
   - See: `memory/subkey-unification-research.md`
-- 🔄 **GIF Panel (Offline)** - infrastructure complete, data pipeline ready
-  - Branch: `feature/gif-panel` (git worktree at `../cleverkeys-gif-module`)
+- 🔄 **GIF Panel (Offline)** - file-picker import system implemented, E2E testing in progress
+  - Branch: `feature/gif-panel-clean` (git worktree at `../cleverkeys-gif-module`)
   - Spec: `docs/specs/gif-panel-spec.md`
-  - Kotlin: `gif/Gif.kt`, `gif/GifCategory.kt`, `gif/GifDatabase.kt`
-  - Python pipeline: `tools/gif_pipeline/` (download, process, build DB)
-  - Data sources: TGIF (100K), Video2GIF (100K), GIFGIF+ (23K), ReactionGIF (4K)
-  - Next steps:
-    - [ ] Download TGIF dataset from Hugging Face
-    - [ ] Process to WebP format (thumbnails + animated)
-    - [ ] Build database with FTS5 search index
-    - [ ] Create GifGridView.kt and UI components
-    - [ ] Add GIF tab to keyboard panel
+  - Architecture: No INTERNET permission. User downloads ZIP from GitHub Releases,
+    imports via file picker (ACTION_OPEN_DOCUMENT). ATTACH pack.db → INSERT into main DB.
+  - Schema: V4 with FTS4 (not FTS5 — not available on all Android builds)
+  - All 9 implementation steps complete:
+    - [x] Step 1: Partitioned thumbnail paths (Gif.kt + GifAssetManager.kt)
+    - [x] Step 2: V4 schema with pack import/remove (GifDatabase.kt)
+    - [x] Step 3: Rewrite GifPackManager as offline file-picker import
+    - [x] Step 4: Remove dead Config settings (wifi_only, cache_mb)
+    - [x] Step 5: Config cleanup
+    - [x] Step 6: Pack management UI in Settings (import/remove/list)
+    - [x] Step 7: AndroidManifest share intent filters for ZIP
+    - [x] Step 8: gif_file_paths.xml thumbs path
+    - [x] Step 9: Python pipeline per-pack ZIP+DB generation
+  - Bug fixes applied:
+    - [x] FTS5→FTS4 migration (FTS5 not available on device)
+    - [x] Pack.db must not contain FTS virtual tables (ATTACH fails)
+    - [x] Pack.db must include pack_id column
+    - [x] Empty initial view fix (Recently Used empty → fallback to getAllGifs)
+    - [x] GIF selection fallback to thumbnail when full file unavailable
+    - [x] Register packs in packs table for proper removePack() FK resolution
+  - Test pack: test-20.zip (20 GIFs) created and successfully imported
+  - V5 schema: gif_pack_membership table for multi-pack support
+  - Tap inserts Giphy URL, long-press uses IME-safe PopupWindow
+  - Conditional "Copy GIF" (only when full animated file exists on device)
+  - Category-based pack builder (build_all_packs.py):
+    - 7 pack groups: reactions, positive, humor, negative, surprise, universal, cats
+    - Outliers (>P90 file size) isolated into separate packs
+    - Modes: test5k, all, full, thumbs, thumbs-all, personal
+  - Test pack built: test-popular-5k.zip (167 MB, 5000 full + 5000 thumbs)
+  - Remaining:
+    - [ ] Install & test 5k pack import on device (ADB reconnection pending)
+    - [ ] Verify tap inserts URL, long-press popup, conditional Copy GIF
+    - [ ] Build full category pack set (--mode all)
+    - [ ] Build personal 25k full + all thumbs pack
+    - [ ] Publish packs to GitHub Releases
+    - [ ] Legal review of GIF content redistribution
 
 ## Completed (2026-01-25)
 - ✅ Subkey system investigation: XML subkeys, ShortSwipeCustomizationActivity, ExtraKeys
