@@ -8,58 +8,44 @@ import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.io.FileOutputStream
-import java.util.zip.GZIPInputStream
 
 /**
  * SQLite database handler for offline GIF storage with FTS5 full-text search.
  *
- * The database is pre-built by build_database.py and downloaded as gzipped DB
- * on first GIF panel enable. On-device it's decompressed to app's database dir.
- *
- * V2 Schema (optimized — no asset_name/thumbnail_name columns):
- * - categories: Emotion category definitions
- * - packs: Pack lookup table (normalizes pack_id strings to integers)
- * - gifs: GIF metadata (dimensions, pack_id, is_available flag)
+ * V3 Schema (incremental pack import):
+ * - categories: Emotion category definitions (shared across packs)
+ * - gifs: GIF metadata with search_text column (for content-synced FTS5)
  * - gif_category_map: WITHOUT ROWID, clustered by (category_id, gif_id)
- * - gifs_fts: Contentless FTS5 (content='', columnsize=0)
- * - gif_usage: Usage tracking for "recently used" feature (created on-device)
+ * - gifs_fts: Content-synced FTS5 (content='gifs') — supports per-row delete
+ * - gif_usage: Usage tracking for "recently used" (created on-device)
+ * - installed_packs: Tracks which packs are imported (pack_id TEXT, not integer)
  *
+ * Pack import: ATTACH mini pack.db, INSERT INTO main tables in single transaction.
+ * Pack removal: FTS5 delete commands per row, then DELETE from gifs/category_map.
  * Asset filenames derived at runtime: String.format("%06d.webp", gif_id)
  */
-class GifDatabase private constructor(context: Context) {
+class GifDatabase private constructor(private val appContext: Context) {
 
-    private val dbHelper: GifDatabaseHelper
-    private val db: SQLiteDatabase
-
-    init {
-        copyDatabaseIfNeeded(context)
-        dbHelper = GifDatabaseHelper(context)
-        db = dbHelper.readableDatabase
-    }
+    private val dbHelper: GifDatabaseHelper = GifDatabaseHelper(appContext)
 
     /**
      * Search GIFs using FTS5 full-text search.
-     * Uses contentless FTS5 — joins back to gifs table via rowid.
-     * Only returns available GIFs (is_available = 1).
-     * @param query Search query (supports prefix matching)
-     * @param limit Maximum results to return
+     * Content-synced FTS5 — joins via content_rowid='gif_id'.
      */
     suspend fun searchGifs(query: String, limit: Int = 100): List<Gif> = withContext(Dispatchers.IO) {
         if (query.isBlank()) return@withContext emptyList()
 
         val sanitizedQuery = sanitizeFtsQuery(query)
         val results = mutableListOf<Gif>()
+        val db = dbHelper.readableDatabase
 
-        // Contentless FTS5: rowid matches gif_id, join back for metadata
         val cursor = db.rawQuery(
             """
             SELECT g.gif_id, g.width, g.height, g.duration_ms, g.file_size,
-                   g.pack_id, g.is_available
+                   g.pack_id, g.search_text
             FROM gifs_fts fts
             JOIN gifs g ON g.gif_id = fts.rowid
             WHERE fts.search_text MATCH ?
-              AND g.is_available = 1
             ORDER BY rank
             LIMIT ?
             """.trimIndent(),
@@ -80,8 +66,6 @@ class GifDatabase private constructor(context: Context) {
 
     /**
      * Get all available GIFs in a specific category.
-     * @param category The category to filter by
-     * @param limit Maximum results
      */
     suspend fun getGifsByCategory(category: GifCategory, limit: Int = 200): List<Gif> =
         withContext(Dispatchers.IO) {
@@ -90,15 +74,15 @@ class GifDatabase private constructor(context: Context) {
             }
 
             val results = mutableListOf<Gif>()
+            val db = dbHelper.readableDatabase
 
             val cursor = db.rawQuery(
                 """
                 SELECT g.gif_id, g.width, g.height, g.duration_ms, g.file_size,
-                       g.pack_id, g.is_available
+                       g.pack_id, g.search_text
                 FROM gifs g
                 JOIN gif_category_map gcm ON g.gif_id = gcm.gif_id
                 WHERE gcm.category_id = ?
-                  AND g.is_available = 1
                 LIMIT ?
                 """.trimIndent(),
                 arrayOf(category.id.toString(), limit.toString())
@@ -118,15 +102,15 @@ class GifDatabase private constructor(context: Context) {
      */
     suspend fun getRecentlyUsedGifs(limit: Int = 50): List<Gif> = withContext(Dispatchers.IO) {
         val results = mutableListOf<Gif>()
+        val db = dbHelper.readableDatabase
 
         val cursor = db.rawQuery(
             """
             SELECT g.gif_id, g.width, g.height, g.duration_ms, g.file_size,
-                   g.pack_id, g.is_available
+                   g.pack_id, g.search_text
             FROM gifs g
             JOIN gif_usage u ON g.gif_id = u.gif_id
             WHERE u.use_count > 0
-              AND g.is_available = 1
             ORDER BY u.last_used DESC
             LIMIT ?
             """.trimIndent(),
@@ -145,7 +129,6 @@ class GifDatabase private constructor(context: Context) {
 
     /**
      * Record that a GIF was used (for recently used tracking).
-     * Writes to the writable database for gif_usage.
      */
     suspend fun recordGifUsage(gifId: Long) = withContext(Dispatchers.IO) {
         val now = System.currentTimeMillis()
@@ -165,12 +148,12 @@ class GifDatabase private constructor(context: Context) {
      * Get a single GIF by ID.
      */
     suspend fun getGifById(gifId: Long): Gif? = withContext(Dispatchers.IO) {
+        val db = dbHelper.readableDatabase
         val cursor = db.rawQuery(
             """
             SELECT g.gif_id, g.width, g.height, g.duration_ms, g.file_size,
-                   g.pack_id, g.is_available
-            FROM gifs g
-            WHERE g.gif_id = ?
+                   g.pack_id, g.search_text
+            FROM gifs g WHERE g.gif_id = ?
             """.trimIndent(),
             arrayOf(gifId.toString())
         )
@@ -185,24 +168,21 @@ class GifDatabase private constructor(context: Context) {
     }
 
     /**
-     * Get total count of available GIFs.
+     * Get total count of GIFs in the database.
      */
     fun getTotalGifCount(): Int {
-        val cursor = db.rawQuery("SELECT COUNT(*) FROM gifs WHERE is_available = 1", null)
-        return cursor.use {
-            if (it.moveToFirst()) it.getInt(0) else 0
-        }
+        val db = dbHelper.readableDatabase
+        val cursor = db.rawQuery("SELECT COUNT(*) FROM gifs", null)
+        return cursor.use { if (it.moveToFirst()) it.getInt(0) else 0 }
     }
 
     /**
-     * Get count of available GIFs in a category.
+     * Get count of GIFs in a category.
      */
     fun getCategoryCount(category: GifCategory): Int {
+        val db = dbHelper.readableDatabase
         if (category == GifCategory.RECENTLY_USED) {
-            val cursor = db.rawQuery(
-                "SELECT COUNT(*) FROM gif_usage WHERE use_count > 0",
-                null
-            )
+            val cursor = db.rawQuery("SELECT COUNT(*) FROM gif_usage WHERE use_count > 0", null)
             return cursor.use { if (it.moveToFirst()) it.getInt(0) else 0 }
         }
 
@@ -210,40 +190,218 @@ class GifDatabase private constructor(context: Context) {
             """
             SELECT COUNT(*) FROM gif_category_map gcm
             JOIN gifs g ON g.gif_id = gcm.gif_id
-            WHERE gcm.category_id = ? AND g.is_available = 1
+            WHERE gcm.category_id = ?
             """.trimIndent(),
             arrayOf(category.id.toString())
         )
         return cursor.use { if (it.moveToFirst()) it.getInt(0) else 0 }
     }
 
+    // ==================== PACK IMPORT ====================
+
     /**
-     * Mark GIFs as available/unavailable by pack_id.
-     * Called after downloading or deleting a pack.
+     * Import a GIF pack from a mini SQLite database file.
+     * Uses ATTACH DATABASE to merge pack entries into the main DB in a single transaction.
+     *
+     * The pack.db must have tables: gifs (with search_text), gif_category_map, categories.
+     *
+     * @param packDbFile Absolute path to the extracted pack.db file
+     * @param packId Unique string identifier for this pack
+     * @param packName Display name
+     * @param gifCount Number of GIFs in pack
+     * @param sizeBytes Total size of pack data on disk
+     * @return Number of GIFs actually imported
      */
-    suspend fun setPackAvailability(packId: Int, available: Boolean) = withContext(Dispatchers.IO) {
-        dbHelper.writableDatabase.execSQL(
-            "UPDATE gifs SET is_available = ? WHERE pack_id = ?",
-            arrayOf(if (available) 1 else 0, packId)
-        )
+    suspend fun importPack(
+        packDbFile: File,
+        packId: String,
+        packName: String,
+        gifCount: Int,
+        sizeBytes: Long
+    ): Int = withContext(Dispatchers.IO) {
+        val db = dbHelper.writableDatabase
+        var imported = 0
+
+        try {
+            db.execSQL("ATTACH DATABASE ? AS pack_db", arrayOf(packDbFile.absolutePath))
+
+            db.beginTransaction()
+            try {
+                // Merge categories (ignore duplicates)
+                db.execSQL("""
+                    INSERT OR IGNORE INTO categories (category_id, name, icon, sort_order)
+                    SELECT category_id, name, icon, sort_order FROM pack_db.categories
+                """)
+
+                // Import GIFs (replace if already exists from a previous import of same pack)
+                db.execSQL("""
+                    INSERT OR REPLACE INTO gifs (gif_id, width, height, duration_ms, file_size, pack_id, search_text, created_at)
+                    SELECT gif_id, width, height, duration_ms, file_size, pack_id, search_text, created_at
+                    FROM pack_db.gifs
+                """)
+
+                // Import category mappings (ignore duplicates)
+                db.execSQL("""
+                    INSERT OR IGNORE INTO gif_category_map (category_id, gif_id)
+                    SELECT category_id, gif_id FROM pack_db.gif_category_map
+                """)
+
+                // Rebuild FTS5 index to include new rows
+                // Content-synced FTS5 rebuild reads from the content table (gifs)
+                db.execSQL("INSERT INTO gifs_fts(gifs_fts) VALUES('rebuild')")
+
+                // Track installed pack
+                val now = System.currentTimeMillis()
+                db.execSQL("""
+                    INSERT OR REPLACE INTO installed_packs (pack_id, name, gif_count, installed_at, size_bytes)
+                    VALUES (?, ?, ?, ?, ?)
+                """, arrayOf(packId, packName, gifCount, now, sizeBytes))
+
+                // Count actual imports
+                val cursor = db.rawQuery("SELECT COUNT(*) FROM pack_db.gifs", null)
+                imported = cursor.use { if (it.moveToFirst()) it.getInt(0) else 0 }
+
+                db.setTransactionSuccessful()
+                Log.i(TAG, "Imported pack '$packId': $imported GIFs")
+            } finally {
+                db.endTransaction()
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to import pack '$packId'", e)
+            throw e
+        } finally {
+            try {
+                db.execSQL("DETACH DATABASE pack_db")
+            } catch (e: Exception) {
+                Log.w(TAG, "DETACH failed (may not be attached): ${e.message}")
+            }
+        }
+
+        imported
+    }
+
+    // ==================== PACK REMOVAL ====================
+
+    /**
+     * Remove a GIF pack — deletes all its entries from the database.
+     * Returns the list of gif IDs that were removed (caller uses this to delete files).
+     *
+     * Uses FTS5 delete commands before row deletion since content-synced FTS5
+     * requires explicit delete notifications.
+     */
+    suspend fun removePack(packId: String): List<Long> = withContext(Dispatchers.IO) {
+        val db = dbHelper.writableDatabase
+        val removedIds = mutableListOf<Long>()
+
+        // Look up the integer pack_id for this string packId
+        val intPackId = getIntPackId(packId) ?: run {
+            Log.w(TAG, "Pack '$packId' not found in packs table")
+            return@withContext emptyList()
+        }
+
+        db.beginTransaction()
+        try {
+            // Collect gif IDs to remove, along with search_text for FTS delete
+            val cursor = db.rawQuery(
+                "SELECT gif_id, search_text FROM gifs WHERE pack_id = ?",
+                arrayOf(intPackId.toString())
+            )
+            cursor.use {
+                while (it.moveToNext()) {
+                    val gifId = it.getLong(0)
+                    val searchText = it.getString(1) ?: ""
+                    removedIds.add(gifId)
+                    // Notify FTS5 about deletion (content-synced requires explicit delete)
+                    db.execSQL(
+                        "INSERT INTO gifs_fts(gifs_fts, rowid, search_text) VALUES('delete', ?, ?)",
+                        arrayOf(gifId, searchText)
+                    )
+                }
+            }
+
+            // Delete category mappings for these GIFs
+            if (removedIds.isNotEmpty()) {
+                // Batch delete in chunks to avoid SQL variable limit
+                for (chunk in removedIds.chunked(500)) {
+                    val placeholders = chunk.joinToString(",") { "?" }
+                    db.execSQL(
+                        "DELETE FROM gif_category_map WHERE gif_id IN ($placeholders)",
+                        chunk.map { it.toString() }.toTypedArray()
+                    )
+                }
+            }
+
+            // Delete the GIFs
+            db.execSQL("DELETE FROM gifs WHERE pack_id = ?", arrayOf(intPackId))
+
+            // Delete usage tracking for removed GIFs
+            if (removedIds.isNotEmpty()) {
+                for (chunk in removedIds.chunked(500)) {
+                    val placeholders = chunk.joinToString(",") { "?" }
+                    db.execSQL(
+                        "DELETE FROM gif_usage WHERE gif_id IN ($placeholders)",
+                        chunk.map { it.toString() }.toTypedArray()
+                    )
+                }
+            }
+
+            // Remove from installed_packs
+            db.execSQL("DELETE FROM installed_packs WHERE pack_id = ?", arrayOf(packId))
+
+            db.setTransactionSuccessful()
+            Log.i(TAG, "Removed pack '$packId': ${removedIds.size} GIFs deleted")
+        } finally {
+            db.endTransaction()
+        }
+
+        // VACUUM outside transaction to reclaim space
+        try {
+            db.execSQL("VACUUM")
+        } catch (e: Exception) {
+            Log.w(TAG, "VACUUM failed: ${e.message}")
+        }
+
+        removedIds
     }
 
     /**
-     * Get all pack IDs and their GIF counts.
+     * Remove all GIF data — deletes the database file entirely.
+     * Caller must also call GifAssetManager.clearAll() and release singletons.
      */
-    fun getPackInfo(): List<DbPackInfo> {
-        val results = mutableListOf<DbPackInfo>()
+    fun removeAllData() {
+        close()
+        val dbFile = appContext.getDatabasePath(DATABASE_NAME)
+        if (dbFile.exists()) {
+            dbFile.delete()
+            Log.i(TAG, "Deleted GIF database")
+        }
+        // Also delete journal/wal files
+        File(dbFile.path + "-journal").delete()
+        File(dbFile.path + "-wal").delete()
+        File(dbFile.path + "-shm").delete()
+    }
+
+    // ==================== PACK QUERIES ====================
+
+    /**
+     * Get list of installed packs.
+     */
+    fun getInstalledPacks(): List<InstalledPackInfo> {
+        val db = dbHelper.readableDatabase
+        val results = mutableListOf<InstalledPackInfo>()
         val cursor = db.rawQuery(
-            "SELECT pack_id, name, gif_count FROM packs ORDER BY pack_id",
+            "SELECT pack_id, name, gif_count, installed_at, size_bytes FROM installed_packs ORDER BY installed_at DESC",
             null
         )
         cursor.use {
             while (it.moveToNext()) {
                 results.add(
-                    DbPackInfo(
-                        id = it.getInt(0),
+                    InstalledPackInfo(
+                        packId = it.getString(0),
                         name = it.getString(1),
-                        gifCount = it.getInt(2)
+                        gifCount = it.getInt(2),
+                        installedAt = it.getLong(3),
+                        sizeBytes = it.getLong(4)
                     )
                 )
             }
@@ -252,29 +410,50 @@ class GifDatabase private constructor(context: Context) {
     }
 
     /**
-     * Get categories for a specific GIF.
+     * Check if a pack is already installed.
      */
-    private fun getCategoriesForGif(gifId: Long): List<GifCategory> {
-        val categories = mutableListOf<GifCategory>()
+    fun isPackInstalled(packId: String): Boolean {
+        val db = dbHelper.readableDatabase
+        val cursor = db.rawQuery(
+            "SELECT 1 FROM installed_packs WHERE pack_id = ?",
+            arrayOf(packId)
+        )
+        return cursor.use { it.moveToFirst() }
+    }
 
+    // ==================== INTERNAL HELPERS ====================
+
+    /**
+     * Look up the integer pack_id for a string pack identifier.
+     * The packs table maps string names → integer IDs used as FK in gifs table.
+     */
+    private fun getIntPackId(packId: String): Int? {
+        val db = dbHelper.readableDatabase
+        val cursor = db.rawQuery(
+            "SELECT pack_id FROM packs WHERE name = ?",
+            arrayOf(packId)
+        )
+        return cursor.use { if (it.moveToFirst()) it.getInt(0) else null }
+    }
+
+    private fun getCategoriesForGif(gifId: Long): List<GifCategory> {
+        val db = dbHelper.readableDatabase
+        val categories = mutableListOf<GifCategory>()
         val cursor = db.rawQuery(
             "SELECT category_id FROM gif_category_map WHERE gif_id = ?",
             arrayOf(gifId.toString())
         )
-
         cursor.use {
             while (it.moveToNext()) {
-                val catId = it.getInt(0)
-                GifCategory.fromId(catId)?.let { cat -> categories.add(cat) }
+                GifCategory.fromId(it.getInt(0))?.let { cat -> categories.add(cat) }
             }
         }
-
         return categories
     }
 
     /**
      * Convert cursor row to Gif object.
-     * V2 schema: no asset_name/thumbnail_name — derived from gif_id.
+     * V3 schema: includes search_text column.
      */
     private fun cursorToGif(cursor: Cursor): Gif {
         return Gif(
@@ -284,13 +463,10 @@ class GifDatabase private constructor(context: Context) {
             durationMs = cursor.getInt(cursor.getColumnIndexOrThrow("duration_ms")),
             fileSize = cursor.getInt(cursor.getColumnIndexOrThrow("file_size")),
             packId = cursor.getInt(cursor.getColumnIndexOrThrow("pack_id")),
-            isAvailable = cursor.getInt(cursor.getColumnIndexOrThrow("is_available")) == 1
+            searchText = cursor.getString(cursor.getColumnIndexOrThrow("search_text")) ?: ""
         )
     }
 
-    /**
-     * Sanitize query for FTS5 to prevent injection and handle special chars.
-     */
     private fun sanitizeFtsQuery(query: String): String {
         val sanitized = query
             .replace("\"", "")
@@ -298,56 +474,9 @@ class GifDatabase private constructor(context: Context) {
             .replace("*", "")
             .replace("-", " ")
             .trim()
-
-        // Prefix matching for partial words
         return sanitized.split(" ")
             .filter { it.isNotBlank() }
             .joinToString(" ") { "$it*" }
-    }
-
-    /**
-     * Copy pre-built database from assets or downloaded gzipped file.
-     * Supports both gifs_v2.db.gz (gzipped) and gifs_v2.db (raw).
-     */
-    private fun copyDatabaseIfNeeded(context: Context) {
-        val dbFile = context.getDatabasePath(DATABASE_NAME)
-
-        if (dbFile.exists()) {
-            // TODO: Check version and re-copy if DB asset is newer
-            return
-        }
-
-        dbFile.parentFile?.mkdirs()
-
-        // Try gzipped version first (smaller download)
-        val gzFile = File(context.filesDir, "gif_packs/$DATABASE_NAME.gz")
-        if (gzFile.exists()) {
-            try {
-                GZIPInputStream(gzFile.inputStream().buffered()).use { gzIn ->
-                    FileOutputStream(dbFile).use { out ->
-                        gzIn.copyTo(out)
-                    }
-                }
-                Log.i(TAG, "Decompressed GIF database from ${gzFile.name}")
-                return
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to decompress GIF database", e)
-                dbFile.delete()
-            }
-        }
-
-        // Try raw DB in assets
-        try {
-            context.assets.open(DATABASE_NAME).use { input ->
-                FileOutputStream(dbFile).use { output ->
-                    input.copyTo(output)
-                }
-            }
-            Log.i(TAG, "Copied GIF database from assets")
-        } catch (e: Exception) {
-            // Database not bundled yet — will be created empty by helper
-            Log.w(TAG, "GIF database not found in assets, using empty database")
-        }
     }
 
     fun close() {
@@ -356,25 +485,18 @@ class GifDatabase private constructor(context: Context) {
 
     companion object {
         private const val TAG = "GifDatabase"
-        const val DATABASE_NAME = "gifs_v2.db"
-        const val DATABASE_VERSION = 2
+        const val DATABASE_NAME = "gifs_v3.db"
+        const val DATABASE_VERSION = 3
 
         @Volatile
         private var instance: GifDatabase? = null
 
-        /**
-         * Get singleton instance of GifDatabase.
-         * Only call when gif_enabled is true in Config.
-         */
         fun getInstance(context: Context): GifDatabase {
             return instance ?: synchronized(this) {
                 instance ?: GifDatabase(context.applicationContext).also { instance = it }
             }
         }
 
-        /**
-         * Release singleton instance (call when GIF panel is disabled).
-         */
         fun release() {
             synchronized(this) {
                 instance?.close()
@@ -384,16 +506,18 @@ class GifDatabase private constructor(context: Context) {
     }
 }
 
-/** Pack metadata from database (lightweight — for DB queries). */
-data class DbPackInfo(
-    val id: Int,
+/** Installed pack metadata (from installed_packs table). */
+data class InstalledPackInfo(
+    val packId: String,
     val name: String,
-    val gifCount: Int
+    val gifCount: Int,
+    val installedAt: Long,
+    val sizeBytes: Long
 )
 
 /**
  * SQLiteOpenHelper for GIF database.
- * Creates v2 schema if database doesn't exist (fallback for empty DB).
+ * Creates V3 schema with content-synced FTS5 and installed_packs tracking.
  */
 class GifDatabaseHelper(context: Context) : SQLiteOpenHelper(
     context,
@@ -402,14 +526,14 @@ class GifDatabaseHelper(context: Context) : SQLiteOpenHelper(
     GifDatabase.DATABASE_VERSION
 ) {
     override fun onCreate(db: SQLiteDatabase) {
-        // Create v2 schema (empty DB fallback — normally pre-built DB is copied)
         db.execSQL(CREATE_CATEGORIES_TABLE)
-        db.execSQL(CREATE_PACKS_TABLE)
         db.execSQL(CREATE_GIFS_TABLE)
         db.execSQL(CREATE_GIF_CATEGORY_MAP_TABLE)
         db.execSQL(CREATE_GIFS_FTS_TABLE)
         db.execSQL(CREATE_GIF_USAGE_TABLE)
         db.execSQL(CREATE_USAGE_INDEX)
+        db.execSQL(CREATE_INSTALLED_PACKS_TABLE)
+        db.execSQL(CREATE_PACKS_TABLE)
 
         // Insert default categories
         for (category in GifCategory.entries) {
@@ -420,22 +544,19 @@ class GifDatabaseHelper(context: Context) : SQLiteOpenHelper(
                 )
             }
         }
-
-        // Insert default pack
-        db.execSQL("INSERT INTO packs (pack_id, name) VALUES (0, 'default')")
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        if (oldVersion < 2) {
-            // V1 → V2: Drop old tables and recreate (pre-built DB is re-downloaded)
-            db.execSQL("DROP TABLE IF EXISTS gifs_fts")
-            db.execSQL("DROP TABLE IF EXISTS gif_category_map")
-            db.execSQL("DROP TABLE IF EXISTS gif_usage")
-            db.execSQL("DROP TABLE IF EXISTS gifs")
-            db.execSQL("DROP TABLE IF EXISTS categories")
-            db.execSQL("DROP TABLE IF EXISTS packs")
-            onCreate(db)
-        }
+        // V2 → V3: Add search_text to gifs, switch to content-synced FTS5, add installed_packs
+        // Since GIF data comes entirely from imported packs, a clean recreation is safe.
+        db.execSQL("DROP TABLE IF EXISTS gifs_fts")
+        db.execSQL("DROP TABLE IF EXISTS gif_category_map")
+        db.execSQL("DROP TABLE IF EXISTS gif_usage")
+        db.execSQL("DROP TABLE IF EXISTS gifs")
+        db.execSQL("DROP TABLE IF EXISTS categories")
+        db.execSQL("DROP TABLE IF EXISTS packs")
+        db.execSQL("DROP TABLE IF EXISTS installed_packs")
+        onCreate(db)
     }
 
     companion object {
@@ -448,6 +569,7 @@ class GifDatabaseHelper(context: Context) : SQLiteOpenHelper(
             )
         """
 
+        // Packs lookup: maps string pack names → integer IDs used as FK in gifs
         private const val CREATE_PACKS_TABLE = """
             CREATE TABLE IF NOT EXISTS packs (
                 pack_id INTEGER PRIMARY KEY,
@@ -457,7 +579,7 @@ class GifDatabaseHelper(context: Context) : SQLiteOpenHelper(
             )
         """
 
-        // V2: No asset_name/thumbnail_name — derive from gif_id as "%06d.webp"
+        // V3: Added search_text column for content-synced FTS5
         private const val CREATE_GIFS_TABLE = """
             CREATE TABLE IF NOT EXISTS gifs (
                 gif_id INTEGER PRIMARY KEY,
@@ -466,7 +588,7 @@ class GifDatabaseHelper(context: Context) : SQLiteOpenHelper(
                 duration_ms INTEGER DEFAULT 0,
                 file_size INTEGER DEFAULT 0,
                 pack_id INTEGER DEFAULT 0 REFERENCES packs(pack_id),
-                is_available INTEGER DEFAULT 1,
+                search_text TEXT DEFAULT '',
                 created_at INTEGER DEFAULT 0
             )
         """
@@ -482,12 +604,12 @@ class GifDatabaseHelper(context: Context) : SQLiteOpenHelper(
             )
         """
 
-        // Contentless FTS5 — smallest possible search index
+        // V3: Content-synced FTS5 (supports per-row delete for pack removal)
         private const val CREATE_GIFS_FTS_TABLE = """
             CREATE VIRTUAL TABLE IF NOT EXISTS gifs_fts USING fts5(
                 search_text,
-                content='',
-                columnsize=0
+                content='gifs',
+                content_rowid='gif_id'
             )
         """
 
@@ -502,5 +624,16 @@ class GifDatabaseHelper(context: Context) : SQLiteOpenHelper(
 
         private const val CREATE_USAGE_INDEX =
             "CREATE INDEX IF NOT EXISTS idx_gif_usage ON gif_usage(last_used DESC)"
+
+        // Tracks installed packs (string pack_id, not integer)
+        private const val CREATE_INSTALLED_PACKS_TABLE = """
+            CREATE TABLE IF NOT EXISTS installed_packs (
+                pack_id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                gif_count INTEGER DEFAULT 0,
+                installed_at INTEGER DEFAULT 0,
+                size_bytes INTEGER DEFAULT 0
+            )
+        """
     }
 }
