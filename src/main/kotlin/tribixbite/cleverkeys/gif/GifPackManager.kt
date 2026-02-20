@@ -77,20 +77,28 @@ class GifPackManager private constructor(private val context: Context) {
 
             // Step 5: If replacing, remove existing pack first
             if (replaceExisting && database.isPackInstalled(manifest.packId)) {
-                val removedIds = database.removePack(manifest.packId)
-                assetManager.removeThumbnails(removedIds)
+                val result = database.removePack(manifest.packId)
+                assetManager.removeThumbnails(result.orphanedThumbIds)
+                assetManager.removeFullGifs(result.orphanedFullIds)
             }
 
-            // Step 6: Import database entries
+            // Step 6: Detect if pack includes full animated GIFs
+            val fullDir = File(tempDir, FULL_DIR)
+            val hasFullGifs = fullDir.exists() && fullDir.walkTopDown().any {
+                it.isFile && it.extension == "webp"
+            }
+
+            // Step 7: Import database entries
             val imported = database.importPack(
                 packDbFile = packDbFile,
                 packId = manifest.packId,
                 packName = manifest.name,
                 gifCount = manifest.gifCount,
-                sizeBytes = calculateExtractedSize(tempDir)
+                sizeBytes = calculateExtractedSize(tempDir),
+                hasFullGifs = hasFullGifs
             )
 
-            // Step 7: Copy thumbnails to app storage
+            // Step 8: Copy thumbnails to app storage
             val thumbsDir = File(tempDir, THUMBS_DIR)
             val thumbCount = if (thumbsDir.exists()) {
                 assetManager.importThumbnails(thumbsDir)
@@ -98,7 +106,14 @@ class GifPackManager private constructor(private val context: Context) {
                 0
             }
 
-            Log.i(TAG, "Pack '${manifest.packId}' imported: $imported DB entries, $thumbCount thumbnails")
+            // Step 9: Copy full animated GIFs if present
+            val fullCount = if (hasFullGifs) {
+                assetManager.importFullGifs(fullDir)
+            } else {
+                0
+            }
+
+            Log.i(TAG, "Pack '${manifest.packId}' imported: $imported DB, $thumbCount thumbs, $fullCount full GIFs")
 
             GifPackImportResult.Success(
                 packId = manifest.packId,
@@ -129,12 +144,17 @@ class GifPackManager private constructor(private val context: Context) {
     }
 
     /**
-     * Remove a specific pack — deletes DB entries and thumbnail files.
+     * Remove a specific pack — deletes DB entries and orphaned files.
+     * Multi-pack safe: only deletes files for gifs not claimed by other packs.
      */
     suspend fun removePack(packId: String) = withContext(Dispatchers.IO) {
-        val removedIds = database.removePack(packId)
-        assetManager.removeThumbnails(removedIds)
-        Log.i(TAG, "Removed pack '$packId': ${removedIds.size} GIFs")
+        val result = database.removePack(packId)
+        assetManager.removeThumbnails(result.orphanedThumbIds)
+        if (result.orphanedFullIds.isNotEmpty()) {
+            assetManager.removeFullGifs(result.orphanedFullIds)
+        }
+        Log.i(TAG, "Removed pack '$packId': ${result.orphanedThumbIds.size} thumbs, " +
+            "${result.orphanedFullIds.size} full GIFs cleaned")
     }
 
     /**
@@ -250,6 +270,7 @@ class GifPackManager private constructor(private val context: Context) {
         private const val MANIFEST_FILE = "manifest.json"
         private const val PACK_DB_FILE = "pack.db"
         private const val THUMBS_DIR = "thumbs"
+        private const val FULL_DIR = "full"
 
         const val GITHUB_RELEASES_URL =
             "https://github.com/tribixbite/CleverKeys/releases/tag/CleverKeys-GIF"

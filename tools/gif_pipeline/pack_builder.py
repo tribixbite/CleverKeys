@@ -351,15 +351,16 @@ def generate_manifest(pack_name: str, gifs: List[Dict],
 
 def write_pack_zip(pack_name: str, gifs: List[Dict],
                    processed_dir: Path, metadata_dir: Path,
-                   output_dir: Path, use_optimized: bool = True) -> Path:
+                   output_dir: Path, use_optimized: bool = True,
+                   include_full: bool = False) -> Path:
     """
     Create a ZIP archive matching the GifPackManager.kt expected format:
       manifest.json  — simple pack identification
       pack.db        — per-pack SQLite with gifs/categories/FTS rows
       thumbs/{partition}/{id}.webp — partitioned thumbnails
+      full/{partition}/{id}.webp   — partitioned full GIFs (optional)
 
-    Full-size GIF files are NOT included (thumbnails only for now).
-    Uses ZIP_STORED since WebP thumbnails are already compressed.
+    Uses ZIP_STORED since WebP files are already compressed.
     """
     zip_path = output_dir / f"{pack_name}.zip"
 
@@ -370,6 +371,11 @@ def write_pack_zip(pack_name: str, gifs: List[Dict],
     tmp_db_fd, tmp_db_path = tempfile.mkstemp(suffix=".db", prefix=f"pack_{pack_name}_")
     os.close(tmp_db_fd)
     tmp_db = Path(tmp_db_path)
+
+    # Resolve full GIF source directory
+    full_dir = processed_dir / ("optimized" if use_optimized else "full")
+    if not full_dir.exists():
+        full_dir = processed_dir / "full"
 
     try:
         print(f"  Building pack.db for {pack_name} ({len(gif_ids)} GIFs)...")
@@ -383,9 +389,11 @@ def write_pack_zip(pack_name: str, gifs: List[Dict],
 
         # Generate simplified manifest
         manifest = generate_manifest(pack_name, gifs)
+        if include_full:
+            manifest["has_full_gifs"] = True
         manifest_json = json.dumps(manifest, separators=(",", ":")).encode()
 
-        # Create the ZIP archive (ZIP_STORED — thumbnails are already WebP-compressed)
+        # Create the ZIP archive (ZIP_STORED — WebP is already compressed)
         with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_STORED) as zf:
             # 1. manifest.json
             zf.writestr("manifest.json", manifest_json)
@@ -400,12 +408,28 @@ def write_pack_zip(pack_name: str, gifs: List[Dict],
                     continue
 
                 file_id_int = int(entry["file_id"])
-                # Partition by id // 1000, zero-padded to 3 digits
                 partition = "%03d" % (file_id_int // 1000)
-                # Filename is zero-padded to 6 digits
                 thumb_name = "%06d.webp" % file_id_int
                 arcname = f"thumbs/{partition}/{thumb_name}"
                 zf.write(thumb_src, arcname)
+
+            # 4. Full animated GIFs (optional) in partitioned layout
+            if include_full:
+                full_count = 0
+                for entry in gifs:
+                    file_id_int = int(entry["file_id"])
+                    file_id_padded = "%06d" % file_id_int
+                    full_src = full_dir / f"{file_id_padded}.webp"
+                    if not full_src.exists():
+                        continue
+
+                    partition = "%03d" % (file_id_int // 1000)
+                    full_name = "%06d.webp" % file_id_int
+                    arcname = f"full/{partition}/{full_name}"
+                    zf.write(full_src, arcname)
+                    full_count += 1
+
+                print(f"  Included {full_count} full animated GIFs")
 
     finally:
         # Clean up temp pack.db

@@ -332,8 +332,20 @@ class KeyboardReceiver(
                     // Tap inserts the Giphy URL as text into the input field
                     val url = gif.getGiphyUrl()
                     val ic = keyboard2.currentInputConnection
+                    android.util.Log.d("GifPanel", "onGifSelected: url=$url ic=${ic != null} searchText='${gif.searchText}'")
                     if (url != null && ic != null) {
-                        ic.commitText(url, 1)
+                        val ok = ic.commitText(url, 1)
+                        android.util.Log.d("GifPanel", "commitText result=$ok")
+                    } else {
+                        // Fallback: if commitText can't work, copy URL to clipboard
+                        if (url != null) {
+                            val clip = android.content.ClipData.newPlainText("GIF URL", url)
+                            val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                            cm.setPrimaryClip(clip)
+                            Toast.makeText(context, "URL copied", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(context, "No URL for this GIF", Toast.LENGTH_SHORT).show()
+                        }
                     }
                     // Record usage and close GIF pane
                     handle_event_key(KeyValue.Event.SWITCH_BACK_GIF)
@@ -531,7 +543,7 @@ class KeyboardReceiver(
             container.addView(actionView)
         }
 
-        // "Copy URL" action
+        // "Copy URL" — copies the Giphy animated GIF URL
         val url = gif.getGiphyUrl()
         if (url != null) {
             addAction("Copy URL") {
@@ -542,15 +554,15 @@ class KeyboardReceiver(
             }
         }
 
-        // "Copy GIF file" action (if thumbnail file exists)
-        val thumbFile = java.io.File(context.filesDir, gif.getThumbnailPath())
-        if (thumbFile.exists()) {
-            addAction("Copy GIF file") {
+        // "Copy GIF" — only shown when full animated file exists on device
+        val fullGifFile = java.io.File(context.filesDir, gif.getFullPath())
+        if (fullGifFile.exists()) {
+            addAction("Copy GIF") {
                 try {
                     val uri = androidx.core.content.FileProvider.getUriForFile(
                         context,
                         "${context.packageName}.fileprovider",
-                        thumbFile
+                        fullGifFile
                     )
                     val clip = android.content.ClipData.newUri(
                         context.contentResolver,
@@ -561,8 +573,19 @@ class KeyboardReceiver(
                     cm.setPrimaryClip(clip)
                     Toast.makeText(context, "GIF copied", Toast.LENGTH_SHORT).show()
                 } catch (e: Exception) {
-                    android.util.Log.w("KeyboardReceiver", "Copy GIF file failed: ${e.message}")
+                    android.util.Log.w("KeyboardReceiver", "Copy GIF failed: ${e.message}")
                 }
+            }
+        }
+
+        // "Copy keywords"
+        val keywords = gif.getKeywords()
+        if (keywords.isNotEmpty()) {
+            addAction("Copy keywords") {
+                val clip = android.content.ClipData.newPlainText("GIF keywords", keywords.joinToString(", "))
+                val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                cm.setPrimaryClip(clip)
+                Toast.makeText(context, "Keywords copied", Toast.LENGTH_SHORT).show()
             }
         }
 

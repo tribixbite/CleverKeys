@@ -242,6 +242,7 @@ class GifDatabase private constructor(private val appContext: Context) {
      * @param packName Display name
      * @param gifCount Number of GIFs in pack
      * @param sizeBytes Total size of pack data on disk
+     * @param hasFullGifs Whether this pack includes full animated GIF files (not just thumbs)
      * @return Number of GIFs actually imported
      */
     suspend fun importPack(
@@ -249,7 +250,8 @@ class GifDatabase private constructor(private val appContext: Context) {
         packId: String,
         packName: String,
         gifCount: Int,
-        sizeBytes: Long
+        sizeBytes: Long,
+        hasFullGifs: Boolean = false
     ): Int = withContext(Dispatchers.IO) {
         val db = dbHelper.writableDatabase
         var imported = 0
@@ -276,9 +278,10 @@ class GifDatabase private constructor(private val appContext: Context) {
                     SELECT category_id, name, icon, sort_order FROM pack_db.categories
                 """)
 
-                // Import GIFs with the resolved integer pack_id
+                // Import GIFs — INSERT OR IGNORE so the first pack to provide a gif_id
+                // owns the row. Later packs with overlapping IDs won't overwrite.
                 db.execSQL("""
-                    INSERT OR REPLACE INTO gifs (gif_id, width, height, duration_ms, file_size, pack_id, search_text, created_at)
+                    INSERT OR IGNORE INTO gifs (gif_id, width, height, duration_ms, file_size, pack_id, search_text, created_at)
                     SELECT gif_id, width, height, duration_ms, file_size, ?, search_text, created_at
                     FROM pack_db.gifs
                 """, arrayOf(intPackId))
@@ -289,8 +292,14 @@ class GifDatabase private constructor(private val appContext: Context) {
                     SELECT category_id, gif_id FROM pack_db.gif_category_map
                 """)
 
+                // Record pack membership for each gif — enables clean multi-pack removal
+                val hasFullInt = if (hasFullGifs) 1 else 0
+                db.execSQL("""
+                    INSERT OR IGNORE INTO gif_pack_membership (gif_id, pack_id, has_full_gif)
+                    SELECT gif_id, ?, ? FROM pack_db.gifs
+                """, arrayOf(packId, hasFullInt))
+
                 // Rebuild FTS4 index to include new rows
-                // Content-synced FTS4 rebuild reads from the content table (gifs)
                 db.execSQL("INSERT INTO gifs_fts(gifs_fts) VALUES('rebuild')")
 
                 // Track installed pack
@@ -305,7 +314,7 @@ class GifDatabase private constructor(private val appContext: Context) {
                 imported = cursor.use { if (it.moveToFirst()) it.getInt(0) else 0 }
 
                 db.setTransactionSuccessful()
-                Log.i(TAG, "Imported pack '$packId': $imported GIFs")
+                Log.i(TAG, "Imported pack '$packId': $imported GIFs (hasFullGifs=$hasFullGifs)")
             } finally {
                 db.endTransaction()
             }
@@ -326,81 +335,79 @@ class GifDatabase private constructor(private val appContext: Context) {
     // ==================== PACK REMOVAL ====================
 
     /**
-     * Remove a GIF pack — deletes all its entries from the database.
-     * Returns the list of gif IDs that were removed (caller uses this to delete files).
+     * Remove a GIF pack — deletes memberships and any orphaned gifs.
+     * Returns [RemovePackResult] with IDs for thumbnail/full file cleanup.
      *
-     * Deletes rows from gifs/category_map first, then rebuilds FTS4 index.
+     * Multi-pack safe: only deletes gifs that have NO remaining memberships
+     * from other packs. Full GIF files are only flagged for deletion if no
+     * other pack claims them with has_full_gif=1.
      */
-    suspend fun removePack(packId: String): List<Long> = withContext(Dispatchers.IO) {
+    suspend fun removePack(packId: String): RemovePackResult = withContext(Dispatchers.IO) {
         val db = dbHelper.writableDatabase
-        val removedIds = mutableListOf<Long>()
-
-        // Look up the integer pack_id for this string packId
-        val intPackId = getIntPackId(packId) ?: run {
-            Log.w(TAG, "Pack '$packId' not found in packs table")
-            return@withContext emptyList()
-        }
+        val orphanedIds = mutableListOf<Long>()
+        val orphanedFullIds = mutableListOf<Long>()
 
         db.beginTransaction()
         try {
-            // Collect gif IDs to remove
-            val cursor = db.rawQuery(
-                "SELECT gif_id FROM gifs WHERE pack_id = ?",
-                arrayOf(intPackId.toString())
-            )
-            cursor.use {
-                while (it.moveToNext()) {
-                    removedIds.add(it.getLong(0))
+            // Find gif_ids that ONLY belong to this pack (orphaned after removal)
+            val orphanCursor = db.rawQuery("""
+                SELECT m.gif_id FROM gif_pack_membership m
+                WHERE m.pack_id = ?
+                  AND m.gif_id NOT IN (
+                      SELECT gif_id FROM gif_pack_membership WHERE pack_id != ?
+                  )
+            """, arrayOf(packId, packId))
+            orphanCursor.use {
+                while (it.moveToNext()) orphanedIds.add(it.getLong(0))
+            }
+
+            // Find gif_ids where this pack provided full GIFs and no other pack does
+            val fullOrphanCursor = db.rawQuery("""
+                SELECT m.gif_id FROM gif_pack_membership m
+                WHERE m.pack_id = ? AND m.has_full_gif = 1
+                  AND m.gif_id NOT IN (
+                      SELECT gif_id FROM gif_pack_membership
+                      WHERE pack_id != ? AND has_full_gif = 1
+                  )
+            """, arrayOf(packId, packId))
+            fullOrphanCursor.use {
+                while (it.moveToNext()) orphanedFullIds.add(it.getLong(0))
+            }
+
+            // Delete memberships for this pack
+            db.execSQL("DELETE FROM gif_pack_membership WHERE pack_id = ?", arrayOf(packId))
+
+            // Delete orphaned gifs (no remaining memberships) and their category mappings
+            if (orphanedIds.isNotEmpty()) {
+                for (chunk in orphanedIds.chunked(500)) {
+                    val ph = chunk.joinToString(",") { "?" }
+                    val args = chunk.map { it.toString() }.toTypedArray()
+                    db.execSQL("DELETE FROM gif_category_map WHERE gif_id IN ($ph)", args)
+                    db.execSQL("DELETE FROM gif_usage WHERE gif_id IN ($ph)", args)
+                    db.execSQL("DELETE FROM gifs WHERE gif_id IN ($ph)", args)
                 }
             }
 
-            // Delete category mappings for these GIFs
-            if (removedIds.isNotEmpty()) {
-                for (chunk in removedIds.chunked(500)) {
-                    val placeholders = chunk.joinToString(",") { "?" }
-                    db.execSQL(
-                        "DELETE FROM gif_category_map WHERE gif_id IN ($placeholders)",
-                        chunk.map { it.toString() }.toTypedArray()
-                    )
-                }
-            }
-
-            // Delete the GIFs
-            db.execSQL("DELETE FROM gifs WHERE pack_id = ?", arrayOf(intPackId))
-
-            // Rebuild FTS4 index after row deletion
-            // Content-synced FTS4 'rebuild' re-reads all remaining rows from gifs table
+            // Rebuild FTS4 index
             db.execSQL("INSERT INTO gifs_fts(gifs_fts) VALUES('rebuild')")
-
-            // Delete usage tracking for removed GIFs
-            if (removedIds.isNotEmpty()) {
-                for (chunk in removedIds.chunked(500)) {
-                    val placeholders = chunk.joinToString(",") { "?" }
-                    db.execSQL(
-                        "DELETE FROM gif_usage WHERE gif_id IN ($placeholders)",
-                        chunk.map { it.toString() }.toTypedArray()
-                    )
-                }
-            }
 
             // Remove from installed_packs and packs lookup table
             db.execSQL("DELETE FROM installed_packs WHERE pack_id = ?", arrayOf(packId))
             db.execSQL("DELETE FROM packs WHERE name = ?", arrayOf(packId))
 
             db.setTransactionSuccessful()
-            Log.i(TAG, "Removed pack '$packId': ${removedIds.size} GIFs deleted")
+            Log.i(TAG, "Removed pack '$packId': ${orphanedIds.size} orphaned gifs deleted, " +
+                "${orphanedFullIds.size} full GIF files to clean")
         } finally {
             db.endTransaction()
         }
 
-        // VACUUM outside transaction to reclaim space
-        try {
-            db.execSQL("VACUUM")
-        } catch (e: Exception) {
-            Log.w(TAG, "VACUUM failed: ${e.message}")
-        }
+        try { db.execSQL("VACUUM") } catch (_: Exception) {}
 
-        removedIds
+        RemovePackResult(
+            orphanedThumbIds = orphanedIds,
+            orphanedFullIds = orphanedFullIds
+        )
     }
 
     /**
@@ -524,8 +531,8 @@ class GifDatabase private constructor(private val appContext: Context) {
 
     companion object {
         private const val TAG = "GifDatabase"
-        const val DATABASE_NAME = "gifs_v4.db"
-        const val DATABASE_VERSION = 4
+        const val DATABASE_NAME = "gifs_v5.db"
+        const val DATABASE_VERSION = 5
 
         @Volatile
         private var instance: GifDatabase? = null
@@ -554,6 +561,14 @@ data class InstalledPackInfo(
     val sizeBytes: Long
 )
 
+/** Result of removing a pack — separated IDs for thumbnail vs full file cleanup. */
+data class RemovePackResult(
+    /** Gif IDs whose thumbnails should be deleted (no other pack references them). */
+    val orphanedThumbIds: List<Long>,
+    /** Gif IDs whose full animated files should be deleted (no other pack provides them). */
+    val orphanedFullIds: List<Long>
+)
+
 /**
  * SQLiteOpenHelper for GIF database.
  * Creates V4 schema with content-synced FTS4 and installed_packs tracking.
@@ -573,6 +588,7 @@ class GifDatabaseHelper(context: Context) : SQLiteOpenHelper(
         db.execSQL(CREATE_USAGE_INDEX)
         db.execSQL(CREATE_INSTALLED_PACKS_TABLE)
         db.execSQL(CREATE_PACKS_TABLE)
+        db.execSQL(CREATE_GIF_PACK_MEMBERSHIP_TABLE)
 
         // Insert default categories
         for (category in GifCategory.entries) {
@@ -586,8 +602,8 @@ class GifDatabaseHelper(context: Context) : SQLiteOpenHelper(
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        // V3 → V4: Switch from FTS5 to FTS4 (FTS5 not available on all Android devices).
         // Since GIF data comes entirely from imported packs, a clean recreation is safe.
+        db.execSQL("DROP TABLE IF EXISTS gif_pack_membership")
         db.execSQL("DROP TABLE IF EXISTS gifs_fts")
         db.execSQL("DROP TABLE IF EXISTS gif_category_map")
         db.execSQL("DROP TABLE IF EXISTS gif_usage")
@@ -672,6 +688,19 @@ class GifDatabaseHelper(context: Context) : SQLiteOpenHelper(
                 gif_count INTEGER DEFAULT 0,
                 installed_at INTEGER DEFAULT 0,
                 size_bytes INTEGER DEFAULT 0
+            )
+        """
+
+        // V5: Multi-pack ownership — tracks which gif_ids belong to which packs.
+        // A gif can be in multiple packs. On removal, only delete gifs with zero
+        // remaining memberships so overlapping packs don't lose shared entries.
+        // has_full_gif: 1 if this pack provided the full animated file (not just thumb)
+        private const val CREATE_GIF_PACK_MEMBERSHIP_TABLE = """
+            CREATE TABLE IF NOT EXISTS gif_pack_membership (
+                gif_id INTEGER NOT NULL,
+                pack_id TEXT NOT NULL,
+                has_full_gif INTEGER DEFAULT 0,
+                PRIMARY KEY (gif_id, pack_id)
             )
         """
     }

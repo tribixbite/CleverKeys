@@ -173,21 +173,66 @@ class GifAssetManager private constructor(private val context: Context) {
     }
 
     /**
+     * Import full animated GIF files from an extracted pack directory.
+     * Handles both flat layout (full/000001.webp) and partitioned layout (full/000/000001.webp).
+     *
+     * @return number of full GIFs imported
+     */
+    suspend fun importFullGifs(sourceFullDir: File): Int = withContext(Dispatchers.IO) {
+        if (!sourceFullDir.exists() || !sourceFullDir.isDirectory) return@withContext 0
+
+        var count = 0
+        sourceFullDir.walkTopDown()
+            .filter { it.isFile && it.extension == "webp" }
+            .forEach { srcFile ->
+                val idStr = srcFile.nameWithoutExtension
+                val id = idStr.toLongOrNull() ?: return@forEach
+                val destFile = fullFileById(id)
+                destFile.parentFile?.mkdirs()
+                try {
+                    srcFile.copyTo(destFile, overwrite = true)
+                    count++
+                } catch (e: Exception) {
+                    Log.w(TAG, "Failed to import full GIF $idStr: ${e.message}")
+                }
+            }
+        Log.i(TAG, "Imported $count full GIFs from ${sourceFullDir.absolutePath}")
+        count
+    }
+
+    /**
      * Remove thumbnail and full animation files for specific GIF IDs.
      * Cleans up empty partition directories afterward.
      */
     suspend fun removeThumbnails(gifIds: List<Long>) = withContext(Dispatchers.IO) {
+        removeFiles(gifIds, thumb = true, full = true)
+    }
+
+    /**
+     * Remove only full animated GIF files (keep thumbnails).
+     * Used when a pack providing full GIFs is removed but another pack still
+     * references the same gif_ids for thumbnail browsing.
+     */
+    suspend fun removeFullGifs(gifIds: List<Long>) = withContext(Dispatchers.IO) {
+        removeFiles(gifIds, thumb = false, full = true)
+    }
+
+    private fun removeFiles(gifIds: List<Long>, thumb: Boolean, full: Boolean) {
         val partitionDirs = mutableSetOf<File>()
         for (id in gifIds) {
-            val thumb = thumbFileById(id)
-            if (thumb.exists()) {
-                thumb.parentFile?.let { partitionDirs.add(it) }
-                thumb.delete()
+            if (thumb) {
+                val thumbF = thumbFileById(id)
+                if (thumbF.exists()) {
+                    thumbF.parentFile?.let { partitionDirs.add(it) }
+                    thumbF.delete()
+                }
             }
-            val full = fullFileById(id)
-            if (full.exists()) {
-                full.parentFile?.let { partitionDirs.add(it) }
-                full.delete()
+            if (full) {
+                val fullF = fullFileById(id)
+                if (fullF.exists()) {
+                    fullF.parentFile?.let { partitionDirs.add(it) }
+                    fullF.delete()
+                }
             }
         }
         // Clean up empty partition subdirectories
@@ -196,7 +241,7 @@ class GifAssetManager private constructor(private val context: Context) {
                 dir.delete()
             }
         }
-        Log.i(TAG, "Removed files for ${gifIds.size} GIFs")
+        Log.i(TAG, "Removed files for ${gifIds.size} GIFs (thumb=$thumb, full=$full)")
     }
 
     /**
