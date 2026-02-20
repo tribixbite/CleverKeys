@@ -198,6 +198,237 @@ def classify_gif(keywords: List[str], description: str) -> List[int]:
     return matched_categories[:3]  # Max 3 categories per GIF
 
 
+def build_pack_database(
+    processed_dir: str,
+    metadata_dir: str,
+    output_path: str,
+    gif_ids: List[str],
+    use_optimized: bool = True,
+) -> Dict:
+    """
+    Build a per-pack mini SQLite database (V3 schema) containing only the specified GIF entries.
+
+    V3 schema matches GifDatabase.kt:
+    - gifs table with search_text column (no is_available, no pack_id)
+    - categories table
+    - gif_category_map (WITHOUT ROWID)
+    - content-synced FTS5: content='gifs', content_rowid='gif_id'
+    - gif_usage table (empty)
+
+    Used by pack_builder.py to create self-contained pack.db files.
+    """
+    processed_path = Path(processed_dir)
+    metadata_path = Path(metadata_dir)
+    output_file = Path(output_path)
+
+    # Ensure output directory exists
+    output_file.parent.mkdir(parents=True, exist_ok=True)
+
+    # Remove existing database
+    if output_file.exists():
+        output_file.unlink()
+
+    # Resolve GIF source directory — prefer optimized/ over full/
+    if use_optimized:
+        gif_dir = processed_path / "optimized"
+        if not gif_dir.exists() or not any(gif_dir.glob("*.webp")):
+            print("Warning: optimized/ empty, falling back to full/")
+            gif_dir = processed_path / "full"
+    else:
+        gif_dir = processed_path / "full"
+
+    # Load processing results for dimensions/sizes
+    results_file = processed_path / "processing_results.json"
+    results_data: Dict = {}
+    if results_file.exists():
+        with open(results_file) as f:
+            data = json.load(f)
+            for r in data.get("results", []):
+                results_data[r["id"]] = r
+
+    # Create database with V3 schema
+    conn = sqlite3.connect(output_file)
+    cursor = conn.cursor()
+
+    # Optimize for size: read-only DB shipped inside a pack ZIP
+    cursor.execute("PRAGMA journal_mode = OFF")
+    cursor.execute("PRAGMA synchronous = OFF")
+    cursor.execute("PRAGMA page_size = 4096")
+
+    # V3 schema — matches GifDatabase.kt V3
+    cursor.executescript("""
+        -- Categories table
+        CREATE TABLE categories (
+            category_id INTEGER PRIMARY KEY,
+            name TEXT NOT NULL UNIQUE,
+            icon TEXT NOT NULL,
+            sort_order INTEGER NOT NULL
+        );
+
+        -- Main GIF metadata table (V3: includes search_text, no is_available/pack_id)
+        CREATE TABLE gifs (
+            gif_id INTEGER PRIMARY KEY,
+            width INTEGER NOT NULL,
+            height INTEGER NOT NULL,
+            duration_ms INTEGER DEFAULT 0,
+            file_size INTEGER DEFAULT 0,
+            search_text TEXT DEFAULT '',
+            created_at INTEGER DEFAULT 0
+        );
+
+        -- Many-to-many: GIF to categories
+        CREATE TABLE gif_category_map (
+            category_id INTEGER NOT NULL,
+            gif_id INTEGER NOT NULL,
+            PRIMARY KEY (category_id, gif_id),
+            FOREIGN KEY (gif_id) REFERENCES gifs(gif_id) ON DELETE CASCADE,
+            FOREIGN KEY (category_id) REFERENCES categories(category_id) ON DELETE CASCADE
+        ) WITHOUT ROWID;
+
+        -- Content-synced FTS5 (V3: supports per-row delete for pack removal)
+        CREATE VIRTUAL TABLE gifs_fts USING fts5(
+            search_text,
+            content='gifs',
+            content_rowid='gif_id'
+        );
+
+        -- FTS sync triggers
+        CREATE TRIGGER gifs_ai AFTER INSERT ON gifs BEGIN
+            INSERT INTO gifs_fts(rowid, search_text) VALUES (new.gif_id, new.search_text);
+        END;
+        CREATE TRIGGER gifs_ad AFTER DELETE ON gifs BEGIN
+            INSERT INTO gifs_fts(gifs_fts, rowid, search_text) VALUES('delete', old.gif_id, old.search_text);
+        END;
+        CREATE TRIGGER gifs_au AFTER UPDATE ON gifs BEGIN
+            INSERT INTO gifs_fts(gifs_fts, rowid, search_text) VALUES('delete', old.gif_id, old.search_text);
+            INSERT INTO gifs_fts(rowid, search_text) VALUES (new.gif_id, new.search_text);
+        END;
+
+        -- Usage tracking (created on-device, empty in pack DB)
+        CREATE TABLE gif_usage (
+            gif_id INTEGER PRIMARY KEY,
+            use_count INTEGER DEFAULT 0,
+            last_used INTEGER DEFAULT 0,
+            FOREIGN KEY (gif_id) REFERENCES gifs(gif_id) ON DELETE CASCADE
+        );
+        CREATE INDEX idx_gif_usage ON gif_usage(last_used DESC);
+    """)
+
+    # Insert categories
+    for cat_id, cat_data in CATEGORIES.items():
+        cursor.execute(
+            "INSERT INTO categories (category_id, name, icon, sort_order) VALUES (?, ?, ?, ?)",
+            (cat_id, cat_data["name"], cat_data["icon"], cat_id)
+        )
+
+    # Process and insert only the specified GIF IDs
+    stats: Dict = {
+        "inserted": 0,
+        "failed": 0,
+        "skipped": 0,
+        "categories_assigned": 0,
+    }
+
+    pbar = tqdm(gif_ids, desc="Building pack database")
+
+    for gif_id_str in pbar:
+        # Normalize to zero-padded 6-digit string
+        gif_id_str = gif_id_str.strip().lstrip("0") or "0"
+        gif_id_padded = gif_id_str.zfill(6)
+
+        gif_file = gif_dir / f"{gif_id_padded}.webp"
+        if not gif_file.exists():
+            # Try unpadded filename as fallback
+            gif_file = gif_dir / f"{gif_id_str}.webp"
+            if not gif_file.exists():
+                stats["skipped"] += 1
+                continue
+
+        # Load metadata for keyword extraction
+        meta_file = metadata_path / f"{gif_id_padded}.json"
+        description = ""
+        slug_words = ""
+        if meta_file.exists():
+            try:
+                with open(meta_file) as f:
+                    meta = json.load(f)
+                description = meta.get("description", "")
+                # Giphy slugs contain hyphenated keyword chains
+                slug = meta.get("slug", "")
+                if slug:
+                    slug_words = slug.replace("-", " ").lower()
+            except (json.JSONDecodeError, OSError):
+                pass
+
+        # Get dimensions from processing results
+        result = results_data.get(gif_id_padded, {})
+        width = result.get("width", 200)
+        height = result.get("height", 200)
+        duration_ms = result.get("duration_ms", 0)
+        file_size = gif_file.stat().st_size
+
+        # Extract keywords and classify
+        combined_text = f"{description} {slug_words}"
+        keywords = extract_keywords(combined_text)
+        categories = classify_gif(keywords, combined_text)
+        search_text = " ".join(keywords)
+
+        gif_id_int = int(gif_id_str.lstrip("0") or "0")
+
+        try:
+            # Insert GIF record with search_text (V3 schema — no pack_id/is_available)
+            cursor.execute(
+                """INSERT INTO gifs
+                   (gif_id, width, height, duration_ms, file_size, search_text, created_at)
+                   VALUES (?, ?, ?, ?, ?, ?, 0)""",
+                (gif_id_int, width, height, duration_ms, file_size, search_text)
+            )
+
+            # Category mappings
+            for cat_id in categories:
+                cursor.execute(
+                    "INSERT OR IGNORE INTO gif_category_map (category_id, gif_id) VALUES (?, ?)",
+                    (cat_id, gif_id_int)
+                )
+                stats["categories_assigned"] += 1
+
+            stats["inserted"] += 1
+
+        except Exception as e:
+            print(f"\nError inserting {gif_id_padded}: {e}")
+            stats["failed"] += 1
+
+        pbar.set_postfix({"inserted": stats["inserted"], "failed": stats["failed"]})
+
+    # Commit and optimize
+    conn.commit()
+
+    # Collect final stats
+    cursor.execute("SELECT COUNT(*) FROM gifs")
+    total_gifs = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM gif_category_map")
+    total_mappings = cursor.fetchone()[0]
+
+    # Vacuum to minimize file size
+    cursor.execute("VACUUM")
+    conn.close()
+
+    db_size = output_file.stat().st_size
+
+    print(f"\nPack database built successfully!")
+    print(f"  Total GIFs: {total_gifs:,}")
+    print(f"  Category mappings: {total_mappings:,}")
+    print(f"  Skipped (not found): {stats['skipped']}")
+    print(f"  Database size: {db_size / 1024:.1f} KB")
+    print(f"  Output: {output_file}")
+
+    stats["total_gifs"] = total_gifs
+    stats["db_size"] = db_size
+
+    return stats
+
+
 def build_database(
     processed_dir: str,
     metadata_dir: str,
@@ -539,16 +770,48 @@ def main():
         "--use-full", action="store_true", default=False,
         help="Use full/ directory instead of optimized/"
     )
+    parser.add_argument(
+        "--pack-mode", action="store_true", default=False,
+        help="Build per-pack mini DB (V3 schema) instead of monolithic DB"
+    )
+    parser.add_argument(
+        "--gif-ids", type=str, default=None,
+        help="Comma-separated list of GIF IDs to include (for --pack-mode)"
+    )
+    parser.add_argument(
+        "--gif-ids-file", type=str, default=None,
+        help="File containing GIF IDs, one per line (for --pack-mode)"
+    )
 
     args = parser.parse_args()
 
-    stats = build_database(
-        processed_dir=args.processed,
-        metadata_dir=args.metadata,
-        output_path=args.output,
-        limit=args.limit,
-        use_optimized=not args.use_full,
-    )
+    if args.pack_mode:
+        # Load GIF IDs from args
+        gif_ids: List[str] = []
+        if args.gif_ids:
+            gif_ids = [id.strip() for id in args.gif_ids.split(",")]
+        elif args.gif_ids_file:
+            with open(args.gif_ids_file) as f:
+                gif_ids = [line.strip() for line in f if line.strip()]
+        else:
+            print("ERROR: --pack-mode requires --gif-ids or --gif-ids-file")
+            sys.exit(1)
+
+        stats = build_pack_database(
+            processed_dir=args.processed,
+            metadata_dir=args.metadata,
+            output_path=args.output,
+            gif_ids=gif_ids,
+            use_optimized=not args.use_full,
+        )
+    else:
+        stats = build_database(
+            processed_dir=args.processed,
+            metadata_dir=args.metadata,
+            output_path=args.output,
+            limit=args.limit,
+            use_optimized=not args.use_full,
+        )
 
     if stats.get("inserted", 0) == 0:
         print("Warning: No GIFs were inserted!")
