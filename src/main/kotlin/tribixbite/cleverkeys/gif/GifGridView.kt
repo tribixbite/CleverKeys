@@ -14,10 +14,14 @@ import kotlinx.coroutines.*
 import java.io.File
 
 /**
- * Manages a RecyclerView-based GIF grid with Coil image loading.
+ * Manages a RecyclerView-based GIF grid with Coil image loading and pagination.
  *
  * Replaces the legacy GridView+BaseAdapter approach with RecyclerView+ViewHolder
  * for better view recycling in the memory-constrained IME context.
+ *
+ * Pagination: 100 items per page (same as clipboard). When total items exceed
+ * ITEMS_PER_PAGE, the onPaginationChanged callback fires with page info for
+ * the UI to show prev/next controls.
  *
  * Coil handles:
  * - Async thumbnail loading from files
@@ -31,6 +35,9 @@ class GifGridManager(
 ) {
     private var gifList: List<Gif> = emptyList()
     private var currentCategory: GifCategory = GifCategory.RECENTLY_USED
+    private var currentSearchQuery: String = ""
+    private var currentPage: Int = 0
+    private var totalItems: Int = 0
 
     private val assetManager = GifAssetManager.getInstance(context)
     private val database = GifDatabase.getInstance(context)
@@ -49,6 +56,14 @@ class GifGridManager(
 
     /** Callback for long-press preview. */
     var onGifLongPress: ((Gif, View) -> Unit)? = null
+
+    /**
+     * Pagination state callback.
+     * @param needsPagination true if total items exceed ITEMS_PER_PAGE
+     * @param currentPage 1-indexed page number
+     * @param totalPages total number of pages
+     */
+    var onPaginationChanged: ((needsPagination: Boolean, currentPage: Int, totalPages: Int) -> Unit)? = null
 
     init {
         recyclerView.layoutManager = GridLayoutManager(context, columns)
@@ -71,6 +86,8 @@ class GifGridManager(
      */
     fun setCategory(category: GifCategory) {
         currentCategory = category
+        currentSearchQuery = ""
+        currentPage = 0
         scope.launch { loadCategory(category) }
     }
 
@@ -78,24 +95,78 @@ class GifGridManager(
      * Search GIFs by query.
      */
     fun search(query: String) {
+        currentSearchQuery = query
+        currentPage = 0
         scope.launch {
-            gifList = if (query.isBlank()) {
-                database.getRecentlyUsedGifs(50)
+            if (query.isBlank()) {
+                gifList = database.getRecentlyUsedGifs(50)
+                totalItems = gifList.size
             } else {
-                database.searchGifs(query, 100)
+                totalItems = database.countSearchResults(query)
+                gifList = database.searchGifs(query, ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
             }
             adapter.notifyDataSetChanged()
+            recyclerView.scrollToPosition(0)
+            notifyPagination()
         }
     }
 
-    /** Current result count. */
+    /** Current result count on this page. */
     fun getResultCount(): Int = gifList.size
 
+    /** Navigate to next page. */
+    fun nextPage() {
+        if (!hasNextPage()) return
+        currentPage++
+        scope.launch { reloadCurrentView() }
+    }
+
+    /** Navigate to previous page. */
+    fun previousPage() {
+        if (currentPage <= 0) return
+        currentPage--
+        scope.launch { reloadCurrentView() }
+    }
+
+    fun hasNextPage(): Boolean = (currentPage + 1) * ITEMS_PER_PAGE < totalItems
+    fun hasPreviousPage(): Boolean = currentPage > 0
+
     private suspend fun loadCategory(category: GifCategory) {
-        gifList = database.getGifsByCategory(category, 200)
+        totalItems = database.getCategoryCount(category)
+        gifList = database.getGifsByCategory(category, ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
         withContext(Dispatchers.Main) {
             adapter.notifyDataSetChanged()
+            recyclerView.scrollToPosition(0)
+            notifyPagination()
         }
+    }
+
+    /** Reload current view (category or search) at current page offset. */
+    private suspend fun reloadCurrentView() {
+        if (currentSearchQuery.isNotBlank()) {
+            gifList = database.searchGifs(currentSearchQuery, ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+        } else {
+            gifList = database.getGifsByCategory(currentCategory, ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+        }
+        withContext(Dispatchers.Main) {
+            adapter.notifyDataSetChanged()
+            recyclerView.scrollToPosition(0)
+            notifyPagination()
+        }
+    }
+
+    private fun notifyPagination() {
+        val totalPages = getTotalPages()
+        onPaginationChanged?.invoke(
+            totalItems > ITEMS_PER_PAGE,
+            currentPage + 1,  // 1-indexed for display
+            totalPages
+        )
+    }
+
+    private fun getTotalPages(): Int {
+        return if (totalItems <= 0) 1
+        else (totalItems + ITEMS_PER_PAGE - 1) / ITEMS_PER_PAGE
     }
 
     /** Clean up resources. */
@@ -175,6 +246,9 @@ class GifGridManager(
     }
 
     companion object {
+        /** Items per page — matches clipboard pagination (100 items). */
+        const val ITEMS_PER_PAGE = 100
+
         /** Thumbnail decode target size (px). Keeps Coil memory low. */
         private const val THUMB_SIZE_PX = 200
 

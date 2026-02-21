@@ -39,21 +39,21 @@ class GifDatabase private constructor(private val appContext: Context) {
      * longer than 4 chars, tries splitting it into two subwords and re-searching.
      * This handles compound words like "eyeroll" matching "eye roll" in the index.
      */
-    suspend fun searchGifs(query: String, limit: Int = 100): List<Gif> = withContext(Dispatchers.IO) {
+    suspend fun searchGifs(query: String, limit: Int = 100, offset: Int = 0): List<Gif> = withContext(Dispatchers.IO) {
         if (query.isBlank()) return@withContext emptyList()
 
         val db = dbHelper.readableDatabase
         val sanitizedQuery = sanitizeFtsQuery(query)
-        var results = executeFtsSearch(db, sanitizedQuery, limit)
+        var results = executeFtsSearch(db, sanitizedQuery, limit, offset)
 
         // Compound word fallback: if single word > 4 chars with no FTS results,
         // try splitting into two subwords. Handles "eyeroll" → "eye* roll*".
-        if (results.isEmpty()) {
+        if (results.isEmpty() && offset == 0) {
             val word = query.trim().lowercase().replace(Regex("[^a-z0-9]"), "")
             if (word.length > 4 && !query.trim().contains(" ")) {
                 for (i in 3..(word.length - 3)) {
                     val splitQuery = "${word.substring(0, i)}* ${word.substring(i)}*"
-                    results = executeFtsSearch(db, splitQuery, limit)
+                    results = executeFtsSearch(db, splitQuery, limit, offset)
                     if (results.isNotEmpty()) break
                 }
             }
@@ -66,9 +66,32 @@ class GifDatabase private constructor(private val appContext: Context) {
     }
 
     /**
+     * Count total search results for pagination.
+     */
+    suspend fun countSearchResults(query: String): Int = withContext(Dispatchers.IO) {
+        if (query.isBlank()) return@withContext 0
+        val db = dbHelper.readableDatabase
+        val sanitizedQuery = sanitizeFtsQuery(query)
+        var count = countFtsResults(db, sanitizedQuery)
+
+        // Compound word fallback for count too
+        if (count == 0) {
+            val word = query.trim().lowercase().replace(Regex("[^a-z0-9]"), "")
+            if (word.length > 4 && !query.trim().contains(" ")) {
+                for (i in 3..(word.length - 3)) {
+                    val splitQuery = "${word.substring(0, i)}* ${word.substring(i)}*"
+                    count = countFtsResults(db, splitQuery)
+                    if (count > 0) break
+                }
+            }
+        }
+        count
+    }
+
+    /**
      * Execute a single FTS4 MATCH query and return raw Gif results.
      */
-    private fun executeFtsSearch(db: SQLiteDatabase, ftsQuery: String, limit: Int): List<Gif> {
+    private fun executeFtsSearch(db: SQLiteDatabase, ftsQuery: String, limit: Int, offset: Int = 0): List<Gif> {
         val results = mutableListOf<Gif>()
         try {
             val cursor = db.rawQuery(
@@ -78,9 +101,9 @@ class GifDatabase private constructor(private val appContext: Context) {
                 FROM gifs_fts fts
                 JOIN gifs g ON g.gif_id = fts.docid
                 WHERE fts.search_text MATCH ?
-                LIMIT ?
+                LIMIT ? OFFSET ?
                 """.trimIndent(),
-                arrayOf(ftsQuery, limit.toString())
+                arrayOf(ftsQuery, limit.toString(), offset.toString())
             )
             cursor.use {
                 while (it.moveToNext()) {
@@ -94,15 +117,31 @@ class GifDatabase private constructor(private val appContext: Context) {
     }
 
     /**
+     * Count FTS results without loading full rows.
+     */
+    private fun countFtsResults(db: SQLiteDatabase, ftsQuery: String): Int {
+        return try {
+            val cursor = db.rawQuery(
+                "SELECT COUNT(*) FROM gifs_fts WHERE search_text MATCH ?",
+                arrayOf(ftsQuery)
+            )
+            cursor.use { if (it.moveToFirst()) it.getInt(0) else 0 }
+        } catch (e: Exception) {
+            Log.w(TAG, "FTS count failed for '$ftsQuery': ${e.message}")
+            0
+        }
+    }
+
+    /**
      * Get all available GIFs in a specific category.
      */
-    suspend fun getGifsByCategory(category: GifCategory, limit: Int = 200): List<Gif> =
+    suspend fun getGifsByCategory(category: GifCategory, limit: Int = 200, offset: Int = 0): List<Gif> =
         withContext(Dispatchers.IO) {
             if (category == GifCategory.RECENTLY_USED) {
                 return@withContext getRecentlyUsedGifs(limit)
             }
             if (category == GifCategory.ALL) {
-                return@withContext getAllGifs(limit)
+                return@withContext getAllGifs(limit, offset)
             }
 
             val results = mutableListOf<Gif>()
@@ -115,9 +154,9 @@ class GifDatabase private constructor(private val appContext: Context) {
                 FROM gifs g
                 JOIN gif_category_map gcm ON g.gif_id = gcm.gif_id
                 WHERE gcm.category_id = ?
-                LIMIT ?
+                LIMIT ? OFFSET ?
                 """.trimIndent(),
-                arrayOf(category.id.toString(), limit.toString())
+                arrayOf(category.id.toString(), limit.toString(), offset.toString())
             )
 
             cursor.use {
@@ -202,7 +241,7 @@ class GifDatabase private constructor(private val appContext: Context) {
     /**
      * Get all GIFs regardless of category (for initial overview display).
      */
-    suspend fun getAllGifs(limit: Int = 200): List<Gif> = withContext(Dispatchers.IO) {
+    suspend fun getAllGifs(limit: Int = 200, offset: Int = 0): List<Gif> = withContext(Dispatchers.IO) {
         val results = mutableListOf<Gif>()
         val db = dbHelper.readableDatabase
 
@@ -212,9 +251,9 @@ class GifDatabase private constructor(private val appContext: Context) {
                    g.pack_id, g.search_text
             FROM gifs g
             ORDER BY g.gif_id
-            LIMIT ?
+            LIMIT ? OFFSET ?
             """.trimIndent(),
-            arrayOf(limit.toString())
+            arrayOf(limit.toString(), offset.toString())
         )
 
         cursor.use {

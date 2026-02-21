@@ -393,6 +393,22 @@ class KeyboardReceiver(
                     handle_event_key(KeyValue.Event.SWITCH_BACK_GIF)
                 }
 
+                // Wire up pagination controls
+                val paginationBar = gifPaneView.findViewById<android.widget.LinearLayout>(R.id.gif_pagination_bar)
+                val pageInfo = gifPaneView.findViewById<TextView>(R.id.gif_page_info)
+                val pagePrev = gifPaneView.findViewById<TextView>(R.id.gif_page_prev)
+                val pageNext = gifPaneView.findViewById<TextView>(R.id.gif_page_next)
+
+                gifGrid?.onPaginationChanged = { needsPagination, currentPage, totalPages ->
+                    paginationBar?.visibility = if (needsPagination) View.VISIBLE else View.GONE
+                    pageInfo?.text = "$currentPage / $totalPages"
+                    pagePrev?.alpha = if (gifGrid.hasPreviousPage()) 1.0f else 0.3f
+                    pageNext?.alpha = if (gifGrid.hasNextPage()) 1.0f else 0.3f
+                }
+
+                pagePrev?.setOnClickListener { gifGrid?.previousPage() }
+                pageNext?.setOnClickListener { gifGrid?.nextPage() }
+
                 // Wire up category buttons — clear search + switch grid category
                 val groupButtons = gifPaneView.findViewById<GifGroupButtonsBar>(R.id.gif_group_buttons)
                 groupButtons?.setOnCategorySelectedListener {
