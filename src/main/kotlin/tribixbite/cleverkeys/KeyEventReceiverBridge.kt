@@ -114,6 +114,19 @@ class KeyEventReceiverBridge(
         receiver?.backspaceEmojiSearch()
     }
 
+    // GIF search delegation — same pattern as emoji/clipboard
+    override fun isGifPaneOpen(): Boolean {
+        return receiver?.isGifPaneOpen() ?: false
+    }
+
+    override fun appendToGifSearch(text: String) {
+        receiver?.appendToGifSearch(text)
+    }
+
+    override fun backspaceGifSearch() {
+        receiver?.backspaceGifSearch()
+    }
+
     // v1.2.7: Smart punctuation - track if last space was auto-inserted
     override fun wasLastSpaceAutoInserted(): Boolean {
         return contextTracker?.lastSpaceWasAutoInserted ?: false
