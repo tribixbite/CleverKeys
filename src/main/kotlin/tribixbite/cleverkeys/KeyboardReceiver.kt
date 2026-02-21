@@ -84,6 +84,8 @@ class KeyboardReceiver(
 
     // GIF search: reference to search EditText for key routing
     private var gifSearchInput: EditText? = null
+    // GIF search active flag — like EmojiSearchManager.searchActive / ClipboardManager.searchMode
+    private var gifSearchActive: Boolean = false
 
     /**
      * Sets references to views for content pane management.
@@ -164,7 +166,8 @@ class KeyboardReceiver(
         currentPaneType = PaneType.NONE
         emojiSearchManager?.onPaneClosed()
         clipboardManager.resetSearchOnHide()
-        // Clear GIF search reference so isGifPaneOpen() returns false
+        // Clear GIF search state so isGifPaneOpen() returns false
+        gifSearchActive = false
         gifSearchInput = null
     }
 
@@ -301,7 +304,7 @@ class KeyboardReceiver(
                 if (!Config.globalConfig().gif_enabled) return
 
                 // Toggle behavior: if GIF pane already visible, close it
-                if (gifSearchInput != null) {
+                if (gifSearchActive) {
                     handle_event_key(KeyValue.Event.SWITCH_BACK_GIF)
                     return
                 }
@@ -359,9 +362,12 @@ class KeyboardReceiver(
                     showGifPopup(gif, anchor)
                 }
 
-                // Wire up search bar — store reference for key routing
+                // Wire up search bar — store reference and activate routing flag
+                // (same pattern as EmojiSearchManager.searchActive / ClipboardManager.searchMode)
                 val searchInput = gifPaneView.findViewById<EditText>(R.id.gif_search_input)
                 gifSearchInput = searchInput
+                gifSearchActive = true
+                searchInput?.requestFocus()
                 val searchClear = gifPaneView.findViewById<ImageButton>(R.id.gif_search_clear)
                 val noResults = gifPaneView.findViewById<TextView>(R.id.gif_no_results)
 
@@ -406,7 +412,8 @@ class KeyboardReceiver(
                 // #41 v4: Notify emoji search manager pane is closing
                 emojiSearchManager?.onPaneClosed()
 
-                // Clear GIF search reference when pane closes
+                // Clear GIF search state when pane closes
+                gifSearchActive = false
                 gifSearchInput = null
 
                 // Reset pane tracking
@@ -671,23 +678,30 @@ class KeyboardReceiver(
         emojiSearchManager?.backspaceSearch()
     }
 
-    // GIF search routing — uses view reference as source of truth
-    // (unlike emoji/clipboard which have dedicated managers with their own state tracking,
-    // GIF pane state flags get reset by resetContentPaneState() on onFinishInputView,
-    // which can fire while the pane is still visually attached)
+    // GIF search routing — uses dedicated boolean flag like emoji/clipboard
+    // (searchActive flag is independent of content pane state flags which get
+    // reset by resetContentPaneState() on onFinishInputView)
     override fun isGifPaneOpen(): Boolean {
-        return gifSearchInput != null
+        return gifSearchActive
     }
 
     override fun appendToGifSearch(text: String) {
-        gifSearchInput?.append(text)
+        // Use setText + setSelection (same pattern as EmojiSearchManager.appendToSearch)
+        // EditText.append() doesn't reliably work when the IME owns the view
+        val input = gifSearchInput ?: return
+        val current = input.text?.toString() ?: ""
+        val newText = current + text
+        input.setText(newText)
+        input.setSelection(newText.length)
     }
 
     override fun backspaceGifSearch() {
         val input = gifSearchInput ?: return
-        val editable = input.text ?: return
-        if (editable.isNotEmpty()) {
-            editable.delete(editable.length - 1, editable.length)
+        val current = input.text?.toString() ?: ""
+        if (current.isNotEmpty()) {
+            val newText = current.dropLast(1)
+            input.setText(newText)
+            input.setSelection(newText.length)
         }
     }
 }
