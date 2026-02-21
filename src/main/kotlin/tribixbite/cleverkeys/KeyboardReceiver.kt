@@ -531,7 +531,7 @@ class KeyboardReceiver(
             ViewGroup.LayoutParams.WRAP_CONTENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply {
-            isFocusable = true
+            isFocusable = false // Must be false — focusable popup steals focus from content pane
             isTouchable = true
             isOutsideTouchable = true
             elevation = 8f

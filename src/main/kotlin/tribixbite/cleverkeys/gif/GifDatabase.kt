@@ -32,31 +32,30 @@ class GifDatabase private constructor(private val appContext: Context) {
     private val dbHelper: GifDatabaseHelper = GifDatabaseHelper(appContext)
 
     /**
-     * Search GIFs using FTS4 full-text search.
+     * Search GIFs using FTS4 full-text search with compound word fallback.
      * Content-synced FTS4 — joins via docid matching gif_id.
+     *
+     * If the initial FTS query returns no results and the query is a single word
+     * longer than 4 chars, tries splitting it into two subwords and re-searching.
+     * This handles compound words like "eyeroll" matching "eye roll" in the index.
      */
     suspend fun searchGifs(query: String, limit: Int = 100): List<Gif> = withContext(Dispatchers.IO) {
         if (query.isBlank()) return@withContext emptyList()
 
-        val sanitizedQuery = sanitizeFtsQuery(query)
-        val results = mutableListOf<Gif>()
         val db = dbHelper.readableDatabase
+        val sanitizedQuery = sanitizeFtsQuery(query)
+        var results = executeFtsSearch(db, sanitizedQuery, limit)
 
-        val cursor = db.rawQuery(
-            """
-            SELECT g.gif_id, g.width, g.height, g.duration_ms, g.file_size,
-                   g.pack_id, g.search_text
-            FROM gifs_fts fts
-            JOIN gifs g ON g.gif_id = fts.docid
-            WHERE fts.search_text MATCH ?
-            LIMIT ?
-            """.trimIndent(),
-            arrayOf(sanitizedQuery, limit.toString())
-        )
-
-        cursor.use {
-            while (it.moveToNext()) {
-                results.add(cursorToGif(it))
+        // Compound word fallback: if single word > 4 chars with no FTS results,
+        // try splitting into two subwords. Handles "eyeroll" → "eye* roll*".
+        if (results.isEmpty()) {
+            val word = query.trim().lowercase().replace(Regex("[^a-z0-9]"), "")
+            if (word.length > 4 && !query.trim().contains(" ")) {
+                for (i in 3..(word.length - 3)) {
+                    val splitQuery = "${word.substring(0, i)}* ${word.substring(i)}*"
+                    results = executeFtsSearch(db, splitQuery, limit)
+                    if (results.isNotEmpty()) break
+                }
             }
         }
 
@@ -64,6 +63,34 @@ class GifDatabase private constructor(private val appContext: Context) {
         results.map { gif ->
             gif.copy(categories = getCategoriesForGif(gif.id))
         }
+    }
+
+    /**
+     * Execute a single FTS4 MATCH query and return raw Gif results.
+     */
+    private fun executeFtsSearch(db: SQLiteDatabase, ftsQuery: String, limit: Int): List<Gif> {
+        val results = mutableListOf<Gif>()
+        try {
+            val cursor = db.rawQuery(
+                """
+                SELECT g.gif_id, g.width, g.height, g.duration_ms, g.file_size,
+                       g.pack_id, g.search_text
+                FROM gifs_fts fts
+                JOIN gifs g ON g.gif_id = fts.docid
+                WHERE fts.search_text MATCH ?
+                LIMIT ?
+                """.trimIndent(),
+                arrayOf(ftsQuery, limit.toString())
+            )
+            cursor.use {
+                while (it.moveToNext()) {
+                    results.add(cursorToGif(it))
+                }
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "FTS search failed for '$ftsQuery': ${e.message}")
+        }
+        return results
     }
 
     /**

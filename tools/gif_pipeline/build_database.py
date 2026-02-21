@@ -176,7 +176,19 @@ def extract_keywords(description: str) -> List[str]:
             seen.add(kw)
             unique_keywords.append(kw)
 
-    return unique_keywords[:20]  # Limit to 20 keywords
+    # Generate compound word forms for adjacent keyword pairs.
+    # "eye roll" → also index "eyeroll" so single-word searches work.
+    compounds = []
+    for idx in range(len(unique_keywords) - 1):
+        a, b = unique_keywords[idx], unique_keywords[idx + 1]
+        if len(a) >= 3 and len(b) >= 3:
+            compound = a + b
+            if compound not in seen:
+                compounds.append(compound)
+                seen.add(compound)
+    unique_keywords.extend(compounds)
+
+    return unique_keywords[:25]  # Limit to 25 keywords (extra room for compounds)
 
 
 def classify_gif(keywords: List[str], description: str) -> List[int]:
