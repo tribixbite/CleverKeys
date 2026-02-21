@@ -442,9 +442,18 @@ Issues already implemented, just need verification + close:
     - Outliers (>P90 file size) isolated into separate packs
     - Modes: test5k, all, full, thumbs, thumbs-all, personal
   - Test pack built: test-popular-5k.zip (167 MB, 5000 full + 5000 thumbs)
+  - Bug fixes (session 2026-02-21):
+    - [x] GIF search routing through KeyEventReceiverBridge (was missing delegation)
+    - [x] GIF search text input uses setText+setSelection (not append) + gifSearchActive flag
+    - [x] PopupWindow isFocusable=false (prevents content pane disappearing on long-press)
+    - [x] Compound word search fallback (eyeroll → eye* roll*) in GifDatabase
+    - [x] Pipeline: extract_keywords generates compound forms for adjacent pairs
+    - [x] GIF grid pagination (100 items/page, prev/next buttons, matching clipboard)
+    - [x] GifDatabase: offset support for paginated queries + countSearchResults
   - Remaining:
-    - [ ] Install & test 5k pack import on device (ADB reconnection pending)
-    - [ ] Verify tap inserts URL, long-press popup, conditional Copy GIF
+    - [ ] Install & test APK with all fixes (APK in ~/storage/shared/Download/)
+    - [ ] Verify: search "eyeroll", long-press popup, pagination controls
+    - [ ] Rebuild test-5k pack with updated pipeline (compound word indexing)
     - [ ] Build full category pack set (--mode all)
     - [ ] Build personal 25k full + all thumbs pack
     - [ ] Publish packs to GitHub Releases
