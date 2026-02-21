@@ -164,6 +164,8 @@ class KeyboardReceiver(
         currentPaneType = PaneType.NONE
         emojiSearchManager?.onPaneClosed()
         clipboardManager.resetSearchOnHide()
+        // Clear GIF search reference so isGifPaneOpen() returns false
+        gifSearchInput = null
     }
 
     /**
@@ -299,7 +301,7 @@ class KeyboardReceiver(
                 if (!Config.globalConfig().gif_enabled) return
 
                 // Toggle behavior: if GIF pane already visible, close it
-                if (currentPaneType == PaneType.GIF && isContentPaneShowing) {
+                if (gifSearchInput != null) {
                     handle_event_key(KeyValue.Event.SWITCH_BACK_GIF)
                     return
                 }
@@ -669,9 +671,12 @@ class KeyboardReceiver(
         emojiSearchManager?.backspaceSearch()
     }
 
-    // GIF search routing — same pattern as clipboard/emoji search
+    // GIF search routing — uses view reference as source of truth
+    // (unlike emoji/clipboard which have dedicated managers with their own state tracking,
+    // GIF pane state flags get reset by resetContentPaneState() on onFinishInputView,
+    // which can fire while the pane is still visually attached)
     override fun isGifPaneOpen(): Boolean {
-        return currentPaneType == PaneType.GIF && isContentPaneShowing
+        return gifSearchInput != null
     }
 
     override fun appendToGifSearch(text: String) {
