@@ -230,13 +230,27 @@ class ShortSwipeIntentTest {
     }
 
     @Test
-    fun `preset Termux Command has SERVICE targetType`() {
-        val preset = IntentDefinition.PRESETS.find { it.name == "Termux Command" }
+    fun `preset Termux Command Background has SERVICE targetType`() {
+        val preset = IntentDefinition.PRESETS.find { it.name == "Termux Command (Background)" }
 
         assertThat(preset).isNotNull()
         assertThat(preset!!.targetType).isEqualTo(IntentTargetType.SERVICE)
         assertThat(preset.packageName).isEqualTo("com.termux")
         assertThat(preset.className).isEqualTo("com.termux.app.RunCommandService")
+        assertThat(preset.extras).containsEntry("com.termux.RUN_COMMAND_BACKGROUND", "true")
+        assertThat(preset.extras).containsEntry("com.termux.RUN_COMMAND_SESSION_ACTION", "0")
+    }
+
+    @Test
+    fun `preset Termux Tab Visible has SERVICE targetType with BACKGROUND false`() {
+        val preset = IntentDefinition.PRESETS.find { it.name == "Termux Tab (Visible)" }
+
+        assertThat(preset).isNotNull()
+        assertThat(preset!!.targetType).isEqualTo(IntentTargetType.SERVICE)
+        assertThat(preset.packageName).isEqualTo("com.termux")
+        assertThat(preset.className).isEqualTo("com.termux.app.RunCommandService")
+        assertThat(preset.extras).containsEntry("com.termux.RUN_COMMAND_BACKGROUND", "false")
+        assertThat(preset.extras).containsEntry("com.termux.RUN_COMMAND_SESSION_ACTION", "0")
     }
 
     @Test
@@ -256,6 +270,8 @@ class ShortSwipeIntentTest {
         assertThat(presetNames).contains("Dial Phone")
         assertThat(presetNames).contains("Send Email")
         assertThat(presetNames).contains("Open Settings")
+        assertThat(presetNames).contains("Termux Command (Background)")
+        assertThat(presetNames).contains("Termux Tab (Visible)")
     }
 
     // =========================================================================

@@ -101,7 +101,7 @@ data class Gif(
      */
     fun matchesQuery(query: String): Boolean {
         val queryLower = query.lowercase().trim()
-        return searchText.contains(queryLower) ||
+        return searchText.lowercase().contains(queryLower) ||
                categories.any { cat -> cat.keywords.any { it.contains(queryLower) } }
     }
 
