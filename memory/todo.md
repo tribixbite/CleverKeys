@@ -454,8 +454,11 @@ Issues already implemented, just need verification + close:
     - [x] build_discord_pack.py: full pipeline (metadata→convert→thumbnail→pack.db→ZIP)
     - [x] Fix pack size target: split by cumulative bytes (~100 MB per ZIP, not 5k GIFs)
     - [x] User cleaned duplicates + oversized files (7814→7323 source files)
-    - [x] Conversion complete: 5,231 converted, 24 failed (corrupt/broken source files)
-    - [x] 6 packs built (100MB×5 + 76MB×1 = 575 MB total, 5,231 GIFs)
+    - [x] Conversion complete: 5,232 converted, 23 failed (corrupt source files)
+    - [x] 6 packs built (100MB×5 + 76MB×1 = 575 MB total, 5,232 GIFs)
+    - [x] Metadata backfill: media_url slug parsing + Tenor short URL resolution
+    - [x] backfill_metadata.py: offline + online (HTTP redirect) enrichment script
+    - [x] Tenor keyword coverage 95%→100%, pack search_text 97%→99%
     - [ ] Test import of discord-community packs on device
   - Remaining:
     - [ ] Install & test APK with all fixes (APK in ~/storage/shared/Download/)
