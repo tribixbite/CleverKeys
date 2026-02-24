@@ -407,6 +407,86 @@ Issues already implemented, just need verification + close:
   - clipboard-history.md: fixed NW→SW, removed long-press features
   - short-swipes.md: fixed numbers direction N→NE
 
+## Pre-Release Audit (v1.3.0-rc — feature/gif-panel-clean)
+
+### Feature Changelog Since v1.2.9
+
+**New Features:**
+1. **GIF Panel (Offline)** — Full offline GIF system with no INTERNET permission
+   - File-picker import of ZIP packs (SAF/ACTION_OPEN_DOCUMENT)
+   - V4→V5 schema: FTS4 search, pack management, gif_pack_membership table
+   - Category browsing (17 emotion categories + Recently Used + All)
+   - GIF search via keyboard, compound word fallback (eyeroll → eye* roll*)
+   - Tap inserts Giphy URL, long-press shows copy/share PopupWindow
+   - Pagination (100 items/page) matching clipboard pattern
+   - Settings UI: enable toggle, grid columns, import/remove/list packs
+   - Share intent filter for ZIP files
+   - 7 new source files: Gif, GifCategory, GifDatabase, GifAssetManager, GifPackManager, GifGridView, GifGroupButtonsBar
+2. **Intent Action Type for Short Swipes** — Launch Android intents from swipe gestures
+   - IntentDefinition data class with 12 presets (browser, share, termux, maps, etc.)
+   - IntentEditorDialog with preset chips + full custom editing
+   - Termux: background + visible tab presets with SESSION_ACTION
+   - Toast feedback on all dispatch failures
+   - KeyValueParser `intent:'json'` syntax for XML round-trip
+3. **Discord GIF Pack Pipeline** — Build packs from real Discord usage data
+   - build_discord_pack.py: metadata→convert→thumbnail→pack.db→ZIP
+   - backfill_metadata.py: Tenor URL resolution + media_url slug parsing
+   - Category-based pack builder (build_all_packs.py) with 7 groups
+   - Byte-based splitting (~100 MB per pack for GitHub downloads)
+
+**Bug Fixes:**
+- Fix: Gif.matchesQuery() case-insensitive (was only lowering query, not searchText)
+- Fix: PopupWindow isFocusable=false (prevents content pane disappearing on long-press)
+- Fix: GIF search routing through KeyEventReceiverBridge
+- Fix: FTS5→FTS4 migration (FTS5 not available on all Android builds)
+- Fix: Termux intent SESSION_ACTION + background/visible presets
+- Fix: Intent dispatch toast feedback on all failure paths
+
+**Test Coverage:**
+- 857 pure JVM tests (was ~781 at v1.2.9)
+- 75 new GIF tests (GifTest: 43, GifCategoryTest: 32)
+- ShortSwipeIntentTest updated for Termux preset changes
+- All tests pass on ARM64 via `./gradlew runPureTests`
+
+**Infrastructure:**
+- BeamSearchEngine testability refactor (ONNX-free, DecoderSessionInterface)
+- Pipeline integration tests with fake decoder
+- calculateMatchQuality length mismatch fix
+
+### Regression Risk Matrix (Manual Testing)
+
+| Area | Risk | What to Test | Why |
+|------|------|-------------|-----|
+| **GIF panel open/close** | HIGH | Enable GIFs → tap GIF key → panel opens → tap again → closes | New panel may interfere with emoji/clipboard panel state |
+| **GIF import** | HIGH | Settings → Import Pack → select ZIP → verify count | Core new feature, ATTACH DATABASE could fail on edge cases |
+| **GIF search** | HIGH | Open GIF panel → type search → results update | New search routing through KeyEventReceiverBridge |
+| **GIF long-press** | MED | Long-press GIF → popup menu → Copy/Share | PopupWindow focus steal fixed but needs device testing |
+| **GIF pagination** | MED | Scroll to bottom → "Next" button → page 2 loads | Offset-based queries, boundary conditions |
+| **GIF pack remove** | MED | Settings → remove pack → verify GIFs gone | DELETE + VACUUM + file cleanup chain |
+| **Keyboard typing** | HIGH | Normal typing, swipe typing, autocorrect | Any regression in core typing is critical |
+| **Short swipe intents** | MED | Configure Termux intent → swipe → command runs | New executor paths with toast feedback |
+| **Emoji/clipboard panels** | MED | Open emoji → close → open clipboard → close | GIF panel shares ViewFlipper with these |
+| **Content pane switching** | HIGH | GIF → emoji → clipboard → close → type → reopen | Panel state machine with 3 panels + keyboard |
+| **Settings search** | LOW | Search "GIF" → settings appear | New searchable entries added |
+| **Profile export/import** | LOW | Export profile → import on fresh install | Intent mappings in export format |
+| **FTS4 search quality** | MED | Search "laughing" → relevant results | FTS4 compound word tokenization |
+| **Pack ZIP validation** | LOW | Import corrupt/invalid ZIP → graceful error | Error handling in GifPackManager |
+| **Memory under load** | MED | Import large pack (5000+ GIFs) → browse → type | Coil image loading + RecyclerView recycling |
+
+### Test Commands
+```bash
+# Build and install release APK
+cd ../cleverkeys-gif-module && ./build-on-termux.sh
+
+# Run all pure JVM tests (857 tests)
+./gradlew runPureTests
+
+# Run single test class
+./gradlew runPureTests -PtestClass=GifTest
+```
+
+---
+
 ## In Progress
 - 🔄 Subkey System Unification (Option D) - awaiting user answers to clarifying questions
   - See: `memory/subkey-unification-research.md`
@@ -459,9 +539,14 @@ Issues already implemented, just need verification + close:
     - [x] Metadata backfill: media_url slug parsing + Tenor short URL resolution
     - [x] backfill_metadata.py: offline + online (HTTP redirect) enrichment script
     - [x] Tenor keyword coverage 95%→100%, pack search_text 97%→99%
+    - [x] 6 discord-community ZIPs uploaded to GitHub pre-release (575 MB)
+    - [x] Pre-release audit: 857 tests pass, regression risk matrix mapped
+    - [x] Fixed matchesQuery case-sensitivity bug (caught by new tests)
+    - [x] Updated ShortSwipeIntentTest for renamed Termux presets
     - [ ] Test import of discord-community packs on device
   - Remaining:
-    - [ ] Install & test APK with all fixes (APK in ~/storage/shared/Download/)
+    - [ ] Build release APK and install on device
+    - [ ] Manual regression testing (see Regression Risk Matrix above)
     - [ ] Verify: search "eyeroll", long-press popup, pagination controls
     - [ ] Rebuild Giphy packs with updated pipeline (compound word indexing)
     - [ ] Build missing Giphy categories (universal, cats, outliers)
