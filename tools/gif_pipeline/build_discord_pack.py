@@ -49,7 +49,7 @@ from collections import Counter, defaultdict
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
-from urllib.parse import unquote, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
 from PIL import Image
 from tqdm import tqdm
@@ -193,8 +193,21 @@ def extract_metadata(url: str, info: Dict) -> Dict:
         meta["source_id"] = parsed["tenor_id"]
         meta["slug"] = parsed["slug"]
         meta["keywords"] = parsed["keywords"]
-        # Build description from keywords
         meta["description"] = " ".join(parsed["keywords"]).title() if parsed["keywords"] else ""
+
+        # Fallback for short Tenor URLs (tenor.com/xFlV.gif) — extract from media_url
+        if not meta["keywords"] and meta["media_url"] and "tenor.com" in meta["media_url"]:
+            media_path = urlparse(meta["media_url"]).path
+            media_filename = media_path.split("/")[-1] if "/" in media_path else ""
+            if media_filename and "." in media_filename:
+                stem = media_filename.rsplit(".", 1)[0]
+                if stem and len(stem) > 2:
+                    words = stem.replace("-", " ").replace("_", " ").lower().split()
+                    kw = [w for w in words if w not in STOP_WORDS and len(w) > 1]
+                    if kw:
+                        meta["slug"] = stem
+                        meta["keywords"] = kw
+                        meta["description"] = " ".join(kw).title()
 
     elif "giphy.com" in url:
         parsed = parse_giphy_url(url)
@@ -211,13 +224,24 @@ def extract_metadata(url: str, info: Dict) -> Dict:
 
     elif "discord" in url:
         meta["source"] = "discord"
-        # Try to extract original filename from Discord CDN URL
-        path = urlparse(url).path
-        fname = path.split("/")[-1].split("?")[0]
-        if fname and not fname.startswith("http"):
-            stem = fname.rsplit(".", 1)[0] if "." in fname else fname
-            words = re.sub(r"[^a-z0-9]", " ", stem.lower()).split()
-            meta["keywords"] = [w for w in words if len(w) > 2 and w not in STOP_WORDS]
+        # Extract emoji name from ?name= query param (e.g. ?name=WAAAAAAAH)
+        parsed_url = urlparse(url)
+        params = parse_qs(parsed_url.query)
+        name = params.get("name", [""])[0]
+        if name:
+            words = re.sub(r"([a-z])([A-Z])", r"\1 \2", name)
+            words = re.sub(r"[^a-zA-Z0-9\s]", " ", words).lower().split()
+            meta["keywords"] = [w for w in words if len(w) > 1 and w not in STOP_WORDS]
+            meta["description"] = name
+            meta["slug"] = name.lower()
+        else:
+            # Fallback: extract from filename
+            path = parsed_url.path
+            fname = path.split("/")[-1].split("?")[0]
+            if fname and not fname.startswith("http"):
+                stem = fname.rsplit(".", 1)[0] if "." in fname else fname
+                words = re.sub(r"[^a-z0-9]", " ", stem.lower()).split()
+                meta["keywords"] = [w for w in words if len(w) > 2 and w not in STOP_WORDS]
     else:
         meta["source"] = "other"
 
