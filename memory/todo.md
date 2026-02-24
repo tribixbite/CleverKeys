@@ -450,12 +450,18 @@ Issues already implemented, just need verification + close:
     - [x] Pipeline: extract_keywords generates compound forms for adjacent pairs
     - [x] GIF grid pagination (100 items/page, prev/next buttons, matching clipboard)
     - [x] GifDatabase: offset support for paginated queries + countSearchResults
+  - Discord community pack (session 2026-02-24):
+    - [x] build_discord_pack.py: full pipeline (metadata→convert→thumbnail→pack.db→ZIP)
+    - [x] Fix pack size target: split by cumulative bytes (~100 MB per ZIP, not 5k GIFs)
+    - [x] User cleaned duplicates + oversized files (7814→7323 source files)
+    - [x] Conversion complete: 5,231 converted, 24 failed (corrupt/broken source files)
+    - [x] 6 packs built (100MB×5 + 76MB×1 = 575 MB total, 5,231 GIFs)
+    - [ ] Test import of discord-community packs on device
   - Remaining:
     - [ ] Install & test APK with all fixes (APK in ~/storage/shared/Download/)
     - [ ] Verify: search "eyeroll", long-press popup, pagination controls
-    - [ ] Rebuild test-5k pack with updated pipeline (compound word indexing)
-    - [ ] Build full category pack set (--mode all)
-    - [ ] Build personal 25k full + all thumbs pack
+    - [ ] Rebuild Giphy packs with updated pipeline (compound word indexing)
+    - [ ] Build missing Giphy categories (universal, cats, outliers)
     - [ ] Publish packs to GitHub Releases
     - [ ] Legal review of GIF content redistribution
 
