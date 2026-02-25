@@ -439,8 +439,9 @@ class OptimizedVocabulary(private val context: Context) {
             // Contractions were added to vocabulary in loadContractionsFromInputStream()
             // but vocabulary lookup is guarded by _englishFallbackEnabled
             if (info == null && nonPairedContractions.containsKey(word)) {
-                // Word is a contraction key - accept it with mid-range frequency
-                info = WordInfo(0.6f, 1.toByte())
+                // Word is a contraction key — use tier 2 (common boost) with high frequency
+                // so contractions like "doesn't", "can't" compete fairly with common words
+                info = WordInfo(0.88f, 2.toByte())
                 displayWord = nonPairedContractions[word]!!
                 if (debugMode) detailedLog?.append(String.format("🔤 \"%s\" → \"%s\" (contraction mapping)\n", word, displayWord))
             }
@@ -814,7 +815,7 @@ class OptimizedVocabulary(private val context: Context) {
                         } else {
                             // Real vocab word - ADD contraction as variant (French: "quest" + "qu'est")
                             // Use pre-cached frequency (built at dictionary load time)
-                            val contractionFreq = contractionFrequencyCache[contraction] ?: 0.6f
+                            val contractionFreq = contractionFrequencyCache[contraction] ?: 0.85f
 
                             // Calculate score using actual contraction frequency
                             // Use same scoring formula as regular words for fair comparison
@@ -1996,10 +1997,23 @@ class OptimizedVocabulary(private val context: Context) {
                 // NOTE: Do NOT insert into activeBeamSearchTrie here - it may point to wrong trie!
                 // Trie insertion is handled by loadPrimaryDictionary() after creating the language trie
                 if (!vocabulary.containsKey(withoutApostrophe)) {
-                    vocabulary[withoutApostrophe] = WordInfo(0.6f, 1.toByte())
+                    // Common contractions (don't, can't, doesn't, etc.) are among the most
+                    // frequent English words. Use tier 2 (common boost) with high frequency
+                    // so they compete fairly with top-100 words in swipe predictions.
+                    vocabulary[withoutApostrophe] = WordInfo(0.88f, 2.toByte())
                     // Add to length-based buckets for fuzzy matching
                     vocabularyByLength.getOrPut(withoutApostrophe.length) { ArrayList() }
                         .add(withoutApostrophe)
+                } else {
+                    // Contraction key already in vocabulary (e.g., synthetic "doesnt" from
+                    // binary dict). Ensure it has tier 2 + competitive frequency so swipe
+                    // predictions rank it alongside common words.
+                    val existing = vocabulary[withoutApostrophe]!!
+                    if (existing.tier < 2 || existing.frequency < 0.85f) {
+                        vocabulary[withoutApostrophe] = WordInfo(
+                            max(existing.frequency, 0.85f), 2.toByte()
+                        )
+                    }
                 }
                 count++
             }

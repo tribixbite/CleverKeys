@@ -137,7 +137,13 @@ class WordListFragment : Fragment() {
         lifecycleScope.launch {
             try {
                 val words = dataSource.getAllWords()
-                adapter.setWords(words)
+                // ACTIVE tab should only show enabled words (disabled ones appear in DISABLED tab)
+                val displayWords = if (tabType == TabType.ACTIVE) {
+                    words.filter { it.enabled }
+                } else {
+                    words
+                }
+                adapter.setWords(displayWords)
                 updateEmptyState()
                 // Notify activity to update tab counts after load completes
                 (activity as? DictionaryManagerActivity)?.onFragmentDataLoaded()
@@ -168,12 +174,19 @@ class WordListFragment : Fragment() {
                 // Normalize query: trim whitespace and treat pure whitespace as blank
                 val normalizedQuery = query.trim()
 
-                val words = if (normalizedQuery.isBlank()) {
+                val rawWords = if (normalizedQuery.isBlank()) {
                     // No search - show all words from this tab's data source
                     dataSource.getAllWords()
                 } else {
                     // Has search query - use prefix indexing
                     dataSource.searchWords(normalizedQuery)
+                }
+
+                // ACTIVE tab should only show enabled words (disabled ones appear in DISABLED tab)
+                val words = if (tabType == TabType.ACTIVE) {
+                    rawWords.filter { it.enabled }
+                } else {
+                    rawWords
                 }
 
                 // v1.2.7: Apply sorting based on sort type

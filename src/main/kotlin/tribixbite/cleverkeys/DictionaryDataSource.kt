@@ -36,10 +36,22 @@ class MainDictionarySource(
     private val languageCode: String = "en"
 ) : DictionaryDataSource {
 
-    // Cache the dictionary after first load
+    // Instance-level cache references (point to shared static cache when language matches)
     private var cachedWords: List<DictionaryWord>? = null
     // Prefix index for fast search: prefix -> list of matching words
     private var prefixIndex: Map<String, List<DictionaryWord>>? = null
+
+    init {
+        // Reuse shared cache if it was built for the same language.
+        // This avoids re-parsing the 50k binary dictionary every time
+        // the user opens Dictionary Manager or switches tabs.
+        synchronized(Companion) {
+            if (sharedCachedLanguage == languageCode && sharedCachedWords != null) {
+                cachedWords = sharedCachedWords
+                prefixIndex = sharedPrefixIndex
+            }
+        }
+    }
 
     override suspend fun getAllWords(): List<DictionaryWord> = withContext(Dispatchers.IO) {
         Log.d(TAG, "getAllWords() called for language: $languageCode")
@@ -152,9 +164,11 @@ class MainDictionarySource(
     }
 
     /**
-     * Build prefix index for fast word search
-     * Creates mapping from prefixes (1-3 chars) to lists of matching words
-     * Performance: Reduces 50k linear search to ~100-500 comparisons
+     * Build prefix index for fast word search.
+     * Creates mapping from prefixes (1-3 chars) to lists of matching words.
+     * Performance: Reduces 50k linear search to ~100-500 comparisons.
+     * Also updates shared static cache so subsequent MainDictionarySource
+     * instances for the same language skip the full load.
      */
     private fun buildPrefixIndex(words: List<DictionaryWord>) {
         val index = mutableMapOf<String, MutableList<DictionaryWord>>()
@@ -169,6 +183,13 @@ class MainDictionarySource(
 
         prefixIndex = index
         Log.d(TAG, "Built prefix index: ${index.size} prefixes for ${words.size} words")
+
+        // Persist to shared static cache for cross-instance reuse
+        synchronized(Companion) {
+            sharedCachedWords = words
+            sharedPrefixIndex = index
+            sharedCachedLanguage = languageCode
+        }
     }
 
     override suspend fun searchWords(query: String): List<DictionaryWord> {
@@ -300,6 +321,23 @@ class MainDictionarySource(
     companion object {
         private const val TAG = "MainDictionarySource"
         private const val PREFIX_INDEX_MAX_LENGTH = 3
+
+        // Shared cache across MainDictionarySource instances for the same language.
+        // Eliminates redundant 50k-word binary dict parsing when DictionaryManager
+        // is reopened or tabs are switched (each fragment creates a new instance).
+        // Thread-safe: synchronized on Companion in init{} and updateSharedCache().
+        @Volatile private var sharedCachedWords: List<DictionaryWord>? = null
+        @Volatile private var sharedPrefixIndex: Map<String, List<DictionaryWord>>? = null
+        @Volatile private var sharedCachedLanguage: String? = null
+
+        /** Invalidate shared cache (e.g., after language change). */
+        fun invalidateCache() {
+            synchronized(this) {
+                sharedCachedWords = null
+                sharedPrefixIndex = null
+                sharedCachedLanguage = null
+            }
+        }
     }
 }
 
