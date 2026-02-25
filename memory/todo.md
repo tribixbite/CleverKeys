@@ -76,6 +76,12 @@ Issues already implemented, just need verification + close:
 ---
 
 ## Completed (2026-02-25)
+- ✅ **56 new instrumented tests** (5e4762c33):
+  - TypingSimulationTest: +25 tests (REAL_WORD_CONTRACTION_BASES + extended autocorrect)
+  - DictionaryDataSourceTest: +19 tests (disabled filtering, shared cache, toggle coherence)
+  - VocabularyRankingTest: +12 tests (contraction scoring, trie, paired base handling)
+  - TypingSimulationTest refactored to shared singleton predictor (OOM-resilient)
+  - ew-cli: 650 tests, 2 OOM flakes (unrelated), 0 real failures
 - ✅ **3 UX fixes** (b13402e88):
   - **Contraction swipe ranking**: Promoted contraction vocabulary entries from
     tier 1 (0.6f freq, 1.0× boost) to tier 2 (0.88f freq, 1.3× boost). Existing
