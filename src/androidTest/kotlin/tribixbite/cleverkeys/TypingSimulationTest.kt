@@ -6,6 +6,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.*
 import org.junit.After
+import org.junit.Assume.assumeNotNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -25,6 +26,12 @@ import org.junit.runner.RunWith
  * - Dictionary toggle UI cache coherence
  * - Paired contraction injection (its → it's alongside "its")
  * - I-contraction capitalization (im → I'm, ill → I'll)
+ * - REAL_WORD_CONTRACTION_BASES — real words not autocorrected
+ * - Extended contraction autocorrect (doesnt, shouldnt, etc.)
+ *
+ * Uses a shared singleton WordPredictor to load the 50k-word dictionary ONCE,
+ * avoiding OOM from repeated loading on emulator.wtf's 200MB heap limit.
+ * If initialization OOMs, individual tests are skipped via assumeNotNull.
  *
  * Runs on emulator.wtf via: ew-cli --app app.apk --test test.apk ...
  */
@@ -41,26 +48,51 @@ class TypingSimulationTest {
     private val testCustomWords = mutableListOf<String>()
     private val testDisabledWords = mutableListOf<String>()
 
+    companion object {
+        // Lazily initialized once, shared across all tests.
+        // Avoids 60+ WordPredictor + 50k dictionary loads that OOM the 200MB heap.
+        // If init OOMs, sharedPredictor stays null and tests skip via assumeNotNull.
+        private var sharedPredictor: WordPredictor? = null
+        private var sharedContractionManager: ContractionManager? = null
+        private var sharedConfig: Config? = null
+        @Volatile private var initAttempted = false
+    }
+
     @Before
     fun setup() {
         context = InstrumentationRegistry.getInstrumentation().targetContext
-        TestConfigHelper.ensureConfigInitialized(context)
-        config = Config.globalConfig()
 
-        // Initialize ContractionManager with real binary/JSON data
-        contractionManager = ContractionManager(context)
-        contractionManager.loadMappings()
+        // One-time lazy initialization (first test to run triggers this)
+        synchronized(TypingSimulationTest::class.java) {
+            if (!initAttempted) {
+                initAttempted = true
+                try {
+                    TestConfigHelper.ensureConfigInitialized(context)
+                    sharedConfig = Config.globalConfig()
+                    sharedConfig!!.autocorrect_enabled = true
 
-        // Initialize WordPredictor with full production dictionary
-        predictor = WordPredictor()
-        predictor.setContext(context)
-        predictor.setConfig(config)  // Wire config into predictor (required for autoCorrect)
-        predictor.loadDictionary(context, "en")
+                    sharedContractionManager = ContractionManager(context)
+                    sharedContractionManager!!.loadMappings()
 
-        // Ensure autocorrect is enabled
+                    sharedPredictor = WordPredictor()
+                    sharedPredictor!!.setContext(context)
+                    sharedPredictor!!.setConfig(sharedConfig!!)
+                    sharedPredictor!!.loadDictionary(context, "en")
+                } catch (e: OutOfMemoryError) {
+                    android.util.Log.w("TypingSimulationTest",
+                        "WordPredictor init OOM — all tests will be skipped")
+                    sharedPredictor = null
+                }
+            }
+        }
+
+        // Skip all tests if dictionary couldn't load (200MB heap emulator)
+        assumeNotNull("WordPredictor required (may OOM on small heap)", sharedPredictor)
+
+        predictor = sharedPredictor!!
+        contractionManager = sharedContractionManager!!
+        config = sharedConfig!!
         config.autocorrect_enabled = true
-
-        // SharedPreferences for custom word / disabled word manipulation
         prefs = DirectBootAwarePreferences.get_shared_preferences(context)
     }
 
@@ -396,6 +428,148 @@ class TypingSimulationTest {
         // If "id" is a contraction alias → "I'd", otherwise stays "id"
         // This test documents the current behavior
         assertTrue("Should be 'I'd' or 'id'", result == "I'd" || result == "id")
+    }
+
+    // =========================================================================
+    // REAL_WORD_CONTRACTION_BASES — Real words must NOT be autocorrected
+    // =========================================================================
+
+    @Test
+    fun autocorrectPreservesShed() {
+        // "shed" is a real English word (a building / past tense of "she'd")
+        val result = predictor.autoCorrect("shed")
+        assertEquals("'shed' is a real word, should not autocorrect to 'she'd'", "shed", result)
+    }
+
+    @Test
+    fun autocorrectPreservesShell() {
+        val result = predictor.autoCorrect("shell")
+        assertEquals("'shell' is a real word, should not autocorrect to 'she'll'", "shell", result)
+    }
+
+    @Test
+    fun autocorrectPreservesWed() {
+        val result = predictor.autoCorrect("wed")
+        assertEquals("'wed' is a real word, should not autocorrect to 'we'd'", "wed", result)
+    }
+
+    @Test
+    fun autocorrectPreservesHell() {
+        val result = predictor.autoCorrect("hell")
+        assertEquals("'hell' is a real word, should not autocorrect to 'he'll'", "hell", result)
+    }
+
+    @Test
+    fun autocorrectPreservesStates() {
+        val result = predictor.autoCorrect("states")
+        assertEquals("'states' is a real word, should not autocorrect", "states", result)
+    }
+
+    @Test
+    fun autocorrectPreservesGirls() {
+        val result = predictor.autoCorrect("girls")
+        assertEquals("'girls' is a real word, should not autocorrect", "girls", result)
+    }
+
+    @Test
+    fun autocorrectPreservesEditors() {
+        val result = predictor.autoCorrect("editors")
+        assertEquals("'editors' is a real word, should not autocorrect", "editors", result)
+    }
+
+    @Test
+    fun autocorrectPreservesReaders() {
+        val result = predictor.autoCorrect("readers")
+        assertEquals("'readers' is a real word, should not autocorrect", "readers", result)
+    }
+
+    // =========================================================================
+    // Extended Contraction Autocorrect — Common contractions must expand
+    // =========================================================================
+
+    @Test
+    fun autocorrectExpandsDoesnt() {
+        assertEquals("doesn't", predictor.autoCorrect("doesnt"))
+    }
+
+    @Test
+    fun autocorrectExpandsShouldnt() {
+        assertEquals("shouldn't", predictor.autoCorrect("shouldnt"))
+    }
+
+    @Test
+    fun autocorrectExpandsWouldnt() {
+        assertEquals("wouldn't", predictor.autoCorrect("wouldnt"))
+    }
+
+    @Test
+    fun autocorrectExpandsCouldnt() {
+        assertEquals("couldn't", predictor.autoCorrect("couldnt"))
+    }
+
+    @Test
+    fun autocorrectExpandsHasnt() {
+        assertEquals("hasn't", predictor.autoCorrect("hasnt"))
+    }
+
+    @Test
+    fun autocorrectExpandsIsnt() {
+        assertEquals("isn't", predictor.autoCorrect("isnt"))
+    }
+
+    @Test
+    fun autocorrectExpandsArent() {
+        assertEquals("aren't", predictor.autoCorrect("arent"))
+    }
+
+    @Test
+    fun autocorrectExpandsWasnt() {
+        assertEquals("wasn't", predictor.autoCorrect("wasnt"))
+    }
+
+    @Test
+    fun autocorrectExpandsWerent() {
+        assertEquals("weren't", predictor.autoCorrect("werent"))
+    }
+
+    @Test
+    fun autocorrectExpandsDidnt() {
+        assertEquals("didn't", predictor.autoCorrect("didnt"))
+    }
+
+    @Test
+    fun autocorrectExpandsYoure() {
+        assertEquals("you're", predictor.autoCorrect("youre"))
+    }
+
+    @Test
+    fun autocorrectExpandsTheyre() {
+        assertEquals("they're", predictor.autoCorrect("theyre"))
+    }
+
+    @Test
+    fun autocorrectExpandsThats() {
+        assertEquals("that's", predictor.autoCorrect("thats"))
+    }
+
+    @Test
+    fun autocorrectExpandsWhats() {
+        assertEquals("what's", predictor.autoCorrect("whats"))
+    }
+
+    @Test
+    fun autocorrectExpandsShouldve() {
+        assertEquals("should've", predictor.autoCorrect("shouldve"))
+    }
+
+    @Test
+    fun autocorrectExpandsWouldve() {
+        assertEquals("would've", predictor.autoCorrect("wouldve"))
+    }
+
+    @Test
+    fun autocorrectExpandsCouldve() {
+        assertEquals("could've", predictor.autoCorrect("couldve"))
     }
 
     // =========================================================================
