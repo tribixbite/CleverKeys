@@ -61,6 +61,9 @@ class WordPredictor {
     private var adaptationManager: UserAdaptationManager? = null
     private var context: Context? = null // For accessing SharedPreferences for disabled words
     private var disabledWords: MutableSet<String> = mutableSetOf() // Cache of disabled words
+    // Track custom/user-added words — these override disabled status (Issue #72: Boston bug)
+    @Volatile
+    private var customAndUserWords: Set<String> = emptySet()
     private var lastReloadTime: Long = 0
 
     // Issue #72: Track original case of user-added words (proper nouns)
@@ -76,6 +79,11 @@ class WordPredictor {
     // OPTIMIZATION: UserDictionary and custom words observer
     private var dictionaryObserver: UserDictionaryObserver? = null
     private var observerActive: Boolean = false
+
+    // Track contraction aliases added to dictionary (e.g., "im" → "i'm", "dont" → "don't")
+    // These are in the dictionary for prediction purposes but should still be autocorrected
+    @Volatile
+    private var contractionAliases: Map<String, String> = emptyMap()
 
     // v1.1.93: Secondary language dictionary for bilingual touch typing
     @Volatile
@@ -225,7 +233,10 @@ class WordPredictor {
      * Check if a word is disabled
      */
     private fun isWordDisabled(word: String): Boolean {
-        return disabledWords.contains(word.lowercase())
+        val lower = word.lowercase()
+        // Custom/user-added words override disabled status — if user explicitly added
+        // "Boston" after disabling "boston", the custom word wins
+        return disabledWords.contains(lower) && !customAndUserWords.contains(lower)
     }
 
     /**
@@ -248,6 +259,7 @@ class WordPredictor {
             userWordOriginalCase.clear()
             // v1.1.90: Pass currentLanguage to filter by locale
             val customWords = loadCustomAndUserWords(it, currentLanguage)
+            customAndUserWords = customWords  // Track for disabled-word override check
             // NOTE: Full rebuild needed here because we don't track which words were removed
             // Future optimization: track previous custom words to compute diff (added/removed)
             buildPrefixIndex()
@@ -573,6 +585,7 @@ class WordPredictor {
         // OPTIMIZATION v2: Use incremental prefix index updates instead of full rebuild
         // v1.1.90: Pass language to filter UserDictionary by locale
         val customWords = loadCustomAndUserWords(context, language)
+        customAndUserWords = customWords  // Track for disabled-word override check
 
         // Add custom words to prefix index (incremental update)
         if (customWords.isNotEmpty()) {
@@ -635,6 +648,7 @@ class WordPredictor {
                 // Load custom words into the maps before they're swapped on main thread
                 // v1.1.90: Pass language to filter UserDictionary by locale
                 val customWords = loadCustomAndUserWordsIntoMap(ctx, dictionary, language)
+                customAndUserWords = customWords  // Track for disabled-word override check
 
                 // Add custom words to prefix index
                 if (customWords.isNotEmpty()) {
@@ -853,12 +867,15 @@ class WordPredictor {
                 val jsonObj = org.json.JSONObject(jsonBuilder.toString())
                 val keys = jsonObj.keys()
 
+                val aliases = mutableMapOf<String, String>()
+
                 while (keys.hasNext()) {
                     val withoutApostrophe = keys.next().lowercase(java.util.Locale.ROOT)
                     val withApostrophe = jsonObj.getString(withoutApostrophe).lowercase(java.util.Locale.ROOT)
 
                     if (targetDict.containsKey(withApostrophe)) {
                         targetDict[withoutApostrophe] = targetDict[withApostrophe] ?: 5000
+                        aliases[withoutApostrophe] = withApostrophe
 
                         val maxLen = min(PREFIX_INDEX_MAX_LENGTH, withoutApostrophe.length)
                         for (len in 1..maxLen) {
@@ -868,6 +885,8 @@ class WordPredictor {
                         count++
                     }
                 }
+
+                contractionAliases = aliases
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to load contraction keys for '$language' (async)", e)
@@ -922,6 +941,7 @@ class WordPredictor {
 
                 val currentDict = dictionary.get()
                 val currentPrefixIndex = prefixIndex.get()
+                val aliases = mutableMapOf<String, String>()
 
                 while (keys.hasNext()) {
                     val withoutApostrophe = keys.next().lowercase(java.util.Locale.ROOT)
@@ -931,6 +951,9 @@ class WordPredictor {
                     if (currentDict.containsKey(withApostrophe)) {
                         // Add apostrophe-free form to dictionary (high frequency for common contractions)
                         currentDict[withoutApostrophe] = currentDict[withApostrophe] ?: 5000
+
+                        // Track alias for autocorrect (im → i'm, dont → don't)
+                        aliases[withoutApostrophe] = withApostrophe
 
                         // Add to prefix index: map the apostrophe-free form to the actual contraction
                         val maxLen = min(PREFIX_INDEX_MAX_LENGTH, withoutApostrophe.length)
@@ -942,6 +965,8 @@ class WordPredictor {
                         count++
                     }
                 }
+
+                contractionAliases = aliases
             }
 
             if (count > 0) {
@@ -1643,6 +1668,20 @@ class WordPredictor {
         // No need to skip autocorrect for non-English - it will match against the loaded dictionary
 
         val lowerTypedWord = typedWord.lowercase()
+
+        // 0. Check for contraction aliases FIRST (e.g., "im" → "I'm", "dont" → "don't")
+        // These are in the dictionary for prediction purposes but should still be autocorrected
+        val contractionTarget = contractionAliases[lowerTypedWord]
+        if (contractionTarget != null) {
+            // Capitalize I-contractions (im → I'm, ill → I'll, id → I'd)
+            val corrected = if (contractionTarget.startsWith("i'")) {
+                contractionTarget.replaceFirstChar { it.uppercase() }
+            } else {
+                preserveCapitalization(typedWord, contractionTarget)
+            }
+            Log.d(TAG, "AUTO-CORRECT (contraction): '$typedWord' → '$corrected'")
+            return corrected
+        }
 
         // 1. Do not correct words already in dictionary or user's vocabulary
         if (dictionary.get().containsKey(lowerTypedWord) ||

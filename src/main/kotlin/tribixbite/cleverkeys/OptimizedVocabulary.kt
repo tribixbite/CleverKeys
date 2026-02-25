@@ -79,6 +79,8 @@ class OptimizedVocabulary(private val context: Context) {
     private var contractionPairings: MutableMap<String, MutableList<String>> = HashMap()
     // Maps apostrophe-free -> with apostrophe (e.g., "dont" -> "don't")
     private var nonPairedContractions: MutableMap<String, String> = HashMap()
+    // Cached contraction frequency lookups (populated once after index build, avoids per-prediction prefix search)
+    private var contractionFrequencyCache: Map<String, Float> = emptyMap()
 
     @Volatile
     private var isLoaded = false
@@ -811,21 +813,8 @@ class OptimizedVocabulary(private val context: Context) {
                             }
                         } else {
                             // Real vocab word - ADD contraction as variant (French: "quest" + "qu'est")
-                            // v1.2.10 FIX: Look up ACTUAL frequency of contraction in primary dictionary
-                            // This allows "qu'est" to appear BEFORE "quest" if it has higher frequency
-                            val index = normalizedIndex
-                            var contractionFreq = 0.6f  // Default if not found in dictionary
-
-                            if (index != null) {
-                                // Look up contraction in primary dictionary
-                                // "qu'est" normalized is still "qu'est" (apostrophe preserved)
-                                val results = index.getWordsWithPrefix(contraction)
-                                val exactMatch = results.find { it.normalized == contraction }
-                                if (exactMatch != null) {
-                                    // Convert rank (0-255, 0=most common) to frequency (0-1, 1=most common)
-                                    contractionFreq = 1.0f - (exactMatch.bestFrequencyRank / 255.0f)
-                                }
-                            }
+                            // Use pre-cached frequency (built at dictionary load time)
+                            val contractionFreq = contractionFrequencyCache[contraction] ?: 0.6f
 
                             // Calculate score using actual contraction frequency
                             // Use same scoring formula as regular words for fair comparison
@@ -1226,6 +1215,7 @@ class OptimizedVocabulary(private val context: Context) {
         // English doesn't need accent normalization for primary
         if (language == "en") {
             normalizedIndex = null
+            contractionFrequencyCache = emptyMap()
             activeBeamSearchTrie = vocabularyTrie  // Reset to English trie
             _primaryLanguageCode = "en"  // v1.2.1: Set language code (was missing!)
 
@@ -1312,6 +1302,10 @@ class OptimizedVocabulary(private val context: Context) {
                 Log.i(TAG, "Added ${contractionKeys.size} contraction keys to language trie")
             }
 
+            // Pre-cache contraction frequency lookups to avoid per-prediction prefix search
+            // (was an N+1 perf regression in v1.2.10)
+            contractionFrequencyCache = buildContractionFrequencyCache(index)
+
             // v1.1.94 CRITICAL FIX: Set _primaryLanguageCode BEFORE activeBeamSearchTrie
             // Due to Java Memory Model volatile ordering:
             // - If reader sees French trie, they're guaranteed to see "fr" (write #1 happens-before write #2)
@@ -1348,6 +1342,7 @@ class OptimizedVocabulary(private val context: Context) {
      */
     fun unloadPrimaryDictionary() {
         normalizedIndex = null
+        contractionFrequencyCache = emptyMap()
         activeBeamSearchTrie = vocabularyTrie  // Reset to English trie
         // v1.1.93: Reset _primaryLanguageCode when unloading (must be after activeBeamSearchTrie reset)
         _primaryLanguageCode = "en"
@@ -1919,6 +1914,24 @@ class OptimizedVocabulary(private val context: Context) {
      *
      * @param langCode Language code (e.g., "fr", "it", "en", "nl")
      */
+    /**
+     * Build a cache mapping contraction strings to their frequency values.
+     * Called once after dictionary + contractions are loaded, replacing per-prediction
+     * getWordsWithPrefix() lookups that caused an N+1 performance regression.
+     */
+    private fun buildContractionFrequencyCache(index: NormalizedPrefixIndex): Map<String, Float> {
+        val cache = HashMap<String, Float>(nonPairedContractions.size)
+        for (contraction in nonPairedContractions.values) {
+            val results = index.getWordsWithPrefix(contraction)
+            val exactMatch = results.find { it.normalized == contraction }
+            if (exactMatch != null) {
+                cache[contraction] = 1.0f - (exactMatch.bestFrequencyRank / 255.0f)
+            }
+        }
+        Log.d(TAG, "Built contraction frequency cache: ${cache.size} entries")
+        return cache
+    }
+
     private fun loadLanguageContractions(langCode: String) {
         // First try loading from installed language pack
         val langPackManager = LanguagePackManager.getInstance(context!!)

@@ -1096,13 +1096,24 @@ class SuggestionHandler(
                 val contractionWords = mutableListOf<String>()
                 val contractionScores = mutableListOf<Int>()
 
-                // Check if the exact partial is a contraction key
+                // Check if the exact partial is a non-paired contraction key (e.g., dont → don't)
                 val contractionMapping = contractionManager.getNonPairedMapping(partial)
                 if (contractionMapping != null) {
                     // Add contraction as first suggestion with high score
                     // Issue #72: Also capitalize I-contractions (im → I'm, ill → I'll)
                     contractionWords.add(capitalizeIWord(contractionMapping))
                     contractionScores.add(result.scores.firstOrNull()?.plus(1000) ?: 10000)
+                }
+
+                // Check if the exact partial is a paired contraction base (e.g., its → it's)
+                // Paired contractions are words where BOTH the base and contraction are valid
+                val pairedVariants = contractionManager.getPairedContractions(partial)
+                if (pairedVariants != null && contractionMapping == null) {
+                    // Add paired variants as high-priority suggestions alongside the base word
+                    for (variant in pairedVariants) {
+                        contractionWords.add(capitalizeIWord(variant))
+                        contractionScores.add(result.scores.firstOrNull()?.plus(500) ?: 5000)
+                    }
                 }
 
                 // v1.2.6 FIX: Transform ALL predictions through contraction manager
@@ -1114,11 +1125,13 @@ class SuggestionHandler(
                 }
 
                 // Merge contraction with predictions (contraction first, then transformed predictions)
-                // Filter out duplicates (contraction might already be in transformed list)
+                // Filter out duplicates (contraction/paired variants might already be in list)
+                val injectedLowerSet = contractionWords.map { it.lowercase() }.toSet()
                 val mergedWords = contractionWords + transformedPredictions.filter {
-                    it.lowercase() != contractionMapping?.lowercase()
+                    it.lowercase() !in injectedLowerSet
                 }
-                val mergedScores = contractionScores + result.scores.take(transformedPredictions.size - contractionWords.size.coerceAtMost(1))
+                val filteredCount = transformedPredictions.size - (transformedPredictions.count { it.lowercase() in injectedLowerSet })
+                val mergedScores = contractionScores + result.scores.take(filteredCount)
 
                 // Apply capitalization transformation if user started with uppercase
                 val transformedWords = if (shouldCapitalize) {

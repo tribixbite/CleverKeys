@@ -195,6 +195,13 @@ class MainDictionarySource(
 
     override suspend fun toggleWord(word: String, enabled: Boolean) {
         disabledSource.setWordEnabled(word, enabled)
+        // Update cached entries in-place so subsequent getAllWords()/searchWords()
+        // reflect the new enabled state without a full 50k-word reload
+        cachedWords?.forEach { dw ->
+            if (dw.word.equals(word, ignoreCase = true)) {
+                dw.enabled = enabled
+            }
+        }
     }
 
     override suspend fun addWord(word: String, frequency: Int) {

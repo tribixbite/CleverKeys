@@ -27,6 +27,11 @@ class ContractionManager(private val context: Context) {
     // Example: "dont" -> "don't", "wholl" -> "who'll"
     private val nonPairedContractions: MutableMap<String, String> = mutableMapOf()
 
+    // Paired contractions: base word (valid English word) -> contraction variants
+    // Example: "its" -> ["it's"], "well" -> ["we'll"]
+    // These are words where the base form IS a valid word, so both forms should appear
+    private val pairedContractions: MutableMap<String, MutableList<String>> = mutableMapOf()
+
     // Set of all known contractions (both non-paired and paired) for quick lookup
     // Used to identify contractions in predictions and prevent unwanted autocorrect
     private val knownContractions: MutableSet<String> = mutableSetOf()
@@ -51,6 +56,7 @@ class ContractionManager(private val context: Context) {
             // v1.2.1: Clear existing mappings before loading to prevent stale data on reload
             // Without this, language toggle could leave old contractions mixed with new
             nonPairedContractions.clear()
+            pairedContractions.clear()
             knownContractions.clear()
 
             // Try binary format first (fastest)
@@ -161,6 +167,18 @@ class ContractionManager(private val context: Context) {
             nonPairedContractions.putAll(data.nonPairedContractions)
             knownContractions.addAll(data.knownContractions)
 
+            // Derive paired contraction mappings from known contractions
+            // Binary format doesn't store base→contraction mappings for paired entries,
+            // so we derive them: for any contraction NOT in nonPaired values, the base
+            // word is the apostrophe-removed form (e.g., "it's" → base "its")
+            val nonPairedValues = data.nonPairedContractions.values.toSet()
+            for (contraction in data.knownContractions) {
+                if (contraction !in nonPairedValues) {
+                    val baseWord = contraction.replace("'", "")
+                    pairedContractions.getOrPut(baseWord) { mutableListOf() }.add(contraction)
+                }
+            }
+
             true
         } catch (e: Exception) {
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
@@ -217,6 +235,21 @@ class ContractionManager(private val context: Context) {
      */
     fun getNonPairedMapping(withoutApostrophe: String): String? {
         return nonPairedContractions[withoutApostrophe.lowercase()]
+    }
+
+    /**
+     * Gets paired contraction variants for a base word that is also a valid English word.
+     *
+     * @param baseWord Base word (case-insensitive)
+     * @return List of contraction variants, or null if not a paired contraction base
+     *
+     * Examples:
+     * - getPairedContractions("its") -> ["it's"]
+     * - getPairedContractions("well") -> ["we'll"]
+     * - getPairedContractions("hello") -> null
+     */
+    fun getPairedContractions(baseWord: String): List<String>? {
+        return pairedContractions[baseWord.lowercase()]
     }
 
     /**
@@ -332,17 +365,19 @@ class ContractionManager(private val context: Context) {
         while (keys.hasNext()) {
             val baseWord = keys.next()
             val contractions = jsonObj.getJSONArray(baseWord)
+            val lowerBase = baseWord.lowercase()
 
             for (i in 0 until contractions.length()) {
                 val contractionObj = contractions.getJSONObject(i)
-                val contraction = contractionObj.getString("contraction")
+                val contraction = contractionObj.getString("contraction").lowercase()
 
-                knownContractions.add(contraction.lowercase())
+                knownContractions.add(contraction)
+                pairedContractions.getOrPut(lowerBase) { mutableListOf() }.add(contraction)
                 pairedCount++
             }
         }
 
-        Log.d(TAG, "Loaded $pairedCount paired contractions")
+        Log.d(TAG, "Loaded $pairedCount paired contractions (${pairedContractions.size} base words)")
     }
 
     /**
