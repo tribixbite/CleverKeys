@@ -447,6 +447,9 @@ Issues already implemented, just need verification + close:
 - 75 new GIF tests (GifTest: 43, GifCategoryTest: 32)
 - ShortSwipeIntentTest updated for Termux preset changes
 - All tests pass on ARM64 via `./gradlew runPureTests`
+- All instrumented tests pass on emulator.wtf Pixel7 API 34
+  - Run: `8ab94295-e067-4b42-919b-ccb51e1d6ec4`
+  - https://emulator.wtf/o/64da92b3-67fb-427a-b56d-11e62fff8751/r/8ab94295-e067-4b42-919b-ccb51e1d6ec4
 
 **Infrastructure:**
 - BeamSearchEngine testability refactor (ONNX-free, DecoderSessionInterface)
