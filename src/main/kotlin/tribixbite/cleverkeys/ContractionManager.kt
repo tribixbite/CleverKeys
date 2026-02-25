@@ -64,15 +64,18 @@ class ContractionManager(private val context: Context) {
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                     Log.d(TAG, "Loaded contractions from binary format")
                 }
-                return
+                // Binary format merges all contractions into nonPairedContractions,
+                // misclassifying paired entries (e.g., "well"→"we'll" where "well" IS
+                // a valid word). Load JSON paired data to fix the classification.
+                loadPairedContractions()
+            } else {
+                // Fall back to JSON format (slower, but always works)
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                    Log.d(TAG, "Binary format not available, loading from JSON")
+                }
+                loadNonPairedContractions()
+                loadPairedContractions()
             }
-
-            // Fall back to JSON format (slower, but always works)
-            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                Log.d(TAG, "Binary format not available, loading from JSON")
-            }
-            loadNonPairedContractions()
-            loadPairedContractions()
 
             Log.d(TAG, "Loaded ${nonPairedContractions.size} non-paired contractions, " +
                     "${knownContractions.size} total known contractions")

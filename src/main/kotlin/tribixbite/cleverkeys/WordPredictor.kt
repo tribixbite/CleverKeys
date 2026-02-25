@@ -856,6 +856,14 @@ class WordPredictor {
                 }
             }
 
+            // Load paired contraction bases (real words) to filter out aliases
+            val pairedBases = mutableSetOf<String>()
+            try {
+                val pairingStream = context.assets.open("dictionaries/contraction_pairings.json")
+                val pairingJson = org.json.JSONObject(pairingStream.bufferedReader().use { it.readText() })
+                pairingJson.keys().forEach { pairedBases.add(it.lowercase(java.util.Locale.ROOT)) }
+            } catch (_: Exception) {}
+
             inputStream.use { stream ->
                 val reader = java.io.BufferedReader(java.io.InputStreamReader(stream))
                 val jsonBuilder = StringBuilder()
@@ -873,20 +881,19 @@ class WordPredictor {
                     val withoutApostrophe = keys.next().lowercase(java.util.Locale.ROOT)
                     val withApostrophe = jsonObj.getString(withoutApostrophe).lowercase(java.util.Locale.ROOT)
 
-                    if (targetDict.containsKey(withApostrophe)) {
-                        // Only track as autocorrect alias if NOT already a real word
-                        if (!targetDict.containsKey(withoutApostrophe)) {
-                            aliases[withoutApostrophe] = withApostrophe
-                        }
-                        targetDict[withoutApostrophe] = targetDict[withApostrophe] ?: 5000
+                    // Skip if base is a known real word (paired contraction base)
+                    if (withoutApostrophe in pairedBases) continue
 
-                        val maxLen = min(PREFIX_INDEX_MAX_LENGTH, withoutApostrophe.length)
-                        for (len in 1..maxLen) {
-                            val prefix = withoutApostrophe.substring(0, len)
-                            targetPrefixIndex.getOrPut(prefix) { mutableSetOf() }.add(withoutApostrophe)
-                        }
-                        count++
+                    // Base form is NOT a real word → create alias and add to dictionary
+                    aliases[withoutApostrophe] = withApostrophe
+                    targetDict[withoutApostrophe] = targetDict[withApostrophe] ?: 5000
+
+                    val maxLen = min(PREFIX_INDEX_MAX_LENGTH, withoutApostrophe.length)
+                    for (len in 1..maxLen) {
+                        val prefix = withoutApostrophe.substring(0, len)
+                        targetPrefixIndex.getOrPut(prefix) { mutableSetOf() }.add(withoutApostrophe)
                     }
+                    count++
                 }
 
                 contractionAliases = aliases
@@ -931,6 +938,18 @@ class WordPredictor {
                 }
             }
 
+            // Load paired contraction bases (real words like "well", "were", "hell")
+            // to distinguish from synthetic entries ("dont", "im", "cant") in the
+            // binary dictionary. Words in pairedBases should NOT get autocorrect aliases.
+            val pairedBases = mutableSetOf<String>()
+            try {
+                val pairingStream = context.assets.open("dictionaries/contraction_pairings.json")
+                val pairingJson = org.json.JSONObject(pairingStream.bufferedReader().use { it.readText() })
+                pairingJson.keys().forEach { pairedBases.add(it.lowercase(java.util.Locale.ROOT)) }
+            } catch (_: Exception) {
+                // No pairings file — fall back to empty set (all entries get aliases)
+            }
+
             inputStream.use { stream ->
                 val reader = java.io.BufferedReader(java.io.InputStreamReader(stream))
                 val jsonBuilder = StringBuilder()
@@ -950,26 +969,24 @@ class WordPredictor {
                     val withoutApostrophe = keys.next().lowercase(java.util.Locale.ROOT)
                     val withApostrophe = jsonObj.getString(withoutApostrophe).lowercase(java.util.Locale.ROOT)
 
-                    // Only add if the contraction exists in the dictionary
-                    if (currentDict.containsKey(withApostrophe)) {
-                        // Only track as autocorrect alias if the base form is NOT already
-                        // a real dictionary word (prevents "well"→"we'll", "were"→"we're")
-                        if (!currentDict.containsKey(withoutApostrophe)) {
-                            aliases[withoutApostrophe] = withApostrophe
-                        }
+                    // Skip if base is a known real word (paired contraction base like "well")
+                    // Can't use dictionary.containsKey() because the binary dict includes
+                    // synthetic entries like "dont", "cant" from the dictionary builder
+                    if (withoutApostrophe in pairedBases) continue
 
-                        // Add apostrophe-free form to dictionary (high frequency for common contractions)
-                        currentDict[withoutApostrophe] = currentDict[withApostrophe] ?: 5000
+                    // Base form is NOT a real word (e.g., "dont", "im", "cant")
+                    // → create autocorrect alias and add to dictionary for predictions
+                    aliases[withoutApostrophe] = withApostrophe
+                    currentDict[withoutApostrophe] = currentDict[withApostrophe] ?: 5000
 
-                        // Add to prefix index: map the apostrophe-free form to the actual contraction
-                        val maxLen = min(PREFIX_INDEX_MAX_LENGTH, withoutApostrophe.length)
-                        for (len in 1..maxLen) {
-                            val prefix = withoutApostrophe.substring(0, len)
-                            currentPrefixIndex.getOrPut(prefix) { mutableSetOf() }.add(withoutApostrophe)
-                        }
-
-                        count++
+                    // Add to prefix index so typing "don" finds "dont" → "don't"
+                    val maxLen = min(PREFIX_INDEX_MAX_LENGTH, withoutApostrophe.length)
+                    for (len in 1..maxLen) {
+                        val prefix = withoutApostrophe.substring(0, len)
+                        currentPrefixIndex.getOrPut(prefix) { mutableSetOf() }.add(withoutApostrophe)
                     }
+
+                    count++
                 }
 
                 contractionAliases = aliases
