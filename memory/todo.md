@@ -1,6 +1,6 @@
 # CleverKeys TODO
 
-## Open Issue Action Plan
+## Open Issues — Corrected from GitHub (2026-02-25)
 
 ### Phase 1 — Simple Fixes (completed)
 - ✅ **#51** KEYBOARD_OPACITY 81→100 (transparent background on first use)
@@ -8,70 +8,94 @@
 - ✅ **#50** Swedish language detection patterns added to LanguageDetector
 - ✅ **IssueRegressionTest.kt** — 57 pure JVM tests covering all open bugs
 
-### Phase 2 — Close Already-Completed Issues (needs GH actions)
-Issues already implemented, just need verification + close:
-- **#21** Subkey system (long-press alternate chars) — implemented in v1.2.0
-- **#48** Context-aware predictions — CONTEXT_AWARE_PREDICTIONS_ENABLED=true
-- **#50** Swedish detection — just fixed, close after ew-cli verification
-- **#62** Password manager clipboard exclusion — PASSWORD_MANAGER_PACKAGES (27 pkgs)
-- **#70** Termux mode — TERMUX_MODE_ENABLED=true, working
-- **#74** Haptic feedback settings — per-event controls implemented
-- **#81** Key repeat backspace-only — KEYREPEAT_BACKSPACE_ONLY config exists
-- **#82** Auto-space after suggestion — AUTO_SPACE_AFTER_SUGGESTION=true
+### Phase 2 — Close Already-Completed Issues (user will close)
+Issues already implemented, need user verification + close:
+- **#21** Subkey system (long-press alternate chars) — already closed
+- **#48** Context-aware predictions / inline autofill — already closed
+- **#50** Swedish language detection — implemented, still open
+- **#62** Password manager clipboard exclusion — already closed
+- **#70** Programmatic launch via Intent — import/export intent support requested
+- **#74** Haptic not disabled when Vibrate Feedback disabled — per-event controls exist
+- **#81** Separate Long-Press Repeat for Backspace vs Character — config exists
+- **#82** Option to disable automatic spaces — AUTO_SPACE_AFTER_SUGGESTION config exists
 
-### Phase 3 — Low-Effort Fixes (1 session)
-- **#99** Calibration tutorial documentation — docs/wiki update, no code
-- **#35** Autocorrect false positive "I"→"o" — may need tuning of
-  AUTOCORRECT_CHAR_MATCH_THRESHOLD (currently 0.67) or proximity weighting
-- **#67** Clipboard history "not working" — likely user didn't enable it;
-  add first-run hint or verify settings UI label clarity
-- **#59** Clipboard date format — ClipboardEntry.formatDate() uses "MMM d",
-  user wants exact date+time; **ASK before changing format** (affects UI)
+### Bugs — Confirmed Real Issues
+- **#30** Per-key short swipe customization to keyboard events does nothing
+  - v1.1.7.8, Android 16. Customizing P/O/K/J short swipes to keyboard events
+- **#35** Overly dark darkmode — settings app should follow system light/dark
+  - User wants system theme follow, not hardcoded dark
+- **#55** Crashes on ancient phone — Nexus 6 / Android 11 / LineageOS
+  - Keyboard exits immediately on use; likely ONNX or memory issue on old device
+- **#71** Opening clipboard causes device freeze for 2-3 seconds
+  - v1.2.5, Android 15. Clipboard pane open triggers device-wide stall
+- **#75** Swipe behaviour broken on Swiss French QWERTZ layout
+  - Pixel 8a, Android 16 LineageOS. Swiping on QWERTZ layout misbehaves
+- **#77** Cannot completely disable Greek/Math toggle in custom XML layout
+  - v1.2.5, Android 15. bottom_row="false" custom layout, Greek/Math key persists
+- **#78** Word prediction doesn't replace typed text (flicker issue)
+  - v1.2.5, Android 15. Selecting prediction doesn't replace; text flickers
+- **#79** UI/Header flickering at top of screen during settings scrolling
+  - v1.2.5, Android 15. Settings menu top area jitters on scroll
+- **#83** "Keys per direction" not used on average length swipe
+  - v1.2.5, Android 12. Short swipe keys inaccessible at normal swipe length
+- **#92** Custom background color ignored in custom themes
+  - v1.2.8, Android 16. Background color setting ignored, shows shade of key color
+- **#96** Dictionary search resets after dis/enabling a word
+  - v1.2.8, Android 16. Already fixed (WordListFragment.refresh preserves state)
+- **#104** Turning off compose key breaks touchpad/arrow keys
+  - v1.2.9, Android 15. Dpad broken when compose key is disabled
 
-### Phase 4 — Medium-Effort Bug Fixes (1-2 sessions, ASK before each)
-- **#92** Custom theme background not applied to keyboard view
-  - Root cause: `keyboardBackground` from theme not set programmatically
-  - Fix: Apply theme background in Keyboard2View.onDraw or setBackground
-  - Risk: Must not break existing themes or add latency
-- **#77** Greek/Math key stays visible when disabled in settings
-  - Root cause: LayoutModifier.modify_key() missing SWITCH_GREEKMATH case
-  - Fix: Add null-return case like SWITCH_VOICE_TYPING pattern
-  - Risk: Low — same pattern as existing voice typing key removal
-- **#30** Custom short swipe actions not executing keyboard events
-  - Root cause: CustomShortSwipeExecutor returns false for non-text events
-  - Fix: Map keyboard event codes to KeyValue events in executor
-  - Risk: Must not break existing short swipe actions
-- **#55** Suggestion bar positioning issues on some devices
-  - Needs device-specific investigation; may be padding/margin issue
-- **#79** Autocapitalization not working in some apps
-  - May be EditorInfo.inputType not properly detected; needs field testing
-- **#83** Clipboard pane overlapping keyboard area
-  - CLIPBOARD_PANE_HEIGHT_PERCENT=30; may need dynamic sizing
+### Features — Low/Medium Effort
+- **#35** (also feature) Settings dark mode should follow system theme
+- **#59** Clipboard delete option + individual item delete + copy timestamps
+- **#67** Script error — build_all_languages.py references missing get_wordlist.py
+  - `python3 build_all_languages.py --lang fr` fails; get_wordlist.py not in repo
+- **#72** Capitalize suggestions for "I" and proper nouns
+  - I and contractions (I'll, I'm, I'd) + names should retain capitalization
+- **#84** Smart Punctuation with configurable time threshold
+  - Only apply smart punctuation within a time interval; precise formatting needed
+- **#87** Long swipes should map to short swipes when swipe typing disabled
+  - Currently long swipes treated as taps when swipe typing off; should be short swipes
+- **#93** Custom Themes: add hex color input field
+  - Sliders are hard to use for precise color matching; hex input requested
+- **#94** Copy version info on long press of Version Information modal
+  - For easier bug reporting — long press to copy version to clipboard
+- **#97** Request to disable/remove English dictionary
+  - Polish user: English dictionary suggests wrong words; wants to disable it
+- **#99** Unclear/outdated documentation of build_langpack.py
+  - Hungarian user tried to build langpack; docs incomplete/outdated
+- **#107** Clipboard: Add a Copy button to store text in system clipboard
+- **#108** Clipboard: Move re-copied text to top of list (dedup + reorder)
+- **#109** Improve the look of the autofill suggestion style
+  - Follow-up to #48; autofill works but visual style needs polish
+- **#110** Cancel autocorrect on backspace
+  - Undo-autocorrect exists but not triggered by backspace key specifically
 
-### Phase 5 — Higher-Effort Features (multi-session, ASK before each)
-- **#94** Theme preview in settings
-- **#93** Custom key sounds
-- **#84** Floating/split keyboard mode
-- **#72** Auto-capitalize "I" in more edge cases (mid-sentence)
-- **#87** Per-language keyboard height
-- **#52** More swipe trail visual effects
-- **#98** Hardware keyboard passthrough improvements
-- **#97** Prediction bar gesture shortcuts
-- **#88** Emoji search improvements
-- **#58** Touch target adjustment per finger size
-- **#68** One-handed mode improvements
-- **#49** Dictionary import/export format support
+### Features — High Effort / Community
+- **#26** Docs: clarify language support + update README comparison table
+  - README implies broader language support than actual; needs accuracy
+- **#31** Next word prediction / Cyrillic layout prediction
+  - T9/prediction only works for English; Cyrillic layouts get no suggestions
+- **#49** Turkish language support — dictionary + keyboard layout
+- **#52** MessageEase layout contribution + gesture tuning concepts
+  - Community layout contribution; novel gesture/UX interaction patterns
+- **#58** Scaling number keyboard — number pad wastes space, should resize
+- **#61** Switch between more than 2 languages actively
+- **#68** Greek dictionary — suggestion to use HeliBoard dictionaries
+- **#69** Two finger swiping — unique feature request (Nintype-style)
+- **#80** Clipboard Suggestion Strip + UI navigation improvements
+- **#88** Arabic language support
+- **#90** Custom size for keyboard/row — bottom_row="false" sizing bug
+- **#101** Autocorrect/gesture recognition training game
+  - FUTO-style training mode to improve neural model in safe environment
+- **#111** Expanded comparison table for Urik keyboard
 
-### Phase 6 — Architecture / Large Features (deferred)
-- **#78** Shift key unreliable in rapid typing — touch event timing issue,
-  needs careful profiling to avoid latency regression
-- **#75** Landscape layout sometimes wrong on rotation — lifecycle/config
-  change handling, affects keyboard view recreation
+### Deferred
+- **#89** Google Play Store Release — requires Play Store account + compliance
 
-### Excluded (per user directive)
-- #89 (Play Store listing), #90 (custom keyboard size UI),
-  #80 (clipboard strip), #69 (two-finger swiping),
-  #61 (multi-language simultaneous), #31 (Cyrillic layout)
+### GIF Panel — COMPLETE
+- All 9 implementation steps done. File-picker import working.
+  User has tested and confirmed GIF pack import/removal/display functional.
 
 ---
 
