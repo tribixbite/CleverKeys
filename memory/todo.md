@@ -75,6 +75,23 @@ Issues already implemented, just need verification + close:
 
 ---
 
+## Completed (2026-02-25)
+- ✅ **3 UX fixes** (b13402e88):
+  - **Contraction swipe ranking**: Promoted contraction vocabulary entries from
+    tier 1 (0.6f freq, 1.0× boost) to tier 2 (0.88f freq, 1.3× boost). Existing
+    binary dict synthetic entries also upgraded. Variant fallback raised to 0.85f.
+    Words like "don't", "doesn't", "she'll" now compete fairly with common words.
+  - **Disabled words in ACTIVE tab**: Added `enabled == true` filter in
+    `WordListFragment.loadWords()` and `filter()` for ACTIVE tab only.
+    Disabled words now only appear in the DISABLED tab as expected.
+  - **Dictionary Manager slow load**: Shared `MainDictionarySource` cache
+    (50k words + prefix index) across instances via companion object static
+    cache. First open still loads from disk; subsequent opens are instant.
+    Added `invalidateCache()` method for language changes.
+- ✅ **Prior session fix** (f29fa33eb): Replaced contraction_pairings.json
+  file I/O with curated `REAL_WORD_CONTRACTION_BASES` constant set (11 words)
+  to avoid false positives ("hes"/"shes"/"intl" are not real English words)
+
 ## Completed (2026-02-24)
 - ✅ **5 prediction/dictionary bug fixes** (7c509a3d):
   - **Bug 4**: Dictionary Manager toggle not updating UI — stale `cachedWords` in
