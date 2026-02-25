@@ -874,8 +874,11 @@ class WordPredictor {
                     val withApostrophe = jsonObj.getString(withoutApostrophe).lowercase(java.util.Locale.ROOT)
 
                     if (targetDict.containsKey(withApostrophe)) {
+                        // Only track as autocorrect alias if NOT already a real word
+                        if (!targetDict.containsKey(withoutApostrophe)) {
+                            aliases[withoutApostrophe] = withApostrophe
+                        }
                         targetDict[withoutApostrophe] = targetDict[withApostrophe] ?: 5000
-                        aliases[withoutApostrophe] = withApostrophe
 
                         val maxLen = min(PREFIX_INDEX_MAX_LENGTH, withoutApostrophe.length)
                         for (len in 1..maxLen) {
@@ -949,11 +952,14 @@ class WordPredictor {
 
                     // Only add if the contraction exists in the dictionary
                     if (currentDict.containsKey(withApostrophe)) {
+                        // Only track as autocorrect alias if the base form is NOT already
+                        // a real dictionary word (prevents "well"→"we'll", "were"→"we're")
+                        if (!currentDict.containsKey(withoutApostrophe)) {
+                            aliases[withoutApostrophe] = withApostrophe
+                        }
+
                         // Add apostrophe-free form to dictionary (high frequency for common contractions)
                         currentDict[withoutApostrophe] = currentDict[withApostrophe] ?: 5000
-
-                        // Track alias for autocorrect (im → i'm, dont → don't)
-                        aliases[withoutApostrophe] = withApostrophe
 
                         // Add to prefix index: map the apostrophe-free form to the actual contraction
                         val maxLen = min(PREFIX_INDEX_MAX_LENGTH, withoutApostrophe.length)

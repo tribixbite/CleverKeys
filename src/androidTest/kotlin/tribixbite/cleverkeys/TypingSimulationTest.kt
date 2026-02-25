@@ -193,11 +193,12 @@ class TypingSimulationTest {
     }
 
     @Test
-    fun autocorrectExpandsIllToContraction() {
+    fun autocorrectPreservesIllAsValidWord() {
         val result = predictor.autoCorrect("ill")
-        // "ill" is a valid word AND a contraction alias (i'll)
-        // Since contraction check runs first, it should become "I'll"
-        assertEquals("'ill' should autocorrect to 'I'll'", "I'll", result)
+        // "ill" is a valid English word (sick) AND a paired contraction base (I'll)
+        // Since "ill" is in paired contractions (not non-paired), it's NOT in
+        // contractionAliases, so autocorrect should preserve it as-is
+        assertEquals("'ill' is a valid word, should not autocorrect", "ill", result)
     }
 
     @Test
@@ -225,6 +226,21 @@ class TypingSimulationTest {
     fun autocorrectDoesNotChangeValidWordThe() {
         val result = predictor.autoCorrect("the")
         assertEquals("'the' should not change", "the", result)
+    }
+
+    @Test
+    fun autocorrectDoesNotChangeWellToContraction() {
+        // "well" is a common English word AND in the contractions file as "we'll"
+        // Autocorrect should NOT change it because "well" pre-existed in the dictionary
+        val result = predictor.autoCorrect("well")
+        assertEquals("'well' is a real word, should not autocorrect to 'we'll'", "well", result)
+    }
+
+    @Test
+    fun autocorrectDoesNotChangeWereToContraction() {
+        // "were" is a common English word AND in the contractions file as "we're"
+        val result = predictor.autoCorrect("were")
+        assertEquals("'were' is a real word, should not autocorrect to 'we're'", "were", result)
     }
 
     // =========================================================================
@@ -367,8 +383,9 @@ class TypingSimulationTest {
     }
 
     @Test
-    fun iContractionIll() {
-        assertEquals("I'll", predictor.autoCorrect("ill"))
+    fun iContractionIllIsPreserved() {
+        // "ill" is a paired contraction (valid word), so NOT autocorrected
+        assertEquals("ill", predictor.autoCorrect("ill"))
     }
 
     @Test
