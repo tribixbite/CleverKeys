@@ -54,6 +54,7 @@ class TypingSimulationTest {
         // Initialize WordPredictor with full production dictionary
         predictor = WordPredictor()
         predictor.setContext(context)
+        predictor.setConfig(config)  // Wire config into predictor (required for autoCorrect)
         predictor.loadDictionary(context, "en")
 
         // Ensure autocorrect is enabled
