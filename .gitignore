@@ -128,7 +128,10 @@ generated_*.kt
 tools/gif_pipeline/raw_data/gifs/
 tools/gif_pipeline/raw_data/metadata/
 tools/gif_pipeline/processed/
+tools/gif_pipeline/discord_processed/
 tools/gif_pipeline/packs/
 tools/gif_pipeline/assets/
+tools/gif_pipeline/*.db
 tools/gif_pipeline/*.log
 tools/gif_pipeline/pipeline_history.json
+assets/gifs.db
