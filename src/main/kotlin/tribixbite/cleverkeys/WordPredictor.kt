@@ -29,6 +29,14 @@ class WordPredictor {
         private const val MAX_RECENT_WORDS = 20 // Keep last 20 words for language detection
         private const val PREFIX_INDEX_MAX_LENGTH = 3 // Index prefixes up to 3 chars
 
+        // Real English words that also appear as contraction bases in contractions_en.json.
+        // These must NOT be autocorrected (e.g., "well" should stay "well", not become "we'll").
+        // Excludes "hes"/"shes"/"intl" which are NOT real words despite appearing in pairings data.
+        private val REAL_WORD_CONTRACTION_BASES = setOf(
+            "well", "were", "hell", "shed", "shell", "wed",
+            "editors", "girls", "readers", "states", "whore"
+        )
+
         // Static flag to signal all WordPredictor instances need to reload custom/user/disabled words
         @Volatile
         private var needsReload = false
@@ -856,14 +864,6 @@ class WordPredictor {
                 }
             }
 
-            // Load paired contraction bases (real words) to filter out aliases
-            val pairedBases = mutableSetOf<String>()
-            try {
-                val pairingStream = context.assets.open("dictionaries/contraction_pairings.json")
-                val pairingJson = org.json.JSONObject(pairingStream.bufferedReader().use { it.readText() })
-                pairingJson.keys().forEach { pairedBases.add(it.lowercase(java.util.Locale.ROOT)) }
-            } catch (_: Exception) {}
-
             inputStream.use { stream ->
                 val reader = java.io.BufferedReader(java.io.InputStreamReader(stream))
                 val jsonBuilder = StringBuilder()
@@ -881,8 +881,8 @@ class WordPredictor {
                     val withoutApostrophe = keys.next().lowercase(java.util.Locale.ROOT)
                     val withApostrophe = jsonObj.getString(withoutApostrophe).lowercase(java.util.Locale.ROOT)
 
-                    // Skip if base is a known real word (paired contraction base)
-                    if (withoutApostrophe in pairedBases) continue
+                    // Skip real English words that are also contraction bases
+                    if (withoutApostrophe in REAL_WORD_CONTRACTION_BASES) continue
 
                     // Base form is NOT a real word → create alias and add to dictionary
                     aliases[withoutApostrophe] = withApostrophe
@@ -938,18 +938,6 @@ class WordPredictor {
                 }
             }
 
-            // Load paired contraction bases (real words like "well", "were", "hell")
-            // to distinguish from synthetic entries ("dont", "im", "cant") in the
-            // binary dictionary. Words in pairedBases should NOT get autocorrect aliases.
-            val pairedBases = mutableSetOf<String>()
-            try {
-                val pairingStream = context.assets.open("dictionaries/contraction_pairings.json")
-                val pairingJson = org.json.JSONObject(pairingStream.bufferedReader().use { it.readText() })
-                pairingJson.keys().forEach { pairedBases.add(it.lowercase(java.util.Locale.ROOT)) }
-            } catch (_: Exception) {
-                // No pairings file — fall back to empty set (all entries get aliases)
-            }
-
             inputStream.use { stream ->
                 val reader = java.io.BufferedReader(java.io.InputStreamReader(stream))
                 val jsonBuilder = StringBuilder()
@@ -969,12 +957,11 @@ class WordPredictor {
                     val withoutApostrophe = keys.next().lowercase(java.util.Locale.ROOT)
                     val withApostrophe = jsonObj.getString(withoutApostrophe).lowercase(java.util.Locale.ROOT)
 
-                    // Skip if base is a known real word (paired contraction base like "well")
-                    // Can't use dictionary.containsKey() because the binary dict includes
-                    // synthetic entries like "dont", "cant" from the dictionary builder
-                    if (withoutApostrophe in pairedBases) continue
+                    // Skip real English words that also happen to be contraction bases
+                    // (e.g., "well" should stay "well", not autocorrect to "we'll")
+                    if (withoutApostrophe in REAL_WORD_CONTRACTION_BASES) continue
 
-                    // Base form is NOT a real word (e.g., "dont", "im", "cant")
+                    // Base form is NOT a real word (e.g., "dont", "im", "thats", "hes")
                     // → create autocorrect alias and add to dictionary for predictions
                     aliases[withoutApostrophe] = withApostrophe
                     currentDict[withoutApostrophe] = currentDict[withApostrophe] ?: 5000
