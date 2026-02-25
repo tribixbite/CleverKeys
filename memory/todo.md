@@ -75,6 +75,33 @@ Issues already implemented, just need verification + close:
 
 ---
 
+## Completed (2026-02-24)
+- ✅ **5 prediction/dictionary bug fixes** (7c509a3d):
+  - **Bug 4**: Dictionary Manager toggle not updating UI — stale `cachedWords` in
+    `MainDictionarySource.getAllWords()`. Fix: `DictionaryWord.enabled` → `var`,
+    update cache in-place on toggle (no 50k-word reload)
+  - **Bug 5**: Contraction frequency N+1 perf regression in `OptimizedVocabulary.kt`
+    — `getWordsWithPrefix()` called per contraction during scoring. Fix: build
+    `contractionFrequencyCache` at load time, O(1) lookup in hot path
+  - **Bug 21**: Custom word "Boston" overridden by disabled "boston" in tap typing —
+    `isWordDisabled()` unconditional. Fix: track `customAndUserWords` set, exempt
+    from disabled check (custom word wins over disabled)
+  - **Bug 22**: Paired contractions missing for tap-typing (its → it's) —
+    `SuggestionHandler` only called `getNonPairedMapping()`. Fix: add
+    `pairedContractions` map to `ContractionManager`, inject paired variants
+  - **Bug 23**: Autocorrect not applying contractions (im → I'm) — contraction
+    aliases added to dictionary made `autoCorrect()` skip them. Fix: track
+    `contractionAliases` map, check before dictionary containsKey
+- ✅ **TypingSimulationTest.kt**: 40+ instrumented end-to-end tests covering all 5 bugs
+  - Paired contraction lookup (its, well, were, hell)
+  - Non-paired contraction mapping (dont, cant, im, wont)
+  - Autocorrect contraction expansion with I-capitalization
+  - Dictionary toggle cache coherence (toggle + re-fetch without reload)
+  - Custom word override of disabled dictionary entries
+  - End-to-end typing scenarios (contraction-heavy sentences)
+  - Prediction pipeline integration (scores, ordering, empty input)
+  - Running on emulator.wtf for cloud verification
+
 ## Completed (2026-02-17)
 - ✅ **Dictionary pipeline spec + skill**: Full architecture documentation
   - `docs/specs/english-dictionary-pipeline.md` — build flow, contraction system, quality issues
