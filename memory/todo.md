@@ -92,7 +92,7 @@ Issues already implemented, just need verification + close:
   - **Bug 23**: Autocorrect not applying contractions (im → I'm) — contraction
     aliases added to dictionary made `autoCorrect()` skip them. Fix: track
     `contractionAliases` map, check before dictionary containsKey
-- ✅ **TypingSimulationTest.kt**: 40+ instrumented end-to-end tests covering all 5 bugs
+- ✅ **TypingSimulationTest.kt**: 37 instrumented end-to-end tests — ALL PASSING on ew-cli
   - Paired contraction lookup (its, well, were, hell)
   - Non-paired contraction mapping (dont, cant, im, wont)
   - Autocorrect contraction expansion with I-capitalization
@@ -100,7 +100,13 @@ Issues already implemented, just need verification + close:
   - Custom word override of disabled dictionary entries
   - End-to-end typing scenarios (contraction-heavy sentences)
   - Prediction pipeline integration (scores, ordering, empty input)
-  - Running on emulator.wtf for cloud verification
+  - Verified: 675 total instrumented tests, 0 failures (Pixel7 API 34)
+- ✅ **3 additional fixes discovered during ew-cli testing** (4ba4609, baedaea):
+  - Test wiring: TypingSimulationTest missing `predictor.setConfig(config)` call
+  - Contraction aliases: binary dict contains synthetic "dont"/"cant" entries —
+    now uses `contraction_pairings.json` as real-word authority instead of dict check
+  - Paired classification: `loadMappings()` now loads JSON paired data after binary
+    to fix misclassification of "well"/"were"/"hell" in binary derivation
 
 ## Completed (2026-02-17)
 - ✅ **Dictionary pipeline spec + skill**: Full architecture documentation
