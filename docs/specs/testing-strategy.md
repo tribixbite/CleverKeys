@@ -248,21 +248,117 @@ jobs:
 - [ ] Replace android.* imports with abstractions
 - [ ] Achieve 80% coverage on `:core`
 
-## Metrics
+## Current Test Suite (as of 2026-02-24)
 
-### Coverage Targets
-| Module | Target | Current |
-|--------|--------|---------|
-| `:core` | 80% | N/A |
-| `:app` | 30% | ~5% |
+| Type | Location | Count | Framework | Runner |
+|------|----------|-------|-----------|--------|
+| Pure JVM | `src/test/kotlin/` | 857 | JUnit4 + Truth | `./gradlew runPureTests` |
+| MockK | `src/test/kotlin/` | ~176 | JUnit4 + MockK | `./gradlew runMockTests` |
+| Instrumented | `src/androidTest/kotlin/` | ~640 | AndroidJUnit4 | emulator.wtf (Pixel7 API 34) |
 
-### Test Execution Time
-| Type | Target | Current |
-|------|--------|---------|
-| Unit | <30s | N/A |
-| Instrumented | <5min | Unknown |
+### ARM64 Termux Compatibility
+Standard `testDebugUnitTest` is disabled — custom `runPureTests` JavaExec task runs
+pure JVM tests directly. `runMockTests` adds MockK + android.jar to classpath.
+Single-class run: `./gradlew runPureTests -PtestClass=ClassName`
+
+### emulator.wtf (ew-cli) Configuration
+```bash
+ew-cli \
+  --app build/outputs/apk/debug/CleverKeys-v1.2.9-x86_64.apk \
+  --test build/outputs/apk/androidTest/debug/CleverKeys-debug-androidTest.apk \
+  --device model=Pixel7,version=34 \
+  --use-orchestrator --clear-package-data \
+  --timeout 15m
+```
+**Note**: timeout needs unit suffix (`10m` not `600`). APKs must be x86_64 for emulator.
 
 ---
 
-*Generated: 2026-01-18*
-*Based on Gemini 3 Pro consultation*
+## Full App Simulation — Typing Pipeline Tests (Espresso Plan)
+
+### Motivation
+The 5 bugs discovered in 2026-02-24 (contractions, toggle UI, custom words, perf)
+all lived at **composition boundaries** — places where multiple components interact
+in ways that unit tests miss. Specifically:
+- SuggestionHandler calls ContractionManager.getNonPairedMapping() but not getPairedContractions()
+- WordPredictor.autoCorrect() checks dictionary.containsKey() but dictionary was polluted by contraction aliases
+- MainDictionarySource.toggleWord() updates SharedPreferences but not cached DictionaryWord objects
+- WordPredictor.isWordDisabled() checks disabledWords but not customAndUserWords
+
+### Architecture: Pipeline-Level Testing
+
+```
+                                    ┌─────────────────────────────┐
+  User types "im" ────────────────▶ │ TypingSimulationTest.kt     │
+                                    │                             │
+                                    │ 1. ContractionManager       │
+                                    │    .getNonPairedMapping()   │
+                                    │    .getPairedContractions() │
+                                    │                             │
+                                    │ 2. WordPredictor             │
+                                    │    .predictWordsWithContext()│
+                                    │    .autoCorrect()           │
+                                    │                             │
+                                    │ 3. DictionaryDataSource      │
+                                    │    .toggleWord()            │
+                                    │    .getAllWords() (cache)    │
+                                    └─────────────────────────────┘
+                                                │
+  Validates: "I'm" ◀───────────────────────────┘
+```
+
+**Key insight**: We test the PRODUCTION components with REAL data (full dictionary,
+real contraction files, real SharedPreferences) — not mocks. This catches the
+composition bugs that mocks hide.
+
+### Test Categories in TypingSimulationTest.kt
+
+| Category | Count | What It Tests |
+|----------|-------|---------------|
+| Paired contraction lookup | 6 | its→it's, well→we'll, case insensitivity |
+| Non-paired contraction mapping | 4 | dont→don't, cant→can't, im→i'm, wont→won't |
+| Autocorrect expansion | 10 | Contraction autocorrect, I-capitalization, case preservation |
+| Autocorrect regression guards | 3 | "well"/"were"/"ill" should NOT autocorrect |
+| Dictionary toggle coherence | 2 | Toggle updates cached list without reload |
+| Custom word override | 2 | Custom word overrides disabled word |
+| Tap-typing predictions | 3 | Prefix completion, multiple results |
+| I-contraction capitalization | 3 | im→I'm, ill preserved, id documented |
+| End-to-end scenarios | 3 | Full sentence typing, contraction-heavy, case |
+| Pipeline integration | 3 | Scores descending, words=scores length, empty input |
+
+### Why NOT Full Espresso UI Testing
+
+InputMethodService runs in a separate process — Espresso can't instrument it directly.
+Options considered:
+1. **Test Activity with EditText + IME simulation** — complex, fragile, tests Android plumbing not our code
+2. **UiAutomator keyboard interaction** — slow, brittle, device-dependent
+3. **Pipeline-level testing (chosen)** — tests all production code paths with real data, fast, reliable
+
+The pipeline approach gives us 95% of the coverage at 5% of the complexity. The remaining
+5% (view rendering, touch coordinates, IME lifecycle) stays in manual QA.
+
+### Future Expansion
+
+1. **SuggestionHandler pipeline test** — requires mocking PredictionCoordinator
+   (SuggestionHandler instantiation needs keyboard context). Could test the full
+   contraction injection + merge + capitalization chain.
+2. **Multi-language scenarios** — bilingual typing with secondary dictionary
+3. **Adaptation learning** — verify UserAdaptationManager boosts recently used words
+4. **Performance benchmarks** — dictionary load time, prediction latency, cache hit rates
+
+---
+
+## Metrics
+
+### Coverage (2026-02-24)
+| Type | Count | Execution Time |
+|------|-------|---------------|
+| Pure JVM | 857 | ~17s |
+| MockK | ~176 | ~12s |
+| Instrumented | ~640 | ~12min (emulator.wtf) |
+| **Total** | **~1,673** | — |
+
+---
+
+*Updated: 2026-02-24*
+*Original: 2026-01-18 (Gemini 3 Pro consultation)*
