@@ -14,6 +14,7 @@ import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
 import android.widget.EditText
 import android.widget.ImageButton
@@ -644,6 +645,10 @@ class KeyboardReceiver(
 
     override fun getCurrentInputConnection(): InputConnection? {
         return keyboard2.currentInputConnection
+    }
+
+    override fun getCurrentEditorInfo(): EditorInfo? {
+        return keyboard2.currentInputEditorInfo
     }
 
     override fun getHandler(): Handler {

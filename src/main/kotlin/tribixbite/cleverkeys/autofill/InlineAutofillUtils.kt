@@ -51,13 +51,14 @@ object InlineAutofillUtils {
      * @return An InlineSuggestionsRequest configured with styling specs
      */
     fun createInlineSuggestionsRequest(context: Context): InlineSuggestionsRequest {
-        // Use default dark theme colors for autofill chips
-        val backgroundColor = 0xFF2D2D2D.toInt()
+        // #109: Improved chip styling for better readability and appearance
+        val backgroundColor = 0xFF353535.toInt()  // Slightly lighter dark gray for contrast
         val textColor = 0xFFFFFFFF.toInt()
-        val hintColor = 0xFFAAAAAA.toInt()
+        val hintColor = 0xFFBBBBBB.toInt()  // Brighter hint for subtitle visibility
 
         // Build the styles for inline suggestion chips
         val stylesBuilder = UiVersions.newStylesBuilder()
+        val chipPadding = (4 * context.resources.displayMetrics.density).toInt() // 4dp padding
         val style = InlineSuggestionUi.newStyleBuilder()
             .setSingleIconChipStyle(
                 ViewStyle.Builder()
@@ -65,7 +66,7 @@ object InlineAutofillUtils {
                         Icon.createWithResource(context, R.drawable.autofill_chip_background)
                             .setTint(backgroundColor)
                     )
-                    .setPadding(0, 0, 0, 0)
+                    .setPadding(chipPadding, 0, chipPadding, 0)
                     .build()
             )
             .setChipStyle(
@@ -74,28 +75,29 @@ object InlineAutofillUtils {
                         Icon.createWithResource(context, R.drawable.autofill_chip_background)
                             .setTint(backgroundColor)
                     )
+                    .setPadding(chipPadding * 2, chipPadding, chipPadding * 2, chipPadding)
                     .build()
             )
             .setStartIconStyle(
                 ImageViewStyle.Builder()
-                    .setLayoutMargin(0, 0, 0, 0)
+                    .setLayoutMargin(0, 0, chipPadding, 0)
                     .build()
             )
             .setTitleStyle(
                 TextViewStyle.Builder()
                     .setTextColor(textColor)
-                    .setTextSize(12f)
+                    .setTextSize(14f)  // Larger title for readability
                     .build()
             )
             .setSubtitleStyle(
                 TextViewStyle.Builder()
                     .setTextColor(hintColor)
-                    .setTextSize(10f)
+                    .setTextSize(11f)  // Slightly larger subtitle
                     .build()
             )
             .setEndIconStyle(
                 ImageViewStyle.Builder()
-                    .setLayoutMargin(0, 0, 0, 0)
+                    .setLayoutMargin(chipPadding, 0, 0, 0)
                     .build()
             )
             .build()
@@ -105,8 +107,10 @@ object InlineAutofillUtils {
 
         // Get suggestion strip height for proper sizing
         val height = context.resources.getDimensionPixelSize(R.dimen.suggestion_strip_height)
+        // #109: Use display width for max chip size so names aren't truncated
+        val displayWidth = context.resources.displayMetrics.widthPixels
         val minSize = Size(100, height)
-        val maxSize = Size(740, height)
+        val maxSize = Size(displayWidth, height)
 
         // Create presentation specs - multiple specs needed for some password managers
         val presentationSpecs = mutableListOf<InlinePresentationSpec>()

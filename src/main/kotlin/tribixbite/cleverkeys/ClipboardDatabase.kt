@@ -56,9 +56,16 @@ class ClipboardDatabase private constructor(context: Context) :
                 WHERE $COLUMN_CONTENT_HASH = ? AND $COLUMN_CONTENT = ? AND $COLUMN_EXPIRY_TIMESTAMP > ?
             """.trimIndent()
             db.rawQuery(duplicateQuery, arrayOf(contentHash, trimmedContent, currentTime.toString())).use { cursor ->
-                if (cursor.count > 0) {
-                    Log.d(TAG, "Duplicate entry ignored: ${trimmedContent.take(20)}...")
-                    return false
+                if (cursor.moveToFirst()) {
+                    // #108: Move duplicate to top by updating its timestamp instead of ignoring
+                    val existingId = cursor.getLong(0)
+                    val updateValues = ContentValues().apply {
+                        put(COLUMN_TIMESTAMP, currentTime)
+                        put(COLUMN_EXPIRY_TIMESTAMP, expiryTimestamp)
+                    }
+                    db.update(TABLE_CLIPBOARD, updateValues, "$COLUMN_ID = ?", arrayOf(existingId.toString()))
+                    Log.d(TAG, "Duplicate moved to top: ${trimmedContent.take(20)}... (id=$existingId)")
+                    return true
                 }
             }
             val values = ContentValues().apply {

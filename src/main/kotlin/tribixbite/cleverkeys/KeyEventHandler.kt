@@ -373,11 +373,25 @@ class KeyEventHandler(
         conn.performContextMenuAction(id)
     }
 
+    /**
+     * #113: Handle paste with terminal app fallback.
+     * performContextMenuAction(paste) doesn't work in terminal emulators (Termux, ConnectBot, etc.)
+     * because they don't implement the Android context menu protocol. Send Ctrl+V key event instead,
+     * which terminal emulators intercept and handle as paste.
+     */
+    private fun handlePaste() {
+        if (TerminalUtils.isTerminalApp(recv.getCurrentEditorInfo())) {
+            send_key_down_up(KeyEvent.KEYCODE_V, KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON)
+        } else {
+            sendContextMenuAction(android.R.id.paste)
+        }
+    }
+
     @SuppressLint("InlinedApi")
     private fun handleEditingKey(ev: KeyValue.Editing) {
         when (ev) {
             KeyValue.Editing.COPY -> if (isSelectionNotEmpty()) sendContextMenuAction(android.R.id.copy)
-            KeyValue.Editing.PASTE -> sendContextMenuAction(android.R.id.paste)
+            KeyValue.Editing.PASTE -> handlePaste()
             KeyValue.Editing.CUT -> if (isSelectionNotEmpty()) sendContextMenuAction(android.R.id.cut)
             KeyValue.Editing.SELECT_ALL -> sendContextMenuAction(android.R.id.selectAll)
             KeyValue.Editing.SHARE -> sendContextMenuAction(android.R.id.shareText)
@@ -653,6 +667,7 @@ class KeyEventHandler(
         fun set_compose_pending(pending: Boolean)
         fun selection_state_changed(selectionIsOngoing: Boolean)
         fun getCurrentInputConnection(): InputConnection?
+        fun getCurrentEditorInfo(): EditorInfo? = null // #113: needed for terminal app detection
         fun getHandler(): Handler
         fun handle_text_typed(text: String)
         fun handle_backspace() {} // Default implementation for backward compatibility
