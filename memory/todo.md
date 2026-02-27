@@ -17,7 +17,7 @@ Issues already implemented, need user verification + close:
 - **#70** Programmatic launch via Intent — import/export intent support requested
 - **#74** Haptic not disabled when Vibrate Feedback disabled — per-event controls exist
 - **#81** Separate Long-Press Repeat for Backspace vs Character — config exists
-- **#82** Option to disable automatic spaces — AUTO_SPACE_AFTER_SUGGESTION config exists
+- ✅ **#82** Auto-space before tapped suggestion — new `auto_space_before_suggestion` toggle (821f943fb)
 
 ### Bugs — Confirmed Real Issues
 - **#30** Per-key short swipe customization to keyboard events does nothing
@@ -98,6 +98,16 @@ Issues already implemented, need user verification + close:
   User has tested and confirmed GIF pack import/removal/display functional.
 
 ---
+
+## Completed (2026-02-27)
+- ✅ **#82 auto_space_before_suggestion** (821f943fb):
+  - New boolean toggle: controls leading space before tapped suggestions
+  - When disabled: "this:" + tap "english" → "this:english" (no leading space)
+  - Swipe auto-inserts always add leading space (preserves word separation)
+  - Both code paths gated (SuggestionHandler.kt + InputCoordinator.kt)
+  - Settings UI: toggle in Word Prediction section, searchable
+  - 7 new AutoSpaceLogicTest cases + 1 IssueRegressionTest default check
+  - 790 pure JVM tests pass (was 781 before GIF panel + 9 new)
 
 ## Completed (2026-02-25)
 - ✅ **56 new instrumented tests** (5e4762c33):
