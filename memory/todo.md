@@ -65,9 +65,9 @@ Issues already implemented, need user verification + close:
 - **#99** Unclear/outdated documentation of build_langpack.py
   - Hungarian user tried to build langpack; docs incomplete/outdated
 - **#107** Clipboard: Add a Copy button to store text in system clipboard
-- **#108** Clipboard: Move re-copied text to top of list (dedup + reorder)
-- **#109** Improve the look of the autofill suggestion style
-  - Follow-up to #48; autofill works but visual style needs polish
+- ✅ **#108** Clipboard: Move re-copied text to top of list (72adabb9f)
+- ✅ **#109** Improve the look of the autofill suggestion style (72adabb9f)
+- ✅ **#113** Paste shortcut works in Termux — Ctrl+V fallback for terminal apps (72adabb9f)
 - **#110** Cancel autocorrect on backspace
   - Undo-autocorrect exists but not triggered by backspace key specifically
 
@@ -100,14 +100,26 @@ Issues already implemented, need user verification + close:
 ---
 
 ## Completed (2026-02-27)
-- ✅ **#82 auto_space_before_suggestion** (821f943fb):
+- ✅ **#108 clipboard dedup reorder** (72adabb9f):
+  - Duplicate clipboard entries now move to top instead of being silently ignored
+  - Updates timestamp + expiry on existing row (no delete/reinsert)
+- ✅ **#113 Termux paste** (72adabb9f):
+  - Paste key sends Ctrl+V key event in terminal apps (Termux, ConnectBot, etc.)
+  - Uses TerminalUtils.isTerminalApp() for detection
+  - Added getCurrentEditorInfo() to KeyEventHandler.IReceiver interface
+- ✅ **#109 autofill chip style** (72adabb9f):
+  - Larger text (14sp title, 11sp subtitle), 8dp horizontal padding
+  - Max chip width uses display width (was hardcoded 740px)
+  - Chip background: lighter gray (#353535), subtle border, 20dp corner radius
+- ✅ **#82 auto_space_before_suggestion** (823f2f16e):
   - New boolean toggle: controls leading space before tapped suggestions
   - When disabled: "this:" + tap "english" → "this:english" (no leading space)
   - Swipe auto-inserts always add leading space (preserves word separation)
   - Both code paths gated (SuggestionHandler.kt + InputCoordinator.kt)
   - Settings UI: toggle in Word Prediction section, searchable
-  - 7 new AutoSpaceLogicTest cases + 1 IssueRegressionTest default check
-  - 790 pure JVM tests pass (was 781 before GIF panel + 9 new)
+- ✅ **GIF panel merged to main** (6d4e6ca6d):
+  - Merged feature/gif-panel-clean branch (39 commits)
+  - 866 pure JVM tests pass (790 main + 76 GIF)
 
 ## Completed (2026-02-25)
 - ✅ **56 new instrumented tests** (5e4762c33):
