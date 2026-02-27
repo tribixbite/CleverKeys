@@ -193,6 +193,11 @@ class IssueRegressionTest {
         assertThat(Defaults.AUTO_SPACE_AFTER_SUGGESTION).isTrue()
     }
 
+    @Test
+    fun `issue 82 — auto space before suggestion enabled`() {
+        assertThat(Defaults.AUTO_SPACE_BEFORE_SUGGESTION).isTrue()
+    }
+
     // =========================================================================
     // #86 — Respect Android 13+ IS_SENSITIVE clipboard flag
     // =========================================================================

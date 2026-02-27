@@ -4,17 +4,20 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
 /**
- * Comprehensive tests for #82 — Auto-space after suggestion toggle.
+ * Comprehensive tests for #82 — Auto-space after/before suggestion toggles.
  *
- * Tests the 4-way decision logic from SuggestionHandler.kt lines 631-667:
- *
+ * Tests the 4-way trailing space decision logic from SuggestionHandler.kt:
  * 1. !auto_space && !isSwipe → no trailing space (user disabled #82)
  * 2. termux_mode && !isSwipe && inTermuxApp → no trailing space (terminal)
  * 3. hasSpaceAfter → no trailing space (mid-sentence replacement)
  * 4. else → trailing space added (normal behavior)
  *
- * Also tests the addedTrailingSpace tracking logic at lines 662-664 which
- * determines whether to mark the space as auto-inserted for smart punctuation.
+ * Also tests the leading space (auto_space_before_suggestion) logic:
+ * - When disabled + tap: no leading space (e.g. "this:" + tap "english" → "this:english")
+ * - When disabled + swipe: leading space still added (swipe always separates words)
+ * - When enabled: leading space whenever previous char is not whitespace/opening punct
+ *
+ * Also tests the addedTrailingSpace tracking for smart punctuation.
  */
 class AutoSpaceLogicTest {
 
@@ -67,9 +70,34 @@ class AutoSpaceLogicTest {
     // Config defaults
     // =========================================================================
 
+    /**
+     * Determines whether a leading space should be added before the word.
+     * Mirrors the needsSpaceBefore logic in SuggestionHandler.kt / InputCoordinator.kt.
+     *
+     * When auto_space_before_suggestion is false and it's a tap (not swipe),
+     * needsSpaceBefore is forced to false regardless of preceding character.
+     * Swipe auto-inserts always get the leading space.
+     */
+    private fun decideNeedsSpaceBefore(
+        autoSpaceBeforeEnabled: Boolean,
+        isSwipeAutoInsert: Boolean,
+        prevCharIsNonWhitespace: Boolean
+    ): Boolean {
+        return if (!isSwipeAutoInsert && !autoSpaceBeforeEnabled) {
+            false  // User disabled leading space before tapped suggestions
+        } else {
+            prevCharIsNonWhitespace
+        }
+    }
+
     @Test
     fun `auto space after suggestion is enabled by default`() {
         assertThat(Defaults.AUTO_SPACE_AFTER_SUGGESTION).isTrue()
+    }
+
+    @Test
+    fun `auto space before suggestion is enabled by default`() {
+        assertThat(Defaults.AUTO_SPACE_BEFORE_SUGGESTION).isTrue()
     }
 
     @Test
@@ -382,5 +410,77 @@ class AutoSpaceLogicTest {
             hasSpaceAfter = true
         )
         assertThat(mode).isEqualTo(SpaceMode.NO_SPACE_TERMUX)
+    }
+
+    // =========================================================================
+    // Leading space (auto_space_before_suggestion)
+    // =========================================================================
+
+    @Test
+    fun `leading space enabled — tap after colon gets space before`() {
+        // "this:" + tap "english" → "this: english"
+        assertThat(decideNeedsSpaceBefore(
+            autoSpaceBeforeEnabled = true,
+            isSwipeAutoInsert = false,
+            prevCharIsNonWhitespace = true  // ':' is not whitespace
+        )).isTrue()
+    }
+
+    @Test
+    fun `leading space disabled — tap after colon gets no space before`() {
+        // "this:" + tap "english" → "this:english"
+        assertThat(decideNeedsSpaceBefore(
+            autoSpaceBeforeEnabled = false,
+            isSwipeAutoInsert = false,
+            prevCharIsNonWhitespace = true
+        )).isFalse()
+    }
+
+    @Test
+    fun `leading space disabled — swipe still gets space before`() {
+        // Swipe auto-insert always gets leading space regardless of setting
+        assertThat(decideNeedsSpaceBefore(
+            autoSpaceBeforeEnabled = false,
+            isSwipeAutoInsert = true,
+            prevCharIsNonWhitespace = true
+        )).isTrue()
+    }
+
+    @Test
+    fun `leading space enabled — swipe gets space before`() {
+        assertThat(decideNeedsSpaceBefore(
+            autoSpaceBeforeEnabled = true,
+            isSwipeAutoInsert = true,
+            prevCharIsNonWhitespace = true
+        )).isTrue()
+    }
+
+    @Test
+    fun `leading space — no space when previous char is whitespace`() {
+        // Regardless of setting, no double space when already preceded by whitespace
+        assertThat(decideNeedsSpaceBefore(
+            autoSpaceBeforeEnabled = true,
+            isSwipeAutoInsert = false,
+            prevCharIsNonWhitespace = false  // Previous char is space/newline
+        )).isFalse()
+    }
+
+    @Test
+    fun `leading space disabled — no space even with whitespace prev (trivially false)`() {
+        assertThat(decideNeedsSpaceBefore(
+            autoSpaceBeforeEnabled = false,
+            isSwipeAutoInsert = false,
+            prevCharIsNonWhitespace = false
+        )).isFalse()
+    }
+
+    @Test
+    fun `leading space — swipe no space when previous is whitespace`() {
+        // Even swipe doesn't add space if there's already whitespace
+        assertThat(decideNeedsSpaceBefore(
+            autoSpaceBeforeEnabled = true,
+            isSwipeAutoInsert = true,
+            prevCharIsNonWhitespace = false
+        )).isFalse()
     }
 }

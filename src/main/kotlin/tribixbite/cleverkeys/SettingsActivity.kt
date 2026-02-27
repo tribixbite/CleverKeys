@@ -193,6 +193,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var swipeOnPasswordFields by mutableStateOf(false)  // #39: Allow swipe on password fields
     private var wordPredictionEnabled by mutableStateOf(true)  // Match Config.kt default
     private var autoSpaceAfterSuggestion by mutableStateOf(true)  // #82: Add trailing space after selecting suggestion
+    private var autoSpaceBeforeSuggestion by mutableStateOf(true)  // Add leading space before tapped suggestion
     private var suggestionBarOpacity by mutableStateOf(90)
     private var autoCorrectEnabled by mutableStateOf(true)
     private var termuxModeEnabled by mutableStateOf(false)
@@ -472,6 +473,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             // ==================== WORD PREDICTION & AUTOCORRECT ====================
             SearchableSetting("Word Predictions", listOf("prediction", "suggestions", "completion", "autocomplete"), "Word Prediction", expandSection = { inputSectionExpanded = true }, settingId = "word_prediction"),
             SearchableSetting("Auto-Space After Suggestion", listOf("space", "auto", "trailing", "automatic"), "Word Prediction", expandSection = { inputSectionExpanded = true }, settingId = "auto_space"),
+            SearchableSetting("Auto-Space Before Suggestion", listOf("space", "auto", "leading", "before", "tap"), "Word Prediction", expandSection = { inputSectionExpanded = true }, settingId = "auto_space_before"),
             SearchableSetting("Suggestion Bar Opacity", listOf("opacity", "transparency", "prediction bar"), "Word Prediction", expandSection = { inputSectionExpanded = true }, settingId = "suggestion_opacity"),
             SearchableSetting("Show Exact Typed Word", listOf("exact", "typed", "add to dictionary"), "Word Prediction", expandSection = { inputSectionExpanded = true }, settingId = "show_exact_typed"),
             SearchableSetting("Context-Aware Predictions", listOf("context", "aware", "intelligent"), "Word Prediction", expandSection = { inputSectionExpanded = true }, settingId = "context_aware"),
@@ -1887,6 +1889,18 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                             autoSpaceAfterSuggestion = it
                             saveSetting("auto_space_after_suggestion", it)
                             Config.globalConfig()?.auto_space_after_suggestion = it
+                        }
+                    )
+
+                    // Auto-space before tapped suggestion (leading space)
+                    SettingsSwitch(
+                        title = "Auto-Space Before Suggestion",
+                        description = "Insert leading space before a tapped suggestion (swipe always adds space)",
+                        checked = autoSpaceBeforeSuggestion,
+                        onCheckedChange = {
+                            autoSpaceBeforeSuggestion = it
+                            saveSetting("auto_space_before_suggestion", it)
+                            Config.globalConfig()?.auto_space_before_suggestion = it
                         }
                     )
 
@@ -4825,6 +4839,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         // Phase 1: Load exposed Config.kt settings
         wordPredictionEnabled = prefs.getSafeBoolean("word_prediction_enabled", Defaults.WORD_PREDICTION_ENABLED)
         autoSpaceAfterSuggestion = prefs.getSafeBoolean("auto_space_after_suggestion", Defaults.AUTO_SPACE_AFTER_SUGGESTION)
+        autoSpaceBeforeSuggestion = prefs.getSafeBoolean("auto_space_before_suggestion", Defaults.AUTO_SPACE_BEFORE_SUGGESTION)
         suggestionBarOpacity = Config.safeGetInt(prefs, "suggestion_bar_opacity", Defaults.SUGGESTION_BAR_OPACITY)
         autoCorrectEnabled = prefs.getSafeBoolean("autocorrect_enabled", Defaults.AUTOCORRECT_ENABLED)
         termuxModeEnabled = prefs.getSafeBoolean("termux_mode_enabled", Defaults.TERMUX_MODE_ENABLED)

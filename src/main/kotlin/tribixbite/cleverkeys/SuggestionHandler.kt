@@ -591,19 +591,25 @@ class SuggestionHandler(
                     }
                 }
 
-                // Add space before word if previous character isn't whitespace
-                val needsSpaceBefore = try {
-                    val textBefore = inputConnection.getTextBeforeCursor(1, 0)
-                    if (textBefore != null && textBefore.isNotEmpty()) {
-                        val prevChar = textBefore[0]
-                        // Add space if previous char is not whitespace and not punctuation start
-                        !prevChar.isWhitespace() && prevChar != '(' && prevChar != '[' && prevChar != '{'
-                    } else {
+                // Add space before word if previous character isn't whitespace.
+                // For tapped suggestions (not swipe), respect auto_space_before_suggestion setting.
+                // Swipe auto-inserts always get the leading space since the swipe replaces no typed text.
+                val needsSpaceBefore = if (!isSwipeAutoInsert && !config.auto_space_before_suggestion) {
+                    false  // User disabled leading space before tapped suggestions
+                } else {
+                    try {
+                        val textBefore = inputConnection.getTextBeforeCursor(1, 0)
+                        if (textBefore != null && textBefore.isNotEmpty()) {
+                            val prevChar = textBefore[0]
+                            // Add space if previous char is not whitespace and not punctuation start
+                            !prevChar.isWhitespace() && prevChar != '(' && prevChar != '[' && prevChar != '{'
+                        } else {
+                            false
+                        }
+                    } catch (e: Exception) {
+                        // If getTextBeforeCursor fails, assume we don't need space before
                         false
                     }
-                } catch (e: Exception) {
-                    // If getTextBeforeCursor fails, assume we don't need space before
-                    false
                 }
 
                 // v1.2.6 FIX: Check if there's already a space after cursor (mid-sentence replacement)

@@ -694,18 +694,24 @@ class InputCoordinator(
                     contextTracker.clearCurrentWordSuffix()
                 }
 
-                // Add space before word if previous character isn't whitespace
-                val needsSpaceBefore = try {
-                    val textBefore = connection.getTextBeforeCursor(1, 0)
-                    if (textBefore?.isNotEmpty() == true) {
-                        val prevChar = textBefore[0]
-                        // Add space if previous char is not whitespace and not punctuation start
-                        !prevChar.isWhitespace() && prevChar != '(' && prevChar != '[' && prevChar != '{'
-                    } else {
+                // Add space before word if previous character isn't whitespace.
+                // For tapped suggestions (not swipe), respect auto_space_before_suggestion setting.
+                // Swipe auto-inserts always get the leading space since the swipe replaces no typed text.
+                val needsSpaceBefore = if (!isSwipeAutoInsert && !config.auto_space_before_suggestion) {
+                    false  // User disabled leading space before tapped suggestions
+                } else {
+                    try {
+                        val textBefore = connection.getTextBeforeCursor(1, 0)
+                        if (textBefore?.isNotEmpty() == true) {
+                            val prevChar = textBefore[0]
+                            // Add space if previous char is not whitespace and not punctuation start
+                            !prevChar.isWhitespace() && prevChar != '(' && prevChar != '[' && prevChar != '{'
+                        } else {
+                            false
+                        }
+                    } catch (e: Exception) {
                         false
                     }
-                } catch (e: Exception) {
-                    false
                 }
 
                 // v1.33.9: Shift/caps-lock transformation is now applied in handlePredictionResults

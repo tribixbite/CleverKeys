@@ -258,6 +258,7 @@ object Defaults {
     const val SWIPE_SHOW_RAW_BEAM_PREDICTIONS = false  // Debug: show beam search predictions
     const val TERMUX_MODE_ENABLED = true
     const val AUTO_SPACE_AFTER_SUGGESTION = true  // Add trailing space after selecting suggestion
+    const val AUTO_SPACE_BEFORE_SUGGESTION = true  // Add leading space before tapped suggestion
 
     // Privacy
     const val PRIVACY_COLLECT_SWIPE = false
@@ -501,6 +502,7 @@ class Config private constructor(
     @JvmField var swipe_show_raw_beam_predictions = false
     @JvmField var termux_mode_enabled = false
     @JvmField var auto_space_after_suggestion = true  // Add trailing space after selecting suggestion
+    @JvmField var auto_space_before_suggestion = true  // Add leading space before tapped suggestion
 
     // Beam search tuning
     @JvmField var neural_beam_alpha = 0f
@@ -756,6 +758,7 @@ class Config private constructor(
         neural_greedy_search = _prefs.getBoolean("neural_greedy_search", Defaults.NEURAL_GREEDY_SEARCH)
         termux_mode_enabled = _prefs.getBoolean("termux_mode_enabled", Defaults.TERMUX_MODE_ENABLED)
         auto_space_after_suggestion = _prefs.getBoolean("auto_space_after_suggestion", Defaults.AUTO_SPACE_AFTER_SUGGESTION)
+        auto_space_before_suggestion = _prefs.getBoolean("auto_space_before_suggestion", Defaults.AUTO_SPACE_BEFORE_SUGGESTION)
         swipe_debug_detailed_logging = _prefs.getBoolean("swipe_debug_detailed_logging", Defaults.SWIPE_DEBUG_DETAILED_LOGGING)
         swipe_debug_show_raw_output = _prefs.getBoolean("swipe_debug_show_raw_output", Defaults.SWIPE_DEBUG_SHOW_RAW_OUTPUT)
         swipe_show_raw_beam_predictions = _prefs.getBoolean("swipe_show_raw_beam_predictions", Defaults.SWIPE_SHOW_RAW_BEAM_PREDICTIONS)
