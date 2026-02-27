@@ -7,7 +7,7 @@ data class DictionaryWord(
     val word: String,
     val frequency: Int = 0,
     val source: WordSource,
-    val enabled: Boolean = true
+    var enabled: Boolean = true
 ) : Comparable<DictionaryWord> {
 
     override fun compareTo(other: DictionaryWord): Int {

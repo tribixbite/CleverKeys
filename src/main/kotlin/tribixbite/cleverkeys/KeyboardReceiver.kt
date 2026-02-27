@@ -2,12 +2,30 @@ package tribixbite.cleverkeys
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.os.Handler
+import android.text.Editable
+import android.text.TextUtils
+import android.text.TextWatcher
+import android.util.TypedValue
+import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputConnection
+import android.widget.EditText
+import android.widget.ImageButton
+import android.widget.LinearLayout
+import android.widget.PopupWindow
+import android.widget.TextView
+import android.widget.Toast
 import androidx.core.view.ViewCompat
+import tribixbite.cleverkeys.gif.Gif
+import tribixbite.cleverkeys.gif.GifAssetManager
+import tribixbite.cleverkeys.gif.GifGridManager
+import tribixbite.cleverkeys.gif.GifGroupButtonsBar
 
 /**
  * Handles keyboard events and state changes for CleverKeysService.
@@ -59,10 +77,15 @@ class KeyboardReceiver(
     // Track which pane is currently visible for toggle behavior
     private var currentPaneType: PaneType = PaneType.NONE
 
-    private enum class PaneType { NONE, EMOJI, CLIPBOARD }
+    private enum class PaneType { NONE, EMOJI, CLIPBOARD, GIF }
 
     // #41: Emoji search manager (uses suggestion bar for status display)
     private var emojiSearchManager: EmojiSearchManager? = null
+
+    // GIF search: reference to search EditText for key routing
+    private var gifSearchInput: EditText? = null
+    // GIF search active flag — like EmojiSearchManager.searchActive / ClipboardManager.searchMode
+    private var gifSearchActive: Boolean = false
 
     /**
      * Sets references to views for content pane management.
@@ -143,6 +166,9 @@ class KeyboardReceiver(
         currentPaneType = PaneType.NONE
         emojiSearchManager?.onPaneClosed()
         clipboardManager.resetSearchOnHide()
+        // Clear GIF search state so isGifPaneOpen() returns false
+        gifSearchActive = false
+        gifSearchInput = null
     }
 
     /**
@@ -273,13 +299,138 @@ class KeyboardReceiver(
                 currentPaneType = PaneType.CLIPBOARD
             }
 
+            KeyValue.Event.SWITCH_GIF -> {
+                // GIF panel is opt-in — ignore key if disabled in settings
+                if (!Config.globalConfig().gif_enabled) return
+
+                // Toggle behavior: if GIF pane already visible, close it
+                if (gifSearchActive) {
+                    handle_event_key(KeyValue.Event.SWITCH_BACK_GIF)
+                    return
+                }
+
+                // Inflate fresh GIF pane layout
+                val gifPaneView = keyboard2.inflate_view(R.layout.gif_pane) as ViewGroup
+
+                // Show GIF pane in content container (keyboard stays visible below)
+                contentPaneContainer?.let { container ->
+                    container.removeAllViews()
+                    (gifPaneView.parent as? ViewGroup)?.removeView(gifPaneView)
+                    gifPaneView.layoutParams = android.widget.FrameLayout.LayoutParams(
+                        android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+                        contentPaneHeight
+                    )
+                    container.addView(gifPaneView)
+                    showContentPane()
+                } ?: run {
+                    // Fallback for when predictions disabled (no container)
+                    keyboard2.setInputView(gifPaneView)
+                }
+
+                currentPaneType = PaneType.GIF
+
+                // Wire up GIF grid with RecyclerView + Coil
+                val recyclerView = gifPaneView.findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.gif_grid)
+                val gifColumns = Config.globalConfig().gif_thumbnail_columns
+                val gifGrid = recyclerView?.let { GifGridManager(context, it, gifColumns) }
+                gifGrid?.onGifSelected = { gif ->
+                    // Tap inserts the Giphy URL as text into the input field
+                    val url = gif.getGiphyUrl()
+                    val ic = keyboard2.currentInputConnection
+                    android.util.Log.d("GifPanel", "onGifSelected: url=$url ic=${ic != null} searchText='${gif.searchText}'")
+                    if (url != null && ic != null) {
+                        val ok = ic.commitText(url, 1)
+                        android.util.Log.d("GifPanel", "commitText result=$ok")
+                    } else {
+                        // Fallback: if commitText can't work, copy URL to clipboard
+                        if (url != null) {
+                            val clip = android.content.ClipData.newPlainText("GIF URL", url)
+                            val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                            cm.setPrimaryClip(clip)
+                            Toast.makeText(context, "URL copied", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(context, "No URL for this GIF", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                    // Record usage and close GIF pane
+                    handle_event_key(KeyValue.Event.SWITCH_BACK_GIF)
+                }
+
+                // Long press: IME-safe PopupWindow with title + copy actions
+                // (PopupMenu fails in IME context — no window token)
+                gifGrid?.onGifLongPress = { gif, anchor ->
+                    showGifPopup(gif, anchor)
+                }
+
+                // Wire up search bar — store reference and activate routing flag
+                // (same pattern as EmojiSearchManager.searchActive / ClipboardManager.searchMode)
+                val searchInput = gifPaneView.findViewById<EditText>(R.id.gif_search_input)
+                gifSearchInput = searchInput
+                gifSearchActive = true
+                searchInput?.requestFocus()
+                val searchClear = gifPaneView.findViewById<ImageButton>(R.id.gif_search_clear)
+                val noResults = gifPaneView.findViewById<TextView>(R.id.gif_no_results)
+
+                searchInput?.addTextChangedListener(object : TextWatcher {
+                    override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                    override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+                    override fun afterTextChanged(s: Editable?) {
+                        val query = s?.toString()?.trim() ?: ""
+                        searchClear?.visibility = if (query.isNotEmpty()) View.VISIBLE else View.GONE
+                        gifGrid?.search(query)
+                        // Show/hide no results message
+                        val count = gifGrid?.getResultCount() ?: 0
+                        noResults?.visibility = if (query.isNotEmpty() && count == 0) View.VISIBLE else View.GONE
+                    }
+                })
+
+                searchClear?.setOnClickListener {
+                    searchInput?.text?.clear()
+                }
+
+                // Wire up close button
+                gifPaneView.findViewById<ImageButton>(R.id.gif_close_button)?.setOnClickListener {
+                    handle_event_key(KeyValue.Event.SWITCH_BACK_GIF)
+                }
+
+                // Wire up pagination controls
+                val paginationBar = gifPaneView.findViewById<android.widget.LinearLayout>(R.id.gif_pagination_bar)
+                val pageInfo = gifPaneView.findViewById<TextView>(R.id.gif_page_info)
+                val pagePrev = gifPaneView.findViewById<TextView>(R.id.gif_page_prev)
+                val pageNext = gifPaneView.findViewById<TextView>(R.id.gif_page_next)
+
+                gifGrid?.onPaginationChanged = { needsPagination, currentPage, totalPages ->
+                    paginationBar?.visibility = if (needsPagination) View.VISIBLE else View.GONE
+                    pageInfo?.text = "$currentPage / $totalPages"
+                    pagePrev?.alpha = if (gifGrid.hasPreviousPage()) 1.0f else 0.3f
+                    pageNext?.alpha = if (gifGrid.hasNextPage()) 1.0f else 0.3f
+                }
+
+                pagePrev?.setOnClickListener { gifGrid?.previousPage() }
+                pageNext?.setOnClickListener { gifGrid?.nextPage() }
+
+                // Wire up category buttons — clear search + switch grid category
+                val groupButtons = gifPaneView.findViewById<GifGroupButtonsBar>(R.id.gif_group_buttons)
+                groupButtons?.setOnCategorySelectedListener {
+                    searchInput?.text?.clear()
+                }
+                groupButtons?.onCategoryChanged = { category ->
+                    gifGrid?.setCategory(category)
+                }
+            }
+
             KeyValue.Event.SWITCH_BACK_EMOJI,
-            KeyValue.Event.SWITCH_BACK_CLIPBOARD -> {
+            KeyValue.Event.SWITCH_BACK_CLIPBOARD,
+            KeyValue.Event.SWITCH_BACK_GIF -> {
                 // Exit clipboard search mode when switching back
                 clipboardManager.resetSearchOnHide()
 
                 // #41 v4: Notify emoji search manager pane is closing
                 emojiSearchManager?.onPaneClosed()
+
+                // Clear GIF search state when pane closes
+                gifSearchActive = false
+                gifSearchInput = null
 
                 // Reset pane tracking
                 currentPaneType = PaneType.NONE
@@ -357,6 +508,128 @@ class KeyboardReceiver(
         }
     }
 
+    /**
+     * Show an IME-safe popup for GIF long-press.
+     * Uses PopupWindow (not PopupMenu) because IME views lack a window token
+     * for standard menus. Same approach as EmojiTooltipManager.
+     */
+    private fun showGifPopup(gif: Gif, anchor: View) {
+        val density = context.resources.displayMetrics.density
+        val padding = (12 * density).toInt()
+        val cornerRadius = 8 * density
+
+        val background = GradientDrawable().apply {
+            setColor(0xEE222222.toInt())
+            this.cornerRadius = cornerRadius
+        }
+
+        val container = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(padding, padding, padding, padding)
+            this.background = background
+        }
+
+        // Title: display name of the GIF
+        val titleView = TextView(context).apply {
+            text = gif.getDisplayName()
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
+            setTextColor(Color.WHITE)
+            setTypeface(null, Typeface.BOLD)
+            maxWidth = (220 * density).toInt()
+            maxLines = 2
+            ellipsize = TextUtils.TruncateAt.END
+            setPadding(0, 0, 0, (8 * density).toInt())
+        }
+        container.addView(titleView)
+
+        val popup = PopupWindow(
+            container,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply {
+            isFocusable = false // Must be false — focusable popup steals focus from content pane
+            isTouchable = true
+            isOutsideTouchable = true
+            elevation = 8f
+        }
+
+        // Helper to create a tappable action row
+        fun addAction(label: String, onClick: () -> Unit) {
+            val actionView = TextView(context).apply {
+                text = label
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
+                setTextColor(0xFF90CAF9.toInt()) // Light blue
+                setPadding(0, (6 * density).toInt(), 0, (6 * density).toInt())
+                setOnClickListener {
+                    onClick()
+                    popup.dismiss()
+                }
+            }
+            container.addView(actionView)
+        }
+
+        // "Copy URL" — copies the Giphy animated GIF URL
+        val url = gif.getGiphyUrl()
+        if (url != null) {
+            addAction("Copy URL") {
+                val clip = android.content.ClipData.newPlainText("GIF URL", url)
+                val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                cm.setPrimaryClip(clip)
+                Toast.makeText(context, "URL copied", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // "Copy GIF" — only shown when full animated file exists on device
+        val fullGifFile = java.io.File(context.filesDir, gif.getFullPath())
+        if (fullGifFile.exists()) {
+            addAction("Copy GIF") {
+                try {
+                    val uri = androidx.core.content.FileProvider.getUriForFile(
+                        context,
+                        "${context.packageName}.fileprovider",
+                        fullGifFile
+                    )
+                    val clip = android.content.ClipData.newUri(
+                        context.contentResolver,
+                        gif.getDisplayName(),
+                        uri
+                    )
+                    val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                    cm.setPrimaryClip(clip)
+                    Toast.makeText(context, "GIF copied", Toast.LENGTH_SHORT).show()
+                } catch (e: Exception) {
+                    android.util.Log.w("KeyboardReceiver", "Copy GIF failed: ${e.message}")
+                }
+            }
+        }
+
+        // "Copy keywords"
+        val keywords = gif.getKeywords()
+        if (keywords.isNotEmpty()) {
+            addAction("Copy keywords") {
+                val clip = android.content.ClipData.newPlainText("GIF keywords", keywords.joinToString(", "))
+                val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                cm.setPrimaryClip(clip)
+                Toast.makeText(context, "Keywords copied", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // Show anchored above the tapped cell (same positioning as EmojiTooltipManager)
+        try {
+            container.measure(
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+            )
+            val popupWidth = container.measuredWidth
+            val popupHeight = container.measuredHeight
+            val offsetX = (anchor.width - popupWidth) / 2
+            val offsetY = -anchor.height - popupHeight - (8 * density).toInt()
+            popup.showAsDropDown(anchor, offsetX, offsetY, Gravity.TOP or Gravity.START)
+        } catch (e: Exception) {
+            android.util.Log.w("KeyboardReceiver", "GIF popup failed: ${e.message}")
+        }
+    }
+
     override fun set_shift_state(state: Boolean, lock: Boolean) {
         keyboardView.set_shift_state(state, lock)
     }
@@ -419,5 +692,32 @@ class KeyboardReceiver(
 
     override fun backspaceEmojiSearch() {
         emojiSearchManager?.backspaceSearch()
+    }
+
+    // GIF search routing — uses dedicated boolean flag like emoji/clipboard
+    // (searchActive flag is independent of content pane state flags which get
+    // reset by resetContentPaneState() on onFinishInputView)
+    override fun isGifPaneOpen(): Boolean {
+        return gifSearchActive
+    }
+
+    override fun appendToGifSearch(text: String) {
+        // Use setText + setSelection (same pattern as EmojiSearchManager.appendToSearch)
+        // EditText.append() doesn't reliably work when the IME owns the view
+        val input = gifSearchInput ?: return
+        val current = input.text?.toString() ?: ""
+        val newText = current + text
+        input.setText(newText)
+        input.setSelection(newText.length)
+    }
+
+    override fun backspaceGifSearch() {
+        val input = gifSearchInput ?: return
+        val current = input.text?.toString() ?: ""
+        if (current.isNotEmpty()) {
+            val newText = current.dropLast(1)
+            input.setText(newText)
+            input.setSelection(newText.length)
+        }
     }
 }

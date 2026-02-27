@@ -573,66 +573,19 @@ cd ../cleverkeys-gif-module && ./build-on-termux.sh
 ## In Progress
 - 🔄 Subkey System Unification (Option D) - awaiting user answers to clarifying questions
   - See: `memory/subkey-unification-research.md`
-- 🔄 **GIF Panel (Offline)** - file-picker import system implemented, E2E testing in progress
-  - Branch: `feature/gif-panel-clean` (git worktree at `../cleverkeys-gif-module`)
+- 🔄 **GIF Panel (Offline)** — merged to main, pending device testing
   - Spec: `docs/specs/gif-panel-spec.md`
-  - Architecture: No INTERNET permission. User downloads ZIP from GitHub Releases,
-    imports via file picker (ACTION_OPEN_DOCUMENT). ATTACH pack.db → INSERT into main DB.
-  - Schema: V4 with FTS4 (not FTS5 — not available on all Android builds)
-  - All 9 implementation steps complete:
-    - [x] Step 1: Partitioned thumbnail paths (Gif.kt + GifAssetManager.kt)
-    - [x] Step 2: V4 schema with pack import/remove (GifDatabase.kt)
-    - [x] Step 3: Rewrite GifPackManager as offline file-picker import
-    - [x] Step 4: Remove dead Config settings (wifi_only, cache_mb)
-    - [x] Step 5: Config cleanup
-    - [x] Step 6: Pack management UI in Settings (import/remove/list)
-    - [x] Step 7: AndroidManifest share intent filters for ZIP
-    - [x] Step 8: gif_file_paths.xml thumbs path
-    - [x] Step 9: Python pipeline per-pack ZIP+DB generation
-  - Bug fixes applied:
-    - [x] FTS5→FTS4 migration (FTS5 not available on device)
-    - [x] Pack.db must not contain FTS virtual tables (ATTACH fails)
-    - [x] Pack.db must include pack_id column
-    - [x] Empty initial view fix (Recently Used empty → fallback to getAllGifs)
-    - [x] GIF selection fallback to thumbnail when full file unavailable
-    - [x] Register packs in packs table for proper removePack() FK resolution
-  - Test pack: test-20.zip (20 GIFs) created and successfully imported
-  - V5 schema: gif_pack_membership table for multi-pack support
-  - Tap inserts Giphy URL, long-press uses IME-safe PopupWindow
-  - Conditional "Copy GIF" (only when full animated file exists on device)
-  - Category-based pack builder (build_all_packs.py):
-    - 7 pack groups: reactions, positive, humor, negative, surprise, universal, cats
-    - Outliers (>P90 file size) isolated into separate packs
-    - Modes: test5k, all, full, thumbs, thumbs-all, personal
-  - Test pack built: test-popular-5k.zip (167 MB, 5000 full + 5000 thumbs)
-  - Bug fixes (session 2026-02-21):
-    - [x] GIF search routing through KeyEventReceiverBridge (was missing delegation)
-    - [x] GIF search text input uses setText+setSelection (not append) + gifSearchActive flag
-    - [x] PopupWindow isFocusable=false (prevents content pane disappearing on long-press)
-    - [x] Compound word search fallback (eyeroll → eye* roll*) in GifDatabase
-    - [x] Pipeline: extract_keywords generates compound forms for adjacent pairs
-    - [x] GIF grid pagination (100 items/page, prev/next buttons, matching clipboard)
-    - [x] GifDatabase: offset support for paginated queries + countSearchResults
-  - Discord community pack (session 2026-02-24):
-    - [x] build_discord_pack.py: full pipeline (metadata→convert→thumbnail→pack.db→ZIP)
-    - [x] Fix pack size target: split by cumulative bytes (~100 MB per ZIP, not 5k GIFs)
-    - [x] User cleaned duplicates + oversized files (7814→7323 source files)
-    - [x] Conversion complete: 5,232 converted, 23 failed (corrupt source files)
-    - [x] 6 packs built (100MB×5 + 76MB×1 = 575 MB total, 5,232 GIFs)
-    - [x] Metadata backfill: media_url slug parsing + Tenor short URL resolution
-    - [x] backfill_metadata.py: offline + online (HTTP redirect) enrichment script
-    - [x] Tenor keyword coverage 95%→100%, pack search_text 97%→99%
-    - [x] 6 discord-community ZIPs uploaded to GitHub pre-release (575 MB)
-    - [x] Pre-release audit: 857 tests pass, regression risk matrix mapped
-    - [x] Fixed matchesQuery case-sensitivity bug (caught by new tests)
-    - [x] Updated ShortSwipeIntentTest for renamed Termux presets
-    - [ ] Test import of discord-community packs on device
+  - Release: https://github.com/tribixbite/CleverKeys/releases/tag/CleverKeys-GIF (prerelease)
+  - Architecture: No INTERNET permission. ZIP pack import via file picker (SAF).
+  - Schema: V5 with FTS4, gif_pack_membership table
+  - All 9 implementation steps complete + bug fixes applied
+  - Discord community pack: 6 ZIPs (575 MB, 5,232 GIFs) on GitHub pre-release
   - Remaining:
+    - [ ] Test import of discord-community packs on device
     - [ ] Build release APK and install on device
     - [ ] Manual regression testing (see Regression Risk Matrix above)
     - [ ] Verify: search "eyeroll", long-press popup, pagination controls
     - [ ] Rebuild Giphy packs with updated pipeline (compound word indexing)
-    - [ ] Build missing Giphy categories (universal, cats, outliers)
     - [ ] Publish packs to GitHub Releases
     - [ ] Legal review of GIF content redistribution
 

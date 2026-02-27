@@ -43,9 +43,26 @@
       </intent-filter>
     </service>
 
-    <activity android:name="tribixbite.cleverkeys.SettingsActivity" android:icon="@mipmap/ic_launcher" android:label="@string/app_name" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true">
+    <activity android:name="tribixbite.cleverkeys.SettingsActivity" android:icon="@mipmap/ic_launcher" android:label="@string/app_name" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true" android:launchMode="singleTop">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
+      </intent-filter>
+      <!-- GIF pack ZIP import via share intent -->
+      <intent-filter>
+        <action android:name="android.intent.action.SEND"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+        <data android:mimeType="application/zip"/>
+      </intent-filter>
+      <intent-filter>
+        <action android:name="android.intent.action.SEND"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+        <data android:mimeType="application/x-zip-compressed"/>
+      </intent-filter>
+      <intent-filter>
+        <action android:name="android.intent.action.VIEW"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+        <data android:mimeType="application/zip"/>
+        <data android:mimeType="application/x-zip-compressed"/>
       </intent-filter>
     </activity>
 
@@ -106,6 +123,17 @@
         <category android:name="android.intent.category.DEFAULT"/>
       </intent-filter>
     </activity>
+
+    <!-- FileProvider for sharing GIF files via content:// URIs (commitContent) -->
+    <provider
+        android:name="androidx.core.content.FileProvider"
+        android:authorities="${applicationId}.fileprovider"
+        android:exported="false"
+        android:grantUriPermissions="true">
+      <meta-data
+          android:name="android.support.FILE_PROVIDER_PATHS"
+          android:resource="@xml/gif_file_paths" />
+    </provider>
 
     <!-- Ghost activities removed: NeuralBrowserActivity, NeuralBrowserActivityM3, TestActivity (no source files) -->
 

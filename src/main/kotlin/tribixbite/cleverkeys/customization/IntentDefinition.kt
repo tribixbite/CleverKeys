@@ -110,17 +110,35 @@ data class IntentDefinition(
                 name = "Web Search",
                 action = "android.intent.action.WEB_SEARCH"
             ),
-            // Termux command (for power users)
+            // Termux background command (runs silently, no visible tab)
             IntentDefinition(
-                name = "Termux Command",
+                name = "Termux Command (Background)",
                 targetType = IntentTargetType.SERVICE,
                 action = "com.termux.RUN_COMMAND",
                 packageName = "com.termux",
                 className = "com.termux.app.RunCommandService",
                 extras = mapOf(
                     "com.termux.RUN_COMMAND_PATH" to "/data/data/com.termux/files/usr/bin/echo",
-                    "com.termux.RUN_COMMAND_ARGUMENTS" to "Hello",
-                    "com.termux.RUN_COMMAND_BACKGROUND" to "true"
+                    "com.termux.RUN_COMMAND_ARGUMENTS" to "Hello from CleverKeys",
+                    "com.termux.RUN_COMMAND_BACKGROUND" to "true",
+                    // SESSION_ACTION=0 shows the terminal session tab (required when BACKGROUND=false)
+                    // For background commands it's ignored, but included for documentation
+                    "com.termux.RUN_COMMAND_SESSION_ACTION" to "0"
+                )
+            ),
+            // Termux visible tab (opens terminal showing command output)
+            IntentDefinition(
+                name = "Termux Tab (Visible)",
+                targetType = IntentTargetType.SERVICE,
+                action = "com.termux.RUN_COMMAND",
+                packageName = "com.termux",
+                className = "com.termux.app.RunCommandService",
+                extras = mapOf(
+                    "com.termux.RUN_COMMAND_PATH" to "/data/data/com.termux/files/usr/bin/echo",
+                    "com.termux.RUN_COMMAND_ARGUMENTS" to "Hello from CleverKeys",
+                    "com.termux.RUN_COMMAND_BACKGROUND" to "false",
+                    // SESSION_ACTION: 0=new tab, 1=new tab (switch), 2=attach to existing
+                    "com.termux.RUN_COMMAND_SESSION_ACTION" to "0"
                 )
             )
         )

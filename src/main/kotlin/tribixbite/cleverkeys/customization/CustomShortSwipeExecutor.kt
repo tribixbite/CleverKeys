@@ -1,10 +1,13 @@
 package tribixbite.cleverkeys.customization
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
+import android.widget.Toast
 import tribixbite.cleverkeys.KeyValue
 
 /**
@@ -79,6 +82,7 @@ class CustomShortSwipeExecutor(private val context: Context) {
             val validationError = validateIntent(intentDef)
             if (validationError != null) {
                 Log.w(TAG, "Intent validation failed: $validationError")
+                showToast("Intent failed: $validationError")
                 return false
             }
 
@@ -117,6 +121,7 @@ class CustomShortSwipeExecutor(private val context: Context) {
                     // Check if activity can be resolved before starting
                     if (intent.resolveActivity(context.packageManager) == null && intentDef.className.isNullOrBlank()) {
                         Log.w(TAG, "No activity found to handle intent: ${intentDef.name}")
+                        showToast("No app found for: ${intentDef.name}")
                         return false
                     }
                     context.startActivity(intent)
@@ -129,12 +134,15 @@ class CustomShortSwipeExecutor(private val context: Context) {
             true
         } catch (e: android.content.ActivityNotFoundException) {
             Log.e(TAG, "Activity not found for intent", e)
+            showToast("App not found for intent")
             false
         } catch (e: SecurityException) {
             Log.e(TAG, "Permission denied for intent", e)
+            showToast("Permission denied for intent")
             false
         } catch (e: Exception) {
             Log.e(TAG, "Failed to execute INTENT action", e)
+            showToast("Intent failed: ${e.message?.take(40)}")
             false
         }
     }
@@ -588,6 +596,13 @@ class CustomShortSwipeExecutor(private val context: Context) {
             AvailableCommand.SWITCH_IME -> KeyValue.getKeyByName("switch_im_picker")
             AvailableCommand.VOICE_INPUT -> KeyValue.getKeyByName("voice_input")
             else -> null // Execute directly via InputConnection
+        }
+    }
+
+    /** Show a brief toast on the main thread. Safe to call from any thread. */
+    private fun showToast(message: String) {
+        Handler(Looper.getMainLooper()).post {
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
         }
     }
 

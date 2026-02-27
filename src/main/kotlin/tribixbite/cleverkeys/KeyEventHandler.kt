@@ -100,6 +100,9 @@ class KeyEventHandler(
                 // #41 v5: Handle backspace in emoji search
                 } else if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && recv.isEmojiPaneOpen()) {
                     recv.backspaceEmojiSearch()
+                // Handle backspace in GIF search
+                } else if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && recv.isGifPaneOpen()) {
+                    recv.backspaceGifSearch()
                 } else {
                     send_key_down_up(key.getKeyevent())
                     // Handle backspace for word prediction
@@ -223,6 +226,12 @@ class KeyEventHandler(
         // #41 v5: Route to emoji search EditText when emoji pane is open
         if (recv.isEmojiPaneOpen()) {
             recv.appendToEmojiSearch(text.toString())
+            return
+        }
+
+        // Route to GIF search EditText when GIF pane is open
+        if (recv.isGifPaneOpen()) {
+            recv.appendToGifSearch(text.toString())
             return
         }
 
@@ -657,6 +666,10 @@ class KeyEventHandler(
         fun isEmojiPaneOpen(): Boolean = false // Check if emoji pane is visible
         fun appendToEmojiSearch(text: String) {} // Append text to emoji search EditText
         fun backspaceEmojiSearch() {} // Handle backspace in emoji search
+        // GIF search: same pattern — route typing to GIF search EditText
+        fun isGifPaneOpen(): Boolean = false
+        fun appendToGifSearch(text: String) {}
+        fun backspaceGifSearch() {}
         // v1.2.7: Smart punctuation - track if last space was auto-inserted
         fun wasLastSpaceAutoInserted(): Boolean = false
         fun setLastSpaceAutoInserted(value: Boolean) {}

@@ -79,6 +79,8 @@ class OptimizedVocabulary(private val context: Context) {
     private var contractionPairings: MutableMap<String, MutableList<String>> = HashMap()
     // Maps apostrophe-free -> with apostrophe (e.g., "dont" -> "don't")
     private var nonPairedContractions: MutableMap<String, String> = HashMap()
+    // Cached contraction frequency lookups (populated once after index build, avoids per-prediction prefix search)
+    private var contractionFrequencyCache: Map<String, Float> = emptyMap()
 
     @Volatile
     private var isLoaded = false
@@ -437,8 +439,9 @@ class OptimizedVocabulary(private val context: Context) {
             // Contractions were added to vocabulary in loadContractionsFromInputStream()
             // but vocabulary lookup is guarded by _englishFallbackEnabled
             if (info == null && nonPairedContractions.containsKey(word)) {
-                // Word is a contraction key - accept it with mid-range frequency
-                info = WordInfo(0.6f, 1.toByte())
+                // Word is a contraction key — use tier 2 (common boost) with high frequency
+                // so contractions like "doesn't", "can't" compete fairly with common words
+                info = WordInfo(0.88f, 2.toByte())
                 displayWord = nonPairedContractions[word]!!
                 if (debugMode) detailedLog?.append(String.format("🔤 \"%s\" → \"%s\" (contraction mapping)\n", word, displayWord))
             }
@@ -811,21 +814,8 @@ class OptimizedVocabulary(private val context: Context) {
                             }
                         } else {
                             // Real vocab word - ADD contraction as variant (French: "quest" + "qu'est")
-                            // v1.2.10 FIX: Look up ACTUAL frequency of contraction in primary dictionary
-                            // This allows "qu'est" to appear BEFORE "quest" if it has higher frequency
-                            val index = normalizedIndex
-                            var contractionFreq = 0.6f  // Default if not found in dictionary
-
-                            if (index != null) {
-                                // Look up contraction in primary dictionary
-                                // "qu'est" normalized is still "qu'est" (apostrophe preserved)
-                                val results = index.getWordsWithPrefix(contraction)
-                                val exactMatch = results.find { it.normalized == contraction }
-                                if (exactMatch != null) {
-                                    // Convert rank (0-255, 0=most common) to frequency (0-1, 1=most common)
-                                    contractionFreq = 1.0f - (exactMatch.bestFrequencyRank / 255.0f)
-                                }
-                            }
+                            // Use pre-cached frequency (built at dictionary load time)
+                            val contractionFreq = contractionFrequencyCache[contraction] ?: 0.85f
 
                             // Calculate score using actual contraction frequency
                             // Use same scoring formula as regular words for fair comparison
@@ -1226,6 +1216,7 @@ class OptimizedVocabulary(private val context: Context) {
         // English doesn't need accent normalization for primary
         if (language == "en") {
             normalizedIndex = null
+            contractionFrequencyCache = emptyMap()
             activeBeamSearchTrie = vocabularyTrie  // Reset to English trie
             _primaryLanguageCode = "en"  // v1.2.1: Set language code (was missing!)
 
@@ -1312,6 +1303,10 @@ class OptimizedVocabulary(private val context: Context) {
                 Log.i(TAG, "Added ${contractionKeys.size} contraction keys to language trie")
             }
 
+            // Pre-cache contraction frequency lookups to avoid per-prediction prefix search
+            // (was an N+1 perf regression in v1.2.10)
+            contractionFrequencyCache = buildContractionFrequencyCache(index)
+
             // v1.1.94 CRITICAL FIX: Set _primaryLanguageCode BEFORE activeBeamSearchTrie
             // Due to Java Memory Model volatile ordering:
             // - If reader sees French trie, they're guaranteed to see "fr" (write #1 happens-before write #2)
@@ -1348,6 +1343,7 @@ class OptimizedVocabulary(private val context: Context) {
      */
     fun unloadPrimaryDictionary() {
         normalizedIndex = null
+        contractionFrequencyCache = emptyMap()
         activeBeamSearchTrie = vocabularyTrie  // Reset to English trie
         // v1.1.93: Reset _primaryLanguageCode when unloading (must be after activeBeamSearchTrie reset)
         _primaryLanguageCode = "en"
@@ -1919,6 +1915,24 @@ class OptimizedVocabulary(private val context: Context) {
      *
      * @param langCode Language code (e.g., "fr", "it", "en", "nl")
      */
+    /**
+     * Build a cache mapping contraction strings to their frequency values.
+     * Called once after dictionary + contractions are loaded, replacing per-prediction
+     * getWordsWithPrefix() lookups that caused an N+1 performance regression.
+     */
+    private fun buildContractionFrequencyCache(index: NormalizedPrefixIndex): Map<String, Float> {
+        val cache = HashMap<String, Float>(nonPairedContractions.size)
+        for (contraction in nonPairedContractions.values) {
+            val results = index.getWordsWithPrefix(contraction)
+            val exactMatch = results.find { it.normalized == contraction }
+            if (exactMatch != null) {
+                cache[contraction] = 1.0f - (exactMatch.bestFrequencyRank / 255.0f)
+            }
+        }
+        Log.d(TAG, "Built contraction frequency cache: ${cache.size} entries")
+        return cache
+    }
+
     private fun loadLanguageContractions(langCode: String) {
         // First try loading from installed language pack
         val langPackManager = LanguagePackManager.getInstance(context!!)
@@ -1983,10 +1997,23 @@ class OptimizedVocabulary(private val context: Context) {
                 // NOTE: Do NOT insert into activeBeamSearchTrie here - it may point to wrong trie!
                 // Trie insertion is handled by loadPrimaryDictionary() after creating the language trie
                 if (!vocabulary.containsKey(withoutApostrophe)) {
-                    vocabulary[withoutApostrophe] = WordInfo(0.6f, 1.toByte())
+                    // Common contractions (don't, can't, doesn't, etc.) are among the most
+                    // frequent English words. Use tier 2 (common boost) with high frequency
+                    // so they compete fairly with top-100 words in swipe predictions.
+                    vocabulary[withoutApostrophe] = WordInfo(0.88f, 2.toByte())
                     // Add to length-based buckets for fuzzy matching
                     vocabularyByLength.getOrPut(withoutApostrophe.length) { ArrayList() }
                         .add(withoutApostrophe)
+                } else {
+                    // Contraction key already in vocabulary (e.g., synthetic "doesnt" from
+                    // binary dict). Ensure it has tier 2 + competitive frequency so swipe
+                    // predictions rank it alongside common words.
+                    val existing = vocabulary[withoutApostrophe]!!
+                    if (existing.tier < 2 || existing.frequency < 0.85f) {
+                        vocabulary[withoutApostrophe] = WordInfo(
+                            max(existing.frequency, 0.85f), 2.toByte()
+                        )
+                    }
                 }
                 count++
             }

@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:hardwareAccelerated="false">
+
+  <!-- Search bar with close button -->
+  <LinearLayout
+      android:id="@+id/gif_search_bar"
+      android:layout_width="match_parent"
+      android:layout_height="40dp"
+      android:orientation="horizontal"
+      android:gravity="center_vertical"
+      android:paddingStart="8dp"
+      android:paddingEnd="4dp"
+      android:background="?attr/colorKey">
+
+    <EditText
+        android:id="@+id/gif_search_input"
+        android:layout_width="0dp"
+        android:layout_height="32dp"
+        android:layout_weight="1"
+        android:hint="Search GIFs..."
+        android:textSize="14sp"
+        android:textColor="?attr/colorLabel"
+        android:textColorHint="?attr/colorSubLabel"
+        android:background="@android:color/transparent"
+        android:inputType="text"
+        android:imeOptions="actionSearch|flagNoExtractUi"
+        android:maxLines="1"
+        android:singleLine="true"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:importantForAutofill="no" />
+
+    <ImageButton
+        android:id="@+id/gif_search_clear"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:src="@android:drawable/ic_menu_close_clear_cancel"
+        android:tint="?attr/colorLabel"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Clear search"
+        android:visibility="gone"
+        android:scaleType="centerInside"
+        android:padding="6dp" />
+
+    <!-- Close/dismiss GIF pane button -->
+    <ImageButton
+        android:id="@+id/gif_close_button"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:src="@android:drawable/arrow_down_float"
+        android:tint="?attr/colorLabel"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Close GIF picker"
+        android:scaleType="centerInside"
+        android:padding="6dp" />
+
+  </LinearLayout>
+
+  <!-- Category buttons -->
+  <tribixbite.cleverkeys.gif.GifGroupButtonsBar
+      android:id="@+id/gif_group_buttons"
+      android:orientation="horizontal"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:background="?attr/colorKey"/>
+
+  <!-- Divider between categories and GIF grid -->
+  <View
+      android:layout_width="match_parent"
+      android:layout_height="1dp"
+      android:background="?attr/clipboard_divider_color"/>
+
+  <!-- GIF grid - fills remaining space -->
+  <FrameLayout
+      android:layout_width="match_parent"
+      android:layout_height="0dp"
+      android:layout_weight="1">
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/gif_grid"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:padding="2dp"
+        android:background="?attr/colorKeyboard"/>
+
+    <!-- No results message (hidden by default) -->
+    <TextView
+        android:id="@+id/gif_no_results"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:text="No GIFs found"
+        android:textColor="?attr/colorSubLabel"
+        android:textSize="16sp"
+        android:visibility="gone"
+        android:background="?attr/colorKeyboard"/>
+
+  </FrameLayout>
+
+  <!-- Pagination bar (hidden when ≤100 items) -->
+  <LinearLayout
+      android:id="@+id/gif_pagination_bar"
+      android:layout_width="match_parent"
+      android:layout_height="28dp"
+      android:orientation="horizontal"
+      android:gravity="center"
+      android:background="?attr/colorKey"
+      android:visibility="gone">
+
+    <TextView
+        android:id="@+id/gif_page_prev"
+        android:text="◀"
+        android:layout_width="48dp"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:textSize="14sp"
+        android:textColor="?attr/colorLabel"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="?android:attr/selectableItemBackground"/>
+
+    <TextView
+        android:id="@+id/gif_page_info"
+        android:text="1 / 1"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:textSize="11sp"
+        android:textColor="?attr/colorSubLabel"/>
+
+    <TextView
+        android:id="@+id/gif_page_next"
+        android:text="▶"
+        android:layout_width="48dp"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:textSize="14sp"
+        android:textColor="?attr/colorLabel"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="?android:attr/selectableItemBackground"/>
+
+  </LinearLayout>
+
+</LinearLayout>
