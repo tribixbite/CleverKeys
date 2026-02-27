@@ -103,6 +103,8 @@ class KeyEventHandler(
                 // Handle backspace in GIF search
                 } else if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && recv.isGifPaneOpen()) {
                     recv.backspaceGifSearch()
+                } else if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && handleBackspaceUndoSwipe()) {
+                    // #110: Backspace after swipe deletes entire swiped word — handled
                 } else {
                     send_key_down_up(key.getKeyevent())
                     // Handle backspace for word prediction
@@ -379,6 +381,44 @@ class KeyEventHandler(
      * because they don't implement the Android context menu protocol. Send Ctrl+V key event instead,
      * which terminal emulators intercept and handle as paste.
      */
+    /**
+     * #110: If backspace_undo_swipe is enabled and last input was a swipe,
+     * delete the entire swiped word + trailing auto-space in one backspace press.
+     * Returns true if the undo was handled, false to fall through to normal backspace.
+     */
+    private fun handleBackspaceUndoSwipe(): Boolean {
+        val config = Config.globalConfig() ?: return false
+        if (!config.backspace_undo_swipe) return false
+        if (!recv.wasLastInputSwipe()) return false
+
+        val swipedWord = recv.getLastAutoInsertedWord() ?: return false
+        if (swipedWord.isEmpty()) return false
+
+        val conn = recv.getCurrentInputConnection() ?: return false
+
+        // Read text before cursor to verify the swiped word is still there
+        // and check for trailing auto-space (inserted by auto_space_after_suggestion)
+        val beforeCursor = conn.getTextBeforeCursor(swipedWord.length + 1, 0)?.toString() ?: ""
+        val charsToDelete = when {
+            // Word + trailing auto-space: "hello " → delete 6 chars
+            beforeCursor.length > swipedWord.length &&
+                beforeCursor.endsWith(" ") &&
+                beforeCursor.dropLast(1).endsWith(swipedWord) -> swipedWord.length + 1
+            // Word without trailing space: "hello" → delete 5 chars
+            beforeCursor.endsWith(swipedWord) -> swipedWord.length
+            // Text changed since swipe (cursor moved, user typed) — don't undo
+            else -> return false
+        }
+
+        conn.deleteSurroundingText(charsToDelete, 0)
+
+        // Clear swipe tracking and reset prediction state
+        recv.clearSwipeUndoState()
+        recv.handle_backspace()
+
+        return true
+    }
+
     private fun handlePaste() {
         if (TerminalUtils.isTerminalApp(recv.getCurrentEditorInfo())) {
             send_key_down_up(KeyEvent.KEYCODE_V, KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON)
@@ -688,6 +728,10 @@ class KeyEventHandler(
         // v1.2.7: Smart punctuation - track if last space was auto-inserted
         fun wasLastSpaceAutoInserted(): Boolean = false
         fun setLastSpaceAutoInserted(value: Boolean) {}
+        // #110: Backspace undo swipe — check if last input was a swipe and get the word
+        fun wasLastInputSwipe(): Boolean = false
+        fun getLastAutoInsertedWord(): String? = null
+        fun clearSwipeUndoState() {} // Reset swipe tracking after undo
     }
 
     private inner class AutocapitalisationCallback : Autocapitalisation.Callback {

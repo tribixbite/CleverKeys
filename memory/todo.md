@@ -68,8 +68,7 @@ Issues already implemented, need user verification + close:
 - ✅ **#108** Clipboard: Move re-copied text to top of list (72adabb9f)
 - ✅ **#109** Improve the look of the autofill suggestion style (72adabb9f)
 - ✅ **#113** Paste shortcut works in Termux — Ctrl+V fallback for terminal apps (72adabb9f)
-- **#110** Cancel autocorrect on backspace
-  - Undo-autocorrect exists but not triggered by backspace key specifically
+- ✅ **#110** Backspace undo swipe — immediate backspace after swiped word deletes entire word
 
 ### Features — High Effort / Community
 - **#26** Docs: clarify language support + update README comparison table
@@ -100,6 +99,12 @@ Issues already implemented, need user verification + close:
 ---
 
 ## Completed (2026-02-27)
+- ✅ **#110 backspace undo swipe**:
+  - Immediate backspace after swiped word deletes entire swiped word + trailing auto-space
+  - New `backspace_undo_swipe` toggle (default ON), gated by swipe_typing
+  - Uses PredictionContextTracker: wasLastInputSwipe + lastAutoInsertedWord
+  - handleBackspaceUndoSwipe() in KeyEventHandler intercepts KEYCODE_DEL before normal dispatch
+  - Settings UI: toggle in Word Prediction section, searchable
 - ✅ **#108 clipboard dedup reorder** (72adabb9f):
   - Duplicate clipboard entries now move to top instead of being silently ignored
   - Updates timestamp + expiry on existing row (no delete/reinsert)

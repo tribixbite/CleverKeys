@@ -725,4 +725,13 @@ class KeyboardReceiver(
             input.setSelection(newText.length)
         }
     }
+
+    // #110: Backspace undo swipe — expose swipe state to KeyEventHandler
+    override fun wasLastInputSwipe(): Boolean = contextTracker.wasLastInputSwipe()
+    override fun getLastAutoInsertedWord(): String? = contextTracker.getLastAutoInsertedWord()
+    override fun clearSwipeUndoState() {
+        contextTracker.setWasLastInputSwipe(false)
+        contextTracker.clearLastAutoInsertedWord()
+        inputCoordinator.resetSwipeData()
+    }
 }

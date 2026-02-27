@@ -194,6 +194,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var wordPredictionEnabled by mutableStateOf(true)  // Match Config.kt default
     private var autoSpaceAfterSuggestion by mutableStateOf(true)  // #82: Add trailing space after selecting suggestion
     private var autoSpaceBeforeSuggestion by mutableStateOf(true)  // Add leading space before tapped suggestion
+    private var backspaceUndoSwipe by mutableStateOf(true)  // #110: Backspace after swipe deletes entire swiped word
     private var suggestionBarOpacity by mutableStateOf(90)
     private var autoCorrectEnabled by mutableStateOf(true)
     private var termuxModeEnabled by mutableStateOf(false)
@@ -474,6 +475,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             SearchableSetting("Word Predictions", listOf("prediction", "suggestions", "completion", "autocomplete"), "Word Prediction", expandSection = { inputSectionExpanded = true }, settingId = "word_prediction"),
             SearchableSetting("Auto-Space After Suggestion", listOf("space", "auto", "trailing", "automatic"), "Word Prediction", expandSection = { inputSectionExpanded = true }, settingId = "auto_space"),
             SearchableSetting("Auto-Space Before Suggestion", listOf("space", "auto", "leading", "before", "tap"), "Word Prediction", expandSection = { inputSectionExpanded = true }, settingId = "auto_space_before"),
+            SearchableSetting("Backspace Undo Swipe", listOf("backspace", "undo", "swipe", "delete", "word"), "Word Prediction", expandSection = { inputSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "backspace_undo_swipe"),
             SearchableSetting("Suggestion Bar Opacity", listOf("opacity", "transparency", "prediction bar"), "Word Prediction", expandSection = { inputSectionExpanded = true }, settingId = "suggestion_opacity"),
             SearchableSetting("Show Exact Typed Word", listOf("exact", "typed", "add to dictionary"), "Word Prediction", expandSection = { inputSectionExpanded = true }, settingId = "show_exact_typed"),
             SearchableSetting("Context-Aware Predictions", listOf("context", "aware", "intelligent"), "Word Prediction", expandSection = { inputSectionExpanded = true }, settingId = "context_aware"),
@@ -1903,6 +1905,21 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                             Config.globalConfig()?.auto_space_before_suggestion = it
                         }
                     )
+
+                    // #110: Backspace undo swipe — delete entire swiped word on immediate backspace
+                    if (swipeTypingEnabled) {
+                        SettingsSwitch(
+                            title = "Backspace Undo Swipe",
+                            description = "Tapping backspace immediately after a swiped word deletes the entire word",
+                            checked = backspaceUndoSwipe,
+                            highlightId = "backspace_undo_swipe",
+                            onCheckedChange = {
+                                backspaceUndoSwipe = it
+                                saveSetting("backspace_undo_swipe", it)
+                                Config.globalConfig()?.backspace_undo_swipe = it
+                            }
+                        )
+                    }
 
                     // Word Prediction Advanced section (expandable)
                     Row(
@@ -4840,6 +4857,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         wordPredictionEnabled = prefs.getSafeBoolean("word_prediction_enabled", Defaults.WORD_PREDICTION_ENABLED)
         autoSpaceAfterSuggestion = prefs.getSafeBoolean("auto_space_after_suggestion", Defaults.AUTO_SPACE_AFTER_SUGGESTION)
         autoSpaceBeforeSuggestion = prefs.getSafeBoolean("auto_space_before_suggestion", Defaults.AUTO_SPACE_BEFORE_SUGGESTION)
+        backspaceUndoSwipe = prefs.getSafeBoolean("backspace_undo_swipe", Defaults.BACKSPACE_UNDO_SWIPE)
         suggestionBarOpacity = Config.safeGetInt(prefs, "suggestion_bar_opacity", Defaults.SUGGESTION_BAR_OPACITY)
         autoCorrectEnabled = prefs.getSafeBoolean("autocorrect_enabled", Defaults.AUTOCORRECT_ENABLED)
         termuxModeEnabled = prefs.getSafeBoolean("termux_mode_enabled", Defaults.TERMUX_MODE_ENABLED)
