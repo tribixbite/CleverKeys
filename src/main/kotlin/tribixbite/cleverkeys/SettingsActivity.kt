@@ -383,6 +383,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     // Position tracking for scroll-to-top functionality
     private val settingPositions = mutableMapOf<String, Int>()  // settingId -> Y position in scroll content
     private var mainScrollState: androidx.compose.foundation.ScrollState? = null
+    private var composeScope: kotlinx.coroutines.CoroutineScope? = null  // Compose-aware scope with MonotonicFrameClock
 
     /** Record the Y position of a setting for scroll targeting */
     fun recordSettingPosition(settingId: String, yPosition: Int) {
@@ -393,8 +394,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private fun scrollToSetting(settingId: String) {
         val position = settingPositions[settingId] ?: return
         val scrollState = mainScrollState ?: return
-        lifecycleScope.launch {
-            // Scroll to position with some padding from top
+        // Must use composeScope (has MonotonicFrameClock) instead of lifecycleScope
+        // for Compose animated scroll — lifecycleScope lacks the frame clock
+        val scope = composeScope ?: return
+        scope.launch {
             scrollState.animateScrollTo(maxOf(0, position - 16))
         }
     }
@@ -621,6 +624,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 "multilang" -> multiLangSectionExpanded = true
             }
             // Delay to let section expand, then scroll and highlight
+            // Use lifecycleScope for delay, scrollToSetting uses composeScope internally
             lifecycleScope.launch {
                 kotlinx.coroutines.delay(200)  // Wait for layout
                 scrollToSetting(targetId)
@@ -961,8 +965,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     @Composable
     private fun SettingsScreen() {
         val scrollState = rememberScrollState()
-        // Store reference for scroll-to-setting functionality
+        // Store references for scroll-to-setting functionality
+        // composeScope has MonotonicFrameClock needed for animateScrollTo
         mainScrollState = scrollState
+        composeScope = rememberCoroutineScope()
 
         // Collected Data Viewer Dialog
         if (showCollectedDataViewer) {
