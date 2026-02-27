@@ -69,6 +69,8 @@ class BackupRestoreActivity : ComponentActivity() {
     private var showResultDialog by mutableStateOf(false)
     private var resultTitle by mutableStateOf("")
     private var resultMessage by mutableStateOf("")
+    // #70: Headless mode — launched via intent action, no UI, finish() after operation
+    private var isHeadless = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -84,45 +86,22 @@ class BackupRestoreActivity : ComponentActivity() {
             return
         }
 
-        // #70: Handle programmatic Intent actions for automation
+        // #70: Handle programmatic Intent actions for automation (Termux, scripts)
+        // Headless mode: perform operation, toast result, finish() — no UI shown
         val fileUri = intent.data
-        when (intent.action) {
-            ACTION_EXPORT_SETTINGS -> {
-                if (fileUri != null) {
-                    performExport(fileUri)
-                    return // Don't show UI for headless operation
-                }
-            }
-            ACTION_IMPORT_SETTINGS -> {
-                if (fileUri != null) {
-                    performImport(fileUri)
-                    return
-                }
-            }
-            ACTION_EXPORT_DICTIONARIES -> {
-                if (fileUri != null) {
-                    performExportDictionaries(fileUri)
-                    return
-                }
-            }
-            ACTION_IMPORT_DICTIONARIES -> {
-                if (fileUri != null) {
-                    performImportDictionaries(fileUri)
-                    return
-                }
-            }
-            ACTION_EXPORT_CLIPBOARD -> {
-                if (fileUri != null) {
-                    performExportClipboard(fileUri)
-                    return
-                }
-            }
-            ACTION_IMPORT_CLIPBOARD -> {
-                if (fileUri != null) {
-                    performImportClipboard(fileUri)
-                    return
-                }
-            }
+        val headlessAction = when (intent.action) {
+            ACTION_EXPORT_SETTINGS -> fileUri?.let { { performExport(it) } }
+            ACTION_IMPORT_SETTINGS -> fileUri?.let { { performImport(it) } }
+            ACTION_EXPORT_DICTIONARIES -> fileUri?.let { { performExportDictionaries(it) } }
+            ACTION_IMPORT_DICTIONARIES -> fileUri?.let { { performImportDictionaries(it) } }
+            ACTION_EXPORT_CLIPBOARD -> fileUri?.let { { performExportClipboard(it) } }
+            ACTION_IMPORT_CLIPBOARD -> fileUri?.let { { performImportClipboard(it) } }
+            else -> null
+        }
+        if (headlessAction != null) {
+            isHeadless = true
+            headlessAction()
+            return // Don't show UI — activity finishes after async operation
         }
 
         setContent {
@@ -524,6 +503,7 @@ class BackupRestoreActivity : ComponentActivity() {
                 showResultDialog = true
             } finally {
                 isProcessing = false
+                if (isHeadless) finish() // #70: close activity after headless operation
             }
         }
     }
@@ -572,6 +552,7 @@ class BackupRestoreActivity : ComponentActivity() {
                 showResultDialog = true
             } finally {
                 isProcessing = false
+                if (isHeadless) finish() // #70: close activity after headless operation
             }
         }
     }
@@ -601,6 +582,7 @@ class BackupRestoreActivity : ComponentActivity() {
                 showResultDialog = true
             } finally {
                 isProcessing = false
+                if (isHeadless) finish() // #70: close activity after headless operation
             }
         }
     }
@@ -642,6 +624,7 @@ class BackupRestoreActivity : ComponentActivity() {
                 showResultDialog = true
             } finally {
                 isProcessing = false
+                if (isHeadless) finish() // #70: close activity after headless operation
             }
         }
     }
@@ -672,6 +655,7 @@ class BackupRestoreActivity : ComponentActivity() {
                 showResultDialog = true
             } finally {
                 isProcessing = false
+                if (isHeadless) finish() // #70: close activity after headless operation
             }
         }
     }
@@ -709,6 +693,7 @@ class BackupRestoreActivity : ComponentActivity() {
                 showResultDialog = true
             } finally {
                 isProcessing = false
+                if (isHeadless) finish() // #70: close activity after headless operation
             }
         }
     }

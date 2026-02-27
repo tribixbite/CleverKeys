@@ -11,7 +11,12 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import java.io.BufferedReader
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.InputStream
 import java.io.InputStreamReader
+import java.io.OutputStream
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.abs
@@ -29,6 +34,62 @@ class BackupRestoreManager(private val context: Context) {
         ShortSwipeCustomizationManager.getInstance(context)
     }
     private val gson: Gson = GsonBuilder().setPrettyPrinting().create()
+
+    /**
+     * Open an OutputStream for writing to a URI. Handles both content:// (SAF)
+     * and file:// (Termux/automation) schemes.
+     *
+     * For file:// URIs: tries direct FileOutputStream first. If permission denied
+     * (scoped storage on Android 11+), falls back to app-private external dir
+     * (Android/data/tribixbite.cleverkeys/files/) which is always writable.
+     */
+    private fun openOutputStream(uri: Uri): OutputStream? {
+        if (uri.scheme == "file") {
+            val path = uri.path ?: return null
+            return try {
+                FileOutputStream(File(path))
+            } catch (e: SecurityException) {
+                // Scoped storage — redirect to app-private external directory
+                writeToAppExternalDir(path)
+            } catch (e: java.io.FileNotFoundException) {
+                // EPERM also surfaces as FileNotFoundException with "open failed: EPERM"
+                if (e.message?.contains("EPERM") == true) {
+                    writeToAppExternalDir(path)
+                } else throw e
+            }
+        }
+        return context.contentResolver.openOutputStream(uri)
+    }
+
+    /**
+     * Redirect file:// write to the app's external files directory.
+     * Logs the actual output path so callers know where the file ended up.
+     */
+    private fun writeToAppExternalDir(originalPath: String): OutputStream {
+        val fileName = File(originalPath).name
+        val extDir = context.getExternalFilesDir(null)
+            ?: throw java.io.IOException("No external files directory available")
+        val outputFile = File(extDir, fileName)
+        Log.i(TAG, "Redirected file:// write to app dir: ${outputFile.absolutePath}")
+        return FileOutputStream(outputFile)
+    }
+
+    /**
+     * Open an InputStream for reading from a URI. Same file:// handling as above.
+     * For file:// URIs: tries the given path, then checks app-private external dir.
+     */
+    private fun openInputStream(uri: Uri): InputStream? {
+        if (uri.scheme == "file") {
+            val path = uri.path ?: return null
+            val file = File(path)
+            if (file.exists() && file.canRead()) return FileInputStream(file)
+            // Fallback: check app-private external dir (in case file was exported there)
+            val extFile = File(context.getExternalFilesDir(null), file.name)
+            if (extFile.exists()) return FileInputStream(extFile)
+            return null
+        }
+        return context.contentResolver.openInputStream(uri)
+    }
 
     /**
      * Export all preferences to JSON file, including defaults for documentation
@@ -114,7 +175,7 @@ class BackupRestoreManager(private val context: Context) {
             }
 
             // Write to file
-            context.contentResolver.openOutputStream(uri)?.use { outputStream ->
+            openOutputStream(uri)?.use { outputStream ->
                 outputStream.writer().use { writer ->
                     gson.toJson(root, writer)
                     writer.flush()
@@ -296,7 +357,7 @@ class BackupRestoreManager(private val context: Context) {
         return try {
             // Read JSON file
             val jsonBuilder = StringBuilder()
-            context.contentResolver.openInputStream(uri)?.use { inputStream ->
+            openInputStream(uri)?.use { inputStream ->
                 BufferedReader(InputStreamReader(inputStream)).use { reader ->
                     reader.forEachLine { line ->
                         jsonBuilder.append(line)
@@ -950,7 +1011,7 @@ class BackupRestoreManager(private val context: Context) {
             }
             root.add("disabled_words", disabledWords) // Legacy format
 
-            context.contentResolver.openOutputStream(uri)?.use { outputStream ->
+            openOutputStream(uri)?.use { outputStream ->
                 outputStream.writer().use { writer ->
                     gson.toJson(root, writer)
                     writer.flush()
@@ -976,7 +1037,7 @@ class BackupRestoreManager(private val context: Context) {
     fun importDictionaries(uri: Uri): DictionaryImportResult {
         return try {
             val jsonBuilder = StringBuilder()
-            context.contentResolver.openInputStream(uri)?.use { inputStream ->
+            openInputStream(uri)?.use { inputStream ->
                 BufferedReader(InputStreamReader(inputStream)).use { reader ->
                     reader.forEachLine { line ->
                         jsonBuilder.append(line)
@@ -1139,7 +1200,7 @@ class BackupRestoreManager(private val context: Context) {
             val exportData = clipboardDb.exportToJSON()
                 ?: throw Exception("Failed to export clipboard data")
 
-            context.contentResolver.openOutputStream(uri)?.use { outputStream ->
+            openOutputStream(uri)?.use { outputStream ->
                 outputStream.writer().use { writer ->
                     writer.write(exportData.toString(2))
                     writer.flush()
@@ -1166,7 +1227,7 @@ class BackupRestoreManager(private val context: Context) {
     fun importClipboardHistory(uri: Uri): ClipboardImportResult {
         return try {
             val jsonBuilder = StringBuilder()
-            context.contentResolver.openInputStream(uri)?.use { inputStream ->
+            openInputStream(uri)?.use { inputStream ->
                 BufferedReader(InputStreamReader(inputStream)).use { reader ->
                     reader.forEachLine { line ->
                         jsonBuilder.append(line)
