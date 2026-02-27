@@ -105,8 +105,15 @@ object InlineAutofillUtils {
         stylesBuilder.addStyle(style)
         val stylesBundle = stylesBuilder.build()
 
-        // Get suggestion strip height for proper sizing
-        val height = context.resources.getDimensionPixelSize(R.dimen.suggestion_strip_height)
+        // #109: Use actual topPane height (40dp) for chip spec, not the suggestion_strip_height
+        // resource (44dp). The SuggestionBar padding is removed in autofill mode, so chips
+        // get the full 40dp container height. Using a height larger than the container
+        // causes chips to be rendered at 44dp and clipped to 40dp — the "cutting off" issue.
+        val height = android.util.TypedValue.applyDimension(
+            android.util.TypedValue.COMPLEX_UNIT_DIP,
+            40f,
+            context.resources.displayMetrics
+        ).toInt()
         // #109: Use display width for max chip size so names aren't truncated
         val displayWidth = context.resources.displayMetrics.widthPixels
         val minSize = Size(100, height)

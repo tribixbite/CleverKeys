@@ -66,7 +66,7 @@ Issues already implemented, need user verification + close:
   - Hungarian user tried to build langpack; docs incomplete/outdated
 - **#107** Clipboard: Add a Copy button to store text in system clipboard
 - ✅ **#108** Clipboard: Move re-copied text to top of list (72adabb9f)
-- ✅ **#109** Improve the look of the autofill suggestion style (72adabb9f)
+- ✅ **#109** Improve the look of the autofill suggestion style (72adabb9f + display cutoff fix)
 - ✅ **#113** Paste shortcut works in Termux — Ctrl+V fallback for terminal apps (72adabb9f)
 - ✅ **#110** Backspace undo swipe — immediate backspace after swiped word deletes entire word
 
@@ -112,10 +112,14 @@ Issues already implemented, need user verification + close:
   - Paste key sends Ctrl+V key event in terminal apps (Termux, ConnectBot, etc.)
   - Uses TerminalUtils.isTerminalApp() for detection
   - Added getCurrentEditorInfo() to KeyEventHandler.IReceiver interface
-- ✅ **#109 autofill chip style** (72adabb9f):
+- ✅ **#109 autofill chip style + display cutoff** (72adabb9f + fix):
   - Larger text (14sp title, 11sp subtitle), 8dp horizontal padding
   - Max chip width uses display width (was hardcoded 740px)
   - Chip background: lighter gray (#353535), subtle border, 20dp corner radius
+  - **Display cutoff fix**: SuggestionBar 8dp padding was stealing 16dp from 40dp container,
+    leaving only 24dp for autofill chips. Padding now removed in password/autofill mode.
+  - InlinePresentationSpec height aligned to actual 40dp container (was 44dp from resource)
+  - Explicit `visibility = VISIBLE` in setInlineAutofillView() for safety
 - ✅ **#82 auto_space_before_suggestion** (823f2f16e):
   - New boolean toggle: controls leading space before tapped suggestions
   - When disabled: "this:" + tap "english" → "this:english" (no leading space)

@@ -515,6 +515,12 @@ class SuggestionBar : LinearLayout {
         currentSuggestions.clear()
         currentScores.clear()
 
+        // #109: Remove padding so autofill chips get the full bar height.
+        // Normal text suggestions use 8dp padding for spacing, but autofill chips
+        // are rendered by the password manager at the spec height (40dp) and need
+        // the full container height to avoid being clipped/cut off.
+        setPadding(0, 0, 0, 0)
+
         // Add the inline autofill view
         inlineAutofillView = view
         isInlineAutofillMode = true
@@ -524,7 +530,11 @@ class SuggestionBar : LinearLayout {
             ViewGroup.LayoutParams.MATCH_PARENT
         ))
 
-        Log.d(TAG, "setInlineAutofillView: Displaying inline autofill suggestions")
+        // #109: Ensure bar is visible — password mode or empty suggestions could have
+        // set visibility to GONE before autofill arrived
+        visibility = VISIBLE
+
+        Log.d(TAG, "setInlineAutofillView: Displaying inline autofill suggestions (padding removed for full height)")
     }
 
     /**
@@ -535,7 +545,12 @@ class SuggestionBar : LinearLayout {
             removeView(inlineAutofillView)
             inlineAutofillView = null
             isInlineAutofillMode = false
-            Log.d(TAG, "clearInlineAutofillView: Cleared inline autofill view")
+
+            // #109: Restore normal padding after autofill is cleared
+            val padding = dpToPx(context, 8)
+            setPadding(padding, padding, padding, padding)
+
+            Log.d(TAG, "clearInlineAutofillView: Cleared inline autofill view, padding restored")
         }
     }
 
@@ -716,6 +731,10 @@ class SuggestionBar : LinearLayout {
         // Clear any existing suggestion views
         removeAllViews()
         suggestionViews.clear()
+
+        // #109: Remove padding so password eye icon (36dp) and autofill chips
+        // get the full 40dp bar height. Password views manage their own spacing.
+        setPadding(0, 0, 0, 0)
 
         val iconSize = dpToPx(context, 36)
         val iconMargin = dpToPx(context, 8)
@@ -938,5 +957,9 @@ class SuggestionBar : LinearLayout {
         // Clear all views - suggestions will be recreated as needed
         removeAllViews()
         suggestionViews.clear()
+
+        // #109: Restore normal padding after leaving password/autofill mode
+        val padding = dpToPx(context, 8)
+        setPadding(padding, padding, padding, padding)
     }
 }
