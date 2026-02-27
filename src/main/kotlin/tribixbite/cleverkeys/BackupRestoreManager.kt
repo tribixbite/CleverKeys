@@ -1,8 +1,12 @@
 package tribixbite.cleverkeys
 
+import android.content.ContentValues
 import android.content.Context
 import android.content.SharedPreferences
 import android.net.Uri
+import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
 import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -39,53 +43,115 @@ class BackupRestoreManager(private val context: Context) {
      * Open an OutputStream for writing to a URI. Handles both content:// (SAF)
      * and file:// (Termux/automation) schemes.
      *
-     * For file:// URIs: tries direct FileOutputStream first. If permission denied
-     * (scoped storage on Android 11+), falls back to app-private external dir
-     * (Android/data/tribixbite.cleverkeys/files/) which is always writable.
+     * Fallback chain for file:// URIs on Android 11+ scoped storage:
+     * 1. Direct FileOutputStream (works if user granted MANAGE_EXTERNAL_STORAGE)
+     * 2. Downloads/ via MediaStore (no permissions needed, visible in file managers)
+     * 3. App-private external dir (always writable, but hidden from most file managers)
+     *
+     * The actual output path is stored in [lastOutputPath] for caller feedback.
      */
+    var lastOutputPath: String? = null
+        private set
+
     private fun openOutputStream(uri: Uri): OutputStream? {
+        lastOutputPath = null
         if (uri.scheme == "file") {
             val path = uri.path ?: return null
+            val fileName = File(path).name
+            // Try 1: Direct write to requested path (works with MANAGE_EXTERNAL_STORAGE)
             return try {
-                FileOutputStream(File(path))
-            } catch (e: SecurityException) {
-                // Scoped storage — redirect to app-private external directory
-                writeToAppExternalDir(path)
-            } catch (e: java.io.FileNotFoundException) {
-                // EPERM also surfaces as FileNotFoundException with "open failed: EPERM"
-                if (e.message?.contains("EPERM") == true) {
-                    writeToAppExternalDir(path)
-                } else throw e
+                val file = File(path)
+                file.parentFile?.mkdirs()
+                FileOutputStream(file).also {
+                    lastOutputPath = file.absolutePath
+                }
+            } catch (e: Exception) {
+                // EPERM or SecurityException — scoped storage blocks /sdcard/ writes
+                if (e.message?.contains("EPERM") != true &&
+                    e !is SecurityException) throw e
+
+                // Try 2: Downloads/ via MediaStore (visible to user, no permissions)
+                writeToDownloads(fileName)
+                    // Try 3: App-private external dir (always writable)
+                    ?: writeToAppExternalDir(fileName)
             }
         }
         return context.contentResolver.openOutputStream(uri)
     }
 
     /**
-     * Redirect file:// write to the app's external files directory.
-     * Logs the actual output path so callers know where the file ended up.
+     * Write to Downloads/ via MediaStore. Works on Android 10+ without permissions.
+     * Files appear in Downloads folder in all file managers.
+     * @return OutputStream or null if MediaStore insert fails
      */
-    private fun writeToAppExternalDir(originalPath: String): OutputStream {
-        val fileName = File(originalPath).name
+    private fun writeToDownloads(fileName: String): OutputStream? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return null
+        return try {
+            val values = ContentValues().apply {
+                put(MediaStore.Downloads.DISPLAY_NAME, fileName)
+                put(MediaStore.Downloads.MIME_TYPE, "application/json")
+                // Place in CleverKeys subfolder within Downloads
+                put(MediaStore.Downloads.RELATIVE_PATH,
+                    "${Environment.DIRECTORY_DOWNLOADS}/CleverKeys")
+            }
+            val contentUri = context.contentResolver.insert(
+                MediaStore.Downloads.EXTERNAL_CONTENT_URI, values
+            ) ?: return null
+            val stream = context.contentResolver.openOutputStream(contentUri)
+            if (stream != null) {
+                lastOutputPath = "${Environment.DIRECTORY_DOWNLOADS}/CleverKeys/$fileName"
+                Log.i(TAG, "Writing to Downloads/CleverKeys/$fileName via MediaStore")
+            }
+            stream
+        } catch (e: Exception) {
+            Log.w(TAG, "MediaStore Downloads write failed: ${e.message}")
+            null
+        }
+    }
+
+    /**
+     * Last-resort fallback: write to app-private external dir.
+     * Always writable but requires a file manager with Android/data/ access.
+     */
+    private fun writeToAppExternalDir(fileName: String): OutputStream {
         val extDir = context.getExternalFilesDir(null)
             ?: throw java.io.IOException("No external files directory available")
         val outputFile = File(extDir, fileName)
-        Log.i(TAG, "Redirected file:// write to app dir: ${outputFile.absolutePath}")
+        Log.i(TAG, "Fallback write to app dir: ${outputFile.absolutePath}")
+        lastOutputPath = outputFile.absolutePath
         return FileOutputStream(outputFile)
     }
 
     /**
      * Open an InputStream for reading from a URI. Same file:// handling as above.
-     * For file:// URIs: tries the given path, then checks app-private external dir.
+     *
+     * Search order for file:// URIs:
+     * 1. Exact path (works with MANAGE_EXTERNAL_STORAGE or app-writable paths)
+     * 2. Downloads/CleverKeys/ (where exports land via MediaStore)
+     * 3. App-private external dir (where exports land as last resort)
      */
     private fun openInputStream(uri: Uri): InputStream? {
         if (uri.scheme == "file") {
             val path = uri.path ?: return null
             val file = File(path)
+            val fileName = file.name
+
+            // Try 1: Exact path
             if (file.exists() && file.canRead()) return FileInputStream(file)
-            // Fallback: check app-private external dir (in case file was exported there)
-            val extFile = File(context.getExternalFilesDir(null), file.name)
+
+            // Try 2: Downloads/CleverKeys/
+            val downloadsDir = Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_DOWNLOADS
+            )
+            val downloadsFile = File(downloadsDir, "CleverKeys/$fileName")
+            if (downloadsFile.exists() && downloadsFile.canRead()) {
+                return FileInputStream(downloadsFile)
+            }
+
+            // Try 3: App-private external dir
+            val extFile = File(context.getExternalFilesDir(null), fileName)
             if (extFile.exists()) return FileInputStream(extFile)
+
             return null
         }
         return context.contentResolver.openInputStream(uri)

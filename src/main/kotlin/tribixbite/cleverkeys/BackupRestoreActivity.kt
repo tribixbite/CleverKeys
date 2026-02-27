@@ -72,6 +72,14 @@ class BackupRestoreActivity : ComponentActivity() {
     // #70: Headless mode — launched via intent action, no UI, finish() after operation
     private var isHeadless = false
 
+    /** Toast the actual output path when running headless (no dialog to show). */
+    private fun headlessToast(label: String) {
+        if (!isHeadless) return
+        val path = backupRestoreManager.lastOutputPath
+        val msg = if (path != null) "$label: $path" else label
+        Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -489,6 +497,7 @@ class BackupRestoreActivity : ComponentActivity() {
                     backupRestoreManager.exportConfig(uri, prefs)
                 }
 
+                headlessToast("Settings exported")
                 resultTitle = "Export Successful"
                 resultMessage = "Configuration exported successfully.\n\n" +
                         "File: ${uri.lastPathSegment}\n\n" +
@@ -498,6 +507,7 @@ class BackupRestoreActivity : ComponentActivity() {
                 android.util.Log.i(TAG, "Export successful: $uri")
             } catch (e: Exception) {
                 android.util.Log.e(TAG, "Export failed", e)
+                headlessToast("Export failed: ${e.message?.take(60)}")
                 resultTitle = "Export Failed"
                 resultMessage = "Failed to export configuration:\n\n${e.message}"
                 showResultDialog = true
@@ -543,9 +553,11 @@ class BackupRestoreActivity : ComponentActivity() {
                 resultMessage = messageBuilder.toString()
                 showResultDialog = true
 
+                headlessToast("Imported ${result.importedCount} settings")
                 android.util.Log.i(TAG, "Import successful: imported=${result.importedCount}, skipped=${result.skippedCount}")
             } catch (e: Exception) {
                 android.util.Log.e(TAG, "Import failed", e)
+                headlessToast("Import failed: ${e.message?.take(60)}")
                 resultTitle = "Import Failed"
                 resultMessage = "Failed to import configuration:\n\n${e.message}\n\n" +
                         "Make sure the file is a valid CleverKeys backup file."
@@ -565,6 +577,7 @@ class BackupRestoreActivity : ComponentActivity() {
                     backupRestoreManager.exportDictionaries(uri)
                 }
 
+                headlessToast("Dictionaries exported")
                 resultTitle = "Dictionary Export Successful"
                 resultMessage = "Dictionaries exported successfully.\n\n" +
                         "File: ${uri.lastPathSegment}\n\n" +
@@ -577,6 +590,7 @@ class BackupRestoreActivity : ComponentActivity() {
                 android.util.Log.i(TAG, "Dictionary export successful: $uri")
             } catch (e: Exception) {
                 android.util.Log.e(TAG, "Dictionary export failed", e)
+                headlessToast("Dict export failed: ${e.message?.take(60)}")
                 resultTitle = "Dictionary Export Failed"
                 resultMessage = "Failed to export dictionaries:\n\n${e.message}"
                 showResultDialog = true
@@ -615,9 +629,11 @@ class BackupRestoreActivity : ComponentActivity() {
                 // Send a broadcast to notify DictionaryManagerActivity to refresh
                 LocalBroadcastManager.getInstance(this@BackupRestoreActivity).sendBroadcast(Intent(ACTION_DICTIONARY_IMPORTED))
 
+                headlessToast("Imported ${result.userWordsImported} user + ${result.disabledWordsImported} disabled words")
                 android.util.Log.i(TAG, "Dictionary import successful: userWords=${result.userWordsImported}, disabledWords=${result.disabledWordsImported}")
             } catch (e: Exception) {
                 android.util.Log.e(TAG, "Dictionary import failed", e)
+                headlessToast("Dict import failed: ${e.message?.take(60)}")
                 resultTitle = "Dictionary Import Failed"
                 resultMessage = "Failed to import dictionaries:\n\n${e.message}\n\n" +
                         "Make sure the file is a valid CleverKeys dictionary backup file."
@@ -637,6 +653,7 @@ class BackupRestoreActivity : ComponentActivity() {
                     backupRestoreManager.exportClipboardHistory(uri)
                 }
 
+                headlessToast("Clipboard exported")
                 resultTitle = "Clipboard Export Successful"
                 resultMessage = "Clipboard history exported successfully.\n\n" +
                         "File: ${uri.lastPathSegment}\n\n" +
@@ -650,6 +667,7 @@ class BackupRestoreActivity : ComponentActivity() {
                 android.util.Log.i(TAG, "Clipboard export successful: $uri")
             } catch (e: Exception) {
                 android.util.Log.e(TAG, "Clipboard export failed", e)
+                headlessToast("Clipboard export failed: ${e.message?.take(60)}")
                 resultTitle = "Clipboard Export Failed"
                 resultMessage = "Failed to export clipboard history:\n\n${e.message}"
                 showResultDialog = true
@@ -684,9 +702,11 @@ class BackupRestoreActivity : ComponentActivity() {
                 resultMessage = messageBuilder.toString()
                 showResultDialog = true
 
+                headlessToast("Imported ${result.importedCount} clipboard entries")
                 android.util.Log.i(TAG, "Clipboard import successful: imported=${result.importedCount}, skipped=${result.skippedCount}")
             } catch (e: Exception) {
                 android.util.Log.e(TAG, "Clipboard import failed", e)
+                headlessToast("Clipboard import failed: ${e.message?.take(60)}")
                 resultTitle = "Clipboard Import Failed"
                 resultMessage = "Failed to import clipboard history:\n\n${e.message}\n\n" +
                         "Make sure the file is a valid CleverKeys clipboard backup file."
