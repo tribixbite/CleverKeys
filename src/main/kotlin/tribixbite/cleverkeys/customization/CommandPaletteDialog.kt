@@ -20,8 +20,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
+import android.content.ClipboardManager
+import android.content.Context
 import tribixbite.cleverkeys.Theme
 
 /**
@@ -691,6 +695,14 @@ private fun CustomTextInputSection(
     onTextChange: (String) -> Unit,
     onConfirm: () -> Unit
 ) {
+    val context = LocalContext.current
+    val focusRequester = remember { FocusRequester() }
+
+    // Auto-focus the text field when this section appears
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -708,10 +720,35 @@ private fun CustomTextInputSection(
         OutlinedTextField(
             value = text,
             onValueChange = { if (it.length <= 100) onTextChange(it) },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .focusRequester(focusRequester),
             label = { Text("Text to insert") },
             placeholder = { Text("e.g., Hello, World!") },
             supportingText = { Text("${text.length}/100 characters") },
+            trailingIcon = {
+                // Paste button — Compose text fields don't reliably receive
+                // performContextMenuAction(paste) from the IME, so provide
+                // a direct paste mechanism via ClipboardManager.
+                IconButton(onClick = {
+                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+                    val clip = clipboard?.primaryClip
+                    if (clip != null && clip.itemCount > 0) {
+                        val pasteText = clip.getItemAt(0).coerceToText(context).toString()
+                        if (pasteText.isNotEmpty()) {
+                            val combined = text + pasteText
+                            onTextChange(combined.take(100))
+                        }
+                    }
+                }) {
+                    // Create icon (page+pencil) — ContentPaste requires extended icons lib
+                    Icon(
+                        imageVector = Icons.Filled.Create,
+                        contentDescription = "Paste from clipboard",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            },
             maxLines = 5,
             minLines = 3
         )
