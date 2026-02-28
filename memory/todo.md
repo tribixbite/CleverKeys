@@ -99,6 +99,10 @@ Issues already implemented, need user verification + close:
 ---
 
 ## Completed (2026-02-28)
+- ✅ **Paste in custom text input** (905bd8d2e):
+  - Compose OutlinedTextField in Dialog doesn't receive performContextMenuAction(paste) from IME
+  - Added trailing paste icon button using ClipboardManager.primaryClip directly
+  - Auto-focuses text field on section open via FocusRequester + LaunchedEffect
 - ✅ **#113 short swipe paste in Termux** (c5e1eb6fc):
   - CustomShortSwipeExecutor.handlePaste() sends Ctrl+V in terminal apps
   - Both AvailableCommand.PASTE and CommandRegistry "paste" paths fixed
