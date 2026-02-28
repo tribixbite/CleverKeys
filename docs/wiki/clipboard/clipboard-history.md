@@ -87,6 +87,16 @@ Pinned items:
 - Don't auto-expire
 - Don't count toward history limit
 
+### Pinned Entry Shortcuts
+
+You can bind pinned clipboard entries to swipe gestures using the `paste_pinned_1` through `paste_pinned_5` commands. This lets you insert frequently used pinned text with a single swipe, without opening the clipboard panel.
+
+Entries are numbered by position (most-recently-pinned first):
+- `paste_pinned_1` inserts your most recently pinned entry
+- `paste_pinned_2` inserts the second, and so on up to `paste_pinned_5`
+
+To set this up, go to **Settings > Activities > Per-Key Customization**, choose a key and direction, select **Command**, and search for "paste_pinned". See [Per-Key Actions](../customization/per-key-actions.md#pinned-clipboard-actions) for full details.
+
 ## Todo Items
 
 Mark clipboard items as to-do reminders:

@@ -79,7 +79,7 @@ enum class SwipeDirection {
 
 ```kotlin
 enum class ActionType(val displayName: String, val description: String) {
-    TEXT("Text Input", "Insert text directly (up to 100 characters)"),
+    TEXT("Text Input", "Insert text directly"),
     COMMAND("Command", "Execute keyboard command (copy, paste, cursor, etc.)"),
     KEY_EVENT("Key Event", "Send raw key event (advanced)"),
     INTENT("Send Intent", "Send Android Intent (advanced)")
@@ -134,7 +134,7 @@ CommandRegistry contains 200+ commands in 18 categories:
 
 | Category | Example Commands |
 |----------|------------------|
-| `CLIPBOARD` | copy, paste, cut, paste_plain |
+| `CLIPBOARD` | copy, paste, cut, paste_plain, paste_pinned_1..5 |
 | `EDITING` | undo, redo, select_all |
 | `CURSOR` | cursor_left, cursor_right, home, end |
 | `NAVIGATION` | page_up, page_down, doc_home, doc_end |
@@ -220,6 +220,85 @@ private fun handlePaste(inputConnection: InputConnection, editorInfo: EditorInfo
 ```
 
 This mirrors the same logic in `KeyEventHandler.handlePaste()` for the regular paste key. Without this, paste via custom short swipe does nothing in Termux because terminal apps don't implement the Android context menu protocol.
+
+### Pinned Clipboard Commands (paste_pinned_N)
+
+Five commands (`paste_pinned_1` through `paste_pinned_5`) allow direct insertion of pinned clipboard entries by position, without opening the clipboard panel.
+
+**CommandRegistry registration:**
+
+```kotlin
+// Category.CLIPBOARD entries in CommandRegistry
+Command("paste_pinned_1", "Paste Pin #1", "Insert 1st pinned clipboard entry", Category.CLIPBOARD,
+    keywords = listOf("pin", "pinned", "clipboard", "paste", "1", "first")),
+// ... through paste_pinned_5
+```
+
+**Execution in CustomShortSwipeExecutor:**
+
+```kotlin
+private fun executePastePinned(commandName: String, inputConnection: InputConnection): Boolean {
+    val index = commandName.removePrefix("paste_pinned_").toIntOrNull()
+    if (index == null || index < 1) return false
+
+    val db = ClipboardDatabase.getInstance(context)
+    val pinnedEntries = db.getPinnedEntries()
+
+    if (index > pinnedEntries.size) {
+        showToast("Pinned entry #$index not found (${pinnedEntries.size} pinned)")
+        return false
+    }
+
+    val entry = pinnedEntries[index - 1]
+    inputConnection.commitText(entry.content, 1)
+    return true
+}
+```
+
+Key implementation details:
+- Uses `ClipboardDatabase.getInstance(context)` singleton to access the clipboard database
+- `getPinnedEntries()` returns entries ordered by timestamp DESC (most recently pinned first)
+- Index is 1-based in the command name, converted to 0-based for list access
+- Graceful failure: shows a toast with the actual pinned count if the index exceeds available entries
+- All exceptions caught and surfaced as a toast ("Failed to read pinned entry"), never crashes
+
+### Text Limit (MAX_ACTION_LENGTH)
+
+The `actionValue` field on `ShortSwipeMapping` is capped at `MAX_ACTION_LENGTH` (4096 characters). This limit applies to all action types — TEXT input content, COMMAND names, KEY_EVENT codes, and serialized INTENT JSON.
+
+```kotlin
+companion object {
+    const val MAX_ACTION_LENGTH = 4096
+}
+```
+
+The previous limit was 100 characters, which was insufficient for long text snippets, multi-line templates, and serialized intent JSON payloads.
+
+### Paste Button in Custom Text Input
+
+The `CommandPaletteDialog` text input field includes a trailing paste `IconButton`. This exists because Jetpack Compose `Dialog` does not reliably receive `performContextMenuAction(android.R.id.paste)` from the IME — the paste action is silently dropped.
+
+The workaround reads directly from `ClipboardManager`:
+
+```kotlin
+trailingIcon = {
+    IconButton(onClick = {
+        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+        val clip = clipboard?.primaryClip
+        if (clip != null && clip.itemCount > 0) {
+            val pasteText = clip.getItemAt(0).coerceToText(context).toString()
+            if (pasteText.isNotEmpty()) {
+                val combined = text + pasteText
+                onTextChange(combined.take(ShortSwipeMapping.MAX_ACTION_LENGTH))
+            }
+        }
+    }) {
+        Icon(imageVector = Icons.Filled.Create, contentDescription = "Paste from clipboard")
+    }
+}
+```
+
+The pasted content is appended to existing text and truncated to `MAX_ACTION_LENGTH`.
 
 ### CommandRegistry
 

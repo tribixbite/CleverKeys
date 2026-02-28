@@ -104,6 +104,31 @@ Put navigation actions where you can reach them:
 | **Backspace** | West | Delete Word |
 | **Space** | Subkeys | Cursor movement |
 
+### Pinned Clipboard Actions
+
+Insert pinned clipboard entries directly via swipe gestures, without opening the clipboard panel. Five positional commands are available:
+
+| Command | Description |
+|---------|-------------|
+| `paste_pinned_1` | Insert 1st pinned clipboard entry |
+| `paste_pinned_2` | Insert 2nd pinned clipboard entry |
+| `paste_pinned_3` | Insert 3rd pinned clipboard entry |
+| `paste_pinned_4` | Insert 4th pinned clipboard entry |
+| `paste_pinned_5` | Insert 5th pinned clipboard entry |
+
+Pinned entries are ordered **most-recently-pinned first**. If you request an index that exceeds the number of pinned items (e.g., `paste_pinned_3` with only 2 pins), a toast notification tells you how many are available instead of inserting anything.
+
+To set up:
+
+1. Go to **Settings > Activities > Per-Key Customization**
+2. Select a key and direction
+3. Choose **Command** as the action type
+4. Search for "paste_pinned" or browse the **Clipboard** category
+5. Select the desired slot (1-5)
+
+> [!TIP]
+> Pin your most-used text snippets (email signature, address, code boilerplate) and bind them to swipe directions for instant insertion.
+
 ### Terminal-Aware Actions
 
 Some actions adapt their behavior when typing in terminal apps like Termux:
@@ -115,6 +140,12 @@ Some actions adapt their behavior when typing in terminal apps like Termux:
 | **Cut** | Android cut API | Standard |
 
 This is automatic — the same paste customization works in both regular apps and terminals.
+
+### Custom Text Input
+
+When using the **Text Input** action type, you can enter up to **4096 characters** per action. This is useful for long templates, code snippets, or multi-line text blocks.
+
+The text input field includes a **paste button** (icon in the trailing position) for pasting from the system clipboard. This is provided because Compose dialogs do not always receive paste commands from the IME reliably.
 
 ## Tips and Tricks
 
