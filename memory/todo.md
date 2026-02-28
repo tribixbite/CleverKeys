@@ -120,6 +120,7 @@ Issues already implemented, need user verification + close:
     leaving only 24dp for autofill chips. Padding now removed in password/autofill mode.
   - InlinePresentationSpec height aligned to actual 40dp container (was 44dp from resource)
   - Explicit `visibility = VISIBLE` in setInlineAutofillView() for safety
+  - **ew-cli instrumented tests**: 15/15 pass on Pixel7 API 34 (SuggestionBarAutofillTest.kt)
 - ✅ **#82 auto_space_before_suggestion** (823f2f16e):
   - New boolean toggle: controls leading space before tapped suggestions
   - When disabled: "this:" + tap "english" → "this:english" (no leading space)
