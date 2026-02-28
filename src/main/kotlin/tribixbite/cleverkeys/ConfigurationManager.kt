@@ -3,6 +3,7 @@ package tribixbite.cleverkeys
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.res.Resources
+import android.util.Log
 
 /**
  * Manages keyboard configuration and notifies listeners of changes.
@@ -86,11 +87,21 @@ class ConfigurationManager(
         val prevThemeName = config.themeName
 
         // Refresh config from SharedPreferences
-        config.refresh(res, foldStateTracker.isUnfolded())
+        try {
+            config.refresh(res, foldStateTracker.isUnfolded())
+        } catch (t: Throwable) {
+            Log.e(TAG, "Config refresh failed", t)
+            return // Don't notify listeners if config refresh itself failed
+        }
 
         // Notify listeners of config change
+        // Catch Throwable (not just Exception) to prevent OOM/Error from killing IME process
         for (listener in listeners) {
-            listener.onConfigChanged(config)
+            try {
+                listener.onConfigChanged(config)
+            } catch (t: Throwable) {
+                Log.e(TAG, "Config listener ${listener.javaClass.simpleName} failed", t)
+            }
         }
 
         // Special notification for theme changes (requires view recreation)
@@ -98,7 +109,11 @@ class ConfigurationManager(
         val themeChanged = prevTheme != config.theme || prevThemeName != config.themeName
         if (themeChanged) {
             for (listener in listeners) {
-                listener.onThemeChanged(prevTheme, config.theme)
+                try {
+                    listener.onThemeChanged(prevTheme, config.theme)
+                } catch (t: Throwable) {
+                    Log.e(TAG, "Theme change listener ${listener.javaClass.simpleName} failed", t)
+                }
             }
         }
     }
@@ -114,7 +129,11 @@ class ConfigurationManager(
      */
     override fun onSharedPreferenceChanged(prefs: SharedPreferences, key: String?) {
         // Refresh config and notify listeners
-        refresh(context.resources)
+        try {
+            refresh(context.resources)
+        } catch (t: Throwable) {
+            Log.e(TAG, "onSharedPreferenceChanged failed for key=$key", t)
+        }
     }
 
     /**

@@ -1,5 +1,7 @@
 package tribixbite.cleverkeys
 
+import android.util.Log
+
 /**
  * Propagates configuration changes to all keyboard managers and components.
  *
@@ -54,31 +56,37 @@ class ConfigPropagator(
      * @param resources Resources for subtype refresh (required by SubtypeManager)
      */
     fun propagateConfig(config: Config, resources: android.content.res.Resources? = null) {
-        // Refresh subtitle IME (requires resources)
-        if (resources != null) {
-            subtypeManager?.refreshSubtype(config, resources)
+        try {
+            // Refresh subtitle IME (requires resources)
+            if (resources != null) {
+                subtypeManager?.refreshSubtype(config, resources)
+            }
+
+            // Update clipboard manager config
+            clipboardManager?.setConfig(config)
+
+            // Update prediction coordinator config
+            predictionCoordinator?.setConfig(config)
+
+            // Update input coordinator config
+            inputCoordinator?.setConfig(config)
+
+            // Update suggestion handler config
+            suggestionHandler?.setConfig(config)
+
+            // Update neural layout helper config
+            neuralLayoutHelper?.setConfig(config)
+
+            // Update layout manager config
+            layoutManager?.setConfig(config)
+
+            // Reset keyboard view to apply changes
+            resetKeyboardView()
+        } catch (t: Throwable) {
+            // Catch Throwable (not just Exception) to prevent OOM/Error from killing IME
+            // during config propagation (e.g., language toggle triggers reload cascade)
+            Log.e(TAG, "Config propagation failed", t)
         }
-
-        // Update clipboard manager config
-        clipboardManager?.setConfig(config)
-
-        // Update prediction coordinator config
-        predictionCoordinator?.setConfig(config)
-
-        // Update input coordinator config
-        inputCoordinator?.setConfig(config)
-
-        // Update suggestion handler config
-        suggestionHandler?.setConfig(config)
-
-        // Update neural layout helper config
-        neuralLayoutHelper?.setConfig(config)
-
-        // Update layout manager config
-        layoutManager?.setConfig(config)
-
-        // Reset keyboard view to apply changes
-        resetKeyboardView()
     }
 
     /**
@@ -162,6 +170,8 @@ class ConfigPropagator(
     }
 
     companion object {
+        private const val TAG = "ConfigPropagator"
+
         /**
          * Create a builder for ConfigPropagator.
          *

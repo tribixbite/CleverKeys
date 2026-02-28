@@ -940,8 +940,9 @@ class Keyboard2View @JvmOverloads constructor(
             val langName = getLanguageDisplayName(alternatePrimary)
             _keyboard2?.showSuggestionBarMessage("Primary: $langName")
             Log.d("Keyboard2View", "Primary language toggled to: $langName")
-        } catch (e: Exception) {
-            Log.e("Keyboard2View", "Failed to toggle primary language", e)
+        } catch (t: Throwable) {
+            // Catch Throwable (not just Exception) to prevent OOM/Error from killing IME
+            Log.e("Keyboard2View", "Failed to toggle primary language", t)
             _keyboard2?.showSuggestionBarMessage("Language toggle failed")
         }
     }
@@ -969,8 +970,9 @@ class Keyboard2View @JvmOverloads constructor(
             _keyboard2?.showSuggestionBarMessage("Secondary: $langName")
             Log.d("Keyboard2View", "Secondary language toggled to: $langName")
             // PreferenceUIUpdateHandler will automatically reload dictionaries on preference change
-        } catch (e: Exception) {
-            Log.e("Keyboard2View", "Failed to toggle secondary language", e)
+        } catch (t: Throwable) {
+            // Catch Throwable (not just Exception) to prevent OOM/Error from killing IME
+            Log.e("Keyboard2View", "Failed to toggle secondary language", t)
             _keyboard2?.showSuggestionBarMessage("Language toggle failed")
         }
     }

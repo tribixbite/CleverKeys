@@ -534,8 +534,10 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
                 vocabulary.unloadPrimaryDictionary()
                 prefixBoostTrie.unload() // Unload any existing boosts
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error loading primary dictionary from prefs", e)
+        } catch (t: Throwable) {
+            // Catch Throwable (not just Exception) to prevent OOM/Error from killing IME
+            // during dictionary reload triggered by language toggle
+            Log.e(TAG, "Error loading primary dictionary from prefs", t)
         }
     }
 
@@ -578,8 +580,9 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
                 vocabulary.unloadSecondaryDictionary()
                 vocabulary.setAutoSwitchConfig(false, 0.6f, "none")
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error loading secondary dictionary from prefs", e)
+        } catch (t: Throwable) {
+            // Catch Throwable (not just Exception) to prevent OOM/Error from killing IME
+            Log.e(TAG, "Error loading secondary dictionary from prefs", t)
         }
     }
 
@@ -615,8 +618,9 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
 
             val loaded = languageDetector.loadLanguages(languagesToLoad)
             Log.i(TAG, "Language detector initialized: $loaded/${languagesToLoad.size} languages")
-        } catch (e: Exception) {
-            Log.e(TAG, "Error initializing language detector", e)
+        } catch (t: Throwable) {
+            // Catch Throwable (not just Exception) to prevent OOM/Error from killing IME
+            Log.e(TAG, "Error initializing language detector", t)
         }
     }
 

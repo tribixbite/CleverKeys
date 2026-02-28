@@ -151,8 +151,10 @@ class PreferenceUIUpdateHandler(
                     Log.i(TAG, "Multilang toggle changed - secondary dictionaries reloaded")
                 }
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to reload dictionary on language change: ${e.message}", e)
+        } catch (t: Throwable) {
+            // Catch Throwable (not just Exception) to prevent OOM/Error from killing IME
+            // during dictionary reload triggered by language toggle
+            Log.e(TAG, "Failed to reload dictionary on language change: ${t.message}", t)
         }
     }
 
