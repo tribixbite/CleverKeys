@@ -2,6 +2,7 @@ package tribixbite.cleverkeys
 
 import android.content.Context
 import android.view.inputmethod.BaseInputConnection
+import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
@@ -276,9 +277,10 @@ class PastePinnedCommandTest {
         var insertedText = ""
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
             val editText = EditText(context)
-            val ic = BaseInputConnection(editText, true)
-            result = executor.execute(mapping, ic, null)
-            // BaseInputConnection commits text to the Editable — read it back
+            val editorInfo = EditorInfo()
+            // Use EditText's own InputConnection so commitText writes to its buffer
+            val ic = editText.onCreateInputConnection(editorInfo)!!
+            result = executor.execute(mapping, ic, editorInfo)
             insertedText = editText.text.toString()
         }
         assertTrue("Should return true on successful paste", result)
@@ -315,8 +317,9 @@ class PastePinnedCommandTest {
         var insertedText = ""
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
             val editText = EditText(context)
-            val ic = BaseInputConnection(editText, true)
-            executor.execute(mapping, ic, null)
+            val editorInfo = EditorInfo()
+            val ic = editText.onCreateInputConnection(editorInfo)!!
+            executor.execute(mapping, ic, editorInfo)
             insertedText = editText.text.toString()
         }
         assertEquals("paste_pinned_2 should insert the 2nd pinned entry", "Second pin", insertedText)
