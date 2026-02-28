@@ -113,7 +113,7 @@ class ClipboardDatabase private constructor(context: Context) :
         val db = readableDatabase
         val query = """
             SELECT $COLUMN_CONTENT, $COLUMN_TIMESTAMP FROM $TABLE_CLIPBOARD
-            WHERE $COLUMN_IS_PINNED = 1 ORDER BY $COLUMN_TIMESTAMP DESC
+            WHERE $COLUMN_IS_PINNED = 1 ORDER BY $COLUMN_TIMESTAMP ASC
         """.trimIndent()
         try {
             db.rawQuery(query, null).use { cursor ->
@@ -135,7 +135,7 @@ class ClipboardDatabase private constructor(context: Context) :
         val db = readableDatabase
         val query = """
             SELECT $COLUMN_CONTENT, $COLUMN_TIMESTAMP FROM $TABLE_CLIPBOARD
-            WHERE $COLUMN_IS_TODO = 1 ORDER BY $COLUMN_TIMESTAMP DESC
+            WHERE $COLUMN_IS_TODO = 1 ORDER BY $COLUMN_TIMESTAMP ASC
         """.trimIndent()
         try {
             db.rawQuery(query, null).use { cursor ->
