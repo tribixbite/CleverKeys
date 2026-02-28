@@ -203,6 +203,24 @@ class CustomShortSwipeExecutor(
 }
 ```
 
+### Terminal-Aware Paste
+
+Both the `AvailableCommand.PASTE` and `CommandRegistry` "paste" paths use `handlePaste()` which detects terminal apps and sends Ctrl+V instead of `performContextMenuAction(android.R.id.paste)`:
+
+```kotlin
+// CustomShortSwipeExecutor.kt
+private fun handlePaste(inputConnection: InputConnection, editorInfo: EditorInfo?): Boolean {
+    return if (TerminalUtils.isTerminalApp(editorInfo)) {
+        sendKeyEventWithModifier(inputConnection, KeyEvent.KEYCODE_V,
+            KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON)
+    } else {
+        inputConnection.performContextMenuAction(android.R.id.paste)
+    }
+}
+```
+
+This mirrors the same logic in `KeyEventHandler.handlePaste()` for the regular paste key. Without this, paste via custom short swipe does nothing in Termux because terminal apps don't implement the Android context menu protocol.
+
 ### CommandRegistry
 
 ```kotlin

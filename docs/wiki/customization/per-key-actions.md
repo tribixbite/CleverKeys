@@ -69,7 +69,7 @@ Changes are saved automatically. Tap **Done** to return.
 | **Tab** | Insert tab character |
 | **Escape** | Send escape key |
 | **Undo/Redo** | Undo or redo action |
-| **Copy/Cut/Paste** | Clipboard operations |
+| **Copy/Cut/Paste** | Clipboard operations (terminal-aware — see below) |
 | **Select All** | Select all text |
 
 ## Common Customizations
@@ -103,6 +103,18 @@ Put navigation actions where you can reach them:
 |-----|-----------|--------|
 | **Backspace** | West | Delete Word |
 | **Space** | Subkeys | Cursor movement |
+
+### Terminal-Aware Actions
+
+Some actions adapt their behavior when typing in terminal apps like Termux:
+
+| Action | Standard Apps | Terminal Apps |
+|--------|---------------|---------------|
+| **Paste** | Android paste API | Ctrl+V key event |
+| **Copy** | Android copy API | Standard |
+| **Cut** | Android cut API | Standard |
+
+This is automatic — the same paste customization works in both regular apps and terminals.
 
 ## Tips and Tricks
 

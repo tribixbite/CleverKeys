@@ -115,6 +115,18 @@ Adjust sensitivity in Settings:
 | **Max Distance** | Gesture Tuning | Maximum swipe length |
 | **Enable Short Swipes** | Gesture Tuning | Toggle feature on/off |
 
+## Terminal App Support
+
+When using CleverKeys in terminal emulators (Termux, ConnectBot, etc.), certain short swipe actions adapt automatically:
+
+| Action | Standard Apps | Terminal Apps |
+|--------|---------------|---------------|
+| **Paste** | Android paste API | Ctrl+V key event |
+| **Copy** | Android copy API | Same |
+| **Cut** | Android cut API | Same |
+
+Terminal apps don't implement the Android context menu protocol, so paste commands are sent as Ctrl+V key events instead. This happens automatically — no configuration needed.
+
 ## Related Features
 
 - [Cursor Navigation](cursor-navigation.md) - Move cursor with gestures

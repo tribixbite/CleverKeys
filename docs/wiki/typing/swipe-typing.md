@@ -76,6 +76,21 @@ Tune swipe typing in Settings > Neural Prediction:
 | **Beam Width** | More candidates = more accurate but slower (default: 6, max: 20) |
 | **Confidence Threshold** | Minimum confidence for predictions |
 | **Max Word Length** | Maximum predicted word length in characters (default: 20) |
+| **Backspace Undo Swipe** | Backspace deletes entire swiped word + auto-space (default: on) |
+
+## Undoing a Swipe
+
+If the wrong word was predicted after swiping:
+
+### Quick Undo with Backspace
+
+Press **backspace immediately** after swiping (before typing anything else). The entire swiped word and its trailing auto-space are deleted in one press, so you can swipe again.
+
+This behavior is controlled by the **Backspace Undo Swipe** toggle in Settings > Word Prediction (enabled by default). When disabled, backspace deletes a single character as normal.
+
+### Choose an Alternative
+
+Check the prediction bar — alternative words are shown left-to-right by confidence. Tap any alternative to replace the auto-inserted word.
 
 ## When Swipe Typing Doesn't Work
 

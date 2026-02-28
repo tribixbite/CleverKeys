@@ -55,6 +55,17 @@ You can assign clipboard access to any key's short swipe:
 1. Open clipboard history
 2. Tap the **🗑 delete button** on the item
 
+### Long-Press to Copy
+
+Copy an item to the system clipboard without pasting it into the current field:
+
+1. Open clipboard history
+2. **Long-press** any item's text
+3. A "Copied to clipboard" toast confirms the action
+4. The text is now on the system clipboard — paste it in any app
+
+This is useful when you want to store text for use in another app without inserting it into the current text field.
+
 ## Pin Items
 
 Keep important items from being removed:
@@ -121,6 +132,7 @@ The clipboard pane organizes items into three tabs:
 | **Todo button** | Adds to todos | Adds to todos | Removes from todos |
 | **Delete** | Deletes item | Deletes item | Deletes item |
 | **Paste** | Pastes to editor | Pastes to editor | Pastes to editor |
+| **Long-press** | Copies to system clipboard | Copies to system clipboard | Copies to system clipboard |
 
 ## Pagination
 

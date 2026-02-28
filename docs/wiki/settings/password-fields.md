@@ -51,6 +51,16 @@ Password mode activates automatically for:
 3. **Scroll for long passwords** - Drag left/right on the dots to see more
 4. **Predictions are intentionally disabled** - This is a security feature
 
+## Autofill Suggestions
+
+When an autofill provider (password manager, credential manager) offers inline suggestions on a password field, CleverKeys adjusts the suggestion bar to display them properly:
+
+- The suggestion bar padding is removed to give autofill chips the full 40dp bar height
+- Autofill chip dimensions are matched to the actual container size
+- The bar is forced visible even if it was hidden
+
+This prevents autofill suggestion chips from being clipped or hidden behind padding.
+
 ## Related Settings
 
 Password mode is automatic. Swipe typing is disabled in password fields by default but can be enabled via **Settings > Neural Prediction > Swipe on Password Fields**.

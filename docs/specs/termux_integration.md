@@ -133,6 +133,35 @@ The spacebar acts as a slider for cursor control:
 |-----|------|---------|-------------|
 | `termux_mode_enabled` | Boolean | true | Enable Termux-specific input handling |
 
+### Paste Operation
+
+Terminal apps don't implement `performContextMenuAction(android.R.id.paste)`. Paste is handled by sending a Ctrl+V key event instead, which all terminal emulators interpret as paste.
+
+This applies to both regular paste key and custom short swipe paste actions:
+
+```kotlin
+// KeyEventHandler.kt — regular paste key
+private fun handlePaste() {
+    if (TerminalUtils.isTerminalApp(recv.getCurrentEditorInfo())) {
+        send_key_down_up(KeyEvent.KEYCODE_V, KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON)
+    } else {
+        sendContextMenuAction(android.R.id.paste)
+    }
+}
+
+// CustomShortSwipeExecutor.kt — custom short swipe paste
+private fun handlePaste(inputConnection: InputConnection, editorInfo: EditorInfo?): Boolean {
+    return if (TerminalUtils.isTerminalApp(editorInfo)) {
+        sendKeyEventWithModifier(inputConnection, KeyEvent.KEYCODE_V,
+            KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON)
+    } else {
+        inputConnection.performContextMenuAction(android.R.id.paste)
+    }
+}
+```
+
+Terminal detection uses `TerminalUtils.isTerminalApp()` which checks package names against a known set (Termux, ConnectBot, JuiceSSH, etc.) and pattern-matches for `termux`, `anotherterm`, `.terminal` in package names.
+
 ## Behavior Comparison
 
 | Operation | Standard Apps | Termux Mode |
@@ -140,5 +169,6 @@ The spacebar acts as a slider for cursor control:
 | Insert text | `commitText()` | `commitText()` |
 | Delete word | `deleteSurroundingText()` | `Ctrl+W` key event |
 | Move cursor | `setSelection()` | `DPAD_LEFT/RIGHT` events |
+| Paste | `performContextMenuAction(paste)` | `Ctrl+V` key event |
 | Auto-space | Enabled | Disabled |
 | Swipe space | Normal | Enabled (exception) |

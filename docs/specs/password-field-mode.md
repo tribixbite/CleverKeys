@@ -137,6 +137,34 @@ horizontalScrollView.setOnTouchListener { v, event ->
 
 Without this, parent gesture detectors intercept horizontal drags and prevent scrolling.
 
+### Autofill Integration
+
+When inline autofill suggestions are provided (e.g., password manager credentials), the suggestion bar adjusts its layout:
+
+```kotlin
+// SuggestionBar.kt — setInlineAutofillView()
+fun setInlineAutofillView(view: View?) {
+    if (view != null) {
+        // Remove padding so autofill chips get the full 40dp bar height.
+        // Default 8dp padding top+bottom steals 16dp, leaving only 24dp.
+        setPadding(0, 0, 0, 0)
+        removeAllViews()
+        addView(view, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
+        visibility = VISIBLE
+    }
+}
+```
+
+The `InlinePresentationSpec` height is set to 40dp (matching the actual topPane container), not the `suggestion_strip_height` resource (44dp) which would cause clipping:
+
+```kotlin
+// InlineAutofillUtils.kt
+val height = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 40f,
+    context.resources.displayMetrics).toInt()
+```
+
+Padding is restored when autofill mode exits via `clearInlineAutofillView()`.
+
 ### Security Considerations
 
 1. Password text only stored in memory (volatile `StringBuilder`)
