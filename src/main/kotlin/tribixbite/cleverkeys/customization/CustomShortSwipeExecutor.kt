@@ -8,6 +8,7 @@ import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
 import android.widget.Toast
+import tribixbite.cleverkeys.ClipboardDatabase
 import tribixbite.cleverkeys.KeyValue
 import tribixbite.cleverkeys.TerminalUtils
 
@@ -206,6 +207,12 @@ class CustomShortSwipeExecutor(private val context: Context) {
                 "selectAll" -> inputConnection.performContextMenuAction(android.R.id.selectAll)
                 "pasteAsPlainText" -> inputConnection.performContextMenuAction(android.R.id.paste)
                 "shareText" -> inputConnection.performContextMenuAction(android.R.id.copy) // Copy first, then share handled elsewhere
+
+                // Pinned clipboard entry insertion
+                "paste_pinned_1", "paste_pinned_2", "paste_pinned_3",
+                "paste_pinned_4", "paste_pinned_5" -> {
+                    executePastePinned(command.name, inputConnection)
+                }
 
                 // Edit operations
                 "undo" -> inputConnection.performContextMenuAction(android.R.id.undo)
@@ -615,6 +622,41 @@ class CustomShortSwipeExecutor(private val context: Context) {
             AvailableCommand.SWITCH_IME -> KeyValue.getKeyByName("switch_im_picker")
             AvailableCommand.VOICE_INPUT -> KeyValue.getKeyByName("voice_input")
             else -> null // Execute directly via InputConnection
+        }
+    }
+
+    /**
+     * Insert the Nth pinned clipboard entry (1-indexed).
+     * Reads from ClipboardDatabase.getPinnedEntries() which returns entries ordered
+     * by timestamp DESC (most recent pin first). If the entry doesn't exist
+     * (fewer pinned items than requested), shows a toast notification.
+     */
+    private fun executePastePinned(commandName: String, inputConnection: InputConnection): Boolean {
+        // Extract the 1-based index from command name (e.g., "paste_pinned_3" -> 3)
+        val index = commandName.removePrefix("paste_pinned_").toIntOrNull()
+        if (index == null || index < 1) {
+            Log.w(TAG, "Invalid paste_pinned command: $commandName")
+            return false
+        }
+
+        return try {
+            val db = ClipboardDatabase.getInstance(context)
+            val pinnedEntries = db.getPinnedEntries()
+
+            if (index > pinnedEntries.size) {
+                showToast("Pinned entry #$index not found (${pinnedEntries.size} pinned)")
+                Log.w(TAG, "paste_pinned_$index: only ${pinnedEntries.size} pinned entries exist")
+                return false
+            }
+
+            val entry = pinnedEntries[index - 1] // Convert to 0-based
+            inputConnection.commitText(entry.content, 1)
+            Log.d(TAG, "Pasted pinned entry #$index: ${entry.content.take(30)}...")
+            true
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to paste pinned entry #$index", e)
+            showToast("Failed to read pinned entry")
+            false
         }
     }
 

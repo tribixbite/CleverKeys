@@ -83,6 +83,17 @@ object CommandRegistry {
             keywords = listOf("paste", "plain", "text", "no format")),
         Command("shareText", "Share", "Share selected text", Category.CLIPBOARD,
             keywords = listOf("share", "send")),
+        // Pinned clipboard entry insertion — dynamically pastes the Nth pinned entry
+        Command("paste_pinned_1", "Paste Pin #1", "Insert 1st pinned clipboard entry", Category.CLIPBOARD,
+            keywords = listOf("pin", "pinned", "clipboard", "paste", "1", "first")),
+        Command("paste_pinned_2", "Paste Pin #2", "Insert 2nd pinned clipboard entry", Category.CLIPBOARD,
+            keywords = listOf("pin", "pinned", "clipboard", "paste", "2", "second")),
+        Command("paste_pinned_3", "Paste Pin #3", "Insert 3rd pinned clipboard entry", Category.CLIPBOARD,
+            keywords = listOf("pin", "pinned", "clipboard", "paste", "3", "third")),
+        Command("paste_pinned_4", "Paste Pin #4", "Insert 4th pinned clipboard entry", Category.CLIPBOARD,
+            keywords = listOf("pin", "pinned", "clipboard", "paste", "4", "fourth")),
+        Command("paste_pinned_5", "Paste Pin #5", "Insert 5th pinned clipboard entry", Category.CLIPBOARD,
+            keywords = listOf("pin", "pinned", "clipboard", "paste", "5", "fifth")),
 
         // ========== EDITING ==========
         Command("undo", "Undo", "Undo last action", Category.EDITING,

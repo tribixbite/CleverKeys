@@ -473,7 +473,7 @@ private fun CommandSearchSection(
                         color = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                     Text(
-                        "Enter any text to insert (up to 100 characters)",
+                        "Enter any text to insert (macros, snippets, etc.)",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
                     )
@@ -719,13 +719,13 @@ private fun CustomTextInputSection(
 
         OutlinedTextField(
             value = text,
-            onValueChange = { if (it.length <= 100) onTextChange(it) },
+            onValueChange = { if (it.length <= ShortSwipeMapping.MAX_ACTION_LENGTH) onTextChange(it) },
             modifier = Modifier
                 .fillMaxWidth()
                 .focusRequester(focusRequester),
             label = { Text("Text to insert") },
             placeholder = { Text("e.g., Hello, World!") },
-            supportingText = { Text("${text.length}/100 characters") },
+            supportingText = { Text("${text.length} characters") },
             trailingIcon = {
                 // Paste button — Compose text fields don't reliably receive
                 // performContextMenuAction(paste) from the IME, so provide
@@ -737,7 +737,7 @@ private fun CustomTextInputSection(
                         val pasteText = clip.getItemAt(0).coerceToText(context).toString()
                         if (pasteText.isNotEmpty()) {
                             val combined = text + pasteText
-                            onTextChange(combined.take(100))
+                            onTextChange(combined.take(ShortSwipeMapping.MAX_ACTION_LENGTH))
                         }
                     }
                 }) {

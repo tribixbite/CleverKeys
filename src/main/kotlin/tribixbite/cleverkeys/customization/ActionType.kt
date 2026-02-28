@@ -11,11 +11,11 @@ enum class ActionType(
 ) {
     /**
      * Insert text string directly into the text field.
-     * The actionValue contains the text to insert (up to 100 characters).
+     * The actionValue contains the text to insert.
      */
     TEXT(
         displayName = "Text Input",
-        description = "Insert text directly (up to 100 characters)"
+        description = "Insert text directly"
     ),
 
     /**
