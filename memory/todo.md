@@ -104,6 +104,8 @@ Issues already implemented, need user verification + close:
   - Added paste_pinned_1..5 commands to CommandRegistry (CLIPBOARD category)
   - CustomShortSwipeExecutor reads Nth pinned entry via ClipboardDatabase.getInstance()
   - Graceful error: toast "Pinned entry #N not found (X pinned)" when index exceeds pins
+  - **ew-cli**: 14/14 PastePinnedCommandTest pass; full suite 789 tests, 788 pass, 1 flaky (VocabularyRankingTest)
+  - Wiki/spec docs updated: per-key-actions.md, clipboard-history.md, short-swipe-customization.md
 - ✅ **Paste in custom text input** (905bd8d2e):
   - Compose OutlinedTextField in Dialog doesn't receive performContextMenuAction(paste) from IME
   - Added trailing paste icon button using ClipboardManager.primaryClip directly
