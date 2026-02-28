@@ -99,6 +99,11 @@ Issues already implemented, need user verification + close:
 ---
 
 ## Completed (2026-02-28)
+- ✅ **Text limit raised + paste_pinned commands** (e78d1a47b):
+  - Removed arbitrary 100-char limit on TEXT actions (now 4096, matching MAX_ACTION_LENGTH)
+  - Added paste_pinned_1..5 commands to CommandRegistry (CLIPBOARD category)
+  - CustomShortSwipeExecutor reads Nth pinned entry via ClipboardDatabase.getInstance()
+  - Graceful error: toast "Pinned entry #N not found (X pinned)" when index exceeds pins
 - ✅ **Paste in custom text input** (905bd8d2e):
   - Compose OutlinedTextField in Dialog doesn't receive performContextMenuAction(paste) from IME
   - Added trailing paste icon button using ClipboardManager.primaryClip directly
