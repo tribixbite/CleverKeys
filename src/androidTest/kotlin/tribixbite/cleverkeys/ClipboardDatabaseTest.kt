@@ -85,11 +85,13 @@ class ClipboardDatabaseTest {
     }
 
     @Test
-    fun testDuplicateEntryIgnored() {
+    fun testDuplicateEntryMovedToTop() {
+        // #108: Duplicate entries are moved to top (timestamp updated), not rejected.
+        // addClipboardEntry returns true because the operation succeeds (entry is reordered).
         db.addClipboardEntry("Duplicate", futureExpiry)
         val result = db.addClipboardEntry("Duplicate", futureExpiry)
-        assertFalse("Duplicate entry should be rejected", result)
-        assertEquals("Should only have 1 entry", 1, db.getActiveClipboardEntries().size)
+        assertTrue("Duplicate entry should succeed (moved to top)", result)
+        assertEquals("Should still have 1 entry", 1, db.getActiveClipboardEntries().size)
     }
 
     @Test

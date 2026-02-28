@@ -1,11 +1,14 @@
 package tribixbite.cleverkeys
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.util.AttributeSet
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.TextView
+import android.widget.Toast
 
 /**
  * Clipboard tab types for the unified clipboard view.
@@ -332,6 +335,14 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             textView.setOnClickListener {
                 expandedStates[pos] = !isExpanded
                 notifyDataSetChanged()
+            }
+
+            // Long-press copies entry text to system clipboard
+            textView.setOnLongClickListener {
+                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                clipboard.setPrimaryClip(ClipData.newPlainText("CleverKeys", text))
+                Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
+                true
             }
 
             // Configure buttons based on current tab

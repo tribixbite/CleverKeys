@@ -9,6 +9,7 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
 import android.widget.Toast
 import tribixbite.cleverkeys.KeyValue
+import tribixbite.cleverkeys.TerminalUtils
 
 /**
  * Executes custom short swipe actions.
@@ -200,7 +201,7 @@ class CustomShortSwipeExecutor(private val context: Context) {
             val success = when (command.name) {
                 // Clipboard operations
                 "copy" -> inputConnection.performContextMenuAction(android.R.id.copy)
-                "paste" -> inputConnection.performContextMenuAction(android.R.id.paste)
+                "paste" -> handlePaste(inputConnection, editorInfo)
                 "cut" -> inputConnection.performContextMenuAction(android.R.id.cut)
                 "selectAll" -> inputConnection.performContextMenuAction(android.R.id.selectAll)
                 "pasteAsPlainText" -> inputConnection.performContextMenuAction(android.R.id.paste)
@@ -405,7 +406,9 @@ class CustomShortSwipeExecutor(private val context: Context) {
                     inputConnection.performContextMenuAction(android.R.id.copy)
                 }
                 AvailableCommand.PASTE -> {
-                    inputConnection.performContextMenuAction(android.R.id.paste)
+                    // #113: Terminal apps don't implement context menu protocol.
+                    // Send Ctrl+V instead, which terminal emulators handle as paste.
+                    handlePaste(inputConnection, editorInfo)
                 }
                 AvailableCommand.CUT -> {
                     inputConnection.performContextMenuAction(android.R.id.cut)
@@ -554,6 +557,22 @@ class CustomShortSwipeExecutor(private val context: Context) {
         } catch (e: Exception) {
             Log.e(TAG, "Failed to execute KEY_EVENT action", e)
             false
+        }
+    }
+
+    /**
+     * #113: Terminal-aware paste. Terminal emulators (Termux, ConnectBot, etc.)
+     * don't implement performContextMenuAction, so send Ctrl+V key event instead.
+     */
+    private fun handlePaste(inputConnection: InputConnection, editorInfo: EditorInfo?): Boolean {
+        return if (TerminalUtils.isTerminalApp(editorInfo)) {
+            sendKeyEventWithModifier(
+                inputConnection,
+                KeyEvent.KEYCODE_V,
+                KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON
+            )
+        } else {
+            inputConnection.performContextMenuAction(android.R.id.paste)
         }
     }
 
