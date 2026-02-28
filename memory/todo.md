@@ -64,10 +64,10 @@ Issues already implemented, need user verification + close:
   - Polish user: English dictionary suggests wrong words; wants to disable it
 - **#99** Unclear/outdated documentation of build_langpack.py
   - Hungarian user tried to build langpack; docs incomplete/outdated
-- **#107** Clipboard: Add a Copy button to store text in system clipboard
+- ✅ **#107** Clipboard: Long-press copies to system clipboard (c5e1eb6fc)
 - ✅ **#108** Clipboard: Move re-copied text to top of list (72adabb9f)
 - ✅ **#109** Improve the look of the autofill suggestion style (72adabb9f + display cutoff fix)
-- ✅ **#113** Paste shortcut works in Termux — Ctrl+V fallback for terminal apps (72adabb9f)
+- ✅ **#113** Paste shortcut works in Termux — Ctrl+V fallback for terminal apps (72adabb9f + c5e1eb6fc short swipe fix)
 - ✅ **#110** Backspace undo swipe — immediate backspace after swiped word deletes entire word
 
 ### Features — High Effort / Community
@@ -97,6 +97,18 @@ Issues already implemented, need user verification + close:
   User has tested and confirmed GIF pack import/removal/display functional.
 
 ---
+
+## Completed (2026-02-28)
+- ✅ **#113 short swipe paste in Termux** (c5e1eb6fc):
+  - CustomShortSwipeExecutor.handlePaste() sends Ctrl+V in terminal apps
+  - Both AvailableCommand.PASTE and CommandRegistry "paste" paths fixed
+  - Previously only KeyEventHandler.handlePaste() had terminal fallback
+- ✅ **#107 clipboard long-press copy** (c5e1eb6fc):
+  - Long-press on clipboard history entry copies text to system clipboard
+  - Uses ClipboardManager.setPrimaryClip() with toast confirmation
+- ✅ **ClipboardDatabaseTest dedup fix** (c5e1eb6fc):
+  - Test expected `false` for duplicate add, but #108 changed to move-to-top (returns `true`)
+  - Updated assertion: `assertFalse` → `assertTrue`, message updated
 
 ## Completed (2026-02-27)
 - ✅ **#110 backspace undo swipe**:
