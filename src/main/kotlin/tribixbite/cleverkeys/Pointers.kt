@@ -203,16 +203,36 @@ class Pointers(
             // If moved significantly, fall through to gesture classification for short swipe
             if (movementDist < _config.short_gesture_min_distance) {
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Path: Deferred nav-subkey key TAP, outputting primary key")
-                _handler.onPointerDown(ptr.value, false)
+                if (ptr.value != null) {
+                    _handler.onPointerDown(ptr.value, false)
+                    _handler.onPointerUp(ptr.value, ptr.modifiers)
+                }
                 ptr.flags = ptr.flags and FLAG_P_DEFERRED_DOWN.inv()
                 clearLatched()
                 removePtr(ptr)
-                _handler.onPointerUp(ptr.value, ptr.modifiers)
                 return
             }
-            // User moved - clear deferred flag and let gesture classification handle it
-            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Path: Deferred nav-subkey key SWIPE, distance=$movementDist, falling through to gesture classification")
+            // User moved - clear deferred flag
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Path: Deferred nav-subkey key SWIPE, distance=$movementDist")
             ptr.flags = ptr.flags and FLAG_P_DEFERRED_DOWN.inv()
+
+            // FIX #104: When key0 is null (e.g., compose key disabled by locale filter),
+            // gesture classification requires non-null ptr.value and will skip this key.
+            // Handle the nav swipe directly here instead of falling through.
+            if (ptr.value == null) {
+                val angle = atan2(dy.toDouble(), dx.toDouble()) + Math.PI
+                val direction = ((angle * 8 / Math.PI).toInt() + 12) % 16
+                val navKey = getNearestKeyAtDirection(ptr, direction)
+                if (navKey != null) {
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Path: Null-key0 nav swipe, direction=$direction, key=$navKey")
+                    _handler.onPointerDown(navKey, true)
+                    clearLatched()
+                    removePtr(ptr)
+                    _handler.onPointerUp(navKey, ptr.modifiers)
+                    return
+                }
+            }
+            // Non-null key0: let gesture classification handle it (existing path)
         }
 
         // Handle deferred backspace key - check if it was a tap or a short swipe
