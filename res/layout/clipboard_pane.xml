@@ -78,6 +78,19 @@
         android:clickable="true"
         android:focusable="true"/>
 
+    <!-- Search clear button (hidden until user types) -->
+    <ImageButton
+        android:id="@+id/clipboard_search_clear"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:src="@android:drawable/ic_menu_close_clear_cancel"
+        android:tint="?attr/colorLabel"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Clear search"
+        android:scaleType="centerInside"
+        android:padding="4dp"
+        android:visibility="gone"/>
+
     <!-- Date filter icon -->
     <TextView
         android:id="@+id/clipboard_date_filter"

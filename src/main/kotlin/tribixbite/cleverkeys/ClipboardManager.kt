@@ -41,6 +41,7 @@ class ClipboardManager(
     // Clipboard views
     private var clipboardPane: ViewGroup? = null
     private var clipboardSearchBox: TextView? = null
+    private var clipboardSearchClear: ImageButton? = null
     private var clipboardHistoryView: ClipboardHistoryView? = null
 
     // Tab buttons
@@ -85,6 +86,12 @@ class ClipboardManager(
                 searchMode = true
                 clipboardSearchBox?.hint = "Type on keyboard below..."
                 clipboardSearchBox?.requestFocus()
+            }
+
+            // Set up search clear button (X)
+            clipboardSearchClear = clipboardPane?.findViewById(R.id.clipboard_search_clear)
+            clipboardSearchClear?.setOnClickListener {
+                clearSearch()
             }
 
             // Set up date filter icon
@@ -154,9 +161,7 @@ class ClipboardManager(
         currentTab = tab
         clipboardHistoryView?.setTab(tab)
         updateTabHighlighting()
-
-        // Clear search when switching tabs
-        clearSearch()
+        // Search persists across tabs — user can clear via X button
     }
 
     /**
@@ -201,6 +206,9 @@ class ClipboardManager(
 
                 // Update history view filter
                 historyView.setSearchFilter(newText)
+
+                // Show clear button when there's text
+                updateSearchClearVisibility(newText)
             }
         }
     }
@@ -220,6 +228,9 @@ class ClipboardManager(
 
                     // Update history view filter
                     historyView.setSearchFilter(newText)
+
+                    // Hide clear button when search is empty
+                    updateSearchClearVisibility(newText)
                 }
             }
         }
@@ -235,6 +246,15 @@ class ClipboardManager(
             hint = "Tap to search..."
         }
         clipboardHistoryView?.setSearchFilter("")
+        updateSearchClearVisibility("")
+    }
+
+    /**
+     * Updates the visibility of the search clear (X) button.
+     * Shown when search text is non-empty, hidden otherwise.
+     */
+    private fun updateSearchClearVisibility(searchText: String) {
+        clipboardSearchClear?.visibility = if (searchText.isNotEmpty()) View.VISIBLE else View.GONE
     }
 
     /**
@@ -248,6 +268,7 @@ class ClipboardManager(
             hint = "Tap to search..."
         }
         clipboardHistoryView?.setSearchFilter("")
+        updateSearchClearVisibility("")
 
         // Reset to History tab when showing pane
         currentTab = ClipboardTab.HISTORY
@@ -265,6 +286,7 @@ class ClipboardManager(
             text = ""
             hint = "Tap to search..."
         }
+        updateSearchClearVisibility("")
     }
 
     /**
@@ -377,6 +399,7 @@ class ClipboardManager(
     fun cleanup() {
         clipboardPane = null
         clipboardSearchBox = null
+        clipboardSearchClear = null
         clipboardHistoryView = null
         tabHistory = null
         tabPinned = null
