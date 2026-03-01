@@ -22,8 +22,7 @@ Issues already implemented, need user verification + close:
 ### Bugs — Confirmed Real Issues
 - **#30** Per-key short swipe customization to keyboard events does nothing
   - v1.1.7.8, Android 16. Customizing P/O/K/J short swipes to keyboard events
-- **#35** Overly dark darkmode — settings app should follow system light/dark
-  - User wants system theme follow, not hardcoded dark
+- ✅ **#35** Overly dark darkmode — fixed in commit 9213de835 (settings uses DayNight theme)
 - **#55** Crashes on ancient phone — Nexus 6 / Android 11 / LineageOS
   - Keyboard exits immediately on use; likely ONNX or memory issue on old device
 - **#71** Opening clipboard causes device freeze for 2-3 seconds
@@ -42,11 +41,11 @@ Issues already implemented, need user verification + close:
   - v1.2.8, Android 16. Background color setting ignored, shows shade of key color
 - **#96** Dictionary search resets after dis/enabling a word
   - v1.2.8, Android 16. Already fixed (WordListFragment.refresh preserves state)
-- **#104** Turning off compose key breaks touchpad/arrow keys
-  - v1.2.9, Android 15. Dpad broken when compose key is disabled
+- ✅ **#104** Turning off compose key breaks touchpad/arrow keys — fixed 279890c43
+  - Short swipe on null key0 now computes direction directly in deferred nav handler
 
 ### Features — Low/Medium Effort
-- **#35** (also feature) Settings dark mode should follow system theme
+- ✅ **#35** (already fixed) Settings dark mode follows system theme (DayNight)
 - **#59** Clipboard delete option + individual item delete + copy timestamps
 - **#67** Script error — build_all_languages.py references missing get_wordlist.py
   - `python3 build_all_languages.py --lang fr` fails; get_wordlist.py not in repo
