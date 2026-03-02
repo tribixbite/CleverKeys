@@ -25,27 +25,39 @@ Issues already implemented, need user verification + close:
 - ✅ **#35** Overly dark darkmode — fixed in commit 9213de835 (settings uses DayNight theme)
 - **#55** Crashes on ancient phone — Nexus 6 / Android 11 / LineageOS
   - Keyboard exits immediately on use; likely ONNX or memory issue on old device
-- **#71** Opening clipboard causes device freeze for 2-3 seconds
+- **#71** Opening clipboard causes device freeze for 2-3 seconds — **FIX NEXT (priority 1)**
   - v1.2.5, Android 15. ClipboardHistoryView.init{} calls clearExpiredAndGetHistory() sync on UI thread
-  - Fix: use findViewTreeLifecycleOwner()?.lifecycleScope + Dispatchers.IO, show loading placeholder
-  - Watch for: empty state flash, service null safety, view detach before coroutine completes
+  - Fix: manual CoroutineScope(SupervisorJob()+Dispatchers.Main) in onAttachedToWindow, cancel in
+    onDetachedFromWindow. Do NOT use findViewTreeLifecycleOwner (null in IME context).
+  - Move db call to withContext(Dispatchers.IO), replace history reference atomically on Main thread
+  - Register OnClipboardHistoryChange callback safely — handler must tolerate pre-load empty state
+  - Risk: medium. Isolated to ClipboardHistoryView.kt. Gemini 3.1 Pro validated (2026-03-02)
 - **#75** Swipe behaviour broken on Swiss French QWERTZ layout
   - Pixel 8a, Android 16 LineageOS. Swiping on QWERTZ layout misbehaves
 - **#77** Cannot completely disable Greek/Math toggle in custom XML layout
   - v1.2.5, Android 15. bottom_row="false" custom layout, Greek/Math key persists
-- **#78** Word prediction doesn't replace typed text (flicker issue)
+- **#78** Word prediction doesn't replace typed text (flicker issue) — **FIX LAST (priority 3, high risk)**
   - v1.2.5, Android 15. SuggestionHandler calls deleteSurroundingText then commitText
-  - Root cause: manual deleteSurroundingText breaks composing span range, subsequent commitText
-    behaves unpredictably (flicker/append). Missing beginBatchEdit/endBatchEdit wrapping.
-  - Fix: wrap in beginBatchEdit/endBatchEdit, let commitText handle composing replacement
-    directly — do NOT call finishComposingText() before commitText (causes duplication)
+  - Root cause: two separate IPC calls cause visible flicker. Missing batch edit wrapping.
+  - Phase 1 (safe): wrap NON-TERMUX path in beginBatchEdit/endBatchEdit. Skip Termux path
+    (KEYCODE_DEL/DPAD_RIGHT bypass IC batching, wrapping is useless). Apps that ignore
+    batch edit degrade gracefully to current behavior (no worse).
+  - Phase 1 bonus: batch edit coalesces onUpdateSelection → contextTracker sees one update
+    instead of intermediate "deleted but not replaced" state. Actually HELPS cursor sync.
+  - Phase 2 (deferred): composing-aware replacement with setComposingRegion (risky, varies by app)
+  - Do NOT call finishComposingText() before commitText (causes duplication)
   - Test in: Chrome URL bar (hardest), mid-word cursor replacement, Samsung OneUI
-- **#79** UI/Header flickering at top of screen during settings scrolling
+  - Risk: high (touches typing core). Gemini 3.1 Pro validated (2026-03-02)
+- **#79** UI/Header flickering at top of screen during settings scrolling — **FIX SECOND (priority 2)**
   - v1.2.5, Android 15. AnimatedVisibility + expandVertically in 11+ CollapsibleSettingsSections
     inside Column+verticalScroll forces full remeasure on expand/collapse during scroll
-  - Best fix: migrate Column+verticalScroll → LazyColumn (each section = item, handles scroll
-    offset adjustments natively). Fallback: replace AnimatedVisibility with animateContentSize()
-  - Watch for: recomposition loops on expanded state, Android 12+ stretch overscroll glitch
+  - Phase 1 (now): replace AnimatedVisibility with Modifier.animateContentSize() on inner Column.
+    ~5 line change per section. animateContentSize handles conditional if(expanded) content fine.
+    Memory concern (always-composed collapsed) is negligible for settings sections.
+  - Phase 2 (deferred): LazyColumn migration. Only if scroll jump on collapse is unacceptable.
+  - Known limitation: scroll position may jump slightly when section above viewport collapses.
+    Only LazyColumn has proper scroll anchoring. Acceptable for Phase 1 (cosmetic fix for cosmetic bug).
+  - Risk: low. Gemini 3.1 Pro validated (2026-03-02)
 - **#83** "Keys per direction" not used on average length swipe
   - v1.2.5, Android 12. Short swipe keys inaccessible at normal swipe length
 - ✅ **#92** Custom background color ignored in custom themes — fixed 737dd0c16
