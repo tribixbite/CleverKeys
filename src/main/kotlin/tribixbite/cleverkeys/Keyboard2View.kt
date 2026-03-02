@@ -132,6 +132,13 @@ class Keyboard2View @JvmOverloads constructor(
         } else {
             Theme(getContext(), attrs)
         }
+        // Fix #92: For runtime themes (custom/decorative), the XML attribute
+        // ?attr/colorKeyboard resolves to the hardcoded base style (CleverKeysDark).
+        // Override with the actual keyboard background from the Theme's color scheme.
+        if (_config.isRuntimeTheme() && _theme.colorKeyboardBackground != 0) {
+            setBackgroundColor(_theme.colorKeyboardBackground)
+        }
+
         _pointers = Pointers(this, _config, getContext())
         _swipeRecognizer = _pointers._swipeRecognizer // Share the recognizer
         _themeCache = LruCache(5)

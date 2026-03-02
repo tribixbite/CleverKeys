@@ -128,10 +128,9 @@ class Theme {
         colorNavBar = colorScheme.keyboardBackground.toArgb()
         isLightNavBar = isColorLight(colorNavBar)
 
-        // TODO: #92 — keyboard background not applied for runtime themes
-        // This should be: colorKeyboardBackground = colorScheme.keyboardBackground.toArgb()
-        // but it's missing, causing custom background colors to be ignored
-        colorKeyboardBackground = 0
+        // Keyboard container background — applied programmatically by Keyboard2View
+        // for runtime themes (custom/decorative), overriding the XML ?attr/colorKeyboard
+        colorKeyboardBackground = colorScheme.keyboardBackground.toArgb()
     }
 
     /** Interpolate the 'value' component toward its opposite by 'alpha'. */
