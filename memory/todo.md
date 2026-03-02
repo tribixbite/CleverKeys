@@ -26,19 +26,30 @@ Issues already implemented, need user verification + close:
 - **#55** Crashes on ancient phone — Nexus 6 / Android 11 / LineageOS
   - Keyboard exits immediately on use; likely ONNX or memory issue on old device
 - **#71** Opening clipboard causes device freeze for 2-3 seconds
-  - v1.2.5, Android 15. Clipboard pane open triggers device-wide stall
+  - v1.2.5, Android 15. ClipboardHistoryView.init{} calls clearExpiredAndGetHistory() sync on UI thread
+  - Fix: use findViewTreeLifecycleOwner()?.lifecycleScope + Dispatchers.IO, show loading placeholder
+  - Watch for: empty state flash, service null safety, view detach before coroutine completes
 - **#75** Swipe behaviour broken on Swiss French QWERTZ layout
   - Pixel 8a, Android 16 LineageOS. Swiping on QWERTZ layout misbehaves
 - **#77** Cannot completely disable Greek/Math toggle in custom XML layout
   - v1.2.5, Android 15. bottom_row="false" custom layout, Greek/Math key persists
 - **#78** Word prediction doesn't replace typed text (flicker issue)
-  - v1.2.5, Android 15. Selecting prediction doesn't replace; text flickers
+  - v1.2.5, Android 15. SuggestionHandler calls deleteSurroundingText then commitText
+  - Root cause: manual deleteSurroundingText breaks composing span range, subsequent commitText
+    behaves unpredictably (flicker/append). Missing beginBatchEdit/endBatchEdit wrapping.
+  - Fix: wrap in beginBatchEdit/endBatchEdit, let commitText handle composing replacement
+    directly — do NOT call finishComposingText() before commitText (causes duplication)
+  - Test in: Chrome URL bar (hardest), mid-word cursor replacement, Samsung OneUI
 - **#79** UI/Header flickering at top of screen during settings scrolling
-  - v1.2.5, Android 15. Settings menu top area jitters on scroll
+  - v1.2.5, Android 15. AnimatedVisibility + expandVertically in 11+ CollapsibleSettingsSections
+    inside Column+verticalScroll forces full remeasure on expand/collapse during scroll
+  - Best fix: migrate Column+verticalScroll → LazyColumn (each section = item, handles scroll
+    offset adjustments natively). Fallback: replace AnimatedVisibility with animateContentSize()
+  - Watch for: recomposition loops on expanded state, Android 12+ stretch overscroll glitch
 - **#83** "Keys per direction" not used on average length swipe
   - v1.2.5, Android 12. Short swipe keys inaccessible at normal swipe length
-- **#92** Custom background color ignored in custom themes
-  - v1.2.8, Android 16. Background color setting ignored, shows shade of key color
+- ✅ **#92** Custom background color ignored in custom themes — fixed 737dd0c16
+  - Theme.colorKeyboardBackground populated from scheme, Keyboard2View applies programmatically
 - **#96** Dictionary search resets after dis/enabling a word
   - v1.2.8, Android 16. Already fixed (WordListFragment.refresh preserves state)
 - ✅ **#104** Turning off compose key breaks touchpad/arrow keys — fixed 279890c43
