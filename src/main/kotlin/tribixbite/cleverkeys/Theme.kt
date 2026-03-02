@@ -52,6 +52,11 @@ class Theme {
     @JvmField
     val isLightNavBar: Boolean
 
+    /** Keyboard container background color — used to apply custom/decorative backgrounds
+     *  that can't be resolved from XML theme attributes. */
+    @JvmField
+    val colorKeyboardBackground: Int
+
     /**
      * Primary constructor for XML-based themes.
      * Reads colors from styled attributes defined in res/values/themes.xml
@@ -82,6 +87,7 @@ class Theme {
         keyBorderColorTop = s.getColor(R.styleable.keyboard_keyBorderColorTop, colorKey)
         keyBorderColorRight = s.getColor(R.styleable.keyboard_keyBorderColorRight, colorKey)
         keyBorderColorBottom = s.getColor(R.styleable.keyboard_keyBorderColorBottom, colorKey)
+        colorKeyboardBackground = s.getColor(R.styleable.keyboard_colorKeyboard, 0)
         s.recycle()
     }
 
@@ -121,6 +127,11 @@ class Theme {
         // Nav bar - derive from keyboard background
         colorNavBar = colorScheme.keyboardBackground.toArgb()
         isLightNavBar = isColorLight(colorNavBar)
+
+        // TODO: #92 — keyboard background not applied for runtime themes
+        // This should be: colorKeyboardBackground = colorScheme.keyboardBackground.toArgb()
+        // but it's missing, causing custom background colors to be ignored
+        colorKeyboardBackground = 0
     }
 
     /** Interpolate the 'value' component toward its opposite by 'alpha'. */
