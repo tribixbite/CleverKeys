@@ -108,12 +108,15 @@ class VocabularyRankingTest {
             CandidateWord("wouldnt", 0.70f),
             CandidateWord("couldnt", 0.65f)
         )
-        val stats = SwipeStats(7, 350f, 50f, 'd', 't')
+        // Use '\u0000' for firstChar/lastChar to disable prefix filtering —
+        // this test validates contraction vocabulary acceptance, not swipe geometry
+        val stats = SwipeStats(7, 350f, 50f, '\u0000', '\u0000')
 
         val results = vocab.filterPredictions(candidates, stats)
 
         // All should pass vocabulary filter (not rejected as unknown)
-        assertTrue("Should have at least 3 accepted predictions", results.size >= 3)
+        assertTrue("Should have at least 3 accepted predictions (got ${results.size}: ${results.map { it.word }})",
+            results.size >= 3)
 
         // Each result should have a non-zero score
         for (result in results) {
