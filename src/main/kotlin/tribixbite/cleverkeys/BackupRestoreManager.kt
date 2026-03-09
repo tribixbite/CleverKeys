@@ -127,8 +127,11 @@ class BackupRestoreManager(private val context: Context) {
      *
      * Search order for file:// URIs:
      * 1. Exact path (works with MANAGE_EXTERNAL_STORAGE or app-writable paths)
-     * 2. Downloads/CleverKeys/ (where exports land via MediaStore)
-     * 3. App-private external dir (where exports land as last resort)
+     * 2. Downloads/CleverKeys/ via direct FileInputStream
+     * 3. Downloads/CleverKeys/ via MediaStore query (handles files created by other
+     *    apps — e.g., `cp` or `vim` from Termux — that the app can't read directly
+     *    due to scoped storage restrictions on Android 10+)
+     * 4. App-private external dir (where exports land as last resort)
      */
     private fun openInputStream(uri: Uri): InputStream? {
         if (uri.scheme == "file") {
@@ -139,7 +142,7 @@ class BackupRestoreManager(private val context: Context) {
             // Try 1: Exact path
             if (file.exists() && file.canRead()) return FileInputStream(file)
 
-            // Try 2: Downloads/CleverKeys/
+            // Try 2: Downloads/CleverKeys/ direct
             val downloadsDir = Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_DOWNLOADS
             )
@@ -148,13 +151,49 @@ class BackupRestoreManager(private val context: Context) {
                 return FileInputStream(downloadsFile)
             }
 
-            // Try 3: App-private external dir
+            // Try 3: MediaStore query by filename in Downloads/CleverKeys/
+            // Handles files created/modified by other apps (cp, vim, etc.) that
+            // scoped storage blocks from direct FileInputStream access
+            readFromDownloadsMediaStore(fileName)?.let { return it }
+
+            // Try 4: App-private external dir
             val extFile = File(context.getExternalFilesDir(null), fileName)
             if (extFile.exists()) return FileInputStream(extFile)
 
             return null
         }
         return context.contentResolver.openInputStream(uri)
+    }
+
+    /**
+     * Read from Downloads/ via MediaStore query. Finds files by display name
+     * regardless of which app created them — unlike direct FileInputStream which
+     * fails on Android 10+ for files created by other processes (e.g., Termux cp).
+     */
+    private fun readFromDownloadsMediaStore(fileName: String): InputStream? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return null
+        return try {
+            val cursor = context.contentResolver.query(
+                MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                arrayOf(MediaStore.Downloads._ID),
+                "${MediaStore.Downloads.DISPLAY_NAME} = ? AND ${MediaStore.Downloads.RELATIVE_PATH} LIKE ?",
+                arrayOf(fileName, "%CleverKeys%"),
+                "${MediaStore.Downloads.DATE_MODIFIED} DESC"
+            )
+            cursor?.use {
+                if (it.moveToFirst()) {
+                    val id = it.getLong(0)
+                    val contentUri = android.content.ContentUris.withAppendedId(
+                        MediaStore.Downloads.EXTERNAL_CONTENT_URI, id
+                    )
+                    Log.i(TAG, "Reading $fileName via MediaStore (id=$id)")
+                    context.contentResolver.openInputStream(contentUri)
+                } else null
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "MediaStore Downloads read failed for $fileName: ${e.message}")
+            null
+        }
     }
 
     /**
