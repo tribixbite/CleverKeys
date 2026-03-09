@@ -1000,8 +1000,13 @@ class Config private constructor(
         @JvmStatic
         fun isSwipeTypingSupportedForLayout(layout: KeyboardData?): Boolean {
             if (layout == null) return false
-            val name = layout.name ?: return false
-            val script = layout.script ?: return false
+            return isSwipeTypingSupportedForLayout(layout.name, layout.script)
+        }
+
+        /** String-based overload for direct testing without KeyboardData construction. */
+        @JvmStatic
+        fun isSwipeTypingSupportedForLayout(name: String?, script: String?): Boolean {
+            if (name == null || script == null) return false
             // Must be Latin script (exclude Greek/Georgian QWERTY) AND
             // must be a QWERTY variant (exclude Dvorak, Colemak, AZERTY, QWERTZ, etc.)
             return script.equals("latin", ignoreCase = true) &&
