@@ -1079,6 +1079,8 @@ class InputCoordinator(
         contextTracker.clearLastAutoInsertedWord()
 
         if (!config.swipe_typing_enabled) return
+        // #9: Neural model is QWERTY-trained — disable swipe for non-QWERTY layouts
+        if (!Config.isSwipeTypingSupportedForLayout(keyboardView.getKeyboard())) return
 
         // OPTIMIZATION v1.32.529: Ensure neural engine is loaded before first swipe
         // If not loaded in onCreate (rare edge case), lazy-load synchronously now

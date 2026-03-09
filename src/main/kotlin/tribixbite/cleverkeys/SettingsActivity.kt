@@ -191,6 +191,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     // Phase 1: Expose existing Config.kt settings
     private var swipeTypingEnabled by mutableStateOf(true)  // Master switch for swipe typing (default ON for CleverKeys)
     private var swipeOnPasswordFields by mutableStateOf(false)  // #39: Allow swipe on password fields
+    private var currentLayoutSupportsSwipe by mutableStateOf(true)  // #9: False for non-QWERTY layouts
+    private var currentLayoutName by mutableStateOf("")  // #9: Display name of active layout
     private var wordPredictionEnabled by mutableStateOf(true)  // Match Config.kt default
     private var autoSpaceAfterSuggestion by mutableStateOf(true)  // #82: Add trailing space after selecting suggestion
     private var autoSpaceBeforeSuggestion by mutableStateOf(true)  // Add leading space before tapped suggestion
@@ -604,7 +606,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     /** Check if a gating toggle is enabled */
     private fun isGateEnabled(gateId: String): Boolean {
         return when (gateId) {
-            "swipe_typing" -> swipeTypingEnabled
+            "swipe_typing" -> swipeTypingEnabled && currentLayoutSupportsSwipe
             "short_gestures" -> shortGesturesEnabled
             "multilang" -> multiLangEnabled
             else -> true
@@ -1416,6 +1418,30 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     },
                     highlightId = "swipe_typing"
                 )
+
+                // #9: Warning when swipe is enabled but layout doesn't support it
+                if (swipeTypingEnabled && !currentLayoutSupportsSwipe) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer
+                        )
+                    ) {
+                        Text(
+                            text = "Swipe typing requires a QWERTY layout. " +
+                                "Your current layout ($currentLayoutName) uses different key positions — " +
+                                "swipe predictions would be inaccurate.\n\n" +
+                                "Swipe typing is temporarily disabled. It will re-enable " +
+                                "automatically when you switch to a QWERTY layout.",
+                            modifier = Modifier.padding(12.dp),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    }
+                }
 
                 if (swipeTypingEnabled) {
                     // #39: Option to enable swipe typing on password fields
@@ -4760,6 +4786,11 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         // Swipe typing master switch
         swipeTypingEnabled = prefs.getSafeBoolean("swipe_typing_enabled", Defaults.SWIPE_TYPING_ENABLED)
         swipeOnPasswordFields = prefs.getSafeBoolean("swipe_on_password_fields", Defaults.SWIPE_ON_PASSWORD_FIELDS)
+
+        // #9: Check if current layout supports neural swipe typing
+        val currentLayout = config.layouts.getOrNull(config.get_current_layout())
+        currentLayoutSupportsSwipe = Config.isSwipeTypingSupportedForLayout(currentLayout)
+        currentLayoutName = currentLayout?.name ?: "Unknown"
 
         // Neural prediction settings
         beamWidth = prefs.getSafeInt("neural_beam_width", Defaults.NEURAL_BEAM_WIDTH)

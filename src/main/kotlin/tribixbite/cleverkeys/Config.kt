@@ -987,6 +987,27 @@ class Config private constructor(
         private const val CONFIG_VERSION = 3
         private const val MARGIN_PREFS_VERSION = 1  // For dp→percentage migration
 
+        /**
+         * Check if the given layout supports neural swipe typing.
+         * The ONNX model is trained on QWERTY US key positions only —
+         * non-QWERTY layouts (Dvorak, Colemak, AZERTY, QWERTZ, etc.)
+         * produce wrong predictions because the decoder weights assume
+         * QWERTY topology. Non-Latin scripts are also unsupported.
+         *
+         * Uses an allowlist: new layouts default to swipe-disabled.
+         * #9: When algorithmic swipe is implemented, this can expand.
+         */
+        @JvmStatic
+        fun isSwipeTypingSupportedForLayout(layout: KeyboardData?): Boolean {
+            if (layout == null) return false
+            val name = layout.name ?: return false
+            val script = layout.script ?: return false
+            // Must be Latin script (exclude Greek/Georgian QWERTY) AND
+            // must be a QWERTY variant (exclude Dvorak, Colemak, AZERTY, QWERTZ, etc.)
+            return script.equals("latin", ignoreCase = true) &&
+                   name.contains("QWERTY", ignoreCase = true)
+        }
+
         @Volatile
         private var _globalConfig: Config? = null
 

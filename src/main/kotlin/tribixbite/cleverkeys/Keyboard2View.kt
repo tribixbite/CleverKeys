@@ -315,6 +315,9 @@ class Keyboard2View @JvmOverloads constructor(
         }
     }
 
+    /** Get the current keyboard layout data (#9: used for swipe support check). */
+    fun getKeyboard(): KeyboardData? = _keyboard
+
     fun setKeyboard(kw: KeyboardData) {
         _keyboard = kw
         val shiftKv = KeyValue.getKeyByName("shift")
