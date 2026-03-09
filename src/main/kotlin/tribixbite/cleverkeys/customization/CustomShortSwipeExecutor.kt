@@ -569,17 +569,45 @@ class CustomShortSwipeExecutor(private val context: Context) {
 
     /**
      * #113: Terminal-aware paste. Terminal emulators (Termux, ConnectBot, etc.)
-     * don't implement performContextMenuAction, so send Ctrl+V key event instead.
+     * don't implement performContextMenuAction, and Ctrl+V via sendKeyEvent()
+     * isn't intercepted by their input layer. Instead, read the system clipboard
+     * directly and commit the text via InputConnection — the same approach the
+     * clipboard popup uses (KeyEventHandler.paste_from_clipboard_pane).
      */
     private fun handlePaste(inputConnection: InputConnection, editorInfo: EditorInfo?): Boolean {
         return if (TerminalUtils.isTerminalApp(editorInfo)) {
-            sendKeyEventWithModifier(
-                inputConnection,
-                KeyEvent.KEYCODE_V,
-                KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON
-            )
+            pasteFromSystemClipboard(inputConnection)
         } else {
             inputConnection.performContextMenuAction(android.R.id.paste)
+        }
+    }
+
+    /**
+     * Read system clipboard and commit text directly via InputConnection.
+     * Works in terminal emulators where performContextMenuAction and Ctrl+V
+     * key events are not handled.
+     */
+    private fun pasteFromSystemClipboard(inputConnection: InputConnection): Boolean {
+        return try {
+            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE)
+                as android.content.ClipboardManager
+            val clip = clipboard.primaryClip
+            if (clip != null && clip.itemCount > 0) {
+                val text = clip.getItemAt(0).coerceToText(context).toString()
+                if (text.isNotEmpty()) {
+                    inputConnection.commitText(text, 1)
+                    true
+                } else {
+                    Log.d(TAG, "Clipboard is empty")
+                    false
+                }
+            } else {
+                Log.d(TAG, "No clipboard data available")
+                false
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to paste from system clipboard", e)
+            false
         }
     }
 

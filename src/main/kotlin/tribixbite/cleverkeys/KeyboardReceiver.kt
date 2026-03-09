@@ -651,6 +651,10 @@ class KeyboardReceiver(
         return keyboard2.currentInputEditorInfo
     }
 
+    override fun getContext(): Context {
+        return context
+    }
+
     override fun getHandler(): Handler {
         return handler
     }

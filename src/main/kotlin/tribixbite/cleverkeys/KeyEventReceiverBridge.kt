@@ -1,6 +1,8 @@
 package tribixbite.cleverkeys
 
+import android.content.Context
 import android.os.Handler
+import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
 
 /**
@@ -67,6 +69,14 @@ class KeyEventReceiverBridge(
 
     override fun getCurrentInputConnection(): InputConnection? {
         return keyboard2.getCurrentInputConnection()
+    }
+
+    override fun getCurrentEditorInfo(): EditorInfo? {
+        return keyboard2.currentInputEditorInfo
+    }
+
+    override fun getContext(): Context {
+        return keyboard2
     }
 
     override fun getHandler(): Handler {

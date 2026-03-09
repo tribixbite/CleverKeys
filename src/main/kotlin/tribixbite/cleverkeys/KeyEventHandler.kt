@@ -1,10 +1,12 @@
 package tribixbite.cleverkeys
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.text.InputType
+import android.util.Log
 import android.view.KeyCharacterMap
 import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
@@ -419,11 +421,45 @@ class KeyEventHandler(
         return true
     }
 
+    /**
+     * #113: Terminal-aware paste. Terminal emulators (Termux, ConnectBot, etc.)
+     * don't implement performContextMenuAction, and Ctrl+V via sendKeyEvent()
+     * isn't intercepted by their input layer. Instead, read the system clipboard
+     * directly and commit the text via InputConnection — the same approach the
+     * clipboard popup uses (paste_from_clipboard_pane → sendText → commitText).
+     */
     private fun handlePaste() {
         if (TerminalUtils.isTerminalApp(recv.getCurrentEditorInfo())) {
-            send_key_down_up(KeyEvent.KEYCODE_V, KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON)
+            pasteFromSystemClipboard()
         } else {
             sendContextMenuAction(android.R.id.paste)
+        }
+    }
+
+    /**
+     * Read system clipboard and commit text directly via InputConnection.
+     * Works in terminal emulators where performContextMenuAction and Ctrl+V
+     * key events are not handled.
+     */
+    private fun pasteFromSystemClipboard() {
+        val conn = recv.getCurrentInputConnection() ?: return
+        val ctx = recv.getContext() ?: return
+        try {
+            val clipboard = ctx.getSystemService(Context.CLIPBOARD_SERVICE)
+                as android.content.ClipboardManager
+            val clip = clipboard.primaryClip
+            if (clip != null && clip.itemCount > 0) {
+                val text = clip.getItemAt(0).coerceToText(ctx).toString()
+                if (text.isNotEmpty()) {
+                    conn.commitText(text, 1)
+                } else {
+                    Log.d(TAG, "Clipboard is empty")
+                }
+            } else {
+                Log.d(TAG, "No clipboard data available")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to paste from system clipboard", e)
         }
     }
 
@@ -708,6 +744,7 @@ class KeyEventHandler(
         fun selection_state_changed(selectionIsOngoing: Boolean)
         fun getCurrentInputConnection(): InputConnection?
         fun getCurrentEditorInfo(): EditorInfo? = null // #113: needed for terminal app detection
+        fun getContext(): Context? = null // #113: needed for terminal clipboard paste
         fun getHandler(): Handler
         fun handle_text_typed(text: String)
         fun handle_backspace() {} // Default implementation for backward compatibility
@@ -744,6 +781,7 @@ class KeyEventHandler(
     }
 
     companion object {
+        private const val TAG = "KeyEventHandler"
         private var moveCursorReq: ExtractedTextRequest? = null
     }
 }
