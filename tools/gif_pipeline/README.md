@@ -1,12 +1,80 @@
 # GIF Pipeline
 
-Tools for building the offline GIF database for CleverKeys keyboard.
+Tools for building offline GIF packs for CleverKeys keyboard.
 
-## Overview
+## Build Your Own Pack (Users)
 
-This pipeline downloads, processes, and indexes GIFs for offline use in the keyboard app. The resulting database and assets are bundled into the APK.
+The easiest way to create a personal GIF pack for CleverKeys. Downloads GIFs
+from a free API, converts to optimized thumbnails, and produces an importable ZIP.
 
-## Quick Start
+**Requirements:** Python 3.10+, Pillow, requests, tqdm, ffmpeg (optional)
+
+```bash
+pip install requests Pillow tqdm
+
+# Interactive mode — guides you through everything
+python make_pack.py
+
+# Quick: 500 reaction GIFs from Giphy (free API key required)
+python make_pack.py --source giphy --api-key YOUR_KEY --preset reactions --count 500
+
+# All emotion categories, 100 each from Klipy (free, Tenor replacement)
+python make_pack.py --source klipy --api-key YOUR_KEY --preset all --per-category 100
+
+# Custom search queries
+python make_pack.py --source giphy --api-key YOUR_KEY --queries "cats funny,dogs cute" --count 300
+
+# Build from your own local GIF files (no API key needed)
+python make_pack.py --source local --input ~/my-gifs/ --name "my-collection"
+```
+
+### Getting a Free API Key
+
+| Source | Free Tier | Rate Limit | Sign Up |
+|--------|-----------|------------|---------|
+| **Giphy** | Beta key | 42 req/hr | [developers.giphy.com](https://developers.giphy.com/) |
+| **Klipy** | Production key | 100 req/min | [klipy.com/migrate](https://klipy.com/migrate) |
+
+### Importing Into CleverKeys
+
+1. Copy the generated `.zip` file to your phone
+2. Open CleverKeys Settings → GIF Panel → Enable
+3. Tap **Import Pack** → select the ZIP file
+
+### Available Presets
+
+| Preset | Description |
+|--------|-------------|
+| `reactions` | Viral reactions, mood, relatable GIFs |
+| `positive` | Happy, love, excited, proud, approve |
+| `humor` | Funny, laughing, smug, awkward |
+| `negative` | Sad, angry, scared, disgusted, sorry |
+| `surprise` | Surprised and relieved reactions |
+| `animals` | Cat, dog, and animal reactions |
+| `all` | All of the above combined |
+
+> **Note:** API terms prohibit redistributing downloaded GIFs. Each user must
+> get their own free API key and build packs for personal use only.
+
+---
+
+## Pre-Built Packs (Download)
+
+Ready-made packs are available on the
+[CleverKeys-GIF release](https://github.com/tribixbite/CleverKeys/releases/tag/CleverKeys-GIF):
+
+- **6 Discord Community packs** — 5,232 full animated GIFs (575 MB)
+- **7 Category thumbnail packs** — organized by emotion (130K GIFs)
+- **1 All-in-one thumbnail pack** — thumbs-all-130k.zip (187 MB)
+- **Base database** — gifs_v2.db.gz (metadata index, no images)
+
+---
+
+## Developer Pipeline
+
+Full pipeline for building packs from scratch (advanced).
+
+### Quick Start
 
 ```bash
 # Install dependencies
@@ -172,11 +240,25 @@ Based on GIFGIF+ research (MIT Media Lab):
 | 16 | Surprised | 😲 | omg, shocked |
 | 17 | Approve | 👍 | yes, agree, ok |
 
-## License Considerations
+## License & API Terms
 
-- **TGIF Dataset**: Academic research license - verify for commercial use
+### API Terms (make_pack.py personal packs)
+- **Giphy**: Prohibits caching, storing, or building databases from their content
+  for redistribution. Personal-use packs built with make_pack.py are for your
+  device only — do NOT share resulting ZIPs publicly.
+- **Klipy**: Free Tenor replacement. Requires "Powered by KLIPY" attribution.
+  Terms silent on offline caching for personal use.
+- **Tenor**: Shut down June 30, 2026. New API keys no longer available.
+
+### Dataset Sources (developer pipeline)
+- **TGIF Dataset**: Academic research license — verify for commercial use
 - **Video2GIF Dataset**: BSD-3-Clause (permissive)
 - **GIFGIF+**: MIT Media Lab research
+- **Discord CDN**: Community-sourced GIFs, fair-use thumbnails (80px static WebP)
+
+### Pre-built packs on GitHub Releases
+- Thumbnails (80px static WebP): strong fair use — *Google v. Perfect 10* precedent
+- Full animated Discord packs: grey-area (non-commercial, user-curated, preservation)
 
 Always verify licensing before distribution.
 
