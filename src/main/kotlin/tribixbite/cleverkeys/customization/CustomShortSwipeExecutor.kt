@@ -628,7 +628,7 @@ class CustomShortSwipeExecutor(private val context: Context) {
     /**
      * Insert the Nth pinned clipboard entry (1-indexed).
      * Reads from ClipboardDatabase.getPinnedEntries() which returns entries ordered
-     * by timestamp DESC (most recent pin first). If the entry doesn't exist
+     * by timestamp ASC (oldest pin first). If the entry doesn't exist
      * (fewer pinned items than requested), shows a toast notification.
      */
     private fun executePastePinned(commandName: String, inputConnection: InputConnection): Boolean {

@@ -289,7 +289,7 @@ class PastePinnedCommandTest {
 
     @Test
     fun pastePinnedInsertCorrectEntryByIndex() {
-        // Pin 3 entries. getPinnedEntries returns newest first (timestamp DESC).
+        // Pin 3 entries. getPinnedEntries returns oldest first (timestamp ASC).
         db.addClipboardEntry("First pin", futureExpiry)
         db.setPinnedStatus("First pin", true)
         Thread.sleep(50) // Ensure distinct timestamps
@@ -299,11 +299,11 @@ class PastePinnedCommandTest {
         db.addClipboardEntry("Third pin", futureExpiry)
         db.setPinnedStatus("Third pin", true)
 
-        // Newest first ordering: Third, Second, First
+        // Oldest first ordering: First, Second, Third
         val pinned = db.getPinnedEntries()
-        assertEquals("Third pin", pinned[0].content)
+        assertEquals("First pin", pinned[0].content)
         assertEquals("Second pin", pinned[1].content)
-        assertEquals("First pin", pinned[2].content)
+        assertEquals("Third pin", pinned[2].content)
 
         // paste_pinned_2 should insert the 2nd entry ("Second pin")
         val mapping = ShortSwipeMapping(
