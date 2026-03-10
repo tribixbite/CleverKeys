@@ -90,7 +90,7 @@ Issues already implemented, need user verification + close:
 - ✅ **#108** Clipboard: Move re-copied text to top of list (72adabb9f)
 - ✅ **#109** Improve the look of the autofill suggestion style (72adabb9f + display cutoff fix)
 - ✅ **#113** Paste shortcut works in Termux — Ctrl+V fallback for terminal apps (72adabb9f + c5e1eb6fc short swipe fix)
-- ✅ **#110** Backspace undo swipe — immediate backspace after swiped word deletes entire word
+- ✅ **#110** Backspace undo swipe (fixed bug) + backspace undo autocorrect (new feature)
 
 ### Features — High Effort / Community
 - **#26** Docs: clarify language support + update README comparison table
@@ -144,12 +144,15 @@ Issues already implemented, need user verification + close:
   - Updated assertion: `assertFalse` → `assertTrue`, message updated
 
 ## Completed (2026-02-27)
-- ✅ **#110 backspace undo swipe**:
-  - Immediate backspace after swiped word deletes entire swiped word + trailing auto-space
-  - New `backspace_undo_swipe` toggle (default ON), gated by swipe_typing
-  - Uses PredictionContextTracker: wasLastInputSwipe + lastAutoInsertedWord
-  - handleBackspaceUndoSwipe() in KeyEventHandler intercepts KEYCODE_DEL before normal dispatch
-  - Settings UI: toggle in Word Prediction section, searchable
+- ✅ **#110 backspace undo swipe + autocorrect** (8d4bdf19f):
+  - **Bug fix**: swipe undo was broken — `wasLastInputSwipe` cleared by `onSuggestionSelected()`
+    before backspace handler could check it. Replaced with `lastAutocorrectOriginalWord` null-check
+  - **New feature**: GBoard-style backspace undo autocorrect — pressing backspace immediately
+    after autocorrect reverts to original word. Does NOT add to dictionary (lighter than suggestion bar undo)
+  - State discrimination: swipe undo = lastAutoInsertedWord set + autocorrectOriginal null;
+    autocorrect undo = both set. Cursor verification prevents stale undos.
+  - New `backspace_undo_autocorrect` toggle (default ON), gated by autocorrect_enabled
+  - Backspace chain: clipboardSearch → emojiSearch → gifSearch → swipeUndo → autocorrectUndo → normal
 - ✅ **#108 clipboard dedup reorder** (72adabb9f):
   - Duplicate clipboard entries now move to top instead of being silently ignored
   - Updates timestamp + expiry on existing row (no delete/reinsert)
