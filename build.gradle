@@ -359,8 +359,7 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.gif.GifTest',
     'tribixbite.cleverkeys.gif.GifCategoryTest',
     'tribixbite.cleverkeys.SwipeLayoutSupportTest',
-    // BackspaceUndoTest excluded: expected-to-fail tests for #110 (not yet implemented)
-    // Run manually: ./gradlew runPureTests -PtestClass=BackspaceUndoTest
+    'tribixbite.cleverkeys.BackspaceUndoTest',
     // SwipePrunerTest excluded: requires android.util.Log (MockK + Robolectric)
   ]
 
