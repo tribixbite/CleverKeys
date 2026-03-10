@@ -4805,7 +4805,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         // #9: Check if current layout supports neural swipe typing
         val currentLayout = config.layouts.getOrNull(config.get_current_layout())
         currentLayoutSupportsSwipe = Config.isSwipeTypingSupportedForLayout(currentLayout)
-        currentLayoutName = currentLayout?.name ?: "Unknown"
+        // null layout = SystemLayout → resolves to latn_qwerty_us at runtime
+        currentLayoutName = currentLayout?.name ?: "System"
 
         // Neural prediction settings
         beamWidth = prefs.getSafeInt("neural_beam_width", Defaults.NEURAL_BEAM_WIDTH)

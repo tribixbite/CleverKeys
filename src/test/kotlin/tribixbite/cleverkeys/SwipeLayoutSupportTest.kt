@@ -32,8 +32,9 @@ class SwipeLayoutSupportTest {
     }
 
     @Test
-    fun `null KeyboardData returns false`() {
-        assertThat(Config.isSwipeTypingSupportedForLayout(null as KeyboardData?)).isFalse()
+    fun `null KeyboardData returns true (SystemLayout defaults to QWERTY US)`() {
+        // null KeyboardData = SystemLayout, which resolves to latn_qwerty_us at runtime
+        assertThat(Config.isSwipeTypingSupportedForLayout(null as KeyboardData?)).isTrue()
     }
 
     // =========================================================================

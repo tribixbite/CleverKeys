@@ -1002,7 +1002,9 @@ class Config private constructor(
          */
         @JvmStatic
         fun isSwipeTypingSupportedForLayout(layout: KeyboardData?): Boolean {
-            if (layout == null) return false
+            // null layout = SystemLayout (unresolved until runtime by LayoutManager).
+            // SystemLayout defaults to latn_qwerty_us, which is QWERTY.
+            if (layout == null) return true
             return isSwipeTypingSupportedForLayout(layout.name, layout.script)
         }
 

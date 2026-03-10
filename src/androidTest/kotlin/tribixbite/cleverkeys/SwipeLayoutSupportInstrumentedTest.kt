@@ -246,8 +246,9 @@ class SwipeLayoutSupportInstrumentedTest {
     // =========================================================================
 
     @Test
-    fun nullKeyboardData_returnsFalse() {
-        assertFalse("null KeyboardData should return false",
+    fun nullKeyboardData_returnsTrue_systemLayoutIsQwerty() {
+        // null KeyboardData = SystemLayout, which resolves to latn_qwerty_us at runtime
+        assertTrue("null KeyboardData (SystemLayout) should return true — defaults to QWERTY",
             Config.isSwipeTypingSupportedForLayout(null as KeyboardData?))
     }
 }
