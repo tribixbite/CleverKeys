@@ -260,6 +260,7 @@ object Defaults {
     const val AUTO_SPACE_AFTER_SUGGESTION = true  // Add trailing space after selecting suggestion
     const val AUTO_SPACE_BEFORE_SUGGESTION = true  // Add leading space before tapped suggestion
     const val BACKSPACE_UNDO_SWIPE = true  // Backspace after swipe deletes entire swiped word
+    const val BACKSPACE_UNDO_AUTOCORRECT = true  // #110: Backspace after autocorrect reverts to original word
 
     // Privacy
     const val PRIVACY_COLLECT_SWIPE = false
@@ -505,6 +506,7 @@ class Config private constructor(
     @JvmField var auto_space_after_suggestion = true  // Add trailing space after selecting suggestion
     @JvmField var auto_space_before_suggestion = true  // Add leading space before tapped suggestion
     @JvmField var backspace_undo_swipe = true  // Backspace after swipe deletes entire swiped word
+    @JvmField var backspace_undo_autocorrect = true  // #110: Backspace after autocorrect reverts to original word
 
     // Beam search tuning
     @JvmField var neural_beam_alpha = 0f
@@ -762,6 +764,7 @@ class Config private constructor(
         auto_space_after_suggestion = _prefs.getBoolean("auto_space_after_suggestion", Defaults.AUTO_SPACE_AFTER_SUGGESTION)
         auto_space_before_suggestion = _prefs.getBoolean("auto_space_before_suggestion", Defaults.AUTO_SPACE_BEFORE_SUGGESTION)
         backspace_undo_swipe = _prefs.getBoolean("backspace_undo_swipe", Defaults.BACKSPACE_UNDO_SWIPE)
+        backspace_undo_autocorrect = _prefs.getBoolean("backspace_undo_autocorrect", Defaults.BACKSPACE_UNDO_AUTOCORRECT)
         swipe_debug_detailed_logging = _prefs.getBoolean("swipe_debug_detailed_logging", Defaults.SWIPE_DEBUG_DETAILED_LOGGING)
         swipe_debug_show_raw_output = _prefs.getBoolean("swipe_debug_show_raw_output", Defaults.SWIPE_DEBUG_SHOW_RAW_OUTPUT)
         swipe_show_raw_beam_predictions = _prefs.getBoolean("swipe_show_raw_beam_predictions", Defaults.SWIPE_SHOW_RAW_BEAM_PREDICTIONS)

@@ -197,6 +197,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var autoSpaceAfterSuggestion by mutableStateOf(true)  // #82: Add trailing space after selecting suggestion
     private var autoSpaceBeforeSuggestion by mutableStateOf(true)  // Add leading space before tapped suggestion
     private var backspaceUndoSwipe by mutableStateOf(true)  // #110: Backspace after swipe deletes entire swiped word
+    private var backspaceUndoAutocorrect by mutableStateOf(true)  // #110: Backspace after autocorrect reverts to original word
     private var suggestionBarOpacity by mutableStateOf(90)
     private var autoCorrectEnabled by mutableStateOf(true)
     private var termuxModeEnabled by mutableStateOf(false)
@@ -485,6 +486,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             SearchableSetting("Show Exact Typed Word", listOf("exact", "typed", "add to dictionary"), "Word Prediction", expandSection = { inputSectionExpanded = true }, settingId = "show_exact_typed"),
             SearchableSetting("Context-Aware Predictions", listOf("context", "aware", "intelligent"), "Word Prediction", expandSection = { inputSectionExpanded = true }, settingId = "context_aware"),
             SearchableSetting("Personalized Learning", listOf("learning", "personalized", "adapt"), "Word Prediction", expandSection = { inputSectionExpanded = true }, settingId = "personalized_learning"),
+            SearchableSetting("Backspace Undo Autocorrect", listOf("backspace", "undo", "autocorrect", "revert", "original"), "Word Prediction", expandSection = { swipeCorrectionsSectionExpanded = true }, gatedBy = "autocorrect_enabled", settingId = "backspace_undo_autocorrect"),
             SearchableSetting("Autocorrect", listOf("autocorrect", "fix", "error", "typo"), "Word Prediction", expandSection = { swipeCorrectionsSectionExpanded = true }, settingId = "autocorrect"),
             SearchableSetting("Autocorrect Min Word Length", listOf("minimum", "length", "autocorrect"), "Word Prediction", expandSection = { swipeCorrectionsSectionExpanded = true }, settingId = "autocorrect_min_length"),
             SearchableSetting("Beam Autocorrect", listOf("beam", "autocorrect", "swipe"), "Word Prediction", expandSection = { swipeCorrectionsSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "beam_autocorrect"),
@@ -2273,6 +2275,19 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 )
 
                 if (autoCorrectEnabled) {
+                    // #110: Backspace undo autocorrect — revert to original word on immediate backspace
+                    SettingsSwitch(
+                        title = "Backspace Undo Autocorrect",
+                        description = "Pressing backspace immediately after autocorrect reverts to the original word",
+                        checked = backspaceUndoAutocorrect,
+                        highlightId = "backspace_undo_autocorrect",
+                        onCheckedChange = {
+                            backspaceUndoAutocorrect = it
+                            saveSetting("backspace_undo_autocorrect", it)
+                            Config.globalConfig()?.backspace_undo_autocorrect = it
+                        }
+                    )
+
                     // Basic Settings
                     Text(
                         text = "Basic Settings",
@@ -4895,6 +4910,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         autoSpaceAfterSuggestion = prefs.getSafeBoolean("auto_space_after_suggestion", Defaults.AUTO_SPACE_AFTER_SUGGESTION)
         autoSpaceBeforeSuggestion = prefs.getSafeBoolean("auto_space_before_suggestion", Defaults.AUTO_SPACE_BEFORE_SUGGESTION)
         backspaceUndoSwipe = prefs.getSafeBoolean("backspace_undo_swipe", Defaults.BACKSPACE_UNDO_SWIPE)
+        backspaceUndoAutocorrect = prefs.getSafeBoolean("backspace_undo_autocorrect", Defaults.BACKSPACE_UNDO_AUTOCORRECT)
         suggestionBarOpacity = Config.safeGetInt(prefs, "suggestion_bar_opacity", Defaults.SUGGESTION_BAR_OPACITY)
         autoCorrectEnabled = prefs.getSafeBoolean("autocorrect_enabled", Defaults.AUTOCORRECT_ENABLED)
         termuxModeEnabled = prefs.getSafeBoolean("termux_mode_enabled", Defaults.TERMUX_MODE_ENABLED)

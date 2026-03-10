@@ -106,7 +106,9 @@ class KeyEventHandler(
                 } else if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && recv.isGifPaneOpen()) {
                     recv.backspaceGifSearch()
                 } else if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && handleBackspaceUndoSwipe()) {
-                    // #110: Backspace after swipe deletes entire swiped word — handled
+                    // #110: Backspace after swipe deletes entire swiped word
+                } else if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && handleBackspaceUndoAutocorrect()) {
+                    // #110: Backspace after autocorrect reverts to original word
                 } else {
                     send_key_down_up(key.getKeyevent())
                     // Handle backspace for word prediction
@@ -391,7 +393,9 @@ class KeyEventHandler(
     private fun handleBackspaceUndoSwipe(): Boolean {
         val config = Config.globalConfig() ?: return false
         if (!config.backspace_undo_swipe) return false
-        if (!recv.wasLastInputSwipe()) return false
+        // #110 fix: Don't check wasLastInputSwipe() — it's cleared by onSuggestionSelected().
+        // Instead, defer to autocorrect handler when autocorrect state is present.
+        if (recv.getLastAutocorrectOriginalWord() != null) return false
 
         val swipedWord = recv.getLastAutoInsertedWord() ?: return false
         if (swipedWord.isEmpty()) return false
@@ -418,6 +422,45 @@ class KeyEventHandler(
         recv.clearSwipeUndoState()
         recv.handle_backspace()
 
+        return true
+    }
+
+    /**
+     * #110: If backspace_undo_autocorrect is enabled and an autocorrect just happened,
+     * revert to the original word on immediate backspace (GBoard-style).
+     * Does NOT add the original word to dictionary — that's the suggestion bar undo's role.
+     */
+    private fun handleBackspaceUndoAutocorrect(): Boolean {
+        val config = Config.globalConfig() ?: return false
+        if (!config.backspace_undo_autocorrect) return false
+
+        val originalWord = recv.getLastAutocorrectOriginalWord() ?: return false
+        val correctedWord = recv.getLastAutoInsertedWord() ?: return false
+        if (correctedWord.isEmpty()) return false
+
+        val conn = recv.getCurrentInputConnection() ?: return false
+
+        // Verify the corrected word is still at cursor position (handles cursor-move edge case)
+        val beforeCursor = conn.getTextBeforeCursor(correctedWord.length + 1, 0)?.toString() ?: ""
+        val charsToDelete = when {
+            // Word + trailing auto-space: "the " → delete 4 chars
+            beforeCursor.length > correctedWord.length &&
+                beforeCursor.endsWith(" ") &&
+                beforeCursor.dropLast(1).endsWith(correctedWord) -> correctedWord.length + 1
+            // Word without trailing space: "the" → delete 3 chars
+            beforeCursor.endsWith(correctedWord) -> correctedWord.length
+            // Text changed since autocorrect (cursor moved, user typed more) — don't undo
+            else -> return false
+        }
+
+        // Replace corrected word with original, preserving trailing space if present
+        conn.deleteSurroundingText(charsToDelete, 0)
+        val replacement = if (charsToDelete > correctedWord.length) "$originalWord " else originalWord
+        conn.commitText(replacement, 1)
+
+        // Clear all undo state to prevent double-undo
+        recv.clearAutocorrectUndoState()
+        recv.handle_backspace()
         return true
     }
 
@@ -769,6 +812,9 @@ class KeyEventHandler(
         fun wasLastInputSwipe(): Boolean = false
         fun getLastAutoInsertedWord(): String? = null
         fun clearSwipeUndoState() {} // Reset swipe tracking after undo
+        // #110: Backspace undo autocorrect — expose autocorrect state to KeyEventHandler
+        fun getLastAutocorrectOriginalWord(): String? = null
+        fun clearAutocorrectUndoState() {}
     }
 
     private inner class AutocapitalisationCallback : Autocapitalisation.Callback {

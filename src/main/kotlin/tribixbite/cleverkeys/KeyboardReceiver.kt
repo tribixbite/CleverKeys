@@ -738,4 +738,12 @@ class KeyboardReceiver(
         contextTracker.clearLastAutoInsertedWord()
         inputCoordinator.resetSwipeData()
     }
+
+    // #110: Backspace undo autocorrect — expose autocorrect state to KeyEventHandler
+    override fun getLastAutocorrectOriginalWord(): String? = contextTracker.getLastAutocorrectOriginalWord()
+    override fun clearAutocorrectUndoState() {
+        contextTracker.clearAutocorrectTracking()
+        contextTracker.clearLastAutoInsertedWord()
+        inputCoordinator.resetSwipeData()
+    }
 }
