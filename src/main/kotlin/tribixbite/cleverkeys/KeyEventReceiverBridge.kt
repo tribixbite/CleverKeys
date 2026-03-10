@@ -137,6 +137,28 @@ class KeyEventReceiverBridge(
         receiver?.backspaceGifSearch()
     }
 
+    // #110: Backspace undo swipe — delegate to receiver
+    override fun wasLastInputSwipe(): Boolean {
+        return receiver?.wasLastInputSwipe() ?: false
+    }
+
+    override fun getLastAutoInsertedWord(): String? {
+        return receiver?.getLastAutoInsertedWord()
+    }
+
+    override fun clearSwipeUndoState() {
+        receiver?.clearSwipeUndoState()
+    }
+
+    // #110: Backspace undo autocorrect — delegate to receiver
+    override fun getLastAutocorrectOriginalWord(): String? {
+        return receiver?.getLastAutocorrectOriginalWord()
+    }
+
+    override fun clearAutocorrectUndoState() {
+        receiver?.clearAutocorrectUndoState()
+    }
+
     // v1.2.7: Smart punctuation - track if last space was auto-inserted
     override fun wasLastSpaceAutoInserted(): Boolean {
         return contextTracker?.lastSpaceWasAutoInserted ?: false
