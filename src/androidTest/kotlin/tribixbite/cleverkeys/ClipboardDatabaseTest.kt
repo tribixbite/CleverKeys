@@ -466,4 +466,125 @@ class ClipboardDatabaseTest {
         assertEquals("Second", entries[1].content)
         assertEquals("First", entries[2].content)
     }
+
+    // =========================================================================
+    // #108: Duplicate reorder — dedup should update timestamp, not just skip
+    // =========================================================================
+
+    @Test
+    fun testDuplicateEntryReorderedToTop() {
+        // #108: Re-adding a duplicate should update its timestamp, making it
+        // appear first in DESC-ordered active entries list.
+        db.addClipboardEntry("Alpha", futureExpiry)
+        Thread.sleep(50)
+        db.addClipboardEntry("Beta", futureExpiry)
+        Thread.sleep(50)
+        // Re-add Alpha — should move it to top via timestamp update
+        db.addClipboardEntry("Alpha", futureExpiry)
+
+        val entries = db.getActiveClipboardEntries()
+        assertEquals("Should still have 2 entries (deduplicated)", 2, entries.size)
+        assertEquals("Alpha should be first (moved to top)", "Alpha", entries[0].content)
+        assertEquals("Beta should be second", "Beta", entries[1].content)
+    }
+
+    @Test
+    fun testDuplicateEntryTimestampActuallyUpdated() {
+        // #108: Verify the timestamp is updated, not just the dedup count.
+        db.addClipboardEntry("Stamp test", futureExpiry)
+        val beforeEntries = db.getActiveClipboardEntries()
+        val timestampBefore = beforeEntries[0].timestamp
+
+        Thread.sleep(50)
+        db.addClipboardEntry("Stamp test", futureExpiry)
+        val afterEntries = db.getActiveClipboardEntries()
+        val timestampAfter = afterEntries[0].timestamp
+
+        assertTrue("Timestamp should increase after dedup reorder",
+            timestampAfter > timestampBefore)
+    }
+
+    @Test
+    fun testDuplicateEntryExpiryUpdated() {
+        // #108: Dedup reorder also refreshes the expiry timestamp.
+        val shortExpiry = System.currentTimeMillis() + 60_000L // 1 minute
+        val longExpiry = System.currentTimeMillis() + 7_200_000L // 2 hours
+        db.addClipboardEntry("Expiry test", shortExpiry)
+
+        Thread.sleep(50)
+        // Re-add with longer expiry
+        db.addClipboardEntry("Expiry test", longExpiry)
+
+        // Should still be active (expiry was refreshed to longExpiry)
+        val entries = db.getActiveClipboardEntries()
+        assertEquals("Entry should still be active with updated expiry", 1, entries.size)
+    }
+
+    // =========================================================================
+    // Pinned/todo ordering — verify ASC timestamp order
+    // =========================================================================
+
+    @Test
+    fun testPinnedEntriesOrderedByTimestampAsc() {
+        // Pinned entries use ORDER BY timestamp ASC — oldest first, providing
+        // a stable ordering where the first-pinned item stays at the top.
+        db.addClipboardEntry("Pin1", futureExpiry)
+        Thread.sleep(50)
+        db.addClipboardEntry("Pin2", futureExpiry)
+        Thread.sleep(50)
+        db.addClipboardEntry("Pin3", futureExpiry)
+
+        db.setPinnedStatus("Pin1", true)
+        db.setPinnedStatus("Pin2", true)
+        db.setPinnedStatus("Pin3", true)
+
+        val pinned = db.getPinnedEntries()
+        assertEquals(3, pinned.size)
+        // ASC: oldest first
+        assertEquals("Pin1", pinned[0].content)
+        assertEquals("Pin2", pinned[1].content)
+        assertEquals("Pin3", pinned[2].content)
+    }
+
+    @Test
+    fun testTodoEntriesOrderedByTimestampAsc() {
+        // Todo entries also use ASC ordering (checklist order matches creation order).
+        db.addClipboardEntry("Todo1", futureExpiry)
+        Thread.sleep(50)
+        db.addClipboardEntry("Todo2", futureExpiry)
+        Thread.sleep(50)
+        db.addClipboardEntry("Todo3", futureExpiry)
+
+        db.setTodoStatus("Todo1", true)
+        db.setTodoStatus("Todo2", true)
+        db.setTodoStatus("Todo3", true)
+
+        val todos = db.getTodoEntries()
+        assertEquals(3, todos.size)
+        // ASC: oldest first
+        assertEquals("Todo1", todos[0].content)
+        assertEquals("Todo2", todos[1].content)
+        assertEquals("Todo3", todos[2].content)
+    }
+
+    @Test
+    fun testPinnedOrderingStableAfterRepin() {
+        // Unpin and repin should preserve original timestamp (not reset it).
+        db.addClipboardEntry("StablePin", futureExpiry)
+        Thread.sleep(50)
+        db.addClipboardEntry("LaterPin", futureExpiry)
+
+        db.setPinnedStatus("StablePin", true)
+        db.setPinnedStatus("LaterPin", true)
+
+        // Unpin and repin StablePin — its original timestamp should be preserved
+        db.setPinnedStatus("StablePin", false)
+        db.setPinnedStatus("StablePin", true)
+
+        val pinned = db.getPinnedEntries()
+        assertEquals(2, pinned.size)
+        // StablePin was created first, so it should still be first in ASC order
+        assertEquals("StablePin", pinned[0].content)
+        assertEquals("LaterPin", pinned[1].content)
+    }
 }
