@@ -894,6 +894,12 @@ class SuggestionHandler(
         // Track current word being typed
         when {
             text.length == 1 && text[0].isLetter() -> {
+                // Suppress cursor sync from onUpdateSelection triggered by commitText.
+                // Without this, the InputCoordinator's cursor sync fires ~100ms later
+                // and overwrites our contraction-aware predictions with results that
+                // lack paired contraction support (e.g., "it's" for "its" disappears).
+                contextTracker.expectingSelectionUpdate = true
+
                 contextTracker.appendToCurrentWord(text)
                 // If just started a new word (first letter), clear auto-insert and autocorrect tracking
                 // This prevents incorrectly deleting a previously swiped word when
@@ -908,6 +914,9 @@ class SuggestionHandler(
                 updatePredictionsForCurrentWord()
             }
             text.length == 1 && !text[0].isLetter() -> {
+                // Suppress cursor sync — word completion triggers onUpdateSelection
+                contextTracker.expectingSelectionUpdate = true
+
                 // Any non-letter character - update context and reset current word
 
                 // If we had a word being typed, add it to context before clearing
@@ -1061,6 +1070,9 @@ class SuggestionHandler(
             handlePasswordBackspace()
             return
         }
+
+        // Suppress cursor sync — backspace triggers onUpdateSelection
+        contextTracker.expectingSelectionUpdate = true
 
         if (contextTracker.getCurrentWordLength() > 0) {
             contextTracker.deleteLastChar()
