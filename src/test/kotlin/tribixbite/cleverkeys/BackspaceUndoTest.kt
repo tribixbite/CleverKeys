@@ -270,6 +270,39 @@ class BackspaceUndoTest {
     // Helpers
     // =========================================================================
 
+    // =========================================================================
+    // Contraction flicker fix — verify expectingSelectionUpdate suppression
+    // =========================================================================
+
+    @Test
+    fun `SuggestionHandler sets expectingSelectionUpdate in letter typing branch`() {
+        val source = readSource("SuggestionHandler.kt")
+        // The fix: SuggestionHandler.handleRegularTyping must set the flag
+        // to suppress cursor sync that would overwrite contraction predictions
+        assertThat(source).contains("expectingSelectionUpdate = true")
+    }
+
+    @Test
+    fun `SuggestionHandler sets expectingSelectionUpdate in handleBackspace`() {
+        val source = readSource("SuggestionHandler.kt")
+        // Count occurrences: should appear in letter branch, non-letter branch, and backspace
+        val count = "expectingSelectionUpdate = true".toRegex()
+            .findAll(source).count()
+        assertThat(count).isAtLeast(3) // letter, non-letter, backspace
+    }
+
+    @Test
+    fun `synchronizeWithCursor checks expectingSelectionUpdate flag`() {
+        val source = readSource("PredictionContextTracker.kt")
+        assertThat(source).contains("if (expectingSelectionUpdate)")
+    }
+
+    @Test
+    fun `InputCoordinator cursor sync calls synchronizeWithCursor`() {
+        val source = readSource("InputCoordinator.kt")
+        assertThat(source).contains("contextTracker.synchronizeWithCursor")
+    }
+
     /** Read a source file from the main source tree */
     private fun readSource(filename: String): String {
         val projectDir = System.getProperty("user.dir") ?: "."
