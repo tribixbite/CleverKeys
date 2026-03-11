@@ -144,15 +144,15 @@ Issues already implemented, need user verification + close:
   - Updated assertion: `assertFalse` → `assertTrue`, message updated
 
 ## Completed (2026-02-27)
-- ✅ **#110 backspace undo swipe + autocorrect** (8d4bdf19f):
-  - **Bug fix**: swipe undo was broken — `wasLastInputSwipe` cleared by `onSuggestionSelected()`
+- ✅ **#110 backspace undo swipe + autocorrect** (8d4bdf19f, 3a030003d):
+  - **Bug fix 1**: swipe undo broken — `wasLastInputSwipe` cleared by `onSuggestionSelected()`
     before backspace handler could check it. Replaced with `lastAutocorrectOriginalWord` null-check
+  - **Bug fix 2**: `KeyEventReceiverBridge` never delegated the 5 IReceiver backspace undo methods,
+    so both features were dead code at runtime. Bridge now delegates to KeyboardReceiver.
   - **New feature**: GBoard-style backspace undo autocorrect — pressing backspace immediately
     after autocorrect reverts to original word. Does NOT add to dictionary (lighter than suggestion bar undo)
-  - State discrimination: swipe undo = lastAutoInsertedWord set + autocorrectOriginal null;
-    autocorrect undo = both set. Cursor verification prevents stale undos.
   - New `backspace_undo_autocorrect` toggle (default ON), gated by autocorrect_enabled
-  - Backspace chain: clipboardSearch → emojiSearch → gifSearch → swipeUndo → autocorrectUndo → normal
+  - 26 source-scanning + context tracker tests (BackspaceUndoTest.kt)
 - ✅ **#108 clipboard dedup reorder** (72adabb9f):
   - Duplicate clipboard entries now move to top instead of being silently ignored
   - Updates timestamp + expiry on existing row (no delete/reinsert)

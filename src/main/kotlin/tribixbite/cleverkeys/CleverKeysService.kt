@@ -21,7 +21,6 @@ import android.view.inputmethod.InputMethodManager
 import android.view.inputmethod.InputMethodSubtype
 import android.widget.FrameLayout
 import android.widget.LinearLayout
-import android.widget.Toast
 import tribixbite.cleverkeys.ml.SwipeMLData
 import tribixbite.cleverkeys.onnx.SwipePredictorOrchestrator
 
@@ -144,7 +143,8 @@ class CleverKeysService : InputMethodService(),
     private var _themeChangeReceiver: BroadcastReceiver? = null
 
     // #9: Track last layout name to avoid repeated swipe-unsupported toasts
-    private var _lastSwipeUnsupportedToastLayout: String? = null
+    // TODO #9: re-enable toast tracking when layout-switch toast is reliable
+    // private var _lastSwipeUnsupportedToastLayout: String? = null
 
     companion object {
         /** Broadcast action sent when theme changes in ThemeSettingsActivity */
@@ -268,25 +268,23 @@ class CleverKeysService : InputMethodService(),
         _layoutBridge.incrTextLayout(delta)
     }
 
-    /**
-     * #9: Show a one-time toast when the active layout doesn't support neural swipe.
-     * Called after setKeyboard() in layout switch paths. Only toasts once per layout name
-     * to avoid spamming on every onStartInputView call.
-     */
-    private fun checkSwipeSupportForCurrentLayout() {
-        val config = _config ?: return
-        if (!config.swipe_typing_enabled) return
-        val layout = _keyboardView.getKeyboard() ?: return
-        if (Config.isSwipeTypingSupportedForLayout(layout)) {
-            // Reset tracker when switching to a supported layout
-            _lastSwipeUnsupportedToastLayout = null
-            return
-        }
-        val layoutName = layout.name ?: return
-        if (_lastSwipeUnsupportedToastLayout == layoutName) return
-        _lastSwipeUnsupportedToastLayout = layoutName
-        Toast.makeText(this, "Swipe typing paused — $layoutName not supported yet", Toast.LENGTH_SHORT).show()
-    }
+    // TODO #9: Re-enable layout-switch toast when reliability issues are resolved.
+    //  The toast didn't fire consistently across devices/API levels — likely because
+    //  onStartInputView timing varies and getKeyboard() may return stale data.
+    //  The settings warning card still covers the case for users checking settings.
+    // private fun checkSwipeSupportForCurrentLayout() {
+    //     val config = _config ?: return
+    //     if (!config.swipe_typing_enabled) return
+    //     val layout = _keyboardView.getKeyboard() ?: return
+    //     if (Config.isSwipeTypingSupportedForLayout(layout)) {
+    //         _lastSwipeUnsupportedToastLayout = null
+    //         return
+    //     }
+    //     val layoutName = layout.name ?: return
+    //     if (_lastSwipeUnsupportedToastLayout == layoutName) return
+    //     _lastSwipeUnsupportedToastLayout = layoutName
+    //     Toast.makeText(this, "Swipe typing paused — $layoutName not supported yet", Toast.LENGTH_SHORT).show()
+    // }
 
     /**
      * Set special layout (numeric, emoji, etc.).
@@ -668,7 +666,8 @@ class CleverKeysService : InputMethodService(),
         }
 
         _keyboardView.setKeyboard(current_layout())
-        checkSwipeSupportForCurrentLayout()  // #9: Toast if non-QWERTY layout
+        // TODO #9: toast on non-QWERTY layout switch — disabled (not showing reliably across devices)
+        // checkSwipeSupportForCurrentLayout()
         _keyeventhandler.started(info)
 
         // Setup prediction views (v1.32.400: extracted prediction/swipe setup logic)
@@ -750,7 +749,8 @@ class CleverKeysService : InputMethodService(),
     override fun onCurrentInputMethodSubtypeChanged(subtype: InputMethodSubtype) {
         refreshSubtypeImm()
         _keyboardView.setKeyboard(current_layout())
-        checkSwipeSupportForCurrentLayout()  // #9: Toast if non-QWERTY
+        // TODO #9: toast on non-QWERTY layout switch — disabled (not showing reliably across devices)
+        // checkSwipeSupportForCurrentLayout()
         // REMOVED: Redundant layout update - now handled exclusively by PredictionViewSetup's GlobalLayoutListener
         // This eliminates double initialization and input lag on app switches
     }
