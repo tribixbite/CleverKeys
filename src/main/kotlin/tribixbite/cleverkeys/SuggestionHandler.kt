@@ -2,6 +2,8 @@ package tribixbite.cleverkeys
 
 import android.content.Context
 import android.content.res.Resources
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
@@ -163,6 +165,8 @@ class SuggestionHandler(
     // Async prediction execution
     private val predictionExecutor: ExecutorService = Executors.newSingleThreadExecutor()
     private var currentPredictionTask: Future<*>? = null
+    // Post to main thread explicitly — View.post() silently drops runnables for detached views
+    private val mainHandler = Handler(Looper.getMainLooper())
 
     // v1.2.6: Flag to prevent async prediction task from overwriting special prompts
     // (autocorrect undo, add-to-dictionary)
@@ -1199,11 +1203,12 @@ class SuggestionHandler(
                 // v1.2.6 FIX: Check if task was cancelled or special prompt is active
                 if (finalWords.isNotEmpty() && suggestionBar != null &&
                     !Thread.currentThread().isInterrupted && !specialPromptActive) {
-                    suggestionBar?.post {
+                    // Use Handler.post() instead of View.post() — View.post() silently
+                    // drops runnables when the View is not attached to a window
+                    mainHandler.post {
                         // v1.2.6: Skip if special prompt became active while queued
                         if (specialPromptActive) return@post
 
-                        // Verify context hasn't changed drastically (optional, but good practice)
                         suggestionBar?.let { bar ->
                             bar.setShowDebugScores(config.swipe_show_debug_scores)
                             // v1.2.0: Use merged scores that include contraction scores
