@@ -804,12 +804,18 @@ class InputCoordinator(
                 // v1.2.6: Reset cursor sync state when user starts typing
                 // This ensures we use normal deletion (prefix only) for typed chars
                 contextTracker.resetCursorSyncState()
+                // Cancel pending cursor sync — typing predictions are authoritative.
+                // Without this, onUpdateSelection's debounced sync fires ~100ms later
+                // and overwrites typing predictions with potentially different results,
+                // causing contraction suggestions to flicker (appear then disappear).
+                cancelPendingCursorSync()
 
                 contextTracker.appendToCurrentWord(text)
                 updatePredictionsForCurrentWord()
             }
             text.length == 1 && !text[0].isLetter() -> {
                 // Any non-letter character - update context and reset current word
+                cancelPendingCursorSync()
 
                 // If we had a word being typed, add it to context before clearing
                 if (contextTracker.getCurrentWordLength() > 0) {
@@ -864,6 +870,7 @@ class InputCoordinator(
             }
             text.length > 1 -> {
                 // Multi-character input (paste, etc) - reset
+                cancelPendingCursorSync()
                 contextTracker.clearCurrentWord()
                 predictionCoordinator.getWordPredictor()?.reset()
                 suggestionBar?.clearSuggestions()
@@ -875,6 +882,7 @@ class InputCoordinator(
      * Handle backspace for prediction tracking
      */
     fun handleBackspace() {
+        cancelPendingCursorSync()
         if (contextTracker.getCurrentWordLength() > 0) {
             contextTracker.deleteLastChar()
             if (contextTracker.getCurrentWordLength() > 0) {
