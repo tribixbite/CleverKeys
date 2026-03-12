@@ -303,6 +303,21 @@ class BackspaceUndoTest {
         assertThat(source).contains("contextTracker.synchronizeWithCursor")
     }
 
+    @Test
+    fun `InputCoordinator skips entire sync+predict when expectingSelectionUpdate`() {
+        // The critical fix: InputCoordinator's debounced Runnable must check the flag
+        // BEFORE sync, and skip both sync AND predictions when typing handler owns keystroke.
+        // Without this, triggerPredictionsForPrefix runs without paired contraction support.
+        val source = readSource("InputCoordinator.kt")
+        val runnableStart = source.indexOf("pendingSyncRunnable = Runnable {")
+        assertThat(runnableStart).isGreaterThan(-1)
+        val syncCall = source.indexOf("synchronizeWithCursor", runnableStart)
+        val flagCheck = source.indexOf("expectingSelectionUpdate", runnableStart)
+        // Flag check must come BEFORE synchronizeWithCursor in the Runnable
+        assertThat(flagCheck).isGreaterThan(runnableStart)
+        assertThat(flagCheck).isLessThan(syncCall)
+    }
+
     /** Read a source file from the main source tree */
     private fun readSource(filename: String): String {
         val projectDir = System.getProperty("user.dir") ?: "."
