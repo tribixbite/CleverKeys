@@ -240,6 +240,12 @@ class SuggestionBar : LinearLayout {
             return
         }
 
+        // Skip re-render if content is identical — prevents visual flicker when
+        // SuggestionHandler and InputCoordinator both post the same predictions
+        if (suggestions != null && suggestions == currentSuggestions.toList()) {
+            return
+        }
+
         currentSuggestions.clear()
         currentScores.clear()
 

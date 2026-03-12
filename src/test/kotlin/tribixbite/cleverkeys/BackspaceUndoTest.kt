@@ -275,47 +275,33 @@ class BackspaceUndoTest {
     // =========================================================================
 
     @Test
-    fun `SuggestionHandler sets expectingSelectionUpdate in letter typing branch`() {
-        val source = readSource("SuggestionHandler.kt")
-        // The fix: SuggestionHandler.handleRegularTyping must set the flag
-        // to suppress cursor sync that would overwrite contraction predictions
-        assertThat(source).contains("expectingSelectionUpdate = true")
-    }
-
-    @Test
-    fun `SuggestionHandler sets expectingSelectionUpdate in handleBackspace`() {
-        val source = readSource("SuggestionHandler.kt")
-        // Count occurrences: should appear in letter branch, non-letter branch, and backspace
-        val count = "expectingSelectionUpdate = true".toRegex()
-            .findAll(source).count()
-        assertThat(count).isAtLeast(3) // letter, non-letter, backspace
-    }
-
-    @Test
-    fun `synchronizeWithCursor checks expectingSelectionUpdate flag`() {
-        val source = readSource("PredictionContextTracker.kt")
-        assertThat(source).contains("if (expectingSelectionUpdate)")
-    }
-
-    @Test
     fun `InputCoordinator cursor sync calls synchronizeWithCursor`() {
         val source = readSource("InputCoordinator.kt")
         assertThat(source).contains("contextTracker.synchronizeWithCursor")
     }
 
     @Test
-    fun `InputCoordinator skips entire sync+predict when expectingSelectionUpdate`() {
-        // The critical fix: InputCoordinator's debounced Runnable must check the flag
-        // BEFORE sync, and skip both sync AND predictions when typing handler owns keystroke.
-        // Without this, triggerPredictionsForPrefix runs without paired contraction support.
+    fun `InputCoordinator has paired contraction support in prediction path`() {
+        // Both prediction pipelines must produce the same contraction results.
+        // Without this, the cursor sync path overwrites SuggestionHandler's
+        // contraction-aware results with results missing paired contractions.
         val source = readSource("InputCoordinator.kt")
-        val runnableStart = source.indexOf("pendingSyncRunnable = Runnable {")
-        assertThat(runnableStart).isGreaterThan(-1)
-        val syncCall = source.indexOf("synchronizeWithCursor", runnableStart)
-        val flagCheck = source.indexOf("expectingSelectionUpdate", runnableStart)
-        // Flag check must come BEFORE synchronizeWithCursor in the Runnable
-        assertThat(flagCheck).isGreaterThan(runnableStart)
-        assertThat(flagCheck).isLessThan(syncCall)
+        assertThat(source).contains("getPairedContractions(prefix)")
+        assertThat(source).contains("getNonPairedMapping(prefix)")
+    }
+
+    @Test
+    fun `SuggestionBar deduplicates identical suggestions`() {
+        // Prevents visual flicker when both prediction pipelines post same results
+        val source = readSource("SuggestionBar.kt")
+        assertThat(source).contains("currentSuggestions.toList()")
+    }
+
+    @Test
+    fun `onFinishInputView clears context tracker`() {
+        // Prevents cross-app text leaking (typing "t" in app A, "h" in app B → "th")
+        val source = readSource("CleverKeysService.kt")
+        assertThat(source).contains("_contextTracker.clearAll()")
     }
 
     /** Read a source file from the main source tree */

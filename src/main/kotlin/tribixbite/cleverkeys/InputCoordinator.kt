@@ -108,6 +108,8 @@ class InputCoordinator(
     // Async prediction execution
     private val predictionExecutor: ExecutorService = Executors.newSingleThreadExecutor()
     private var currentPredictionTask: Future<*>? = null
+    // Post to main thread explicitly — View.post() silently drops runnables for detached views
+    private val mainHandler = Handler(Looper.getMainLooper())
 
     /**
      * Updates configuration.
@@ -151,14 +153,6 @@ class InputCoordinator(
 
         // Schedule new sync with debounce delay
         pendingSyncRunnable = Runnable {
-            // Typing/backspace handler set this flag — it owns predictions for this keystroke.
-            // Skip both sync AND predictions to avoid overwriting contraction-aware results
-            // with InputCoordinator's prediction path (which lacks paired contraction support).
-            if (contextTracker.expectingSelectionUpdate) {
-                contextTracker.expectingSelectionUpdate = false
-                return@Runnable
-            }
-
             contextTracker.synchronizeWithCursor(ic, language, editorInfo)
 
             // Trigger predictions for the synced word
@@ -260,31 +254,62 @@ class InputCoordinator(
 
                 if (Thread.currentThread().isInterrupted || allResults.isEmpty()) return@submit
 
-                // v1.2.6: Transform predictions through contraction manager
-                // e.g., "cant" -> "can't", "dont" -> "don't"
-                val contractionTransformed = allResults.map { word ->
-                    contractionManager.getNonPairedMapping(word) ?: word
+                // Build contraction-aware suggestions matching SuggestionHandler's pipeline:
+                // 1. Inject paired contraction variants (its → it's, well → we'll)
+                // 2. Inject non-paired contraction mapping (dont → don't)
+                // 3. Transform all predictions through non-paired mapping
+                // 4. Deduplicate and merge
+                val contractionWords = mutableListOf<String>()
+                val contractionScores = mutableListOf<Int>()
+
+                val nonPairedMapping = contractionManager.getNonPairedMapping(prefix)
+                if (nonPairedMapping != null) {
+                    contractionWords.add(capitalizeIWord(nonPairedMapping))
+                    contractionScores.add(allScores.firstOrNull()?.plus(1000) ?: 10000)
                 }
 
-                // v1.2.6: Apply capitalization if prefix was capitalized
-                val transformedWords = if (shouldCapitalize) {
-                    contractionTransformed.map { word ->
+                val pairedVariants = contractionManager.getPairedContractions(prefix)
+                if (pairedVariants != null && nonPairedMapping == null) {
+                    for (variant in pairedVariants) {
+                        contractionWords.add(capitalizeIWord(variant))
+                        contractionScores.add(allScores.firstOrNull()?.plus(500) ?: 5000)
+                    }
+                }
+
+                // Transform all predictions through contraction manager + I-word capitalization
+                val transformedPredictions = allResults.map { word ->
+                    val contracted = contractionManager.getNonPairedMapping(word) ?: word
+                    capitalizeIWord(contracted)
+                }
+
+                // Merge: contraction words first, then predictions (deduped)
+                val injectedLowerSet = contractionWords.map { it.lowercase() }.toSet()
+                val mergedWords = contractionWords + transformedPredictions.filter {
+                    it.lowercase() !in injectedLowerSet
+                }
+                val filteredCount = transformedPredictions.size -
+                    transformedPredictions.count { it.lowercase() in injectedLowerSet }
+                val mergedScores = contractionScores + allScores.take(filteredCount)
+
+                // Apply capitalization if prefix was capitalized
+                val finalWords = if (shouldCapitalize) {
+                    mergedWords.map { word ->
                         word.replaceFirstChar {
                             if (it.isLowerCase()) it.titlecase(java.util.Locale.getDefault()) else it.toString()
                         }
                     }
                 } else {
-                    contractionTransformed
+                    mergedWords
                 }
 
                 // Update UI on main thread
-                if (transformedWords.isNotEmpty()) {
-                    suggestionBar?.post {
+                if (finalWords.isNotEmpty()) {
+                    mainHandler.post {
                         suggestionBar?.let { bar ->
                             bar.setShowDebugScores(config.swipe_show_debug_scores)
-                            bar.setSuggestionsWithScores(transformedWords, allScores)
+                            bar.setSuggestionsWithScores(finalWords, mergedScores)
                         }
-                        debugLogger?.invoke("📊 Cursor-sync predictions: ${transformedWords.take(5)}")
+                        debugLogger?.invoke("📊 Cursor-sync predictions: ${finalWords.take(5)}")
                     }
                 }
             } catch (e: Exception) {

@@ -800,6 +800,10 @@ class CleverKeysService : InputMethodService(),
         // v1.2.6: Cancel any pending cursor sync
         _inputCoordinator.cancelPendingCursorSync()
 
+        // Clear prediction context to prevent cross-app text leaking
+        // (e.g., typing "t" in app A then "h" in app B showing "th" predictions)
+        _contextTracker.clearAll()
+
         // Reset content pane state (hide emoji/clipboard if open)
         _receiver?.resetContentPaneState()
     }
