@@ -151,6 +151,14 @@ class InputCoordinator(
 
         // Schedule new sync with debounce delay
         pendingSyncRunnable = Runnable {
+            // Typing/backspace handler set this flag — it owns predictions for this keystroke.
+            // Skip both sync AND predictions to avoid overwriting contraction-aware results
+            // with InputCoordinator's prediction path (which lacks paired contraction support).
+            if (contextTracker.expectingSelectionUpdate) {
+                contextTracker.expectingSelectionUpdate = false
+                return@Runnable
+            }
+
             contextTracker.synchronizeWithCursor(ic, language, editorInfo)
 
             // Trigger predictions for the synced word
