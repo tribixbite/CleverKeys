@@ -1117,7 +1117,9 @@ class SuggestionHandler(
 
                 // Check if the exact partial is a paired contraction base (e.g., its → it's)
                 // Paired contractions are words where BOTH the base and contraction are valid
-                val pairedVariants = contractionManager.getPairedContractions(partial)
+                // Only inject paired contractions for prefixes >= 3 chars to avoid
+                // corrupting frequency ranking with possessive forms (t→t's, a→a's)
+                val pairedVariants = if (partial.length >= 3) contractionManager.getPairedContractions(partial) else null
                 if (pairedVariants != null && contractionMapping == null) {
                     // Add paired variants as high-priority suggestions alongside the base word
                     for (variant in pairedVariants) {

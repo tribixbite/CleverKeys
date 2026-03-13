@@ -268,7 +268,9 @@ class InputCoordinator(
                     contractionScores.add(allScores.firstOrNull()?.plus(1000) ?: 10000)
                 }
 
-                val pairedVariants = contractionManager.getPairedContractions(prefix)
+                // Only inject paired contractions for prefixes >= 3 chars to avoid
+                // corrupting frequency ranking with possessive forms (t→t's, a→a's)
+                val pairedVariants = if (prefix.length >= 3) contractionManager.getPairedContractions(prefix) else null
                 if (pairedVariants != null && nonPairedMapping == null) {
                     for (variant in pairedVariants) {
                         contractionWords.add(capitalizeIWord(variant))
@@ -292,7 +294,7 @@ class InputCoordinator(
                 val mergedScores = contractionScores + allScores.take(filteredCount)
 
                 // Apply capitalization if prefix was capitalized
-                val finalWords = if (shouldCapitalize) {
+                val transformedWords = if (shouldCapitalize) {
                     mergedWords.map { word ->
                         word.replaceFirstChar {
                             if (it.isLowerCase()) it.titlecase(java.util.Locale.getDefault()) else it.toString()
@@ -302,12 +304,41 @@ class InputCoordinator(
                     mergedWords
                 }
 
+                // #42: Add exact typed word option — must match SuggestionHandler's
+                // pipeline to prevent "+word" flicker when cursor sync overwrites bar
+                val finalWords: List<String>
+                val finalScores: List<Int>
+                if (config.show_exact_typed_word && prefix.length >= 2) {
+                    val exactTyped = if (shouldCapitalize) {
+                        prefix.replaceFirstChar {
+                            if (it.isLowerCase()) it.titlecase(java.util.Locale.getDefault()) else it.toString()
+                        }
+                    } else {
+                        prefix
+                    }
+                    val exactLower = exactTyped.lowercase()
+                    val alreadyInPredictions = transformedWords.any { it.lowercase() == exactLower }
+                    val isUserWord = predictionCoordinator.getDictionaryManager()?.isUserWord(exactTyped) ?: false
+                    val isInDictionary = predictionCoordinator.getWordPredictor()?.isInDictionary(exactTyped) ?: true
+
+                    if (!alreadyInPredictions && !isUserWord && !isInDictionary) {
+                        finalWords = transformedWords + "exact_add:$exactTyped"
+                        finalScores = mergedScores + 0
+                    } else {
+                        finalWords = transformedWords
+                        finalScores = mergedScores
+                    }
+                } else {
+                    finalWords = transformedWords
+                    finalScores = mergedScores
+                }
+
                 // Update UI on main thread
                 if (finalWords.isNotEmpty()) {
                     mainHandler.post {
                         suggestionBar?.let { bar ->
                             bar.setShowDebugScores(config.swipe_show_debug_scores)
-                            bar.setSuggestionsWithScores(finalWords, mergedScores)
+                            bar.setSuggestionsWithScores(finalWords, finalScores)
                         }
                         debugLogger?.invoke("📊 Cursor-sync predictions: ${finalWords.take(5)}")
                     }

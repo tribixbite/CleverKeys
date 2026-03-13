@@ -291,6 +291,25 @@ class BackspaceUndoTest {
     }
 
     @Test
+    fun `InputCoordinator has exact_add support matching SuggestionHandler`() {
+        // Both pipelines must include exact_add so "+word" suggestions don't
+        // flicker when cursor sync overwrites SuggestionHandler's results
+        val source = readSource("InputCoordinator.kt")
+        assertThat(source).contains("exact_add:")
+        assertThat(source).contains("show_exact_typed_word")
+    }
+
+    @Test
+    fun `both pipelines have minimum prefix length for paired contractions`() {
+        // Paired contraction injection for 1-2 char prefixes corrupts frequency
+        // ranking (e.g., "t" → "t's" outranks "the"). Both pipelines must guard.
+        val sugHandler = readSource("SuggestionHandler.kt")
+        val inputCoord = readSource("InputCoordinator.kt")
+        assertThat(sugHandler).contains("partial.length >= 3")
+        assertThat(inputCoord).contains("prefix.length >= 3")
+    }
+
+    @Test
     fun `SuggestionBar deduplicates identical suggestions`() {
         // Prevents visual flicker when both prediction pipelines post same results
         val source = readSource("SuggestionBar.kt")
