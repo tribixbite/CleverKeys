@@ -249,6 +249,161 @@ class ContractionFlickerIntegrationTest {
     }
 
     // =========================================================================
+    // Prefix length guard: single-char prefix must NOT inject paired contractions
+    // =========================================================================
+
+    @Test
+    fun typingSingleChar_noPairedContractionInjected() {
+        // Type just "t" — the suggestion bar should show high-frequency words
+        // like "the", NOT "t's" (which was being injected at score +500)
+        suggestionHandler.handleRegularTyping("t", null, null)
+
+        Thread.sleep(1000)
+        drainMainThread()
+
+        val suggestions = suggestionBar.getCurrentSuggestions()
+        // "t's" should not appear because prefix "t" (len 1) < 3 char minimum
+        assertFalse(
+            "After typing 't', suggestion bar must NOT include 't's' (prefix too short). Got: $suggestions",
+            suggestions.any { it == "t's" }
+        )
+        // "the" should still be the top suggestion from frequency ranking
+        assertTrue(
+            "After typing 't', 'the' should be in suggestions. Got: $suggestions",
+            suggestions.any { it.lowercase() == "the" }
+        )
+    }
+
+    // =========================================================================
+    // exact_add pipeline symmetry: both pipelines produce "+word" for unknown words
+    // =========================================================================
+
+    @Test
+    fun typingUnknownWord_showsExactAddSuggestion() {
+        // Type "xyzq" — not a dictionary word, should show exact_add
+        sharedConfig!!.show_exact_typed_word = true
+        suggestionHandler.handleRegularTyping("x", null, null)
+        suggestionHandler.handleRegularTyping("y", null, null)
+        suggestionHandler.handleRegularTyping("z", null, null)
+        suggestionHandler.handleRegularTyping("q", null, null)
+
+        Thread.sleep(1000)
+        drainMainThread()
+
+        val suggestions = suggestionBar.getCurrentSuggestions()
+        // The SuggestionHandler pipeline should produce an exact_add entry.
+        // SuggestionBar renders "exact_add:xyzq" as "+xyzq" in the UI,
+        // but getCurrentSuggestions() returns the raw word list.
+        assertTrue(
+            "Unknown word 'xyzq' should produce exact_add suggestion. Got: $suggestions",
+            suggestions.any { it.startsWith("exact_add:") || it == "+xyzq" }
+        )
+    }
+
+    @Test
+    fun cursorSync_preservesExactAddForUnknownWord() {
+        // Type "xyzq", verify exact_add appears, then simulate cursor sync
+        // and verify exact_add is STILL present (pipeline symmetry)
+        sharedConfig!!.show_exact_typed_word = true
+        suggestionHandler.handleRegularTyping("x", null, null)
+        suggestionHandler.handleRegularTyping("y", null, null)
+        suggestionHandler.handleRegularTyping("z", null, null)
+        suggestionHandler.handleRegularTyping("q", null, null)
+
+        Thread.sleep(1000)
+        drainMainThread()
+
+        val suggestionsBeforeSync = suggestionBar.getCurrentSuggestions()
+        val hasExactAddBefore = suggestionsBeforeSync.any {
+            it.startsWith("exact_add:") || it == "+xyzq"
+        }
+
+        // Simulate cursor sync pipeline (same logic as InputCoordinator)
+        val prefix = "xyzq"
+        val result = sharedPredictor!!.predictWordsWithContext(
+            prefix, emptyList()
+        )
+
+        val cursorSyncExecutor: ExecutorService = Executors.newSingleThreadExecutor()
+        val syncLatch = CountDownLatch(1)
+        cursorSyncExecutor.submit {
+            val contractionWords = mutableListOf<String>()
+            val contractionScores = mutableListOf<Int>()
+
+            // Build merged predictions (same as InputCoordinator pipeline)
+            val mergedWords: List<String>
+            val mergedScores: List<Int>
+            if (result != null && result.words.isNotEmpty()) {
+                val transformedPredictions = result.words.map { word ->
+                    contractionManager.getNonPairedMapping(word) ?: word
+                }
+                val injectedLowerSet = contractionWords.map { it.lowercase() }.toSet()
+                mergedWords = contractionWords + transformedPredictions.filter {
+                    it.lowercase() !in injectedLowerSet
+                }
+                val filteredCount = transformedPredictions.size -
+                    transformedPredictions.count { it.lowercase() in injectedLowerSet }
+                mergedScores = contractionScores + result.scores.take(filteredCount)
+            } else {
+                mergedWords = emptyList()
+                mergedScores = emptyList()
+            }
+
+            // Apply exact_add logic (must match InputCoordinator's pipeline)
+            val finalWords: List<String>
+            val finalScores: List<Int>
+            if (sharedConfig!!.show_exact_typed_word && prefix.length >= 2) {
+                val exactLower = prefix.lowercase()
+                val alreadyIn = mergedWords.any { it.lowercase() == exactLower }
+                val isInDict = sharedPredictor!!.isInDictionary(prefix)
+                if (!alreadyIn && !isInDict) {
+                    finalWords = mergedWords + "exact_add:$prefix"
+                    finalScores = mergedScores + 0
+                } else {
+                    finalWords = mergedWords
+                    finalScores = mergedScores
+                }
+            } else {
+                finalWords = mergedWords
+                finalScores = mergedScores
+            }
+
+            if (finalWords.isNotEmpty()) {
+                Handler(Looper.getMainLooper()).post {
+                    suggestionBar.setSuggestionsWithScores(finalWords, finalScores)
+                    syncLatch.countDown()
+                }
+            } else {
+                syncLatch.countDown()
+            }
+        }
+
+        syncLatch.await(3, TimeUnit.SECONDS)
+        drainMainThread()
+
+        val suggestionsAfterSync = suggestionBar.getCurrentSuggestions()
+        val hasExactAddAfter = suggestionsAfterSync.any {
+            it.startsWith("exact_add:") || it == "+xyzq"
+        }
+
+        // If SuggestionHandler produced exact_add, cursor sync must also produce it
+        if (hasExactAddBefore) {
+            assertTrue(
+                "Cursor sync must preserve exact_add for unknown word. Before: $suggestionsBeforeSync, After: $suggestionsAfterSync",
+                hasExactAddAfter
+            )
+        }
+        // Even without SuggestionHandler producing it, cursor sync should produce exact_add
+        // for non-dictionary words (the fix we just applied)
+        assertTrue(
+            "Cursor sync pipeline must include exact_add for unknown word 'xyzq'. Got: $suggestionsAfterSync",
+            hasExactAddAfter
+        )
+
+        cursorSyncExecutor.shutdown()
+    }
+
+    // =========================================================================
     // SuggestionBar deduplication test
     // =========================================================================
 

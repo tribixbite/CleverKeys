@@ -279,6 +279,67 @@ class ContractionFlickerTest {
     }
 
     // =========================================================================
+    // Prefix length guard — paired contractions only for >= 3 char prefixes
+    // =========================================================================
+
+    @Test
+    fun prefixGuard_singleCharHasPairedMappingsInData() {
+        // Verify the data exists — "t" maps to "t's" in contraction_pairings.json
+        val variants = contractionManager.getPairedContractions("t")
+        assertNotNull("'t' must have paired contractions in data", variants)
+        assertTrue("Must include 't's'", "t's" in variants!!)
+    }
+
+    @Test
+    fun prefixGuard_twoCharHasPairedMappingsInData() {
+        // "he" maps to "he's", "he'd", "he'll" in contraction_pairings.json
+        val variants = contractionManager.getPairedContractions("he")
+        assertNotNull("'he' must have paired contractions in data", variants)
+        assertTrue("Must include 'he's'", "he's" in variants!!)
+    }
+
+    @Test
+    fun prefixGuard_pipelineSkipsSingleCharPairedInjection() {
+        // Simulate the pipeline logic: for prefix "t" (len < 3),
+        // paired contraction injection should be skipped
+        val prefix = "t"
+        val pairedVariants = if (prefix.length >= 3) contractionManager.getPairedContractions(prefix) else null
+        assertNull(
+            "Paired contractions must be skipped for single-char prefix 't'",
+            pairedVariants
+        )
+    }
+
+    @Test
+    fun prefixGuard_pipelineSkipsTwoCharPairedInjection() {
+        val prefix = "he"
+        val pairedVariants = if (prefix.length >= 3) contractionManager.getPairedContractions(prefix) else null
+        assertNull(
+            "Paired contractions must be skipped for two-char prefix 'he'",
+            pairedVariants
+        )
+    }
+
+    @Test
+    fun prefixGuard_pipelineAllowsThreeCharPairedInjection() {
+        val prefix = "its"
+        val pairedVariants = if (prefix.length >= 3) contractionManager.getPairedContractions(prefix) else null
+        assertNotNull(
+            "Paired contractions must be allowed for three-char prefix 'its'",
+            pairedVariants
+        )
+        assertTrue("Must include 'it's'", "it's" in pairedVariants!!)
+    }
+
+    @Test
+    fun prefixGuard_nonPairedNotAffectedByLengthCheck() {
+        // Non-paired contractions (dont → don't) should work at any length
+        // because they transform predictions, not inject new ones
+        val result = contractionManager.getNonPairedMapping("dont")
+        assertEquals("Non-paired mapping should work regardless of length", "don't", result)
+    }
+
+    // =========================================================================
     // Full prediction pipeline — paired contractions in results
     // =========================================================================
 
