@@ -37,6 +37,36 @@ CleverKeysService (InputMethodService)
 - **KeyEventHandler**: Processes key activations, tracks modifier state (Shift, Ctrl, Alt), handles compose key sequences
 - **InputConnectionManager**: Wraps `InputConnection`, provides text insertion/deletion, cursor movement, selection handling
 
+## Dual Prediction Pipeline
+
+CleverKeys has two independent prediction pipelines that both target the same SuggestionBar:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Typing Path (SuggestionHandler)                             │
+│  handleRegularTyping() → updatePredictionsForCurrentWord()  │
+│  Has: contractions, exact_add, I-word capitalization         │
+│  Trigger: each keystroke via commitText()                    │
+├─────────────────────────────────────────────────────────────┤
+│  Cursor Sync Path (InputCoordinator)                         │
+│  onCursorMoved() → synchronizeWithCursor() →                │
+│  triggerPredictionsForPrefix()                               │
+│  Has: contractions, exact_add, I-word capitalization         │
+│  Trigger: onUpdateSelection (100ms debounce)                 │
+├─────────────────────────────────────────────────────────────┤
+│                    SuggestionBar                              │
+│  setSuggestionsWithScores() — deduplicates identical content │
+│  Last pipeline to post wins; dedup prevents re-render flicker│
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Pipeline symmetry rule**: Both pipelines MUST produce identical results for the same input. Any feature added to SuggestionHandler (contractions, exact_add, capitalization, prefix guards) must also exist in InputCoordinator's `triggerPredictionsForPrefix()`. Without this, the cursor sync path overwrites the typing path's results ~100ms later, causing visible flicker.
+
+**Key safety mechanisms**:
+- `contextTracker.clearAll()` in `onFinishInputView()` prevents cross-app text leaking
+- `Handler(Looper.getMainLooper()).post{}` instead of `View.post{}` — detached views silently drop runnables
+- Paired contraction injection requires prefix >= 3 chars (prevents "t" → "t's" outranking "the")
+
 ## Data Flow
 
 ```

@@ -127,6 +127,63 @@ When adding new components:
 3. Pass dependencies explicitly via constructor/method parameters
 4. Document dependency chain in comments if complex
 
+## ADR-008: Dual Prediction Pipeline Symmetry
+
+**Decision**: Both SuggestionHandler (typing path) and InputCoordinator (cursor sync path) maintain independent prediction executors that post to the same SuggestionBar. Both must implement identical contraction/exact_add/capitalization logic.
+
+**Rationale**:
+- `onUpdateSelection()` fires asynchronously after `commitText()` — triggers InputCoordinator ~100ms after SuggestionHandler
+- If pipelines produce different results, the cursor sync path overwrites the typing path, causing visible flicker
+- Suppression-based approaches (flags) failed: cross-app leaking, incomplete coverage, timing brittleness
+
+**Implementation**:
+- Both paths: paired contractions, non-paired contractions, I-word capitalization, exact_add, prefix guard
+- SuggestionBar deduplicates identical content to prevent redundant re-renders
+- `contextTracker.clearAll()` in `onFinishInputView()` prevents state from leaking across apps
+
+**Consequences**:
+- Features added to one pipeline MUST be mirrored in the other
+- Last pipeline to post wins — but with symmetric output, this is invisible to users
+- Source-scanning JVM tests verify both pipelines contain required logic
+
+## ADR-009: Paired Contraction Prefix Guard
+
+**Decision**: Minimum 3 characters required for paired contraction injection in both prediction pipelines.
+
+**Rationale**:
+- `contraction_pairings.json` has 19 single-character entries (a→a's, t→t's, etc.) — all possessive forms
+- These inject at score +500 above top prediction, corrupting frequency ranking
+- Typing "t" showed "t's" above "the" — frequency ranking was bypassed
+
+**Implementation**:
+```kotlin
+val pairedVariants = if (prefix.length >= 3) contractionManager.getPairedContractions(prefix) else null
+```
+
+**Consequences**:
+- Single/double-char prefixes no longer get possessive form injection
+- Real contraction bases (its, hes, wed, well) at 3+ chars still work correctly
+- Non-paired contractions (dont → don't) are unaffected — they transform predictions, not inject new ones
+
+## ADR-010: Context Tracker Clearance on Input Finish
+
+**Decision**: Call `contextTracker.clearAll()` in `onFinishInputView()` to reset all prediction state when switching apps or text fields.
+
+**Rationale**:
+- Without clearing, text typed in app A leaked into predictions for app B
+- Example: type "t" in app A, switch to app B, type "h" → got "th" predictions instead of "h"
+- The `expectingSelectionUpdate` flag approach persisted across field switches, suppressing legitimate cursor syncs
+
+**Implementation**: Single line in `CleverKeysService.onFinishInputView()`:
+```kotlin
+_contextTracker.clearAll()
+```
+
+**Consequences**:
+- Clean prediction state for every new input field
+- No cross-app text contamination
+- Context words from previous field are lost (acceptable — new field means new context)
+
 ## Summary
 
 **Philosophy**:

@@ -248,13 +248,13 @@ jobs:
 - [ ] Replace android.* imports with abstractions
 - [ ] Achieve 80% coverage on `:core`
 
-## Current Test Suite (as of 2026-02-24)
+## Current Test Suite (as of 2026-03-15)
 
 | Type | Location | Count | Framework | Runner |
 |------|----------|-------|-----------|--------|
-| Pure JVM | `src/test/kotlin/` | 857 | JUnit4 + Truth | `./gradlew runPureTests` |
+| Pure JVM | `src/test/kotlin/` | 987 | JUnit4 + Truth | `./gradlew runPureTests` |
 | MockK | `src/test/kotlin/` | ~176 | JUnit4 + MockK | `./gradlew runMockTests` |
-| Instrumented | `src/androidTest/kotlin/` | ~640 | AndroidJUnit4 | emulator.wtf (Pixel7 API 34) |
+| Instrumented | `src/androidTest/kotlin/` | 887 | AndroidJUnit4 | emulator.wtf (Pixel7 API 34) |
 
 ### ARM64 Termux Compatibility
 Standard `testDebugUnitTest` is disabled — custom `runPureTests` JavaExec task runs
@@ -350,15 +350,39 @@ The pipeline approach gives us 95% of the coverage at 5% of the complexity. The 
 
 ## Metrics
 
-### Coverage (2026-02-24)
+### Coverage (2026-03-15)
 | Type | Count | Execution Time |
 |------|-------|---------------|
-| Pure JVM | 857 | ~17s |
+| Pure JVM | 987 | ~10s |
 | MockK | ~176 | ~12s |
-| Instrumented | ~640 | ~12min (emulator.wtf) |
-| **Total** | **~1,673** | — |
+| Instrumented | 887 | ~15min (emulator.wtf with orchestrator) |
+| **Total** | **~2,050** | — |
+
+### New Test Classes (v1.3.0+)
+
+| Class | Tests | Type | Purpose |
+|-------|-------|------|---------|
+| `ContractionFlickerTest` | 20 | Instrumented | Paired contraction pipeline, prefix guard validation, flag mechanism |
+| `ContractionFlickerIntegrationTest` | 7 | Instrumented | Real SuggestionHandler + SuggestionBar + WordPredictor wired together |
+| `SwipeLayoutSupportTest` | 66 | JVM | Swipe layout configuration validation |
+| `BackspaceUndoTest` | 32 | JVM | Pipeline symmetry source scanning, backspace undo state |
+| `TypingSimulationTest` | 62 | Instrumented | End-to-end typing with real dictionary + contractions |
+| `DictionaryDataSourceTest` | 19 | Instrumented | Dictionary cache coherence, toggle word behavior |
+| `VocabularyRankingTest` | 12 | Instrumented | Contraction scoring, trie lookup |
+| `SuggestionBarAutofillTest` | 15 | Instrumented | Autofill padding, password mode |
+
+### Dual Pipeline Test Coverage
+
+The contraction flicker tests validate **pipeline symmetry** — both SuggestionHandler
+(typing path) and InputCoordinator (cursor sync path) must produce identical results:
+
+- **Paired contraction injection**: Both paths inject `it's` for `its`, `we'll` for `well`
+- **Prefix guard**: Both paths skip paired injection for prefixes < 3 chars
+- **exact_add support**: Both paths produce `exact_add:` entries for non-dictionary words
+- **SuggestionBar deduplication**: Identical suggestion lists don't trigger re-render
+- **Context clearing**: `onFinishInputView()` calls `clearAll()` to prevent cross-app leaking
 
 ---
 
-*Updated: 2026-02-24*
+*Updated: 2026-03-15*
 *Original: 2026-01-18 (Gemini 3 Pro consultation)*

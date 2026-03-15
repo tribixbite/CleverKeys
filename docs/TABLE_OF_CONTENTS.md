@@ -1,6 +1,6 @@
 # CleverKeys Documentation - Table of Contents
 
-**Last Updated**: 2025-12-11
+**Last Updated**: 2026-03-15
 **Review Status**: Files 251 of 251 (100% complete) ✅
 
 ## 📋 Quick Navigation
@@ -62,7 +62,7 @@
 | `settings-system.md` | Settings & preferences | ✅ Implemented |
 | `ui-material3-modernization.md` | Material 3 UI | ✅ Implemented |
 | `performance-optimization.md` | Performance & monitoring | ✅ Complete |
-| `test-suite.md` | Testing infrastructure | ✅ Complete |
+| `testing-strategy.md` | Testing infrastructure (2050+ tests) | ✅ Active |
 | `short-swipe-customization.md` | **NEW** Short Swipe System | ✅ Implemented |
 | `profile_system_restoration.md` | **NEW** Profile Import/Export | ✅ Implemented |
 | `architectural-decisions.md` | Architectural Decision Records | ✅ Active |

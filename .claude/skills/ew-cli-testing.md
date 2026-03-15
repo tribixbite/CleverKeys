@@ -98,9 +98,11 @@ ew-cli \
 | `GifCategoryTest` | 32 | GIF category model and filtering |
 | `LanguageDetectorTest` | 30 | Language detection with confidence |
 | `SuggestionBarAutofillTest` | 15 | Autofill padding, password mode (#109) |
+| `ContractionFlickerTest` | 20 | Pipeline symmetry, paired contraction prefix guard |
+| `ContractionFlickerIntegrationTest` | 7 | Full real component wiring (SuggestionHandler+SuggestionBar+WordPredictor) |
 | `DictionaryDataSourceTest` | 19 | Dictionary cache, toggle coherence |
 | `VocabularyRankingTest` | 12 | Contraction scoring, trie lookup |
-| `SettingsSearchTest` | ~10 | Settings search UI (OOM-prone) |
+| `SettingsSearchTest` | 5 | Settings search-to-scroll crash regression |
 
 ## Writing New Tests
 
@@ -230,8 +232,8 @@ ls -la build/outputs/apk/androidTest/debug/
 ```
 
 ### Test Timeout
-Always use `--timeout 15m`. Full orchestrator suite takes ~13 min (775 tests).
-Without orchestrator: ~40s for 465 tests, but OOM failures cascade.
+Always use `--timeout 15m`. Full orchestrator suite takes ~15 min (887 tests).
+Without orchestrator: faster but OOM failures cascade.
 
 ### Signature Mismatch
 ```

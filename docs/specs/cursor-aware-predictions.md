@@ -120,6 +120,27 @@ predictions = wordPredictor.predict(normalizedPrefix)
 ic.deleteSurroundingText(rawPrefix.length, rawSuffix.length)
 ```
 
+## Cursor Sync Prediction Pipeline
+
+When cursor sync fires, `InputCoordinator.triggerPredictionsForPrefix()` runs a full
+prediction pipeline that mirrors `SuggestionHandler.updatePredictionsForCurrentWord()`:
+
+1. **Predict**: `wordPredictor.predictWordsWithContext(prefix, contextWords)`
+2. **Non-paired contractions**: `contractionManager.getNonPairedMapping(prefix)` (e.g., dont → don't)
+3. **Paired contractions**: `contractionManager.getPairedContractions(prefix)` if prefix >= 3 chars
+4. **Transform predictions**: Map all results through non-paired contraction mapping + I-word capitalization
+5. **Merge & deduplicate**: Contraction words first, then filtered predictions
+6. **Capitalize**: Apply sentence-start capitalization if raw prefix started uppercase
+7. **exact_add**: Append `exact_add:$word` for non-dictionary words (if `config.show_exact_typed_word`)
+8. **Post to SuggestionBar**: Via `Handler(Looper.getMainLooper()).post{}`
+
+### Safety Mechanisms
+
+- `ic ?: return` at the top of `synchronizeWithCursor()` — null InputConnection = early return
+- `contextTracker.clearAll()` in `onFinishInputView()` — prevents cross-app text leaking
+- `Handler.post()` instead of `View.post()` — detached views silently drop runnables
+- SuggestionBar deduplication — skips re-render if new suggestions match existing ones
+
 ## Edge Cases
 
 | Case | prefix | suffix | Behavior |
@@ -131,6 +152,9 @@ ic.deleteSurroundingText(rawPrefix.length, rawSuffix.length)
 | After emoji: `hi 👋 \|` | "" | "" | Reset prediction |
 | Numbers: `test\|123` | "test" | "" | Numbers break word |
 | Contraction: `don'\|t` | "don'" | "t" | Treated as single word |
+| Short prefix: `t\|` | "t" | "" | Predictions but no paired contractions (< 3 chars) |
+| Non-dict word: `xyzq\|` | "xyzq" | "" | Predictions + exact_add entry |
+| App switch: new field | "" | "" | contextTracker.clearAll() resets state |
 
 ## Language Handling
 

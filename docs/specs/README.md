@@ -19,7 +19,7 @@ Technical documentation for CleverKeys, an Android keyboard with neural swipe ty
 |------|-------------|
 | [Neural Prediction](./neural-prediction.md) | ONNX transformer, beam search, vocabulary |
 | [Neural Multilanguage](./neural-multilanguage-architecture.md) | Multi-language swipe typing architecture |
-| [Cursor-Aware Predictions](./cursor-aware-predictions.md) | Context-aware prediction enhancement |
+| [Cursor-Aware Predictions](./cursor-aware-predictions.md) | Dual pipeline cursor sync, exact_add, contraction prefix guard |
 | [KV-Cache Optimization](./kv-cache-optimization.md) | ONNX inference optimization |
 | [Memory Pool Optimization](./memory-pool-optimization.md) | Memory management for neural inference |
 
@@ -64,7 +64,8 @@ Technical documentation for CleverKeys, an Android keyboard with neural swipe ty
 
 | Spec | Description |
 |------|-------------|
-| [Architectural Decisions](./architectural-decisions.md) | ADRs for major design choices |
+| [Architectural Decisions](./architectural-decisions.md) | ADRs for major design choices (10 decisions) |
+| [Testing Strategy](./testing-strategy.md) | Test architecture, 2050+ tests, ew-cli integration |
 | [Performance Optimization](./performance-optimization.md) | Rendering, memory, ONNX performance |
 | [SPEC_TEMPLATE.md](./SPEC_TEMPLATE.md) | Template for new specifications |
 
