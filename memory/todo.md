@@ -143,6 +143,34 @@ Issues already implemented, need user verification + close:
   - Test expected `false` for duplicate add, but #108 changed to move-to-top (returns `true`)
   - Updated assertion: `assertFalse` → `assertTrue`, message updated
 
+## Completed (2026-03-15)
+- ✅ **Contraction suggestion flicker — pipeline symmetry fix** (f6584c33e, c021fc8dd):
+  - **Root cause**: SuggestionHandler (typing path) and InputCoordinator (cursor sync path)
+    posted different predictions to the same SuggestionBar. Cursor sync fires ~100ms after
+    typing, overwriting with stale/different results → visible flicker
+  - **Fix**: Made both pipelines produce identical output (paired/non-paired contractions,
+    I-word capitalization, exact_add, prefix guard). SuggestionBar deduplicates identical content
+  - **Paired contraction prefix guard** (ADR-009): `prefix.length >= 3` blocks single-char
+    entries like "t"→"t's" from corrupting frequency ranking
+  - **exact_add in cursor sync** (ADR-008): InputCoordinator now appends `exact_add:$word`
+    for non-dictionary words, matching SuggestionHandler behavior
+  - **Context clearance** (ADR-010): `contextTracker.clearAll()` in onFinishInputView()
+    prevents cross-app text leaking
+  - Handler.post() replaces View.post() for detached-view safety
+- ✅ **Contraction flicker tests** (5960751d0, 0bb56b844):
+  - ContractionFlickerTest: 20 instrumented tests (prefix guard, pipeline symmetry)
+  - ContractionFlickerIntegrationTest: 7 instrumented tests (real component wiring)
+  - JVM source-scanning tests verify both pipelines contain required logic
+  - 987 JVM tests, 887 instrumented tests — all pass
+- ✅ **Flaky SettingsSearchTest fix** (639c7b989):
+  - "backspace" query returned 5 results overflowing 200dp search results card
+  - Changed to "backspace undo" (2 results, both visible without scrolling)
+- ✅ **Spec/doc updates** (9d730ac48):
+  - ADR-008, ADR-009, ADR-010 in architectural-decisions.md
+  - Dual pipeline section in core-keyboard-system.md
+  - Cursor sync pipeline in cursor-aware-predictions.md
+  - Updated test counts in testing-strategy.md, ew-cli skill, MEMORY.md
+
 ## Completed (2026-02-27)
 - ✅ **#110 backspace undo swipe + autocorrect** (8d4bdf19f, 3a030003d):
   - **Bug fix 1**: swipe undo broken — `wasLastInputSwipe` cleared by `onSuggestionSelected()`
