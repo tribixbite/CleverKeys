@@ -167,21 +167,31 @@ class SettingsSearchTest {
         )
         assertNotNull("Backspace Undo Swipe should appear in search results", result)
 
-        val sectionLabel = device.findObject(By.text("in Word Prediction"))
+        val sectionLabel = device.wait(
+            Until.findObject(By.text("in Word Prediction")),
+            UI_TIMEOUT
+        )
         assertNotNull("Should show 'in Word Prediction' section label", sectionLabel)
     }
 
     @Test
     fun searchResults_backspace_showsMultipleResults() {
-        searchFor("backspace")
+        // Search for "backspace undo" — matches "Backspace Undo Swipe" and
+        // "Backspace Undo Autocorrect" (2 results, both visible without scrolling).
+        // Note: searching bare "backspace" returns 5 results that overflow the
+        // 200dp search results card, making items below the fold invisible to
+        // UIAutomator on some devices.
+        searchFor("backspace undo")
 
         val undoSwipe = device.wait(
             Until.findObject(By.text("Backspace Undo Swipe")),
             UI_TIMEOUT
         )
-        val onlyRepeat = device.findObject(By.text("Backspace Only Repeat"))
-
+        val undoAutocorrect = device.wait(
+            Until.findObject(By.text("Backspace Undo Autocorrect")),
+            UI_TIMEOUT
+        )
         assertNotNull("'Backspace Undo Swipe' should appear in search results", undoSwipe)
-        assertNotNull("'Backspace Only Repeat' should appear in search results", onlyRepeat)
+        assertNotNull("'Backspace Undo Autocorrect' should appear in search results", undoAutocorrect)
     }
 }
