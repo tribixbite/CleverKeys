@@ -86,8 +86,8 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
-    - name: Check code formatting
-      run: ./gradlew ktlintCheck --stacktrace
+    - name: Run lint checks
+      run: ./gradlew lint --stacktrace
       continue-on-error: true
 
     - name: Dependency analysis
@@ -113,6 +113,6 @@ jobs:
 
     - name: Upload security results
       uses: github/codeql-action/upload-sarif@v3
-      if: always()
+      if: always() && hashFiles('trivy-results.sarif') != ''
       with:
         sarif_file: 'trivy-results.sarif'
