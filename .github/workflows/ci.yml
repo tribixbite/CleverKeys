@@ -35,8 +35,11 @@ jobs:
     - name: Build with Gradle
       run: ./gradlew assembleDebug --stacktrace
 
-    - name: Run unit tests
-      run: ./gradlew testDebugUnitTest --stacktrace
+    - name: Run pure JVM tests
+      run: ./gradlew runPureTests --stacktrace
+
+    - name: Run MockK tests
+      run: ./gradlew runMockTests --stacktrace
 
     - name: Upload test results
       uses: actions/upload-artifact@v4
