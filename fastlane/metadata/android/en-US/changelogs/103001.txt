@@ -1,0 +1,15 @@
+v1.3.0 - GIF Panel & Prediction Fixes
+
+NEW:
+• Offline GIF panel — search, categories, pack import
+• Backspace undo autocorrect (#110)
+• Auto space before suggestion toggle (#82)
+• Swipe auto-disabled on non-QWERTY layouts (#9)
+
+FIXES:
+• Contraction flicker fix (pipeline symmetry)
+• Backspace undo swipe broken (#110)
+• Clipboard dedup (#108), terminal paste (#113)
+• Autofill cutoff (#109), theme background (#92)
+
+GIF: github.com/tribixbite/CleverKeys/releases/tag/CleverKeys-GIF
