@@ -409,7 +409,9 @@ tasks.register('runMockTests', JavaExec) {
   mainClass = 'org.junit.runner.JUnitCore'
 
   // android.jar MUST come AFTER MockK on classpath so MockK intercepts first
-  def androidJar = file("${System.getProperty('user.home')}/android-sdk/platforms/android-35/android.jar")
+  // Resolve SDK location: ANDROID_HOME (CI), ANDROID_SDK_ROOT, or ~/android-sdk (Termux)
+  def sdkDir = System.getenv('ANDROID_HOME') ?: System.getenv('ANDROID_SDK_ROOT') ?: "${System.getProperty('user.home')}/android-sdk"
+  def androidJar = file("${sdkDir}/platforms/android-34/android.jar")
   classpath = files(
     "${buildDir}/intermediates/javac/debugUnitTest/classes",
     "${buildDir}/tmp/kotlin-classes/debugUnitTest",
