@@ -403,7 +403,7 @@ class ClipboardDatabase private constructor(context: Context) :
                         continue
                     }
                     // Use fresh expiry timestamp so imported entries don't expire immediately
-                    val freshExpiry = System.currentTimeMillis() + HISTORY_TTL_MS
+                    val freshExpiry = System.currentTimeMillis() + ClipboardHistoryService.getHistoryTtlMs()
                     val values = ContentValues().apply {
                         put(COLUMN_CONTENT, content)
                         put(COLUMN_TIMESTAMP, entry.getLong("timestamp"))
@@ -431,7 +431,7 @@ class ClipboardDatabase private constructor(context: Context) :
                         continue
                     }
                     // Pinned entries use fresh expiry (they don't expire anyway due to is_pinned=1)
-                    val freshExpiry = System.currentTimeMillis() + HISTORY_TTL_MS
+                    val freshExpiry = System.currentTimeMillis() + ClipboardHistoryService.getHistoryTtlMs()
                     val values = ContentValues().apply {
                         put(COLUMN_CONTENT, content)
                         put(COLUMN_TIMESTAMP, entry.getLong("timestamp"))
@@ -460,7 +460,7 @@ class ClipboardDatabase private constructor(context: Context) :
                         continue
                     }
                     // Todo entries use fresh expiry
-                    val freshExpiry = System.currentTimeMillis() + HISTORY_TTL_MS
+                    val freshExpiry = System.currentTimeMillis() + ClipboardHistoryService.getHistoryTtlMs()
                     val values = ContentValues().apply {
                         put(COLUMN_CONTENT, content)
                         put(COLUMN_TIMESTAMP, entry.getLong("timestamp"))
@@ -491,7 +491,6 @@ class ClipboardDatabase private constructor(context: Context) :
         private const val COLUMN_IS_TODO = "is_todo"
         private const val COLUMN_CONTENT_HASH = "content_hash"
         private const val TAG = "ClipboardDatabase"
-        private const val HISTORY_TTL_MS = 7 * 24 * 60 * 60 * 1000L
         @Volatile private var instance: ClipboardDatabase? = null
         @JvmStatic
         fun getInstance(context: Context): ClipboardDatabase {

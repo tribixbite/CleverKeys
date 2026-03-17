@@ -39,7 +39,7 @@ import tribixbite.cleverkeys.theme.KeyboardTheme
  * All settings map to existing Config.kt properties:
  * - clipboard_history_enabled (default: false)
  * - clipboard_history_limit (default: 6)
- * - clipboard_history_duration (default: 5 minutes, -1 for never)
+ * - clipboard_history_duration (default: 10080 minutes / 7 days, -1 for never)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferenceChangeListener {
@@ -55,7 +55,7 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
     // Settings state
     private var clipboardEnabled by mutableStateOf(false)
     private var historyLimit by mutableStateOf(6)
-    private var historyDuration by mutableStateOf(5) // minutes
+    private var historyDuration by mutableStateOf(10080) // minutes; 10080 = 7 days, -1 = never
 
     // Statistics state
     private var statsLoading by mutableStateOf(true)
@@ -116,7 +116,7 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
                 historyLimit = prefs.getInt(key, 6)
             }
             "clipboard_history_duration" -> {
-                historyDuration = prefs.getString(key, "5")?.toIntOrNull() ?: 5
+                historyDuration = prefs.getString(key, "10080")?.toIntOrNull() ?: 10080
             }
         }
     }
@@ -124,7 +124,7 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
     private fun loadCurrentSettings() {
         clipboardEnabled = prefs.getBoolean("clipboard_history_enabled", false)
         historyLimit = prefs.getInt("clipboard_history_limit", 6)
-        historyDuration = prefs.getString("clipboard_history_duration", "5")?.toIntOrNull() ?: 5
+        historyDuration = prefs.getString("clipboard_history_duration", "10080")?.toIntOrNull() ?: 10080
     }
 
     private suspend fun loadStatistics() {
@@ -331,25 +331,35 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
                                 helpText = "Older entries are automatically removed when limit is reached"
                             )
 
-                            // Duration Slider
+                            // Duration Slider — discrete presets from 1 hour to Never
+                            // Presets: 1h, 6h, 12h, 1d, 3d, 7d, 14d, 30d, Never
+                            val durationPresets = listOf(60, 360, 720, 1440, 4320, 10080, 20160, 43200, -1)
+                            val currentIndex = durationPresets.indexOf(historyDuration).let {
+                                if (it >= 0) it else durationPresets.indexOfLast { p -> p in 1..historyDuration }
+                                    .coerceAtLeast(0)
+                            }
                             SliderSetting(
                                 title = "Entry Duration",
                                 description = "How long clipboard entries persist before expiring",
-                                value = if (historyDuration == -1) 1441f else historyDuration.toFloat(),
-                                valueRange = 1f..1441f, // 1441 represents "Never expire"
-                                steps = 1440,
+                                value = currentIndex.toFloat(),
+                                valueRange = 0f..(durationPresets.size - 1).toFloat(),
+                                steps = durationPresets.size - 2, // intermediate steps between endpoints
                                 onValueChange = {
-                                    historyDuration = if (it.toInt() == 1441) -1 else it.toInt()
+                                    val idx = it.toInt().coerceIn(0, durationPresets.size - 1)
+                                    historyDuration = durationPresets[idx]
                                     saveSetting("clipboard_history_duration", historyDuration.toString())
                                 },
                                 displayValue = when (historyDuration) {
                                     -1 -> "Never expire"
-                                    1 -> "1 minute"
-                                    in 2..59 -> "$historyDuration minutes"
                                     60 -> "1 hour"
-                                    in 61..1439 -> "${historyDuration / 60} hours"
+                                    360 -> "6 hours"
+                                    720 -> "12 hours"
                                     1440 -> "1 day"
-                                    else -> "$historyDuration minutes"
+                                    4320 -> "3 days"
+                                    10080 -> "7 days"
+                                    20160 -> "14 days"
+                                    43200 -> "30 days"
+                                    else -> "${historyDuration / 60} hours"
                                 },
                                 helpText = "Pinned entries never expire regardless of this setting"
                             )
@@ -406,10 +416,10 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
                     // Reset to Defaults Button
                     Button(
                         onClick = {
-                            historyLimit = 6
-                            historyDuration = 5
-                            saveSetting("clipboard_history_limit", 6)
-                            saveSetting("clipboard_history_duration", "5")
+                            historyLimit = 50
+                            historyDuration = 10080
+                            saveSetting("clipboard_history_limit", 50)
+                            saveSetting("clipboard_history_duration", "10080")
                             Toast.makeText(this@ClipboardSettingsActivity,
                                 "Reset to default values",
                                 Toast.LENGTH_SHORT).show()

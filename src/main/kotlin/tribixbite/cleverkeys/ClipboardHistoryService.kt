@@ -186,8 +186,13 @@ class ClipboardHistoryService private constructor(ctx: Context) {
             }
         }
 
-        // Calculate expiry time
-        val expiryTime = System.currentTimeMillis() + HISTORY_TTL_MS
+        // Calculate expiry time from user-configured duration (minutes, -1 = never expire)
+        val durationMinutes = Config.globalConfig().clipboard_history_duration
+        val expiryTime = if (durationMinutes >= 0) {
+            System.currentTimeMillis() + java.util.concurrent.TimeUnit.MINUTES.toMillis(durationMinutes.toLong())
+        } else {
+            Long.MAX_VALUE // Never expire
+        }
 
         // Add to database (handles duplicate detection automatically)
         val added = _database.addClipboardEntry(clip, expiryTime)
@@ -479,12 +484,19 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         }
 
         /** Clipboard history is persistently stored in SQLite database and survives app restarts.
-            Entries expire after HISTORY_TTL_MS unless pinned. The configurable size limit
-            (clipboard_history_limit) controls maximum entries (0 = unlimited). */
-        /** Time in ms until history entries expire.
-         *  Set to 7 days to maintain useful history across app updates and restarts.
-         *  Use pinning for permanent entries. */
-        const val HISTORY_TTL_MS = 7 * 24 * 60 * 60 * 1000L // 7 days
+            Entries expire based on clipboard_history_duration config (default 7 days) unless pinned.
+            The configurable size limit (clipboard_history_limit) controls maximum entries (0 = unlimited). */
+        /** Compute the TTL in ms from user-configured clipboard_history_duration (minutes).
+         *  -1 = never expire (Long.MAX_VALUE). Default = 10080 minutes (7 days). */
+        @JvmStatic
+        fun getHistoryTtlMs(): Long {
+            val durationMinutes = Config.globalConfig().clipboard_history_duration
+            return if (durationMinutes >= 0) {
+                java.util.concurrent.TimeUnit.MINUTES.toMillis(durationMinutes.toLong())
+            } else {
+                Long.MAX_VALUE
+            }
+        }
 
         private var _service: ClipboardHistoryService? = null
 

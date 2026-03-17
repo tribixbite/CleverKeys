@@ -182,6 +182,8 @@ object Defaults {
     const val CLIPBOARD_SIZE_LIMIT_MB = "5"  // Was "10" - reduced for safety
     const val CLIPBOARD_SIZE_LIMIT_MB_FALLBACK = 5
     const val CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS = true  // Skip clipboard from password managers
+    const val CLIPBOARD_HISTORY_DURATION = "10080"  // Minutes; 10080 = 7 days. -1 = never expire
+    const val CLIPBOARD_HISTORY_DURATION_FALLBACK = 10080
     const val CLIPBOARD_RESPECT_SENSITIVE_FLAG = true  // #86: Respect Android 13+ IS_SENSITIVE flag
 
     // GIF Panel — opt-in, off by default, zero data shipped in APK
@@ -410,6 +412,7 @@ class Config private constructor(
     @JvmField var clipboard_size_limit_mb = 0
     @JvmField var clipboard_exclude_password_managers = true  // Skip clipboard from password managers
     @JvmField var clipboard_respect_sensitive_flag = true  // #86: Respect Android 13+ IS_SENSITIVE flag
+    @JvmField var clipboard_history_duration = 10080  // Minutes; 10080 = 7 days. -1 = never expire
 
     // GIF Panel
     @JvmField var gif_enabled = Defaults.GIF_ENABLED
@@ -672,6 +675,8 @@ class Config private constructor(
         clipboard_size_limit_mb = safeGetString(_prefs, "clipboard_size_limit_mb", Defaults.CLIPBOARD_SIZE_LIMIT_MB).toIntOrNull() ?: Defaults.CLIPBOARD_SIZE_LIMIT_MB_FALLBACK
 
         clipboard_exclude_password_managers = _prefs.getBoolean("clipboard_exclude_password_managers", Defaults.CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS)
+
+        clipboard_history_duration = safeGetString(_prefs, "clipboard_history_duration", Defaults.CLIPBOARD_HISTORY_DURATION).toIntOrNull() ?: Defaults.CLIPBOARD_HISTORY_DURATION_FALLBACK
 
         clipboard_respect_sensitive_flag = _prefs.getBoolean("clipboard_respect_sensitive_flag", Defaults.CLIPBOARD_RESPECT_SENSITIVE_FLAG)
 
