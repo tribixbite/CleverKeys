@@ -184,8 +184,8 @@ class ClipboardDatabase private constructor(context: Context) :
     fun clearAllEntries(): Result<Int> {
         return try {
             val db = writableDatabase
-            val deletedRows = db.delete(TABLE_CLIPBOARD, "$COLUMN_IS_PINNED = 0", null)
-            Log.d(TAG, "Cleared $deletedRows clipboard entries (kept pinned entries)")
+            val deletedRows = db.delete(TABLE_CLIPBOARD, "$COLUMN_IS_PINNED = 0 AND $COLUMN_IS_TODO = 0", null)
+            Log.d(TAG, "Cleared $deletedRows clipboard entries (kept pinned and todo entries)")
             Result.success(deletedRows)
         } catch (e: Exception) {
             Log.e(TAG, "Error clearing clipboard entries: ${e.message}")
@@ -199,7 +199,7 @@ class ClipboardDatabase private constructor(context: Context) :
             val db = writableDatabase
             val deletedRows = db.delete(
                 TABLE_CLIPBOARD,
-                "$COLUMN_EXPIRY_TIMESTAMP <= ? AND $COLUMN_IS_PINNED = 0",
+                "$COLUMN_EXPIRY_TIMESTAMP <= ? AND $COLUMN_IS_PINNED = 0 AND $COLUMN_IS_TODO = 0",
                 arrayOf(currentTime.toString())
             )
             if (deletedRows > 0) Log.d(TAG, "Cleaned up $deletedRows expired clipboard entries")
@@ -289,7 +289,7 @@ class ClipboardDatabase private constructor(context: Context) :
             val db = writableDatabase
             val currentTime = System.currentTimeMillis()
             val currentCount = db.rawQuery(
-                "SELECT COUNT(*) FROM $TABLE_CLIPBOARD WHERE $COLUMN_IS_PINNED = 0 AND $COLUMN_EXPIRY_TIMESTAMP > ?",
+                "SELECT COUNT(*) FROM $TABLE_CLIPBOARD WHERE $COLUMN_IS_PINNED = 0 AND $COLUMN_IS_TODO = 0 AND $COLUMN_EXPIRY_TIMESTAMP > ?",
                 arrayOf(currentTime.toString())
             ).use { if (it.moveToFirst()) it.getInt(0) else 0 }
             if (currentCount <= maxSize) return 0
@@ -297,7 +297,7 @@ class ClipboardDatabase private constructor(context: Context) :
             db.execSQL("""
                 DELETE FROM $TABLE_CLIPBOARD WHERE $COLUMN_ID IN (
                     SELECT $COLUMN_ID FROM $TABLE_CLIPBOARD
-                    WHERE $COLUMN_IS_PINNED = 0 AND $COLUMN_EXPIRY_TIMESTAMP > ?
+                    WHERE $COLUMN_IS_PINNED = 0 AND $COLUMN_IS_TODO = 0 AND $COLUMN_EXPIRY_TIMESTAMP > ?
                     ORDER BY $COLUMN_TIMESTAMP ASC LIMIT ?
                 )
             """.trimIndent(), arrayOf(currentTime, entriesToDelete))
@@ -319,7 +319,7 @@ class ClipboardDatabase private constructor(context: Context) :
             val idsToDelete = mutableListOf<Long>()
             db.rawQuery("""
                 SELECT $COLUMN_ID, $COLUMN_CONTENT FROM $TABLE_CLIPBOARD
-                WHERE $COLUMN_IS_PINNED = 0 AND $COLUMN_EXPIRY_TIMESTAMP > ?
+                WHERE $COLUMN_IS_PINNED = 0 AND $COLUMN_IS_TODO = 0 AND $COLUMN_EXPIRY_TIMESTAMP > ?
                 ORDER BY $COLUMN_TIMESTAMP ASC
             """.trimIndent(), arrayOf(currentTime.toString())).use { cursor ->
                 if (cursor.moveToFirst()) {
@@ -403,7 +403,9 @@ class ClipboardDatabase private constructor(context: Context) :
                         continue
                     }
                     // Use fresh expiry timestamp so imported entries don't expire immediately
-                    val freshExpiry = System.currentTimeMillis() + ClipboardHistoryService.getHistoryTtlMs()
+                    val freshExpiry = ClipboardHistoryService.getHistoryTtlMs().let { ttl ->
+                        if (ttl == Long.MAX_VALUE) Long.MAX_VALUE else System.currentTimeMillis() + ttl
+                    }
                     val values = ContentValues().apply {
                         put(COLUMN_CONTENT, content)
                         put(COLUMN_TIMESTAMP, entry.getLong("timestamp"))
@@ -431,7 +433,9 @@ class ClipboardDatabase private constructor(context: Context) :
                         continue
                     }
                     // Pinned entries use fresh expiry (they don't expire anyway due to is_pinned=1)
-                    val freshExpiry = System.currentTimeMillis() + ClipboardHistoryService.getHistoryTtlMs()
+                    val freshExpiry = ClipboardHistoryService.getHistoryTtlMs().let { ttl ->
+                        if (ttl == Long.MAX_VALUE) Long.MAX_VALUE else System.currentTimeMillis() + ttl
+                    }
                     val values = ContentValues().apply {
                         put(COLUMN_CONTENT, content)
                         put(COLUMN_TIMESTAMP, entry.getLong("timestamp"))
@@ -460,7 +464,9 @@ class ClipboardDatabase private constructor(context: Context) :
                         continue
                     }
                     // Todo entries use fresh expiry
-                    val freshExpiry = System.currentTimeMillis() + ClipboardHistoryService.getHistoryTtlMs()
+                    val freshExpiry = ClipboardHistoryService.getHistoryTtlMs().let { ttl ->
+                        if (ttl == Long.MAX_VALUE) Long.MAX_VALUE else System.currentTimeMillis() + ttl
+                    }
                     val values = ContentValues().apply {
                         put(COLUMN_CONTENT, content)
                         put(COLUMN_TIMESTAMP, entry.getLong("timestamp"))

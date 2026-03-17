@@ -187,12 +187,8 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         }
 
         // Calculate expiry time from user-configured duration (minutes, -1 = never expire)
-        val durationMinutes = Config.globalConfig().clipboard_history_duration
-        val expiryTime = if (durationMinutes >= 0) {
-            System.currentTimeMillis() + java.util.concurrent.TimeUnit.MINUTES.toMillis(durationMinutes.toLong())
-        } else {
-            Long.MAX_VALUE // Never expire
-        }
+        val ttlMs = getHistoryTtlMs()
+        val expiryTime = if (ttlMs == Long.MAX_VALUE) Long.MAX_VALUE else System.currentTimeMillis() + ttlMs
 
         // Add to database (handles duplicate detection automatically)
         val added = _database.addClipboardEntry(clip, expiryTime)

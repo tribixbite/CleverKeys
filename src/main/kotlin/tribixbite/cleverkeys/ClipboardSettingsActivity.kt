@@ -416,10 +416,10 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
                     // Reset to Defaults Button
                     Button(
                         onClick = {
-                            historyLimit = 50
-                            historyDuration = 10080
-                            saveSetting("clipboard_history_limit", 50)
-                            saveSetting("clipboard_history_duration", "10080")
+                            historyLimit = Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK
+                            historyDuration = Defaults.CLIPBOARD_HISTORY_DURATION_FALLBACK
+                            saveSetting("clipboard_history_limit", Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK)
+                            saveSetting("clipboard_history_duration", Defaults.CLIPBOARD_HISTORY_DURATION.toString())
                             Toast.makeText(this@ClipboardSettingsActivity,
                                 "Reset to default values",
                                 Toast.LENGTH_SHORT).show()
