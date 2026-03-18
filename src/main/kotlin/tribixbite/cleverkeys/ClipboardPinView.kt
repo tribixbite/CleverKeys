@@ -21,8 +21,8 @@ class ClipboardPinView(ctx: Context, attrs: AttributeSet?) : MaxHeightListView(c
     private var entries: List<ClipboardEntry> = emptyList()
     private val adapter: ClipboardPinEntriesAdapter
     private val service: ClipboardHistoryService?
-    // Track expanded state: position -> isExpanded
-    private val expandedStates = mutableMapOf<Int, Boolean>()
+    // Track expanded state: content string -> isExpanded (survives reorder/delete)
+    private val expandedStates = mutableMapOf<String, Boolean>()
 
     // Coroutine scope tied to window attach/detach lifecycle (#71: async DB loads)
     private var viewScope: CoroutineScope? = null
@@ -124,7 +124,7 @@ class ClipboardPinView(ctx: Context, attrs: AttributeSet?) : MaxHeightListView(c
 
             // Check if text contains newlines (multi-line)
             val isMultiLine = text.contains("\n")
-            val isExpanded = expandedStates[pos] == true
+            val isExpanded = expandedStates[text] == true
 
             // Set maxLines based on expanded state (applies to all entries)
             if (isExpanded) {
@@ -142,7 +142,7 @@ class ClipboardPinView(ctx: Context, attrs: AttributeSet?) : MaxHeightListView(c
 
                 // Handle expand button click for multi-line entries
                 expandButton.setOnClickListener {
-                    expandedStates[pos] = !isExpanded
+                    expandedStates[text] = !isExpanded
                     notifyDataSetChanged()
                 }
             } else {
@@ -151,7 +151,7 @@ class ClipboardPinView(ctx: Context, attrs: AttributeSet?) : MaxHeightListView(c
 
             // Make text clickable to expand/collapse (all entries)
             textView.setOnClickListener {
-                expandedStates[pos] = !isExpanded
+                expandedStates[text] = !isExpanded
                 notifyDataSetChanged()
             }
 

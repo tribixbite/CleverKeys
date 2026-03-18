@@ -39,8 +39,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     // Current tab mode
     private var currentTab = ClipboardTab.HISTORY
 
-    // Track expanded state: position -> isExpanded
-    private val expandedStates = mutableMapOf<Int, Boolean>()
+    // Track expanded state: content string -> isExpanded (survives reorder/delete)
+    private val expandedStates = mutableMapOf<String, Boolean>()
 
     // Date filter state
     private var dateFilterEnabled = false
@@ -257,8 +257,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     fun delete_entry(pos: Int) {
         val clip = paginatedHistory[pos].content
         service?.removeHistoryEntry(clip)
-        // Clear expanded state for deleted position
-        expandedStates.remove(pos)
+        // Clear expanded state for deleted entry
+        expandedStates.remove(clip)
         loadDataAsync()
     }
 
@@ -348,7 +348,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
 
             // Check if text contains newlines (multi-line)
             val isMultiLine = text.contains("\n")
-            val isExpanded = expandedStates[pos] == true
+            val isExpanded = expandedStates[text] == true
 
             // Set maxLines based on expanded state (applies to all entries)
             if (isExpanded) {
@@ -366,7 +366,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
 
                 // Handle expand button click for multi-line entries
                 expandButton.setOnClickListener {
-                    expandedStates[pos] = !isExpanded
+                    expandedStates[text] = !isExpanded
                     notifyDataSetChanged()
                 }
             } else {
@@ -375,7 +375,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
 
             // Make text clickable to expand/collapse (all entries)
             textView.setOnClickListener {
-                expandedStates[pos] = !isExpanded
+                expandedStates[text] = !isExpanded
                 notifyDataSetChanged()
             }
 

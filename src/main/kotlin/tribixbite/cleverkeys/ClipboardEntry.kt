@@ -2,14 +2,15 @@ package tribixbite.cleverkeys
 
 import android.content.Context
 import android.text.Spannable
-import android.text.SpannableString
+import android.text.SpannableStringBuilder
 import android.text.style.ForegroundColorSpan
+import androidx.core.content.ContextCompat
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 /**
- * Data class representing a clipboard entry with content and timestamp
+ * Data class representing a clipboard entry with content and timestamp.
  */
 class ClipboardEntry(
     @JvmField val content: String,
@@ -33,7 +34,7 @@ class ClipboardEntry(
             hours < 24 -> "${hours}h ago"
             days == 1L -> "Yesterday"
             days < 7 -> "${days}d ago"
-            else -> formatDate()
+            else -> DATE_FORMAT.format(Date(timestamp))
         }
     }
 
@@ -41,29 +42,43 @@ class ClipboardEntry(
      * Format timestamp as date string (e.g., "Nov 12")
      */
     fun formatDate(): String {
-        val sdf = SimpleDateFormat("MMM d", Locale.getDefault())
-        return sdf.format(Date(timestamp))
+        return DATE_FORMAT.format(Date(timestamp))
     }
 
     /**
-     * Get formatted text with timestamp appended
-     * Returns SpannableString with timestamp in secondary color
+     * Get formatted text with timestamp appended.
+     * Uses SpannableStringBuilder to avoid intermediate String allocation —
+     * content is appended directly without concatenation copy.
+     * Color is cached to avoid repeated resource lookups.
      */
-    fun getFormattedText(context: Context): SpannableString {
+    fun getFormattedText(context: Context): Spannable {
         val timeStr = " · ${getRelativeTime()}"
-        val fullText = content + timeStr
+        val contentLen = content.length
 
-        val spannable = SpannableString(fullText)
+        // Append directly to builder — avoids content + timeStr intermediate String
+        val spannable = SpannableStringBuilder(content).append(timeStr)
 
-        // Apply secondary text color to timestamp portion
-        val secondaryColor = context.resources.getColor(android.R.color.secondary_text_dark)
         spannable.setSpan(
-            ForegroundColorSpan(secondaryColor),
-            content.length,
-            fullText.length,
+            ForegroundColorSpan(getSecondaryColor(context)),
+            contentLen,
+            contentLen + timeStr.length,
             Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
         )
 
         return spannable
+    }
+
+    companion object {
+        // Reuse across all instances — all calls are on Main thread (no thread-safety needed)
+        private val DATE_FORMAT = SimpleDateFormat("MMM d", Locale.getDefault())
+
+        // Cache the secondary text color to avoid per-call resource lookups
+        private var cachedSecondaryColor: Int? = null
+
+        private fun getSecondaryColor(context: Context): Int {
+            return cachedSecondaryColor ?: ContextCompat.getColor(
+                context, android.R.color.secondary_text_dark
+            ).also { cachedSecondaryColor = it }
+        }
     }
 }
