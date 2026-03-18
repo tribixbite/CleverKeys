@@ -7,7 +7,6 @@ import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
 import org.json.JSONArray
 import org.json.JSONObject
-import java.nio.charset.StandardCharsets
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -261,23 +260,34 @@ class ClipboardDatabase private constructor(context: Context) :
         }
     }
 
+    /**
+     * Get storage statistics using pure SQL aggregation.
+     * Uses LENGTH(CAST(content AS BLOB)) to measure UTF-8 byte sizes server-side,
+     * avoiding loading content into JVM heap. Returns a single aggregated row
+     * instead of iterating all entries — O(1) JNI crossings instead of O(n).
+     */
     fun getStorageStats(): StorageStats {
         val currentTime = System.currentTimeMillis()
         var totalEntries = 0; var activeEntries = 0; var pinnedEntries = 0
         var totalSizeBytes = 0L; var activeSizeBytes = 0L; var pinnedSizeBytes = 0L
-        readableDatabase.rawQuery(
-            "SELECT $COLUMN_CONTENT, $COLUMN_IS_PINNED, $COLUMN_EXPIRY_TIMESTAMP FROM $TABLE_CLIPBOARD", null
-        ).use { cursor ->
+        val query = """
+            SELECT
+                COUNT(*),
+                COALESCE(SUM(LENGTH(CAST($COLUMN_CONTENT AS BLOB))), 0),
+                COALESCE(SUM(CASE WHEN $COLUMN_IS_PINNED = 1 THEN 1 ELSE 0 END), 0),
+                COALESCE(SUM(CASE WHEN $COLUMN_IS_PINNED = 1 THEN LENGTH(CAST($COLUMN_CONTENT AS BLOB)) ELSE 0 END), 0),
+                COALESCE(SUM(CASE WHEN $COLUMN_IS_PINNED = 1 OR $COLUMN_EXPIRY_TIMESTAMP > ? THEN 1 ELSE 0 END), 0),
+                COALESCE(SUM(CASE WHEN $COLUMN_IS_PINNED = 1 OR $COLUMN_EXPIRY_TIMESTAMP > ? THEN LENGTH(CAST($COLUMN_CONTENT AS BLOB)) ELSE 0 END), 0)
+            FROM $TABLE_CLIPBOARD
+        """.trimIndent()
+        readableDatabase.rawQuery(query, arrayOf(currentTime.toString(), currentTime.toString())).use { cursor ->
             if (cursor.moveToFirst()) {
-                do {
-                    val content = cursor.getString(0)
-                    val isPinned = cursor.getInt(1) == 1
-                    val expiryTimestamp = cursor.getLong(2)
-                    val contentSize = try { content.toByteArray(StandardCharsets.UTF_8).size.toLong() } catch (e: Exception) { 0L }
-                    totalEntries++; totalSizeBytes += contentSize
-                    if (isPinned) { pinnedEntries++; pinnedSizeBytes += contentSize }
-                    if (isPinned || expiryTimestamp > currentTime) { activeEntries++; activeSizeBytes += contentSize }
-                } while (cursor.moveToNext())
+                totalEntries = cursor.getInt(0)
+                totalSizeBytes = cursor.getLong(1)
+                pinnedEntries = cursor.getInt(2)
+                pinnedSizeBytes = cursor.getLong(3)
+                activeEntries = cursor.getInt(4)
+                activeSizeBytes = cursor.getLong(5)
             }
         }
         return StorageStats(totalEntries, activeEntries, pinnedEntries, totalSizeBytes, activeSizeBytes, pinnedSizeBytes)
@@ -309,6 +319,11 @@ class ClipboardDatabase private constructor(context: Context) :
         }
     }
 
+    /**
+     * Remove oldest non-pinned/non-todo entries until total size is under [maxSizeMB].
+     * Uses LENGTH(CAST(content AS BLOB)) to measure sizes server-side (no JVM heap allocation).
+     * Batches DELETE in chunks of 500 IDs to stay within SQLite SQL length limits.
+     */
     fun applySizeLimitBytes(maxSizeMB: Int): Int {
         if (maxSizeMB <= 0) return 0
         val maxSizeBytes = maxSizeMB * 1024L * 1024L
@@ -317,23 +332,25 @@ class ClipboardDatabase private constructor(context: Context) :
             val currentTime = System.currentTimeMillis()
             var totalSize = 0L
             val idsToDelete = mutableListOf<Long>()
+            // Fetch only id + byte size — content never crosses JNI boundary
             db.rawQuery("""
-                SELECT $COLUMN_ID, $COLUMN_CONTENT FROM $TABLE_CLIPBOARD
+                SELECT $COLUMN_ID, LENGTH(CAST($COLUMN_CONTENT AS BLOB))
+                FROM $TABLE_CLIPBOARD
                 WHERE $COLUMN_IS_PINNED = 0 AND $COLUMN_IS_TODO = 0 AND $COLUMN_EXPIRY_TIMESTAMP > ?
                 ORDER BY $COLUMN_TIMESTAMP ASC
             """.trimIndent(), arrayOf(currentTime.toString())).use { cursor ->
                 if (cursor.moveToFirst()) {
                     do {
-                        val contentSize = try {
-                            cursor.getString(1).toByteArray(StandardCharsets.UTF_8).size.toLong()
-                        } catch (e: Exception) { 0L }
-                        totalSize += contentSize
+                        totalSize += cursor.getLong(1)
                         if (totalSize > maxSizeBytes) idsToDelete.add(cursor.getLong(0))
                     } while (cursor.moveToNext())
                 }
             }
             if (idsToDelete.isEmpty()) return 0
-            db.execSQL("DELETE FROM $TABLE_CLIPBOARD WHERE $COLUMN_ID IN (${idsToDelete.joinToString(",")})")
+            // Batch deletes in chunks of 500 to stay within SQLITE_MAX_SQL_LENGTH
+            for (chunk in idsToDelete.chunked(500)) {
+                db.execSQL("DELETE FROM $TABLE_CLIPBOARD WHERE $COLUMN_ID IN (${chunk.joinToString(",")})")
+            }
             Log.d(TAG, "Applied size limit (bytes): removed ${idsToDelete.size} oldest entries")
             idsToDelete.size
         } catch (e: Exception) {
