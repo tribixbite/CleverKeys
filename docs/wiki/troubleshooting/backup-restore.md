@@ -133,19 +133,22 @@ am start -a tribixbite.cleverkeys.action.IMPORT_SETTINGS \
   --es json_base64 "$(base64 -w0 < backup.json)"
 ```
 
-**Size limit**: ~48KB raw JSON via `am start` (adb shell protocol caps at 64KB base64).
-For the UI file picker, there is no size limit.
+**Size limits**:
+- **Direct `am` (Termux)**: ~96KB raw JSON (128KB base64 MAX_ARG_STRLEN)
+- **Via `adb shell`**: ~48KB raw JSON (64KB adb protocol buffer)
+- **UI file picker**: No size limit
 
 ### Importing Large Files (Chunked)
 
-Clipboard backups can exceed the `am start` size limit. This one-liner splits a JSON
-backup into chunks and imports each one. Requires `jq` and `python3`:
+Clipboard backups can exceed the `am start` argument limit. This script splits a JSON
+backup into chunks and imports each one. Requires `jq` and `python3`.
 
 ```bash
 # Chunked clipboard import — handles files of any size
+# Usage: python3 ck_import.py clip.json
 python3 -c "
-import json,base64,subprocess,time,tempfile,os
-F='clip.json'; MAX=60000
+import json,base64,subprocess,sys,time
+F=sys.argv[1]; MAX=125000  # base64 bytes; under 128KB MAX_ARG_STRLEN
 d=json.load(open(F)); e=d['active_entries']
 m={k:v for k,v in d.items() if k not in('active_entries','pinned_entries','todo_entries','total_active','total_pinned','total_todo')}
 p=d.get('pinned_entries',[]); t=d.get('todo_entries',[])
@@ -166,23 +169,17 @@ print(f'{sum(len(c) for c,_ in chunks)} entries -> {len(chunks)} chunks')
 for i,(ce,hp) in enumerate(chunks):
     cd=dict(m,active_entries=ce)
     if hp: cd['pinned_entries']=p; cd['todo_entries']=t
-    raw=json.dumps(cd,separators=(',',':'))
-    b64=base64.b64encode(raw.encode()).decode()
-    if len(b64)>MAX:
-        tf=tempfile.NamedTemporaryFile(mode='w',suffix='.json',delete=False); tf.write(raw); tf.close()
-        subprocess.run(['adb','push',tf.name,f'/data/local/tmp/ck{i}.json'],capture_output=True)
-        subprocess.run(['adb','shell',f'chmod 644 /data/local/tmp/ck{i}.json'],capture_output=True)
-        os.unlink(tf.name)
-        r=subprocess.run(['adb','shell',f'am start -W -a {A} -n {C} -d file:///data/local/tmp/ck{i}.json'],capture_output=True,text=True)
-        subprocess.run(['adb','shell',f'rm /data/local/tmp/ck{i}.json'],capture_output=True)
-    else:
-        r=subprocess.run(['adb','shell',f\"am start -W -a {A} -n {C} --es json_base64 '{b64}'\"],capture_output=True,text=True)
+    b64=base64.b64encode(json.dumps(cd,separators=(',',':')).encode()).decode()
+    r=subprocess.run(['am','start','-W','-a',A,'-n',C,'--es','json_base64',b64],capture_output=True,text=True)
     print(f'  [{i+1}/{len(chunks)}] {len(ce)} entries: {\"ok\" if r.returncode==0 else \"FAIL\"}')
     time.sleep(1)
-"
+" "$1"
 ```
 
-Entries are deduplicated by content hash — re-importing is safe (duplicates are skipped).
+> **Note**: Entries with content >96KB (rare — e.g., pasted logs) exceed MAX_ARG_STRLEN
+> even as a single-entry chunk. For those, use the UI Import button.
+>
+> Entries are deduplicated by content hash — re-importing is safe (duplicates are skipped).
 
 ## Troubleshooting
 
