@@ -8,6 +8,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.TextView
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class ClipboardPinView(ctx: Context, attrs: AttributeSet?) : MaxHeightListView(ctx, attrs) {
 
@@ -17,22 +24,45 @@ class ClipboardPinView(ctx: Context, attrs: AttributeSet?) : MaxHeightListView(c
     // Track expanded state: position -> isExpanded
     private val expandedStates = mutableMapOf<Int, Boolean>()
 
+    // Coroutine scope tied to window attach/detach lifecycle (#71: async DB loads)
+    private var viewScope: CoroutineScope? = null
+    private var loadJob: Job? = null
+
     init {
         service = ClipboardHistoryService.get_service(ctx)
         adapter = ClipboardPinEntriesAdapter()
         setAdapter(adapter)
+        // Defer data load to onAttachedToWindow (async, off UI thread)
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        viewScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
         refresh_pinned_items()
     }
 
-    /** Refresh pinned items from database */
+    override fun onDetachedFromWindow() {
+        loadJob?.cancel()
+        loadJob = null
+        viewScope?.cancel()
+        viewScope = null
+        super.onDetachedFromWindow()
+    }
+
+    /**
+     * Refresh pinned items from database asynchronously.
+     * #71: Was previously synchronous, causing UI freezes with many pinned entries.
+     */
     fun refresh_pinned_items() {
-        if (service != null) {
-            entries = service.getPinnedEntries()
+        loadJob?.cancel()
+        loadJob = viewScope?.launch {
+            val pinnedEntries = withContext(Dispatchers.IO) {
+                service?.getPinnedEntries() ?: emptyList()
+            }
+            // Back on Main thread
+            entries = pinnedEntries
             adapter.notifyDataSetChanged()
             invalidate()
-
-            // Set minimum height on parent ScrollView if 2+ items exist
-            // This ensures 2 entries are visible without scrolling
             updateParentMinHeight()
         }
     }
@@ -68,7 +98,7 @@ class ClipboardPinView(ctx: Context, attrs: AttributeSet?) : MaxHeightListView(c
     }
 
     override fun onWindowVisibilityChanged(visibility: Int) {
-        if (visibility == View.VISIBLE) {
+        if (visibility == View.VISIBLE && viewScope != null) {
             refresh_pinned_items()
         }
     }

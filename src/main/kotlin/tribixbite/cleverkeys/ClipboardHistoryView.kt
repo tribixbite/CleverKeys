@@ -9,6 +9,13 @@ import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.TextView
 import android.widget.Toast
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * Clipboard tab types for the unified clipboard view.
@@ -44,6 +51,11 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     private var currentPage = 0
     private var onPaginationChangeListener: ((needsPagination: Boolean, currentPage: Int, totalPages: Int) -> Unit)? = null
 
+    // Coroutine scope tied to window attach/detach lifecycle (IME has no ViewLifecycleOwner)
+    private var viewScope: CoroutineScope? = null
+    // Current async load job — cancelled on new load to prevent stale data
+    private var loadJob: Job? = null
+
     companion object {
         const val ITEMS_PER_PAGE = 100
     }
@@ -51,14 +63,28 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     init {
         service = ClipboardHistoryService.get_service(ctx)
         clipboardAdapter = ClipboardEntriesAdapter()
-
-        service?.let {
-            it.setOnClipboardHistoryChange(this)
-            history = it.clearExpiredAndGetHistory()
-            filteredHistory = history
-        }
-
+        // Start with empty data — actual load deferred to onAttachedToWindow (async, off UI thread)
+        history = emptyList()
+        filteredHistory = emptyList()
         adapter = clipboardAdapter
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        viewScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+        // Register listener here (not init) to prevent singleton→view memory leak
+        service?.setOnClipboardHistoryChange(this)
+        loadDataAsync()
+    }
+
+    override fun onDetachedFromWindow() {
+        // Unregister to break singleton→view reference and stop receiving callbacks
+        service?.setOnClipboardHistoryChange(null)
+        loadJob?.cancel()
+        loadJob = null
+        viewScope?.cancel()
+        viewScope = null
+        super.onDetachedFromWindow()
     }
 
     /**
@@ -67,7 +93,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     fun setTab(tab: ClipboardTab) {
         currentTab = tab
         expandedStates.clear()  // Reset expanded states when switching tabs
-        update_data()
+        loadDataAsync()
     }
 
     /**
@@ -204,7 +230,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 service?.setPinnedStatus(clip, true)
             }
         }
-        update_data()
+        loadDataAsync()
     }
 
     /**
@@ -224,7 +250,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 database.setTodoStatus(clip, false)
             }
         }
-        update_data()
+        loadDataAsync()
     }
 
     /** Delete the specified entry from clipboard history (position in current page). */
@@ -233,7 +259,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         service?.removeHistoryEntry(clip)
         // Clear expanded state for deleted position
         expandedStates.remove(pos)
-        update_data()
+        loadDataAsync()
     }
 
     /** Send the specified entry to the editor (position in current page). */
@@ -242,25 +268,41 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     }
 
     override fun on_clipboard_history_change() {
-        update_data()
+        // Skip if not attached — onAttachedToWindow will load fresh data
+        if (viewScope != null) {
+            loadDataAsync()
+        }
     }
 
     override fun onWindowVisibilityChanged(visibility: Int) {
         if (visibility == VISIBLE) {
-            update_data()
+            loadDataAsync()
         }
     }
 
-    private fun update_data() {
-        val database = ClipboardDatabase.getInstance(context)
-
-        // Load data based on current tab
-        history = when (currentTab) {
-            ClipboardTab.HISTORY -> service?.clearExpiredAndGetHistory() ?: emptyList()
-            ClipboardTab.PINNED -> database.getPinnedEntries()
-            ClipboardTab.TODOS -> database.getTodoEntries()
+    /**
+     * Loads clipboard data asynchronously off the UI thread.
+     * Cancels any in-flight load to prevent stale data from a previous request
+     * overwriting fresher results (e.g., rapid tab switching).
+     *
+     * #71: This was previously synchronous in update_data(), causing 2-3s UI freezes
+     * with large clipboard histories.
+     */
+    private fun loadDataAsync() {
+        loadJob?.cancel()
+        loadJob = viewScope?.launch {
+            val entries = withContext(Dispatchers.IO) {
+                val database = ClipboardDatabase.getInstance(context)
+                when (currentTab) {
+                    ClipboardTab.HISTORY -> service?.clearExpiredAndGetHistory() ?: emptyList()
+                    ClipboardTab.PINNED -> database.getPinnedEntries()
+                    ClipboardTab.TODOS -> database.getTodoEntries()
+                }
+            }
+            // Back on Main thread — atomic reference replacement
+            history = entries
+            applyFilter()
         }
-        applyFilter() // Reapply current search filter
     }
 
     /** Date filter methods */
