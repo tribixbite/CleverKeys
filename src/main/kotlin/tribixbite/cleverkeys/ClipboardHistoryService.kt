@@ -17,6 +17,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
     private var _pasteCallback: ClipboardPasteCallback? = null
     private var _listener: OnClipboardHistoryChange? = null
     private var _isListenerRegistered = false
+    private var _systemListener: ClipboardManager.OnPrimaryClipChangedListener? = null
 
     init {
         // Clean up expired entries on startup
@@ -43,7 +44,9 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         }
 
         try {
-            _cm.addPrimaryClipChangedListener(SystemListener())
+            val listener = SystemListener()
+            _cm.addPrimaryClipChangedListener(listener)
+            _systemListener = listener
             _isListenerRegistered = true
             android.util.Log.i("ClipboardHistory", "Clipboard listener registered for system-wide monitoring")
 
@@ -60,15 +63,17 @@ class ClipboardHistoryService private constructor(ctx: Context) {
 
     /**
      * Unregister clipboard listener. Call from InputMethodService.onDestroy().
+     * Properly removes the stored listener instance to prevent memory leaks
+     * (SystemListener is an inner class holding a reference to this service).
      */
     fun unregisterClipboardListener() {
         if (!_isListenerRegistered) return
 
         try {
-            // Note: We cannot remove a specific listener instance, so this may not work as expected
-            // The listener will be automatically cleaned up when the service process is destroyed
-            android.util.Log.i("ClipboardHistory", "Clipboard listener cleanup on service destroy")
+            _systemListener?.let { _cm.removePrimaryClipChangedListener(it) }
+            _systemListener = null
             _isListenerRegistered = false
+            android.util.Log.i("ClipboardHistory", "Clipboard listener unregistered")
         } catch (e: Exception) {
             android.util.Log.e("ClipboardHistory", "Error cleaning up clipboard listener", e)
         }
@@ -446,13 +451,13 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         }
 
         /** Start the service if it hasn't been started before. Returns [null] if the
-            feature is unsupported. */
+            feature is unsupported. Thread-safe via double-checked locking. */
         @JvmStatic
         fun get_service(ctx: Context): ClipboardHistoryService? {
             if (VERSION.SDK_INT <= 11) return null
-            if (_service == null)
-                _service = ClipboardHistoryService(ctx)
-            return _service
+            return _service ?: synchronized(this) {
+                _service ?: ClipboardHistoryService(ctx).also { _service = it }
+            }
         }
 
         @JvmStatic
@@ -494,7 +499,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
             }
         }
 
-        private var _service: ClipboardHistoryService? = null
+        @Volatile private var _service: ClipboardHistoryService? = null
 
         // Deprecated snake_case aliases for Java compatibility
         @Deprecated("Use on_startup", ReplaceWith("on_startup(ctx, cb)"))
