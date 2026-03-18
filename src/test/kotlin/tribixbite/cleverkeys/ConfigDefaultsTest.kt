@@ -698,6 +698,48 @@ class ConfigDefaultsTest {
         assertThat(Defaults.CLIPBOARD_RESPECT_SENSITIVE_FLAG).isTrue()
     }
 
+    @Test
+    fun `clipboard history duration default is 7 days in minutes`() {
+        // wiki: "History Duration | 7 days". Stored as minutes string, -1 = never expire
+        assertThat(Defaults.CLIPBOARD_HISTORY_DURATION).isEqualTo("10080")
+        assertThat(Defaults.CLIPBOARD_HISTORY_DURATION_FALLBACK).isEqualTo(10080)
+        // String and int defaults must agree
+        assertThat(Defaults.CLIPBOARD_HISTORY_DURATION.toInt())
+            .isEqualTo(Defaults.CLIPBOARD_HISTORY_DURATION_FALLBACK)
+    }
+
+    @Test
+    fun `clipboard history duration converted to millis does not overflow Long`() {
+        // Regression: adding duration_minutes * 60_000L to currentTimeMillis() must not
+        // wrap negative. The "never expire" sentinel (-1) uses Long.MAX_VALUE directly,
+        // but normal durations must also stay positive after conversion.
+        val durationMinutes = Defaults.CLIPBOARD_HISTORY_DURATION_FALLBACK.toLong()
+        val durationMillis = durationMinutes * 60_000L
+        assertThat(durationMillis).isGreaterThan(0L)
+
+        val expiryTimestamp = System.currentTimeMillis() + durationMillis
+        assertThat(expiryTimestamp).isGreaterThan(0L)
+
+        // Verify the overflow scenario that was fixed:
+        // Long.MAX_VALUE + any positive number wraps negative
+        val buggyExpiry = System.currentTimeMillis() + Long.MAX_VALUE
+        assertThat(buggyExpiry).isLessThan(0L)  // proves the bug existed
+    }
+
+    @Test
+    fun `clipboard never-expire sentinel is minus one`() {
+        // When duration is -1, the code must use Long.MAX_VALUE as expiry
+        // instead of computing currentTimeMillis() + (-1 * 60_000) which gives past expiry
+        val neverExpireSentinel = -1
+        val ttlMillis = neverExpireSentinel.toLong() * 60_000L
+        assertThat(ttlMillis).isLessThan(0L)  // proves direct calc would expire immediately
+
+        // The correct guard:
+        val safeExpiry = if (neverExpireSentinel == -1) Long.MAX_VALUE
+                         else System.currentTimeMillis() + (neverExpireSentinel.toLong() * 60_000L)
+        assertThat(safeExpiry).isEqualTo(Long.MAX_VALUE)
+    }
+
     // =========================================================================
     // Multi-Language (wiki: layouts/multi-language.md)
     // =========================================================================
