@@ -89,7 +89,7 @@ class ClipboardDatabase private constructor(context: Context) :
         val db = readableDatabase
         val query = """
             SELECT $COLUMN_CONTENT, $COLUMN_TIMESTAMP FROM $TABLE_CLIPBOARD
-            WHERE $COLUMN_IS_PINNED = 0 AND $COLUMN_EXPIRY_TIMESTAMP > ?
+            WHERE $COLUMN_IS_PINNED = 0 AND $COLUMN_IS_TODO = 0 AND $COLUMN_EXPIRY_TIMESTAMP > ?
             ORDER BY $COLUMN_TIMESTAMP DESC
         """.trimIndent()
         try {

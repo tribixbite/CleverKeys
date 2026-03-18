@@ -113,7 +113,8 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
                 clipboardEnabled = prefs.getBoolean(key, false)
             }
             "clipboard_history_limit" -> {
-                historyLimit = prefs.getInt(key, 6)
+                val savedLimit = prefs.getInt(key, 6)
+                historyLimit = if (savedLimit <= 0) 100 else savedLimit
             }
             "clipboard_history_duration" -> {
                 historyDuration = prefs.getString(key, "10080")?.toIntOrNull() ?: 10080
@@ -123,7 +124,9 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
 
     private fun loadCurrentSettings() {
         clipboardEnabled = prefs.getBoolean("clipboard_history_enabled", false)
-        historyLimit = prefs.getInt("clipboard_history_limit", 6)
+        // Map 0 (unlimited sentinel) back to 100 for slider range (1..100)
+        val savedLimit = prefs.getInt("clipboard_history_limit", 6)
+        historyLimit = if (savedLimit <= 0) 100 else savedLimit
         historyDuration = prefs.getString("clipboard_history_duration", "10080")?.toIntOrNull() ?: 10080
     }
 
@@ -325,9 +328,11 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
                                 steps = 99,
                                 onValueChange = {
                                     historyLimit = it.toInt()
-                                    saveSetting("clipboard_history_limit", historyLimit)
+                                    // Save 0 (unlimited sentinel) when slider is at max position
+                                    val valueToSave = if (historyLimit >= 100) 0 else historyLimit
+                                    saveSetting("clipboard_history_limit", valueToSave)
                                 },
-                                displayValue = if (historyLimit == 100) "Unlimited" else "$historyLimit entries",
+                                displayValue = if (historyLimit >= 100) "Unlimited" else "$historyLimit entries",
                                 helpText = "Older entries are automatically removed when limit is reached"
                             )
 
