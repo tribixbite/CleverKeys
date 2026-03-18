@@ -126,12 +126,16 @@ class BackupRestoreManager(private val context: Context) {
      * Open an InputStream for reading from a URI. Same file:// handling as above.
      *
      * Search order for file:// URIs:
-     * 1. Exact path (works with MANAGE_EXTERNAL_STORAGE or app-writable paths)
+     * 1. Exact path via direct FileInputStream (try without canRead — FUSE may lie)
      * 2. Downloads/CleverKeys/ via direct FileInputStream
-     * 3. Downloads/CleverKeys/ via MediaStore query (handles files created by other
-     *    apps — e.g., `cp` or `vim` from Termux — that the app can't read directly
-     *    due to scoped storage restrictions on Android 10+)
-     * 4. App-private external dir (where exports land as last resort)
+     * 3. Downloads/CleverKeys/ via MediaStore query (app's own exports)
+     * 4. Force MediaStore scan + retry (handles cp/vim/external edits)
+     * 5. Broader MediaStore query by filename only (any Downloads subfolder)
+     * 6. App-private external dir (where exports land as last resort)
+     *
+     * #70: On Android 10+, scoped storage restricts file access to files the app
+     * created. Files modified by external tools (cp, vim, etc.) get a new owner UID,
+     * making them inaccessible via both File API and MediaStore without storage perms.
      */
     private fun openInputStream(uri: Uri): InputStream? {
         if (uri.scheme == "file") {
@@ -139,26 +143,46 @@ class BackupRestoreManager(private val context: Context) {
             val file = File(path)
             val fileName = file.name
 
-            // Try 1: Exact path
-            if (file.exists() && file.canRead()) return FileInputStream(file)
+            // Try 1: Exact path — attempt direct read (FUSE canRead() may lie)
+            try {
+                return FileInputStream(file)
+            } catch (e: Exception) {
+                Log.d(TAG, "Direct read failed for $path: ${e.message}")
+            }
 
             // Try 2: Downloads/CleverKeys/ direct
             val downloadsDir = Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_DOWNLOADS
             )
             val downloadsFile = File(downloadsDir, "CleverKeys/$fileName")
-            if (downloadsFile.exists() && downloadsFile.canRead()) {
-                return FileInputStream(downloadsFile)
+            if (downloadsFile != file) {
+                try {
+                    return FileInputStream(downloadsFile)
+                } catch (e: Exception) {
+                    Log.d(TAG, "Downloads dir read failed for $fileName: ${e.message}")
+                }
             }
 
-            // Try 3: MediaStore query by filename in Downloads/CleverKeys/
-            // Handles files created/modified by other apps (cp, vim, etc.) that
-            // scoped storage blocks from direct FileInputStream access
-            readFromDownloadsMediaStore(fileName)?.let { return it }
+            // Try 3: MediaStore query by filename in Downloads/CleverKeys/ (app's own files)
+            readFromDownloadsMediaStore(fileName, "%CleverKeys%")?.let { return it }
 
-            // Try 4: App-private external dir
+            // Try 4: Force MediaStore scan of the exact path, then retry query
+            // This indexes files created/modified by external tools (cp, vim, etc.)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                scanFileIntoMediaStore(path)
+                readFromDownloadsMediaStore(fileName, "%CleverKeys%")?.let { return it }
+            }
+
+            // Try 5: Broader MediaStore query — any file with this name in Downloads/
+            readFromDownloadsMediaStore(fileName, "%")?.let { return it }
+
+            // Try 6: App-private external dir
             val extFile = File(context.getExternalFilesDir(null), fileName)
-            if (extFile.exists()) return FileInputStream(extFile)
+            try {
+                return FileInputStream(extFile)
+            } catch (e: Exception) {
+                Log.d(TAG, "App-private dir read failed for $fileName: ${e.message}")
+            }
 
             return null
         }
@@ -166,18 +190,44 @@ class BackupRestoreManager(private val context: Context) {
     }
 
     /**
-     * Read from Downloads/ via MediaStore query. Finds files by display name
-     * regardless of which app created them — unlike direct FileInputStream which
-     * fails on Android 10+ for files created by other processes (e.g., Termux cp).
+     * Force MediaStore to scan a file path so it becomes queryable.
+     * Synchronous: blocks up to 5 seconds for the scan to complete.
+     * After scanning, the file entry is owned by the system (not this app),
+     * so it may still be unreadable without storage permissions on Android 13+.
      */
-    private fun readFromDownloadsMediaStore(fileName: String): InputStream? {
+    private fun scanFileIntoMediaStore(filePath: String) {
+        try {
+            val latch = java.util.concurrent.CountDownLatch(1)
+            android.media.MediaScannerConnection.scanFile(
+                context, arrayOf(filePath), arrayOf("application/json")
+            ) { scannedPath, scannedUri ->
+                Log.i(TAG, "MediaScanner indexed: $scannedPath → $scannedUri")
+                latch.countDown()
+            }
+            latch.await(5, java.util.concurrent.TimeUnit.SECONDS)
+        } catch (e: Exception) {
+            Log.w(TAG, "MediaScanner scan failed for $filePath: ${e.message}")
+        }
+    }
+
+    /**
+     * Read from Downloads/ via MediaStore query. Finds files by display name
+     * and optional relative path pattern.
+     *
+     * Note: On Android 10+ without storage permissions, MediaStore only returns
+     * files owned by this app. Files created/copied by other processes (Termux, etc.)
+     * may not be visible even after scanning.
+     *
+     * @param pathPattern LIKE pattern for RELATIVE_PATH (e.g., "%CleverKeys%" or "%")
+     */
+    private fun readFromDownloadsMediaStore(fileName: String, pathPattern: String): InputStream? {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return null
         return try {
             val cursor = context.contentResolver.query(
                 MediaStore.Downloads.EXTERNAL_CONTENT_URI,
                 arrayOf(MediaStore.Downloads._ID),
                 "${MediaStore.Downloads.DISPLAY_NAME} = ? AND ${MediaStore.Downloads.RELATIVE_PATH} LIKE ?",
-                arrayOf(fileName, "%CleverKeys%"),
+                arrayOf(fileName, pathPattern),
                 "${MediaStore.Downloads.DATE_MODIFIED} DESC"
             )
             cursor?.use {
@@ -186,13 +236,40 @@ class BackupRestoreManager(private val context: Context) {
                     val contentUri = android.content.ContentUris.withAppendedId(
                         MediaStore.Downloads.EXTERNAL_CONTENT_URI, id
                     )
-                    Log.i(TAG, "Reading $fileName via MediaStore (id=$id)")
+                    Log.i(TAG, "Reading $fileName via MediaStore (id=$id, path=$pathPattern)")
                     context.contentResolver.openInputStream(contentUri)
                 } else null
             }
         } catch (e: Exception) {
             Log.w(TAG, "MediaStore Downloads read failed for $fileName: ${e.message}")
             null
+        }
+    }
+
+    /**
+     * Read entire JSON string from a URI. Throws IOException with a clear message
+     * if the file cannot be read (e.g., scoped storage blocks access to files
+     * created/modified by other apps like Termux).
+     *
+     * #70: On Android 10+, files copied/edited by external apps (cp, vim) become
+     * owned by that app's UID. Without storage permissions, CleverKeys can only
+     * read files it created. Use --es json_base64 intent extra as workaround.
+     */
+    fun readJsonFromUri(uri: Uri): String {
+        val inputStream = openInputStream(uri)
+            ?: throw java.io.IOException(
+                "Cannot read file: ${uri.lastPathSegment ?: uri}\n\n" +
+                "On Android 10+, files modified by external apps (cp, vim, etc.) " +
+                "become inaccessible due to scoped storage restrictions.\n\n" +
+                "Workarounds:\n" +
+                "• Use the Import button in the UI (file picker grants access)\n" +
+                "• Pass file content directly: --es json_base64 \"\$(base64 < file.json)\"\n" +
+                "• Import the original exported file without modification"
+            )
+        return inputStream.use { stream ->
+            BufferedReader(InputStreamReader(stream)).use { reader ->
+                reader.readText()
+            }
         }
     }
 
@@ -460,17 +537,9 @@ class BackupRestoreManager(private val context: Context) {
      */
     fun importConfig(uri: Uri, prefs: SharedPreferences): ImportResult {
         return try {
-            // Read JSON file
-            val jsonBuilder = StringBuilder()
-            openInputStream(uri)?.use { inputStream ->
-                BufferedReader(InputStreamReader(inputStream)).use { reader ->
-                    reader.forEachLine { line ->
-                        jsonBuilder.append(line)
-                    }
-                }
-            }
-
-            val root = JsonParser.parseString(jsonBuilder.toString()).asJsonObject
+            // #70: Read JSON with scoped-storage fallbacks
+            val jsonContent = readJsonFromUri(uri)
+            val root = JsonParser.parseString(jsonContent).asJsonObject
 
             // Parse metadata (optional, for informational purposes)
             val result = ImportResult()
@@ -1141,16 +1210,9 @@ class BackupRestoreManager(private val context: Context) {
      */
     fun importDictionaries(uri: Uri): DictionaryImportResult {
         return try {
-            val jsonBuilder = StringBuilder()
-            openInputStream(uri)?.use { inputStream ->
-                BufferedReader(InputStreamReader(inputStream)).use { reader ->
-                    reader.forEachLine { line ->
-                        jsonBuilder.append(line)
-                    }
-                }
-            }
-
-            val root = JsonParser.parseString(jsonBuilder.toString()).asJsonObject
+            // #70: Read JSON with scoped-storage fallbacks
+            val jsonContent = readJsonFromUri(uri)
+            val root = JsonParser.parseString(jsonContent).asJsonObject
             val result = DictionaryImportResult()
             val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
 
@@ -1331,16 +1393,9 @@ class BackupRestoreManager(private val context: Context) {
      */
     fun importClipboardHistory(uri: Uri): ClipboardImportResult {
         return try {
-            val jsonBuilder = StringBuilder()
-            openInputStream(uri)?.use { inputStream ->
-                BufferedReader(InputStreamReader(inputStream)).use { reader ->
-                    reader.forEachLine { line ->
-                        jsonBuilder.append(line)
-                    }
-                }
-            }
-
-            val importData = org.json.JSONObject(jsonBuilder.toString())
+            // #70: Read JSON with scoped-storage fallbacks
+            val jsonContent = readJsonFromUri(uri)
+            val importData = org.json.JSONObject(jsonContent)
             val clipboardDb = ClipboardDatabase.getInstance(context)
             val importResult = clipboardDb.importFromJSON(importData)
 

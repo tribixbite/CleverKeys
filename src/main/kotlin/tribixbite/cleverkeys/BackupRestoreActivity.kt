@@ -97,13 +97,15 @@ class BackupRestoreActivity : ComponentActivity() {
         // #70: Handle programmatic Intent actions for automation (Termux, scripts)
         // Headless mode: perform operation, toast result, finish() — no UI shown
         val fileUri = intent.data
+        // #70: json_base64 extra bypasses scoped storage entirely — decode to temp file
+        val importUri = fileUri ?: resolveBase64Extra(intent)
         val headlessAction = when (intent.action) {
             ACTION_EXPORT_SETTINGS -> fileUri?.let { { performExport(it) } }
-            ACTION_IMPORT_SETTINGS -> fileUri?.let { { performImport(it) } }
+            ACTION_IMPORT_SETTINGS -> importUri?.let { { performImport(it) } }
             ACTION_EXPORT_DICTIONARIES -> fileUri?.let { { performExportDictionaries(it) } }
-            ACTION_IMPORT_DICTIONARIES -> fileUri?.let { { performImportDictionaries(it) } }
+            ACTION_IMPORT_DICTIONARIES -> importUri?.let { { performImportDictionaries(it) } }
             ACTION_EXPORT_CLIPBOARD -> fileUri?.let { { performExportClipboard(it) } }
-            ACTION_IMPORT_CLIPBOARD -> fileUri?.let { { performImportClipboard(it) } }
+            ACTION_IMPORT_CLIPBOARD -> importUri?.let { { performImportClipboard(it) } }
             else -> null
         }
         if (headlessAction != null) {
@@ -486,6 +488,25 @@ class BackupRestoreActivity : ComponentActivity() {
             ) {
                 CircularProgressIndicator()
             }
+        }
+    }
+
+    /**
+     * #70: Decode json_base64 intent extra to a temp file, returning its URI.
+     * Bypasses scoped storage entirely — the caller passes file content inline:
+     *   am start -a ...IMPORT_SETTINGS --es json_base64 "$(base64 < backup.json)"
+     */
+    private fun resolveBase64Extra(intent: Intent): Uri? {
+        val b64 = intent.getStringExtra("json_base64") ?: return null
+        return try {
+            val decoded = android.util.Base64.decode(b64, android.util.Base64.DEFAULT)
+            val tempFile = java.io.File(cacheDir, "import_base64_${System.currentTimeMillis()}.json")
+            tempFile.writeBytes(decoded)
+            Uri.fromFile(tempFile)
+        } catch (e: Exception) {
+            android.util.Log.e(TAG, "Failed to decode json_base64 extra", e)
+            Toast.makeText(this, "Invalid base64 data: ${e.message}", Toast.LENGTH_LONG).show()
+            null
         }
     }
 
