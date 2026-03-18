@@ -14,7 +14,7 @@ Issues already implemented, need user verification + close:
 - **#48** Context-aware predictions / inline autofill — already closed
 - **#50** Swedish language detection — implemented, still open
 - **#62** Password manager clipboard exclusion — already closed
-- **#70** Programmatic launch via Intent — import/export intent support requested
+- ✅ **#70** Scoped storage import fix — 6-step fallback + json_base64 bypass (6888f77f7)
 - **#74** Haptic not disabled when Vibrate Feedback disabled — per-event controls exist
 - **#81** Separate Long-Press Repeat for Backspace vs Character — config exists
 - ✅ **#82** Auto-space before tapped suggestion — new `auto_space_before_suggestion` toggle (821f943fb)
