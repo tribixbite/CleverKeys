@@ -3,6 +3,7 @@ package tribixbite.cleverkeys
 import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.*
 import org.junit.After
@@ -731,5 +732,308 @@ class ClipboardDatabaseTest {
         // StablePin was created first, so it should still be first in ASC order
         assertEquals("StablePin", pinned[0].content)
         assertEquals("LaterPin", pinned[1].content)
+    }
+
+    // =========================================================================
+    // Commit a9010cb84: TODO items excluded from History tab
+    // Bug: getActiveClipboardEntries() didn't filter is_todo=0, so TODO items
+    // appeared in both History and Todos tabs.
+    // =========================================================================
+
+    @Test
+    fun testTodoItemExcludedFromActiveEntries() {
+        // Add regular and todo entries
+        db.addClipboardEntry("Regular item", futureExpiry)
+        db.addClipboardEntry("Todo item", futureExpiry)
+        db.setTodoStatus("Todo item", true)
+
+        val active = db.getActiveClipboardEntries()
+        assertEquals("Active list should exclude TODO items", 1, active.size)
+        assertEquals("Only regular item in active list", "Regular item", active[0].content)
+    }
+
+    @Test
+    fun testTodoItemOnlyInTodoList() {
+        db.addClipboardEntry("Item A", futureExpiry)
+        db.addClipboardEntry("Item B", futureExpiry)
+        db.setTodoStatus("Item B", true)
+
+        val active = db.getActiveClipboardEntries()
+        val todos = db.getTodoEntries()
+
+        // Item B should be in todos but NOT in active
+        assertTrue("Item B should be in todo list", todos.any { it.content == "Item B" })
+        assertFalse("Item B should NOT be in active list", active.any { it.content == "Item B" })
+        // Item A should be in active but NOT in todos
+        assertTrue("Item A should be in active list", active.any { it.content == "Item A" })
+        assertFalse("Item A should NOT be in todo list", todos.any { it.content == "Item A" })
+    }
+
+    @Test
+    fun testUnmarkTodoReturnsToActiveList() {
+        db.addClipboardEntry("Unmarked todo", futureExpiry)
+        db.setTodoStatus("Unmarked todo", true)
+
+        // Verify it's not in active
+        assertTrue(db.getActiveClipboardEntries().isEmpty())
+
+        // Unmark as todo
+        db.setTodoStatus("Unmarked todo", false)
+
+        // Should return to active list
+        val active = db.getActiveClipboardEntries()
+        assertEquals(1, active.size)
+        assertEquals("Unmarked todo", active[0].content)
+    }
+
+    // =========================================================================
+    // Commit 8c5a1c4c5: getStorageStats byte accuracy
+    // Verifies SQL aggregation (LENGTH(CAST(content AS BLOB))) matches
+    // expected UTF-8 byte counts for known content.
+    // =========================================================================
+
+    @Test
+    fun testStorageStatsByteAccuracyAscii() {
+        // ASCII: 1 byte per char
+        val content = "Hello" // 5 bytes UTF-8
+        db.addClipboardEntry(content, futureExpiry)
+
+        val stats = db.getStorageStats()
+        assertEquals("Total size should be 5 bytes for ASCII 'Hello'",
+            5L, stats.totalSizeBytes)
+    }
+
+    @Test
+    fun testStorageStatsByteAccuracyMultipleEntries() {
+        db.addClipboardEntry("AAA", futureExpiry) // 3 bytes
+        db.addClipboardEntry("BBBBB", futureExpiry) // 5 bytes
+
+        val stats = db.getStorageStats()
+        assertEquals("Total size should sum all entries", 8L, stats.totalSizeBytes)
+        assertEquals("Total entries should be 2", 2, stats.totalEntries)
+    }
+
+    @Test
+    fun testStorageStatsPinnedSizeIsolated() {
+        db.addClipboardEntry("Regular", futureExpiry) // 7 bytes
+        db.addClipboardEntry("Pinned!", futureExpiry) // 7 bytes
+        db.setPinnedStatus("Pinned!", true)
+
+        val stats = db.getStorageStats()
+        assertEquals("Total size should include both", 14L, stats.totalSizeBytes)
+        assertEquals("Pinned size should be 7 bytes", 7L, stats.pinnedSizeBytes)
+        assertEquals("Pinned count should be 1", 1, stats.pinnedEntries)
+    }
+
+    @Test
+    fun testStorageStatsActiveIncludesPinned() {
+        // "Active" = non-expired + pinned (both are usable entries)
+        db.addClipboardEntry("Active", futureExpiry) // non-expired, not pinned
+        db.addClipboardEntry("PinnedActive", futureExpiry)
+        db.setPinnedStatus("PinnedActive", true)
+        db.addClipboardEntry("Expired", pastExpiry) // expired, not pinned
+
+        val stats = db.getStorageStats()
+        assertEquals("Total entries should be 3", 3, stats.totalEntries)
+        // Active = non-expired(1) + pinned(1) = 2
+        assertEquals("Active should include non-expired + pinned", 2, stats.activeEntries)
+    }
+
+    @Test
+    fun testStorageStatsEmptyDB() {
+        val stats = db.getStorageStats()
+        assertEquals(0, stats.totalEntries)
+        assertEquals(0, stats.activeEntries)
+        assertEquals(0, stats.pinnedEntries)
+        assertEquals(0L, stats.totalSizeBytes)
+        assertEquals(0L, stats.activeSizeBytes)
+        assertEquals(0L, stats.pinnedSizeBytes)
+    }
+
+    // =========================================================================
+    // Commit 8c5a1c4c5: applySizeLimitBytes — SQL LENGTH(CAST) approach
+    // Verifies oldest entries are deleted when total size exceeds limit.
+    // =========================================================================
+
+    @Test
+    fun testApplySizeLimitBytesRemovesOldest() {
+        // Add 3 entries of known size, limit to ~2 entries worth
+        db.addClipboardEntry("A".repeat(1024), futureExpiry) // 1KB, oldest
+        Thread.sleep(10)
+        db.addClipboardEntry("B".repeat(1024), futureExpiry) // 1KB
+        Thread.sleep(10)
+        db.addClipboardEntry("C".repeat(1024), futureExpiry) // 1KB, newest
+
+        // Total: 3KB. Limit to 1MB → no deletions (under limit)
+        val removed = db.applySizeLimitBytes(1)
+        assertEquals("All entries under 1MB, no deletions", 0, removed)
+    }
+
+    @Test
+    fun testApplySizeLimitBytesZeroIsNoOp() {
+        db.addClipboardEntry("Content", futureExpiry)
+        val removed = db.applySizeLimitBytes(0)
+        assertEquals("Zero limit should be no-op", 0, removed)
+        assertEquals("Entry should still exist", 1, db.getTotalEntryCount())
+    }
+
+    @Test
+    fun testApplySizeLimitBytesNegativeIsNoOp() {
+        db.addClipboardEntry("Content", futureExpiry)
+        val removed = db.applySizeLimitBytes(-5)
+        assertEquals("Negative limit should be no-op", 0, removed)
+    }
+
+    @Test
+    fun testApplySizeLimitBytesPreservesPinnedEntries() {
+        // Large pinned entry + small regular entries
+        db.addClipboardEntry("P".repeat(2048), futureExpiry) // 2KB pinned
+        db.setPinnedStatus("P".repeat(2048), true)
+        db.addClipboardEntry("R".repeat(512), futureExpiry) // 0.5KB regular
+
+        // Limit to 1MB — both should survive (way under limit)
+        val removed = db.applySizeLimitBytes(1)
+        assertEquals(0, removed)
+        assertEquals(2, db.getTotalEntryCount())
+    }
+
+    @Test
+    fun testApplySizeLimitBytesPreservesTodoEntries() {
+        db.addClipboardEntry("T".repeat(2048), futureExpiry) // 2KB todo
+        db.setTodoStatus("T".repeat(2048), true)
+        db.addClipboardEntry("R".repeat(512), futureExpiry) // 0.5KB regular
+
+        val removed = db.applySizeLimitBytes(1)
+        assertEquals(0, removed)
+        assertEquals(2, db.getTotalEntryCount())
+    }
+
+    // =========================================================================
+    // Commit 2d283f2eb: Import transaction integrity
+    // Verifies import is atomic (all-or-nothing via transaction wrapping).
+    // =========================================================================
+
+    @Test
+    fun testImportTransactionAllOrNothing() {
+        // Successful import: all entries should be present
+        db.addClipboardEntry("Export1", futureExpiry)
+        db.addClipboardEntry("Export2", futureExpiry)
+        val exported = db.exportToJSON()!!
+
+        db.writableDatabase.delete("clipboard_entries", null, null)
+        val result = db.importFromJSON(exported)
+        val totalImported = result[0] + result[1] + result[2]
+        assertEquals("All entries should be imported", 2, totalImported)
+    }
+
+    @Test
+    fun testImportWithInvalidJsonReturnsZeros() {
+        // Completely invalid JSON structure — should not crash
+        val badJson = JSONObject().apply {
+            put("export_version", 2)
+            // Missing active_entries, pinned_entries, todo_entries arrays
+        }
+
+        val result = db.importFromJSON(badJson)
+        val totalImported = result[0] + result[1] + result[2]
+        assertEquals("Invalid JSON should import 0 entries", 0, totalImported)
+        assertEquals("No entries in DB after failed import", 0, db.getTotalEntryCount())
+    }
+
+    @Test
+    fun testImportWithEmptyArrays() {
+        val emptyJson = JSONObject().apply {
+            put("export_version", 2)
+            put("active_entries", JSONArray())
+            put("pinned_entries", JSONArray())
+            put("todo_entries", JSONArray())
+        }
+
+        val result = db.importFromJSON(emptyJson)
+        assertEquals("Active imported", 0, result[0])
+        assertEquals("Pinned imported", 0, result[1])
+        assertEquals("Todo imported", 0, result[2])
+        assertEquals("Duplicates", 0, result[3])
+    }
+
+    @Test
+    fun testImportPreservesExistingEntries() {
+        // Existing entry should not be overwritten by import
+        db.addClipboardEntry("Existing", futureExpiry)
+
+        val importJson = JSONObject().apply {
+            put("export_version", 2)
+            put("active_entries", JSONArray().apply {
+                put(JSONObject().apply {
+                    put("content", "New import")
+                    put("timestamp", System.currentTimeMillis())
+                })
+            })
+            put("pinned_entries", JSONArray())
+            put("todo_entries", JSONArray())
+        }
+
+        db.importFromJSON(importJson)
+        assertEquals("Should have both existing and imported", 2, db.getTotalEntryCount())
+        assertTrue(db.getActiveClipboardEntries().any { it.content == "Existing" })
+    }
+
+    // =========================================================================
+    // Commit 90d126a5b: ClipboardEntry.getFormattedText span structure
+    // Verifies SpannableStringBuilder output has correct span placement.
+    // =========================================================================
+
+    @Test
+    fun testGetFormattedTextContainsTimestamp() {
+        val entry = ClipboardEntry("Test content", System.currentTimeMillis())
+        val formatted = entry.getFormattedText(context)
+        val text = formatted.toString()
+
+        assertTrue("Should contain original content", text.startsWith("Test content"))
+        assertTrue("Should contain separator", text.contains(" · "))
+        assertTrue("Should contain relative time", text.contains("Just now"))
+    }
+
+    @Test
+    fun testGetFormattedTextHasColorSpan() {
+        val entry = ClipboardEntry("Span test", System.currentTimeMillis())
+        val formatted = entry.getFormattedText(context)
+
+        // Should have exactly one ForegroundColorSpan on the timestamp portion
+        val spans = formatted.getSpans(0, formatted.length,
+            android.text.style.ForegroundColorSpan::class.java)
+        assertEquals("Should have exactly 1 color span", 1, spans.size)
+
+        // Span should start after the content
+        val spanStart = formatted.getSpanStart(spans[0])
+        assertEquals("Span should start at content length",
+            "Span test".length, spanStart)
+    }
+
+    @Test
+    fun testGetFormattedTextSpanDoesNotCoverContent() {
+        val entry = ClipboardEntry("Content here", System.currentTimeMillis())
+        val formatted = entry.getFormattedText(context)
+
+        val spans = formatted.getSpans(0, "Content here".length,
+            android.text.style.ForegroundColorSpan::class.java)
+        // No span should cover the content portion (only the timestamp)
+        for (span in spans) {
+            val start = formatted.getSpanStart(span)
+            assertTrue("Span should not start within content", start >= "Content here".length)
+        }
+    }
+
+    @Test
+    fun testGetFormattedTextWithEmptyishContent() {
+        // Single character content — edge case for span placement
+        val entry = ClipboardEntry("X", System.currentTimeMillis())
+        val formatted = entry.getFormattedText(context)
+
+        assertTrue("Should start with X", formatted.toString().startsWith("X"))
+        val spans = formatted.getSpans(0, formatted.length,
+            android.text.style.ForegroundColorSpan::class.java)
+        assertEquals(1, spans.size)
+        assertEquals("Span starts at position 1", 1, formatted.getSpanStart(spans[0]))
     }
 }

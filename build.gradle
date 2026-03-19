@@ -361,6 +361,7 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.SwipeLayoutSupportTest',
     'tribixbite.cleverkeys.BackspaceUndoTest',
     'tribixbite.cleverkeys.ClipboardPaginationTest',
+    'tribixbite.cleverkeys.ClipboardFixesJvmTest',
     // SwipePrunerTest excluded: requires android.util.Log (MockK + Robolectric)
   ]
 
