@@ -147,7 +147,7 @@ class ClipboardHistoryTest {
         val testClip = "Pinned entry ${System.currentTimeMillis()}"
 
         clipboardService?.addClip(testClip)
-        clipboardService?.setPinnedStatus(testClip, true)
+        clipboardService?.pinEntry(testClip)
 
         val pinnedEntries = clipboardService?.getPinnedEntries() ?: emptyList()
         val hasPinned = pinnedEntries.any { it.content == testClip }
@@ -159,8 +159,8 @@ class ClipboardHistoryTest {
         val testClip = "To unpin ${System.currentTimeMillis()}"
 
         clipboardService?.addClip(testClip)
-        clipboardService?.setPinnedStatus(testClip, true)
-        clipboardService?.setPinnedStatus(testClip, false)
+        clipboardService?.pinEntry(testClip)
+        clipboardService?.unpinEntry(testClip)
 
         val pinnedEntries = clipboardService?.getPinnedEntries() ?: emptyList()
         val hasPinned = pinnedEntries.any { it.content == testClip }
@@ -172,7 +172,7 @@ class ClipboardHistoryTest {
         val pinnedClip = "Survives clear ${System.currentTimeMillis()}"
 
         clipboardService?.addClip(pinnedClip)
-        clipboardService?.setPinnedStatus(pinnedClip, true)
+        clipboardService?.pinEntry(pinnedClip)
         clipboardService?.clearHistory()
 
         val pinnedEntries = clipboardService?.getPinnedEntries() ?: emptyList()
@@ -180,7 +180,7 @@ class ClipboardHistoryTest {
         assertTrue("Pinned entry should survive clear", hasPinned)
 
         // Clean up
-        clipboardService?.setPinnedStatus(pinnedClip, false)
+        clipboardService?.unpinEntry(pinnedClip)
         clipboardService?.removeHistoryEntry(pinnedClip)
     }
 

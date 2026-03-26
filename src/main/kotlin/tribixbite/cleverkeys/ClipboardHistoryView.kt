@@ -214,20 +214,20 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
      * Pin or unpin the entry at index [pos] (position in current page).
      */
     fun pin_entry(pos: Int) {
-        val clip = paginatedHistory[pos].content
+        val entry = paginatedHistory[pos]
 
         when (currentTab) {
             ClipboardTab.HISTORY -> {
-                // Pin from history
-                service?.setPinnedStatus(clip, true)
+                // Pin from history (COPY — history entry stays)
+                service?.pinEntry(entry.content, entry.timestamp)
             }
             ClipboardTab.PINNED -> {
                 // Unpin from pinned tab
-                service?.setPinnedStatus(clip, false)
+                service?.unpinEntry(entry.content)
             }
             ClipboardTab.TODOS -> {
                 // Pin todo item (can be both pinned and todo)
-                service?.setPinnedStatus(clip, true)
+                service?.pinEntry(entry.content, entry.timestamp)
             }
         }
         loadDataAsync()
@@ -237,17 +237,16 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
      * Add or remove entry from todos at index [pos] (position in current page).
      */
     fun todo_entry(pos: Int) {
-        val clip = paginatedHistory[pos].content
-        val database = ClipboardDatabase.getInstance(context)
+        val entry = paginatedHistory[pos]
 
         when (currentTab) {
             ClipboardTab.HISTORY, ClipboardTab.PINNED -> {
-                // Add to todos
-                database.setTodoStatus(clip, true)
+                // Add to todos (COPY — original entry stays)
+                service?.addToTodo(entry.content, entry.timestamp)
             }
             ClipboardTab.TODOS -> {
-                // Remove from todos (mark as done)
-                database.setTodoStatus(clip, false)
+                // Remove from todos
+                service?.removeFromTodo(entry.content)
             }
         }
         loadDataAsync()

@@ -207,9 +207,9 @@ class PastePinnedCommandTest {
     fun pastePinnedReturnsFlaseWhenIndexExceedsPinCount() {
         // Pin 2 entries but request #3
         db.addClipboardEntry("Pin A", futureExpiry)
-        db.setPinnedStatus("Pin A", true)
+        db.pinEntry("Pin A")
         db.addClipboardEntry("Pin B", futureExpiry)
-        db.setPinnedStatus("Pin B", true)
+        db.pinEntry("Pin B")
         assertEquals("Precondition: 2 pinned entries", 2, db.getPinnedEntries().size)
 
         val mapping = ShortSwipeMapping(
@@ -263,7 +263,7 @@ class PastePinnedCommandTest {
     fun pastePinnedInsertFirstPinnedEntry() {
         // Pin an entry and verify paste_pinned_1 inserts its content
         db.addClipboardEntry("Hello from pin", futureExpiry)
-        db.setPinnedStatus("Hello from pin", true)
+        db.pinEntry("Hello from pin")
 
         val mapping = ShortSwipeMapping(
             keyCode = "a",
@@ -291,13 +291,13 @@ class PastePinnedCommandTest {
     fun pastePinnedInsertCorrectEntryByIndex() {
         // Pin 3 entries. getPinnedEntries returns oldest first (timestamp ASC).
         db.addClipboardEntry("First pin", futureExpiry)
-        db.setPinnedStatus("First pin", true)
+        db.pinEntry("First pin")
         Thread.sleep(50) // Ensure distinct timestamps
         db.addClipboardEntry("Second pin", futureExpiry)
-        db.setPinnedStatus("Second pin", true)
+        db.pinEntry("Second pin")
         Thread.sleep(50)
         db.addClipboardEntry("Third pin", futureExpiry)
-        db.setPinnedStatus("Third pin", true)
+        db.pinEntry("Third pin")
 
         // Oldest first ordering: First, Second, Third
         val pinned = db.getPinnedEntries()
@@ -328,7 +328,7 @@ class PastePinnedCommandTest {
     @Test
     fun pastePinnedNullInputConnectionReturnsFalse() {
         db.addClipboardEntry("Has pin", futureExpiry)
-        db.setPinnedStatus("Has pin", true)
+        db.pinEntry("Has pin")
 
         val mapping = ShortSwipeMapping(
             keyCode = "a",

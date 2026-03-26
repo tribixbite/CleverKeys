@@ -228,11 +228,37 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         _listener = l
     }
 
-    /** Pin or unpin a clipboard entry to prevent it from expiring */
-    fun setPinnedStatus(clip: String, isPinned: Boolean) {
-        val updated = _database.setPinnedStatus(clip, isPinned)
-        if (updated)
-            _listener?.on_clipboard_history_change()
+    /** Pin a clipboard entry (copies to independent pinned_entries table) */
+    fun pinEntry(clip: String, createdTimestamp: Long = System.currentTimeMillis()) {
+        val added = _database.pinEntry(clip, createdTimestamp)
+        if (added) _listener?.on_clipboard_history_change()
+    }
+
+    /** Unpin a clipboard entry (removes from pinned_entries; history copy unaffected) */
+    fun unpinEntry(clip: String) {
+        val removed = _database.unpinEntry(clip)
+        if (removed) _listener?.on_clipboard_history_change()
+    }
+
+    /** Check if content is pinned */
+    fun isPinned(clip: String): Boolean = _database.isPinned(clip)
+
+    /** Add content to todo list (copies to independent todo_entries table) */
+    fun addToTodo(clip: String, createdTimestamp: Long = System.currentTimeMillis()) {
+        val added = _database.addTodoEntry(clip, createdTimestamp)
+        if (added) _listener?.on_clipboard_history_change()
+    }
+
+    /** Remove content from todo list (removes from todo_entries; history copy unaffected) */
+    fun removeFromTodo(clip: String) {
+        val removed = _database.removeTodoEntry(clip)
+        if (removed) _listener?.on_clipboard_history_change()
+    }
+
+    /** Update todo entry status (active/planned/completed) */
+    fun setTodoStatus(clip: String, status: String) {
+        val updated = _database.setTodoEntryStatus(clip, status)
+        if (updated) _listener?.on_clipboard_history_change()
     }
 
     /** Get all pinned clipboard entries */

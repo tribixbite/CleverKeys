@@ -127,7 +127,7 @@ class ClipboardDatabaseTest {
     fun testCleanupExpiredEntriesPreservesPinned() {
         // Add a non-active entry with past expiry and pin it
         db.addClipboardEntry("Pinned expired", pastExpiry)
-        db.setPinnedStatus("Pinned expired", true)
+        db.pinEntry("Pinned expired")
 
         val cleaned = db.cleanupExpiredEntries()
         assertEquals("Pinned entries should not be cleaned", 0, cleaned)
@@ -145,7 +145,7 @@ class ClipboardDatabaseTest {
     fun testCleanupExpiredEntriesPreservesTodoItems() {
         // TODO item with expired timestamp — should survive cleanup
         db.addClipboardEntry("Buy milk", pastExpiry)
-        db.setTodoStatus("Buy milk", true)
+        db.addTodoEntry("Buy milk")
         // Regular expired entry — should be deleted
         db.addClipboardEntry("Ephemeral", pastExpiry)
 
@@ -161,7 +161,7 @@ class ClipboardDatabaseTest {
         db.addClipboardEntry("Regular 1", futureExpiry)
         db.addClipboardEntry("Regular 2", futureExpiry)
         db.addClipboardEntry("My todo", futureExpiry)
-        db.setTodoStatus("My todo", true)
+        db.addTodoEntry("My todo")
 
         val result = db.clearAllEntries()
         assertTrue(result.isSuccess)
@@ -178,7 +178,7 @@ class ClipboardDatabaseTest {
             Thread.sleep(10)
         }
         db.addClipboardEntry("Todo item", futureExpiry)
-        db.setTodoStatus("Todo item", true)
+        db.addTodoEntry("Todo item")
 
         // Limit to 2 regular entries — todo should not count toward limit
         val removed = db.applySizeLimit(2)
@@ -194,7 +194,7 @@ class ClipboardDatabaseTest {
         val largeContent = "X".repeat(1024) // 1KB
         db.addClipboardEntry(largeContent, futureExpiry)
         db.addClipboardEntry("Todo survives", futureExpiry)
-        db.setTodoStatus("Todo survives", true)
+        db.addTodoEntry("Todo survives")
 
         // Set byte limit to 0.001 MB — effectively evicts all regular entries
         // applySizeLimitBytes takes maxSizeMB as Int, min useful = 1MB
@@ -214,9 +214,9 @@ class ClipboardDatabaseTest {
     fun testCleanupPreservesBothPinnedAndTodoItems() {
         // Verify pinned AND todo items both survive all cleanup paths
         db.addClipboardEntry("Pinned item", pastExpiry)
-        db.setPinnedStatus("Pinned item", true)
+        db.pinEntry("Pinned item")
         db.addClipboardEntry("Todo item", pastExpiry)
-        db.setTodoStatus("Todo item", true)
+        db.addTodoEntry("Todo item")
         db.addClipboardEntry("Regular expired", pastExpiry)
 
         val cleaned = db.cleanupExpiredEntries()
@@ -228,9 +228,9 @@ class ClipboardDatabaseTest {
     fun testClearAllPreservesBothPinnedAndTodo() {
         db.addClipboardEntry("Regular", futureExpiry)
         db.addClipboardEntry("Pinned", futureExpiry)
-        db.setPinnedStatus("Pinned", true)
+        db.pinEntry("Pinned")
         db.addClipboardEntry("Todo", futureExpiry)
-        db.setTodoStatus("Todo", true)
+        db.addTodoEntry("Todo")
 
         db.clearAllEntries()
         assertEquals("Pinned and todo should survive clear all", 2, db.getTotalEntryCount())
@@ -264,7 +264,7 @@ class ClipboardDatabaseTest {
         // Export with todo entries, clear, reimport — todos should survive
         db.addClipboardEntry("Active", futureExpiry)
         db.addClipboardEntry("My todo", futureExpiry)
-        db.setTodoStatus("My todo", true)
+        db.addTodoEntry("My todo")
 
         val exported = db.exportToJSON()!!
         db.writableDatabase.delete("clipboard_entries", null, null)
@@ -307,7 +307,7 @@ class ClipboardDatabaseTest {
         db.addClipboardEntry("Entry 1", futureExpiry)
         db.addClipboardEntry("Entry 2", futureExpiry)
         db.addClipboardEntry("Pinned", futureExpiry)
-        db.setPinnedStatus("Pinned", true)
+        db.pinEntry("Pinned")
 
         val result = db.clearAllEntries()
         assertTrue("clearAllEntries should succeed", result.isSuccess)
@@ -322,7 +322,7 @@ class ClipboardDatabaseTest {
     @Test
     fun testSetPinnedStatus() {
         db.addClipboardEntry("Pin me", futureExpiry)
-        val pinned = db.setPinnedStatus("Pin me", true)
+        val pinned = db.pinEntry("Pin me")
         assertTrue("Should pin entry", pinned)
 
         val pinnedEntries = db.getPinnedEntries()
@@ -333,8 +333,8 @@ class ClipboardDatabaseTest {
     @Test
     fun testUnpinEntry() {
         db.addClipboardEntry("Unpin me", futureExpiry)
-        db.setPinnedStatus("Unpin me", true)
-        db.setPinnedStatus("Unpin me", false)
+        db.pinEntry("Unpin me")
+        db.unpinEntry("Unpin me")
 
         val pinnedEntries = db.getPinnedEntries()
         assertTrue("Should have no pinned entries", pinnedEntries.isEmpty())
@@ -343,7 +343,7 @@ class ClipboardDatabaseTest {
     @Test
     fun testPinnedEntryNotInActiveList() {
         db.addClipboardEntry("Pinned", futureExpiry)
-        db.setPinnedStatus("Pinned", true)
+        db.pinEntry("Pinned")
 
         // getActiveClipboardEntries filters for is_pinned=0
         val active = db.getActiveClipboardEntries()
@@ -352,7 +352,7 @@ class ClipboardDatabaseTest {
 
     @Test
     fun testSetPinnedStatusNullContent() {
-        val result = db.setPinnedStatus(null, true)
+        val result = db.pinEntry(null)
         assertFalse("Null content should return false", result)
     }
 
@@ -363,7 +363,7 @@ class ClipboardDatabaseTest {
     @Test
     fun testSetTodoStatus() {
         db.addClipboardEntry("Todo item", futureExpiry)
-        val result = db.setTodoStatus("Todo item", true)
+        val result = db.addTodoEntry("Todo item")
         assertTrue("Should set todo status", result)
 
         val todoEntries = db.getTodoEntries()
@@ -374,8 +374,8 @@ class ClipboardDatabaseTest {
     @Test
     fun testClearTodoStatus() {
         db.addClipboardEntry("Not todo", futureExpiry)
-        db.setTodoStatus("Not todo", true)
-        db.setTodoStatus("Not todo", false)
+        db.addTodoEntry("Not todo")
+        db.removeTodoEntry("Not todo")
 
         val todoEntries = db.getTodoEntries()
         assertTrue("Should have no todo entries", todoEntries.isEmpty())
@@ -383,7 +383,7 @@ class ClipboardDatabaseTest {
 
     @Test
     fun testSetTodoStatusNullContent() {
-        val result = db.setTodoStatus(null, true)
+        val result = db.addTodoEntry(null)
         assertFalse("Null content should return false", result)
     }
 
@@ -408,7 +408,7 @@ class ClipboardDatabaseTest {
         db.addClipboardEntry("Active", futureExpiry)
         db.addClipboardEntry("Expired", pastExpiry)
         db.addClipboardEntry("Pinned", futureExpiry)
-        db.setPinnedStatus("Pinned", true)
+        db.pinEntry("Pinned")
 
         val activeCount = db.getActiveEntryCount()
         // Active includes: non-expired + pinned
@@ -423,7 +423,7 @@ class ClipboardDatabaseTest {
     fun testGetStorageStats() {
         db.addClipboardEntry("Active entry", futureExpiry)
         db.addClipboardEntry("Pinned entry", futureExpiry)
-        db.setPinnedStatus("Pinned entry", true)
+        db.pinEntry("Pinned entry")
 
         val stats = db.getStorageStats()
         assertEquals(2, stats.totalEntries)
@@ -477,9 +477,9 @@ class ClipboardDatabaseTest {
     fun testExportToJSON() {
         db.addClipboardEntry("Active 1", futureExpiry)
         db.addClipboardEntry("Pinned 1", futureExpiry)
-        db.setPinnedStatus("Pinned 1", true)
+        db.pinEntry("Pinned 1")
         db.addClipboardEntry("Todo 1", futureExpiry)
-        db.setTodoStatus("Todo 1", true)
+        db.addTodoEntry("Todo 1")
 
         val json = db.exportToJSON()
         assertNotNull("Export should return JSON", json)
@@ -529,9 +529,9 @@ class ClipboardDatabaseTest {
     fun testExportImportRoundTrip() {
         db.addClipboardEntry("Active entry", futureExpiry)
         db.addClipboardEntry("Pinned entry", futureExpiry)
-        db.setPinnedStatus("Pinned entry", true)
+        db.pinEntry("Pinned entry")
         db.addClipboardEntry("Todo entry", futureExpiry)
-        db.setTodoStatus("Todo entry", true)
+        db.addTodoEntry("Todo entry")
 
         val exported = db.exportToJSON()!!
 
@@ -680,9 +680,9 @@ class ClipboardDatabaseTest {
         Thread.sleep(50)
         db.addClipboardEntry("Pin3", futureExpiry)
 
-        db.setPinnedStatus("Pin1", true)
-        db.setPinnedStatus("Pin2", true)
-        db.setPinnedStatus("Pin3", true)
+        db.pinEntry("Pin1")
+        db.pinEntry("Pin2")
+        db.pinEntry("Pin3")
 
         val pinned = db.getPinnedEntries()
         assertEquals(3, pinned.size)
@@ -701,9 +701,9 @@ class ClipboardDatabaseTest {
         Thread.sleep(50)
         db.addClipboardEntry("Todo3", futureExpiry)
 
-        db.setTodoStatus("Todo1", true)
-        db.setTodoStatus("Todo2", true)
-        db.setTodoStatus("Todo3", true)
+        db.addTodoEntry("Todo1")
+        db.addTodoEntry("Todo2")
+        db.addTodoEntry("Todo3")
 
         val todos = db.getTodoEntries()
         assertEquals(3, todos.size)
@@ -720,12 +720,12 @@ class ClipboardDatabaseTest {
         Thread.sleep(50)
         db.addClipboardEntry("LaterPin", futureExpiry)
 
-        db.setPinnedStatus("StablePin", true)
-        db.setPinnedStatus("LaterPin", true)
+        db.pinEntry("StablePin")
+        db.pinEntry("LaterPin")
 
         // Unpin and repin StablePin — its original timestamp should be preserved
-        db.setPinnedStatus("StablePin", false)
-        db.setPinnedStatus("StablePin", true)
+        db.unpinEntry("StablePin")
+        db.pinEntry("StablePin")
 
         val pinned = db.getPinnedEntries()
         assertEquals(2, pinned.size)
@@ -745,7 +745,7 @@ class ClipboardDatabaseTest {
         // Add regular and todo entries
         db.addClipboardEntry("Regular item", futureExpiry)
         db.addClipboardEntry("Todo item", futureExpiry)
-        db.setTodoStatus("Todo item", true)
+        db.addTodoEntry("Todo item")
 
         val active = db.getActiveClipboardEntries()
         assertEquals("Active list should exclude TODO items", 1, active.size)
@@ -756,7 +756,7 @@ class ClipboardDatabaseTest {
     fun testTodoItemOnlyInTodoList() {
         db.addClipboardEntry("Item A", futureExpiry)
         db.addClipboardEntry("Item B", futureExpiry)
-        db.setTodoStatus("Item B", true)
+        db.addTodoEntry("Item B")
 
         val active = db.getActiveClipboardEntries()
         val todos = db.getTodoEntries()
@@ -772,13 +772,13 @@ class ClipboardDatabaseTest {
     @Test
     fun testUnmarkTodoReturnsToActiveList() {
         db.addClipboardEntry("Unmarked todo", futureExpiry)
-        db.setTodoStatus("Unmarked todo", true)
+        db.addTodoEntry("Unmarked todo")
 
         // Verify it's not in active
         assertTrue(db.getActiveClipboardEntries().isEmpty())
 
         // Unmark as todo
-        db.setTodoStatus("Unmarked todo", false)
+        db.removeTodoEntry("Unmarked todo")
 
         // Should return to active list
         val active = db.getActiveClipboardEntries()
@@ -817,7 +817,7 @@ class ClipboardDatabaseTest {
     fun testStorageStatsPinnedSizeIsolated() {
         db.addClipboardEntry("Regular", futureExpiry) // 7 bytes
         db.addClipboardEntry("Pinned!", futureExpiry) // 7 bytes
-        db.setPinnedStatus("Pinned!", true)
+        db.pinEntry("Pinned!")
 
         val stats = db.getStorageStats()
         assertEquals("Total size should include both", 14L, stats.totalSizeBytes)
@@ -830,7 +830,7 @@ class ClipboardDatabaseTest {
         // "Active" = non-expired + pinned (both are usable entries)
         db.addClipboardEntry("Active", futureExpiry) // non-expired, not pinned
         db.addClipboardEntry("PinnedActive", futureExpiry)
-        db.setPinnedStatus("PinnedActive", true)
+        db.pinEntry("PinnedActive")
         db.addClipboardEntry("Expired", pastExpiry) // expired, not pinned
 
         val stats = db.getStorageStats()
@@ -888,7 +888,7 @@ class ClipboardDatabaseTest {
     fun testApplySizeLimitBytesPreservesPinnedEntries() {
         // Large pinned entry + small regular entries
         db.addClipboardEntry("P".repeat(2048), futureExpiry) // 2KB pinned
-        db.setPinnedStatus("P".repeat(2048), true)
+        db.pinEntry("P".repeat(2048))
         db.addClipboardEntry("R".repeat(512), futureExpiry) // 0.5KB regular
 
         // Limit to 1MB — both should survive (way under limit)
@@ -900,7 +900,7 @@ class ClipboardDatabaseTest {
     @Test
     fun testApplySizeLimitBytesPreservesTodoEntries() {
         db.addClipboardEntry("T".repeat(2048), futureExpiry) // 2KB todo
-        db.setTodoStatus("T".repeat(2048), true)
+        db.addTodoEntry("T".repeat(2048))
         db.addClipboardEntry("R".repeat(512), futureExpiry) // 0.5KB regular
 
         val removed = db.applySizeLimitBytes(1)
