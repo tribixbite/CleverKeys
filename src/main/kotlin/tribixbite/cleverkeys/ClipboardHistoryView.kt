@@ -319,13 +319,17 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     private fun loadDataAsync() {
         loadJob?.cancel()
         loadJob = viewScope?.launch {
-            val entries = withContext(Dispatchers.IO) {
+            var entries = withContext(Dispatchers.IO) {
                 val database = ClipboardDatabase.getInstance(context)
                 when (currentTab) {
                     ClipboardTab.HISTORY -> service?.clearExpiredAndGetHistory() ?: emptyList()
                     ClipboardTab.PINNED -> database.getPinnedEntries()
                     ClipboardTab.TODOS -> database.getTodoEntries()
                 }
+            }
+            // Filter out media entries when text-only mode is active
+            if (Config.globalConfig().clipboard_text_only) {
+                entries = entries.filter { !it.isMedia }
             }
             // Back on Main thread — atomic reference replacement
             history = entries
@@ -446,22 +450,10 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 true
             }
 
-            // Configure buttons based on current tab and text-only mode
-            val textOnly = Config.globalConfig().clipboard_text_only
-            when (currentTab) {
-                ClipboardTab.HISTORY -> {
-                    pinButton.visibility = if (textOnly) GONE else VISIBLE
-                    todoButton.visibility = if (textOnly) GONE else VISIBLE
-                }
-                ClipboardTab.PINNED -> {
-                    pinButton.visibility = VISIBLE
-                    todoButton.visibility = VISIBLE
-                }
-                ClipboardTab.TODOS -> {
-                    pinButton.visibility = VISIBLE
-                    todoButton.visibility = VISIBLE
-                }
-            }
+            // Show pin/todo buttons only when their respective tabs are enabled
+            val cfg = Config.globalConfig()
+            pinButton.visibility = if (cfg.clipboard_pinned_enabled) VISIBLE else GONE
+            todoButton.visibility = if (cfg.clipboard_todo_enabled) VISIBLE else GONE
 
             pinButton.setOnClickListener {
                 pin_entry(pos)

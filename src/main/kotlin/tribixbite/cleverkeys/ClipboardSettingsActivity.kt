@@ -57,8 +57,10 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
     private var historyLimit by mutableStateOf(6)
     private var historyDuration by mutableStateOf(-1) // minutes; -1 = never expire (default)
 
-    // Text-only mode: disables media, pinned tabs, and todo tabs
+    // Feature toggles
     private var clipboardTextOnly by mutableStateOf(false)
+    private var pinnedEnabled by mutableStateOf(true)
+    private var todoEnabled by mutableStateOf(true)
 
     // Media settings state
     private var mediaClipboardEnabled by mutableStateOf(true)
@@ -138,8 +140,10 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
         val savedLimit = prefs.getInt("clipboard_history_limit", 6)
         historyLimit = if (savedLimit <= 0) 100 else savedLimit
         historyDuration = prefs.getString("clipboard_history_duration", Defaults.CLIPBOARD_HISTORY_DURATION)?.toIntOrNull() ?: Defaults.CLIPBOARD_HISTORY_DURATION_FALLBACK
-        // v4 clipboard mode + media settings
+        // v4 feature toggles + media settings
         clipboardTextOnly = prefs.getBoolean("clipboard_text_only", false)
+        pinnedEnabled = prefs.getBoolean("clipboard_pinned_enabled", true)
+        todoEnabled = prefs.getBoolean("clipboard_todo_enabled", true)
         mediaClipboardEnabled = prefs.getBoolean("clipboard_media_enabled", true)
         maxMediaSizeMb = prefs.getInt("clipboard_max_media_size_mb", 10).coerceIn(1, 50)
     }
@@ -300,40 +304,36 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
                             )
                         }
 
-                        // Text-only mode toggle (visible when clipboard is enabled)
+                        // Feature toggles (visible when clipboard is enabled)
                         if (clipboardEnabled) {
                             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = "Text Only Mode",
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.SemiBold
-                                    )
-                                    Text(
-                                        text = "Disable media capture, pinned items, and todo lists",
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        fontSize = 12.sp
-                                    )
+                            FeatureToggle(
+                                title = "Text Only",
+                                description = "Hide media entries from clipboard history",
+                                checked = clipboardTextOnly,
+                                onCheckedChange = {
+                                    clipboardTextOnly = it
+                                    saveSetting("clipboard_text_only", it)
                                 }
-                                Switch(
-                                    checked = clipboardTextOnly,
-                                    onCheckedChange = {
-                                        clipboardTextOnly = it
-                                        saveSetting("clipboard_text_only", it)
-                                        // When text-only is on, also disable media capture
-                                        if (it) {
-                                            mediaClipboardEnabled = false
-                                            saveSetting("clipboard_media_enabled", false)
-                                        }
-                                    }
-                                )
-                            }
+                            )
+                            FeatureToggle(
+                                title = "Pinned Tab",
+                                description = "Pin important clips to prevent expiration",
+                                checked = pinnedEnabled,
+                                onCheckedChange = {
+                                    pinnedEnabled = it
+                                    saveSetting("clipboard_pinned_enabled", it)
+                                }
+                            )
+                            FeatureToggle(
+                                title = "Todo Tab",
+                                description = "Mark clips as to-do items",
+                                checked = todoEnabled,
+                                onCheckedChange = {
+                                    todoEnabled = it
+                                    saveSetting("clipboard_todo_enabled", it)
+                                }
+                            )
                         }
                     }
                 }
@@ -550,10 +550,8 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
                                 )
                             } else {
                                 StatRow("History (Active)", activeEntries.toString())
-                                if (!clipboardTextOnly) {
-                                    StatRow("Pinned", pinnedEntries.toString())
-                                    StatRow("Todos", todoEntries.toString())
-                                }
+                                if (pinnedEnabled) StatRow("Pinned", pinnedEntries.toString())
+                                if (todoEnabled) StatRow("Todos", todoEntries.toString())
                                 StatRow("Total", totalEntries.toString())
                                 StatRow("Expired (pending cleanup)", expiredEntries.toString())
                             }
@@ -587,11 +585,15 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
                             saveSetting("clipboard_exclude_password_managers", Defaults.CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS)
                             saveSetting("clipboard_respect_sensitive_flag", Defaults.CLIPBOARD_RESPECT_SENSITIVE_FLAG)
                             saveSetting("clipboard_pane_height_percent", Defaults.CLIPBOARD_PANE_HEIGHT_PERCENT)
-                            // v4 mode + media settings defaults
+                            // v4 feature toggles + media settings defaults
                             clipboardTextOnly = false
+                            pinnedEnabled = true
+                            todoEnabled = true
                             mediaClipboardEnabled = true
                             maxMediaSizeMb = 10
                             saveSetting("clipboard_text_only", false)
+                            saveSetting("clipboard_pinned_enabled", true)
+                            saveSetting("clipboard_todo_enabled", true)
                             saveSetting("clipboard_media_enabled", true)
                             saveSetting("clipboard_max_media_size_mb", 10)
                             Toast.makeText(this@ClipboardSettingsActivity,
@@ -669,6 +671,34 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
                     fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
                 )
             }
+        }
+    }
+
+    @Composable
+    private fun FeatureToggle(
+        title: String,
+        description: String,
+        checked: Boolean,
+        onCheckedChange: (Boolean) -> Unit
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = 14.sp
+                )
+                Text(
+                    text = description,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontSize = 12.sp
+                )
+            }
+            Switch(checked = checked, onCheckedChange = onCheckedChange)
         }
     }
 

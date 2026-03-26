@@ -113,8 +113,8 @@ class ClipboardManager(
             tabPinned?.setOnClickListener { switchToTab(ClipboardTab.PINNED) }
             tabTodos?.setOnClickListener { switchToTab(ClipboardTab.TODOS) }
 
-            // Hide pinned/todo tabs when text-only mode is active
-            applyTextOnlyMode()
+            // Apply tab visibility based on config toggles
+            applyTabVisibility()
 
             // Set initial tab highlighting
             updateTabHighlighting()
@@ -387,27 +387,28 @@ class ClipboardManager(
     }
 
     /**
-     * Updates configuration and re-applies text-only mode visibility.
+     * Updates configuration and re-applies tab visibility.
      *
      * @param newConfig Updated configuration
      */
     fun setConfig(newConfig: Config) {
         config = newConfig
-        applyTextOnlyMode()
+        applyTabVisibility()
     }
 
     /**
-     * Hides pinned/todo tab buttons when clipboard_text_only is enabled.
-     * Forces back to HISTORY tab if currently on pinned or todo.
+     * Shows/hides pinned and todo tab buttons based on their individual config toggles.
+     * Forces back to HISTORY tab if the current tab was just disabled.
      */
-    private fun applyTextOnlyMode() {
-        val textOnly = config.clipboard_text_only
-        val visibility = if (textOnly) View.GONE else View.VISIBLE
-        tabPinned?.visibility = visibility
-        tabTodos?.visibility = visibility
+    private fun applyTabVisibility() {
+        tabPinned?.visibility = if (config.clipboard_pinned_enabled) View.VISIBLE else View.GONE
+        tabTodos?.visibility = if (config.clipboard_todo_enabled) View.VISIBLE else View.GONE
 
         // Force back to HISTORY if sitting on a disabled tab
-        if (textOnly && currentTab != ClipboardTab.HISTORY) {
+        if (currentTab == ClipboardTab.PINNED && !config.clipboard_pinned_enabled) {
+            switchToTab(ClipboardTab.HISTORY)
+        }
+        if (currentTab == ClipboardTab.TODOS && !config.clipboard_todo_enabled) {
             switchToTab(ClipboardTab.HISTORY)
         }
     }
