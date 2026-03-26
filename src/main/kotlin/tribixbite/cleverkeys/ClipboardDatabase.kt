@@ -497,6 +497,59 @@ class ClipboardDatabase private constructor(context: Context) :
         private const val COLUMN_IS_TODO = "is_todo"
         private const val COLUMN_CONTENT_HASH = "content_hash"
         private const val TAG = "ClipboardDatabase"
+
+        // ─── v3 schema: independent pinned/todo tables ───
+        private const val TABLE_PINNED = "pinned_entries"
+        private const val TABLE_TODO = "todo_entries"
+        private const val COLUMN_CREATED_TIMESTAMP = "created_timestamp"
+        private const val COLUMN_PINNED_TIMESTAMP = "pinned_timestamp"
+        private const val COLUMN_ADDED_TIMESTAMP = "added_timestamp"
+        private const val COLUMN_POSITION = "position"
+        private const val COLUMN_STATUS = "status"
+        private const val COLUMN_TAGS = "tags"
+
+        // DDL for v3 clipboard_entries (no is_pinned/is_todo columns)
+        private const val CREATE_TABLE_CLIPBOARD_V3 = """
+            CREATE TABLE $TABLE_CLIPBOARD (
+                $COLUMN_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                $COLUMN_CONTENT TEXT NOT NULL,
+                $COLUMN_TIMESTAMP INTEGER NOT NULL,
+                $COLUMN_EXPIRY_TIMESTAMP INTEGER NOT NULL,
+                $COLUMN_CONTENT_HASH TEXT NOT NULL
+            )
+        """
+
+        private const val CREATE_TABLE_PINNED = """
+            CREATE TABLE $TABLE_PINNED (
+                $COLUMN_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                $COLUMN_CONTENT TEXT NOT NULL,
+                $COLUMN_CONTENT_HASH TEXT NOT NULL,
+                $COLUMN_CREATED_TIMESTAMP INTEGER NOT NULL,
+                $COLUMN_PINNED_TIMESTAMP INTEGER NOT NULL,
+                $COLUMN_POSITION REAL NOT NULL,
+                $COLUMN_TAGS TEXT DEFAULT '[]'
+            )
+        """
+
+        private const val CREATE_TABLE_TODO = """
+            CREATE TABLE $TABLE_TODO (
+                $COLUMN_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                $COLUMN_CONTENT TEXT NOT NULL,
+                $COLUMN_CONTENT_HASH TEXT NOT NULL,
+                $COLUMN_CREATED_TIMESTAMP INTEGER NOT NULL,
+                $COLUMN_ADDED_TIMESTAMP INTEGER NOT NULL,
+                $COLUMN_POSITION REAL NOT NULL,
+                $COLUMN_STATUS TEXT DEFAULT 'active',
+                $COLUMN_TAGS TEXT DEFAULT '[]'
+            )
+        """
+
+        // Indexes for v3 tables
+        private const val CREATE_INDEX_PINNED_HASH = "CREATE INDEX idx_pinned_hash ON $TABLE_PINNED ($COLUMN_CONTENT_HASH)"
+        private const val CREATE_INDEX_PINNED_POS = "CREATE INDEX idx_pinned_position ON $TABLE_PINNED ($COLUMN_POSITION)"
+        private const val CREATE_INDEX_TODO_HASH = "CREATE INDEX idx_todo_hash ON $TABLE_TODO ($COLUMN_CONTENT_HASH)"
+        private const val CREATE_INDEX_TODO_POS = "CREATE INDEX idx_todo_position ON $TABLE_TODO ($COLUMN_POSITION)"
+        private const val CREATE_INDEX_TODO_STATUS = "CREATE INDEX idx_todo_status ON $TABLE_TODO ($COLUMN_STATUS)"
         @Volatile private var instance: ClipboardDatabase? = null
         @JvmStatic
         fun getInstance(context: Context): ClipboardDatabase {
