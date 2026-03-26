@@ -13,17 +13,17 @@ import java.util.*
 class ClipboardDatabase private constructor(context: Context) :
     SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
-    // ─── Schema creation (fresh install gets v3 directly) ───
+    // ─── Schema creation (fresh install gets v4 directly) ───
 
     override fun onCreate(db: SQLiteDatabase) {
-        db.execSQL(CREATE_TABLE_CLIPBOARD_V3.trimIndent())
+        db.execSQL(CREATE_TABLE_CLIPBOARD_V4.trimIndent())
         db.execSQL("CREATE INDEX idx_content_hash ON $TABLE_CLIPBOARD ($COLUMN_CONTENT_HASH)")
         db.execSQL("CREATE INDEX idx_timestamp ON $TABLE_CLIPBOARD ($COLUMN_TIMESTAMP DESC)")
         db.execSQL("CREATE INDEX idx_expiry ON $TABLE_CLIPBOARD ($COLUMN_EXPIRY_TIMESTAMP)")
-        db.execSQL(CREATE_TABLE_PINNED.trimIndent())
+        db.execSQL(CREATE_TABLE_PINNED_V4.trimIndent())
         db.execSQL(CREATE_INDEX_PINNED_HASH)
         db.execSQL(CREATE_INDEX_PINNED_POS)
-        db.execSQL(CREATE_TABLE_TODO.trimIndent())
+        db.execSQL(CREATE_TABLE_TODO_V4.trimIndent())
         db.execSQL(CREATE_INDEX_TODO_HASH)
         db.execSQL(CREATE_INDEX_TODO_POS)
         db.execSQL(CREATE_INDEX_TODO_STATUS)
@@ -42,6 +42,9 @@ class ClipboardDatabase private constructor(context: Context) :
         }
         if (oldVersion < 3) {
             migrateV2toV3(db)
+        }
+        if (oldVersion < 4) {
+            migrateV3toV4(db)
         }
     }
 
@@ -122,6 +125,37 @@ class ClipboardDatabase private constructor(context: Context) :
             Log.d(TAG, "Database upgraded v2→v3: independent pinned/todo tables created")
         } catch (e: Exception) {
             Log.e(TAG, "Error upgrading v2→v3: ${e.message}", e)
+            throw e  // Re-throw so SQLiteOpenHelper rolls back the transaction
+        }
+    }
+
+    /**
+     * Migrate from v3 to v4: add media columns to all three tables.
+     *
+     * Uses ALTER TABLE ADD COLUMN which is non-destructive and O(1) — only schema
+     * metadata changes, no data is moved. Existing rows automatically get DEFAULT values:
+     * mime_type='text/plain', thumbnail_blob=NULL, media_path=NULL.
+     */
+    private fun migrateV3toV4(db: SQLiteDatabase) {
+        try {
+            // Add media columns to clipboard_entries
+            db.execSQL("ALTER TABLE $TABLE_CLIPBOARD ADD COLUMN $COLUMN_MIME_TYPE TEXT DEFAULT '${ClipboardEntry.MIME_TEXT_PLAIN}'")
+            db.execSQL("ALTER TABLE $TABLE_CLIPBOARD ADD COLUMN $COLUMN_THUMBNAIL_BLOB BLOB")
+            db.execSQL("ALTER TABLE $TABLE_CLIPBOARD ADD COLUMN $COLUMN_MEDIA_PATH TEXT")
+
+            // Add media columns to pinned_entries
+            db.execSQL("ALTER TABLE $TABLE_PINNED ADD COLUMN $COLUMN_MIME_TYPE TEXT DEFAULT '${ClipboardEntry.MIME_TEXT_PLAIN}'")
+            db.execSQL("ALTER TABLE $TABLE_PINNED ADD COLUMN $COLUMN_THUMBNAIL_BLOB BLOB")
+            db.execSQL("ALTER TABLE $TABLE_PINNED ADD COLUMN $COLUMN_MEDIA_PATH TEXT")
+
+            // Add media columns to todo_entries
+            db.execSQL("ALTER TABLE $TABLE_TODO ADD COLUMN $COLUMN_MIME_TYPE TEXT DEFAULT '${ClipboardEntry.MIME_TEXT_PLAIN}'")
+            db.execSQL("ALTER TABLE $TABLE_TODO ADD COLUMN $COLUMN_THUMBNAIL_BLOB BLOB")
+            db.execSQL("ALTER TABLE $TABLE_TODO ADD COLUMN $COLUMN_MEDIA_PATH TEXT")
+
+            Log.d(TAG, "Database upgraded v3→v4: media columns added to all tables")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error upgrading v3→v4: ${e.message}", e)
             throw e  // Re-throw so SQLiteOpenHelper rolls back the transaction
         }
     }
@@ -1035,7 +1069,7 @@ class ClipboardDatabase private constructor(context: Context) :
 
     companion object {
         private const val DATABASE_NAME = "clipboard_history.db"
-        private const val DATABASE_VERSION = 3  // v3: Independent pinned/todo tables
+        private const val DATABASE_VERSION = 4  // v4: Media clipboard (mime_type, thumbnail, media_path)
         private const val TABLE_CLIPBOARD = "clipboard_entries"
         private const val COLUMN_ID = "id"
         private const val COLUMN_CONTENT = "content"
@@ -1054,17 +1088,26 @@ class ClipboardDatabase private constructor(context: Context) :
         private const val COLUMN_STATUS = "status"
         private const val COLUMN_TAGS = "tags"
 
-        // DDL for v3 clipboard_entries (no is_pinned/is_todo columns)
-        private const val CREATE_TABLE_CLIPBOARD_V3 = """
+        // ─── v4 schema: media clipboard columns ───
+        private const val COLUMN_MIME_TYPE = "mime_type"
+        private const val COLUMN_THUMBNAIL_BLOB = "thumbnail_blob"
+        private const val COLUMN_MEDIA_PATH = "media_path"
+
+        // DDL for v4 clipboard_entries (with media columns)
+        private const val CREATE_TABLE_CLIPBOARD_V4 = """
             CREATE TABLE $TABLE_CLIPBOARD (
                 $COLUMN_ID INTEGER PRIMARY KEY AUTOINCREMENT,
                 $COLUMN_CONTENT TEXT NOT NULL,
                 $COLUMN_TIMESTAMP INTEGER NOT NULL,
                 $COLUMN_EXPIRY_TIMESTAMP INTEGER NOT NULL,
-                $COLUMN_CONTENT_HASH TEXT NOT NULL
+                $COLUMN_CONTENT_HASH TEXT NOT NULL,
+                $COLUMN_MIME_TYPE TEXT DEFAULT 'text/plain',
+                $COLUMN_THUMBNAIL_BLOB BLOB,
+                $COLUMN_MEDIA_PATH TEXT
             )
         """
 
+        // v3 DDL kept for migration chain (v2→v3 creates these, then v3→v4 alters them)
         private const val CREATE_TABLE_PINNED = """
             CREATE TABLE $TABLE_PINNED (
                 $COLUMN_ID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1090,7 +1133,39 @@ class ClipboardDatabase private constructor(context: Context) :
             )
         """
 
-        // Indexes for v3 tables
+        // v4 DDL for fresh installs (includes media columns)
+        private const val CREATE_TABLE_PINNED_V4 = """
+            CREATE TABLE $TABLE_PINNED (
+                $COLUMN_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                $COLUMN_CONTENT TEXT NOT NULL,
+                $COLUMN_CONTENT_HASH TEXT NOT NULL,
+                $COLUMN_CREATED_TIMESTAMP INTEGER NOT NULL,
+                $COLUMN_PINNED_TIMESTAMP INTEGER NOT NULL,
+                $COLUMN_POSITION REAL NOT NULL,
+                $COLUMN_TAGS TEXT DEFAULT '[]',
+                $COLUMN_MIME_TYPE TEXT DEFAULT 'text/plain',
+                $COLUMN_THUMBNAIL_BLOB BLOB,
+                $COLUMN_MEDIA_PATH TEXT
+            )
+        """
+
+        private const val CREATE_TABLE_TODO_V4 = """
+            CREATE TABLE $TABLE_TODO (
+                $COLUMN_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                $COLUMN_CONTENT TEXT NOT NULL,
+                $COLUMN_CONTENT_HASH TEXT NOT NULL,
+                $COLUMN_CREATED_TIMESTAMP INTEGER NOT NULL,
+                $COLUMN_ADDED_TIMESTAMP INTEGER NOT NULL,
+                $COLUMN_POSITION REAL NOT NULL,
+                $COLUMN_STATUS TEXT DEFAULT 'active',
+                $COLUMN_TAGS TEXT DEFAULT '[]',
+                $COLUMN_MIME_TYPE TEXT DEFAULT 'text/plain',
+                $COLUMN_THUMBNAIL_BLOB BLOB,
+                $COLUMN_MEDIA_PATH TEXT
+            )
+        """
+
+        // Indexes for v3/v4 tables
         private const val CREATE_INDEX_PINNED_HASH = "CREATE INDEX idx_pinned_hash ON $TABLE_PINNED ($COLUMN_CONTENT_HASH)"
         private const val CREATE_INDEX_PINNED_POS = "CREATE INDEX idx_pinned_position ON $TABLE_PINNED ($COLUMN_POSITION)"
         private const val CREATE_INDEX_TODO_HASH = "CREATE INDEX idx_todo_hash ON $TABLE_TODO ($COLUMN_CONTENT_HASH)"

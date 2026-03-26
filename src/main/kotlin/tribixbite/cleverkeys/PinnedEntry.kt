@@ -26,8 +26,13 @@ data class PinnedEntry(
     val createdTimestamp: Long,   // original clipboard copy time (millis)
     val pinnedTimestamp: Long,    // when user pinned it (millis)
     val position: Double,        // sort order (REAL for midpoint insertion)
-    val tags: List<String> = emptyList()
+    val tags: List<String> = emptyList(),
+    val mimeType: String = ClipboardEntry.MIME_TEXT_PLAIN,
+    val thumbnailBlob: ByteArray? = null,
+    val mediaPath: String? = null
 ) {
+    /** Whether this entry contains non-text media */
+    val isMedia: Boolean get() = mimeType != ClipboardEntry.MIME_TEXT_PLAIN
     /** Format pinned time as relative time (e.g., "2h ago", "Yesterday") */
     fun getRelativeTime(): String {
         val now = System.currentTimeMillis()
@@ -70,7 +75,9 @@ data class PinnedEntry(
     }
 
     /** Convert to ClipboardEntry for backward-compatible view rendering */
-    fun toClipboardEntry(): ClipboardEntry = ClipboardEntry(content, pinnedTimestamp)
+    fun toClipboardEntry(): ClipboardEntry = ClipboardEntry(
+        content, pinnedTimestamp, mimeType, thumbnailBlob, mediaPath
+    )
 
     /** Serialize tags to JSON string for DB storage */
     fun tagsToJson(): String {

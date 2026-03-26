@@ -11,11 +11,29 @@ import java.util.Locale
 
 /**
  * Data class representing a clipboard entry with content and timestamp.
+ * v4 adds media support: mimeType, thumbnailBlob, mediaPath for non-text content.
  */
 class ClipboardEntry(
     @JvmField val content: String,
-    @JvmField val timestamp: Long // Unix timestamp in milliseconds
+    @JvmField val timestamp: Long, // Unix timestamp in milliseconds
+    @JvmField val mimeType: String = MIME_TEXT_PLAIN,
+    @JvmField val thumbnailBlob: ByteArray? = null,
+    @JvmField val mediaPath: String? = null
 ) {
+    /** Whether this entry contains non-text media (image, video, PDF, etc.) */
+    val isMedia: Boolean get() = mimeType != MIME_TEXT_PLAIN
+
+    /** Whether this entry is an image (JPEG, PNG, WebP, GIF, etc.) */
+    val isImage: Boolean get() = mimeType.startsWith("image/")
+
+    /** Whether this entry is a video */
+    val isVideo: Boolean get() = mimeType.startsWith("video/")
+
+    /** Whether this entry is a PDF document */
+    val isPdf: Boolean get() = mimeType == "application/pdf"
+
+    /** Whether this entry has a renderable thumbnail */
+    val hasThumbnail: Boolean get() = thumbnailBlob != null
     /**
      * Format timestamp as relative time (e.g., "2h ago", "Yesterday")
      */
@@ -69,6 +87,8 @@ class ClipboardEntry(
     }
 
     companion object {
+        const val MIME_TEXT_PLAIN = "text/plain"
+
         // Reuse across all instances — all calls are on Main thread (no thread-safety needed)
         private val DATE_FORMAT = SimpleDateFormat("MMM d", Locale.getDefault())
 

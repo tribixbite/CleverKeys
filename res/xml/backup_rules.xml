@@ -39,6 +39,9 @@
     <!-- Exclude files with user customizations (not aesthetic) -->
     <exclude domain="file" path="short_swipe_customizations.json" />
 
+    <!-- Exclude clipboard media files (can be large, PII) -->
+    <exclude domain="file" path="clipboard_media/" />
+
     <!-- Include only aesthetic SharedPreferences -->
     <include domain="sharedpref" path="custom_theme_prefs.xml" />
     <include domain="sharedpref" path="material_theme_prefs.xml" />

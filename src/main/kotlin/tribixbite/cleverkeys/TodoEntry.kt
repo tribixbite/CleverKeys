@@ -28,8 +28,13 @@ data class TodoEntry(
     val addedTimestamp: Long,     // when added to todo list (millis)
     val position: Double,        // sort order (REAL for midpoint insertion)
     val status: String = STATUS_ACTIVE,
-    val tags: List<String> = emptyList()
+    val tags: List<String> = emptyList(),
+    val mimeType: String = ClipboardEntry.MIME_TEXT_PLAIN,
+    val thumbnailBlob: ByteArray? = null,
+    val mediaPath: String? = null
 ) {
+    /** Whether this entry contains non-text media */
+    val isMedia: Boolean get() = mimeType != ClipboardEntry.MIME_TEXT_PLAIN
     /** Whether this todo is marked completed */
     val isCompleted: Boolean get() = status == STATUS_COMPLETED
 
@@ -100,7 +105,9 @@ data class TodoEntry(
     }
 
     /** Convert to ClipboardEntry for backward-compatible view rendering */
-    fun toClipboardEntry(): ClipboardEntry = ClipboardEntry(content, addedTimestamp)
+    fun toClipboardEntry(): ClipboardEntry = ClipboardEntry(
+        content, addedTimestamp, mimeType, thumbnailBlob, mediaPath
+    )
 
     /** Serialize tags to JSON string for DB storage */
     fun tagsToJson(): String {
