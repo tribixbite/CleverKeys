@@ -497,8 +497,9 @@ class ClipboardHistoryService private constructor(ctx: Context) {
                     addClip(text)
                 }
             } else {
-                // Media content (image, video, PDF, etc.) — check if media clipboard enabled
-                if (!Config.globalConfig().clipboard_media_enabled) return
+                // Media content (image, video, PDF, etc.) — skip in text-only or media-disabled mode
+                val cfg = Config.globalConfig()
+                if (cfg.clipboard_text_only || !cfg.clipboard_media_enabled) return
 
                 val maxMediaBytes = Config.globalConfig().clipboard_max_media_size_mb * 1024L * 1024L
                 val result = _mediaManager.saveMedia(uri, mimeType, maxMediaBytes) ?: return

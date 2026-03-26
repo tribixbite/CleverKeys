@@ -57,6 +57,9 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
     private var historyLimit by mutableStateOf(6)
     private var historyDuration by mutableStateOf(-1) // minutes; -1 = never expire (default)
 
+    // Text-only mode: disables media, pinned tabs, and todo tabs
+    private var clipboardTextOnly by mutableStateOf(false)
+
     // Media settings state
     private var mediaClipboardEnabled by mutableStateOf(true)
     private var maxMediaSizeMb by mutableStateOf(10)
@@ -135,7 +138,8 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
         val savedLimit = prefs.getInt("clipboard_history_limit", 6)
         historyLimit = if (savedLimit <= 0) 100 else savedLimit
         historyDuration = prefs.getString("clipboard_history_duration", Defaults.CLIPBOARD_HISTORY_DURATION)?.toIntOrNull() ?: Defaults.CLIPBOARD_HISTORY_DURATION_FALLBACK
-        // v4 media settings
+        // v4 clipboard mode + media settings
+        clipboardTextOnly = prefs.getBoolean("clipboard_text_only", false)
         mediaClipboardEnabled = prefs.getBoolean("clipboard_media_enabled", true)
         maxMediaSizeMb = prefs.getInt("clipboard_max_media_size_mb", 10).coerceIn(1, 50)
     }
@@ -295,6 +299,42 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
                                 }
                             )
                         }
+
+                        // Text-only mode toggle (visible when clipboard is enabled)
+                        if (clipboardEnabled) {
+                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "Text Only Mode",
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    Text(
+                                        text = "Disable media capture, pinned items, and todo lists",
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        fontSize = 12.sp
+                                    )
+                                }
+                                Switch(
+                                    checked = clipboardTextOnly,
+                                    onCheckedChange = {
+                                        clipboardTextOnly = it
+                                        saveSetting("clipboard_text_only", it)
+                                        // When text-only is on, also disable media capture
+                                        if (it) {
+                                            mediaClipboardEnabled = false
+                                            saveSetting("clipboard_media_enabled", false)
+                                        }
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
 
@@ -408,8 +448,8 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
                         }
                     }
 
-                    // Media Clipboard Settings Card (v4)
-                    Card(
+                    // Media Clipboard Settings Card (v4) — hidden in text-only mode
+                    if (!clipboardTextOnly) Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.surface
@@ -510,8 +550,10 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
                                 )
                             } else {
                                 StatRow("History (Active)", activeEntries.toString())
-                                StatRow("Pinned", pinnedEntries.toString())
-                                StatRow("Todos", todoEntries.toString())
+                                if (!clipboardTextOnly) {
+                                    StatRow("Pinned", pinnedEntries.toString())
+                                    StatRow("Todos", todoEntries.toString())
+                                }
                                 StatRow("Total", totalEntries.toString())
                                 StatRow("Expired (pending cleanup)", expiredEntries.toString())
                             }
@@ -545,9 +587,11 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
                             saveSetting("clipboard_exclude_password_managers", Defaults.CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS)
                             saveSetting("clipboard_respect_sensitive_flag", Defaults.CLIPBOARD_RESPECT_SENSITIVE_FLAG)
                             saveSetting("clipboard_pane_height_percent", Defaults.CLIPBOARD_PANE_HEIGHT_PERCENT)
-                            // v4 media settings defaults
+                            // v4 mode + media settings defaults
+                            clipboardTextOnly = false
                             mediaClipboardEnabled = true
                             maxMediaSizeMb = 10
+                            saveSetting("clipboard_text_only", false)
                             saveSetting("clipboard_media_enabled", true)
                             saveSetting("clipboard_max_media_size_mb", 10)
                             Toast.makeText(this@ClipboardSettingsActivity,

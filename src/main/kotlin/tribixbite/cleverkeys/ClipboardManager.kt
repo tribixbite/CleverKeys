@@ -113,6 +113,9 @@ class ClipboardManager(
             tabPinned?.setOnClickListener { switchToTab(ClipboardTab.PINNED) }
             tabTodos?.setOnClickListener { switchToTab(ClipboardTab.TODOS) }
 
+            // Hide pinned/todo tabs when text-only mode is active
+            applyTextOnlyMode()
+
             // Set initial tab highlighting
             updateTabHighlighting()
 
@@ -384,12 +387,29 @@ class ClipboardManager(
     }
 
     /**
-     * Updates configuration.
+     * Updates configuration and re-applies text-only mode visibility.
      *
      * @param newConfig Updated configuration
      */
     fun setConfig(newConfig: Config) {
         config = newConfig
+        applyTextOnlyMode()
+    }
+
+    /**
+     * Hides pinned/todo tab buttons when clipboard_text_only is enabled.
+     * Forces back to HISTORY tab if currently on pinned or todo.
+     */
+    private fun applyTextOnlyMode() {
+        val textOnly = config.clipboard_text_only
+        val visibility = if (textOnly) View.GONE else View.VISIBLE
+        tabPinned?.visibility = visibility
+        tabTodos?.visibility = visibility
+
+        // Force back to HISTORY if sitting on a disabled tab
+        if (textOnly && currentTab != ClipboardTab.HISTORY) {
+            switchToTab(ClipboardTab.HISTORY)
+        }
     }
 
     /**

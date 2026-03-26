@@ -446,11 +446,12 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 true
             }
 
-            // Configure buttons based on current tab
+            // Configure buttons based on current tab and text-only mode
+            val textOnly = Config.globalConfig().clipboard_text_only
             when (currentTab) {
                 ClipboardTab.HISTORY -> {
-                    pinButton.visibility = VISIBLE
-                    todoButton.visibility = VISIBLE
+                    pinButton.visibility = if (textOnly) GONE else VISIBLE
+                    todoButton.visibility = if (textOnly) GONE else VISIBLE
                 }
                 ClipboardTab.PINNED -> {
                     pinButton.visibility = VISIBLE
