@@ -1,5 +1,19 @@
 # CleverKeys TODO
 
+## Content URI Support + Media Clipboard (v3→v4) — COMPLETE (2026-03-26)
+All 9 phases implemented and compiling:
+1. ✅ Schema v4 migration (mime_type, thumbnail_blob, media_path columns)
+2. ✅ ClipboardMediaManager (MIME-aware storage, thumbnails, cleanup)
+3. ✅ Content URI streaming in addCurrentClip (IO dispatch + Binder bypass)
+4. ✅ MIME-agnostic media capture from system clipboard
+5. ✅ Database CRUD for media-aware entries (enriched return types)
+6. ✅ Media rendering in clipboard history view (thumbnails + MIME icons)
+7. ✅ Media paste via commitContent + FileProvider (all MIME types)
+8. ✅ Dual export format (JSON text-only + ZIP full backup with media)
+9. ✅ Media clipboard settings + orphan cleanup
+
+**Remaining**: Device testing — build release APK, install, test image/video/PDF copy-paste end-to-end.
+
 ## Open Issues — Corrected from GitHub (2026-02-25)
 
 ### Phase 1 — Simple Fixes (completed)
