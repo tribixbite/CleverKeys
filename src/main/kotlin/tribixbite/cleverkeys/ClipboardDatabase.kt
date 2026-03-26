@@ -1011,38 +1011,61 @@ class ClipboardDatabase private constructor(context: Context) :
     }
 
     // ═══════════════════════════════════════════════════════════════════
-    // Export / Import (v3 format with v2 backward compatibility)
+    // Export / Import (v4 format with v2/v3 backward compatibility)
     // ═══════════════════════════════════════════════════════════════════
 
-    fun exportToJSON(): JSONObject? {
+    /**
+     * Export clipboard data to JSON. Text-only entries are always included.
+     * Media entries include mime_type and media_path metadata (no thumbnail BLOBs or
+     * file bytes — those go in the ZIP export only).
+     *
+     * @param textOnly If true, skip media entries entirely (lightweight JSON export).
+     *                 If false, include media metadata (for ZIP export manifest).
+     */
+    fun exportToJSON(textOnly: Boolean = false): JSONObject? {
         return try {
             val activeArray = JSONArray()
             val pinnedArray = JSONArray()
             val todoArray = JSONArray()
             var activeCount = 0; var pinnedCount = 0; var todoCount = 0
+            var mediaSkipped = 0
 
-            // Export history entries
+            // Export history entries (v4: includes mime_type, media_path)
             readableDatabase.rawQuery("""
-                SELECT $COLUMN_CONTENT, $COLUMN_TIMESTAMP, $COLUMN_EXPIRY_TIMESTAMP
+                SELECT $COLUMN_CONTENT, $COLUMN_TIMESTAMP, $COLUMN_EXPIRY_TIMESTAMP,
+                       $COLUMN_MIME_TYPE, $COLUMN_MEDIA_PATH
                 FROM $TABLE_CLIPBOARD ORDER BY $COLUMN_TIMESTAMP DESC
             """.trimIndent(), null).use { cursor ->
                 while (cursor.moveToNext()) {
+                    val mimeType = cursor.getString(3) ?: ClipboardEntry.MIME_TEXT_PLAIN
+                    val mediaPath = cursor.getString(4)
+                    val isMedia = mimeType != ClipboardEntry.MIME_TEXT_PLAIN
+                    if (textOnly && isMedia) { mediaSkipped++; continue }
                     activeArray.put(JSONObject().apply {
                         put("content", cursor.getString(0))
                         put("timestamp", cursor.getLong(1))
                         put("expiry_timestamp", cursor.getLong(2))
+                        if (isMedia) {
+                            put("mime_type", mimeType)
+                            if (mediaPath != null) put("media_path", mediaPath)
+                        }
                     })
                     activeCount++
                 }
             }
 
-            // Export pinned entries with v3 fields
+            // Export pinned entries with v4 media fields
             readableDatabase.rawQuery("""
                 SELECT $COLUMN_CONTENT, $COLUMN_CONTENT_HASH, $COLUMN_CREATED_TIMESTAMP,
-                       $COLUMN_PINNED_TIMESTAMP, $COLUMN_POSITION, $COLUMN_TAGS
+                       $COLUMN_PINNED_TIMESTAMP, $COLUMN_POSITION, $COLUMN_TAGS,
+                       $COLUMN_MIME_TYPE, $COLUMN_MEDIA_PATH
                 FROM $TABLE_PINNED ORDER BY $COLUMN_POSITION ASC
             """.trimIndent(), null).use { cursor ->
                 while (cursor.moveToNext()) {
+                    val mimeType = cursor.getString(6) ?: ClipboardEntry.MIME_TEXT_PLAIN
+                    val mediaPath = cursor.getString(7)
+                    val isMedia = mimeType != ClipboardEntry.MIME_TEXT_PLAIN
+                    if (textOnly && isMedia) { mediaSkipped++; continue }
                     pinnedArray.put(JSONObject().apply {
                         put("content", cursor.getString(0))
                         put("content_hash", cursor.getString(1))
@@ -1051,18 +1074,27 @@ class ClipboardDatabase private constructor(context: Context) :
                         put("timestamp", cursor.getLong(3))  // v2 compat key
                         put("position", cursor.getDouble(4))
                         put("tags", cursor.getString(5) ?: "[]")
+                        if (isMedia) {
+                            put("mime_type", mimeType)
+                            if (mediaPath != null) put("media_path", mediaPath)
+                        }
                     })
                     pinnedCount++
                 }
             }
 
-            // Export todo entries with v3 fields
+            // Export todo entries with v4 media fields
             readableDatabase.rawQuery("""
                 SELECT $COLUMN_CONTENT, $COLUMN_CONTENT_HASH, $COLUMN_CREATED_TIMESTAMP,
-                       $COLUMN_ADDED_TIMESTAMP, $COLUMN_POSITION, $COLUMN_STATUS, $COLUMN_TAGS
+                       $COLUMN_ADDED_TIMESTAMP, $COLUMN_POSITION, $COLUMN_STATUS, $COLUMN_TAGS,
+                       $COLUMN_MIME_TYPE, $COLUMN_MEDIA_PATH
                 FROM $TABLE_TODO ORDER BY $COLUMN_POSITION ASC
             """.trimIndent(), null).use { cursor ->
                 while (cursor.moveToNext()) {
+                    val mimeType = cursor.getString(7) ?: ClipboardEntry.MIME_TEXT_PLAIN
+                    val mediaPath = cursor.getString(8)
+                    val isMedia = mimeType != ClipboardEntry.MIME_TEXT_PLAIN
+                    if (textOnly && isMedia) { mediaSkipped++; continue }
                     todoArray.put(JSONObject().apply {
                         put("content", cursor.getString(0))
                         put("content_hash", cursor.getString(1))
@@ -1072,6 +1104,10 @@ class ClipboardDatabase private constructor(context: Context) :
                         put("position", cursor.getDouble(4))
                         put("status", cursor.getString(5) ?: TodoEntry.STATUS_ACTIVE)
                         put("tags", cursor.getString(6) ?: "[]")
+                        if (isMedia) {
+                            put("mime_type", mimeType)
+                            if (mediaPath != null) put("media_path", mediaPath)
+                        }
                     })
                     todoCount++
                 }
@@ -1081,13 +1117,15 @@ class ClipboardDatabase private constructor(context: Context) :
                 put("active_entries", activeArray)
                 put("pinned_entries", pinnedArray)
                 put("todo_entries", todoArray)
-                put("export_version", 3)
+                put("export_version", 4)
                 put("export_date", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(Date()))
                 put("total_active", activeCount)
                 put("total_pinned", pinnedCount)
                 put("total_todo", todoCount)
+                if (mediaSkipped > 0) put("media_skipped", mediaSkipped)
             }.also {
-                Log.d(TAG, "Exported $activeCount active, $pinnedCount pinned, $todoCount todo entries (v3)")
+                val suffix = if (textOnly) " (text-only, $mediaSkipped media skipped)" else ""
+                Log.d(TAG, "Exported $activeCount active, $pinnedCount pinned, $todoCount todo entries (v4)$suffix")
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error exporting clipboard data: ${e.message}")
@@ -1161,6 +1199,11 @@ class ClipboardDatabase private constructor(context: Context) :
                 put(COLUMN_TIMESTAMP, entry.getLong("timestamp"))
                 put(COLUMN_EXPIRY_TIMESTAMP, freshExpiry)
                 put(COLUMN_CONTENT_HASH, contentHash)
+                // v4 media fields (optional — text-only entries won't have these)
+                val mimeType = entry.optString("mime_type", ClipboardEntry.MIME_TEXT_PLAIN)
+                put(COLUMN_MIME_TYPE, mimeType)
+                val mediaPath = if (entry.has("media_path")) entry.getString("media_path") else null
+                if (mediaPath != null) put(COLUMN_MEDIA_PATH, mediaPath)
             }
             if (db.insert(TABLE_CLIPBOARD, null, values) != -1L) added++
         }
@@ -1201,6 +1244,11 @@ class ClipboardDatabase private constructor(context: Context) :
                 put(COLUMN_PINNED_TIMESTAMP, pinnedTs)
                 put(COLUMN_POSITION, position)
                 put(COLUMN_TAGS, tags)
+                // v4 media fields
+                val mimeType = entry.optString("mime_type", ClipboardEntry.MIME_TEXT_PLAIN)
+                put(COLUMN_MIME_TYPE, mimeType)
+                val mediaPath = if (entry.has("media_path")) entry.getString("media_path") else null
+                if (mediaPath != null) put(COLUMN_MEDIA_PATH, mediaPath)
             }
             if (db.insert(TABLE_PINNED, null, values) != -1L) added++
 
@@ -1260,6 +1308,11 @@ class ClipboardDatabase private constructor(context: Context) :
                 put(COLUMN_POSITION, position)
                 put(COLUMN_STATUS, status)
                 put(COLUMN_TAGS, tags)
+                // v4 media fields
+                val mimeType = entry.optString("mime_type", ClipboardEntry.MIME_TEXT_PLAIN)
+                put(COLUMN_MIME_TYPE, mimeType)
+                val mediaPath = if (entry.has("media_path")) entry.getString("media_path") else null
+                if (mediaPath != null) put(COLUMN_MEDIA_PATH, mediaPath)
             }
             if (db.insert(TABLE_TODO, null, values) != -1L) added++
 

@@ -1357,14 +1357,15 @@ class BackupRestoreManager(private val context: Context) {
     }
 
     /**
-     * Export clipboard history to JSON file
+     * Export clipboard history to JSON file (text-only, lightweight).
+     * Media entries are skipped — use exportClipboardHistoryZip for full backup.
      * @param uri URI from Storage Access Framework (ACTION_CREATE_DOCUMENT)
      * @return ClipboardExportResult with statistics
      */
     fun exportClipboardHistory(uri: Uri): ClipboardExportResult {
         try {
             val clipboardDb = ClipboardDatabase.getInstance(context)
-            val exportData = clipboardDb.exportToJSON()
+            val exportData = clipboardDb.exportToJSON(textOnly = true)
                 ?: throw Exception("Failed to export clipboard data")
 
             openOutputStream(uri)?.use { outputStream ->
@@ -1377,12 +1378,172 @@ class BackupRestoreManager(private val context: Context) {
             val activeCount = exportData.optInt("total_active", 0)
             val pinnedCount = exportData.optInt("total_pinned", 0)
             val todoCount = exportData.optInt("total_todo", 0)
+            val mediaSkipped = exportData.optInt("media_skipped", 0)
 
-            Log.i(TAG, "Exported clipboard history: $activeCount active, $pinnedCount pinned, $todoCount todo")
-            return ClipboardExportResult(activeCount + pinnedCount + todoCount)
+            Log.i(TAG, "Exported clipboard (text-only): $activeCount active, $pinnedCount pinned, $todoCount todo, $mediaSkipped media skipped")
+            return ClipboardExportResult(activeCount + pinnedCount + todoCount, mediaSkipped)
         } catch (e: Exception) {
             Log.e(TAG, "Clipboard export failed", e)
             throw Exception("Clipboard export failed: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Export clipboard history to ZIP file (full backup with media files).
+     * ZIP contains: clipboard_data.json + clipboard_media/{files}
+     * Streams media files directly — never loads all into memory (OOM safe).
+     * @param uri URI from Storage Access Framework (ACTION_CREATE_DOCUMENT)
+     * @return ClipboardExportResult with statistics
+     */
+    fun exportClipboardHistoryZip(uri: Uri): ClipboardExportResult {
+        try {
+            val clipboardDb = ClipboardDatabase.getInstance(context)
+            // Export JSON manifest with all entries including media metadata
+            val exportData = clipboardDb.exportToJSON(textOnly = false)
+                ?: throw Exception("Failed to export clipboard data")
+
+            val mediaManager = ClipboardMediaManager(context)
+            var mediaFileCount = 0
+
+            openOutputStream(uri)?.use { outputStream ->
+                java.util.zip.ZipOutputStream(outputStream).use { zipOut ->
+                    // Write JSON manifest as first entry
+                    val jsonEntry = java.util.zip.ZipEntry("clipboard_data.json")
+                    zipOut.putNextEntry(jsonEntry)
+                    zipOut.write(exportData.toString(2).toByteArray(Charsets.UTF_8))
+                    zipOut.closeEntry()
+
+                    // Collect unique media paths from all tables and stream files into ZIP
+                    val mediaPaths = clipboardDb.getAllReferencedMediaPaths()
+                    for (mediaPath in mediaPaths) {
+                        val file = mediaManager.getMediaFile(mediaPath)
+                        if (!file.exists()) {
+                            Log.w(TAG, "Media file not found during export, skipping: $mediaPath")
+                            continue
+                        }
+                        val zipMediaEntry = java.util.zip.ZipEntry("clipboard_media/$mediaPath")
+                        zipOut.putNextEntry(zipMediaEntry)
+                        file.inputStream().use { it.copyTo(zipOut) }
+                        zipOut.closeEntry()
+                        mediaFileCount++
+                    }
+                }
+            }
+
+            val activeCount = exportData.optInt("total_active", 0)
+            val pinnedCount = exportData.optInt("total_pinned", 0)
+            val todoCount = exportData.optInt("total_todo", 0)
+
+            Log.i(TAG, "Exported clipboard ZIP: $activeCount active, $pinnedCount pinned, $todoCount todo, $mediaFileCount media files")
+            return ClipboardExportResult(activeCount + pinnedCount + todoCount, 0, mediaFileCount)
+        } catch (e: Exception) {
+            Log.e(TAG, "Clipboard ZIP export failed", e)
+            throw Exception("Clipboard ZIP export failed: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Import clipboard history from ZIP file (full backup with media files).
+     * Extracts media files to internal storage, regenerates thumbnails, imports JSON.
+     * @param uri URI from Storage Access Framework (ACTION_OPEN_DOCUMENT)
+     * @return ClipboardImportResult with statistics
+     */
+    fun importClipboardHistoryZip(uri: Uri): ClipboardImportResult {
+        return try {
+            val clipboardDb = ClipboardDatabase.getInstance(context)
+            val mediaManager = ClipboardMediaManager(context)
+            var mediaFilesRestored = 0
+
+            // Stream ZIP entries directly — never buffer entire payload in memory
+            context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                java.util.zip.ZipInputStream(inputStream).use { zipIn ->
+                    var jsonData: org.json.JSONObject? = null
+                    var entry = zipIn.nextEntry
+                    while (entry != null) {
+                        when {
+                            entry.name == "clipboard_data.json" -> {
+                                // Read JSON manifest
+                                val jsonBytes = zipIn.readBytes()
+                                jsonData = org.json.JSONObject(String(jsonBytes, Charsets.UTF_8))
+                            }
+                            entry.name.startsWith("clipboard_media/") -> {
+                                // Extract media file to internal storage
+                                val relativePath = entry.name.removePrefix("clipboard_media/")
+                                if (relativePath.isNotEmpty()) {
+                                    val targetFile = mediaManager.getMediaFile(relativePath)
+                                    targetFile.parentFile?.mkdirs()
+                                    targetFile.outputStream().use { out ->
+                                        zipIn.copyTo(out)
+                                    }
+                                    mediaFilesRestored++
+                                }
+                            }
+                        }
+                        zipIn.closeEntry()
+                        entry = zipIn.nextEntry
+                    }
+
+                    if (jsonData == null) {
+                        throw Exception("ZIP does not contain clipboard_data.json manifest")
+                    }
+
+                    // Import JSON entries (they reference media_path values we just extracted)
+                    val importResult = clipboardDb.importFromJSON(jsonData)
+
+                    // Regenerate thumbnails for imported media entries
+                    val referencedPaths = clipboardDb.getAllReferencedMediaPaths()
+                    var thumbnailsRegenerated = 0
+                    for (path in referencedPaths) {
+                        val file = mediaManager.getMediaFile(path)
+                        if (!file.exists()) continue
+                        // Determine MIME type from extension
+                        val ext = file.extension.lowercase()
+                        val mimeType = when (ext) {
+                            "jpg", "jpeg" -> "image/jpeg"
+                            "png" -> "image/png"
+                            "webp" -> "image/webp"
+                            "gif" -> "image/gif"
+                            "mp4" -> "video/mp4"
+                            "pdf" -> "application/pdf"
+                            else -> "application/octet-stream"
+                        }
+                        val thumbnail = mediaManager.generateThumbnail(file.absolutePath, mimeType)
+                        if (thumbnail != null) {
+                            // Update thumbnail_blob in all tables that reference this path
+                            updateThumbnailForMediaPath(clipboardDb, path, thumbnail)
+                            thumbnailsRegenerated++
+                        }
+                    }
+                    Log.d(TAG, "Regenerated $thumbnailsRegenerated thumbnails after ZIP import")
+
+                    val result = ClipboardImportResult()
+                    result.importedCount = importResult[0] + importResult[1] + importResult[2]
+                    result.skippedCount = importResult[3]
+                    result.mediaFilesRestored = mediaFilesRestored
+                    if (jsonData.has("export_date")) {
+                        result.sourceVersion = jsonData.getString("export_date")
+                    }
+                    result
+                }
+            } ?: throw Exception("Cannot open ZIP file")
+        } catch (e: Exception) {
+            Log.e(TAG, "Clipboard ZIP import failed", e)
+            throw Exception("Clipboard ZIP import failed: ${e.message}", e)
+        }
+    }
+
+    /** Update thumbnail_blob for all rows referencing a given media_path across all tables */
+    private fun updateThumbnailForMediaPath(db: ClipboardDatabase, mediaPath: String, thumbnail: ByteArray) {
+        try {
+            val sqliteDb = db.writableDatabase
+            val values = android.content.ContentValues().apply {
+                put("thumbnail_blob", thumbnail)
+            }
+            for (table in listOf("clipboard_entries", "pinned_entries", "todo_entries")) {
+                sqliteDb.update(table, values, "media_path = ?", arrayOf(mediaPath))
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to update thumbnail for $mediaPath: ${e.message}")
         }
     }
 
@@ -1431,14 +1592,17 @@ class BackupRestoreManager(private val context: Context) {
     data class ClipboardImportResult(
         @JvmField var importedCount: Int = 0,
         @JvmField var skippedCount: Int = 0,
-        @JvmField var sourceVersion: String = "unknown"
+        @JvmField var sourceVersion: String = "unknown",
+        @JvmField var mediaFilesRestored: Int = 0
     )
 
     /**
      * Result of clipboard export operation
      */
     data class ClipboardExportResult(
-        @JvmField var exportedCount: Int = 0
+        @JvmField var exportedCount: Int = 0,
+        @JvmField var mediaSkipped: Int = 0,
+        @JvmField var mediaFilesIncluded: Int = 0
     )
 
     companion object {

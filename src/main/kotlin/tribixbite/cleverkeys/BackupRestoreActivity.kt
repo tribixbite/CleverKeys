@@ -152,7 +152,7 @@ class BackupRestoreActivity : ComponentActivity() {
             uri?.let { performImportDictionaries(it) }
         }
 
-        // Clipboard export/import launchers
+        // Clipboard export/import launchers (JSON text-only)
         val exportClipboardLauncher = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.CreateDocument("application/json")
         ) { uri ->
@@ -163,6 +163,19 @@ class BackupRestoreActivity : ComponentActivity() {
             contract = ActivityResultContracts.OpenDocument()
         ) { uri ->
             uri?.let { performImportClipboard(it) }
+        }
+
+        // Clipboard ZIP export/import launchers (full backup with media)
+        val exportClipboardZipLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.CreateDocument("application/zip")
+        ) { uri ->
+            uri?.let { performExportClipboardZip(it) }
+        }
+
+        val importClipboardZipLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.OpenDocument()
+        ) { uri ->
+            uri?.let { performImportClipboardZip(it) }
         }
 
         Scaffold(
@@ -390,13 +403,21 @@ class BackupRestoreActivity : ComponentActivity() {
                         )
 
                         Text(
-                            text = "Export and import your clipboard history including all entries, timestamps, and pinned status. " +
-                                    "Import merges with existing history without overwriting.",
+                            text = "Export and import your clipboard history. " +
+                                    "JSON export is text-only (lightweight). " +
+                                    "ZIP export includes media files (full backup).",
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             lineHeight = 16.sp
                         )
 
+                        // JSON text-only export/import
+                        Text(
+                            text = "Text Only (JSON)",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -427,6 +448,46 @@ class BackupRestoreActivity : ComponentActivity() {
                                 )
                             ) {
                                 Text("Import")
+                            }
+                        }
+
+                        // ZIP full backup export/import (includes media files)
+                        Text(
+                            text = "Full Backup (ZIP with media)",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Button(
+                                onClick = {
+                                    val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
+                                    val filename = "CleverKeys_clipboard_full_$timestamp.zip"
+                                    exportClipboardZipLauncher.launch(filename)
+                                },
+                                modifier = Modifier.weight(1f),
+                                enabled = !isProcessing,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.tertiary
+                                )
+                            ) {
+                                Text("Export ZIP")
+                            }
+
+                            Button(
+                                onClick = {
+                                    importClipboardZipLauncher.launch(arrayOf("application/zip", "application/x-zip-compressed"))
+                                },
+                                modifier = Modifier.weight(1f),
+                                enabled = !isProcessing,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.tertiary
+                                )
+                            ) {
+                                Text("Import ZIP")
                             }
                         }
                     }
@@ -735,6 +796,79 @@ class BackupRestoreActivity : ComponentActivity() {
             } finally {
                 isProcessing = false
                 if (isHeadless) finish() // #70: close activity after headless operation
+            }
+        }
+    }
+
+    private fun performExportClipboardZip(uri: Uri) {
+        lifecycleScope.launch {
+            isProcessing = true
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    backupRestoreManager.exportClipboardHistoryZip(uri)
+                }
+
+                headlessToast("Clipboard ZIP exported")
+                resultTitle = "Full Clipboard Export Successful"
+                resultMessage = "Clipboard history exported with media files.\n\n" +
+                        "File: ${uri.lastPathSegment}\n\n" +
+                        "Includes:\n" +
+                        "- ${result.exportedCount} clipboard entries\n" +
+                        "- ${result.mediaFilesIncluded} media files\n\n" +
+                        "This ZIP can be imported to fully restore all entries including images, videos, and other media."
+                showResultDialog = true
+
+                android.util.Log.i(TAG, "Clipboard ZIP export successful: ${result.exportedCount} entries, ${result.mediaFilesIncluded} media files")
+            } catch (e: Exception) {
+                android.util.Log.e(TAG, "Clipboard ZIP export failed", e)
+                headlessToast("ZIP export failed: ${e.message?.take(60)}")
+                resultTitle = "Clipboard ZIP Export Failed"
+                resultMessage = "Failed to export clipboard history with media:\n\n${e.message}"
+                showResultDialog = true
+            } finally {
+                isProcessing = false
+                if (isHeadless) finish()
+            }
+        }
+    }
+
+    private fun performImportClipboardZip(uri: Uri) {
+        lifecycleScope.launch {
+            isProcessing = true
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    backupRestoreManager.importClipboardHistoryZip(uri)
+                }
+
+                val messageBuilder = StringBuilder()
+                messageBuilder.append("Full clipboard import completed!\n\n")
+                messageBuilder.append("Statistics:\n")
+                messageBuilder.append("- Imported: ${result.importedCount} entries\n")
+                messageBuilder.append("- Skipped: ${result.skippedCount} duplicates\n")
+                messageBuilder.append("- Media files restored: ${result.mediaFilesRestored}\n")
+
+                if (result.sourceVersion != "unknown") {
+                    messageBuilder.append("- Source: ${result.sourceVersion}\n")
+                }
+
+                messageBuilder.append("\nAll media files and thumbnails have been restored.")
+
+                resultTitle = "Full Clipboard Import Successful"
+                resultMessage = messageBuilder.toString()
+                showResultDialog = true
+
+                headlessToast("Imported ${result.importedCount} entries + ${result.mediaFilesRestored} media")
+                android.util.Log.i(TAG, "Clipboard ZIP import: ${result.importedCount} entries, ${result.mediaFilesRestored} media files")
+            } catch (e: Exception) {
+                android.util.Log.e(TAG, "Clipboard ZIP import failed", e)
+                headlessToast("ZIP import failed: ${e.message?.take(60)}")
+                resultTitle = "Clipboard ZIP Import Failed"
+                resultMessage = "Failed to import clipboard ZIP:\n\n${e.message}\n\n" +
+                        "Make sure the file is a valid CleverKeys clipboard ZIP backup."
+                showResultDialog = true
+            } finally {
+                isProcessing = false
+                if (isHeadless) finish()
             }
         }
     }
