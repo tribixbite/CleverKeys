@@ -142,6 +142,68 @@ class KeyEventHandler(
         sendText(content)
     }
 
+    /**
+     * Paste media content via InputConnection.commitContent (API 25+).
+     * Uses FileProvider to generate a content:// URI from the internal media file path,
+     * then sends it to the target app via commitContent. Falls back to placing
+     * the media URI on the system clipboard if commitContent fails.
+     */
+    override fun paste_media_from_clipboard_pane(mimeType: String, mediaPath: String): Boolean {
+        if (recv.isClipboardSearchMode()) {
+            recv.exitClipboardSearchMode()
+        }
+        val context = recv.getContext() ?: return false
+        val editorInfo = recv.getCurrentEditorInfo() ?: return false
+        val conn = recv.getCurrentInputConnection() ?: return false
+
+        return try {
+            val mediaManager = ClipboardMediaManager(context)
+            val file = mediaManager.getMediaFile(mediaPath)
+            if (!file.exists()) {
+                Log.w(TAG, "Media file not found for paste: $mediaPath")
+                return false
+            }
+
+            val contentUri = androidx.core.content.FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                file
+            )
+
+            if (Build.VERSION.SDK_INT >= 25) {
+                // commitContent is the standard IME→app media insertion API (API 25+)
+                val description = android.content.ClipDescription(mediaPath, arrayOf(mimeType))
+                val inputContentInfo = androidx.core.view.inputmethod.InputContentInfoCompat(
+                    contentUri, description, null
+                )
+                val flags = androidx.core.view.inputmethod.InputConnectionCompat.INPUT_CONTENT_GRANT_READ_URI_PERMISSION
+                val committed = androidx.core.view.inputmethod.InputConnectionCompat.commitContent(
+                    conn, editorInfo, inputContentInfo, flags, null
+                )
+                if (committed) {
+                    Log.d(TAG, "commitContent succeeded for $mimeType")
+                    return true
+                }
+                Log.d(TAG, "commitContent returned false, falling back to system clipboard")
+            }
+
+            // Fallback: place media URI on system clipboard with read permission
+            val clip = android.content.ClipData.newUri(
+                context.contentResolver, mediaPath, contentUri
+            )
+            clip.description.extras = android.os.PersistableBundle().apply {
+                putString("android.content.extra.MIME_TYPES", mimeType)
+            }
+            val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+            cm.setPrimaryClip(clip)
+            Log.d(TAG, "Media placed on system clipboard as fallback")
+            true
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to paste media: ${e.message}", e)
+            false
+        }
+    }
+
     /** Update [mods] to be consistent with the [mods], sending key events if needed. */
     private fun updateMetaState(mods: Pointers.Modifiers) {
         // Released modifiers

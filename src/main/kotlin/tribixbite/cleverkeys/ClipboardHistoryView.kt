@@ -282,7 +282,17 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
 
     /** Send the specified entry to the editor (position in current page). */
     fun paste_entry(pos: Int) {
-        ClipboardHistoryService.paste(paginatedHistory[pos].content)
+        val entry = paginatedHistory[pos]
+        if (entry.isMedia && entry.mediaPath != null) {
+            // Media entry — use commitContent to send to target app
+            val success = ClipboardHistoryService.pasteMedia(entry.mimeType, entry.mediaPath)
+            if (!success) {
+                Toast.makeText(context, "Cannot paste media here", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            // Text entry — use standard commitText path
+            ClipboardHistoryService.paste(entry.content)
+        }
     }
 
     override fun on_clipboard_history_change() {

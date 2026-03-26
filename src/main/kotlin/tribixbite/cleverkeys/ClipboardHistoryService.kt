@@ -595,8 +595,10 @@ class ClipboardHistoryService private constructor(ctx: Context) {
 
     // HistoryEntry class removed - now using SQLite database storage
 
-    fun interface ClipboardPasteCallback {
+    interface ClipboardPasteCallback {
         fun paste_from_clipboard_pane(content: String)
+        /** Paste media content via commitContent (API 25+). Returns true if successful. */
+        fun paste_media_from_clipboard_pane(mimeType: String, mediaPath: String): Boolean = false
     }
 
     companion object {
@@ -688,13 +690,24 @@ class ClipboardHistoryService private constructor(ctx: Context) {
             // History will simply stop recording new clipboard changes
         }
 
-        /** Send the given string to the editor. */
+        /** Send the given string to the editor (text entries). */
         @JvmStatic
         fun paste(clip: String) {
             if (_service != null && _service!!._pasteCallback != null)
                 _service!!._pasteCallback!!.paste_from_clipboard_pane(clip)
             else
                 android.util.Log.w("ClipboardHistory", "Cannot paste - callback not initialized")
+        }
+
+        /** Send media content to the editor via commitContent (v4 media entries). */
+        @JvmStatic
+        fun pasteMedia(mimeType: String, mediaPath: String): Boolean {
+            val cb = _service?._pasteCallback
+            if (cb == null) {
+                android.util.Log.w("ClipboardHistory", "Cannot paste media - callback not initialized")
+                return false
+            }
+            return cb.paste_media_from_clipboard_pane(mimeType, mediaPath)
         }
 
         /** Clipboard history is persistently stored in SQLite database and survives app restarts.

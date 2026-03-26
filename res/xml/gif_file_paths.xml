@@ -8,4 +8,6 @@
     <files-path name="gifs_thumbs" path="gifs/thumbs/" />
     <!-- GIF sharing cache (Gif.getCacheFile uses cacheDir/gifs/) -->
     <cache-path name="gifs_cache" path="gifs/" />
+    <!-- Clipboard media files in partitioned storage (clipboard_media/{partition}/{hash}.{ext}) -->
+    <files-path name="clipboard_media" path="clipboard_media/" />
 </paths>
