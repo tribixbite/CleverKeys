@@ -203,6 +203,63 @@ class ClipboardDatabase private constructor(context: Context) :
         }
     }
 
+    /**
+     * Add a media clipboard entry (v4). Uses SHA-256 content hash for dedup instead
+     * of String.hashCode(). Stores MIME type, thumbnail BLOB, and media file path.
+     *
+     * @param content Display name (filename or URI segment) — NOT the media bytes
+     * @param contentHash SHA-256 hex digest of the media file
+     */
+    fun addMediaClipboardEntry(
+        content: String,
+        expiryTimestamp: Long,
+        mimeType: String,
+        thumbnailBlob: ByteArray?,
+        mediaPath: String,
+        contentHash: String
+    ): Boolean {
+        if (content.isBlank()) return false
+        return try {
+            val db = writableDatabase
+            val currentTime = System.currentTimeMillis()
+
+            // Dedup: check if this exact media file already exists (by content hash)
+            val duplicateQuery = """
+                SELECT $COLUMN_ID FROM $TABLE_CLIPBOARD
+                WHERE $COLUMN_CONTENT_HASH = ? AND $COLUMN_EXPIRY_TIMESTAMP > ?
+            """.trimIndent()
+            db.rawQuery(duplicateQuery, arrayOf(contentHash, currentTime.toString())).use { cursor ->
+                if (cursor.moveToFirst()) {
+                    // Move duplicate to top by updating timestamp
+                    val existingId = cursor.getLong(0)
+                    val updateValues = ContentValues().apply {
+                        put(COLUMN_TIMESTAMP, currentTime)
+                        put(COLUMN_EXPIRY_TIMESTAMP, expiryTimestamp)
+                    }
+                    db.update(TABLE_CLIPBOARD, updateValues, "$COLUMN_ID = ?", arrayOf(existingId.toString()))
+                    Log.d(TAG, "Duplicate media moved to top: $content (id=$existingId)")
+                    return true
+                }
+            }
+
+            val values = ContentValues().apply {
+                put(COLUMN_CONTENT, content)
+                put(COLUMN_TIMESTAMP, currentTime)
+                put(COLUMN_EXPIRY_TIMESTAMP, expiryTimestamp)
+                put(COLUMN_CONTENT_HASH, contentHash)
+                put(COLUMN_MIME_TYPE, mimeType)
+                if (thumbnailBlob != null) put(COLUMN_THUMBNAIL_BLOB, thumbnailBlob)
+                put(COLUMN_MEDIA_PATH, mediaPath)
+            }
+            val result = db.insert(TABLE_CLIPBOARD, null, values)
+            Log.d(TAG, "Added media entry: $content ($mimeType, id=$result)")
+            result != -1L
+        } catch (e: Exception) {
+            Log.e(TAG, "Error adding media clipboard entry: ${e.message}")
+            false
+        }
+    }
+
     /** Get non-expired history entries (v3: no pinned/todo filters — those are separate tables) */
     fun getActiveClipboardEntries(): List<ClipboardEntry> {
         val entries = mutableListOf<ClipboardEntry>()

@@ -5,10 +5,17 @@ import android.app.usage.UsageStatsManager
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.net.Uri
 import android.os.Build
 import android.os.Build.VERSION
 import android.os.UserManager
 import android.widget.Toast
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import java.io.InputStreamReader
+import java.nio.charset.StandardCharsets
 
 class ClipboardHistoryService private constructor(ctx: Context) {
     private val _context: Context = ctx.applicationContext
@@ -18,6 +25,12 @@ class ClipboardHistoryService private constructor(ctx: Context) {
     private var _listener: OnClipboardHistoryChange? = null
     private var _isListenerRegistered = false
     private var _systemListener: ClipboardManager.OnPrimaryClipChangedListener? = null
+
+    // Coroutine scope for IO-dispatched clipboard reads (survives entire service lifetime)
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+
+    // Media manager for clipboard media file storage and thumbnails
+    private val _mediaManager: ClipboardMediaManager by lazy { ClipboardMediaManager(_context) }
 
     init {
         // Clean up expired entries on startup
@@ -353,7 +366,17 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         return Defaults.PASSWORD_MANAGER_PACKAGES.contains(packageName)
     }
 
-    /** Add what is currently in the system clipboard into the history. */
+    /**
+     * Add what is currently in the system clipboard into the history.
+     *
+     * Reads ClipData metadata on the main thread (fast Binder IPC for small metadata),
+     * then dispatches URI content streaming to Dispatchers.IO to prevent ANR.
+     *
+     * When an item has text, it goes through addClip() as before.
+     * When an item has a content:// URI instead:
+     * - text MIME: stream text via ContentResolver.openInputStream (bypasses Binder limit)
+     * - media MIME: save file via ClipboardMediaManager, store thumbnail in DB
+     */
     private fun addCurrentClip() {
         try {
             // Check if password manager exclusion is enabled
@@ -387,9 +410,20 @@ class ClipboardHistoryService private constructor(ctx: Context) {
 
             val count = clip.itemCount
             for (i in 0 until count) {
-                val text = clip.getItemAt(i).text
-                if (text != null)
+                val item = clip.getItemAt(i)
+                val text = item.text
+
+                if (text != null) {
+                    // Standard text content — handle synchronously (already on main, fast)
                     addClip(text.toString())
+                } else if (item.uri != null) {
+                    // Content URI — dispatch to IO thread to prevent ANR
+                    // Android grants temp read access while IME is active; read promptly
+                    val uri = item.uri
+                    serviceScope.launch(Dispatchers.IO) {
+                        processClipUri(uri)
+                    }
+                }
             }
         } catch (e: SecurityException) {
             // Android 10+ denies clipboard access when app is not in focus
@@ -404,6 +438,128 @@ class ClipboardHistoryService private constructor(ctx: Context) {
             // cannot help because the data never reaches our code.
             android.util.Log.w("ClipboardHistoryService",
                 "Clipboard read failed (${e.javaClass.simpleName}): ${e.message?.take(100)}")
+        }
+    }
+
+    /**
+     * Process a content:// URI from the clipboard on IO thread.
+     *
+     * Routes by MIME type:
+     * - text: stream to String, add via addClip() (bypasses Binder IPC limit for large text)
+     * - media: save file + thumbnail via ClipboardMediaManager, add via addMediaClip()
+     */
+    private fun processClipUri(uri: Uri) {
+        try {
+            if (!Config.globalConfig().clipboard_history_enabled) return
+
+            val mimeType = _context.contentResolver.getType(uri) ?: "application/octet-stream"
+
+            if (mimeType.startsWith("text/")) {
+                // Text content via URI — stream directly (bypasses Binder ~1MB limit)
+                val text = readTextFromUri(uri)
+                if (text != null) {
+                    addClip(text)
+                }
+            } else {
+                // Media content (image, video, PDF, etc.) — check if media clipboard enabled
+                if (!Config.globalConfig().clipboard_media_enabled) return
+
+                val maxMediaBytes = Config.globalConfig().clipboard_max_media_size_mb * 1024L * 1024L
+                val result = _mediaManager.saveMedia(uri, mimeType, maxMediaBytes) ?: return
+
+                addMediaClip(
+                    content = result.displayName,
+                    mimeType = result.mimeType,
+                    thumbnailBlob = result.thumbnailBlob,
+                    mediaPath = result.mediaPath,
+                    contentHash = result.contentHash
+                )
+            }
+        } catch (e: SecurityException) {
+            // URI permission may have expired (clipboard changed before we read)
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                android.util.Log.d("ClipboardHistory", "URI permission expired: ${e.message}")
+            }
+        } catch (e: Exception) {
+            android.util.Log.w("ClipboardHistory", "Failed to process clip URI: ${e.message}")
+        }
+    }
+
+    /**
+     * Stream text content from a content:// URI.
+     * Respects clipboard_max_item_size_kb limit. Returns null if stream fails or exceeds limit.
+     */
+    private fun readTextFromUri(uri: Uri): String? {
+        val maxSizeKb = Config.globalConfig().clipboard_max_item_size_kb
+        val maxSizeBytes = if (maxSizeKb > 0) maxSizeKb * 1024 else Int.MAX_VALUE
+
+        return try {
+            val inputStream = _context.contentResolver.openInputStream(uri) ?: return null
+            inputStream.use { stream ->
+                val reader = InputStreamReader(stream, StandardCharsets.UTF_8)
+                val sb = StringBuilder()
+                val buffer = CharArray(4096)
+                var charsRead = reader.read(buffer)
+                while (charsRead != -1) {
+                    sb.append(buffer, 0, charsRead)
+                    // Approximate byte check (UTF-8 can be 1-4 bytes per char)
+                    if (sb.length * 2 > maxSizeBytes) {
+                        android.util.Log.w("ClipboardHistory",
+                            "Text URI content too large (>${maxSizeKb}KB), truncating")
+                        return sb.substring(0, maxSizeBytes / 2).toString()
+                    }
+                    charsRead = reader.read(buffer)
+                }
+                val result = sb.toString().trim()
+                if (result.isEmpty()) null else result
+            }
+        } catch (e: Exception) {
+            android.util.Log.w("ClipboardHistory", "Failed to read text from URI: ${e.message}")
+            null
+        }
+    }
+
+    /**
+     * Add a media clipboard entry (image, video, PDF, etc.) to the database.
+     * Uses content hash for dedup instead of String.hashCode().
+     */
+    private fun addMediaClip(
+        content: String,
+        mimeType: String,
+        thumbnailBlob: ByteArray?,
+        mediaPath: String,
+        contentHash: String
+    ) {
+        if (!Config.globalConfig().clipboard_history_enabled) return
+
+        val ttlMs = getHistoryTtlMs()
+        val expiryTime = if (ttlMs == Long.MAX_VALUE) Long.MAX_VALUE else System.currentTimeMillis() + ttlMs
+
+        val added = _database.addMediaClipboardEntry(
+            content = content,
+            expiryTimestamp = expiryTime,
+            mimeType = mimeType,
+            thumbnailBlob = thumbnailBlob,
+            mediaPath = mediaPath,
+            contentHash = contentHash
+        )
+
+        if (added) {
+            // Apply size limits (count-based only for now — media size managed by ClipboardMediaManager)
+            val limitType = Config.globalConfig().clipboard_limit_type
+            if ("size" == limitType) {
+                val maxSizeMB = Config.globalConfig().clipboard_size_limit_mb
+                if (maxSizeMB > 0) {
+                    _database.applySizeLimitBytes(maxSizeMB)
+                }
+            } else {
+                val maxHistorySize = Config.globalConfig().clipboard_history_limit
+                if (maxHistorySize > 0) {
+                    _database.applySizeLimit(maxHistorySize)
+                }
+            }
+
+            _listener?.on_clipboard_history_change()
         }
     }
 

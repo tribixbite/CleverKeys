@@ -413,6 +413,8 @@ class Config private constructor(
     @JvmField var clipboard_exclude_password_managers = true  // Skip clipboard from password managers
     @JvmField var clipboard_respect_sensitive_flag = true  // #86: Respect Android 13+ IS_SENSITIVE flag
     @JvmField var clipboard_history_duration = -1  // Minutes; -1 = never expire. Was 10080 (7 days)
+    @JvmField var clipboard_media_enabled = true  // v4: Enable media clipboard (images, videos, PDFs)
+    @JvmField var clipboard_max_media_size_mb = 10  // v4: Max media file size in MB (default 10)
 
     // GIF Panel
     @JvmField var gif_enabled = Defaults.GIF_ENABLED
@@ -679,6 +681,10 @@ class Config private constructor(
         clipboard_history_duration = safeGetString(_prefs, "clipboard_history_duration", Defaults.CLIPBOARD_HISTORY_DURATION).toIntOrNull() ?: Defaults.CLIPBOARD_HISTORY_DURATION_FALLBACK
 
         clipboard_respect_sensitive_flag = _prefs.getBoolean("clipboard_respect_sensitive_flag", Defaults.CLIPBOARD_RESPECT_SENSITIVE_FLAG)
+
+        // v4: Media clipboard settings
+        clipboard_media_enabled = _prefs.getBoolean("clipboard_media_enabled", true)
+        clipboard_max_media_size_mb = safeGetInt(_prefs, "clipboard_max_media_size_mb", 10).coerceIn(1, 50)
 
         // GIF Panel
         gif_enabled = _prefs.getBoolean("gif_enabled", Defaults.GIF_ENABLED)
