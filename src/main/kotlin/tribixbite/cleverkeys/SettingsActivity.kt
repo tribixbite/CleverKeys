@@ -174,6 +174,9 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var clipboardSizeLimitMb by mutableStateOf(10)
     private var clipboardExcludePasswordManagers by mutableStateOf(true)  // Privacy: skip password managers
     private var clipboardRespectSensitiveFlag by mutableStateOf(true)  // #86: Respect IS_SENSITIVE flag
+    private var clipboardTextOnly by mutableStateOf(false)  // v4: Hide media entries
+    private var clipboardPinnedEnabled by mutableStateOf(true)  // v4: Show/hide pinned tab
+    private var clipboardTodoEnabled by mutableStateOf(true)  // v4: Show/hide todo tab
 
     // GIF Panel (opt-in, off by default)
     private var gifEnabled by mutableStateOf(Defaults.GIF_ENABLED)
@@ -566,6 +569,9 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             SearchableSetting("Clipboard Pane Height", listOf("pane", "height", "size"), "Clipboard", expandSection = { clipboardSectionExpanded = true }, settingId = "clipboard_height"),
             SearchableSetting("Exclude Password Managers", listOf("password", "exclude", "security"), "Clipboard", expandSection = { clipboardSectionExpanded = true }, settingId = "clipboard_exclude_passwords"),
             SearchableSetting("Respect Sensitive Flag", listOf("sensitive", "flag", "android", "13", "privacy"), "Clipboard", expandSection = { clipboardSectionExpanded = true }, settingId = "clipboard_sensitive_flag"),
+            SearchableSetting("Clipboard Text Only", listOf("text", "only", "media", "image", "video"), "Clipboard", expandSection = { clipboardSectionExpanded = true }, settingId = "clipboard_text_only"),
+            SearchableSetting("Clipboard Pinned Tab", listOf("pin", "pinned", "tab", "save"), "Clipboard", expandSection = { clipboardSectionExpanded = true }, settingId = "clipboard_pinned"),
+            SearchableSetting("Clipboard Todo Tab", listOf("todo", "task", "tab", "list"), "Clipboard", expandSection = { clipboardSectionExpanded = true }, settingId = "clipboard_todo"),
 
             // ==================== GIF PANEL ====================
             SearchableSetting("GIF Panel", listOf("gif", "sticker", "animation", "meme", "reaction"), "GIF Panel", expandSection = { gifSectionExpanded = true }, settingId = "gif_enabled"),
@@ -3081,6 +3087,39 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         saveSetting("clipboard_respect_sensitive_flag", clipboardRespectSensitiveFlag)
                     }
                 )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // v4: Feature toggles
+                SettingsSwitch(
+                    title = "Text Only",
+                    description = "Hide media entries and disable media capture",
+                    checked = clipboardTextOnly,
+                    onCheckedChange = {
+                        clipboardTextOnly = it
+                        saveSetting("clipboard_text_only", it)
+                    }
+                )
+
+                SettingsSwitch(
+                    title = "Pinned Tab",
+                    description = "Show pinned tab for saving important clips",
+                    checked = clipboardPinnedEnabled,
+                    onCheckedChange = {
+                        clipboardPinnedEnabled = it
+                        saveSetting("clipboard_pinned_enabled", it)
+                    }
+                )
+
+                SettingsSwitch(
+                    title = "Todo Tab",
+                    description = "Show todo tab for marking clips as tasks",
+                    checked = clipboardTodoEnabled,
+                    onCheckedChange = {
+                        clipboardTodoEnabled = it
+                        saveSetting("clipboard_todo_enabled", it)
+                    }
+                )
             }
 
             // GIF Panel Section (Collapsible) — opt-in, off by default
@@ -4856,6 +4895,9 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         clipboardSizeLimitMb = prefs.getSafeString("clipboard_size_limit_mb", Defaults.CLIPBOARD_SIZE_LIMIT_MB).toIntOrNull() ?: Defaults.CLIPBOARD_SIZE_LIMIT_MB_FALLBACK
         clipboardExcludePasswordManagers = prefs.getSafeBoolean("clipboard_exclude_password_managers", Defaults.CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS)
         clipboardRespectSensitiveFlag = prefs.getSafeBoolean("clipboard_respect_sensitive_flag", Defaults.CLIPBOARD_RESPECT_SENSITIVE_FLAG)
+        clipboardTextOnly = prefs.getSafeBoolean("clipboard_text_only", false)
+        clipboardPinnedEnabled = prefs.getSafeBoolean("clipboard_pinned_enabled", true)
+        clipboardTodoEnabled = prefs.getSafeBoolean("clipboard_todo_enabled", true)
 
         // GIF Panel
         gifEnabled = prefs.getSafeBoolean("gif_enabled", Defaults.GIF_ENABLED)
@@ -5353,6 +5395,9 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     editor.putString("clipboard_size_limit_mb", Defaults.CLIPBOARD_SIZE_LIMIT_MB)
                     editor.putBoolean("clipboard_exclude_password_managers", Defaults.CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS)
                     editor.putBoolean("clipboard_respect_sensitive_flag", Defaults.CLIPBOARD_RESPECT_SENSITIVE_FLAG)
+                    editor.putBoolean("clipboard_text_only", false)
+                    editor.putBoolean("clipboard_pinned_enabled", true)
+                    editor.putBoolean("clipboard_todo_enabled", true)
 
                     // Accessibility
                     editor.putBoolean("sticky_keys_enabled", Defaults.STICKY_KEYS_ENABLED)
