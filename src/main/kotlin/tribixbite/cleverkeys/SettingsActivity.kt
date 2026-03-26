@@ -4847,7 +4847,11 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         clipboardHistoryEnabled = prefs.getSafeBoolean("clipboard_history_enabled", Defaults.CLIPBOARD_HISTORY_ENABLED)
         clipboardHistoryLimit = prefs.getSafeString("clipboard_history_limit", Defaults.CLIPBOARD_HISTORY_LIMIT).toIntOrNull() ?: Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK
         clipboardPaneHeightPercent = Config.safeGetInt(prefs, "clipboard_pane_height_percent", Defaults.CLIPBOARD_PANE_HEIGHT_PERCENT).coerceIn(10, 50)
-        clipboardMaxItemSizeKb = prefs.getSafeString("clipboard_max_item_size_kb", Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB).toIntOrNull() ?: Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB_FALLBACK
+        clipboardMaxItemSizeKb = (prefs.getSafeString("clipboard_max_item_size_kb", Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB).toIntOrNull() ?: Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB_FALLBACK).coerceIn(64, 1024)
+        // Migrate stale values exceeding Binder limit (was 5000KB max, now 1024KB)
+        if (clipboardMaxItemSizeKb < (prefs.getSafeString("clipboard_max_item_size_kb", "0").toIntOrNull() ?: 0)) {
+            saveSetting("clipboard_max_item_size_kb", clipboardMaxItemSizeKb)
+        }
         clipboardLimitType = prefs.getSafeString("clipboard_limit_type", Defaults.CLIPBOARD_LIMIT_TYPE)
         clipboardSizeLimitMb = prefs.getSafeString("clipboard_size_limit_mb", Defaults.CLIPBOARD_SIZE_LIMIT_MB).toIntOrNull() ?: Defaults.CLIPBOARD_SIZE_LIMIT_MB_FALLBACK
         clipboardExcludePasswordManagers = prefs.getSafeBoolean("clipboard_exclude_password_managers", Defaults.CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS)

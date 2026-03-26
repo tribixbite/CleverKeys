@@ -668,7 +668,7 @@ class Config private constructor(
 
         clipboard_pane_height_percent = safeGetInt(_prefs, "clipboard_pane_height_percent", Defaults.CLIPBOARD_PANE_HEIGHT_PERCENT).coerceIn(10, 50)
 
-        clipboard_max_item_size_kb = safeGetString(_prefs, "clipboard_max_item_size_kb", Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB).toIntOrNull() ?: Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB_FALLBACK
+        clipboard_max_item_size_kb = (safeGetString(_prefs, "clipboard_max_item_size_kb", Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB).toIntOrNull() ?: Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB_FALLBACK).coerceIn(1, 1024)
 
         clipboard_limit_type = safeGetString(_prefs, "clipboard_limit_type", Defaults.CLIPBOARD_LIMIT_TYPE)
 
