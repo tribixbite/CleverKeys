@@ -3,10 +3,13 @@ package tribixbite.cleverkeys
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.graphics.BitmapFactory
 import android.util.AttributeSet
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
+import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import kotlinx.coroutines.CoroutineScope
@@ -58,6 +61,14 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
 
     companion object {
         const val ITEMS_PER_PAGE = 100
+
+        /** Map MIME type to a fallback drawable icon when no thumbnail BLOB is available */
+        fun getMimeTypeIcon(mimeType: String): Int = when {
+            mimeType.startsWith("image/") -> R.drawable.ic_media_image
+            mimeType.startsWith("video/") -> R.drawable.ic_media_video
+            mimeType == "application/pdf" -> R.drawable.ic_media_pdf
+            else -> R.drawable.ic_media_file
+        }
     }
 
     init {
@@ -349,11 +360,40 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             val expandButton = view.findViewById<View>(R.id.clipboard_entry_expand)
             val pinButton = view.findViewById<View>(R.id.clipboard_entry_addpin)
             val todoButton = view.findViewById<View>(R.id.clipboard_entry_addtodo)
+            val thumbnailContainer = view.findViewById<FrameLayout>(R.id.clipboard_entry_thumbnail_container)
+            val thumbnailView = view.findViewById<ImageView>(R.id.clipboard_entry_thumbnail)
+            val playBadge = view.findViewById<ImageView>(R.id.clipboard_entry_play_badge)
 
-            // Set text with timestamp appended
-            textView.text = entry.getFormattedText(context)
+            // ── Media thumbnail rendering ──
+            if (entry.isMedia) {
+                thumbnailContainer.visibility = VISIBLE
+                if (entry.hasThumbnail) {
+                    // Decode thumbnail from BLOB — small (≤10KB WebP), no file I/O
+                    val bitmap = BitmapFactory.decodeByteArray(
+                        entry.thumbnailBlob, 0, entry.thumbnailBlob!!.size
+                    )
+                    thumbnailView.setImageBitmap(bitmap)
+                    thumbnailView.scaleType = ImageView.ScaleType.CENTER_CROP
+                } else {
+                    // No thumbnail — show MIME-type fallback icon
+                    thumbnailView.setImageResource(getMimeTypeIcon(entry.mimeType))
+                    thumbnailView.scaleType = ImageView.ScaleType.CENTER_INSIDE
+                }
+                // Show play badge for animated media (GIF, animated WebP)
+                val isAnimated = entry.mimeType == "image/gif" ||
+                    (entry.mimeType == "image/webp" && entry.mediaPath != null)
+                playBadge.visibility = if (isAnimated) VISIBLE else GONE
 
-            // Check if text contains newlines (multi-line)
+                // For media entries, show MIME label + filename instead of content body
+                textView.text = entry.getFormattedText(context)
+            } else {
+                thumbnailContainer.visibility = GONE
+                playBadge.visibility = GONE
+                // Set text with timestamp appended
+                textView.text = entry.getFormattedText(context)
+            }
+
+            // Check if text contains newlines (multi-line) — applies to text entries
             val isMultiLine = text.contains("\n")
             val isExpanded = expandedStates[text] == true
 
@@ -362,12 +402,12 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 textView.maxLines = Int.MAX_VALUE
                 textView.ellipsize = null
             } else {
-                textView.maxLines = 1
+                textView.maxLines = if (entry.isMedia) 2 else 1
                 textView.ellipsize = android.text.TextUtils.TruncateAt.END
             }
 
-            // Show expand button only for multi-line entries
-            if (isMultiLine) {
+            // Show expand button only for multi-line text entries
+            if (isMultiLine && !entry.isMedia) {
                 expandButton.visibility = VISIBLE
                 expandButton.rotation = if (isExpanded) 180f else 0f
 
@@ -380,10 +420,12 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 expandButton.visibility = GONE
             }
 
-            // Make text clickable to expand/collapse (all entries)
+            // Make text clickable to expand/collapse (text entries only)
             textView.setOnClickListener {
-                expandedStates[text] = !isExpanded
-                notifyDataSetChanged()
+                if (!entry.isMedia) {
+                    expandedStates[text] = !isExpanded
+                    notifyDataSetChanged()
+                }
             }
 
             // Long-press copies entry text to system clipboard
@@ -401,12 +443,10 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                     todoButton.visibility = VISIBLE
                 }
                 ClipboardTab.PINNED -> {
-                    // In pinned tab, pin button unpins
                     pinButton.visibility = VISIBLE
                     todoButton.visibility = VISIBLE
                 }
                 ClipboardTab.TODOS -> {
-                    // In todos tab, todo button marks as done (removes from todos)
                     pinButton.visibility = VISIBLE
                     todoButton.visibility = VISIBLE
                 }

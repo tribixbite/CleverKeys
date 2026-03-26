@@ -4,6 +4,36 @@
     android:layout_width="fill_parent"
     android:layout_height="wrap_content">
 
+  <!-- Media thumbnail container: GONE for text entries, VISIBLE for media -->
+  <FrameLayout
+      android:id="@+id/clipboard_entry_thumbnail_container"
+      android:layout_width="48dp"
+      android:layout_height="48dp"
+      android:layout_gravity="center_vertical"
+      android:layout_marginStart="8dp"
+      android:layout_marginEnd="4dp"
+      android:visibility="gone">
+
+    <!-- Thumbnail image (decoded from BLOB) or MIME-type fallback icon -->
+    <ImageView
+        android:id="@+id/clipboard_entry_thumbnail"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:scaleType="centerCrop"
+        android:contentDescription="Media thumbnail" />
+
+    <!-- Play badge overlay for animated GIF/WebP (bottom-right corner) -->
+    <ImageView
+        android:id="@+id/clipboard_entry_play_badge"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:layout_gravity="bottom|end"
+        android:src="@drawable/ic_media_play_badge"
+        android:visibility="gone"
+        android:contentDescription="Animated" />
+
+  </FrameLayout>
+
   <TextView
       android:id="@+id/clipboard_entry_text"
       style="@style/clipboardEntry"
