@@ -57,6 +57,10 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
     private var historyLimit by mutableStateOf(6)
     private var historyDuration by mutableStateOf(-1) // minutes; -1 = never expire (default)
 
+    // Media settings state
+    private var mediaClipboardEnabled by mutableStateOf(true)
+    private var maxMediaSizeMb by mutableStateOf(10)
+
     // Statistics state
     private var statsLoading by mutableStateOf(true)
     private var totalEntries by mutableStateOf(0)
@@ -64,6 +68,8 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
     private var pinnedEntries by mutableStateOf(0)
     private var todoEntries by mutableStateOf(0)
     private var expiredEntries by mutableStateOf(0)
+    private var mediaFileCount by mutableStateOf(0)
+    private var mediaTotalSizeMb by mutableStateOf("0")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -129,6 +135,9 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
         val savedLimit = prefs.getInt("clipboard_history_limit", 6)
         historyLimit = if (savedLimit <= 0) 100 else savedLimit
         historyDuration = prefs.getString("clipboard_history_duration", Defaults.CLIPBOARD_HISTORY_DURATION)?.toIntOrNull() ?: Defaults.CLIPBOARD_HISTORY_DURATION_FALLBACK
+        // v4 media settings
+        mediaClipboardEnabled = prefs.getBoolean("clipboard_media_enabled", true)
+        maxMediaSizeMb = prefs.getInt("clipboard_max_media_size_mb", 10).coerceIn(1, 50)
     }
 
     private suspend fun loadStatistics() {
@@ -143,6 +152,16 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
                     pinnedEntries = stats["pinned_entries"] as? Int ?: 0
                     todoEntries = stats["todo_entries"] as? Int ?: 0
                     expiredEntries = stats["expired_entries"] as? Int ?: 0
+                }
+
+                // v4: Calculate media storage stats
+                try {
+                    val mediaManager = ClipboardMediaManager(this@ClipboardSettingsActivity)
+                    val mediaStats = mediaManager.getStorageStats()
+                    mediaFileCount = mediaStats.first
+                    mediaTotalSizeMb = String.format("%.1f", mediaStats.second / (1024.0 * 1024.0))
+                } catch (e: Exception) {
+                    android.util.Log.w(TAG, "Error loading media stats: ${e.message}")
                 }
 
                 statsLoading = false
@@ -389,6 +408,81 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
                         }
                     }
 
+                    // Media Clipboard Settings Card (v4)
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surface
+                        ),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Text(
+                                text = "Media Clipboard",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+
+                            Text(
+                                text = "When enabled, images, videos, PDFs, and other files " +
+                                        "copied to the clipboard are saved and shown with thumbnails.",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                lineHeight = 16.sp
+                            )
+
+                            // Media clipboard toggle
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Enable media clipboard",
+                                    fontSize = 14.sp,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Switch(
+                                    checked = mediaClipboardEnabled,
+                                    onCheckedChange = {
+                                        mediaClipboardEnabled = it
+                                        saveSetting("clipboard_media_enabled", it)
+                                    }
+                                )
+                            }
+
+                            // Max media file size slider
+                            Text(
+                                text = "Max media file size: ${maxMediaSizeMb}MB",
+                                fontSize = 14.sp,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Slider(
+                                value = maxMediaSizeMb.toFloat(),
+                                onValueChange = { maxMediaSizeMb = it.toInt() },
+                                onValueChangeFinished = {
+                                    saveSetting("clipboard_max_media_size_mb", maxMediaSizeMb)
+                                },
+                                valueRange = 1f..50f,
+                                steps = 48,
+                                enabled = mediaClipboardEnabled
+                            )
+
+                            // Media storage stats
+                            if (!statsLoading) {
+                                Text(
+                                    text = "Media files: $mediaFileCount ($mediaTotalSizeMb MB on disk)",
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+
                     // Statistics Card
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -451,6 +545,11 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
                             saveSetting("clipboard_exclude_password_managers", Defaults.CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS)
                             saveSetting("clipboard_respect_sensitive_flag", Defaults.CLIPBOARD_RESPECT_SENSITIVE_FLAG)
                             saveSetting("clipboard_pane_height_percent", Defaults.CLIPBOARD_PANE_HEIGHT_PERCENT)
+                            // v4 media settings defaults
+                            mediaClipboardEnabled = true
+                            maxMediaSizeMb = 10
+                            saveSetting("clipboard_media_enabled", true)
+                            saveSetting("clipboard_max_media_size_mb", 10)
                             Toast.makeText(this@ClipboardSettingsActivity,
                                 "Reset to default values",
                                 Toast.LENGTH_SHORT).show()

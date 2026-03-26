@@ -33,8 +33,20 @@ class ClipboardHistoryService private constructor(ctx: Context) {
     private val _mediaManager: ClipboardMediaManager by lazy { ClipboardMediaManager(_context) }
 
     init {
-        // Clean up expired entries on startup
-        _database.cleanupExpiredEntries()
+        // Clean up expired entries on startup (also returns orphaned media paths)
+        val (_, expiredMediaPaths) = _database.cleanupExpiredEntries()
+        // Delete media files from expired entries
+        for (path in expiredMediaPaths) {
+            if (!_database.isMediaPathReferenced(path)) {
+                _mediaManager.deleteMedia(path)
+            }
+        }
+
+        // Reconcile media files with DB on startup — delete orphan files not in any table
+        serviceScope.launch(Dispatchers.IO) {
+            val referencedPaths = _database.getAllReferencedMediaPaths()
+            _mediaManager.cleanupOrphans(referencedPaths)
+        }
 
         // Note: Listener registration is deferred to attemptToRegisterListener()
         // which will be called from on_startup() and can be retried when keyboard gains focus

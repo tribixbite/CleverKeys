@@ -248,6 +248,26 @@ class ClipboardMediaManager(private val context: Context) {
         }
     }
 
+    /**
+     * Get storage statistics for clipboard media files.
+     * @return Pair of (fileCount, totalSizeBytes)
+     */
+    fun getStorageStats(): Pair<Int, Long> {
+        var fileCount = 0
+        var totalSize = 0L
+        try {
+            if (mediaBaseDir.exists()) {
+                mediaBaseDir.walkTopDown().filter { it.isFile }.forEach { file ->
+                    fileCount++
+                    totalSize += file.length()
+                }
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Error calculating media storage stats: ${e.message}")
+        }
+        return Pair(fileCount, totalSize)
+    }
+
     /** Delete all clipboard media files */
     fun clearAll() {
         try {

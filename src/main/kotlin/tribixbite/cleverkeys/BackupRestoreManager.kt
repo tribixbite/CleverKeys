@@ -1421,7 +1421,8 @@ class BackupRestoreManager(private val context: Context) {
                             Log.w(TAG, "Media file not found during export, skipping: $mediaPath")
                             continue
                         }
-                        val zipMediaEntry = java.util.zip.ZipEntry("clipboard_media/$mediaPath")
+                        // mediaPath already contains "clipboard_media/" prefix from DB
+                    val zipMediaEntry = java.util.zip.ZipEntry(mediaPath)
                         zipOut.putNextEntry(zipMediaEntry)
                         file.inputStream().use { it.copyTo(zipOut) }
                         zipOut.closeEntry()
@@ -1468,15 +1469,13 @@ class BackupRestoreManager(private val context: Context) {
                             }
                             entry.name.startsWith("clipboard_media/") -> {
                                 // Extract media file to internal storage
-                                val relativePath = entry.name.removePrefix("clipboard_media/")
-                                if (relativePath.isNotEmpty()) {
-                                    val targetFile = mediaManager.getMediaFile(relativePath)
-                                    targetFile.parentFile?.mkdirs()
-                                    targetFile.outputStream().use { out ->
-                                        zipIn.copyTo(out)
-                                    }
-                                    mediaFilesRestored++
+                                // entry.name IS the media_path as stored in DB (e.g. "clipboard_media/042/hash.ext")
+                                val targetFile = mediaManager.getMediaFile(entry.name)
+                                targetFile.parentFile?.mkdirs()
+                                targetFile.outputStream().use { out ->
+                                    zipIn.copyTo(out)
                                 }
+                                mediaFilesRestored++
                             }
                         }
                         zipIn.closeEntry()
@@ -1515,6 +1514,10 @@ class BackupRestoreManager(private val context: Context) {
                         }
                     }
                     Log.d(TAG, "Regenerated $thumbnailsRegenerated thumbnails after ZIP import")
+
+                    // Clean up orphan media files not referenced by any DB table
+                    // (handles stale files from previous state before import)
+                    mediaManager.cleanupOrphans(referencedPaths)
 
                     val result = ClipboardImportResult()
                     result.importedCount = importResult[0] + importResult[1] + importResult[2]
