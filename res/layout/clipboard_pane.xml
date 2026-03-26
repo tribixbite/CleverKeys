@@ -92,16 +92,16 @@
         android:visibility="gone"/>
 
     <!-- Date filter icon -->
-    <TextView
+    <ImageButton
         android:id="@+id/clipboard_date_filter"
-        android:text="📅"
         android:layout_width="32dp"
         android:layout_height="32dp"
-        android:gravity="center"
-        android:textSize="16sp"
-        android:clickable="true"
-        android:focusable="true"
-        android:background="?android:attr/selectableItemBackgroundBorderless"/>
+        android:src="@android:drawable/ic_menu_sort_by_size"
+        android:tint="?attr/colorLabel"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Date filter"
+        android:scaleType="centerInside"
+        android:padding="4dp"/>
 
     <!-- Close/dismiss clipboard pane button -->
     <ImageButton

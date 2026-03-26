@@ -252,11 +252,14 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         loadDataAsync()
     }
 
-    /** Delete the specified entry from clipboard history (position in current page). */
+    /** Delete the specified entry from the current tab's backing store (position in current page). */
     fun delete_entry(pos: Int) {
         val clip = paginatedHistory[pos].content
-        service?.removeHistoryEntry(clip)
-        // Clear expanded state for deleted entry
+        when (currentTab) {
+            ClipboardTab.HISTORY -> service?.removeHistoryEntry(clip)
+            ClipboardTab.PINNED -> service?.unpinEntry(clip)
+            ClipboardTab.TODOS -> service?.removeFromTodo(clip)
+        }
         expandedStates.remove(clip)
         loadDataAsync()
     }
