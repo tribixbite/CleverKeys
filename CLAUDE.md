@@ -8,10 +8,10 @@
 3.  **CHECK `docs/TABLE_OF_CONTENTS.md`** - Master navigation for project docs.
 4.  **CHECK `docs/specs/`** - Feature specifications for the area you are working on.
 
-**CURRENT STATUS (2025-12-11):**
+**CURRENT STATUS (2026-03-26):**
 - ✅ Development 100% complete.
 - ✅ Production Ready (Grade A).
-- ✅ **New Features**: Short Swipe Customization, Profile System (Layout Import/Export).
+- ✅ **New Features**: Short Swipe Customization, Profile System, Media Clipboard (v4).
 - ✅ Documentation updated and consolidated.
 
 **SPEC-DRIVEN DEVELOPMENT WORKFLOW:**
@@ -47,6 +47,7 @@ CleverKeys is a **complete Kotlin rewrite** of `Julow/Unexpected-Keyboard` featu
 - `profile_system_restoration.md`: Layout import/export with gestures.
 - `neural-prediction.md`: ONNX AI model architecture.
 - `core-keyboard-system.md`: Main keyboard logic.
+- `clipboard-privacy.md`: Clipboard privacy features.
 
 ---
 

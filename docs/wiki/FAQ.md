@@ -76,13 +76,18 @@ A: **Swipe SOUTHWEST on the Fn key** to open the emoji picker:
 **Q: How do I use the clipboard?**
 
 A: **Swipe SOUTHWEST on the Ctrl key** to open clipboard history:
-- **History tab**: Recent clipboard items
+- **History tab**: Recent clipboard items (text + media)
 - **Pinned tab**: Items you've saved for quick access
 - **Todos tab**: Items marked as todos
-- Tap an item's content to expand it
+- Tap an item's content to expand it (text) or paste it (media)
+- Images, videos, and PDFs show thumbnails in the panel
 - Use the icon buttons to paste, move to pinned, or copy as todo
 - Re-copying text already in history won't duplicate or reorder it (tip: use search instead)
 - Password manager and 'sensitive' flagged clippings are excluded by default
+
+**Q: How do I paste images from clipboard?**
+
+A: Copy an image in any app (Gallery, Chrome, etc.) — it appears in clipboard history with a thumbnail. Tap the entry to paste it into the current app via `commitContent`. Most messaging apps support this.
 
 ---
 

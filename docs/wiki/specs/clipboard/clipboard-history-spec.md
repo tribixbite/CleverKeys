@@ -2,493 +2,397 @@
 title: Clipboard History - Technical Specification
 user_guide: ../../clipboard/clipboard-history.md
 status: implemented
-version: v1.2.7
+version: v1.3.0
+schema_version: v4
 ---
 
 # Clipboard History Technical Specification
 
 ## Overview
 
-The clipboard history system maintains a persistent list of copied text items with support for pinning, search, auto-expiry, and privacy protection.
+The clipboard history system maintains a persistent store of copied content — text, images, videos, PDFs, and other media — with support for independent pinned and todo tables, search, auto-expiry, pagination, media thumbnails, and privacy protection.
 
 ## Key Components
 
 | Component | File | Purpose |
 |-----------|------|---------|
-| ClipboardManager | `ClipboardManager.kt` | History management |
-| ClipboardStore | `ClipboardStore.kt` | Persistence layer |
-| ClipboardHistoryView | `ClipboardHistoryView.kt` | UI panel |
-| PrivacyDetector | `PrivacyDetector.kt` | Sensitive field detection |
-| Config | `Config.kt` | Clipboard preferences |
+| ClipboardDatabase | `ClipboardDatabase.kt` | SQLite storage, CRUD, migration, export/import |
+| ClipboardHistoryService | `ClipboardHistoryService.kt` | System clipboard listener, IO dispatch, media capture |
+| ClipboardHistoryView | `ClipboardHistoryView.kt` | UI panel, adapter, thumbnail rendering, paste |
+| ClipboardMediaManager | `ClipboardMediaManager.kt` | Media file storage, thumbnails, cleanup |
+| ClipboardManager | `ClipboardManager.kt` | Clipboard pane lifecycle, tab wiring, pagination |
+| ClipboardEntry | `ClipboardEntry.kt` | Data model for clipboard items |
+| PinnedEntry | `PinnedEntry.kt` | Data model for pinned items (COPY semantics) |
+| TodoEntry | `TodoEntry.kt` | Data model for todo items (COPY semantics) |
+| Config | `Config.kt` | Clipboard preferences and toggles |
 
-## Data Model
+## Data Models
 
-### Clipboard Entry
+### ClipboardEntry (v4)
 
 ```kotlin
 // ClipboardEntry.kt
-data class ClipboardEntry(
+class ClipboardEntry(
+    @JvmField val content: String,
+    @JvmField val timestamp: Long,
+    @JvmField val mimeType: String = MIME_TEXT_PLAIN,
+    @JvmField val thumbnailBlob: ByteArray? = null,
+    @JvmField val mediaPath: String? = null
+) {
+    val isMedia: Boolean get() = mimeType != MIME_TEXT_PLAIN
+    val isImage: Boolean get() = mimeType.startsWith("image/")
+    val isVideo: Boolean get() = mimeType.startsWith("video/")
+    val isPdf: Boolean get() = mimeType == "application/pdf"
+    val hasThumbnail: Boolean get() = thumbnailBlob != null
+
+    companion object {
+        const val MIME_TEXT_PLAIN = "text/plain"
+    }
+}
+```
+
+### PinnedEntry (v4)
+
+```kotlin
+// PinnedEntry.kt — independent table, COPY semantics from history
+data class PinnedEntry(
     val content: String,
-    val timestamp: Long,
-    val expiryTimestamp: Long,
-    val isPinned: Boolean = false,
-    val isTodo: Boolean = false
+    val contentHash: String,
+    val createdTimestamp: Long,
+    val pinnedTimestamp: Long,
+    val position: Double,       // REAL for drag-and-drop midpoint insertion
+    val tags: List<String>,     // JSON array in TEXT column
+    val mimeType: String = ClipboardEntry.MIME_TEXT_PLAIN,
+    val thumbnailBlob: ByteArray? = null,
+    val mediaPath: String? = null
 )
 ```
 
-### Storage Structure
+### TodoEntry (v4)
 
 ```kotlin
-// ClipboardDatabase.kt (DATABASE_VERSION = 2)
-// Stored in SQLite database
-CREATE TABLE clipboard_history (
-    content TEXT PRIMARY KEY,
+// TodoEntry.kt — independent table, COPY semantics from history
+data class TodoEntry(
+    val content: String,
+    val contentHash: String,
+    val createdTimestamp: Long,
+    val addedTimestamp: Long,
+    val position: Double,
+    val status: String,         // 'active' | 'planned' | 'completed'
+    val tags: List<String>,
+    val mimeType: String = ClipboardEntry.MIME_TEXT_PLAIN,
+    val thumbnailBlob: ByteArray? = null,
+    val mediaPath: String? = null
+)
+```
+
+## Storage Schema (v4)
+
+### clipboard_entries — history only
+
+```sql
+CREATE TABLE clipboard_entries (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    content TEXT NOT NULL,
     timestamp INTEGER NOT NULL,
     expiry_timestamp INTEGER NOT NULL,
-    is_pinned INTEGER DEFAULT 0,
-    is_todo INTEGER DEFAULT 0        -- Added in v2
+    content_hash TEXT NOT NULL,
+    mime_type TEXT DEFAULT 'text/plain',     -- v4
+    thumbnail_blob BLOB,                     -- v4: ≤10KB WebP thumbnail
+    media_path TEXT                           -- v4: internal file path
 );
-
-CREATE INDEX idx_timestamp ON clipboard_history(timestamp DESC);
-CREATE INDEX idx_pinned ON clipboard_history(is_pinned DESC);
-CREATE INDEX idx_todo ON clipboard_history(is_todo DESC);
+CREATE INDEX idx_content_hash ON clipboard_entries(content_hash);
+CREATE INDEX idx_timestamp ON clipboard_entries(timestamp DESC);
+CREATE INDEX idx_expiry ON clipboard_entries(expiry_timestamp);
 ```
 
-### Database Migration (v1 → v2)
+### pinned_entries — independent from history
 
-```kotlin
-// ClipboardDatabase.kt
-override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-    if (oldVersion < 2) {
-        // Add is_todo column with default value 0
-        db.execSQL("ALTER TABLE clipboard_history ADD COLUMN is_todo INTEGER DEFAULT 0")
-    }
-}
+```sql
+CREATE TABLE pinned_entries (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    content TEXT NOT NULL,
+    content_hash TEXT NOT NULL,
+    created_timestamp INTEGER NOT NULL,
+    pinned_timestamp INTEGER NOT NULL,
+    position REAL NOT NULL,                  -- drag-and-drop midpoint insertion
+    tags TEXT DEFAULT '[]',                  -- JSON array
+    mime_type TEXT DEFAULT 'text/plain',     -- v4
+    thumbnail_blob BLOB,                     -- v4
+    media_path TEXT                           -- v4
+);
+CREATE INDEX idx_pinned_hash ON pinned_entries(content_hash);
+CREATE INDEX idx_pinned_pos ON pinned_entries(position ASC);
 ```
 
-## Tab System
+### todo_entries — independent from history
 
-The clipboard pane organizes items into three tabs:
-
-| Tab | Enum | Icon | Query Method |
-|-----|------|------|--------------|
-| **History** | `ClipboardTab.HISTORY` | 📋 | `clearExpiredAndGetHistory()` |
-| **Pinned** | `ClipboardTab.PINNED` | 📌 | `getPinnedEntries()` |
-| **Todos** | `ClipboardTab.TODOS` | ✓ | `getTodoEntries()` |
-
-```kotlin
-// ClipboardHistoryView.kt
-enum class ClipboardTab {
-    HISTORY,  // Recent clipboard history (default)
-    PINNED,   // Pinned items
-    TODOS     // To-do items
-}
-
-private var currentTab = ClipboardTab.HISTORY
-
-fun setTab(tab: ClipboardTab) {
-    currentTab = tab
-    expandedStates.clear()
-    update_data()
-}
+```sql
+CREATE TABLE todo_entries (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    content TEXT NOT NULL,
+    content_hash TEXT NOT NULL,
+    created_timestamp INTEGER NOT NULL,
+    added_timestamp INTEGER NOT NULL,
+    position REAL NOT NULL,
+    status TEXT DEFAULT 'active',            -- 'active' | 'planned' | 'completed'
+    tags TEXT DEFAULT '[]',
+    mime_type TEXT DEFAULT 'text/plain',     -- v4
+    thumbnail_blob BLOB,                     -- v4
+    media_path TEXT                           -- v4
+);
+CREATE INDEX idx_todo_hash ON todo_entries(content_hash);
+CREATE INDEX idx_todo_pos ON todo_entries(position ASC);
+CREATE INDEX idx_todo_status ON todo_entries(status);
 ```
 
-### Tab Data Loading
+### Migration Chain
 
-```kotlin
-// ClipboardHistoryView.kt
-private fun update_data() {
-    history = when (currentTab) {
-        ClipboardTab.HISTORY -> service?.clearExpiredAndGetHistory() ?: emptyList()
-        ClipboardTab.PINNED -> database.getPinnedEntries()
-        ClipboardTab.TODOS -> database.getTodoEntries()
-    }
-    applyFilter()
-}
+| Version | Change | Strategy |
+|---------|--------|----------|
+| v1→v2 | Add `is_todo` column | ALTER TABLE ADD COLUMN |
+| v2→v3 | Independent pinned/todo tables | CREATE-COPY-DROP-RENAME (pre-API 34 compat) |
+| v3→v4 | Media columns (mime_type, thumbnail_blob, media_path) | ALTER TABLE ADD COLUMN × 9 |
 
-// ClipboardDatabase.kt
-fun getPinnedEntries(): List<ClipboardEntry> =
-    queryEntries("SELECT * FROM clipboard_history WHERE is_pinned = 1 ORDER BY timestamp DESC")
-
-fun getTodoEntries(): List<ClipboardEntry> =
-    queryEntries("SELECT * FROM clipboard_history WHERE is_todo = 1 ORDER BY timestamp DESC")
-```
-
-## Pagination
-
-For large histories (>100 items), pagination improves performance:
-
-```kotlin
-// ClipboardHistoryView.kt
-companion object {
-    const val ITEMS_PER_PAGE = 100
-}
-
-private var currentPage = 0
-private var paginatedHistory: List<ClipboardEntry> = emptyList()
-private var onPaginationChangeListener: ((needsPagination: Boolean, currentPage: Int, totalPages: Int) -> Unit)? = null
-
-private fun applyPagination() {
-    val totalItems = filteredHistory.size
-    val totalPages = getTotalPages()
-
-    // Ensure current page is valid
-    if (currentPage >= totalPages) {
-        currentPage = maxOf(0, totalPages - 1)
-    }
-
-    // Apply pagination only if more than ITEMS_PER_PAGE
-    paginatedHistory = if (totalItems > ITEMS_PER_PAGE) {
-        val startIndex = currentPage * ITEMS_PER_PAGE
-        val endIndex = minOf(startIndex + ITEMS_PER_PAGE, totalItems)
-        filteredHistory.subList(startIndex, endIndex)
-    } else {
-        filteredHistory
-    }
-
-    // Notify listener about pagination state
-    onPaginationChangeListener?.invoke(
-        totalItems > ITEMS_PER_PAGE,
-        currentPage + 1,  // 1-indexed for display
-        totalPages
-    )
-}
-```
-
-### Search Across All Items
-
-Search filters ALL items before pagination:
-
-```kotlin
-private fun applyFilter() {
-    // Filter ALL history items (not paginated)
-    val filtered = history.filter { entry ->
-        // Apply search filter
-        if (searchFilter.isNotEmpty() && !entry.content.lowercase().contains(searchFilter)) {
-            return@filter false
-        }
-        // Apply date filter
-        if (dateFilterEnabled) {
-            // ... date filter logic
-        }
-        true
-    }
-    filteredHistory = filtered
-
-    // Reset to first page when filter changes
-    currentPage = 0
-    applyPagination()
-}
-```
+All migrations are non-destructive. v2→v3 uses COPY semantics: pinned/todo entries are copied to new tables AND remain in history.
 
 ## Clipboard Monitoring
 
 ### System Clipboard Listener
 
 ```kotlin
-// ClipboardManager.kt
-class ClipboardManager(context: Context) {
-    private val systemClipboard = context.getSystemService(
-        Context.CLIPBOARD_SERVICE
-    ) as android.content.ClipboardManager
+// ClipboardHistoryService.kt
+private fun addCurrentClip() {
+    // 1. Check clipboard_history_enabled
+    // 2. Check password manager exclusion (foreground app detection)
+    // 3. Check Android 13+ IS_SENSITIVE flag
+    // 4. For each ClipData item:
+    //    - If item.text != null: addClip(text) on main thread
+    //    - If item.uri != null: dispatch to Dispatchers.IO → processClipUri(uri)
+}
+```
 
-    init {
-        systemClipboard.addPrimaryClipChangedListener {
-            onClipboardChanged()
+### Content URI Processing (IO thread)
+
+```kotlin
+// ClipboardHistoryService.kt — runs on Dispatchers.IO
+private fun processClipUri(uri: Uri) {
+    val mimeType = contentResolver.getType(uri) ?: "application/octet-stream"
+    if (mimeType.startsWith("text/")) {
+        // Stream text via ContentResolver (bypasses Binder ~1MB limit)
+        val text = readTextFromUri(uri)
+        if (text != null) addClip(text)
+    } else {
+        // Media: check text-only and media-enabled toggles
+        if (cfg.clipboard_text_only || !cfg.clipboard_media_enabled) return
+        val result = mediaManager.saveMedia(uri, mimeType, maxMediaBytes)
+        addMediaClip(result.displayName, result.mimeType, result.thumbnailBlob, ...)
+    }
+}
+```
+
+### Media Settings Gating
+
+| Check Point | Setting | Behavior When Disabled |
+|-------------|---------|----------------------|
+| Capture | `clipboard_media_enabled` | Media URIs silently dropped |
+| Capture | `clipboard_text_only` | Media URIs silently dropped |
+| Display | `clipboard_text_only` | Media entries filtered from all tabs |
+| Paste | (always allowed) | Falls back to text if media paste unsupported |
+
+## Media Storage Architecture
+
+### ClipboardMediaManager
+
+```
+filesDir/
+└── clipboard_media/
+    ├── 000/          ← partition 0 (IDs 0-999)
+    │   ├── a1b2c3.jpg
+    │   └── d4e5f6.webp
+    ├── 001/          ← partition 1 (IDs 1000-1999)
+    └── ...
+```
+
+- **Partitioned storage**: `{id / 1000}/{sha256_hash}.{ext}` — avoids >1000 files per directory
+- **Max media file**: configurable `clipboard_max_media_size_mb` (default 10MB, max 50MB)
+- **External URIs copied immediately**: content:// URIs expire when clipboard changes
+
+### Thumbnail Generation by MIME Type
+
+| MIME Type | Method | Output |
+|-----------|--------|--------|
+| `image/*` (static) | `BitmapFactory` + `inSampleSize` | 80×80 WebP ≤10KB |
+| `image/gif`, `image/webp` (animated) | `BitmapFactory` first frame | 80×80 WebP ≤10KB |
+| `video/*` | `MediaMetadataRetriever.getFrameAtTime(0)` | 80×80 WebP ≤10KB |
+| `application/pdf` | `PdfRenderer` first page | 80×80 WebP ≤10KB |
+| Unknown | No thumbnail | UI shows MIME-type icon |
+
+- Thumbnails ≤10KB stored as BLOB in SQLite (CursorWindow is 2MB; 10KB × 200 rows = safe)
+- Animated detection: RIFF header VP8X chunk for WebP, NETSCAPE2.0 block for GIF
+
+### Orphan Cleanup
+
+`cleanupOrphans()` runs on service startup and after import:
+1. Query all `media_path` values from all 3 tables
+2. Scan `clipboard_media/` directories
+3. Delete files not referenced by any table
+4. Remove empty partition directories
+
+## Tab System
+
+| Tab | Enum | Data Source | Query |
+|-----|------|-------------|-------|
+| History | `ClipboardTab.HISTORY` | `clipboard_entries` | `clearExpiredAndGetHistory()` |
+| Pinned | `ClipboardTab.PINNED` | `pinned_entries` | `getPinnedEntries()` ORDER BY position |
+| Todos | `ClipboardTab.TODOS` | `todo_entries` | `getTodoEntries()` ORDER BY position |
+
+### Pin/Todo Semantics (COPY, not MOVE)
+
+- **Pin from History**: COPIES content to `pinned_entries`. History entry stays (subject to expiry).
+- **Todo from History**: COPIES content to `todo_entries`. History entry stays.
+- Re-copying same text does NOT affect pinned/todo copies.
+- Deleting from history does NOT affect pinned/todo copies.
+- Media fields (mimeType, thumbnailBlob, mediaPath) are carried on pin/todo.
+
+### Tab Data Loading
+
+```kotlin
+// ClipboardHistoryView.kt — async off UI thread
+private fun loadDataAsync() {
+    loadJob?.cancel()
+    loadJob = viewScope?.launch {
+        val entries = withContext(Dispatchers.IO) {
+            when (currentTab) {
+                ClipboardTab.HISTORY -> service?.clearExpiredAndGetHistory() ?: emptyList()
+                ClipboardTab.PINNED -> database.getPinnedEntries()
+                ClipboardTab.TODOS -> database.getTodoEntries()
+            }
         }
-    }
-
-    private fun onClipboardChanged() {
-        if (!config.clipboard_history_enabled) return
-        if (isIncognitoMode) return
-
-        val clip = systemClipboard.primaryClip ?: return
-        val text = clip.getItemAt(0)?.text?.toString() ?: return
-
-        // Check if from password field
-        if (privacyDetector.isFromPasswordField()) return
-
-        // Check for duplicates
-        if (isDuplicate(text)) return
-
-        // Add to history
-        addToHistory(text, getCurrentPackage())
+        // Filter out media entries when text-only mode active
+        if (Config.globalConfig().clipboard_text_only) {
+            entries = entries.filter { !it.isMedia }
+        }
+        history = entries
+        applyFilter()
     }
 }
 ```
 
-### Privacy Detection
+## Pagination
+
+- 100 items per page (`ITEMS_PER_PAGE = 100`)
+- Search filters ALL items before pagination
+- Pagination bar shows `currentPage / totalPages` with ◀ ▶ navigation
+
+## View Rendering
+
+### Adapter (ClipboardEntriesAdapter)
 
 ```kotlin
-// PrivacyDetector.kt
-class PrivacyDetector {
-    private var lastInputType: Int = 0
-
-    fun onInputTypeChanged(inputType: Int) {
-        lastInputType = inputType
+override fun getView(pos: Int, v: View?, parent: ViewGroup): View {
+    val entry = paginatedHistory[pos]
+    if (entry.isMedia) {
+        // Show thumbnail container (48×48dp)
+        if (entry.hasThumbnail) {
+            // Decode BLOB to bitmap — no file I/O on UI thread
+            val bitmap = BitmapFactory.decodeByteArray(entry.thumbnailBlob, 0, ...)
+            thumbnailView.setImageBitmap(bitmap)
+        } else {
+            // Fallback: MIME-type icon (ic_media_image, ic_media_video, ic_media_pdf, ic_media_file)
+            thumbnailView.setImageResource(getMimeTypeIcon(entry.mimeType))
+        }
+        // Animated badge for GIF/animated WebP
+        playBadge.visibility = if (isAnimated) VISIBLE else GONE
     }
-
-    fun isFromPasswordField(): Boolean {
-        return lastInputType and InputType.TYPE_TEXT_VARIATION_PASSWORD != 0 ||
-               lastInputType and InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD != 0 ||
-               lastInputType and InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD != 0
-    }
+    // Text entry: show formatted text with relative timestamp ("2h ago")
 }
 ```
 
-## History Management
-
-### Add to History
+### Paste
 
 ```kotlin
-// ClipboardManager.kt
-fun addToHistory(text: String, source: String?) {
-    val trimmed = text.take(MAX_ITEM_LENGTH)
-    val hash = trimmed.hashCode().toString()
-
-    // Remove old duplicate if exists
-    store.deleteByHash(hash)
-
-    // Insert new item
-    val item = ClipboardItem(
-        id = 0,
-        text = trimmed,
-        timestamp = System.currentTimeMillis(),
-        source = source
-    )
-    store.insert(item)
-
-    // Enforce history limit (excluding pinned)
-    enforceLimit()
-
-    // Notify UI
-    historyChangedListeners.forEach { it.onHistoryChanged() }
-}
-
-private fun enforceLimit() {
-    val unpinnedCount = store.getUnpinnedCount()
-    if (unpinnedCount > config.clipboard_history_size) {
-        val excess = unpinnedCount - config.clipboard_history_size
-        store.deleteOldestUnpinned(excess)
+fun paste_entry(pos: Int) {
+    val entry = paginatedHistory[pos]
+    if (entry.isMedia && entry.mediaPath != null) {
+        // Media paste via commitContent (API 25+) — uses FileProvider URI
+        val success = ClipboardHistoryService.pasteMedia(entry.mimeType, entry.mediaPath)
+        if (!success) Toast("Cannot paste media here")
+    } else {
+        ClipboardHistoryService.paste(entry.content)  // Text paste
     }
 }
 ```
 
-### Pin/Unpin
+## Export/Import (v4 dual format)
 
-```kotlin
-// ClipboardManager.kt
-fun pinItem(itemId: Long) {
-    store.updatePinned(itemId, true)
-    notifyHistoryChanged()
-}
-
-fun unpinItem(itemId: Long) {
-    store.updatePinned(itemId, false)
-    notifyHistoryChanged()
-}
-```
-
-## Auto-Expiry
-
-```kotlin
-// ClipboardManager.kt
-fun cleanExpiredItems() {
-    val expiryMs = when (config.clipboard_expiry) {
-        ClipboardExpiry.ONE_HOUR -> 60 * 60 * 1000L
-        ClipboardExpiry.ONE_DAY -> 24 * 60 * 60 * 1000L
-        ClipboardExpiry.ONE_WEEK -> 7 * 24 * 60 * 60 * 1000L
-        ClipboardExpiry.NEVER -> return
-    }
-
-    val cutoff = System.currentTimeMillis() - expiryMs
-
-    // Delete unpinned items older than cutoff
-    store.deleteUnpinnedOlderThan(cutoff)
-}
-
-// Called on app start and periodically
-init {
-    cleanExpiredItems()
-    schedulePeriodicCleanup()
-}
-```
-
-## Search Implementation
-
-```kotlin
-// ClipboardManager.kt
-fun search(query: String): List<ClipboardItem> {
-    if (query.length < 2) return getHistory()
-
-    return store.searchByText("%$query%")
-        .sortedWith(
-            compareByDescending<ClipboardItem> { it.isPinned }
-                .thenByDescending { it.timestamp }
-        )
-}
-```
-
-## Clipboard Pane Layout
-
-The clipboard pane combines tabs, search, date filter, and close button in a single header row:
-
-```xml
-<!-- clipboard_pane.xml -->
-<!-- Combined row: Tabs + Search + Close (40dp height) -->
-<LinearLayout android:id="@+id/clipboard_search_bar">
-    <TextView android:id="@+id/tab_history" android:text="📋"/>    <!-- 36dp -->
-    <TextView android:id="@+id/tab_pinned" android:text="📌"/>     <!-- 36dp -->
-    <TextView android:id="@+id/tab_todos" android:text="✓"/>      <!-- 36dp -->
-    <TextView android:id="@+id/clipboard_search" android:layout_weight="1"/>
-    <TextView android:id="@+id/clipboard_date_filter" android:text="📅"/>
-    <ImageButton android:id="@+id/clipboard_close_button"/>
-</LinearLayout>
-
-<!-- ClipboardHistoryView content area -->
-<ScrollView>
-    <ClipboardHistoryView android:id="@+id/clipboard_history_view"/>
-</ScrollView>
-
-<!-- Pagination bar (hidden when ≤100 items) -->
-<LinearLayout android:id="@+id/clipboard_pagination_bar" android:visibility="gone">
-    <TextView android:id="@+id/clipboard_page_prev" android:text="◀"/>
-    <TextView android:id="@+id/clipboard_page_info" android:text="1 / 1"/>
-    <TextView android:id="@+id/clipboard_page_next" android:text="▶"/>
-</LinearLayout>
-```
-
-### ClipboardManager Tab Wiring
-
-```kotlin
-// ClipboardManager.kt
-fun getClipboardPane(layoutInflater: LayoutInflater): ViewGroup {
-    // Set up tab buttons
-    tabHistory = clipboardPane?.findViewById(R.id.tab_history)
-    tabPinned = clipboardPane?.findViewById(R.id.tab_pinned)
-    tabTodos = clipboardPane?.findViewById(R.id.tab_todos)
-
-    tabHistory?.setOnClickListener { switchToTab(ClipboardTab.HISTORY) }
-    tabPinned?.setOnClickListener { switchToTab(ClipboardTab.PINNED) }
-    tabTodos?.setOnClickListener { switchToTab(ClipboardTab.TODOS) }
-
-    // Set up pagination controls
-    pagePrev?.setOnClickListener { clipboardHistoryView?.previousPage() }
-    pageNext?.setOnClickListener { clipboardHistoryView?.nextPage() }
-
-    clipboardHistoryView?.setOnPaginationChangeListener { needsPagination, currentPage, totalPages ->
-        paginationBar?.visibility = if (needsPagination) View.VISIBLE else View.GONE
-        pageInfo?.text = "$currentPage / $totalPages"
-        pagePrev?.alpha = if (clipboardHistoryView?.hasPreviousPage() == true) 1.0f else 0.3f
-        pageNext?.alpha = if (clipboardHistoryView?.hasNextPage() == true) 1.0f else 0.3f
-    }
-}
-
-private fun updateTabHighlighting() {
-    val activeAlpha = 1.0f
-    val inactiveAlpha = 0.5f
-    tabHistory?.alpha = if (currentTab == ClipboardTab.HISTORY) activeAlpha else inactiveAlpha
-    tabPinned?.alpha = if (currentTab == ClipboardTab.PINNED) activeAlpha else inactiveAlpha
-    tabTodos?.alpha = if (currentTab == ClipboardTab.TODOS) activeAlpha else inactiveAlpha
-}
-```
-
-### Close Button Callback
-
-```kotlin
-// ClipboardManager.kt
-private var onCloseCallback: (() -> Unit)? = null
-
-fun setOnCloseCallback(callback: () -> Unit) {
-    onCloseCallback = callback
-}
-
-// In getClipboardPane():
-clipboardPane?.findViewById<ImageButton>(R.id.clipboard_close_button)?.setOnClickListener {
-    onCloseCallback?.invoke()
-}
-
-// KeyboardReceiver.kt
-clipboardManager.setOnCloseCallback {
-    handle_event_key(KeyValue.Event.SWITCH_BACK_CLIPBOARD)
-}
-```
-
-## Import/Export with Todos
-
-### Export Format (JSON)
+### JSON Export (text-only)
 
 ```json
 {
-  "exportVersion": 2,
-  "exportedAt": "2025-01-22T12:00:00Z",
-  "count": 500,
-  "entries": [
-    {
-      "content": "clipboard text",
-      "timestamp": 1705939200000,
-      "isPinned": false,
-      "isTodo": true
-    }
-  ]
+    "export_version": 4,
+    "export_date": "2026-03-26 12:00:00",
+    "active_entries": [
+        { "content": "text here", "timestamp": 1711468800000, "expiry_timestamp": ...,
+          "mime_type": "text/plain" }
+    ],
+    "pinned_entries": [
+        { "content": "pinned text", "content_hash": "...", "created_timestamp": ...,
+          "pinned_timestamp": ..., "position": 1.0, "tags": "[]", "mime_type": "text/plain" }
+    ],
+    "todo_entries": [
+        { "content": "todo text", "content_hash": "...", "created_timestamp": ...,
+          "added_timestamp": ..., "position": 1.0, "status": "active", "tags": "[]",
+          "mime_type": "text/plain" }
+    ]
 }
 ```
 
-### Import with Fresh Expiry
+### ZIP Export (full backup with media)
 
-```kotlin
-// ClipboardDatabase.kt
-fun importEntry(entry: JSONObject, addedCounts: IntArray): Boolean {
-    // Use fresh expiry timestamp so imported entries don't expire immediately
-    val freshExpiry = System.currentTimeMillis() + HISTORY_TTL_MS
-
-    val values = ContentValues().apply {
-        put(COLUMN_CONTENT, content)
-        put(COLUMN_TIMESTAMP, entry.getLong("timestamp"))
-        put(COLUMN_EXPIRY_TIMESTAMP, freshExpiry)  // Fresh expiry, not imported one
-        put(COLUMN_IS_PINNED, if (isPinned) 1 else 0)
-        put(COLUMN_IS_TODO, if (isTodo) 1 else 0)
-    }
-
-    // Track what was added: [activeAdded, pinnedAdded, todoAdded, duplicatesSkipped]
-    if (isPinned) addedCounts[1]++
-    if (isTodo) addedCounts[2]++
-    if (!isPinned && !isTodo) addedCounts[0]++
-}
+```
+clipboard_backup.zip
+├── clipboard_data.json    ← Same JSON structure with media metadata
+└── clipboard_media/       ← Raw media files by content hash
+    ├── a1b2c3.jpg
+    └── d4e5f6.mp4
 ```
 
-### BackupRestoreManager Result Handling
+### Import Compatibility
 
-```kotlin
-// BackupRestoreManager.kt
-fun importClipboard(context: Context, uri: Uri): ClipboardImportResult {
-    val importResult = database.importFromJson(jsonArray)
-    // importResult = [activeAdded, pinnedAdded, todoAdded, duplicatesSkipped]
-
-    result.importedCount = importResult[0] + importResult[1] + importResult[2]
-    result.skippedCount = importResult[3]
-    return result
-}
-
-fun exportClipboard(context: Context, uri: Uri): ClipboardExportResult {
-    val entries = database.getAllEntriesForExport()
-    // ... write to JSON ...
-    return ClipboardExportResult(exportedCount = entries.size)
-}
-```
+| Source Format | Target Schema | Behavior |
+|--------------|---------------|----------|
+| v2 JSON | v4 | Entries get `mime_type='text/plain'`, no media fields |
+| v3 JSON | v4 | Entries get `mime_type='text/plain'`, no media fields |
+| v4 JSON | v4 | Text entries imported, media entries skipped (no files) |
+| v4 ZIP | v4 | Media extracted, thumbnails regenerated, full restore |
 
 ## Configuration
 
 | Setting | Key | Default | Range |
 |---------|-----|---------|-------|
-| **Enable History** | `clipboard_history_enabled` | true | bool |
-| **History Size** | `clipboard_history_size` | 25 | 10-50 |
-| **Auto-Expiry** | `clipboard_expiry` | ONE_DAY | 1hr/24hr/7d/never |
-| **Password Detection** | `clipboard_detect_password` | true | bool |
-| **Show Icon** | `clipboard_show_icon` | true | bool |
-| **Max Item Length** | - | 10000 | chars |
+| Enable History | `clipboard_history_enabled` | true | bool |
+| History Limit | `clipboard_history_limit` | 50 | count or size-based |
+| History Duration | `clipboard_history_duration` | -1 (never) | minutes, -1=never |
+| Max Item Size (text) | `clipboard_max_item_size_kb` | 256 | 64-1024 KB |
+| Text-Only Mode | `clipboard_text_only` | false | bool — hides all media |
+| Media Clipboard | `clipboard_media_enabled` | true | bool — enables media capture |
+| Max Media Size | `clipboard_max_media_size_mb` | 10 | 1-50 MB |
+| Pinned Tab | `clipboard_pinned_enabled` | true | bool — show/hide tab |
+| Todo Tab | `clipboard_todo_enabled` | true | bool — show/hide tab |
+| Exclude PWMs | `clipboard_exclude_password_managers` | true | bool |
+| Sensitive Flag | `clipboard_respect_sensitive_flag` | true | bool (Android 13+) |
+| Pane Height | `clipboard_pane_height_percent` | 45 | 20-80% |
+
+## Privacy
+
+- Clipboard media excluded from Android Auto Backup (`backup_rules.xml`, `data_extraction_rules.xml`)
+- Password manager exclusion via foreground app detection
+- Android 13+ IS_SENSITIVE flag respected
+- No INTERNET permission — all processing is local
+- Media files stored in app-private `filesDir` (not accessible to other apps)
 
 ## Related Specifications
 
-- [Privacy Settings](../../../specs/settings-system.md) - Privacy controls
+- [Clipboard Privacy](../../../../docs/specs/clipboard-privacy.md) - Password manager exclusion
 - [Text Selection](text-selection-spec.md) - Selection integration

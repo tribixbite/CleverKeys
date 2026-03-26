@@ -16,7 +16,7 @@ Export and import your keyboard settings, dictionary, and clipboard history.
 | **Settings** | Settings > Activities > Backup & Restore > Export/Import Config |
 | **Dictionary** | Settings > Activities > Backup & Restore > Export/Import Dictionary |
 | **Clipboard** | Settings > Activities > Backup & Restore > Export/Import Clipboard |
-| **Format** | JSON files |
+| **Format** | JSON (text-only) or ZIP (full backup with media) |
 
 ## Available Exports
 
@@ -47,13 +47,27 @@ Exports your personal dictionary:
 
 ### Clipboard Export
 
-Exports clipboard history:
+Exports clipboard history in two formats:
+
+#### JSON Export (text-only, lightweight)
 
 | Included | Description |
 |----------|-------------|
-| **History** | Recent clipboard items |
-| **Pinned** | Pinned items |
-| **Todos** | Todo items |
+| **History** | Recent text clipboard items |
+| **Pinned** | Pinned text items |
+| **Todos** | Todo text items |
+| **Media metadata** | MIME types noted but media files not included |
+
+#### ZIP Export (full backup with media)
+
+| Included | Description |
+|----------|-------------|
+| **All text entries** | History, pinned, todos |
+| **Media files** | Images, videos, PDFs, other files |
+| **Thumbnails** | Regenerated on import (not in export) |
+
+> [!TIP]
+> Use JSON export for quick, lightweight backups of text entries. Use ZIP export when you want to preserve images and other media.
 
 ## Importing
 
@@ -73,8 +87,11 @@ Exports clipboard history:
 ### Import Clipboard
 
 1. Tap **Import Clipboard**
-2. Select clipboard JSON file
+2. Select clipboard file (JSON or ZIP)
 3. Items are added to history
+4. For ZIP imports: media files are extracted and thumbnails regenerated
+
+Import supports v2, v3, and v4 export formats — older backups work on newer versions.
 
 ## Transfer to New Device
 
@@ -200,8 +217,8 @@ for i,(ce,hp) in enumerate(chunks):
 ### Clipboard History Disappearing
 
 Entries expire based on the **History Duration** setting in Clipboard Settings:
-- Default: 7 days
-- Set to **Never** to keep entries indefinitely
+- Default: **Never expire** (duration = -1)
+- Can be set to 1 hour, 1 day, 7 days, or custom
 - Pinned items and TODO items never expire regardless of this setting
 - **Note**: Changing this setting only affects new entries. To refresh expiry on
   existing entries, re-import your clipboard backup (import assigns fresh timestamps)

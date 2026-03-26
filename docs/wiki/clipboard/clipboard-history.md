@@ -7,13 +7,13 @@ difficulty: beginner
 
 # Clipboard History
 
-CleverKeys maintains a history of text you've copied, making it easy to paste items from earlier.
+CleverKeys maintains a history of everything you've copied — text, images, videos, PDFs, and more — making it easy to paste items from earlier.
 
 ## Quick Summary
 
 | What | Description |
 |------|-------------|
-| **Purpose** | Access previous clipboard items |
+| **Purpose** | Access previous clipboard items (text + media) |
 | **Access** | Swipe SW from Ctrl key, or add Clipboard to Extra Keys |
 | **Capacity** | Configurable (default 50 items) |
 
@@ -118,6 +118,47 @@ Todo items:
 - Can also be pinned (both flags independent)
 - Useful for quick reference or follow-up
 
+## Media Clipboard
+
+CleverKeys automatically captures images, videos, PDFs, and other files you copy to the clipboard.
+
+### Supported Media Types
+
+| Type | Examples | Thumbnail |
+|------|----------|-----------|
+| **Images** | JPEG, PNG, WebP, GIF | Photo preview |
+| **Animated** | Animated GIF, animated WebP | First frame + play badge |
+| **Videos** | MP4, QuickTime | Video frame preview |
+| **PDFs** | PDF documents | First page preview |
+| **Other files** | ZIP, documents | MIME-type icon |
+
+### How Media Clipboard Works
+
+1. **Copy** an image/video/file in any app (Gallery, Chrome, Files, etc.)
+2. CleverKeys captures it automatically in the background
+3. A **thumbnail** appears in clipboard history
+4. **Tap** the media entry to paste it into the current app (via `commitContent`)
+
+### Media Paste
+
+- Media is pasted via Android's `commitContent` API — the receiving app must support it
+- Most messaging apps (Signal, Telegram, WhatsApp) and text editors support image paste
+- If the app doesn't support media paste, a "Cannot paste media here" message appears
+- **Long-press** a media entry to copy the media URI to the system clipboard
+
+### Media Settings
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| **Media Clipboard** | Enable/disable media capture | On |
+| **Text-Only Mode** | Hide all media, show only text entries | Off |
+| **Max Media Size** | Maximum file size for media entries (1-50 MB) | 10 MB |
+
+To access: **Settings > Clipboard section** (expand it) or **Settings > Activities > Clipboard Settings**.
+
+> [!TIP]
+> If you only want text in your clipboard and find media entries distracting, enable **Text-Only Mode**. Media will still be captured (unless you also disable Media Clipboard) but won't appear in the panel.
+
 ## Tab System
 
 The clipboard pane organizes items into three tabs:
@@ -164,11 +205,12 @@ For large clipboard histories (>100 items), pagination improves performance:
 
 ```
 ┌─────────────────────────────────────┐
-│ 📋 📌 ✓  [Search...]  📅  [▼]       │ ← Tabs + Search + Close
+│ 📋 📌 ✓  [Search...]  🔽  [▼]      │ ← Tabs + Search + Filter + Close
 ├─────────────────────────────────────┤
-│ Recently copied text here... [📌✓🗑]│ ← History items
-│ Another clipboard item...    [📌✓🗑]│
-│ More text from earlier...    [📌✓🗑]│
+│ Recently copied text here... [📌✓🗑]│ ← Text entry
+│ [thumb] photo.jpg · 2h ago   [📌✓🗑]│ ← Image entry with thumbnail
+│ [▶vid] clip.mp4 · Yesterday  [📌✓🗑]│ ← Video entry with play badge
+│ Another clipboard item...    [📌✓🗑]│ ← Text entry
 ├─────────────────────────────────────┤
 │ [◀]         1 / 3              [▶]  │ ← Pagination (if >100 items)
 └─────────────────────────────────────┘
@@ -212,7 +254,15 @@ CleverKeys automatically detects password fields:
 |---------|----------|-------------|
 | **Enable History** | Clipboard section | Turn history on/off |
 | **History Size** | Clipboard section | Maximum items to keep |
+| **History Duration** | Clipboard section | Auto-expiry (default: never) |
+| **Max Item Size** | Clipboard section | Per-item text size limit (64-1024 KB) |
+| **Media Clipboard** | Clipboard section | Enable/disable media capture |
+| **Text-Only Mode** | Clipboard section | Hide media, show only text |
+| **Max Media Size** | Clipboard section | Maximum media file size (1-50 MB) |
+| **Pinned Tab** | Clipboard section | Show/hide the Pinned tab |
+| **Todo Tab** | Clipboard section | Show/hide the Todos tab |
 | **Exclude Password Managers** | Clipboard section | Don't save from password apps |
+| **Respect Sensitive Flag** | Clipboard section | Honor Android 13+ IS_SENSITIVE |
 
 ## Clear History
 
@@ -235,6 +285,14 @@ A: It may have been from a password field or a password manager app (if exclusio
 ### Q: Can I recover deleted items?
 
 A: No, deleted items cannot be recovered. Pin important items.
+
+### Q: Why don't I see images in my clipboard?
+
+A: Check that **Media Clipboard** is enabled and **Text-Only Mode** is off in **Settings > Clipboard section**. The source app must also provide a content URI when copying (most apps do).
+
+### Q: Can I paste an image from clipboard into a messaging app?
+
+A: Yes — tap the image entry in clipboard history. It uses Android's `commitContent` API. The receiving app must support media input (most modern messaging apps do).
 
 ## Related Features
 

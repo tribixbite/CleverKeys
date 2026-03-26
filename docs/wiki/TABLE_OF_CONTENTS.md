@@ -1,7 +1,7 @@
 # CleverKeys User Guide
 
-**Last Updated**: 2026-01-15
-**Version**: v1.2.9
+**Last Updated**: 2026-03-26
+**Version**: v1.3.0
 
 Welcome to the CleverKeys documentation. This guide covers everything you need to know to get the most out of your keyboard.
 
@@ -105,6 +105,8 @@ Each user guide has a paired technical specification for developers:
 | [Per-Key Actions](./customization/per-key-actions.md) | [Short Swipe Customization Spec](../specs/short-swipe-customization.md) |
 | [Themes](./customization/themes.md) | [Settings System Spec](../specs/settings-system.md) |
 | [Multi-Language](./layouts/multi-language.md) | [Dictionary & Language Spec](../specs/dictionary-and-language-system.md) |
+| [Clipboard History](./clipboard/clipboard-history.md) | [Clipboard History Spec](./specs/clipboard/clipboard-history-spec.md) |
+| [Privacy](./settings/privacy.md) | [Clipboard Privacy Spec](../specs/clipboard-privacy.md) |
 
 ---
 

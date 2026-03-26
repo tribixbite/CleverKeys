@@ -37,7 +37,10 @@ Found under the **Clipboard** section in Settings:
 | **Clipboard History** | Enable/disable clipboard history |
 | **Clipboard History Limit** | Maximum items to keep (default: 50) |
 | **Clipboard Size Limit** | Total size limit in MB |
-| **Clipboard Max Item Size** | Maximum size per item in KB |
+| **Clipboard Max Item Size** | Maximum size per text item in KB (64-1024) |
+| **Media Clipboard** | Enable/disable media capture (images, videos, PDFs) |
+| **Text-Only Mode** | Hide all media entries from clipboard panel |
+| **Max Media Size** | Maximum file size for media entries (1-50 MB) |
 | **Exclude Password Managers** | Don't save clips from 1Password, Bitwarden, etc. |
 | **Respect Sensitive Flag** | Honor Android 13+ IS_SENSITIVE flag |
 
@@ -72,6 +75,7 @@ Useful for entering sensitive information in any app.
 | **Dictionary** | App data | Personal words |
 | **Profiles** | App data | Saved configurations |
 | **Clipboard** | App data | Recent clips (up to limit) |
+| **Clipboard Media** | App data | Copied images, videos, PDFs |
 
 ### Storage Location
 
@@ -79,10 +83,14 @@ All data is stored locally on your device:
 
 ```
 /data/data/tribixbite.cleverkeys/
-├── shared_prefs/     # Settings
-├── files/            # Dictionary, profiles
-└── databases/        # Clipboard history
+├── shared_prefs/         # Settings
+├── files/                # Dictionary, profiles
+│   └── clipboard_media/  # Copied images, videos, PDFs (excluded from backup)
+└── databases/            # Clipboard history (text + media metadata)
 ```
+
+> [!NOTE]
+> Clipboard media files are excluded from Android Auto Backup to protect privacy and prevent consuming Google Drive quota.
 
 ## Secure Input
 
@@ -118,6 +126,10 @@ Use Settings > Backup & Restore to:
 |---------|---------|---------|
 | **Clipboard History** | Clipboard | On |
 | **History Limit** | Clipboard | 50 items |
+| **History Duration** | Clipboard | Never expire |
+| **Media Clipboard** | Clipboard | On |
+| **Text-Only Mode** | Clipboard | Off |
+| **Max Media Size** | Clipboard | 10 MB |
 | **Exclude Password Managers** | Clipboard | On |
 | **Respect Sensitive Flag** | Clipboard | On |
 | **Incognito Mode** | Privacy | Off |

@@ -17,7 +17,7 @@ CleverKeys includes privacy features for the clipboard history system, primarily
 ## Architecture
 
 ```
-Clipboard Change Event
+Clipboard Change Event (onPrimaryClipChanged)
        |
        v
 +----------------------+
@@ -37,18 +37,49 @@ Clipboard Change Event
 | App()                |
 +----------------------+
        |
+       v
++----------------------+
+| IS_SENSITIVE flag    | -- Android 13+ sensitive content check
+| (API 33+)           |
++----------------------+
+       |
        v (if NOT excluded)
-+----------------------+
-| Store to clipboard   | -- Save to history database
-| history              |
-+----------------------+
++------ text? --------+------- URI? ---------+
+|                      |                      |
+v                      v                      |
+addClip(text)          Dispatchers.IO         |
+                       processClipUri(uri)    |
+                            |                 |
+                   +--------+--------+        |
+                   | text/* | media  |        |
+                   v        v        |        |
+              readTextFromUri  check media    |
+                            toggles           |
+                            |                 |
+                   clipboard_media_enabled?   |
+                   clipboard_text_only?       |
+                            |                 |
+                   (if both pass)             |
+                   saveMedia() + addMediaClip |
++------------------------------------------+
 ```
+
+### Media Privacy Gating
+
+Media capture is gated by two independent settings:
+- `clipboard_media_enabled` (default: true) — master toggle for media capture
+- `clipboard_text_only` (default: false) — hides media from display AND blocks capture
+
+Both must allow media for it to be captured. Media files are stored in app-private `filesDir/clipboard_media/` and excluded from Android Auto Backup.
 
 ## Configuration
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `clipboard_exclude_password_managers` | Boolean | true | Skip clipboard from password managers |
+| `clipboard_respect_sensitive_flag` | Boolean | true | Honor Android 13+ IS_SENSITIVE flag |
+| `clipboard_media_enabled` | Boolean | true | Enable media clipboard capture |
+| `clipboard_text_only` | Boolean | false | Hide media, block media capture |
 
 ## Implementation Details
 
