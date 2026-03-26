@@ -62,6 +62,7 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
     private var totalEntries by mutableStateOf(0)
     private var activeEntries by mutableStateOf(0)
     private var pinnedEntries by mutableStateOf(0)
+    private var todoEntries by mutableStateOf(0)
     private var expiredEntries by mutableStateOf(0)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -140,6 +141,7 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
                     totalEntries = stats["total_entries"] as? Int ?: 0
                     activeEntries = stats["active_entries"] as? Int ?: 0
                     pinnedEntries = stats["pinned_entries"] as? Int ?: 0
+                    todoEntries = stats["todo_entries"] as? Int ?: 0
                     expiredEntries = stats["expired_entries"] as? Int ?: 0
                 }
 
@@ -331,6 +333,13 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
                                     // Save 0 (unlimited sentinel) when slider is at max position
                                     val valueToSave = if (historyLimit >= 100) 0 else historyLimit
                                     saveSetting("clipboard_history_limit", valueToSave)
+                                    // Auto-link: when user sets count to Unlimited and duration
+                                    // is still at default 7 days, auto-set to "Never expire"
+                                    // to prevent unexpected expiry (Bug #6)
+                                    if (historyLimit >= 100 && historyDuration == 10080) {
+                                        historyDuration = -1
+                                        saveSetting("clipboard_history_duration", "-1")
+                                    }
                                 },
                                 displayValue = if (historyLimit >= 100) "Unlimited" else "$historyLimit entries",
                                 helpText = "Older entries are automatically removed when limit is reached"
@@ -366,7 +375,9 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
                                     43200 -> "30 days"
                                     else -> "${historyDuration / 60} hours"
                                 },
-                                helpText = "Pinned entries never expire regardless of this setting"
+                                helpText = if (historyLimit >= 100 && historyDuration != -1)
+                                    "Warning: count is unlimited but entries will still expire after this duration"
+                                else "Pinned entries never expire regardless of this setting"
                             )
                         }
                     }
@@ -397,10 +408,11 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
                                         .align(Alignment.CenterHorizontally)
                                 )
                             } else {
-                                StatRow("Total Entries", totalEntries.toString())
-                                StatRow("Active Entries", activeEntries.toString())
-                                StatRow("Pinned Entries", pinnedEntries.toString())
-                                StatRow("Expired Entries", expiredEntries.toString())
+                                StatRow("History (Active)", activeEntries.toString())
+                                StatRow("Pinned", pinnedEntries.toString())
+                                StatRow("Todos", todoEntries.toString())
+                                StatRow("Total", totalEntries.toString())
+                                StatRow("Expired (pending cleanup)", expiredEntries.toString())
                             }
                         }
                     }

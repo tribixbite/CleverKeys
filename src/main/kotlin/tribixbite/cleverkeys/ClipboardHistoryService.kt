@@ -397,6 +397,13 @@ class ClipboardHistoryService private constructor(ctx: Context) {
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                 android.util.Log.d("ClipboardHistoryService", "Clipboard access denied (app not in focus): " + e.message)
             }
+        } catch (e: Exception) {
+            // Catches TransactionTooLargeException (Binder IPC limit ~1MB) and other
+            // unexpected exceptions from _cm.primaryClip. The clipboard content is too
+            // large to cross the Binder boundary — our per-item size limit (clipboard_max_item_size_kb)
+            // cannot help because the data never reaches our code.
+            android.util.Log.w("ClipboardHistoryService",
+                "Clipboard read failed (${e.javaClass.simpleName}): ${e.message?.take(100)}")
         }
     }
 
