@@ -39,7 +39,7 @@ import tribixbite.cleverkeys.theme.KeyboardTheme
  * All settings map to existing Config.kt properties:
  * - clipboard_history_enabled (default: false)
  * - clipboard_history_limit (default: 6)
- * - clipboard_history_duration (default: 10080 minutes / 7 days, -1 for never)
+ * - clipboard_history_duration (default: -1 / never expire)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferenceChangeListener {
@@ -55,7 +55,7 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
     // Settings state
     private var clipboardEnabled by mutableStateOf(false)
     private var historyLimit by mutableStateOf(6)
-    private var historyDuration by mutableStateOf(10080) // minutes; 10080 = 7 days, -1 = never
+    private var historyDuration by mutableStateOf(-1) // minutes; -1 = never expire (default)
 
     // Statistics state
     private var statsLoading by mutableStateOf(true)
@@ -118,7 +118,7 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
                 historyLimit = if (savedLimit <= 0) 100 else savedLimit
             }
             "clipboard_history_duration" -> {
-                historyDuration = prefs.getString(key, "10080")?.toIntOrNull() ?: 10080
+                historyDuration = prefs.getString(key, Defaults.CLIPBOARD_HISTORY_DURATION)?.toIntOrNull() ?: Defaults.CLIPBOARD_HISTORY_DURATION_FALLBACK
             }
         }
     }
@@ -128,7 +128,7 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
         // Map 0 (unlimited sentinel) back to 100 for slider range (1..100)
         val savedLimit = prefs.getInt("clipboard_history_limit", 6)
         historyLimit = if (savedLimit <= 0) 100 else savedLimit
-        historyDuration = prefs.getString("clipboard_history_duration", "10080")?.toIntOrNull() ?: 10080
+        historyDuration = prefs.getString("clipboard_history_duration", Defaults.CLIPBOARD_HISTORY_DURATION)?.toIntOrNull() ?: Defaults.CLIPBOARD_HISTORY_DURATION_FALLBACK
     }
 
     private suspend fun loadStatistics() {
@@ -436,7 +436,14 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
                             historyLimit = Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK
                             historyDuration = Defaults.CLIPBOARD_HISTORY_DURATION_FALLBACK
                             saveSetting("clipboard_history_limit", Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK)
-                            saveSetting("clipboard_history_duration", Defaults.CLIPBOARD_HISTORY_DURATION.toString())
+                            saveSetting("clipboard_history_duration", Defaults.CLIPBOARD_HISTORY_DURATION)
+                            // Also reset per-item size, limit type, size limit, and privacy settings
+                            saveSetting("clipboard_max_item_size_kb", Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB)
+                            saveSetting("clipboard_limit_type", Defaults.CLIPBOARD_LIMIT_TYPE)
+                            saveSetting("clipboard_size_limit_mb", Defaults.CLIPBOARD_SIZE_LIMIT_MB)
+                            saveSetting("clipboard_exclude_password_managers", Defaults.CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS)
+                            saveSetting("clipboard_respect_sensitive_flag", Defaults.CLIPBOARD_RESPECT_SENSITIVE_FLAG)
+                            saveSetting("clipboard_pane_height_percent", Defaults.CLIPBOARD_PANE_HEIGHT_PERCENT)
                             Toast.makeText(this@ClipboardSettingsActivity,
                                 "Reset to default values",
                                 Toast.LENGTH_SHORT).show()

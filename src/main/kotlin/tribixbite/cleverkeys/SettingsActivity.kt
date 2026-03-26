@@ -3047,10 +3047,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 // Max item size
                 SettingsSlider(
                     title = "Max Item Size",
-                    description = "Maximum size per clipboard entry",
+                    description = "Maximum size per clipboard entry (Android Binder limit: ~1MB)",
                     value = clipboardMaxItemSizeKb.toFloat(),
-                    valueRange = 100f..5000f,
-                    steps = 49,
+                    valueRange = 64f..1024f,
+                    steps = 14,  // 64, 128, 192, 256, ... 1024
                     onValueChange = {
                         clipboardMaxItemSizeKb = it.toInt()
                         saveSetting("clipboard_max_item_size_kb", clipboardMaxItemSizeKb)
@@ -5339,9 +5339,16 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     editor.putBoolean("swipe_trail_enabled", Defaults.SWIPE_TRAIL_ENABLED)
                     editor.putString("swipe_trail_effect", Defaults.SWIPE_TRAIL_EFFECT)
 
-                    // Clipboard
+                    // Clipboard — all settings in sync with ClipboardSettingsActivity reset
                     editor.putBoolean("clipboard_history_enabled", Defaults.CLIPBOARD_HISTORY_ENABLED)
                     editor.putInt("clipboard_pane_height_percent", Defaults.CLIPBOARD_PANE_HEIGHT_PERCENT)
+                    editor.putInt("clipboard_history_limit", Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK)
+                    editor.putString("clipboard_history_duration", Defaults.CLIPBOARD_HISTORY_DURATION)
+                    editor.putString("clipboard_max_item_size_kb", Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB)
+                    editor.putString("clipboard_limit_type", Defaults.CLIPBOARD_LIMIT_TYPE)
+                    editor.putString("clipboard_size_limit_mb", Defaults.CLIPBOARD_SIZE_LIMIT_MB)
+                    editor.putBoolean("clipboard_exclude_password_managers", Defaults.CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS)
+                    editor.putBoolean("clipboard_respect_sensitive_flag", Defaults.CLIPBOARD_RESPECT_SENSITIVE_FLAG)
 
                     // Accessibility
                     editor.putBoolean("sticky_keys_enabled", Defaults.STICKY_KEYS_ENABLED)

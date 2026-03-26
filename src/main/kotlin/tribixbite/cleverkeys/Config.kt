@@ -176,14 +176,14 @@ object Defaults {
     const val CLIPBOARD_HISTORY_LIMIT = "50"  // Was "0" (unlimited) - now 50 entries max
     const val CLIPBOARD_HISTORY_LIMIT_FALLBACK = 50
     const val CLIPBOARD_PANE_HEIGHT_PERCENT = 30
-    const val CLIPBOARD_MAX_ITEM_SIZE_KB = "256"  // Was "500" - reduced to stay well under Binder limit
+    const val CLIPBOARD_MAX_ITEM_SIZE_KB = "256"  // Default 256KB. Android Binder IPC caps at ~1MB
     const val CLIPBOARD_MAX_ITEM_SIZE_KB_FALLBACK = 256
     const val CLIPBOARD_LIMIT_TYPE = "count"
     const val CLIPBOARD_SIZE_LIMIT_MB = "5"  // Was "10" - reduced for safety
     const val CLIPBOARD_SIZE_LIMIT_MB_FALLBACK = 5
     const val CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS = true  // Skip clipboard from password managers
-    const val CLIPBOARD_HISTORY_DURATION = "10080"  // Minutes; 10080 = 7 days. -1 = never expire
-    const val CLIPBOARD_HISTORY_DURATION_FALLBACK = 10080
+    const val CLIPBOARD_HISTORY_DURATION = "-1"  // Minutes; -1 = never expire. Was 10080 (7 days)
+    const val CLIPBOARD_HISTORY_DURATION_FALLBACK = -1
     const val CLIPBOARD_RESPECT_SENSITIVE_FLAG = true  // #86: Respect Android 13+ IS_SENSITIVE flag
 
     // GIF Panel — opt-in, off by default, zero data shipped in APK
@@ -412,7 +412,7 @@ class Config private constructor(
     @JvmField var clipboard_size_limit_mb = 0
     @JvmField var clipboard_exclude_password_managers = true  // Skip clipboard from password managers
     @JvmField var clipboard_respect_sensitive_flag = true  // #86: Respect Android 13+ IS_SENSITIVE flag
-    @JvmField var clipboard_history_duration = 10080  // Minutes; 10080 = 7 days. -1 = never expire
+    @JvmField var clipboard_history_duration = -1  // Minutes; -1 = never expire. Was 10080 (7 days)
 
     // GIF Panel
     @JvmField var gif_enabled = Defaults.GIF_ENABLED

@@ -518,10 +518,10 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         }
 
         /** Clipboard history is persistently stored in SQLite database and survives app restarts.
-            Entries expire based on clipboard_history_duration config (default 7 days) unless pinned.
+            Entries expire based on clipboard_history_duration config (default: never expire) unless pinned.
             The configurable size limit (clipboard_history_limit) controls maximum entries (0 = unlimited). */
         /** Compute the TTL in ms from user-configured clipboard_history_duration (minutes).
-         *  -1 = never expire (Long.MAX_VALUE). Default = 10080 minutes (7 days). */
+         *  -1 = never expire (Long.MAX_VALUE). Default = -1 (never expire). */
         @JvmStatic
         fun getHistoryTtlMs(): Long {
             val durationMinutes = Config.globalConfig().clipboard_history_duration

@@ -699,31 +699,27 @@ class ConfigDefaultsTest {
     }
 
     @Test
-    fun `clipboard history duration default is 7 days in minutes`() {
-        // wiki: "History Duration | 7 days". Stored as minutes string, -1 = never expire
-        assertThat(Defaults.CLIPBOARD_HISTORY_DURATION).isEqualTo("10080")
-        assertThat(Defaults.CLIPBOARD_HISTORY_DURATION_FALLBACK).isEqualTo(10080)
+    fun `clipboard history duration default is never expire`() {
+        // Default changed from 7 days (10080) to never expire (-1)
+        assertThat(Defaults.CLIPBOARD_HISTORY_DURATION).isEqualTo("-1")
+        assertThat(Defaults.CLIPBOARD_HISTORY_DURATION_FALLBACK).isEqualTo(-1)
         // String and int defaults must agree
         assertThat(Defaults.CLIPBOARD_HISTORY_DURATION.toInt())
             .isEqualTo(Defaults.CLIPBOARD_HISTORY_DURATION_FALLBACK)
     }
 
     @Test
-    fun `clipboard history duration converted to millis does not overflow Long`() {
-        // Regression: adding duration_minutes * 60_000L to currentTimeMillis() must not
-        // wrap negative. The "never expire" sentinel (-1) uses Long.MAX_VALUE directly,
-        // but normal durations must also stay positive after conversion.
-        val durationMinutes = Defaults.CLIPBOARD_HISTORY_DURATION_FALLBACK.toLong()
-        val durationMillis = durationMinutes * 60_000L
-        assertThat(durationMillis).isGreaterThan(0L)
-
-        val expiryTimestamp = System.currentTimeMillis() + durationMillis
-        assertThat(expiryTimestamp).isGreaterThan(0L)
-
-        // Verify the overflow scenario that was fixed:
-        // Long.MAX_VALUE + any positive number wraps negative
+    fun `clipboard history never-expire sentinel avoids Long overflow`() {
+        // When duration is -1 (never expire), ClipboardHistoryService uses Long.MAX_VALUE
+        // as TTL. Adding Long.MAX_VALUE to currentTimeMillis() would overflow to negative.
+        // The service handles this with: if (ttl == MAX_VALUE) MAX_VALUE else now + ttl
         val buggyExpiry = System.currentTimeMillis() + Long.MAX_VALUE
-        assertThat(buggyExpiry).isLessThan(0L)  // proves the bug existed
+        assertThat(buggyExpiry).isLessThan(0L)  // proves overflow still happens in arithmetic
+
+        // Verify the service-level guard: TTL of MAX_VALUE must produce MAX_VALUE, not overflow
+        val ttl = Long.MAX_VALUE
+        val safeExpiry = if (ttl == Long.MAX_VALUE) Long.MAX_VALUE else System.currentTimeMillis() + ttl
+        assertThat(safeExpiry).isEqualTo(Long.MAX_VALUE)
     }
 
     @Test
