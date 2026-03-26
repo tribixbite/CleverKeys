@@ -177,10 +177,17 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
         lifecycleScope.launch {
             try {
                 val result = clipboardDatabase.clearAllEntries().getOrNull()
-                if (result != null && result > 0) {
+                if (result != null && result.first > 0) {
+                    // Clean up media files from deleted entries
+                    val mediaManager = ClipboardMediaManager(this@ClipboardSettingsActivity)
+                    result.second.forEach { mediaPath ->
+                        if (!clipboardDatabase.isMediaPathReferenced(mediaPath)) {
+                            mediaManager.deleteMedia(mediaPath)
+                        }
+                    }
                     Toast.makeText(
                         this@ClipboardSettingsActivity,
-                        "Cleared $result clipboard entries",
+                        "Cleared ${result.first} clipboard entries",
                         Toast.LENGTH_SHORT
                     ).show()
                     loadStatistics()

@@ -212,6 +212,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
 
     /**
      * Pin or unpin the entry at index [pos] (position in current page).
+     * Carries media fields (mimeType, thumbnailBlob, mediaPath) through COPY semantics.
      */
     fun pin_entry(pos: Int) {
         val entry = paginatedHistory[pos]
@@ -219,7 +220,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         when (currentTab) {
             ClipboardTab.HISTORY -> {
                 // Pin from history (COPY — history entry stays)
-                service?.pinEntry(entry.content, entry.timestamp)
+                service?.pinEntry(entry.content, entry.timestamp,
+                    entry.mimeType, entry.thumbnailBlob, entry.mediaPath)
             }
             ClipboardTab.PINNED -> {
                 // Unpin from pinned tab
@@ -227,7 +229,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             }
             ClipboardTab.TODOS -> {
                 // Pin todo item (can be both pinned and todo)
-                service?.pinEntry(entry.content, entry.timestamp)
+                service?.pinEntry(entry.content, entry.timestamp,
+                    entry.mimeType, entry.thumbnailBlob, entry.mediaPath)
             }
         }
         loadDataAsync()
@@ -235,6 +238,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
 
     /**
      * Add or remove entry from todos at index [pos] (position in current page).
+     * Carries media fields through COPY semantics.
      */
     fun todo_entry(pos: Int) {
         val entry = paginatedHistory[pos]
@@ -242,7 +246,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         when (currentTab) {
             ClipboardTab.HISTORY, ClipboardTab.PINNED -> {
                 // Add to todos (COPY — original entry stays)
-                service?.addToTodo(entry.content, entry.timestamp)
+                service?.addToTodo(entry.content, entry.timestamp,
+                    entry.mimeType, entry.thumbnailBlob, entry.mediaPath)
             }
             ClipboardTab.TODOS -> {
                 // Remove from todos

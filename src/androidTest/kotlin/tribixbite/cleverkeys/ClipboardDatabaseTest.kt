@@ -118,7 +118,7 @@ class ClipboardDatabaseTest {
         db.addClipboardEntry("Expired", pastExpiry)
         db.addClipboardEntry("Active", futureExpiry)
 
-        val cleaned = db.cleanupExpiredEntries()
+        val (cleaned, _) = db.cleanupExpiredEntries()
         assertEquals("Should clean 1 expired entry", 1, cleaned)
         assertEquals("Should have 1 total entry left", 1, db.getTotalEntryCount())
     }
@@ -129,7 +129,7 @@ class ClipboardDatabaseTest {
         db.addClipboardEntry("Pinned expired", pastExpiry)
         db.pinEntry("Pinned expired")
 
-        val cleaned = db.cleanupExpiredEntries()
+        val (cleaned, _) = db.cleanupExpiredEntries()
         assertEquals("Pinned entries should not be cleaned", 0, cleaned)
     }
 
@@ -149,7 +149,7 @@ class ClipboardDatabaseTest {
         // Regular expired entry — should be deleted
         db.addClipboardEntry("Ephemeral", pastExpiry)
 
-        val cleaned = db.cleanupExpiredEntries()
+        val (cleaned, _) = db.cleanupExpiredEntries()
         assertEquals("Should only clean the non-todo expired entry", 1, cleaned)
         assertEquals("Total should be 1 (the todo)", 1, db.getTotalEntryCount())
         assertEquals("Todo should survive", 1, db.getTodoEntries().size)
@@ -219,7 +219,7 @@ class ClipboardDatabaseTest {
         db.addTodoEntry("Todo item")
         db.addClipboardEntry("Regular expired", pastExpiry)
 
-        val cleaned = db.cleanupExpiredEntries()
+        val (cleaned, _) = db.cleanupExpiredEntries()
         assertEquals("Only regular expired should be cleaned", 1, cleaned)
         assertEquals("Pinned + todo should remain", 2, db.getTotalEntryCount())
     }
@@ -285,21 +285,21 @@ class ClipboardDatabaseTest {
     @Test
     fun testRemoveClipboardEntry() {
         db.addClipboardEntry("Remove me", futureExpiry)
-        val removed = db.removeClipboardEntry("Remove me")
-        assertTrue("Should remove entry", removed)
+        // removeClipboardEntry returns media_path (null for text-only) — non-null would indicate media
+        db.removeClipboardEntry("Remove me")
         assertEquals(0, db.getTotalEntryCount())
     }
 
     @Test
     fun testRemoveNonexistentEntry() {
-        val removed = db.removeClipboardEntry("Nonexistent")
-        assertFalse("Should not remove nonexistent entry", removed)
+        val mediaPath = db.removeClipboardEntry("Nonexistent")
+        assertNull("Should return null for nonexistent entry", mediaPath)
     }
 
     @Test
     fun testRemoveNullContent() {
-        val removed = db.removeClipboardEntry(null)
-        assertFalse("Should not remove null content", removed)
+        val mediaPath = db.removeClipboardEntry(null)
+        assertNull("Should return null for null content", mediaPath)
     }
 
     @Test

@@ -260,12 +260,14 @@ class ClipboardDatabase private constructor(context: Context) :
         }
     }
 
-    /** Get non-expired history entries (v3: no pinned/todo filters — those are separate tables) */
+    /** Get non-expired history entries with v4 media fields */
     fun getActiveClipboardEntries(): List<ClipboardEntry> {
         val entries = mutableListOf<ClipboardEntry>()
         val currentTime = System.currentTimeMillis()
         val query = """
-            SELECT $COLUMN_CONTENT, $COLUMN_TIMESTAMP FROM $TABLE_CLIPBOARD
+            SELECT $COLUMN_CONTENT, $COLUMN_TIMESTAMP, $COLUMN_MIME_TYPE,
+                   $COLUMN_THUMBNAIL_BLOB, $COLUMN_MEDIA_PATH
+            FROM $TABLE_CLIPBOARD
             WHERE $COLUMN_EXPIRY_TIMESTAMP > ?
             ORDER BY $COLUMN_TIMESTAMP DESC
         """.trimIndent()
@@ -273,7 +275,13 @@ class ClipboardDatabase private constructor(context: Context) :
             readableDatabase.rawQuery(query, arrayOf(currentTime.toString())).use { cursor ->
                 if (cursor.moveToFirst()) {
                     do {
-                        entries.add(ClipboardEntry(cursor.getString(0), cursor.getLong(1)))
+                        entries.add(ClipboardEntry(
+                            content = cursor.getString(0),
+                            timestamp = cursor.getLong(1),
+                            mimeType = cursor.getString(2) ?: ClipboardEntry.MIME_TEXT_PLAIN,
+                            thumbnailBlob = cursor.getBlob(3),
+                            mediaPath = cursor.getString(4)
+                        ))
                     } while (cursor.moveToNext())
                 }
             }
@@ -284,48 +292,85 @@ class ClipboardDatabase private constructor(context: Context) :
         return entries
     }
 
-    fun removeClipboardEntry(content: String?): Boolean {
-        if (content.isNullOrBlank()) return false
+    /**
+     * Remove a clipboard history entry by content. Returns the media_path of the deleted entry
+     * (or null if text-only) so the caller can clean up the associated media file.
+     */
+    fun removeClipboardEntry(content: String?): String? {
+        if (content.isNullOrBlank()) return null
         val trimmedContent = content.trim()
         return try {
             val db = writableDatabase
+            // Query media_path before deleting so caller can clean up the file
+            val mediaPath = db.rawQuery(
+                "SELECT $COLUMN_MEDIA_PATH FROM $TABLE_CLIPBOARD WHERE $COLUMN_CONTENT = ? LIMIT 1",
+                arrayOf(trimmedContent)
+            ).use { cursor ->
+                if (cursor.moveToFirst()) cursor.getString(0) else null
+            }
             val deletedRows = db.delete(TABLE_CLIPBOARD, "$COLUMN_CONTENT = ?", arrayOf(trimmedContent))
             Log.d(TAG, "Removed $deletedRows clipboard entries matching: ${trimmedContent.take(20)}...")
-            deletedRows > 0
+            if (deletedRows > 0) mediaPath else null
         } catch (e: Exception) {
             Log.e(TAG, "Error removing clipboard entry: ${e.message}")
-            false
+            null
         }
     }
 
-    /** Clear all history entries. Pinned/todo entries live in separate tables and are unaffected. */
-    fun clearAllEntries(): Result<Int> {
+    /**
+     * Clear all history entries. Pinned/todo entries live in separate tables and are unaffected.
+     * Returns the list of media_path values from deleted entries so caller can clean up files.
+     */
+    fun clearAllEntries(): Result<Pair<Int, List<String>>> {
         return try {
             val db = writableDatabase
+            // Collect media paths before deleting so caller can clean up files
+            val mediaPaths = mutableListOf<String>()
+            db.rawQuery(
+                "SELECT $COLUMN_MEDIA_PATH FROM $TABLE_CLIPBOARD WHERE $COLUMN_MEDIA_PATH IS NOT NULL",
+                null
+            ).use { cursor ->
+                while (cursor.moveToNext()) {
+                    cursor.getString(0)?.let { mediaPaths.add(it) }
+                }
+            }
             val deletedRows = db.delete(TABLE_CLIPBOARD, null, null)
-            Log.d(TAG, "Cleared $deletedRows history entries (pinned/todo tables unaffected)")
-            Result.success(deletedRows)
+            Log.d(TAG, "Cleared $deletedRows history entries (${mediaPaths.size} with media, pinned/todo unaffected)")
+            Result.success(Pair(deletedRows, mediaPaths))
         } catch (e: Exception) {
             Log.e(TAG, "Error clearing clipboard entries: ${e.message}")
             Result.failure(e)
         }
     }
 
-    /** Remove expired history entries. Pinned/todo are in separate tables and never expire. */
-    fun cleanupExpiredEntries(): Int {
+    /**
+     * Remove expired history entries. Pinned/todo are in separate tables and never expire.
+     * Returns a pair of (deletedCount, mediaPaths) so caller can clean up associated media files.
+     */
+    fun cleanupExpiredEntries(): Pair<Int, List<String>> {
         val currentTime = System.currentTimeMillis()
         return try {
             val db = writableDatabase
+            // Collect media paths of expired entries before deleting
+            val mediaPaths = mutableListOf<String>()
+            db.rawQuery(
+                "SELECT $COLUMN_MEDIA_PATH FROM $TABLE_CLIPBOARD WHERE $COLUMN_EXPIRY_TIMESTAMP <= ? AND $COLUMN_MEDIA_PATH IS NOT NULL",
+                arrayOf(currentTime.toString())
+            ).use { cursor ->
+                while (cursor.moveToNext()) {
+                    cursor.getString(0)?.let { mediaPaths.add(it) }
+                }
+            }
             val deletedRows = db.delete(
                 TABLE_CLIPBOARD,
                 "$COLUMN_EXPIRY_TIMESTAMP <= ?",
                 arrayOf(currentTime.toString())
             )
-            if (deletedRows > 0) Log.d(TAG, "Cleaned up $deletedRows expired history entries")
-            deletedRows
+            if (deletedRows > 0) Log.d(TAG, "Cleaned up $deletedRows expired entries (${mediaPaths.size} with media)")
+            Pair(deletedRows, mediaPaths)
         } catch (e: Exception) {
             Log.e(TAG, "Error cleaning up expired entries: ${e.message}")
-            0
+            Pair(0, emptyList())
         }
     }
 
@@ -336,11 +381,21 @@ class ClipboardDatabase private constructor(context: Context) :
     /**
      * Pin content by copying it to pinned_entries. If already pinned, returns false.
      * The original history entry (if any) is unaffected — COPY semantics.
+     * Carries v4 media fields (mime_type, thumbnail_blob, media_path) when pinning media.
      *
-     * @param content The text content to pin
+     * @param content The text content to pin (or display name for media)
      * @param createdTimestamp Original clipboard copy time (defaults to now)
+     * @param mimeType MIME type of the entry (default text/plain)
+     * @param thumbnailBlob WebP thumbnail bytes or null
+     * @param mediaPath Relative path to media file or null
      */
-    fun pinEntry(content: String?, createdTimestamp: Long = System.currentTimeMillis()): Boolean {
+    fun pinEntry(
+        content: String?,
+        createdTimestamp: Long = System.currentTimeMillis(),
+        mimeType: String = ClipboardEntry.MIME_TEXT_PLAIN,
+        thumbnailBlob: ByteArray? = null,
+        mediaPath: String? = null
+    ): Boolean {
         if (content.isNullOrBlank()) return false
         val trimmedContent = content.trim()
         val contentHash = trimmedContent.hashCode().toString()
@@ -363,6 +418,9 @@ class ClipboardDatabase private constructor(context: Context) :
                 put(COLUMN_PINNED_TIMESTAMP, System.currentTimeMillis())
                 put(COLUMN_POSITION, position)
                 put(COLUMN_TAGS, "[]")
+                put(COLUMN_MIME_TYPE, mimeType)
+                if (thumbnailBlob != null) put(COLUMN_THUMBNAIL_BLOB, thumbnailBlob)
+                if (mediaPath != null) put(COLUMN_MEDIA_PATH, mediaPath)
             }
             val result = db.insert(TABLE_PINNED, null, values)
             Log.d(TAG, "Pinned entry: ${trimmedContent.take(20)}... (id=$result, pos=$position)")
@@ -373,18 +431,28 @@ class ClipboardDatabase private constructor(context: Context) :
         }
     }
 
-    /** Remove content from pinned_entries. History copy (if any) is unaffected. */
-    fun unpinEntry(content: String?): Boolean {
-        if (content.isNullOrBlank()) return false
+    /**
+     * Remove content from pinned_entries. History copy (if any) is unaffected.
+     * Returns the media_path of the deleted entry (or null) so caller can clean up the file.
+     * Note: media is only deleted if no other table references the same media_path.
+     */
+    fun unpinEntry(content: String?): String? {
+        if (content.isNullOrBlank()) return null
         val trimmedContent = content.trim()
         return try {
             val db = writableDatabase
+            val mediaPath = db.rawQuery(
+                "SELECT $COLUMN_MEDIA_PATH FROM $TABLE_PINNED WHERE $COLUMN_CONTENT = ? LIMIT 1",
+                arrayOf(trimmedContent)
+            ).use { cursor ->
+                if (cursor.moveToFirst()) cursor.getString(0) else null
+            }
             val deletedRows = db.delete(TABLE_PINNED, "$COLUMN_CONTENT = ?", arrayOf(trimmedContent))
             Log.d(TAG, "Unpinned $deletedRows entries: ${trimmedContent.take(20)}...")
-            deletedRows > 0
+            if (deletedRows > 0) mediaPath else null
         } catch (e: Exception) {
             Log.e(TAG, "Error unpinning entry: ${e.message}")
-            false
+            null
         }
     }
 
@@ -406,19 +474,26 @@ class ClipboardDatabase private constructor(context: Context) :
 
     /**
      * Get pinned entries as ClipboardEntry list (backward-compatible for existing views).
-     * Ordered by position ASC (user-defined sort order).
+     * Ordered by position ASC (user-defined sort order). Includes v4 media fields.
      */
     fun getPinnedEntries(): List<ClipboardEntry> {
         val entries = mutableListOf<ClipboardEntry>()
         val query = """
-            SELECT $COLUMN_CONTENT, $COLUMN_PINNED_TIMESTAMP FROM $TABLE_PINNED
-            ORDER BY $COLUMN_POSITION ASC
+            SELECT $COLUMN_CONTENT, $COLUMN_PINNED_TIMESTAMP, $COLUMN_MIME_TYPE,
+                   $COLUMN_THUMBNAIL_BLOB, $COLUMN_MEDIA_PATH
+            FROM $TABLE_PINNED ORDER BY $COLUMN_POSITION ASC
         """.trimIndent()
         try {
             readableDatabase.rawQuery(query, null).use { cursor ->
                 if (cursor.moveToFirst()) {
                     do {
-                        entries.add(ClipboardEntry(cursor.getString(0), cursor.getLong(1)))
+                        entries.add(ClipboardEntry(
+                            content = cursor.getString(0),
+                            timestamp = cursor.getLong(1),
+                            mimeType = cursor.getString(2) ?: ClipboardEntry.MIME_TEXT_PLAIN,
+                            thumbnailBlob = cursor.getBlob(3),
+                            mediaPath = cursor.getString(4)
+                        ))
                     } while (cursor.moveToNext())
                 }
             }
@@ -429,13 +504,14 @@ class ClipboardDatabase private constructor(context: Context) :
         return entries
     }
 
-    /** Get pinned entries with full v3 fields (position, tags, timestamps) */
+    /** Get pinned entries with full v4 fields (position, tags, timestamps, media) */
     fun getPinnedEntriesFull(): List<PinnedEntry> {
         val entries = mutableListOf<PinnedEntry>()
         val query = """
             SELECT $COLUMN_ID, $COLUMN_CONTENT, $COLUMN_CONTENT_HASH,
                    $COLUMN_CREATED_TIMESTAMP, $COLUMN_PINNED_TIMESTAMP,
-                   $COLUMN_POSITION, $COLUMN_TAGS
+                   $COLUMN_POSITION, $COLUMN_TAGS, $COLUMN_MIME_TYPE,
+                   $COLUMN_THUMBNAIL_BLOB, $COLUMN_MEDIA_PATH
             FROM $TABLE_PINNED ORDER BY $COLUMN_POSITION ASC
         """.trimIndent()
         try {
@@ -449,7 +525,10 @@ class ClipboardDatabase private constructor(context: Context) :
                             createdTimestamp = cursor.getLong(3),
                             pinnedTimestamp = cursor.getLong(4),
                             position = cursor.getDouble(5),
-                            tags = PinnedEntry.tagsFromJson(cursor.getString(6))
+                            tags = PinnedEntry.tagsFromJson(cursor.getString(6)),
+                            mimeType = cursor.getString(7) ?: ClipboardEntry.MIME_TEXT_PLAIN,
+                            thumbnailBlob = cursor.getBlob(8),
+                            mediaPath = cursor.getString(9)
                         ))
                     } while (cursor.moveToNext())
                 }
@@ -474,11 +553,21 @@ class ClipboardDatabase private constructor(context: Context) :
     /**
      * Add content to todo_entries. If already a todo, returns false.
      * The original history entry (if any) is unaffected — COPY semantics.
+     * Carries v4 media fields when adding media as todo.
      *
-     * @param content The text content to add as todo
+     * @param content The text content to add as todo (or display name for media)
      * @param createdTimestamp Original clipboard copy time (defaults to now)
+     * @param mimeType MIME type of the entry (default text/plain)
+     * @param thumbnailBlob WebP thumbnail bytes or null
+     * @param mediaPath Relative path to media file or null
      */
-    fun addTodoEntry(content: String?, createdTimestamp: Long = System.currentTimeMillis()): Boolean {
+    fun addTodoEntry(
+        content: String?,
+        createdTimestamp: Long = System.currentTimeMillis(),
+        mimeType: String = ClipboardEntry.MIME_TEXT_PLAIN,
+        thumbnailBlob: ByteArray? = null,
+        mediaPath: String? = null
+    ): Boolean {
         if (content.isNullOrBlank()) return false
         val trimmedContent = content.trim()
         val contentHash = trimmedContent.hashCode().toString()
@@ -502,6 +591,9 @@ class ClipboardDatabase private constructor(context: Context) :
                 put(COLUMN_POSITION, position)
                 put(COLUMN_STATUS, TodoEntry.STATUS_ACTIVE)
                 put(COLUMN_TAGS, "[]")
+                put(COLUMN_MIME_TYPE, mimeType)
+                if (thumbnailBlob != null) put(COLUMN_THUMBNAIL_BLOB, thumbnailBlob)
+                if (mediaPath != null) put(COLUMN_MEDIA_PATH, mediaPath)
             }
             val result = db.insert(TABLE_TODO, null, values)
             Log.d(TAG, "Added todo: ${trimmedContent.take(20)}... (id=$result, pos=$position)")
@@ -512,18 +604,27 @@ class ClipboardDatabase private constructor(context: Context) :
         }
     }
 
-    /** Remove content from todo_entries. History copy (if any) is unaffected. */
-    fun removeTodoEntry(content: String?): Boolean {
-        if (content.isNullOrBlank()) return false
+    /**
+     * Remove content from todo_entries. History copy (if any) is unaffected.
+     * Returns the media_path of the deleted entry (or null) so caller can clean up the file.
+     */
+    fun removeTodoEntry(content: String?): String? {
+        if (content.isNullOrBlank()) return null
         val trimmedContent = content.trim()
         return try {
             val db = writableDatabase
+            val mediaPath = db.rawQuery(
+                "SELECT $COLUMN_MEDIA_PATH FROM $TABLE_TODO WHERE $COLUMN_CONTENT = ? LIMIT 1",
+                arrayOf(trimmedContent)
+            ).use { cursor ->
+                if (cursor.moveToFirst()) cursor.getString(0) else null
+            }
             val deletedRows = db.delete(TABLE_TODO, "$COLUMN_CONTENT = ?", arrayOf(trimmedContent))
             Log.d(TAG, "Removed $deletedRows todo entries: ${trimmedContent.take(20)}...")
-            deletedRows > 0
+            if (deletedRows > 0) mediaPath else null
         } catch (e: Exception) {
             Log.e(TAG, "Error removing todo entry: ${e.message}")
-            false
+            null
         }
     }
 
@@ -565,19 +666,26 @@ class ClipboardDatabase private constructor(context: Context) :
 
     /**
      * Get todo entries as ClipboardEntry list (backward-compatible for existing views).
-     * Ordered by position ASC (user-defined sort order).
+     * Ordered by position ASC (user-defined sort order). Includes v4 media fields.
      */
     fun getTodoEntries(): List<ClipboardEntry> {
         val entries = mutableListOf<ClipboardEntry>()
         val query = """
-            SELECT $COLUMN_CONTENT, $COLUMN_ADDED_TIMESTAMP FROM $TABLE_TODO
-            ORDER BY $COLUMN_POSITION ASC
+            SELECT $COLUMN_CONTENT, $COLUMN_ADDED_TIMESTAMP, $COLUMN_MIME_TYPE,
+                   $COLUMN_THUMBNAIL_BLOB, $COLUMN_MEDIA_PATH
+            FROM $TABLE_TODO ORDER BY $COLUMN_POSITION ASC
         """.trimIndent()
         try {
             readableDatabase.rawQuery(query, null).use { cursor ->
                 if (cursor.moveToFirst()) {
                     do {
-                        entries.add(ClipboardEntry(cursor.getString(0), cursor.getLong(1)))
+                        entries.add(ClipboardEntry(
+                            content = cursor.getString(0),
+                            timestamp = cursor.getLong(1),
+                            mimeType = cursor.getString(2) ?: ClipboardEntry.MIME_TEXT_PLAIN,
+                            thumbnailBlob = cursor.getBlob(3),
+                            mediaPath = cursor.getString(4)
+                        ))
                     } while (cursor.moveToNext())
                 }
             }
@@ -588,13 +696,14 @@ class ClipboardDatabase private constructor(context: Context) :
         return entries
     }
 
-    /** Get todo entries with full v3 fields (position, tags, status, timestamps) */
+    /** Get todo entries with full v4 fields (position, tags, status, timestamps, media) */
     fun getTodoEntriesFull(): List<TodoEntry> {
         val entries = mutableListOf<TodoEntry>()
         val query = """
             SELECT $COLUMN_ID, $COLUMN_CONTENT, $COLUMN_CONTENT_HASH,
                    $COLUMN_CREATED_TIMESTAMP, $COLUMN_ADDED_TIMESTAMP,
-                   $COLUMN_POSITION, $COLUMN_STATUS, $COLUMN_TAGS
+                   $COLUMN_POSITION, $COLUMN_STATUS, $COLUMN_TAGS,
+                   $COLUMN_MIME_TYPE, $COLUMN_THUMBNAIL_BLOB, $COLUMN_MEDIA_PATH
             FROM $TABLE_TODO ORDER BY $COLUMN_POSITION ASC
         """.trimIndent()
         try {
@@ -609,7 +718,10 @@ class ClipboardDatabase private constructor(context: Context) :
                             addedTimestamp = cursor.getLong(4),
                             position = cursor.getDouble(5),
                             status = cursor.getString(6) ?: TodoEntry.STATUS_ACTIVE,
-                            tags = TodoEntry.tagsFromJson(cursor.getString(7))
+                            tags = TodoEntry.tagsFromJson(cursor.getString(7)),
+                            mimeType = cursor.getString(8) ?: ClipboardEntry.MIME_TEXT_PLAIN,
+                            thumbnailBlob = cursor.getBlob(9),
+                            mediaPath = cursor.getString(10)
                         ))
                     } while (cursor.moveToNext())
                 }
@@ -781,6 +893,57 @@ class ClipboardDatabase private constructor(context: Context) :
             Log.e(TAG, "Error applying size limit (bytes): ${e.message}")
             0
         }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // Media reference checks (v4 — COPY semantics means same file can be in multiple tables)
+    // ═══════════════════════════════════════════════════════════════════
+
+    /**
+     * Check if a media_path is still referenced by any table.
+     * COPY semantics means pinning/todoing a media entry duplicates the media_path reference,
+     * so we must not delete the file until ALL references are gone.
+     */
+    fun isMediaPathReferenced(mediaPath: String?): Boolean {
+        if (mediaPath.isNullOrBlank()) return false
+        return try {
+            val db = readableDatabase
+            // Check all three tables for references to this media_path
+            val tables = listOf(TABLE_CLIPBOARD, TABLE_PINNED, TABLE_TODO)
+            tables.any { table ->
+                db.rawQuery(
+                    "SELECT 1 FROM $table WHERE $COLUMN_MEDIA_PATH = ? LIMIT 1",
+                    arrayOf(mediaPath)
+                ).use { it.moveToFirst() }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error checking media path references: ${e.message}")
+            true // Err on the side of keeping the file if check fails
+        }
+    }
+
+    /**
+     * Get all media_path values referenced by any table (for orphan cleanup).
+     * Returns the set of all paths that should NOT be deleted from disk.
+     */
+    fun getAllReferencedMediaPaths(): Set<String> {
+        val paths = mutableSetOf<String>()
+        try {
+            val db = readableDatabase
+            for (table in listOf(TABLE_CLIPBOARD, TABLE_PINNED, TABLE_TODO)) {
+                db.rawQuery(
+                    "SELECT DISTINCT $COLUMN_MEDIA_PATH FROM $table WHERE $COLUMN_MEDIA_PATH IS NOT NULL",
+                    null
+                ).use { cursor ->
+                    while (cursor.moveToNext()) {
+                        cursor.getString(0)?.let { paths.add(it) }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error collecting referenced media paths: ${e.message}")
+        }
+        return paths
     }
 
     // ═══════════════════════════════════════════════════════════════════

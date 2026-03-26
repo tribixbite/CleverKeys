@@ -128,8 +128,13 @@ class ClipboardHistoryService private constructor(ctx: Context) {
     }
 
     fun clearExpiredAndGetHistory(): List<ClipboardEntry> {
-        // Clean up expired entries and return active ones
-        _database.cleanupExpiredEntries()
+        // Clean up expired entries and delete orphaned media files
+        val (_, expiredMediaPaths) = _database.cleanupExpiredEntries()
+        expiredMediaPaths.forEach { mediaPath ->
+            if (!_database.isMediaPathReferenced(mediaPath)) {
+                _mediaManager.deleteMedia(mediaPath)
+            }
+        }
         return try {
             val entries = _database.getActiveClipboardEntries()
             // Issue #71: Original 100-entry limit was for TransactionTooLargeException prevention,
@@ -168,10 +173,13 @@ class ClipboardHistoryService private constructor(ctx: Context) {
             }
         }
 
-        // Remove from database
-        val removed = _database.removeClipboardEntry(clip)
-        if (removed)
-            _listener?.on_clipboard_history_change()
+        // Remove from database — returns media_path if entry had associated media file
+        val mediaPath = _database.removeClipboardEntry(clip)
+        // Clean up the media file if no other table still references it
+        if (mediaPath != null && !_database.isMediaPathReferenced(mediaPath)) {
+            _mediaManager.deleteMedia(mediaPath)
+        }
+        _listener?.on_clipboard_history_change()
     }
 
     /** Add clipboard entries to the history, skipping consecutive duplicates and
@@ -233,7 +241,13 @@ class ClipboardHistoryService private constructor(ctx: Context) {
     }
 
     fun clearHistory() {
-        _database.clearAllEntries()
+        val result = _database.clearAllEntries()
+        // Clean up media files that are no longer referenced by any table
+        result.getOrNull()?.second?.forEach { mediaPath ->
+            if (!_database.isMediaPathReferenced(mediaPath)) {
+                _mediaManager.deleteMedia(mediaPath)
+            }
+        }
         _listener?.on_clipboard_history_change()
     }
 
@@ -242,30 +256,40 @@ class ClipboardHistoryService private constructor(ctx: Context) {
     }
 
     /** Pin a clipboard entry (copies to independent pinned_entries table) */
-    fun pinEntry(clip: String, createdTimestamp: Long = System.currentTimeMillis()) {
-        val added = _database.pinEntry(clip, createdTimestamp)
+    fun pinEntry(clip: String, createdTimestamp: Long = System.currentTimeMillis(),
+                 mimeType: String = ClipboardEntry.MIME_TEXT_PLAIN,
+                 thumbnailBlob: ByteArray? = null, mediaPath: String? = null) {
+        val added = _database.pinEntry(clip, createdTimestamp, mimeType, thumbnailBlob, mediaPath)
         if (added) _listener?.on_clipboard_history_change()
     }
 
     /** Unpin a clipboard entry (removes from pinned_entries; history copy unaffected) */
     fun unpinEntry(clip: String) {
-        val removed = _database.unpinEntry(clip)
-        if (removed) _listener?.on_clipboard_history_change()
+        val mediaPath = _database.unpinEntry(clip)
+        if (mediaPath != null && !_database.isMediaPathReferenced(mediaPath)) {
+            _mediaManager.deleteMedia(mediaPath)
+        }
+        _listener?.on_clipboard_history_change()
     }
 
     /** Check if content is pinned */
     fun isPinned(clip: String): Boolean = _database.isPinned(clip)
 
     /** Add content to todo list (copies to independent todo_entries table) */
-    fun addToTodo(clip: String, createdTimestamp: Long = System.currentTimeMillis()) {
-        val added = _database.addTodoEntry(clip, createdTimestamp)
+    fun addToTodo(clip: String, createdTimestamp: Long = System.currentTimeMillis(),
+                  mimeType: String = ClipboardEntry.MIME_TEXT_PLAIN,
+                  thumbnailBlob: ByteArray? = null, mediaPath: String? = null) {
+        val added = _database.addTodoEntry(clip, createdTimestamp, mimeType, thumbnailBlob, mediaPath)
         if (added) _listener?.on_clipboard_history_change()
     }
 
     /** Remove content from todo list (removes from todo_entries; history copy unaffected) */
     fun removeFromTodo(clip: String) {
-        val removed = _database.removeTodoEntry(clip)
-        if (removed) _listener?.on_clipboard_history_change()
+        val mediaPath = _database.removeTodoEntry(clip)
+        if (mediaPath != null && !_database.isMediaPathReferenced(mediaPath)) {
+            _mediaManager.deleteMedia(mediaPath)
+        }
+        _listener?.on_clipboard_history_change()
     }
 
     /** Update todo entry status (active/planned/completed) */
