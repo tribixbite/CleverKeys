@@ -4,7 +4,11 @@
 Tap pencil icon on text entry → inline EditText with save/cancel. Key routing via IReceiver
 pattern (same as search bar). Database: EditEntryResult + per-table update with dedup guard.
 COPY semantics preserved across tabs. Mutual exclusion with search mode.
-**Remaining**: Device testing — verify edit flow, duplicate toast, tab switch cancel, media edit hidden.
+**Bug fixes (8413dc6)**: 3 user-reported bugs resolved with 10 regression tests:
+1. Search/edit conflict — entering edit now clears search; routing order swapped (edit before search)
+2. Cut drift — content-identity tracking replaces position-based (survives list shifts from cut)
+3. Empty text breaks typing — editingInProgressText + TextWatcher + cursor clamping + reload suppression
+**Remaining**: Device testing — verify all 3 bug fixes on device.
 
 ## Content URI Support + Media Clipboard (v3→v4) — COMPLETE (2026-03-26)
 All 9 phases implemented and compiling:
