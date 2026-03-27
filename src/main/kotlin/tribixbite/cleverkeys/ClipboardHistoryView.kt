@@ -1,7 +1,9 @@
 package tribixbite.cleverkeys
 
 import android.content.ClipData
-import android.content.ClipboardManager
+// NOTE: android.content.ClipboardManager is imported with alias to avoid shadowing by
+// tribixbite.cleverkeys.ClipboardManager (same-package takes priority in Kotlin resolution).
+import android.content.ClipboardManager as SystemClipboardManager
 import android.content.Context
 import android.graphics.BitmapFactory
 import android.util.AttributeSet
@@ -394,7 +396,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     /** Paste system clipboard content into the active edit field */
     fun pasteToEditText() {
         editingEditText?.let { et ->
-            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? SystemClipboardManager
             val pasteText = clipboard?.primaryClip?.getItemAt(0)?.text?.toString() ?: return
             val editable = et.text ?: return
             val start = et.selectionStart.coerceIn(0, editable.length)
@@ -413,7 +415,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 val lo = minOf(start, end)
                 val hi = maxOf(start, end)
                 val selected = editable.substring(lo, hi)
-                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? SystemClipboardManager
                 clipboard?.setPrimaryClip(ClipData.newPlainText("CleverKeys", selected))
                 editable.delete(lo, hi)
             }
@@ -660,7 +662,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
 
             // Long-press copies entry text to system clipboard
             textView.setOnLongClickListener {
-                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as SystemClipboardManager
                 clipboard.setPrimaryClip(ClipData.newPlainText("CleverKeys", text))
                 Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
                 true

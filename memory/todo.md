@@ -8,6 +8,7 @@ COPY semantics preserved across tabs. Mutual exclusion with search mode.
 1. Search/edit conflict — entering edit now clears search; routing order swapped (edit before search)
 2. Cut drift — content-identity tracking replaces position-based (survives list shifts from cut)
 3. Empty text breaks typing — editingInProgressText + TextWatcher + cursor clamping + reload suppression
+**Tests (c7c7253)**: 23 instrumented tests — 20 direct getView() + 3 Activity-hosted with real framework layout passes. All pass on Pixel7 API 34.
 **Remaining**: Device testing — verify all 3 bug fixes on device.
 
 ## Content URI Support + Media Clipboard (v3→v4) — COMPLETE (2026-03-26)
