@@ -85,8 +85,8 @@ class ClipboardManager(
 
             // Set up search box click listener
             clipboardSearchBox?.setOnClickListener {
-                // Mutual exclusion: exit edit mode when entering search mode
-                exitEditMode()
+                // Block search activation during edit mode — edit takes priority
+                if (isInEditMode()) return@setOnClickListener
                 searchMode = true
                 clipboardSearchBox?.hint = "Type on keyboard below..."
                 clipboardSearchBox?.requestFocus()
@@ -100,7 +100,7 @@ class ClipboardManager(
 
             // Set up date filter icon
             clipboardPane?.findViewById<View>(R.id.clipboard_date_filter)?.setOnClickListener { v ->
-                showDateFilterDialog(v)
+                if (!isInEditMode()) showDateFilterDialog(v)
             }
 
             // Set up close button
@@ -113,9 +113,9 @@ class ClipboardManager(
             tabPinned = clipboardPane?.findViewById(R.id.tab_pinned)
             tabTodos = clipboardPane?.findViewById(R.id.tab_todos)
 
-            tabHistory?.setOnClickListener { switchToTab(ClipboardTab.HISTORY) }
-            tabPinned?.setOnClickListener { switchToTab(ClipboardTab.PINNED) }
-            tabTodos?.setOnClickListener { switchToTab(ClipboardTab.TODOS) }
+            tabHistory?.setOnClickListener { if (!isInEditMode()) switchToTab(ClipboardTab.HISTORY) }
+            tabPinned?.setOnClickListener { if (!isInEditMode()) switchToTab(ClipboardTab.PINNED) }
+            tabTodos?.setOnClickListener { if (!isInEditMode()) switchToTab(ClipboardTab.TODOS) }
 
             // Apply tab visibility based on config toggles
             applyTabVisibility()
@@ -130,16 +130,22 @@ class ClipboardManager(
             pageNext = clipboardPane?.findViewById(R.id.clipboard_page_next)
 
             pagePrev?.setOnClickListener {
-                clipboardHistoryView?.previousPage()
+                if (!isInEditMode()) clipboardHistoryView?.previousPage()
             }
             pageNext?.setOnClickListener {
-                clipboardHistoryView?.nextPage()
+                if (!isInEditMode()) clipboardHistoryView?.nextPage()
             }
 
-            // Bug #1 fix: entering edit mode disables search INPUT ROUTING but
-            // keeps the search filter + text visible. Clearing the filter would rebuild
-            // the list and scroll the edited entry off-screen.
-            clipboardHistoryView?.onEditModeEntered = { searchMode = false }
+            // Edit mode: disable search input routing and visually dim non-edit controls.
+            // Search filter text stays visible (clearing it would rebuild the list and
+            // scroll the edited entry off-screen).
+            clipboardHistoryView?.onEditModeEntered = {
+                searchMode = false
+                setEditModeLockUI(true)
+            }
+            clipboardHistoryView?.onEditModeExited = {
+                setEditModeLockUI(false)
+            }
 
             // Listen for pagination state changes
             clipboardHistoryView?.setOnPaginationChangeListener { needsPagination, currentPage, totalPages ->
@@ -309,6 +315,28 @@ class ClipboardManager(
 
     /** Whether the clipboard view is currently inline-editing an entry */
     fun isInEditMode(): Boolean = clipboardHistoryView?.isEditing() ?: false
+
+    /**
+     * Dims or restores non-edit UI controls during inline edit mode.
+     * Clickability is enforced by guards in each click listener; this provides
+     * visual feedback that search/tabs/pagination are temporarily disabled.
+     */
+    private fun setEditModeLockUI(locked: Boolean) {
+        val dimAlpha = 0.3f
+        val normalAlpha = 1.0f
+        val alpha = if (locked) dimAlpha else normalAlpha
+
+        clipboardSearchBox?.alpha = alpha
+        clipboardSearchClear?.alpha = alpha
+        // Tabs — restore proper active/inactive highlighting when unlocking
+        if (locked) {
+            tabHistory?.alpha = dimAlpha
+            tabPinned?.alpha = dimAlpha
+            tabTodos?.alpha = dimAlpha
+        } else {
+            updateTabHighlighting()
+        }
+    }
 
     /** Insert typed text at cursor position in the editing entry's EditText */
     fun insertToEdit(text: String) {

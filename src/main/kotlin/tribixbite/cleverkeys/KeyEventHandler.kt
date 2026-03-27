@@ -142,7 +142,9 @@ class KeyEventHandler(
         if (recv.isClipboardSearchMode()) {
             recv.exitClipboardSearchMode()
         }
-        sendText(content)
+        // Paste from clipboard pane always targets the app's InputConnection, even
+        // during edit mode. Use sendTextDirect() to bypass edit/search/emoji routing.
+        sendTextDirect(content)
     }
 
     /**
@@ -445,6 +447,18 @@ class KeyEventHandler(
 
     /** Check if quote character needs smart punctuation handling. */
     private fun isQuoteChar(c: Char): Boolean = c == '\'' || c == '"'
+
+    /**
+     * Send text directly to the app's InputConnection, bypassing all mode routing
+     * (edit, search, emoji, GIF). Used for clipboard pane paste which always targets
+     * the app regardless of current keyboard panel mode.
+     */
+    private fun sendTextDirect(text: CharSequence) {
+        val conn = recv.getCurrentInputConnection() ?: return
+        conn.beginBatchEdit()
+        conn.commitText(text, 1)
+        conn.endBatchEdit()
+    }
 
     /** See {!InputConnection.performContextMenuAction}. */
     private fun sendContextMenuAction(id: Int) {

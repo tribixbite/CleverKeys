@@ -70,8 +70,9 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     // TextWatcher reference — tracked to prevent accumulation on view recycling.
     // Removed from old EditText before adding to new one in getView().
     private var editingTextWatcher: android.text.TextWatcher? = null
-    // Callback fired when entering edit mode — used by ClipboardManager to clear search (Bug #1)
+    // Callbacks for edit mode transitions — used by ClipboardManager to lock/unlock UI controls
     var onEditModeEntered: (() -> Unit)? = null
+    var onEditModeExited: (() -> Unit)? = null
 
     // Coroutine scope tied to window attach/detach lifecycle (IME has no ViewLifecycleOwner)
     private var viewScope: CoroutineScope? = null
@@ -121,14 +122,9 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
      * Switch to a different tab and update the displayed content.
      */
     fun setTab(tab: ClipboardTab) {
-        // Cancel any in-progress edit before switching tabs
-        if (isEditing()) {
-            editingOriginalContent = null
-            editingInProgressText = null
-            editingTextWatcher?.let { editingEditText?.removeTextChangedListener(it) }
-            editingTextWatcher = null
-            editingEditText = null
-        }
+        // Cancel any in-progress edit before switching tabs (safety — tab clicks
+        // are guarded in ClipboardManager, but direct callers like resetSearchOnShow need this)
+        cancelEdit()
         currentTab = tab
         expandedStates.clear()  // Reset expanded states when switching tabs
         loadDataAsync()
@@ -364,6 +360,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         editingTextWatcher?.let { editingEditText?.removeTextChangedListener(it) }
         editingTextWatcher = null
         editingEditText = null
+        // Notify ClipboardManager to re-enable search/tabs/pagination UI
+        onEditModeExited?.invoke()
         // Reload data to pick up any changes that were suppressed during edit
         loadDataAsync()
     }
@@ -561,19 +559,27 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 }
                 editingEditText = editField
 
+                // Save button — disabled when content is blank to prevent confusing error toast
+                val saveButton = view.findViewById<View>(R.id.clipboard_entry_save)
+                saveButton.isEnabled = displayText.isNotBlank()
+                saveButton.alpha = if (displayText.isNotBlank()) 1.0f else 0.3f
+
                 // Sync editingInProgressText via TextWatcher so it survives view recreation
                 val watcher = object : android.text.TextWatcher {
                     override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                     override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
                     override fun afterTextChanged(s: android.text.Editable?) {
                         editingInProgressText = s?.toString()
+                        // Disable save when content is blank
+                        val canSave = !s.isNullOrBlank()
+                        saveButton.isEnabled = canSave
+                        saveButton.alpha = if (canSave) 1.0f else 0.3f
                     }
                 }
                 editField.addTextChangedListener(watcher)
                 editingTextWatcher = watcher
 
-                // Save button
-                view.findViewById<View>(R.id.clipboard_entry_save).setOnClickListener {
+                saveButton.setOnClickListener {
                     save_edit()
                 }
                 // Cancel button
@@ -662,6 +668,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
 
             // Long-press copies entry text to system clipboard
             textView.setOnLongClickListener {
+                if (isEditing()) return@setOnLongClickListener true  // Block during edit
                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as SystemClipboardManager
                 clipboard.setPrimaryClip(ClipData.newPlainText("CleverKeys", text))
                 Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
@@ -673,17 +680,18 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             pinButton.visibility = if (cfg.clipboard_pinned_enabled) VISIBLE else GONE
             todoButton.visibility = if (cfg.clipboard_todo_enabled) VISIBLE else GONE
 
+            // Guard destructive actions during edit — list changes would disrupt the active edit
             pinButton.setOnClickListener {
-                pin_entry(pos)
+                if (!isEditing()) pin_entry(pos)
             }
             todoButton.setOnClickListener {
-                todo_entry(pos)
+                if (!isEditing()) todo_entry(pos)
             }
             view.findViewById<View>(R.id.clipboard_entry_paste).setOnClickListener {
-                paste_entry(pos)
+                if (!isEditing()) paste_entry(pos)
             }
             view.findViewById<View>(R.id.clipboard_entry_delete).setOnClickListener {
-                delete_entry(pos)
+                if (!isEditing()) delete_entry(pos)
             }
 
             return view
