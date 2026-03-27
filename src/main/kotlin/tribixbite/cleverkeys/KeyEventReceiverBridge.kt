@@ -111,6 +111,31 @@ class KeyEventReceiverBridge(
         receiver?.exitClipboardSearchMode()
     }
 
+    // Clipboard edit mode delegation — same pattern as search
+    override fun isClipboardEditMode(): Boolean {
+        return receiver?.isClipboardEditMode() ?: false
+    }
+
+    override fun insertToClipboardEdit(text: String) {
+        receiver?.insertToClipboardEdit(text)
+    }
+
+    override fun backspaceClipboardEdit() {
+        receiver?.backspaceClipboardEdit()
+    }
+
+    override fun pasteToClipboardEdit() {
+        receiver?.pasteToClipboardEdit()
+    }
+
+    override fun cutFromClipboardEdit() {
+        receiver?.cutFromClipboardEdit()
+    }
+
+    override fun selectAllClipboardEdit() {
+        receiver?.selectAllClipboardEdit()
+    }
+
     // #41 v7: Emoji search delegation (was missing - caused routing to fail!)
     override fun isEmojiPaneOpen(): Boolean {
         return receiver?.isEmojiPaneOpen() ?: false

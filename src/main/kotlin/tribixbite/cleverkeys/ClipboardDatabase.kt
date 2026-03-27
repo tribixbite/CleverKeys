@@ -10,6 +10,18 @@ import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.*
 
+/** Result of an inline edit operation on a clipboard entry */
+sealed class EditEntryResult {
+    /** Content updated successfully */
+    object Success : EditEntryResult()
+    /** Another entry in the same table already has this content */
+    object DuplicateConflict : EditEntryResult()
+    /** Content is blank or otherwise invalid */
+    object InvalidContent : EditEntryResult()
+    /** Unexpected database error */
+    data class Error(val message: String) : EditEntryResult()
+}
+
 class ClipboardDatabase private constructor(context: Context) :
     SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
@@ -645,6 +657,83 @@ class ClipboardDatabase private constructor(context: Context) :
         } catch (e: Exception) {
             Log.e(TAG, "Error updating todo status: ${e.message}")
             false
+        }
+    }
+
+    // ─── Inline edit: update content in a single table (COPY semantics preserved) ───
+
+    /**
+     * Update the content of a history (clipboard_entries) entry.
+     * Recomputes content_hash. Rejects blank content and same-table duplicates.
+     * Preserves timestamp, mime_type, thumbnail_blob, media_path, expiry fields.
+     */
+    fun updateHistoryEntryContent(oldContent: String, newContent: String): EditEntryResult {
+        return updateEntryContentInTable(TABLE_CLIPBOARD, oldContent, newContent)
+    }
+
+    /**
+     * Update the content of a pinned_entries entry.
+     * Recomputes content_hash. Rejects blank content and same-table duplicates.
+     * Preserves position, tags, timestamp, media fields.
+     */
+    fun updatePinnedEntryContent(oldContent: String, newContent: String): EditEntryResult {
+        return updateEntryContentInTable(TABLE_PINNED, oldContent, newContent)
+    }
+
+    /**
+     * Update the content of a todo_entries entry.
+     * Recomputes content_hash. Rejects blank content and same-table duplicates.
+     * Preserves position, tags, status, timestamp, media fields.
+     */
+    fun updateTodoEntryContent(oldContent: String, newContent: String): EditEntryResult {
+        return updateEntryContentInTable(TABLE_TODO, oldContent, newContent)
+    }
+
+    /**
+     * Shared implementation for updating content in any of the 3 clipboard tables.
+     * Uses a transaction with dedup guard: if the new content already exists in the
+     * same table (different row), returns DuplicateConflict instead of creating a duplicate.
+     */
+    private fun updateEntryContentInTable(table: String, oldContent: String, newContent: String): EditEntryResult {
+        val trimmedNew = newContent.trim()
+        if (trimmedNew.isBlank()) return EditEntryResult.InvalidContent
+
+        val trimmedOld = oldContent.trim()
+        if (trimmedOld == trimmedNew) return EditEntryResult.Success // no-op
+
+        val newHash = trimmedNew.hashCode().toString()
+
+        return try {
+            val db = writableDatabase
+            db.beginTransaction()
+            try {
+                // Dedup: check if another entry in this table already has the new content
+                val hasDuplicate = db.rawQuery(
+                    "SELECT 1 FROM $table WHERE $COLUMN_CONTENT_HASH = ? AND $COLUMN_CONTENT = ? AND $COLUMN_CONTENT != ? LIMIT 1",
+                    arrayOf(newHash, trimmedNew, trimmedOld)
+                ).use { it.moveToFirst() }
+
+                if (hasDuplicate) {
+                    db.endTransaction()
+                    return EditEntryResult.DuplicateConflict
+                }
+
+                // Update content + hash, preserving all other columns
+                val values = ContentValues().apply {
+                    put(COLUMN_CONTENT, trimmedNew)
+                    put(COLUMN_CONTENT_HASH, newHash)
+                }
+                val updatedRows = db.update(table, values, "$COLUMN_CONTENT = ?", arrayOf(trimmedOld))
+
+                db.setTransactionSuccessful()
+                if (updatedRows > 0) EditEntryResult.Success
+                else EditEntryResult.Error("Entry not found in $table")
+            } finally {
+                if (db.inTransaction()) db.endTransaction()
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error updating entry content in $table: ${e.message}")
+            EditEntryResult.Error(e.message ?: "Unknown error")
         }
     }
 

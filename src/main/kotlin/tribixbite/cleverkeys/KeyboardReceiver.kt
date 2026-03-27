@@ -690,6 +690,31 @@ class KeyboardReceiver(
         clipboardManager.clearSearch()
     }
 
+    // Clipboard edit mode — delegates to ClipboardManager → ClipboardHistoryView
+    override fun isClipboardEditMode(): Boolean {
+        return clipboardManager.isInEditMode()
+    }
+
+    override fun insertToClipboardEdit(text: String) {
+        clipboardManager.insertToEdit(text)
+    }
+
+    override fun backspaceClipboardEdit() {
+        clipboardManager.backspaceFromEdit()
+    }
+
+    override fun pasteToClipboardEdit() {
+        clipboardManager.pasteToEdit()
+    }
+
+    override fun cutFromClipboardEdit() {
+        clipboardManager.cutFromEdit()
+    }
+
+    override fun selectAllClipboardEdit() {
+        clipboardManager.selectAllInEdit()
+    }
+
     // #41 v5: Emoji search routes typing to visible EditText (IME can't type into own views)
     override fun isEmojiPaneOpen(): Boolean {
         return emojiSearchManager?.isEmojiPaneOpen() ?: false

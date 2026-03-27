@@ -64,6 +64,8 @@ class ClipboardManager(
     // Search state
     private var searchMode = false
 
+    // Edit mode state — delegates to ClipboardHistoryView for actual text manipulation
+
     /**
      * Gets or creates the clipboard pane view.
      * Performs lazy initialization on first call.
@@ -83,6 +85,8 @@ class ClipboardManager(
 
             // Set up search box click listener
             clipboardSearchBox?.setOnClickListener {
+                // Mutual exclusion: exit edit mode when entering search mode
+                exitEditMode()
                 searchMode = true
                 clipboardSearchBox?.hint = "Type on keyboard below..."
                 clipboardSearchBox?.requestFocus()
@@ -161,6 +165,8 @@ class ClipboardManager(
     private fun switchToTab(tab: ClipboardTab) {
         if (currentTab == tab) return
 
+        // Cancel any in-progress edit when switching tabs
+        exitEditMode()
         currentTab = tab
         clipboardHistoryView?.setTab(tab)
         updateTabHighlighting()
@@ -290,6 +296,43 @@ class ClipboardManager(
             hint = "Tap to search..."
         }
         updateSearchClearVisibility("")
+        // Also exit edit mode when hiding clipboard pane
+        exitEditMode()
+    }
+
+    // ─── Edit mode delegation (parallels search mode) ───
+
+    /** Whether the clipboard view is currently inline-editing an entry */
+    fun isInEditMode(): Boolean = clipboardHistoryView?.isEditing() ?: false
+
+    /** Insert typed text at cursor position in the editing entry's EditText */
+    fun insertToEdit(text: String) {
+        clipboardHistoryView?.insertEditText(text)
+    }
+
+    /** Handle backspace in the editing entry's EditText */
+    fun backspaceFromEdit() {
+        clipboardHistoryView?.backspaceEditText()
+    }
+
+    /** Exit inline edit mode, discarding unsaved changes */
+    fun exitEditMode() {
+        clipboardHistoryView?.cancelEdit()
+    }
+
+    /** Paste system clipboard content into the editing entry's EditText */
+    fun pasteToEdit() {
+        clipboardHistoryView?.pasteToEditText()
+    }
+
+    /** Cut selected text from the editing entry's EditText to system clipboard */
+    fun cutFromEdit() {
+        clipboardHistoryView?.cutFromEditText()
+    }
+
+    /** Select all text in the editing entry's EditText */
+    fun selectAllInEdit() {
+        clipboardHistoryView?.selectAllEditText()
     }
 
     /**
@@ -418,6 +461,7 @@ class ClipboardManager(
      * Should be called during keyboard shutdown.
      */
     fun cleanup() {
+        exitEditMode()
         clipboardPane = null
         clipboardSearchBox = null
         clipboardSearchClear = null

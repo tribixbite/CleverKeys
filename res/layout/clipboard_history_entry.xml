@@ -34,13 +34,32 @@
 
   </FrameLayout>
 
+  <!-- Normal text display (hidden during edit) -->
   <TextView
       android:id="@+id/clipboard_entry_text"
       style="@style/clipboardEntry"
       android:maxLines="1"
       android:ellipsize="end"/>
 
+  <!-- Inline edit field: overlays TextView when editing. inputType=none prevents Android
+       from showing a soft keyboard — we ARE the keyboard, input routed via KeyEventHandler -->
+  <EditText
+      android:id="@+id/clipboard_entry_edit_field"
+      style="@style/clipboardEntry"
+      android:visibility="gone"
+      android:inputType="none"
+      android:minLines="2"
+      android:maxLines="10"
+      android:background="@drawable/clipboard_edit_bg"
+      android:cursorVisible="true"
+      android:focusable="true"
+      android:focusableInTouchMode="true"
+      android:textColor="#FFFFFFFF"
+      android:textColorHint="#99FFFFFF"/>
+
+  <!-- Normal mode: action buttons -->
   <LinearLayout
+      android:id="@+id/clipboard_entry_normal_buttons"
       android:orientation="horizontal"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
@@ -52,6 +71,13 @@
         android:id="@+id/clipboard_entry_expand"
         style="@style/clipboardEntryButton"
         android:background="@drawable/ic_expand_more"
+        android:visibility="gone"
+        android:layout_marginRight="4dp"/>
+
+    <View
+        android:id="@+id/clipboard_entry_edit"
+        style="@style/clipboardEntryButton"
+        android:background="@drawable/ic_clipboard_edit"
         android:visibility="gone"
         android:layout_marginRight="4dp"/>
 
@@ -76,4 +102,29 @@
         android:background="@drawable/ic_delete"/>
 
   </LinearLayout>
+
+  <!-- Edit mode: save/cancel buttons (shown only for the entry being edited) -->
+  <LinearLayout
+      android:id="@+id/clipboard_entry_edit_buttons"
+      android:orientation="horizontal"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_gravity="top"
+      android:layout_marginTop="7dp"
+      android:layout_marginRight="12dp"
+      android:visibility="gone">
+
+    <View
+        android:id="@+id/clipboard_entry_save"
+        style="@style/clipboardEntryButton"
+        android:background="@drawable/ic_clipboard_save_edit"
+        android:layout_marginRight="4dp"/>
+
+    <View
+        android:id="@+id/clipboard_entry_cancel"
+        style="@style/clipboardEntryButton"
+        android:background="@drawable/ic_clipboard_cancel"/>
+
+  </LinearLayout>
+
 </LinearLayout>

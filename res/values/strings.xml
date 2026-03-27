@@ -226,6 +226,10 @@
     <string name="clipboard_unpin">Unpin</string>
     <string name="clipboard_paste">Paste</string>
     <string name="clipboard_delete">Delete</string>
+    <string name="clipboard_edit">Edit</string>
+    <string name="clipboard_edit_duplicate">An entry with this content already exists</string>
+    <string name="clipboard_edit_invalid">Content cannot be empty</string>
+    <string name="clipboard_edit_error">Failed to update entry</string>
     <string name="clipboard_empty_title">No clipboard history</string>
     <string name="clipboard_empty_message">Copy text to see it here</string>
 

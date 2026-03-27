@@ -310,6 +310,43 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         if (updated) _listener?.on_clipboard_history_change()
     }
 
+    /**
+     * Edit the content of a clipboard entry in-place (inline edit).
+     * Routes to the correct database table based on [tab].
+     * Validates size limit and trims content. COPY semantics: only the entry
+     * in the specified tab is modified; copies in other tabs are unaffected.
+     *
+     * @return EditEntryResult indicating success, duplicate conflict, or error
+     */
+    fun editEntryContent(oldContent: String, newContent: String, tab: ClipboardTab): EditEntryResult {
+        val trimmedOld = oldContent.trim()
+        val trimmedNew = newContent.trim()
+
+        // No-op if content unchanged
+        if (trimmedOld == trimmedNew) return EditEntryResult.Success
+
+        // Validate size limit
+        val maxSizeKb = Config.globalConfig().clipboard_max_item_size_kb
+        if (maxSizeKb > 0) {
+            val sizeBytes = trimmedNew.toByteArray(java.nio.charset.StandardCharsets.UTF_8).size
+            if (sizeBytes > maxSizeKb * 1024) {
+                return EditEntryResult.InvalidContent
+            }
+        }
+
+        // Route to correct table
+        val result = when (tab) {
+            ClipboardTab.HISTORY -> _database.updateHistoryEntryContent(trimmedOld, trimmedNew)
+            ClipboardTab.PINNED -> _database.updatePinnedEntryContent(trimmedOld, trimmedNew)
+            ClipboardTab.TODOS -> _database.updateTodoEntryContent(trimmedOld, trimmedNew)
+        }
+
+        if (result is EditEntryResult.Success) {
+            _listener?.on_clipboard_history_change()
+        }
+        return result
+    }
+
     /** Get all pinned clipboard entries */
     fun getPinnedEntries(): List<ClipboardEntry> {
         return _database.getPinnedEntries()

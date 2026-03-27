@@ -99,6 +99,9 @@ class KeyEventHandler(
                 // Handle backspace in clipboard search mode
                 if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && recv.isClipboardSearchMode()) {
                     recv.backspaceClipboardSearch()
+                // Handle backspace in clipboard edit mode
+                } else if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && recv.isClipboardEditMode()) {
+                    recv.backspaceClipboardEdit()
                 // #41 v5: Handle backspace in emoji search
                 } else if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && recv.isEmojiPaneOpen()) {
                     recv.backspaceEmojiSearch()
@@ -288,6 +291,12 @@ class KeyEventHandler(
         // Route to clipboard search box if in search mode
         if (recv.isClipboardSearchMode()) {
             recv.appendToClipboardSearch(text.toString())
+            return
+        }
+
+        // Route to clipboard edit field if in inline edit mode
+        if (recv.isClipboardEditMode()) {
+            recv.insertToClipboardEdit(text.toString())
             return
         }
 
@@ -570,6 +579,16 @@ class KeyEventHandler(
 
     @SuppressLint("InlinedApi")
     private fun handleEditingKey(ev: KeyValue.Editing) {
+        // Route editing operations to clipboard edit field when in inline edit mode
+        if (recv.isClipboardEditMode()) {
+            when (ev) {
+                KeyValue.Editing.PASTE -> recv.pasteToClipboardEdit()
+                KeyValue.Editing.CUT -> recv.cutFromClipboardEdit()
+                KeyValue.Editing.SELECT_ALL -> recv.selectAllClipboardEdit()
+                else -> {} // Other editing keys (undo, redo, share) — no-op during inline edit
+            }
+            return
+        }
         when (ev) {
             KeyValue.Editing.COPY -> if (isSelectionNotEmpty()) sendContextMenuAction(android.R.id.copy)
             KeyValue.Editing.PASTE -> handlePaste()
@@ -859,6 +878,13 @@ class KeyEventHandler(
         fun appendToClipboardSearch(text: String) {} // Append text to clipboard search box
         fun backspaceClipboardSearch() {} // Handle backspace in clipboard search
         fun exitClipboardSearchMode() {} // Exit clipboard search mode (clear search box and mode)
+        // Clipboard edit mode — route typing to inline edit field (same pattern as search)
+        fun isClipboardEditMode(): Boolean = false
+        fun insertToClipboardEdit(text: String) {}
+        fun backspaceClipboardEdit() {}
+        fun pasteToClipboardEdit() {}
+        fun cutFromClipboardEdit() {}
+        fun selectAllClipboardEdit() {}
         // #41 v5: Emoji search routes typing to visible EditText (IME can't type into own views)
         fun isEmojiPaneOpen(): Boolean = false // Check if emoji pane is visible
         fun appendToEmojiSearch(text: String) {} // Append text to emoji search EditText
