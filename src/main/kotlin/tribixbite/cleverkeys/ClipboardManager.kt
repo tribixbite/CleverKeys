@@ -136,6 +136,9 @@ class ClipboardManager(
                 clipboardHistoryView?.nextPage()
             }
 
+            // Bug #1 fix: entering edit mode clears search mode (mutual exclusion)
+            clipboardHistoryView?.onEditModeEntered = { clearSearch() }
+
             // Listen for pagination state changes
             clipboardHistoryView?.setOnPaginationChangeListener { needsPagination, currentPage, totalPages ->
                 paginationBar?.visibility = if (needsPagination) View.VISIBLE else View.GONE

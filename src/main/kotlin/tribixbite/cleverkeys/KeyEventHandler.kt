@@ -96,12 +96,12 @@ class KeyEventHandler(
             KeyValue.Kind.String -> sendText(key.getString(), isKeyRepeat)
             KeyValue.Kind.Event -> recv.handle_event_key(key.getEvent())
             KeyValue.Kind.Keyevent -> {
-                // Handle backspace in clipboard search mode
-                if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && recv.isClipboardSearchMode()) {
-                    recv.backspaceClipboardSearch()
-                // Handle backspace in clipboard edit mode
-                } else if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && recv.isClipboardEditMode()) {
+                // Bug #1 fix: check edit mode BEFORE search mode for backspace too
+                if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && recv.isClipboardEditMode()) {
                     recv.backspaceClipboardEdit()
+                // Handle backspace in clipboard search mode
+                } else if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && recv.isClipboardSearchMode()) {
+                    recv.backspaceClipboardSearch()
                 // #41 v5: Handle backspace in emoji search
                 } else if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && recv.isEmojiPaneOpen()) {
                     recv.backspaceEmojiSearch()
@@ -288,15 +288,17 @@ class KeyEventHandler(
     }
 
     private fun sendText(text: CharSequence, isKeyRepeat: Boolean = false) {
-        // Route to clipboard search box if in search mode
-        if (recv.isClipboardSearchMode()) {
-            recv.appendToClipboardSearch(text.toString())
+        // Bug #1 fix: check edit mode BEFORE search mode — edit takes priority.
+        // Primary defense is mutual exclusion (entering edit clears search), but
+        // checking edit first guards against timing races.
+        if (recv.isClipboardEditMode()) {
+            recv.insertToClipboardEdit(text.toString())
             return
         }
 
-        // Route to clipboard edit field if in inline edit mode
-        if (recv.isClipboardEditMode()) {
-            recv.insertToClipboardEdit(text.toString())
+        // Route to clipboard search box if in search mode
+        if (recv.isClipboardSearchMode()) {
+            recv.appendToClipboardSearch(text.toString())
             return
         }
 

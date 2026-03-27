@@ -57,12 +57,16 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     private var onPaginationChangeListener: ((needsPagination: Boolean, currentPage: Int, totalPages: Int) -> Unit)? = null
 
     // ─── Inline edit state ───
-    // Position of the entry currently being edited (-1 = not editing)
-    private var editingPosition: Int = -1
-    // Original content before editing (used for database update + rollback)
+    // Original content before editing — used as identity key to find entry across list rebuilds.
+    // Non-null means edit mode is active. Replaces position-based tracking (Bug #2).
     private var editingOriginalContent: String? = null
+    // In-progress text that the user is typing — preserved across view recreation (Bug #3).
+    // Initialized to DB content on edit_entry(), updated by TextWatcher.
+    private var editingInProgressText: String? = null
     // Reference to the active EditText widget for key routing (insertEditText/backspaceEditText)
     private var editingEditText: EditText? = null
+    // Callback fired when entering edit mode — used by ClipboardManager to clear search (Bug #1)
+    var onEditModeEntered: (() -> Unit)? = null
 
     // Coroutine scope tied to window attach/detach lifecycle (IME has no ViewLifecycleOwner)
     private var viewScope: CoroutineScope? = null
@@ -114,8 +118,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     fun setTab(tab: ClipboardTab) {
         // Cancel any in-progress edit before switching tabs
         if (isEditing()) {
-            editingPosition = -1
             editingOriginalContent = null
+            editingInProgressText = null
             editingEditText = null
         }
         currentTab = tab
@@ -299,7 +303,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     // ─── Inline edit mode ───
 
     /** Whether an entry is currently being edited inline */
-    fun isEditing(): Boolean = editingPosition >= 0
+    fun isEditing(): Boolean = editingOriginalContent != null
 
     /** Enter inline edit mode for the entry at [pos] (position in current page) */
     fun edit_entry(pos: Int) {
@@ -308,8 +312,11 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         // Media entries cannot be edited inline
         if (entry.isMedia) return
 
-        editingPosition = pos
+        // Bug #1 fix: clear search mode before entering edit (mutual exclusion)
+        onEditModeEntered?.invoke()
+
         editingOriginalContent = entry.content
+        editingInProgressText = entry.content
         // Re-render to show EditText + save/cancel buttons for this entry
         clipboardAdapter.notifyDataSetChanged()
     }
@@ -343,33 +350,35 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
 
     /** Discard edits and exit edit mode */
     fun cancelEdit() {
-        if (editingPosition < 0) return
-        editingPosition = -1
+        if (editingOriginalContent == null) return
         editingOriginalContent = null
+        editingInProgressText = null
         editingEditText = null
-        clipboardAdapter.notifyDataSetChanged()
+        // Reload data to pick up any changes that were suppressed during edit
+        loadDataAsync()
     }
 
     /** Insert text at cursor position in the active edit field (called by key routing) */
     fun insertEditText(text: String) {
         editingEditText?.let { et ->
-            val start = et.selectionStart.coerceAtLeast(0)
-            val end = et.selectionEnd.coerceAtLeast(start)
-            et.text.replace(minOf(start, end), maxOf(start, end), text)
+            val editable = et.text ?: return
+            // Bug #3 fix: clamp cursor to editable bounds (handles empty and stale states)
+            val start = et.selectionStart.coerceIn(0, editable.length)
+            val end = et.selectionEnd.coerceIn(start, editable.length)
+            editable.replace(start, end, text)
         }
     }
 
     /** Handle backspace in the active edit field (called by key routing) */
     fun backspaceEditText() {
         editingEditText?.let { et ->
-            val start = et.selectionStart
-            val end = et.selectionEnd
+            val editable = et.text ?: return
+            val start = et.selectionStart.coerceIn(0, editable.length)
+            val end = et.selectionEnd.coerceIn(0, editable.length)
             if (start != end) {
-                // Delete selection
-                et.text.delete(minOf(start, end), maxOf(start, end))
+                editable.delete(minOf(start, end), maxOf(start, end))
             } else if (start > 0) {
-                // Delete single char before cursor
-                et.text.delete(start - 1, start)
+                editable.delete(start - 1, start)
             }
         }
     }
@@ -379,22 +388,26 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         editingEditText?.let { et ->
             val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
             val pasteText = clipboard?.primaryClip?.getItemAt(0)?.text?.toString() ?: return
-            val start = et.selectionStart.coerceAtLeast(0)
-            val end = et.selectionEnd.coerceAtLeast(start)
-            et.text.replace(minOf(start, end), maxOf(start, end), pasteText)
+            val editable = et.text ?: return
+            val start = et.selectionStart.coerceIn(0, editable.length)
+            val end = et.selectionEnd.coerceIn(start, editable.length)
+            editable.replace(start, end, pasteText)
         }
     }
 
     /** Cut selected text from the edit field to system clipboard */
     fun cutFromEditText() {
         editingEditText?.let { et ->
-            val start = et.selectionStart
-            val end = et.selectionEnd
+            val editable = et.text ?: return
+            val start = et.selectionStart.coerceIn(0, editable.length)
+            val end = et.selectionEnd.coerceIn(0, editable.length)
             if (start != end) {
-                val selected = et.text.substring(minOf(start, end), maxOf(start, end))
+                val lo = minOf(start, end)
+                val hi = maxOf(start, end)
+                val selected = editable.substring(lo, hi)
                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
                 clipboard?.setPrimaryClip(ClipData.newPlainText("CleverKeys", selected))
-                et.text.delete(minOf(start, end), maxOf(start, end))
+                editable.delete(lo, hi)
             }
         }
     }
@@ -420,6 +433,9 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     }
 
     override fun on_clipboard_history_change() {
+        // Suppress reload during inline edit to prevent view recreation that would
+        // overwrite the user's in-progress text. Deferred reload fires on cancelEdit/save_edit.
+        if (isEditing()) return
         // Skip if not attached — onAttachedToWindow will load fresh data
         if (viewScope != null) {
             loadDataAsync()
@@ -506,7 +522,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             val thumbnailView = view.findViewById<ImageView>(R.id.clipboard_entry_thumbnail)
             val playBadge = view.findViewById<ImageView>(R.id.clipboard_entry_play_badge)
 
-            val isEditingThis = (pos == editingPosition)
+            // Bug #2 fix: match by content identity, not list position — survives list shifts
+            val isEditingThis = editingOriginalContent != null && entry.content == editingOriginalContent
 
             // ── Edit mode: show EditText + save/cancel, hide normal UI ──
             if (isEditingThis) {
@@ -517,11 +534,21 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 thumbnailContainer.visibility = GONE
                 playBadge.visibility = GONE
 
-                // Pre-fill with current content, cursor at end
-                editField.setText(text)
+                // Bug #3 fix: use in-progress text (not DB content) to survive view recreation
+                val displayText = editingInProgressText ?: text
+                editField.setText(displayText)
                 editField.setSelection(editField.text.length)
                 // Store reference for key routing (insertEditText/backspaceEditText)
                 editingEditText = editField
+
+                // Sync editingInProgressText via TextWatcher so it survives view recreation
+                editField.addTextChangedListener(object : android.text.TextWatcher {
+                    override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                    override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+                    override fun afterTextChanged(s: android.text.Editable?) {
+                        editingInProgressText = s?.toString()
+                    }
+                })
 
                 // Save button
                 view.findViewById<View>(R.id.clipboard_entry_save).setOnClickListener {
