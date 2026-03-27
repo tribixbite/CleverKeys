@@ -1,5 +1,15 @@
 # CleverKeys TODO
 
+## Clipboard Regex Search — COMPLETE (2026-03-27)
+VSCode-style `.*` toggle button in search bar. OFF = plain substring match (unchanged),
+ON = regex with case-insensitive matching. Glob shorthand: bare `*` → `.*`, bare `?` → `.`.
+Full regex power available (anchors, alternation, character classes, escape sequences).
+Invalid regex shows red text, matches nothing, no crash. State resets on search clear.
+**Files**: ClipboardSearchUtils.kt (pure Kotlin), ClipboardHistoryView.kt (filter logic),
+ClipboardManager.kt (toggle wiring + error feedback), clipboard_pane.xml (toggle button).
+**Tests (fe60dfc)**: 31 JVM tests — shorthand expansion (17), regex matching (10), error handling (4).
+**Remaining**: Device testing — verify toggle appears, glob matching, `^http` anchoring, invalid regex red text.
+
 ## Inline Clipboard Editing — COMPLETE (2026-03-27)
 Tap pencil icon on text entry → inline EditText with save/cancel. Key routing via IReceiver
 pattern (same as search bar). Database: EditEntryResult + per-table update with dedup guard.
