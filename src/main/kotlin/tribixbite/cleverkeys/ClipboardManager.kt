@@ -136,8 +136,10 @@ class ClipboardManager(
                 clipboardHistoryView?.nextPage()
             }
 
-            // Bug #1 fix: entering edit mode clears search mode (mutual exclusion)
-            clipboardHistoryView?.onEditModeEntered = { clearSearch() }
+            // Bug #1 fix: entering edit mode disables search INPUT ROUTING but
+            // keeps the search filter + text visible. Clearing the filter would rebuild
+            // the list and scroll the edited entry off-screen.
+            clipboardHistoryView?.onEditModeEntered = { searchMode = false }
 
             // Listen for pagination state changes
             clipboardHistoryView?.setOnPaginationChangeListener { needsPagination, currentPage, totalPages ->

@@ -117,7 +117,7 @@ class ClipboardEditBugTest {
     }
 
     // =========================================================================
-    // Bug #1: Edit mode must disable search mode (mutual exclusion)
+    // Bug #1: Edit mode must disable search input routing (mutual exclusion)
     //
     // Regression scenario: User opens clipboard, types in search box to filter
     // entries, then taps edit on a filtered result. Typed characters go to the
@@ -125,7 +125,9 @@ class ClipboardEditBugTest {
     // active edit to jump to a different entry.
     //
     // Fix: edit_entry() fires onEditModeEntered callback → ClipboardManager
-    //      clears search mode. sendText() checks edit BEFORE search.
+    //      disables search routing (searchMode=false) but keeps the search
+    //      filter visible so the edited entry stays in place.
+    //      sendText() checks edit BEFORE search as defense-in-depth.
     // =========================================================================
 
     @Test
@@ -143,7 +145,7 @@ class ClipboardEditBugTest {
         }
         assertTrue(
             "onEditModeEntered callback must fire when entering edit mode " +
-            "(used by ClipboardManager to clear search)",
+            "(used by ClipboardManager to disable search routing)",
             callbackFired
         )
     }
