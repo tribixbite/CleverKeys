@@ -65,6 +65,9 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     private var editingInProgressText: String? = null
     // Reference to the active EditText widget for key routing (insertEditText/backspaceEditText)
     private var editingEditText: EditText? = null
+    // TextWatcher reference — tracked to prevent accumulation on view recycling.
+    // Removed from old EditText before adding to new one in getView().
+    private var editingTextWatcher: android.text.TextWatcher? = null
     // Callback fired when entering edit mode — used by ClipboardManager to clear search (Bug #1)
     var onEditModeEntered: (() -> Unit)? = null
 
@@ -120,6 +123,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         if (isEditing()) {
             editingOriginalContent = null
             editingInProgressText = null
+            editingTextWatcher?.let { editingEditText?.removeTextChangedListener(it) }
+            editingTextWatcher = null
             editingEditText = null
         }
         currentTab = tab
@@ -353,6 +358,9 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         if (editingOriginalContent == null) return
         editingOriginalContent = null
         editingInProgressText = null
+        // Remove TextWatcher before dropping reference to prevent stale callbacks
+        editingTextWatcher?.let { editingEditText?.removeTextChangedListener(it) }
+        editingTextWatcher = null
         editingEditText = null
         // Reload data to pick up any changes that were suppressed during edit
         loadDataAsync()
@@ -444,7 +452,12 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
 
     override fun onWindowVisibilityChanged(visibility: Int) {
         if (visibility == VISIBLE) {
-            loadDataAsync()
+            // Suppress reload during edit — same guard as on_clipboard_history_change().
+            // Window visibility changes during keyboard redraw would otherwise trigger
+            // view recreation that resets the EditText cursor and accumulates TextWatchers.
+            if (!isEditing()) {
+                loadDataAsync()
+            }
         }
     }
 
@@ -538,17 +551,24 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 val displayText = editingInProgressText ?: text
                 editField.setText(displayText)
                 editField.setSelection(editField.text.length)
-                // Store reference for key routing (insertEditText/backspaceEditText)
+                // Store reference for key routing (insertEditText/backspaceEditText).
+                // Remove old TextWatcher before adding new one to prevent accumulation
+                // when getView() is called multiple times (view recycling).
+                editingTextWatcher?.let { oldWatcher ->
+                    editingEditText?.removeTextChangedListener(oldWatcher)
+                }
                 editingEditText = editField
 
                 // Sync editingInProgressText via TextWatcher so it survives view recreation
-                editField.addTextChangedListener(object : android.text.TextWatcher {
+                val watcher = object : android.text.TextWatcher {
                     override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                     override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
                     override fun afterTextChanged(s: android.text.Editable?) {
                         editingInProgressText = s?.toString()
                     }
-                })
+                }
+                editField.addTextChangedListener(watcher)
+                editingTextWatcher = watcher
 
                 // Save button
                 view.findViewById<View>(R.id.clipboard_entry_save).setOnClickListener {
