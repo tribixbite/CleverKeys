@@ -91,6 +91,23 @@
         android:padding="4dp"
         android:visibility="gone"/>
 
+    <!-- Regex toggle button (VSCode-style .* toggle, shown when search is active) -->
+    <TextView
+        android:id="@+id/clipboard_regex_toggle"
+        android:text=".*"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:gravity="center"
+        android:textSize="12sp"
+        android:typeface="monospace"
+        android:textColor="?attr/colorLabel"
+        android:alpha="0.4"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Toggle regex search"
+        android:visibility="gone"/>
+
     <!-- Date filter icon -->
     <ImageButton
         android:id="@+id/clipboard_date_filter"

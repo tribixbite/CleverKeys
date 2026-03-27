@@ -23,6 +23,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.regex.PatternSyntaxException
 
 /**
  * Clipboard tab types for the unified clipboard view.
@@ -40,6 +41,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     private var filteredHistory: List<ClipboardEntry> = emptyList()
     private var paginatedHistory: List<ClipboardEntry> = emptyList()
     private var searchFilter = ""
+    private var regexMode = false
+    private var searchRegexError = false
     private val service: ClipboardHistoryService?
     private val clipboardAdapter: ClipboardEntriesAdapter
 
@@ -89,6 +92,10 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             mimeType == "application/pdf" -> R.drawable.ic_media_pdf
             else -> R.drawable.ic_media_file
         }
+
+        /** Delegates to [ClipboardSearchUtils.expandGlobShorthand] */
+        fun expandGlobShorthand(query: String): String =
+            ClipboardSearchUtils.expandGlobShorthand(query)
     }
 
     init {
@@ -141,12 +148,49 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         applyFilter()
     }
 
+    /** Toggle regex search mode — when enabled, search filter is interpreted as regex */
+    fun setRegexMode(enabled: Boolean) {
+        regexMode = enabled
+        applyFilter()
+    }
+
+    /** Whether regex search mode is currently active */
+    fun isRegexMode(): Boolean = regexMode
+
+    /** Whether the current regex pattern has a syntax error */
+    fun hasRegexError(): Boolean = searchRegexError
+
     private fun applyFilter() {
+        // Pre-compile regex once per filter pass (not per entry)
+        val compiledRegex: Regex? = if (regexMode && searchFilter.isNotEmpty()) {
+            try {
+                val pattern = expandGlobShorthand(searchFilter)
+                searchRegexError = false
+                Regex(pattern, RegexOption.IGNORE_CASE)
+            } catch (e: PatternSyntaxException) {
+                searchRegexError = true
+                null  // invalid regex → match nothing
+            }
+        } else {
+            searchRegexError = false
+            null
+        }
+
         // Apply both search and date filters (searches ALL items)
         val filtered = history.filter { entry ->
             // Apply search filter
-            if (searchFilter.isNotEmpty() && !entry.content.lowercase().contains(searchFilter)) {
-                return@filter false
+            if (searchFilter.isNotEmpty()) {
+                if (regexMode) {
+                    // Regex mode: use compiled pattern or reject all on syntax error
+                    if (compiledRegex == null || !compiledRegex.containsMatchIn(entry.content)) {
+                        return@filter false
+                    }
+                } else {
+                    // Plain text mode: case-insensitive substring match
+                    if (!entry.content.lowercase().contains(searchFilter)) {
+                        return@filter false
+                    }
+                }
             }
 
             // Apply date filter

@@ -10,6 +10,7 @@ import android.widget.ImageButton
 import android.widget.RadioButton
 import android.widget.Switch
 import android.widget.TextView
+import android.util.TypedValue
 import java.util.Calendar
 
 /**
@@ -42,6 +43,7 @@ class ClipboardManager(
     private var clipboardPane: ViewGroup? = null
     private var clipboardSearchBox: TextView? = null
     private var clipboardSearchClear: ImageButton? = null
+    private var regexToggle: TextView? = null
     private var clipboardHistoryView: ClipboardHistoryView? = null
 
     // Tab buttons
@@ -96,6 +98,18 @@ class ClipboardManager(
             clipboardSearchClear = clipboardPane?.findViewById(R.id.clipboard_search_clear)
             clipboardSearchClear?.setOnClickListener {
                 clearSearch()
+            }
+
+            // Set up regex toggle button (.*)
+            regexToggle = clipboardPane?.findViewById(R.id.clipboard_regex_toggle)
+            regexToggle?.setOnClickListener {
+                if (isInEditMode()) return@setOnClickListener
+                val historyView = clipboardHistoryView ?: return@setOnClickListener
+                val newState = !historyView.isRegexMode()
+                historyView.setRegexMode(newState)
+                updateRegexToggleVisual(newState)
+                // Re-check error state after toggling mode
+                updateSearchBoxErrorState(historyView.hasRegexError())
             }
 
             // Set up date filter icon
@@ -229,6 +243,8 @@ class ClipboardManager(
 
                 // Show clear button when there's text
                 updateSearchClearVisibility(newText)
+                // Update error state for regex mode
+                updateSearchBoxErrorState(historyView.hasRegexError())
             }
         }
     }
@@ -251,6 +267,8 @@ class ClipboardManager(
 
                     // Hide clear button when search is empty
                     updateSearchClearVisibility(newText)
+                    // Update error state for regex mode
+                    updateSearchBoxErrorState(historyView.hasRegexError())
                 }
             }
         }
@@ -266,6 +284,9 @@ class ClipboardManager(
             hint = "Tap to search..."
         }
         clipboardHistoryView?.setSearchFilter("")
+        clipboardHistoryView?.setRegexMode(false)
+        updateRegexToggleVisual(false)
+        updateSearchBoxErrorState(false)
         updateSearchClearVisibility("")
     }
 
@@ -274,7 +295,9 @@ class ClipboardManager(
      * Shown when search text is non-empty, hidden otherwise.
      */
     private fun updateSearchClearVisibility(searchText: String) {
-        clipboardSearchClear?.visibility = if (searchText.isNotEmpty()) View.VISIBLE else View.GONE
+        val visible = searchText.isNotEmpty()
+        clipboardSearchClear?.visibility = if (visible) View.VISIBLE else View.GONE
+        regexToggle?.visibility = if (visible) View.VISIBLE else View.GONE
     }
 
     /**
@@ -288,6 +311,9 @@ class ClipboardManager(
             hint = "Tap to search..."
         }
         clipboardHistoryView?.setSearchFilter("")
+        clipboardHistoryView?.setRegexMode(false)
+        updateRegexToggleVisual(false)
+        updateSearchBoxErrorState(false)
         updateSearchClearVisibility("")
 
         // Reset to History tab when showing pane
@@ -311,6 +337,25 @@ class ClipboardManager(
         exitEditMode()
     }
 
+    // ─── Regex toggle visual helpers ───
+
+    /** Update regex toggle button alpha: full brightness when active, dimmed when inactive */
+    private fun updateRegexToggleVisual(active: Boolean) {
+        regexToggle?.alpha = if (active) 1.0f else 0.4f
+    }
+
+    /** Tint search box text red when current regex pattern is invalid, restore themed color otherwise */
+    private fun updateSearchBoxErrorState(hasError: Boolean) {
+        if (hasError) {
+            clipboardSearchBox?.setTextColor(0xFFFF6B6B.toInt())
+        } else {
+            // Resolve ?attr/colorLabel from current theme
+            val tv = TypedValue()
+            context.theme.resolveAttribute(R.attr.colorLabel, tv, true)
+            clipboardSearchBox?.setTextColor(tv.data)
+        }
+    }
+
     // ─── Edit mode delegation (parallels search mode) ───
 
     /** Whether the clipboard view is currently inline-editing an entry */
@@ -328,6 +373,9 @@ class ClipboardManager(
 
         clipboardSearchBox?.alpha = alpha
         clipboardSearchClear?.alpha = alpha
+        // Regex toggle — respect active state when unlocking
+        regexToggle?.alpha = if (locked) dimAlpha
+            else if (clipboardHistoryView?.isRegexMode() == true) 1.0f else 0.4f
         // Tabs — restore proper active/inactive highlighting when unlocking
         if (locked) {
             tabHistory?.alpha = dimAlpha
@@ -498,6 +546,7 @@ class ClipboardManager(
         clipboardPane = null
         clipboardSearchBox = null
         clipboardSearchClear = null
+        regexToggle = null
         clipboardHistoryView = null
         tabHistory = null
         tabPinned = null
