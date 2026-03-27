@@ -1,7 +1,12 @@
 package tribixbite.cleverkeys
 
 import android.content.Context
+import android.view.ContextThemeWrapper
+import android.view.View
+import android.widget.BaseAdapter
 import android.widget.EditText
+import android.widget.FrameLayout
+import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.After
@@ -30,9 +35,9 @@ import org.junit.runner.RunWith
  *          empty EditText, and on_clipboard_history_change() triggered view
  *          recreation that overwrote in-progress edits with DB content.
  *
- * These tests exercise the actual ClipboardHistoryView methods using reflection
- * to set internal state where the adapter lifecycle can't be replicated in test.
- * They are designed to FAIL against the pre-fix code and PASS after the fix.
+ * These tests exercise the REAL adapter getView() lifecycle — inflating the
+ * actual clipboard_history_entry.xml layout with inputType="none" EditText,
+ * wiring up the real TextWatcher, and testing through the real code path.
  */
 @RunWith(AndroidJUnit4::class)
 class ClipboardEditBugTest {
@@ -73,6 +78,42 @@ class ClipboardEditBugTest {
         val field = obj::class.java.getDeclaredField(fieldName)
         field.isAccessible = true
         field.set(obj, value)
+    }
+
+    /**
+     * Creates a themed context that resolves custom keyboard theme attributes
+     * (colorLabel, colorSubLabel, etc.) needed by clipboard_history_entry.xml.
+     * In production, the clipboard pane is inflated with the keyboard theme;
+     * in tests we must wrap the bare app context with the same theme.
+     */
+    private fun themedContext(): Context =
+        ContextThemeWrapper(context, R.style.Dark)
+
+    /**
+     * Helper: Create a ClipboardHistoryView, set paginatedHistory, enter edit mode,
+     * and call getView() to inflate the real XML layout. Returns (chv, editText).
+     *
+     * MUST be called from runOnMainSync.
+     */
+    private fun setupEditWithRealGetView(entries: List<ClipboardEntry>, editPos: Int = 0): Pair<ClipboardHistoryView, EditText> {
+        val themed = themedContext()
+        val chv = ClipboardHistoryView(themed, null)
+        setField(chv, "paginatedHistory", entries)
+
+        // Enter edit mode — sets editingOriginalContent + editingInProgressText
+        chv.edit_entry(editPos)
+
+        // Call adapter.getView() to inflate the REAL clipboard_history_entry.xml
+        // This is what happens when ListView renders the cell — it inflates the
+        // EditText with inputType="none" and wires up the TextWatcher.
+        val adapter = getField<BaseAdapter>(chv, "clipboardAdapter")!!
+        val parent = FrameLayout(context) // dummy parent for inflation
+        adapter.getView(editPos, null, parent)
+
+        // editingEditText should now be the real XML-inflated EditText
+        val et = getField<EditText>(chv, "editingEditText")
+            ?: fail("editingEditText must be set after getView() in edit mode")
+        return Pair(chv, et as EditText)
     }
 
     // =========================================================================
@@ -318,157 +359,272 @@ class ClipboardEditBugTest {
     // =========================================================================
     // Bug #3: Empty EditText must accept inserted text
     //
-    // Regression scenario: User taps edit, deletes all text with backspace,
-    // then types new characters. Characters don't appear — the edit is broken.
+    // These tests exercise the REAL adapter getView() lifecycle: they call
+    // adapter.getView() to inflate clipboard_history_entry.xml (with the real
+    // EditText that has inputType="none"), wire up the TextWatcher, and then
+    // test the backspace-to-empty + insert scenario through the actual code path.
     //
-    // Root causes:
-    //   a) selectionStart returns -1 or stale value on empty EditText
-    //   b) on_clipboard_history_change() triggered by clipboard ops during edit
-    //      causes loadDataAsync() → notifyDataSetChanged() → getView() which
-    //      resets EditText to DB content, wiping in-progress edits
-    //   c) No editingInProgressText field to survive view recreation
-    //
-    // Fix: cursor clamping via coerceIn(0, editable.length), suppress reload
-    //      during edit, preserve text via editingInProgressText + TextWatcher.
+    // The previous version of these tests used EditText(context) — a programmatic
+    // EditText that bypasses the XML layout inflation and inputType="none".
+    // Those tests always passed even when the bug was present on device.
     // =========================================================================
 
     @Test
-    fun bug3_insertTextIntoEditField() {
-        var result = ""
+    fun bug3_getViewSetsEditingEditText() {
+        // Verify that calling adapter.getView() in edit mode wires up editingEditText
+        // from the real XML-inflated layout
+        db.addClipboardEntry("Hello", futureExpiry)
+        val entries = db.getActiveClipboardEntries()
+
+        var editText: EditText? = null
+        var editTextContent = ""
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
-            val chv = ClipboardHistoryView(context, null)
-            val et = EditText(context)
-            et.setText("Hello")
-            et.setSelection(et.text.length)
-
-            // Set up edit state (bypass adapter lifecycle — we're testing the method itself)
-            setField(chv, "editingOriginalContent", "Hello")
-            setField(chv, "editingEditText", et)
-
-            chv.insertEditText(" World")
-            result = et.text.toString()
+            val (chv, et) = setupEditWithRealGetView(entries)
+            editText = et
+            editTextContent = et.text.toString()
         }
-        assertEquals("insertEditText must append at cursor position", "Hello World", result)
+        assertNotNull("editingEditText must be set from getView()", editText)
+        assertEquals("EditText must contain entry content", "Hello", editTextContent)
     }
 
     @Test
-    fun bug3_backspaceToEmptyThenInsert() {
+    fun bug3_realGetView_insertAfterBackspaceToEmpty() {
+        // Core Bug #3 scenario through the real adapter lifecycle:
+        // edit_entry() → getView() inflates real EditText → backspace to empty → insert
+        db.addClipboardEntry("Hello", futureExpiry)
+        val entries = db.getActiveClipboardEntries()
+
         var result = ""
+        var inProgressText: String? = null
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
-            val chv = ClipboardHistoryView(context, null)
-            val et = EditText(context)
-            et.setText("abc")
-            et.setSelection(et.text.length)
+            val (chv, et) = setupEditWithRealGetView(entries)
 
-            setField(chv, "editingOriginalContent", "abc")
-            setField(chv, "editingEditText", et)
+            // Verify precondition: EditText has content and cursor is at end
+            assertEquals("Precondition: should have content", "Hello", et.text.toString())
 
-            // Backspace 3 times to empty
-            chv.backspaceEditText()
-            chv.backspaceEditText()
-            chv.backspaceEditText()
-            assertEquals("Should be empty after 3 backspaces", "", et.text.toString())
+            // Backspace to empty (5 chars)
+            repeat(5) { chv.backspaceEditText() }
+            assertEquals("Should be empty after 5 backspaces", "", et.text.toString())
 
-            // Insert new text — THIS IS THE BUG #3 SCENARIO
-            chv.insertEditText("X")
+            // THIS IS THE BUG #3 SCENARIO: insert text after emptying
+            chv.insertEditText("W")
             result = et.text.toString()
+            inProgressText = getField(chv, "editingInProgressText")
         }
         assertEquals(
-            "Must accept text after backspacing to empty",
-            "X", result
+            "Bug #3: Must accept text after backspacing to empty via real getView() EditText",
+            "W", result
+        )
+        assertEquals(
+            "editingInProgressText must be updated by TextWatcher",
+            "W", inProgressText
         )
     }
 
     @Test
-    fun bug3_backspaceOnEmptyIsNoOp() {
+    fun bug3_realGetView_multipleCharsAfterEmpty() {
+        // Type multiple characters after emptying — tests cursor position tracking
+        db.addClipboardEntry("Hi", futureExpiry)
+        val entries = db.getActiveClipboardEntries()
+
         var result = ""
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
-            val chv = ClipboardHistoryView(context, null)
-            val et = EditText(context)
-            et.setText("")
+            val (chv, et) = setupEditWithRealGetView(entries)
 
-            setField(chv, "editingOriginalContent", "")
-            setField(chv, "editingEditText", et)
-
-            // Backspace on empty — must not crash or corrupt state
-            chv.backspaceEditText()
-            result = et.text.toString()
-        }
-        assertEquals("Backspace on empty must be no-op", "", result)
-    }
-
-    @Test
-    fun bug3_multipleCharsAfterEmpty() {
-        var result = ""
-        InstrumentationRegistry.getInstrumentation().runOnMainSync {
-            val chv = ClipboardHistoryView(context, null)
-            val et = EditText(context)
-            et.setText("Hi")
-            et.setSelection(et.text.length)
-
-            setField(chv, "editingOriginalContent", "Hi")
-            setField(chv, "editingEditText", et)
-
-            // Delete all
+            // Backspace to empty
             chv.backspaceEditText()
             chv.backspaceEditText()
+            assertEquals("", et.text.toString())
 
-            // Type multiple characters one-by-one (simulating keyboard taps)
+            // Type characters one by one (simulates keyboard taps)
             chv.insertEditText("N")
             chv.insertEditText("e")
             chv.insertEditText("w")
             result = et.text.toString()
         }
         assertEquals(
-            "Characters must accumulate after emptying",
+            "Bug #3: Characters must accumulate after emptying via real getView()",
             "New", result
         )
     }
 
     @Test
-    fun bug3_editingInProgressTextPreserved() {
-        // Tests that editingInProgressText is set during edit_entry() and survives
-        var inProgressText: String? = null
+    fun bug3_realGetView_viewRecreationDuringEmptyEdit() {
+        // Critical scenario: user backspaces to empty, then ListView calls getView()
+        // again (layout pass / scroll / view recycling). After getView() recreates
+        // the edit view, typing must still work.
+        db.addClipboardEntry("Hello", futureExpiry)
+        val entries = db.getActiveClipboardEntries()
+
+        var result = ""
+        var editTextRef1: EditText? = null
+        var editTextRef2: EditText? = null
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
-            val chv = ClipboardHistoryView(context, null)
-
-            db.addClipboardEntry("Preserve me", futureExpiry)
-            val entries = db.getActiveClipboardEntries()
+            val chv = ClipboardHistoryView(themedContext(), null)
             setField(chv, "paginatedHistory", entries)
-
             chv.edit_entry(0)
-            inProgressText = getField(chv, "editingInProgressText")
+
+            val adapter = getField<BaseAdapter>(chv, "clipboardAdapter")!!
+            val parent = FrameLayout(context)
+
+            // First getView() — inflates real EditText
+            val view1 = adapter.getView(0, null, parent)
+            editTextRef1 = getField(chv, "editingEditText")!!
+
+            // Backspace to empty
+            repeat(5) { chv.backspaceEditText() }
+            assertEquals("", editTextRef1!!.text.toString())
+
+            // SECOND getView() — simulates ListView relayout during empty edit
+            // Pass the same view (recycling) to match real ListView behavior
+            val view2 = adapter.getView(0, view1, parent)
+            editTextRef2 = getField(chv, "editingEditText")!!
+
+            // Type after view recreation
+            chv.insertEditText("X")
+            result = editTextRef2!!.text.toString()
         }
         assertEquals(
-            "editingInProgressText must be initialized to entry content on edit_entry()",
-            "Preserve me", inProgressText
+            "Bug #3: Must accept text after getView() recreation during empty edit",
+            "X", result
         )
     }
 
     @Test
-    fun bug3_editingInProgressTextSurvivesClipboardChange() {
-        // The critical scenario: user is typing, clipboard changes fire,
-        // but in-progress text must not be wiped
-        var inProgressTextAfterChange: String? = null
+    fun bug3_realGetView_viewRecreationPreservesInProgressText() {
+        // User types some text, then getView() fires (layout pass). The in-progress
+        // text must be preserved and the EditText must continue working.
+        db.addClipboardEntry("Hello", futureExpiry)
+        val entries = db.getActiveClipboardEntries()
+
+        var resultAfterRecreation = ""
+        var resultAfterMoreTyping = ""
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
-            val chv = ClipboardHistoryView(context, null)
-            val et = EditText(context)
-            et.setText("Modified by user")
-            et.setSelection(et.text.length)
+            val chv = ClipboardHistoryView(themedContext(), null)
+            setField(chv, "paginatedHistory", entries)
+            chv.edit_entry(0)
 
-            setField(chv, "editingOriginalContent", "Original text")
-            setField(chv, "editingInProgressText", "Modified by user")
-            setField(chv, "editingEditText", et)
+            val adapter = getField<BaseAdapter>(chv, "clipboardAdapter")!!
+            val parent = FrameLayout(context)
 
-            // Clipboard change fires during edit — must be suppressed
-            chv.on_clipboard_history_change()
+            // First getView() — inflates real EditText
+            val view1 = adapter.getView(0, null, parent)
 
-            inProgressTextAfterChange = getField(chv, "editingInProgressText")
+            // Backspace to empty and type "New"
+            repeat(5) { chv.backspaceEditText() }
+            chv.insertEditText("N")
+            chv.insertEditText("e")
+            chv.insertEditText("w")
+
+            // getView() fires again (layout pass) — must preserve "New"
+            adapter.getView(0, view1, parent)
+            val et = getField<EditText>(chv, "editingEditText")!!
+            resultAfterRecreation = et.text.toString()
+
+            // Continue typing after recreation
+            chv.insertEditText("!")
+            resultAfterMoreTyping = et.text.toString()
         }
         assertEquals(
-            "editingInProgressText must survive on_clipboard_history_change()",
-            "Modified by user", inProgressTextAfterChange
+            "In-progress text must survive getView() recreation",
+            "New", resultAfterRecreation
         )
+        assertEquals(
+            "Must accept more text after getView() recreation",
+            "New!", resultAfterMoreTyping
+        )
+    }
+
+    @Test
+    fun bug3_realGetView_newViewInflation_duringEmptyEdit() {
+        // getView() with null convertView (new inflation, NOT recycling)
+        // during empty edit. Tests that editingEditText reference is properly
+        // updated to the new EditText.
+        db.addClipboardEntry("Hello", futureExpiry)
+        val entries = db.getActiveClipboardEntries()
+
+        var result = ""
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            val chv = ClipboardHistoryView(themedContext(), null)
+            setField(chv, "paginatedHistory", entries)
+            chv.edit_entry(0)
+
+            val adapter = getField<BaseAdapter>(chv, "clipboardAdapter")!!
+            val parent = FrameLayout(context)
+
+            // First getView() — inflates view
+            adapter.getView(0, null, parent)
+
+            // Backspace to empty
+            repeat(5) { chv.backspaceEditText() }
+
+            // getView() with null convertView — FRESH inflation (no recycling)
+            // The editingEditText reference must be updated to the new EditText
+            adapter.getView(0, null, parent)
+            val et = getField<EditText>(chv, "editingEditText")!!
+
+            // Type on the new EditText
+            chv.insertEditText("Y")
+            result = et.text.toString()
+        }
+        assertEquals(
+            "Bug #3: Must work after fresh view inflation during empty edit",
+            "Y", result
+        )
+    }
+
+    @Test
+    fun bug3_realGetView_backspaceNoOpOnEmpty() {
+        // Backspace on already-empty EditText must be safe no-op
+        db.addClipboardEntry("Hi", futureExpiry)
+        val entries = db.getActiveClipboardEntries()
+
+        var result = ""
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            val (chv, et) = setupEditWithRealGetView(entries)
+
+            // Backspace to empty
+            chv.backspaceEditText()
+            chv.backspaceEditText()
+
+            // Extra backspaces on empty — must not crash
+            chv.backspaceEditText()
+            chv.backspaceEditText()
+
+            result = et.text.toString()
+        }
+        assertEquals("Backspace on empty must be safe no-op", "", result)
+    }
+
+    @Test
+    fun bug3_realGetView_editingInProgressTextSyncsViaTextWatcher() {
+        // Verify the TextWatcher from getView() properly syncs editingInProgressText
+        // as the user types — this is critical for surviving view recreation
+        db.addClipboardEntry("Test", futureExpiry)
+        val entries = db.getActiveClipboardEntries()
+
+        var inProgress1: String? = null
+        var inProgress2: String? = null
+        var inProgress3: String? = null
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            val (chv, et) = setupEditWithRealGetView(entries)
+
+            // Type a character — TextWatcher should sync
+            chv.insertEditText("!")
+            inProgress1 = getField(chv, "editingInProgressText")
+
+            // Backspace — TextWatcher should sync
+            chv.backspaceEditText()  // "Test!" → "Test"
+            chv.backspaceEditText()  // "Test"  → "Tes"
+            inProgress2 = getField(chv, "editingInProgressText")
+
+            // Backspace to empty — TextWatcher should sync to ""
+            repeat(3) { chv.backspaceEditText() } // "Tes" → "Te" → "T" → ""
+            inProgress3 = getField(chv, "editingInProgressText")
+        }
+        assertEquals("TextWatcher must sync after insert", "Test!", inProgress1)
+        assertEquals("TextWatcher must sync after backspace", "Tes", inProgress2)
+        assertEquals("TextWatcher must sync to empty string", "", inProgress3)
     }
 
     // =========================================================================
@@ -477,23 +633,11 @@ class ClipboardEditBugTest {
 
     @Test
     fun cancelEditClearsAllState() {
+        db.addClipboardEntry("Editing", futureExpiry)
+        val entries = db.getActiveClipboardEntries()
+
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
-            val chv = ClipboardHistoryView(context, null)
-            val et = EditText(context)
-            et.setText("Editing")
-
-            setField(chv, "editingOriginalContent", "Editing")
-            setField(chv, "editingInProgressText", "Modified")
-            setField(chv, "editingEditText", et)
-            // Simulate a TextWatcher being attached (as getView would do)
-            val watcher = object : android.text.TextWatcher {
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-                override fun afterTextChanged(s: android.text.Editable?) {}
-            }
-            et.addTextChangedListener(watcher)
-            setField(chv, "editingTextWatcher", watcher)
-
+            val (chv, _) = setupEditWithRealGetView(entries)
             assertTrue("Precondition: should be editing", chv.isEditing())
 
             chv.cancelEdit()
@@ -538,11 +682,11 @@ class ClipboardEditBugTest {
     }
 
     // =========================================================================
-    // Integration: full edit lifecycle with text manipulation
+    // Integration: full edit lifecycle through real getView()
     // =========================================================================
 
     @Test
-    fun integration_fullEditLifecycle() {
+    fun integration_fullEditLifecycleViaGetView() {
         db.addClipboardEntry("Original text", futureExpiry)
         val entries = db.getActiveClipboardEntries()
 
@@ -552,38 +696,31 @@ class ClipboardEditBugTest {
         var isEditingAfter = false
 
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
-            val chv = ClipboardHistoryView(context, null)
-            setField(chv, "paginatedHistory", entries)
+            val (chv, et) = setupEditWithRealGetView(entries)
 
-            // 1. Enter edit mode
-            chv.edit_entry(0)
+            // 1. Verify edit mode
             isEditingDuring = chv.isEditing()
             editContent = getField(chv, "editingOriginalContent")
+            assertEquals("Original text", et.text.toString())
 
-            // 2. Set up EditText (simulating getView adapter callback)
-            val et = EditText(context)
-            et.setText("Original text")
-            et.setSelection(et.text.length)
-            setField(chv, "editingEditText", et)
-
-            // 3. Type some text
+            // 2. Type some text
             chv.insertEditText("!")
             assertEquals("Original text!", et.text.toString())
 
-            // 4. Clipboard change during edit — must be suppressed
+            // 3. Clipboard change during edit — must be suppressed
             chv.on_clipboard_history_change()
             assertTrue("Should still be editing after clipboard change", chv.isEditing())
 
-            // 5. Backspace to remove the "!" and more
+            // 4. Backspace to remove "!" and more
             chv.backspaceEditText() // removes "!"
             chv.backspaceEditText() // removes "t"
             assertEquals("Original tex", et.text.toString())
 
-            // 6. Type replacement
+            // 5. Type replacement
             chv.insertEditText("t fixed")
             editTextFinal = et.text.toString()
 
-            // 7. Cancel edit
+            // 6. Cancel edit
             chv.cancelEdit()
             isEditingAfter = chv.isEditing()
         }
@@ -592,5 +729,274 @@ class ClipboardEditBugTest {
         assertEquals("editingOriginalContent should be entry content", "Original text", editContent)
         assertEquals("Final text after edits", "Original text fixed", editTextFinal)
         assertFalse("Should not be editing after cancel", isEditingAfter)
+    }
+
+    @Test
+    fun integration_backspaceToEmptyThenRebuildThenType() {
+        // End-to-end: backspace to empty → view recreation (getView) → type new content
+        // This simulates the exact scenario reported in Bug #3 on device.
+        db.addClipboardEntry("Delete me", futureExpiry)
+        val entries = db.getActiveClipboardEntries()
+
+        var finalText = ""
+        var inProgressText: String? = null
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            val chv = ClipboardHistoryView(themedContext(), null)
+            setField(chv, "paginatedHistory", entries)
+            chv.edit_entry(0)
+
+            val adapter = getField<BaseAdapter>(chv, "clipboardAdapter")!!
+            val parent = FrameLayout(context)
+
+            // First render — real EditText from XML
+            val view = adapter.getView(0, null, parent)
+            val et1 = getField<EditText>(chv, "editingEditText")!!
+            assertEquals("Delete me", et1.text.toString())
+
+            // Backspace everything
+            repeat(9) { chv.backspaceEditText() }
+            assertEquals("", et1.text.toString())
+
+            // Simulate layout pass — getView() fires on the same view
+            adapter.getView(0, view, parent)
+            val et2 = getField<EditText>(chv, "editingEditText")!!
+
+            // Type completely new content
+            "Replaced".forEach { c -> chv.insertEditText(c.toString()) }
+            finalText = et2.text.toString()
+            inProgressText = getField(chv, "editingInProgressText")
+        }
+        assertEquals(
+            "Bug #3 end-to-end: Must type new content after empty → view recreation",
+            "Replaced", finalText
+        )
+        assertEquals(
+            "editingInProgressText must track the new content",
+            "Replaced", inProgressText
+        )
+    }
+
+    // =========================================================================
+    // Activity-hosted tests: real window + real layout lifecycle
+    //
+    // These tests host the ClipboardHistoryView in a real Activity so the
+    // ListView performs actual layout passes, calls getView() through the
+    // framework (not manually), and handles view recycling automatically.
+    // waitForIdleSync() between operations allows layout passes to run
+    // between user actions — this is the realistic device scenario.
+    //
+    // Uses PINNED tab because it reads from DB directly (no ClipboardHistoryService
+    // dependency — service is null in test).
+    // =========================================================================
+
+    /**
+     * Launches the test Activity and adds a ClipboardHistoryView with pinned entries.
+     * Returns the scenario (caller must close) and the CHV reference.
+     * The CHV is switched to PINNED tab and the view is laid out.
+     */
+    private fun launchWithPinnedEntries(
+        entries: List<String>
+    ): Pair<ActivityScenario<ClipboardEditTestActivity>, ClipboardHistoryView> {
+        // Add entries to pinned_entries table
+        entries.forEach { content ->
+            db.pinEntry(content, System.currentTimeMillis())
+            Thread.sleep(10) // ensure different timestamps for ordering
+        }
+
+        // Launch via class (not Intent) — ActivityScenario resolves the component
+        // from the debug manifest where the Activity is declared
+        val scenario = ActivityScenario.launch(ClipboardEditTestActivity::class.java)
+
+        lateinit var chv: ClipboardHistoryView
+        val instr = InstrumentationRegistry.getInstrumentation()
+
+        scenario.onActivity { activity ->
+            val themed = ContextThemeWrapper(activity, R.style.Dark)
+            chv = ClipboardHistoryView(themed, null)
+            // Switch to PINNED tab — reads from pinned_entries directly (no service needed)
+            chv.setTab(ClipboardTab.PINNED)
+            activity.container.addView(chv, FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                800 // Fixed height in px for predictable layout
+            ))
+        }
+
+        // Wait for the layout pass + loadDataAsync coroutine to complete
+        instr.waitForIdleSync()
+        Thread.sleep(300) // Extra wait for coroutine on IO dispatcher
+
+        // Force a refresh on main thread to ensure data is loaded
+        instr.runOnMainSync {
+            // Trigger a manual data reload in case the coroutine didn't have a viewScope
+            // (onAttachedToWindow sets viewScope, but timing may vary)
+            val method = ClipboardHistoryView::class.java.getDeclaredMethod("loadDataAsync")
+            method.isAccessible = true
+            method.invoke(chv)
+        }
+        instr.waitForIdleSync()
+        Thread.sleep(300) // Wait for coroutine completion
+
+        return Pair(scenario, chv)
+    }
+
+    @Test
+    fun bug3_activityHosted_backspaceToEmptyThenType() {
+        // Host CHV in real Activity → real layout passes → real getView() by framework.
+        // This tests the exact Bug #3 scenario: edit → backspace to empty → type.
+        // Between each step, waitForIdleSync() allows pending layout passes to fire.
+        val (scenario, chv) = launchWithPinnedEntries(listOf("Hello"))
+        val instr = InstrumentationRegistry.getInstrumentation()
+
+        try {
+            // Verify data loaded — paginatedHistory should have our entry
+            var entryCount = 0
+            instr.runOnMainSync {
+                val paginated = getField<List<*>>(chv, "paginatedHistory")
+                entryCount = paginated?.size ?: 0
+            }
+            assertTrue(
+                "Precondition: paginatedHistory must have entries (got $entryCount)",
+                entryCount > 0
+            )
+
+            // Step 1: Enter edit mode — triggers notifyDataSetChanged → framework getView()
+            instr.runOnMainSync {
+                chv.edit_entry(0)
+            }
+            instr.waitForIdleSync() // layout pass processes edit mode → getView() inflates EditText
+
+            // Verify edit mode is active and EditText is wired
+            var isEditing = false
+            var editTextContent = ""
+            instr.runOnMainSync {
+                isEditing = chv.isEditing()
+                editTextContent = getField<EditText>(chv, "editingEditText")?.text?.toString() ?: "NULL"
+            }
+            assertTrue("Should be in edit mode after edit_entry + layout", isEditing)
+            assertEquals("EditText should have entry content after framework getView()", "Hello", editTextContent)
+
+            // Step 2: Backspace to empty
+            instr.runOnMainSync {
+                repeat(5) { chv.backspaceEditText() }
+            }
+            // *** KEY: wait for idle — allows layout passes triggered by text/height change ***
+            instr.waitForIdleSync()
+
+            // Verify empty
+            var afterBackspace = ""
+            instr.runOnMainSync {
+                afterBackspace = getField<EditText>(chv, "editingEditText")?.text?.toString() ?: "NULL_ET"
+            }
+            assertEquals("Should be empty after backspacing", "", afterBackspace)
+
+            // Step 3: Type new text — THIS IS WHERE BUG #3 MANIFESTS
+            // If the layout pass between steps 2 and 3 broke the edit state,
+            // this insert will either go nowhere or crash.
+            instr.runOnMainSync {
+                chv.insertEditText("W")
+            }
+            instr.waitForIdleSync()
+
+            // Assert
+            var result = ""
+            instr.runOnMainSync {
+                val et = getField<EditText>(chv, "editingEditText")
+                result = et?.text?.toString() ?: "NULL_ET"
+            }
+            assertEquals(
+                "Bug #3: Must accept typed text after backspace-to-empty + layout pass",
+                "W", result
+            )
+        } finally {
+            scenario.close()
+        }
+    }
+
+    @Test
+    fun bug3_activityHosted_multipleCharsAfterEmptyWithLayoutPasses() {
+        // Type multiple characters after emptying, with layout passes between each.
+        // Each character change may trigger a layout pass (height change).
+        val (scenario, chv) = launchWithPinnedEntries(listOf("Hi"))
+        val instr = InstrumentationRegistry.getInstrumentation()
+
+        try {
+            var entryCount = 0
+            instr.runOnMainSync {
+                entryCount = getField<List<*>>(chv, "paginatedHistory")?.size ?: 0
+            }
+            assertTrue("Precondition: must have entries", entryCount > 0)
+
+            // Enter edit
+            instr.runOnMainSync { chv.edit_entry(0) }
+            instr.waitForIdleSync()
+
+            // Backspace to empty
+            instr.runOnMainSync {
+                chv.backspaceEditText()
+                chv.backspaceEditText()
+            }
+            instr.waitForIdleSync() // layout pass
+
+            // Type characters one by one with idle waits between
+            instr.runOnMainSync { chv.insertEditText("N") }
+            instr.waitForIdleSync() // potential layout pass from "" → "N"
+
+            instr.runOnMainSync { chv.insertEditText("e") }
+            instr.waitForIdleSync()
+
+            instr.runOnMainSync { chv.insertEditText("w") }
+            instr.waitForIdleSync()
+
+            var result = ""
+            instr.runOnMainSync {
+                result = getField<EditText>(chv, "editingEditText")?.text?.toString() ?: "NULL_ET"
+            }
+            assertEquals(
+                "Bug #3: Characters must accumulate with layout passes between each",
+                "New", result
+            )
+        } finally {
+            scenario.close()
+        }
+    }
+
+    @Test
+    fun bug3_activityHosted_editStillActiveAfterEmptyLayoutPass() {
+        // Verify that isEditing() remains true after emptying + layout pass.
+        // If the layout pass somehow cancels edit mode, routing would break.
+        val (scenario, chv) = launchWithPinnedEntries(listOf("Test"))
+        val instr = InstrumentationRegistry.getInstrumentation()
+
+        try {
+            var entryCount = 0
+            instr.runOnMainSync {
+                entryCount = getField<List<*>>(chv, "paginatedHistory")?.size ?: 0
+            }
+            assertTrue("Precondition: must have entries", entryCount > 0)
+
+            instr.runOnMainSync { chv.edit_entry(0) }
+            instr.waitForIdleSync()
+
+            // Backspace to empty
+            instr.runOnMainSync {
+                repeat(4) { chv.backspaceEditText() }
+            }
+            instr.waitForIdleSync() // layout pass with empty text
+
+            // Check that edit mode survived the layout pass
+            var isEditing = false
+            var originalContent: String? = null
+            var editText: EditText? = null
+            instr.runOnMainSync {
+                isEditing = chv.isEditing()
+                originalContent = getField(chv, "editingOriginalContent")
+                editText = getField(chv, "editingEditText")
+            }
+            assertTrue("Bug #3: edit mode must survive empty-text layout pass", isEditing)
+            assertEquals("originalContent must be preserved", "Test", originalContent)
+            assertNotNull("editingEditText must not be null after layout pass", editText)
+        } finally {
+            scenario.close()
+        }
     }
 }
