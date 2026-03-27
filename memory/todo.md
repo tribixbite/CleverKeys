@@ -8,8 +8,13 @@ COPY semantics preserved across tabs. Mutual exclusion with search mode.
 1. Search/edit conflict — entering edit now clears search; routing order swapped (edit before search)
 2. Cut drift — content-identity tracking replaces position-based (survives list shifts from cut)
 3. Empty text breaks typing — editingInProgressText + TextWatcher + cursor clamping + reload suppression
-**Tests (c7c7253)**: 23 instrumented tests — 20 direct getView() + 3 Activity-hosted with real framework layout passes. All pass on Pixel7 API 34.
-**Remaining**: Device testing — verify all 3 bug fixes on device.
+**Tests (c7c7253, 76bdb2c, 57bfa8b)**: 45 instrumented tests total:
+- 23 original (20 direct getView + 3 Activity-hosted Bug #3 lifecycle)
+- 16 new: paste (4), cut (5), selectAll (4), save_edit (3) — discovered ClipboardManager name shadow bug
+- 6 Espresso UI tests: tap edit/save/cancel buttons, verify view state transitions, media entry guard
+All pass on Pixel7 API 34 via emulator.wtf.
+**Bug fix (76bdb2c)**: ClipboardManager name shadow — Kotlin resolved same-package class instead of android.content.ClipboardManager, silently breaking paste/cut/long-press copy. Fixed with import alias.
+**Bug fix (25f2584)**: Search filter preserved when entering edit mode — only disables search input routing, keeps filter visible.
 
 ## Content URI Support + Media Clipboard (v3→v4) — COMPLETE (2026-03-26)
 All 9 phases implemented and compiling:
