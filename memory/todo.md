@@ -16,6 +16,10 @@ All pass on Pixel7 API 34 via emulator.wtf.
 **Bug fix (76bdb2c)**: ClipboardManager name shadow — Kotlin resolved same-package class instead of android.content.ClipboardManager, silently breaking paste/cut/long-press copy. Fixed with import alias.
 **Bug fix (25f2584)**: Search filter preserved when entering edit mode — only disables search input routing, keeps filter visible.
 **Bug fix (bbff54c)**: UI lockdown during edit mode — search bar, tabs, pagination, date filter, entry actions all blocked during edit. Save button disabled when content blank. Paste-from-clipboard-pane uses sendTextDirect() to bypass edit routing. onEditModeExited callback restores UI state.
+**Feature tests (38a12ca)**: 55 ClipboardFeatureTest covering tags (16), todo status (7), text-only export (5), export/import roundtrip (5), COPY semantics (4), media model/ref tracking (8), config toggles (2), v2 compat (1), long-press media copy bug (2), export format (4), pinned position (1).
+**Known bugs documented in tests**:
+- Long-press media entry copies filename as plain text instead of URI+image (ClipData.newPlainText vs newUri)
+- SettingsActivity export only does JSON — ZIP export exists in BackupRestoreManager but isn't wired from settings
 **Remaining**: Device testing — verify delete-until-empty + retype works, search tap blocked during edit, tab switch blocked.
 
 ## Content URI Support + Media Clipboard (v3→v4) — COMPLETE (2026-03-26)
