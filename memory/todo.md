@@ -1,5 +1,11 @@
 # CleverKeys TODO
 
+## Inline Clipboard Editing — COMPLETE (2026-03-27)
+Tap pencil icon on text entry → inline EditText with save/cancel. Key routing via IReceiver
+pattern (same as search bar). Database: EditEntryResult + per-table update with dedup guard.
+COPY semantics preserved across tabs. Mutual exclusion with search mode.
+**Remaining**: Device testing — verify edit flow, duplicate toast, tab switch cancel, media edit hidden.
+
 ## Content URI Support + Media Clipboard (v3→v4) — COMPLETE (2026-03-26)
 All 9 phases implemented and compiling:
 1. ✅ Schema v4 migration (mime_type, thumbnail_blob, media_path columns)
@@ -12,6 +18,7 @@ All 9 phases implemented and compiling:
 8. ✅ Dual export format (JSON text-only + ZIP full backup with media)
 9. ✅ Media clipboard settings + orphan cleanup
 
+**Documentation**: All 8 docs updated for v4 (a8d5127) — spec rewrite, wiki guides, FAQ, privacy, backup-restore, TOC.
 **Remaining**: Device testing — build release APK, install, test image/video/PDF copy-paste end-to-end.
 
 ## Open Issues — Corrected from GitHub (2026-02-25)
