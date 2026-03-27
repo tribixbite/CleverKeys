@@ -1036,4 +1036,255 @@ class ClipboardDatabaseTest {
         assertEquals(1, spans.size)
         assertEquals("Span starts at position 1", 1, formatted.getSpanStart(spans[0]))
     }
+
+    // =========================================================================
+    // Inline edit: updateHistoryEntryContent / updatePinnedEntryContent /
+    // updateTodoEntryContent — EditEntryResult sealed class
+    //
+    // Verifies content + hash update, dedup conflict, blank rejection,
+    // timestamp/position/tags/status preservation, cross-table independence.
+    // =========================================================================
+
+    /** Helper: clear ALL 3 tables for edit test isolation */
+    private fun clearAllTables() {
+        db.writableDatabase.delete("clipboard_entries", null, null)
+        db.writableDatabase.delete("pinned_entries", null, null)
+        db.writableDatabase.delete("todo_entries", null, null)
+    }
+
+    @Test
+    fun testEditHistoryEntryContent() {
+        clearAllTables()
+        db.addClipboardEntry("Original text", futureExpiry)
+
+        val result = db.updateHistoryEntryContent("Original text", "Edited text")
+        assertTrue("Edit should succeed", result is EditEntryResult.Success)
+
+        val entries = db.getActiveClipboardEntries()
+        assertEquals(1, entries.size)
+        assertEquals("Edited text", entries[0].content)
+    }
+
+    @Test
+    fun testEditPinnedEntryContent() {
+        clearAllTables()
+        db.pinEntry("Pinned original")
+
+        val result = db.updatePinnedEntryContent("Pinned original", "Pinned edited")
+        assertTrue("Edit should succeed", result is EditEntryResult.Success)
+
+        val entries = db.getPinnedEntries()
+        assertEquals(1, entries.size)
+        assertEquals("Pinned edited", entries[0].content)
+    }
+
+    @Test
+    fun testEditTodoEntryContent() {
+        clearAllTables()
+        db.addTodoEntry("Todo original")
+
+        val result = db.updateTodoEntryContent("Todo original", "Todo edited")
+        assertTrue("Edit should succeed", result is EditEntryResult.Success)
+
+        val entries = db.getTodoEntries()
+        assertEquals(1, entries.size)
+        assertEquals("Todo edited", entries[0].content)
+    }
+
+    @Test
+    fun testEditContentHashRecomputed() {
+        clearAllTables()
+        db.addClipboardEntry("Hash test", futureExpiry)
+
+        db.updateHistoryEntryContent("Hash test", "Hash changed")
+
+        // Verify hash correctness by checking that dedup works with the new hash
+        // Adding another entry with old content should succeed (no longer in table)
+        val added = db.addClipboardEntry("Hash test", futureExpiry)
+        assertTrue("Old content should be addable again (hash cleared)", added)
+        assertEquals(2, db.getActiveClipboardEntries().size)
+    }
+
+    @Test
+    fun testEditRejectsDuplicateInSameTable() {
+        clearAllTables()
+        db.addClipboardEntry("Entry A", futureExpiry)
+        db.addClipboardEntry("Entry B", futureExpiry)
+
+        // Try to edit "Entry A" to "Entry B" — should conflict
+        val result = db.updateHistoryEntryContent("Entry A", "Entry B")
+        assertTrue("Should be DuplicateConflict", result is EditEntryResult.DuplicateConflict)
+
+        // Verify neither entry was modified
+        val entries = db.getActiveClipboardEntries()
+        assertEquals(2, entries.size)
+        assertTrue(entries.any { it.content == "Entry A" })
+        assertTrue(entries.any { it.content == "Entry B" })
+    }
+
+    @Test
+    fun testEditRejectsDuplicateInPinnedTable() {
+        clearAllTables()
+        db.pinEntry("Pin A")
+        db.pinEntry("Pin B")
+
+        val result = db.updatePinnedEntryContent("Pin A", "Pin B")
+        assertTrue("Should be DuplicateConflict", result is EditEntryResult.DuplicateConflict)
+    }
+
+    @Test
+    fun testEditRejectsDuplicateInTodoTable() {
+        clearAllTables()
+        db.addTodoEntry("Todo A")
+        db.addTodoEntry("Todo B")
+
+        val result = db.updateTodoEntryContent("Todo A", "Todo B")
+        assertTrue("Should be DuplicateConflict", result is EditEntryResult.DuplicateConflict)
+    }
+
+    @Test
+    fun testEditRejectsBlankContent() {
+        clearAllTables()
+        db.addClipboardEntry("Non-blank", futureExpiry)
+
+        val resultEmpty = db.updateHistoryEntryContent("Non-blank", "")
+        assertTrue("Empty should be InvalidContent", resultEmpty is EditEntryResult.InvalidContent)
+
+        val resultBlank = db.updateHistoryEntryContent("Non-blank", "   ")
+        assertTrue("Whitespace should be InvalidContent", resultBlank is EditEntryResult.InvalidContent)
+
+        // Verify original unchanged
+        assertEquals("Non-blank", db.getActiveClipboardEntries()[0].content)
+    }
+
+    @Test
+    fun testEditNoOpWhenContentUnchanged() {
+        clearAllTables()
+        db.addClipboardEntry("Same content", futureExpiry)
+
+        val result = db.updateHistoryEntryContent("Same content", "Same content")
+        assertTrue("No-op should return Success", result is EditEntryResult.Success)
+    }
+
+    @Test
+    fun testEditTrimsWhitespace() {
+        clearAllTables()
+        db.addClipboardEntry("Trimmed", futureExpiry)
+
+        // Edit with whitespace-padded version of same content = no-op
+        val result = db.updateHistoryEntryContent("Trimmed", "  Trimmed  ")
+        assertTrue("Trim-equivalent should be Success (no-op)", result is EditEntryResult.Success)
+    }
+
+    @Test
+    fun testEditPreservesTimestamp() {
+        clearAllTables()
+        val beforeAdd = System.currentTimeMillis()
+        db.addClipboardEntry("Timestamp test", futureExpiry)
+        Thread.sleep(50)
+
+        val originalTimestamp = db.getActiveClipboardEntries()[0].timestamp
+        assertTrue("Timestamp should be set", originalTimestamp >= beforeAdd)
+
+        db.updateHistoryEntryContent("Timestamp test", "Timestamp edited")
+
+        val editedTimestamp = db.getActiveClipboardEntries()[0].timestamp
+        assertEquals("Timestamp should be preserved after edit", originalTimestamp, editedTimestamp)
+    }
+
+    @Test
+    fun testEditPreservesTodoStatus() {
+        clearAllTables()
+        db.addTodoEntry("Status test")
+        db.setTodoEntryStatus("Status test", "completed")
+
+        db.updateTodoEntryContent("Status test", "Status edited")
+
+        // Verify status was preserved — check via raw query since getTodoEntries
+        // doesn't expose status directly through ClipboardEntry
+        val cursor = db.readableDatabase.rawQuery(
+            "SELECT status FROM todo_entries WHERE content = ?",
+            arrayOf("Status edited")
+        )
+        cursor.use {
+            assertTrue("Should find edited entry", it.moveToFirst())
+            assertEquals("Status should be preserved", "completed", it.getString(0))
+        }
+    }
+
+    @Test
+    fun testEditPreservesPinnedPosition() {
+        clearAllTables()
+        db.pinEntry("First pin")
+        db.pinEntry("Second pin")
+        db.pinEntry("Third pin")
+
+        // Get position of second pin before edit
+        val posBefore = db.readableDatabase.rawQuery(
+            "SELECT position FROM pinned_entries WHERE content = ?",
+            arrayOf("Second pin")
+        ).use { cursor ->
+            cursor.moveToFirst()
+            cursor.getDouble(0)
+        }
+
+        db.updatePinnedEntryContent("Second pin", "Second pin edited")
+
+        val posAfter = db.readableDatabase.rawQuery(
+            "SELECT position FROM pinned_entries WHERE content = ?",
+            arrayOf("Second pin edited")
+        ).use { cursor ->
+            cursor.moveToFirst()
+            cursor.getDouble(0)
+        }
+
+        assertEquals("Position should be preserved", posBefore, posAfter, 0.001)
+    }
+
+    @Test
+    fun testEditPreservesTags() {
+        clearAllTables()
+        db.pinEntry("Tagged entry")
+        db.setPinnedEntryTags("Tagged entry", listOf("work", "important"))
+
+        db.updatePinnedEntryContent("Tagged entry", "Tagged edited")
+
+        val tags = db.readableDatabase.rawQuery(
+            "SELECT tags FROM pinned_entries WHERE content = ?",
+            arrayOf("Tagged edited")
+        ).use { cursor ->
+            cursor.moveToFirst()
+            cursor.getString(0)
+        }
+
+        assertTrue("Tags should contain 'work'", tags.contains("work"))
+        assertTrue("Tags should contain 'important'", tags.contains("important"))
+    }
+
+    @Test
+    fun testEditCrossTableIndependence() {
+        // COPY semantics: editing in one tab must NOT affect copies in other tabs
+        clearAllTables()
+        val content = "Cross-table test"
+        db.addClipboardEntry(content, futureExpiry)
+        db.pinEntry(content)
+        db.addTodoEntry(content)
+
+        // Edit only the pinned copy
+        val result = db.updatePinnedEntryContent(content, "Pinned only edit")
+        assertTrue("Should succeed", result is EditEntryResult.Success)
+
+        // History and todo copies should be unaffected
+        assertEquals(content, db.getActiveClipboardEntries()[0].content)
+        assertEquals(content, db.getTodoEntries()[0].content)
+        assertEquals("Pinned only edit", db.getPinnedEntries()[0].content)
+    }
+
+    @Test
+    fun testEditNonexistentEntryReturnsError() {
+        clearAllTables()
+
+        val result = db.updateHistoryEntryContent("Does not exist", "New content")
+        assertTrue("Should return Error for missing entry", result is EditEntryResult.Error)
+    }
 }

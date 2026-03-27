@@ -250,4 +250,161 @@ class ClipboardHistoryTest {
         // Should not crash when listener is null
         clipboardService?.addClip("No listener test ${System.currentTimeMillis()}")
     }
+
+    // =========================================================================
+    // Inline edit: editEntryContent() — service-layer routing + validation
+    //
+    // Tests the public API that routes to the correct table, validates size
+    // limits, and fires the change listener on success.
+    // =========================================================================
+
+    /** Helper: clear all 3 tables for edit test isolation */
+    private fun clearAllTablesForEdit() {
+        val db = ClipboardDatabase.getInstance(context)
+        db.writableDatabase.delete("clipboard_entries", null, null)
+        db.writableDatabase.delete("pinned_entries", null, null)
+        db.writableDatabase.delete("todo_entries", null, null)
+    }
+
+    @Test
+    fun testEditHistoryViaService() {
+        clearAllTablesForEdit()
+        clipboardService?.addClip("Service edit test")
+        Thread.sleep(50)
+
+        val result = clipboardService?.editEntryContent(
+            "Service edit test", "Service edited", ClipboardTab.HISTORY
+        )
+        assertTrue("Should succeed", result is EditEntryResult.Success)
+
+        val entries = clipboardService?.clearExpiredAndGetHistory() ?: emptyList()
+        assertTrue("Should contain edited content", entries.any { it.content == "Service edited" })
+        assertFalse("Should not contain original", entries.any { it.content == "Service edit test" })
+    }
+
+    @Test
+    fun testEditPinnedViaService() {
+        clearAllTablesForEdit()
+        clipboardService?.pinEntry("Pin service test")
+
+        val result = clipboardService?.editEntryContent(
+            "Pin service test", "Pin service edited", ClipboardTab.PINNED
+        )
+        assertTrue("Should succeed", result is EditEntryResult.Success)
+
+        val pinned = clipboardService?.getPinnedEntries() ?: emptyList()
+        assertTrue(pinned.any { it.content == "Pin service edited" })
+    }
+
+    @Test
+    fun testEditTodoViaService() {
+        clearAllTablesForEdit()
+        clipboardService?.addToTodo("Todo service test")
+
+        val result = clipboardService?.editEntryContent(
+            "Todo service test", "Todo service edited", ClipboardTab.TODOS
+        )
+        assertTrue("Should succeed", result is EditEntryResult.Success)
+
+        // Service doesn't expose getTodoEntries() — use database directly
+        val db = ClipboardDatabase.getInstance(context)
+        val todos = db.getTodoEntries()
+        assertTrue(todos.any { it.content == "Todo service edited" })
+    }
+
+    @Test
+    fun testEditNoOpWhenUnchanged() {
+        clearAllTablesForEdit()
+        clipboardService?.addClip("Unchanged content")
+
+        val result = clipboardService?.editEntryContent(
+            "Unchanged content", "Unchanged content", ClipboardTab.HISTORY
+        )
+        assertTrue("No-op should return Success", result is EditEntryResult.Success)
+    }
+
+    @Test
+    fun testEditTrimsAndDetectsNoOp() {
+        clearAllTablesForEdit()
+        clipboardService?.addClip("Trim test")
+
+        val result = clipboardService?.editEntryContent(
+            "Trim test", "  Trim test  ", ClipboardTab.HISTORY
+        )
+        assertTrue("Trim-equivalent should be Success (no-op)", result is EditEntryResult.Success)
+    }
+
+    @Test
+    fun testEditFiresChangeListener() {
+        clearAllTablesForEdit()
+        clipboardService?.addClip("Listener test")
+
+        var listenerFired = false
+        clipboardService?.setOnClipboardHistoryChange(
+            ClipboardHistoryService.OnClipboardHistoryChange { listenerFired = true }
+        )
+
+        clipboardService?.editEntryContent(
+            "Listener test", "Listener edited", ClipboardTab.HISTORY
+        )
+
+        assertTrue("Change listener should fire on successful edit", listenerFired)
+
+        // Clean up listener
+        clipboardService?.setOnClipboardHistoryChange(null)
+    }
+
+    @Test
+    fun testEditDoesNotFireListenerOnNoOp() {
+        clearAllTablesForEdit()
+        clipboardService?.addClip("No-op listener")
+
+        var listenerFired = false
+        clipboardService?.setOnClipboardHistoryChange(
+            ClipboardHistoryService.OnClipboardHistoryChange { listenerFired = true }
+        )
+
+        clipboardService?.editEntryContent(
+            "No-op listener", "No-op listener", ClipboardTab.HISTORY
+        )
+
+        assertFalse("Listener should NOT fire on no-op", listenerFired)
+
+        clipboardService?.setOnClipboardHistoryChange(null)
+    }
+
+    @Test
+    fun testEditDuplicateViaService() {
+        clearAllTablesForEdit()
+        clipboardService?.addClip("Entry X")
+        clipboardService?.addClip("Entry Y")
+
+        val result = clipboardService?.editEntryContent(
+            "Entry X", "Entry Y", ClipboardTab.HISTORY
+        )
+        assertTrue("Should be DuplicateConflict", result is EditEntryResult.DuplicateConflict)
+    }
+
+    @Test
+    fun testEditCrossTabIndependence() {
+        clearAllTablesForEdit()
+        val content = "Cross-tab via service"
+        clipboardService?.addClip(content)
+        clipboardService?.pinEntry(content)
+        clipboardService?.addToTodo(content)
+
+        // Edit only the todo copy
+        clipboardService?.editEntryContent(content, "Todo only edit", ClipboardTab.TODOS)
+
+        // History and pinned should be unaffected
+        val history = clipboardService?.clearExpiredAndGetHistory() ?: emptyList()
+        val pinned = clipboardService?.getPinnedEntries() ?: emptyList()
+        val db = ClipboardDatabase.getInstance(context)
+        val todos = db.getTodoEntries()
+
+        assertTrue(history.any { it.content == content })
+        assertTrue(pinned.any { it.content == content })
+        assertTrue(todos.any { it.content == "Todo only edit" })
+        assertFalse(todos.any { it.content == content })
+    }
 }
