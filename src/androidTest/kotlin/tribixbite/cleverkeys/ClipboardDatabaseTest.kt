@@ -30,14 +30,20 @@ class ClipboardDatabaseTest {
     @Before
     fun setup() {
         context = InstrumentationRegistry.getInstrumentation().targetContext
+        // Config must be initialized — importFromJSON calls Config.globalConfig()
+        TestConfigHelper.ensureConfigInitialized(context)
         db = ClipboardDatabase.getInstance(context)
-        // Clear all entries (including pinned) for test isolation
+        // Clear ALL tables for test isolation (v3 uses independent pinned/todo tables)
         db.writableDatabase.delete("clipboard_entries", null, null)
+        db.writableDatabase.delete("pinned_entries", null, null)
+        db.writableDatabase.delete("todo_entries", null, null)
     }
 
     @After
     fun cleanup() {
         db.writableDatabase.delete("clipboard_entries", null, null)
+        db.writableDatabase.delete("pinned_entries", null, null)
+        db.writableDatabase.delete("todo_entries", null, null)
     }
 
     // =========================================================================
@@ -124,13 +130,17 @@ class ClipboardDatabaseTest {
     }
 
     @Test
-    fun testCleanupExpiredEntriesPreservesPinned() {
-        // Add a non-active entry with past expiry and pin it
+    fun testCleanupExpiredEntriesDoesNotAffectPinnedTable() {
+        // v3 COPY semantics: pinEntry() copies to pinned_entries; the expired
+        // history row in clipboard_entries is still deleted by cleanup.
         db.addClipboardEntry("Pinned expired", pastExpiry)
         db.pinEntry("Pinned expired")
 
         val (cleaned, _) = db.cleanupExpiredEntries()
-        assertEquals("Pinned entries should not be cleaned", 0, cleaned)
+        assertEquals("Expired history row should be cleaned", 1, cleaned)
+        // Pinned copy survives in independent table
+        assertEquals("Pinned copy survives in pinned_entries", 1, db.getPinnedEntries().size)
+        assertEquals("Pinned expired", db.getPinnedEntries()[0].content)
     }
 
     // =========================================================================
@@ -142,17 +152,19 @@ class ClipboardDatabaseTest {
     // =========================================================================
 
     @Test
-    fun testCleanupExpiredEntriesPreservesTodoItems() {
-        // TODO item with expired timestamp — should survive cleanup
+    fun testCleanupExpiredEntriesDoesNotAffectTodoTable() {
+        // v3 COPY semantics: addTodoEntry() copies to todo_entries; the expired
+        // history rows in clipboard_entries are still cleaned up.
         db.addClipboardEntry("Buy milk", pastExpiry)
         db.addTodoEntry("Buy milk")
-        // Regular expired entry — should be deleted
+        // Regular expired entry — also deleted
         db.addClipboardEntry("Ephemeral", pastExpiry)
 
         val (cleaned, _) = db.cleanupExpiredEntries()
-        assertEquals("Should only clean the non-todo expired entry", 1, cleaned)
-        assertEquals("Total should be 1 (the todo)", 1, db.getTotalEntryCount())
-        assertEquals("Todo should survive", 1, db.getTodoEntries().size)
+        assertEquals("Both expired history rows should be cleaned", 2, cleaned)
+        assertEquals("clipboard_entries should be empty", 0, db.getTotalEntryCount())
+        // Todo copy survives in independent table
+        assertEquals("Todo should survive in todo_entries", 1, db.getTodoEntries().size)
         assertEquals("Buy milk", db.getTodoEntries()[0].content)
     }
 
@@ -165,14 +177,19 @@ class ClipboardDatabaseTest {
 
         val result = db.clearAllEntries()
         assertTrue(result.isSuccess)
-        assertEquals("Should only delete non-todo, non-pinned entries", 2, result.getOrNull())
-        assertEquals("Todo should survive", 1, db.getTotalEntryCount())
+        // clearAllEntries() returns Pair<deletedCount, mediaPaths>
+        val (deletedCount, _) = result.getOrNull()!!
+        assertEquals("Should only delete non-todo, non-pinned entries", 3, deletedCount)
+        // Todo lives in independent table — clipboard_entries rows all deleted
+        assertEquals("Todo should survive in todo_entries table", 1, db.getTodoEntries().size)
         assertEquals("My todo", db.getTodoEntries()[0].content)
     }
 
     @Test
-    fun testApplySizeLimitPreservesTodoItems() {
-        // Add 5 regular entries + 1 todo
+    fun testApplySizeLimitDoesNotAffectTodoTable() {
+        // v3 COPY semantics: applySizeLimit operates on clipboard_entries only;
+        // todo_entries is unaffected. The "Todo item" row in clipboard_entries
+        // counts toward the limit like any other entry.
         for (i in 1..5) {
             db.addClipboardEntry("Regular $i", futureExpiry)
             Thread.sleep(10)
@@ -180,39 +197,38 @@ class ClipboardDatabaseTest {
         db.addClipboardEntry("Todo item", futureExpiry)
         db.addTodoEntry("Todo item")
 
-        // Limit to 2 regular entries — todo should not count toward limit
+        // 6 entries in clipboard_entries; limit to 2 → remove 4 oldest
         val removed = db.applySizeLimit(2)
-        assertEquals("Should remove 3 oldest regular entries", 3, removed)
-        // 2 regular + 1 todo = 3 total
-        assertEquals("Should have 2 regular + 1 todo", 3, db.getTotalEntryCount())
-        assertEquals("Todo should survive", 1, db.getTodoEntries().size)
+        assertEquals("Should remove 4 oldest history entries", 4, removed)
+        assertEquals("Should have 2 newest history entries", 2, db.getTotalEntryCount())
+        // Todo copy in independent table is unaffected
+        assertEquals("Todo should survive in todo_entries", 1, db.getTodoEntries().size)
     }
 
     @Test
-    fun testApplySizeLimitBytesPreservesTodoItems() {
-        // Add entries: 1 large regular + 1 todo
+    fun testApplySizeLimitCountWithTodoCopy() {
+        // v3 COPY semantics: todo copy in clipboard_entries counts toward limit
         val largeContent = "X".repeat(1024) // 1KB
         db.addClipboardEntry(largeContent, futureExpiry)
         db.addClipboardEntry("Todo survives", futureExpiry)
         db.addTodoEntry("Todo survives")
 
-        // Set byte limit to 0.001 MB — effectively evicts all regular entries
-        // applySizeLimitBytes takes maxSizeMB as Int, min useful = 1MB
-        // Instead, use applySizeLimit to test with the count path
         val removed = db.applySizeLimit(0) // 0 is a no-op per the code
         assertEquals("Size limit 0 should be no-op", 0, removed)
 
-        // Functional test: apply limit of 0 entries (would delete all regular)
-        // The method returns 0 for maxSize<=0, so test with limit=1
+        // Add a 3rd entry; clipboard_entries now has 3 rows
         db.addClipboardEntry("Regular 2", futureExpiry)
+        // Limit to 1 → remove 2 oldest (largeContent + "Todo survives")
         val removed2 = db.applySizeLimit(1)
-        assertEquals("Should remove 1 oldest regular, keep newest + todo", 1, removed2)
-        assertEquals("Todo should survive byte limit", 1, db.getTodoEntries().size)
+        assertEquals("Should remove 2 oldest history entries", 2, removed2)
+        // Todo copy in independent table is unaffected
+        assertEquals("Todo should survive in todo_entries", 1, db.getTodoEntries().size)
     }
 
     @Test
-    fun testCleanupPreservesBothPinnedAndTodoItems() {
-        // Verify pinned AND todo items both survive all cleanup paths
+    fun testCleanupDeletesAllExpiredHistoryButPinnedTodoTablesSurvive() {
+        // v3: All 3 history rows are expired → all cleaned from clipboard_entries.
+        // Pinned/todo copies in independent tables are unaffected.
         db.addClipboardEntry("Pinned item", pastExpiry)
         db.pinEntry("Pinned item")
         db.addClipboardEntry("Todo item", pastExpiry)
@@ -220,12 +236,16 @@ class ClipboardDatabaseTest {
         db.addClipboardEntry("Regular expired", pastExpiry)
 
         val (cleaned, _) = db.cleanupExpiredEntries()
-        assertEquals("Only regular expired should be cleaned", 1, cleaned)
-        assertEquals("Pinned + todo should remain", 2, db.getTotalEntryCount())
+        assertEquals("All 3 expired history rows should be cleaned", 3, cleaned)
+        assertEquals("clipboard_entries should be empty", 0, db.getTotalEntryCount())
+        assertEquals("Pinned copy survives", 1, db.getPinnedEntries().size)
+        assertEquals("Todo copy survives", 1, db.getTodoEntries().size)
     }
 
     @Test
-    fun testClearAllPreservesBothPinnedAndTodo() {
+    fun testClearAllDeletesHistoryButPinnedTodoTablesSurvive() {
+        // v3: clearAllEntries() wipes clipboard_entries. Pinned/todo in
+        // independent tables are unaffected.
         db.addClipboardEntry("Regular", futureExpiry)
         db.addClipboardEntry("Pinned", futureExpiry)
         db.pinEntry("Pinned")
@@ -233,9 +253,9 @@ class ClipboardDatabaseTest {
         db.addTodoEntry("Todo")
 
         db.clearAllEntries()
-        assertEquals("Pinned and todo should survive clear all", 2, db.getTotalEntryCount())
-        assertEquals(1, db.getPinnedEntries().size)
-        assertEquals(1, db.getTodoEntries().size)
+        assertEquals("clipboard_entries should be empty", 0, db.getTotalEntryCount())
+        assertEquals("Pinned copy survives in pinned_entries", 1, db.getPinnedEntries().size)
+        assertEquals("Todo copy survives in todo_entries", 1, db.getTodoEntries().size)
     }
 
     // =========================================================================
@@ -261,16 +281,19 @@ class ClipboardDatabaseTest {
 
     @Test
     fun testImportRoundTripPreservesTodo() {
-        // Export with todo entries, clear, reimport — todos should survive
+        // v3: Export includes all 3 tables. clipboard_entries has both rows;
+        // todo_entries has 1 row. Clear all tables before reimport.
         db.addClipboardEntry("Active", futureExpiry)
         db.addClipboardEntry("My todo", futureExpiry)
         db.addTodoEntry("My todo")
 
         val exported = db.exportToJSON()!!
+        // Clear ALL tables to avoid duplicate skips
         db.writableDatabase.delete("clipboard_entries", null, null)
+        db.writableDatabase.delete("todo_entries", null, null)
 
         val result = db.importFromJSON(exported)
-        assertEquals("Should import 1 active", 1, result[0])
+        assertEquals("Should import 2 active (both history rows)", 2, result[0])
         assertEquals("Should import 1 todo", 1, result[2])
 
         // Verify imported todo survives cleanup
@@ -311,8 +334,10 @@ class ClipboardDatabaseTest {
 
         val result = db.clearAllEntries()
         assertTrue("clearAllEntries should succeed", result.isSuccess)
-        // clearAllEntries keeps pinned entries
-        assertEquals("Should keep pinned entries", 1, db.getTotalEntryCount())
+        // v3 COPY semantics: clearAllEntries deletes ALL rows from clipboard_entries.
+        // Pinned copy lives in independent pinned_entries table and is unaffected.
+        assertEquals("clipboard_entries should be empty", 0, db.getTotalEntryCount())
+        assertEquals("Pinned copy survives in pinned_entries", 1, db.getPinnedEntries().size)
     }
 
     // =========================================================================
@@ -341,13 +366,16 @@ class ClipboardDatabaseTest {
     }
 
     @Test
-    fun testPinnedEntryNotInActiveList() {
+    fun testPinnedCopyDoesNotRemoveFromHistory() {
+        // v3 COPY semantics: pinEntry() copies to pinned_entries but the
+        // original history row in clipboard_entries remains visible.
         db.addClipboardEntry("Pinned", futureExpiry)
         db.pinEntry("Pinned")
 
-        // getActiveClipboardEntries filters for is_pinned=0
         val active = db.getActiveClipboardEntries()
-        assertTrue("Pinned entries should not appear in active list", active.isEmpty())
+        assertEquals("History entry should still be visible (COPY semantics)", 1, active.size)
+        assertEquals("Pinned", active[0].content)
+        assertEquals("Pinned copy also in pinned_entries", 1, db.getPinnedEntries().size)
     }
 
     @Test
@@ -421,12 +449,16 @@ class ClipboardDatabaseTest {
 
     @Test
     fun testGetStorageStats() {
+        // v3: getStorageStats() aggregates across all 3 tables via UNION ALL.
+        // activeEntries = historyEntries (non-expired rows in clipboard_entries)
         db.addClipboardEntry("Active entry", futureExpiry)
         db.addClipboardEntry("Pinned entry", futureExpiry)
         db.pinEntry("Pinned entry")
 
         val stats = db.getStorageStats()
-        assertEquals(2, stats.totalEntries)
+        // totalEntries = 2 history + 1 pinned copy = 3
+        assertEquals(3, stats.totalEntries)
+        // activeEntries = historyEntries = 2 (both in clipboard_entries, non-expired)
         assertEquals(2, stats.activeEntries)
         assertEquals(1, stats.pinnedEntries)
         assertTrue("Total size should be > 0", stats.totalSizeBytes > 0)
@@ -486,7 +518,7 @@ class ClipboardDatabaseTest {
         assertTrue("Should have active_entries", json!!.has("active_entries"))
         assertTrue("Should have pinned_entries", json.has("pinned_entries"))
         assertTrue("Should have todo_entries", json.has("todo_entries"))
-        assertEquals(2, json.getInt("export_version"))
+        assertEquals("Export version should be 4 (v4 media schema)", 4, json.getInt("export_version"))
     }
 
     @Test
@@ -527,6 +559,8 @@ class ClipboardDatabaseTest {
 
     @Test
     fun testExportImportRoundTrip() {
+        // v3: clipboard_entries has 3 rows (Active, Pinned, Todo);
+        // pinned_entries has 1, todo_entries has 1. Clear all before reimport.
         db.addClipboardEntry("Active entry", futureExpiry)
         db.addClipboardEntry("Pinned entry", futureExpiry)
         db.pinEntry("Pinned entry")
@@ -535,11 +569,13 @@ class ClipboardDatabaseTest {
 
         val exported = db.exportToJSON()!!
 
-        // Clear and reimport
+        // Clear ALL tables to avoid duplicate skips
         db.writableDatabase.delete("clipboard_entries", null, null)
+        db.writableDatabase.delete("pinned_entries", null, null)
+        db.writableDatabase.delete("todo_entries", null, null)
         val result = db.importFromJSON(exported)
 
-        assertEquals("Should import 1 active", 1, result[0])
+        assertEquals("Should import 3 active (all history rows)", 3, result[0])
         assertEquals("Should import 1 pinned", 1, result[1])
         assertEquals("Should import 1 todo", 1, result[2])
     }
@@ -714,24 +750,25 @@ class ClipboardDatabaseTest {
     }
 
     @Test
-    fun testPinnedOrderingStableAfterRepin() {
-        // Unpin and repin should preserve original timestamp (not reset it).
+    fun testRepinnedEntryMovesToEnd() {
+        // Unpin + repin creates a fresh row with position at the end.
+        // The original creation timestamp is NOT preserved.
         db.addClipboardEntry("StablePin", futureExpiry)
         Thread.sleep(50)
         db.addClipboardEntry("LaterPin", futureExpiry)
 
-        db.pinEntry("StablePin")
-        db.pinEntry("LaterPin")
+        db.pinEntry("StablePin")   // position ~1.0
+        db.pinEntry("LaterPin")    // position ~2.0
 
-        // Unpin and repin StablePin — its original timestamp should be preserved
+        // Unpin and repin StablePin — gets new position (3.0)
         db.unpinEntry("StablePin")
         db.pinEntry("StablePin")
 
         val pinned = db.getPinnedEntries()
         assertEquals(2, pinned.size)
-        // StablePin was created first, so it should still be first in ASC order
-        assertEquals("StablePin", pinned[0].content)
-        assertEquals("LaterPin", pinned[1].content)
+        // LaterPin keeps position 2.0; StablePin moves to end (3.0)
+        assertEquals("LaterPin", pinned[0].content)
+        assertEquals("StablePin", pinned[1].content)
     }
 
     // =========================================================================
@@ -741,19 +778,21 @@ class ClipboardDatabaseTest {
     // =========================================================================
 
     @Test
-    fun testTodoItemExcludedFromActiveEntries() {
-        // Add regular and todo entries
+    fun testTodoCopyDoesNotRemoveFromHistory() {
+        // v3 COPY semantics: addTodoEntry() copies to todo_entries; the
+        // original history row in clipboard_entries remains visible.
         db.addClipboardEntry("Regular item", futureExpiry)
         db.addClipboardEntry("Todo item", futureExpiry)
         db.addTodoEntry("Todo item")
 
         val active = db.getActiveClipboardEntries()
-        assertEquals("Active list should exclude TODO items", 1, active.size)
-        assertEquals("Only regular item in active list", "Regular item", active[0].content)
+        assertEquals("History should have both entries (COPY semantics)", 2, active.size)
+        assertEquals("Todo should also be in todo_entries", 1, db.getTodoEntries().size)
     }
 
     @Test
-    fun testTodoItemOnlyInTodoList() {
+    fun testTodoCopySemantics() {
+        // v3 COPY: Item B exists in BOTH clipboard_entries and todo_entries
         db.addClipboardEntry("Item A", futureExpiry)
         db.addClipboardEntry("Item B", futureExpiry)
         db.addTodoEntry("Item B")
@@ -761,29 +800,31 @@ class ClipboardDatabaseTest {
         val active = db.getActiveClipboardEntries()
         val todos = db.getTodoEntries()
 
-        // Item B should be in todos but NOT in active
+        // Item B in both history and todo (COPY semantics)
         assertTrue("Item B should be in todo list", todos.any { it.content == "Item B" })
-        assertFalse("Item B should NOT be in active list", active.any { it.content == "Item B" })
-        // Item A should be in active but NOT in todos
+        assertTrue("Item B should also be in active list", active.any { it.content == "Item B" })
+        // Item A only in history
         assertTrue("Item A should be in active list", active.any { it.content == "Item A" })
         assertFalse("Item A should NOT be in todo list", todos.any { it.content == "Item A" })
     }
 
     @Test
-    fun testUnmarkTodoReturnsToActiveList() {
+    fun testRemoveTodoDoesNotAffectHistory() {
+        // v3 COPY: history row always visible; removing from todo_entries
+        // only affects the todo table.
         db.addClipboardEntry("Unmarked todo", futureExpiry)
         db.addTodoEntry("Unmarked todo")
 
-        // Verify it's not in active
-        assertTrue(db.getActiveClipboardEntries().isEmpty())
+        // History row is always visible in v3
+        assertEquals("History entry always visible", 1, db.getActiveClipboardEntries().size)
+        assertEquals("Todo copy exists", 1, db.getTodoEntries().size)
 
-        // Unmark as todo
+        // Remove from todo
         db.removeTodoEntry("Unmarked todo")
 
-        // Should return to active list
-        val active = db.getActiveClipboardEntries()
-        assertEquals(1, active.size)
-        assertEquals("Unmarked todo", active[0].content)
+        // History entry unchanged, todo copy gone
+        assertEquals("History entry still present", 1, db.getActiveClipboardEntries().size)
+        assertEquals("Todo copy removed", 0, db.getTodoEntries().size)
     }
 
     // =========================================================================
@@ -815,12 +856,16 @@ class ClipboardDatabaseTest {
 
     @Test
     fun testStorageStatsPinnedSizeIsolated() {
+        // v3: pinEntry() copies to pinned_entries; history row remains.
+        // getStorageStats() sums across all 3 tables.
         db.addClipboardEntry("Regular", futureExpiry) // 7 bytes
         db.addClipboardEntry("Pinned!", futureExpiry) // 7 bytes
         db.pinEntry("Pinned!")
 
         val stats = db.getStorageStats()
-        assertEquals("Total size should include both", 14L, stats.totalSizeBytes)
+        // Total = history(14) + pinned(7) = 21 bytes
+        assertEquals("Total size: 14 history + 7 pinned", 21L, stats.totalSizeBytes)
+        assertEquals("History size should be 14 bytes", 14L, stats.activeSizeBytes)
         assertEquals("Pinned size should be 7 bytes", 7L, stats.pinnedSizeBytes)
         assertEquals("Pinned count should be 1", 1, stats.pinnedEntries)
     }

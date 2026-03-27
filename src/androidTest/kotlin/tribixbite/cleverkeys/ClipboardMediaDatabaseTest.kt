@@ -36,6 +36,7 @@ class ClipboardMediaDatabaseTest {
     @Before
     fun setup() {
         context = InstrumentationRegistry.getInstrumentation().targetContext
+        TestConfigHelper.ensureConfigInitialized(context)
         db = ClipboardDatabase.getInstance(context)
         clearAllTables()
     }

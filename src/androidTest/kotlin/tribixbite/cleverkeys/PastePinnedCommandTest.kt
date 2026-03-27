@@ -45,13 +45,17 @@ class PastePinnedCommandTest {
         context = InstrumentationRegistry.getInstrumentation().targetContext
         db = ClipboardDatabase.getInstance(context)
         executor = CustomShortSwipeExecutor(context)
-        // Clear all entries for test isolation
+        // Clear ALL tables for test isolation (v3 uses independent pinned/todo tables)
         db.writableDatabase.delete("clipboard_entries", null, null)
+        db.writableDatabase.delete("pinned_entries", null, null)
+        db.writableDatabase.delete("todo_entries", null, null)
     }
 
     @After
     fun cleanup() {
         db.writableDatabase.delete("clipboard_entries", null, null)
+        db.writableDatabase.delete("pinned_entries", null, null)
+        db.writableDatabase.delete("todo_entries", null, null)
     }
 
     // =========================================================================
