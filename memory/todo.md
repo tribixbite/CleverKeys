@@ -1,5 +1,27 @@
 # CleverKeys TODO
 
+## Clipboard UI Overhaul — Icons, Tap-to-Expand, Tags & Status (2026-03-28)
+Replaced emoji tab icons (📋📌✓) with vector drawable ImageViews for consistent theming.
+Restructured entry layout: primary row (paste, edit, expand) + secondary row (tab-specific
+actions revealed on tap-expand). Reduces default button clutter from 6 to 3 buttons.
+
+**Changes (4c273da)**:
+- 6 new icons: ic_tab_history, ic_tab_pinned, ic_tab_todos, ic_tag, ic_unpin, ic_status_cycle
+- 5 existing icons updated to outline style for visual consistency
+- ClipboardEntry gains `tags: List<String>` + `todoStatus: String?` fields
+- getPinnedEntries()/getTodoEntries() now SELECT tags/status columns
+- ClipboardHistoryService wrappers: setPinnedTags, setTodoTags, getAllPinnedTags, getAllTodoTags
+- Tab-aware secondary buttons: History(pin/todo/delete), Pinned(unpin/todo/tags), Todos(status/tags/remove)
+- cycleTodoStatus(): active→planned→completed with [plan]/[done] prefix + strikethrough
+- ClipboardTagDialog: AlertDialog with FlowLayout chips, suggestions, new tag input
+- ClipboardManager tab fields: TextView? → ImageView?
+- Test fix: clipboard_entry_normal_buttons → primary_buttons (Espresso)
+
+**Build**: compileDebugKotlin OK, 1041 pure tests pass, release APK builds.
+**Remaining**: Device testing — verify tab icons render, tap-expand reveals secondary row,
+status cycling works on todos tab, tag dialog opens/adds/removes tags, edit mode hides
+secondary row, all tabs show correct button sets.
+
 ## Clipboard Regex Search — COMPLETE (2026-03-27)
 VSCode-style `.*` toggle button in search bar. OFF = plain substring match (unchanged),
 ON = regex with case-insensitive matching. Glob shorthand: bare `*` → `.*`, bare `?` → `.`.

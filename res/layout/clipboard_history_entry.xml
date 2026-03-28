@@ -1,78 +1,80 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Clipboard entry: vertical layout with content row + expandable secondary buttons row -->
+<!-- Clipboard entry: horizontal layout with text + stacked button column on right -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
+    android:orientation="horizontal"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content">
 
-  <!-- ─── Content row (horizontal): thumbnail + text + primary buttons ─── -->
-  <LinearLayout
-      android:orientation="horizontal"
-      android:layout_width="fill_parent"
-      android:layout_height="wrap_content">
+  <!-- Media thumbnail container: GONE for text entries, VISIBLE for media -->
+  <FrameLayout
+      android:id="@+id/clipboard_entry_thumbnail_container"
+      android:layout_width="48dp"
+      android:layout_height="48dp"
+      android:layout_gravity="center_vertical"
+      android:layout_marginStart="8dp"
+      android:layout_marginEnd="4dp"
+      android:visibility="gone">
 
-    <!-- Media thumbnail container: GONE for text entries, VISIBLE for media -->
-    <FrameLayout
-        android:id="@+id/clipboard_entry_thumbnail_container"
+    <!-- Thumbnail image (decoded from BLOB) or MIME-type fallback icon -->
+    <ImageView
+        android:id="@+id/clipboard_entry_thumbnail"
         android:layout_width="48dp"
         android:layout_height="48dp"
-        android:layout_gravity="center_vertical"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="4dp"
-        android:visibility="gone">
+        android:scaleType="centerCrop"
+        android:contentDescription="Media thumbnail" />
 
-      <!-- Thumbnail image (decoded from BLOB) or MIME-type fallback icon -->
-      <ImageView
-          android:id="@+id/clipboard_entry_thumbnail"
-          android:layout_width="48dp"
-          android:layout_height="48dp"
-          android:scaleType="centerCrop"
-          android:contentDescription="Media thumbnail" />
-
-      <!-- Play badge overlay for animated GIF/WebP (bottom-right corner) -->
-      <ImageView
-          android:id="@+id/clipboard_entry_play_badge"
-          android:layout_width="16dp"
-          android:layout_height="16dp"
-          android:layout_gravity="bottom|end"
-          android:src="@drawable/ic_media_play_badge"
-          android:visibility="gone"
-          android:contentDescription="Animated" />
-
-    </FrameLayout>
-
-    <!-- Normal text display (hidden during edit) -->
-    <TextView
-        android:id="@+id/clipboard_entry_text"
-        style="@style/clipboardEntry"
-        android:maxLines="1"
-        android:ellipsize="end"/>
-
-    <!-- Inline edit field: overlays TextView when editing. inputType=none prevents Android
-         from showing a soft keyboard — we ARE the keyboard, input routed via KeyEventHandler -->
-    <EditText
-        android:id="@+id/clipboard_entry_edit_field"
-        style="@style/clipboardEntry"
+    <!-- Play badge overlay for animated GIF/WebP (bottom-right corner) -->
+    <ImageView
+        android:id="@+id/clipboard_entry_play_badge"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:layout_gravity="bottom|end"
+        android:src="@drawable/ic_media_play_badge"
         android:visibility="gone"
-        android:inputType="none"
-        android:minLines="2"
-        android:maxLines="10"
-        android:background="@drawable/clipboard_edit_bg"
-        android:cursorVisible="true"
-        android:focusable="true"
-        android:focusableInTouchMode="true"
-        android:textColor="#FFFFFFFF"
-        android:textColorHint="#99FFFFFF"/>
+        android:contentDescription="Animated" />
 
-    <!-- Primary buttons: expand indicator + edit + paste (always visible) -->
+  </FrameLayout>
+
+  <!-- Normal text display (hidden during edit) -->
+  <TextView
+      android:id="@+id/clipboard_entry_text"
+      style="@style/clipboardEntry"
+      android:maxLines="1"
+      android:ellipsize="end"/>
+
+  <!-- Inline edit field: overlays TextView when editing. inputType=none prevents Android
+       from showing a soft keyboard — we ARE the keyboard, input routed via KeyEventHandler -->
+  <EditText
+      android:id="@+id/clipboard_entry_edit_field"
+      style="@style/clipboardEntry"
+      android:visibility="gone"
+      android:inputType="none"
+      android:minLines="2"
+      android:maxLines="10"
+      android:background="@drawable/clipboard_edit_bg"
+      android:cursorVisible="true"
+      android:focusable="true"
+      android:focusableInTouchMode="true"
+      android:textColor="#FFFFFFFF"
+      android:textColorHint="#99FFFFFF"/>
+
+  <!-- ─── Button column: stacked vertically on the right side ─── -->
+  <LinearLayout
+      android:id="@+id/clipboard_entry_button_column"
+      android:orientation="vertical"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_gravity="top"
+      android:layout_marginTop="7dp"
+      android:layout_marginEnd="12dp"
+      android:gravity="end">
+
+    <!-- Row 1: Primary buttons (always visible in normal mode) -->
     <LinearLayout
         android:id="@+id/clipboard_entry_primary_buttons"
         android:orientation="horizontal"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="top"
-        android:layout_marginTop="7dp"
-        android:layout_marginRight="12dp">
+        android:layout_height="wrap_content">
 
       <View
           android:id="@+id/clipboard_entry_expand"
@@ -95,15 +97,63 @@
 
     </LinearLayout>
 
-    <!-- Edit mode: save/cancel buttons (shown only for the entry being edited) -->
+    <!-- Row 2: Secondary buttons (shown on tap-expand, tab-specific actions) -->
+    <LinearLayout
+        android:id="@+id/clipboard_entry_secondary_buttons"
+        android:orientation="horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:visibility="gone">
+
+      <!-- Pin / Save to pinned (history tab) -->
+      <View
+          android:id="@+id/clipboard_entry_addpin"
+          style="@style/clipboardEntryButton"
+          android:background="@drawable/ic_clipboard_save"/>
+
+      <!-- Unpin (pinned tab only) -->
+      <View
+          android:id="@+id/clipboard_entry_unpin"
+          style="@style/clipboardEntryButton"
+          android:background="@drawable/ic_unpin"
+          android:visibility="gone"/>
+
+      <!-- Add to Todo (history + pinned tabs) -->
+      <View
+          android:id="@+id/clipboard_entry_addtodo"
+          style="@style/clipboardEntryButton"
+          android:background="@drawable/ic_clipboard_todo"/>
+
+      <!-- Done/check button — marks todo as completed (todos tab only) -->
+      <View
+          android:id="@+id/clipboard_entry_done"
+          style="@style/clipboardEntryButton"
+          android:background="@drawable/ic_clipboard_save_edit"
+          android:visibility="gone"/>
+
+      <!-- Status cycle (todos tab only) -->
+      <View
+          android:id="@+id/clipboard_entry_status"
+          style="@style/clipboardEntryButton"
+          android:background="@drawable/ic_status_cycle"
+          android:visibility="gone"/>
+
+      <!-- Tags (pinned + todos tabs) -->
+      <View
+          android:id="@+id/clipboard_entry_tags"
+          style="@style/clipboardEntryButton"
+          android:background="@drawable/ic_tag"
+          android:visibility="gone"/>
+
+    </LinearLayout>
+
+    <!-- Row 3: Edit mode buttons (save + cancel + delete, shown only during edit) -->
     <LinearLayout
         android:id="@+id/clipboard_entry_edit_buttons"
         android:orientation="horizontal"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="top"
-        android:layout_marginTop="7dp"
-        android:layout_marginRight="12dp"
         android:visibility="gone">
 
       <View
@@ -115,56 +165,16 @@
       <View
           android:id="@+id/clipboard_entry_cancel"
           style="@style/clipboardEntryButton"
-          android:background="@drawable/ic_clipboard_cancel"/>
+          android:background="@drawable/ic_clipboard_cancel"
+          android:layout_marginRight="4dp"/>
+
+      <!-- Delete: gated behind edit mode (only visible after tapping edit) -->
+      <View
+          android:id="@+id/clipboard_entry_delete"
+          style="@style/clipboardEntryButton"
+          android:background="@drawable/ic_delete"/>
 
     </LinearLayout>
-
-  </LinearLayout>
-
-  <!-- ─── Secondary buttons row (GONE by default, shown on tap-expand) ─── -->
-  <LinearLayout
-      android:id="@+id/clipboard_entry_secondary_buttons"
-      style="@style/clipboardSecondaryButtons"
-      android:visibility="gone">
-
-    <!-- Pin / Save to pinned (history + todos tabs) -->
-    <View
-        android:id="@+id/clipboard_entry_addpin"
-        style="@style/clipboardEntryButton"
-        android:background="@drawable/ic_clipboard_save"/>
-
-    <!-- Unpin (pinned tab only) -->
-    <View
-        android:id="@+id/clipboard_entry_unpin"
-        style="@style/clipboardEntryButton"
-        android:background="@drawable/ic_unpin"
-        android:visibility="gone"/>
-
-    <!-- Add to Todo / cycle status (history + pinned: add; todos: cycle) -->
-    <View
-        android:id="@+id/clipboard_entry_addtodo"
-        style="@style/clipboardEntryButton"
-        android:background="@drawable/ic_clipboard_todo"/>
-
-    <!-- Status cycle (todos tab only) -->
-    <View
-        android:id="@+id/clipboard_entry_status"
-        style="@style/clipboardEntryButton"
-        android:background="@drawable/ic_status_cycle"
-        android:visibility="gone"/>
-
-    <!-- Tags (pinned + todos tabs) -->
-    <View
-        android:id="@+id/clipboard_entry_tags"
-        style="@style/clipboardEntryButton"
-        android:background="@drawable/ic_tag"
-        android:visibility="gone"/>
-
-    <!-- Delete / Remove -->
-    <View
-        android:id="@+id/clipboard_entry_delete"
-        style="@style/clipboardEntryButton"
-        android:background="@drawable/ic_delete"/>
 
   </LinearLayout>
 

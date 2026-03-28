@@ -40,16 +40,6 @@
     <item name="android:backgroundTint">?attr/colorLabel</item>
     <item name="android:backgroundTintMode">src_in</item>
   </style>
-  <!-- Secondary button row: revealed on tap-expand, right-aligned below content -->
-  <style name="clipboardSecondaryButtons">
-    <item name="android:orientation">horizontal</item>
-    <item name="android:layout_width">match_parent</item>
-    <item name="android:layout_height">wrap_content</item>
-    <item name="android:gravity">end</item>
-    <item name="android:paddingEnd">12dp</item>
-    <item name="android:paddingBottom">4dp</item>
-    <item name="android:paddingTop">2dp</item>
-  </style>
   <!-- Launcher activity -->
   <style name="paragraph">
     <item name="android:layout_width">fill_parent</item>

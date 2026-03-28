@@ -74,7 +74,8 @@ class ClipboardEntry(
      * Color is cached to avoid repeated resource lookups.
      */
     fun getFormattedText(context: Context): Spannable {
-        val timeStr = " · ${getRelativeTime()}"
+        // Use non-breaking spaces (\u00A0) so the time suffix never wraps mid-unit
+        val timeStr = "\u00A0\u00B7\u00A0${getRelativeTime().replace(' ', '\u00A0')}"
         val contentLen = content.length
 
         // Append directly to builder — avoids content + timeStr intermediate String

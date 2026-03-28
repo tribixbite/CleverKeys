@@ -593,12 +593,14 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             val thumbnailView = view.findViewById<ImageView>(R.id.clipboard_entry_thumbnail)
             val playBadge = view.findViewById<ImageView>(R.id.clipboard_entry_play_badge)
 
-            // Secondary row buttons
+            // Secondary row buttons (shown on tap-expand, tab-specific)
             val pinButton = view.findViewById<View>(R.id.clipboard_entry_addpin)
             val unpinButton = view.findViewById<View>(R.id.clipboard_entry_unpin)
             val todoButton = view.findViewById<View>(R.id.clipboard_entry_addtodo)
+            val doneButton = view.findViewById<View>(R.id.clipboard_entry_done)
             val statusButton = view.findViewById<View>(R.id.clipboard_entry_status)
             val tagsButton = view.findViewById<View>(R.id.clipboard_entry_tags)
+            // Delete is in the edit_buttons row (only visible during edit mode)
             val deleteButton = view.findViewById<View>(R.id.clipboard_entry_delete)
 
             // Bug #2 fix: match by content identity, not list position — survives list shifts
@@ -653,6 +655,10 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 view.findViewById<View>(R.id.clipboard_entry_cancel).setOnClickListener {
                     cancelEdit()
                 }
+                // Delete button — gated behind edit mode for safety
+                deleteButton.setOnClickListener {
+                    delete_entry(pos)
+                }
 
                 return view
             }
@@ -696,7 +702,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                         TodoEntry.STATUS_PLANNED -> "[plan] "
                         else -> ""
                     }
-                    val timeStr = " \u00B7 ${entry.getRelativeTime()}"
+                    // Non-breaking spaces so time suffix never wraps mid-unit
+                    val timeStr = "\u00A0\u00B7\u00A0${entry.getRelativeTime().replace(' ', '\u00A0')}"
                     val spannable = android.text.SpannableStringBuilder(prefix + entry.content).append(timeStr)
 
                     // Strikethrough the content portion (not prefix or timestamp) for completed
@@ -754,34 +761,35 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             secondaryButtons.visibility = if (isExpanded && !isEditingThis) VISIBLE else GONE
 
             // ── Tab-aware button visibility in secondary row ──
+            // Delete is NOT here — it's gated behind edit mode in the edit_buttons row
             val cfg = Config.globalConfig()
             when (currentTab) {
                 ClipboardTab.HISTORY -> {
-                    // History: pin (if enabled), todo (if enabled), delete
+                    // History: pin (if enabled), todo (if enabled)
                     pinButton.visibility = if (cfg.clipboard_pinned_enabled) VISIBLE else GONE
                     unpinButton.visibility = GONE
                     todoButton.visibility = if (cfg.clipboard_todo_enabled) VISIBLE else GONE
+                    doneButton.visibility = GONE
                     statusButton.visibility = GONE
                     tagsButton.visibility = GONE
-                    deleteButton.visibility = VISIBLE
                 }
                 ClipboardTab.PINNED -> {
                     // Pinned: unpin, todo (if enabled), tags
                     pinButton.visibility = GONE
                     unpinButton.visibility = VISIBLE
                     todoButton.visibility = if (cfg.clipboard_todo_enabled) VISIBLE else GONE
+                    doneButton.visibility = GONE
                     statusButton.visibility = GONE
                     tagsButton.visibility = VISIBLE
-                    deleteButton.visibility = GONE
                 }
                 ClipboardTab.TODOS -> {
-                    // Todos: status cycle, tags, delete (= remove from todos)
+                    // Todos: done (mark completed), status cycle, tags
                     pinButton.visibility = GONE
                     unpinButton.visibility = GONE
                     todoButton.visibility = GONE
+                    doneButton.visibility = VISIBLE
                     statusButton.visibility = VISIBLE
                     tagsButton.visibility = VISIBLE
-                    deleteButton.visibility = VISIBLE
                     // Status button alpha reflects current state
                     statusButton.alpha = when (entry.todoStatus) {
                         TodoEntry.STATUS_ACTIVE -> 1.0f
@@ -831,6 +839,15 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             todoButton.setOnClickListener {
                 if (!isEditing()) todo_entry(pos)
             }
+            doneButton.setOnClickListener {
+                if (!isEditing()) {
+                    // Toggle between active and completed
+                    val newStatus = if (entry.todoStatus == TodoEntry.STATUS_COMPLETED)
+                        TodoEntry.STATUS_ACTIVE else TodoEntry.STATUS_COMPLETED
+                    service?.setTodoStatus(entry.content, newStatus)
+                    loadDataAsync()
+                }
+            }
             statusButton.setOnClickListener {
                 if (!isEditing()) cycleTodoStatus(entry)
             }
@@ -840,9 +857,6 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                         loadDataAsync()
                     }
                 }
-            }
-            deleteButton.setOnClickListener {
-                if (!isEditing()) delete_entry(pos)
             }
 
             return view
