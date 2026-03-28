@@ -555,6 +555,21 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         applyFilter()
     }
 
+    /**
+     * Cycle todo status: active → planned → completed → active.
+     * Updates via service (which notifies DB + triggers UI refresh).
+     */
+    private fun cycleTodoStatus(entry: ClipboardEntry) {
+        val next = when (entry.todoStatus) {
+            TodoEntry.STATUS_ACTIVE -> TodoEntry.STATUS_PLANNED
+            TodoEntry.STATUS_PLANNED -> TodoEntry.STATUS_COMPLETED
+            TodoEntry.STATUS_COMPLETED -> TodoEntry.STATUS_ACTIVE
+            else -> TodoEntry.STATUS_ACTIVE
+        }
+        service?.setTodoStatus(entry.content, next)
+        loadDataAsync()
+    }
+
     inner class ClipboardEntriesAdapter : BaseAdapter() {
         override fun getCount(): Int = paginatedHistory.size
 
@@ -571,13 +586,20 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             val editField = view.findViewById<EditText>(R.id.clipboard_entry_edit_field)
             val expandButton = view.findViewById<View>(R.id.clipboard_entry_expand)
             val editButton = view.findViewById<View>(R.id.clipboard_entry_edit)
-            val pinButton = view.findViewById<View>(R.id.clipboard_entry_addpin)
-            val todoButton = view.findViewById<View>(R.id.clipboard_entry_addtodo)
-            val normalButtons = view.findViewById<LinearLayout>(R.id.clipboard_entry_normal_buttons)
+            val primaryButtons = view.findViewById<LinearLayout>(R.id.clipboard_entry_primary_buttons)
             val editButtons = view.findViewById<LinearLayout>(R.id.clipboard_entry_edit_buttons)
+            val secondaryButtons = view.findViewById<LinearLayout>(R.id.clipboard_entry_secondary_buttons)
             val thumbnailContainer = view.findViewById<FrameLayout>(R.id.clipboard_entry_thumbnail_container)
             val thumbnailView = view.findViewById<ImageView>(R.id.clipboard_entry_thumbnail)
             val playBadge = view.findViewById<ImageView>(R.id.clipboard_entry_play_badge)
+
+            // Secondary row buttons
+            val pinButton = view.findViewById<View>(R.id.clipboard_entry_addpin)
+            val unpinButton = view.findViewById<View>(R.id.clipboard_entry_unpin)
+            val todoButton = view.findViewById<View>(R.id.clipboard_entry_addtodo)
+            val statusButton = view.findViewById<View>(R.id.clipboard_entry_status)
+            val tagsButton = view.findViewById<View>(R.id.clipboard_entry_tags)
+            val deleteButton = view.findViewById<View>(R.id.clipboard_entry_delete)
 
             // Bug #2 fix: match by content identity, not list position — survives list shifts
             val isEditingThis = editingOriginalContent != null && entry.content == editingOriginalContent
@@ -586,8 +608,9 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             if (isEditingThis) {
                 textView.visibility = GONE
                 editField.visibility = VISIBLE
-                normalButtons.visibility = GONE
+                primaryButtons.visibility = GONE
                 editButtons.visibility = VISIBLE
+                secondaryButtons.visibility = GONE
                 thumbnailContainer.visibility = GONE
                 playBadge.visibility = GONE
 
@@ -637,7 +660,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             // ── Normal mode: standard rendering ──
             textView.visibility = VISIBLE
             editField.visibility = GONE
-            normalButtons.visibility = VISIBLE
+            primaryButtons.visibility = VISIBLE
             editButtons.visibility = GONE
 
             // ── Media thumbnail rendering ──
@@ -665,11 +688,42 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             } else {
                 thumbnailContainer.visibility = GONE
                 playBadge.visibility = GONE
-                // Set text with timestamp appended
-                textView.text = entry.getFormattedText(context)
+
+                // ── Todo status visual indicator (prefix + strikethrough) ──
+                if (currentTab == ClipboardTab.TODOS && entry.todoStatus != null) {
+                    val prefix = when (entry.todoStatus) {
+                        TodoEntry.STATUS_COMPLETED -> "[done] "
+                        TodoEntry.STATUS_PLANNED -> "[plan] "
+                        else -> ""
+                    }
+                    val timeStr = " \u00B7 ${entry.getRelativeTime()}"
+                    val spannable = android.text.SpannableStringBuilder(prefix + entry.content).append(timeStr)
+
+                    // Strikethrough the content portion (not prefix or timestamp) for completed
+                    if (entry.todoStatus == TodoEntry.STATUS_COMPLETED) {
+                        spannable.setSpan(
+                            android.text.style.StrikethroughSpan(),
+                            prefix.length,
+                            prefix.length + entry.content.length,
+                            android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                        )
+                    }
+                    // Dim timestamp suffix
+                    spannable.setSpan(
+                        android.text.style.ForegroundColorSpan(
+                            androidx.core.content.ContextCompat.getColor(context, android.R.color.secondary_text_dark)
+                        ),
+                        prefix.length + entry.content.length,
+                        spannable.length,
+                        android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+                    textView.text = spannable
+                } else {
+                    textView.text = entry.getFormattedText(context)
+                }
             }
 
-            // Check if text contains newlines (multi-line) — applies to text entries
+            // ── Expand state: single tap toggles text expansion + secondary row ──
             val isMultiLine = text.contains("\n")
             val isExpanded = expandedStates[text] == true
 
@@ -682,16 +736,10 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 textView.ellipsize = android.text.TextUtils.TruncateAt.END
             }
 
-            // Show expand button only for multi-line text entries
+            // Expand chevron shown for multi-line text — rotates as visual indicator
             if (isMultiLine && !entry.isMedia) {
                 expandButton.visibility = VISIBLE
                 expandButton.rotation = if (isExpanded) 180f else 0f
-
-                // Handle expand button click for multi-line entries
-                expandButton.setOnClickListener {
-                    expandedStates[text] = !isExpanded
-                    notifyDataSetChanged()
-                }
             } else {
                 expandButton.visibility = GONE
             }
@@ -699,15 +747,63 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             // Show edit button for text entries only (media entries cannot be edited inline)
             editButton.visibility = if (!entry.isMedia) VISIBLE else GONE
             editButton.setOnClickListener {
-                edit_entry(pos)
+                if (!isEditing()) edit_entry(pos)
             }
 
-            // Make text clickable to expand/collapse (text entries only)
-            textView.setOnClickListener {
-                if (!entry.isMedia) {
-                    expandedStates[text] = !isExpanded
-                    notifyDataSetChanged()
+            // ── Secondary buttons: VISIBLE when expanded, GONE otherwise ──
+            secondaryButtons.visibility = if (isExpanded && !isEditingThis) VISIBLE else GONE
+
+            // ── Tab-aware button visibility in secondary row ──
+            val cfg = Config.globalConfig()
+            when (currentTab) {
+                ClipboardTab.HISTORY -> {
+                    // History: pin (if enabled), todo (if enabled), delete
+                    pinButton.visibility = if (cfg.clipboard_pinned_enabled) VISIBLE else GONE
+                    unpinButton.visibility = GONE
+                    todoButton.visibility = if (cfg.clipboard_todo_enabled) VISIBLE else GONE
+                    statusButton.visibility = GONE
+                    tagsButton.visibility = GONE
+                    deleteButton.visibility = VISIBLE
                 }
+                ClipboardTab.PINNED -> {
+                    // Pinned: unpin, todo (if enabled), tags
+                    pinButton.visibility = GONE
+                    unpinButton.visibility = VISIBLE
+                    todoButton.visibility = if (cfg.clipboard_todo_enabled) VISIBLE else GONE
+                    statusButton.visibility = GONE
+                    tagsButton.visibility = VISIBLE
+                    deleteButton.visibility = GONE
+                }
+                ClipboardTab.TODOS -> {
+                    // Todos: status cycle, tags, delete (= remove from todos)
+                    pinButton.visibility = GONE
+                    unpinButton.visibility = GONE
+                    todoButton.visibility = GONE
+                    statusButton.visibility = VISIBLE
+                    tagsButton.visibility = VISIBLE
+                    deleteButton.visibility = VISIBLE
+                    // Status button alpha reflects current state
+                    statusButton.alpha = when (entry.todoStatus) {
+                        TodoEntry.STATUS_ACTIVE -> 1.0f
+                        TodoEntry.STATUS_PLANNED -> 0.7f
+                        TodoEntry.STATUS_COMPLETED -> 0.4f
+                        else -> 1.0f
+                    }
+                }
+            }
+
+            // ── Click handlers ──
+
+            // Tap text to toggle expand/collapse (all entries, not just multi-line)
+            textView.setOnClickListener {
+                expandedStates[text] = !isExpanded
+                notifyDataSetChanged()
+            }
+
+            // Expand chevron also toggles
+            expandButton.setOnClickListener {
+                expandedStates[text] = !isExpanded
+                notifyDataSetChanged()
             }
 
             // Long-press copies entry text to system clipboard
@@ -719,22 +815,33 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 true
             }
 
-            // Show pin/todo buttons only when their respective tabs are enabled
-            val cfg = Config.globalConfig()
-            pinButton.visibility = if (cfg.clipboard_pinned_enabled) VISIBLE else GONE
-            todoButton.visibility = if (cfg.clipboard_todo_enabled) VISIBLE else GONE
+            // Primary row: paste
+            view.findViewById<View>(R.id.clipboard_entry_paste).setOnClickListener {
+                if (!isEditing()) paste_entry(pos)
+            }
 
-            // Guard destructive actions during edit — list changes would disrupt the active edit
+            // Secondary row: all guarded against edit mode
             pinButton.setOnClickListener {
+                if (!isEditing()) pin_entry(pos)
+            }
+            unpinButton.setOnClickListener {
+                // On PINNED tab, pin_entry() already unpins
                 if (!isEditing()) pin_entry(pos)
             }
             todoButton.setOnClickListener {
                 if (!isEditing()) todo_entry(pos)
             }
-            view.findViewById<View>(R.id.clipboard_entry_paste).setOnClickListener {
-                if (!isEditing()) paste_entry(pos)
+            statusButton.setOnClickListener {
+                if (!isEditing()) cycleTodoStatus(entry)
             }
-            view.findViewById<View>(R.id.clipboard_entry_delete).setOnClickListener {
+            tagsButton.setOnClickListener {
+                if (!isEditing()) {
+                    ClipboardTagDialog.show(context, service, currentTab, entry, tagsButton) {
+                        loadDataAsync()
+                    }
+                }
+            }
+            deleteButton.setOnClickListener {
                 if (!isEditing()) delete_entry(pos)
             }
 

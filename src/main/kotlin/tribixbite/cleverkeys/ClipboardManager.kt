@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.DatePicker
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.RadioButton
 import android.widget.Switch
 import android.widget.TextView
@@ -45,10 +46,10 @@ class ClipboardManager(
     private var regexToggle: TextView? = null
     private var clipboardHistoryView: ClipboardHistoryView? = null
 
-    // Tab buttons
-    private var tabHistory: TextView? = null
-    private var tabPinned: TextView? = null
-    private var tabTodos: TextView? = null
+    // Tab buttons (ImageViews with vector drawable icons, tinted by colorLabel)
+    private var tabHistory: ImageView? = null
+    private var tabPinned: ImageView? = null
+    private var tabTodos: ImageView? = null
 
     // Pagination views
     private var paginationBar: View? = null
@@ -125,10 +126,10 @@ class ClipboardManager(
                 onCloseCallback?.invoke()
             }
 
-            // Set up tab buttons
-            tabHistory = clipboardPane?.findViewById(R.id.tab_history)
-            tabPinned = clipboardPane?.findViewById(R.id.tab_pinned)
-            tabTodos = clipboardPane?.findViewById(R.id.tab_todos)
+            // Set up tab buttons (ImageViews with vector icons)
+            tabHistory = clipboardPane?.findViewById<ImageView>(R.id.tab_history)
+            tabPinned = clipboardPane?.findViewById<ImageView>(R.id.tab_pinned)
+            tabTodos = clipboardPane?.findViewById<ImageView>(R.id.tab_todos)
 
             tabHistory?.setOnClickListener { if (!isInEditMode()) switchToTab(ClipboardTab.HISTORY) }
             tabPinned?.setOnClickListener { if (!isInEditMode()) switchToTab(ClipboardTab.PINNED) }

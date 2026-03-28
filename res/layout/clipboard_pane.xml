@@ -17,27 +17,29 @@
       android:paddingEnd="4dp"
       android:background="?attr/colorKey">
 
-    <!-- History tab (default, highlighted) -->
-    <TextView
+    <!-- History tab (default, highlighted) — vector icon replaces emoji -->
+    <ImageView
         android:id="@+id/tab_history"
-        android:text="📋"
         android:layout_width="36dp"
         android:layout_height="36dp"
-        android:gravity="center"
-        android:textSize="20sp"
+        android:src="@drawable/ic_tab_history"
+        android:tint="?attr/colorLabel"
+        android:scaleType="centerInside"
+        android:padding="6dp"
         android:clickable="true"
         android:focusable="true"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="Recent clipboard history"/>
 
     <!-- Pinned tab -->
-    <TextView
+    <ImageView
         android:id="@+id/tab_pinned"
-        android:text="📌"
         android:layout_width="36dp"
         android:layout_height="36dp"
-        android:gravity="center"
-        android:textSize="20sp"
+        android:src="@drawable/ic_tab_pinned"
+        android:tint="?attr/colorLabel"
+        android:scaleType="centerInside"
+        android:padding="6dp"
         android:alpha="0.5"
         android:clickable="true"
         android:focusable="true"
@@ -45,13 +47,14 @@
         android:contentDescription="Pinned items"/>
 
     <!-- Todos tab -->
-    <TextView
+    <ImageView
         android:id="@+id/tab_todos"
-        android:text="✓"
         android:layout_width="36dp"
         android:layout_height="36dp"
-        android:gravity="center"
-        android:textSize="20sp"
+        android:src="@drawable/ic_tab_todos"
+        android:tint="?attr/colorLabel"
+        android:scaleType="centerInside"
+        android:padding="6dp"
         android:alpha="0.5"
         android:clickable="true"
         android:focusable="true"

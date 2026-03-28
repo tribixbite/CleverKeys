@@ -352,6 +352,28 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         return _database.getPinnedEntries()
     }
 
+    // ─── Tag management wrappers (database methods exist, service exposes + notifies) ───
+
+    /** Set tags for a pinned entry. Returns true if updated. */
+    fun setPinnedTags(clip: String, tags: List<String>): Boolean {
+        val updated = _database.setPinnedEntryTags(clip, tags)
+        if (updated) _listener?.on_clipboard_history_change()
+        return updated
+    }
+
+    /** Set tags for a todo entry. Returns true if updated. */
+    fun setTodoTags(clip: String, tags: List<String>): Boolean {
+        val updated = _database.setTodoEntryTags(clip, tags)
+        if (updated) _listener?.on_clipboard_history_change()
+        return updated
+    }
+
+    /** Get all unique tags across pinned entries */
+    fun getAllPinnedTags(): Set<String> = _database.getAllPinnedTags()
+
+    /** Get all unique tags across todo entries */
+    fun getAllTodoTags(): Set<String> = _database.getAllTodoTags()
+
     /** Get statistics about clipboard storage */
     fun getStorageStats(): String {
         val stats = _database.getStorageStats()

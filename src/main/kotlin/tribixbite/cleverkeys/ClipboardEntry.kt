@@ -18,7 +18,11 @@ class ClipboardEntry(
     @JvmField val timestamp: Long, // Unix timestamp in milliseconds
     @JvmField val mimeType: String = MIME_TEXT_PLAIN,
     @JvmField val thumbnailBlob: ByteArray? = null,
-    @JvmField val mediaPath: String? = null
+    @JvmField val mediaPath: String? = null,
+    // Optional fields carried from pinned_entries/todo_entries tables for view rendering.
+    // Defaults preserve backward compat — history entries get emptyList() + null.
+    @JvmField val tags: List<String> = emptyList(),
+    @JvmField val todoStatus: String? = null
 ) {
     /** Whether this entry contains non-text media (image, video, PDF, etc.) */
     val isMedia: Boolean get() = mimeType != MIME_TEXT_PLAIN

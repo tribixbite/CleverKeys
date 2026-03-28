@@ -492,7 +492,7 @@ class ClipboardDatabase private constructor(context: Context) :
         val entries = mutableListOf<ClipboardEntry>()
         val query = """
             SELECT $COLUMN_CONTENT, $COLUMN_PINNED_TIMESTAMP, $COLUMN_MIME_TYPE,
-                   $COLUMN_THUMBNAIL_BLOB, $COLUMN_MEDIA_PATH
+                   $COLUMN_THUMBNAIL_BLOB, $COLUMN_MEDIA_PATH, $COLUMN_TAGS
             FROM $TABLE_PINNED ORDER BY $COLUMN_POSITION ASC
         """.trimIndent()
         try {
@@ -504,7 +504,8 @@ class ClipboardDatabase private constructor(context: Context) :
                             timestamp = cursor.getLong(1),
                             mimeType = cursor.getString(2) ?: ClipboardEntry.MIME_TEXT_PLAIN,
                             thumbnailBlob = cursor.getBlob(3),
-                            mediaPath = cursor.getString(4)
+                            mediaPath = cursor.getString(4),
+                            tags = PinnedEntry.tagsFromJson(cursor.getString(5))
                         ))
                     } while (cursor.moveToNext())
                 }
@@ -761,7 +762,7 @@ class ClipboardDatabase private constructor(context: Context) :
         val entries = mutableListOf<ClipboardEntry>()
         val query = """
             SELECT $COLUMN_CONTENT, $COLUMN_ADDED_TIMESTAMP, $COLUMN_MIME_TYPE,
-                   $COLUMN_THUMBNAIL_BLOB, $COLUMN_MEDIA_PATH
+                   $COLUMN_THUMBNAIL_BLOB, $COLUMN_MEDIA_PATH, $COLUMN_TAGS, $COLUMN_STATUS
             FROM $TABLE_TODO ORDER BY $COLUMN_POSITION ASC
         """.trimIndent()
         try {
@@ -773,7 +774,9 @@ class ClipboardDatabase private constructor(context: Context) :
                             timestamp = cursor.getLong(1),
                             mimeType = cursor.getString(2) ?: ClipboardEntry.MIME_TEXT_PLAIN,
                             thumbnailBlob = cursor.getBlob(3),
-                            mediaPath = cursor.getString(4)
+                            mediaPath = cursor.getString(4),
+                            tags = TodoEntry.tagsFromJson(cursor.getString(5)),
+                            todoStatus = cursor.getString(6) ?: TodoEntry.STATUS_ACTIVE
                         ))
                     } while (cursor.moveToNext())
                 }

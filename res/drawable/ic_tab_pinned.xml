@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Pushpin outline icon — pin/save to pinned tab (matches ic_tab_pinned style) -->
+<!-- Thumbtack/pushpin outline icon for Pinned tab (replaces emoji) -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"

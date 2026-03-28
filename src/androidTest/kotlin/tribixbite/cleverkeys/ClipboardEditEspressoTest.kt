@@ -154,7 +154,7 @@ class ClipboardEditEspressoTest {
             onData(anything())
                 .inAdapterView(withId(R.id.clipboard_history_view))
                 .atPosition(0)
-                .onChildView(withId(R.id.clipboard_entry_normal_buttons))
+                .onChildView(withId(R.id.clipboard_entry_primary_buttons))
                 .check(matches(not(isDisplayed())))
 
         } finally { scenario.close() }
@@ -230,7 +230,7 @@ class ClipboardEditEspressoTest {
             onData(anything())
                 .inAdapterView(withId(R.id.clipboard_history_view))
                 .atPosition(0)
-                .onChildView(withId(R.id.clipboard_entry_normal_buttons))
+                .onChildView(withId(R.id.clipboard_entry_primary_buttons))
                 .check(matches(isDisplayed()))
 
         } finally { scenario.close() }
