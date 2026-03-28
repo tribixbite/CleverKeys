@@ -2,25 +2,29 @@
 
 ## Clipboard UI Overhaul — Icons, Tap-to-Expand, Tags & Status (2026-03-28)
 Replaced emoji tab icons (📋📌✓) with vector drawable ImageViews for consistent theming.
-Restructured entry layout: primary row (paste, edit, expand) + secondary row (tab-specific
-actions revealed on tap-expand). Reduces default button clutter from 6 to 3 buttons.
+Restructured entry layout: vertical button column on right side (primary → secondary → edit
+rows stacked). Reduces default button clutter from 6 to 3 buttons.
 
-**Changes (4c273da)**:
+**Changes (4c273da, b7947f7)**:
 - 6 new icons: ic_tab_history, ic_tab_pinned, ic_tab_todos, ic_tag, ic_unpin, ic_status_cycle
 - 5 existing icons updated to outline style for visual consistency
 - ClipboardEntry gains `tags: List<String>` + `todoStatus: String?` fields
 - getPinnedEntries()/getTodoEntries() now SELECT tags/status columns
 - ClipboardHistoryService wrappers: setPinnedTags, setTodoTags, getAllPinnedTags, getAllTodoTags
-- Tab-aware secondary buttons: History(pin/todo/delete), Pinned(unpin/todo/tags), Todos(status/tags/remove)
+- Tab-aware secondary buttons: History(pin/todo), Pinned(unpin/todo/tags), Todos(done/status/tags)
+- Delete button gated behind edit mode (edit_buttons row 3, under cancel)
+- Done button for todos: one-tap toggle between active↔completed
 - cycleTodoStatus(): active→planned→completed with [plan]/[done] prefix + strikethrough
+- Non-breaking spaces in timestamps prevent date wrapping mid-unit
 - ClipboardTagDialog: AlertDialog with FlowLayout chips, suggestions, new tag input
 - ClipboardManager tab fields: TextView? → ImageView?
 - Test fix: clipboard_entry_normal_buttons → primary_buttons (Espresso)
 
 **Build**: compileDebugKotlin OK, 1041 pure tests pass, release APK builds.
-**Remaining**: Device testing — verify tab icons render, tap-expand reveals secondary row,
-status cycling works on todos tab, tag dialog opens/adds/removes tags, edit mode hides
-secondary row, all tabs show correct button sets.
+**Device tested**: History tab verified — buttons stack vertically on right side, secondary row
+reveals on expand with correct tab-specific icons, no whitespace issues, timestamps don't wrap.
+**Remaining**: Verify pinned tab (unpin/todo/tags), todos tab (done/status/tags), edit mode
+(delete visible under cancel), tag dialog opens/adds/removes tags.
 
 ## Clipboard Regex Search — COMPLETE (2026-03-27)
 VSCode-style `.*` toggle button in search bar. OFF = plain substring match (unchanged),
