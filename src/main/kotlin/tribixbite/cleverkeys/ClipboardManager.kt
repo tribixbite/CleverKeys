@@ -10,7 +10,6 @@ import android.widget.ImageButton
 import android.widget.RadioButton
 import android.widget.Switch
 import android.widget.TextView
-import android.util.TypedValue
 import java.util.Calendar
 
 /**
@@ -65,6 +64,8 @@ class ClipboardManager(
 
     // Search state
     private var searchMode = false
+    // Original search box text color — saved at init to restore after regex error tint
+    private var searchBoxDefaultTextColor: Int = 0
 
     // Edit mode state — delegates to ClipboardHistoryView for actual text manipulation
 
@@ -83,6 +84,8 @@ class ClipboardManager(
 
             // Get search box and history view references
             clipboardSearchBox = clipboardPane?.findViewById(R.id.clipboard_search)
+            // Save the themed text color before any setTextColor() calls overwrite it
+            searchBoxDefaultTextColor = clipboardSearchBox?.currentTextColor ?: 0
             clipboardHistoryView = clipboardPane?.findViewById(R.id.clipboard_history_view)
 
             // Set up search box click listener
@@ -346,14 +349,9 @@ class ClipboardManager(
 
     /** Tint search box text red when current regex pattern is invalid, restore themed color otherwise */
     private fun updateSearchBoxErrorState(hasError: Boolean) {
-        if (hasError) {
-            clipboardSearchBox?.setTextColor(0xFFFF6B6B.toInt())
-        } else {
-            // Resolve ?attr/colorLabel from current theme
-            val tv = TypedValue()
-            context.theme.resolveAttribute(R.attr.colorLabel, tv, true)
-            clipboardSearchBox?.setTextColor(tv.data)
-        }
+        clipboardSearchBox?.setTextColor(
+            if (hasError) 0xFFFF6B6B.toInt() else searchBoxDefaultTextColor
+        )
     }
 
     // ─── Edit mode delegation (parallels search mode) ───
