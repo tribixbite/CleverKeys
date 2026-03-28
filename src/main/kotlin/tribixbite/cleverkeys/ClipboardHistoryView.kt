@@ -588,6 +588,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             val editButton = view.findViewById<View>(R.id.clipboard_entry_edit)
             val primaryButtons = view.findViewById<LinearLayout>(R.id.clipboard_entry_primary_buttons)
             val editButtons = view.findViewById<LinearLayout>(R.id.clipboard_entry_edit_buttons)
+            val deleteRow = view.findViewById<LinearLayout>(R.id.clipboard_entry_delete_row)
             val secondaryButtons = view.findViewById<LinearLayout>(R.id.clipboard_entry_secondary_buttons)
             val thumbnailContainer = view.findViewById<FrameLayout>(R.id.clipboard_entry_thumbnail_container)
             val thumbnailView = view.findViewById<ImageView>(R.id.clipboard_entry_thumbnail)
@@ -612,6 +613,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 editField.visibility = VISIBLE
                 primaryButtons.visibility = GONE
                 editButtons.visibility = VISIBLE
+                deleteRow.visibility = VISIBLE
                 secondaryButtons.visibility = GONE
                 thumbnailContainer.visibility = GONE
                 playBadge.visibility = GONE
@@ -668,6 +670,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             editField.visibility = GONE
             primaryButtons.visibility = VISIBLE
             editButtons.visibility = GONE
+            deleteRow.visibility = GONE
 
             // ── Media thumbnail rendering ──
             if (entry.isMedia) {

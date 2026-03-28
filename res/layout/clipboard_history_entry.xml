@@ -148,7 +148,7 @@
 
     </LinearLayout>
 
-    <!-- Row 3: Edit mode buttons (save + cancel + delete, shown only during edit) -->
+    <!-- Row 3: Edit mode buttons — save + cancel (shown only during edit) -->
     <LinearLayout
         android:id="@+id/clipboard_entry_edit_buttons"
         android:orientation="horizontal"
@@ -165,10 +165,19 @@
       <View
           android:id="@+id/clipboard_entry_cancel"
           style="@style/clipboardEntryButton"
-          android:background="@drawable/ic_clipboard_cancel"
-          android:layout_marginRight="4dp"/>
+          android:background="@drawable/ic_clipboard_cancel"/>
 
-      <!-- Delete: gated behind edit mode (only visible after tapping edit) -->
+    </LinearLayout>
+
+    <!-- Row 4: Delete — own line below save/cancel to prevent accidental presses -->
+    <LinearLayout
+        android:id="@+id/clipboard_entry_delete_row"
+        android:orientation="horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:visibility="gone">
+
       <View
           android:id="@+id/clipboard_entry_delete"
           style="@style/clipboardEntryButton"
