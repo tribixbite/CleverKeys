@@ -355,6 +355,21 @@ class ClipboardManager(
         )
     }
 
+    // ─── Tag dialog mode delegation (highest priority — modal overlay) ───
+
+    /** Whether the tag dialog is open and accepting key input */
+    fun isInTagMode(): Boolean = clipboardHistoryView?.isTagging() ?: false
+
+    /** Insert typed text into the tag dialog's EditText */
+    fun insertToTag(text: String) {
+        clipboardHistoryView?.insertTagText(text)
+    }
+
+    /** Handle backspace in the tag dialog's EditText */
+    fun backspaceFromTag() {
+        clipboardHistoryView?.backspaceTagText()
+    }
+
     // ─── Edit mode delegation (parallels search mode) ───
 
     /** Whether the clipboard view is currently inline-editing an entry */

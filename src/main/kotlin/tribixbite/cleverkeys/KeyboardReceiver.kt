@@ -690,6 +690,19 @@ class KeyboardReceiver(
         clipboardManager.clearSearch()
     }
 
+    // Clipboard tag dialog mode — highest priority modal (checked before edit)
+    override fun isClipboardTagMode(): Boolean {
+        return clipboardManager.isInTagMode()
+    }
+
+    override fun insertToClipboardTag(text: String) {
+        clipboardManager.insertToTag(text)
+    }
+
+    override fun backspaceClipboardTag() {
+        clipboardManager.backspaceFromTag()
+    }
+
     // Clipboard edit mode — delegates to ClipboardManager → ClipboardHistoryView
     override fun isClipboardEditMode(): Boolean {
         return clipboardManager.isInEditMode()

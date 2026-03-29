@@ -36,6 +36,7 @@ object ClipboardTagDialog {
      * @param tab Current tab (determines which table to update)
      * @param entry The entry being tagged
      * @param anchorView View providing windowToken for IME dialog display
+     * @param clipboardView The ClipboardHistoryView for key routing registration
      * @param onTagsChanged Callback invoked after any tag change (triggers data reload)
      */
     fun show(
@@ -44,6 +45,7 @@ object ClipboardTagDialog {
         tab: ClipboardTab,
         entry: ClipboardEntry,
         anchorView: View,
+        clipboardView: ClipboardHistoryView?,
         onTagsChanged: () -> Unit
     ) {
         if (service == null) return
@@ -189,8 +191,30 @@ object ClipboardTagDialog {
 
         refreshChips()
 
+        // Register tag input for key routing — unregister on dismiss
+        clipboardView?.setTagEditText(newTagInput)
+        dialog.setOnDismissListener {
+            clipboardView?.setTagEditText(null)
+        }
+
         // Override positive button to add new tag without dismissing dialog
         dialog.setOnShowListener {
+            // Constrain dialog to fit within clipboard panel (don't obscure keyboard)
+            dialog.window?.let { win ->
+                val panelHeight = anchorView.rootView.height
+                // Cap at 60% of the panel height so keyboard rows remain visible
+                val maxHeight = (panelHeight * 0.6).toInt()
+                win.setLayout(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    maxHeight.coerceAtMost(dp(320))
+                )
+                // Position at top of the IME window so keyboard is below
+                val lp = win.attributes
+                lp.gravity = Gravity.TOP
+                lp.y = dp(4)
+                win.attributes = lp
+            }
+
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                 val newTag = newTagInput.text.toString().trim().lowercase()
                 if (newTag.isEmpty()) {

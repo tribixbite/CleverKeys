@@ -96,8 +96,11 @@ class KeyEventHandler(
             KeyValue.Kind.String -> sendText(key.getString(), isKeyRepeat)
             KeyValue.Kind.Event -> recv.handle_event_key(key.getEvent())
             KeyValue.Kind.Keyevent -> {
+                // Tag dialog mode — highest priority modal overlay
+                if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && recv.isClipboardTagMode()) {
+                    recv.backspaceClipboardTag()
                 // Bug #1 fix: check edit mode BEFORE search mode for backspace too
-                if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && recv.isClipboardEditMode()) {
+                } else if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && recv.isClipboardEditMode()) {
                     recv.backspaceClipboardEdit()
                 // Handle backspace in clipboard search mode
                 } else if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && recv.isClipboardSearchMode()) {
@@ -290,6 +293,12 @@ class KeyEventHandler(
     }
 
     private fun sendText(text: CharSequence, isKeyRepeat: Boolean = false) {
+        // Tag dialog mode — highest priority modal overlay
+        if (recv.isClipboardTagMode()) {
+            recv.insertToClipboardTag(text.toString())
+            return
+        }
+
         // Bug #1 fix: check edit mode BEFORE search mode — edit takes priority.
         // Primary defense is mutual exclusion (entering edit clears search), but
         // checking edit first guards against timing races.
@@ -894,6 +903,10 @@ class KeyEventHandler(
         fun appendToClipboardSearch(text: String) {} // Append text to clipboard search box
         fun backspaceClipboardSearch() {} // Handle backspace in clipboard search
         fun exitClipboardSearchMode() {} // Exit clipboard search mode (clear search box and mode)
+        // Clipboard tag dialog — modal overlay, checked before edit mode
+        fun isClipboardTagMode(): Boolean = false
+        fun insertToClipboardTag(text: String) {}
+        fun backspaceClipboardTag() {}
         // Clipboard edit mode — route typing to inline edit field (same pattern as search)
         fun isClipboardEditMode(): Boolean = false
         fun insertToClipboardEdit(text: String) {}
