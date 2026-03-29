@@ -29,11 +29,24 @@ reveals on expand with correct tab-specific icons, no whitespace issues, timesta
 - Tag input key routing: full chain KeyEventHandler→KeyboardReceiver→ClipboardManager→View
 - Tag mode checked before edit mode in key routing priority
 
+**Inline tag panel conversion (5f15ad5)**:
+- Replaced AlertDialog with inline panel in clipboard_pane.xml (mutually exclusive with entry list)
+- ClipboardTagDialog.kt → ClipboardTagPanel: populate() builds into provided LinearLayout
+- Tag EditText ownership moved from ClipboardHistoryView to ClipboardManager
+- ClipboardHistoryView.onTagPanelRequested callback replaces direct dialog call
+- Header row with truncated entry preview + close button
+- Theme-aware colors via resolveThemeColor (colorLabel, colorSubLabel, colorKey)
+- Panel auto-hides on tab switch or pane close
+
+**Skill files created (.claude/skills/)**:
+- ime-key-routing.md — IME key routing chain pattern, priority order, how to add new modes
+- clipboard-panel-architecture.md — Panel layout, tabs, modes, data flow, common gotchas
+
 **Remaining (manual device verification)**:
 - Pinned tab: unpin/todo/tags buttons on expand
 - Todos tab: done/status/tags buttons on expand
 - Edit mode: delete on own row below save/cancel
-- Tag dialog: fits in panel, typing works, chip add/remove
+- Tag panel: opens inline (no flicker/teleport), typing works, chip add/remove, close restores list
 
 ## Clipboard Regex Search — COMPLETE (2026-03-27)
 VSCode-style `.*` toggle button in search bar. OFF = plain substring match (unchanged),
