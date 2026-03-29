@@ -1,7 +1,7 @@
 package tribixbite.cleverkeys
 
 import android.content.Context
-import android.text.InputType
+import android.util.Log
 import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.view.View
@@ -387,36 +387,37 @@ class ClipboardManager(
 
     /** Insert typed text into the tag panel's EditText */
     fun insertToTag(text: String) {
-        tagEditText?.let { et ->
-            val editable = et.text ?: return
-            val start = et.selectionStart.coerceIn(0, editable.length)
-            val end = et.selectionEnd.coerceIn(start, editable.length)
-            editable.replace(start, end, text)
-        }
+        val et = tagEditText ?: return
+        // Use append() for simplicity — cursor is always at end for tag name input
+        et.append(text)
     }
 
     /** Handle backspace in the tag panel's EditText */
     fun backspaceFromTag() {
-        tagEditText?.let { et ->
-            val editable = et.text ?: return
-            val start = et.selectionStart.coerceIn(0, editable.length)
-            val end = et.selectionEnd.coerceIn(0, editable.length)
-            if (start != end) {
-                editable.delete(minOf(start, end), maxOf(start, end))
-            } else if (start > 0) {
-                editable.delete(start - 1, start)
-            }
+        val et = tagEditText ?: return
+        val editable = et.text ?: return
+        val start = et.selectionStart.coerceIn(0, editable.length)
+        val end = et.selectionEnd.coerceIn(0, editable.length)
+        if (start != end) {
+            editable.delete(minOf(start, end), maxOf(start, end))
+        } else if (start > 0) {
+            editable.delete(start - 1, start)
         }
     }
 
     /**
      * Show the inline tag panel for a clipboard entry.
      * Hides the entry list and populates the tag panel container.
+     * Clears search mode to prevent state overlap (tag has highest routing priority
+     * anyway, but keeping state machine clean avoids confusion).
      */
     private fun showTagPanel(entry: ClipboardEntry, tab: ClipboardTab) {
-        val container = tagPanelContent ?: return
-        val ctx = clipboardPane?.context ?: return
+        val container = tagPanelContent
+        if (container == null) { Log.e(TAG, "showTagPanel: tagPanelContent is NULL"); return }
+        val ctx = clipboardPane?.context
+        if (ctx == null) { Log.e(TAG, "showTagPanel: context is NULL"); return }
         val svc = ClipboardHistoryService.get_service(ctx)
+        if (svc == null) { Log.e(TAG, "showTagPanel: service is NULL"); return }
 
         val editText = ClipboardTagPanel.populate(
             container = container,
@@ -431,15 +432,26 @@ class ClipboardManager(
             onClose = { hideTagPanel() }
         )
 
-        if (editText != null) {
-            tagMode = true
-            tagEditText = editText
-            // Swap visibility: hide entry list, show tag panel
-            contentScroll?.visibility = View.GONE
-            tagPanel?.visibility = View.VISIBLE
-            // Hide pagination while tag panel is shown
-            paginationBar?.visibility = View.GONE
+        if (editText == null) {
+            Log.e(TAG, "showTagPanel: populate() returned null for tab=$tab")
+            return
         }
+
+        // Activate tag mode — must happen before visibility swap
+        tagMode = true
+        tagEditText = editText
+        // Clear search mode to keep state machine clean
+        searchMode = false
+        // Visual feedback: show what's being tagged in the search bar
+        clipboardSearchBox?.apply {
+            text = "Tags: ${entry.content.take(30)}"
+            hint = ""
+        }
+        // Swap visibility: hide entry list, show tag panel
+        contentScroll?.visibility = View.GONE
+        tagPanel?.visibility = View.VISIBLE
+        paginationBar?.visibility = View.GONE
+        Log.d(TAG, "showTagPanel: active for '${entry.content.take(20)}' tab=$tab")
     }
 
     /**
@@ -449,6 +461,12 @@ class ClipboardManager(
         tagMode = false
         tagEditText = null
         tagPanelContent?.removeAllViews()
+        // Restore search bar to default state (pane is still open, so use the "tap to search" hint)
+        clipboardSearchBox?.apply {
+            text = ""
+            hint = "Tap to search..."
+        }
+        updateSearchClearVisibility("")
         // Swap visibility: show entry list, hide tag panel
         tagPanel?.visibility = View.GONE
         contentScroll?.visibility = View.VISIBLE

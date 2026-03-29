@@ -64,10 +64,23 @@ echo "Step 2: Preparing layout resources..."
 # Ensure layout files are copied (gradle task sometimes doesn't run)
 # Fixed in build.gradle - logic removed
 
+# Suspend other tmx sessions to free memory for the build
+if command -v tmx &>/dev/null; then
+    echo "Step 3a: Suspending other sessions to free memory..."
+    tmx suspend-others cleverkeys 2>/dev/null || true
+fi
+# Restore sessions on exit (success or failure)
+trap 'tmx resume-all 2>/dev/null; exit' EXIT INT TERM
+
 echo "Step 3: Cleaning previous builds..."
-./gradlew clean || {
-    echo "Warning: Clean failed, continuing anyway..."
-}
+# Only clean if explicitly requested or first build (incremental builds are much faster)
+if [[ "$2" == "--clean" ]] || [ ! -d "app/build" ]; then
+    ./gradlew clean || {
+        echo "Warning: Clean failed, continuing anyway..."
+    }
+else
+    echo "  Skipping clean (use --clean to force). Incremental build."
+fi
 
 # Re-copy layouts after clean
 # Fixed in build.gradle - logic removed
@@ -108,10 +121,15 @@ fi
 
 echo "This may take a few minutes on first run..."
 
-# Build with Termux-specific configuration (optimized for speed)
+# Build with Termux-specific configuration (optimized for memory + speed)
 # Uses native ARM64 aapt2 from Termux packages (no QEMU emulation needed)
-./gradlew $GRADLE_TASK \
-    -Dorg.gradle.jvmargs="-Xmx2048m -XX:MaxMetaspaceSize=512m" \
+# nice -n 19 + ionice -c 3: lowest CPU/IO priority to avoid competing with system services
+# -Xmx1536m: reduced from 2048m to prevent OOM death spirals on phones
+# workers.max=2: cap parallel gradle workers to limit memory/CPU explosion
+nice -n 19 ionice -c 3 \
+    ./gradlew $GRADLE_TASK \
+    -Dorg.gradle.jvmargs="-Xmx1536m -XX:MaxMetaspaceSize=384m" \
+    -Dorg.gradle.workers.max=2 \
     -Pandroid.aapt2FromMavenOverride="/data/data/com.termux/files/usr/bin/aapt2" \
     --no-daemon \
     --warning-mode=none \
