@@ -23,8 +23,17 @@ rows stacked). Reduces default button clutter from 6 to 3 buttons.
 **Build**: compileDebugKotlin OK, 1041 pure tests pass, release APK builds.
 **Device tested**: History tab verified — buttons stack vertically on right side, secondary row
 reveals on expand with correct tab-specific icons, no whitespace issues, timestamps don't wrap.
-**Remaining**: Verify pinned tab (unpin/todo/tags), todos tab (done/status/tags), edit mode
-(delete visible under cancel), tag dialog opens/adds/removes tags.
+**Additional fixes (9868e4c, b597b0f)**:
+- Delete button isolated on own row (row 4) below save/cancel — prevents accidental presses
+- Tag dialog constrained to 60% of panel height (max 320dp), positioned at top
+- Tag input key routing: full chain KeyEventHandler→KeyboardReceiver→ClipboardManager→View
+- Tag mode checked before edit mode in key routing priority
+
+**Remaining (manual device verification)**:
+- Pinned tab: unpin/todo/tags buttons on expand
+- Todos tab: done/status/tags buttons on expand
+- Edit mode: delete on own row below save/cancel
+- Tag dialog: fits in panel, typing works, chip add/remove
 
 ## Clipboard Regex Search — COMPLETE (2026-03-27)
 VSCode-style `.*` toggle button in search bar. OFF = plain substring match (unchanged),
