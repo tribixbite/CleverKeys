@@ -1,150 +1,200 @@
 package tribixbite.cleverkeys
 
-import android.app.AlertDialog
 import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.text.InputType
+import android.text.TextUtils
 import android.util.TypedValue
-import android.view.ContextThemeWrapper
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.LinearLayout
-import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 
 /**
- * AlertDialog-based tag management for clipboard entries.
+ * Inline tag management panel for clipboard entries.
  *
- * Programmatic layout (no XML needed):
+ * Builds a programmatic layout into a provided [LinearLayout] container within
+ * [clipboard_pane.xml]. This replaces the entry list while active, keeping the
+ * keyboard visible below. Key events are routed via the standard IME key routing
+ * chain (see `ime-key-routing.md` skill).
+ *
+ * Layout:
+ * - Header row: truncated entry preview + Close button
  * - Current tags as removable chips
  * - Existing tags from other entries as suggestion chips (tap to add)
- * - EditText for creating new tags
+ * - EditText for creating new tags + Add button
  *
- * Uses [Utils.show_dialog_on_ime] pattern for proper IME context display.
+ * @see ClipboardManager.showTagPanel for activation
+ * @see ClipboardManager.hideTagPanel for deactivation
  */
-object ClipboardTagDialog {
+object ClipboardTagPanel {
 
     /**
-     * Show the tag management dialog for a clipboard entry.
+     * Populate the inline tag panel with chips and input for an entry.
      *
+     * @param container The LinearLayout to populate (clipboard_tag_panel_content)
      * @param context Application/IME context
      * @param service ClipboardHistoryService for tag operations
      * @param tab Current tab (determines which table to update)
      * @param entry The entry being tagged
-     * @param anchorView View providing windowToken for IME dialog display
-     * @param clipboardView The ClipboardHistoryView for key routing registration
      * @param onTagsChanged Callback invoked after any tag change (triggers data reload)
+     * @param onClose Callback to close the tag panel
+     * @return The EditText for key routing registration, or null if tab doesn't support tags
      */
-    fun show(
+    fun populate(
+        container: LinearLayout,
         context: Context,
         service: ClipboardHistoryService?,
         tab: ClipboardTab,
         entry: ClipboardEntry,
-        anchorView: View,
-        clipboardView: ClipboardHistoryView?,
-        onTagsChanged: () -> Unit
-    ) {
-        if (service == null) return
+        onTagsChanged: () -> Unit,
+        onClose: () -> Unit
+    ): EditText? {
+        if (service == null) return null
         // Only pinned and todos tabs support tags
-        if (tab != ClipboardTab.PINNED && tab != ClipboardTab.TODOS) return
+        if (tab != ClipboardTab.PINNED && tab != ClipboardTab.TODOS) return null
 
-        val themedContext = ContextThemeWrapper(context, android.R.style.Theme_DeviceDefault_Dialog)
+        container.removeAllViews()
+
         val dp = { value: Int ->
-            TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, value.toFloat(), context.resources.displayMetrics).toInt()
+            TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, value.toFloat(),
+                context.resources.displayMetrics
+            ).toInt()
         }
 
-        // ── Build programmatic layout ──
-        val rootLayout = LinearLayout(themedContext).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dp(16), dp(12), dp(16), dp(8))
+        // Resolve theme colors for consistent styling
+        val labelColor = resolveThemeColor(context, R.attr.colorLabel, Color.WHITE)
+        val subLabelColor = resolveThemeColor(context, R.attr.colorSubLabel, 0x99FFFFFF.toInt())
+        val keyBg = resolveThemeColor(context, R.attr.colorKey, 0xFF3A3A3A.toInt())
+
+        // ── Header row: entry preview + Close button ──
+        val headerRow = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply { bottomMargin = dp(8) }
         }
 
-        // Current tags section
+        // "Tags for:" label + truncated entry content
+        val headerText = TextView(context).apply {
+            val preview = entry.content.take(40).replace('\n', ' ')
+            val suffix = if (entry.content.length > 40) "..." else ""
+            text = "Tags: $preview$suffix"
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
+            setTextColor(labelColor)
+            maxLines = 1
+            ellipsize = TextUtils.TruncateAt.END
+            layoutParams = LinearLayout.LayoutParams(
+                0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f
+            )
+        }
+        headerRow.addView(headerText)
+
+        // Close button (X)
+        val closeButton = ImageButton(context).apply {
+            setImageResource(android.R.drawable.ic_menu_close_clear_cancel)
+            setColorFilter(labelColor)
+            setBackgroundResource(android.R.drawable.list_selector_background)
+            layoutParams = LinearLayout.LayoutParams(dp(32), dp(32))
+            contentDescription = "Close tag panel"
+            setOnClickListener { onClose() }
+        }
+        headerRow.addView(closeButton)
+        container.addView(headerRow)
+
+        // ── Current tags section ──
         val currentTags = entry.tags.toMutableList()
 
-        val currentLabel = TextView(themedContext).apply {
+        val currentLabel = TextView(context).apply {
             text = "Current tags"
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
-            setTextColor(0x99FFFFFF.toInt())
+            setTextColor(subLabelColor)
             setPadding(0, 0, 0, dp(4))
         }
-        rootLayout.addView(currentLabel)
+        container.addView(currentLabel)
 
         // Flow layout for current tag chips (removable)
-        val currentChipsContainer = FlowLayout(themedContext, dp(4), dp(4))
-        rootLayout.addView(currentChipsContainer)
+        val currentChipsContainer = FlowLayout(context, dp(4), dp(4))
+        container.addView(currentChipsContainer)
 
         // Divider
-        val divider1 = View(themedContext).apply {
+        val divider1 = View(context).apply {
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, dp(1)
             ).apply { topMargin = dp(8); bottomMargin = dp(8) }
             setBackgroundColor(0x33FFFFFF)
         }
-        rootLayout.addView(divider1)
+        container.addView(divider1)
 
-        // Suggestion section (existing tags not on this entry)
-        val suggestionLabel = TextView(themedContext).apply {
+        // ── Suggestion section (existing tags not on this entry) ──
+        val suggestionLabel = TextView(context).apply {
             text = "Add from existing"
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
-            setTextColor(0x99FFFFFF.toInt())
+            setTextColor(subLabelColor)
             setPadding(0, 0, 0, dp(4))
         }
-        rootLayout.addView(suggestionLabel)
+        container.addView(suggestionLabel)
 
-        val suggestionChipsContainer = FlowLayout(themedContext, dp(4), dp(4))
-        rootLayout.addView(suggestionChipsContainer)
+        val suggestionChipsContainer = FlowLayout(context, dp(4), dp(4))
+        container.addView(suggestionChipsContainer)
 
         // Divider
-        val divider2 = View(themedContext).apply {
+        val divider2 = View(context).apply {
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, dp(1)
             ).apply { topMargin = dp(8); bottomMargin = dp(8) }
             setBackgroundColor(0x33FFFFFF)
         }
-        rootLayout.addView(divider2)
+        container.addView(divider2)
 
-        // New tag input
-        val inputRow = LinearLayout(themedContext).apply {
+        // ── New tag input row ──
+        val inputRow = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-        val newTagInput = EditText(themedContext).apply {
+
+        val newTagInput = EditText(context).apply {
             hint = "New tag..."
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
-            setTextColor(Color.WHITE)
-            setHintTextColor(0x66FFFFFF)
+            setTextColor(labelColor)
+            setHintTextColor(subLabelColor)
             setSingleLine(true)
-            // inputType=none to prevent Android soft keyboard — we ARE the keyboard
+            // inputType=none prevents Android soft keyboard — we ARE the keyboard
             inputType = InputType.TYPE_NULL
-            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-        }
-        inputRow.addView(newTagInput)
-        rootLayout.addView(inputRow)
-
-        // Wrap in ScrollView for long tag lists
-        val scrollView = ScrollView(themedContext).apply {
-            addView(rootLayout)
-            layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+            layoutParams = LinearLayout.LayoutParams(
+                0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f
             )
         }
+        inputRow.addView(newTagInput)
 
-        // ── Build dialog ──
-        val dialog = AlertDialog.Builder(themedContext)
-            .setTitle("Manage Tags")
-            .setView(scrollView)
-            .setPositiveButton("Add") { _, _ -> /* handled below */ }
-            .setNegativeButton("Close", null)
-            .create()
+        // Add button
+        val addButton = TextView(context).apply {
+            text = "Add"
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
+            setTextColor(labelColor)
+            setPadding(dp(12), dp(6), dp(12), dp(6))
+            gravity = Gravity.CENTER
+            background = GradientDrawable().apply {
+                cornerRadius = dp(8).toFloat()
+                setColor(keyBg)
+            }
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply { marginStart = dp(8) }
+        }
+        inputRow.addView(addButton)
+        container.addView(inputRow)
 
         // ── Helper to refresh chip displays ──
         fun refreshChips() {
-            // Get all existing tags from the appropriate table
             val allTags = when (tab) {
                 ClipboardTab.PINNED -> service.getAllPinnedTags()
                 ClipboardTab.TODOS -> service.getAllTodoTags()
@@ -159,12 +209,15 @@ object ClipboardTagDialog {
             } else {
                 currentLabel.text = "Current tags"
                 for (tag in currentTags) {
-                    currentChipsContainer.addView(createChip(themedContext, dp, tag, isRemovable = true) {
-                        currentTags.remove(tag)
-                        saveTags(service, tab, entry.content, currentTags)
-                        onTagsChanged()
-                        refreshChips()
-                    })
+                    currentChipsContainer.addView(
+                        createChip(context, dp, tag, labelColor, subLabelColor, keyBg,
+                            isRemovable = true) {
+                            currentTags.remove(tag)
+                            saveTags(service, tab, entry.content, currentTags)
+                            onTagsChanged()
+                            refreshChips()
+                        }
+                    )
                 }
             }
 
@@ -179,61 +232,50 @@ object ClipboardTagDialog {
                 suggestionChipsContainer.visibility = View.VISIBLE
                 divider2.visibility = View.VISIBLE
                 for (tag in unusedTags.sorted()) {
-                    suggestionChipsContainer.addView(createChip(themedContext, dp, tag, isRemovable = false) {
-                        currentTags.add(tag)
-                        saveTags(service, tab, entry.content, currentTags)
-                        onTagsChanged()
-                        refreshChips()
-                    })
+                    suggestionChipsContainer.addView(
+                        createChip(context, dp, tag, labelColor, subLabelColor, keyBg,
+                            isRemovable = false) {
+                            currentTags.add(tag)
+                            saveTags(service, tab, entry.content, currentTags)
+                            onTagsChanged()
+                            refreshChips()
+                        }
+                    )
                 }
             }
         }
 
         refreshChips()
 
-        // Register tag input for key routing — unregister on dismiss
-        clipboardView?.setTagEditText(newTagInput)
-        dialog.setOnDismissListener {
-            clipboardView?.setTagEditText(null)
+        // Add button click handler
+        addButton.setOnClickListener {
+            val newTag = newTagInput.text.toString().trim().lowercase()
+            if (newTag.isEmpty()) {
+                Toast.makeText(context, "Enter a tag name", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            if (currentTags.contains(newTag)) {
+                Toast.makeText(context, "Tag already exists", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            currentTags.add(newTag)
+            newTagInput.text.clear()
+            saveTags(service, tab, entry.content, currentTags)
+            onTagsChanged()
+            refreshChips()
         }
 
-        // Override positive button to add new tag without dismissing dialog
-        dialog.setOnShowListener {
-            // Constrain dialog to fit within clipboard panel (don't obscure keyboard)
-            dialog.window?.let { win ->
-                val panelHeight = anchorView.rootView.height
-                // Cap at 60% of the panel height so keyboard rows remain visible
-                val maxHeight = (panelHeight * 0.6).toInt()
-                win.setLayout(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    maxHeight.coerceAtMost(dp(320))
-                )
-                // Position at top of the IME window so keyboard is below
-                val lp = win.attributes
-                lp.gravity = Gravity.TOP
-                lp.y = dp(4)
-                win.attributes = lp
-            }
+        return newTagInput
+    }
 
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                val newTag = newTagInput.text.toString().trim().lowercase()
-                if (newTag.isEmpty()) {
-                    Toast.makeText(context, "Enter a tag name", Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
-                }
-                if (currentTags.contains(newTag)) {
-                    Toast.makeText(context, "Tag already exists", Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
-                }
-                currentTags.add(newTag)
-                newTagInput.text.clear()
-                saveTags(service, tab, entry.content, currentTags)
-                onTagsChanged()
-                refreshChips()
-            }
+    /** Resolve a theme attribute color, falling back to [fallback] if unavailable */
+    private fun resolveThemeColor(context: Context, attr: Int, fallback: Int): Int {
+        val tv = TypedValue()
+        return if (context.theme.resolveAttribute(attr, tv, true)) {
+            tv.data
+        } else {
+            fallback
         }
-
-        Utils.show_dialog_on_ime(dialog, anchorView.windowToken)
     }
 
     /** Persist tag changes to the correct table via service */
@@ -255,6 +297,9 @@ object ClipboardTagDialog {
         context: Context,
         dp: (Int) -> Int,
         text: String,
+        labelColor: Int,
+        subLabelColor: Int,
+        keyBg: Int,
         isRemovable: Boolean,
         onClick: () -> Unit
     ): TextView {
@@ -262,16 +307,16 @@ object ClipboardTagDialog {
             val displayText = if (isRemovable) "$text  \u00D7" else "+ $text"
             this.text = displayText
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
-            setTextColor(if (isRemovable) Color.WHITE else 0xAAFFFFFF.toInt())
+            setTextColor(if (isRemovable) labelColor else subLabelColor)
             setPadding(dp(8), dp(4), dp(8), dp(4))
             // Rounded background
             background = GradientDrawable().apply {
                 cornerRadius = dp(12).toFloat()
                 if (isRemovable) {
-                    // Resolve ?attr/colorKey — fall back to a dark gray
-                    setColor(0xFF3A3A3A.toInt())
+                    setColor(keyBg)
                 } else {
-                    setColor(0xFF2A2A2A.toInt())
+                    // Slightly darker for suggestion chips
+                    setColor(adjustAlpha(keyBg, 0.7f))
                 }
             }
             setOnClickListener { onClick() }
@@ -284,11 +329,20 @@ object ClipboardTagDialog {
         }
     }
 
+    /** Darken a color by multiplying RGB channels */
+    private fun adjustAlpha(color: Int, factor: Float): Int {
+        val a = Color.alpha(color)
+        val r = (Color.red(color) * factor).toInt().coerceIn(0, 255)
+        val g = (Color.green(color) * factor).toInt().coerceIn(0, 255)
+        val b = (Color.blue(color) * factor).toInt().coerceIn(0, 255)
+        return Color.argb(a, r, g, b)
+    }
+
     /**
      * Simple flow layout that wraps children horizontally.
      * Used for tag chips that may overflow a single line.
      */
-    private class FlowLayout(
+    class FlowLayout(
         context: Context,
         private val hSpacing: Int,
         private val vSpacing: Int

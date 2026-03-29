@@ -77,10 +77,9 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     var onEditModeEntered: (() -> Unit)? = null
     var onEditModeExited: (() -> Unit)? = null
 
-    // ─── Tag dialog edit state ───
-    // Reference to the tag dialog's EditText — non-null while tag dialog is open.
-    // Key routing checks isTagging() before isEditing(), so tag input takes priority.
-    private var tagEditText: EditText? = null
+    // ─── Tag panel callback ───
+    // Invoked when user taps tags button — ClipboardManager shows inline tag panel
+    var onTagPanelRequested: ((entry: ClipboardEntry, tab: ClipboardTab) -> Unit)? = null
 
     // Coroutine scope tied to window attach/detach lifecycle (IME has no ViewLifecycleOwner)
     private var viewScope: CoroutineScope? = null
@@ -474,40 +473,6 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         editingEditText?.selectAll()
     }
 
-    // ─── Tag dialog key routing ───
-
-    /** Whether the tag dialog is open and accepting key input */
-    fun isTagging(): Boolean = tagEditText != null
-
-    /** Set the tag dialog's EditText for key routing (called by ClipboardTagDialog) */
-    fun setTagEditText(editText: EditText?) {
-        tagEditText = editText
-    }
-
-    /** Insert text at cursor position in the tag dialog's EditText */
-    fun insertTagText(text: String) {
-        tagEditText?.let { et ->
-            val editable = et.text ?: return
-            val start = et.selectionStart.coerceIn(0, editable.length)
-            val end = et.selectionEnd.coerceIn(start, editable.length)
-            editable.replace(start, end, text)
-        }
-    }
-
-    /** Handle backspace in the tag dialog's EditText */
-    fun backspaceTagText() {
-        tagEditText?.let { et ->
-            val editable = et.text ?: return
-            val start = et.selectionStart.coerceIn(0, editable.length)
-            val end = et.selectionEnd.coerceIn(0, editable.length)
-            if (start != end) {
-                editable.delete(minOf(start, end), maxOf(start, end))
-            } else if (start > 0) {
-                editable.delete(start - 1, start)
-            }
-        }
-    }
-
     /** Send the specified entry to the editor (position in current page). */
     fun paste_entry(pos: Int) {
         val entry = paginatedHistory[pos]
@@ -571,6 +536,22 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             history = entries
             applyFilter()
         }
+    }
+
+    /**
+     * Reload data without updating the UI — used by tag panel to keep backing data fresh
+     * so the entry list is current when the panel closes.
+     */
+    fun reloadInBackground() {
+        loadDataAsync()
+    }
+
+    /**
+     * Force a full data reload and UI update — used by ClipboardManager when tag panel closes.
+     * Public wrapper for loadDataAsync().
+     */
+    fun loadDataForce() {
+        loadDataAsync()
     }
 
     /** Date filter methods */
@@ -895,9 +876,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             }
             tagsButton.setOnClickListener {
                 if (!isEditing()) {
-                    ClipboardTagDialog.show(context, service, currentTab, entry, tagsButton, this@ClipboardHistoryView) {
-                        loadDataAsync()
-                    }
+                    onTagPanelRequested?.invoke(entry, currentTab)
                 }
             }
 

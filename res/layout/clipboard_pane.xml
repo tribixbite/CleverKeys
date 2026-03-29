@@ -143,8 +143,9 @@
       android:layout_height="1dp"
       android:background="?attr/clipboard_divider_color"/>
 
-  <!-- Content area (switches based on tab) -->
+  <!-- Content area: entry list (hidden when tag panel is active) -->
   <ScrollView
+      android:id="@+id/clipboard_content_scroll"
       android:layout_width="match_parent"
       android:layout_height="0dp"
       android:layout_weight="1">
@@ -156,6 +157,26 @@
         android:layout_height="wrap_content"
         android:divider="?attr/clipboard_divider_color"
         android:dividerHeight="?attr/clipboard_divider_height"/>
+
+  </ScrollView>
+
+  <!-- Inline tag panel: replaces entry list when managing tags for an entry.
+       Mutually exclusive with clipboard_content_scroll — only one VISIBLE at a time.
+       Populated programmatically by ClipboardTagPanel. -->
+  <ScrollView
+      android:id="@+id/clipboard_tag_panel"
+      android:layout_width="match_parent"
+      android:layout_height="0dp"
+      android:layout_weight="1"
+      android:visibility="gone"
+      android:background="?attr/colorKeyboard">
+
+    <LinearLayout
+        android:id="@+id/clipboard_tag_panel_content"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="12dp"/>
 
   </ScrollView>
 
