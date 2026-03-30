@@ -111,6 +111,19 @@ class KeyEventReceiverBridge(
         receiver?.exitClipboardSearchMode()
     }
 
+    // Clipboard tag mode delegation — highest priority modal overlay
+    override fun isClipboardTagMode(): Boolean {
+        return receiver?.isClipboardTagMode() ?: false
+    }
+
+    override fun insertToClipboardTag(text: String) {
+        receiver?.insertToClipboardTag(text)
+    }
+
+    override fun backspaceClipboardTag() {
+        receiver?.backspaceClipboardTag()
+    }
+
     // Clipboard edit mode delegation — same pattern as search
     override fun isClipboardEditMode(): Boolean {
         return receiver?.isClipboardEditMode() ?: false
