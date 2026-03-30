@@ -3,6 +3,7 @@ package tribixbite.cleverkeys
 import android.content.Context
 import android.util.Log
 import android.view.ContextThemeWrapper
+import android.widget.Toast
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -144,9 +145,9 @@ class ClipboardManager(
             tabPinned = clipboardPane?.findViewById<ImageView>(R.id.tab_pinned)
             tabTodos = clipboardPane?.findViewById<ImageView>(R.id.tab_todos)
 
-            tabHistory?.setOnClickListener { if (!isInEditMode()) switchToTab(ClipboardTab.HISTORY) }
-            tabPinned?.setOnClickListener { if (!isInEditMode()) switchToTab(ClipboardTab.PINNED) }
-            tabTodos?.setOnClickListener { if (!isInEditMode()) switchToTab(ClipboardTab.TODOS) }
+            tabHistory?.setOnClickListener { if (!isInEditMode() && !tagMode) switchToTab(ClipboardTab.HISTORY) }
+            tabPinned?.setOnClickListener { if (!isInEditMode() && !tagMode) switchToTab(ClipboardTab.PINNED) }
+            tabTodos?.setOnClickListener { if (!isInEditMode() && !tagMode) switchToTab(ClipboardTab.TODOS) }
 
             // Apply tab visibility based on config toggles
             applyTabVisibility()
@@ -177,6 +178,8 @@ class ClipboardManager(
             // scroll the edited entry off-screen).
             clipboardHistoryView?.onEditModeEntered = {
                 searchMode = false
+                // Mutual exclusion: close tag panel when entering edit mode
+                if (tagMode) hideTagPanel()
                 setEditModeLockUI(true)
             }
             clipboardHistoryView?.onEditModeExited = {
@@ -185,6 +188,8 @@ class ClipboardManager(
 
             // Tag panel: ClipboardHistoryView requests tag panel via callback
             clipboardHistoryView?.onTagPanelRequested = { entry, tab ->
+                // TODO: remove diagnostic toast after tag panel input is verified working
+                Toast.makeText(context, "Tag callback: tab=$tab", Toast.LENGTH_SHORT).show()
                 showTagPanel(entry, tab)
             }
 
@@ -389,11 +394,16 @@ class ClipboardManager(
      *  Uses setText+setSelection pattern — EditText.append() and Editable.replace()
      *  don't reliably work when the IME owns the view (same as GIF/emoji search). */
     fun insertToTag(text: String) {
-        val et = tagEditText ?: return
+        val et = tagEditText ?: run {
+            Log.w(TAG, "insertToTag: tagEditText is NULL (tagMode=$tagMode)")
+            return
+        }
         val current = et.text?.toString() ?: ""
         val newText = current + text
         et.setText(newText)
         et.setSelection(newText.length)
+        // TODO: remove diagnostic log after tag panel input is verified working
+        Log.d(TAG, "insertToTag: '$text' → '$newText'")
     }
 
     /** Handle backspace in the tag panel's EditText.
@@ -415,6 +425,10 @@ class ClipboardManager(
      * anyway, but keeping state machine clean avoids confusion).
      */
     private fun showTagPanel(entry: ClipboardEntry, tab: ClipboardTab) {
+        // Ensure mutual exclusion with other modes before activating tag panel
+        exitEditMode()
+        clearSearch()
+
         val container = tagPanelContent
         if (container == null) { Log.e(TAG, "showTagPanel: tagPanelContent is NULL"); return }
         val ctx = clipboardPane?.context
@@ -443,17 +457,19 @@ class ClipboardManager(
         // Activate tag mode — must happen before visibility swap
         tagMode = true
         tagEditText = editText
-        // Clear search mode to keep state machine clean
-        searchMode = false
+
         // Visual feedback: show what's being tagged in the search bar
-        clipboardSearchBox?.apply {
-            text = "Tags: ${entry.content.take(30)}"
-            hint = ""
+        clipboardSearchBox?.let {
+            it.text = "Tags: ${entry.content.take(30)}"
+            it.hint = ""
         }
         // Swap visibility: hide entry list, show tag panel
         contentScroll?.visibility = View.GONE
         tagPanel?.visibility = View.VISIBLE
         paginationBar?.visibility = View.GONE
+
+        // Lock UI controls to prevent conflicting actions while tagging
+        setTagModeLockUI(true)
         Log.d(TAG, "showTagPanel: active for '${entry.content.take(20)}' tab=$tab")
     }
 
@@ -464,6 +480,10 @@ class ClipboardManager(
         tagMode = false
         tagEditText = null
         tagPanelContent?.removeAllViews()
+
+        // Unlock UI controls first
+        setTagModeLockUI(false)
+
         // Restore search bar to default state (pane is still open, so use the "tap to search" hint)
         clipboardSearchBox?.apply {
             text = ""
@@ -505,6 +525,31 @@ class ClipboardManager(
         } else {
             updateTabHighlighting()
         }
+    }
+
+    /**
+     * Dims or restores non-tag UI controls when the tag panel is open.
+     * Provides visual feedback and prevents conflicting actions like switching tabs.
+     * Parallels setEditModeLockUI() for the tag mode state.
+     */
+    private fun setTagModeLockUI(locked: Boolean) {
+        val dimAlpha = 0.3f
+
+        // Hide clear/regex buttons — they're irrelevant during tagging
+        clipboardSearchClear?.visibility = if (locked) View.GONE else View.VISIBLE
+        regexToggle?.visibility = if (locked) View.GONE else View.VISIBLE
+
+        // Dim tabs to indicate they are disabled
+        if (locked) {
+            tabHistory?.alpha = dimAlpha
+            tabPinned?.alpha = dimAlpha
+            tabTodos?.alpha = dimAlpha
+        } else {
+            // On unlock, restore proper active/inactive highlighting
+            updateTabHighlighting()
+        }
+        // Sync clear button visibility with current search state
+        updateSearchClearVisibility(clipboardSearchBox?.text?.toString() ?: "")
     }
 
     /** Insert typed text at cursor position in the editing entry's EditText */
