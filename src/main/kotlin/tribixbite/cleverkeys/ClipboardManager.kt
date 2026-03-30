@@ -385,23 +385,26 @@ class ClipboardManager(
     /** Whether the inline tag panel is open and accepting key input */
     fun isInTagMode(): Boolean = tagMode
 
-    /** Insert typed text into the tag panel's EditText */
+    /** Insert typed text into the tag panel's EditText.
+     *  Uses setText+setSelection pattern — EditText.append() and Editable.replace()
+     *  don't reliably work when the IME owns the view (same as GIF/emoji search). */
     fun insertToTag(text: String) {
         val et = tagEditText ?: return
-        // Use append() for simplicity — cursor is always at end for tag name input
-        et.append(text)
+        val current = et.text?.toString() ?: ""
+        val newText = current + text
+        et.setText(newText)
+        et.setSelection(newText.length)
     }
 
-    /** Handle backspace in the tag panel's EditText */
+    /** Handle backspace in the tag panel's EditText.
+     *  Uses setText+setSelection pattern (same as GIF/emoji search backspace). */
     fun backspaceFromTag() {
         val et = tagEditText ?: return
-        val editable = et.text ?: return
-        val start = et.selectionStart.coerceIn(0, editable.length)
-        val end = et.selectionEnd.coerceIn(0, editable.length)
-        if (start != end) {
-            editable.delete(minOf(start, end), maxOf(start, end))
-        } else if (start > 0) {
-            editable.delete(start - 1, start)
+        val current = et.text?.toString() ?: ""
+        if (current.isNotEmpty()) {
+            val newText = current.dropLast(1)
+            et.setText(newText)
+            et.setSelection(newText.length)
         }
     }
 
