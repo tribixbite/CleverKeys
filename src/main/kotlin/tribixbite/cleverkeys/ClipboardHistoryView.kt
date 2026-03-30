@@ -57,6 +57,15 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     private var dateFilterBefore = false // true = before date, false = after date
     private var dateFilterTimestamp = 0L
 
+    // Tag filter — entry must have at least one (OR) or all (AND) selected tags. Empty = show all.
+    private var tagFilterSelected: Set<String> = emptySet()
+    private var tagFilterMatchAll = false  // false=OR (any tag), true=AND (all tags)
+
+    // Todo status filter — entry status must be in enabled set. Defaults: active only.
+    private var statusFilterActive = true
+    private var statusFilterPlanned = false
+    private var statusFilterCompleted = false
+
     // Pagination state
     private var currentPage = 0
     private var onPaginationChangeListener: ((needsPagination: Boolean, currentPage: Int, totalPages: Int) -> Unit)? = null
@@ -138,6 +147,13 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         cancelEdit()
         currentTab = tab
         expandedStates.clear()  // Reset expanded states when switching tabs
+        // Reset tag/status filters on tab switch — tags are tab-specific
+        // NOTE: searchFilter, regexMode, dateFilter* are NOT reset — they persist across tabs
+        tagFilterSelected = emptySet()
+        tagFilterMatchAll = false
+        statusFilterActive = true
+        statusFilterPlanned = false
+        statusFilterCompleted = false
         loadDataAsync()
     }
 
@@ -212,11 +228,40 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 }
             }
 
+            // Tag filter (PINNED/TODOS tabs — when tags are selected)
+            if (tagFilterSelected.isNotEmpty()) {
+                if (entry.tags.isEmpty()) {
+                    // Entries with no tags don't match any tag filter
+                    return@filter false
+                }
+                val matches = if (tagFilterMatchAll) {
+                    tagFilterSelected.all { it in entry.tags }  // AND: must have all
+                } else {
+                    entry.tags.any { it in tagFilterSelected }  // OR: any match
+                }
+                if (!matches) return@filter false
+            }
+
+            // Status filter (TODOS tab only — filter by active/planned/completed)
+            if (currentTab == ClipboardTab.TODOS) {
+                val status = entry.todoStatus ?: TodoEntry.STATUS_ACTIVE
+                val passes = when (status) {
+                    TodoEntry.STATUS_ACTIVE -> statusFilterActive
+                    TodoEntry.STATUS_PLANNED -> statusFilterPlanned
+                    TodoEntry.STATUS_COMPLETED -> statusFilterCompleted
+                    else -> statusFilterActive  // unknown status treated as active
+                }
+                if (!passes) return@filter false
+            }
+
             true
         }
 
-        // If no filters are active, show all history
-        filteredHistory = if (searchFilter.isEmpty() && !dateFilterEnabled) {
+        // If no filters are active, show all history (skip filter pass optimization)
+        val hasStatusFilter = currentTab == ClipboardTab.TODOS &&
+            !(statusFilterActive && !statusFilterPlanned && !statusFilterCompleted)
+        filteredHistory = if (searchFilter.isEmpty() && !dateFilterEnabled &&
+            tagFilterSelected.isEmpty() && !hasStatusFilter) {
             history
         } else {
             filtered
@@ -573,6 +618,61 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         dateFilterTimestamp = 0
         dateFilterBefore = false
         applyFilter()
+    }
+
+    // ─── Tag filter methods ───
+
+    /** Set which tags to filter by and whether to match all (AND) or any (OR) */
+    fun setTagFilter(selected: Set<String>, matchAll: Boolean) {
+        tagFilterSelected = selected
+        tagFilterMatchAll = matchAll
+        applyFilter()
+    }
+
+    /** Currently selected tag filter set */
+    fun getTagFilter(): Set<String> = tagFilterSelected
+
+    /** Whether tag filter uses AND (true) or OR (false) semantics */
+    fun isTagFilterMatchAll(): Boolean = tagFilterMatchAll
+
+    // ─── Status filter methods (TODOS tab) ───
+
+    /** Set which todo statuses are visible */
+    fun setStatusFilter(active: Boolean, planned: Boolean, completed: Boolean) {
+        statusFilterActive = active
+        statusFilterPlanned = planned
+        statusFilterCompleted = completed
+        applyFilter()
+    }
+
+    /** Current status filter state: (active, planned, completed) */
+    fun getStatusFilter(): Triple<Boolean, Boolean, Boolean> =
+        Triple(statusFilterActive, statusFilterPlanned, statusFilterCompleted)
+
+    // ─── Combined filter operations ───
+
+    /** Clear all filters (date + tags + status) and reset to defaults */
+    fun clearAllFilters() {
+        dateFilterEnabled = false
+        dateFilterTimestamp = 0
+        dateFilterBefore = false
+        tagFilterSelected = emptySet()
+        tagFilterMatchAll = false
+        statusFilterActive = true
+        statusFilterPlanned = false
+        statusFilterCompleted = false
+        applyFilter()
+    }
+
+    /** Whether any filter is active (non-default state) — used for filter icon tinting */
+    fun hasActiveFilters(): Boolean {
+        if (dateFilterEnabled) return true
+        if (tagFilterSelected.isNotEmpty()) return true
+        // Status filter is "active" when not at defaults (only Active checked)
+        if (currentTab == ClipboardTab.TODOS) {
+            if (!statusFilterActive || statusFilterPlanned || statusFilterCompleted) return true
+        }
+        return false
     }
 
     /**

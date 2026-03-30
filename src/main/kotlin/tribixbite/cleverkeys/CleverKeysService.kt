@@ -900,7 +900,7 @@ class CleverKeysService : InputMethodService(),
         return _config
     }
 
-    // v1.32.349: showDateFilterDialog() method removed - functionality moved to ClipboardManager class
+    // v1.32.349: showDateFilterDialog() moved to ClipboardManager (now showFilterDialog())
 
     // SuggestionBar.OnSuggestionSelectedListener implementation
     /**

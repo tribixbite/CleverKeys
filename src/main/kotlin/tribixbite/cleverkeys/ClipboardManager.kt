@@ -1,12 +1,18 @@
 package tribixbite.cleverkeys
 
 import android.content.Context
+import android.graphics.Color
+import android.graphics.PorterDuff
 import android.util.Log
+import android.util.TypedValue
 import android.view.ContextThemeWrapper
 import android.widget.Toast
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.CheckBox
+import android.widget.CompoundButton
 import android.widget.DatePicker
 import android.widget.EditText
 import android.widget.ImageButton
@@ -60,6 +66,9 @@ class ClipboardManager(
     private var pagePrev: TextView? = null
     private var pageInfo: TextView? = null
     private var pageNext: TextView? = null
+
+    // Filter button (calendar icon — tinted when filters active)
+    private var filterButton: ImageView? = null
 
     // Content area views (mutually exclusive: content scroll vs tag panel)
     private var contentScroll: View? = null
@@ -130,9 +139,10 @@ class ClipboardManager(
                 updateSearchBoxErrorState(historyView.hasRegexError())
             }
 
-            // Set up date filter icon
-            clipboardPane?.findViewById<View>(R.id.clipboard_date_filter)?.setOnClickListener { v ->
-                if (!isInEditMode()) showDateFilterDialog(v)
+            // Set up filter icon (opens unified filter dialog)
+            filterButton = clipboardPane?.findViewById<ImageView>(R.id.clipboard_date_filter)
+            filterButton?.setOnClickListener { v ->
+                if (!isInEditMode()) showFilterDialog(v)
             }
 
             // Set up close button
@@ -228,6 +238,7 @@ class ClipboardManager(
         currentTab = tab
         clipboardHistoryView?.setTab(tab)
         updateTabHighlighting()
+        updateFilterIconTint()
         // Search persists across tabs — user can clear via X button
     }
 
@@ -353,6 +364,7 @@ class ClipboardManager(
         currentTab = ClipboardTab.HISTORY
         clipboardHistoryView?.setTab(ClipboardTab.HISTORY)
         updateTabHighlighting()
+        updateFilterIconTint()
     }
 
     /**
@@ -583,97 +595,202 @@ class ClipboardManager(
     }
 
     /**
-     * Shows the date filter dialog for filtering clipboard entries by date.
+     * Shows the unified filter dialog — date + status (TODOS) + tags (PINNED/TODOS).
+     * Sections are shown/hidden based on current tab.
      *
      * @param anchorView View to anchor the dialog window token
      */
-    fun showDateFilterDialog(anchorView: View) {
-        // Use dark theme for dialog to match keyboard theme
+    fun showFilterDialog(anchorView: View) {
         val themedContext = ContextThemeWrapper(context, android.R.style.Theme_DeviceDefault_Dialog)
+        val historyView = clipboardHistoryView ?: return
+        val tab = currentTab
 
         val dialogView = LayoutInflater.from(themedContext).inflate(
-            R.layout.clipboard_date_filter_dialog, null
+            R.layout.clipboard_filter_dialog, null
         )
 
+        // ─── Date section (existing logic, unchanged) ───
         val enabledSwitch = dialogView.findViewById<Switch>(R.id.date_filter_enabled)
-        val modeGroup = dialogView.findViewById<android.widget.RadioGroup>(R.id.date_filter_mode)
         val beforeRadio = dialogView.findViewById<RadioButton>(R.id.date_filter_before)
         val afterRadio = dialogView.findViewById<RadioButton>(R.id.date_filter_after)
         val datePicker = dialogView.findViewById<DatePicker>(R.id.date_picker)
         val modeContainer = dialogView.findViewById<View>(R.id.date_filter_mode_container)
         val pickerContainer = dialogView.findViewById<View>(R.id.date_picker_container)
 
-        // Get current filter state from ClipboardHistoryView
-        val isFilterEnabled = clipboardHistoryView?.isDateFilterEnabled() ?: false
-        val isBeforeMode = clipboardHistoryView?.isDateFilterBefore() ?: false
+        val isFilterEnabled = historyView.isDateFilterEnabled()
+        val isBeforeMode = historyView.isDateFilterBefore()
 
         enabledSwitch.isChecked = isFilterEnabled
-        if (isBeforeMode) {
-            beforeRadio.isChecked = true
-        } else {
-            afterRadio.isChecked = true
-        }
-
-        // Set initial visibility based on enabled state
+        if (isBeforeMode) beforeRadio.isChecked = true else afterRadio.isChecked = true
         modeContainer.visibility = if (isFilterEnabled) View.VISIBLE else View.GONE
         pickerContainer.visibility = if (isFilterEnabled) View.VISIBLE else View.GONE
 
-        // Toggle visibility when enable switch changes
         enabledSwitch.setOnCheckedChangeListener { _, isChecked ->
             modeContainer.visibility = if (isChecked) View.VISIBLE else View.GONE
             pickerContainer.visibility = if (isChecked) View.VISIBLE else View.GONE
         }
 
-        // Get current filter date or default to today
         val cal = Calendar.getInstance()
-        clipboardHistoryView?.let { historyView ->
-            if (historyView.getDateFilterTimestamp() > 0) {
-                cal.timeInMillis = historyView.getDateFilterTimestamp()
+        if (historyView.getDateFilterTimestamp() > 0) {
+            cal.timeInMillis = historyView.getDateFilterTimestamp()
+        }
+        datePicker.updateDate(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH))
+
+        // ─── Status section (TODOS tab only) ───
+        val statusSection = dialogView.findViewById<View>(R.id.filter_status_section)
+        val statusDivider = dialogView.findViewById<View>(R.id.filter_divider_status)
+        val cbActive = dialogView.findViewById<CheckBox>(R.id.filter_status_active)
+        val cbPlanned = dialogView.findViewById<CheckBox>(R.id.filter_status_planned)
+        val cbCompleted = dialogView.findViewById<CheckBox>(R.id.filter_status_completed)
+        val statusHint = dialogView.findViewById<TextView>(R.id.filter_status_hint)
+
+        val showStatus = tab == ClipboardTab.TODOS
+        statusSection.visibility = if (showStatus) View.VISIBLE else View.GONE
+        statusDivider.visibility = if (showStatus) View.VISIBLE else View.GONE
+
+        if (showStatus) {
+            val (activeOn, plannedOn, completedOn) = historyView.getStatusFilter()
+            cbActive.isChecked = activeOn
+            cbPlanned.isChecked = plannedOn
+            cbCompleted.isChecked = completedOn
+        }
+
+        // ─── Tags section (PINNED + TODOS tabs) ───
+        val tagsSection = dialogView.findViewById<View>(R.id.filter_tags_section)
+        val tagsDivider = dialogView.findViewById<View>(R.id.filter_divider_tags)
+        val tagContainer = dialogView.findViewById<LinearLayout>(R.id.filter_tags_container)
+        val matchAllToggle = dialogView.findViewById<Switch>(R.id.filter_tags_match_all)
+        val matchLabel = dialogView.findViewById<View>(R.id.filter_tags_match_label)
+        val emptyHint = dialogView.findViewById<TextView>(R.id.filter_tags_empty_hint)
+
+        val showTags = tab != ClipboardTab.HISTORY
+        tagsSection.visibility = if (showTags) View.VISIBLE else View.GONE
+        tagsDivider.visibility = if (showTags) View.VISIBLE else View.GONE
+
+        // Collect tag checkboxes for reading on Apply
+        val tagCheckboxes = mutableListOf<CheckBox>()
+
+        if (showTags) {
+            val svc = ClipboardHistoryService.get_service(context)
+            val allTags = when (tab) {
+                ClipboardTab.PINNED -> svc?.getAllPinnedTags() ?: emptySet()
+                ClipboardTab.TODOS -> svc?.getAllTodoTags() ?: emptySet()
+                else -> emptySet()
+            }
+            val selectedTags = historyView.getTagFilter()
+            matchAllToggle.isChecked = historyView.isTagFilterMatchAll()
+
+            if (allTags.isEmpty()) {
+                // No tags exist yet — show hint, hide match toggle
+                emptyHint.visibility = View.VISIBLE
+                matchAllToggle.visibility = View.GONE
+                matchLabel.visibility = View.GONE
+            } else {
+                emptyHint.visibility = View.GONE
+                for (tag in allTags.sorted()) {
+                    val cb = CheckBox(themedContext).apply {
+                        text = tag
+                        isChecked = tag in selectedTags
+                        setTextColor(resolveThemeColor(themedContext,
+                            android.R.attr.textColorPrimary, Color.WHITE))
+                    }
+                    tagContainer.addView(cb)
+                    tagCheckboxes.add(cb)
+                }
             }
         }
-        datePicker.updateDate(
-            cal.get(Calendar.YEAR),
-            cal.get(Calendar.MONTH),
-            cal.get(Calendar.DAY_OF_MONTH)
-        )
 
+        // ─── Build dialog ───
         val dialog = android.app.AlertDialog.Builder(themedContext)
-            .setTitle("Filter by Date")
+            .setTitle("Filters")
             .setView(dialogView)
             .create()
 
-        // Set up button click handlers
+        val applyButton = dialogView.findViewById<Button>(R.id.date_filter_apply)
+
+        // ─── Status guard: disable Apply when all status checkboxes unchecked (TODOS tab) ───
+        if (showStatus) {
+            val statusWatcher = CompoundButton.OnCheckedChangeListener { _, _ ->
+                val anyChecked = cbActive.isChecked || cbPlanned.isChecked || cbCompleted.isChecked
+                applyButton.isEnabled = anyChecked
+                statusHint.visibility = if (anyChecked) View.GONE else View.VISIBLE
+            }
+            cbActive.setOnCheckedChangeListener(statusWatcher)
+            cbPlanned.setOnCheckedChangeListener(statusWatcher)
+            cbCompleted.setOnCheckedChangeListener(statusWatcher)
+        }
+
+        // ─── Clear button — clears ALL filters ───
         dialogView.findViewById<View>(R.id.date_filter_clear).setOnClickListener {
-            clipboardHistoryView?.clearDateFilter()
+            historyView.clearAllFilters()
+            updateFilterIconTint()
             dialog.dismiss()
         }
 
+        // ─── Cancel ───
         dialogView.findViewById<View>(R.id.date_filter_cancel).setOnClickListener {
             dialog.dismiss()
         }
 
-        dialogView.findViewById<View>(R.id.date_filter_apply).setOnClickListener {
-            clipboardHistoryView?.let { historyView ->
-                val enabled = enabledSwitch.isChecked
-                val isBefore = beforeRadio.isChecked
-
-                if (enabled) {
-                    // Get selected date at start of day (00:00:00)
-                    val selectedCal = Calendar.getInstance().apply {
-                        set(datePicker.year, datePicker.month, datePicker.dayOfMonth, 0, 0, 0)
-                        set(Calendar.MILLISECOND, 0)
-                    }
-                    val timestamp = selectedCal.timeInMillis
-
-                    historyView.setDateFilter(timestamp, isBefore)
-                } else {
-                    historyView.clearDateFilter()
+        // ─── Apply button — reads all sections ───
+        applyButton.setOnClickListener {
+            // Date filter
+            val enabled = enabledSwitch.isChecked
+            val isBefore = beforeRadio.isChecked
+            if (enabled) {
+                val selectedCal = Calendar.getInstance().apply {
+                    set(datePicker.year, datePicker.month, datePicker.dayOfMonth, 0, 0, 0)
+                    set(Calendar.MILLISECOND, 0)
                 }
+                historyView.setDateFilter(selectedCal.timeInMillis, isBefore)
+            } else {
+                historyView.clearDateFilter()
             }
+
+            // Status filter (TODOS only)
+            if (showStatus) {
+                historyView.setStatusFilter(
+                    cbActive.isChecked, cbPlanned.isChecked, cbCompleted.isChecked
+                )
+            }
+
+            // Tag filter (PINNED/TODOS)
+            if (showTags) {
+                val selected = tagCheckboxes
+                    .filter { it.isChecked }
+                    .map { it.text.toString() }
+                    .toSet()
+                historyView.setTagFilter(selected, matchAllToggle.isChecked)
+            }
+
+            updateFilterIconTint()
             dialog.dismiss()
         }
 
         Utils.show_dialog_on_ime(dialog, anchorView.windowToken)
+    }
+
+    /**
+     * Resolves a theme attribute to a color value with a fallback default.
+     */
+    private fun resolveThemeColor(ctx: Context, attr: Int, defaultColor: Int): Int {
+        val tv = TypedValue()
+        return if (ctx.theme.resolveAttribute(attr, tv, true)) tv.data else defaultColor
+    }
+
+    /**
+     * Updates the filter button icon tint based on active filter state.
+     * Tinted accent when filters active, normal label color otherwise.
+     */
+    private fun updateFilterIconTint() {
+        val hasFilters = clipboardHistoryView?.hasActiveFilters() ?: false
+        val ctx = clipboardPane?.context ?: return
+        val activeColor = resolveThemeColor(ctx, android.R.attr.colorAccent, 0xFF4FC3F7.toInt())
+        val normalColor = resolveThemeColor(ctx, android.R.attr.textColorPrimary, Color.WHITE)
+        filterButton?.setColorFilter(
+            if (hasFilters) activeColor else normalColor,
+            PorterDuff.Mode.SRC_IN
+        )
     }
 
     /**
@@ -715,6 +832,7 @@ class ClipboardManager(
         clipboardSearchClear = null
         regexToggle = null
         clipboardHistoryView = null
+        filterButton = null
         tabHistory = null
         tabPinned = null
         tabTodos = null
