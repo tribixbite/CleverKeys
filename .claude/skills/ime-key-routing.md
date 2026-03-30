@@ -30,9 +30,15 @@ Backspace follows the **same priority chain** in `key_down()` for `KEYCODE_DEL`.
 |-------|------|------|
 | **Router** | `KeyEventHandler.kt` | Checks mode flags, calls appropriate insert/backspace methods |
 | **Interface** | `KeyEventHandler.IReceiver` | Defines mode check + text manipulation methods with default no-ops |
-| **Bridge** | `KeyboardReceiver.kt` | Implements `IReceiver`, delegates to managers |
+| **Delegation Bridge** | `KeyEventReceiverBridge.kt` | Proxies `IReceiver` calls to `KeyboardReceiver` — **KeyEventHandler's `recv` is THIS, not KeyboardReceiver** |
+| **Receiver** | `KeyboardReceiver.kt` | Full `IReceiver` impl, delegates to managers |
 | **Manager** | `ClipboardManager.kt` | Owns clipboard mode state, delegates to views |
 | **View** | `ClipboardHistoryView.kt` | Owns the actual EditText/TextView and performs text manipulation |
+
+> **⚠ CRITICAL**: `KeyEventHandler.recv` → `KeyEventReceiverBridge` → `KeyboardReceiver` → Manager.
+> If you add methods to `IReceiver` + `KeyboardReceiver` but forget `KeyEventReceiverBridge`,
+> calls silently fall through to `IReceiver` defaults (false/no-op). No crash, no log.
+> This bug has occurred TWICE: emoji search (#41 v7) and tag mode.
 
 ## How to Add a New Input Mode
 
@@ -82,7 +88,28 @@ if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && recv.isMyCustomMode()) {
 }
 ```
 
-### Step 3: Implement in KeyboardReceiver.kt
+### Step 3: Add delegation in KeyEventReceiverBridge.kt
+
+**This step is mandatory. Skipping it = silent no-op (the bug that hit emoji search and tag mode).**
+
+The bridge proxies all `IReceiver` calls from `KeyEventHandler` to `KeyboardReceiver`. New methods need explicit delegation:
+
+```kotlin
+// In KeyEventReceiverBridge.kt — add alongside existing mode delegations
+override fun isMyCustomMode(): Boolean {
+    return receiver?.isMyCustomMode() ?: false
+}
+
+override fun insertToMyCustomMode(text: String) {
+    receiver?.insertToMyCustomMode(text)
+}
+
+override fun backspaceMyCustomMode() {
+    receiver?.backspaceMyCustomMode()
+}
+```
+
+### Step 4: Implement in KeyboardReceiver.kt
 
 ```kotlin
 override fun isMyCustomMode(): Boolean {
@@ -98,7 +125,7 @@ override fun backspaceMyCustomMode() {
 }
 ```
 
-### Step 4: Add manager methods (ClipboardManager.kt)
+### Step 5: Add manager methods (ClipboardManager.kt)
 
 ```kotlin
 // Mode state
@@ -107,30 +134,29 @@ private var myCustomEditText: EditText? = null  // or TextView
 
 fun isInMyCustomMode(): Boolean = myCustomMode
 
+// ⚠ ALWAYS use setText + setSelection — NOT editable.replace() or EditText.append().
+// Those methods don't reliably work when the IME owns the view.
+// See KeyboardReceiver.kt:752 comment and GIF/emoji search implementations.
 fun insertToMyCustom(text: String) {
-    myCustomEditText?.let { et ->
-        val editable = et.text ?: return
-        val start = et.selectionStart.coerceIn(0, editable.length)
-        val end = et.selectionEnd.coerceIn(start, editable.length)
-        editable.replace(start, end, text)
-    }
+    val et = myCustomEditText ?: return
+    val current = et.text?.toString() ?: ""
+    val newText = current + text
+    et.setText(newText)
+    et.setSelection(newText.length)
 }
 
 fun backspaceFromMyCustom() {
-    myCustomEditText?.let { et ->
-        val editable = et.text ?: return
-        val start = et.selectionStart.coerceIn(0, editable.length)
-        val end = et.selectionEnd.coerceIn(0, editable.length)
-        if (start != end) {
-            editable.delete(minOf(start, end), maxOf(start, end))
-        } else if (start > 0) {
-            editable.delete(start - 1, start)
-        }
+    val et = myCustomEditText ?: return
+    val current = et.text?.toString() ?: ""
+    if (current.isNotEmpty()) {
+        val newText = current.dropLast(1)
+        et.setText(newText)
+        et.setSelection(newText.length)
     }
 }
 ```
 
-### Step 5: EditText/TextView setup
+### Step 6: EditText/TextView setup
 
 **Critical**: Set `inputType = InputType.TYPE_NULL` on any EditText within the IME:
 
@@ -195,6 +221,8 @@ These views live inside the IME's own view tree, so:
 
 ## Common Gotchas
 
+- **KeyEventReceiverBridge is the #1 cause of "input goes to app instead of panel"**. When adding new `IReceiver` methods, you must add delegation in THREE files: `IReceiver` (interface), `KeyEventReceiverBridge` (delegation), `KeyboardReceiver` (implementation). Missing the bridge = silent no-op with no crash or log. This has happened twice.
+- **setText + setSelection, NEVER editable.replace() or append()**: `EditText.append()` and `Editable.replace()` don't reliably work when the IME owns the view. Always use `et.setText(newText); et.setSelection(newText.length)`.
 - **inputType = TYPE_NULL**: Always set this on EditText within IME views. Without it, Android will try to show its own soft keyboard (which IS the current keyboard — infinite recursion).
 - **Cursor clamping**: Always use `.coerceIn(0, editable.length)` when accessing `selectionStart`/`selectionEnd`. View recycling can leave stale cursor positions.
 - **View recycling**: In `BaseAdapter.getView()`, use content-identity matching (not position) for tracking which entry is being edited. List positions shift when entries are added/deleted.
