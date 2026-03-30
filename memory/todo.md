@@ -42,17 +42,22 @@ reveals on expand with correct tab-specific icons, no whitespace issues, timesta
 - ime-key-routing.md — IME key routing chain pattern, priority order, how to add new modes
 - clipboard-panel-architecture.md — Panel layout, tabs, modes, data flow, common gotchas
 
-**Tag panel input fix (90d95a6)**:
-- Root cause: EditText.append() and Editable.replace() unreliable in IME-owned views
-- Fix: switched to setText()+setSelection() pattern (matches GIF/emoji search)
-- Also: clear searchMode on tag panel open, visual feedback in search bar ("Tags: [preview]")
-- Also: restore search bar hint on tag panel close
+**Tag panel input fixes (90d95a6, 946ce9b, a3e5693)**:
+- Fix 1: setText()+setSelection() pattern instead of append()/editable.replace() (IME-owned views)
+- Fix 2: State machine mutual exclusion — exitEditMode()+clearSearch() on tag open, tag guards on
+  tab clicks, edit mode callback closes tag panel, setTagModeLockUI() dims tabs during tagging
+- Fix 3 (ROOT CAUSE): KeyEventReceiverBridge.kt was missing tag mode delegation methods
+  (isClipboardTagMode, insertToClipboardTag, backspaceClipboardTag). KeyEventHandler.recv is the
+  bridge, not KeyboardReceiver directly — calls fell through to IReceiver defaults (false/no-op).
+  Same bug class as emoji search (#41 v7). Skill updated: .claude/skills/ime-key-routing.md
 
 **Remaining (manual device verification)**:
-- Pinned tab: unpin/todo/tags buttons on expand
-- Todos tab: done/status/tags buttons on expand
-- Edit mode: delete on own row below save/cancel
-- Tag panel: opens inline (no flicker/teleport), typing works, chip add/remove, close restores list
+- [ ] Tag panel: typing works into tag EditText (input captured, not sent to app)
+- [ ] Tag panel: chip add/remove, close restores list
+- [ ] Pinned tab: unpin/todo/tags buttons on expand
+- [ ] Todos tab: done/status/tags buttons on expand
+- [ ] Edit mode: delete on own row below save/cancel
+- [ ] Remove diagnostic Toast+Log after tag input confirmed (ClipboardManager.kt:191,405)
 
 ## Clipboard Regex Search — COMPLETE (2026-03-27)
 VSCode-style `.*` toggle button in search bar. OFF = plain substring match (unchanged),
