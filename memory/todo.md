@@ -42,6 +42,12 @@ reveals on expand with correct tab-specific icons, no whitespace issues, timesta
 - ime-key-routing.md — IME key routing chain pattern, priority order, how to add new modes
 - clipboard-panel-architecture.md — Panel layout, tabs, modes, data flow, common gotchas
 
+**Tag panel input fix (90d95a6)**:
+- Root cause: EditText.append() and Editable.replace() unreliable in IME-owned views
+- Fix: switched to setText()+setSelection() pattern (matches GIF/emoji search)
+- Also: clear searchMode on tag panel open, visual feedback in search bar ("Tags: [preview]")
+- Also: restore search bar hint on tag panel close
+
 **Remaining (manual device verification)**:
 - Pinned tab: unpin/todo/tags buttons on expand
 - Todos tab: done/status/tags buttons on expand
