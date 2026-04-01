@@ -1152,21 +1152,23 @@ class ClipboardDatabase private constructor(context: Context) :
             var activeCount = 0; var pinnedCount = 0; var todoCount = 0
             var mediaSkipped = 0
 
-            // Export history entries (v4: includes mime_type, media_path)
+            // Export history entries (v4: includes content_hash, mime_type, media_path)
             readableDatabase.rawQuery("""
                 SELECT $COLUMN_CONTENT, $COLUMN_TIMESTAMP, $COLUMN_EXPIRY_TIMESTAMP,
-                       $COLUMN_MIME_TYPE, $COLUMN_MEDIA_PATH
+                       $COLUMN_MIME_TYPE, $COLUMN_MEDIA_PATH, $COLUMN_CONTENT_HASH
                 FROM $TABLE_CLIPBOARD ORDER BY $COLUMN_TIMESTAMP DESC
             """.trimIndent(), null).use { cursor ->
                 while (cursor.moveToNext()) {
                     val mimeType = cursor.getString(3) ?: ClipboardEntry.MIME_TEXT_PLAIN
                     val mediaPath = cursor.getString(4)
+                    val contentHash = cursor.getString(5)
                     val isMedia = mimeType != ClipboardEntry.MIME_TEXT_PLAIN
                     if (textOnly && isMedia) { mediaSkipped++; continue }
                     activeArray.put(JSONObject().apply {
                         put("content", cursor.getString(0))
                         put("timestamp", cursor.getLong(1))
                         put("expiry_timestamp", cursor.getLong(2))
+                        if (contentHash != null) put("content_hash", contentHash)
                         if (isMedia) {
                             put("mime_type", mimeType)
                             if (mediaPath != null) put("media_path", mediaPath)
@@ -1304,25 +1306,38 @@ class ClipboardDatabase private constructor(context: Context) :
         return intArrayOf(activeAdded, pinnedAdded, todoAdded, duplicatesSkipped)
     }
 
-    /** Import history entries into clipboard_entries */
+    /** Import history entries into clipboard_entries.
+     *  Uses exported content_hash when available (preserves SHA-256 for media entries).
+     *  Falls back to String.hashCode() for text entries or old exports without hash. */
     private fun importHistoryEntries(db: SQLiteDatabase, entries: JSONArray, freshExpiry: Long): Pair<Int, Int> {
         var added = 0; var skipped = 0
         for (i in 0 until entries.length()) {
             val entry = entries.getJSONObject(i)
             val content = entry.getString("content")
-            val contentHash = content.hashCode().toString()
-            val isDuplicate = db.rawQuery(
-                "SELECT $COLUMN_ID FROM $TABLE_CLIPBOARD WHERE $COLUMN_CONTENT_HASH = ? AND $COLUMN_CONTENT = ?",
-                arrayOf(contentHash, content)
-            ).use { it.moveToFirst() }
+            val mimeType = entry.optString("mime_type", ClipboardEntry.MIME_TEXT_PLAIN)
+            val isMedia = mimeType != ClipboardEntry.MIME_TEXT_PLAIN
+            // Prefer exported hash (preserves SHA-256 for media); fall back to hashCode for text
+            val contentHash = entry.optString("content_hash", "").ifEmpty { content.hashCode().toString() }
+
+            // Media dedup: hash-only (SHA-256 is collision-free)
+            // Text dedup: hash+content (hashCode can collide)
+            val isDuplicate = if (isMedia) {
+                db.rawQuery(
+                    "SELECT $COLUMN_ID FROM $TABLE_CLIPBOARD WHERE $COLUMN_CONTENT_HASH = ?",
+                    arrayOf(contentHash)
+                ).use { it.moveToFirst() }
+            } else {
+                db.rawQuery(
+                    "SELECT $COLUMN_ID FROM $TABLE_CLIPBOARD WHERE $COLUMN_CONTENT_HASH = ? AND $COLUMN_CONTENT = ?",
+                    arrayOf(contentHash, content)
+                ).use { it.moveToFirst() }
+            }
             if (isDuplicate) { skipped++; continue }
             val values = ContentValues().apply {
                 put(COLUMN_CONTENT, content)
                 put(COLUMN_TIMESTAMP, entry.getLong("timestamp"))
                 put(COLUMN_EXPIRY_TIMESTAMP, freshExpiry)
                 put(COLUMN_CONTENT_HASH, contentHash)
-                // v4 media fields (optional — text-only entries won't have these)
-                val mimeType = entry.optString("mime_type", ClipboardEntry.MIME_TEXT_PLAIN)
                 put(COLUMN_MIME_TYPE, mimeType)
                 val mediaPath = if (entry.has("media_path")) entry.getString("media_path") else null
                 if (mediaPath != null) put(COLUMN_MEDIA_PATH, mediaPath)
@@ -1346,12 +1361,23 @@ class ClipboardDatabase private constructor(context: Context) :
         for (i in 0 until entries.length()) {
             val entry = entries.getJSONObject(i)
             val content = entry.getString("content")
-            val contentHash = content.hashCode().toString()
-            // Duplicate check in pinned_entries
-            val isDuplicate = db.rawQuery(
-                "SELECT $COLUMN_ID FROM $TABLE_PINNED WHERE $COLUMN_CONTENT_HASH = ? AND $COLUMN_CONTENT = ?",
-                arrayOf(contentHash, content)
-            ).use { it.moveToFirst() }
+            val mimeType = entry.optString("mime_type", ClipboardEntry.MIME_TEXT_PLAIN)
+            val isMedia = mimeType != ClipboardEntry.MIME_TEXT_PLAIN
+            // Prefer exported hash (preserves SHA-256 for media); fall back to hashCode for text
+            val contentHash = entry.optString("content_hash", "").ifEmpty { content.hashCode().toString() }
+
+            // Duplicate check: media uses hash-only, text uses hash+content
+            val isDuplicate = if (isMedia) {
+                db.rawQuery(
+                    "SELECT $COLUMN_ID FROM $TABLE_PINNED WHERE $COLUMN_CONTENT_HASH = ?",
+                    arrayOf(contentHash)
+                ).use { it.moveToFirst() }
+            } else {
+                db.rawQuery(
+                    "SELECT $COLUMN_ID FROM $TABLE_PINNED WHERE $COLUMN_CONTENT_HASH = ? AND $COLUMN_CONTENT = ?",
+                    arrayOf(contentHash, content)
+                ).use { it.moveToFirst() }
+            }
             if (isDuplicate) { skipped++; continue }
 
             val createdTs = entry.optLong("created_timestamp", entry.getLong("timestamp"))
@@ -1366,8 +1392,6 @@ class ClipboardDatabase private constructor(context: Context) :
                 put(COLUMN_PINNED_TIMESTAMP, pinnedTs)
                 put(COLUMN_POSITION, position)
                 put(COLUMN_TAGS, tags)
-                // v4 media fields
-                val mimeType = entry.optString("mime_type", ClipboardEntry.MIME_TEXT_PLAIN)
                 put(COLUMN_MIME_TYPE, mimeType)
                 val mediaPath = if (entry.has("media_path")) entry.getString("media_path") else null
                 if (mediaPath != null) put(COLUMN_MEDIA_PATH, mediaPath)
@@ -1376,10 +1400,17 @@ class ClipboardDatabase private constructor(context: Context) :
 
             // COPY semantics: also insert into history if not already there
             if (exportVersion < 3) {
-                val inHistory = db.rawQuery(
-                    "SELECT $COLUMN_ID FROM $TABLE_CLIPBOARD WHERE $COLUMN_CONTENT_HASH = ? AND $COLUMN_CONTENT = ?",
-                    arrayOf(contentHash, content)
-                ).use { it.moveToFirst() }
+                val inHistory = if (isMedia) {
+                    db.rawQuery(
+                        "SELECT $COLUMN_ID FROM $TABLE_CLIPBOARD WHERE $COLUMN_CONTENT_HASH = ?",
+                        arrayOf(contentHash)
+                    ).use { it.moveToFirst() }
+                } else {
+                    db.rawQuery(
+                        "SELECT $COLUMN_ID FROM $TABLE_CLIPBOARD WHERE $COLUMN_CONTENT_HASH = ? AND $COLUMN_CONTENT = ?",
+                        arrayOf(contentHash, content)
+                    ).use { it.moveToFirst() }
+                }
                 if (!inHistory) {
                     val historyValues = ContentValues().apply {
                         put(COLUMN_CONTENT, content)
@@ -1408,12 +1439,23 @@ class ClipboardDatabase private constructor(context: Context) :
         for (i in 0 until entries.length()) {
             val entry = entries.getJSONObject(i)
             val content = entry.getString("content")
-            val contentHash = content.hashCode().toString()
-            // Duplicate check in todo_entries
-            val isDuplicate = db.rawQuery(
-                "SELECT $COLUMN_ID FROM $TABLE_TODO WHERE $COLUMN_CONTENT_HASH = ? AND $COLUMN_CONTENT = ?",
-                arrayOf(contentHash, content)
-            ).use { it.moveToFirst() }
+            val mimeType = entry.optString("mime_type", ClipboardEntry.MIME_TEXT_PLAIN)
+            val isMedia = mimeType != ClipboardEntry.MIME_TEXT_PLAIN
+            // Prefer exported hash (preserves SHA-256 for media); fall back to hashCode for text
+            val contentHash = entry.optString("content_hash", "").ifEmpty { content.hashCode().toString() }
+
+            // Duplicate check: media uses hash-only, text uses hash+content
+            val isDuplicate = if (isMedia) {
+                db.rawQuery(
+                    "SELECT $COLUMN_ID FROM $TABLE_TODO WHERE $COLUMN_CONTENT_HASH = ?",
+                    arrayOf(contentHash)
+                ).use { it.moveToFirst() }
+            } else {
+                db.rawQuery(
+                    "SELECT $COLUMN_ID FROM $TABLE_TODO WHERE $COLUMN_CONTENT_HASH = ? AND $COLUMN_CONTENT = ?",
+                    arrayOf(contentHash, content)
+                ).use { it.moveToFirst() }
+            }
             if (isDuplicate) { skipped++; continue }
 
             val createdTs = entry.optLong("created_timestamp", entry.getLong("timestamp"))
@@ -1430,8 +1472,6 @@ class ClipboardDatabase private constructor(context: Context) :
                 put(COLUMN_POSITION, position)
                 put(COLUMN_STATUS, status)
                 put(COLUMN_TAGS, tags)
-                // v4 media fields
-                val mimeType = entry.optString("mime_type", ClipboardEntry.MIME_TEXT_PLAIN)
                 put(COLUMN_MIME_TYPE, mimeType)
                 val mediaPath = if (entry.has("media_path")) entry.getString("media_path") else null
                 if (mediaPath != null) put(COLUMN_MEDIA_PATH, mediaPath)
@@ -1440,10 +1480,17 @@ class ClipboardDatabase private constructor(context: Context) :
 
             // COPY semantics: also insert into history if not already there
             if (exportVersion < 3) {
-                val inHistory = db.rawQuery(
-                    "SELECT $COLUMN_ID FROM $TABLE_CLIPBOARD WHERE $COLUMN_CONTENT_HASH = ? AND $COLUMN_CONTENT = ?",
-                    arrayOf(contentHash, content)
-                ).use { it.moveToFirst() }
+                val inHistory = if (isMedia) {
+                    db.rawQuery(
+                        "SELECT $COLUMN_ID FROM $TABLE_CLIPBOARD WHERE $COLUMN_CONTENT_HASH = ?",
+                        arrayOf(contentHash)
+                    ).use { it.moveToFirst() }
+                } else {
+                    db.rawQuery(
+                        "SELECT $COLUMN_ID FROM $TABLE_CLIPBOARD WHERE $COLUMN_CONTENT_HASH = ? AND $COLUMN_CONTENT = ?",
+                        arrayOf(contentHash, content)
+                    ).use { it.moveToFirst() }
+                }
                 if (!inHistory) {
                     val historyValues = ContentValues().apply {
                         put(COLUMN_CONTENT, content)

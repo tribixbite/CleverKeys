@@ -167,7 +167,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var vibrationEnabled by mutableStateOf(false)
     private var debugEnabled by mutableStateOf(false)
     private var clipboardHistoryEnabled by mutableStateOf(true)
-    private var clipboardHistoryLimit by mutableStateOf(6)
+    private var clipboardHistoryLimit by mutableStateOf(Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK)
     private var clipboardHistoryDuration by mutableStateOf(-1)  // Minutes; -1 = never expire
     private var clipboardPaneHeightPercent by mutableStateOf(30)
     private var clipboardMaxItemSizeKb by mutableStateOf(500)
