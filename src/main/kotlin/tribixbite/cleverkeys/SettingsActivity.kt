@@ -168,6 +168,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var debugEnabled by mutableStateOf(false)
     private var clipboardHistoryEnabled by mutableStateOf(true)
     private var clipboardHistoryLimit by mutableStateOf(6)
+    private var clipboardHistoryDuration by mutableStateOf(-1)  // Minutes; -1 = never expire
     private var clipboardPaneHeightPercent by mutableStateOf(30)
     private var clipboardMaxItemSizeKb by mutableStateOf(500)
     private var clipboardLimitType by mutableStateOf("count") // "count" or "size"
@@ -564,6 +565,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             // ==================== CLIPBOARD ====================
             SearchableSetting("Clipboard History", listOf("copy", "paste", "buffer", "clipboard"), "Clipboard", expandSection = { clipboardSectionExpanded = true }, settingId = "clipboard"),
             SearchableSetting("Clipboard History Limit", listOf("history", "limit", "items", "count"), "Clipboard", expandSection = { clipboardSectionExpanded = true }, settingId = "clipboard_limit"),
+            SearchableSetting("Entry Duration", listOf("duration", "expire", "expiry", "time", "ttl", "retention"), "Clipboard", expandSection = { clipboardSectionExpanded = true }, settingId = "clipboard_duration"),
             SearchableSetting("Clipboard Size Limit", listOf("size", "limit", "megabytes"), "Clipboard", expandSection = { clipboardSectionExpanded = true }, settingId = "clipboard_size"),
             SearchableSetting("Clipboard Max Item Size", listOf("item", "size", "maximum"), "Clipboard", expandSection = { clipboardSectionExpanded = true }, settingId = "clipboard_item_size"),
             SearchableSetting("Clipboard Pane Height", listOf("pane", "height", "size"), "Clipboard", expandSection = { clipboardSectionExpanded = true }, settingId = "clipboard_height"),
@@ -3020,6 +3022,41 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     )
                 }
 
+                // Entry Duration — discrete presets from 1 hour to Never
+                run {
+                    val durationPresets = listOf(60, 360, 720, 1440, 4320, 10080, 20160, 43200, -1)
+                    val currentIndex = durationPresets.indexOf(clipboardHistoryDuration).let {
+                        if (it >= 0) it else durationPresets.indexOfLast { p -> p in 1..clipboardHistoryDuration }
+                            .coerceAtLeast(0)
+                    }
+                    SettingsSlider(
+                        title = "Entry Duration",
+                        description = if (clipboardHistoryLimit == 0 && clipboardHistoryDuration != -1)
+                            "Warning: count is unlimited but entries expire after this duration"
+                        else "How long entries persist before auto-deletion (-1 = never)",
+                        value = currentIndex.toFloat(),
+                        valueRange = 0f..(durationPresets.size - 1).toFloat(),
+                        steps = durationPresets.size - 2,
+                        onValueChange = {
+                            val idx = it.toInt().coerceIn(0, durationPresets.size - 1)
+                            clipboardHistoryDuration = durationPresets[idx]
+                            saveSetting("clipboard_history_duration", clipboardHistoryDuration.toString())
+                        },
+                        displayValue = when (clipboardHistoryDuration) {
+                            -1 -> "Never expire"
+                            60 -> "1 hour"
+                            360 -> "6 hours"
+                            720 -> "12 hours"
+                            1440 -> "1 day"
+                            4320 -> "3 days"
+                            10080 -> "7 days"
+                            20160 -> "14 days"
+                            43200 -> "30 days"
+                            else -> "${clipboardHistoryDuration / 60} hours"
+                        }
+                    )
+                }
+
                 // Size limit (only shown if limit type is "size")
                 if (clipboardLimitType == "size") {
                     SettingsSlider(
@@ -4885,6 +4922,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         vibrationEnabled = prefs.getSafeBoolean("vibration_enabled", Defaults.HAPTIC_ENABLED)
         clipboardHistoryEnabled = prefs.getSafeBoolean("clipboard_history_enabled", Defaults.CLIPBOARD_HISTORY_ENABLED)
         clipboardHistoryLimit = prefs.getSafeString("clipboard_history_limit", Defaults.CLIPBOARD_HISTORY_LIMIT).toIntOrNull() ?: Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK
+        clipboardHistoryDuration = prefs.getSafeString("clipboard_history_duration", Defaults.CLIPBOARD_HISTORY_DURATION).toIntOrNull() ?: Defaults.CLIPBOARD_HISTORY_DURATION_FALLBACK
         clipboardPaneHeightPercent = Config.safeGetInt(prefs, "clipboard_pane_height_percent", Defaults.CLIPBOARD_PANE_HEIGHT_PERCENT).coerceIn(10, 50)
         clipboardMaxItemSizeKb = (prefs.getSafeString("clipboard_max_item_size_kb", Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB).toIntOrNull() ?: Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB_FALLBACK).coerceIn(64, 1024)
         // Migrate stale values exceeding Binder limit (was 5000KB max, now 1024KB)
