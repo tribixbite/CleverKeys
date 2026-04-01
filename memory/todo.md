@@ -1,5 +1,27 @@
 # CleverKeys TODO
 
+## Clipboard Entry Duration Fix — Settings Bug + Stale Expiry Rescue (2026-03-31)
+Entry Duration slider was missing from main SettingsActivity — only existed in dead
+ClipboardSettingsActivity (not in manifest, never launched). Users could not configure
+how long entries persist. Three root causes of silent entry deletion:
+
+1. **Dead class**: Duration slider only in `ClipboardSettingsActivity` (unreachable)
+2. **Default mismatch**: ClipboardSettingsActivity defaulted `clipboard_history_enabled`
+   to `false` (hiding all config UI) while Config defaults to `true`
+3. **Stale expiry**: Old entries carried 7-day TTL from before `-1` (never) default
+
+**Fixes (ff6a03b, 03739d1)**:
+- Added Entry Duration slider to SettingsActivity (9 presets: 1h→30d→Never)
+- Added `clipboardHistoryDuration` state var + prefs loading + searchable setting
+- Fixed ClipboardSettingsActivity defaults → use `Defaults.*` constants
+- Added `ClipboardDatabase.rescueExpiredEntries()` — updates stale expiry→MAX_VALUE
+- ClipboardHistoryService: rescue instead of delete when duration is "never"
+- `clearExpiredAndGetHistory()`: skip time-based cleanup when TTL is infinite
+- Warning text when count unlimited but duration finite
+
+**Remaining**: Device testing — verify Duration slider visible in Clipboard settings section,
+verify "Never expire" stops auto-deletion, verify old entries rescued after app restart.
+
 ## Clipboard UI Overhaul — Icons, Tap-to-Expand, Tags & Status (2026-03-28)
 Replaced emoji tab icons (📋📌✓) with vector drawable ImageViews for consistent theming.
 Restructured entry layout: vertical button column on right side (primary → secondary → edit
@@ -51,13 +73,28 @@ reveals on expand with correct tab-specific icons, no whitespace issues, timesta
   bridge, not KeyboardReceiver directly — calls fell through to IReceiver defaults (false/no-op).
   Same bug class as emoji search (#41 v7). Skill updated: .claude/skills/ime-key-routing.md
 
+**Filter dialog extension (023b5da)**:
+- Renamed clipboard_date_filter_dialog → clipboard_filter_dialog (ScrollView-wrapped)
+- TODOS tab: status checkboxes (Active/Planned/Completed) with apply guard
+- PINNED+TODOS tabs: dynamic tag checkboxes with OR/AND match toggle
+- HISTORY tab: date section only (tags/status sections hidden)
+- Filter icon tints accent when any filter is active
+- clearAllFilters() resets all dimensions, tag/status reset on tab switch
+
 **Remaining (manual device verification)**:
+- [ ] Filter dialog: HISTORY tab shows date section only
+- [ ] Filter dialog: PINNED tab shows date + tags (no status)
+- [ ] Filter dialog: TODOS tab shows date + status + tags
+- [ ] Filter dialog: status checkboxes filter correctly
+- [ ] Filter dialog: tag checkboxes filter correctly (OR + AND modes)
+- [ ] Filter dialog: Clear resets all, icon tint resets
+- [ ] Filter dialog: can't Apply with all status unchecked
 - [ ] Tag panel: typing works into tag EditText (input captured, not sent to app)
 - [ ] Tag panel: chip add/remove, close restores list
 - [ ] Pinned tab: unpin/todo/tags buttons on expand
 - [ ] Todos tab: done/status/tags buttons on expand
 - [ ] Edit mode: delete on own row below save/cancel
-- [ ] Remove diagnostic Toast+Log after tag input confirmed (ClipboardManager.kt:191,405)
+- [ ] Remove diagnostic Toast+Log after tag input confirmed (ClipboardManager.kt:192,406)
 
 ## Clipboard Regex Search — COMPLETE (2026-03-27)
 VSCode-style `.*` toggle button in search bar. OFF = plain substring match (unchanged),
