@@ -33,12 +33,19 @@ class ClipboardHistoryService private constructor(ctx: Context) {
     private val _mediaManager: ClipboardMediaManager by lazy { ClipboardMediaManager(_context) }
 
     init {
-        // Clean up expired entries on startup (also returns orphaned media paths)
-        val (_, expiredMediaPaths) = _database.cleanupExpiredEntries()
-        // Delete media files from expired entries
-        for (path in expiredMediaPaths) {
-            if (!_database.isMediaPathReferenced(path)) {
-                _mediaManager.deleteMedia(path)
+        // Handle expired entries based on current user setting
+        val ttlMs = getHistoryTtlMs()
+        if (ttlMs == Long.MAX_VALUE) {
+            // User has "never expire" — rescue entries with stale expiry timestamps
+            // from when the default was 7 days. Don't delete anything by time.
+            _database.rescueExpiredEntries()
+        } else {
+            // User has a finite duration — clean up expired entries and orphaned media
+            val (_, expiredMediaPaths) = _database.cleanupExpiredEntries()
+            for (path in expiredMediaPaths) {
+                if (!_database.isMediaPathReferenced(path)) {
+                    _mediaManager.deleteMedia(path)
+                }
             }
         }
 
@@ -140,11 +147,14 @@ class ClipboardHistoryService private constructor(ctx: Context) {
     }
 
     fun clearExpiredAndGetHistory(): List<ClipboardEntry> {
-        // Clean up expired entries and delete orphaned media files
-        val (_, expiredMediaPaths) = _database.cleanupExpiredEntries()
-        expiredMediaPaths.forEach { mediaPath ->
-            if (!_database.isMediaPathReferenced(mediaPath)) {
-                _mediaManager.deleteMedia(mediaPath)
+        // Only run time-based cleanup when user has a finite duration set
+        val ttlMs = getHistoryTtlMs()
+        if (ttlMs != Long.MAX_VALUE) {
+            val (_, expiredMediaPaths) = _database.cleanupExpiredEntries()
+            expiredMediaPaths.forEach { mediaPath ->
+                if (!_database.isMediaPathReferenced(mediaPath)) {
+                    _mediaManager.deleteMedia(mediaPath)
+                }
             }
         }
         return try {

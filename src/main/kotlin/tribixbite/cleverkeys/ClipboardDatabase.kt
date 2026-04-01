@@ -386,6 +386,36 @@ class ClipboardDatabase private constructor(context: Context) :
         }
     }
 
+    /**
+     * Rescue entries with stale expiry timestamps by updating them to never expire.
+     * Called at startup when user's current duration setting is -1 (never expire).
+     * This handles the case where entries were created with a previous TTL (e.g., 7 days)
+     * before the default was changed to never expire — without this, those entries would
+     * be silently deleted by cleanupExpiredEntries().
+     *
+     * @return number of entries rescued
+     */
+    fun rescueExpiredEntries(): Int {
+        val currentTime = System.currentTimeMillis()
+        return try {
+            val db = writableDatabase
+            val cv = android.content.ContentValues().apply {
+                put(COLUMN_EXPIRY_TIMESTAMP, Long.MAX_VALUE)
+            }
+            val updated = db.update(
+                TABLE_CLIPBOARD,
+                cv,
+                "$COLUMN_EXPIRY_TIMESTAMP <= ? AND $COLUMN_EXPIRY_TIMESTAMP != ?",
+                arrayOf(currentTime.toString(), Long.MAX_VALUE.toString())
+            )
+            if (updated > 0) Log.i(TAG, "Rescued $updated entries with stale expiry timestamps → never expire")
+            updated
+        } catch (e: Exception) {
+            Log.e(TAG, "Error rescuing expired entries: ${e.message}")
+            0
+        }
+    }
+
     // ═══════════════════════════════════════════════════════════════════
     // Pinned entries CRUD (pinned_entries — independent table)
     // ═══════════════════════════════════════════════════════════════════

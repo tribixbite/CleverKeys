@@ -37,9 +37,9 @@ import tribixbite.cleverkeys.theme.KeyboardTheme
  * - Clear all functionality
  *
  * All settings map to existing Config.kt properties:
- * - clipboard_history_enabled (default: false)
- * - clipboard_history_limit (default: 6)
- * - clipboard_history_duration (default: -1 / never expire)
+ * - clipboard_history_enabled (default: true — see Defaults.CLIPBOARD_HISTORY_ENABLED)
+ * - clipboard_history_limit (default: 50 — see Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK)
+ * - clipboard_history_duration (default: -1 / never expire — see Defaults.CLIPBOARD_HISTORY_DURATION)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferenceChangeListener {
@@ -122,10 +122,10 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
         when (key) {
             "clipboard_history_enabled" -> {
-                clipboardEnabled = prefs.getBoolean(key, false)
+                clipboardEnabled = prefs.getBoolean(key, Defaults.CLIPBOARD_HISTORY_ENABLED)
             }
             "clipboard_history_limit" -> {
-                val savedLimit = prefs.getInt(key, 6)
+                val savedLimit = prefs.getInt(key, Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK)
                 historyLimit = if (savedLimit <= 0) 100 else savedLimit
             }
             "clipboard_history_duration" -> {
@@ -135,9 +135,9 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
     }
 
     private fun loadCurrentSettings() {
-        clipboardEnabled = prefs.getBoolean("clipboard_history_enabled", false)
+        clipboardEnabled = prefs.getBoolean("clipboard_history_enabled", Defaults.CLIPBOARD_HISTORY_ENABLED)
         // Map 0 (unlimited sentinel) back to 100 for slider range (1..100)
-        val savedLimit = prefs.getInt("clipboard_history_limit", 6)
+        val savedLimit = prefs.getInt("clipboard_history_limit", Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK)
         historyLimit = if (savedLimit <= 0) 100 else savedLimit
         historyDuration = prefs.getString("clipboard_history_duration", Defaults.CLIPBOARD_HISTORY_DURATION)?.toIntOrNull() ?: Defaults.CLIPBOARD_HISTORY_DURATION_FALLBACK
         // v4 feature toggles + media settings
