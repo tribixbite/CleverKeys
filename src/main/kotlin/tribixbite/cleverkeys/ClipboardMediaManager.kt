@@ -6,7 +6,9 @@ import android.graphics.BitmapFactory
 import android.graphics.pdf.PdfRenderer
 import android.media.MediaMetadataRetriever
 import android.net.Uri
+import android.os.Build
 import android.os.ParcelFileDescriptor
+import android.os.UserManager
 import android.provider.OpenableColumns
 import android.util.Log
 import java.io.ByteArrayOutputStream
@@ -43,6 +45,16 @@ class ClipboardMediaManager(private val context: Context) {
         File(context.filesDir, MEDIA_DIR).also { it.mkdirs() }
     }
 
+    /**
+     * Direct Boot guard: credential-protected filesDir is inaccessible before user unlocks.
+     * ClipboardHistoryService.on_startup() already guards against this, but this is defense-in-depth.
+     */
+    private fun isDeviceUnlocked(): Boolean {
+        if (Build.VERSION.SDK_INT < 24) return true  // Pre-N: no Direct Boot
+        val um = context.getSystemService(Context.USER_SERVICE) as? UserManager
+        return um?.isUserUnlocked ?: true
+    }
+
     // ─── Public API ───────────────────────────────────────────────────
 
     /**
@@ -55,6 +67,10 @@ class ClipboardMediaManager(private val context: Context) {
      * @return MediaSaveResult or null if save failed / exceeded size limit
      */
     fun saveMedia(uri: Uri, mimeType: String, maxSizeBytes: Long = DEFAULT_MAX_MEDIA_BYTES): MediaSaveResult? {
+        if (!isDeviceUnlocked()) {
+            Log.w(TAG, "saveMedia: device locked, credential-protected storage unavailable")
+            return null
+        }
         return try {
             val displayName = queryDisplayName(uri) ?: uri.lastPathSegment ?: "media"
             val ext = extensionForMime(mimeType)
@@ -179,6 +195,7 @@ class ClipboardMediaManager(private val context: Context) {
 
     /** Delete the media file at the given relative path */
     fun deleteMedia(mediaPath: String) {
+        if (!isDeviceUnlocked()) return
         try {
             val file = File(context.filesDir, mediaPath)
             if (file.exists()) {
@@ -204,6 +221,7 @@ class ClipboardMediaManager(private val context: Context) {
      * Call on service startup and after import to reconcile file system with DB.
      */
     fun cleanupOrphans(referencedPaths: Set<String>) {
+        if (!isDeviceUnlocked()) return
         try {
             var deleted = 0
             mediaBaseDir.listFiles()?.forEach { partitionDir ->
@@ -270,6 +288,7 @@ class ClipboardMediaManager(private val context: Context) {
 
     /** Delete all clipboard media files */
     fun clearAll() {
+        if (!isDeviceUnlocked()) return
         try {
             mediaBaseDir.deleteRecursively()
             mediaBaseDir.mkdirs()

@@ -49,8 +49,10 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     // Current tab mode
     private var currentTab = ClipboardTab.HISTORY
 
-    // Track expanded state: content string -> isExpanded (survives reorder/delete)
-    private val expandedStates = mutableMapOf<String, Boolean>()
+    // Track expanded state: entry timestamp -> isExpanded (survives reorder/delete)
+    // Uses timestamp (Long) as key instead of full content string to avoid duplicating
+    // large clipboard entries in memory just for expand/collapse tracking.
+    private val expandedStates = mutableMapOf<Long, Boolean>()
 
     // Date filter state
     private var dateFilterEnabled = false
@@ -386,13 +388,13 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
 
     /** Delete the specified entry from the current tab's backing store (position in current page). */
     fun delete_entry(pos: Int) {
-        val clip = paginatedHistory[pos].content
+        val entry = paginatedHistory[pos]
         when (currentTab) {
-            ClipboardTab.HISTORY -> service?.removeHistoryEntry(clip)
-            ClipboardTab.PINNED -> service?.unpinEntry(clip)
-            ClipboardTab.TODOS -> service?.removeFromTodo(clip)
+            ClipboardTab.HISTORY -> service?.removeHistoryEntry(entry.content)
+            ClipboardTab.PINNED -> service?.unpinEntry(entry.content)
+            ClipboardTab.TODOS -> service?.removeFromTodo(entry.content)
         }
-        expandedStates.remove(clip)
+        expandedStates.remove(entry.timestamp)
         loadDataAsync()
     }
 
@@ -425,12 +427,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         val result = service?.editEntryContent(oldContent, newContent, currentTab)
         when (result) {
             is EditEntryResult.Success -> {
-                // Migrate expandedStates key if content changed
-                val trimmedNew = newContent.trim()
-                if (oldContent.trim() != trimmedNew) {
-                    val wasExpanded = expandedStates.remove(oldContent)
-                    if (wasExpanded == true) expandedStates[trimmedNew] = true
-                }
+                // Timestamp key doesn't change when content is edited — no migration needed
             }
             is EditEntryResult.DuplicateConflict ->
                 Toast.makeText(context, R.string.clipboard_edit_duplicate, Toast.LENGTH_SHORT).show()
@@ -855,7 +852,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
 
             // ── Expand state: single tap toggles text expansion + secondary row ──
             val isMultiLine = text.contains("\n")
-            val isExpanded = expandedStates[text] == true
+            val isExpanded = expandedStates[entry.timestamp] == true
 
             // Set maxLines based on expanded state (applies to all entries)
             if (isExpanded) {
@@ -927,13 +924,13 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
 
             // Tap text to toggle expand/collapse (all entries, not just multi-line)
             textView.setOnClickListener {
-                expandedStates[text] = !isExpanded
+                expandedStates[entry.timestamp] = !isExpanded
                 notifyDataSetChanged()
             }
 
             // Expand chevron also toggles
             expandButton.setOnClickListener {
-                expandedStates[text] = !isExpanded
+                expandedStates[entry.timestamp] = !isExpanded
                 notifyDataSetChanged()
             }
 

@@ -6,7 +6,6 @@ import android.graphics.PorterDuff
 import android.util.Log
 import android.util.TypedValue
 import android.view.ContextThemeWrapper
-import android.widget.Toast
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -198,8 +197,6 @@ class ClipboardManager(
 
             // Tag panel: ClipboardHistoryView requests tag panel via callback
             clipboardHistoryView?.onTagPanelRequested = { entry, tab ->
-                // TODO: remove diagnostic toast after tag panel input is verified working
-                Toast.makeText(context, "Tag callback: tab=$tab", Toast.LENGTH_SHORT).show()
                 showTagPanel(entry, tab)
             }
 
@@ -414,8 +411,6 @@ class ClipboardManager(
         val newText = current + text
         et.setText(newText)
         et.setSelection(newText.length)
-        // TODO: remove diagnostic log after tag panel input is verified working
-        Log.d(TAG, "insertToTag: '$text' → '$newText'")
     }
 
     /** Handle backspace in the tag panel's EditText.

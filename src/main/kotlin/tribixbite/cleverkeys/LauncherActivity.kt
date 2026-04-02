@@ -215,7 +215,7 @@ fun LauncherScreen(
     ) {
         // 1. Background Animation layer - extends edge-to-edge including under system bars
         // Pause animation when keyboard visible to reduce input lag
-        MatrixSwipeRainBackground(isPaused = isKeyboardVisible)
+        SparkleMagicBackground(isPaused = isKeyboardVisible)
 
         // 2. Top Bar with GitHub (left) and Settings (right)
         // Fixed position at top - not affected by keyboard or scroll
@@ -590,7 +590,7 @@ data class MagicSpell(
 )
 
 @Composable
-fun MatrixSwipeRainBackground(isPaused: Boolean = false) {
+fun SparkleMagicBackground(isPaused: Boolean = false) {
     // Stardust Silver & Ethereal Magic Palette
     val baseColors = listOf(
         Color(0xFFFFFFFF), // Pure Light

@@ -516,7 +516,7 @@ version=${project.ext.versionNameStr}
 }
 
 tasks.named("preBuild") {
-  dependsOn "initDebugKeystore", "copyRawQwertyUS", "copyLayoutDefinitions", "generateBinaryDictionaries", "generateBinaryContractions", "generateComposeData", "generateVersionInfo"
+  dependsOn "initDebugKeystore", "copyLayoutDefinitions", "generateBinaryDictionaries", "generateBinaryContractions", "generateComposeData", "generateVersionInfo"
 }
 
 tasks.register('generateComposeData') {
@@ -536,7 +536,8 @@ tasks.register('initDebugKeystore') {
   }
 }
 
-tasks.register('copyRawQwertyUS', Copy) { from "srcs/layouts/latn_qwerty_us.xml"; into "build/generated/layouts/res/raw" }
+// copyLayoutDefinitions copies ALL layout XMLs from src/main/layouts/ (including latn_qwerty_us.xml)
+// into build/generated/layouts/res/raw/ — no separate copyRawQwertyUS needed.
 tasks.register('copyLayoutDefinitions', Copy) { from "src/main/layouts"; include "*.xml"; into "build/generated/layouts/res/raw" }
 
 tasks.register("printR8Version") {
