@@ -910,14 +910,14 @@ class ClipboardDatabaseTest {
         db.addClipboardEntry("C".repeat(1024), futureExpiry) // 1KB, newest
 
         // Total: 3KB. Limit to 1MB → no deletions (under limit)
-        val removed = db.applySizeLimitBytes(1)
+        val (removed, _) = db.applySizeLimitBytes(1)
         assertEquals("All entries under 1MB, no deletions", 0, removed)
     }
 
     @Test
     fun testApplySizeLimitBytesZeroIsNoOp() {
         db.addClipboardEntry("Content", futureExpiry)
-        val removed = db.applySizeLimitBytes(0)
+        val (removed, _) = db.applySizeLimitBytes(0)
         assertEquals("Zero limit should be no-op", 0, removed)
         assertEquals("Entry should still exist", 1, db.getTotalEntryCount())
     }
@@ -925,7 +925,7 @@ class ClipboardDatabaseTest {
     @Test
     fun testApplySizeLimitBytesNegativeIsNoOp() {
         db.addClipboardEntry("Content", futureExpiry)
-        val removed = db.applySizeLimitBytes(-5)
+        val (removed, _) = db.applySizeLimitBytes(-5)
         assertEquals("Negative limit should be no-op", 0, removed)
     }
 
@@ -937,7 +937,7 @@ class ClipboardDatabaseTest {
         db.addClipboardEntry("R".repeat(512), futureExpiry) // 0.5KB regular
 
         // Limit to 1MB — both should survive (way under limit)
-        val removed = db.applySizeLimitBytes(1)
+        val (removed, _) = db.applySizeLimitBytes(1)
         assertEquals(0, removed)
         assertEquals(2, db.getTotalEntryCount())
     }
@@ -948,7 +948,7 @@ class ClipboardDatabaseTest {
         db.addTodoEntry("T".repeat(2048))
         db.addClipboardEntry("R".repeat(512), futureExpiry) // 0.5KB regular
 
-        val removed = db.applySizeLimitBytes(1)
+        val (removed, _) = db.applySizeLimitBytes(1)
         assertEquals(0, removed)
         assertEquals(2, db.getTotalEntryCount())
     }

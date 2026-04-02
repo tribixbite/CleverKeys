@@ -984,36 +984,57 @@ class ClipboardDatabase private constructor(context: Context) :
      * Uses LENGTH(CAST(content AS BLOB)) to measure sizes server-side (no JVM heap allocation).
      * Batches DELETE in chunks of 500 IDs to stay within SQLite SQL length limits.
      */
-    fun applySizeLimitBytes(maxSizeMB: Int): Int {
-        if (maxSizeMB <= 0) return 0
+    /**
+     * Apply size-based limit to clipboard history.
+     * Accounts for text content, thumbnail BLOBs, and media files on disk.
+     *
+     * @param maxSizeMB Maximum total size in megabytes (text + thumbnails + media files)
+     * @param filesDir App's filesDir for measuring media file sizes (null = DB-only measurement)
+     * @return Pair of (entries deleted, media paths of deleted entries for file cleanup)
+     */
+    fun applySizeLimitBytes(maxSizeMB: Int, filesDir: java.io.File? = null): Pair<Int, List<String>> {
+        if (maxSizeMB <= 0) return Pair(0, emptyList())
         val maxSizeBytes = maxSizeMB * 1024L * 1024L
         return try {
             val db = writableDatabase
             val currentTime = System.currentTimeMillis()
             var totalSize = 0L
             val idsToDelete = mutableListOf<Long>()
+            val mediaPaths = mutableListOf<String>()
+            // Include text content + thumbnail BLOB sizes from DB; media_path for disk stat
             db.rawQuery("""
-                SELECT $COLUMN_ID, LENGTH(CAST($COLUMN_CONTENT AS BLOB))
+                SELECT $COLUMN_ID,
+                       LENGTH(CAST($COLUMN_CONTENT AS BLOB)) + COALESCE(LENGTH($COLUMN_THUMBNAIL_BLOB), 0),
+                       $COLUMN_MEDIA_PATH
                 FROM $TABLE_CLIPBOARD
                 WHERE $COLUMN_EXPIRY_TIMESTAMP > ?
                 ORDER BY $COLUMN_TIMESTAMP ASC
             """.trimIndent(), arrayOf(currentTime.toString())).use { cursor ->
                 if (cursor.moveToFirst()) {
                     do {
-                        totalSize += cursor.getLong(1)
-                        if (totalSize > maxSizeBytes) idsToDelete.add(cursor.getLong(0))
+                        val rowDbSize = cursor.getLong(1)
+                        val mediaPath = if (!cursor.isNull(2)) cursor.getString(2) else null
+                        // Include media file size on disk when filesDir is provided
+                        val mediaFileSize = if (mediaPath != null && filesDir != null) {
+                            java.io.File(filesDir, mediaPath).let { if (it.exists()) it.length() else 0L }
+                        } else 0L
+                        totalSize += rowDbSize + mediaFileSize
+                        if (totalSize > maxSizeBytes) {
+                            idsToDelete.add(cursor.getLong(0))
+                            if (mediaPath != null) mediaPaths.add(mediaPath)
+                        }
                     } while (cursor.moveToNext())
                 }
             }
-            if (idsToDelete.isEmpty()) return 0
+            if (idsToDelete.isEmpty()) return Pair(0, emptyList())
             for (chunk in idsToDelete.chunked(500)) {
                 db.execSQL("DELETE FROM $TABLE_CLIPBOARD WHERE $COLUMN_ID IN (${chunk.joinToString(",")})")
             }
-            Log.d(TAG, "Applied size limit (bytes): removed ${idsToDelete.size} oldest history entries")
-            idsToDelete.size
+            Log.d(TAG, "Applied size limit (bytes): removed ${idsToDelete.size} oldest entries (${mediaPaths.size} with media)")
+            Pair(idsToDelete.size, mediaPaths)
         } catch (e: Exception) {
             Log.e(TAG, "Error applying size limit (bytes): ${e.message}")
-            0
+            Pair(0, emptyList())
         }
     }
 

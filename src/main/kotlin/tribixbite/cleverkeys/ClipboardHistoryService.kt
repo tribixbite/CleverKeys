@@ -245,10 +245,14 @@ class ClipboardHistoryService private constructor(ctx: Context) {
             // Apply size limits if configured (based on limit type)
             val limitType = Config.globalConfig().clipboard_limit_type
             if ("size" == limitType) {
-                // Apply size-based limit (total MB)
+                // Apply size-based limit (total MB — includes text + thumbnails + media files)
                 val maxSizeMB = Config.globalConfig().clipboard_size_limit_mb
                 if (maxSizeMB > 0) {
-                    _database.applySizeLimitBytes(maxSizeMB)
+                    val (_, mediaPaths) = _database.applySizeLimitBytes(maxSizeMB, _context.filesDir)
+                    // Delete media files of pruned entries (only if no other table references them)
+                    for (path in mediaPaths) {
+                        if (!_database.isMediaPathReferenced(path)) _mediaManager.deleteMedia(path)
+                    }
                 }
             } else {
                 // Apply count-based limit (default)
@@ -651,12 +655,15 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         )
 
         if (added) {
-            // Apply size limits (count-based only for now — media size managed by ClipboardMediaManager)
+            // Apply size limits (includes text + thumbnails + media files on disk)
             val limitType = Config.globalConfig().clipboard_limit_type
             if ("size" == limitType) {
                 val maxSizeMB = Config.globalConfig().clipboard_size_limit_mb
                 if (maxSizeMB > 0) {
-                    _database.applySizeLimitBytes(maxSizeMB)
+                    val (_, mediaPaths) = _database.applySizeLimitBytes(maxSizeMB, _context.filesDir)
+                    for (path in mediaPaths) {
+                        if (!_database.isMediaPathReferenced(path)) _mediaManager.deleteMedia(path)
+                    }
                 }
             } else {
                 val maxHistorySize = Config.globalConfig().clipboard_history_limit

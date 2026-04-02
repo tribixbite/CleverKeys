@@ -5,8 +5,10 @@ import android.content.ClipData
 // tribixbite.cleverkeys.ClipboardManager (same-package takes priority in Kotlin resolution).
 import android.content.ClipboardManager as SystemClipboardManager
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.AttributeSet
+import android.util.LruCache
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
@@ -53,6 +55,13 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     // Uses timestamp (Long) as key instead of full content string to avoid duplicating
     // large clipboard entries in memory just for expand/collapse tracking.
     private val expandedStates = mutableMapOf<Long, Boolean>()
+
+    // LRU cache for decoded media thumbnails. Keyed by entry timestamp.
+    // 80×80 ARGB_8888 = ~25KB per bitmap. 30 entries ≈ 750KB — well within limits.
+    // Avoids re-decoding BitmapFactory.decodeByteArray on every getView() scroll.
+    private val thumbnailCache = object : LruCache<Long, Bitmap>(30) {
+        override fun sizeOf(key: Long, value: Bitmap): Int = 1  // count-based, not byte-based
+    }
 
     // Date filter state
     private var dateFilterEnabled = false
@@ -148,7 +157,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         // are guarded in ClipboardManager, but direct callers like resetSearchOnShow need this)
         cancelEdit()
         currentTab = tab
-        expandedStates.clear()  // Reset expanded states when switching tabs
+        expandedStates.clear()
+        thumbnailCache.evictAll()
         // Reset tag/status filters on tab switch — tags are tab-specific
         // NOTE: searchFilter, regexMode, dateFilter* are NOT reset — they persist across tabs
         tagFilterSelected = emptySet()
@@ -292,8 +302,9 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             filteredHistory
         }
 
-        // Clear expanded states when page changes
+        // Clear UI state when page changes
         expandedStates.clear()
+        thumbnailCache.evictAll()
 
         // Notify listener about pagination state
         onPaginationChangeListener?.invoke(
@@ -793,10 +804,11 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             if (entry.isMedia) {
                 thumbnailContainer.visibility = VISIBLE
                 if (entry.hasThumbnail) {
-                    // Decode thumbnail from BLOB — small (≤10KB WebP), no file I/O
-                    val bitmap = BitmapFactory.decodeByteArray(
-                        entry.thumbnailBlob, 0, entry.thumbnailBlob!!.size
-                    )
+                    // Use LRU cache to avoid re-decoding on every scroll
+                    val bitmap = thumbnailCache.get(entry.timestamp)
+                        ?: BitmapFactory.decodeByteArray(
+                            entry.thumbnailBlob, 0, entry.thumbnailBlob!!.size
+                        )?.also { thumbnailCache.put(entry.timestamp, it) }
                     thumbnailView.setImageBitmap(bitmap)
                     thumbnailView.scaleType = ImageView.ScaleType.CENTER_CROP
                 } else {
