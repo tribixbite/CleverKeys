@@ -763,7 +763,10 @@ class ClipboardHistoryService private constructor(ctx: Context) {
             if (_service == null) return
 
             if (e) {
-                // Re-enable: add current clip and re-register listener if needed
+                // Re-enable: rescue stale entries if "never expire" is set, then re-register
+                if (getHistoryTtlMs() == Long.MAX_VALUE) {
+                    _service!!._database.rescueExpiredEntries()
+                }
                 _service!!.addCurrentClip()
                 _service!!.registerClipboardListener()
             }
@@ -790,6 +793,23 @@ class ClipboardHistoryService private constructor(ctx: Context) {
                 return false
             }
             return cb.paste_media_from_clipboard_pane(mimeType, mediaPath)
+        }
+
+        /**
+         * Called from SettingsActivity when the user changes the Entry Duration slider.
+         * Re-reads the duration from Config and rescues entries with stale expiry timestamps
+         * if the new duration is "never expire". This ensures mid-session changes take
+         * effect immediately without requiring a keyboard restart.
+         */
+        @JvmStatic
+        fun onDurationSettingChanged() {
+            if (_service == null) return
+            // Re-read fresh config from SharedPreferences
+            Config.globalConfig().reloadClipboardDuration()
+            val ttlMs = getHistoryTtlMs()
+            if (ttlMs == Long.MAX_VALUE) {
+                _service!!._database.rescueExpiredEntries()
+            }
         }
 
         /** Clipboard history is persistently stored in SQLite database and survives app restarts.

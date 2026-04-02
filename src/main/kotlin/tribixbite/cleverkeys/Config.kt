@@ -173,16 +173,23 @@ object Defaults {
     // Issue #71: Made defaults more robust to prevent TransactionTooLargeException
     // Android Binder has ~1MB limit; conservative defaults prevent crashes
     const val CLIPBOARD_HISTORY_ENABLED = true
-    const val CLIPBOARD_HISTORY_LIMIT = "50"  // Was "0" (unlimited) - now 50 entries max
+    // History limit: 0 = unlimited (no pruning), >0 = max entry count.
+    // applySizeLimit() skips when limit <= 0. SettingsActivity slider: 0..500 where 0 = "Unlimited".
+    // Backup/restore preserves the raw int (0 for unlimited). DO NOT add "limit > 0" guards that
+    // would break unlimited — always use "limit > 0" as the conditional, never "limit >= 0".
+    const val CLIPBOARD_HISTORY_LIMIT = "50"
     const val CLIPBOARD_HISTORY_LIMIT_FALLBACK = 50
     const val CLIPBOARD_PANE_HEIGHT_PERCENT = 30
     const val CLIPBOARD_MAX_ITEM_SIZE_KB = "256"  // Default 256KB. Android Binder IPC caps at ~1MB
     const val CLIPBOARD_MAX_ITEM_SIZE_KB_FALLBACK = 256
-    const val CLIPBOARD_LIMIT_TYPE = "count"
-    const val CLIPBOARD_SIZE_LIMIT_MB = "5"  // Was "10" - reduced for safety
+    const val CLIPBOARD_LIMIT_TYPE = "count"  // "count" or "size"
+    const val CLIPBOARD_SIZE_LIMIT_MB = "5"
     const val CLIPBOARD_SIZE_LIMIT_MB_FALLBACK = 5
     const val CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS = true  // Skip clipboard from password managers
-    const val CLIPBOARD_HISTORY_DURATION = "-1"  // Minutes; -1 = never expire. Was 10080 (7 days)
+    // Duration: -1 = never expire (Long.MAX_VALUE expiry), >=0 = minutes until auto-deletion.
+    // When -1, cleanupExpiredEntries() is skipped entirely; rescueExpiredEntries() runs instead.
+    // SettingsActivity auto-links: setting "Never expire" also sets count to unlimited (0).
+    const val CLIPBOARD_HISTORY_DURATION = "-1"
     const val CLIPBOARD_HISTORY_DURATION_FALLBACK = -1
     const val CLIPBOARD_RESPECT_SENSITIVE_FLAG = true  // #86: Respect Android 13+ IS_SENSITIVE flag
 
@@ -842,6 +849,14 @@ class Config private constructor(
     fun set_clipboard_history_limit(limit: Int) {
         clipboard_history_limit = limit
         _prefs.edit().putInt("clipboard_history_limit", limit).commit()
+    }
+
+    /** Re-read clipboard_history_duration from SharedPreferences.
+     *  Called mid-session when the user changes the Entry Duration slider in settings,
+     *  so the service picks up the new value without requiring a keyboard restart. */
+    fun reloadClipboardDuration() {
+        clipboard_history_duration = safeGetString(_prefs, "clipboard_history_duration",
+            Defaults.CLIPBOARD_HISTORY_DURATION).toIntOrNull() ?: Defaults.CLIPBOARD_HISTORY_DURATION_FALLBACK
     }
 
     fun set_clipboard_pane_height_percent(percent: Int) {

@@ -3023,17 +3023,24 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 }
 
                 // Entry Duration — discrete presets from 1 hour to Never
+                // Auto-links with History Limit: setting "Never expire" also sets count to Unlimited
                 run {
                     val durationPresets = listOf(60, 360, 720, 1440, 4320, 10080, 20160, 43200, -1)
                     val currentIndex = durationPresets.indexOf(clipboardHistoryDuration).let {
                         if (it >= 0) it else durationPresets.indexOfLast { p -> p in 1..clipboardHistoryDuration }
                             .coerceAtLeast(0)
                     }
+                    // Contextual description based on limit+duration combination
+                    val durationDesc = when {
+                        clipboardHistoryDuration != -1 && clipboardHistoryLimit == 0 ->
+                            "Warning: count is unlimited but entries expire after this duration"
+                        clipboardHistoryDuration == -1 && clipboardHistoryLimit > 0 ->
+                            "Entries never expire but capped at $clipboardHistoryLimit (count limit still applies)"
+                        else -> "How long entries persist before auto-deletion (-1 = never)"
+                    }
                     SettingsSlider(
                         title = "Entry Duration",
-                        description = if (clipboardHistoryLimit == 0 && clipboardHistoryDuration != -1)
-                            "Warning: count is unlimited but entries expire after this duration"
-                        else "How long entries persist before auto-deletion (-1 = never)",
+                        description = durationDesc,
                         value = currentIndex.toFloat(),
                         valueRange = 0f..(durationPresets.size - 1).toFloat(),
                         steps = durationPresets.size - 2,
@@ -3041,6 +3048,13 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                             val idx = it.toInt().coerceIn(0, durationPresets.size - 1)
                             clipboardHistoryDuration = durationPresets[idx]
                             saveSetting("clipboard_history_duration", clipboardHistoryDuration.toString())
+                            // Auto-link: "Never expire" + capped count → set count to unlimited too
+                            if (clipboardHistoryDuration == -1 && clipboardHistoryLimit > 0) {
+                                clipboardHistoryLimit = 0
+                                saveSetting("clipboard_history_limit", 0)
+                            }
+                            // Trigger mid-session rescue for entries with stale expiry timestamps
+                            ClipboardHistoryService.onDurationSettingChanged()
                         },
                         displayValue = when (clipboardHistoryDuration) {
                             -1 -> "Never expire"
