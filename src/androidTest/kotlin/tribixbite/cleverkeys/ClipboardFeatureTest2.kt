@@ -182,7 +182,8 @@ class ClipboardFeatureTest2 {
         val text = spannable.toString()
 
         assertTrue(text.startsWith("Some text"))
-        assertTrue(text.contains(" · Just now"))
+        // Separator uses non-breaking spaces (\u00A0) to prevent line-wrap
+        assertTrue(text.contains("\u00A0\u00B7\u00A0Just\u00A0now"))
 
         val colorSpans = spannable.getSpans(0, spannable.length, ForegroundColorSpan::class.java)
         assertEquals(1, colorSpans.size)

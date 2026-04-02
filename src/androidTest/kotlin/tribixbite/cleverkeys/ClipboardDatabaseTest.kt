@@ -1035,8 +1035,9 @@ class ClipboardDatabaseTest {
         val text = formatted.toString()
 
         assertTrue("Should contain original content", text.startsWith("Test content"))
-        assertTrue("Should contain separator", text.contains(" · "))
-        assertTrue("Should contain relative time", text.contains("Just now"))
+        // Separator uses non-breaking spaces (\u00A0) to prevent line-wrap
+        assertTrue("Should contain separator", text.contains("\u00A0\u00B7\u00A0"))
+        assertTrue("Should contain relative time", text.contains("Just\u00A0now"))
     }
 
     @Test
