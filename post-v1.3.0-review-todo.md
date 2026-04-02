@@ -42,3 +42,18 @@ This document tracks technical debt, performance bottlenecks, and architectural 
 
 ### Item 4: Explicit State Machine (Heavy)
 `KeyboardReceiver` has `PaneType` enum for pane tracking, but supplementary booleans (`isContentPaneShowing`, `gifSearchActive`) and `ClipboardManager` sub-mode booleans (`searchMode`, `tagMode`, `isEditing()`) remain. A single `ModalState` enum covering all sub-modes would prevent impossible state combinations but requires careful refactoring of the routing logic.
+
+---
+
+## Test Coverage (commit 4e4be6005)
+
+All fixes verified with 28 new tests (1046 JVM + 39 instrumented, 0 failures):
+
+| Fix | JVM Tests | Instrumented Tests |
+|-----|-----------|-------------------|
+| Timestamp expand state (item 8) | 5 in ClipboardFixesJvmTest | 3 in PostReviewFixesInstrumentedTest |
+| applySizeLimitBytes Pair + media (item 3) | 2 in ClipboardFixesJvmTest | 7 in ClipboardMediaDatabaseTest, 2 in PostReviewFixesInstrumentedTest |
+| LRU thumbnail cache (item 2) | 1 in ClipboardFixesJvmTest | — |
+| Direct Boot guard (item 10) | — | 6 in PostReviewFixesInstrumentedTest |
+| ContentObserver (item 6) | — | 3 in PostReviewFixesInstrumentedTest |
+| ClipboardEntry media properties | — | 2 in PostReviewFixesInstrumentedTest |
