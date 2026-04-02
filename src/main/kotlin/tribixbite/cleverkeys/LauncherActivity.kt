@@ -188,13 +188,24 @@ fun LauncherScreen(
     val prefs = remember { context.getSharedPreferences("cleverkeys_launcher", Context.MODE_PRIVATE) }
     var hasVisitedCalibration by remember { mutableStateOf(prefs.getBoolean("has_visited_calibration", false)) }
 
-    // Auto-refresh completion status every 500ms when screen is visible
-    LaunchedEffect(Unit) {
-        while (true) {
-            kotlinx.coroutines.delay(500)
-            isKeyboardEnabled = isCleverKeysEnabled(context)
-            isKeyboardSelected = isCleverKeysSelected(context)
+    // React to IME settings changes via ContentObserver instead of 500ms polling.
+    // Fires immediately when user enables/selects keyboard in Android Settings.
+    DisposableEffect(Unit) {
+        val observer = object : android.database.ContentObserver(
+            android.os.Handler(android.os.Looper.getMainLooper())
+        ) {
+            override fun onChange(selfChange: Boolean) {
+                isKeyboardEnabled = isCleverKeysEnabled(context)
+                isKeyboardSelected = isCleverKeysSelected(context)
+            }
         }
+        context.contentResolver.registerContentObserver(
+            Settings.Secure.getUriFor(Settings.Secure.ENABLED_INPUT_METHODS), false, observer
+        )
+        context.contentResolver.registerContentObserver(
+            Settings.Secure.getUriFor(Settings.Secure.DEFAULT_INPUT_METHOD), false, observer
+        )
+        onDispose { context.contentResolver.unregisterContentObserver(observer) }
     }
 
     // Load raccoon logo from assets
