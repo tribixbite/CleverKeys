@@ -94,7 +94,7 @@ reveals on expand with correct tab-specific icons, no whitespace issues, timesta
 - [ ] Pinned tab: unpin/todo/tags buttons on expand
 - [ ] Todos tab: done/status/tags buttons on expand
 - [ ] Edit mode: delete on own row below save/cancel
-- [ ] Remove diagnostic Toast+Log after tag input confirmed (ClipboardManager.kt:192,406)
+- [x] Remove diagnostic Toast+Log after tag input confirmed — fixed in 18ec94094
 
 ## Clipboard Regex Search — COMPLETE (2026-03-27)
 VSCode-style `.*` toggle button in search bar. OFF = plain substring match (unchanged),
@@ -903,6 +903,10 @@ cd ../cleverkeys-gif-module && ./build-on-termux.sh
 - [ ] Lazy loading for 12.5MB models
 - [ ] PWA/Service Worker for offline support
 
+### Clipboard Performance (from post-v1.3.0 review)
+- [ ] RecyclerView Migration: `ClipboardHistoryView` extends `NonScrollListView` — migrate to RecyclerView for scroll perf with many entries (ViewHolder, LayoutManager, drag/swipe/long-press callbacks)
+- [ ] Explicit State Machine: Replace supplementary booleans in `KeyboardReceiver` + `ClipboardManager` (`isContentPaneShowing`, `gifSearchActive`, `searchMode`, `tagMode`, `isEditing()`) with single `ModalState` enum to prevent impossible state combinations
+
 ### Legacy Code Cleanup
 - [x] Migrate deprecated `android.preference.*` to `androidx.preference.*` (v1.2.10)
 
@@ -922,15 +926,16 @@ cd ../cleverkeys-gif-module && ./build-on-termux.sh
 
 ### Test
 ```bash
-# Instrumented (emulator.wtf) — 600 tests, 0 failures
-ew-cli --app build/outputs/apk/debug/CleverKeys-v1.2.9-x86_64.apk \
+# Instrumented (emulator.wtf) — 1128 tests, 0 failures
+ew-cli --app build/outputs/apk/debug/CleverKeys-v1.3.0-x86_64.apk \
        --test build/outputs/apk/androidTest/debug/CleverKeys-debug-androidTest.apk \
-       --device model=Pixel7,version=34
+       --device model=Pixel7,version=34 --use-orchestrator --timeout 15m \
+       --outputs-dir ~/ew-output
 
 # Local JVM (Gradle — preferred)
-./gradlew runPureTests                           # 781 pure JVM tests
+./gradlew runPureTests                           # 1046 pure JVM tests
 ./gradlew runMockTests                           # 176 MockK tests (needs android.jar)
-./gradlew runAllTests                            # all ~957 tests
+./gradlew runAllTests                            # all ~1222 tests
 ./gradlew runPureTests -PtestClass=ClassName     # single class (pure)
 ./gradlew runMockTests -PtestClass=ClassName     # single class (mock)
 ```
