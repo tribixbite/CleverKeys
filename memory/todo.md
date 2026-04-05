@@ -95,6 +95,7 @@ reveals on expand with correct tab-specific icons, no whitespace issues, timesta
 - [ ] Todos tab: done/status/tags buttons on expand
 - [ ] Edit mode: delete on own row below save/cancel
 - [x] Remove diagnostic Toast+Log after tag input confirmed — fixed in 18ec94094
+- [x] Edit mode: arrow keys + Enter routed to inline EditText — fixed in 2da276127
 
 ## Clipboard Regex Search — COMPLETE (2026-03-27)
 VSCode-style `.*` toggle button in search bar. OFF = plain substring match (unchanged),
