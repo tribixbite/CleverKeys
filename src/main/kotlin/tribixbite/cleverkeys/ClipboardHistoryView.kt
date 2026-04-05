@@ -526,6 +526,16 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         editingEditText?.selectAll()
     }
 
+    /** Dispatch a raw key event to the active edit field (arrow keys, Enter, etc.) */
+    fun dispatchKeyToEditText(keyCode: Int) {
+        editingEditText?.let { et ->
+            val downEvent = android.view.KeyEvent(android.view.KeyEvent.ACTION_DOWN, keyCode)
+            val upEvent = android.view.KeyEvent(android.view.KeyEvent.ACTION_UP, keyCode)
+            et.dispatchKeyEvent(downEvent)
+            et.dispatchKeyEvent(upEvent)
+        }
+    }
+
     /** Send the specified entry to the editor (position in current page). */
     fun paste_entry(pos: Int) {
         val entry = paginatedHistory[pos]

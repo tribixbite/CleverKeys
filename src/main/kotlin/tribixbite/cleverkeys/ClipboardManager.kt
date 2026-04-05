@@ -589,6 +589,11 @@ class ClipboardManager(
         clipboardHistoryView?.selectAllEditText()
     }
 
+    /** Dispatch a raw key event (arrow keys, Enter) to the editing EditText */
+    fun dispatchKeyToEdit(keyCode: Int) {
+        clipboardHistoryView?.dispatchKeyToEditText(keyCode)
+    }
+
     /**
      * Shows the unified filter dialog — date + status (TODOS) + tags (PINNED/TODOS).
      * Sections are shown/hidden based on current tab.

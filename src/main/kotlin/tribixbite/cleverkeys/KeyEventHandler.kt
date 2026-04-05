@@ -111,6 +111,9 @@ class KeyEventHandler(
                 // Handle backspace in GIF search
                 } else if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && recv.isGifPaneOpen()) {
                     recv.backspaceGifSearch()
+                // Arrow keys and Enter in clipboard edit mode — dispatch to inline EditText
+                } else if (recv.isClipboardEditMode() && key.getKeyevent() in EDIT_MODE_DISPATCH_KEYS) {
+                    recv.dispatchKeyToClipboardEdit(key.getKeyevent())
                 } else if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && handleBackspaceUndoSwipe()) {
                     // #110: Backspace after swipe deletes entire swiped word
                 } else if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && handleBackspaceUndoAutocorrect()) {
@@ -690,6 +693,23 @@ class KeyEventHandler(
 
     /** [r] might be negative, in which case the direction is reversed. */
     private fun handleSlider(s: KeyValue.Slider, r: Int, keyDown: Boolean) {
+        // In clipboard edit mode, route cursor movements to the inline EditText
+        if (recv.isClipboardEditMode()) {
+            val keyCode = when (s) {
+                KeyValue.Slider.Cursor_left -> KeyEvent.KEYCODE_DPAD_LEFT
+                KeyValue.Slider.Cursor_right -> KeyEvent.KEYCODE_DPAD_RIGHT
+                KeyValue.Slider.Cursor_up -> KeyEvent.KEYCODE_DPAD_UP
+                KeyValue.Slider.Cursor_down -> KeyEvent.KEYCODE_DPAD_DOWN
+                else -> null
+            }
+            if (keyCode != null) {
+                // Dispatch once per repeat unit so slider distance maps to cursor steps
+                repeat(kotlin.math.abs(r).coerceAtLeast(1)) {
+                    recv.dispatchKeyToClipboardEdit(keyCode)
+                }
+                return
+            }
+        }
         when (s) {
             KeyValue.Slider.Cursor_left -> moveCursor(-r)
             KeyValue.Slider.Cursor_right -> moveCursor(r)
@@ -914,6 +934,7 @@ class KeyEventHandler(
         fun pasteToClipboardEdit() {}
         fun cutFromClipboardEdit() {}
         fun selectAllClipboardEdit() {}
+        fun dispatchKeyToClipboardEdit(keyCode: Int) {} // Arrow keys, Enter, etc.
         // #41 v5: Emoji search routes typing to visible EditText (IME can't type into own views)
         fun isEmojiPaneOpen(): Boolean = false // Check if emoji pane is visible
         fun appendToEmojiSearch(text: String) {} // Append text to emoji search EditText
@@ -946,5 +967,17 @@ class KeyEventHandler(
     companion object {
         private const val TAG = "KeyEventHandler"
         private var moveCursorReq: ExtractedTextRequest? = null
+
+        // Key events that should be dispatched to the clipboard edit EditText
+        // instead of the app's InputConnection when in edit mode
+        private val EDIT_MODE_DISPATCH_KEYS = setOf(
+            KeyEvent.KEYCODE_DPAD_LEFT,
+            KeyEvent.KEYCODE_DPAD_RIGHT,
+            KeyEvent.KEYCODE_DPAD_UP,
+            KeyEvent.KEYCODE_DPAD_DOWN,
+            KeyEvent.KEYCODE_ENTER,
+            KeyEvent.KEYCODE_MOVE_HOME,
+            KeyEvent.KEYCODE_MOVE_END,
+        )
     }
 }

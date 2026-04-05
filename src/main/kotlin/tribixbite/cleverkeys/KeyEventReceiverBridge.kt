@@ -149,6 +149,10 @@ class KeyEventReceiverBridge(
         receiver?.selectAllClipboardEdit()
     }
 
+    override fun dispatchKeyToClipboardEdit(keyCode: Int) {
+        receiver?.dispatchKeyToClipboardEdit(keyCode)
+    }
+
     // #41 v7: Emoji search delegation (was missing - caused routing to fail!)
     override fun isEmojiPaneOpen(): Boolean {
         return receiver?.isEmojiPaneOpen() ?: false
