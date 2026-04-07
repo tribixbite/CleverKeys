@@ -404,9 +404,9 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     /** Delete the specified entry from the current tab's backing store (position in current page). */
     fun delete_entry(pos: Int) {
         val entry = paginatedHistory[pos]
-        // If deleting the entry being edited, exit edit mode first
-        // (otherwise isEditing() stays true and blocks all UI interaction)
-        if (editingOriginalContent == entry.content) {
+        // Always exit edit mode when deleting — the entry being edited is removed,
+        // and list positions shift. Without this, isEditing() stays true and blocks all UI.
+        if (isEditing()) {
             cancelEdit()
         }
         when (currentTab) {
@@ -483,21 +483,22 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     // on their own EditText views — those APIs are unreliable when the IME owns the view.
     // All methods use setText() + setSelection() pattern (same as tag/search modes).
 
-    /** Insert text at cursor position in the active edit field (called by key routing) */
+    /** Insert text at cursor position in the active edit field (called by key routing).
+     *  Uses editingCursorPosition as source of truth — et.selectionStart may return stale
+     *  values on IME-owned EditText depending on inputType and focus state. */
     fun insertEditText(text: String) {
         editingEditText?.let { et ->
             val oldText = et.text.toString()
-            val start = et.selectionStart.coerceIn(0, oldText.length)
-            val end = et.selectionEnd.coerceIn(0, oldText.length)
-            val lo = minOf(start, end)
-            val hi = maxOf(start, end)
+            // Use tracked cursor as primary, fallback to EditText selection, then end of text
+            val cursor = (editingCursorPosition ?: et.selectionStart.takeIf { it >= 0 }
+                ?: oldText.length).coerceIn(0, oldText.length)
 
-            val newText = oldText.substring(0, lo) + text + oldText.substring(hi)
-            val newCursorPos = lo + text.length
+            val newText = oldText.substring(0, cursor) + text + oldText.substring(cursor)
+            val newCursorPos = (cursor + text.length).coerceIn(0, newText.length)
 
             et.setText(newText)
-            et.setSelection(newCursorPos.coerceIn(0, newText.length))
-            editingCursorPosition = newCursorPos.coerceIn(0, newText.length)
+            et.setSelection(newCursorPos)
+            editingCursorPosition = newCursorPos
         }
     }
 
@@ -507,22 +508,16 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             val oldText = et.text.toString()
             if (oldText.isEmpty()) return
 
-            val start = et.selectionStart.coerceIn(0, oldText.length)
-            val end = et.selectionEnd.coerceIn(0, oldText.length)
+            val cursor = (editingCursorPosition ?: et.selectionStart.takeIf { it >= 0 }
+                ?: oldText.length).coerceIn(0, oldText.length)
 
             val newText: String
             val newCursorPos: Int
 
-            if (start != end) {
-                // Selection exists — delete it
-                val lo = minOf(start, end)
-                val hi = maxOf(start, end)
-                newText = oldText.removeRange(lo, hi)
-                newCursorPos = lo
-            } else if (start > 0) {
-                // No selection — delete character before cursor (works for \n too)
-                newText = oldText.removeRange(start - 1, start)
-                newCursorPos = start - 1
+            if (cursor > 0) {
+                // Delete character before cursor (works for \n too)
+                newText = oldText.removeRange(cursor - 1, cursor)
+                newCursorPos = cursor - 1
             } else {
                 return // Cursor at start, nothing to delete
             }
@@ -540,16 +535,17 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         insertEditText(pasteText)
     }
 
-    /** Cut selected text from the edit field to system clipboard */
+    /** Cut selected text from the edit field to system clipboard.
+     *  Requires active selection (e.g., from selectAll) — no-op if no selection. */
     fun cutFromEditText() {
         editingEditText?.let { et ->
             val oldText = et.text.toString()
-            val start = et.selectionStart.coerceIn(0, oldText.length)
-            val end = et.selectionEnd.coerceIn(0, oldText.length)
+            val selStart = et.selectionStart
+            val selEnd = et.selectionEnd
 
-            if (start != end) {
-                val lo = minOf(start, end)
-                val hi = maxOf(start, end)
+            if (selStart >= 0 && selEnd >= 0 && selStart != selEnd) {
+                val lo = minOf(selStart, selEnd).coerceIn(0, oldText.length)
+                val hi = maxOf(selStart, selEnd).coerceIn(0, oldText.length)
                 val selected = oldText.substring(lo, hi)
 
                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? SystemClipboardManager
@@ -577,9 +573,15 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     fun dispatchKeyToEditText(keyCode: Int) {
         editingEditText?.let { et ->
             val text = et.text.toString()
-            val start = et.selectionStart.coerceIn(0, text.length)
-            val end = et.selectionEnd.coerceIn(0, text.length)
-            val hasSelection = start != end
+            // Use tracked cursor as primary source of truth
+            val trackedPos = (editingCursorPosition ?: et.selectionStart.takeIf { it >= 0 }
+                ?: text.length).coerceIn(0, text.length)
+            val selStart = et.selectionStart
+            val selEnd = et.selectionEnd
+            val hasSelection = selStart >= 0 && selEnd >= 0 && selStart != selEnd
+            // For navigation without selection, use tracked position
+            val start = if (hasSelection) selStart.coerceIn(0, text.length) else trackedPos
+            val end = if (hasSelection) selEnd.coerceIn(0, text.length) else trackedPos
 
             when (keyCode) {
                 android.view.KeyEvent.KEYCODE_DPAD_LEFT -> {

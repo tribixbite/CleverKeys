@@ -42,13 +42,15 @@
       android:maxLines="1"
       android:ellipsize="end"/>
 
-  <!-- Inline edit field: overlays TextView when editing. inputType=none prevents Android
-       from showing a soft keyboard — we ARE the keyboard, input routed via KeyEventHandler -->
+  <!-- Inline edit field: overlays TextView when editing. IME framework prevents
+       showing a soft keyboard for the IME's own views — no inputType trick needed.
+       textMultiLine gives proper cursor/selection support (inputType=none breaks
+       setSelection and selectionStart on some devices). -->
   <EditText
       android:id="@+id/clipboard_entry_edit_field"
       style="@style/clipboardEntry"
       android:visibility="gone"
-      android:inputType="none"
+      android:inputType="textMultiLine"
       android:minLines="2"
       android:maxLines="10"
       android:background="@drawable/clipboard_edit_bg"
