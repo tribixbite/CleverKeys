@@ -483,18 +483,25 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     // on their own EditText views — those APIs are unreliable when the IME owns the view.
     // All methods use setText() + setSelection() pattern (same as tag/search modes).
 
-    /** Insert text at cursor position in the active edit field (called by key routing).
-     *  Uses editingCursorPosition as source of truth — et.selectionStart may return stale
-     *  values on IME-owned EditText depending on inputType and focus state. */
+    /** Insert text at cursor/selection in the active edit field (called by key routing).
+     *  Trusts et.selectionStart/End first (reliable with textMultiLine inputType),
+     *  falls back to editingCursorPosition only for view-recycling recovery. */
     fun insertEditText(text: String) {
         editingEditText?.let { et ->
             val oldText = et.text.toString()
-            // Use tracked cursor as primary, fallback to EditText selection, then end of text
-            val cursor = (editingCursorPosition ?: et.selectionStart.takeIf { it >= 0 }
-                ?: oldText.length).coerceIn(0, oldText.length)
+            // Trust EditText selection first (reliable with textMultiLine), tracked cursor as fallback
+            val selStart = et.selectionStart
+            val selEnd = et.selectionEnd
+            val hasValidSelection = selStart >= 0 && selEnd >= 0
+            val lo = if (hasValidSelection) minOf(selStart, selEnd) else
+                (editingCursorPosition ?: oldText.length)
+            val hi = if (hasValidSelection) maxOf(selStart, selEnd) else lo
+            val safeLo = lo.coerceIn(0, oldText.length)
+            val safeHi = hi.coerceIn(0, oldText.length)
 
-            val newText = oldText.substring(0, cursor) + text + oldText.substring(cursor)
-            val newCursorPos = (cursor + text.length).coerceIn(0, newText.length)
+            // Replace selection range (or insert at cursor when lo==hi)
+            val newText = oldText.substring(0, safeLo) + text + oldText.substring(safeHi)
+            val newCursorPos = (safeLo + text.length).coerceIn(0, newText.length)
 
             et.setText(newText)
             et.setSelection(newCursorPos)
@@ -502,24 +509,34 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         }
     }
 
-    /** Handle backspace in the active edit field (called by key routing) */
+    /** Handle backspace in the active edit field (called by key routing).
+     *  If selection exists, deletes selected range. Otherwise deletes char before cursor. */
     fun backspaceEditText() {
         editingEditText?.let { et ->
             val oldText = et.text.toString()
             if (oldText.isEmpty()) return
 
-            val cursor = (editingCursorPosition ?: et.selectionStart.takeIf { it >= 0 }
-                ?: oldText.length).coerceIn(0, oldText.length)
+            // Trust EditText selection first, tracked cursor as fallback
+            val selStart = et.selectionStart
+            val selEnd = et.selectionEnd
+            val hasSelection = selStart >= 0 && selEnd >= 0 && selStart != selEnd
 
             val newText: String
             val newCursorPos: Int
 
-            if (cursor > 0) {
-                // Delete character before cursor (works for \n too)
+            if (hasSelection) {
+                // Delete selected range (e.g., after selectAll)
+                val lo = minOf(selStart, selEnd).coerceIn(0, oldText.length)
+                val hi = maxOf(selStart, selEnd).coerceIn(0, oldText.length)
+                newText = oldText.removeRange(lo, hi)
+                newCursorPos = lo.coerceIn(0, newText.length)
+            } else {
+                // No selection — delete character before cursor
+                val cursor = (if (selStart >= 0) selStart else
+                    (editingCursorPosition ?: oldText.length)).coerceIn(0, oldText.length)
+                if (cursor <= 0) return
                 newText = oldText.removeRange(cursor - 1, cursor)
                 newCursorPos = cursor - 1
-            } else {
-                return // Cursor at start, nothing to delete
             }
 
             et.setText(newText)
@@ -573,15 +590,14 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     fun dispatchKeyToEditText(keyCode: Int) {
         editingEditText?.let { et ->
             val text = et.text.toString()
-            // Use tracked cursor as primary source of truth
-            val trackedPos = (editingCursorPosition ?: et.selectionStart.takeIf { it >= 0 }
-                ?: text.length).coerceIn(0, text.length)
+            // Trust EditText selection first (reliable with textMultiLine), tracked cursor as fallback
             val selStart = et.selectionStart
             val selEnd = et.selectionEnd
             val hasSelection = selStart >= 0 && selEnd >= 0 && selStart != selEnd
-            // For navigation without selection, use tracked position
-            val start = if (hasSelection) selStart.coerceIn(0, text.length) else trackedPos
-            val end = if (hasSelection) selEnd.coerceIn(0, text.length) else trackedPos
+            val cursorPos = if (selStart >= 0) selStart.coerceIn(0, text.length) else
+                (editingCursorPosition ?: text.length).coerceIn(0, text.length)
+            val start = if (hasSelection) selStart.coerceIn(0, text.length) else cursorPos
+            val end = if (hasSelection) selEnd.coerceIn(0, text.length) else cursorPos
 
             when (keyCode) {
                 android.view.KeyEvent.KEYCODE_DPAD_LEFT -> {
