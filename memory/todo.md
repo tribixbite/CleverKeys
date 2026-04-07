@@ -96,6 +96,11 @@ reveals on expand with correct tab-specific icons, no whitespace issues, timesta
 - [ ] Edit mode: delete on own row below save/cancel
 - [x] Remove diagnostic Toast+Log after tag input confirmed — fixed in 18ec94094
 - [x] Edit mode: arrow keys + Enter routed to inline EditText — fixed in 2da276127
+- [x] Edit mode: full setText+setSelection rewrite (editable.replace/dispatchKeyEvent broken on IME EditText) — f1e80d0ff
+- [x] Edit mode: TextWatcher cursor corruption fix (setText resets cursor to 0, TextWatcher captured wrong pos) — f1e80d0ff
+- [x] Edit mode: delete_entry exits edit mode (prevents isEditing() blocking all buttons) — f1e80d0ff
+- [x] Todo status filter: default (active only) was skipping filter pass, showing planned/completed — f1e80d0ff
+- [ ] Edit mode: verify Enter, arrows, paste, backspace work correctly on device
 
 ## Clipboard Regex Search — COMPLETE (2026-03-27)
 VSCode-style `.*` toggle button in search bar. OFF = plain substring match (unchanged),
