@@ -88,6 +88,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     // In-progress text that the user is typing — preserved across view recreation (Bug #3).
     // Initialized to DB content on edit_entry(), updated by TextWatcher.
     private var editingInProgressText: String? = null
+    // Cursor position preserved across view recycling — updated after every text op
+    private var editingCursorPosition: Int? = null
     // Reference to the active EditText widget for key routing (insertEditText/backspaceEditText)
     private var editingEditText: EditText? = null
     // TextWatcher reference — tracked to prevent accumulation on view recycling.
@@ -270,8 +272,10 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         }
 
         // If no filters are active, show all history (skip filter pass optimization)
+        // Status filter is active when not ALL three statuses are enabled (truly "show all").
+        // The default state (only active=true) IS a filter — it hides planned/completed items.
         val hasStatusFilter = currentTab == ClipboardTab.TODOS &&
-            !(statusFilterActive && !statusFilterPlanned && !statusFilterCompleted)
+            !(statusFilterActive && statusFilterPlanned && statusFilterCompleted)
         filteredHistory = if (searchFilter.isEmpty() && !dateFilterEnabled &&
             tagFilterSelected.isEmpty() && !hasStatusFilter) {
             history
@@ -400,6 +404,11 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     /** Delete the specified entry from the current tab's backing store (position in current page). */
     fun delete_entry(pos: Int) {
         val entry = paginatedHistory[pos]
+        // If deleting the entry being edited, exit edit mode first
+        // (otherwise isEditing() stays true and blocks all UI interaction)
+        if (editingOriginalContent == entry.content) {
+            cancelEdit()
+        }
         when (currentTab) {
             ClipboardTab.HISTORY -> service?.removeHistoryEntry(entry.content)
             ClipboardTab.PINNED -> service?.unpinEntry(entry.content)
@@ -426,6 +435,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
 
         editingOriginalContent = entry.content
         editingInProgressText = entry.content
+        editingCursorPosition = entry.content.length
         // Re-render to show EditText + save/cancel buttons for this entry
         clipboardAdapter.notifyDataSetChanged()
     }
@@ -457,6 +467,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         if (editingOriginalContent == null) return
         editingOriginalContent = null
         editingInProgressText = null
+        editingCursorPosition = null
         // Remove TextWatcher before dropping reference to prevent stale callbacks
         editingTextWatcher?.let { editingEditText?.removeTextChangedListener(it) }
         editingTextWatcher = null
@@ -467,72 +478,173 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         loadDataAsync()
     }
 
+    // ── IME-owned EditText manipulation ──────────────────────────────────
+    // Android IMEs cannot use editable.replace()/editable.delete()/dispatchKeyEvent()
+    // on their own EditText views — those APIs are unreliable when the IME owns the view.
+    // All methods use setText() + setSelection() pattern (same as tag/search modes).
+
     /** Insert text at cursor position in the active edit field (called by key routing) */
     fun insertEditText(text: String) {
         editingEditText?.let { et ->
-            val editable = et.text ?: return
-            // Bug #3 fix: clamp cursor to editable bounds (handles empty and stale states)
-            val start = et.selectionStart.coerceIn(0, editable.length)
-            val end = et.selectionEnd.coerceIn(start, editable.length)
-            editable.replace(start, end, text)
+            val oldText = et.text.toString()
+            val start = et.selectionStart.coerceIn(0, oldText.length)
+            val end = et.selectionEnd.coerceIn(0, oldText.length)
+            val lo = minOf(start, end)
+            val hi = maxOf(start, end)
+
+            val newText = oldText.substring(0, lo) + text + oldText.substring(hi)
+            val newCursorPos = lo + text.length
+
+            et.setText(newText)
+            et.setSelection(newCursorPos.coerceIn(0, newText.length))
+            editingCursorPosition = newCursorPos.coerceIn(0, newText.length)
         }
     }
 
     /** Handle backspace in the active edit field (called by key routing) */
     fun backspaceEditText() {
         editingEditText?.let { et ->
-            val editable = et.text ?: return
-            val start = et.selectionStart.coerceIn(0, editable.length)
-            val end = et.selectionEnd.coerceIn(0, editable.length)
+            val oldText = et.text.toString()
+            if (oldText.isEmpty()) return
+
+            val start = et.selectionStart.coerceIn(0, oldText.length)
+            val end = et.selectionEnd.coerceIn(0, oldText.length)
+
+            val newText: String
+            val newCursorPos: Int
+
             if (start != end) {
-                editable.delete(minOf(start, end), maxOf(start, end))
+                // Selection exists — delete it
+                val lo = minOf(start, end)
+                val hi = maxOf(start, end)
+                newText = oldText.removeRange(lo, hi)
+                newCursorPos = lo
             } else if (start > 0) {
-                editable.delete(start - 1, start)
+                // No selection — delete character before cursor (works for \n too)
+                newText = oldText.removeRange(start - 1, start)
+                newCursorPos = start - 1
+            } else {
+                return // Cursor at start, nothing to delete
             }
+
+            et.setText(newText)
+            et.setSelection(newCursorPos.coerceIn(0, newText.length))
+            editingCursorPosition = newCursorPos.coerceIn(0, newText.length)
         }
     }
 
     /** Paste system clipboard content into the active edit field */
     fun pasteToEditText() {
-        editingEditText?.let { et ->
-            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? SystemClipboardManager
-            val pasteText = clipboard?.primaryClip?.getItemAt(0)?.text?.toString() ?: return
-            val editable = et.text ?: return
-            val start = et.selectionStart.coerceIn(0, editable.length)
-            val end = et.selectionEnd.coerceIn(start, editable.length)
-            editable.replace(start, end, pasteText)
-        }
+        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? SystemClipboardManager
+        val pasteText = clipboard?.primaryClip?.getItemAt(0)?.text?.toString() ?: return
+        insertEditText(pasteText)
     }
 
     /** Cut selected text from the edit field to system clipboard */
     fun cutFromEditText() {
         editingEditText?.let { et ->
-            val editable = et.text ?: return
-            val start = et.selectionStart.coerceIn(0, editable.length)
-            val end = et.selectionEnd.coerceIn(0, editable.length)
+            val oldText = et.text.toString()
+            val start = et.selectionStart.coerceIn(0, oldText.length)
+            val end = et.selectionEnd.coerceIn(0, oldText.length)
+
             if (start != end) {
                 val lo = minOf(start, end)
                 val hi = maxOf(start, end)
-                val selected = editable.substring(lo, hi)
+                val selected = oldText.substring(lo, hi)
+
                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? SystemClipboardManager
                 clipboard?.setPrimaryClip(ClipData.newPlainText("CleverKeys", selected))
-                editable.delete(lo, hi)
+
+                val newText = oldText.removeRange(lo, hi)
+                et.setText(newText)
+                et.setSelection(lo.coerceIn(0, newText.length))
+                editingCursorPosition = lo.coerceIn(0, newText.length)
             }
         }
     }
 
     /** Select all text in the active edit field */
     fun selectAllEditText() {
-        editingEditText?.selectAll()
+        editingEditText?.let { et ->
+            et.selectAll()
+            // Track end-of-text so view recycling has a safe fallback position
+            editingCursorPosition = et.text.length
+        }
     }
 
-    /** Dispatch a raw key event to the active edit field (arrow keys, Enter, etc.) */
+    /** Handle arrow keys, Enter, Home, End in the active edit field.
+     *  Manual cursor manipulation — dispatchKeyEvent() is a no-op on IME-owned EditText. */
     fun dispatchKeyToEditText(keyCode: Int) {
         editingEditText?.let { et ->
-            val downEvent = android.view.KeyEvent(android.view.KeyEvent.ACTION_DOWN, keyCode)
-            val upEvent = android.view.KeyEvent(android.view.KeyEvent.ACTION_UP, keyCode)
-            et.dispatchKeyEvent(downEvent)
-            et.dispatchKeyEvent(upEvent)
+            val text = et.text.toString()
+            val start = et.selectionStart.coerceIn(0, text.length)
+            val end = et.selectionEnd.coerceIn(0, text.length)
+            val hasSelection = start != end
+
+            when (keyCode) {
+                android.view.KeyEvent.KEYCODE_DPAD_LEFT -> {
+                    // Collapse selection to start, or move left by 1
+                    val newPos = if (hasSelection) minOf(start, end) else (start - 1).coerceAtLeast(0)
+                    et.setSelection(newPos)
+                    editingCursorPosition = newPos
+                }
+                android.view.KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                    // Collapse selection to end, or move right by 1
+                    val newPos = if (hasSelection) maxOf(start, end) else (end + 1).coerceAtMost(text.length)
+                    et.setSelection(newPos)
+                    editingCursorPosition = newPos
+                }
+                android.view.KeyEvent.KEYCODE_DPAD_UP -> {
+                    // Use cursor position (collapse selection if any)
+                    val pos = if (hasSelection) minOf(start, end) else start
+                    val lineStart = text.lastIndexOf('\n', pos - 1) + 1
+                    if (lineStart > 0) {
+                        val prevLineEnd = lineStart - 1
+                        val prevLineStart = text.lastIndexOf('\n', prevLineEnd - 1) + 1
+                        val offset = pos - lineStart
+                        val newPos = (prevLineStart + offset).coerceAtMost(prevLineEnd)
+                        et.setSelection(newPos)
+                        editingCursorPosition = newPos
+                    } else {
+                        et.setSelection(0)
+                        editingCursorPosition = 0
+                    }
+                }
+                android.view.KeyEvent.KEYCODE_DPAD_DOWN -> {
+                    // Use cursor position (collapse selection if any)
+                    val pos = if (hasSelection) maxOf(start, end) else start
+                    var lineEnd = text.indexOf('\n', pos)
+                    if (lineEnd != -1) {
+                        val lineStart = text.lastIndexOf('\n', pos - 1) + 1
+                        val offset = pos - lineStart
+                        val nextLineStart = lineEnd + 1
+                        var nextLineEnd = text.indexOf('\n', nextLineStart)
+                        if (nextLineEnd == -1) nextLineEnd = text.length
+                        val newPos = (nextLineStart + offset).coerceAtMost(nextLineEnd)
+                        et.setSelection(newPos)
+                        editingCursorPosition = newPos
+                    } else {
+                        et.setSelection(text.length)
+                        editingCursorPosition = text.length
+                    }
+                }
+                android.view.KeyEvent.KEYCODE_ENTER -> {
+                    insertEditText("\n")
+                }
+                android.view.KeyEvent.KEYCODE_MOVE_HOME -> {
+                    val pos = if (hasSelection) minOf(start, end) else start
+                    val lineStart = text.lastIndexOf('\n', pos - 1) + 1
+                    et.setSelection(lineStart)
+                    editingCursorPosition = lineStart
+                }
+                android.view.KeyEvent.KEYCODE_MOVE_END -> {
+                    val pos = if (hasSelection) maxOf(start, end) else start
+                    var lineEnd = text.indexOf('\n', pos)
+                    if (lineEnd == -1) lineEnd = text.length
+                    et.setSelection(lineEnd)
+                    editingCursorPosition = lineEnd
+                }
+            }
         }
     }
 
@@ -758,8 +870,11 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
 
                 // Bug #3 fix: use in-progress text (not DB content) to survive view recreation
                 val displayText = editingInProgressText ?: text
+                // Capture cursor BEFORE setText — setText() resets cursor to 0 and
+                // would corrupt editingCursorPosition if the TextWatcher tracked it
+                val cursorPos = editingCursorPosition ?: displayText.length
                 editField.setText(displayText)
-                editField.setSelection(editField.text.length)
+                editField.setSelection(cursorPos.coerceIn(0, displayText.length))
                 // Store reference for key routing (insertEditText/backspaceEditText).
                 // Remove old TextWatcher before adding new one to prevent accumulation
                 // when getView() is called multiple times (view recycling).
@@ -779,6 +894,10 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                     override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
                     override fun afterTextChanged(s: android.text.Editable?) {
                         editingInProgressText = s?.toString()
+                        // NOTE: Do NOT update editingCursorPosition here.
+                        // setText() resets cursor to 0 before our setSelection() corrects it.
+                        // The TextWatcher fires between those two calls, capturing the wrong
+                        // position (0). Cursor is tracked explicitly in insertEditText/backspace/etc.
                         // Disable save when content is blank
                         val canSave = !s.isNullOrBlank()
                         saveButton.isEnabled = canSave
