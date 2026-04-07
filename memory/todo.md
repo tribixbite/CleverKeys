@@ -100,6 +100,9 @@ reveals on expand with correct tab-specific icons, no whitespace issues, timesta
 - [x] Edit mode: TextWatcher cursor corruption fix (setText resets cursor to 0, TextWatcher captured wrong pos) — f1e80d0ff
 - [x] Edit mode: delete_entry exits edit mode (prevents isEditing() blocking all buttons) — f1e80d0ff
 - [x] Todo status filter: default (active only) was skipping filter pass, showing planned/completed — f1e80d0ff
+- [x] Edit mode: inputType="none" → "textMultiLine" (TYPE_NULL breaks setSelection/selectionStart) — 3f0a25c55
+- [x] Edit mode: use editingCursorPosition as source of truth instead of et.selectionStart — 3f0a25c55
+- [x] Edit mode: delete_entry always cancels edit mode (was only matching on content) — 3f0a25c55
 - [ ] Edit mode: verify Enter, arrows, paste, backspace work correctly on device
 
 ## Clipboard Regex Search — COMPLETE (2026-03-27)
