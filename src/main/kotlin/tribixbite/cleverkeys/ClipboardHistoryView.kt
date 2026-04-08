@@ -496,8 +496,16 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         editingOriginalContent = null
         editingInProgressText = null
         editingCursorPosition = null
-        // Remove TextWatcher before dropping reference to prevent stale callbacks
-        editingTextWatcher?.let { editingEditText?.removeTextChangedListener(it) }
+        // Remove TextWatcher via tag-based cleanup (matches getView tag management).
+        // Also try field-based removal as belt-and-suspenders.
+        editingEditText?.let { et ->
+            @Suppress("UNCHECKED_CAST")
+            (et.getTag(R.id.clipboard_entry_edit_field) as? android.text.TextWatcher)?.let {
+                et.removeTextChangedListener(it)
+                et.setTag(R.id.clipboard_entry_edit_field, null)
+            }
+            editingTextWatcher?.let { et.removeTextChangedListener(it) }
+        }
         editingTextWatcher = null
         editingEditText = null
         // Notify ClipboardManager to re-enable search/tabs/pagination UI
@@ -923,48 +931,55 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 val displayText = editingInProgressText ?: text
                 editField.setText(displayText)
 
+                // Restore cursor after setText (which resets to 0). Must run on EVERY
+                // getView call, not just first render — ListView re-getViews after height
+                // changes and the cursor would jump to 0 without this.
+                val cursorPos = editingCursorPosition ?: displayText.length
+                editField.setSelection(cursorPos.coerceIn(0, displayText.length))
+
+                // Save button state — reflects current content on every render
+                val saveButton = view.findViewById<View>(R.id.clipboard_entry_save)
+                saveButton.isEnabled = displayText.isNotBlank()
+                saveButton.alpha = if (displayText.isNotBlank()) 1.0f else 0.3f
+
+                // Click listeners: setOnClickListener replaces previous, no accumulation.
+                // Must be set on every getView because ListView may provide a recycled view
+                // with different button widget instances than the initial render.
+                saveButton.setOnClickListener { save_edit() }
+                view.findViewById<View>(R.id.clipboard_entry_cancel).setOnClickListener { cancelEdit() }
+                deleteButton.setOnClickListener { delete_entry(pos) }
+
+                // TextWatcher: tag-based management prevents accumulation on view recycling.
+                // Remove any existing watcher from THIS editField (via tag), then add fresh one.
+                @Suppress("UNCHECKED_CAST")
+                (editField.getTag(R.id.clipboard_entry_edit_field) as? android.text.TextWatcher)?.let {
+                    editField.removeTextChangedListener(it)
+                }
+                val watcher = object : android.text.TextWatcher {
+                    override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                    override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+                    override fun afterTextChanged(s: android.text.Editable?) {
+                        editingInProgressText = s?.toString()
+                        // NOTE: Do NOT update editingCursorPosition here.
+                        // setText() resets cursor to 0 before our setSelection() corrects it.
+                        // The TextWatcher fires between those two calls, capturing the wrong
+                        // position (0). Cursor is tracked explicitly in insertEditText/backspace/etc.
+                        val canSave = !s.isNullOrBlank()
+                        saveButton.isEnabled = canSave
+                        saveButton.alpha = if (canSave) 1.0f else 0.3f
+                    }
+                }
+                editField.addTextChangedListener(watcher)
+                editField.setTag(R.id.clipboard_entry_edit_field, watcher)
+                editingTextWatcher = watcher
+
                 // CRITICAL: Only cache editingEditText on first real render.
-                // ListView.measureHeightOfChildren() calls getView() with SCRAP views to
-                // calculate row heights after a newline changes the EditText height.
-                // If we cache the scrap view's EditText, all subsequent key routing goes
-                // to an invisible detached view — "nothing works after Enter".
+                // ListView.measureHeightOfChildren() calls getView() with SCRAP views for
+                // height calculation after a newline changes the EditText height.
+                // activeEditingEditText property recovers from stale scrap references,
+                // but preventing the theft in the first place is the primary defense.
                 if (editingEditText == null) {
-                    val cursorPos = editingCursorPosition ?: displayText.length
-                    editField.setSelection(cursorPos.coerceIn(0, displayText.length))
                     editingEditText = editField
-
-                    // Save button — disabled when content is blank
-                    val saveButton = view.findViewById<View>(R.id.clipboard_entry_save)
-                    saveButton.isEnabled = displayText.isNotBlank()
-                    saveButton.alpha = if (displayText.isNotBlank()) 1.0f else 0.3f
-
-                    // Sync editingInProgressText via TextWatcher so it survives view recreation
-                    val watcher = object : android.text.TextWatcher {
-                        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-                        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-                        override fun afterTextChanged(s: android.text.Editable?) {
-                            editingInProgressText = s?.toString()
-                            // NOTE: Do NOT update editingCursorPosition here.
-                            // setText() resets cursor to 0 before our setSelection() corrects it.
-                            // The TextWatcher fires between those two calls, capturing the wrong
-                            // position (0). Cursor is tracked explicitly in insertEditText/backspace/etc.
-                            val canSave = !s.isNullOrBlank()
-                            saveButton.isEnabled = canSave
-                            saveButton.alpha = if (canSave) 1.0f else 0.3f
-                        }
-                    }
-                    editField.addTextChangedListener(watcher)
-                    editingTextWatcher = watcher
-
-                    saveButton.setOnClickListener {
-                        save_edit()
-                    }
-                    view.findViewById<View>(R.id.clipboard_entry_cancel).setOnClickListener {
-                        cancelEdit()
-                    }
-                    deleteButton.setOnClickListener {
-                        delete_entry(pos)
-                    }
                 }
 
                 return view

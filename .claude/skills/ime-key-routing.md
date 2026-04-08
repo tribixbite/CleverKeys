@@ -223,12 +223,48 @@ These views live inside the IME's own view tree, so:
 
 - **KeyEventReceiverBridge is the #1 cause of "input goes to app instead of panel"**. When adding new `IReceiver` methods, you must add delegation in THREE files: `IReceiver` (interface), `KeyEventReceiverBridge` (delegation), `KeyboardReceiver` (implementation). Missing the bridge = silent no-op with no crash or log. This has happened twice.
 - **setText + setSelection, NEVER editable.replace() or append()**: `EditText.append()` and `Editable.replace()` don't reliably work when the IME owns the view. Always use `et.setText(newText); et.setSelection(newText.length)`.
-- **inputType = TYPE_NULL**: Always set this on EditText within IME views. Without it, Android will try to show its own soft keyboard (which IS the current keyboard — infinite recursion).
+- **inputType = TYPE_NULL**: Always set this on EditText within IME views. Without it, Android will try to show its own soft keyboard (which IS the current keyboard — infinite recursion). `setSelection()` and `selectionStart/End` operate on Editable spans and work correctly regardless of inputType.
 - **Cursor clamping**: Always use `.coerceIn(0, editable.length)` when accessing `selectionStart`/`selectionEnd`. View recycling can leave stale cursor positions.
 - **View recycling**: In `BaseAdapter.getView()`, use content-identity matching (not position) for tracking which entry is being edited. List positions shift when entries are added/deleted.
-- **TextWatcher accumulation**: When using `EditText` in a recycled view, remove the old `TextWatcher` before adding a new one. Otherwise watchers accumulate on each `getView()` call.
+- **TextWatcher accumulation**: When using `EditText` in a recycled view, remove the old `TextWatcher` before adding a new one. Otherwise watchers accumulate on each `getView()` call. Use `view.getTag()`/`setTag()` to track the active TextWatcher per view instance.
 - **PopupWindow in IME**: Must set `isFocusable = false` to prevent panel dismiss.
 - **View.post() for detached views**: Use `Handler(Looper.getMainLooper()).post()` instead of `view.post()` — detached views silently drop runnables.
+
+## ListView Scrap View Architecture (Critical for EditText in Adapters)
+
+When a `BaseAdapter`'s `getView()` renders an `EditText` whose height can change (e.g., multiline after Enter), ListView calls `measureHeightOfChildren()` which invokes `getView()` with a **scrap view** — a detached, invisible view used only for measurement. This has severe consequences:
+
+**The Problem**: If you cache a reference to the scrap view's EditText (e.g., `editingEditText = editField`), all subsequent key routing goes to an invisible detached view. The user presses keys but nothing appears to happen.
+
+**Required Architecture** (implemented in `ClipboardHistoryView.getView()`):
+
+1. **Scrap-safe reference caching**: Only cache `editingEditText = editField` when the reference is null (first render). Use `if (editingEditText == null) { editingEditText = editField }`.
+
+2. **Dynamic recovery property** (`activeEditingEditText`): A computed property that validates the cached reference via `windowToken` (null = detached) and falls back to scanning live child views. All text manipulation methods use this instead of the raw field.
+
+3. **Setup OUTSIDE the guard**: Everything except the reference cache must run on every `getView()` call, because ListView may provide a different view instance for the same position:
+   - `setSelection(cursorPos)` — `setText()` resets cursor to 0; must restore after every setText
+   - `setOnClickListener` — new button widgets need their handlers
+   - TextWatcher (with tag-based cleanup to prevent accumulation)
+
+4. **Direct state sync**: Text manipulation methods must update `editingInProgressText` directly (not rely solely on TextWatcher), because the TextWatcher may be on a different view instance.
+
+```
+getView() call flow for editing row:
+┌──────────────────────────────────────────────┐
+│ ALWAYS (every getView call):                 │
+│  • editField.setText(displayText)            │
+│  • editField.setSelection(cursorPos)         │
+│  • saveButton.setOnClickListener(...)        │
+│  • cancelButton.setOnClickListener(...)      │
+│  • deleteButton.setOnClickListener(...)      │
+│  • TextWatcher (tag-based: remove old, add)  │
+├──────────────────────────────────────────────┤
+│ GUARD (if editingEditText == null):          │
+│  • editingEditText = editField               │
+│  (prevents scrap view reference theft)       │
+└──────────────────────────────────────────────┘
+```
 
 ## Testing
 

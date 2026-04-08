@@ -107,8 +107,11 @@ The clipboard pane has three mutually exclusive modes. Only one can be active at
 - **Enter**: Tap edit button → `edit_entry(pos)`
 - **Exit**: Save/cancel → `cancelEdit()` / `save_edit()`
 - **UI lock**: `onEditModeEntered` callback dims tabs, search, pagination
-- **Key routing**: `isClipboardEditMode() → insertToClipboardEdit()`
+- **Key routing**: `isClipboardEditMode() → insertToClipboardEdit()` (tab-agnostic — same chain for history, pinned, todos)
 - Search mode cleared on enter. Tab switching blocked.
+- **Text manipulation**: All methods use `activeEditingEditText` (dynamic property with windowToken validation + child view fallback) — see `ime-key-routing.md` "ListView Scrap View Architecture"
+- **View recycling**: getView() sets up cursor, click listeners, TextWatcher on EVERY call (not just first render). Only the `editingEditText` reference cache is guarded.
+- **State tracking**: `editingInProgressText` is synced directly in text manipulation methods AND via TextWatcher (belt-and-suspenders). `save_edit()` reads from `editingInProgressText` (not EditText widget).
 
 ### 3. Tag Mode (pane-level, in ClipboardManager)
 - **State**: `tagMode: Boolean` + `tagEditText: EditText?`
@@ -193,9 +196,10 @@ Status button cycles through all three states.
 - **COPY semantics**: Pinning/todoing copies the entry (independent from history). Changes to one don't affect the other.
 - **Content-based identity**: Edit/expand states track by content string, not list position. Position changes when entries are added/deleted/filtered.
 - **Async loading**: `loadDataAsync()` cancels previous load job. Rapid tab switches won't cause stale data overwrites.
-- **Edit suppression**: `on_clipboard_history_change()` returns early during edit mode to prevent view recreation that would reset the EditText.
+- **Edit suppression**: `on_clipboard_history_change()` and `onWindowVisibilityChanged()` return early during edit mode to prevent view recreation that would reset the EditText.
 - **Non-breaking spaces**: Timestamps use `\u00A0` to prevent wrapping mid-unit (e.g., "2\u00A0min\u00A0ago").
 - **View recycling**: `getView()` receives recycled views. Always reset ALL visibility states — never assume a view starts in a particular state.
+- **ListView scrap views**: When EditText height changes (e.g., newline inserted), ListView calls `getView()` with invisible scrap views for measurement. NEVER cache references to scrap view widgets without a guard. See `ime-key-routing.md` "ListView Scrap View Architecture" for the required pattern.
 - **FTS4**: The project uses FTS4 (not FTS5) because FTS5 is unavailable on all Android builds.
 
 ## Related Skills
