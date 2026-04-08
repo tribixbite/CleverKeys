@@ -886,10 +886,17 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 thumbnailContainer.visibility = GONE
                 playBadge.visibility = GONE
 
+                // Rescue cursor position from the active EditText before rebinding,
+                // to preserve user tap-to-reposition (editingCursorPosition is stale
+                // if the user tapped to move cursor since the last text operation).
+                editingEditText?.let { activeEt ->
+                    if (activeEt.selectionStart >= 0) {
+                        editingCursorPosition = activeEt.selectionStart
+                    }
+                }
+
                 // Bug #3 fix: use in-progress text (not DB content) to survive view recreation
                 val displayText = editingInProgressText ?: text
-                // Capture cursor BEFORE setText — setText() resets cursor to 0 and
-                // would corrupt editingCursorPosition if the TextWatcher tracked it
                 val cursorPos = editingCursorPosition ?: displayText.length
                 editField.setText(displayText)
                 editField.setSelection(cursorPos.coerceIn(0, displayText.length))
