@@ -95,6 +95,32 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     // TextWatcher reference — tracked to prevent accumulation on view recycling.
     // Removed from old EditText before adding to new one in getView().
     private var editingTextWatcher: android.text.TextWatcher? = null
+
+    // Dynamic lookup for the editing EditText — resilient to stale references from
+    // ListView scrap view measurement passes. When Enter inserts a newline, the EditText
+    // height changes → ListView.measureHeightOfChildren() calls getView() with a SCRAP
+    // view → if that scrap steals editingEditText, all subsequent key routing goes to an
+    // invisible detached view. This property detects stale references via windowToken
+    // (null = detached) and falls back to scanning live children for the visible EditText.
+    private val activeEditingEditText: EditText?
+        get() {
+            // Fast path: current reference is still attached and valid
+            editingEditText?.let { et ->
+                if (et.windowToken != null) return et
+            }
+            // Slow path: reference is stale (scrap view or detached). Search live children.
+            for (i in 0 until childCount) {
+                val child = getChildAt(i) ?: continue
+                val et = child.findViewById<EditText>(R.id.clipboard_entry_edit_field)
+                if (et != null && et.visibility == VISIBLE && et.windowToken != null) {
+                    editingEditText = et
+                    return et
+                }
+            }
+            // No attached editing view found — return cached reference (callers null-check)
+            return editingEditText
+        }
+
     // Callbacks for edit mode transitions — used by ClipboardManager to lock/unlock UI controls
     var onEditModeEntered: (() -> Unit)? = null
     var onEditModeExited: (() -> Unit)? = null
@@ -443,7 +469,9 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     /** Commit the edited content to the database and exit edit mode */
     fun save_edit() {
         val oldContent = editingOriginalContent ?: return
-        val newContent = editingEditText?.text?.toString() ?: return
+        // Use tracked in-progress text — resilient to editingEditText pointing at stale scrap view.
+        // Falls back to activeEditingEditText?.text if editingInProgressText was never initialized.
+        val newContent = editingInProgressText ?: activeEditingEditText?.text?.toString() ?: return
 
         val result = service?.editEntryContent(oldContent, newContent, currentTab)
         when (result) {
@@ -487,9 +515,9 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
      *  Trusts et.selectionStart/End first (reliable with textMultiLine inputType),
      *  falls back to editingCursorPosition only for view-recycling recovery. */
     fun insertEditText(text: String) {
-        editingEditText?.let { et ->
+        activeEditingEditText?.let { et ->
             val oldText = et.text.toString()
-            // Trust EditText selection first (reliable with textMultiLine), tracked cursor as fallback
+            // Trust EditText selection first (reliable regardless of inputType), tracked cursor as fallback
             val selStart = et.selectionStart
             val selEnd = et.selectionEnd
             val hasValidSelection = selStart >= 0 && selEnd >= 0
@@ -506,13 +534,15 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             et.setText(newText)
             et.setSelection(newCursorPos)
             editingCursorPosition = newCursorPos
+            // Direct sync — resilient to missing TextWatcher (e.g., recycled view without guard entry)
+            editingInProgressText = newText
         }
     }
 
     /** Handle backspace in the active edit field (called by key routing).
      *  If selection exists, deletes selected range. Otherwise deletes char before cursor. */
     fun backspaceEditText() {
-        editingEditText?.let { et ->
+        activeEditingEditText?.let { et ->
             val oldText = et.text.toString()
             if (oldText.isEmpty()) return
 
@@ -542,6 +572,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             et.setText(newText)
             et.setSelection(newCursorPos.coerceIn(0, newText.length))
             editingCursorPosition = newCursorPos.coerceIn(0, newText.length)
+            editingInProgressText = newText
         }
     }
 
@@ -555,7 +586,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     /** Cut selected text from the edit field to system clipboard.
      *  Requires active selection (e.g., from selectAll) — no-op if no selection. */
     fun cutFromEditText() {
-        editingEditText?.let { et ->
+        activeEditingEditText?.let { et ->
             val oldText = et.text.toString()
             val selStart = et.selectionStart
             val selEnd = et.selectionEnd
@@ -572,13 +603,14 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 et.setText(newText)
                 et.setSelection(lo.coerceIn(0, newText.length))
                 editingCursorPosition = lo.coerceIn(0, newText.length)
+                editingInProgressText = newText
             }
         }
     }
 
     /** Select all text in the active edit field */
     fun selectAllEditText() {
-        editingEditText?.let { et ->
+        activeEditingEditText?.let { et ->
             et.selectAll()
             // Track end-of-text so view recycling has a safe fallback position
             editingCursorPosition = et.text.length
@@ -588,7 +620,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     /** Handle arrow keys, Enter, Home, End in the active edit field.
      *  Manual cursor manipulation — dispatchKeyEvent() is a no-op on IME-owned EditText. */
     fun dispatchKeyToEditText(keyCode: Int) {
-        editingEditText?.let { et ->
+        activeEditingEditText?.let { et ->
             val text = et.text.toString()
             // Trust EditText selection first (reliable with textMultiLine), tracked cursor as fallback
             val selStart = et.selectionStart
