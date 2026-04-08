@@ -42,15 +42,16 @@
       android:maxLines="1"
       android:ellipsize="end"/>
 
-  <!-- Inline edit field: overlays TextView when editing. IME framework prevents
-       showing a soft keyboard for the IME's own views — no inputType trick needed.
-       textMultiLine gives proper cursor/selection support (inputType=none breaks
-       setSelection and selectionStart on some devices). -->
+  <!-- Inline edit field: overlays TextView when editing. Uses inputType="none"
+       (TYPE_NULL) per IME best practice — prevents framework from calling restartInput()
+       on setText(), which breaks key routing after newline insertion.
+       Cursor tracking is handled by editingCursorPosition in ClipboardHistoryView.
+       Multiline display is controlled by minLines/maxLines, not inputType. -->
   <EditText
       android:id="@+id/clipboard_entry_edit_field"
       style="@style/clipboardEntry"
       android:visibility="gone"
-      android:inputType="textMultiLine"
+      android:inputType="none"
       android:minLines="2"
       android:maxLines="10"
       android:background="@drawable/clipboard_edit_bg"
