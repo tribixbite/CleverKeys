@@ -122,6 +122,8 @@ reveals on expand with correct tab-specific icons, no whitespace issues, timesta
   Fix: guard only protects editingEditText=editField. All other setup runs every getView call.
   TextWatcher uses tag-based cleanup (getTag/setTag) to prevent accumulation.
   Documented in skills: ime-key-routing.md "ListView Scrap View Architecture".
+- [x] Edit mode: Gemini review — TextWatcher cleanup in normal-mode, isEditing() guard, save_edit simplify — 3bff571f9
+  Gemini 3 Pro confirmed: guard restructure correct, scrap windowToken=null (safe), architecture sound.
 - [ ] Edit mode: verify Enter, arrows, paste, backspace, tap-to-reposition, save/cancel/delete work on all tabs
 
 ## Clipboard Regex Search — COMPLETE (2026-03-27)
