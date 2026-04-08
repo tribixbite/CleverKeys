@@ -104,6 +104,9 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     // (null = detached) and falls back to scanning live children for the visible EditText.
     private val activeEditingEditText: EditText?
         get() {
+            // Not in edit mode — no searching needed, avoid unnecessary child iteration
+            if (!isEditing()) return null
+
             // Fast path: current reference is still attached and valid
             editingEditText?.let { et ->
                 if (et.windowToken != null) return et
@@ -469,9 +472,9 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     /** Commit the edited content to the database and exit edit mode */
     fun save_edit() {
         val oldContent = editingOriginalContent ?: return
-        // Use tracked in-progress text — resilient to editingEditText pointing at stale scrap view.
-        // Falls back to activeEditingEditText?.text if editingInProgressText was never initialized.
-        val newContent = editingInProgressText ?: activeEditingEditText?.text?.toString() ?: return
+        // editingInProgressText is guaranteed non-null during active edit (set in edit_entry,
+        // updated by TextWatcher + direct sync in text manipulation methods).
+        val newContent = editingInProgressText ?: return
 
         val result = service?.editEntryContent(oldContent, newContent, currentTab)
         when (result) {
@@ -991,6 +994,15 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             primaryButtons.visibility = VISIBLE
             editButtons.visibility = GONE
             deleteRow.visibility = GONE
+
+            // Clean up TextWatcher from recycled edit views. If this view was previously
+            // used for editing (scrap or real), the watcher's lambda captures saveButton
+            // and adapter context — remove it to prevent minor memory retention.
+            @Suppress("UNCHECKED_CAST")
+            (editField.getTag(R.id.clipboard_entry_edit_field) as? android.text.TextWatcher)?.let {
+                editField.removeTextChangedListener(it)
+                editField.setTag(R.id.clipboard_entry_edit_field, null)
+            }
 
             // ── Media thumbnail rendering ──
             if (entry.isMedia) {
