@@ -103,7 +103,10 @@ reveals on expand with correct tab-specific icons, no whitespace issues, timesta
 - [x] Edit mode: inputType="none" → "textMultiLine" (TYPE_NULL breaks setSelection/selectionStart) — 3f0a25c55
 - [x] Edit mode: use editingCursorPosition as source of truth instead of et.selectionStart — 3f0a25c55
 - [x] Edit mode: delete_entry always cancels edit mode (was only matching on content) — 3f0a25c55
-- [ ] Edit mode: verify Enter, arrows, paste, backspace work correctly on device
+- [x] Edit mode: reverse cursor priority — trust et.selectionStart first (textMultiLine makes it reliable), editingCursorPosition as view-recycling fallback — 824c3f764
+- [x] Edit mode: restore selection handling in insertEditText (selectAll+type replaces) and backspaceEditText (selectAll+backspace clears) — 824c3f764
+- [x] Edit mode: rescue cursor from active EditText in getView() to preserve tap-to-reposition — 0fa3f53c9
+- [ ] Edit mode: verify Enter, arrows, paste, backspace, tap-to-reposition work correctly on device
 
 ## Clipboard Regex Search — COMPLETE (2026-03-27)
 VSCode-style `.*` toggle button in search bar. OFF = plain substring match (unchanged),
