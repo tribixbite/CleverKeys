@@ -106,7 +106,9 @@ reveals on expand with correct tab-specific icons, no whitespace issues, timesta
 - [x] Edit mode: delete_entry always cancels edit mode (was only matching on content) — 3f0a25c55
 - [x] Edit mode: reverse cursor priority — trust et.selectionStart first (textMultiLine makes it reliable), editingCursorPosition as view-recycling fallback — 824c3f764
 - [x] Edit mode: restore selection handling in insertEditText (selectAll+type replaces) and backspaceEditText (selectAll+backspace clears) — 824c3f764
-- [x] Edit mode: rescue cursor from active EditText in getView() to preserve tap-to-reposition — 0fa3f53c9
+- [x] Edit mode: rescue cursor from active EditText in getView() to preserve tap-to-reposition — 0fa3f53c9 — REMOVED: unnecessary with scrap view guard
+- [x] Edit mode: guard editingEditText against ListView scrap view theft — 4139fd00d
+  Root cause: Enter → height change → measureHeightOfChildren() → getView(scrap) → editingEditText overwritten with invisible detached view → all subsequent input lost
 - [ ] Edit mode: verify Enter, arrows, paste, backspace, tap-to-reposition work correctly on device
 
 ## Clipboard Regex Search — COMPLETE (2026-03-27)
