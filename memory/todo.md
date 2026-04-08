@@ -113,7 +113,16 @@ reveals on expand with correct tab-specific icons, no whitespace issues, timesta
   Belt+suspenders: guard prevents scrap theft, dynamic property recovers if reference goes stale.
   Also: direct editingInProgressText sync in insertEditText/backspaceEditText/cutFromEditText,
   save_edit() reads editingInProgressText instead of potentially-stale EditText widget.
-- [ ] Edit mode: verify Enter, arrows, paste, backspace, tap-to-reposition work correctly on device
+- [x] Edit mode: restructure getView guard — cursor/listeners/TextWatcher outside guard — 002a89409
+  Guard was too broad: setSelection, setOnClickListener, TextWatcher all inside guard.
+  After ListView recycles view (Enter → height change), new view missed all setup.
+  Bug 1: cursor jumped to 0 after Enter (setText resets, setSelection was guarded).
+  Bug 2: save/cancel/delete buttons stopped working (new widget, no listeners).
+  Bug 3: Enter appeared broken on pinned/todos (manifestation of bugs 1+2).
+  Fix: guard only protects editingEditText=editField. All other setup runs every getView call.
+  TextWatcher uses tag-based cleanup (getTag/setTag) to prevent accumulation.
+  Documented in skills: ime-key-routing.md "ListView Scrap View Architecture".
+- [ ] Edit mode: verify Enter, arrows, paste, backspace, tap-to-reposition, save/cancel/delete work on all tabs
 
 ## Clipboard Regex Search — COMPLETE (2026-03-27)
 VSCode-style `.*` toggle button in search bar. OFF = plain substring match (unchanged),
