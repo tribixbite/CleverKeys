@@ -109,6 +109,10 @@ reveals on expand with correct tab-specific icons, no whitespace issues, timesta
 - [x] Edit mode: rescue cursor from active EditText in getView() to preserve tap-to-reposition — 0fa3f53c9 — REMOVED: unnecessary with scrap view guard
 - [x] Edit mode: guard editingEditText against ListView scrap view theft — 4139fd00d
   Root cause: Enter → height change → measureHeightOfChildren() → getView(scrap) → editingEditText overwritten with invisible detached view → all subsequent input lost
+- [x] Edit mode: dynamic activeEditingEditText property (windowToken + child search fallback) — 00d8b7381
+  Belt+suspenders: guard prevents scrap theft, dynamic property recovers if reference goes stale.
+  Also: direct editingInProgressText sync in insertEditText/backspaceEditText/cutFromEditText,
+  save_edit() reads editingInProgressText instead of potentially-stale EditText widget.
 - [ ] Edit mode: verify Enter, arrows, paste, backspace, tap-to-reposition work correctly on device
 
 ## Clipboard Regex Search — COMPLETE (2026-03-27)
