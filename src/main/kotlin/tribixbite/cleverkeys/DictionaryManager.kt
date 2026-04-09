@@ -3,6 +3,7 @@ package tribixbite.cleverkeys
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import androidx.preference.PreferenceManager
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.util.Locale
@@ -115,13 +116,16 @@ class DictionaryManager(private val context: Context) {
         if (languageChanged) {
             loadUserWords()
 
-            // Evict previous language's predictor to free memory (~5-10MB per instance).
-            // Each WordPredictor holds dictionary map, prefix index, ContextModel,
-            // PersonalizationEngine, and a ContentObserver — all leak if not cleaned up.
-            if (previousLanguage in predictors) {
-                predictors[previousLanguage]?.stopObservingDictionaryChanges()
-                predictors.remove(previousLanguage)
-                Log.i(TAG, "Evicted predictor for '$previousLanguage' (memory freed)")
+            // Evict stale predictors to free memory (~5-10MB per instance).
+            // Keep all configured languages: primary, secondary, and their alternates
+            // (up to 4). Users can toggle between primary↔alt_primary and
+            // secondary↔alt_secondary without paying async reload penalty.
+            val keepSet = getConfiguredLanguages()
+            val keysToEvict = predictors.keys.filter { it !in keepSet }
+            for (k in keysToEvict) {
+                predictors[k]?.stopObservingDictionaryChanges()
+                predictors.remove(k)
+                Log.i(TAG, "Evicted predictor for '$k' (memory freed)")
             }
         }
 
@@ -131,11 +135,16 @@ class DictionaryManager(private val context: Context) {
                 setContext(context) // Enable disabled words filtering
 
                 // CRITICAL: Use async loading to prevent UI freeze during language switching
-                loadDictionaryAsync(context, code) {
-                    // This runs on the main thread when loading is complete
-                    // CRITICAL: Activate the UserDictionaryObserver now that dictionary is loaded
-                    startObservingDictionaryChanges()
-                    Log.i(TAG, "Dictionary loaded and observer activated for: $code")
+                val capturedCode = code
+                loadDictionaryAsync(context, capturedCode) {
+                    // Prevent orphaned observer: if this predictor was evicted before
+                    // loading finished, don't start an observer on a dead instance
+                    if (predictors[capturedCode] === this) {
+                        startObservingDictionaryChanges()
+                        Log.i(TAG, "Dictionary loaded and observer activated for: $capturedCode")
+                    } else {
+                        Log.w(TAG, "Predictor for '$capturedCode' evicted before load finished, skipping observer")
+                    }
                 }
             }
         }
@@ -263,19 +272,38 @@ class DictionaryManager(private val context: Context) {
     fun preloadLanguages(languageCodes: Array<String>) {
         for (code in languageCodes) {
             predictors.getOrPut(code) {
+                val capturedCode = code
                 WordPredictor().apply {
                     setContext(context) // Enable disabled words filtering
 
                     // CRITICAL: Use async loading to prevent UI freeze during preloading
-                    loadDictionaryAsync(context, code) {
-                        // This runs on the main thread when loading is complete
-                        // CRITICAL: Activate the UserDictionaryObserver for preloaded language
-                        startObservingDictionaryChanges()
-                        Log.i(TAG, "Preloaded dictionary and activated observer for: $code")
+                    loadDictionaryAsync(context, capturedCode) {
+                        // Prevent orphaned observer if predictor was evicted before load finished
+                        if (predictors[capturedCode] === this) {
+                            startObservingDictionaryChanges()
+                            Log.i(TAG, "Preloaded dictionary and activated observer for: $capturedCode")
+                        } else {
+                            Log.w(TAG, "Predictor for '$capturedCode' evicted before preload finished, skipping observer")
+                        }
                     }
                 }
             }
         }
+    }
+
+    /**
+     * Returns the set of all configured language codes that should be retained.
+     * Includes primary, secondary, and their alternates (up to 4 languages).
+     * "none" and empty strings are excluded.
+     */
+    private fun getConfiguredLanguages(): Set<String> {
+        val langPrefs = PreferenceManager.getDefaultSharedPreferences(context)
+        return setOfNotNull(
+            langPrefs.getString("pref_primary_language", "en"),
+            langPrefs.getString("pref_secondary_language", null),
+            langPrefs.getString("pref_primary_language_alt", null),
+            langPrefs.getString("pref_secondary_language_alt", null)
+        ).filter { it != "none" && it.isNotEmpty() }.toSet()
     }
 
     /** Release all predictor instances and their observers. */

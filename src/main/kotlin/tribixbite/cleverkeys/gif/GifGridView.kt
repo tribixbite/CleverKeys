@@ -47,8 +47,9 @@ class GifGridManager(
 
     /** Coil image loader with IME-friendly memory limits.
      * Default Coil cache is 25% of available RAM (~200-300MB on modern phones).
-     * Cap at 32MB — holds ~6000 thumbnails (80px WebP, ~5KB each), plenty for
-     * GIF browsing with 100-item pages. Prevents IME from bloating to 500MB+. */
+     * Cap at 32MB — Coil caches uncompressed ARGB_8888 bitmaps (~160KB at 200px),
+     * so 32MB holds ~200 images — enough for two 100-item pages. Prevents IME
+     * from bloating to 500MB+. */
     private val imageLoader: ImageLoader = ImageLoader.Builder(context)
         .memoryCache {
             MemoryCache.Builder(context)
