@@ -1,5 +1,17 @@
 # CleverKeys TODO
 
+## ✅ Clipboard Edit Mode — Visibility Check Fix (2026-04-09)
+Edit mode on pinned/todo tabs appeared to work (UI showed EditText) but typed keys had
+no visible effect. Root cause: `activeEditingEditText` fast path checked `windowToken != null`
+but NOT `visibility == VISIBLE`. When `loadDataAsync()` completed during edit mode (tab switch
+race), `notifyDataSetChanged()` recycled the cached editField to a different position (GONE)
+while it retained a valid windowToken. All setText() calls went to the invisible recycled view.
+
+**Fix (6835ba57c)**: Added `et.visibility == VISIBLE` check to fast path. Falls through to
+slow path (child search) when cached ref is recycled/GONE.
+
+**Repro**: Edit + delete entry in history → switch to pinned → edit entry → type = no response.
+
 ## Clipboard Entry Duration Fix — Settings Bug + Stale Expiry Rescue (2026-03-31)
 Entry Duration slider was missing from main SettingsActivity — only existed in dead
 ClipboardSettingsActivity (not in manifest, never launched). Users could not configure

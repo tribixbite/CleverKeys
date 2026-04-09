@@ -59,6 +59,11 @@ CleverKeys is a **complete Kotlin rewrite** of `Julow/Unexpected-Keyboard` featu
 - **ALWAYS** implement features properly and completely.
 - **ALWAYS** do things the right way, not the expedient way.
 
+**TESTING POLICY:**
+- **NEVER** test locally via ADB (screencap, input, am start, etc.). ADB is for build-install only.
+- **ALWAYS** write instrumented tests (ew-cli) or pure JVM tests when testing is possible.
+- If a scenario cannot be tested via instrumented or pure tests, **ask the user to test manually**.
+
 ---
 
 ## 📁 **ARCHITECTURE OVERVIEW**

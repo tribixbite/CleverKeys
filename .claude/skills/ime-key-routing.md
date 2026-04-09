@@ -240,7 +240,7 @@ When a `BaseAdapter`'s `getView()` renders an `EditText` whose height can change
 
 1. **Scrap-safe reference caching**: Only cache `editingEditText = editField` when the reference is null (first render). Use `if (editingEditText == null) { editingEditText = editField }`.
 
-2. **Dynamic recovery property** (`activeEditingEditText`): A computed property that validates the cached reference via `windowToken` (null = detached) and falls back to scanning live child views. All text manipulation methods use this instead of the raw field.
+2. **Dynamic recovery property** (`activeEditingEditText`): A computed property that validates the cached reference via `visibility == VISIBLE` AND `windowToken != null`, then falls back to scanning live child views. All text manipulation methods use this instead of the raw field. **CRITICAL**: Must check visibility, not just windowToken. When `loadDataAsync()` completes during edit mode, `notifyDataSetChanged()` can recycle the cached editField to a different position (GONE) while it retains a valid windowToken. Without the visibility check, setText goes to the invisible view.
 
 3. **Setup OUTSIDE the guard**: Everything except the reference cache must run on every `getView()` call, because ListView may provide a different view instance for the same position:
    - `setSelection(cursorPos)` — `setText()` resets cursor to 0; must restore after every setText
