@@ -8,6 +8,7 @@ import android.widget.ImageView
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import coil.ImageLoader
+import coil.memory.MemoryCache
 import coil.request.ImageRequest
 import coil.size.Scale
 import kotlinx.coroutines.*
@@ -44,8 +45,16 @@ class GifGridManager(
     private val adapter = GifRecyclerAdapter()
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
-    /** Coil image loader with IME-friendly memory limits */
+    /** Coil image loader with IME-friendly memory limits.
+     * Default Coil cache is 25% of available RAM (~200-300MB on modern phones).
+     * Cap at 32MB — holds ~6000 thumbnails (80px WebP, ~5KB each), plenty for
+     * GIF browsing with 100-item pages. Prevents IME from bloating to 500MB+. */
     private val imageLoader: ImageLoader = ImageLoader.Builder(context)
+        .memoryCache {
+            MemoryCache.Builder(context)
+                .maxSizeBytes(32 * 1024 * 1024) // 32 MB cap (vs ~250MB default)
+                .build()
+        }
         .memoryCachePolicy(coil.request.CachePolicy.ENABLED)
         .diskCachePolicy(coil.request.CachePolicy.DISABLED) // Files already on disk
         .crossfade(false) // Minimize animation overhead in IME
