@@ -295,6 +295,11 @@ class DictionaryManager(private val context: Context) {
      * Returns the set of all configured language codes that should be retained.
      * Includes primary, secondary, and their alternates (up to 4 languages).
      * "none" and empty strings are excluded.
+     *
+     * # TODO: If more simultaneous language slots are added beyond the current 4
+     * (primary, secondary, alt_primary, alt_secondary), add their pref keys here.
+     * The eviction logic in setLanguage() only evicts predictors NOT in this set,
+     * so any new slot just needs its pref key added to the setOfNotNull() call.
      */
     private fun getConfiguredLanguages(): Set<String> {
         val langPrefs = PreferenceManager.getDefaultSharedPreferences(context)

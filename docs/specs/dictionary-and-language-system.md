@@ -224,3 +224,29 @@ data class LanguageState(
 | Lazy init | Secondary dictionary loaded only when enabled |
 | Memory cleanup | Inactive ONNX sessions unloaded after 60s |
 | Unigram cache | ~100KB per language kept in memory |
+| Predictor eviction | `DictionaryManager.setLanguage()` evicts stale predictors (~5-10MB each) |
+| Predictor keep set | Retains up to 4 configured languages (primary, secondary, alternates) |
+| Coil image cache | Capped at 32MB in GifGridView (default was ~250MB) |
+| ONNX shutdown | `PredictionCoordinator.shutdown()` explicitly closes native OrtSessions |
+
+### Predictor Lifecycle & Memory
+
+`DictionaryManager.predictors` caches a `WordPredictor` per language code (~5-10MB each:
+dictionary map, prefix index, ContextModel, PersonalizationEngine, ContentObserver).
+
+**Eviction policy:** On `setLanguage()`, predictors not in the configured language set are
+evicted and their observers stopped. The configured set is read from preferences:
+- `pref_primary_language` (default: "en")
+- `pref_secondary_language` (default: "none")
+- `pref_primary_language_alt` (default: "es")
+- `pref_secondary_language_alt` (default: "none")
+
+Up to 4 languages are retained simultaneously. Languages outside this set are evicted to
+free memory. See `DictionaryManager.getConfiguredLanguages()`.
+
+**Orphaned observer guard:** `loadDictionaryAsync` callbacks check `predictors[code] === this`
+before starting a ContentObserver, preventing leaked observers on evicted instances.
+
+> **Future expansion:** To support more simultaneous languages, add their pref keys to
+> `getConfiguredLanguages()` in `DictionaryManager.kt`. The eviction logic automatically
+> adapts — it only evicts what's NOT in the returned set.

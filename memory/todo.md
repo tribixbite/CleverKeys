@@ -15,10 +15,13 @@ WordPredictor holds ~5-10MB. Switching N languages leaked N×5-10MB for the keyb
 lifetime. Additionally, `PredictionCoordinator.shutdown()` set `neuralEngine = null`
 without calling `cleanup()`, leaking native OrtSession resources.
 
-**Fix (220df6204)**:
-- `DictionaryManager.setLanguage()` evicts previous language predictor (stops observer + removes)
-- `DictionaryManager.cleanup()` releases all predictor instances
+**Fix (220df6204, c985bf372)**:
+- `DictionaryManager.setLanguage()` evicts predictors not in configured language set
+- Configured set = up to 4 languages (primary, secondary, alt_primary, alt_secondary)
+- `loadDictionaryAsync` callback guards against orphaned observer (`predictors[code] === this`)
+- `DictionaryManager.cleanup()` releases all predictor instances on service destroy
 - `PredictionCoordinator.shutdown()` calls `neuralEngine.cleanup()` + `dictionaryManager.cleanup()`
+- Note: shutdown only fires on app update/disable, not during normal use
 
 **Estimated savings**: ~220MB (Coil ~218MB + predictors ~5-10MB per unused language).
 
