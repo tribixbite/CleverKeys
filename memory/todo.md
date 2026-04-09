@@ -1,5 +1,27 @@
 # CleverKeys TODO
 
+## ✅ Memory/Performance Optimization (2026-04-09)
+
+### Coil Memory Cache Cap
+Coil 2.x defaults to 25% of available RAM (~250MB) for memory cache. For an IME loading
+80px WebP thumbnails (~5KB each), this was the primary contributor to the 500MB+ running
+services footprint. Capped at 32MB — holds ~6000 thumbnails, 64x the 100-item page size.
+
+**Fix (05404568e)**: `GifGridView.kt` — explicit `MemoryCache.Builder.maxSizeBytes(32MB)`.
+
+### Predictor Eviction + ONNX Cleanup
+`DictionaryManager.predictors` used `getOrPut()` but never removed entries. Each
+WordPredictor holds ~5-10MB. Switching N languages leaked N×5-10MB for the keyboard's
+lifetime. Additionally, `PredictionCoordinator.shutdown()` set `neuralEngine = null`
+without calling `cleanup()`, leaking native OrtSession resources.
+
+**Fix (220df6204)**:
+- `DictionaryManager.setLanguage()` evicts previous language predictor (stops observer + removes)
+- `DictionaryManager.cleanup()` releases all predictor instances
+- `PredictionCoordinator.shutdown()` calls `neuralEngine.cleanup()` + `dictionaryManager.cleanup()`
+
+**Estimated savings**: ~220MB (Coil ~218MB + predictors ~5-10MB per unused language).
+
 ## ✅ Clipboard Edit Mode — Visibility Check Fix (2026-04-09)
 Edit mode on pinned/todo tabs appeared to work (UI showed EditText) but typed keys had
 no visible effect. Root cause: `activeEditingEditText` fast path checked `windowToken != null`
