@@ -394,6 +394,11 @@ class WordListFragment : Fragment() {
     }
 
     fun refresh() {
+        // Re-sync cached enabled states from persistent storage before re-filtering.
+        // Fixes cross-source coherence: DisabledDictionarySource.toggleWord() updates
+        // SharedPreferences but MainDictionarySource's cached DictionaryWord.enabled
+        // flags remain stale until this call.
+        dataSource.onRefresh()
         // #96: Reapply current search/sort state instead of loading unfiltered
         filter(currentSearchQuery, currentSortType)
     }

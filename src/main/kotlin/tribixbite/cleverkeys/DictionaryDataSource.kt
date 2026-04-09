@@ -20,6 +20,15 @@ interface DictionaryDataSource {
     suspend fun addWord(word: String, frequency: Int = 100)
     suspend fun deleteWord(word: String)
     suspend fun updateWord(oldWord: String, newWord: String, frequency: Int)
+
+    /**
+     * Re-sync cached state from persistent storage.
+     * Called by [WordListFragment.refresh] before re-filtering, so that changes made
+     * by a different data source (e.g. DisabledDictionarySource toggling a word that
+     * MainDictionarySource has cached) are reflected.
+     * Default no-op — only sources with in-memory caches need to override.
+     */
+    fun onRefresh() {}
 }
 
 /**
@@ -221,6 +230,24 @@ class MainDictionarySource(
 
         // Fallback to full search (should rarely happen)
         return getAllWords().filter { it.word.contains(query, ignoreCase = true) }
+    }
+
+    /**
+     * Re-sync all cached DictionaryWord.enabled flags from the current disabled set.
+     * Handles cross-source coherence: when DisabledDictionarySource toggles a word,
+     * this source's cache becomes stale. Called by WordListFragment.refresh() before
+     * re-filtering. O(n) scan of ~50k words against a HashSet — <5ms.
+     *
+     * The prefix index stores the SAME DictionaryWord object references as cachedWords,
+     * so mutating .enabled here also fixes prefix index search results.
+     */
+    override fun onRefresh() {
+        cachedWords?.let { words ->
+            val disabled = disabledSource.getDisabledWords()
+            for (dw in words) {
+                dw.enabled = !disabled.contains(dw.word)
+            }
+        }
     }
 
     override suspend fun toggleWord(word: String, enabled: Boolean) {
