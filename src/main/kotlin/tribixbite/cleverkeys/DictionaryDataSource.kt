@@ -56,10 +56,21 @@ class MainDictionarySource(
     override suspend fun getAllWords(): List<DictionaryWord> = withContext(Dispatchers.IO) {
         Log.d(TAG, "getAllWords() called for language: $languageCode")
 
-        // Return cached if available
+        // Return cached if available (instance-level fast path)
         if (cachedWords != null) {
             Log.d(TAG, "Returning ${cachedWords!!.size} cached words for $languageCode")
             return@withContext cachedWords!!
+        }
+
+        // Double-check shared cache: another fragment for this language may have
+        // finished loading while we were waiting for the IO dispatcher
+        synchronized(Companion) {
+            sharedCache[languageCode]?.let { cached ->
+                cachedWords = cached.words
+                prefixIndex = cached.prefixIndex
+                Log.d(TAG, "Returning ${cached.words.size} words from shared cache for $languageCode")
+                return@withContext cached.words
+            }
         }
 
         try {
