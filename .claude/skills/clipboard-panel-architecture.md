@@ -109,7 +109,7 @@ The clipboard pane has three mutually exclusive modes. Only one can be active at
 - **UI lock**: `onEditModeEntered` callback dims tabs, search, pagination
 - **Key routing**: `isClipboardEditMode() → insertToClipboardEdit()` (tab-agnostic — same chain for history, pinned, todos)
 - Search mode cleared on enter. Tab switching blocked.
-- **Text manipulation**: All methods use `activeEditingEditText` (dynamic property with windowToken validation + child view fallback) — see `ime-key-routing.md` "ListView Scrap View Architecture"
+- **Text manipulation**: All methods use `activeEditingEditText` (dynamic property with visibility + windowToken validation + child view fallback) — see `ime-key-routing.md` "ListView Scrap View Architecture"
 - **View recycling**: getView() sets up cursor, click listeners, TextWatcher on EVERY call (not just first render). Only the `editingEditText` reference cache is guarded.
 - **State tracking**: `editingInProgressText` is synced directly in text manipulation methods AND via TextWatcher (belt-and-suspenders). `save_edit()` reads from `editingInProgressText` (not EditText widget).
 

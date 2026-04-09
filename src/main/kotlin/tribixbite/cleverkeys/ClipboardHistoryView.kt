@@ -107,11 +107,17 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             // Not in edit mode — no searching needed, avoid unnecessary child iteration
             if (!isEditing()) return null
 
-            // Fast path: current reference is still attached and valid
+            // Fast path: current reference is still attached, visible, and valid.
+            // CRITICAL: Must check visibility == VISIBLE, not just windowToken.
+            // When loadDataAsync() completes during edit mode, notifyDataSetChanged()
+            // redistributes scrap views. The cached editField may get recycled to a
+            // different list position (visibility=GONE) while a NEW editField becomes
+            // the visible edit widget. Without the visibility check, setText() goes to
+            // the invisible recycled view — user sees nothing.
             editingEditText?.let { et ->
-                if (et.windowToken != null) return et
+                if (et.visibility == VISIBLE && et.windowToken != null) return et
             }
-            // Slow path: reference is stale (scrap view or detached). Search live children.
+            // Slow path: reference is stale, recycled, or detached. Search live children.
             for (i in 0 until childCount) {
                 val child = getChildAt(i) ?: continue
                 val et = child.findViewById<EditText>(R.id.clipboard_entry_edit_field)
