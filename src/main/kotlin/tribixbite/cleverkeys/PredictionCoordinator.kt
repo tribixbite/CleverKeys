@@ -464,7 +464,16 @@ class PredictionCoordinator(
         // Stop observing dictionary changes
         wordPredictor?.stopObservingDictionaryChanges()
 
-        // Clean up engines
+        // Clean up ONNX native resources (OrtSessions) explicitly — GC alone is unreliable
+        try {
+            neuralEngine?.cleanup()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error cleaning up neural engine", e)
+        }
+
+        // Clean up all predictor instances held by DictionaryManager
+        dictionaryManager?.cleanup()
+
         neuralEngine = null
         wordPredictor = null
         dictionaryManager = null

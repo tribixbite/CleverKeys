@@ -108,11 +108,21 @@ class DictionaryManager(private val context: Context) {
     fun setLanguage(languageCode: String?) {
         val code = languageCode ?: "en"
         val languageChanged = currentLanguage != code
+        val previousLanguage = currentLanguage
         currentLanguage = code
 
         // Reload user words if language changed
         if (languageChanged) {
             loadUserWords()
+
+            // Evict previous language's predictor to free memory (~5-10MB per instance).
+            // Each WordPredictor holds dictionary map, prefix index, ContextModel,
+            // PersonalizationEngine, and a ContentObserver — all leak if not cleaned up.
+            if (previousLanguage in predictors) {
+                predictors[previousLanguage]?.stopObservingDictionaryChanges()
+                predictors.remove(previousLanguage)
+                Log.i(TAG, "Evicted predictor for '$previousLanguage' (memory freed)")
+            }
         }
 
         // Get or create predictor for this language
@@ -266,6 +276,16 @@ class DictionaryManager(private val context: Context) {
                 }
             }
         }
+    }
+
+    /** Release all predictor instances and their observers. */
+    fun cleanup() {
+        for ((lang, predictor) in predictors) {
+            predictor.stopObservingDictionaryChanges()
+        }
+        predictors.clear()
+        currentPredictor = null
+        Log.i(TAG, "Cleaned up all predictors")
     }
 
     companion object {
