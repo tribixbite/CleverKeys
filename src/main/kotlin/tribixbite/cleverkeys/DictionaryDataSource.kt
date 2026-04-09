@@ -42,13 +42,13 @@ class MainDictionarySource(
     private var prefixIndex: Map<String, List<DictionaryWord>>? = null
 
     init {
-        // Reuse shared cache if it was built for the same language.
+        // Reuse shared cache if it was built for this language.
         // This avoids re-parsing the 50k binary dictionary every time
         // the user opens Dictionary Manager or switches tabs.
         synchronized(Companion) {
-            if (sharedCachedLanguage == languageCode && sharedCachedWords != null) {
-                cachedWords = sharedCachedWords
-                prefixIndex = sharedPrefixIndex
+            sharedCache[languageCode]?.let { cached ->
+                cachedWords = cached.words
+                prefixIndex = cached.prefixIndex
             }
         }
     }
@@ -186,9 +186,7 @@ class MainDictionarySource(
 
         // Persist to shared static cache for cross-instance reuse
         synchronized(Companion) {
-            sharedCachedWords = words
-            sharedPrefixIndex = index
-            sharedCachedLanguage = languageCode
+            sharedCache[languageCode] = LanguageCache(words, index)
         }
     }
 
@@ -322,20 +320,28 @@ class MainDictionarySource(
         private const val TAG = "MainDictionarySource"
         private const val PREFIX_INDEX_MAX_LENGTH = 3
 
-        // Shared cache across MainDictionarySource instances for the same language.
+        // Per-language shared cache across MainDictionarySource instances.
         // Eliminates redundant 50k-word binary dict parsing when DictionaryManager
         // is reopened or tabs are switched (each fragment creates a new instance).
-        // Thread-safe: synchronized on Companion in init{} and updateSharedCache().
-        @Volatile private var sharedCachedWords: List<DictionaryWord>? = null
-        @Volatile private var sharedPrefixIndex: Map<String, List<DictionaryWord>>? = null
-        @Volatile private var sharedCachedLanguage: String? = null
+        // Keyed by language code so multilang tabs don't evict each other.
+        // Thread-safe: synchronized on Companion in init{} and buildPrefixIndex().
+        private data class LanguageCache(
+            val words: List<DictionaryWord>,
+            val prefixIndex: Map<String, List<DictionaryWord>>
+        )
+        private val sharedCache = mutableMapOf<String, LanguageCache>()
 
-        /** Invalidate shared cache (e.g., after language change). */
+        /** Invalidate shared cache for all languages. */
         fun invalidateCache() {
             synchronized(this) {
-                sharedCachedWords = null
-                sharedPrefixIndex = null
-                sharedCachedLanguage = null
+                sharedCache.clear()
+            }
+        }
+
+        /** Invalidate shared cache for a specific language. */
+        fun invalidateCache(languageCode: String) {
+            synchronized(this) {
+                sharedCache.remove(languageCode)
             }
         }
     }
