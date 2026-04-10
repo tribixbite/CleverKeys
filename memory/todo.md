@@ -32,6 +32,15 @@ adds ~16 bytes per entry across ~250k entries.
 
 **Estimated savings**: ~4MB.
 
+### VocabularyTrie Hot Path Allocation Fix (ac5066acd)
+Gemini 3 Pro review found `hasPrefix()`, `containsWord()`, `getAllowedNextChars()`
+each called `String.lowercase()`, allocating a new String per invocation. During beam
+search (beam_width=6, max_length=20), that's ~120 String allocations per swipe — all
+immediately GC-eligible.
+
+**Fix**: Replaced with per-character `Char.lowercaseChar()` (primitive, zero-alloc).
+Also switched `LinkedHashSet<Char>` to `HashSet<Char>` in `getAllowedNextChars()`.
+
 ### Cross-Source Cache Coherence (b83109146)
 Enabling words in Disabled tab didn't make them appear in Active tab. Root cause:
 `DisabledDictionarySource.toggleWord()` updates SharedPreferences but `MainDictionarySource`
