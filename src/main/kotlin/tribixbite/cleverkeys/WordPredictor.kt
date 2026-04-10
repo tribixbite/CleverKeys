@@ -891,7 +891,7 @@ class WordPredictor {
                     val maxLen = min(PREFIX_INDEX_MAX_LENGTH, withoutApostrophe.length)
                     for (len in 1..maxLen) {
                         val prefix = withoutApostrophe.substring(0, len)
-                        targetPrefixIndex.getOrPut(prefix) { mutableSetOf() }.add(withoutApostrophe)
+                        targetPrefixIndex.getOrPut(prefix) { HashSet() }.add(withoutApostrophe)
                     }
                     count++
                 }
@@ -970,7 +970,7 @@ class WordPredictor {
                     val maxLen = min(PREFIX_INDEX_MAX_LENGTH, withoutApostrophe.length)
                     for (len in 1..maxLen) {
                         val prefix = withoutApostrophe.substring(0, len)
-                        currentPrefixIndex.getOrPut(prefix) { mutableSetOf() }.add(withoutApostrophe)
+                        currentPrefixIndex.getOrPut(prefix) { HashSet() }.add(withoutApostrophe)
                     }
 
                     count++
@@ -1084,7 +1084,7 @@ class WordPredictor {
             val maxLen = min(PREFIX_INDEX_MAX_LENGTH, word.length)
             for (len in 1..maxLen) {
                 val prefix = word.substring(0, len)
-                prefixIndex.get().getOrPut(prefix) { mutableSetOf() }.add(word)
+                prefixIndex.get().getOrPut(prefix) { HashSet() }.add(word)
             }
         }
     }
@@ -1097,7 +1097,7 @@ class WordPredictor {
             val maxLen = min(PREFIX_INDEX_MAX_LENGTH, word.length)
             for (len in 1..maxLen) {
                 val prefix = word.substring(0, len)
-                prefixIndex.get().getOrPut(prefix) { mutableSetOf() }.add(word)
+                prefixIndex.get().getOrPut(prefix) { HashSet() }.add(word)
             }
         }
     }
@@ -1251,7 +1251,7 @@ class WordPredictor {
             val maxLen = min(PREFIX_INDEX_MAX_LENGTH, word.length)
             for (len in 1..maxLen) {
                 val prefix = word.substring(0, len)
-                targetIndex.getOrPut(prefix) { mutableSetOf() }.add(word)
+                targetIndex.getOrPut(prefix) { HashSet() }.add(word)
             }
         }
     }

@@ -187,7 +187,7 @@ class AsyncDictionaryLoader {
                             val maxLen = min(3, word.length)
                             for (len in 1..maxLen) {
                                 val prefix = word.substring(0, len)
-                                prefixIndex.getOrPut(prefix) { mutableSetOf() }.add(word)
+                                prefixIndex.getOrPut(prefix) { HashSet() }.add(word)
                             }
                         }
 

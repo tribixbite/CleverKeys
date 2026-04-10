@@ -439,7 +439,9 @@ object BinaryDictionaryLoader {
 
             // Read matching word indices
             val matchCount = buffer.int
-            val matchingWords = mutableSetOf<String>()
+            // Use HashSet instead of LinkedHashSet (mutableSetOf default)
+            // to save ~16 bytes/entry from linked-list overhead
+            val matchingWords = HashSet<String>(matchCount)
             for (j in 0 until matchCount) {
                 val wordIdx = buffer.int
                 matchingWords.add(words[wordIdx])
@@ -489,7 +491,7 @@ object BinaryDictionaryLoader {
             val maxPrefixLen = kotlin.math.min(3, word.length)
             for (len in 1..maxPrefixLen) {
                 val prefix = word.substring(0, len).lowercase()
-                outPrefixIndex.getOrPut(prefix) { mutableSetOf() }.add(word)
+                outPrefixIndex.getOrPut(prefix) { HashSet() }.add(word)
             }
         }
 

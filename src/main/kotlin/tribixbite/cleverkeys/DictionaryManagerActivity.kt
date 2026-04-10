@@ -156,6 +156,15 @@ class DictionaryManagerActivity : AppCompatActivity() {
         outState.putInt("sortType", currentSort.ordinal)
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        // Release the 50k-word dictionary caches (~7MB per language) held in
+        // MainDictionarySource.sharedCache. These are only needed while the
+        // Dictionary Manager is open — keeping them in memory permanently
+        // wastes RAM for a rarely-used activity.
+        MainDictionarySource.invalidateCache()
+    }
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             android.R.id.home -> {
