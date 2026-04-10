@@ -1,6 +1,44 @@
 # CleverKeys TODO
 
-## ✅ Memory/Performance Optimization (2026-04-09)
+## ✅ Memory/Performance Optimization (2026-04-09, continued 2026-04-10)
+
+### VocabularyTrie Compact Nodes (f183e1515)
+VocabularyTrie used `mutableMapOf<Char, TrieNode>()` (LinkedHashMap) per node.
+For 50k English words (~180k nodes), each node cost ~250 bytes average due to
+LinkedHashMap overhead (Entry objects, boxed Char keys, linked-list pointers).
+Total: ~45MB per trie instance.
+
+**Fix**: Replaced with compact parallel arrays (`CharArray` + `Array<TrieNode?>`).
+Leaf nodes share static empty-array singletons (36 bytes each). Linear scan on
+≤26 children is faster than HashMap due to CPU cache locality.
+
+**Estimated savings**: ~34MB per trie (45MB → 11MB). ~68MB for bilingual users.
+
+### Dictionary Manager Cache Eviction (b08c21859)
+`MainDictionarySource.sharedCache` (companion object) held 50k-word lists + prefix
+indices (~7MB per language) for the app's entire lifecycle. The Dictionary Manager
+is rarely used after initial setup.
+
+**Fix**: `DictionaryManagerActivity.onDestroy()` calls `MainDictionarySource.invalidateCache()`.
+
+**Estimated savings**: ~7-14MB (1-2 cached languages freed on activity close).
+
+### HashSet Prefix Indices (b08c21859)
+`WordPredictor`, `BinaryDictionaryLoader`, and `AsyncDictionaryLoader` used
+`mutableSetOf()` (LinkedHashSet) for prefix index values. The linked-list overhead
+adds ~16 bytes per entry across ~250k entries.
+
+**Fix**: Switched to `HashSet()` — same uniqueness guarantees, no linked-list overhead.
+
+**Estimated savings**: ~4MB.
+
+### Cross-Source Cache Coherence (b83109146)
+Enabling words in Disabled tab didn't make them appear in Active tab. Root cause:
+`DisabledDictionarySource.toggleWord()` updates SharedPreferences but `MainDictionarySource`
+caches 50k DictionaryWord objects with stale `.enabled` flags.
+
+**Fix**: Added `DictionaryDataSource.onRefresh()` interface method. `MainDictionarySource`
+overrides to re-scan cached words against current disabled set. O(n) scan ~50k words <5ms.
 
 ### Coil Memory Cache Cap
 Coil 2.x defaults to 25% of available RAM (~250MB) for memory cache. For an IME loading
