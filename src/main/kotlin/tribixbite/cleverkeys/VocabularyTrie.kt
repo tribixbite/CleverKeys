@@ -126,11 +126,10 @@ class VocabularyTrie {
     fun hasPrefix(prefix: String): Boolean {
         if (prefix.isEmpty()) return true // Empty prefix is valid
 
-        val lowerPrefix = prefix.lowercase()
         var current = root
 
-        for (char in lowerPrefix) {
-            current = current.getChild(char) ?: return false
+        for (char in prefix) {
+            current = current.getChild(char.lowercaseChar()) ?: return false
         }
 
         return true
@@ -144,17 +143,16 @@ class VocabularyTrie {
      * @return Set of valid next characters, or empty set if prefix not found
      */
     fun getAllowedNextChars(prefix: String): Set<Char> {
-        val lowerPrefix = prefix.lowercase()
         var current = root
 
-        for (char in lowerPrefix) {
-            current = current.getChild(char) ?: return emptySet()
+        for (char in prefix) {
+            current = current.getChild(char.lowercaseChar()) ?: return emptySet()
         }
 
         // Build set from compact key array
         val k = current.keys
         if (k.isEmpty()) return emptySet()
-        val result = LinkedHashSet<Char>(k.size)
+        val result = HashSet<Char>(k.size)
         for (c in k) result.add(c)
         return result
     }
@@ -169,18 +167,17 @@ class VocabularyTrie {
     fun containsWord(word: String): Boolean {
         if (word.isEmpty()) return false
 
-        val lowerWord = word.lowercase()
         var current = root
 
-        for (char in lowerWord) {
-            current = current.getChild(char) ?: return false
+        for (char in word) {
+            current = current.getChild(char.lowercaseChar()) ?: return false
         }
 
         return current.isEndOfWord
     }
 
     /**
-     * Bulk insert words from a collection. More efficient than calling insert() repeatedly.
+     * Bulk insert words from a collection. Convenience wrapper over insert().
      *
      * @param words Collection of words to insert
      */
