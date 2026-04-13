@@ -44,7 +44,7 @@
 
 # 🗺️ Project Overview
 
-CleverKeys is the only fully open-source neural network gesture keyboard for Android. Featuring an AI-powered swipe engine that runs entirely on-device, unlimited clipboard history, and a powerful theme engine with DIY customization. No proprietary libraries. No cloud dependencies. No data collection.
+CleverKeys is a feature-rich open-source keyboard for Android. Neural swipe typing with autocorrect, multi-language hot-swap with per-language dictionaries, unlimited clipboard with pinning/todos/tags/regex search/inline editing, offline GIF packs, 208 customizable short-swipe actions, TrackPoint cursor control, 35+ themes with DIY creator — all running 100% on-device with zero internet permissions.
 
 </div>
 
@@ -99,19 +99,16 @@ CleverKeys is the only fully open-source neural network gesture keyboard for And
 
 ### Why CleverKeys?
 
-CleverKeys uses a custom **transformer neural network** (encoder-decoder architecture) trained specifically for swipe typing. Unlike algorithmic approaches, neural models learn complex patterns from real swipe data. The model architecture, training code, and datasets are all publicly available at [CleverKeys-ML](https://github.com/tribixbite/CleverKeys-ML) — making it fully reproducible and auditable.
+Most keyboard apps do one thing well. CleverKeys does many things well:
 
-**Key differentiators:**
-- **Only keyboard with public ML training pipeline** — verify exactly how the model was trained
-- **ONNX format** — cross-platform, hardware-accelerated inference via XNNPACK
-- **Sub-200ms predictions** — optimized for mobile with beam search decoding
-- **208 customizable short-swipe gestures** — 8 directions × 26 letter keys
+- **Swipe + autocorrect + multi-language** — a custom transformer neural network evaluates multiple language dictionaries simultaneously per swipe, with contraction-aware autocorrect
+- **Clipboard as a productivity tool** — not just history, but pinning, todos with status tracking, tags, inline editing, regex search, and media support (images/videos/PDFs)
+- **Deep customization** — 208 short-swipe actions, Android intent launching, custom text macros, per-key gesture mapping, XML layout authoring
+- **Power user essentials** — TrackPoint cursor, selection-delete, backspace undo, terminal key support, offline GIF packs
+- **Auditable ML** — model architecture, training code, and datasets all public at [CleverKeys-ML](https://github.com/tribixbite/CleverKeys-ML)
 
-### Unlimited Clipboard History
-Android restricts clipboard access for security - apps can't read clipboard contents in the background. But keyboards are special. As an Input Method Editor (IME), CleverKeys has legitimate clipboard access, making it the only way to get truly unlimited clipboard history without root.
-
-### 📱 Reliable Swipe Typing in Termux
-CleverKeys is the **only open-source keyboard with reliable swipe/gesture typing in Termux**. Other keyboards either disable gestures in terminals (FlorisBoard), produce corrupted output (HeliBoard), or simply don't work (FUTO). Commercial keyboards like Gboard and SwiftKey also disable swipe in Termux. CleverKeys works everywhere — including terminal emulators, SSH sessions, and developer tools.
+### 📱 Works Everywhere — Including Termux
+CleverKeys is the **only open-source keyboard with reliable swipe typing in Termux**. Other keyboards either disable gestures in terminals (FlorisBoard), produce corrupted output (HeliBoard), or don't work (FUTO). Commercial keyboards like Gboard and SwiftKey also disable swipe in Termux.
 
 <div align="center">
 
@@ -162,58 +159,67 @@ Build your own themes on-the-fly with full control over:
 
 </div>
 
-### 🧠 Neural Network Gesture Recognition
-- **Transformer-based encoder-decoder model** (5.4MB encoder + 7.4MB decoder)
-- **Sub-200ms predictions** with hardware acceleration (XNNPACK)
-- **100% local processing** — works in airplane mode
+### 🧠 Neural Swipe & Autocorrect
+- **Custom transformer model** (encoder-decoder, 13MB) trained on real swipe data
+- **Sub-200ms predictions** with XNNPACK hardware acceleration
+- **Autocorrect with contraction support** — "dont" to "don't", "im" to "I'm"
 - **Full inference control** — beam width, length normalization, pruning, early stopping
+- **100% on-device** — works in airplane mode, no cloud anything
 
-### 📋 Unlimited Clipboard History
+### 🌍 Multi-Language with Hot-Swap
+- **11 swipe languages** — 6 bundled, 5 downloadable packs
+- **Primary + secondary language** — neural network evaluates both dictionaries per swipe
+- **Instant language switch** — toggle between languages without reloading
+- **Per-language custom dictionaries** — add words, adjust frequency weights, disable entries
+- **Smart contractions** — language-aware handling across English, French, and more
+
+### 📋 Clipboard System
 As an IME, CleverKeys has legitimate clipboard access that other apps don't:
-- **Unlimited history** (configurable by count or storage size)
-- **Pin important items**
-- **Search through history**
-- **Persistent across reboots**
-- **Export/Import for backup**
+- **Unlimited history** — configurable by count or storage size, persistent across reboots
+- **Pinned entries** — save important clips with drag-and-drop reordering
+- **Built-in todo list** — track items with active/planned/completed status and tags
+- **Inline editing** — edit any clipboard entry directly in the panel
+- **Regex search** — VSCode-style `.*` toggle, glob shorthand, full regex power
+- **Media clipboard** — images, videos, PDFs with thumbnail previews
+- **Tags** — organize pinned and todo entries with custom tag labels
+- **Export/Import** — JSON (text) or ZIP (full backup with media)
+
+### 🎮 Offline GIF Panel
+- **No internet permission** — GIF packs imported via file picker, not downloaded
+- **FTS4 search** — find GIFs by keyword with compound word fallback
+- **Category browsing** — 17 emotion categories + recently used
+- **Community packs** — import ZIP packs from Discord or build your own
+
+### 🎯 208 Short Swipe Actions
+Assign custom actions to any key's 8 swipe directions:
+- **204+ built-in commands** — navigation, editing, clipboard, function keys, special chars
+- **Custom text macros** — email addresses, signatures, code snippets, emoji sequences
+- **Android intents** — launch any app, Termux commands, system settings, maps, browser
+- **Visual feedback** — custom icons displayed as sublabels on keys
+- **Import/Export** — share customizations as JSON profiles
+
+### 🖱️ Cursor & Text Control
+- **TrackPoint navigation** — IBM/Lenovo-style joystick cursor on nav key (hold to activate)
+- **Selection-Delete** — hold backspace + swipe to highlight text, release to delete
+- **Backspace undo** — press backspace after autocorrect to revert to original word
+- **Arrow keys** — full cursor control with shift-select support
 
 ### 🔒 Privacy First
 - **Zero network permissions** — literally cannot phone home
-- **No analytics or telemetry**
-- **No cloud sync**
-- **All processing on-device**
+- **No analytics, telemetry, or cloud sync**
+- **Password manager privacy** — exclude clipboard from 1Password, Bitwarden, KeePassDX, etc.
 - **Open source = auditable**
 
-### ⚙️ Full Prediction Control
-Unlike black-box keyboards, CleverKeys exposes all parameters:
-- Beam search tuning (width, length normalization, pruning)
-- Autocorrect settings (thresholds, style presets)
-- Dictionary control (custom words, frequency adjustments)
-- Gesture sensitivity and thresholds
-
-### 🎯 Per-Key Short Swipe Customization
-Assign custom actions to any key's 8 swipe directions:
-- **204+ built-in commands** — navigation, editing, clipboard, function keys, special characters
-- **Custom text macros** — email addresses, signatures, code snippets, emoji sequences
-- **System actions** — keyboard settings, voice typing, language switch, numeric pad
-- **Visual feedback** — custom icons displayed as sublabels on keys
-- **Import/Export** — share your customizations as JSON profiles
-
 ### ⌨️ 100+ Keyboard Layouts
-Inherited from Unexpected Keyboard:
-- QWERTY, AZERTY, QWERTZ, Dvorak, Colemak
-- Programming layouts with special characters
+- QWERTY, AZERTY, QWERTZ, Dvorak, Colemak, and programming layouts
 - International layouts for 30+ languages
-- Customizable bottom row and modifiers
+- Full XML customization with 8 sublabels per key
+- Terminal mode with Ctrl/Meta/Fn for Termux
 
-### 🛠️ Power User Features
-- **Terminal mode** — Ctrl/Meta/Fn keys for Termux users
-- **Short swipe gestures** — Swipe keys for symbols, navigation, clipboard, and function keys
-- **Selection-Delete mode** — Hold backspace and swipe to select text, then delete on release
-- **TrackPoint navigation** — Joystick-style cursor control on nav keys (hold to activate)
-- **Timestamp keys** — Insert formatted date/time with custom patterns (8 pre-defined shortcuts)
-- **Quick Settings tile** — Switch keyboards from Android Quick Settings
-- **Password manager privacy** — Exclude clipboard from password managers (1Password, Bitwarden, etc.)
-- **Backup & Restore** — Export all settings and custom data as profiles
+### 🎨 35+ Themes with DIY Creator
+- Material You (Monet), Rose Pine, Everforest, Cobalt, ePaper, and more
+- Full control: key colors, label colors, borders, swipe trail effects
+- Dark and light variants for every theme
 
 <div align="center">
 
@@ -407,10 +413,13 @@ This application is completely free and open source. If you want to support cont
 CleverKeys began as a fork of [Unexpected Keyboard](https://github.com/Julow/Unexpected-Keyboard) by Jules Aguillon ([@Julow](https://github.com/Julow)). The original is an excellent, highly customizable keyboard with support for 100+ layouts.
 
 Our projects have since diverged significantly (~900 commits apart):
-- Complete rewrite from Java to Kotlin
-- Addition of gesture typing via custom neural network model
-- Clipboard history system
-- Different architecture (coroutines, ONNX integration)
+- Complete rewrite from Java to Kotlin with coroutines and Flow
+- Neural network gesture typing (ONNX transformer model)
+- Full clipboard system (unlimited history, pinning, todos, tags, inline editing, regex search, media)
+- Offline GIF panel with FTS4 search
+- Multi-language simultaneous prediction with per-language dictionary management
+- Autocorrect with contraction support
+- 1000+ automated tests (JVM + instrumented)
 
 If you want a lightweight keyboard without gesture typing, we recommend the original Unexpected Keyboard.
 
