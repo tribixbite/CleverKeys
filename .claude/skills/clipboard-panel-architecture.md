@@ -11,7 +11,7 @@ Use this skill when working on clipboard tabs, entry rendering, inline editing, 
 | `ClipboardManager.kt` | Pane-level state: search, tag mode, edit lock UI, tab switching |
 | `ClipboardHistoryView.kt` | Entry list: adapter, getView(), inline edit, expand states |
 | `ClipboardHistoryService.kt` | Singleton data layer: CRUD, history/pinned/todo operations |
-| `ClipboardDatabase.kt` | SQLite: schema V3, FTS4 search, tag JSON, todo status |
+| `ClipboardDatabase.kt` | SQLite: schema V4, FTS4 search, tag JSON, todo status, media |
 | `ClipboardEntry.kt` | Data class: content, timestamp, mimeType, tags, todoStatus |
 | `ClipboardTagPanel.kt` | Inline tag management: chips, suggestions, new tag input |
 | `KeyEventHandler.kt` | Key routing: tag > edit > search priority chain |
@@ -123,11 +123,12 @@ The clipboard pane has three mutually exclusive modes. Only one can be active at
 
 ## Expand/Collapse State
 
-- Tracked by **content string** (not position): `expandedStates: MutableMap<String, Boolean>`
+- Tracked by **timestamp** (Long key, not position or content): `expandedStates: MutableMap<Long, Boolean>`
 - Single tap on text/chevron toggles expansion
 - Expanded state shows: full text (maxLines=MAX_VALUE) + secondary buttons
 - Collapsed state: single line (maxLines=1) + no secondary buttons
-- States cleared on tab switch or page change
+- States cleared on tab switch, page change, or filter change (`applyFilter(resetView=true)`)
+- States preserved on data reloads after pin/todo/delete actions (`applyFilter(resetView=false)`)
 
 ## Pagination
 
@@ -140,15 +141,33 @@ The clipboard pane has three mutually exclusive modes. Only one can be active at
 
 ```
 searchFilter (String) + regexMode (Boolean) + dateFilter (timestamp + direction)
++ tagFilter (Set<String> + matchAll) + statusFilter (active/planned/completed booleans)
     ↓
-applyFilter() — filters full history → filteredHistory
+applyFilter(resetView=true) — filters full history → filteredHistory, resets page + expand
+applyFilter(resetView=false) — refilters but preserves page position + expand states
     ↓
-applyPagination() — slices filteredHistory → paginatedHistory
+applyPagination(clearExpandedStates) — slices filteredHistory → paginatedHistory
     ↓
 adapter.notifyDataSetChanged()
 ```
 
 Regex uses `expandGlobShorthand()` for `*`/`?` glob support.
+
+### Filter Dialog (`clipboard_filter_dialog.xml`)
+- Opened via filter icon in search bar (funnel icon, tinted when filters active)
+- Tab-aware sections: HISTORY=date only, PINNED=date+tags, TODOS=date+status+tags
+- **Date filter**: Enable toggle + Before/After radio + DatePicker (spinner mode)
+- **Status filter** (TODOS): Active/Planned/Completed checkboxes, Apply disabled when all unchecked
+- **Tag filter**: Checkboxes for all known tags + Match Any/All toggle (Switch, no showText)
+- Filter icon tint: `R.attr.colorLabelActivated` when active, `R.attr.colorLabel` when default
+
+## Action Feedback
+
+- **Tab icon pulse**: When pinning or adding to todos from another tab, the target tab icon
+  pulses (scale 1.0→1.5→1.0 over 350ms) via `onItemAddedToTab` callback
+- Callback set in `ClipboardManager` on `clipboardHistoryView.onItemAddedToTab`
+- No text/toasts — Toasts are invisible in IME context (render behind keyboard panel)
+- Duplicate detection: `addToTodo()` returns Boolean, no pulse on duplicate (already exists)
 
 ## Adding New Entry Buttons
 
@@ -201,6 +220,8 @@ Status button cycles through all three states.
 - **View recycling**: `getView()` receives recycled views. Always reset ALL visibility states — never assume a view starts in a particular state.
 - **ListView scrap views**: When EditText height changes (e.g., newline inserted), ListView calls `getView()` with invisible scrap views for measurement. NEVER cache references to scrap view widgets without a guard. See `ime-key-routing.md` "ListView Scrap View Architecture" for the required pattern.
 - **FTS4**: The project uses FTS4 (not FTS5) because FTS5 is unavailable on all Android builds.
+- **IME Toasts invisible**: Android Toasts render behind the keyboard panel (lower Z-order). Use tab icon pulse (`onItemAddedToTab`) or in-view feedback instead. Toasts are OK for non-IME contexts (settings activities).
+- **applyFilter(resetView)**: Always pass `resetView=false` when reloading data after an action (pin, todo, delete). Pass `true` only when the filter criteria themselves changed.
 
 ## Related Skills
 - `ime-key-routing.md` — How key events reach inline editors

@@ -50,18 +50,21 @@ context. Fell back to hardcoded cyan `0xFF4FC3F7` in all themes.
 theme attrs defined by every keyboard theme. Also added `TodoEntry.VALID_STATUSES`
 validation on clipboard import to guard against corrupted status values.
 
-### Clipboard UX Fixes (2ba5831c5)
-Three issues found during manual testing:
+### Clipboard UX Fixes (2ba5831c5, f6208d28e)
+Issues found during manual testing:
 
 1. **Edit maxLines cap**: EditText had `maxLines="10"` — entries with 11+ lines were
    clipped during editing. Raised to 50.
-2. **Todo button silent dedup**: Tapping "add to todo" on a duplicate showed no feedback.
-   Now shows toast: "Added to todos" / "Already in todos". Service `addToTodo()` returns
-   Boolean for caller feedback.
-3. **Expand state lost after actions**: `applyPagination()` unconditionally cleared
-   `expandedStates` on every `loadDataAsync()` call. Entries collapsed after tapping
-   any action button (pin, todo, delete). Now only clears on filter/page/tab changes.
-   Stale entries pruned via `retainAll(visibleTimestamps)`.
+2. **Todo/pin button feedback**: Toasts invisible in IME context (render behind keyboard).
+   Replaced with tab icon pulse animation (`onItemAddedToTab` callback, scale 1.0→1.5→1.0).
+   No text = no translations needed. Service `addToTodo()` returns Boolean for dedup detection.
+3. **Expand state lost after actions**: `applyFilter()` unconditionally reset page and cleared
+   `expandedStates` on every `loadDataAsync()` call. Entries collapsed after tapping any
+   action button. Fixed via `applyFilter(resetView: Boolean)` — data reloads pass `false`.
+4. **Filter dialog Match toggle overlap**: Switch `showText="true"` rendered "ANY"/"ALL" on
+   the switch track, overflowing on narrow IME panels. Removed showText, added dynamic label
+   "Match: Any" / "Match: All" updated via OnCheckedChangeListener. Tags header margin
+   increased from 4dp to 12dp for clear visual separation.
 
 ### README Rewrite (013a0e265)
 README over-emphasized "only open source swipe engine" — restructured to showcase full
