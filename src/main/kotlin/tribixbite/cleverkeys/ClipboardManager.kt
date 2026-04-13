@@ -692,7 +692,7 @@ class ClipboardManager(
                         text = tag
                         isChecked = tag in selectedTags
                         setTextColor(resolveThemeColor(themedContext,
-                            android.R.attr.textColorPrimary, Color.WHITE))
+                            R.attr.colorLabel, Color.WHITE))
                     }
                     tagContainer.addView(cb)
                     tagCheckboxes.add(cb)
@@ -785,8 +785,8 @@ class ClipboardManager(
     private fun updateFilterIconTint() {
         val hasFilters = clipboardHistoryView?.hasActiveFilters() ?: false
         val ctx = clipboardPane?.context ?: return
-        val activeColor = resolveThemeColor(ctx, android.R.attr.colorAccent, 0xFF4FC3F7.toInt())
-        val normalColor = resolveThemeColor(ctx, android.R.attr.textColorPrimary, Color.WHITE)
+        val activeColor = resolveThemeColor(ctx, R.attr.colorLabelActivated, 0xFF3399FF.toInt())
+        val normalColor = resolveThemeColor(ctx, R.attr.colorLabel, Color.WHITE)
         filterButton?.setColorFilter(
             if (hasFilters) activeColor else normalColor,
             PorterDuff.Mode.SRC_IN

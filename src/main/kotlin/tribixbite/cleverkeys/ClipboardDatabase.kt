@@ -1482,7 +1482,9 @@ class ClipboardDatabase private constructor(context: Context) :
             val createdTs = entry.optLong("created_timestamp", entry.getLong("timestamp"))
             val addedTs = entry.optLong("added_timestamp", entry.getLong("timestamp"))
             val position = if (exportVersion >= 3) entry.getDouble("position") else { maxPosition += 1.0; maxPosition }
-            val status = if (exportVersion >= 3) entry.optString("status", TodoEntry.STATUS_ACTIVE) else TodoEntry.STATUS_ACTIVE
+            val rawStatus = if (exportVersion >= 3) entry.optString("status", TodoEntry.STATUS_ACTIVE) else TodoEntry.STATUS_ACTIVE
+            // Validate against known statuses to guard against corrupted imports
+            val status = if (rawStatus in TodoEntry.VALID_STATUSES) rawStatus else TodoEntry.STATUS_ACTIVE
             val tags = if (exportVersion >= 3) entry.optString("tags", "[]") else "[]"
 
             val values = ContentValues().apply {
