@@ -50,6 +50,24 @@ context. Fell back to hardcoded cyan `0xFF4FC3F7` in all themes.
 theme attrs defined by every keyboard theme. Also added `TodoEntry.VALID_STATUSES`
 validation on clipboard import to guard against corrupted status values.
 
+### Clipboard UX Fixes (2ba5831c5)
+Three issues found during manual testing:
+
+1. **Edit maxLines cap**: EditText had `maxLines="10"` — entries with 11+ lines were
+   clipped during editing. Raised to 50.
+2. **Todo button silent dedup**: Tapping "add to todo" on a duplicate showed no feedback.
+   Now shows toast: "Added to todos" / "Already in todos". Service `addToTodo()` returns
+   Boolean for caller feedback.
+3. **Expand state lost after actions**: `applyPagination()` unconditionally cleared
+   `expandedStates` on every `loadDataAsync()` call. Entries collapsed after tapping
+   any action button (pin, todo, delete). Now only clears on filter/page/tab changes.
+   Stale entries pruned via `retainAll(visibleTimestamps)`.
+
+### README Rewrite (013a0e265)
+README over-emphasized "only open source swipe engine" — restructured to showcase full
+feature set: clipboard system, multi-language hot-swap, GIF panel, TrackPoint cursor,
+autocorrect with contractions, 208 short-swipe actions, tags, regex search, etc.
+
 ### Cross-Source Cache Coherence (b83109146)
 Enabling words in Disabled tab didn't make them appear in Active tab. Root cause:
 `DisabledDictionarySource.toggleWord()` updates SharedPreferences but `MainDictionarySource`
