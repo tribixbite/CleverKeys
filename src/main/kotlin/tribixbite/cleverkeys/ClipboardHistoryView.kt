@@ -320,10 +320,10 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
 
         // Reset to first page when filter changes
         currentPage = 0
-        applyPagination()
+        applyPagination(clearExpandedStates = true)
     }
 
-    private fun applyPagination() {
+    private fun applyPagination(clearExpandedStates: Boolean = false) {
         val totalItems = filteredHistory.size
         val totalPages = getTotalPages()
 
@@ -341,8 +341,14 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             filteredHistory
         }
 
-        // Clear UI state when page changes
-        expandedStates.clear()
+        // Only clear expanded states on tab/page/filter change — not on action reloads
+        // (pin, todo, delete). This prevents entries from collapsing after an action.
+        if (clearExpandedStates) {
+            expandedStates.clear()
+        }
+        // Prune expanded states for entries no longer visible on this page
+        val visibleTimestamps = paginatedHistory.map { it.timestamp }.toSet()
+        expandedStates.keys.retainAll(visibleTimestamps)
         thumbnailCache.evictAll()
 
         // Notify listener about pagination state
@@ -371,7 +377,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     fun previousPage() {
         if (currentPage > 0) {
             currentPage--
-            applyPagination()
+            applyPagination(clearExpandedStates = true)
         }
     }
 
@@ -379,7 +385,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     fun nextPage() {
         if (currentPage < getTotalPages() - 1) {
             currentPage++
-            applyPagination()
+            applyPagination(clearExpandedStates = true)
         }
     }
 
@@ -425,8 +431,14 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         when (currentTab) {
             ClipboardTab.HISTORY, ClipboardTab.PINNED -> {
                 // Add to todos (COPY — original entry stays)
-                service?.addToTodo(entry.content, entry.timestamp,
+                val svc = service ?: return
+                val added = svc.addToTodo(entry.content, entry.timestamp,
                     entry.mimeType, entry.thumbnailBlob, entry.mediaPath)
+                if (!added) {
+                    Toast.makeText(context, "Already in todos", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(context, "Added to todos", Toast.LENGTH_SHORT).show()
+                }
             }
             ClipboardTab.TODOS -> {
                 // Remove from todos

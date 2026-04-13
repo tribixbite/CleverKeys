@@ -301,12 +301,14 @@ class ClipboardHistoryService private constructor(ctx: Context) {
     /** Check if content is pinned */
     fun isPinned(clip: String): Boolean = _database.isPinned(clip)
 
-    /** Add content to todo list (copies to independent todo_entries table) */
+    /** Add content to todo list (copies to independent todo_entries table).
+     * @return true if added, false if already a todo (duplicate) */
     fun addToTodo(clip: String, createdTimestamp: Long = System.currentTimeMillis(),
                   mimeType: String = ClipboardEntry.MIME_TEXT_PLAIN,
-                  thumbnailBlob: ByteArray? = null, mediaPath: String? = null) {
+                  thumbnailBlob: ByteArray? = null, mediaPath: String? = null): Boolean {
         val added = _database.addTodoEntry(clip, createdTimestamp, mimeType, thumbnailBlob, mediaPath)
         if (added) _listener?.on_clipboard_history_change()
+        return added
     }
 
     /** Remove content from todo list (removes from todo_entries; history copy unaffected) */

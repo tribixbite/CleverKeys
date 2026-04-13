@@ -53,7 +53,7 @@
       android:visibility="gone"
       android:inputType="none"
       android:minLines="2"
-      android:maxLines="10"
+      android:maxLines="50"
       android:background="@drawable/clipboard_edit_bg"
       android:cursorVisible="true"
       android:focusable="true"
