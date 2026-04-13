@@ -180,7 +180,17 @@
           android:layout_height="wrap_content"
           android:visibility="gone">
 
-        <!-- Tags header with match mode toggle -->
+        <!-- Tags header -->
+        <TextView
+            android:text="Tags"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="?android:attr/textColorPrimary"
+            android:layout_marginBottom="4dp"/>
+
+        <!-- Match mode toggle — separate row to avoid overlap on narrow panels -->
         <LinearLayout
             android:orientation="horizontal"
             android:layout_width="match_parent"
@@ -188,21 +198,13 @@
             android:layout_marginBottom="8dp"
             android:gravity="center_vertical">
           <TextView
-              android:text="Tags"
+              android:id="@+id/filter_tags_match_label"
+              android:text="Match mode:"
               android:layout_width="0dp"
               android:layout_height="wrap_content"
               android:layout_weight="1"
-              android:textSize="16sp"
-              android:textStyle="bold"
-              android:textColor="?android:attr/textColorPrimary"/>
-          <TextView
-              android:id="@+id/filter_tags_match_label"
-              android:text="Match:"
-              android:layout_width="wrap_content"
-              android:layout_height="wrap_content"
               android:textSize="13sp"
-              android:textColor="?android:attr/textColorSecondary"
-              android:layout_marginRight="6dp"/>
+              android:textColor="?android:attr/textColorSecondary"/>
           <Switch
               android:id="@+id/filter_tags_match_all"
               android:layout_width="wrap_content"
