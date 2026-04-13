@@ -41,6 +41,15 @@ immediately GC-eligible.
 **Fix**: Replaced with per-character `Char.lowercaseChar()` (primitive, zero-alloc).
 Also switched `LinkedHashSet<Char>` to `HashSet<Char>` in `getAllowedNextChars()`.
 
+### Clipboard Filter Icon Theme Fix (23881fe20)
+Filter icon and filter dialog tag checkboxes used `android.R.attr.colorAccent` and
+`android.R.attr.textColorPrimary` — framework attrs that don't resolve in IME theme
+context. Fell back to hardcoded cyan `0xFF4FC3F7` in all themes.
+
+**Fix**: Replaced with `R.attr.colorLabelActivated` and `R.attr.colorLabel` — custom
+theme attrs defined by every keyboard theme. Also added `TodoEntry.VALID_STATUSES`
+validation on clipboard import to guard against corrupted status values.
+
 ### Cross-Source Cache Coherence (b83109146)
 Enabling words in Disabled tab didn't make them appear in Active tab. Root cause:
 `DisabledDictionarySource.toggleWord()` updates SharedPreferences but `MainDictionarySource`
