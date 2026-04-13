@@ -2,7 +2,9 @@
 
 # Complete build script for CleverKeys on Termux ARM64
 # This script handles all the compatibility issues
-# Usage: ./build-on-termux.sh [debug|release]
+# Usage: ./build-on-termux.sh [debug|release] [--clean] [--slow]
+#   --clean: force clean build (default: incremental)
+#   --slow:  disable daemon + lowest CPU/IO priority (for low-memory devices)
 
 BUILD_TYPE="${1:-release}"
 BUILD_TYPE_LOWER=$(echo "$BUILD_TYPE" | tr '[:upper:]' '[:lower:]')
@@ -121,17 +123,24 @@ fi
 
 echo "This may take a few minutes on first run..."
 
-# Build with Termux-specific configuration (optimized for memory + speed)
+# Build with Termux-specific configuration (optimized for speed)
 # Uses native ARM64 aapt2 from Termux packages (no QEMU emulation needed)
-# nice -n 19 + ionice -c 3: lowest CPU/IO priority to avoid competing with system services
-# -Xmx1536m: reduced from 2048m to prevent OOM death spirals on phones
-# workers.max=2: cap parallel gradle workers to limit memory/CPU explosion
-nice -n 19 ionice -c 3 \
+# Gradle daemon stays warm between builds (~200-300MB resident, 3h idle timeout)
+# Use --slow flag to disable daemon + lower priority (for OOM-prone situations)
+DAEMON_FLAG=""
+NICE_PREFIX=""
+if [[ "$2" == "--slow" || "$3" == "--slow" ]]; then
+    echo "  Slow mode: daemon disabled, lowest CPU/IO priority"
+    DAEMON_FLAG="--no-daemon"
+    NICE_PREFIX="nice -n 19 ionice -c 3"
+fi
+
+$NICE_PREFIX \
     ./gradlew $GRADLE_TASK \
     -Dorg.gradle.jvmargs="-Xmx1536m -XX:MaxMetaspaceSize=384m" \
     -Dorg.gradle.workers.max=2 \
     -Pandroid.aapt2FromMavenOverride="/data/data/com.termux/files/usr/bin/aapt2" \
-    --no-daemon \
+    $DAEMON_FLAG \
     --warning-mode=none \
     --console=plain \
     --parallel \
