@@ -188,9 +188,9 @@
             android:textSize="16sp"
             android:textStyle="bold"
             android:textColor="?android:attr/textColorPrimary"
-            android:layout_marginBottom="4dp"/>
+            android:layout_marginBottom="12dp"/>
 
-        <!-- Match mode toggle — separate row to avoid overlap on narrow panels -->
+        <!-- Match mode toggle — plain Switch, label updated dynamically -->
         <LinearLayout
             android:orientation="horizontal"
             android:layout_width="match_parent"
@@ -199,19 +199,16 @@
             android:gravity="center_vertical">
           <TextView
               android:id="@+id/filter_tags_match_label"
-              android:text="Match mode:"
+              android:text="Match: Any"
               android:layout_width="0dp"
               android:layout_height="wrap_content"
               android:layout_weight="1"
-              android:textSize="13sp"
-              android:textColor="?android:attr/textColorSecondary"/>
+              android:textSize="14sp"
+              android:textColor="?android:attr/textColorPrimary"/>
           <Switch
               android:id="@+id/filter_tags_match_all"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
-              android:textOff="Any"
-              android:textOn="All"
-              android:showText="true"
               android:checked="false"/>
         </LinearLayout>
 

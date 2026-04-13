@@ -660,7 +660,7 @@ class ClipboardManager(
         val tagsDivider = dialogView.findViewById<View>(R.id.filter_divider_tags)
         val tagContainer = dialogView.findViewById<LinearLayout>(R.id.filter_tags_container)
         val matchAllToggle = dialogView.findViewById<Switch>(R.id.filter_tags_match_all)
-        val matchLabel = dialogView.findViewById<View>(R.id.filter_tags_match_label)
+        val matchLabel = dialogView.findViewById<TextView>(R.id.filter_tags_match_label)
         val emptyHint = dialogView.findViewById<TextView>(R.id.filter_tags_empty_hint)
 
         val showTags = tab != ClipboardTab.HISTORY
@@ -679,6 +679,12 @@ class ClipboardManager(
             }
             val selectedTags = historyView.getTagFilter()
             matchAllToggle.isChecked = historyView.isTagFilterMatchAll()
+
+            // Update label to reflect current match mode
+            matchLabel.text = if (matchAllToggle.isChecked) "Match: All" else "Match: Any"
+            matchAllToggle.setOnCheckedChangeListener { _, isChecked ->
+                matchLabel.text = if (isChecked) "Match: All" else "Match: Any"
+            }
 
             if (allTags.isEmpty()) {
                 // No tags exist yet — show hint, hide match toggle
