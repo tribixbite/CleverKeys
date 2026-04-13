@@ -158,6 +158,16 @@ class ClipboardManager(
             tabPinned?.setOnClickListener { if (!isInEditMode() && !tagMode) switchToTab(ClipboardTab.PINNED) }
             tabTodos?.setOnClickListener { if (!isInEditMode() && !tagMode) switchToTab(ClipboardTab.TODOS) }
 
+            // Visual feedback: pulse target tab icon when item is added to another tab
+            clipboardHistoryView?.onItemAddedToTab = { tab ->
+                val target = when (tab) {
+                    ClipboardTab.PINNED -> tabPinned
+                    ClipboardTab.TODOS -> tabTodos
+                    else -> null
+                }
+                target?.let { pulseTabIcon(it) }
+            }
+
             // Apply tab visibility based on config toggles
             applyTabVisibility()
 
@@ -250,6 +260,28 @@ class ClipboardManager(
         tabHistory?.alpha = if (currentTab == ClipboardTab.HISTORY) activeAlpha else inactiveAlpha
         tabPinned?.alpha = if (currentTab == ClipboardTab.PINNED) activeAlpha else inactiveAlpha
         tabTodos?.alpha = if (currentTab == ClipboardTab.TODOS) activeAlpha else inactiveAlpha
+    }
+
+    /**
+     * Scale-pulse a tab icon to give visual feedback that an item was added to that tab.
+     * No text required — works across all languages.
+     */
+    private fun pulseTabIcon(icon: ImageView) {
+        icon.animate().cancel()  // Cancel any in-flight animation
+        icon.animate()
+            .scaleX(1.5f).scaleY(1.5f)
+            .alpha(1.0f)  // Briefly highlight even if tab is inactive (dimmed)
+            .setDuration(150)
+            .withEndAction {
+                icon.animate()
+                    .scaleX(1.0f).scaleY(1.0f)
+                    .alpha(if (currentTab == ClipboardTab.PINNED && icon == tabPinned ||
+                               currentTab == ClipboardTab.TODOS && icon == tabTodos)
+                               1.0f else 0.5f)  // Restore correct alpha
+                    .setDuration(200)
+                    .start()
+            }
+            .start()
     }
 
     /**
@@ -837,6 +869,7 @@ class ClipboardManager(
         clipboardSearchBox = null
         clipboardSearchClear = null
         regexToggle = null
+        clipboardHistoryView?.onItemAddedToTab = null
         clipboardHistoryView = null
         filterButton = null
         tabHistory = null

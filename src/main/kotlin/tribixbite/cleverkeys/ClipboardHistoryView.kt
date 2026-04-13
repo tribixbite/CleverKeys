@@ -51,6 +51,9 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     // Current tab mode
     private var currentTab = ClipboardTab.HISTORY
 
+    // Callback for visual feedback when an item is added to another tab (pulse animation)
+    var onItemAddedToTab: ((ClipboardTab) -> Unit)? = null
+
     // Track expanded state: entry timestamp -> isExpanded (survives reorder/delete)
     // Uses timestamp (Long) as key instead of full content string to avoid duplicating
     // large clipboard entries in memory just for expand/collapse tracking.
@@ -229,7 +232,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     /** Whether the current regex pattern has a syntax error */
     fun hasRegexError(): Boolean = searchRegexError
 
-    private fun applyFilter() {
+    private fun applyFilter(resetView: Boolean = true) {
         // Pre-compile regex once per filter pass (not per entry)
         val compiledRegex: Regex? = if (regexMode && searchFilter.isNotEmpty()) {
             try {
@@ -318,9 +321,11 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             filtered
         }
 
-        // Reset to first page when filter changes
-        currentPage = 0
-        applyPagination(clearExpandedStates = true)
+        // Reset to first page when filter changes (but not on data reloads)
+        if (resetView) {
+            currentPage = 0
+        }
+        applyPagination(clearExpandedStates = resetView)
     }
 
     private fun applyPagination(clearExpandedStates: Boolean = false) {
@@ -407,6 +412,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 // Pin from history (COPY — history entry stays)
                 service?.pinEntry(entry.content, entry.timestamp,
                     entry.mimeType, entry.thumbnailBlob, entry.mediaPath)
+                onItemAddedToTab?.invoke(ClipboardTab.PINNED)
             }
             ClipboardTab.PINNED -> {
                 // Unpin from pinned tab
@@ -416,6 +422,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 // Pin todo item (can be both pinned and todo)
                 service?.pinEntry(entry.content, entry.timestamp,
                     entry.mimeType, entry.thumbnailBlob, entry.mediaPath)
+                onItemAddedToTab?.invoke(ClipboardTab.PINNED)
             }
         }
         loadDataAsync()
@@ -434,10 +441,9 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 val svc = service ?: return
                 val added = svc.addToTodo(entry.content, entry.timestamp,
                     entry.mimeType, entry.thumbnailBlob, entry.mediaPath)
-                if (!added) {
-                    Toast.makeText(context, "Already in todos", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(context, "Added to todos", Toast.LENGTH_SHORT).show()
+                if (added) {
+                    // Pulse the Todos tab icon as visual feedback (no text = no translations needed)
+                    onItemAddedToTab?.invoke(ClipboardTab.TODOS)
                 }
             }
             ClipboardTab.TODOS -> {
@@ -786,9 +792,10 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             if (Config.globalConfig().clipboard_text_only) {
                 entries = entries.filter { !it.isMedia }
             }
-            // Back on Main thread — atomic reference replacement
+            // Back on Main thread — atomic reference replacement.
+            // resetView=false: preserve page position and expand states on data reload
             history = entries
-            applyFilter()
+            applyFilter(resetView = false)
         }
     }
 
