@@ -159,13 +159,14 @@ class ClipboardManager(
             tabTodos?.setOnClickListener { if (!isInEditMode() && !tagMode) switchToTab(ClipboardTab.TODOS) }
 
             // Visual feedback: pulse target tab icon when item is added to another tab
-            clipboardHistoryView?.onItemAddedToTab = { tab ->
+            // pulseCount: 1 = success, 3 = duplicate (already exists)
+            clipboardHistoryView?.onItemAddedToTab = { tab, pulseCount ->
                 val target = when (tab) {
                     ClipboardTab.PINNED -> tabPinned
                     ClipboardTab.TODOS -> tabTodos
                     else -> null
                 }
-                target?.let { pulseTabIcon(it) }
+                target?.let { pulseTabIcon(it, pulseCount) }
             }
 
             // Apply tab visibility based on config toggles
@@ -263,22 +264,34 @@ class ClipboardManager(
     }
 
     /**
-     * Scale-pulse a tab icon to give visual feedback that an item was added to that tab.
-     * No text required — works across all languages.
+     * Scale-pulse a tab icon to give visual feedback.
+     * Single pulse (count=1) = item added successfully.
+     * Triple pulse (count=3) = duplicate, already exists in target tab.
      */
-    private fun pulseTabIcon(icon: ImageView) {
-        icon.animate().cancel()  // Cancel any in-flight animation
+    private fun pulseTabIcon(icon: ImageView, count: Int = 1) {
+        icon.animate().cancel()
+        val restoreAlpha = if (currentTab == ClipboardTab.PINNED && icon == tabPinned ||
+                               currentTab == ClipboardTab.TODOS && icon == tabTodos)
+                               1.0f else 0.5f
+        doPulse(icon, count, restoreAlpha)
+    }
+
+    /** Recursive single-pulse step: scales up then down, then chains remaining pulses. */
+    private fun doPulse(icon: ImageView, remaining: Int, restoreAlpha: Float) {
+        if (remaining <= 0) {
+            // Final restore
+            icon.animate().scaleX(1.0f).scaleY(1.0f).alpha(restoreAlpha).setDuration(150).start()
+            return
+        }
         icon.animate()
             .scaleX(1.5f).scaleY(1.5f)
-            .alpha(1.0f)  // Briefly highlight even if tab is inactive (dimmed)
-            .setDuration(150)
+            .alpha(1.0f)
+            .setDuration(100)
             .withEndAction {
                 icon.animate()
                     .scaleX(1.0f).scaleY(1.0f)
-                    .alpha(if (currentTab == ClipboardTab.PINNED && icon == tabPinned ||
-                               currentTab == ClipboardTab.TODOS && icon == tabTodos)
-                               1.0f else 0.5f)  // Restore correct alpha
-                    .setDuration(200)
+                    .setDuration(100)
+                    .withEndAction { doPulse(icon, remaining - 1, restoreAlpha) }
                     .start()
             }
             .start()

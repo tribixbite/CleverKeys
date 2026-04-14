@@ -281,12 +281,13 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         _listener = l
     }
 
-    /** Pin a clipboard entry (copies to independent pinned_entries table) */
+    /** Pin a clipboard entry (copies to independent pinned_entries table). Returns true if new, false if duplicate. */
     fun pinEntry(clip: String, createdTimestamp: Long = System.currentTimeMillis(),
                  mimeType: String = ClipboardEntry.MIME_TEXT_PLAIN,
-                 thumbnailBlob: ByteArray? = null, mediaPath: String? = null) {
+                 thumbnailBlob: ByteArray? = null, mediaPath: String? = null): Boolean {
         val added = _database.pinEntry(clip, createdTimestamp, mimeType, thumbnailBlob, mediaPath)
         if (added) _listener?.on_clipboard_history_change()
+        return added
     }
 
     /** Unpin a clipboard entry (removes from pinned_entries; history copy unaffected) */

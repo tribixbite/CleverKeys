@@ -51,8 +51,9 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     // Current tab mode
     private var currentTab = ClipboardTab.HISTORY
 
-    // Callback for visual feedback when an item is added to another tab (pulse animation)
-    var onItemAddedToTab: ((ClipboardTab) -> Unit)? = null
+    // Callback for visual feedback when an item is added to another tab (pulse animation).
+    // Second param: pulse count (1 = success, 3 = duplicate/already exists)
+    var onItemAddedToTab: ((ClipboardTab, Int) -> Unit)? = null
 
     // Track expanded state: entry timestamp -> isExpanded (survives reorder/delete)
     // Uses timestamp (Long) as key instead of full content string to avoid duplicating
@@ -410,9 +411,10 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         when (currentTab) {
             ClipboardTab.HISTORY -> {
                 // Pin from history (COPY — history entry stays)
-                service?.pinEntry(entry.content, entry.timestamp,
+                val svc = service ?: return
+                val added = svc.pinEntry(entry.content, entry.timestamp,
                     entry.mimeType, entry.thumbnailBlob, entry.mediaPath)
-                onItemAddedToTab?.invoke(ClipboardTab.PINNED)
+                onItemAddedToTab?.invoke(ClipboardTab.PINNED, if (added) 1 else 3)
             }
             ClipboardTab.PINNED -> {
                 // Unpin from pinned tab
@@ -420,9 +422,10 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             }
             ClipboardTab.TODOS -> {
                 // Pin todo item (can be both pinned and todo)
-                service?.pinEntry(entry.content, entry.timestamp,
+                val svc = service ?: return
+                val added = svc.pinEntry(entry.content, entry.timestamp,
                     entry.mimeType, entry.thumbnailBlob, entry.mediaPath)
-                onItemAddedToTab?.invoke(ClipboardTab.PINNED)
+                onItemAddedToTab?.invoke(ClipboardTab.PINNED, if (added) 1 else 3)
             }
         }
         loadDataAsync()
@@ -441,10 +444,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 val svc = service ?: return
                 val added = svc.addToTodo(entry.content, entry.timestamp,
                     entry.mimeType, entry.thumbnailBlob, entry.mediaPath)
-                if (added) {
-                    // Pulse the Todos tab icon as visual feedback (no text = no translations needed)
-                    onItemAddedToTab?.invoke(ClipboardTab.TODOS)
-                }
+                // Single pulse = added, triple pulse = already exists
+                onItemAddedToTab?.invoke(ClipboardTab.TODOS, if (added) 1 else 3)
             }
             ClipboardTab.TODOS -> {
                 // Remove from todos
