@@ -56,7 +56,8 @@ Technical documentation for CleverKeys, an Android keyboard with neural swipe ty
 | Spec | Description |
 |------|-------------|
 | [Quick Settings Tile](./quick-settings-tile.md) | Android notification shade tile |
-| [Clipboard Privacy](./clipboard-privacy.md) | Password manager exclusion |
+| [Clipboard System](./clipboard-system.md) | 3-tab clipboard (history/pinned/todos), schema V4, media, tags, todos |
+| [Clipboard Privacy](./clipboard-privacy.md) | Password manager exclusion + media privacy gating |
 | [Timestamp Keys](./timestamp-keys.md) | Date/time insertion keys |
 | [Termux Integration](./termux_integration.md) | Terminal keyboard optimizations |
 

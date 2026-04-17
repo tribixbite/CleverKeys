@@ -225,4 +225,7 @@ Status button cycles through all three states.
 
 ## Related Skills
 - `ime-key-routing.md` — How key events reach inline editors
+- `ime-visual-feedback.md` — Tab pulse and other IME-safe feedback patterns (toasts are invisible)
+- `clipboard-tag-system.md` — Tag storage, chip UI, filter integration for pinned/todos
+- `clipboard-todo-system.md` — Status cycle, done button, visual rendering for todos
 - `content-pane-layout.md` — View hierarchy and pane switching
