@@ -229,6 +229,17 @@ Assign custom actions to any key's 8 swipe directions:
 
 CleverKeys supports swipe typing in **11 languages** with intelligent multi-language features:
 
+> ⚠️ **Current swipe-typing scope** — The v1 gesture engine is trained on
+> **English + QWERTY**. It works well for other Latin-script languages that
+> share the QWERTY keyboard (Spanish, French, Portuguese, Italian, German,
+> etc.), but quality degrades for non-QWERTY layouts (AZERTY, QWERTZ, Dvorak,
+> Colemak) and for non-Latin / non-romance scripts, where swipe is
+> automatically disabled on keyboards whose row shape diverges from QWERTY
+> (see [#9](https://github.com/tribixbite/CleverKeys/issues/9)). A new
+> multi-layout / multi-script gesture model with layout-aware decoding is on
+> the roadmap for **Q2–Q3 2026**; in the interim, tap typing + autocorrect
+> works across every supported layout and language.
+
 ### Bundled Languages (6)
 Included in the APK — no additional download required:
 

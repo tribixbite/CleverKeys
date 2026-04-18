@@ -46,12 +46,14 @@ This document outlines the planned development path for CleverKeys, focusing on 
     - Address gaps in current vocabulary (e.g., words like "popsicle", "narcissist").
     - Implement a federated-style on-device learning mechanism to fine-tune the ONNX model on user's typing history without data leaving the device.
 
-- [ ] **Layout-Agnostic Training**
-    - **Current Limitation:** The model is trained primarily on QWERTY spatial data.
-    - **Goal:** Support Dvorak, Colemak, Neo2, and other layouts for gesture typing.
-    - **Implementation:**
-        - Generate synthetic swipe datasets for alternative layouts.
-        - Train layout-specific ONNX models or a single multi-head model that takes layout geometry as input.
+- [ ] **Layout-Agnostic & Multi-Script Gesture Model** *(target: Q2–Q3 2026)*
+    - **Current limitation:** The v1 gesture engine is trained on English + QWERTY. Quality is acceptable for other Latin-script QWERTY languages (es, fr, pt, it, de, nl, id, ms, tl, sw) but degrades on non-QWERTY layouts (AZERTY, QWERTZ, Dvorak, Colemak, Neo2) and on non-Latin scripts (Cyrillic, Greek, Arabic, Devanagari, CJK romanization, etc.), where swipe is currently auto-disabled on non-QWERTY row shapes (see [#9](https://github.com/tribixbite/CleverKeys/issues/9)).
+    - **Goal:** A layout-aware gesture decoder that accepts arbitrary keyboard geometries and script-specific vocabularies as inputs, enabling swipe on every supported layout and language without retraining a separate model per layout.
+    - **Implementation plan:**
+        - Synthesize large-scale swipe datasets for alternative layouts (Dvorak, Colemak, Neo2, AZERTY, QWERTZ) from the existing English corpus via geometric remap.
+        - Extend the encoder to consume layout geometry (key centroids + label embeddings) as a conditioning input rather than hard-coded QWERTY coordinates.
+        - Train either a single multi-head model or a small family of per-script models; evaluate against held-out native-speaker swipe data per language.
+        - Ship behind a feature flag, roll out language-by-language as accuracy clears a threshold.
 
 - [ ] **Context-Aware Predictions**
     - Improve next-word prediction using lightweight transformer models (distilled BERT/GPT) optimized for mobile CPU (ARM64).

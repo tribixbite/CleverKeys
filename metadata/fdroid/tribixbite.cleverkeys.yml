@@ -1,0 +1,150 @@
+Categories:
+  - Development
+  - Keyboard & IME
+  - Task
+  - Writing
+License: GPL-3.0-only
+AuthorName: tribixbite
+AuthorEmail: willstone@gmail.com
+SourceCode: https://github.com/tribixbite/CleverKeys
+IssueTracker: https://github.com/tribixbite/CleverKeys/issues
+Donate: https://paypal.me/WillStone
+Liberapay: tribixbite
+
+AutoName: CleverKeys
+
+RepoType: git
+Repo: https://github.com/tribixbite/CleverKeys
+
+Builds:
+  - versionName: 1.1.64
+    versionCode: 101641
+    commit: v1.1.64
+    gradle:
+      - yes
+    output: build/outputs/apk/release/*armeabi-v7a*.apk
+    binary: https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-armeabi-v7a.apk
+    srclibs:
+      - reproducible-apk-tools@v0.3.0
+    prebuild:
+      - rm -rf $$SDK$$/platforms/android-34
+      - sdkmanager 'platforms;android-34' 'build-tools;34.0.0'
+      - sed -i -e "s/include 'armeabi-v7a'.*/include 'armeabi-v7a'/" build.gradle
+    postbuild:
+      - python3 -c "import zipfile,sys,os,tempfile,shutil;a=sys.argv[1];t=tempfile.mktemp('.apk');z=zipfile.ZipFile(a);o=zipfile.ZipFile(t,'w');[o.writestr(i,z.read(i.filename))for
+        i in z.infolist()if not(i.filename.startswith('META-INF/com/')or i.filename.startswith('META-INF/services/'))];z.close();o.close();shutil.move(t,a)"
+        $$OUT$$
+      - $$reproducible-apk-tools$$/inplace-fix.py --page-size 16 --internal fix-pg-map-id
+        $$OUT$$ 0000000
+
+  - versionName: 1.1.64
+    versionCode: 101642
+    commit: v1.1.64
+    gradle:
+      - yes
+    output: build/outputs/apk/release/*arm64-v8a*.apk
+    binary: https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-arm64-v8a.apk
+    srclibs:
+      - reproducible-apk-tools@v0.3.0
+    prebuild:
+      - rm -rf $$SDK$$/platforms/android-34
+      - sdkmanager 'platforms;android-34' 'build-tools;34.0.0'
+      - sed -i -e "s/include 'armeabi-v7a'.*/include 'arm64-v8a'/" build.gradle
+    postbuild:
+      - python3 -c "import zipfile,sys,os,tempfile,shutil;a=sys.argv[1];t=tempfile.mktemp('.apk');z=zipfile.ZipFile(a);o=zipfile.ZipFile(t,'w');[o.writestr(i,z.read(i.filename))for
+        i in z.infolist()if not(i.filename.startswith('META-INF/com/')or i.filename.startswith('META-INF/services/'))];z.close();o.close();shutil.move(t,a)"
+        $$OUT$$
+      - $$reproducible-apk-tools$$/inplace-fix.py --page-size 16 --internal fix-pg-map-id
+        $$OUT$$ 0000000
+
+  - versionName: 1.1.64
+    versionCode: 101643
+    commit: v1.1.64
+    gradle:
+      - yes
+    output: build/outputs/apk/release/*x86_64*.apk
+    binary: https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-x86_64.apk
+    srclibs:
+      - reproducible-apk-tools@v0.3.0
+    prebuild:
+      - rm -rf $$SDK$$/platforms/android-34
+      - sdkmanager 'platforms;android-34' 'build-tools;34.0.0'
+      - sed -i -e "s/include 'armeabi-v7a'.*/include 'x86_64'/" build.gradle
+    postbuild:
+      - python3 -c "import zipfile,sys,os,tempfile,shutil;a=sys.argv[1];t=tempfile.mktemp('.apk');z=zipfile.ZipFile(a);o=zipfile.ZipFile(t,'w');[o.writestr(i,z.read(i.filename))for
+        i in z.infolist()if not(i.filename.startswith('META-INF/com/')or i.filename.startswith('META-INF/services/'))];z.close();o.close();shutil.move(t,a)"
+        $$OUT$$
+      - $$reproducible-apk-tools$$/inplace-fix.py --page-size 16 --internal fix-pg-map-id
+        $$OUT$$ 0000000
+
+  - versionName: 1.3.0
+    versionCode: 103001
+    commit: v1.3.0
+    gradle:
+      - yes
+    output: build/outputs/apk/release/*armeabi-v7a*.apk
+    binary: https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-armeabi-v7a.apk
+    srclibs:
+      - reproducible-apk-tools@v0.3.0
+    prebuild:
+      - rm -rf $$SDK$$/platforms/android-34
+      - sdkmanager 'platforms;android-34' 'build-tools;34.0.0'
+      - sed -i -e "s/include 'armeabi-v7a'.*/include 'armeabi-v7a'/" build.gradle
+    postbuild:
+      - python3 -c "import zipfile,sys,os,tempfile,shutil;a=sys.argv[1];t=tempfile.mktemp('.apk');z=zipfile.ZipFile(a);o=zipfile.ZipFile(t,'w');[o.writestr(i,z.read(i.filename))for
+        i in z.infolist()if not(i.filename.startswith('META-INF/com/')or i.filename.startswith('META-INF/services/'))];z.close();o.close();shutil.move(t,a)"
+        $$OUT$$
+      - $$reproducible-apk-tools$$/inplace-fix.py --page-size 16 --internal fix-pg-map-id
+        $$OUT$$ 0000000
+
+  - versionName: 1.3.0
+    versionCode: 103002
+    commit: v1.3.0
+    gradle:
+      - yes
+    output: build/outputs/apk/release/*arm64-v8a*.apk
+    binary: https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-arm64-v8a.apk
+    srclibs:
+      - reproducible-apk-tools@v0.3.0
+    prebuild:
+      - rm -rf $$SDK$$/platforms/android-34
+      - sdkmanager 'platforms;android-34' 'build-tools;34.0.0'
+      - sed -i -e "s/include 'armeabi-v7a'.*/include 'arm64-v8a'/" build.gradle
+    postbuild:
+      - python3 -c "import zipfile,sys,os,tempfile,shutil;a=sys.argv[1];t=tempfile.mktemp('.apk');z=zipfile.ZipFile(a);o=zipfile.ZipFile(t,'w');[o.writestr(i,z.read(i.filename))for
+        i in z.infolist()if not(i.filename.startswith('META-INF/com/')or i.filename.startswith('META-INF/services/'))];z.close();o.close();shutil.move(t,a)"
+        $$OUT$$
+      - $$reproducible-apk-tools$$/inplace-fix.py --page-size 16 --internal fix-pg-map-id
+        $$OUT$$ 0000000
+
+  - versionName: 1.3.0
+    versionCode: 103003
+    commit: v1.3.0
+    gradle:
+      - yes
+    output: build/outputs/apk/release/*x86_64*.apk
+    binary: https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-x86_64.apk
+    srclibs:
+      - reproducible-apk-tools@v0.3.0
+    prebuild:
+      - rm -rf $$SDK$$/platforms/android-34
+      - sdkmanager 'platforms;android-34' 'build-tools;34.0.0'
+      - sed -i -e "s/include 'armeabi-v7a'.*/include 'x86_64'/" build.gradle
+    postbuild:
+      - python3 -c "import zipfile,sys,os,tempfile,shutil;a=sys.argv[1];t=tempfile.mktemp('.apk');z=zipfile.ZipFile(a);o=zipfile.ZipFile(t,'w');[o.writestr(i,z.read(i.filename))for
+        i in z.infolist()if not(i.filename.startswith('META-INF/com/')or i.filename.startswith('META-INF/services/'))];z.close();o.close();shutil.move(t,a)"
+        $$OUT$$
+      - $$reproducible-apk-tools$$/inplace-fix.py --page-size 16 --internal fix-pg-map-id
+        $$OUT$$ 0000000
+
+AllowedAPKSigningKeys: 3c70de8852fca5bb279c9998d558ea7606131f1f937af35cc943eee1aedfb97e
+
+# Manual update mode: ABI-split builds with binary verification need a
+# coordinated triple of Builds entries per release, so auto-update isn't
+# safe here. Bump CurrentVersion/CurrentVersionCode below at each release
+# and add three new Builds entries above (armv7, arm64, x86_64) following
+# the versionCode scheme `base*10 + abiCode` (1=armv7, 2=arm64, 3=x86_64).
+AutoUpdateMode: None
+UpdateCheckMode: Tags ^v[\d.]+$
+CurrentVersion: 1.3.0
+CurrentVersionCode: 103003

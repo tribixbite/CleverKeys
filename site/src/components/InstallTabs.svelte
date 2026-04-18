@@ -1,11 +1,12 @@
 <script lang="ts">
-  type Tab = 'fdroid' | 'github' | 'build'
-  let active = $state<Tab>('fdroid')
+  type Tab = 'obtainium' | 'fdroid' | 'github' | 'build'
+  let active = $state<Tab>('obtainium')
 
-  const tabs: { id: Tab; label: string }[] = [
-    { id: 'fdroid', label: 'F-Droid' },
-    { id: 'github', label: 'GitHub APK' },
-    { id: 'build',  label: 'Build from source' },
+  const tabs: { id: Tab; label: string; badge?: string }[] = [
+    { id: 'obtainium', label: 'Obtainium', badge: 'Recommended' },
+    { id: 'fdroid',    label: 'F-Droid' },
+    { id: 'github',    label: 'GitHub APK' },
+    { id: 'build',     label: 'Build from source' },
   ]
 
   let copied = $state(false)
@@ -17,16 +18,29 @@
     } catch {}
   }
 
-  const snippets: Record<Tab, { label: string; cmd: string; note: string }> = {
+  // Pre-built URL (kept outside the payload so it wraps cleanly in source)
+  const OBTAINIUM_DEEPLINK =
+    'https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22tribixbite.cleverkeys%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Ftribixbite%2FCleverKeys%22%2C%22author%22%3A%22tribixbite%22%2C%22name%22%3A%22CleverKeys%22%7D'
+
+  const snippets: Record<Tab, { label: string; cmd: string; note: string; cta?: { href: string; label: string } }> = {
+    obtainium: {
+      label: 'Install via Obtainium (recommended)',
+      cmd: OBTAINIUM_DEEPLINK,
+      note:
+        'Obtainium auto-tracks GitHub releases so you get new versions the moment they ship — no F-Droid indexing lag. Tap to open in Obtainium on your phone, or share this link to your device.',
+      cta: { href: OBTAINIUM_DEEPLINK, label: 'Open in Obtainium' },
+    },
     fdroid: {
       label: 'One-tap install from F-Droid',
       cmd: 'https://f-droid.org/packages/tribixbite.cleverkeys',
-      note: 'Signed reproducible builds. No Play Store account required.',
+      note: 'Signed reproducible builds. No Play Store account required. Updates typically land 24–48 h after a GitHub release.',
+      cta: { href: 'https://f-droid.org/packages/tribixbite.cleverkeys', label: 'Open F-Droid listing' },
     },
     github: {
       label: 'Latest signed release',
       cmd: 'https://github.com/tribixbite/CleverKeys/releases/latest',
       note: 'Grab the arm64-v8a APK, install, then enable in Settings → Languages & input.',
+      cta: { href: 'https://github.com/tribixbite/CleverKeys/releases/latest', label: 'Open release' },
     },
     build: {
       label: 'Clone and build locally',
@@ -44,10 +58,17 @@
         aria-selected={active === t.id}
         type="button"
         onclick={() => (active = t.id)}
-        class="flex-1 rounded-lg px-3 py-2 text-xs font-medium transition sm:text-sm"
+        class="flex-1 rounded-lg px-2 py-2 text-xs font-medium transition sm:text-sm"
         class:is-active={active === t.id}
       >
-        {t.label}
+        <span class="inline-flex items-center gap-1.5">
+          {t.label}
+          {#if t.badge}
+            <span class="rounded-full bg-[color:var(--color-teal)]/20 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-[color:var(--color-teal)]">
+              {t.badge}
+            </span>
+          {/if}
+        </span>
       </button>
     {/each}
   </div>
@@ -65,6 +86,19 @@
       </button>
     </div>
     <p class="mt-3 text-sm text-white/60">{snippets[active].note}</p>
+    {#if snippets[active].cta}
+      <div class="mt-4">
+        <a
+          href={snippets[active].cta!.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-1.5 text-sm font-semibold text-[color:var(--color-violet-200)] hover:text-white"
+        >
+          {snippets[active].cta!.label}
+          <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg>
+        </a>
+      </div>
+    {/if}
   </div>
 </div>
 

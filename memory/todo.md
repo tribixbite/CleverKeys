@@ -1,5 +1,37 @@
 # CleverKeys TODO
 
+## ✅ Site polish + F-Droid 1.3.0 metadata + doc skills (2026-04-18)
+
+- **Obtainium restored as primary install CTA** on cleverkeys.app. Hero,
+  header "Install" button, InstallTabs (now with an "Obtainium — Recommended"
+  tab as default), and footer all lead with the Obtainium deep-link; F-Droid
+  stays as secondary. Explanatory subcopy notes the 24–48 h F-Droid lag.
+- **Fixed F-Droid 1.3.0 pickup.** Canonical metadata now tracked at
+  `metadata/fdroid/tribixbite.cleverkeys.yml` (previously only the
+  untracked `fdroiddata_temp/` staging clone existed). Upstream was
+  frozen at 1.1.64 with `AutoUpdateMode: None` + `UpdateCheckMode: None`,
+  so F-Droid never advanced past 101643. Added three Builds entries
+  (103001 armeabi-v7a, 103002 arm64-v8a, 103003 x86_64) modelled on the
+  existing 1.1.64 triplet, bumped `CurrentVersion: 1.3.0` /
+  `CurrentVersionCode: 103003`, switched `UpdateCheckMode` to
+  `Tags ^v[\d.]+$` so new tags surface in the F-Droid dashboard.
+  **Next manual step**: open an MR against upstream
+  `https://gitlab.com/fdroid/fdroiddata` replacing
+  `metadata/tribixbite.cleverkeys.yml` with the tracked content from
+  `metadata/fdroid/`.
+- **README swipe-typing caveat** added next to the multi-language section,
+  making clear that swipe currently needs QWERTY + Latin script, and
+  pointing to the ROADMAP item ("Layout-Agnostic & Multi-Script Gesture
+  Model — Q2–Q3 2026") that tracks the fix. ROADMAP entry expanded with
+  explicit timeline + implementation plan.
+- **New skill docs** (user-global `~/.claude/skills/`):
+  - `cleverkeys-site-deploy.md` — Astro build, CI workflow, custom domain,
+    Termux ARM64 native-binding install recipe, cache smoke tests.
+  - `cleverkeys-wiki-authoring.md` — content collection layout, remark
+    link rewriter, sidebar ordering, rename/delete protocol.
+  - `cleverkeys-fdroid-release.md` — ABI-split versionCode math,
+    metadata structure, failure modes, per-release checklist.
+
 ## ✅ Landing site rewrite: Astro 5 + Svelte 5 + Tailwind v4 (2026-04-17)
 
 Fully replaced the old single-file `web_demo/index.html` with a proper Astro
