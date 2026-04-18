@@ -1,5 +1,30 @@
 # CleverKeys TODO
 
+## ✅ Landing site rewrite: Astro 5 + Svelte 5 + Tailwind v4 (2026-04-17)
+
+Fully replaced the old single-file `web_demo/index.html` with a proper Astro
+project under `site/`. New landing matches `svelte-landing-page` + `impeccable`
+skill guidance: dark-first purple brand, custom SVG phone mockup with animated
+swipe-path demo as a Svelte island, stats ribbon, feature grid, install tabs
+(copy-to-clipboard island), language grid, demo/docs CTAs.
+
+Wiki (43 pages) migrated to Astro content collections sourced from
+`docs/wiki/**/*.md`. Shared `WikiLayout` with section sidebar, breadcrumbs, new
+prose styling. Custom remark plugin rewrites all `.md` cross-refs to clean
+`/wiki/<slug>/` routes and redirects spec references to `/specs/…html`.
+
+Custom domain: `site/public/CNAME = cleverkeys.app`. Workflow
+(`.github/workflows/deploy-web-demo.yml`) rewritten to install deps with Bun,
+run `astro build`, merge legacy `/demo/` and `/specs/` HTML + assets into
+`site/dist/`, and emit redirect shims for any old `.html` wiki URLs so external
+links don't 404. Fixed a broken wiki reference
+(`customization/custom-layouts.md` → split into per-key-actions + custom-layouts).
+
+- Site root: `site/` (Astro 5.18, Svelte 5.55, Tailwind 4.2, sitemap integration)
+- Build: `cd site && bun install && bun run build` → `site/dist/`
+- **Manual step**: Set "Custom domain" to `cleverkeys.app` in repo
+  Settings → Pages (CNAME file handles the certificate).
+
 ## ✅ Memory/Performance Optimization (2026-04-09, continued 2026-04-10)
 
 ### VocabularyTrie Compact Nodes (f183e1515)

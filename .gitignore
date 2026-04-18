@@ -121,6 +121,9 @@ src/main/assets/prefix_boosts/*.json
 pal_generated.code
 # Temp emoji data files
 *.json
+!site/**/*.json
+!site/package.json
+!site/tsconfig.json
 generated_*.kt
 .env
 

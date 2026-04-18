@@ -1,0 +1,111 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import Icon from '../../components/Icon.astro'
+import { getCollection, render } from 'astro:content'
+import { CATEGORIES, titleFor, categorySlug, pageSlug, orderedWithinCategory } from '../../lib/wiki'
+
+const all = await getCollection('wiki')
+
+const byCategory = new Map<string, typeof all>()
+for (const c of CATEGORIES) byCategory.set(c.slug, [])
+for (const entry of all) {
+  const slug = categorySlug(entry)
+  if (!byCategory.has(slug)) byCategory.set(slug, [])
+  byCategory.get(slug)!.push(entry)
+}
+
+// Pre-extract title + description per entry for the cards
+async function describe(entry: (typeof all)[number]) {
+  const body = entry.body ?? ''
+  // First non-heading paragraph
+  const lines = body.split(/\r?\n/).filter((l) => l.trim().length > 0 && !l.startsWith('#'))
+  const first = lines[0] ?? ''
+  return {
+    slug: pageSlug(entry),
+    title: titleFor(entry),
+    blurb: first.replace(/[*_`]/g, '').slice(0, 140),
+  }
+}
+
+const sections = await Promise.all(
+  CATEGORIES.map(async (c) => {
+    const entries = orderedWithinCategory(byCategory.get(c.slug) ?? [], c.slug)
+    const cards = await Promise.all(entries.map(describe))
+    return { ...c, cards }
+  }),
+)
+---
+
+<BaseLayout title="User guide — CleverKeys" description="Complete user documentation for CleverKeys keyboard." pageType="wiki">
+  <section class="relative overflow-hidden pt-12 pb-10 sm:pt-20">
+    <div aria-hidden="true" class="pointer-events-none absolute inset-0 -z-[1] mask-fade-b opacity-30">
+      <svg width="100%" height="100%" class="text-white/5">
+        <defs>
+          <pattern id="wikigrid" width="44" height="44" patternUnits="userSpaceOnUse">
+            <path d="M 44 0 L 0 0 0 44" fill="none" stroke="currentColor" stroke-width="1"/>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#wikigrid)"/>
+      </svg>
+    </div>
+
+    <div class="container-x">
+      <p class="text-xs font-semibold uppercase tracking-widest text-[color:var(--color-violet-200)]">User guide</p>
+      <h1 class="mt-3 max-w-3xl font-display text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl">
+        <span class="gradient-text">Everything CleverKeys can do</span>,
+        organized by what you're trying to get done.
+      </h1>
+      <p class="mt-5 max-w-2xl text-white/65">
+        Jump in at any section. Pages are short, task-oriented, and cross-linked.
+      </p>
+
+      <!-- Category nav chips -->
+      <nav class="mt-8 flex flex-wrap gap-2" aria-label="Jump to category">
+        {CATEGORIES.map((c) => (
+          <a href={`#${c.slug}`} class="chip">
+            <span class="inline-flex h-1.5 w-1.5 rounded-full" style={`background:${c.color}`}></span>
+            {c.name}
+          </a>
+        ))}
+        <a href="/wiki/faq/" class="chip">
+          <Icon name="sparkles" class="h-3 w-3" />
+          FAQ
+        </a>
+      </nav>
+    </div>
+  </section>
+
+  <div class="container-x space-y-20 pb-24">
+    {sections.map((s) => s.cards.length > 0 && (
+      <section id={s.slug} class="scroll-mt-24">
+        <header class="mb-8 flex items-end justify-between gap-6 border-b border-white/5 pb-4">
+          <div>
+            <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-white/70">
+              <span class="inline-flex h-2 w-2 rounded-full" style={`background:${s.color}`}></span>
+              {s.name}
+            </div>
+            <h2 class="mt-2 font-display text-2xl font-bold">{s.description}</h2>
+          </div>
+          <span class="hidden text-xs text-white/40 sm:block">{s.cards.length} page{s.cards.length === 1 ? '' : 's'}</span>
+        </header>
+
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {s.cards.map((card) => (
+            <a
+              href={`/wiki/${card.slug}/`}
+              class="group surface relative overflow-hidden rounded-2xl p-5 transition hover:-translate-y-0.5 hover:border-[color:var(--color-violet-500)]/40"
+              style={`--cat:${s.color}`}
+            >
+              <div class="absolute inset-x-0 top-0 h-px" style={`background: linear-gradient(to right, transparent, ${s.color}, transparent); opacity: 0.35`}></div>
+              <h3 class="font-display text-base font-semibold text-white">{card.title}</h3>
+              <p class="mt-1.5 line-clamp-2 text-sm text-white/60">{card.blurb}</p>
+              <span class="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-[color:var(--color-violet-200)] transition group-hover:text-white">
+                Open <Icon name="arrow-right" class="h-3.5 w-3.5" />
+              </span>
+            </a>
+          ))}
+        </div>
+      </section>
+    ))}
+  </div>
+</BaseLayout>

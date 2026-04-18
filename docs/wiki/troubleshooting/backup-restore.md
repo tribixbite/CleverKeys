@@ -230,4 +230,5 @@ Exported files are saved to the location you choose via Android's file picker (t
 ## Related Topics
 
 - [Privacy](../settings/privacy.md) - Data collection settings
-- [Per-Key Customization](../customization/custom-layouts.md) - Subkey settings
+- [Per-Key Customization](../customization/per-key-actions.md) - Subkey settings
+- [Custom Layouts](../layouts/custom-layouts.md) - Build your own keyboard layout

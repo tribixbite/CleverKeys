@@ -1,9 +1,14 @@
-name: Deploy CleverKeys Web Demo
+name: Deploy cleverkeys.app
 
 on:
   push:
-    branches: [ main ]
-    paths: [ 'web_demo/**', 'README.md', 'docs/wiki/**' ]
+    branches: [main]
+    paths:
+      - 'site/**'
+      - 'web_demo/**'
+      - 'docs/wiki/**'
+      - 'README.md'
+      - '.github/workflows/deploy-web-demo.yml'
   workflow_dispatch:
 
 permissions:
@@ -12,12 +17,15 @@ permissions:
   id-token: write
 
 concurrency:
-  group: "pages"
+  group: 'pages'
   cancel-in-progress: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: site
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,73 +34,82 @@ jobs:
 
       - name: Ensure LFS files
         run: git lfs install && git lfs pull
+        working-directory: .
 
-      - name: Prepare CleverKeys website and demo
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install site dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build Astro site
+        run: bun run build
+        env:
+          ASTRO_TELEMETRY_DISABLED: '1'
+
+      - name: Merge legacy demo & specs into dist
+        working-directory: .
         run: |
-          mkdir -p deploy/demo
-          mkdir -p deploy/specs
+          set -euo pipefail
 
-          if [ -d "web_demo" ]; then
-            echo "📁 Setting up CleverKeys website..."
-
-            # Copy new homepage
-            if [ -f "web_demo/index.html" ]; then
-              cp web_demo/index.html deploy/
-              echo "✅ Homepage ready"
-            fi
-
-            # Copy demo page (use demo/index.html if exists, otherwise under construction)
-            echo "📁 Setting up demo in /demo/..."
-            if [ -f "web_demo/demo/index.html" ]; then
-              cp web_demo/demo/index.html deploy/demo/index.html
-              echo "✅ Demo page ready (under construction)"
-            elif [ -f "web_demo/swipe-onnx.html" ]; then
-              cp web_demo/swipe-onnx.html deploy/demo/index.html
-              echo "✅ Demo page ready (neural swipe)"
-            fi
-
-            # Copy specs documentation
-            echo "📁 Setting up specs documentation in /specs/..."
-            if [ -d "web_demo/specs" ]; then
-              cp -r web_demo/specs/* deploy/specs/
-              echo "✅ Specs documentation ready"
-            fi
-
-            # Copy wiki user guide
-            echo "📁 Setting up wiki user guide in /wiki/..."
-            if [ -d "web_demo/wiki" ]; then
-              mkdir -p deploy/wiki
-              cp -r web_demo/wiki/* deploy/wiki/
-              echo "✅ Wiki user guide ready (includes search-index.json)"
-            fi
-
-            # Copy demo supporting files (for when demo is restored)
-            echo "📁 Copying demo assets..."
-            cp web_demo/*.onnx deploy/demo/ 2>/dev/null || echo "ℹ️  No ONNX models"
-            cp web_demo/*.js deploy/demo/ 2>/dev/null || echo "ℹ️  No JS files"
-            cp web_demo/*.json deploy/demo/ 2>/dev/null || echo "ℹ️  No JSON config files"
-            cp web_demo/*.css deploy/demo/ 2>/dev/null || echo "ℹ️  No CSS files"
-
-            # Copy any font files
-            cp web_demo/*.ttf deploy/demo/ 2>/dev/null || echo "ℹ️  No TTF fonts"
-            cp web_demo/*.woff deploy/demo/ 2>/dev/null || echo "ℹ️  No WOFF fonts"
-            cp web_demo/*.woff2 deploy/demo/ 2>/dev/null || echo "ℹ️  No WOFF2 fonts"
-
-            # Copy any image files
-            cp web_demo/*.png deploy/demo/ 2>/dev/null || echo "ℹ️  No PNG images"
-            cp web_demo/*.jpg deploy/demo/ 2>/dev/null || echo "ℹ️  No JPG images"
-            cp web_demo/*.svg deploy/demo/ 2>/dev/null || echo "ℹ️  No SVG images"
+          # /demo/ — ONNX-powered swipe demo (self-contained legacy HTML)
+          if [ -d "web_demo/demo" ]; then
+            mkdir -p site/dist/demo
+            cp -r web_demo/demo/. site/dist/demo/
+            echo "✅ Copied web_demo/demo → site/dist/demo"
+          elif [ -f "web_demo/swipe-onnx.html" ]; then
+            mkdir -p site/dist/demo
+            cp web_demo/swipe-onnx.html site/dist/demo/index.html
           fi
 
-          echo ""
-          echo "✅ Website structure prepared:"
-          echo "   / - Homepage"
-          echo "   /demo/ - Demo (under construction)"
-          echo "   /specs/ - Technical specifications"
-          echo "   /wiki/ - User guide wiki (with search-index.json)"
-          echo ""
-          echo "📊 Deployed files:"
-          ls -laR deploy/
+          # Supporting assets referenced by the demo (ONNX, tokenizer, vocab, JS, fonts)
+          for pattern in '*.onnx' '*.js' '*.json' '*.css' '*.ttf' '*.woff' '*.woff2' '*.png' '*.jpg' '*.svg'; do
+            cp -n web_demo/$pattern site/dist/demo/ 2>/dev/null || true
+          done
+
+          # /specs/ — technical specifications (static HTML snapshot)
+          if [ -d "web_demo/specs" ]; then
+            mkdir -p site/dist/specs
+            cp -r web_demo/specs/. site/dist/specs/
+            echo "✅ Copied web_demo/specs → site/dist/specs"
+          fi
+
+          # Backwards-compatible redirects for any old .html wiki URLs that
+          # might be cached or linked externally.
+          # The new wiki routes omit .html and lowercase path segments.
+          if [ -d "web_demo/wiki" ]; then
+            find web_demo/wiki -type f -name "*.html" | while read f; do
+              rel="${f#web_demo/wiki/}"
+              # /wiki/foo/bar.html  ->  /wiki/foo/bar/
+              slug="${rel%.html}"
+              slug_lower="$(echo "$slug" | tr '[:upper:]' '[:lower:]')"
+              target="/wiki/${slug_lower}/"
+              # Skip if a file with this exact path already exists in dist
+              if [ -f "site/dist/wiki/${rel}" ]; then
+                continue
+              fi
+              mkdir -p "site/dist/wiki/$(dirname "$rel")"
+              cat > "site/dist/wiki/${rel}" <<EOF
+          <!doctype html><meta charset="utf-8">
+          <title>Redirecting…</title>
+          <link rel="canonical" href="${target}">
+          <meta http-equiv="refresh" content="0;url=${target}">
+          <p>Redirecting to <a href="${target}">${target}</a>.</p>
+          EOF
+            done
+          fi
+
+          # CNAME lives in site/public/ and is copied automatically by Astro,
+          # but we reassert it here so the deploy artifact always has it.
+          echo "cleverkeys.app" > site/dist/CNAME
+
+          echo "---"
+          echo "📊 Deploy tree:"
+          find site/dist -maxdepth 2 -type d | sort
+          echo "---"
+          echo "📦 Total size: $(du -sh site/dist | cut -f1)"
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
@@ -100,7 +117,7 @@ jobs:
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./deploy
+          path: ./site/dist
 
   deploy:
     environment:

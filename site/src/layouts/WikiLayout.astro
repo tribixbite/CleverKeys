@@ -1,0 +1,88 @@
+---
+import BaseLayout from './BaseLayout.astro'
+import { CATEGORIES, CATEGORY_BY_SLUG } from '../lib/wiki'
+import Icon from '../components/Icon.astro'
+
+interface Props {
+  title: string
+  description?: string
+  category?: string
+  pageSlug: string
+  allInCategory?: { slug: string; title: string }[]
+}
+
+const { title, description, category, pageSlug, allInCategory = [] } = Astro.props
+const cat = category ? CATEGORY_BY_SLUG[category] : undefined
+---
+
+<BaseLayout title={`${title} — CleverKeys`} description={description} pageType="wiki">
+  <div class="container-x grid gap-10 py-10 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-14">
+    <!-- sidebar -->
+    <aside class="lg:sticky lg:top-20 lg:self-start">
+      <a href="/wiki/" class="mb-4 inline-flex items-center gap-1.5 text-sm text-[color:var(--color-violet-200)] hover:text-white">
+        <Icon name="arrow-right" class="h-4 w-4 rotate-180" /> All guides
+      </a>
+      <nav aria-label="Section navigation">
+        {cat && (
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="inline-flex h-2 w-2 rounded-full" style={`background:${cat.color}`}></span>
+              <span class="text-xs font-semibold uppercase tracking-widest text-white/70">{cat.name}</span>
+            </div>
+            <ul class="mt-3 space-y-0.5">
+              {allInCategory.map((p) => {
+                const active = p.slug === pageSlug
+                return (
+                  <li>
+                    <a
+                      href={`/wiki/${p.slug}/`}
+                      class={`block rounded-md px-2.5 py-1.5 text-sm transition ${
+                        active
+                          ? 'bg-[color:var(--color-violet-600)]/20 text-white'
+                          : 'text-white/70 hover:bg-white/5 hover:text-white'
+                      }`}
+                    >
+                      {p.title}
+                    </a>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
+        )}
+
+        <div class="mt-8 border-t border-white/5 pt-6">
+          <div class="text-xs font-semibold uppercase tracking-widest text-white/50">Other sections</div>
+          <ul class="mt-3 space-y-0.5">
+            {CATEGORIES.filter((c) => c.slug !== category).map((c) => (
+              <li>
+                <a href={`/wiki/#${c.slug}`} class="block rounded-md px-2.5 py-1.5 text-sm text-white/60 transition hover:bg-white/5 hover:text-white">
+                  {c.name}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </nav>
+    </aside>
+
+    <article class="min-w-0 max-w-3xl">
+      <!-- Breadcrumbs -->
+      <nav class="mb-3 text-xs text-white/50" aria-label="Breadcrumb">
+        <a href="/" class="hover:text-white">Home</a> / <a href="/wiki/" class="hover:text-white">Wiki</a>
+        {cat && (<> / <a href={`/wiki/#${cat.slug}`} class="hover:text-white">{cat.name}</a></>)}
+      </nav>
+
+      <div class="prose-wiki">
+        <slot />
+      </div>
+
+      <div class="mt-16 flex flex-wrap items-center gap-3 border-t border-white/5 pt-6">
+        <a href="/wiki/" class="btn-secondary text-sm"><Icon name="book" class="h-4 w-4" /> All docs</a>
+        <a href="https://github.com/tribixbite/CleverKeys/issues/new" class="btn-secondary text-sm" target="_blank" rel="noopener noreferrer">
+          Report doc issue
+        </a>
+      </div>
+    </article>
+  </div>
+</BaseLayout>

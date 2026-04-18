@@ -1,0 +1,17 @@
+---
+import Icon from './Icon.astro'
+import type { Feature } from '../lib/site'
+interface Props { feature: Feature }
+const { feature } = Astro.props
+---
+
+<article class="group relative overflow-hidden rounded-2xl border border-white/5 bg-[color:var(--color-ink-700)]/50 p-6 transition hover:border-[color:var(--color-violet-500)]/40 hover:bg-[color:var(--color-ink-700)]/80">
+  <div aria-hidden="true" class="pointer-events-none absolute inset-px rounded-[15px] bg-gradient-to-br from-[color:var(--color-violet-500)]/0 via-transparent to-transparent opacity-0 transition group-hover:opacity-100"></div>
+  <div class="relative z-[1]">
+    <div class="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-[color:var(--color-violet-600)]/15 text-[color:var(--color-violet-200)]">
+      <Icon name={feature.glyph} class="h-5 w-5" />
+    </div>
+    <h3 class="font-display text-lg font-semibold text-white">{feature.title}</h3>
+    <p class="mt-1.5 text-sm leading-6 text-white/65">{feature.blurb}</p>
+  </div>
+</article>

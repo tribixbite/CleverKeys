@@ -1,0 +1,166 @@
+@import "tailwindcss";
+
+@theme {
+  /* Brand — CleverKeys deep purple lineage */
+  --color-ink-900: #07060d;
+  --color-ink-800: #0d0b18;
+  --color-ink-700: #151128;
+  --color-ink-600: #1e1a3a;
+  --color-ink-500: #29244f;
+  --color-ink-400: #3a3566;
+
+  --color-violet-50:  #f6f2ff;
+  --color-violet-100: #eee5ff;
+  --color-violet-200: #dcc9ff;
+  --color-violet-300: #c1a4ff;
+  --color-violet-400: #a279ff;
+  --color-violet-500: #8b5cf6;
+  --color-violet-600: #7c3aed;
+  --color-violet-700: #6d28d9;
+  --color-violet-800: #5b21b6;
+  --color-violet-900: #4c1d95;
+
+  --color-accent: #b28bff;
+  --color-accent-strong: #8b5cf6;
+  --color-teal: #2dd4bf;
+
+  --font-sans: "Inter var", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-display: "Space Grotesk", "Inter", sans-serif;
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+    --grain-opacity: 0.04;
+  }
+
+  html {
+    font-family: var(--font-sans);
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    background-color: var(--color-ink-900);
+    color: #e8e6f3;
+  }
+
+  body {
+    position: relative;
+    min-height: 100dvh;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% -10%, rgba(139, 92, 246, 0.22), transparent 60%),
+      radial-gradient(ellipse 50% 40% at 90% 100%, rgba(45, 212, 191, 0.08), transparent 60%),
+      var(--color-ink-900);
+  }
+
+  /* Film-grain overlay to kill that AI-gradient sheen */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    opacity: var(--grain-opacity);
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.6 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--color-accent-strong) 55%, transparent);
+    color: #fff;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.015em;
+  }
+}
+
+@layer components {
+  .container-x { @apply mx-auto w-full max-w-6xl px-5 sm:px-6 lg:px-8; }
+
+  .hairline {
+    background-image: linear-gradient(to right,
+      transparent,
+      color-mix(in oklab, var(--color-accent) 40%, transparent),
+      transparent);
+  }
+
+  .gradient-text {
+    background: linear-gradient(130deg, #ffffff 0%, #d7c8ff 42%, #9b7bff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .surface {
+    background: color-mix(in oklab, var(--color-ink-700) 80%, transparent);
+    border: 1px solid color-mix(in oklab, var(--color-accent) 14%, transparent);
+    backdrop-filter: blur(10px);
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium;
+    background: color-mix(in oklab, var(--color-ink-600) 70%, transparent);
+    border: 1px solid color-mix(in oklab, var(--color-accent) 16%, transparent);
+    color: #e0daff;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition;
+    background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+    color: #fff;
+    box-shadow: 0 6px 24px -6px rgba(139, 92, 246, 0.6);
+  }
+  .btn-primary:hover { filter: brightness(1.08); transform: translateY(-1px); }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition;
+    background: color-mix(in oklab, var(--color-ink-600) 60%, transparent);
+    border: 1px solid color-mix(in oklab, var(--color-accent) 22%, transparent);
+    color: #eae5ff;
+  }
+  .btn-secondary:hover {
+    border-color: color-mix(in oklab, var(--color-accent) 48%, transparent);
+    background: color-mix(in oklab, var(--color-ink-600) 85%, transparent);
+  }
+
+  .link-quiet { @apply text-[color:var(--color-violet-200)] hover:text-white transition-colors; }
+
+  /* Prose overrides for wiki content */
+  .prose-wiki { color: #d9d4ef; }
+  .prose-wiki h1 { @apply text-3xl font-bold mb-6 mt-2; background: linear-gradient(130deg,#fff,#c1a4ff); -webkit-background-clip: text; color: transparent; }
+  .prose-wiki h2 { @apply text-2xl font-bold mt-10 mb-4; color: #e5dcff; }
+  .prose-wiki h3 { @apply text-xl font-semibold mt-8 mb-3; color: #cdbfff; }
+  .prose-wiki p  { @apply leading-7 mb-4; }
+  .prose-wiki ul { @apply list-disc pl-6 mb-4 space-y-1.5; }
+  .prose-wiki ol { @apply list-decimal pl-6 mb-4 space-y-1.5; }
+  .prose-wiki li { color: #d9d4ef; }
+  .prose-wiki a  { color: #c1a4ff; text-decoration: underline; text-decoration-color: color-mix(in oklab, var(--color-accent) 40%, transparent); text-underline-offset: 3px; }
+  .prose-wiki a:hover { color: #fff; text-decoration-color: var(--color-accent); }
+  .prose-wiki code { background: rgba(255,255,255,0.06); border: 1px solid color-mix(in oklab, var(--color-accent) 18%, transparent); padding: 1px 6px; border-radius: 6px; font-family: var(--font-mono); font-size: 0.9em; color: #ddd2ff; }
+  .prose-wiki pre  { background: #0a0815; border: 1px solid color-mix(in oklab, var(--color-accent) 20%, transparent); border-radius: 10px; padding: 1rem 1.1rem; overflow-x: auto; margin-bottom: 1.25rem; font-size: 0.9em; }
+  .prose-wiki pre code { background: transparent; border: 0; padding: 0; color: #e4dbff; }
+  .prose-wiki blockquote { border-left: 3px solid var(--color-accent); background: rgba(139,92,246,0.06); padding: 0.75rem 1rem; border-radius: 0 8px 8px 0; margin: 1rem 0; color: #e1d9f7; }
+  .prose-wiki table { width: 100%; border-collapse: collapse; margin: 1.25rem 0; font-size: 0.92em; }
+  .prose-wiki th, .prose-wiki td { border: 1px solid color-mix(in oklab, var(--color-accent) 18%, transparent); padding: 0.55rem 0.75rem; text-align: left; }
+  .prose-wiki th { background: rgba(139,92,246,0.12); color: #fff; font-weight: 600; }
+  .prose-wiki hr { border: 0; height: 1px; background: linear-gradient(to right, transparent, color-mix(in oklab, var(--color-accent) 35%, transparent), transparent); margin: 2rem 0; }
+  .prose-wiki img { border-radius: 10px; margin: 1rem 0; }
+}
+
+@layer utilities {
+  .mask-fade-b {
+    -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+    mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+  }
+  .glow-violet {
+    box-shadow: 0 10px 60px -10px rgba(139, 92, 246, 0.45);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .float-slow { animation: floatSlow 7s ease-in-out infinite; }
+  }
+  @keyframes floatSlow {
+    0%,100% { transform: translateY(0); }
+    50%     { transform: translateY(-8px); }
+  }
+}

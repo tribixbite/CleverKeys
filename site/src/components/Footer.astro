@@ -1,0 +1,55 @@
+---
+import { site } from '../lib/site'
+import Icon from './Icon.astro'
+const year = new Date().getFullYear()
+---
+
+<footer class="relative z-[2] mt-24 border-t border-white/5 pt-12 pb-10">
+  <div class="container-x">
+    <div class="grid gap-10 md:grid-cols-4">
+      <div class="md:col-span-2">
+        <div class="flex items-center gap-2.5">
+          <img src={site.icon} alt="" class="h-8 w-8 rounded-lg ring-1 ring-white/10" />
+          <span class="font-display text-base font-semibold">
+            <span class="gradient-text">Clever</span><span class="text-white">Keys</span>
+          </span>
+        </div>
+        <p class="mt-4 max-w-sm text-sm leading-6 text-[color:var(--color-violet-200)]/70">
+          Neural gesture typing for Android, built in the open. On-device transformer decoding, unlimited clipboard, 208 swipe gestures.
+        </p>
+      </div>
+
+      <div>
+        <h4 class="text-xs font-semibold uppercase tracking-widest text-white/60">Project</h4>
+        <ul class="mt-4 space-y-2 text-sm">
+          <li><a class="link-quiet" href="/wiki/">User guide</a></li>
+          <li><a class="link-quiet" href="/specs/">Technical specs</a></li>
+          <li><a class="link-quiet" href="/demo/">Web demo</a></li>
+          <li><a class="link-quiet" href={site.repo} target="_blank" rel="noopener noreferrer">Source code</a></li>
+          <li><a class="link-quiet" href={site.mlRepo} target="_blank" rel="noopener noreferrer">ML training repo</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="text-xs font-semibold uppercase tracking-widest text-white/60">Install</h4>
+        <ul class="mt-4 space-y-2 text-sm">
+          <li><a class="link-quiet inline-flex items-center gap-1.5" href={site.releases} target="_blank" rel="noopener noreferrer"><Icon name="github" class="h-4 w-4"/>GitHub releases</a></li>
+          <li><a class="link-quiet inline-flex items-center gap-1.5" href={site.fdroid} target="_blank" rel="noopener noreferrer"><Icon name="fdroid" class="h-4 w-4"/>F-Droid</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="mt-10 flex flex-col items-start justify-between gap-3 border-t border-white/5 pt-6 text-xs text-white/50 md:flex-row md:items-center">
+      <div>
+        © {year} {site.author}. Released under
+        <a href="https://www.gnu.org/licenses/gpl-3.0.en.html" class="text-[color:var(--color-violet-200)] hover:text-white">GPL-3.0</a>.
+        Based on <a href={`https://github.com/${site.basedOn}`} class="text-[color:var(--color-violet-200)] hover:text-white">Unexpected Keyboard</a>.
+      </div>
+      <div class="flex items-center gap-3">
+        <a href={site.repo} aria-label="GitHub repository" target="_blank" rel="noopener noreferrer" class="rounded-lg p-1.5 hover:bg-white/10">
+          <Icon name="github" class="h-4 w-4" />
+        </a>
+      </div>
+    </div>
+  </div>
+</footer>

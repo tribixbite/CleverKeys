@@ -1,0 +1,44 @@
+---
+import { primaryNav, site } from '../lib/site'
+import Icon from './Icon.astro'
+interface Props { variant?: 'landing' | 'wiki' }
+const { variant = 'landing' } = Astro.props
+---
+
+<header class="sticky top-0 z-40 border-b border-white/5 bg-[color:var(--color-ink-900)]/70 backdrop-blur-md">
+  <div class="container-x flex h-14 items-center justify-between">
+    <a href="/" class="group flex items-center gap-2.5" aria-label="CleverKeys home">
+      <span class="relative inline-flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg ring-1 ring-white/10">
+        <img src={site.icon} alt="" class="h-full w-full object-cover" loading="eager" />
+      </span>
+      <span class="font-display text-[15px] font-semibold tracking-tight">
+        <span class="gradient-text">Clever</span><span class="text-white">Keys</span>
+      </span>
+      {variant === 'wiki' && (
+        <span class="ml-2 rounded-full border border-white/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-[color:var(--color-violet-200)]">Wiki</span>
+      )}
+    </a>
+    <nav class="flex items-center gap-1 sm:gap-2" aria-label="Primary">
+      {primaryNav.map((item) => (
+        <a
+          href={item.href}
+          target={item.external ? '_blank' : undefined}
+          rel={item.external ? 'noopener noreferrer' : undefined}
+          class="link-quiet hidden sm:inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-white/5"
+        >
+          {item.label}
+          {item.external && <Icon name="arrow-right" class="h-3.5 w-3.5 -rotate-45 opacity-60" />}
+        </a>
+      ))}
+      <a
+        href={site.releases}
+        class="btn-primary ml-1 px-3 py-1.5 text-xs"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <Icon name="download" class="h-3.5 w-3.5" />
+        Download
+      </a>
+    </nav>
+  </div>
+</header>

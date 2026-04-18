@@ -1,0 +1,35 @@
+---
+import WikiLayout from '../../layouts/WikiLayout.astro'
+import { getCollection, render } from 'astro:content'
+import { titleFor, categorySlug, pageSlug, orderedWithinCategory } from '../../lib/wiki'
+
+export async function getStaticPaths() {
+  const all = await getCollection('wiki')
+  return all.map((entry) => ({
+    params: { slug: pageSlug(entry) },
+    props: { entry },
+  }))
+}
+
+const { entry } = Astro.props
+const { Content } = await render(entry)
+const title = titleFor(entry)
+const cat = categorySlug(entry)
+
+// Gather sibling pages for sidebar
+const all = await getCollection('wiki')
+const siblings = orderedWithinCategory(
+  all.filter((e) => categorySlug(e) === cat),
+  cat,
+).map((e) => ({ slug: pageSlug(e), title: titleFor(e) }))
+---
+
+<WikiLayout
+  title={title}
+  description={entry.data.description}
+  category={cat}
+  pageSlug={pageSlug(entry)}
+  allInCategory={siblings}
+>
+  <Content />
+</WikiLayout>
