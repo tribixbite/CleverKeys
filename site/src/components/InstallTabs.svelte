@@ -51,10 +51,10 @@
       </button>
     {/each}
   </div>
-  <div class="p-5">
+  <div class="min-w-0 p-5">
     <div class="text-xs uppercase tracking-widest text-white/50">{snippets[active].label}</div>
-    <div class="mt-2 flex items-center gap-2">
-      <pre class="flex-1 overflow-x-auto rounded-lg border border-white/10 bg-[color:var(--color-ink-900)]/80 px-3 py-2.5 font-mono text-xs leading-snug text-[color:var(--color-violet-100)]"><code>{snippets[active].cmd}</code></pre>
+    <div class="mt-2 flex min-w-0 items-stretch gap-2">
+      <pre class="min-w-0 flex-1 overflow-x-auto whitespace-pre rounded-lg border border-white/10 bg-[color:var(--color-ink-900)]/80 px-3 py-2.5 font-mono text-xs leading-snug text-[color:var(--color-violet-100)]"><code>{snippets[active].cmd}</code></pre>
       <button
         type="button"
         onclick={() => copy(snippets[active].cmd)}
