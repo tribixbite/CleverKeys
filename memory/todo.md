@@ -6,19 +6,27 @@
   header "Install" button, InstallTabs (now with an "Obtainium — Recommended"
   tab as default), and footer all lead with the Obtainium deep-link; F-Droid
   stays as secondary. Explanatory subcopy notes the 24–48 h F-Droid lag.
-- **Fixed F-Droid 1.3.0 pickup.** Canonical metadata now tracked at
-  `metadata/fdroid/tribixbite.cleverkeys.yml` (previously only the
-  untracked `fdroiddata_temp/` staging clone existed). Upstream was
-  frozen at 1.1.64 with `AutoUpdateMode: None` + `UpdateCheckMode: None`,
-  so F-Droid never advanced past 101643. Added three Builds entries
-  (103001 armeabi-v7a, 103002 arm64-v8a, 103003 x86_64) modelled on the
-  existing 1.1.64 triplet, bumped `CurrentVersion: 1.3.0` /
-  `CurrentVersionCode: 103003`, switched `UpdateCheckMode` to
-  `Tags ^v[\d.]+$` so new tags surface in the F-Droid dashboard.
-  **Next manual step**: open an MR against upstream
-  `https://gitlab.com/fdroid/fdroiddata` replacing
-  `metadata/tribixbite.cleverkeys.yml` with the tracked content from
-  `metadata/fdroid/`.
+- **Diagnosed + fixed F-Droid 1.2.9 / 1.3.0 pickup regression.** Earlier
+  guess (manual MR with Builds triplet) was wrong; my local staging
+  `fdroiddata_temp/` was a year-stale snapshot. Real upstream has been
+  auto-updating this whole time via `AutoUpdateMode: Version v%v` +
+  `UpdateCheckMode: HTTP` that scrapes `releases/latest` HTML with
+  regex `VersionCode:\s(\d+)|.|Version:\s([\d.]+)`. Commit
+  `a4eaa7e541` (v1.2.9, 2026-01-27) replaced the colon-delimited
+  `Version: x.y.z` / `VersionCode: N` lines in the release body with a
+  pipe-delimited markdown table, plus removed the guardian comment —
+  so the regex stopped matching, the bot couldn't detect new
+  versions, and F-Droid froze at 1.2.8 / 102083. Fix landed in
+  `.github/workflows/release.yml`: restored the colon-delimited lines
+  (kept the human-friendly table below) and put a loud guardian
+  comment back to stop it happening again. Replaced our tracked
+  mirror `metadata/fdroid/tribixbite.cleverkeys.yml` with the real
+  upstream content (36 Builds, bot-managed).
+  **To unstick v1.3.0 right now** (future releases will self-fix via
+  the workflow): edit the v1.3.0 release body on GitHub to prepend
+  `Version: 1.3.0\nVersionCode: 10300`. F-Droid's next bot scan
+  (≤24 h) will then auto-add the 103001/2/3 Builds entries. Skill
+  doc has the exact `gh release edit` command.
 - **README swipe-typing caveat** added next to the multi-language section,
   making clear that swipe currently needs QWERTY + Latin script, and
   pointing to the ROADMAP item ("Layout-Agnostic & Multi-Script Gesture

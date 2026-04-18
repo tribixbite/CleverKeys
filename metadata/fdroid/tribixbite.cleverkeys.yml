@@ -1,8 +1,5 @@
 Categories:
-  - Development
   - Keyboard & IME
-  - Task
-  - Writing
 License: GPL-3.0-only
 AuthorName: tribixbite
 AuthorEmail: willstone@gmail.com
@@ -17,134 +14,441 @@ RepoType: git
 Repo: https://github.com/tribixbite/CleverKeys
 
 Builds:
-  - versionName: 1.1.64
-    versionCode: 101641
-    commit: v1.1.64
+  - versionName: 1.1.71
+    versionCode: 101711
+    commit: 435152269b232a6c1187cac0b5008cd12d4f68ec
     gradle:
       - yes
-    output: build/outputs/apk/release/*armeabi-v7a*.apk
-    binary: https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-armeabi-v7a.apk
-    srclibs:
-      - reproducible-apk-tools@v0.3.0
-    prebuild:
-      - rm -rf $$SDK$$/platforms/android-34
-      - sdkmanager 'platforms;android-34' 'build-tools;34.0.0'
-      - sed -i -e "s/include 'armeabi-v7a'.*/include 'armeabi-v7a'/" build.gradle
-    postbuild:
-      - python3 -c "import zipfile,sys,os,tempfile,shutil;a=sys.argv[1];t=tempfile.mktemp('.apk');z=zipfile.ZipFile(a);o=zipfile.ZipFile(t,'w');[o.writestr(i,z.read(i.filename))for
-        i in z.infolist()if not(i.filename.startswith('META-INF/com/')or i.filename.startswith('META-INF/services/'))];z.close();o.close();shutil.move(t,a)"
-        $$OUT$$
-      - $$reproducible-apk-tools$$/inplace-fix.py --page-size 16 --internal fix-pg-map-id
-        $$OUT$$ 0000000
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-armeabi-v7a.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'armeabi-v7a'/" build.gradle
 
-  - versionName: 1.1.64
-    versionCode: 101642
-    commit: v1.1.64
+  - versionName: 1.1.71
+    versionCode: 101712
+    commit: 435152269b232a6c1187cac0b5008cd12d4f68ec
     gradle:
       - yes
-    output: build/outputs/apk/release/*arm64-v8a*.apk
-    binary: https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-arm64-v8a.apk
-    srclibs:
-      - reproducible-apk-tools@v0.3.0
-    prebuild:
-      - rm -rf $$SDK$$/platforms/android-34
-      - sdkmanager 'platforms;android-34' 'build-tools;34.0.0'
-      - sed -i -e "s/include 'armeabi-v7a'.*/include 'arm64-v8a'/" build.gradle
-    postbuild:
-      - python3 -c "import zipfile,sys,os,tempfile,shutil;a=sys.argv[1];t=tempfile.mktemp('.apk');z=zipfile.ZipFile(a);o=zipfile.ZipFile(t,'w');[o.writestr(i,z.read(i.filename))for
-        i in z.infolist()if not(i.filename.startswith('META-INF/com/')or i.filename.startswith('META-INF/services/'))];z.close();o.close();shutil.move(t,a)"
-        $$OUT$$
-      - $$reproducible-apk-tools$$/inplace-fix.py --page-size 16 --internal fix-pg-map-id
-        $$OUT$$ 0000000
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-arm64-v8a.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'arm64-v8a'/" build.gradle
 
-  - versionName: 1.1.64
-    versionCode: 101643
-    commit: v1.1.64
+  - versionName: 1.1.71
+    versionCode: 101713
+    commit: 435152269b232a6c1187cac0b5008cd12d4f68ec
     gradle:
       - yes
-    output: build/outputs/apk/release/*x86_64*.apk
-    binary: https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-x86_64.apk
-    srclibs:
-      - reproducible-apk-tools@v0.3.0
-    prebuild:
-      - rm -rf $$SDK$$/platforms/android-34
-      - sdkmanager 'platforms;android-34' 'build-tools;34.0.0'
-      - sed -i -e "s/include 'armeabi-v7a'.*/include 'x86_64'/" build.gradle
-    postbuild:
-      - python3 -c "import zipfile,sys,os,tempfile,shutil;a=sys.argv[1];t=tempfile.mktemp('.apk');z=zipfile.ZipFile(a);o=zipfile.ZipFile(t,'w');[o.writestr(i,z.read(i.filename))for
-        i in z.infolist()if not(i.filename.startswith('META-INF/com/')or i.filename.startswith('META-INF/services/'))];z.close();o.close();shutil.move(t,a)"
-        $$OUT$$
-      - $$reproducible-apk-tools$$/inplace-fix.py --page-size 16 --internal fix-pg-map-id
-        $$OUT$$ 0000000
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-x86_64.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'x86_64'/" build.gradle
 
-  - versionName: 1.3.0
-    versionCode: 103001
-    commit: v1.3.0
+  - versionName: 1.1.72
+    versionCode: 101721
+    commit: 5c81b0f7ba6e329ae8df08e9813d73a2cfa46041
     gradle:
       - yes
-    output: build/outputs/apk/release/*armeabi-v7a*.apk
-    binary: https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-armeabi-v7a.apk
-    srclibs:
-      - reproducible-apk-tools@v0.3.0
-    prebuild:
-      - rm -rf $$SDK$$/platforms/android-34
-      - sdkmanager 'platforms;android-34' 'build-tools;34.0.0'
-      - sed -i -e "s/include 'armeabi-v7a'.*/include 'armeabi-v7a'/" build.gradle
-    postbuild:
-      - python3 -c "import zipfile,sys,os,tempfile,shutil;a=sys.argv[1];t=tempfile.mktemp('.apk');z=zipfile.ZipFile(a);o=zipfile.ZipFile(t,'w');[o.writestr(i,z.read(i.filename))for
-        i in z.infolist()if not(i.filename.startswith('META-INF/com/')or i.filename.startswith('META-INF/services/'))];z.close();o.close();shutil.move(t,a)"
-        $$OUT$$
-      - $$reproducible-apk-tools$$/inplace-fix.py --page-size 16 --internal fix-pg-map-id
-        $$OUT$$ 0000000
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-armeabi-v7a.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'armeabi-v7a'/" build.gradle
 
-  - versionName: 1.3.0
-    versionCode: 103002
-    commit: v1.3.0
+  - versionName: 1.1.72
+    versionCode: 101722
+    commit: 5c81b0f7ba6e329ae8df08e9813d73a2cfa46041
     gradle:
       - yes
-    output: build/outputs/apk/release/*arm64-v8a*.apk
-    binary: https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-arm64-v8a.apk
-    srclibs:
-      - reproducible-apk-tools@v0.3.0
-    prebuild:
-      - rm -rf $$SDK$$/platforms/android-34
-      - sdkmanager 'platforms;android-34' 'build-tools;34.0.0'
-      - sed -i -e "s/include 'armeabi-v7a'.*/include 'arm64-v8a'/" build.gradle
-    postbuild:
-      - python3 -c "import zipfile,sys,os,tempfile,shutil;a=sys.argv[1];t=tempfile.mktemp('.apk');z=zipfile.ZipFile(a);o=zipfile.ZipFile(t,'w');[o.writestr(i,z.read(i.filename))for
-        i in z.infolist()if not(i.filename.startswith('META-INF/com/')or i.filename.startswith('META-INF/services/'))];z.close();o.close();shutil.move(t,a)"
-        $$OUT$$
-      - $$reproducible-apk-tools$$/inplace-fix.py --page-size 16 --internal fix-pg-map-id
-        $$OUT$$ 0000000
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-arm64-v8a.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'arm64-v8a'/" build.gradle
 
-  - versionName: 1.3.0
-    versionCode: 103003
-    commit: v1.3.0
+  - versionName: 1.1.72
+    versionCode: 101723
+    commit: 5c81b0f7ba6e329ae8df08e9813d73a2cfa46041
     gradle:
       - yes
-    output: build/outputs/apk/release/*x86_64*.apk
-    binary: https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-x86_64.apk
-    srclibs:
-      - reproducible-apk-tools@v0.3.0
-    prebuild:
-      - rm -rf $$SDK$$/platforms/android-34
-      - sdkmanager 'platforms;android-34' 'build-tools;34.0.0'
-      - sed -i -e "s/include 'armeabi-v7a'.*/include 'x86_64'/" build.gradle
-    postbuild:
-      - python3 -c "import zipfile,sys,os,tempfile,shutil;a=sys.argv[1];t=tempfile.mktemp('.apk');z=zipfile.ZipFile(a);o=zipfile.ZipFile(t,'w');[o.writestr(i,z.read(i.filename))for
-        i in z.infolist()if not(i.filename.startswith('META-INF/com/')or i.filename.startswith('META-INF/services/'))];z.close();o.close();shutil.move(t,a)"
-        $$OUT$$
-      - $$reproducible-apk-tools$$/inplace-fix.py --page-size 16 --internal fix-pg-map-id
-        $$OUT$$ 0000000
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-x86_64.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'x86_64'/" build.gradle
+
+  - versionName: 1.1.77
+    versionCode: 101771
+    commit: 5d81049d6334fe29f0741b6a6f2de985988bb75a
+    gradle:
+      - yes
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-armeabi-v7a.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'armeabi-v7a'/" build.gradle
+
+  - versionName: 1.1.77
+    versionCode: 101772
+    commit: 5d81049d6334fe29f0741b6a6f2de985988bb75a
+    gradle:
+      - yes
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-arm64-v8a.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'arm64-v8a'/" build.gradle
+
+  - versionName: 1.1.77
+    versionCode: 101773
+    commit: 5d81049d6334fe29f0741b6a6f2de985988bb75a
+    gradle:
+      - yes
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-x86_64.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'x86_64'/" build.gradle
+
+  - versionName: 1.1.78
+    versionCode: 101781
+    commit: 26c91f83a464a9ef3e0133c0f0d0e0533604678d
+    gradle:
+      - yes
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-armeabi-v7a.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'armeabi-v7a'/" build.gradle
+
+  - versionName: 1.1.78
+    versionCode: 101782
+    commit: 26c91f83a464a9ef3e0133c0f0d0e0533604678d
+    gradle:
+      - yes
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-arm64-v8a.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'arm64-v8a'/" build.gradle
+
+  - versionName: 1.1.78
+    versionCode: 101783
+    commit: 26c91f83a464a9ef3e0133c0f0d0e0533604678d
+    gradle:
+      - yes
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-x86_64.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'x86_64'/" build.gradle
+
+  - versionName: 1.1.79
+    versionCode: 101791
+    commit: 94955bbc0d014499fb6a8dc5ca112d029336f311
+    gradle:
+      - yes
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-armeabi-v7a.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'armeabi-v7a'/" build.gradle
+
+  - versionName: 1.1.79
+    versionCode: 101792
+    commit: 94955bbc0d014499fb6a8dc5ca112d029336f311
+    gradle:
+      - yes
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-arm64-v8a.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'arm64-v8a'/" build.gradle
+
+  - versionName: 1.1.79
+    versionCode: 101793
+    commit: 94955bbc0d014499fb6a8dc5ca112d029336f311
+    gradle:
+      - yes
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-x86_64.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'x86_64'/" build.gradle
+
+  - versionName: 1.1.81
+    versionCode: 101811
+    commit: b1712bce990cff0380104f803e3036f41d3c3231
+    gradle:
+      - yes
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-armeabi-v7a.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'armeabi-v7a'/" build.gradle
+
+  - versionName: 1.1.81
+    versionCode: 101812
+    commit: b1712bce990cff0380104f803e3036f41d3c3231
+    gradle:
+      - yes
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-arm64-v8a.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'arm64-v8a'/" build.gradle
+
+  - versionName: 1.1.81
+    versionCode: 101813
+    commit: b1712bce990cff0380104f803e3036f41d3c3231
+    gradle:
+      - yes
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-x86_64.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'x86_64'/" build.gradle
+
+  - versionName: 1.1.97
+    versionCode: 101971
+    commit: 5e513f6b44b670b623a404254bdc9fb8c87de181
+    gradle:
+      - yes
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-armeabi-v7a.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'armeabi-v7a'/" build.gradle
+    scanignore:
+      - scripts/dictionaries/langpack-*.zip
+      - scripts/dictionaries/en/en_enhanced.bin
+      - src/main/assets/dictionaries/*.bin
+
+  - versionName: 1.1.97
+    versionCode: 101972
+    commit: 5e513f6b44b670b623a404254bdc9fb8c87de181
+    gradle:
+      - yes
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-arm64-v8a.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'arm64-v8a'/" build.gradle
+    scanignore:
+      - scripts/dictionaries/langpack-*.zip
+      - scripts/dictionaries/en/en_enhanced.bin
+      - src/main/assets/dictionaries/*.bin
+
+  - versionName: 1.1.97
+    versionCode: 101973
+    commit: 5e513f6b44b670b623a404254bdc9fb8c87de181
+    gradle:
+      - yes
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-x86_64.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'x86_64'/" build.gradle
+    scanignore:
+      - scripts/dictionaries/langpack-*.zip
+      - scripts/dictionaries/en/en_enhanced.bin
+      - src/main/assets/dictionaries/*.bin
+
+  - versionName: 1.1.99
+    versionCode: 101991
+    commit: 296908bcf664cd9e3e358d622a8e9e461472ec98
+    gradle:
+      - yes
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-armeabi-v7a.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'armeabi-v7a'/" build.gradle
+    scanignore:
+      - scripts/dictionaries/langpack-*.zip
+      - scripts/dictionaries/en/en_enhanced.bin
+      - src/main/assets/dictionaries/*.bin
+
+  - versionName: 1.1.99
+    versionCode: 101992
+    commit: 296908bcf664cd9e3e358d622a8e9e461472ec98
+    gradle:
+      - yes
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-arm64-v8a.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'arm64-v8a'/" build.gradle
+    scanignore:
+      - scripts/dictionaries/langpack-*.zip
+      - scripts/dictionaries/en/en_enhanced.bin
+      - src/main/assets/dictionaries/*.bin
+
+  - versionName: 1.1.99
+    versionCode: 101993
+    commit: 296908bcf664cd9e3e358d622a8e9e461472ec98
+    gradle:
+      - yes
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-x86_64.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'x86_64'/" build.gradle
+    scanignore:
+      - scripts/dictionaries/langpack-*.zip
+      - scripts/dictionaries/en/en_enhanced.bin
+      - src/main/assets/dictionaries/*.bin
+
+  - versionName: 1.2.1
+    versionCode: 102011
+    commit: a89b8ab7c1471d60ebf3b9081f61561726817e14
+    gradle:
+      - yes
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-armeabi-v7a.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'armeabi-v7a'/" build.gradle
+    scanignore:
+      - scripts/dictionaries/langpack-*.zip
+      - scripts/dictionaries/en/en_enhanced.bin
+      - src/main/assets/dictionaries/*.bin
+
+  - versionName: 1.2.1
+    versionCode: 102012
+    commit: a89b8ab7c1471d60ebf3b9081f61561726817e14
+    gradle:
+      - yes
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-arm64-v8a.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'arm64-v8a'/" build.gradle
+    scanignore:
+      - scripts/dictionaries/langpack-*.zip
+      - scripts/dictionaries/en/en_enhanced.bin
+      - src/main/assets/dictionaries/*.bin
+
+  - versionName: 1.2.1
+    versionCode: 102013
+    commit: a89b8ab7c1471d60ebf3b9081f61561726817e14
+    gradle:
+      - yes
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-x86_64.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'x86_64'/" build.gradle
+    scanignore:
+      - scripts/dictionaries/langpack-*.zip
+      - scripts/dictionaries/en/en_enhanced.bin
+      - src/main/assets/dictionaries/*.bin
+
+  - versionName: 1.2.2
+    versionCode: 102021
+    commit: 734789b99e35e57a678f85f1fdc79a61e50b2628
+    gradle:
+      - yes
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-armeabi-v7a.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'armeabi-v7a'/" build.gradle
+    scanignore:
+      - scripts/dictionaries/langpack-*.zip
+      - scripts/dictionaries/en/en_enhanced.bin
+      - src/main/assets/dictionaries/*.bin
+      - src/main/assets/prefix_boosts/*.bin
+    scandelete:
+      - docs
+
+  - versionName: 1.2.2
+    versionCode: 102022
+    commit: 734789b99e35e57a678f85f1fdc79a61e50b2628
+    gradle:
+      - yes
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-arm64-v8a.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'arm64-v8a'/" build.gradle
+    scanignore:
+      - scripts/dictionaries/langpack-*.zip
+      - scripts/dictionaries/en/en_enhanced.bin
+      - src/main/assets/dictionaries/*.bin
+      - src/main/assets/prefix_boosts/*.bin
+    scandelete:
+      - docs
+
+  - versionName: 1.2.2
+    versionCode: 102023
+    commit: 734789b99e35e57a678f85f1fdc79a61e50b2628
+    gradle:
+      - yes
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-x86_64.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'x86_64'/" build.gradle
+    scanignore:
+      - scripts/dictionaries/langpack-*.zip
+      - scripts/dictionaries/en/en_enhanced.bin
+      - src/main/assets/dictionaries/*.bin
+      - src/main/assets/prefix_boosts/*.bin
+    scandelete:
+      - docs
+
+  - versionName: 1.2.5
+    versionCode: 102051
+    commit: 07142bf450d9b283059bca72ffa12e2d95dad030
+    gradle:
+      - yes
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-armeabi-v7a.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'armeabi-v7a'/" build.gradle
+    scanignore:
+      - scripts/dictionaries/langpack-*.zip
+      - scripts/dictionaries/en/en_enhanced.bin
+      - src/main/assets/dictionaries/*.bin
+      - src/main/assets/prefix_boosts/*.bin
+    scandelete:
+      - docs
+
+  - versionName: 1.2.5
+    versionCode: 102052
+    commit: 07142bf450d9b283059bca72ffa12e2d95dad030
+    gradle:
+      - yes
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-arm64-v8a.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'arm64-v8a'/" build.gradle
+    scanignore:
+      - scripts/dictionaries/langpack-*.zip
+      - scripts/dictionaries/en/en_enhanced.bin
+      - src/main/assets/dictionaries/*.bin
+      - src/main/assets/prefix_boosts/*.bin
+    scandelete:
+      - docs
+
+  - versionName: 1.2.5
+    versionCode: 102053
+    commit: 07142bf450d9b283059bca72ffa12e2d95dad030
+    gradle:
+      - yes
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-x86_64.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'x86_64'/" build.gradle
+    scanignore:
+      - scripts/dictionaries/langpack-*.zip
+      - scripts/dictionaries/en/en_enhanced.bin
+      - src/main/assets/dictionaries/*.bin
+      - src/main/assets/prefix_boosts/*.bin
+    scandelete:
+      - docs
+
+  - versionName: 1.2.8
+    versionCode: 102081
+    commit: e0932a381a774a6acb7ba92c1778b5b5de4c46e3
+    gradle:
+      - yes
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-armeabi-v7a.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'armeabi-v7a'/" build.gradle
+    scanignore:
+      - scripts/langpack-sv.zip
+      - scripts/dictionaries/langpack-*.zip
+      - scripts/dictionaries/en/en_enhanced.bin
+      - src/main/assets/dictionaries/*.bin
+      - src/main/assets/prefix_boosts/*.bin
+    scandelete:
+      - docs
+
+  - versionName: 1.2.8
+    versionCode: 102082
+    commit: e0932a381a774a6acb7ba92c1778b5b5de4c46e3
+    gradle:
+      - yes
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-arm64-v8a.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'arm64-v8a'/" build.gradle
+    scanignore:
+      - scripts/langpack-sv.zip
+      - scripts/dictionaries/langpack-*.zip
+      - scripts/dictionaries/en/en_enhanced.bin
+      - src/main/assets/dictionaries/*.bin
+      - src/main/assets/prefix_boosts/*.bin
+    scandelete:
+      - docs
+
+  - versionName: 1.2.8
+    versionCode: 102083
+    commit: e0932a381a774a6acb7ba92c1778b5b5de4c46e3
+    gradle:
+      - yes
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-x86_64.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'x86_64'/" build.gradle
+    scanignore:
+      - scripts/langpack-sv.zip
+      - scripts/dictionaries/langpack-*.zip
+      - scripts/dictionaries/en/en_enhanced.bin
+      - src/main/assets/dictionaries/*.bin
+      - src/main/assets/prefix_boosts/*.bin
+    scandelete:
+      - docs
 
 AllowedAPKSigningKeys: 3c70de8852fca5bb279c9998d558ea7606131f1f937af35cc943eee1aedfb97e
 
-# Manual update mode: ABI-split builds with binary verification need a
-# coordinated triple of Builds entries per release, so auto-update isn't
-# safe here. Bump CurrentVersion/CurrentVersionCode below at each release
-# and add three new Builds entries above (armv7, arm64, x86_64) following
-# the versionCode scheme `base*10 + abiCode` (1=armv7, 2=arm64, 3=x86_64).
-AutoUpdateMode: None
-UpdateCheckMode: Tags ^v[\d.]+$
-CurrentVersion: 1.3.0
-CurrentVersionCode: 103003
+AutoUpdateMode: Version v%v
+UpdateCheckMode: HTTP
+VercodeOperation:
+  - 10 * %c + 1
+  - 10 * %c + 2
+  - 10 * %c + 3
+UpdateCheckData: https://github.com/tribixbite/CleverKeys/releases/latest|VersionCode:\
+  (\d+)|.|Version:\ ([\d.]+)
+CurrentVersion: 1.2.8
+CurrentVersionCode: 102083

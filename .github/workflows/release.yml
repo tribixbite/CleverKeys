@@ -243,6 +243,16 @@ jobs:
         echo "" >> CHANGELOG.md
         echo "## Build Information" >> CHANGELOG.md
         echo "" >> CHANGELOG.md
+        # ⚠️  F-Droid REQUIRED: these two colon-delimited lines are what the
+        #     upstream fdroiddata bot (tribixbite.cleverkeys.yml) scrapes via
+        #     UpdateCheckMode: HTTP + UpdateCheckData regex
+        #     `VersionCode:\s(\d+)|.|Version:\s([\d.]+)` to detect new
+        #     releases. Removing or reformatting them silently breaks
+        #     F-Droid auto-update (this happened in v1.2.9–v1.3.0, which
+        #     F-Droid never picked up). Keep them EXACTLY in this form.
+        echo "Version: ${{ env.VERSION }}" >> CHANGELOG.md
+        echo "VersionCode: ${{ env.VERSION_CODE }}" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
         echo "| Property | Value |" >> CHANGELOG.md
         echo "|----------|-------|" >> CHANGELOG.md
         echo "| Version | ${{ env.VERSION }} |" >> CHANGELOG.md
