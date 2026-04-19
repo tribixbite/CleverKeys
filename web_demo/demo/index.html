@@ -400,7 +400,15 @@
         let tapTimeout = null;
         
         // Initialize ONNX Runtime and load models
-        // Helper to validate a file is accessible and has expected minimum size
+        // Helper to validate a file is accessible and has a plausible size.
+        //
+        // The only "size" failure mode we actually care about is catching Git
+        // LFS pointer files (~130 bytes of text) being served instead of the
+        // real binary. ANY threshold above ~1 KB catches that. We deliberately
+        // stay LOW here because CDNs (Fastly/Cloudflare) transparently gzip
+        // `application/octet-stream` and report the COMPRESSED size in
+        // content-length / content-range — which can legitimately be ~20%
+        // smaller than the original on-disk file for ONNX models.
         async function validateFile(url, minSizeKB = 0, description = 'file') {
             try {
                 // Try HEAD first for performance, with cache bypass
@@ -410,17 +418,18 @@
                 }
 
                 let contentLength = response.headers.get('content-length');
+                const contentEncoding = response.headers.get('content-encoding');
 
-                // Some CDNs don't return content-length for HEAD requests
-                // Fall back to range request to verify file accessibility and get size
+                // Some CDNs don't return content-length for HEAD requests.
+                // Fall back to a 1-byte range GET — the resulting 206 has a
+                // content-range header with the full resource size.
                 if (!contentLength && minSizeKB > 0) {
-                    console.log(`${description}: No content-length from HEAD, trying range request...`);
+                    console.log(`${description}: no content-length from HEAD, trying range GET...`);
                     const rangeResponse = await fetch(url, {
                         method: 'GET',
                         headers: { 'Range': 'bytes=0-0' },
                         cache: 'no-store'
                     });
-                    // Range responses include content-range header with total size
                     const contentRange = rangeResponse.headers.get('content-range');
                     if (contentRange) {
                         const match = contentRange.match(/\/(\d+)$/);
@@ -431,13 +440,19 @@
                 const sizeKB = contentLength ? parseInt(contentLength) / 1024 : -1;
 
                 if (sizeKB >= 0) {
-                    console.log(`${description}: ${sizeKB.toFixed(0)}KB`);
-                    // Check minimum expected size (catches LFS pointer files)
+                    const suffix = contentEncoding ? ` (${contentEncoding} encoded)` : '';
+                    console.log(`${description}: ${sizeKB.toFixed(0)}KB${suffix}`);
+                    // The check is ONLY meaningful for catching LFS pointer text
+                    // files. CDN gzip compression can shrink real ONNX binaries
+                    // well below their on-disk KB, so we use a very low floor
+                    // (a couple of KB) that is still 10×+ the size of any
+                    // possible LFS pointer.
                     if (minSizeKB > 0 && sizeKB < minSizeKB) {
                         throw new Error(`${description} appears incomplete (${sizeKB.toFixed(0)}KB < ${minSizeKB}KB expected). Try hard refresh.`);
                     }
                 } else {
-                    // Can't determine size, but file is accessible - proceed with caution
+                    // Can't determine size but file is reachable — proceed; the
+                    // subsequent ONNX parse will surface any real corruption.
                     console.log(`${description}: accessible (size unknown)`);
                 }
 
@@ -466,10 +481,14 @@
                 // browser demo runs the exact same transformer you'd get on-device.
                 updateLoadingStatus('Validating model files...');
                 await Promise.all([
-                    validateFile('tokenizer_config.json', 0.5, 'Tokenizer config'),
-                    validateFile('swipe_encoder_android.onnx', 4000, 'Encoder model'),  // ~5.3MB
-                    validateFile('swipe_decoder_android.onnx', 4000, 'Decoder model'),  // ~5.0MB
-                    validateFile('swipe_vocabulary.json', 4000, 'Vocabulary')
+                    // Floors are tiny (just past LFS-pointer size); CDN gzip
+                    // means the reported Content-Length can be 20% below the
+                    // on-disk KB, so never set minSizeKB anywhere near the
+                    // true file size — see validateFile() comment.
+                    validateFile('tokenizer_config.json', 0.1, 'Tokenizer config'),
+                    validateFile('swipe_encoder_android.onnx', 10, 'Encoder model'),
+                    validateFile('swipe_decoder_android.onnx', 10, 'Decoder model'),
+                    validateFile('swipe_vocabulary.json', 10, 'Vocabulary')
                 ]);
                 console.log('All model files validated successfully');
 
