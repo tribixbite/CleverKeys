@@ -8,11 +8,13 @@
     <!-- ONNX Runtime Web -->
     <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/ort.min.js"></script>
     <!-- Swipe Vocabulary Module -->
-    <script src="swipe-vocabulary.js"></script>
+    <!-- ?v=<hash> cache-busts Cloudflare/Fastly edge + browser cache so users
+         don't get stranded on an old JS that predates loadFromFlatFreq et al. -->
+    <script src="swipe-vocabulary.js?v=20260419b"></script>
     <!-- Custom Dictionary Support -->
-    <script src="custom-dictionary.js"></script>
+    <script src="custom-dictionary.js?v=20260419b"></script>
     <!-- Niche Words Loader -->
-    <script src="niche-words-loader.js"></script>
+    <script src="niche-words-loader.js?v=20260419b"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -730,7 +732,15 @@
                 swipeVocabulary = new SwipeVocabulary();
                 let loaded = false;
 
-                if (DEMO_CONFIG.dictionary === 'apk') {
+                // Defensive: an old cached swipe-vocabulary.js may predate
+                // loadFromFlatFreq. If the method is missing, skip straight
+                // to the 150k JSON loader instead of hard-failing.
+                const canLoadFlat = typeof swipeVocabulary.loadFromFlatFreq === 'function';
+                if (!canLoadFlat) {
+                    console.warn('swipe-vocabulary.js is stale (no loadFromFlatFreq); falling back to full 150k vocab');
+                }
+
+                if (DEMO_CONFIG.dictionary === 'apk' && canLoadFlat) {
                     updateLoadingStatus('Loading APK dictionary (52k, ~930KB)...');
                     loaded = await swipeVocabulary.loadFromFlatFreq('en_enhanced.json');
                     if (!loaded) {
