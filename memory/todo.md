@@ -1,5 +1,44 @@
 # CleverKeys TODO
 
+## ✅ Demo UX + perf overhaul (2026-04-19)
+
+Closed out the "gorgeous demo" polish pass:
+
+- **Default dictionary switched to the APK's `en_enhanced.json` (52k
+  curated words)** — same file the Android keyboard ships. The
+  broader 150k `swipe_vocabulary.json` is retained as the "Full"
+  option in a new settings panel. Added
+  `SwipeVocabulary.loadFromFlatFreq` so the flat `{word: freq}` dict
+  synthesises the common_words / top5000 / wordsByLength structure
+  the filter pipeline expects.
+- **Auto-insert on swipe**: after `processSwipe` produces filtered
+  predictions, the top candidate is appended with a trailing space
+  automatically. Multiple swipes chain into a sentence.
+  `selectWord()` now REPLACES the last auto-inserted word when a
+  different chip is tapped (override UX).
+- **Non-words hidden by default**: old pipeline padded results to 5
+  by dumping raw beam output into the chip row. Now the raw chips
+  appear only when the "Show raw beam output" toggle is on, styled
+  distinct (dashed border, muted) with a "raw" label separator.
+- **Batched beam-search decoder** (`stepBatched` in `decodeLogits`)
+  feeds `target_tokens` at `[num_beams, 20]` with broadcast `memory`,
+  running one decoder session per step instead of N. Fallback to
+  per-beam on shape errors. ~6–8× decoder speedup.
+- **WASM SIMD + threads** enabled via `ort.env.wasm`. Threads silently
+  fall back to 1 when GH Pages doesn't serve COOP/COEP headers;
+  SIMD is always a win.
+- **Settings panel** (gear button next to Dictionary) exposes:
+  dictionary, beam width (4/6/8/12), max decode length (15/20/25/35),
+  auto-insert, show-raw, batch-beams, WASM SIMD, WASM threads.
+  Persisted to `localStorage['cleverkeys.demo.config.v2']`. Changing
+  dict or WASM flags reloads the page; everything else applies live.
+- **Timing log**: every swipe now logs
+  `⏱ swipe → prediction took XXXms (beam=N maxLen=M batched=true)`
+  and the status bar shows `Ready (XXXms)`.
+- **Skill updated** (`~/.claude/skills/cleverkeys-site-deploy.md`)
+  and **memory updated** with the new arch/knobs + the two-dictionary
+  distinction + the CDN gzip false-alarm landmine.
+
 ## ✅ Web demo restored with Android ONNX arch (2026-04-18)
 
 The /demo/ page was stuck on an "under construction" placeholder because

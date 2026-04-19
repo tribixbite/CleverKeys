@@ -17,6 +17,58 @@ class SwipeVocabulary {
     }
 
     /**
+     * Load a flat frequency dictionary — the APK's en_enhanced.json shape
+     * ({word: freq, ...}). Synthesizes common_words / top5000 / wordsByLength
+     * from the raw frequencies so the rest of the filter pipeline works
+     * identically regardless of which dict is loaded.
+     */
+    async loadFromFlatFreq(url) {
+        try {
+            console.log('Loading flat-freq dictionary from:', url);
+            const response = await fetch(url, { cache: 'force-cache' });
+            if (!response.ok) throw new Error(`Flat-freq fetch failed: HTTP ${response.status}`);
+            const data = await response.json();
+            const entries = Object.entries(data);
+            if (!entries.length) throw new Error('Flat-freq dict is empty');
+
+            this.wordFreq = new Map(entries);
+
+            // Highest-frequency 5000 become the "common" pool used to promote
+            // swipe candidates that look like real words.
+            entries.sort((a, b) => b[1] - a[1]);
+            const top5k = entries.slice(0, Math.min(5000, entries.length));
+            this.top5000 = new Set(top5k.map((e) => e[0]));
+            this.commonWords = new Set(entries.slice(0, Math.min(1000, entries.length)).map((e) => e[0]));
+
+            this.wordsByLength = new Map();
+            for (const [word] of entries) {
+                const len = word.length;
+                if (!this.wordsByLength.has(len)) this.wordsByLength.set(len, []);
+                this.wordsByLength.get(len).push(word);
+            }
+
+            // No adjacency graph in the flat dict; the filter tolerates null.
+            this.keyboardAdjacency = null;
+            // Per-length 20th-percentile frequency as a minimum floor so the
+            // filter's sanity thresholds don't admit ultra-rare words ahead of
+            // common ones.
+            this.minFreqByLength = {};
+            for (const [len, words] of this.wordsByLength) {
+                const freqs = words.map((w) => this.wordFreq.get(w) || 0);
+                freqs.sort((a, b) => a - b);
+                this.minFreqByLength[len] = freqs[Math.floor(freqs.length * 0.2)] || 0;
+            }
+
+            this.isLoaded = true;
+            console.log(`Loaded ${this.wordFreq.size} words from flat-freq dict`);
+            return true;
+        } catch (error) {
+            console.error('Error loading flat-freq dictionary:', error);
+            return false;
+        }
+    }
+
+    /**
      * Load vocabulary from JSON file with frequency data
      */
     async loadFromJSON(url) {

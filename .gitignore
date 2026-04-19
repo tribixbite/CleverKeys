@@ -124,6 +124,7 @@ pal_generated.code
 !site/**/*.json
 !site/package.json
 !site/tsconfig.json
+!web_demo/**/*.json
 generated_*.kt
 .env
 

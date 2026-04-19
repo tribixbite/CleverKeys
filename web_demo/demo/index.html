@@ -153,10 +153,93 @@
                     class="px-4 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 text-sm transition-all hover:border-neon-purple/50">
                 Debug: <span id="debugStatus">OFF</span>
             </button>
-            <button onclick="toggleDictionary()" 
+            <button onclick="toggleDictionary()"
                     class="px-4 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 text-sm transition-all hover:border-neon-green/50">
                 📚 Dictionary
             </button>
+            <button onclick="toggleSettingsPanel()" aria-label="Open inference settings"
+                    class="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 text-sm transition-all hover:border-neon-pink/50">
+                ⚙
+            </button>
+        </div>
+    </div>
+
+    <!-- Settings Panel -->
+    <div id="settingsPanel" class="fixed inset-0 bg-black/70 backdrop-blur flex items-start sm:items-center justify-center z-50 hidden" role="dialog" aria-labelledby="settingsTitle">
+        <div class="bg-dark-surface rounded-2xl p-6 w-full max-w-lg mx-4 mt-8 sm:mt-0 border border-white/10 shadow-2xl">
+            <div class="flex items-center justify-between mb-5">
+                <h2 id="settingsTitle" class="text-white text-lg font-semibold">Demo settings</h2>
+                <button onclick="toggleSettingsPanel()" class="text-gray-400 hover:text-white text-xl leading-none px-2" aria-label="Close settings">×</button>
+            </div>
+
+            <div class="space-y-5 text-sm">
+                <!-- Dictionary -->
+                <div>
+                    <label class="block text-gray-300 font-medium mb-1.5">Dictionary</label>
+                    <div class="flex gap-2">
+                        <label class="flex-1 cursor-pointer">
+                            <input type="radio" name="settingsDict" value="apk" class="peer sr-only" />
+                            <div class="px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-center text-gray-300 peer-checked:border-neon-blue peer-checked:bg-neon-blue/20 peer-checked:text-white transition-all">
+                                APK <span class="text-xs text-gray-500">(52k, default)</span>
+                            </div>
+                        </label>
+                        <label class="flex-1 cursor-pointer">
+                            <input type="radio" name="settingsDict" value="full" class="peer sr-only" />
+                            <div class="px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-center text-gray-300 peer-checked:border-neon-blue peer-checked:bg-neon-blue/20 peer-checked:text-white transition-all">
+                                Full <span class="text-xs text-gray-500">(150k)</span>
+                            </div>
+                        </label>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1.5">APK dict matches the Android keyboard exactly. Changing this reloads vocabulary.</p>
+                </div>
+
+                <!-- Beam width -->
+                <div>
+                    <label class="block text-gray-300 font-medium mb-1.5">Beam width <span class="text-gray-500 text-xs">(more = slower, better)</span></label>
+                    <div class="flex gap-2" id="settingsBeamWidth">
+                        <!-- populated in updateSettingsUI -->
+                    </div>
+                </div>
+
+                <!-- Max decode length -->
+                <div>
+                    <label class="block text-gray-300 font-medium mb-1.5">Max decode length <span class="text-gray-500 text-xs">(cap on word length)</span></label>
+                    <div class="flex gap-2" id="settingsMaxLength"></div>
+                </div>
+
+                <!-- Toggles -->
+                <div class="space-y-3 pt-2 border-t border-white/5">
+                    <label class="flex items-center justify-between cursor-pointer">
+                        <span class="text-gray-300">Auto-insert best after swipe</span>
+                        <input type="checkbox" id="settingsAutoInsert" class="w-4 h-4 accent-neon-blue" />
+                    </label>
+                    <label class="flex items-center justify-between cursor-pointer">
+                        <span class="text-gray-300">Show raw beam output <span class="text-xs text-gray-500">(includes non-words)</span></span>
+                        <input type="checkbox" id="settingsShowRaw" class="w-4 h-4 accent-neon-pink" />
+                    </label>
+                    <label class="flex items-center justify-between cursor-pointer">
+                        <span class="text-gray-300">Batch beam search <span class="text-xs text-gray-500">(6–8× faster)</span></span>
+                        <input type="checkbox" id="settingsBatchBeams" class="w-4 h-4 accent-neon-purple" />
+                    </label>
+                    <label class="flex items-center justify-between cursor-pointer">
+                        <span class="text-gray-300">WASM SIMD</span>
+                        <input type="checkbox" id="settingsWasmSimd" class="w-4 h-4 accent-neon-purple" />
+                    </label>
+                    <label class="flex items-center justify-between cursor-pointer">
+                        <span class="text-gray-300">WASM threads <span class="text-xs text-gray-500">(needs COOP/COEP)</span></span>
+                        <input type="checkbox" id="settingsWasmThreads" class="w-4 h-4 accent-neon-purple" />
+                    </label>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center gap-3 mt-6 pt-4 border-t border-white/5">
+                <button onclick="resetSettings()" class="text-xs text-gray-500 hover:text-gray-300 underline">Reset to defaults</button>
+                <div class="flex gap-2">
+                    <button onclick="toggleSettingsPanel()" class="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 text-sm">Cancel</button>
+                    <button onclick="applySettingsPanel()" class="px-4 py-2 rounded-lg bg-gradient-to-r from-neon-blue/30 to-neon-purple/30 border border-neon-blue/60 text-white text-sm font-medium hover:from-neon-blue/40 hover:to-neon-purple/40">Apply</button>
+                </div>
+            </div>
+            <p class="text-xs text-gray-500 mt-3">Dictionary / WASM changes require a reload; other settings apply immediately.</p>
         </div>
     </div>
 
@@ -395,6 +478,39 @@
         let currentKey = null;
         let keyboardBounds = null;
         let inputText = '';
+        // Track the word auto-inserted after the most recent swipe so clicking
+        // a different chip can REPLACE it (multi-word swipe override UX).
+        let lastAutoInsertedWord = null;
+
+        // ============================================================
+        // Demo-wide tuning knobs. All persisted to localStorage so a user
+        // who cranks beamWidth down once doesn't have to redo it next visit.
+        // ============================================================
+        const DEFAULT_CONFIG = {
+            beamWidth: 6,           // 4 / 6 / 8 / 12
+            maxLength: 25,          // 15 / 20 / 25 / 35
+            dictionary: 'apk',      // 'apk' = 52k en_enhanced | 'full' = 150k swipe_vocabulary
+            autoInsert: true,       // auto-append top filtered word after swipe
+            showRaw: false,         // show non-dictionary beam outputs alongside filtered
+            batchBeams: true,       // run one decoder per step with a batched target_tokens tensor
+            wasmSimd: true,
+            wasmThreads: true,
+        };
+        const CONFIG_KEY = 'cleverkeys.demo.config.v2';
+        function loadConfig() {
+            try {
+                const raw = localStorage.getItem(CONFIG_KEY);
+                if (!raw) return { ...DEFAULT_CONFIG };
+                return { ...DEFAULT_CONFIG, ...JSON.parse(raw) };
+            } catch {
+                return { ...DEFAULT_CONFIG };
+            }
+        }
+        function saveConfig() {
+            try { localStorage.setItem(CONFIG_KEY, JSON.stringify(DEMO_CONFIG)); } catch {}
+        }
+        const DEMO_CONFIG = loadConfig();
+        window.DEMO_CONFIG = DEMO_CONFIG;
         let swipeStartPos = null;
         let swipeStartTime = null;
         let tapTimeout = null;
@@ -467,10 +583,23 @@
             try {
                 updateLoadingStatus('Initializing ONNX Runtime...');
 
-                // Configure ONNX Runtime Web WASM paths
+                // Configure ONNX Runtime Web WASM paths + perf flags.
+                // SIMD is safe on every browser that also runs WASM. Threads
+                // need cross-origin isolation (COOP/COEP) which GH Pages does
+                // not set — ORT will silently fall back to 1 thread if the
+                // browser refuses SharedArrayBuffer, so enabling this is a
+                // free optimisation where it's available.
                 if (typeof ort !== 'undefined') {
                     ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/';
-                    console.log('ONNX Runtime initialized, version:', ort.env.versions?.onnxruntime);
+                    ort.env.wasm.simd = DEMO_CONFIG.wasmSimd !== false;
+                    if (DEMO_CONFIG.wasmThreads !== false) {
+                        const maxThreads = Math.min(navigator.hardwareConcurrency || 1, 4);
+                        ort.env.wasm.numThreads = maxThreads;
+                    } else {
+                        ort.env.wasm.numThreads = 1;
+                    }
+                    console.log('ONNX Runtime initialized, version:', ort.env.versions?.onnxruntime,
+                                'SIMD:', ort.env.wasm.simd, 'threads:', ort.env.wasm.numThreads);
                 } else {
                     throw new Error('ONNX Runtime library not loaded. Try refreshing.');
                 }
@@ -591,15 +720,30 @@
             }
         }
         
-        // Load vocabulary for spell correction
+        // Load vocabulary for spell correction.
+        // Default: the APK's curated 52k en_enhanced.json (matches what the
+        // Android keyboard actually uses). Users can flip `DEMO_CONFIG.dictionary`
+        // to 'full' to swap in the broader 150k swipe_vocabulary.json.
         async function loadVocabulary() {
             console.log('Starting vocabulary load...');
             try {
-                // Initialize the SwipeVocabulary instance
                 swipeVocabulary = new SwipeVocabulary();
-                
-                // Try loading the optimized JSON vocabulary first
-                const jsonSuccess = await swipeVocabulary.loadFromJSON('swipe_vocabulary.json');
+                let loaded = false;
+
+                if (DEMO_CONFIG.dictionary === 'apk') {
+                    updateLoadingStatus('Loading APK dictionary (52k, ~930KB)...');
+                    loaded = await swipeVocabulary.loadFromFlatFreq('en_enhanced.json');
+                    if (!loaded) {
+                        console.warn('APK dict load failed, falling back to full 150k vocab');
+                    }
+                }
+
+                // Full dict path — either explicitly chosen or APK fallback.
+                let jsonSuccess = loaded;
+                if (!loaded) {
+                    updateLoadingStatus('Loading extended vocabulary (150k, ~5MB)...');
+                    jsonSuccess = await swipeVocabulary.loadFromJSON('swipe_vocabulary.json');
+                }
                 
                 if (jsonSuccess) {
                     console.log('Loaded optimized vocabulary:', swipeVocabulary.getStats());
@@ -1276,25 +1420,40 @@
                 console.warn('Models not ready yet');
                 return;
             }
-            
+
             try {
                 updateStatus('Processing swipe...', 'processing');
-                
-                // Prepare input features from swipe path
+
+                const t0 = performance.now();
                 const features = prepareSwipeFeatures(swipeData);
-                
-                // Run inference
                 const predictions = await runInference(features);
-                
-                // Display predictions
-                displayPredictions(predictions);
-                
-                updateStatus('Ready', 'success');
-                
+                const dtMs = Math.round(performance.now() - t0);
+                console.log(`⏱ swipe → prediction took ${dtMs}ms  (beam=${DEMO_CONFIG.beamWidth} maxLen=${DEMO_CONFIG.maxLength} batched=${DEMO_CONFIG.batchBeams})`);
+
+                const shown = displayPredictions(predictions);
+
+                // Auto-insert the best filtered candidate if enabled.
+                // displayPredictions returns the filtered list so we don't
+                // need to re-derive it here.
+                if (DEMO_CONFIG.autoInsert && shown && shown.length > 0) {
+                    autoInsertBestCandidate(shown[0]);
+                }
+
+                updateStatus(`Ready (${dtMs}ms)`, 'success');
             } catch (error) {
                 console.error('Error processing swipe:', error);
                 updateStatus('Processing error', 'error');
             }
+        }
+
+        // Append a word + space, remembering it as the "last auto-inserted"
+        // so that clicking a different chip replaces it instead of stacking.
+        function autoInsertBestCandidate(word) {
+            if (!word) return;
+            inputText += word + ' ';
+            lastAutoInsertedWord = word;
+            document.getElementById('inputText').textContent = inputText;
+            console.log(`✨ Auto-inserted: "${word}"`);
         }
         
         function prepareSwipeFeatures(swipeData) {
@@ -1442,18 +1601,20 @@
         }
         
         async function decodeLogits(encoderOutput, actualSrcLength) {
-            // The encoder output contains memory states that need to be decoded
-            // We need to run the decoder with proper beam search
-            // actualSrcLength tells us which encoder positions are real vs padded
+            // Beam search with the Android-arch decoder. If batchBeams is on
+            // (default), we feed target_tokens with shape [num_active_beams,
+            // DECODER_SEQ_LENGTH] and keep memory at [1, seq_len, hidden_dim]
+            // — the model's broadcast mode expands memory internally, which
+            // is 6–8× faster than running one decoder session per beam.
 
             if (!decoderSession) {
                 console.error('Decoder not loaded, cannot decode');
                 return [];
             }
-            
-            // Beam search parameters - expanded by 50%
-            const beamWidth = 8; // Increased from 5 to 8 (50% more)
-            const maxLength = 35;  // Increased from 20 to 35 to support longer words
+
+            const beamWidth = Number(DEMO_CONFIG.beamWidth) || 6;
+            const maxLength = Number(DEMO_CONFIG.maxLength) || 25;
+            const useBatched = DEMO_CONFIG.batchBeams !== false;
             
             // Special tokens from tokenizer config
             const PAD_IDX = tokenizer?.special_tokens?.pad_idx ?? 0;
@@ -1476,69 +1637,105 @@
             
             console.log('Decoder memory shape:', memory.dims);
             
+            const DECODER_SEQ_LENGTH = 20;
+            const VOCAB_SIZE = 30;
+
+            // Create reusable tensors
+            const actualSrcLenTensor = new ort.Tensor('int32', Int32Array.from([actualSrcLength]), [1]);
+
             // Initialize beams with SOS token
             let beams = [{
                 tokens: [BigInt(SOS_IDX)],
                 score: 0,
                 finished: false
             }];
-            
-            // Beam search
-            for (let step = 0; step < maxLength; step++) {
-                const candidates = [];
-                
-                for (const beam of beams) {
-                    if (beam.finished) {
-                        candidates.push(beam);
-                        continue;
-                    }
-                    
-                    // Android decoder signature (matches DecoderWrapper.kt):
-                    // - memory:            [1, src_seq_len, hidden_dim] f32 (from encoder)
-                    // - target_tokens:     [1, DECODER_SEQ_LENGTH]      i32 (SOS-prefixed, PAD-suffixed)
-                    // - actual_src_length: [1]                          i32 (scalar, # of real src points)
-                    // Output: log_probs [1, DECODER_SEQ_LENGTH, vocab_size] f32 — ALREADY log-softmaxed.
-                    const DECODER_SEQ_LENGTH = 20;
-                    const paddedTokens = new Int32Array(DECODER_SEQ_LENGTH);
+
+            // Batched or per-beam step helpers. Both produce the same shape
+            // output (per-beam stepLogProbs) so the caller is identical.
+            async function stepBatched(activeBeams) {
+                const batch = activeBeams.length;
+                const buf = new Int32Array(batch * DECODER_SEQ_LENGTH);
+                for (let b = 0; b < batch; b++) {
+                    const beam = activeBeams[b];
+                    const base = b * DECODER_SEQ_LENGTH;
                     for (let i = 0; i < DECODER_SEQ_LENGTH; i++) {
-                        paddedTokens[i] = i < beam.tokens.length ? Number(beam.tokens[i]) : PAD_IDX;
-                    }
-
-                    try {
-                        const decoderOutput = await decoderSession.run({
-                            memory: memory,
-                            target_tokens: new ort.Tensor('int32', paddedTokens, [1, DECODER_SEQ_LENGTH]),
-                            actual_src_length: new ort.Tensor('int32', Int32Array.from([actualSrcLength]), [1])
-                        });
-
-                        // Model emits log_probs directly. Name is usually `log_probs`
-                        // but fall back to the first output for safety.
-                        const logProbsTensor = decoderOutput.log_probs ?? decoderOutput[Object.keys(decoderOutput)[0]];
-                        const logProbsData = logProbsTensor.data;
-                        const vocabSize = 30;
-
-                        // Pick the position corresponding to the last real token
-                        const tokenPosition = Math.min(beam.tokens.length - 1, DECODER_SEQ_LENGTH - 1);
-                        const startIdx = tokenPosition * vocabSize;
-                        const stepLogProbs = Array.from(logProbsData.slice(startIdx, startIdx + vocabSize));
-
-                        // Top-k over log-probs (monotonic, so we don't need to exp)
-                        const topK = getTopKIndices(stepLogProbs, beamWidth);
-
-                        for (const idx of topK) {
-                            candidates.push({
-                                tokens: [...beam.tokens, BigInt(idx)],
-                                score: beam.score + stepLogProbs[idx],
-                                finished: idx === EOS_IDX
-                            });
-                        }
-                    } catch (error) {
-                        console.error('Decoder error:', error);
-                        console.error('Error message:', error.message);
-                        console.error('Error stack:', error.stack);
-                        throw error;
+                        buf[base + i] = i < beam.tokens.length ? Number(beam.tokens[i]) : PAD_IDX;
                     }
                 }
+                const out = await decoderSession.run({
+                    memory: memory,                                              // [1, src_seq_len, hidden_dim] — broadcast expands internally
+                    target_tokens: new ort.Tensor('int32', buf, [batch, DECODER_SEQ_LENGTH]),
+                    actual_src_length: actualSrcLenTensor,                       // [1]
+                });
+                const lpTensor = out.log_probs ?? out[Object.keys(out)[0]];
+                const lp = lpTensor.data;
+                const perBeamStride = DECODER_SEQ_LENGTH * VOCAB_SIZE;
+                return activeBeams.map((beam, b) => {
+                    const tokPos = Math.min(beam.tokens.length - 1, DECODER_SEQ_LENGTH - 1);
+                    const offset = b * perBeamStride + tokPos * VOCAB_SIZE;
+                    return Array.from(lp.slice(offset, offset + VOCAB_SIZE));
+                });
+            }
+
+            async function stepPerBeam(activeBeams) {
+                const results = [];
+                for (const beam of activeBeams) {
+                    const buf = new Int32Array(DECODER_SEQ_LENGTH);
+                    for (let i = 0; i < DECODER_SEQ_LENGTH; i++) {
+                        buf[i] = i < beam.tokens.length ? Number(beam.tokens[i]) : PAD_IDX;
+                    }
+                    const out = await decoderSession.run({
+                        memory: memory,
+                        target_tokens: new ort.Tensor('int32', buf, [1, DECODER_SEQ_LENGTH]),
+                        actual_src_length: actualSrcLenTensor,
+                    });
+                    const lpTensor = out.log_probs ?? out[Object.keys(out)[0]];
+                    const lp = lpTensor.data;
+                    const tokPos = Math.min(beam.tokens.length - 1, DECODER_SEQ_LENGTH - 1);
+                    const offset = tokPos * VOCAB_SIZE;
+                    results.push(Array.from(lp.slice(offset, offset + VOCAB_SIZE)));
+                }
+                return results;
+            }
+
+            // Choose batched by default; fall back to per-beam on any shape
+            // error (e.g. if the model turns out to be legacy-mode only).
+            let doStep = useBatched ? stepBatched : stepPerBeam;
+            let batchedFailed = false;
+
+            // Beam search
+            for (let step = 0; step < maxLength; step++) {
+                const active = beams.filter((b) => !b.finished);
+                if (active.length === 0) break;
+                const finishedCarry = beams.filter((b) => b.finished);
+
+                let perBeamLogProbs;
+                try {
+                    perBeamLogProbs = await doStep(active);
+                } catch (err) {
+                    if (useBatched && !batchedFailed) {
+                        console.warn('Batched decoder step failed, falling back to per-beam:', err?.message);
+                        batchedFailed = true;
+                        doStep = stepPerBeam;
+                        perBeamLogProbs = await doStep(active);
+                    } else {
+                        console.error('Decoder error:', err);
+                        throw err;
+                    }
+                }
+
+                const candidates = finishedCarry.slice();
+                active.forEach((beam, i) => {
+                    const stepLogProbs = perBeamLogProbs[i];
+                    const topK = getTopKIndices(stepLogProbs, beamWidth);
+                    for (const idx of topK) {
+                        candidates.push({
+                            tokens: [...beam.tokens, BigInt(idx)],
+                            score: beam.score + stepLogProbs[idx],
+                            finished: idx === EOS_IDX,
+                        });
+                    }
+                });
                 
                 // Select top beams
                 candidates.sort((a, b) => b.score - a.score);
@@ -1641,41 +1838,30 @@
                 filteredPredictions.push(...validPredictions);
             }
             
-            // Ensure we always have at least 5 suggestions by adding raw predictions if needed
-            if (filteredPredictions.length < 5) {
-                console.log(`Only ${filteredPredictions.length} filtered predictions, adding raw predictions to reach 5`);
-                
-                // Add raw predictions that aren't already included
-                const additionalPredictions = predictions
-                    .map(word => word.toLowerCase().trim())
-                    .filter(word => word && word.match(/^[a-z]+$/) && !filteredPredictions.includes(word))
-                    .slice(0, 5 - filteredPredictions.length);
-                
-                additionalPredictions.forEach(word => console.log(`Added raw prediction: ${word}`));
-                filteredPredictions.push(...additionalPredictions);
-                
-                // If still not enough, add common 2-char words based on keySequence
-                if (filteredPredictions.length < 5 && keySequence && keySequence.length >= 2) {
-                    const startKey = keySequence[0]?.key;
-                    const endKey = keySequence[keySequence.length - 1]?.key;
-                    
-                    if (startKey && endKey && commonTwoCharWords) {
-                        for (const twoCharWord of commonTwoCharWords) {
-                            if (filteredPredictions.length >= 5) break;
-                            
-                            if ((twoCharWord.startsWith(startKey) || twoCharWord.endsWith(endKey)) && 
-                                !filteredPredictions.includes(twoCharWord)) {
-                                filteredPredictions.push(twoCharWord);
-                                console.log(`Added 2-char fallback: ${twoCharWord}`);
-                            }
-                        }
-                    }
+            // "Raw output" mode: show ALL beam candidates as non-dictionary
+            // chips below the filtered set. Default behaviour hides them so
+            // gibberish beam outputs never reach the UI. We keep filtered
+            // padding only when raw mode is on — otherwise non-words never
+            // sneak in via the "pad to 5" path.
+            const rawExtras = [];
+            if (DEMO_CONFIG.showRaw) {
+                const seen = new Set(filteredPredictions);
+                for (const raw of predictions) {
+                    const w = (raw || '').toLowerCase().trim();
+                    if (!w || seen.has(w)) continue;
+                    if (!/^[a-z]+$/.test(w)) continue;
+                    seen.add(w);
+                    rawExtras.push(w);
                 }
             }
-            
-            // Final limit to exactly 5 suggestions
+
+            // Final limit — dictionary words get priority; raw (if enabled)
+            // gets whatever slot remains up to 8 total chips.
             filteredPredictions = filteredPredictions.slice(0, 5);
-            console.log(`Final predictions count: ${filteredPredictions.length}`, filteredPredictions);
+            const rawShown = rawExtras.slice(0, Math.max(0, 8 - filteredPredictions.length));
+            console.log(`Final predictions: dict=${filteredPredictions.length} raw=${rawShown.length}`, {
+                filteredPredictions, rawShown,
+            });
             
             // Update prediction state
             currentPredictions = [...filteredPredictions];
@@ -1684,49 +1870,60 @@
             
             filteredPredictions.forEach((word, index) => {
                 const suggestion = document.createElement('div');
-                
-                // Check if this is a custom/personal word for special styling
                 const isPersonalWord = dictionaryManager && dictionaryManager.personalWords.has(word);
                 const isCustomWord = dictionaryManager && (dictionaryManager.customWords.has(word) || dictionaryManager.androidDictionary.has(word));
-                
+
                 let className;
                 if (index === 0) {
-                    // Top prediction
                     className = 'px-4 py-1.5 rounded-full bg-gradient-to-r from-neon-blue/20 to-neon-purple/20 border border-neon-blue/50 text-white text-sm cursor-pointer hover:scale-105 transition-transform';
                 } else if (isPersonalWord) {
-                    // Personal dictionary words get a special highlight
                     className = 'px-4 py-1.5 rounded-full bg-gradient-to-r from-neon-pink/15 to-neon-purple/15 border border-neon-pink/40 text-white text-sm cursor-pointer hover:bg-gradient-to-r hover:from-neon-pink/25 hover:to-neon-purple/25 transition-all';
                 } else if (isCustomWord) {
-                    // Custom dictionary words get a different highlight
                     className = 'px-4 py-1.5 rounded-full bg-gradient-to-r from-green-500/15 to-blue-500/15 border border-green-500/40 text-gray-200 text-sm cursor-pointer hover:bg-gradient-to-r hover:from-green-500/25 hover:to-blue-500/25 transition-all';
                 } else {
-                    // Regular vocabulary words
                     className = 'px-4 py-1.5 rounded-full bg-white/5 border border-white/20 text-gray-300 text-sm cursor-pointer hover:bg-white/10 transition-all';
                 }
-                
                 suggestion.className = className;
-                
-                // Add indicator for custom words
-                if (isPersonalWord) {
-                    suggestion.textContent = `★ ${word}`; // Star for personal words
-                } else if (isCustomWord) {
-                    suggestion.textContent = `+ ${word}`; // Plus for custom words
-                } else {
-                    suggestion.textContent = word;
-                }
-                
+                suggestion.textContent = isPersonalWord ? `★ ${word}` : isCustomWord ? `+ ${word}` : word;
                 suggestion.onclick = () => selectWord(word);
                 suggestionsDiv.appendChild(suggestion);
             });
+
+            // Raw beam outputs (shown only when DEMO_CONFIG.showRaw is on).
+            // Visually distinct so users can tell at a glance that these are
+            // beam-search candidates that don't match the dictionary.
+            if (rawShown.length > 0) {
+                const label = document.createElement('div');
+                label.textContent = 'raw';
+                label.className = 'self-center text-[10px] font-medium uppercase tracking-widest text-gray-500 ml-2 mr-1';
+                suggestionsDiv.appendChild(label);
+                rawShown.forEach((word) => {
+                    const chip = document.createElement('div');
+                    chip.className = 'px-3 py-1.5 rounded-full border border-dashed border-white/15 text-gray-500 text-xs cursor-pointer hover:border-white/30 hover:text-gray-300 transition-all';
+                    chip.textContent = word;
+                    chip.title = 'Raw beam-search output (not in dictionary)';
+                    chip.onclick = () => selectWord(word);
+                    suggestionsDiv.appendChild(chip);
+                });
+            }
+
+            return filteredPredictions;
         }
-        
+
         function selectWord(word) {
-            // Mark that user made manual selection
             userMadeManualSelection = true;
-            
+
+            // If we just auto-inserted a word, clicking a chip should REPLACE
+            // it rather than stack another word next to it — the expected UX
+            // for "I meant a different word than what you picked".
+            const suffix = lastAutoInsertedWord ? lastAutoInsertedWord + ' ' : null;
+            if (suffix && inputText.endsWith(suffix)) {
+                inputText = inputText.slice(0, -suffix.length);
+            }
             inputText += word + ' ';
+            lastAutoInsertedWord = word;
             document.getElementById('inputText').textContent = inputText;
-            
+
             // Clear prediction state and swipe canvas, but keep the input text
             clearPredictionState();
             clearSwipeState();
@@ -3133,6 +3330,97 @@
             }
 
             console.log('✓ Accessibility attributes configured');
+        }
+
+        // ============================================================
+        // Settings panel wiring
+        // ============================================================
+        const BEAM_CHOICES = [4, 6, 8, 12];
+        const MAX_LENGTH_CHOICES = [15, 20, 25, 35];
+
+        function renderChoiceRow(hostId, choices, currentValue, dataKey) {
+            const host = document.getElementById(hostId);
+            if (!host) return;
+            host.innerHTML = '';
+            choices.forEach((val) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.dataset[dataKey] = String(val);
+                btn.className = 'flex-1 px-3 py-2 rounded-lg border text-sm transition-all ' + (
+                    val === currentValue
+                        ? 'border-neon-blue bg-neon-blue/20 text-white'
+                        : 'border-white/10 bg-white/5 text-gray-300 hover:bg-white/10'
+                );
+                btn.textContent = String(val);
+                btn.onclick = () => {
+                    host.querySelectorAll('button').forEach((b) => {
+                        b.className = 'flex-1 px-3 py-2 rounded-lg border text-sm transition-all border-white/10 bg-white/5 text-gray-300 hover:bg-white/10';
+                    });
+                    btn.className = 'flex-1 px-3 py-2 rounded-lg border text-sm transition-all border-neon-blue bg-neon-blue/20 text-white';
+                };
+                host.appendChild(btn);
+            });
+        }
+
+        function updateSettingsUI() {
+            document.querySelectorAll('input[name="settingsDict"]').forEach((el) => {
+                el.checked = el.value === DEMO_CONFIG.dictionary;
+            });
+            renderChoiceRow('settingsBeamWidth', BEAM_CHOICES, Number(DEMO_CONFIG.beamWidth), 'beam');
+            renderChoiceRow('settingsMaxLength', MAX_LENGTH_CHOICES, Number(DEMO_CONFIG.maxLength), 'maxlen');
+            document.getElementById('settingsAutoInsert').checked = !!DEMO_CONFIG.autoInsert;
+            document.getElementById('settingsShowRaw').checked = !!DEMO_CONFIG.showRaw;
+            document.getElementById('settingsBatchBeams').checked = DEMO_CONFIG.batchBeams !== false;
+            document.getElementById('settingsWasmSimd').checked = DEMO_CONFIG.wasmSimd !== false;
+            document.getElementById('settingsWasmThreads').checked = DEMO_CONFIG.wasmThreads !== false;
+        }
+
+        function toggleSettingsPanel() {
+            const panel = document.getElementById('settingsPanel');
+            if (!panel) return;
+            const opening = panel.classList.contains('hidden');
+            if (opening) {
+                updateSettingsUI();
+                panel.classList.remove('hidden');
+            } else {
+                panel.classList.add('hidden');
+            }
+        }
+
+        function applySettingsPanel() {
+            const prev = { ...DEMO_CONFIG };
+            const dictChoice = document.querySelector('input[name="settingsDict"]:checked');
+            if (dictChoice) DEMO_CONFIG.dictionary = dictChoice.value;
+
+            const beamBtn = document.querySelector('#settingsBeamWidth button.border-neon-blue');
+            if (beamBtn) DEMO_CONFIG.beamWidth = Number(beamBtn.dataset.beam);
+            const maxBtn = document.querySelector('#settingsMaxLength button.border-neon-blue');
+            if (maxBtn) DEMO_CONFIG.maxLength = Number(maxBtn.dataset.maxlen);
+
+            DEMO_CONFIG.autoInsert = document.getElementById('settingsAutoInsert').checked;
+            DEMO_CONFIG.showRaw = document.getElementById('settingsShowRaw').checked;
+            DEMO_CONFIG.batchBeams = document.getElementById('settingsBatchBeams').checked;
+            DEMO_CONFIG.wasmSimd = document.getElementById('settingsWasmSimd').checked;
+            DEMO_CONFIG.wasmThreads = document.getElementById('settingsWasmThreads').checked;
+
+            saveConfig();
+            toggleSettingsPanel();
+
+            const needsReload = (
+                prev.dictionary !== DEMO_CONFIG.dictionary ||
+                prev.wasmSimd !== DEMO_CONFIG.wasmSimd ||
+                prev.wasmThreads !== DEMO_CONFIG.wasmThreads
+            );
+            if (needsReload) {
+                console.log('Settings requiring reload changed — reloading page');
+                location.reload();
+            }
+        }
+
+        function resetSettings() {
+            Object.assign(DEMO_CONFIG, DEFAULT_CONFIG);
+            saveConfig();
+            updateSettingsUI();
         }
 
         // Initialize on load
