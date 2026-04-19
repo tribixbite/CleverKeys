@@ -663,9 +663,12 @@
                 console.log('Decoder inputs:', decoderSession.inputNames);
                 console.log('Decoder outputs:', decoderSession.outputNames);
 
-                // Load vocabulary dictionary
-                updateLoadingStatus('Loading vocabulary (5.2MB)...');
-                await loadVocabulary();
+                // Load vocabulary dictionary + contraction rewrites in parallel.
+                updateLoadingStatus('Loading vocabulary...');
+                await Promise.all([
+                    loadVocabulary(),
+                    loadContractions(),
+                ]);
 
                 isModelReady = true;
                 window.isModelReady = true;  // Expose for debugging
@@ -1436,9 +1439,12 @@
 
                 const t0 = performance.now();
                 const features = prepareSwipeFeatures(swipeData);
+                const tFeat = performance.now();
                 const predictions = await runInference(features);
                 const dtMs = Math.round(performance.now() - t0);
-                console.log(`⏱ swipe → prediction took ${dtMs}ms  (beam=${DEMO_CONFIG.beamWidth} maxLen=${DEMO_CONFIG.maxLength} batched=${DEMO_CONFIG.batchBeams})`);
+                const featMs = Math.round(tFeat - t0);
+                const infMs = dtMs - featMs;
+                console.log(`⏱ total ${dtMs}ms  (features ${featMs}ms · inference ${infMs}ms · beam=${DEMO_CONFIG.beamWidth} maxLen=${DEMO_CONFIG.maxLength} batched=${DEMO_CONFIG.batchBeams})`);
 
                 const shown = displayPredictions(predictions);
 
@@ -1458,12 +1464,43 @@
 
         // Append a word + space, remembering it as the "last auto-inserted"
         // so that clicking a different chip replaces it instead of stacking.
+        //
+        // CRITICAL: must clear hasPendingPredictions and mark userMadeManualSelection,
+        // otherwise the legacy auto-select trigger in pointerdown / handleSpace /
+        // handleKeyTap will fire on the next input event and RE-INSERT the same word.
         function autoInsertBestCandidate(word) {
             if (!word) return;
-            inputText += word + ' ';
+            inputText += applyContractionFixup(word) + ' ';
             lastAutoInsertedWord = word;
             document.getElementById('inputText').textContent = inputText;
+            hasPendingPredictions = false;
+            userMadeManualSelection = true;
             console.log(`✨ Auto-inserted: "${word}"`);
+        }
+
+        // Apply APK-parity contraction rewrites (dont → don't, cant → can't, etc.)
+        // on a prediction before it gets shown or inserted. Keeps the output in
+        // sync with what the on-device keyboard produces.
+        let contractionMap = null;
+        async function loadContractions() {
+            try {
+                const r = await fetch('contractions_en.json', { cache: 'force-cache' });
+                if (!r.ok) return;
+                contractionMap = await r.json();
+                console.log(`Loaded ${Object.keys(contractionMap).length} contractions`);
+            } catch (e) {
+                console.warn('Contractions load failed:', e?.message);
+            }
+        }
+        function applyContractionFixup(word) {
+            if (!word || !contractionMap) return word;
+            const lower = word.toLowerCase();
+            if (Object.prototype.hasOwnProperty.call(contractionMap, lower)) {
+                return contractionMap[lower];
+            }
+            // Capitalize 'i' → 'I' to match on-device behaviour
+            if (lower === 'i') return 'I';
+            return word;
         }
         
         function prepareSwipeFeatures(swipeData) {
@@ -1593,11 +1630,13 @@
             });
 
             // Run encoder with Android 3-input signature
+            const tEnc0 = performance.now();
             const encoderOutput = await encoderSession.run({
                 trajectory_features: trajectoryTensor,
                 nearest_keys: nearestKeysTensor,
                 actual_length: actualLengthTensor
             });
+            console.log(`🧠 encoder: ${Math.round(performance.now() - tEnc0)}ms`);
             
             console.log('Encoder output:', encoderOutput);
             
@@ -1623,7 +1662,12 @@
             }
 
             const beamWidth = Number(DEMO_CONFIG.beamWidth) || 6;
-            const maxLength = Number(DEMO_CONFIG.maxLength) || 25;
+            // The model's target_tokens input is fixed at DECODER_SEQ_LENGTH=20.
+            // Every step past token-index 19 re-reads the same clamped position
+            // and burns decoder time for zero new information, so cap here.
+            // Keep settings panel value in place for user visibility, but
+            // clamp the actual loop ceiling.
+            const maxLength = Math.min(Number(DEMO_CONFIG.maxLength) || 25, 19);
             const useBatched = DEMO_CONFIG.batchBeams !== false;
             
             // Special tokens from tokenizer config
@@ -1712,6 +1756,8 @@
             // error (e.g. if the model turns out to be legacy-mode only).
             let doStep = useBatched ? stepBatched : stepPerBeam;
             let batchedFailed = false;
+            let decoderStepCount = 0;
+            const tDec0 = performance.now();
 
             // Beam search
             for (let step = 0; step < maxLength; step++) {
@@ -1722,12 +1768,14 @@
                 let perBeamLogProbs;
                 try {
                     perBeamLogProbs = await doStep(active);
+                    decoderStepCount++;
                 } catch (err) {
                     if (useBatched && !batchedFailed) {
                         console.warn('Batched decoder step failed, falling back to per-beam:', err?.message);
                         batchedFailed = true;
                         doStep = stepPerBeam;
                         perBeamLogProbs = await doStep(active);
+                        decoderStepCount++;
                     } else {
                         console.error('Decoder error:', err);
                         throw err;
@@ -1756,7 +1804,10 @@
                     break;
                 }
             }
-            
+
+            const decoderTotalMs = Math.round(performance.now() - tDec0);
+            console.log(`🔁 decoder: ${decoderStepCount} steps · ${decoderTotalMs}ms total · mode=${batchedFailed ? 'per-beam (fallback)' : (useBatched ? 'batched' : 'per-beam')}`);
+
             // Convert token sequences to words
             const predictions = beams.map(beam => {
                 const chars = [];
@@ -1893,8 +1944,11 @@
                 } else {
                     className = 'px-4 py-1.5 rounded-full bg-white/5 border border-white/20 text-gray-300 text-sm cursor-pointer hover:bg-white/10 transition-all';
                 }
+                // Show the contraction-corrected form on the chip so what the
+                // user sees matches what the auto-insert will actually commit.
+                const display = applyContractionFixup(word);
                 suggestion.className = className;
-                suggestion.textContent = isPersonalWord ? `★ ${word}` : isCustomWord ? `+ ${word}` : word;
+                suggestion.textContent = isPersonalWord ? `★ ${display}` : isCustomWord ? `+ ${display}` : display;
                 suggestion.onclick = () => selectWord(word);
                 suggestionsDiv.appendChild(suggestion);
             });
@@ -1925,12 +1979,15 @@
 
             // If we just auto-inserted a word, clicking a chip should REPLACE
             // it rather than stack another word next to it — the expected UX
-            // for "I meant a different word than what you picked".
-            const suffix = lastAutoInsertedWord ? lastAutoInsertedWord + ' ' : null;
+            // for "I meant a different word than what you picked". We match
+            // against the CONTRACTION-FIXED form because that's what's in the
+            // buffer.
+            const lastFixed = lastAutoInsertedWord ? applyContractionFixup(lastAutoInsertedWord) : null;
+            const suffix = lastFixed ? lastFixed + ' ' : null;
             if (suffix && inputText.endsWith(suffix)) {
                 inputText = inputText.slice(0, -suffix.length);
             }
-            inputText += word + ' ';
+            inputText += applyContractionFixup(word) + ' ';
             lastAutoInsertedWord = word;
             document.getElementById('inputText').textContent = inputText;
 
