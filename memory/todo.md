@@ -1,5 +1,49 @@
 # CleverKeys TODO
 
+## ✅ Web demo restored with Android ONNX arch (2026-04-18)
+
+The /demo/ page was stuck on an "under construction" placeholder because
+`web_demo/demo/index.html` was a stub while the full featured 3154-line
+`web_demo/swipe-onnx.html` (swipe demo with beam search + custom
+dictionary import + niche-words loader) had never been wired in, and
+was still pointed at the old encoder/decoder ONNX files with the legacy
+`src_mask` / `target_mask` boolean-tensor inputs.
+
+The in-APK model switched to a new signature:
+  encoder inputs  = (trajectory_features f32, nearest_keys i32, actual_length i32)
+  decoder inputs  = (memory f32, target_tokens i32, actual_src_length i32)
+  decoder output  = log_probs (pre-log-softmaxed)
+
+Changes:
+- Copied `src/main/assets/models/swipe_encoder_android.onnx` +
+  `swipe_decoder_android.onnx` into `web_demo/` so the web demo runs
+  the exact same weights the Android build ships.
+- Removed the legacy `swipe_model_character_quant.onnx` /
+  `swipe_decoder_character_quant.onnx` files from `web_demo/`.
+- Rewrote the inference path in `web_demo/demo/index.html`
+  (derived from the old `swipe-onnx.html`):
+  - `nearest_keys` now int32 (was BigInt64).
+  - Dropped `src_mask`; added `actual_length` int32 scalar.
+  - Dropped `target_mask`; added `actual_src_length` int32 scalar.
+  - Target tokens now int32 (was BigInt64); decoder output read as
+    `log_probs` (not `logits`); beam scoring sums log-probs directly
+    (no JS softmax pass).
+- Rebuilt `web_demo/tokenizer_config.json` to keep both the
+  web-demo's `char_to_idx`/expanded `special_tokens` schema and the
+  Android tokenizer semantics.
+- Deleted the now-superseded `web_demo/swipe-onnx.html` and tightened
+  the deploy workflow's demo copy step (no more `elif` fallback).
+- Smoke-tested the deploy tree locally: every asset
+  (`swipe_encoder_android.onnx`, `swipe_decoder_android.onnx`,
+  `swipe_vocabulary.json` (5.2 MB), support JS, tokenizer)
+  resolves 200 under `/demo/`.
+
+Preserved behaviour:
+- Beam width 8, max length 35, vocabulary filter via
+  `SwipeVocabulary.filterPredictions` with personal/custom dictionary
+  boosts, niche-words loader, straight-line 2-char fallback, and all
+  accessibility hooks.
+
 ## ✅ Site polish + F-Droid 1.3.0 metadata + doc skills (2026-04-18)
 
 - **Obtainium restored as primary install CTA** on cleverkeys.app. Hero,

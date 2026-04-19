@@ -54,14 +54,14 @@ jobs:
         run: |
           set -euo pipefail
 
-          # /demo/ — ONNX-powered swipe demo (self-contained legacy HTML)
+          # /demo/ — ONNX-powered swipe demo. The HTML lives at
+          # web_demo/demo/index.html and hits the same encoder/decoder
+          # pair (swipe_encoder_android.onnx / swipe_decoder_android.onnx)
+          # that the Android build ships inside the APK.
           if [ -d "web_demo/demo" ]; then
             mkdir -p site/dist/demo
             cp -r web_demo/demo/. site/dist/demo/
             echo "✅ Copied web_demo/demo → site/dist/demo"
-          elif [ -f "web_demo/swipe-onnx.html" ]; then
-            mkdir -p site/dist/demo
-            cp web_demo/swipe-onnx.html site/dist/demo/index.html
           fi
 
           # Supporting assets referenced by the demo (ONNX, tokenizer, vocab, JS, fonts)
