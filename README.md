@@ -284,43 +284,81 @@ Available via **Settings → Languages → Download Language Packs**:
 
 ### Creating Custom Language Packs
 
-You can create dictionaries for any language using the included Python scripts:
+You can create dictionaries for any language using the included Python scripts.
+
+#### Quick Start (Recommended)
+
+The easiest way to build a language pack is the two-step `wordfreq` pipeline. This automatically generates a word list with frequency data and packages it into a ready-to-install ZIP:
 
 ```bash
-# Navigate to scripts directory
 cd scripts/
-
-# Install prerequisite
 pip install wordfreq
 
-# Option 1: Two-step build from wordfreq (any language wordfreq supports)
-python get_wordlist.py --lang fr --output fr_words.txt --count 50000
-python build_langpack.py --lang fr --name "French" --input fr_words.txt --use-wordfreq --output langpack-fr.zip
+# Step 1: Generate a word list from wordfreq (supports 50+ languages)
+python get_wordlist.py --lang hu --output hu_words.txt --count 25000
 
-# Option 2: Build from pre-existing binary dictionary (.bin file)
+# Step 2: Build the language pack from the word list
+python build_langpack.py --lang hu --name "Hungarian" --input hu_words.txt --use-wordfreq --output langpack-hu.zip
+```
+
+The `--use-wordfreq` flag enriches word frequencies using the [wordfreq](https://github.com/rspeer/wordfreq) library, which produces better prediction results.
+
+#### Input File Format
+
+The `--input` file for `build_langpack.py` and `build_dictionary.py` is a plain text word list. Supported formats:
+
+| Format | Example | Notes |
+|--------|---------|-------|
+| One word per line | `hello` | Frequencies are looked up via `wordfreq` (use `--use-wordfreq`) |
+| Word + TAB + frequency | `hello\t50000` | Uses the provided integer frequency |
+| Word + space + frequency | `hello 50000` | Uses the provided integer frequency |
+
+Lines starting with `#` are treated as comments and skipped. Words longer than 50 characters are ignored.
+
+> **Tip:** Using `get_wordlist.py` to generate the input file is the recommended approach — it produces a clean one-word-per-line file from `wordfreq`'s curated data. If you provide your own file (e.g., scraped text), make sure it contains **one word per line** (not sentences or paragraphs), otherwise only a small fraction of entries will be recognized as valid dictionary words.
+
+#### Alternative Build Methods
+
+```bash
+# From a pre-existing binary dictionary (.bin file)
 python build_langpack.py --lang sv --name "Swedish" --dict ../src/main/assets/dictionaries/sv_enhanced.bin --output langpack-sv.zip
 
-# Option 3: Build from custom word frequency CSV (format: word,frequency per line)
-python build_dictionary.py --input my_words.csv --output my_lang.bin
+# From a custom word+frequency file (two-step: build dictionary, then package)
+python build_dictionary.py --lang xx --input my_words.txt --output my_lang.bin
 python build_langpack.py --lang xx --name "MyLang" --dict my_lang.bin --output langpack-xx.zip
 
-# Option 4: Batch build all bundled languages (en, es, fr, de, it, pt, nl, id, ms, tl, sw)
+# Batch build all supported languages (en, es, fr, de, it, pt, hu, nl, id, ms, tl, sw)
 python build_all_languages.py
 ```
 
-**Script Details:**
-- `build_langpack.py` — Creates complete .zip language packs from wordfreq
-- `build_dictionary.py` — Builds binary dictionary from CSV word lists
-- `build_all_languages.py` — Batch builds all supported languages
-- `get_wordlist.py` — Extracts top N words from wordfreq for a language
+#### Script Reference
 
-Language packs are simple .zip files containing:
-- `{lang}_enhanced.bin` — Binary dictionary with frequency data
-- `{lang}_enhanced.json` — Human-readable word list with frequencies
-- `manifest.json` — Metadata (language code, version, word count)
+| Script | Purpose |
+|--------|---------|
+| `get_wordlist.py` | Extracts top N words from `wordfreq` for a given language code |
+| `build_langpack.py` | Creates a complete `.zip` language pack (dictionary + unigrams + manifest) |
+| `build_dictionary.py` | Builds a V2 binary dictionary (`.bin`) from a word list |
+| `build_all_languages.py` | Batch builds all supported languages |
+| `generate_unigrams.py` | Generates unigram frequency lists for language detection |
+
+#### Language Pack Contents
+
+Language packs are `.zip` files containing:
+
+| File | Description |
+|------|-------------|
+| `manifest.json` | Metadata — language code, name, version, word count |
+| `dictionary.bin` | V2 binary dictionary with accent normalization and frequency ranks |
+| `unigrams.txt` | Top words ordered by frequency (used for language detection) |
+| `contractions.json` | *(optional)* Apostrophe word mappings for languages that use them |
+| `prefix_boost.bin` | *(optional)* Aho-Corasick trie for prefix boosting (non-English) |
+
+#### Installing a Language Pack
+
+Copy the `.zip` file to your device and import it in **CleverKeys Settings → Multi-Language**.
 
 **Pre-built Language Packs:**
-Available in [`scripts/dictionaries/`](./scripts/dictionaries/) for testing, or download directly from the app.
+Available in [`scripts/dictionaries/`](./scripts/dictionaries/) for immediate use, or download directly from within the app.
 
 <div align="center">
 

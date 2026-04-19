@@ -9,6 +9,7 @@ Supported languages (26-letter QWERTY compatible):
 - Portuguese (pt)
 - Italian (it)
 - German (de)
+- Hungarian (hu)
 - Indonesian (id)
 - Swahili (sw)
 - Malay (ms)
@@ -58,6 +59,7 @@ SUPPORTED_LANGUAGES = {
     'pt': {'name': 'Portuguese', 'words': 25000, 'bundle': True},
     'it': {'name': 'Italian', 'words': 25000, 'bundle': True},
     'de': {'name': 'German', 'words': 25000, 'bundle': True},
+    'hu': {'name': 'Hungarian', 'words': 25000, 'bundle': False},
     'nl': {'name': 'Dutch', 'words': 20000, 'bundle': False},
     'id': {'name': 'Indonesian', 'words': 20000, 'bundle': False},
     'ms': {'name': 'Malay', 'words': 20000, 'bundle': False},
