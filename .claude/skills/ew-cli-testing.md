@@ -77,6 +77,30 @@ ew-cli \
   --test-targets "class tribixbite.cleverkeys.AutocapitalizationTest#testIWordCapitalization_SingleI"
 ```
 
+## Run Multiple Test Classes
+
+`--test-targets` is a SINGLE-VALUE flag — repeating it only honors the LAST occurrence. To run multiple classes in one invocation, comma-separate inside one quoted arg:
+
+```bash
+ew-cli \
+  --app ... \
+  --test ... \
+  --test-targets "class tribixbite.cleverkeys.Issue94VersionCopyComposeTest,tribixbite.cleverkeys.Issue93ThemeHexInputComposeTest,tribixbite.cleverkeys.Issue134ShowKeyboardButtonComposeTest"
+```
+
+The first class needs the `class ` prefix; subsequent ones are bare FQCNs. Format mirrors `am instrument -e class A,B,C` semantics.
+
+## Compose UI Tests
+
+Tests using `androidx.compose.ui.test.junit4.createAndroidComposeRule<ActivityClass>()` work via ew-cli with no extra flags. Required deps in `build.gradle`:
+
+```gradle
+androidTestImplementation "androidx.compose.ui:ui-test-junit4"
+debugImplementation "androidx.compose.ui:ui-test-manifest"
+```
+
+Activity is auto-launched per test (~1.2-1.8s overhead). Assertion failures surface clean diagnostic output naming the missing `ContentDescription`/`Text` semantics — line numbers in the stack trace point at your test source. Verified: 6/6 RED-phase Compose tests on Pixel7 API 34, 8.266s total runtime.
+
 ## Device Options
 
 | Device | API | Notes |
