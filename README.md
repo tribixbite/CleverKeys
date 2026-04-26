@@ -56,23 +56,23 @@ CleverKeys is a feature-rich open-source keyboard for Android. Neural swipe typi
 
 ### Open-Source Gesture Keyboard Comparison
 
-| Feature | CleverKeys | HeliBoard | FUTO | FlorisBoard | AnySoftKeyboard |
-|---------|:----------:|:---------:|:----:|:-----------:|:---------------:|
-| **Gesture Typing in Termux** | ✅ | ⚠️ Corrupted⁴ | ❌ Broken | ⚠️ Disabled | ⚠️ Experimental |
-| **Gesture/Swipe Typing** | ✅ Stable | ✅ Stable | ⚠️ Alpha | ⚠️ Disabled⁵ | ⚠️ Experimental |
-| **Multi-Language Swipe**⁹ | ✅ 11 languages | ⚠️ Single | ⚠️ English only | ❌ | ❌ |
-| **Gesture Engine Open Source** | ✅ | ❌¹ | ✅² | ✅ | ✅ |
-| **ML Training Code Public** | ✅ | N/A | ✅⁶ | N/A³ | N/A³ |
-| **Model Size** | 13MB | Proprietary | 62MB | N/A | N/A |
-| **APK Size** | ~52MB | ~45MB | ~200MB | ~15MB | ~25MB |
-| **Clipboard History** | ✅ Unlimited | ⚠️ 10min default⁷ | ✅ 25 items | ✅ 20-100 items | ❌ 15s hint only |
-| **Short-Swipe Actions**⁸ | ✅ 208 gestures | ⚠️ Limited | ❌ | ⚠️ Limited | ⚠️ Limited |
-| **Per-Key Customization** | ✅ 204+ commands | ❌ | ❌ | ❌ | ❌ |
-| **Custom Layouts** | ✅ XML (8 sublabels) | ✅ JSON | ✅ YAML | ⚠️ JSON (no editor) | ⚠️ Addon packs only |
-| **DIY Theme Creator** | ✅ | ✅ | ❌ (16 built-in) | ✅ Snygg v2 | ✅ |
-| **Word Suggestions** | ✅ | ✅ | ✅ | ❌ (v0.6 planned) | ✅ |
-| **No Internet Access** | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **License** | GPL-3.0 | GPL-3.0 | Source-First² | Apache-2.0 | Apache-2.0 |
+| Feature | CleverKeys | HeliBoard | FUTO | FlorisBoard | AnySoftKeyboard | Urik |
+|---------|:----------:|:---------:|:----:|:-----------:|:---------------:|:----:|
+| **Gesture Typing in Termux** | ✅ | ⚠️ Corrupted⁴ | ❌ Broken | ⚠️ Disabled | ⚠️ Experimental | ❓ |
+| **Gesture/Swipe Typing** | ✅ Stable | ✅ Stable | ⚠️ Alpha | ⚠️ Disabled⁵ | ⚠️ Experimental | ✅ Geometric¹⁰ |
+| **Multi-Language Swipe**⁹ | ✅ 11 languages | ⚠️ Single | ⚠️ English only | ❌ | ❌ | ✅ Simultaneous |
+| **Gesture Engine Open Source** | ✅ | ❌¹ | ✅² | ✅ | ✅ | ✅ |
+| **ML Training Code Public** | ✅ | N/A | ✅⁶ | N/A³ | N/A³ | N/A¹⁰ |
+| **Model Size** | 13MB | Proprietary | 62MB | N/A | N/A | N/A |
+| **APK Size** | ~52MB | ~45MB | ~200MB | ~15MB | ~25MB | ~40MB |
+| **Clipboard History** | ✅ Unlimited | ⚠️ 10min default⁷ | ✅ 25 items | ✅ 20-100 items | ❌ 15s hint only | ✅ Encrypted |
+| **Short-Swipe Actions**⁸ | ✅ 208 gestures | ⚠️ Limited | ❌ | ⚠️ Limited | ⚠️ Limited | ⚠️ Space/Del only¹¹ |
+| **Per-Key Customization** | ✅ 204+ commands | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Custom Layouts** | ✅ XML (8 sublabels) | ✅ JSON | ✅ YAML | ⚠️ JSON (no editor) | ⚠️ Addon packs only | ✅ |
+| **DIY Theme Creator** | ✅ | ✅ | ❌ (16 built-in) | ✅ Snygg v2 | ✅ | ✅ |
+| **Word Suggestions** | ✅ | ✅ | ✅ | ❌ (v0.6 planned) | ✅ | ✅ |
+| **No Internet Access** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **License** | GPL-3.0 | GPL-3.0 | Source-First² | Apache-2.0 | Apache-2.0 | GPL-3.0 |
 
 <details>
 <summary><b>Footnotes & Sources</b></summary>
@@ -94,6 +94,10 @@ CleverKeys is a feature-rich open-source keyboard for Android. Neural swipe typi
 ⁸ Short-swipe actions: 8 directions × 26 keys = 208 one-touch gestures for navigation (arrows, home/end), editing (select all, undo, cut/copy/paste), function keys (F1-F12), and more — no long-press menus needed
 
 ⁹ Multi-language swipe typing: CleverKeys uses the same neural network model for all languages — dictionaries provide word candidates, not language-specific models. 6 languages bundled (en, es, fr, pt, it, de), 5 downloadable (nl, id, ms, tl, sw). Primary + secondary language support with automatic best-match selection.
+
+¹⁰ Urik uses a geometric/template path matcher (no ML model, no training code applicable) — German-friendly QWERTZ-native with simultaneous multilingual spell-check. CleverKeys is exploring a complementary geometric pipeline for non-QWERTY layouts and non-Latin scripts (Russian, etc.) — see [ROADMAP.md](./ROADMAP.md#-neural-network--prediction).
+
+¹¹ Urik short-swipe is limited to Space (cursor movement) and Backspace (delete word) — no general short-swipe action mapping system.
 
 </details>
 

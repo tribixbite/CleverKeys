@@ -47,16 +47,20 @@ This document outlines the planned development path for CleverKeys, focusing on 
     - Implement a federated-style on-device learning mechanism to fine-tune the ONNX model on user's typing history without data leaving the device.
 
 - [ ] **Layout-Agnostic & Multi-Script Gesture Model** *(target: Q2–Q3 2026)*
-    - **Current limitation:** The v1 gesture engine is trained on English + QWERTY. Quality is acceptable for other Latin-script QWERTY languages (es, fr, pt, it, de, nl, id, ms, tl, sw) but degrades on non-QWERTY layouts (AZERTY, QWERTZ, Dvorak, Colemak, Neo2) and on non-Latin scripts (Cyrillic, Greek, Arabic, Devanagari, CJK romanization, etc.), where swipe is currently auto-disabled on non-QWERTY row shapes (see [#9](https://github.com/tribixbite/CleverKeys/issues/9)).
-    - **Goal:** A layout-aware gesture decoder that accepts arbitrary keyboard geometries and script-specific vocabularies as inputs, enabling swipe on every supported layout and language without retraining a separate model per layout.
+    - **Current limitation:** The v1 gesture engine is trained on English + QWERTY. Quality is acceptable for other Latin-script QWERTY languages (es, fr, pt, it, de, nl, id, ms, tl, sw) but degrades on non-QWERTY layouts (AZERTY, QWERTZ, Dvorak, Colemak, Neo2) and on non-Latin scripts (Cyrillic for Russian/Ukrainian/Bulgarian/Serbian, Greek, Arabic, Devanagari, CJK romanization, etc.), where swipe is currently auto-disabled on non-QWERTY row shapes (see [#9](https://github.com/tribixbite/CleverKeys/issues/9)).
+    - **Goal:** Two complementary swipe pipelines — keep the trained transformer for QWERTY+Latin (current strength) and add a geometric/template path-matcher for arbitrary layouts and scripts. The geometric engine resembles [Urik](https://github.com/urikdev/Urik) and AnySoftKeyboard's gesture approach: dictionary-driven candidate scoring against the swipe path's nearest-key sequence, no per-layout training required.
+    - **Why dual-path:** Geometric matchers ship instantly for any layout (Russian Cyrillic, AZERTY, QWERTZ, Dvorak, Colemak, Arabic, Greek) once a dictionary exists, and they compose with our existing dictionary infrastructure. Trained transformer stays the default for English+QWERTY where its accuracy lead is largest; geometric path takes over when the active layout doesn't match the trained geometry.
     - **Implementation plan:**
-        - Synthesize large-scale swipe datasets for alternative layouts (Dvorak, Colemak, Neo2, AZERTY, QWERTZ) from the existing English corpus via geometric remap.
-        - Extend the encoder to consume layout geometry (key centroids + label embeddings) as a conditioning input rather than hard-coded QWERTY coordinates.
-        - Train either a single multi-head model or a small family of per-script models; evaluate against held-out native-speaker swipe data per language.
-        - Ship behind a feature flag, roll out language-by-language as accuracy clears a threshold.
+        - Build a geometric scorer that walks a swipe trajectory against per-layout key centroids and ranks dictionary words by path-length + nearest-key alignment cost.
+        - Add Russian (Cyrillic ЙЦУКЕН) layout + dictionary as the first non-Latin target. Validate with native-speaker swipe sessions.
+        - Extend to AZERTY, QWERTZ, Dvorak, Colemak, Neo2 using the same engine — just new layout geometries + existing dictionaries.
+        - In parallel, explore extending the trained encoder to consume layout geometry as a conditioning input so the transformer eventually catches up on alt layouts.
+        - Ship behind a feature flag; auto-route per layout: transformer for QWERTY-Latin, geometric for everything else.
 
-- [ ] **Context-Aware Predictions**
-    - Improve next-word prediction using lightweight transformer models (distilled BERT/GPT) optimized for mobile CPU (ARM64).
+- [ ] **Next-Word Prediction**
+    - Top-of-suggestion-bar word prediction based on the previous word(s), distinct from autocorrect/swipe.
+    - Distilled transformer (BERT-style or n-gram blend) optimized for ARM64 CPU; sub-50ms latency budget on mid-range devices.
+    - Per-language models, sharing the dictionary infrastructure already in place.
 
 ## 🛠 Customization & UI
 
