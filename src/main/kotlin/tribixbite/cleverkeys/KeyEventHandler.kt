@@ -613,6 +613,10 @@ class KeyEventHandler(
                 KeyValue.Editing.PASTE -> recv.pasteToClipboardEdit()
                 KeyValue.Editing.CUT -> recv.cutFromClipboardEdit()
                 KeyValue.Editing.SELECT_ALL -> recv.selectAllClipboardEdit()
+                KeyValue.Editing.CLEAR -> {
+                    recv.selectAllClipboardEdit()
+                    recv.backspaceClipboardEdit()
+                }
                 else -> {} // Other editing keys (undo, redo, share) — no-op during inline edit
             }
             return
@@ -647,6 +651,13 @@ class KeyEventHandler(
                 KeyEvent.KEYCODE_MOVE_END,
                 KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON
             )
+            KeyValue.Editing.CLEAR -> {
+                val conn = recv.getCurrentInputConnection() ?: return
+                conn.beginBatchEdit()
+                conn.performContextMenuAction(android.R.id.selectAll)
+                conn.commitText("", 1)
+                conn.endBatchEdit()
+            }
         }
     }
 

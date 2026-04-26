@@ -100,6 +100,8 @@ object CommandRegistry {
             keywords = listOf("undo", "ctrl+z", "back", "revert")),
         Command("redo", "Redo", "Redo last undone action", Category.EDITING,
             keywords = listOf("redo", "ctrl+y", "forward")),
+        Command("clear", "Clear", "Erase entire field (select all + delete)", Category.EDITING,
+            keywords = listOf("clear", "erase", "wipe", "empty", "select all delete")),
         Command("delete_word", "Delete Word", "Delete word before cursor", Category.DELETE,
             keywords = listOf("delete", "word", "backspace", "ctrl+backspace")),
         Command("forward_delete_word", "Forward Delete Word", "Delete word after cursor", Category.DELETE,

@@ -25,6 +25,9 @@ object Defaults {
     const val KEY_OPACITY = 100
     const val KEY_ACTIVATED_OPACITY = 100
     const val CHARACTER_SIZE = 1.18f
+    // #133: Secondary-key (flick) label size as fraction of key height.
+    // Exposed so a future preference can scale it independently of the primary label.
+    const val SUBLABEL_TEXT_SIZE_FACTOR = 0.22f
     const val KEY_VERTICAL_MARGIN = 1.5f
     const val KEY_HORIZONTAL_MARGIN = 2.0f
     const val BORDER_CONFIG = false
@@ -360,7 +363,7 @@ class Config private constructor(
     @JvmField val marginTop: Float = res.getDimension(R.dimen.margin_top)
     @JvmField val keyPadding: Float = res.getDimension(R.dimen.key_padding)
     @JvmField val labelTextSize: Float = 0.33f
-    @JvmField val sublabelTextSize: Float = 0.22f
+    @JvmField val sublabelTextSize: Float = Defaults.SUBLABEL_TEXT_SIZE_FACTOR
 
     // From preferences
     // Nullable list preserves indices - null entries represent SystemLayout (use localeTextLayout)

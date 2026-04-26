@@ -99,6 +99,7 @@ class KeyValue private constructor(
         DELETE_LAST_WORD, // Smart delete of last auto-inserted or typed word
         CURSOR_DOC_START, // Move cursor to start of document (Ctrl+Home)
         CURSOR_DOC_END, // Move cursor to end of document (Ctrl+End)
+        CLEAR, // #135: Erase entire field (selectAll + delete in one batched edit)
     }
 
     enum class Placeholder {
@@ -721,6 +722,7 @@ class KeyValue private constructor(
             "redo" -> editingKey(0xE037, Editing.REDO)
             "delete_word" -> editingKey(0xE01B, Editing.DELETE_WORD)
             "forward_delete_word" -> editingKey(0xE01C, Editing.FORWARD_DELETE_WORD)
+            "clear" -> editingKey("clr", Editing.CLEAR, FLAG_SMALLER_FONT)
             "delete_last_word" -> editingKey("word", Editing.DELETE_LAST_WORD)
             "cursor_left" -> sliderKey(Slider.Cursor_left, 1)
             "cursor_right" -> sliderKey(Slider.Cursor_right, 1)
