@@ -56,6 +56,9 @@ dependencies {
   androidTestImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3"
   androidTestImplementation "org.mockito:mockito-android:5.5.0"
   androidTestImplementation "org.mockito:mockito-core:5.5.0"
+  androidTestImplementation platform("androidx.compose:compose-bom:2024.06.00")
+  androidTestImplementation "androidx.compose.ui:ui-test-junit4"
+  debugImplementation "androidx.compose.ui:ui-test-manifest"
 }
 
 // =============================================================================
@@ -364,6 +367,8 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.ClipboardPaginationTest',
     'tribixbite.cleverkeys.ClipboardFixesJvmTest',
     'tribixbite.cleverkeys.ClipboardEditJvmTest',
+    'tribixbite.cleverkeys.Issue78SuggestionReplaceTest',
+    'tribixbite.cleverkeys.BucketBSourceContractTest',
     // SwipePrunerTest excluded: requires android.util.Log (MockK + Robolectric)
   ]
 
