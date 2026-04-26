@@ -557,7 +557,9 @@ class SuggestionHandler(
                 // ALSO: If user is selecting a prediction during regular typing, delete the partial word
                 // This handles typing "hel" then selecting "hello" - we need to delete "hel" first
                 // v1.2.6: Also handles cursor mid-word - need to delete BOTH prefix AND suffix
-                else if (contextTracker.getCurrentWordLength() > 0 && !isSwipeAutoInsert) {
+                // #78: Fall back to scanning the editor when ContextTracker has no composing-region
+                // info (Termux/Fennec address bar/Google Keep commit chars without composing-text).
+                else if (!isSwipeAutoInsert) {
                     // v1.2.6 FIX: Do immediate cursor sync to get accurate prefix/suffix
                     // The debounced sync may not have completed yet
                     // v1.2.7: CRITICAL - Clear expectingSelectionUpdate flag first!
@@ -570,28 +572,54 @@ class SuggestionHandler(
                         editorInfo
                     )
 
-                    val (prefixDelete, suffixDelete) = contextTracker.getCharsToDeleteForPrediction()
-                    Log.d(TAG, "TYPING PREDICTION: Deleting partial word - prefix=$prefixDelete, suffix=$suffixDelete")
+                    var (prefixDelete, suffixDelete) = contextTracker.getCharsToDeleteForPrediction()
 
-                    if (inTermuxApp) {
-                        // TERMUX: Use backspace key events
-                        // First delete suffix (move right then backspace), then delete prefix
-                        if (suffixDelete > 0) {
-                            // Move cursor to end of word
-                            repeat(suffixDelete) {
-                                keyeventhandler.send_key_down_up(KeyEvent.KEYCODE_DPAD_RIGHT, 0)
+                    // #78 fallback: when ContextTracker reports 0 length, scan the editor
+                    // for a partial word ending immediately before the cursor. Treats
+                    // letters, digits, apostrophes, and hyphens as word characters so
+                    // hyphenated typing ("co-o" → "co-op") works correctly.
+                    if (prefixDelete == 0 && suffixDelete == 0 && contextTracker.getCurrentWordLength() == 0) {
+                        try {
+                            val before = inputConnection.getTextBeforeCursor(64, 0)?.toString() ?: ""
+                            if (before.isNotEmpty()) {
+                                val wordStart = before.indexOfLast {
+                                    !it.isLetterOrDigit() && it != '\'' && it != '-'
+                                } + 1
+                                val partialLen = before.length - wordStart
+                                if (partialLen in 1..64) {
+                                    prefixDelete = partialLen
+                                    Log.d(TAG, "TYPING PREDICTION (#78 fallback): scanned editor, prefixDelete=$partialLen")
+                                }
                             }
+                        } catch (e: Exception) {
+                            Log.w(TAG, "TYPING PREDICTION: editor-scan fallback failed", e)
                         }
-                        // Delete entire word (prefix + suffix)
-                        repeat(prefixDelete + suffixDelete) {
-                            keyeventhandler.send_key_down_up(KeyEvent.KEYCODE_DEL, 0)
-                        }
-                    } else {
-                        // NORMAL APPS: Use InputConnection with both prefix AND suffix deletion
-                        inputConnection.deleteSurroundingText(prefixDelete, suffixDelete)
+                    }
 
-                        val debugAfter = inputConnection.getTextBeforeCursor(50, 0)
-                        Log.d(TAG, "TYPING PREDICTION: After deleting partial, text before cursor: '$debugAfter'")
+                    if (prefixDelete == 0 && suffixDelete == 0) {
+                        // Nothing to delete — neither composing-text nor a partial word at cursor.
+                    } else {
+                        Log.d(TAG, "TYPING PREDICTION: Deleting partial word - prefix=$prefixDelete, suffix=$suffixDelete")
+                        if (inTermuxApp) {
+                            // TERMUX: Use backspace key events
+                            // First delete suffix (move right then backspace), then delete prefix
+                            if (suffixDelete > 0) {
+                                // Move cursor to end of word
+                                repeat(suffixDelete) {
+                                    keyeventhandler.send_key_down_up(KeyEvent.KEYCODE_DPAD_RIGHT, 0)
+                                }
+                            }
+                            // Delete entire word (prefix + suffix)
+                            repeat(prefixDelete + suffixDelete) {
+                                keyeventhandler.send_key_down_up(KeyEvent.KEYCODE_DEL, 0)
+                            }
+                        } else {
+                            // NORMAL APPS: Use InputConnection with both prefix AND suffix deletion
+                            inputConnection.deleteSurroundingText(prefixDelete, suffixDelete)
+
+                            val debugAfter = inputConnection.getTextBeforeCursor(50, 0)
+                            Log.d(TAG, "TYPING PREDICTION: After deleting partial, text before cursor: '$debugAfter'")
+                        }
                     }
                 }
 
@@ -637,19 +665,15 @@ class SuggestionHandler(
                 }
 
                 // Commit the selected word
-                // Only skip trailing space if:
+                // #78: Only skip trailing space when:
                 // 1. auto_space_after_suggestion is disabled (user preference #82)
-                // 2. OR actually IN Termux app (not just termux_mode_enabled) for non-swipe
-                // 3. OR there's already a space after cursor (mid-sentence replacement)
+                // 2. OR there's already a space after cursor (mid-sentence replacement)
+                // The previous Termux-app override has been removed — Termux users who want
+                // no trailing space should disable auto_space_after_suggestion.
                 val textToInsert = if (!config.auto_space_after_suggestion && !isSwipeAutoInsert) {
                     // #82: User disabled auto-space after suggestion (tap selection only)
                     if (needsSpaceBefore) " $capitalizedWord" else capitalizedWord.also {
                         Log.d(TAG, "AUTO-SPACE DISABLED: textToInsert = '$it'")
-                    }
-                } else if (config.termux_mode_enabled && !isSwipeAutoInsert && inTermuxApp) {
-                    // Termux app: Insert word without automatic space for terminal compatibility
-                    if (needsSpaceBefore) " $capitalizedWord" else capitalizedWord.also {
-                        Log.d(TAG, "TERMUX APP (non-swipe): textToInsert = '$it'")
                     }
                 } else if (hasSpaceAfter) {
                     // v1.2.6: Mid-sentence replacement - don't add trailing space (already exists)
@@ -657,8 +681,7 @@ class SuggestionHandler(
                         Log.d(TAG, "MID-SENTENCE: textToInsert = '$it' (hasSpaceAfter=true)")
                     }
                 } else {
-                    // Normal apps (even with Termux mode) or swipe: Insert word with space after
-                    // This provides better touch typing experience
+                    // Normal apps (incl. Termux when user opts in) or swipe: Insert word with trailing space
                     if (needsSpaceBefore) " $capitalizedWord " else "$capitalizedWord ".also {
                         Log.d(TAG, "NORMAL/SWIPE MODE: textToInsert = '$it' (needsSpaceBefore=$needsSpaceBefore, isSwipe=$isSwipeAutoInsert, capitalize=$shouldCapitalize)")
                     }
@@ -668,9 +691,8 @@ class SuggestionHandler(
                 inputConnection.commitText(textToInsert, 1)
 
                 // v1.2.7: Mark space as auto-inserted for smart punctuation
-                // Only the "else" branch (normal mode) adds trailing space
+                // #78: Trailing space is added when neither user-disabled nor mid-sentence applies
                 val addedTrailingSpace = !(!config.auto_space_after_suggestion && !isSwipeAutoInsert) &&
-                    !(config.termux_mode_enabled && !isSwipeAutoInsert && inTermuxApp) &&
                     !hasSpaceAfter
                 if (addedTrailingSpace) {
                     contextTracker.lastSpaceWasAutoInserted = true

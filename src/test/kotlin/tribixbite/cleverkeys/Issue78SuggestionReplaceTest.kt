@@ -52,9 +52,9 @@ class Issue78SuggestionReplaceTest {
      * Simulates onSuggestionSelected's commit phase for the partial-word-replace
      * scenario. Returns the final text in the editor.
      *
-     * Mirrors SuggestionHandler line 560 guard: only deletes the typed prefix
-     * if `currentWordLengthFromContext > 0`. In Termux/Fennec/Keep, that value
-     * is 0 (composing-text not used), so deletion is skipped.
+     * Mirrors the FIXED SuggestionHandler logic (#78): when ContextTracker
+     * reports 0 length (Termux/Fennec/Keep don't use composing-text), fall
+     * back to scanning editor text before cursor for a partial word.
      */
     private fun simulateImplCommit(
         editorTextBeforeTap: String,
@@ -62,34 +62,35 @@ class Issue78SuggestionReplaceTest {
         tappedWord: String,
         addTrailingSpace: Boolean
     ): String {
-        // Mirror line 560: `if (getCurrentWordLength() > 0 && !isSwipeAutoInsert)`
-        val deleted = if (currentWordLengthFromContext > 0) {
-            // Deletion path runs (works in apps that use composing-text)
-            editorTextBeforeTap.dropLast(currentWordLengthFromContext)
+        val deleteLen = if (currentWordLengthFromContext > 0) {
+            currentWordLengthFromContext
         } else {
-            // Deletion skipped — bug: typed prefix stays in editor
-            editorTextBeforeTap
+            // #78 fallback: scan editor text for partial word at end.
+            // Treats letters, digits, apostrophes, and hyphens as word chars.
+            val wordStart = editorTextBeforeTap.indexOfLast {
+                !it.isLetterOrDigit() && it != '\'' && it != '-'
+            } + 1
+            editorTextBeforeTap.length - wordStart
         }
+        val deleted = editorTextBeforeTap.dropLast(deleteLen)
         val tail = if (addTrailingSpace) " " else ""
         return deleted + tappedWord + tail
     }
 
     /**
-     * Simulates SuggestionHandler line 644-664 4-way decision in CURRENT
-     * (buggy) form — Termux branch overrides user pref unconditionally.
+     * Simulates SuggestionHandler's trailing-space decision in FIXED form.
+     * The Termux-app override has been removed — user pref drives. Termux
+     * users who want no trailing space disable auto_space_after_suggestion.
      */
-    private fun decideSpaceModeBuggy(
+    private fun decideSpaceMode(
         autoSpaceEnabled: Boolean,
         isSwipeAutoInsert: Boolean,
-        termuxModeEnabled: Boolean,
-        inTermuxApp: Boolean,
+        termuxModeEnabled: Boolean,    // unused after fix; kept for sig compat
+        inTermuxApp: Boolean,           // unused after fix; kept for sig compat
         hasSpaceAfter: Boolean
     ): AutoSpaceLogicTest.SpaceMode {
         return if (!autoSpaceEnabled && !isSwipeAutoInsert) {
             AutoSpaceLogicTest.SpaceMode.NO_SPACE_USER_DISABLED
-        } else if (termuxModeEnabled && !isSwipeAutoInsert && inTermuxApp) {
-            // BUG B: this branch fires regardless of autoSpaceEnabled
-            AutoSpaceLogicTest.SpaceMode.NO_SPACE_TERMUX
         } else if (hasSpaceAfter) {
             AutoSpaceLogicTest.SpaceMode.NO_SPACE_MID_SENTENCE
         } else {
@@ -163,7 +164,7 @@ class Issue78SuggestionReplaceTest {
         // User explicitly enabled auto_space_after_suggestion. In Termux app,
         // they should still get the trailing space they asked for.
         // Current impl: returns NO_SPACE_TERMUX, ignoring the user's pref.
-        val current = decideSpaceModeBuggy(
+        val current = decideSpaceMode(
             autoSpaceEnabled = true,    // user wants space
             isSwipeAutoInsert = false,
             termuxModeEnabled = true,
@@ -178,7 +179,7 @@ class Issue78SuggestionReplaceTest {
     fun `BUG B — Termux should honor auto_space_after_suggestion=false`() {
         // Control: user pref OFF. This case happens to work today because
         // the NO_SPACE_USER_DISABLED branch fires before the Termux branch.
-        val current = decideSpaceModeBuggy(
+        val current = decideSpaceMode(
             autoSpaceEnabled = false,
             isSwipeAutoInsert = false,
             termuxModeEnabled = true,
@@ -191,7 +192,7 @@ class Issue78SuggestionReplaceTest {
     @Test
     fun `BUG B — Fennec correctly honors auto_space_after_suggestion (control)`() {
         // Reporter confirms Fennec honors user pref correctly.
-        val current = decideSpaceModeBuggy(
+        val current = decideSpaceMode(
             autoSpaceEnabled = true,
             isSwipeAutoInsert = false,
             termuxModeEnabled = true,
@@ -204,7 +205,7 @@ class Issue78SuggestionReplaceTest {
     @Test
     fun `BUG B — Termux with termux_mode disabled honors user preference`() {
         // If user disables termux_mode globally, Termux app should behave normally.
-        val current = decideSpaceModeBuggy(
+        val current = decideSpaceMode(
             autoSpaceEnabled = true,
             isSwipeAutoInsert = false,
             termuxModeEnabled = false,  // user disabled termux mode globally
