@@ -1,5 +1,8 @@
 package tribixbite.cleverkeys
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.res.Configuration
@@ -22,6 +25,7 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -50,6 +54,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -4396,10 +4402,33 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
+    @OptIn(ExperimentalFoundationApi::class)
     @Composable
     private fun VersionInfoCard() {
+        val context = LocalContext.current
+        val versionInfo = loadVersionInfo()
+        val title = stringResource(R.string.settings_version_title)
+        val buildText = stringResource(R.string.settings_version_build, versionInfo.getProperty("version", "unknown"))
+        val toastCopied = stringResource(R.string.settings_version_copied)
+
         Card(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .semantics { contentDescription = "Copy version info" }
+                .combinedClickable(
+                    onClick = {},
+                    onLongClick = {
+                        val payload = buildString {
+                            appendLine(title)
+                            append(buildText)
+                            versionInfo.getProperty("commit")?.let { append("\n").append(it) }
+                            versionInfo.getProperty("date")?.let { append("\n").append(it) }
+                        }
+                        val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        cm.setPrimaryClip(ClipData.newPlainText("CleverKeys version", payload))
+                        Toast.makeText(context, toastCopied, Toast.LENGTH_SHORT).show()
+                    }
+                ),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceVariant
             )
@@ -4408,16 +4437,14 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 modifier = Modifier.padding(16.dp)
             ) {
                 Text(
-                    text = stringResource(R.string.settings_version_title),
+                    text = title,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground,
                     fontSize = 16.sp
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-
-                val versionInfo = loadVersionInfo()
                 Text(
-                    text = stringResource(R.string.settings_version_build, versionInfo.getProperty("version", "unknown")),
+                    text = buildText,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 12.sp,
                     lineHeight = 16.sp

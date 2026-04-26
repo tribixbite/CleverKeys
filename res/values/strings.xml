@@ -335,6 +335,7 @@
     <string name="settings_version_build">Build: %1$s</string>
     <string name="settings_version_commit">Commit: %1$s</string>
     <string name="settings_version_date">Built: %1$s</string>
+    <string name="settings_version_copied">Version info copied</string>
     <string name="settings_reset_button">🔄 Reset All</string>
     <string name="settings_updates_button">📥 Check Updates</string>
 
