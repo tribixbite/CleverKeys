@@ -1045,6 +1045,27 @@ class ClipboardEditBugTest {
         return Pair(scenario, chv)
     }
 
+    /**
+     * Find the actually-visible EditText in [chv]. Mimics the impl's
+     * `activeEditingEditText` getter (private — not directly accessible).
+     *
+     * After ListView.measureHeightOfChildren() recycles scrap views, the cached
+     * `editingEditText` field can point to a detached/invisible scrap. The impl
+     * recovers via slow-path scan; tests must do the same when manipulating
+     * selection state, otherwise setSelection() lands on the wrong EditText
+     * and paste/cut operations read default selection from the visible widget.
+     */
+    private fun getVisibleEditText(chv: ClipboardHistoryView): EditText? {
+        val cached = getField<EditText>(chv, "editingEditText")
+        if (cached?.visibility == View.VISIBLE && cached.windowToken != null) return cached
+        for (i in 0 until chv.childCount) {
+            val child = chv.getChildAt(i) ?: continue
+            val et = child.findViewById<EditText>(R.id.clipboard_entry_edit_field)
+            if (et != null && et.visibility == View.VISIBLE && et.windowToken != null) return et
+        }
+        return cached
+    }
+
     @Test
     fun paste_insertAtCursorPosition() {
         val (scenario, chv) = launchEditableEntry("Hello World")
@@ -1054,10 +1075,10 @@ class ClipboardEditBugTest {
             instr.runOnMainSync {
                 val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
                 cm.setPrimaryClip(ClipData.newPlainText("test", "PASTED"))
-                val et = getField<EditText>(chv, "editingEditText")!!
+                val et = getVisibleEditText(chv)!!
                 et.setSelection(5)
                 chv.pasteToEditText()
-                result = getField<EditText>(chv, "editingEditText")!!.text.toString()
+                result = getVisibleEditText(chv)!!.text.toString()
             }
             assertEquals("Paste must insert at cursor position", "HelloPASTED World", result)
         } finally { scenario.close() }
@@ -1072,10 +1093,10 @@ class ClipboardEditBugTest {
             instr.runOnMainSync {
                 val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
                 cm.setPrimaryClip(ClipData.newPlainText("test", "Planet"))
-                val et = getField<EditText>(chv, "editingEditText")!!
+                val et = getVisibleEditText(chv)!!
                 et.setSelection(6, 11)
                 chv.pasteToEditText()
-                result = getField<EditText>(chv, "editingEditText")!!.text.toString()
+                result = getVisibleEditText(chv)!!.text.toString()
             }
             assertEquals("Paste must replace selection", "Hello Planet", result)
         } finally { scenario.close() }
@@ -1148,7 +1169,7 @@ class ClipboardEditBugTest {
         try {
             var clipboardContent = ""
             instr.runOnMainSync {
-                val et = getField<EditText>(chv, "editingEditText")!!
+                val et = getVisibleEditText(chv)!!
                 et.setSelection(6, 11)
                 chv.cutFromEditText()
                 val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
