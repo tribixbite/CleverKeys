@@ -1077,11 +1077,14 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                             android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                         )
                     }
-                    // Dim timestamp suffix
+                    // #130: Dim timestamp suffix using theme attr colorSubLabel
+                    // so custom themes propagate instead of a hardcoded system color.
+                    val typed = android.util.TypedValue()
+                    context.theme.resolveAttribute(R.attr.colorSubLabel, typed, true)
+                    val subLabelColor = if (typed.data != 0) typed.data
+                        else androidx.core.content.ContextCompat.getColor(context, android.R.color.secondary_text_dark)
                     spannable.setSpan(
-                        android.text.style.ForegroundColorSpan(
-                            androidx.core.content.ContextCompat.getColor(context, android.R.color.secondary_text_dark)
-                        ),
+                        android.text.style.ForegroundColorSpan(subLabelColor),
                         prefix.length + entry.content.length,
                         spannable.length,
                         android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
