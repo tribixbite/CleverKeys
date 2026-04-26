@@ -22,6 +22,9 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -89,6 +92,7 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
     val manager = remember { ShortSwipeCustomizationManager.getInstance(context) }
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
+    val rootView = LocalView.current
 
     // Load mappings on first composition
     LaunchedEffect(Unit) {
@@ -158,6 +162,17 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
                     }
                 },
                 actions = {
+                    // #134: Show keyboard button — re-opens the IME if it lost focus
+                    IconButton(
+                        onClick = {
+                            focusRequester.requestFocus()
+                            val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                            imm.showSoftInput(rootView, 0)
+                        },
+                        modifier = Modifier.semantics { contentDescription = "Show keyboard" }
+                    ) {
+                        Text("⌨", fontSize = 22.sp)
+                    }
                     // Reset all button
                     IconButton(
                         onClick = {
