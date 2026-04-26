@@ -21,6 +21,25 @@
 4. **Test**: Use spec's testing strategy.
 5. **Update**: Mark TODOs complete in `memory/todo.md`.
 
+## 📚 **SKILL FILES (READ BEFORE TASK MATCHES)**
+
+`.claude/skills/` contains task-specific reference docs. **ALWAYS read the relevant skill BEFORE starting work on a matching topic** — they encode hard-won lessons and exact procedures the main context doesn't reproduce.
+
+| Trigger phrase | Skill file |
+|---|---|
+| "release", "tag", "publish", "version bump", "F-Droid", "fastlane", "changelog" | `.claude/skills/release-process.md` |
+| "clipboard", "pinned", "todo", "tag" (clipboard) | `.claude/skills/clipboard-panel-architecture.md`, `clipboard-tag-system.md`, `clipboard-todo-system.md` |
+| "IME toast", "feedback", "pulse" | `.claude/skills/ime-visual-feedback.md` |
+| "key routing", "edit mode", "search mode" in IME | `.claude/skills/ime-key-routing.md` |
+| "ew-cli", "instrumented test", "emulator.wtf" | `.claude/skills/ew-cli-testing.md` |
+| "dictionary", "VocabularyTrie", "predictor" | `.claude/skills/dictionary-pipeline.md` |
+| "settings", "SharedPreferences" | `.claude/skills/settings-preferences.md` |
+| "wiki", "Astro", "site docs" | `.claude/skills/wiki-documentation.md` |
+| "emoji panel" | `.claude/skills/emoji-panel.md` |
+| "content pane layout" | `.claude/skills/content-pane-layout.md` |
+
+**Release-specific reminder**: When user says any release-related word, READ `.claude/skills/release-process.md` FIRST. It documents the fastlane changelog model (`fastlane/metadata/android/en-US/changelogs/{baseCode}{abi}.txt`), the F-Droid API queries for current state, and the version-code math. Do NOT confuse `metadata/fdroid/tribixbite.cleverkeys.yml` (build recipe) with the fastlane changelogs (release notes).
+
 ---
 
 ## 🎯 **PROJECT OVERVIEW**

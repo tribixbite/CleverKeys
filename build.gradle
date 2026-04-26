@@ -63,7 +63,7 @@ dependencies {
 // =============================================================================
 // UPDATE ONLY THESE THREE VALUES FOR A NEW RELEASE:
 ext.VERSION_MAJOR = 1
-ext.VERSION_MINOR = 3
+ext.VERSION_MINOR = 4
 ext.VERSION_PATCH = 0
 // =============================================================================
 // DERIVED VALUES (auto-calculated, do not edit):

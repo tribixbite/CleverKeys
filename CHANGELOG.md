@@ -19,6 +19,94 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.4.0] - 2026-04-25
+
+### New Features - Media Clipboard
+
+- **Media clipboard (schema v4)**: Copy/paste images, videos, PDFs through the panel
+  - Inline thumbnails for images, MIME icons for other media
+  - Dual export: JSON text-only or ZIP full backup with media
+  - Orphan media cleanup on startup and on import
+  - Per-item size capped at 1 MB to prevent `TransactionTooLargeException`
+- **Independent Pinned & Todos tabs**: Each tab has its own database table (true COPY semantics)
+  - Per-entry tags with inline tag editor
+  - Todo status cycle: active → planned → completed; one-tap done toggle
+  - Tab-aware delete; pinned/todo items protected from expiry and size cleanup
+- **Inline editing**: Tap pencil on any text entry to edit, save, cancel, or delete
+  - Search filter preserved when entering edit mode
+  - UI locked during edit to prevent silent data loss
+- **Regex search**: VSCode-style `.*` toggle with `*`/`?` glob shorthand, invalid regex shows red
+- **Filter dialog overhaul**: Per-tab filters (date / status / tags) with OR / AND tag match toggle
+- **Three visibility toggles**: text-only mode, Pinned tab, Todos tab — independent
+
+### Fixed
+
+- **#71 Clipboard freeze on open** — async DB load removes the 2–3 second UI thread hang
+- **Entry Duration "Never expire"** honored end-to-end; stale 7-day expiries rescued
+- **#70 Profile/clipboard import** — scoped-storage fallbacks + `json_base64` bypass
+- **Tag panel input capture** — added tag-mode delegation to `KeyEventReceiverBridge`
+- **Clipboard search bar text invisible** — wrong theme context for resolution
+- **IME toasts replaced** with tab-icon pulse (toasts render behind keyboard panel)
+- **Edit-mode key routing** — arrow keys, Enter, paste, cut, select-all all work on pinned/todo tabs
+- **Tag filter "match any/all"** no longer overlaps in narrow panels
+- **F-Droid `Version:`/`VersionCode:`** lines restored to release body for auto-update
+
+### Performance
+
+- **Per-language predictor eviction** on language switch (configured languages retained)
+- **VocabularyTrie compacted** (~34 MB savings per trie instance)
+- **Coil image cache** capped at 32 MB (was ~250 MB default)
+- **ContentObserver** replaces 500 ms IME-status polling
+- **Heap-allocation storms** in clipboard size calculations eliminated
+- **Clipboard import** wrapped in single transaction
+- **Gradle daemon** enabled
+
+### Web Demo & Site
+
+- **cleverkeys.app** rewritten in Astro 5 + Svelte 5 + Tailwind v4
+- **43 wiki pages** migrated to Astro content collections
+- **ONNX swipe demo** uses APK-shipped encoder/decoder weights
+- **Demo settings panel**: dictionary, beam width, batched beam search, auto-insert, timing log
+
+### Testing
+
+- 1046 JVM tests + ~1100 instrumented tests on Pixel 7 / API 34
+- 55 + 48 clipboard feature tests, 45 inline-edit tests, 31 regex-search tests, 28 v1.3.0-review-fix regression tests
+
+---
+
+## [1.3.0] - 2026-03-16
+
+### New Features
+
+- **Offline GIF panel**: Category browsing, FTS4 search, community pack import via file picker
+  - No internet permission required
+  - Pack management in Settings
+- **Backspace undo autocorrect (#110)**: Press backspace after autocorrect to revert to original word
+- **Backspace undo swipe (#110)**: Fixed existing feature (was broken since flag was cleared too early)
+- **Auto space before suggestion (#82)**: Toggle leading space on tapped suggestions
+- **Swipe layout guard (#9)**: Auto-disables swipe typing on non-QWERTY layouts
+- **GIF pack builder**: `make_pack.py` for creating custom packs
+
+### Fixed
+
+- **Contraction suggestion flicker** — Dual prediction pipeline symmetry. Both typing and cursor sync paths produce identical output. SuggestionBar deduplicates.
+- **Paired contraction prefix guard** — "t" no longer injects "t's" above "the"
+- **Clipboard dedup reorder (#108)** — Re-copied entries move to top
+- **Terminal paste (#113)** — Uses clipboard-read for Termux
+- **Autofill chip display (#109)** — No longer cut off on password fields
+- **Custom theme background (#92)** — Color applied to keyboard view
+- **Compose key + arrows (#104)** — Short swipe nav works with compose off
+- **Settings search scroll crash** — MonotonicFrameClock fix
+- **Profile import (#70)** — MediaStore fallback for cross-app files
+- **Cross-app text leaking** — contextTracker cleared on input finish
+
+### Testing
+
+- 987 JVM + 887 instrumented tests on Pixel 7 / API 34
+
+---
+
 ## [1.2.9] - 2026-01-15
 
 ### New Features - Timestamp Keys
