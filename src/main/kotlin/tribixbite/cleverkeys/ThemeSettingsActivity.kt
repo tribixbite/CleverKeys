@@ -31,6 +31,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -1002,11 +1004,39 @@ fun ColorPickerDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // Hex value display
-                Text(
-                    String.format("#%08X", currentColor.toArgb()),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                // #93: Editable hex input — accepts #RRGGBB or #AARRGGBB and updates HSL sliders
+                var hexText by remember { mutableStateOf(String.format("#%08X", currentColor.toArgb())) }
+                val expectedHex = String.format("#%08X", currentColor.toArgb())
+                LaunchedEffect(expectedHex) {
+                    if (hexText.uppercase() != expectedHex.uppercase()) {
+                        hexText = expectedHex
+                    }
+                }
+                OutlinedTextField(
+                    value = hexText,
+                    onValueChange = { newText ->
+                        hexText = newText
+                        val match = Regex("#?([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})").matchEntire(newText.trim())
+                        if (match != null) {
+                            val hex = match.groupValues[1]
+                            val argb = if (hex.length == 6) {
+                                (0xFF000000.toInt()) or hex.toLong(16).toInt()
+                            } else {
+                                hex.toLong(16).toInt()
+                            }
+                            val parsed = Color(argb)
+                            val hsl = parsed.toHsl()
+                            hue = hsl[0]
+                            saturation = hsl[1]
+                            lightness = hsl[2]
+                            alpha = parsed.alpha
+                        }
+                    },
+                    label = { Text("Hex") },
+                    singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .semantics { contentDescription = "Hex color input" }
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
