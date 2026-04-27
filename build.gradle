@@ -368,6 +368,7 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.ClipboardFixesJvmTest',
     'tribixbite.cleverkeys.ClipboardEditJvmTest',
     'tribixbite.cleverkeys.Issue78SuggestionReplaceTest',
+    'tribixbite.cleverkeys.Issue118EmojiOverflowTest',
     'tribixbite.cleverkeys.BucketBSourceContractTest',
     // SwipePrunerTest excluded: requires android.util.Log (MockK + Robolectric)
   ]

@@ -214,8 +214,9 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
             setPadding(horizontalPadding, verticalPadding, horizontalPadding, verticalPadding)
             // Ensure minimum height for consistent row spacing
             minHeight = (36 * density).toInt()
-            // Ellipsize very long emoticons
-            ellipsize = android.text.TextUtils.TruncateAt.END
+            // #118: ellipsize is set per-cell in setEmoji() — only emoticons
+            // truncate; real emojis must clip so wider-than-cell glyphs on
+            // high-DPI / custom-font devices don't collapse to "…".
         }
 
         fun setEmoji(emoji: Emoji) {
@@ -238,9 +239,13 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
                     else -> 6f        // Very long: ¯\_(ツ)_/¯
                 }
                 setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, scaledSize)
+                ellipsize = android.text.TextUtils.TruncateAt.END
             } else {
                 // Regular emoji - use default size from theme
                 setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, defaultTextSize)
+                // #118: clip wider-than-cell emoji glyphs instead of collapsing
+                // them to "…" on high-DPI / custom-font devices.
+                ellipsize = null
             }
         }
 
