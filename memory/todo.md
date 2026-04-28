@@ -1,5 +1,65 @@
 # CleverKeys TODO
 
+## ✅ High-signal test expansion (2026-04-28)
+
+After reviewing whether to mechanically expand to ~400 mostly-display
+Compose tests (Gemini's enterprise list T1-T80 was the seed), pivoted
+to three high-signal flavors that catch bug classes mechanical
+display tests miss. 30 new tests, 30/30 green via ew-cli.
+
+- **Suggestion state-machine integration** (12 tests,
+  `SuggestionStateMachineIntegrationTest`) — wires real
+  `SuggestionHandler` + `BaseInputConnection` + `WordPredictor` and
+  exercises end-state of typing → backspace, suggestion selection,
+  capitalize-I commit, raw:/exact_add: prefix handling, manual
+  selection (#63), context window FIFO eviction at MAX_CONTEXT_WORDS=2.
+  Mirrors the `ContractionFlickerIntegrationTest` setup pattern for
+  OOM-resilient shared `WordPredictor` cache.
+- **Dialog-truth Compose** (10 tests, `DialogTruthComposeTest`) —
+  isolates `ColorPickerDialog` and `CustomThemeDialog` via
+  `createComposeRule().setContent`, captures callbacks with mock
+  lambdas, asserts that Cancel does NOT fire the commit callback and
+  Apply/Create DOES (with the right value). Locks contracts that
+  display-only tests cannot enforce. Includes the
+  "Apply does NOT auto-dismiss" invariant that keeps callers in
+  control of the close cycle.
+- **Rendering-truth instrumented** (8 tests,
+  `RenderingTruthInstrumentedTest`) — instantiates real `EmojiView`
+  and `SuggestionBar`, asserts post-set-data structural state:
+  `EmojiView.ellipsize == null` for real emojis (#118 runtime
+  guard), `TruncateAt.END` for emoticons, single-line invariant,
+  SuggestionBar dedup + clear semantics. Replacement for Roborazzi
+  goldens — Termux ARM64 doesn't reliably ship Robolectric's
+  nativeruntime, so pixel diffs would be brittle, but the
+  structural-state assertions catch the same regression class.
+
+### Hard-won Compose/IC test lessons
+
+- **`BaseInputConnection.commitText` writes to the IC's own internal
+  Editable, NOT to `targetView.getEditableText()`.** The
+  `EditText.text` you pass to `BaseInputConnection(view, true)` stays
+  empty after commitText. Read back via `inputConnection.editable`
+  for ground truth. Burned ~2 ew-cli iterations on this; documenting
+  here because the AOSP behavior surprised both our prior
+  `ContractionFlickerIntegrationTest` and Gemini's test plan.
+- **`PredictionContextTracker.commitWord(word)` lowercases unconditionally**
+  before adding to the context window. So capitalize-I
+  (`autocapitalize_i_words`) appears at the IC commit boundary,
+  never in `getContextWords()`. Tests asserting capitalization MUST
+  read back via the IC's editable.
+- **`MAX_CONTEXT_WORDS = 2`** in PredictionContextTracker — third
+  selection evicts the oldest. Tests expecting 3+ words in context
+  are wrong about the prod design.
+- **`PredictionCoordinator` lazy-inits `dictionaryManager` only after
+  `initializeWordPredictor()` runs.** Reflection-injecting just
+  `wordPredictor` leaves `dictionaryManager` null; `addUserWord`,
+  `refreshCustomWords`, etc. silently no-op. Inject both fields.
+- **`onNodeWithText("My Theme")` does NOT find the
+  `OutlinedTextField` itself** — only the placeholder Text node,
+  which has no `SetText` semantic action. Use
+  `composeTestRule.onNode(hasSetTextAction()).performTextInput(...)`
+  to drive Compose text fields where there's no `Modifier.testTag`.
+
 ## ✅ Demo UX + perf overhaul (2026-04-19)
 
 Closed out the "gorgeous demo" polish pass:
