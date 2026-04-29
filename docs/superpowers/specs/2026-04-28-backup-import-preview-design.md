@@ -74,7 +74,7 @@ class BackupRestoreManager(context: Context) {
     fun buildSettingsImportPlan(uri: Uri, prefs: SharedPreferences): SettingsImportPlan
     fun applySettingsImportPlan(
         plan: SettingsImportPlan,
-        excludedKeys: Set<String>,
+        excludedKeys: Set<String>,         // filters only plan.changes rows; plan.internalRemoves always execute
         shortSwipeMode: ShortSwipeImportMode,
         prefs: SharedPreferences
     ): ImportResult
@@ -123,7 +123,7 @@ The Manager wraps these with thin URI-reading + snapshot-building methods that a
 ### Apply semantics
 
 - Build a single `SharedPreferences.Editor`, dispatch all `EditorOp.Put` and `EditorOp.Remove` calls, then call `editor.commit()` ONCE. Synchronous, returns boolean — converted into `ImportResult.applied` count.
-- Drift detection: immediately before `commit()`, snapshot `prefs.all` again; for each un-excluded key, compare the plan's `current` field to the now-current value. Log one line `BackupRestore: N keys drifted between preview and apply` to logcat. No UI surfacing.
+- Drift detection: immediately before `commit()`, snapshot `prefs.all` again; for each un-excluded key, compare the plan's `current` field to the now-current value. Log one line `BackupRestore: N keys drifted between preview and apply` to logcat. **The user's selection is always honored — drifted keys are still written.** No UI surfacing; the log line is for support diagnostics only. Drift count returned in `ImportResult.driftCount`.
 - Dict apply uses the same "single editor + commit" pattern, replacing today's four separate `apply()` calls (BackupRestoreManager.kt:1248, 1271, 1298, 1329) — fixes existing partial-state-on-OOM risk.
 - `applySettingsImportPlan` separately invokes `shortSwipeManager.importFromJson(rawJson, merge = (mode == MERGE))` only if `mode != SKIP`. Mode `REPLACE` calls with `merge=false`. Mode `MERGE` calls with `merge=true` — this **also fixes the pre-existing latent bug** where `importConfig` line 597 hardcoded `merge=false`.
 
@@ -139,7 +139,7 @@ when (op) {
         is PrefValue.FloatV  -> editor.putFloat(op.key, op.value.v)
         is PrefValue.Str     -> editor.putString(op.key, op.value.v)
         is PrefValue.JsonBlob -> editor.putString(op.key, op.value.raw)
-        PrefValue.Unset      -> editor.remove(op.key)   // unreachable for Puts; included for exhaustiveness
+        PrefValue.Unset      -> error("PrefValue.Unset is illegal inside EditorOp.Put — use EditorOp.Remove(key) instead")
     }
     is EditorOp.Remove -> editor.remove(op.key)
 }
@@ -191,7 +191,7 @@ legacyUserWords?.forEach { (w, f) -> merged.putIfAbsent(LangWord("en", w), f) }
 
 Naive `Map.plus` would give last-writer-wins — opposite of current behavior. Documented in code.
 
-`LangWord(lang, word)` keeps case-sensitive (matches current behavior). "FOO" and "foo" remain separate entries.
+`LangWord(lang, word)` keeps case-sensitive (matches current behavior). "FOO" and "foo" remain separate entries. **Implication for the preview UI**: an import that contains both "foo" and "FOO" will render two distinct rows under the same language. This matches the current dictionary import semantics — neither is dropped. Tests should cover this case explicitly (`buildDictPlan_caseDifferentVariants_renderAsDistinctEntries`).
 
 ### OOM safety
 
@@ -270,6 +270,10 @@ Export complete.
 • Custom words: N (across L languages)
 • Disabled words: D
 ```
+
+Dict **import** result reuses the same shape; counts:
+- `Applied = (mergedCustomWordsByLang.flatten().size - excludedCustom.size) + (mergedDisabledWordsByLang.flatten().size - excludedDisabled.size)`
+- `Excluded by you = excludedCustom.size + excludedDisabled.size`
 
 `exportConfig` modified to return `Int` count of exported preference entries. `exportDictionaries` already counts these internally (line 1127, 1146) but discards them — surface in return value.
 
@@ -351,13 +355,15 @@ If `buildPlan` returns a plan with `changes.isEmpty() && parseSkippedKeys.isEmpt
 `BackupRestoreActivityComposeTest` (extend existing):
 - empty deltas skip preview, show result directly
 - export result dialog shows count
-- headless Intent path bypasses preview (regression guard)
+
+`BackupRestoreManagerHeadlessTest` (MockK — better seam than Compose UI for this assertion):
+- Headless Intent path: invoking `importConfig(uri, prefs)` directly produces the same `ImportResult` shape as `applySettingsImportPlan(plan, emptySet(), MERGE, prefs)` — i.e., legacy public API delegates to build+apply with no exclusions and no UI hooks. Regression guard for Termux automation.
 
 ## Files
 
 | Status | File | Δ lines |
 |---|---|---|
-| Modified | `BackupRestoreManager.kt` | +400 (~25%) |
+| Modified | `BackupRestoreManager.kt` (currently 1615 lines) | +400 (~25%) |
 | Modified | `BackupRestoreActivity.kt` | +80 |
 | New | `BackupRestorePreviewDialogs.kt` | ~450 |
 | New | `BackupRestoreViewModel.kt` | ~50 |
