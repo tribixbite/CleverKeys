@@ -325,7 +325,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     // Neural model config settings
     private var neuralResamplingMode by mutableStateOf("discard")
-    private var neuralUserMaxSeqLength by mutableStateOf(0)
 
     // Multi-language settings
     private var multiLangEnabled by mutableStateOf(false)
@@ -484,7 +483,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             SearchableSetting("Swipe on Password Fields", listOf("password", "swipe", "security"), "Neural Prediction", expandSection = { neuralSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "swipe_password"),
             SearchableSetting("Beam Width", listOf("accuracy", "prediction", "candidates", "beam"), "Neural Prediction", expandSection = { neuralSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "beam_width"),
             SearchableSetting("Confidence Threshold", listOf("accuracy", "filter", "confidence"), "Neural Prediction", expandSection = { neuralSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "confidence_threshold"),
-            SearchableSetting("Max Sequence Length", listOf("sequence", "length", "maximum", "resampling"), "Neural Prediction", expandSection = { neuralSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "max_seq_length"),
             SearchableSetting("ONNX Threads", listOf("threads", "cpu", "xnnpack", "performance", "onnx"), "Neural Prediction", NeuralSettingsActivity::class.java, gatedBy = "swipe_typing", settingId = "onnx_threads"),
 
             // ==================== WORD PREDICTION & AUTOCORRECT ====================
@@ -4062,19 +4060,13 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     }
                 }
 
-                // Max Sequence Length Override (advanced neural setting)
-                SettingsSlider(
-                    title = "Max Sequence Length Override",
-                    description = "Override model's max trajectory length (0 = use default 250)",
-                    value = neuralUserMaxSeqLength.toFloat(),
-                    valueRange = 0f..400f,
-                    steps = 40,
-                    onValueChange = {
-                        neuralUserMaxSeqLength = it.toInt()
-                        saveSetting("neural_user_max_seq_length", neuralUserMaxSeqLength)
-                    },
-                    displayValue = if (neuralUserMaxSeqLength == 0) "Default" else "$neuralUserMaxSeqLength"
-                )
+                // #136: "Max Sequence Length Override" slider removed.
+                // The encoder ONNX graph is exported with max_seq_length=250 baked
+                // in. A user-set value > 250 caused every swipe to crash with
+                // ORT_INVALID_ARGUMENT (got: <user value>, expected: 250). Any
+                // legacy stored pref is now clamped at the orchestrator level.
+                // Setting key `neural_user_max_seq_length` is preserved in Config
+                // so backup/restore round-trips still work.
 
                 Button(
                     onClick = { openCalibration() },
@@ -5088,7 +5080,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
         // Neural model config settings
         neuralResamplingMode = prefs.getSafeString("neural_resampling_mode", Defaults.NEURAL_RESAMPLING_MODE)
-        neuralUserMaxSeqLength = Config.safeGetInt(prefs, "neural_user_max_seq_length", Defaults.NEURAL_USER_MAX_SEQ_LENGTH)
+        // #136: neural_user_max_seq_length pref is preserved in Config for
+        // backup/restore round-trips, but no longer surfaced in this UI —
+        // values >250 crash the encoder. SwipePredictorOrchestrator clamps
+        // any stored value to MODEL_MAX_SEQUENCE_LENGTH at runtime.
 
         // Multi-language settings
         multiLangEnabled = prefs.getSafeBoolean("pref_enable_multilang", Defaults.ENABLE_MULTILANG)

@@ -32,6 +32,12 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
     companion object {
         private const val TAG = "SwipePredictorOrchestrator"
         private const val TRAJECTORY_FEATURES = 6
+
+        // The encoder ONNX graph has its trajectory_features input shape baked
+        // in at export time (see model_config.json: max_seq_length=250). Feeding
+        // a longer tensor causes ORT_INVALID_ARGUMENT — see issue #136. Any
+        // user-supplied override MUST be clamped to this ceiling.
+        const val MODEL_MAX_SEQUENCE_LENGTH = 250
         private val instanceLock = Any()
         @Volatile private var instance: SwipePredictorOrchestrator? = null
 
@@ -79,7 +85,7 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
     private var adaptiveWidthStep = Defaults.NEURAL_ADAPTIVE_WIDTH_STEP
     private var scoreGapStep = Defaults.NEURAL_SCORE_GAP_STEP
     private var temperature = Defaults.NEURAL_TEMPERATURE
-    private var maxSequenceLength = 250
+    private var maxSequenceLength = MODEL_MAX_SEQUENCE_LENGTH
     private var enableVerboseLogging = false
     private var showRawOutput = false
     private var batchBeams = false
@@ -110,8 +116,13 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
             showRawOutput = it.swipe_debug_show_raw_output
             batchBeams = it.neural_batch_beams
             
+            // #136: clamp user override to the model's exported max seq length.
+            // Older builds shipped a slider that allowed up to 400, which produces
+            // ORT_INVALID_ARGUMENT on every swipe once the model encoder receives a
+            // larger trajectory tensor than its graph was exported for.
             if (it.neural_user_max_seq_length > 0) {
                 maxSequenceLength = it.neural_user_max_seq_length
+                    .coerceAtMost(MODEL_MAX_SEQUENCE_LENGTH)
             }
             
             it.neural_resampling_mode?.let { mode ->
