@@ -458,13 +458,17 @@ Also at the top of the file: `import com.google.gson.JsonParser`.
         return when {
             p.isBoolean -> PrefValue.Bool(p.asBoolean)
             p.isNumber -> {
-                val n = p.asNumber
-                // Heuristic: integer-valued numbers map to IntV; fractional to FloatV.
-                // Matches Gson's default — apps that need Float-typed integer values
-                // (rare) explicitly mark them; we mirror BackupRestoreManager's
-                // existing behavior at importPreference line 658-683.
-                if (n.toDouble().let { it == it.toInt().toDouble() }) PrefValue.IntV(n.toInt())
-                else PrefValue.FloatV(n.toFloat())
+                // Type dispatch is BY KEY, not by JSON value shape. The legacy
+                // importPreference (BackupRestoreManager.kt:658-683) calls
+                // `isFloatPreference(key)` to decide between putInt and putFloat
+                // — using the JSON value's fractional part would corrupt every
+                // float-typed pref whose runtime value happens to be an integer
+                // multiple (e.g. swipe_trail_width=5.0 → IntV(5) → ClassCastException
+                // on next prefs.getFloat). SettingsValidation.isFloatPreference
+                // is the parity-checked source of truth (Task 1.6 ports it from
+                // BackupRestoreManager.kt:976-1009).
+                if (SettingsValidation.isFloatPreference(key)) PrefValue.FloatV(p.asFloat)
+                else PrefValue.IntV(p.asInt)
             }
             p.isString -> PrefValue.Str(p.asString)
             else -> null
@@ -710,6 +714,49 @@ object SettingsValidation {
     fun isInternalPreference(key: String): Boolean = key in INTERNAL_KEYS
 
     /**
+     * Mirrors BackupRestoreManager.isFloatPreference (lines 976-1009).
+     * Drives the IntV vs FloatV dispatch in
+     * SettingsImportPlanBuilder.parsePrefValue — using JSON shape instead of
+     * key membership corrupts integer-multiple float values (e.g.
+     * swipe_trail_width=5.0). Port the FULL when-block + the two prefix
+     * patterns; the test isFloatPreferenceParityWithLegacy (Task 1.6.5)
+     * locks the set against drift.
+     */
+    fun isFloatPreference(key: String): Boolean {
+        if (key.startsWith("neural_prefix_boost_multiplier_") ||
+            key.startsWith("neural_prefix_boost_max_")) return true
+        return when (key) {
+            // PORT VERBATIM from BackupRestoreManager.kt:983-1006. The keys to
+            // include are the union of these categories (worked example: copy
+            // the entire when-block as-is):
+            //   - character_size, key_vertical_margin, key_horizontal_margin,
+            //     custom_border_line_width
+            //   - prediction_context_boost, prediction_frequency_scale
+            //   - autocorrect_char_match_threshold
+            //   - neural_confidence_threshold
+            //   - swipe_rare_words_penalty, swipe_common_words_boost,
+            //     swipe_top5000_boost
+            //   - slider_speed_smoothing, slider_speed_max
+            //   - swipe_min_distance, swipe_min_key_distance,
+            //     swipe_noise_threshold, swipe_high_velocity_threshold
+            //   - neural_beam_score_gap, neural_beam_prune_confidence,
+            //     neural_beam_alpha, neural_temperature, neural_frequency_weight
+            //   - pref_language_detection_sensitivity
+            //   - swipe_trail_width, swipe_trail_glow_radius
+            //   - neural_prefix_boost_multiplier, neural_prefix_boost_max
+            //
+            // Replace this comment with the actual full when arms:
+            //   "character_size", "key_vertical_margin", ..., -> true
+            //   else -> false
+            else -> error(
+                "isFloatPreference: port the full key list from " +
+                "BackupRestoreManager.kt:983-1006. Until the port is done, " +
+                "every test exercising parsePrefValue with a float key fails."
+            )
+        }
+    }
+
+    /**
      * Returns null if the proposed value is valid for the key, or an
      * error message suitable for `SkippedKey.reason` if not.
      *
@@ -768,6 +815,48 @@ The deliberate `TODO()` call is a hard fail — if you commit without porting al
         )
         plan.parseSkippedKeys.forEach {
             assertThat(it.reason).isEqualTo("internal preference")
+        }
+    }
+
+    @Test
+    fun floatKey_dispatchesToFloatVNotIntV_evenWhenJsonValueIsIntegerMultiple() {
+        // Regression for the round-3 reviewer's correctness finding:
+        // SharedPreferences throws ClassCastException if a key historically
+        // stored as Float is overwritten with putInt. The dispatch is BY KEY.
+        // swipe_trail_width is in isFloatPreference's allowlist; even when
+        // the import JSON has 5.0 (no fractional part), it must produce
+        // FloatV, NOT IntV.
+        val json = """{"preferences":{"swipe_trail_width":5.0}}"""
+        val plan = SettingsImportPlanBuilder.fromJson(json, emptyMap(), screen)
+        val change = plan.changes.single { it.key == "swipe_trail_width" }
+        assertThat(change.proposed).isInstanceOf(PrefValue.FloatV::class.java)
+        assertThat((change.proposed as PrefValue.FloatV).v).isEqualTo(5.0f)
+    }
+
+    @Test
+    fun nonFloatKey_dispatchesToIntVForIntegerJson() {
+        val json = """{"preferences":{"key_height":50}}"""
+        val plan = SettingsImportPlanBuilder.fromJson(json, emptyMap(), screen)
+        val change = plan.changes.single { it.key == "key_height" }
+        assertThat(change.proposed).isEqualTo(PrefValue.IntV(50))
+    }
+
+    @Test
+    fun isFloatPreferenceParityWithLegacy() {
+        // Spot-check the ported set covers the categories listed in the
+        // legacy method's source comments. Update as the legacy method evolves.
+        val expectedFloatKeys = listOf(
+            "character_size", "neural_temperature", "swipe_trail_width",
+            "neural_beam_alpha", "swipe_min_distance",
+            "neural_prefix_boost_multiplier_en",   // prefix pattern
+            "neural_prefix_boost_max_de",           // prefix pattern
+        )
+        expectedFloatKeys.forEach {
+            assertThat(SettingsValidation.isFloatPreference(it)).isTrue()
+        }
+        val expectedNonFloatKeys = listOf("key_height", "version", "layouts", "primary_language")
+        expectedNonFloatKeys.forEach {
+            assertThat(SettingsValidation.isFloatPreference(it)).isFalse()
         }
     }
 
@@ -2211,6 +2300,15 @@ class LanguagePreferenceKeysReverseLookupTest {
         assertThat(LanguagePreferenceKeys.languageFromCustomWordsKey("custom_words_")).isNull()
         assertThat(LanguagePreferenceKeys.languageFromDisabledWordsKey("disabled_words_")).isNull()
     }
+
+    @Test
+    fun reverseLookup_caseFolding_consistentWithCustomWordsKey() {
+        // customWordsKey lowercases its input, so "EN" produces "custom_words_en".
+        // The reverse must round-trip through that lowercased form, NOT the raw input.
+        val key = LanguagePreferenceKeys.customWordsKey("EN")
+        assertThat(key).isEqualTo("custom_words_en")
+        assertThat(LanguagePreferenceKeys.languageFromCustomWordsKey(key)).isEqualTo("en")
+    }
 }
 ```
 
@@ -3402,26 +3500,42 @@ git commit -m "feat: dictionary import goes through preview dialog — opus 4.7"
 
 - [ ] **Step 5.4.1: Modify `exportConfig` signature.** Find the existing method (search for `fun exportConfig(uri: Uri,`). The legacy body builds a JsonObject of preferences, wraps it with metadata (app_version, screen dimensions), and writes to the URI. Refactor to delegate the per-key serialization to the new `SettingsExporter.buildPreferencesJson` (Task 5.4.2 below), then return the count.
 
+The legacy method (BackupRestoreManager.kt:367+) builds metadata inline and writes via `openOutputStream(uri).use { ... }`. There is NO `buildExportMetadata()` or `writeJsonToUri()` helper — port the inline pattern verbatim:
+
 ```kotlin
 fun exportConfig(uri: Uri, prefs: SharedPreferences): Int {
     val (preferencesObj, count) = SettingsExporter.buildPreferencesJson(prefs.all)
 
-    // PRESERVE the existing metadata wrapping from the legacy method:
-    //   - "metadata": {"app_version", "screen_width", "screen_height", "timestamp"}
-    //   - "preferences": <preferencesObj>
-    //   - "short_swipe_customizations": <existing call into shortSwipeManager.exportToJson() if any>
-    val root = JsonObject().apply {
-        add("metadata", buildExportMetadata())   // existing helper or inlined logic
-        add("preferences", preferencesObj)
-        // existing short_swipe_customizations export, if the legacy method writes it
+    val root = JsonObject()
+    val metadata = JsonObject()
+    val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+    metadata.addProperty("app_version", packageInfo.versionName)
+    metadata.addProperty("export_date",
+        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).format(Date()))
+    val dm = context.resources.displayMetrics
+    metadata.addProperty("screen_width", dm.widthPixels)
+    metadata.addProperty("screen_height", dm.heightPixels)
+    root.add("metadata", metadata)
+    root.add("preferences", preferencesObj)
+
+    // PRESERVE any short-swipe export the legacy method already produced.
+    // If the existing method calls shortSwipeManager.exportToJson() and adds
+    // a "short_swipe_customizations" entry, keep that block verbatim. If it
+    // does NOT, do not add it now — out of scope.
+
+    openOutputStream(uri)?.use { outputStream ->
+        outputStream.writer().use { writer ->
+            gson.toJson(root, writer)
+            writer.flush()
+        }
     }
-    writeJsonToUri(uri, root.toString())   // existing helper
+
     Log.i(TAG, "Exported $count preferences to $uri")
     return count
 }
 ```
 
-If the legacy `exportConfig` did not previously write `short_swipe_customizations` to the export, do not add it — the spec only requires that import preview AND export counts work; export schema changes are out of scope.
+`gson` is the existing field on `BackupRestoreManager`; `openOutputStream(uri)` is the existing private helper. Both already exist — do not redefine.
 
 - [ ] **Step 5.4.2: Extract `SettingsExporter` (mirrors `SettingsImportApplier`).**
 
@@ -3576,30 +3690,91 @@ data class DictionaryExportSummary(
 )
 ```
 
-- [ ] **Step 5.5.2: Modify `exportDictionaries` signature.** Existing function body retained verbatim; only the trailing accumulator + return changed:
+- [ ] **Step 5.5.2: Modify `exportDictionaries` signature.** The legacy method (BackupRestoreManager.kt:1107-1196) ALREADY has `totalCustomWords` and `totalDisabledWords` local accumulators — just expose them via the new return type. Add a `languagesWithData` set that captures every language that contributed at least one word.
 
 ```kotlin
 fun exportDictionaries(uri: Uri): DictionaryExportSummary {
+    val languagesWithData = mutableSetOf<String>()
     var totalCustomWords = 0
     var totalDisabledWords = 0
-    val languagesWithData = mutableSetOf<String>()
+    try {
+        val root = JsonObject()
+        val metadata = JsonObject()
+        val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+        metadata.addProperty("app_version", packageInfo.versionName)
+        metadata.addProperty("export_date",
+            SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).format(Date()))
+        metadata.addProperty("type", "dictionaries")
+        metadata.addProperty("format_version", 2)
+        root.add("metadata", metadata)
 
-    // ... preserve the existing block that builds custom_words_by_language
-    // and disabled_words_by_language sub-objects. Inside each per-language
-    // loop, increment totalCustomWords += langWords.size and add the lang
-    // to languagesWithData. The legacy method already iterates these — find
-    // the existing accumulators and rename them to match if needed.
+        val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
+        LanguagePreferenceKeys.migrateToLanguageSpecific(prefs)
 
-    // ... preserve the existing JSON write to URI (writeJsonToUri). Then:
-    return DictionaryExportSummary(
-        customWordsCount = totalCustomWords,
-        disabledWordsCount = totalDisabledWords,
-        languageCount = languagesWithData.size,
-    )
+        // Custom words per language (v2 format)
+        val customWordsPerLang = JsonObject()
+        for (lang in LanguagePreferenceKeys.getLanguagesWithCustomWords(prefs)) {
+            val langKey = LanguagePreferenceKeys.customWordsKey(lang)
+            val wordsJson = prefs.getString(langKey, "{}")
+            if (wordsJson != null && wordsJson != "{}") {
+                customWordsPerLang.add(lang, JsonParser.parseString(wordsJson))
+                try {
+                    val wordsMap = JsonParser.parseString(wordsJson).asJsonObject
+                    if (wordsMap.size() > 0) {
+                        totalCustomWords += wordsMap.size()
+                        languagesWithData += lang
+                    }
+                } catch (_: Exception) { /* ignore count errors */ }
+            }
+        }
+        root.add("custom_words_by_language", customWordsPerLang)
+
+        // Disabled words per language (v2 format)
+        val disabledWordsPerLang = JsonObject()
+        for (lang in LanguagePreferenceKeys.getLanguagesWithDisabledWords(prefs)) {
+            val langKey = LanguagePreferenceKeys.disabledWordsKey(lang)
+            val wordsSet = prefs.getStringSet(langKey, emptySet()) ?: emptySet()
+            if (wordsSet.isNotEmpty()) {
+                val wordsArray = JsonArray()
+                for (word in wordsSet) wordsArray.add(word)
+                disabledWordsPerLang.add(lang, wordsArray)
+                totalDisabledWords += wordsSet.size
+                languagesWithData += lang
+            }
+        }
+        root.add("disabled_words_by_language", disabledWordsPerLang)
+
+        // Legacy backward-compat blocks (preserve verbatim from the legacy method).
+        val enCustomWordsJson = prefs.getString(LanguagePreferenceKeys.customWordsKey("en"), "{}")
+        if (enCustomWordsJson != null && enCustomWordsJson != "{}") {
+            try {
+                val enWordsMap = JsonParser.parseString(enCustomWordsJson).asJsonObject
+                val userWords = JsonArray()
+                for ((word, freq) in enWordsMap.entrySet()) {
+                    val wordObj = JsonObject()
+                    wordObj.addProperty("word", word)
+                    wordObj.addProperty("frequency", freq.asInt)
+                    userWords.add(wordObj)
+                }
+                root.add("user_words", userWords)
+            } catch (e: Exception) { Log.w(TAG, "Failed to export legacy format", e) }
+        }
+        val enDisabledWords = prefs.getStringSet(LanguagePreferenceKeys.disabledWordsKey("en"), emptySet()) ?: emptySet()
+        val disabledWords = JsonArray()
+        for (word in enDisabledWords) disabledWords.add(word)
+        root.add("disabled_words", disabledWords)
+
+        openOutputStream(uri)?.use { it.writer().use { w -> gson.toJson(root, w); w.flush() } }
+        Log.i(TAG, "Exported dictionaries: $totalCustomWords custom + $totalDisabledWords disabled across ${languagesWithData.size} languages")
+    } catch (e: Exception) {
+        Log.e(TAG, "Dictionary export failed", e)
+        throw e
+    }
+    return DictionaryExportSummary(totalCustomWords, totalDisabledWords, languagesWithData.size)
 }
 ```
 
-If the existing function has callers other than `BackupRestoreActivity.performExportDictionaries`, update them to either ignore the new return (`exportDictionaries(uri)` without the assignment is still legal) or consume the summary.
+If the existing function has callers other than `BackupRestoreActivity.performExportDictionaries` (search the codebase via Grep), update them — `Unit` callers simply ignore the new `DictionaryExportSummary` return.
 
 - [ ] **Step 5.5.3: Update `performExportDictionaries` to render.**
 
@@ -3639,35 +3814,33 @@ git commit -m "feat: dictionary export returns DictionaryExportSummary with real
 
 - [ ] **Step 5.6.1: Add a minimal test-factory seam in the Activity.**
 
-The Activity instantiates `BackupRestoreManager(this)` directly. To let Compose tests inject a fake, add a companion-object hook:
+The Activity instantiates `BackupRestoreManager(this)` directly inside `onCreate` (BackupRestoreActivity.kt:89). To let Compose tests inject a fake, add a `var` in the existing companion object and consult it during construction. Anchor exact insertion points:
+
+**Insertion 1**: At the END of the existing `companion object` block (which today contains `TAG` and the six `ACTION_*` constants — BackupRestoreActivity.kt:50-61). Append:
 
 ```kotlin
-class BackupRestoreActivity : ComponentActivity() {
-    // ... existing code ...
-
-    companion object {
-        // ... existing companion content (TAG, ACTION_*) ...
-
         /**
          * Test-only override hook. When non-null, the activity uses this
-         * Manager instead of constructing its own. Tests set it in @Before,
-         * clear it in @After. NOT thread-safe by design — instrumented tests
-         * run sequentially.
+         * Manager instead of constructing its own. Instrumented tests set
+         * it in @Before, clear it in @After. NOT thread-safe by design —
+         * instrumented tests run sequentially.
          */
         @androidx.annotation.VisibleForTesting
         var testManagerOverride: BackupRestoreManager? = null
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        try {
-            prefs = DirectBootAwarePreferences.get_shared_preferences(this)
-            backupRestoreManager = testManagerOverride ?: BackupRestoreManager(this)
-        } catch (e: Exception) { /* existing handling */ }
-        // ... rest of onCreate unchanged ...
-    }
-}
 ```
+
+**Insertion 2**: Replace the existing line at BackupRestoreActivity.kt:89:
+```kotlin
+            backupRestoreManager = BackupRestoreManager(this)
+```
+with:
+```kotlin
+            backupRestoreManager = testManagerOverride ?: BackupRestoreManager(this)
+```
+
+Nothing else in `onCreate` changes. The `prefs = ...` line above and the `headlessAction` block below remain untouched.
+
+The instrumented test below uses **reflection** to drive the private `performImport` / `performExport` methods. We deliberately do NOT add `@VisibleForTesting` wrappers — reflection keeps the production API surface unchanged, and the test bodies (Step 5.6.2) already use it.
 
 Document the seam in `memory/todo.md` under the completion entry.
 
@@ -3762,7 +3935,7 @@ class BackupRestoreActivityImportPreviewTest {
 }
 ```
 
-If reflection feels fragile, add a `@VisibleForTesting` wrapper method on the Activity that delegates to `performImport` / `performExport` and call those from the test. Either approach satisfies the test; pick the one that fits the codebase's existing instrumented-test style.
+Reflection is the locked-in approach for these tests — see Step 5.6.1's note above. `@VisibleForTesting` wrappers are NOT added. If a future test needs higher reliability than reflection (e.g., because the JVM strips method signatures in some R8 mode), revisit this decision in a separate commit.
 
 - [ ] **Step 5.6.3: Build, run via ew-cli, commit.**
 ```bash
