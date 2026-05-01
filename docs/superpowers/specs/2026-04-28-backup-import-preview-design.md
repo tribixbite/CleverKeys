@@ -93,7 +93,7 @@ class BackupRestoreManager(context: Context) {
 }
 ```
 
-`importConfig` and `importDictionaries` keep their exact public signature — internally they delegate to `buildPlan` then `applyPlan(plan, emptySet(), MERGE, prefs)`. The headless Intent path at `BackupRestoreActivity.kt:99-115` keeps working with **no UI change**.
+`importConfig` and `importDictionaries` keep their exact public signature — internally they delegate to `buildPlan` then `applyPlan(plan, emptySet(), REPLACE, prefs)`. REPLACE preserves the legacy `merge=false` short-swipe semantics that headless Termux automation callers documented (BackupRestoreManager.kt:597); flipping the default to MERGE is intentionally out of scope for this change. The SAF preview UI defaults the radio to MERGE — see §UI flow > Settings preview dialog. The headless Intent path at `BackupRestoreActivity.kt:99-115` keeps working with **no UI change**.
 
 ### Pure-vs-IO testability split
 
@@ -357,7 +357,7 @@ If `buildPlan` returns a plan with `changes.isEmpty() && parseSkippedKeys.isEmpt
 - export result dialog shows count
 
 `BackupRestoreManagerHeadlessTest` (MockK — better seam than Compose UI for this assertion):
-- Headless Intent path: invoking `importConfig(uri, prefs)` directly produces the same `ImportResult` shape as `applySettingsImportPlan(plan, emptySet(), MERGE, prefs)` — i.e., legacy public API delegates to build+apply with no exclusions and no UI hooks. Regression guard for Termux automation.
+- Headless Intent path: invoking `importConfig(uri, prefs)` directly produces the same `ImportResult` shape as `applySettingsImportPlan(plan, emptySet(), REPLACE, prefs)` — i.e., legacy public API delegates to build+apply with no exclusions and no UI hooks, preserving the legacy `merge=false` destructive short-swipe semantics. Regression guard for Termux automation.
 
 ## Files
 
