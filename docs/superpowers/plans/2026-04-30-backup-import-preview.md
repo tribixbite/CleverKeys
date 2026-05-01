@@ -31,7 +31,7 @@
   - `src/main/kotlin/tribixbite/cleverkeys/BackupRestoreActivity.kt` (875 lines)
   - `src/main/kotlin/tribixbite/cleverkeys/customization/ShortSwipeCustomizationManager.kt` (focus on `importFromJson` signature)
   - `src/main/kotlin/tribixbite/cleverkeys/LanguagePreferenceKeys.kt` (full file — small)
-- [ ] **Step 0.3: Confirm tests run.** `./gradlew runPureTests` should print `OK (1085 tests)` (current count). If higher, that's fine — record the baseline.
+- [ ] **Step 0.3: Confirm tests run.** `./gradlew runPureTests` should print `OK (N tests)` where N is at least 1085. Record the actual baseline N — Step 5.7.1's expected count is `baseline + ~28 new` (Chunks 1-3 add the pure tests). If your baseline is higher than 1085, expect a proportionally higher final count.
 - [ ] **Step 0.4: Confirm baseline build.** `./gradlew compileDebugKotlin` succeeds.
 
 ---
@@ -523,38 +523,67 @@ git commit -m "feat: settings import plan builder — diff + PrefValue typing �
 
 - [ ] **Step 1.5.2: Run — confirm fail.**
 
-- [ ] **Step 1.5.3: Add `migrateLegacyMarginsPure` helper.** Inside `SettingsImportPlanBuilder`:
+- [ ] **Step 1.5.3: Add `applyLegacyMigration` — FULL port of BackupRestoreManager.kt:876-939.**
+
+The legacy method handles **four** horizontal-margin pairs (portrait, landscape, portrait_unfolded, landscape_unfolded) AND converts dp→% using `pixelValue / screenWidth × 100` (clamped 0..45). It ALSO migrates dp-based `margin_bottom_*` values > 30 to percentages using `screenHeight`. Both conversions need `screen.density`. The pure version below is a verbatim port — do not abbreviate.
 
 ```kotlin
     /**
-     * Pure equivalent of `BackupRestoreManager.migrateLegacyMargins`.
-     * - `horizontal_margin_*` → `margin_left_*` + `margin_right_*` (same dp value).
-     * - Old key dropped from preferences AND queued in `internalRemoves` so
-     *   apply calls `editor.remove(oldKey)` to clean up SharedPreferences.
-     * Density is a no-op for this migration (the dp→% legacy in the original
-     * also depends on screen height; if your import contains absolute-dp
-     * margin_bottom_* > some threshold, convert here using `screen.height`
-     * + `screen.density` as the original code does).
+     * Pure equivalent of `BackupRestoreManager.migrateLegacyMargins`
+     * (lines 876-939 of BackupRestoreManager.kt as of v1.4.0).
      */
     private fun applyLegacyMigration(
         prefs: JsonObject,
         screen: ScreenMetrics,
     ): Pair<JsonObject, MigrationOutputs> {
-        val out = JsonObject()
+        val out = prefs.deepCopy()
         val removes = mutableListOf<String>()
         val skipped = mutableListOf<SkippedKey>()
-        for ((key, value) in prefs.entrySet()) {
-            when {
-                key == "horizontal_margin_portrait" || key == "horizontal_margin_landscape" -> {
-                    val orient = key.removePrefix("horizontal_margin_")
-                    if (!prefs.has("margin_left_$orient")) out.add("margin_left_$orient", value)
-                    if (!prefs.has("margin_right_$orient")) out.add("margin_right_$orient", value)
-                    removes += key
-                    skipped += SkippedKey(key, "superseded by margin_left_$orient + margin_right_$orient")
+
+        // 1. Horizontal-margin pairs — symmetric dp→% conversion.
+        val horizontalKeys = listOf(
+            "horizontal_margin_portrait" to listOf("margin_left_portrait", "margin_right_portrait"),
+            "horizontal_margin_landscape" to listOf("margin_left_landscape", "margin_right_landscape"),
+            "horizontal_margin_portrait_unfolded" to listOf("margin_left_portrait_unfolded", "margin_right_portrait_unfolded"),
+            "horizontal_margin_landscape_unfolded" to listOf("margin_left_landscape_unfolded", "margin_right_landscape_unfolded"),
+        )
+        for ((oldKey, newKeys) in horizontalKeys) {
+            if (out.has(oldKey) && !out.has(newKeys[0])) {
+                try {
+                    val dpValue = out.get(oldKey).asInt
+                    val pixelValue = dpValue * screen.density
+                    val percentValue = ((pixelValue / screen.width) * 100).toInt().coerceIn(0, 45)
+                    for (newKey in newKeys) out.addProperty(newKey, percentValue)
+                    out.remove(oldKey)
+                    removes += oldKey
+                    skipped += SkippedKey(oldKey, "superseded by ${newKeys[0]} + ${newKeys[1]}")
+                } catch (_: Exception) {
+                    // Malformed value — leave for the validator to reject downstream.
                 }
-                else -> out.add(key, value)
             }
         }
+
+        // 2. Bottom-margin dp→% conversion (only when value > 30, matching legacy guard).
+        val bottomKeys = listOf(
+            "margin_bottom_portrait",
+            "margin_bottom_landscape",
+            "margin_bottom_portrait_unfolded",
+            "margin_bottom_landscape_unfolded",
+        )
+        for (key in bottomKeys) {
+            if (out.has(key)) {
+                try {
+                    val value = out.get(key).asInt
+                    if (value > 30) {
+                        val pixelValue = value * screen.density
+                        val percentValue = ((pixelValue / screen.height) * 100).toInt().coerceIn(0, 30)
+                        out.addProperty(key, percentValue)
+                        // Same key — rewritten in-place; not a SkippedKey entry.
+                    }
+                } catch (_: Exception) { /* same as above */ }
+            }
+        }
+
         return out to MigrationOutputs(removes, skipped)
     }
 
@@ -564,9 +593,63 @@ git commit -m "feat: settings import plan builder — diff + PrefValue typing �
     )
 ```
 
-Then update `fromJson` to call the migration BEFORE the iteration loop, and pipe `removes`/`skipped` into the returned plan.
+Update `fromJson` to call `applyLegacyMigration(preferences, screen)` BEFORE the iteration loop. Pipe `removes` into the plan's `internalRemoves`, `skipped` into `parseSkippedKeys`. Iterate the migrated `out` JsonObject for the diff loop.
 
-- [ ] **Step 1.5.4: Run — confirm 6 tests pass.**
+- [ ] **Step 1.5.3a: Add parity tests for the full migration coverage.** Append to the test file:
+
+```kotlin
+    @Test
+    fun legacyHorizontalMargins_allFourPairsConverted() {
+        // Density 3.0, width 1080: 24dp * 3.0 = 72px ; 72/1080 = 0.0667 → 6%.
+        val json = """{"preferences":{
+            "horizontal_margin_portrait":24,
+            "horizontal_margin_landscape":24,
+            "horizontal_margin_portrait_unfolded":24,
+            "horizontal_margin_landscape_unfolded":24
+        }}""".trimIndent()
+        val plan = SettingsImportPlanBuilder.fromJson(json, emptyMap(), screen)
+
+        // Eight ADDED rows expected (left + right per orientation × 4).
+        val addedKeys = plan.changes.filter { it.type == ChangeType.ADDED }.map { it.key }.toSet()
+        assertThat(addedKeys).containsAtLeast(
+            "margin_left_portrait", "margin_right_portrait",
+            "margin_left_landscape", "margin_right_landscape",
+            "margin_left_portrait_unfolded", "margin_right_portrait_unfolded",
+            "margin_left_landscape_unfolded", "margin_right_landscape_unfolded",
+        )
+        // All four legacy keys queued for removal.
+        assertThat(plan.internalRemoves.toSet()).containsExactly(
+            "horizontal_margin_portrait",
+            "horizontal_margin_landscape",
+            "horizontal_margin_portrait_unfolded",
+            "horizontal_margin_landscape_unfolded",
+        )
+    }
+
+    @Test
+    fun legacyBottomMargin_dpAboveThirty_convertedToPercent() {
+        // 50dp * 3.0 / 2400 * 100 = 6.25 → 6%.
+        val json = """{"preferences":{"margin_bottom_portrait":50}}"""
+        val plan = SettingsImportPlanBuilder.fromJson(json, emptyMap(), screen)
+
+        val change = plan.changes.single { it.key == "margin_bottom_portrait" }
+        val proposed = change.proposed as PrefValue.IntV
+        assertThat(proposed.v).isLessThan(30)
+        assertThat(proposed.v).isAtLeast(1)
+    }
+
+    @Test
+    fun legacyBottomMargin_valueAtOrBelowThirty_passesThrough() {
+        // ≤30 may already be a percent — leave alone.
+        val json = """{"preferences":{"margin_bottom_portrait":15}}"""
+        val plan = SettingsImportPlanBuilder.fromJson(json, emptyMap(), screen)
+
+        val change = plan.changes.single { it.key == "margin_bottom_portrait" }
+        assertThat((change.proposed as PrefValue.IntV).v).isEqualTo(15)
+    }
+```
+
+- [ ] **Step 1.5.4: Run — all tests pass.**
 
 - [ ] **Step 1.5.5: Commit.**
 ```bash
@@ -608,13 +691,20 @@ package tribixbite.cleverkeys.backup
 object SettingsValidation {
 
     /**
-     * Service-managed state that should never be imported. Copied
-     * verbatim from BackupRestoreManager.isInternalPreference — DO NOT
-     * truncate. If you add a key to that legacy method, add it here too.
+     * Service-managed state that should never be imported. Verbatim from
+     * BackupRestoreManager.isInternalPreference (lines 960-969 of
+     * BackupRestoreManager.kt as of v1.4.0). If a future release adds a
+     * key to that method, add it here too.
+     *
+     * The legacy method uses a `when` block; the keys it returns true for are:
+     *   - "version"                  — internal version tracking
+     *   - "current_layout_portrait"  — device-specific layout index
+     *   - "current_layout_landscape" — device-specific layout index
      */
-    private val INTERNAL_KEYS: Set<String> = setOf(
-        // PASTE the exact set from BackupRestoreManager.kt:960-969 here.
-        // The list is the actual implementation — there is no shorter form.
+    val INTERNAL_KEYS: Set<String> = setOf(
+        "version",
+        "current_layout_portrait",
+        "current_layout_landscape",
     )
 
     fun isInternalPreference(key: String): Boolean = key in INTERNAL_KEYS
@@ -627,20 +717,30 @@ object SettingsValidation {
      * methods in BackupRestoreManager. Do not abbreviate; copy each rule.
      */
     fun validate(key: String, value: PrefValue): String? {
-        // PASTE the full when-block here, structured by key. Each branch
-        // returns null for valid or a message for invalid. Structure:
+        // Worked examples below show the dispatch shape. The implementer
+        // MUST replace the `TODO(...)` call with the full when-block ported
+        // verbatim from BackupRestoreManager.kt:789-1068 — the four
+        // validate*Preference methods. Until that's done, every test
+        // exercising validation throws NotImplementedError, which CI catches.
         //
-        // return when (key) {
-        //     "key_height" -> when {
-        //         value !is PrefValue.IntV -> "expected Int, got ${value::class.simpleName}"
-        //         value.v !in 20..200 -> "out of range (20..200), got ${value.v}"
-        //         else -> null
-        //     }
-        //     "swipe_min_distance" -> ...
-        //     ...etc...
-        //     else -> null  // unknown key → caller decides (typically allow)
-        // }
-        TODO("Port validatePreferenceValue + validateIntPreference + validateFloatPreference + validateStringPreference from BackupRestoreManager.kt:789-1068. The TODO must NOT remain in the final code — every rule must be ported. Compile-time error from the TODO call enforces this.")
+        // Worked example shape — DO NOT ship this stub; it's reference only:
+        //
+        //   return when (key) {
+        //       "key_height" -> when {
+        //           value !is PrefValue.IntV -> "expected Int, got ${value::class.simpleName}"
+        //           value.v !in <range from validateIntPreference> -> "out of range, got ${value.v}"
+        //           else -> null
+        //       }
+        //       // ...one branch per validated key in BackupRestoreManager.kt:789-1068...
+        //       else -> null   // unknown key — caller decides (typically allow)
+        //   }
+        TODO(
+            "Port validatePreferenceValue + validateIntPreference + " +
+            "validateFloatPreference + validateStringPreference from " +
+            "BackupRestoreManager.kt:789-1068. Every rule must be ported; " +
+            "the test internalKeys_setMatchesLegacyMethod and the per-rule " +
+            "coverage tests (Task 1.6.5) won't pass until this TODO is gone."
+        )
     }
 }
 ```
@@ -654,15 +754,31 @@ The deliberate `TODO()` call is a hard fail — if you commit without porting al
 ```kotlin
     @Test
     fun internalPreferenceKeys_landInSkippedNotChanges() {
-        // Pick THE FIRST key from BackupRestoreManager.isInternalPreference.
-        // Update this string if you ported a different first key.
-        val json = """{"preferences":{"last_input_method":"foo"}}"""
+        // All three internal keys from BackupRestoreManager.isInternalPreference.
+        val json = """{"preferences":{
+            "version":42,
+            "current_layout_portrait":3,
+            "current_layout_landscape":2
+        }}""".trimIndent()
         val plan = SettingsImportPlanBuilder.fromJson(json, emptyMap(), screen)
 
         assertThat(plan.changes).isEmpty()
-        assertThat(plan.parseSkippedKeys.map { it.key }).contains("last_input_method")
-        assertThat(plan.parseSkippedKeys.first { it.key == "last_input_method" }.reason)
-            .isEqualTo("internal preference")
+        assertThat(plan.parseSkippedKeys.map { it.key }).containsExactly(
+            "version", "current_layout_portrait", "current_layout_landscape"
+        )
+        plan.parseSkippedKeys.forEach {
+            assertThat(it.reason).isEqualTo("internal preference")
+        }
+    }
+
+    @Test
+    fun internalKeys_setMatchesLegacyMethod() {
+        // Drift guard. If someone adds an entry to
+        // BackupRestoreManager.isInternalPreference but forgets to update
+        // SettingsValidation.INTERNAL_KEYS, this test fails. Hard-code the
+        // expected set explicitly so the parity check is auditable.
+        val expected = setOf("version", "current_layout_portrait", "current_layout_landscape")
+        assertThat(SettingsValidation.INTERNAL_KEYS).isEqualTo(expected)
     }
 
     @Test
@@ -839,7 +955,7 @@ git commit -m "feat: ShortSwipeImporter interface for testable injection — opu
 **Files:**
 - Modify: `src/main/kotlin/tribixbite/cleverkeys/BackupRestoreManager.kt` — find `data class ImportResult` (~line 1070).
 
-- [ ] **Step 2.2.1: Add the new fields.**
+- [ ] **Step 2.2.1: Add the new fields.** The existing `ImportResult` definition lives at BackupRestoreManager.kt:1073-1100. Verbatim existing schema (with `MutableSet<String>` for the keys collections, NOT MutableList — preserve that):
 
 ```kotlin
 data class ImportResult(
@@ -852,12 +968,20 @@ data class ImportResult(
     @JvmField var sourceScreenHeight: Int = 0,
     @JvmField var currentScreenWidth: Int = 0,
     @JvmField var currentScreenHeight: Int = 0,
-    @JvmField var importedKeys: MutableList<String> = mutableListOf(),
-    @JvmField var skippedKeys: MutableList<String> = mutableListOf(),
+    @JvmField val importedKeys: MutableSet<String> = mutableSetOf(),
+    @JvmField val skippedKeys: MutableSet<String> = mutableSetOf(),
     @JvmField var shortSwipeCustomizationsImported: Int = 0,
-    // ... preserve any other existing fields you find in the live file
-)
+) {
+    fun hasScreenSizeMismatch(): Boolean {
+        if (sourceScreenWidth == 0 || sourceScreenHeight == 0) return false
+        val widthDiff = abs(currentScreenWidth - sourceScreenWidth)
+        val heightDiff = abs(currentScreenHeight - sourceScreenHeight)
+        return (widthDiff > currentScreenWidth * 0.2) || (heightDiff > currentScreenHeight * 0.2)
+    }
+}
 ```
+
+The two new fields (`excludedByUserCount`, `driftCount`) are the only additions; `hasScreenSizeMismatch()` and the existing fields are preserved as-is. If subsequent reading reveals additional fields (e.g. media-clipboard-related), preserve them too.
 
 - [ ] **Step 2.2.2: Compile.**
 - [ ] **Step 2.2.3: Commit.**
@@ -1264,18 +1388,28 @@ git commit -m "test: SettingsImportApplier short-swipe routing for SKIP/MERGE/RE
 **Files:**
 - Modify: `src/main/kotlin/tribixbite/cleverkeys/BackupRestoreManager.kt`
 
-- [ ] **Step 2.7.1: Add the field + delegator method.**
+- [ ] **Step 2.7.1: Add the constructor injection + delegator method.**
+
+The existing `BackupRestoreManager` constructor takes only `Context`. The new `shortSwipeImporter` is added as a SECOND constructor parameter with a default that constructs the real importer. Existing call sites continue to work — `BackupRestoreManager(context)` still compiles because the default kicks in.
+
+`ShortSwipeCustomizationManager` exposes `fun getInstance(context: Context): ShortSwipeCustomizationManager` on its companion object (verified in source) — so the default expression compiles.
 
 ```kotlin
+import tribixbite.cleverkeys.backup.RealShortSwipeImporter
+import tribixbite.cleverkeys.backup.ShortSwipeImporter
+import tribixbite.cleverkeys.customization.ShortSwipeCustomizationManager
+import kotlinx.coroutines.runBlocking
+
 class BackupRestoreManager(
     private val context: Context,
-    // Default uses the real ShortSwipeCustomizationManager; instrumented
-    // tests can pass a stub via the secondary constructor.
     private val shortSwipeImporter: ShortSwipeImporter = RealShortSwipeImporter(
         ShortSwipeCustomizationManager.getInstance(context)
     ),
 ) {
-    // ... existing code ...
+    // PRESERVE all existing fields and methods of BackupRestoreManager —
+    // do not delete or restructure anything. The only additions in this
+    // task are: (a) the new constructor parameter above, and (b) the
+    // applySettingsImportPlan delegator method below.
 
     fun applySettingsImportPlan(
         plan: SettingsImportPlan,
@@ -1997,8 +2131,6 @@ fun applyDictImportPlan(
 }
 
 private fun readCurrentCustomWordsByLang(prefs: SharedPreferences): Map<String, Map<String, Int>> {
-    // Iterate prefs.all looking for keys matching customWordsKey(lang) pattern.
-    // Use LanguagePreferenceKeys to identify language codes from the prefix.
     val out = mutableMapOf<String, Map<String, Int>>()
     val gson = Gson()
     val mapType = object : TypeToken<Map<String, Int>>() {}.type
@@ -2023,7 +2155,68 @@ private fun readCurrentDisabledWordsByLang(prefs: SharedPreferences): Map<String
 }
 ```
 
-If `LanguagePreferenceKeys.languageFromCustomWordsKey` doesn't exist yet, add it (regex over the prefix pattern). Add the `excludedByUserCount` field to `DictionaryImportResult` mirroring what was done for `ImportResult`.
+Neither `languageFromCustomWordsKey` nor `languageFromDisabledWordsKey` exists in `LanguagePreferenceKeys.kt` today (verified — the existing file only has `customWordsKey(lang)` and `disabledWordsKey(lang)` going the OTHER direction, plus list-scan helpers `getLanguagesWithCustomWords`/`getLanguagesWithDisabledWords` that strip prefixes inline). Add the two reverse helpers + update `DictionaryImportResult` schema.
+
+```kotlin
+// Add to LanguagePreferenceKeys.kt:
+
+/**
+ * Inverse of customWordsKey — given a pref key, return the language code if
+ * it matches the custom-words prefix pattern, or null otherwise.
+ */
+fun languageFromCustomWordsKey(key: String): String? =
+    if (key.startsWith("custom_words_") && key.length > "custom_words_".length)
+        key.removePrefix("custom_words_") else null
+
+/**
+ * Inverse of disabledWordsKey.
+ */
+fun languageFromDisabledWordsKey(key: String): String? =
+    if (key.startsWith("disabled_words_") && key.length > "disabled_words_".length)
+        key.removePrefix("disabled_words_") else null
+```
+
+Also add the matching unit test as part of Task 3.11. Create `src/test/kotlin/tribixbite/cleverkeys/LanguagePreferenceKeysReverseLookupTest.kt`:
+
+```kotlin
+package tribixbite.cleverkeys
+
+import com.google.common.truth.Truth.assertThat
+import org.junit.Test
+
+class LanguagePreferenceKeysReverseLookupTest {
+
+    @Test
+    fun customWordsKey_andReverse_roundTrip() {
+        val key = LanguagePreferenceKeys.customWordsKey("en")
+        assertThat(key).isEqualTo("custom_words_en")
+        assertThat(LanguagePreferenceKeys.languageFromCustomWordsKey(key)).isEqualTo("en")
+    }
+
+    @Test
+    fun reverseLookup_unrelatedKey_returnsNull() {
+        assertThat(LanguagePreferenceKeys.languageFromCustomWordsKey("custom_words")).isNull()  // prefix-only
+        assertThat(LanguagePreferenceKeys.languageFromCustomWordsKey("layouts")).isNull()
+        assertThat(LanguagePreferenceKeys.languageFromCustomWordsKey("custom_word_en")).isNull()
+    }
+
+    @Test
+    fun disabledWordsKey_andReverse_roundTrip() {
+        val key = LanguagePreferenceKeys.disabledWordsKey("fr")
+        assertThat(LanguagePreferenceKeys.languageFromDisabledWordsKey(key)).isEqualTo("fr")
+    }
+
+    @Test
+    fun reverseLookup_emptyLanguageSuffix_returnsNull() {
+        assertThat(LanguagePreferenceKeys.languageFromCustomWordsKey("custom_words_")).isNull()
+        assertThat(LanguagePreferenceKeys.languageFromDisabledWordsKey("disabled_words_")).isNull()
+    }
+}
+```
+
+Register this in `pureTestClasses`.
+
+Add the `excludedByUserCount` field to `DictionaryImportResult` mirroring what was done for `ImportResult`. Find the existing `data class DictionaryImportResult` in BackupRestoreManager.kt (~line 1596) — add `@JvmField var excludedByUserCount: Int = 0` and preserve all other existing fields verbatim.
 
 - [ ] **Step 3.11.2: Build; tests pass; commit.**
 
@@ -3083,7 +3276,7 @@ private fun buildSettingsResultMessage(result: ImportResult): String = buildStri
     }
     if (result.sourceScreenWidth > 0 && result.sourceScreenWidth != result.currentScreenWidth) {
         appendLine()
-        appendLine("⚠️ Screen-size mismatch: source ${result.sourceScreenWidth}×${result.sourceScreenHeight}, current ${result.currentScreenWidth}×${result.currentScreenHeight}.")
+        appendLine("Screen-size mismatch: source ${result.sourceScreenWidth}x${result.sourceScreenHeight}, current ${result.currentScreenWidth}x${result.currentScreenHeight}. Some visual settings may need adjustment.")
     }
     appendLine()
     append("Restart the keyboard for changes to take effect.")
@@ -3149,7 +3342,10 @@ private fun performImportDictionaries(uri: Uri) {
                 viewModel.dictPreviewPlan = plan
             }
         } catch (e: Exception) {
-            // ... same error handling shape as performImport
+            android.util.Log.e(TAG, "Build dictionary plan failed", e)
+            viewModel.resultTitle = "Import Failed"
+            viewModel.resultMessage = "Failed to read dictionary file:\n\n${e.message}"
+            viewModel.showResultDialog = true
         } finally {
             viewModel.isProcessing = false
         }
@@ -3173,7 +3369,10 @@ private fun applyPlannedDictionaries(
             LocalBroadcastManager.getInstance(this@BackupRestoreActivity)
                 .sendBroadcast(Intent(ACTION_DICTIONARY_IMPORTED))
         } catch (e: Exception) {
-            // error handling
+            android.util.Log.e(TAG, "Apply dictionary plan failed", e)
+            viewModel.resultTitle = "Import Failed"
+            viewModel.resultMessage = "Failed to apply dictionary import:\n\n${e.message}"
+            viewModel.showResultDialog = true
         } finally {
             viewModel.isProcessing = false
         }
@@ -3201,30 +3400,139 @@ git commit -m "feat: dictionary import goes through preview dialog — opus 4.7"
 - Modify: `BackupRestoreManager.kt` (return `Int` from `exportConfig`)
 - Modify: `BackupRestoreActivity.kt` (read it, render in result dialog)
 
-- [ ] **Step 5.4.1: Modify `exportConfig` signature.** Find the existing method (BackupRestoreManager.kt:367-ish) and change its return type from whatever it is today (likely `Boolean` or `Unit`) to `Int` — count of preferences written. Most existing callers will still work because `Int` is non-Unit; instrumentation tests catch any that depend on the old return.
+- [ ] **Step 5.4.1: Modify `exportConfig` signature.** Find the existing method (search for `fun exportConfig(uri: Uri,`). The legacy body builds a JsonObject of preferences, wraps it with metadata (app_version, screen dimensions), and writes to the URI. Refactor to delegate the per-key serialization to the new `SettingsExporter.buildPreferencesJson` (Task 5.4.2 below), then return the count.
 
 ```kotlin
 fun exportConfig(uri: Uri, prefs: SharedPreferences): Int {
-    // ... existing parse + write logic ...
-    val count = preferences.size()    // existing local
+    val (preferencesObj, count) = SettingsExporter.buildPreferencesJson(prefs.all)
+
+    // PRESERVE the existing metadata wrapping from the legacy method:
+    //   - "metadata": {"app_version", "screen_width", "screen_height", "timestamp"}
+    //   - "preferences": <preferencesObj>
+    //   - "short_swipe_customizations": <existing call into shortSwipeManager.exportToJson() if any>
+    val root = JsonObject().apply {
+        add("metadata", buildExportMetadata())   // existing helper or inlined logic
+        add("preferences", preferencesObj)
+        // existing short_swipe_customizations export, if the legacy method writes it
+    }
+    writeJsonToUri(uri, root.toString())   // existing helper
     Log.i(TAG, "Exported $count preferences to $uri")
     return count
 }
 ```
 
-- [ ] **Step 5.4.2: Add a regression test for headless export.** This is a public-API behavior change; add `BackupRestoreManagerHeadlessTest.headlessExportConfig_returnsCountForCallers` to confirm the `Int` is returned and matches the prefs.size:
+If the legacy `exportConfig` did not previously write `short_swipe_customizations` to the export, do not add it — the spec only requires that import preview AND export counts work; export schema changes are out of scope.
+
+- [ ] **Step 5.4.2: Extract `SettingsExporter` (mirrors `SettingsImportApplier`).**
+
+The `exportConfig` body is mostly Gson serialization. To keep the test light and avoid constructing a `BackupRestoreManager` (which needs Context), extract the count-returning core into a stateless object — symmetric with the import side.
+
+Create `src/main/kotlin/tribixbite/cleverkeys/backup/SettingsExporter.kt`:
 
 ```kotlin
-@Test
-fun headlessExportConfig_returnsCountForCallers() {
-    // Mocked prefs with 3 entries; exportConfig writes them and returns 3.
-    every { prefs.all } returns mapOf("a" to 1, "b" to 2, "c" to 3)
-    // ... exercise via the Manager constructed with mock context if feasible, OR
-    // assert the contract via a hand-rolled call to the underlying writer.
+package tribixbite.cleverkeys.backup
+
+import android.content.SharedPreferences
+import com.google.gson.JsonObject
+
+/**
+ * Stateless settings export. Serializes filtered prefs into a JsonObject
+ * and returns the count of entries written. The caller (BackupRestoreManager)
+ * wraps the JsonObject in metadata + writes to URI.
+ */
+object SettingsExporter {
+    /**
+     * Returns (preferencesJsonObject, count). `internalKeys` is the same
+     * `SettingsValidation.INTERNAL_KEYS` set used by import to skip
+     * service-managed state — symmetry guarantees export/import round-trip.
+     */
+    fun buildPreferencesJson(
+        prefsAll: Map<String, Any?>,
+        internalKeys: Set<String> = SettingsValidation.INTERNAL_KEYS,
+    ): Pair<JsonObject, Int> {
+        val obj = JsonObject()
+        var count = 0
+        for ((key, value) in prefsAll) {
+            if (key in internalKeys) continue
+            when (value) {
+                is Boolean -> obj.addProperty(key, value)
+                is Int -> obj.addProperty(key, value)
+                is Long -> obj.addProperty(key, value)
+                is Float -> obj.addProperty(key, value)
+                is String -> obj.addProperty(key, value)
+                is Set<*> -> {
+                    val arr = com.google.gson.JsonArray()
+                    value.forEach { arr.add(it.toString()) }
+                    obj.add(key, arr)
+                }
+                else -> continue
+            }
+            count++
+        }
+        return obj to count
+    }
 }
 ```
 
-If constructing a `BackupRestoreManager` is too heavy for MockK, capture the contract via a separate object (e.g. an internal `SettingsExporter` along the same shape as `SettingsImportApplier`) — this is symmetry with the import side and keeps tests light.
+Refactor `BackupRestoreManager.exportConfig` to call `SettingsExporter.buildPreferencesJson(prefs.all)`, write the resulting JSON to the URI, and return the count.
+
+- [ ] **Step 5.4.3: Pure JVM regression test.**
+
+Create `src/test/kotlin/tribixbite/cleverkeys/backup/SettingsExporterTest.kt` and register it in `pureTestClasses`:
+
+```kotlin
+package tribixbite.cleverkeys.backup
+
+import com.google.common.truth.Truth.assertThat
+import org.junit.Test
+
+class SettingsExporterTest {
+
+    @Test
+    fun buildPreferencesJson_returnsCountMatchingNonInternalKeys() {
+        val prefs: Map<String, Any?> = mapOf(
+            "a" to 1, "b" to true, "c" to "hello",
+            "version" to 99,                  // internal — must be skipped
+            "current_layout_portrait" to 0,    // internal — must be skipped
+        )
+        val (obj, count) = SettingsExporter.buildPreferencesJson(prefs)
+
+        assertThat(count).isEqualTo(3)
+        assertThat(obj.has("a")).isTrue()
+        assertThat(obj.has("b")).isTrue()
+        assertThat(obj.has("c")).isTrue()
+        assertThat(obj.has("version")).isFalse()
+        assertThat(obj.has("current_layout_portrait")).isFalse()
+    }
+
+    @Test
+    fun buildPreferencesJson_eachTypeRoundTrips() {
+        val prefs: Map<String, Any?> = mapOf(
+            "b" to true, "i" to 42, "l" to 1234L, "f" to 3.14f, "s" to "x",
+            "set" to setOf("a", "b"),
+        )
+        val (obj, count) = SettingsExporter.buildPreferencesJson(prefs)
+
+        assertThat(count).isEqualTo(6)
+        assertThat(obj.get("b").asBoolean).isTrue()
+        assertThat(obj.get("i").asInt).isEqualTo(42)
+        assertThat(obj.get("l").asLong).isEqualTo(1234L)
+        assertThat(obj.get("f").asFloat).isEqualTo(3.14f)
+        assertThat(obj.get("s").asString).isEqualTo("x")
+        val arr = obj.get("set").asJsonArray
+        assertThat(listOf(arr.get(0).asString, arr.get(1).asString))
+            .containsExactly("a", "b")
+    }
+
+    @Test
+    fun buildPreferencesJson_emptyPrefs_returnsZero() {
+        val (_, count) = SettingsExporter.buildPreferencesJson(emptyMap())
+        assertThat(count).isEqualTo(0)
+    }
+}
+```
+
+Run: `./gradlew runPureTests -PtestClass=backup.SettingsExporterTest` → expect PASS.
 
 - [ ] **Step 5.4.3: Update `performExport` in the Activity** to read and render the count.
 
@@ -3240,7 +3548,10 @@ private fun performExport(uri: Uri) {
             viewModel.resultMessage = "Settings exported: $count\n\nFile: ${uri.lastPathSegment}\n\nYou can transfer this file to another device or keep it as a backup."
             viewModel.showResultDialog = true
         } catch (e: Exception) {
-            // ... existing error handling
+            android.util.Log.e(TAG, "Export failed", e)
+            viewModel.resultTitle = "Export Failed"
+            viewModel.resultMessage = "Failed to export configuration:\n\n${e.message}"
+            viewModel.showResultDialog = true
         } finally { viewModel.isProcessing = false }
     }
 }
@@ -3250,57 +3561,227 @@ private fun performExport(uri: Uri) {
 
 ### Task 5.5: Export count surfacing — dictionary
 
-`exportDictionaries` already counts internally (BackupRestoreManager.kt:1127, 1146 — `totalCustomWords`, `totalDisabledWords`) but discards them.
+`exportDictionaries` already counts internally (the local variables `totalCustomWords`, `totalDisabledWords`, and `languageCount` accumulate during JSON construction) but discards them.
+
+- [ ] **Step 5.5.0: Read BackupRestoreManager.kt:1100-1170.** Identify the local counters that already exist. Confirm names match `totalCustomWords` (sums `existingWords.size` across languages), `totalDisabledWords` (sums `disabledSet.size`), and the count of languages with non-empty word lists.
 
 - [ ] **Step 5.5.1: Define a return type.**
 
 ```kotlin
+/** Counts surfaced from a successful exportDictionaries call. */
 data class DictionaryExportSummary(
     val customWordsCount: Int,
     val disabledWordsCount: Int,
     val languageCount: Int,
 )
+```
 
+- [ ] **Step 5.5.2: Modify `exportDictionaries` signature.** Existing function body retained verbatim; only the trailing accumulator + return changed:
+
+```kotlin
 fun exportDictionaries(uri: Uri): DictionaryExportSummary {
-    // ... existing logic ...
-    return DictionaryExportSummary(totalCustomWords, totalDisabledWords, languageCount)
+    var totalCustomWords = 0
+    var totalDisabledWords = 0
+    val languagesWithData = mutableSetOf<String>()
+
+    // ... preserve the existing block that builds custom_words_by_language
+    // and disabled_words_by_language sub-objects. Inside each per-language
+    // loop, increment totalCustomWords += langWords.size and add the lang
+    // to languagesWithData. The legacy method already iterates these — find
+    // the existing accumulators and rename them to match if needed.
+
+    // ... preserve the existing JSON write to URI (writeJsonToUri). Then:
+    return DictionaryExportSummary(
+        customWordsCount = totalCustomWords,
+        disabledWordsCount = totalDisabledWords,
+        languageCount = languagesWithData.size,
+    )
 }
 ```
 
-- [ ] **Step 5.5.2: Update `performExportDictionaries` to render.**
+If the existing function has callers other than `BackupRestoreActivity.performExportDictionaries`, update them to either ignore the new return (`exportDictionaries(uri)` without the assignment is still legal) or consume the summary.
+
+- [ ] **Step 5.5.3: Update `performExportDictionaries` to render.**
+
 ```kotlin
-viewModel.resultMessage = "Custom words: ${summary.customWordsCount} (across ${summary.languageCount} languages)\nDisabled words: ${summary.disabledWordsCount}\n\nFile: ${uri.lastPathSegment}"
+private fun performExportDictionaries(uri: Uri) {
+    lifecycleScope.launch {
+        viewModel.isProcessing = true
+        try {
+            val summary = withContext(Dispatchers.IO) {
+                backupRestoreManager.exportDictionaries(uri)
+            }
+            viewModel.resultTitle = "Dictionary Export Successful"
+            viewModel.resultMessage = "Custom words: ${summary.customWordsCount} (across ${summary.languageCount} languages)\nDisabled words: ${summary.disabledWordsCount}\n\nFile: ${uri.lastPathSegment}"
+            viewModel.showResultDialog = true
+        } catch (e: Exception) {
+            android.util.Log.e(TAG, "Dictionary export failed", e)
+            viewModel.resultTitle = "Dictionary Export Failed"
+            viewModel.resultMessage = "Failed to export dictionaries:\n\n${e.message}"
+            viewModel.showResultDialog = true
+        } finally { viewModel.isProcessing = false }
+    }
+}
 ```
 
-- [ ] **Step 5.5.3: Run tests; commit.**
+- [ ] **Step 5.5.4: Run tests; commit.**
+```bash
+git add src/main/kotlin/tribixbite/cleverkeys/BackupRestoreManager.kt \
+        src/main/kotlin/tribixbite/cleverkeys/BackupRestoreActivity.kt
+git commit -m "feat: dictionary export returns DictionaryExportSummary with real counts — opus 4.7"
+```
 
 ### Task 5.6: Activity Compose tests — empty-delta skip + export count
 
 **Files:**
+- Modify: `src/main/kotlin/tribixbite/cleverkeys/BackupRestoreActivity.kt` (add testFactory seam)
 - Modify: `src/androidTest/kotlin/tribixbite/cleverkeys/BackupRestoreActivityComposeTest.kt`
 
-- [ ] **Step 5.6.1: Add tests.**
+- [ ] **Step 5.6.1: Add a minimal test-factory seam in the Activity.**
+
+The Activity instantiates `BackupRestoreManager(this)` directly. To let Compose tests inject a fake, add a companion-object hook:
 
 ```kotlin
-@Test
-fun import_emptyDeltas_skipsPreviewAndShowsResultDirectly() {
-    // Pre-condition: prefer to construct an activity that imports a JSON
-    // identical to the current state. Mock the file-picker to return a
-    // sentinel URI, plumb a fake BackupRestoreManager that returns a plan
-    // with no deltas. Verify "No changes — backup file matches current
-    // settings." is the dialog shown.
-}
+class BackupRestoreActivity : ComponentActivity() {
+    // ... existing code ...
 
-@Test
-fun export_resultDialogShowsCount() {
-    // Construct activity, drive performExport, verify the result dialog
-    // text contains "Settings exported: <some Int>".
+    companion object {
+        // ... existing companion content (TAG, ACTION_*) ...
+
+        /**
+         * Test-only override hook. When non-null, the activity uses this
+         * Manager instead of constructing its own. Tests set it in @Before,
+         * clear it in @After. NOT thread-safe by design — instrumented tests
+         * run sequentially.
+         */
+        @androidx.annotation.VisibleForTesting
+        var testManagerOverride: BackupRestoreManager? = null
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        try {
+            prefs = DirectBootAwarePreferences.get_shared_preferences(this)
+            backupRestoreManager = testManagerOverride ?: BackupRestoreManager(this)
+        } catch (e: Exception) { /* existing handling */ }
+        // ... rest of onCreate unchanged ...
+    }
 }
 ```
 
-The exact wiring for these tests depends on whether the activity supports test injection. If not, add a minimal seam via a `BackupRestoreManager` factory that ComposeRule fakes can replace. Document the seam in `memory/todo.md` if added.
+Document the seam in `memory/todo.md` under the completion entry.
 
-- [ ] **Step 5.6.2: Run via ew-cli; commit.**
+- [ ] **Step 5.6.2: Add the empty-delta-skip test.**
+
+```kotlin
+package tribixbite.cleverkeys
+
+import androidx.compose.ui.test.*
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.mockk.every
+import io.mockk.mockk
+import org.junit.After
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+import tribixbite.cleverkeys.backup.*
+
+@RunWith(AndroidJUnit4::class)
+class BackupRestoreActivityImportPreviewTest {
+
+    @get:Rule
+    val composeRule = createAndroidComposeRule<BackupRestoreActivity>()
+
+    private val sampleScreen = ScreenMetrics(1080, 2400, 3.0f)
+
+    @Before
+    fun setUp() {
+        // Override the activity's manager with a MockK fake. createAndroidComposeRule
+        // launches the activity AFTER @Before runs, so the override is in place
+        // before onCreate executes.
+        BackupRestoreActivity.testManagerOverride = mockk(relaxed = true) {
+            // Empty-delta plan — no changes, no parse-skipped, no short-swipe
+            every { buildSettingsImportPlan(any(), any()) } returns SettingsImportPlan(
+                sourceVersion = "1.4.0",
+                sourceScreen = sampleScreen,
+                currentScreen = sampleScreen,
+                changes = emptyList(),
+                parseSkippedKeys = emptyList(),
+                internalRemoves = emptyList(),
+                shortSwipeImportSize = 0,
+                shortSwipeImportRawJson = null,
+            )
+            // exportConfig returns a known count
+            every { exportConfig(any(), any()) } returns 42
+        }
+    }
+
+    @After
+    fun tearDown() {
+        BackupRestoreActivity.testManagerOverride = null
+    }
+
+    @Test
+    fun import_emptyDeltas_skipsPreviewAndShowsResultDirectly() {
+        // Drive the import path. The simplest entry is to invoke performImport
+        // via reflection, OR via a public helper added behind @VisibleForTesting.
+        // We use reflection to keep the production API surface unchanged.
+        val activity = composeRule.activity
+        val method = activity.javaClass.getDeclaredMethod("performImport", android.net.Uri::class.java)
+        method.isAccessible = true
+        composeRule.runOnUiThread {
+            method.invoke(activity, android.net.Uri.parse("content://test/empty"))
+        }
+        composeRule.waitForIdle()
+        // Wait briefly for the IO coroutine to settle; idling resources would
+        // be cleaner but the existing project doesn't use them.
+        Thread.sleep(500)
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithText("No changes").assertIsDisplayed()
+        composeRule.onNodeWithText("Backup file matches current settings.", substring = true)
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun export_resultDialogShowsCount() {
+        val activity = composeRule.activity
+        val method = activity.javaClass.getDeclaredMethod("performExport", android.net.Uri::class.java)
+        method.isAccessible = true
+        composeRule.runOnUiThread {
+            method.invoke(activity, android.net.Uri.parse("content://test/dest.json"))
+        }
+        composeRule.waitForIdle()
+        Thread.sleep(500)
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithText("Settings exported: 42", substring = true).assertIsDisplayed()
+    }
+}
+```
+
+If reflection feels fragile, add a `@VisibleForTesting` wrapper method on the Activity that delegates to `performImport` / `performExport` and call those from the test. Either approach satisfies the test; pick the one that fits the codebase's existing instrumented-test style.
+
+- [ ] **Step 5.6.3: Build, run via ew-cli, commit.**
+```bash
+./gradlew assembleDebug assembleDebugAndroidTest
+ew-cli --use-orchestrator --timeout 15m \
+       --device model=Pixel7,version=34 \
+       --app build/outputs/apk/debug/CleverKeys-v1.4.0-x86_64.apk \
+       --test build/outputs/apk/androidTest/debug/CleverKeys-debug-androidTest.apk \
+       --outputs-dir ~/ew-output \
+       --test-targets "class tribixbite.cleverkeys.BackupRestoreActivityImportPreviewTest"
+```
+
+Expected: PASS.
+
+```bash
+git add src/main/kotlin/tribixbite/cleverkeys/BackupRestoreActivity.kt \
+        src/androidTest/kotlin/tribixbite/cleverkeys/BackupRestoreActivityImportPreviewTest.kt
+git commit -m "test: BackupRestoreActivity preview-skip + export-count regression — opus 4.7"
+```
 
 ### Task 5.7: Final integration sweep
 
@@ -3308,7 +3789,7 @@ The exact wiring for these tests depends on whether the activity supports test i
 ```bash
 ./gradlew runPureTests
 ```
-Expected: 1085 baseline + ~25 new = ~1110. (Reconciled lower than the original 1140 estimate — Chunks 1+3 net ~17 pure tests; Chunk 2 adds a few; some are MockK rather than pure.)
+Expected: `baseline + ~28 new`. The 28 breaks down as: Chunk 1 adds ~17 (`SettingsImportPlanBuilderTest`), Chunk 3 adds ~7 (`DictImportPlanBuilderTest`) + 4 (`LanguagePreferenceKeysReverseLookupTest`) + 3 (`SettingsExporterTest` from Task 5.4.3). Chunk 2 + Chunk 3 also add ~14 MockK tests counted separately under `runMockTests`. Whatever the baseline N you recorded in Step 0.3, the final pure count should be N + ~28.
 
 - [ ] **Step 5.7.2: Run all mock tests.**
 ```bash
