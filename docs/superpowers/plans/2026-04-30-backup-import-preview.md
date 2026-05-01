@@ -872,44 +872,46 @@ The deliberate `TODO()` call is a hard fail — if you commit without porting al
 
     @Test
     fun outOfRangeIntValue_landsInSkipped() {
-        // key_height: BackupRestoreManager.validateIntPreference range is bounded;
-        // confirm yours matches before relying on the literal range here.
-        val json = """{"preferences":{"key_height":99999}}"""
+        // keyboard_height has range 10..100 in BackupRestoreManager.validateIntPreference.
+        // Pick a key that has a real int range rule — verify against
+        // your ported when-block before relying on the literal bounds.
+        val json = """{"preferences":{"keyboard_height":99999}}"""
         val plan = SettingsImportPlanBuilder.fromJson(json, emptyMap(), screen)
 
-        val rejected = plan.parseSkippedKeys.singleOrNull { it.key == "key_height" }
+        val rejected = plan.parseSkippedKeys.singleOrNull { it.key == "keyboard_height" }
         assertThat(rejected).isNotNull()
         assertThat(rejected!!.reason).contains("out of range")
-        assertThat(plan.changes.any { it.key == "key_height" }).isFalse()
+        assertThat(plan.changes.any { it.key == "keyboard_height" }).isFalse()
     }
 
     @Test
     fun typeMismatch_landsInSkipped() {
-        // Key with int rule receives a string — should reject.
-        val json = """{"preferences":{"key_height":"definitely-not-a-number"}}"""
+        // Int-typed key receives a string — must reject.
+        val json = """{"preferences":{"keyboard_height":"definitely-not-a-number"}}"""
         val plan = SettingsImportPlanBuilder.fromJson(json, emptyMap(), screen)
 
-        assertThat(plan.parseSkippedKeys.any { it.key == "key_height" }).isTrue()
+        assertThat(plan.parseSkippedKeys.any { it.key == "keyboard_height" }).isTrue()
     }
 
     @Test
     fun perRuleCategoryCoverage_intRangeFloatRangeStringAllowlist() {
-        // Concrete keys for each category — pick ONE per category from your
-        // actual ported ruleset. These three names come from common settings;
-        // replace if your validator's rule set differs.
+        // One key per category. Substitute with whatever keys your ported
+        // validator actually constrains:
+        //   - keyboard_height (Int range 10-100 — out at 99999)
+        //   - neural_temperature (Float range 0.1-3.0 — out at 99.0)
+        //   - theme (String — empty rejected by isNotEmpty())
         val json = """{
             "preferences": {
-                "swipe_min_distance": 999999,
-                "swipe_trail_width": 9999.0,
-                "primary_language": "klingon"
+                "keyboard_height": 99999,
+                "neural_temperature": 99.0,
+                "theme": ""
             }
         }""".trimIndent()
         val plan = SettingsImportPlanBuilder.fromJson(json, emptyMap(), screen)
 
-        // All three rejected by their respective validators.
         val rejectedKeys = plan.parseSkippedKeys.map { it.key }.toSet()
         assertThat(rejectedKeys).containsAtLeast(
-            "swipe_min_distance", "swipe_trail_width", "primary_language"
+            "keyboard_height", "neural_temperature", "theme"
         )
     }
 ```
@@ -1582,11 +1584,12 @@ class BackupRestoreManagerHeadlessTest {
     }
 
     @Test
-    fun headlessImportConfig_usesShortSwipeReplaceMode() {
-        // Verify the default short-swipe mode for the headless entry point
-        // matches the legacy destructive `merge=false` behavior. Changing
-        // this default would break Termux automation users — keep this test
-        // green by NOT modifying importConfig's mode unless coordinated.
+    fun applierWithReplaceMode_invokesImportFromJsonWithMergeFalse() {
+        // Verifies the contract that REPLACE mode → ShortSwipeImporter receives
+        // merge=false. The headless `importConfig` public method passes
+        // ShortSwipeImportMode.REPLACE so it preserves the legacy destructive
+        // semantics. Don't change importConfig's mode without a coordinated
+        // Termux-automation announcement — this test guards the contract.
         val ssImporter: ShortSwipeImporter = mockk(relaxed = true) {
             coEvery { importFromJson(any(), any()) } returns 0
         }
@@ -2314,7 +2317,7 @@ class LanguagePreferenceKeysReverseLookupTest {
 
 Register this in `pureTestClasses`.
 
-Add the `excludedByUserCount` field to `DictionaryImportResult` mirroring what was done for `ImportResult`. Find the existing `data class DictionaryImportResult` in BackupRestoreManager.kt (~line 1596) — add `@JvmField var excludedByUserCount: Int = 0` and preserve all other existing fields verbatim.
+Add the `excludedByUserCount` field to `DictionaryImportResult` mirroring what was done for `ImportResult`. Find the existing `data class DictionaryImportResult` in BackupRestoreManager.kt (~line 1586) — add `@JvmField var excludedByUserCount: Int = 0` and preserve all other existing fields verbatim.
 
 - [ ] **Step 3.11.2: Build; tests pass; commit.**
 
@@ -3812,6 +3815,27 @@ git commit -m "feat: dictionary export returns DictionaryExportSummary with real
 - Modify: `src/main/kotlin/tribixbite/cleverkeys/BackupRestoreActivity.kt` (add testFactory seam)
 - Modify: `src/androidTest/kotlin/tribixbite/cleverkeys/BackupRestoreActivityComposeTest.kt`
 
+- [ ] **Step 5.6.0: Make `BackupRestoreManager` `open class`.**
+
+Kotlin classes are `final` by default. The instrumented test below uses a hand-rolled subclass (NOT MockK — `mockk-android` is not on the androidTest classpath, and adding it would require dexmaker config the project doesn't have). Single-keyword change at BackupRestoreManager.kt:35:
+
+```kotlin
+// Before:
+class BackupRestoreManager(...
+
+// After:
+open class BackupRestoreManager(...
+```
+
+The methods we override in the fake (`buildSettingsImportPlan`, `exportConfig`) also need `open`. Mark each:
+
+```kotlin
+open fun buildSettingsImportPlan(uri: Uri, prefs: SharedPreferences): SettingsImportPlan = ...
+open fun exportConfig(uri: Uri, prefs: SharedPreferences): Int = ...
+```
+
+No production behavior change — just removing the implicit `final` so test-only subclasses can override. `final` callers stay final-by-default at their own definition sites.
+
 - [ ] **Step 5.6.1: Add a minimal test-factory seam in the Activity.**
 
 The Activity instantiates `BackupRestoreManager(this)` directly inside `onCreate` (BackupRestoreActivity.kt:89). To let Compose tests inject a fake, add a `var` in the existing companion object and consult it during construction. Anchor exact insertion points:
@@ -3846,14 +3870,18 @@ Document the seam in `memory/todo.md` under the completion entry.
 
 - [ ] **Step 5.6.2: Add the empty-delta-skip test.**
 
+The test injects a hand-rolled `FakeBackupRestoreManager` via `BackupRestoreActivity.testManagerOverride`. NO MockK in androidTest — the project's `androidTestImplementation` does not include `mockk-android`, and adding it (with dexmaker config) is out of scope. The fake subclass overrides only the two methods we need.
+
 ```kotlin
 package tribixbite.cleverkeys
 
+import android.content.Context
+import android.content.SharedPreferences
+import android.net.Uri
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import io.mockk.every
-import io.mockk.mockk
+import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -3869,14 +3897,18 @@ class BackupRestoreActivityImportPreviewTest {
 
     private val sampleScreen = ScreenMetrics(1080, 2400, 3.0f)
 
-    @Before
-    fun setUp() {
-        // Override the activity's manager with a MockK fake. createAndroidComposeRule
-        // launches the activity AFTER @Before runs, so the override is in place
-        // before onCreate executes.
-        BackupRestoreActivity.testManagerOverride = mockk(relaxed = true) {
-            // Empty-delta plan — no changes, no parse-skipped, no short-swipe
-            every { buildSettingsImportPlan(any(), any()) } returns SettingsImportPlan(
+    /**
+     * Hand-rolled fake — overrides ONLY the methods this test exercises.
+     * BackupRestoreManager must be `open` (Step 5.6.0) for this to compile.
+     */
+    private class FakeBackupRestoreManager(
+        context: Context,
+        private val sampleScreen: ScreenMetrics,
+        private val emptyPlan: Boolean,
+        private val exportCount: Int,
+    ) : BackupRestoreManager(context) {
+        override fun buildSettingsImportPlan(uri: Uri, prefs: SharedPreferences): SettingsImportPlan =
+            SettingsImportPlan(
                 sourceVersion = "1.4.0",
                 sourceScreen = sampleScreen,
                 currentScreen = sampleScreen,
@@ -3886,9 +3918,17 @@ class BackupRestoreActivityImportPreviewTest {
                 shortSwipeImportSize = 0,
                 shortSwipeImportRawJson = null,
             )
-            // exportConfig returns a known count
-            every { exportConfig(any(), any()) } returns 42
-        }
+
+        override fun exportConfig(uri: Uri, prefs: SharedPreferences): Int = exportCount
+    }
+
+    @Before
+    fun setUp() {
+        // createAndroidComposeRule launches the activity AFTER @Before runs,
+        // so the override is in place before onCreate executes.
+        val ctx = InstrumentationRegistry.getInstrumentation().targetContext
+        BackupRestoreActivity.testManagerOverride =
+            FakeBackupRestoreManager(ctx, sampleScreen, emptyPlan = true, exportCount = 42)
     }
 
     @After
@@ -3898,18 +3938,17 @@ class BackupRestoreActivityImportPreviewTest {
 
     @Test
     fun import_emptyDeltas_skipsPreviewAndShowsResultDirectly() {
-        // Drive the import path. The simplest entry is to invoke performImport
-        // via reflection, OR via a public helper added behind @VisibleForTesting.
-        // We use reflection to keep the production API surface unchanged.
+        // Drive the import path via reflection so we don't expose performImport
+        // publicly. Methods are private but accessible via getDeclaredMethod.
         val activity = composeRule.activity
-        val method = activity.javaClass.getDeclaredMethod("performImport", android.net.Uri::class.java)
+        val method = activity.javaClass.getDeclaredMethod("performImport", Uri::class.java)
         method.isAccessible = true
         composeRule.runOnUiThread {
-            method.invoke(activity, android.net.Uri.parse("content://test/empty"))
+            method.invoke(activity, Uri.parse("content://test/empty"))
         }
         composeRule.waitForIdle()
-        // Wait briefly for the IO coroutine to settle; idling resources would
-        // be cleaner but the existing project doesn't use them.
+        // Brief wait for the IO coroutine to settle; idling resources would
+        // be cleaner but the project doesn't currently configure them.
         Thread.sleep(500)
         composeRule.waitForIdle()
 
@@ -3921,10 +3960,10 @@ class BackupRestoreActivityImportPreviewTest {
     @Test
     fun export_resultDialogShowsCount() {
         val activity = composeRule.activity
-        val method = activity.javaClass.getDeclaredMethod("performExport", android.net.Uri::class.java)
+        val method = activity.javaClass.getDeclaredMethod("performExport", Uri::class.java)
         method.isAccessible = true
         composeRule.runOnUiThread {
-            method.invoke(activity, android.net.Uri.parse("content://test/dest.json"))
+            method.invoke(activity, Uri.parse("content://test/dest.json"))
         }
         composeRule.waitForIdle()
         Thread.sleep(500)
@@ -3935,7 +3974,7 @@ class BackupRestoreActivityImportPreviewTest {
 }
 ```
 
-Reflection is the locked-in approach for these tests — see Step 5.6.1's note above. `@VisibleForTesting` wrappers are NOT added. If a future test needs higher reliability than reflection (e.g., because the JVM strips method signatures in some R8 mode), revisit this decision in a separate commit.
+Reflection is the locked-in approach for these tests — see Step 5.6.1's note above. `@VisibleForTesting` wrappers are NOT added. The hand-rolled fake replaces the MockK approach the round-3 review flagged as not classpath-compatible. If a future test needs deeper interaction surface than this fake provides, add another override method on the fake — do NOT pull in mockk-android.
 
 - [ ] **Step 5.6.3: Build, run via ew-cli, commit.**
 ```bash
