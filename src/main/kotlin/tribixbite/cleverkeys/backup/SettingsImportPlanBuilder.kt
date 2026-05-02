@@ -41,14 +41,20 @@ object SettingsImportPlanBuilder {
 
         val sourceScreen = ScreenMetrics(sourceWidth, sourceHeight, screen.density)
 
-        val preferences: JsonObject = root.getAsJsonObject("preferences")
+        val rawPreferences: JsonObject = root.getAsJsonObject("preferences")
             ?: return SettingsImportPlan(
                 sourceVersion, sourceScreen, screen,
                 emptyList(), emptyList(), emptyList(), 0, null,
             )
 
+        // Legacy-margin migration runs BEFORE the diff so the user sees only
+        // the new-format keys in `changes` and the old keys are queued in
+        // `internalRemoves` + `parseSkippedKeys`.
+        val (preferences, migration) = applyLegacyMigration(rawPreferences, screen)
+
         val changes = mutableListOf<SettingsChange>()
         val skipped = mutableListOf<SkippedKey>()
+        skipped += migration.skipped
 
         for ((key, valueElement) in preferences.entrySet()) {
             val proposed = parsePrefValue(key, valueElement)
@@ -71,11 +77,79 @@ object SettingsImportPlanBuilder {
             currentScreen = screen,
             changes = changes,
             parseSkippedKeys = skipped,
-            internalRemoves = emptyList(),
+            internalRemoves = migration.removes,
             shortSwipeImportSize = 0,
             shortSwipeImportRawJson = null,
         )
     }
+
+    /**
+     * Pure equivalent of `BackupRestoreManager.migrateLegacyMargins`
+     * (lines 876-939 of BackupRestoreManager.kt as of v1.4.0).
+     *
+     * Handles four horizontal-margin pairs (portrait, landscape, portrait_unfolded,
+     * landscape_unfolded) AND `margin_bottom_*` dp→% conversion using
+     * `screen.density`. Verbatim port — do not abbreviate.
+     */
+    private fun applyLegacyMigration(
+        prefs: JsonObject,
+        screen: ScreenMetrics,
+    ): Pair<JsonObject, MigrationOutputs> {
+        val out = prefs.deepCopy()
+        val removes = mutableListOf<String>()
+        val skipped = mutableListOf<SkippedKey>()
+
+        // 1. Horizontal-margin pairs — symmetric dp→% conversion.
+        val horizontalKeys = listOf(
+            "horizontal_margin_portrait" to listOf("margin_left_portrait", "margin_right_portrait"),
+            "horizontal_margin_landscape" to listOf("margin_left_landscape", "margin_right_landscape"),
+            "horizontal_margin_portrait_unfolded" to listOf("margin_left_portrait_unfolded", "margin_right_portrait_unfolded"),
+            "horizontal_margin_landscape_unfolded" to listOf("margin_left_landscape_unfolded", "margin_right_landscape_unfolded"),
+        )
+        for ((oldKey, newKeys) in horizontalKeys) {
+            if (out.has(oldKey) && !out.has(newKeys[0])) {
+                try {
+                    val dpValue = out.get(oldKey).asInt
+                    val pixelValue = dpValue * screen.density
+                    val percentValue = ((pixelValue / screen.width) * 100).toInt().coerceIn(0, 45)
+                    for (newKey in newKeys) out.addProperty(newKey, percentValue)
+                    out.remove(oldKey)
+                    removes += oldKey
+                    skipped += SkippedKey(oldKey, "superseded by ${newKeys[0]} + ${newKeys[1]}")
+                } catch (_: Exception) {
+                    // Malformed value — leave for the validator to reject downstream.
+                }
+            }
+        }
+
+        // 2. Bottom-margin dp→% conversion (only when value > 30, matching legacy guard).
+        val bottomKeys = listOf(
+            "margin_bottom_portrait",
+            "margin_bottom_landscape",
+            "margin_bottom_portrait_unfolded",
+            "margin_bottom_landscape_unfolded",
+        )
+        for (key in bottomKeys) {
+            if (out.has(key)) {
+                try {
+                    val value = out.get(key).asInt
+                    if (value > 30) {
+                        val pixelValue = value * screen.density
+                        val percentValue = ((pixelValue / screen.height) * 100).toInt().coerceIn(0, 30)
+                        out.addProperty(key, percentValue)
+                        // Same key — rewritten in-place; not a SkippedKey entry.
+                    }
+                } catch (_: Exception) { /* same as above */ }
+            }
+        }
+
+        return out to MigrationOutputs(removes, skipped)
+    }
+
+    private data class MigrationOutputs(
+        val removes: List<String>,
+        val skipped: List<SkippedKey>,
+    )
 
     /**
      * Materialize a JSON value as a typed `PrefValue`. Returns null when the

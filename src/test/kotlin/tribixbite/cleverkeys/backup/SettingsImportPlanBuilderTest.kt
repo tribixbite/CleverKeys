@@ -80,4 +80,69 @@ class SettingsImportPlanBuilderTest {
         val canonical = JsonParser.parseString(rawLayouts).toString()
         assertThat((c.proposed as PrefValue.JsonBlob).raw).isEqualTo(canonical)
     }
+
+    @Test
+    fun legacyHorizontalMargin_synthesizesNewKeysAndQueuesRemove() {
+        val json = """{"preferences":{"horizontal_margin_portrait":24}}"""
+        val plan = SettingsImportPlanBuilder.fromJson(json, emptyMap(), screen)
+
+        // The legacy key never lands in `changes` (user wouldn't see "old key" rows).
+        assertThat(plan.changes.map { it.key }).containsExactly("margin_left_portrait", "margin_right_portrait")
+        // Both new keys are ADDED (snapshot is empty).
+        assertThat(plan.changes.all { it.type == ChangeType.ADDED }).isTrue()
+        // The legacy key's removal is queued so apply explicitly drops it from prefs.
+        assertThat(plan.internalRemoves).containsExactly("horizontal_margin_portrait")
+        // And it's listed in parseSkippedKeys so the user can audit what was dropped.
+        assertThat(plan.parseSkippedKeys.map { it.key }).contains("horizontal_margin_portrait")
+    }
+
+    @Test
+    fun legacyHorizontalMargins_allFourPairsConverted() {
+        // Density 3.0, width 1080: 24dp * 3.0 = 72px ; 72/1080 = 0.0667 → 6%.
+        val json = """{"preferences":{
+            "horizontal_margin_portrait":24,
+            "horizontal_margin_landscape":24,
+            "horizontal_margin_portrait_unfolded":24,
+            "horizontal_margin_landscape_unfolded":24
+        }}""".trimIndent()
+        val plan = SettingsImportPlanBuilder.fromJson(json, emptyMap(), screen)
+
+        // Eight ADDED rows expected (left + right per orientation × 4).
+        val addedKeys = plan.changes.filter { it.type == ChangeType.ADDED }.map { it.key }.toSet()
+        assertThat(addedKeys).containsAtLeast(
+            "margin_left_portrait", "margin_right_portrait",
+            "margin_left_landscape", "margin_right_landscape",
+            "margin_left_portrait_unfolded", "margin_right_portrait_unfolded",
+            "margin_left_landscape_unfolded", "margin_right_landscape_unfolded",
+        )
+        // All four legacy keys queued for removal.
+        assertThat(plan.internalRemoves.toSet()).containsExactly(
+            "horizontal_margin_portrait",
+            "horizontal_margin_landscape",
+            "horizontal_margin_portrait_unfolded",
+            "horizontal_margin_landscape_unfolded",
+        )
+    }
+
+    @Test
+    fun legacyBottomMargin_dpAboveThirty_convertedToPercent() {
+        // 50dp * 3.0 / 2400 * 100 = 6.25 → 6%.
+        val json = """{"preferences":{"margin_bottom_portrait":50}}"""
+        val plan = SettingsImportPlanBuilder.fromJson(json, emptyMap(), screen)
+
+        val change = plan.changes.single { it.key == "margin_bottom_portrait" }
+        val proposed = change.proposed as PrefValue.IntV
+        assertThat(proposed.v).isLessThan(30)
+        assertThat(proposed.v).isAtLeast(1)
+    }
+
+    @Test
+    fun legacyBottomMargin_valueAtOrBelowThirty_passesThrough() {
+        // ≤30 may already be a percent — leave alone.
+        val json = """{"preferences":{"margin_bottom_portrait":15}}"""
+        val plan = SettingsImportPlanBuilder.fromJson(json, emptyMap(), screen)
+
+        val change = plan.changes.single { it.key == "margin_bottom_portrait" }
+        assertThat((change.proposed as PrefValue.IntV).v).isEqualTo(15)
+    }
 }
