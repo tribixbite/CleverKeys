@@ -57,9 +57,20 @@ object SettingsImportPlanBuilder {
         skipped += migration.skipped
 
         for ((key, valueElement) in preferences.entrySet()) {
+            if (SettingsValidation.isInternalPreference(key)) {
+                skipped += SkippedKey(key, "internal preference")
+                continue
+            }
+
             val proposed = parsePrefValue(key, valueElement)
             if (proposed == null) {
                 skipped += SkippedKey(key, "unsupported JSON shape")
+                continue
+            }
+
+            val rangeError = SettingsValidation.validate(key, proposed)
+            if (rangeError != null) {
+                skipped += SkippedKey(key, rangeError)
                 continue
             }
 

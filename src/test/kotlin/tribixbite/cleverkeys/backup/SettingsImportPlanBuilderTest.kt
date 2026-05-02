@@ -145,4 +145,117 @@ class SettingsImportPlanBuilderTest {
         val change = plan.changes.single { it.key == "margin_bottom_portrait" }
         assertThat((change.proposed as PrefValue.IntV).v).isEqualTo(15)
     }
+
+    @Test
+    fun internalPreferenceKeys_landInSkippedNotChanges() {
+        // All three internal keys from BackupRestoreManager.isInternalPreference.
+        val json = """{"preferences":{
+            "version":42,
+            "current_layout_portrait":3,
+            "current_layout_landscape":2
+        }}""".trimIndent()
+        val plan = SettingsImportPlanBuilder.fromJson(json, emptyMap(), screen)
+
+        assertThat(plan.changes).isEmpty()
+        assertThat(plan.parseSkippedKeys.map { it.key }).containsExactly(
+            "version", "current_layout_portrait", "current_layout_landscape"
+        )
+        plan.parseSkippedKeys.forEach {
+            assertThat(it.reason).isEqualTo("internal preference")
+        }
+    }
+
+    @Test
+    fun floatKey_dispatchesToFloatVNotIntV_evenWhenJsonValueIsIntegerMultiple() {
+        // Regression for the round-3 reviewer's correctness finding:
+        // SharedPreferences throws ClassCastException if a key historically
+        // stored as Float is overwritten with putInt. The dispatch is BY KEY.
+        // swipe_trail_width is in isFloatPreference's allowlist; even when
+        // the import JSON has 5.0 (no fractional part), it must produce
+        // FloatV, NOT IntV.
+        val json = """{"preferences":{"swipe_trail_width":5.0}}"""
+        val plan = SettingsImportPlanBuilder.fromJson(json, emptyMap(), screen)
+        val change = plan.changes.single { it.key == "swipe_trail_width" }
+        assertThat(change.proposed).isInstanceOf(PrefValue.FloatV::class.java)
+        assertThat((change.proposed as PrefValue.FloatV).v).isEqualTo(5.0f)
+    }
+
+    @Test
+    fun nonFloatKey_dispatchesToIntVForIntegerJson() {
+        val json = """{"preferences":{"key_height":50}}"""
+        val plan = SettingsImportPlanBuilder.fromJson(json, emptyMap(), screen)
+        val change = plan.changes.single { it.key == "key_height" }
+        assertThat(change.proposed).isEqualTo(PrefValue.IntV(50))
+    }
+
+    @Test
+    fun isFloatPreferenceParityWithLegacy() {
+        // Spot-check the ported set covers the categories listed in the
+        // legacy method's source comments. Update as the legacy method evolves.
+        val expectedFloatKeys = listOf(
+            "character_size", "neural_temperature", "swipe_trail_width",
+            "neural_beam_alpha", "swipe_min_distance",
+            "neural_prefix_boost_multiplier_en",   // prefix pattern
+            "neural_prefix_boost_max_de",           // prefix pattern
+        )
+        expectedFloatKeys.forEach {
+            assertThat(SettingsValidation.isFloatPreference(it)).isTrue()
+        }
+        val expectedNonFloatKeys = listOf("key_height", "version", "layouts", "primary_language")
+        expectedNonFloatKeys.forEach {
+            assertThat(SettingsValidation.isFloatPreference(it)).isFalse()
+        }
+    }
+
+    @Test
+    fun internalKeys_setMatchesLegacyMethod() {
+        // Drift guard. If someone adds an entry to
+        // BackupRestoreManager.isInternalPreference but forgets to update
+        // SettingsValidation.INTERNAL_KEYS, this test fails. Hard-code the
+        // expected set explicitly so the parity check is auditable.
+        val expected = setOf("version", "current_layout_portrait", "current_layout_landscape")
+        assertThat(SettingsValidation.INTERNAL_KEYS).isEqualTo(expected)
+    }
+
+    @Test
+    fun outOfRangeIntValue_landsInSkipped() {
+        // keyboard_height has range 10..100 in BackupRestoreManager.validateIntPreference.
+        val json = """{"preferences":{"keyboard_height":99999}}"""
+        val plan = SettingsImportPlanBuilder.fromJson(json, emptyMap(), screen)
+
+        val rejected = plan.parseSkippedKeys.singleOrNull { it.key == "keyboard_height" }
+        assertThat(rejected).isNotNull()
+        assertThat(rejected!!.reason).contains("out of range")
+        assertThat(plan.changes.any { it.key == "keyboard_height" }).isFalse()
+    }
+
+    @Test
+    fun typeMismatch_landsInSkipped() {
+        // Int-typed key receives a string — must reject.
+        val json = """{"preferences":{"keyboard_height":"definitely-not-a-number"}}"""
+        val plan = SettingsImportPlanBuilder.fromJson(json, emptyMap(), screen)
+
+        assertThat(plan.parseSkippedKeys.any { it.key == "keyboard_height" }).isTrue()
+    }
+
+    @Test
+    fun perRuleCategoryCoverage_intRangeFloatRangeStringAllowlist() {
+        // One key per category:
+        //   - keyboard_height (Int range 10..100 — out at 99999)
+        //   - neural_temperature (Float range 0.1..3.0 — out at 99.0)
+        //   - theme (String — empty rejected by isNotEmpty())
+        val json = """{
+            "preferences": {
+                "keyboard_height": 99999,
+                "neural_temperature": 99.0,
+                "theme": ""
+            }
+        }""".trimIndent()
+        val plan = SettingsImportPlanBuilder.fromJson(json, emptyMap(), screen)
+
+        val rejectedKeys = plan.parseSkippedKeys.map { it.key }.toSet()
+        assertThat(rejectedKeys).containsAtLeast(
+            "keyboard_height", "neural_temperature", "theme"
+        )
+    }
 }
