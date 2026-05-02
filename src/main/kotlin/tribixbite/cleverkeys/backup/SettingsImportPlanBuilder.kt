@@ -82,6 +82,11 @@ object SettingsImportPlanBuilder {
             changes += SettingsChange(key, current, proposed, type)
         }
 
+        // Short-swipe section is captured raw — applier hands it to ShortSwipeImporter.
+        val shortSwipeJson = root.getAsJsonObject("short_swipe_customizations")
+        val shortSwipeRaw = shortSwipeJson?.toString()
+        val shortSwipeSize = shortSwipeJson?.entrySet()?.size ?: 0
+
         return SettingsImportPlan(
             sourceVersion = sourceVersion,
             sourceScreen = sourceScreen,
@@ -89,8 +94,8 @@ object SettingsImportPlanBuilder {
             changes = changes,
             parseSkippedKeys = skipped,
             internalRemoves = migration.removes,
-            shortSwipeImportSize = 0,
-            shortSwipeImportRawJson = null,
+            shortSwipeImportSize = shortSwipeSize,
+            shortSwipeImportRawJson = shortSwipeRaw,
         )
     }
 

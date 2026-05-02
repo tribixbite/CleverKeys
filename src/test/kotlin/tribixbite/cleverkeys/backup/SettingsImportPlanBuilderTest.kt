@@ -239,6 +239,18 @@ class SettingsImportPlanBuilderTest {
     }
 
     @Test
+    fun shortSwipeSection_recordsSizeAndRawJson() {
+        val ssJson = """{"q":{"up":"DEL"}}"""
+        val json = """{"preferences":{}, "short_swipe_customizations":$ssJson}"""
+
+        val plan = SettingsImportPlanBuilder.fromJson(json, emptyMap(), screen)
+
+        assertThat(plan.shortSwipeImportSize).isEqualTo(1)
+        // Canonicalized — caller hands `shortSwipeImportRawJson` to ShortSwipeManager.importFromJson.
+        assertThat(plan.shortSwipeImportRawJson).isEqualTo(JsonParser.parseString(ssJson).toString())
+    }
+
+    @Test
     fun perRuleCategoryCoverage_intRangeFloatRangeStringAllowlist() {
         // One key per category:
         //   - keyboard_height (Int range 10..100 — out at 99999)
