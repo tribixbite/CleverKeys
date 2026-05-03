@@ -4,13 +4,13 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 
 /**
- * Stateless settings export. Serializes filtered prefs into a JsonObject
- * and returns the count of entries written. The caller (BackupRestoreManager)
- * wraps the JsonObject in metadata + writes to URI.
+ * Stateless helper that serializes a `prefs.all` snapshot to a Gson `JsonObject`,
+ * filtering out internal-state keys via [SettingsValidation.INTERNAL_KEYS].
  *
- * Symmetric counterpart to [SettingsImportApplier]: both share the
- * `internalKeys` filter ([SettingsValidation.INTERNAL_KEYS]) so any value
- * that survives an export round-trips back through import.
+ * Currently used as a count helper for export-result dialogs and as a unit-test
+ * surface — not yet wired as the canonical body of `BackupRestoreManager.exportConfig`,
+ * which retains the legacy default-prefs + JSON-string-preserve handling.
+ * See `memory/todo.md` for the migration plan.
  */
 object SettingsExporter {
     /**
