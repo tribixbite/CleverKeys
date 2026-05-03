@@ -9,6 +9,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -28,6 +29,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import tribixbite.cleverkeys.theme.KeyboardTheme
+import tribixbite.cleverkeys.backup.DictImportPlan
+import tribixbite.cleverkeys.backup.LangWord
+import tribixbite.cleverkeys.backup.SettingsImportPlan
+import tribixbite.cleverkeys.backup.ShortSwipeImportMode
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import java.text.SimpleDateFormat
 import java.util.*
@@ -64,11 +69,9 @@ class BackupRestoreActivity : ComponentActivity() {
     private lateinit var prefs: SharedPreferences
     private lateinit var backupRestoreManager: BackupRestoreManager
 
-    // State
-    private var isProcessing by mutableStateOf(false)
-    private var showResultDialog by mutableStateOf(false)
-    private var resultTitle by mutableStateOf("")
-    private var resultMessage by mutableStateOf("")
+    // State hoisted into a ViewModel so plan + dialog state survive rotation.
+    private val viewModel: BackupRestoreViewModel by viewModels()
+
     // #70: Headless mode — launched via intent action, no UI, finish() after operation
     private var isHeadless = false
 
@@ -268,7 +271,7 @@ class BackupRestoreActivity : ComponentActivity() {
                                 exportLauncher.launch(filename)
                             },
                             modifier = Modifier.fillMaxWidth(),
-                            enabled = !isProcessing,
+                            enabled = !viewModel.isProcessing,
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary
                             )
@@ -311,7 +314,7 @@ class BackupRestoreActivity : ComponentActivity() {
                                 importLauncher.launch(arrayOf("application/json"))
                             },
                             modifier = Modifier.fillMaxWidth(),
-                            enabled = !isProcessing,
+                            enabled = !viewModel.isProcessing,
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.secondary
                             )
@@ -359,7 +362,7 @@ class BackupRestoreActivity : ComponentActivity() {
                                     exportDictionaryLauncher.launch(filename)
                                 },
                                 modifier = Modifier.weight(1f),
-                                enabled = !isProcessing,
+                                enabled = !viewModel.isProcessing,
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = MaterialTheme.colorScheme.tertiary
                                 )
@@ -372,7 +375,7 @@ class BackupRestoreActivity : ComponentActivity() {
                                     importDictionaryLauncher.launch(arrayOf("application/json"))
                                 },
                                 modifier = Modifier.weight(1f),
-                                enabled = !isProcessing,
+                                enabled = !viewModel.isProcessing,
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = MaterialTheme.colorScheme.tertiary
                                 )
@@ -429,7 +432,7 @@ class BackupRestoreActivity : ComponentActivity() {
                                     exportClipboardLauncher.launch(filename)
                                 },
                                 modifier = Modifier.weight(1f),
-                                enabled = !isProcessing,
+                                enabled = !viewModel.isProcessing,
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = MaterialTheme.colorScheme.tertiary
                                 )
@@ -442,7 +445,7 @@ class BackupRestoreActivity : ComponentActivity() {
                                     importClipboardLauncher.launch(arrayOf("application/json"))
                                 },
                                 modifier = Modifier.weight(1f),
-                                enabled = !isProcessing,
+                                enabled = !viewModel.isProcessing,
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = MaterialTheme.colorScheme.tertiary
                                 )
@@ -469,7 +472,7 @@ class BackupRestoreActivity : ComponentActivity() {
                                     exportClipboardZipLauncher.launch(filename)
                                 },
                                 modifier = Modifier.weight(1f),
-                                enabled = !isProcessing,
+                                enabled = !viewModel.isProcessing,
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = MaterialTheme.colorScheme.tertiary
                                 )
@@ -482,7 +485,7 @@ class BackupRestoreActivity : ComponentActivity() {
                                     importClipboardZipLauncher.launch(arrayOf("application/zip", "application/x-zip-compressed"))
                                 },
                                 modifier = Modifier.weight(1f),
-                                enabled = !isProcessing,
+                                enabled = !viewModel.isProcessing,
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = MaterialTheme.colorScheme.tertiary
                                 )
@@ -526,13 +529,13 @@ class BackupRestoreActivity : ComponentActivity() {
         }
 
         // Result dialog
-        if (showResultDialog) {
+        if (viewModel.showResultDialog) {
             AlertDialog(
-                onDismissRequest = { showResultDialog = false },
-                title = { Text(resultTitle) },
-                text = { Text(resultMessage) },
+                onDismissRequest = { viewModel.showResultDialog = false },
+                title = { Text(viewModel.resultTitle) },
+                text = { Text(viewModel.resultMessage) },
                 confirmButton = {
-                    TextButton(onClick = { showResultDialog = false }) {
+                    TextButton(onClick = { viewModel.showResultDialog = false }) {
                         Text("OK")
                     }
                 }
@@ -540,7 +543,7 @@ class BackupRestoreActivity : ComponentActivity() {
         }
 
         // Loading indicator
-        if (isProcessing) {
+        if (viewModel.isProcessing) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -573,28 +576,28 @@ class BackupRestoreActivity : ComponentActivity() {
 
     private fun performExport(uri: Uri) {
         lifecycleScope.launch {
-            isProcessing = true
+            viewModel.isProcessing = true
             try {
                 withContext(Dispatchers.IO) {
                     backupRestoreManager.exportConfig(uri, prefs)
                 }
 
                 headlessToast("Settings exported")
-                resultTitle = "Export Successful"
-                resultMessage = "Configuration exported successfully.\n\n" +
+                viewModel.resultTitle = "Export Successful"
+                viewModel.resultMessage = "Configuration exported successfully.\n\n" +
                         "File: ${uri.lastPathSegment}\n\n" +
                         "You can now transfer this file to another device or keep it as a backup."
-                showResultDialog = true
+                viewModel.showResultDialog = true
 
                 android.util.Log.i(TAG, "Export successful: $uri")
             } catch (e: Exception) {
                 android.util.Log.e(TAG, "Export failed", e)
                 headlessToast("Export failed: ${e.message?.take(60)}")
-                resultTitle = "Export Failed"
-                resultMessage = "Failed to export configuration:\n\n${e.message}"
-                showResultDialog = true
+                viewModel.resultTitle = "Export Failed"
+                viewModel.resultMessage = "Failed to export configuration:\n\n${e.message}"
+                viewModel.showResultDialog = true
             } finally {
-                isProcessing = false
+                viewModel.isProcessing = false
                 if (isHeadless) finish() // #70: close activity after headless operation
             }
         }
@@ -602,7 +605,7 @@ class BackupRestoreActivity : ComponentActivity() {
 
     private fun performImport(uri: Uri) {
         lifecycleScope.launch {
-            isProcessing = true
+            viewModel.isProcessing = true
             try {
                 val result = withContext(Dispatchers.IO) {
                     backupRestoreManager.importConfig(uri, prefs)
@@ -631,21 +634,21 @@ class BackupRestoreActivity : ComponentActivity() {
 
                 messageBuilder.append("\n\nPlease restart the keyboard for all changes to take effect.")
 
-                resultTitle = "Import Successful"
-                resultMessage = messageBuilder.toString()
-                showResultDialog = true
+                viewModel.resultTitle = "Import Successful"
+                viewModel.resultMessage = messageBuilder.toString()
+                viewModel.showResultDialog = true
 
                 headlessToast("Imported ${result.importedCount} settings")
                 android.util.Log.i(TAG, "Import successful: imported=${result.importedCount}, skipped=${result.skippedCount}")
             } catch (e: Exception) {
                 android.util.Log.e(TAG, "Import failed", e)
                 headlessToast("Import failed: ${e.message?.take(60)}")
-                resultTitle = "Import Failed"
-                resultMessage = "Failed to import configuration:\n\n${e.message}\n\n" +
+                viewModel.resultTitle = "Import Failed"
+                viewModel.resultMessage = "Failed to import configuration:\n\n${e.message}\n\n" +
                         "Make sure the file is a valid CleverKeys backup file."
-                showResultDialog = true
+                viewModel.showResultDialog = true
             } finally {
-                isProcessing = false
+                viewModel.isProcessing = false
                 if (isHeadless) finish() // #70: close activity after headless operation
             }
         }
@@ -653,31 +656,31 @@ class BackupRestoreActivity : ComponentActivity() {
 
     private fun performExportDictionaries(uri: Uri) {
         lifecycleScope.launch {
-            isProcessing = true
+            viewModel.isProcessing = true
             try {
                 withContext(Dispatchers.IO) {
                     backupRestoreManager.exportDictionaries(uri)
                 }
 
                 headlessToast("Dictionaries exported")
-                resultTitle = "Dictionary Export Successful"
-                resultMessage = "Dictionaries exported successfully.\n\n" +
+                viewModel.resultTitle = "Dictionary Export Successful"
+                viewModel.resultMessage = "Dictionaries exported successfully.\n\n" +
                         "File: ${uri.lastPathSegment}\n\n" +
                         "Includes:\n" +
                         "• User dictionary words\n" +
                         "• Disabled words\n\n" +
                         "You can now transfer this file to another device or keep it as a backup."
-                showResultDialog = true
+                viewModel.showResultDialog = true
 
                 android.util.Log.i(TAG, "Dictionary export successful: $uri")
             } catch (e: Exception) {
                 android.util.Log.e(TAG, "Dictionary export failed", e)
                 headlessToast("Dict export failed: ${e.message?.take(60)}")
-                resultTitle = "Dictionary Export Failed"
-                resultMessage = "Failed to export dictionaries:\n\n${e.message}"
-                showResultDialog = true
+                viewModel.resultTitle = "Dictionary Export Failed"
+                viewModel.resultMessage = "Failed to export dictionaries:\n\n${e.message}"
+                viewModel.showResultDialog = true
             } finally {
-                isProcessing = false
+                viewModel.isProcessing = false
                 if (isHeadless) finish() // #70: close activity after headless operation
             }
         }
@@ -685,7 +688,7 @@ class BackupRestoreActivity : ComponentActivity() {
 
     private fun performImportDictionaries(uri: Uri) {
         lifecycleScope.launch {
-            isProcessing = true
+            viewModel.isProcessing = true
             try {
                 val result = withContext(Dispatchers.IO) {
                     backupRestoreManager.importDictionaries(uri)
@@ -704,9 +707,9 @@ class BackupRestoreActivity : ComponentActivity() {
 
                 messageBuilder.append("\nNote: Import merges with existing words without overwriting.")
 
-                resultTitle = "Dictionary Import Successful"
-                resultMessage = messageBuilder.toString()
-                showResultDialog = true
+                viewModel.resultTitle = "Dictionary Import Successful"
+                viewModel.resultMessage = messageBuilder.toString()
+                viewModel.showResultDialog = true
 
                 // Send a broadcast to notify DictionaryManagerActivity to refresh
                 LocalBroadcastManager.getInstance(this@BackupRestoreActivity).sendBroadcast(Intent(ACTION_DICTIONARY_IMPORTED))
@@ -716,12 +719,12 @@ class BackupRestoreActivity : ComponentActivity() {
             } catch (e: Exception) {
                 android.util.Log.e(TAG, "Dictionary import failed", e)
                 headlessToast("Dict import failed: ${e.message?.take(60)}")
-                resultTitle = "Dictionary Import Failed"
-                resultMessage = "Failed to import dictionaries:\n\n${e.message}\n\n" +
+                viewModel.resultTitle = "Dictionary Import Failed"
+                viewModel.resultMessage = "Failed to import dictionaries:\n\n${e.message}\n\n" +
                         "Make sure the file is a valid CleverKeys dictionary backup file."
-                showResultDialog = true
+                viewModel.showResultDialog = true
             } finally {
-                isProcessing = false
+                viewModel.isProcessing = false
                 if (isHeadless) finish() // #70: close activity after headless operation
             }
         }
@@ -729,32 +732,32 @@ class BackupRestoreActivity : ComponentActivity() {
 
     private fun performExportClipboard(uri: Uri) {
         lifecycleScope.launch {
-            isProcessing = true
+            viewModel.isProcessing = true
             try {
                 withContext(Dispatchers.IO) {
                     backupRestoreManager.exportClipboardHistory(uri)
                 }
 
                 headlessToast("Clipboard exported")
-                resultTitle = "Clipboard Export Successful"
-                resultMessage = "Clipboard history exported successfully.\n\n" +
+                viewModel.resultTitle = "Clipboard Export Successful"
+                viewModel.resultMessage = "Clipboard history exported successfully.\n\n" +
                         "File: ${uri.lastPathSegment}\n\n" +
                         "Includes:\n" +
                         "• All clipboard entries\n" +
                         "• Timestamps and expiry times\n" +
                         "• Pinned status\n\n" +
                         "You can now transfer this file to another device or keep it as a backup."
-                showResultDialog = true
+                viewModel.showResultDialog = true
 
                 android.util.Log.i(TAG, "Clipboard export successful: $uri")
             } catch (e: Exception) {
                 android.util.Log.e(TAG, "Clipboard export failed", e)
                 headlessToast("Clipboard export failed: ${e.message?.take(60)}")
-                resultTitle = "Clipboard Export Failed"
-                resultMessage = "Failed to export clipboard history:\n\n${e.message}"
-                showResultDialog = true
+                viewModel.resultTitle = "Clipboard Export Failed"
+                viewModel.resultMessage = "Failed to export clipboard history:\n\n${e.message}"
+                viewModel.showResultDialog = true
             } finally {
-                isProcessing = false
+                viewModel.isProcessing = false
                 if (isHeadless) finish() // #70: close activity after headless operation
             }
         }
@@ -762,7 +765,7 @@ class BackupRestoreActivity : ComponentActivity() {
 
     private fun performImportClipboard(uri: Uri) {
         lifecycleScope.launch {
-            isProcessing = true
+            viewModel.isProcessing = true
             try {
                 val result = withContext(Dispatchers.IO) {
                     backupRestoreManager.importClipboardHistory(uri)
@@ -780,21 +783,21 @@ class BackupRestoreActivity : ComponentActivity() {
 
                 messageBuilder.append("\nNote: Import merges with existing history without overwriting.")
 
-                resultTitle = "Clipboard Import Successful"
-                resultMessage = messageBuilder.toString()
-                showResultDialog = true
+                viewModel.resultTitle = "Clipboard Import Successful"
+                viewModel.resultMessage = messageBuilder.toString()
+                viewModel.showResultDialog = true
 
                 headlessToast("Imported ${result.importedCount} clipboard entries")
                 android.util.Log.i(TAG, "Clipboard import successful: imported=${result.importedCount}, skipped=${result.skippedCount}")
             } catch (e: Exception) {
                 android.util.Log.e(TAG, "Clipboard import failed", e)
                 headlessToast("Clipboard import failed: ${e.message?.take(60)}")
-                resultTitle = "Clipboard Import Failed"
-                resultMessage = "Failed to import clipboard history:\n\n${e.message}\n\n" +
+                viewModel.resultTitle = "Clipboard Import Failed"
+                viewModel.resultMessage = "Failed to import clipboard history:\n\n${e.message}\n\n" +
                         "Make sure the file is a valid CleverKeys clipboard backup file."
-                showResultDialog = true
+                viewModel.showResultDialog = true
             } finally {
-                isProcessing = false
+                viewModel.isProcessing = false
                 if (isHeadless) finish() // #70: close activity after headless operation
             }
         }
@@ -802,31 +805,31 @@ class BackupRestoreActivity : ComponentActivity() {
 
     private fun performExportClipboardZip(uri: Uri) {
         lifecycleScope.launch {
-            isProcessing = true
+            viewModel.isProcessing = true
             try {
                 val result = withContext(Dispatchers.IO) {
                     backupRestoreManager.exportClipboardHistoryZip(uri)
                 }
 
                 headlessToast("Clipboard ZIP exported")
-                resultTitle = "Full Clipboard Export Successful"
-                resultMessage = "Clipboard history exported with media files.\n\n" +
+                viewModel.resultTitle = "Full Clipboard Export Successful"
+                viewModel.resultMessage = "Clipboard history exported with media files.\n\n" +
                         "File: ${uri.lastPathSegment}\n\n" +
                         "Includes:\n" +
                         "- ${result.exportedCount} clipboard entries\n" +
                         "- ${result.mediaFilesIncluded} media files\n\n" +
                         "This ZIP can be imported to fully restore all entries including images, videos, and other media."
-                showResultDialog = true
+                viewModel.showResultDialog = true
 
                 android.util.Log.i(TAG, "Clipboard ZIP export successful: ${result.exportedCount} entries, ${result.mediaFilesIncluded} media files")
             } catch (e: Exception) {
                 android.util.Log.e(TAG, "Clipboard ZIP export failed", e)
                 headlessToast("ZIP export failed: ${e.message?.take(60)}")
-                resultTitle = "Clipboard ZIP Export Failed"
-                resultMessage = "Failed to export clipboard history with media:\n\n${e.message}"
-                showResultDialog = true
+                viewModel.resultTitle = "Clipboard ZIP Export Failed"
+                viewModel.resultMessage = "Failed to export clipboard history with media:\n\n${e.message}"
+                viewModel.showResultDialog = true
             } finally {
-                isProcessing = false
+                viewModel.isProcessing = false
                 if (isHeadless) finish()
             }
         }
@@ -834,7 +837,7 @@ class BackupRestoreActivity : ComponentActivity() {
 
     private fun performImportClipboardZip(uri: Uri) {
         lifecycleScope.launch {
-            isProcessing = true
+            viewModel.isProcessing = true
             try {
                 val result = withContext(Dispatchers.IO) {
                     backupRestoreManager.importClipboardHistoryZip(uri)
@@ -853,21 +856,21 @@ class BackupRestoreActivity : ComponentActivity() {
 
                 messageBuilder.append("\nAll media files and thumbnails have been restored.")
 
-                resultTitle = "Full Clipboard Import Successful"
-                resultMessage = messageBuilder.toString()
-                showResultDialog = true
+                viewModel.resultTitle = "Full Clipboard Import Successful"
+                viewModel.resultMessage = messageBuilder.toString()
+                viewModel.showResultDialog = true
 
                 headlessToast("Imported ${result.importedCount} entries + ${result.mediaFilesRestored} media")
                 android.util.Log.i(TAG, "Clipboard ZIP import: ${result.importedCount} entries, ${result.mediaFilesRestored} media files")
             } catch (e: Exception) {
                 android.util.Log.e(TAG, "Clipboard ZIP import failed", e)
                 headlessToast("ZIP import failed: ${e.message?.take(60)}")
-                resultTitle = "Clipboard ZIP Import Failed"
-                resultMessage = "Failed to import clipboard ZIP:\n\n${e.message}\n\n" +
+                viewModel.resultTitle = "Clipboard ZIP Import Failed"
+                viewModel.resultMessage = "Failed to import clipboard ZIP:\n\n${e.message}\n\n" +
                         "Make sure the file is a valid CleverKeys clipboard ZIP backup."
-                showResultDialog = true
+                viewModel.showResultDialog = true
             } finally {
-                isProcessing = false
+                viewModel.isProcessing = false
                 if (isHeadless) finish()
             }
         }
