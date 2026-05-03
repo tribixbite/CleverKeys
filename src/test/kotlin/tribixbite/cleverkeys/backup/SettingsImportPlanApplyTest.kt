@@ -209,6 +209,30 @@ class SettingsImportPlanApplyTest {
     }
 
     @Test
+    fun apply_commitFails_returnsResultButLogsWarning() {
+        // commit() returning false is rare (disk full / IPC failure) but
+        // must not crash — the result is still returned so the caller can
+        // surface the import counts; a Log.w warning is the only side effect.
+        every { editor.commit() } returns false
+        val plan = planWith(
+            SettingsChange("k", PrefValue.Unset, PrefValue.IntV(1), ChangeType.ADDED)
+        )
+
+        val result = runBlocking {
+            SettingsImportApplier.apply(plan, emptySet(), ShortSwipeImportMode.SKIP, prefs, ssImporter)
+        }
+
+        // The result still reports "applied" because commit was attempted.
+        assertThat(result.importedCount).isEqualTo(1)
+        // And the warning was emitted.
+        verify {
+            Log.w("SettingsImportApplier", match<String> {
+                it.contains("editor.commit() returned false")
+            })
+        }
+    }
+
+    @Test
     fun apply_unsetSentinelInDispatch_throws() {
         // PrefValue.Unset must never reach dispatchPut — internalRemoves is the
         // correct path. Guard against a future bug where someone wires Unset
