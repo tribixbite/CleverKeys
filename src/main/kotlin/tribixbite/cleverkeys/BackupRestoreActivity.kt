@@ -876,7 +876,7 @@ class BackupRestoreActivity : ComponentActivity() {
                     backupRestoreManager.applyDictImportPlan(plan, excludedCustom, excludedDisabled, prefs)
                 }
                 viewModel.resultTitle = "Dictionary Import Successful"
-                viewModel.resultMessage = buildDictResultMessage(result, excludedCustom.size + excludedDisabled.size)
+                viewModel.resultMessage = buildDictResultMessage(result)
                 viewModel.showResultDialog = true
                 LocalBroadcastManager.getInstance(this@BackupRestoreActivity)
                     .sendBroadcast(Intent(ACTION_DICTIONARY_IMPORTED))
@@ -898,12 +898,11 @@ class BackupRestoreActivity : ComponentActivity() {
     /** Render a `DictionaryImportResult` into the result dialog body. */
     private fun buildDictResultMessage(
         result: BackupRestoreManager.DictionaryImportResult,
-        excludedCount: Int,
     ): String = buildString {
         appendLine("Dictionary import completed.\n")
         appendLine("• Custom words applied: ${result.userWordsImported}")
         appendLine("• Disabled words applied: ${result.disabledWordsImported}")
-        if (excludedCount > 0) appendLine("• Excluded by you: $excludedCount")
+        if (result.excludedByUserCount > 0) appendLine("• Excluded by you: ${result.excludedByUserCount}")
         if (result.sourceVersion != "unknown") appendLine("• Source version: ${result.sourceVersion}")
     }
 
