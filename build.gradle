@@ -371,6 +371,7 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.Issue118EmojiOverflowTest',
     'tribixbite.cleverkeys.Issue136MaxSeqLengthClampTest',
     'tribixbite.cleverkeys.backup.SettingsImportPlanBuilderTest',
+    'tribixbite.cleverkeys.backup.DictImportPlanBuilderTest',
     'tribixbite.cleverkeys.BucketBSourceContractTest',
     // SwipePrunerTest excluded: requires android.util.Log (MockK + Robolectric)
   ]
