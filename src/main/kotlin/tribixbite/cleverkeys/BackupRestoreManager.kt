@@ -914,6 +914,8 @@ class BackupRestoreManager(private val context: Context) {
     data class ImportResult(
         @JvmField var importedCount: Int = 0,
         @JvmField var skippedCount: Int = 0,
+        @JvmField var excludedByUserCount: Int = 0,    // NEW: user-deselected in preview
+        @JvmField var driftCount: Int = 0,              // NEW: changed between build and apply
         @JvmField var sourceVersion: String = "unknown",
         @JvmField var sourceScreenWidth: Int = 0,
         @JvmField var sourceScreenHeight: Int = 0,
