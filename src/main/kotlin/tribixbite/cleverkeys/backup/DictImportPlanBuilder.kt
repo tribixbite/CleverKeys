@@ -17,6 +17,15 @@ import com.google.gson.JsonParser
  */
 object DictImportPlanBuilder {
 
+    /**
+     * Default frequency for legacy `user_words` entries that lack an explicit
+     * frequency (bare-string entries, or object form missing the `frequency`
+     * field). Mirrors the legacy `BackupRestoreManager.importPreference`
+     * constant — preserved here so external/older backups round-trip without
+     * silent narrowing.
+     */
+    private const val DEFAULT_USER_WORD_FREQ = 100
+
     fun fromJson(
         jsonString: String,
         currentCustomByLang: Map<String, Map<String, Int>>,
@@ -81,12 +90,22 @@ object DictImportPlanBuilder {
             map.putIfAbsent(w, freqEl.asInt)
         }
 
-        // 3. legacy user_words → English (array of {word, frequency} objects)
+        // 3. legacy user_words → English (array of strings OR array of
+        // {word, frequency} objects). Bare-string entries default to
+        // DEFAULT_USER_WORD_FREQ; object form missing `frequency` likewise —
+        // matches legacy `BackupRestoreManager.importPreference` behavior.
         root.getAsJsonArray("user_words")?.forEach { entry ->
-            if (!entry.isJsonObject) return@forEach
-            val obj = entry.asJsonObject
-            val word = obj.get("word")?.asString ?: return@forEach
-            val freq = obj.get("frequency")?.asInt ?: 1
+            val (word, freq) = when {
+                entry.isJsonObject -> {
+                    val obj = entry.asJsonObject
+                    val w = obj.get("word")?.asString ?: return@forEach
+                    val f = obj.get("frequency")?.asInt ?: DEFAULT_USER_WORD_FREQ
+                    w to f
+                }
+                entry.isJsonPrimitive && entry.asJsonPrimitive.isString ->
+                    entry.asString to DEFAULT_USER_WORD_FREQ
+                else -> return@forEach
+            }
             val map = merged.getOrPut("en") { LinkedHashMap() }
             map.putIfAbsent(word, freq)
         }

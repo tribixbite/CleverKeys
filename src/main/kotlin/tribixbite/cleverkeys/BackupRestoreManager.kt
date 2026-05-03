@@ -1100,6 +1100,5 @@ class BackupRestoreManager(
 
     companion object {
         private const val TAG = "BackupRestoreManager"
-        private const val DEFAULT_USER_WORD_FREQ = 100 // Default frequency for user words
     }
 }

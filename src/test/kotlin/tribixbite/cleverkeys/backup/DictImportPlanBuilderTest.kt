@@ -81,4 +81,21 @@ class DictImportPlanBuilderTest {
         val en = plan.perLanguage["en"]!!
         assertThat(en.newCustomWords).containsExactly("foo", 10, "FOO", 20)
     }
+
+    @Test
+    fun legacyUserWords_bareStringEntries_acceptedWithDefaultFrequency() {
+        val json = """{"user_words":["foo","bar"]}"""
+        val plan = DictImportPlanBuilder.fromJson(json, emptyMap(), emptyMap())
+        val en = plan.perLanguage["en"]!!
+        // Both bare-string entries land with DEFAULT_USER_WORD_FREQ = 100.
+        assertThat(en.newCustomWords).containsExactly("foo", 100, "bar", 100)
+    }
+
+    @Test
+    fun legacyUserWords_objectMissingFrequency_usesDefault() {
+        val json = """{"user_words":[{"word":"foo"}]}"""
+        val plan = DictImportPlanBuilder.fromJson(json, emptyMap(), emptyMap())
+        val en = plan.perLanguage["en"]!!
+        assertThat(en.newCustomWords["foo"]).isEqualTo(100)
+    }
 }
