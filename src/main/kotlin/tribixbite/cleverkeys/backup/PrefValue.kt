@@ -23,15 +23,6 @@ sealed class PrefValue {
 }
 
 /**
- * Atomic operation the apply loop executes against a single
- * `SharedPreferences.Editor`.
- */
-sealed class EditorOp {
-    data class Put(val key: String, val value: PrefValue) : EditorOp()
-    data class Remove(val key: String) : EditorOp()
-}
-
-/**
  * Screen size + density needed by `migrateLegacyMargins` (dp→px) and the
  * Source vs Current screen-mismatch warning. Passing this to the pure
  * builder lets us avoid `context.resources.displayMetrics`.
