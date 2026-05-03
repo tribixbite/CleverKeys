@@ -3,6 +3,7 @@ package tribixbite.cleverkeys
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -10,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -161,13 +163,21 @@ private fun SettingsChangeRow(
     isExcluded: Boolean,
     onToggle: () -> Unit,
 ) {
+    // Whole-row toggle so taps on the key text — not just the checkbox glyph —
+    // flip exclusion. Without `toggleable`, narrow checkbox hit-targets miss
+    // on touch and tests targeting onNodeWithText(key).performClick() fail.
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .toggleable(
+                value = !isExcluded,
+                role = Role.Checkbox,
+                onValueChange = { onToggle() },
+            )
             .padding(horizontal = 16.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Checkbox(checked = !isExcluded, onCheckedChange = { onToggle() })
+        Checkbox(checked = !isExcluded, onCheckedChange = null)
         Spacer(Modifier.width(8.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(change.key, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
@@ -224,26 +234,34 @@ private fun ShortSwipeModeRadio(
         )
         ShortSwipeImportMode.entries.forEach { mode ->
             Row(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .toggleable(
+                        value = (mode == selected),
+                        role = Role.RadioButton,
+                        onValueChange = { if (it) onSelect(mode) },
+                    )
+                    .padding(vertical = 2.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                RadioButton(selected = (mode == selected), onClick = { onSelect(mode) })
+                RadioButton(selected = (mode == selected), onClick = null)
                 Spacer(Modifier.width(8.dp))
-                Column {
-                    Text(when (mode) {
-                        ShortSwipeImportMode.SKIP -> "Skip — don't import"
-                        ShortSwipeImportMode.MERGE -> "Merge — fill gaps, preserve existing (recommended)"
-                        ShortSwipeImportMode.REPLACE -> "Replace — wipe existing, install file's set"
-                    })
-                    if (mode == ShortSwipeImportMode.REPLACE) {
-                        Text(
-                            text = "This will REPLACE all your existing short-swipe customizations.",
-                            color = MaterialTheme.colorScheme.error,
-                            fontSize = 11.sp,
-                        )
-                    }
-                }
+                Text(when (mode) {
+                    ShortSwipeImportMode.SKIP -> "Skip — don't import"
+                    ShortSwipeImportMode.MERGE -> "Merge — fill gaps, preserve existing (recommended)"
+                    ShortSwipeImportMode.REPLACE -> "Replace — wipe existing, install file's set"
+                })
             }
+        }
+        // Warning only when REPLACE is the active selection — see spec
+        // "Red warning text shown only when REPLACE is selected".
+        if (selected == ShortSwipeImportMode.REPLACE) {
+            Text(
+                text = "This will REPLACE all your existing short-swipe customizations.",
+                color = MaterialTheme.colorScheme.error,
+                fontSize = 11.sp,
+                modifier = Modifier.padding(start = 48.dp, top = 4.dp),
+            )
         }
     }
 }
@@ -298,6 +316,11 @@ private fun LanguageSection(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .toggleable(
+                    value = allSelected,
+                    role = Role.Checkbox,
+                    onValueChange = { onToggleAll(lang, it) },
+                )
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -306,7 +329,7 @@ private fun LanguageSection(
             // glyph that destroys cherry-picked selections on tap.
             Checkbox(
                 checked = allSelected,
-                onCheckedChange = { onToggleAll(lang, it) },
+                onCheckedChange = null,
             )
             Spacer(Modifier.width(8.dp))
             Text(
@@ -373,10 +396,17 @@ private fun LangSubgroup(
         ) {
             items(filtered, key = { it }) { word ->
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .toggleable(
+                            value = !isExcluded(word),
+                            role = Role.Checkbox,
+                            onValueChange = { onToggle(word) },
+                        )
+                        .padding(vertical = 2.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Checkbox(checked = !isExcluded(word), onCheckedChange = { onToggle(word) })
+                    Checkbox(checked = !isExcluded(word), onCheckedChange = null)
                     Spacer(Modifier.width(8.dp))
                     Text(word, modifier = Modifier.weight(1f), fontSize = 13.sp)
                     val meta = metadata(word)
