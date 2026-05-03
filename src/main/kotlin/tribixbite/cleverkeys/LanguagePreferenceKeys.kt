@@ -99,6 +99,21 @@ object LanguagePreferenceKeys {
     // DictionaryManager now handles all legacy migration correctly using Locale.getDefault().language.
 
     /**
+     * Inverse of customWordsKey — given a pref key, return the language code if
+     * it matches the custom-words prefix pattern, or null otherwise.
+     */
+    fun languageFromCustomWordsKey(key: String): String? =
+        if (key.startsWith("custom_words_") && key.length > "custom_words_".length)
+            key.removePrefix("custom_words_") else null
+
+    /**
+     * Inverse of disabledWordsKey.
+     */
+    fun languageFromDisabledWordsKey(key: String): String? =
+        if (key.startsWith("disabled_words_") && key.length > "disabled_words_".length)
+            key.removePrefix("disabled_words_") else null
+
+    /**
      * Get all language codes that have custom words stored.
      *
      * @param prefs SharedPreferences to scan

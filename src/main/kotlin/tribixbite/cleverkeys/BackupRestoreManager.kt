@@ -25,6 +25,10 @@ import java.util.*
 import kotlin.math.abs
 import android.provider.UserDictionary
 import tribixbite.cleverkeys.customization.ShortSwipeCustomizationManager
+import tribixbite.cleverkeys.backup.DictImportApplier
+import tribixbite.cleverkeys.backup.DictImportPlan
+import tribixbite.cleverkeys.backup.DictImportPlanBuilder
+import tribixbite.cleverkeys.backup.LangWord
 import tribixbite.cleverkeys.backup.RealShortSwipeImporter
 import tribixbite.cleverkeys.backup.ScreenMetrics
 import tribixbite.cleverkeys.backup.SettingsImportApplier
@@ -752,6 +756,74 @@ class BackupRestoreManager(
     }
 
     /**
+     * Build a `DictImportPlan` for the given URI without applying any changes.
+     * Pure IO + delegation to the pure planner — UI calls this on a background
+     * thread to populate the preview dialog before the user confirms.
+     */
+    fun buildDictImportPlan(uri: Uri, prefs: SharedPreferences): DictImportPlan {
+        val jsonString = readJsonFromUri(uri)
+        val currentCustom = readCurrentCustomWordsByLang(prefs)
+        val currentDisabled = readCurrentDisabledWordsByLang(prefs)
+        return DictImportPlanBuilder.fromJson(jsonString, currentCustom, currentDisabled)
+    }
+
+    /**
+     * Apply a previously-built `DictImportPlan` against the current prefs.
+     * Thin delegator to `DictImportApplier.apply` — returns a populated
+     * `DictionaryImportResult` for caller telemetry/UI display.
+     *
+     * Atomicity: a single `editor.commit()` covers all languages — see
+     * DictImportApplier.apply contract.
+     */
+    fun applyDictImportPlan(
+        plan: DictImportPlan,
+        excludedCustom: Set<LangWord>,
+        excludedDisabled: Set<LangWord>,
+        prefs: SharedPreferences,
+    ): DictionaryImportResult {
+        val (customApplied, disabledApplied) = DictImportApplier.apply(
+            plan, excludedCustom, excludedDisabled, prefs
+        )
+        return DictionaryImportResult().apply {
+            sourceVersion = plan.sourceVersion
+            userWordsImported = customApplied
+            disabledWordsImported = disabledApplied
+            excludedByUserCount = excludedCustom.size + excludedDisabled.size
+        }
+    }
+
+    /**
+     * Read the user's current per-language custom words from prefs.
+     * Scans for keys matching `custom_words_<lang>` via reverse helper.
+     */
+    private fun readCurrentCustomWordsByLang(prefs: SharedPreferences): Map<String, Map<String, Int>> {
+        val out = mutableMapOf<String, Map<String, Int>>()
+        val gson = Gson()
+        val mapType = object : com.google.gson.reflect.TypeToken<Map<String, Int>>() {}.type
+        for ((key, value) in prefs.all) {
+            val lang = LanguagePreferenceKeys.languageFromCustomWordsKey(key) ?: continue
+            if (value !is String) continue
+            try {
+                out[lang] = gson.fromJson(value, mapType) ?: emptyMap()
+            } catch (_: Exception) { /* skip malformed */ }
+        }
+        return out
+    }
+
+    /**
+     * Read the user's current per-language disabled words from prefs.
+     */
+    private fun readCurrentDisabledWordsByLang(prefs: SharedPreferences): Map<String, Set<String>> {
+        val out = mutableMapOf<String, Set<String>>()
+        for ((key, value) in prefs.all) {
+            val lang = LanguagePreferenceKeys.languageFromDisabledWordsKey(key) ?: continue
+            @Suppress("UNCHECKED_CAST")
+            if (value is Set<*>) out[lang] = value as Set<String>
+        }
+        return out
+    }
+
+    /**
      * Import user dictionaries from JSON file
      * @param uri URI from Storage Access Framework (ACTION_OPEN_DOCUMENT)
      * @return DictionaryImportResult with statistics
@@ -1138,7 +1210,8 @@ class BackupRestoreManager(
     data class DictionaryImportResult(
         @JvmField var userWordsImported: Int = 0,
         @JvmField var disabledWordsImported: Int = 0,
-        @JvmField var sourceVersion: String = "unknown"
+        @JvmField var sourceVersion: String = "unknown",
+        @JvmField var excludedByUserCount: Int = 0,    // NEW: user-deselected in preview
     )
 
     /**
