@@ -104,9 +104,9 @@ class BackupRestoreActivity : ComponentActivity() {
         val importUri = fileUri ?: resolveBase64Extra(intent)
         val headlessAction = when (intent.action) {
             ACTION_EXPORT_SETTINGS -> fileUri?.let { { performExport(it) } }
-            ACTION_IMPORT_SETTINGS -> importUri?.let { { performImport(it) } }
+            ACTION_IMPORT_SETTINGS -> importUri?.let { { performImportHeadless(it) } }
             ACTION_EXPORT_DICTIONARIES -> fileUri?.let { { performExportDictionaries(it) } }
-            ACTION_IMPORT_DICTIONARIES -> importUri?.let { { performImportDictionaries(it) } }
+            ACTION_IMPORT_DICTIONARIES -> importUri?.let { { performImportDictionariesHeadless(it) } }
             ACTION_EXPORT_CLIPBOARD -> fileUri?.let { { performExportClipboard(it) } }
             ACTION_IMPORT_CLIPBOARD -> importUri?.let { { performImportClipboard(it) } }
             else -> null
@@ -121,6 +121,26 @@ class BackupRestoreActivity : ComponentActivity() {
             // #35: Follow system dark/light mode
             KeyboardTheme {
                 BackupRestoreScreen()
+                viewModel.settingsPreviewPlan?.let { plan ->
+                    SettingsImportPreviewDialog(
+                        plan = plan,
+                        onCancel = { viewModel.settingsPreviewPlan = null },
+                        onApply = { excluded, ssMode ->
+                            viewModel.settingsPreviewPlan = null
+                            applyPlannedSettings(plan, excluded, ssMode)
+                        }
+                    )
+                }
+                viewModel.dictPreviewPlan?.let { plan ->
+                    DictionaryImportPreviewDialog(
+                        plan = plan,
+                        onCancel = { viewModel.dictPreviewPlan = null },
+                        onApply = { excludedCustom, excludedDisabled ->
+                            viewModel.dictPreviewPlan = null
+                            applyPlannedDictionaries(plan, excludedCustom, excludedDisabled)
+                        }
+                    )
+                }
             }
         }
     }
@@ -603,7 +623,111 @@ class BackupRestoreActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * SAF picker entry point: build a preview plan, then either skip
+     * straight to the result dialog (no deltas) or surface the preview
+     * dialog so the user can deselect keys / pick a short-swipe mode.
+     *
+     * The headless Intent path (Termux automation) does NOT route here —
+     * see `performImportHeadless` for the legacy destructive default.
+     */
     private fun performImport(uri: Uri) {
+        lifecycleScope.launch {
+            viewModel.isProcessing = true
+            try {
+                val plan = withContext(Dispatchers.IO) {
+                    backupRestoreManager.buildSettingsImportPlan(uri, prefs)
+                }
+                val nothingToImport = plan.changes.isEmpty() &&
+                    plan.parseSkippedKeys.isEmpty() &&
+                    plan.shortSwipeImportSize == 0
+                if (nothingToImport) {
+                    viewModel.resultTitle = "No changes"
+                    viewModel.resultMessage = "Backup file matches current settings."
+                    viewModel.showResultDialog = true
+                } else {
+                    viewModel.settingsPreviewPlan = plan
+                }
+            } catch (e: Exception) {
+                android.util.Log.e(TAG, "Build settings plan failed", e)
+                viewModel.resultTitle = "Import Failed"
+                viewModel.resultMessage = "Failed to read backup file:\n\n${e.message}"
+                viewModel.showResultDialog = true
+            } finally {
+                viewModel.isProcessing = false
+            }
+        }
+    }
+
+    /**
+     * Apply a previously-shown settings preview. Runs the IO commit on a
+     * background thread, then mirrors the legacy result-dialog flow.
+     * Always copies to protected storage afterward (Direct Boot survival).
+     */
+    private fun applyPlannedSettings(
+        plan: SettingsImportPlan,
+        excludedKeys: Set<String>,
+        shortSwipeMode: ShortSwipeImportMode,
+    ) {
+        lifecycleScope.launch {
+            viewModel.isProcessing = true
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    backupRestoreManager.applySettingsImportPlan(plan, excludedKeys, shortSwipeMode, prefs)
+                }
+                DirectBootAwarePreferences.copy_preferences_to_protected_storage(this@BackupRestoreActivity, prefs)
+                viewModel.resultTitle = "Import Successful"
+                viewModel.resultMessage = buildSettingsResultMessage(result)
+                viewModel.showResultDialog = true
+                android.util.Log.i(
+                    TAG,
+                    "Import successful: imported=${result.importedCount}, skipped=${result.skippedCount}, excluded=${result.excludedByUserCount}"
+                )
+            } catch (e: Exception) {
+                android.util.Log.e(TAG, "Apply settings plan failed", e)
+                viewModel.resultTitle = "Import Failed"
+                viewModel.resultMessage = "Failed to apply imported settings:\n\n${e.message}"
+                viewModel.showResultDialog = true
+            } finally {
+                viewModel.isProcessing = false
+            }
+        }
+    }
+
+    /** Render an `ImportResult` into the result dialog body. */
+    private fun buildSettingsResultMessage(result: BackupRestoreManager.ImportResult): String = buildString {
+        appendLine("Import completed.\n")
+        appendLine("• Applied: ${result.importedCount}")
+        if (result.excludedByUserCount > 0) {
+            appendLine("• Excluded by you: ${result.excludedByUserCount}")
+        }
+        if (result.skippedCount > 0) {
+            appendLine("• Invalid/skipped: ${result.skippedCount}")
+        }
+        if (result.shortSwipeCustomizationsImported > 0) {
+            appendLine("• Short-swipe applied: ${result.shortSwipeCustomizationsImported}")
+        }
+        if (result.sourceVersion != "unknown") {
+            appendLine("• Source version: ${result.sourceVersion}")
+        }
+        if (result.sourceScreenWidth > 0 && result.sourceScreenWidth != result.currentScreenWidth) {
+            appendLine()
+            appendLine(
+                "Screen-size mismatch: source ${result.sourceScreenWidth}x${result.sourceScreenHeight}, " +
+                    "current ${result.currentScreenWidth}x${result.currentScreenHeight}. " +
+                    "Some visual settings may need adjustment."
+            )
+        }
+        appendLine()
+        append("Restart the keyboard for changes to take effect.")
+    }
+
+    /**
+     * Headless Intent path: preserves the legacy `importConfig` semantics
+     * (destructive `merge=false` short-swipe REPLACE). Termux automation
+     * callers depend on this — do NOT route through the preview flow.
+     */
+    private fun performImportHeadless(uri: Uri) {
         lifecycleScope.launch {
             viewModel.isProcessing = true
             try {
@@ -686,7 +810,97 @@ class BackupRestoreActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * SAF picker entry point for dictionary import. Mirrors `performImport`:
+     * builds a `DictImportPlan`, then either skips straight to the result
+     * dialog (no new words) or surfaces the dictionary preview dialog so
+     * the user can deselect per-word.
+     *
+     * The headless Intent path (Termux automation) does NOT route here —
+     * see `performImportDictionariesHeadless` for the legacy semantics.
+     */
     private fun performImportDictionaries(uri: Uri) {
+        lifecycleScope.launch {
+            viewModel.isProcessing = true
+            try {
+                val plan = withContext(Dispatchers.IO) {
+                    backupRestoreManager.buildDictImportPlan(uri, prefs)
+                }
+                val nothingToImport = plan.perLanguage.values.all {
+                    it.newCustomWords.isEmpty() && it.newDisabledWords.isEmpty()
+                }
+                if (nothingToImport) {
+                    viewModel.resultTitle = "No changes"
+                    viewModel.resultMessage = "Dictionary file has no new words to import."
+                    viewModel.showResultDialog = true
+                } else {
+                    viewModel.dictPreviewPlan = plan
+                }
+            } catch (e: Exception) {
+                android.util.Log.e(TAG, "Build dictionary plan failed", e)
+                viewModel.resultTitle = "Import Failed"
+                viewModel.resultMessage = "Failed to read dictionary file:\n\n${e.message}"
+                viewModel.showResultDialog = true
+            } finally {
+                viewModel.isProcessing = false
+            }
+        }
+    }
+
+    /**
+     * Apply a previously-shown dictionary preview. Single editor.commit()
+     * across all per-language word lists; broadcasts ACTION_DICTIONARY_IMPORTED
+     * so DictionaryManagerActivity refreshes its view.
+     */
+    private fun applyPlannedDictionaries(
+        plan: DictImportPlan,
+        excludedCustom: Set<LangWord>,
+        excludedDisabled: Set<LangWord>,
+    ) {
+        lifecycleScope.launch {
+            viewModel.isProcessing = true
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    backupRestoreManager.applyDictImportPlan(plan, excludedCustom, excludedDisabled, prefs)
+                }
+                viewModel.resultTitle = "Dictionary Import Successful"
+                viewModel.resultMessage = buildDictResultMessage(result, excludedCustom.size + excludedDisabled.size)
+                viewModel.showResultDialog = true
+                LocalBroadcastManager.getInstance(this@BackupRestoreActivity)
+                    .sendBroadcast(Intent(ACTION_DICTIONARY_IMPORTED))
+                android.util.Log.i(
+                    TAG,
+                    "Dictionary import successful: userWords=${result.userWordsImported}, disabledWords=${result.disabledWordsImported}"
+                )
+            } catch (e: Exception) {
+                android.util.Log.e(TAG, "Apply dictionary plan failed", e)
+                viewModel.resultTitle = "Import Failed"
+                viewModel.resultMessage = "Failed to apply dictionary import:\n\n${e.message}"
+                viewModel.showResultDialog = true
+            } finally {
+                viewModel.isProcessing = false
+            }
+        }
+    }
+
+    /** Render a `DictionaryImportResult` into the result dialog body. */
+    private fun buildDictResultMessage(
+        result: BackupRestoreManager.DictionaryImportResult,
+        excludedCount: Int,
+    ): String = buildString {
+        appendLine("Dictionary import completed.\n")
+        appendLine("• Custom words applied: ${result.userWordsImported}")
+        appendLine("• Disabled words applied: ${result.disabledWordsImported}")
+        if (excludedCount > 0) appendLine("• Excluded by you: $excludedCount")
+        if (result.sourceVersion != "unknown") appendLine("• Source version: ${result.sourceVersion}")
+    }
+
+    /**
+     * Headless Intent path for dictionary import. Preserves legacy
+     * `importDictionaries` semantics (no preview, merge-only via
+     * first-writer-wins). Termux automation depends on this signature.
+     */
+    private fun performImportDictionariesHeadless(uri: Uri) {
         lifecycleScope.launch {
             viewModel.isProcessing = true
             try {
