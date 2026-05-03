@@ -46,4 +46,16 @@ class DictImportPlanBuilderTest {
         // mergedCustomWordsByLang should also reflect this
         assertThat(plan.mergedCustomWordsByLang["en"]).containsExactly("foo", 10)
     }
+
+    @Test
+    fun existingWord_filteredFromDeltas() {
+        val json = """{"custom_words_by_language":{"en":{"foo":10,"bar":20}}}"""
+        val current = mapOf("en" to mapOf("foo" to 5))   // user already has "foo"
+
+        val plan = DictImportPlanBuilder.fromJson(json, current, emptyMap())
+
+        val en = plan.perLanguage["en"]!!
+        assertThat(en.newCustomWords).doesNotContainKey("foo")    // filtered
+        assertThat(en.newCustomWords).containsKey("bar")           // genuinely new
+    }
 }
