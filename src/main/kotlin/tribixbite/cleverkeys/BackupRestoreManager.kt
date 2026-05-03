@@ -27,14 +27,26 @@ import kotlin.math.abs
 import android.provider.UserDictionary
 import tribixbite.cleverkeys.customization.ShortSwipeCustomizationManager
 import tribixbite.cleverkeys.backup.PrefValue
+import tribixbite.cleverkeys.backup.RealShortSwipeImporter
+import tribixbite.cleverkeys.backup.ScreenMetrics
+import tribixbite.cleverkeys.backup.SettingsImportApplier
+import tribixbite.cleverkeys.backup.SettingsImportPlan
+import tribixbite.cleverkeys.backup.SettingsImportPlanBuilder
 import tribixbite.cleverkeys.backup.SettingsValidation
+import tribixbite.cleverkeys.backup.ShortSwipeImportMode
+import tribixbite.cleverkeys.backup.ShortSwipeImporter
 import kotlinx.coroutines.runBlocking
 
 /**
  * Manages backup and restore of keyboard configuration
  * Uses Storage Access Framework (SAF) for Android 15+ compatibility
  */
-class BackupRestoreManager(private val context: Context) {
+class BackupRestoreManager(
+    private val context: Context,
+    private val shortSwipeImporter: ShortSwipeImporter = RealShortSwipeImporter(
+        ShortSwipeCustomizationManager.getInstance(context)
+    ),
+) {
     // Lazy init to avoid circular dependency issues
     private val shortSwipeManager: ShortSwipeCustomizationManager by lazy {
         ShortSwipeCustomizationManager.getInstance(context)
@@ -537,6 +549,35 @@ class BackupRestoreManager(private val context: Context) {
      * @param uri URI from Storage Access Framework (ACTION_OPEN_DOCUMENT)
      * @return ImportResult with statistics
      */
+    /**
+     * Build a `SettingsImportPlan` for the given URI without applying any changes.
+     * Reads the JSON, snapshots current prefs, and diffs to produce the plan that
+     * the SAF-flow preview UI displays before the user accepts.
+     */
+    fun buildSettingsImportPlan(uri: Uri, prefs: SharedPreferences): SettingsImportPlan {
+        val jsonString = readJsonFromUri(uri)
+        val snapshot: Map<String, Any?> = prefs.all.toMap()
+        val dm = context.resources.displayMetrics
+        val screen = ScreenMetrics(dm.widthPixels, dm.heightPixels, dm.density)
+        return SettingsImportPlanBuilder.fromJson(jsonString, snapshot, screen)
+    }
+
+    /**
+     * Apply a previously-built `SettingsImportPlan` against the current prefs.
+     * Thin delegator to `SettingsImportApplier.apply` — owns the editor + commit
+     * lifecycle and short-swipe importer routing centrally.
+     */
+    fun applySettingsImportPlan(
+        plan: SettingsImportPlan,
+        excludedKeys: Set<String>,
+        shortSwipeMode: ShortSwipeImportMode,
+        prefs: SharedPreferences,
+    ): ImportResult = runBlocking {
+        SettingsImportApplier.apply(
+            plan, excludedKeys, shortSwipeMode, prefs, shortSwipeImporter
+        )
+    }
+
     fun importConfig(uri: Uri, prefs: SharedPreferences): ImportResult {
         return try {
             // #70: Read JSON with scoped-storage fallbacks
