@@ -142,6 +142,36 @@ class SettingsImportPreviewDialogComposeTest {
     }
 
     @Test
+    fun jsonBlobChange_rendersJsonChangePlaceholder() {
+        // Locks down the new "(JSON change)" copy that replaced the misleading
+        // "tap to view" affordance (commit 46bac61f3). The row's tap action
+        // toggles exclusion — there is no viewer — so the copy must not promise
+        // a tap-to-view interaction.
+        composeRule.setContent {
+            MaterialTheme {
+                Surface {
+                    SettingsImportPreviewDialog(
+                        plan = planWith(
+                            SettingsChange(
+                                key = "layouts",
+                                current = PrefValue.JsonBlob("[]"),
+                                proposed = PrefValue.JsonBlob("[\"qwerty\"]"),
+                                type = ChangeType.MODIFIED,
+                            )
+                        ),
+                        onCancel = {},
+                        onApply = { _, _ -> },
+                    )
+                }
+            }
+        }
+
+        composeRule.onNodeWithText("(JSON change)", substring = true).assertIsDisplayed()
+        // Negative assertion: the misleading legacy copy must not be present.
+        composeRule.onNodeWithText("tap to view", substring = true).assertDoesNotExist()
+    }
+
+    @Test
     fun applyButton_alwaysEnabledEvenAtZeroSelection() {
         composeRule.setContent {
             MaterialTheme {
