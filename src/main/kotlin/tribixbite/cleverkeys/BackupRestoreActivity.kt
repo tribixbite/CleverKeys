@@ -703,34 +703,6 @@ class BackupRestoreActivity : ComponentActivity() {
         }
     }
 
-    /** Render an `ImportResult` into the result dialog body. */
-    private fun buildSettingsResultMessage(result: BackupRestoreManager.ImportResult): String = buildString {
-        appendLine("Import completed.\n")
-        appendLine("• Applied: ${result.importedCount}")
-        if (result.excludedByUserCount > 0) {
-            appendLine("• Excluded by you: ${result.excludedByUserCount}")
-        }
-        if (result.skippedCount > 0) {
-            appendLine("• Invalid/skipped: ${result.skippedCount}")
-        }
-        if (result.shortSwipeCustomizationsImported > 0) {
-            appendLine("• Short-swipe applied: ${result.shortSwipeCustomizationsImported}")
-        }
-        if (result.sourceVersion != "unknown") {
-            appendLine("• Source version: ${result.sourceVersion}")
-        }
-        if (result.sourceScreenWidth > 0 && result.sourceScreenWidth != result.currentScreenWidth) {
-            appendLine()
-            appendLine(
-                "Screen-size mismatch: source ${result.sourceScreenWidth}x${result.sourceScreenHeight}, " +
-                    "current ${result.currentScreenWidth}x${result.currentScreenHeight}. " +
-                    "Some visual settings may need adjustment."
-            )
-        }
-        appendLine()
-        append("Restart the keyboard for changes to take effect.")
-    }
-
     /**
      * Headless Intent path: preserves the legacy `importConfig` semantics
      * (destructive `merge=false` short-swipe REPLACE). Termux automation
@@ -893,17 +865,6 @@ class BackupRestoreActivity : ComponentActivity() {
                 viewModel.isProcessing = false
             }
         }
-    }
-
-    /** Render a `DictionaryImportResult` into the result dialog body. */
-    private fun buildDictResultMessage(
-        result: BackupRestoreManager.DictionaryImportResult,
-    ): String = buildString {
-        appendLine("Dictionary import completed.\n")
-        appendLine("• Custom words applied: ${result.userWordsImported}")
-        appendLine("• Disabled words applied: ${result.disabledWordsImported}")
-        if (result.excludedByUserCount > 0) appendLine("• Excluded by you: ${result.excludedByUserCount}")
-        if (result.sourceVersion != "unknown") appendLine("• Source version: ${result.sourceVersion}")
     }
 
     /**
