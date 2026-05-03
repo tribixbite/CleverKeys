@@ -598,18 +598,18 @@ class BackupRestoreActivity : ComponentActivity() {
         lifecycleScope.launch {
             viewModel.isProcessing = true
             try {
-                withContext(Dispatchers.IO) {
+                val count = withContext(Dispatchers.IO) {
                     backupRestoreManager.exportConfig(uri, prefs)
                 }
 
-                headlessToast("Settings exported")
+                headlessToast("Settings exported: $count")
                 viewModel.resultTitle = "Export Successful"
-                viewModel.resultMessage = "Configuration exported successfully.\n\n" +
+                viewModel.resultMessage = "Settings exported: $count\n\n" +
                         "File: ${uri.lastPathSegment}\n\n" +
-                        "You can now transfer this file to another device or keep it as a backup."
+                        "You can transfer this file to another device or keep it as a backup."
                 viewModel.showResultDialog = true
 
-                android.util.Log.i(TAG, "Export successful: $uri")
+                android.util.Log.i(TAG, "Export successful: $count preferences -> $uri")
             } catch (e: Exception) {
                 android.util.Log.e(TAG, "Export failed", e)
                 headlessToast("Export failed: ${e.message?.take(60)}")

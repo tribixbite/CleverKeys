@@ -43,7 +43,7 @@ import kotlinx.coroutines.runBlocking
  * Manages backup and restore of keyboard configuration
  * Uses Storage Access Framework (SAF) for Android 15+ compatibility
  */
-class BackupRestoreManager(
+open class BackupRestoreManager(
     private val context: Context,
     private val shortSwipeImporter: ShortSwipeImporter = RealShortSwipeImporter(
         ShortSwipeCustomizationManager.getInstance(context)
@@ -290,12 +290,21 @@ class BackupRestoreManager(
     }
 
     /**
-     * Export all preferences to JSON file, including defaults for documentation
+     * Export all preferences to a JSON file, including defaults for documentation.
+     *
+     * Returns the count of preferences written so the SAF picker flow
+     * (`BackupRestoreActivity.performExport`) can surface a real number in
+     * the success dialog. The legacy `Boolean` return is gone — every
+     * non-throwing path now returns the count; failures throw.
+     *
+     * Marked `open` so [BackupRestoreActivityImportPreviewTest]'s hand-rolled
+     * fake can stub the count without performing real IO.
+     *
      * @param uri URI from Storage Access Framework (ACTION_CREATE_DOCUMENT)
-     * @return true if successful
+     * @return number of preferences written (defaults + stored, internal keys excluded)
      */
-    fun exportConfig(uri: Uri, prefs: SharedPreferences): Boolean {
-        return try {
+    open fun exportConfig(uri: Uri, prefs: SharedPreferences): Int {
+        try {
             // Collect metadata
             val root = JsonObject()
             val metadata = JsonObject()
@@ -380,8 +389,9 @@ class BackupRestoreManager(
                 }
             }
 
-            Log.i(TAG, "Exported ${preferences.size()} preferences (${storedPrefs.size} stored + defaults)")
-            true
+            val count = preferences.size()
+            Log.i(TAG, "Exported $count preferences (${storedPrefs.size} stored + defaults)")
+            return count
         } catch (e: Exception) {
             Log.e(TAG, "Export failed", e)
             throw Exception("Export failed: ${e.message}", e)
@@ -556,7 +566,7 @@ class BackupRestoreManager(
      * Reads the JSON, snapshots current prefs, and diffs to produce the plan that
      * the SAF-flow preview UI displays before the user accepts.
      */
-    fun buildSettingsImportPlan(uri: Uri, prefs: SharedPreferences): SettingsImportPlan {
+    open fun buildSettingsImportPlan(uri: Uri, prefs: SharedPreferences): SettingsImportPlan {
         val jsonString = readJsonFromUri(uri)
         val snapshot: Map<String, Any?> = prefs.all.toMap()
         val dm = context.resources.displayMetrics
