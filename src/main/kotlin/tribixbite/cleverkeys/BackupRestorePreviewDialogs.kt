@@ -3,6 +3,7 @@ package tribixbite.cleverkeys
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -236,10 +237,10 @@ private fun ShortSwipeModeRadio(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .toggleable(
-                        value = (mode == selected),
+                    .selectable(
+                        selected = (mode == selected),
                         role = Role.RadioButton,
-                        onValueChange = { if (it) onSelect(mode) },
+                        onClick = { onSelect(mode) },
                     )
                     .padding(vertical = 2.dp),
                 verticalAlignment = Alignment.CenterVertically,
