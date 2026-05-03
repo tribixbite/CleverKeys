@@ -206,7 +206,10 @@ private fun renderPrefValue(v: PrefValue): String = when (v) {
     is PrefValue.Str -> "\"${v.v}\""
     // JsonBlob deliberately rendered as a marker — full diff is in a separate
     // section; mixing JSON walls with scalar diffs hurts UX (spec §UI flow).
-    is PrefValue.JsonBlob -> "(JSON, tap to view)"
+    // Placeholder is intentionally non-promising: the row's tap action toggles
+    // exclusion, not opens a viewer. A real "tap to view raw" disclosure is a
+    // future polish pass (spec §168, §226).
+    is PrefValue.JsonBlob -> "(JSON change)"
 }
 
 @Composable
