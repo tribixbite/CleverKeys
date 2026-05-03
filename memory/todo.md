@@ -1,5 +1,37 @@
 # CleverKeys TODO
 
+## ✅ BackupRestore import preview + export counts (2026-04-30)
+
+Two-phase build/apply split inside BackupRestoreManager. Settings + dictionary
+imports now show a preview dialog with deltas-only listings + per-key /
+per-word deselect. Export dialogs show real counts.
+
+- SettingsImportApplier + DictImportApplier: stateless, single editor.commit()
+  per import (replaces 4 separate apply()s in legacy dict path)
+- SettingsValidation.kt: single source of truth shared by IO + pure paths
+- ViewModel rotation: BackupRestoreViewModel hoists plan state through
+  config changes; user toggle state survives device rotation
+- 2-state-with-badge language header (NOT TriStateCheckbox) — tap on
+  partial-selection deselect-all destroys cherry-picked work
+- ShortSwipeImportMode 3-radio: SKIP / MERGE (default in SAF flow) / REPLACE
+- Headless Termux path preserved: importConfig keeps legacy merge=false
+  destructive default for ACTION_IMPORT_SETTINGS Intent callers
+
+### Hard-won lessons
+
+- BaseInputConnection-style fire-and-forget: `editor.apply()` is async; for
+  honest post-write counts use `editor.commit()` (synchronous).
+- `migrateLegacyMargins` synthesizes new keys but never calls
+  `editor.remove(oldKey)` — old margin keys orphan in SharedPreferences
+  forever. The new build path queues an explicit `internalRemoves` list.
+- `importDictionaries` accepts THREE concurrent formats (v2 + 2 legacy)
+  with first-writer-wins via `!containsKey` — when refactoring, preserve
+  ordering via `LinkedHashMap.putIfAbsent` (NOT `Map.plus` which is
+  last-writer-wins).
+- Material `TriStateCheckbox` cycles On→Off→Indeterminate→On; in a
+  selection list with cherry-picked deselects, that destroys user work.
+  Use a 2-state checkbox + count-badge instead (Gmail/GitHub pattern).
+
 ## ✅ High-signal test expansion (2026-04-28)
 
 After reviewing whether to mechanically expand to ~400 mostly-display
