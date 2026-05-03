@@ -897,14 +897,13 @@ class BackupRestoreManager(private val context: Context) {
     }
 
     /**
-     * Validate string preference values. Delegates to SettingsValidation.
-     *
-     * The legacy IO path (importPreference) calls this AFTER routing past
-     * the int/float branches, so type-mismatch keys (e.g. "keyboard_height"
-     * arriving as a string) never reach this method. The pure validator's
-     * type-mismatch guard for int-/float-typed keys is intentionally STRICTER
-     * than the legacy method's per-key allowlist; the legacy IO path's
-     * dispatch order made the guard unreachable in practice.
+     * Delegates to SettingsValidation.validate. Note: the new validator
+     * is stricter than the legacy method for malformed/hand-edited
+     * exports — a JSON String value for an Int- or Float-allowlisted
+     * key (e.g. `"keyboard_height": "50"`) is now rejected at import.
+     * Previously such values were stored via editor.putString and would
+     * cause a ClassCastException on the next prefs.getInt(...) call.
+     * This is a net correctness improvement.
      */
     private fun validateStringPreference(key: String, value: String?): Boolean =
         value != null && SettingsValidation.validate(key, PrefValue.Str(value)) == null
