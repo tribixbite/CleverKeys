@@ -1,9 +1,11 @@
 package tribixbite.cleverkeys.backup
 
 import android.content.SharedPreferences
+import android.util.Log
 import com.google.common.truth.Truth.assertThat
 import io.mockk.*
 import kotlinx.coroutines.runBlocking
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
@@ -17,6 +19,11 @@ class SettingsImportPlanApplyTest {
 
     @Before
     fun setUp() {
+        mockkStatic(Log::class)
+        every { Log.d(any(), any()) } returns 0
+        every { Log.e(any(), any()) } returns 0
+        every { Log.i(any(), any()) } returns 0
+        every { Log.w(any(), any<String>()) } returns 0
         prefs = mockk(relaxed = true)
         editor = mockk(relaxed = true)
         every { prefs.edit() } returns editor
@@ -24,6 +31,11 @@ class SettingsImportPlanApplyTest {
         every { prefs.all } returns emptyMap()
         ssImporter = mockk(relaxed = true)
         coEvery { ssImporter.importFromJson(any(), any()) } returns 0
+    }
+
+    @After
+    fun tearDown() {
+        unmockkStatic(Log::class)
     }
 
     private fun planWith(vararg changes: SettingsChange) = SettingsImportPlan(
@@ -66,5 +78,87 @@ class SettingsImportPlanApplyTest {
         assertThat(result.importedCount).isEqualTo(5)
         assertThat(result.excludedByUserCount).isEqualTo(0)
         coVerify(exactly = 0) { ssImporter.importFromJson(any(), any()) }
+    }
+
+    @Test
+    fun apply_omitsExcludedKeys() {
+        val plan = planWith(
+            SettingsChange("a", PrefValue.Unset, PrefValue.IntV(1), ChangeType.ADDED),
+            SettingsChange("b", PrefValue.Unset, PrefValue.IntV(2), ChangeType.ADDED),
+        )
+
+        val result = runBlocking {
+            SettingsImportApplier.apply(
+                plan = plan,
+                excludedKeys = setOf("a"),
+                shortSwipeMode = ShortSwipeImportMode.SKIP,
+                prefs = prefs,
+                shortSwipeImporter = ssImporter,
+            )
+        }
+
+        verify(exactly = 0) { editor.putInt("a", any()) }
+        verify(exactly = 1) { editor.putInt("b", 2) }
+        assertThat(result.importedCount).isEqualTo(1)
+        assertThat(result.excludedByUserCount).isEqualTo(1)
+    }
+
+    @Test
+    fun apply_executesInternalRemovesEvenWhenChangesEmpty() {
+        val plan = SettingsImportPlan(
+            sourceVersion = "1.4.0",
+            sourceScreen = screen,
+            currentScreen = screen,
+            changes = emptyList(),
+            parseSkippedKeys = emptyList(),
+            internalRemoves = listOf("legacy_key"),
+            shortSwipeImportSize = 0,
+            shortSwipeImportRawJson = null,
+        )
+
+        runBlocking {
+            SettingsImportApplier.apply(plan, emptySet(), ShortSwipeImportMode.SKIP, prefs, ssImporter)
+        }
+
+        verify(exactly = 1) { editor.remove("legacy_key") }
+        verify(exactly = 1) { editor.commit() }
+    }
+
+    @Test
+    fun apply_driftCount_incrementsWhenCurrentChangedSinceBuild() {
+        // Plan recorded current value = 50 at build time. By the time apply runs,
+        // prefs.all returns 99 — drift!
+        every { prefs.all } returns mapOf("key_height" to 99)
+        val plan = planWith(
+            SettingsChange("key_height", PrefValue.IntV(50), PrefValue.IntV(60), ChangeType.MODIFIED)
+        )
+
+        val result = runBlocking {
+            SettingsImportApplier.apply(plan, emptySet(), ShortSwipeImportMode.SKIP, prefs, ssImporter)
+        }
+
+        // The user's selection is still honored — value 60 is still written.
+        verify(exactly = 1) { editor.putInt("key_height", 60) }
+        // But drift is logged.
+        assertThat(result.driftCount).isEqualTo(1)
+    }
+
+    @Test
+    fun apply_unsetSentinelInDispatch_throws() {
+        // PrefValue.Unset must never reach dispatchPut — internalRemoves is the
+        // correct path. Guard against a future bug where someone wires Unset
+        // into a Put op.
+        val plan = planWith(
+            SettingsChange("k", PrefValue.Unset, PrefValue.Unset, ChangeType.ADDED)
+        )
+
+        try {
+            runBlocking {
+                SettingsImportApplier.apply(plan, emptySet(), ShortSwipeImportMode.SKIP, prefs, ssImporter)
+            }
+            assert(false) { "Expected IllegalStateException" }
+        } catch (e: IllegalStateException) {
+            assertThat(e.message).contains("PrefValue.Unset is illegal")
+        }
     }
 }
