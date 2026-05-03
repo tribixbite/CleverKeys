@@ -51,4 +51,65 @@ class DictImportPlanApplyTest {
         verify(exactly = 1) { editor.commit() }
         verify(exactly = 3) { editor.putString(any(), any()) }   // 3 langs × custom
     }
+
+    @Test
+    fun apply_excludesByLangWord() {
+        val plan = DictImportPlan(
+            sourceVersion = "1.4.0",
+            perLanguage = mapOf("en" to LangChanges(mapOf("foo" to 1, "bar" to 2), emptyList())),
+            mergedCustomWordsByLang = mapOf("en" to mapOf("foo" to 1, "bar" to 2)),
+            mergedDisabledWordsByLang = emptyMap(),
+        )
+
+        val (customApplied, _) = DictImportApplier.apply(
+            plan = plan,
+            excludedCustom = setOf(LangWord("en", "foo")),
+            excludedDisabled = emptySet(),
+            prefs = prefs,
+        )
+
+        assertThat(customApplied).isEqualTo(1)
+        // Verify the editor saw only "bar" in the saved JSON. Captured via
+        // a slot:
+        val saved = slot<String>()
+        verify { editor.putString(any(), capture(saved)) }
+        assertThat(saved.captured).contains("bar")
+        assertThat(saved.captured).doesNotContain("foo")
+    }
+
+    @Test
+    fun apply_existingWord_notRecounted() {
+        every { prefs.getString(any(), any()) } returns """{"foo":99}"""    // user already has foo
+        val plan = DictImportPlan(
+            sourceVersion = "1.4.0",
+            perLanguage = mapOf("en" to LangChanges(mapOf("foo" to 1, "bar" to 2), emptyList())),
+            mergedCustomWordsByLang = mapOf("en" to mapOf("foo" to 1, "bar" to 2)),
+            mergedDisabledWordsByLang = emptyMap(),
+        )
+
+        val (customApplied, _) = DictImportApplier.apply(
+            plan, emptySet(), emptySet(), prefs
+        )
+
+        // "foo" already present — only "bar" counted.
+        assertThat(customApplied).isEqualTo(1)
+    }
+
+    @Test
+    fun apply_disabledWords_singleCommit() {
+        val plan = DictImportPlan(
+            sourceVersion = "1.4.0",
+            perLanguage = mapOf("en" to LangChanges(emptyMap(), listOf("bad"))),
+            mergedCustomWordsByLang = emptyMap(),
+            mergedDisabledWordsByLang = mapOf("en" to setOf("bad")),
+        )
+
+        val (_, disabledApplied) = DictImportApplier.apply(
+            plan, emptySet(), emptySet(), prefs
+        )
+
+        assertThat(disabledApplied).isEqualTo(1)
+        verify(exactly = 1) { editor.commit() }
+        verify(exactly = 1) { editor.putStringSet(any(), any()) }
+    }
 }
