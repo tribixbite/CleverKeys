@@ -118,7 +118,7 @@ class SettingsImportPreviewDialogComposeTest {
         composeRule.onNodeWithText("Merge — fill gaps, preserve existing (recommended)")
             .assertIsDisplayed()
         // Default is Merge -> red warning is NOT shown
-        composeRule.onNodeWithText("This will REPLACE all your existing", substring = true)
+        composeRule.onNodeWithText("This will REPLACE your", substring = true)
             .assertDoesNotExist()
     }
 
@@ -137,7 +137,7 @@ class SettingsImportPreviewDialogComposeTest {
         }
         composeRule.onNodeWithText("Replace — wipe existing, install file's set").performClick()
         composeRule.waitForIdle()
-        composeRule.onNodeWithText("This will REPLACE all your existing", substring = true)
+        composeRule.onNodeWithText("This will REPLACE your", substring = true)
             .assertIsDisplayed()
     }
 

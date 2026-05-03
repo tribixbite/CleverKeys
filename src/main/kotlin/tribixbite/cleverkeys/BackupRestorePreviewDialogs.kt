@@ -257,7 +257,7 @@ private fun ShortSwipeModeRadio(
         // "Red warning text shown only when REPLACE is selected".
         if (selected == ShortSwipeImportMode.REPLACE) {
             Text(
-                text = "This will REPLACE all your existing short-swipe customizations.",
+                text = "This will REPLACE your $size existing short-swipe customizations.",
                 color = MaterialTheme.colorScheme.error,
                 fontSize = 11.sp,
                 modifier = Modifier.padding(start = 48.dp, top = 4.dp),
