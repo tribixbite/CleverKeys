@@ -58,4 +58,15 @@ class DictImportPlanBuilderTest {
         assertThat(en.newCustomWords).doesNotContainKey("foo")    // filtered
         assertThat(en.newCustomWords).containsKey("bar")           // genuinely new
     }
+
+    @Test
+    fun legacyDisabledWords_routedToEnglish() {
+        val json = """{"disabled_words":["bad","words"]}"""
+
+        val plan = DictImportPlanBuilder.fromJson(json, emptyMap(), emptyMap())
+
+        val en = plan.perLanguage["en"]!!
+        assertThat(en.newDisabledWords).containsExactly("bad", "words")
+        assertThat(en.newCustomWords).isEmpty()
+    }
 }
