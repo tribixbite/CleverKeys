@@ -418,6 +418,19 @@ private fun LangSubgroup(
     }
 }
 
+/**
+ * Top-level entry point for the dictionary import preview.
+ *
+ * onApply receives two exclusion sets — one for custom-word LangWords, one
+ * for disabled-word LangWords. Empty sets + tapping Apply imports the full
+ * delta; non-empty sets uncheck individual words within the deltas.
+ *
+ * Per-language sections start collapsed; expand reveals two LazyColumn
+ * sub-groups (Custom / Disabled) each with their own search field. The
+ * language-header checkbox is 2-state with a "X of Y selected" badge —
+ * NOT Material's TriStateCheckbox (which would destroy cherry-picked
+ * deselections on tap).
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DictionaryImportPreviewDialog(
