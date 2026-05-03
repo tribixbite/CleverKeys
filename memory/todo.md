@@ -31,6 +31,31 @@ per-word deselect. Export dialogs show real counts.
 - Material `TriStateCheckbox` cycles On→Off→Indeterminate→On; in a
   selection list with cherry-picked deselects, that destroys user work.
   Use a 2-state checkbox + count-badge instead (Gmail/GitHub pattern).
+- **Compose `Modifier.toggleable` vs `Modifier.selectable`** — toggleable models on/off
+  state; selectable models single-choice from a group. Radio rows MUST use selectable
+  (with `Role.RadioButton`) for correct accessibility semantics. Compose Test
+  `onNodeWithText().performClick()` works with either, but the role + click semantics
+  matter for screen readers. We use both in the same dialog (checkbox rows = toggleable,
+  radio rows = selectable).
+
+### Follow-ups
+
+- **`backup/SettingsExporter` not yet canonical for export.** `BackupRestoreManager.exportConfig`
+  preserves the legacy body (defaults via `getAllDefaultPreferences()`, JSON-string preserve via
+  `isJsonStringPreference()`) and computes count locally via `preferences.size()`.
+  `SettingsExporter.buildPreferencesJson` exists with 3 unit tests but isn't called outside the
+  test class. Migrate by extending `SettingsExporter` to handle defaults + JSON-string preserve,
+  then have `exportConfig` delegate to it. Until then the helper rot-risks if the legacy body
+  drifts.
+- **`Thread.sleep(500)` in `BackupRestoreActivityImportPreviewTest`** waits for the IO coroutine.
+  Replace with `composeRule.registerIdlingResource(...)` once the project has a coroutine idling
+  resource pattern.
+- **Reflection in same test class.** Tests call `getDeclaredMethod("performImport", Uri::class.java)`
+  to invoke private methods. If those methods get renamed, the test fails at runtime, not compile
+  time. Migrate to `@VisibleForTesting internal` once more activity-level tests appear.
+- **`BackupRestoreActivity.kt` at 1104 LOC** with 8 near-identical `perform*` handlers all doing
+  the same `lifecycleScope.launch + try + isProcessing` boilerplate. Worth extracting a
+  `runOperation(label, body)` helper if any future change adds another handler.
 
 ## ✅ High-signal test expansion (2026-04-28)
 
