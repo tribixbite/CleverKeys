@@ -63,6 +63,15 @@ class BackupRestoreActivity : ComponentActivity() {
         const val ACTION_IMPORT_DICTIONARIES = "tribixbite.cleverkeys.action.IMPORT_DICTIONARIES"
         const val ACTION_EXPORT_CLIPBOARD = "tribixbite.cleverkeys.action.EXPORT_CLIPBOARD"
         const val ACTION_IMPORT_CLIPBOARD = "tribixbite.cleverkeys.action.IMPORT_CLIPBOARD"
+
+        /**
+         * Test-only override hook. When non-null, the activity uses this
+         * Manager instead of constructing its own. Instrumented tests set
+         * it in @Before, clear it in @After. NOT thread-safe by design —
+         * instrumented tests run sequentially.
+         */
+        @androidx.annotation.VisibleForTesting
+        var testManagerOverride: BackupRestoreManager? = null
     }
 
     // SharedPreferences
@@ -89,7 +98,7 @@ class BackupRestoreActivity : ComponentActivity() {
         // Initialize preferences and backup manager
         try {
             prefs = DirectBootAwarePreferences.get_shared_preferences(this)
-            backupRestoreManager = BackupRestoreManager(this)
+            backupRestoreManager = testManagerOverride ?: BackupRestoreManager(this)
         } catch (e: Exception) {
             android.util.Log.e(TAG, "Error initializing", e)
             Toast.makeText(this, "Error initializing: ${e.message}", Toast.LENGTH_SHORT).show()
