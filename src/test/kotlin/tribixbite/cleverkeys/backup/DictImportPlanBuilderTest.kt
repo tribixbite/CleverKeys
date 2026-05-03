@@ -69,4 +69,16 @@ class DictImportPlanBuilderTest {
         assertThat(en.newDisabledWords).containsExactly("bad", "words")
         assertThat(en.newCustomWords).isEmpty()
     }
+
+    @Test
+    fun caseDifferentVariants_renderAsDistinctEntries() {
+        // "foo" and "FOO" are distinct in current importDictionaries —
+        // preserved here so the preview UI shows them as two rows.
+        val json = """{"custom_words_by_language":{"en":{"foo":10,"FOO":20}}}"""
+
+        val plan = DictImportPlanBuilder.fromJson(json, emptyMap(), emptyMap())
+
+        val en = plan.perLanguage["en"]!!
+        assertThat(en.newCustomWords).containsExactly("foo", 10, "FOO", 20)
+    }
 }
