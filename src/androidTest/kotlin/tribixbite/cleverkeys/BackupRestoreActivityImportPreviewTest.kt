@@ -47,7 +47,7 @@ class BackupRestoreActivityImportPreviewTest {
         // so each method sees a fresh override + fresh activity.
         val ctx = InstrumentationRegistry.getInstrumentation().targetContext
         BackupRestoreActivity.testManagerOverride =
-            FakeBackupRestoreManager(ctx, sampleScreen, emptyPlan = true, exportCount = 42)
+            FakeBackupRestoreManager(ctx, sampleScreen, exportCount = 42)
     }
 
     @get:Rule
@@ -60,7 +60,6 @@ class BackupRestoreActivityImportPreviewTest {
     private class FakeBackupRestoreManager(
         context: Context,
         private val sampleScreen: ScreenMetrics,
-        @Suppress("UNUSED_PARAMETER") emptyPlan: Boolean,
         private val exportCount: Int,
     ) : BackupRestoreManager(context) {
         override fun buildSettingsImportPlan(uri: Uri, prefs: SharedPreferences): SettingsImportPlan =
