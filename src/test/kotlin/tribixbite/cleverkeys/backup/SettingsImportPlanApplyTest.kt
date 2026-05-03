@@ -143,6 +143,71 @@ class SettingsImportPlanApplyTest {
         assertThat(result.driftCount).isEqualTo(1)
     }
 
+    private fun planWithShortSwipe(rawJson: String, size: Int = 1) = SettingsImportPlan(
+        sourceVersion = "1.4.0",
+        sourceScreen = screen,
+        currentScreen = screen,
+        changes = emptyList(),
+        parseSkippedKeys = emptyList(),
+        internalRemoves = emptyList(),
+        shortSwipeImportSize = size,
+        shortSwipeImportRawJson = rawJson,
+    )
+
+    @Test
+    fun apply_shortSwipeSkip_doesNotCallImporter() {
+        runBlocking {
+            SettingsImportApplier.apply(
+                plan = planWithShortSwipe("""{"q":{"up":"DEL"}}"""),
+                excludedKeys = emptySet(),
+                shortSwipeMode = ShortSwipeImportMode.SKIP,
+                prefs = prefs,
+                shortSwipeImporter = ssImporter,
+            )
+        }
+        coVerify(exactly = 0) { ssImporter.importFromJson(any(), any()) }
+    }
+
+    @Test
+    fun apply_shortSwipeMerge_invokesImporterWithMergeTrue() {
+        coEvery { ssImporter.importFromJson(any(), merge = true) } returns 3
+        val result = runBlocking {
+            SettingsImportApplier.apply(
+                plan = planWithShortSwipe("""{"q":{"up":"DEL"}}"""),
+                excludedKeys = emptySet(),
+                shortSwipeMode = ShortSwipeImportMode.MERGE,
+                prefs = prefs,
+                shortSwipeImporter = ssImporter,
+            )
+        }
+        coVerify(exactly = 1) { ssImporter.importFromJson(any(), merge = true) }
+        assertThat(result.shortSwipeCustomizationsImported).isEqualTo(3)
+    }
+
+    @Test
+    fun apply_shortSwipeReplace_invokesImporterWithMergeFalse() {
+        coEvery { ssImporter.importFromJson(any(), merge = false) } returns 2
+        runBlocking {
+            SettingsImportApplier.apply(
+                plan = planWithShortSwipe("""{"q":{"up":"DEL"}}"""),
+                excludedKeys = emptySet(),
+                shortSwipeMode = ShortSwipeImportMode.REPLACE,
+                prefs = prefs,
+                shortSwipeImporter = ssImporter,
+            )
+        }
+        coVerify(exactly = 1) { ssImporter.importFromJson(any(), merge = false) }
+    }
+
+    @Test
+    fun apply_shortSwipeNullRawJson_skipsRegardlessOfMode() {
+        val plan = planWith()   // no short-swipe at all
+        runBlocking {
+            SettingsImportApplier.apply(plan, emptySet(), ShortSwipeImportMode.MERGE, prefs, ssImporter)
+        }
+        coVerify(exactly = 0) { ssImporter.importFromJson(any(), any()) }
+    }
+
     @Test
     fun apply_unsetSentinelInDispatch_throws() {
         // PrefValue.Unset must never reach dispatchPut — internalRemoves is the
