@@ -130,8 +130,8 @@ private fun SettingsPreviewHeaderCard(plan: SettingsImportPlan) {
             Text("Source: ${plan.sourceVersion}", fontWeight = FontWeight.SemiBold)
             val s = plan.sourceScreen
             val c = plan.currentScreen
-            Text("Source screen: ${s.width}x${s.height}@${s.density}", fontSize = 12.sp)
-            Text("Current screen: ${c.width}x${c.height}@${c.density}", fontSize = 12.sp)
+            Text("Source screen: ${s.width}\u00d7${s.height}@${s.density}", fontSize = 12.sp)
+            Text("Current screen: ${c.width}\u00d7${c.height}@${c.density}", fontSize = 12.sp)
             if (s.width != c.width || s.height != c.height) {
                 Spacer(Modifier.height(8.dp))
                 Text(
@@ -194,7 +194,7 @@ private fun SettingsChangeRow(
 private fun renderDelta(change: SettingsChange): String {
     val current = renderPrefValue(change.current)
     val proposed = renderPrefValue(change.proposed)
-    return "$current  ->  $proposed"
+    return "$current  \u2192  $proposed"
 }
 
 private fun renderPrefValue(v: PrefValue): String = when (v) {
@@ -216,7 +216,7 @@ private fun TypeChip(value: PrefValue) {
         is PrefValue.FloatV -> "Float"
         is PrefValue.Str -> "Str"
         is PrefValue.JsonBlob -> "JSON"
-        PrefValue.Unset -> "-"
+        PrefValue.Unset -> "\u2014"
     }
     AssistChip(onClick = {}, label = { Text(label, fontSize = 10.sp) })
 }
@@ -272,8 +272,8 @@ private fun SkippedSection(skipped: List<SkippedKey>) {
     Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
         TextButton(onClick = { expanded = !expanded }) {
             Text(
-                if (expanded) "v Invalid/skipped (${skipped.size}) — tap to collapse"
-                else "> Invalid/skipped (${skipped.size}) — tap to expand",
+                if (expanded) "\u25bc Invalid/skipped (${skipped.size}) — tap to collapse"
+                else "\u25b6 Invalid/skipped (${skipped.size}) — tap to expand",
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
@@ -385,7 +385,7 @@ private fun LangSubgroup(
         OutlinedTextField(
             value = query,
             onValueChange = { query = it },
-            placeholder = { Text("Search...") },
+            placeholder = { Text("Search\u2026") },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )

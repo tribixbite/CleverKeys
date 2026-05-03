@@ -100,7 +100,7 @@ class DictionaryImportPreviewDialogComposeTest {
         }
         composeRule.onNodeWithText("Expand").performClick()
         composeRule.waitForIdle()
-        composeRule.onNodeWithText("Search...", substring = true).performTextInput("app")
+        composeRule.onNodeWithText("Search\u2026", substring = true).performTextInput("app")
         composeRule.waitForIdle()
         composeRule.onNodeWithText("apple").assertIsDisplayed()
         composeRule.onNodeWithText("banana").assertDoesNotExist()
