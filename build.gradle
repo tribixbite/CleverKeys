@@ -417,6 +417,7 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.TerminalUtilsTest',
     'tribixbite.cleverkeys.KeyRepeatLogicTest',
     'tribixbite.cleverkeys.backup.SettingsImportPlanApplyTest',
+    'tribixbite.cleverkeys.backup.DictImportPlanApplyTest',
     'tribixbite.cleverkeys.backup.BackupRestoreManagerHeadlessTest',
   ]
 
