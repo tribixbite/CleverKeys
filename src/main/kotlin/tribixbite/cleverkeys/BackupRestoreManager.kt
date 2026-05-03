@@ -662,13 +662,31 @@ open class BackupRestoreManager(
     }
 
     /**
-     * Export user dictionaries to JSON file
-     * @param uri URI from Storage Access Framework (ACTION_CREATE_DOCUMENT)
+     * Counts surfaced from a successful [exportDictionaries] call so the
+     * SAF picker flow can render real numbers in the success dialog.
+     */
+    data class DictionaryExportSummary(
+        @JvmField val customWordsCount: Int,
+        @JvmField val disabledWordsCount: Int,
+        @JvmField val languageCount: Int,
+    )
+
+    /**
+     * Export user dictionaries to JSON file.
+     *
+     * Returns a [DictionaryExportSummary] with the actual counts, replacing
+     * the legacy `Unit` return. Existing callers that ignored the return
+     * value continue to compile unchanged.
      *
      * v1.1.88: Exports in language-specific format (custom_words_${lang}, disabled_words_${lang})
      * Also includes legacy format for backwards compatibility with older app versions.
+     *
+     * @param uri URI from Storage Access Framework (ACTION_CREATE_DOCUMENT)
      */
-    fun exportDictionaries(uri: Uri) {
+    fun exportDictionaries(uri: Uri): DictionaryExportSummary {
+        val languagesWithData = mutableSetOf<String>()
+        var totalCustomWords = 0
+        var totalDisabledWords = 0
         try {
             val root = JsonObject()
             val metadata = JsonObject()
@@ -690,17 +708,19 @@ open class BackupRestoreManager(
             // Export custom words per language (new format)
             val customWordsPerLang = JsonObject()
             val languages = LanguagePreferenceKeys.getLanguagesWithCustomWords(prefs)
-            var totalCustomWords = 0
 
             for (lang in languages) {
                 val langKey = LanguagePreferenceKeys.customWordsKey(lang)
                 val wordsJson = prefs.getString(langKey, "{}")
                 if (wordsJson != null && wordsJson != "{}") {
                     customWordsPerLang.add(lang, JsonParser.parseString(wordsJson))
-                    // Count words for logging
+                    // Count words for logging + summary
                     try {
                         val wordsMap = JsonParser.parseString(wordsJson).asJsonObject
-                        totalCustomWords += wordsMap.size()
+                        if (wordsMap.size() > 0) {
+                            totalCustomWords += wordsMap.size()
+                            languagesWithData += lang
+                        }
                     } catch (e: Exception) { /* ignore count errors */ }
                 }
             }
@@ -709,7 +729,6 @@ open class BackupRestoreManager(
             // Export disabled words per language (new format)
             val disabledWordsPerLang = JsonObject()
             val disabledLanguages = LanguagePreferenceKeys.getLanguagesWithDisabledWords(prefs)
-            var totalDisabledWords = 0
 
             for (lang in disabledLanguages) {
                 val langKey = LanguagePreferenceKeys.disabledWordsKey(lang)
@@ -721,6 +740,7 @@ open class BackupRestoreManager(
                     }
                     disabledWordsPerLang.add(lang, wordsArray)
                     totalDisabledWords += wordsSet.size
+                    languagesWithData += lang
                 }
             }
             root.add("disabled_words_by_language", disabledWordsPerLang)
@@ -758,11 +778,12 @@ open class BackupRestoreManager(
                 }
             }
 
-            Log.i(TAG, "Exported dictionaries: $totalCustomWords custom words, $totalDisabledWords disabled words (${languages.size + disabledLanguages.size} languages)")
+            Log.i(TAG, "Exported dictionaries: $totalCustomWords custom + $totalDisabledWords disabled across ${languagesWithData.size} languages")
         } catch (e: Exception) {
             Log.e(TAG, "Dictionary export failed", e)
             throw Exception("Dictionary export failed: ${e.message}", e)
         }
+        return DictionaryExportSummary(totalCustomWords, totalDisabledWords, languagesWithData.size)
     }
 
     /**

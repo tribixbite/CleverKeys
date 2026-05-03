@@ -782,21 +782,24 @@ class BackupRestoreActivity : ComponentActivity() {
         lifecycleScope.launch {
             viewModel.isProcessing = true
             try {
-                withContext(Dispatchers.IO) {
+                val summary = withContext(Dispatchers.IO) {
                     backupRestoreManager.exportDictionaries(uri)
                 }
 
-                headlessToast("Dictionaries exported")
+                headlessToast(
+                    "Dictionaries exported: ${summary.customWordsCount} custom + ${summary.disabledWordsCount} disabled"
+                )
                 viewModel.resultTitle = "Dictionary Export Successful"
-                viewModel.resultMessage = "Dictionaries exported successfully.\n\n" +
-                        "File: ${uri.lastPathSegment}\n\n" +
-                        "Includes:\n" +
-                        "• User dictionary words\n" +
-                        "• Disabled words\n\n" +
-                        "You can now transfer this file to another device or keep it as a backup."
+                viewModel.resultMessage = "Custom words: ${summary.customWordsCount} " +
+                        "(across ${summary.languageCount} languages)\n" +
+                        "Disabled words: ${summary.disabledWordsCount}\n\n" +
+                        "File: ${uri.lastPathSegment}"
                 viewModel.showResultDialog = true
 
-                android.util.Log.i(TAG, "Dictionary export successful: $uri")
+                android.util.Log.i(
+                    TAG,
+                    "Dictionary export successful: ${summary.customWordsCount} custom + ${summary.disabledWordsCount} disabled across ${summary.languageCount} langs -> $uri"
+                )
             } catch (e: Exception) {
                 android.util.Log.e(TAG, "Dictionary export failed", e)
                 headlessToast("Dict export failed: ${e.message?.take(60)}")
