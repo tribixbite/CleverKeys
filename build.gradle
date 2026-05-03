@@ -416,6 +416,7 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.TerminalUtilsTest',
     'tribixbite.cleverkeys.KeyRepeatLogicTest',
     'tribixbite.cleverkeys.backup.SettingsImportPlanApplyTest',
+    'tribixbite.cleverkeys.backup.BackupRestoreManagerHeadlessTest',
   ]
 
   mainClass = 'org.junit.runner.JUnitCore'

@@ -578,79 +578,18 @@ class BackupRestoreManager(
         )
     }
 
+    /**
+     * Legacy headless entry point. Termux automation callers depend on this
+     * signature and the destructive `merge=false` short-swipe semantics — both
+     * are preserved by routing through `applySettingsImportPlan` with
+     * `ShortSwipeImportMode.REPLACE`. The SAF-flow UI uses MERGE by default
+     * (see `BackupRestoreActivity.applyPlannedSettings`); flipping the headless
+     * default is intentionally out of scope (tracked in `memory/todo.md`).
+     */
     fun importConfig(uri: Uri, prefs: SharedPreferences): ImportResult {
         return try {
-            // #70: Read JSON with scoped-storage fallbacks
-            val jsonContent = readJsonFromUri(uri)
-            val root = JsonParser.parseString(jsonContent).asJsonObject
-
-            // Parse metadata (optional, for informational purposes)
-            val result = ImportResult()
-            if (root.has("metadata")) {
-                val metadata = root.getAsJsonObject("metadata")
-                result.sourceVersion = metadata.get("app_version")?.asString ?: "unknown"
-                result.sourceScreenWidth = metadata.get("screen_width")?.asInt ?: 0
-                result.sourceScreenHeight = metadata.get("screen_height")?.asInt ?: 0
-            }
-
-            // Get current screen dimensions for comparison
-            val dm = context.resources.displayMetrics
-            result.currentScreenWidth = dm.widthPixels
-            result.currentScreenHeight = dm.heightPixels
-
-            // Import preferences with validation
-            if (!root.has("preferences")) {
-                throw Exception("Invalid backup file: missing preferences section")
-            }
-
-            val preferences = root.getAsJsonObject("preferences")
-            val editor = prefs.edit()
-
-            // Migrate legacy margin settings before import (uses dm from above)
-            val migratedPrefs = migrateLegacyMargins(preferences, dm.widthPixels, dm.heightPixels)
-
-            var imported = 0
-            var skipped = 0
-
-            for ((key, value) in migratedPrefs.entrySet()) {
-                try {
-                    if (importPreference(editor, key, value)) {
-                        imported++
-                        result.importedKeys.add(key)
-                        Log.d(TAG, "Imported: $key = $value")
-                    } else {
-                        skipped++
-                        result.skippedKeys.add(key)
-                        Log.i(TAG, "Skipped: $key = $value")
-                    }
-                } catch (e: Exception) {
-                    Log.e(TAG, "Failed to import key: $key = $value", e)
-                    skipped++
-                    result.skippedKeys.add(key)
-                }
-            }
-
-            editor.apply()
-
-            // Import short swipe customizations if present
-            if (root.has("short_swipe_customizations")) {
-                try {
-                    val shortSwipeJson = root.getAsJsonObject("short_swipe_customizations").toString()
-                    val shortSwipeImported = runBlocking {
-                        shortSwipeManager.importFromJson(shortSwipeJson, merge = false)
-                    }
-                    Log.i(TAG, "Imported $shortSwipeImported short swipe customizations")
-                    result.shortSwipeCustomizationsImported = shortSwipeImported
-                } catch (e: Exception) {
-                    Log.w(TAG, "Failed to import short swipe customizations (non-fatal)", e)
-                }
-            }
-
-            result.importedCount = imported
-            result.skippedCount = skipped
-
-            Log.i(TAG, "Import complete: $imported imported, $skipped skipped")
-            result
+            val plan = buildSettingsImportPlan(uri, prefs)
+            applySettingsImportPlan(plan, emptySet(), ShortSwipeImportMode.REPLACE, prefs)
         } catch (e: Exception) {
             Log.e(TAG, "Import failed", e)
             throw Exception("Import failed: ${e.message}", e)
