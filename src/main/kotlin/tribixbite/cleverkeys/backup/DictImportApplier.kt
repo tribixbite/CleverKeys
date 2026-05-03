@@ -1,6 +1,7 @@
 package tribixbite.cleverkeys.backup
 
 import android.content.SharedPreferences
+import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import tribixbite.cleverkeys.LanguagePreferenceKeys
@@ -16,6 +17,7 @@ import tribixbite.cleverkeys.LanguagePreferenceKeys
  */
 object DictImportApplier {
 
+    private const val TAG = "DictImportApplier"
     private val gson = Gson()
     private val mapType = object : TypeToken<MutableMap<String, Int>>() {}.type
 
@@ -69,7 +71,9 @@ object DictImportApplier {
             editor.putStringSet(key, existing)
         }
 
-        editor.commit()
+        if (!editor.commit()) {
+            Log.w(TAG, "editor.commit() returned false — disk full or IPC failure")
+        }
         return customApplied to disabledApplied
     }
 }
