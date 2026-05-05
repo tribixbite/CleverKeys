@@ -68,7 +68,11 @@ data class Provider(
 
 data class RedirectionRule(
     val pattern: Regex,                            // capture-group regex
-    val replacement: String,                       // $1, $2 substitution template
+    val replacement: String?,                      // explicit template ("https://fxtwitter.com/$1");
+                                                   // null → upstream-compatible behavior:
+                                                   // group 1 is treated as the full target URL
+                                                   // (matches ClearURLs' chained-redirect-bypass semantics
+                                                   // for `bit.ly`-style param-embedded redirects).
 )
 
 data class Ruleset(
@@ -124,7 +128,7 @@ for url in extracted_urls(text):
     break        // first matching provider wins; further providers skipped
 ```
 
-Provider iteration order: globalRules first (always-on cleanups like `utm_*`), then specific providers in JSON-declaration order. Custom rules merged per-provider (not appended to the iteration list) so they take effect through the same matching path.
+Provider iteration order: ClearURLs upstream encodes "globalRules" as a regular provider entry with `urlPattern: ".*"` (NOT a separate top-level field) — our `Ruleset.providers` map preserves this representation verbatim. The provider keyed `"globalRules"` is iterated FIRST (always matches because `urlPattern: ".*"` is universal), then specific providers in JSON-declaration order. Custom rules merged per-provider (not appended to the iteration list) so they take effect through the same matching path. First matching provider's rewrites apply; subsequent providers are skipped per-URL except for globalRules cleanups which always run alongside.
 
 ### URL extraction from arbitrary text
 
@@ -183,7 +187,7 @@ src/main/assets/url_rules/
   embed_enrich.json      (3KB, hand-curated ~10 redirection providers)
 ```
 
-`clearurls.json` is the ClearURLs project's MIT-licensed canonical ruleset. Snapshot frozen at the version present at implementation time; documented in `memory/todo.md` for periodic refresh tracking.
+`clearurls.json` is the ClearURLs project's MIT-licensed canonical ruleset (upstream: `gitlab.com/ClearURLs/Rules`, file `data.minify.json`). At implementation time, capture the upstream commit SHA + retrieval date as a header comment OR a sibling `clearurls.version` text file co-located with the asset (Gson skips non-JSON files when loading). `memory/todo.md` records the pinned version for periodic refresh tracking.
 
 `embed_enrich.json` schema (full ClearURLs format, only `redirections` populated):
 
