@@ -204,6 +204,10 @@ android {
     test {
       kotlin.srcDirs = ['src/test/kotlin']
       java.srcDirs = ['src/test/java']
+      // Expose bundled assets to JVM tests so EmbedEnrichRulesTest (and any
+      // future test that loads url_rules/*.json) can resolve them via
+      // Class.getResourceAsStream("/url_rules/<name>.json").
+      resources.srcDirs += 'src/main/assets'
     }
     androidTest {
       kotlin.srcDirs = ['src/androidTest/kotlin']
@@ -330,7 +334,7 @@ if (isArm64) {
 // Runs JUnitCore directly via JavaExec, no proot or shell script needed.
 // Usage: ./gradlew runPureTests [-PtestClass=BeamSearchEngineTest]
 tasks.register('runPureTests', JavaExec) {
-  dependsOn 'compileDebugUnitTestKotlin'
+  dependsOn 'compileDebugUnitTestKotlin', 'processDebugUnitTestJavaRes'
   group = 'verification'
   description = 'Run pure JVM tests via JUnitCore (works on ARM64)'
 
@@ -378,17 +382,21 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.BucketBSourceContractTest',
     'tribixbite.cleverkeys.clipboard.sanitize.RulesetParserTest',
     'tribixbite.cleverkeys.clipboard.sanitize.UrlSanitizerTest',
+    'tribixbite.cleverkeys.clipboard.sanitize.EmbedEnrichRulesTest',
     // SwipePrunerTest excluded: requires android.util.Log (MockK + Robolectric)
   ]
 
   mainClass = 'org.junit.runner.JUnitCore'
 
   // Build classpath from test + main compiled classes + all dependencies
+  // The java-res output dir holds processed test resources (incl. files exposed
+  // from src/main/assets via the test sourceSet's resources.srcDirs additions).
   classpath = files(
     "${buildDir}/intermediates/javac/debugUnitTest/classes",
     "${buildDir}/tmp/kotlin-classes/debugUnitTest",
     "${buildDir}/intermediates/javac/debug/classes",
     "${buildDir}/tmp/kotlin-classes/debug",
+    "${buildDir}/intermediates/java_res/debugUnitTest/processDebugUnitTestJavaRes/out",
   ) + configurations.debugUnitTestRuntimeClasspath + configurations.debugRuntimeClasspath
 
   // Allow single test via -PtestClass=ClassName
