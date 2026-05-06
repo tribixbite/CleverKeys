@@ -376,6 +376,7 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.BackupRestoreResultMessagesTest',
     'tribixbite.cleverkeys.LanguagePreferenceKeysReverseLookupTest',
     'tribixbite.cleverkeys.BucketBSourceContractTest',
+    'tribixbite.cleverkeys.clipboard.sanitize.RulesetParserTest',
     // SwipePrunerTest excluded: requires android.util.Log (MockK + Robolectric)
   ]
 
