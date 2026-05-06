@@ -9,11 +9,11 @@ package tribixbite.cleverkeys.clipboard.sanitize
  *
  * Idempotency: process(process(s)) == process(s) for any input s.
  */
-interface UrlSanitizer {
+internal interface UrlSanitizer {
     fun process(text: String): String
 }
 
-class RulesetUrlSanitizer(private val ruleset: Ruleset) : UrlSanitizer {
+internal class RulesetUrlSanitizer(private val ruleset: Ruleset) : UrlSanitizer {
 
     private companion object {
         // Hand-rolled URL regex: HTTP/HTTPS only, until first whitespace or string end.

@@ -15,7 +15,7 @@ import com.google.gson.JsonParser
  */
 object RulesetParser {
 
-    fun fromJson(jsonString: String): Ruleset {
+    internal fun fromJson(jsonString: String): Ruleset {
         val root = JsonParser.parseString(jsonString).asJsonObject
         val providersObj = root.getAsJsonObject("providers")
             ?: return Ruleset(emptyMap())
@@ -80,7 +80,7 @@ object RulesetParser {
      * `completeProvider: true` from overlay can disable a base provider; once
      * `true`, never reverts to false.
      */
-    fun merge(base: Ruleset, overlay: Ruleset): Ruleset {
+    internal fun merge(base: Ruleset, overlay: Ruleset): Ruleset {
         val out = LinkedHashMap(base.providers)
         for ((name, op) in overlay.providers) {
             val bp = out[name]

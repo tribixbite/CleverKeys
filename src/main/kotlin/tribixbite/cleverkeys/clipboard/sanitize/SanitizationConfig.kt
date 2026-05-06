@@ -22,7 +22,7 @@ class SanitizationConfig(private val context: Context) {
      * Returns the current sanitizer. If all toggles are off, returns a
      * no-op sanitizer that returns input unchanged in O(text-length).
      */
-    fun sanitizer(): UrlSanitizer {
+    internal fun sanitizer(): UrlSanitizer {
         cached?.let { return it }
         synchronized(this) {
             cached?.let { return it }

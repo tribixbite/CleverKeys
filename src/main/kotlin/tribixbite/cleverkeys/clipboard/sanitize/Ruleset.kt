@@ -10,7 +10,7 @@ package tribixbite.cleverkeys.clipboard.sanitize
  * upstream chained-redirect-bypass use case AND embed-enrichment host
  * rewrites without forking the format.
  */
-data class Provider(
+internal data class Provider(
     val name: String,
     val urlPattern: Regex,
     val rules: List<String> = emptyList(),         // case-insensitive query-param names to strip
@@ -33,7 +33,7 @@ data class Provider(
  * - replacement != null  → result = pattern.replaceFirst(url, replacement)
  *                           where $1, $2, etc. interpolate captured groups
  */
-data class RedirectionRule(
+internal data class RedirectionRule(
     val pattern: Regex,
     val replacement: String? = null,
 )
@@ -44,6 +44,6 @@ data class RedirectionRule(
  * separate field. Iteration order is map iteration order, which for
  * Gson-decoded LinkedHashMap matches JSON declaration order.
  */
-data class Ruleset(
+internal data class Ruleset(
     val providers: Map<String, Provider>,
 )
