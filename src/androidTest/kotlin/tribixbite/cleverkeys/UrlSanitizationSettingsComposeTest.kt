@@ -6,6 +6,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -30,6 +32,31 @@ class UrlSanitizationSettingsComposeTest {
 
     @get:Rule
     val composeRule = createAndroidComposeRule<SettingsActivity>()
+
+    /**
+     * Reset the three sanitization toggles before each test so prior tests
+     * (alphabetical order on emulator.wtf) can't leak persisted state into the
+     * next case via SharedPreferences.
+     *
+     * JUnit @Rule.before() runs BEFORE @Before, so the activity has already
+     * read prefs by the time we get here. We commit fresh prefs and recreate
+     * the activity so its onCreate re-reads them — the recreate() must run
+     * on the main thread.
+     */
+    @Before
+    fun clearSanitizationPrefs() {
+        val instr = InstrumentationRegistry.getInstrumentation()
+        val ctx = instr.targetContext
+        DirectBootAwarePreferences.get_shared_preferences(ctx)
+            .edit()
+            .remove("clipboard_sanitize_links_enabled")
+            .remove("clipboard_embed_enrich_enabled")
+            .remove("clipboard_custom_rules_enabled")
+            .remove("clipboard_custom_rules_uri")
+            .commit()
+        instr.runOnMainSync { composeRule.activity.recreate() }
+        composeRule.waitForIdle()
+    }
 
     @Test
     fun urlHandling_subsectionVisibleAfterExpandingClipboard() {
