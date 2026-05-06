@@ -5328,8 +5328,11 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
                 // Validate by parsing — rejects malformed JSON / unsupported schema.
                 val parsed = RulesetParser.fromJson(json)
-                val ruleCount = parsed.providers.size
-                if (ruleCount == 0) {
+                if (parsed.providers.size == 0) {
+                    // Direct write here: recomputeCustomRulesStatus reads on-disk
+                    // state, but we deliberately did NOT writeText for this branch
+                    // (parser accepted but content is useless), so the helper has
+                    // nothing to summarise. This is the one allowed deviation.
                     clipboardCustomRulesStatus = "File parsed but contained 0 providers."
                     return@launch
                 }
@@ -5345,8 +5348,12 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 // Persist URI for diagnostics + reload.
                 saveSetting("clipboard_custom_rules_uri", uri.toString())
                 clipboardCustomRulesUri = uri.toString()
-                clipboardCustomRulesStatus =
-                    "$ruleCount providers loaded from ${uri.lastPathSegment ?: "custom file"}."
+                // Single source of truth for status text — same on-disk file
+                // produces the same status regardless of code path (picker
+                // success vs. activity recreate). In-session filename display
+                // dropped for consistency; user sees the filename in the SAF
+                // picker UI itself.
+                recomputeCustomRulesStatus()
 
                 notifySanitizationRulesChanged()
             } catch (e: Exception) {
