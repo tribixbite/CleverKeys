@@ -60,15 +60,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.BufferedReader
+import java.io.IOException
 import java.io.InputStreamReader
 import java.util.Properties
 import tribixbite.cleverkeys.theme.KeyboardTheme
 import tribixbite.cleverkeys.langpack.LanguagePackManager
 import tribixbite.cleverkeys.langpack.ImportResult
 import tribixbite.cleverkeys.langpack.LanguagePackManifest
+import tribixbite.cleverkeys.clipboard.sanitize.RulesetParser
+import tribixbite.cleverkeys.clipboard.sanitize.SanitizationConfig
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 
 /**
@@ -87,6 +92,14 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     companion object {
         private const val TAG = "SettingsActivity"
+
+        /**
+         * Broadcast sent when any URL-sanitization toggle changes or the custom-rules
+         * file is replaced. ClipboardHistoryService listens and invalidates its cached
+         * SanitizationConfig so the next clipboard insert sees the new ruleset.
+         */
+        const val ACTION_SANITIZATION_RULES_CHANGED =
+            "tribixbite.cleverkeys.action.SANITIZATION_RULES_CHANGED"
     }
 
     // Configuration state
@@ -163,6 +176,13 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         uri?.let { performGifPackImport(it) }
     }
 
+    // Custom URL-sanitization rules (Chunk 4). SAF-only, mime-restricted to JSON.
+    private val customRulesPickerLauncher = registerForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        if (uri != null) handleCustomRulesPicked(uri)
+    }
+
     // Settings state for reactive UI
     private var beamWidth by mutableStateOf(6)
     private var maxLength by mutableStateOf(20)
@@ -184,6 +204,15 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var clipboardTextOnly by mutableStateOf(false)  // v4: Hide media entries
     private var clipboardPinnedEnabled by mutableStateOf(true)  // v4: Show/hide pinned tab
     private var clipboardTodoEnabled by mutableStateOf(true)  // v4: Show/hide todo tab
+
+    // URL sanitization (Chunk 4): three independent toggles + custom-rules import
+    private var clipboardSanitizeLinksEnabled by mutableStateOf(false)
+    private var clipboardEmbedEnrichEnabled by mutableStateOf(false)
+    private var clipboardCustomRulesEnabled by mutableStateOf(false)
+    private var clipboardCustomRulesUri by mutableStateOf<String?>(null)
+    // Status text for the custom-rules row — examples:
+    //  "" / "12 providers loaded." / "Saved file is malformed: ..." / "URI persisted but no copy on disk yet."
+    private var clipboardCustomRulesStatus by mutableStateOf("")
 
     // GIF Panel (opt-in, off by default)
     private var gifEnabled by mutableStateOf(Defaults.GIF_ENABLED)
@@ -3175,6 +3204,79 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         saveSetting("clipboard_todo_enabled", it)
                     }
                 )
+
+                // ── URL handling subsection (Chunk 4) ───────────────────────
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = "URL handling",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                )
+
+                SettingsSwitch(
+                    title = "Sanitize tracking parameters",
+                    description = "Strip utm_*, fbclid, etc. from URLs you copy. Powered by ClearURLs.",
+                    checked = clipboardSanitizeLinksEnabled,
+                    onCheckedChange = {
+                        clipboardSanitizeLinksEnabled = it
+                        saveSetting("clipboard_sanitize_links_enabled", it)
+                        notifySanitizationRulesChanged()
+                    }
+                )
+
+                SettingsSwitch(
+                    title = "Enrich embeds for sharing",
+                    description = "Rewrite x.com → fxtwitter.com, reddit.com → rxddit.com, etc.",
+                    checked = clipboardEmbedEnrichEnabled,
+                    onCheckedChange = {
+                        clipboardEmbedEnrichEnabled = it
+                        saveSetting("clipboard_embed_enrich_enabled", it)
+                        notifySanitizationRulesChanged()
+                    }
+                )
+
+                SettingsSwitch(
+                    title = "Use custom rules",
+                    description = "Apply your own ClearURLs-format JSON.",
+                    checked = clipboardCustomRulesEnabled,
+                    onCheckedChange = {
+                        clipboardCustomRulesEnabled = it
+                        saveSetting("clipboard_custom_rules_enabled", it)
+                        notifySanitizationRulesChanged()
+                    }
+                )
+
+                if (clipboardCustomRulesEnabled) {
+                    Button(
+                        onClick = { customRulesPickerLauncher.launch(arrayOf("application/json")) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 4.dp),
+                    ) {
+                        Text(
+                            text = if (clipboardCustomRulesUri == null)
+                                "Browse for custom.substitutions.json"
+                            else
+                                "Replace custom rules"
+                        )
+                    }
+                    if (clipboardCustomRulesStatus.isNotEmpty()) {
+                        Text(
+                            text = clipboardCustomRulesStatus,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+
+                Text(
+                    text = "Note: only applies to copies made via CleverKeys. Other apps' copies are unchanged.",
+                    modifier = Modifier.padding(16.dp),
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
 
             // GIF Panel Section (Collapsible) — opt-in, off by default
@@ -4970,6 +5072,14 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         clipboardPinnedEnabled = prefs.getSafeBoolean("clipboard_pinned_enabled", true)
         clipboardTodoEnabled = prefs.getSafeBoolean("clipboard_todo_enabled", true)
 
+        // URL sanitization toggles (Chunk 4) — defaults match Config.kt (all off)
+        clipboardSanitizeLinksEnabled = prefs.getSafeBoolean("clipboard_sanitize_links_enabled", false)
+        clipboardEmbedEnrichEnabled = prefs.getSafeBoolean("clipboard_embed_enrich_enabled", false)
+        clipboardCustomRulesEnabled = prefs.getSafeBoolean("clipboard_custom_rules_enabled", false)
+        clipboardCustomRulesUri = prefs.getString("clipboard_custom_rules_uri", null)
+        // Status text reflects the on-disk copy of custom.substitutions.json (computed lazily).
+        recomputeCustomRulesStatus()
+
         // GIF Panel
         gifEnabled = prefs.getSafeBoolean("gif_enabled", Defaults.GIF_ENABLED)
         gifThumbnailColumns = Config.safeGetInt(prefs, "gif_thumbnail_columns", Defaults.GIF_THUMBNAIL_COLUMNS).coerceIn(2, 5)
@@ -5156,6 +5266,93 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 Toast.makeText(this@SettingsActivity,
                     getString(R.string.settings_toast_error_saving, e.message ?: ""),
                     Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    // ─── URL sanitization helpers (Chunk 4) ────────────────────────────────
+
+    /**
+     * Recompute the user-visible status of the custom rules file. Called at
+     * activity init AND after the SAF picker completes — covers both the
+     * "user just imported" path and the "previously imported, opened settings"
+     * path. Result feeds [clipboardCustomRulesStatus].
+     */
+    private fun recomputeCustomRulesStatus() {
+        val customFile = SanitizationConfig.customFile(this)
+        clipboardCustomRulesStatus = when {
+            customFile.exists() -> {
+                try {
+                    val rs = RulesetParser.fromJson(customFile.readText())
+                    "${rs.providers.size} providers loaded."
+                } catch (e: Exception) {
+                    "Saved file is malformed: ${e.message}"
+                }
+            }
+            clipboardCustomRulesUri != null -> "URI persisted but no copy on disk yet."
+            else -> ""
+        }
+    }
+
+    /**
+     * Notify the running ClipboardHistoryService that the active sanitization
+     * ruleset has changed (toggle flip OR custom-rules import). The service
+     * invalidates its cached SanitizationConfig so the next clipboard insert
+     * sees the fresh state.
+     */
+    private fun notifySanitizationRulesChanged() {
+        LocalBroadcastManager.getInstance(this)
+            .sendBroadcast(Intent(ACTION_SANITIZATION_RULES_CHANGED))
+    }
+
+    /**
+     * SAF picker callback — reads the user-selected JSON, validates by parsing,
+     * copies into app private dir for resilience against grant revocation,
+     * persists the URI, and broadcasts a cache-invalidation signal.
+     *
+     * Failure modes:
+     *   - Stream open fails → status text + Toast, on-disk copy untouched
+     *   - JSON malformed    → status text + Toast, on-disk copy untouched
+     *   - 0 providers       → status text only ("File parsed but contained 0 providers."),
+     *                         on-disk copy untouched (parser accepted but content useless)
+     *
+     * In every failure case the previous valid file (if any) is retained.
+     */
+    private fun handleCustomRulesPicked(uri: Uri) {
+        lifecycleScope.launch {
+            try {
+                val json = withContext(Dispatchers.IO) {
+                    contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
+                        ?: throw IOException("Could not open URI: $uri")
+                }
+
+                // Validate by parsing — rejects malformed JSON / unsupported schema.
+                val parsed = RulesetParser.fromJson(json)
+                val ruleCount = parsed.providers.size
+                if (ruleCount == 0) {
+                    clipboardCustomRulesStatus = "File parsed but contained 0 providers."
+                    return@launch
+                }
+
+                // Copy to app-private dir for resilience against SAF grant revocation.
+                // CRITICAL: parent dir doesn't exist by default — must mkdirs() first.
+                val customFile = SanitizationConfig.customFile(this@SettingsActivity)
+                withContext(Dispatchers.IO) {
+                    customFile.parentFile?.mkdirs()
+                    customFile.writeText(json)
+                }
+
+                // Persist URI for diagnostics + reload.
+                saveSetting("clipboard_custom_rules_uri", uri.toString())
+                clipboardCustomRulesUri = uri.toString()
+                clipboardCustomRulesStatus =
+                    "$ruleCount providers loaded from ${uri.lastPathSegment ?: "custom file"}."
+
+                notifySanitizationRulesChanged()
+            } catch (e: Exception) {
+                android.util.Log.w(TAG, "Custom rules import failed", e)
+                clipboardCustomRulesStatus = "Invalid rules file: ${e.message}"
+                Toast.makeText(this@SettingsActivity, "Invalid rules file", Toast.LENGTH_LONG).show()
             }
         }
     }
