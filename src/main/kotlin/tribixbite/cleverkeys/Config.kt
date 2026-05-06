@@ -429,6 +429,12 @@ class Config private constructor(
     @JvmField var clipboard_media_enabled = true  // v4: Enable media clipboard (images, videos, PDFs)
     @JvmField var clipboard_max_media_size_mb = 10  // v4: Max media file size in MB (default 10)
 
+    // URL sanitization toggles (Chunk 3 — applies to clipboard text inserts only)
+    @JvmField var clipboard_sanitize_links_enabled = false
+    @JvmField var clipboard_embed_enrich_enabled = false
+    @JvmField var clipboard_custom_rules_enabled = false
+    @JvmField var clipboard_custom_rules_uri: String? = null   // SAF persisted URI as String, null = no file picked
+
     // GIF Panel
     @JvmField var gif_enabled = Defaults.GIF_ENABLED
     @JvmField var gif_thumbnail_columns = Defaults.GIF_THUMBNAIL_COLUMNS
@@ -701,6 +707,12 @@ class Config private constructor(
         clipboard_todo_enabled = _prefs.getBoolean("clipboard_todo_enabled", true)
         clipboard_media_enabled = _prefs.getBoolean("clipboard_media_enabled", true)
         clipboard_max_media_size_mb = safeGetInt(_prefs, "clipboard_max_media_size_mb", 10).coerceIn(1, 50)
+
+        // URL sanitization toggles (Chunk 3)
+        clipboard_sanitize_links_enabled = _prefs.getBoolean("clipboard_sanitize_links_enabled", false)
+        clipboard_embed_enrich_enabled = _prefs.getBoolean("clipboard_embed_enrich_enabled", false)
+        clipboard_custom_rules_enabled = _prefs.getBoolean("clipboard_custom_rules_enabled", false)
+        clipboard_custom_rules_uri = _prefs.getString("clipboard_custom_rules_uri", null)
 
         // GIF Panel
         gif_enabled = _prefs.getBoolean("gif_enabled", Defaults.GIF_ENABLED)
