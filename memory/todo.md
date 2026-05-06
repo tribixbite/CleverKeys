@@ -1,5 +1,55 @@
 # CleverKeys TODO
 
+## ✅ Clipboard URL sanitization (2026-05-05)
+
+Three independent toggles in Clipboard settings → URL handling:
+1. Sanitize tracking parameters — bundled ClearURLs ruleset (~700 providers, 60KB)
+2. Enrich embeds for sharing — 8 hand-curated providers (x→fxtwitter, reddit→rxddit, etc.)
+3. Use custom rules — user-supplied ClearURLs-format JSON via SAF picker
+
+All three use ClearURLs format. Per-provider field-level merge means custom rules can
+surgically disable bundled rules via `exceptions: [".*"]` — no all-or-nothing toggle pain.
+Hooks `ClipboardHistoryService` text/plain insert path; media bypasses sanitization.
+Headless Termux automation paths (`am` Intents to system clipboard) are NOT affected —
+this only filters CleverKeys' own clipboard panel inserts.
+
+### Hard-won lessons
+
+- ClearURLs format is the right format for any URL-rule modular system — covers
+  param-strip, host rewrite, regex strip, exceptions, complete-disable.
+- `RedirectionRule` extended with optional `replacement` template so the same data class
+  represents upstream chained-redirect-bypass (group 1 = target URL) AND embed-enrichment
+  host rewrites ($1 substitution).
+- Per-provider field-level merge (not full replacement, not flat append) is what enables
+  surgical user override of bundled rules via the `exceptions` field.
+- Bundle the ClearURLs minified snapshot as an asset (~60KB); CleverKeys explicitly bans
+  INTERNET so live refresh is impossible. Pin upstream commit SHA in
+  `src/main/assets/url_rules/clearurls.version` for periodic refresh tracking.
+- Hook URL sanitization at CleverKeys' own `ClipboardHistoryService.processClipboardChange`
+  (line 248, immediately before `_database.addClipboardEntry`), NOT Android system
+  clipboard (would need `READ_CLIPBOARD` permission).
+- For pure JVM tests of URL-scanning logic, hand-roll a regex (`Regex("https?://...")`)
+  rather than depending on `android.util.Patterns.WEB_URL` (not available outside
+  Android runtime). Keeps test tier consistent.
+- Cache invalidation via LocalBroadcastManager: SettingsActivity sends
+  `ACTION_SANITIZATION_RULES_CHANGED` from every toggle's `onCheckedChange` AND from
+  the SAF picker's success path. ClipboardHistoryService listens and calls
+  `SanitizationConfig.rebuild()` — the toggles take effect immediately, no reboot.
+- SAF custom-rules import: `customFile.parentFile?.mkdirs()` BEFORE `writeText()` — the
+  `url_rules/` subdir of `filesDir` doesn't exist by default, so writeText would throw.
+- Compose UI test isolation: emulator.wtf runs tests alphabetically and SharedPreferences
+  state survives across tests in the same suite. `@Before` must clear the toggles AND
+  call `activity.recreate()` on the main thread so onCreate re-reads fresh prefs.
+
+### Follow-ups
+
+- ClearURLs ruleset is a frozen snapshot. Refresh by re-pulling
+  `gitlab.com/ClearURLs/Rules/data.minify.json` and updating `clearurls.version`.
+- YouTube intentionally omitted from embed enrichment list (it embeds well natively).
+  Users can add via custom rules if desired.
+- `ClipboardSettingsActivity` orphan (700+ lines, never declared in AndroidManifest)
+  flagged in earlier session — out of scope for this feature, tracked separately.
+
 ## ✅ BackupRestore import preview + export counts (2026-04-30)
 
 Two-phase build/apply split inside BackupRestoreManager. Settings + dictionary
