@@ -81,6 +81,8 @@ class UrlSanitizerTest {
 
     @Test
     fun nonHttpScheme_leftAlone() {
+        // URL_REGEX only matches http(s)://... — mailto: is never scanned, so the
+        // `?utm_source=…` survives untouched as part of the surrounding text.
         val rs = RulesetParser.fromJson("""{
             "providers":{"globalRules":{"urlPattern":".*","rules":["utm_source"]}}
         }""")
