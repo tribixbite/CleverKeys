@@ -32,11 +32,13 @@ object RulesetParser {
     private fun parseProvider(name: String, obj: JsonObject): Provider? {
         val urlPatternStr = obj.get("urlPattern")?.asString ?: return null
         val urlPattern = try { Regex(urlPatternStr, RegexOption.IGNORE_CASE) }
+            // Malformed urlPattern regex — drop entire provider; no useful matching possible.
             catch (_: Exception) { return null }
 
         val rules = obj.getAsJsonArray("rules")?.mapNotNull { it.asString } ?: emptyList()
 
         val rawRules = obj.getAsJsonArray("rawRules")?.mapNotNull {
+            // Malformed rawRule regex — drop just this entry, keep the rest of the provider.
             try { Regex(it.asString) } catch (_: Exception) { null }
         } ?: emptyList()
 
@@ -57,6 +59,7 @@ object RulesetParser {
         } ?: emptyList()
 
         val exceptions = obj.getAsJsonArray("exceptions")?.mapNotNull {
+            // Malformed exception regex — drop just this entry, keep the rest of the provider.
             try { Regex(it.asString, RegexOption.IGNORE_CASE) } catch (_: Exception) { null }
         } ?: emptyList()
 
@@ -66,6 +69,7 @@ object RulesetParser {
     }
 
     private fun parseRedirection(pattern: String, replacement: String?): RedirectionRule? {
+        // Malformed redirection pattern — drop the rule, caller filters via mapNotNull.
         val regex = try { Regex(pattern, RegexOption.IGNORE_CASE) } catch (_: Exception) { return null }
         return RedirectionRule(regex, replacement)
     }
