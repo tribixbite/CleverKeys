@@ -18,8 +18,8 @@ class RulesetUrlSanitizer(private val ruleset: Ruleset) : UrlSanitizer {
     private companion object {
         // Hand-rolled URL regex: HTTP/HTTPS only, until first whitespace or string end.
         // Pure JVM-compatible — does NOT depend on android.util.Patterns.
-        // Trailing punctuation (.,;:!?) is excluded so "see https://x.com." → the trailing
-        // dot is left outside the URL match.
+        // Trailing punctuation/brackets (.,;:!?) and `)` are excluded so e.g.
+        // "(see https://x.com)" trims the closing paren and "see https://x.com." trims the dot.
         private val URL_REGEX = Regex(
             "https?://[^\\s<>\"]+[^\\s<>\".,;:!?)]"
         )
