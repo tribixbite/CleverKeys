@@ -43,7 +43,13 @@
   - `src/main/kotlin/tribixbite/cleverkeys/SettingsActivity.kt` — clipboard section is around lines 2988-3100. Three switches to add there.
 - [ ] **Step 0.3: Confirm tests pass.** `./gradlew runPureTests` should print `OK (1131 tests)` (current baseline post-BackupRestore). `./gradlew runMockTests` → `OK (192 tests)`. Record actual numbers for Step 4.7.1.
 - [ ] **Step 0.4: Confirm baseline build.** `./gradlew compileDebugKotlin` succeeds.
-- [ ] **Step 0.5: Fetch the ClearURLs ruleset.** From `https://gitlab.com/ClearURLs/Rules/-/raw/master/data.minify.json`, save the file content + capture the commit SHA at the time of pull. You'll commit both later.
+- [ ] **Step 0.5: Fetch the ClearURLs ruleset.** Save to `~/Downloads/data.minify.json` so Task 2.4.1's `cp` source path works as written. Capture the upstream commit SHA at the same time:
+```bash
+curl -sL "https://gitlab.com/ClearURLs/Rules/-/raw/master/data.minify.json" -o ~/Downloads/data.minify.json
+SHA=$(curl -s "https://gitlab.com/api/v4/projects/ClearURLs%2FRules/repository/commits/master" | jq -r .id)
+echo "Pinned commit: $SHA"  # paste this into clearurls.version in Task 2.4.1
+```
+Verify the file is ~60KB: `wc -c ~/Downloads/data.minify.json`.
 
 ---
 
@@ -562,17 +568,17 @@ Register `tribixbite.cleverkeys.clipboard.sanitize.UrlSanitizerTest` in `pureTes
 
 - [ ] **Step 2.2.1: Implement.**
 
+NOTE: no `import android.util.Patterns` — Task 2.3 uses a hand-rolled regex to keep this class pure-JVM testable. The stub deliberately has no Android dependencies so the file compiles inside `runPureTests` without android.jar.
+
 ```kotlin
 package tribixbite.cleverkeys.clipboard.sanitize
 
-import android.util.Patterns
-
 /**
- * Stateless URL sanitization engine.
+ * Stateless URL sanitization engine. Pure JVM — no Android deps.
  *
- * Scans the input for HTTP/HTTPS URLs (via Android's Patterns.WEB_URL),
- * runs each through the matching providers in the ruleset, and returns
- * the input with each URL replaced in-place.
+ * Scans input text for HTTP/HTTPS URLs, runs each through the matching
+ * providers in the ruleset, and returns the input with each URL replaced
+ * in-place.
  *
  * Idempotency: process(process(s)) == process(s) for any input s.
  */
@@ -584,7 +590,7 @@ class RulesetUrlSanitizer(private val ruleset: Ruleset) : UrlSanitizer {
 
     override fun process(text: String): String {
         if (ruleset.providers.isEmpty() || text.isEmpty()) return text
-        // TODO Task 2.3: scan for URLs and apply providers.
+        // Filled in at Task 2.3 when the URL-scan + per-provider matching lands.
         return text
     }
 }
@@ -1265,6 +1271,77 @@ class ClipboardSanitizationHookTest {
         }
         assertThat(mediaProcessor("image/png")).isNull()
         verify(exactly = 0) { sanitizer.process(any()) }
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // SanitizationConfig.build() — production code, exercised directly
+    // ─────────────────────────────────────────────────────────────────
+
+    @Test
+    fun toggleAllOff_returnsNoOpSanitizer() {
+        // Spec §Testing > MockK requires this regression: when all three
+        // toggles are off, the unified sanitizer must be a no-op (passes
+        // input through unchanged) without ever opening any asset.
+        mockkStatic(tribixbite.cleverkeys.Config::class)
+        val cfg = mockk<tribixbite.cleverkeys.Config>(relaxed = true) {
+            every { clipboard_sanitize_links_enabled } returns false
+            every { clipboard_embed_enrich_enabled } returns false
+            every { clipboard_custom_rules_enabled } returns false
+            every { clipboard_custom_rules_uri } returns null
+        }
+        every { tribixbite.cleverkeys.Config.globalConfig() } returns cfg
+
+        val ctx = mockk<android.content.Context>(relaxed = true)
+        val sanitizer = SanitizationConfig(ctx).sanitizer()
+
+        val input = "https://example.com/page?utm_source=foo"
+        assertThat(sanitizer.process(input)).isEqualTo(input)
+        // Crucially: no asset access happened.
+        verify(exactly = 0) { ctx.assets }
+    }
+
+    @Test
+    fun customRulesEnabled_fileMissing_fallsBackToBundled() {
+        // Spec §Testing > MockK regression: if user enables custom rules
+        // but the persisted file is gone (manual cache wipe, app reinstall,
+        // SAF grant revoked), the bundled rules must still apply — never
+        // crash, never disable everything.
+        mockkStatic(tribixbite.cleverkeys.Config::class)
+        val cfg = mockk<tribixbite.cleverkeys.Config>(relaxed = true) {
+            every { clipboard_sanitize_links_enabled } returns true
+            every { clipboard_embed_enrich_enabled } returns false
+            every { clipboard_custom_rules_enabled } returns true
+            // URI persisted but file at app-private location does not exist
+            every { clipboard_custom_rules_uri } returns "content://does.not.exist/rules.json"
+        }
+        every { tribixbite.cleverkeys.Config.globalConfig() } returns cfg
+
+        val bundledJson = """{
+            "providers": {
+                "globalRules": {
+                    "urlPattern": ".*",
+                    "rules": ["utm_source"]
+                }
+            }
+        }""".trimIndent()
+
+        val assetManager = mockk<android.content.res.AssetManager>(relaxed = true) {
+            every { open("url_rules/clearurls.json") } returns bundledJson.byteInputStream()
+        }
+        val nonexistentDir = java.io.File("/data/local/tmp/nonexistent-${System.currentTimeMillis()}")
+        val ctx = mockk<android.content.Context>(relaxed = true) {
+            every { assets } returns assetManager
+            every { filesDir } returns nonexistentDir
+            every { contentResolver } returns mockk(relaxed = true) {
+                // SAF resolver returns null for the bogus URI
+                every { openInputStream(any()) } returns null
+            }
+        }
+
+        val sanitizer = SanitizationConfig(ctx).sanitizer()
+        // Bundled `utm_source` strip MUST still apply despite custom file missing.
+        assertThat(sanitizer.process("https://example.com/page?utm_source=foo&keep=bar"))
+            .isEqualTo("https://example.com/page?keep=bar")
     }
 }
 ```
