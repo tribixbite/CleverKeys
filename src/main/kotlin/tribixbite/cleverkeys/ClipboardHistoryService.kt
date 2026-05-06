@@ -14,6 +14,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import tribixbite.cleverkeys.clipboard.sanitize.SanitizationConfig
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
 
@@ -31,6 +32,11 @@ class ClipboardHistoryService private constructor(ctx: Context) {
 
     // Media manager for clipboard media file storage and thumbnails
     private val _mediaManager: ClipboardMediaManager by lazy { ClipboardMediaManager(_context) }
+
+    // URL sanitizer config — lazy because Config may not be initialised at construction
+    private val _sanitizationConfig: SanitizationConfig by lazy {
+        SanitizationConfig(_context)
+    }
 
     init {
         // Handle expired entries based on current user setting
@@ -238,8 +244,11 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         val ttlMs = getHistoryTtlMs()
         val expiryTime = if (ttlMs == Long.MAX_VALUE) Long.MAX_VALUE else System.currentTimeMillis() + ttlMs
 
+        // URL sanitization (text/plain only). No-op when all three toggles are off.
+        val processed = _sanitizationConfig.sanitizer().process(clip)
+
         // Add to database (handles duplicate detection automatically)
-        val added = _database.addClipboardEntry(clip, expiryTime)
+        val added = _database.addClipboardEntry(processed, expiryTime)
 
         if (added) {
             // Apply size limits if configured (based on limit type)
