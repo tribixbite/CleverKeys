@@ -2,14 +2,18 @@ package tribixbite.cleverkeys
 
 import android.app.ActivityManager
 import android.app.usage.UsageStatsManager
+import android.content.BroadcastReceiver
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.net.Uri
 import android.os.Build
 import android.os.Build.VERSION
 import android.os.UserManager
 import android.widget.Toast
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -36,6 +40,30 @@ class ClipboardHistoryService private constructor(ctx: Context) {
     // URL sanitizer config — lazy because Config may not be initialised at construction
     private val _sanitizationConfig: SanitizationConfig by lazy {
         SanitizationConfig(_context)
+    }
+
+    /**
+     * Receives [SettingsActivity.ACTION_SANITIZATION_RULES_CHANGED] from the settings
+     * UI (toggle change, custom-rules import). Drops the cached sanitizer so the next
+     * clipboard insert rebuilds it from current Config + on-disk custom file.
+     */
+    private val _sanitizationRulesReceiver = object : BroadcastReceiver() {
+        override fun onReceive(c: Context?, intent: Intent?) {
+            if (intent?.action == SettingsActivity.ACTION_SANITIZATION_RULES_CHANGED) {
+                _sanitizationConfig.rebuild()
+            }
+        }
+    }
+    private var _sanitizationReceiverRegistered = false
+
+    init {
+        // Listen for sanitization toggle/file changes so the cached ruleset stays fresh.
+        // Mirrors the dictionary-import receiver pattern used by DictionaryManagerActivity.
+        LocalBroadcastManager.getInstance(_context).registerReceiver(
+            _sanitizationRulesReceiver,
+            IntentFilter(SettingsActivity.ACTION_SANITIZATION_RULES_CHANGED)
+        )
+        _sanitizationReceiverRegistered = true
     }
 
     init {
@@ -105,6 +133,18 @@ class ClipboardHistoryService private constructor(ctx: Context) {
      * (SystemListener is an inner class holding a reference to this service).
      */
     fun unregisterClipboardListener() {
+        // Always tear down the sanitization broadcast receiver, even if the system
+        // clipboard listener never registered (e.g. non-default IME path).
+        if (_sanitizationReceiverRegistered) {
+            try {
+                LocalBroadcastManager.getInstance(_context)
+                    .unregisterReceiver(_sanitizationRulesReceiver)
+            } catch (e: Exception) {
+                android.util.Log.w("ClipboardHistory", "Error unregistering sanitization receiver", e)
+            }
+            _sanitizationReceiverRegistered = false
+        }
+
         if (!_isListenerRegistered) return
 
         try {
