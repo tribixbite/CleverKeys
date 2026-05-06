@@ -432,7 +432,7 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.backup.SettingsImportPlanApplyTest',
     'tribixbite.cleverkeys.backup.DictImportPlanApplyTest',
     'tribixbite.cleverkeys.backup.BackupRestoreManagerHeadlessTest',
-    'tribixbite.cleverkeys.clipboard.sanitize.ClipboardSanitizationHookTest',
+    'tribixbite.cleverkeys.clipboard.sanitize.SanitizationConfigBuildTest',
   ]
 
   mainClass = 'org.junit.runner.JUnitCore'

@@ -8,33 +8,27 @@ import org.junit.Before
 import org.junit.Test
 
 /**
- * Verifies the ClipboardHistoryService → UrlSanitizer hook contract:
- *  - when at least one toggle is on, text is sanitized before insert
- *  - when all toggles are off, text passes through unchanged AND no asset is opened
- *  - media inserts are NEVER sanitized (mime-gated)
- *  - custom rules file missing falls back to bundled rules without crashing
+ * Direct unit coverage of `SanitizationConfig.build()` — the production
+ * code that resolves the active sanitizer from the three Config toggles
+ * + bundled assets + custom file.
  *
- * Implementation note: the first two tests exercise `UrlSanitizer.process` via
- * an MockK stub rather than spinning up a full ClipboardHistoryService — that
- * class binds to a System service and would require Robolectric. The contract
- * under test is "if sanitizer.process(x) returns y, then y is what reaches
- * addClipboardEntry" — locked here against the production hook structure.
+ * Two contracts under test:
+ *   - All toggles off → returns a no-op sanitizer that passes input
+ *     through unchanged AND never opens any asset.
+ *   - Custom toggle on but custom file missing → falls back to the
+ *     bundled clearurls ruleset (no crash, no all-disable).
  *
- * The latter two tests exercise `SanitizationConfig.build()` directly with
- * mocked Config + Context, covering the "all toggles off" and "custom file
- * missing → fall back to bundled" branches required by spec §Testing.
+ * The `ClipboardHistoryService.kt:248` hook itself is verified by
+ * code inspection (one-line diff in a clearly-named file). Robolectric
+ * coverage of that hook is deferred — would add a heavier test
+ * dependency for marginal value over the diff review.
  */
-class ClipboardSanitizationHookTest {
-
-    private lateinit var sanitizer: UrlSanitizer
+class SanitizationConfigBuildTest {
 
     @Before
     fun setUp() {
-        sanitizer = mockk()
-        every { sanitizer.process(any()) } answers { firstArg<String>().uppercase() }
-
-        // Asset-load failure path in SanitizationConfig.loadAsset calls Log.e.
-        // Safe to stub for the entire suite even when not exercised.
+        // Asset-load failure path in SanitizationConfig.loadAsset calls Log.e;
+        // loadCustom failure path calls Log.w. Stub both for the entire suite.
         mockkStatic(Log::class)
         every { Log.d(any(), any()) } returns 0
         every { Log.e(any(), any(), any()) } returns 0
@@ -46,29 +40,6 @@ class ClipboardSanitizationHookTest {
         unmockkStatic(Log::class)
         unmockkObject(tribixbite.cleverkeys.Config.Companion)
     }
-
-    @Test
-    fun process_isCalledOnTextInput() {
-        val out = sanitizer.process("hello https://x.com/foo")
-        assertThat(out).isEqualTo("HELLO HTTPS://X.COM/FOO")
-        verify(exactly = 1) { sanitizer.process(any()) }
-    }
-
-    @Test
-    fun mediaPath_doesNotInvokeSanitizer() {
-        // The hook's mime gate is verified by call-site code review; we lock
-        // the contract here by asserting the sanitizer is callable and that
-        // the production hook only calls it on text/plain.
-        val mediaProcessor: (String?) -> String? = { mime ->
-            if (mime == "text/plain") sanitizer.process("text") else null
-        }
-        assertThat(mediaProcessor("image/png")).isNull()
-        verify(exactly = 0) { sanitizer.process(any()) }
-    }
-
-    // ─────────────────────────────────────────────────────────────────
-    // SanitizationConfig.build() — production code, exercised directly
-    // ─────────────────────────────────────────────────────────────────
 
     @Test
     fun toggleAllOff_returnsNoOpSanitizer() {
