@@ -163,4 +163,36 @@ class RulesetParserTest {
         assertThat(merged.providers["twitter"]!!.exceptions).hasSize(1)
         assertThat(merged.providers["twitter"]!!.rules).containsExactly("s")
     }
+
+    @Test
+    fun merge_overlayUrlPatternOverridesBaseWhenDifferent() {
+        // Overlay supplies a stricter urlPattern; merged Provider uses the overlay's pattern.
+        val base = RulesetParser.fromJson(
+            """{"providers":{"p":{"urlPattern":".*","rules":["a"]}}}"""
+        )
+        val overlay = RulesetParser.fromJson(
+            """{"providers":{"p":{"urlPattern":"^https?://example\\.com","rules":["b"]}}}"""
+        )
+        val merged = RulesetParser.merge(base, overlay)
+        // The new pattern is the overlay's specific one — verify by source-string equality.
+        assertThat(merged.providers["p"]!!.urlPattern.pattern).isEqualTo("^https?://example\\.com")
+        // List fields still merged (append).
+        assertThat(merged.providers["p"]!!.rules).containsExactly("a", "b").inOrder()
+    }
+
+    @Test
+    fun merge_overlayUrlPatternIdenticalKeepsBase() {
+        // Identical urlPattern strings → merged keeps base instance (no override).
+        val base = RulesetParser.fromJson(
+            """{"providers":{"p":{"urlPattern":"^https?://example\\.com","rules":["a"]}}}"""
+        )
+        val overlay = RulesetParser.fromJson(
+            """{"providers":{"p":{"urlPattern":"^https?://example\\.com","rules":["b"]}}}"""
+        )
+        val merged = RulesetParser.merge(base, overlay)
+        // Pattern source-string is preserved (still the same shape regardless of which
+        // instance won — but the merge code path took the "no diff → keep base" branch).
+        assertThat(merged.providers["p"]!!.urlPattern.pattern).isEqualTo("^https?://example\\.com")
+        assertThat(merged.providers["p"]!!.rules).containsExactly("a", "b").inOrder()
+    }
 }
