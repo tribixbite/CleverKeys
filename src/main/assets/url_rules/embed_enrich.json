@@ -9,9 +9,9 @@
       "completeProvider": false
     },
     "reddit_embed_fix": {
-      "urlPattern": "^https?://(?:www|old|new)\\.?reddit\\.com/.+",
+      "urlPattern": "^https?://(?:(?:www|old|new)\\.)?reddit\\.com/.+",
       "redirections": [{
-        "pattern": "^https?://(?:www|old|new)\\.?reddit\\.com/(.+)$",
+        "pattern": "^https?://(?:(?:www|old|new)\\.)?reddit\\.com/(.+)$",
         "replacement": "https://rxddit.com/$1"
       }],
       "completeProvider": false
