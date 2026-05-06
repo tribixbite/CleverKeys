@@ -28,9 +28,9 @@ panel delivers the sanitized variant.
 - Bundle the ClearURLs minified snapshot as an asset (~60KB); CleverKeys explicitly bans
   INTERNET so live refresh is impossible. Pin upstream commit SHA in
   `src/main/assets/url_rules/clearurls.version` for periodic refresh tracking.
-- Hook URL sanitization at CleverKeys' own `ClipboardHistoryService.processClipboardChange`
-  (line 248, immediately before `_database.addClipboardEntry`), NOT Android system
-  clipboard (would need `READ_CLIPBOARD` permission).
+- Hook URL sanitization at CleverKeys' own `ClipboardHistoryService.addClip` (immediately
+  before `_database.addClipboardEntry`), NOT Android system clipboard (would need
+  `READ_CLIPBOARD` permission).
 - For pure JVM tests of URL-scanning logic, hand-roll a regex (`Regex("https?://...")`)
   rather than depending on `android.util.Patterns.WEB_URL` (not available outside
   Android runtime). Keeps test tier consistent.

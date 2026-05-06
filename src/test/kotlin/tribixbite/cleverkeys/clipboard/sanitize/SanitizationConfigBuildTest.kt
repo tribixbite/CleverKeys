@@ -18,10 +18,11 @@ import org.junit.Test
  *   - Custom toggle on but custom file missing → falls back to the
  *     bundled clearurls ruleset (no crash, no all-disable).
  *
- * The `ClipboardHistoryService.kt:248` hook itself is verified by
- * code inspection (one-line diff in a clearly-named file). Robolectric
- * coverage of that hook is deferred — would add a heavier test
- * dependency for marginal value over the diff review.
+ * The hook in `ClipboardHistoryService.addClip` (immediately before
+ * `_database.addClipboardEntry`) is verified by code inspection
+ * (one-line diff in a clearly-named function). Robolectric coverage of
+ * that hook is deferred — would add a heavier test dependency for
+ * marginal value over the diff review.
  */
 class SanitizationConfigBuildTest {
 
