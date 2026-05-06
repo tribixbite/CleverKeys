@@ -36,8 +36,8 @@ class SanitizationConfig(private val context: Context) {
     fun rebuild() { cached = null }
 
     private fun build(): UrlSanitizer {
-        val cfg = try { Config.globalConfig() } catch (_: Exception) {
-            // Config not yet initialised (e.g. during early service start). No-op.
+        val cfg = try { Config.globalConfig() } catch (e: Exception) {
+            Log.w(TAG, "Config not yet initialised — sanitizer disabled this call", e)
             return RulesetUrlSanitizer(Ruleset(emptyMap()))
         }
 
