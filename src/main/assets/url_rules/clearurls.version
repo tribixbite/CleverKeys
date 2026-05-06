@@ -1,0 +1,4 @@
+upstream: gitlab.com/ClearURLs/rules
+file:     data.min.json
+commit:   11086f40512774dcadef54079f1ba023bfacf940
+fetched:  2026-05-05
