@@ -3272,7 +3272,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 }
 
                 Text(
-                    text = "Note: only applies to copies made via CleverKeys. Other apps' copies are unchanged.",
+                    text = "Note: applies when CleverKeys saves a clip to its history. The Android system clipboard is not modified — other apps still see the original URL. Pastes from CleverKeys' panel deliver the sanitized version.",
                     modifier = Modifier.padding(16.dp),
                     fontSize = 11.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,

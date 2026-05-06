@@ -21,7 +21,7 @@ import org.junit.runner.RunWith
  *   2. All three switches render with their canonical labels.
  *   3. The "Browse..." button stays hidden until the third toggle (custom rules)
  *      is enabled — gating prevents accidental SAF picks.
- *   4. The scope-note disclosure ("only applies to copies made via CleverKeys")
+ *   4. The scope-note disclosure ("Android system clipboard is not modified")
  *      is always visible to set user expectations.
  *
  * Section title uses substring matching because it carries an emoji prefix
@@ -116,7 +116,7 @@ class UrlSanitizationSettingsComposeTest {
             .performScrollTo()
             .performClick()
         composeRule.waitForIdle()
-        composeRule.onNodeWithText("only applies to copies made via CleverKeys", substring = true)
+        composeRule.onNodeWithText("Android system clipboard is not modified", substring = true)
             .performScrollTo()
             .assertIsDisplayed()
     }

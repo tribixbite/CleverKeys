@@ -9,9 +9,12 @@ Three independent toggles in Clipboard settings → URL handling:
 
 All three use ClearURLs format. Per-provider field-level merge means custom rules can
 surgically disable bundled rules via `exceptions: [".*"]` — no all-or-nothing toggle pain.
-Hooks `ClipboardHistoryService` text/plain insert path; media bypasses sanitization.
-Headless Termux automation paths (`am` Intents to system clipboard) are NOT affected —
-this only filters CleverKeys' own clipboard panel inserts.
+
+**Scope**: Hooks `ClipboardHistoryService.addClip` (text/plain). Sanitizes EVERY clipboard
+event CleverKeys observes via `OnPrimaryClipChangedListener` (own copies + system-clipboard
+changes from other apps + `am` Intents). The Android system clipboard is NOT modified —
+other apps still read original URLs. Only CleverKeys' history table + paste via CleverKeys'
+panel delivers the sanitized variant.
 
 ### Hard-won lessons
 
