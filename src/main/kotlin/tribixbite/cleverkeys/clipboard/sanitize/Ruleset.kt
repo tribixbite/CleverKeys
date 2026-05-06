@@ -11,7 +11,6 @@ package tribixbite.cleverkeys.clipboard.sanitize
  * rewrites without forking the format.
  */
 internal data class Provider(
-    val name: String,
     val urlPattern: Regex,
     val rules: List<String> = emptyList(),         // case-insensitive query-param names to strip
     val rawRules: List<Regex> = emptyList(),       // regex strip from full URL string

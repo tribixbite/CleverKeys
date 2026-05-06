@@ -32,7 +32,6 @@ class RulesetParserTest {
         val rs = RulesetParser.fromJson(json)
         val p = rs.providers["twitter"]!!
 
-        assertThat(p.name).isEqualTo("twitter")
         assertThat(p.rules).containsExactly("s", "ref_src", "ref_url").inOrder()
         assertThat(p.rawRules).hasSize(1)
         assertThat(p.redirections).hasSize(1)

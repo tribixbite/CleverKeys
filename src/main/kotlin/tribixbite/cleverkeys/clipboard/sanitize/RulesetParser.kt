@@ -23,13 +23,13 @@ object RulesetParser {
         val out = LinkedHashMap<String, Provider>()
         for ((name, providerEl) in providersObj.entrySet()) {
             if (!providerEl.isJsonObject) continue
-            val p = parseProvider(name, providerEl.asJsonObject) ?: continue
+            val p = parseProvider(providerEl.asJsonObject) ?: continue
             out[name] = p
         }
         return Ruleset(out)
     }
 
-    private fun parseProvider(name: String, obj: JsonObject): Provider? {
+    private fun parseProvider(obj: JsonObject): Provider? {
         val urlPatternStr = obj.get("urlPattern")?.asString ?: return null
         val urlPattern = try { Regex(urlPatternStr, RegexOption.IGNORE_CASE) }
             // Malformed urlPattern regex — drop entire provider; no useful matching possible.
@@ -65,7 +65,7 @@ object RulesetParser {
 
         val completeProvider = obj.get("completeProvider")?.asBoolean ?: false
 
-        return Provider(name, urlPattern, rules, rawRules, redirections, exceptions, completeProvider)
+        return Provider(urlPattern, rules, rawRules, redirections, exceptions, completeProvider)
     }
 
     private fun parseRedirection(pattern: String, replacement: String?): RedirectionRule? {
