@@ -69,4 +69,33 @@ object RulesetParser {
         val regex = try { Regex(pattern, RegexOption.IGNORE_CASE) } catch (_: Exception) { return null }
         return RedirectionRule(regex, replacement)
     }
+
+    /**
+     * Per-provider, field-level overlay. New providers in `overlay` are added
+     * as-is; existing providers have their list fields appended.
+     * `completeProvider: true` from overlay can disable a base provider; once
+     * `true`, never reverts to false.
+     */
+    fun merge(base: Ruleset, overlay: Ruleset): Ruleset {
+        val out = LinkedHashMap(base.providers)
+        for ((name, op) in overlay.providers) {
+            val bp = out[name]
+            if (bp == null) {
+                out[name] = op
+                continue
+            }
+            out[name] = bp.copy(
+                rules = bp.rules + op.rules,
+                rawRules = bp.rawRules + op.rawRules,
+                redirections = bp.redirections + op.redirections,
+                exceptions = bp.exceptions + op.exceptions,
+                completeProvider = bp.completeProvider || op.completeProvider,
+                // urlPattern: overlay wins if its raw pattern was not the wildcard sentinel
+                // (Regex equality is identity-only, so we compare via toString).
+                urlPattern = if (op.urlPattern.pattern != bp.urlPattern.pattern)
+                    op.urlPattern else bp.urlPattern,
+            )
+        }
+        return Ruleset(out)
+    }
 }

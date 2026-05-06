@@ -112,4 +112,55 @@ class RulesetParserTest {
         assertThat(p.urlPattern.matches("https://example.com")).isTrue()
         assertThat(p.rules).containsExactly("utm_source", "fbclid")
     }
+
+    @Test
+    fun merge_overlayAddsNewProvider() {
+        val base = RulesetParser.fromJson("""{"providers":{}}""")
+        val overlay = RulesetParser.fromJson("""{"providers":{"new":{"urlPattern":".*","rules":["x"]}}}""")
+        val merged = RulesetParser.merge(base, overlay)
+        assertThat(merged.providers["new"]!!.rules).containsExactly("x")
+    }
+
+    @Test
+    fun merge_overlayAppendsRulesToExistingProvider() {
+        val base = RulesetParser.fromJson(
+            """{"providers":{"p":{"urlPattern":".*","rules":["a","b"]}}}"""
+        )
+        val overlay = RulesetParser.fromJson(
+            """{"providers":{"p":{"urlPattern":".*","rules":["c"]}}}"""
+        )
+        val merged = RulesetParser.merge(base, overlay)
+        assertThat(merged.providers["p"]!!.rules).containsExactly("a", "b", "c").inOrder()
+    }
+
+    @Test
+    fun merge_overlayCanForceCompleteProvider() {
+        val base = RulesetParser.fromJson(
+            """{"providers":{"p":{"urlPattern":".*","completeProvider":false,"rules":["a"]}}}"""
+        )
+        val overlay = RulesetParser.fromJson(
+            """{"providers":{"p":{"urlPattern":".*","completeProvider":true}}}"""
+        )
+        val merged = RulesetParser.merge(base, overlay)
+        // Overlay's completeProvider:true wins → all processing skipped for this provider.
+        assertThat(merged.providers["p"]!!.completeProvider).isTrue()
+        // But rules survived the merge (provider is just disabled at apply-time).
+        assertThat(merged.providers["p"]!!.rules).containsExactly("a")
+    }
+
+    @Test
+    fun merge_overlayWithExceptionsDisablesBundledRule() {
+        // The user-disable-bundled-rule pattern: overlay supplies exceptions: [".*"]
+        // for a provider, which appends to bundled exceptions and shorts every match
+        // at apply-time.
+        val base = RulesetParser.fromJson(
+            """{"providers":{"twitter":{"urlPattern":"^https?://twitter\\.com","rules":["s"]}}}"""
+        )
+        val overlay = RulesetParser.fromJson(
+            """{"providers":{"twitter":{"urlPattern":"^https?://twitter\\.com","exceptions":[".*"]}}}"""
+        )
+        val merged = RulesetParser.merge(base, overlay)
+        assertThat(merged.providers["twitter"]!!.exceptions).hasSize(1)
+        assertThat(merged.providers["twitter"]!!.rules).containsExactly("s")
+    }
 }
