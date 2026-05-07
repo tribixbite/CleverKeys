@@ -264,6 +264,9 @@ android {
       // Note: If no signingConfig, APK is unsigned (requires manual signing)
     }
     debug {
+      // Separate applicationId so debug builds coexist with the prod-signed app
+      // and never overwrite/wipe its data on install.
+      applicationIdSuffix '.debug'
       minifyEnabled false
       shrinkResources false
       debuggable true
