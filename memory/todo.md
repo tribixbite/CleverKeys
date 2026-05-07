@@ -1,5 +1,28 @@
 # CleverKeys TODO
 
+## ✅ URL sanitizer: rule-as-regex fix (2026-05-06)
+
+Bundled ClearURLs `rules` entries are regex source strings (e.g.
+`(?:%3F)?spm`, `utm(?:_[a-z_]*)?`, `scm[_a-z-]*`), not literal param keys.
+The original `stripQueryParams` did string-equality set membership against
+the lowercased param key, so virtually every common tracking parameter
+(spm, utm_*, fbclid, gclid, srsltid, scm*) bypassed the strip — only
+literal-rule providers (sid, btsid) actually fired. Reported by user
+testing the same AliExpress URL we'd validated during design (the design
+test had used literal-string rules, hiding the bug).
+
+**Fix**: pre-compile each provider's `rules` as anchored case-insensitive
+regex (`^(?:rule)$`) at sanitizer construction; match param keys via
+`Regex.matches()`. Malformed patterns drop per-rule via `mapNotNull` so a
+single bad entry never disables a provider. Pure JVM regression tests
+exercise the four common bundled-rule shapes.
+
+### Hard-won lesson
+- When testing rule engines that consume an external rule format, write
+  at least one fixture that uses **the actual upstream regex syntax**, not
+  simplified literal strings. The pre-existing 8-test UrlSanitizerTest
+  used only literal rules and was therefore unable to detect this bug.
+
 ## ✅ Clipboard URL sanitization (2026-05-05)
 
 Three independent toggles in Clipboard settings → URL handling:
