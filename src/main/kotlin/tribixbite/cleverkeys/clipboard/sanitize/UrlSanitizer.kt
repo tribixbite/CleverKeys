@@ -25,6 +25,18 @@ internal class RulesetUrlSanitizer(private val ruleset: Ruleset) : UrlSanitizer 
         )
     }
 
+    // Per-provider compiled rule patterns, fixed at construction.
+    // ClearURLs `rules` entries are regex source strings (e.g. `(?:%3F)?spm`,
+    // `utm(?:_[a-z_]*)?`), not literal param names. Each is compiled as anchored
+    // case-insensitive regex matching the full param key. Malformed patterns
+    // are dropped per-rule (mapNotNull) so one bad entry doesn't kill a provider.
+    private val compiledRules: Map<Provider, List<Regex>> =
+        ruleset.providers.values.associateWith { p ->
+            p.rules.mapNotNull {
+                try { Regex("^(?:$it)$", RegexOption.IGNORE_CASE) } catch (_: Exception) { null }
+            }
+        }
+
     override fun process(text: String): String {
         if (ruleset.providers.isEmpty() || text.isEmpty()) return text
 
@@ -61,20 +73,18 @@ internal class RulesetUrlSanitizer(private val ruleset: Ruleset) : UrlSanitizer 
                 current = raw.replace(current, "")
             }
 
-            // Apply rules (case-insensitive query-param strip)
-            current = stripQueryParams(current, provider.rules)
+            // Apply rules (regex-based query-param strip)
+            val rulePatterns = compiledRules[provider] ?: emptyList()
+            current = stripQueryParams(current, rulePatterns)
         }
 
         return current
     }
 
-    private fun stripQueryParams(url: String, paramsToStrip: List<String>): String {
-        if (paramsToStrip.isEmpty()) return url
+    private fun stripQueryParams(url: String, rulePatterns: List<Regex>): String {
+        if (rulePatterns.isEmpty()) return url
         val qIdx = url.indexOf('?')
         if (qIdx < 0) return url
-
-        // Lowercase the strip list once for case-insensitive matching.
-        val stripSet = paramsToStrip.map { it.lowercase() }.toHashSet()
 
         // Split off the fragment (#anchor) — preserve verbatim.
         val fragIdx = url.indexOf('#', startIndex = qIdx)
@@ -85,8 +95,8 @@ internal class RulesetUrlSanitizer(private val ruleset: Ruleset) : UrlSanitizer 
         val query = pathAndQuery.substring(qIdx + 1)
 
         val keptParams = query.split('&').filter { kv ->
-            val key = kv.substringBefore('=').lowercase()
-            key.isNotEmpty() && key !in stripSet
+            val key = kv.substringBefore('=')
+            key.isNotEmpty() && rulePatterns.none { it.matches(key) }
         }
 
         return when {

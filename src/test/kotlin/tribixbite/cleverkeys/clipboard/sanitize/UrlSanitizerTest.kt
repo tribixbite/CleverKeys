@@ -92,6 +92,70 @@ class UrlSanitizerTest {
     }
 
     @Test
+    fun rule_isRegexNotLiteral_clearUrlsSpmPattern() {
+        val rs = RulesetParser.fromJson("""{
+            "providers": {
+                "globalRules": {
+                    "urlPattern": ".*",
+                    "rules": ["(?:%3F)?spm"]
+                }
+            }
+        }""")
+        val sanitizer = RulesetUrlSanitizer(rs)
+        val input = "https://www.aliexpress.us/item/3256807058505746.html?spm=a2g0o.detail.0.0.foo"
+        assertThat(sanitizer.process(input))
+            .isEqualTo("https://www.aliexpress.us/item/3256807058505746.html")
+    }
+
+    @Test
+    fun rule_isRegexNotLiteral_clearUrlsUtmFamily() {
+        val rs = RulesetParser.fromJson("""{
+            "providers": {
+                "globalRules": {
+                    "urlPattern": ".*",
+                    "rules": ["(?:%3F)?utm(?:_[a-z_]*)?"]
+                }
+            }
+        }""")
+        val sanitizer = RulesetUrlSanitizer(rs)
+        val input = "https://example.com/x?utm_source=a&utm_medium=b&utm_campaign=c&keep=yes"
+        assertThat(sanitizer.process(input))
+            .isEqualTo("https://example.com/x?keep=yes")
+    }
+
+    @Test
+    fun rule_isRegexNotLiteral_clearUrlsScmFamily() {
+        val rs = RulesetParser.fromJson("""{
+            "providers": {
+                "aliexpress": {
+                    "urlPattern": "^https?://(?:[^/?#]+\\.)?aliexpress\\.",
+                    "rules": ["scm[_a-z-]*"]
+                }
+            }
+        }""")
+        val sanitizer = RulesetUrlSanitizer(rs)
+        val input = "https://www.aliexpress.us/item/x.html?scm=foo&scm-url=bar&scm_id=baz&keep=yes"
+        assertThat(sanitizer.process(input))
+            .isEqualTo("https://www.aliexpress.us/item/x.html?keep=yes")
+    }
+
+    @Test
+    fun malformedRulePattern_skippedGracefullyOthersStillApply() {
+        val rs = RulesetParser.fromJson("""{
+            "providers": {
+                "globalRules": {
+                    "urlPattern": ".*",
+                    "rules": ["[invalid", "fbclid"]
+                }
+            }
+        }""")
+        val sanitizer = RulesetUrlSanitizer(rs)
+        val input = "https://example.com/x?fbclid=foo&keep=yes"
+        assertThat(sanitizer.process(input))
+            .isEqualTo("https://example.com/x?keep=yes")
+    }
+
+    @Test
     fun idempotent_runTwiceSameAsOnce() {
         val rs = RulesetParser.fromJson("""{
             "providers":{"globalRules":{"urlPattern":".*","rules":["utm_source"]}}
