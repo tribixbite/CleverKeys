@@ -300,7 +300,13 @@ fi
 say "Step 6: Installing $PKG_INSTALL..."
 # CRITICAL: never run 'adb uninstall' on the prod package id — that would wipe user data.
 # Debug builds install at $PKG_BASE.debug (separate applicationId), so they coexist with prod.
-if "$ADB_PATH" install -r "$APK_PATH"; then
+#
+# Capture stderr so we can decode the common failure modes that aren't obvious
+# to a casual reader of Android's INSTALL_FAILED_* codes. Existing app data is
+# always safe — `adb install -r` cannot wipe data; it only succeeds or rejects.
+INSTALL_OUTPUT=$("$ADB_PATH" install -r "$APK_PATH" 2>&1)
+INSTALL_RC=$?
+if [ $INSTALL_RC -eq 0 ]; then
     echo
     say "=== APK INSTALLED SUCCESSFULLY ==="
     if [ "$BUILD_TYPE" = "debug" ]; then
@@ -309,13 +315,48 @@ if "$ADB_PATH" install -r "$APK_PATH"; then
         say "Look for 'CleverKeys (Debug)'."
     fi
     exit 0
-else
-    say "ADB install failed."
-    if command -v termux-open >/dev/null 2>&1; then
-        say "Falling back to manual install..."
-        termux-open "$APK_PATH" 2>/dev/null || say "  Share the APK manually: $APK_PATH"
-    else
-        say "Share the APK manually: $APK_PATH"
-    fi
-    exit 1
 fi
+
+# Install failed — decode the common Android error codes into actionable advice.
+echo
+say "ADB install failed:"
+echo "$INSTALL_OUTPUT" | sed 's/^/    /'
+echo
+if echo "$INSTALL_OUTPUT" | grep -q "INSTALL_FAILED_UPDATE_INCOMPATIBLE\|signatures do not match\|INCONSISTENT_CERTIFICATES"; then
+    say "DIAGNOSIS: signing key mismatch."
+    say "  The installed $PKG_INSTALL is signed with a different key than this build."
+    say "  Your existing app data is SAFE — Android rejected the replace, nothing was written."
+    say
+    if [ "$BUILD_TYPE" = "release" ]; then
+        if [ "$USER_SUPPLIED_KEYSTORE" -eq 1 ]; then
+            say "  You used your release keystore ($RELEASE_KEYSTORE), but it doesn't match"
+            say "  whatever signed the currently-installed APK. Possibilities:"
+            say "    1. Installed APK came from F-Droid (different upstream signer)"
+            say "    2. Installed APK came from GitHub Releases (different signer)"
+            say "    3. Your keystore changed since last install"
+            say "  To install this build alongside the existing one, run: $0 debug"
+        else
+            say "  No RELEASE_KEYSTORE in env — this build is signed with a throwaway test key."
+            say "  Set RELEASE_KEYSTORE/RELEASE_KEY_ALIAS/passwords in your shell to match the"
+            say "  installed APK's signer, or run: $0 debug  (installs side-by-side)."
+        fi
+    else
+        say "  This is unusual for a debug build (applicationId .debug should be unique)."
+        say "  Did someone else's debug APK get installed under this package id?"
+    fi
+elif echo "$INSTALL_OUTPUT" | grep -q "INSTALL_FAILED_VERSION_DOWNGRADE"; then
+    say "DIAGNOSIS: version downgrade."
+    say "  Installed APK has a higher versionCode than this build."
+    say "  Your data is SAFE — Android refused the downgrade."
+    say "  To force-install (data preserved), re-run with: $0 $BUILD_TYPE  after a 'git pull'."
+elif echo "$INSTALL_OUTPUT" | grep -q "INSTALL_FAILED_INSUFFICIENT_STORAGE"; then
+    say "DIAGNOSIS: device storage full. Free up space and retry."
+fi
+
+if command -v termux-open >/dev/null 2>&1; then
+    say "Falling back to manual install..."
+    termux-open "$APK_PATH" 2>/dev/null || say "  Share the APK manually: $APK_PATH"
+else
+    say "Share the APK manually: $APK_PATH"
+fi
+exit 1
