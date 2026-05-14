@@ -130,9 +130,13 @@ class SettingsSearchTest {
         result.click()
         Thread.sleep(1500)
 
-        // No crash = pass. Header may scroll off-screen so check package is still foreground
-        assertEquals("Settings activity should still be running",
-            "tribixbite.cleverkeys", device.currentPackageName)
+        // No crash = pass. Header may scroll off-screen so check package is still foreground.
+        // startsWith covers both release (tribixbite.cleverkeys) and debug (.debug suffix).
+        val pkg = device.currentPackageName ?: ""
+        assertTrue(
+            "Settings activity should still be running, got pkg=$pkg",
+            pkg.startsWith("tribixbite.cleverkeys")
+        )
     }
 
     @Test
@@ -149,8 +153,11 @@ class SettingsSearchTest {
         result.click()
         Thread.sleep(1500)
 
-        assertEquals("Settings activity should still be running after gated search tap",
-            "tribixbite.cleverkeys", device.currentPackageName)
+        val pkg = device.currentPackageName ?: ""
+        assertTrue(
+            "Settings activity should still be running after gated search tap, got pkg=$pkg",
+            pkg.startsWith("tribixbite.cleverkeys")
+        )
     }
 
     // =========================================================================

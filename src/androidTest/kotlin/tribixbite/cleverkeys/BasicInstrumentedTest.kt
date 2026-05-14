@@ -28,7 +28,12 @@ class BasicInstrumentedTest {
 
     @Test
     fun testPackageName() {
-        assertEquals("tribixbite.cleverkeys", context.packageName)
+        // Debug builds use `applicationIdSuffix '.debug'`; release uses the bare id.
+        // startsWith covers both flavors without per-build matchers.
+        assertTrue(
+            "expected package id to start with tribixbite.cleverkeys, got ${context.packageName}",
+            context.packageName.startsWith("tribixbite.cleverkeys")
+        )
     }
 
     @Test
