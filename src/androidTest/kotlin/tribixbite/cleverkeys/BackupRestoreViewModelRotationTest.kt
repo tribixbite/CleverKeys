@@ -9,19 +9,23 @@ import tribixbite.cleverkeys.backup.*
 
 /**
  * Validates the ViewModel's purpose: state survives [ActivityScenario.recreate]
- * (the rotation simulation). Without [BackupRestoreViewModel] the import-preview
+ * (rotation simulation). Without [BackupRestoreViewModel] the import-preview
  * plan would be discarded on rotate, forcing the user to re-pick the file.
  *
- * Reflection seam: `viewModels()` generates a private `viewModel$delegate`
+ * As of 2026-05-07 the ViewModel lives on [SettingsActivity] (Option 2
+ * unification — the dedicated Compose UI was retired in favor of the inline
+ * Backup & Restore section). The reflection seam targets that activity.
+ *
+ * Reflection seam: `viewModels()` generates a private `backupRestoreViewModel$delegate`
  * `Lazy<VM>` field on the activity. We unwrap it to access the resolved VM
- * instance. Brittle by nature — if the Kotlin codegen changes the field name
- * we expose a `@VisibleForTesting` accessor on the activity instead.
+ * instance. Brittle by nature — if Kotlin codegen changes the field name we
+ * expose a `@VisibleForTesting` accessor on the activity instead.
  */
 @RunWith(AndroidJUnit4::class)
 class BackupRestoreViewModelRotationTest {
 
-    private fun extractViewModel(activity: BackupRestoreActivity): BackupRestoreViewModel {
-        val vmField = activity.javaClass.getDeclaredField("viewModel\$delegate")
+    private fun extractViewModel(activity: SettingsActivity): BackupRestoreViewModel {
+        val vmField = activity.javaClass.getDeclaredField("backupRestoreViewModel\$delegate")
         vmField.isAccessible = true
         @Suppress("UNCHECKED_CAST")
         val lazyVm = vmField.get(activity) as Lazy<BackupRestoreViewModel>
@@ -30,7 +34,7 @@ class BackupRestoreViewModelRotationTest {
 
     @Test
     fun previewPlan_survivesActivityRecreation() {
-        val scenario = ActivityScenario.launch(BackupRestoreActivity::class.java)
+        val scenario = ActivityScenario.launch(SettingsActivity::class.java)
         try {
             val testPlan = SettingsImportPlan(
                 sourceVersion = "1.4.0",

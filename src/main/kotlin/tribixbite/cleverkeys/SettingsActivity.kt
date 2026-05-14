@@ -13,6 +13,7 @@ import android.widget.*
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.RepeatMode
@@ -74,6 +75,10 @@ import tribixbite.cleverkeys.langpack.ImportResult
 import tribixbite.cleverkeys.langpack.LanguagePackManifest
 import tribixbite.cleverkeys.clipboard.sanitize.RulesetParser
 import tribixbite.cleverkeys.clipboard.sanitize.SanitizationConfig
+import tribixbite.cleverkeys.backup.DictImportPlan
+import tribixbite.cleverkeys.backup.LangWord
+import tribixbite.cleverkeys.backup.SettingsImportPlan
+import tribixbite.cleverkeys.backup.ShortSwipeImportMode
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 
 /**
@@ -100,11 +105,25 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
          */
         const val ACTION_SANITIZATION_RULES_CHANGED =
             "tribixbite.cleverkeys.action.SANITIZATION_RULES_CHANGED"
+
+        /**
+         * Test-only override for the inline Backup & Restore flow's manager.
+         * Instrumented tests set this in @Before, clear it in @After. Mirrors
+         * [BackupRestoreActivity.testManagerOverride] — used by the migrated
+         * ImportPreview tests that exercise the inline preview dispatch.
+         */
+        @androidx.annotation.VisibleForTesting
+        var testBackupRestoreManagerOverride: BackupRestoreManager? = null
     }
 
     // Configuration state
     private lateinit var config: Config
     private lateinit var prefs: SharedPreferences
+    private lateinit var backupRestoreManager: BackupRestoreManager
+
+    // ViewModel hosts the import-preview state so plan + dialog state survive
+    // configuration changes (rotation). See BackupRestoreViewModel for fields.
+    private val backupRestoreViewModel: BackupRestoreViewModel by viewModels()
 
     // SAF file pickers for backup/restore
     private val configExportLauncher = registerForActivityResult(
@@ -141,6 +160,19 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
         uri?.let { performClipboardImport(it) }
+    }
+
+    // ZIP variants — full clipboard backup including media files
+    private val clipboardZipExportLauncher = registerForActivityResult(
+        ActivityResultContracts.CreateDocument("application/zip")
+    ) { uri: Uri? ->
+        uri?.let { performClipboardZipExport(it) }
+    }
+
+    private val clipboardZipImportLauncher = registerForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        uri?.let { performClipboardZipImport(it) }
     }
 
     // SAF file pickers for swipe ML data export
@@ -503,7 +535,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             SearchableSetting("Per-Key Customization", listOf("short swipe", "gesture", "actions", "commands"), "Activities", ShortSwipeCustomizationActivity::class.java, gatedBy = "short_gestures", settingId = "per_key_customization"),
             SearchableSetting("Short Swipe Calibration", listOf("calibrate", "practice", "tutorial", "test"), "Gesture Tuning", ShortSwipeCalibrationActivity::class.java, gatedBy = "short_gestures", settingId = "short_swipe_calibration"),
             SearchableSetting("Extra Keys", listOf("toolbar", "arrows", "numbers"), "Activities", ExtraKeysConfigActivity::class.java),
-            SearchableSetting("Backup & Restore", listOf("backup", "export", "import", "restore"), "Activities", BackupRestoreActivity::class.java),
+            SearchableSetting("Backup & Restore", listOf("backup", "export", "import", "restore", "zip", "preview", "deselect"), "Backup & Restore", expandSection = { backupRestoreSectionExpanded = true }, settingId = "backup_restore"),
             SearchableSetting("What's New", listOf("changelog", "release", "update", "features", "version"), "Activities", settingId = "whats_new"),
 
             // ==================== NEURAL PREDICTION ====================
@@ -761,6 +793,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 config = Config.globalConfig()
             }
 
+            backupRestoreManager = testBackupRestoreManagerOverride ?: BackupRestoreManager(this)
         } catch (e: Exception) {
             android.util.Log.e(TAG, "Error initializing settings", e)
             fallbackEncrypted()
@@ -773,11 +806,76 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         // Handle share intent for GIF pack ZIP import
         handleGifPackShareIntent(intent)
 
+        // `scroll_to` extra: expand a named section + scroll/highlight on launch.
+        // Used by [BackupRestoreActivity] when redirected without a known intent
+        // action so the inline Backup & Restore section is the landing target.
+        intent.getStringExtra("scroll_to")?.let { target ->
+            when (target) {
+                "backup_restore" -> {
+                    backupRestoreSectionExpanded = true
+                    lifecycleScope.launch {
+                        kotlinx.coroutines.delay(300)
+                        scrollToSetting("backup_restore")
+                        highlightedSettingId = "backup_restore"
+                        kotlinx.coroutines.delay(2000)
+                        highlightedSettingId = null
+                    }
+                }
+            }
+        }
+
         try {
             setContent {
                 // #35: Follow system dark/light mode instead of forcing dark
                 KeyboardTheme {
                     SettingsScreen()
+
+                    // Backup & Restore preview/result dialogs + loading overlay.
+                    // Lifted out of BackupRestoreActivity (Option 2 unification) so
+                    // the inline section in SettingsScreen has full feature parity
+                    // with the previous dedicated activity.
+                    backupRestoreViewModel.settingsPreviewPlan?.let { plan ->
+                        SettingsImportPreviewDialog(
+                            plan = plan,
+                            onCancel = { backupRestoreViewModel.settingsPreviewPlan = null },
+                            onApply = { excluded, ssMode ->
+                                backupRestoreViewModel.settingsPreviewPlan = null
+                                applyPlannedSettings(plan, excluded, ssMode)
+                            }
+                        )
+                    }
+                    backupRestoreViewModel.dictPreviewPlan?.let { plan ->
+                        DictionaryImportPreviewDialog(
+                            plan = plan,
+                            onCancel = { backupRestoreViewModel.dictPreviewPlan = null },
+                            onApply = { excludedCustom, excludedDisabled ->
+                                backupRestoreViewModel.dictPreviewPlan = null
+                                applyPlannedDictionaries(plan, excludedCustom, excludedDisabled)
+                            }
+                        )
+                    }
+                    if (backupRestoreViewModel.showResultDialog) {
+                        AlertDialog(
+                            onDismissRequest = { backupRestoreViewModel.showResultDialog = false },
+                            title = { Text(backupRestoreViewModel.resultTitle) },
+                            text = { Text(backupRestoreViewModel.resultMessage) },
+                            confirmButton = {
+                                TextButton(onClick = { backupRestoreViewModel.showResultDialog = false }) {
+                                    Text("OK")
+                                }
+                            }
+                        )
+                    }
+                    if (backupRestoreViewModel.isProcessing) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.6f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    }
                 }
             }
         } catch (e: Exception) {
@@ -3470,7 +3568,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             CollapsibleSettingsSection(
                 title = "💾 Backup & Restore",
                 expanded = backupRestoreSectionExpanded,
-                onExpandChange = { backupRestoreSectionExpanded = it }
+                onExpandChange = { backupRestoreSectionExpanded = it },
+                sectionId = "backup_restore"
             ) {
                 Text(
                     text = "Export and import keyboard settings, dictionary, and clipboard history.",
@@ -3531,10 +3630,16 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Clipboard history backup/restore
+                // Clipboard history backup/restore — JSON (text-only) + ZIP (full backup with media)
                 Text(
                     text = "Clipboard History",
                     fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+                Text(
+                    text = "Text only (JSON)",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
                 Row(
@@ -3555,8 +3660,34 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     }
                 }
 
+                Spacer(modifier = Modifier.height(8.dp))
+
                 Text(
-                    text = "Tap Export to choose save location, Import to browse for files.",
+                    text = "Full backup (ZIP with media)",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = { exportClipboardZip() },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Export ZIP")
+                    }
+                    Button(
+                        onClick = { importClipboardZip() },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Import ZIP")
+                    }
+                }
+
+                Text(
+                    text = "Settings + dictionary imports show a preview so you can deselect entries before applying. Clipboard imports merge non-destructively (duplicates are skipped).",
                     fontSize = 11.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 12.dp)
@@ -4245,10 +4376,20 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         title: String,
         expanded: Boolean,
         onExpandChange: (Boolean) -> Unit,
+        sectionId: String? = null,
         content: @Composable ColumnScope.() -> Unit
     ) {
+        // Track scroll offset so SearchableSetting can target a section header.
+        val scrollOffset = mainScrollState?.value ?: 0
         Card(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .let { m ->
+                    if (sectionId != null) m.onGloballyPositioned { coords ->
+                        val positionInParent = coords.positionInRoot()
+                        recordSettingPosition(sectionId, (positionInParent.y + scrollOffset).toInt())
+                    } else m
+                },
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface
             ),
@@ -5767,6 +5908,22 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
+    private fun exportClipboardZip() {
+        try {
+            clipboardZipExportLauncher.launch("cleverkeys-clipboard-full.zip")
+        } catch (e: Exception) {
+            Toast.makeText(this, "Could not open file picker: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun importClipboardZip() {
+        try {
+            clipboardZipImportLauncher.launch(arrayOf("application/zip", "application/x-zip-compressed", "*/*"))
+        } catch (e: Exception) {
+            Toast.makeText(this, "Could not open file picker: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     private fun importLanguagePack() {
         languagePackImportStatus = null
         try {
@@ -5935,107 +6092,298 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
-    // SAF callback functions that perform actual export/import
+    // SAF callback functions that perform actual export/import.
+    // All paths go through the shared BackupRestoreManager. Imports for
+    // settings + dictionaries route through the buildPlan + preview-dialog
+    // flow so users can deselect entries before applying. Clipboard imports
+    // (JSON + ZIP) use the destructive-merge default since they're already
+    // non-destructive (skip-duplicates).
+
     private fun performConfigExport(uri: Uri) {
         lifecycleScope.launch {
+            backupRestoreViewModel.isProcessing = true
             try {
-                val backupManager = BackupRestoreManager(this@SettingsActivity)
-                backupManager.exportConfig(uri, prefs)
-                Toast.makeText(this@SettingsActivity, "Config exported successfully", Toast.LENGTH_SHORT).show()
+                val count = withContext(Dispatchers.IO) {
+                    backupRestoreManager.exportConfig(uri, prefs)
+                }
+                backupRestoreViewModel.resultTitle = "Export Successful"
+                backupRestoreViewModel.resultMessage = "Settings exported: $count\n\n" +
+                        "File: ${uri.lastPathSegment}\n\n" +
+                        "Transfer the file to another device or keep it as a backup."
+                backupRestoreViewModel.showResultDialog = true
             } catch (e: Exception) {
-                Toast.makeText(this@SettingsActivity, "Export failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                android.util.Log.e(TAG, "Config export failed", e)
+                backupRestoreViewModel.resultTitle = "Export Failed"
+                backupRestoreViewModel.resultMessage = "Failed to export configuration:\n\n${e.message}"
+                backupRestoreViewModel.showResultDialog = true
+            } finally {
+                backupRestoreViewModel.isProcessing = false
             }
         }
     }
 
+    /**
+     * Settings import: build a preview plan so the user can deselect keys
+     * and choose a short-swipe import mode. If the file matches current
+     * settings exactly, jump straight to the "No changes" result dialog.
+     */
     private fun performConfigImport(uri: Uri) {
         lifecycleScope.launch {
+            backupRestoreViewModel.isProcessing = true
             try {
-                val backupManager = BackupRestoreManager(this@SettingsActivity)
-                val result = backupManager.importConfig(uri, prefs)
-
-                // Reload settings to reflect imported values
-                loadCurrentSettings()
-
-                Toast.makeText(
-                    this@SettingsActivity,
-                    "Config imported: ${result.importedCount} settings imported, ${result.skippedCount} skipped",
-                    Toast.LENGTH_LONG
-                ).show()
+                val plan = withContext(Dispatchers.IO) {
+                    backupRestoreManager.buildSettingsImportPlan(uri, prefs)
+                }
+                val nothingToImport = plan.changes.isEmpty() &&
+                    plan.parseSkippedKeys.isEmpty() &&
+                    plan.shortSwipeImportSize == 0
+                if (nothingToImport) {
+                    backupRestoreViewModel.resultTitle = "No changes"
+                    backupRestoreViewModel.resultMessage = "Backup file matches current settings."
+                    backupRestoreViewModel.showResultDialog = true
+                } else {
+                    backupRestoreViewModel.settingsPreviewPlan = plan
+                }
             } catch (e: Exception) {
-                Toast.makeText(this@SettingsActivity, "Import failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                android.util.Log.e(TAG, "Build settings plan failed", e)
+                backupRestoreViewModel.resultTitle = "Import Failed"
+                backupRestoreViewModel.resultMessage = "Failed to read backup file:\n\n${e.message}"
+                backupRestoreViewModel.showResultDialog = true
+            } finally {
+                backupRestoreViewModel.isProcessing = false
+            }
+        }
+    }
+
+    /**
+     * Apply a previously-shown settings preview. Reloads in-memory state via
+     * loadCurrentSettings() so the UI reflects imported values immediately,
+     * and copies prefs to protected storage for Direct Boot survival.
+     */
+    private fun applyPlannedSettings(
+        plan: SettingsImportPlan,
+        excludedKeys: Set<String>,
+        shortSwipeMode: ShortSwipeImportMode,
+    ) {
+        lifecycleScope.launch {
+            backupRestoreViewModel.isProcessing = true
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    backupRestoreManager.applySettingsImportPlan(plan, excludedKeys, shortSwipeMode, prefs)
+                }
+                DirectBootAwarePreferences.copy_preferences_to_protected_storage(this@SettingsActivity, prefs)
+                loadCurrentSettings()
+                backupRestoreViewModel.resultTitle = "Import Successful"
+                backupRestoreViewModel.resultMessage = buildSettingsResultMessage(result)
+                backupRestoreViewModel.showResultDialog = true
+            } catch (e: Exception) {
+                android.util.Log.e(TAG, "Apply settings plan failed", e)
+                backupRestoreViewModel.resultTitle = "Import Failed"
+                backupRestoreViewModel.resultMessage = "Failed to apply imported settings:\n\n${e.message}"
+                backupRestoreViewModel.showResultDialog = true
+            } finally {
+                backupRestoreViewModel.isProcessing = false
             }
         }
     }
 
     private fun performDictionaryExport(uri: Uri) {
         lifecycleScope.launch {
+            backupRestoreViewModel.isProcessing = true
             try {
-                val backupManager = BackupRestoreManager(this@SettingsActivity)
-                backupManager.exportDictionaries(uri)
-                Toast.makeText(this@SettingsActivity, "Dictionary exported successfully", Toast.LENGTH_SHORT).show()
+                val summary = withContext(Dispatchers.IO) {
+                    backupRestoreManager.exportDictionaries(uri)
+                }
+                backupRestoreViewModel.resultTitle = "Dictionary Export Successful"
+                backupRestoreViewModel.resultMessage = "Custom words: ${summary.customWordsCount} " +
+                        "(across ${summary.languageCount} languages)\n" +
+                        "Disabled words: ${summary.disabledWordsCount}\n\n" +
+                        "File: ${uri.lastPathSegment}"
+                backupRestoreViewModel.showResultDialog = true
             } catch (e: Exception) {
-                Toast.makeText(this@SettingsActivity, "Export failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                android.util.Log.e(TAG, "Dictionary export failed", e)
+                backupRestoreViewModel.resultTitle = "Dictionary Export Failed"
+                backupRestoreViewModel.resultMessage = "Failed to export dictionaries:\n\n${e.message}"
+                backupRestoreViewModel.showResultDialog = true
+            } finally {
+                backupRestoreViewModel.isProcessing = false
             }
         }
     }
 
+    /**
+     * Dictionary import: build a per-language plan so the user can deselect
+     * specific words. If no new words to import, jump straight to the result
+     * dialog.
+     */
     private fun performDictionaryImport(uri: Uri) {
         lifecycleScope.launch {
+            backupRestoreViewModel.isProcessing = true
             try {
-                val backupManager = BackupRestoreManager(this@SettingsActivity)
-                val result = backupManager.importDictionaries(uri)
-
-                Toast.makeText(
-                    this@SettingsActivity,
-                    "Dictionary imported: ${result.userWordsImported} words, ${result.disabledWordsImported} disabled",
-                    Toast.LENGTH_LONG
-                ).show()
-
-                // Broadcast the change so Dictionary Manager can refresh
-                if (result.userWordsImported > 0 || result.disabledWordsImported > 0) {
-                    androidx.localbroadcastmanager.content.LocalBroadcastManager.getInstance(this@SettingsActivity)
-                        .sendBroadcast(Intent(BackupRestoreActivity.ACTION_DICTIONARY_IMPORTED))
+                val plan = withContext(Dispatchers.IO) {
+                    backupRestoreManager.buildDictImportPlan(uri, prefs)
+                }
+                val nothingToImport = plan.perLanguage.values.all {
+                    it.newCustomWords.isEmpty() && it.newDisabledWords.isEmpty()
+                }
+                if (nothingToImport) {
+                    backupRestoreViewModel.resultTitle = "No changes"
+                    backupRestoreViewModel.resultMessage = "Dictionary file has no new words to import."
+                    backupRestoreViewModel.showResultDialog = true
+                } else {
+                    backupRestoreViewModel.dictPreviewPlan = plan
                 }
             } catch (e: Exception) {
-                Toast.makeText(this@SettingsActivity, "Import failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                android.util.Log.e(TAG, "Build dictionary plan failed", e)
+                backupRestoreViewModel.resultTitle = "Import Failed"
+                backupRestoreViewModel.resultMessage = "Failed to read dictionary file:\n\n${e.message}"
+                backupRestoreViewModel.showResultDialog = true
+            } finally {
+                backupRestoreViewModel.isProcessing = false
+            }
+        }
+    }
+
+    /**
+     * Apply a previously-shown dictionary preview. Single editor.commit()
+     * across all per-language word lists; broadcasts ACTION_DICTIONARY_IMPORTED
+     * so DictionaryManagerActivity refreshes its view.
+     */
+    private fun applyPlannedDictionaries(
+        plan: DictImportPlan,
+        excludedCustom: Set<LangWord>,
+        excludedDisabled: Set<LangWord>,
+    ) {
+        lifecycleScope.launch {
+            backupRestoreViewModel.isProcessing = true
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    backupRestoreManager.applyDictImportPlan(plan, excludedCustom, excludedDisabled, prefs)
+                }
+                backupRestoreViewModel.resultTitle = "Dictionary Import Successful"
+                backupRestoreViewModel.resultMessage = buildDictResultMessage(result)
+                backupRestoreViewModel.showResultDialog = true
+                LocalBroadcastManager.getInstance(this@SettingsActivity)
+                    .sendBroadcast(Intent(BackupRestoreActivity.ACTION_DICTIONARY_IMPORTED))
+            } catch (e: Exception) {
+                android.util.Log.e(TAG, "Apply dictionary plan failed", e)
+                backupRestoreViewModel.resultTitle = "Import Failed"
+                backupRestoreViewModel.resultMessage = "Failed to apply dictionary import:\n\n${e.message}"
+                backupRestoreViewModel.showResultDialog = true
+            } finally {
+                backupRestoreViewModel.isProcessing = false
             }
         }
     }
 
     private fun performClipboardExport(uri: Uri) {
         lifecycleScope.launch {
+            backupRestoreViewModel.isProcessing = true
             try {
-                val backupManager = BackupRestoreManager(this@SettingsActivity)
-                val result = backupManager.exportClipboardHistory(uri)
-                Toast.makeText(this@SettingsActivity, "Clipboard exported: ${result.exportedCount} entries", Toast.LENGTH_SHORT).show()
+                val result = withContext(Dispatchers.IO) {
+                    backupRestoreManager.exportClipboardHistory(uri)
+                }
+                backupRestoreViewModel.resultTitle = "Clipboard Export Successful"
+                backupRestoreViewModel.resultMessage = "Exported ${result.exportedCount} clipboard entries.\n\n" +
+                        "File: ${uri.lastPathSegment}\n\n" +
+                        "Includes timestamps, expiry, and pinned/todo status. " +
+                        "Media files are NOT included — use Export ZIP for a full backup."
+                backupRestoreViewModel.showResultDialog = true
             } catch (e: Exception) {
-                Toast.makeText(this@SettingsActivity, "Export failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                android.util.Log.e(TAG, "Clipboard export failed", e)
+                backupRestoreViewModel.resultTitle = "Clipboard Export Failed"
+                backupRestoreViewModel.resultMessage = "Failed to export clipboard history:\n\n${e.message}"
+                backupRestoreViewModel.showResultDialog = true
+            } finally {
+                backupRestoreViewModel.isProcessing = false
             }
         }
     }
 
     private fun performClipboardImport(uri: Uri) {
         lifecycleScope.launch {
+            backupRestoreViewModel.isProcessing = true
             try {
-                contentResolver.openInputStream(uri)?.use { inputStream ->
-                    val jsonText = inputStream.bufferedReader().readText()
-                    val json = org.json.JSONObject(jsonText)
-
-                    val clipboardDb = ClipboardDatabase.getInstance(this@SettingsActivity)
-                    // result = [activeAdded, pinnedAdded, todoAdded, duplicatesSkipped]
-                    val result = clipboardDb.importFromJSON(json)
-                    val imported = result[0] + result[1] + result[2]  // active + pinned + todo
-                    val duplicates = result[3]
-
-                    Toast.makeText(
-                        this@SettingsActivity,
-                        "Clipboard imported: $imported entries ($duplicates duplicates skipped)",
-                        Toast.LENGTH_LONG
-                    ).show()
-                } ?: throw Exception("Could not open file")
+                val result = withContext(Dispatchers.IO) {
+                    backupRestoreManager.importClipboardHistory(uri)
+                }
+                backupRestoreViewModel.resultTitle = "Clipboard Import Successful"
+                backupRestoreViewModel.resultMessage = buildString {
+                    appendLine("Clipboard import completed.\n")
+                    appendLine("• Imported: ${result.importedCount} entries")
+                    appendLine("• Skipped: ${result.skippedCount} duplicates")
+                    if (result.sourceVersion != "unknown") {
+                        appendLine("• Source version: ${result.sourceVersion}")
+                    }
+                    appendLine()
+                    append("Imports merge with existing history without overwriting.")
+                }
+                backupRestoreViewModel.showResultDialog = true
             } catch (e: Exception) {
-                Toast.makeText(this@SettingsActivity, "Import failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                android.util.Log.e(TAG, "Clipboard import failed", e)
+                backupRestoreViewModel.resultTitle = "Clipboard Import Failed"
+                backupRestoreViewModel.resultMessage = "Failed to import clipboard history:\n\n${e.message}\n\n" +
+                        "Make sure the file is a valid CleverKeys clipboard backup."
+                backupRestoreViewModel.showResultDialog = true
+            } finally {
+                backupRestoreViewModel.isProcessing = false
+            }
+        }
+    }
+
+    private fun performClipboardZipExport(uri: Uri) {
+        lifecycleScope.launch {
+            backupRestoreViewModel.isProcessing = true
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    backupRestoreManager.exportClipboardHistoryZip(uri)
+                }
+                backupRestoreViewModel.resultTitle = "Full Clipboard Export Successful"
+                backupRestoreViewModel.resultMessage = "Clipboard backup with media saved.\n\n" +
+                        "File: ${uri.lastPathSegment}\n\n" +
+                        "• ${result.exportedCount} clipboard entries\n" +
+                        "• ${result.mediaFilesIncluded} media files\n\n" +
+                        "Restore via Import ZIP to recover all entries including images, videos, and other media."
+                backupRestoreViewModel.showResultDialog = true
+            } catch (e: Exception) {
+                android.util.Log.e(TAG, "Clipboard ZIP export failed", e)
+                backupRestoreViewModel.resultTitle = "Clipboard ZIP Export Failed"
+                backupRestoreViewModel.resultMessage = "Failed to export clipboard history with media:\n\n${e.message}"
+                backupRestoreViewModel.showResultDialog = true
+            } finally {
+                backupRestoreViewModel.isProcessing = false
+            }
+        }
+    }
+
+    private fun performClipboardZipImport(uri: Uri) {
+        lifecycleScope.launch {
+            backupRestoreViewModel.isProcessing = true
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    backupRestoreManager.importClipboardHistoryZip(uri)
+                }
+                backupRestoreViewModel.resultTitle = "Full Clipboard Import Successful"
+                backupRestoreViewModel.resultMessage = buildString {
+                    appendLine("Full clipboard import completed.\n")
+                    appendLine("• Imported: ${result.importedCount} entries")
+                    appendLine("• Skipped: ${result.skippedCount} duplicates")
+                    appendLine("• Media files restored: ${result.mediaFilesRestored}")
+                    if (result.sourceVersion != "unknown") {
+                        appendLine("• Source version: ${result.sourceVersion}")
+                    }
+                    appendLine()
+                    append("All media files and thumbnails have been restored.")
+                }
+                backupRestoreViewModel.showResultDialog = true
+            } catch (e: Exception) {
+                android.util.Log.e(TAG, "Clipboard ZIP import failed", e)
+                backupRestoreViewModel.resultTitle = "Clipboard ZIP Import Failed"
+                backupRestoreViewModel.resultMessage = "Failed to import clipboard ZIP:\n\n${e.message}\n\n" +
+                        "Make sure the file is a valid CleverKeys clipboard ZIP backup."
+                backupRestoreViewModel.showResultDialog = true
+            } finally {
+                backupRestoreViewModel.isProcessing = false
             }
         }
     }
