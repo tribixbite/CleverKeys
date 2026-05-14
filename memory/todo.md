@@ -1,5 +1,60 @@
 # CleverKeys TODO
 
+## ✅ Backup & Restore: unify dedicated activity + inline section (2026-05-07)
+
+Eliminated the duplicate import/export surfaces. The inline "💾 Backup &
+Restore" section in `SettingsActivity` now hosts the full preview/approval
+flow + Clipboard ZIP (which were previously only in the dedicated
+`BackupRestoreActivity` Compose screen). The dedicated activity remains as
+a headless Intent target for Termux automation (`am start` with
+ACTION_*_SETTINGS / DICTIONARIES / CLIPBOARD) — all six action handlers
+preserved verbatim. When opened without a known action, it redirects to
+`SettingsActivity` with `scroll_to=backup_restore` extra, expanding +
+scrolling to the inline section.
+
+Net: the user sees ONE set of buttons (inline), with full feature parity
+including the preview/approval system they specifically called out, plus
+Clipboard ZIP for full media backup which the inline section previously
+lacked. BackupRestoreActivity shrank 1064 → 240 lines.
+
+### Hard-won lessons
+
+- `CollapsibleSettingsSection` gained optional `sectionId` parameter
+  recording position via `onGloballyPositioned`, so the SearchableSetting
+  search-tap + the Intent's `scroll_to=` extra can scroll-to + highlight
+  the section header. Useful pattern for future deep-link surface.
+- `viewModels()` delegate is needed (not just `mutableStateOf`) because the
+  preview plans aren't trivially `Parcelable` — ViewModel survives rotation
+  without requiring `rememberSaveable` machinery. Same pattern as the
+  retired BackupRestoreActivity, just hosted on SettingsActivity now.
+- The `testBackupRestoreManagerOverride` companion field mirrors the prior
+  `BackupRestoreActivity.testManagerOverride`. Instrumented tests inject
+  fakes via the field initializer / `init` block — JUnit constructs the
+  test instance BEFORE the `@get:Rule` fires onCreate, so this is the
+  earliest possible seam without exposing internals.
+- `BasicInstrumentedTest.testPackageName` and two
+  `SettingsSearchTest.searchAndTapResult_*` cases hardcoded
+  `"tribixbite.cleverkeys"` against `context.packageName` /
+  `device.currentPackageName`. Debug builds use `.debug` suffix per
+  `applicationIdSuffix '.debug'` in build.gradle. `startsWith` matchers
+  fix it for both flavors.
+
+### Follow-ups
+
+- ew-cli's 15-min orchestrator wall-clock budget timed out after class
+  `ShortSwipeGestureTest` (alphabetical order). Url-prefix classes were
+  skipped. Consider raising `--timeout 25m` going forward or splitting
+  the suite into two batches.
+
+## ✅ build-on-termux.sh: decode install failures with data-safety reassurance (2026-05-07)
+
+`adb install -r` cannot wipe data (Android either accepts the replace with
+data preserved, or rejects it). The script now decodes the common rejection
+codes (UPDATE_INCOMPATIBLE / VERSION_DOWNGRADE / INSUFFICIENT_STORAGE) into
+actionable messages with explicit "your data is SAFE" reassurance. Plus
+keystore-scenario hints for the UPDATE_INCOMPATIBLE case (release with
+mismatched env keystore vs missing env vars vs side-by-side debug option).
+
 ## ✅ URL sanitizer: rule-as-regex fix (2026-05-06)
 
 Bundled ClearURLs `rules` entries are regex source strings (e.g.
