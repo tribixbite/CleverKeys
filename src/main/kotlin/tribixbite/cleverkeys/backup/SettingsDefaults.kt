@@ -3,31 +3,43 @@ package tribixbite.cleverkeys.backup
 import tribixbite.cleverkeys.Defaults
 
 /**
- * Effective compile-time defaults for every preference key the app reads
- * via `prefs.get*(key, Defaults.X)` or `safeGet*(prefs, key, Defaults.X)`.
+ * Effective compile-time defaults for every preference key the app reads.
+ *
+ * # Contract
  *
  * Used by `SettingsImportPlanBuilder.fromJson` to suppress preview rows
  * where the imported value equals what the user would experience anyway.
- * On a fresh install the prefs map is empty — without this map, every
- * key in the import file appears as ADDED (`current=Unset → proposed=X`),
- * including keys whose proposed value is the default the user already has
- * in effect. The user sees "150 changes" when only a handful are real.
+ * On a fresh install the prefs map is empty — without this map, every key
+ * in the import file appears as ADDED (`current=Unset → proposed=X`),
+ * including keys whose proposed value equals the default the user
+ * already has in effect.
  *
- * Source of truth: `Config.kt`'s pref-read sites. Mismatches between this
- * map and Config cause the fresh-install preview to over-report changes.
- * To audit after editing Config.kt:
+ * # Three-bucket classification
  *
- *     grep -rhE '(_prefs|prefs)\.get(Boolean|Int|Float|String)\("[a-z_]+",\s*Defaults\.' src/main/kotlin/
- *     grep -rhE 'safeGet(Boolean|Int|Float|String)\(_prefs,\s*"[a-z_]+",\s*Defaults\.' src/main/kotlin/
+ * Every pref key read in `src/main/kotlin/` must fall into exactly one of:
  *
- * Keys NOT in this map fall through to the pre-fix behavior (ADDED with
- * `current=PrefValue.Unset`). That preserves backward compatibility for
- * any future pref we forget to add here.
+ *   1. **`SETTINGS_DEFAULTS`** (this map) — keys with a known compile-time
+ *      default value. The import diff compares against this default and
+ *      skips rows where `proposed == default`. Rows that DO change show
+ *      the default as `current` so the dialog renders a real before/after.
  *
- * Type discipline:
- *   - Use `PrefValue.IntV(...)` for keys read via `getInt` / `safeGetInt`.
- *   - Use `PrefValue.FloatV(...)` for keys read via `getFloat`/`safeGetFloat`.
- *   - Use `PrefValue.Str(...)` for keys read via `getString`/`safeGetString`,
+ *   2. **`NON_DEFAULTED_KEYS`** (below) — keys whose runtime default is
+ *      literally `null` (e.g. optional URIs). These intentionally fall
+ *      through to `current=PrefValue.Unset` in the preview.
+ *
+ *   3. **`SettingsValidation.INTERNAL_KEYS`** — migration-version markers
+ *      and runtime-device state that should never be imported or exported.
+ *      Filtered before the diff even runs.
+ *
+ * `SettingsDefaultsDriftTest` walks the source tree and asserts every
+ * pref-read key is classified. **If that test fails, classify the key
+ * into one of the three buckets** — do not just suppress the failure.
+ *
+ * # Type discipline
+ *
+ *   - `PrefValue.IntV(...)` for keys read via `getInt` / `safeGetInt`.
+ *   - `PrefValue.FloatV(...)` for keys read via `getFloat`/`safeGetFloat`.
+ *   - `PrefValue.Str(...)` for keys read via `getString`/`safeGetString`,
  *     INCLUDING numeric-looking strings like `"50"` (some sliders store
  *     stringly-typed values for backwards compat with legacy XML prefs).
  */
@@ -114,6 +126,7 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     "neural_frequency_weight" to PrefValue.FloatV(Defaults.NEURAL_FREQUENCY_WEIGHT),
     "neural_prefix_boost_multiplier" to PrefValue.FloatV(Defaults.NEURAL_PREFIX_BOOST_MULTIPLIER),
     "neural_prefix_boost_max" to PrefValue.FloatV(Defaults.NEURAL_PREFIX_BOOST_MAX),
+    "neural_max_cumulative_boost" to PrefValue.FloatV(Defaults.NEURAL_MAX_CUMULATIVE_BOOST),
     "neural_strict_start_char" to PrefValue.Bool(Defaults.NEURAL_STRICT_START_CHAR),
     "neural_resampling_mode" to PrefValue.Str(Defaults.NEURAL_RESAMPLING_MODE),
     "neural_user_max_seq_length" to PrefValue.IntV(Defaults.NEURAL_USER_MAX_SEQ_LENGTH),
@@ -159,6 +172,20 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     "pref_language_detection_sensitivity" to PrefValue.FloatV(Defaults.LANGUAGE_DETECTION_SENSITIVITY),
     "pref_secondary_prediction_weight" to PrefValue.FloatV(Defaults.SECONDARY_PREDICTION_WEIGHT),
 
+    // ── CGR calibration (touch-input model parameters, literal defaults) ─
+    // Reads in SettingsActivity use literal int defaults; values are user-
+    // tunable via the swipe-calibration UI. Importing across devices is
+    // valid (user prefers their tuned settings).
+    "cgr_beta" to PrefValue.IntV(400),
+    "cgr_e_sigma" to PrefValue.IntV(120),
+    "cgr_kappa" to PrefValue.IntV(25),
+    "cgr_lambda" to PrefValue.IntV(65),
+    "cgr_length_filter" to PrefValue.IntV(70),
+    "has_visited_calibration" to PrefValue.Bool(false),
+
+    // ── Pin / number-entry layout ────────────────────────────────────
+    "pin_entry_enabled" to PrefValue.Bool(true),
+
     // ── Clipboard ────────────────────────────────────────────────────
     "clipboard_history_enabled" to PrefValue.Bool(Defaults.CLIPBOARD_HISTORY_ENABLED),
     "clipboard_history_limit" to PrefValue.Str(Defaults.CLIPBOARD_HISTORY_LIMIT),
@@ -167,6 +194,7 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     "clipboard_max_item_size_kb" to PrefValue.Str(Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB),
     "clipboard_limit_type" to PrefValue.Str(Defaults.CLIPBOARD_LIMIT_TYPE),
     "clipboard_size_limit_mb" to PrefValue.Str(Defaults.CLIPBOARD_SIZE_LIMIT_MB),
+    "clipboard_pinned_rows" to PrefValue.Str("100"),
     "clipboard_exclude_password_managers" to PrefValue.Bool(Defaults.CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS),
     "clipboard_respect_sensitive_flag" to PrefValue.Bool(Defaults.CLIPBOARD_RESPECT_SENSITIVE_FLAG),
     // URL-sanitization (Chunk 4) — defaults are literal `false` at the read sites in SettingsActivity.
@@ -190,4 +218,23 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     "swipe_debug_show_raw_output" to PrefValue.Bool(Defaults.SWIPE_DEBUG_SHOW_RAW_OUTPUT),
     "swipe_show_debug_scores" to PrefValue.Bool(Defaults.SWIPE_SHOW_DEBUG_SCORES),
     "swipe_show_raw_beam_predictions" to PrefValue.Bool(Defaults.SWIPE_SHOW_RAW_BEAM_PREDICTIONS),
+)
+
+/**
+ * Keys whose runtime default is literally `null` (read site passes `null`
+ * to `prefs.getString`). Importing such a key with a non-null proposed
+ * value is a real change — but we cannot express "the absence of a value"
+ * as a `PrefValue` variant other than `Unset`. Listing them here:
+ *
+ *   1. Documents the intentional fall-through to `Unset` in the preview
+ *      (the dialog will render "(unset) → value", which is correct here —
+ *      there really is no prior value to compare against).
+ *   2. Allows `SettingsDefaultsDriftTest` to recognize these as classified
+ *      so the test doesn't flag them as missing-from-`SETTINGS_DEFAULTS`.
+ */
+internal val NON_DEFAULTED_KEYS: Set<String> = setOf(
+    "clipboard_custom_rules_uri",      // SAF URI for user-supplied URL rules
+    "pref_primary_language_alt",       // Optional alt-primary multi-lang slot
+    "pref_secondary_language",         // Optional secondary multi-lang slot
+    "pref_secondary_language_alt",     // Optional alt-secondary multi-lang slot
 )

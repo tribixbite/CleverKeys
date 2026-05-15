@@ -378,6 +378,7 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.Issue118EmojiOverflowTest',
     'tribixbite.cleverkeys.Issue136MaxSeqLengthClampTest',
     'tribixbite.cleverkeys.backup.SettingsImportPlanBuilderTest',
+    'tribixbite.cleverkeys.backup.SettingsDefaultsDriftTest',
     'tribixbite.cleverkeys.backup.DictImportPlanBuilderTest',
     'tribixbite.cleverkeys.backup.SettingsExporterTest',
     'tribixbite.cleverkeys.BackupRestoreResultMessagesTest',

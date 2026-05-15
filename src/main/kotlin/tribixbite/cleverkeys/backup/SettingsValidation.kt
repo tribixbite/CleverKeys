@@ -15,15 +15,23 @@ package tribixbite.cleverkeys.backup
 object SettingsValidation {
 
     /**
-     * Service-managed state that should never be imported. Verbatim from
-     * BackupRestoreManager.isInternalPreference (lines 960-969 of
-     * BackupRestoreManager.kt as of v1.4.0). If a future release adds a
-     * key to that method, add it here too.
+     * Service-managed state that should never be imported or exported.
+     * These are migration version markers + transient runtime state that
+     * is meaningless across devices.
+     *
+     * `BackupRestoreManager.isInternalPreference` delegates here — this is
+     * the single source of truth. Filtered from BOTH export (so backup
+     * files never contain them) AND import (so legacy backups with these
+     * keys are silently dropped).
+     *
+     * `SettingsDefaultsDriftTest` recognizes membership here as a valid
+     * reason for a pref-read key to be absent from `SETTINGS_DEFAULTS`.
      */
     val INTERNAL_KEYS: Set<String> = setOf(
-        "version",
-        "current_layout_portrait",
-        "current_layout_landscape",
+        "version",                    // Config migration version
+        "current_layout_portrait",    // Runtime layout selection (per device)
+        "current_layout_landscape",   // Runtime layout selection (per device)
+        "margin_prefs_version",       // Margin-units migration version
     )
 
     fun isInternalPreference(key: String): Boolean = key in INTERNAL_KEYS

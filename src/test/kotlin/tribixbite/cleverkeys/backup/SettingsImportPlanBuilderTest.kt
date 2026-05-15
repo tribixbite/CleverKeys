@@ -209,11 +209,18 @@ class SettingsImportPlanBuilderTest {
 
     @Test
     fun internalKeys_setMatchesLegacyMethod() {
-        // Drift guard. If someone adds an entry to
-        // BackupRestoreManager.isInternalPreference but forgets to update
-        // SettingsValidation.INTERNAL_KEYS, this test fails. Hard-code the
-        // expected set explicitly so the parity check is auditable.
-        val expected = setOf("version", "current_layout_portrait", "current_layout_landscape")
+        // Drift guard. INTERNAL_KEYS is the single source of truth for both
+        // export-filter and import-filter (BackupRestoreManager.isInternalPreference
+        // now delegates here). Hard-code the expected set explicitly so any
+        // future addition is reviewed deliberately, not slipped in silently.
+        val expected = setOf(
+            "version",
+            "current_layout_portrait",
+            "current_layout_landscape",
+            "margin_prefs_version",  // 2026-05-14: was previously exported on
+                                     // legacy backups; now filtered so it
+                                     // doesn't appear as a no-op preview row.
+        )
         assertThat(SettingsValidation.INTERNAL_KEYS).isEqualTo(expected)
     }
 
