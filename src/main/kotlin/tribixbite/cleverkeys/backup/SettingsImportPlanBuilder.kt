@@ -25,10 +25,24 @@ object SettingsImportPlanBuilder {
      */
     private val JSON_BLOB_KEYS = setOf("layouts", "extra_keys", "custom_extra_keys")
 
+    /**
+     * Build an import plan.
+     *
+     * @param defaultSnapshot maps SharedPreferences key → the value the app
+     *   would read for that key when it's absent (i.e. `Defaults.X` as
+     *   supplied to `prefs.get*(key, default)` in Config.kt). When provided,
+     *   the diff treats `current=Unset && proposed=defaults[key]` as a
+     *   no-op (skipped) instead of an ADDED change — fresh-install imports
+     *   no longer over-report every key as "added" when most equal the
+     *   compile-time default the user already experiences. Keys absent
+     *   from this map fall back to the pre-fix behavior (ADDED with
+     *   `current=Unset`).
+     */
     fun fromJson(
         jsonString: String,
         currentSnapshot: Map<String, Any?>,
         screen: ScreenMetrics,
+        defaultSnapshot: Map<String, PrefValue> = emptyMap(),
     ): SettingsImportPlan {
         val root = JsonParser.parseString(jsonString).asJsonObject
 
@@ -76,10 +90,21 @@ object SettingsImportPlanBuilder {
 
             val currentRaw = currentSnapshot[key]
             val current = currentToPrefValue(currentRaw, key in JSON_BLOB_KEYS)
-            if (current == proposed) continue   // no delta — skip
+
+            // Effective state: what the user reads from prefs RIGHT NOW. When
+            // the key is present, that's the stored value; when absent, it's
+            // the compile-time default `prefs.get*(key, default)` returns.
+            // The diff is against this effective value — comparing against
+            // `Unset` would emit a noisy "ADDED: unset → default" row for
+            // every key in a fresh-install backup.
+            val effective = if (current == PrefValue.Unset)
+                defaultSnapshot[key] ?: PrefValue.Unset
+            else
+                current
+            if (effective == proposed) continue   // no perceived change — skip
 
             val type = if (current == PrefValue.Unset) ChangeType.ADDED else ChangeType.MODIFIED
-            changes += SettingsChange(key, current, proposed, type)
+            changes += SettingsChange(key, effective, proposed, type)
         }
 
         // Short-swipe section is captured raw — applier hands it to ShortSwipeImporter.

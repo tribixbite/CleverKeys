@@ -270,4 +270,150 @@ class SettingsImportPlanBuilderTest {
             "keyboard_height", "neural_temperature", "theme"
         )
     }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Default-aware diff (added 2026-05-14 to fix fresh-install over-report
+    // of changes). The user's complaint: importing a 150-key backup into a
+    // fresh install showed 150 "changes" — but a row whose proposed value
+    // equals the effective default is NOT a change the user can perceive.
+    // ─────────────────────────────────────────────────────────────────────
+
+    @Test
+    fun freshInstall_proposedEqualsDefault_isNotEmittedAsChange() {
+        // gif_enabled defaults to false. The import file also has false. On a
+        // fresh install (current snapshot empty), the user sees NO change.
+        val json = """{"preferences":{"gif_enabled":false}}"""
+        val defaults = mapOf<String, PrefValue>("gif_enabled" to PrefValue.Bool(false))
+
+        val plan = SettingsImportPlanBuilder.fromJson(
+            json,
+            currentSnapshot = emptyMap(),
+            screen = screen,
+            defaultSnapshot = defaults,
+        )
+
+        assertThat(plan.changes).isEmpty()
+    }
+
+    @Test
+    fun freshInstall_proposedDiffersFromDefault_showsDefaultAsCurrent() {
+        // gif_enabled defaults to false; import wants true. User WILL see a
+        // change: from default false → true. The `current` field is the
+        // effective default (Bool(false)) so the preview row is meaningful,
+        // not the inert `Unset` sentinel.
+        val json = """{"preferences":{"gif_enabled":true}}"""
+        val defaults = mapOf<String, PrefValue>("gif_enabled" to PrefValue.Bool(false))
+
+        val plan = SettingsImportPlanBuilder.fromJson(
+            json,
+            currentSnapshot = emptyMap(),
+            screen = screen,
+            defaultSnapshot = defaults,
+        )
+
+        assertThat(plan.changes).hasSize(1)
+        val c = plan.changes.single()
+        assertThat(c.key).isEqualTo("gif_enabled")
+        assertThat(c.current).isEqualTo(PrefValue.Bool(false))   // not Unset
+        assertThat(c.proposed).isEqualTo(PrefValue.Bool(true))
+        assertThat(c.type).isEqualTo(ChangeType.ADDED)
+    }
+
+    @Test
+    fun freshInstall_unknownKey_fallsBackToUnsetSentinel() {
+        // For keys not in the defaults map (e.g. future prefs we don't yet
+        // track), behavior is unchanged: ADDED row with current=Unset. This
+        // preserves backward compatibility for the import side.
+        val json = """{"preferences":{"future_key":"x"}}"""
+
+        val plan = SettingsImportPlanBuilder.fromJson(
+            json,
+            currentSnapshot = emptyMap(),
+            screen = screen,
+            defaultSnapshot = emptyMap(),
+        )
+
+        assertThat(plan.changes).hasSize(1)
+        val c = plan.changes.single()
+        assertThat(c.current).isEqualTo(PrefValue.Unset)
+        assertThat(c.proposed).isEqualTo(PrefValue.Str("x"))
+        assertThat(c.type).isEqualTo(ChangeType.ADDED)
+    }
+
+    @Test
+    fun currentSet_diffsAgainstCurrentNotDefault() {
+        // When prefs already have a non-default value, the diff is between
+        // current and proposed — the default is irrelevant. This guards
+        // against any regression where the defaults map shadows real user
+        // values.
+        val json = """{"preferences":{"gif_enabled":false}}"""
+        val current = mapOf<String, Any?>("gif_enabled" to true)
+        val defaults = mapOf<String, PrefValue>("gif_enabled" to PrefValue.Bool(false))
+
+        val plan = SettingsImportPlanBuilder.fromJson(
+            json,
+            currentSnapshot = current,
+            screen = screen,
+            defaultSnapshot = defaults,
+        )
+
+        assertThat(plan.changes).hasSize(1)
+        val c = plan.changes.single()
+        assertThat(c.current).isEqualTo(PrefValue.Bool(true))
+        assertThat(c.proposed).isEqualTo(PrefValue.Bool(false))
+        assertThat(c.type).isEqualTo(ChangeType.MODIFIED)
+    }
+
+    @Test
+    fun bulkFreshInstall_onlyNonDefaultRowsEmitted() {
+        // Simulates the user's actual scenario: import 5 keys into a fresh
+        // install, 3 of which equal defaults. Only 2 changes should be
+        // surfaced — the over-report this fix targets.
+        val json = """{"preferences":{
+            "gif_enabled":false,
+            "swipe_typing_enabled":true,
+            "autocorrect_enabled":true,
+            "keyboard_opacity":75,
+            "neural_temperature":1.5
+        }}""".trimIndent()
+        val defaults = mapOf<String, PrefValue>(
+            "gif_enabled" to PrefValue.Bool(false),
+            "swipe_typing_enabled" to PrefValue.Bool(true),
+            "autocorrect_enabled" to PrefValue.Bool(true),
+            "keyboard_opacity" to PrefValue.IntV(100),
+            "neural_temperature" to PrefValue.FloatV(1.0f),
+        )
+
+        val plan = SettingsImportPlanBuilder.fromJson(
+            json,
+            currentSnapshot = emptyMap(),
+            screen = screen,
+            defaultSnapshot = defaults,
+        )
+
+        // Three rows (gif_enabled, swipe_typing_enabled, autocorrect_enabled)
+        // equal defaults → skipped. Two rows (keyboard_opacity, neural_temperature)
+        // differ from defaults → emitted with default-as-current.
+        assertThat(plan.changes.map { it.key }.toSet())
+            .containsExactly("keyboard_opacity", "neural_temperature")
+        val byKey = plan.changes.associateBy { it.key }
+        assertThat(byKey["keyboard_opacity"]!!.current).isEqualTo(PrefValue.IntV(100))
+        assertThat(byKey["neural_temperature"]!!.current).isEqualTo(PrefValue.FloatV(1.0f))
+    }
+
+    @Test
+    fun emptyDefaults_behavesAsBeforeFix() {
+        // Backward-compat sanity: empty defaults map = pre-fix behavior.
+        val json = """{"preferences":{"new_key":"hello"}}"""
+        val plan = SettingsImportPlanBuilder.fromJson(
+            json,
+            currentSnapshot = emptyMap(),
+            screen = screen,
+            defaultSnapshot = emptyMap(),
+        )
+
+        assertThat(plan.changes).hasSize(1)
+        assertThat(plan.changes.single().current).isEqualTo(PrefValue.Unset)
+        assertThat(plan.changes.single().type).isEqualTo(ChangeType.ADDED)
+    }
 }

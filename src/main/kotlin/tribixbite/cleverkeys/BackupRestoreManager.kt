@@ -33,6 +33,7 @@ import tribixbite.cleverkeys.backup.RealShortSwipeImporter
 import tribixbite.cleverkeys.backup.ScreenMetrics
 import tribixbite.cleverkeys.backup.SettingsImportApplier
 import tribixbite.cleverkeys.backup.SettingsImportPlan
+import tribixbite.cleverkeys.backup.SETTINGS_DEFAULTS
 import tribixbite.cleverkeys.backup.SettingsImportPlanBuilder
 import tribixbite.cleverkeys.backup.SettingsValidation
 import tribixbite.cleverkeys.backup.ShortSwipeImportMode
@@ -571,7 +572,15 @@ open class BackupRestoreManager(
         val snapshot: Map<String, Any?> = prefs.all.toMap()
         val dm = context.resources.displayMetrics
         val screen = ScreenMetrics(dm.widthPixels, dm.heightPixels, dm.density)
-        return SettingsImportPlanBuilder.fromJson(jsonString, snapshot, screen)
+        // SETTINGS_DEFAULTS suppresses preview rows where the proposed value
+        // equals the compile-time default the user already experiences on
+        // unset keys (fresh-install over-report fix, 2026-05-14).
+        return SettingsImportPlanBuilder.fromJson(
+            jsonString,
+            currentSnapshot = snapshot,
+            screen = screen,
+            defaultSnapshot = SETTINGS_DEFAULTS,
+        )
     }
 
     /**
