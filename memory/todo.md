@@ -1,5 +1,46 @@
 # CleverKeys TODO
 
+## ✅ Import preview: 100% coverage + drift-detection test (2026-05-14, round 2)
+
+Closed the remaining 17 unclassified pref-read keys. Established a
+three-bucket classification contract (`SETTINGS_DEFAULTS` /
+`NON_DEFAULTED_KEYS` / `INTERNAL_KEYS`) and a pure-JVM drift test that
+walks `src/main/kotlin` at test time, regex-extracts every pref-read
+site, and asserts each key is classified.
+
+Bucket totals: 146 read keys = 138 defaults + 4 null-defaulted + 4
+internal. Zero unclassified. Drift test catches the silent-drift class
+of bug at PR-time instead of at the next user-visible noisy preview.
+
+### Architectural decisions (this round)
+
+- **Stay hand-maintained, don't codegen** — codegen would need AST
+  parsing to handle the `safeGet*` family + literal-default reads in
+  `SettingsActivity.kt`. Marginal value over the scan-test approach,
+  which is ~30 LOC + zero production-code change.
+- **Three buckets, not two** — `NON_DEFAULTED_KEYS` exists because some
+  reads (`clipboard_custom_rules_uri`, the three optional language-alt
+  slots) pass literal `null` as default. Cannot be expressed as a
+  `PrefValue` variant other than `Unset`; intentional fall-through to
+  the "(unset)" preview rendering is correct here.
+- **`SettingsValidation.INTERNAL_KEYS` is the unified source of truth**
+  for both export-filter and import-filter. `BackupRestoreManager.
+  isInternalPreference` was already delegating; the stale "synced with
+  BackupRestoreManager" comment is now removed.
+- **Disjoint-bucket invariant** — the drift test also asserts no key
+  appears in two buckets (catches copy-paste errors that would render
+  ambiguous behavior).
+
+### Hard-won lessons
+
+- Silent-drift bugs in preview-style features feel cheap to ignore
+  ("just hand-add a row when noise reappears") but accumulate quickly.
+  A 30-LOC scan-test is a 100x ROI vs. waiting for the next user
+  complaint.
+- For preview UIs that ask the user to accept/reject changes, the test
+  invariant should be "every code-side input is classified into a
+  documented bucket". Coverage is verifiable without running the UI.
+
 ## ✅ Import preview: suppress no-op rows on fresh install (2026-05-14)
 
 Importing a config into a fresh install previously showed every key in
