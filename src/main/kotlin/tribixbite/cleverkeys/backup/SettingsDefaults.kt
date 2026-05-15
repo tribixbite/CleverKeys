@@ -233,7 +233,12 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     "privacy_collect_errors" to PrefValue.Bool(Defaults.PRIVACY_COLLECT_ERRORS),
     "sticky_keys_enabled" to PrefValue.Bool(Defaults.STICKY_KEYS_ENABLED),
     "sticky_keys_timeout" to PrefValue.IntV(Defaults.STICKY_KEYS_TIMEOUT),
+    "sticky_keys_timeout_ms" to PrefValue.IntV(Defaults.STICKY_KEYS_TIMEOUT),  // SettingsActivity duplicate
     "voice_guidance_enabled" to PrefValue.Bool(Defaults.VOICE_GUIDANCE_ENABLED),
+
+    // ── Presets (string-valued UI selections) ────────────────────────
+    "neural_preset" to PrefValue.Str("custom"),
+    "swipe_correction_preset" to PrefValue.Str("balanced"),
 
     // ── Misc / runtime ───────────────────────────────────────────────
     "termux_mode_enabled" to PrefValue.Bool(Defaults.TERMUX_MODE_ENABLED),

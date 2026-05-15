@@ -220,6 +220,8 @@ class SettingsImportPlanBuilderTest {
             "margin_prefs_version",  // 2026-05-14: was previously exported on
                                      // legacy backups; now filtered so it
                                      // doesn't appear as a no-op preview row.
+            "need_migration",        // 2026-05-14: DirectBoot prefs-migration
+                                     // tracker; per-device, not portable.
         )
         assertThat(SettingsValidation.INTERNAL_KEYS).isEqualTo(expected)
     }

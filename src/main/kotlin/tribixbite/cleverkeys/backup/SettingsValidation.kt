@@ -32,6 +32,7 @@ object SettingsValidation {
         "current_layout_portrait",    // Runtime layout selection (per device)
         "current_layout_landscape",   // Runtime layout selection (per device)
         "margin_prefs_version",       // Margin-units migration version
+        "need_migration",             // DirectBoot prefs-migration tracker
     )
 
     fun isInternalPreference(key: String): Boolean = key in INTERNAL_KEYS

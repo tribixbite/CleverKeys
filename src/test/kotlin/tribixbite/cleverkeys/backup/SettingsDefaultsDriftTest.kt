@@ -40,11 +40,31 @@ import java.io.File
  */
 class SettingsDefaultsDriftTest {
 
-    // Regex finds: prefs.getX("key", ...) / _prefs.getX("key", ...) /
-    // safeGetX(_prefs, "key", ...) — covering every read pattern used in
-    // the codebase as of v1.4.0. Captures the key in group 2.
+    // Covers every pref-access pattern used in the codebase as of v1.4.0.
+    // Captures the key name in capture group 1. Patterns:
+    //   prefs.getBoolean("k", …)         — direct SharedPreferences read
+    //   _prefs.getInt("k", …)            — Config.kt field-style access
+    //   protectedPrefs.getBoolean("k",…) — DirectBoot prefs
+    //   prefs.getSafeBoolean("k", …)     — Config.kt's typed-default helper
+    //   safeGetFloat(_prefs, "k", …)     — module-level safe-get function
+    //   get_dip_pref(dm, "k", …)         — dp→px converted reads
+    //   prefs.putString("k", …)          — direct write
+    //   editor.putBoolean("k", …)        — write via editor (the export
+    //                                       reads `prefs.all`, so any write
+    //                                       creates a key that ends up in
+    //                                       every export)
+    //
+    // The PUT pattern requires `editor`/`Editor` or `prefs`/`Prefs` as the
+    // receiver to avoid Bundle false-positives (Activity savedInstanceState
+    // uses identical `.putString("k", …)` syntax against a Bundle, NOT
+    // SharedPreferences — those keys aren't preferences).
     private val readPattern = Regex(
-        """(?:\w*_?[Pp]refs\.get(?:Boolean|Int|Float|Long|String)|safeGet(?:Boolean|Int|Float|Long|String)\(_prefs,)\s*"([a-zA-Z_]+)""""
+        """(?:""" +
+            """\w*[Pp]refs\.get(?:Safe)?(?:Boolean|Int|Float|Long|String)\(|""" +
+            """safeGet(?:Boolean|Int|Float|Long|String)\(_prefs,|""" +
+            """get_dip_pref\([^,]+,|""" +
+            """(?:\w*[Pp]refs(?:\.edit\(\))?|\w*[Ee]ditor)\.put(?:Boolean|Int|Float|Long|String)\(""" +
+        """)\s*"([a-zA-Z_]+)""""
     )
 
     @Test
