@@ -455,6 +455,73 @@ class SettingsImportPlanBuilderTest {
     }
 
     @Test
+    fun customWords_routedToDictionaryPreview_notSettingsPreview() {
+        // `custom_words_fr` and `disabled_words_en` are per-language dictionary
+        // entries handled by DictImportPlan. They appearing in the SETTINGS
+        // preview as "(unset) → {huge JSON blob}" is a leak — the filter
+        // sends them to parseSkippedKeys with a descriptive reason.
+        val json = """{"preferences":{
+            "custom_words_fr": "{\"oui\":100}",
+            "disabled_words_en": "[\"nope\"]",
+            "neural_temperature": 1.5
+        }}""".trimIndent()
+        val plan = SettingsImportPlanBuilder.fromJson(
+            json,
+            currentSnapshot = emptyMap(),
+            screen = screen,
+            defaultSnapshot = SETTINGS_DEFAULTS,
+        )
+        // Only neural_temperature in changes; dictionary keys filtered.
+        assertThat(plan.changes.map { it.key }).containsExactly("neural_temperature")
+        val skippedKeys = plan.parseSkippedKeys.map { it.key }.toSet()
+        assertThat(skippedKeys).contains("custom_words_fr")
+        assertThat(skippedKeys).contains("disabled_words_en")
+    }
+
+    @Test
+    fun stringlyNumericKey_typeFlipDoesNotSurfaceAsChange() {
+        // `clipboard_history_limit` is read via `safeGetString(…).toIntOrNull()`
+        // but written via both `putString` (legacy slider) AND `putInt`
+        // (Config setter). A backup made via the Int path stores `50`;
+        // canonicalization normalizes both sides to Str("50") so the diff
+        // sees no change.
+        val json = """{"preferences":{"clipboard_history_limit": 50}}"""
+        val current = mapOf<String, Any?>("clipboard_history_limit" to "50")  // String stored
+
+        val plan = SettingsImportPlanBuilder.fromJson(
+            json,
+            currentSnapshot = current,
+            screen = screen,
+            defaultSnapshot = SETTINGS_DEFAULTS,
+        )
+
+        // Same conceptual value, different types → suppressed.
+        assertThat(plan.changes).isEmpty()
+    }
+
+    @Test
+    fun stringlyNumericKey_realValueChangeStillSurfaces() {
+        // Same key but proposed value is genuinely different from current.
+        // Verify canonicalization didn't break the real-change path.
+        val json = """{"preferences":{"clipboard_history_limit": 0}}"""
+        val current = mapOf<String, Any?>("clipboard_history_limit" to "50")
+
+        val plan = SettingsImportPlanBuilder.fromJson(
+            json,
+            currentSnapshot = current,
+            screen = screen,
+            defaultSnapshot = SETTINGS_DEFAULTS,
+        )
+
+        assertThat(plan.changes).hasSize(1)
+        val c = plan.changes.single()
+        // Both sides canonicalized to Str.
+        assertThat(c.current).isEqualTo(PrefValue.Str("50"))
+        assertThat(c.proposed).isEqualTo(PrefValue.Str("0"))
+        assertThat(c.type).isEqualTo(ChangeType.MODIFIED)
+    }
+
+    @Test
     fun emptyDefaults_behavesAsBeforeFix() {
         // Backward-compat sanity: empty defaults map = pre-fix behavior.
         val json = """{"preferences":{"new_key":"hello"}}"""

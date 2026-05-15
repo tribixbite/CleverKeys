@@ -83,21 +83,38 @@ object SettingsImportPlanBuilder {
                 skipped += SkippedKey(key, "deprecated (no read site in current code)")
                 continue
             }
+            if (SettingsValidation.isDictionaryPreference(key)) {
+                // Per-language dictionary words (`custom_words_<lang>`,
+                // `disabled_words_<lang>`) are handled by the SEPARATE
+                // dictionary import flow (DictImportPlan). They appearing
+                // in settings preview is a leak — silently drop so the
+                // user sees a clean settings preview.
+                skipped += SkippedKey(key, "dictionary words (separate import flow)")
+                continue
+            }
 
-            val proposed = parsePrefValue(key, valueElement)
-            if (proposed == null) {
+            val rawProposed = parsePrefValue(key, valueElement)
+            if (rawProposed == null) {
                 skipped += SkippedKey(key, "unsupported JSON shape")
                 continue
             }
 
-            val rangeError = SettingsValidation.validate(key, proposed)
+            val rangeError = SettingsValidation.validate(key, rawProposed)
             if (rangeError != null) {
                 skipped += SkippedKey(key, rangeError)
                 continue
             }
 
             val currentRaw = currentSnapshot[key]
-            val current = currentToPrefValue(currentRaw, key in JSON_BLOB_KEYS)
+            val rawCurrent = currentToPrefValue(currentRaw, key in JSON_BLOB_KEYS)
+
+            // Stringly-typed numeric prefs (`clipboard_history_limit` etc.)
+            // are stored as String "50" via legacy slider write paths AND
+            // as Int 50 via newer setter methods. Normalize both sides to
+            // the canonical storage type (String) before comparing, so a
+            // pure type-flip doesn't surface as a value change.
+            val current = canonicalize(key, rawCurrent)
+            val proposed = canonicalize(key, rawProposed)
 
             // Effective state: what the user reads from prefs RIGHT NOW. When
             // the key is present, that's the stored value; when absent, it's
@@ -261,6 +278,29 @@ object SettingsImportPlanBuilder {
             value is Long -> PrefValue.IntV(value.toInt())   // see PrefValue header — Long unused in app
             value is String -> PrefValue.Str(value)
             else -> PrefValue.Unset
+        }
+    }
+
+    /**
+     * Keys stored as String "50" by legacy slider-writer paths AND as Int
+     * 50 by newer setter methods (e.g. `Config.set_clipboard_history_limit`
+     * does `putInt`, but the slider UI writes via `putString`). Canonicalize
+     * to `Str` for the diff so a pure type-flip isn't surfaced as a value
+     * change. The read path already does `getString(…).toIntOrNull()` so
+     * either form works at runtime.
+     */
+    private val STRING_BUT_NUMERIC_KEYS = setOf(
+        "clipboard_history_limit",
+        "clipboard_max_item_size_kb",
+        "clipboard_size_limit_mb",
+    )
+
+    private fun canonicalize(key: String, v: PrefValue): PrefValue {
+        if (key !in STRING_BUT_NUMERIC_KEYS) return v
+        return when (v) {
+            is PrefValue.IntV -> PrefValue.Str(v.v.toString())
+            is PrefValue.FloatV -> PrefValue.Str(v.v.toInt().toString())  // shouldn't happen but defensive
+            else -> v
         }
     }
 }

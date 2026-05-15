@@ -71,6 +71,21 @@ object SettingsValidation {
     fun isDeprecatedPreference(key: String): Boolean = key in DEPRECATED_KEYS
 
     /**
+     * Per-language dictionary words and disabled-words lists. These are
+     * imported via the SEPARATE `DictImportPlan` flow (with its own
+     * preview dialog), not as settings rows. The settings preview filters
+     * these out so they don't appear as "(unset) → {huge JSON blob}" rows
+     * that the user can't act on usefully.
+     *
+     * Keys: `custom_words_<lang>` and `disabled_words_<lang>` where `<lang>`
+     * is any 2+ letter language code.
+     */
+    private val DICTIONARY_KEY_PREFIXES = listOf("custom_words_", "disabled_words_")
+
+    fun isDictionaryPreference(key: String): Boolean =
+        DICTIONARY_KEY_PREFIXES.any { key.startsWith(it) }
+
+    /**
      * Mirrors BackupRestoreManager.isFloatPreference (lines 976-1009).
      * Drives the IntV vs FloatV dispatch in
      * SettingsImportPlanBuilder.parsePrefValue — using JSON shape instead of
