@@ -1,5 +1,75 @@
 # CleverKeys TODO
 
+## ✅ Import preview: architectural consolidation + per-row analysis fix (2026-05-14, round 3)
+
+User reviewed screenshots and listed 60+ visible rows. Root-cause analysis
+uncovered an architectural mess underneath the surface-level "missing
+defaults" complaint:
+
+- **Two parallel defaults maps had silently drifted**:
+  `BackupRestoreManager.getAllDefaultPreferences()` (used for export-seed)
+  vs. `SettingsDefaults.SETTINGS_DEFAULTS` (used for import-preview diff).
+  The legacy export-seed had 8 orphan entries the runtime never reads
+  (`enable_multilang`, `primary_language`, `auto_detect_language`,
+  `language_detection_sensitivity`, `double_tap_lock_shift`,
+  `autocorrect_min_frequency`, `keyboard_height_percent`,
+  `extra_key_switch_greekmath`) — they polluted every backup file.
+- **Drift test missed 3 helper families** (`prefs.getSafe*` camelCase,
+  `get_dip_pref`, `editor.put*`). The regex had a `(`-consumption bug
+  that made the literal-default-coverage measurement look complete when
+  it wasn't.
+- **No facility for per-language pattern defaults** —
+  `neural_prefix_boost_multiplier_fr` and friends fell through to Unset.
+- **Per-language dictionary words leaked into the settings preview** —
+  belonged in `DictImportPlan`'s own preview flow.
+- **Stringly-typed numeric prefs had type-flip noise** — `"50"` vs
+  `50` showed as a change row even when conceptually identical.
+
+Four sequential commits (`645597c5e`, `c79746a6a`, `d819a2c39`,
+`418cb5364`) fixed each layer:
+
+1. Unified to one source: `getAllDefaultPreferences()` now derives from
+   `SETTINGS_DEFAULTS` via `PrefValue.toExportableValue()`. Added 16
+   legitimate missing defaults (margins, keyboard_height, key_*_margin,
+   custom_border_line_width, privacy_collect_*, sticky_keys_*,
+   voice_guidance, swipe_top5000_boost, debug_enabled).
+   `SettingsValidation.DEPRECATED_KEYS` carries the 8 orphans;
+   `isDeprecatedPreference()` filter drops them from old backups.
+2. Drift test regex expanded to cover all 5 helper families + the
+   `(`-consumption bug fixed. 4 additional missed keys classified.
+3. `PATTERN_DEFAULTS` map + `lookupDefault()` for per-language keys.
+   4 IME/runtime keys added to `INTERNAL_KEYS`.
+4. `STRING_BUT_NUMERIC_KEYS` canonicalization + dictionary-key prefix
+   filter routing them to the dedicated dictionary import flow.
+
+### Hard-won lessons
+
+- **Two parallel implementations of the same concept always drift.**
+  Even when the second was written intentionally as a typed wrapper
+  with awareness of the original — the convenience of "just hand-add a
+  row" loses out to verification rigor. Single source of truth + a
+  derivation transform is the only stable shape.
+- **Regex drift tests need their own tests.** My initial regex had a
+  consumption bug that made it match nothing in the put-pattern branch.
+  Test was passing trivially. Lesson: when writing a scan-test, run it
+  once against a known sample with known classifications to confirm the
+  scan actually finds them. A passing scan-test with too-few matches is
+  worse than a failing one — it looks like coverage.
+- **Type-mismatched prefs (Str "50" vs Int 50) are a code smell pointing
+  at duplicated write paths.** The fix at the diff layer (canonicalize
+  both sides) is correct UX-wise, but the underlying duplication
+  (`putString` from slider AND `putInt` from Config setter) is a
+  separate technical-debt item worth cleaning up later.
+
+### Coverage summary
+
+Pure: 1183 OK (was 1178 + 5 new). Mock: 194 OK.
+All 60+ rows from the screenshot analysis are now either:
+- Suppressed (no-op against default),
+- Displayed with the real default as `current` (real changes), or
+- Filtered to the appropriate alternative flow (internal, deprecated,
+  or dictionary preview).
+
 ## ✅ Import preview: 100% coverage + drift-detection test (2026-05-14, round 2)
 
 Closed the remaining 17 unclassified pref-read keys. Established a
