@@ -75,6 +75,14 @@ object SettingsImportPlanBuilder {
                 skipped += SkippedKey(key, "internal preference")
                 continue
             }
+            if (SettingsValidation.isDeprecatedPreference(key)) {
+                // Legacy export-seed pollution. No code reads the key, so
+                // surfacing it as a preview row would be misleading. Drop
+                // silently — also blocks it from being written by the apply
+                // step (which only writes keys present in `plan.changes`).
+                skipped += SkippedKey(key, "deprecated (no read site in current code)")
+                continue
+            }
 
             val proposed = parsePrefValue(key, valueElement)
             if (proposed == null) {

@@ -7,11 +7,14 @@ import java.io.File
 /**
  * Drift detection: scans `src/main/kotlin/` for every SharedPreferences
  * read site at test time, then asserts every key found is classified
- * into exactly one of three buckets:
+ * into exactly one of four buckets:
  *
  *   1. `SETTINGS_DEFAULTS` — known compile-time default value
  *   2. `NON_DEFAULTED_KEYS` — literal `null` default (intentional)
  *   3. `SettingsValidation.INTERNAL_KEYS` — migration/runtime marker
+ *   4. `SettingsValidation.DEPRECATED_KEYS` — legacy pref name, no read
+ *      site in current code; filtered out of import previews so legacy
+ *      backups don't surface them as no-op rows
  *
  * **Why scan source instead of using reflection or codegen?**
  *
@@ -67,7 +70,8 @@ class SettingsDefaultsDriftTest {
 
         val classified = SETTINGS_DEFAULTS.keys +
             NON_DEFAULTED_KEYS +
-            SettingsValidation.INTERNAL_KEYS
+            SettingsValidation.INTERNAL_KEYS +
+            SettingsValidation.DEPRECATED_KEYS
         val unclassified = foundKeys - classified
 
         assertThat(unclassified).isEmpty()
@@ -80,13 +84,13 @@ class SettingsDefaultsDriftTest {
         val inDefaults = SETTINGS_DEFAULTS.keys
         val inNoDefault = NON_DEFAULTED_KEYS
         val inInternal = SettingsValidation.INTERNAL_KEYS
+        val inDeprecated = SettingsValidation.DEPRECATED_KEYS
 
-        val overlapDefaultsNoDefault = inDefaults intersect inNoDefault
-        val overlapDefaultsInternal = inDefaults intersect inInternal
-        val overlapNoDefaultInternal = inNoDefault intersect inInternal
-
-        assertThat(overlapDefaultsNoDefault).isEmpty()
-        assertThat(overlapDefaultsInternal).isEmpty()
-        assertThat(overlapNoDefaultInternal).isEmpty()
+        assertThat(inDefaults intersect inNoDefault).isEmpty()
+        assertThat(inDefaults intersect inInternal).isEmpty()
+        assertThat(inDefaults intersect inDeprecated).isEmpty()
+        assertThat(inNoDefault intersect inInternal).isEmpty()
+        assertThat(inNoDefault intersect inDeprecated).isEmpty()
+        assertThat(inInternal intersect inDeprecated).isEmpty()
     }
 }

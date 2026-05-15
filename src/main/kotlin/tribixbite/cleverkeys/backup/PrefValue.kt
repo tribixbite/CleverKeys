@@ -23,6 +23,24 @@ sealed class PrefValue {
 }
 
 /**
+ * Unwrap a `PrefValue` to the boxed Any used by Gson during export. Keeps
+ * the typed defaults map (`SETTINGS_DEFAULTS`) usable as the single source
+ * of truth for both the import-preview diff AND the export-seed step.
+ *
+ * `Unset` is unreachable here — defaults are always concrete values; the
+ * sentinel only appears as a "current value was absent from prefs"
+ * marker on the import side.
+ */
+fun PrefValue.toExportableValue(): Any = when (this) {
+    is PrefValue.Bool -> v
+    is PrefValue.IntV -> v
+    is PrefValue.FloatV -> v
+    is PrefValue.Str -> v
+    is PrefValue.JsonBlob -> raw
+    is PrefValue.Unset -> error("Unset is not exportable")
+}
+
+/**
  * Screen size + density needed by `migrateLegacyMargins` (dp→px) and the
  * Source vs Current screen-mismatch warning. Passing this to the pure
  * builder lets us avoid `context.resources.displayMetrics`.

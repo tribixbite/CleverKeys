@@ -46,13 +46,26 @@ import tribixbite.cleverkeys.Defaults
 internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     // ── Appearance ────────────────────────────────────────────────────
     "theme" to PrefValue.Str(Defaults.THEME),
+    "keyboard_height" to PrefValue.IntV(Defaults.KEYBOARD_HEIGHT_PORTRAIT),
+    "keyboard_height_landscape" to PrefValue.IntV(Defaults.KEYBOARD_HEIGHT_LANDSCAPE),
     "label_brightness" to PrefValue.IntV(Defaults.LABEL_BRIGHTNESS),
     "keyboard_opacity" to PrefValue.IntV(Defaults.KEYBOARD_OPACITY),
     "key_opacity" to PrefValue.IntV(Defaults.KEY_OPACITY),
     "key_activated_opacity" to PrefValue.IntV(Defaults.KEY_ACTIVATED_OPACITY),
     "character_size" to PrefValue.FloatV(Defaults.CHARACTER_SIZE),
+    "key_vertical_margin" to PrefValue.FloatV(Defaults.KEY_VERTICAL_MARGIN),
+    "key_horizontal_margin" to PrefValue.FloatV(Defaults.KEY_HORIZONTAL_MARGIN),
     "border_config" to PrefValue.Bool(Defaults.BORDER_CONFIG),
     "custom_border_radius" to PrefValue.IntV(Defaults.CUSTOM_BORDER_RADIUS),
+    "custom_border_line_width" to PrefValue.FloatV(Defaults.CUSTOM_BORDER_LINE_WIDTH.toFloat()),
+
+    // ── Margins (percent of screen dimension) ─────────────────────────
+    "margin_bottom_portrait" to PrefValue.IntV(Defaults.MARGIN_BOTTOM_PORTRAIT),
+    "margin_bottom_landscape" to PrefValue.IntV(Defaults.MARGIN_BOTTOM_LANDSCAPE),
+    "margin_left_portrait" to PrefValue.IntV(Defaults.MARGIN_LEFT_PORTRAIT),
+    "margin_left_landscape" to PrefValue.IntV(Defaults.MARGIN_LEFT_LANDSCAPE),
+    "margin_right_portrait" to PrefValue.IntV(Defaults.MARGIN_RIGHT_PORTRAIT),
+    "margin_right_landscape" to PrefValue.IntV(Defaults.MARGIN_RIGHT_LANDSCAPE),
 
     // ── Layout ────────────────────────────────────────────────────────
     "show_numpad" to PrefValue.Str(Defaults.SHOW_NUMPAD),
@@ -154,6 +167,7 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     "autocorrect_min_word_length" to PrefValue.IntV(Defaults.AUTOCORRECT_MIN_WORD_LENGTH),
     "autocorrect_char_match_threshold" to PrefValue.FloatV(Defaults.AUTOCORRECT_CHAR_MATCH_THRESHOLD),
     "autocorrect_confidence_min_frequency" to PrefValue.IntV(Defaults.AUTOCORRECT_MIN_FREQUENCY),
+    "swipe_top5000_boost" to PrefValue.FloatV(Defaults.SWIPE_TOP5000_BOOST),
     "autocorrect_max_length_diff" to PrefValue.IntV(Defaults.AUTOCORRECT_MAX_LENGTH_DIFF),
     "autocorrect_prefix_length" to PrefValue.IntV(Defaults.AUTOCORRECT_PREFIX_LENGTH),
     "autocorrect_max_beam_candidates" to PrefValue.IntV(Defaults.AUTOCORRECT_MAX_BEAM_CANDIDATES),
@@ -211,6 +225,15 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     // ── GIF panel ────────────────────────────────────────────────────
     "gif_enabled" to PrefValue.Bool(Defaults.GIF_ENABLED),
     "gif_thumbnail_columns" to PrefValue.IntV(Defaults.GIF_THUMBNAIL_COLUMNS),
+
+    // ── Privacy / debug / accessibility ──────────────────────────────
+    "debug_enabled" to PrefValue.Bool(Defaults.DEBUG_ENABLED),
+    "privacy_collect_swipe" to PrefValue.Bool(Defaults.PRIVACY_COLLECT_SWIPE),
+    "privacy_collect_performance" to PrefValue.Bool(Defaults.PRIVACY_COLLECT_PERFORMANCE),
+    "privacy_collect_errors" to PrefValue.Bool(Defaults.PRIVACY_COLLECT_ERRORS),
+    "sticky_keys_enabled" to PrefValue.Bool(Defaults.STICKY_KEYS_ENABLED),
+    "sticky_keys_timeout" to PrefValue.IntV(Defaults.STICKY_KEYS_TIMEOUT),
+    "voice_guidance_enabled" to PrefValue.Bool(Defaults.VOICE_GUIDANCE_ENABLED),
 
     // ── Misc / runtime ───────────────────────────────────────────────
     "termux_mode_enabled" to PrefValue.Bool(Defaults.TERMUX_MODE_ENABLED),

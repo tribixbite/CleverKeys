@@ -36,6 +36,7 @@ import tribixbite.cleverkeys.backup.SettingsImportPlan
 import tribixbite.cleverkeys.backup.SETTINGS_DEFAULTS
 import tribixbite.cleverkeys.backup.SettingsImportPlanBuilder
 import tribixbite.cleverkeys.backup.SettingsValidation
+import tribixbite.cleverkeys.backup.toExportableValue
 import tribixbite.cleverkeys.backup.ShortSwipeImportMode
 import tribixbite.cleverkeys.backup.ShortSwipeImporter
 import kotlinx.coroutines.runBlocking
@@ -400,162 +401,25 @@ open class BackupRestoreManager(
     }
 
     /**
-     * Returns a map of all default preference keys to their default values.
-     * This ensures exports include defaults for documentation purposes
-     * even if the user hasn't changed them from defaults.
+     * Returns the export-seed defaults map. The single source of truth is
+     * `SETTINGS_DEFAULTS` in `backup/SettingsDefaults.kt` (typed
+     * `Map<String, PrefValue>`). This function unwraps it to `Map<String, Any>`
+     * for Gson's `toJsonTree`.
+     *
+     * History: this function used to be a 151-line literal map that parallel-
+     * tracked SETTINGS_DEFAULTS. The two drifted — `getAllDefaultPreferences`
+     * had 8 orphan entries (`enable_multilang`, `primary_language`,
+     * `auto_detect_language`, `language_detection_sensitivity`,
+     * `double_tap_lock_shift`, `autocorrect_min_frequency`,
+     * `keyboard_height_percent`, `extra_key_switch_greekmath`) that no code
+     * read; they polluted every backup file as "(unset) → default" noise
+     * rows on import. Consolidated 2026-05-14 (see SettingsValidation.
+     * DEPRECATED_KEYS for the filter that suppresses them in legacy
+     * backups).
      */
-    private fun getAllDefaultPreferences(): Map<String, Any> = mapOf(
-        // Appearance
-        "theme" to Defaults.THEME,
-        "keyboard_height_percent" to Defaults.KEYBOARD_HEIGHT_PORTRAIT,
-        "keyboard_height_landscape" to Defaults.KEYBOARD_HEIGHT_LANDSCAPE,
-        "label_brightness" to Defaults.LABEL_BRIGHTNESS,
-        "keyboard_opacity" to Defaults.KEYBOARD_OPACITY,
-        "key_opacity" to Defaults.KEY_OPACITY,
-        "key_activated_opacity" to Defaults.KEY_ACTIVATED_OPACITY,
-        "character_size" to Defaults.CHARACTER_SIZE,
-        "key_vertical_margin" to Defaults.KEY_VERTICAL_MARGIN,
-        "key_horizontal_margin" to Defaults.KEY_HORIZONTAL_MARGIN,
-        "border_config" to Defaults.BORDER_CONFIG,
-        "custom_border_radius" to Defaults.CUSTOM_BORDER_RADIUS,
-        "custom_border_line_width" to Defaults.CUSTOM_BORDER_LINE_WIDTH,
+    private fun getAllDefaultPreferences(): Map<String, Any> =
+        SETTINGS_DEFAULTS.mapValues { (_, v) -> v.toExportableValue() }
 
-        // Layout
-        "show_numpad" to Defaults.SHOW_NUMPAD,
-        "numpad_layout" to Defaults.NUMPAD_LAYOUT,
-        "scale_numpad_height" to Defaults.SCALE_NUMPAD_HEIGHT,
-        "number_row" to Defaults.NUMBER_ROW,
-        "number_entry_layout" to Defaults.NUMBER_ENTRY_LAYOUT,
-        "margin_bottom_portrait" to Defaults.MARGIN_BOTTOM_PORTRAIT,
-        "margin_bottom_landscape" to Defaults.MARGIN_BOTTOM_LANDSCAPE,
-        "margin_left_portrait" to Defaults.MARGIN_LEFT_PORTRAIT,
-        "margin_left_landscape" to Defaults.MARGIN_LEFT_LANDSCAPE,
-        "margin_right_portrait" to Defaults.MARGIN_RIGHT_PORTRAIT,
-        "margin_right_landscape" to Defaults.MARGIN_RIGHT_LANDSCAPE,
-
-        // Input behavior
-        "vibrate_custom" to Defaults.VIBRATE_CUSTOM,
-        "vibrate_duration" to Defaults.VIBRATE_DURATION,
-        // Master haptic toggle
-        "vibration_enabled" to Defaults.HAPTIC_ENABLED,
-        // Per-event haptic feedback
-        "haptic_key_press" to Defaults.HAPTIC_KEY_PRESS,
-        "haptic_prediction_tap" to Defaults.HAPTIC_PREDICTION_TAP,
-        "haptic_trackpoint_activate" to Defaults.HAPTIC_TRACKPOINT_ACTIVATE,
-        "haptic_long_press" to Defaults.HAPTIC_LONG_PRESS,
-        "haptic_swipe_complete" to Defaults.HAPTIC_SWIPE_COMPLETE,
-        "longpress_timeout" to Defaults.LONGPRESS_TIMEOUT,
-        "longpress_interval" to Defaults.LONGPRESS_INTERVAL,
-        "keyrepeat_enabled" to Defaults.KEYREPEAT_ENABLED,
-        "double_tap_lock_shift" to Defaults.DOUBLE_TAP_LOCK_SHIFT,
-        "autocapitalisation" to Defaults.AUTOCAPITALISATION,
-        "switch_input_immediate" to Defaults.SWITCH_INPUT_IMMEDIATE,
-        "smart_punctuation" to Defaults.SMART_PUNCTUATION,
-
-        // Gesture settings
-        "swipe_dist" to Defaults.SWIPE_DIST,
-        "slider_sensitivity" to Defaults.SLIDER_SENSITIVITY,
-        "circle_sensitivity" to Defaults.CIRCLE_SENSITIVITY,
-        "tap_duration_threshold" to Defaults.TAP_DURATION_THRESHOLD,
-        "double_space_threshold" to Defaults.DOUBLE_SPACE_THRESHOLD,
-        "swipe_min_distance" to Defaults.SWIPE_MIN_DISTANCE,
-        "swipe_min_key_distance" to Defaults.SWIPE_MIN_KEY_DISTANCE,
-        "swipe_min_dwell_time" to Defaults.SWIPE_MIN_DWELL_TIME,
-        "swipe_noise_threshold" to Defaults.SWIPE_NOISE_THRESHOLD,
-        "swipe_high_velocity_threshold" to Defaults.SWIPE_HIGH_VELOCITY_THRESHOLD,
-        "slider_speed_smoothing" to Defaults.SLIDER_SPEED_SMOOTHING,
-        "slider_speed_max" to Defaults.SLIDER_SPEED_MAX,
-
-        // Short gestures
-        "short_gestures_enabled" to Defaults.SHORT_GESTURES_ENABLED,
-        "short_gesture_min_distance" to Defaults.SHORT_GESTURE_MIN_DISTANCE,
-        "short_gesture_max_distance" to Defaults.SHORT_GESTURE_MAX_DISTANCE,
-
-        // Swipe trail
-        "swipe_trail_enabled" to Defaults.SWIPE_TRAIL_ENABLED,
-        "swipe_trail_effect" to Defaults.SWIPE_TRAIL_EFFECT,
-        "swipe_trail_color" to Defaults.SWIPE_TRAIL_COLOR,
-        "swipe_trail_width" to Defaults.SWIPE_TRAIL_WIDTH,
-        "swipe_trail_glow_radius" to Defaults.SWIPE_TRAIL_GLOW_RADIUS,
-
-        // Neural prediction
-        "neural_beam_width" to Defaults.NEURAL_BEAM_WIDTH,
-        "neural_max_length" to Defaults.NEURAL_MAX_LENGTH,
-        "neural_confidence_threshold" to Defaults.NEURAL_CONFIDENCE_THRESHOLD,
-        "neural_batch_beams" to Defaults.NEURAL_BATCH_BEAMS,
-        "neural_greedy_search" to Defaults.NEURAL_GREEDY_SEARCH,
-        "neural_beam_alpha" to Defaults.NEURAL_BEAM_ALPHA,
-        "neural_beam_prune_confidence" to Defaults.NEURAL_BEAM_PRUNE_CONFIDENCE,
-        "neural_beam_score_gap" to Defaults.NEURAL_BEAM_SCORE_GAP,
-        "neural_adaptive_width_step" to Defaults.NEURAL_ADAPTIVE_WIDTH_STEP,
-        "neural_score_gap_step" to Defaults.NEURAL_SCORE_GAP_STEP,
-        "neural_temperature" to Defaults.NEURAL_TEMPERATURE,
-        "neural_frequency_weight" to Defaults.NEURAL_FREQUENCY_WEIGHT,
-        "swipe_smoothing_window" to Defaults.SWIPE_SMOOTHING_WINDOW,
-        "neural_resampling_mode" to Defaults.NEURAL_RESAMPLING_MODE,
-        "neural_user_max_seq_length" to Defaults.NEURAL_USER_MAX_SEQ_LENGTH,
-        "onnx_xnnpack_threads" to Defaults.ONNX_XNNPACK_THREADS,
-
-        // Word prediction
-        "swipe_typing_enabled" to Defaults.SWIPE_TYPING_ENABLED,
-        "swipe_on_password_fields" to Defaults.SWIPE_ON_PASSWORD_FIELDS,  // #39
-        "word_prediction_enabled" to Defaults.WORD_PREDICTION_ENABLED,
-        "suggestion_bar_opacity" to Defaults.SUGGESTION_BAR_OPACITY,
-        "show_exact_typed_word" to Defaults.SHOW_EXACT_TYPED_WORD,  // #42: Tap-to-add
-        "context_aware_predictions_enabled" to Defaults.CONTEXT_AWARE_PREDICTIONS_ENABLED,
-        "personalized_learning_enabled" to Defaults.PERSONALIZED_LEARNING_ENABLED,
-        "learning_aggression" to Defaults.LEARNING_AGGRESSION,
-        "prediction_context_boost" to Defaults.PREDICTION_CONTEXT_BOOST,
-        "prediction_frequency_scale" to Defaults.PREDICTION_FREQUENCY_SCALE,
-
-        // Autocorrect
-        "autocorrect_enabled" to Defaults.AUTOCORRECT_ENABLED,
-        "autocorrect_min_word_length" to Defaults.AUTOCORRECT_MIN_WORD_LENGTH,
-        "autocorrect_char_match_threshold" to Defaults.AUTOCORRECT_CHAR_MATCH_THRESHOLD,
-        "autocorrect_min_frequency" to Defaults.AUTOCORRECT_MIN_FREQUENCY,
-        "autocorrect_max_length_diff" to Defaults.AUTOCORRECT_MAX_LENGTH_DIFF,
-        "autocorrect_prefix_length" to Defaults.AUTOCORRECT_PREFIX_LENGTH,
-        "autocorrect_max_beam_candidates" to Defaults.AUTOCORRECT_MAX_BEAM_CANDIDATES,
-        "swipe_beam_autocorrect_enabled" to Defaults.SWIPE_BEAM_AUTOCORRECT_ENABLED,
-        "swipe_final_autocorrect_enabled" to Defaults.SWIPE_FINAL_AUTOCORRECT_ENABLED,
-        "swipe_fuzzy_match_mode" to Defaults.SWIPE_FUZZY_MATCH_MODE,
-        "swipe_prediction_source" to Defaults.SWIPE_PREDICTION_SOURCE,
-        "swipe_common_words_boost" to Defaults.SWIPE_COMMON_WORDS_BOOST,
-        "swipe_top5000_boost" to Defaults.SWIPE_TOP5000_BOOST,
-        "swipe_rare_words_penalty" to Defaults.SWIPE_RARE_WORDS_PENALTY,
-
-        // Clipboard
-        "clipboard_history_enabled" to Defaults.CLIPBOARD_HISTORY_ENABLED,
-        "clipboard_history_limit" to Defaults.CLIPBOARD_HISTORY_LIMIT,
-        "clipboard_pane_height_percent" to Defaults.CLIPBOARD_PANE_HEIGHT_PERCENT,
-        "clipboard_max_item_size_kb" to Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB,
-        "clipboard_limit_type" to Defaults.CLIPBOARD_LIMIT_TYPE,
-        "clipboard_size_limit_mb" to Defaults.CLIPBOARD_SIZE_LIMIT_MB,
-
-        // Multi-language
-        "enable_multilang" to Defaults.ENABLE_MULTILANG,
-        "primary_language" to Defaults.PRIMARY_LANGUAGE,
-        "auto_detect_language" to Defaults.AUTO_DETECT_LANGUAGE,
-        "language_detection_sensitivity" to Defaults.LANGUAGE_DETECTION_SENSITIVITY,
-
-        // Debug
-        "debug_enabled" to Defaults.DEBUG_ENABLED,
-        "swipe_show_debug_scores" to Defaults.SWIPE_SHOW_DEBUG_SCORES,
-        "swipe_debug_detailed_logging" to Defaults.SWIPE_DEBUG_DETAILED_LOGGING,
-        "swipe_debug_show_raw_output" to Defaults.SWIPE_DEBUG_SHOW_RAW_OUTPUT,
-        "swipe_show_raw_beam_predictions" to Defaults.SWIPE_SHOW_RAW_BEAM_PREDICTIONS,
-        "termux_mode_enabled" to Defaults.TERMUX_MODE_ENABLED,
-
-        // Privacy
-        "privacy_collect_swipe" to Defaults.PRIVACY_COLLECT_SWIPE,
-        "privacy_collect_performance" to Defaults.PRIVACY_COLLECT_PERFORMANCE,
-        "privacy_collect_errors" to Defaults.PRIVACY_COLLECT_ERRORS,
-
-        // Accessibility
-        "sticky_keys_enabled" to Defaults.STICKY_KEYS_ENABLED,
-        "sticky_keys_timeout" to Defaults.STICKY_KEYS_TIMEOUT,
-        "voice_guidance_enabled" to Defaults.VOICE_GUIDANCE_ENABLED
-    )
 
     /**
      * Import preferences from JSON file with version-tolerant parsing

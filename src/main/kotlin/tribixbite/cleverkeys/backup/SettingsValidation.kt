@@ -37,6 +37,35 @@ object SettingsValidation {
     fun isInternalPreference(key: String): Boolean = key in INTERNAL_KEYS
 
     /**
+     * Pref keys that the EXPORT used to seed as defaults but that no code
+     * READS. Removing them from the live defaults map (and seeding logic)
+     * means new backups don't contain them. But legacy backups in the
+     * wild DO contain them — so the import plan builder filters these
+     * out before the diff, so the user doesn't see a "(unset) → default"
+     * noise row for a key that's about to be a no-op write into prefs
+     * that nothing ever reads.
+     *
+     * The keys come from a historical state where `getAllDefaultPreferences()`
+     * in BackupRestoreManager seeded both the "real" Config key (e.g.
+     * `pref_enable_multilang`) AND a no-prefix duplicate (`enable_multilang`)
+     * — and a few other cases of stale key names that survived migrations.
+     */
+    val DEPRECATED_KEYS: Set<String> = setOf(
+        // Duplicates of Config's `pref_*` keys, never read:
+        "enable_multilang",
+        "primary_language",
+        "auto_detect_language",
+        "language_detection_sensitivity",
+        // Renamed/superseded keys, never read at this name:
+        "double_tap_lock_shift",          // Config reads `lock_double_tap`
+        "autocorrect_min_frequency",      // Config reads `autocorrect_confidence_min_frequency`
+        "keyboard_height_percent",        // Superseded by `keyboard_height`
+        "extra_key_switch_greekmath",     // Never read; legacy
+    )
+
+    fun isDeprecatedPreference(key: String): Boolean = key in DEPRECATED_KEYS
+
+    /**
      * Mirrors BackupRestoreManager.isFloatPreference (lines 976-1009).
      * Drives the IntV vs FloatV dispatch in
      * SettingsImportPlanBuilder.parsePrefValue — using JSON shape instead of
