@@ -39,12 +39,14 @@ lacked. BackupRestoreActivity shrank 1064 → 240 lines.
   `applicationIdSuffix '.debug'` in build.gradle. `startsWith` matchers
   fix it for both flavors.
 
-### Follow-ups
+### Verification
 
-- ew-cli's 15-min orchestrator wall-clock budget timed out after class
-  `ShortSwipeGestureTest` (alphabetical order). Url-prefix classes were
-  skipped. Consider raising `--timeout 25m` going forward or splitting
-  the suite into two batches.
+Full ew-cli run on Pixel7 API 34 (UUID
+`5db03983-8e40-495d-85db-a5172bf5d951`) with `--timeout 25m`: **1270
+tests, 0 failures, 0 errors, 0 flakes, 0 skipped** (1302s = 21m 42s).
+The previously-missed alphabetical tail (Sho…Z, including
+`UrlSanitizationSettingsComposeTest`) all passed. `--timeout 25m` is the
+new floor for full-suite runs; `--timeout 15m` is no longer enough.
 
 ## ✅ build-on-termux.sh: decode install failures with data-safety reassurance (2026-05-07)
 
