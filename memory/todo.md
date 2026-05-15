@@ -1,5 +1,44 @@
 # CleverKeys TODO
 
+## ✅ Import preview: suppress no-op rows on fresh install (2026-05-14)
+
+Importing a config into a fresh install previously showed every key in
+the backup file as an "ADDED" change row, including keys whose proposed
+value equaled the compile-time default the user already experiences. A
+150-key backup produced 150 preview rows that the user couldn't act on
+meaningfully ("(unset) → value" is not informative).
+
+Fix: `SettingsImportPlanBuilder.fromJson` now accepts a
+`defaultSnapshot: Map<String, PrefValue>` mirroring `Config.kt`'s
+`prefs.get*(key, Defaults.X)` reads. The diff treats
+`current=Unset && proposed=defaults[key]` as no-op (skipped). Rows that
+DO change show the effective default as `current` so the dialog
+displays a real before/after.
+
+`backup/SettingsDefaults.kt` carries the hand-maintained map (~120
+entries, organized by domain). Keys absent fall through to pre-fix
+behavior (backward compatible).
+
+### Hard-won lessons
+
+- For preview-diffing systems comparing imported state vs. installed
+  state, the user's mental model of "current" is the **effective value
+  they perceive**, not the **stored prefs value**. On fresh installs
+  these diverge: stored=absent, perceived=default. The diff must
+  account for this or it generates noise.
+- The defaults map is hand-maintained. Audit comment in
+  `SettingsDefaults.kt` gives the exact grep command for catching new
+  reads added to Config.kt — if a future pref shows up as a noisy
+  "(unset) → default" row in fresh-install preview, that's the audit
+  to run.
+
+### Follow-ups
+
+- ~30 keys read via specialized paths (keyboard_height_*, margin_*,
+  current_layout_*) aren't in the map yet. They'll continue to appear
+  as "(unset) → value" on fresh install. Adding them is mechanical
+  but requires understanding the legacy-margin migration logic.
+
 ## ✅ Backup & Restore: unify dedicated activity + inline section (2026-05-07)
 
 Eliminated the duplicate import/export surfaces. The inline "💾 Backup &
