@@ -249,6 +249,35 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
 )
 
 /**
+ * Per-language pref keys whose name is `<base>_<lang>` (e.g.
+ * `neural_prefix_boost_multiplier_fr`, `custom_words_en`). One default
+ * applies to every language variant. Lookup: if a key matches a prefix
+ * here, the corresponding `PrefValue` is used as the effective default.
+ *
+ * Prefix MUST end with `_` so the language code can't accidentally be a
+ * full match (e.g. `neural_prefix_boost_multiplier` itself is a separate
+ * entry in SETTINGS_DEFAULTS — only `neural_prefix_boost_multiplier_<x>`
+ * matches the per-language pattern).
+ */
+internal val PATTERN_DEFAULTS: Map<String, PrefValue> = mapOf(
+    "neural_prefix_boost_multiplier_" to PrefValue.FloatV(Defaults.NEURAL_PREFIX_BOOST_MULTIPLIER),
+    "neural_prefix_boost_max_" to PrefValue.FloatV(Defaults.NEURAL_PREFIX_BOOST_MAX),
+)
+
+/**
+ * Resolve a key's effective default via either the literal map or the
+ * pattern map. Used by `SettingsImportPlanBuilder` to decide whether a
+ * key represents a real change vs. a no-op against the default.
+ */
+internal fun lookupDefault(key: String): PrefValue? {
+    SETTINGS_DEFAULTS[key]?.let { return it }
+    for ((prefix, value) in PATTERN_DEFAULTS) {
+        if (key.startsWith(prefix)) return value
+    }
+    return null
+}
+
+/**
  * Keys whose runtime default is literally `null` (read site passes `null`
  * to `prefs.getString`). Importing such a key with a non-null proposed
  * value is a real change — but we cannot express "the absence of a value"

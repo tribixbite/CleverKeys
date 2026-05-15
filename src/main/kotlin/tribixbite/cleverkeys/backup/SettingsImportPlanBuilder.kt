@@ -105,8 +105,11 @@ object SettingsImportPlanBuilder {
             // The diff is against this effective value — comparing against
             // `Unset` would emit a noisy "ADDED: unset → default" row for
             // every key in a fresh-install backup.
+            //
+            // Fall-through to PATTERN_DEFAULTS handles per-language keys like
+            // `neural_prefix_boost_multiplier_fr` that share one default.
             val effective = if (current == PrefValue.Unset)
-                defaultSnapshot[key] ?: PrefValue.Unset
+                defaultSnapshot[key] ?: lookupDefault(key) ?: PrefValue.Unset
             else
                 current
             if (effective == proposed) continue   // no perceived change — skip

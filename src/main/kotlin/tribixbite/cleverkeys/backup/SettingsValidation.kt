@@ -28,11 +28,15 @@ object SettingsValidation {
      * reason for a pref-read key to be absent from `SETTINGS_DEFAULTS`.
      */
     val INTERNAL_KEYS: Set<String> = setOf(
-        "version",                    // Config migration version
-        "current_layout_portrait",    // Runtime layout selection (per device)
-        "current_layout_landscape",   // Runtime layout selection (per device)
-        "margin_prefs_version",       // Margin-units migration version
-        "need_migration",             // DirectBoot prefs-migration tracker
+        "version",                          // Config migration version
+        "current_layout_portrait",          // Runtime layout selection (per device)
+        "current_layout_landscape",         // Runtime layout selection (per device)
+        "margin_prefs_version",             // Margin-units migration version
+        "need_migration",                   // DirectBoot prefs-migration tracker
+        "lang_pref_migration_version",      // Language-prefs migration version
+        "voice_ime_known",                  // Runtime voice-IME state (per device)
+        "voice_ime_last_used",              // Runtime voice-IME state (per device)
+        "ime_prompt_shown_this_session",    // Per-session UI flag (not portable)
     )
 
     fun isInternalPreference(key: String): Boolean = key in INTERNAL_KEYS

@@ -217,11 +217,12 @@ class SettingsImportPlanBuilderTest {
             "version",
             "current_layout_portrait",
             "current_layout_landscape",
-            "margin_prefs_version",  // 2026-05-14: was previously exported on
-                                     // legacy backups; now filtered so it
-                                     // doesn't appear as a no-op preview row.
-            "need_migration",        // 2026-05-14: DirectBoot prefs-migration
-                                     // tracker; per-device, not portable.
+            "margin_prefs_version",            // legacy backup pollution
+            "need_migration",                  // DirectBoot prefs migration
+            "lang_pref_migration_version",     // language-prefs migration
+            "voice_ime_known",                 // runtime IME state
+            "voice_ime_last_used",             // runtime IME state
+            "ime_prompt_shown_this_session",   // per-session UI flag
         )
         assertThat(SettingsValidation.INTERNAL_KEYS).isEqualTo(expected)
     }
@@ -408,6 +409,49 @@ class SettingsImportPlanBuilderTest {
         val byKey = plan.changes.associateBy { it.key }
         assertThat(byKey["keyboard_opacity"]!!.current).isEqualTo(PrefValue.IntV(100))
         assertThat(byKey["neural_temperature"]!!.current).isEqualTo(PrefValue.FloatV(1.0f))
+    }
+
+    @Test
+    fun patternDefault_perLanguageKey_resolvedViaPrefix() {
+        // `neural_prefix_boost_multiplier_<lang>` keys share the
+        // NEURAL_PREFIX_BOOST_MULTIPLIER default. Importing
+        // `neural_prefix_boost_multiplier_fr` = 1.0 (== default) on a
+        // fresh install should NOT surface as a change row.
+        val json = """{"preferences":{
+            "neural_prefix_boost_multiplier_fr": 1.0,
+            "neural_prefix_boost_multiplier_es": 2.5
+        }}""".trimIndent()
+        val plan = SettingsImportPlanBuilder.fromJson(
+            json,
+            currentSnapshot = emptyMap(),
+            screen = screen,
+            // Empty literal map — pattern lookup is exercised directly via
+            // the production lookupDefault() fallback.
+        )
+
+        // The _fr one equals the default → suppressed.
+        // The _es one differs from the default → emitted with default as `current`.
+        val keys = plan.changes.map { it.key }.toSet()
+        assertThat(keys).containsExactly("neural_prefix_boost_multiplier_es")
+        val esRow = plan.changes.single()
+        assertThat(esRow.current).isEqualTo(PrefValue.FloatV(1.0f))   // not Unset
+        assertThat(esRow.proposed).isEqualTo(PrefValue.FloatV(2.5f))
+    }
+
+    @Test
+    fun patternDefault_doesNotShadowExactMatch() {
+        // `neural_prefix_boost_multiplier` (no language suffix) is its own
+        // entry in SETTINGS_DEFAULTS — the pattern fallback must NOT match
+        // it (the prefix requires trailing `_<something>`).
+        val json = """{"preferences":{"neural_prefix_boost_multiplier": 1.0}}"""
+        val plan = SettingsImportPlanBuilder.fromJson(
+            json,
+            currentSnapshot = emptyMap(),
+            screen = screen,
+            defaultSnapshot = SETTINGS_DEFAULTS,
+        )
+        // Default = 1.0 = proposed → suppressed regardless of which lookup path fires.
+        assertThat(plan.changes).isEmpty()
     }
 
     @Test
