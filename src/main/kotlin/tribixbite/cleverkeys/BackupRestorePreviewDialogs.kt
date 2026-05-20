@@ -76,6 +76,16 @@ fun SettingsImportPreviewDialog(
 
                     if (plan.shortSwipeImportSize > 0) {
                         item { SectionHeader("Short-swipe customizations") }
+                        // Diff section (above the radio) shows exactly which
+                        // key+direction mappings change. Null when current
+                        // state couldn't be captured — radio still works.
+                        val diff = computeShortSwipeDiff(
+                            currentJson = plan.currentShortSwipeRawJson,
+                            proposedJson = plan.shortSwipeImportRawJson,
+                        )
+                        if (diff != null && !diff.isEmpty) {
+                            item { ShortSwipeDiffSummary(diff) }
+                        }
                         item {
                             ShortSwipeModeRadio(
                                 size = plan.shortSwipeImportSize,
@@ -279,16 +289,61 @@ private fun renderArrayDelta(
     cur: com.google.gson.JsonArray,
     prop: com.google.gson.JsonArray,
 ): String {
-    // Layouts: array of objects with `name` field — diff by name.
+    // Layouts: array of objects with `name` field — diff by name + per-layout
+    // deep-diff (key-count delta) for shared names.
     val curIsLayouts = cur.size() > 0 && cur.all { it.isJsonObject && it.asJsonObject.has("name") }
     val propIsLayouts = prop.size() > 0 && prop.all { it.isJsonObject && it.asJsonObject.has("name") }
     if (curIsLayouts && propIsLayouts) {
-        val curNames = cur.map { it.asJsonObject.get("name").asString }.toSet()
-        val propNames = prop.map { it.asJsonObject.get("name").asString }.toSet()
-        return formatSetDelta(curNames, propNames)
+        return renderLayoutsDelta(cur, prop)
     }
     // Generic array — count delta.
     return "[${cur.size()} → ${prop.size()} item${if (prop.size() == 1 && cur.size() == 1) "" else "s"}]"
+}
+
+/**
+ * Layouts-specific deep diff:
+ *  - Set diff by `name` (added / removed / unchanged-name).
+ *  - For each shared-name layout, compare key counts; report
+ *    "name: M→N keys" if counts differ, otherwise drop from output.
+ *  - If shared names match exactly AND every layout's key count is equal,
+ *    the difference is in some sub-field (e.g. key glyphs / script tag) —
+ *    report as "[N unchanged; internal field change]".
+ */
+private fun renderLayoutsDelta(
+    cur: com.google.gson.JsonArray,
+    prop: com.google.gson.JsonArray,
+): String {
+    val curByName = cur.associate { it.asJsonObject.get("name").asString to it.asJsonObject }
+    val propByName = prop.associate { it.asJsonObject.get("name").asString to it.asJsonObject }
+    val added = propByName.keys - curByName.keys
+    val removed = curByName.keys - propByName.keys
+    val shared = curByName.keys intersect propByName.keys
+
+    // Per-shared-layout key-count delta.
+    val keyCountChanges = shared.mapNotNull { name ->
+        val curKeys = safeKeyCount(curByName[name])
+        val propKeys = safeKeyCount(propByName[name])
+        if (curKeys != propKeys) "$name: $curKeys→$propKeys keys" else null
+    }
+    // Shared layouts whose objects differ but key count is the same.
+    val internalChanges = shared.count { name ->
+        val a = curByName[name]
+        val b = propByName[name]
+        a != b && safeKeyCount(a) == safeKeyCount(b)
+    }
+    val pureUnchanged = shared.size - keyCountChanges.size - internalChanges
+
+    val parts = mutableListOf<String>()
+    if (added.isNotEmpty()) parts += "+ ${truncateNameList(added.toList(), maxLen = 30)}"
+    if (removed.isNotEmpty()) parts += "− ${truncateNameList(removed.toList(), maxLen = 30)}"
+    if (keyCountChanges.isNotEmpty()) {
+        parts += "~ ${truncateNameList(keyCountChanges, maxLen = 40)}"
+    }
+    if (internalChanges > 0) {
+        parts += "$internalChanges layout${if (internalChanges == 1) "" else "s"} with internal changes"
+    }
+    if (pureUnchanged > 0) parts += "($pureUnchanged unchanged)"
+    return if (parts.isEmpty()) "[no differences]" else parts.joinToString("  ")
 }
 
 private fun renderObjectDelta(
@@ -306,19 +361,11 @@ private fun renderObjectDelta(
     return formatObjectDelta(both.size - changed.size, added, removed, changed)
 }
 
-private fun formatSetDelta(curSet: Set<String>, propSet: Set<String>): String {
-    val added = propSet - curSet
-    val removed = curSet - propSet
-    val unchangedCount = (curSet intersect propSet).size
-    if (added.isEmpty() && removed.isEmpty()) {
-        // Same set — order or non-name field changed.
-        return "[$unchangedCount unchanged; internal field change]"
-    }
-    val parts = mutableListOf<String>()
-    if (added.isNotEmpty()) parts += "+ ${truncateNameList(added.toList(), maxLen = 30)}"
-    if (removed.isNotEmpty()) parts += "− ${truncateNameList(removed.toList(), maxLen = 30)}"
-    if (unchangedCount > 0) parts += "($unchangedCount unchanged)"
-    return parts.joinToString("  ")
+/** Safe `keys` field length — returns 0 for missing / non-array shapes. */
+private fun safeKeyCount(obj: com.google.gson.JsonObject?): Int = try {
+    obj?.getAsJsonArray("keys")?.size() ?: 0
+} catch (_: Exception) {
+    0
 }
 
 private fun formatObjectDelta(
@@ -370,6 +417,56 @@ private fun TypeChip(value: PrefValue) {
         PrefValue.Unset -> "\u2014"
     }
     AssistChip(onClick = {}, label = { Text(label, fontSize = 10.sp) })
+}
+
+/**
+ * Inline summary of the short-swipe diff (counts of added / removed /
+ * changed / unchanged mapping ids). Sample names are shown via the
+ * existing `truncateNameList` helper so a user can recognize specific
+ * mappings without expanding into a full table.
+ *
+ * Rendered above [ShortSwipeModeRadio] so the user picks Skip / Merge /
+ * Replace with concrete delta data in view.
+ */
+@Composable
+private fun ShortSwipeDiffSummary(diff: ShortSwipeDiff) {
+    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
+        // Headline counts on one line for at-a-glance reading.
+        val countParts = buildList {
+            if (diff.added.isNotEmpty())    add("+${diff.added.size} new")
+            if (diff.removed.isNotEmpty())  add("\u2212${diff.removed.size} removed")
+            if (diff.changed.isNotEmpty())  add("~${diff.changed.size} changed")
+            if (diff.unchanged > 0)         add("(${diff.unchanged} unchanged)")
+        }
+        Text(
+            countParts.joinToString("  "),
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        // Detail lines (truncated). Each non-empty bucket gets one line.
+        if (diff.added.isNotEmpty()) {
+            Text(
+                "  + ${truncateNameList(diff.added, maxLen = 60)}",
+                fontSize = 11.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        if (diff.removed.isNotEmpty()) {
+            Text(
+                "  \u2212 ${truncateNameList(diff.removed, maxLen = 60)}",
+                fontSize = 11.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        if (diff.changed.isNotEmpty()) {
+            Text(
+                "  ~ ${truncateNameList(diff.changed, maxLen = 60)}",
+                fontSize = 11.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
 }
 
 @Composable

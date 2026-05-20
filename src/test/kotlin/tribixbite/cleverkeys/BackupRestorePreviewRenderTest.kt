@@ -106,14 +106,30 @@ class BackupRestorePreviewRenderTest {
     }
 
     @Test
-    fun layoutsDelta_sameNamesButDifferentObjects_reportsInternalChange() {
-        // Same names, but the underlying objects differ (e.g. key positions
-        // tweaked). The set-based diff sees no name change → fall to the
-        // "internal field change" marker.
-        val cur = """[{"name":"qwerty","keys":1},{"name":"dvorak","keys":2}]"""
-        val prop = """[{"name":"qwerty","keys":99},{"name":"dvorak","keys":2}]"""
+    fun layoutsDelta_sameNamesDifferentInternalContent_reportsInternalChanges() {
+        // Same layout names, same key count, but a non-`keys` field differs
+        // (e.g. `script` tag, key glyphs). Deep diff buckets these as
+        // "internal changes" rather than reporting per-layout key counts.
+        val cur = """[
+            {"name":"qwerty","keys":[1,2,3],"script":"en"},
+            {"name":"dvorak","keys":[1,2],"script":"en"}
+        ]""".trimIndent()
+        val prop = """[
+            {"name":"qwerty","keys":[1,2,3],"script":"en-US"},
+            {"name":"dvorak","keys":[1,2],"script":"en"}
+        ]""".trimIndent()
         val out = renderJsonBlobDelta(cur, prop)
-        assertThat(out).contains("internal field change")
+        assertThat(out).contains("internal changes")
+        assertThat(out).contains("1 unchanged")  // dvorak unchanged
+    }
+
+    @Test
+    fun layoutsDelta_keyCountChanged_reportsPerLayoutCountDelta() {
+        // When a shared layout's key count changes, report the delta inline.
+        val cur = """[{"name":"qwerty","keys":[1,2,3]}]"""
+        val prop = """[{"name":"qwerty","keys":[1,2,3,4,5]}]"""
+        val out = renderJsonBlobDelta(cur, prop)
+        assertThat(out).contains("qwerty: 3\u21925 keys")  // 3→5 keys
     }
 
     @Test

@@ -383,6 +383,7 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.backup.SettingsExporterTest',
     'tribixbite.cleverkeys.BackupRestoreResultMessagesTest',
     'tribixbite.cleverkeys.BackupRestorePreviewRenderTest',
+    'tribixbite.cleverkeys.backup.ShortSwipeDiffTest',
     'tribixbite.cleverkeys.LanguagePreferenceKeysReverseLookupTest',
     'tribixbite.cleverkeys.BucketBSourceContractTest',
     'tribixbite.cleverkeys.clipboard.sanitize.RulesetParserTest',

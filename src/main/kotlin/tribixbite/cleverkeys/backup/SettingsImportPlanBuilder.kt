@@ -43,6 +43,7 @@ object SettingsImportPlanBuilder {
         currentSnapshot: Map<String, Any?>,
         screen: ScreenMetrics,
         defaultSnapshot: Map<String, PrefValue> = emptyMap(),
+        currentShortSwipeRawJson: String? = null,
     ): SettingsImportPlan {
         val root = JsonParser.parseString(jsonString).asJsonObject
 
@@ -149,6 +150,7 @@ object SettingsImportPlanBuilder {
             internalRemoves = migration.removes,
             shortSwipeImportSize = shortSwipeSize,
             shortSwipeImportRawJson = shortSwipeRaw,
+            currentShortSwipeRawJson = currentShortSwipeRawJson,
         )
     }
 

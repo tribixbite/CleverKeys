@@ -436,6 +436,18 @@ open class BackupRestoreManager(
         val snapshot: Map<String, Any?> = prefs.all.toMap()
         val dm = context.resources.displayMetrics
         val screen = ScreenMetrics(dm.widthPixels, dm.heightPixels, dm.density)
+        // Snapshot the current short-swipe state so the preview dialog can
+        // render a structured diff against the import's short-swipe section.
+        // loadMappings() is suspend; we runBlocking on the IO dispatcher this
+        // is already on (called via withContext(Dispatchers.IO) by the SAF
+        // pathway). Failure tolerated — null disables the diff section.
+        val currentShortSwipeJson: String? = try {
+            runBlocking { shortSwipeManager.loadMappings() }
+            shortSwipeManager.exportToJson()
+        } catch (e: Exception) {
+            Log.w(TAG, "Short-swipe snapshot failed; preview will skip diff section", e)
+            null
+        }
         // SETTINGS_DEFAULTS suppresses preview rows where the proposed value
         // equals the compile-time default the user already experiences on
         // unset keys (fresh-install over-report fix, 2026-05-14).
@@ -444,6 +456,7 @@ open class BackupRestoreManager(
             currentSnapshot = snapshot,
             screen = screen,
             defaultSnapshot = SETTINGS_DEFAULTS,
+            currentShortSwipeRawJson = currentShortSwipeJson,
         )
     }
 
