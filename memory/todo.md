@@ -1,5 +1,142 @@
 # CleverKeys TODO
 
+## 🔜 Backup/Restore — next steps (priority order)
+
+Tracking what remains after the round-3-to-6 import-preview polish work.
+The settings preview UI is feature-complete; remaining work is the
+dictionary + clipboard import surfaces and any apply-path verification.
+
+### A. Dictionary import end-to-end verification (instrumented)
+
+The `DictionaryImportPreviewDialog` exists with per-word deselect, but
+hasn't been screenshot-verified against a real backup the way settings
+import was in rounds 3-6. Pure tests pass (`DictImportPlanBuilderTest`,
+`DictImportPlanApplyTest`); instrumented `BackupRestoreManagerImportDictionariesEndToEndTest`
+also passes. **Manual gap**: import a backup with diverse
+`custom_words_<lang>` (en, fr, es) and `disabled_words_<lang>` keys.
+Verify the preview shows per-language buckets correctly + per-word
+deselect actually filters the apply step. Verify the dictionary-
+imported broadcast reaches `DictionaryManagerActivity` and refreshes
+the tab list.
+
+### B. Clipboard import end-to-end verification (instrumented + manual)
+
+Three surfaces to exercise:
+  - **JSON v4 round-trip** — export from configured device → import to fresh
+  - **ZIP full-backup round-trip** — media-bearing entries; verify
+    thumbnail regeneration on import (lazy, not in export)
+  - **Schema migration paths** — v2/v3 → v4 import. Older backups should
+    still parse; `ClipboardDatabaseTest.testImportFromJSON` covers some
+    of this but a real old backup is the gold-standard check.
+
+Pinned + Todo tabs must survive both JSON and ZIP imports (separate
+`pinned_entries` and `todo_entries` tables in V4 schema).
+
+### C. Apply-path semantics under default flips (write check)
+
+Round 3-6 changed several Defaults (kbd_height 30→27, keyrepeat
+backspace_only false→true, etc.). The IMPORT-PREVIEW diff already
+suppresses no-op rows where proposed == default. But what does the
+APPLY path do when the user accepts that suppressed row? Per the
+builder code, suppressed rows aren't in `plan.changes`, so the apply
+step never writes them. That's correct semantics — but worth a
+fixture test asserting "apply doesn't write keys not in changes" so
+future regression here is caught.
+
+### D. Compose UI test for the new diff sections (ew-cli)
+
+  - `ShortSwipeDiffSummary` Composable — assert it renders given a
+    non-empty diff (use a stub `SettingsImportPlan` with a populated
+    `currentShortSwipeRawJson`).
+  - Layouts deep-diff render — assert "+ azerty  − dvorak" copy
+    appears in the dialog for a backup that swaps layouts.
+
+These would live alongside `SettingsImportPreviewDialogComposeTest.kt`.
+
+### E. Privacy toggle warning UI (deferred from round 4)
+
+Round-4 issue #3 from the per-row screenshot review. `privacy_collect_*`
+toggles flip silently during import — no visual distinction. Deferred
+by user. Future: red icon or warning chip on privacy-sensitive rows so
+a user importing a backup notices. Spec needed.
+
+### F. Open polish items
+
+  - `clipboard_max_item_size_kb` UX: now defaults to 512. If a user
+    pastes something larger, do we surface that the limit was hit?
+  - Wiki/FAQ: `docs/wiki/troubleshooting/backup-restore.md` updated
+    in 2026-05-20 doc pass — when adding new fields, mirror updates
+    there.
+
+---
+
+## ✅ JSON layouts deep-diff + short-swipe mapping diff + build script polish (2026-05-20, round 6)
+
+Two import-preview enhancements (`0733ca6b8`) and one build-script
+behavior tweak (`dd193ef06`):
+
+**Layouts deep-diff**: when the `layouts` blob shows in the preview's
+Modified section, the diff drills INTO shared-name layouts. Output:
+  - `+ azerty  − dvorak  (1 unchanged)` — name set-diff
+  - `~ qwerty: 50→52 keys  (1 unchanged)` — per-layout key-count delta
+  - `1 layout with internal changes  (1 unchanged)` — same name +
+    same key count, but other field differs (script tag, key glyphs)
+
+`safeKeyCount()` guards against malformed `keys` field.
+
+**Short-swipe mapping diff**: new `ShortSwipeDiff` data class + pure
+`computeShortSwipeDiff(current, proposed)` helper +
+`ShortSwipeDiffSummary` Composable rendered above the
+Skip/Merge/Replace radio. Threaded `currentShortSwipeRawJson` through
+`SettingsImportPlan` (default null for back-compat). `BackupRestoreManager`
+snapshots via `ShortSwipeCustomizationManager.exportToJson()` (forces
+`loadMappings()` first; failure-tolerant — null disables the diff
+section). Output:
+
+    +3 new  −1 removed  ~2 changed  (8 unchanged)
+      + a:NE, b:SW, c:E
+      − d:W
+      ~ a:SE, b:N
+
+**Build script**: `--suspend-tmx` flag introduced; tmx-session-suspend
+no longer happens by default. Was killing user shells silently.
+
+Pure: 1211 OK. Mock: 194 OK.
+
+## ✅ Import preview polish + 5 more default flips (2026-05-15, round 5)
+
+`7463c9f61`. Structured JSON-blob diff (single-side rendering for
+ADDED rows: `[3 layouts: qwerty, dvorak, azerty]` / `{N keys}` /
+`[N items]`; combined-string two-side rendering for MODIFIED rows).
+Render helpers `internal` so pure-JVM tests can hit them.
+
+5 more default tunings:
+  - `KEY_ACTIVATED_OPACITY`           100  → 80
+  - `AUTOCORRECT_PREFIX_LENGTH`         1  → 0
+  - `AUTOCORRECT_CHAR_MATCH_THRESHOLD` 0.67 → 0.65
+  - `AUTOCORRECT_MIN_WORD_LENGTH`       3  → 2
+  - `CLIPBOARD_MAX_ITEM_SIZE_KB`      "256" → "512"
+
+## ✅ Import preview polish + 6 default flips (2026-05-15, round 4)
+
+`431d32c7f`. Six bug-fix + UX items + 6 default flips. The
+`circle_sensitivity` validation type-mismatch was a high-severity
+silent-data-loss bug — `isIntKey()` wrongly listed a Str pref.
+Removed `circle_sensitivity` + `clipboard_history_limit` from
+`isIntKey()`; both are stored as Str.
+
+UX:
+  - `Unset` → renders as `(none)` (was `(unset)`)
+  - layouts placeholder → `[N layouts]` summary (was opaque "JSON change")
+
+Default flips:
+  - `KEYBOARD_HEIGHT_PORTRAIT`     30 → 27
+  - `HAPTIC_SWIPE_COMPLETE`       false → true
+  - `KEYREPEAT_BACKSPACE_ONLY`    false → true
+  - `SWIPE_MIN_KEY_DISTANCE`       38f → 15f
+  - `NEURAL_BEAM_ALPHA`           1.0f → 1.4f
+  - `CLIPBOARD_HISTORY_LIMIT`     "50"/50 → "0"/0 (unlimited)
+
 ## ✅ Import preview: architectural consolidation + per-row analysis fix (2026-05-14, round 3)
 
 User reviewed screenshots and listed 60+ visible rows. Root-cause analysis

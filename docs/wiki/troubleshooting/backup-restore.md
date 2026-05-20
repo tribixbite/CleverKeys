@@ -13,10 +13,40 @@ Export and import your keyboard settings, dictionary, and clipboard history.
 
 | What | How |
 |------|-----|
-| **Settings** | Settings > Activities > Backup & Restore > Export/Import Config |
-| **Dictionary** | Settings > Activities > Backup & Restore > Export/Import Dictionary |
-| **Clipboard** | Settings > Activities > Backup & Restore > Export/Import Clipboard |
+| **Settings** | Settings > 💾 Backup & Restore > Export/Import Config |
+| **Dictionary** | Settings > 💾 Backup & Restore > Export/Import Dict |
+| **Clipboard** | Settings > 💾 Backup & Restore > Export/Import Clip / Export/Import ZIP |
 | **Format** | JSON (text-only) or ZIP (full backup with media) |
+
+> [!NOTE]
+> As of v1.4 the Backup & Restore surface lives inline in the main Settings
+> page under the "💾 Backup & Restore" collapsible section. The previously
+> separate Activity is now headless-only — it handles the Termux
+> Intent-action automation surface (see "Programmatic Import/Export"
+> below) and redirects to the inline section if opened directly.
+
+## Import Preview (v1.4+)
+
+When importing settings or dictionary backups, the app shows a preview
+dialog before applying any changes:
+
+  - **Per-row deselect** — uncheck individual settings or dictionary
+    entries you don't want to apply. The remaining rows are written;
+    deselected rows are left untouched.
+  - **Default-aware diff** — rows whose imported value equals the
+    compile-time default (i.e. what you'd experience on a fresh
+    install) are suppressed from the preview. You only see what's
+    actually about to change.
+  - **Layouts deep-diff** — for the `layouts` row, the preview shows
+    layout names being added/removed and key-count changes per
+    shared-name layout (e.g. `+ azerty  − dvorak  (1 unchanged)` or
+    `~ qwerty: 50→52 keys`).
+  - **Short-swipe diff** — short-swipe customizations show a per-mapping
+    diff above the Skip/Merge/Replace radio so you can see exactly
+    which `key+direction` mappings will change.
+  - **Invalid/skipped section** — keys that can't be imported
+    (deprecated, internal, dictionary words routed elsewhere,
+    type-mismatched) are listed with a clear reason.
 
 ## Available Exports
 
@@ -32,7 +62,7 @@ Exports all keyboard settings to a JSON file:
 
 **How to export:**
 1. Open **Settings**
-2. Tap **Backup & Restore** in the Activities section
+2. Scroll to / expand the **💾 Backup & Restore** section
 3. Tap **Export Config**
 4. Choose save location
 
@@ -73,23 +103,29 @@ Exports clipboard history in two formats:
 
 ### Import Config
 
-1. Open **Settings > Activities > Backup & Restore**
+1. Open **Settings**, scroll to **💾 Backup & Restore**
 2. Tap **Import Config**
 3. Browse to your backup JSON file
-4. Settings will be applied immediately
+4. **Import preview** opens — review the changes, deselect any rows
+   you don't want, choose a Short-swipe import mode (Skip / Merge /
+   Replace), tap **Apply (N)** to commit. Settings apply immediately.
 
 ### Import Dictionary
 
-1. Tap **Import Dictionary**
+1. Tap **Import Dict**
 2. Select dictionary JSON file
-3. Words are merged with existing dictionary
+3. **Dictionary import preview** opens with per-language buckets — you
+   can deselect individual words. Existing words are preserved (merge);
+   imported words that already exist are silently skipped.
 
 ### Import Clipboard
 
-1. Tap **Import Clipboard**
-2. Select clipboard file (JSON or ZIP)
-3. Items are added to history
+1. Tap **Import Clip** (JSON, text-only) or **Import ZIP** (full backup
+   with media)
+2. Select the backup file
+3. Items are appended to history (non-destructive — duplicates skipped)
 4. For ZIP imports: media files are extracted and thumbnails regenerated
+   lazily on first view
 
 Import supports v2, v3, and v4 export formats — older backups work on newer versions.
 
