@@ -112,6 +112,33 @@ class AutocorrectTest {
     }
 
     @Test
+    fun testAutocorrectFirstCharTypo_wuestionToQuestion() {
+        // Reported 2026-05-20: "wuestion" should correct to "question" (w↔q
+        // are adjacent on QWERTY). With prefix_length=0 (default since
+        // 7463c9f61) the prefix-match guard must NOT block this — the bug
+        // was that `WordPredictor.autoCorrect` hard-coded a 2-char prefix
+        // check that ignored the config field, so any typo on the first
+        // character was uncorrectable.
+        config.autocorrect_enabled = true
+        config.autocorrect_prefix_length = 0
+        val result = predictor.autoCorrect("wuestion")
+        assertEquals("First-char typo must autocorrect with prefix_length=0",
+            "question", result)
+    }
+
+    @Test
+    fun testAutocorrectPrefixLength_two_enforcesPrefix() {
+        // With prefix_length=2, "wuestion" must NOT correct to "question"
+        // (no shared "wu" prefix). Verifies the config knob still works at
+        // the legacy default.
+        config.autocorrect_enabled = true
+        config.autocorrect_prefix_length = 2
+        val result = predictor.autoCorrect("wuestion")
+        assertEquals("With prefix_length=2, first-char typo is NOT corrected",
+            "wuestion", result)
+    }
+
+    @Test
     fun testAutocorrectMinLengthRespected() {
         val minLength = config.autocorrect_min_word_length
         assertTrue("Min length should be reasonable", minLength >= 0 && minLength <= 5)

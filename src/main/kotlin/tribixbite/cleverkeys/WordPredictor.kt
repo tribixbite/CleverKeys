@@ -1705,12 +1705,19 @@ class WordPredictor {
             return typedWord
         }
 
-        // 3. "Same first 2 letters" rule requires at least 2 characters
-        if (lowerTypedWord.length < 2) {
-            return typedWord
-        }
+        // 3. Required-prefix rule. Configurable via `autocorrect_prefix_length`:
+        //   - >0: candidate must share that many leading chars with typed word
+        //   - 0:  no prefix required — typo on first char (e.g. "wuestion" →
+        //         "question") is correctable. Skips the prefix filter entirely
+        //         so the candidate sweep also covers off-by-one-on-first-char.
+        // Clamped to typed-word length so a misconfigured huge prefix doesn't
+        // short-circuit. Was previously hard-coded to 2, ignoring config.
+        val configPrefixLength = (config?.autocorrect_prefix_length ?: 1).coerceAtLeast(0)
+        val effectivePrefixLength = minOf(configPrefixLength, lowerTypedWord.length)
+        val prefix: String? =
+            if (effectivePrefixLength > 0) lowerTypedWord.substring(0, effectivePrefixLength)
+            else null
 
-        val prefix = lowerTypedWord.substring(0, 2)
         val wordLength = lowerTypedWord.length
         var bestCandidate: WordCandidate? = null
 
@@ -1719,8 +1726,8 @@ class WordPredictor {
             // Heuristic 1: Must have same length
             if (dictWord.length != wordLength) continue
 
-            // Heuristic 2: Must start with same first two letters
-            if (!dictWord.startsWith(prefix)) continue
+            // Heuristic 2: prefix match (when required by config)
+            if (prefix != null && !dictWord.startsWith(prefix)) continue
 
             // Heuristic 3: Calculate positional character match ratio
             var matchCount = 0
