@@ -192,13 +192,24 @@ private fun SettingsChangeRow(
     }
 }
 
-private fun renderDelta(change: SettingsChange): String {
-    val current = renderPrefValue(change.current)
-    val proposed = renderPrefValue(change.proposed)
+internal fun renderDelta(change: SettingsChange): String {
+    // Specialized JSON-blob diff path: when BOTH sides are JsonBlob, compute
+    // a structured diff (added/removed/changed names) instead of rendering
+    // each side independently as a count. The combined-string output is more
+    // informative than "[3 layouts] → [5 layouts]".
+    val cur = change.current
+    val prop = change.proposed
+    if (cur is PrefValue.JsonBlob && prop is PrefValue.JsonBlob) {
+        return renderJsonBlobDelta(cur.raw, prop.raw)
+    }
+    // Asymmetric case (ADDED with Unset → JsonBlob, or vice versa): fall
+    // through to per-side rendering so the dialog shows "(none) → [3 layouts]".
+    val current = renderPrefValue(cur)
+    val proposed = renderPrefValue(prop)
     return "$current  \u2192  $proposed"
 }
 
-private fun renderPrefValue(v: PrefValue): String = when (v) {
+internal fun renderPrefValue(v: PrefValue): String = when (v) {
     // "(none)" reads more naturally than "(unset)" for multi-language slots
     // (`pref_secondary_language` → "de" → "(none) → 'de'") and for any
     // unknown key that falls through to the Unset sentinel.
@@ -211,29 +222,141 @@ private fun renderPrefValue(v: PrefValue): String = when (v) {
 }
 
 /**
- * Summarize a JSON blob for the preview row. Currently specialized for the
- * `layouts` shape (an array of objects with a `name` field) — falls back to
- * "(JSON change)" for any other blob shape.
- *
- * Output examples:
- *   - `[3 layouts]` for the `layouts` key
- *   - `(JSON change)` for `extra_keys`, `custom_extra_keys`, malformed input
+ * Summarize a JSON blob for a SINGLE-side render (used when the other side
+ * is Unset, i.e. ADDED rows). Output examples:
+ *   - `[3 layouts: qwerty, dvorak, azerty]` for the `layouts` key
+ *   - `{4 keys}` for `extra_keys` / `custom_extra_keys` (JSON object shape)
+ *   - `[N items]` for other array shapes
+ *   - `(JSON change)` for malformed input
  */
-private fun renderJsonBlobSummary(raw: String): String = try {
+internal fun renderJsonBlobSummary(raw: String): String = try {
     val el = com.google.gson.JsonParser.parseString(raw)
     when {
-        el.isJsonArray -> {
-            val arr = el.asJsonArray
-            // Layouts shape: array of objects with `name` field.
-            val isLayouts = arr.size() > 0 && arr.all { it.isJsonObject && it.asJsonObject.has("name") }
-            if (isLayouts) "[${arr.size()} layout${if (arr.size() == 1) "" else "s"}]"
-            else "[${arr.size()} item${if (arr.size() == 1) "" else "s"}]"
-        }
+        el.isJsonArray -> renderArraySummary(el.asJsonArray)
         el.isJsonObject -> "{${el.asJsonObject.size()} keys}"
         else -> "(JSON change)"
     }
 } catch (_: Exception) {
     "(JSON change)"
+}
+
+private fun renderArraySummary(arr: com.google.gson.JsonArray): String {
+    if (arr.size() == 0) return "[empty]"
+    val isLayouts = arr.all { it.isJsonObject && it.asJsonObject.has("name") }
+    if (!isLayouts) return "[${arr.size()} item${if (arr.size() == 1) "" else "s"}]"
+    val names = arr.map { it.asJsonObject.get("name").asString }
+    val label = "${arr.size()} layout${if (arr.size() == 1) "" else "s"}"
+    // Truncate the names list at ~50 chars so the row stays readable on
+    // narrow phone widths. Excess names land in a "+N more" suffix.
+    val joined = truncateNameList(names, maxLen = 50)
+    return "[$label: $joined]"
+}
+
+/**
+ * Diff between current and proposed JSON blobs. Specialized for the known
+ * blob shapes (`layouts` array, `extra_keys`/`custom_extra_keys` objects).
+ *
+ * Output examples:
+ *   - `+ azerty, − dvorak  (3 unchanged)`     for `layouts`
+ *   - `+ key_dollar, key_euro  (5 unchanged)` for `extra_keys`
+ *   - `[3 items → 5 items]`                   for other JSON arrays
+ *   - `[3 keys → 4 keys]`                     for other JSON objects
+ *   - `(JSON change)`                         for malformed / mixed shapes
+ */
+internal fun renderJsonBlobDelta(curRaw: String, propRaw: String): String = try {
+    val cur = com.google.gson.JsonParser.parseString(curRaw)
+    val prop = com.google.gson.JsonParser.parseString(propRaw)
+    when {
+        cur.isJsonArray && prop.isJsonArray -> renderArrayDelta(cur.asJsonArray, prop.asJsonArray)
+        cur.isJsonObject && prop.isJsonObject -> renderObjectDelta(cur.asJsonObject, prop.asJsonObject)
+        else -> "(JSON change)"
+    }
+} catch (_: Exception) {
+    "(JSON change)"
+}
+
+private fun renderArrayDelta(
+    cur: com.google.gson.JsonArray,
+    prop: com.google.gson.JsonArray,
+): String {
+    // Layouts: array of objects with `name` field — diff by name.
+    val curIsLayouts = cur.size() > 0 && cur.all { it.isJsonObject && it.asJsonObject.has("name") }
+    val propIsLayouts = prop.size() > 0 && prop.all { it.isJsonObject && it.asJsonObject.has("name") }
+    if (curIsLayouts && propIsLayouts) {
+        val curNames = cur.map { it.asJsonObject.get("name").asString }.toSet()
+        val propNames = prop.map { it.asJsonObject.get("name").asString }.toSet()
+        return formatSetDelta(curNames, propNames)
+    }
+    // Generic array — count delta.
+    return "[${cur.size()} → ${prop.size()} item${if (prop.size() == 1 && cur.size() == 1) "" else "s"}]"
+}
+
+private fun renderObjectDelta(
+    cur: com.google.gson.JsonObject,
+    prop: com.google.gson.JsonObject,
+): String {
+    // extra_keys / custom_extra_keys / any object — diff by key membership.
+    // Detects value-only changes too (same key, different value).
+    val curKeys = cur.keySet()
+    val propKeys = prop.keySet()
+    val added = propKeys - curKeys
+    val removed = curKeys - propKeys
+    val both = curKeys intersect propKeys
+    val changed = both.filter { cur.get(it) != prop.get(it) }.toSet()
+    return formatObjectDelta(both.size - changed.size, added, removed, changed)
+}
+
+private fun formatSetDelta(curSet: Set<String>, propSet: Set<String>): String {
+    val added = propSet - curSet
+    val removed = curSet - propSet
+    val unchangedCount = (curSet intersect propSet).size
+    if (added.isEmpty() && removed.isEmpty()) {
+        // Same set — order or non-name field changed.
+        return "[$unchangedCount unchanged; internal field change]"
+    }
+    val parts = mutableListOf<String>()
+    if (added.isNotEmpty()) parts += "+ ${truncateNameList(added.toList(), maxLen = 30)}"
+    if (removed.isNotEmpty()) parts += "− ${truncateNameList(removed.toList(), maxLen = 30)}"
+    if (unchangedCount > 0) parts += "($unchangedCount unchanged)"
+    return parts.joinToString("  ")
+}
+
+private fun formatObjectDelta(
+    unchangedCount: Int,
+    added: Set<String>,
+    removed: Set<String>,
+    changed: Set<String>,
+): String {
+    if (added.isEmpty() && removed.isEmpty() && changed.isEmpty()) {
+        return "[$unchangedCount unchanged]"
+    }
+    val parts = mutableListOf<String>()
+    if (added.isNotEmpty()) parts += "+ ${truncateNameList(added.toList(), maxLen = 30)}"
+    if (removed.isNotEmpty()) parts += "− ${truncateNameList(removed.toList(), maxLen = 30)}"
+    if (changed.isNotEmpty()) parts += "~ ${truncateNameList(changed.toList(), maxLen = 30)}"
+    if (unchangedCount > 0) parts += "($unchangedCount unchanged)"
+    return parts.joinToString("  ")
+}
+
+/**
+ * Comma-join `names`, ellipsizing at the first name that would push the
+ * total over `maxLen` characters. Output suffix is "+N more" when truncated.
+ */
+private fun truncateNameList(names: List<String>, maxLen: Int): String {
+    if (names.isEmpty()) return ""
+    val sb = StringBuilder()
+    var shown = 0
+    for (name in names) {
+        val sep = if (sb.isEmpty()) "" else ", "
+        val tentative = sep + name
+        if (sb.length + tentative.length > maxLen && shown > 0) break
+        sb.append(tentative)
+        shown++
+    }
+    if (shown < names.size) {
+        sb.append(", +${names.size - shown} more")
+    }
+    return sb.toString()
 }
 
 @Composable

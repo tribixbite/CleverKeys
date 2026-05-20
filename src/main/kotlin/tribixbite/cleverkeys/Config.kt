@@ -25,7 +25,10 @@ object Defaults {
     const val LABEL_BRIGHTNESS = 100
     const val KEYBOARD_OPACITY = 100  // #51: Must be fully opaque by default
     const val KEY_OPACITY = 100
-    const val KEY_ACTIVATED_OPACITY = 100
+    // 2026-05-15: lowered from 100 to 80 — a subtle transparency on the
+    // activated/pressed state is more visually obvious as press feedback
+    // than a pure color shift.
+    const val KEY_ACTIVATED_OPACITY = 80
     const val CHARACTER_SIZE = 1.18f
     // #133: Secondary-key (flick) label size as fraction of key height.
     // Exposed so a future preference can scale it independently of the primary label.
@@ -167,11 +170,19 @@ object Defaults {
 
     // Autocorrect
     const val AUTOCORRECT_ENABLED = true
-    const val AUTOCORRECT_MIN_WORD_LENGTH = 3
-    const val AUTOCORRECT_CHAR_MATCH_THRESHOLD = 0.67f
+    // 2026-05-15: lowered from 3 to 2 — 2-char typos (e.g. "th" → "the")
+    // are common and worth correcting.
+    const val AUTOCORRECT_MIN_WORD_LENGTH = 2
+    // 2026-05-15: lowered from 0.67 to 0.65 — slightly more permissive
+    // character-match threshold; catches a few more typos without
+    // noticeably increasing false-positive corrections.
+    const val AUTOCORRECT_CHAR_MATCH_THRESHOLD = 0.65f
     const val AUTOCORRECT_MIN_FREQUENCY = 100
     const val AUTOCORRECT_MAX_LENGTH_DIFF = 2
-    const val AUTOCORRECT_PREFIX_LENGTH = 1
+    // 2026-05-15: lowered from 1 to 0 — no required prefix match. The
+    // beam-candidate ranker still prefers same-prefix corrections, but
+    // we no longer hard-require even the first character to match.
+    const val AUTOCORRECT_PREFIX_LENGTH = 0
     const val AUTOCORRECT_MAX_BEAM_CANDIDATES = 3
     const val SWIPE_BEAM_AUTOCORRECT_ENABLED = true
     const val SWIPE_FINAL_AUTOCORRECT_ENABLED = true
@@ -200,8 +211,12 @@ object Defaults {
     const val CLIPBOARD_HISTORY_LIMIT = "0"
     const val CLIPBOARD_HISTORY_LIMIT_FALLBACK = 0
     const val CLIPBOARD_PANE_HEIGHT_PERCENT = 30
-    const val CLIPBOARD_MAX_ITEM_SIZE_KB = "256"  // Default 256KB. Android Binder IPC caps at ~1MB
-    const val CLIPBOARD_MAX_ITEM_SIZE_KB_FALLBACK = 256
+    // 2026-05-15: raised from 256 to 512. Android Binder IPC caps at ~1MB
+    // so 512 still leaves headroom for the framing+envelope overhead;
+    // modern devices comfortably handle larger pastes (long articles,
+    // formatted text). The slider lets the user push to 1024 if needed.
+    const val CLIPBOARD_MAX_ITEM_SIZE_KB = "512"
+    const val CLIPBOARD_MAX_ITEM_SIZE_KB_FALLBACK = 512
     const val CLIPBOARD_LIMIT_TYPE = "count"  // "count" or "size"
     const val CLIPBOARD_SIZE_LIMIT_MB = "5"
     const val CLIPBOARD_SIZE_LIMIT_MB_FALLBACK = 5

@@ -38,8 +38,10 @@ class IssueRegressionTest {
     }
 
     @Test
-    fun `issue 51 — key activated opacity default is fully opaque`() {
-        assertThat(Defaults.KEY_ACTIVATED_OPACITY).isEqualTo(100)
+    fun `issue 51 — key activated opacity default is partially opaque for press feedback`() {
+        // 2026-05-15: lowered from 100 (fully opaque) to 80 — subtle
+        // transparency makes the activated/pressed state more visible.
+        assertThat(Defaults.KEY_ACTIVATED_OPACITY).isEqualTo(80)
     }
 
     // =========================================================================
@@ -98,9 +100,11 @@ class IssueRegressionTest {
     }
 
     @Test
-    fun `issue 71 — clipboard max item size is 256KB`() {
-        assertThat(Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB).isEqualTo("256")
-        assertThat(Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB_FALLBACK).isEqualTo(256)
+    fun `issue 71 — clipboard max item size is 512KB`() {
+        // 2026-05-15: raised from 256 to 512 KB. Still safely under the
+        // Android Binder IPC ~1MB transaction cap.
+        assertThat(Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB).isEqualTo("512")
+        assertThat(Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB_FALLBACK).isEqualTo(512)
     }
 
     @Test
@@ -259,8 +263,9 @@ class IssueRegressionTest {
     }
 
     @Test
-    fun `issue 35 — autocorrect min word length is 3`() {
-        assertThat(Defaults.AUTOCORRECT_MIN_WORD_LENGTH).isEqualTo(3)
+    fun `issue 35 — autocorrect min word length is 2`() {
+        // 2026-05-15: lowered from 3 to 2 — 2-char typos are common.
+        assertThat(Defaults.AUTOCORRECT_MIN_WORD_LENGTH).isEqualTo(2)
     }
 
     @Test

@@ -51,8 +51,9 @@ class ConfigDefaultsTest {
     }
 
     @Test
-    fun `key activated opacity default is 100`() {
-        assertThat(Defaults.KEY_ACTIVATED_OPACITY).isEqualTo(100)
+    fun `key activated opacity default is 80`() {
+        // 2026-05-15: lowered from 100 to 80 for subtle press feedback.
+        assertThat(Defaults.KEY_ACTIVATED_OPACITY).isEqualTo(80)
     }
 
     @Test
@@ -584,13 +585,16 @@ class ConfigDefaultsTest {
     }
 
     @Test
-    fun `autocorrect min word length default is 3`() {
-        assertThat(Defaults.AUTOCORRECT_MIN_WORD_LENGTH).isEqualTo(3)
+    fun `autocorrect min word length default is 2`() {
+        // 2026-05-15: lowered from 3 to 2 — 2-char typos like "th" are
+        // common targets for correction.
+        assertThat(Defaults.AUTOCORRECT_MIN_WORD_LENGTH).isEqualTo(2)
     }
 
     @Test
-    fun `autocorrect char match threshold default is 0_67`() {
-        assertThat(Defaults.AUTOCORRECT_CHAR_MATCH_THRESHOLD).isWithin(0.01f).of(0.67f)
+    fun `autocorrect char match threshold default is 0_65`() {
+        // 2026-05-15: lowered from 0.67 to 0.65 — slightly more permissive.
+        assertThat(Defaults.AUTOCORRECT_CHAR_MATCH_THRESHOLD).isWithin(0.01f).of(0.65f)
     }
 
     @Test
@@ -604,8 +608,9 @@ class ConfigDefaultsTest {
     }
 
     @Test
-    fun `autocorrect prefix length default is 1`() {
-        assertThat(Defaults.AUTOCORRECT_PREFIX_LENGTH).isEqualTo(1)
+    fun `autocorrect prefix length default is 0`() {
+        // 2026-05-15: lowered from 1 to 0 — no required prefix match.
+        assertThat(Defaults.AUTOCORRECT_PREFIX_LENGTH).isEqualTo(0)
     }
 
     @Test
@@ -678,9 +683,11 @@ class ConfigDefaultsTest {
     }
 
     @Test
-    fun `clipboard max item size default is 256 KB`() {
-        assertThat(Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB).isEqualTo("256")
-        assertThat(Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB_FALLBACK).isEqualTo(256)
+    fun `clipboard max item size default is 512 KB`() {
+        // 2026-05-15: raised from 256 to 512. Still safely under Binder
+        // ~1MB cap; modern devices handle larger pastes.
+        assertThat(Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB).isEqualTo("512")
+        assertThat(Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB_FALLBACK).isEqualTo(512)
     }
 
     @Test
