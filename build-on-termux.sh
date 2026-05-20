@@ -11,6 +11,8 @@
 #   --slow         Disable daemon, lowest CPU/IO priority, single worker
 #   --low-mem      Constrain JVM memory further (-Xmx768m, single worker)
 #   --no-install   Build only; skip ADB install step
+#   --suspend-tmx  Suspend other tmx sessions to reclaim RAM
+#                  (opt-in: interrupts user shells, so off by default)
 #   --help, -h     Show this message
 #
 # Env overrides (optional):
@@ -31,12 +33,14 @@ CLEAN=0
 SLOW=0
 LOW_MEM=0
 NO_INSTALL=0
+SUSPEND_TMX=0
 for arg in "$@"; do
     case "$arg" in
         --clean)         CLEAN=1 ;;
         --slow)          SLOW=1 ;;
         --low-mem)       LOW_MEM=1 ;;
         --no-install)    NO_INSTALL=1 ;;
+        --suspend-tmx)   SUSPEND_TMX=1 ;;
         --help|-h)       show_help ;;
         debug|Debug|DEBUG|release|Release|RELEASE) BUILD_TYPE="${arg,,}" ;;
         *) echo "Error: unknown argument '$arg'. Run '$0 --help'." >&2; exit 1 ;;
@@ -76,10 +80,15 @@ command -v aapt2 >/dev/null 2>&1 || fail "aapt2 not found. Install with: pacman 
 [ -d "$ANDROID_HOME/build-tools/$BUILD_TOOLS_VERSION" ] \
     || fail "build-tools/$BUILD_TOOLS_VERSION missing. Set BUILD_TOOLS_VERSION env var or install via sdkmanager."
 
-# --- Free memory: install trap BEFORE side-effect ------------------------------
-if command -v tmx >/dev/null 2>&1; then
+# --- Free memory: opt-in tmx suspend ------------------------------------------
+# Suspending other tmx sessions reclaims a fair chunk of RAM but kills any
+# work-in-progress shells the user has open (editor sessions, REPLs, etc.).
+# Opt-in via `--suspend-tmx` so the build doesn't surprise-interrupt them.
+# When set, install the resume-on-exit trap BEFORE the side-effect so a
+# SIGINT mid-build still restores sessions.
+if [ "$SUSPEND_TMX" -eq 1 ] && command -v tmx >/dev/null 2>&1; then
     trap 'tmx resume-all 2>/dev/null || true' EXIT INT TERM
-    say "Step 2: Suspending other tmx sessions to free memory..."
+    say "Step 2: Suspending other tmx sessions to free memory (--suspend-tmx)..."
     tmx suspend-others cleverkeys 2>/dev/null || true
 fi
 
