@@ -142,11 +142,12 @@ class SettingsImportPreviewDialogComposeTest {
     }
 
     @Test
-    fun jsonBlobChange_rendersJsonChangePlaceholder() {
-        // Locks down the new "(JSON change)" copy that replaced the misleading
-        // "tap to view" affordance (commit 46bac61f3). The row's tap action
-        // toggles exclusion — there is no viewer — so the copy must not promise
-        // a tap-to-view interaction.
+    fun jsonBlobChange_rendersStructuredDiff() {
+        // 2026-05-20: renderer was upgraded from the inert "(JSON change)"
+        // placeholder to a structured diff (layouts deep-diff + extra_keys
+        // object-diff + generic count fallbacks). Verify the new layouts
+        // diff path: + azerty  − dvorak  (1 unchanged) for a backup that
+        // swaps one layout.
         composeRule.setContent {
             MaterialTheme {
                 Surface {
@@ -154,8 +155,12 @@ class SettingsImportPreviewDialogComposeTest {
                         plan = planWith(
                             SettingsChange(
                                 key = "layouts",
-                                current = PrefValue.JsonBlob("[]"),
-                                proposed = PrefValue.JsonBlob("[\"qwerty\"]"),
+                                current = PrefValue.JsonBlob(
+                                    """[{"name":"qwerty"},{"name":"dvorak"}]"""
+                                ),
+                                proposed = PrefValue.JsonBlob(
+                                    """[{"name":"qwerty"},{"name":"azerty"}]"""
+                                ),
                                 type = ChangeType.MODIFIED,
                             )
                         ),
@@ -166,8 +171,12 @@ class SettingsImportPreviewDialogComposeTest {
             }
         }
 
-        composeRule.onNodeWithText("(JSON change)", substring = true).assertIsDisplayed()
-        // Negative assertion: the misleading legacy copy must not be present.
+        composeRule.onNodeWithText("+ azerty", substring = true).assertIsDisplayed()
+        composeRule.onNodeWithText("\u2212 dvorak", substring = true).assertIsDisplayed()
+        composeRule.onNodeWithText("(1 unchanged)", substring = true).assertIsDisplayed()
+        // Negative assertion: the legacy placeholder must NOT appear for
+        // a structured-diff-eligible blob.
+        composeRule.onNodeWithText("(JSON change)", substring = true).assertDoesNotExist()
         composeRule.onNodeWithText("tap to view", substring = true).assertDoesNotExist()
     }
 

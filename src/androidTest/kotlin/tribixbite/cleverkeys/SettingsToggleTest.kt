@@ -79,9 +79,10 @@ class SettingsToggleTest {
     // =========================================================================
 
     @Test
-    fun testKeyRepeatBackspaceOnly_DefaultIsFalse() {
-        // Default should be false (all keys repeat)
-        assertFalse("Default KEYREPEAT_BACKSPACE_ONLY should be false",
+    fun testKeyRepeatBackspaceOnly_DefaultIsTrue() {
+        // 2026-05-15: flipped from false → true. Letter auto-repeat is
+        // rarely useful; matches Gboard/SwiftKey UX.
+        assertTrue("Default KEYREPEAT_BACKSPACE_ONLY should be true",
             Defaults.KEYREPEAT_BACKSPACE_ONLY)
     }
 

@@ -40,9 +40,12 @@ class BackupRestoreManagerImportConfigEndToEndTest {
     fun importConfig_appliesPreferences_andReturnsCount() {
         val prefs = context.getSharedPreferences("import_test_prefs_1", Context.MODE_PRIVATE)
         prefs.edit().clear().commit()
+        // 2026-05-20: must use values DIFFERENT from the compile-time defaults
+        // — `SettingsImportPlanBuilder` suppresses no-op rows where proposed
+        // equals default. Defaults: keyboard_height=27, swipe_typing_enabled=true.
         val json = """{
             "metadata":{"app_version":"1.4.0"},
-            "preferences":{"keyboard_height":50,"swipe_typing_enabled":true}
+            "preferences":{"keyboard_height":50,"swipe_typing_enabled":false}
         }"""
         val uri = writeImportFile(json)
 
@@ -54,16 +57,18 @@ class BackupRestoreManagerImportConfigEndToEndTest {
         assertEquals(0, result.excludedByUserCount)
         // Values land in prefs.
         assertEquals(50, prefs.getInt("keyboard_height", 0))
-        assertTrue(prefs.getBoolean("swipe_typing_enabled", false))
+        assertFalse(prefs.getBoolean("swipe_typing_enabled", true))
     }
 
     @Test
     fun importConfig_invalidValue_landsInSkippedCount_validValuesStillApplied() {
         val prefs = context.getSharedPreferences("import_test_prefs_2", Context.MODE_PRIVATE)
         prefs.edit().clear().commit()
-        // keyboard_height range is 10..100; 999999 must reject. swipe_typing_enabled OK.
+        // 2026-05-20: swipe_typing_enabled=false differs from default (true)
+        // so it isn't suppressed by the default-aware filter. keyboard_height
+        // 999999 is out of range (10..100) and lands in skipped.
         val json = """{
-            "preferences":{"keyboard_height":999999,"swipe_typing_enabled":true}
+            "preferences":{"keyboard_height":999999,"swipe_typing_enabled":false}
         }"""
         val uri = writeImportFile(json)
 
@@ -72,7 +77,7 @@ class BackupRestoreManagerImportConfigEndToEndTest {
         assertEquals(1, result.importedCount)
         assertEquals(1, result.skippedCount)
         assertTrue(result.skippedKeys.contains("keyboard_height"))
-        assertTrue(prefs.getBoolean("swipe_typing_enabled", false))
+        assertFalse(prefs.getBoolean("swipe_typing_enabled", true))
         // Invalid pref didn't land
         assertEquals(0, prefs.getInt("keyboard_height", 0))
     }

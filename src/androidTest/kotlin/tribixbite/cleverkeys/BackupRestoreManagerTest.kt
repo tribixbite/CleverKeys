@@ -43,7 +43,7 @@ class BackupRestoreManagerTest {
             .putBoolean("haptic_enabled", true)
             .putInt("vibrate_duration", 25)
             .putFloat("keyboard_height_percent", 35.0f)
-            .putString("primary_language", "en")
+            .putString("pref_primary_language", "en")
             .apply()
 
         val tempFile = File(context.cacheDir, "test_export.json")
@@ -123,7 +123,7 @@ class BackupRestoreManagerTest {
         testPrefs.edit()
             .putBoolean("haptic_enabled", true)
             .putInt("vibrate_duration", 30)
-            .putString("primary_language", "fr")
+            .putString("pref_primary_language", "fr")
             .apply()
 
         val tempFile = File(context.cacheDir, "test_roundtrip.json")
@@ -134,14 +134,14 @@ class BackupRestoreManagerTest {
 
             // Clear prefs
             testPrefs.edit().clear().apply()
-            assertNull(testPrefs.getString("primary_language", null))
+            assertNull(testPrefs.getString("pref_primary_language", null))
 
             // Import
             val result = manager.importConfig(uri, testPrefs)
             assertTrue("Should import some keys", result.importedCount > 0)
 
             // Verify restored
-            assertEquals("fr", testPrefs.getString("primary_language", null))
+            assertEquals("fr", testPrefs.getString("pref_primary_language", null))
         } finally {
             tempFile.delete()
         }

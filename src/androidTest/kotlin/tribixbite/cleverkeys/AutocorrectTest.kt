@@ -28,6 +28,12 @@ class AutocorrectTest {
         predictor = WordPredictor()
         predictor.setContext(context)
         predictor.loadDictionary(context, "en")
+        // 2026-05-20: previously omitted — `WordPredictor.config` defaulted
+        // to null, causing `autoCorrect` to short-circuit and return the
+        // typed word unchanged. Existing assertions used `assertNotNull`
+        // which masked the bug. Wire the global config in so corrections
+        // actually run.
+        predictor.setConfig(config)
 
         // Ensure autocorrect is enabled for tests
         config.autocorrect_enabled = true
