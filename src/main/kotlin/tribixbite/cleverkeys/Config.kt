@@ -18,7 +18,9 @@ import tribixbite.cleverkeys.prefs.LayoutsPreference
 object Defaults {
     // Appearance
     const val THEME = "cleverkeysdark"
-    const val KEYBOARD_HEIGHT_PORTRAIT = 30
+    // 2026-05-15: lowered from 30% to 27% — feels less cramped on most phones
+    // and gives the input field more breathing room above.
+    const val KEYBOARD_HEIGHT_PORTRAIT = 27
     const val KEYBOARD_HEIGHT_LANDSCAPE = 40
     const val LABEL_BRIGHTNESS = 100
     const val KEYBOARD_OPACITY = 100  // #51: Must be fully opaque by default
@@ -69,11 +71,17 @@ object Defaults {
     const val HAPTIC_PREDICTION_TAP = true
     const val HAPTIC_TRACKPOINT_ACTIVATE = true
     const val HAPTIC_LONG_PRESS = true
-    const val HAPTIC_SWIPE_COMPLETE = false  // Disabled by default - can be distracting
+    // 2026-05-15: enabled by default — the swipe-completion haptic confirms
+    // word recognition, which teaches new users the gesture worked. The
+    // "distracting" concern is best handled per-user via the toggle.
+    const val HAPTIC_SWIPE_COMPLETE = true
     const val LONGPRESS_TIMEOUT = 600
     const val LONGPRESS_INTERVAL = 25
     const val KEYREPEAT_ENABLED = true
-    const val KEYREPEAT_BACKSPACE_ONLY = false  // #81: When true, only backspace/nav keys repeat
+    // 2026-05-15: changed default to true — letter auto-repeat is rarely
+    // useful and frequently surprising; modern keyboards (Gboard, SwiftKey)
+    // don't repeat letters on long-press. #81: backspace + nav keys still repeat.
+    const val KEYREPEAT_BACKSPACE_ONLY = true
     const val DOUBLE_TAP_LOCK_SHIFT = true
     const val AUTOCAPITALISATION = true
     const val SWITCH_INPUT_IMMEDIATE = false
@@ -89,7 +97,9 @@ object Defaults {
     const val DOUBLE_SPACE_TO_PERIOD = true
     const val DOUBLE_SPACE_THRESHOLD = 500
     const val SWIPE_MIN_DISTANCE = 72f
-    const val SWIPE_MIN_KEY_DISTANCE = 38f
+    // 2026-05-15: lowered from 38px to 15px — 38 is too conservative for
+    // narrow keys on compact keyboards; many short strokes weren't catching.
+    const val SWIPE_MIN_KEY_DISTANCE = 15f
     const val SWIPE_MIN_DWELL_TIME = 7
     const val SWIPE_NOISE_THRESHOLD = 1.26f
     const val SWIPE_HIGH_VELOCITY_THRESHOLD = 1000f
@@ -122,7 +132,10 @@ object Defaults {
 
     // Neural prediction - Beam search tuning
     // NOTE: These MUST match the working defaults in BeamSearchEngine.kt
-    const val NEURAL_BEAM_ALPHA = 1.0f          // Length penalty factor (1.0 = linear normalization)
+    // 2026-05-15: increased from 1.0 to 1.4 — favors longer candidate words
+    // slightly. Empirically catches more complete swiped words than the
+    // pure-linear normalization on average input.
+    const val NEURAL_BEAM_ALPHA = 1.4f
     const val NEURAL_BEAM_PRUNE_CONFIDENCE = 0.8f  // Adaptive width pruning threshold
     const val NEURAL_BEAM_SCORE_GAP = 80.0f     // Early stopping score gap (high = search longer for long words)
     const val NEURAL_ADAPTIVE_WIDTH_STEP = 12   // Step when to start adaptive width pruning
@@ -180,8 +193,12 @@ object Defaults {
     // applySizeLimit() skips when limit <= 0. SettingsActivity slider: 0..500 where 0 = "Unlimited".
     // Backup/restore preserves the raw int (0 for unlimited). DO NOT add "limit > 0" guards that
     // would break unlimited — always use "limit > 0" as the conditional, never "limit >= 0".
-    const val CLIPBOARD_HISTORY_LIMIT = "50"
-    const val CLIPBOARD_HISTORY_LIMIT_FALLBACK = 50
+    // 2026-05-15: changed default from "50" to "0" (unlimited). Power users
+    // hit 50 entries quickly; size pressure is governed by per-item size +
+    // total size limits instead. The slider still allows 1..500 if a user
+    // wants a count cap.
+    const val CLIPBOARD_HISTORY_LIMIT = "0"
+    const val CLIPBOARD_HISTORY_LIMIT_FALLBACK = 0
     const val CLIPBOARD_PANE_HEIGHT_PERCENT = 30
     const val CLIPBOARD_MAX_ITEM_SIZE_KB = "256"  // Default 256KB. Android Binder IPC caps at ~1MB
     const val CLIPBOARD_MAX_ITEM_SIZE_KB_FALLBACK = 256

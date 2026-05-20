@@ -90,9 +90,11 @@ class IssueRegressionTest {
     // =========================================================================
 
     @Test
-    fun `issue 71 — clipboard history limit is 50`() {
-        assertThat(Defaults.CLIPBOARD_HISTORY_LIMIT).isEqualTo("50")
-        assertThat(Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK).isEqualTo(50)
+    fun `issue 71 — clipboard history limit is 0 (unlimited)`() {
+        // 2026-05-15: changed from "50" to "0" (unlimited). Size pressure is
+        // now governed by CLIPBOARD_MAX_ITEM_SIZE_KB + CLIPBOARD_SIZE_LIMIT_MB.
+        assertThat(Defaults.CLIPBOARD_HISTORY_LIMIT).isEqualTo("0")
+        assertThat(Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK).isEqualTo(0)
     }
 
     @Test
@@ -114,14 +116,14 @@ class IssueRegressionTest {
 
     @Test
     fun `issue 71 — clipboard worst case under binder limit`() {
-        // 50 entries * 256KB max = 12.5MB theoretical max, but count limit + size limit
-        // ensure actual usage stays well under the ~1MB Binder transaction limit
-        val maxTotalKB = Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK *
-                Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB_FALLBACK
-        // This is theoretical max; actual clipboard pane sends only visible entries
-        assertThat(maxTotalKB).isGreaterThan(0)
-        // Size limit provides secondary protection
+        // 2026-05-15: count limit default is now 0 (unlimited). Worst case
+        // is bounded by CLIPBOARD_SIZE_LIMIT_MB_FALLBACK alone — assert that
+        // alone keeps the total under the Binder ~1MB transaction soft limit
+        // for typical paste operations. Per-item size cap is the primary
+        // guard against any single item exceeding Binder.
         assertThat(Defaults.CLIPBOARD_SIZE_LIMIT_MB_FALLBACK).isAtMost(10)
+        // Per-item size cap should be safely below Binder transaction limit (~1MB).
+        assertThat(Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB_FALLBACK).isAtMost(1024)
     }
 
     // =========================================================================
@@ -159,9 +161,11 @@ class IssueRegressionTest {
     }
 
     @Test
-    fun `issue 74 — haptic swipe complete disabled by default`() {
-        // Swipe complete vibration is intentionally off by default — can be distracting
-        assertThat(Defaults.HAPTIC_SWIPE_COMPLETE).isFalse()
+    fun `issue 74 — haptic swipe complete enabled by default`() {
+        // 2026-05-15: flipped to true — confirmation haptic on swipe completion
+        // teaches new users the gesture registered. Users who find it
+        // distracting still have the toggle.
+        assertThat(Defaults.HAPTIC_SWIPE_COMPLETE).isTrue()
     }
 
     @Test
@@ -180,8 +184,9 @@ class IssueRegressionTest {
     }
 
     @Test
-    fun `issue 81 — key repeat backspace only disabled by default`() {
-        assertThat(Defaults.KEYREPEAT_BACKSPACE_ONLY).isFalse()
+    fun `issue 81 — key repeat backspace only enabled by default`() {
+        // 2026-05-15: flipped to true — letter auto-repeat is rarely useful.
+        assertThat(Defaults.KEYREPEAT_BACKSPACE_ONLY).isTrue()
     }
 
     // =========================================================================

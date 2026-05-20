@@ -24,8 +24,9 @@ class ConfigDefaultsTest {
     }
 
     @Test
-    fun `keyboard height portrait default is 30 percent`() {
-        assertThat(Defaults.KEYBOARD_HEIGHT_PORTRAIT).isEqualTo(30)
+    fun `keyboard height portrait default is 27 percent`() {
+        // 2026-05-15: lowered from 30 to 27 — less cramped on most phones.
+        assertThat(Defaults.KEYBOARD_HEIGHT_PORTRAIT).isEqualTo(27)
     }
 
     @Test
@@ -193,9 +194,10 @@ class ConfigDefaultsTest {
     }
 
     @Test
-    fun `haptic swipe complete disabled by default`() {
-        // wiki: "Swipe Complete is disabled by default as it can be distracting"
-        assertThat(Defaults.HAPTIC_SWIPE_COMPLETE).isFalse()
+    fun `haptic swipe complete enabled by default`() {
+        // 2026-05-15: flipped to true — confirmation haptic on swipe completion
+        // teaches new users that the gesture registered.
+        assertThat(Defaults.HAPTIC_SWIPE_COMPLETE).isTrue()
     }
 
     // =========================================================================
@@ -219,8 +221,10 @@ class ConfigDefaultsTest {
     }
 
     @Test
-    fun `key repeat backspace only disabled by default`() {
-        assertThat(Defaults.KEYREPEAT_BACKSPACE_ONLY).isFalse()
+    fun `key repeat backspace only enabled by default`() {
+        // 2026-05-15: flipped to true — letter auto-repeat is rarely useful.
+        // Backspace + nav keys still repeat per #81's original intent.
+        assertThat(Defaults.KEYREPEAT_BACKSPACE_ONLY).isTrue()
     }
 
     @Test
@@ -371,8 +375,10 @@ class ConfigDefaultsTest {
     }
 
     @Test
-    fun `swipe min key distance default is 38`() {
-        assertThat(Defaults.SWIPE_MIN_KEY_DISTANCE).isWithin(0.01f).of(38f)
+    fun `swipe min key distance default is 15`() {
+        // 2026-05-15: lowered from 38 to 15 — 38 was too conservative for
+        // compact keyboards; short strokes weren't catching.
+        assertThat(Defaults.SWIPE_MIN_KEY_DISTANCE).isWithin(0.01f).of(15f)
     }
 
     @Test
@@ -437,8 +443,9 @@ class ConfigDefaultsTest {
     }
 
     @Test
-    fun `neural beam alpha default is 1_0`() {
-        assertThat(Defaults.NEURAL_BEAM_ALPHA).isWithin(0.01f).of(1.0f)
+    fun `neural beam alpha default is 1_4`() {
+        // 2026-05-15: increased from 1.0 to 1.4 — favors longer candidate words.
+        assertThat(Defaults.NEURAL_BEAM_ALPHA).isWithin(0.01f).of(1.4f)
     }
 
     @Test
@@ -658,10 +665,11 @@ class ConfigDefaultsTest {
     }
 
     @Test
-    fun `clipboard history limit default is 50`() {
-        // wiki: "History Size | 50 items"
-        assertThat(Defaults.CLIPBOARD_HISTORY_LIMIT).isEqualTo("50")
-        assertThat(Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK).isEqualTo(50)
+    fun `clipboard history limit default is 0 (unlimited)`() {
+        // 2026-05-15: changed default from "50" to "0" — 0 = unlimited entries.
+        // Size pressure is governed by per-item + total-size limits instead.
+        assertThat(Defaults.CLIPBOARD_HISTORY_LIMIT).isEqualTo("0")
+        assertThat(Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK).isEqualTo(0)
     }
 
     @Test
@@ -907,8 +915,12 @@ class ConfigDefaultsTest {
     }
 
     @Test
-    fun `clipboard history limit is positive`() {
-        assertThat(Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK).isGreaterThan(0)
+    fun `clipboard history limit is non-negative`() {
+        // 2026-05-15: 0 is now the unlimited sentinel; the assertion is that
+        // the limit is non-negative (no negative-count nonsense). The
+        // unlimited semantics live in ClipboardHistoryService — see the
+        // `limit > 0` conditional, NOT `limit >= 0`.
+        assertThat(Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK).isAtLeast(0)
     }
 
     @Test

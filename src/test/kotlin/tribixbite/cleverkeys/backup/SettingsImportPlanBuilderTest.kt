@@ -522,6 +522,47 @@ class SettingsImportPlanBuilderTest {
     }
 
     @Test
+    fun circleSensitivity_stringValue_acceptedNotRejectedAsTypeMismatch() {
+        // `Defaults.CIRCLE_SENSITIVITY = "2"` — the runtime reads it via
+        // `safeGetString` and validates against the regex `[1-5]`. The
+        // validator's `isIntKey()` allowlist wrongly contained this key,
+        // causing String values to be rejected as "expected Int, got String"
+        // and silently dropped from the import. Reported by user 2026-05-15.
+        val json = """{"preferences":{"circle_sensitivity": "3"}}"""
+        val plan = SettingsImportPlanBuilder.fromJson(
+            json,
+            currentSnapshot = emptyMap(),
+            screen = screen,
+            defaultSnapshot = SETTINGS_DEFAULTS,
+        )
+
+        // Should land in changes (Str("3")), NOT in parseSkippedKeys.
+        assertThat(plan.changes.map { it.key }).contains("circle_sensitivity")
+        assertThat(plan.parseSkippedKeys.map { it.key }).doesNotContain("circle_sensitivity")
+        val c = plan.changes.single { it.key == "circle_sensitivity" }
+        assertThat(c.proposed).isEqualTo(PrefValue.Str("3"))
+    }
+
+    @Test
+    fun clipboardHistoryLimit_stringValue_acceptedNotRejected() {
+        // Same bug class as circle_sensitivity — `Defaults.CLIPBOARD_HISTORY_LIMIT = "50"`
+        // is a String pref but `isIntKey()` wrongly listed it. A backup
+        // with the value as String "100" would be dropped.
+        val json = """{"preferences":{"clipboard_history_limit": "100"}}"""
+        val plan = SettingsImportPlanBuilder.fromJson(
+            json,
+            currentSnapshot = emptyMap(),
+            screen = screen,
+            defaultSnapshot = SETTINGS_DEFAULTS,
+        )
+
+        assertThat(plan.parseSkippedKeys.map { it.key })
+            .doesNotContain("clipboard_history_limit")
+        // Should appear in changes (Str("100") differs from default "50").
+        assertThat(plan.changes.map { it.key }).contains("clipboard_history_limit")
+    }
+
+    @Test
     fun emptyDefaults_behavesAsBeforeFix() {
         // Backward-compat sanity: empty defaults map = pre-fix behavior.
         val json = """{"preferences":{"new_key":"hello"}}"""

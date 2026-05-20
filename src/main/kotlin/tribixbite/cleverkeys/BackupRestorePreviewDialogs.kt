@@ -199,17 +199,41 @@ private fun renderDelta(change: SettingsChange): String {
 }
 
 private fun renderPrefValue(v: PrefValue): String = when (v) {
-    PrefValue.Unset -> "(unset)"
+    // "(none)" reads more naturally than "(unset)" for multi-language slots
+    // (`pref_secondary_language` → "de" → "(none) → 'de'") and for any
+    // unknown key that falls through to the Unset sentinel.
+    PrefValue.Unset -> "(none)"
     is PrefValue.Bool -> v.v.toString()
     is PrefValue.IntV -> v.v.toString()
     is PrefValue.FloatV -> v.v.toString()
     is PrefValue.Str -> "\"${v.v}\""
-    // JsonBlob deliberately rendered as a marker — full diff is in a separate
-    // section; mixing JSON walls with scalar diffs hurts UX (spec §UI flow).
-    // Placeholder is intentionally non-promising: the row's tap action toggles
-    // exclusion, not opens a viewer. A real "tap to view raw" disclosure is a
-    // future polish pass (spec §168, §226).
-    is PrefValue.JsonBlob -> "(JSON change)"
+    is PrefValue.JsonBlob -> renderJsonBlobSummary(v.raw)
+}
+
+/**
+ * Summarize a JSON blob for the preview row. Currently specialized for the
+ * `layouts` shape (an array of objects with a `name` field) — falls back to
+ * "(JSON change)" for any other blob shape.
+ *
+ * Output examples:
+ *   - `[3 layouts]` for the `layouts` key
+ *   - `(JSON change)` for `extra_keys`, `custom_extra_keys`, malformed input
+ */
+private fun renderJsonBlobSummary(raw: String): String = try {
+    val el = com.google.gson.JsonParser.parseString(raw)
+    when {
+        el.isJsonArray -> {
+            val arr = el.asJsonArray
+            // Layouts shape: array of objects with `name` field.
+            val isLayouts = arr.size() > 0 && arr.all { it.isJsonObject && it.asJsonObject.has("name") }
+            if (isLayouts) "[${arr.size()} layout${if (arr.size() == 1) "" else "s"}]"
+            else "[${arr.size()} item${if (arr.size() == 1) "" else "s"}]"
+        }
+        el.isJsonObject -> "{${el.asJsonObject.size()} keys}"
+        else -> "(JSON change)"
+    }
+} catch (_: Exception) {
+    "(JSON change)"
 }
 
 @Composable

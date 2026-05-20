@@ -342,8 +342,12 @@ object SettingsValidation {
         "short_gesture_min_distance", "short_gesture_max_distance",
         "neural_beam_width", "neural_max_length", "neural_user_max_seq_length",
         "neural_adaptive_width_step", "neural_score_gap_step", "swipe_smoothing_window",
-        "autocorrect_min_word_length", "autocorrect_confidence_min_frequency",
-        "clipboard_history_limit", "circle_sensitivity" -> true
+        "autocorrect_min_word_length", "autocorrect_confidence_min_frequency" -> true
+        // `clipboard_history_limit` and `circle_sensitivity` were here, but
+        // both are stored as String (`Defaults.CIRCLE_SENSITIVITY = "2"`,
+        // `Defaults.CLIPBOARD_HISTORY_LIMIT = "50"`) — the read sites use
+        // `safeGetString(...)`. Listing them as Int caused `validateString`
+        // to reject their import values as "expected Int, got String".
         else -> false
     }
 

@@ -38,17 +38,24 @@ class KeyRepeatLogicTest {
     }
 
     @Test
-    fun `keyrepeat backspace only is disabled by default`() {
-        assertThat(Defaults.KEYREPEAT_BACKSPACE_ONLY).isFalse()
+    fun `keyrepeat backspace only is enabled by default`() {
+        // 2026-05-15: flipped to true — letter auto-repeat is rarely useful.
+        assertThat(Defaults.KEYREPEAT_BACKSPACE_ONLY).isTrue()
     }
 
     @Test
-    fun `default config allows all keys to repeat`() {
-        // With defaults: enabled=true, backspaceOnly=false
+    fun `default config only allows backspace-and-nav to repeat`() {
+        // With defaults: enabled=true, backspaceOnly=true. Letters do NOT repeat;
+        // backspace/nav DO repeat.
         assertThat(shouldKeyRepeat(
             keyrepeatEnabled = Defaults.KEYREPEAT_ENABLED,
             keyrepeatBackspaceOnly = Defaults.KEYREPEAT_BACKSPACE_ONLY,
             isBackspaceOrNav = false
+        )).isFalse()
+        assertThat(shouldKeyRepeat(
+            keyrepeatEnabled = Defaults.KEYREPEAT_ENABLED,
+            keyrepeatBackspaceOnly = Defaults.KEYREPEAT_BACKSPACE_ONLY,
+            isBackspaceOrNav = true
         )).isTrue()
     }
 
