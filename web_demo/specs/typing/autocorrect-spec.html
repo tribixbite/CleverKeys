@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autocorrect - CleverKeys Documentation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'ck-purple': '#9b59b6',
+                        'ck-purple-dark': '#6b21a8',
+                        'ck-purple-light': '#c39bd3',
+                        'ck-dark': '#0f0f1a',
+                        'ck-surface': '#1a1a2e',
+                        'ck-card': '#242438',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-text {
+            background: linear-gradient(135deg, #9b59b6 0%, #c39bd3 50%, #9b59b6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        pre { line-height: 1.5; }
+        table { border-collapse: collapse; }
+        th, td { border-bottom: 1px solid #2d2d44; padding: 0.5rem 0.75rem; text-align: left; }
+        th { color: #c39bd3; font-weight: 600; }
+        td code { background: #0f0f1a; padding: 0 0.25rem; border-radius: 0.25rem; }
+    </style>
+</head>
+<body class="bg-ck-dark text-gray-100 min-h-screen">
+    <nav class="sticky top-0 bg-ck-dark/95 backdrop-blur border-b border-gray-800 z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="../../" class="flex items-center gap-3">
+                <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-8 h-8 rounded-lg">
+                <span class="font-bold">CleverKeys</span>
+            </a>
+            <div class="flex gap-4">
+                <a href="../" class="text-gray-400 hover:text-white transition-colors">All Specs</a>
+                <a href="../../" class="text-gray-400 hover:text-white transition-colors">Home</a>
+                <a href="/wiki/typing/autocorrect/" class="text-gray-400 hover:text-white transition-colors">User Guide</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-6 py-4 pt-20">
+        <div class="flex items-center gap-2 text-sm text-gray-500">
+            <a href="../../" class="hover:text-ck-purple">Home</a>
+            <span>/</span>
+            <a href="../" class="hover:text-ck-purple">Specs</a>
+            <span>/</span>
+            <span class="text-gray-300">Autocorrect</span>
+        </div>
+    </div>
+
+    <header class="container mx-auto px-6 pb-8">
+        <div class="flex items-center gap-3 mb-4">
+            <span class="px-3 py-1 text-sm rounded-full" style="background: #9b59b620; color: #9b59b6">Typing</span>
+            <span class="px-3 py-1 text-sm rounded-full bg-ck-card text-gray-400">v1.4.0</span>
+            <span class="px-3 py-1 text-sm rounded-full" style="background: #34d39920; color: #34d399">implemented</span>
+        </div>
+        <h1 class="text-4xl font-bold gradient-text mb-2">Autocorrect Technical Specification</h1>
+        <p class="text-xl text-gray-400">Adjacency-weighted dictionary scoring with four-tier candidate selection</p>
+    </header>
+
+    <main class="container mx-auto px-6 pb-20">
+        <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
+
+        <h2 class="text-2xl font-bold mt-2 mb-4 text-ck-purple">Overview</h2>
+        <p class="mb-4 text-gray-300">CleverKeys autocorrect is an adjacency-weighted dictionary scorer with a four-tier selection function. The scoring model uses physical keyboard distance to rank candidate replacements, so fingertip-typical typos (adjacent-key substitutions) outscore arbitrary string-distance matches. Contractions, accented Latin characters, and runtime layout swaps (AZERTY/QWERTZ/Dvorak/custom) are all first-class citizens.</p>
+        <p class="mb-4 text-gray-300">This spec covers v1.4.0 — the major refactor at Tier A (#101) + Tier B (layout-aware) introduced in May 2026. Earlier versions used position-only exact match against a hardcoded QWERTY assumption.</p>
+
+        <h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Key Components</h2>
+        <table class="w-full mb-4 text-gray-300">
+            <thead><tr><th>Component</th><th>File</th><th>Purpose</th></tr></thead>
+            <tbody>
+                <tr><td><code>KeyAdjacency</code></td><td><code>src/main/kotlin/tribixbite/cleverkeys/autocorrect/KeyAdjacency.kt</code></td><td>Position table, distance math, layout injection</td></tr>
+                <tr><td><code>WordPredictor.autoCorrect</code></td><td><code>WordPredictor.kt:~1750</code></td><td>Pipeline entry point + selection logic</td></tr>
+                <tr><td><code>WordPredictor.loadPrimaryContractionKeys</code></td><td><code>WordPredictor.kt:~966</code></td><td>Alias map + dict freq injection</td></tr>
+                <tr><td><code>Keyboard2View.onLayout</code></td><td><code>Keyboard2View.kt:~1279</code></td><td>Pushes the active layout's key positions into <code>KeyAdjacency</code></td></tr>
+                <tr><td><code>SuggestionHandler</code></td><td><code>SuggestionHandler.kt</code></td><td>Wires autocorrect into the IME's word-completion flow + undo</td></tr>
+                <tr><td><code>PredictionContextTracker</code></td><td><code>PredictionContextTracker.kt</code></td><td>Tracks <code>lastAutocorrectOriginalWord</code> for undo</td></tr>
+            </tbody>
+        </table>
+
+        <h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Pipeline</h2>
+        <pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto text-sm"><code class="language-text">User types word + space
+        ↓
+SuggestionHandler.onWordCompleted()
+        ↓
+WordPredictor.autoCorrect(typedWord)
+        ↓
+┌──────────────────────────────────────────────┐
+│ Step 0: contractionAliases[typedWord]        │  ← exact alias hit
+│   "dont" → "don't" (direct map lookup)       │
+└──────────────────────────────────────────────┘
+        ↓ (miss)
+┌──────────────────────────────────────────────┐
+│ Step 1: dictionary.containsKey(typedWord)    │  ← already valid
+│   "hello" → "hello"                          │
+└──────────────────────────────────────────────┘
+        ↓ (miss)
+┌──────────────────────────────────────────────┐
+│ Step 2: length >= autocorrect_min_word_length│
+└──────────────────────────────────────────────┘
+        ↓ (pass)
+┌──────────────────────────────────────────────┐
+│ Step 3: prefix gate from config              │
+│   autocorrect_prefix_length:                 │
+│     0 = no prefix (first-char typos OK)      │
+│     N = candidate must share N leading chars │
+└──────────────────────────────────────────────┘
+        ↓
+┌──────────────────────────────────────────────┐
+│ Step 4: iterate dictionary                   │
+│   For each (dictWord, candidateFrequency):   │
+│     if |len diff| > max_length_diff → skip   │
+│     score = scoreCandidate(typed, dictWord)  │
+│     if score >= char_match_threshold:        │
+│       update bestCandidate via 4-tier rule   │
+└──────────────────────────────────────────────┘
+        ↓
+┌──────────────────────────────────────────────┐
+│ Step 5: confirm + reroute                    │
+│   if bestCandidate.frequency >= floor:       │
+│     if bestCandidate.word in aliases:        │
+│       return aliases[bestCandidate.word]     │
+│     else:                                    │
+│       return bestCandidate.word              │
+└──────────────────────────────────────────────┘</code></pre>
+
+        <h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">KeyAdjacency Module</h2>
+        <p class="mb-4 text-gray-300">Pure-JVM, no Android deps. Three public functions:</p>
+        <pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto text-sm"><code class="language-kotlin">object KeyAdjacency {
+    fun keyDistance(a: Char, b: Char): Float       // [0, 1] normalized euclidean
+    fun substitutionScore(a: Char, b: Char): Float  // 1 - keyDistance
+    fun weightedEditDistance(a: String, b: String): Float
+    fun setLayout(positions: Map&lt;Char, Pair&lt;Float, Float&gt;&gt;)
+    fun resetLayout()
+}</code></pre>
+
+        <h3 class="text-xl font-bold mt-6 mb-3 text-ck-purple-light">Position Table</h3>
+        <p class="mb-4 text-gray-300">Default table uses key-width grid coordinates:</p>
+        <pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto text-sm"><code class="language-text">Row 0:   q  w  e  r  t  y  u  i  o  p     (x = 0..9, y = 0)
+Row 1:    a  s  d  f  g  h  j  k  l       (x = 0.5..8.5, y = 1)
+Row 2:     z  x  c  v  b  n  m            (x = 1..7, y = 2)</code></pre>
+        <p class="mb-4 text-gray-300">Accented Latin characters share their unaccented base's position:</p>
+        <pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto text-sm"><code class="language-text">á à â ä ã å → a's position
+é è ê ë     → e's position
+í ì î ï     → i's position
+ó ò ô ö õ ø → o's position
+ú ù û ü     → u's position
+ñ           → n's position
+ç           → c's position
+ß           → s's position
+ý ÿ         → y's position</code></pre>
+
+        <h3 class="text-xl font-bold mt-6 mb-3 text-ck-purple-light">Distance Normalization</h3>
+        <p class="mb-4 text-gray-300">Denominator is the pairwise maximum distance in the active position table. For default QWERTY this is <code>q ↔ p = 9.0</code> (opposite ends of the top row). The previous hardcoded value of <code>q ↔ m = 7.28</code> was mathematically incorrect; v1.4.0 fixed this and updated calibrated thresholds accordingly.</p>
+
+        <h3 class="text-xl font-bold mt-6 mb-3 text-ck-purple-light">Layout Injection (Tier B)</h3>
+        <p class="mb-4 text-gray-300"><code>Keyboard2View.onLayout</code> extracts key positions in pixel coordinates and pushes them to <code>KeyAdjacency</code>. Thread safety via <code>@Volatile</code> + local-snapshot pattern inside <code>keyDistance</code> — UI thread writes, prediction thread reads, no locking.</p>
+        <pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto text-sm"><code class="language-kotlin">@Volatile private var positions: Map&lt;Char, Pair&lt;Float, Float&gt;&gt; = DEFAULT_POSITIONS
+@Volatile private var maxDistance: Float = computeMaxDistance(DEFAULT_POSITIONS)
+
+fun keyDistance(a: Char, b: Char): Float {
+    if (a == b) return 0f
+    val p = positions  // local snapshot — dodges mid-call layout swap
+    val pa = p[a.lowercaseChar()] ?: return 1f
+    val pb = p[b.lowercaseChar()] ?: return 1f
+    val d = hypot(pa.first - pb.first, pa.second - pb.second)
+    return (d / maxDistance).coerceIn(0f, 1f)
+}</code></pre>
+        <p class="mb-4 text-gray-300">Coordinates can be in any unit (pixels, key-widths, anything) — only relative distances matter.</p>
+
+        <h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Scoring</h2>
+        <p class="mb-4 text-gray-300">Two paths depending on length difference between typed word and dictionary candidate.</p>
+
+        <h3 class="text-xl font-bold mt-6 mb-3 text-ck-purple-light">Same-Length: Dual-Gate</h3>
+        <p class="mb-4 text-gray-300"><strong>Gate 1</strong> (<code>exactRatio &gt;= 0.50</code>): at least 50% of positions must exactly match. Rejects unrelated same-length words (without this, "every char-pair has SOME adjacency similarity" would let <code>questin</code> match <code>without</code>).</p>
+        <p class="mb-4 text-gray-300"><strong>Gate 2</strong> (<code>weightedScore &gt;= char_match_threshold</code>): rewards adjacency-rich matches. <code>tge → the</code> passes both (2/3 exact AND weighted ≈ 0.96).</p>
+
+        <h3 class="text-xl font-bold mt-6 mb-3 text-ck-purple-light">Different-Length: Weighted Edit Distance</h3>
+        <p class="mb-4 text-gray-300">Weighted Levenshtein DP: substitution cost = <code>keyDistance</code> (0.0 to 1.0), insertion/deletion cost = 1.0. The absolute budget <code>lengthDiff + 0.5</code> was calibrated against the bundled English dictionary:</p>
+        <table class="w-full mb-4 text-gray-300">
+            <thead><tr><th>Case</th><th>lenDiff</th><th>ed</th><th>Result</th></tr></thead>
+            <tbody>
+                <tr><td><code>questin → question</code></td><td>1</td><td>1.0</td><td>1.0 ≤ 1.5 ✓ accept</td></tr>
+                <tr><td><code>quuestion → question</code></td><td>1</td><td>1.0</td><td>1.0 ≤ 1.5 ✓ accept</td></tr>
+                <tr><td><code>wuestion → season</code></td><td>2</td><td>≈2.95</td><td>2.95 &gt; 2.5 ✗ reject</td></tr>
+                <tr><td><code>wuestion → wuthering</code></td><td>1</td><td>≈2.79</td><td>2.79 &gt; 1.5 ✗ reject</td></tr>
+            </tbody>
+        </table>
+
+        <h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Four-Tier Candidate Selection</h2>
+        <p class="mb-4 text-gray-300">Each candidate passing the score threshold competes through a four-tier comparator. Each tier exists because of a specific failing test case from earlier iterations.</p>
+        <pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto text-sm"><code class="language-kotlin">val isAlias = dictWord in contractionAliases
+val effectiveScore = if (isAlias) score + ALIAS_SCORE_BONUS else score
+val bothAliases = isAlias &amp;&amp; (bestCandidate?.word in contractionAliases)
+val better = when {
+    bestCandidate == null -&gt; true
+    // Tier 1: strictly better score by more than the gap → win
+    effectiveScore &gt; bestCandidate.effectiveScore + SCORE_TIEBREAK_GAP -&gt; true
+    // Tier 1 negative: strictly worse → lose
+    effectiveScore &lt; bestCandidate.effectiveScore - SCORE_TIEBREAK_GAP -&gt; false
+    // Tier 2: alias vs alias → raw score (structural closeness) wins
+    bothAliases -&gt; effectiveScore &gt; bestCandidate.effectiveScore
+    // Tier 3: normal close-score case → frequency wins
+    candidateFrequency &gt; bestCandidate.frequency -&gt; true
+    candidateFrequency &lt; bestCandidate.frequency -&gt; false
+    // Tier 4: everything tied → deterministic by score
+    else -&gt; effectiveScore &gt; bestCandidate.effectiveScore
+}</code></pre>
+
+        <table class="w-full mb-4 text-gray-300">
+            <thead><tr><th>Tier</th><th>Calibration Case</th></tr></thead>
+            <tbody>
+                <tr><td>1: big score gap</td><td><code>wuestion → question</code> (0.99) wins over <code>within</code> (0.69) by 0.30 gap</td></tr>
+                <tr><td>1: big score gap</td><td><code>tge → the</code> (0.96) wins over <code>weve</code> (0.81 effective) by 0.15 gap</td></tr>
+                <tr><td>2: alias vs alias</td><td><code>hadnr → hadnt</code> (one adj sub, 0.978) wins over <code>hasnt</code> (two subs, 0.956)</td></tr>
+                <tr><td>3: close-score freq</td><td><code>tfe → the</code> — <code>tfw</code> scores 0.96 but <code>the</code> (freq 255) beats <code>tfw</code> (freq 162)</td></tr>
+                <tr><td>3: close-score freq</td><td><code>quuestion → question</code> (0.89) beats <code>quotation</code> (0.94) because gap is only 0.05 → freq wins</td></tr>
+                <tr><td>4: deterministic</td><td>Removes hash-map iteration-order dependence</td></tr>
+            </tbody>
+        </table>
+
+        <h3 class="text-xl font-bold mt-6 mb-3 text-ck-purple-light">Calibrated Constants</h3>
+        <pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto text-sm"><code class="language-kotlin">private const val MIN_SAME_LENGTH_EXACT_RATIO = 0.50f
+private const val LENGTH_DIFF_ED_BUDGET = 0.5f
+private const val ALIAS_SCORE_BONUS = 0.15f
+private const val SCORE_TIEBREAK_GAP = 0.10f</code></pre>
+        <p class="mb-4 text-gray-300">The <code>ALIAS_SCORE_BONUS = 0.15</code> is sized to cross the <code>SCORE_TIEBREAK_GAP = 0.10</code> boundary: a tied alias-key (<code>dont</code> at 0.966) beats a tied non-alias (<code>done</code> at 0.966) by score-primary because <code>1.116 - 0.966 = 0.15 &gt; 0.10</code>.</p>
+
+        <h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Contraction Handling</h2>
+
+        <h3 class="text-xl font-bold mt-6 mb-3 text-ck-purple-light">Alias Map</h3>
+        <p class="mb-4 text-gray-300"><code>contractionAliases: Map&lt;String, String&gt;</code> maps apostrophe-free base forms to their contracted forms. Loaded from <code>dictionaries/contractions_&lt;lang&gt;.json</code>.</p>
+        <p class="mb-4 text-gray-300">Real-word bases that ALSO appear in the contractions file are filtered out via <code>REAL_WORD_CONTRACTION_BASES = setOf("well", "were", "hell", "shed", "shell", "wed", "editors", "girls", "readers", "states", "whore")</code>. This stops <code>well → we'll</code>, <code>were → we're</code>, etc.</p>
+
+        <h3 class="text-xl font-bold mt-6 mb-3 text-ck-purple-light">Dictionary Injection (Freq-Preservation Fix)</h3>
+        <pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto text-sm"><code class="language-kotlin">// PRESERVES existing freq (was destructive `?: 5000` before v1.4.0)
+currentDict[withoutApostrophe] = currentDict[withApostrophe]
+    ?: currentDict[withoutApostrophe]
+    ?: 5000</code></pre>
+        <p class="mb-4 text-gray-300">The earlier <code>?: 5000</code> form silently downgraded binary-loaded freqs (e.g., <code>hadnt</code> from ~789K to 5000). The fix preserves whichever value is already present, falling back to 5000 only when neither form exists.</p>
+
+        <h3 class="text-xl font-bold mt-6 mb-3 text-ck-purple-light">Alias Rerouting</h3>
+        <p class="mb-4 text-gray-300">Two layers:</p>
+        <ol class="mb-4 text-gray-300 list-decimal list-inside space-y-2">
+            <li><strong>Step 0 direct path</strong> — exact <code>typedWord</code> lookup in <code>contractionAliases</code> handles <code>dont → don't</code>.</li>
+            <li><strong>Step 5 dict-scan reroute</strong> — after the four-tier selection picks a winner, if that winner is an alias-key, return the contracted form. Reuses the I-capitalization rule from Step 0. Handles <code>donr → don't</code>, <code>hadnr → hadn't</code>, <code>couldnr → couldn't</code>.</li>
+        </ol>
+
+        <h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Configuration</h2>
+        <p class="mb-4 text-gray-300">All <code>Config</code> fields below are read in <code>autoCorrect</code>. Defaults at v1.4.0:</p>
+        <table class="w-full mb-4 text-gray-300">
+            <thead><tr><th>Setting</th><th>Key</th><th>Default</th><th>Range</th></tr></thead>
+            <tbody>
+                <tr><td>Enabled</td><td><code>autocorrect_enabled</code></td><td><code>true</code></td><td>bool</td></tr>
+                <tr><td>Min word length</td><td><code>autocorrect_min_word_length</code></td><td>2</td><td>1–5</td></tr>
+                <tr><td>Required prefix</td><td><code>autocorrect_prefix_length</code></td><td>0</td><td>0–5</td></tr>
+                <tr><td>Score threshold</td><td><code>autocorrect_char_match_threshold</code></td><td>0.65</td><td>0.5–0.95</td></tr>
+                <tr><td>Max length diff</td><td><code>autocorrect_max_length_diff</code></td><td>2</td><td>0–5</td></tr>
+                <tr><td>Min freq floor</td><td><code>autocorrect_confidence_min_frequency</code></td><td>100</td><td>0+</td></tr>
+                <tr><td>Diagnostic logging</td><td><code>swipe_debug_detailed_logging</code></td><td><code>false</code></td><td>bool</td></tr>
+            </tbody>
+        </table>
+
+        <h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">User Freq Control & Beam Search Interaction</h2>
+        <p class="mb-4 text-gray-300">The freq-preservation fix at line 1024 is safe for beam search because beam search consumes frequency through <code>OptimizedVocabulary.WordInfo</code>, which:</p>
+        <ol class="mb-4 text-gray-300 list-decimal list-inside space-y-1">
+            <li>Normalizes raw frequency to <code>[0, 1]</code>.</li>
+            <li>Multiplies by <code>Config.neural_frequency_weight</code> (user-tunable in Neural Settings, default <code>0.57</code>).</li>
+            <li>Combines with NN confidence via <code>VocabularyUtils.calculateCombinedScore</code>.</li>
+        </ol>
+        <p class="mb-4 text-gray-300">Higher input freq → slightly higher final beam score, no breakage. The user's <code>neural_frequency_weight</code> knob still drives the relative importance of dict frequency vs. neural confidence.</p>
+
+        <h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Test Coverage</h2>
+        <table class="w-full mb-4 text-gray-300">
+            <thead><tr><th>Suite</th><th>File</th><th>Cases</th></tr></thead>
+            <tbody>
+                <tr><td>Pure JVM — KeyAdjacency</td><td><code>src/test/kotlin/tribixbite/cleverkeys/autocorrect/KeyAdjacencyTest.kt</code></td><td>31</td></tr>
+                <tr><td>Instrumented — AutocorrectTest</td><td><code>src/androidTest/kotlin/tribixbite/cleverkeys/AutocorrectTest.kt</code></td><td>36</td></tr>
+                <tr><td>Instrumented — TypingSimulationTest</td><td><code>src/androidTest/kotlin/tribixbite/cleverkeys/TypingSimulationTest.kt</code></td><td>~60</td></tr>
+            </tbody>
+        </table>
+
+        <h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Related Specifications</h2>
+        <ul class="mb-4 text-gray-300 list-disc list-inside space-y-1">
+            <li><a href="../neural-prediction.html" class="text-ck-purple-light hover:text-ck-purple">Neural Prediction</a> — ONNX swipe pipeline (consumes the same dict + freq)</li>
+            <li><a href="../dictionary-and-language-system.html" class="text-ck-purple-light hover:text-ck-purple">Dictionary System</a> — word storage, binary format, language packs</li>
+            <li><a href="/wiki/typing/autocorrect/" class="text-ck-purple-light hover:text-ck-purple">User Guide</a> — non-technical walkthrough</li>
+        </ul>
+
+        </div>
+    </main>
+</body>
+</html>
