@@ -44,9 +44,14 @@ import kotlin.math.hypot
  */
 object KeyAdjacency {
 
-    // Each entry: char → (x, y) on a uniform-key-width grid.
-    // Distances computed via Euclidean on these coordinates.
-    private val POSITIONS: Map<Char, Pair<Float, Float>> = buildMap {
+    /**
+     * Default US-QWERTY position table. Each entry: char → (x, y) on a
+     * uniform-key-width grid. Used when no runtime layout has been
+     * injected via [setLayout]. Common accented Latin chars are mapped
+     * to the position of their unaccented base so de/fr/es/it/pt/sv
+     * users get adjacency credit on `é`, `ñ`, `ü`, etc.
+     */
+    private val DEFAULT_POSITIONS: Map<Char, Pair<Float, Float>> = buildMap {
         // Top row
         listOf('q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p')
             .forEachIndexed { i, c -> put(c, i.toFloat() to 0f) }
@@ -56,39 +61,116 @@ object KeyAdjacency {
         // Bottom row — one full key indent on left; right end of row is shorter
         listOf('z', 'x', 'c', 'v', 'b', 'n', 'm')
             .forEachIndexed { i, c -> put(c, (i + 1f) to 2f) }
+
+        // Accented Latin chars share their unaccented base's position. This
+        // means typos like `cafe → café` cost ~0 for the e↔é position (both
+        // map to (2,0)), letting adjacency-aware autocorrect bridge accent
+        // omissions on languages where the user's physical layout doesn't
+        // include the accented form. When the user IS on a layout with a
+        // dedicated key for the accent (German with ü, French with é etc.),
+        // `setLayout` overrides this default with the real key position.
+        listOf('á', 'à', 'â', 'ä', 'ã', 'å').forEach { put(it, get('a')!!) }
+        listOf('é', 'è', 'ê', 'ë').forEach { put(it, get('e')!!) }
+        listOf('í', 'ì', 'î', 'ï').forEach { put(it, get('i')!!) }
+        listOf('ó', 'ò', 'ô', 'ö', 'õ', 'ø').forEach { put(it, get('o')!!) }
+        listOf('ú', 'ù', 'û', 'ü').forEach { put(it, get('u')!!) }
+        listOf('ñ').forEach { put(it, get('n')!!) }
+        listOf('ç').forEach { put(it, get('c')!!) }
+        listOf('ß').forEach { put(it, get('s')!!) }
+        listOf('ý', 'ÿ').forEach { put(it, get('y')!!) }
     }
 
     /**
-     * Farthest pair on the layout: `q` at (0,0) ↔ `m` at (7,2)
-     * → euclidean = √(7² + 2²) ≈ 7.28. Used as the normalization
-     * constant so all `keyDistance` outputs land in `[0, 1]`.
+     * Currently-active position table — defaults to QWERTY, replaced by
+     * the most recent [setLayout] call. `@Volatile` so calls from the UI
+     * thread (`Keyboard2View.onLayout`) are visible to autocorrect calls
+     * on the prediction thread without locking.
      */
-    private val MAX_DISTANCE: Float = run {
-        val q = POSITIONS['q']!!
-        val m = POSITIONS['m']!!
-        hypot(q.first - m.first, q.second - m.second)
+    @Volatile
+    private var positions: Map<Char, Pair<Float, Float>> = DEFAULT_POSITIONS
+
+    /**
+     * Normalization constant for [keyDistance]. Recomputed when the
+     * layout changes; for the default QWERTY this is `q ↔ p = 9.0`
+     * (both ends of the top row — farther than q↔m's √53 ≈ 7.28, the
+     * value previously hardcoded). Computed via [computeMaxDistance]
+     * so accent additions and runtime layouts can't drift out of sync.
+     */
+    @Volatile
+    private var maxDistance: Float = computeMaxDistance(DEFAULT_POSITIONS)
+
+    /**
+     * Inject a runtime layout. Coordinates can be in any unit (pixels,
+     * key-widths, anything); only relative distances matter. Each
+     * char-to-position mapping replaces the default. Call from
+     * `Keyboard2View.onLayout` (or equivalent) whenever the keyboard's
+     * physical layout changes — orientation flip, layout swap, custom
+     * layout import, etc.
+     *
+     * Pass an empty map (or call [resetLayout]) to revert to the
+     * default US-QWERTY + accents table. This is also the safe state
+     * when the layout isn't yet known (boot, layout load failure).
+     */
+    @JvmStatic
+    fun setLayout(layoutPositions: Map<Char, Pair<Float, Float>>) {
+        if (layoutPositions.isEmpty()) {
+            positions = DEFAULT_POSITIONS
+            maxDistance = computeMaxDistance(DEFAULT_POSITIONS)
+            return
+        }
+        // Lower-case keys for case-insensitive lookup.
+        val normalized = layoutPositions.mapKeys { it.key.lowercaseChar() }
+        positions = normalized
+        maxDistance = computeMaxDistance(normalized).coerceAtLeast(1e-6f)
+    }
+
+    /** Revert to the default US-QWERTY position table (plus accents). */
+    @JvmStatic
+    fun resetLayout() {
+        positions = DEFAULT_POSITIONS
+        maxDistance = computeMaxDistance(DEFAULT_POSITIONS)
+    }
+
+    /**
+     * Farthest pair distance in the position table. Used as the
+     * normalization denominator so all distances land in [0, 1].
+     * Computed by full O(n²) pairwise comparison since the table is
+     * tiny (~30 entries) and recomputed only on layout change.
+     */
+    private fun computeMaxDistance(p: Map<Char, Pair<Float, Float>>): Float {
+        val values = p.values.toList()
+        var max = 0f
+        for (i in values.indices) {
+            for (j in i + 1 until values.size) {
+                val d = hypot(
+                    values[i].first - values[j].first,
+                    values[i].second - values[j].second
+                )
+                if (d > max) max = d
+            }
+        }
+        return max
     }
 
     /**
      * Normalized euclidean distance between two characters' centers on
-     * the QWERTY grid. Both chars are lowercased.
+     * the active position table. Both chars are lowercased.
      *
      *   - Same char → 0.0
-     *   - Adjacent keys → ≈ 0.137 (1.0 / MAX_DISTANCE)
-     *   - Diagonal one-key-away → ≈ 0.158
+     *   - Adjacent keys → ≈ 0.137 (QWERTY default)
      *   - Distant corners → 1.0
      *
-     * For characters NOT in the layout (digits, punctuation, accented
-     * letters), returns 1.0 — i.e. "as different as possible." This
-     * makes autocorrect refuse to bridge a non-letter typo to a letter
-     * correction, which is the safer behavior.
+     * For characters NOT in the active table (digits, punctuation,
+     * chars not on the user's layout), returns 1.0 — "as different as
+     * possible." Safer than guessing a position for unknown chars.
      */
     fun keyDistance(a: Char, b: Char): Float {
         if (a == b) return 0f
-        val pa = POSITIONS[a.lowercaseChar()] ?: return 1f
-        val pb = POSITIONS[b.lowercaseChar()] ?: return 1f
+        val p = positions  // local snapshot to dodge mid-call layout swap
+        val pa = p[a.lowercaseChar()] ?: return 1f
+        val pb = p[b.lowercaseChar()] ?: return 1f
         val d = hypot(pa.first - pb.first, pa.second - pb.second)
-        return (d / MAX_DISTANCE).coerceIn(0f, 1f)
+        return (d / maxDistance).coerceIn(0f, 1f)
     }
 
     /**

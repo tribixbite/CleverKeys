@@ -72,26 +72,40 @@ class WordPredictor {
         private const val LENGTH_DIFF_ED_BUDGET = 0.5f
 
         /**
-         * Floor frequency assigned to alias-key candidates (bare-form
-         * contractions like `dont`, `cant`, `hadnt`) during the dict-scan
-         * tiebreaker. Sized at `Int.MAX_VALUE / 2` so the alias-key wins
-         * against ANY non-alias candidate regardless of which freq scale
-         * is in use (JSON path: ≈100–10k, binary path: ≈5500–1,000,000).
-         *
-         * Product intent: when a typo is a near-match to a contraction
-         * base AND clears the score threshold, the contracted form is the
-         * far more likely intent than a similarly-scored common word —
-         * `donr → don't` beats `donr → done` because users typing `donr`
-         * almost always meant `don't`. Tied/near-tied scores are the norm
-         * for typos: a single adjacent-key substitution lands at score ≈
-         * 0.97 for many candidate words simultaneously, and the old
-         * frequency tiebreaker silently picked the wrong winner.
-         *
-         * Halved from `Int.MAX_VALUE` so two aliases competing in the
-         * same scan don't overflow into ambiguous wraparound — though
-         * that case is itself a corner (most typos match only one base).
+         * Score bonus applied to alias-key candidates (bare-form
+         * contractions like `dont`, `cant`, `hadnt`) in the dict-scan
+         * tiebreaker. Sized so an alias-key's effective score clears
+         * [SCORE_TIEBREAK_GAP] above a tied non-alias — that flips ties
+         * toward the contraction (`donr → don't` instead of `done`)
+         * without overriding clearly-better non-alias matches.
          */
-        private const val ALIAS_KEY_FLOOR_FREQUENCY = Int.MAX_VALUE / 2
+        private const val ALIAS_SCORE_BONUS = 0.15f
+
+        /**
+         * Score-difference threshold for score-vs-frequency tiebreaker.
+         * When two candidates differ by MORE than this in effective
+         * score, the higher-scoring one wins regardless of frequency.
+         * When the gap is within this band, frequency is the tiebreaker
+         * (the more popular word wins).
+         *
+         * Why hybrid: same-length multi-substitution candidates have an
+         * asymmetric scoring advantage over lengthDiff=1 candidates. A
+         * user typing `quuestion` almost certainly meant `question`
+         * (one extra letter, ed=1) not `quotation` (three subs, score
+         * 0.938 vs 0.889 — tantalizingly close by score, semantically
+         * miles apart). Pure score-primary picks `quotation`; pure
+         * freq-primary picks `quentin` for `questin`. The 0.10 gap
+         * threshold separates "clearly better" from "noise" — picks
+         * `question` correctly via the freq fallback.
+         *
+         * Calibrated against:
+         *   - `donr → dont` (alias bonus pushes gap to 0.15) → alias wins
+         *   - `tge → the` (gap 0.149 vs `weve`) → score wins (the)
+         *   - `tfe → the` (gap 0.037 vs `tfw`) → freq wins (the)
+         *   - `quuestion → question` (gap 0.049 vs `quotation`) → freq wins
+         *   - `questin → question` (gap 0.052 vs `quentin`) → freq wins
+         */
+        private const val SCORE_TIEBREAK_GAP = 0.10f
         private const val MAX_EDIT_DISTANCE = 2
         private const val MAX_RECENT_WORDS = 20 // Keep last 20 words for language detection
         private const val PREFIX_INDEX_MAX_LENGTH = 3 // Index prefixes up to 3 chars
@@ -951,9 +965,14 @@ class WordPredictor {
                     // Skip real English words that are also contraction bases
                     if (withoutApostrophe in REAL_WORD_CONTRACTION_BASES) continue
 
-                    // Base form is NOT a real word → create alias and add to dictionary
+                    // Base form is NOT a real word → create alias and add to dictionary.
+                    // Preserve existing freq (same fix as `loadPrimaryContractionKeys`
+                    // — see that function for rationale). The async loader path
+                    // would otherwise silently downgrade bare-form contractions.
                     aliases[withoutApostrophe] = withApostrophe
-                    targetDict[withoutApostrophe] = targetDict[withApostrophe] ?: 5000
+                    targetDict[withoutApostrophe] = targetDict[withApostrophe]
+                        ?: targetDict[withoutApostrophe]
+                        ?: 5000
 
                     val maxLen = min(PREFIX_INDEX_MAX_LENGTH, withoutApostrophe.length)
                     for (len in 1..maxLen) {
@@ -1029,9 +1048,24 @@ class WordPredictor {
                     if (withoutApostrophe in REAL_WORD_CONTRACTION_BASES) continue
 
                     // Base form is NOT a real word (e.g., "dont", "im", "thats", "hes")
-                    // → create autocorrect alias and add to dictionary for predictions
+                    // → create autocorrect alias and add to dictionary for predictions.
+                    //
+                    // Preserve any pre-existing frequency for the bare form (loaded
+                    // from the binary/JSON dict) rather than overwriting. The
+                    // previous `?: 5000` form was destructive: a bare form like
+                    // `hadnt` loaded from binary at ≈ 789K freq would be SILENTLY
+                    // DOWNGRADED to 5000 (since `currentDict[withApostrophe]` is
+                    // null — the apostrophe form is never in the dict). The fall-
+                    // through order is now: apostrophe-form freq if present →
+                    // existing bare-form freq if present → 5000 anchor. This
+                    // preserves both the binary-loaded ranking signal and the
+                    // beam-search ranking (OptimizedVocabulary normalizes to 0-1
+                    // and multiplies by `Config.neural_frequency_weight`, so
+                    // higher input freq → slightly better ranking).
                     aliases[withoutApostrophe] = withApostrophe
-                    currentDict[withoutApostrophe] = currentDict[withApostrophe] ?: 5000
+                    currentDict[withoutApostrophe] = currentDict[withApostrophe]
+                        ?: currentDict[withoutApostrophe]
+                        ?: 5000
 
                     // Add to prefix index so typing "don" finds "dont" → "don't"
                     val maxLen = min(PREFIX_INDEX_MAX_LENGTH, withoutApostrophe.length)
@@ -1791,7 +1825,7 @@ class WordPredictor {
         val maxLengthDiff = (config?.autocorrect_max_length_diff ?: 0).coerceAtLeast(0)
 
         // Track top-3 candidates for diagnostic logging on rejection.
-        var bestCandidate: WordCandidate? = null
+        var bestCandidate: AutocorrectCandidate? = null
         val rejectionLog = mutableListOf<Pair<String, Float>>()  // (word, score) for top-N
         val diagnosticsEnabled = config?.swipe_debug_detailed_logging == true
 
@@ -1867,28 +1901,52 @@ class WordPredictor {
             }
 
             if (score >= charMatchThreshold) {
-                // Tiebreaker: higher dictionary frequency wins, but alias-
-                // keys (bare-form contractions like `dont`, `cant`, `hadnt`)
-                // are floored at `ALIAS_KEY_FLOOR_FREQUENCY` so they always
-                // beat non-alias competitors. Among multiple alias-keys
-                // (e.g. `couldnr` matches both `couldnt` AND `couldve`),
-                // the higher-scoring candidate wins via a score-scaled
-                // offset added to the floor. Without the offset, hash-map
-                // iteration order silently picks the wrong contraction.
-                val effectiveFrequency =
-                    if (dictWord in contractionAliases) {
-                        ALIAS_KEY_FLOOR_FREQUENCY + (score * 1000f).toInt()
-                    } else {
-                        candidateFrequency
-                    }
-                if (bestCandidate == null || effectiveFrequency > bestCandidate.score) {
-                    bestCandidate = WordCandidate(dictWord, effectiveFrequency)
+                // Two-level tiebreaker:
+                //   1. SCORE PRIMARY — higher-scoring candidate wins. This
+                //      stops a freq-popular but distantly-aligned word from
+                //      beating a high-quality match: e.g. `wuestion → within`
+                //      (lenDiff=2 weighted-ed-passes-budget, freq 245)
+                //      should NOT beat `wuestion → question` (lenDiff=0,
+                //      near-perfect score 0.986, freq 243).
+                //   2. FREQ SECONDARY — when scores are equal (the common
+                //      "single adjacent-key sub" case where multiple words
+                //      tie), the more common word wins.
+                //
+                // Alias-keys get a small `ALIAS_SCORE_BONUS` to flip ties
+                // toward the contraction (`donr → don't` not `done`),
+                // sized small enough that a clearly-better non-alias still
+                // wins (`tge → the` not `we've`).
+                val isAlias = dictWord in contractionAliases
+                val effectiveScore = if (isAlias) score + ALIAS_SCORE_BONUS else score
+                val bothAliases = isAlias && (bestCandidate?.word in contractionAliases)
+                val better = when {
+                    bestCandidate == null -> true
+                    // Strictly better score by more than the tiebreak gap → win.
+                    effectiveScore > bestCandidate.effectiveScore + SCORE_TIEBREAK_GAP -> true
+                    // Strictly worse score by more than the gap → lose.
+                    effectiveScore < bestCandidate.effectiveScore - SCORE_TIEBREAK_GAP -> false
+                    // Alias vs alias: structural closeness (raw score) wins, NOT
+                    // frequency. Sibling contractions (`hadnt` vs `hasnt`) all
+                    // sit at similar freqs, and typing `hadnr` (d/t-adjacent) means
+                    // `hadnt` — `hasnt` only matches via TWO substitutions and
+                    // should lose to the single-typo match regardless of dict
+                    // popularity.
+                    bothAliases -> effectiveScore > bestCandidate.effectiveScore
+                    // Within the gap, normal case → frequency wins (the more
+                    // popular word for close-quality matches).
+                    candidateFrequency > bestCandidate.frequency -> true
+                    candidateFrequency < bestCandidate.frequency -> false
+                    // Score-close AND freq-tied → deterministic by score.
+                    else -> effectiveScore > bestCandidate.effectiveScore
+                }
+                if (better) {
+                    bestCandidate = AutocorrectCandidate(dictWord, effectiveScore, candidateFrequency)
                 }
             }
         }
 
         // 5. Apply correction only if confident candidate found.
-        if (bestCandidate != null && bestCandidate.score >= frequencyFloor) {
+        if (bestCandidate != null && bestCandidate.frequency >= frequencyFloor) {
             // Re-route alias-keyed winners through contractionAliases so the
             // returned form is the apostrophe-bearing contraction. Without
             // this, `donr → dont` (the alias-key) would stop there; the
@@ -1902,7 +1960,9 @@ class WordPredictor {
             } else {
                 preserveCapitalization(typedWord, outputWord)
             }
-            Log.d(TAG, "AUTO-CORRECT: '$typedWord' → '$corrected' (winner=$winnerWord, freq=${bestCandidate.score})")
+            Log.d(TAG, "AUTO-CORRECT: '$typedWord' → '$corrected' " +
+                "(winner=$winnerWord score=${"%.3f".format(bestCandidate.effectiveScore)} " +
+                "freq=${bestCandidate.frequency})")
             return corrected
         }
 
@@ -1913,8 +1973,8 @@ class WordPredictor {
                 .joinToString(", ") { "${it.first}=${"%.3f".format(it.second)}" }
             val reason = when {
                 bestCandidate == null -> "no candidate above threshold $charMatchThreshold"
-                bestCandidate.score < frequencyFloor ->
-                    "best='${bestCandidate.word}' freq=${bestCandidate.score.toInt()} < floor=$frequencyFloor"
+                bestCandidate.frequency < frequencyFloor ->
+                    "best='${bestCandidate.word}' freq=${bestCandidate.frequency} < floor=$frequencyFloor"
                 else -> "?"
             }
             Log.d(TAG, "AUTO-CORRECT-REJECT: '$typedWord' [$reason]  top=[$top]")
@@ -1959,9 +2019,29 @@ class WordPredictor {
     }
 
     /**
-     * Helper class to store word candidates with scores
+     * Helper class to store word candidates with scores (used by
+     * `predictWords` — score is the unified ranking integer from
+     * `calculateUnifiedScore`, NOT a [0,1] match score).
      */
     private data class WordCandidate(val word: String, val score: Int)
+
+    /**
+     * Helper class to store autocorrect candidates.
+     *
+     * `effectiveScore` is the adjacency-weighted match quality plus any
+     * alias bonus, in [0, ~1.05]. `frequency` is the raw dictionary
+     * frequency (scale varies by loader — binary 5K-1M, JSON 100-10K).
+     * Selection sorts by effectiveScore desc, then frequency desc.
+     *
+     * Kept distinct from `WordCandidate` so the prediction path's
+     * Int-score contract isn't conflated with the autocorrect path's
+     * Float-score-+-Int-freq pair.
+     */
+    private data class AutocorrectCandidate(
+        val word: String,
+        val effectiveScore: Float,
+        val frequency: Int
+    )
 
     /**
      * Result class containing predictions and their scores

@@ -1289,6 +1289,20 @@ class Keyboard2View @JvmOverloads constructor(
             )
             systemGestureExclusionRects = listOf(keyboard_area)
         }
+
+        // Push current layout's key positions to the autocorrect adjacency
+        // model so non-QWERTY layouts (AZERTY, QWERTZ, Dvorak, Colemak,
+        // user-custom) get adjacency-aware scoring. `getRealKeyPositions`
+        // returns an empty map when the layout isn't ready yet — the
+        // setter falls back to the QWERTY default in that case.
+        try {
+            val realPositions = getRealKeyPositions()
+            val adjacencyPositions = realPositions.mapValues { (_, pt) -> pt.x to pt.y }
+            tribixbite.cleverkeys.autocorrect.KeyAdjacency.setLayout(adjacencyPositions)
+        } catch (e: Exception) {
+            android.util.Log.w("Keyboard2View",
+                "Failed to push layout to KeyAdjacency: ${e.message}")
+        }
     }
 
     override fun onApplyWindowInsets(wi: WindowInsets?): WindowInsets? {
