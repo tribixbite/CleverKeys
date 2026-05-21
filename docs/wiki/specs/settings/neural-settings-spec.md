@@ -13,8 +13,8 @@ All facts in the [Neural Settings wiki page](../../settings/neural-settings.md) 
 
 | Fact | Source File | Line(s) | Value |
 |------|------------|---------|-------|
-| Beam width default | `Config.kt` | 114 | `NEURAL_BEAM_WIDTH = 6` |
-| Beam width range 1-20 | `SettingsActivity.kt` | 1400 | `valueRange = 1f..20f` |
+| Beam width default | `Config.kt` | 130 | `NEURAL_BEAM_WIDTH = 6` |
+| Beam width range 1-32 | `backup/SettingsValidation.kt` | - | `"neural_beam_width" -> value in 1..32` |
 | Max sequence length default | `Config.kt` | 115 | `NEURAL_MAX_LENGTH = 20` |
 | Confidence threshold default | `Config.kt` | 116 | `NEURAL_CONFIDENCE_THRESHOLD = 0.01f` |
 | ONNX threads default | `Config.kt` | 247 | `ONNX_XNNPACK_THREADS = 2` |

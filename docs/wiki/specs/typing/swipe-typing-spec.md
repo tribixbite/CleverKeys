@@ -49,11 +49,12 @@ SuggestionHandler → UI
 
 From `Config.kt`:
 
-| Setting | Key | Default | Range |
-|---------|-----|---------|-------|
-| **Beam Width** | `neural_beam_width` | 6 | 1-15 |
-| **Max Length** | `neural_max_length` | 20 | 10-50 |
-| **Prediction Count** | `prediction_count` | 3 | 1-5 |
+| Setting | Key | Default | Range | Source |
+|---------|-----|---------|-------|--------|
+| **Beam Width** | `neural_beam_width` | 6 | 1-32 | `Config.kt:130`, validator `backup/SettingsValidation.kt` |
+| **Max Length** | `neural_max_length` | 20 | 10-50 | `Config.kt` (NEURAL_MAX_LENGTH) |
+| **Confidence Threshold** | `neural_confidence_threshold` | 0.01 | 0.0-1.0 | `Config.kt:132` (NEURAL_CONFIDENCE_THRESHOLD) |
+| **ONNX Models** | bundled assets | — | — | `src/main/assets/models/swipe_{encoder,decoder}_android.onnx` |
 
 ## Key Methods
 

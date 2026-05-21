@@ -34,8 +34,8 @@ IDLE
 ## Flag
 
 ```kotlin
-// Pointers.kt
-const val FLAG_P_TRACKPOINT_MODE = 0x800
+// Pointers.kt:1713
+const val FLAG_P_TRACKPOINT_MODE = 1 shl 10  // = 0x400 = 1024
 ```
 
 ## Activation Flow

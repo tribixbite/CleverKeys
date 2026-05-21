@@ -1,5 +1,10 @@
 # Short Swipe Customization
 
+> **Note:** As of v1.4.0, the canonical version of this specification lives at
+> [`docs/wiki/specs/customization/per-key-actions-spec.md`](../wiki/specs/customization/per-key-actions-spec.md)
+> and renders at <https://cleverkeys.app/specs/customization/per-key-actions-spec/>.
+> This file is preserved for cross-references but may not be kept in sync.
+
 ## Overview
 
 Short Swipe Customization allows users to fully customize the 8-direction swipe gestures for every key on the keyboard. Each key has 8 subkey positions (N, NE, E, SE, S, SW, W, NW) that can be customized with text input, commands, key events, or Android Intents through a dedicated settings UI.

@@ -22,8 +22,8 @@ Backspace swipe-hold gesture that enables joystick-style text selection, deletin
 ## State Flag
 
 ```kotlin
-// Pointers.kt
-const val FLAG_P_SELECTION_DELETE_MODE = 0x1000
+// Pointers.kt:1716
+const val FLAG_P_SELECTION_DELETE_MODE = 1 shl 11  // = 0x800 = 2048
 ```
 
 ## Activation Flow

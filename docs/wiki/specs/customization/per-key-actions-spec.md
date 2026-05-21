@@ -1,185 +1,532 @@
 ---
-title: Per-Key Actions - Technical Specification
+title: Per-Key Actions — Technical Specification
+description: Full short-swipe customization system covering all 8 directions per key with TEXT/COMMAND/KEY_EVENT/INTENT action types and 200+ command registry
 user_guide: ../../customization/per-key-actions.md
 status: implemented
-version: v1.2.7
+version: v1.4.0
 ---
 
 # Per-Key Actions Technical Specification
 
+
 ## Overview
 
-Per-key action customization allows users to define custom characters, actions, or macros for each of the 8 swipe directions on any key. This system integrates with the short swipe gesture recognizer.
+Short Swipe Customization allows users to fully customize the 8-direction swipe gestures for every key on the keyboard. Each key has 8 subkey positions (N, NE, E, SE, S, SW, W, NW) that can be customized with text input, commands, key events, or Android Intents through a dedicated settings UI.
 
-## Key Components
+## Key Files
 
-| Component | File | Purpose |
-|-----------|------|---------|
-| SubkeyManager | `SubkeyManager.kt:1-150` | Manages subkey definitions |
-| CustomizationStore | `CustomizationStore.kt` | Persistence layer |
-| SubkeyEditor | `SubkeyEditorActivity.kt` | Visual editor UI |
-| ShortSwipeHandler | `Pointers.kt:400-600` | Gesture detection |
-| Config | `Config.kt` | Default subkey mappings |
+| File | Class/Function | Purpose |
+|------|----------------|---------|
+| `src/main/kotlin/tribixbite/cleverkeys/customization/SwipeDirection.kt` | `SwipeDirection` | Enum for 8 directions |
+| `src/main/kotlin/tribixbite/cleverkeys/customization/ActionType.kt` | `ActionType` | Enum for action types |
+| `src/main/kotlin/tribixbite/cleverkeys/customization/ShortSwipeMapping.kt` | `ShortSwipeMapping` | Data model for custom mapping |
+| `src/main/kotlin/tribixbite/cleverkeys/customization/ShortSwipeCustomizationManager.kt` | `ShortSwipeCustomizationManager` | JSON persistence, CRUD operations |
+| `src/main/kotlin/tribixbite/cleverkeys/customization/CustomShortSwipeExecutor.kt` | `CustomShortSwipeExecutor` | Executes commands via InputConnection |
+| `src/main/kotlin/tribixbite/cleverkeys/customization/IntentDefinition.kt` | `IntentDefinition`, `IntentTargetType` | Intent data model, presets, Gson-safe parsing |
+| `src/main/kotlin/tribixbite/cleverkeys/customization/IntentEditorDialog.kt` | `IntentEditorDialog` | UI for configuring intents (presets, manual fields, extras) |
+| `src/main/kotlin/tribixbite/cleverkeys/customization/CommandRegistry.kt` | `CommandRegistry` | 200+ searchable commands |
+| `src/main/kotlin/tribixbite/cleverkeys/customization/XmlAttributeMapper.kt` | `XmlAttributeMapper` | XML round-trip for all action types incl. INTENT |
+| `src/main/kotlin/tribixbite/cleverkeys/KeyValueParser.kt` | `parseIntentKeydef()` | Parses `intent:'json'` from layout XML |
+| `src/main/kotlin/tribixbite/cleverkeys/Pointers.kt` | `handleShortGesture()` | Checks custom mappings first |
+| `src/main/kotlin/tribixbite/cleverkeys/KeyEventHandler.kt` | Integration | Executes custom commands |
+
+## Architecture
+
+```
+Settings UI
+       |
+       v
++----------------------------------+
+| ShortSwipeCustomization          | -- User selects key, direction, action
+| Activity                         |
++----------------------------------+
+       |
+       v
++----------------------------------+
+| ShortSwipeCustomization          | -- CRUD for mappings
+| Manager                          | -- JSON persistence
++----------------------------------+
+       |
+       v (on gesture)
++----------------------------------+
+| Pointers.handleShortGesture()    | -- Check custom mapping first
++----------------------------------+
+       |
+       v (if custom found)
++----------------------------------+
+| CustomShortSwipeExecutor         | -- Execute TEXT/COMMAND/KEY_EVENT/INTENT
+| .execute()                       |
++----------------------------------+
+       |
+       v (if INTENT)
++----------------------------------+
+| IntentDefinition.parseFromGson() | -- Null-safe JSON deserialization
+| validateIntent()                 | -- URI scheme, package existence
+| context.startActivity/Service/   | -- Dispatch by IntentTargetType
+|   sendBroadcast                  |
++----------------------------------+
+```
 
 ## Data Model
 
-### Subkey Definition
+### SwipeDirection
 
 ```kotlin
-// SubkeyManager.kt
-data class SubkeyDefinition(
-    val keyCode: Int,           // Parent key code
-    val direction: Direction,   // N, NE, E, SE, S, SW, W, NW
-    val action: SubkeyAction    // Character, action, or macro
-)
-
-enum class Direction {
-    N, NE, E, SE, S, SW, W, NW
-}
-
-sealed class SubkeyAction {
-    data class Character(val char: String) : SubkeyAction()
-    data class KeyAction(val event: Event) : SubkeyAction()
-    data class Macro(val sequence: List<SubkeyAction>) : SubkeyAction()
+enum class SwipeDirection {
+    N,   // North (up)
+    NE,  // Northeast
+    E,   // East (right)
+    SE,  // Southeast
+    S,   // South (down)
+    SW,  // Southwest
+    W,   // West (left)
+    NW   // Northwest
 }
 ```
 
-### Storage Format
+### ActionType
 
 ```kotlin
-// CustomizationStore.kt
-// Stored as JSON in SharedPreferences
+enum class ActionType(val displayName: String, val description: String) {
+    TEXT("Text Input", "Insert text directly"),
+    COMMAND("Command", "Execute keyboard command (copy, paste, cursor, etc.)"),
+    KEY_EVENT("Key Event", "Send raw key event (advanced)"),
+    INTENT("Send Intent", "Send Android Intent (advanced)")
+}
+```
+
+### ShortSwipeMapping
+
+```kotlin
+data class ShortSwipeMapping(
+    val keyCode: String,           // Key identifier (e.g., "a", "e", "shift")
+    val direction: SwipeDirection, // One of 8 directions
+    val displayText: String,       // Max 4 chars for visual display
+    val actionType: ActionType,    // TEXT, COMMAND, KEY_EVENT, or INTENT
+    val actionValue: String,       // Text content, command name, keycode, or JSON IntentDefinition
+    val useKeyFont: Boolean = false // Use special_font.ttf for icons
+)
+```
+
+## Storage Format
+
+File: `short_swipe_customizations.json`
+
+```json
 {
-    "customizations": {
-        "key_q": {
-            "N": {"type": "char", "value": "1"},
-            "NE": {"type": "char", "value": "!"},
-            "E": {"type": "action", "value": "TAB"},
-            ...
+  "version": 2,
+  "mappings": {
+    "a": {
+      "N": { "displayText": "@", "actionType": "TEXT", "actionValue": "@", "useKeyFont": false },
+      "NE": { "displayText": "sel", "actionType": "COMMAND", "actionValue": "select_all", "useKeyFont": false }
+    },
+    "e": {
+      "NW": { "displayText": "", "actionType": "COMMAND", "actionValue": "home", "useKeyFont": true }
+    },
+    "t": {
+      "N": {
+        "displayText": "term",
+        "actionType": "INTENT",
+        "actionValue": "{\"name\":\"Termux Command\",\"targetType\":\"SERVICE\",\"action\":\"com.termux.RUN_COMMAND\",\"packageName\":\"com.termux\",\"className\":\"com.termux.app.RunCommandService\",\"extras\":{\"com.termux.RUN_COMMAND_PATH\":\"/data/data/com.termux/files/usr/bin/echo\",\"com.termux.RUN_COMMAND_ARGUMENTS\":\"Hello\",\"com.termux.RUN_COMMAND_BACKGROUND\":\"true\"}}",
+        "useKeyFont": false
+      }
+    }
+  }
+}
+```
+
+## Available Commands
+
+CommandRegistry contains 200+ commands in 18 categories:
+
+### Core Categories
+
+| Category | Example Commands |
+|----------|------------------|
+| `CLIPBOARD` | copy, paste, cut, paste_plain, paste_pinned_1..5 |
+| `EDITING` | undo, redo, select_all |
+| `CURSOR` | cursor_left, cursor_right, home, end |
+| `NAVIGATION` | page_up, page_down, doc_home, doc_end |
+| `SELECTION` | select_all, selection_mode |
+| `DELETE` | delete_word, forward_delete_word |
+| `MODIFIERS` | shift, ctrl, alt, meta, fn |
+| `FUNCTION_KEYS` | f1-f12 |
+| `SPECIAL_KEYS` | escape, tab, insert, print_screen |
+| `EVENTS` | config, change_method, action, caps_lock |
+| `MEDIA` | media_play_pause, volume_up, volume_down |
+| `SYSTEM` | search, calculator, calendar, brightness_up |
+
+### Diacritics Categories
+
+| Category | Example Commands |
+|----------|------------------|
+| `DIACRITICS` | combining_grave, combining_acute |
+| `DIACRITICS_SLAVONIC` | combining_titlo, combining_palatalization |
+| `DIACRITICS_ARABIC` | arabic_fatha, arabic_kasra, arabic_sukun |
+| `HEBREW` | hebrew_dagesh, hebrew_qamats, hebrew_tsere |
+
+## Public API
+
+### ShortSwipeCustomizationManager
+
+```kotlin
+class ShortSwipeCustomizationManager(context: Context) {
+    // Get mapping for specific key and direction
+    fun getMapping(keyCode: String, direction: SwipeDirection): ShortSwipeMapping?
+
+    // Save or update a mapping
+    fun saveMapping(mapping: ShortSwipeMapping)
+
+    // Delete a mapping
+    fun deleteMapping(keyCode: String, direction: SwipeDirection)
+
+    // Get all mappings for a key
+    fun getMappingsForKey(keyCode: String): Map<SwipeDirection, ShortSwipeMapping>
+
+    // Reset all customizations
+    fun resetAll()
+
+    // Export for backup
+    fun exportToJson(): String
+
+    // Import from backup
+    fun importFromJson(json: String)
+}
+```
+
+### CustomShortSwipeExecutor
+
+```kotlin
+class CustomShortSwipeExecutor(
+    private val inputConnection: InputConnection,
+    private val keyEventHandler: KeyEventHandler
+) {
+    fun execute(mapping: ShortSwipeMapping, inputConnection: InputConnection?, editorInfo: EditorInfo?): Boolean {
+        return when (mapping.actionType) {
+            ActionType.TEXT -> executeTextInput(mapping.actionValue, inputConnection)
+            ActionType.COMMAND -> executeCommandByName(mapping.actionValue, inputConnection, editorInfo)
+            ActionType.KEY_EVENT -> executeKeyEvent(mapping.getKeyEventCode(), inputConnection)
+            ActionType.INTENT -> executeIntent(mapping.actionValue)
         }
     }
 }
 ```
 
-## Direction Mapping
+### Terminal-Aware Paste
 
-```
-    NW(-1,-1)  N(0,-1)  NE(1,-1)
-           \    |    /
-    W(-1,0) -- KEY -- E(1,0)
-           /    |    \
-    SW(-1,1)  S(0,1)  SE(1,1)
-```
-
-### Direction Calculation
+Both the `AvailableCommand.PASTE` and `CommandRegistry` "paste" paths use `handlePaste()` which detects terminal apps and sends Ctrl+V instead of `performContextMenuAction(android.R.id.paste)`:
 
 ```kotlin
-// Pointers.kt:~450
-fun calculateDirection(dx: Float, dy: Float): Direction {
-    val angle = atan2(dy, dx)
-    val degrees = Math.toDegrees(angle.toDouble())
-
-    return when {
-        degrees in -22.5..22.5 -> Direction.E
-        degrees in 22.5..67.5 -> Direction.SE
-        degrees in 67.5..112.5 -> Direction.S
-        degrees in 112.5..157.5 -> Direction.SW
-        degrees > 157.5 || degrees < -157.5 -> Direction.W
-        degrees in -157.5..-112.5 -> Direction.NW
-        degrees in -112.5..-67.5 -> Direction.N
-        degrees in -67.5..-22.5 -> Direction.NE
-        else -> Direction.E
+// CustomShortSwipeExecutor.kt
+private fun handlePaste(inputConnection: InputConnection, editorInfo: EditorInfo?): Boolean {
+    return if (TerminalUtils.isTerminalApp(editorInfo)) {
+        sendKeyEventWithModifier(inputConnection, KeyEvent.KEYCODE_V,
+            KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON)
+    } else {
+        inputConnection.performContextMenuAction(android.R.id.paste)
     }
 }
 ```
 
-## Customization Flow
+This mirrors the same logic in `KeyEventHandler.handlePaste()` for the regular paste key. Without this, paste via custom short swipe does nothing in Termux because terminal apps don't implement the Android context menu protocol.
 
-```
-User taps key in editor
-        ↓
-SubkeyEditorActivity loads current config
-        ↓
-User selects direction
-        ↓
-Action picker dialog shows options
-        ↓
-User selects character/action
-        ↓
-CustomizationStore.save(keyCode, direction, action)
-        ↓
-SubkeyManager reloads definitions
-        ↓
-Keyboard uses new mapping
-```
+### Pinned Clipboard Commands (paste_pinned_N)
 
-## Activation Integration
+Five commands (`paste_pinned_1` through `paste_pinned_5`) allow direct insertion of pinned clipboard entries by position, without opening the clipboard panel.
+
+**CommandRegistry registration:**
 
 ```kotlin
-// Pointers.kt:~500
-private fun handleShortSwipe(ptr: Pointer, direction: Direction) {
-    val key = ptr.key
+// Category.CLIPBOARD entries in CommandRegistry
+Command("paste_pinned_1", "Paste Pin #1", "Insert 1st pinned clipboard entry", Category.CLIPBOARD,
+    keywords = listOf("pin", "pinned", "clipboard", "paste", "1", "first")),
+// ... through paste_pinned_5
+```
 
-    // Check for custom subkey first
-    val customAction = subkeyManager.getCustomAction(key.keyCode, direction)
-    if (customAction != null) {
-        executeSubkeyAction(customAction)
+**Execution in CustomShortSwipeExecutor:**
+
+```kotlin
+private fun executePastePinned(commandName: String, inputConnection: InputConnection): Boolean {
+    val index = commandName.removePrefix("paste_pinned_").toIntOrNull()
+    if (index == null || index < 1) return false
+
+    val db = ClipboardDatabase.getInstance(context)
+    val pinnedEntries = db.getPinnedEntries()
+
+    if (index > pinnedEntries.size) {
+        showToast("Pinned entry #$index not found (${pinnedEntries.size} pinned)")
+        return false
+    }
+
+    val entry = pinnedEntries[index - 1]
+    inputConnection.commitText(entry.content, 1)
+    return true
+}
+```
+
+Key implementation details:
+- Uses `ClipboardDatabase.getInstance(context)` singleton to access the clipboard database
+- `getPinnedEntries()` returns entries ordered by timestamp DESC (most recently pinned first)
+- Index is 1-based in the command name, converted to 0-based for list access
+- Graceful failure: shows a toast with the actual pinned count if the index exceeds available entries
+- All exceptions caught and surfaced as a toast ("Failed to read pinned entry"), never crashes
+
+### Text Limit (MAX_ACTION_LENGTH)
+
+The `actionValue` field on `ShortSwipeMapping` is capped at `MAX_ACTION_LENGTH` (4096 characters). This limit applies to all action types — TEXT input content, COMMAND names, KEY_EVENT codes, and serialized INTENT JSON.
+
+```kotlin
+companion object {
+    const val MAX_ACTION_LENGTH = 4096
+}
+```
+
+The previous limit was 100 characters, which was insufficient for long text snippets, multi-line templates, and serialized intent JSON payloads.
+
+### Paste Button in Custom Text Input
+
+The `CommandPaletteDialog` text input field includes a trailing paste `IconButton`. This exists because Jetpack Compose `Dialog` does not reliably receive `performContextMenuAction(android.R.id.paste)` from the IME — the paste action is silently dropped.
+
+The workaround reads directly from `ClipboardManager`:
+
+```kotlin
+trailingIcon = {
+    IconButton(onClick = {
+        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+        val clip = clipboard?.primaryClip
+        if (clip != null && clip.itemCount > 0) {
+            val pasteText = clip.getItemAt(0).coerceToText(context).toString()
+            if (pasteText.isNotEmpty()) {
+                val combined = text + pasteText
+                onTextChange(combined.take(ShortSwipeMapping.MAX_ACTION_LENGTH))
+            }
+        }
+    }) {
+        Icon(imageVector = Icons.Filled.Create, contentDescription = "Paste from clipboard")
+    }
+}
+```
+
+The pasted content is appended to existing text and truncated to `MAX_ACTION_LENGTH`.
+
+### CommandRegistry
+
+```kotlin
+object CommandRegistry {
+    // Get all commands grouped by category
+    fun getAllCommands(): Map<Category, List<Command>>
+
+    // Search commands by keyword
+    fun search(query: String): List<Command>
+
+    // Get display info (icon + useKeyFont flag)
+    fun getDisplayInfo(commandName: String): DisplayInfo?
+
+    data class Command(
+        val name: String,
+        val category: Category,
+        val keywords: List<String>,
+        val description: String
+    )
+}
+```
+
+## Intent Action Type
+
+The INTENT action type allows users to fire Android Intents directly from a swipe gesture. This enables launching apps, starting services, sending broadcasts, and integrating with automation tools like Termux.
+
+### IntentDefinition
+
+```kotlin
+data class IntentDefinition(
+    val name: String = "",                        // Human-readable label
+    val targetType: IntentTargetType = ACTIVITY,  // ACTIVITY, SERVICE, or BROADCAST
+    val action: String? = null,                   // e.g., "android.intent.action.VIEW"
+    val data: String? = null,                     // URI, e.g., "https://google.com"
+    val type: String? = null,                     // MIME type, e.g., "text/plain"
+    val packageName: String? = null,              // Target package
+    val className: String? = null,                // Target component class
+    val extras: Map<String, String>? = null       // Key-value extras (String values only)
+)
+
+enum class IntentTargetType {
+    ACTIVITY,   // Start an activity (most common)
+    SERVICE,    // Start a foreground/background service
+    BROADCAST   // Send a broadcast intent
+}
+```
+
+### Gson-Safe Parsing
+
+Gson uses `sun.misc.Unsafe` to instantiate Kotlin data classes, bypassing the constructor. This means non-nullable fields with Kotlin defaults (`name: String = ""`) become `null` when the JSON key is absent. `IntentDefinition.parseFromGson()` re-applies Kotlin defaults after deserialization:
+
+```kotlin
+companion object {
+    fun parseFromGson(json: String): IntentDefinition? {
+        val raw = Gson().fromJson(json, IntentDefinition::class.java) ?: return null
+        return IntentDefinition(
+            name = raw.name ?: "",
+            targetType = raw.targetType ?: IntentTargetType.ACTIVITY,
+            // nullable fields pass through unchanged
+            action = raw.action, data = raw.data, type = raw.type,
+            packageName = raw.packageName, className = raw.className,
+            extras = raw.extras
+        )
+    }
+}
+```
+
+### Intent Validation
+
+Before execution, `CustomShortSwipeExecutor.validateIntent()` checks:
+
+| Check | Rule |
+|-------|------|
+| Action or package | Must have at least one of `action` or `packageName` |
+| Package installed | If `packageName` set, verify via `PackageManager.getPackageInfo()` |
+| URI scheme | If `data` set, `Uri.parse()` result must have a non-blank scheme |
+
+Note: `Uri.parse()` on Android never throws; it silently produces an opaque URI. The scheme check catches malformed URIs like `"not a uri"`.
+
+### Intent Execution Flow
+
+When both `data` and `type` are set, `Intent.setDataAndType()` must be used. Calling `Intent.setData()` clears the type and vice versa — this is an Android API pitfall that was caught in code review.
+
+```kotlin
+when {
+    hasData && hasType -> intent.setDataAndType(Uri.parse(data), type)
+    hasData -> intent.data = Uri.parse(data)
+    hasType -> intent.type = type
+}
+```
+
+Dispatch by target type:
+- **ACTIVITY**: `context.startActivity(intent)` with `FLAG_ACTIVITY_NEW_TASK`. Pre-checks `resolveActivity()` unless an explicit component is set.
+- **SERVICE**: `context.startService(intent)`.
+- **BROADCAST**: `context.sendBroadcast(intent)`.
+
+### Intent Presets (11 built-in)
+
+| Preset | Target | Action | Use Case |
+|--------|--------|--------|----------|
+| Open Browser | ACTIVITY | `VIEW` | Open URL in browser |
+| Share Text | ACTIVITY | `SEND` | Share text via share sheet |
+| Dial Phone | ACTIVITY | `DIAL` | Open phone dialer |
+| Send Email | ACTIVITY | `SENDTO` | Open email composer |
+| Open Settings | ACTIVITY | `SETTINGS` | System settings |
+| Wi-Fi Settings | ACTIVITY | `WIFI_SETTINGS` | Wi-Fi settings page |
+| Bluetooth Settings | ACTIVITY | `BLUETOOTH_SETTINGS` | Bluetooth settings page |
+| Open Camera | ACTIVITY | `IMAGE_CAPTURE` | Launch camera |
+| Open Maps | ACTIVITY | `VIEW` (geo:) | Open maps with query |
+| Web Search | ACTIVITY | `WEB_SEARCH` | Web search |
+| Termux Command | SERVICE | `RUN_COMMAND` | Execute Termux CLI command |
+
+### XML Round-Trip (Layout Import/Export)
+
+Intent mappings stored in layout XML use the `__intent__:` prefix:
+
+```
+intent:'{"name":"Open Browser","action":"android.intent.action.VIEW","data":"https://google.com"}'
+```
+
+`KeyValueParser.parseIntentKeydef()` reads this format and produces a KeyValue string with the `IntentDefinition.INTENT_PREFIX` (`__intent__:`) prepended. Profile import/export strips this prefix for round-trip compatibility.
+
+`XmlAttributeMapper` handles serialization of all action types to/from XML attributes, including proper single-quote escaping for TEXT values.
+
+### ShortSwipeMapping Factory & Accessor
+
+```kotlin
+// Factory method
+ShortSwipeMapping.intent(keyCode, direction, displayText, intentJson, useKeyFont)
+
+// Accessor — uses parseFromGson for null safety
+fun getIntentDefinition(): IntentDefinition? {
+    return if (actionType == ActionType.INTENT) {
+        IntentDefinition.parseFromGson(actionValue)
+    } else null
+}
+```
+
+The `actionValue` for INTENT mappings is a JSON string capped at `MAX_ACTION_LENGTH` (4096 chars).
+
+## Implementation Details
+
+### Integration with Pointers.kt
+
+Custom mappings are checked before built-in subkeys:
+
+```kotlin
+private fun handleShortGesture(ptr: Pointer, direction: SwipeDirection) {
+    // Check custom mapping first
+    val customMapping = customizationManager.getMapping(ptr.key.name, direction)
+    if (customMapping != null) {
+        customExecutor.execute(customMapping)
         return
     }
 
-    // Fall back to default subkey
-    val defaultSubkey = key.getSubkey(direction)
-    if (defaultSubkey != null) {
-        sendKeyValue(defaultSubkey)
+    // Fall back to built-in subkey
+    val subkey = ptr.key.getSubkey(direction)
+    if (subkey != null) {
+        handleKeyPress(subkey)
     }
 }
 ```
 
-## Built-in Actions
+### Modifier Key Support
 
-| Action | Event Code | Description |
-|--------|------------|-------------|
-| **Delete Word** | `Event.DELETE_WORD` | Delete previous word |
-| **Cursor Left** | `Event.CURSOR_LEFT` | Move cursor left |
-| **Cursor Right** | `Event.CURSOR_RIGHT` | Move cursor right |
-| **Home** | `Event.HOME` | Jump to line start |
-| **End** | `Event.END` | Jump to line end |
-| **Tab** | `Event.TAB` | Insert tab |
-| **Escape** | `Event.ESCAPE` | Send escape |
-| **Undo** | `Event.UNDO` | Undo action |
-| **Redo** | `Event.REDO` | Redo action |
-| **Copy** | `Event.COPY` | Copy selection |
-| **Cut** | `Event.CUT` | Cut selection |
-| **Paste** | `Event.PASTE` | Paste clipboard |
-| **Select All** | `Event.SELECT_ALL` | Select all text |
-
-## Profile Integration
+Custom mappings work even with Shift/Ctrl/Alt active:
 
 ```kotlin
-// ProfileManager.kt
-fun exportCustomizations(): Map<String, Any> {
-    return mapOf(
-        "version" to 1,
-        "customizations" to customizationStore.getAllCustomizations()
-    )
+private fun shouldBlockBuiltInGesture(): Boolean {
+    // Built-in gestures blocked when modifiers active
+    return modifierState != 0
 }
 
-fun importCustomizations(data: Map<String, Any>) {
-    val customizations = data["customizations"] as? Map<String, Any> ?: return
-    customizationStore.importAll(customizations)
-    subkeyManager.reload()
+// But custom mappings always execute
+if (customMapping != null) {
+    customExecutor.execute(customMapping)  // Executes regardless of modifiers
+    return
+}
+
+// Built-in check happens after
+if (shouldBlockBuiltInGesture()) {
+    return  // Block built-in subkey
 }
 ```
 
-## Configuration
+### Icon Font Rendering
 
-| Setting | Key | Default | Description |
-|---------|-----|---------|-------------|
-| **Customizations Enabled** | `pref_custom_subkeys_enabled` | true | Enable custom subkeys |
-| **Per-Layout** | `pref_custom_per_layout` | false | Separate per layout |
+Custom mappings can use `special_font.ttf` for icon display:
 
-## Related Specifications
+```kotlin
+// In Keyboard2View
+private fun drawCustomSubLabel(canvas: Canvas, mapping: ShortSwipeMapping, x: Float, y: Float) {
+    val paint = if (mapping.useKeyFont) {
+        sublabelPaint.apply { typeface = specialFont }
+    } else {
+        sublabelPaint.apply { typeface = Typeface.DEFAULT }
+    }
+    canvas.drawText(mapping.displayText, x, y, paint)
+}
+```
 
-- [Short Swipe Customization](../../../specs/short-swipe-customization.md) - Full customization system
-- [Gesture System](../../../specs/gesture-system.md) - Direction detection
-- [Profile System](../../../specs/profile_system_restoration.md) - Import/export
+### Direction Zone Colors (UI)
+
+The customization UI uses distinct colors for each direction:
+
+| Direction | Color |
+|-----------|-------|
+| NW | Red (#FF6B6B) |
+| N | Teal (#4ECDC4) |
+| NE | Yellow (#FFE66D) |
+| W | Mint (#95E1D3) |
+| E | Coral (#F38181) |
+| SW | Purple (#AA96DA) |
+| S | Cyan (#72D4E8) |
+| SE | Pink (#FCBAD3) |
+
+### Performance
+
+- Custom mapping lookup: < 1ms (HashMap)
+- UI response time: < 16ms (60fps)
+- JSON storage load: < 100ms
