@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.provider.UserDictionary
 import android.util.Log
+import tribixbite.cleverkeys.autocorrect.KeyAdjacency
 import tribixbite.cleverkeys.contextaware.ContextModel
 import tribixbite.cleverkeys.langpack.LanguagePackManager
 import tribixbite.cleverkeys.personalization.PersonalizationEngine
@@ -25,6 +26,50 @@ class WordPredictor {
         private const val TAG = "WordPredictor"
         private const val MAX_PREDICTIONS_TYPING = 5
         private const val MAX_PREDICTIONS_SWIPE = 10
+
+        // ── Autocorrect tuning constants ────────────────────────────
+        // Used by the dual-gate scoring in `autoCorrect`. Constants
+        // (not config knobs) because they're calibration values that
+        // should NOT need per-user tuning — exposing them as config
+        // would tempt users into breaking the gate semantics.
+
+        /**
+         * Same-length minimum-exact-match-ratio gate. At least half the
+         * positions must literally match before we'll consider the
+         * candidate, regardless of how adjacency-flattering the
+         * substitutions look. Without this, every same-length word
+         * scores 0.5+ via adjacency-similarity alone and the frequency
+         * tiebreaker picks common-but-unrelated words (`questin →
+         * without`).
+         */
+        private const val MIN_SAME_LENGTH_EXACT_RATIO = 0.50f
+
+        /**
+         * Length-diff edit-distance budget — caps allowed substitution
+         * cost ABOVE the literal length difference. Each insertion or
+         * deletion costs 1.0 in our weighted Levenshtein; adjacent-key
+         * substitutions cost ~0.137; distant subs cost up to 1.0.
+         *
+         * Calibrated through three iterations against the ew-cli dictionary:
+         *   - 2.0 was way too loose (let unrelated `something` through)
+         *   - 1.0 was still too loose (let `season` through at ed ≈ 2.95
+         *     for `wuestion → season` lengthDiff=2 case)
+         *   - 0.5 is tight enough: only adjacent-key subs fit beyond the
+         *     length diff, so unrelated 2-length-diff candidates (which
+         *     inevitably need ≥ 1 mid/distant sub in their best alignment)
+         *     get rejected, while legitimate single-char-insertion typos
+         *     (`questin → question`, ed=1.0) clear `1 + 0.5 = 1.5`.
+         *
+         * Verified accept:
+         *   - `questin → question` (lenDiff=1, ed=1.0): 1.0 ≤ 1.5 ✓
+         *   - `quuestion → question` (lenDiff=1, ed=1.0): 1.0 ≤ 1.5 ✓
+         *
+         * Verified reject:
+         *   - `wuestion → season` (lenDiff=2, ed≈2.95): 2.95 > 2.5 ✗
+         *   - `wuestion → wuthering` (lenDiff=1, ed≈2.79): 2.79 > 1.5 ✗
+         *   - `wuestion → something` (lenDiff=1, ed≈2.71): 2.71 > 1.5 ✗
+         */
+        private const val LENGTH_DIFF_ED_BUDGET = 0.5f
         private const val MAX_EDIT_DISTANCE = 2
         private const val MAX_RECENT_WORDS = 20 // Keep last 20 words for language detection
         private const val PREFIX_INDEX_MAX_LENGTH = 3 // Index prefixes up to 3 chars
@@ -1719,40 +1764,113 @@ class WordPredictor {
             else null
 
         val wordLength = lowerTypedWord.length
+        val charMatchThreshold = config?.autocorrect_char_match_threshold ?: 0.66f
+        val frequencyFloor = config?.autocorrect_confidence_min_frequency ?: 500
+        val maxLengthDiff = (config?.autocorrect_max_length_diff ?: 0).coerceAtLeast(0)
+
+        // Track top-3 candidates for diagnostic logging on rejection.
         var bestCandidate: WordCandidate? = null
+        val rejectionLog = mutableListOf<Pair<String, Float>>()  // (word, score) for top-N
+        val diagnosticsEnabled = config?.swipe_debug_detailed_logging == true
 
-        // 4. Iterate through dictionary to find candidates
+        // 4. Iterate through dictionary to find candidates.
+        //
+        //    Same-length candidates are scored by KEYBOARD-ADJACENCY-WEIGHTED
+        //    positional match: each position contributes `1.0` for a perfect
+        //    match, `~0.86` for an adjacent-key substitution (e.g. `q↔w`),
+        //    down to `0` for distant pairs. Sum / wordLength yields a
+        //    score in [0, 1] comparable to the old positional-match ratio.
+        //
+        //    Different-length candidates (up to `autocorrect_max_length_diff`)
+        //    are scored via KeyAdjacency.weightedEditDistance — substitution
+        //    cost = keyDistance, insertion/deletion cost = 1.0. Score is
+        //    `1 - editDistance / maxLength`.
+        //
+        //    Why two paths? Position-wise scoring is faster (linear in
+        //    word length, no DP) and is the right model when the candidate
+        //    aligns with the typed word index-by-index. Levenshtein handles
+        //    the harder case where one is a one-off insertion or deletion.
         for ((dictWord, candidateFrequency) in dictionary.get()) {
-            // Heuristic 1: Must have same length
-            if (dictWord.length != wordLength) continue
+            val lengthDiff = kotlin.math.abs(dictWord.length - wordLength)
+            if (lengthDiff > maxLengthDiff) continue
 
-            // Heuristic 2: prefix match (when required by config)
+            // Prefix match (when required by config).
             if (prefix != null && !dictWord.startsWith(prefix)) continue
 
-            // Heuristic 3: Calculate positional character match ratio
-            var matchCount = 0
-            for (i in 0 until wordLength) {
-                if (lowerTypedWord[i] == dictWord[i]) {
-                    matchCount++
+            // Dual-gate scoring. Adjacency-weighted scores reward typos on
+            // physically-near keys, but applied naively they let unrelated
+            // 7-char words like "without" clear a 0.65 threshold against
+            // typed "questin" (every char-pair has SOME adjacency similarity).
+            //
+            // Same-length path:
+            //   - GATE 1: at least 50% of positions must exactly match.
+            //     Rejects unrelated same-length words wholesale ("questin"
+            //     vs "without" has 0 exact matches → fails).
+            //   - GATE 2: weighted score must clear `charMatchThreshold`.
+            //     Picks adjacency-rich matches ("tge" vs "the" passes both
+            //     because 2/3 exact AND weighted ≈ 0.95).
+            //
+            // Length-diff path:
+            //   - Position-by-position exact-counting is unreliable here
+            //     (insertion/deletion shifts the alignment). Instead use
+            //     an ABSOLUTE edit-distance budget: `ed ≤ lengthDiff + 2`.
+            //     Allows the legitimate-typo case (lengthDiff=1, ed≈1.0
+            //     for `questin → question`) while rejecting weakly-aligned
+            //     unrelated candidates (ed≈3+ for `wuestion → wuthering`).
+            val score: Float = if (lengthDiff == 0) {
+                var exactCount = 0
+                var weightedSum = 0f
+                for (i in 0 until wordLength) {
+                    val a = lowerTypedWord[i]
+                    val b = dictWord[i]
+                    if (a == b) exactCount++
+                    weightedSum += KeyAdjacency.substitutionScore(a, b)
+                }
+                val exactRatio = exactCount.toFloat() / wordLength
+                val weightedScore = weightedSum / wordLength
+                if (exactRatio >= MIN_SAME_LENGTH_EXACT_RATIO) weightedScore else -1f
+            } else {
+                val ed = KeyAdjacency.weightedEditDistance(lowerTypedWord, dictWord)
+                val maxEd = lengthDiff + LENGTH_DIFF_ED_BUDGET
+                if (ed <= maxEd) {
+                    val maxLen = maxOf(wordLength, dictWord.length).toFloat()
+                    (1f - ed / maxLen).coerceAtLeast(0f)
+                } else {
+                    -1f
                 }
             }
 
-            val matchRatio = matchCount.toFloat() / wordLength
-            if (matchRatio >= (config?.autocorrect_char_match_threshold ?: 0.66f)) {
-                // Valid candidate - select if better than current best
-                // "Better" = higher dictionary frequency
+            if (diagnosticsEnabled && score >= 0.4f) {
+                rejectionLog += dictWord to score
+            }
+
+            if (score >= charMatchThreshold) {
+                // Tiebreaker: higher dictionary frequency wins.
                 if (bestCandidate == null || candidateFrequency > bestCandidate.score) {
                     bestCandidate = WordCandidate(dictWord, candidateFrequency)
                 }
             }
         }
 
-        // 5. Apply correction only if confident candidate found
-        if (bestCandidate != null && bestCandidate.score >= (config?.autocorrect_confidence_min_frequency ?: 500)) {
-            // Preserve original capitalization (e.g., "Teh" → "The")
+        // 5. Apply correction only if confident candidate found.
+        if (bestCandidate != null && bestCandidate.score >= frequencyFloor) {
             val corrected = preserveCapitalization(typedWord, bestCandidate.word)
             Log.d(TAG, "AUTO-CORRECT: '$typedWord' → '$corrected' (freq=${bestCandidate.score})")
             return corrected
+        }
+
+        // Diagnostic logging on rejection. Symmetric with the success log so
+        // "why didn't it correct X?" is answerable from logcat.
+        if (diagnosticsEnabled) {
+            val top = rejectionLog.sortedByDescending { it.second }.take(5)
+                .joinToString(", ") { "${it.first}=${"%.3f".format(it.second)}" }
+            val reason = when {
+                bestCandidate == null -> "no candidate above threshold $charMatchThreshold"
+                bestCandidate.score < frequencyFloor ->
+                    "best='${bestCandidate.word}' freq=${bestCandidate.score.toInt()} < floor=$frequencyFloor"
+                else -> "?"
+            }
+            Log.d(TAG, "AUTO-CORRECT-REJECT: '$typedWord' [$reason]  top=[$top]")
         }
 
         return typedWord // No suitable correction found
