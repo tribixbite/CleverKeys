@@ -218,6 +218,55 @@ class AutocorrectTest {
     }
 
     // =========================================================================
+    // Issue #101 follow-up — typo of a contraction base must autocorrect to
+    // the CONTRACTED form, not the bare alias key. Reported 2026-05-21:
+    // Tier A's adjacency-aware dict scan now reaches alias-injected `dont` /
+    // `im` / `youre` entries via near-miss typos, but autoCorrect returned
+    // the bare alias key because the contractionAliases lookup only fired on
+    // the typed input, not on the dict-scan winner. Fix: re-route the winner
+    // through contractionAliases before returning.
+    // =========================================================================
+
+    @Test
+    fun testAutocorrect_aliasDirect_hadntIsLoaded() {
+        // Sanity probe: confirms `contractionAliases` is populated for this
+        // test's @Before setup. If this fails the typo-of-base tests below
+        // can't possibly work (boost is gated on `dictWord in aliases`).
+        config.autocorrect_enabled = true
+        val result = predictor.autoCorrect("hadnt")
+        assertEquals("alias direct path: hadnt should map to hadn't via step 0",
+            "hadn't", result)
+    }
+
+    @Test
+    fun testAutocorrect_contractionBaseTypo_hadnrToHadntContracted() {
+        // `hadnr` is a 5-char typo of `hadnt` (t→r, both top-row adjacent).
+        // `hadnt` is alias-injected mapping to "hadn't". The `hadn?` prefix
+        // and ≥ 50% exact ratio leave `hadnt` (alias-keyed) as the only
+        // viable winner — no high-freq 5-char competitor matches the
+        // `had?r` shape with exactRatio ≥ 0.5.
+        // Expected: the dict-scan winner `hadnt` is re-routed through the
+        // alias map to yield "hadn't".
+        config.autocorrect_enabled = true
+        config.autocorrect_prefix_length = 0
+        val result = predictor.autoCorrect("hadnr")
+        assertEquals("hadnr → hadn't (alias re-routed dict-scan winner)",
+            "hadn't", result)
+    }
+
+    @Test
+    fun testAutocorrect_contractionBaseTypo_couldnrToCouldntContracted() {
+        // `couldnr` is a 7-char typo of `couldnt` (t→r, adjacent). With
+        // 7 chars the prefix constraint plus exactRatio ≥ 0.5 leaves only
+        // `couldnt` as a candidate among 7-char dict words.
+        config.autocorrect_enabled = true
+        config.autocorrect_prefix_length = 0
+        val result = predictor.autoCorrect("couldnr")
+        assertEquals("couldnr → couldn't (alias re-routed dict-scan winner)",
+            "couldn't", result)
+    }
+
+    // =========================================================================
     // Config settings tests
     // =========================================================================
 

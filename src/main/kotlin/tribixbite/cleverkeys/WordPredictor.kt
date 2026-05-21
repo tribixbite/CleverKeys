@@ -70,6 +70,28 @@ class WordPredictor {
          *   - `wuestion → something` (lenDiff=1, ed≈2.71): 2.71 > 1.5 ✗
          */
         private const val LENGTH_DIFF_ED_BUDGET = 0.5f
+
+        /**
+         * Floor frequency assigned to alias-key candidates (bare-form
+         * contractions like `dont`, `cant`, `hadnt`) during the dict-scan
+         * tiebreaker. Sized at `Int.MAX_VALUE / 2` so the alias-key wins
+         * against ANY non-alias candidate regardless of which freq scale
+         * is in use (JSON path: ≈100–10k, binary path: ≈5500–1,000,000).
+         *
+         * Product intent: when a typo is a near-match to a contraction
+         * base AND clears the score threshold, the contracted form is the
+         * far more likely intent than a similarly-scored common word —
+         * `donr → don't` beats `donr → done` because users typing `donr`
+         * almost always meant `don't`. Tied/near-tied scores are the norm
+         * for typos: a single adjacent-key substitution lands at score ≈
+         * 0.97 for many candidate words simultaneously, and the old
+         * frequency tiebreaker silently picked the wrong winner.
+         *
+         * Halved from `Int.MAX_VALUE` so two aliases competing in the
+         * same scan don't overflow into ambiguous wraparound — though
+         * that case is itself a corner (most typos match only one base).
+         */
+        private const val ALIAS_KEY_FLOOR_FREQUENCY = Int.MAX_VALUE / 2
         private const val MAX_EDIT_DISTANCE = 2
         private const val MAX_RECENT_WORDS = 20 // Keep last 20 words for language detection
         private const val PREFIX_INDEX_MAX_LENGTH = 3 // Index prefixes up to 3 chars
@@ -1845,17 +1867,42 @@ class WordPredictor {
             }
 
             if (score >= charMatchThreshold) {
-                // Tiebreaker: higher dictionary frequency wins.
-                if (bestCandidate == null || candidateFrequency > bestCandidate.score) {
-                    bestCandidate = WordCandidate(dictWord, candidateFrequency)
+                // Tiebreaker: higher dictionary frequency wins, but alias-
+                // keys (bare-form contractions like `dont`, `cant`, `hadnt`)
+                // are floored at `ALIAS_KEY_FLOOR_FREQUENCY` so they always
+                // beat non-alias competitors. Among multiple alias-keys
+                // (e.g. `couldnr` matches both `couldnt` AND `couldve`),
+                // the higher-scoring candidate wins via a score-scaled
+                // offset added to the floor. Without the offset, hash-map
+                // iteration order silently picks the wrong contraction.
+                val effectiveFrequency =
+                    if (dictWord in contractionAliases) {
+                        ALIAS_KEY_FLOOR_FREQUENCY + (score * 1000f).toInt()
+                    } else {
+                        candidateFrequency
+                    }
+                if (bestCandidate == null || effectiveFrequency > bestCandidate.score) {
+                    bestCandidate = WordCandidate(dictWord, effectiveFrequency)
                 }
             }
         }
 
         // 5. Apply correction only if confident candidate found.
         if (bestCandidate != null && bestCandidate.score >= frequencyFloor) {
-            val corrected = preserveCapitalization(typedWord, bestCandidate.word)
-            Log.d(TAG, "AUTO-CORRECT: '$typedWord' → '$corrected' (freq=${bestCandidate.score})")
+            // Re-route alias-keyed winners through contractionAliases so the
+            // returned form is the apostrophe-bearing contraction. Without
+            // this, `donr → dont` (the alias-key) would stop there; the
+            // user-visible result must be `don't`. The same I-capitalization
+            // rule from step 0 applies.
+            val winnerWord = bestCandidate.word
+            val aliasTarget = contractionAliases[winnerWord]
+            val outputWord = aliasTarget ?: winnerWord
+            val corrected = if (aliasTarget != null && aliasTarget.startsWith("i'")) {
+                aliasTarget.replaceFirstChar { it.uppercase() }
+            } else {
+                preserveCapitalization(typedWord, outputWord)
+            }
+            Log.d(TAG, "AUTO-CORRECT: '$typedWord' → '$corrected' (winner=$winnerWord, freq=${bestCandidate.score})")
             return corrected
         }
 
