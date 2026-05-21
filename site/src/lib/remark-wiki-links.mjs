@@ -3,12 +3,19 @@ import { visit } from 'unist-util-visit'
 /**
  * Rewrite markdown links so that wiki cross-refs resolve on the built site.
  *
- *   ./foo.md                  ->  /wiki/<cat>/foo/
- *   ../FAQ.md                 ->  /wiki/faq/
- *   ../specs/x-spec.md        ->  /specs/x-spec.html
- *   ../../wiki/typing/x.md    ->  /wiki/typing/x/
+ *   ./foo.md                       ->  /wiki/<cat>/foo/
+ *   ../FAQ.md                      ->  /wiki/faq/
+ *   ../specs/typing/x-spec.md      ->  /specs/typing/x-spec/
+ *   ../../wiki/typing/x.md         ->  /wiki/typing/x/
+ *   ../../typing/x.md (from spec)  ->  /wiki/typing/x/
  *
- * Preserves hash fragments. Leaves http(s), mailto, and anchor-only links alone.
+ * Specs render as Astro pages now (Phase 1 of the doc-architecture
+ * cleanup), so the `.md` extension becomes a trailing slash. Old
+ * `.html` URLs continue to resolve via legacy redirect stubs emitted
+ * by the deploy workflow.
+ *
+ * Preserves hash fragments. Leaves http(s), mailto, and anchor-only
+ * links alone.
  */
 export default function remarkWikiLinks() {
   return (tree, file) => {
@@ -48,8 +55,11 @@ export default function remarkWikiLinks() {
       if (wikiIdx !== -1) {
         const tail = abs.slice(wikiIdx + '/docs/wiki/'.length)
         if (tail.startsWith('specs/')) {
-          // Specs live on the static-copied /specs/ tree (kept as .html)
-          target = '/' + tail.replace(/\.md$/, '.html')
+          // Specs live under /specs/<category>/<name>/, rendered by Astro
+          // from `docs/wiki/specs/**/*.md` via the `specs` content
+          // collection. Trailing slash matches Astro's slug convention.
+          const slug = tail.slice('specs/'.length).replace(/\.md$/, '').toLowerCase()
+          target = `/specs/${slug}/`
         } else {
           // Wiki pages: strip .md, trailing slash, lowercase
           const slug = tail.replace(/\.md$/, '').toLowerCase()

@@ -69,11 +69,17 @@ jobs:
             cp -n web_demo/$pattern site/dist/demo/ 2>/dev/null || true
           done
 
-          # /specs/ — technical specifications (static HTML snapshot)
+          # /specs/ — Astro now renders specs from docs/wiki/specs/**/*.md
+          # via the `specs` content collection. Static HTML files in
+          # web_demo/specs/ remain as LEGACY fallbacks for URLs not yet
+          # migrated to markdown (gesture-system.html, neural-prediction.html,
+          # etc.). `cp -n` (no-clobber) ensures Astro-generated files like
+          # /specs/index.html and /specs/typing/autocorrect-spec/index.html
+          # take precedence over their legacy counterparts.
           if [ -d "web_demo/specs" ]; then
             mkdir -p site/dist/specs
-            cp -r web_demo/specs/. site/dist/specs/
-            echo "✅ Copied web_demo/specs → site/dist/specs"
+            cp -rn web_demo/specs/. site/dist/specs/ || true
+            echo "✅ Merged web_demo/specs into site/dist/specs (no-clobber)"
           fi
 
           # Backwards-compatible redirects for any old .html wiki URLs that

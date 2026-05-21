@@ -1,0 +1,146 @@
+---
+import BaseLayout from './BaseLayout.astro'
+import { SPEC_CATEGORIES, SPEC_CATEGORY_BY_SLUG } from '../lib/specs'
+import Icon from '../components/Icon.astro'
+
+interface Props {
+  title: string
+  description?: string
+  category?: string
+  pageSlug: string
+  status?: 'implemented' | 'planning' | 'planned' | 'in-progress'
+  version?: string
+  userGuide?: string
+  allInCategory?: { slug: string; title: string }[]
+}
+
+const {
+  title,
+  description,
+  category,
+  pageSlug,
+  status,
+  version,
+  userGuide,
+  allInCategory = [],
+} = Astro.props
+
+const cat = category ? SPEC_CATEGORY_BY_SLUG[category] : undefined
+
+const statusClass: Record<string, string> = {
+  implemented: 'bg-emerald-500/15 text-emerald-300 ring-emerald-400/30',
+  planning: 'bg-amber-500/15 text-amber-200 ring-amber-400/30',
+  planned: 'bg-amber-500/15 text-amber-200 ring-amber-400/30',
+  'in-progress': 'bg-sky-500/15 text-sky-200 ring-sky-400/30',
+}
+---
+
+<BaseLayout title={`${title} — CleverKeys Specs`} description={description} pageType="wiki">
+  <div class="container-x grid gap-10 py-10 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-14">
+    <!-- sidebar -->
+    <aside class="lg:sticky lg:top-20 lg:self-start">
+      <a href="/specs/" class="mb-4 inline-flex items-center gap-1.5 text-sm text-[color:var(--color-violet-200)] hover:text-white">
+        <Icon name="arrow-right" class="h-4 w-4 rotate-180" /> All specifications
+      </a>
+      <nav aria-label="Section navigation">
+        {cat && (
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="inline-flex h-2 w-2 rounded-full" style={`background:${cat.color}`}></span>
+              <span class="text-xs font-semibold uppercase tracking-widest text-white/70">{cat.name}</span>
+            </div>
+            <ul class="mt-3 space-y-0.5">
+              {allInCategory.map((p) => {
+                const active = p.slug === pageSlug
+                return (
+                  <li>
+                    <a
+                      href={`/specs/${p.slug}/`}
+                      class={`block rounded-md px-2.5 py-1.5 text-sm transition ${
+                        active
+                          ? 'bg-[color:var(--color-violet-600)]/20 text-white'
+                          : 'text-white/70 hover:bg-white/5 hover:text-white'
+                      }`}
+                    >
+                      {p.title}
+                    </a>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
+        )}
+
+        <div class="mt-8 border-t border-white/5 pt-6">
+          <div class="text-xs font-semibold uppercase tracking-widest text-white/50">Other sections</div>
+          <ul class="mt-3 space-y-0.5">
+            {SPEC_CATEGORIES.filter((c) => c.slug !== category).map((c) => (
+              <li>
+                <a href={`/specs/#${c.slug}`} class="block rounded-md px-2.5 py-1.5 text-sm text-white/60 transition hover:bg-white/5 hover:text-white">
+                  {c.name}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div class="mt-8 border-t border-white/5 pt-6">
+          <div class="text-xs font-semibold uppercase tracking-widest text-white/50">Related</div>
+          <ul class="mt-3 space-y-0.5">
+            <li>
+              <a href="/wiki/" class="block rounded-md px-2.5 py-1.5 text-sm text-white/60 transition hover:bg-white/5 hover:text-white">User Wiki</a>
+            </li>
+            <li>
+              <a href="https://github.com/tribixbite/CleverKeys" target="_blank" rel="noopener noreferrer" class="block rounded-md px-2.5 py-1.5 text-sm text-white/60 transition hover:bg-white/5 hover:text-white">GitHub source</a>
+            </li>
+          </ul>
+        </div>
+      </nav>
+    </aside>
+
+    <article class="min-w-0 max-w-3xl">
+      <!-- Breadcrumbs -->
+      <nav class="mb-3 text-xs text-white/50" aria-label="Breadcrumb">
+        <a href="/" class="hover:text-white">Home</a> /
+        <a href="/specs/" class="hover:text-white">Specs</a>
+        {cat && (<> / <a href={`/specs/#${cat.slug}`} class="hover:text-white">{cat.name}</a></>)}
+      </nav>
+
+      <!-- Status / version badges -->
+      {(status || version || userGuide) && (
+        <div class="mb-4 flex flex-wrap items-center gap-2">
+          {status && (
+            <span class={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ${statusClass[status] ?? 'bg-white/10 text-white/70 ring-white/15'}`}>
+              {status}
+            </span>
+          )}
+          {version && (
+            <span class="inline-flex items-center rounded-full bg-white/5 px-2.5 py-1 text-xs font-medium text-white/70 ring-1 ring-white/10">
+              {version}
+            </span>
+          )}
+          {userGuide && (
+            <a
+              href={userGuide}
+              class="inline-flex items-center gap-1 rounded-full bg-[color:var(--color-violet-600)]/15 px-2.5 py-1 text-xs font-medium text-[color:var(--color-violet-200)] ring-1 ring-[color:var(--color-violet-400)]/30 hover:bg-[color:var(--color-violet-600)]/25"
+            >
+              User guide <Icon name="arrow-right" class="h-3 w-3" />
+            </a>
+          )}
+        </div>
+      )}
+
+      <div class="prose-wiki prose-spec">
+        <slot />
+      </div>
+
+      <div class="mt-16 flex flex-wrap items-center gap-3 border-t border-white/5 pt-6">
+        <a href="/specs/" class="btn-secondary text-sm"><Icon name="book" class="h-4 w-4" /> All specs</a>
+        <a href="/wiki/" class="btn-secondary text-sm">User wiki</a>
+        <a href="https://github.com/tribixbite/CleverKeys/issues/new" class="btn-secondary text-sm" target="_blank" rel="noopener noreferrer">
+          Report doc issue
+        </a>
+      </div>
+    </article>
+  </div>
+</BaseLayout>

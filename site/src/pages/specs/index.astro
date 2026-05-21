@@ -1,0 +1,124 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import Icon from '../../components/Icon.astro'
+import { getCollection } from 'astro:content'
+import {
+  SPEC_CATEGORIES,
+  specTitleFor,
+  specCategorySlug,
+  specPageSlug,
+  specBlurb,
+  specOrderedWithinCategory,
+} from '../../lib/specs'
+
+const all = await getCollection('specs')
+
+const byCategory = new Map<string, typeof all>()
+for (const c of SPEC_CATEGORIES) byCategory.set(c.slug, [])
+for (const entry of all) {
+  const slug = specCategorySlug(entry)
+  if (!byCategory.has(slug)) byCategory.set(slug, [])
+  byCategory.get(slug)!.push(entry)
+}
+
+const sections = SPEC_CATEGORIES.map((c) => {
+  const entries = specOrderedWithinCategory(byCategory.get(c.slug) ?? [], c.slug)
+  const cards = entries.map((entry) => ({
+    slug: specPageSlug(entry),
+    title: specTitleFor(entry),
+    blurb: specBlurb(entry),
+    status: entry.data.status,
+    version: entry.data.version,
+  }))
+  return { ...c, cards }
+})
+---
+
+<BaseLayout
+  title="Technical specifications — CleverKeys"
+  description="Developer-facing technical specifications for CleverKeys keyboard features."
+  pageType="wiki"
+>
+  <section class="relative overflow-hidden pt-12 pb-10 sm:pt-20">
+    <div aria-hidden="true" class="pointer-events-none absolute inset-0 -z-[1] mask-fade-b opacity-30">
+      <svg width="100%" height="100%" class="text-white/5">
+        <defs>
+          <pattern id="specsgrid" width="44" height="44" patternUnits="userSpaceOnUse">
+            <path d="M 44 0 L 0 0 0 44" fill="none" stroke="currentColor" stroke-width="1"/>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#specsgrid)"/>
+      </svg>
+    </div>
+
+    <div class="container-x">
+      <p class="text-xs font-semibold uppercase tracking-widest text-[color:var(--color-violet-200)]">Technical specifications</p>
+      <h1 class="mt-3 max-w-3xl font-display text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl">
+        <span class="gradient-text">How CleverKeys works under the hood</span>,
+        feature by feature.
+      </h1>
+      <p class="mt-5 max-w-2xl text-white/65">
+        Implementation details, calibrated thresholds, code references, and test coverage. Each spec is paired with a user-facing wiki page.
+      </p>
+
+      <nav class="mt-8 flex flex-wrap gap-2" aria-label="Jump to category">
+        {SPEC_CATEGORIES.map((c) => (
+          <a href={`#${c.slug}`} class="chip">
+            <span class="inline-flex h-1.5 w-1.5 rounded-full" style={`background:${c.color}`}></span>
+            {c.name}
+          </a>
+        ))}
+        <a href="/wiki/" class="chip">
+          <Icon name="book" class="h-3 w-3" />
+          User wiki
+        </a>
+      </nav>
+    </div>
+  </section>
+
+  <div class="container-x space-y-20 pb-24">
+    {sections.map((s) => s.cards.length > 0 && (
+      <section id={s.slug} class="scroll-mt-24">
+        <header class="mb-8 flex items-end justify-between gap-6 border-b border-white/5 pb-4">
+          <div>
+            <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-white/70">
+              <span class="inline-flex h-2 w-2 rounded-full" style={`background:${s.color}`}></span>
+              {s.name}
+            </div>
+            <h2 class="mt-2 font-display text-2xl font-bold">{s.description}</h2>
+          </div>
+          <span class="hidden text-xs text-white/40 sm:block">{s.cards.length} spec{s.cards.length === 1 ? '' : 's'}</span>
+        </header>
+
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {s.cards.map((card) => (
+            <a
+              href={`/specs/${card.slug}/`}
+              class="group surface relative overflow-hidden rounded-2xl p-5 transition hover:-translate-y-0.5 hover:border-[color:var(--color-violet-500)]/40"
+              style={`--cat:${s.color}`}
+            >
+              <div class="absolute inset-x-0 top-0 h-px" style={`background: linear-gradient(to right, transparent, ${s.color}, transparent); opacity: 0.35`}></div>
+              <h3 class="font-display text-base font-semibold text-white">{card.title}</h3>
+              <p class="mt-1.5 line-clamp-2 text-sm text-white/60">{card.blurb}</p>
+              <div class="mt-3 flex flex-wrap items-center gap-2">
+                {card.status && (
+                  <span class="inline-flex items-center rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-medium text-white/60 ring-1 ring-white/10">
+                    {card.status}
+                  </span>
+                )}
+                {card.version && (
+                  <span class="inline-flex items-center rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-medium text-white/60 ring-1 ring-white/10">
+                    {card.version}
+                  </span>
+                )}
+              </div>
+              <span class="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-[color:var(--color-violet-200)] transition group-hover:text-white">
+                Open <Icon name="arrow-right" class="h-3.5 w-3.5" />
+              </span>
+            </a>
+          ))}
+        </div>
+      </section>
+    ))}
+  </div>
+</BaseLayout>

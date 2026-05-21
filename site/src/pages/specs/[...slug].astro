@@ -1,0 +1,43 @@
+---
+import SpecsLayout from '../../layouts/SpecsLayout.astro'
+import { getCollection, render } from 'astro:content'
+import {
+  specTitleFor,
+  specCategorySlug,
+  specPageSlug,
+  specOrderedWithinCategory,
+} from '../../lib/specs'
+
+export async function getStaticPaths() {
+  const all = await getCollection('specs')
+  return all.map((entry) => ({
+    params: { slug: specPageSlug(entry) },
+    props: { entry },
+  }))
+}
+
+const { entry } = Astro.props
+const { Content } = await render(entry)
+const title = specTitleFor(entry)
+const cat = specCategorySlug(entry)
+
+// Gather sibling specs for sidebar (same category as this one).
+const all = await getCollection('specs')
+const siblings = specOrderedWithinCategory(
+  all.filter((e) => specCategorySlug(e) === cat),
+  cat,
+).map((e) => ({ slug: specPageSlug(e), title: specTitleFor(e) }))
+---
+
+<SpecsLayout
+  title={title}
+  description={entry.data.description}
+  category={cat}
+  pageSlug={specPageSlug(entry)}
+  status={entry.data.status}
+  version={entry.data.version}
+  userGuide={entry.data.user_guide}
+  allInCategory={siblings}
+>
+  <Content />
+</SpecsLayout>
