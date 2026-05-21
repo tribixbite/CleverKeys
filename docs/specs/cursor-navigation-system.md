@@ -1,5 +1,9 @@
 # Cursor Navigation System
 
+> **Note:** As of v1.4.0, the canonical version of this specification lives at
+> [`docs/wiki/specs/gestures/cursor-navigation-spec.md`](../wiki/specs/gestures/cursor-navigation-spec.md) and renders at <https://cleverkeys.app/specs/gestures/cursor-navigation-spec/>.
+> This file is preserved for cross-references but may not be kept in sync.
+
 ## Overview
 
 CleverKeys provides two distinct cursor navigation mechanisms: slider-based cursor (spacebar) for continuous movement scaled by distance and speed, and arrow key navigation (dedicated nav key) for discrete single-character movement. Both are accessed via swipe gestures on bottom row keys.

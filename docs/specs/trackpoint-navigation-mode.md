@@ -1,5 +1,9 @@
 # TrackPoint Navigation Mode
 
+> **Note:** As of v1.4.0, the canonical version of this specification lives at
+> [`docs/wiki/specs/gestures/trackpoint-mode-spec.md`](../wiki/specs/gestures/trackpoint-mode-spec.md) and renders at <https://cleverkeys.app/specs/gestures/trackpoint-mode-spec/>.
+> This file is preserved for cross-references but may not be kept in sync.
+
 ## Overview
 
 TrackPoint Navigation Mode provides joystick-style cursor control by holding arrow keys (without initial swipe movement). When activated, finger movement in any direction moves the cursor proportionally, with speed scaling based on distance from the activation point. Supports all 8 directions including diagonals for fluid text navigation.

@@ -1,23 +1,36 @@
-# Neural Swipe Prediction System
+---
+title: Neural Prediction - Technical Specification
+description: Deep architectural reference for the ONNX neural swipe prediction pipeline (trajectory → encoder → beam-search decoder → vocabulary filter)
+status: implemented
+version: v1.4.0
+user_guide: ../../typing/swipe-typing.md
+---
 
-> **Note:** As of v1.4.0, the canonical version of this specification lives at
-> [`docs/wiki/specs/typing/neural-prediction-spec.md`](../wiki/specs/typing/neural-prediction-spec.md) and renders at <https://cleverkeys.app/specs/typing/neural-prediction-spec/>.
-> This file is preserved for cross-references but may not be kept in sync.
+# Neural Prediction Technical Specification
 
 ## Overview
 
 Pure ONNX neural transformer architecture for converting swipe gestures into ranked word predictions. This replaces legacy template-matching (CGR) with deep learning inference: trajectory → encoder → beam search decoder → vocabulary filter → predictions.
 
+The runtime pipeline is composed of small, independently testable modules orchestrated by `SwipePredictorOrchestrator`. Each module wraps one phase of the pipeline behind an interface so the beam search engine can be exercised against fake decoders in pure JVM tests.
+
 ## Key Files
 
 | File | Class/Function | Purpose |
 |------|----------------|---------|
-| `src/main/kotlin/tribixbite/cleverkeys/OnnxSwipePredictorImpl.kt` | `OnnxSwipePredictorImpl` | Core prediction pipeline (~1500 lines) |
-| `src/main/kotlin/tribixbite/cleverkeys/SwipeTrajectoryProcessor.kt` | Feature extraction | Smoothing, velocity, normalization |
-| `src/main/kotlin/tribixbite/cleverkeys/OptimizedVocabularyImpl.kt` | `OptimizedVocabulary` | Dictionary filtering |
-| `src/main/kotlin/tribixbite/cleverkeys/data/LanguageDetector.kt` | `LanguageDetector` | Multi-language detection |
-| `assets/models/swipe_model_character_quant.onnx` | Encoder model | ~4MB quantized |
-| `assets/models/swipe_decoder_character_quant.onnx` | Decoder model | ~4MB quantized |
+| `src/main/kotlin/tribixbite/cleverkeys/onnx/SwipePredictorOrchestrator.kt` | `SwipePredictorOrchestrator` | Top-level orchestrator (singleton) wiring all components |
+| `src/main/kotlin/tribixbite/cleverkeys/onnx/EncoderWrapper.kt` | `EncoderWrapper` | Encoder ONNX session adapter |
+| `src/main/kotlin/tribixbite/cleverkeys/onnx/DecoderWrapper.kt` | `DecoderWrapper` | Decoder ONNX session adapter (`runDecoder`) |
+| `src/main/kotlin/tribixbite/cleverkeys/onnx/BeamSearchEngine.kt` | `BeamSearchEngine` | Beam search with trie guidance, adaptive pruning, length normalization |
+| `src/main/kotlin/tribixbite/cleverkeys/onnx/PredictionPostProcessor.kt` | `PredictionPostProcessor` | Score normalization, dedup, vocabulary filtering |
+| `src/main/kotlin/tribixbite/cleverkeys/onnx/MemoryPool.kt` | `MemoryPool` | Pre-allocated tensor / buffer pool |
+| `src/main/kotlin/tribixbite/cleverkeys/onnx/TensorFactory.kt` | `TensorFactory` | ONNX tensor construction helpers |
+| `src/main/kotlin/tribixbite/cleverkeys/SwipeTokenizer.kt` | `SwipeTokenizer` | Token ↔ character mapping (loads `tokenizer_config.json`) |
+| `src/main/kotlin/tribixbite/cleverkeys/SwipeTrajectoryProcessor.kt` | `SwipeTrajectoryProcessor` | Smoothing, velocity, normalization, nearest-key detection |
+| `src/main/kotlin/tribixbite/cleverkeys/OptimizedVocabulary.kt` | `OptimizedVocabulary` | Dictionary filtering + trie lookup |
+| `src/main/kotlin/tribixbite/cleverkeys/LanguageDetector.kt` | `LanguageDetector` | Multi-language detection |
+| `src/main/assets/models/swipe_encoder_android.onnx` | Encoder model | Quantized transformer encoder |
+| `src/main/assets/models/swipe_decoder_android.onnx` | Decoder model | Quantized character-level decoder |
 
 ## Architecture
 
@@ -53,7 +66,7 @@ Pure ONNX neural transformer architecture for converting swipe gestures into ran
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
 │              runBeamSearch() (Character Decoding)            │
-│  - Batched decoder inference (beam_width=8)                 │
+│  - Batched decoder inference (beam_width=6)                 │
 │  - Expand hypotheses, track log-probabilities               │
 │  - Terminate on EOS or max_length=20                        │
 │  Output: List<Beam(tokens, score)>                          │
@@ -83,11 +96,13 @@ Pure ONNX neural transformer architecture for converting swipe gestures into ran
 
 ## Configuration
 
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| `neural_beam_width` | Int | 6 | Beam search width (more = better quality, slower) |
-| `neural_max_length` | Int | 20 | Maximum word length in characters |
-| `neural_confidence_threshold` | Float | 0.3 | Minimum confidence to show prediction |
+Defaults live in `Defaults` (Config.kt:130-132). Validator clamps are in `backup/SettingsValidation.kt`.
+
+| Key | Type | Default | Valid Range | Description |
+|-----|------|---------|-------------|-------------|
+| `neural_beam_width` | Int | 6 | 1..32 | Beam search width (more = better quality, slower) |
+| `neural_max_length` | Int | 20 | — | Maximum word length in characters (must match model export) |
+| `neural_confidence_threshold` | Float | 0.01 | — | Minimum confidence to keep a candidate during beam search |
 
 ## Implementation Details
 
@@ -167,7 +182,18 @@ for (step in 0 until max_length) {
 return finishedBeams.sortedByDescending { it.score }
 ```
 
+`BeamSearchEngine` additionally implements (see `BeamSearchEngine.kt:26-48`):
+
+- **Trie-guided decoding** — logit masking against `VocabularyTrie` so only in-vocabulary prefixes can extend
+- **Adaptive width pruning** — narrows the beam after step 12 if the top hypothesis dominates (`adaptiveWidthConfidence=0.8f`)
+- **Score-gap early stopping** — terminates after step 10 if the score gap to the top beam exceeds `scoreGapThreshold=8.0f`
+- **Length-normalized scoring** — `lengthPenaltyAlpha=1.0f`
+- **Language-specific prefix boost** — Aho-Corasick `PrefixBoostTrie` rewards prefixes of the active language's frequent words
+- **Strict start char** — optionally constrains beams to the first detected key character
+
 ### Token Mapping
+
+The tokenizer is data-driven: `SwipeTokenizer.loadFromAssets()` reads `assets/models/tokenizer_config.json` and populates the bidirectional maps. The default layout matches the model export:
 
 ```kotlin
 val CHAR_MAP = mapOf(
@@ -199,31 +225,36 @@ fun decode(tokens: List<Int>): String {
 
 ### Model Architecture
 
-**Encoder Model** (`swipe_model_character_quant.onnx`):
-- Type: Transformer encoder (6 layers, 8 attention heads)
-- Input 1: `trajectory_features` [batch, 150, 6]
-- Input 2: `nearest_keys` [batch, 150]
-- Input 3: `src_mask` [batch, 150]
-- Output: `memory` [batch, 150, 256]
-- Size: ~4MB (INT8 quantized)
+**Encoder Model** (`swipe_encoder_android.onnx`):
+- Type: Transformer encoder
+- Input 1: `trajectory_features` [batch, 250, 6] (model export ceiling — see `MODEL_MAX_SEQUENCE_LENGTH` in `SwipePredictorOrchestrator.kt:40`)
+- Input 2: `nearest_keys` [batch, 250]
+- Input 3: `src_mask` [batch, 250]
+- Output: `memory` [batch, 250, hidden_dim]
+- Size: ~4MB (quantized)
 
-**Decoder Model** (`swipe_decoder_character_quant.onnx`):
+**Decoder Model** (`swipe_decoder_android.onnx`):
 - Type: Transformer decoder (character-level)
-- Input 1: `memory` [batch, 150, 256]
+- Input 1: `memory` [batch, src_len, hidden_dim]
 - Input 2: `tgt_input_ids` [batch, seq_len]
-- Output: `logits` [batch, seq_len, 35]
-- Vocabulary: 35 tokens (special + a-z + punctuation)
-- Size: ~4MB (INT8 quantized)
+- Output: `logits` [batch, seq_len, vocab_size]
+- Vocabulary: tokens for special + a-z + punctuation, loaded from `tokenizer_config.json`
+- Decoder sequence length is fixed at 20 by export (see `BeamSearchEngine.kt:60`)
+- Size: ~4MB (quantized)
+
+> **Note**: The encoder ONNX graph has its `trajectory_features` input shape baked in at export time (`max_seq_length=250` per `model_config.json`). Feeding a longer tensor causes `ORT_INVALID_ARGUMENT` (issue #136). Any user-supplied override is clamped to this ceiling by `SwipePredictorOrchestrator`.
 
 ### Performance Characteristics
 
 | Operation | Target | Method |
 |-----------|--------|--------|
-| Encoder inference | < 30ms | INT8 quantization |
+| Encoder inference | < 30ms | Quantization |
 | Decoder inference | < 50ms | Batched beam search |
 | Total latency | < 100ms | Memory pooling |
 
 ### Memory Optimization
+
+Pre-allocated buffers in `MemoryPool` avoid per-inference allocation:
 
 ```kotlin
 // OptimizedTensorPool prevents allocation during inference
@@ -237,3 +268,10 @@ class OptimizedTensorPool {
     }
 }
 ```
+
+## Related Specifications
+
+- [Swipe Typing](swipe-typing-spec.md) - User-facing swipe typing feature spec
+- [Autocorrect](autocorrect-spec.md) - Post-prediction correction layer
+- [User Dictionary](user-dictionary-spec.md) - Vocabulary customization
+- [Gesture System Overview](../gestures/gesture-system-overview-spec.md) - Touch routing pipeline that feeds neural prediction

@@ -1,27 +1,34 @@
-# Settings System
+---
+title: Settings System Architecture - Technical Specification
+description: Architectural overview of the CleverKeys settings system — Defaults singleton, Config, ConfigurationManager, and Material 3 Compose UI.
+status: implemented
+version: v1.4.0
+---
 
-> **Note:** As of v1.4.0, the canonical version of this specification lives at
-> [`docs/wiki/specs/settings/settings-system-architecture-spec.md`](../wiki/specs/settings/settings-system-architecture-spec.md) and renders at <https://cleverkeys.app/specs/settings/settings-system-architecture-spec/>.
-> This file is preserved for cross-references but may not be kept in sync.
+# Settings System Architecture
 
 ## Overview
 
-The settings system manages user preferences through SharedPreferences, provides a Material 3 Compose UI for configuration, and applies settings at runtime via the Config singleton. All default values are centralized in the `Defaults` object within Config.kt to prevent mismatches between UI display and actual behavior.
+The settings system manages user preferences through SharedPreferences, provides a Material 3 Compose UI for configuration, and applies settings at runtime via the `Config` singleton. All compile-time default values are centralized in the `Defaults` object inside `Config.kt` to prevent mismatches between UI display and actual behavior.
 
-## Key Files
+This document covers the cross-cutting architecture (defaults, Config singleton, ConfigurationManager, UI shell). Per-area details — labels, ranges, validation, and screenshots — live in the dedicated area specs (see [Per-Area Settings Specs](#per-area-settings-specs)).
+
+## Key Components
 
 | File | Class/Function | Purpose |
 |------|----------------|---------|
-| `src/main/kotlin/tribixbite/cleverkeys/Config.kt` | `Config`, `Defaults` | Global configuration singleton, centralized defaults |
-| `src/main/kotlin/tribixbite/cleverkeys/SettingsActivity.kt` | `SettingsActivity` | Material 3 Compose settings UI (~3000 lines) |
-| `src/main/kotlin/tribixbite/cleverkeys/ConfigurationManager.kt` | `ConfigurationManager` | Runtime configuration application |
+| `src/main/kotlin/tribixbite/cleverkeys/Config.kt` | `Config`, `Defaults` | Global configuration class, centralized defaults |
+| `src/main/kotlin/tribixbite/cleverkeys/SettingsActivity.kt` | `SettingsActivity` | Material 3 Compose settings UI (collapsible sections) |
+| `src/main/kotlin/tribixbite/cleverkeys/ConfigurationManager.kt` | `ConfigurationManager` | Owns Config + FoldStateTracker; observes prefs and notifies listeners |
+| `src/main/kotlin/tribixbite/cleverkeys/DirectBootAwarePreferences.kt` | `DirectBootAwarePreferences` | Device-protected preferences for direct-boot scenarios |
 | `src/main/kotlin/tribixbite/cleverkeys/theme/KeyboardTheme.kt` | `KeyboardTheme` | Theme data and application |
+| `src/main/kotlin/tribixbite/cleverkeys/backup/SettingsDefaults.kt` | `SETTINGS_DEFAULTS` | Backup/restore default snapshot (derived from `Defaults` via `PrefValue.toExportableValue()`) |
 
 ## Architecture
 
 ```
 SettingsActivity (Material 3 Compose)
-    ├── PreferenceScreen
+    ├── PreferenceScreen (collapsible sections)
     │   ├── Appearance Section
     │   ├── Input Behavior Section
     │   ├── Neural Prediction Section
@@ -30,14 +37,14 @@ SettingsActivity (Material 3 Compose)
     │   ├── Clipboard Section
     │   └── Advanced Section
     ├── Config (reads SharedPreferences)
-    └── ConfigurationManager (applies settings)
+    └── ConfigurationManager (observes prefs, notifies ConfigChangeListeners)
 
 Defaults Architecture:
-    └── Defaults object (Config.kt)
-        ├── Single source of truth for all ~100 default values
-        ├── Referenced by Config.kt refresh()
-        ├── Referenced by SettingsActivity.kt loadCurrentSettings()
-        └── Referenced by onSharedPreferenceChanged()
+    └── Defaults object (Config.kt:18)
+        ├── Single source of truth for all compile-time defaults
+        ├── Referenced by Config refresh
+        ├── Referenced by SettingsActivity loadCurrentSettings()
+        └── Referenced by SETTINGS_DEFAULTS via PrefValue.toExportableValue()
 
 Storage Strategy:
     ├── SharedPreferences (settings data)
@@ -50,7 +57,7 @@ Storage Strategy:
 
 ### Defaults Object
 
-The `Defaults` object centralizes all app default values:
+The `Defaults` object (`Config.kt:18`) centralizes all app default values:
 
 ```kotlin
 // Config.kt
@@ -89,6 +96,8 @@ object Defaults {
 }
 ```
 
+For exact current values per area, see the per-area specs ([Appearance](appearance-spec.md), [Input Behavior](input-behavior-spec.md), [Haptics](haptics-spec.md), [Neural Settings](neural-settings-spec.md)).
+
 ### Settings Categories
 
 | Category | Settings Count | Key Settings |
@@ -104,48 +113,59 @@ object Defaults {
 
 ## Public API
 
-### Config Singleton
+### Config
+
+`Config` is constructed by `ConfigurationManager` and exposed as a global singleton via the companion object (`Config.kt:1101-1121`):
 
 ```kotlin
-class Config private constructor(context: Context) {
+class Config private constructor(
+    private val _prefs: SharedPreferences,
+    res: Resources,
+    @JvmField val handler: IKeyEventHandler?,
+    foldableUnfolded: Boolean?
+) {
+    // From preferences
+    @JvmField var layouts: List<KeyboardData?> = emptyList()
+    @JvmField var show_numpad = false
+    @JvmField var haptic_enabled = Defaults.HAPTIC_ENABLED
+    // ... ~100 @JvmField vars sourced from Defaults
+
     companion object {
-        private var instance: Config? = null
+        private var _globalConfig: Config? = null
 
-        fun globalConfig(): Config = instance
-            ?: throw IllegalStateException("Config not initialized")
-
-        fun initialize(context: Context) {
-            instance = Config(context)
-        }
-    }
-
-    // Refresh from SharedPreferences
-    fun refresh() {
-        val prefs = context.getSharedPreferences("cleverkeys_prefs", MODE_PRIVATE)
-        theme = prefs.getString("theme", Defaults.THEME)!!
-        keyboardHeightPortrait = prefs.getInt("keyboard_height_portrait", Defaults.KEYBOARD_HEIGHT_PORTRAIT)
-        neuralBeamWidth = prefs.getInt("neural_beam_width", Defaults.NEURAL_BEAM_WIDTH)
-        // ... all other settings
-    }
-
-    // Save individual setting
-    fun saveSetting(key: String, value: Any) {
-        val prefs = context.getSharedPreferences("cleverkeys_prefs", MODE_PRIVATE)
-        prefs.edit().apply {
-            when (value) {
-                is String -> putString(key, value)
-                is Int -> putInt(key, value)
-                is Boolean -> putBoolean(key, value)
-                is Float -> putFloat(key, value)
-            }
-            apply()
-        }
-        refresh()
+        fun globalConfig(): Config = _globalConfig!!
+        fun globalPrefs(): SharedPreferences = _globalConfig!!._prefs
     }
 }
 ```
 
+### ConfigurationManager
+
+`ConfigurationManager` owns the `Config` instance, observes SharedPreferences, and uses the observer pattern to decouple config refresh from config propagation:
+
+```kotlin
+class ConfigurationManager(
+    private val context: Context,
+    private val config: Config,
+    private val foldStateTracker: FoldStateTracker
+) : SharedPreferences.OnSharedPreferenceChangeListener {
+
+    private val listeners = mutableListOf<ConfigChangeListener>()
+
+    init {
+        foldStateTracker.setChangedCallback {
+            refresh(context.resources)
+        }
+    }
+    // refresh, addListener, onSharedPreferenceChanged, etc.
+}
+```
+
+Components that need to respond to config changes implement `ConfigChangeListener` and register with `ConfigurationManager`.
+
 ### SettingsActivity
+
+`SettingsActivity` is a `ComponentActivity` that uses Material 3 Compose:
 
 ```kotlin
 class SettingsActivity : ComponentActivity() {
@@ -232,6 +252,7 @@ fun SettingsSlider(
 ```
 
 App-specific storage doesn't require permissions:
+
 ```kotlin
 val appDir = context.getExternalFilesDir(null)  // No permission needed
 ```
@@ -251,27 +272,7 @@ fun applyTheme(themeName: String) {
 
 ### Settings Change Listener
 
-```kotlin
-class Config(context: Context) : SharedPreferences.OnSharedPreferenceChangeListener {
-    init {
-        prefs.registerOnSharedPreferenceChangeListener(this)
-    }
-
-    override fun onSharedPreferenceChanged(prefs: SharedPreferences, key: String?) {
-        when (key) {
-            "theme" -> {
-                theme = prefs.getString("theme", Defaults.THEME)!!
-                ConfigurationManager.applyTheme(theme)
-            }
-            "keyboard_height_portrait" -> {
-                keyboardHeightPortrait = prefs.getInt(key, Defaults.KEYBOARD_HEIGHT_PORTRAIT)
-                CleverKeysService.getInstance()?.requestKeyboardResize()
-            }
-            // ... handle other settings
-        }
-    }
-}
-```
+`Config` reacts to preference changes through `ConfigurationManager`, which implements `SharedPreferences.OnSharedPreferenceChangeListener` and notifies registered `ConfigChangeListener` instances. Components that depend on a specific subset of preferences (theme, keyboard height, neural parameters, etc.) implement the listener interface rather than each reading SharedPreferences directly.
 
 ### Collapsible Sections Pattern
 
@@ -305,3 +306,14 @@ fun CollapsibleSection(
 ```
 
 This pattern means settings paths are "Settings > [expand section] > [setting]" rather than hierarchical navigation like "Settings > Appearance > Theme".
+
+## Per-Area Settings Specs
+
+This architectural spec covers the shared scaffolding. For exact values, ranges, validation rules, and per-key behavior, refer to:
+
+- [Appearance Settings](appearance-spec.md) — theme, keyboard height, opacity, borders, label brightness
+- [Input Behavior Settings](input-behavior-spec.md) — long-press timeout, key repeat, swipe geometry
+- [Haptics Settings](haptics-spec.md) — master haptic toggle and per-event vibration
+- [Neural Settings](neural-settings-spec.md) — beam width, confidence threshold, prefix boost
+
+For backup/restore and the import-preview pipeline (which exercises `SETTINGS_DEFAULTS`, `PrefValue`, and the diff engine), see the backup/restore specs.

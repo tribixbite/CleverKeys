@@ -1,9 +1,11 @@
-# Quick Settings Tile
+---
+title: Quick Settings Tile — Technical Specification
+description: KeyboardTileService quick-settings tile for fast keyboard switcher access
+status: implemented
+version: v1.4.0
+---
 
-> **Note:** As of v1.4.0, the canonical version of this specification lives at
-> [`docs/wiki/specs/customization/quick-settings-tile-spec.md`](../wiki/specs/customization/quick-settings-tile-spec.md)
-> and renders at <https://cleverkeys.app/specs/customization/quick-settings-tile-spec/>.
-> This file is preserved for cross-references but may not be kept in sync.
+# Quick Settings Tile
 
 ## Overview
 

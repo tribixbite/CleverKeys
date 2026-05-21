@@ -1,5 +1,9 @@
 # Selection-Delete Mode
 
+> **Note:** As of v1.4.0, the canonical version of this specification lives at
+> [`docs/wiki/specs/gestures/selection-delete-spec.md`](../wiki/specs/gestures/selection-delete-spec.md) and renders at <https://cleverkeys.app/specs/gestures/selection-delete-spec/>.
+> This file is preserved for cross-references but may not be kept in sync.
+
 ## Overview
 
 Selection-Delete Mode is a gesture that enables text selection by swiping and holding on the backspace key. When activated, horizontal finger movement selects characters (left/right), vertical movement selects lines (up/down), and releasing the finger deletes all selected text. This provides a single fluid gesture for rapid text correction.

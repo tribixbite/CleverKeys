@@ -384,7 +384,9 @@ clipboard_backup.zip
 | Sensitive Flag | `clipboard_respect_sensitive_flag` | true | bool (Android 13+) |
 | Pane Height | `clipboard_pane_height_percent` | 45 | 20-80% |
 
-## Privacy
+## Privacy and access control
+
+Privacy controls — password-manager exclusion, the Android 13+ `IS_SENSITIVE` flag, and media gating — are documented in [Clipboard Privacy](privacy-spec.md). Summary:
 
 - Clipboard media excluded from Android Auto Backup (`backup_rules.xml`, `data_extraction_rules.xml`)
 - Password manager exclusion via foreground app detection
@@ -392,7 +394,9 @@ clipboard_backup.zip
 - No INTERNET permission — all processing is local
 - Media files stored in app-private `filesDir` (not accessible to other apps)
 
+See [Clipboard Privacy](privacy-spec.md) for the full exclusion list, foreground-app detection code path, and media-gating logic.
+
 ## Related Specifications
 
-- [Clipboard Privacy](../../../../docs/specs/clipboard-privacy.md) - Password manager exclusion
+- [Clipboard Privacy](privacy-spec.md) — password manager exclusion, IS_SENSITIVE handling, media gating
 - [Text Selection](text-selection-spec.md) - Selection integration

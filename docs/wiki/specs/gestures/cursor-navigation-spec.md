@@ -1,123 +1,223 @@
 ---
 title: Cursor Navigation - Technical Specification
+description: Spacebar-slider continuous cursor and discrete arrow-key navigation.
 user_guide: ../../gestures/cursor-navigation.md
 status: implemented
-version: v1.2.7
+version: v1.4.0
 ---
 
 # Cursor Navigation Technical Specification
 
 ## Overview
 
-Cursor navigation through spacebar slider gesture and arrow key handling with repeat acceleration.
+CleverKeys provides two distinct cursor navigation mechanisms: slider-based cursor (spacebar) for continuous movement scaled by distance and speed, and arrow key navigation (dedicated nav key) for discrete single-character movement. Both are accessed via swipe gestures on bottom row keys, with optional repeat acceleration when an arrow key is held.
 
 ## Key Components
 
 | Component | File | Purpose |
 |-----------|------|---------|
-| Pointers | `Pointers.kt:600-800` | Spacebar slider detection |
-| KeyEventHandler | `KeyEventHandler.kt` | Arrow key event dispatch |
-| InputCoordinator | `InputCoordinator.kt` | Cursor position tracking |
-| Config | `Config.kt` | Slider sensitivity settings |
+| Pointers | `src/main/kotlin/tribixbite/cleverkeys/Pointers.kt` | `Sliding` inner class — touch tracking and movement calculation |
+| KeyValue | `src/main/kotlin/tribixbite/cleverkeys/KeyValue.kt` | `Slider` enum — cursor key definitions |
+| KeyEventHandler | `src/main/kotlin/tribixbite/cleverkeys/KeyEventHandler.kt` | `handleSlider()`, `moveCursor()` — cursor movement execution |
+| InputCoordinator | `src/main/kotlin/tribixbite/cleverkeys/InputCoordinator.kt` | Cursor position tracking |
+| Config | `src/main/kotlin/tribixbite/cleverkeys/Config.kt` | `swipe_scaling`, `slide_step_px`, slider sensitivity / smoothing / max |
+| Layout | `res/xml/bottom_row.xml` | Swipe direction mappings |
 
-## Spacebar Slider
+## Architecture
 
-### Detection Logic
+### Layout Configuration
+
+From `res/xml/bottom_row.xml`:
+
+```xml
+<!-- Spacebar: Slider-based cursor (continuous) -->
+<key width="4.4" key0="space" key5="cursor_left" key6="cursor_right"
+     key7="switch_forward" key8="switch_backward"/>
+
+<!-- Navigation key: Arrow keys (discrete) -->
+<key key0="loc compose" key5="left" key6="right" key7="up" key8="down"
+     key1="loc home" key2="loc page_up" key3="loc end" key4="loc page_down"/>
+```
+
+**Swipe direction mapping:**
+- `key5` = West (left swipe)
+- `key6` = East (right swipe)
+- `key7` = North (up swipe)
+- `key8` = South (down swipe)
+
+## Configuration
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `slider_sensitivity` | Int (% string) | 30 | Pixels per cursor movement (lower = more sensitive) |
+| `slider_speed_smoothing` | Float | 0.7 | Exponential smoothing factor (0.0-1.0) |
+| `slider_speed_max` | Float | 4.0 | Maximum speed multiplier |
+| `SLIDING_SPEED_VERTICAL_MULT` | Float (const) | 0.5 | Vertical movement reduction factor |
+
+> Default values reflect the current constants in `Config.kt:542-543` and `Pointers.kt:1747`. The previously-documented defaults (`0.6` / `6.0`) refer to an older configuration.
+
+## Implementation Details
+
+### Slider Key Types
 
 ```kotlin
-// Pointers.kt:~650
-private fun handleSpacebarSlide(ptr: Pointer) {
-    if (ptr.key.value != KeyValue.Event(Event.SPACE)) return
+// KeyValue.kt
+enum class Slider(val symbol: String) {
+    Cursor_left("\uE008"),
+    Cursor_right("\uE006"),
+    Cursor_up("\uE005"),
+    Cursor_down("\uE007"),
+    Selection_cursor_left("\uE008"),   // Extends selection leftward
+    Selection_cursor_right("\uE006");  // Extends selection rightward
+}
+```
 
-    val dx = ptr.x - ptr.downX
-    val threshold = config.spacebar_slider_threshold
+### The `swipe_scaling` Calculation
 
-    if (abs(dx) > threshold) {
-        val direction = if (dx > 0) DIRECTION_RIGHT else DIRECTION_LEFT
-        val steps = (abs(dx) / threshold).toInt()
+Device-adaptive scaling ensures consistent behavior across different screen sizes:
 
-        for (i in 0 until steps) {
-            sendCursorMove(direction)
+```kotlin
+// Config.kt
+val dpi_ratio = maxOf(dm.xdpi, dm.ydpi) / minOf(dm.xdpi, dm.ydpi)
+val swipe_scaling = minOf(dm.widthPixels, dm.heightPixels) / 10f * dpi_ratio
+
+val slider_sensitivity = prefs.getString("slider_sensitivity", "30").toFloat() / 100f
+slide_step_px = slider_sensitivity * swipe_scaling
+```
+
+**Example calculations by device:**
+
+| Device | Width | DPI Ratio | swipe_scaling | slide_step_px (30%) |
+|--------|-------|-----------|---------------|---------------------|
+| 1080p phone | 1080px | 1.0 | 108 | 32.4px |
+| 1440p phone | 1440px | 1.0 | 144 | 43.2px |
+| 720p phone | 720px | 1.0 | 72 | 21.6px |
+
+### Sliding Algorithm
+
+Located in `Pointers.kt:1443`:
+
+```kotlin
+inner class Sliding(
+    x: Float, y: Float,
+    val direction_x: Int,  // ±1 based on initial swipe direction
+    val direction_y: Int,
+    val slider: KeyValue.Slider
+) {
+    var d = 0f              // Accumulated fractional cursor movements
+    var speed = 1.0f        // Current speed multiplier (1.0 - max)
+    var last_move_ms: Long = -1  // Timestamp for speed calculation
+}
+
+fun onTouchMove(ptr: Pointer, x: Float, y: Float) {
+    val travelled = abs(x - last_x) + abs(y - last_y)
+    if (last_move_ms == -1L) {
+        if (travelled < _config.slide_step_px) {
+            return
         }
+        last_move_ms = System.currentTimeMillis()
+    }
+    // Accumulate distance with speed multiplier
+    d += ((x - last_x) * speed * direction_x +
+          (y - last_y) * speed * SLIDING_SPEED_VERTICAL_MULT * direction_y) /
+         _config.slide_step_px
+    update_speed(travelled, x, y)
+    // Send cursor event for each whole unit accumulated
+    val d_ = d.toInt()
+    if (d_ != 0) {
+        d -= d_
+        _handler.onPointerHold(KeyValue.sliderKey(slider, d_), ptr.modifiers)
+    }
+}
 
-        // Reset baseline for continuous sliding
-        ptr.downX = ptr.x
+private fun update_speed(travelled: Float, x: Float, y: Float) {
+    val now = System.currentTimeMillis()
+    val instant_speed = min(getSlidingSpeedMax(), travelled / (now - last_move_ms) + 1f)
+    speed = speed + (instant_speed - speed) * getSlidingSpeedSmoothing()
+    last_move_ms = now
+    last_x = x
+    last_y = y
+}
+```
+
+### Swipe Behavior Examples
+
+| Swipe Type | Distance | Time | Speed | Cursor Moves |
+|------------|----------|------|-------|--------------|
+| Short, slow | 50px | 200ms | ~1.0 | 1-2 positions |
+| Long, slow | 200px | 800ms | ~1.2 | 7-8 positions |
+| Fast | 150px | 75ms | ~2.5 | 11-12 positions |
+| Very fast | 200px | 40ms | ~4.0 (capped at `slider_speed_max`) | ~20 positions |
+
+### Arrow Key Navigation
+
+Discrete movement via DPAD key events:
+
+```kotlin
+// KeyValue.kt
+"up" -> keyeventKey(0xE005, KeyEvent.KEYCODE_DPAD_UP, 0)
+"right" -> keyeventKey(0xE006, KeyEvent.KEYCODE_DPAD_RIGHT, FLAG_SMALLER_FONT)
+"down" -> keyeventKey(0xE007, KeyEvent.KEYCODE_DPAD_DOWN, 0)
+"left" -> keyeventKey(0xE008, KeyEvent.KEYCODE_DPAD_LEFT, FLAG_SMALLER_FONT)
+```
+
+Each swipe triggers exactly ONE key event — no distance or speed scaling.
+
+### Comparison Table
+
+| Feature | Spacebar Slider | Nav Key Arrows |
+|---------|-----------------|----------------|
+| **Key values** | `cursor_left`, `cursor_right` | `left`, `right`, `up`, `down` |
+| **Movement type** | Continuous (fractional accumulation) | Discrete (one per swipe) |
+| **Speed-sensitive** | Yes (1x to `slider_speed_max`) | No |
+| **Distance-sensitive** | Yes (proportional) | No |
+| **Output method** | `InputConnection.setSelection()` | `KeyEvent.KEYCODE_DPAD_*` |
+| **Use case** | Quick navigation through text | Precise single-char movement |
+
+### Cursor Movement Execution
+
+```kotlin
+// KeyEventHandler.kt:706
+private fun handleSlider(s: KeyValue.Slider, r: Int, keyDown: Boolean) {
+    when (s) {
+        KeyValue.Slider.Cursor_left -> moveCursor(-r)
+        KeyValue.Slider.Cursor_right -> moveCursor(r)
+        KeyValue.Slider.Cursor_up -> moveCursorVertical(-r)
+        KeyValue.Slider.Cursor_down -> moveCursorVertical(r)
+        KeyValue.Slider.Selection_cursor_left -> moveCursorSel(r, true, keyDown)
+        KeyValue.Slider.Selection_cursor_right -> moveCursorSel(r, false, keyDown)
+    }
+}
+
+private fun moveCursor(d: Int) {
+    val conn = recv.getCurrentInputConnection() ?: return
+    val et = getCursorPos(conn)
+
+    if (et != null && canSetSelection(conn)) {
+        var selEnd = et.selectionEnd + d
+        var selStart = if ((metaState and KeyEvent.META_SHIFT_ON) == 0) selEnd else et.selectionStart
+        conn.setSelection(selStart, selEnd)
+    } else {
+        moveCursorFallback(d)  // Send arrow key events
     }
 }
 ```
 
-### Configuration
+### Holding an Arrow Key — Repeat with Acceleration
 
-| Setting | Key | Default | Range |
-|---------|-----|---------|-------|
-| **Slider Enabled** | `spacebar_slider_enabled` | true | boolean |
-| **Slider Threshold** | `spacebar_slider_threshold` | 20px | 10-50 |
-| **Slider Sensitivity** | `spacebar_slider_sensitivity` | 1.0 | 0.5-2.0 |
+When `keyrepeat_enabled` is set and the user holds a discrete arrow key (rather than swiping on the spacebar slider), the long-press handler engages a repeating timer. Each repeat tick re-sends the same DPAD key event with a progressively shorter delay, producing acceleration similar to a physical keyboard:
 
-## Arrow Key Handling
+- Initial delay: `longpress_timeout` (default 600 ms) before the first repeat fires
+- Each subsequent tick: delay is interpolated downward toward `TRACKPOINT_MIN_DELAY` (30 ms) as the hold persists
+- Releasing the key clears the timer immediately
 
-### Single Press
+Holding a nav key on a layout where that key has nav **subkeys** instead engages [TrackPoint Mode](trackpoint-mode-spec.md) — the repeat-accelerate path applies to plain (non-subkey) arrow keys.
 
-```kotlin
-// KeyEventHandler.kt:~300
-fun handleArrowKey(direction: Direction) {
-    val keyCode = when (direction) {
-        Direction.LEFT -> KeyEvent.KEYCODE_DPAD_LEFT
-        Direction.RIGHT -> KeyEvent.KEYCODE_DPAD_RIGHT
-        Direction.UP -> KeyEvent.KEYCODE_DPAD_UP
-        Direction.DOWN -> KeyEvent.KEYCODE_DPAD_DOWN
-    }
-    sendKeyEvent(keyCode)
-}
-```
+### Word Navigation
 
-### Repeat with Acceleration
+With the Ctrl modifier held, arrow keys jump by word boundary rather than character:
 
 ```kotlin
-// Pointers.kt:~700
-private fun startArrowRepeat(ptr: Pointer, direction: Direction) {
-    ptr.flags = ptr.flags or FLAG_P_NAV_HOLD_REPEAT
-
-    var delay = config.key_repeat_initial_delay // 400ms
-    val minDelay = config.key_repeat_min_delay   // 30ms
-    val acceleration = 0.8f
-
-    handler.postDelayed({
-        if (ptr.flags and FLAG_P_NAV_HOLD_REPEAT != 0) {
-            handleArrowKey(direction)
-            delay = max(minDelay, (delay * acceleration).toLong())
-            scheduleNextRepeat(delay)
-        }
-    }, delay)
-}
-```
-
-## Key Events Sent
-
-| Direction | KeyEvent | Android Constant |
-|-----------|----------|------------------|
-| **Left** | DPAD_LEFT | 21 |
-| **Right** | DPAD_RIGHT | 22 |
-| **Up** | DPAD_UP | 19 |
-| **Down** | DPAD_DOWN | 20 |
-| **Home** | MOVE_HOME | 122 |
-| **End** | MOVE_END | 123 |
-
-## InputConnection Methods
-
-```kotlin
-// Alternative to key events for precise control
-ic.setSelection(newPosition, newPosition)  // Move cursor
-ic.getTextBeforeCursor(n, 0)               // Get context
-ic.getTextAfterCursor(n, 0)                // Get context
-```
-
-## Word Navigation
-
-With Ctrl modifier:
-
-```kotlin
-// KeyEventHandler.kt:~350
 fun handleWordNavigation(direction: Direction, ic: InputConnection) {
     val text = when (direction) {
         Direction.LEFT -> ic.getTextBeforeCursor(100, 0)
@@ -129,8 +229,27 @@ fun handleWordNavigation(direction: Direction, ic: InputConnection) {
 }
 ```
 
+### Key Events Sent
+
+| Direction | KeyEvent | Android Constant |
+|-----------|----------|------------------|
+| **Left** | DPAD_LEFT | 21 |
+| **Right** | DPAD_RIGHT | 22 |
+| **Up** | DPAD_UP | 19 |
+| **Down** | DPAD_DOWN | 20 |
+| **Home** | MOVE_HOME | 122 |
+| **End** | MOVE_END | 123 |
+
+### InputConnection Methods
+
+```kotlin
+// Alternative to key events for precise control
+ic.setSelection(newPosition, newPosition)  // Move cursor
+ic.getTextBeforeCursor(n, 0)               // Get context
+ic.getTextAfterCursor(n, 0)                // Get context
+```
+
 ## Related Specifications
 
-- [TrackPoint Mode](trackpoint-mode-spec.md) - Continuous cursor movement
-- [Selection Delete](selection-delete-spec.md) - Cursor with selection
-- [Cursor Navigation System](../../../specs/cursor-navigation-system.md) - Full system spec
+- [TrackPoint Mode](trackpoint-mode-spec.md) - Continuous cursor movement on nav keys with subkeys
+- [Selection Delete](selection-delete-spec.md) - Cursor movement combined with text selection

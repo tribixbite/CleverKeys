@@ -90,6 +90,6 @@ Typical inference times:
 
 ## Related Specifications
 
-- [Neural Prediction](../../../specs/neural-prediction.md) - Full architecture details
-- [Gesture System](../../../specs/gesture-system.md) - Touch event handling
+- [Neural Prediction](neural-prediction-spec.md) - Deeper architectural reference (beam search algorithm, token mapping, model I/O shapes, memory pooling)
+- [Gesture System Overview](../gestures/gesture-system-overview-spec.md) - Touch event routing and `hasLeftStartingKey` gatekeeper
 - [Autocorrect Specification](autocorrect-spec.md)

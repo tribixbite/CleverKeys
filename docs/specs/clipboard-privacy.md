@@ -1,5 +1,9 @@
 # Clipboard Privacy
 
+> **Note:** As of v1.4.0, the canonical version of this specification lives at
+> [`docs/wiki/specs/clipboard/privacy-spec.md`](../wiki/specs/clipboard/privacy-spec.md) and renders at <https://cleverkeys.app/specs/clipboard/privacy-spec/>.
+> This file is preserved for cross-references but may not be kept in sync.
+
 ## Overview
 
 CleverKeys includes privacy features for the clipboard history system, primarily automatic exclusion of clipboard entries from password managers. When enabled, CleverKeys detects when the foreground app is a password manager and skips storing clipboard content, preventing sensitive credentials from appearing in clipboard history.

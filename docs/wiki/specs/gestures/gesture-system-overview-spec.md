@@ -1,20 +1,27 @@
-# Gesture Recognition System
+---
+title: Gesture System Overview - Technical Specification
+description: Architectural overview of the multi-layered gesture recognition pipeline (short swipes, long swipes, circles, sliders) and the hasLeftStartingKey routing gatekeeper
+status: implemented
+version: v1.4.0
+---
 
-> **Note:** As of v1.4.0, the canonical version of this specification lives at
-> [`docs/wiki/specs/gestures/gesture-system-overview-spec.md`](../wiki/specs/gestures/gesture-system-overview-spec.md) and renders at <https://cleverkeys.app/specs/gestures/gesture-system-overview-spec/>.
-> This file is preserved for cross-references but may not be kept in sync.
+# Gesture System Overview
 
 ## Overview
 
 CleverKeys implements a multi-layered gesture recognition system that handles four gesture types: short swipes (directional swipes within a key for sublabels), long swipes (gestures across keys for neural word prediction), circle/rotation gestures (for double letters), and slider gestures (continuous value adjustment). The `hasLeftStartingKey` flag is the central decision point that routes touches to the appropriate handler.
 
+This spec is the system-level overview. Per-gesture behavior is documented in the linked specifications under "Related Specifications".
+
 ## Key Files
 
 | File | Class/Function | Purpose |
 |------|----------------|---------|
-| `src/main/kotlin/tribixbite/cleverkeys/Pointers.kt` | `Pointers` | Touch event handling, gesture pipeline routing (~1100 lines) |
+| `src/main/kotlin/tribixbite/cleverkeys/Pointers.kt` | `Pointers` | Touch event handling, gesture pipeline routing (~1789 lines) |
+| `src/main/kotlin/tribixbite/cleverkeys/Pointers.kt` | `Pointers.Pointer` (internal class) | Per-pointer state including `hasLeftStartingKey` |
 | `src/main/kotlin/tribixbite/cleverkeys/GestureClassifier.kt` | `GestureClassifier` | TAP vs SWIPE classification (65 lines) |
 | `src/main/kotlin/tribixbite/cleverkeys/Gesture.kt` | `Gesture` | Circle/rotation state machine (141 lines) |
+| `src/main/kotlin/tribixbite/cleverkeys/customization/SwipeDirection.kt` | `SwipeDirection` | 8-direction enum for short swipes |
 | `src/main/kotlin/tribixbite/cleverkeys/Config.kt` | Gesture settings | Configuration thresholds |
 | `src/main/kotlin/tribixbite/cleverkeys/Keyboard2View.kt` | `getKeyHypotenuse()` | Key dimension calculation |
 
@@ -69,6 +76,8 @@ if (ptr.key != null && !ptr.hasLeftStartingKey) {
     }
 }
 ```
+
+See `Pointers.kt:734-744` for the live implementation.
 
 ## Configuration
 
@@ -253,6 +262,8 @@ private fun onTouchUp(ptr: Pointer) {
 
 ### Pointer State
 
+The per-pointer state lives in the internal `Pointers.Pointer` class (`Pointers.kt:1389`). The conceptual shape:
+
 ```kotlin
 data class Pointer(
     var key: KeyboardData.Key?,       // Starting key
@@ -266,3 +277,13 @@ data class Pointer(
     var flags: Int                     // State flags (trackpoint, selection-delete, etc.)
 )
 ```
+
+## Related Specifications
+
+- [Short Swipes](short-swipes-spec.md) - Per-key 8-direction sublabel gestures
+- [Circle Gestures](circle-gestures-spec.md) - Rotation-based double-letter input
+- [Cursor Navigation](cursor-navigation-spec.md) - Spacebar swipe cursor movement
+- [Selection / Delete](selection-delete-spec.md) - Backspace swipe word-delete and selection
+- [Trackpoint Mode](trackpoint-mode-spec.md) - Continuous cursor control
+- [Neural Prediction](../typing/neural-prediction-spec.md) - The long-swipe consumer
+- [Swipe Typing](../typing/swipe-typing-spec.md) - User-facing swipe typing feature
