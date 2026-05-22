@@ -223,6 +223,42 @@ Status button cycles through all three states.
 - **IME Toasts invisible**: Android Toasts render behind the keyboard panel (lower Z-order). Use tab icon pulse (`onItemAddedToTab`) or in-view feedback instead. Toasts are OK for non-IME contexts (settings activities).
 - **applyFilter(resetView)**: Always pass `resetView=false` when reloading data after an action (pin, todo, delete). Pass `true` only when the filter criteria themselves changed.
 
+## URL Sanitization (Chunk 3, v1.4.0+)
+
+Inserted clipboard text is run through a URL sanitizer BEFORE the database write,
+at `ClipboardHistoryService.addClip()` line ~288. Sequence is:
+
+```
+addClip(rawText)
+  ↓ privacy gates (password manager check, IS_SENSITIVE flag)
+  ↓ size cap (MAX_CLIP_LEN)
+  ↓ _sanitizationConfig.sanitizer().process(text)
+  ↓ database.insertEntry()
+```
+
+Sanitizer files live in `clipboard/sanitize/`:
+- `UrlSanitizer.kt` — provider matching + `process()` + `stripQueryParams()`
+- `SanitizationConfig.kt` — toggle resolution + lazy cache + `rebuild()` on settings change
+- `RulesetParser.kt` — ClearURLs JSON parser + ruleset merge
+
+Settings hooks: three independent boolean toggles in `Config.kt:464` ("Chunk 3"):
+- `clipboard_sanitize_links_enabled` — bundled `assets/url_rules/clearurls.json`
+- `clipboard_embed_enrich_enabled` — bundled `assets/url_rules/embed_enrich.json`
+- `clipboard_custom_rules_enabled` (+ `clipboard_custom_rules_uri`) — user-supplied JSON via SAF
+
+All default OFF. NoOpSanitizer is returned when all are off (no asset access). Settings UI broadcasts
+`SettingsActivity.ACTION_SANITIZATION_RULES_CHANGED` on any toggle change; ClipboardHistoryService
+drops its cached sanitizer in response (`SanitizationConfig.rebuild()`).
+
+When debugging "sanitizer didn't strip my URL", check in order:
+1. Is `clipboard_sanitize_links_enabled` true (not just `embed_enrich`)?
+2. Is the domain in `assets/url_rules/clearurls.json`? grep for it. If not, fall-through to globalRules
+   only — only `utm_*`, `fbclid`, `gclid` family will be stripped.
+3. Is the specific param name in any rule regex for the matched provider? `Regex.matches(name)` is
+   case-insensitive but exact-match — `aff_short` doesn't match `aff_request_id` even though both look "aff".
+
+See `docs/wiki/specs/clipboard/url-sanitization-spec.md` for the full algorithm + code refs.
+
 ## Related Skills
 - `ime-key-routing.md` — How key events reach inline editors
 - `ime-visual-feedback.md` — Tab pulse and other IME-safe feedback patterns (toasts are invisible)

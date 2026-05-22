@@ -139,3 +139,49 @@ if (featureEnabled) {
 Activities, Multi-Language, Privacy, Neural, Appearance, Swipe Trail,
 Input, Swipe Corrections, Gesture Tuning, Accessibility, **Clipboard**,
 Backup & Restore, Advanced, Info, Help & FAQ
+
+## Notable Config Chunks
+
+The Config file groups settings into "Chunks" — informal section markers
+in comments. When adding a setting, find the right Chunk for locality:
+
+- **Chunk 3** (Config.kt:464 and refresh block at 743): URL sanitization
+  toggles for the clipboard pipeline. Keys:
+  `clipboard_sanitize_links_enabled`, `clipboard_embed_enrich_enabled`,
+  `clipboard_custom_rules_enabled`, `clipboard_custom_rules_uri`. All
+  default OFF. Changes broadcast `SettingsActivity.ACTION_SANITIZATION_RULES_CHANGED`
+  so `ClipboardHistoryService` rebuilds its cached `UrlSanitizer`. See
+  `clipboard-panel-architecture.md` and `docs/wiki/specs/clipboard/
+  url-sanitization-spec.md` for the full pipeline.
+
+## Autocorrect Knobs (v1.4.0 + KeyAdjacency)
+
+Calibrated thresholds — don't change without re-running `AutocorrectTest`
+(36 instrumented + 31 pure-JVM `KeyAdjacencyTest` cases):
+
+| Key | Default | Range | Controls |
+|-----|---------|-------|----------|
+| `autocorrect_enabled` | true | bool | Master toggle |
+| `autocorrect_min_word_length` | 2 | 1-5 | Skip very short words |
+| `autocorrect_prefix_length` | 0 | 0-5 | Required leading-char match (0 allows first-char typos) |
+| `autocorrect_char_match_threshold` | 0.65 | 0.5-0.95 | Min KeyAdjacency weighted score |
+| `autocorrect_max_length_diff` | 2 | 0-5 | Allow ±N length candidates |
+| `autocorrect_confidence_min_frequency` | 100 | 0+ | Winner must clear this dict frequency |
+
+Selection has four hardcoded tiers in `WordPredictor.kt:~1900` —
+`SCORE_TIEBREAK_GAP=0.10f`, `ALIAS_SCORE_BONUS=0.15f`,
+`MIN_SAME_LENGTH_EXACT_RATIO=0.50f`, `LENGTH_DIFF_ED_BUDGET=0.5f`. See
+`docs/wiki/specs/typing/autocorrect-spec.md` for the calibration rationale.
+
+## Backup/Restore + Spec Site Integration
+
+For settings that need backup/restore + a live-site spec page, BOTH
+`backup/SettingsValidation.kt` and `backup/SettingsDefaults.kt` must
+classify the key. The `SettingsDefaultsDriftTest` scans source for any
+`prefs.get*` / `editor.put*` call and asserts every key is classified —
+build fails if a new setting is added without classification.
+
+The companion spec at `docs/wiki/specs/settings/settings-system-
+architecture-spec.md` documents the full pipeline: Defaults singleton,
+Config constructor, ConfigurationManager listener, observer pattern,
+backup serialization format.
