@@ -66,6 +66,15 @@
 - [ ] Web demo P2 (lazy loading, PWA)
 - [ ] Legacy code migration (deprecated Activities, preferences)
 
+### Planned (design docs written, awaiting implementation)
+- [ ] **Full-Keyboard Trackpad Mode** (#143) — converts entire keyboard panel
+  into a virtual trackpad on command. Design spec:
+  [`docs/wiki/specs/gestures/full-trackpad-mode-spec.md`](wiki/specs/gestures/full-trackpad-mode-spec.md)
+  · live: <https://cleverkeys.app/specs/gestures/full-trackpad-mode-spec/>
+  · ~250 LOC + tests. Needs UX decisions on exit gesture (quick-tap vs
+  two-finger tap vs visible ✕) and tap-to-place-cursor semantics before
+  implementation.
+
 ---
 
 ## Proposed Next Steps
