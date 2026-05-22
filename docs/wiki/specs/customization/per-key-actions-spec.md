@@ -91,7 +91,8 @@ enum class ActionType(val displayName: String, val description: String) {
     TEXT("Text Input", "Insert text directly"),
     COMMAND("Command", "Execute keyboard command (copy, paste, cursor, etc.)"),
     KEY_EVENT("Key Event", "Send raw key event (advanced)"),
-    INTENT("Send Intent", "Send Android Intent (advanced)")
+    INTENT("Send Intent", "Send Android Intent (advanced)"),
+    TIMESTAMP("Timestamp", "Insert formatted date/time using SimpleDateFormat pattern")
 }
 ```
 
@@ -130,7 +131,8 @@ File: `short_swipe_customizations.json`
         "actionValue": "{\"name\":\"Termux Command\",\"targetType\":\"SERVICE\",\"action\":\"com.termux.RUN_COMMAND\",\"packageName\":\"com.termux\",\"className\":\"com.termux.app.RunCommandService\",\"extras\":{\"com.termux.RUN_COMMAND_PATH\":\"/data/data/com.termux/files/usr/bin/echo\",\"com.termux.RUN_COMMAND_ARGUMENTS\":\"Hello\",\"com.termux.RUN_COMMAND_BACKGROUND\":\"true\"}}",
         "useKeyFont": false
       }
-    }
+    },
+    "d": { "N": { "displayText": "date", "actionType": "TIMESTAMP", "actionValue": "yyyy-MM-dd", "useKeyFont": false } }
   }
 }
 ```
@@ -207,10 +209,33 @@ class CustomShortSwipeExecutor(
             ActionType.COMMAND -> executeCommandByName(mapping.actionValue, inputConnection, editorInfo)
             ActionType.KEY_EVENT -> executeKeyEvent(mapping.getKeyEventCode(), inputConnection)
             ActionType.INTENT -> executeIntent(mapping.actionValue)
+            ActionType.TIMESTAMP -> executeTimestamp(mapping.actionValue, inputConnection)
         }
     }
 }
 ```
+
+### Timestamp Action Type
+
+The TIMESTAMP action type formats the current `Date` with a [SimpleDateFormat](https://developer.android.com/reference/java/text/SimpleDateFormat) pattern stored in `actionValue` and commits the result via `InputConnection.commitText`. The current system default `Locale` is used.
+
+```kotlin
+private fun executeTimestamp(pattern: String, ic: InputConnection?): Boolean {
+    if (ic == null) return false
+    return try {
+        val formatter = SimpleDateFormat(pattern, Locale.getDefault())
+        val formatted = formatter.format(Date())
+        ic.commitText(formatted, 1)
+    } catch (e: IllegalArgumentException) {
+        // Malformed pattern (e.g. unclosed quote, unknown letter)
+        false
+    } catch (e: Exception) {
+        false
+    }
+}
+```
+
+Invalid patterns are caught and result in a no-op (`false` return). Preset chips in `CommandPaletteDialog` provide the common patterns (`yyyy-MM-dd`, `HH:mm`, `yyyy-MM-dd HH:mm`, ISO 8601, etc.); users can also enter any custom pattern.
 
 ### Terminal-Aware Paste
 

@@ -1,5 +1,8 @@
 package tribixbite.cleverkeys.customization
 
+import java.text.SimpleDateFormat
+import java.util.Locale
+
 /**
  * Represents a single short swipe mapping for a key in a specific direction.
  *
@@ -7,7 +10,8 @@ package tribixbite.cleverkeys.customization
  * @property direction The swipe direction this mapping applies to
  * @property displayText The text shown on the key's sub-label (max 4 characters for display)
  * @property actionType The type of action to execute
- * @property actionValue The action data (text content, command name, or key event code)
+ * @property actionValue The action data (text content, command name, key event code, or
+ *     [SimpleDateFormat] pattern for [ActionType.TIMESTAMP])
  * @property useKeyFont Whether to render displayText with the special keyboard icon font
  */
 data class ShortSwipeMapping(
@@ -26,6 +30,15 @@ data class ShortSwipeMapping(
         require(actionValue.length <= MAX_ACTION_LENGTH) {
             "actionValue must be at most $MAX_ACTION_LENGTH characters"
         }
+        // For TIMESTAMP, validate the actionValue is a parseable SimpleDateFormat pattern.
+        // SimpleDateFormat constructor throws IllegalArgumentException for malformed patterns
+        // (e.g. unclosed quotes "abc'") but accepts unknown pattern letters as literals.
+        if (actionType == ActionType.TIMESTAMP) {
+            require(actionValue.isNotBlank()) { "TIMESTAMP actionValue (pattern) cannot be blank" }
+            require(isValidTimestampPattern(actionValue)) {
+                "TIMESTAMP actionValue must be a valid SimpleDateFormat pattern: '$actionValue'"
+            }
+        }
         // Note: We no longer validate command names here because we support two systems:
         // 1. CommandRegistry (camelCase names like "selectAll") - new system with 143+ commands
         // 2. AvailableCommand enum (SCREAMING_SNAKE like "SELECT_ALL") - legacy system
@@ -38,6 +51,29 @@ data class ShortSwipeMapping(
 
         /** Maximum characters for action value (text input or serialized intent) */
         const val MAX_ACTION_LENGTH = 4096
+
+        /**
+         * Validate that [pattern] is a parseable [SimpleDateFormat] pattern.
+         *
+         * SimpleDateFormat's constructor throws [IllegalArgumentException] for unknown
+         * pattern letters and unterminated quotes — both cases we want to reject.
+         *
+         * @return true if pattern is non-blank and can be used to construct a
+         *         [SimpleDateFormat] without throwing; false otherwise.
+         */
+        @JvmStatic
+        fun isValidTimestampPattern(pattern: String): Boolean {
+            if (pattern.isBlank()) return false
+            return try {
+                SimpleDateFormat(pattern, Locale.getDefault())
+                true
+            } catch (_: IllegalArgumentException) {
+                false
+            } catch (_: NullPointerException) {
+                // Defensive: shouldn't happen for non-null non-blank input
+                false
+            }
+        }
 
         /**
          * Create a text input mapping.
@@ -110,6 +146,31 @@ data class ShortSwipeMapping(
             actionValue = intentJson.take(MAX_ACTION_LENGTH),
             useKeyFont = useKeyFont
         )
+
+        /**
+         * Create a timestamp mapping.
+         *
+         * The [pattern] is a [SimpleDateFormat] pattern (e.g. "yyyy-MM-dd HH:mm").
+         * At execution time, the current Date is formatted with [Locale.getDefault]
+         * and the result is committed as text via InputConnection.
+         *
+         * @throws IllegalArgumentException if [pattern] is not a valid SimpleDateFormat
+         *         pattern (constructor would throw).
+         */
+        fun timestamp(
+            keyCode: String,
+            direction: SwipeDirection,
+            displayText: String,
+            pattern: String,
+            useKeyFont: Boolean = false
+        ): ShortSwipeMapping = ShortSwipeMapping(
+            keyCode = keyCode.lowercase(),
+            direction = direction,
+            displayText = displayText.take(MAX_DISPLAY_LENGTH),
+            actionType = ActionType.TIMESTAMP,
+            actionValue = pattern.take(MAX_ACTION_LENGTH),
+            useKeyFont = useKeyFont
+        )
     }
 
     /**
@@ -139,6 +200,15 @@ data class ShortSwipeMapping(
         return if (actionType == ActionType.INTENT) {
             IntentDefinition.parseFromGson(actionValue)
         } else null
+    }
+
+    /**
+     * Get the timestamp pattern if this is a TIMESTAMP type mapping.
+     * Validation already happened in [init], so the pattern is guaranteed parseable.
+     * @return The [SimpleDateFormat] pattern, or null if not a TIMESTAMP mapping.
+     */
+    fun getTimestampPattern(): String? {
+        return if (actionType == ActionType.TIMESTAMP) actionValue else null
     }
 
     /**

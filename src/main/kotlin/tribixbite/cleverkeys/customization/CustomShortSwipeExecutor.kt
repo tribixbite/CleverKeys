@@ -8,6 +8,9 @@ import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
 import android.widget.Toast
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import tribixbite.cleverkeys.ClipboardDatabase
 import tribixbite.cleverkeys.KeyValue
 import tribixbite.cleverkeys.TerminalUtils
@@ -41,6 +44,36 @@ class CustomShortSwipeExecutor(private val context: Context) {
             ActionType.COMMAND -> executeCommandByName(mapping.actionValue, inputConnection, editorInfo)
             ActionType.KEY_EVENT -> executeKeyEvent(mapping.getKeyEventCode(), inputConnection)
             ActionType.INTENT -> executeIntent(mapping.actionValue)
+            ActionType.TIMESTAMP -> executeTimestamp(mapping.actionValue, inputConnection)
+        }
+    }
+
+    /**
+     * Execute a TIMESTAMP action: format current Date with the SimpleDateFormat
+     * pattern stored in [pattern] and commit the result as text.
+     *
+     * @param pattern A SimpleDateFormat pattern (e.g. "yyyy-MM-dd HH:mm")
+     * @param ic Target [InputConnection]
+     * @return true on successful commit; false if [ic] is null, the pattern fails to
+     *         format (e.g. malformed at runtime), or commitText returns false.
+     */
+    private fun executeTimestamp(pattern: String, ic: InputConnection?): Boolean {
+        if (ic == null) {
+            Log.w(TAG, "Cannot execute TIMESTAMP: input connection is null")
+            return false
+        }
+        return try {
+            val formatter = SimpleDateFormat(pattern, Locale.getDefault())
+            val formatted = formatter.format(Date())
+            val committed = ic.commitText(formatted, 1)
+            Log.d(TAG, "Executed TIMESTAMP action: pattern='$pattern' -> '$formatted' (committed=$committed)")
+            committed
+        } catch (e: IllegalArgumentException) {
+            Log.e(TAG, "Invalid SimpleDateFormat pattern: '$pattern'", e)
+            false
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to execute TIMESTAMP action", e)
+            false
         }
     }
 

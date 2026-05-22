@@ -353,6 +353,7 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
                                     "intent"
                                 }
                             }
+                            ActionType.TIMESTAMP -> "timestamp: ${selection.actionValue}"
                         }
                         Toast.makeText(
                             context,
@@ -613,6 +614,7 @@ private fun MappingListItem(
                             "Intent (invalid)"
                         }
                     }
+                    ActionType.TIMESTAMP -> "Timestamp: ${mapping.actionValue}"
                 }
                 Text(
                     text = actionDesc,

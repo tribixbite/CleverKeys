@@ -355,6 +355,7 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.BeamSearchEngineTest',
     'tribixbite.cleverkeys.PipelineIntegrationTest',
     'tribixbite.cleverkeys.ShortSwipeIntentTest',
+    'tribixbite.cleverkeys.customization.ShortSwipeMappingTest',
     'tribixbite.cleverkeys.GestureTest',
     'tribixbite.cleverkeys.ModmapTest',
     'tribixbite.cleverkeys.ComposeKeyPureTest',
@@ -440,6 +441,7 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.backup.DictImportPlanApplyTest',
     'tribixbite.cleverkeys.backup.BackupRestoreManagerHeadlessTest',
     'tribixbite.cleverkeys.clipboard.sanitize.SanitizationConfigBuildTest',
+    'tribixbite.cleverkeys.customization.CustomShortSwipeExecutorTest',
   ]
 
   mainClass = 'org.junit.runner.JUnitCore'

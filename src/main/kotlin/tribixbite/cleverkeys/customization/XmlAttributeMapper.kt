@@ -49,6 +49,12 @@ object XmlAttributeMapper {
                 val escapedJson = mapping.actionValue.replace("'", "\\'")
                 "intent:'$escapedJson'"
             }
+            ActionType.TIMESTAMP -> {
+                // Use the timestamp:'pattern' syntax recognized by KeyValueParser.
+                // Escape single quotes in the pattern (rare but supported by quote escaping).
+                val escapedPattern = mapping.actionValue.replace("'", "\\'")
+                "timestamp:'$escapedPattern'"
+            }
         }
     }
 

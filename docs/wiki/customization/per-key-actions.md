@@ -71,6 +71,20 @@ Changes are saved automatically. Tap **Done** to return.
 | **Undo/Redo** | Undo or redo action |
 | **Copy/Cut/Paste** | Clipboard operations (terminal-aware — see below) |
 | **Select All** | Select all text |
+| **Timestamp** | Insert current date/time using a SimpleDateFormat pattern (see below) |
+
+### Timestamp Action
+
+The **Timestamp** action type inserts the current date and/or time, formatted via a [SimpleDateFormat](https://developer.android.com/reference/java/text/SimpleDateFormat) pattern. The pattern is the action value; at swipe time the current `Date` is formatted with the system default locale and the result is committed to the text field.
+
+| Pattern | Example output |
+|---------|----------------|
+| `yyyy-MM-dd HH:mm` | `2026-05-22 14:30` |
+| `yyyy-MM-dd` | `2026-05-22` |
+| `HH:mm` | `14:30` |
+| `yyyy-MM-dd'T'HH:mm:ssXXX` | `2026-05-22T14:30:00+00:00` (ISO 8601) |
+
+Any valid SimpleDateFormat pattern works. The Command Palette dialog also offers a few preset chips covering the common date/time formats.
 
 ## Common Customizations
 

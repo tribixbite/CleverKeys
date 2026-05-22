@@ -43,6 +43,17 @@ enum class ActionType(
     INTENT(
         displayName = "Send Intent",
         description = "Send Android Intent (advanced)"
+    ),
+
+    /**
+     * Insert a formatted date/time using a [java.text.SimpleDateFormat] pattern.
+     * The actionValue contains the pattern (e.g. "yyyy-MM-dd HH:mm").
+     * At execution time, the current Date is formatted using the system default
+     * locale and the resulting string is committed via InputConnection.
+     */
+    TIMESTAMP(
+        displayName = "Timestamp",
+        description = "Insert formatted date/time using SimpleDateFormat pattern"
     );
 
     companion object {

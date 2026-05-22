@@ -60,12 +60,14 @@ fun CommandPaletteDialog(
     var searchQuery by remember { mutableStateOf(initialSearchQuery) }
     var showTextInput by remember { mutableStateOf(false) }
     var showIntentEditor by remember { mutableStateOf(false) }
+    var showTimestampEditor by remember { mutableStateOf(false) }
     var customText by remember { mutableStateOf("") }
 
     // State for label confirmation dialog
     var pendingCommand by remember { mutableStateOf<CommandRegistry.Command?>(null) }
     var pendingText by remember { mutableStateOf<String?>(null) }
     var pendingIntentDef by remember { mutableStateOf<IntentDefinition?>(null) }
+    var pendingTimestampPattern by remember { mutableStateOf<String?>(null) }
     var customLabel by remember { mutableStateOf("") }
 
     // Get filtered commands
@@ -78,7 +80,7 @@ fun CommandPaletteDialog(
     }
 
     // Show label confirmation dialog when pending selection exists
-    if (pendingCommand != null || pendingText != null || pendingIntentDef != null) {
+    if (pendingCommand != null || pendingText != null || pendingIntentDef != null || pendingTimestampPattern != null) {
         // Get display info for commands (includes icon and font flag)
         val commandDisplayInfo = pendingCommand?.let {
             CommandRegistry.getDisplayInfo(it.name)
@@ -87,17 +89,28 @@ fun CommandPaletteDialog(
         // Determine if this is an icon-based command
         val isIconMode = commandDisplayInfo?.useKeyFont == true
 
+        // Pre-compute a live preview for timestamp patterns
+        val timestampPreview = pendingTimestampPattern?.let { p ->
+            runCatching {
+                java.text.SimpleDateFormat(p, java.util.Locale.getDefault())
+                    .format(java.util.Date())
+            }.getOrNull()
+        }
+
         LabelConfirmationDialog(
             defaultLabel = when {
                 pendingCommand != null -> commandDisplayInfo?.displayText ?: pendingCommand!!.displayName.take(4)
                 pendingText != null -> pendingText!!.take(4)
                 pendingIntentDef != null -> pendingIntentDef!!.name.take(4)
+                pendingTimestampPattern != null -> (timestampPreview ?: pendingTimestampPattern!!).take(4)
                 else -> ""
             },
             actionDescription = when {
                 pendingCommand != null -> "Command: ${pendingCommand!!.displayName}"
                 pendingText != null -> "Text: \"${pendingText!!.take(30)}${if (pendingText!!.length > 30) "..." else ""}\""
                 pendingIntentDef != null -> "Intent: ${pendingIntentDef!!.name}"
+                pendingTimestampPattern != null ->
+                    "Timestamp: ${pendingTimestampPattern} (now → \"${timestampPreview ?: "?"}\")"
                 else -> ""
             },
             currentLabel = customLabel,
@@ -110,6 +123,7 @@ fun CommandPaletteDialog(
                         pendingCommand != null -> commandDisplayInfo?.displayText ?: pendingCommand!!.displayName.take(4)
                         pendingText != null -> pendingText!!.take(4)
                         pendingIntentDef != null -> pendingIntentDef!!.name.take(4)
+                        pendingTimestampPattern != null -> (timestampPreview ?: pendingTimestampPattern!!).take(4)
                         else -> "?"
                     }
                 }
@@ -140,6 +154,12 @@ fun CommandPaletteDialog(
                             actionValue = com.google.gson.Gson().toJson(pendingIntentDef),
                             useKeyFont = false
                         )
+                        pendingTimestampPattern != null -> MappingSelection(
+                            displayLabel = label,
+                            actionType = ActionType.TIMESTAMP,
+                            actionValue = pendingTimestampPattern!!,
+                            useKeyFont = false
+                        )
                         else -> null
                     }
                     selection?.let { onMappingSelected(it) }
@@ -152,12 +172,14 @@ fun CommandPaletteDialog(
                 pendingCommand = null
                 pendingText = null
                 pendingIntentDef = null
+                pendingTimestampPattern = null
                 customLabel = ""
             },
             onCancel = {
                 pendingCommand = null
                 pendingText = null
                 pendingIntentDef = null
+                pendingTimestampPattern = null
                 customLabel = ""
             }
         )
@@ -170,6 +192,22 @@ fun CommandPaletteDialog(
                 showIntentEditor = false
                 pendingIntentDef = intentDef
                 customLabel = intentDef.name.take(4)
+            }
+        )
+    }
+
+    if (showTimestampEditor) {
+        TimestampPatternDialog(
+            onDismiss = { showTimestampEditor = false },
+            onConfirm = { pattern ->
+                showTimestampEditor = false
+                pendingTimestampPattern = pattern
+                // Default label: a short slice of the live formatted preview if possible,
+                // else the first 4 chars of the pattern itself.
+                customLabel = runCatching {
+                    java.text.SimpleDateFormat(pattern, java.util.Locale.getDefault())
+                        .format(java.util.Date())
+                }.getOrNull()?.take(4) ?: pattern.take(4)
             }
         )
     }
@@ -243,7 +281,8 @@ fun CommandPaletteDialog(
                             customLabel = command.displayName.take(4)
                         },
                         onShowTextInput = { showTextInput = true },
-                        onShowIntentEditor = { showIntentEditor = true }
+                        onShowIntentEditor = { showIntentEditor = true },
+                        onShowTimestampEditor = { showTimestampEditor = true }
                     )
                 }
             }
@@ -416,7 +455,8 @@ private fun CommandSearchSection(
     filteredCommands: Map<CommandRegistry.Category, List<CommandRegistry.Command>>,
     onCommandSelected: (CommandRegistry.Command) -> Unit,
     onShowTextInput: () -> Unit,
-    onShowIntentEditor: () -> Unit
+    onShowIntentEditor: () -> Unit,
+    onShowTimestampEditor: () -> Unit = {}
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         // Search bar
@@ -524,6 +564,48 @@ private fun CommandSearchSection(
                     Icons.Filled.KeyboardArrowRight,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onTertiaryContainer
+                )
+            }
+        }
+
+        // Quick action: Timestamp (issue #141)
+        Card(
+            onClick = onShowTimestampEditor,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer
+            )
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Filled.DateRange,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        "Timestamp",
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                    Text(
+                        "Insert formatted date/time (e.g. yyyy-MM-dd HH:mm)",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                    )
+                }
+                Icon(
+                    Icons.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             }
         }
@@ -863,6 +945,178 @@ fun QuickCommandPicker(
             Icon(Icons.Filled.Search, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
             Text("Browse All ${CommandRegistry.totalCount} Commands")
+        }
+    }
+}
+
+/**
+ * Dialog for entering a [java.text.SimpleDateFormat] timestamp pattern.
+ *
+ * Features (per issue #141):
+ * - Free-form pattern input with placeholder "yyyy-MM-dd HH:mm"
+ * - Preset chips for common patterns
+ * - Live preview of "what would be inserted right now"
+ * - Inline validation: invalid patterns disable Confirm and show error supportingText
+ *
+ * @param onDismiss Invoked when the user cancels.
+ * @param onConfirm Invoked with the validated pattern when the user confirms.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TimestampPatternDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (pattern: String) -> Unit
+) {
+    // Preset patterns. The first is also the default text the input starts with.
+    data class TimestampPreset(val label: String, val pattern: String)
+    val presets = remember {
+        listOf(
+            TimestampPreset("Date", "yyyy-MM-dd"),
+            TimestampPreset("Date + Time", "yyyy-MM-dd HH:mm"),
+            TimestampPreset("Time", "HH:mm"),
+            TimestampPreset("Time + sec", "HH:mm:ss"),
+            TimestampPreset("12h time", "h:mm a"),
+            TimestampPreset("Day Mon d", "EEE MMM d"),
+            TimestampPreset("Long date", "EEEE, MMMM d, yyyy"),
+            TimestampPreset("ISO 8601", "yyyy-MM-dd'T'HH:mm:ss"),
+            TimestampPreset("Slash MDY", "MM/dd/yy")
+        )
+    }
+
+    var pattern by remember { mutableStateOf(presets.first().pattern) }
+
+    // Re-evaluate preview + validity on every pattern change.
+    val (isValid, preview, errorMsg) = remember(pattern) {
+        when {
+            pattern.isBlank() -> Triple(false, "", "Pattern cannot be blank")
+            else -> try {
+                val formatted = java.text.SimpleDateFormat(pattern, java.util.Locale.getDefault())
+                    .format(java.util.Date())
+                Triple(true, formatted, null)
+            } catch (e: IllegalArgumentException) {
+                Triple(false, "", e.message ?: "Invalid SimpleDateFormat pattern")
+            } catch (e: Exception) {
+                Triple(false, "", e.message ?: "Failed to format pattern")
+            }
+        }
+    }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp)
+            ) {
+                Text(
+                    "Timestamp Pattern",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    "Uses java.text.SimpleDateFormat patterns. " +
+                        "Letters: y M d H h m s a E. Quote literal text in single quotes.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedTextField(
+                    value = pattern,
+                    onValueChange = {
+                        // Cap at MAX_ACTION_LENGTH to match storage contract
+                        if (it.length <= ShortSwipeMapping.MAX_ACTION_LENGTH) pattern = it
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Pattern") },
+                    placeholder = { Text("yyyy-MM-dd HH:mm") },
+                    isError = !isValid,
+                    supportingText = {
+                        if (isValid) {
+                            Text("Preview: $preview")
+                        } else {
+                            Text(
+                                errorMsg ?: "Invalid pattern",
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
+                    singleLine = true
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    "Presets",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // Render presets in rows of 3 so labels stay readable on narrow dialogs.
+                presets.chunked(3).forEach { row ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        row.forEach { preset ->
+                            AssistChip(
+                                onClick = { pattern = preset.pattern },
+                                label = {
+                                    Text(
+                                        preset.label,
+                                        fontSize = 11.sp,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                },
+                                modifier = Modifier.weight(1f, fill = false)
+                            )
+                        }
+                        // Pad incomplete rows so widths stay aligned
+                        repeat(3 - row.size) {
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Cancel")
+                    }
+
+                    Button(
+                        onClick = { if (isValid) onConfirm(pattern) },
+                        enabled = isValid,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(Icons.Filled.Check, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Use Pattern")
+                    }
+                }
+            }
         }
     }
 }
