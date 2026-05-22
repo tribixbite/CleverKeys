@@ -25,6 +25,47 @@ Export and import your keyboard settings, dictionary, and clipboard history.
 > Intent-action automation surface (see "Programmatic Import/Export"
 > below) and redirects to the inline section if opened directly.
 
+## Full Backup (one-click ZIP)
+
+The **Full Backup** workflow bundles every backup section — config, dictionaries, and clipboard (including media files) — into a single dated ZIP. Useful for device migration and as a fast pre-upgrade safety net.
+
+- **Filename convention**: `cleverkeys_full_backup_yyyy-MM-dd.zip`
+- **Where to find**: Settings > **💾 Backup & Restore** > **Export Full Backup** / **Import Full Backup** buttons.
+
+### ZIP Layout
+
+```
+cleverkeys_full_backup_2026-05-22.zip
+├── manifest.json          ← top-level metadata (read first by importer)
+├── config.json            ← same payload as "Export Config"
+├── dictionaries.json      ← same payload as "Export Dict"
+├── clipboard_history.json ← all text entries + media references
+└── clipboard_media/...    ← raw media blobs referenced from clipboard JSON
+```
+
+### Manifest format
+
+`manifest.json` carries forward-compat metadata so importers can sanity-check the file before reading anything else:
+
+| Field | Description |
+|-------|-------------|
+| `format` | Always `"cleverkeys_full_backup"` — importers refuse anything else |
+| `format_version` | Schema version (currently `1`); importer refuses any value `>` this |
+| `app_version` / `app_version_code` | App version that produced the backup |
+| `export_date` | ISO timestamp of export |
+| `entries[]` | Inventory of section files present (manifest, config, dictionaries, clipboard) |
+
+### Forward-compat behavior
+
+- Older ZIPs (with a lower `format_version`) **are accepted** — missing sections are tolerated.
+- Newer ZIPs (with a higher `format_version`) **are refused** with a clear error message — update the app first.
+- ZIPs whose `format` is not `cleverkeys_full_backup` are rejected up-front so the importer doesn't mishandle an unrelated ZIP file.
+
+### Round-trip notes
+
+- Importing the same Full Backup ZIP twice is a no-op: clipboard entries are deduplicated by content hash, dictionary words merge non-destructively, and config import goes through the same preview pipeline as single-file imports.
+- Media files are streamed directly to disk on both export and import — never buffered in memory, so very large clipboards stay OOM-safe.
+
 ## Import Preview (v1.4+)
 
 When importing settings or dictionary backups, the app shows a preview

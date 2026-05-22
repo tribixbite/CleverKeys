@@ -44,6 +44,11 @@ dependencies {
   testImplementation "androidx.test:core:1.5.0"
   testImplementation "io.mockk:mockk:1.13.8"
   testImplementation "com.google.truth:truth:1.1.5"
+  // Real org.json JSONObject for mock tests — android.jar provides only stubs
+  // that throw RuntimeException("Stub!") on construction. Tests that build a
+  // real JSON payload (BackupRestoreFullBackupTest) need this to shadow the
+  // stub on the unit-test classpath.
+  testImplementation "org.json:json:20231013"
   // ONNX Runtime for JVM unit tests (Android runtime doesn't work on host JVM)
   testImplementation "com.microsoft.onnxruntime:onnxruntime:1.20.0"
 
@@ -440,6 +445,7 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.backup.SettingsImportPlanApplyTest',
     'tribixbite.cleverkeys.backup.DictImportPlanApplyTest',
     'tribixbite.cleverkeys.backup.BackupRestoreManagerHeadlessTest',
+    'tribixbite.cleverkeys.BackupRestoreFullBackupTest',
     'tribixbite.cleverkeys.clipboard.sanitize.SanitizationConfigBuildTest',
     'tribixbite.cleverkeys.customization.CustomShortSwipeExecutorTest',
   ]

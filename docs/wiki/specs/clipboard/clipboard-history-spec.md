@@ -367,6 +367,10 @@ clipboard_backup.zip
 | v4 JSON | v4 | Text entries imported, media entries skipped (no files) |
 | v4 ZIP | v4 | Media extracted, thumbnails regenerated, full restore |
 
+### Full Backup ZIP
+
+Clipboard data is also included in the new one-click **Full Backup** ZIP (`cleverkeys_full_backup_<date>.zip`), alongside settings and dictionaries. The clipboard section uses the same `clipboard_data.json` + `clipboard_media/` layout described above and the same `ClipboardDatabase.exportToJSON` / `importFromJSON` round-trip — duplicates are skipped on import. See the [Backup & Restore user guide](../../troubleshooting/backup-restore.md) for the ZIP layout, manifest format, and forward-compat rules.
+
 ## Configuration
 
 | Setting | Key | Default | Range |

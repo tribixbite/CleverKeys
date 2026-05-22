@@ -307,81 +307,7 @@ open class BackupRestoreManager(
      */
     open fun exportConfig(uri: Uri, prefs: SharedPreferences): Int {
         try {
-            // Collect metadata
-            val root = JsonObject()
-            val metadata = JsonObject()
-
-            // App version
-            val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-            val versionName = packageInfo.versionName
-            val versionCode = packageInfo.versionCode
-
-            metadata.addProperty("app_version", versionName)
-            metadata.addProperty("version_code", versionCode)
-            metadata.addProperty(
-                "export_date",
-                SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).format(Date())
-            )
-
-            // Screen dimensions
-            val dm = context.resources.displayMetrics
-            metadata.addProperty("screen_width", dm.widthPixels)
-            metadata.addProperty("screen_height", dm.heightPixels)
-            metadata.addProperty("screen_density", dm.density)
-            metadata.addProperty("android_version", android.os.Build.VERSION.SDK_INT)
-
-            root.add("metadata", metadata)
-
-            // Get all defaults first, then override with stored preferences
-            val allDefaults = getAllDefaultPreferences()
-            val storedPrefs = prefs.all
-            val preferences = JsonObject()
-
-            // First add all defaults
-            for ((key, value) in allDefaults) {
-                if (!isInternalPreference(key)) {
-                    preferences.add(key, gson.toJsonTree(value))
-                }
-            }
-
-            // Then override with stored preferences (these take precedence)
-            for ((key, value) in storedPrefs) {
-                // Preserve JSON-string preferences (layouts, extra_keys, custom_extra_keys)
-                // These are already stored as JSON strings and should be preserved as-is
-                when {
-                    isJsonStringPreference(key) && value is String -> {
-                        try {
-                            // Parse the JSON string and add as JsonElement to avoid double-encoding
-                            preferences.add(key, JsonParser.parseString(value))
-                        } catch (e: Exception) {
-                            Log.w(TAG, "Failed to parse JSON preference: $key", e)
-                            // Fall back to regular serialization if parsing fails
-                            preferences.add(key, gson.toJsonTree(value))
-                        }
-                    }
-                    isInternalPreference(key) -> {
-                        // Skip internal state preferences
-                        Log.i(TAG, "Skipping internal preference on export: $key")
-                    }
-                    else -> {
-                        preferences.add(key, gson.toJsonTree(value))
-                    }
-                }
-            }
-
-            root.add("preferences", preferences)
-
-            // Export short swipe customizations (stored in separate file, not SharedPreferences)
-            try {
-                runBlocking { shortSwipeManager.loadMappings() }
-                val shortSwipeJson = shortSwipeManager.exportToJson()
-                if (shortSwipeJson.isNotBlank() && shortSwipeJson != "{}") {
-                    root.add("short_swipe_customizations", JsonParser.parseString(shortSwipeJson))
-                    Log.i(TAG, "Exported short swipe customizations")
-                }
-            } catch (e: Exception) {
-                Log.w(TAG, "Failed to export short swipe customizations (non-fatal)", e)
-            }
+            val (root, count) = buildConfigJson(prefs)
 
             // Write to file
             openOutputStream(uri)?.use { outputStream ->
@@ -391,13 +317,99 @@ open class BackupRestoreManager(
                 }
             }
 
-            val count = preferences.size()
-            Log.i(TAG, "Exported $count preferences (${storedPrefs.size} stored + defaults)")
+            Log.i(TAG, "Exported $count preferences (${prefs.all.size} stored + defaults)")
             return count
         } catch (e: Exception) {
             Log.e(TAG, "Export failed", e)
             throw Exception("Export failed: ${e.message}", e)
         }
+    }
+
+    /**
+     * Build the config-export JSON tree without writing it anywhere. Pure helper
+     * used by [exportConfig] and [exportFullBackup] to share serialization
+     * (metadata + defaulted preferences + short-swipe customizations).
+     *
+     * Returns the root [JsonObject] and the preference count for caller telemetry.
+     */
+    private fun buildConfigJson(prefs: SharedPreferences): Pair<JsonObject, Int> {
+        // Collect metadata
+        val root = JsonObject()
+        val metadata = JsonObject()
+
+        // App version
+        val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+        val versionName = packageInfo.versionName
+        val versionCode = packageInfo.versionCode
+
+        metadata.addProperty("app_version", versionName)
+        metadata.addProperty("version_code", versionCode)
+        metadata.addProperty(
+            "export_date",
+            SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).format(Date())
+        )
+
+        // Screen dimensions
+        val dm = context.resources.displayMetrics
+        metadata.addProperty("screen_width", dm.widthPixels)
+        metadata.addProperty("screen_height", dm.heightPixels)
+        metadata.addProperty("screen_density", dm.density)
+        metadata.addProperty("android_version", android.os.Build.VERSION.SDK_INT)
+
+        root.add("metadata", metadata)
+
+        // Get all defaults first, then override with stored preferences
+        val allDefaults = getAllDefaultPreferences()
+        val storedPrefs = prefs.all
+        val preferences = JsonObject()
+
+        // First add all defaults
+        for ((key, value) in allDefaults) {
+            if (!isInternalPreference(key)) {
+                preferences.add(key, gson.toJsonTree(value))
+            }
+        }
+
+        // Then override with stored preferences (these take precedence)
+        for ((key, value) in storedPrefs) {
+            // Preserve JSON-string preferences (layouts, extra_keys, custom_extra_keys)
+            // These are already stored as JSON strings and should be preserved as-is
+            when {
+                isJsonStringPreference(key) && value is String -> {
+                    try {
+                        // Parse the JSON string and add as JsonElement to avoid double-encoding
+                        preferences.add(key, JsonParser.parseString(value))
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Failed to parse JSON preference: $key", e)
+                        // Fall back to regular serialization if parsing fails
+                        preferences.add(key, gson.toJsonTree(value))
+                    }
+                }
+                isInternalPreference(key) -> {
+                    // Skip internal state preferences
+                    Log.i(TAG, "Skipping internal preference on export: $key")
+                }
+                else -> {
+                    preferences.add(key, gson.toJsonTree(value))
+                }
+            }
+        }
+
+        root.add("preferences", preferences)
+
+        // Export short swipe customizations (stored in separate file, not SharedPreferences)
+        try {
+            runBlocking { shortSwipeManager.loadMappings() }
+            val shortSwipeJson = shortSwipeManager.exportToJson()
+            if (shortSwipeJson.isNotBlank() && shortSwipeJson != "{}") {
+                root.add("short_swipe_customizations", JsonParser.parseString(shortSwipeJson))
+                Log.i(TAG, "Exported short swipe customizations")
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to export short swipe customizations (non-fatal)", e)
+        }
+
+        return root to preferences.size()
     }
 
     /**
@@ -570,92 +582,8 @@ open class BackupRestoreManager(
      * @param uri URI from Storage Access Framework (ACTION_CREATE_DOCUMENT)
      */
     fun exportDictionaries(uri: Uri): DictionaryExportSummary {
-        val languagesWithData = mutableSetOf<String>()
-        var totalCustomWords = 0
-        var totalDisabledWords = 0
         try {
-            val root = JsonObject()
-            val metadata = JsonObject()
-
-            val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-            metadata.addProperty("app_version", packageInfo.versionName)
-            metadata.addProperty("export_date",
-                SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).format(Date()))
-            metadata.addProperty("type", "dictionaries")
-            metadata.addProperty("format_version", 2) // v2 = language-specific format
-            root.add("metadata", metadata)
-
-            val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
-
-            // Run migration first to ensure all words are in new format
-            LanguagePreferenceKeys.migrateToLanguageSpecific(prefs)
-            // NOTE: Legacy user_dictionary migration is handled by DictionaryManager.migrateLegacyCustomWords()
-
-            // Export custom words per language (new format)
-            val customWordsPerLang = JsonObject()
-            val languages = LanguagePreferenceKeys.getLanguagesWithCustomWords(prefs)
-
-            for (lang in languages) {
-                val langKey = LanguagePreferenceKeys.customWordsKey(lang)
-                val wordsJson = prefs.getString(langKey, "{}")
-                if (wordsJson != null && wordsJson != "{}") {
-                    customWordsPerLang.add(lang, JsonParser.parseString(wordsJson))
-                    // Count words for logging + summary
-                    try {
-                        val wordsMap = JsonParser.parseString(wordsJson).asJsonObject
-                        if (wordsMap.size() > 0) {
-                            totalCustomWords += wordsMap.size()
-                            languagesWithData += lang
-                        }
-                    } catch (e: Exception) { /* ignore count errors */ }
-                }
-            }
-            root.add("custom_words_by_language", customWordsPerLang)
-
-            // Export disabled words per language (new format)
-            val disabledWordsPerLang = JsonObject()
-            val disabledLanguages = LanguagePreferenceKeys.getLanguagesWithDisabledWords(prefs)
-
-            for (lang in disabledLanguages) {
-                val langKey = LanguagePreferenceKeys.disabledWordsKey(lang)
-                val wordsSet = prefs.getStringSet(langKey, emptySet()) ?: emptySet()
-                if (wordsSet.isNotEmpty()) {
-                    val wordsArray = JsonArray()
-                    for (word in wordsSet) {
-                        wordsArray.add(word)
-                    }
-                    disabledWordsPerLang.add(lang, wordsArray)
-                    totalDisabledWords += wordsSet.size
-                    languagesWithData += lang
-                }
-            }
-            root.add("disabled_words_by_language", disabledWordsPerLang)
-
-            // Also export in legacy format for backwards compatibility
-            // Use English words if available, otherwise empty
-            val enCustomWordsJson = prefs.getString(LanguagePreferenceKeys.customWordsKey("en"), "{}")
-            if (enCustomWordsJson != null && enCustomWordsJson != "{}") {
-                try {
-                    val enWordsMap = JsonParser.parseString(enCustomWordsJson).asJsonObject
-                    val userWords = JsonArray()
-                    for ((word, freq) in enWordsMap.entrySet()) {
-                        val wordObj = JsonObject()
-                        wordObj.addProperty("word", word)
-                        wordObj.addProperty("frequency", freq.asInt)
-                        userWords.add(wordObj)
-                    }
-                    root.add("user_words", userWords) // Legacy format
-                } catch (e: Exception) {
-                    Log.w(TAG, "Failed to export legacy format", e)
-                }
-            }
-
-            val enDisabledWords = prefs.getStringSet(LanguagePreferenceKeys.disabledWordsKey("en"), emptySet()) ?: emptySet()
-            val disabledWords = JsonArray()
-            for (word in enDisabledWords) {
-                disabledWords.add(word)
-            }
-            root.add("disabled_words", disabledWords) // Legacy format
+            val (root, summary) = buildDictionariesJson()
 
             openOutputStream(uri)?.use { outputStream ->
                 outputStream.writer().use { writer ->
@@ -664,12 +592,110 @@ open class BackupRestoreManager(
                 }
             }
 
-            Log.i(TAG, "Exported dictionaries: $totalCustomWords custom + $totalDisabledWords disabled across ${languagesWithData.size} languages")
+            Log.i(TAG, "Exported dictionaries: ${summary.customWordsCount} custom + " +
+                "${summary.disabledWordsCount} disabled across ${summary.languageCount} languages")
+            return summary
         } catch (e: Exception) {
             Log.e(TAG, "Dictionary export failed", e)
             throw Exception("Dictionary export failed: ${e.message}", e)
         }
-        return DictionaryExportSummary(totalCustomWords, totalDisabledWords, languagesWithData.size)
+    }
+
+    /**
+     * Build the dictionary-export JSON tree without writing it anywhere. Pure
+     * helper shared by [exportDictionaries] and [exportFullBackup]. Returns the
+     * root [JsonObject] plus a [DictionaryExportSummary] for caller telemetry.
+     */
+    private fun buildDictionariesJson(): Pair<JsonObject, DictionaryExportSummary> {
+        val languagesWithData = mutableSetOf<String>()
+        var totalCustomWords = 0
+        var totalDisabledWords = 0
+
+        val root = JsonObject()
+        val metadata = JsonObject()
+
+        val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+        metadata.addProperty("app_version", packageInfo.versionName)
+        metadata.addProperty("export_date",
+            SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).format(Date()))
+        metadata.addProperty("type", "dictionaries")
+        metadata.addProperty("format_version", 2) // v2 = language-specific format
+        root.add("metadata", metadata)
+
+        val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
+
+        // Run migration first to ensure all words are in new format
+        LanguagePreferenceKeys.migrateToLanguageSpecific(prefs)
+        // NOTE: Legacy user_dictionary migration is handled by DictionaryManager.migrateLegacyCustomWords()
+
+        // Export custom words per language (new format)
+        val customWordsPerLang = JsonObject()
+        val languages = LanguagePreferenceKeys.getLanguagesWithCustomWords(prefs)
+
+        for (lang in languages) {
+            val langKey = LanguagePreferenceKeys.customWordsKey(lang)
+            val wordsJson = prefs.getString(langKey, "{}")
+            if (wordsJson != null && wordsJson != "{}") {
+                customWordsPerLang.add(lang, JsonParser.parseString(wordsJson))
+                // Count words for logging + summary
+                try {
+                    val wordsMap = JsonParser.parseString(wordsJson).asJsonObject
+                    if (wordsMap.size() > 0) {
+                        totalCustomWords += wordsMap.size()
+                        languagesWithData += lang
+                    }
+                } catch (e: Exception) { /* ignore count errors */ }
+            }
+        }
+        root.add("custom_words_by_language", customWordsPerLang)
+
+        // Export disabled words per language (new format)
+        val disabledWordsPerLang = JsonObject()
+        val disabledLanguages = LanguagePreferenceKeys.getLanguagesWithDisabledWords(prefs)
+
+        for (lang in disabledLanguages) {
+            val langKey = LanguagePreferenceKeys.disabledWordsKey(lang)
+            val wordsSet = prefs.getStringSet(langKey, emptySet()) ?: emptySet()
+            if (wordsSet.isNotEmpty()) {
+                val wordsArray = JsonArray()
+                for (word in wordsSet) {
+                    wordsArray.add(word)
+                }
+                disabledWordsPerLang.add(lang, wordsArray)
+                totalDisabledWords += wordsSet.size
+                languagesWithData += lang
+            }
+        }
+        root.add("disabled_words_by_language", disabledWordsPerLang)
+
+        // Also export in legacy format for backwards compatibility
+        // Use English words if available, otherwise empty
+        val enCustomWordsJson = prefs.getString(LanguagePreferenceKeys.customWordsKey("en"), "{}")
+        if (enCustomWordsJson != null && enCustomWordsJson != "{}") {
+            try {
+                val enWordsMap = JsonParser.parseString(enCustomWordsJson).asJsonObject
+                val userWords = JsonArray()
+                for ((word, freq) in enWordsMap.entrySet()) {
+                    val wordObj = JsonObject()
+                    wordObj.addProperty("word", word)
+                    wordObj.addProperty("frequency", freq.asInt)
+                    userWords.add(wordObj)
+                }
+                root.add("user_words", userWords) // Legacy format
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to export legacy format", e)
+            }
+        }
+
+        val enDisabledWords = prefs.getStringSet(LanguagePreferenceKeys.disabledWordsKey("en"), emptySet()) ?: emptySet()
+        val disabledWords = JsonArray()
+        for (word in enDisabledWords) {
+            disabledWords.add(word)
+        }
+        root.add("disabled_words", disabledWords) // Legacy format
+
+        val summary = DictionaryExportSummary(totalCustomWords, totalDisabledWords, languagesWithData.size)
+        return root to summary
     }
 
     /**
@@ -1015,7 +1041,399 @@ open class BackupRestoreManager(
         @JvmField var mediaFilesIncluded: Int = 0
     )
 
+    /**
+     * Result of a full backup ZIP export. Tracks which sections were included so
+     * the UI can render an accurate success dialog (and so tests can assert
+     * coverage). [totalBytes] is best-effort; it counts bytes streamed to the
+     * ZIP, not the compressed file size on disk.
+     *
+     * GitHub #142: one-click full backup containing manifest + config + dicts +
+     * clipboard JSON + clipboard media files in a single dated ZIP.
+     */
+    data class FullBackupResult(
+        @JvmField val success: Boolean,
+        @JvmField val configIncluded: Boolean,
+        @JvmField val dictionaryCount: Int,
+        @JvmField val clipboardEntryCount: Int,
+        @JvmField val mediaFileCount: Int,
+        @JvmField val errorMessage: String? = null,
+        @JvmField val totalBytes: Long = 0,
+    )
+
+    /**
+     * Result of a full backup ZIP import. Aggregates per-section counts from
+     * the existing [SettingsImportApplier], [DictImportApplier], and
+     * [ClipboardDatabase.importFromJSON] outputs.
+     */
+    data class FullBackupImportResult(
+        @JvmField val success: Boolean,
+        @JvmField val configImported: Boolean,
+        @JvmField val configKeysApplied: Int,
+        @JvmField val customWordsImported: Int,
+        @JvmField val disabledWordsImported: Int,
+        @JvmField val clipboardEntriesImported: Int,
+        @JvmField val clipboardEntriesSkipped: Int,
+        @JvmField val mediaFilesRestored: Int,
+        @JvmField val sourceAppVersion: String? = null,
+        @JvmField val errorMessage: String? = null,
+    )
+
+    /**
+     * Export EVERYTHING in one dated ZIP file (GitHub #142). The ZIP layout is:
+     *
+     *   manifest.json          — top-level metadata (app version, export date,
+     *                            section inventory)
+     *   config.json            — same JSON that [exportConfig] produces
+     *   dictionaries.json      — same JSON that [exportDictionaries] produces
+     *   clipboard_history.json — same JSON that [exportClipboardHistory] produces
+     *                            (textOnly = false so media references stay)
+     *   clipboard_media/...    — media file blobs referenced by the clipboard JSON,
+     *                            paths match the in-DB media_path values (matches
+     *                            [exportClipboardHistoryZip] verbatim so existing
+     *                            ZIP importer code can be reused).
+     *
+     * Reuses the per-section JSON-builder helpers ([buildConfigJson],
+     * [buildDictionariesJson]) and the media-streaming pattern from
+     * [exportClipboardHistoryZip] — no duplicate serialization logic.
+     */
+    fun exportFullBackup(uri: Uri, prefs: SharedPreferences): FullBackupResult {
+        var configIncluded = false
+        var dictionaryCount = 0
+        var clipboardEntryCount = 0
+        var mediaFileCount = 0
+        var totalBytes = 0L
+        try {
+            val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+            val versionName = packageInfo.versionName
+            val versionCode = packageInfo.versionCode
+            val exportDateIso = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).format(Date())
+
+            // Pre-build all JSON payloads (so manifest can carry final counts).
+            val (configRoot, configCount) = buildConfigJson(prefs)
+            val configBytes = gson.toJson(configRoot).toByteArray(Charsets.UTF_8)
+            configIncluded = configCount > 0
+
+            val (dictRoot, dictSummary) = buildDictionariesJson()
+            val dictBytes = gson.toJson(dictRoot).toByteArray(Charsets.UTF_8)
+            dictionaryCount = dictSummary.languageCount
+
+            val clipboardDb = ClipboardDatabase.getInstance(context)
+            val clipboardJson = clipboardDb.exportToJSON(textOnly = false)
+            val clipboardBytes: ByteArray
+            if (clipboardJson != null) {
+                clipboardEntryCount = clipboardJson.optInt("total_active", 0) +
+                    clipboardJson.optInt("total_pinned", 0) +
+                    clipboardJson.optInt("total_todo", 0)
+                clipboardBytes = clipboardJson.toString(2).toByteArray(Charsets.UTF_8)
+            } else {
+                Log.w(TAG, "Clipboard export returned null; ZIP will omit clipboard section")
+                clipboardBytes = ByteArray(0)
+            }
+
+            // Manifest entry — written FIRST so importers can sanity-check format
+            // and refuse forward-incompatible files without scanning the whole ZIP.
+            val manifest = JsonObject().apply {
+                addProperty("format", "cleverkeys_full_backup")
+                addProperty("format_version", FULL_BACKUP_FORMAT_VERSION)
+                addProperty("app_version", versionName)
+                addProperty("app_version_code", versionCode)
+                addProperty("export_date", exportDateIso)
+                addProperty("config_preference_count", configCount)
+                addProperty("dictionary_language_count", dictionaryCount)
+                addProperty("dictionary_custom_word_count", dictSummary.customWordsCount)
+                addProperty("dictionary_disabled_word_count", dictSummary.disabledWordsCount)
+                addProperty("clipboard_entry_count", clipboardEntryCount)
+                val entriesArray = JsonArray().apply {
+                    add(ENTRY_MANIFEST)
+                    if (configCount > 0) add(ENTRY_CONFIG)
+                    if (clipboardBytes.isNotEmpty()) add(ENTRY_CLIPBOARD_JSON)
+                    add(ENTRY_DICTIONARIES)
+                }
+                add("entries", entriesArray)
+            }
+            val manifestBytes = gson.toJson(manifest).toByteArray(Charsets.UTF_8)
+
+            val mediaManager = ClipboardMediaManager(context)
+            openOutputStream(uri)?.use { outputStream ->
+                java.util.zip.ZipOutputStream(outputStream).use { zipOut ->
+                    // 1. manifest.json (first — readable by tools that only inspect headers)
+                    totalBytes += writeZipEntry(zipOut, ENTRY_MANIFEST, manifestBytes)
+
+                    // 2. config.json
+                    if (configCount > 0) {
+                        totalBytes += writeZipEntry(zipOut, ENTRY_CONFIG, configBytes)
+                    }
+
+                    // 3. dictionaries.json (always written, even when empty — symmetric importer)
+                    totalBytes += writeZipEntry(zipOut, ENTRY_DICTIONARIES, dictBytes)
+
+                    // 4. clipboard_history.json
+                    if (clipboardBytes.isNotEmpty()) {
+                        totalBytes += writeZipEntry(zipOut, ENTRY_CLIPBOARD_JSON, clipboardBytes)
+                    }
+
+                    // 5. clipboard_media/* — stream each file directly (OOM-safe).
+                    // mediaPath already contains the `clipboard_media/` prefix from
+                    // the DB so the importer can re-extract straight back to the
+                    // same on-disk location without translation.
+                    val mediaPaths = clipboardDb.getAllReferencedMediaPaths()
+                    for (mediaPath in mediaPaths) {
+                        val file = mediaManager.getMediaFile(mediaPath)
+                        if (!file.exists()) {
+                            Log.w(TAG, "Media file not found during full backup, skipping: $mediaPath")
+                            continue
+                        }
+                        zipOut.putNextEntry(java.util.zip.ZipEntry(mediaPath))
+                        val streamed = file.inputStream().use { it.copyTo(zipOut) }
+                        totalBytes += streamed
+                        zipOut.closeEntry()
+                        mediaFileCount++
+                    }
+                }
+            }
+
+            Log.i(TAG, "Full backup exported: cfg=$configCount, dict langs=$dictionaryCount, " +
+                "clip entries=$clipboardEntryCount, media=$mediaFileCount, bytes=$totalBytes")
+            return FullBackupResult(
+                success = true,
+                configIncluded = configIncluded,
+                dictionaryCount = dictionaryCount,
+                clipboardEntryCount = clipboardEntryCount,
+                mediaFileCount = mediaFileCount,
+                totalBytes = totalBytes,
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "Full backup export failed", e)
+            return FullBackupResult(
+                success = false,
+                configIncluded = configIncluded,
+                dictionaryCount = dictionaryCount,
+                clipboardEntryCount = clipboardEntryCount,
+                mediaFileCount = mediaFileCount,
+                errorMessage = e.message ?: "Unknown error",
+                totalBytes = totalBytes,
+            )
+        }
+    }
+
+    /**
+     * Helper: write a single in-memory ZIP entry and return the byte count
+     * streamed (useful for [FullBackupResult.totalBytes]).
+     */
+    private fun writeZipEntry(
+        zipOut: java.util.zip.ZipOutputStream,
+        name: String,
+        payload: ByteArray,
+    ): Long {
+        zipOut.putNextEntry(java.util.zip.ZipEntry(name))
+        zipOut.write(payload)
+        zipOut.closeEntry()
+        return payload.size.toLong()
+    }
+
+    /**
+     * Symmetric inverse of [exportFullBackup]. Streams the ZIP entries and
+     * dispatches each to the corresponding per-section importer, then performs
+     * thumbnail regeneration + orphan-media cleanup matching
+     * [importClipboardHistoryZip].
+     *
+     * Forward-compat guard: refuses to import if the manifest's
+     * `format_version` is strictly greater than the version this build knows
+     * about. The user must update the app first.
+     */
+    fun importFullBackup(uri: Uri, prefs: SharedPreferences): FullBackupImportResult {
+        var configKeysApplied = 0
+        var configImported = false
+        var customWordsImported = 0
+        var disabledWordsImported = 0
+        var clipboardEntriesImported = 0
+        var clipboardEntriesSkipped = 0
+        var mediaFilesRestored = 0
+        var sourceAppVersion: String? = null
+
+        return try {
+            val clipboardDb = ClipboardDatabase.getInstance(context)
+            val mediaManager = ClipboardMediaManager(context)
+
+            // Buffer JSON payloads to memory (small) while streaming media to disk.
+            // We must process manifest before applying anything else.
+            var manifestJson: JsonObject? = null
+            var configJsonBytes: ByteArray? = null
+            var dictionariesJsonBytes: ByteArray? = null
+            var clipboardJsonData: org.json.JSONObject? = null
+
+            context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                java.util.zip.ZipInputStream(inputStream).use { zipIn ->
+                    var entry = zipIn.nextEntry
+                    while (entry != null) {
+                        when {
+                            entry.name == ENTRY_MANIFEST -> {
+                                val bytes = zipIn.readBytes()
+                                manifestJson = JsonParser.parseString(
+                                    String(bytes, Charsets.UTF_8)
+                                ).asJsonObject
+                                // Format guard — refuse unrelated ZIPs cleanly instead of
+                                // silently treating them as v1 full-backup files.
+                                val format = manifestJson?.get("format")?.asString
+                                if (format != "cleverkeys_full_backup") {
+                                    throw Exception("Not a CleverKeys full backup ZIP " +
+                                        "(manifest.json `format` was \"${format ?: "<missing>"}\", " +
+                                        "expected \"cleverkeys_full_backup\").")
+                                }
+                                // Forward-compat check — refuse newer formats early.
+                                val formatVersion = manifestJson?.get("format_version")?.asInt ?: 1
+                                if (formatVersion > FULL_BACKUP_FORMAT_VERSION) {
+                                    throw Exception("Full backup format_version $formatVersion is newer " +
+                                        "than supported ($FULL_BACKUP_FORMAT_VERSION). Update the app and retry.")
+                                }
+                                sourceAppVersion = manifestJson?.get("app_version")?.asString
+                            }
+                            entry.name == ENTRY_CONFIG -> {
+                                configJsonBytes = zipIn.readBytes()
+                            }
+                            entry.name == ENTRY_DICTIONARIES -> {
+                                dictionariesJsonBytes = zipIn.readBytes()
+                            }
+                            entry.name == ENTRY_CLIPBOARD_JSON -> {
+                                val bytes = zipIn.readBytes()
+                                clipboardJsonData = org.json.JSONObject(String(bytes, Charsets.UTF_8))
+                            }
+                            entry.name.startsWith("clipboard_media/") -> {
+                                val targetFile = mediaManager.getMediaFile(entry.name)
+                                targetFile.parentFile?.mkdirs()
+                                targetFile.outputStream().use { out -> zipIn.copyTo(out) }
+                                mediaFilesRestored++
+                            }
+                            else -> {
+                                Log.w(TAG, "Unknown entry in full backup, skipping: ${entry.name}")
+                            }
+                        }
+                        zipIn.closeEntry()
+                        entry = zipIn.nextEntry
+                    }
+                }
+            } ?: throw Exception("Cannot open full backup ZIP")
+
+            if (manifestJson == null) {
+                throw Exception("Full backup is missing manifest.json")
+            }
+
+            // Apply config.json — funnel through SettingsImportPlanBuilder + Applier
+            // so screen-mismatch + drift handling stay consistent with single-file import.
+            configJsonBytes?.let { bytes ->
+                val configString = String(bytes, Charsets.UTF_8)
+                val snapshot: Map<String, Any?> = prefs.all.toMap()
+                val dm = context.resources.displayMetrics
+                val screen = ScreenMetrics(dm.widthPixels, dm.heightPixels, dm.density)
+                val plan = SettingsImportPlanBuilder.fromJson(
+                    configString,
+                    currentSnapshot = snapshot,
+                    screen = screen,
+                    defaultSnapshot = SETTINGS_DEFAULTS,
+                    currentShortSwipeRawJson = null,
+                )
+                val result = runBlocking {
+                    SettingsImportApplier.apply(
+                        plan, emptySet(), ShortSwipeImportMode.REPLACE, prefs, shortSwipeImporter
+                    )
+                }
+                configKeysApplied = result.importedCount
+                configImported = true
+            }
+
+            // Apply dictionaries.json — funnel through DictImportPlanBuilder + Applier.
+            dictionariesJsonBytes?.let { bytes ->
+                val dictString = String(bytes, Charsets.UTF_8)
+                val currentCustom = readCurrentCustomWordsByLang(prefs)
+                val currentDisabled = readCurrentDisabledWordsByLang(prefs)
+                val plan = DictImportPlanBuilder.fromJson(dictString, currentCustom, currentDisabled)
+                val (custom, disabled) = DictImportApplier.apply(
+                    plan, emptySet(), emptySet(), prefs
+                )
+                customWordsImported = custom
+                disabledWordsImported = disabled
+            }
+
+            // Apply clipboard_history.json + regenerate thumbnails for any media
+            // we just extracted to disk. Mirrors importClipboardHistoryZip's
+            // post-import housekeeping.
+            clipboardJsonData?.let { json ->
+                val importResult = clipboardDb.importFromJSON(json)
+                clipboardEntriesImported = importResult[0] + importResult[1] + importResult[2]
+                clipboardEntriesSkipped = importResult[3]
+            }
+
+            if (mediaFilesRestored > 0) {
+                val referencedPaths = clipboardDb.getAllReferencedMediaPaths()
+                for (path in referencedPaths) {
+                    val file = mediaManager.getMediaFile(path)
+                    if (!file.exists()) continue
+                    val ext = file.extension.lowercase()
+                    val mimeType = when (ext) {
+                        "jpg", "jpeg" -> "image/jpeg"
+                        "png" -> "image/png"
+                        "webp" -> "image/webp"
+                        "gif" -> "image/gif"
+                        "mp4" -> "video/mp4"
+                        "pdf" -> "application/pdf"
+                        else -> "application/octet-stream"
+                    }
+                    val thumbnail = mediaManager.generateThumbnail(file.absolutePath, mimeType)
+                    if (thumbnail != null) {
+                        updateThumbnailForMediaPath(clipboardDb, path, thumbnail)
+                    }
+                }
+                mediaManager.cleanupOrphans(referencedPaths)
+            }
+
+            Log.i(TAG, "Full backup imported: cfg=$configKeysApplied, custom=$customWordsImported, " +
+                "disabled=$disabledWordsImported, clip imported=$clipboardEntriesImported, " +
+                "clip skipped=$clipboardEntriesSkipped, media restored=$mediaFilesRestored")
+
+            FullBackupImportResult(
+                success = true,
+                configImported = configImported,
+                configKeysApplied = configKeysApplied,
+                customWordsImported = customWordsImported,
+                disabledWordsImported = disabledWordsImported,
+                clipboardEntriesImported = clipboardEntriesImported,
+                clipboardEntriesSkipped = clipboardEntriesSkipped,
+                mediaFilesRestored = mediaFilesRestored,
+                sourceAppVersion = sourceAppVersion,
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "Full backup import failed", e)
+            FullBackupImportResult(
+                success = false,
+                configImported = configImported,
+                configKeysApplied = configKeysApplied,
+                customWordsImported = customWordsImported,
+                disabledWordsImported = disabledWordsImported,
+                clipboardEntriesImported = clipboardEntriesImported,
+                clipboardEntriesSkipped = clipboardEntriesSkipped,
+                mediaFilesRestored = mediaFilesRestored,
+                sourceAppVersion = sourceAppVersion,
+                errorMessage = e.message ?: "Unknown error",
+            )
+        }
+    }
+
     companion object {
         private const val TAG = "BackupRestoreManager"
+
+        /**
+         * Bumped when the full-backup ZIP layout changes in a non-back-compatible
+         * way. The importer refuses files whose `format_version` is strictly
+         * greater than this constant — older files are accepted (the importer
+         * tolerates missing entries).
+         */
+        const val FULL_BACKUP_FORMAT_VERSION = 1
+
+        // Canonical ZIP entry names — referenced by both export + import so the
+        // names stay in lockstep.
+        const val ENTRY_MANIFEST = "manifest.json"
+        const val ENTRY_CONFIG = "config.json"
+        const val ENTRY_DICTIONARIES = "dictionaries.json"
+        const val ENTRY_CLIPBOARD_JSON = "clipboard_history.json"
     }
 }

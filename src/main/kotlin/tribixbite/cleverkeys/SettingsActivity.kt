@@ -68,6 +68,9 @@ import java.io.File
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import java.util.Properties
 import tribixbite.cleverkeys.theme.KeyboardTheme
 import tribixbite.cleverkeys.langpack.LanguagePackManager
@@ -173,6 +176,19 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
         uri?.let { performClipboardZipImport(it) }
+    }
+
+    // GitHub #142: one-click full backup ZIP — manifest + config + dicts + clipboard + media
+    private val fullBackupExportLauncher = registerForActivityResult(
+        ActivityResultContracts.CreateDocument("application/zip")
+    ) { uri: Uri? ->
+        uri?.let { performFullBackupExport(it) }
+    }
+
+    private val fullBackupImportLauncher = registerForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        uri?.let { performFullBackupImport(it) }
     }
 
     // SAF file pickers for swipe ML data export
@@ -3686,6 +3702,38 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     }
                 }
 
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // GitHub #142: one-click full backup as dated ZIP (config + dicts + clipboard + media).
+                Text(
+                    text = "Full Backup",
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+                Text(
+                    text = "Export everything (settings, dictionary, clipboard, media) into one dated ZIP file.",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = { exportFullBackup() },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Export Full Backup")
+                    }
+                    Button(
+                        onClick = { importFullBackup() },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Import Full Backup")
+                    }
+                }
+
                 Text(
                     text = "Settings + dictionary imports show a preview so you can deselect entries before applying. Clipboard imports merge non-destructively (duplicates are skipped).",
                     fontSize = 11.sp,
@@ -5924,6 +5972,28 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
+    /**
+     * GitHub #142: launch SAF picker for the dated full-backup ZIP. The default
+     * filename baked into the picker is `cleverkeys_full_backup_<YYYY-MM-DD>.zip`
+     * so users get the requested dated-history filesystem layout with zero typing.
+     */
+    private fun exportFullBackup() {
+        try {
+            val date = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+            fullBackupExportLauncher.launch("cleverkeys_full_backup_$date.zip")
+        } catch (e: Exception) {
+            Toast.makeText(this, "Could not open file picker: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun importFullBackup() {
+        try {
+            fullBackupImportLauncher.launch(arrayOf("application/zip", "application/x-zip-compressed", "*/*"))
+        } catch (e: Exception) {
+            Toast.makeText(this, "Could not open file picker: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     private fun importLanguagePack() {
         languagePackImportStatus = null
         try {
@@ -6381,6 +6451,98 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 backupRestoreViewModel.resultTitle = "Clipboard ZIP Import Failed"
                 backupRestoreViewModel.resultMessage = "Failed to import clipboard ZIP:\n\n${e.message}\n\n" +
                         "Make sure the file is a valid CleverKeys clipboard ZIP backup."
+                backupRestoreViewModel.showResultDialog = true
+            } finally {
+                backupRestoreViewModel.isProcessing = false
+            }
+        }
+    }
+
+    /**
+     * GitHub #142: write a single dated ZIP containing config + dictionaries +
+     * clipboard JSON + media. Reuses the shared [BackupRestoreManager] helpers
+     * so output stays in lockstep with the per-section exporters.
+     */
+    private fun performFullBackupExport(uri: Uri) {
+        lifecycleScope.launch {
+            backupRestoreViewModel.isProcessing = true
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    backupRestoreManager.exportFullBackup(uri, prefs)
+                }
+                if (result.success) {
+                    backupRestoreViewModel.resultTitle = "Full Backup Successful"
+                    backupRestoreViewModel.resultMessage = buildString {
+                        appendLine("Full backup saved.\n")
+                        appendLine("File: ${uri.lastPathSegment}")
+                        appendLine()
+                        appendLine("• Config: ${if (result.configIncluded) "included" else "(none)"}")
+                        appendLine("• Dictionary languages: ${result.dictionaryCount}")
+                        appendLine("• Clipboard entries: ${result.clipboardEntryCount}")
+                        appendLine("• Media files: ${result.mediaFileCount}")
+                        if (result.totalBytes > 0) {
+                            appendLine("• Bytes streamed: ${result.totalBytes}")
+                        }
+                        appendLine()
+                        append("Restore via Import Full Backup to recover everything.")
+                    }
+                } else {
+                    backupRestoreViewModel.resultTitle = "Full Backup Failed"
+                    backupRestoreViewModel.resultMessage =
+                        "Failed to write full backup:\n\n${result.errorMessage ?: "Unknown error"}"
+                }
+                backupRestoreViewModel.showResultDialog = true
+            } catch (e: Exception) {
+                android.util.Log.e(TAG, "Full backup export failed", e)
+                backupRestoreViewModel.resultTitle = "Full Backup Failed"
+                backupRestoreViewModel.resultMessage = "Failed to write full backup:\n\n${e.message}"
+                backupRestoreViewModel.showResultDialog = true
+            } finally {
+                backupRestoreViewModel.isProcessing = false
+            }
+        }
+    }
+
+    private fun performFullBackupImport(uri: Uri) {
+        lifecycleScope.launch {
+            backupRestoreViewModel.isProcessing = true
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    backupRestoreManager.importFullBackup(uri, prefs)
+                }
+                if (result.success) {
+                    // Refresh in-memory state and copy prefs to protected storage so
+                    // imported values survive Direct Boot — same housekeeping as the
+                    // single-file config import.
+                    DirectBootAwarePreferences.copy_preferences_to_protected_storage(
+                        this@SettingsActivity, prefs
+                    )
+                    loadCurrentSettings()
+                    LocalBroadcastManager.getInstance(this@SettingsActivity)
+                        .sendBroadcast(Intent(BackupRestoreActivity.ACTION_DICTIONARY_IMPORTED))
+                    backupRestoreViewModel.resultTitle = "Full Backup Restored"
+                    backupRestoreViewModel.resultMessage = buildString {
+                        appendLine("Full backup import completed.\n")
+                        appendLine("• Settings applied: ${result.configKeysApplied}")
+                        appendLine("• Custom words: ${result.customWordsImported}")
+                        appendLine("• Disabled words: ${result.disabledWordsImported}")
+                        appendLine("• Clipboard imported: ${result.clipboardEntriesImported}")
+                        appendLine("• Clipboard skipped: ${result.clipboardEntriesSkipped} (duplicates)")
+                        appendLine("• Media files restored: ${result.mediaFilesRestored}")
+                        result.sourceAppVersion?.let { appendLine("• Source version: $it") }
+                        appendLine()
+                        append("Restart the keyboard for settings changes to take effect.")
+                    }
+                } else {
+                    backupRestoreViewModel.resultTitle = "Full Backup Import Failed"
+                    backupRestoreViewModel.resultMessage =
+                        "Failed to import full backup:\n\n${result.errorMessage ?: "Unknown error"}"
+                }
+                backupRestoreViewModel.showResultDialog = true
+            } catch (e: Exception) {
+                android.util.Log.e(TAG, "Full backup import failed", e)
+                backupRestoreViewModel.resultTitle = "Full Backup Import Failed"
+                backupRestoreViewModel.resultMessage = "Failed to import full backup:\n\n${e.message}"
                 backupRestoreViewModel.showResultDialog = true
             } finally {
                 backupRestoreViewModel.isProcessing = false
