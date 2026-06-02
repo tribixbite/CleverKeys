@@ -1,111 +1,178 @@
 ---
 title: Greek Language Support — Design Specification
-description: Plan for adding Greek (el) word suggestions + dictionary, and (phase 2) swipe via transliteration. Design proposal for issue #68.
+description: Plan for Greek (el) word suggestions + dictionary via wordfreq, an "Import dictionary from file" feature, and (phase 2) swipe via transliteration. Issue #68.
 status: planning
 version: v1.4.0+
 ---
 
 # Greek Language Support — Design Specification
 
-> **Status:** Planning. Design proposal for
+> **Status:** Planning, decisions resolved. Design for
 > [GitHub issue #68](https://github.com/tribixbite/CleverKeys/issues/68).
-> NOT implemented. **Blocked on a licensing + distribution decision** (see
-> "Decisions needed"). Linked from `docs/ROADMAP.md`.
+> Sourcing + licensing + feasibility are settled (below); remaining gate is
+> a maintainer go/no-go on bundle size + scope. Linked from `docs/ROADMAP.md`.
 
 ## What the user asked for
 
-Greek (`el`) word suggestions + dictionary. Autocorrect would be nice but
-"good suggestions without aggressive autocorrect would already help a lot."
-The reporter offered their own wordlist
-([github.com/dim-geo/greekdictionary](https://github.com/dim-geo/greekdictionary))
-and asked whether the swipe model can be retrained via a "pseudoenglish"
-transliteration (map Greek letters to QWERTY key positions).
+Greek (`el`) word suggestions + dictionary; autocorrect optional. Plus a
+broader ask: **offer importing the phone's system-installed language
+dictionary** (a Russian/Greek phone has a built-in dict) as an import
+option. Swipe via "pseudoenglish" transliteration was floated as a stretch.
 
-## What already exists (verified against current source)
+## Decisions (resolved by research, 2026-06-02)
 
-CleverKeys' new-language infrastructure is mature — most of the surface is
-already in place:
+### Source + licensing — use `wordfreq`
+
+The dictionary is generated from the **`wordfreq`** library via
+`top_n_list('el', N)` / `get_wordlist.py`. Why:
+- **Real corpus frequencies** (OpenSubtitles 2018, SUBTLEX, Wikipedia,
+  Google Books) — not the *synthetic* Levenshtein-estimated frequencies in
+  dim-geo/greekdictionary.
+- **License is clean for a GPL-3.0 app:** wordfreq code is Apache-2.0; its
+  data is CC-BY-SA-4.0, and **CC-BY-SA-4.0 is one-way compatible *into*
+  GPLv3** (Creative Commons, 2015-10-08). We relicense the generated
+  wordlist under GPL-3.0 when bundling. (The reverse is not permitted.)
+- **Already wired** into `scripts/build_dictionary.py` (`--use-wordfreq`).
+- **Generalizes** to Russian (`ru`) and dozens more — same one-command flow.
+
+Rejected sources: **FrequencyWords** (data is CC-BY-SA-**3.0**, *not*
+GPL-compatible — only 4.0 gained one-way compatibility); **HeliBoard
+`main_el`** (184k, license unspecified). Acceptable alternates if ever
+needed: **Hunspell el_GR** (tri-license; take the `GPL-2.0-or-later` arm,
+no frequencies) and **dim-geo/greekdictionary** (GPL-3.0, but synthetic
+freqs). wordfreq is preferred.
+
+### Required NOTICE / attribution (when shipping)
+
+Add to the app's credits / NOTICE:
+
+> Greek (and other) word frequencies derived from **wordfreq** (Robyn Speer
+> et al.), data under CC-BY-SA-4.0, incorporating OpenSubtitles 2018,
+> SUBTLEX, Wikipedia, and Google Books Ngrams. Derived wordlist
+> redistributed under GPL-3.0.
+
+### "Import the phone's system dictionary" — NOT possible; ship file-import instead
+
+Researched against Android platform docs: a third-party IME **cannot** read
+the phone's system/Gboard/AOSP main language dictionary.
+- Main `.dict` files are **app-private** (since API 28 an app can't
+  world-share its data dir; since API 30 no app can read another's) and the
+  format is proprietary.
+- No content provider / service exports them; Gboard's are proprietary.
+- `UserDictionary` exposes only the **user's manually-added** words (and
+  CleverKeys *already* reads those — `OptimizedVocabulary.kt:1734-1768` —
+  because the active IME is granted access; the permission has been IME-only
+  since API 23). It is **not** the system language dictionary.
+- The spell-checker API can only *validate words you supply*, never
+  enumerate its dictionary.
+
+**Therefore the real feature is "Import dictionary from a file"** via the
+Storage Access Framework, reusing the existing
+`langpack/LanguagePackManager.importLanguagePack(uri)` flow (same pattern as
+GIF packs). The user imports a wordlist/freq file (or a `langpack-el.zip`);
+we build the per-language trie on-device. This generalizes to any language
+and is the honest, implementable version of the request.
+
+## Existing infrastructure (verified against current source)
 
 | Component | Status | Evidence |
 |-----------|--------|----------|
-| Greek keyboard layout | ✅ exists | `srcs/layouts/grek_qwerty.xml` (1 of 83 layouts) |
-| Dictionary binary format | ✅ exists | 7 bundled `*_enhanced.bin` (de/en/es/fr/it/pt/sv) |
-| Wordlist → binary converter | ✅ exists | `scripts/build_dictionary.py` (word-per-line or `word<tab>freq`) |
-| Importable language packs | ✅ exists | `langpack/LanguagePackManager.kt` |
-| Per-language prefs | ✅ generic | ISO-639-1 key scheme (`custom_words_<lang>`, etc.) |
-| Language detection for `el` | ❌ missing | `data/LanguageDetector.kt` has no Greek patterns |
-| Bundled/importable `el` dictionary | ❌ missing | no `el_enhanced.bin`, no Greek pack |
-| Swipe model support for Greek | ❌ missing | tokenizer is Latin-only (see Phase 2) |
+| Greek keyboard layout | ✅ exists | `srcs/layouts/grek_qwerty.xml` (1 of 83) |
+| wordfreq runs on this dev env | ✅ verified | installed on Termux; `top_n_list('el',…)` → 46,306 words |
+| Wordlist → binary pipeline | ✅ exists + run | `get_wordlist.py` → `build_dictionary.py` → `el_enhanced.bin` |
+| Unigrams (lang detection) | ✅ script | `generate_unigrams.py --lang el` |
+| Contractions | ✅ script | `generate_binary_contractions.py` (Greek: minimal/empty) |
+| Importable language pack | ✅ exists | `build_langpack.py` + `LanguagePackManager.kt:59-83` |
+| UserDictionary user-words import | ✅ already works | `OptimizedVocabulary.kt:1734-1768` |
+| Greek language detection | ❌ missing | no Greek patterns in `data/LanguageDetector.kt` |
+| Bundled/packaged `el` dictionary | ❌ not yet | generated 1.82 MB artifact, not yet committed |
+| Swipe model support for Greek | ❌ missing | tokenizer is Latin-only (Phase 2) |
 
-## Phase 1 — Suggestions + dictionary (bounded, ~6–12 hrs once a wordlist is chosen)
+## Generated artifact (proof-of-pipeline, 2026-06-02)
 
-1. **Obtain a Greek wordlist with frequencies** (the blocker — see Decisions).
-2. **Build the dictionary:**
-   `python3 scripts/build_dictionary.py --lang el --input greek_words.txt --output el_enhanced.bin`
-3. **Add Greek language detection** to `data/LanguageDetector.kt`
-   (`initializeGreekPatterns()` — character-frequency + common-word block,
-   mirroring the existing Spanish/German blocks). Greek's α–ω range is
-   highly distinctive, so detection should be reliable.
-4. **Optional contractions:** `contractions_el.json` (Greek uses few
-   apostrophe contractions; can be empty/minimal).
-5. **Distribute** (see Decisions): bundle `el_enhanced.bin` in
-   `src/main/assets/dictionaries/` OR publish an importable
-   `langpack-el.zip` via `LanguagePackManager`.
+```
+get_wordlist.py  --lang el --count 50000   → 46,306 words (wordfreq 'small')
+build_dictionary.py --lang el --use-wordfreq → el_enhanced.bin = 1.82 MB
+  46,306 canonical · 42,719 normalized · 84.3% accented · 3,587 collisions
+```
 
-Greek typing + word suggestions work as soon as the dictionary + detection
-land. No model or tokenizer work required for Phase 1.
+**Bundle-size note:** 1.82 MB is larger than de/fr/it/pt (~620–650 KB) and
+en/es (~1.26 MB) — Greek's 2-byte-per-char UTF-8 + heavy tonos accents
+inflate it. Trimming to ~30k words would cut size materially. This is the
+main go/no-go input for bundle-vs-pack.
 
-## Phase 2 — Swipe via "pseudoenglish" transliteration (deferred, ~1–2 days)
+## Open decision (maintainer go/no-go)
 
-The ONNX swipe model + tokenizer are Latin-QWERTY only. The reporter's
-transliteration idea is sound *in principle*: Greek letters sit on the same
-physical QWERTY key positions (`grek_qwerty.xml`), so the model sees the
-same coordinate sequences; only the output characters differ. But the
-`SwipeTokenizer` currently hard-maps lowercase Latin chars to token indices
-with **no transliteration abstraction**.
+1. **Bundle vs pack vs both, and word count:** bundle 46k/1.82 MB in the
+   APK, trim to ~30k, or ship pack-only (`langpack-el.zip`, zero APK bloat,
+   importable)? "combo 1-3" pointed at bundle+pack+swipe.
+2. **Scope now:** Phase 1 (suggestions) + the file-import feature, with
+   Phase 2 (swipe) as a follow-up — or all together?
 
-Implementing Phase 2 requires:
-- A per-language transliteration map (Greek↔Latin-key) loaded into
-  `SwipeTokenizer` (e.g. `models/transliteration_el.json`).
-- Pre-transliterate Greek layout chars → Latin tokens before model input,
-  and map predicted Latin tokens → Greek output via the dictionary.
-- **No neural retraining needed** — the model consumes coordinate sequences,
-  not glyphs.
+## Implementation plan
 
-Phase 2 is a good stretch goal but not required for the user's core ask
-(suggestions). Recommend shipping Phase 1 first.
+### Phase 1 — suggestions + dictionary (~½–1 day)
+1. Generate + commit `src/main/assets/dictionaries/el_enhanced.bin` (or the
+   pack). Add the NOTICE attribution.
+2. `data/LanguageDetector.kt`: `initializeGreekPatterns()` — char-frequency
+   + common-word block (Greek α–ω is highly distinctive → reliable). Wire
+   `el_unigrams.txt` from `generate_unigrams.py`.
+3. Register `el` so it's selectable; verify `grek_qwerty.xml` is offered.
+4. Optional minimal `contractions_el.json`.
 
-## Decisions needed (cannot proceed without these)
+### "Import dictionary from file" feature (~½ day)
+- Add an "Import dictionary" action (Settings → Languages) using
+  `ACTION_OPEN_DOCUMENT` → `LanguagePackManager.importLanguagePack(uri)`
+  (already parses `word[\tfreq]` / `unigrams.txt` in a zip).
+- Document accepted formats; point users at wordfreq-derived or
+  Hunspell/AOSP wordlists for languages we don't bundle.
 
-1. **Wordlist source + license.** A dictionary is third-party data bundled
-   into a GPL-3.0 app. Options:
-   - Reporter's repo (dim-geo/greekdictionary) — license must be confirmed
-     GPL-compatible.
-   - HeliBoard / AnySoftKeyboard Greek dicts — Apache-2.0 / GPL respectively;
-     must verify and attribute.
-   - A permissively-licensed frequency list (e.g. derived from
-     `wordfreq`, OpenSubtitles, or a CC-licensed corpus).
-   This is a licensing call the maintainer must make; the agent will not
-   fetch/bundle third-party data without explicit direction.
-2. **Distribution:** bundle in the APK (~0.6–1 MB size increase, always
-   available) vs. importable language pack (no APK bloat, allows community
-   updates) vs. both.
-3. **Scope:** Phase 1 only (suggestions) now, or commit to Phase 2 (swipe)
-   as a follow-up?
+### Phase 2 — swipe via transliteration (~1–2 days, deferred)
+- Per-language Greek↔Latin-key map loaded into `SwipeTokenizer`
+  (`models/transliteration_el.json`); pre-transliterate layout chars →
+  Latin tokens before model input, map predictions back to Greek via the
+  dictionary. **No neural retraining** — the model consumes coordinate
+  sequences, not glyphs.
 
-## File touch list (Phase 1, when unblocked)
+## Test plan
+
+**Pure JVM**
+- Language-detection unit test: feed Greek sample text (`"και το να του με"`)
+  → detector returns `el`; feed English → not `el`.
+- Dictionary-load test: `el_enhanced.bin` parses; word count > 40k; a known
+  word (`και`) is present with non-zero frequency; accent-normalized lookup
+  (`τησ` form) resolves.
+
+**Instrumented (ew-cli, Pixel7 API34)**
+- With `el` active + `grek_qwerty.xml`: typing a Greek prefix yields Greek
+  suggestions from the bundled/imported dict.
+- Import flow: SAF-pick a small `el` wordlist zip →
+  `LanguagePackManager.importLanguagePack` → suggestions reflect imported
+  words (mirror existing language-pack import test).
+- Layout: `grek_qwerty.xml` selectable and renders Greek keys.
+
+**Phase 2 (when built)**
+- Swipe across the Greek layout for a known word → transliteration maps to
+  the right Latin token sequence → correct Greek word predicted.
+
+**Manual**
+- Set a Greek wordlist, type a sentence, confirm suggestions; confirm
+  language auto-detect switches correctly when typing Greek vs English.
+
+## File touch list (Phase 1 + import)
 
 | File | Change |
 |------|--------|
-| `src/main/assets/dictionaries/el_enhanced.bin` | New (built via script) — if bundling |
-| `src/main/kotlin/tribixbite/cleverkeys/data/LanguageDetector.kt` | `initializeGreekPatterns()` + registration |
+| `src/main/assets/dictionaries/el_enhanced.bin` | New (1.82 MB @ 46k, or trimmed) — if bundling |
+| `src/main/assets/unigrams/el_unigrams.txt` | New — language detection |
+| `data/LanguageDetector.kt` | `initializeGreekPatterns()` + registration |
 | `src/main/assets/dictionaries/contractions_el.json` | Optional, minimal |
-| `srcs/layouts/grek_qwerty.xml` | Already exists — verify it's selectable in layout settings |
-| Tests | Language-detection unit test for Greek sample text |
+| NOTICE / credits screen | wordfreq attribution text (above) |
+| Settings (Languages) | "Import dictionary" SAF action → `LanguagePackManager` |
+| Tests | detection + dict-load (pure) + import + layout (instrumented) |
 
 ## Related
 
 - [Dictionary System](../../../specs/dictionary-and-language-system.md)
-- [Multi-language](./multi-language-spec.md)
-- [Language packs](./language-packs-spec.md)
+- [Multi-language](./multi-language-spec.md) · [Language packs](./language-packs-spec.md)
 - [Neural Prediction](../typing/neural-prediction-spec.md) (Phase 2 tokenizer)
