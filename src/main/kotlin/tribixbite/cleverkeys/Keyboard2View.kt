@@ -1270,7 +1270,9 @@ class Keyboard2View @JvmOverloads constructor(
             (width / 10 - tc.horizontal_margin) * 3 / 2
         ) * _config.characterSize
         _mainLabelSize = labelBaseSize * _config.labelTextSize
-        _subLabelSize = labelBaseSize * _config.sublabelTextSize
+        // #133: secondary (flick) labels scale independently of the primary
+        // label via secondary_label_size_scale (default 1.0 = unchanged).
+        _subLabelSize = labelBaseSize * _config.sublabelTextSize * _config.secondary_label_size_scale
 
         val height = (tc.row_height * keyboard.keysHeight + _config.marginTop + _marginBottom).toInt()
         setMeasuredDimension(width, height)

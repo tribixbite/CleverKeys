@@ -324,6 +324,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     // Spacing and sizing settings
     private var characterSize by mutableStateOf(115)
+    private var secondaryLabelSizeScale by mutableStateOf(100) // #133: percent; 100 = unchanged
     private var keyVerticalMargin by mutableStateOf(150)
     private var keyHorizontalMargin by mutableStateOf(200)
 
@@ -591,6 +592,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             SearchableSetting("Key Opacity", listOf("opacity", "key", "transparent"), "Appearance", expandSection = { appearanceSectionExpanded = true }, settingId = "key_opacity"),
             SearchableSetting("Label Brightness", listOf("brightness", "text", "label", "visibility"), "Appearance", expandSection = { appearanceSectionExpanded = true }, settingId = "label_brightness"),
             SearchableSetting("Character Size", listOf("size", "font", "text", "label"), "Appearance", expandSection = { appearanceSectionExpanded = true }, settingId = "character_size"),
+            SearchableSetting("Secondary Label Size", listOf("size", "secondary", "flick", "sublabel", "corner", "accent"), "Appearance", expandSection = { appearanceSectionExpanded = true }, settingId = "secondary_label_size_scale"),
             SearchableSetting("Vertical Key Spacing", listOf("vertical", "spacing", "margin", "row"), "Appearance", expandSection = { appearanceSectionExpanded = true }, settingId = "vertical_spacing"),
             SearchableSetting("Number Row", listOf("123", "digits", "top row", "numbers"), "Appearance", expandSection = { appearanceSectionExpanded = true }, settingId = "number_row"),
             SearchableSetting("Show Numpad", listOf("numpad", "numbers", "digits", "calculator"), "Appearance", expandSection = { appearanceSectionExpanded = true }, settingId = "show_numpad"),
@@ -1023,6 +1025,9 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             // Spacing and sizing settings
             "character_size" -> {
                 characterSize = (prefs.getFloat(key, Defaults.CHARACTER_SIZE) * 100).toInt()
+            }
+            "secondary_label_size_scale" -> {
+                secondaryLabelSizeScale = (prefs.getFloat(key, Defaults.SECONDARY_LABEL_SIZE_SCALE) * 100).toInt()
             }
             "key_vertical_margin" -> {
                 keyVerticalMargin = (prefs.getFloat(key, Defaults.KEY_VERTICAL_MARGIN) * 100).toInt()
@@ -1844,6 +1849,21 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         saveSetting("character_size", characterSize / 100f)
                     },
                     displayValue = "${characterSize}%"
+                )
+
+                // #133: independent sizing for the small secondary (flick) labels
+                // so increasing primary Character Size doesn't crowd/overlap them.
+                SettingsSlider(
+                    title = "Secondary Label Size",
+                    description = "Size of the small corner (flick) labels, independent of Character Size",
+                    value = secondaryLabelSizeScale.toFloat(),
+                    valueRange = 50f..200f,
+                    steps = 150,
+                    onValueChange = {
+                        secondaryLabelSizeScale = it.toInt()
+                        saveSetting("secondary_label_size_scale", secondaryLabelSizeScale / 100f)
+                    },
+                    displayValue = "${secondaryLabelSizeScale}%"
                 )
 
                 SettingsSlider(
@@ -5234,6 +5254,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
         // Spacing and sizing settings
         characterSize = (prefs.getSafeFloat("character_size", Defaults.CHARACTER_SIZE) * 100).toInt()
+        secondaryLabelSizeScale = (prefs.getSafeFloat("secondary_label_size_scale", Defaults.SECONDARY_LABEL_SIZE_SCALE) * 100).toInt()
         keyVerticalMargin = (prefs.getSafeFloat("key_vertical_margin", Defaults.KEY_VERTICAL_MARGIN) * 100).toInt()
         keyHorizontalMargin = (prefs.getSafeFloat("key_horizontal_margin", Defaults.KEY_HORIZONTAL_MARGIN) * 100).toInt()
 

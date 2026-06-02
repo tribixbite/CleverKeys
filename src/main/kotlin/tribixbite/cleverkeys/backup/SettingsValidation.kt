@@ -98,7 +98,7 @@ object SettingsValidation {
             key.startsWith("neural_prefix_boost_max_")) return true
         return when (key) {
             // Character and UI sizing
-            "character_size", "key_vertical_margin", "key_horizontal_margin", "custom_border_line_width",
+            "character_size", "secondary_label_size_scale", "key_vertical_margin", "key_horizontal_margin", "custom_border_line_width",
             // Prediction weights
             "prediction_context_boost", "prediction_frequency_scale",
             // Auto-correction threshold
@@ -239,6 +239,9 @@ object SettingsValidation {
         val ok = when (key) {
             // Character size (0.75-1.5)
             "character_size" -> value in 0.75f..1.5f
+
+            // #133: Secondary (flick) label size multiplier (0.5-2.0)
+            "secondary_label_size_scale" -> value in 0.5f..2.0f
 
             // Margins (0-5%)
             "key_vertical_margin", "key_horizontal_margin" -> value in 0f..5f

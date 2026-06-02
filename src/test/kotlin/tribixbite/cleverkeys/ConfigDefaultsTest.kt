@@ -62,6 +62,14 @@ class ConfigDefaultsTest {
     }
 
     @Test
+    fun `secondary label size scale default is 1_0`() {
+        // #133: independent secondary (flick) label sizing. Default 1.0
+        // means NO change from prior behavior — secondary labels keep
+        // their `sublabelTextSize` (0.22) ratio until the user opts in.
+        assertThat(Defaults.SECONDARY_LABEL_SIZE_SCALE).isWithin(0.001f).of(1.0f)
+    }
+
+    @Test
     fun `key vertical margin default is 1_5`() {
         assertThat(Defaults.KEY_VERTICAL_MARGIN).isWithin(0.01f).of(1.5f)
     }

@@ -76,7 +76,8 @@ Control transparency levels:
 
 | Setting | Description |
 |---------|-------------|
-| **Character Size** | Font size of key labels |
+| **Character Size** | Font size of the primary key labels |
+| **Secondary Label Size** | Size of the small corner (flick/short-swipe) labels, independent of Character Size — turn it down if larger Character Size makes them overlap (default 100% = unchanged) |
 | **Label Brightness** | Visibility of key text |
 | **Vertical Key Spacing** | Gap between keyboard rows |
 | **Number Row** | Show dedicated number row above letters |

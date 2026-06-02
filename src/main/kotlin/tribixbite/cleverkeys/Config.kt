@@ -31,8 +31,12 @@ object Defaults {
     const val KEY_ACTIVATED_OPACITY = 80
     const val CHARACTER_SIZE = 1.18f
     // #133: Secondary-key (flick) label size as fraction of key height.
-    // Exposed so a future preference can scale it independently of the primary label.
+    // Exposed so a preference can scale it independently of the primary label.
     const val SUBLABEL_TEXT_SIZE_FACTOR = 0.22f
+    // #133: User-facing multiplier on the secondary-label size. 1.0 = unchanged
+    // (keeps the historic SUBLABEL_TEXT_SIZE_FACTOR ratio). Lets users shrink
+    // crowded flick labels or enlarge them independently of the primary label.
+    const val SECONDARY_LABEL_SIZE_SCALE = 1.0f
     const val KEY_VERTICAL_MARGIN = 1.5f
     const val KEY_HORIZONTAL_MARGIN = 2.0f
     const val BORDER_CONFIG = false
@@ -396,6 +400,8 @@ class Config private constructor(
     @JvmField val keyPadding: Float = res.getDimension(R.dimen.key_padding)
     @JvmField val labelTextSize: Float = 0.33f
     @JvmField val sublabelTextSize: Float = Defaults.SUBLABEL_TEXT_SIZE_FACTOR
+    // #133: user multiplier applied to the secondary (flick) label size only.
+    @JvmField var secondary_label_size_scale = 0f
 
     // From preferences
     // Nullable list preserves indices - null entries represent SystemLayout (use localeTextLayout)
@@ -705,6 +711,7 @@ class Config private constructor(
         customBorderLineWidth = get_dip_pref(dm, "custom_border_line_width", Defaults.CUSTOM_BORDER_LINE_WIDTH.toFloat())
         double_tap_lock_shift = _prefs.getBoolean("lock_double_tap", Defaults.DOUBLE_TAP_LOCK_SHIFT)
         characterSize = safeGetFloat(_prefs, "character_size", Defaults.CHARACTER_SIZE) * characterSizeScale
+        secondary_label_size_scale = safeGetFloat(_prefs, "secondary_label_size_scale", Defaults.SECONDARY_LABEL_SIZE_SCALE)
         themeName = safeGetString(_prefs, "theme", Defaults.THEME)
         theme = getThemeId(res, themeName)
         autocapitalisation = _prefs.getBoolean("autocapitalisation", Defaults.AUTOCAPITALISATION)
@@ -1148,6 +1155,7 @@ class Config private constructor(
             // NOTE: These defaults MUST match Defaults.* constants for consistency
             val floatPrefs = arrayOf(
                 arrayOf("character_size", "${Defaults.CHARACTER_SIZE}"),
+                arrayOf("secondary_label_size_scale", "${Defaults.SECONDARY_LABEL_SIZE_SCALE}"),
                 arrayOf("key_vertical_margin", "${Defaults.KEY_VERTICAL_MARGIN}"),
                 arrayOf("key_horizontal_margin", "${Defaults.KEY_HORIZONTAL_MARGIN}"),
                 arrayOf("custom_border_line_width", "${Defaults.CUSTOM_BORDER_LINE_WIDTH}"),
