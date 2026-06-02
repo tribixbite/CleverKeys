@@ -20,6 +20,7 @@ import android.widget.LinearLayout
 import android.widget.RadioButton
 import android.widget.Switch
 import android.widget.TextView
+import tribixbite.cleverkeys.theme.ThemeProvider
 import java.util.Calendar
 
 /**
@@ -48,6 +49,12 @@ class ClipboardManager(
     private val context: Context,
     private var config: Config
 ) {
+    // #130: Active runtime theme (custom_/decorative_) cached at pane-build time.
+    // Runtime themes have no XML style, so clipboard_pane.xml's ?attr/color*
+    // resolve to the hardcoded base style (CleverKeysDark purple) instead of the
+    // active theme — we apply the real colors programmatically, like Keyboard2View.
+    private var runtimeTheme: Theme? = null
+
     // Clipboard views
     private var clipboardPane: ViewGroup? = null
     private var clipboardSearchBox: TextView? = null
@@ -104,6 +111,11 @@ class ClipboardManager(
             // Inflate clipboard pane layout with correct theme (v1.32.415: fix theme attribute resolution)
             val themedContext = ContextThemeWrapper(context, config.theme)
             clipboardPane = View.inflate(themedContext, R.layout.clipboard_pane, null) as ViewGroup
+
+            // #130: for runtime themes the inflated ?attr/color* are the wrong
+            // (base-style) colors — overwrite them with the active theme's colors
+            // BEFORE we read searchBoxDefaultTextColor below.
+            applyRuntimeThemeColors()
 
             // Get search box and history view references
             clipboardSearchBox = clipboardPane?.findViewById(R.id.clipboard_search)
@@ -823,10 +835,86 @@ class ClipboardManager(
 
     /**
      * Resolves a theme attribute to a color value with a fallback default.
+     *
+     * #130: For runtime themes (custom_/decorative_), `?attr/color*` resolves
+     * against the hardcoded base style, NOT the active theme. Prefer the
+     * runtime Theme object's colors in that case so programmatic color reads
+     * (tag panel checkboxes, filter-icon tint, search-box default) match the
+     * keyboard.
      */
     private fun resolveThemeColor(ctx: Context, attr: Int, defaultColor: Int): Int {
+        runtimeThemeColor(attr)?.let { return it }
         val tv = TypedValue()
         return if (ctx.theme.resolveAttribute(attr, tv, true)) tv.data else defaultColor
+    }
+
+    /**
+     * #130: Maps a theme color attribute to the active runtime Theme's color.
+     * Returns null for non-runtime themes (so the caller falls back to normal
+     * `?attr/` resolution) or when the theme lacks that color (value 0).
+     */
+    private fun runtimeThemeColor(attr: Int): Int? {
+        if (!config.isRuntimeTheme()) return null
+        val theme = runtimeTheme
+            ?: ThemeProvider.getInstance(context).getTheme(config.themeName).also { runtimeTheme = it }
+        val c = when (attr) {
+            R.attr.colorKeyboard -> theme.colorKeyboardBackground
+            R.attr.colorKey -> theme.colorKey
+            R.attr.colorLabel -> theme.labelColor
+            R.attr.colorSubLabel -> theme.subLabelColor
+            R.attr.colorLabelActivated -> theme.activatedColor
+            else -> 0
+        }
+        return c.takeIf { it != 0 }
+    }
+
+    /**
+     * #130: Applies the active runtime theme's colors to the inflated clipboard
+     * pane chrome. No-op for built-in (XML-style) themes, which resolve
+     * `?attr/color*` correctly on their own. Mirrors how Keyboard2View applies
+     * runtime-theme colors programmatically. Caches the Theme in [runtimeTheme]
+     * so subsequent [resolveThemeColor] calls (tag panel, filter icon) reuse it
+     * without re-parsing (ThemeProvider.getTheme is not cached).
+     */
+    private fun applyRuntimeThemeColors() {
+        if (!config.isRuntimeTheme()) {
+            runtimeTheme = null
+            return
+        }
+        val pane = clipboardPane ?: return
+        val theme = ThemeProvider.getInstance(context).getTheme(config.themeName)
+            .also { runtimeTheme = it }
+        val bg = theme.colorKeyboardBackground
+        val key = theme.colorKey
+        val label = theme.labelColor
+        val sub = theme.subLabelColor
+
+        if (bg != 0) {
+            pane.setBackgroundColor(bg)
+            pane.findViewById<View?>(R.id.clipboard_tag_panel)?.setBackgroundColor(bg)
+        }
+        if (key != 0) {
+            pane.findViewById<View?>(R.id.clipboard_search_bar)?.setBackgroundColor(key)
+            pane.findViewById<View?>(R.id.clipboard_pagination_bar)?.setBackgroundColor(key)
+        }
+        if (label != 0) {
+            intArrayOf(
+                R.id.tab_history, R.id.tab_pinned, R.id.tab_todos,
+                R.id.clipboard_search_clear, R.id.clipboard_date_filter,
+                R.id.clipboard_close_button
+            ).forEach { id ->
+                (pane.findViewById<View?>(id) as? ImageView)
+                    ?.setColorFilter(label, PorterDuff.Mode.SRC_IN)
+            }
+            (pane.findViewById<TextView?>(R.id.clipboard_search))?.setTextColor(label)
+            (pane.findViewById<TextView?>(R.id.clipboard_regex_toggle))?.setTextColor(label)
+            (pane.findViewById<TextView?>(R.id.clipboard_page_prev))?.setTextColor(label)
+            (pane.findViewById<TextView?>(R.id.clipboard_page_next))?.setTextColor(label)
+        }
+        if (sub != 0) {
+            (pane.findViewById<TextView?>(R.id.clipboard_search))?.setHintTextColor(sub)
+            (pane.findViewById<TextView?>(R.id.clipboard_page_info))?.setTextColor(sub)
+        }
     }
 
     /**
