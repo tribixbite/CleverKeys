@@ -74,6 +74,13 @@
   · ~250 LOC + tests. Needs UX decisions on exit gesture (quick-tap vs
   two-finger tap vs visible ✕) and tap-to-place-cursor semantics before
   implementation.
+- [ ] **Greek language support** (#68) — word suggestions + dictionary
+  (Phase 1, ~6–12 hrs), swipe via transliteration (Phase 2, ~1–2 days).
+  Design spec:
+  [`docs/wiki/specs/layouts/greek-language-support-spec.md`](wiki/specs/layouts/greek-language-support-spec.md)
+  · live: <https://cleverkeys.app/specs/layouts/greek-language-support-spec/>
+  · Layout `grek_qwerty.xml` + build pipeline already exist. **Blocked on
+  a wordlist licensing + distribution (bundle vs language-pack) decision.**
 
 ---
 
