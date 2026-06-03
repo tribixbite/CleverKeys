@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import android.provider.UserDictionary
 import android.util.Log
 import tribixbite.cleverkeys.autocorrect.KeyAdjacency
+import tribixbite.cleverkeys.autocorrect.Morphology
 import tribixbite.cleverkeys.contextaware.ContextModel
 import tribixbite.cleverkeys.langpack.LanguagePackManager
 import tribixbite.cleverkeys.personalization.PersonalizationEngine
@@ -1798,6 +1799,22 @@ class WordPredictor {
         if (dictionary.get().containsKey(lowerTypedWord) ||
             (adaptationManager?.getAdaptationMultiplier(lowerTypedWord) ?: 0f) > 1.0f
         ) {
+            return typedWord
+        }
+
+        // 1.5. Morphological guard (#B1): do NOT autocorrect a word that is a
+        // regular inflection of a dictionary word. The bundled dictionary has
+        // incomplete inflection coverage (e.g. "immunization" is present but
+        // the valid plural "immunizations" is not), and without this guard the
+        // missing inflection gets "corrected" to a distant same-length word
+        // that happens to be in the dictionary ("organizations"), which is
+        // worse than leaving it alone. Require stem length >= 4 so short,
+        // ambiguous words (e.g. "thes") remain correctable — long technical
+        // plurals/inflections (immunization, vaccination, realization, ...)
+        // are the real failure mode.
+        val dict = dictionary.get()
+        if (Morphology.inflectionStems(lowerTypedWord).any { it.length >= 4 && dict.containsKey(it) }) {
+            Log.d(TAG, "AUTO-CORRECT skip (valid inflection): '$typedWord'")
             return typedWord
         }
 

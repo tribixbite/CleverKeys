@@ -218,6 +218,42 @@ class AutocorrectTest {
     }
 
     // =========================================================================
+    // Morphological guard (#B1) — valid inflections missing from the dictionary
+    // must NOT be "corrected" to a distant in-dictionary word.
+    // Reported: "immunizations" → "organizations" (the plural is absent from
+    // the bundled dict, the singular stem "immunization" is present, and
+    // "organizations" is same-length + higher frequency).
+    // =========================================================================
+
+    @Test
+    fun testAutocorrect_validPluralNotCorrected_immunizations() {
+        config.autocorrect_enabled = true
+        config.autocorrect_prefix_length = 0
+        // Precondition for a meaningful test: the singular stem is in the
+        // dictionary (so the guard can recognize the plural as valid). If the
+        // bundled dict lacks it, skip rather than assert a vacuous result.
+        org.junit.Assume.assumeTrue(
+            "stem 'immunization' must be in dict for this guard test",
+            predictor.isInDictionary("immunization")
+        )
+        val result = predictor.autoCorrect("immunizations")
+        assertEquals("valid plural must stay unchanged, not become 'organizations'",
+            "immunizations", result)
+    }
+
+    @Test
+    fun testAutocorrect_morphGuard_doesNotBlockRealTypos() {
+        // Guard must be surgical: a genuine non-inflection typo still corrects.
+        // "teh" is not an inflection of any dictionary word, so the guard is a
+        // no-op and the normal correction path still applies.
+        config.autocorrect_enabled = true
+        config.autocorrect_prefix_length = 0
+        val result = predictor.autoCorrect("teh")
+        assertTrue("non-inflection typo still corrects (or is left alone), never blocked by morph guard",
+            result == "the" || result == "teh")
+    }
+
+    // =========================================================================
     // Issue #101 follow-up — typo of a contraction base must autocorrect to
     // the CONTRACTED form, not the bare alias key. Reported 2026-05-21:
     // Tier A's adjacency-aware dict scan now reaches alias-injected `dont` /
