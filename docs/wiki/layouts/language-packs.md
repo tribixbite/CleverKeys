@@ -19,9 +19,9 @@ Add language dictionaries and layouts by importing language pack files.
 | **Contents** | Dictionary, frequency list, contractions |
 
 > [!TIP]
-> **Greek, German, French, Spanish, Italian, Portuguese, Dutch, Swedish,
-> Turkish, Indonesian, Malay, Tagalog, Swahili and more are already built**
-> — you don't need to build anything. See [Prebuilt Language Packs](#prebuilt-language-packs)
+> **Greek, Russian, German, French, Spanish, Italian, Portuguese, Dutch,
+> Swedish, Turkish, Indonesian, Malay, Tagalog, Swahili and more are already
+> built** — you don't need to build anything. See [Prebuilt Language Packs](#prebuilt-language-packs)
 > below, then import via Settings > 🌐 Multi-Language > Import Pack.
 
 ## What's in a Language Pack
@@ -50,6 +50,7 @@ download the `.zip` and import it (no need to build anything):
 | Language | Pack file | Words |
 |----------|-----------|-------|
 | **Greek (Ελληνικά)** | `langpack-el.zip` | ~46,000 |
+| **Russian (Русский)** | `langpack-ru.zip` | ~50,000 |
 | German (Deutsch) | `langpack-de.zip` | |
 | Spanish (Español) | `langpack-es.zip` | |
 | French (Français) | `langpack-fr.zip` | |
@@ -200,6 +201,13 @@ A: Download `langpack-el.zip` from
 [`scripts/dictionaries/`](https://github.com/tribixbite/CleverKeys/tree/main/scripts/dictionaries),
 then Settings > 🌐 Multi-Language > Import Pack, and set Primary/Secondary
 Language to **Greek (Ελληνικά)**. Greek word suggestions then work offline.
+
+### Q: How do I add Russian?
+
+A: Same flow — download `langpack-ru.zip` from
+[`scripts/dictionaries/`](https://github.com/tribixbite/CleverKeys/tree/main/scripts/dictionaries),
+Import Pack, set language to **Russian (Русский)**, and pick the Cyrillic
+(ЙЦУКЕН) layout. ~50,000 words, works offline.
 
 ### Q: Can I use a language without importing a pack?
 
