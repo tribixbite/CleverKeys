@@ -14,9 +14,15 @@ Add language dictionaries and layouts by importing language pack files.
 
 | What | Description |
 |------|-------------|
-| **Purpose** | Add language support |
-| **Access** | Settings > Activities > Backup & Restore > Import |
-| **Contents** | Dictionary, contractions, layouts |
+| **Purpose** | Add language support (dictionary + predictions) |
+| **Access** | Settings > 🌐 Multi-Language > **Import Pack** |
+| **Contents** | Dictionary, frequency list, contractions |
+
+> [!TIP]
+> **Greek, German, French, Spanish, Italian, Portuguese, Dutch, Swedish,
+> Turkish, Indonesian, Malay, Tagalog, Swahili and more are already built**
+> — you don't need to build anything. See [Prebuilt Language Packs](#prebuilt-language-packs)
+> below, then import via Settings > 🌐 Multi-Language > Import Pack.
 
 ## What's in a Language Pack
 
@@ -30,34 +36,62 @@ Each language pack includes:
 
 ## Bundled Languages
 
-CleverKeys includes English by default. The following dictionaries are bundled in the app:
+CleverKeys bundles these dictionaries in the app (no import needed):
+**English, Spanish, French, German, Italian, Portuguese, Swedish.**
 
-- English (US) - default
-- Additional layouts available via import
+Every other language is added by importing a language pack (below).
+
+## Prebuilt Language Packs
+
+These packs are **already built** and ship in the repository under
+[`scripts/dictionaries/`](https://github.com/tribixbite/CleverKeys/tree/main/scripts/dictionaries) —
+download the `.zip` and import it (no need to build anything):
+
+| Language | Pack file | Words |
+|----------|-----------|-------|
+| **Greek (Ελληνικά)** | `langpack-el.zip` | ~46,000 |
+| German (Deutsch) | `langpack-de.zip` | |
+| Spanish (Español) | `langpack-es.zip` | |
+| French (Français) | `langpack-fr.zip` | |
+| Italian (Italiano) | `langpack-it.zip` | |
+| Portuguese (Português) | `langpack-pt.zip` | |
+| Dutch (Nederlands) | `langpack-nl.zip` | |
+| Swedish (Svenska) | `langpack-sv.zip` | |
+| Turkish (Türkçe) | `langpack-tr.zip` | |
+| Indonesian | `langpack-id.zip` | |
+| Malay | `langpack-ms.zip` | |
+| Tagalog/Filipino | `langpack-tl.zip` | |
+| Swahili | `langpack-sw.zip` | |
+
+> All packs are generated from the [`wordfreq`](https://github.com/rspeer/wordfreq)
+> corpus (real word frequencies). See [Attribution](#attribution).
 
 ## Importing Language Packs
 
 ### Step 1: Obtain the Language Pack
 
-Language packs are `.zip` files you can:
-- Build yourself using the provided scripts
-- Obtain from community resources
+- **Prebuilt** (recommended): download a `.zip` from
+  [`scripts/dictionaries/`](https://github.com/tribixbite/CleverKeys/tree/main/scripts/dictionaries)
+  (e.g. `langpack-el.zip` for Greek) to your device.
+- **Build your own** for a language not listed (see below).
 
-### Step 2: Import via Backup & Restore
+### Step 2: Import via Multi-Language
 
 1. Open **Settings**
-2. Go to **Activities > Backup & Restore**
-3. Select **Import**
+2. Go to the **🌐 Multi-Language** section
+3. Tap **Import Pack**
 4. Choose the language pack `.zip` file
-5. The pack is extracted and installed
+5. The pack is extracted and installed (you'll see "Installed: N language pack(s)")
 
-### Step 3: Configure Language
+### Step 3: Select the Language
 
-After import:
+After import the language becomes selectable immediately:
 
-1. The new layout appears in Layout Manager
-2. Dictionary is automatically loaded for predictions
-3. Configure in Settings > Activities > Layout Manager
+1. In **Settings > 🌐 Multi-Language**, set **Primary Language** (or
+   **Secondary Language**) to the imported language — e.g. **Greek (Ελληνικά)**.
+2. The dictionary loads automatically for predictions and autocorrect.
+3. Pick the matching keyboard layout (e.g. the Greek layout) if you want
+   the native script on the keys.
 
 ## Building Custom Language Packs
 
@@ -102,11 +136,15 @@ python build_langpack.py --lang xx --name "MyLang" --dict custom.bin --output la
 
 ```
 langpack-{lang}.zip
-├── {lang}_enhanced.bin    # Binary dictionary
-├── {lang}_enhanced.json   # Human-readable word list
+├── manifest.json          # Metadata: code, name, version, wordCount
+├── dictionary.bin         # V2 binary dictionary (required)
+├── unigrams.txt           # Word-frequency list for language detection
 ├── contractions.json      # Language contractions (optional)
-└── manifest.json          # Metadata
+└── prefix_boost.bin       # Aho-Corasick prefix trie (optional, non-English)
 ```
+
+`manifest.json` and `dictionary.bin` are required; the importer rejects a
+pack missing either, or a `dictionary.bin` without the V2 (`CKDT`) header.
 
 ### Languages Supported by wordfreq
 
@@ -150,7 +188,18 @@ Once imported, all language features work offline:
 
 ### Q: How do I add a new language?
 
-A: Build a language pack using the provided Python scripts, then import it via Settings > Activities > Backup & Restore.
+A: If it's in the [Prebuilt Language Packs](#prebuilt-language-packs) list
+(Greek, German, French, Spanish, Italian, Portuguese, Dutch, Swedish,
+Turkish, and more), just download the `.zip` and import it via Settings >
+🌐 Multi-Language > Import Pack — no building required. For an unlisted
+language, build a pack with the Python scripts, then import the same way.
+
+### Q: How do I add Greek?
+
+A: Download `langpack-el.zip` from
+[`scripts/dictionaries/`](https://github.com/tribixbite/CleverKeys/tree/main/scripts/dictionaries),
+then Settings > 🌐 Multi-Language > Import Pack, and set Primary/Secondary
+Language to **Greek (Ελληνικά)**. Greek word suggestions then work offline.
 
 ### Q: Can I use a language without importing a pack?
 
@@ -163,6 +212,14 @@ A: Build it yourself using the `build_langpack.py` script with the wordfreq pack
 ### Q: Do I need to download English?
 
 A: No, English is included by default.
+
+## Attribution
+
+Prebuilt packs are generated from the [`wordfreq`](https://github.com/rspeer/wordfreq)
+library (Robyn Speer et al.). Word-frequency data is CC-BY-SA-4.0,
+incorporating OpenSubtitles 2018, SUBTLEX, Wikipedia, and Google Books
+Ngrams; derived wordlists are redistributed under GPL-3.0 (CC-BY-SA-4.0 is
+one-way compatible with GPLv3). See the repository `NOTICE` file.
 
 ## Related Features
 

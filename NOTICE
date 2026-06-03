@@ -1,0 +1,28 @@
+CleverKeys
+Copyright (C) tribixbite and contributors
+Licensed under the GNU General Public License v3.0 (see LICENSE).
+
+This product includes third-party data and components:
+
+================================================================================
+Language-pack word frequencies — wordfreq
+================================================================================
+The bundled and prebuilt language dictionaries (src/main/assets/dictionaries/
+and scripts/dictionaries/langpack-*.zip) are generated from the wordfreq
+library:
+
+  wordfreq — Robyn Speer et al.
+  https://github.com/rspeer/wordfreq
+  Code: Apache License 2.0
+  Data: Creative Commons Attribution-ShareAlike 4.0 (CC-BY-SA-4.0)
+
+wordfreq's frequency data incorporates OpenSubtitles 2018, SUBTLEX,
+Wikipedia, and the Google Books Ngram Viewer datasets. SUBTLEX word
+frequencies are freely available for research and application use.
+
+CC-BY-SA-4.0 is one-way compatible with GPLv3
+(https://creativecommons.org/2015/10/08/cc-by-sa-4-0-now-one-way-compatible-with-gplv3/),
+so the derived wordlists distributed with CleverKeys are redistributed under
+GPL-3.0, with attribution preserved here.
+
+================================================================================

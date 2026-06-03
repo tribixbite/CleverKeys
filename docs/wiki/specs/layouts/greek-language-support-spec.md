@@ -7,10 +7,20 @@ version: v1.4.0+
 
 # Greek Language Support — Design Specification
 
-> **Status:** Planning, decisions resolved. Design for
-> [GitHub issue #68](https://github.com/tribixbite/CleverKeys/issues/68).
-> Sourcing + licensing + feasibility are settled (below); remaining gate is
-> a maintainer go/no-go on bundle size + scope. Linked from `docs/ROADMAP.md`.
+> **Status (2026-06-03 update):** Phase 1 is effectively **already shipped** —
+> the Greek pack `scripts/dictionaries/langpack-el.zip` was committed in
+> `0fb56dc09` and is byte-identical to a fresh `wordfreq` build (verified),
+> and the import → select → suggest chain already works with **zero app
+> code** (the `el` display name is even present in `getLanguageDisplayName`).
+> The real gap was **discoverability**: users didn't know the pack existed or
+> how to import it. Fixed by rewriting `docs/wiki/layouts/language-packs.md`
+> (correct path: Settings > 🌐 Multi-Language > Import Pack; lists prebuilt
+> packs incl Greek; attribution) + adding the repo `NOTICE`.
+>
+> **Remaining:** (1) maintainer publishes the pack `.zip`s as downloadable
+> release assets (currently only in-repo); (2) optional Phase 2 swipe
+> (transliteration). Design for
+> [issue #68](https://github.com/tribixbite/CleverKeys/issues/68).
 
 ## What the user asked for
 
