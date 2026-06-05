@@ -385,6 +385,7 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.Issue136MaxSeqLengthClampTest',
     'tribixbite.cleverkeys.backup.SettingsImportPlanBuilderTest',
     'tribixbite.cleverkeys.backup.SettingsDefaultsDriftTest',
+    'tribixbite.cleverkeys.SettingsSearchCoverageTest',
     'tribixbite.cleverkeys.backup.DictImportPlanBuilderTest',
     'tribixbite.cleverkeys.backup.SettingsExporterTest',
     'tribixbite.cleverkeys.BackupRestoreResultMessagesTest',

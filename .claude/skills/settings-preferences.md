@@ -129,7 +129,8 @@ if (featureEnabled) {
 4. [ ] Optional: Add setter method in Config (Config.kt ~line 798)
 5. [ ] Add `mutableStateOf` in SettingsActivity (~line 163)
 6. [ ] Add to `collapseAllSections()` if new section (~line 399)
-7. [ ] Add `SearchableSetting` entry (~line 525)
+7. [ ] Add `SearchableSetting` entry so the control is findable by search (~line 545).
+   **Enforced** by `SettingsSearchCoverageTest` — see "Search Coverage" below.
 8. [ ] Add preference change handler (~line 755)
 9. [ ] Add UI in `SettingsScreen()` composable
 10. [ ] Init from prefs in `initSettingsFromPrefs()` (~line 4600)
@@ -153,6 +154,28 @@ in comments. When adding a setting, find the right Chunk for locality:
   so `ClipboardHistoryService` rebuilds its cached `UrlSanitizer`. See
   `clipboard-panel-architecture.md` and `docs/wiki/specs/clipboard/
   url-sanitization-spec.md` for the full pipeline.
+
+## Search Coverage (every setting must be findable)
+
+The in-app search (`SettingsActivity.getFilteredSettings`) matches a query against the
+hand-maintained `searchableSettings` list (titles + keywords) in `SettingsActivity.kt`.
+That list is **parallel** to the actual UI controls, so a control added without a matching
+entry becomes invisible to search — the user types its name and gets zero results. This is
+exactly how the URL-handling toggles ("Sanitize tracking parameters") and a whole
+Auto-Correction section drifted out of search.
+
+**Enforced by `SettingsSearchCoverageTest`** (pure JVM, in `runPureTests`): it scans
+`SettingsActivity.kt` for every `SettingsSwitch` / `SettingsSlider` / `SettingsDropdown`
+literal title and fails the build unless every significant word of that title appears (as a
+substring) in some `SearchableSetting` title or keyword.
+
+When it fails, make the flagged word searchable — either add a new `SearchableSetting` for
+the control, OR add the missing word as a `keyword` on the most relevant existing entry.
+Each entry needs: `title`, `keywords`, `sectionName`, `expandSection` (the section's
+`*Expanded` state setter), optional `gatedBy` (only `swipe_typing` / `short_gestures` /
+`multilang` get special highlight handling — any other value behaves as ungated), and a
+unique `settingId`. Titles built from `stringResource(...)` are skipped (can't be scanned
+statically) — those resolve from `res/values/strings.xml`.
 
 ## Autocorrect Knobs (v1.4.0 + KeyAdjacency)
 

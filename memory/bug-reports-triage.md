@@ -161,4 +161,46 @@ the original file bytes should exist locally and be preservable.
 
 ---
 
+## B3 — Clipboard URL sanitizer does nothing (until restart) ✅ FIXED
+
+**Reported:** 2026-06-04 (user)
+
+**Symptom:** Enabling "Sanitize tracking parameters" had no effect — copied URLs
+kept their `utm_*`/`fbclid` params.
+
+**Root cause:** the toggle persists to SharedPreferences and broadcasts a
+rules-changed signal that drops the cached sanitizer, but the in-memory `Config`
+field it reads was never refreshed (`SettingsActivity.updateConfigFromSettings()`
+syncs only a hardcoded subset of fields). So `SanitizationConfig.build()` re-read
+the stale startup value (`false`) and rebuilt a no-op sanitizer. Only a full
+keyboard restart (which re-runs `Config.refresh()`) fixed it.
+
+**Fix:** `Config.reloadSanitizationSettings()` re-reads the four Chunk-3 keys; the
+`ClipboardHistoryService` rules-changed receiver now calls it before `rebuild()`.
+Verified by `SanitizationReloadInstrumentedTest` (ew-cli, Pixel7 API34): toggle
+ON mid-session → `utm_source` actually stripped, no restart needed.
+
+---
+
+## B4 — Settings not findable via search ✅ FIXED
+
+**Reported:** 2026-06-04 (user)
+
+**Symptom:** Typing "sanitize" (and many other setting names) returned no search
+results despite the setting being visible on screen.
+
+**Root cause:** settings search uses a hand-maintained `searchableSettings` index
+parallel to the UI controls, with nothing enforcing sync. An audit found 83/126
+control titles had no exact search match and ~25 controls had ZERO term coverage
+(the 3 URL toggles, an entire Auto-Correction section, learning/boost sliders) —
+so newly-added settings silently dropped out of search.
+
+**Fix:** (1) backfilled search entries/keywords for every control whose name-words
+were unsearchable; (2) added `SettingsSearchCoverageTest` (pure JVM, in
+`runPureTests`) that scans `SettingsActivity.kt` and fails the build if any control
+title word is absent from the search index — preventing recurrence, including for
+future settings. `settings-preferences.md` skill documents the requirement.
+
+---
+
 ## (awaiting further reports)
