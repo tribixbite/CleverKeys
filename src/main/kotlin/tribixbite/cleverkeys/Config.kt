@@ -913,6 +913,19 @@ class Config private constructor(
             Defaults.CLIPBOARD_HISTORY_DURATION).toIntOrNull() ?: Defaults.CLIPBOARD_HISTORY_DURATION_FALLBACK
     }
 
+    /** Re-read the URL-sanitization toggles (Chunk 3) from SharedPreferences.
+     *  Called mid-session from ClipboardHistoryService's rules-changed receiver when the
+     *  user flips a "URL handling" toggle in settings. The settings UI persists the toggle
+     *  but does NOT push it into the live Config, so without this the cached sanitizer would
+     *  rebuild from the stale startup value and appear to do nothing until a keyboard restart.
+     *  Keys MUST stay in sync with the Chunk-3 reads in refresh(). */
+    fun reloadSanitizationSettings() {
+        clipboard_sanitize_links_enabled = _prefs.getBoolean("clipboard_sanitize_links_enabled", false)
+        clipboard_embed_enrich_enabled = _prefs.getBoolean("clipboard_embed_enrich_enabled", false)
+        clipboard_custom_rules_enabled = _prefs.getBoolean("clipboard_custom_rules_enabled", false)
+        clipboard_custom_rules_uri = _prefs.getString("clipboard_custom_rules_uri", null)
+    }
+
     fun set_clipboard_pane_height_percent(percent: Int) {
         clipboard_pane_height_percent = percent.coerceIn(10, 50)
         _prefs.edit().putInt("clipboard_pane_height_percent", clipboard_pane_height_percent).commit()

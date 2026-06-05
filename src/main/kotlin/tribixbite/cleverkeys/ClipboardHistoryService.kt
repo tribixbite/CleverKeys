@@ -50,6 +50,15 @@ class ClipboardHistoryService private constructor(ctx: Context) {
     private val _sanitizationRulesReceiver = object : BroadcastReceiver() {
         override fun onReceive(c: Context?, intent: Intent?) {
             if (intent?.action == SettingsActivity.ACTION_SANITIZATION_RULES_CHANGED) {
+                // Refresh the live Config BEFORE dropping the cache: the settings UI persists
+                // the toggle to SharedPreferences but never pushes it into the in-memory Config,
+                // so build() would otherwise re-read the stale startup value (sanitizer would
+                // appear to do nothing until a full keyboard restart).
+                try {
+                    Config.globalConfig().reloadSanitizationSettings()
+                } catch (e: Exception) {
+                    android.util.Log.w("ClipboardHistory", "Config not ready on sanitization rules change", e)
+                }
                 _sanitizationConfig.rebuild()
             }
         }
