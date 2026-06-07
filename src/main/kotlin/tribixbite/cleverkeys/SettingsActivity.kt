@@ -110,6 +110,15 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             "tribixbite.cleverkeys.action.SANITIZATION_RULES_CHANGED"
 
         /**
+         * Public folder containing the prebuilt language-pack ZIPs (de, el, es, fr, it,
+         * nl, pt, ru, sv, tr, ...). Users download a ZIP here and import it via SAF — the
+         * app has no INTERNET permission, so this only opens the browser. Matches the
+         * canonical location referenced by docs/wiki/layouts/language-packs.md.
+         */
+        const val LANGUAGE_PACKS_URL =
+            "https://github.com/tribixbite/CleverKeys/tree/main/scripts/dictionaries"
+
+        /**
          * Test-only override for the inline Backup & Restore flow's manager.
          * Instrumented tests set this in @Before, clear it in @After. Mirrors
          * [BackupRestoreActivity.testManagerOverride] — used by the migrated
@@ -3939,7 +3948,18 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                                "Download packs externally and import here (no internet permission needed).",
                         fontSize = 11.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(bottom = 8.dp)
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                    // Link to the prebuilt packs folder on GitHub (opens the browser; SAF import below).
+                    Text(
+                        text = "Browse available packs ↗",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .clickable {
+                                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(LANGUAGE_PACKS_URL)))
+                            }
+                            .padding(bottom = 8.dp)
                     )
 
                     // Installed packs count
@@ -3993,7 +4013,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                             if (installedLanguagePacks.isEmpty()) {
                                 Text(
                                     text = "No language packs installed.\n\n" +
-                                           "Download language pack ZIP files and use 'Import Pack' to add them.",
+                                           "Use 'Browse available packs' to download a ZIP, then 'Import Pack' to add it.",
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             } else {
