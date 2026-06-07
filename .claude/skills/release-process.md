@@ -339,6 +339,16 @@ done
 
 ## Lessons Learned
 
+### The per-version fastlane file is the changelog source — NOT RELEASE_NOTES.md
+- `release.yml` reads `fastlane/.../changelogs/{versionCode}2.txt` (arm64 code) for the GitHub
+  body, the same file F-Droid shows in-app. The repo-root `RELEASE_NOTES.md` is only the
+  human-editable INPUT that `scripts/prepare-release.sh` syncs INTO the fastlane files.
+- **Past bug (v1.4.0):** `release.yml` used to read `RELEASE_NOTES.md` first ("single source of
+  truth"). It was left stale at v1.2.9, so the v1.4.0 GitHub release body shipped v1.2.9 text —
+  even though the fastlane file (and therefore F-Droid) was correct. Fixed by removing that
+  Priority-1 override. If you ever see GitHub and F-Droid changelogs disagree, suspect a stale
+  global override shadowing the per-version file.
+
 ### Don't conflate the build recipe with the changelog
 - `metadata/fdroid/tribixbite.cleverkeys.yml` is the F-Droid build recipe — versionCode, commit, ABI splits, prebuild hooks. Don't put release notes here. Its `CurrentVersion:` field is auto-updated by F-Droid's bot post-publish, not manually.
 - Release notes for F-Droid go in `fastlane/metadata/android/en-US/changelogs/{baseCode}{abi}.txt` — **THREE separate files per release**, one per ABI.

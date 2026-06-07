@@ -204,35 +204,33 @@ jobs:
         echo "## What's New in ${{ env.TAG_NAME }}" > CHANGELOG.md
         echo "" >> CHANGELOG.md
 
-        # Priority 1: Use RELEASE_NOTES.md if it exists (single source of truth)
-        if [ -f "RELEASE_NOTES.md" ]; then
-          cat RELEASE_NOTES.md >> CHANGELOG.md
-          echo "📋 Read changelog from RELEASE_NOTES.md"
-        else
-          # Priority 2: Read from fastlane changelog (use arm64 versionCode suffix = 2)
-          CHANGELOG_CODE=$((${{ env.VERSION_CODE }} * 10 + 2))
-          CHANGELOG_FILE="fastlane/metadata/android/en-US/changelogs/${CHANGELOG_CODE}.txt"
+        # The per-version fastlane changelog is the single source of truth for BOTH the
+        # GitHub release body and F-Droid's in-app "What's New" (materialized per version by
+        # scripts/prepare-release.sh). Do NOT read the mutable repo-root RELEASE_NOTES.md
+        # here: a stale RELEASE_NOTES.md (left at v1.2.9) once shadowed the correct fastlane
+        # file and shipped v1.2.9 text as the v1.4.0 release body. arm64 ABI suffix = 2.
+        CHANGELOG_CODE=$((${{ env.VERSION_CODE }} * 10 + 2))
+        CHANGELOG_FILE="fastlane/metadata/android/en-US/changelogs/${CHANGELOG_CODE}.txt"
 
-          if [ -f "$CHANGELOG_FILE" ]; then
-            cat "$CHANGELOG_FILE" >> CHANGELOG.md
-            echo "📋 Read changelog from $CHANGELOG_FILE"
+        if [ -f "$CHANGELOG_FILE" ]; then
+          cat "$CHANGELOG_FILE" >> CHANGELOG.md
+          echo "📋 Read changelog from $CHANGELOG_FILE"
+        else
+          # Fallback: base versionCode without ABI suffix
+          CHANGELOG_FILE_ALT="fastlane/metadata/android/en-US/changelogs/${{ env.VERSION_CODE }}.txt"
+          if [ -f "$CHANGELOG_FILE_ALT" ]; then
+            cat "$CHANGELOG_FILE_ALT" >> CHANGELOG.md
+            echo "📋 Read changelog from $CHANGELOG_FILE_ALT"
           else
-            # Priority 3: check for base versionCode without ABI suffix
-            CHANGELOG_FILE_ALT="fastlane/metadata/android/en-US/changelogs/${{ env.VERSION_CODE }}.txt"
-            if [ -f "$CHANGELOG_FILE_ALT" ]; then
-              cat "$CHANGELOG_FILE_ALT" >> CHANGELOG.md
-              echo "📋 Read changelog from $CHANGELOG_FILE_ALT"
+            # Final fallback: generate from commits
+            echo "⚠️ No changelog found, generating from commits"
+            LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+            if [ -n "$LAST_TAG" ]; then
+              echo "Changes since $LAST_TAG:" >> CHANGELOG.md
+              echo "" >> CHANGELOG.md
+              git log $LAST_TAG..HEAD --pretty=format:"- %s" >> CHANGELOG.md
             else
-              # Final fallback: generate from commits
-              echo "⚠️ No changelog found, generating from commits"
-              LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-              if [ -n "$LAST_TAG" ]; then
-                echo "Changes since $LAST_TAG:" >> CHANGELOG.md
-                echo "" >> CHANGELOG.md
-                git log $LAST_TAG..HEAD --pretty=format:"- %s" >> CHANGELOG.md
-              else
-                echo "- Initial release with neural swipe typing" >> CHANGELOG.md
-              fi
+              echo "- Initial release with neural swipe typing" >> CHANGELOG.md
             fi
           fi
         fi
