@@ -121,11 +121,13 @@ class SettingsSearchTest {
     fun searchAndTapResult_keyRepeat_doesNotCrash() {
         searchFor("key repeat")
 
+        // The search result now shows the control's full title ("Key Repeat Enabled"),
+        // since the index is auto-derived from the actual control names.
         val result = device.wait(
-            Until.findObject(By.text("Key Repeat")),
+            Until.findObject(By.text("Key Repeat Enabled")),
             UI_TIMEOUT
         )
-        assertNotNull("Search result 'Key Repeat' should appear", result)
+        assertNotNull("Search result 'Key Repeat Enabled' should appear", result)
 
         result.click()
         Thread.sleep(1500)
@@ -200,5 +202,42 @@ class SettingsSearchTest {
         )
         assertNotNull("'Backspace Undo Swipe' should appear in search results", undoSwipe)
         assertNotNull("'Backspace Undo Autocorrect' should appear in search results", undoAutocorrect)
+    }
+
+    // =========================================================================
+    // Auto-derived search index (generated from control titles) — these settings
+    // previously returned ZERO results because they were missing from the
+    // hand-maintained list. They are now indexed automatically.
+    // =========================================================================
+
+    @Test
+    fun search_sanitizeSetting_isFindable() {
+        // The originally-reported bug: typing "sanitize" returned no results.
+        searchFor("sanitize")
+        val result = device.wait(
+            Until.findObject(By.text("Sanitize tracking parameters")),
+            UI_TIMEOUT
+        )
+        assertNotNull("'Sanitize tracking parameters' should appear for query 'sanitize'", result)
+    }
+
+    @Test
+    fun search_autoIndexedAutocorrectSetting_isFindableAndDoesNotCrash() {
+        // "Fuzzy Match Algorithm" had zero search coverage before the generated index.
+        searchFor("fuzzy")
+        val result = device.wait(
+            Until.findObject(By.text("Fuzzy Match Algorithm")),
+            UI_TIMEOUT
+        )
+        assertNotNull("Auto-indexed 'Fuzzy Match Algorithm' should appear for query 'fuzzy'", result)
+
+        // Tapping expands the correct section and scrolls toward the control.
+        result.click()
+        Thread.sleep(1500)
+        val pkg = device.currentPackageName ?: ""
+        assertTrue(
+            "Settings should remain foreground after tapping an auto-indexed result, got pkg=$pkg",
+            pkg.startsWith("tribixbite.cleverkeys")
+        )
     }
 }

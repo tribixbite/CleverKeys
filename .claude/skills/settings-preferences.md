@@ -129,8 +129,9 @@ if (featureEnabled) {
 4. [ ] Optional: Add setter method in Config (Config.kt ~line 798)
 5. [ ] Add `mutableStateOf` in SettingsActivity (~line 163)
 6. [ ] Add to `collapseAllSections()` if new section (~line 399)
-7. [ ] Add `SearchableSetting` entry so the control is findable by search (~line 545).
-   **Enforced** by `SettingsSearchCoverageTest` — see "Search Coverage" below.
+7. [ ] Search: **nothing to do** — the control's search entry is auto-generated from its
+   title at build time. (Only add a manual `SearchableSetting` for NON-control entries such
+   as activity navigation or FAQ links.) See "Search Coverage" below.
 8. [ ] Add preference change handler (~line 755)
 9. [ ] Add UI in `SettingsScreen()` composable
 10. [ ] Init from prefs in `initSettingsFromPrefs()` (~line 4600)
@@ -150,32 +151,41 @@ in comments. When adding a setting, find the right Chunk for locality:
   toggles for the clipboard pipeline. Keys:
   `clipboard_sanitize_links_enabled`, `clipboard_embed_enrich_enabled`,
   `clipboard_custom_rules_enabled`, `clipboard_custom_rules_uri`. All
-  default OFF. Changes broadcast `SettingsActivity.ACTION_SANITIZATION_RULES_CHANGED`
-  so `ClipboardHistoryService` rebuilds its cached `UrlSanitizer`. See
+  default OFF. Changes broadcast `SettingsActivity.ACTION_SANITIZATION_RULES_CHANGED`;
+  the `ClipboardHistoryService` receiver calls `Config.reloadSanitizationSettings()` (the
+  settings UI does NOT push these into the live Config) and then rebuilds its cached
+  `UrlSanitizer` — without that reload the sanitizer reads stale toggles until restart. See
   `clipboard-panel-architecture.md` and `docs/wiki/specs/clipboard/
   url-sanitization-spec.md` for the full pipeline.
 
-## Search Coverage (every setting must be findable)
+## Search Coverage (auto-generated — every control is findable)
 
-The in-app search (`SettingsActivity.getFilteredSettings`) matches a query against the
-hand-maintained `searchableSettings` list (titles + keywords) in `SettingsActivity.kt`.
-That list is **parallel** to the actual UI controls, so a control added without a matching
-entry becomes invisible to search — the user types its name and gets zero results. This is
-exactly how the URL-handling toggles ("Sanitize tracking parameters") and a whole
-Auto-Correction section drifted out of search.
+The in-app search index is **generated at build time from the actual controls**, so it can
+never drift out of sync with the UI (it used to be a hand-maintained parallel list, which is
+how the URL toggles and a whole Auto-Correction section silently fell out of search).
 
-**Enforced by `SettingsSearchCoverageTest`** (pure JVM, in `runPureTests`): it scans
-`SettingsActivity.kt` for every `SettingsSwitch` / `SettingsSlider` / `SettingsDropdown`
-literal title and fails the build unless every significant word of that title appears (as a
-substring) in some `SearchableSetting` title or keyword.
+- `scripts/generate_settings_search_index.py` (run by the `generateSettingsSearchIndex`
+  Gradle task, wired into `preBuild`) scans `SettingsActivity.kt` for every `SettingsSwitch`
+  / `SettingsSlider` / `SettingsDropdown`, takes the control's **full title** (resolving
+  `stringResource(...)` via `res/values/strings.xml`), derives keywords from the title words
+  + a small synonym map, infers the enclosing collapsible section, and emits
+  `build/generated/search/kotlin/.../SettingsSearchIndex.kt` (`GENERATED_SEARCH_ENTRIES`).
+- `SettingsActivity.searchableSettings` = those generated control entries (mapped to a
+  section display-name + expand action via `sectionDisplayName` / `expanderFor`, ~12 sections)
+  **plus** a small hand-maintained list of NON-control entries (activity navigation, FAQ,
+  What's New). Those are the ONLY search entries you ever write by hand.
 
-When it fails, make the flagged word searchable — either add a new `SearchableSetting` for
-the control, OR add the missing word as a `keyword` on the most relevant existing entry.
-Each entry needs: `title`, `keywords`, `sectionName`, `expandSection` (the section's
-`*Expanded` state setter), optional `gatedBy` (only `swipe_typing` / `short_gestures` /
-`multilang` get special highlight handling — any other value behaves as ungated), and a
-unique `settingId`. Titles built from `stringResource(...)` are skipped (can't be scanned
-statically) — those resolve from `res/values/strings.xml`.
+**Adding a setting needs zero search work** — build the control; the entry appears.
+
+To make search results **scroll to the exact control**, `SettingsSwitch`/`SettingsSlider`/
+`SettingsDropdown` register their on-screen position under `settingSlug(title)`, which equals
+the generated entry's `settingId`. Keep the Kotlin `settingSlug()` and the Python `slugify()`
+identical. To add a cross-vocabulary synonym (e.g. "haptic" → "Vibration Feedback"), edit the
+`SYNONYMS` map in the generator script, not the UI.
+
+`SettingsSearchCoverageTest` (pure JVM, in `runPureTests`) independently re-scans the source
+and fails the build if any control lacks a generated entry, any entry has empty keywords, or
+any control title-word is uncovered — catching generator gaps.
 
 ## Autocorrect Knobs (v1.4.0 + KeyAdjacency)
 

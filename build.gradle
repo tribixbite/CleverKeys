@@ -201,7 +201,7 @@ android {
   sourceSets {
     main {
       manifest.srcFile 'AndroidManifest.xml'
-      kotlin.srcDirs = ['src/main/kotlin']
+      kotlin.srcDirs = ['src/main/kotlin', 'build/generated/search/kotlin']
       java.srcDirs = ['src/main/java']
       res.srcDirs = ['res', 'build/generated/layouts/res', 'build/generated/version/res']
       assets.srcDirs = ['assets', 'src/main/assets']
@@ -559,7 +559,22 @@ version=${project.ext.versionNameStr}
 }
 
 tasks.named("preBuild") {
-  dependsOn "initDebugKeystore", "copyLayoutDefinitions", "generateBinaryDictionaries", "generateBinaryContractions", "generateComposeData", "generateVersionInfo"
+  dependsOn "initDebugKeystore", "copyLayoutDefinitions", "generateBinaryDictionaries", "generateBinaryContractions", "generateComposeData", "generateVersionInfo", "generateSettingsSearchIndex"
+}
+
+// Auto-derive the settings search index from the SettingsActivity controls so it never
+// has to be hand-maintained (see scripts/generate_settings_search_index.py). Inputs/outputs
+// are declared so Gradle skips regeneration when nothing relevant changed.
+tasks.register('generateSettingsSearchIndex') {
+  def src = file("src/main/kotlin/tribixbite/cleverkeys/SettingsActivity.kt")
+  def strings = file("res/values/strings.xml")
+  def script = file("scripts/generate_settings_search_index.py")
+  def outKt = file("build/generated/search/kotlin/tribixbite/cleverkeys/SettingsSearchIndex.kt")
+  inputs.files(src, strings, script)
+  outputs.file(outKt)
+  doLast {
+    exec { workingDir = projectDir; commandLine "python3", script.absolutePath, outKt.absolutePath }
+  }
 }
 
 tasks.register('generateComposeData') {
