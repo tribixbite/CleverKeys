@@ -194,4 +194,22 @@ class UrlSanitizerTest {
         assertThat(out).doesNotContain("embed_host_url")
         assertThat(out).startsWith("https://rxddit.com/r/x/comments/1/title/")
     }
+
+    @Test
+    fun clearUrls_cleansAliexpressUsListingLink() {
+        // Real-world AliExpress share link: affiliate/tracking junk + a pdp_ext_f value that
+        // contains literal `"` characters (which used to truncate URL matching). Should reduce
+        // to the bare product page.
+        val input = "https://www.aliexpress.us/item/3256807058505746.html" +
+            "?spm=a2g0n.productlist.0.0.29b4124aDE5jw1" +
+            "&browser_id=3a6b5ec51a5a43e1880fcdc43b82ba5a&aff_platform=msite" +
+            "&m_page_id=qwhiintprycacoom19df446aff757fb06e120b7ee2" +
+            "&pdp_ext_f=%7B\"order\"%3A\"54\"%2C\"eval\"%3A\"1\"%2C\"fromPage\"%3A\"search\"%7D" +
+            "&pdp_npi=6%40dis!USD!18.92!13.89!!!128.43!94.30!%40210328c017779197664987980e1b6f" +
+            "!12000039930916669!sea!US!0!ABX!1!0!n_tag%3A-29910%3Bd%3Ae7eef248" +
+            "&algo_pvid=9fc4d04f-5375-4727-b893-8bb8783fc5eb" +
+            "&utparam-url=scene%3Asearch%7Cquery_from%3A%7Cx_object_id%3A1005007244820498"
+        assertThat(bundledClearUrls.process(input))
+            .isEqualTo("https://www.aliexpress.us/item/3256807058505746.html")
+    }
 }

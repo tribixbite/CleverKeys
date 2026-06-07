@@ -18,10 +18,13 @@ internal class RulesetUrlSanitizer(private val ruleset: Ruleset) : UrlSanitizer 
     private companion object {
         // Hand-rolled URL regex: HTTP/HTTPS only, until first whitespace or string end.
         // Pure JVM-compatible — does NOT depend on android.util.Patterns.
-        // Trailing punctuation/brackets (.,;:!?) and `)` are excluded so e.g.
-        // "(see https://x.com)" trims the closing paren and "see https://x.com." trims the dot.
+        // A double-quote is allowed *inside* the URL (real-world links like AliExpress put
+        // literal `"` in params such as pdp_ext_f={"order":...}; excluding it truncated the
+        // URL and left the rest unsanitized) but is excluded as the FINAL char, together with
+        // trailing punctuation/brackets (.,;:!?) and `)`, so a quoted URL in prose still trims:
+        // `(see https://x.com)` -> closing paren dropped; `"https://x.com"` -> closing quote dropped.
         private val URL_REGEX = Regex(
-            "https?://[^\\s<>\"]+[^\\s<>\".,;:!?)]"
+            "https?://[^\\s<>]+[^\\s<>\".,;:!?)]"
         )
     }
 

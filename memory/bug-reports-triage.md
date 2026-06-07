@@ -76,7 +76,13 @@ candidates. `immunizations` (13 chars) and `organizations` (13 chars) are the
 
 ---
 
-## B2 — Copying a GIF to clipboard yields a static JPG 🔍 ROOT-CAUSED (fix needs decision)
+## B2 — Copying a GIF to clipboard yields a static JPG ❌ WONTFIX (receiver/OS limitation)
+
+**Resolution (2026-06-07, user decision):** WONTFIX. Our side puts a valid animated
+`image/webp` on the system clipboard (verified below); the still-frame is produced by the
+*receiving* app, which grabs the first frame of animated clipboard images. That's a
+platform/receiver limitation, not ours. A WebP→GIF transcoder was considered (Option 1) but
+deferred as not worth the cost for a problem outside our control. Original analysis kept below.
 
 **Reported:** 2026-06-02 (user)
 
