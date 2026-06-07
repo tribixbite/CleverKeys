@@ -1,5 +1,12 @@
 {
     "providers": {
+        "reddit_embed_host_url": {
+            "urlPattern": "^https?:\\/\\/(?:[a-z0-9-]+\\.)*?(?:reddit|rxddit)\\.com",
+            "completeProvider": false,
+            "rules": [
+                "embed_host_url"
+            ]
+        },
         "amazon": {
             "urlPattern": "^https?:\\/\\/(?:[a-z0-9-]+\\.)*?amazon(?:\\.[a-z]{2,}){1,}",
             "completeProvider": false,

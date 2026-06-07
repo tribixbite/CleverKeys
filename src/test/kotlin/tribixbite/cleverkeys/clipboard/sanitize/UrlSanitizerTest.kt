@@ -166,4 +166,32 @@ class UrlSanitizerTest {
         val twice = sanitizer.process(once)
         assertThat(twice).isEqualTo(once)
     }
+
+    // The bundled clearurls.json must strip the reddit/rxddit `embed_host_url` tracking
+    // param so shared reddit and rxddit links don't leak the embedding host. Loads the
+    // REAL shipped ruleset (exposed to JVM tests via resources.srcDirs += src/main/assets).
+    private val bundledClearUrls by lazy {
+        val stream = javaClass.getResourceAsStream("/url_rules/clearurls.json")
+            ?: error("clearurls.json missing from test classpath")
+        RulesetUrlSanitizer(RulesetParser.fromJson(stream.bufferedReader().use { it.readText() }))
+    }
+
+    @Test
+    fun clearUrls_stripsEmbedHostUrl_fromRedditLink() {
+        val out = bundledClearUrls.process(
+            "https://www.reddit.com/r/x/comments/1/title/?embed_host_url=https%3A%2F%2Fe.com&keep=1"
+        )
+        assertThat(out).doesNotContain("embed_host_url")
+        assertThat(out).contains("keep=1")
+        assertThat(out).startsWith("https://www.reddit.com/r/x/comments/1/title/")
+    }
+
+    @Test
+    fun clearUrls_stripsEmbedHostUrl_fromRxdditLink() {
+        val out = bundledClearUrls.process(
+            "https://rxddit.com/r/x/comments/1/title/?embed_host_url=foo"
+        )
+        assertThat(out).doesNotContain("embed_host_url")
+        assertThat(out).startsWith("https://rxddit.com/r/x/comments/1/title/")
+    }
 }
