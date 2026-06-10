@@ -1,5 +1,30 @@
 # CleverKeys TODO
 
+## ✅ Gesture routing audit fixes (2026-06-10, all landed locally)
+
+Audit of the short-swipe vs word-swipe boundary work found and fixed (one
+change per commit, TDD via `PointersGestureRoutingTest` on ew-cli Pixel7
+API34; 13 routing tests green; pure suite 1267 green):
+- `c8ee910a1` word candidates only accept exact-direction subkeys (±1 fuzz
+  hijacked "the"→"%", tilted "we"→"2" on corner-dense layouts)
+- `231cb041b` swipe_typing_enabled gates every word route (silent letter loss
+  with swipe off + short gestures on)
+- `8ff63d5fe` Max Distance slider = the boundary; false "200%=OFF" retired
+- `7b9f29297` Minimum Swipe Distance description = word-candidacy role
+- `ff6566c1c` return-trip word rescue ("pop"/"lol" ended as first-letter tap)
+- `40f44d725` touch-up candidacy includes 2nd key registered on final sample
+- `4a277fdfc` spec Threshold Logic corrected; swipe_dist_px wide-key cap KEPT
+  (audit removal plan reversed — load-bearing for backspace/shift/space)
+- `5a7948f25` + `f72e1f031` dead recognizers deleted (SwipeGestureRecognizer,
+  ContinuousSwipeGestureRecognizer, LoopGestureDetector, SwipeDetector +
+  18 dead tests)
+- `0bc735743` Config initializers bound to Defaults consts
+
+**Deliberate non-fixes:** MAX_POINT_INTERVAL_MS=500 still hardcoded (config
+candidate); ~30°-tilted 2-key words still hit exact-corner subkeys
+(irreducible — same angle as a deliberate corner flick); T3's 8px boundary
+margin (theoretical fragility only). NOT PUSHED — needs user approval.
+
 ## 🔜 Backup/Restore — next steps (priority order)
 
 Tracking what remains after the round-3-to-6 import-preview polish work.
