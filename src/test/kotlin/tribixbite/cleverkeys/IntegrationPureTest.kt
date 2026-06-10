@@ -11,44 +11,15 @@ import org.junit.Test
  *
  * This file provides integration-style tests that verify how pure JVM
  * components work together:
- * - PredictionResult + SwipeDetector.SwipeClassification interaction
- * - SwipeDetector decision logic with various classification scenarios
  * - TrajectoryFeatures data pipeline structure
+ * - PredictionResult filtering/ranking patterns
  * - Cross-component data flow without Android dependencies
+ *
+ * (SwipeDetector interaction tests removed 2026-06: SwipeDetector was dead
+ * code — never called by the live Pointers/ImprovedSwipeGestureRecognizer
+ * pipeline — and has been deleted.)
  */
 class IntegrationPureTest {
-
-    // ========================================================================
-    // Classification → DTW decision pipeline
-    // ========================================================================
-
-    @Test
-    fun classificationToDtwDecision_highQuality_usesDtw() {
-        val detector = SwipeDetector()
-        val classification = SwipeDetector.SwipeClassification(
-            isSwipe = true,
-            confidence = 0.85f,
-            reason = "Good path length; Multiple directions; ",
-            quality = SwipeDetector.SwipeClassification.SwipeQuality.HIGH
-        )
-
-        assertThat(detector.shouldUseDTW(classification)).isTrue()
-        assertThat(classification.isSwipe).isTrue()
-    }
-
-    @Test
-    fun classificationToDtwDecision_lowQuality_skipsDtw() {
-        val detector = SwipeDetector()
-        val classification = SwipeDetector.SwipeClassification(
-            isSwipe = false,
-            confidence = 0.3f,
-            reason = "Too short; ",
-            quality = SwipeDetector.SwipeClassification.SwipeQuality.LOW
-        )
-
-        assertThat(detector.shouldUseDTW(classification)).isFalse()
-        assertThat(classification.isSwipe).isFalse()
-    }
 
     // ========================================================================
     // TrajectoryFeatures data structure pipeline
@@ -190,33 +161,6 @@ class IntegrationPureTest {
     }
 
     // ========================================================================
-    // SwipeClassification quality tier mapping
-    // ========================================================================
-
-    @Test
-    fun qualityTierMapping_confidenceToQuality() {
-        // Verify the confidence → quality mapping matches SwipeDetector logic
-        data class TestCase(val confidence: Float, val expectedQuality: SwipeDetector.SwipeClassification.SwipeQuality)
-
-        val cases = listOf(
-            TestCase(0.85f, SwipeDetector.SwipeClassification.SwipeQuality.HIGH),
-            TestCase(0.65f, SwipeDetector.SwipeClassification.SwipeQuality.MEDIUM),
-            TestCase(0.45f, SwipeDetector.SwipeClassification.SwipeQuality.LOW),
-            TestCase(0.2f, SwipeDetector.SwipeClassification.SwipeQuality.NOT_SWIPE),
-        )
-
-        for (case in cases) {
-            val quality = when {
-                case.confidence > 0.8f -> SwipeDetector.SwipeClassification.SwipeQuality.HIGH
-                case.confidence > 0.6f -> SwipeDetector.SwipeClassification.SwipeQuality.MEDIUM
-                case.confidence > 0.4f -> SwipeDetector.SwipeClassification.SwipeQuality.LOW
-                else -> SwipeDetector.SwipeClassification.SwipeQuality.NOT_SWIPE
-            }
-            assertThat(quality).isEqualTo(case.expectedQuality)
-        }
-    }
-
-    // ========================================================================
     // Token index conventions
     // ========================================================================
 
@@ -276,31 +220,4 @@ class IntegrationPureTest {
         assertThat(point.y).isEqualTo(1.0f) // Clamped
     }
 
-    // ========================================================================
-    // SwipeDetector instantiation and config
-    // ========================================================================
-
-    @Test
-    fun swipeDetector_multipleInstances() {
-        val d1 = SwipeDetector()
-        val d2 = SwipeDetector()
-
-        // Independent instances
-        assertThat(d1).isNotSameInstanceAs(d2)
-    }
-
-    @Test
-    fun swipeDetector_nullConfigIsNoOp() {
-        val detector = SwipeDetector()
-
-        // Should not throw
-        detector.updateConfig(null)
-
-        // Detector should still be functional for shouldUseDTW
-        val high = SwipeDetector.SwipeClassification(
-            true, 0.9f, "test",
-            SwipeDetector.SwipeClassification.SwipeQuality.HIGH
-        )
-        assertThat(detector.shouldUseDTW(high)).isTrue()
-    }
 }

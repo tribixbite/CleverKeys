@@ -116,13 +116,6 @@ class NeuralPredictionTest {
     }
 
     @Test
-    fun testSwipeDetectorInstantiation() = testScope.runTest {
-        // Just verify SwipeDetector can be instantiated
-        val detector = SwipeDetector()
-        assertNotNull(detector)
-    }
-
-    @Test
     fun testSwipeTrajectoryProcessorInstantiation() = testScope.runTest {
         // Just verify SwipeTrajectoryProcessor can be instantiated
         val processor = SwipeTrajectoryProcessor()

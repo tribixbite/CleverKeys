@@ -13,7 +13,7 @@ import org.junit.runner.RunWith
 
 /**
  * Instrumented tests for swipe typing functionality.
- * Tests SwipeDetector, NeuralSwipeTypingEngine, and gesture recognition.
+ * Tests NeuralSwipeTypingEngine and gesture recognition.
  * Note: NeuralSwipeTypingEngine requires Config which may not be available in test context.
  */
 @RunWith(AndroidJUnit4::class)
@@ -21,13 +21,11 @@ class SwipePredictionTest {
 
     private lateinit var context: Context
     private var swipeEngine: NeuralSwipeTypingEngine? = null
-    private lateinit var swipeDetector: SwipeDetector
     private var config: Config? = null
 
     @Before
     fun setup() {
         context = InstrumentationRegistry.getInstrumentation().targetContext
-        swipeDetector = SwipeDetector()
 
         // Initialize Config for testing using TestConfigHelper
         if (TestConfigHelper.ensureConfigInitialized(context)) {
@@ -36,7 +34,7 @@ class SwipePredictionTest {
                 swipeEngine = NeuralSwipeTypingEngine(context, config!!)
             } catch (e: OutOfMemoryError) {
                 // Dictionary loading OOMs on test emulators with 200MB heap limit
-                // Skip engine tests — SwipeDetector and gesture recognizer tests still run
+                // Skip engine tests — gesture recognizer tests still run
                 swipeEngine = null
             }
         }
@@ -137,24 +135,6 @@ class SwipePredictionTest {
         assumeNotNull("Config required for NeuralSwipeTypingEngine", config)
         val engine = swipeEngine ?: return
         engine.reloadCustomWords()
-        // Should not crash
-    }
-
-    // =========================================================================
-    // SwipeDetector tests (no Config required)
-    // =========================================================================
-
-    @Test
-    fun testSwipeDetectorCreation() {
-        assertNotNull("SwipeDetector should be created", swipeDetector)
-    }
-
-    @Test
-    fun testSwipeDetectorUpdateConfig() {
-        // Config may be null in test context
-        if (config != null) {
-            swipeDetector.updateConfig(config)
-        }
         // Should not crash
     }
 
