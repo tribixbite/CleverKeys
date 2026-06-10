@@ -525,8 +525,8 @@ class Config private constructor(
 
     // Short gesture configuration
     @JvmField var short_gestures_enabled = false
-    @JvmField var short_gesture_min_distance = 0
-    @JvmField var short_gesture_max_distance = 100 // The short/long boundary as % of key diagonal (50-200): at/below = short swipe, beyond = word swipe. ("200=disabled" was a UI label that was never implemented; retired.)
+    @JvmField var short_gesture_min_distance = Defaults.SHORT_GESTURE_MIN_DISTANCE
+    @JvmField var short_gesture_max_distance = Defaults.SHORT_GESTURE_MAX_DISTANCE // The short/long boundary as % of key diagonal (50-200): at/below = short swipe, beyond = word swipe. ("200=disabled" was a UI label that was never implemented; retired.)
 
     // Selection-delete mode configuration (backspace swipe+hold)
     @JvmField var selection_delete_vertical_threshold = 40  // % of key height to trigger vertical selection
