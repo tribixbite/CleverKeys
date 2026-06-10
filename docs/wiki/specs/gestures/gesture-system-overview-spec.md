@@ -250,7 +250,7 @@ The `&& ptr.hasLeftStartingKey` conjunct is the fix for the **overshoot bug**: `
 
 Because both paths require `hasLeftStartingKey`, `short_gesture_max_distance` is the one knob that moves the short/long boundary for the whole system. (The no-subkey fallback is the deliberate sub-boundary exception — an intent signal, not a second threshold.)
 
-`swipe_typing_enabled` gates **every** word route: the mid-move latch, Path B's classifier (a SWIPE classification is demoted to TAP when swipe typing is off — the gesture commits the starting key instead of silently dying in `onSwipeEnd`), and the no-subkey fallback (via the word-candidate check).
+`swipe_typing_enabled` gates **every** word route: the mid-move latch, Path B's classifier (a SWIPE classification is demoted to TAP when swipe typing is off — the gesture commits the starting key instead of silently dying in `onSwipeEnd`), the no-subkey fallback, and the return-trip rescue (both via the word-candidate check). See [Short Swipes](short-swipes-spec.md#no-subkey-fallback-to-word-swipe) for the latter two.
 
 ### Pointer State
 

@@ -119,8 +119,10 @@ Intent ordering at the boundary, for a gesture that registered ≥2 keys below t
 
 | Subkey assigned in direction? | Outcome |
 |---|---|
-| Yes | Short swipe → emit subkey (overshoot tolerated) |
-| No  | Word candidate → neural word swipe; otherwise first-letter tap |
+| Yes (exact direction) | Short swipe → emit subkey (overshoot tolerated) |
+| No (or ±1-fuzz only) | Word candidate → neural word swipe; otherwise first-letter tap |
+
+**Return-trip rescue.** A word whose path returns near its start ("pop", "lol") ends with displacement *below* the short-swipe minimum and would fall through to a first-letter tap. The plain-tap fallthrough rescues it as a word when the gesture is a word candidate, lasted longer than `tap_duration_threshold`, and the end displacement is under half the traced path. Straight gestures (taps, overshoots, flicks) have displacement ≈ path and can never match; fast grazes fail the duration check. This applies whether or not short gestures are enabled.
 
 ## Visual Feedback
 

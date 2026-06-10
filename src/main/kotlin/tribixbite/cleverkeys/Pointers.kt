@@ -555,6 +555,26 @@ class Pointers(
                         "distance=$distance")
                 }
 
+                // RETURN-TRIP WORD RESCUE: a word whose path returns near its start ("pop",
+                // "lol") ends with displacement below the short-swipe minimum, so it reaches
+                // this plain-tap fallthrough even though the recognizer saw a full word path.
+                // Rescue it as a word when the gesture is a word candidate, lasted longer
+                // than a tap, and the end displacement is small relative to the traced path.
+                // Straight gestures (taps, overshoots, flicks) have displacement ~= path and
+                // can never satisfy the ratio; fast grazes fail the duration check. This
+                // restores the pre-boundary-gate behavior for exactly this gesture class.
+                if (isCharKey && _config.swipe_typing_enabled && _swipeRecognizer.isSwipeTyping() &&
+                    timeElapsed > _config.tap_duration_threshold &&
+                    distance < totalDistance / 2
+                ) {
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "RETURN_TRIP_WORD: disp=$distance path=$totalDistance time=${timeElapsed}ms -> word")
+                    _handler.onSwipeEnd(_swipeRecognizer)
+                    clearLatched()
+                    _swipeRecognizer.reset()
+                    removePtr(ptr)
+                    return
+                }
+
                 // Regular TAP - output the key character only if it was deferred
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "TAP path: deferred=${ptr.hasFlagsAny(FLAG_P_DEFERRED_DOWN)}")
                 if (ptr.hasFlagsAny(FLAG_P_DEFERRED_DOWN)) {

@@ -240,6 +240,39 @@ class PointersGestureRoutingTest {
         )
     }
 
+    /** T10 (F2, "pop"/"lol" shape): a deliberate word gesture that returns near its start
+     *  ends with displacement below the short-swipe minimum and previously fell through to
+     *  a first-letter tap. It must commit a word: candidacy (2 keys + path), duration above
+     *  tap threshold, and end displacement far below the traced path prove the return trip. */
+    @Test
+    fun returnTripWord_endsNearStart_committsWord() {
+        // b -> into c -> back to b. 15px steps (>= swipe_min_key_distance so keyC registers),
+        // 25ms sampling (deliberate pace, > tap duration). Path ~115px, end displacement ~5px.
+        val inst = InstrumentationRegistry.getInstrumentation()
+        inst.runOnMainSync { pointers.onTouchDown(180f, 80f, 0, keyB) }
+        val samples = listOf(195f, 210f, 225f, 240f, 225f, 210f, 195f, 185f) // 240 = keyC
+        for (x in samples) {
+            Thread.sleep(25)
+            inst.runOnMainSync { pointers.onTouchMove(x, 80f, 0) }
+        }
+        Thread.sleep(25)
+        inst.runOnMainSync { pointers.onTouchUp(0) }
+        assertEquals("return-trip word gesture must commit a word", 1, handler.swipeEndCount)
+    }
+
+    /** T10b (guard): a FAST graze through the neighbor and back (under the tap-duration
+     *  threshold) must stay a tap of the starting key — not become a word. */
+    @Test
+    fun fastGrazeThroughNeighbor_staysTap() {
+        val inst = InstrumentationRegistry.getInstrumentation()
+        inst.runOnMainSync { pointers.onTouchDown(180f, 80f, 0, keyB) }
+        Thread.sleep(8); inst.runOnMainSync { pointers.onTouchMove(250f, 80f, 0) } // graze keyC
+        Thread.sleep(8); inst.runOnMainSync { pointers.onTouchMove(185f, 80f, 0) } // back
+        Thread.sleep(8); inst.runOnMainSync { pointers.onTouchUp(0) }
+        assertEquals("a fast graze must not commit a word", 0, handler.swipeEndCount)
+        assertTrue("the starting key must tap", handler.upValues.any { it?.getChar() == 'b' })
+    }
+
     /** T8 (guard): a deliberate ~45° corner flick computes the corner's EXACT direction
      *  (dir 2 -> ne). The exact-direction subkey must still win even when the flick crossed
      *  into the adjacent key and the gesture is technically a word candidate. */
