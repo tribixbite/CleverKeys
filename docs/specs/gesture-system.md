@@ -74,11 +74,12 @@ if (ptr.key != null && !ptr.hasLeftStartingKey) {
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `short_gesture_min_distance` | Int | 15 | Min pixels for short swipe detection |
-| `short_gesture_max_distance` | Int | 50 | Max % of key hypotenuse for short swipe (above = long swipe) |
-| `tap_duration_threshold` | Long | 200 | Max ms for tap vs swipe distinction |
-| `swipe_speed_threshold` | Float | 0.4 | Min speed for swipe typing activation |
+| `short_gesture_min_distance` | Int | 28 | Min displacement to trigger a short swipe, as % of key diagonal |
+| `short_gesture_max_distance` | Int | 141 | Single short/long boundary: max displacement (% of key diagonal) still treated as a short swipe; above = long (neural word) swipe. 200 = disabled. Honored by both the mid-move latch and the touch-up classifier. |
+| `tap_duration_threshold` | Long | 150 | Max ms a gesture that left the key may last and still be a tap (touch-up path) |
 | `circle_gesture_enabled` | Boolean | true | Enable circle gestures for double letters |
+
+> No `swipe_speed_threshold` / minimum-speed gate exists (it was never in code). Word activation goes through two paths, both gated on `short_gesture_max_distance` — see the canonical [Gesture System Overview](../wiki/specs/gestures/gesture-system-overview-spec.md) "Swipe Typing Activation" section.
 
 ## Public API
 

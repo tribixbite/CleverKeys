@@ -818,8 +818,16 @@ class Pointers(
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "onTouchMove: collecting point ($x, $y) for potential swipe")
             _handler.onSwipeMove(x, y, _swipeRecognizer)
 
-            // Check if this has become a confirmed multi-key swipe typing gesture
-            if (_swipeRecognizer.isSwipeTyping()) {
+            // Check if this has become a confirmed multi-key swipe typing gesture.
+            // The recognizer's isSwipeTyping() only requires >=2 keys + swipe_min_distance
+            // of PATH, which a short directional swipe that merely overshoots into an
+            // adjacent letter can satisfy at ~half a key-width of displacement. Committing
+            // to a word there bypassed the short/long boundary entirely (the overshoot bug).
+            // Gate the commit on hasLeftStartingKey so Path A honors the SAME single
+            // displacement threshold (short_gesture_max_distance, % of key diagonal) that
+            // Path B's GestureClassifier uses. Sub-threshold overshoots fall through to the
+            // touch-up short-gesture decision instead of latching a word mid-gesture.
+            if (_swipeRecognizer.isSwipeTyping() && ptr.hasLeftStartingKey) {
                 ptr.flags = ptr.flags or FLAG_P_SWIPE_TYPING
                 stopLongPress(ptr)
             }
