@@ -70,22 +70,26 @@ Distances are measured from the touch-down point and compared against a percenta
 
 ### Threshold Logic
 
+The live logic (Pointers.kt touch-up TAP branch) measures end displacement from the
+touch-down point against the key **diagonal**, with an absolute cap on the minimum so
+wide keys stay easy:
+
 ```kotlin
-// Pointers.kt:~320
-fun detectShortSwipe(ptr: Pointer): Int {
-    val dx = ptr.x - ptr.downX
-    val dy = ptr.y - ptr.downY
-    val distance = sqrt(dx * dx + dy * dy)
+val distance = sqrt(dx * dx + dy * dy)            // dx,dy = lastX/Y - downX/Y
+val keyHypotenuse = handler.getKeyHypotenuse(ptr.key)
 
-    val keyWidth = ptr.key.width
-    val minDist = keyWidth * config.short_gesture_min_distance / 100f
-    val maxDist = keyWidth * config.short_gesture_max_distance / 100f
+// MIN: the easier of percentage and absolute. The absolute cap
+// (swipe_dist_px * 0.8, from the legacy device-scaled "swipe_dist" pref) only
+// wins on WIDE keys (>~1.3 units, e.g. backspace/shift/space) where the
+// percentage of a large diagonal would demand uncomfortably long swipes.
+// Ordinary letter keys always use the percentage.
+val percentMin = keyHypotenuse * (config.short_gesture_min_distance / 100f)
+val minDistance = min(percentMin, config.swipe_dist_px * 0.8f)
 
-    if (distance >= minDist && distance <= maxDist) {
-        return getSwipeDirection(dx, dy)
-    }
-    return DIRECTION_NONE
-}
+// MAX: the short/long boundary (same value that gates hasLeftStartingKey).
+val maxDistance = keyHypotenuse * (config.short_gesture_max_distance / 100f)
+
+if (distance >= minDistance && distance <= maxDistance) { /* short swipe */ }
 ```
 
 ## Subkey Resolution
