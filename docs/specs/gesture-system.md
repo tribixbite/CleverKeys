@@ -75,7 +75,7 @@ if (ptr.key != null && !ptr.hasLeftStartingKey) {
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `short_gesture_min_distance` | Int | 28 | Min displacement to trigger a short swipe, as % of key diagonal |
-| `short_gesture_max_distance` | Int | 141 | Single short/long boundary: max displacement (% of key diagonal) still treated as a short swipe; above = long (neural word) swipe. 200 = disabled. Honored by both the mid-move latch and the touch-up classifier. |
+| `short_gesture_max_distance` | Int | 141 | Single short/long boundary: max displacement (% of key diagonal) still treated as a short swipe; above = long (neural word) swipe. Honored by both the mid-move latch and the touch-up classifier. ("200 = disabled" was never implemented; retired — disable via the Enable Short Gestures toggle.) |
 | `tap_duration_threshold` | Long | 150 | Max ms a gesture that left the key may last and still be a tap (touch-up path) |
 | `circle_gesture_enabled` | Boolean | true | Enable circle gestures for double letters |
 

@@ -84,7 +84,7 @@ See `Pointers.kt:734-744` for the live implementation.
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `short_gesture_min_distance` | Int | 28 | Min displacement to trigger a short swipe, as % of key diagonal |
-| `short_gesture_max_distance` | Int | 141 | **The single short/long boundary.** Max displacement-from-touch-down (% of key diagonal) a gesture may travel and still be a short swipe; beyond it the gesture is a long (neural word) swipe. `200` disables short swipes. Honored by **both** activation paths (see "Swipe Typing Activation"). |
+| `short_gesture_max_distance` | Int | 141 | **The single short/long boundary.** Max displacement-from-touch-down (% of key diagonal) a gesture may travel and still be a short swipe; beyond it the gesture is a long (neural word) swipe. Honored by **both** activation paths (see "Swipe Typing Activation"). The old "200 = disabled" label was never implemented in logic and has been retired — use the Enable Short Gestures toggle to disable short swipes. |
 | `tap_duration_threshold` | Long | 150 | Max ms a gesture that already left the key may last and still be classified as a tap (touch-up path only) |
 | `circle_gesture_enabled` | Boolean | true | Enable circle gestures for double letters |
 

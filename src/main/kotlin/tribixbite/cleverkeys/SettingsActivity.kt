@@ -2661,7 +2661,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
                     SettingsSlider(
                         title = "Max Distance",
-                        description = "Maximum swipe distance (% of key diagonal). 200% = disabled",
+                        description = "The short/long boundary (% of key diagonal): at or below = short swipe, beyond = swipe-typed word. Low values turn slight overshoots into words; high values require longer swipes before word typing starts.",
                         value = shortGestureMaxDistance.toFloat(),
                         valueRange = 50f..200f,
                         steps = 30,
@@ -2669,7 +2669,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                             shortGestureMaxDistance = it.toInt()
                             saveSetting("short_gesture_max_distance", shortGestureMaxDistance)
                         },
-                        displayValue = if (shortGestureMaxDistance >= 200) "OFF" else "${shortGestureMaxDistance}%"
+                        displayValue = "${shortGestureMaxDistance}%"
                     )
 
                     // Calibration Activity Button
