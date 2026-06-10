@@ -61,10 +61,12 @@ const val DIRECTION_NW = 8   // key8
 ```kotlin
 // Config.kt
 object Defaults {
-    const val SHORT_GESTURE_MIN_DISTANCE = 28  // % of key width
-    const val SHORT_GESTURE_MAX_DISTANCE = 65  // % of key width
+    const val SHORT_GESTURE_MIN_DISTANCE = 28   // % of key DIAGONAL (hypotenuse)
+    const val SHORT_GESTURE_MAX_DISTANCE = 141  // % of key DIAGONAL; also the short/long boundary
 }
 ```
+
+Distances are measured from the touch-down point and compared against a percentage of the key **diagonal** (`getKeyHypotenuse`), not the width. `short_gesture_max_distance` is the single short/long boundary: at or below it a gesture is a short swipe, above it a long (neural word) swipe.
 
 ### Threshold Logic
 
@@ -104,6 +106,19 @@ fun getSubkeyForDirection(key: Key, direction: Int): KeyValue? {
     }
 }
 ```
+
+## No-Subkey Fallback to Word Swipe
+
+When a short swipe resolves to **no subkey** in its direction (`getNearestKeyAtDirection` returns `null`) but the gesture is a word candidate — the recognizer registered ≥2 distinct letter keys and ≥`swipe_min_distance` of path — and swipe typing is enabled on a char key, the gesture is committed as a **neural word swipe** instead of falling through to a first-letter tap (`Pointers.kt`, the `gestureValue == null` branch).
+
+This lets compact words swiped toward a direction with no sublabel (e.g. "we") still produce a word, **without** weakening overshoot protection: an overshoot toward an *assigned* subkey takes the subkey branch above and never reaches this fallback. The fallback is bounded to the sub-boundary short zone (it lives inside `distance <= maxDistance`, where `maxDistance` uses the same `short_gesture_max_distance` that gates `hasLeftStartingKey`), so it never competes with clearly-long swipes — those have already committed via the mid-move latch.
+
+Intent ordering at the boundary, for a gesture that registered ≥2 keys below the boundary:
+
+| Subkey assigned in direction? | Outcome |
+|---|---|
+| Yes | Short swipe → emit subkey (overshoot tolerated) |
+| No  | Word candidate → neural word swipe; otherwise first-letter tap |
 
 ## Visual Feedback
 

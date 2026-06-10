@@ -504,6 +504,24 @@ class Pointers(
                             removePtr(ptr)
                             return
                         } else {
+                            // No subkey is assigned in the swipe direction. If the gesture is a
+                            // word candidate (recognizer saw >=2 keys + swipe_min_distance of path)
+                            // and swipe typing is on for this char key, fall back to a neural word
+                            // swipe instead of dropping to a first-letter tap. This rescues compact
+                            // words (e.g. "we") swiped toward a direction with no sublabel. It cannot
+                            // reintroduce the overshoot bug: an overshoot toward an ASSIGNED subkey
+                            // takes the gestureValue != null branch above and emits the subkey. The
+                            // fallback is bounded to the sub-boundary short zone because it lives
+                            // inside distance <= maxDistance, and maxDistance is computed from the
+                            // same short_gesture_max_distance that gates hasLeftStartingKey.
+                            if (isCharKey && _config.swipe_typing_enabled && _swipeRecognizer.isSwipeTyping()) {
+                                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "SHORT_GESTURE->WORD: no subkey in direction $direction, committing word swipe")
+                                _handler.onSwipeEnd(_swipeRecognizer)
+                                clearLatched()
+                                _swipeRecognizer.reset()
+                                removePtr(ptr)
+                                return
+                            }
                             if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "SHORT_GESTURE FAILED: getNearestKeyAtDirection returned null for direction $direction")
                         }
                     } else {
