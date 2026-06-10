@@ -2792,7 +2792,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
                 SettingsSlider(
                     title = "Minimum Swipe Distance",
-                    description = "Total distance to recognize a swipe (px). Lower allows shorter words like 'it', 'is'.",
+                    description = "Minimum traced path (px) before a gesture can qualify as a swipe-typed word. Lower helps very short words register; raise if stray touches misfire as words. (Short-vs-long is decided by Max Distance above.)",
                     value = swipeMinDistance,
                     valueRange = 20f..100f,
                     steps = 16,
