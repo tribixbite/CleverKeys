@@ -248,7 +248,9 @@ The `&& ptr.hasLeftStartingKey` conjunct is the fix for the **overshoot bug**: `
 
 **Path B — touch-up classifier** (`Pointers.kt:289-343`), reached only when Path A did **not** latch. `GestureClassifier.classify()` (which also requires `hasLeftStartingKey`) decides TAP vs SWIPE; SWIPE on a char key calls `onSwipeEnd`, TAP falls to the short-gesture handler. In the short-gesture handler, a sub-boundary gesture that resolves to **no exact-direction subkey** but is a word candidate falls back to a neural word swipe — word candidates do not accept ±1-fuzzed corner matches (see [Short Swipes → No-Subkey Fallback](short-swipes-spec.md#no-subkey-fallback-to-word-swipe)).
 
-Because both paths require `hasLeftStartingKey`, `short_gesture_max_distance` is the one knob that moves the short/long boundary for the whole system.
+Because both paths require `hasLeftStartingKey`, `short_gesture_max_distance` is the one knob that moves the short/long boundary for the whole system. (The no-subkey fallback is the deliberate sub-boundary exception — an intent signal, not a second threshold.)
+
+`swipe_typing_enabled` gates **every** word route: the mid-move latch, Path B's classifier (a SWIPE classification is demoted to TAP when swipe typing is off — the gesture commits the starting key instead of silently dying in `onSwipeEnd`), and the no-subkey fallback (via the word-candidate check).
 
 ### Pointer State
 

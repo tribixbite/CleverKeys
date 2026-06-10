@@ -317,10 +317,14 @@ class Pointers(
 
             val gestureType = _gestureClassifier.classify(gestureData)
 
-            // CRITICAL FIX: Only Char keys can trigger Neural Swipe Typing
-            // For non-Char keys (like Backspace), even if the gesture is long (classified as SWIPE),
-            // we must treat it as a TAP/Short Gesture to allow directional actions (e.g. Delete Word)
-            val effectiveGestureType = if (!isCharKey && gestureType == GestureClassifier.GestureType.SWIPE) {
+            // Only swipe-typing-eligible gestures may route to the neural predictor:
+            // - non-Char keys (like Backspace): a long gesture must still be treated as a
+            //   TAP/Short Gesture to allow directional actions (e.g. Delete Word)
+            // - swipe typing disabled: SWIPE must degrade to TAP so the gesture commits the
+            //   starting key instead of hitting onSwipeEnd (a no-op without word candidacy)
+            //   and silently dropping the letter.
+            // canSwipeType = swipe_typing_enabled && isCharKey covers both.
+            val effectiveGestureType = if (!canSwipeType && gestureType == GestureClassifier.GestureType.SWIPE) {
                 GestureClassifier.GestureType.TAP
             } else {
                 gestureType
@@ -863,7 +867,12 @@ class Pointers(
             // displacement threshold (short_gesture_max_distance, % of key diagonal) that
             // Path B's GestureClassifier uses. Sub-threshold overshoots fall through to the
             // touch-up short-gesture decision instead of latching a word mid-gesture.
-            if (_swipeRecognizer.isSwipeTyping() && ptr.hasLeftStartingKey) {
+            // swipe_typing_enabled must gate the latch too: the recognizer tracks paths
+            // whenever short gestures are enabled, so without this check a letters gesture
+            // could latch FLAG_P_SWIPE_TYPING with swipe typing OFF and then be excluded
+            // from BOTH the completion path (:163 requires the setting) and the touch-up
+            // gesture block (flag exclusion).
+            if (_config.swipe_typing_enabled && _swipeRecognizer.isSwipeTyping() && ptr.hasLeftStartingKey) {
                 ptr.flags = ptr.flags or FLAG_P_SWIPE_TYPING
                 stopLongPress(ptr)
             }

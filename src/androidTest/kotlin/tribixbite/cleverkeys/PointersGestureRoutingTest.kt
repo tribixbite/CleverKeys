@@ -222,6 +222,24 @@ class PointersGestureRoutingTest {
         assertTrue("must not emit the NE subkey \"2\"", handler.upValues.none { it?.getString() == "2" })
     }
 
+    /** T9 (F5): with swipe typing DISABLED (short gestures still on), a long gesture must
+     *  degrade to a tap of the starting key — never route into the word-swipe machinery.
+     *  Pre-fix, a beyond-boundary gesture registering <2 keys classified as SWIPE and hit
+     *  onSwipeEnd (a no-op without word candidacy) then returned early — the letter was lost. */
+    @Test
+    fun longGesture_swipeTypingDisabled_fallsBackToTap() {
+        config.swipe_typing_enabled = false
+        // Diagonal off the keyboard (y >= 160 -> no key): only keyA registers, but
+        // displacement 432px crosses the 282px boundary -> classify() returns SWIPE.
+        val moves = (1..12).map { i -> Pair(60f + i * 24f, 80f + i * 27f) }
+        drive(keyA, 60f, 80f, moves)
+        assertEquals("swipe machinery must not run with swipe typing disabled", 0, handler.swipeEndCount)
+        assertTrue(
+            "the starting key must be committed as a tap",
+            handler.upValues.any { it?.getChar() == 'a' }
+        )
+    }
+
     /** T8 (guard): a deliberate ~45° corner flick computes the corner's EXACT direction
      *  (dir 2 -> ne). The exact-direction subkey must still win even when the flick crossed
      *  into the adjacent key and the gesture is technically a word candidate. */
