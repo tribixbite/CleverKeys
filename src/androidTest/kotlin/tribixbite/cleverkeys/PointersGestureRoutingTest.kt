@@ -273,6 +273,19 @@ class PointersGestureRoutingTest {
         assertTrue("the starting key must tap", handler.upValues.any { it?.getChar() == 'b' })
     }
 
+    /** T11 (F6): a word gesture whose 2nd key registers on the FINAL sample must still be a
+     *  word candidate. addPoint checks promotion BEFORE registering the sample's key, so a
+     *  gesture ending exactly as it enters key 2 never promoted mid-move and previously fell
+     *  to a tap even though the recognizer held 2 keys + sufficient path at touch-up. */
+    @Test
+    fun wordGesture_secondKeyOnFinalSample_committsWord() {
+        // Zigzag inside keyB inflates path > swipe_min_distance(72) while staying one key;
+        // the final 17.7px step crosses into keyC and registers it, then UP fires immediately.
+        val moves = listOf(190f to 70f, 205f to 85f, 220f to 70f, 228f to 85f, 245f to 80f)
+        drive(keyB, 180f, 80f, moves)
+        assertEquals("2nd-key-on-final-sample word gesture must commit a word", 1, handler.swipeEndCount)
+    }
+
     /** T8 (guard): a deliberate ~45° corner flick computes the corner's EXACT direction
      *  (dir 2 -> ne). The exact-direction subkey must still win even when the flick crossed
      *  into the adjacent key and the gesture is technically a word candidate. */

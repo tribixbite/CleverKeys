@@ -459,7 +459,7 @@ class Pointers(
                         // (single-key flicks, non-char keys e.g. backspace nw=delete_last_word)
                         // keep the full +/-1 forgiveness.
                         val isWordCandidate = isCharKey && _config.swipe_typing_enabled &&
-                            _swipeRecognizer.isSwipeTyping()
+                            _swipeRecognizer.promoteWordCandidacy()
                         var gestureValue = if (isWordCandidate) {
                             _handler.modifyKey(getKeyAtDirection(ptr.key, direction), ptr.modifiers)
                         } else {
@@ -563,7 +563,7 @@ class Pointers(
                 // Straight gestures (taps, overshoots, flicks) have displacement ~= path and
                 // can never satisfy the ratio; fast grazes fail the duration check. This
                 // restores the pre-boundary-gate behavior for exactly this gesture class.
-                if (isCharKey && _config.swipe_typing_enabled && _swipeRecognizer.isSwipeTyping() &&
+                if (isCharKey && _config.swipe_typing_enabled && _swipeRecognizer.promoteWordCandidacy() &&
                     timeElapsed > _config.tap_duration_threshold &&
                     distance < totalDistance / 2
                 ) {
