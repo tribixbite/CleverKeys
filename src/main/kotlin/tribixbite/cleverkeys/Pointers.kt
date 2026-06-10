@@ -442,13 +442,30 @@ class Pointers(
                             return
                         }
 
-                        // Use getNearestKeyAtDirection to search nearby if exact direction not defined
-                        var gestureValue = getNearestKeyAtDirection(ptr, direction)
+                        // WORD-CANDIDATE vs FUZZ RESOLUTION: getNearestKeyAtDirection scans
+                        // +/-1 of 16 directions so deliberate short swipes are forgiving of
+                        // angle. But default layouts populate CORNERS densely (ne=digits,
+                        // nw=symbols), so for a word-shaped gesture the fuzz almost always
+                        // finds *something*: a "we" swipe tilted <22.5 degrees up reached
+                        // ne="2", and a "the"-shaped gesture (end vector W) reached nw="%".
+                        // Resolution: a word candidate (recognizer saw >=2 keys + min path)
+                        // only accepts the EXACT-direction subkey (i=0). A deliberate corner
+                        // flick computes the corner's own direction and still hits exactly;
+                        // fuzz-only matches lose to the word fallback below. Non-candidates
+                        // (single-key flicks, non-char keys e.g. backspace nw=delete_last_word)
+                        // keep the full +/-1 forgiveness.
+                        val isWordCandidate = isCharKey && _config.swipe_typing_enabled &&
+                            _swipeRecognizer.isSwipeTyping()
+                        var gestureValue = if (isWordCandidate) {
+                            _handler.modifyKey(getKeyAtDirection(ptr.key, direction), ptr.modifiers)
+                        } else {
+                            getNearestKeyAtDirection(ptr, direction)
+                        }
 
                         Log.d(
                             "Pointers", String.format(
-                                "SHORT_SWIPE_RESULT: dir=%d found=%s",
-                                direction, gestureValue?.toString() ?: "null"
+                                "SHORT_SWIPE_RESULT: dir=%d found=%s wordCandidate=%b",
+                                direction, gestureValue?.toString() ?: "null", isWordCandidate
                             )
                         )
 
@@ -504,17 +521,18 @@ class Pointers(
                             removePtr(ptr)
                             return
                         } else {
-                            // No subkey is assigned in the swipe direction. If the gesture is a
-                            // word candidate (recognizer saw >=2 keys + swipe_min_distance of path)
-                            // and swipe typing is on for this char key, fall back to a neural word
-                            // swipe instead of dropping to a first-letter tap. This rescues compact
-                            // words (e.g. "we") swiped toward a direction with no sublabel. It cannot
-                            // reintroduce the overshoot bug: an overshoot toward an ASSIGNED subkey
-                            // takes the gestureValue != null branch above and emits the subkey. The
-                            // fallback is bounded to the sub-boundary short zone because it lives
-                            // inside distance <= maxDistance, and maxDistance is computed from the
-                            // same short_gesture_max_distance that gates hasLeftStartingKey.
-                            if (isCharKey && _config.swipe_typing_enabled && _swipeRecognizer.isSwipeTyping()) {
+                            // No subkey accepted for the swipe direction (none assigned, or only a
+                            // +/-1-fuzzed corner match which word candidates reject above). Fall
+                            // back to a neural word swipe instead of dropping to a first-letter
+                            // tap. This rescues compact words (e.g. "we", tilted "we", "the"-shaped
+                            // gestures) swiped where no exact-direction sublabel exists. It cannot
+                            // reintroduce the overshoot bug: an overshoot toward an exactly-aimed
+                            // subkey takes the gestureValue != null branch above and emits the
+                            // subkey. The fallback is bounded to the sub-boundary short zone
+                            // because it lives inside distance <= maxDistance, and maxDistance is
+                            // computed from the same short_gesture_max_distance that gates
+                            // hasLeftStartingKey.
+                            if (isWordCandidate) {
                                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "SHORT_GESTURE->WORD: no subkey in direction $direction, committing word swipe")
                                 _handler.onSwipeEnd(_swipeRecognizer)
                                 clearLatched()

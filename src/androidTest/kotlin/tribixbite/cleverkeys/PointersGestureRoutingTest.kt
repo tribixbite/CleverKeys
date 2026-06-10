@@ -37,13 +37,23 @@ class PointersGestureRoutingTest {
     private lateinit var pointers: Pointers
 
     // --- test layout -------------------------------------------------------
+    // keyB mirrors a real top-row key (e.g. 'w' with ne=2, nw=@): corners populated,
+    // straight directions empty. This is what exposes the ±1-fuzz vs word-candidate
+    // conflict that a corner-free layout cannot reproduce.
     private val keyA = letterKey('a', eastSubkey = "1")
-    private val keyB = letterKey('b')
+    private val keyB = letterKey('b', neSubkey = "2", nwSubkey = "(")
     private val keyC = letterKey('c')
 
-    private fun letterKey(c: Char, eastSubkey: String? = null): KeyboardData.Key {
+    private fun letterKey(
+        c: Char,
+        eastSubkey: String? = null,
+        neSubkey: String? = null,
+        nwSubkey: String? = null
+    ): KeyboardData.Key {
         var k = KeyboardData.Key.EMPTY.withKeyValue(0, KeyValue.makeCharKey(c))
-        if (eastSubkey != null) k = k.withKeyValue(6, KeyValue.makeStringKey(eastSubkey)) // index 6 = East
+        if (eastSubkey != null) k = k.withKeyValue(6, KeyValue.makeStringKey(eastSubkey)) // index 6 = E
+        if (neSubkey != null) k = k.withKeyValue(2, KeyValue.makeStringKey(neSubkey))     // index 2 = NE
+        if (nwSubkey != null) k = k.withKeyValue(1, KeyValue.makeStringKey(nwSubkey))     // index 1 = NW
         return k
     }
 
@@ -184,5 +194,46 @@ class PointersGestureRoutingTest {
         Thread.sleep(12); inst.runOnMainSync { pointers.onTouchMove(300f, 80f, 0) }
         Thread.sleep(12); inst.runOnMainSync { pointers.onTouchUp(0) }
         assertEquals("a word swipe interrupted by a >500ms pause must still commit", 1, handler.swipeEndCount)
+    }
+
+    /** T6 ("the" shape): a multi-segment word gesture whose max displacement stays under the
+     *  boundary and whose END vector points W must commit a word, NOT the NW corner subkey
+     *  reached via the +/-1 direction fuzz. Real-world case: swiping "the" on QWERTY ends
+     *  with a pure-W vector from 't' (nw="%"), and the fuzz emitted "%" instead of the word. */
+    @Test
+    fun multiSegmentWord_endVectorW_emitsWord_notFuzzedNwSubkey() {
+        // b -> right into c -> back left into a. Max displacement 130px < 282 boundary.
+        // End vector (60-180, 0) = pure W (dir 12); keyB has no W subkey but nw="(".
+        val moves = hMoves(180f, 310f, 80f) + hMoves(310f, 60f, 80f)
+        drive(keyB, 180f, 80f, moves)
+        assertEquals("multi-segment word must commit a word, not a fuzzed corner subkey", 1, handler.swipeEndCount)
+        assertTrue("must not emit the NW subkey \"(\"", handler.upValues.none { it?.getString() == "(" })
+    }
+
+    /** T7 (tilted "we"): a 2-key word gesture with a slight (<22.5°) upward tilt computes
+     *  direction 3 (upper-E); the exact E slot is empty but the +/-1 fuzz reaches ne="2".
+     *  Word candidates must win over fuzz-only matches -> word, not "2". */
+    @Test
+    fun tiltedTwoKeyWord_emitsWord_notFuzzedNeSubkey() {
+        // ~15° upward tilt: dx=130, dy=-35 -> atan2 zone dir 3. Ends inside keyC.
+        val moves = listOf(200f to 74f, 220f to 69f, 240f to 63f, 260f to 58f, 285f to 51f, 310f to 45f)
+        drive(keyB, 180f, 80f, moves)
+        assertEquals("tilted 2-key word must commit a word, not the fuzzed NE subkey", 1, handler.swipeEndCount)
+        assertTrue("must not emit the NE subkey \"2\"", handler.upValues.none { it?.getString() == "2" })
+    }
+
+    /** T8 (guard): a deliberate ~45° corner flick computes the corner's EXACT direction
+     *  (dir 2 -> ne). The exact-direction subkey must still win even when the flick crossed
+     *  into the adjacent key and the gesture is technically a word candidate. */
+    @Test
+    fun cornerFlick_exactDirection_emitsSubkey_evenWhenWordCandidate() {
+        // 45° NE flick from keyB ending inside keyC: dx=70, dy=-70 -> dir 2 exact -> ne="2".
+        val moves = listOf(200f to 60f, 215f to 45f, 230f to 30f, 250f to 10f)
+        drive(keyB, 180f, 80f, moves)
+        assertEquals("exact-direction corner flick must not become a word", 0, handler.swipeEndCount)
+        assertTrue(
+            "must emit the NE subkey \"2\"",
+            handler.upValues.any { it?.getString() == "2" }
+        )
     }
 }
