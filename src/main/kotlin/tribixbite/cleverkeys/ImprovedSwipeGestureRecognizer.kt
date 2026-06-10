@@ -110,10 +110,21 @@ open class ImprovedSwipeGestureRecognizer {
         
         val now = System.currentTimeMillis()
         val timeSinceLastPoint = now - _lastPointTime
-        
-        // Fix timestamp issues - ignore invalid time deltas
-        if (timeSinceLastPoint <= 0 || timeSinceLastPoint > MAX_POINT_INTERVAL_MS) {
-            return // Skip this point if timing is invalid
+
+        // Duplicate or backward timestamp - skip without moving the anchor.
+        if (timeSinceLastPoint <= 0) {
+            return
+        }
+        // Long pause mid-gesture (e.g. a slow/deliberate swiper holding still to aim).
+        // Re-anchor the timing to NOW and skip just this resume sample. _lastPointTime is
+        // only advanced for accepted points, so WITHOUT this re-anchor a single
+        // >MAX_POINT_INTERVAL_MS gap leaves _lastPointTime stale, every subsequent sample's
+        // delta grows even larger, and the rest of the swipe is dropped -- permanently
+        // starving key/path registration (the "slow swipe never triggers" bug). The next
+        // sample resumes normally; skipping this one avoids a pause-spanning path segment.
+        if (timeSinceLastPoint > MAX_POINT_INTERVAL_MS) {
+            _lastPointTime = now
+            return
         }
         
         val lastRawPoint = _rawPath.last()

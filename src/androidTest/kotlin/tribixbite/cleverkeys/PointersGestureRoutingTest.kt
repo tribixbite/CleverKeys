@@ -168,4 +168,21 @@ class PointersGestureRoutingTest {
         drive(keyB, 180f, 80f, listOf(180f to 65f, 180f to 50f, 180f to 35f, 180f to 20f, 180f to 10f))
         assertEquals("a non-word flick must never commit a word", 0, handler.swipeEndCount)
     }
+
+    /** T5: a word swipe interrupted by a >MAX_POINT_INTERVAL_MS pause (a slow/deliberate
+     *  swiper holding still mid-gesture) must still commit. Pre-fix, the resume point and all
+     *  points after it were permanently dropped because _lastPointTime was never re-anchored,
+     *  so the second key never registered and no word was produced. */
+    @Test
+    fun slowSwipe_withMidGesturePause_stillCommitsWord() {
+        val inst = InstrumentationRegistry.getInstrumentation()
+        inst.runOnMainSync { pointers.onTouchDown(180f, 80f, 0, keyB) }
+        Thread.sleep(12); inst.runOnMainSync { pointers.onTouchMove(200f, 80f, 0) } // still 'b'
+        Thread.sleep(12); inst.runOnMainSync { pointers.onTouchMove(220f, 80f, 0) } // still 'b'
+        Thread.sleep(600); inst.runOnMainSync { pointers.onTouchMove(245f, 80f, 0) } // >500ms pause, resume into 'c'
+        Thread.sleep(12); inst.runOnMainSync { pointers.onTouchMove(270f, 80f, 0) }
+        Thread.sleep(12); inst.runOnMainSync { pointers.onTouchMove(300f, 80f, 0) }
+        Thread.sleep(12); inst.runOnMainSync { pointers.onTouchUp(0) }
+        assertEquals("a word swipe interrupted by a >500ms pause must still commit", 1, handler.swipeEndCount)
+    }
 }
