@@ -201,7 +201,8 @@ class Pointers(
 
             // If barely moved (tap), output the primary key
             // If moved significantly, fall through to gesture classification for short swipe
-            if (movementDist < _config.short_gesture_min_distance) {
+            // (short_gesture_min_distance is % of key diagonal — convert, don't compare raw)
+            if (movementDist < shortGestureMinDistancePx(ptr.key)) {
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Path: Deferred nav-subkey key TAP, outputting primary key")
                 if (ptr.value != null) {
                     _handler.onPointerDown(ptr.value, false)
@@ -244,7 +245,8 @@ class Pointers(
 
             // If barely moved (tap), output the backspace key
             // If moved significantly, fall through to gesture classification for short swipe (e.g., delete_last_word)
-            if (movementDist < _config.short_gesture_min_distance) {
+            // (short_gesture_min_distance is % of key diagonal — convert, don't compare raw)
+            if (movementDist < shortGestureMinDistancePx(ptr.key)) {
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Path: Deferred backspace TAP, outputting backspace")
                 _handler.onPointerDown(ptr.value, false)
                 ptr.flags = ptr.flags and FLAG_P_DEFERRED_DOWN.inv()
@@ -379,22 +381,12 @@ class Pointers(
                     distance > 0 // Basic check that we moved
                 ) {
                     
-                    // CRITICAL FIX: Calculate keyHypotenuse since it's needed for threshold calculation
                     val keyHypotenuse = _handler.getKeyHypotenuse(ptr.key)
 
-                    // Calculate MIN threshold: Use MIN of percentage-based and absolute threshold
-                    // This ensures wide keys (like Backspace) don't require huge swipes,
-                    // while small keys still respect the percentage to avoid accidental triggers.
-                    val percentMinThreshold = keyHypotenuse * (_config.short_gesture_min_distance / 100.0f)
-                    val absoluteThreshold = _config.swipe_dist_px.toFloat()
-
-                    // RELAXED THRESHOLD: Use 0.8 factor to approximate Manhattan->Euclidean conversion
-                    // (Manhattan distance is ~1.4x Euclidean for diagonals).
-                    // Also removed the 1.5f multiplier which made triggering too hard.
-                    val effectiveAbsolute = if (absoluteThreshold > 0) absoluteThreshold * 0.8f else Float.MAX_VALUE
-
-                    // Use the easier (smaller) of the two thresholds for minimum
-                    val minDistance = min(percentMinThreshold, effectiveAbsolute)
+                    // MIN threshold: percent-of-diagonal with the wide-key absolute cap —
+                    // single source of truth shared with the deferred nav/backspace and
+                    // selection-delete pre-checks.
+                    val minDistance = shortGestureMinDistancePx(ptr.key)
 
                     // v1.2.3 FIX: Restore max distance check that was removed in 7c2131f7
                     // The hasLeftStartingKey flag alone creates a gap where medium swipes (e.g., 140px)
@@ -710,6 +702,21 @@ class Pointers(
         if (!mightBeSwipe && !hasNavSubkeys && !isBackspace) {
             _handler.onPointerDown(value, false)
         }
+    }
+
+    /**
+     * Minimum displacement (px) for a short swipe on [key]: the user's
+     * short_gesture_min_distance (PERCENT of the key diagonal) converted through the
+     * key's actual diagonal, capped by the absolute swipe_dist_px * 0.8 so wide keys
+     * (backspace/shift/space) don't demand uncomfortably long swipes. Single source
+     * of truth for every "did the finger move enough for a short swipe" pre-check —
+     * three call sites previously compared px displacement against the raw percent
+     * value (28 treated as 28px, ~half the intended threshold).
+     */
+    private fun shortGestureMinDistancePx(key: KeyboardData.Key): Float {
+        val percentMin = _handler.getKeyHypotenuse(key) * (_config.short_gesture_min_distance / 100.0f)
+        val cap = if (_config.swipe_dist_px > 0) _config.swipe_dist_px * 0.8f else Float.MAX_VALUE
+        return min(percentMin, cap)
     }
 
     /**
@@ -1271,7 +1278,8 @@ class Pointers(
             // No movement + hold → normal key repeat
             val isBackspace = isBackspaceKey(ptr.value)
             if (_config.keyrepeat_enabled && isBackspace) {
-                if (movementDist >= _config.short_gesture_min_distance) {
+                // (short_gesture_min_distance is % of key diagonal — convert, don't compare raw)
+                if (movementDist >= shortGestureMinDistancePx(ptr.key)) {
                     // User did a short swipe then held - enter selection-delete mode
                     // Determine direction based on horizontal movement (left/right selection)
                     val direction = if (dx > 0) 1 else -1  // 1 = right, -1 = left
