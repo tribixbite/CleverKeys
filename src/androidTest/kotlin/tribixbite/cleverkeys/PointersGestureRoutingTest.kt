@@ -102,8 +102,8 @@ class PointersGestureRoutingTest {
         // Deterministic thresholds regardless of device metrics.
         config.short_gestures_enabled = true
         config.swipe_typing_enabled = true
-        config.short_gesture_min_distance = 28
-        config.short_gesture_max_distance = 141
+        config.short_gesture_min_distance = PercentOfKey(28)
+        config.short_gesture_max_distance = PercentOfKey(141)
         config.swipe_min_distance = 72f
         config.swipe_min_key_distance = 15f
         config.swipe_noise_threshold = 1.26f

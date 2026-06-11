@@ -299,13 +299,13 @@ class ShortSwipeGestureTest {
     fun testShortGestureMinDistanceSetting() {
         val config = Config.globalConfig()
         val minDist = config.short_gesture_min_distance
-        assertTrue("Min distance should be non-negative", minDist >= 0)
+        assertTrue("Min distance should be non-negative", minDist.v >= 0)
     }
 
     @Test
     fun testShortGestureMaxDistanceSetting() {
         val config = Config.globalConfig()
         val maxDist = config.short_gesture_max_distance
-        assertTrue("Max distance should be positive", maxDist > 0)
+        assertTrue("Max distance should be positive", maxDist.v > 0)
     }
 }

@@ -525,8 +525,11 @@ class Config private constructor(
 
     // Short gesture configuration
     @JvmField var short_gestures_enabled = false
-    @JvmField var short_gesture_min_distance = Defaults.SHORT_GESTURE_MIN_DISTANCE
-    @JvmField var short_gesture_max_distance = Defaults.SHORT_GESTURE_MAX_DISTANCE // The short/long boundary as % of key diagonal (50-200): at/below = short swipe, beyond = word swipe. ("200=disabled" was a UI label that was never implemented; retired.)
+    // Unit-typed (PercentOfKey): consumers must convert via .toPx(keyDiagonal) — raw
+    // px-vs-percent comparisons no longer compile. (Value classes can't be @JvmField;
+    // the codebase is pure Kotlin, so nothing needed the Java field exposure.)
+    var short_gesture_min_distance = PercentOfKey(Defaults.SHORT_GESTURE_MIN_DISTANCE)
+    var short_gesture_max_distance = PercentOfKey(Defaults.SHORT_GESTURE_MAX_DISTANCE) // The short/long boundary (50-200): at/below = short swipe, beyond = word swipe. ("200=disabled" was a UI label that was never implemented; retired.)
 
     // Selection-delete mode configuration (backspace swipe+hold)
     @JvmField var selection_delete_vertical_threshold = 40  // % of key height to trigger vertical selection
@@ -803,8 +806,8 @@ class Config private constructor(
         swipe_rare_words_penalty = safeGetFloat(_prefs, "swipe_rare_words_penalty", Defaults.SWIPE_RARE_WORDS_PENALTY)
 
         short_gestures_enabled = _prefs.getBoolean("short_gestures_enabled", Defaults.SHORT_GESTURES_ENABLED)
-        short_gesture_min_distance = safeGetInt(_prefs, "short_gesture_min_distance", Defaults.SHORT_GESTURE_MIN_DISTANCE)
-        short_gesture_max_distance = safeGetInt(_prefs, "short_gesture_max_distance", Defaults.SHORT_GESTURE_MAX_DISTANCE)
+        short_gesture_min_distance = PercentOfKey(safeGetInt(_prefs, "short_gesture_min_distance", Defaults.SHORT_GESTURE_MIN_DISTANCE))
+        short_gesture_max_distance = PercentOfKey(safeGetInt(_prefs, "short_gesture_max_distance", Defaults.SHORT_GESTURE_MAX_DISTANCE))
 
         // Selection-delete mode configuration
         selection_delete_vertical_threshold = safeGetInt(_prefs, "selection_delete_vertical_threshold", Defaults.SELECTION_DELETE_VERTICAL_THRESHOLD)

@@ -257,7 +257,7 @@ class ConfigIntegrationTest {
     fun testShortGestureMinDistance() {
         val cfg = config ?: return
         val distance = cfg.short_gesture_min_distance
-        assertTrue("Min distance should be non-negative", distance >= 0)
+        assertTrue("Min distance should be non-negative", distance.v >= 0)
     }
 
     // =========================================================================

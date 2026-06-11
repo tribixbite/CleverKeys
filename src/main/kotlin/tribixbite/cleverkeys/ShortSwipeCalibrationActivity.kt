@@ -58,8 +58,8 @@ class ShortSwipeCalibrationActivity : ComponentActivity() {
         setContent {
             KeyboardTheme {
                 ShortSwipeCalibrationScreen(
-                    initialMinDistance = cfg?.short_gesture_min_distance ?: Defaults.SHORT_GESTURE_MIN_DISTANCE,
-                    initialMaxDistance = cfg?.short_gesture_max_distance ?: Defaults.SHORT_GESTURE_MAX_DISTANCE,
+                    initialMinDistance = cfg?.short_gesture_min_distance?.v ?: Defaults.SHORT_GESTURE_MIN_DISTANCE,
+                    initialMaxDistance = cfg?.short_gesture_max_distance?.v ?: Defaults.SHORT_GESTURE_MAX_DISTANCE,
                     onSave = { min, max ->
                         prefs.edit()
                             .putInt("short_gesture_min_distance", min)

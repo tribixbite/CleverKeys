@@ -91,6 +91,8 @@ See `Pointers.kt:734-744` for the live implementation.
 
 > There is **no** `swipe_speed_threshold` / minimum-speed gate. (Older drafts of this spec listed one; it has never existed in code. Slow swipes are not rejected by speed — see the pause-recovery note in [Swipe Typing](../typing/swipe-typing-spec.md).)
 
+> **Unit safety:** the two percent thresholds are typed as `PercentOfKey` (`Units.kt`, a `@JvmInline value class` like Compose's `Dp`). Consumers must convert via `.toPx(keyDiagonalPx)` — comparing them against raw px displacement no longer compiles. Raw `prefs.get*` reads of gesture keys outside Config/settings/backup layers are rejected by `GesturePrefAccessDriftTest`.
+
 ## Public API
 
 ### GestureClassifier

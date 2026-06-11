@@ -392,12 +392,12 @@ class Pointers(
                     // The hasLeftStartingKey flag alone creates a gap where medium swipes (e.g., 140px)
                     // that don't exceed max_distance still trigger short gestures instead of neural swipe.
                     // By checking max explicitly here, swipes exceeding max fall through to neural prediction.
-                    val maxDistance = keyHypotenuse * (_config.short_gesture_max_distance / 100.0f)
+                    val maxDistance = _config.short_gesture_max_distance.toPx(keyHypotenuse)
 
                     Log.d(
                         "Pointers", "Short gesture check: distance=$distance " +
                             "minDistance=$minDistance maxDistance=$maxDistance " +
-                            "(min=${_config.short_gesture_min_distance}% max=${_config.short_gesture_max_distance}% of $keyHypotenuse) " +
+                            "(min=${_config.short_gesture_min_distance} max=${_config.short_gesture_max_distance} of $keyHypotenuse) " +
                             "hasLeftKey=${ptr.hasLeftStartingKey}"
                     )
 
@@ -714,7 +714,7 @@ class Pointers(
      * value (28 treated as 28px, ~half the intended threshold).
      */
     private fun shortGestureMinDistancePx(key: KeyboardData.Key): Float {
-        val percentMin = _handler.getKeyHypotenuse(key) * (_config.short_gesture_min_distance / 100.0f)
+        val percentMin = _config.short_gesture_min_distance.toPx(_handler.getKeyHypotenuse(key))
         val cap = if (_config.swipe_dist_px > 0) _config.swipe_dist_px * 0.8f else Float.MAX_VALUE
         return min(percentMin, cap)
     }
@@ -800,7 +800,7 @@ class Pointers(
         // Higher values = more lenient, allows swipes further from key center
         if (ptr.key != null && !ptr.hasLeftStartingKey) {
             val keyHypotenuse = _handler.getKeyHypotenuse(ptr.key)
-            val maxAllowedDistance = keyHypotenuse * (_config.short_gesture_max_distance / 100.0f)
+            val maxAllowedDistance = _config.short_gesture_max_distance.toPx(keyHypotenuse)
 
             // Calculate distance from key center
             val keyCenterX = ptr.downX  // Approximation: touch down point is roughly key center
