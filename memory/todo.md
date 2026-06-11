@@ -20,10 +20,19 @@ API34; 13 routing tests green; pure suite 1267 green):
   18 dead tests)
 - `0bc735743` Config initializers bound to Defaults consts
 
+**Verification round (2026-06-11):** `374292763` calibration activity was
+treating the % prefs as raw px (practice pad ~2× off, divergent slider
+ranges) — fixed to engine units; `971ef126a` T12 guard: custom mappings beat
+word candidacy (13/13 routing tests); `8ee1d0833` spec tables' fictional
+`circle_gesture_enabled` replaced with real `circle_sensitivity`, swipe_dist
+slider description now states its two live roles.
+
 **Deliberate non-fixes:** MAX_POINT_INTERVAL_MS=500 still hardcoded (config
-candidate); ~30°-tilted 2-key words still hit exact-corner subkeys
-(irreducible — same angle as a deliberate corner flick); T3's 8px boundary
-margin (theoretical fragility only). NOT PUSHED — needs user approval.
+candidate); GestureClassifier's keyWidth/2-or-time terms are near-vestigial
+(hasLeftStartingKey dominates for real gestures) — simplification candidate;
+~30°-tilted 2-key words still hit exact-corner subkeys (irreducible — same
+angle as a deliberate corner flick); T3's 8px boundary margin (theoretical
+fragility only). NOT PUSHED — needs user approval.
 
 ## 🔜 Backup/Restore — next steps (priority order)
 
