@@ -84,6 +84,23 @@ private fun ShortSwipeCalibrationScreen(
     var feedbackColor by remember { mutableStateOf(Color.Gray) }
     var lastDistance by remember { mutableStateOf(0f) }
 
+    // The thresholds are PERCENT OF KEY DIAGONAL (the engine compares displacement against
+    // getKeyHypotenuse(key) * pct/100 of the actual touched key). The practice pad has no
+    // real key, so convert through a representative key: width = narrow-side/10 (standard
+    // 10-column layout), height from the configured keyboard height over 4 letter rows.
+    val context = LocalContext.current
+    val refKeyDiagonalPx = remember {
+        val dm = context.resources.displayMetrics
+        val keyW = minOf(dm.widthPixels, dm.heightPixels) / 10f
+        val heightPct = try {
+            Config.globalConfig().keyboardHeightPercent
+        } catch (e: Exception) {
+            0
+        }
+        val keyH = if (heightPct > 0) dm.heightPixels * heightPct / 100f / 4f else keyW * 1.5f
+        sqrt(keyW * keyW + keyH * keyH)
+    }
+
     val scrollState = rememberScrollState()
 
     Scaffold(
@@ -146,22 +163,26 @@ private fun ShortSwipeCalibrationScreen(
             PracticeSection(
                 minDistance = minDistance,
                 maxDistance = maxDistance,
+                refKeyDiagonalPx = refKeyDiagonalPx,
                 feedbackText = feedbackText,
                 feedbackColor = feedbackColor,
                 lastDistance = lastDistance,
                 onGestureDetected = { distance ->
                     lastDistance = distance
+                    // Convert measured px displacement to % of the reference key diagonal
+                    // so feedback matches how the engine interprets the thresholds.
+                    val pct = if (refKeyDiagonalPx > 0f) distance / refKeyDiagonalPx * 100f else 0f
                     when {
-                        distance < minDistance -> {
-                            feedbackText = "TAP (${distance.toInt()}px)"
+                        pct < minDistance -> {
+                            feedbackText = "TAP (${pct.toInt()}% of key)"
                             feedbackColor = Color.White
                         }
-                        distance <= maxDistance -> {
-                            feedbackText = "SHORT SWIPE ✓ (${distance.toInt()}px)"
+                        pct <= maxDistance -> {
+                            feedbackText = "SHORT SWIPE ✓ (${pct.toInt()}% of key)"
                             feedbackColor = Color(0xFF4CAF50) // Green
                         }
                         else -> {
-                            feedbackText = "LONG SWIPE (${distance.toInt()}px)"
+                            feedbackText = "LONG SWIPE → word (${pct.toInt()}% of key)"
                             feedbackColor = Color(0xFF2196F3) // Blue
                         }
                     }
@@ -366,7 +387,7 @@ private fun ConfigurationSection(
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = "Gestures shorter than this are taps",
+                text = "Gestures shorter than this (% of key diagonal) are taps",
                 fontSize = 12.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -377,12 +398,13 @@ private fun ConfigurationSection(
                 Slider(
                     value = minDistance,
                     onValueChange = onMinChange,
-                    valueRange = 10f..100f,
-                    steps = 17,
+                    // Same range/granularity as the Settings "Min Distance" slider
+                    valueRange = 10f..60f,
+                    steps = 10,
                     modifier = Modifier.weight(1f)
                 )
                 Text(
-                    text = "${minDistance.toInt()}px",
+                    text = "${minDistance.toInt()}%",
                     modifier = Modifier.width(60.dp),
                     textAlign = TextAlign.End,
                     fontWeight = FontWeight.Medium
@@ -393,12 +415,12 @@ private fun ConfigurationSection(
 
             // Maximum Distance Slider
             Text(
-                text = "Short / Long Swipe Threshold",
+                text = "Short / Long Swipe Boundary",
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = "Short swipes must be shorter than this",
+                text = "At or below = short swipe (subkey); beyond = swipe-typed word (% of key diagonal)",
                 fontSize = 12.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -409,12 +431,13 @@ private fun ConfigurationSection(
                 Slider(
                     value = maxDistance,
                     onValueChange = onMaxChange,
-                    valueRange = 50f..250f,
-                    steps = 19,
+                    // Same range/granularity as the Settings "Max Distance" slider
+                    valueRange = 50f..200f,
+                    steps = 30,
                     modifier = Modifier.weight(1f)
                 )
                 Text(
-                    text = "${maxDistance.toInt()}px",
+                    text = "${maxDistance.toInt()}%",
                     modifier = Modifier.width(60.dp),
                     textAlign = TextAlign.End,
                     fontWeight = FontWeight.Medium
@@ -473,13 +496,17 @@ fun PerKeyCustomizationButton() {
 
 @Composable
 private fun PracticeSection(
-    minDistance: Float,
-    maxDistance: Float,
+    minDistance: Float,          // % of key diagonal
+    maxDistance: Float,          // % of key diagonal (the short/long boundary)
+    refKeyDiagonalPx: Float,     // representative key diagonal for %<->px conversion
     feedbackText: String,
     feedbackColor: Color,
     lastDistance: Float,
     onGestureDetected: (Float) -> Unit
 ) {
+    // px equivalents of the % thresholds, for live drawing/comparison
+    val minPx = minDistance / 100f * refKeyDiagonalPx
+    val maxPx = maxDistance / 100f * refKeyDiagonalPx
     var startOffset by remember { mutableStateOf(Offset.Zero) }
     var currentOffset by remember { mutableStateOf(Offset.Zero) }
     var isDragging by remember { mutableStateOf(false) }
@@ -571,8 +598,8 @@ private fun PracticeSection(
                         val currentDistance = sqrt(dx * dx + dy * dy)
 
                         val lineColor = when {
-                            currentDistance < minDistance -> Color.White
-                            currentDistance <= maxDistance -> Color(0xFF4CAF50)
+                            currentDistance < minPx -> Color.White
+                            currentDistance <= maxPx -> Color(0xFF4CAF50)
                             else -> Color(0xFF2196F3)
                         }
 
@@ -595,18 +622,18 @@ private fun PracticeSection(
                     // Draw threshold circles around center
                     val center = Offset(size.width / 2, size.height / 2)
 
-                    // Min threshold circle
+                    // Min threshold circle (px equivalent of the % threshold)
                     drawCircle(
                         color = Color.White.copy(alpha = 0.2f),
-                        radius = minDistance,
+                        radius = minPx,
                         center = center,
                         style = Stroke(width = 1f)
                     )
 
-                    // Max threshold circle
+                    // Max threshold circle (px equivalent of the % boundary)
                     drawCircle(
                         color = Color(0xFF4CAF50).copy(alpha = 0.2f),
-                        radius = maxDistance,
+                        radius = maxPx,
                         center = center,
                         style = Stroke(width = 1f)
                     )
@@ -629,12 +656,12 @@ private fun PracticeSection(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Min: ${minDistance.toInt()}px",
+                    text = "Min: ${minDistance.toInt()}%",
                     fontSize = 12.sp,
                     color = Color.White.copy(alpha = 0.7f)
                 )
                 Text(
-                    text = "Max: ${maxDistance.toInt()}px",
+                    text = "Max: ${maxDistance.toInt()}%",
                     fontSize = 12.sp,
                     color = Color(0xFF4CAF50).copy(alpha = 0.7f)
                 )

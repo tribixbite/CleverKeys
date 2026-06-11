@@ -161,9 +161,9 @@ fun drawSwipeTrail(canvas: Canvas, points: List<PointF>) {
 `ShortSwipeCalibrationActivity.kt` provides:
 
 1. Visual tutorial with animated diagram
-2. Slider controls for min/max distance
-3. Interactive practice area
-4. Real-time gesture type feedback
+2. Slider controls for min distance and the short/long boundary — same `%`-of-key-diagonal units and ranges (10–60 / 50–200) as the Settings sliders; saving calls `Config.refresh()` so the engine picks the values up immediately
+3. Interactive practice area — measured displacement is converted to % through a representative key diagonal (width = narrow-side/10, height from the configured keyboard height over 4 rows) so feedback matches the engine's interpretation; the real engine uses the touched key's actual diagonal
+4. Real-time gesture type feedback (TAP / SHORT SWIPE / LONG SWIPE → word)
 
 ## Related Specifications
 
