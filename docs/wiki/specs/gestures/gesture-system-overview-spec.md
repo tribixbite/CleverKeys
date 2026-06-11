@@ -86,7 +86,8 @@ See `Pointers.kt:734-744` for the live implementation.
 | `short_gesture_min_distance` | Int | 28 | Min displacement to trigger a short swipe, as % of key diagonal |
 | `short_gesture_max_distance` | Int | 141 | **The single short/long boundary.** Max displacement-from-touch-down (% of key diagonal) a gesture may travel and still be a short swipe; beyond it the gesture is a long (neural word) swipe. Honored by **both** activation paths (see "Swipe Typing Activation"). The old "200 = disabled" label was never implemented in logic and has been retired — use the Enable Short Gestures toggle to disable short swipes. |
 | `tap_duration_threshold` | Long | 150 | Max ms a gesture that already left the key may last and still be classified as a tap (touch-up path only) |
-| `circle_gesture_enabled` | Boolean | true | Enable circle gestures for double letters |
+| `circle_sensitivity` | Int | (see Defaults.CIRCLE_SENSITIVITY) | Sensitivity for loop/circle gestures (there is **no** `circle_gesture_enabled` boolean — older drafts listed one that never existed) |
+| `swipe_dist` (→ `swipe_dist_px`) | String/Int | 23 | Device-scaled distance with two live roles: mid-move slider/event subkey activation gate, and the absolute cap on the short-swipe minimum for wide keys |
 
 > There is **no** `swipe_speed_threshold` / minimum-speed gate. (Older drafts of this spec listed one; it has never existed in code. Slow swipes are not rejected by speed — see the pause-recovery note in [Swipe Typing](../typing/swipe-typing-spec.md).)
 

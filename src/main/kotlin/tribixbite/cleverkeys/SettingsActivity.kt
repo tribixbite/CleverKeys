@@ -2196,7 +2196,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
                 SettingsSlider(
                     title = "Swipe Distance Threshold",
-                    description = "Minimum distance for swipe gestures (units)",
+                    description = "Distance (device-scaled units) to activate slider/event subkeys mid-swipe (e.g. spacebar cursor slider). Also caps the short-swipe minimum on wide keys like backspace so their flicks stay easy.",
                     value = swipeDistance.toFloat(),
                     valueRange = 5f..30f,
                     steps = 25,
