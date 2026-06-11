@@ -3,11 +3,14 @@ package tribixbite.cleverkeys
 import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import tribixbite.cleverkeys.customization.ShortSwipeCustomizationManager
 import tribixbite.cleverkeys.customization.ShortSwipeMapping
+import tribixbite.cleverkeys.customization.SwipeDirection
 
 /**
  * Instrumented routing tests for [Pointers] — the short-swipe (subkey) vs
@@ -284,6 +287,23 @@ class PointersGestureRoutingTest {
         val moves = listOf(190f to 70f, 205f to 85f, 220f to 70f, 228f to 85f, 245f to 80f)
         drive(keyB, 180f, 80f, moves)
         assertEquals("2nd-key-on-final-sample word gesture must commit a word", 1, handler.swipeEndCount)
+    }
+
+    /** T12 (guard): a USER-DEFINED custom short-swipe mapping is the strongest intent signal
+     *  and beats word candidacy outright — even a word-shaped gesture (2 keys + path) in the
+     *  mapped direction must execute the custom mapping, not commit a word. */
+    @Test
+    fun customMapping_beatsWordCandidate() {
+        val manager = ShortSwipeCustomizationManager.getInstance(context)
+        runBlocking { manager.setMapping(ShortSwipeMapping.textInput("b", SwipeDirection.E, "@", "@")) }
+        try {
+            // Same word-shaped flat-E gesture as T2 (which commits a word WITHOUT a mapping).
+            drive(keyB, 180f, 80f, hMoves(180f, 310f, 80f))
+            assertEquals("custom mapping must execute", 1, handler.customCount)
+            assertEquals("custom mapping must pre-empt the word", 0, handler.swipeEndCount)
+        } finally {
+            runBlocking { manager.removeMapping("b", SwipeDirection.E) }
+        }
     }
 
     /** T8 (guard): a deliberate ~45° corner flick computes the corner's EXACT direction
