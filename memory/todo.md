@@ -27,12 +27,20 @@ word candidacy (13/13 routing tests); `8ee1d0833` spec tables' fictional
 `circle_gesture_enabled` replaced with real `circle_sensitivity`, swipe_dist
 slider description now states its two live roles.
 
+**Unit-safety round (2026-06-11):** `23798a370` GesturePrefAccessDriftTest
+(forbids raw gesture-pref reads outside canonical layers; caught calibration's
+bypass) ; `d2f2f4a4d` fixed 3 latent px-vs-% comparisons (deferred nav-subkey,
+deferred backspace, selection-delete entry — triggered at ~half intended
+displacement) via shared `shortGestureMinDistancePx()` ; `3fd1cb249`
+PercentOfKey value class (Units.kt) — px-vs-% now uncompilable, à la Compose Dp.
+
 **Deliberate non-fixes:** MAX_POINT_INTERVAL_MS=500 still hardcoded (config
 candidate); GestureClassifier's keyWidth/2-or-time terms are near-vestigial
 (hasLeftStartingKey dominates for real gestures) — simplification candidate;
 ~30°-tilted 2-key words still hit exact-corner subkeys (irreducible — same
 angle as a deliberate corner flick); T3's 8px boundary margin (theoretical
-fragility only). NOT PUSHED — needs user approval.
+fragility only); selection-delete entry threshold change has no dedicated
+behavioral test (type system + drift test are the guards). NOT PUSHED.
 
 ## 🔜 Backup/Restore — next steps (priority order)
 
