@@ -27,6 +27,16 @@ word candidacy (13/13 routing tests); `8ee1d0833` spec tables' fictional
 `circle_gesture_enabled` replaced with real `circle_sensitivity`, swipe_dist
 slider description now states its two live roles.
 
+**Race fix (2026-06-11):** `3a947623f` — the full-suite run failed the new
+custom-mapping guard test, exposing a REAL lost-update race in
+ShortSwipeCustomizationManager: mutators updated mappingCache outside
+fileMutex, so a mapping saved during the IME's init-time loadMappings could be
+erased by its clear() and the loss persisted (importFromJson, the live
+backup-restore path, had no locking at all; importFromMappings self-deadlocked
+— dormant, zero callers). Fixed via saveMappingsLocked + mutex around every
+mutation. Sentinel: customMapping_beatsWordCandidate under full-suite load.
+Final verification: full instrumented suite 1299/1299, 0 failures/flakes.
+
 **Unit-safety round (2026-06-11):** `23798a370` GesturePrefAccessDriftTest
 (forbids raw gesture-pref reads outside canonical layers; caught calibration's
 bypass) ; `d2f2f4a4d` fixed 3 latent px-vs-% comparisons (deferred nav-subkey,
