@@ -50,12 +50,16 @@ class ShortSwipeCalibrationActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
+        // Read through Config's typed surface, not raw prefs: gesture prefs carry units
+        // (% of key diagonal) and Config is the single canonical reader. (Raw reads here
+        // are also rejected by GesturePrefAccessDriftTest.)
+        val cfg = runCatching { Config.globalConfig() }.getOrNull()
 
         setContent {
             KeyboardTheme {
                 ShortSwipeCalibrationScreen(
-                    initialMinDistance = prefs.getInt("short_gesture_min_distance", Defaults.SHORT_GESTURE_MIN_DISTANCE),
-                    initialMaxDistance = prefs.getInt("short_gesture_max_distance", Defaults.SHORT_GESTURE_MAX_DISTANCE),
+                    initialMinDistance = cfg?.short_gesture_min_distance ?: Defaults.SHORT_GESTURE_MIN_DISTANCE,
+                    initialMaxDistance = cfg?.short_gesture_max_distance ?: Defaults.SHORT_GESTURE_MAX_DISTANCE,
                     onSave = { min, max ->
                         prefs.edit()
                             .putInt("short_gesture_min_distance", min)

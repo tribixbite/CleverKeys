@@ -386,6 +386,7 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.backup.SettingsImportPlanBuilderTest',
     'tribixbite.cleverkeys.backup.SettingsDefaultsDriftTest',
     'tribixbite.cleverkeys.SettingsSearchCoverageTest',
+    'tribixbite.cleverkeys.GesturePrefAccessDriftTest',
     'tribixbite.cleverkeys.backup.DictImportPlanBuilderTest',
     'tribixbite.cleverkeys.backup.SettingsExporterTest',
     'tribixbite.cleverkeys.BackupRestoreResultMessagesTest',
