@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<keyboard name="ES-PT Typesplit" script="latin" bottom_row="false">
+  <row>
+    <key width="2" c="e" n="w" s="q" e="é"  />
+    <key width="2" c="r" s="t" w="y" />
+    <key width="2" c="@" n="&lt;" s="&gt;" w="(" e=")" ne="_" />
+    <key width="2" c="i" n="ü" s="u" w="ú" e="í" />
+    <key width="2" c="o" n="õ" s="p" w="ó" e="ô" />
+  </row>
+
+  <row>
+    <key width="2" c="a" n="qu" s="ã" e="á" w="â" />
+    <key width="2" c="s" e="#" />
+    <key width="2" c="backspace" n="'" s="," />
+    <key width="2" c="d" n="¯\_(ツ)_/¯" s="g" e="f" />
+    <key width="2" c="l" n="k" s="h" w="j" />
+  </row>
+
+  <row>
+    <key width="2" c="c" n="ç" s="z" e="x" />
+    <key width="2" c="b" s="v" n="&quot;" />
+    <key width="2" c="shift" s="." w="*" n="-" />
+    <key width="2" c="n" s="ñ" w="¿" e="¡" />
+    <key width="2" c="m" s=":" n=";" w="!" e="\?" />
+  </row>
+
+  <row height="0.95">
+	<key width="1.7" key0="switch_numeric" key1="loc switch_greekmath" key2="loc meta" key3="loc switch_clipboard" key4="ctrl" key7="switch_back_clipboard"/>
+	<key width="1.1" key0="switch_emoji" key1="loc alt" key2="loc change_method" key3="fn" key4="config" key7="switch_gif"/>
+	<key width="5.4" key0="space" key7="switch_forward" key8="switch_backward" key5="cursor_left" key6="cursor_right"/>
+	<key width="1.8" key0="enter" key1="loc voice_typing" key2="action"/>
+  </row>
+</keyboard>
