@@ -13,6 +13,27 @@ internal interface UrlSanitizer {
     fun process(text: String): String
 }
 
+/**
+ * Decide whether the cleaned text should also replace the Android *system* clipboard.
+ *
+ * By default the sanitizer only rewrites CleverKeys' own clipboard history (the read path
+ * in [tribixbite.cleverkeys.ClipboardHistoryService.addClip]); the system clipboard keeps
+ * the original, so a normal long-press→Paste in another app still leaks trackers. When the
+ * user enables "Also clean system clipboard", we push the cleaned form back via
+ * `ClipboardManager.setPrimaryClip`.
+ *
+ * Returns the string to write, or `null` to leave the system clipboard untouched.
+ *
+ * Pure (no Android deps) so the gating logic is unit-testable. Two guards:
+ *  - [enabled]: the opt-in toggle (`clipboard_sanitize_system_clipboard`).
+ *  - [processed] != [original]: nothing was stripped → don't churn the clipboard. This is
+ *    also what terminates the re-entrant listener loop: `setPrimaryClip` re-fires the
+ *    clipboard-changed listener, but re-sanitizing an already-clean value is idempotent
+ *    (`original == processed`), so the second pass returns null and stops.
+ */
+internal fun systemClipboardRewrite(original: String, processed: String, enabled: Boolean): String? =
+    if (enabled && processed != original) processed else null
+
 internal class RulesetUrlSanitizer(private val ruleset: Ruleset) : UrlSanitizer {
 
     private companion object {

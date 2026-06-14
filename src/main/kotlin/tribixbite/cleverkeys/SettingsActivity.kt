@@ -266,6 +266,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var clipboardSanitizeLinksEnabled by mutableStateOf(false)
     private var clipboardEmbedEnrichEnabled by mutableStateOf(false)
     private var clipboardCustomRulesEnabled by mutableStateOf(false)
+    private var clipboardSanitizeSystemClipboard by mutableStateOf(true)
     private var clipboardCustomRulesUri by mutableStateOf<String?>(null)
     // Status text for the custom-rules row — examples:
     //  "" / "12 providers loaded." / "Saved file is malformed: ..." / "URI persisted but no copy on disk yet."
@@ -3295,6 +3296,17 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 )
 
                 SettingsSwitch(
+                    title = "Also clean system clipboard",
+                    description = "When a copied URL is cleaned, overwrite the system clipboard too, so pastes in any app are sanitized — not just CleverKeys' panel.",
+                    checked = clipboardSanitizeSystemClipboard,
+                    onCheckedChange = {
+                        clipboardSanitizeSystemClipboard = it
+                        saveSetting("clipboard_sanitize_system_clipboard", it)
+                        notifySanitizationRulesChanged()
+                    }
+                )
+
+                SettingsSwitch(
                     title = "Enrich embeds for sharing",
                     description = "Rewrite x.com → fxtwitter.com, reddit.com → rxddit.com, etc.",
                     checked = clipboardEmbedEnrichEnabled,
@@ -3341,7 +3353,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 }
 
                 Text(
-                    text = "Note: applies when CleverKeys saves a clip to its history. The Android system clipboard is not modified — other apps still see the original URL. Pastes from CleverKeys' panel deliver the sanitized version.",
+                    text = "Note: cleaning runs when CleverKeys saves a clip to its history, so pastes from CleverKeys' panel are always sanitized. With \"Also clean system clipboard\" on, the Android system clipboard is overwritten with the cleaned URL too, so pastes in other apps are sanitized as well (best-effort — only while the keyboard has clipboard access). With it off, other apps still see the original URL.",
                     modifier = Modifier.padding(16.dp),
                     fontSize = 11.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -5268,6 +5280,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         clipboardSanitizeLinksEnabled = prefs.getSafeBoolean("clipboard_sanitize_links_enabled", false)
         clipboardEmbedEnrichEnabled = prefs.getSafeBoolean("clipboard_embed_enrich_enabled", false)
         clipboardCustomRulesEnabled = prefs.getSafeBoolean("clipboard_custom_rules_enabled", false)
+        clipboardSanitizeSystemClipboard = prefs.getSafeBoolean("clipboard_sanitize_system_clipboard", true)
         clipboardCustomRulesUri = prefs.getString("clipboard_custom_rules_uri", null)
         // Status text reflects the on-disk copy of custom.substitutions.json (computed lazily).
         recomputeCustomRulesStatus()

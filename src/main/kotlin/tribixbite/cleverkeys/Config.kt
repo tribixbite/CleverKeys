@@ -472,6 +472,11 @@ class Config private constructor(
     @JvmField var clipboard_embed_enrich_enabled = false
     @JvmField var clipboard_custom_rules_enabled = false
     @JvmField var clipboard_custom_rules_uri: String? = null   // SAF persisted URI as String, null = no file picked
+    // When sanitization actually cleans a copied URL, also overwrite the Android system
+    // clipboard with the cleaned form so pastes from ANY app deliver the sanitized URL
+    // (not just CleverKeys' own clipboard panel). Default ON — only acts when a sanitize
+    // toggle is enabled AND a URL was actually changed, so it's a no-op otherwise.
+    @JvmField var clipboard_sanitize_system_clipboard = true
 
     // GIF Panel
     @JvmField var gif_enabled = Defaults.GIF_ENABLED
@@ -755,6 +760,7 @@ class Config private constructor(
         clipboard_embed_enrich_enabled = _prefs.getBoolean("clipboard_embed_enrich_enabled", false)
         clipboard_custom_rules_enabled = _prefs.getBoolean("clipboard_custom_rules_enabled", false)
         clipboard_custom_rules_uri = _prefs.getString("clipboard_custom_rules_uri", null)
+        clipboard_sanitize_system_clipboard = _prefs.getBoolean("clipboard_sanitize_system_clipboard", true)
 
         // GIF Panel
         gif_enabled = _prefs.getBoolean("gif_enabled", Defaults.GIF_ENABLED)
@@ -927,6 +933,7 @@ class Config private constructor(
         clipboard_embed_enrich_enabled = _prefs.getBoolean("clipboard_embed_enrich_enabled", false)
         clipboard_custom_rules_enabled = _prefs.getBoolean("clipboard_custom_rules_enabled", false)
         clipboard_custom_rules_uri = _prefs.getString("clipboard_custom_rules_uri", null)
+        clipboard_sanitize_system_clipboard = _prefs.getBoolean("clipboard_sanitize_system_clipboard", true)
     }
 
     fun set_clipboard_pane_height_percent(percent: Int) {

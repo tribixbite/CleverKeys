@@ -216,6 +216,9 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     "clipboard_sanitize_links_enabled" to PrefValue.Bool(false),
     "clipboard_embed_enrich_enabled" to PrefValue.Bool(false),
     "clipboard_custom_rules_enabled" to PrefValue.Bool(false),
+    // Default literal `true` at the read site — rewrite the system clipboard with the
+    // cleaned URL so pastes from any app are sanitized (acts only when a sanitize toggle is on).
+    "clipboard_sanitize_system_clipboard" to PrefValue.Bool(true),
     // Clipboard tab visibility — defaults literal `true` per SettingsActivity reads.
     "clipboard_text_only" to PrefValue.Bool(false),
     "clipboard_pinned_enabled" to PrefValue.Bool(true),

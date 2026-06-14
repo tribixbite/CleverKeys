@@ -1,5 +1,30 @@
 # CleverKeys TODO
 
+## ✅ Sanitized URL → system clipboard (2026-06-14, landed locally)
+
+Feature ask: "can the sanitized url be copied to system clipboard too?" Until now
+the sanitizer only rewrote CleverKeys' OWN clipboard history (read path in
+`ClipboardHistoryService.addClip` → `sanitizer().process`); the Android *system*
+clipboard kept the original, so a normal long-press→Paste in another app still
+leaked trackers. Now opt-in (default ON, gated by the new
+`clipboard_sanitize_system_clipboard` pref) write-back:
+- New pure helper `systemClipboardRewrite(original, processed, enabled): String?`
+  in `clipboard/sanitize/UrlSanitizer.kt` — returns the text to push back, or null.
+  Two guards: toggle on AND `processed != original` (the latter also terminates the
+  re-entrant listener loop, since re-sanitizing a clean URL is idempotent → null).
+- `addClip` calls it and, on non-null, posts `_cm.setPrimaryClip(...)` to the main
+  thread via `rewriteSystemClipboard` (best-effort; swallows the Android 10+
+  not-focused SecurityException like the read path).
+- New "Also clean system clipboard" toggle under Settings → Clipboard → URL handling
+  (default ON); note text updated; auto-indexed into search (136 entries now, was 135).
+- Config field + `refresh()` + `reloadSanitizationSettings()` reads (default true);
+  `SETTINGS_DEFAULTS` classifies the key (drift test green).
+- Tests: 3 new pure `systemClipboardRewrite` cases in UrlSanitizerTest (18/18 green);
+  new instrumented `systemClipboardRewrite_defaultsOn_andReloadsMidSession` (default+
+  mid-session reload). Pure suite 1271 green; debug+androidTest compile clean; release
+  APK built+installed. The actual cross-app paste write is best-effort and clipboard
+  *reads* are restricted for unfocused test processes → needs a manual on-device check.
+
 ## ✅ Gesture routing audit fixes (2026-06-10, all landed locally)
 
 Audit of the short-swipe vs word-swipe boundary work found and fixed (one

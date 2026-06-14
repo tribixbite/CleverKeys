@@ -19,6 +19,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import tribixbite.cleverkeys.clipboard.sanitize.SanitizationConfig
+import tribixbite.cleverkeys.clipboard.sanitize.systemClipboardRewrite
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
 
@@ -296,6 +297,16 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         // URL sanitization (text/plain only). No-op when all three toggles are off.
         val processed = _sanitizationConfig.sanitizer().process(clip)
 
+        // If sanitization actually cleaned the URL and the user opted in, also overwrite the
+        // Android system clipboard so pastes from ANY app deliver the sanitized URL (not just
+        // CleverKeys' own panel). Idempotent: the re-fired listener re-sanitizes an already-clean
+        // value → no further change → no loop. See [systemClipboardRewrite].
+        systemClipboardRewrite(
+            original = clip,
+            processed = processed,
+            enabled = Config.globalConfig().clipboard_sanitize_system_clipboard,
+        )?.let { rewriteSystemClipboard(it) }
+
         // Add to database (handles duplicate detection automatically)
         val added = _database.addClipboardEntry(processed, expiryTime)
 
@@ -321,6 +332,32 @@ class ClipboardHistoryService private constructor(ctx: Context) {
             }
 
             _listener?.on_clipboard_history_change()
+        }
+    }
+
+    /**
+     * Replace the system clipboard's primary clip with [sanitized] (the cleaned URL text).
+     *
+     * Posted to the main thread: `setPrimaryClip` requires a Looper thread and [addClip] may
+     * run on `Dispatchers.IO` for content-URI text (see [processClipUri]); `serviceScope` is
+     * `Dispatchers.Main.immediate`. Best-effort — Android 10+ throws [SecurityException] when
+     * the IME isn't focused, swallowed exactly like the read path in [addCurrentClip].
+     *
+     * Note: the original clip's label/metadata is not preserved (we only receive the text).
+     * For sanitized URLs a neutral label is fine.
+     */
+    private fun rewriteSystemClipboard(sanitized: String) {
+        serviceScope.launch {
+            try {
+                _cm.setPrimaryClip(ClipData.newPlainText("CleverKeys", sanitized))
+            } catch (e: SecurityException) {
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                    android.util.Log.d("ClipboardHistory",
+                        "Cannot rewrite system clipboard (app not in focus): " + e.message)
+                }
+            } catch (e: Exception) {
+                android.util.Log.w("ClipboardHistory", "System clipboard rewrite failed: " + e.message)
+            }
         }
     }
 

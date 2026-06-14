@@ -212,4 +212,45 @@ class UrlSanitizerTest {
         assertThat(bundledClearUrls.process(input))
             .isEqualTo("https://www.aliexpress.us/item/3256807058505746.html")
     }
+
+    // ─── systemClipboardRewrite: decide whether to push the cleaned text back to the
+    //     Android system clipboard (so pastes from ANY app, not just CleverKeys' panel,
+    //     deliver the sanitized URL). Returns the string to write, or null to leave the
+    //     system clipboard untouched. ──────────────────────────────────────────────────
+
+    @Test
+    fun systemClipboardRewrite_enabledAndChanged_returnsSanitized() {
+        // Sanitizer cleaned the URL AND the user opted in → push the clean form back.
+        assertThat(
+            systemClipboardRewrite(
+                original = "https://x.com/a?utm_source=foo",
+                processed = "https://x.com/a",
+                enabled = true,
+            )
+        ).isEqualTo("https://x.com/a")
+    }
+
+    @Test
+    fun systemClipboardRewrite_enabledButUnchanged_returnsNull() {
+        // Nothing was stripped (already clean, or no rule matched) → don't churn the
+        // system clipboard. This is also what breaks the re-entrant listener loop:
+        // re-sanitizing an already-clean value yields original == processed → null.
+        val clean = "https://x.com/a"
+        assertThat(
+            systemClipboardRewrite(original = clean, processed = clean, enabled = true)
+        ).isNull()
+    }
+
+    @Test
+    fun systemClipboardRewrite_disabled_returnsNullEvenWhenChanged() {
+        // User has the "also clean system clipboard" toggle off → never touch it,
+        // even though the in-history copy was sanitized.
+        assertThat(
+            systemClipboardRewrite(
+                original = "https://x.com/a?utm_source=foo",
+                processed = "https://x.com/a",
+                enabled = false,
+            )
+        ).isNull()
+    }
 }

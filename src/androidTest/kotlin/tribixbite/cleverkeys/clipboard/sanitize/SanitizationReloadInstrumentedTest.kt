@@ -85,4 +85,26 @@ class SanitizationReloadInstrumentedTest {
         assertTrue("base URL must be preserved: $result",
             result.startsWith("https://example.com/p"))
     }
+
+    @Test
+    fun systemClipboardRewrite_defaultsOn_andReloadsMidSession() {
+        val prefs = context.getSharedPreferences("sanitize_sysclip_test", Context.MODE_PRIVATE)
+        prefs.edit().clear().commit()
+
+        // Fresh install (key never written) → default ON, matching SettingsDefaults + Config.kt.
+        Config.initGlobalConfig(prefs, context.resources, null, null)
+        assertTrue(
+            "clipboard_sanitize_system_clipboard must default to true",
+            Config.globalConfig().clipboard_sanitize_system_clipboard
+        )
+
+        // User turns the toggle OFF in settings (persists pref); the rules-changed receiver
+        // path then reloads the live Config without a keyboard restart.
+        prefs.edit().putBoolean("clipboard_sanitize_system_clipboard", false).commit()
+        Config.globalConfig().reloadSanitizationSettings()
+        assertFalse(
+            "reloadSanitizationSettings must pick up the persisted OFF value mid-session",
+            Config.globalConfig().clipboard_sanitize_system_clipboard
+        )
+    }
 }
