@@ -211,6 +211,43 @@ class AutocorrectTest {
         assertEquals("quuestion → question (extra-char typo)", "question", result)
     }
 
+    // =========================================================================
+    // Structural-quality cap — substitution count beats frequency
+    // Reported 2026-06-17: "broight" corrected to "thought" instead of
+    // "brought". Root cause: MIN_SAME_LENGTH_EXACT_RATIO=0.50 admits up to
+    // ⌊L/2⌋ subs, so the 3-substitution lookalike "thought" (4/7 match) became
+    // a candidate and won the within-gap frequency tiebreak over the real
+    // single-typo target "brought" (6/7 match, i↔u adjacent). Fixed by
+    // MAX_SAME_LENGTH_SUBSTITUTIONS=2, which drops 3+-sub candidates before
+    // the tiebreaker runs.
+    // =========================================================================
+
+    @Test
+    fun testAutocorrect_singleTypo_beatsHigherFreqLookalike_broightToBrought() {
+        // broight → brought: single adjacent-key sub (i↔u), 6/7 exact.
+        //   The wrong target "thought" (freq 247 > brought 239) needs THREE
+        //   subs (b→t, r→h, i→u) and must be rejected by the sub-cap so the
+        //   structurally-correct, slightly-less-frequent word wins.
+        config.autocorrect_enabled = true
+        config.autocorrect_prefix_length = 0
+        config.autocorrect_max_length_diff = 2
+        val result = predictor.autoCorrect("broight")
+        assertEquals("broight → brought (1-sub beats 3-sub 'thought')",
+            "brought", result)
+    }
+
+    @Test
+    fun testAutocorrect_singleTypo_thoightToThought() {
+        // Guard: thoight → thought is itself a legitimate single-sub typo
+        // (i↔u). The sub-cap must NOT block a genuine 1-substitution match.
+        config.autocorrect_enabled = true
+        config.autocorrect_prefix_length = 0
+        config.autocorrect_max_length_diff = 2
+        val result = predictor.autoCorrect("thoight")
+        assertEquals("thoight → thought (single-sub still corrects)",
+            "thought", result)
+    }
+
     @Test
     fun testAutocorrectMinLengthRespected() {
         val minLength = config.autocorrect_min_word_length

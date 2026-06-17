@@ -46,6 +46,32 @@ class WordPredictor {
         private const val MIN_SAME_LENGTH_EXACT_RATIO = 0.50f
 
         /**
+         * Absolute cap on substituted positions for a same-length
+         * correction candidate. Complements [MIN_SAME_LENGTH_EXACT_RATIO]:
+         * the ratio gate scales with length (50% → ⌊L/2⌋ allowed subs), so
+         * for a 7-letter word it still admits THREE wrong keys. That let
+         * `broight` "correct" to `thought` (4/7 match, 3 subs `b→t r→h i→u`)
+         * which then beat the real target `brought` (6/7 match, single
+         * adjacent `i→u` typo) purely on a higher frequency inside
+         * [SCORE_TIEBREAK_GAP].
+         *
+         * A correction that changes 3+ keys of a word is rarely a
+         * fat-finger fix and is dangerous to apply silently. Capping at 2
+         * substitutions removes those structurally-poor candidates BEFORE
+         * the score/frequency tiebreaker, so the deliberate
+         * frequency-breaks-near-ties behavior (`questin → question` over
+         * `quentin`) is preserved while `broight → brought` is restored.
+         * Binds only for length ≥ 6; shorter words remain governed by the
+         * ratio gate.
+         *
+         * Verified accept: `broight → brought` (1 sub), `tge → the` (1),
+         *   `donr → dont` (1), `thoight → thought` (1).
+         * Verified reject: `broight → thought` (3 subs), `delight`/`troughs`
+         *   (3 subs each) — all drop out, brought wins on score.
+         */
+        private const val MAX_SAME_LENGTH_SUBSTITUTIONS = 2
+
+        /**
          * Length-diff edit-distance budget — caps allowed substitution
          * cost ABOVE the literal length difference. Each insertion or
          * deletion costs 1.0 in our weighted Levenshtein; adjacent-key
@@ -1901,7 +1927,12 @@ class WordPredictor {
                 }
                 val exactRatio = exactCount.toFloat() / wordLength
                 val weightedScore = weightedSum / wordLength
-                if (exactRatio >= MIN_SAME_LENGTH_EXACT_RATIO) weightedScore else -1f
+                val substitutions = wordLength - exactCount
+                // GATE 1a (ratio) AND GATE 1b (absolute sub-cap): both must
+                // pass. The cap rejects long multi-substitution lookalikes
+                // (`broight → thought`) the ratio alone would admit.
+                if (exactRatio >= MIN_SAME_LENGTH_EXACT_RATIO &&
+                    substitutions <= MAX_SAME_LENGTH_SUBSTITUTIONS) weightedScore else -1f
             } else {
                 val ed = KeyAdjacency.weightedEditDistance(lowerTypedWord, dictWord)
                 val maxEd = lengthDiff + LENGTH_DIFF_ED_BUDGET

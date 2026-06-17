@@ -1,5 +1,29 @@
 # CleverKeys TODO
 
+## ✅ Autocorrect: single-typo match must beat higher-freq lookalike (2026-06-17, landed locally)
+
+Reported: `broight` autocorrected to **`thought`** instead of `brought`. Root-caused
+by replaying `KeyAdjacency` scoring against the real 52k dict (`scripts`-side py harness):
+- `brought` = 6/7 exact (single adjacent `i↔u` sub), score **0.9841**, freq 239.
+- `thought` = 4/7 exact (THREE subs `b→t r→h i→u`), score **0.9059**, freq 247.
+- `0.9841 − 0.9059 = 0.078 < SCORE_TIEBREAK_GAP (0.10)` → fell through to the
+  frequency tiebreak, and `thought` (247) edged out `brought` (239).
+- Deeper cause: `MIN_SAME_LENGTH_EXACT_RATIO = 0.50` admits ⌊L/2⌋ subs, so a
+  7-letter word can differ by 3 keys and still qualify.
+
+Fix (`WordPredictor.kt`): added `MAX_SAME_LENGTH_SUBSTITUTIONS = 2` — a same-length
+candidate needing 3+ substituted positions is dropped at GATE 1 (before the
+score/frequency tiebreak), so structurally-poor lookalikes can't win on frequency.
+Binds only for length ≥ 6; short words still governed by the ratio gate. Python
+harness verified ALL calibrated cases preserved (`tge→the`, `tfe→the`,
+`questin→question`, `quuestion→question`, `donr→don't`, `thoight→thought`,
+`wuestion→question`) and `broight→brought` restored. Two regression tests added to
+`AutocorrectTest.kt` (needs ew-cli to execute on-device; compileDebugKotlin green).
+
+NOTE: This addresses same-length substitution lookalikes. Transposition typos
+(`becuase→because`, `hte→the`) remain mis-corrected — separate root cause (no
+Damerau adjacent-transposition support). See autocorrect audit (this session).
+
 ## ✅ Sanitized URL → system clipboard (2026-06-14, landed locally)
 
 Feature ask: "can the sanitized url be copied to system clipboard too?" Until now
