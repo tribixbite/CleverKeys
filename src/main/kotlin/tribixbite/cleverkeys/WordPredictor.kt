@@ -1896,6 +1896,15 @@ class WordPredictor {
             // Prefix match (when required by config).
             if (prefix != null && !dictWord.startsWith(prefix)) continue
 
+            // Never offer a user-disabled word as a CORRECTION TARGET.
+            // `autoCorrect` previously consulted `isWordDisabled` nowhere, so
+            // disabling "boston" still let "bostom → boston", and bundled
+            // corpus-noise the user disabled (teh, wich, hav, …) stayed
+            // reachable as targets. The `isNotEmpty` guard skips the per-word
+            // lowercase in `isWordDisabled` for the common no-disabled-words
+            // case (the dictionary scan runs ~52k times per correction).
+            if (disabledWords.isNotEmpty() && isWordDisabled(dictWord)) continue
+
             // Dual-gate scoring. Adjacency-weighted scores reward typos on
             // physically-near keys, but applied naively they let unrelated
             // 7-char words like "without" clear a 0.65 threshold against

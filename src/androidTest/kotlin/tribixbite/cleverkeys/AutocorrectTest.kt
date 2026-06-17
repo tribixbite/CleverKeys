@@ -248,6 +248,35 @@ class AutocorrectTest {
             "thought", result)
     }
 
+    // =========================================================================
+    // Disabled words must not be offered as correction targets
+    // Audit 2026-06-17: autoCorrect() never consulted isWordDisabled(), so a
+    // user-disabled word stayed reachable as a correction TARGET (disabling
+    // "boston" still allowed "bostom → boston").
+    // =========================================================================
+
+    @Test
+    fun testAutocorrect_disabledWord_notOfferedAsTarget() {
+        val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
+        val key = LanguagePreferenceKeys.disabledWordsKey("en")
+        val original = prefs.getStringSet(key, emptySet())?.toMutableSet() ?: mutableSetOf()
+        try {
+            // Disable "the" — the natural correction target for "tge".
+            prefs.edit().putStringSet(key, setOf("the")).apply()
+            predictor.reloadDisabledWords()
+
+            config.autocorrect_enabled = true
+            config.autocorrect_prefix_length = 0
+            val result = predictor.autoCorrect("tge")
+            assertNotEquals("Disabled 'the' must not be produced as a correction",
+                "the", result)
+        } finally {
+            // Restore prefs + predictor state so other tests are unaffected.
+            prefs.edit().putStringSet(key, original).apply()
+            predictor.reloadDisabledWords()
+        }
+    }
+
     @Test
     fun testAutocorrectMinLengthRespected() {
         val minLength = config.autocorrect_min_word_length

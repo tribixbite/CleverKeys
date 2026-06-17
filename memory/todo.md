@@ -1,5 +1,16 @@
 # CleverKeys TODO
 
+## ✅ Autocorrect respects disabled words as correction targets (2026-06-17, landed locally)
+
+Audit finding: `WordPredictor.autoCorrect()` never called `isWordDisabled()` — the
+candidate sweep iterated the whole dictionary with no disabled filter. So a
+user-disabled word stayed a valid correction TARGET (`bostom → boston` even after
+disabling `boston`), and bundled corpus-noise the user disabled (`teh`, `wich`, `hav`…)
+remained reachable. Fix: `if (disabledWords.isNotEmpty() && isWordDisabled(dictWord)) continue`
+in the candidate loop (the `isNotEmpty` guard avoids 52k redundant lowercases per call
+when no words are disabled). Regression test added (`reloadDisabledWords` + assert
+disabled `the` is never produced for `tge`). compile{Debug,DebugAndroidTest}Kotlin green.
+
 ## ✅ Autocorrect: single-typo match must beat higher-freq lookalike (2026-06-17, landed locally)
 
 Reported: `broight` autocorrected to **`thought`** instead of `brought`. Root-caused
