@@ -292,6 +292,22 @@ def main():
                  if args.min_length <= len(w) <= args.max_length]
     print(f"After length filter: {len(raw_words)} words")
 
+    # Strip junk entries (corpus-noise fragments, foreign-script glyphs).
+    # Shares the exact predicate with generate_binary_dict.py so the V2
+    # (this) and V1 build paths filter identically. See that module for the
+    # full rationale on why contraction full-forms (dont/doesnt) are KEPT
+    # while apostrophe-split left-fragments (doesn/isn) are removed.
+    from generate_binary_dict import ENGLISH_JUNK_BLOCKLIST, _is_latin_word
+    ascii_share = sum(1 for w, _ in raw_words if w.isascii()) / max(1, len(raw_words))
+    latin_dict = ascii_share > 0.90
+    before = len(raw_words)
+    raw_words = [
+        (w, f) for w, f in raw_words
+        if w not in ENGLISH_JUNK_BLOCKLIST and not (latin_dict and not _is_latin_word(w))
+    ]
+    if before != len(raw_words):
+        print(f"After junk filter: {len(raw_words)} words (removed {before - len(raw_words)})")
+
     # Get frequencies
     print(f"Getting frequencies (lang={args.lang})...")
     words_with_freq = []

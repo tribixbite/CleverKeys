@@ -965,7 +965,6 @@ aiming
 aimless
 aimlessly
 aims
-ain
 ainsworth
 aip
 air
@@ -2298,7 +2297,6 @@ arduous
 are
 area
 areas
-aren
 arena
 arenas
 arent
@@ -9930,7 +9928,6 @@ coughlin
 coughs
 could
 coulda
-couldn
 couldnt
 couldve
 coulson
@@ -12129,7 +12126,6 @@ didactic
 diddy
 didi
 didier
-didn
 didnt
 dido
 didst
@@ -12887,7 +12883,6 @@ doe
 doer
 doers
 does
-doesn
 doesnt
 dog
 doge
@@ -19909,7 +19904,6 @@ haut
 haute
 hautes
 hauts
-hav
 havana
 have
 havel
@@ -19918,7 +19912,6 @@ havens
 havent
 haves
 havilland
-havin
 having
 havoc
 havre
@@ -23087,7 +23080,6 @@ islington
 ism
 ismael
 ismail
-isn
 isnt
 iso
 isobel
@@ -35563,7 +35555,6 @@ rake
 raked
 rakes
 raking
-ral
 raleigh
 ralf
 rallied
@@ -39568,7 +39559,6 @@ shaming
 shampoo
 shamrock
 shams
-shan
 shana
 shanahan
 shandong
@@ -40730,7 +40720,6 @@ snatches
 snatching
 snc
 sncf
-snd
 sneak
 sneaked
 sneaker
@@ -43744,7 +43733,6 @@ teeth
 teething
 teflon
 tegan
-teh
 tehran
 teixeira
 tek
@@ -44239,7 +44227,6 @@ thoughts
 thousand
 thousands
 thousandth
-thr
 thrace
 thrall
 thrash
@@ -44277,7 +44264,6 @@ thrive
 thrived
 thrives
 thriving
-thro
 throat
 throated
 throats
@@ -47698,7 +47684,6 @@ washingtons
 washout
 washroom
 washy
-wasn
 wasnt
 wasp
 wasps
@@ -48206,7 +48191,6 @@ whys
 whyte
 wi
 wic
-wich
 wichita
 wick
 wicked
@@ -48671,7 +48655,6 @@ worthy
 wot
 would
 woulda
-wouldn
 wouldnt
 wouldve
 wound
@@ -49242,8 +49225,6 @@ zurich
 zx
 zz
 zürich
-ª
-º
 à
 á
 ángel
@@ -49275,23 +49256,3 @@ zürich
 über
 þ
 ʖ
-α
-β
-γ
-δ
-ε
-θ
-λ
-μ
-μg
-μm
-π
-σ
-φ
-ω
-а
-в
-и
-на
-с
-ツ

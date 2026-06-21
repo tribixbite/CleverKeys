@@ -42,6 +42,7 @@ Benefits:
 import json
 import struct
 import sys
+import unicodedata
 from pathlib import Path
 from typing import Dict, List, Tuple
 from collections import defaultdict
@@ -52,13 +53,80 @@ VERSION = 1
 HEADER_SIZE = 32
 PREFIX_INDEX_MAX_LENGTH = 3
 
+# --------------------------------------------------------------------------
+# Junk filter (added 2026-06-17)
+#
+# The bundled English word lists were built from noisy web-text corpora and
+# accumulated three classes of non-words that then served as autocorrect
+# CORRECTION TARGETS (e.g. typing "teg" could "correct" to the junk entry
+# "teh"). This filter strips them at the .json -> .bin step so the shipped
+# binary can never carry them, even if the source JSON regresses.
+#
+# Two rules, both conservative:
+#
+#   (1) ENGLISH_JUNK_BLOCKLIST — an explicit, audited set of apostrophe-split
+#       contraction LEFT-fragments ("doesn" from "doesn't", "isn" from
+#       "isn't", ...) and well-known typos ("teh", "wich", "havin", ...).
+#       Each was verified to be (a) NOT a contraction key — the real keys are
+#       the FULL forms "doesnt"/"isnt", which are re-injected into the runtime
+#       dictionary by WordPredictor.loadContractionKeysIntoMaps and so must NOT
+#       be removed — and (b) NOT a real word in the curated en.txt list.
+#
+#   (2) NON-LATIN-SCRIPT rule — for a Latin-script dictionary only, drop any
+#       entry containing a character that is neither a Latin letter (accented
+#       Latin is fine: "café", "résumé", "naïve" are KEPT) nor an apostrophe/
+#       hyphen. Removes Greek (α, μ), Cyrillic (а, в), ordinal/symbol marks
+#       (ª, º) and stray glyphs (ツ). Gated behind a >90%-ASCII heuristic so it
+#       NEVER fires on a genuinely non-Latin pack (a Cyrillic/Greek dictionary
+#       is left untouched).
+# --------------------------------------------------------------------------
+ENGLISH_JUNK_BLOCKLIST = frozenset({
+    # apostrophe-split "n't" left-fragments (NOT contraction keys)
+    "doesn", "didn", "isn", "wasn", "couldn", "wouldn", "aren", "shan", "ain",
+    # common typos / fragments
+    "teh", "wich", "hav", "havin", "abl", "thr", "thro", "snd", "ral",
+})
+
+def _is_latin_word(word: str) -> bool:
+    """True iff `word` is composed only of Latin letters (accented allowed)
+    plus apostrophe/hyphen. False for Greek/Cyrillic/CJK letters and symbols."""
+    for ch in word:
+        if ch in "'-":
+            continue
+        try:
+            name = unicodedata.name(ch)
+        except ValueError:
+            return False  # control / unnamed glyph
+        if unicodedata.category(ch)[0] == "L" and name.startswith("LATIN"):
+            continue
+        return False
+    return True
+
+def filter_junk(dictionary: Dict[str, int]) -> Tuple[Dict[str, int], List[str]]:
+    """Apply the junk rules. Returns (cleaned_dict, removed_words)."""
+    ascii_share = sum(1 for w in dictionary if w.isascii()) / max(1, len(dictionary))
+    latin_dict = ascii_share > 0.90
+    cleaned: Dict[str, int] = {}
+    removed: List[str] = []
+    for word, freq in dictionary.items():
+        if word in ENGLISH_JUNK_BLOCKLIST:
+            removed.append(word)
+        elif latin_dict and not _is_latin_word(word):
+            removed.append(word)
+        else:
+            cleaned[word] = freq
+    return cleaned, removed
+
 def load_json_dictionary(json_path: Path) -> Dict[str, int]:
-    """Load dictionary from JSON file."""
+    """Load dictionary from JSON file, stripping junk entries."""
     with open(json_path, 'r', encoding='utf-8') as f:
         data = json.load(f)
 
     # Ensure all keys are lowercase and frequencies are integers
     dictionary = {word.lower(): int(freq) for word, freq in data.items()}
+    dictionary, removed = filter_junk(dictionary)
+    if removed:
+        print(f"Filtered {len(removed)} junk entries: {', '.join(sorted(removed))}")
     print(f"Loaded {len(dictionary)} words from {json_path.name}")
     return dictionary
 

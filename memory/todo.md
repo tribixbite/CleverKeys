@@ -1,5 +1,34 @@
 # CleverKeys TODO
 
+## ✅ Dictionary junk removal + build-time filter (2026-06-17, landed locally)
+
+Removed 40 corpus-noise entries from the bundled English dictionary (all 3 artifacts:
+`en_enhanced.{json,txt,bin}`), each verified safe via the contraction system, the
+curated `en.txt`, and Unicode script inspection. **52042 → 52002.**
+
+- **Rule 2 — apostrophe-split & typo fragments (18):** `doesn, didn, isn, wasn,
+  couldn, wouldn, aren, shan, ain` (n't LEFT-fragments — NOT contraction keys; the
+  real keys are the FULL forms `doesnt`/`isnt`, re-injected at runtime by
+  `WordPredictor.loadContractionKeysIntoMaps`, so those are KEPT) + `teh, wich, hav,
+  havin, abl, thr, thro, snd, ral` (typos).
+- **Rule 1 — non-Latin-script / symbol noise (22):** `ª º α β γ δ ε θ λ μ μg μm π σ
+  φ ω а в и на с ツ` (Greek/Cyrillic/symbol/katakana). Accented LATIN words KEPT
+  (`café, résumé, naïve, pokémon, montréal` …).
+
+Why they were there: the list was built from noisy web-text (wordfreq) corpora; these
+non-words then served as autocorrect CORRECTION TARGETS (e.g. `teg → teh`).
+
+**Filter** (so it stays clean) added to BOTH build paths, sharing one predicate:
+`scripts/generate_binary_dict.py` (V1 json→bin, the gradle `generateBinaryDictionaries`
+path) defines `ENGLISH_JUNK_BLOCKLIST` + `_is_latin_word` + `filter_junk`;
+`scripts/build_dictionary.py` (V2 wordfreq path) imports + applies them. Rule 1 is
+gated behind a >90%-ASCII check so it never fires on a Cyrillic/Greek language pack.
+
+The `.bin` is V2 (`CKDT`, accent-folding) — edited via index-preserving surgery
+(parse → drop 40 → remap accent-map indices → re-emit with the project's own
+`write_v2_binary`), validated by a byte-identical remove-0 round-trip. Accent-folding
+verified intact (`cafe → [cafe, café]`). json/bin word sets now identical.
+
 ## ✅ Autocorrect respects disabled words as correction targets (2026-06-17, landed locally)
 
 Audit finding: `WordPredictor.autoCorrect()` never called `isWordDisabled()` — the
