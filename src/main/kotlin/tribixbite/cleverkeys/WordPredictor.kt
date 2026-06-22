@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.provider.UserDictionary
 import android.util.Log
+import tribixbite.cleverkeys.autocorrect.FrequencyFloor
 import tribixbite.cleverkeys.autocorrect.KeyAdjacency
 import tribixbite.cleverkeys.autocorrect.Morphology
 import tribixbite.cleverkeys.contextaware.ContextModel
@@ -164,6 +165,15 @@ class WordPredictor {
     // Allows O(1) atomic swap instead of O(n) putAll() on main thread during async loading
     private val dictionary: AtomicReference<MutableMap<String, Int>> = AtomicReference(mutableMapOf())
     private val prefixIndex: AtomicReference<MutableMap<String, MutableSet<String>>> = AtomicReference(mutableMapOf())
+
+    // Cached max dictionary frequency, used to scale the autocorrect frequency
+    // floor (see FrequencyFloor). Recomputed lazily whenever the dictionary size
+    // changes — covers initial load, language switch, and custom-word additions
+    // without hooking every mutation site. Value changes that don't alter size
+    // (e.g. DictionaryWord.enabled toggles) don't affect frequencies, so a
+    // size-keyed cache is sufficient.
+    @Volatile private var cachedMaxFreq: Int = 0
+    @Volatile private var cachedMaxFreqForSize: Int = -1
     private var bigramModel: BigramModel? = BigramModel.getInstance(null)
     private var contextModel: ContextModel? = null // Phase 7.1: Dynamic N-gram model
     private var personalizationEngine: PersonalizationEngine? = null // Phase 7.2: Personalized learning
@@ -1796,6 +1806,20 @@ class WordPredictor {
      * @param typedWord The word user just finished typing
      * @return Corrected word, or original if no suitable correction found
      */
+    /**
+     * Max frequency in the current dictionary, cached and recomputed only when
+     * the dictionary size changes. Used by [FrequencyFloor] to scale the
+     * autocorrect confidence floor to whatever frequency scale the dictionary
+     * was loaded on. O(n) on a size change, O(1) otherwise.
+     */
+    private fun dictMaxFrequency(dict: Map<String, Int>): Int {
+        if (dict.size != cachedMaxFreqForSize) {
+            cachedMaxFreq = dict.values.maxOrNull() ?: 0
+            cachedMaxFreqForSize = dict.size
+        }
+        return cachedMaxFreq
+    }
+
     fun autoCorrect(typedWord: String): String {
         if (config?.autocorrect_enabled != true || typedWord.isEmpty()) {
             return typedWord
@@ -1864,7 +1888,15 @@ class WordPredictor {
 
         val wordLength = lowerTypedWord.length
         val charMatchThreshold = config?.autocorrect_char_match_threshold ?: 0.66f
-        val frequencyFloor = config?.autocorrect_confidence_min_frequency ?: 500
+        // The configured value is on the fixed 100..2000 slider scale; the
+        // runtime dictionary frequency scale depends on the load path (~5k..1M
+        // for the V2 binary, 100..10k for the JSON fallback). Map the slider
+        // onto a fraction of THIS dictionary's max frequency so the floor is
+        // meaningful and consistent regardless of load path, and can never
+        // disable autocorrect outright. See FrequencyFloor.
+        val configFloor = config?.autocorrect_confidence_min_frequency
+            ?: Defaults.AUTOCORRECT_MIN_FREQUENCY
+        val frequencyFloor = FrequencyFloor.effective(configFloor, dictMaxFrequency(dict))
         val maxLengthDiff = (config?.autocorrect_max_length_diff ?: 0).coerceAtLeast(0)
 
         // Track top-3 candidates for diagnostic logging on rejection.

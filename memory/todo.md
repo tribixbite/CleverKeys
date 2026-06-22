@@ -1,5 +1,28 @@
 # CleverKeys TODO
 
+## ✅ Autocorrect min-frequency floor: map slider onto dict scale (2026-06-17, landed locally)
+
+Audit P0: the `autocorrect_confidence_min_frequency` slider (100..2000) was compared
+raw against the runtime dict frequency, but that scale depends on the LOAD PATH —
+`BinaryDictionaryLoader` V2 converts rank to `1_000_000 - rank*3900` (~5k..1M), while
+the JSON fallback scales to 100..10k. Net: in the primary (.bin) path the floor was a
+NO-OP (5000 ≫ 2000 → slider did nothing); on the JSON path it gated arbitrarily and a
+high value could disable autocorrect entirely. (My first-pass "128..255" reading was
+the *raw json*; the runtime scales it — corrected during impl.)
+
+Fix: new `autocorrect/FrequencyFloor.kt` maps the slider onto a FRACTION of the loaded
+dict's max frequency (`slider 100 → 0` no-op = prior default behaviour; `slider 2000 →
+0.6*maxFreq`). `MAX_STRICTNESS=0.6 < 1` ⇒ the most common words always clear the floor,
+so the slider can never fully disable autocorrect. Load-path-independent: same meaning
+whether maxFreq is 1M (.bin) or 10k (.json). `WordPredictor` caches max via a
+size-keyed `dictMaxFrequency()` (O(1) except on dict size change) and uses
+`Defaults.AUTOCORRECT_MIN_FREQUENCY` (100) as the null-fallback (was a stray `?: 500`).
+7 pure tests (`FrequencyFloorTest`, registered in runPureTests) green; compile green.
+
+NOTE (out of scope): `OptimizedVocabulary` reads the SAME pref but divides by 10000 on
+a 0..1 scale for SWIPE-prediction filtering — a different subsystem. Unifying the two
+interpretations of one pref is a separate follow-up.
+
 ## ✅ Dictionary junk removal + build-time filter (2026-06-17, landed locally)
 
 Removed 40 corpus-noise entries from the bundled English dictionary (all 3 artifacts:

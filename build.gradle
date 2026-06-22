@@ -394,6 +394,7 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.backup.ShortSwipeDiffTest',
     'tribixbite.cleverkeys.autocorrect.KeyAdjacencyTest',
     'tribixbite.cleverkeys.autocorrect.MorphologyTest',
+    'tribixbite.cleverkeys.autocorrect.FrequencyFloorTest',
     'tribixbite.cleverkeys.LanguagePreferenceKeysReverseLookupTest',
     'tribixbite.cleverkeys.BucketBSourceContractTest',
     'tribixbite.cleverkeys.clipboard.sanitize.RulesetParserTest',
