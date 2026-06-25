@@ -1868,6 +1868,27 @@ class WordPredictor {
             return typedWord
         }
 
+        // 1.6. Possessive guard. A possessive of a known noun ("ember's",
+        // "dog's", "rivers'") is valid English, but the possessive form itself
+        // is never stored in the dictionary — so without this guard autocorrect
+        // treats it as a typo and "corrects" it to a same-ish dictionary word
+        // ("ember's" → "rivers", "dog's" → "does"). If the base (the text before
+        // the last apostrophe) is a known word, accept the possessive as-is.
+        // Covers singular ('s) and plural/already-ends-in-s (trailing ') forms;
+        // suffixes other than "s"/"" (e.g. "'t", "'ll") are left to the
+        // contraction-alias path. Both straight (') and curly (’) apostrophes.
+        val apostropheIdx = lowerTypedWord.indexOfLast { it == '\'' || it == '’' }
+        if (apostropheIdx >= 2) {
+            val base = lowerTypedWord.substring(0, apostropheIdx)
+            val suffix = lowerTypedWord.substring(apostropheIdx + 1)
+            if ((suffix == "s" || suffix.isEmpty()) &&
+                (dict.containsKey(base) || customAndUserWords.contains(base))
+            ) {
+                Log.d(TAG, "AUTO-CORRECT skip (possessive of '$base'): '$typedWord'")
+                return typedWord
+            }
+        }
+
         // 2. Enforce minimum word length for correction
         if (lowerTypedWord.length < (config?.autocorrect_min_word_length ?: 3)) {
             return typedWord

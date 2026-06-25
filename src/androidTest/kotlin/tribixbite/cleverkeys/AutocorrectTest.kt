@@ -277,6 +277,32 @@ class AutocorrectTest {
         }
     }
 
+    // =========================================================================
+    // Possessive guard — possessive of a known noun must not be "corrected"
+    // Reported 2026-06-25: typing "ember's glow" produced "rivers glow". The
+    // possessive form is never stored in the dictionary, so autocorrect treated
+    // "ember's" as a typo of the nearest dictionary word.
+    // =========================================================================
+
+    @Test
+    fun testAutocorrect_possessive_ofKnownNoun_preserved() {
+        config.autocorrect_enabled = true
+        config.autocorrect_prefix_length = 0
+        config.autocorrect_max_length_diff = 2
+        // base nouns (ember, dog, river, cat) are all in the bundled dictionary.
+        assertEquals("ember's preserved", "ember's", predictor.autoCorrect("ember's"))
+        assertEquals("dog's preserved", "dog's", predictor.autoCorrect("dog's"))
+        assertEquals("river's preserved", "river's", predictor.autoCorrect("river's"))
+    }
+
+    @Test
+    fun testAutocorrect_pluralPossessive_trailingApostrophe_preserved() {
+        config.autocorrect_enabled = true
+        config.autocorrect_prefix_length = 0
+        // "rivers'" — base "rivers" is in the dictionary.
+        assertEquals("rivers' preserved", "rivers'", predictor.autoCorrect("rivers'"))
+    }
+
     @Test
     fun testAutocorrectMinLengthRespected() {
         val minLength = config.autocorrect_min_word_length

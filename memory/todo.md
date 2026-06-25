@@ -1,5 +1,25 @@
 # CleverKeys TODO
 
+## ✅ Autocorrect possessive guard (2026-06-25, landed locally)
+
+Reported: typing "ember's glow" produced "rivers glow". Root cause: possessive forms
+("ember's", "dog's", "river's") are NEVER stored in the dictionary (only base nouns
+are), so autocorrect treated them as typos and corrected to the nearest same-ish dict
+word — reproduced: ember's→rivers, dog's→does, cat's→days, james'→games. Fix: new
+"1.6 possessive guard" in `autoCorrect` — if the text before the last apostrophe is a
+known word (dict or custom) and the suffix is "s" or empty (singular `'s` / plural
+`'`), return the possessive unchanged. Handles straight + curly apostrophes; other
+suffixes (`'t`, `'ll`…) still flow to the contraction-alias path. This also makes the
+26 manually-added possessive custom words (person's, friend's…) unnecessary going
+forward. 2 instrumented regression tests added; compile{Debug,DebugAndroidTest} green.
+
+## TODO: expand bundled dict to ~100k + typo filter (in progress 2026-06-25)
+Raise wordfreq cutoff 50k→100k; cut genuine typos/misspellings without losing
+slang/abbreviations. aspell+hunspell are installed on-device → usable as reference
+spell-validation. Keep wordfreq words that are (a) spell-valid OR (b) known
+slang/abbrev; drop low-freq tokens that are ed1 of a high-freq real word and not in
+reference. See autocorrect audit (this session).
+
 ## ✅ Autocorrect min-frequency floor: map slider onto dict scale (2026-06-17, landed locally)
 
 Audit P0: the `autocorrect_confidence_min_frequency` slider (100..2000) was compared
