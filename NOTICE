@@ -26,3 +26,17 @@ so the derived wordlists distributed with CleverKeys are redistributed under
 GPL-3.0, with attribution preserved here.
 
 ================================================================================
+AOSP LatinIME English word list
+================================================================================
+The English dictionary build pipeline (scripts/build_en_wordlist.py) uses the
+Android Open Source Project LatinIME English word list as a build-time
+inclusion oracle; a headword snapshot is committed at
+scripts/data/aosp_en_wordlist.txt.gz.
+
+  AOSP LatinIME dictionaries — The Android Open Source Project
+  https://android.googlesource.com/platform/packages/inputmethods/LatinIME/
+  License: Apache License 2.0
+
+Apache-2.0 is one-way compatible with GPLv3; the derived word selections
+distributed with CleverKeys are redistributed under GPL-3.0, with attribution
+preserved here.

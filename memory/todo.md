@@ -1,5 +1,40 @@
 # CleverKeys TODO
 
+## 🔶 Dictionary expansion 52k→~80k: one-pass evidence classifier (2026-07-02, tooling landed; ARTIFACT SWAP GATED on maintainer review)
+
+Rearchitected the 2026-06-25 hybrid filter + typo-drop-rescue spec into ONE pass:
+`scripts/build_en_wordlist.py` (report mode default; `--write` regenerates
+`scripts/dictionaries/en/en_words.txt` → `en_enhanced.{json,bin}` via build_dictionary.py).
+
+- **Candidates**: wordfreq top-100k ∪ allowlist ∪ shipped-52k carryover.
+- **Positive oracles**: hunspell en_US ×3 case-forms (UPPER−Cap−lower = true initialisms
+  like ISP/NASA — raw UPPER acceptance would leak every proper noun), aspell en_GB,
+  British-suffix rules, NLTK words+names, pyspellchecker (verified clean of
+  teh/wich/recieve/alot), **AOSP LatinIME en wordlist** (165,544 headwords, Apache-2.0,
+  snapshot `scripts/data/aosp_en_wordlist.txt.gz` + PROVENANCE.md + NOTICE attribution;
+  `nonword`-flagged excluded), contraction keys, curated allowlist (928: user's 0words.py
+  lists + session curation; `scripts/dictionaries/en/en_allowlist.txt`).
+- **Negatives**: 7-rule ed1 typo detector (reused from detect_misspellings.py) with
+  len-tiered zipf gaps (≥6:2.0 / 4-5:2.5 / 3:3.0); foreign-language DOMINANCE (15 langs,
+  margin +1.0 — mere presence flagged sooo/ahhh/naruto wrongly); elongation exemption
+  (run≥3 collapsing to valid word); blocklist (54: n't fragments, freq-protected
+  misspellings alot/atleast/…, junk seeds, AutocorrectTest inputs tge/broight/questin/…).
+- **Bands** (maintainer spec 2026-06-25): rank<65k conservative; 65-100k keep only with
+  positive oracle (name-only insufficient); shipped carryover keep-unless-junk;
+  len≤2 needs oracle ∨ (shipped ∧ zipf≥3.0).
+- **Result (report mode)**: KEEP 79,944 (Δ+27,942), DROP 20,606. Shipped-lost 2,400 —
+  all with reasons (foreign function words, typo fragments, bigram noise). Guards
+  hard-fail the build: MUST_INCLUDE (the/gonna/yall/dont/im/theyre/immunizations/json/…),
+  blocklist-in-keep, valid seeds.
+- **Review artifacts** (~/git/swype/): cleverkeys-dictgen-{drops-review,shipped-lost,keep}.txt.
+- `docs/specs/typo-drop-rescue-pipeline.md` marked SUPERSEDED (fold-in per its own
+  Future-Enhancements §1; gazetteer/Wikidata/Wiktionary lanes deliberately not adopted).
+- **NEXT (needs maintainer)**: review the three artifacts → run `--write` → compile +
+  ew-cli AutocorrectTest (dict-content-sensitive: tge/tfe/questin/broight/thoight/rivers')
+  → consider deleting vestigial assets/en_enhanced.txt (~400KB APK savings, not loaded)
+  → watch: WordPredictor autoCorrect linear sweep + OptimizedVocabulary trie now over
+  80k words (perf/memory), json+bin asset growth ≈ +0.9MB.
+
 ## ✅ Autocorrect possessive guard (2026-06-25, landed locally)
 
 Reported: typing "ember's glow" produced "rivers glow". Root cause: possessive forms
