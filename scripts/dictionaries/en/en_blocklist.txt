@@ -1,0 +1,70 @@
+# CleverKeys English dictionary — BLOCKLIST
+# Words here are NEVER admitted by scripts/build_en_wordlist.py, overriding every
+# positive oracle including the allowlist. One word per line; '#' comments.
+
+## Apostrophe-split contraction LEFT-fragments (the real contraction keys are the
+## FULL forms doesnt/isnt/…, which are kept — see WordPredictor.loadContractionKeysIntoMaps)
+doesn
+didn
+isn
+wasn
+couldn
+wouldn
+shouldn
+hasn
+hadn
+weren
+mightn
+mustn
+needn
+oughtn
+mayn
+aren
+shan
+ain
+
+## Corpus-noise typo fragments (user-disabled in the wild; removed from dict 2026-06-17)
+teh
+wich
+hav
+havin
+abl
+thr
+thro
+snd
+ral
+
+## Frequency-protected misspellings (too common for the typo filter's zipf-gap to
+## catch, but universally considered misspellings — not intentional casual register)
+alot
+aswell
+atleast
+incase
+ofcourse
+eachother
+infront
+noone
+
+## Junk regression seeds (docs/specs/typo-drop-rescue-pipeline.md — must never be KEEP)
+aae
+aad
+aal
+aao
+bbg
+bcd
+bfg
+aas
+aat
+qwxz
+
+## Autocorrect instrumented-test inputs (AutocorrectTest.kt) — these must never be
+## dictionary words or the regression tests break ("already valid" short-circuit)
+tge
+tfe
+wuestion
+questin
+quuestion
+broight
+thoight
+donr
+hadnr

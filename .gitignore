@@ -105,6 +105,15 @@ scripts/reddit_wordcount.txt
 # Language pack build intermediates
 scripts/dictionaries/*/
 !scripts/dictionaries/*.zip
+# …but the English curation inputs are dictionary source-of-truth — keep tracked
+# (en_words.txt / en_enhanced.bin / unigrams.txt were grandfathered before the rule)
+!scripts/dictionaries/en/
+scripts/dictionaries/en/*
+!scripts/dictionaries/en/en_words.txt
+!scripts/dictionaries/en/en_allowlist.txt
+!scripts/dictionaries/en/en_blocklist.txt
+!scripts/dictionaries/en/en_enhanced.bin
+!scripts/dictionaries/en/unigrams.txt
 scripts/norvig_missing.txt
 scripts/opensub_missing.txt
 
