@@ -36,16 +36,32 @@ Use this skill when building, modifying, or quality-checking dictionaries and co
 
 ## Build Commands
 
-### Rebuild a Dictionary
+### English (V4, 98,140 words — one-pass evidence classifier, 2026-07-03)
+```bash
+# Report mode (no files touched): classification counts + review artifacts + eval coverage
+python3 scripts/build_en_wordlist.py
+# Regenerate en_words.txt + en_enhanced.{json,bin} (assets + scripts copies) + verify
+python3 scripts/build_en_wordlist.py --write
+# Organic-coverage measurement mode (excludes eval words from allowlist force-keep)
+python3 scripts/build_en_wordlist.py --eval-blind
+```
+Inputs: wordfreq top-150k ∪ curated files. Oracles: hunspell en_US ×3 case forms
+(UPPER−Cap−lower = true initialisms — raw UPPER acceptance leaks every proper noun),
+aspell en_GB, NLTK, pyspellchecker, AOSP LatinIME snapshot
+(`scripts/data/aosp_en_wordlist.txt.gz`, Apache-2.0, `nonword` flag excluded).
+Curation: `scripts/dictionaries/en/en_allowlist.txt` (force-keep, delete-to-exclude)
+and `en_blocklist.txt` (force-drop; includes the AutocorrectTest inputs
+tge/broight/questin/… which must NEVER become dict words). Bands: rank<65k
+conservative, 65k+ requires a positive oracle. Guards hard-fail the build.
+Held-out eval: `en_user_export_eval.txt` (gitignored — personal vocabulary).
+
+### Rebuild a Dictionary (other languages)
 ```bash
 cd scripts/
 
 # From wordfreq (any supported language)
 python3 get_wordlist.py --lang {code} --output {code}_words.txt --count 50000
 python3 build_dictionary.py --lang {code} --input {code}_words.txt --output ../src/main/assets/dictionaries/{code}_enhanced.bin --use-wordfreq
-
-# From curated source (English V3)
-python3 build_dictionary.py --lang en --input dictionaries/en/en_words.txt --output ../src/main/assets/dictionaries/en_enhanced.bin --use-wordfreq
 ```
 
 ### Rebuild Contractions
