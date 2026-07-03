@@ -78,12 +78,13 @@ WORD_RE = re.compile(r"[a-z][a-z'-]*")
 
 # Words that MUST come out of the build (representative of every keep-class);
 # hard build failure otherwise. Chosen to be oracle-robust, not freq-marginal.
+# NOTE: deliberately contains NO words from the user's dictionary exports —
+# those form the held-out --eval set and are measured, not asserted.
 MUST_INCLUDE = [
     "the", "of", "and", "you",                    # core
     "gonna", "wanna", "yall", "lol", "idk",       # casual register
     "dont", "cant", "im", "theyre",               # contraction keys (FUNC)
-    "immunizations", "configurable", "frontend",  # past-50k real words (the old gap)
-    "codebase", "json", "npm",                    # tech register (allowlist/valid)
+    "json",                                       # tech register (allowlist)
     "a", "i",                                     # single letters (carryover)
 ]
 
@@ -150,12 +151,22 @@ def main() -> None:
     ap.add_argument("--write", action="store_true", help="regenerate en_words.txt + en_enhanced.{json,bin}")
     ap.add_argument("--review-dir", type=Path, default=Path.home() / "git" / "swype",
                     help="where the annotated review artifacts are written")
+    ap.add_argument("--eval", type=Path, default=EN_DIR / "en_user_export_eval.txt",
+                    help="held-out eval wordlist (user dictionary exports); coverage is "
+                         "reported and these words are EXCLUDED from the allowlist "
+                         "force-keep path so the measurement is organic")
     args = ap.parse_args()
     t0 = time.time()
 
     # ---------------- Stage A: resources ----------------
     allow = read_list_file(EN_DIR / "en_allowlist.txt")
     block = read_list_file(EN_DIR / "en_blocklist.txt")
+    eval_set = read_list_file(args.eval) if args.eval and args.eval.exists() else set()
+    contaminated = allow & eval_set
+    if contaminated:
+        print(f"eval decontamination: {len(contaminated)} eval words removed from allowlist "
+              f"({', '.join(sorted(contaminated)[:12])}{'…' if len(contaminated) > 12 else ''})")
+        allow -= contaminated
     func = {k.lower() for k in json.loads((ASSETS / "contractions_non_paired.json").read_text()).keys()
             if k.isalpha()}
     aosp = load_aosp()
@@ -308,6 +319,34 @@ def main() -> None:
         print(f"  drop/{r:16s} {n:,}")
     lost = sorted(w for w in shipped if w not in keep)
     print(f"\nregression check — shipped words lost: {len(lost)}")
+
+    # ---------------- eval coverage (held-out user-export words) ----------------
+    if eval_set:
+        ev_kept = {w: keep[w] for w in eval_set if w in keep}
+        ev_drop = {w: drop[w] for w in eval_set if w in drop}
+        ev_out = sorted(w for w in eval_set if w not in keep and w not in drop)
+        old_cov = len(eval_set & shipped)
+        print(f"\nEVAL — user dictionary exports ({len(eval_set)} words):")
+        print(f"  old shipped dict covered : {old_cov}  ({100*old_cov/len(eval_set):.0f}%)")
+        print(f"  new pipeline covers      : {len(ev_kept)}  ({100*len(ev_kept)/len(eval_set):.0f}%)")
+        for r, n in Counter(ev_kept.values()).most_common():
+            print(f"    kept/{r:16s} {n}")
+        print(f"  dropped by pipeline      : {len(ev_drop)}")
+        for r, n in Counter(v.split('→')[0].split(':')[0] for v in ev_drop.values()).most_common():
+            print(f"    drop/{r:16s} {n}")
+        print(f"  not reachable (beyond top-{args.top}, no oracle path): {len(ev_out)}")
+        args.review_dir.mkdir(parents=True, exist_ok=True)
+        evf = args.review_dir / "cleverkeys-dictgen-eval.txt"
+        with open(evf, "w", encoding="utf-8") as fp:
+            fp.write(f"# Eval coverage of user dictionary-export words ({len(eval_set)}).\n"
+                     f"# KEPT {len(ev_kept)} | DROPPED {len(ev_drop)} | UNREACHABLE {len(ev_out)}\n")
+            for w in sorted(ev_kept):
+                fp.write(f"KEPT\t{w}\t# {ev_kept[w]} zipf={zc.get(w, 0):.2f}\n")
+            for w in sorted(ev_drop):
+                fp.write(f"DROP\t{w}\t# {ev_drop[w]} zipf={zc.get(w, 0):.2f}\n")
+            for w in ev_out:
+                fp.write(f"MISS\t{w}\t# not a candidate zipf={zipf_frequency(w, 'en'):.2f}\n")
+        print(f"  detail: {evf}")
 
     args.review_dir.mkdir(parents=True, exist_ok=True)
     rev = args.review_dir / "cleverkeys-dictgen-drops-review.txt"

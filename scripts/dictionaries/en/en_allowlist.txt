@@ -2,10 +2,12 @@
 # Words here are ALWAYS kept by scripts/build_en_wordlist.py, overriding the
 # typo/foreign filters (but not the blocklist). One word per line; '#' comments.
 # Delete a line to stop force-keeping it. Sections preserve provenance.
+# NOTE (2026-07-03): words present in the user's dictionary exports were MOVED
+# to en_user_export_eval.txt (held-out eval set) — the builder also subtracts
+# that file from this list at load time to keep eval coverage organic.
 
 
 ## internet_slang (user-curated, from 0words.py)
-lol
 lmao
 rofl
 lmfao
@@ -13,7 +15,6 @@ omg
 wtf
 brb
 ttyl
-idk
 imo
 imho
 tbh
@@ -69,7 +70,6 @@ sub
 share
 yt
 notif
-notifs
 ping
 tg
 tag
@@ -80,7 +80,6 @@ snap
 snapchat
 insta
 reels
-tiktok
 twitter
 fb
 youtube
@@ -227,7 +226,6 @@ scrim
 ## tech_terms (user-curated, from 0words.py)
 smartphone
 iphone
-android
 tablet
 ipad
 laptop
@@ -258,13 +256,11 @@ mouse
 trackpad
 touchscreen
 usbc
-ryzen
 camera
 webcam
 ubiquiti
 speaker
 router
-unifi
 server
 cloud
 cpuz
@@ -348,7 +344,6 @@ menu
 search
 filter
 sort
-pagination
 scroll
 click
 tap
@@ -366,7 +361,6 @@ dnn
 deeplearning
 nn
 blockchain
-solana
 cryptocurrency
 crypto
 bitcoin
@@ -382,11 +376,8 @@ xr
 dockerfile
 cgi
 bot
-chatbot
 api
 sdk
-llm
-llms
 db
 fe
 be
@@ -410,7 +401,6 @@ skype
 facetime
 signal
 pinterest
-github
 stackoverflow
 wiki
 google
@@ -436,7 +426,6 @@ contractor
 consultant
 freelance
 remote
-wfh
 office
 meeting
 presentation
@@ -730,7 +719,6 @@ sacramento
 detroit
 
 ## programming_terms (user-curated, from 0words.py)
-proxmox
 python
 javascript
 java
@@ -763,15 +751,12 @@ kubernetes
 aws
 azure
 gcp
-firebase
-vercel
 netlify
 heroku
 digital
 ocean
 gitlab
 bitbucket
-npm
 yarn
 pip
 maven
@@ -833,7 +818,6 @@ welp
 ofc
 lil
 bday
-tmrw
 rn
 af
 nvm
@@ -844,8 +828,6 @@ ikr
 bruh
 hehe
 haha
-lmk
-nty
 yw
 np
 ty
@@ -879,8 +861,6 @@ repo
 repos
 async
 await
-enum
-bool
 struct
 oled
 nsaid
@@ -888,14 +868,12 @@ mri
 ecg
 vpn
 saas
-webhook
 webhooks
 linux
 ubuntu
 nginx
 sqlite
 graphql
-websocket
 stdin
 stdout
 stderr
@@ -903,31 +881,17 @@ svg
 png
 jpg
 jpeg
-webp
 gif
 pdf
 csv
 gpt
 nlp
 ocr
-totp
-kyc
 etl
-rpc
 ide
 cli
 gui
-npx
-frontend
 backend
-codebase
-changelog
-readme
-dropdown
-autocomplete
-backspace
-spacebar
-passphrase
 
 ## report-mode rescues (2026-07-02) — real casual/acronym tokens the oracles miss
 mens
@@ -954,4 +918,3 @@ tbf
 imy
 ily
 bffs
-grats
