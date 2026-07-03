@@ -918,3 +918,97 @@ tbf
 imy
 ily
 bffs
+
+## MERIT RESTORES (2026-07-03) — generic vocabulary identified by the held-out
+## export eval (cleverkeys-dictgen-eval.txt) as systematic oracle gaps:
+## (a) short acronyms — irreducibly ambiguous, curation is the designed mechanism
+## (b) post-2015 tech vocabulary the 2014-AOSP / 2015-SCOWL oracles predate
+## (c) foreign-homograph tech (cuda=pl, distro/tpu=id, osm=cs)
+## Brands and proper names from the eval deliberately NOT restored (stay per-user):
+## dremel sketchup disneyworld battleborn kraven majin tamora flir tmobile meijer …
+# (a) short acronyms
+kyc
+llm
+llms
+npm
+npx
+nbd
+tix
+msl
+bci
+nuc
+lmk
+otw
+wtb
+wts
+srv
+rtx
+rtv
+sota
+ahk
+mitm
+idek
+inhg
+# (b) modern tech + casual compounds
+autocomplete
+dropdown
+spacebar
+enum
+onboarding
+janky
+jailbreaking
+inlaws
+upvotes
+upvoted
+creds
+coords
+droppin
+whatchu
+playdate
+passthrough
+nodejs
+clojure
+vulkan
+holdem
+grats
+heya
+aoe
+refactor
+performant
+params
+tldr
+soonish
+outcompete
+neurotypical
+ultramarathon
+smores
+zelle
+prefixing
+populates
+presales
+splicer
+fastpass
+minifig
+pogs
+aramid
+betw
+crowfoot
+zazen
+webhook
+webhooks
+websocket
+totp
+passphrase
+readme
+changelog
+codebase
+frontend
+backend
+pagination
+chatbot
+notifs
+# (c) foreign-homograph tech
+cuda
+distro
+osm
+tpu

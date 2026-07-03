@@ -1,6 +1,32 @@
 # CleverKeys TODO
 
-## 🔶 Dictionary expansion 52k→~80k: one-pass evidence classifier (2026-07-02, tooling landed; ARTIFACT SWAP GATED on maintainer review)
+## ✅ Dictionary expansion 52k→98,140 SHIPPED (2026-07-03; artifacts regenerated + verified)
+
+Final production build (`build_en_wordlist.py --write`, defaults `--top 150000 --band 65000`):
+- **98,140 words** (was 52,002). CKDT v2 verified; en_words.txt/json/bin word sets identical;
+  post-gradle magic still CKDT (generateBinaryDictionaries doesn't clobber — bin newer than json).
+- **Held-out eval** (483 words from user's 32 dictionary-export backups, gitignored at
+  `scripts/dictionaries/en/en_user_export_eval.txt`): old dict covered **2%**; blind organic
+  pipeline **31%** @100k / **37%** @150k; production (with merit restores) **50%**.
+  Remainder = 57 brands/names deliberately per-user + own-typos correctly rejected +
+  28 possessives (runtime-solved by possessive guard) + personal jargon beyond 150k.
+- **Merit restores** (~60, documented in en_allowlist.txt §MERIT RESTORES): three systematic
+  oracle-gap classes found by the eval — short acronyms (kyc/llm/npm/nbd), post-2015 tech
+  vocabulary (autocomplete/dropdown/refactor/performant/janky), foreign-homograph tech
+  (cuda=pl distro/tpu=id osm=cs). Brands (dremel/sketchup/tmobile/flir…) NOT restored.
+- `--eval-blind` flag preserves the organic-measurement mode; default runs report-only.
+- Asset growth: bin 1.26→2.49MB, json 0.94→1.83MB (APK ≈ +2.1MB).
+- Guards green: AutocorrectTest inputs (broight/tge/questin/…) structurally blocklisted +
+  verified absent from shipped json; freq ordering sane (the=255).
+
+FOLLOW-UPS:
+- [ ] ew-cli run of AutocorrectTest + TypingSimulationTest (dict-content-sensitive; can't run locally)
+- [ ] delete vestigial `assets/en_enhanced.txt` (never loaded; −400KB APK) — needs maintainer OK
+- [ ] perf watch: WordPredictor.autoCorrect linear sweep + OptimizedVocabulary trie now 98k
+  (88% more words); consider prefix-index-assisted candidate enumeration if corrections lag
+- [ ] wiki/docs: update english-dictionary-pipeline.md numbers (52,042 → 98,140) + new builder
+
+## ✅ (superseded stage) one-pass evidence classifier tooling (2026-07-02)
 
 Rearchitected the 2026-06-25 hybrid filter + typo-drop-rescue spec into ONE pass:
 `scripts/build_en_wordlist.py` (report mode default; `--write` regenerates

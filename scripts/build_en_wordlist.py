@@ -146,15 +146,20 @@ def load_aosp() -> set[str]:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--top", type=int, default=100_000, help="wordfreq candidate depth (default 100000)")
+    ap.add_argument("--top", type=int, default=150_000, help="wordfreq candidate depth (default 150000; "
+                    "band 2 is oracle-gated so extra depth adds only spellchecker/AOSP-approved words)")
     ap.add_argument("--band", type=int, default=65_000, help="conservative/aggressive band boundary (default 65000)")
     ap.add_argument("--write", action="store_true", help="regenerate en_words.txt + en_enhanced.{json,bin}")
     ap.add_argument("--review-dir", type=Path, default=Path.home() / "git" / "swype",
                     help="where the annotated review artifacts are written")
     ap.add_argument("--eval", type=Path, default=EN_DIR / "en_user_export_eval.txt",
                     help="held-out eval wordlist (user dictionary exports); coverage is "
-                         "reported and these words are EXCLUDED from the allowlist "
-                         "force-keep path so the measurement is organic")
+                         "reported after classification")
+    ap.add_argument("--eval-blind", action="store_true",
+                    help="ALSO exclude eval words from the allowlist force-keep path, so "
+                         "the coverage measurement is fully organic (the 2026-07-03 "
+                         "experiment mode). Off by default: the production allowlist "
+                         "carries merit-restored words that ARE in the eval set.")
     args = ap.parse_args()
     t0 = time.time()
 
@@ -162,11 +167,12 @@ def main() -> None:
     allow = read_list_file(EN_DIR / "en_allowlist.txt")
     block = read_list_file(EN_DIR / "en_blocklist.txt")
     eval_set = read_list_file(args.eval) if args.eval and args.eval.exists() else set()
-    contaminated = allow & eval_set
-    if contaminated:
-        print(f"eval decontamination: {len(contaminated)} eval words removed from allowlist "
-              f"({', '.join(sorted(contaminated)[:12])}{'…' if len(contaminated) > 12 else ''})")
-        allow -= contaminated
+    if args.eval_blind:
+        contaminated = allow & eval_set
+        if contaminated:
+            print(f"eval-blind: {len(contaminated)} eval words removed from allowlist "
+                  f"({', '.join(sorted(contaminated)[:12])}{'…' if len(contaminated) > 12 else ''})")
+            allow -= contaminated
     func = {k.lower() for k in json.loads((ASSETS / "contractions_non_paired.json").read_text()).keys()
             if k.isalpha()}
     aosp = load_aosp()
