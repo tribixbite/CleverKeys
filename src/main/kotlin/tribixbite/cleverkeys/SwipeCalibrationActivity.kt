@@ -221,8 +221,12 @@ class SwipeCalibrationActivity : Activity() {
     }
 
     /**
-     * Load full vocabulary from dictionary assets
-     * Loads from both en.txt and en_enhanced.txt for maximum word variety
+     * Load full vocabulary from dictionary assets.
+     * Loads from en.txt (~10k curated common words) — deliberately NOT the full
+     * 98k dictionary: calibration prompts should be words users actually swipe,
+     * and the rare tail (obscure names, technical terms) makes poor calibration
+     * material. (en_enhanced.txt was the vestigial V1 word list, deleted
+     * 2026-07-03 — the V2 dictionary ships as en_enhanced.bin/json only.)
      */
     private fun loadFullVocabulary() {
         try {
@@ -231,8 +235,7 @@ class SwipeCalibrationActivity : Activity() {
             val vocabulary = ArrayList<String>()
             val uniqueWords = HashSet<String>() // Prevent duplicates across files
 
-            // Load from both dictionary files for maximum variety
-            val dictFiles = arrayOf("dictionaries/en.txt", "dictionaries/en_enhanced.txt")
+            val dictFiles = arrayOf("dictionaries/en.txt")
 
             for (dictFile in dictFiles) {
                 try {

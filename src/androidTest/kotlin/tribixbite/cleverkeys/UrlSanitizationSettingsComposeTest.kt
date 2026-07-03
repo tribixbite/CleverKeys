@@ -112,11 +112,16 @@ class UrlSanitizationSettingsComposeTest {
 
     @Test
     fun scopeNoteVisible() {
+        // 2026-07-03: the note was reworded when the system-clipboard write-back
+        // feature landed (da3f3d536) — the old "Android system clipboard is not
+        // modified" wording no longer exists (modification is now opt-in,
+        // default ON). Assert on a stable substring of the current note
+        // (SettingsActivity "Note: cleaning runs when CleverKeys saves a clip…").
         composeRule.onNodeWithText("Clipboard", substring = true)
             .performScrollTo()
             .performClick()
         composeRule.waitForIdle()
-        composeRule.onNodeWithText("Android system clipboard is not modified", substring = true)
+        composeRule.onNodeWithText("cleaning runs when CleverKeys saves a clip", substring = true)
             .performScrollTo()
             .assertIsDisplayed()
     }

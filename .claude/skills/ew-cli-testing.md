@@ -128,6 +128,24 @@ Activity is auto-launched per test (~1.2-1.8s overhead). Assertion failures surf
 | `VocabularyRankingTest` | 12 | Contraction scoring, trie lookup |
 | `SettingsSearchTest` | 5 | Settings search-to-scroll crash regression |
 
+## Cross-Test State Leaks Under the Orchestrator (hard-won, 2026-07-03)
+
+The orchestrator runs each test in its own process and **kills the process the
+moment the test finishes**. SharedPreferences `apply()` is asynchronous — a
+restore write in a `finally` block can be LOST to process death, leaking state
+into every later test (which run in fresh processes but read the same prefs
+files). Post-mortem: a test disabled the word "the" and restored with
+`apply()`; the lost restore made four unrelated autocorrect tests fail with
+bizarre corrections (`tge→age`, `tfe→tie`) that only reproduced in simulation
+once "the" was removed from the candidate pool.
+
+Rules:
+1. Any prefs write a test must undo → use **`commit()`**, never `apply()`.
+2. Mutate **inert state**: don't disable/add words other tests' inputs are
+   near ("zebra", not "the") — even a leak then can't cascade.
+3. When on-device results contradict a faithful local simulation, suspect
+   leaked state from an earlier test before suspecting the algorithm.
+
 ## Writing New Tests
 
 ### Test File Location

@@ -134,6 +134,17 @@ class WordPredictor {
          *   - `questin → question` (gap 0.052 vs `quentin`) → freq wins
          */
         private const val SCORE_TIEBREAK_GAP = 0.10f
+
+        /**
+         * Length-normalized score penalty for an adjacent-transposition
+         * (Damerau) match in the same-length path: score = 1 − penalty/len.
+         * Calibrated so the transposition target lands just BELOW a single
+         * adjacent-key substitution ("teh"→"the" scores 0.917 vs "ten" 0.959)
+         * but well inside [SCORE_TIEBREAK_GAP], letting the frequency
+         * tiebreaker pick the (usually far more common) transposition target.
+         * Verified accept: teh→the, hte→the, becuase→because, recieve→receive.
+         */
+        private const val TRANSPOSITION_PENALTY = 0.25f
         private const val MAX_EDIT_DISTANCE = 2
         private const val MAX_RECENT_WORDS = 20 // Keep last 20 words for language detection
         private const val PREFIX_INDEX_MAX_LENGTH = 3 // Index prefixes up to 3 chars
@@ -1807,6 +1818,21 @@ class WordPredictor {
      * @return Corrected word, or original if no suitable correction found
      */
     /**
+     * True iff [a] and [b] differ ONLY by one swap of two adjacent (distinct)
+     * characters — the Damerau transposition typo ("teh"/"the", "becuase"/
+     * "because"). Same-length inputs only; O(n), no allocation.
+     */
+    private fun isAdjacentTransposition(a: String, b: String): Boolean {
+        if (a.length != b.length || a.length < 2) return false
+        var i = 0
+        while (i < a.length && a[i] == b[i]) i++
+        if (i >= a.length - 1) return false           // identical or diff at last char only
+        if (a[i] != b[i + 1] || a[i + 1] != b[i] || a[i] == a[i + 1]) return false
+        for (j in i + 2 until a.length) if (a[j] != b[j]) return false
+        return true
+    }
+
+    /**
      * Max frequency in the current dictionary, cached and recomputed only when
      * the dictionary size changes. Used by [FrequencyFloor] to scale the
      * autocorrect confidence floor to whatever frequency scale the dictionary
@@ -1979,6 +2005,20 @@ class WordPredictor {
             //     for `questin → question`) while rejecting weakly-aligned
             //     unrelated candidates (ed≈3+ for `wuestion → wuthering`).
             val score: Float = if (lengthDiff == 0) {
+                if (isAdjacentTransposition(lowerTypedWord, dictWord)) {
+                    // Damerau transposition fast path ("teh" → "the", "becuase"
+                    // → "because", "recieve" → "receive"). A swap typo has only
+                    // wordLength−2 exact positions, so for short words it can
+                    // NEVER pass the 50% exact-ratio gate ("teh" vs "the" is
+                    // 1/3 exact) even though it's among the most common typo
+                    // classes. Score it as a mild, length-normalized penalty —
+                    // slightly below a single adjacent-key substitution, so a
+                    // genuine 1-sub candidate still outranks it on score and
+                    // the within-gap frequency tiebreak resolves the rest
+                    // ("teh": ten scores 0.959 vs the 0.917, gap < 0.10 →
+                    // freq picks "the").
+                    1f - TRANSPOSITION_PENALTY / wordLength
+                } else {
                 var exactCount = 0
                 var weightedSum = 0f
                 for (i in 0 until wordLength) {
@@ -1995,6 +2035,7 @@ class WordPredictor {
                 // (`broight → thought`) the ratio alone would admit.
                 if (exactRatio >= MIN_SAME_LENGTH_EXACT_RATIO &&
                     substitutions <= MAX_SAME_LENGTH_SUBSTITUTIONS) weightedScore else -1f
+                }
             } else {
                 val ed = KeyAdjacency.weightedEditDistance(lowerTypedWord, dictWord)
                 val maxEd = lengthDiff + LENGTH_DIFF_ED_BUDGET

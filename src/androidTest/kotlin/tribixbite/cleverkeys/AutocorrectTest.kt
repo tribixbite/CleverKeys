@@ -83,17 +83,29 @@ class AutocorrectTest {
 
     @Test
     fun testAutocorrectTeh() {
+        // "teh" is THE classic transposition typo. Before Damerau support the
+        // swap target could never pass the 50% exact-ratio gate (teh vs the =
+        // 1/3 exact) so this corrected to "ten" once the junk "teh" dict entry
+        // was removed (2026-06-17). The transposition fast path now scores
+        // "the" into the tiebreak band where its frequency wins.
         val result = predictor.autoCorrect("teh")
-        // "teh" is a common typo for "the"
-        assertTrue("Should correct 'teh'",
-            result == "the" || result == "teh")  // May not correct if threshold not met
+        assertEquals("teh → the (adjacent transposition)", "the", result)
     }
 
     @Test
     fun testAutocorrectHte() {
+        // "hte" — leading-pair transposition of "the".
         val result = predictor.autoCorrect("hte")
-        // "hte" is a typo for "the"
-        assertNotNull(result)
+        assertEquals("hte → the (adjacent transposition)", "the", result)
+    }
+
+    @Test
+    fun testAutocorrect_transposition_becuaseToBecause() {
+        // Mid-word transposition in a longer word (u/a swapped).
+        config.autocorrect_enabled = true
+        config.autocorrect_prefix_length = 0
+        val result = predictor.autoCorrect("becuase")
+        assertEquals("becuase → because (adjacent transposition)", "because", result)
     }
 
     @Test
@@ -257,22 +269,34 @@ class AutocorrectTest {
 
     @Test
     fun testAutocorrect_disabledWord_notOfferedAsTarget() {
+        // POST-MORTEM (2026-07-03 ew run): this test originally disabled "the"
+        // and restored prefs with apply(). apply() is ASYNC — under the
+        // orchestrator each test's process is killed right after it finishes,
+        // and the racing restore write was lost, leaking disabled={"the"} into
+        // every later test in the class (tge→"age", tfe→"tie"). Two rules now:
+        //  1. commit() (synchronous) for BOTH writes — never apply() for
+        //     cross-test-visible state under the orchestrator.
+        //  2. Disable an INERT word ("zebra") no other test's inputs are near,
+        //     so even a leak cannot cascade.
         val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
         val key = LanguagePreferenceKeys.disabledWordsKey("en")
         val original = prefs.getStringSet(key, emptySet())?.toMutableSet() ?: mutableSetOf()
         try {
-            // Disable "the" — the natural correction target for "tge".
-            prefs.edit().putStringSet(key, setOf("the")).apply()
+            // Disable "zebra" — the natural correction target for "zebrq"
+            // (q/a adjacent, 4/5 exact match).
+            @Suppress("ApplySharedPref")
+            prefs.edit().putStringSet(key, setOf("zebra")).commit()
             predictor.reloadDisabledWords()
 
             config.autocorrect_enabled = true
             config.autocorrect_prefix_length = 0
-            val result = predictor.autoCorrect("tge")
-            assertNotEquals("Disabled 'the' must not be produced as a correction",
-                "the", result)
+            val result = predictor.autoCorrect("zebrq")
+            assertNotEquals("Disabled 'zebra' must not be produced as a correction",
+                "zebra", result)
         } finally {
             // Restore prefs + predictor state so other tests are unaffected.
-            prefs.edit().putStringSet(key, original).apply()
+            @Suppress("ApplySharedPref")
+            prefs.edit().putStringSet(key, original).commit()
             predictor.reloadDisabledWords()
         }
     }

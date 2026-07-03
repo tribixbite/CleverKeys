@@ -20,8 +20,25 @@ Final production build (`build_en_wordlist.py --write`, defaults `--top 150000 -
   verified absent from shipped json; freq ordering sane (the=255).
 
 FOLLOW-UPS:
-- [ ] ew-cli run of AutocorrectTest + TypingSimulationTest (dict-content-sensitive; can't run locally)
-- [ ] delete vestigial `assets/en_enhanced.txt` (never loaded; −400KB APK) — needs maintainer OK
+- [x] ew-cli FULL suite run (2026-07-03): 1305 tests, 5 failures → root-caused + fixed + targeted
+  re-run 48/48 green. Failures were NOT dictionary regressions:
+  * 2 (tge→age, tfe→tie): my disabled-word test disabled "the" and restored prefs with async
+    apply() — orchestrator kills the process, restore write LOST, disabled={"the"} leaked into
+    later tests. Fixed: commit() both writes + inert word (zebra/zebrq). Lesson recorded in
+    .claude/skills/ew-cli-testing.md.
+  * 2 (teh tests): latent since 2026-06-17 junk removal — "teh" corrected to "ten" because
+    transposition wasn't modeled ("the" can't pass the 50% exact gate at 1/3). Fixed PROPERLY:
+    Damerau adjacent-transposition fast path in autoCorrect same-length scoring
+    (TRANSPOSITION_PENALTY=0.25, score 1−0.25/len lands in the freq-tiebreak band). Sim 16/18:
+    fixes teh/hte/becuase/freind classes, zero regressions on all calibrated cases.
+  * 1 (UrlSanitization scopeNoteVisible): stale since 2026-06-14 — asserted the OLD scope note
+    ("system clipboard is not modified") that the write-back feature reworded. Test updated.
+- [x] deleted vestigial `assets/en_enhanced.txt` (−400KB APK; never loaded) + removed the dead
+  reference in SwipeCalibrationActivity (calibration now en.txt-only — common words are better
+  calibration material anyway). Deleted 0words.py (fully absorbed into en_allowlist.txt).
+- [ ] pre-existing (NOT from this work): alias-bonus can overtake structurally-better matches:
+  "thier" → "this'd" (alias 0.95+0.15 beats their-transposition 0.95), "recieve" → wrong word.
+  Fix idea: alias bonus must not beat a transposition/lower-edit-class candidate.
 - [ ] perf watch: WordPredictor.autoCorrect linear sweep + OptimizedVocabulary trie now 98k
   (88% more words); consider prefix-index-assisted candidate enumeration if corrections lag
 - [ ] wiki/docs: update english-dictionary-pipeline.md numbers (52,042 → 98,140) + new builder
