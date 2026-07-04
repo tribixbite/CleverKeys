@@ -45,9 +45,12 @@ class BucketBSourceContractTest {
 
     @Test
     fun `issue 94 — VersionInfoCard supports long-press copy`() {
-        val source = readSource("SettingsActivity.kt")
+        // VersionInfoCard was extracted to ui/settings/SettingsInfoCards.kt by Task 2 refactor.
+        val source = File("src/main/kotlin/tribixbite/cleverkeys/ui/settings/SettingsInfoCards.kt")
+            .takeIf { it.exists() }?.readText() ?: readSource("SettingsActivity.kt")
         // Locate VersionInfoCard definition and check for long-click support.
-        val cardStart = source.indexOf("private fun VersionInfoCard")
+        val cardStart = source.indexOf("fun SettingsActivity.VersionInfoCard")
+            .takeIf { it >= 0 } ?: source.indexOf("fun VersionInfoCard")
         assertThat(cardStart).isAtLeast(0)
         // Find next ~80 lines of the function body
         val cardBody = source.substring(cardStart, minOf(cardStart + 4000, source.length))
@@ -61,8 +64,11 @@ class BucketBSourceContractTest {
 
     @Test
     fun `issue 94 — copy-to-clipboard side effect referenced near VersionInfoCard`() {
-        val source = readSource("SettingsActivity.kt")
-        val cardStart = source.indexOf("private fun VersionInfoCard")
+        // VersionInfoCard was extracted to ui/settings/SettingsInfoCards.kt by Task 2 refactor.
+        val source = File("src/main/kotlin/tribixbite/cleverkeys/ui/settings/SettingsInfoCards.kt")
+            .takeIf { it.exists() }?.readText() ?: readSource("SettingsActivity.kt")
+        val cardStart = source.indexOf("fun SettingsActivity.VersionInfoCard")
+            .takeIf { it >= 0 } ?: source.indexOf("fun VersionInfoCard")
         assertThat(cardStart).isAtLeast(0)
         val cardBody = source.substring(cardStart, minOf(cardStart + 4000, source.length))
         // Expected: ClipboardManager / setPrimaryClip / setText invocation
