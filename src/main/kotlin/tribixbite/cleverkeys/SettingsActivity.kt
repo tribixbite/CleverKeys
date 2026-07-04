@@ -129,361 +129,361 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     }
 
     // Configuration state
-    private lateinit var config: Config
-    private lateinit var prefs: SharedPreferences
-    private lateinit var backupRestoreManager: BackupRestoreManager
+    internal lateinit var config: Config
+    internal lateinit var prefs: SharedPreferences
+    internal lateinit var backupRestoreManager: BackupRestoreManager
 
     // ViewModel hosts the import-preview state so plan + dialog state survive
     // configuration changes (rotation). See BackupRestoreViewModel for fields.
     private val backupRestoreViewModel: BackupRestoreViewModel by viewModels()
 
     // SAF file pickers for backup/restore
-    private val configExportLauncher = registerForActivityResult(
+    internal val configExportLauncher = registerForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
     ) { uri: Uri? ->
         uri?.let { performConfigExport(it) }
     }
 
-    private val configImportLauncher = registerForActivityResult(
+    internal val configImportLauncher = registerForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
         uri?.let { performConfigImport(it) }
     }
 
-    private val dictionaryExportLauncher = registerForActivityResult(
+    internal val dictionaryExportLauncher = registerForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
     ) { uri: Uri? ->
         uri?.let { performDictionaryExport(it) }
     }
 
-    private val dictionaryImportLauncher = registerForActivityResult(
+    internal val dictionaryImportLauncher = registerForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
         uri?.let { performDictionaryImport(it) }
     }
 
-    private val clipboardExportLauncher = registerForActivityResult(
+    internal val clipboardExportLauncher = registerForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
     ) { uri: Uri? ->
         uri?.let { performClipboardExport(it) }
     }
 
-    private val clipboardImportLauncher = registerForActivityResult(
+    internal val clipboardImportLauncher = registerForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
         uri?.let { performClipboardImport(it) }
     }
 
     // ZIP variants — full clipboard backup including media files
-    private val clipboardZipExportLauncher = registerForActivityResult(
+    internal val clipboardZipExportLauncher = registerForActivityResult(
         ActivityResultContracts.CreateDocument("application/zip")
     ) { uri: Uri? ->
         uri?.let { performClipboardZipExport(it) }
     }
 
-    private val clipboardZipImportLauncher = registerForActivityResult(
+    internal val clipboardZipImportLauncher = registerForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
         uri?.let { performClipboardZipImport(it) }
     }
 
     // GitHub #142: one-click full backup ZIP — manifest + config + dicts + clipboard + media
-    private val fullBackupExportLauncher = registerForActivityResult(
+    internal val fullBackupExportLauncher = registerForActivityResult(
         ActivityResultContracts.CreateDocument("application/zip")
     ) { uri: Uri? ->
         uri?.let { performFullBackupExport(it) }
     }
 
-    private val fullBackupImportLauncher = registerForActivityResult(
+    internal val fullBackupImportLauncher = registerForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
         uri?.let { performFullBackupImport(it) }
     }
 
     // SAF file pickers for swipe ML data export
-    private val swipeDataJsonExportLauncher = registerForActivityResult(
+    internal val swipeDataJsonExportLauncher = registerForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
     ) { uri: Uri? ->
         uri?.let { performSwipeDataJsonExport(it) }
     }
 
-    private val swipeDataNdjsonExportLauncher = registerForActivityResult(
+    internal val swipeDataNdjsonExportLauncher = registerForActivityResult(
         ActivityResultContracts.CreateDocument("application/x-ndjson")
     ) { uri: Uri? ->
         uri?.let { performSwipeDataNdjsonExport(it) }
     }
 
     // Performance metrics export launcher
-    private val perfStatsExportLauncher = registerForActivityResult(
+    internal val perfStatsExportLauncher = registerForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
     ) { uri: Uri? ->
         uri?.let { performPerfStatsExport(it) }
     }
 
     // Language pack import launcher
-    private val languagePackImportLauncher = registerForActivityResult(
+    internal val languagePackImportLauncher = registerForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
         uri?.let { performLanguagePackImport(it) }
     }
 
-    private val gifPackImportLauncher = registerForActivityResult(
+    internal val gifPackImportLauncher = registerForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
         uri?.let { performGifPackImport(it) }
     }
 
     // Custom URL-sanitization rules (Chunk 4). SAF-only, mime-restricted to JSON.
-    private val customRulesPickerLauncher = registerForActivityResult(
+    internal val customRulesPickerLauncher = registerForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
         if (uri != null) handleCustomRulesPicked(uri)
     }
 
     // Settings state for reactive UI
-    private var beamWidth by mutableStateOf(6)
-    private var maxLength by mutableStateOf(20)
-    private var confidenceThreshold by mutableStateOf(0.01f)
-    private var currentThemeName by mutableStateOf("cleverkeysdark")
-    private var keyboardHeight by mutableStateOf(28)
-    private var keyboardHeightLandscape by mutableStateOf(50)
-    private var vibrationEnabled by mutableStateOf(false)
-    private var debugEnabled by mutableStateOf(false)
-    private var clipboardHistoryEnabled by mutableStateOf(true)
-    private var clipboardHistoryLimit by mutableStateOf(Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK)
-    private var clipboardHistoryDuration by mutableStateOf(-1)  // Minutes; -1 = never expire
-    private var clipboardPaneHeightPercent by mutableStateOf(30)
-    private var clipboardMaxItemSizeKb by mutableStateOf(500)
-    private var clipboardLimitType by mutableStateOf("count") // "count" or "size"
-    private var clipboardSizeLimitMb by mutableStateOf(10)
-    private var clipboardExcludePasswordManagers by mutableStateOf(true)  // Privacy: skip password managers
-    private var clipboardRespectSensitiveFlag by mutableStateOf(true)  // #86: Respect IS_SENSITIVE flag
-    private var clipboardTextOnly by mutableStateOf(false)  // v4: Hide media entries
-    private var clipboardPinnedEnabled by mutableStateOf(true)  // v4: Show/hide pinned tab
-    private var clipboardTodoEnabled by mutableStateOf(true)  // v4: Show/hide todo tab
+    internal var beamWidth by mutableStateOf(6)
+    internal var maxLength by mutableStateOf(20)
+    internal var confidenceThreshold by mutableStateOf(0.01f)
+    internal var currentThemeName by mutableStateOf("cleverkeysdark")
+    internal var keyboardHeight by mutableStateOf(28)
+    internal var keyboardHeightLandscape by mutableStateOf(50)
+    internal var vibrationEnabled by mutableStateOf(false)
+    internal var debugEnabled by mutableStateOf(false)
+    internal var clipboardHistoryEnabled by mutableStateOf(true)
+    internal var clipboardHistoryLimit by mutableStateOf(Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK)
+    internal var clipboardHistoryDuration by mutableStateOf(-1)  // Minutes; -1 = never expire
+    internal var clipboardPaneHeightPercent by mutableStateOf(30)
+    internal var clipboardMaxItemSizeKb by mutableStateOf(500)
+    internal var clipboardLimitType by mutableStateOf("count") // "count" or "size"
+    internal var clipboardSizeLimitMb by mutableStateOf(10)
+    internal var clipboardExcludePasswordManagers by mutableStateOf(true)  // Privacy: skip password managers
+    internal var clipboardRespectSensitiveFlag by mutableStateOf(true)  // #86: Respect IS_SENSITIVE flag
+    internal var clipboardTextOnly by mutableStateOf(false)  // v4: Hide media entries
+    internal var clipboardPinnedEnabled by mutableStateOf(true)  // v4: Show/hide pinned tab
+    internal var clipboardTodoEnabled by mutableStateOf(true)  // v4: Show/hide todo tab
 
     // URL sanitization (Chunk 4): three independent toggles + custom-rules import
-    private var clipboardSanitizeLinksEnabled by mutableStateOf(false)
-    private var clipboardEmbedEnrichEnabled by mutableStateOf(false)
-    private var clipboardCustomRulesEnabled by mutableStateOf(false)
-    private var clipboardSanitizeSystemClipboard by mutableStateOf(true)
-    private var clipboardCustomRulesUri by mutableStateOf<String?>(null)
+    internal var clipboardSanitizeLinksEnabled by mutableStateOf(false)
+    internal var clipboardEmbedEnrichEnabled by mutableStateOf(false)
+    internal var clipboardCustomRulesEnabled by mutableStateOf(false)
+    internal var clipboardSanitizeSystemClipboard by mutableStateOf(true)
+    internal var clipboardCustomRulesUri by mutableStateOf<String?>(null)
     // Status text for the custom-rules row — examples:
     //  "" / "12 providers loaded." / "Saved file is malformed: ..." / "URI persisted but no copy on disk yet."
-    private var clipboardCustomRulesStatus by mutableStateOf("")
+    internal var clipboardCustomRulesStatus by mutableStateOf("")
 
     // GIF Panel (opt-in, off by default)
-    private var gifEnabled by mutableStateOf(Defaults.GIF_ENABLED)
-    private var gifThumbnailColumns by mutableStateOf(Defaults.GIF_THUMBNAIL_COLUMNS)
-    private var installedGifPacks by mutableStateOf(listOf<tribixbite.cleverkeys.gif.InstalledPackInfo>())
-    private var gifImportInProgress by mutableStateOf(false)
-    private var gifImportStatus by mutableStateOf<String?>(null)
-    private var showGifRemoveAllDialog by mutableStateOf(false)
-    private var showGifRemovePackDialog by mutableStateOf<String?>(null)
-    private var gifStorageUsed by mutableStateOf(0L)
+    internal var gifEnabled by mutableStateOf(Defaults.GIF_ENABLED)
+    internal var gifThumbnailColumns by mutableStateOf(Defaults.GIF_THUMBNAIL_COLUMNS)
+    internal var installedGifPacks by mutableStateOf(listOf<tribixbite.cleverkeys.gif.InstalledPackInfo>())
+    internal var gifImportInProgress by mutableStateOf(false)
+    internal var gifImportStatus by mutableStateOf<String?>(null)
+    internal var showGifRemoveAllDialog by mutableStateOf(false)
+    internal var showGifRemovePackDialog by mutableStateOf<String?>(null)
+    internal var gifStorageUsed by mutableStateOf(0L)
 
-    private var autoCapitalizationEnabled by mutableStateOf(true)
-    private var capitalizeIWords by mutableStateOf(true)  // #72: Auto-capitalize I, I'm, I'll, etc.
+    internal var autoCapitalizationEnabled by mutableStateOf(true)
+    internal var capitalizeIWords by mutableStateOf(true)  // #72: Auto-capitalize I, I'm, I'll, etc.
 
     // Phase 1: Expose existing Config.kt settings
-    private var swipeTypingEnabled by mutableStateOf(true)  // Master switch for swipe typing (default ON for CleverKeys)
-    private var swipeOnPasswordFields by mutableStateOf(false)  // #39: Allow swipe on password fields
-    private var currentLayoutSupportsSwipe by mutableStateOf(true)  // #9: False for non-QWERTY layouts
-    private var currentLayoutName by mutableStateOf("")  // #9: Display name of active layout
-    private var wordPredictionEnabled by mutableStateOf(true)  // Match Config.kt default
-    private var autoSpaceAfterSuggestion by mutableStateOf(true)  // #82: Add trailing space after selecting suggestion
-    private var autoSpaceBeforeSuggestion by mutableStateOf(true)  // Add leading space before tapped suggestion
-    private var backspaceUndoSwipe by mutableStateOf(true)  // #110: Backspace after swipe deletes entire swiped word
-    private var backspaceUndoAutocorrect by mutableStateOf(true)  // #110: Backspace after autocorrect reverts to original word
-    private var suggestionBarOpacity by mutableStateOf(90)
-    private var autoCorrectEnabled by mutableStateOf(true)
-    private var termuxModeEnabled by mutableStateOf(false)
-    private var vibrationDuration by mutableStateOf(20)
+    internal var swipeTypingEnabled by mutableStateOf(true)  // Master switch for swipe typing (default ON for CleverKeys)
+    internal var swipeOnPasswordFields by mutableStateOf(false)  // #39: Allow swipe on password fields
+    internal var currentLayoutSupportsSwipe by mutableStateOf(true)  // #9: False for non-QWERTY layouts
+    internal var currentLayoutName by mutableStateOf("")  // #9: Display name of active layout
+    internal var wordPredictionEnabled by mutableStateOf(true)  // Match Config.kt default
+    internal var autoSpaceAfterSuggestion by mutableStateOf(true)  // #82: Add trailing space after selecting suggestion
+    internal var autoSpaceBeforeSuggestion by mutableStateOf(true)  // Add leading space before tapped suggestion
+    internal var backspaceUndoSwipe by mutableStateOf(true)  // #110: Backspace after swipe deletes entire swiped word
+    internal var backspaceUndoAutocorrect by mutableStateOf(true)  // #110: Backspace after autocorrect reverts to original word
+    internal var suggestionBarOpacity by mutableStateOf(90)
+    internal var autoCorrectEnabled by mutableStateOf(true)
+    internal var termuxModeEnabled by mutableStateOf(false)
+    internal var vibrationDuration by mutableStateOf(20)
     // Per-event haptic feedback toggles
-    private var hapticKeyPress by mutableStateOf(Defaults.HAPTIC_KEY_PRESS)
-    private var hapticPredictionTap by mutableStateOf(Defaults.HAPTIC_PREDICTION_TAP)
-    private var hapticTrackpointActivate by mutableStateOf(Defaults.HAPTIC_TRACKPOINT_ACTIVATE)
-    private var hapticLongPress by mutableStateOf(Defaults.HAPTIC_LONG_PRESS)
-    private var hapticSwipeComplete by mutableStateOf(Defaults.HAPTIC_SWIPE_COMPLETE)
-    private var swipeDebugEnabled by mutableStateOf(false)
+    internal var hapticKeyPress by mutableStateOf(Defaults.HAPTIC_KEY_PRESS)
+    internal var hapticPredictionTap by mutableStateOf(Defaults.HAPTIC_PREDICTION_TAP)
+    internal var hapticTrackpointActivate by mutableStateOf(Defaults.HAPTIC_TRACKPOINT_ACTIVATE)
+    internal var hapticLongPress by mutableStateOf(Defaults.HAPTIC_LONG_PRESS)
+    internal var hapticSwipeComplete by mutableStateOf(Defaults.HAPTIC_SWIPE_COMPLETE)
+    internal var swipeDebugEnabled by mutableStateOf(false)
 
     // Adaptive layout settings (percentages of screen dimensions)
-    private var marginBottomPortrait by mutableStateOf(Defaults.MARGIN_BOTTOM_PORTRAIT)
-    private var marginBottomLandscape by mutableStateOf(Defaults.MARGIN_BOTTOM_LANDSCAPE)
-    private var marginLeftPortrait by mutableStateOf(Defaults.MARGIN_LEFT_PORTRAIT)
-    private var marginLeftLandscape by mutableStateOf(Defaults.MARGIN_LEFT_LANDSCAPE)
-    private var marginRightPortrait by mutableStateOf(Defaults.MARGIN_RIGHT_PORTRAIT)
-    private var marginRightLandscape by mutableStateOf(Defaults.MARGIN_RIGHT_LANDSCAPE)
+    internal var marginBottomPortrait by mutableStateOf(Defaults.MARGIN_BOTTOM_PORTRAIT)
+    internal var marginBottomLandscape by mutableStateOf(Defaults.MARGIN_BOTTOM_LANDSCAPE)
+    internal var marginLeftPortrait by mutableStateOf(Defaults.MARGIN_LEFT_PORTRAIT)
+    internal var marginLeftLandscape by mutableStateOf(Defaults.MARGIN_LEFT_LANDSCAPE)
+    internal var marginRightPortrait by mutableStateOf(Defaults.MARGIN_RIGHT_PORTRAIT)
+    internal var marginRightLandscape by mutableStateOf(Defaults.MARGIN_RIGHT_LANDSCAPE)
 
     // Gesture sensitivity settings
-    private var swipeDistance by mutableStateOf(23)
-    private var circleSensitivity by mutableStateOf(2)
-    private var sliderSensitivity by mutableStateOf(30) // Phase 5: Space bar slider (0-100%)
+    internal var swipeDistance by mutableStateOf(23)
+    internal var circleSensitivity by mutableStateOf(2)
+    internal var sliderSensitivity by mutableStateOf(30) // Phase 5: Space bar slider (0-100%)
 
     // Long press settings
-    private var longPressTimeout by mutableStateOf(600)
-    private var longPressInterval by mutableStateOf(65)
-    private var keyRepeatEnabled by mutableStateOf(true)
-    private var keyRepeatBackspaceOnly by mutableStateOf(false)  // #81: Only repeat backspace/nav
+    internal var longPressTimeout by mutableStateOf(600)
+    internal var longPressInterval by mutableStateOf(65)
+    internal var keyRepeatEnabled by mutableStateOf(true)
+    internal var keyRepeatBackspaceOnly by mutableStateOf(false)  // #81: Only repeat backspace/nav
 
     // Visual customization settings
-    private var labelBrightness by mutableStateOf(100)
-    private var keyboardOpacity by mutableStateOf(100)
-    private var keyOpacity by mutableStateOf(100)
-    private var keyActivatedOpacity by mutableStateOf(100)
+    internal var labelBrightness by mutableStateOf(100)
+    internal var keyboardOpacity by mutableStateOf(100)
+    internal var keyOpacity by mutableStateOf(100)
+    internal var keyActivatedOpacity by mutableStateOf(100)
 
     // Spacing and sizing settings
-    private var characterSize by mutableStateOf(115)
-    private var secondaryLabelSizeScale by mutableStateOf(100) // #133: percent; 100 = unchanged
-    private var keyVerticalMargin by mutableStateOf(150)
-    private var keyHorizontalMargin by mutableStateOf(200)
+    internal var characterSize by mutableStateOf(115)
+    internal var secondaryLabelSizeScale by mutableStateOf(100) // #133: percent; 100 = unchanged
+    internal var keyVerticalMargin by mutableStateOf(150)
+    internal var keyHorizontalMargin by mutableStateOf(200)
 
     // Border customization settings
-    private var borderConfigEnabled by mutableStateOf(false)
-    private var customBorderRadius by mutableStateOf(0)
-    private var customBorderLineWidth by mutableStateOf(0)
+    internal var borderConfigEnabled by mutableStateOf(false)
+    internal var customBorderRadius by mutableStateOf(0)
+    internal var customBorderLineWidth by mutableStateOf(0)
 
     // Behavior settings
-    private var doubleTapLockShift by mutableStateOf(false)
-    private var switchInputImmediate by mutableStateOf(false)
-    private var smartPunctuationEnabled by mutableStateOf(true) // Attach punctuation to end of last word
-    private var vibrateCustomEnabled by mutableStateOf(false) // Custom vibration duration
-    private var numberEntryLayout by mutableStateOf("pin") // "pin", "phone", "calculator"
+    internal var doubleTapLockShift by mutableStateOf(false)
+    internal var switchInputImmediate by mutableStateOf(false)
+    internal var smartPunctuationEnabled by mutableStateOf(true) // Attach punctuation to end of last word
+    internal var vibrateCustomEnabled by mutableStateOf(false) // Custom vibration duration
+    internal var numberEntryLayout by mutableStateOf("pin") // "pin", "phone", "calculator"
 
     // Gesture tuning settings
-    private var tapDurationThreshold by mutableStateOf(150) // ms
-    private var doubleSpaceToPeriod by mutableStateOf(true) // Enable double-space-to-period
-    private var doubleSpaceThreshold by mutableStateOf(500) // ms
-    private var swipeMinDistance by mutableStateOf(72f) // pixels
-    private var swipeMinKeyDistance by mutableStateOf(38f) // pixels
-    private var swipeMinDwellTime by mutableStateOf(10) // ms
-    private var swipeNoiseThreshold by mutableStateOf(2.0f) // pixels
-    private var swipeHighVelocityThreshold by mutableStateOf(1000f) // px/sec
-    private var fingerOcclusionOffset by mutableStateOf(12.5f) // % of row height
-    private var sliderSpeedSmoothing by mutableStateOf(0.7f) // 0.0-1.0
-    private var sliderSpeedMax by mutableStateOf(4.0f) // multiplier
+    internal var tapDurationThreshold by mutableStateOf(150) // ms
+    internal var doubleSpaceToPeriod by mutableStateOf(true) // Enable double-space-to-period
+    internal var doubleSpaceThreshold by mutableStateOf(500) // ms
+    internal var swipeMinDistance by mutableStateOf(72f) // pixels
+    internal var swipeMinKeyDistance by mutableStateOf(38f) // pixels
+    internal var swipeMinDwellTime by mutableStateOf(10) // ms
+    internal var swipeNoiseThreshold by mutableStateOf(2.0f) // pixels
+    internal var swipeHighVelocityThreshold by mutableStateOf(1000f) // px/sec
+    internal var fingerOcclusionOffset by mutableStateOf(12.5f) // % of row height
+    internal var sliderSpeedSmoothing by mutableStateOf(0.7f) // 0.0-1.0
+    internal var sliderSpeedMax by mutableStateOf(4.0f) // multiplier
 
     // Number row and numpad settings
-    private var numberRowMode by mutableStateOf("no_number_row") // "no_number_row", "no_symbols", "symbols"
-    private var showNumpadMode by mutableStateOf("never") // "never", "landscape", "always"
-    private var numpadLayout by mutableStateOf("default") // "default", "low_first"
-    private var pinEntryEnabled by mutableStateOf(false)
+    internal var numberRowMode by mutableStateOf("no_number_row") // "no_number_row", "no_symbols", "symbols"
+    internal var showNumpadMode by mutableStateOf("never") // "never", "landscape", "always"
+    internal var numpadLayout by mutableStateOf("default") // "default", "low_first"
+    internal var pinEntryEnabled by mutableStateOf(false)
 
     // Accessibility settings (Bug #373, #368, #377)
-    private var stickyKeysEnabled by mutableStateOf(false)
-    private var stickyKeysTimeout by mutableStateOf(5000) // milliseconds
-    private var voiceGuidanceEnabled by mutableStateOf(false)
+    internal var stickyKeysEnabled by mutableStateOf(false)
+    internal var stickyKeysTimeout by mutableStateOf(5000) // milliseconds
+    internal var voiceGuidanceEnabled by mutableStateOf(false)
 
     // Swipe Corrections settings (migrated from XML)
-    private var swipeBeamAutocorrectEnabled by mutableStateOf(true)
-    private var swipeFinalAutocorrectEnabled by mutableStateOf(true)
-    private var swipeCorrectionPreset by mutableStateOf("balanced")
-    private var swipeFuzzyMatchMode by mutableStateOf("edit_distance")
-    private var autocorrectMaxLengthDiff by mutableStateOf(2)
-    private var autocorrectPrefixLength by mutableStateOf(1)
-    private var autocorrectMaxBeamCandidates by mutableStateOf(3)
-    private var swipePredictionSource by mutableStateOf(80)
-    private var swipeCommonWordsBoost by mutableStateOf(1.0f)
-    private var swipeTop5000Boost by mutableStateOf(1.0f)
-    private var swipeRareWordsPenalty by mutableStateOf(1.0f)
+    internal var swipeBeamAutocorrectEnabled by mutableStateOf(true)
+    internal var swipeFinalAutocorrectEnabled by mutableStateOf(true)
+    internal var swipeCorrectionPreset by mutableStateOf("balanced")
+    internal var swipeFuzzyMatchMode by mutableStateOf("edit_distance")
+    internal var autocorrectMaxLengthDiff by mutableStateOf(2)
+    internal var autocorrectPrefixLength by mutableStateOf(1)
+    internal var autocorrectMaxBeamCandidates by mutableStateOf(3)
+    internal var swipePredictionSource by mutableStateOf(80)
+    internal var swipeCommonWordsBoost by mutableStateOf(1.0f)
+    internal var swipeTop5000Boost by mutableStateOf(1.0f)
+    internal var swipeRareWordsPenalty by mutableStateOf(1.0f)
 
     // Swipe trail appearance settings
-    private var swipeTrailEnabled by mutableStateOf(true)
-    private var swipeTrailEffect by mutableStateOf("glow")
-    private var swipeTrailColor by mutableStateOf(0xFF9B59B6.toInt()) // Jewel purple
-    private var swipeTrailWidth by mutableStateOf(8.0f)
-    private var swipeTrailGlowRadius by mutableStateOf(12.0f)
+    internal var swipeTrailEnabled by mutableStateOf(true)
+    internal var swipeTrailEffect by mutableStateOf("glow")
+    internal var swipeTrailColor by mutableStateOf(0xFF9B59B6.toInt()) // Jewel purple
+    internal var swipeTrailWidth by mutableStateOf(8.0f)
+    internal var swipeTrailGlowRadius by mutableStateOf(12.0f)
 
     // Word Prediction Advanced settings
-    private var contextAwarePredictionsEnabled by mutableStateOf(true)
-    private var personalizedLearningEnabled by mutableStateOf(true)
-    private var learningAggression by mutableStateOf("BALANCED")
-    private var predictionContextBoost by mutableStateOf(2.0f)
-    private var predictionFrequencyScale by mutableStateOf(1000f)
+    internal var contextAwarePredictionsEnabled by mutableStateOf(true)
+    internal var personalizedLearningEnabled by mutableStateOf(true)
+    internal var learningAggression by mutableStateOf("BALANCED")
+    internal var predictionContextBoost by mutableStateOf(2.0f)
+    internal var predictionFrequencyScale by mutableStateOf(1000f)
 
     // Auto-correction advanced settings
-    private var autocorrectMinWordLength by mutableStateOf(3)
-    private var autocorrectCharMatchThreshold by mutableStateOf(0.67f)
-    private var autocorrectMinFrequency by mutableStateOf(500)
+    internal var autocorrectMinWordLength by mutableStateOf(3)
+    internal var autocorrectCharMatchThreshold by mutableStateOf(0.67f)
+    internal var autocorrectMinFrequency by mutableStateOf(500)
 
     // Neural beam search advanced settings (batch/greedy/onnx threads moved to NeuralSettingsActivity)
-    private var neuralBeamAlpha by mutableStateOf(1.55f)
-    private var neuralBeamPruneConfidence by mutableStateOf(0.33f)
-    private var neuralBeamScoreGap by mutableStateOf(50.0f)
+    internal var neuralBeamAlpha by mutableStateOf(1.55f)
+    internal var neuralBeamPruneConfidence by mutableStateOf(0.33f)
+    internal var neuralBeamScoreGap by mutableStateOf(50.0f)
 
     // Neural model config settings
-    private var neuralResamplingMode by mutableStateOf("discard")
+    internal var neuralResamplingMode by mutableStateOf("discard")
 
     // Multi-language settings
-    private var multiLangEnabled by mutableStateOf(false)
-    private var primaryLanguage by mutableStateOf("en")
-    private var secondaryLanguage by mutableStateOf("none") // "none", "es", "fr", etc.
-    private var autoDetectLanguage by mutableStateOf(true)
-    private var languageDetectionSensitivity by mutableStateOf(0.6f)
-    private var secondaryPredictionWeight by mutableStateOf(0.9f) // v1.1.94: Secondary dictionary weight
-    private var prefixBoostMultiplier by mutableStateOf(Defaults.NEURAL_PREFIX_BOOST_MULTIPLIER)
-    private var prefixBoostMax by mutableStateOf(Defaults.NEURAL_PREFIX_BOOST_MAX)
-    private var maxCumulativeBoost by mutableStateOf(Defaults.NEURAL_MAX_CUMULATIVE_BOOST)
-    private var strictStartChar by mutableStateOf(Defaults.NEURAL_STRICT_START_CHAR)
-    private var primaryLanguageAlt by mutableStateOf("es") // v1.2.0: Alternate primary for quick toggle
-    private var secondaryLanguageAlt by mutableStateOf("none") // v1.2.0: Alternate secondary for quick toggle
-    private var availableSecondaryLanguages by mutableStateOf(listOf<String>()) // V2 dictionaries
-    private var installedLanguagePacks by mutableStateOf(listOf<LanguagePackManifest>())
-    private var showLanguagePackDialog by mutableStateOf(false)
-    private var languagePackImportStatus by mutableStateOf<String?>(null)
+    internal var multiLangEnabled by mutableStateOf(false)
+    internal var primaryLanguage by mutableStateOf("en")
+    internal var secondaryLanguage by mutableStateOf("none") // "none", "es", "fr", etc.
+    internal var autoDetectLanguage by mutableStateOf(true)
+    internal var languageDetectionSensitivity by mutableStateOf(0.6f)
+    internal var secondaryPredictionWeight by mutableStateOf(0.9f) // v1.1.94: Secondary dictionary weight
+    internal var prefixBoostMultiplier by mutableStateOf(Defaults.NEURAL_PREFIX_BOOST_MULTIPLIER)
+    internal var prefixBoostMax by mutableStateOf(Defaults.NEURAL_PREFIX_BOOST_MAX)
+    internal var maxCumulativeBoost by mutableStateOf(Defaults.NEURAL_MAX_CUMULATIVE_BOOST)
+    internal var strictStartChar by mutableStateOf(Defaults.NEURAL_STRICT_START_CHAR)
+    internal var primaryLanguageAlt by mutableStateOf("es") // v1.2.0: Alternate primary for quick toggle
+    internal var secondaryLanguageAlt by mutableStateOf("none") // v1.2.0: Alternate secondary for quick toggle
+    internal var availableSecondaryLanguages by mutableStateOf(listOf<String>()) // V2 dictionaries
+    internal var installedLanguagePacks by mutableStateOf(listOf<LanguagePackManifest>())
+    internal var showLanguagePackDialog by mutableStateOf(false)
+    internal var languagePackImportStatus by mutableStateOf<String?>(null)
 
     // Privacy settings - all OFF by default (CleverKeys is fully offline)
-    private var privacyCollectSwipe by mutableStateOf(false)
-    private var privacyCollectPerformance by mutableStateOf(false)
-    private var privacyCollectErrors by mutableStateOf(false)
+    internal var privacyCollectSwipe by mutableStateOf(false)
+    internal var privacyCollectPerformance by mutableStateOf(false)
+    internal var privacyCollectErrors by mutableStateOf(false)
 
     // Short gesture settings
-    private var shortGesturesEnabled by mutableStateOf(true)
-    private var shortGestureMinDistance by mutableStateOf(37)
-    private var shortGestureMaxDistance by mutableStateOf(141)
+    internal var shortGesturesEnabled by mutableStateOf(true)
+    internal var shortGestureMinDistance by mutableStateOf(37)
+    internal var shortGestureMaxDistance by mutableStateOf(141)
 
     // Selection-delete mode settings (backspace swipe+hold)
-    private var selectionDeleteVerticalThreshold by mutableStateOf(40)
-    private var selectionDeleteVerticalSpeed by mutableStateOf(0.4f)
+    internal var selectionDeleteVerticalThreshold by mutableStateOf(40)
+    internal var selectionDeleteVerticalSpeed by mutableStateOf(0.4f)
 
     // Swipe debug advanced settings
-    private var swipeDebugDetailedLogging by mutableStateOf(false)
-    private var swipeDebugShowRawOutput by mutableStateOf(true)
-    private var swipeShowRawBeamPredictions by mutableStateOf(false)
+    internal var swipeDebugDetailedLogging by mutableStateOf(false)
+    internal var swipeDebugShowRawOutput by mutableStateOf(true)
+    internal var swipeShowRawBeamPredictions by mutableStateOf(false)
 
     // Section expanded states
-    private var wordPredictionAdvancedExpanded by mutableStateOf(false)
-    private var activitiesSectionExpanded by mutableStateOf(true)  // Activities at top, default expanded
-    private var multiLangSectionExpanded by mutableStateOf(false)
-    private var privacySectionExpanded by mutableStateOf(false)
-    private var neuralSectionExpanded by mutableStateOf(false)  // Collapsed by default, Activities is primary
-    private var appearanceSectionExpanded by mutableStateOf(false)  // No longer default expanded since Theme is in Activities
-    private var swipeTrailSectionExpanded by mutableStateOf(false)
-    private var inputSectionExpanded by mutableStateOf(false)
-    private var swipeCorrectionsSectionExpanded by mutableStateOf(false)
-    private var gestureTuningSectionExpanded by mutableStateOf(false)
-    private var accessibilitySectionExpanded by mutableStateOf(false)
+    internal var wordPredictionAdvancedExpanded by mutableStateOf(false)
+    internal var activitiesSectionExpanded by mutableStateOf(true)  // Activities at top, default expanded
+    internal var multiLangSectionExpanded by mutableStateOf(false)
+    internal var privacySectionExpanded by mutableStateOf(false)
+    internal var neuralSectionExpanded by mutableStateOf(false)  // Collapsed by default, Activities is primary
+    internal var appearanceSectionExpanded by mutableStateOf(false)  // No longer default expanded since Theme is in Activities
+    internal var swipeTrailSectionExpanded by mutableStateOf(false)
+    internal var inputSectionExpanded by mutableStateOf(false)
+    internal var swipeCorrectionsSectionExpanded by mutableStateOf(false)
+    internal var gestureTuningSectionExpanded by mutableStateOf(false)
+    internal var accessibilitySectionExpanded by mutableStateOf(false)
     // v1.2.6: dictionarySectionExpanded removed - Dictionary Manager moved to Activities
-    private var clipboardSectionExpanded by mutableStateOf(false)
-    private var gifSectionExpanded by mutableStateOf(false)
-    private var backupRestoreSectionExpanded by mutableStateOf(false)
-    private var advancedSectionExpanded by mutableStateOf(false)
-    private var infoSectionExpanded by mutableStateOf(false)
-    private var helpSectionExpanded by mutableStateOf(false)
+    internal var clipboardSectionExpanded by mutableStateOf(false)
+    internal var gifSectionExpanded by mutableStateOf(false)
+    internal var backupRestoreSectionExpanded by mutableStateOf(false)
+    internal var advancedSectionExpanded by mutableStateOf(false)
+    internal var infoSectionExpanded by mutableStateOf(false)
+    internal var helpSectionExpanded by mutableStateOf(false)
 
     // Test keyboard field (#1134: test input without leaving settings)
-    private var testKeyboardExpanded by mutableStateOf(false)
-    private var testKeyboardText by mutableStateOf("")
+    internal var testKeyboardExpanded by mutableStateOf(false)
+    internal var testKeyboardText by mutableStateOf("")
 
     // Settings search
-    private var settingsSearchQuery by mutableStateOf("")
-    private var showSearchResults by mutableStateOf(false)
-    private var highlightedSettingId by mutableStateOf<String?>(null)  // For pulse animation
+    internal var settingsSearchQuery by mutableStateOf("")
+    internal var showSearchResults by mutableStateOf(false)
+    internal var highlightedSettingId by mutableStateOf<String?>(null)  // For pulse animation
 
     // Position tracking for scroll-to-top functionality
-    private val settingPositions = mutableMapOf<String, Int>()  // settingId -> Y position in scroll content
-    private var mainScrollState: androidx.compose.foundation.ScrollState? = null
-    private var composeScope: kotlinx.coroutines.CoroutineScope? = null  // Compose-aware scope with MonotonicFrameClock
+    internal val settingPositions = mutableMapOf<String, Int>()  // settingId -> Y position in scroll content
+    internal var mainScrollState: androidx.compose.foundation.ScrollState? = null
+    internal var composeScope: kotlinx.coroutines.CoroutineScope? = null  // Compose-aware scope with MonotonicFrameClock
 
     /** Record the Y position of a setting for scroll targeting */
     fun recordSettingPosition(settingId: String, yPosition: Int) {
@@ -491,7 +491,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     }
 
     /** Scroll to a setting by ID, positioning it at the top of the screen */
-    private fun scrollToSetting(settingId: String) {
+    internal fun scrollToSetting(settingId: String) {
         val position = settingPositions[settingId] ?: return
         val scrollState = mainScrollState ?: return
         // Must use composeScope (has MonotonicFrameClock) instead of lifecycleScope
@@ -503,7 +503,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     }
 
     /** Nested scroll connection to prevent search results from scrolling parent */
-    private val searchResultsNestedScrollConnection = object : NestedScrollConnection {
+    internal val searchResultsNestedScrollConnection = object : NestedScrollConnection {
         override fun onPostScroll(
             consumed: Offset,
             available: Offset,
@@ -515,7 +515,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     }
 
     /** Collapse all sections */
-    private fun collapseAllSections() {
+    internal fun collapseAllSections() {
         activitiesSectionExpanded = false
         multiLangSectionExpanded = false
         privacySectionExpanded = false
@@ -542,7 +542,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
      * gatedBy: if set, this setting requires another toggle to be enabled first
      * settingId: unique ID for highlighting
      */
-    private data class SearchableSetting(
+    internal data class SearchableSetting(
         val title: String,
         val keywords: List<String>,
         val sectionName: String,
@@ -555,11 +555,11 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     /** Stable scroll/highlight key for a control, derived from its visible title.
      *  MUST match scripts/generate_settings_search_index.py's slugify so an auto-derived
      *  search entry's settingId equals the key the control registers its position under. */
-    private fun settingSlug(title: String): String =
+    internal fun settingSlug(title: String): String =
         title.lowercase().replace(Regex("[^a-z0-9]+"), "_").trim('_')
 
     /** Display name shown as "in <section>" for an auto-derived (generated) search result. */
-    private fun sectionDisplayName(sectionKey: String): String = when (sectionKey) {
+    internal fun sectionDisplayName(sectionKey: String): String = when (sectionKey) {
         "neural" -> "Neural Prediction"
         "appearance" -> "Appearance"
         "swipeTrail" -> "Swipe Trail"
@@ -576,7 +576,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     }
 
     /** Expand action for an auto-derived search result's enclosing section. */
-    private fun expanderFor(sectionKey: String): () -> Unit = {
+    internal fun expanderFor(sectionKey: String): () -> Unit = {
         when (sectionKey) {
             "neural" -> neuralSectionExpanded = true
             "appearance" -> appearanceSectionExpanded = true
@@ -593,7 +593,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
-    private val searchableSettings: List<SearchableSetting> by lazy {
+    internal val searchableSettings: List<SearchableSetting> by lazy {
         listOf(
             // Auto-derived control entries — generated from the actual
             // SettingsSwitch/SettingsSlider/SettingsDropdown titles by
@@ -633,7 +633,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     }
 
     /** Check if a gating toggle is enabled */
-    private fun isGateEnabled(gateId: String): Boolean {
+    internal fun isGateEnabled(gateId: String): Boolean {
         return when (gateId) {
             "swipe_typing" -> swipeTypingEnabled && currentLayoutSupportsSwipe
             "short_gestures" -> shortGesturesEnabled
@@ -643,7 +643,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     }
 
     /** Execute search result action - collapse others, expand target, handle gating */
-    private fun executeSearchAction(setting: SearchableSetting) {
+    internal fun executeSearchAction(setting: SearchableSetting) {
         // Check if gated by a disabled toggle
         if (setting.gatedBy != null && !isGateEnabled(setting.gatedBy)) {
             // Find the gating setting and highlight it
@@ -688,7 +688,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
-    private fun getFilteredSettings(query: String): List<SearchableSetting> {
+    internal fun getFilteredSettings(query: String): List<SearchableSetting> {
         if (query.isBlank()) return emptyList()
         val lowerQuery = query.lowercase().trim()
         return searchableSettings.filter { setting ->
@@ -698,17 +698,17 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     }
 
     // Collected data viewer dialog state
-    private var showCollectedDataViewer by mutableStateOf(false)
-    private var collectedDataList by mutableStateOf<List<tribixbite.cleverkeys.ml.SwipeMLData>>(emptyList())
-    private var collectedDataStats by mutableStateOf<tribixbite.cleverkeys.ml.SwipeMLDataStore.DataStatistics?>(null)
-    private var collectedDataSearchQuery by mutableStateOf("")
-    private var collectedDataCurrentPage by mutableStateOf(0)
-    private var collectedDataTotalCount by mutableStateOf(0)
-    private val collectedDataPageSize = 20
+    internal var showCollectedDataViewer by mutableStateOf(false)
+    internal var collectedDataList by mutableStateOf<List<tribixbite.cleverkeys.ml.SwipeMLData>>(emptyList())
+    internal var collectedDataStats by mutableStateOf<tribixbite.cleverkeys.ml.SwipeMLDataStore.DataStatistics?>(null)
+    internal var collectedDataSearchQuery by mutableStateOf("")
+    internal var collectedDataCurrentPage by mutableStateOf(0)
+    internal var collectedDataTotalCount by mutableStateOf(0)
+    internal val collectedDataPageSize = 20
 
     // Performance stats viewer dialog state
-    private var showPerfStatsViewer by mutableStateOf(false)
-    private var perfStatsSummary by mutableStateOf("")
+    internal var showPerfStatsViewer by mutableStateOf(false)
+    internal var perfStatsSummary by mutableStateOf("")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -1063,7 +1063,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
     @Composable
-    private fun SettingsScreen() {
+    internal fun SettingsScreen() {
         val scrollState = rememberScrollState()
         // Store references for scroll-to-setting functionality
         // composeScope has MonotonicFrameClock needed for animateScrollTo
@@ -4387,7 +4387,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
-    private fun openWikiInBrowser() {
+    internal fun openWikiInBrowser() {
         try {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://tribixbite.github.io/CleverKeys/wiki"))
             startActivity(intent)
@@ -4398,7 +4398,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     // Composable helper components
     @Composable
-    private fun CollapsibleSettingsSection(
+    internal fun CollapsibleSettingsSection(
         title: String,
         expanded: Boolean,
         onExpandChange: (Boolean) -> Unit,
@@ -4461,7 +4461,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     // Non-collapsible version for simple sections
     @Composable
-    private fun SettingsSection(
+    internal fun SettingsSection(
         title: String,
         content: @Composable ColumnScope.() -> Unit
     ) {
@@ -4489,7 +4489,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     @OptIn(ExperimentalFoundationApi::class)
     @Composable
-    private fun SettingsSwitch(
+    internal fun SettingsSwitch(
         title: String,
         description: String,
         checked: Boolean,
@@ -4557,7 +4557,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     }
 
     @Composable
-    private fun SettingsSlider(
+    internal fun SettingsSlider(
         title: String,
         description: String,
         value: Float,
@@ -4624,7 +4624,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     }
 
     @Composable
-    private fun SettingsDropdown(
+    internal fun SettingsDropdown(
         title: String,
         description: String,
         options: List<String>,
@@ -4701,7 +4701,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     @OptIn(ExperimentalFoundationApi::class)
     @Composable
-    private fun VersionInfoCard() {
+    internal fun VersionInfoCard() {
         val context = LocalContext.current
         val versionInfo = loadVersionInfo()
         val title = stringResource(R.string.settings_version_title)
@@ -4751,7 +4751,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     }
 
     @Composable
-    private fun GitHubInfoCard() {
+    internal fun GitHubInfoCard() {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -4790,7 +4790,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
      * NOTE: All answers verified against actual code implementation.
      */
     @Composable
-    private fun FAQSection() {
+    internal fun FAQSection() {
         // FAQ data - each item is a question/answer pair (verified against source code)
         val faqItems = listOf(
             FAQItem(
@@ -4834,10 +4834,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
-    private data class FAQItem(val question: String, val answer: String)
+    internal data class FAQItem(val question: String, val answer: String)
 
     @Composable
-    private fun FAQItemCard(item: FAQItem) {
+    internal fun FAQItemCard(item: FAQItem) {
         var expanded by remember { mutableStateOf(false) }
 
         Card(
@@ -4889,7 +4889,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
      * Dialog to view collected swipe data with search and pagination
      */
     @Composable
-    private fun CollectedDataViewerDialog(
+    internal fun CollectedDataViewerDialog(
         dataList: List<tribixbite.cleverkeys.ml.SwipeMLData>,
         stats: tribixbite.cleverkeys.ml.SwipeMLDataStore.DataStatistics?,
         onDismiss: () -> Unit
@@ -5091,7 +5091,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
      * Dialog to view performance statistics
      */
     @Composable
-    private fun PerfStatsViewerDialog(
+    internal fun PerfStatsViewerDialog(
         summary: String,
         onDismiss: () -> Unit
     ) {
@@ -5129,7 +5129,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     // Helper functions
 
     /** Safely get an Int preference, handling cases where the value is stored as a different type */
-    private fun SharedPreferences.getSafeInt(key: String, default: Int): Int {
+    internal fun SharedPreferences.getSafeInt(key: String, default: Int): Int {
         return try {
             getInt(key, default)
         } catch (e: ClassCastException) {
@@ -5143,7 +5143,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     }
 
     /** Safely get a Float preference, handling cases where the value is stored as a different type */
-    private fun SharedPreferences.getSafeFloat(key: String, default: Float): Float {
+    internal fun SharedPreferences.getSafeFloat(key: String, default: Float): Float {
         return try {
             getFloat(key, default)
         } catch (e: ClassCastException) {
@@ -5156,7 +5156,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     }
 
     /** Safely get a String preference, handling cases where the value is stored as Int or other types */
-    private fun SharedPreferences.getSafeString(key: String, default: String): String {
+    internal fun SharedPreferences.getSafeString(key: String, default: String): String {
         return try {
             getString(key, default) ?: default
         } catch (e: ClassCastException) {
@@ -5181,7 +5181,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     }
 
     /** Safely get a Boolean preference, handling cases where the value is stored as String or Int */
-    private fun SharedPreferences.getSafeBoolean(key: String, default: Boolean): Boolean {
+    internal fun SharedPreferences.getSafeBoolean(key: String, default: Boolean): Boolean {
         return try {
             getBoolean(key, default)
         } catch (e: ClassCastException) {
@@ -5211,7 +5211,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
-    private fun loadCurrentSettings() {
+    internal fun loadCurrentSettings() {
         // Swipe typing master switch
         swipeTypingEnabled = prefs.getSafeBoolean("swipe_typing_enabled", Defaults.SWIPE_TYPING_ENABLED)
         swipeOnPasswordFields = prefs.getSafeBoolean("swipe_on_password_fields", Defaults.SWIPE_ON_PASSWORD_FIELDS)
@@ -5442,7 +5442,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         swipeShowRawBeamPredictions = prefs.getSafeBoolean("swipe_show_raw_beam_predictions", Defaults.SWIPE_SHOW_RAW_BEAM_PREDICTIONS)
     }
 
-    private fun saveSetting(key: String, value: Any) {
+    internal fun saveSetting(key: String, value: Any) {
         lifecycleScope.launch {
             try {
                 val editor = prefs.edit()
@@ -5483,7 +5483,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
      * "user just imported" path and the "previously imported, opened settings"
      * path. Result feeds [clipboardCustomRulesStatus].
      */
-    private fun recomputeCustomRulesStatus() {
+    internal fun recomputeCustomRulesStatus() {
         val customFile = SanitizationConfig.customFile(this)
         clipboardCustomRulesStatus = when {
             customFile.exists() -> {
@@ -5505,7 +5505,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
      * invalidates its cached SanitizationConfig so the next clipboard insert
      * sees the fresh state.
      */
-    private fun notifySanitizationRulesChanged() {
+    internal fun notifySanitizationRulesChanged() {
         LocalBroadcastManager.getInstance(this)
             .sendBroadcast(Intent(ACTION_SANITIZATION_RULES_CHANGED))
     }
@@ -5523,7 +5523,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
      *
      * In every failure case the previous valid file (if any) is retained.
      */
-    private fun handleCustomRulesPicked(uri: Uri) {
+    internal fun handleCustomRulesPicked(uri: Uri) {
         lifecycleScope.launch {
             try {
                 val json = withContext(Dispatchers.IO) {
@@ -5572,7 +5572,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     /**
      * Get current swipe sensitivity preset based on current values
      */
-    private fun getSwipeSensitivityPreset(): String {
+    internal fun getSwipeSensitivityPreset(): String {
         // Low: Higher thresholds = less sensitive
         val lowPreset = swipeMinDistance == 80f && swipeMinKeyDistance == 60f && swipeMinDwellTime == 30
         // Medium: Default values
@@ -5591,7 +5591,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     /**
      * Apply swipe sensitivity preset values
      */
-    private fun applySwipeSensitivityPreset(preset: String) {
+    internal fun applySwipeSensitivityPreset(preset: String) {
         when (preset) {
             "Low" -> {
                 swipeMinDistance = 80f
@@ -5616,7 +5616,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         saveSetting("swipe_min_dwell_time", swipeMinDwellTime)
     }
 
-    private fun updateConfigFromSettings() {
+    internal fun updateConfigFromSettings() {
         // Update global config from current settings
         // Note: Config.theme uses R.style.* resource IDs, converted from theme name
         config.apply {
@@ -5644,7 +5644,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
      *
      * @return List of language codes (e.g., ["es", "fr", "de"])
      */
-    private fun detectAvailableV2Dictionaries(): List<String> {
+    internal fun detectAvailableV2Dictionaries(): List<String> {
         val languages = mutableSetOf<String>()
         try {
             // Bundled dictionaries in assets
@@ -5673,14 +5673,14 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         return languages.sorted()
     }
 
-    private fun refreshAvailableSecondaryLanguages() {
+    internal fun refreshAvailableSecondaryLanguages() {
         availableSecondaryLanguages = detectAvailableV2Dictionaries()
     }
 
     /**
      * Get display name for language code.
      */
-    private fun getLanguageDisplayName(code: String): String {
+    internal fun getLanguageDisplayName(code: String): String {
         return when (code) {
             "none" -> "None"
             "en" -> "English"
@@ -5723,7 +5723,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
      * Called when primary language changes to load that language's specific boost values.
      * Uses same fallback logic as Config.kt: per-language → global → defaults
      */
-    private fun loadPrefixBoostForLanguage(langCode: String) {
+    internal fun loadPrefixBoostForLanguage(langCode: String) {
         val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
         // Match Config.kt fallback logic: per-language key -> global key -> defaults
         prefixBoostMultiplier = Config.safeGetFloat(prefs, "neural_prefix_boost_multiplier_$langCode",
@@ -5732,7 +5732,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             Config.safeGetFloat(prefs, "neural_prefix_boost_max", Defaults.NEURAL_PREFIX_BOOST_MAX))
     }
 
-    private fun loadVersionInfo(): Properties {
+    internal fun loadVersionInfo(): Properties {
         val props = Properties()
         try {
             val reader = BufferedReader(
@@ -5752,40 +5752,40 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         return props
     }
 
-    private fun openNeuralSettings() {
+    internal fun openNeuralSettings() {
         startActivity(Intent(this, NeuralSettingsActivity::class.java))
     }
 
-    private fun openCalibration() {
+    internal fun openCalibration() {
         startActivity(Intent(this, SwipeCalibrationActivity::class.java))
     }
 
-    private fun openSwipeDebugActivity() {
+    internal fun openSwipeDebugActivity() {
         startActivity(Intent(this, SwipeDebugActivity::class.java))
     }
 
-    private fun openDictionaryManager() {
+    internal fun openDictionaryManager() {
         // Launch our 4-tab Dictionary Manager (Active, Disabled, User, Custom)
         startActivity(Intent(this, DictionaryManagerActivity::class.java))
     }
 
-    private fun openLayoutManager() {
+    internal fun openLayoutManager() {
         startActivity(Intent(this, LayoutManagerActivity::class.java))
     }
 
-    private fun openExtraKeysConfig() {
+    internal fun openExtraKeysConfig() {
         startActivity(Intent(this, ExtraKeysConfigActivity::class.java))
     }
 
-    private fun openShortSwipeCustomization() {
+    internal fun openShortSwipeCustomization() {
         startActivity(Intent(this, ShortSwipeCustomizationActivity::class.java))
     }
 
-    private fun openAutoCorrectionSettings() {
+    internal fun openAutoCorrectionSettings() {
         startActivity(Intent(this, AutoCorrectionSettingsActivity::class.java))
     }
 
-    private fun resetAllSettings() {
+    internal fun resetAllSettings() {
         lifecycleScope.launch {
             android.app.AlertDialog.Builder(this@SettingsActivity)
                 .setTitle(getString(R.string.settings_reset_dialog_title))
@@ -5911,7 +5911,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     // Self-update feature removed for F-Droid compliance
     // F-Droid handles updates automatically - no storage permissions needed
 
-    private fun fallbackEncrypted() {
+    internal fun fallbackEncrypted() {
         // Handle direct boot mode failure
         android.util.Log.w(TAG, "Settings unavailable in direct boot mode")
         finish()
@@ -5919,12 +5919,12 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     // Clipboard settings now inline in main settings UI
 
-    private fun openBackupRestore() {
+    internal fun openBackupRestore() {
         startActivity(Intent(this, BackupRestoreActivity::class.java))
     }
 
     // Inline backup/restore functions - launch SAF file pickers
-    private fun exportConfiguration() {
+    internal fun exportConfiguration() {
         try {
             configExportLauncher.launch("cleverkeys-config.json")
         } catch (e: Exception) {
@@ -5932,7 +5932,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
-    private fun importConfiguration() {
+    internal fun importConfiguration() {
         try {
             configImportLauncher.launch(arrayOf("application/json", "*/*"))
         } catch (e: Exception) {
@@ -5940,7 +5940,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
-    private fun exportCustomDictionary() {
+    internal fun exportCustomDictionary() {
         try {
             dictionaryExportLauncher.launch("cleverkeys-dictionary.json")
         } catch (e: Exception) {
@@ -5948,7 +5948,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
-    private fun importCustomDictionary() {
+    internal fun importCustomDictionary() {
         try {
             dictionaryImportLauncher.launch(arrayOf("application/json", "*/*"))
         } catch (e: Exception) {
@@ -5956,7 +5956,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
-    private fun exportClipboardHistory() {
+    internal fun exportClipboardHistory() {
         try {
             clipboardExportLauncher.launch("cleverkeys-clipboard.json")
         } catch (e: Exception) {
@@ -5964,7 +5964,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
-    private fun importClipboardHistory() {
+    internal fun importClipboardHistory() {
         try {
             clipboardImportLauncher.launch(arrayOf("application/json", "*/*"))
         } catch (e: Exception) {
@@ -5972,7 +5972,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
-    private fun exportClipboardZip() {
+    internal fun exportClipboardZip() {
         try {
             clipboardZipExportLauncher.launch("cleverkeys-clipboard-full.zip")
         } catch (e: Exception) {
@@ -5980,7 +5980,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
-    private fun importClipboardZip() {
+    internal fun importClipboardZip() {
         try {
             clipboardZipImportLauncher.launch(arrayOf("application/zip", "application/x-zip-compressed", "*/*"))
         } catch (e: Exception) {
@@ -5993,7 +5993,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
      * filename baked into the picker is `cleverkeys_full_backup_<YYYY-MM-DD>.zip`
      * so users get the requested dated-history filesystem layout with zero typing.
      */
-    private fun exportFullBackup() {
+    internal fun exportFullBackup() {
         try {
             val date = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
             fullBackupExportLauncher.launch("cleverkeys_full_backup_$date.zip")
@@ -6002,7 +6002,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
-    private fun importFullBackup() {
+    internal fun importFullBackup() {
         try {
             fullBackupImportLauncher.launch(arrayOf("application/zip", "application/x-zip-compressed", "*/*"))
         } catch (e: Exception) {
@@ -6010,7 +6010,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
-    private fun importLanguagePack() {
+    internal fun importLanguagePack() {
         languagePackImportStatus = null
         try {
             languagePackImportLauncher.launch(arrayOf("application/zip", "application/x-zip-compressed", "*/*"))
@@ -6019,7 +6019,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
-    private fun performLanguagePackImport(uri: Uri) {
+    internal fun performLanguagePackImport(uri: Uri) {
         lifecycleScope.launch {
             try {
                 val manager = LanguagePackManager.getInstance(this@SettingsActivity)
@@ -6050,7 +6050,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
-    private fun deleteLanguagePack(code: String) {
+    internal fun deleteLanguagePack(code: String) {
         lifecycleScope.launch {
             try {
                 val manager = LanguagePackManager.getInstance(this@SettingsActivity)
@@ -6065,7 +6065,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
-    private fun refreshInstalledLanguagePacks() {
+    internal fun refreshInstalledLanguagePacks() {
         try {
             val manager = LanguagePackManager.getInstance(this)
             installedLanguagePacks = manager.getInstalledPacks()
@@ -6081,7 +6081,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         handleGifPackShareIntent(intent)
     }
 
-    private fun handleGifPackShareIntent(intent: Intent?) {
+    internal fun handleGifPackShareIntent(intent: Intent?) {
         if (intent == null) return
         val uri: Uri? = when (intent.action) {
             Intent.ACTION_SEND -> intent.getParcelableExtra(Intent.EXTRA_STREAM)
@@ -6096,7 +6096,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     // GIF pack management methods
 
-    private fun performGifPackImport(uri: Uri) {
+    internal fun performGifPackImport(uri: Uri) {
         gifImportInProgress = true
         gifImportStatus = "Importing..."
         lifecycleScope.launch {
@@ -6138,7 +6138,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
-    private fun performGifRemovePack(packId: String) {
+    internal fun performGifRemovePack(packId: String) {
         lifecycleScope.launch {
             try {
                 val manager = tribixbite.cleverkeys.gif.GifPackManager.getInstance(this@SettingsActivity)
@@ -6151,7 +6151,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
-    private fun performGifRemoveAll() {
+    internal fun performGifRemoveAll() {
         lifecycleScope.launch {
             try {
                 val manager = tribixbite.cleverkeys.gif.GifPackManager.getInstance(this@SettingsActivity)
@@ -6167,7 +6167,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
-    private fun refreshInstalledGifPacks() {
+    internal fun refreshInstalledGifPacks() {
         try {
             val manager = tribixbite.cleverkeys.gif.GifPackManager.getInstance(this)
             installedGifPacks = manager.getInstalledPacks()
@@ -6185,7 +6185,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     // (JSON + ZIP) use the destructive-merge default since they're already
     // non-destructive (skip-duplicates).
 
-    private fun performConfigExport(uri: Uri) {
+    internal fun performConfigExport(uri: Uri) {
         lifecycleScope.launch {
             backupRestoreViewModel.isProcessing = true
             try {
@@ -6213,7 +6213,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
      * and choose a short-swipe import mode. If the file matches current
      * settings exactly, jump straight to the "No changes" result dialog.
      */
-    private fun performConfigImport(uri: Uri) {
+    internal fun performConfigImport(uri: Uri) {
         lifecycleScope.launch {
             backupRestoreViewModel.isProcessing = true
             try {
@@ -6246,7 +6246,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
      * loadCurrentSettings() so the UI reflects imported values immediately,
      * and copies prefs to protected storage for Direct Boot survival.
      */
-    private fun applyPlannedSettings(
+    internal fun applyPlannedSettings(
         plan: SettingsImportPlan,
         excludedKeys: Set<String>,
         shortSwipeMode: ShortSwipeImportMode,
@@ -6273,7 +6273,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
-    private fun performDictionaryExport(uri: Uri) {
+    internal fun performDictionaryExport(uri: Uri) {
         lifecycleScope.launch {
             backupRestoreViewModel.isProcessing = true
             try {
@@ -6302,7 +6302,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
      * specific words. If no new words to import, jump straight to the result
      * dialog.
      */
-    private fun performDictionaryImport(uri: Uri) {
+    internal fun performDictionaryImport(uri: Uri) {
         lifecycleScope.launch {
             backupRestoreViewModel.isProcessing = true
             try {
@@ -6335,7 +6335,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
      * across all per-language word lists; broadcasts ACTION_DICTIONARY_IMPORTED
      * so DictionaryManagerActivity refreshes its view.
      */
-    private fun applyPlannedDictionaries(
+    internal fun applyPlannedDictionaries(
         plan: DictImportPlan,
         excludedCustom: Set<LangWord>,
         excludedDisabled: Set<LangWord>,
@@ -6362,7 +6362,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
-    private fun performClipboardExport(uri: Uri) {
+    internal fun performClipboardExport(uri: Uri) {
         lifecycleScope.launch {
             backupRestoreViewModel.isProcessing = true
             try {
@@ -6386,7 +6386,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
-    private fun performClipboardImport(uri: Uri) {
+    internal fun performClipboardImport(uri: Uri) {
         lifecycleScope.launch {
             backupRestoreViewModel.isProcessing = true
             try {
@@ -6417,7 +6417,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
-    private fun performClipboardZipExport(uri: Uri) {
+    internal fun performClipboardZipExport(uri: Uri) {
         lifecycleScope.launch {
             backupRestoreViewModel.isProcessing = true
             try {
@@ -6442,7 +6442,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
-    private fun performClipboardZipImport(uri: Uri) {
+    internal fun performClipboardZipImport(uri: Uri) {
         lifecycleScope.launch {
             backupRestoreViewModel.isProcessing = true
             try {
@@ -6479,7 +6479,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
      * clipboard JSON + media. Reuses the shared [BackupRestoreManager] helpers
      * so output stays in lockstep with the per-section exporters.
      */
-    private fun performFullBackupExport(uri: Uri) {
+    internal fun performFullBackupExport(uri: Uri) {
         lifecycleScope.launch {
             backupRestoreViewModel.isProcessing = true
             try {
@@ -6519,7 +6519,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
-    private fun performFullBackupImport(uri: Uri) {
+    internal fun performFullBackupImport(uri: Uri) {
         lifecycleScope.launch {
             backupRestoreViewModel.isProcessing = true
             try {
@@ -6566,7 +6566,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
-    private fun openGitHubReleases() {
+    internal fun openGitHubReleases() {
         try {
             val intent = Intent(Intent.ACTION_VIEW).apply {
                 data = android.net.Uri.parse("https://github.com/tribixbite/cleverkeys/releases")
@@ -6577,7 +6577,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
-    private fun clearAllPrivacyData() {
+    internal fun clearAllPrivacyData() {
         android.app.AlertDialog.Builder(this)
             .setTitle("Clear All Data")
             .setMessage("This will delete all collected data including:\n\n" +
@@ -6615,7 +6615,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     /**
      * View collected swipe data in a dialog with pagination
      */
-    private fun viewCollectedData() {
+    internal fun viewCollectedData() {
         collectedDataSearchQuery = ""
         collectedDataCurrentPage = 0
         loadCollectedDataPage()
@@ -6625,7 +6625,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     /**
      * Load a page of collected data based on current search/pagination state
      */
-    private fun loadCollectedDataPage() {
+    internal fun loadCollectedDataPage() {
         lifecycleScope.launch {
             try {
                 val dataStore = tribixbite.cleverkeys.ml.SwipeMLDataStore.getInstance(this@SettingsActivity)
@@ -6654,7 +6654,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     /**
      * View performance statistics in a dialog
      */
-    private fun viewPerfStats() {
+    internal fun viewPerfStats() {
         try {
             val stats = NeuralPerformanceStats.getInstance(this)
             perfStatsSummary = stats.formatSummary()
@@ -6667,7 +6667,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     /**
      * Export performance statistics to JSON file
      */
-    private fun exportPerfStats() {
+    internal fun exportPerfStats() {
         try {
             val sdf = java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.US)
             val filename = "perf_stats_${sdf.format(java.util.Date())}.json"
@@ -6680,7 +6680,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     /**
      * Delete all collected swipe data with confirmation
      */
-    private fun deleteCollectedData() {
+    internal fun deleteCollectedData() {
         android.app.AlertDialog.Builder(this)
             .setTitle("Delete Collected Data")
             .setMessage("This will permanently delete all collected swipe data.\n\n" +
@@ -6702,7 +6702,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             .show()
     }
 
-    private fun exportSwipeDataJSON() {
+    internal fun exportSwipeDataJSON() {
         try {
             val sdf = java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.US)
             val filename = "swipe_data_${sdf.format(java.util.Date())}.json"
@@ -6712,7 +6712,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
-    private fun exportSwipeDataNDJSON() {
+    internal fun exportSwipeDataNDJSON() {
         try {
             val sdf = java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.US)
             val filename = "swipe_data_${sdf.format(java.util.Date())}.ndjson"
@@ -6722,7 +6722,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
-    private fun performSwipeDataJsonExport(uri: Uri) {
+    internal fun performSwipeDataJsonExport(uri: Uri) {
         lifecycleScope.launch {
             try {
                 contentResolver.openOutputStream(uri)?.use { outputStream ->
@@ -6744,7 +6744,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
-    private fun performSwipeDataNdjsonExport(uri: Uri) {
+    internal fun performSwipeDataNdjsonExport(uri: Uri) {
         lifecycleScope.launch {
             try {
                 contentResolver.openOutputStream(uri)?.use { outputStream ->
@@ -6766,7 +6766,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
-    private fun performPerfStatsExport(uri: Uri) {
+    internal fun performPerfStatsExport(uri: Uri) {
         lifecycleScope.launch {
             try {
                 contentResolver.openOutputStream(uri)?.use { outputStream ->
