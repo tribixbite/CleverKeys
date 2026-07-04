@@ -99,22 +99,19 @@ class WordPredictor {
          */
         private const val LENGTH_DIFF_ED_BUDGET = 0.5f
 
-        /**
-         * Score bonus applied to alias-key candidates (bare-form
-         * contractions like `dont`, `cant`, `hadnt`) in the dict-scan
-         * tiebreaker. Sized so an alias-key's effective score clears
-         * [SCORE_TIEBREAK_GAP] above a tied non-alias — that flips ties
-         * toward the contraction (`donr → don't` instead of `done`)
-         * without overriding clearly-better non-alias matches.
-         */
-        private const val ALIAS_SCORE_BONUS = 0.15f
+        // NOTE (2026-07-04): the old ALIAS_SCORE_BONUS (+0.15 to alias-key
+        // candidates) is GONE. As a score bump it could beat candidates up to
+        // 0.15 STRONGER than the alias — the very thing its own doc said it
+        // shouldn't do ("thier" → "this'd" instead of "their"). Alias
+        // preference is now a RULE in the tiebreaker: within the gap band an
+        // alias wins against a non-alias only at equal-or-better RAW score.
 
         /**
          * Score-difference threshold for score-vs-frequency tiebreaker.
-         * When two candidates differ by MORE than this in effective
-         * score, the higher-scoring one wins regardless of frequency.
-         * When the gap is within this band, frequency is the tiebreaker
-         * (the more popular word wins).
+         * When two candidates differ by MORE than this in raw score, the
+         * higher-scoring one wins regardless of frequency. When the gap is
+         * within this band, structural rules (alias privilege, transposition
+         * beats 2-sub) and then frequency decide.
          *
          * Why hybrid: same-length multi-substitution candidates have an
          * asymmetric scoring advantage over lengthDiff=1 candidates. A
@@ -126,8 +123,10 @@ class WordPredictor {
          * threshold separates "clearly better" from "noise" — picks
          * `question` correctly via the freq fallback.
          *
-         * Calibrated against:
-         *   - `donr → dont` (alias bonus pushes gap to 0.15) → alias wins
+         * Calibrated against (sim, 26/29 on the 98k dictionary, 2026-07-04):
+         *   - `donr → don't` (dont/done raw-tied 0.972) → alias privilege
+         *   - `thier → their` (transposition 0.97 > alias thisd 0.95) → raw
+         *   - `thsi → this` (transposition beats 2-sub `that` in-band)
          *   - `tge → the` (gap 0.149 vs `weve`) → score wins (the)
          *   - `tfe → the` (gap 0.037 vs `tfw`) → freq wins (the)
          *   - `quuestion → question` (gap 0.049 vs `quotation`) → freq wins
@@ -138,13 +137,15 @@ class WordPredictor {
         /**
          * Length-normalized score penalty for an adjacent-transposition
          * (Damerau) match in the same-length path: score = 1 − penalty/len.
-         * Calibrated so the transposition target lands just BELOW a single
-         * adjacent-key substitution ("teh"→"the" scores 0.917 vs "ten" 0.959)
-         * but well inside [SCORE_TIEBREAK_GAP], letting the frequency
-         * tiebreaker pick the (usually far more common) transposition target.
-         * Verified accept: teh→the, hte→the, becuase→because, recieve→receive.
+         * Calibrated (0.25 → 0.15, 2026-07-04) so a transposition ranks
+         * BETWEEN a single adjacent-key substitution and a 2-substitution
+         * candidate — where one swap operation structurally belongs:
+         *   "teh"→"the" 0.950 vs "ten" (1 sub) 0.959 → in-band, freq → the ✓
+         *   "thier"→"their" 0.970 vs "thisd" (2 subs) 0.950 → raw win ✓
+         * Verified accept: teh→the, hte→the, becuase→because, recieve→receive,
+         * thsi→this, waht→what, taht→that, jsut→just, liek→like, onyl→only.
          */
-        private const val TRANSPOSITION_PENALTY = 0.25f
+        private const val TRANSPOSITION_PENALTY = 0.15f
         private const val MAX_EDIT_DISTANCE = 2
         private const val MAX_RECENT_WORDS = 20 // Keep last 20 words for language detection
         private const val PREFIX_INDEX_MAX_LENGTH = 3 // Index prefixes up to 3 chars
@@ -2004,6 +2005,8 @@ class WordPredictor {
             //     Allows the legitimate-typo case (lengthDiff=1, ed≈1.0
             //     for `questin → question`) while rejecting weakly-aligned
             //     unrelated candidates (ed≈3+ for `wuestion → wuthering`).
+            var isTransposition = false
+            var isMultiSub = false
             val score: Float = if (lengthDiff == 0) {
                 if (isAdjacentTransposition(lowerTypedWord, dictWord)) {
                     // Damerau transposition fast path ("teh" → "the", "becuase"
@@ -2012,11 +2015,12 @@ class WordPredictor {
                     // NEVER pass the 50% exact-ratio gate ("teh" vs "the" is
                     // 1/3 exact) even though it's among the most common typo
                     // classes. Score it as a mild, length-normalized penalty —
-                    // slightly below a single adjacent-key substitution, so a
+                    // just below a single adjacent-key substitution, so a
                     // genuine 1-sub candidate still outranks it on score and
                     // the within-gap frequency tiebreak resolves the rest
-                    // ("teh": ten scores 0.959 vs the 0.917, gap < 0.10 →
+                    // ("teh": ten scores 0.959 vs the 0.950, gap < 0.10 →
                     // freq picks "the").
+                    isTransposition = true
                     1f - TRANSPOSITION_PENALTY / wordLength
                 } else {
                 var exactCount = 0
@@ -2030,6 +2034,7 @@ class WordPredictor {
                 val exactRatio = exactCount.toFloat() / wordLength
                 val weightedScore = weightedSum / wordLength
                 val substitutions = wordLength - exactCount
+                isMultiSub = substitutions >= 2
                 // GATE 1a (ratio) AND GATE 1b (absolute sub-cap): both must
                 // pass. The cap rejects long multi-substitution lookalikes
                 // (`broight → thought`) the ratio alone would admit.
@@ -2052,46 +2057,53 @@ class WordPredictor {
             }
 
             if (score >= charMatchThreshold) {
-                // Two-level tiebreaker:
-                //   1. SCORE PRIMARY — higher-scoring candidate wins. This
-                //      stops a freq-popular but distantly-aligned word from
-                //      beating a high-quality match: e.g. `wuestion → within`
-                //      (lenDiff=2 weighted-ed-passes-budget, freq 245)
-                //      should NOT beat `wuestion → question` (lenDiff=0,
-                //      near-perfect score 0.986, freq 243).
-                //   2. FREQ SECONDARY — when scores are equal (the common
-                //      "single adjacent-key sub" case where multiple words
-                //      tie), the more common word wins.
-                //
-                // Alias-keys get a small `ALIAS_SCORE_BONUS` to flip ties
-                // toward the contraction (`donr → don't` not `done`),
-                // sized small enough that a clearly-better non-alias still
-                // wins (`tge → the` not `we've`).
+                // Tiebreaker — RAW-score dominance first, then structural
+                // rules inside the ±SCORE_TIEBREAK_GAP band, then frequency:
+                //   1. SCORE PRIMARY — a candidate more than the gap better
+                //      wins outright (`wuestion → question` 0.986 beats the
+                //      freq-popular but distant `within`).
+                //   2. Within the band, ALIAS PRIVILEGE: a bare-contraction
+                //      key wins against a non-alias ONLY at equal-or-better
+                //      raw score. This flips true ties toward the contraction
+                //      (`donr → don't`, dont/done both 0.972) but — unlike the
+                //      old +0.15 score bonus, which could beat candidates up
+                //      to 0.15 STRONGER — can no longer override a
+                //      structurally better match (`thier → their`, not
+                //      `this'd`: the transposition outscores the 2-sub alias).
+                //   3. Within the band, TRANSPOSITION beats a 2-substitution
+                //      candidate regardless of frequency: one swap is almost
+                //      always the intent vs two independent wrong keys
+                //      (`thsi → this`, not the more frequent `that`).
+                //   4. FREQ — otherwise the more common word wins (the normal
+                //      "several 1-sub candidates" case).
                 val isAlias = dictWord in contractionAliases
-                val effectiveScore = if (isAlias) score + ALIAS_SCORE_BONUS else score
-                val bothAliases = isAlias && (bestCandidate?.word in contractionAliases)
+                val bestIsAlias = bestCandidate?.isAlias == true
                 val better = when {
                     bestCandidate == null -> true
-                    // Strictly better score by more than the tiebreak gap → win.
-                    effectiveScore > bestCandidate.effectiveScore + SCORE_TIEBREAK_GAP -> true
-                    // Strictly worse score by more than the gap → lose.
-                    effectiveScore < bestCandidate.effectiveScore - SCORE_TIEBREAK_GAP -> false
-                    // Alias vs alias: structural closeness (raw score) wins, NOT
-                    // frequency. Sibling contractions (`hadnt` vs `hasnt`) all
-                    // sit at similar freqs, and typing `hadnr` (d/t-adjacent) means
-                    // `hadnt` — `hasnt` only matches via TWO substitutions and
-                    // should lose to the single-typo match regardless of dict
-                    // popularity.
-                    bothAliases -> effectiveScore > bestCandidate.effectiveScore
-                    // Within the gap, normal case → frequency wins (the more
-                    // popular word for close-quality matches).
+                    // Raw-score dominance beyond the gap.
+                    score > bestCandidate.score + SCORE_TIEBREAK_GAP -> true
+                    score < bestCandidate.score - SCORE_TIEBREAK_GAP -> false
+                    // Alias vs alias: structural closeness (raw score) wins,
+                    // NOT frequency — sibling contractions (`hadnt` vs `hasnt`)
+                    // sit at similar freqs and typing `hadnr` means `hadnt`.
+                    isAlias && bestIsAlias -> score > bestCandidate.score
+                    // Alias privilege: only at equal-or-better raw score.
+                    isAlias && !bestIsAlias -> score >= bestCandidate.score
+                    bestIsAlias && !isAlias -> score > bestCandidate.score
+                    // One Damerau swap beats two independent substitutions.
+                    isTransposition && bestCandidate.isMultiSub -> true
+                    bestCandidate.isTransposition && isMultiSub -> false
+                    // Within the band, normal case → frequency wins.
                     candidateFrequency > bestCandidate.frequency -> true
                     candidateFrequency < bestCandidate.frequency -> false
                     // Score-close AND freq-tied → deterministic by score.
-                    else -> effectiveScore > bestCandidate.effectiveScore
+                    else -> score > bestCandidate.score
                 }
                 if (better) {
-                    bestCandidate = AutocorrectCandidate(dictWord, effectiveScore, candidateFrequency)
+                    bestCandidate = AutocorrectCandidate(
+                        dictWord, score, candidateFrequency,
+                        isAlias, isTransposition, isMultiSub
+                    )
                 }
             }
         }
@@ -2112,7 +2124,7 @@ class WordPredictor {
                 preserveCapitalization(typedWord, outputWord)
             }
             Log.d(TAG, "AUTO-CORRECT: '$typedWord' → '$corrected' " +
-                "(winner=$winnerWord score=${"%.3f".format(bestCandidate.effectiveScore)} " +
+                "(winner=$winnerWord score=${"%.3f".format(bestCandidate.score)} " +
                 "freq=${bestCandidate.frequency})")
             return corrected
         }
@@ -2179,10 +2191,12 @@ class WordPredictor {
     /**
      * Helper class to store autocorrect candidates.
      *
-     * `effectiveScore` is the adjacency-weighted match quality plus any
-     * alias bonus, in [0, ~1.05]. `frequency` is the raw dictionary
-     * frequency (scale varies by loader — binary 5K-1M, JSON 100-10K).
-     * Selection sorts by effectiveScore desc, then frequency desc.
+     * `score` is the RAW adjacency-weighted match quality in [0, 1] (no
+     * bonuses — alias preference is a tiebreak RULE, not a score bump).
+     * `frequency` is the raw dictionary frequency (scale varies by loader —
+     * binary 5K-1M, JSON 100-10K). The structural flags feed the in-band
+     * tiebreaker: alias privilege (equal-or-better raw only) and
+     * transposition-beats-2-substitutions.
      *
      * Kept distinct from `WordCandidate` so the prediction path's
      * Int-score contract isn't conflated with the autocorrect path's
@@ -2190,8 +2204,11 @@ class WordPredictor {
      */
     private data class AutocorrectCandidate(
         val word: String,
-        val effectiveScore: Float,
-        val frequency: Int
+        val score: Float,
+        val frequency: Int,
+        val isAlias: Boolean,
+        val isTransposition: Boolean,
+        val isMultiSub: Boolean
     )
 
     /**

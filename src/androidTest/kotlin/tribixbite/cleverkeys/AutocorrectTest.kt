@@ -109,6 +109,39 @@ class AutocorrectTest {
     }
 
     @Test
+    fun testAutocorrect_aliasCannotOvertakeStrongerMatch_thierToTheir() {
+        // Reported by audit (2026-07-03): "thier" corrected to "this'd" — the
+        // old +0.15 alias score bonus let the 2-substitution alias key "thisd"
+        // beat the structurally better transposition "their". Alias preference
+        // is now a rule (wins only at equal-or-better RAW score), so the
+        // transposition wins.
+        config.autocorrect_enabled = true
+        config.autocorrect_prefix_length = 0
+        val result = predictor.autoCorrect("thier")
+        assertEquals("thier → their (transposition beats 2-sub alias)", "their", result)
+    }
+
+    @Test
+    fun testAutocorrect_transposition_recieveToReceive() {
+        // The classic i/e swap. Previously lost to unrelated candidates.
+        config.autocorrect_enabled = true
+        config.autocorrect_prefix_length = 0
+        val result = predictor.autoCorrect("recieve")
+        assertEquals("recieve → receive (adjacent transposition)", "receive", result)
+    }
+
+    @Test
+    fun testAutocorrect_transpositionBeats2Sub_thsiToThis() {
+        // Within the tiebreak band a one-swap explanation must beat a
+        // 2-substitution candidate regardless of frequency: "thsi" is "this"
+        // (s/i swapped), not the more frequent "that" (2 subs).
+        config.autocorrect_enabled = true
+        config.autocorrect_prefix_length = 0
+        val result = predictor.autoCorrect("thsi")
+        assertEquals("thsi → this (transposition beats 2-sub 'that')", "this", result)
+    }
+
+    @Test
     fun testAutocorrectAdn() {
         val result = predictor.autoCorrect("adn")
         // "adn" is a typo for "and"

@@ -36,12 +36,22 @@ FOLLOW-UPS:
 - [x] deleted vestigial `assets/en_enhanced.txt` (−400KB APK; never loaded) + removed the dead
   reference in SwipeCalibrationActivity (calibration now en.txt-only — common words are better
   calibration material anyway). Deleted 0words.py (fully absorbed into en_allowlist.txt).
-- [ ] pre-existing (NOT from this work): alias-bonus can overtake structurally-better matches:
-  "thier" → "this'd" (alias 0.95+0.15 beats their-transposition 0.95), "recieve" → wrong word.
-  Fix idea: alias bonus must not beat a transposition/lower-edit-class candidate.
+- [x] alias-bonus overtake FIXED (2026-07-04): replaced the +0.15 ALIAS_SCORE_BONUS score
+  bump (which could beat candidates up to 0.15 STRONGER — thier→this'd) with rule-based
+  tiebreaking on RAW scores: (1) raw-score dominance beyond ±0.10; in-band: (2) alias
+  privilege only at equal-or-better raw score (donr→don't preserved via the exact
+  dont/done 0.972 tie), (3) transposition beats 2-substitution regardless of frequency
+  (thsi→this, not the more frequent that), (4) frequency. TRANSPOSITION_PENALTY 0.25→0.15
+  so one swap ranks between 1-sub and 2-sub where it structurally belongs.
+  AutocorrectCandidate now carries raw score + isAlias/isTransposition/isMultiSub flags.
+  Sim 26/29 (misses: nad/clea legitimately in-dict; wnat→what is calibrated 1-sub+freq
+  behavior). Fixes: thier→their, recieve→receive, thsi→this. No regressions across the
+  full calibrated set (donr/hadnr/teh/hte/tge/tfe/broight/questin/wuestion/becuase/…).
+  4 new instrumented regression tests.
+- [x] docs: english-dictionary-pipeline.md updated to V4 (98,140; V4 history row; vestigial
+  txt marked deleted; V3 misspellings section marked historical)
 - [ ] perf watch: WordPredictor.autoCorrect linear sweep + OptimizedVocabulary trie now 98k
   (88% more words); consider prefix-index-assisted candidate enumeration if corrections lag
-- [ ] wiki/docs: update english-dictionary-pipeline.md numbers (52,042 → 98,140) + new builder
 
 ## ✅ (superseded stage) one-pass evidence classifier tooling (2026-07-02)
 
