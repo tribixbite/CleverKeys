@@ -16,6 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import tribixbite.cleverkeys.SettingsActivity
+import tribixbite.cleverkeys.ui.settings.io.loadCollectedDataPage
 
 /**
  * Dialog to view collected swipe data with search and pagination
