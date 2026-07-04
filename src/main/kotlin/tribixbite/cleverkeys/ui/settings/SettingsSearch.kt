@@ -119,7 +119,6 @@ internal fun SettingsActivity.isGateEnabled(gateId: String): Boolean {
 
 /** Execute search result action - collapse others, expand target, handle gating */
 internal fun SettingsActivity.executeSearchAction(setting: SearchableSetting) {
-    @Suppress("LocalVariableName")
     val _self = this  // capture extension receiver for use inside non-inline lambdas
     // Check if gated by a disabled toggle
     if (setting.gatedBy != null && !isGateEnabled(setting.gatedBy)) {

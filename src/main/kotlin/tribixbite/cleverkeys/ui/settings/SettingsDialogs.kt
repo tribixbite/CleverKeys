@@ -27,7 +27,6 @@ internal fun SettingsActivity.CollectedDataViewerDialog(
     stats: tribixbite.cleverkeys.ml.SwipeMLDataStore.DataStatistics?,
     onDismiss: () -> Unit
 ) {
-    @Suppress("LocalVariableName")
     val _self = this  // capture extension receiver for use inside non-inline lambdas
     val clipboardManager = getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
     val totalPages = if (collectedDataTotalCount > 0) {

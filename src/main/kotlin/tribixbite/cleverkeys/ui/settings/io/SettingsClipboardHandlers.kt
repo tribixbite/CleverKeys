@@ -12,6 +12,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.clipboard.sanitize.RulesetParser
 import tribixbite.cleverkeys.clipboard.sanitize.SanitizationConfig
+import tribixbite.cleverkeys.ui.settings.saveSetting
 
 internal fun SettingsActivity.recomputeCustomRulesStatus() {
     val customFile = SanitizationConfig.customFile(this)

@@ -4,21 +4,19 @@ import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import tribixbite.cleverkeys.BackupRestoreActivity
 import tribixbite.cleverkeys.DirectBootAwarePreferences
 import tribixbite.cleverkeys.SettingsActivity
-import tribixbite.cleverkeys.backup.DictImportPlan
-import tribixbite.cleverkeys.backup.LangWord
+import tribixbite.cleverkeys.ui.settings.loadCurrentSettings
 import tribixbite.cleverkeys.backup.SettingsImportPlan
 import tribixbite.cleverkeys.backup.ShortSwipeImportMode
-import tribixbite.cleverkeys.buildDictResultMessage
 import tribixbite.cleverkeys.buildSettingsResultMessage
 
 // Inline backup/restore functions - launch SAF file pickers

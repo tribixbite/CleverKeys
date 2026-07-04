@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys.ui.settings.io
 
+import android.net.Uri
 import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
@@ -9,7 +10,6 @@ import tribixbite.cleverkeys.DirectBootAwarePreferences
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.langpack.ImportResult
 import tribixbite.cleverkeys.langpack.LanguagePackManager
-import android.net.Uri
 
 /**
  * Detect available V2 binary dictionaries for secondary language selection.
