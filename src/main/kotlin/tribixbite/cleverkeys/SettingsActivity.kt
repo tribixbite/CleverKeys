@@ -1,11 +1,7 @@
 package tribixbite.cleverkeys
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
-import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -14,120 +10,30 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInRoot
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.Velocity
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color as ComposeColor
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.io.File
-import java.io.BufferedReader
-import java.io.IOException
-import java.io.InputStreamReader
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-import java.util.Properties
 import tribixbite.cleverkeys.theme.KeyboardTheme
-import tribixbite.cleverkeys.langpack.LanguagePackManager
-import tribixbite.cleverkeys.langpack.ImportResult
 import tribixbite.cleverkeys.langpack.LanguagePackManifest
-import tribixbite.cleverkeys.clipboard.sanitize.RulesetParser
-import tribixbite.cleverkeys.clipboard.sanitize.SanitizationConfig
-import tribixbite.cleverkeys.backup.SettingsImportPlan
-import tribixbite.cleverkeys.backup.ShortSwipeImportMode
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
-import tribixbite.cleverkeys.ui.settings.SettingsSection
-import tribixbite.cleverkeys.ui.settings.SettingsSwitch
-import tribixbite.cleverkeys.ui.settings.SettingsSlider
-import tribixbite.cleverkeys.ui.settings.SettingsDropdown
-import tribixbite.cleverkeys.ui.settings.getSafeInt
-import tribixbite.cleverkeys.ui.settings.getSafeFloat
-import tribixbite.cleverkeys.ui.settings.getSafeString
-import tribixbite.cleverkeys.ui.settings.getSafeBoolean
-import tribixbite.cleverkeys.ui.settings.VersionInfoCard
-import tribixbite.cleverkeys.ui.settings.GitHubInfoCard
-import tribixbite.cleverkeys.ui.settings.FAQSection
-import tribixbite.cleverkeys.ui.settings.CollectedDataViewerDialog
-import tribixbite.cleverkeys.ui.settings.PerfStatsViewerDialog
 import tribixbite.cleverkeys.ui.settings.SearchableSetting
-import tribixbite.cleverkeys.ui.settings.executeSearchAction
 import tribixbite.cleverkeys.ui.settings.expanderFor
-import tribixbite.cleverkeys.ui.settings.getFilteredSettings
 import tribixbite.cleverkeys.ui.settings.scrollToSetting
 import tribixbite.cleverkeys.ui.settings.sectionDisplayName
 import tribixbite.cleverkeys.ui.settings.settingSlug
 import tribixbite.cleverkeys.ui.settings.io.applyPlannedDictionaries
 import tribixbite.cleverkeys.ui.settings.io.applyPlannedSettings
-import tribixbite.cleverkeys.ui.settings.io.clearAllPrivacyData
-import tribixbite.cleverkeys.ui.settings.io.deleteCollectedData
-import tribixbite.cleverkeys.ui.settings.io.deleteLanguagePack
-import tribixbite.cleverkeys.ui.settings.io.detectAvailableV2Dictionaries
-import tribixbite.cleverkeys.ui.settings.io.exportClipboardHistory
-import tribixbite.cleverkeys.ui.settings.io.exportClipboardZip
-import tribixbite.cleverkeys.ui.settings.io.exportConfiguration
-import tribixbite.cleverkeys.ui.settings.io.exportCustomDictionary
-import tribixbite.cleverkeys.ui.settings.io.exportFullBackup
-import tribixbite.cleverkeys.ui.settings.io.exportPerfStats
-import tribixbite.cleverkeys.ui.settings.io.exportSwipeDataJSON
-import tribixbite.cleverkeys.ui.settings.io.exportSwipeDataNDJSON
-import tribixbite.cleverkeys.ui.settings.io.getLanguageDisplayName
 import tribixbite.cleverkeys.ui.settings.io.handleCustomRulesPicked
 import tribixbite.cleverkeys.ui.settings.io.handleGifPackShareIntent
-import tribixbite.cleverkeys.ui.settings.io.importClipboardHistory
-import tribixbite.cleverkeys.ui.settings.io.importClipboardZip
-import tribixbite.cleverkeys.ui.settings.io.importConfiguration
-import tribixbite.cleverkeys.ui.settings.io.importCustomDictionary
-import tribixbite.cleverkeys.ui.settings.io.importFullBackup
-import tribixbite.cleverkeys.ui.settings.io.importLanguagePack
-import tribixbite.cleverkeys.ui.settings.io.loadCollectedDataPage
-import tribixbite.cleverkeys.ui.settings.io.loadPrefixBoostForLanguage
-import tribixbite.cleverkeys.ui.settings.io.notifySanitizationRulesChanged
 import tribixbite.cleverkeys.ui.settings.io.performClipboardExport
 import tribixbite.cleverkeys.ui.settings.io.performClipboardImport
 import tribixbite.cleverkeys.ui.settings.io.performClipboardZipExport
@@ -139,57 +45,26 @@ import tribixbite.cleverkeys.ui.settings.io.performDictionaryImport
 import tribixbite.cleverkeys.ui.settings.io.performFullBackupExport
 import tribixbite.cleverkeys.ui.settings.io.performFullBackupImport
 import tribixbite.cleverkeys.ui.settings.io.performGifPackImport
-import tribixbite.cleverkeys.ui.settings.io.performGifRemoveAll
-import tribixbite.cleverkeys.ui.settings.io.performGifRemovePack
 import tribixbite.cleverkeys.ui.settings.io.performLanguagePackImport
 import tribixbite.cleverkeys.ui.settings.io.performPerfStatsExport
 import tribixbite.cleverkeys.ui.settings.io.performSwipeDataJsonExport
 import tribixbite.cleverkeys.ui.settings.io.performSwipeDataNdjsonExport
-import tribixbite.cleverkeys.ui.settings.io.recomputeCustomRulesStatus
-import tribixbite.cleverkeys.ui.settings.io.refreshAvailableSecondaryLanguages
-import tribixbite.cleverkeys.ui.settings.io.refreshInstalledGifPacks
-import tribixbite.cleverkeys.ui.settings.io.refreshInstalledLanguagePacks
-import tribixbite.cleverkeys.ui.settings.io.viewCollectedData
-import tribixbite.cleverkeys.ui.settings.io.viewPerfStats
-import tribixbite.cleverkeys.ui.settings.applySwipeSensitivityPreset
 import tribixbite.cleverkeys.ui.settings.fallbackEncrypted
-import tribixbite.cleverkeys.ui.settings.getSwipeSensitivityPreset
 import tribixbite.cleverkeys.ui.settings.handlePreferenceChanged
 import tribixbite.cleverkeys.ui.settings.loadCurrentSettings
-import tribixbite.cleverkeys.ui.settings.openAutoCorrectionSettings
-import tribixbite.cleverkeys.ui.settings.openBackupRestore
-import tribixbite.cleverkeys.ui.settings.openCalibration
-import tribixbite.cleverkeys.ui.settings.openDictionaryManager
-import tribixbite.cleverkeys.ui.settings.openExtraKeysConfig
-import tribixbite.cleverkeys.ui.settings.openGitHubReleases
-import tribixbite.cleverkeys.ui.settings.openLayoutManager
-import tribixbite.cleverkeys.ui.settings.openNeuralSettings
-import tribixbite.cleverkeys.ui.settings.openShortSwipeCustomization
-import tribixbite.cleverkeys.ui.settings.openSwipeDebugActivity
-import tribixbite.cleverkeys.ui.settings.openWikiInBrowser
-import tribixbite.cleverkeys.ui.settings.resetAllSettings
-import tribixbite.cleverkeys.ui.settings.saveSetting
-import tribixbite.cleverkeys.ui.settings.updateConfigFromSettings
-import tribixbite.cleverkeys.ui.settings.sections.TestKeyboardSection
-import tribixbite.cleverkeys.ui.settings.sections.ActivitiesSection
-import tribixbite.cleverkeys.ui.settings.sections.NeuralPredictionSection
-import tribixbite.cleverkeys.ui.settings.sections.AppearanceSection
-import tribixbite.cleverkeys.ui.settings.sections.SwipeTrailSection
-import tribixbite.cleverkeys.ui.settings.sections.InputBehaviorSection
-import tribixbite.cleverkeys.ui.settings.sections.AutoCorrectionSection
-import tribixbite.cleverkeys.ui.settings.sections.GestureTuningSection
 import tribixbite.cleverkeys.ui.settings.SettingsScreen
 
 /**
- * Modern settings activity for CleverKeys.
+ * Shell host for the CleverKeys settings UI.
  *
- * Migrated from SettingsActivity.java with enhanced functionality:
- * - Modern Compose UI with Material Design 3
- * - Reactive settings with live preview
- * - Neural parameter configuration
- * - Enhanced version management
- * - Performance monitoring integration
- * - Accessibility improvements
+ * Owns: all mutable Compose state fields, the 14-16 SAF ActivityResult launchers,
+ * lifecycle callbacks (onCreate → setContent { SettingsScreen() }, onResume/onPause
+ * for preference listener registration, onSharedPreferenceChanged → handlePreferenceChanged,
+ * onNewIntent → handleGifPackShareIntent), and the BackupRestoreViewModel held across
+ * configuration changes.
+ *
+ * Screen/section composables, IO handlers, search/scroll logic, and persistence helpers
+ * live in ui/settings/ — see that package for the decomposed extension files.
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferenceChangeListener {
@@ -774,10 +649,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
     
-    override fun onDestroy() {
-        super.onDestroy()
-    }
-
     override fun onResume() {
         super.onResume()
         // Register for preference changes

@@ -86,6 +86,11 @@ internal fun SettingsActivity.sectionDisplayName(sectionKey: String): String = w
     "multiLang" -> "Multi-Language"
     "privacy" -> "Privacy"
     "advanced" -> "Advanced"
+    "activities" -> "Activities"
+    "backupRestore" -> "Backup & Restore"
+    "help" -> "Help & FAQ"
+    "testKeyboard" -> "Test Keyboard"
+    "info" -> "Information & Actions"
     else -> "Settings"
 }
 
@@ -104,6 +109,11 @@ internal fun SettingsActivity.expanderFor(sectionKey: String): () -> Unit = {
         "multiLang" -> multiLangSectionExpanded = true
         "privacy" -> privacySectionExpanded = true
         "advanced" -> advancedSectionExpanded = true
+        "activities" -> activitiesSectionExpanded = true
+        "backupRestore" -> backupRestoreSectionExpanded = true
+        "help" -> helpSectionExpanded = true
+        "testKeyboard" -> testKeyboardExpanded = true
+        "info" -> infoSectionExpanded = true
     }
 }
 
