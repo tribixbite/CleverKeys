@@ -569,10 +569,12 @@ tasks.named("preBuild") {
 // are declared so Gradle skips regeneration when nothing relevant changed.
 tasks.register('generateSettingsSearchIndex') {
   def src = file("src/main/kotlin/tribixbite/cleverkeys/SettingsActivity.kt")
+  def sectionsDir = fileTree("src/main/kotlin/tribixbite/cleverkeys/ui/settings/sections") { include "*.kt" }
   def strings = file("res/values/strings.xml")
   def script = file("scripts/generate_settings_search_index.py")
   def outKt = file("build/generated/search/kotlin/tribixbite/cleverkeys/SettingsSearchIndex.kt")
   inputs.files(src, strings, script)
+  inputs.files(sectionsDir)
   outputs.file(outKt)
   doLast {
     exec { workingDir = projectDir; commandLine "python3", script.absolutePath, outKt.absolutePath }

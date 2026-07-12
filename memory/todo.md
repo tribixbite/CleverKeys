@@ -1,5 +1,34 @@
 # CleverKeys TODO
 
+## ✅ SettingsActivity God-Object decomposition (2026-07-04, branch refactor/settings-decomposition)
+
+Executed docs/settings-fix-roadmap.md Tasks 0–7 via subagent-driven-development (fresh
+implementer + spec reviewer + quality reviewer per task, all against immutable git objects).
+**SettingsActivity.kt: 6,806 → 815 lines**; 34 focused files under ui/settings/{,io,sections}/;
+no production file ≥1000 lines (largest extracted: SettingsPersistence.kt 512). Pure
+Extract-Function relocation via `internal fun SettingsActivity.x()` extensions — byte-verbatim
+bodies (spec-reviewed function-by-function), zero behavior change.
+
+Commits: 66f44b0f5 (widen visibility) → 2c71d19a1 (leaf UI) → e37e5f4e8 (search) → 8b9577227
+(IO handlers ×7) → 6d2ead01d (persistence/presets/nav; incl. the 203-line onSharedPreferenceChanged
+body → handlePreferenceChanged delegate, the plan's only behavior-bearing move) → 317b3537a
+(sections 1–8) → 95653c802 (sections 9–17 + SettingsScreen.kt).
+
+Verified: compile green; 1278 pure JVM tests green throughout; **full ew-cli instrumented suite
+1309/1309 green** (Pixel7 API34, orchestrator). Search-index generator + SettingsSearchCoverageTest
+extended to scan sections/; GesturePrefAccessDriftTest allowlist extended.
+
+REGRESSION caught by the ew gate (NOT visible to compiler or pure tests): Task 4 moved
+performConfigImport/Export to extension functions (→ static SettingsBackupHandlersKt methods),
+breaking BackupRestoreActivityImportPreviewTest's `getDeclaredMethod` reflection with
+NoSuchMethodException. Fixed by retargeting reflection to the Kt facade (commit after 95653c802).
+This is exactly why the plan mandates the instrumented gate.
+
+Task 8 (state hoisting into a ViewModel/holder) deliberately DEFERRED per the plan's own
+recommendation — it's a data-flow rewrite, separate project.
+
+
+
 ## ✅ Dictionary expansion 52k→98,140 SHIPPED (2026-07-03; artifacts regenerated + verified)
 
 Final production build (`build_en_wordlist.py --write`, defaults `--top 150000 --band 65000`):

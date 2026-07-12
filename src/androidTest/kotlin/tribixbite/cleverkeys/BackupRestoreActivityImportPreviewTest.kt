@@ -83,16 +83,30 @@ class BackupRestoreActivityImportPreviewTest {
         SettingsActivity.testBackupRestoreManagerOverride = null
     }
 
+    /**
+     * Invoke a relocated backup/restore handler via reflection.
+     *
+     * The 2026-07 settings decomposition moved `performConfigImport`/`Export`
+     * out of `SettingsActivity` (where they were `private` instance methods)
+     * into `ui/settings/io/SettingsBackupHandlers.kt` as `internal fun
+     * SettingsActivity.x(uri)` extensions. Those compile to `public static`
+     * methods `SettingsBackupHandlersKt.x(SettingsActivity, Uri)` (top-level
+     * internal funs are not name-mangled), so the handle is now on the Kt
+     * facade class, invoked statically with the activity as the first arg.
+     */
+    private fun invokeBackupHandler(name: String, activity: SettingsActivity, uri: Uri) {
+        val cls = Class.forName("tribixbite.cleverkeys.ui.settings.io.SettingsBackupHandlersKt")
+        val method = cls.getDeclaredMethod(name, SettingsActivity::class.java, Uri::class.java)
+        method.isAccessible = true
+        composeRule.runOnUiThread { method.invoke(null, activity, uri) }
+    }
+
     @Test
     fun import_emptyDeltas_skipsPreviewAndShowsResultDirectly() {
         // Drive the import path via reflection so we don't expose performConfigImport
-        // publicly. Methods are private but accessible via getDeclaredMethod.
+        // publicly. See invokeBackupHandler for why it targets the Kt facade.
         val activity = composeRule.activity
-        val method = activity.javaClass.getDeclaredMethod("performConfigImport", Uri::class.java)
-        method.isAccessible = true
-        composeRule.runOnUiThread {
-            method.invoke(activity, Uri.parse("content://test/empty"))
-        }
+        invokeBackupHandler("performConfigImport", activity, Uri.parse("content://test/empty"))
         composeRule.waitForIdle()
         // Brief wait for the IO coroutine to settle; idling resources would
         // be cleaner but the project doesn't currently configure them.
@@ -107,11 +121,7 @@ class BackupRestoreActivityImportPreviewTest {
     @Test
     fun export_resultDialogShowsCount() {
         val activity = composeRule.activity
-        val method = activity.javaClass.getDeclaredMethod("performConfigExport", Uri::class.java)
-        method.isAccessible = true
-        composeRule.runOnUiThread {
-            method.invoke(activity, Uri.parse("content://test/dest.json"))
-        }
+        invokeBackupHandler("performConfigExport", activity, Uri.parse("content://test/dest.json"))
         composeRule.waitForIdle()
         Thread.sleep(500)
         composeRule.waitForIdle()

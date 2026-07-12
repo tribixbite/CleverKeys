@@ -27,6 +27,7 @@ import re
 import sys
 
 ACTIVITY = "src/main/kotlin/tribixbite/cleverkeys/SettingsActivity.kt"
+SECTIONS_DIR = "src/main/kotlin/tribixbite/cleverkeys/ui/settings/sections"
 STRINGS = "res/values/strings.xml"
 DEFAULT_OUT = "build/generated/search/kotlin/tribixbite/cleverkeys/SettingsSearchIndex.kt"
 
@@ -123,14 +124,9 @@ def section_for(pos, sections):
     return cur
 
 
-def main():
-    out_path = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_OUT
-    text = open(ACTIVITY, encoding="utf-8").read()
-    strings = load_strings(STRINGS)
+def scan_file(text, strings, entries, seen):
+    """Scan a single Kotlin source text for controls, appending to entries."""
     sections = find_sections(text)
-
-    entries = []  # (title, keywords, sectionKey)
-    seen = set()
     for m in CONTROL_RE.finditer(text):
         window = text[m.start():m.start() + 500]
         tm = TITLE_RE.search(window)
@@ -149,6 +145,24 @@ def main():
             continue
         seen.add(dedup)
         entries.append((title, keywords_for(title), key))
+
+
+def main():
+    out_path = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_OUT
+    strings = load_strings(STRINGS)
+
+    entries = []  # (title, keywords, sectionKey)
+    seen = set()
+
+    # Scan SettingsActivity.kt (retains any controls defined inline there)
+    scan_file(open(ACTIVITY, encoding="utf-8").read(), strings, entries, seen)
+
+    # Scan all section files — controls moved here during the settings decomposition refactor
+    if os.path.isdir(SECTIONS_DIR):
+        for fname in sorted(os.listdir(SECTIONS_DIR)):
+            if fname.endswith(".kt"):
+                fpath = os.path.join(SECTIONS_DIR, fname)
+                scan_file(open(fpath, encoding="utf-8").read(), strings, entries, seen)
 
     if not entries:
         sys.exit("generate_settings_search_index: no controls found — parser broken")
