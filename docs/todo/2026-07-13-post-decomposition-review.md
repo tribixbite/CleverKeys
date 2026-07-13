@@ -89,7 +89,7 @@ Status legend: ☐ todo · ◐ in progress · ☑ done
   read directly by Config — no behavior change.
 - **Test**: SettingsDefaultsDriftTest extension detecting loaded-but-unread vars (optional); compile+suite green.
 
-### ◐ TEST-1 (case-preservation + custom-word-floor DONE; morphology-vs-transposition, Hadnr case, slider end-to-end remain) [MISSING] Autocorrect coverage gaps
+### ☑ TEST-1 (all done 2026-07-13: `gamees`→games via new elongation-collapse step, `Hadnr`→`Hadn't` pinned, floor-slider end-to-end via prefs commit + Config.refresh — JVM AutoCorrectEndToEndTest 13 tests + 6 instrumented AutocorrectTest cases) [MISSING] Autocorrect coverage gaps
 - Case-preserved transposition winner (`"Teh"→"The"`, `"TEH"→"THE"`).
 - Custom-word-as-target under nonzero floor (pairs with AC-2).
 - Morphology-guard vs transposition interplay (`"gamees"`).
@@ -126,8 +126,10 @@ Status legend: ☐ todo · ◐ in progress · ☑ done
 
 ### Autocorrect
 - ☑ AC-3 [LOW] `OptimizedVocabulary.kt:105` `_autocorrect_confidence_min_frequency = 500` init → align to 100.
-- ☐ AC-4 [MISSING/TODO] Possessive-typo (`"embeer's"`) neither corrected nor handled — add TODO +
-  optional: correct base, re-append `'s`. WordPredictor.kt ~1907.
+- ☑ AC-4 [MISSING/TODO] Possessive-typo (`"embeer's"`) neither corrected nor handled — DONE 2026-07-13:
+  base corrected recursively + suffix (original apostrophe char) re-appended; new step-1.4
+  doubled-letter elongation collapse makes `embeer→ember` (and `gamees→games`) win over sweep
+  lookalikes. TDD red (`embeer's→rivers`) → green in AutoCorrectEndToEndTest.
 - ☐ AC-5 [POLISH] KDoc `isAdjacentTransposition`/`AutocorrectCandidate`: note distant-char alias
   transpositions can lose to a 1-sub competitor (documented edge, no fix).
 

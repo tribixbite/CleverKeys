@@ -108,9 +108,9 @@ Open GH issues that are **not yet fixed** in the current codebase.
 |---|---|---|
 | **DICT-4** Unify blocklists: `generate_binary_dict.ENGLISH_JUNK_BLOCKLIST` should read `en_blocklist.txt` | `scripts/build_en_wordlist.py` | Low effort; latent correctness gap |
 | **DEC-6** `fallbackEncrypted()` misfiled in `SettingsResetPresets.kt` (lifecycle, not presets) | `SettingsResetPresets.kt:181` | One-line move |
-| **AC-4** Possessive-typo (`"embeer's"`) neither corrected nor handled — add TODO + optional base-correct + re-append `'s` | `WordPredictor.kt ~1907` | Medium; add TODO now, implement later |
+| ~~**AC-4** Possessive-typo (`"embeer's"`) neither corrected nor handled — add TODO + optional base-correct + re-append `'s`~~ ✅ done 2026-07-13 (base-corrected recursively + elongation collapse; see Addendum) | `WordPredictor.kt ~1907` | ~~Medium; add TODO now, implement later~~ |
 | **AC-5** KDoc note: `isAdjacentTransposition`/`AutocorrectCandidate` — distant-char alias transpositions can lose to 1-sub competitor (documented edge) | autocorrect/ | Docs only |
-| **TEST-1 tail** Morphology-guard vs transposition (`gamees`), capitalized alias winner (`Hadnr`), slider end-to-end | `AutocorrectTest` (instrumented) | ~3 new test cases |
+| ~~**TEST-1 tail** Morphology-guard vs transposition (`gamees`), capitalized alias winner (`Hadnr`), slider end-to-end~~ ✅ done 2026-07-13 (AutoCorrectEndToEndTest JVM + 6 instrumented cases; see Addendum) | `AutocorrectTest` (instrumented) | ~~3 new test cases~~ |
 | **en.txt apostrophe review** — 105 apostrophe entries in calibration list; `alot` is blocklisted but listed | `scripts/dictionaries/en/en.txt` | Low effort cleanup |
 | **ONNX .sh audit** — 8 dead ONNX-era scripts in `scripts/*.sh` | `scripts/` | Careful audit before delete |
 
@@ -148,3 +148,4 @@ Clearest, smallest real **bugs** (not features), ranked by signal-to-effort rati
 |---|---|---|---|
 | URL/email/path autocorrect corruption (user-reported 2026-07-13) | (this commit) | 2026-07-13 | TDD: AutocorrectUrlGuardTest verified RED pre-fix then 7/7 GREEN + AutocorrectTest 49/49 (ew Pixel7 API34); AutocorrectContextGuardTest 10 pure |
 | #154 Vibration delay on keypress | fa00cb0ae | 2026-07-13 | Root cause: settings layer forced vibrate_custom=true on every save, blocking the fast performHapticFeedback path. HapticsBehaviorDriftTest (3, red-first); 1301 pure green. NOTE: users with previously-persisted vibrate_custom=true stay on the slow path until reset — consider a one-time migration. Needs on-device feel check. |
+| **AC-4** Possessive-typo base correction (`embeer's → ember's`) + **TEST-1 tail** (`gamees`, `Hadnr`, floor slider e2e) | (this commit) | 2026-07-13 | TDD: new JVM harness AutoCorrectEndToEndTest (real 98k dict + aliases via Objenesis/MockK, runMockTests) verified RED pre-fix (`embeer's→rivers`, `teh's→true`, `gamees` frozen by morph guard) then 13/13 GREEN; mock suite 223, pure 1301; 6 instrumented AutocorrectTest cases added (compile-gated, ew run pending) |

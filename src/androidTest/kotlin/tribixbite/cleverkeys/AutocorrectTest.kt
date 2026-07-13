@@ -402,6 +402,146 @@ class AutocorrectTest {
         assertEquals("rivers' preserved", "rivers'", predictor.autoCorrect("rivers'"))
     }
 
+    // =========================================================================
+    // AC-4 — possessive-typo correction: when the BASE before the apostrophe
+    // is itself a typo, correct the base alone and re-append the suffix.
+    // Pre-fix the full token was swept against apostrophe-free dictionary
+    // words, stripping the possessive ("embeer's" → "rivers").
+    // =========================================================================
+
+    @Test
+    fun testAutocorrect_possessiveBaseTypo_embeersToEmbers() {
+        config.autocorrect_enabled = true
+        config.autocorrect_prefix_length = 0
+        config.autocorrect_max_length_diff = 2
+        assertEquals("embeer's → ember's (base corrected, suffix preserved)",
+            "ember's", predictor.autoCorrect("embeer's"))
+    }
+
+    @Test
+    fun testAutocorrect_possessiveBaseTypo_typographicApostrophePreserved() {
+        // U+2019 in → U+2019 out; the original apostrophe char is re-appended.
+        config.autocorrect_enabled = true
+        config.autocorrect_prefix_length = 0
+        config.autocorrect_max_length_diff = 2
+        assertEquals("embeer’s → ember’s (typographic apostrophe preserved)",
+            "ember’s", predictor.autoCorrect("embeer’s"))
+    }
+
+    @Test
+    fun testAutocorrect_possessiveBaseTypo_tehsToThes() {
+        // Chosen behavior: the base is corrected exactly as the bare token
+        // would be ("teh" → "the") and the suffix is re-appended — "the's".
+        // Rule-consistency beats second-guessing the user's possessive.
+        config.autocorrect_enabled = true
+        config.autocorrect_prefix_length = 0
+        config.autocorrect_max_length_diff = 2
+        assertEquals("teh's → the's (base corrected via sweep)",
+            "the's", predictor.autoCorrect("teh's"))
+    }
+
+    @Test
+    fun testAutocorrect_possessiveUncorrectableBase_leftUntouched() {
+        // No plausible correction for the base — the token must come back
+        // unchanged, never stripped of its suffix.
+        config.autocorrect_enabled = true
+        config.autocorrect_prefix_length = 0
+        config.autocorrect_max_length_diff = 2
+        assertEquals("uncorrectable possessive base stays untouched",
+            "zqjxvqz's", predictor.autoCorrect("zqjxvqz's"))
+    }
+
+    // =========================================================================
+    // TEST-1 — doubled-letter elongation vs morphology guard ("gamees")
+    // =========================================================================
+
+    @Test
+    fun testAutocorrect_elongation_gameesToGames() {
+        // Pre-fix the morphology guard misread "gamees" as a valid -es
+        // inflection of "game" and froze it (and without the guard the
+        // adjacency sweep preferred the 1-sub lookalike "gamers"). The
+        // elongation-collapse step recognizes the doubled 'e' and corrects
+        // to the exact-letters dictionary word "games".
+        config.autocorrect_enabled = true
+        config.autocorrect_prefix_length = 0
+        config.autocorrect_max_length_diff = 2
+        assertEquals("gamees → games (doubled-letter collapse)",
+            "games", predictor.autoCorrect("gamees"))
+    }
+
+    // =========================================================================
+    // TEST-1 — capitalized contraction-alias correction
+    // =========================================================================
+
+    @Test
+    fun testAutocorrect_capitalizedAliasTypo_HadnrToHadnt() {
+        // Sweep winner is the alias key "hadnt" (t→r adjacent), re-routed to
+        // "hadn't"; preserveCapitalization must keep the leading capital.
+        config.autocorrect_enabled = true
+        config.autocorrect_prefix_length = 0
+        assertEquals("Hadnr → Hadn't (capitalized alias re-route)",
+            "Hadn't", predictor.autoCorrect("Hadnr"))
+    }
+
+    // =========================================================================
+    // TEST-1 — frequency-floor slider end-to-end (prefs → Config.refresh →
+    // setConfig → suppression). "bathmat" sits below MAX_STRICTNESS(0.6) ×
+    // maxFreq on the V2 binary scale (rank ~115 → ~551k < 600k), so a max-
+    // strictness slider must suppress "bathmst" → "bathmat" while the default
+    // floor allows it.
+    // =========================================================================
+
+    @Test
+    fun testAutocorrect_frequencyFloorSlider_endToEnd() {
+        val prefs = Config.globalPrefs()
+        val key = "autocorrect_confidence_min_frequency"
+        val hadValue = prefs.contains(key)
+        val original = prefs.getInt(key, Defaults.AUTOCORRECT_MIN_FREQUENCY)
+
+        // Re-applies the test knobs clobbered by Config.refresh() re-reading
+        // prefs (refresh overwrites ALL autocorrect fields from storage).
+        fun applyTestKnobs() {
+            config.autocorrect_enabled = true
+            config.autocorrect_min_word_length = 2
+            config.autocorrect_char_match_threshold = 0.65f
+            config.autocorrect_max_length_diff = 2
+            config.autocorrect_prefix_length = 0
+        }
+
+        try {
+            // 1. Default floor → the rare correction applies.
+            @Suppress("ApplySharedPref")
+            prefs.edit().putInt(key, Defaults.AUTOCORRECT_MIN_FREQUENCY).commit()
+            config.refresh(context.resources, null)
+            applyTestKnobs()
+            predictor.setConfig(config)
+            assertEquals("at the default floor the rare correction must apply",
+                "bathmat", predictor.autoCorrect("bathmst"))
+
+            // 2. Max-strictness slider (commit, not apply — the orchestrator
+            // kills the process and apply() loses the write) → suppressed.
+            @Suppress("ApplySharedPref")
+            prefs.edit().putInt(key, tribixbite.cleverkeys.autocorrect.FrequencyFloor.SLIDER_MAX)
+                .commit()
+            config.refresh(context.resources, null)
+            applyTestKnobs()
+            predictor.setConfig(config)
+            assertEquals("at max slider strictness the rare correction must be suppressed",
+                "bathmst", predictor.autoCorrect("bathmst"))
+
+            // 3. Common corrections always clear the floor (MAX_STRICTNESS < 1).
+            assertEquals("common correction survives max strictness",
+                "the", predictor.autoCorrect("teh"))
+        } finally {
+            @Suppress("ApplySharedPref")
+            if (hadValue) prefs.edit().putInt(key, original).commit()
+            else prefs.edit().remove(key).commit()
+            config.refresh(context.resources, null)
+            applyTestKnobs()
+            config.autocorrect_confidence_min_frequency = Defaults.AUTOCORRECT_MIN_FREQUENCY
+        }
+    }
+
     @Test
     fun testAutocorrectMinLengthRespected() {
         val minLength = config.autocorrect_min_word_length

@@ -1884,6 +1884,55 @@ class WordPredictor {
             return typedWord
         }
 
+        val dict = dictionary.get()
+
+        // 1.4. Doubled-letter elongation collapse ("gamees" → "games",
+        // "embeer" → "ember"). Key auto-repeat / a lingering finger doubles a
+        // letter; when removing one half of a doubled pair yields a dictionary
+        // word, that word is a structurally near-certain intent — an exact
+        // letter match at edit distance 1. It must run BEFORE the morphology
+        // guard (which would misread "gamees" as a valid -es inflection of
+        // "game" and freeze it) and before the sweep (whose adjacency scoring
+        // prefers 1-substitution lookalikes: "gamees" would sweep to "gamers",
+        // "embeer" to "embers"). Structural certainty exempts it from the
+        // frequency floor — same rationale as the contraction path (step 0) —
+        // but disabled words are still never offered. Gated on
+        // autocorrect_max_length_diff >= 1: this IS a length-changing
+        // correction, and a user who configured same-length-only corrections
+        // keeps that guarantee. The collapsed word must still meet the
+        // min-word-length bar (typed length must exceed it by the removed char).
+        if (lowerTypedWord.length > (config?.autocorrect_min_word_length ?: 3) &&
+            (config?.autocorrect_max_length_diff ?: 0) >= 1
+        ) {
+            var collapseBest: String? = null
+            var collapseBestFreq = -1
+            for (i in 0 until lowerTypedWord.length - 1) {
+                if (lowerTypedWord[i] != lowerTypedWord[i + 1] ||
+                    !lowerTypedWord[i].isLetter()
+                ) continue
+                val collapsed = lowerTypedWord.removeRange(i, i + 1)
+                val freq = dict[collapsed] ?: continue
+                if (disabledWords.isNotEmpty() && isWordDisabled(collapsed)) continue
+                if (freq > collapseBestFreq) {
+                    collapseBest = collapsed
+                    collapseBestFreq = freq
+                }
+            }
+            if (collapseBest != null) {
+                // Re-route alias-keyed hits ("doont" → collapse "dont" →
+                // "don't"), mirroring the sweep-winner re-route in step 5.
+                val aliasTarget = contractionAliases[collapseBest]
+                val outputWord = aliasTarget ?: collapseBest
+                val corrected = if (aliasTarget != null && aliasTarget.startsWith("i'")) {
+                    aliasTarget.replaceFirstChar { it.uppercase() }
+                } else {
+                    preserveCapitalization(typedWord, outputWord)
+                }
+                Log.d(TAG, "AUTO-CORRECT (elongation collapse): '$typedWord' → '$corrected'")
+                return corrected
+            }
+        }
+
         // 1.5. Morphological guard (#B1): do NOT autocorrect a word that is a
         // regular inflection of a dictionary word. The bundled dictionary has
         // incomplete inflection coverage (e.g. "immunization" is present but
@@ -1894,29 +1943,51 @@ class WordPredictor {
         // ambiguous words (e.g. "thes") remain correctable — long technical
         // plurals/inflections (immunization, vaccination, realization, ...)
         // are the real failure mode.
-        val dict = dictionary.get()
         if (Morphology.inflectionStems(lowerTypedWord).any { it.length >= 4 && dict.containsKey(it) }) {
             Log.d(TAG, "AUTO-CORRECT skip (valid inflection): '$typedWord'")
             return typedWord
         }
 
-        // 1.6. Possessive guard. A possessive of a known noun ("ember's",
-        // "dog's", "rivers'") is valid English, but the possessive form itself
-        // is never stored in the dictionary — so without this guard autocorrect
-        // treats it as a typo and "corrects" it to a same-ish dictionary word
-        // ("ember's" → "rivers", "dog's" → "does"). If the base (the text before
-        // the last apostrophe) is a known word, accept the possessive as-is.
+        // 1.6. Possessive guard + possessive-typo correction (AC-4). A
+        // possessive of a known noun ("ember's", "dog's", "rivers'") is valid
+        // English, but the possessive form itself is never stored in the
+        // dictionary — so without this guard autocorrect treats it as a typo
+        // and "corrects" it to a same-ish dictionary word ("ember's" →
+        // "rivers", "dog's" → "does"). If the base (the text before the last
+        // apostrophe) is a known word, accept the possessive as-is.
         // Covers singular ('s) and plural/already-ends-in-s (trailing ') forms;
         // suffixes other than "s"/"" (e.g. "'t", "'ll") are left to the
         // contraction-alias path. Both straight (') and curly (’) apostrophes.
+        //
+        // When the base is NOT a known word it's a typo'd possessive
+        // ("embeer's"). Running the normal pipeline on the full token compares
+        // it against apostrophe-free dictionary words and strips the suffix
+        // ("embeer's" → "rivers") — so instead correct the BASE alone via a
+        // recursive call (which reuses every guard: contraction aliases, min
+        // length, morphology, disabled words, frequency floor, capitalization)
+        // and re-append the suffix with its ORIGINAL apostrophe character.
+        // If the base can't be corrected, return the token untouched — never
+        // strip the suffix. Recursion terminates: the base is strictly
+        // shorter, and a base whose own last apostrophe is at index < 2
+        // (e.g. "o'clock") doesn't re-enter this block.
         val apostropheIdx = lowerTypedWord.indexOfLast { it == '\'' || it == '’' }
         if (apostropheIdx >= 2) {
             val base = lowerTypedWord.substring(0, apostropheIdx)
             val suffix = lowerTypedWord.substring(apostropheIdx + 1)
-            if ((suffix == "s" || suffix.isEmpty()) &&
-                (dict.containsKey(base) || customAndUserWords.contains(base))
-            ) {
-                Log.d(TAG, "AUTO-CORRECT skip (possessive of '$base'): '$typedWord'")
+            if (suffix == "s" || suffix.isEmpty()) {
+                if (dict.containsKey(base) || customAndUserWords.contains(base)) {
+                    Log.d(TAG, "AUTO-CORRECT skip (possessive of '$base'): '$typedWord'")
+                    return typedWord
+                }
+                // AC-4: base is a typo — correct it alone, keep the suffix.
+                val originalBase = typedWord.substring(0, apostropheIdx)
+                val correctedBase = autoCorrect(originalBase)
+                if (correctedBase != originalBase) {
+                    val corrected = correctedBase + typedWord.substring(apostropheIdx)
+                    Log.d(TAG, "AUTO-CORRECT (possessive base): '$typedWord' → '$corrected'")
+                    return corrected
+                }
+                Log.d(TAG, "AUTO-CORRECT skip (uncorrectable possessive base): '$typedWord'")
                 return typedWord
             }
         }
