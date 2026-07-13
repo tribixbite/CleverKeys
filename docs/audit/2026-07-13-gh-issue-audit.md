@@ -141,3 +141,9 @@ Clearest, smallest real **bugs** (not features), ranked by signal-to-effort rati
 - Internal campaign items verified: **19** (§1b)
 - Outstanding (genuinely not fixed): **30** issues + 7 P2 tail items
 - Of outstanding: **8 bugs** (35, 75, 79, 83, 148, 149/152 GIF, 151, 154), **22 features**
+
+### Addendum (post-audit fixes)
+
+| Item | Fix commit | Date | Verification |
+|---|---|---|---|
+| URL/email/path autocorrect corruption (user-reported 2026-07-13) | (this commit) | 2026-07-13 | TDD: AutocorrectUrlGuardTest verified RED pre-fix then 7/7 GREEN + AutocorrectTest 49/49 (ew Pixel7 API34); AutocorrectContextGuardTest 10 pure |
