@@ -108,6 +108,14 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     // configuration changes (rotation). See BackupRestoreViewModel for fields.
     internal val backupRestoreViewModel: BackupRestoreViewModel by viewModels()
 
+    /**
+     * Hosts transient UI state (section expansion, search, dialogs, data-viewer paging)
+     * so it survives configuration changes. Prefs-backed values intentionally remain on
+     * the Activity — [loadCurrentSettings] re-reads them from SharedPreferences every
+     * onCreate, so they already survive rotation.  See [SettingsViewModel] for full scope.
+     */
+    internal val settingsViewModel: SettingsViewModel by viewModels()
+
     // SAF file pickers for backup/restore
     internal val configExportLauncher = registerForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
@@ -246,10 +254,20 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var gifEnabled by mutableStateOf(Defaults.GIF_ENABLED)
     internal var gifThumbnailColumns by mutableStateOf(Defaults.GIF_THUMBNAIL_COLUMNS)
     internal var installedGifPacks by mutableStateOf(listOf<tribixbite.cleverkeys.gif.InstalledPackInfo>())
-    internal var gifImportInProgress by mutableStateOf(false)
-    internal var gifImportStatus by mutableStateOf<String?>(null)
-    internal var showGifRemoveAllDialog by mutableStateOf(false)
-    internal var showGifRemovePackDialog by mutableStateOf<String?>(null)
+    // gifImportInProgress/gifImportStatus delegated to settingsViewModel (survive rotation)
+    internal var gifImportInProgress: Boolean
+        get() = settingsViewModel.gifImportInProgress
+        set(value) { settingsViewModel.gifImportInProgress = value }
+    internal var gifImportStatus: String?
+        get() = settingsViewModel.gifImportStatus
+        set(value) { settingsViewModel.gifImportStatus = value }
+    // showGifRemoveAllDialog/showGifRemovePackDialog delegated to settingsViewModel (survive rotation)
+    internal var showGifRemoveAllDialog: Boolean
+        get() = settingsViewModel.showGifRemoveAllDialog
+        set(value) { settingsViewModel.showGifRemoveAllDialog = value }
+    internal var showGifRemovePackDialog: String?
+        get() = settingsViewModel.showGifRemovePackDialog
+        set(value) { settingsViewModel.showGifRemovePackDialog = value }
     internal var gifStorageUsed by mutableStateOf(0L)
 
     internal var autoCapitalizationEnabled by mutableStateOf(true)
@@ -389,8 +407,13 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var secondaryLanguageAlt by mutableStateOf("none") // v1.2.0: Alternate secondary for quick toggle
     internal var availableSecondaryLanguages by mutableStateOf(listOf<String>()) // V2 dictionaries
     internal var installedLanguagePacks by mutableStateOf(listOf<LanguagePackManifest>())
-    internal var showLanguagePackDialog by mutableStateOf(false)
-    internal var languagePackImportStatus by mutableStateOf<String?>(null)
+    // showLanguagePackDialog/languagePackImportStatus delegated to settingsViewModel (survive rotation)
+    internal var showLanguagePackDialog: Boolean
+        get() = settingsViewModel.showLanguagePackDialog
+        set(value) { settingsViewModel.showLanguagePackDialog = value }
+    internal var languagePackImportStatus: String?
+        get() = settingsViewModel.languagePackImportStatus
+        set(value) { settingsViewModel.languagePackImportStatus = value }
 
     // Privacy settings - all OFF by default (CleverKeys is fully offline)
     internal var privacyCollectSwipe by mutableStateOf(false)
@@ -410,33 +433,75 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var swipeDebugShowRawOutput by mutableStateOf(true)
     internal var swipeShowRawBeamPredictions by mutableStateOf(false)
 
-    // Section expanded states
-    internal var wordPredictionAdvancedExpanded by mutableStateOf(false)
-    internal var activitiesSectionExpanded by mutableStateOf(true)  // Activities at top, default expanded
-    internal var multiLangSectionExpanded by mutableStateOf(false)
-    internal var privacySectionExpanded by mutableStateOf(false)
-    internal var neuralSectionExpanded by mutableStateOf(false)  // Collapsed by default, Activities is primary
-    internal var appearanceSectionExpanded by mutableStateOf(false)  // No longer default expanded since Theme is in Activities
-    internal var swipeTrailSectionExpanded by mutableStateOf(false)
-    internal var inputSectionExpanded by mutableStateOf(false)
-    internal var swipeCorrectionsSectionExpanded by mutableStateOf(false)
-    internal var gestureTuningSectionExpanded by mutableStateOf(false)
-    internal var accessibilitySectionExpanded by mutableStateOf(false)
+    // Section expanded states — delegated to settingsViewModel (survive rotation)
     // v1.2.6: dictionarySectionExpanded removed - Dictionary Manager moved to Activities
-    internal var clipboardSectionExpanded by mutableStateOf(false)
-    internal var gifSectionExpanded by mutableStateOf(false)
-    internal var backupRestoreSectionExpanded by mutableStateOf(false)
-    internal var advancedSectionExpanded by mutableStateOf(false)
-    internal var infoSectionExpanded by mutableStateOf(false)
-    internal var helpSectionExpanded by mutableStateOf(false)
+    internal var wordPredictionAdvancedExpanded: Boolean
+        get() = settingsViewModel.wordPredictionAdvancedExpanded
+        set(value) { settingsViewModel.wordPredictionAdvancedExpanded = value }
+    internal var activitiesSectionExpanded: Boolean  // Activities at top, default expanded
+        get() = settingsViewModel.activitiesSectionExpanded
+        set(value) { settingsViewModel.activitiesSectionExpanded = value }
+    internal var multiLangSectionExpanded: Boolean
+        get() = settingsViewModel.multiLangSectionExpanded
+        set(value) { settingsViewModel.multiLangSectionExpanded = value }
+    internal var privacySectionExpanded: Boolean
+        get() = settingsViewModel.privacySectionExpanded
+        set(value) { settingsViewModel.privacySectionExpanded = value }
+    internal var neuralSectionExpanded: Boolean  // Collapsed by default, Activities is primary
+        get() = settingsViewModel.neuralSectionExpanded
+        set(value) { settingsViewModel.neuralSectionExpanded = value }
+    internal var appearanceSectionExpanded: Boolean  // No longer default expanded since Theme is in Activities
+        get() = settingsViewModel.appearanceSectionExpanded
+        set(value) { settingsViewModel.appearanceSectionExpanded = value }
+    internal var swipeTrailSectionExpanded: Boolean
+        get() = settingsViewModel.swipeTrailSectionExpanded
+        set(value) { settingsViewModel.swipeTrailSectionExpanded = value }
+    internal var inputSectionExpanded: Boolean
+        get() = settingsViewModel.inputSectionExpanded
+        set(value) { settingsViewModel.inputSectionExpanded = value }
+    internal var swipeCorrectionsSectionExpanded: Boolean
+        get() = settingsViewModel.swipeCorrectionsSectionExpanded
+        set(value) { settingsViewModel.swipeCorrectionsSectionExpanded = value }
+    internal var gestureTuningSectionExpanded: Boolean
+        get() = settingsViewModel.gestureTuningSectionExpanded
+        set(value) { settingsViewModel.gestureTuningSectionExpanded = value }
+    internal var accessibilitySectionExpanded: Boolean
+        get() = settingsViewModel.accessibilitySectionExpanded
+        set(value) { settingsViewModel.accessibilitySectionExpanded = value }
+    internal var clipboardSectionExpanded: Boolean
+        get() = settingsViewModel.clipboardSectionExpanded
+        set(value) { settingsViewModel.clipboardSectionExpanded = value }
+    internal var gifSectionExpanded: Boolean
+        get() = settingsViewModel.gifSectionExpanded
+        set(value) { settingsViewModel.gifSectionExpanded = value }
+    internal var backupRestoreSectionExpanded: Boolean
+        get() = settingsViewModel.backupRestoreSectionExpanded
+        set(value) { settingsViewModel.backupRestoreSectionExpanded = value }
+    internal var advancedSectionExpanded: Boolean
+        get() = settingsViewModel.advancedSectionExpanded
+        set(value) { settingsViewModel.advancedSectionExpanded = value }
+    internal var infoSectionExpanded: Boolean
+        get() = settingsViewModel.infoSectionExpanded
+        set(value) { settingsViewModel.infoSectionExpanded = value }
+    internal var helpSectionExpanded: Boolean
+        get() = settingsViewModel.helpSectionExpanded
+        set(value) { settingsViewModel.helpSectionExpanded = value }
 
-    // Test keyboard field (#1134: test input without leaving settings)
-    internal var testKeyboardExpanded by mutableStateOf(false)
-    internal var testKeyboardText by mutableStateOf("")
+    // Test keyboard field (#1134: test input without leaving settings) — delegated to settingsViewModel
+    internal var testKeyboardExpanded: Boolean
+        get() = settingsViewModel.testKeyboardExpanded
+        set(value) { settingsViewModel.testKeyboardExpanded = value }
+    internal var testKeyboardText: String
+        get() = settingsViewModel.testKeyboardText
+        set(value) { settingsViewModel.testKeyboardText = value }
 
-    // Settings search
-    internal var settingsSearchQuery by mutableStateOf("")
-    internal var highlightedSettingId by mutableStateOf<String?>(null)  // For pulse animation
+    // Settings search — delegated to settingsViewModel (survive rotation)
+    internal var settingsSearchQuery: String
+        get() = settingsViewModel.settingsSearchQuery
+        set(value) { settingsViewModel.settingsSearchQuery = value }
+    internal var highlightedSettingId: String?  // For pulse animation
+        get() = settingsViewModel.highlightedSettingId
+        set(value) { settingsViewModel.highlightedSettingId = value }
 
     // Position tracking for scroll-to-top functionality
     internal val settingPositions = mutableMapOf<String, Int>()  // settingId -> Y position in scroll content
@@ -494,18 +559,34 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         )
     }
 
-    // Collected data viewer dialog state
-    internal var showCollectedDataViewer by mutableStateOf(false)
-    internal var collectedDataList by mutableStateOf<List<tribixbite.cleverkeys.ml.SwipeMLData>>(emptyList())
-    internal var collectedDataStats by mutableStateOf<tribixbite.cleverkeys.ml.SwipeMLDataStore.DataStatistics?>(null)
-    internal var collectedDataSearchQuery by mutableStateOf("")
-    internal var collectedDataCurrentPage by mutableStateOf(0)
-    internal var collectedDataTotalCount by mutableStateOf(0)
+    // Collected data viewer dialog state — delegated to settingsViewModel (survive rotation)
+    internal var showCollectedDataViewer: Boolean
+        get() = settingsViewModel.showCollectedDataViewer
+        set(value) { settingsViewModel.showCollectedDataViewer = value }
+    internal var collectedDataList: List<tribixbite.cleverkeys.ml.SwipeMLData>
+        get() = settingsViewModel.collectedDataList
+        set(value) { settingsViewModel.collectedDataList = value }
+    internal var collectedDataStats: tribixbite.cleverkeys.ml.SwipeMLDataStore.DataStatistics?
+        get() = settingsViewModel.collectedDataStats
+        set(value) { settingsViewModel.collectedDataStats = value }
+    internal var collectedDataSearchQuery: String
+        get() = settingsViewModel.collectedDataSearchQuery
+        set(value) { settingsViewModel.collectedDataSearchQuery = value }
+    internal var collectedDataCurrentPage: Int
+        get() = settingsViewModel.collectedDataCurrentPage
+        set(value) { settingsViewModel.collectedDataCurrentPage = value }
+    internal var collectedDataTotalCount: Int
+        get() = settingsViewModel.collectedDataTotalCount
+        set(value) { settingsViewModel.collectedDataTotalCount = value }
     internal val collectedDataPageSize = 20
 
-    // Performance stats viewer dialog state
-    internal var showPerfStatsViewer by mutableStateOf(false)
-    internal var perfStatsSummary by mutableStateOf("")
+    // Performance stats viewer dialog state — delegated to settingsViewModel (survive rotation)
+    internal var showPerfStatsViewer: Boolean
+        get() = settingsViewModel.showPerfStatsViewer
+        set(value) { settingsViewModel.showPerfStatsViewer = value }
+    internal var perfStatsSummary: String
+        get() = settingsViewModel.perfStatsSummary
+        set(value) { settingsViewModel.perfStatsSummary = value }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
