@@ -334,6 +334,48 @@ class AutocorrectTest {
         }
     }
 
+    @Test
+    fun testAutocorrect_customWord_notBlockedByFrequencyFloor() {
+        // AC-2 (2026-07): custom words are injected at freq 1000, far below the
+        // binary dict scale (~52k..1M). Before the fix, ANY non-zero min-freq
+        // slider produced a floor >> 1000 that silently excluded every custom
+        // word as a correction target. Custom words are now exempt from the floor.
+        val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
+        val key = LanguagePreferenceKeys.customWordsKey("en")
+        val original = prefs.getString(key, "{}") ?: "{}"
+        try {
+            @Suppress("ApplySharedPref")
+            prefs.edit().putString(key, "{\"zqxword\": 1000}").commit()
+            predictor.reloadCustomAndUserWords()
+
+            config.autocorrect_enabled = true
+            config.autocorrect_prefix_length = 0
+            config.autocorrect_max_length_diff = 2
+            // A high slider → large floor that would exclude the freq-1000 custom word.
+            config.autocorrect_confidence_min_frequency = 2000
+            // "zqxwora" is a single adjacent-key typo (a↔d? no — 'a' at end vs 'd')
+            // of the custom word "zqxword"; must still correct to it despite the floor.
+            val result = predictor.autoCorrect("zqxwora")
+            assertEquals("custom word must survive the frequency floor as a target",
+                "zqxword", result)
+        } finally {
+            @Suppress("ApplySharedPref")
+            prefs.edit().putString(key, original).commit()
+            predictor.reloadCustomAndUserWords()
+            config.autocorrect_confidence_min_frequency = Defaults.AUTOCORRECT_MIN_FREQUENCY
+        }
+    }
+
+    @Test
+    fun testAutocorrect_transposition_preservesCase() {
+        // TEST-1: case preservation must apply to the transposition fast-path
+        // winner, not only substitution winners.
+        config.autocorrect_enabled = true
+        config.autocorrect_prefix_length = 0
+        assertEquals("Teh → The (title case preserved)", "The", predictor.autoCorrect("Teh"))
+        assertEquals("TEH → THE (all caps preserved)", "THE", predictor.autoCorrect("TEH"))
+    }
+
     // =========================================================================
     // Possessive guard — possessive of a known noun must not be "corrected"
     // Reported 2026-06-25: typing "ember's glow" produced "rivers glow". The

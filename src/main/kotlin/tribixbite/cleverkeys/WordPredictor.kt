@@ -2117,7 +2117,15 @@ class WordPredictor {
         }
 
         // 5. Apply correction only if confident candidate found.
-        if (bestCandidate != null && bestCandidate.frequency >= frequencyFloor) {
+        // Custom/user-added words are injected at a low placeholder frequency
+        // (1000) far below the binary dict's runtime scale (~52k..1M), so any
+        // non-zero slider floor would silently exclude EVERY custom word as a
+        // correction target. The user added them explicitly, so exempt them
+        // from the floor — analogous to the custom-word override in
+        // isWordDisabled. (AC-2, 2026-07.)
+        val winnerIsCustom = bestCandidate != null &&
+            customAndUserWords.contains(bestCandidate.word)
+        if (bestCandidate != null && (winnerIsCustom || bestCandidate.frequency >= frequencyFloor)) {
             // Re-route alias-keyed winners through contractionAliases so the
             // returned form is the apostrophe-bearing contraction. Without
             // this, `donr → dont` (the alias-key) would stop there; the
