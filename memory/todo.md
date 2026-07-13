@@ -1,11 +1,15 @@
 # CleverKeys TODO
 
-## 🔎 Post-decomposition review (2026-07-13) → docs/todo/2026-07-13-post-decomposition-review.md
+## ✅ Post-decomposition review EXECUTED (2026-07-13) → docs/todo/2026-07-13-post-decomposition-review.md
 3-agent review of the July settings-decomposition + dictionary + autocorrect work. Real bugs found:
 AC-1 (autocorrect min-freq default 500≠100 + slider 5000>SLIDER_MAX 2000), DICT-1 (gradle can
 downgrade en bin V2→V1), DEC-1 (gif_enabled search gate incomplete), AC-2 (custom words blocked by
-floor), + perf (weightedEditDistance no early-abandon/per-row alloc), dead state vars, docs. Executing
-TDD fixes → Task 8 (state hoisting) → perf. See the doc for the full prioritized list.
+floor), + perf (weightedEditDistance no early-abandon/per-row alloc), dead state vars, docs. All P0/P1 + most P2 fixed across 9 commits (perf 8812a8cf0, AC-1 f179c50f3, DEC-1/2 935c6a117,
+AC-2 a813969da, DICT-1 1c7c3c970, batches 3096ea17c + 343d61e30, T8 9a6504452, AC-3). Every bug
+got a red-first test. Verified: 1288 pure green; batched ew gate 79/79 green incl. new
+SettingsViewModelRotationTest. Perf: DP path ~145→58ms. REMAINING (P2 tail, see doc §Execution log):
+DICT-4 blocklist unification, DEC-6 fallbackEncrypted move, AC-4 possessive-typo TODO, AC-5 KDoc note,
+TEST-1 leftovers (gamees/Hadnr/slider-e2e), en.txt apostrophe review, ONNX .sh audit.
 
 ## ✅ SettingsActivity God-Object decomposition (2026-07-04, branch refactor/settings-decomposition)
 

@@ -11,7 +11,7 @@ Status legend: ☐ todo · ◐ in progress · ☑ done
 
 ## P0 — Real user-facing bugs
 
-### ☐ AC-1 [HIGH] Autocorrect min-frequency default & slider range are inconsistent
+### ☑ AC-1 [HIGH] Autocorrect min-frequency default & slider range are inconsistent
 - **Evidence**: `AutoCorrectionSettingsActivity.kt:{37,53,101,110,305,308}` hardcode `500`;
   `Config.Defaults.AUTOCORRECT_MIN_FREQUENCY = 100` (Config.kt:184). The live main-UI slider
   `AutoCorrectionSection.kt:86` is `valueRange = 100f..5000f` but `FrequencyFloor.SLIDER_MAX = 2000`
@@ -27,7 +27,7 @@ Status legend: ☐ todo · ◐ in progress · ☑ done
   AutoCorrectionSection max == `FrequencyFloor.SLIDER_MAX` (source-scan drift test); instrumented —
   after Reset, `prefs.getInt(...) == 100`.
 
-### ☐ DICT-1 [MED→HIGH latent] gradle task can silently downgrade en bin V2(CKDT)→V1(DICT)
+### ☑ DICT-1 [MED→HIGH latent] gradle task can silently downgrade en bin V2(CKDT)→V1(DICT)
 - **Evidence**: `build.gradle generateBinaryDictionaries` regenerates `<lang>_enhanced.bin` from json
   via `generate_binary_dict.py` (writes V1 `DICT`, no accent map) when `json.lastModified() > bin.lastModified()`.
   Shipped `en_enhanced.bin` is V2 `CKDT`. en is the ONLY lang with a json in assets. A stray json
@@ -37,7 +37,7 @@ Status legend: ☐ todo · ◐ in progress · ☑ done
   `build_en_wordlist.py --write`). Prefer the magic-guard (defensive for all langs).
 - **Test**: pure/CI — assert `en_enhanced.bin[0:4] == "CKDT"` (a bin-format guard test).
 
-### ☐ DEC-1 [MED] `gif_enabled` search gate incomplete (3 sites)
+### ☑ DEC-1 [MED] `gif_enabled` search gate incomplete (3 sites)
 - **Evidence**: `SettingsSearch.kt isGateEnabled()` (~121) has no `"gif_enabled"` case → `else→true`
   → gate never fires; `executeSearchAction()` (~138) has no `"gif_enabled"` expand redirect;
   `GifPanelSection.kt:44` "Enable GIF Panel" switch has no `highlightId="gif_enabled"`.
@@ -52,7 +52,7 @@ Status legend: ☐ todo · ◐ in progress · ☑ done
 
 ## P1 — Medium (correctness / perf / coverage)
 
-### ☐ AC-2 [MED] Custom/user words blocked as correction targets by any nonzero floor
+### ☑ AC-2 [MED] Custom/user words blocked as correction targets by any nonzero floor
 - **Evidence**: custom/user words injected at freq `1000` (WordPredictor.kt ~1310/1441 `optInt(...,1000)`);
   bin min freq ≈52,300. Any slider >~103 → floor >> 1000 → all custom words excluded as targets.
 - **Fix**: exempt `customAndUserWords` from the `frequencyFloor` gate (mirror the `isWordDisabled`
@@ -60,7 +60,7 @@ Status legend: ☐ todo · ◐ in progress · ☑ done
   (semantically: user-added words are always valid targets).
 - **Test**: instrumented — add custom word "zzqword", set slider high, assert a typo of it still corrects to it.
 
-### ☐ PERF-1 [HIGH] weightedEditDistance: no early-abandon → DP runs full on ~49k unrelated words
+### ☑ PERF-1 [HIGH] weightedEditDistance: no early-abandon → DP runs full on ~49k unrelated words
 - **Evidence**: `KeyAdjacency.weightedEditDistance` runs the full n×m DP for every lengthDiff-1..2
   candidate (prefix_length default 0 → no prefilter). L=8 typed ⇒ ~3M float ops/correction.
 - **Fix**: after each row, `if (curr.min() > maxEd) break` — but `maxEd` lives in the caller; pass a
@@ -69,18 +69,18 @@ Status legend: ☐ todo · ◐ in progress · ☑ done
 - **Test**: KeyAdjacencyTest — assert `weightedEditDistance(a,b,budget)` equals the unbounded value when
   ≤budget, and returns >budget (or a sentinel) when exceeding; existing distance tests unchanged.
 
-### ☐ PERF-2 [MED] weightedEditDistance: `prev = curr.copyOf()` allocates a FloatArray per row
+### ☑ PERF-2 [MED] weightedEditDistance: `prev = curr.copyOf()` allocates a FloatArray per row
 - **Evidence**: KeyAdjacency.kt:217 (~394k allocs / L=8 correction). `curr` is `val`.
 - **Fix**: make `curr` a `var`, swap rows (`val t=prev;prev=curr;curr=t`) — zero allocation. Combine with PERF-1.
 - **Test**: covered by existing KeyAdjacencyTest edit-distance cases (behavior identical).
 
-### ☐ DEC-2 [LOW-MED] `collapseAllSections()` omits `testKeyboardExpanded`
+### ☑ DEC-2 [LOW-MED] `collapseAllSections()` omits `testKeyboardExpanded`
 - **Evidence**: SettingsSearch.kt ~32-50 resets all top-level expand vars except `testKeyboardExpanded`
   (a top-level CollapsibleSettingsSection). Clicking a search result leaves Test Keyboard open too.
 - **Fix**: add `testKeyboardExpanded = false`.
 - **Test**: SettingsSearchTest — after executeSearchAction, exactly one section expanded.
 
-### ☐ DEC-3 [STREAMLINE] Remove 9 dead state vars
+### ☑ DEC-3 [STREAMLINE] Remove 9 dead state vars
 - **Evidence**: `showSearchResults` (never read; SettingsScreen uses a local), `currentThemeName`,
   `vibrateCustomEnabled`, `numberEntryLayout`, `neuralBeamAlpha/PruneConfidence/ScoreGap`,
   `neuralResamplingMode`, `privacyCollectErrors` — loaded in loadCurrentSettings/handlePreferenceChanged
@@ -89,7 +89,7 @@ Status legend: ☐ todo · ◐ in progress · ☑ done
   read directly by Config — no behavior change.
 - **Test**: SettingsDefaultsDriftTest extension detecting loaded-but-unread vars (optional); compile+suite green.
 
-### ☐ TEST-1 [MISSING] Autocorrect coverage gaps
+### ◐ TEST-1 (case-preservation + custom-word-floor DONE; morphology-vs-transposition, Hadnr case, slider end-to-end remain) [MISSING] Autocorrect coverage gaps
 - Case-preserved transposition winner (`"Teh"→"The"`, `"TEH"→"THE"`).
 - Custom-word-as-target under nonzero floor (pairs with AC-2).
 - Morphology-guard vs transposition interplay (`"gamees"`).
@@ -101,49 +101,49 @@ Status legend: ☐ todo · ◐ in progress · ☑ done
 ## P2 — Low / polish / docs
 
 ### Dictionary
-- ☐ DICT-2 [LOW] `DictionaryDataSource.kt:137` + `OptimizedVocabulary.kt:985` `^[a-z]+$` filter hides
+- ☑ DICT-2 [LOW] `DictionaryDataSource.kt:137` + `OptimizedVocabulary.kt:985` `^[a-z]+$` filter hides
   207 accented words (café…) from Dictionary Manager in the JSON-fallback path (latent). Drop filter in fallback.
-- ☐ DICT-3 [LOW latent] `OptimizedVocabulary.kt:1002` `(raw-128)/127f` → value 128 ⇒ freq 0.0 (excluded).
+- ☑ DICT-3 [LOW latent] `OptimizedVocabulary.kt:1002` `(raw-128)/127f` → value 128 ⇒ freq 0.0 (excluded).
   Current min is 134; clamp build output ≥129 or floor freq at 0.001f in the loader.
 - ☐ DICT-4 [STREAMLINE] Unify blocklists: `generate_binary_dict.ENGLISH_JUNK_BLOCKLIST` (18) should read
   `en_blocklist.txt` (54) when present (no leakage today — all 54 absent from json — but format-downgrade risk).
-- ☐ DICT-5 [LOW fragile] `detect_misspellings.py:286` doesn't skip `#` header lines of en_words.txt
+- ☑ DICT-5 [LOW fragile] `detect_misspellings.py:286` doesn't skip `#` header lines of en_words.txt
   (harmless today; a single-token comment would be analyzed). Skip `#` like build_dictionary.py:96.
-- ☐ DICT-6 [MISSING] `en.txt` calibration list contains `alot` (blocklisted, not in 98k → unpredictable
+- ☑ DICT-6 [MISSING] `en.txt` calibration list contains `alot` (blocklisted, not in 98k → unpredictable
   prompt); review the 105 apostrophe entries. Remove `alot`.
 
 ### Decomposition
-- ☐ DEC-4 [STREAMLINE] `clearAllPrivacyData()` (SettingsPrivacyDataHandlers.kt:10) is dead (PrivacySection
+- ☑ DEC-4 [STREAMLINE] `clearAllPrivacyData()` (SettingsPrivacyDataHandlers.kt:10) is dead (PrivacySection
   calls deleteCollectedData). Wire to a "Clear All" button or delete.
-- ☐ DEC-5 [POLISH] `SettingsNavigation.kt:68` FQ `android.net.Uri.parse` (import already present).
+- ☑ DEC-5 [POLISH] `SettingsNavigation.kt:68` FQ `android.net.Uri.parse` (import already present).
 - ☐ DEC-6 [POLISH] `SettingsResetPresets.kt:181` `fallbackEncrypted()` misfiled (lifecycle, not presets).
-- ☐ DEC-7 [POLISH] `SettingsResetPresets.kt:59` `lifecycleScope.launch{}` wrapping synchronous
+- ☑ DEC-7 [POLISH] `SettingsResetPresets.kt:59` `lifecycleScope.launch{}` wrapping synchronous
   `AlertDialog.Builder.show()` — drop the launch.
-- ☐ DEC-8 [POLISH] 3 unused imports: SettingsDialogs.kt (LocalContext), ClipboardSection.kt (FontStyle),
+- ☑ DEC-8 [POLISH] 3 unused imports: SettingsDialogs.kt (LocalContext), ClipboardSection.kt (FontStyle),
   MultiLanguageSection.kt (CardDefaults).
-- ☐ DEC-9 [STREAMLINE] ActivitiesSection.kt:90-259 bypasses SettingsNavigation wrappers
+- ☑ DEC-9 [STREAMLINE] ActivitiesSection.kt:90-259 bypasses SettingsNavigation wrappers
   (openExtraKeysConfig/openLayoutManager/openCalibration) with raw startActivity. Route through wrappers.
 
 ### Autocorrect
-- ☐ AC-3 [LOW] `OptimizedVocabulary.kt:105` `_autocorrect_confidence_min_frequency = 500` init → align to 100.
+- ☑ AC-3 [LOW] `OptimizedVocabulary.kt:105` `_autocorrect_confidence_min_frequency = 500` init → align to 100.
 - ☐ AC-4 [MISSING/TODO] Possessive-typo (`"embeer's"`) neither corrected nor handled — add TODO +
   optional: correct base, re-append `'s`. WordPredictor.kt ~1907.
 - ☐ AC-5 [POLISH] KDoc `isAdjacentTransposition`/`AutocorrectCandidate`: note distant-char alias
   transpositions can lose to a 1-sub competitor (documented edge, no fix).
 
 ### Docs / cleanup
-- ☐ DOC-1 `.claude/skills/dictionary-pipeline.md:33` (en_enhanced.txt "can be deleted" — already deleted),
+- ☑ DOC-1 `.claude/skills/dictionary-pipeline.md:33` (en_enhanced.txt "can be deleted" — already deleted),
   `:92` word_count=52042 → 98140; `docs/specs/english-dictionary-pipeline.md` Vestigial/Rebuild sections stale.
-- ☐ DOC-2 Stale "50k" comments: OptimizedVocabulary.kt:992,1005,1010; DictionaryDataSource.kt (×6).
-- ☐ DOC-3 `detect_misspellings.py:16` lists `metaphone` dep never imported — drop from docstring.
-- ☐ CLEAN-1 Delete superseded committed review artifacts: `scripts/misspelling_review.txt`,
+- ☑ DOC-2 Stale "50k" comments: OptimizedVocabulary.kt:992,1005,1010; DictionaryDataSource.kt (×6).
+- ☑ DOC-3 `detect_misspellings.py:16` lists `metaphone` dep never imported — drop from docstring.
+- ◐ CLEAN-1 (accented_words_for_review deleted; misspelling_review.txt kept = detect_misspellings DEFAULT_OUTPUT; ONNX .sh audit remains) Delete superseded committed review artifacts: `scripts/misspelling_review.txt`,
   `scripts/accented_words_for_review.txt`. Audit 8 dead ONNX-era `scripts/*.sh` for removal (separate, careful).
 
 ---
 
 ## Deferred big items (own sub-projects)
 
-### ☐ T8 — Hoist settings state into a SettingsViewModel (roadmap Task 8)
+### ☑ T8 — Hoist settings state into a SettingsViewModel (roadmap Task 8)
 187 `mutableStateOf` vars (all plain, zero prefs/config in initializers — clean surface). Move into a
 `SettingsViewModel : ViewModel()` (repo already uses `by viewModels()` for BackupRestoreViewModel);
 Activity keeps `internal var x by vm::x` delegates so the 33 extension files stay untouched. Benefit:
@@ -151,3 +151,16 @@ rotation-survivable settings/dialog/expansion state. Launchers + lifecycle stay 
 pure + instrumented gates.
 
 ### (PERF-1/2 above are the "autocorrect linear-sweep perf watch at 98k" deferred item — promoted to P1.)
+
+
+---
+
+## Execution log (2026-07-13)
+
+Commits c59a50aad..HEAD: perf (8812a8cf0), AC-1 (f179c50f3), DEC-1/2 (935c6a117), AC-2
+(a813969da), DICT-1 (1c7c3c970), batch A DEC-3/4/5/7/8/9 (3096ea17c), batch B
+DICT-2/3/5/6+DOC-1/2/3+CLEAN-1 (343d61e30), T8 scoped hoist (9a6504452), AC-3 (this commit).
+Verified: 1288 pure tests green; batched ew-cli gate 79/79 green (AutocorrectTest incl.
+AC-2/case tests, SettingsViewModelRotationTest, SettingsSearchTest, SettingsActivityComposeTest,
+BackupRestore x2, UrlSanitization). Perf measured on the 98k bin: DP path ~145→~58ms,
+same-length 2-7x, zero per-row allocation.

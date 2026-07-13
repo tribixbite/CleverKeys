@@ -102,7 +102,10 @@ class OptimizedVocabulary(private val context: Context) {
     private var _minWordLength = 2
     private var _charMatchThreshold = 0.67f
     private var _useEditDistance = true
-    private var _autocorrect_confidence_min_frequency: Int = 500 // Added for user-configured min frequency
+    // Pre-updateConfig() placeholder — must match Defaults.AUTOCORRECT_MIN_FREQUENCY.
+    // (Was 500: a swipe before the first updateConfig() used a 5x-too-strict
+    // normalized floor vs the real default of 100; AC-3, 2026-07-13.)
+    private var _autocorrect_confidence_min_frequency: Int = Defaults.AUTOCORRECT_MIN_FREQUENCY
 
     // LANGUAGE DETECTION: Auto-switch configuration
     // When detected language score exceeds threshold, boost that language's dictionary
