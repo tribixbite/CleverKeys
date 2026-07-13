@@ -47,6 +47,7 @@ internal fun SettingsActivity.collapseAllSections() {
     advancedSectionExpanded = false
     infoSectionExpanded = false
     helpSectionExpanded = false
+    testKeyboardExpanded = false
 }
 
 /**
@@ -123,6 +124,7 @@ internal fun SettingsActivity.isGateEnabled(gateId: String): Boolean {
         "swipe_typing" -> swipeTypingEnabled && currentLayoutSupportsSwipe
         "short_gestures" -> shortGesturesEnabled
         "multilang" -> multiLangEnabled
+        "gif_enabled" -> gifEnabled
         else -> true
     }
 }
@@ -139,6 +141,7 @@ internal fun SettingsActivity.executeSearchAction(setting: SearchableSetting) {
             "swipe_typing" -> neuralSectionExpanded = true
             "short_gestures" -> gestureTuningSectionExpanded = true
             "multilang" -> multiLangSectionExpanded = true
+            "gif_enabled" -> gifSectionExpanded = true
         }
         // Delay to let section expand, then scroll and highlight
         // Use lifecycleScope for delay, scrollToSetting uses composeScope internally

@@ -40,11 +40,14 @@ internal fun SettingsActivity.GifPanelSection() {
                     modifier = Modifier.padding(bottom = 12.dp)
                 )
 
-                // Master toggle
+                // Master toggle — the gate target for search results that are
+                // gatedBy="gif_enabled"; highlightId registers a scroll position
+                // so search redirect can reach it when GIF is disabled.
                 SettingsSwitch(
                     title = "Enable GIF Panel",
                     description = "Show GIF key on keyboard and enable reaction picker",
                     checked = gifEnabled,
+                    highlightId = "gif_enabled",
                     onCheckedChange = {
                         gifEnabled = it
                         saveSetting("gif_enabled", it)

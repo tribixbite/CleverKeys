@@ -106,4 +106,51 @@ class SettingsSearchCoverageTest {
         }
         assertThat(uncovered).isEmpty()
     }
+
+    /**
+     * Every `gatedBy = "X"` used in `searchableSettings` must have a matching
+     * `"X" ->` branch in `SettingsSearch.isGateEnabled()`, otherwise the gate
+     * falls through to `else -> true` and never fires: searching for a gated
+     * control while its gate is OFF expands the section and tries to scroll to
+     * an unrendered control (silent no-op) instead of redirecting the user to
+     * the enable toggle. (`gif_enabled` regression, 2026-07.)
+     */
+    @Test
+    fun everyGatedByHasAnIsGateEnabledCase() {
+        val activitySrc = settingsFile.readText()
+        val searchSrc = File("src/main/kotlin/tribixbite/cleverkeys/ui/settings/SettingsSearch.kt").readText()
+        val gateIds = Regex("""gatedBy\s*=\s*"([a-z_]+)"""").findAll(activitySrc)
+            .map { it.groupValues[1] }.toSortedSet()
+        check(gateIds.isNotEmpty()) { "No gatedBy values found — scanner broken." }
+        // isGateEnabled body: collect the `"X" ->` case labels.
+        val gateBody = Regex("""fun\s+SettingsActivity\.isGateEnabled[\s\S]*?\n    \}""").find(searchSrc)!!.value
+        val handled = Regex(""""([a-z_]+)"\s*->""").findAll(gateBody).map { it.groupValues[1] }.toSet()
+        val missing = gateIds.filter { it !in handled }
+        assertThat(missing).isEmpty()
+    }
+
+    /**
+     * `collapseAllSections()` must reset EVERY top-level section expand flag, or
+     * a search-result click (which collapses-all then expands the target) can
+     * leave two sections open. `testKeyboardExpanded` was omitted (2026-07).
+     */
+    @Test
+    fun collapseAllSections_resetsEveryTopLevelSectionFlag() {
+        val searchSrc = File("src/main/kotlin/tribixbite/cleverkeys/ui/settings/SettingsSearch.kt").readText()
+        val body = Regex("""fun\s+SettingsActivity\.collapseAllSections[\s\S]*?\n\}""").find(searchSrc)!!.value
+        val reset = Regex("""(\w+)\s*=\s*false""").findAll(body).map { it.groupValues[1] }.toSet()
+        // Every top-level CollapsibleSettingsSection expand var lives in SettingsActivity.kt as
+        // `internal var <name>(Section)?Expanded by mutableStateOf`. Each must be reset here.
+        // (AnimatedVisibility sub-toggles like wordPredictionAdvancedExpanded are NOT top-level
+        // sections and are intentionally excluded — they are nested inside a section body.)
+        val topLevel = setOf(
+            "activitiesSectionExpanded", "multiLangSectionExpanded", "privacySectionExpanded",
+            "neuralSectionExpanded", "appearanceSectionExpanded", "swipeTrailSectionExpanded",
+            "inputSectionExpanded", "swipeCorrectionsSectionExpanded", "gestureTuningSectionExpanded",
+            "accessibilitySectionExpanded", "clipboardSectionExpanded", "gifSectionExpanded",
+            "backupRestoreSectionExpanded", "advancedSectionExpanded", "infoSectionExpanded",
+            "helpSectionExpanded", "testKeyboardExpanded"
+        )
+        assertThat(topLevel.filter { it !in reset }).isEmpty()
+    }
 }
