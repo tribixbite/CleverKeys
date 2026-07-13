@@ -1,8 +1,6 @@
 package tribixbite.cleverkeys.ui.settings
 
 import android.widget.Toast
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.launch
 import tribixbite.cleverkeys.Defaults
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
@@ -56,11 +54,10 @@ internal fun SettingsActivity.applySwipeSensitivityPreset(preset: String) {
 
 internal fun SettingsActivity.resetAllSettings() {
         val _self = this  // capture extension receiver for use inside non-inline lambdas
-        lifecycleScope.launch {
-            android.app.AlertDialog.Builder(_self)
-                .setTitle(getString(R.string.settings_reset_dialog_title))
-                .setMessage(getString(R.string.settings_reset_dialog_message))
-                .setPositiveButton(getString(R.string.settings_reset_dialog_confirm)) { _, _ ->
+        android.app.AlertDialog.Builder(_self)
+            .setTitle(getString(R.string.settings_reset_dialog_title))
+            .setMessage(getString(R.string.settings_reset_dialog_message))
+            .setPositiveButton(getString(R.string.settings_reset_dialog_confirm)) { _, _ ->
                     // Reset all settings using Defaults constants
                     val editor = prefs.edit()
                     editor.clear()
@@ -175,7 +172,6 @@ internal fun SettingsActivity.resetAllSettings() {
                 }
                 .setNegativeButton(android.R.string.cancel, null)
                 .show()
-        }
 }
 
 internal fun SettingsActivity.fallbackEncrypted() {

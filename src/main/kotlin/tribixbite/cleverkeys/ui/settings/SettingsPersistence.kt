@@ -35,9 +35,6 @@ internal fun SettingsActivity.handlePreferenceChanged(sharedPreferences: SharedP
             "neural_confidence_threshold" -> {
                 confidenceThreshold = prefs.getFloat(key, Defaults.NEURAL_CONFIDENCE_THRESHOLD)
             }
-            "theme" -> {
-                currentThemeName = prefs.getSafeString(key, Defaults.THEME)
-            }
             "keyboard_height" -> {
                 keyboardHeight = prefs.getInt(key, Defaults.KEYBOARD_HEIGHT_PORTRAIT)
             }
@@ -241,7 +238,6 @@ internal fun SettingsActivity.loadCurrentSettings() {
         confidenceThreshold = prefs.getSafeFloat("neural_confidence_threshold", Defaults.NEURAL_CONFIDENCE_THRESHOLD)
 
         // Appearance settings
-        currentThemeName = prefs.getSafeString("theme", Defaults.THEME)
         keyboardHeight = prefs.getSafeInt("keyboard_height", Defaults.KEYBOARD_HEIGHT_PORTRAIT)
         keyboardHeightLandscape = prefs.getSafeInt("keyboard_height_landscape", Defaults.KEYBOARD_HEIGHT_LANDSCAPE)
 
@@ -321,8 +317,6 @@ internal fun SettingsActivity.loadCurrentSettings() {
         doubleTapLockShift = prefs.getSafeBoolean("lock_double_tap", Defaults.DOUBLE_TAP_LOCK_SHIFT)
         switchInputImmediate = prefs.getSafeBoolean("switch_input_immediate", Defaults.SWITCH_INPUT_IMMEDIATE)
         smartPunctuationEnabled = prefs.getSafeBoolean("smart_punctuation", Defaults.SMART_PUNCTUATION)
-        vibrateCustomEnabled = prefs.getSafeBoolean("vibrate_custom", Defaults.VIBRATE_CUSTOM)
-        numberEntryLayout = prefs.getSafeString("number_entry_layout", Defaults.NUMBER_ENTRY_LAYOUT)
 
         // Gesture tuning settings
         tapDurationThreshold = Config.safeGetInt(prefs, "tap_duration_threshold", Defaults.TAP_DURATION_THRESHOLD)
@@ -401,13 +395,6 @@ internal fun SettingsActivity.loadCurrentSettings() {
         autocorrectCharMatchThreshold = Config.safeGetFloat(prefs, "autocorrect_char_match_threshold", Defaults.AUTOCORRECT_CHAR_MATCH_THRESHOLD)
         autocorrectMinFrequency = Config.safeGetInt(prefs, "autocorrect_confidence_min_frequency", Defaults.AUTOCORRECT_MIN_FREQUENCY)
 
-        // Neural beam search advanced settings (batch/greedy/onnx threads now in NeuralSettingsActivity)
-        neuralBeamAlpha = Config.safeGetFloat(prefs, "neural_beam_alpha", Defaults.NEURAL_BEAM_ALPHA)
-        neuralBeamPruneConfidence = Config.safeGetFloat(prefs, "neural_beam_prune_confidence", Defaults.NEURAL_BEAM_PRUNE_CONFIDENCE)
-        neuralBeamScoreGap = Config.safeGetFloat(prefs, "neural_beam_score_gap", Defaults.NEURAL_BEAM_SCORE_GAP)
-
-        // Neural model config settings
-        neuralResamplingMode = prefs.getSafeString("neural_resampling_mode", Defaults.NEURAL_RESAMPLING_MODE)
         // #136: neural_user_max_seq_length pref is preserved in Config for
         // backup/restore round-trips, but no longer surfaced in this UI —
         // values >250 crash the encoder. SwipePredictorOrchestrator clamps
@@ -438,7 +425,6 @@ internal fun SettingsActivity.loadCurrentSettings() {
         // Privacy settings - all OFF by default (CleverKeys is fully offline)
         privacyCollectSwipe = prefs.getSafeBoolean("privacy_collect_swipe", Defaults.PRIVACY_COLLECT_SWIPE)
         privacyCollectPerformance = prefs.getSafeBoolean("privacy_collect_performance", Defaults.PRIVACY_COLLECT_PERFORMANCE)
-        privacyCollectErrors = prefs.getSafeBoolean("privacy_collect_errors", Defaults.PRIVACY_COLLECT_ERRORS)
 
         // Short gesture settings
         shortGesturesEnabled = prefs.getSafeBoolean("short_gestures_enabled", Defaults.SHORT_GESTURES_ENABLED)

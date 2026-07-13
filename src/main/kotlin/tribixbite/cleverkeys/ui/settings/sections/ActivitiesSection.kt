@@ -24,14 +24,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import tribixbite.cleverkeys.ExtraKeysConfigActivity
-import tribixbite.cleverkeys.LayoutManagerActivity
 import tribixbite.cleverkeys.PerKeyCustomizationButton
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.ShortSwipeCalibrationActivity
 import tribixbite.cleverkeys.ThemeSettingsActivity
 import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
 import tribixbite.cleverkeys.ui.settings.openDictionaryManager
+import tribixbite.cleverkeys.ui.settings.openExtraKeysConfig
+import tribixbite.cleverkeys.ui.settings.openLayoutManager
 import androidx.compose.foundation.layout.Box
 
 @Composable
@@ -132,10 +132,7 @@ internal fun SettingsActivity.ActivitiesSection() {
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 8.dp)
-                        .clickable {
-                            val intent = Intent(activityContext, ExtraKeysConfigActivity::class.java)
-                            activityContext.startActivity(intent)
-                        },
+                        .clickable { openExtraKeysConfig() },
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.tertiaryContainer
                     )
@@ -173,10 +170,7 @@ internal fun SettingsActivity.ActivitiesSection() {
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 8.dp)
-                        .clickable {
-                            val intent = Intent(activityContext, LayoutManagerActivity::class.java)
-                            activityContext.startActivity(intent)
-                        },
+                        .clickable { openLayoutManager() },
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant
                     )

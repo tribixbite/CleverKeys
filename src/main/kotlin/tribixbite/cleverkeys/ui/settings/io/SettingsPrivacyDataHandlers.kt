@@ -7,42 +7,6 @@ import kotlinx.coroutines.launch
 import tribixbite.cleverkeys.NeuralPerformanceStats
 import tribixbite.cleverkeys.SettingsActivity
 
-internal fun SettingsActivity.clearAllPrivacyData() {
-    android.app.AlertDialog.Builder(this)
-        .setTitle("Clear All Data")
-        .setMessage("This will delete all collected data including:\n\n" +
-            "• Swipe patterns\n" +
-            "• Performance metrics\n" +
-            "• Error logs\n" +
-            "• Learned word frequencies\n\n" +
-            "This cannot be undone.")
-        .setPositiveButton("Clear All") { _, _ ->
-            val _self = this
-            lifecycleScope.launch {
-                try {
-                    // Clear privacy-related files
-                    val privacyDir = java.io.File(filesDir, "privacy_data")
-                    if (privacyDir.exists()) {
-                        privacyDir.deleteRecursively()
-                    }
-
-                    // Clear learned frequencies from prefs
-                    val editor = prefs.edit()
-                    prefs.all.keys.filter { it.startsWith("learned_") || it.startsWith("freq_") }.forEach {
-                        editor.remove(it)
-                    }
-                    editor.apply()
-
-                    Toast.makeText(_self, "All collected data cleared", Toast.LENGTH_SHORT).show()
-                } catch (e: Exception) {
-                    Toast.makeText(_self, "Error clearing data: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-        .setNegativeButton(android.R.string.cancel, null)
-        .show()
-}
-
 /**
  * View collected swipe data in a dialog with pagination
  */

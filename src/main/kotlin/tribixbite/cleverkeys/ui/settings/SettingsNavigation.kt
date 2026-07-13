@@ -65,7 +65,7 @@ internal fun SettingsActivity.openBackupRestore() {
 internal fun SettingsActivity.openGitHubReleases() {
         try {
             val intent = Intent(Intent.ACTION_VIEW).apply {
-                data = android.net.Uri.parse("https://github.com/tribixbite/cleverkeys/releases")
+                data = Uri.parse("https://github.com/tribixbite/cleverkeys/releases")
             }
             startActivity(intent)
         } catch (e: Exception) {

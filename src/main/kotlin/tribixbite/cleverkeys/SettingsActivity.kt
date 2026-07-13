@@ -215,7 +215,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var beamWidth by mutableStateOf(6)
     internal var maxLength by mutableStateOf(20)
     internal var confidenceThreshold by mutableStateOf(0.01f)
-    internal var currentThemeName by mutableStateOf("cleverkeysdark")
     internal var keyboardHeight by mutableStateOf(28)
     internal var keyboardHeightLandscape by mutableStateOf(50)
     internal var vibrationEnabled by mutableStateOf(false)
@@ -318,8 +317,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var doubleTapLockShift by mutableStateOf(false)
     internal var switchInputImmediate by mutableStateOf(false)
     internal var smartPunctuationEnabled by mutableStateOf(true) // Attach punctuation to end of last word
-    internal var vibrateCustomEnabled by mutableStateOf(false) // Custom vibration duration
-    internal var numberEntryLayout by mutableStateOf("pin") // "pin", "phone", "calculator"
 
     // Gesture tuning settings
     internal var tapDurationThreshold by mutableStateOf(150) // ms
@@ -377,14 +374,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var autocorrectCharMatchThreshold by mutableStateOf(0.67f)
     internal var autocorrectMinFrequency by mutableStateOf(500)
 
-    // Neural beam search advanced settings (batch/greedy/onnx threads moved to NeuralSettingsActivity)
-    internal var neuralBeamAlpha by mutableStateOf(1.55f)
-    internal var neuralBeamPruneConfidence by mutableStateOf(0.33f)
-    internal var neuralBeamScoreGap by mutableStateOf(50.0f)
-
-    // Neural model config settings
-    internal var neuralResamplingMode by mutableStateOf("discard")
-
     // Multi-language settings
     internal var multiLangEnabled by mutableStateOf(false)
     internal var primaryLanguage by mutableStateOf("en")
@@ -406,7 +395,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     // Privacy settings - all OFF by default (CleverKeys is fully offline)
     internal var privacyCollectSwipe by mutableStateOf(false)
     internal var privacyCollectPerformance by mutableStateOf(false)
-    internal var privacyCollectErrors by mutableStateOf(false)
 
     // Short gesture settings
     internal var shortGesturesEnabled by mutableStateOf(true)
@@ -448,7 +436,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     // Settings search
     internal var settingsSearchQuery by mutableStateOf("")
-    internal var showSearchResults by mutableStateOf(false)
     internal var highlightedSettingId by mutableStateOf<String?>(null)  // For pulse animation
 
     // Position tracking for scroll-to-top functionality
