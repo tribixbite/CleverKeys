@@ -12,6 +12,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -118,22 +119,44 @@ class ThemeSettingsActivity : ComponentActivity() {
         prefs = DirectBootAwarePreferences.get_shared_preferences(this)
 
         setContent {
-            // Use a custom dark color scheme with visible surfaces
-            val colorScheme = darkColorScheme(
-                primary = Color(0xFF9B59B6),       // Purple accent
-                onPrimary = Color.White,
-                primaryContainer = Color(0xFF4A235A),
-                onPrimaryContainer = Color(0xFFE8DAEF),
-                secondary = Color(0xFF64B5F6),     // Blue accent
-                onSecondary = Color.Black,
-                surface = Color(0xFF1E1E1E),       // Dark but visible surface
-                onSurface = Color(0xFFE0E0E0),     // Light text
-                background = Color(0xFF121212),    // Material dark background
-                onBackground = Color(0xFFE0E0E0),
-                surfaceVariant = Color(0xFF2C2C2C),
-                onSurfaceVariant = Color(0xFFB0B0B0),
-                outline = Color(0xFF555555)
-            )
+            // #35: Follow the system day/night setting. Dark keeps the original
+            // custom scheme verbatim; light derives from it (same purple/blue
+            // accent hues darkened for contrast on light surfaces, neutrals
+            // matching MaterialThemeManager's branded light scheme).
+            val colorScheme = if (isSystemInDarkTheme()) {
+                // Custom dark color scheme with visible surfaces (unchanged)
+                darkColorScheme(
+                    primary = Color(0xFF9B59B6),       // Purple accent
+                    onPrimary = Color.White,
+                    primaryContainer = Color(0xFF4A235A),
+                    onPrimaryContainer = Color(0xFFE8DAEF),
+                    secondary = Color(0xFF64B5F6),     // Blue accent
+                    onSecondary = Color.Black,
+                    surface = Color(0xFF1E1E1E),       // Dark but visible surface
+                    onSurface = Color(0xFFE0E0E0),     // Light text
+                    background = Color(0xFF121212),    // Material dark background
+                    onBackground = Color(0xFFE0E0E0),
+                    surfaceVariant = Color(0xFF2C2C2C),
+                    onSurfaceVariant = Color(0xFFB0B0B0),
+                    outline = Color(0xFF555555)
+                )
+            } else {
+                lightColorScheme(
+                    primary = Color(0xFF7D3C98),       // Purple accent (darkened for light-surface contrast)
+                    onPrimary = Color.White,
+                    primaryContainer = Color(0xFFE8DAEF),
+                    onPrimaryContainer = Color(0xFF4A235A),
+                    secondary = Color(0xFF1976D2),     // Blue accent (Blue 700)
+                    onSecondary = Color.White,
+                    surface = Color.White,
+                    onSurface = Color(0xFF1A1C1E),
+                    background = Color(0xFFFAFAFA),    // Grey 50
+                    onBackground = Color(0xFF1A1C1E),
+                    surfaceVariant = Color(0xFFF5F5F5),
+                    onSurfaceVariant = Color(0xFF44474E),
+                    outline = Color(0xFFBDBDBD)
+                )
+            }
             MaterialTheme(colorScheme = colorScheme) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),

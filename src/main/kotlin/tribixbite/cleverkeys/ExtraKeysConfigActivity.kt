@@ -3,6 +3,7 @@ package tribixbite.cleverkeys
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -35,8 +36,9 @@ class ExtraKeysConfigActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
+            // #35: Follow the system day/night setting (dark look unchanged)
             MaterialTheme(
-                colorScheme = darkColorScheme()
+                colorScheme = if (isSystemInDarkTheme()) darkColorScheme() else lightColorScheme()
             ) {
                 ExtraKeysConfigScreen(
                     onBack = { finish() }
