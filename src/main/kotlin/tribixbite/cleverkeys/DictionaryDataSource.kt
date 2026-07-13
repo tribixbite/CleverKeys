@@ -33,7 +33,7 @@ interface DictionaryDataSource {
 
 /**
  * Main dictionary source - loads from assets dictionary file
- * Uses prefix indexing for fast search with 50k vocabulary
+ * Uses prefix indexing for fast search with 98k vocabulary
  *
  * v1.1.89: Added language support - loads language-specific dictionary when available
  *
@@ -52,7 +52,7 @@ class MainDictionarySource(
 
     init {
         // Reuse shared cache if it was built for this language.
-        // This avoids re-parsing the 50k binary dictionary every time
+        // This avoids re-parsing the 98k binary dictionary every time
         // the user opens Dictionary Manager or switches tabs.
         synchronized(Companion) {
             sharedCache[languageCode]?.let { cached ->
@@ -125,7 +125,7 @@ class MainDictionarySource(
                 }
             }
 
-            // Try JSON format first (50k words with frequencies)
+            // Try JSON format first (98k words with frequencies)
             try {
                 val jsonFilename = "dictionaries/${languageCode}_enhanced.json"
                 val jsonString = context.assets.open(jsonFilename).bufferedReader().use { it.readText() }
@@ -134,7 +134,7 @@ class MainDictionarySource(
 
                 while (keys.hasNext()) {
                     val word = keys.next().lowercase()
-                    if (word.matches(Regex("^[a-z]+$"))) {
+                    if (word.matches(Regex("^[\\p{L}'-]+$"))) {
                         val frequency = jsonDict.getInt(word)
                         // Use raw frequency from JSON (128-255 range)
                         words.add(
@@ -186,7 +186,7 @@ class MainDictionarySource(
     /**
      * Build prefix index for fast word search.
      * Creates mapping from prefixes (1-3 chars) to lists of matching words.
-     * Performance: Reduces 50k linear search to ~100-500 comparisons.
+     * Performance: Reduces 98k linear search to ~100-500 comparisons.
      * Also updates shared static cache so subsequent MainDictionarySource
      * instances for the same language skip the full load.
      */
@@ -236,7 +236,7 @@ class MainDictionarySource(
      * Re-sync all cached DictionaryWord.enabled flags from the current disabled set.
      * Handles cross-source coherence: when DisabledDictionarySource toggles a word,
      * this source's cache becomes stale. Called by WordListFragment.refresh() before
-     * re-filtering. O(n) scan of ~50k words against a HashSet — <5ms.
+     * re-filtering. O(n) scan of ~98k words against a HashSet — <10ms.
      *
      * The prefix index stores the SAME DictionaryWord object references as cachedWords,
      * so mutating .enabled here also fixes prefix index search results.
@@ -253,7 +253,7 @@ class MainDictionarySource(
     override suspend fun toggleWord(word: String, enabled: Boolean) {
         disabledSource.setWordEnabled(word, enabled)
         // Update cached entries in-place so subsequent getAllWords()/searchWords()
-        // reflect the new enabled state without a full 50k-word reload
+        // reflect the new enabled state without a full 98k-word reload
         cachedWords?.forEach { dw ->
             if (dw.word.equals(word, ignoreCase = true)) {
                 dw.enabled = enabled
@@ -359,7 +359,7 @@ class MainDictionarySource(
         private const val PREFIX_INDEX_MAX_LENGTH = 3
 
         // Per-language shared cache across MainDictionarySource instances.
-        // Eliminates redundant 50k-word binary dict parsing when DictionaryManager
+        // Eliminates redundant 98k-word binary dict parsing when DictionaryManager
         // is reopened or tabs are switched (each fragment creates a new instance).
         // Keyed by language code so multilang tabs don't evict each other.
         // Thread-safe: synchronized on Companion in init{} and buildPrefixIndex().

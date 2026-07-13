@@ -191,32 +191,22 @@ From spot-check of the 52,042 shipped words:
 `contractions_en.json` and `contractions_non_paired.json` are byte-identical. The per-language file (`contractions_en.json`) is loaded by `loadLanguageContractions("en")`, while the base file (`contractions_non_paired.json`) is loaded by `loadMappings()`. Both end up in the same `nonPairedContractions` map so this is harmless duplication.
 
 ### Vestigial Files
-- `src/main/assets/dictionaries/en_enhanced.txt` — V1 word list (49,297 words). NOT loaded at runtime (app uses `.bin`). Contains more misspellings than V3. Should be deleted or replaced with V3 source.
+- ~~`src/main/assets/dictionaries/en_enhanced.txt`~~ — **DELETED 2026-07-03.** Was a V1 word list (49,297 words); never loaded at runtime.
 - `src/main/assets/dictionaries/en_enhanced.json` — JSON export of dictionary. Used only by `OptimizedVocabulary.loadFromJSON()` as fallback if binary loading fails.
 
 ## Build Commands
 
-### Rebuild English Dictionary from Scratch
+### Rebuild English Dictionary (V4, 98,140 words)
 ```bash
 cd scripts/
 
-# 1. Generate word list from wordfreq
-python3 get_wordlist.py --lang en --output en_words.txt --count 50000
+# Report mode (no files touched): classification counts + review artifacts + eval coverage
+python3 build_en_wordlist.py
 
-# 2. Build binary dictionary
-python3 build_dictionary.py --lang en --input en_words.txt --output en_enhanced.bin --use-wordfreq
-
-# 3. Copy to assets
-cp en_enhanced.bin ../src/main/assets/dictionaries/
+# Regenerate en_words.txt + en_enhanced.{json,bin} (assets + scripts copies) + verify
+python3 build_en_wordlist.py --write
 ```
-
-### Rebuild from Curated V3 Source
-```bash
-cd scripts/
-
-# Build from the curated word list (preferred — preserves manual curation)
-python3 build_dictionary.py --lang en --input dictionaries/en/en_words.txt --output ../src/main/assets/dictionaries/en_enhanced.bin --use-wordfreq
-```
+See `.claude/skills/dictionary-pipeline.md` for the full one-pass evidence classifier pipeline.
 
 ### Rebuild Contractions
 ```bash

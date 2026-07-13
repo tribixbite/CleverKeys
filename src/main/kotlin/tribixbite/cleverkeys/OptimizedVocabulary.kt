@@ -49,7 +49,7 @@ class OptimizedVocabulary(private val context: Context) {
     @Volatile
     private var activeBeamSearchTrie: VocabularyTrie = vocabularyTrie
 
-    // OPTIMIZATION Phase 2: Length-based buckets for fuzzy matching (reduces 50k iteration to ~2k)
+    // OPTIMIZATION Phase 2: Length-based buckets for fuzzy matching (reduces 98k iteration to ~2k)
     // Maps word length -> list of words with that length
     private val vocabularyByLength: MutableMap<Int, MutableList<String>> = HashMap()
 
@@ -61,12 +61,12 @@ class OptimizedVocabulary(private val context: Context) {
     @Volatile
     private var secondaryNormalizedIndex: NormalizedPrefixIndex? = null
 
-    // Scoring parameters (tuned for 50k vocabulary)
+    // Scoring parameters (tuned for 98k vocabulary)
     private val CONFIDENCE_WEIGHT = 0.6f
     private val FREQUENCY_WEIGHT = 0.4f
-    private val COMMON_WORDS_BOOST = 1.3f  // Increased for 50k vocab
+    private val COMMON_WORDS_BOOST = 1.3f  // Increased for 98k vocab
     private val TOP5000_BOOST = 1.0f
-    private val RARE_WORDS_PENALTY = 0.75f // Strengthened for 50k vocab
+    private val RARE_WORDS_PENALTY = 0.75f // Strengthened for 98k vocab
 
     // Filtering thresholds
     private val minFrequencyByLength: MutableMap<Int, Float> = HashMap()
@@ -618,7 +618,7 @@ class OptimizedVocabulary(private val context: Context) {
                     }
 
                     // OPTIMIZATION Phase 2: Use length-based buckets instead of iterating entire vocabulary
-                    // This reduces iteration from 50k+ words to ~2k words (only similar lengths)
+                    // This reduces iteration from 98k+ words to ~2k words (only similar lengths)
                     // v1.33.2: CRITICAL FIX - find BEST match (highest score), not FIRST match
                     val targetLength = beamWord.length
                     var bestMatch: String? = null
@@ -982,14 +982,14 @@ class OptimizedVocabulary(private val context: Context) {
             val wordFreqList = ArrayList<MutableMap.MutableEntry<String, Int>>()
             while (keys.hasNext()) {
                 val word = keys.next().toLowerCase(Locale.ROOT)
-                if (word.matches("^[a-z]+$".toRegex())) {
+                if (word.matches("^[\\p{L}'-]+$".toRegex())) {
                     val freq = jsonDict.getInt(word)
                     wordFreqList.add(AbstractMap.SimpleEntry(word, freq))
                 }
             }
 
             // Sort by frequency descending (highest frequency first)
-            // BOTTLENECK: O(n log n) sort of 50k items takes ~500ms on ARM devices
+            // BOTTLENECK: O(n log n) sort of 98k items takes ~750ms on ARM devices
             wordFreqList.sortWith { a, b -> b.value.compareTo(a.value) }
 
             // Second pass: assign tiers based on sorted position
@@ -999,15 +999,16 @@ class OptimizedVocabulary(private val context: Context) {
                 val rawFreq = entry.value
 
                 // Normalize frequency from 128-255 range to 0-1 range
-                val frequency = (rawFreq - 128).toFloat() / 127.0f
+                // Clamp to ≥0.001f so a raw value of exactly 128 is never excluded by minFrequencyByLength
+                val frequency = ((rawFreq - 128).toFloat() / 127.0f).coerceAtLeast(0.001f)
 
                 // Determine tier based on sorted position
-                // Tightened thresholds for 50k vocabulary (was top 5000, now top 3000)
+                // Tightened thresholds for 98k vocabulary (was top 5000, now top 3000)
                 val tier: Byte
                 if (i < 100) {
                     tier = 2 // common (top 100)
                 } else if (i < 3000) {
-                    tier = 1 // top3000 (6% of 50k vocab)
+                    tier = 1 // top3000 (~3% of 98k vocab)
                 } else {
                     tier = 0 // regular
                 }

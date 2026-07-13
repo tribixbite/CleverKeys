@@ -13,7 +13,7 @@ Usage:
     python3 detect_misspellings.py [--dict PATH] [--output PATH] [--min-gap FLOAT]
 
 Dependencies:
-    pip install wordfreq spellchecker nltk metaphone
+    pip install wordfreq spellchecker nltk
     python3 -c "import nltk; nltk.download('words'); nltk.download('names')"
     # hunspell with en_US dictionary must be installed
 
@@ -283,7 +283,7 @@ def main():
 
     # Load dictionary
     with open(args.dict) as f:
-        our_words = [w.strip() for w in f if w.strip()]
+        our_words = [w.strip() for w in f if w.strip() and not w.startswith('#')]
     print(f"Dictionary: {len(our_words)} words")
 
     # Stage 1: Build whitelist

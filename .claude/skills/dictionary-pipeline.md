@@ -30,7 +30,7 @@ Use this skill when building, modifying, or quality-checking dictionaries and co
 ### What the App Does NOT Load
 | File | Status | Notes |
 |------|--------|-------|
-| `en_enhanced.txt` | Vestigial | V1 word list, NOT used. Can be deleted. |
+| `en_enhanced.txt` | Deleted | V1 word list. DELETED 2026-07-03 (was never loaded at runtime). |
 | `contraction_pairings_cleaned.json` | Unused | Cleaned subset, never referenced in code |
 | `contractions_en.json` | Redundant | Identical to `contractions_non_paired.json` |
 
@@ -89,7 +89,7 @@ with open('en_enhanced.bin', 'rb') as f:
     magic = struct.unpack('<I', f.read(4))[0]    # 0x54444B43 = "CKDT"
     version = struct.unpack('<I', f.read(4))[0]   # 2
     lang = f.read(4).decode().rstrip('\x00')       # "en"
-    word_count = struct.unpack('<I', f.read(4))[0] # 52042
+    word_count = struct.unpack('<I', f.read(4))[0] # 98140
     canonical_offset = struct.unpack('<I', f.read(4))[0]
     f.seek(canonical_offset)
     for i in range(word_count):
