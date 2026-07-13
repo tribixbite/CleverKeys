@@ -294,16 +294,20 @@ def main():
 
     # Strip junk entries (corpus-noise fragments, foreign-script glyphs).
     # Shares the exact predicate with generate_binary_dict.py so the V2
-    # (this) and V1 build paths filter identically. See that module for the
-    # full rationale on why contraction full-forms (dont/doesnt) are KEPT
-    # while apostrophe-split left-fragments (doesn/isn) are removed.
-    from generate_binary_dict import ENGLISH_JUNK_BLOCKLIST, _is_latin_word
+    # (this) and V1 build paths filter identically. load_blocklist() returns
+    # the union of ENGLISH_JUNK_BLOCKLIST (hardcoded) and
+    # scripts/dictionaries/en/en_blocklist.txt so both paths stay in sync.
+    # See generate_binary_dict for the full rationale on why contraction
+    # full-forms (dont/doesnt) are KEPT while left-fragments (doesn/isn) are
+    # removed.
+    from generate_binary_dict import load_blocklist, _is_latin_word
+    _junk_blocklist = load_blocklist()
     ascii_share = sum(1 for w, _ in raw_words if w.isascii()) / max(1, len(raw_words))
     latin_dict = ascii_share > 0.90
     before = len(raw_words)
     raw_words = [
         (w, f) for w, f in raw_words
-        if w not in ENGLISH_JUNK_BLOCKLIST and not (latin_dict and not _is_latin_word(w))
+        if w not in _junk_blocklist and not (latin_dict and not _is_latin_word(w))
     ]
     if before != len(raw_words):
         print(f"After junk filter: {len(raw_words)} words (removed {before - len(raw_words)})")

@@ -144,6 +144,11 @@ class WordPredictor {
          *   "thier"→"their" 0.970 vs "thisd" (2 subs) 0.950 → raw win ✓
          * Verified accept: teh→the, hte→the, becuase→because, recieve→receive,
          * thsi→this, waht→what, taht→that, jsut→just, liek→like, onyl→only.
+         * Note: transposition detection is positional, not keyboard-aware — a swap of
+         * physically distant keys scores the same 1−0.15/len, and in rare short-word
+         * cases a 1-substitution alias candidate at equal-or-better raw score can win
+         * via alias privilege (e.g. hypothetical dnot→snot vs don't); accepted as an
+         * edge (2026-07-13 review H4).
          */
         private const val TRANSPOSITION_PENALTY = 0.15f
         private const val MAX_EDIT_DISTANCE = 2

@@ -40,6 +40,7 @@ Benefits:
 """
 
 import json
+import re
 import struct
 import sys
 import unicodedata
@@ -54,7 +55,7 @@ HEADER_SIZE = 32
 PREFIX_INDEX_MAX_LENGTH = 3
 
 # --------------------------------------------------------------------------
-# Junk filter (added 2026-06-17)
+# Junk filter (added 2026-06-17; file-based blocklist union added 2026-07-13)
 #
 # The bundled English word lists were built from noisy web-text corpora and
 # accumulated three classes of non-words that then served as autocorrect
@@ -64,13 +65,20 @@ PREFIX_INDEX_MAX_LENGTH = 3
 #
 # Two rules, both conservative:
 #
-#   (1) ENGLISH_JUNK_BLOCKLIST — an explicit, audited set of apostrophe-split
-#       contraction LEFT-fragments ("doesn" from "doesn't", "isn" from
-#       "isn't", ...) and well-known typos ("teh", "wich", "havin", ...).
-#       Each was verified to be (a) NOT a contraction key — the real keys are
-#       the FULL forms "doesnt"/"isnt", which are re-injected into the runtime
-#       dictionary by WordPredictor.loadContractionKeysIntoMaps and so must NOT
-#       be removed — and (b) NOT a real word in the curated en.txt list.
+#   (1) Blocklist — the union of ENGLISH_JUNK_BLOCKLIST (hardcoded fallback,
+#       kept for standalone / import use outside the repo tree) and
+#       scripts/dictionaries/en/en_blocklist.txt when that file exists.
+#       The file uses the same '#'-comment format as build_en_wordlist.py's
+#       read_list_file(): one word per line, inline comments stripped.
+#       Call load_blocklist() to get the resolved union set.
+#
+#       ENGLISH_JUNK_BLOCKLIST entries: apostrophe-split contraction
+#       LEFT-fragments ("doesn" from "doesn't", "isn" from "isn't", …) and
+#       well-known typos ("teh", "wich", "havin", …).  Each was verified to
+#       be (a) NOT a contraction key — the real keys are the FULL forms
+#       "doesnt"/"isnt", re-injected at runtime by
+#       WordPredictor.loadContractionKeysIntoMaps — and (b) NOT a real word
+#       in the curated en.txt list.
 #
 #   (2) NON-LATIN-SCRIPT rule — for a Latin-script dictionary only, drop any
 #       entry containing a character that is neither a Latin letter (accented
@@ -80,12 +88,41 @@ PREFIX_INDEX_MAX_LENGTH = 3
 #       NEVER fires on a genuinely non-Latin pack (a Cyrillic/Greek dictionary
 #       is left untouched).
 # --------------------------------------------------------------------------
+
+# Hardcoded fallback — used when scripts/dictionaries/en/en_blocklist.txt is absent.
+# Kept as a frozenset so build_dictionary.py can import it by name for backwards
+# compatibility (ENGLISH_JUNK_BLOCKLIST is part of the public surface of this module).
 ENGLISH_JUNK_BLOCKLIST = frozenset({
     # apostrophe-split "n't" left-fragments (NOT contraction keys)
     "doesn", "didn", "isn", "wasn", "couldn", "wouldn", "aren", "shan", "ain",
     # common typos / fragments
     "teh", "wich", "hav", "havin", "abl", "thr", "thro", "snd", "ral",
 })
+
+# Canonical word pattern (Latin alpha + optional internal apostrophe/hyphen).
+_WORD_RE = re.compile(r"[a-z][a-z'\-]*", re.ASCII)
+
+# Resolved path of the canonical per-language file-based blocklist.
+_EN_BLOCKLIST_PATH = Path(__file__).parent / "dictionaries" / "en" / "en_blocklist.txt"
+
+
+def load_blocklist() -> frozenset:
+    """Return the union of ENGLISH_JUNK_BLOCKLIST and en_blocklist.txt (when present).
+
+    The file uses '#'-comment syntax (same as build_en_wordlist.py's read_list_file):
+    one word per line, everything from '#' onwards is ignored.  The result is the
+    authoritative block-set used by both filter_junk() and build_dictionary.py's
+    junk-filter pass.  Falls back gracefully to ENGLISH_JUNK_BLOCKLIST alone when the
+    file does not exist (standalone use outside the repo tree).
+    """
+    file_words: set = set()
+    if _EN_BLOCKLIST_PATH.exists():
+        for line in _EN_BLOCKLIST_PATH.read_text(encoding="utf-8").splitlines():
+            w = line.split("#", 1)[0].strip().lower()
+            if w and _WORD_RE.fullmatch(w):
+                file_words.add(w)
+    return frozenset(ENGLISH_JUNK_BLOCKLIST | file_words)
+
 
 def _is_latin_word(word: str) -> bool:
     """True iff `word` is composed only of Latin letters (accented allowed)
@@ -102,14 +139,20 @@ def _is_latin_word(word: str) -> bool:
         return False
     return True
 
+
 def filter_junk(dictionary: Dict[str, int]) -> Tuple[Dict[str, int], List[str]]:
-    """Apply the junk rules. Returns (cleaned_dict, removed_words)."""
+    """Apply the junk rules. Returns (cleaned_dict, removed_words).
+
+    Blocklist is the union of ENGLISH_JUNK_BLOCKLIST (hardcoded) and
+    scripts/dictionaries/en/en_blocklist.txt (when present in the repo tree).
+    """
+    blocklist = load_blocklist()
     ascii_share = sum(1 for w in dictionary if w.isascii()) / max(1, len(dictionary))
     latin_dict = ascii_share > 0.90
     cleaned: Dict[str, int] = {}
     removed: List[str] = []
     for word, freq in dictionary.items():
-        if word in ENGLISH_JUNK_BLOCKLIST:
+        if word in blocklist:
             removed.append(word)
         elif latin_dict and not _is_latin_word(word):
             removed.append(word)

@@ -174,8 +174,3 @@ internal fun SettingsActivity.resetAllSettings() {
                 .show()
 }
 
-internal fun SettingsActivity.fallbackEncrypted() {
-        // Handle direct boot mode failure
-        android.util.Log.w(SettingsActivity.TAG, "Settings unavailable in direct boot mode")
-        finish()
-}
