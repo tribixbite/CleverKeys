@@ -2023,27 +2023,35 @@ class WordPredictor {
                     isTransposition = true
                     1f - TRANSPOSITION_PENALTY / wordLength
                 } else {
+                // Pass 1: cheap exact-match count only (`==`, no keyDistance).
+                // GATE 1a (ratio) + GATE 1b (sub-cap) depend solely on this, so
+                // words that fail the gate — the large majority of the 98k dict
+                // for any typed word — skip the expensive adjacency-weighted
+                // sum (a keyDistance/hypot per position) entirely.
                 var exactCount = 0
-                var weightedSum = 0f
                 for (i in 0 until wordLength) {
-                    val a = lowerTypedWord[i]
-                    val b = dictWord[i]
-                    if (a == b) exactCount++
-                    weightedSum += KeyAdjacency.substitutionScore(a, b)
+                    if (lowerTypedWord[i] == dictWord[i]) exactCount++
                 }
-                val exactRatio = exactCount.toFloat() / wordLength
-                val weightedScore = weightedSum / wordLength
                 val substitutions = wordLength - exactCount
                 isMultiSub = substitutions >= 2
-                // GATE 1a (ratio) AND GATE 1b (absolute sub-cap): both must
-                // pass. The cap rejects long multi-substitution lookalikes
-                // (`broight → thought`) the ratio alone would admit.
-                if (exactRatio >= MIN_SAME_LENGTH_EXACT_RATIO &&
-                    substitutions <= MAX_SAME_LENGTH_SUBSTITUTIONS) weightedScore else -1f
+                if (exactCount.toFloat() / wordLength >= MIN_SAME_LENGTH_EXACT_RATIO &&
+                    substitutions <= MAX_SAME_LENGTH_SUBSTITUTIONS
+                ) {
+                    // Pass 2: adjacency-weighted score, only for gate survivors.
+                    var weightedSum = 0f
+                    for (i in 0 until wordLength) {
+                        weightedSum += KeyAdjacency.substitutionScore(lowerTypedWord[i], dictWord[i])
+                    }
+                    weightedSum / wordLength
+                } else -1f
                 }
             } else {
-                val ed = KeyAdjacency.weightedEditDistance(lowerTypedWord, dictWord)
                 val maxEd = lengthDiff + LENGTH_DIFF_ED_BUDGET
+                // Early-abandon budget: most dict words in the ±length band are
+                // unrelated and blow past maxEd after 2-3 DP rows. When ed > maxEd
+                // the sweep rejects anyway, so a fast above-budget lower bound is
+                // equivalent and avoids the full n×m DP over ~50% of 98k words.
+                val ed = KeyAdjacency.weightedEditDistance(lowerTypedWord, dictWord, maxEd)
                 if (ed <= maxEd) {
                     val maxLen = maxOf(wordLength, dictWord.length).toFloat()
                     (1f - ed / maxLen).coerceAtLeast(0f)

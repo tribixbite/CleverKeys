@@ -135,6 +135,37 @@ class KeyAdjacencyTest {
         assertThat(KeyAdjacency.weightedEditDistance("question", "question")).isEqualTo(0f)
     }
 
+    // ── weightedEditDistance early-abandon budget (PERF-1) ────────────
+    // A `maxDistance` budget lets the DP bail once no completion can stay
+    // within budget. Contract: when the true distance is ≤ budget the exact
+    // value is returned (behavior-preserving); when it exceeds budget the
+    // result is > budget (the caller only tests `ed <= maxEd`, so a lower
+    // bound above the budget is a correct rejection).
+
+    @Test
+    fun weightedEditDistance_budgetAboveTrue_returnsExactValue() {
+        val exact = KeyAdjacency.weightedEditDistance("questin", "question")
+        val bounded = KeyAdjacency.weightedEditDistance("questin", "question", 5f)
+        assertThat(bounded).isWithin(0.001f).of(exact)
+    }
+
+    @Test
+    fun weightedEditDistance_budgetBelowTrue_returnsAboveBudget() {
+        // "abcdefgh" vs "question": wildly different → true distance is large.
+        // With a tight budget the early-abandon must report a value > budget.
+        val budget = 1.5f
+        val bounded = KeyAdjacency.weightedEditDistance("abcdefgh", "question", budget)
+        assertThat(bounded).isGreaterThan(budget)
+    }
+
+    @Test
+    fun weightedEditDistance_defaultBudget_isUnbounded() {
+        // The no-budget overload and an explicit infinite budget must agree.
+        val a = KeyAdjacency.weightedEditDistance("muestion", "question")
+        val b = KeyAdjacency.weightedEditDistance("muestion", "question", Float.MAX_VALUE)
+        assertThat(b).isEqualTo(a)
+    }
+
     @Test
     fun weightedEditDistance_emptyString_returnsLengthOfOther() {
         assertThat(KeyAdjacency.weightedEditDistance("", "abc")).isEqualTo(3f)

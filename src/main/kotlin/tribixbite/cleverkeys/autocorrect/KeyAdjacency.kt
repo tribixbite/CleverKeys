@@ -116,12 +116,14 @@ object KeyAdjacency {
         if (layoutPositions.isEmpty()) {
             positions = DEFAULT_POSITIONS
             maxDistance = computeMaxDistance(DEFAULT_POSITIONS)
+            azDist = buildAzDist(DEFAULT_POSITIONS, maxDistance)
             return
         }
         // Lower-case keys for case-insensitive lookup.
         val normalized = layoutPositions.mapKeys { it.key.lowercaseChar() }
         positions = normalized
         maxDistance = computeMaxDistance(normalized).coerceAtLeast(1e-6f)
+        azDist = buildAzDist(normalized, maxDistance)
     }
 
     /** Revert to the default US-QWERTY position table (plus accents). */
@@ -129,6 +131,7 @@ object KeyAdjacency {
     fun resetLayout() {
         positions = DEFAULT_POSITIONS
         maxDistance = computeMaxDistance(DEFAULT_POSITIONS)
+        azDist = buildAzDist(DEFAULT_POSITIONS, maxDistance)
     }
 
     /**
@@ -166,12 +169,43 @@ object KeyAdjacency {
      */
     fun keyDistance(a: Char, b: Char): Float {
         if (a == b) return 0f
+        val ca = a.lowercaseChar()
+        val cb = b.lowercaseChar()
+        // Fast path: both are ASCII letters → precomputed table lookup. The
+        // autocorrect sweep calls keyDistance ~1M times per correction over the
+        // 98k dictionary; this replaces a HashMap<Char> lookup (autoboxing) +
+        // hypot with a dense array read. Values are identical to the fallback.
+        if (ca in 'a'..'z' && cb in 'a'..'z') {
+            return azDist[ca - 'a'][cb - 'a']
+        }
         val p = positions  // local snapshot to dodge mid-call layout swap
-        val pa = p[a.lowercaseChar()] ?: return 1f
-        val pb = p[b.lowercaseChar()] ?: return 1f
+        val pa = p[ca] ?: return 1f
+        val pb = p[cb] ?: return 1f
         val d = hypot(pa.first - pb.first, pa.second - pb.second)
         return (d / maxDistance).coerceIn(0f, 1f)
     }
+
+    /**
+     * Precomputed a–z × a–z distance table for [keyDistance]'s fast path.
+     * Rebuilt (via [buildAzDist]) whenever [positions]/[maxDistance] change.
+     * A cell is 1.0 when either letter is absent from the active layout,
+     * mirroring the map-lookup fallback.
+     */
+    @Volatile
+    private var azDist: Array<FloatArray> = buildAzDist(DEFAULT_POSITIONS, computeMaxDistance(DEFAULT_POSITIONS))
+
+    private fun buildAzDist(p: Map<Char, Pair<Float, Float>>, maxD: Float): Array<FloatArray> =
+        Array(26) { i ->
+            val pa = p['a' + i]
+            FloatArray(26) { j ->
+                if (i == j) 0f
+                else {
+                    val pb = p['a' + j]
+                    if (pa == null || pb == null) 1f
+                    else (hypot(pa.first - pb.first, pa.second - pb.second) / maxD).coerceIn(0f, 1f)
+                }
+            }
+        }
 
     /**
      * Substitution score = 1 - keyDistance. Returned value:
@@ -194,26 +228,46 @@ object KeyAdjacency {
      * candidate differ in length by 1+ chars, position-wise comparison
      * can't apply, so we fall through to this edit-distance metric.
      */
-    fun weightedEditDistance(a: String, b: String): Float {
+    fun weightedEditDistance(a: String, b: String): Float =
+        weightedEditDistance(a, b, Float.MAX_VALUE)
+
+    /**
+     * As [weightedEditDistance], with an early-abandon [maxDistance] budget.
+     *
+     * When the true distance is ≤ [maxDistance] the exact value is returned
+     * (identical to the unbounded call). When a completed DP row's minimum
+     * already exceeds [maxDistance] — meaning no remaining path can finish
+     * within budget, since edit costs are non-negative — the DP stops and
+     * returns that minimum (a lower bound that is itself > [maxDistance]). The
+     * autocorrect sweep only tests `ed <= maxEd`, so an above-budget lower
+     * bound is a correct rejection, and this prunes the ~50% of the 98k
+     * dictionary that are unrelated words after 2-3 rows instead of n full rows.
+     *
+     * Also uses a zero-allocation two-row swap (no per-row `copyOf`).
+     */
+    fun weightedEditDistance(a: String, b: String, maxDistance: Float): Float {
         val n = a.length
         val m = b.length
         if (n == 0) return m.toFloat()
         if (m == 0) return n.toFloat()
-        // Rolling two-row DP.
+        // Rolling two-row DP with in-place row reuse.
         var prev = FloatArray(m + 1) { it.toFloat() }
-        val curr = FloatArray(m + 1)
+        var curr = FloatArray(m + 1)
         for (i in 1..n) {
             curr[0] = i.toFloat()
             val ai = a[i - 1]
+            var rowMin = curr[0]
             for (j in 1..m) {
                 val bj = b[j - 1]
-                val subCost = keyDistance(ai, bj)
-                val sub = prev[j - 1] + subCost
+                val sub = prev[j - 1] + keyDistance(ai, bj)
                 val ins = curr[j - 1] + 1f
                 val del = prev[j] + 1f
-                curr[j] = minOf(sub, ins, del)
+                val v = minOf(sub, ins, del)
+                curr[j] = v
+                if (v < rowMin) rowMin = v
             }
-            prev = curr.copyOf()
+            if (rowMin > maxDistance) return rowMin
+            val tmp = prev; prev = curr; curr = tmp
         }
         return prev[m]
     }
