@@ -34,7 +34,7 @@ import tribixbite.cleverkeys.theme.KeyboardTheme
  * All settings map to existing Config.kt properties:
  * - autocorrect_min_word_length (default: 3)
  * - autocorrect_char_match_threshold (default: 0.67 = 2/3 chars)
- * - autocorrect_confidence_min_frequency (default: 500)
+ * - autocorrect_confidence_min_frequency (default: 100 = Config.Defaults.AUTOCORRECT_MIN_FREQUENCY)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 class AutoCorrectionSettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferenceChangeListener {
@@ -48,9 +48,9 @@ class AutoCorrectionSettingsActivity : ComponentActivity(), SharedPreferences.On
 
     // Settings state
     private var autoCorrectEnabled by mutableStateOf(true)
-    private var minWordLength by mutableStateOf(3)
-    private var charMatchThreshold by mutableStateOf(0.67f)
-    private var minFrequency by mutableStateOf(500)
+    private var minWordLength by mutableStateOf(Defaults.AUTOCORRECT_MIN_WORD_LENGTH)
+    private var charMatchThreshold by mutableStateOf(Defaults.AUTOCORRECT_CHAR_MATCH_THRESHOLD)
+    private var minFrequency by mutableStateOf(Defaults.AUTOCORRECT_MIN_FREQUENCY)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -98,16 +98,16 @@ class AutoCorrectionSettingsActivity : ComponentActivity(), SharedPreferences.On
                 charMatchThreshold = prefs.getFloat(key, 0.67f)
             }
             "autocorrect_confidence_min_frequency" -> {
-                minFrequency = prefs.getInt(key, 500)
+                minFrequency = prefs.getInt(key, Defaults.AUTOCORRECT_MIN_FREQUENCY)
             }
         }
     }
 
     private fun loadCurrentSettings() {
         autoCorrectEnabled = prefs.getBoolean("autocorrect_enabled", true)
-        minWordLength = prefs.getInt("autocorrect_min_word_length", 3)
-        charMatchThreshold = prefs.getFloat("autocorrect_char_match_threshold", 0.67f)
-        minFrequency = prefs.getInt("autocorrect_confidence_min_frequency", 500)
+        minWordLength = prefs.getInt("autocorrect_min_word_length", Defaults.AUTOCORRECT_MIN_WORD_LENGTH)
+        charMatchThreshold = prefs.getFloat("autocorrect_char_match_threshold", Defaults.AUTOCORRECT_CHAR_MATCH_THRESHOLD)
+        minFrequency = prefs.getInt("autocorrect_confidence_min_frequency", Defaults.AUTOCORRECT_MIN_FREQUENCY)
     }
 
     private fun saveSetting(key: String, value: Any) {
@@ -300,12 +300,12 @@ class AutoCorrectionSettingsActivity : ComponentActivity(), SharedPreferences.On
                     // Reset to Defaults Button
                     Button(
                         onClick = {
-                            minWordLength = 3
-                            charMatchThreshold = 0.67f
-                            minFrequency = 500
-                            saveSetting("autocorrect_min_word_length", 3)
-                            saveSetting("autocorrect_char_match_threshold", 0.67f)
-                            saveSetting("autocorrect_confidence_min_frequency", 500)
+                            minWordLength = Defaults.AUTOCORRECT_MIN_WORD_LENGTH
+                            charMatchThreshold = Defaults.AUTOCORRECT_CHAR_MATCH_THRESHOLD
+                            minFrequency = Defaults.AUTOCORRECT_MIN_FREQUENCY
+                            saveSetting("autocorrect_min_word_length", Defaults.AUTOCORRECT_MIN_WORD_LENGTH)
+                            saveSetting("autocorrect_char_match_threshold", Defaults.AUTOCORRECT_CHAR_MATCH_THRESHOLD)
+                            saveSetting("autocorrect_confidence_min_frequency", Defaults.AUTOCORRECT_MIN_FREQUENCY)
                             Toast.makeText(this@AutoCorrectionSettingsActivity,
                                 "Reset to default values",
                                 Toast.LENGTH_SHORT).show()

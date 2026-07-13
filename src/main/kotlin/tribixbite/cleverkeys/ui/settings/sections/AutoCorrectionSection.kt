@@ -83,7 +83,7 @@ internal fun SettingsActivity.AutoCorrectionSection() {
                         title = "Minimum Word Frequency",
                         description = "Only correct to words with frequency >= this",
                         value = autocorrectMinFrequency.toFloat(),
-                        valueRange = 100f..5000f,
+                        valueRange = 100f..2000f,
                         steps = 49,
                         onValueChange = {
                             autocorrectMinFrequency = it.toInt()

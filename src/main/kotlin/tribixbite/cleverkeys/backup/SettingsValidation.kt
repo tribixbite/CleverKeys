@@ -211,7 +211,7 @@ object SettingsValidation {
 
             // Auto-correction parameters
             "autocorrect_min_word_length" -> value in 2..5
-            "autocorrect_confidence_min_frequency" -> value in 100..5000
+            "autocorrect_confidence_min_frequency" -> value in 100..2000
 
             // Clipboard history limit (0 = unlimited)
             "clipboard_history_limit" -> value in 0..500
