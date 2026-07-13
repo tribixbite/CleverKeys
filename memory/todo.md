@@ -1,5 +1,12 @@
 # CleverKeys TODO
 
+## 🔎 Post-decomposition review (2026-07-13) → docs/todo/2026-07-13-post-decomposition-review.md
+3-agent review of the July settings-decomposition + dictionary + autocorrect work. Real bugs found:
+AC-1 (autocorrect min-freq default 500≠100 + slider 5000>SLIDER_MAX 2000), DICT-1 (gradle can
+downgrade en bin V2→V1), DEC-1 (gif_enabled search gate incomplete), AC-2 (custom words blocked by
+floor), + perf (weightedEditDistance no early-abandon/per-row alloc), dead state vars, docs. Executing
+TDD fixes → Task 8 (state hoisting) → perf. See the doc for the full prioritized list.
+
 ## ✅ SettingsActivity God-Object decomposition (2026-07-04, branch refactor/settings-decomposition)
 
 Executed docs/settings-fix-roadmap.md Tasks 0–7 via subagent-driven-development (fresh
