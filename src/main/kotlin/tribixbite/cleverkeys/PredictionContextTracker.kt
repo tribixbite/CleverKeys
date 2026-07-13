@@ -602,10 +602,14 @@ class PredictionContextTracker {
      * Checks if sync should be skipped for this input type.
      * Skip for passwords, URLs, emails, and other non-predictable fields.
      *
+     * Public (#151): SuggestionHandler needs this to know that a suggestion tap
+     * in such a field cannot rely on cursor-sync deletion counts and must fall
+     * back to scanning the editor for the partial token to replace.
+     *
      * @param editorInfo Editor info with input type
      * @return true if sync is appropriate, false to skip
      */
-    private fun shouldSyncForInputType(editorInfo: EditorInfo?): Boolean {
+    fun shouldSyncForInputType(editorInfo: EditorInfo?): Boolean {
         editorInfo ?: return true
 
         val inputType = editorInfo.inputType

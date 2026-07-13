@@ -482,6 +482,14 @@ class SuggestionHandler(
                     false
                 }
 
+                // #151: URI/email/password/number fields never get cursor-sync
+                // (shouldSyncForInputType skips them), so deletion counts from the
+                // tracker are always (0,0) there. Tapping a suggestion in a browser
+                // URL bar must still replace the typed partial token — we detect
+                // these fields up front and (a) force the editor-scan fallback,
+                // (b) never inject a leading space (it would corrupt the value).
+                val syncSuppressedField = !contextTracker.shouldSyncForInputType(editorInfo)
+
                 // IMPORTANT: _currentWord tracks typed characters, but they're already committed to input!
                 // When typing normally (not swipe), each character is committed immediately via KeyEventHandler
                 // So _currentWord is just for tracking - the text is already in the editor
@@ -579,7 +587,13 @@ class SuggestionHandler(
                     // for a partial word ending immediately before the cursor. Treats
                     // letters, digits, apostrophes, and hyphens as word characters so
                     // hyphenated typing ("co-o" → "co-op") works correctly.
-                    if (prefixDelete == 0 && suffixDelete == 0 && contextTracker.getCurrentWordLength() == 0) {
+                    // #151: also fall back when cursor-sync is suppressed for this input
+                    // type (URL bars, email fields) — there currentWord IS tracked from
+                    // typing (non-zero), but sync never populated the deletion counts,
+                    // so without the scan the typed partial ("exa") was left behind and
+                    // the tap produced "exa example ".
+                    if (prefixDelete == 0 && suffixDelete == 0 &&
+                        (contextTracker.getCurrentWordLength() == 0 || syncSuppressedField)) {
                         try {
                             val before = inputConnection.getTextBeforeCursor(64, 0)?.toString() ?: ""
                             if (before.isNotEmpty()) {
@@ -629,6 +643,11 @@ class SuggestionHandler(
                 // Swipe auto-inserts always get the leading space since the swipe replaces no typed text.
                 val needsSpaceBefore = if (!isSwipeAutoInsert && !config.auto_space_before_suggestion) {
                     false  // User disabled leading space before tapped suggestions
+                } else if (syncSuppressedField) {
+                    // #151: never inject a leading space into URL/email/etc. fields —
+                    // after replacing "exa" in "https://exa" the previous char is '/',
+                    // and " example" would corrupt the URL.
+                    false
                 } else {
                     try {
                         val textBefore = inputConnection.getTextBeforeCursor(1, 0)
