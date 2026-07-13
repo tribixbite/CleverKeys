@@ -13,6 +13,7 @@ import tribixbite.cleverkeys.onnx.SwipePredictorOrchestrator
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
+import tribixbite.cleverkeys.autocorrect.AutocorrectContextGuard
 
 /**
  * Handles suggestion selection, prediction display, and text completion logic.
@@ -970,8 +971,18 @@ class SuggestionHandler(
                         }
                     }
 
+                    // Non-prose guard (2026-07-13): the word tracker only sees
+                    // LETTERS, so "teh" inside "foo.teh" / "user@teh" /
+                    // "https://teh…" looks identical to prose "teh". The editor
+                    // text reveals the real token — skip autocorrect when the
+                    // cursor just left a URL/email/path-like token, otherwise
+                    // domains and pasted-then-edited URLs get corrupted.
+                    val inNonProseToken = AutocorrectContextGuard.isNonProseContext(
+                        ic?.getTextBeforeCursor(72, 0)
+                    )
+
                     if (config.autocorrect_enabled && predictionCoordinator.getWordPredictor() != null &&
-                        text == " " && !inTermuxApp) {
+                        text == " " && !inTermuxApp && !inNonProseToken) {
                         var correctedWord = predictionCoordinator.getWordPredictor()?.autoCorrect(completedWord)
 
                         // If correction was made, replace the typed word
