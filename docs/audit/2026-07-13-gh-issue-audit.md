@@ -147,3 +147,4 @@ Clearest, smallest real **bugs** (not features), ranked by signal-to-effort rati
 | Item | Fix commit | Date | Verification |
 |---|---|---|---|
 | URL/email/path autocorrect corruption (user-reported 2026-07-13) | (this commit) | 2026-07-13 | TDD: AutocorrectUrlGuardTest verified RED pre-fix then 7/7 GREEN + AutocorrectTest 49/49 (ew Pixel7 API34); AutocorrectContextGuardTest 10 pure |
+| #154 Vibration delay on keypress | fa00cb0ae | 2026-07-13 | Root cause: settings layer forced vibrate_custom=true on every save, blocking the fast performHapticFeedback path. HapticsBehaviorDriftTest (3, red-first); 1301 pure green. NOTE: users with previously-persisted vibrate_custom=true stay on the slow path until reset — consider a one-time migration. Needs on-device feel check. |
