@@ -478,9 +478,11 @@ internal fun SettingsActivity.saveSetting(key: String, value: Any) {
 internal fun SettingsActivity.updateConfigFromSettings() {
         // Update global config from current settings
         // Note: Config.theme uses R.style.* resource IDs, converted from theme name
+        // vibrate_custom is intentionally NOT set here — it is only set to true when the
+        // user explicitly drags the duration slider. Mapping vibrationEnabled → vibrate_custom
+        // was the root cause of #154 (it forced every user into the slow createOneShot path).
         config.apply {
             keyboardHeightPercent = keyboardHeight
-            vibrate_custom = vibrationEnabled
             neural_beam_width = beamWidth
             neural_max_length = maxLength
             neural_confidence_threshold = confidenceThreshold

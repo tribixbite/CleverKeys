@@ -91,28 +91,29 @@ internal fun SettingsActivity.AccessibilitySection() {
                     onCheckedChange = {
                         vibrationEnabled = it
                         saveSetting("vibration_enabled", it)
-                        // v1.2.8: Update Config immediately for haptic feedback
+                        // Update haptic_enabled immediately so the IME picks up the change
+                        // without waiting for a full Config reload.
+                        // Do NOT set vibrate_custom here — that flag is only set when the user
+                        // explicitly drags the duration slider. Setting it on toggle was the
+                        // root cause of #154: it forced the slow Vibrator.createOneShot path
+                        // for all users, bypassing the low-latency performHapticFeedback path.
                         Config.globalConfig().haptic_enabled = it
-                        // v1.2.8: Enable custom vibration mode so duration slider actually works
-                        if (it) {
-                            saveSetting("vibrate_custom", true)
-                            Config.globalConfig().vibrate_custom = true
-                            Config.globalConfig().vibrate_duration = vibrationDuration.toLong()
-                        }
                     }
                 )
 
                 if (vibrationEnabled) {
                     SettingsSlider(
-                        title = "Vibration Duration",
-                        description = "Length of haptic feedback in milliseconds",
+                        title = "Custom Duration (optional)",
+                        description = "Set a custom vibration length. Leave at default to use the system haptic pattern (lowest latency, OEM-tuned).",
                         value = vibrationDuration.toFloat(),
                         valueRange = 5f..100f,
                         steps = 19,
                         onValueChange = {
                             vibrationDuration = it.toInt()
                             saveSetting("vibrate_duration", vibrationDuration)
-                            // v1.2.8: Also enable custom vibration mode and update Config
+                            // Only enable custom mode when user explicitly drags the slider.
+                            // This preserves the low-latency performHapticFeedback path for
+                            // users who don't need a custom duration (fixes #154).
                             saveSetting("vibrate_custom", true)
                             Config.globalConfig().vibrate_custom = true
                             Config.globalConfig().vibrate_duration = vibrationDuration.toLong()
