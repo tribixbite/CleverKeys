@@ -355,6 +355,7 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.VocabularyUtilsTest',
     'tribixbite.cleverkeys.BeamSearchModelsTest',
     'tribixbite.cleverkeys.ConfigDefaultsTest',
+    'tribixbite.cleverkeys.DictionaryBinFormatTest',
     'tribixbite.cleverkeys.AutocorrectDefaultsDriftTest',
     'tribixbite.cleverkeys.ContractionFrequencyTest',
     'tribixbite.cleverkeys.PipelineBenchmarkTest',
@@ -521,6 +522,20 @@ tasks.register('generateBinaryDictionaries') {
     dictDir.listFiles().findAll { it.name.endsWith(".json") && !it.name.contains("contraction") }.each { jsonFile ->
       def binFile = new File(dictDir, jsonFile.name.replace(".json", ".bin"))
       if (!binFile.exists() || jsonFile.lastModified() > binFile.lastModified()) {
+        // DICT-1 guard: generate_binary_dict.py emits the V1 'DICT' format (no
+        // accent map). The English dictionary ships as V2 'CKDT' (built by
+        // build_en_wordlist.py) and is the only bundled dict with a .json in
+        // assets. A stray json mtime bump (formatter, partial checkout/stash,
+        // CI) would otherwise silently DOWNGRADE it to V1, losing accent-folding.
+        // Never overwrite an existing CKDT bin with a DICT one.
+        if (binFile.exists()) {
+          def magic = binFile.withInputStream { it.readNBytes(4) }
+          if (new String(magic, "US-ASCII") == "CKDT") {
+            logger.lifecycle("Skipping ${binFile.name}: existing bin is V2 (CKDT); " +
+              "regenerate it with build_en_wordlist.py --write, not generate_binary_dict.py (V1).")
+            return  // continue to next json
+          }
+        }
         exec { workingDir = projectDir; commandLine "python3", "scripts/generate_binary_dict.py", jsonFile.absolutePath, binFile.absolutePath }
       }
     }
