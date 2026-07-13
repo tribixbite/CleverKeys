@@ -34,6 +34,7 @@ object SettingsValidation {
         "margin_prefs_version",             // Margin-units migration version
         "need_migration",                   // DirectBoot prefs-migration tracker
         "lang_pref_migration_version",      // Language-prefs migration version
+        "vibrate_custom_migration_v1",      // One-time #154 vibrate_custom cleanup marker
         "voice_ime_known",                  // Runtime voice-IME state (per device)
         "voice_ime_last_used",              // Runtime voice-IME state (per device)
         "ime_prompt_shown_this_session",    // Per-session UI flag (not portable)

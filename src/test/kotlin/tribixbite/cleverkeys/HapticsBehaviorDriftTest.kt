@@ -107,4 +107,108 @@ class HapticsBehaviorDriftTest {
             nearSlider.contains("vibrate_custom = true")
         ).isTrue()
     }
+
+    // =========================================================================
+    // One-time migration for the stale `vibrate_custom=true` that the #154 bug
+    // wrote into existing installs. Decision logic is the pure function
+    // HapticsMigration.shouldClearForcedVibrateCustom(); wiring lives in
+    // Config.migrateForcedVibrateCustom() (called from initGlobalConfig).
+    // =========================================================================
+
+    /** Bug-forced case: flag set, never migrated, duration untouched → clear it. */
+    @Test
+    fun migration_clears_bugForced_vibrateCustom() {
+        assertWithMessage(
+            "vibrate_custom=true with vibrate_duration still at its default means the flag " +
+            "was bug-forced (#154), not user-chosen — migration must clear it."
+        ).that(
+            HapticsMigration.shouldClearForcedVibrateCustom(
+                vibrateCustom = true, alreadyMigrated = false, paramsAtDefaults = true
+            )
+        ).isTrue()
+    }
+
+    /** User customized the duration → they plausibly chose the custom path; keep it. */
+    @Test
+    fun migration_keeps_vibrateCustom_whenDurationCustomized() {
+        assertWithMessage(
+            "A non-default vibrate_duration means the user dragged the slider — " +
+            "migration must NOT clear vibrate_custom."
+        ).that(
+            HapticsMigration.shouldClearForcedVibrateCustom(
+                vibrateCustom = true, alreadyMigrated = false, paramsAtDefaults = false
+            )
+        ).isFalse()
+    }
+
+    /** Already migrated → never touch the flag again, regardless of state. */
+    @Test
+    fun migration_noops_whenAlreadyMigrated() {
+        assertWithMessage("Migration must run exactly once (marker set → no-op).")
+            .that(
+                HapticsMigration.shouldClearForcedVibrateCustom(
+                    vibrateCustom = true, alreadyMigrated = true, paramsAtDefaults = true
+                )
+            ).isFalse()
+        assertWithMessage("Migration must run exactly once (marker set → no-op).")
+            .that(
+                HapticsMigration.shouldClearForcedVibrateCustom(
+                    vibrateCustom = true, alreadyMigrated = true, paramsAtDefaults = false
+                )
+            ).isFalse()
+    }
+
+    /** vibrate_custom already false → nothing to clear (call site still marks migrated). */
+    @Test
+    fun migration_noops_whenVibrateCustomAlreadyFalse() {
+        assertWithMessage("vibrate_custom=false has nothing to clear.")
+            .that(
+                HapticsMigration.shouldClearForcedVibrateCustom(
+                    vibrateCustom = false, alreadyMigrated = false, paramsAtDefaults = true
+                )
+            ).isFalse()
+        assertWithMessage("vibrate_custom=false has nothing to clear.")
+            .that(
+                HapticsMigration.shouldClearForcedVibrateCustom(
+                    vibrateCustom = false, alreadyMigrated = false, paramsAtDefaults = false
+                )
+            ).isFalse()
+    }
+
+    /** The migration marker key must be the frozen v1 name — it is persisted in user prefs. */
+    @Test
+    fun migration_markerKey_isFrozen() {
+        assertWithMessage("Marker key is persisted on user devices — never rename it.")
+            .that(HapticsMigration.MIGRATION_MARKER_KEY)
+            .isEqualTo("vibrate_custom_migration_v1")
+    }
+
+    /**
+     * Source-scan: the migration must actually be wired into Config startup
+     * (initGlobalConfig), and the call site must ALWAYS write the marker —
+     * unconditionally — so the migration runs exactly once even when it
+     * changes nothing.
+     */
+    @Test
+    fun config_wiresMigration_andAlwaysWritesMarker() {
+        val src = read("Config.kt")
+
+        val initIdx = src.indexOf("fun initGlobalConfig(")
+        assertWithMessage("initGlobalConfig must exist in Config.kt")
+            .that(initIdx).isGreaterThan(-1)
+        val initBody = src.substring(initIdx, minOf(initIdx + 800, src.length))
+        assertWithMessage(
+            "initGlobalConfig() must call migrateForcedVibrateCustom(prefs) so the one-time " +
+            "#154 cleanup runs on startup alongside the other pref migrations."
+        ).that(initBody.contains("migrateForcedVibrateCustom(prefs)")).isTrue()
+
+        val fnIdx = src.indexOf("fun migrateForcedVibrateCustom(")
+        assertWithMessage("migrateForcedVibrateCustom must exist in Config.kt")
+            .that(fnIdx).isGreaterThan(-1)
+        val fnBody = src.substring(fnIdx, minOf(fnIdx + 1500, src.length))
+        assertWithMessage(
+            "migrateForcedVibrateCustom must unconditionally persist the marker " +
+            "(putBoolean(\"vibrate_custom_migration_v1\", true)) whether or not it cleared the flag."
+        ).that(fnBody.contains("putBoolean(\"vibrate_custom_migration_v1\", true)")).isTrue()
+    }
 }

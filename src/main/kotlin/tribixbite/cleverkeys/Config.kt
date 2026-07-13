@@ -322,6 +322,40 @@ object Defaults {
 }
 
 /**
+ * One-time cleanup for the stale `vibrate_custom=true` written by the #154 bug.
+ *
+ * Before the fix (fa00cb0ae / 538122f1d-era), the settings layer force-set
+ * `vibrate_custom = true` whenever the master vibration toggle was saved,
+ * pushing users onto the slow `VibrationEffect.createOneShot` path instead of
+ * the low-latency `performHapticFeedback` default. The forcing code is gone,
+ * but existing installs still carry the bug-written flag.
+ *
+ * Decision logic is a pure function (JVM-testable, no Android deps); the
+ * pref wiring lives in [Config.Companion.migrateForcedVibrateCustom].
+ */
+object HapticsMigration {
+    /** Persisted on user devices once the migration has run — never rename. */
+    const val MIGRATION_MARKER_KEY = "vibrate_custom_migration_v1"
+
+    /**
+     * Decide whether the stale `vibrate_custom` flag should be cleared.
+     *
+     * Clears ONLY when the flag was bug-forced: it is set, the migration has
+     * never run, and every custom-path parameter (currently just
+     * `vibrate_duration`) is still at its compile-time default — i.e. the
+     * user never actually customized anything. If the user changed a
+     * parameter, they plausibly chose the custom path; leave it alone.
+     * The call site must persist [MIGRATION_MARKER_KEY] unconditionally so
+     * this runs exactly once.
+     */
+    fun shouldClearForcedVibrateCustom(
+        vibrateCustom: Boolean,
+        alreadyMigrated: Boolean,
+        paramsAtDefaults: Boolean
+    ): Boolean = !alreadyMigrated && vibrateCustom && paramsAtDefaults
+}
+
+/**
  * Neural prediction presets for different use cases.
  *
  * These presets trade off between speed and accuracy:
@@ -1139,6 +1173,7 @@ class Config private constructor(
         ) {
             migrate(prefs)
             migrateMarginPrefs(prefs, res.displayMetrics)
+            migrateForcedVibrateCustom(prefs)
             val config = Config(prefs, res, handler, foldableUnfolded)
             _globalConfig = config
             LayoutModifier.init(config, res)
@@ -1430,6 +1465,39 @@ class Config private constructor(
                     }
                 }
             }
+            e.apply()
+        }
+
+        /**
+         * One-time #154 cleanup: clear a bug-forced `vibrate_custom=true` so
+         * affected installs return to the low-latency performHapticFeedback
+         * path. Skips users who actually customized `vibrate_duration` (they
+         * plausibly chose custom mode). Runs exactly once — the marker is
+         * persisted unconditionally, even when nothing is changed.
+         * Decision logic: [HapticsMigration.shouldClearForcedVibrateCustom].
+         */
+        @JvmStatic
+        fun migrateForcedVibrateCustom(prefs: SharedPreferences) {
+            if (prefs.getBoolean("vibrate_custom_migration_v1", false)) return
+
+            val vibrateCustom = prefs.getBoolean("vibrate_custom", Defaults.VIBRATE_CUSTOM)
+            // The custom vibration path (VibratorCompat) reads exactly one
+            // user-tunable parameter: vibrate_duration. No amplitude pref exists.
+            val paramsAtDefaults =
+                safeGetInt(prefs, "vibrate_duration", Defaults.VIBRATE_DURATION) == Defaults.VIBRATE_DURATION
+
+            val e = prefs.edit()
+            if (HapticsMigration.shouldClearForcedVibrateCustom(
+                    vibrateCustom = vibrateCustom,
+                    alreadyMigrated = false, // marker checked above
+                    paramsAtDefaults = paramsAtDefaults
+                )
+            ) {
+                e.putBoolean("vibrate_custom", false)
+                Log.i("Config", "Cleared bug-forced vibrate_custom (#154 one-time migration)")
+            }
+            // Always mark migrated so this never runs again.
+            e.putBoolean("vibrate_custom_migration_v1", true)
             e.apply()
         }
 

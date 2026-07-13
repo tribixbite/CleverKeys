@@ -220,6 +220,7 @@ class SettingsImportPlanBuilderTest {
             "margin_prefs_version",            // legacy backup pollution
             "need_migration",                  // DirectBoot prefs migration
             "lang_pref_migration_version",     // language-prefs migration
+            "vibrate_custom_migration_v1",     // one-time #154 vibrate_custom cleanup
             "voice_ime_known",                 // runtime IME state
             "voice_ime_last_used",             // runtime IME state
             "ime_prompt_shown_this_session",   // per-session UI flag
