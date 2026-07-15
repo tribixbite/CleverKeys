@@ -129,12 +129,46 @@ class LauncherActivity : ComponentActivity() {
     }
 
     private fun launchInputMethodPicker() {
+        // UT-6: showInputMethodPicker() displays a dialog OWNED BY system_server.
+        // On some OEM ROMs, issuing that binder call from a window that does not
+        // currently hold input focus (or before the IME is enabled) can crash
+        // InputMethodManagerService — which restarts system_server and soft-resets
+        // the device. An app-side try/catch cannot intercept that, so the only
+        // safe strategy is to never issue the call in the risky states:
+        //  - IME not enabled yet → the picker couldn't offer CleverKeys anyway;
+        //    route to the IME settings Activity (ordinary intent, safe).
+        //  - Window not focused → defer via decorView.post and re-check; if still
+        //    unfocused, fall back to IME settings instead of forcing the dialog.
         try {
-            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
-            imm.showInputMethodPicker()
+            if (!isCleverKeysEnabledCompat()) {
+                launchKeyboardSettings()
+                return
+            }
+            window.decorView.post {
+                if (hasWindowFocus()) {
+                    try {
+                        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+                        imm.showInputMethodPicker()
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error showing input method picker", e)
+                        launchKeyboardSettings()
+                    }
+                } else {
+                    Log.w(TAG, "Window unfocused at picker time; opening IME settings instead")
+                    launchKeyboardSettings()
+                }
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Error showing input method picker", e)
         }
+    }
+
+    private fun isCleverKeysEnabledCompat(): Boolean = try {
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+        imm.enabledInputMethodList.any { it.packageName == packageName }
+    } catch (e: Exception) {
+        Log.e(TAG, "Error checking enabled IMEs", e)
+        false
     }
 
     private fun launchAppSettings() {
