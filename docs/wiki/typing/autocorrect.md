@@ -194,6 +194,7 @@ A: They're separate paths. Swipe typing produces candidates via the neural model
 - [Swipe Typing](swipe-typing.md) - Neural word prediction for gesture input
 - [User Dictionary](user-dictionary.md) - Add custom words
 - [Special Characters](special-characters.md) - Symbols and accents
+- [Smart Punctuation](smart-punctuation.md) - Punctuation attachment and smart auto-space around punctuation
 
 ## Technical Details
 

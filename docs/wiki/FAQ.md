@@ -103,6 +103,10 @@ A: Touch the first letter of your word, slide your finger through each letter wi
 
 A: Yes, but this currently requires using the qwerty latin layout and manually tuning several settings to achieve useable output - see FAQ entry above and Prefix Boost settings (these are very sensitive; try small changes).
 
+**Q: Why did the space disappear when I typed a period after swiping a word?**
+
+A: Swiping adds a trailing space automatically, and smart punctuation removes that automatic space so the period attaches to the word (`word.` instead of `word .`). Spaces you type yourself are never removed — press spacebar manually before the punctuation to keep it. Similarly, swiping a word right after an opening bracket or quote skips the leading space (`("` + swipe → `("word`). See [Smart Punctuation](./typing/smart-punctuation.md).
+
 ---
 
 ## Gestures Reference

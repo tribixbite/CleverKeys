@@ -31,7 +31,7 @@ Welcome to the CleverKeys documentation. This guide covers everything you need t
 |------|-------------|
 | [Swipe Typing](./typing/swipe-typing.md) | How neural swipe prediction works |
 | [Autocorrect & Predictions](./typing/autocorrect.md) | Smart text correction settings |
-| [Smart Punctuation](./typing/smart-punctuation.md) | Automatic punctuation attachment |
+| [Smart Punctuation](./typing/smart-punctuation.md) | Automatic punctuation attachment and smart auto-space (v1.5.0) |
 | [User Dictionary](./typing/user-dictionary.md) | Custom words and case preservation |
 | [Special Characters](./typing/special-characters.md) | Symbols, accents, and compose key |
 | [Emoji & Symbols](./typing/emoji.md) | Emoji picker and symbol input |
