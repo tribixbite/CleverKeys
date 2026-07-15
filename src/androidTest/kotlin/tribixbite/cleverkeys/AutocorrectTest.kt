@@ -334,6 +334,47 @@ class AutocorrectTest {
         }
     }
 
+    // =========================================================================
+    // UT-8 (user report 2026-07-14): a typed word the user DISABLED must be
+    // treated as a typo. "ans" IS in the bundled dictionary, so the step-1
+    // "already in dictionary" short-circuit froze it even after Dictionary
+    // Manager disabled it. This is the REVERSE direction of the guard above
+    // (there: disabled word as correction TARGET; here: disabled word as the
+    // TYPED token). Uses the real production propagation path: pref write →
+    // reloadDisabledWords().
+    // =========================================================================
+
+    @Test
+    fun testAutocorrect_disabledTypedWord_correctedLikeATypo() {
+        // "ans" must be used here — it is the exact user repro (a real
+        // dictionary word the user disabled). Same commit()-not-apply() and
+        // finally-restore rules as testAutocorrect_disabledWord_notOfferedAsTarget;
+        // no other test in this class types "ans" or corrects into it, so a
+        // leak cannot cascade.
+        val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
+        val key = LanguagePreferenceKeys.disabledWordsKey("en")
+        val original = prefs.getStringSet(key, emptySet())?.toMutableSet() ?: mutableSetOf()
+        try {
+            @Suppress("ApplySharedPref")
+            prefs.edit().putStringSet(key, original.toMutableSet().apply { add("ans") }).commit()
+            predictor.reloadDisabledWords()
+
+            assertEquals("Disabled 'ans' must autocorrect to the adjacent-key word 'and'",
+                "and", predictor.autoCorrect("ans"))
+        } finally {
+            @Suppress("ApplySharedPref")
+            prefs.edit().putStringSet(key, original).commit()
+            predictor.reloadDisabledWords()
+        }
+    }
+
+    @Test
+    fun testAutocorrect_enabledDictionaryWord_ans_unchanged() {
+        // Regression pair for the test above: while NOT disabled, "ans" is a
+        // valid dictionary word and must never be corrected.
+        assertEquals("ans", predictor.autoCorrect("ans"))
+    }
+
     @Test
     fun testAutocorrect_customWord_notBlockedByFrequencyFloor() {
         // AC-2 (2026-07): custom words are injected at freq 1000, far below the

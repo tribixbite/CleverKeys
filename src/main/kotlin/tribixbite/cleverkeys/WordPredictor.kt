@@ -1877,9 +1877,19 @@ class WordPredictor {
             return corrected
         }
 
-        // 1. Do not correct words already in dictionary or user's vocabulary
-        if (dictionary.get().containsKey(lowerTypedWord) ||
-            (adaptationManager?.getAdaptationMultiplier(lowerTypedWord) ?: 0f) > 1.0f
+        // 1. Do not correct words already in dictionary or user's vocabulary.
+        // A word the user DISABLED in Dictionary Manager is no longer valid
+        // vocabulary, so it must NOT short-circuit here — typed "ans" with
+        // "ans" disabled falls through to the sweep and corrects like any
+        // typo (UT-8; "ans" IS a bundled dictionary word). The explicit
+        // disable also outranks the implicit personalization multiplier;
+        // custom/user words still override the disable inside isWordDisabled.
+        // The `isNotEmpty` guard keeps the common no-disabled-words path free
+        // of the extra lowercase-set lookup (same pattern as the sweep).
+        val typedWordDisabled = disabledWords.isNotEmpty() && isWordDisabled(lowerTypedWord)
+        if (!typedWordDisabled &&
+            (dictionary.get().containsKey(lowerTypedWord) ||
+                (adaptationManager?.getAdaptationMultiplier(lowerTypedWord) ?: 0f) > 1.0f)
         ) {
             return typedWord
         }
@@ -1943,7 +1953,12 @@ class WordPredictor {
         // ambiguous words (e.g. "thes") remain correctable — long technical
         // plurals/inflections (immunization, vaccination, realization, ...)
         // are the real failure mode.
-        if (Morphology.inflectionStems(lowerTypedWord).any { it.length >= 4 && dict.containsKey(it) }) {
+        // UT-8: an explicitly-disabled typed word outranks the inflection
+        // heuristic — the user said this exact token is not a word, so don't
+        // freeze it just because a plausible stem exists.
+        if (!typedWordDisabled &&
+            Morphology.inflectionStems(lowerTypedWord).any { it.length >= 4 && dict.containsKey(it) }
+        ) {
             Log.d(TAG, "AUTO-CORRECT skip (valid inflection): '$typedWord'")
             return typedWord
         }
@@ -1975,7 +1990,15 @@ class WordPredictor {
             val base = lowerTypedWord.substring(0, apostropheIdx)
             val suffix = lowerTypedWord.substring(apostropheIdx + 1)
             if (suffix == "s" || suffix.isEmpty()) {
-                if (dict.containsKey(base) || customAndUserWords.contains(base)) {
+                // UT-8: a DISABLED base is no longer a known word, so its
+                // possessive must not be accepted as-is — fall through to the
+                // AC-4 base-correction path (whose recursive autoCorrect call
+                // applies the disabled check again). isWordDisabled keeps the
+                // custom-word override.
+                val baseDisabled = disabledWords.isNotEmpty() && isWordDisabled(base)
+                if (!baseDisabled &&
+                    (dict.containsKey(base) || customAndUserWords.contains(base))
+                ) {
                     Log.d(TAG, "AUTO-CORRECT skip (possessive of '$base'): '$typedWord'")
                     return typedWord
                 }

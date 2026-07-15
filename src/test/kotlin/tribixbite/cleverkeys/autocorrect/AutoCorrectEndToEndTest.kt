@@ -251,4 +251,91 @@ class AutoCorrectEndToEndTest {
         config.autocorrect_confidence_min_frequency = FrequencyFloor.SLIDER_MAX
         assertEquals("the", predictor.autoCorrect("teh"))
     }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // UT-8: a typed word the user DISABLED must be treated as a typo.
+    // Reverse direction of the AC-2 guard (disabled words are never OFFERED
+    // as targets): here the typed token ITSELF is disabled, so the step-1
+    // "already in dictionary" short-circuit must not freeze it.
+    // ─────────────────────────────────────────────────────────────────────
+
+    @Test
+    fun disabledTypedWord_ans_correctsToAnd() {
+        // "ans" IS in the bundled dictionary (byte 172 → device freq
+        // 676,300), so pre-fix the validity short-circuit returned it
+        // unchanged even after the user disabled it in Dictionary Manager.
+        // Disabling must make it correctable like any typo: s↔d adjacent,
+        // 2/3 exact positions → "and". The injected `disabledWords` field is
+        // the SAME field reloadDisabledWords() populates in production.
+        setField("disabledWords", mutableSetOf("ans"))
+        try {
+            assertEquals("and", predictor.autoCorrect("ans"))
+        } finally {
+            setField("disabledWords", mutableSetOf<String>())
+        }
+    }
+
+    @Test
+    fun disabledTypedWord_customWordOverride_staysUnchanged() {
+        // isWordDisabled contract: custom/user words override the disabled
+        // set. A word both disabled AND explicitly re-added by the user is
+        // valid and must not be corrected.
+        setField("disabledWords", mutableSetOf("ans"))
+        setField("customAndUserWords", setOf("ans"))
+        try {
+            assertEquals("ans", predictor.autoCorrect("ans"))
+        } finally {
+            setField("disabledWords", mutableSetOf<String>())
+            setField("customAndUserWords", emptySet<String>())
+        }
+    }
+
+    @Test
+    fun enabledDictionaryWord_ans_neverCorrected_regression() {
+        // Without the disable, "ans" is a valid dictionary word: unchanged.
+        assertEquals("ans", predictor.autoCorrect("ans"))
+    }
+
+    @Test
+    fun disabledWord_stillNeverOfferedAsTarget_regression() {
+        // The AC-2 direction must keep holding alongside the UT-8 fix:
+        // disabling "the" removes it as a correction TARGET, so "teh" must
+        // resolve to something else (or stay), never to "the".
+        setField("disabledWords", mutableSetOf("the"))
+        try {
+            org.junit.Assert.assertNotEquals("the", predictor.autoCorrect("teh"))
+        } finally {
+            setField("disabledWords", mutableSetOf<String>())
+        }
+    }
+
+    @Test
+    fun disabledTypedWord_inflectionGuardDoesNotFreezeIt() {
+        // "games" is a valid -s inflection of "game" (stem length 4), so the
+        // morphology guard would freeze it — but the user explicitly disabled
+        // "games", which outranks the inflection heuristic. The exact sweep
+        // winner is a tiebreak detail (empirically "makes" under this
+        // config's prefix_length=0); the contract under test is that the
+        // DISABLED word is never returned — neither frozen by the guard nor
+        // re-offered by the sweep.
+        setField("disabledWords", mutableSetOf("games"))
+        try {
+            org.junit.Assert.assertNotEquals("games", predictor.autoCorrect("games"))
+        } finally {
+            setField("disabledWords", mutableSetOf<String>())
+        }
+    }
+
+    @Test
+    fun disabledPossessiveBase_notFrozenByPossessiveGuard() {
+        // Possessive guard accepts "X's" when base X is a known word — but a
+        // DISABLED base is no longer known. "ans's" must correct its base via
+        // the AC-4 recursive path and re-append the suffix: "and's".
+        setField("disabledWords", mutableSetOf("ans"))
+        try {
+            assertEquals("and's", predictor.autoCorrect("ans's"))
+        } finally {
+            setField("disabledWords", mutableSetOf<String>())
+        }
+    }
 }
