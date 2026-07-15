@@ -18,7 +18,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:text="No words found"
-        android:textColor="#888888"
+        android:textColor="@color/dict_mgr_text_secondary"
         android:textSize="16sp"
         android:visibility="gone" />
 

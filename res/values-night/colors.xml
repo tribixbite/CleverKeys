@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dictionary Manager night palette — UT-1.
+     These are the EXACT hex values that were previously hardcoded in
+     activity_dictionary_manager.xml / fragment_word_list.xml /
+     item_word_editable.xml, so dark-mode rendering is byte-identical. -->
+<resources>
+  <color name="dict_mgr_header_bg">#2A2A2A</color>
+  <color name="dict_mgr_field_bg">#1E1E1E</color>
+  <color name="dict_mgr_text_primary">#FFFFFF</color>
+  <color name="dict_mgr_text_hint">#888888</color>
+  <color name="dict_mgr_text_secondary">#888888</color>
+  <color name="dict_mgr_button_bg">#3A3A3A</color>
+  <color name="dict_mgr_button_text">#FFFFFF</color>
+  <color name="dict_mgr_delete_button_bg">#5A3A3A</color>
+  <color name="dict_mgr_delete_button_text">#FFFFFF</color>
+</resources>

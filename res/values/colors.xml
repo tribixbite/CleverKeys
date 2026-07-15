@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dictionary Manager day (light) palette — UT-1.
+     Night variants live in res/values-night/colors.xml and are byte-identical
+     to the previously hardcoded dark hexes, so system-dark rendering is
+     unchanged. Light values follow the app's branded light scheme
+     (MaterialThemeManager.createCleverKeysLightColorScheme / #35 treatment):
+     white / #FAFAFA surfaces, #1A1C1E primary text, #44474E secondary,
+     #F5F5F5 surfaceVariant, #E0E0E0 outlineVariant, #FFCDD2/#410002 error
+     container pair. -->
+<resources>
+  <!-- Search/filter header + tab strip background (night: #2A2A2A) -->
+  <color name="dict_mgr_header_bg">#F5F5F5</color>
+  <!-- Search box + sort spinner background (night: #1E1E1E) -->
+  <color name="dict_mgr_field_bg">#FFFFFF</color>
+  <!-- Primary text: search input, selected tab (night: #FFFFFF) -->
+  <color name="dict_mgr_text_primary">#1A1C1E</color>
+  <!-- Search hint text (night: #888888); Grey 600 = 4.6:1 on white -->
+  <color name="dict_mgr_text_hint">#757575</color>
+  <!-- Unselected tab text + empty-state text (night: #888888) -->
+  <color name="dict_mgr_text_secondary">#44474E</color>
+  <!-- Reset/Edit button background (night: #3A3A3A) -->
+  <color name="dict_mgr_button_bg">#E0E0E0</color>
+  <!-- Reset/Edit button text (night: #FFFFFF) -->
+  <color name="dict_mgr_button_text">#1A1C1E</color>
+  <!-- Delete button background (night: #5A3A3A) -->
+  <color name="dict_mgr_delete_button_bg">#FFCDD2</color>
+  <!-- Delete button text (night: #FFFFFF) -->
+  <color name="dict_mgr_delete_button_text">#410002</color>
+</resources>
