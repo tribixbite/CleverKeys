@@ -2,7 +2,7 @@
 title: Short Swipes - Technical Specification
 user_guide: ../../gestures/short-swipes.md
 status: implemented
-version: v1.2.7
+version: v1.5.0
 ---
 
 # Short Swipes Technical Specification
@@ -152,9 +152,11 @@ fun drawSwipeTrail(canvas: Canvas, points: List<PointF>) {
 
 | Setting | Key | Default | Range |
 |---------|-----|---------|-------|
-| **Min Distance** | `short_gesture_min_distance` | 28% | 15-50 |
-| **Max Distance** | `short_gesture_max_distance` | 65% | 40-80 |
-| **Enable Short Swipes** | `short_swipes_enabled` | true | boolean |
+| **Min Distance** | `short_gesture_min_distance` | 28 (% of key diagonal) | 10-60 (`Config.kt:119`) |
+| **Max Distance** (short/long boundary) | `short_gesture_max_distance` | 141 (% of key diagonal) | 50-200 (`Config.kt:120`) |
+| **Enable Short Swipes** | `short_gestures_enabled` | true | boolean (`Config.kt:118`) |
+
+`short_gesture_max_distance` is the short/long boundary: displacement at or below it is a short swipe (subkey); beyond it the gesture continues as a word swipe. The old "200 = disabled" UI label was never implemented and has been retired (`Config.kt:571`). Both distances are stored as `PercentOfKey` — a value class that makes raw-pixel vs percent confusion uncompilable (`Config.kt:570-571`).
 
 ## Calibration Activity
 

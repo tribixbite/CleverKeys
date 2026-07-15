@@ -2,7 +2,7 @@
 title: Appearance Settings - Technical Specification
 user_guide: ../../settings/appearance.md
 status: implemented
-version: v1.2.9
+version: v1.5.0
 ---
 
 # Appearance Settings Technical Specification
@@ -244,6 +244,17 @@ class PredictionBarView : ViewGroup {
 | **Popup Mode** | `key_popup_mode` | ALWAYS | Always/HoldOnly |
 | **Prediction Height** | `prediction_bar_height` | NORMAL | Hidden/Compact/Normal/Expanded |
 | **Prediction Count** | `prediction_count` | 5 | 3-7 |
+| **Secondary Label Size** | `secondary_label_size_scale` | 1.0 (100% = unchanged) | 0.5–2.0 (UI slider 50%–200%) |
+
+### Secondary Label Size (#133, v1.5.0)
+
+Independent scale for the small corner (short-swipe/flick) labels, decoupled from Character Size. Default `SECONDARY_LABEL_SIZE_SCALE = 1.0f` (`Config.kt:39`); applied multiplicatively in `Keyboard2View.kt:1275`:
+
+```kotlin
+_subLabelSize = labelBaseSize * _config.sublabelTextSize * _config.secondary_label_size_scale
+```
+
+Turn it down when a large Character Size makes sublabels crowd the main label.
 
 ## Related Specifications
 

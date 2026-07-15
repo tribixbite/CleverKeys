@@ -2,7 +2,7 @@
 title: Clipboard History - Technical Specification
 user_guide: ../../clipboard/clipboard-history.md
 status: implemented
-version: v1.3.0
+version: v1.4.0
 schema_version: v4
 ---
 
@@ -171,6 +171,28 @@ private fun addCurrentClip() {
     //    - If item.uri != null: dispatch to Dispatchers.IO → processClipUri(uri)
 }
 ```
+
+### Duplicate Handling — Move to Top (#108)
+
+Copying text that is already in history does NOT create a second row and does NOT get silently ignored — the existing entry is moved to the top by refreshing its timestamps:
+
+```kotlin
+// ClipboardDatabase.kt:186-199 (inside addClipboardEntry)
+db.rawQuery(duplicateQuery, arrayOf(contentHash, trimmedContent, currentTime.toString())).use { cursor ->
+    if (cursor.moveToFirst()) {
+        // #108: Move duplicate to top by updating its timestamp instead of ignoring
+        val existingId = cursor.getLong(0)
+        val updateValues = ContentValues().apply {
+            put(COLUMN_TIMESTAMP, currentTime)
+            put(COLUMN_EXPIRY_TIMESTAMP, expiryTimestamp)
+        }
+        db.update(TABLE_CLIPBOARD, updateValues, "$COLUMN_ID = ?", arrayOf(existingId.toString()))
+        return true
+    }
+}
+```
+
+Duplicates are detected by `content_hash` + exact content match against non-expired entries. Media entries get the same treatment via their SHA-256 content hash (`ClipboardDatabase.kt:245-252`, "Duplicate media moved to top"). Pinned and todo tables behave differently: adding an already-pinned/already-todo item is rejected (`return false`) with no timestamp refresh — their ordering is user-managed (drag positions), not recency-based.
 
 ### Content URI Processing (IO thread)
 

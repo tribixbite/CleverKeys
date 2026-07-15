@@ -1,37 +1,49 @@
 ---
 title: Autocorrect - Technical Specification
+description: Adjacency-weighted dictionary scorer with structural guards (non-prose context, possessives, inflections), Damerau transpositions, and a rule-based tiebreak.
 user_guide: ../../typing/autocorrect.md
 status: implemented
-version: v1.4.0
+version: v1.5.0
 ---
 
 # Autocorrect Technical Specification
 
 ## Overview
 
-CleverKeys autocorrect is an adjacency-weighted dictionary scorer with a four-tier selection function. The scoring model uses physical keyboard distance to rank candidate replacements, so fingertip-typical typos (adjacent-key substitutions) outscore arbitrary string-distance matches. Contractions, accented Latin characters, and runtime layout swaps (AZERTY/QWERTZ/Dvorak/custom) are all first-class citizens in the model.
+CleverKeys autocorrect is an adjacency-weighted dictionary scorer with a rule-based selection function. The scoring model uses physical keyboard distance to rank candidate replacements, so fingertip-typical typos (adjacent-key substitutions and adjacent transpositions) outscore arbitrary string-distance matches. Contractions, accented Latin characters, and runtime layout swaps (AZERTY/QWERTZ/Dvorak/custom) are all first-class citizens in the model.
 
-This spec covers v1.4.0 — the major refactor at Tier A (#101) + Tier B (layout-aware) introduced in May 2026. Earlier versions used position-only exact match against a hardcoded QWERTY assumption.
+This spec covers the v1.5.0 pipeline: the Tier A (#101) + Tier B (layout-aware) adjacency model from v1.4.0, plus the guard layer added since — non-prose context suppression (URLs/emails/paths), possessive and inflection guards, doubled-letter elongation collapse, the Damerau transposition fast path, a dictionary-scaled frequency floor, and disabled-word exclusion.
 
 ## Key Components
 
 | Component | File | Purpose |
 |-----------|------|---------|
 | `KeyAdjacency` | `src/main/kotlin/tribixbite/cleverkeys/autocorrect/KeyAdjacency.kt` | Position table, distance math, layout injection |
-| `WordPredictor.autoCorrect` | `WordPredictor.kt:~1750` | The pipeline entry point + selection logic |
-| `WordPredictor.loadPrimaryContractionKeys` | `WordPredictor.kt:~966` | Alias map + dict freq injection |
-| `Keyboard2View.onLayout` | `Keyboard2View.kt:~1279` | Pushes the active layout's key positions into `KeyAdjacency` |
-| `SuggestionHandler` | `SuggestionHandler.kt` | Wires autocorrect into the IME's word-completion flow + undo |
-| `PredictionContextTracker` | `PredictionContextTracker.kt` | Tracks `lastAutocorrectOriginalWord` for undo |
+| `AutocorrectContextGuard` | `src/main/kotlin/tribixbite/cleverkeys/autocorrect/AutocorrectContextGuard.kt` | Detects URL/email/path tokens at the cursor; suppresses autocorrect |
+| `Morphology` | `src/main/kotlin/tribixbite/cleverkeys/autocorrect/Morphology.kt` | `inflectionStems()` for the valid-inflection guard |
+| `FrequencyFloor` | `src/main/kotlin/tribixbite/cleverkeys/autocorrect/FrequencyFloor.kt` | Maps the 100–2000 slider onto the loaded dictionary's frequency scale |
+| `WordPredictor.autoCorrect` | `WordPredictor.kt:1855` | The pipeline entry point + selection logic |
+| `WordPredictor.isAdjacentTransposition` | `WordPredictor.kt:1831` | Damerau swap detector |
+| `Keyboard2View.onLayout` | `Keyboard2View.kt:1303` | Pushes the active layout's key positions into `KeyAdjacency` |
+| `SuggestionHandler` | `SuggestionHandler.kt:999-1004` | Wires autocorrect into the IME's word-completion flow (context guard + undo) |
+| `PredictionContextTracker` | `PredictionContextTracker.kt` | Tracks `lastAutocorrectOriginalWord` for undo; `shouldSyncForInputType` (`:612`) detects URI/email/password fields |
 
 ## Pipeline
 
 ```
 User types word + space
         ↓
-SuggestionHandler.onWordCompleted()
+SuggestionHandler word-completion path
         ↓
-WordPredictor.autoCorrect(typedWord)
+┌──────────────────────────────────────────────┐
+│ Context gate (SuggestionHandler.kt:999-1004) │
+│   AutocorrectContextGuard.isNonProseContext( │
+│     ic.getTextBeforeCursor(72, 0))           │
+│   token contains ./:@#?&=%~\ or digits       │
+│   → SKIP autocorrect for this token          │
+└──────────────────────────────────────────────┘
+        ↓ (prose)
+WordPredictor.autoCorrect(typedWord)   (WordPredictor.kt:1855)
         ↓
 ┌──────────────────────────────────────────────┐
 │ Step 0: contractionAliases[typedWord]        │  ← exact alias hit
@@ -44,6 +56,22 @@ WordPredictor.autoCorrect(typedWord)
 └──────────────────────────────────────────────┘
         ↓ (miss)
 ┌──────────────────────────────────────────────┐
+│ Step 1.4: elongation collapse (:1889)        │
+│   doubled letter whose removal yields a      │
+│   dictionary word → correct directly          │
+│   "gamees" → "games", "embeer" → "ember"     │
+├──────────────────────────────────────────────┤
+│ Step 1.5: morphological guard (:1946)        │
+│   inflectionStems(word) hits a dict word of  │
+│   length >= 4 → return typedWord unchanged   │
+├──────────────────────────────────────────────┤
+│ Step 1.6: possessive guard (AC-4, :1951)     │
+│   base's / bases' of a known word → keep;    │
+│   possessive of a TYPO → autoCorrect(base) + │
+│   reattach suffix ("embeer's" → "ember's")   │
+└──────────────────────────────────────────────┘
+        ↓
+┌──────────────────────────────────────────────┐
 │ Step 2: length >= autocorrect_min_word_length│
 └──────────────────────────────────────────────┘
         ↓ (pass)
@@ -55,17 +83,21 @@ WordPredictor.autoCorrect(typedWord)
 └──────────────────────────────────────────────┘
         ↓
 ┌──────────────────────────────────────────────┐
-│ Step 4: iterate dictionary                    │
+│ Step 4: iterate dictionary (:2048)            │
 │   For each (dictWord, candidateFrequency):    │
 │     if |len diff| > max_length_diff → skip    │
-│     score = scoreCandidate(typed, dictWord)   │
+│     if isWordDisabled(dictWord) → skip (:2062)│
+│     score = transposition | same-length |     │
+│             weighted edit distance            │
 │     if score >= char_match_threshold:         │
-│       update bestCandidate via 4-tier rule    │
+│       update bestCandidate via rule-based     │
+│       tiebreak (:2163-2185)                   │
 └──────────────────────────────────────────────┘
         ↓
 ┌──────────────────────────────────────────────┐
-│ Step 5: confirm + reroute                     │
-│   if bestCandidate.frequency >= floor:        │
+│ Step 5: confirm + reroute (:2202-2217)        │
+│   if winner is custom/user word OR            │
+│      frequency >= FrequencyFloor.effective(): │
 │     if bestCandidate.word in aliases:         │
 │       return aliases[bestCandidate.word]      │
 │     else:                                     │
@@ -79,11 +111,12 @@ Pure-JVM, no Android deps. Three public functions:
 
 ```kotlin
 object KeyAdjacency {
-    fun keyDistance(a: Char, b: Char): Float       // [0, 1] normalized euclidean
-    fun substitutionScore(a: Char, b: Char): Float  // 1 - keyDistance
-    fun weightedEditDistance(a: String, b: String): Float  // weighted Levenshtein
-    fun setLayout(positions: Map<Char, Pair<Float, Float>>)  // Tier B injection
-    fun resetLayout()                                // revert to default QWERTY
+    fun keyDistance(a: Char, b: Char): Float       // [0, 1] normalized euclidean (:170)
+    fun substitutionScore(a: Char, b: Char): Float  // 1 - keyDistance (:220)
+    fun weightedEditDistance(a: String, b: String): Float  // weighted Levenshtein (:231)
+    fun weightedEditDistance(a: String, b: String, maxDistance: Float): Float  // early-abandon overload (:248)
+    fun setLayout(positions: Map<Char, Pair<Float, Float>>)  // Tier B injection (:115)
+    fun resetLayout()                                // revert to default QWERTY (:131)
 }
 ```
 
@@ -135,7 +168,7 @@ For the default QWERTY layout this is `q ↔ p = 9.0` (opposite ends of the top 
 `Keyboard2View.onLayout` extracts key positions in pixel coordinates and pushes them to `KeyAdjacency`:
 
 ```kotlin
-// Keyboard2View.kt:~1295
+// Keyboard2View.kt:~1303
 override fun onLayout(changed: Boolean, ...) {
     if (!changed) return
     // ...gesture exclusion rects...
@@ -169,99 +202,202 @@ Coordinates can be in any unit (pixels, key-widths, anything) — only relative 
 
 ## Scoring
 
-Two scoring paths depending on length difference:
+Three scoring paths: an adjacent-transposition fast path, same-length dual-gate scoring, and weighted edit distance for length differences.
 
-### Same-Length (Dual-Gate)
+### Damerau Transposition Fast Path
+
+A swap of two neighboring letters has only `wordLength - 2` exact positions, so short swaps like `teh` (1/3 exact) can never pass the 50% exact-ratio gate — even though transpositions are among the most common typo classes. `isAdjacentTransposition` (`WordPredictor.kt:1831`) detects an exact single-swap and scores it just below a perfect match:
 
 ```kotlin
-// WordPredictor.kt:~1820
-val score: Float = if (lengthDiff == 0) {
-    var exactCount = 0
+// WordPredictor.kt:2087-2100
+if (isAdjacentTransposition(lowerTypedWord, dictWord)) {
+    // Damerau transposition fast path ("teh" → "the", "becuase"
+    // → "because", "recieve" → "receive").
+    isTransposition = true
+    1f - TRANSPOSITION_PENALTY / wordLength
+}
+```
+
+With `TRANSPOSITION_PENALTY = 0.15f` (`WordPredictor.kt:153`), `teh → the` scores `1 - 0.15/3 = 0.950` — just below a single adjacent-key substitution (`ten` at 0.959), so the within-gap frequency tiebreak resolves the rest (`the` wins on frequency).
+
+### Same-Length (Dual-Gate + Substitution Cap)
+
+```kotlin
+// WordPredictor.kt:2107-2122
+var exactCount = 0
+for (i in 0 until wordLength) {
+    if (lowerTypedWord[i] == dictWord[i]) exactCount++
+}
+val substitutions = wordLength - exactCount
+isMultiSub = substitutions >= 2
+if (exactCount.toFloat() / wordLength >= MIN_SAME_LENGTH_EXACT_RATIO &&
+    substitutions <= MAX_SAME_LENGTH_SUBSTITUTIONS
+) {
+    // Pass 2: adjacency-weighted score, only for gate survivors.
     var weightedSum = 0f
     for (i in 0 until wordLength) {
-        val a = lowerTypedWord[i]
-        val b = dictWord[i]
-        if (a == b) exactCount++
-        weightedSum += KeyAdjacency.substitutionScore(a, b)
+        weightedSum += KeyAdjacency.substitutionScore(lowerTypedWord[i], dictWord[i])
     }
-    val exactRatio = exactCount.toFloat() / wordLength
-    val weightedScore = weightedSum / wordLength
-    // GATE 1: at least 50% of positions must exactly match.
-    if (exactRatio >= MIN_SAME_LENGTH_EXACT_RATIO) weightedScore else -1f
-}
+    weightedSum / wordLength
+} else -1f
 ```
 
-- **Gate 1 (`exactRatio >= 0.50`)** rejects unrelated same-length words. Without it, "every char-pair has SOME adjacency similarity" would let `questin` match `without` (0 exact, all-adjacent-fuzzy).
-- **Gate 2 (`weightedScore >= char_match_threshold`)** rewards adjacency-rich matches. `tge → the` passes both (2/3 exact AND weighted ≈ 0.96).
+- **Gate 1a (`exactRatio >= 0.50`)** rejects unrelated same-length words. Without it, "every char-pair has SOME adjacency similarity" would let `questin` match `without` (0 exact, all-adjacent-fuzzy).
+- **Gate 1b (`substitutions <= MAX_SAME_LENGTH_SUBSTITUTIONS = 2`)** caps how different a same-length candidate may be, so a single-typo match beats a higher-frequency lookalike that needs 3+ substitutions.
+- **Gate 2 (`weightedScore >= char_match_threshold`)** rewards adjacency-rich matches. `tge → the` passes (2/3 exact AND weighted ≈ 0.95).
+- The exact-count pass runs first with no `keyDistance` calls, so the large majority of the 98k dictionary that fails the gates skips the adjacency math entirely (`WordPredictor.kt:2102-2106`).
 
-### Different-Length (Weighted Edit Distance)
+### Different-Length (Weighted Edit Distance, Early-Abandon)
 
 ```kotlin
-val score: Float = ... else {
-    val ed = KeyAdjacency.weightedEditDistance(lowerTypedWord, dictWord)
-    val maxEd = lengthDiff + LENGTH_DIFF_ED_BUDGET  // = lengthDiff + 0.5
-    if (ed <= maxEd) {
-        val maxLen = maxOf(wordLength, dictWord.length).toFloat()
-        (1f - ed / maxLen).coerceAtLeast(0f)
-    } else {
-        -1f
-    }
+// WordPredictor.kt:2124-2137
+val maxEd = lengthDiff + LENGTH_DIFF_ED_BUDGET
+val ed = KeyAdjacency.weightedEditDistance(lowerTypedWord, dictWord, maxEd)
+if (ed <= maxEd) {
+    val maxLen = maxOf(wordLength, dictWord.length).toFloat()
+    (1f - ed / maxLen).coerceAtLeast(0f)
+} else {
+    -1f
 }
 ```
 
-Weighted Levenshtein DP: substitution cost = `keyDistance` (0.0 to 1.0), insertion/deletion cost = 1.0. The absolute budget `lengthDiff + 0.5` was calibrated against the bundled English dictionary:
+Weighted Levenshtein DP: substitution cost = `keyDistance` (0.0 to 1.0), insertion/deletion cost = 1.0. The `maxDistance` overload (`KeyAdjacency.kt:248`) abandons the DP early once every cell in a row exceeds the budget — most dictionary words in the ±length band are unrelated and blow past `maxEd` after 2-3 rows. The absolute budget `lengthDiff + 0.5` was calibrated against the bundled English dictionary:
 
 - `questin → question` (lenDiff=1, ed=1.0) → 1.0 ≤ 1.5 ✓
 - `quuestion → question` (lenDiff=1, ed=1.0) → 1.0 ≤ 1.5 ✓
 - `wuestion → season` (lenDiff=2, ed≈2.95) → 2.95 > 2.5 ✗ rejected
 - `wuestion → wuthering` (lenDiff=1, ed≈2.79) → 2.79 > 1.5 ✗ rejected
 
-## Four-Tier Candidate Selection
+## Rule-Based Candidate Selection
 
-Each candidate passing the score threshold competes through a four-tier comparator:
+Each candidate passing the score threshold competes through a rule-based comparator. Raw score dominates beyond a ±0.10 band; inside the band, structural rules apply before frequency:
 
 ```kotlin
-// WordPredictor.kt:~1900
+// WordPredictor.kt:2163-2185
 val isAlias = dictWord in contractionAliases
-val effectiveScore = if (isAlias) score + ALIAS_SCORE_BONUS else score
-val bothAliases = isAlias && (bestCandidate?.word in contractionAliases)
+val bestIsAlias = bestCandidate?.isAlias == true
 val better = when {
     bestCandidate == null -> true
-    // Tier 1: strictly better score by more than the gap → win
-    effectiveScore > bestCandidate.effectiveScore + SCORE_TIEBREAK_GAP -> true
-    // Tier 1 (negative): strictly worse → lose
-    effectiveScore < bestCandidate.effectiveScore - SCORE_TIEBREAK_GAP -> false
-    // Tier 2: alias vs alias → raw score (structural closeness) wins
-    bothAliases -> effectiveScore > bestCandidate.effectiveScore
-    // Tier 3: normal close-score case → frequency wins
+    // Raw-score dominance beyond the gap.
+    score > bestCandidate.score + SCORE_TIEBREAK_GAP -> true
+    score < bestCandidate.score - SCORE_TIEBREAK_GAP -> false
+    // Alias vs alias: structural closeness (raw score) wins,
+    // NOT frequency — sibling contractions (`hadnt` vs `hasnt`)
+    // sit at similar freqs and typing `hadnr` means `hadnt`.
+    isAlias && bestIsAlias -> score > bestCandidate.score
+    // Alias privilege: only at equal-or-better raw score.
+    isAlias && !bestIsAlias -> score >= bestCandidate.score
+    bestIsAlias && !isAlias -> score > bestCandidate.score
+    // One Damerau swap beats two independent substitutions.
+    isTransposition && bestCandidate.isMultiSub -> true
+    bestCandidate.isTransposition && isMultiSub -> false
+    // Within the band, normal case → frequency wins.
     candidateFrequency > bestCandidate.frequency -> true
     candidateFrequency < bestCandidate.frequency -> false
-    // Tier 4: everything tied → deterministic by score
-    else -> effectiveScore > bestCandidate.effectiveScore
+    // Score-close AND freq-tied → deterministic by score.
+    else -> score > bestCandidate.score
 }
 ```
 
-### Why Four Tiers
+### Why These Rules
 
-| Tier | Calibration Case |
+| Rule | Calibration Case |
 |------|------------------|
-| **1: big score gap** | `wuestion → question` (0.99) wins over `within` (0.69) by 0.30 gap |
-| **1: big score gap** | `tge → the` (0.96) wins over `weve` (0.81 effective) by 0.15 gap |
-| **2: alias vs alias** | `hadnr → hadnt` (one adj sub, score 0.978) wins over `hasnt` (two subs, 0.956) |
-| **3: close-score freq** | `tfe → the` — `tfw` scores 0.96 but `the` (freq 255) beats `tfw` (freq 162) on freq tiebreaker |
-| **3: close-score freq** | `quuestion → question` (0.89) beats `quotation` (0.94) because gap is only 0.05 → freq wins; question freq 243 > quotation 182 |
-| **4: deterministic** | Removes hash-map iteration-order dependence |
+| **Score primary** | `wuestion → question` (0.986) wins over the freq-popular but distant `within` |
+| **Alias vs alias** | `hadnr → hadnt` (one adj sub) wins over `hasnt` (two subs) on raw score |
+| **Alias privilege (ties only)** | `donr`: `dont`/`done` tie on score → the contraction wins (`don't`). Unlike the pre-v1.5.0 `+0.15` score bonus — which could beat candidates up to 0.15 *stronger* — an alias can no longer override a structurally better match (`thier → their`, not `this'd`: the transposition outscores the 2-sub alias) |
+| **Transposition > 2-sub** | `thsi → this`, not the more frequent 2-sub `that`: one swap is almost always the intent vs two independent wrong keys |
+| **Close-score freq** | `tfe`: `tfw` scores 0.96 but `the` beats it on frequency inside the band |
+| **Deterministic** | Removes hash-map iteration-order dependence |
 
 ### Calibrated Constants
 
 ```kotlin
-private const val MIN_SAME_LENGTH_EXACT_RATIO = 0.50f
-private const val LENGTH_DIFF_ED_BUDGET = 0.5f
-private const val ALIAS_SCORE_BONUS = 0.15f
-private const val SCORE_TIEBREAK_GAP = 0.10f
+// WordPredictor.kt:47-153
+private const val MIN_SAME_LENGTH_EXACT_RATIO = 0.50f   // :47
+private const val MAX_SAME_LENGTH_SUBSTITUTIONS = 2     // :73
+private const val LENGTH_DIFF_ED_BUDGET = 0.5f          // :100
+private const val SCORE_TIEBREAK_GAP = 0.10f            // :135
+private const val TRANSPOSITION_PENALTY = 0.15f         // :153
 ```
 
-The `ALIAS_SCORE_BONUS = 0.15` is sized to cross the `SCORE_TIEBREAK_GAP = 0.10` boundary: a tied alias-key (`dont` at 0.966) beats a tied non-alias (`done` at 0.966) by score-primary because `1.116 - 0.966 = 0.15 > 0.10`.
+The `ALIAS_SCORE_BONUS` additive bonus from v1.4.0 was removed: alias preference is now a *tiebreak rule* (equal-or-better raw score inside the gap band) instead of a score inflation, so it can no longer overtake stronger matches.
+
+## Guard Layer (pre-scan short circuits)
+
+### Non-Prose Context Guard (URLs, emails, paths)
+
+The word tracker only sees letters, so `teh` inside `foo.teh`, `user@teh`, or `https://teh…` looks identical to prose `teh`. The editor text reveals the real token — `SuggestionHandler` consults `AutocorrectContextGuard` before invoking `autoCorrect`:
+
+```kotlin
+// AutocorrectContextGuard.kt:22
+private const val NON_PROSE_CHARS = "./:@#?&=%~\\"
+```
+
+`isNonProseContext(textBeforeCursor)` (`AutocorrectContextGuard.kt:32`) extracts the whitespace-delimited token ending at the cursor (ignoring one trailing space) and returns `true` if any character is a digit or in `NON_PROSE_CHARS`. The call site passes the last 72 chars before the cursor:
+
+```kotlin
+// SuggestionHandler.kt:999-1004
+val inNonProseToken = AutocorrectContextGuard.isNonProseContext(
+    ic?.getTextBeforeCursor(72, 0)
+)
+if (config.autocorrect_enabled && predictionCoordinator.getWordPredictor() != null &&
+    text == " " && !inTermuxApp && !inNonProseToken) {
+```
+
+This is distinct from (and unrelated to) the clipboard [URL sanitization](../clipboard/url-sanitization-spec.md) feature — the guard suppresses *typing* corrections; the sanitizer strips tracking parameters from *copied* URLs.
+
+### Elongation Collapse
+
+Before the dictionary scan, a doubled letter whose removal yields a dictionary word is corrected directly (`WordPredictor.kt:1889-1934`): each `cc` pair is tried with one half removed; the highest-frequency surviving dictionary word wins (disabled words excluded), and contraction aliases reroute as usual. Structural certainty exempts this path from the frequency floor. Handles `gamees → games` and the base step of `embeer's → ember's`.
+
+### Morphological Guard (valid inflections)
+
+```kotlin
+// WordPredictor.kt:1946
+if (Morphology.inflectionStems(lowerTypedWord).any { it.length >= 4 && dict.containsKey(it) }) {
+    Log.d(TAG, "AUTO-CORRECT skip (valid inflection): '$typedWord'")
+    return typedWord
+}
+```
+
+`Morphology.inflectionStems` generates candidate stems for regular suffixes (`-s/-es/-ies`, `-ed/-ied`, `-ing`, `-er/-est`, `-ly/-ily`). Stems shorter than 4 chars don't qualify, so short words remain correctable.
+
+### Possessive Guard + Possessive-Typo Correction (AC-4)
+
+A possessive of a known noun (`ember's`, `dogs'`) is valid English but never stored in the dictionary, so without this guard it would be treated as a typo. `WordPredictor.kt:1951-1993`: if the token ends in `'s` or a bare trailing apostrophe and the base is a dictionary/custom word, return unchanged. If the base is itself a typo, recurse on the base alone and reattach the suffix — preserving the original apostrophe character (typewriter `'` or curly `’`): `embeer's → ember's`.
+
+### Disabled Words and Custom Words
+
+- A user-disabled word is never offered as a correction target (`WordPredictor.kt:2062`); `isWordDisabled` (`:378-382`) lets custom/user-added words override disabled status.
+- Custom/user words are exempt from the frequency floor (`WordPredictor.kt:2202-2204`): they are injected at a low placeholder frequency far below the binary dictionary's runtime scale, so any non-zero floor would silently exclude every custom word (AC-2).
+
+## Frequency Floor (dictionary-scaled)
+
+The `autocorrect_confidence_min_frequency` slider (100–2000, default 100) no longer compares against raw stored frequencies — dictionary scales vary wildly per language and format. `FrequencyFloor` maps the slider position onto the loaded dictionary's own maximum frequency:
+
+```kotlin
+// FrequencyFloor.kt:40-59
+const val SLIDER_MIN = 100
+const val SLIDER_MAX = 2000
+const val MAX_STRICTNESS = 0.6f
+
+fun effective(sliderValue: Int, maxFreq: Int): Int {
+    if (maxFreq <= 0) return 0 // dictionary not loaded yet → don't gate
+    val span = (SLIDER_MAX - SLIDER_MIN).toFloat()
+    val t = ((sliderValue - SLIDER_MIN).toFloat() / span).coerceIn(0f, 1f)
+    return (t * MAX_STRICTNESS * maxFreq).toInt()
+}
+```
+
+Slider 100 → floor 0 (any dictionary word can win); slider 2000 → floor = 60% of the dictionary's max frequency. `MAX_STRICTNESS < 1` guarantees the most common words always clear the floor. Applied at `WordPredictor.kt:2023` via `FrequencyFloor.effective(configFloor, dictMaxFrequency(dict))`.
+
+## Suggestion Taps in URI/Email Fields (#151)
+
+Browser URL bars, email fields, and password fields never get cursor-sync (`PredictionContextTracker.shouldSyncForInputType`, `PredictionContextTracker.kt:612`, skips `TYPE_TEXT_VARIATION_URI`/`EMAIL_ADDRESS`/password variants), so the tracker's deletion counts stay `(0,0)` there. `SuggestionHandler.onSuggestionSelected` detects these fields up front (`SuggestionHandler.kt:491`: `syncSuppressedField = !contextTracker.shouldSyncForInputType(editorInfo)`) and:
+
+- forces the editor-scan fallback that measures the typed partial token via `getTextBeforeCursor` and deletes it before committing the suggestion (`SuggestionHandler.kt:585-596`), so tapping `example` after typing `exa` produces `example`, not `exa example`;
+- never injects a leading/trailing space, which would corrupt a URL or address value.
 
 ## Contraction Handling
 
@@ -293,7 +429,7 @@ This stops `well → we'll`, `were → we're`, `shed → she'd`, etc.
 ### Dictionary Injection (freq-preservation fix)
 
 ```kotlin
-// WordPredictor.kt:~1024
+// WordPredictor.kt:1120-1122
 // PRESERVES existing freq (was destructive `?: 5000` before v1.4.0)
 currentDict[withoutApostrophe] = currentDict[withApostrophe]
     ?: currentDict[withoutApostrophe]
@@ -324,7 +460,7 @@ This handles `donr → don't`, `hadnr → hadn't`, `couldnr → couldn't`.
 
 ## Configuration
 
-All `Config` fields below are read in `autoCorrect`. Defaults at v1.4.0:
+All `Config` fields below are read in `autoCorrect`. Defaults at v1.5.0 (`Config.kt:179-189` in `object Defaults`):
 
 | Setting | Key | Default | Range | Description |
 |---------|-----|---------|-------|-------------|
@@ -333,7 +469,7 @@ All `Config` fields below are read in `autoCorrect`. Defaults at v1.4.0:
 | **Required prefix** | `autocorrect_prefix_length` | `0` | 0–5 | Candidates must share leading N chars (`0` = no prefix; allows first-char typos) |
 | **Score threshold** | `autocorrect_char_match_threshold` | `0.65` | 0.5–0.95 | Min match score |
 | **Max length diff** | `autocorrect_max_length_diff` | `2` | 0–5 | Allow ±N length candidates |
-| **Min freq floor** | `autocorrect_confidence_min_frequency` | `100` | 0+ | Winner must clear this dict freq |
+| **Min freq floor** | `autocorrect_confidence_min_frequency` | `100` | 100–2000 | Slider mapped onto the dictionary's frequency scale via `FrequencyFloor.effective()`; 100 = no floor. Custom/user words exempt |
 | **Diagnostic logging** | `swipe_debug_detailed_logging` | `false` | bool | Gates rejection-reason logs |
 
 ## User Freq Control & Beam Search Interaction
@@ -377,11 +513,16 @@ Adding to the user dictionary on undo ensures the same correction won't fire aga
 
 ## Test Coverage
 
-| Suite | File | Cases |
-|-------|------|-------|
-| Pure JVM — KeyAdjacency | `src/test/kotlin/tribixbite/cleverkeys/autocorrect/KeyAdjacencyTest.kt` | 31 (position math, accents, layout swap) |
-| Instrumented — AutocorrectTest | `src/androidTest/kotlin/tribixbite/cleverkeys/AutocorrectTest.kt` | 36 (adjacency typos, length-diff, contractions, prefix gate, case preservation) |
-| Instrumented — TypingSimulationTest | `src/androidTest/kotlin/tribixbite/cleverkeys/TypingSimulationTest.kt` | ~60 cases incl. step-0 alias direct (`im → I'm`) |
+| Suite | File | Coverage |
+|-------|------|----------|
+| Pure JVM — KeyAdjacency | `src/test/kotlin/tribixbite/cleverkeys/autocorrect/KeyAdjacencyTest.kt` | Position math, accents, layout swap |
+| Pure JVM — Context guard | `src/test/kotlin/tribixbite/cleverkeys/autocorrect/AutocorrectContextGuardTest.kt` | Non-prose token detection |
+| Pure JVM — Frequency floor | `src/test/kotlin/tribixbite/cleverkeys/autocorrect/FrequencyFloorTest.kt` | Slider→floor mapping, unloaded-dict guard |
+| Pure JVM — Morphology | `src/test/kotlin/tribixbite/cleverkeys/autocorrect/MorphologyTest.kt` | Inflection stem generation |
+| Pure JVM — End to end | `src/test/kotlin/tribixbite/cleverkeys/autocorrect/AutoCorrectEndToEndTest.kt` | Full pipeline against the shipped dictionary |
+| Instrumented — AutocorrectTest | `src/androidTest/kotlin/tribixbite/cleverkeys/AutocorrectTest.kt` | Adjacency typos, length-diff, contractions, prefix gate, case preservation |
+| Instrumented — URL guard | `src/androidTest/kotlin/tribixbite/cleverkeys/AutocorrectUrlGuardTest.kt` | Guard behavior in real input connections |
+| Instrumented — TypingSimulationTest | `src/androidTest/kotlin/tribixbite/cleverkeys/TypingSimulationTest.kt` | Typing scenarios incl. step-0 alias direct (`im → I'm`) |
 
 ## Related Specifications
 

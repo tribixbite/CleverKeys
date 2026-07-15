@@ -2,7 +2,7 @@
 title: Settings System Architecture - Technical Specification
 description: Architectural overview of the CleverKeys settings system — Defaults singleton, Config, ConfigurationManager, and Material 3 Compose UI.
 status: implemented
-version: v1.4.0
+version: v1.5.0
 ---
 
 # Settings System Architecture
@@ -18,7 +18,9 @@ This document covers the cross-cutting architecture (defaults, Config singleton,
 | File | Class/Function | Purpose |
 |------|----------------|---------|
 | `src/main/kotlin/tribixbite/cleverkeys/Config.kt` | `Config`, `Defaults` | Global configuration class, centralized defaults |
-| `src/main/kotlin/tribixbite/cleverkeys/SettingsActivity.kt` | `SettingsActivity` | Material 3 Compose settings UI (collapsible sections) |
+| `src/main/kotlin/tribixbite/cleverkeys/SettingsActivity.kt` | `SettingsActivity` | Settings shell — hosts the Compose screen, launchers, and search index |
+| `src/main/kotlin/tribixbite/cleverkeys/ui/settings/` | `SettingsScreen`, `SettingsSearch`, controls/dialogs/persistence | Decomposed settings UI layer (v1.5.0 refactor) |
+| `src/main/kotlin/tribixbite/cleverkeys/ui/settings/sections/` | 17 per-section composables (`AppearanceSection`, `ClipboardSection`, ...) | One file per collapsible section |
 | `src/main/kotlin/tribixbite/cleverkeys/ConfigurationManager.kt` | `ConfigurationManager` | Owns Config + FoldStateTracker; observes prefs and notifies listeners |
 | `src/main/kotlin/tribixbite/cleverkeys/DirectBootAwarePreferences.kt` | `DirectBootAwarePreferences` | Device-protected preferences for direct-boot scenarios |
 | `src/main/kotlin/tribixbite/cleverkeys/theme/KeyboardTheme.kt` | `KeyboardTheme` | Theme data and application |
@@ -60,39 +62,37 @@ Storage Strategy:
 The `Defaults` object (`Config.kt:18`) centralizes all app default values:
 
 ```kotlin
-// Config.kt
+// Config.kt (abridged; line numbers per current source)
 object Defaults {
     // Appearance
-    const val THEME = "cleverkeysdark"
-    const val KEYBOARD_HEIGHT_PORTRAIT = 28
-    const val KEYBOARD_HEIGHT_LANDSCAPE = 50
-    const val KEY_OPACITY = 1.0f
-    const val KEY_BORDER_ENABLED = false
+    const val THEME = "cleverkeysdark"          // :20
+    const val KEYBOARD_HEIGHT_PORTRAIT = 27    // :23
+    const val KEYBOARD_HEIGHT_LANDSCAPE = 40   // :24
+    const val KEY_OPACITY = 100                // :27
 
-    // Input Behavior
-    const val LONGPRESS_TIMEOUT = 600
-    const val KEY_REPEAT_DELAY = 50
-    const val VIBRATION_ENABLED = true
-    const val VIBRATION_STRENGTH = 10
+    // Input Behavior / Haptics
+    const val LONGPRESS_TIMEOUT = 600          // :85
+    const val HAPTIC_ENABLED = true            // :75
+    const val VIBRATE_CUSTOM = false           // :72
+    const val VIBRATE_DURATION = 20            // :73
 
     // Neural Prediction
-    const val NEURAL_BEAM_WIDTH = 6
-    const val NEURAL_MAX_LENGTH = 20
-    const val NEURAL_CONFIDENCE_THRESHOLD = 0.3f
-    const val SWIPE_ENABLED = true
+    const val NEURAL_BEAM_WIDTH = 6            // :134
+    const val NEURAL_MAX_LENGTH = 20           // :135
+    const val NEURAL_CONFIDENCE_THRESHOLD = 0.01f  // :136
+    const val SWIPE_TYPING_ENABLED = true      // :164
 
-    // Gestures
-    const val SHORT_GESTURE_MIN_DISTANCE = 15
-    const val SHORT_GESTURE_MAX_DISTANCE = 50
-    const val SLIDER_SENSITIVITY = 30
-    const val TAP_DURATION_THRESHOLD = 200L
+    // Gestures (units: % of key diagonal)
+    const val SHORT_GESTURE_MIN_DISTANCE = 28  // :119
+    const val SHORT_GESTURE_MAX_DISTANCE = 141 // :120
+    const val TAP_DURATION_THRESHOLD = 150     // :103
 
     // Clipboard
-    const val CLIPBOARD_HISTORY_ENABLED = true
-    const val CLIPBOARD_HISTORY_SIZE = 25
-    const val CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS = true
+    const val CLIPBOARD_HISTORY_ENABLED = true              // :206
+    const val CLIPBOARD_HISTORY_LIMIT = "0"                 // :215 (unlimited)
+    const val CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS = true    // :227
 
-    // ... ~100 constants organized by category
+    // ... ~100 more constants organized by category
 }
 ```
 
@@ -110,6 +110,15 @@ For exact current values per area, see the per-area specs ([Appearance](appearan
 | Clipboard | ~5 | history_enabled, history_size, exclusions |
 | Accessibility | ~6 | sticky_keys, voice_guidance |
 | Debug | ~4 | debug_mode, logging |
+
+## Settings Search
+
+The settings screen has a search box that finds any control by title or keyword and scrolls to it:
+
+- `SearchableSetting` (`ui/settings/SettingsSearch.kt:60`) carries `title`, `keywords`, `sectionName`, an `expandSection` lambda, and an optional `gatedBy` key (e.g. a setting hidden behind the swipe-typing toggle).
+- The index is **generated from the actual control titles** — `scripts/generate_settings_search_index.py` scans the section composables so every rendered control is findable; a drift test keeps the index complete.
+- Selecting a result expands the owning collapsible section and animates the scroll to the control's measured position (`SettingsSearch.kt:27`: `scrollState.animateScrollTo(maxOf(0, position - 16))`).
+- Gated results (`gatedBy != null`) are handled at `SettingsSearch.kt:136-139`: when the gate is disabled, search navigates to the gate toggle instead of a hidden control.
 
 ## Public API
 

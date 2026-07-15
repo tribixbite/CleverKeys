@@ -2,7 +2,7 @@
 title: First Time Setup - Technical Specification
 user_guide: ../../getting-started/first-time-setup.md
 status: implemented
-version: v1.2.9
+version: v1.5.0
 ---
 
 # First Time Setup Technical Specification
@@ -18,7 +18,8 @@ Initial keyboard configuration flow including language pack download and prefere
 | Settings Activity | `SettingsActivity.kt` | Main configuration UI |
 | Config | `Config.kt` | Default values and preference keys |
 | DirectBootPrefs | `DirectBootAwarePreferences.kt` | Device-encrypted storage |
-| Language Manager | `LanguagePackManager.kt` | Download and install language packs |
+| Launcher | `LauncherActivity.kt` | First-run Enable/Select Keyboard flow |
+| Language Manager | `langpack/LanguagePackManager.kt` | Import and install language packs (SAF, no network) |
 
 ## Initialization Flow
 
@@ -44,7 +45,7 @@ Normal keyboard operation
 |---------|------|----------|
 | **Preferences** | `shared_prefs/cleverkeys_prefs.xml` | User settings |
 | **Device Protected** | `shared_prefs/neural_performance_stats.xml` | Stats (encrypted) |
-| **Language Packs** | `files/language_packs/` | Downloaded ONNX models |
+| **Language Packs** | `files/langpacks/` | Imported dictionaries + unigrams (`LanguagePackManager.kt:29`) |
 
 ## Default Values
 
@@ -53,34 +54,42 @@ Key defaults from `Config.kt` `object Defaults` (line 18+):
 | Setting | Default | Source (`Config.kt` line) |
 |---------|---------|--------------------------|
 | `THEME` | `"cleverkeysdark"` | 20 |
-| `KEYBOARD_HEIGHT_PORTRAIT` | 30 | 21 |
-| `KEYBOARD_HEIGHT_LANDSCAPE` | 40 | 22 |
-| `SHORT_GESTURE_MIN_DISTANCE` | 28 | 99 |
-| `SHORT_GESTURE_MAX_DISTANCE` | 141 | 100 |
-| `AUTOCORRECT_ENABLED` | true | 153 |
-| `LONGPRESS_TIMEOUT` | 600 | 70 |
-| `NEURAL_BEAM_WIDTH` | 6 | 114 |
-| `NEURAL_MAX_LENGTH` | 20 | 115 |
-| `NEURAL_CONFIDENCE_THRESHOLD` | 0.01f | 116 |
-| `ONNX_XNNPACK_THREADS` | 2 | 247 |
-| `HAPTIC_ENABLED` | true | 63 |
-| `HAPTIC_SWIPE_COMPLETE` | false | 69 |
-| `SMART_PUNCTUATION` | true | 77 |
-| `DOUBLE_SPACE_TO_PERIOD` | true | 86 |
-| `DOUBLE_SPACE_THRESHOLD` | 500 | 87 |
-| `LANGUAGE_DETECTION_SENSITIVITY` | 0.6f | 243 |
-| `CLIPBOARD_HISTORY_LIMIT` | 50 | 176-177 |
+| `KEYBOARD_HEIGHT_PORTRAIT` | 27 | 23 |
+| `KEYBOARD_HEIGHT_LANDSCAPE` | 40 | 24 |
+| `SHORT_GESTURE_MIN_DISTANCE` | 28 (% of key diagonal) | 119 |
+| `SHORT_GESTURE_MAX_DISTANCE` | 141 (% of key diagonal; short/long boundary) | 120 |
+| `AUTOCORRECT_ENABLED` | true | 176 |
+| `LONGPRESS_TIMEOUT` | 600 | 85 |
+| `NEURAL_BEAM_WIDTH` | 6 | 134 |
+| `NEURAL_MAX_LENGTH` | 20 | 135 |
+| `NEURAL_CONFIDENCE_THRESHOLD` | 0.01f | 136 |
+| `ONNX_XNNPACK_THREADS` | 2 | 299 |
+| `HAPTIC_ENABLED` | true | 75 |
+| `HAPTIC_SWIPE_COMPLETE` | true | 84 |
+| `SMART_PUNCTUATION` | true | 95 |
+| `DOUBLE_SPACE_TO_PERIOD` | true | 104 |
+| `DOUBLE_SPACE_THRESHOLD` | 500 | 105 |
+| `LANGUAGE_DETECTION_SENSITIVITY` | 0.6f | 295 |
+| `CLIPBOARD_HISTORY_LIMIT` | "0" (unlimited) | 215 |
 
-## Language Pack Download
+## Enable / Select Keyboard Flow (LauncherActivity)
 
-Flow in `LanguagePackManager.kt`:
+The in-app launcher offers **Enable Keyboard** and **Select Keyboard** actions (`LauncherActivity.kt:110-111`). `Select Keyboard` never calls `showInputMethodPicker()` in crash-prone states (UT-6, `LauncherActivity.kt:131-164`):
 
-1. Check network connectivity
-2. Fetch pack list from GitHub releases
-3. Download ZIP containing model + dictionary
-4. Extract to `language_packs/{lang}/`
-5. Verify model loads successfully
-6. Update preferences with available languages
+- CleverKeys **not yet enabled** as an input method → opens the system IME settings screen instead of the picker (`isCleverKeysEnabledCompat()` check → `launchKeyboardSettings()`).
+- Enabled **and window focused** → shows the system input-method picker.
+- Enabled but **window unfocused** at picker time → falls back to IME settings.
+
+Rationale: `showInputMethodPicker()` displays a dialog owned by `system_server`; issuing it while the IME isn't enabled or the window is unfocused can crash or no-op silently.
+
+## Language Pack Import
+
+CleverKeys has **no INTERNET permission** — language packs are never downloaded by the app. Flow:
+
+1. Obtain a prebuilt `langpack-<lang>.zip` (repo `scripts/dictionaries/`) or build one with `scripts/build_langpack.py`
+2. Settings → 🌐 Multi-Language → **Import Pack** (SAF file picker)
+3. Pack contents (manifest.json + dictionary.bin + unigrams.txt) are installed under `files/langpacks/`
+4. The language becomes selectable; installed packs are detected alongside bundled dictionaries
 
 ## Related Specifications
 
