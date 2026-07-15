@@ -207,7 +207,21 @@ class KeyEventReceiverBridge(
     }
 
     override fun setLastSpaceAutoInserted(value: Boolean) {
-        contextTracker?.lastSpaceWasAutoInserted = value
+        if (value) {
+            contextTracker?.lastSpaceWasAutoInserted = true
+        } else {
+            // SAS-1: clearing the flag also drops the stale position stamp
+            contextTracker?.invalidateAutoSpacePending()
+        }
+    }
+
+    // SAS-1: position-stamped auto-space pending state
+    override fun getAutoSpaceStampedPosition(): Int {
+        return contextTracker?.autoSpaceStampedPosition ?: -1
+    }
+
+    override fun markAutoSpacePending(expectedCursorPosition: Int) {
+        contextTracker?.markAutoSpacePending(expectedCursorPosition)
     }
 
     companion object {

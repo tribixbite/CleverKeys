@@ -54,6 +54,25 @@ class PredictionContextTracker {
             '&', '*', '+', '=', '<', '>',    // Math/logic
             '|', '~', '`', '^'               // Technical
         )
+
+        /**
+         * SAS-1: current absolute cursor position, or -1 when unknown (editor
+         * without ExtractedText support). Shared by SuggestionHandler /
+         * InputCoordinator (stamp capture at auto-space commit time) and
+         * KeyEventHandler (stamp validation at punctuation time).
+         */
+        fun currentCursorPosition(ic: InputConnection?): Int {
+            if (ic == null) return -1
+            return try {
+                val extracted = ic.getExtractedText(
+                    android.view.inputmethod.ExtractedTextRequest(), 0
+                ) ?: return -1
+                if (extracted.selectionStart < 0) -1
+                else extracted.startOffset + extracted.selectionStart
+            } catch (e: Exception) {
+                -1
+            }
+        }
     }
 
     // Current partial word being typed (not yet committed to input)
@@ -99,6 +118,54 @@ class PredictionContextTracker {
     // v1.2.7: Track whether last space was auto-inserted (swipe/suggestion) vs manually typed
     // Used by smart punctuation to respect manual spaces (user typed space then punctuation)
     var lastSpaceWasAutoInserted: Boolean = false
+
+    // SAS-1: cursor position expected immediately after the auto-space commit,
+    // captured at commit time (pre-commit cursor position + committed length).
+    // -1 = unknown (editor without ExtractedText support) → swallow eligibility
+    // degrades to the legacy flag+space verify-at-use check.
+    // Together with lastSpaceWasAutoInserted this forms the position-stamped
+    // transient state validated by SmartAutoSpace.isSwallowEligible — never
+    // trusted blindly (the actual editor text is re-read at punctuation time).
+    var autoSpaceStampedPosition: Int = -1
+        private set
+
+    /**
+     * SAS-1: mark that an automatic trailing space was just committed.
+     *
+     * @param expectedCursorPosition Absolute cursor position the commit left the
+     *   cursor at (pre-commit position + committed text length), or -1 if unknown.
+     */
+    fun markAutoSpacePending(expectedCursorPosition: Int) {
+        lastSpaceWasAutoInserted = true
+        autoSpaceStampedPosition = expectedCursorPosition
+    }
+
+    /**
+     * SAS-1: invalidate the pending auto-space swallow. Called on any other
+     * key/char input, backspace, field switch (clearAll), and cursor movement
+     * away from the stamped position.
+     */
+    fun invalidateAutoSpacePending() {
+        lastSpaceWasAutoInserted = false
+        autoSpaceStampedPosition = -1
+    }
+
+    /**
+     * SAS-1: cursor-movement invalidation hook (fed by InputCoordinator.onCursorMoved
+     * ← CleverKeysService.onUpdateSelection). The auto-space commit's OWN selection
+     * callback reports exactly the stamped position and keeps the pending state
+     * alive; any other position means the user moved the cursor. When the stamp is
+     * unknown (-1) the flag is left alone — the verify-at-use check in
+     * SmartAutoSpace.isSwallowEligible still guards against eating a manual space.
+     */
+    fun onCursorPositionChanged(newPosition: Int) {
+        if (lastSpaceWasAutoInserted &&
+            autoSpaceStampedPosition >= 0 &&
+            newPosition != autoSpaceStampedPosition
+        ) {
+            invalidateAutoSpacePending()
+        }
+    }
 
     // Original word that was autocorrected (for undo functionality)
     // When user types "subkeys" and it's autocorrected to "surveys",
@@ -297,6 +364,8 @@ class PredictionContextTracker {
         rawSuffixForDeletion = ""
         wasSyncedFromCursor = false
         expectingSelectionUpdate = false
+        // SAS-1: field switch invalidates the pending auto-space swallow
+        invalidateAutoSpacePending()
     }
 
     /**

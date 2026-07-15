@@ -122,6 +122,8 @@ class KeyEventHandler(
                     send_key_down_up(key.getKeyevent())
                     // Handle backspace for word prediction
                     if (key.getKeyevent() == KeyEvent.KEYCODE_DEL) {
+                        // SAS-1: backspace invalidates the pending auto-space swallow
+                        recv.setLastSpaceAutoInserted(false)
                         recv.handle_backspace()
                     }
                 }
@@ -334,6 +336,9 @@ class KeyEventHandler(
         // Skip if: feature disabled, key repeat (long press), or previous char wasn't alphanumeric
         val currentTime = System.currentTimeMillis()
         var textToCommit = text
+        // SAS-1: set when sentence-ending punctuation swallows the auto-space and
+        // re-adds one — the fresh space is re-marked pending AFTER the commit below.
+        var reMarkAutoSpaceAfterCommit = false
         val config = Config.globalConfig()
         if (config.double_space_to_period && !isKeyRepeat &&
             text.length == 1 && text[0] == ' ' && lastTypedChar == ' ' &&
@@ -355,63 +360,85 @@ class KeyEventHandler(
             // Smart punctuation: If typing punctuation and previous char is space, delete the space
             // This attaches punctuation to the end of the previous word (e.g., "word ." -> "word.")
             // v1.2.7: Only attach if space was auto-inserted (respects manual space+punctuation)
+            // SAS-1: eligibility is verified at use — the actual editor text must show
+            // a plain space before the cursor AND the cursor must sit exactly at the
+            // position stamped when the auto-space was committed. A manually typed
+            // space or a cursor move can therefore never be swallowed.
             val smartPuncEnabled = Config.globalConfig().smart_punctuation
             val isPunctChar = isSmartPunctuationChar(char)
             val isQuote = isQuoteChar(char)
 
             if (smartPuncEnabled && (isPunctChar || isQuote)) {
                 val textBefore = conn.getTextBeforeCursor(500, 0)  // Get enough context for quote counting
-                val lastCharIsSpace = textBefore?.lastOrNull() == ' '
-                val spaceWasAutoInserted = recv.wasLastSpaceAutoInserted()
+                val eligible = SmartAutoSpace.isSwallowEligible(
+                    autoSpacePending = recv.wasLastSpaceAutoInserted(),
+                    stampedPosition = recv.getAutoSpaceStampedPosition(),
+                    actualPrevChar = textBefore?.lastOrNull(),
+                    actualPosition = PredictionContextTracker.currentCursorPosition(conn)
+                )
 
-                if (isPunctChar && lastCharIsSpace && spaceWasAutoInserted) {
-                    // Regular punctuation: attach to previous word only if space was auto-inserted
+                if (isPunctChar && eligible) {
+                    // Closing punctuation: swallow the automatic space to attach to the word
                     conn.deleteSurroundingText(1, 0)
                     // v1.2.8: For sentence-ending punctuation, add space after so autocap triggers
                     // "hello " + "." → "hello. " (enables getCursorCapsMode to detect sentence end)
                     if (isSentenceEndingPunctuation(char)) {
                         textToCommit = "$char "
-                        // Mark this space as auto-inserted for smart punctuation chaining
-                        recv.setLastSpaceAutoInserted(true)
+                        // SAS-1: re-mark the re-added space as auto-inserted (with a
+                        // fresh position stamp) AFTER the commit below — chaining.
+                        reMarkAutoSpaceAfterCommit = true
                     }
-                } else if (isQuote && lastCharIsSpace && spaceWasAutoInserted) {
-                    // Quote handling: only attach if it's a CLOSING quote, not apostrophe
-                    if (!isLikelyApostrophe(char, textBefore?.dropLast(1))) {
-                        // Not an apostrophe - check if closing quote
-                        if (isClosingQuote(char, textBefore)) {
-                            // Closing quote: delete space to attach to word
-                            conn.deleteSurroundingText(1, 0)
-                        }
-                        // Opening quote: keep the space (do nothing)
+                } else if (isQuote && eligible) {
+                    // Straight double quote: parity disambiguation — an odd count of
+                    // prior " means an unmatched opener, so this one is CLOSING.
+                    // (Apostrophes are handled by isSmartPunctuationChar above.)
+                    if (isClosingQuote(char, textBefore)) {
+                        // Closing quote: delete space to attach to word
+                        conn.deleteSurroundingText(1, 0)
                     }
-                    // Apostrophe: just insert normally (handled by contraction logic elsewhere)
+                    // Opening quote: keep the space (do nothing)
                 }
             }
 
-            // v1.2.7: Clear auto-inserted flag AFTER smart punctuation check
+            // v1.2.7/SAS-1: Any other single-char input invalidates the pending
+            // auto-space (flag + position stamp), cleared AFTER the swallow check.
             // This ensures: swipe→":"→attaches, but swipe→" "→":"→doesn't attach
             recv.setLastSpaceAutoInserted(false)
 
             lastTypedChar = char
         } else {
+            // SAS-1: multi-char input (macros, emoji strings) invalidates too
+            recv.setLastSpaceAutoInserted(false)
             lastTypedChar = '\u0000' // Reset on multi-char input
         }
         lastTypedTimestamp = currentTime
 
+        // SAS-1: capture the pre-commit cursor position for the chaining stamp
+        // (after the swallow deletion above, right before the commit)
+        val preCommitPos =
+            if (reMarkAutoSpaceAfterCommit) PredictionContextTracker.currentCursorPosition(conn)
+            else -1
         conn.commitText(textToCommit, 1)
+        if (reMarkAutoSpaceAfterCommit) {
+            // SAS-1: fixes the v1.2.7 clobber where the chain flag was set BEFORE the
+            // unconditional clear above and thus never survived — mark AFTER commit.
+            recv.markAutoSpacePending(
+                if (preCommitPos >= 0) preCommitPos + textToCommit.length else -1
+            )
+        }
         autocap.typed(textToCommit)
         recv.handle_text_typed(textToCommit.toString())
     }
 
-    /** Characters that should attach to the previous word (smart punctuation). */
-    private fun isSmartPunctuationChar(c: Char): Boolean {
-        return when (c) {
-            '.', ',', '!', '?', ';', ':', ')', ']', '}' -> true
-            // Quotes handled separately by isClosingQuote()
-            '\'', '"' -> false
-            else -> false
-        }
-    }
+    /** Characters that should attach to the previous word (smart punctuation).
+     * SAS-1: full closer set — . , ; : ! ? ) ] } ” ’ … ' — via SmartAutoSpace.
+     * Straight double quote `"` is excluded here and parity-resolved through
+     * isClosingQuote(). Straight apostrophe `'` IS a closer: mid-word
+     * contractions (don't) never reach the swallow path because the char
+     * before the cursor there is a letter, not the pending auto-space, so an
+     * apostrophe typed right after an auto-space reads as possessive/closing
+     * (`kids ` + `'` → `kids'`). */
+    private fun isSmartPunctuationChar(c: Char): Boolean = SmartAutoSpace.isClosingPunctuation(c)
 
     /** v1.2.8: Sentence-ending punctuation that should trigger autocap for next word. */
     private fun isSentenceEndingPunctuation(c: Char): Boolean {
@@ -419,19 +446,6 @@ class KeyEventHandler(
             '.', '!', '?' -> true
             else -> false
         }
-    }
-
-    /**
-     * Determines if a quote character is likely an apostrophe (contractions/possessives).
-     * Apostrophes should NOT trigger smart punctuation spacing logic.
-     * Examples: don't, it's, John's, 90's
-     */
-    private fun isLikelyApostrophe(quote: Char, textBefore: CharSequence?): Boolean {
-        if (quote != '\'') return false
-        if (textBefore.isNullOrEmpty()) return false
-        val lastChar = textBefore.last()
-        // Apostrophe if preceded by letter or digit (contractions, possessives, decades)
-        return lastChar.isLetterOrDigit()
     }
 
     /**
@@ -446,7 +460,7 @@ class KeyEventHandler(
      * Example: 'He said ' + '"' → zero " found (even) → opening
      */
     private fun isClosingQuote(quote: Char, textBefore: CharSequence?): Boolean {
-        if (quote != '\'' && quote != '"') return false
+        if (quote != '"') return false
         if (textBefore.isNullOrEmpty()) return false
 
         // Count occurrences of this quote type in the text before cursor
@@ -457,8 +471,10 @@ class KeyEventHandler(
         return quoteCount % 2 == 1
     }
 
-    /** Check if quote character needs smart punctuation handling. */
-    private fun isQuoteChar(c: Char): Boolean = c == '\'' || c == '"'
+    /** Check if quote character needs parity-based smart punctuation handling.
+     * SAS-1: only the straight double quote — `'` moved to the closer set
+     * (isSmartPunctuationChar) and curly quotes are unambiguous. */
+    private fun isQuoteChar(c: Char): Boolean = c == '"'
 
     /**
      * Send text directly to the app's InputConnection, bypassing all mode routing
@@ -518,6 +534,8 @@ class KeyEventHandler(
         conn.deleteSurroundingText(charsToDelete, 0)
 
         // Clear swipe tracking and reset prediction state
+        // SAS-1: the undone commit's auto-space is gone — invalidate the swallow
+        recv.setLastSpaceAutoInserted(false)
         recv.clearSwipeUndoState()
         recv.handle_backspace()
 
@@ -558,6 +576,8 @@ class KeyEventHandler(
         conn.commitText(replacement, 1)
 
         // Clear all undo state to prevent double-undo
+        // SAS-1: text was rewritten by the undo — invalidate the pending auto-space
+        recv.setLastSpaceAutoInserted(false)
         recv.clearAutocorrectUndoState()
         recv.handle_backspace()
         return true
@@ -957,6 +977,10 @@ class KeyEventHandler(
         // v1.2.7: Smart punctuation - track if last space was auto-inserted
         fun wasLastSpaceAutoInserted(): Boolean = false
         fun setLastSpaceAutoInserted(value: Boolean) {}
+        // SAS-1: position-stamped auto-space pending state (see
+        // PredictionContextTracker.markAutoSpacePending / SmartAutoSpace)
+        fun getAutoSpaceStampedPosition(): Int = -1
+        fun markAutoSpacePending(expectedCursorPosition: Int) {}
         // #110: Backspace undo swipe — check if last input was a swipe and get the word
         fun wasLastInputSwipe(): Boolean = false
         fun getLastAutoInsertedWord(): String? = null

@@ -650,11 +650,16 @@ class SuggestionHandler(
                     false
                 } else {
                     try {
-                        val textBefore = inputConnection.getTextBeforeCursor(1, 0)
+                        // SAS-1: read TWO chars — straight quotes " and ' are opener vs
+                        // possessive/closing depending on the char before them
+                        val textBefore = inputConnection.getTextBeforeCursor(2, 0)
                         if (textBefore != null && textBefore.isNotEmpty()) {
-                            val prevChar = textBefore[0]
-                            // Add space if previous char is not whitespace and not punctuation start
-                            !prevChar.isWhitespace() && prevChar != '(' && prevChar != '[' && prevChar != '{'
+                            val prevChar = textBefore.last()
+                            val charBeforePrev =
+                                if (textBefore.length >= 2) textBefore[textBefore.length - 2] else null
+                            // SAS-1: no leading auto-space after opening punctuation
+                            // ( [ { " ' “ ‘ ¿ ¡ — `("` + swipe "word" → `(word`, not `( word`
+                            SmartAutoSpace.needsLeadingSpace(prevChar, charBeforePrev)
                         } else {
                             false
                         }
@@ -707,15 +712,31 @@ class SuggestionHandler(
                     }
                 }
 
-                Log.d(TAG, "Committing text: '$textToInsert' (length=${textToInsert.length})")
-                inputConnection.commitText(textToInsert, 1)
-
                 // v1.2.7: Mark space as auto-inserted for smart punctuation
                 // #78: Trailing space is added when neither user-disabled nor mid-sentence applies
                 val addedTrailingSpace = !(!config.auto_space_after_suggestion && !isSwipeAutoInsert) &&
                     !hasSpaceAfter
+
+                // SAS-1: capture the pre-commit cursor position so the pending
+                // auto-space carries a position stamp (validated at punctuation time;
+                // -1 when the editor doesn't support ExtractedText → legacy check)
+                val preCommitCursorPos = if (addedTrailingSpace) {
+                    PredictionContextTracker.currentCursorPosition(inputConnection)
+                } else {
+                    -1
+                }
+
+                Log.d(TAG, "Committing text: '$textToInsert' (length=${textToInsert.length})")
+                inputConnection.commitText(textToInsert, 1)
+
                 if (addedTrailingSpace) {
-                    contextTracker.lastSpaceWasAutoInserted = true
+                    contextTracker.markAutoSpacePending(
+                        if (preCommitCursorPos >= 0) preCommitCursorPos + textToInsert.length else -1
+                    )
+                } else {
+                    // SAS-1: a re-commit without a fresh trailing space makes any
+                    // previously pending auto-space stale — invalidate it
+                    contextTracker.invalidateAutoSpacePending()
                 }
 
                 // Track that this commit was from candidate selection (manual tap)

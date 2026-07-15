@@ -148,6 +148,11 @@ class InputCoordinator(
         language: String = "en",
         editorInfo: EditorInfo? = null
     ) {
+        // SAS-1: cursor movement invalidates the pending auto-space swallow unless
+        // it reports exactly the stamped position (the auto-space commit's own
+        // onUpdateSelection callback). Synchronous — must run before any debounce.
+        contextTracker.onCursorPositionChanged(newPosition)
+
         // Cancel any pending sync
         pendingSyncRunnable?.let { syncHandler.removeCallbacks(it) }
 
@@ -765,11 +770,16 @@ class InputCoordinator(
                     false  // User disabled leading space before tapped suggestions
                 } else {
                     try {
-                        val textBefore = connection.getTextBeforeCursor(1, 0)
+                        // SAS-1: read TWO chars — straight quotes " and ' are opener vs
+                        // possessive/closing depending on the char before them
+                        val textBefore = connection.getTextBeforeCursor(2, 0)
                         if (textBefore?.isNotEmpty() == true) {
-                            val prevChar = textBefore[0]
-                            // Add space if previous char is not whitespace and not punctuation start
-                            !prevChar.isWhitespace() && prevChar != '(' && prevChar != '[' && prevChar != '{'
+                            val prevChar = textBefore.last()
+                            val charBeforePrev =
+                                if (textBefore.length >= 2) textBefore[textBefore.length - 2] else null
+                            // SAS-1: no leading auto-space after opening punctuation
+                            // ( [ { " ' “ ‘ ¿ ¡ — `("` + swipe "word" → `(word`, not `( word`
+                            SmartAutoSpace.needsLeadingSpace(prevChar, charBeforePrev)
                         } else {
                             false
                         }
@@ -805,6 +815,15 @@ class InputCoordinator(
                     android.util.Log.d("CleverKeysService", "Committing text: '$textToInsert' (length=${textToInsert.length})")
                 }
 
+                // SAS-1: capture the pre-commit cursor position so the pending
+                // auto-space carries a position stamp (validated at punctuation time;
+                // -1 when the editor doesn't support ExtractedText → legacy check)
+                val preCommitCursorPos = if (shouldAddTrailingSpace) {
+                    PredictionContextTracker.currentCursorPosition(connection)
+                } else {
+                    -1
+                }
+
                 val commitStartTime = System.currentTimeMillis()
                 connection.commitText(textToInsert, 1)
                 val commitDuration = System.currentTimeMillis() - commitStartTime
@@ -812,7 +831,13 @@ class InputCoordinator(
 
                 // v1.2.7: Mark space as auto-inserted for smart punctuation
                 if (shouldAddTrailingSpace) {
-                    contextTracker.lastSpaceWasAutoInserted = true
+                    contextTracker.markAutoSpacePending(
+                        if (preCommitCursorPos >= 0) preCommitCursorPos + textToInsert.length else -1
+                    )
+                } else {
+                    // SAS-1: a re-commit without a fresh trailing space makes any
+                    // previously pending auto-space stale — invalidate it
+                    contextTracker.invalidateAutoSpacePending()
                 }
 
                 // Notify auto-capitalization system about the inserted text
