@@ -102,6 +102,20 @@ Open GH issues that are **not yet fixed** in the current codebase.
 | **#156** | Encrypted Clipboard | Feature | No encryption layer; large scope (key management, SQLCipher integration) |
 | **#158** | Arabizi support (numbers inside words treated as word characters) | Feature | No word-boundary model change; affects ContextTracker and WordPredictor |
 
+### Outstanding — user on-device testing round 2026-07-15 (post-v1.4.0 fixes verification)
+
+User verified the 2026-07-13/14 fix batch on-device (possessive autocorrect, URL guard, #151 tap replacement, #154 haptics, #35 light theme all confirmed working) and reported these NEW issues:
+
+| Item | Area | Notes |
+|---|---|---|
+| **UT-1** System light theme doesn't apply to Dictionary Manager | Theming (#35 residue) | DictionaryManagerActivity was intentionally left with DayNight window bg + self-consistent dark panels in `787913453`; user reports it renders incorrectly under system light — needs real light treatment like the three fixed activities |
+| **UT-2** Possessives incorrectly trigger "add to dictionary" prompt | Suggestions/dictionary | Typing a valid possessive (`ember's`) prompts add-to-dictionary; the unknown-word detector needs the same possessive-base check the autocorrect guard got (base word known → not an unknown word) |
+| **UT-3** Some URL edits trigger "add to dictionary" prompt | Suggestions/dictionary | Editing URLs surfaces add-to-dictionary for URL fragments; the unknown-word detector needs the AutocorrectContextGuard non-prose check |
+| **UT-4** Whitespace/newline-only clipboard edits don't save | Clipboard | Editing a clipboard item changing ONLY whitespace/newlines is not persisted — likely a trimmed-equality check treating the edit as a no-op |
+| **UT-5** "doesn't" nearly impossible to swipe | Neural/vocab | Apostrophe words depend on contraction mapping from swiped `doesnt`; ranking appears too weak to surface `doesn't` |
+| **UT-6** Debug-app FRE splash "Select keyboard" soft-resets the phone | FRE/Launcher — **RELEASE BLOCKER** | Tapping "select keyboard" on first-run splash caused a device soft reset (system_server restart). Must be made safe before v-next tag |
+| **UT-7** "I'd" needs manual score boost, especially after periods | Neural/vocab | `I'd` under-ranked in predictions, notably at sentence start after `.` where capitalized `I'd` should be likelier |
+
 ### Outstanding P2 tail from 2026-07-13 post-decomposition review
 
 | Item | File | Fix |
