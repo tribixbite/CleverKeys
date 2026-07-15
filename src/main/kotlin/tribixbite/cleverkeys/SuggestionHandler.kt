@@ -1063,12 +1063,25 @@ class SuggestionHandler(
                     // 1. Word was just completed with space (text == " ")
                     // 2. Word is at least 3 characters (avoid prompts for short words)
                     // 3. Word is not in dictionary
-                    if (text == " " && completedWord.length >= 3) {
+                    // 4. Not a valid possessive of a known word (UT-2) and not a
+                    //    URL/email/path fragment (UT-3) — see
+                    //    AutocorrectContextGuard.shouldOfferAddToDictionary.
+                    if (text == " ") {
                         val wordPredictor = predictionCoordinator.getWordPredictor()
-                        val isInDictionary = wordPredictor?.isInDictionary(completedWord) ?: true
-                        val isUserWord = predictionCoordinator.getDictionaryManager()?.isUserWord(completedWord) ?: false
+                        val dictionaryManager = predictionCoordinator.getDictionaryManager()
+                        val shouldPrompt = AutocorrectContextGuard.shouldOfferAddToDictionary(
+                            token = completedWord,
+                            inNonProseToken = inNonProseToken,
+                            isKnownWord = { w ->
+                                // Predictor not ready → treat as known (never prompt),
+                                // preserving the original `?: true` behavior.
+                                (wordPredictor?.isInDictionary(w) ?: true) ||
+                                    (dictionaryManager?.isUserWord(w) ?: false)
+                            },
+                            isDisabledWord = { w -> wordPredictor?.isWordDisabled(w) ?: false }
+                        )
 
-                        if (!isInDictionary && !isUserWord) {
+                        if (shouldPrompt) {
                             // v1.2.6 FIX: Cancel pending prediction task and set flag to prevent overwriting
                             currentPredictionTask?.cancel(true)
                             specialPromptActive = true

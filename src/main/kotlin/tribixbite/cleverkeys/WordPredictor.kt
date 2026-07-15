@@ -373,9 +373,11 @@ class WordPredictor {
     }
 
     /**
-     * Check if a word is disabled
+     * Check if a word is disabled.
+     * Public (2026-07-15): the add-to-dictionary prompt guard (UT-2) needs it
+     * so a possessive of a DISABLED base is not suppressed as "known".
      */
-    private fun isWordDisabled(word: String): Boolean {
+    fun isWordDisabled(word: String): Boolean {
         val lower = word.lowercase()
         // Custom/user-added words override disabled status — if user explicitly added
         // "Boston" after disabling "boston", the custom word wins

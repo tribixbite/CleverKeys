@@ -44,4 +44,54 @@ object AutocorrectContextGuard {
         }
         return false
     }
+
+    /**
+     * Decides whether the "Add to dictionary?" prompt should be offered for a
+     * word the user just completed with a space (UT-2/UT-3, 2026-07-15).
+     *
+     * Pure decision function — dictionary state is injected via callbacks so
+     * the logic is JVM-testable without Android.
+     *
+     * @param token the completed word as tracked by the word tracker (may
+     *   contain apostrophes when it was rebuilt via cursor sync, e.g.
+     *   "ember's").
+     * @param inNonProseToken result of [isNonProseContext] on the editor text
+     *   at the cursor — when true the token is a URL/email/path fragment and
+     *   must never prompt (UT-3).
+     * @param isKnownWord true when the given word is in the main dictionary
+     *   or the user dictionary (caller folds both, mirroring the original
+     *   `isInDictionary || isUserWord` gate).
+     * @param isDisabledWord true when the word is user-disabled. A possessive
+     *   of a DISABLED base is not "known" — it still prompts (consistent with
+     *   the UT-8 autocorrect rule: disabling a word removes its possessive
+     *   protection too).
+     * @return true → show the prompt; false → the token is known/non-prose.
+     */
+    fun shouldOfferAddToDictionary(
+        token: String,
+        inNonProseToken: Boolean,
+        isKnownWord: (String) -> Boolean,
+        isDisabledWord: (String) -> Boolean = { false },
+    ): Boolean {
+        // Original gate: short tokens never prompt, known tokens never prompt.
+        if (token.length < 3) return false
+        // UT-3: URL/email/path fragments are not prose words — never prompt.
+        if (inNonProseToken) return false
+        if (isKnownWord(token)) return false
+        // UT-2: possessive whose BASE is a known word is valid English, not an
+        // unknown word. Mirrors WordPredictor.autoCorrect step 1.6 exactly:
+        // last apostrophe (straight U+0027 or curly U+2019) at index >= 2,
+        // suffix "s" (singular possessive) or empty (plural possessive,
+        // "rivers'"). Other suffixes ("'ll", "'nt") stay on the unknown path.
+        // A DISABLED base gives no protection (UT-8 parity) — still prompts.
+        val apostropheIdx = token.indexOfLast { it == '\'' || it == '’' }
+        if (apostropheIdx >= 2) {
+            val suffix = token.substring(apostropheIdx + 1).lowercase()
+            if (suffix == "s" || suffix.isEmpty()) {
+                val base = token.substring(0, apostropheIdx)
+                if (!isDisabledWord(base) && isKnownWord(base)) return false
+            }
+        }
+        return true
+    }
 }
