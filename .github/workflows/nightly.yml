@@ -75,6 +75,21 @@ jobs:
         done
         ls -la *.apk
 
+    - name: Prune old nightly assets
+      # APK names embed the commit SHA, so overwrite_files never matches and
+      # assets accumulate until GitHub's hard cap of 1000 per release (hit
+      # 2026-07-15, failing every nightly upload). Keep the newest 30
+      # (~7 nightlies at 4 APKs each) and delete the rest before uploading.
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        gh api "repos/${{ github.repository }}/releases/tags/nightly" \
+          --jq '.assets | sort_by(.created_at) | reverse | .[30:] | .[].id' |
+        while read -r id; do
+          gh api -X DELETE "repos/${{ github.repository }}/releases/assets/$id" \
+            && echo "Deleted asset $id" || echo "::warning::Failed to delete asset $id"
+        done
+
     - name: Update nightly release
       uses: softprops/action-gh-release@v2
       with:
