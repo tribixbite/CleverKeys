@@ -24,15 +24,22 @@ CleverKeys autocorrect knows that **adjacent keys are more likely typos than dis
 
 When you finish a word (by pressing space or punctuation):
 
-1. **Exact alias check** — if the typed word is a known contraction base (`dont`, `im`, `cant`), it expands directly (`don't`, `I'm`, `can't`).
-2. **Dictionary hit** — if the word is in the dictionary as-is, no correction.
-3. **Length / prefix gates** — words shorter than the minimum length, or that violate the prefix rule, are skipped.
-4. **Adjacency-weighted dictionary scan** — every dictionary word within `max_length_diff` characters is scored by keyboard physics:
-   - **Same length:** each position contributes a substitution score from `1.0` (exact match) down to `~0` (max-distant keys). Adjacent keys score `~0.89`.
+1. **Non-prose context check** — if the token at the cursor looks like a URL, email address, or file path (it contains `. / : @ # ? & = %` or digits), autocorrect skips it entirely. Domains and pasted-then-edited links never get "corrected".
+2. **Exact alias check** — if the typed word is a known contraction base (`dont`, `im`, `cant`), it expands directly (`don't`, `I'm`, `can't`).
+3. **Dictionary hit** — if the word is in the dictionary as-is, no correction.
+4. **Elongation collapse** — a doubled letter that collapses to a real word is fixed directly: `gamees` → `games`, `embeer` → `ember`.
+5. **Inflection guard** — regular inflections of dictionary words (`-s`, `-ed`, `-ing`, `-er`, `-est`, `-ly`, ...) are treated as valid even if the inflected form isn't stored, so real words don't get "corrected".
+6. **Possessive guard** — possessives of known words (`ember's`, `dogs'`) are valid and left alone. A possessive of a *typo* gets its base corrected while keeping the apostrophe: `embeer's` → `ember's`.
+7. **Length / prefix gates** — words shorter than the minimum length, or that violate the prefix rule, are skipped.
+8. **Adjacency-weighted dictionary scan** — every dictionary word within `max_length_diff` characters is scored by keyboard physics:
+   - **Same length:** each position contributes a substitution score from `1.0` (exact match) down to `~0` (max-distant keys). Adjacent keys score `~0.89`. At most 2 substituted positions are allowed, so a single-typo match always beats a barely-similar lookalike.
+   - **Adjacent swap:** transposing two neighboring letters (`teh` → `the`, `recieve` → `receive`) is recognized as its own typo class and scored nearly as high as a perfect match.
    - **Different length:** weighted Levenshtein distance where insert/delete cost 1.0 but substitution cost is the normalized key distance.
-5. **Four-tier tiebreaker** — picks the winner using score, frequency, and alias preference. Details below.
-6. **Alias rerouting** — if the winning candidate is a contraction base (`dont` → `don't`), the apostrophe form is returned.
-7. **Capitalization preservation** — `Teh` → `The`, `TEH` → `THE`.
+   - Words you've **disabled** in Dictionary Manager are never offered as correction targets.
+9. **Rule-based tiebreaker** — a clearly better score wins outright; among close scores, a contraction wins only at equal-or-better score, one adjacent swap beats two independent substitutions, and otherwise the more common word wins.
+10. **Frequency floor** — the winner must be a reasonably common word (see the slider below). Words you added yourself are exempt.
+11. **Alias rerouting** — if the winning candidate is a contraction base (`dont` → `don't`), the apostrophe form is returned.
+12. **Capitalization preservation** — `Teh` → `The`, `TEH` → `THE`.
 
 ## The Key Proximity System
 
@@ -61,6 +68,20 @@ Common Latin diacritics (`é, ñ, ü, ç, ß, å, ø, ý` and ~20 others) share 
 - `mude → müde` (German) — same.
 
 If you're on a keyboard layout that has a **dedicated accent key**, the real key position overrides this default. The accent fallback only kicks in when the keyboard doesn't have a physical key for the accented form.
+
+## When Autocorrect Stays Out of the Way
+
+Autocorrect deliberately refuses to touch several categories of input:
+
+- **URLs, emails, and file paths.** If the token you're typing contains `. / : @ # ? & = % ~ \` or digits (`example.com`, `user@host`, `~/notes/todo.txt`), autocorrect is suppressed for that token. It resumes on the next normal word.
+- **Possessives.** `ember's` is valid English even though the possessive form isn't in the dictionary, so it's never corrected. Typos inside a possessive still get fixed: `embeer's` → `ember's`.
+- **Regular inflections.** `-s`, `-es`, `-ed`, `-ing`, `-er`, `-est`, `-ly` forms of dictionary words are accepted as-is.
+- **Disabled words** never get *picked as corrections* either — disable a word in Dictionary Manager and autocorrect will not steer your typing toward it.
+- **Your own words.** Custom and user-dictionary words are protected from correction and exempt from the frequency floor.
+
+### Suggestions in URL bars
+
+Browser URL bars don't report cursor position the way normal text fields do. CleverKeys detects these fields and makes suggestion taps **replace the partial token you typed** (typing `exa` then tapping `example` yields `example`, not `exa example`), without adding the trailing space that would break a URL.
 
 ## Contractions
 
@@ -125,7 +146,7 @@ All in Settings → **Word Prediction**. Most users only ever touch the top thre
 |---------|---------|--------------|
 | **Score threshold** (`autocorrect_char_match_threshold`) | 0.65 | Minimum match score (0.0–1.0) a candidate must reach. Higher = more conservative. |
 | **Max length difference** (`autocorrect_max_length_diff`) | 2 | Allow candidates whose length differs by up to this many characters. Handles insertion/deletion typos like `questin → question`. |
-| **Min frequency floor** (`autocorrect_confidence_min_frequency`) | 100 | The winning candidate must have at least this dictionary frequency to actually replace your word. Filters out very rare words. |
+| **Min frequency floor** (`autocorrect_confidence_min_frequency`) | 100 | How common the winning candidate must be before it replaces your word. The slider (100–2000) maps onto the loaded dictionary's own frequency scale: 100 = no floor (any dictionary word can win), 2000 = only fairly common words win. Words you added yourself are always exempt. |
 
 ### Swipe Typing
 
@@ -149,6 +170,12 @@ All in Settings → **Word Prediction**. Most users only ever touch the top thre
 
 ### Q: Why did `tge` correct to `the` but `tgw` didn't correct to anything?
 A: `g↔h` is one adjacent-key substitution (score ~0.96) for `tge → the`. `tgw` would need a substitution for `g↔h` AND a substitution for `w↔e`, dropping the score below the threshold.
+
+### Q: How does `teh` become `the` when t-e-h are all "wrong" positions?
+A: Swapping two adjacent letters (a transposition) is one of the most common typo classes, so it gets a dedicated fast path: `teh → the`, `thsi → this`, `recieve → receive`. A transposition scores just below a perfect match and beats any candidate needing two independent substitutions.
+
+### Q: Why won't autocorrect fix typos in my URL / email / file path?
+A: By design. Tokens containing `. / : @ # ? & = %` or digits are treated as non-prose and skipped — "correcting" a domain or path usually breaks it. Finish the token and autocorrect resumes on the next word.
 
 ### Q: My word is technical jargon and keeps getting corrected. What do I do?
 A: Add it to your dictionary via the "Add to dictionary?" prompt, or via Settings → Dictionary Manager → Custom tab. Once added, autocorrect skips it.

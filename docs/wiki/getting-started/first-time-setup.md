@@ -31,7 +31,7 @@ Open CleverKeys settings:
 
 - **Location**: Scroll to **Appearance** section in Settings
 - **Setting**: Keyboard Height Portrait/Landscape sliders
-- **Default**: 30% portrait / 40% landscape (of screen height)
+- **Default**: 27% portrait / 40% landscape (of screen height)
 - **Tip**: Adjust up or down depending on your screen size and preference
 
 ### Theme

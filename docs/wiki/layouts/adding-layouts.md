@@ -36,9 +36,9 @@ CleverKeys includes several pre-installed layouts:
 To add layouts for other languages:
 
 1. Build or obtain a language pack (see [Language Packs](language-packs.md))
-2. Go to **Settings > Activities > Backup & Restore**
-3. Tap **Import** and select the language pack file
-4. The layout and dictionary are installed together
+2. Go to **Settings > 🌐 Multi-Language**
+3. Tap **Import Pack** and select the language pack `.zip`
+4. The dictionary is installed and the language becomes selectable (its layout ships with the app)
 
 See [Language Packs](language-packs.md) for details.
 
@@ -116,7 +116,7 @@ For specific use cases:
 
 ### Q: How do I get layouts for my language?
 
-A: Build a language pack using the provided Python scripts, then import via Settings > Activities > Backup & Restore. It includes both the layout and dictionary.
+A: Build a language pack using the provided Python scripts, then import via Settings > 🌐 Multi-Language > Import Pack. The pack provides the dictionary; the matching layout must exist in the app's layout list.
 
 ### Q: Can I create custom layouts?
 

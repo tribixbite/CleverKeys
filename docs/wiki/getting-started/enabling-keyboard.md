@@ -35,6 +35,15 @@ Navigate to: **System → Languages & Input → On-screen keyboard**
 2. Tap **Default keyboard** (or similar)
 3. Select **CleverKeys**
 
+## Alternative: The CleverKeys App
+
+Opening the **CleverKeys** app from your app drawer gives you two shortcuts:
+
+1. **Enable Keyboard** — jumps straight to the system's input-method settings so you can toggle CleverKeys on
+2. **Select Keyboard** — opens the system keyboard picker so you can make CleverKeys the active keyboard
+
+If CleverKeys isn't enabled yet, **Select Keyboard** takes you to the input-method settings first (the picker can't select a keyboard that isn't enabled).
+
 ## Alternative: Quick Switch
 
 You can also switch keyboards when any text field is active:

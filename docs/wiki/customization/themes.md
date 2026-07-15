@@ -17,6 +17,9 @@ Customize the appearance of your keyboard with different color themes, from dark
 | **Access** | Settings > Theme Manager (in Activities section) |
 | **Options** | 35+ built-in themes + custom DIY colors |
 
+> [!NOTE]
+> Keyboard themes only affect the keyboard itself. The settings screens follow your **system** light/dark mode setting.
+
 ## Built-in Themes
 
 CleverKeys includes many pre-designed themes:

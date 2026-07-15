@@ -1,6 +1,6 @@
 ---
 title: URL Sanitization
-description: Strip tracking parameters from URLs you paste, using the ClearURLs ruleset (utm_*, fbclid, gclid, aff_*, and ~100 provider-specific patterns)
+description: Strip tracking parameters from URLs you paste, using the ClearURLs ruleset (utm_*, fbclid, gclid, aff_*, and ~200 provider-specific patterns)
 category: Clipboard
 difficulty: intermediate
 related_spec: ../specs/clipboard/url-sanitization-spec.md
@@ -18,7 +18,7 @@ CleverKeys can automatically strip tracking and analytics parameters from URLs *
 | **Trigger** | Runs when text enters the clipboard history (system copy event) |
 | **Scope** | Clipboard only — typed text is never sanitized |
 | **Feedback** | Silent — sanitized text replaces the original with no toast |
-| **Default** | Off — all three toggles default to disabled |
+| **Default** | Off — all three rule toggles default to disabled ("Also clean system clipboard" defaults on, but does nothing until a rule toggle is enabled) |
 | **Access** | Settings → Clipboard → URL handling |
 
 ## How It Works
@@ -27,24 +27,26 @@ When you copy text containing URLs:
 
 1. The system clipboard change fires `ClipboardHistoryService.addClip()`.
 2. The full clipboard text is run through a URL detector (regex over the whole text — handles multi-URL and surrounding prose).
-3. Each detected URL is matched against the active ruleset, which has ~100 providers like Amazon, AliExpress, Google, Facebook, Twitter, Reddit, plus a `globalRules` provider that handles the universal `utm_*` family.
-4. Matching parameters are dropped; non-matching parameters are preserved.
-5. The sanitized text is what gets saved to clipboard history (and pasted into your destination app).
+3. Each detected URL is matched against the active ruleset, which has ~200 providers like Amazon, AliExpress, Google, Facebook, Twitter, Reddit, plus a `globalRules` provider that handles the universal `utm_*` family.
+4. Matching parameters are dropped; non-matching parameters are preserved. URLs containing literal quotes (AliExpress embeds JSON like `pdp_ext_f={"order":...}` in params) are captured whole, so the junk after the quote gets stripped too.
+5. The sanitized text is what gets saved to clipboard history (and pasted from CleverKeys' clipboard panel).
+6. If **Also clean system clipboard** is on (the default) and something was actually stripped, the cleaned URL is written back to the Android system clipboard too — so a plain long-press → Paste in any app also gets the clean link.
 
-The original tracking-laden URL never reaches the destination — it's filtered at the moment of copy, not the moment of paste.
+Settings changes apply immediately: toggling any of these mid-session rebuilds the sanitizer without restarting the keyboard.
 
-## Three Independent Toggles
+## The Toggles
 
 All in Settings → Clipboard → **URL handling**:
 
 | Toggle | Setting key | What it does |
 |--------|-------------|--------------|
-| **Sanitize tracking parameters** | `clipboard_sanitize_links_enabled` | Master switch for the bundled ClearURLs ruleset. Strips `utm_*`, `fbclid`, `gclid`, per-provider trackers like AliExpress `spm`/`scm*`, Amazon `ref`/`tag`, etc. |
+| **Sanitize tracking parameters** | `clipboard_sanitize_links_enabled` | Master switch for the bundled ClearURLs ruleset. Strips `utm_*`, `fbclid`, `gclid`, per-provider trackers like AliExpress `spm`/`scm*`/`aff_*`/`pdp_*`, Amazon `ref`/`tag`, Reddit share trackers, etc. |
 | **Enrich embeds for sharing** | `clipboard_embed_enrich_enabled` | Separate ruleset that rewrites social-media hosts for richer link previews (`x.com` → `fxtwitter.com`, `reddit.com` → `rxddit.com`, etc.). |
 | **Use custom rules** | `clipboard_custom_rules_enabled` | Load your own ClearURLs-format JSON. When enabled, a **Browse…** button appears for picking the file via SAF. |
+| **Also clean system clipboard** | `clipboard_sanitize_system_clipboard` | When a URL was actually cleaned, write the cleaned form back to the Android system clipboard so pasting in *any* app gets the clean link. On by default; inert until one of the rule toggles above is enabled. |
 
 > [!NOTE]
-> The three toggles are **independent**. Enabling "Enrich embeds" alone does NOT strip tracking parameters — you also need "Sanitize tracking parameters" on for the bundled ClearURLs rules to apply. If you previously enabled sanitization and saw no effect, double-check the master toggle is on.
+> The three rule toggles are **independent**. Enabling "Enrich embeds" alone does NOT strip tracking parameters — you also need "Sanitize tracking parameters" on for the bundled ClearURLs rules to apply. If you previously enabled sanitization and saw no effect, double-check the master toggle is on.
 
 ## Worked Examples
 
@@ -88,7 +90,7 @@ With **Enrich embeds for sharing** on, a Twitter link becomes a [fxtwitter](http
 https://x.com/user/status/12345  →  https://fxtwitter.com/user/status/12345
 ```
 
-This is a redirect rewrite, not a parameter strip.
+This is a redirect rewrite, not a parameter strip. Rewrites ship for Twitter/X, Reddit, Instagram, TikTok, Bluesky, Pixiv, FurAffinity, and DeviantArt. A companion rule in the *tracking* ruleset strips the `embed_host_url` parameter from reddit.com and rxddit.com links (it leaks the embedding site) — so with both toggles on, a copied Reddit embed link comes out as a clean rxddit link.
 
 ## Custom Rules
 
@@ -102,7 +104,7 @@ After enabling the toggle, tap **Browse…** to pick the file via the Android fi
 ## What This Does NOT Do
 
 - **Doesn't follow short URLs.** `bit.ly`, `t.co`, etc. are not expanded — the rules can rewrite some short URLs to their long forms via redirect rules, but there's no live HTTP resolution.
-- **Doesn't run on typed text.** If you type a URL with tracking params directly into a text field, it's not touched. Only clipboard inserts (system copy events) trigger sanitization.
+- **Doesn't run on typed text.** If you type a URL with tracking params directly into a text field, it's not touched. Only clipboard inserts (system copy events) trigger sanitization. (Autocorrect separately *avoids* URLs you type — see [Autocorrect](../typing/autocorrect.md) — but that's a typing guard, not sanitization.)
 - **Doesn't notify you.** No toast, no badge, no log entry. Sanitization is silent. To verify it's working, copy a known tracking URL and inspect the clipboard history entry (Settings → Clipboard → History).
 - **Doesn't have per-provider granularity in the UI.** You can't toggle "strip Google only" — it's all-or-nothing per ruleset. For fine-grained control, write a custom rules file with just the providers you want.
 
@@ -113,7 +115,7 @@ After enabling the toggle, tap **Browse…** to pick the file via the Android fi
 Three things to check:
 
 1. **Is the master toggle on?** Settings → Clipboard → URL handling → **Sanitize tracking parameters** must be checked. Enabling only "Enrich embeds" or only "Use custom rules" doesn't enable the bundled rules.
-2. **Are the specific params in the bundled ruleset?** AliExpress bundled rules cover `spm`, `scm*`, `algo_pvid`, `gps-id`, `aff_request_id`, `ws_ab_test`, `btsid`, `mall_affr`, `terminal_id`, `cv`, `af`, `dp`, `sk`. Params NOT bundled — like `aff_short`, `pdp_npi`, `utparam-url`, `aff_platform` — won't be stripped unless you add a custom rules file.
+2. **Are the specific params in the bundled ruleset?** AliExpress bundled rules cover `spm` (via the global rules), `scm*`, `algo_*`, `gps-id`, the whole `aff_*` family (`aff_short`, `aff_platform`, `aff_request_id`, ...), `pdp_*` (including `pdp_npi`), `utparam-url`, `ws_ab_test`, `btsid`, `mall_affr`, `terminal_id`, `gatewayAdapt`, `srcSns`, and more. A param that still survives probably isn't in the bundled set — add a custom rules file for it.
 3. **Did you copy the link, or paste a previously-saved one?** Sanitization runs on the copy event. URLs already saved in clipboard history before you enabled the feature aren't reprocessed.
 
 ### "The sanitizer broke a URL I need"
@@ -132,6 +134,7 @@ If a domain's `urlPattern` matches your URL but a rule incorrectly strips someth
 | **Enrich embeds** | `clipboard_embed_enrich_enabled` | `false` | bool |
 | **Use custom rules** | `clipboard_custom_rules_enabled` | `false` | bool |
 | **Custom rules file** | `clipboard_custom_rules_uri` | (none) | SAF URI / local path |
+| **Also clean system clipboard** | `clipboard_sanitize_system_clipboard` | `true` | bool |
 
 ## Related Features
 

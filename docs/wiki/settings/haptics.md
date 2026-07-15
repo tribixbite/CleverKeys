@@ -30,15 +30,21 @@ In **Settings**, scroll to the **Accessibility** section (collapsible). All hapt
 | **On** | Haptics enabled for selected events |
 | **Off** | All haptics disabled |
 
-### Vibration Duration
+### System Haptics vs Custom Duration
 
-Control vibration intensity via duration:
+By default, key presses use Android's **system haptic feedback** — the same low-latency, OEM-tuned effect the stock keyboard uses. This feels snappier than a manual vibration because the effect is pre-loaded by the hardware.
+
+Moving the **Vibration Duration** slider switches key-press feedback to a **custom vibration** of that length. That gives you control over the feel, at the cost of the system effect's lower latency.
 
 | Duration | Feel |
 |----------|------|
-| **Short** | Subtle, brief feedback |
-| **Medium** | Noticeable tactile response |
-| **Long** | Pronounced, strong vibration |
+| **Default (untouched)** | System haptic — fast, subtle, OEM-tuned |
+| **Short custom** | Subtle, brief feedback |
+| **Medium custom** | Noticeable tactile response |
+| **Long custom** | Pronounced, strong vibration |
+
+> [!NOTE]
+> A bug in older versions could silently switch installs to custom-duration mode. Current versions run a one-time cleanup: if you never changed the duration slider, you're returned to the low-latency system haptic automatically. Users who did set a custom duration keep it.
 
 ## Per-Event Haptics
 
@@ -50,10 +56,10 @@ CleverKeys supports 5 specific haptic events:
 | **Suggestion Tap** | On | Vibrate when tapping a suggestion |
 | **TrackPoint Activate** | On | Vibrate when entering navigation mode |
 | **Long Press** | On | Vibrate when long-press detected |
-| **Swipe Complete** | Off | Vibrate when swipe word completes |
+| **Swipe Complete** | On | Vibrate when swipe word completes |
 
 > [!NOTE]
-> Swipe Complete is disabled by default as it can be distracting during rapid typing.
+> Swipe Complete confirms that a swiped word was recognized — helpful while learning the gesture. Turn it off here if it feels distracting during rapid typing.
 
 ## Configuring Haptics
 
@@ -131,9 +137,9 @@ A: Minimally. The vibration motor uses very little power compared to the screen.
 
 A: No, haptic settings apply to event types (all key presses, all predictions, etc.), not individual keys.
 
-### Q: Why is Swipe Complete off by default?
+### Q: Why does my keyboard vibrate after every swiped word?
 
-A: It vibrates after every swipe word, which many users find distracting during continuous typing. Enable it if you want confirmation that swipes are recognized.
+A: That's the Swipe Complete haptic — it confirms the word was recognized, which is especially useful while learning swipe typing. If you find it distracting, turn off **Swipe Complete** in the Accessibility section.
 
 ## Related Features
 

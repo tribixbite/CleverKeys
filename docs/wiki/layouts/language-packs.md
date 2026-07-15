@@ -66,6 +66,10 @@ download the `.zip` and import it (no need to build anything):
 
 > All packs are generated from the [`wordfreq`](https://github.com/rspeer/wordfreq)
 > corpus (real word frequencies). See [Attribution](#attribution).
+> The bundled *English* dictionary is different: it's built by a dedicated
+> evidence-classification pipeline (98,140 words validated against multiple
+> spelling oracles, with typo and junk filtering) rather than a raw
+> frequency cut.
 
 ## Importing Language Packs
 

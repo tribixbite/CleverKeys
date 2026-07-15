@@ -82,7 +82,7 @@ A: **Swipe SOUTHWEST on the Ctrl key** to open clipboard history:
 - Tap an item's content to expand it (text) or paste it (media)
 - Images, videos, and PDFs show thumbnails in the panel
 - Use the icon buttons to paste, move to pinned, or copy as todo
-- Re-copying text already in history won't duplicate or reorder it (tip: use search instead)
+- Re-copying text already in history moves the existing entry back to the top (no duplicate is created)
 - Password manager and 'sensitive' flagged clippings are excluded by default
 
 **Q: How do I paste images from clipboard?**
@@ -134,6 +134,10 @@ A: Check these settings:
 A: Adjust in **Settings → Appearance**:
 - **Keyboard Height** percentage slider
 - Separate slider for landscape mode
+
+**Q: Autocorrect stopped working while I was typing a web address.**
+
+A: That's intentional. Autocorrect stays out of the way while you type URLs, email addresses, and file paths — any token containing characters like `. / : @ # ? & = %` or digits is left alone, so domains and pasted-then-edited links don't get corrupted. It resumes automatically on the next normal word. Relatedly, tapping a suggestion in a browser URL bar replaces the partial word you typed rather than appending to it.
 
 ---
 

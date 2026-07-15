@@ -79,12 +79,15 @@ These come pre-installed:
 
 | Language | Code | Dictionary Size |
 |----------|------|-----------------|
-| English | en | 50,000 words |
+| English | en | 98,140 words |
 | Spanish | es | 50,000 words |
 | French | fr | 25,000 words |
 | Portuguese | pt | 25,000 words |
 | German | de | 25,000 words |
 | Italian | it | 25,000 words |
+| Swedish | sv | 40,000 words |
+
+The English dictionary is built by a dedicated pipeline: the top 150,000 wordfreq candidates are classified against multiple spelling oracles (hunspell, aspell, the AOSP mobile-keyboard wordlist, and more), with typo-pattern and foreign-word filtering plus a curated allowlist/blocklist. That's why it's both larger *and* cleaner than a raw frequency list — common internet slang is in, corpus-noise typos like "teh" are out.
 
 ### Downloadable Languages
 
@@ -96,7 +99,8 @@ Via Language Packs:
 | Indonesian | id | Available |
 | Malay | ms | Available |
 | Tagalog | tl | Available |
-| Swedish | sv | Via wordfreq script |
+| Greek | el | Available |
+| Russian | ru | Available |
 
 See [Language Packs](language-packs.md) for download instructions.
 
