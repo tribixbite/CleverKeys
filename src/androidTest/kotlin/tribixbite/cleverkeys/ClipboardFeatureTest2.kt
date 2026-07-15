@@ -637,15 +637,15 @@ class ClipboardFeatureTest2 {
     }
 
     @Test
-    fun editEntry_whitespaceTrimmingApplied() {
+    fun editEntry_whitespacePreservedVerbatim() {
         db.addClipboardEntry("Trim me", futureExpiry)
 
-        // Content with leading/trailing spaces should be trimmed
+        // UT-4: leading/trailing whitespace is part of the edit and must persist verbatim
         val result = db.updateHistoryEntryContent("Trim me", "  Trimmed  ")
         assertEquals(EditEntryResult.Success, result)
 
         val entries = db.getActiveClipboardEntries()
-        assertEquals("Trimmed", entries[0].content)
+        assertEquals("  Trimmed  ", entries[0].content)
     }
 
     @Test

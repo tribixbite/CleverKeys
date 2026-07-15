@@ -425,32 +425,35 @@ class ClipboardHistoryService private constructor(ctx: Context) {
     /**
      * Edit the content of a clipboard entry in-place (inline edit).
      * Routes to the correct database table based on [tab].
-     * Validates size limit and trims content. COPY semantics: only the entry
-     * in the specified tab is modified; copies in other tabs are unaffected.
+     * Validates size limit. Content is compared and stored EXACTLY (UT-4):
+     * whitespace/newline-only changes are real edits and persist verbatim.
+     * COPY semantics: only the entry in the specified tab is modified;
+     * copies in other tabs are unaffected.
      *
      * @return EditEntryResult indicating success, duplicate conflict, or error
      */
     fun editEntryContent(oldContent: String, newContent: String, tab: ClipboardTab): EditEntryResult {
-        val trimmedOld = oldContent.trim()
-        val trimmedNew = newContent.trim()
-
-        // No-op if content unchanged
-        if (trimmedOld == trimmedNew) return EditEntryResult.Success
+        // Shared exact-comparison policy (no trim — see ClipboardEditPolicy KDoc)
+        when (ClipboardEditPolicy.decide(oldContent, newContent)) {
+            is ClipboardEditPolicy.Decision.NoOp -> return EditEntryResult.Success
+            is ClipboardEditPolicy.Decision.Invalid -> return EditEntryResult.InvalidContent
+            is ClipboardEditPolicy.Decision.Apply -> { /* fall through to size check + DB write */ }
+        }
 
         // Validate size limit
         val maxSizeKb = Config.globalConfig().clipboard_max_item_size_kb
         if (maxSizeKb > 0) {
-            val sizeBytes = trimmedNew.toByteArray(java.nio.charset.StandardCharsets.UTF_8).size
+            val sizeBytes = newContent.toByteArray(java.nio.charset.StandardCharsets.UTF_8).size
             if (sizeBytes > maxSizeKb * 1024) {
                 return EditEntryResult.InvalidContent
             }
         }
 
-        // Route to correct table
+        // Route to correct table (exact strings — DB layer stores newContent verbatim)
         val result = when (tab) {
-            ClipboardTab.HISTORY -> _database.updateHistoryEntryContent(trimmedOld, trimmedNew)
-            ClipboardTab.PINNED -> _database.updatePinnedEntryContent(trimmedOld, trimmedNew)
-            ClipboardTab.TODOS -> _database.updateTodoEntryContent(trimmedOld, trimmedNew)
+            ClipboardTab.HISTORY -> _database.updateHistoryEntryContent(oldContent, newContent)
+            ClipboardTab.PINNED -> _database.updatePinnedEntryContent(oldContent, newContent)
+            ClipboardTab.TODOS -> _database.updateTodoEntryContent(oldContent, newContent)
         }
 
         if (result is EditEntryResult.Success) {

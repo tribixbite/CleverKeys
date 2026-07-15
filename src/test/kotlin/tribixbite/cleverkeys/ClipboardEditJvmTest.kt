@@ -214,32 +214,84 @@ class ClipboardEditJvmTest {
     }
 
     // =========================================================================
-    // Trim normalization — no-op detection
+    // UT-4: ClipboardEditPolicy — whitespace-preserving edit decision
     //
-    // editEntryContent() returns Success early if trimmedOld == trimmedNew.
-    // This prevents unnecessary DB writes when user adds/removes whitespace.
+    // The shared decision function used by ClipboardHistoryService.editEntryContent
+    // and ClipboardDatabase.updateEntryContentInTable. A whitespace/newline-only
+    // change IS a real change and must be persisted verbatim; only exact-equal
+    // content is a no-op, and only blank new content is invalid.
     // =========================================================================
 
     @Test
-    fun `trim normalization detects no-op edits`() {
-        val oldContent = "Hello world"
-        val newContent = "  Hello world  "
-        assertThat(oldContent.trim()).isEqualTo(newContent.trim())
+    fun `trailing newline only edit is persisted verbatim`() {
+        val decision = ClipboardEditPolicy.decide("Hello world", "Hello world\n")
+        assertThat(decision).isInstanceOf(ClipboardEditPolicy.Decision.Apply::class.java)
+        assertThat((decision as ClipboardEditPolicy.Decision.Apply).content)
+            .isEqualTo("Hello world\n")
     }
 
     @Test
-    fun `trim normalization detects real changes`() {
-        val oldContent = "Hello world"
-        val newContent = "Hello world!"
-        assertThat(oldContent.trim()).isNotEqualTo(newContent.trim())
+    fun `leading whitespace only edit is persisted verbatim`() {
+        val decision = ClipboardEditPolicy.decide("Hello world", "  Hello world")
+        assertThat(decision).isInstanceOf(ClipboardEditPolicy.Decision.Apply::class.java)
+        assertThat((decision as ClipboardEditPolicy.Decision.Apply).content)
+            .isEqualTo("  Hello world")
     }
 
     @Test
-    fun `blank content detected correctly`() {
-        assertThat("".trim().isBlank()).isTrue()
-        assertThat("   ".trim().isBlank()).isTrue()
-        assertThat("\t\n".trim().isBlank()).isTrue()
-        assertThat("a".trim().isBlank()).isFalse()
+    fun `internal whitespace only edit is persisted verbatim`() {
+        val decision = ClipboardEditPolicy.decide("Hello world", "Hello  world")
+        assertThat(decision).isInstanceOf(ClipboardEditPolicy.Decision.Apply::class.java)
+        assertThat((decision as ClipboardEditPolicy.Decision.Apply).content)
+            .isEqualTo("Hello  world")
+    }
+
+    @Test
+    fun `internal newline insertion is persisted verbatim`() {
+        val decision = ClipboardEditPolicy.decide("line one line two", "line one\nline two")
+        assertThat(decision).isInstanceOf(ClipboardEditPolicy.Decision.Apply::class.java)
+        assertThat((decision as ClipboardEditPolicy.Decision.Apply).content)
+            .isEqualTo("line one\nline two")
+    }
+
+    @Test
+    fun `whitespace removal from stored content is persisted verbatim`() {
+        // A previously edited entry may legitimately carry whitespace;
+        // removing it is also a real change.
+        val decision = ClipboardEditPolicy.decide("Hello world\n", "Hello world")
+        assertThat(decision).isInstanceOf(ClipboardEditPolicy.Decision.Apply::class.java)
+        assertThat((decision as ClipboardEditPolicy.Decision.Apply).content)
+            .isEqualTo("Hello world")
+    }
+
+    @Test
+    fun `genuinely unchanged content is a no-op`() {
+        val decision = ClipboardEditPolicy.decide("Hello world", "Hello world")
+        assertThat(decision).isInstanceOf(ClipboardEditPolicy.Decision.NoOp::class.java)
+    }
+
+    @Test
+    fun `unchanged content with existing whitespace is a no-op`() {
+        val decision = ClipboardEditPolicy.decide("  Hello world\n", "  Hello world\n")
+        assertThat(decision).isInstanceOf(ClipboardEditPolicy.Decision.NoOp::class.java)
+    }
+
+    @Test
+    fun `normal content edit is persisted verbatim`() {
+        val decision = ClipboardEditPolicy.decide("Hello world", "Hello world!")
+        assertThat(decision).isInstanceOf(ClipboardEditPolicy.Decision.Apply::class.java)
+        assertThat((decision as ClipboardEditPolicy.Decision.Apply).content)
+            .isEqualTo("Hello world!")
+    }
+
+    @Test
+    fun `blank new content is invalid`() {
+        assertThat(ClipboardEditPolicy.decide("Content", ""))
+            .isInstanceOf(ClipboardEditPolicy.Decision.Invalid::class.java)
+        assertThat(ClipboardEditPolicy.decide("Content", "   "))
+            .isInstanceOf(ClipboardEditPolicy.Decision.Invalid::class.java)
+        assertThat(ClipboardEditPolicy.decide("Content", "\t\n"))
+            .isInstanceOf(ClipboardEditPolicy.Decision.Invalid::class.java)
     }
 
     // =========================================================================

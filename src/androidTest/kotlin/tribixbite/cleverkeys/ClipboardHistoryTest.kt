@@ -324,14 +324,23 @@ class ClipboardHistoryTest {
     }
 
     @Test
-    fun testEditTrimsAndDetectsNoOp() {
+    fun testEditWhitespaceOnlyChangePersists() {
         clearAllTablesForEdit()
         clipboardService?.addClip("Trim test")
+        Thread.sleep(50)
 
+        // UT-4: a whitespace-only change is a real edit — it must be written to the
+        // DB verbatim, not silently swallowed by a trimmed-equality no-op guard.
         val result = clipboardService?.editEntryContent(
-            "Trim test", "  Trim test  ", ClipboardTab.HISTORY
+            "Trim test", "Trim test\n", ClipboardTab.HISTORY
         )
-        assertTrue("Trim-equivalent should be Success (no-op)", result is EditEntryResult.Success)
+        assertTrue("Whitespace-only edit should succeed", result is EditEntryResult.Success)
+
+        val entries = clipboardService?.clearExpiredAndGetHistory() ?: emptyList()
+        assertTrue("Edited content with trailing newline must be stored verbatim",
+            entries.any { it.content == "Trim test\n" })
+        assertFalse("Original un-newlined content should be gone",
+            entries.any { it.content == "Trim test" })
     }
 
     @Test

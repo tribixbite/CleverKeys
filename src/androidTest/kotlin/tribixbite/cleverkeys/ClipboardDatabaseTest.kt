@@ -1212,14 +1212,99 @@ class ClipboardDatabaseTest {
         assertTrue("No-op should return Success", result is EditEntryResult.Success)
     }
 
-    @Test
-    fun testEditTrimsWhitespace() {
-        clearAllTables()
-        db.addClipboardEntry("Trimmed", futureExpiry)
+    // ─── UT-4: whitespace/newline-only edits are real edits and persist verbatim ───
 
-        // Edit with whitespace-padded version of same content = no-op
-        val result = db.updateHistoryEntryContent("Trimmed", "  Trimmed  ")
-        assertTrue("Trim-equivalent should be Success (no-op)", result is EditEntryResult.Success)
+    @Test
+    fun testEditTrailingNewlineOnlyPersists() {
+        clearAllTables()
+        db.addClipboardEntry("Newline edit", futureExpiry)
+
+        val result = db.updateHistoryEntryContent("Newline edit", "Newline edit\n")
+        assertTrue("Trailing-newline edit should succeed", result is EditEntryResult.Success)
+
+        val entries = db.getActiveClipboardEntries()
+        assertEquals(1, entries.size)
+        assertEquals("Trailing newline must be stored verbatim", "Newline edit\n", entries[0].content)
+    }
+
+    @Test
+    fun testEditLeadingWhitespaceOnlyPersistsInPinned() {
+        clearAllTables()
+        db.pinEntry("Indent edit")
+
+        val result = db.updatePinnedEntryContent("Indent edit", "  Indent edit")
+        assertTrue("Leading-whitespace edit should succeed", result is EditEntryResult.Success)
+
+        val entries = db.getPinnedEntries()
+        assertEquals(1, entries.size)
+        assertEquals("Leading whitespace must be stored verbatim", "  Indent edit", entries[0].content)
+    }
+
+    @Test
+    fun testEditInternalWhitespaceOnlyPersistsInTodo() {
+        clearAllTables()
+        db.addTodoEntry("Spacing edit here")
+
+        val result = db.updateTodoEntryContent("Spacing edit here", "Spacing  edit\nhere")
+        assertTrue("Internal-whitespace edit should succeed", result is EditEntryResult.Success)
+
+        val entries = db.getTodoEntries()
+        assertEquals(1, entries.size)
+        assertEquals("Internal whitespace must be stored verbatim", "Spacing  edit\nhere", entries[0].content)
+    }
+
+    @Test
+    fun testEditWhitespaceRemovalPersists() {
+        clearAllTables()
+        db.addClipboardEntry("Strip me", futureExpiry)
+        db.updateHistoryEntryContent("Strip me", "Strip me\n")
+
+        // Removing the whitespace again is also a real edit
+        val result = db.updateHistoryEntryContent("Strip me\n", "Strip me")
+        assertTrue("Whitespace-removal edit should succeed", result is EditEntryResult.Success)
+        assertEquals("Strip me", db.getActiveClipboardEntries()[0].content)
+    }
+
+    @Test
+    fun testDeleteAfterWhitespaceEdit() {
+        clearAllTables()
+        db.addClipboardEntry("Delete after edit", futureExpiry)
+        db.updateHistoryEntryContent("Delete after edit", "Delete after edit\n")
+
+        // Content-keyed delete must find the row by its exact stored content
+        db.removeClipboardEntry("Delete after edit\n")
+        assertEquals("Edited entry must be deletable", 0, db.getActiveClipboardEntries().size)
+    }
+
+    @Test
+    fun testUnpinAfterWhitespaceEdit() {
+        clearAllTables()
+        db.pinEntry("Unpin after edit")
+        db.updatePinnedEntryContent("Unpin after edit", "Unpin after edit\n")
+
+        db.unpinEntry("Unpin after edit\n")
+        assertEquals("Edited pinned entry must be unpinnable", 0, db.getPinnedEntries().size)
+    }
+
+    @Test
+    fun testTodoStatusAfterWhitespaceEdit() {
+        clearAllTables()
+        db.addTodoEntry("Status after edit")
+        db.updateTodoEntryContent("Status after edit", "Status after edit\n")
+
+        val updated = db.setTodoEntryStatus("Status after edit\n", "completed")
+        assertTrue("Status update must find whitespace-edited entry", updated)
+    }
+
+    @Test
+    fun testEditWhitespaceOnlyContentStillRejected() {
+        clearAllTables()
+        db.addClipboardEntry("Keep me", futureExpiry)
+
+        val result = db.updateHistoryEntryContent("Keep me", " \n\t ")
+        assertTrue("Whitespace-only content must stay InvalidContent",
+            result is EditEntryResult.InvalidContent)
+        assertEquals("Keep me", db.getActiveClipboardEntries()[0].content)
     }
 
     @Test

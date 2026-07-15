@@ -22,6 +22,42 @@ sealed class EditEntryResult {
     data class Error(val message: String) : EditEntryResult()
 }
 
+/**
+ * Pure decision logic for inline clipboard edits (UT-4). Shared by
+ * [ClipboardHistoryService.editEntryContent] (service-layer early exit) and
+ * [ClipboardDatabase.updateEntryContentInTable] (DB-layer guard) so both
+ * layers agree on what counts as a no-op vs. a persistable change.
+ *
+ * No Android dependencies — covered by pure JVM tests (ClipboardEditJvmTest).
+ */
+object ClipboardEditPolicy {
+
+    /** Outcome of comparing the stored content against the edited content. */
+    sealed class Decision {
+        /** Content is unchanged — skip the DB write, report success. */
+        object NoOp : Decision()
+        /** New content is blank/whitespace-only — reject the edit. */
+        object Invalid : Decision()
+        /** Persist [content] as the entry's new content. */
+        data class Apply(val content: String) : Decision()
+    }
+
+    /**
+     * Decide how an inline edit of [oldContent] → [newContent] should be handled.
+     *
+     * UT-4 fix: comparison and persistence are EXACT — a whitespace/newline-only
+     * change (trailing newline, internal spacing, leading indent) is a real edit
+     * and the new content is stored verbatim, NOT trimmed. Previously both layers
+     * compared `.trim()`-ed values and stored the trimmed string, silently
+     * dropping any edit that differed only in leading/trailing whitespace.
+     */
+    fun decide(oldContent: String, newContent: String): Decision = when {
+        newContent.isBlank() -> Decision.Invalid
+        newContent == oldContent -> Decision.NoOp
+        else -> Decision.Apply(newContent)
+    }
+}
+
 class ClipboardDatabase private constructor(context: Context) :
     SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
@@ -310,18 +346,18 @@ class ClipboardDatabase private constructor(context: Context) :
      */
     fun removeClipboardEntry(content: String?): String? {
         if (content.isNullOrBlank()) return null
-        val trimmedContent = content.trim()
+        val contentKey = resolveContentKey(TABLE_CLIPBOARD, content)
         return try {
             val db = writableDatabase
             // Query media_path before deleting so caller can clean up the file
             val mediaPath = db.rawQuery(
                 "SELECT $COLUMN_MEDIA_PATH FROM $TABLE_CLIPBOARD WHERE $COLUMN_CONTENT = ? LIMIT 1",
-                arrayOf(trimmedContent)
+                arrayOf(contentKey)
             ).use { cursor ->
                 if (cursor.moveToFirst()) cursor.getString(0) else null
             }
-            val deletedRows = db.delete(TABLE_CLIPBOARD, "$COLUMN_CONTENT = ?", arrayOf(trimmedContent))
-            Log.d(TAG, "Removed $deletedRows clipboard entries matching: ${trimmedContent.take(20)}...")
+            val deletedRows = db.delete(TABLE_CLIPBOARD, "$COLUMN_CONTENT = ?", arrayOf(contentKey))
+            Log.d(TAG, "Removed $deletedRows clipboard entries matching: ${contentKey.take(20)}...")
             if (deletedRows > 0) mediaPath else null
         } catch (e: Exception) {
             Log.e(TAG, "Error removing clipboard entry: ${e.message}")
@@ -480,17 +516,17 @@ class ClipboardDatabase private constructor(context: Context) :
      */
     fun unpinEntry(content: String?): String? {
         if (content.isNullOrBlank()) return null
-        val trimmedContent = content.trim()
+        val contentKey = resolveContentKey(TABLE_PINNED, content)
         return try {
             val db = writableDatabase
             val mediaPath = db.rawQuery(
                 "SELECT $COLUMN_MEDIA_PATH FROM $TABLE_PINNED WHERE $COLUMN_CONTENT = ? LIMIT 1",
-                arrayOf(trimmedContent)
+                arrayOf(contentKey)
             ).use { cursor ->
                 if (cursor.moveToFirst()) cursor.getString(0) else null
             }
-            val deletedRows = db.delete(TABLE_PINNED, "$COLUMN_CONTENT = ?", arrayOf(trimmedContent))
-            Log.d(TAG, "Unpinned $deletedRows entries: ${trimmedContent.take(20)}...")
+            val deletedRows = db.delete(TABLE_PINNED, "$COLUMN_CONTENT = ?", arrayOf(contentKey))
+            Log.d(TAG, "Unpinned $deletedRows entries: ${contentKey.take(20)}...")
             if (deletedRows > 0) mediaPath else null
         } catch (e: Exception) {
             Log.e(TAG, "Error unpinning entry: ${e.message}")
@@ -653,17 +689,17 @@ class ClipboardDatabase private constructor(context: Context) :
      */
     fun removeTodoEntry(content: String?): String? {
         if (content.isNullOrBlank()) return null
-        val trimmedContent = content.trim()
+        val contentKey = resolveContentKey(TABLE_TODO, content)
         return try {
             val db = writableDatabase
             val mediaPath = db.rawQuery(
                 "SELECT $COLUMN_MEDIA_PATH FROM $TABLE_TODO WHERE $COLUMN_CONTENT = ? LIMIT 1",
-                arrayOf(trimmedContent)
+                arrayOf(contentKey)
             ).use { cursor ->
                 if (cursor.moveToFirst()) cursor.getString(0) else null
             }
-            val deletedRows = db.delete(TABLE_TODO, "$COLUMN_CONTENT = ?", arrayOf(trimmedContent))
-            Log.d(TAG, "Removed $deletedRows todo entries: ${trimmedContent.take(20)}...")
+            val deletedRows = db.delete(TABLE_TODO, "$COLUMN_CONTENT = ?", arrayOf(contentKey))
+            Log.d(TAG, "Removed $deletedRows todo entries: ${contentKey.take(20)}...")
             if (deletedRows > 0) mediaPath else null
         } catch (e: Exception) {
             Log.e(TAG, "Error removing todo entry: ${e.message}")
@@ -678,16 +714,37 @@ class ClipboardDatabase private constructor(context: Context) :
             Log.w(TAG, "Invalid todo status: $status")
             return false
         }
-        val trimmedContent = content.trim()
+        val contentKey = resolveContentKey(TABLE_TODO, content)
         return try {
             val db = writableDatabase
             val values = ContentValues().apply { put(COLUMN_STATUS, status) }
-            val updatedRows = db.update(TABLE_TODO, values, "$COLUMN_CONTENT = ?", arrayOf(trimmedContent))
-            Log.d(TAG, "Updated todo status to '$status' for $updatedRows entries: ${trimmedContent.take(20)}...")
+            val updatedRows = db.update(TABLE_TODO, values, "$COLUMN_CONTENT = ?", arrayOf(contentKey))
+            Log.d(TAG, "Updated todo status to '$status' for $updatedRows entries: ${contentKey.take(20)}...")
             updatedRows > 0
         } catch (e: Exception) {
             Log.e(TAG, "Error updating todo status: ${e.message}")
             false
+        }
+    }
+
+    /**
+     * Resolve the content key that actually exists in [table] for content-keyed
+     * operations (delete/unpin/todo-status/tags). Legacy rows are trimmed on
+     * insert, but rows edited via [updateEntryContentInTable] may carry
+     * leading/trailing whitespace verbatim (UT-4). Callers pass the stored
+     * `entry.content`, so try the exact string first; fall back to the trimmed
+     * form for defensive compat with padded input against legacy trimmed rows.
+     */
+    private fun resolveContentKey(table: String, content: String): String {
+        return try {
+            val exactExists = readableDatabase.rawQuery(
+                "SELECT 1 FROM $table WHERE $COLUMN_CONTENT = ? LIMIT 1",
+                arrayOf(content)
+            ).use { it.moveToFirst() }
+            if (exactExists) content else content.trim()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error resolving content key in $table: ${e.message}")
+            content.trim()
         }
     }
 
@@ -726,13 +783,15 @@ class ClipboardDatabase private constructor(context: Context) :
      * same table (different row), returns DuplicateConflict instead of creating a duplicate.
      */
     private fun updateEntryContentInTable(table: String, oldContent: String, newContent: String): EditEntryResult {
-        val trimmedNew = newContent.trim()
-        if (trimmedNew.isBlank()) return EditEntryResult.InvalidContent
+        // UT-4: exact comparison + verbatim storage — whitespace/newline-only edits
+        // are real changes and must persist (no trim normalization).
+        val storedContent = when (val decision = ClipboardEditPolicy.decide(oldContent, newContent)) {
+            is ClipboardEditPolicy.Decision.Invalid -> return EditEntryResult.InvalidContent
+            is ClipboardEditPolicy.Decision.NoOp -> return EditEntryResult.Success // no-op
+            is ClipboardEditPolicy.Decision.Apply -> decision.content
+        }
 
-        val trimmedOld = oldContent.trim()
-        if (trimmedOld == trimmedNew) return EditEntryResult.Success // no-op
-
-        val newHash = trimmedNew.hashCode().toString()
+        val newHash = storedContent.hashCode().toString()
 
         return try {
             val db = writableDatabase
@@ -741,7 +800,7 @@ class ClipboardDatabase private constructor(context: Context) :
                 // Dedup: check if another entry in this table already has the new content
                 val hasDuplicate = db.rawQuery(
                     "SELECT 1 FROM $table WHERE $COLUMN_CONTENT_HASH = ? AND $COLUMN_CONTENT = ? AND $COLUMN_CONTENT != ? LIMIT 1",
-                    arrayOf(newHash, trimmedNew, trimmedOld)
+                    arrayOf(newHash, storedContent, oldContent)
                 ).use { it.moveToFirst() }
 
                 if (hasDuplicate) {
@@ -749,12 +808,18 @@ class ClipboardDatabase private constructor(context: Context) :
                     return EditEntryResult.DuplicateConflict
                 }
 
-                // Update content + hash, preserving all other columns
+                // Update content + hash, preserving all other columns.
+                // Lookup key: exact stored content (legacy rows are trimmed-on-insert
+                // and callers pass entry.content verbatim, so exact match is correct;
+                // fall back to trimmed key for defensive compat with padded input).
                 val values = ContentValues().apply {
-                    put(COLUMN_CONTENT, trimmedNew)
+                    put(COLUMN_CONTENT, storedContent)
                     put(COLUMN_CONTENT_HASH, newHash)
                 }
-                val updatedRows = db.update(table, values, "$COLUMN_CONTENT = ?", arrayOf(trimmedOld))
+                var updatedRows = db.update(table, values, "$COLUMN_CONTENT = ?", arrayOf(oldContent))
+                if (updatedRows == 0 && oldContent != oldContent.trim()) {
+                    updatedRows = db.update(table, values, "$COLUMN_CONTENT = ?", arrayOf(oldContent.trim()))
+                }
 
                 db.setTransactionSuccessful()
                 if (updatedRows > 0) EditEntryResult.Success
@@ -1095,12 +1160,12 @@ class ClipboardDatabase private constructor(context: Context) :
 
     /** Set tags for a pinned entry by content */
     fun setPinnedEntryTags(content: String, tags: List<String>): Boolean {
-        val trimmedContent = content.trim()
+        val contentKey = resolveContentKey(TABLE_PINNED, content)
         return try {
             val arr = JSONArray()
             tags.forEach { arr.put(it) }
             val values = ContentValues().apply { put(COLUMN_TAGS, arr.toString()) }
-            val updated = writableDatabase.update(TABLE_PINNED, values, "$COLUMN_CONTENT = ?", arrayOf(trimmedContent))
+            val updated = writableDatabase.update(TABLE_PINNED, values, "$COLUMN_CONTENT = ?", arrayOf(contentKey))
             updated > 0
         } catch (e: Exception) {
             Log.e(TAG, "Error setting pinned tags: ${e.message}")
@@ -1110,12 +1175,12 @@ class ClipboardDatabase private constructor(context: Context) :
 
     /** Set tags for a todo entry by content */
     fun setTodoEntryTags(content: String, tags: List<String>): Boolean {
-        val trimmedContent = content.trim()
+        val contentKey = resolveContentKey(TABLE_TODO, content)
         return try {
             val arr = JSONArray()
             tags.forEach { arr.put(it) }
             val values = ContentValues().apply { put(COLUMN_TAGS, arr.toString()) }
-            val updated = writableDatabase.update(TABLE_TODO, values, "$COLUMN_CONTENT = ?", arrayOf(trimmedContent))
+            val updated = writableDatabase.update(TABLE_TODO, values, "$COLUMN_CONTENT = ?", arrayOf(contentKey))
             updated > 0
         } catch (e: Exception) {
             Log.e(TAG, "Error setting todo tags: ${e.message}")
