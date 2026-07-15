@@ -19,6 +19,72 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.5.0] - 2026-07-15
+
+### Added
+
+- **98,140-word English dictionary** (was 52,002): rebuilt one-pass pipeline with
+  spellchecker/AOSP oracles, typo & junk filtering, curated allow/blocklists; accented
+  words (café, résumé) now load; 40 corpus-noise entries (teh, wich, …) removed
+- **Clipboard URL sanitization**: ClearURLs-based tracker stripping (~206 providers +
+  AliExpress/Reddit extensions), embed enrichment (x.com → fxtwitter, reddit → rxddit, …),
+  custom rules file via SAF, optional system-clipboard write-back; toggles apply mid-session
+- **Smart auto-space**: no space inserted after opening quotes/brackets (`("word`), and
+  closing punctuation absorbs the automatic space after a swiped word (`word.`, chaining
+  `word.)` works) — manual spaces are never touched
+- **Backup import preview**: per-item deselect, default-aware diff, layouts deep diff,
+  short-swipe mapping diff; **one-click Full Backup ZIP** (settings + dictionaries +
+  clipboard + media) (#142)
+- **Settings search overhaul**: auto-generated index covers every control; results
+  scroll to and highlight the exact setting
+- **System light theme**: settings screens follow system day/night, including Theme
+  Settings, Short Swipe Customization, Extra Keys, and Dictionary Manager (#35)
+- Secondary Label Size slider (#133); TIMESTAMP short-swipe action (#141); editable hex
+  color input (#93); long-press copy version info (#94); show-keyboard button in
+  customization (#134); `clear` editing command (#135)
+- Russian language pack; Greek pack surfaced with corrected import guide (#68)
+
+### Changed
+
+- **Autocorrect selection rewritten**: keyboard-adjacency-weighted scoring (#101),
+  Damerau transposition support, rule-based tiebreaks (thier→their, recieve→receive,
+  thsi→this), layout-aware adjacency (AZERTY/QWERTZ/Dvorak + accents), ~2.5× faster
+  candidate sweep at 98k words
+- Default tuning: key repeat backspace-only, gesture-complete haptic on, unlimited
+  clipboard history, beam alpha 1.4, autocorrect prefix length 0 / min word length 2,
+  larger clipboard item cap — explicit user settings are untouched
+- Termux now honors the auto-space-after-suggestion preference like every other app (#78)
+- Keypress vibration uses the low-latency system haptic path by default; a one-time
+  migration clears the bug-forced custom-vibration flag (#154)
+
+### Fixed
+
+- Possessives of known words preserved (`ember's` no longer becomes `rivers`); possessive
+  typos corrected at the base (`embeer's → ember's`); doubled-letter slips collapse
+  (`gamees → games`); valid inflections never "corrected" (`immunizations`); disabled
+  words never offered; custom words exempt from the frequency floor; frequency-floor
+  slider was a no-op
+- Disabling a word in Dictionary Manager now makes autocorrect treat it as a typo
+  (disabled `ans` → `and`)
+- Autocorrect never fires inside URLs, emails, or file paths
+- "Add to dictionary" no longer prompts for valid possessives (`ember's`) or URL/email
+  fragments
+- Clipboard edits that only change whitespace or newlines now save correctly
+- Suggestion tap in URL bars replaces the typed partial instead of appending (#151);
+  same fix for Termux/Fennec/Keep-style non-composing editors (#78)
+- Short-swipe overshoot no longer commits a full word; no-subkey, return-trip (`pop`,
+  `lol`), and paused swipes commit correctly; swipe-typing toggle gates all word routes
+- Calibration screen treated %-of-key thresholds as pixels (feedback ran at ~half scale)
+- Custom short-swipe mappings lost to a save/load race; import path now locked
+- Clipboard panel honors custom/decorative themes (#130); URL toggles apply mid-session
+- Swipe stopped working when Max Sequence Length override exceeded the model cap (#136)
+- Emoji panel rendered "…" instead of glyphs on high-DPI/custom-font devices (#118)
+- First-run "Select Keyboard" no longer issues a system call that could soft-reset
+  some OEM ROMs
+- GitHub release body no longer shows stale notes (per-version changelog is the source)
+
+---
+
 ## [1.4.0] - 2026-04-25
 
 ### New Features - Media Clipboard
