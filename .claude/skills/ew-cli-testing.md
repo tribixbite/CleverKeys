@@ -5,7 +5,7 @@ Use this skill when running instrumented tests on emulator.wtf cloud infrastruct
 ## Critical Defaults — ALWAYS USE THESE
 
 - **`--use-orchestrator`**: ALWAYS. Runs each test in its own process, preventing OOM cascades.
-- **`--timeout 15m`**: ALWAYS. Full suite takes ~13 min with orchestrator. Default is too short.
+- **`--timeout 30m`**: ALWAYS. Full suite was ~13 min at 887 tests, 22 min at 1272, and TIMED OUT at 25m with 1344 tests (2026-07-15 — alphabetical tail after UserAdaptationManagerTest was silently skipped). Scale up as the suite grows; a timeout shows as `ERROR Tests timed out` + missing tail classes in results.xml.
 - **`--device model=Pixel7,version=34`**: ALWAYS use API 34+. The APK has x86_64 native ONNX
   libraries and API 30 emulators are 32-bit x86 only — causes ABI mismatch install failure.
 - **`--outputs-dir ~/ew-output`**: ALWAYS. Must exist and be under home dir (Termux restricts /tmp).
@@ -127,6 +127,21 @@ Activity is auto-launched per test (~1.2-1.8s overhead). Assertion failures surf
 | `DictionaryDataSourceTest` | 19 | Dictionary cache, toggle coherence |
 | `VocabularyRankingTest` | 12 | Contraction scoring, trie lookup |
 | `SettingsSearchTest` | 5 | Settings search-to-scroll crash regression |
+
+## Infinitely-Animating Compose Screens Never Go Idle (hard-won, 2026-07-15)
+
+A screen with a perpetual animation (e.g. LauncherActivity's matrix background)
+never satisfies Compose's idling resource — any idle-synced interaction
+(`onNodeWithText(...).performClick()`, `waitForIdle()`) throws
+`ComposeNotIdleException: possibly due to compose being busy ... infinite
+re-compositions`. Fix in the test, not the app:
+
+```kotlin
+composeTestRule.mainClock.autoAdvance = false
+composeTestRule.mainClock.advanceTimeBy(2_000)   // get past initial composition
+// ...interact...
+composeTestRule.mainClock.advanceTimeBy(1_000)   // let click effects run
+```
 
 ## Cross-Test State Leaks Under the Orchestrator (hard-won, 2026-07-03)
 
@@ -274,7 +289,7 @@ ls -la build/outputs/apk/androidTest/debug/
 ```
 
 ### Test Timeout
-Always use `--timeout 15m`. Full orchestrator suite takes ~15 min (887 tests).
+Always use `--timeout 30m` (suite outgrew 15m and then 25m; see Critical Defaults).
 Without orchestrator: faster but OOM failures cascade.
 
 ### Signature Mismatch

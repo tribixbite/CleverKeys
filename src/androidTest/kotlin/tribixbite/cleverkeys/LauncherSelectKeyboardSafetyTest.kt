@@ -31,11 +31,16 @@ class LauncherSelectKeyboardSafetyTest {
 
     @Test
     fun selectKeyboard_tap_doesNotCrashActivity() {
+        // The launcher screen animates continuously (matrix background), so Compose
+        // never reaches idle — idle-synced interaction throws ComposeNotIdleException.
+        // Take manual clock control and advance past initial composition instead.
+        composeTestRule.mainClock.autoAdvance = false
+        composeTestRule.mainClock.advanceTimeBy(2_000)
         // On the test emulator CleverKeys is installed but NOT an enabled IME, so
         // this exercises the guarded fallback path (IME settings intent), which is
         // exactly the state the reporting device was in on first run.
         composeTestRule.onNodeWithText("Select Keyboard").performScrollTo().performClick()
-        composeTestRule.waitForIdle()
+        composeTestRule.mainClock.advanceTimeBy(1_000)
         // Activity must still be alive and composed — a crash would fail the rule.
         assertFalse(composeTestRule.activity.isDestroyed)
     }
