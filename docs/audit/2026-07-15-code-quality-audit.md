@@ -12,7 +12,9 @@
 
 CleverKeys is a **real, working, heavily-iterated neural swipe keyboard** with an unusually strong test culture and thoughtful engineering in its hot paths. It is also a **transitional codebase**: a Java-lineage flat keyboard core (visible Unexpected-Keyboard DNA) wrapped in a well-executed but **incomplete strangler-fig migration**. The newer modules — the `onnx/` inference pipeline, the `backup/` pure-JVM diff engine, the decomposed Compose settings screen — are genuinely professional. The older core — a 1,615-line global mutable `Config`, two ~1,300-line coordinator classes duplicating the entire suggestion pipeline, a 158-file flat root package — is where the debt lives.
 
-The audit found **two critical (P0-class) defects** that undercut the project's "Production Ready (Grade A)" self-billing, plus a cluster of P1/P2 structural and safety issues. All are well-scoped; none require re-architecture to fix.
+The audit found a cluster of real but well-scoped defects that undercut the project's "Production Ready (Grade A)" self-billing. None require re-architecture to fix.
+
+> **⚠️ Severity re-rating (2026-07-16).** The original draft of this document labelled two findings "P0/critical." A follow-up realistic-impact review (see [`2026-07-15-remediation-action-plan.md`](./2026-07-15-remediation-action-plan.md) → *Realistic Severity Re-rating*) **downgraded both**: the ONNX memory leak is a genuine but slow-burn **P1** (256 KB/swipe, reclaimed on process death, degrades gracefully), and the exported-activity issue is a genuine security bug of **medium** realistic severity (high impact × low likelihood — needs targeted malware already installed). Several performance/log claims were also deflated. The severities in the tables below are the **original, un-deflated** ratings; read them against the re-rating table in the action plan, which is authoritative.
 
 ### Overall grade: **B− / C+**
 
@@ -26,12 +28,12 @@ A competent, battle-hardened, well-tested open-source IME that sits **above the 
 |---|:---:|---|
 | Architecture & structure | **C+** | Good newer modules; flat root package, global mutable Config, bridge/initializer sprawl. |
 | Core IME implementation | **C+** | Thoughtful async/gesture code; two diverged duplicate pipelines, silent-catch state mutation, main-thread busy-wait. |
-| Neural & dictionary pipeline | **B−** | Correct beam search & memory-conscious structures; **P0 per-swipe native leak**, ~2,300 dead lines. |
-| Data, persistence & security | **C+** | Excellent parameterized SQL & PII-excluding backup rules; **P1 unauthenticated exported export/import**. |
-| UI layer | **B−** | Optimized renderer + de-god-ified settings; **P1 keyboard invisible to TalkBack**. |
-| Engineering practices | **B+** | Top-decile test discipline & real CI gate; 973-issue lint baseline, R8 disabled, keystore in worktree. |
+| Neural & dictionary pipeline | **B−** | Correct beam search & memory-conscious structures; **P1 per-swipe native leak** (~256 KB, slow-burn), ~2,300 dead lines. |
+| Data, persistence & security | **C+** | Excellent parameterized SQL & PII-excluding backup rules; unauthenticated exported export/import (medium realistic severity). |
+| UI layer | **B−** | Optimized renderer + de-god-ified settings; keyboard invisible to TalkBack (screen-reader users only). |
+| Engineering practices | **B+** | Top-decile test discipline & real CI gate; 972-issue lint baseline, R8 disabled, keystore in worktree (untracked/safe). |
 
-**Aggregate:** simple mean ≈ 2.6 on a 4.0 scale (between C+ and B−). Weighted toward the two P0-class findings, the honest overall is **B−**, conditional on those two fixes; without them, **C+**.
+**Aggregate:** simple mean ≈ 2.6 on a 4.0 scale (between C+ and B−). The honest overall is **B−** once the leak (item A) and the export surface (item B) are fixed; without them, **C+**. See the action plan's *Realistic Severity Re-rating* for what each finding actually costs a user.
 
 ---
 
@@ -51,7 +53,7 @@ These are the findings that most gate the "professional / production-ready" clai
 
 ### Secondary privacy leaks (fix alongside #2)
 
-- **Ungated logging of user text** — flagged independently by two agents. `GreedySearchEngine.kt:116` logs the decoded swipe-typed word at INFO; `Keyboard2View.kt:793,826` logs full selected text; `ClipboardDatabase.kt:246,360,504,678` logs 20-char content prefixes. All un-gated by `BuildConfig.ENABLE_VERBOSE_LOGGING`, so any app with READ_LOGS (or adb) captures typed content. **P2.**
+- **Ungated logging of user text** — flagged independently by two agents. `GreedySearchEngine.kt:116` logs the decoded swipe-typed word at INFO; `Keyboard2View.kt:793,826` logs full selected text; `ClipboardDatabase.kt:246,360,504,678` logs 20-char content prefixes. All un-gated by `BuildConfig.ENABLE_VERBOSE_LOGGING`. **Severity deflated to P3:** on Android 4.1+ `READ_LOGS` is a privileged/system permission, so *other apps cannot read logcat*. Realistic exposure is limited to someone with ADB/USB-debugging access to the physical device, or a user who captures and shares a bug report / logcat (leaking their own typed text). Not a remote or cross-app threat — but still worth gating (cheap, avoids PII in shared logs).
 - **Zip-slip in clipboard/full-backup media extraction** — `importClipboardHistoryZip`/`importFullBackup` extract to `File(filesDir, entry.name)` with only a `startsWith("clipboard_media/")` guard (which `clipboard_media/../../foo` satisfies). The `GifPackManager` canonical-path pattern (`GifPackManager.kt:221-224`) already exists — reuse it. **P2.**
 
 ---
