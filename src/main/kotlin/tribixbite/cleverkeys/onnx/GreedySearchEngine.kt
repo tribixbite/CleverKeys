@@ -4,6 +4,7 @@ import ai.onnxruntime.OnnxTensor
 import ai.onnxruntime.OrtEnvironment
 import ai.onnxruntime.OrtSession
 import android.util.Log
+import tribixbite.cleverkeys.BuildConfig
 import tribixbite.cleverkeys.SwipeTokenizer
 import java.util.ArrayList
 import java.util.Arrays
@@ -62,31 +63,41 @@ class GreedySearchEngine(
                             "actual_src_length" to actualSrcLengthTensor,
                             "target_tokens" to targetTokensTensor
                         )
-                        
+
+                        // Compute the argmax token inside a try/finally so the ONNX
+                        // Result (and its child logits tensor) is always closed —
+                        // including when the loop breaks on EOS. A `.use {}` block
+                        // cannot be used here because `break` must exit the outer
+                        // decode loop, not just the resource scope.
                         val result = decoderSession.run(inputs)
-                        val logitsTensor = result.get(0) as OnnxTensor
-                        val logits3D = logitsTensor.value as Array<Array<FloatArray>>
-                        
-                        val currentLogits = logits3D[0][step]
-                        
-                        // Find token with maximum probability
-                        var bestToken = 0
-                        var bestProb = Float.NEGATIVE_INFINITY
-                        for (i in currentLogits.indices) {
-                            if (currentLogits[i] > bestProb) {
-                                bestProb = currentLogits[i]
-                                bestToken = i
+                        val bestToken: Int = try {
+                            val logitsTensor = result.get(0) as OnnxTensor
+                            @Suppress("UNCHECKED_CAST")
+                            val logits3D = logitsTensor.value as Array<Array<FloatArray>>
+
+                            val currentLogits = logits3D[0][step]
+
+                            // Find token with maximum probability
+                            var best = 0
+                            var bestProb = Float.NEGATIVE_INFINITY
+                            for (i in currentLogits.indices) {
+                                if (currentLogits[i] > bestProb) {
+                                    bestProb = currentLogits[i]
+                                    best = i
+                                }
                             }
+                            best
+                        } finally {
+                            // Closing the Result closes all child tensors (logits).
+                            // Must run before the EOS break below to avoid a leak.
+                            result.close()
                         }
-                        
+
                         if (bestToken == EOS_IDX) {
                             break
                         }
-                        
-                        tokens.add(bestToken)
 
-                        // Only close result - it closes all child tensors including logitsTensor
-                        result.close()
+                        tokens.add(bestToken)
                     } finally {
                         targetTokensTensor.close()
                     }
@@ -113,7 +124,9 @@ class GreedySearchEngine(
         val greedyTime = (System.nanoTime() - greedyStart) / 1_000_000
         val wordStr = word.toString()
         
-        Log.i(TAG, "🏆 Greedy search completed in ${greedyTime}ms: '$wordStr'")
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+            Log.i(TAG, "🏆 Greedy search completed in ${greedyTime}ms: '$wordStr'")
+        }
         debugLogger?.invoke("🏆 Greedy search completed in ${greedyTime}ms: '$wordStr'")
         
         val result = ArrayList<GreedyResult>()

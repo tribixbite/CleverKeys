@@ -22,6 +22,9 @@ import tribixbite.cleverkeys.langpack.LanguagePackManager
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
+import java.util.concurrent.locks.ReentrantReadWriteLock
+import kotlin.concurrent.read
+import kotlin.concurrent.write
 
 /**
  * Orchestrator for neural swipe prediction.
@@ -44,7 +47,9 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
         @JvmStatic
         fun getInstance(context: Context): SwipePredictorOrchestrator {
             return instance ?: synchronized(instanceLock) {
-                instance ?: SwipePredictorOrchestrator(context).also { instance = it }
+                // Hold the application context in the process-lifetime singleton to
+                // avoid leaking a short-lived Activity/Service context.
+                instance ?: SwipePredictorOrchestrator(context.applicationContext).also { instance = it }
             }
         }
     }
@@ -68,6 +73,13 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
     private var forceCpuFallback = false
     private var encoderSession: OrtSession? = null
     private var decoderSession: OrtSession? = null
+
+    // Guards the ONNX session/wrapper fields against a predict()-vs-cleanup() race:
+    // predict() takes the READ lock (concurrent inference is allowed since ORT
+    // sessions are used single-threaded via the executor, but the read lock keeps
+    // sessions alive for the whole prediction); initialize()/cleanup() take the
+    // WRITE lock so sessions are never closed out from under an in-flight predict().
+    private val sessionLock = ReentrantReadWriteLock()
 
     // Debug logging callback (sends to SwipeDebugActivity)
     // IMPORTANT: debugLogger is set, but debugModeActive gates expensive string building
@@ -209,17 +221,21 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
             val encResult = modelLoader.loadModel(encoderPath, "Encoder", !forceCpuFallback, xnnpackThreads)
             val decResult = modelLoader.loadModel(decoderPath, "Decoder", !forceCpuFallback, xnnpackThreads)
 
-            encoderSession = encResult.session
-            decoderSession = decResult.session
+            // Publish the sessions + wrappers under the write lock so no in-flight
+            // predict() (holding the read lock) observes a half-assigned state.
+            sessionLock.write {
+                encoderSession = encResult.session
+                decoderSession = decResult.session
 
-            // Initialize Wrappers
-            tensorFactory = TensorFactory(ortEnvironment, maxSequenceLength, TRAJECTORY_FEATURES)
-            encoderWrapper = EncoderWrapper(encoderSession!!, tensorFactory!!, ortEnvironment, enableVerboseLogging)
-            // Check broadcast support (simplified)
-            val broadcastEnabled = true // Assuming v2 models
-            decoderWrapper = DecoderWrapper(decoderSession!!, tensorFactory!!, ortEnvironment, broadcastEnabled, enableVerboseLogging)
+                // Initialize Wrappers
+                tensorFactory = TensorFactory(ortEnvironment, maxSequenceLength, TRAJECTORY_FEATURES)
+                encoderWrapper = EncoderWrapper(encoderSession!!, tensorFactory!!, ortEnvironment, enableVerboseLogging)
+                // Check broadcast support (simplified)
+                val broadcastEnabled = true // Assuming v2 models
+                decoderWrapper = DecoderWrapper(decoderSession!!, tensorFactory!!, ortEnvironment, broadcastEnabled, enableVerboseLogging)
 
-            isModelLoaded = true
+                isModelLoaded = true
+            }
 
             // Record success in version manager
             versionManager.recordSuccess(versionId)
@@ -245,7 +261,20 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
 
         } catch (e: Exception) {
             Log.e(TAG, "Initialization failed", e)
-            isModelLoaded = false
+
+            // Roll back any partially-published state under the write lock so a
+            // subsequent retry starts clean and predict() never sees a session
+            // that failed to fully initialize.
+            sessionLock.write {
+                try { encoderSession?.close() } catch (ce: Exception) { Log.w(TAG, "Error closing encoder session during init rollback", ce) }
+                try { decoderSession?.close() } catch (ce: Exception) { Log.w(TAG, "Error closing decoder session during init rollback", ce) }
+                encoderSession = null
+                decoderSession = null
+                encoderWrapper = null
+                decoderWrapper = null
+                tensorFactory = null
+                isModelLoaded = false
+            }
 
             // Record failure in version manager
             versionManager.recordFailure(versionId, e.message ?: "Unknown error")
@@ -268,11 +297,21 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
     }
 
     fun predict(input: SwipeInput): PredictionPostProcessor.Result {
-        if (!isModelLoaded) return PredictionPostProcessor.Result(emptyList(), emptyList())
+        // Hold the read lock for the entire prediction so cleanup()/initialize()
+        // (which take the write lock) cannot close the sessions mid-inference.
+        // read {} is inline, so the non-local returns below exit predict() while
+        // still releasing the lock.
+        return sessionLock.read {
+            if (!isModelLoaded) return PredictionPostProcessor.Result(emptyList(), emptyList())
 
-        val startTime = System.currentTimeMillis()
+            // Snapshot the session-backed collaborators under the lock. If any is
+            // null the model isn't ready → return an empty result rather than NPE.
+            val enc = encoderWrapper ?: return PredictionPostProcessor.Result(emptyList(), emptyList())
+            val dec = decoderSession ?: return PredictionPostProcessor.Result(emptyList(), emptyList())
 
-        try {
+            val startTime = System.currentTimeMillis()
+
+            try {
             // Log touch trace (gated behind debugModeActive to avoid expensive string building)
             if (debugModeActive && input.coordinates.isNotEmpty()) {
                 val sb = StringBuilder()
@@ -379,8 +418,7 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
 
             // Encoder
             val encoderStartTime = System.currentTimeMillis()
-            val encoderResult = encoderWrapper!!.encode(features)
-            val memory = encoderResult.memory
+            val encoderResult = enc.encode(features)
             val encoderTime = System.currentTimeMillis() - encoderStartTime
 
             if (debugModeActive) {
@@ -403,32 +441,43 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
             val maxCumulativeBoost = config?.neural_max_cumulative_boost ?: 15.0f
             val strictStartChar = config?.neural_strict_start_char ?: false
 
-            val candidates = if (config?.neural_greedy_search == true) {
-                val engine = GreedySearchEngine(decoderSession!!, ortEnvironment, tokenizer, maxLength, activeLogger)
-                val results = engine.search(memory, features.actualLength)
-                results.map { PredictionPostProcessor.Candidate(it.word, it.confidence) }
-            } else {
-                // DIAGNOSTIC: Log trie info on every prediction
-                val trie = vocabulary.getVocabularyTrie()
-                // Wrap raw ONNX session in the decoder interface adapter
-                val decoderAdapter = OrtDecoderSession(decoderSession!!, ortEnvironment)
-                decoderAdapter.setMemory(memory)
-                val engine = BeamSearchEngine(
-                    decoderAdapter, tokenizer,
-                    trie, beamWidth, maxLength,
-                    confidenceThreshold, beamAlpha, beamPruneConfidence, beamScoreGap,
-                    adaptiveWidthStep, scoreGapStep, temperature, activeLogger,
-                    // Language-specific prefix boost support (Aho-Corasick trie for O(1) lookups)
-                    prefixBoostTrie = if (prefixBoostTrie.hasBoosts()) prefixBoostTrie else null,
-                    prefixBoostMultiplier = prefixBoostMultiplier,
-                    prefixBoostMax = prefixBoostMax,
-                    maxCumulativeBoost = maxCumulativeBoost,
-                    // Strict start char: only keep beams matching first detected key
-                    strictStartChar = strictStartChar,
-                    firstDetectedKey = firstDetectedKey
-                )
-                val results = engine.search(features.actualLength, batchBeams)
-                results.map { PredictionPostProcessor.Candidate(it.word, it.confidence) }
+            // Own the encoder Result for the full decode: the memory tensor is a
+            // child of it and MUST NOT outlive it. Close it once search finishes.
+            val candidates = try {
+                val memory = encoderResult.memory
+                if (config?.neural_greedy_search == true) {
+                    val engine = GreedySearchEngine(dec, ortEnvironment, tokenizer, maxLength, activeLogger)
+                    val results = engine.search(memory, features.actualLength)
+                    results.map { PredictionPostProcessor.Candidate(it.word, it.confidence) }
+                } else {
+                    // DIAGNOSTIC: Log trie info on every prediction
+                    val trie = vocabulary.getVocabularyTrie()
+                    // Wrap raw ONNX session in the decoder interface adapter
+                    val decoderAdapter = OrtDecoderSession(dec, ortEnvironment)
+                    try {
+                        decoderAdapter.setMemory(memory)
+                        val engine = BeamSearchEngine(
+                            decoderAdapter, tokenizer,
+                            trie, beamWidth, maxLength,
+                            confidenceThreshold, beamAlpha, beamPruneConfidence, beamScoreGap,
+                            adaptiveWidthStep, scoreGapStep, temperature, activeLogger,
+                            // Language-specific prefix boost support (Aho-Corasick trie for O(1) lookups)
+                            prefixBoostTrie = if (prefixBoostTrie.hasBoosts()) prefixBoostTrie else null,
+                            prefixBoostMultiplier = prefixBoostMultiplier,
+                            prefixBoostMax = prefixBoostMax,
+                            maxCumulativeBoost = maxCumulativeBoost,
+                            // Strict start char: only keep beams matching first detected key
+                            strictStartChar = strictStartChar,
+                            firstDetectedKey = firstDetectedKey
+                        )
+                        val results = engine.search(features.actualLength, batchBeams)
+                        results.map { PredictionPostProcessor.Candidate(it.word, it.confidence) }
+                    } finally {
+                        decoderAdapter.cleanup()
+                    }
+                }
+            } finally {
+                encoderResult.close()
             }
 
             val decoderTime = System.currentTimeMillis() - decoderStartTime
@@ -469,13 +518,14 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
 
             return result
 
-        } catch (e: Exception) {
-            Log.e(TAG, "Prediction failed", e)
-            logDebug("❌ Prediction failed: ${e.message}\n")
-            return PredictionPostProcessor.Result(emptyList(), emptyList())
+            } catch (e: Exception) {
+                Log.e(TAG, "Prediction failed", e)
+                logDebug("❌ Prediction failed: ${e.message}\n")
+                return PredictionPostProcessor.Result(emptyList(), emptyList())
+            }
         }
     }
-    
+
     // Pass-through methods for compatibility
     fun isAvailable() = isModelLoaded
     fun setKeyboardDimensions(w: Float, h: Float) {
@@ -708,10 +758,22 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
     }
 
     fun cleanup() {
-        encoderSession?.close()
-        decoderSession?.close()
-        isModelLoaded = false
-        isInitialized = false // Allow re-initialization after cleanup
+        // Take the WRITE lock so no in-flight predict() (holding the read lock) can
+        // observe or use a session while it's being closed/nulled. NOT @Synchronized:
+        // the read/write lock is the correct mutual-exclusion primitive here, and
+        // @Synchronized would deadlock against predict()'s read-lock section if it
+        // ever re-entered. The executor is intentionally left running (deferred).
+        sessionLock.write {
+            try { encoderSession?.close() } catch (e: Exception) { Log.w(TAG, "Error closing encoder session", e) }
+            try { decoderSession?.close() } catch (e: Exception) { Log.w(TAG, "Error closing decoder session", e) }
+            encoderSession = null
+            decoderSession = null
+            encoderWrapper = null
+            decoderWrapper = null
+            tensorFactory = null
+            isModelLoaded = false
+            isInitialized = false // Allow re-initialization after cleanup
+        }
         Log.d(TAG, "Cleanup complete - ready for re-initialization")
     }
 }

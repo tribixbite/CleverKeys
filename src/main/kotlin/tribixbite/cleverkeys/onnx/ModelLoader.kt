@@ -12,6 +12,40 @@ import java.io.IOException
 import java.io.InputStream
 
 /**
+ * Minimum plausible size (bytes) for a valid ONNX model stream. Any real
+ * encoder/decoder model is far larger; a read that returns fewer bytes than
+ * this indicates a truncated or corrupt stream (e.g. an LFS pointer file or a
+ * short read that wasn't fully drained) and must fail loudly rather than be
+ * handed to ORT as a malformed model.
+ */
+internal const val MIN_MODEL_SIZE_BYTES = 1024
+
+/**
+ * Fully read a model stream into a byte array, failing fast on implausibly
+ * small results.
+ *
+ * Uses [InputStream.readBytes], which loops until EOF — unlike a single
+ * `read(buffer)` sized by [InputStream.available], `available()` is only a hint
+ * and can under-report (returning 0 or a partial count) for content URIs,
+ * compressed streams, or slow sources, silently truncating the model.
+ *
+ * @param stream Source stream (NOT closed here — caller owns lifecycle).
+ * @param sourceDescription Human-readable origin for error messages.
+ * @return The fully read model bytes.
+ * @throws IOException if fewer than [MIN_MODEL_SIZE_BYTES] bytes were read.
+ */
+internal fun readModelBytes(stream: InputStream, sourceDescription: String): ByteArray {
+    val bytes = stream.readBytes()
+    if (bytes.size < MIN_MODEL_SIZE_BYTES) {
+        throw IOException(
+            "Model read from $sourceDescription is implausibly small " +
+                "(${bytes.size} bytes < $MIN_MODEL_SIZE_BYTES) — truncated or corrupt stream"
+        )
+    }
+    return bytes
+}
+
+/**
  * Model loading and ONNX session initialization.
  *
  * Responsibilities:
@@ -142,16 +176,10 @@ class ModelLoader(
             }
         }
 
-        // Read all bytes from input stream
+        // Read all bytes from input stream. Uses readModelBytes (readBytes loop)
+        // rather than sizing by available(), which can under-report and truncate.
         return inputStream.use { stream ->
-            val buffer = ByteArray(stream.available())
-            var totalRead = 0
-            while (totalRead < buffer.size) {
-                val read = stream.read(buffer, totalRead, buffer.size - totalRead)
-                if (read == -1) break
-                totalRead += read
-            }
-            buffer
+            readModelBytes(stream, modelPath)
         }
     }
 

@@ -28,7 +28,19 @@ class NeuralSwipeTypingEngine(
     private val neuralPredictor: SwipePredictorOrchestrator
 
     // State tracking
-    private var initialized = false
+    @Volatile private var initialized = false
+
+    // Last initialization error message (null when initialization succeeded or has
+    // not failed). Exposed via getLastError() for diagnostics/UI.
+    @Volatile private var lastError: String? = null
+
+    // Timestamp (uptime ms) of the most recent initialize() attempt, used to
+    // back off rapid retry storms after a failure.
+    @Volatile private var lastInitAttemptMs: Long = 0L
+
+    // Minimum interval between retry attempts after a failure. internal (not
+    // private const) so tests can drive retries without real-time delays.
+    internal var initRetryIntervalMs = 5000L
 
     // Debug logging callback
     private var debugLogger: DebugLogger? = null
@@ -48,12 +60,27 @@ class NeuralSwipeTypingEngine(
     }
 
     /**
-     * Initialize the engine and load models
+     * Initialize the engine and load models.
+     *
+     * Retryable: a failed attempt leaves [initialized] false so a later call can
+     * retry (e.g. once Direct Boot storage becomes available). To avoid a retry
+     * storm when initialization keeps failing, attempts are throttled to at most
+     * one per [initRetryIntervalMs] after a failure. Use [getLastError] to inspect
+     * the most recent failure reason.
      */
     fun initialize(): Boolean {
         if (initialized) {
             return true
         }
+
+        // Back off rapid retries: after a prior failure, suppress attempts until
+        // initRetryIntervalMs has elapsed. Uses wall-clock time (pure JVM, no
+        // android.os dependency so it is testable off-device).
+        val now = System.currentTimeMillis()
+        if (lastError != null && now - lastInitAttemptMs < initRetryIntervalMs) {
+            return false
+        }
+        lastInitAttemptMs = now
 
         return try {
             Log.d(TAG, "Initializing pure neural swipe engine...")
@@ -72,17 +99,28 @@ class NeuralSwipeTypingEngine(
             }
 
             initialized = true
+            lastError = null
 
             Log.d(TAG, "Neural engine initialized successfully - pure neural mode")
 
             true
         } catch (e: Exception) {
             Log.e(TAG, "Failed to initialize neural engine", e)
-            // Pure neural - no fallback variables needed
-            initialized = true
+            // Record the failure and leave `initialized` FALSE so a subsequent call
+            // (after the backoff interval) can retry. Previously this set
+            // initialized = true, which permanently wedged the engine in a broken
+            // state after a single transient failure.
+            lastError = e.message ?: "Unknown initialization error"
+            initialized = false
             false
         }
     }
+
+    /**
+     * @return The most recent initialization failure message, or null if
+     *   initialization has succeeded or never failed.
+     */
+    fun getLastError(): String? = lastError
 
     /**
      * Main prediction method - maintains compatibility with legacy interface
@@ -254,6 +292,10 @@ class NeuralSwipeTypingEngine(
      */
     fun cleanup() {
         neuralPredictor.cleanup()
+
+        // Reset init state so a re-init after cleanup actually re-runs (mirrors the
+        // orchestrator resetting isInitialized in its own cleanup()).
+        initialized = false
 
         Log.d(TAG, "Neural swipe engine cleaned up")
     }

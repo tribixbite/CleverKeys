@@ -42,15 +42,73 @@ class EncoderWrapper(
     }
 
     /**
+     * Set-once, close-once guard for an [AutoCloseable] resource.
+     *
+     * Guarantees the wrapped resource is closed at most once regardless of how
+     * many times [close] is called, and that a failure while closing is reported
+     * (via [onError]) rather than propagated — closing must never mask the
+     * original control flow. Pure JVM: no Android/ORT dependencies so it can be
+     * unit-tested directly.
+     *
+     * @param resource The resource to close exactly once (may be null → no-op).
+     * @param onError Optional callback invoked with any exception thrown by
+     *   [AutoCloseable.close]; when null, the exception is swallowed silently.
+     */
+    class CloseOnceGuard(
+        private val resource: AutoCloseable?,
+        private val onError: ((Exception) -> Unit)? = null
+    ) : AutoCloseable {
+
+        @Volatile
+        private var closed = false
+
+        /** True once [close] has run (idempotent). */
+        val isClosed: Boolean
+            get() = closed
+
+        override fun close() {
+            // Set-once under lock so concurrent callers never double-close.
+            synchronized(this) {
+                if (closed) return
+                closed = true
+            }
+            try {
+                resource?.close()
+            } catch (e: Exception) {
+                onError?.invoke(e)
+            }
+        }
+    }
+
+    /**
      * Result of encoder inference.
+     *
+     * Ownership: [memory] is a CHILD tensor of [ortResult] (the raw
+     * [OrtSession.Result]). Calling [OrtSession.Result.close] closes [memory]
+     * too — so [memory] MUST NOT be used after [close] is called on this result.
+     * Ownership of the underlying Result transfers to the caller via this
+     * EncoderResult; the caller is responsible for calling [close].
      *
      * @param memory Encoded representation [1, seq_len, hidden_dim]
      * @param inferenceTimeMs Time taken for inference in milliseconds
+     * @param ortResult The owning ONNX Result; closed exactly once via [close].
      */
-    data class EncoderResult(
+    class EncoderResult(
         val memory: OnnxTensor,
-        val inferenceTimeMs: Double
-    )
+        val inferenceTimeMs: Double,
+        ortResult: OrtSession.Result?
+    ) : AutoCloseable {
+
+        private val guard = CloseOnceGuard(ortResult) { e ->
+            Log.w(TAG, "Error closing encoder result: ${e.message}")
+        }
+
+        /** True once this result has been closed. */
+        val isClosed: Boolean
+            get() = guard.isClosed
+
+        override fun close() = guard.close()
+    }
 
     /**
      * Run encoder inference on trajectory features.
@@ -90,31 +148,42 @@ class EncoderWrapper(
             val encoderResults = encoderSession.run(encoderInputs)
             val inferenceTimeMs = (System.nanoTime() - startTime) / 1_000_000.0
 
-            // Extract memory tensor from results
-            val memory = encoderResults.get(0) as? OnnxTensor
-                ?: throw RuntimeException("Failed to extract memory tensor from encoder output")
+            // Extract + validate under a guard so any failure between here and the
+            // EncoderResult hand-off closes the Result (and thus its child memory
+            // tensor). Once EncoderResult is constructed, ownership transfers to it.
+            try {
+                // Extract memory tensor from results
+                val memory = encoderResults.get(0) as? OnnxTensor
+                    ?: throw RuntimeException("Failed to extract memory tensor from encoder output")
 
-            // Validate memory tensor shape [1, seq_len, hidden_dim]
-            val memoryShape = memory.info.shape
-            require(memoryShape.size == 3) {
-                "Invalid memory shape: expected [1, seq_len, hidden_dim], got ${memoryShape.contentToString()}"
-            }
-            require(memoryShape[0] == 1L) {
-                "Invalid memory batch size: expected 1, got ${memoryShape[0]}"
-            }
+                // Validate memory tensor shape [1, seq_len, hidden_dim]
+                val memoryShape = memory.info.shape
+                require(memoryShape.size == 3) {
+                    "Invalid memory shape: expected [1, seq_len, hidden_dim], got ${memoryShape.contentToString()}"
+                }
+                require(memoryShape[0] == 1L) {
+                    "Invalid memory batch size: expected 1, got ${memoryShape[0]}"
+                }
 
-            if (enableDetailedLogging) {
-                Log.d(TAG, "✅ Encoder inference complete: ${inferenceTimeMs}ms")
-                Log.d(TAG, "   memory shape: ${memoryShape.contentToString()}")
-            }
+                if (enableDetailedLogging) {
+                    Log.d(TAG, "✅ Encoder inference complete: ${inferenceTimeMs}ms")
+                    Log.d(TAG, "   memory shape: ${memoryShape.contentToString()}")
+                }
 
-            return EncoderResult(memory, inferenceTimeMs)
+                return EncoderResult(memory, inferenceTimeMs, encoderResults)
+            } catch (e: Exception) {
+                // Extraction/validation failed before ownership transfer — close the
+                // Result to release the native memory tensor, then rethrow.
+                encoderResults.close()
+                throw e
+            }
 
         } catch (e: Exception) {
             Log.e(TAG, "Encoder inference failed", e)
             throw RuntimeException("Encoder inference failed: ${e.message}", e)
         } finally {
-            // Clean up input tensors (output memory tensor is owned by caller)
+            // Clean up input tensors. Output Result ownership transfers to caller
+            // via EncoderResult (it owns and closes the memory tensor).
             trajectoryTensor?.close()
             nearestKeysTensor?.close()
             actualLengthTensor?.close()
