@@ -13,7 +13,10 @@ import org.junit.Test
  * ideal place to assert the "not initialized" contract:
  *
  *  - [Config.globalConfigOrNull] returns `null` (branchable, no crash).
- *  - [Config.globalConfig] throws [IllegalStateException] with a diagnostic message.
+ *  - [Config.globalConfig] throws [NullPointerException] with a diagnostic message.
+ *    (NPE, not IllegalStateException — see the comment on globalConfig(): a documented
+ *    test idiom + TestConfigHelper catch NullPointerException to detect the pre-init state,
+ *    matching the original `_globalConfig!!` behavior.)
  *  - [Config.globalPrefs] routes through [Config.globalConfig] and throws the same.
  */
 class ConfigNullSafetyTest {
@@ -24,8 +27,8 @@ class ConfigNullSafetyTest {
     }
 
     @Test
-    fun globalConfig_throwsIllegalState_beforeInit() {
-        val ex = assertThrows(IllegalStateException::class.java) {
+    fun globalConfig_throwsDiagnosticNpe_beforeInit() {
+        val ex = assertThrows(NullPointerException::class.java) {
             Config.globalConfig()
         }
         assertThat(ex).hasMessageThat().contains("Config not initialized")
@@ -33,8 +36,8 @@ class ConfigNullSafetyTest {
     }
 
     @Test
-    fun globalPrefs_throwsIllegalState_beforeInit() {
-        val ex = assertThrows(IllegalStateException::class.java) {
+    fun globalPrefs_throwsDiagnosticNpe_beforeInit() {
+        val ex = assertThrows(NullPointerException::class.java) {
             Config.globalPrefs()
         }
         assertThat(ex).hasMessageThat().contains("Config not initialized")

@@ -1181,7 +1181,11 @@ class Config private constructor(
 
         @JvmStatic
         fun globalConfig(): Config = _globalConfig
-            ?: error("Config not initialized — initGlobalConfig() must run before globalConfig()")
+            // NullPointerException (not IllegalStateException) is deliberate: the original
+            // `_globalConfig!!` threw KotlinNullPointerException, and a documented test idiom
+            // + TestConfigHelper catch NullPointerException to detect the "not initialized yet"
+            // state. Keep the diagnostic message but preserve the exception TYPE for them.
+            ?: throw NullPointerException("Config not initialized — initGlobalConfig() must run before globalConfig()")
 
         /**
          * Null-safe accessor for the global [Config] instance. Returns `null` when
