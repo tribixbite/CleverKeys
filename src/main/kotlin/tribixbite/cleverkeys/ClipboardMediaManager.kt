@@ -213,8 +213,37 @@ class ClipboardMediaManager(private val context: Context) {
         }
     }
 
-    /** Get the File object for a media entry (for commitContent/paste) */
-    fun getMediaFile(mediaPath: String): File = File(context.filesDir, mediaPath)
+    /**
+     * Get the File object for a media entry (for commitContent/paste and import extraction).
+     *
+     * Path-traversal hardening: [mediaPath] may originate from an untrusted backup ZIP
+     * (`entry.name`), so a crafted value like `clipboard_media/../../databases/clipboard.db`
+     * could otherwise resolve outside the media directory and clobber app-private files.
+     * Legit media paths are always `clipboard_media/<partition>/<hash>.<ext>` (see
+     * [MediaSaveResult.mediaPath]), so we confine the resolved target to the
+     * `clipboard_media/` directory — this also blocks a crafted `clipboard_media/../<x>`
+     * from dropping a file elsewhere in the app sandbox (e.g. overwriting
+     * short_swipe_customizations.json). Mirrors `gif/GifPackManager.extractZip`.
+     *
+     * @throws SecurityException if the resolved path escapes the clipboard_media directory.
+     */
+    fun getMediaFile(mediaPath: String): File {
+        val target = File(context.filesDir, mediaPath)
+        // Canonicalize to collapse `..` / symlinks before the containment check.
+        val canonicalBase = File(context.filesDir, MEDIA_DIR).canonicalPath
+        val canonicalTarget = target.canonicalFile
+        // Ensure the target is the media dir itself or a descendant. Appending
+        // File.separator to the base prevents a sibling-prefix bypass
+        // (e.g. `<filesDir>/clipboard_media_evil`).
+        if (canonicalTarget.path != canonicalBase &&
+            !canonicalTarget.path.startsWith(canonicalBase + File.separator)
+        ) {
+            throw SecurityException(
+                "Media path escapes clipboard_media dir: '$mediaPath' -> ${canonicalTarget.path}"
+            )
+        }
+        return canonicalTarget
+    }
 
     /**
      * Delete orphan media files not referenced by any DB table.

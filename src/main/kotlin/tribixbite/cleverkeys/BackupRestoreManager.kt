@@ -891,23 +891,37 @@ open class BackupRestoreManager(
             context.contentResolver.openInputStream(uri)?.use { inputStream ->
                 java.util.zip.ZipInputStream(inputStream).use { zipIn ->
                     var jsonData: org.json.JSONObject? = null
+                    var entryCount = 0
                     var entry = zipIn.nextEntry
                     while (entry != null) {
+                        // Entry-count cap: reject archives with an implausible number of
+                        // entries (per-entry work × count DoS) before processing this one.
+                        if (++entryCount > MAX_IMPORT_ENTRIES) {
+                            throw java.io.IOException(
+                                "Backup ZIP has more than $MAX_IMPORT_ENTRIES entries — refusing to import."
+                            )
+                        }
                         when {
                             entry.name == "clipboard_data.json" -> {
-                                // Read JSON manifest
-                                val jsonBytes = zipIn.readBytes()
+                                // Read JSON manifest (bounded — zip-bomb defense)
+                                val jsonBytes = readBoundedBytes(zipIn)
                                 jsonData = org.json.JSONObject(String(jsonBytes, Charsets.UTF_8))
                             }
                             entry.name.startsWith("clipboard_media/") -> {
-                                // Extract media file to internal storage
-                                // entry.name IS the media_path as stored in DB (e.g. "clipboard_media/042/hash.ext")
-                                val targetFile = mediaManager.getMediaFile(entry.name)
-                                targetFile.parentFile?.mkdirs()
-                                targetFile.outputStream().use { out ->
-                                    zipIn.copyTo(out)
+                                // Extract media file to internal storage.
+                                // entry.name IS the media_path as stored in DB (e.g. "clipboard_media/042/hash.ext").
+                                // getMediaFile() rejects path-traversal names with SecurityException;
+                                // skip such entries rather than aborting the whole import.
+                                try {
+                                    val targetFile = mediaManager.getMediaFile(entry.name)
+                                    targetFile.parentFile?.mkdirs()
+                                    targetFile.outputStream().use { out ->
+                                        zipIn.copyTo(out)
+                                    }
+                                    mediaFilesRestored++
+                                } catch (e: SecurityException) {
+                                    Log.w(TAG, "Skipping unsafe media entry '${entry.name}': ${e.message}")
                                 }
-                                mediaFilesRestored++
                             }
                         }
                         zipIn.closeEntry()
@@ -1264,11 +1278,19 @@ open class BackupRestoreManager(
 
             context.contentResolver.openInputStream(uri)?.use { inputStream ->
                 java.util.zip.ZipInputStream(inputStream).use { zipIn ->
+                    var entryCount = 0
                     var entry = zipIn.nextEntry
                     while (entry != null) {
+                        // Entry-count cap: reject archives with an implausible number of
+                        // entries (per-entry work × count DoS) before processing this one.
+                        if (++entryCount > MAX_IMPORT_ENTRIES) {
+                            throw java.io.IOException(
+                                "Backup ZIP has more than $MAX_IMPORT_ENTRIES entries — refusing to import."
+                            )
+                        }
                         when {
                             entry.name == ENTRY_MANIFEST -> {
-                                val bytes = zipIn.readBytes()
+                                val bytes = readBoundedBytes(zipIn)
                                 manifestJson = JsonParser.parseString(
                                     String(bytes, Charsets.UTF_8)
                                 ).asJsonObject
@@ -1289,20 +1311,26 @@ open class BackupRestoreManager(
                                 sourceAppVersion = manifestJson?.get("app_version")?.asString
                             }
                             entry.name == ENTRY_CONFIG -> {
-                                configJsonBytes = zipIn.readBytes()
+                                configJsonBytes = readBoundedBytes(zipIn)
                             }
                             entry.name == ENTRY_DICTIONARIES -> {
-                                dictionariesJsonBytes = zipIn.readBytes()
+                                dictionariesJsonBytes = readBoundedBytes(zipIn)
                             }
                             entry.name == ENTRY_CLIPBOARD_JSON -> {
-                                val bytes = zipIn.readBytes()
+                                val bytes = readBoundedBytes(zipIn)
                                 clipboardJsonData = org.json.JSONObject(String(bytes, Charsets.UTF_8))
                             }
                             entry.name.startsWith("clipboard_media/") -> {
-                                val targetFile = mediaManager.getMediaFile(entry.name)
-                                targetFile.parentFile?.mkdirs()
-                                targetFile.outputStream().use { out -> zipIn.copyTo(out) }
-                                mediaFilesRestored++
+                                // getMediaFile() rejects path-traversal names with SecurityException;
+                                // skip such entries rather than aborting the whole import.
+                                try {
+                                    val targetFile = mediaManager.getMediaFile(entry.name)
+                                    targetFile.parentFile?.mkdirs()
+                                    targetFile.outputStream().use { out -> zipIn.copyTo(out) }
+                                    mediaFilesRestored++
+                                } catch (e: SecurityException) {
+                                    Log.w(TAG, "Skipping unsafe media entry '${entry.name}': ${e.message}")
+                                }
                             }
                             else -> {
                                 Log.w(TAG, "Unknown entry in full backup, skipping: ${entry.name}")
@@ -1435,5 +1463,47 @@ open class BackupRestoreManager(
         const val ENTRY_CONFIG = "config.json"
         const val ENTRY_DICTIONARIES = "dictionaries.json"
         const val ENTRY_CLIPBOARD_JSON = "clipboard_history.json"
+
+        /**
+         * Per-entry decompressed size cap for JSON payloads read fully into memory.
+         * A malicious/zip-bomb backup could declare a tiny compressed entry that
+         * inflates to gigabytes; `ZipInputStream.readBytes()` is unbounded and would
+         * OOM the process. 32 MB comfortably exceeds any legitimate config/dictionary/
+         * clipboard JSON while capping the blast radius.
+         */
+        const val MAX_JSON_ENTRY_BYTES = 32 * 1024 * 1024
+
+        /**
+         * Upper bound on the number of ZIP entries an import will iterate. Guards
+         * against archives with millions of tiny entries (per-entry work × count).
+         */
+        const val MAX_IMPORT_ENTRIES = 10_000
+    }
+
+    /**
+     * Read up to [cap] bytes from [input] into memory, throwing [java.io.IOException]
+     * if the stream exceeds the cap. Replaces the unbounded [InputStream.readBytes]
+     * for JSON entries decompressed from untrusted backup ZIPs (zip-bomb defense).
+     *
+     * Reads via a 64 KB buffer so we never allocate the full payload up front and
+     * bail as soon as the running total crosses the cap.
+     */
+    private fun readBoundedBytes(input: InputStream, cap: Int = MAX_JSON_ENTRY_BYTES): ByteArray {
+        val buffer = ByteArray(64 * 1024)
+        val out = java.io.ByteArrayOutputStream()
+        var total = 0L
+        while (true) {
+            val read = input.read(buffer)
+            if (read < 0) break
+            total += read
+            if (total > cap) {
+                throw java.io.IOException(
+                    "ZIP entry exceeds ${cap / (1024 * 1024)} MB limit — refusing to buffer " +
+                        "(possible zip bomb)."
+                )
+            }
+            out.write(buffer, 0, read)
+        }
+        return out.toByteArray()
     }
 }

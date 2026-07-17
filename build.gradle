@@ -471,6 +471,8 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.NeuralSwipeTypingEngineInitRetryTest',
     'tribixbite.cleverkeys.CleanupHandlerTeardownTest',
     'tribixbite.cleverkeys.AutocapitalisationCallbackDedupeTest',
+    'tribixbite.cleverkeys.ClipboardMediaManagerZipSlipTest',
+    'tribixbite.cleverkeys.BackupRestoreArchiveLimitsTest',
   ]
 
   mainClass = 'org.junit.runner.JUnitCore'
