@@ -405,6 +405,15 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.clipboard.sanitize.UrlSanitizerTest',
     'tribixbite.cleverkeys.clipboard.sanitize.EmbedEnrichRulesTest',
     'tribixbite.cleverkeys.HapticsBehaviorDriftTest',
+    // Audit remediation (2026-07-17) — new pure JVM tests
+    'tribixbite.cleverkeys.ClipboardSearchRegexTest',
+    'tribixbite.cleverkeys.ConfigNullSafetyTest',
+    'tribixbite.cleverkeys.CoreImeHygieneDriftTest',
+    'tribixbite.cleverkeys.EngineInitGateTest',
+    'tribixbite.cleverkeys.PredictionTaskRunnerTest',
+    'tribixbite.cleverkeys.TestRunnerListDriftTest',
+    'tribixbite.cleverkeys.onnx.CloseOnceGuardTest',
+    'tribixbite.cleverkeys.onnx.ModelLoaderReadBytesTest',
     // SwipePrunerTest excluded: requires android.util.Log (MockK + Robolectric)
   ]
 
@@ -458,6 +467,10 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.clipboard.sanitize.SanitizationConfigBuildTest',
     'tribixbite.cleverkeys.customization.CustomShortSwipeExecutorTest',
     'tribixbite.cleverkeys.autocorrect.AutoCorrectEndToEndTest',
+    // Audit remediation (2026-07-17) — new MockK tests
+    'tribixbite.cleverkeys.NeuralSwipeTypingEngineInitRetryTest',
+    'tribixbite.cleverkeys.CleanupHandlerTeardownTest',
+    'tribixbite.cleverkeys.AutocapitalisationCallbackDedupeTest',
   ]
 
   mainClass = 'org.junit.runner.JUnitCore'

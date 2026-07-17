@@ -148,3 +148,14 @@ tools/gif_pipeline/*.db
 tools/gif_pipeline/*.log
 tools/gif_pipeline/pipeline_history.json
 assets/gifs.db
+
+# Dead scratch artifacts (deleted from the tree; keep them from creeping back)
+archive/
+/cli_test_10_output.txt
+/resources_diff.txt
+/test_swipes_*.jsonl
+/test_prediction.kts
+/preview.html
+/swipe.html
+model/export_log.txt
+assets/models/*_character_quant.onnx

@@ -1,10 +1,6 @@
 name: UI & Performance Testing
 
 on:
-  push:
-    branches: [ main, develop ]
-    tags-ignore:
-      - '**'  # Don't run on tag pushes - release.yml handles those
   pull_request:
     branches: [ main ]
   schedule:
@@ -160,34 +156,39 @@ jobs:
         emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
         disable-animations: true
         script: |
-          # Install CleverKeys APK
+          set -euo pipefail
+          # Debug build applies applicationIdSuffix '.debug'; component classes
+          # keep their original (non-suffixed) fully-qualified names.
+          PKG=tribixbite.cleverkeys.debug
+          IME_COMPONENT="$PKG/tribixbite.cleverkeys.CleverKeysService"
+
           echo "Installing APK: ${{ env.APK_FILE }}"
           adb install "${{ env.APK_FILE }}"
 
-          # List available input methods
           echo "Available input methods:"
           adb shell ime list -a
 
-          # Try to enable CleverKeys (may fail on some API levels, that's OK)
-          adb shell ime enable tribixbite.cleverkeys/tribixbite.cleverkeys.CleverKeysService || true
-          adb shell ime set tribixbite.cleverkeys/tribixbite.cleverkeys.CleverKeysService || true
+          adb shell ime enable "$IME_COMPONENT"
+          adb shell ime set "$IME_COMPONENT"
 
-          # Basic smoke test - launch settings activity
-          adb shell am start -n tribixbite.cleverkeys/tribixbite.cleverkeys.SettingsActivity || true
+          # Hard-assert the IME registered — a silent no-op used to pass here.
+          adb shell dumpsys input_method | grep -q "$PKG" \
+            || { echo "::error::CleverKeys IME not registered"; exit 1; }
+
+          adb shell am start -W -n "$PKG/tribixbite.cleverkeys.SettingsActivity"
           sleep 2
+          adb shell pidof "$PKG" || { echo "::error::App process died"; exit 1; }
 
-          # Capture screenshot
+          # Capture screenshot (best-effort — not a gate).
           adb exec-out screencap -p > settings-screenshot.png || true
           echo "Smoke test completed"
 
-    - name: Upload test reports
+    - name: Upload settings screenshot
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: ui-test-reports-api${{ matrix.api-level }}
-        path: |
-          build/reports/androidTests/
-          build/outputs/androidTest-results/
+        name: ui-settings-screenshot-api${{ matrix.api-level }}
+        path: settings-screenshot.png
         retention-days: 7
         if-no-files-found: ignore
 
@@ -233,19 +234,23 @@ jobs:
         emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
         disable-animations: true
         script: |
-          # Install CleverKeys APK
+          set -euo pipefail
+          PKG=tribixbite.cleverkeys.debug
+          IME_COMPONENT="$PKG/tribixbite.cleverkeys.CleverKeysService"
+
           adb install "${{ env.APK_FILE }}"
 
-          # Try to enable keyboard (may fail, that's OK)
-          adb shell ime enable tribixbite.cleverkeys/tribixbite.cleverkeys.CleverKeysService || true
-          adb shell ime set tribixbite.cleverkeys/tribixbite.cleverkeys.CleverKeysService || true
+          adb shell ime enable "$IME_COMPONENT"
+          adb shell ime set "$IME_COMPONENT"
 
-          # Capture screenshots
+          adb shell dumpsys input_method | grep -q "$PKG" \
+            || { echo "::error::CleverKeys IME not registered"; exit 1; }
+
           mkdir -p screenshots
 
-          # Launch settings to verify app works
-          adb shell am start -n tribixbite.cleverkeys/tribixbite.cleverkeys.SettingsActivity || true
+          adb shell am start -W -n "$PKG/tribixbite.cleverkeys.SettingsActivity"
           sleep 2
+          adb shell pidof "$PKG" || { echo "::error::App process died"; exit 1; }
           adb exec-out screencap -p > screenshots/settings-screen.png || true
 
           echo "Visual regression test completed"
@@ -310,65 +315,30 @@ jobs:
         emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
         disable-animations: true
         script: |
-          # Install CleverKeys APK
+          set -euo pipefail
+          PKG=tribixbite.cleverkeys.debug
+          IME_COMPONENT="$PKG/tribixbite.cleverkeys.CleverKeysService"
+
           adb install "${{ env.APK_FILE }}"
 
-          # Try to enable keyboard (may fail, that's OK)
-          adb shell ime enable tribixbite.cleverkeys/tribixbite.cleverkeys.CleverKeysService || true
-          adb shell ime set tribixbite.cleverkeys/tribixbite.cleverkeys.CleverKeysService || true
+          adb shell ime enable "$IME_COMPONENT"
+          adb shell ime set "$IME_COMPONENT"
 
           # Enable accessibility services for testing
-          adb shell settings put secure accessibility_enabled 1 || true
+          adb shell settings put secure accessibility_enabled 1
 
-          # Verify keyboard is accessible
-          adb shell dumpsys input_method | head -20
+          # Hard-assert the IME registered before claiming accessibility passed.
+          adb shell dumpsys input_method | grep -q "$PKG" \
+            || { echo "::error::CleverKeys IME not registered"; exit 1; }
 
           echo "Accessibility test completed"
 
     - name: Generate accessibility summary
+      if: success()
       run: |
         echo "## Accessibility Test Results" >> $GITHUB_STEP_SUMMARY
         echo "- Keyboard installed and enabled" >> $GITHUB_STEP_SUMMARY
-        echo "- Accessibility services verified" >> $GITHUB_STEP_SUMMARY
-
-  device-farm-testing:
-    name: Firebase Test Lab
-    runs-on: ubuntu-latest
-    needs: build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.ENABLE_FIREBASE == 'true'
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Download APKs
-      uses: actions/download-artifact@v4
-      with:
-        name: apks
-        path: build/outputs/apk/
-
-    - name: Authenticate to Google Cloud
-      uses: google-github-actions/auth@v2
-      with:
-        credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-
-    - name: Run tests on Firebase Test Lab
-      run: |
-        # Install gcloud CLI
-        curl -sSL https://sdk.cloud.google.com | bash -s -- --disable-prompts
-        source ~/google-cloud-sdk/path.bash.inc
-
-        # Run tests (requires Firebase project setup)
-        gcloud firebase test android run \
-          --type instrumentation \
-          --app build/outputs/apk/debug/tribixbite.cleverkeys.apk \
-          --test build/outputs/apk/androidTest/debug/*.apk \
-          --device model=Pixel6,version=33 \
-          --timeout 10m \
-          --results-bucket gs://${{ secrets.FIREBASE_BUCKET }} || true
-
-        echo "## Firebase Test Lab Results" >> $GITHUB_STEP_SUMMARY
-        echo "- Tests submitted to Firebase Test Lab" >> $GITHUB_STEP_SUMMARY
+        echo "- IME registration verified via dumpsys" >> $GITHUB_STEP_SUMMARY
 
   test-summary:
     name: Test Summary

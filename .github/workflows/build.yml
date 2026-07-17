@@ -8,12 +8,9 @@
 name: Build APK
 
 on:
-  push:
-    branches: [ main, develop ]
-    tags-ignore:
-      - 'v*'  # Don't run on version tags - release.yml handles those
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -65,10 +62,6 @@ jobs:
         name: cleverkeys-debug-${{ steps.vars.outputs.sha_short }}
         path: build/outputs/apk/debug/*.apk
         retention-days: 14
-
-    - name: Run tests
-      run: ./gradlew test --stacktrace
-      continue-on-error: true
 
     - name: Upload test results
       if: always()

@@ -97,11 +97,21 @@ if [ "${CODE:-0}" -lt "$MIN_PUBLISHED" ]; then
 fi
 echo "Gate 1 OK: F-Droid published code $CODE (>= $MIN_PUBLISHED)"
 
+# --- Auth preflight: fail fast if we can't reach/authenticate to the remote --
+# Cheaper than discovering a bad credential AFTER the full mirror + filter run.
+git ls-remote "$REPO_URL" >/dev/null || { echo "FATAL: cannot reach/authenticate to $REPO_URL"; exit 1; }
+echo "Auth preflight OK: $REPO_URL reachable"
+
 # --- Gate 2: fresh mirror ----------------------------------------------------
 echo "Fresh mirror clone into $WORK ..."
 git clone --mirror "$REPO_URL" "$WORK"
 cd "$WORK"
 PRE_SIZE=$(du -sh . | cut -f1)
+
+# Pristine pre-filter backup: a bundle of ALL refs, written OUTSIDE $WORK so a
+# botched filter/push is fully recoverable (git clone <bundle> restores it).
+git bundle create "$WORK/../ck-prefilter-$(date +%s).bundle" --all
+echo "Backup: pre-filter bundle written to $WORK/../ck-prefilter-*.bundle"
 
 # Snapshot pre-filter tree hashes for every ref we must preserve.
 PRE_TREES="$WORK/pre-trees.txt"
@@ -111,6 +121,13 @@ done
 
 # --- Filter -------------------------------------------------------------------
 git filter-repo --invert-paths --paths-from-file "$STRIP_LIST" --force
+
+# Drop GitHub's read-only pull-request refs (refs/pull/*). A mirror clone
+# carries them, but `git push --mirror` tries to update them and GitHub rejects
+# the write — which, under `set -e`, aborts the whole push. Delete them so the
+# mirror push only touches heads + tags.
+git for-each-ref --format='delete %(refname)' refs/pull | git update-ref --stdin
+
 POST_SIZE=$(du -sh . | cut -f1)
 
 # --- Gate 3: tree identity ------------------------------------------------------

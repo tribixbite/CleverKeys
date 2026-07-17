@@ -35,7 +35,7 @@ jobs:
     - name: Build with Gradle
       run: ./gradlew assembleDebug --stacktrace
 
-    - name: Run pure JVM tests (987 tests)
+    - name: Run pure JVM tests
       run: ./gradlew runPureTests --stacktrace
       # MockK tests (176) require android.jar stubs + specific classpath ordering
       # that can hang on CI runners. Run via ew-cli instrumented tests instead.

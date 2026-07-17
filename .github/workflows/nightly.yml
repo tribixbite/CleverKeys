@@ -1,10 +1,9 @@
 name: Nightly Build
 
 on:
-  push:
-    branches: [ main ]
-    tags-ignore:
-      - '**'  # Don't run on tag pushes - release.yml handles those
+  schedule:
+    # Nightly build at 02:30 UTC.
+    - cron: '30 2 * * *'
   workflow_dispatch:
 
 permissions:

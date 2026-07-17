@@ -14,3 +14,8 @@ tools/aapt2_official
 tools/aapt2-arm64
 src/main/assets/models/swipe_decoder_web.onnx
 src/main/assets/models/swipe_encoder_web.onnx
+test_onnx_cli.jar
+tools/gif_pipeline/raw_data
+tools/gif_pipeline/assets
+tools/gif_pipeline/packs
+tools/gif_pipeline/processed
