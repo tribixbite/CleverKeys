@@ -23,6 +23,9 @@ class Autocapitalisation(
     /** Keep track of the cursor to recognize cursor movements from typing. */
     private var cursor = 0
 
+    /** Verbose-only debug log; message lambda is not evaluated unless verbose logging is enabled. */
+    private inline fun vlog(message: () -> String) { if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, message()) }
+
     /**
      * The events are: started, typed, event sent, selection updated
      * [started] does initialisation work and must be called before any other
@@ -34,18 +37,18 @@ class Autocapitalisation(
         capsMode = info.inputType and SUPPORTED_CAPS_MODES
         val autocapEnabled = Config.globalConfig().autocapitalisation
 
-        Log.d(TAG, "AUTOCAP started: setting=$autocapEnabled, capsMode=$capsMode, inputType=0x${info.inputType.toString(16)}")
+        vlog { "AUTOCAP started: setting=$autocapEnabled, capsMode=$capsMode, inputType=0x${info.inputType.toString(16)}" }
 
         if (!autocapEnabled || capsMode == 0) {
             enabled = false
-            Log.d(TAG, "AUTOCAP: Disabled (setting=$autocapEnabled, capsMode=$capsMode)")
+            vlog { "AUTOCAP: Disabled (setting=$autocapEnabled, capsMode=$capsMode)" }
             return
         }
 
         enabled = true
         shouldEnableShift = info.initialCapsMode != 0
         shouldUpdateCapsMode = started_should_update_state(info.inputType)
-        Log.d(TAG, "AUTOCAP: Enabled, shouldEnableShift=$shouldEnableShift, shouldUpdateCapsMode=$shouldUpdateCapsMode")
+        vlog { "AUTOCAP: Enabled, shouldEnableShift=$shouldEnableShift, shouldUpdateCapsMode=$shouldUpdateCapsMode" }
         callback_now(true)
     }
 
@@ -123,10 +126,10 @@ class Autocapitalisation(
         if (shouldUpdateCapsMode && ic != null) {
             val cursorCapsMode = ic?.getCursorCapsMode(capsMode) ?: 0
             shouldEnableShift = enabled && (cursorCapsMode != 0)
-            Log.d(TAG, "AUTOCAP callback: enabled=$enabled, cursorCapsMode=$cursorCapsMode, shouldEnableShift=$shouldEnableShift")
+            vlog { "AUTOCAP callback: enabled=$enabled, cursorCapsMode=$cursorCapsMode, shouldEnableShift=$shouldEnableShift" }
             shouldUpdateCapsMode = false
         }
-        Log.d(TAG, "AUTOCAP update_shift_state: enable=$shouldEnableShift, disable=$shouldDisableShift")
+        vlog { "AUTOCAP update_shift_state: enable=$shouldEnableShift, disable=$shouldDisableShift" }
         callback.update_shift_state(shouldEnableShift, shouldDisableShift)
     }
 
@@ -140,12 +143,17 @@ class Autocapitalisation(
         shouldDisableShift = might_disable
         // The callback must be delayed because [getCursorCapsMode] would sometimes
         // be called before the editor finished handling the previous event.
+        // Remove any stale queued callback first so rapid events don't stack up
+        // and fire with outdated shift state.
+        handler.removeCallbacks(delayed_callback)
         handler.postDelayed(delayed_callback, 50)
     }
 
     /** Like [callback] but runs immediately. */
     private fun callback_now(might_disable: Boolean) {
         shouldDisableShift = might_disable
+        // Cancel any queued delayed callback so it can't fire after this immediate run.
+        handler.removeCallbacks(delayed_callback)
         delayed_callback.run()
     }
 
@@ -153,7 +161,7 @@ class Autocapitalisation(
         cursor++
         if (is_trigger_character(c)) {
             shouldUpdateCapsMode = true
-            Log.d(TAG, "AUTOCAP: Trigger char '$c' typed, will update caps mode")
+            vlog { "AUTOCAP: Trigger char typed, will update caps mode" }
         } else {
             shouldEnableShift = false
         }

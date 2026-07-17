@@ -10,9 +10,6 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
 import tribixbite.cleverkeys.ml.SwipeMLData
 import tribixbite.cleverkeys.onnx.SwipePredictorOrchestrator
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
-import java.util.concurrent.Future
 import tribixbite.cleverkeys.autocorrect.AutocorrectContextGuard
 
 /**
@@ -164,8 +161,7 @@ class SuggestionHandler(
     private var debugLogger: DebugLogger? = null
 
     // Async prediction execution
-    private val predictionExecutor: ExecutorService = Executors.newSingleThreadExecutor()
-    private var currentPredictionTask: Future<*>? = null
+    private val predictionTasks = PredictionTaskRunner()
     // Post to main thread explicitly — View.post() silently drops runnables for detached views
     private val mainHandler = Handler(Looper.getMainLooper())
 
@@ -185,6 +181,21 @@ class SuggestionHandler(
     fun setConfig(newConfig: Config) {
         config = newConfig
     }
+
+    /** Verbose-only debug log; message lambda is not evaluated unless verbose logging is enabled. */
+    private inline fun vlog(message: () -> String) { if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, message()) }
+
+    /**
+     * Shuts down the prediction executor (interrupting in-flight work) and clears main-thread
+     * callbacks. Called during IME teardown so no prediction thread outlives the service.
+     */
+    fun shutdown() {
+        predictionTasks.shutdown()
+        mainHandler.removeCallbacksAndMessages(null)
+    }
+
+    /** True once the prediction executor has been shut down (test/diagnostic hook). */
+    fun isPredictionExecutorShutdown(): Boolean = predictionTasks.isShutdown
 
     /**
      * Sets the suggestion bar reference.
@@ -218,7 +229,7 @@ class SuggestionHandler(
             // Clear predictions when entering password mode
             suggestionBar?.clearSuggestions()
         }
-        Log.d(TAG, "Password mode ${if (enabled) "enabled" else "disabled"}")
+        vlog { "Password mode ${if (enabled) "enabled" else "disabled"}" }
     }
 
     /**
@@ -433,13 +444,13 @@ class SuggestionHandler(
         // 3. Manual selections (user explicitly tapped a neural prediction - issue #63 fix)
         if (isKnownContraction || isRawPrediction || isManualSelection) {
             if (isKnownContraction) {
-                Log.d(TAG, "KNOWN CONTRACTION: \"$processedWord\" - skipping autocorrect")
+                vlog { "KNOWN CONTRACTION: \"$processedWord\" - skipping autocorrect" }
             }
             if (isRawPrediction) {
-                Log.d(TAG, "RAW PREDICTION: \"$processedWord\" - skipping autocorrect")
+                vlog { "RAW PREDICTION: \"$processedWord\" - skipping autocorrect" }
             }
             if (isManualSelection) {
-                Log.d(TAG, "MANUAL SELECTION: \"$processedWord\" - skipping autocorrect (user chose this word)")
+                vlog { "MANUAL SELECTION: \"$processedWord\" - skipping autocorrect (user chose this word)" }
             }
         } else {
             // v1.33.7: Final autocorrect - second chance autocorrect after beam search
@@ -454,7 +465,7 @@ class SuggestionHandler(
                     // Preserve capitalization from original prediction
                     correctedWord = preserveCapitalization(processedWord, correctedWord)
                     correctedWord = capitalizeIWord(correctedWord)
-                    Log.d(TAG, "FINAL AUTOCORRECT: \"$processedWord\" → \"$correctedWord\"")
+                    vlog { "FINAL AUTOCORRECT: \"$processedWord\" → \"$correctedWord\"" }
                     processedWord = correctedWord
                 }
             }
@@ -513,7 +524,7 @@ class SuggestionHandler(
                 if (!contextTracker.getLastAutoInsertedWord().isNullOrEmpty() &&
                     contextTracker.getLastCommitSource() == PredictionSource.NEURAL_SWIPE
                 ) {
-                    Log.d(TAG, "REPLACE: Deleting auto-inserted word: '${contextTracker.getLastAutoInsertedWord()}'")
+                    vlog { "REPLACE: Deleting auto-inserted word: '${contextTracker.getLastAutoInsertedWord()}'" }
 
                     var deleteCount = (contextTracker.getLastAutoInsertedWord()?.length ?: 0) + 1 // Word + trailing space
                     var deletedLeadingSpace = false
@@ -521,7 +532,7 @@ class SuggestionHandler(
                     if (inTermuxApp) {
                         // TERMUX: Use backspace key events instead of InputConnection methods
                         // Termux doesn't support deleteSurroundingText properly
-                        Log.d(TAG, "TERMUX: Using backspace key events to delete $deleteCount chars")
+                        vlog { "TERMUX: Using backspace key events to delete $deleteCount chars" }
 
                         // Check if there's a leading space to delete
                         val textBefore = inputConnection.getTextBeforeCursor(1, 0)
@@ -536,26 +547,32 @@ class SuggestionHandler(
                         }
                     } else {
                         // NORMAL APPS: Use InputConnection methods
-                        val debugBefore = inputConnection.getTextBeforeCursor(50, 0)
-                        Log.d(TAG, "REPLACE: Text before cursor (50 chars): '$debugBefore'")
-                        Log.d(TAG, "REPLACE: Delete count = $deleteCount")
+                        if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                            val debugBefore = inputConnection.getTextBeforeCursor(50, 0)
+                            Log.d(TAG, "REPLACE: Text before cursor (50 chars): '$debugBefore'")
+                        }
+                        vlog { "REPLACE: Delete count = $deleteCount" }
 
                         // Delete the auto-inserted word and its space
                         inputConnection.deleteSurroundingText(deleteCount, 0)
 
-                        val debugAfter = inputConnection.getTextBeforeCursor(50, 0)
-                        Log.d(TAG, "REPLACE: After deleting word, text before cursor: '$debugAfter'")
+                        if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                            val debugAfter = inputConnection.getTextBeforeCursor(50, 0)
+                            Log.d(TAG, "REPLACE: After deleting word, text before cursor: '$debugAfter'")
+                        }
 
                         // Also need to check if there was a space added before it
                         val textBefore = inputConnection.getTextBeforeCursor(1, 0)
-                        Log.d(TAG, "REPLACE: Checking for leading space, got: '$textBefore'")
+                        vlog { "REPLACE: Checking for leading space, got: '$textBefore'" }
                         if (textBefore != null && textBefore.isNotEmpty() && textBefore[0] == ' ') {
-                            Log.d(TAG, "REPLACE: Deleting leading space")
+                            vlog { "REPLACE: Deleting leading space" }
                             // Delete the leading space too
                             inputConnection.deleteSurroundingText(1, 0)
 
-                            val debugFinal = inputConnection.getTextBeforeCursor(50, 0)
-                            Log.d(TAG, "REPLACE: After deleting leading space: '$debugFinal'")
+                            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                                val debugFinal = inputConnection.getTextBeforeCursor(50, 0)
+                                Log.d(TAG, "REPLACE: After deleting leading space: '$debugFinal'")
+                            }
                         }
                     }
 
@@ -603,7 +620,7 @@ class SuggestionHandler(
                                 val partialLen = before.length - wordStart
                                 if (partialLen in 1..64) {
                                     prefixDelete = partialLen
-                                    Log.d(TAG, "TYPING PREDICTION (#78 fallback): scanned editor, prefixDelete=$partialLen")
+                                    vlog { "TYPING PREDICTION (#78 fallback): scanned editor, prefixDelete=$partialLen" }
                                 }
                             }
                         } catch (e: Exception) {
@@ -614,7 +631,7 @@ class SuggestionHandler(
                     if (prefixDelete == 0 && suffixDelete == 0) {
                         // Nothing to delete — neither composing-text nor a partial word at cursor.
                     } else {
-                        Log.d(TAG, "TYPING PREDICTION: Deleting partial word - prefix=$prefixDelete, suffix=$suffixDelete")
+                        vlog { "TYPING PREDICTION: Deleting partial word - prefix=$prefixDelete, suffix=$suffixDelete" }
                         if (inTermuxApp) {
                             // TERMUX: Use backspace key events
                             // First delete suffix (move right then backspace), then delete prefix
@@ -632,8 +649,10 @@ class SuggestionHandler(
                             // NORMAL APPS: Use InputConnection with both prefix AND suffix deletion
                             inputConnection.deleteSurroundingText(prefixDelete, suffixDelete)
 
-                            val debugAfter = inputConnection.getTextBeforeCursor(50, 0)
-                            Log.d(TAG, "TYPING PREDICTION: After deleting partial, text before cursor: '$debugAfter'")
+                            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                                val debugAfter = inputConnection.getTextBeforeCursor(50, 0)
+                                Log.d(TAG, "TYPING PREDICTION: After deleting partial, text before cursor: '$debugAfter'")
+                            }
                         }
                     }
                 }
@@ -695,22 +714,21 @@ class SuggestionHandler(
                 // 2. OR there's already a space after cursor (mid-sentence replacement)
                 // The previous Termux-app override has been removed — Termux users who want
                 // no trailing space should disable auto_space_after_suggestion.
+                val insertMode: String
                 val textToInsert = if (!config.auto_space_after_suggestion && !isSwipeAutoInsert) {
                     // #82: User disabled auto-space after suggestion (tap selection only)
-                    if (needsSpaceBefore) " $capitalizedWord" else capitalizedWord.also {
-                        Log.d(TAG, "AUTO-SPACE DISABLED: textToInsert = '$it'")
-                    }
+                    insertMode = "AUTO-SPACE DISABLED"
+                    if (needsSpaceBefore) " $capitalizedWord" else capitalizedWord
                 } else if (hasSpaceAfter) {
                     // v1.2.6: Mid-sentence replacement - don't add trailing space (already exists)
-                    if (needsSpaceBefore) " $capitalizedWord" else capitalizedWord.also {
-                        Log.d(TAG, "MID-SENTENCE: textToInsert = '$it' (hasSpaceAfter=true)")
-                    }
+                    insertMode = "MID-SENTENCE (hasSpaceAfter=true)"
+                    if (needsSpaceBefore) " $capitalizedWord" else capitalizedWord
                 } else {
                     // Normal apps (incl. Termux when user opts in) or swipe: Insert word with trailing space
-                    if (needsSpaceBefore) " $capitalizedWord " else "$capitalizedWord ".also {
-                        Log.d(TAG, "NORMAL/SWIPE MODE: textToInsert = '$it' (needsSpaceBefore=$needsSpaceBefore, isSwipe=$isSwipeAutoInsert, capitalize=$shouldCapitalize)")
-                    }
+                    insertMode = "NORMAL/SWIPE MODE (needsSpaceBefore=$needsSpaceBefore, isSwipe=$isSwipeAutoInsert, capitalize=$shouldCapitalize)"
+                    if (needsSpaceBefore) " $capitalizedWord " else "$capitalizedWord "
                 }
+                vlog { "$insertMode: textToInsert len=${textToInsert.length}" }
 
                 // v1.2.7: Mark space as auto-inserted for smart punctuation
                 // #78: Trailing space is added when neither user-disabled nor mid-sentence applies
@@ -726,7 +744,7 @@ class SuggestionHandler(
                     -1
                 }
 
-                Log.d(TAG, "Committing text: '$textToInsert' (length=${textToInsert.length})")
+                vlog { "Committing text: len=${textToInsert.length}" }
                 inputConnection.commitText(textToInsert, 1)
 
                 if (addedTrailingSpace) {
@@ -769,7 +787,7 @@ class SuggestionHandler(
             return
         }
 
-        Log.d(TAG, "ADD TO DICTIONARY: Adding '$wordToAdd'")
+        vlog { "ADD TO DICTIONARY: Adding '$wordToAdd'" }
 
         // Add to user dictionary
         predictionCoordinator.getDictionaryManager()?.addUserWord(wordToAdd)
@@ -800,7 +818,7 @@ class SuggestionHandler(
             return
         }
 
-        Log.d(TAG, "EXACT ADD: Committing and adding '$exactWord' to dictionary")
+        vlog { "EXACT ADD: Committing and adding '$exactWord' to dictionary" }
 
         // First, delete the partial word that was typed (since we're replacing it)
         val currentWord = contextTracker.getCurrentWord()
@@ -862,7 +880,7 @@ class SuggestionHandler(
             return
         }
 
-        Log.d(TAG, "AUTOCORRECT UNDO: Replacing '$correctedWord' with '$tappedWord'")
+        vlog { "AUTOCORRECT UNDO: Replacing '$correctedWord' with '$tappedWord'" }
 
         ic?.let { inputConnection ->
             // Detect Termux
@@ -892,7 +910,7 @@ class SuggestionHandler(
 
             // Add to user dictionary so it won't be autocorrected again
             predictionCoordinator.getDictionaryManager()?.addUserWord(tappedWord)
-            Log.d(TAG, "AUTOCORRECT UNDO: Added '$tappedWord' to user dictionary")
+            vlog { "AUTOCORRECT UNDO: Added '$tappedWord' to user dictionary" }
 
             // Refresh dictionary so word appears in predictions immediately
             predictionCoordinator.refreshCustomWords()
@@ -1004,7 +1022,7 @@ class SuggestionHandler(
                             updateContext(capitalizedWord)
                             contextTracker.clearCurrentWord()
                             contextTracker.setLastCommitSource(PredictionSource.USER_TYPED_TAP)
-                            Log.d(TAG, "I-WORD CAPITALIZE: '$completedWord' → '$capitalizedWord'")
+                            vlog { "I-WORD CAPITALIZE: '$completedWord' → '$capitalizedWord'" }
                             predictionCoordinator.getWordPredictor()?.reset()
                             suggestionBar?.clearSuggestions()
                             return
@@ -1057,10 +1075,10 @@ class SuggestionHandler(
                                 contextTracker.setLastCommitSource(PredictionSource.AUTOCORRECT)
                                 contextTracker.setLastAutocorrectOriginalWord(completedWord)
 
-                                Log.d(TAG, "AUTOCORRECT: '$completedWord' → '$correctedWord' (tracking for undo)")
+                                vlog { "AUTOCORRECT: '$completedWord' → '$correctedWord' (tracking for undo)" }
 
                                 // v1.2.6 FIX: Cancel pending prediction task and set flag to prevent overwriting
-                                currentPredictionTask?.cancel(true)
+                                predictionTasks.cancelCurrent()
                                 specialPromptActive = true
 
                                 // Show original word as first suggestion for easy undo
@@ -1104,7 +1122,7 @@ class SuggestionHandler(
 
                         if (shouldPrompt) {
                             // v1.2.6 FIX: Cancel pending prediction task and set flag to prevent overwriting
-                            currentPredictionTask?.cancel(true)
+                            predictionTasks.cancelCurrent()
                             specialPromptActive = true
 
                             // Store word for add-to-dictionary handling
@@ -1117,7 +1135,7 @@ class SuggestionHandler(
                                 listOf(0)
                             )
 
-                            Log.d(TAG, "UNKNOWN WORD: '$completedWord' - showing add to dictionary prompt")
+                            vlog { "UNKNOWN WORD: '$completedWord' - showing add to dictionary prompt" }
 
                             // Skip clearing suggestions below
                             contextTracker.clearCurrentWord()
@@ -1175,17 +1193,14 @@ class SuggestionHandler(
             // Copy context to be thread-safe
             val contextWords = contextTracker.getContextWords().toList()
 
-            // Cancel previous task if running
-            currentPredictionTask?.cancel(true)
-
-            // Submit new prediction task
-            currentPredictionTask = predictionExecutor.submit {
-                if (Thread.currentThread().isInterrupted) return@submit
+            // Cancel previous task if running, then submit new prediction task
+            predictionTasks.cancelAndSubmit {
+                if (Thread.currentThread().isInterrupted) return@cancelAndSubmit
 
                 // Use contextual prediction (Heavy operation)
                 val result = predictionCoordinator.getWordPredictor()?.predictWordsWithContext(partial, contextWords)
 
-                if (Thread.currentThread().isInterrupted || result == null) return@submit
+                if (Thread.currentThread().isInterrupted || result == null) return@cancelAndSubmit
 
                 // v1.2.0: Apply contraction transformation (e.g., "dont" -> "don't")
                 // Check if the typed partial matches a contraction key
@@ -1265,7 +1280,7 @@ class SuggestionHandler(
                         // Using end position so it doesn't displace the best prediction
                         finalWords = transformedWords + "exact_add:$exactTyped"
                         finalScores = mergedScores + 0  // Low score since it's at the end
-                        Log.d(TAG, "EXACT ADD: Added '$exactTyped' as tap-to-add option")
+                        vlog { "EXACT ADD: Added '$exactTyped' as tap-to-add option" }
                     } else {
                         finalWords = transformedWords
                         finalScores = mergedScores
@@ -1317,7 +1332,7 @@ class SuggestionHandler(
         // For Termux, use Ctrl+W key event which Termux handles correctly
         // Termux doesn't support InputConnection methods, but processes terminal control sequences
         if (inTermux) {
-            Log.d(TAG, "DELETE_LAST_WORD: Using Ctrl+W (^W) for Termux")
+            vlog { "DELETE_LAST_WORD: Using Ctrl+W (^W) for Termux" }
             // Send Ctrl+W which is the standard terminal "delete word backward" sequence
             keyeventhandler.send_key_down_up(
                 KeyEvent.KEYCODE_W,
@@ -1332,7 +1347,7 @@ class SuggestionHandler(
         // First, try to delete the last auto-inserted word if it exists
         val lastAutoInserted = contextTracker.getLastAutoInsertedWord()
         if (!lastAutoInserted.isNullOrEmpty()) {
-            Log.d(TAG, "DELETE_LAST_WORD: Deleting auto-inserted word: '$lastAutoInserted'")
+            vlog { "DELETE_LAST_WORD: Deleting auto-inserted word: '$lastAutoInserted'" }
 
             // Get text before cursor to verify
             val textBefore = ic.getTextBeforeCursor(100, 0)
@@ -1363,7 +1378,7 @@ class SuggestionHandler(
                     if (hasTrailingSpace) deleteCount += 1
 
                     ic.deleteSurroundingText(deleteCount, 0)
-                    Log.d(TAG, "DELETE_LAST_WORD: Deleted $deleteCount characters")
+                    vlog { "DELETE_LAST_WORD: Deleted $deleteCount characters" }
 
                     // Clear tracking
                     contextTracker.clearLastAutoInsertedWord()
@@ -1373,13 +1388,13 @@ class SuggestionHandler(
             }
 
             // If verification failed, fall through to delete last word generically
-            Log.d(TAG, "DELETE_LAST_WORD: Auto-inserted word verification failed, using generic delete")
+            vlog { "DELETE_LAST_WORD: Auto-inserted word verification failed, using generic delete" }
         }
 
         // Fallback: Delete the last word before cursor (generic approach)
         val textBefore = ic.getTextBeforeCursor(100, 0)
         if (textBefore.isNullOrEmpty()) {
-            Log.d(TAG, "DELETE_LAST_WORD: No text before cursor, falling back to Ctrl+Backspace")
+            vlog { "DELETE_LAST_WORD: No text before cursor, falling back to Ctrl+Backspace" }
             keyeventhandler.send_key_down_up(
                 KeyEvent.KEYCODE_DEL,
                 KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON
@@ -1396,7 +1411,7 @@ class SuggestionHandler(
         }
 
         if (cursorPos == 0) {
-            Log.d(TAG, "DELETE_LAST_WORD: Only whitespace before cursor")
+            vlog { "DELETE_LAST_WORD: Only whitespace before cursor" }
             return
         }
 
@@ -1411,13 +1426,13 @@ class SuggestionHandler(
 
         // Safety check: don't delete more than 50 characters at once
         if (deleteCount > 50) {
-            Log.d(TAG, "DELETE_LAST_WORD: Refusing to delete $deleteCount characters (safety limit)")
+            vlog { "DELETE_LAST_WORD: Refusing to delete $deleteCount characters (safety limit)" }
             deleteCount = 50
         }
 
-        Log.d(TAG, "DELETE_LAST_WORD: Deleting last word (generic), count=$deleteCount")
+        vlog { "DELETE_LAST_WORD: Deleting last word (generic), count=$deleteCount" }
         if (!ic.deleteSurroundingText(deleteCount, 0)) {
-            Log.d(TAG, "DELETE_LAST_WORD: deleteSurroundingText failed, falling back to Ctrl+Backspace")
+            vlog { "DELETE_LAST_WORD: deleteSurroundingText failed, falling back to Ctrl+Backspace" }
             keyeventhandler.send_key_down_up(
                 KeyEvent.KEYCODE_DEL,
                 KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON

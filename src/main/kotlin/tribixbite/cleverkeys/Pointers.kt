@@ -45,6 +45,9 @@ class Pointers(
         }
     }
 
+    /** Verbose-only debug log; message lambda is not evaluated unless verbose logging is enabled. */
+    private inline fun vlog(message: () -> String) { if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", message()) }
+
     /** Return the list of modifiers currently activated. */
     fun getModifiers(): Modifiers {
         return getModifiers(false)
@@ -332,12 +335,12 @@ class Pointers(
                 gestureType
             }
 
-            Log.d(
-                "Pointers", "Gesture classified as: $gestureType (effective=$effectiveGestureType) " +
+            vlog {
+                "Gesture classified as: $gestureType (effective=$effectiveGestureType) " +
                     "(hasLeftKey=${ptr.hasLeftStartingKey} " +
                     "distance=$totalDistance " +
                     "time=${timeElapsed}ms)"
-            )
+            }
 
             if (effectiveGestureType == GestureClassifier.GestureType.SWIPE) {
                 // This is a swipe gesture - send to neural predictor
@@ -349,12 +352,12 @@ class Pointers(
                 return
             } else {
                 // This is a TAP - check for short gesture (within-key directional swipe)
-                Log.d(
-                    "Pointers", "TAP path: short_gestures=${_config.short_gestures_enabled} " +
+                vlog {
+                    "TAP path: short_gestures=${_config.short_gestures_enabled} " +
                         "hasLeftKey=${ptr.hasLeftStartingKey} " +
                         "pathSize=${swipePath?.size ?: 0} " +
                         "modifiers=${ptr.modifiers.size()}"
-                )
+                }
 
                 // CRITICAL FIX v1.32.923: Changed from swipePath.size > 1 to >= 1
                 // Some gestures only collect 1 point (downX,downY) before UP fires
@@ -394,12 +397,12 @@ class Pointers(
                     // By checking max explicitly here, swipes exceeding max fall through to neural prediction.
                     val maxDistance = _config.short_gesture_max_distance.toPx(keyHypotenuse)
 
-                    Log.d(
-                        "Pointers", "Short gesture check: distance=$distance " +
+                    vlog {
+                        "Short gesture check: distance=$distance " +
                             "minDistance=$minDistance maxDistance=$maxDistance " +
                             "(min=${_config.short_gesture_min_distance} max=${_config.short_gesture_max_distance} of $keyHypotenuse) " +
                             "hasLeftKey=${ptr.hasLeftStartingKey}"
-                    )
+                    }
 
                     if (distance >= minDistance && distance <= maxDistance) {
                         // Trigger short gesture - calculate direction (same as original repo)
@@ -414,12 +417,12 @@ class Pointers(
                         val posNames = arrayOf("c", "nw", "ne", "sw", "se", "w", "e", "n", "s")
                         val posName = if (keyIndex in posNames.indices) posNames[keyIndex] else "?"
 
-                        Log.d(
-                            "Pointers", String.format(
+                        vlog {
+                            String.format(
                                 "SHORT_SWIPE: key=%s dx=%.1f dy=%.1f dist=%.1f angle=%.1f° dir=%d→idx=%d(%s)",
                                 ptr.key.keys[0], dx, dy, distance, angleDeg, direction, keyIndex, posName
                             )
-                        )
+                        }
 
                         // CUSTOM MAPPING CHECK: Check user-defined mappings first
                         // Convert 16-direction to 8-direction SwipeDirection
@@ -458,12 +461,12 @@ class Pointers(
                             getNearestKeyAtDirection(ptr, direction)
                         }
 
-                        Log.d(
-                            "Pointers", String.format(
+                        vlog {
+                            String.format(
                                 "SHORT_SWIPE_RESULT: dir=%d found=%s wordCandidate=%b",
                                 direction, gestureValue?.toString() ?: "null", isWordCandidate
                             )
-                        )
+                        }
 
                         if (gestureValue != null) {
                             // v1.32.927: Apply shift capitalization to word sublabels
@@ -769,12 +772,11 @@ class Pointers(
         ptr.lastX = x
         ptr.lastY = y
 
-        Log.d(
-            "Pointers", "onTouchMove: id=$pointerId pos=($x,$y) " +
-                "value=${ptr.value} " +
+        vlog {
+            "onTouchMove: id=$pointerId pos=($x,$y) " +
                 "hasLeftKey=${ptr.hasLeftStartingKey} " +
                 "flags=${ptr.flags}"
-        )
+        }
 
         if (ptr.hasFlagsAny(FLAG_P_SLIDING)) {
             ptr.sliding?.onTouchMove(ptr, x, y)
@@ -870,15 +872,15 @@ class Pointers(
         val isShortGestureKey = _config.short_gestures_enabled && activePointers == 1 && ptrValue != null
         val shouldCollectPath = isSwipeTypingKey || isShortGestureKey
 
-        Log.d(
-            "Pointers", "Path collection check: " +
+        vlog {
+            "Path collection check: " +
                 "swipeEnabled=${_config.swipe_typing_enabled} " +
                 "shortGesturesEnabled=${_config.short_gestures_enabled} " +
                 "ptrsSize=${_ptrs.size} " +
                 "hasValue=${ptrValue != null} " +
                 "isChar=${ptrValue != null && ptrValue.getKind() == KeyValue.Kind.Char} " +
                 "shouldCollect=$shouldCollectPath"
-        )
+        }
 
         if (shouldCollectPath) {
             // Track swipe movement for path collection

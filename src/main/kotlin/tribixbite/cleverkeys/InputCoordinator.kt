@@ -12,6 +12,47 @@ import tribixbite.cleverkeys.ml.SwipeMLData
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
+import java.util.concurrent.RejectedExecutionException
+
+/**
+ * Owns a single-threaded prediction executor and its in-flight task, exposing a small
+ * cancel/submit/shutdown surface. Pure JVM (no Android types) so it is unit-testable.
+ *
+ * Submissions after [shutdown] are silently dropped rather than throwing, which matches the
+ * lifecycle where predictions can be requested while the IME is tearing down.
+ */
+class PredictionTaskRunner(
+    private val executor: ExecutorService = Executors.newSingleThreadExecutor()
+) {
+    @Volatile
+    private var currentTask: Future<*>? = null
+
+    /** True once the underlying executor has been shut down. */
+    val isShutdown: Boolean
+        get() = executor.isShutdown
+
+    /** Cancels (interrupting) the currently-running task, if any. */
+    fun cancelCurrent() {
+        currentTask?.cancel(true)
+    }
+
+    /** Cancels the current task then submits [task]; a no-op if the executor is already shut down. */
+    fun cancelAndSubmit(task: Runnable) {
+        cancelCurrent()
+        if (executor.isShutdown) return
+        currentTask = try {
+            executor.submit(task)
+        } catch (e: RejectedExecutionException) {
+            null
+        }
+    }
+
+    /** Cancels the in-flight task and shuts the executor down, interrupting running work. */
+    fun shutdown() {
+        cancelCurrent()
+        executor.shutdownNow()
+    }
+}
 
 /**
  * Coordinates all text input operations including typing, backspace, word deletion,
@@ -106,8 +147,7 @@ class InputCoordinator(
     private var wasShiftLockedAtSwipeStart: Boolean = false
 
     // Async prediction execution
-    private val predictionExecutor: ExecutorService = Executors.newSingleThreadExecutor()
-    private var currentPredictionTask: Future<*>? = null
+    private val predictionTasks = PredictionTaskRunner()
     // Post to main thread explicitly — View.post() silently drops runnables for detached views
     private val mainHandler = Handler(Looper.getMainLooper())
 
@@ -199,6 +239,20 @@ class InputCoordinator(
     }
 
     /**
+     * Releases coordinator resources: cancels any pending cursor sync, shuts down the prediction
+     * executor (interrupting in-flight work), and clears main-thread callbacks. Called during
+     * IME teardown so no prediction thread outlives the service.
+     */
+    fun shutdown() {
+        cancelPendingCursorSync()
+        predictionTasks.shutdown()
+        mainHandler.removeCallbacksAndMessages(null)
+    }
+
+    /** True once the prediction executor has been shut down (test/diagnostic hook). */
+    fun isPredictionExecutorShutdown(): Boolean = predictionTasks.isShutdown
+
+    /**
      * Triggers predictions for the prefix (chars before cursor).
      * Used after cursor sync to show predictions for the word being typed.
      *
@@ -223,12 +277,10 @@ class InputCoordinator(
         // v1.2.6 FIX: Use RAW prefix for capitalization check (normalized is always lowercase)
         val shouldCapitalize = rawPrefix.isNotEmpty() && rawPrefix[0].isUpperCase()
 
-        // Cancel any running prediction task
-        currentPredictionTask?.cancel(true)
-
-        // Run prediction asynchronously (same pattern as updatePredictionsForCurrentWord)
-        currentPredictionTask = predictionExecutor.submit {
-            if (Thread.currentThread().isInterrupted) return@submit
+        // Cancel any running prediction task and run this one asynchronously
+        // (same pattern as updatePredictionsForCurrentWord)
+        predictionTasks.cancelAndSubmit {
+            if (Thread.currentThread().isInterrupted) return@cancelAndSubmit
 
             try {
                 // v1.2.7: Search using PREFIX only (chars before cursor)
@@ -257,7 +309,7 @@ class InputCoordinator(
                     }
                 }
 
-                if (Thread.currentThread().isInterrupted || allResults.isEmpty()) return@submit
+                if (Thread.currentThread().isInterrupted || allResults.isEmpty()) return@cancelAndSubmit
 
                 // Build contraction-aware suggestions matching SuggestionHandler's pipeline:
                 // 1. Inject paired contraction variants (its → it's, well → we'll)
@@ -505,18 +557,15 @@ class InputCoordinator(
             // Copy context to be thread-safe
             val contextWords = ArrayList(contextTracker.getContextWords())
 
-            // Cancel previous task if running
-            currentPredictionTask?.cancel(true)
-
-            // Submit new prediction task
-            currentPredictionTask = predictionExecutor.submit {
-                if (Thread.currentThread().isInterrupted) return@submit
+            // Cancel previous task if running, then submit new prediction task
+            predictionTasks.cancelAndSubmit {
+                if (Thread.currentThread().isInterrupted) return@cancelAndSubmit
 
                 // Use contextual prediction (Heavy operation)
                 val result = predictionCoordinator.getWordPredictor()
                     ?.predictWordsWithContext(partial, contextWords)
 
-                if (Thread.currentThread().isInterrupted || result == null) return@submit
+                if (Thread.currentThread().isInterrupted || result == null) return@cancelAndSubmit
 
                 // Post result to UI thread
                 if (result.words.isNotEmpty()) {
@@ -867,7 +916,14 @@ class InputCoordinator(
                     contextTracker.setLastCommitSource(PredictionSource.CANDIDATE_SELECTION)
                 }
             } catch (e: Exception) {
-                // Silently catch exceptions
+                // Log the failure (type/message only, never committed text) and reset the
+                // selection-tracking state so a botched commit can't leave stale context.
+                android.util.Log.e(TAG, "Error in onSuggestionSelected", e)
+                debugLogger?.invoke("❌ onSuggestionSelected FAILED: ${e.javaClass.simpleName}: ${e.message}")
+                contextTracker.clearLastAutoInsertedWord()
+                contextTracker.setLastCommitSource(PredictionSource.UNKNOWN)
+                contextTracker.expectingSelectionUpdate = false
+                contextTracker.clearCurrentWordSuffix()
             }
 
             // Update context with the selected word
@@ -1171,10 +1227,43 @@ class InputCoordinator(
         // #9: Neural model is QWERTY-trained — disable swipe for non-QWERTY layouts
         if (!Config.isSwipeTypingSupportedForLayout(keyboardView.getKeyboard())) return
 
-        // OPTIMIZATION v1.32.529: Ensure neural engine is loaded before first swipe
-        // If not loaded in onCreate (rare edge case), lazy-load synchronously now
-        predictionCoordinator.ensureNeuralEngineReady()
+        // OPTIMIZATION: Ensure the neural engine is loaded before running the swipe. If it is
+        // not yet ready, initialize it OFF the main thread and resume via performSwipeTyping
+        // once the attempt completes — never busy-wait on the UI thread. The replay path calls
+        // performSwipeTyping directly, so there is no re-enqueue loop.
+        if (config.swipe_typing_enabled && predictionCoordinator.getNeuralEngine() == null) {
+            predictionCoordinator.runWhenNeuralEngineReady { _ ->
+                performSwipeTyping(
+                    swipedKeys, swipePath, timestamps, ic, editorInfo, resources,
+                    wasShiftActive, wasShiftLocked
+                )
+            }
+            return
+        }
 
+        performSwipeTyping(
+            swipedKeys, swipePath, timestamps, ic, editorInfo, resources,
+            wasShiftActive, wasShiftLocked
+        )
+    }
+
+    /**
+     * Runs the actual swipe prediction once the neural engine is (or is confirmed not) ready.
+     *
+     * Split out of [handleSwipeTyping] so the engine-readiness wait can be non-blocking: the
+     * dispatch in [handleSwipeTyping] resumes here on the main thread. Shift state is passed
+     * as params rather than re-read from fields (already captured in [handleSwipeTyping]).
+     */
+    private fun performSwipeTyping(
+        swipedKeys: List<KeyboardData.Key>,
+        swipePath: List<android.graphics.PointF>?,
+        timestamps: List<Long>?,
+        ic: InputConnection?,
+        editorInfo: EditorInfo?,
+        resources: Resources,
+        wasShiftActive: Boolean,
+        wasShiftLocked: Boolean
+    ) {
         if (predictionCoordinator.getNeuralEngine() == null) {
             // Fallback to word predictor if engine not initialized
             if (predictionCoordinator.getWordPredictor() == null) return

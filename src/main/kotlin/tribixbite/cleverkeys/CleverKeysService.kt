@@ -483,7 +483,9 @@ class CleverKeysService : InputMethodService(),
             _configManager,
             _clipboardManager,
             _predictionCoordinator,
-            _debugLoggingManager
+            _debugLoggingManager,
+            if (::_inputCoordinator.isInitialized) _inputCoordinator else null,
+            if (::_suggestionHandler.isInitialized) _suggestionHandler else null
         ).cleanup()
 
         // Cleanup DirectBootManager (v1.1.75: Direct Boot compatibility)

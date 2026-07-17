@@ -2,10 +2,57 @@ package tribixbite.cleverkeys
 
 import android.content.Context
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.os.UserManager
 import android.util.Log
 import tribixbite.cleverkeys.ml.SwipeMLDataStore
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.concurrent.thread
+
+/**
+ * Pure-JVM one-shot gate coordinating a single neural-engine initialization attempt.
+ *
+ * Replaces the former main-thread busy-wait: waiters park on a [CountDownLatch] instead of
+ * spinning in a sleep loop, and a single [pending] action is flushed exactly once when the
+ * attempt completes (or immediately if it already has). Contains NO Android types so it is
+ * unit-testable on the JVM.
+ */
+class EngineInitGate {
+    private val attemptDone = CountDownLatch(1)
+    private val pending = AtomicReference<Runnable?>(null)
+
+    /** True once the (idempotent) initialization attempt has finished, regardless of outcome. */
+    val hasCompletedAttempt: Boolean
+        get() = attemptDone.count == 0L
+
+    /** Marks the single initialization attempt complete and flushes any pending action. Idempotent. */
+    fun markAttemptComplete() {
+        attemptDone.countDown()
+        flushPending()
+    }
+
+    /** Parks the caller until the attempt completes or [timeout] elapses. Returns true if completed. */
+    fun awaitAttempt(timeout: Long, unit: TimeUnit): Boolean = attemptDone.await(timeout, unit)
+
+    /** Registers a one-shot action to run on completion; runs it now if the attempt already completed. */
+    fun setPending(action: Runnable) {
+        pending.set(action)
+        if (hasCompletedAttempt) flushPending()
+    }
+
+    /** Drops any registered pending action without running it. */
+    fun clearPending() {
+        pending.set(null)
+    }
+
+    /** Atomically claims and runs the pending action, guaranteeing it fires at most once. */
+    private fun flushPending() {
+        pending.getAndSet(null)?.run()
+    }
+}
 
 /**
  * Coordinates prediction engines and manages prediction lifecycle.
@@ -41,11 +88,18 @@ class PredictionCoordinator(
     // Prediction engines
     private var dictionaryManager: DictionaryManager? = null
     private var wordPredictor: WordPredictor? = null
+    @Volatile
     private var neuralEngine: NeuralSwipeTypingEngine? = null
+    @Volatile
     private var asyncPredictionHandler: AsyncPredictionHandler? = null
 
     @Volatile
     private var isInitializingNeuralEngine = false // v1.32.529: Track initialization state
+
+    // One-shot gate for background neural-engine init: lets callers park (no busy-wait) or
+    // register a non-blocking continuation that fires when the attempt finishes.
+    private val engineInitGate = EngineInitGate()
+    private val mainHandler = Handler(Looper.getMainLooper())
 
     // Supporting services
     private var mlDataStore: SwipeMLDataStore? = null
@@ -210,6 +264,9 @@ class PredictionCoordinator(
             asyncPredictionHandler = null
         } finally {
             isInitializingNeuralEngine = false
+            // Signal that the single init attempt is done (success or failure) so parked waiters
+            // wake and any registered non-blocking continuation fires exactly once.
+            engineInitGate.markAttemptComplete()
         }
     }
 
@@ -225,22 +282,15 @@ class PredictionCoordinator(
         // Fast path: already initialized
         if (neuralEngine != null) return
 
-        // If background thread is initializing, wait for it (up to 5 seconds)
+        // If background thread is initializing, park on the gate (no busy-wait) until the
+        // attempt completes, up to 5 seconds.
         if (isInitializingNeuralEngine) {
             Log.d(TAG, "Waiting for background ONNX initialization to complete...")
-            val startTime = System.currentTimeMillis()
-            val maxWaitMs = 5000L
-            while (isInitializingNeuralEngine && neuralEngine == null) {
-                if (System.currentTimeMillis() - startTime > maxWaitMs) {
-                    Log.w(TAG, "Timeout waiting for ONNX initialization (${maxWaitMs}ms)")
-                    break
-                }
-                Thread.sleep(50)
+            val completed = engineInitGate.awaitAttempt(5, TimeUnit.SECONDS)
+            if (!completed) {
+                Log.w(TAG, "Timeout waiting for ONNX initialization (5000ms)")
             }
-            if (neuralEngine != null) {
-                Log.d(TAG, "ONNX initialization completed after waiting")
-                return
-            }
+            if (neuralEngine != null) return
         }
 
         // Fallback: synchronous initialization if not started or timed out
@@ -248,6 +298,44 @@ class PredictionCoordinator(
             if (neuralEngine == null && !isInitializingNeuralEngine) {
                 Log.d(TAG, "Lazy-loading neural engine on first swipe...")
                 initializeNeuralEngine()
+            }
+        }
+    }
+
+    /**
+     * Non-blocking counterpart to [ensureNeuralEngineReady]: never parks the caller's thread.
+     *
+     * Invokes [action] with true if the neural engine is ready, false otherwise. If the engine
+     * is already available (or swipe typing is disabled) the action runs synchronously; otherwise
+     * a background init is kicked off (if not already running) and [action] is posted to the main
+     * thread once the single init attempt completes.
+     *
+     * @param action callback receiving whether the neural engine is ready
+     */
+    fun runWhenNeuralEngineReady(action: (Boolean) -> Unit) {
+        // Swipe typing off: nothing to initialize.
+        if (!config.swipe_typing_enabled) {
+            action(false)
+            return
+        }
+
+        // Fast path: already initialized.
+        if (neuralEngine != null) {
+            action(true)
+            return
+        }
+
+        // Register the continuation to fire (on the main thread) when the attempt completes.
+        engineInitGate.setPending {
+            mainHandler.post { action(neuralEngine != null) }
+        }
+
+        // Kick off a single background init if none is running and none has completed yet.
+        synchronized(this) {
+            if (neuralEngine == null && !isInitializingNeuralEngine && !engineInitGate.hasCompletedAttempt) {
+                thread(name = "NeuralEngineInit") {
+                    initializeNeuralEngine()
+                }
             }
         }
     }
@@ -477,6 +565,9 @@ class PredictionCoordinator(
         neuralEngine = null
         wordPredictor = null
         dictionaryManager = null
+
+        // Drop any pending non-blocking continuation so it never fires post-shutdown.
+        engineInitGate.clearPending()
 
         Log.d(TAG, "PredictionCoordinator shutdown complete")
     }

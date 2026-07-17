@@ -24,7 +24,9 @@ class CleanupHandler(
     private val configManager: ConfigurationManager?,
     private val clipboardManager: ClipboardManager?,
     private val predictionCoordinator: PredictionCoordinator?,
-    private val debugLoggingManager: DebugLoggingManager?
+    private val debugLoggingManager: DebugLoggingManager?,
+    private val inputCoordinator: InputCoordinator? = null,
+    private val suggestionHandler: SuggestionHandler? = null
 ) {
     /**
      * Perform all cleanup operations.
@@ -46,6 +48,11 @@ class CleanupHandler(
         // Cleanup clipboard manager
         clipboardManager?.cleanup()
 
+        // Shut down executor-owning coordinators BEFORE the prediction coordinator, so no
+        // in-flight prediction task references engines that shutdown() is about to release.
+        inputCoordinator?.shutdown()
+        suggestionHandler?.shutdown()
+
         // Cleanup prediction coordinator
         predictionCoordinator?.shutdown()
 
@@ -65,6 +72,8 @@ class CleanupHandler(
          * @param clipboardManager The clipboard manager (nullable)
          * @param predictionCoordinator The prediction coordinator (nullable)
          * @param debugLoggingManager The debug logging manager (nullable)
+         * @param inputCoordinator The input coordinator whose prediction executor to shut down (nullable)
+         * @param suggestionHandler The suggestion handler whose prediction executor to shut down (nullable)
          * @return A new CleanupHandler instance
          */
         @JvmStatic
@@ -73,14 +82,18 @@ class CleanupHandler(
             configManager: ConfigurationManager?,
             clipboardManager: ClipboardManager?,
             predictionCoordinator: PredictionCoordinator?,
-            debugLoggingManager: DebugLoggingManager?
+            debugLoggingManager: DebugLoggingManager?,
+            inputCoordinator: InputCoordinator? = null,
+            suggestionHandler: SuggestionHandler? = null
         ): CleanupHandler {
             return CleanupHandler(
                 context,
                 configManager,
                 clipboardManager,
                 predictionCoordinator,
-                debugLoggingManager
+                debugLoggingManager,
+                inputCoordinator,
+                suggestionHandler
             )
         }
     }
