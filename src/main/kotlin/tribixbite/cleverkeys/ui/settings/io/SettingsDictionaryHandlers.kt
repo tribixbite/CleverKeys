@@ -30,10 +30,11 @@ internal fun SettingsActivity.importCustomDictionary() {
     }
 }
 
-internal fun SettingsActivity.performDictionaryExport(uri: Uri) {
+internal fun SettingsActivity.performDictionaryExport(uri: Uri, plaintextOptOut: Boolean = false) {
     lifecycleScope.launch {
         backupRestoreViewModel.isProcessing = true
         try {
+            backupRestoreManager.encryptionPolicy = exportPolicy(plaintextOptOut)
             val summary = withContext(Dispatchers.IO) {
                 backupRestoreManager.exportDictionaries(uri)
             }
@@ -59,9 +60,10 @@ internal fun SettingsActivity.performDictionaryExport(uri: Uri) {
  * specific words. If no new words to import, jump straight to the result
  * dialog.
  */
-internal fun SettingsActivity.performDictionaryImport(uri: Uri) {
+internal fun SettingsActivity.performDictionaryImport(uri: Uri, retryPassphrase: CharArray? = null) {
     lifecycleScope.launch {
         backupRestoreViewModel.isProcessing = true
+        if (retryPassphrase == null) primeImport()
         try {
             val plan = withContext(Dispatchers.IO) {
                 backupRestoreManager.buildDictImportPlan(uri, prefs)
@@ -75,6 +77,11 @@ internal fun SettingsActivity.performDictionaryImport(uri: Uri) {
                 backupRestoreViewModel.showResultDialog = true
             } else {
                 backupRestoreViewModel.dictPreviewPlan = plan
+            }
+        } catch (e: tribixbite.cleverkeys.BackupRestoreManager.BackupDecryptException) {
+            promptForPassphrase(e, retryPassphrase) { entered ->
+                backupRestoreManager.setImportPassphraseOverride(entered)
+                performDictionaryImport(uri, entered)
             }
         } catch (e: Exception) {
             android.util.Log.e(SettingsActivity.TAG, "Build dictionary plan failed", e)

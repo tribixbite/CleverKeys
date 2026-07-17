@@ -133,10 +133,11 @@ internal fun SettingsActivity.importClipboardZip() {
     }
 }
 
-internal fun SettingsActivity.performClipboardExport(uri: Uri) {
+internal fun SettingsActivity.performClipboardExport(uri: Uri, plaintextOptOut: Boolean = false) {
     lifecycleScope.launch {
         backupRestoreViewModel.isProcessing = true
         try {
+            backupRestoreManager.encryptionPolicy = exportPolicy(plaintextOptOut)
             val result = withContext(Dispatchers.IO) {
                 backupRestoreManager.exportClipboardHistory(uri)
             }
@@ -157,9 +158,10 @@ internal fun SettingsActivity.performClipboardExport(uri: Uri) {
     }
 }
 
-internal fun SettingsActivity.performClipboardImport(uri: Uri) {
+internal fun SettingsActivity.performClipboardImport(uri: Uri, retryPassphrase: CharArray? = null) {
     lifecycleScope.launch {
         backupRestoreViewModel.isProcessing = true
+        if (retryPassphrase == null) primeImport()
         try {
             val result = withContext(Dispatchers.IO) {
                 backupRestoreManager.importClipboardHistory(uri)
@@ -176,6 +178,11 @@ internal fun SettingsActivity.performClipboardImport(uri: Uri) {
                 append("Imports merge with existing history without overwriting.")
             }
             backupRestoreViewModel.showResultDialog = true
+        } catch (e: tribixbite.cleverkeys.BackupRestoreManager.BackupDecryptException) {
+            promptForPassphrase(e, retryPassphrase) { entered ->
+                backupRestoreManager.setImportPassphraseOverride(entered)
+                performClipboardImport(uri, entered)
+            }
         } catch (e: Exception) {
             android.util.Log.e(SettingsActivity.TAG, "Clipboard import failed", e)
             backupRestoreViewModel.resultTitle = "Clipboard Import Failed"
@@ -188,10 +195,11 @@ internal fun SettingsActivity.performClipboardImport(uri: Uri) {
     }
 }
 
-internal fun SettingsActivity.performClipboardZipExport(uri: Uri) {
+internal fun SettingsActivity.performClipboardZipExport(uri: Uri, plaintextOptOut: Boolean = false) {
     lifecycleScope.launch {
         backupRestoreViewModel.isProcessing = true
         try {
+            backupRestoreManager.encryptionPolicy = exportPolicy(plaintextOptOut)
             val result = withContext(Dispatchers.IO) {
                 backupRestoreManager.exportClipboardHistoryZip(uri)
             }
@@ -213,9 +221,10 @@ internal fun SettingsActivity.performClipboardZipExport(uri: Uri) {
     }
 }
 
-internal fun SettingsActivity.performClipboardZipImport(uri: Uri) {
+internal fun SettingsActivity.performClipboardZipImport(uri: Uri, retryPassphrase: CharArray? = null) {
     lifecycleScope.launch {
         backupRestoreViewModel.isProcessing = true
+        if (retryPassphrase == null) primeImport()
         try {
             val result = withContext(Dispatchers.IO) {
                 backupRestoreManager.importClipboardHistoryZip(uri)
@@ -233,6 +242,11 @@ internal fun SettingsActivity.performClipboardZipImport(uri: Uri) {
                 append("All media files and thumbnails have been restored.")
             }
             backupRestoreViewModel.showResultDialog = true
+        } catch (e: tribixbite.cleverkeys.BackupRestoreManager.BackupDecryptException) {
+            promptForPassphrase(e, retryPassphrase) { entered ->
+                backupRestoreManager.setImportPassphraseOverride(entered)
+                performClipboardZipImport(uri, entered)
+            }
         } catch (e: Exception) {
             android.util.Log.e(SettingsActivity.TAG, "Clipboard ZIP import failed", e)
             backupRestoreViewModel.resultTitle = "Clipboard ZIP Import Failed"

@@ -187,9 +187,90 @@ CleverKeys also supports exporting swipe training data:
 
 Access via **Settings > Privacy & Data section > Export JSON/NDJSON**.
 
+## Backup Encryption
+
+CleverKeys backups can be **encrypted** so that a leaked or intercepted backup file
+cannot be read, and a forged backup cannot be injected via automation.
+
+### One-time setup: set a Backup Password
+
+Go to **Settings → 💾 Backup & Restore → Backup Password** and tap **Set Password**
+(enter + confirm, minimum 8 characters; 12+ recommended). Once set:
+
+- **All exports are encrypted** into a `CKENC1` container (AES-256-GCM, key derived
+  from your password via PBKDF2-HMAC-SHA256 @ 600,000 iterations).
+- Encrypted files get a `.ckenc` suffix appended to their normal name
+  (`cleverkeys_settings_2026-07-17.json.ckenc`, `..._clipboard.zip.ckenc`). Detection
+  never trusts the extension — the file's magic bytes decide.
+- **Restoring on another device** works by entering the *same* password there.
+
+**A Backup Password is REQUIRED for automation.** The `am start` export/import commands
+below fail closed with *"Set a backup password in Settings → Backup & Restore first"*
+until you set one. This is what closes the exfiltration/injection vector on the exported
+`BackupRestoreActivity` — a zero-permission app that fires the intents gets only
+ciphertext (or nothing), and cannot forge an importable payload.
+
+### The `am start` commands are UNCHANGED
+
+Setting a password does **not** change any automation command — no secret ever goes on
+the command line. The app holds the password in its private storage and uses it
+automatically. Your existing scripts keep working after the one-time setup.
+
+### New failure messages
+
+| Message | Meaning |
+|--------|---------|
+| `Set a backup password in Settings → Backup & Restore first` | Headless export/import with no password set — nothing was written or applied. |
+| `Wrong backup password, or the file is corrupted/tampered.` | The stored/entered password did not decrypt the file, OR the file was modified. AES-GCM cannot tell these apart. No partial import occurs. |
+| `Import failed: plaintext backups are not accepted via automation — use the app's Import button` | A legacy (unencrypted) backup was passed to a headless `IMPORT_*`. Import it via the in-app **Import** button instead, then re-export encrypted. |
+
+### Interactive plaintext opt-out
+
+The in-app export buttons let you deliberately **Export unencrypted…** (a confirm
+dialog under the Backup & Restore section arms the next export as plaintext). This is
+for users who post-process the JSON in on-device scripts. It only affects the manual
+SAF flow — the automation (headless) path is *always* encrypted and never has an
+off switch.
+
+### Foreign-restore escape hatch (`--es passphrase`, default OFF)
+
+To restore a backup made on **another device** (different password) via automation,
+enable **Settings → Backup & Restore → "Allow password via automation intent"** and pass
+the password as an extra on `IMPORT_*` **only**:
+
+```bash
+# Only works when the toggle is ON. NEVER accepted for EXPORT_*.
+am start -a tribixbite.cleverkeys.action.IMPORT_SETTINGS \
+  -n tribixbite.cleverkeys/.BackupRestoreActivity \
+  --es json_base64 "$(base64 -w0 < backup.ckenc)" \
+  --es passphrase 'the-other-devices-password'
+```
+
+> ⚠️ **Shell-history warning.** A password on the command line leaks into your shell
+> history, `ps` snapshots, and any logging of the `am` invocation. Protect it:
+> - Prefix the command with a **leading space** (works when `HISTCONTROL=ignorespace`),
+> - and/or add `am` to `HISTIGNORE`: `export HISTIGNORE='*passphrase*'`.
+>
+> Exports **never** accept `--es passphrase` — supplying your own password to an export
+> would reopen the exfiltration vector, so it is refused by design.
+
+### Decrypting a `.ckenc` file off-app
+
+Use the reference decryptor `scripts/ckenc-decrypt.py` (needs `pip install cryptography`):
+
+```bash
+python3 scripts/ckenc-decrypt.py cleverkeys_settings.json.ckenc -o settings.json
+# prompts for the backup password; -p PASS to pass it non-interactively (history caveat!)
+```
+
+It parses the `CKENC1` header, runs PBKDF2-HMAC-SHA256 with the header's salt/iterations,
+and AES-256-GCM-decrypts using the 51-byte header as AAD — matching the on-disk format
+exactly.
+
 ## Programmatic Import/Export (Termux / Automation)
 
 All backup operations can be triggered via Android intents for scripting and automation.
+**Automation requires a Backup Password** (see [Backup Encryption](#backup-encryption)).
 
 ### Intent Actions
 
@@ -285,6 +366,9 @@ for i,(ce,hp) in enumerate(chunks):
 | **File corrupt** | Re-export from source device |
 | **Wrong format** | Ensure file is CleverKeys JSON export |
 | **"not a JSON object"** | File is empty or unreadable — likely scoped storage; see above |
+| **"Set a backup password … first"** | Automation requires a password — set one in Settings → Backup & Restore |
+| **"Wrong backup password, or the file is corrupted/tampered."** | Password mismatch or the file was modified. Re-enter the correct password, or re-export from the source device. |
+| **"plaintext backups are not accepted via automation"** | A legacy unencrypted backup hit a headless import — use the in-app Import button, then re-export encrypted |
 
 ### Settings Not Applied
 

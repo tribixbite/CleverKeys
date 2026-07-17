@@ -11,6 +11,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import tribixbite.cleverkeys.backup.crypto.BackupPassphraseStore
+import tribixbite.cleverkeys.backup.crypto.EncryptedBackupFormat
 
 /**
  * Headless backup/restore Intent target.
@@ -59,16 +61,51 @@ class BackupRestoreActivity : ComponentActivity() {
          */
         @androidx.annotation.VisibleForTesting
         var testManagerOverride: BackupRestoreManager? = null
+
+        /**
+         * Test-only override for the passphrase store (mirrors [testManagerOverride]).
+         */
+        @androidx.annotation.VisibleForTesting
+        var testPassphraseStoreOverride: BackupPassphraseStore? = null
+
+        /**
+         * In-memory rate-limit: minimum spacing between two headless actions
+         * (design §7 residual-risk #5 — cheap KDF/disk-write DoS hardening).
+         * Backed by a static timestamp so it survives per-invocation Activity
+         * instances (each `am start` creates a fresh Activity).
+         */
+        const val MIN_HEADLESS_ACTION_SPACING_MS = 2_000L
+
+        @Volatile
+        private var lastHeadlessActionMs: Long = 0L
+
+        /** Test-only: reset the headless rate-limit so sequential instrumented tests
+         *  aren't throttled by the static timestamp. */
+        @androidx.annotation.VisibleForTesting
+        fun resetHeadlessRateLimitForTest() { lastHeadlessActionMs = 0L }
+
+        /** Pref gating the headless `--es passphrase` IMPORT escape hatch (default off). */
+        const val PREF_ALLOW_INTENT_PASSPHRASE = "backup_allow_intent_passphrase"
+
+        private val IMPORT_ACTIONS = setOf(
+            ACTION_IMPORT_SETTINGS, ACTION_IMPORT_DICTIONARIES, ACTION_IMPORT_CLIPBOARD,
+        )
+        private val EXPORT_ACTIONS = setOf(
+            ACTION_EXPORT_SETTINGS, ACTION_EXPORT_DICTIONARIES, ACTION_EXPORT_CLIPBOARD,
+        )
+        private val KNOWN_BACKUP_ACTIONS = IMPORT_ACTIONS + EXPORT_ACTIONS
     }
 
     private lateinit var prefs: SharedPreferences
     private lateinit var backupRestoreManager: BackupRestoreManager
+    private lateinit var passphraseStore: BackupPassphraseStore
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         try {
             prefs = DirectBootAwarePreferences.get_shared_preferences(this)
+            passphraseStore = testPassphraseStoreOverride ?: BackupPassphraseStore(this)
             backupRestoreManager = testManagerOverride ?: BackupRestoreManager(this)
         } catch (e: Exception) {
             android.util.Log.e(TAG, "Error initializing", e)
@@ -77,11 +114,67 @@ class BackupRestoreActivity : ComponentActivity() {
             return
         }
 
+        val action = intent.action
+        val isKnownBackupAction = action in KNOWN_BACKUP_ACTIONS
+
+        if (isKnownBackupAction) {
+            // Design §4.3: on the exported-activity path, encryption is MANDATORY.
+            // No stored passphrase → fail closed (nothing written, nothing applied).
+            if (!passphraseStore.hasPassphrase()) {
+                android.util.Log.w(TAG, "Headless $action rejected: no backup password set")
+                Toast.makeText(
+                    this,
+                    "Set a backup password in Settings → Backup & Restore first",
+                    Toast.LENGTH_LONG,
+                ).show()
+                finish()
+                return
+            }
+            // Design §7 residual-risk #5: rate-limit consecutive headless actions.
+            val now = android.os.SystemClock.elapsedRealtime()
+            val sinceLast = now - lastHeadlessActionMs
+            if (lastHeadlessActionMs != 0L && sinceLast < MIN_HEADLESS_ACTION_SPACING_MS) {
+                android.util.Log.w(TAG, "Headless $action throttled (${sinceLast}ms since last)")
+                Toast.makeText(this, "Backup action throttled — try again in a moment", Toast.LENGTH_SHORT).show()
+                finish()
+                return
+            }
+            lastHeadlessActionMs = now
+            // All headless ops run under the mandatory-encryption policy.
+            backupRestoreManager.encryptionPolicy = BackupRestoreManager.EncryptionPolicy.HEADLESS_MANDATORY
+        }
+
         // #70: Decode `json_base64` extra to a temp file URI when present —
         // bypasses scoped storage so callers can pipe content inline.
         val fileUri = intent.data
         val importUri = fileUri ?: resolveBase64Extra(intent)
-        val action: (() -> Unit)? = when (intent.action) {
+
+        // Gated escape hatch: accept `--es passphrase` ONLY for IMPORT, ONLY when the
+        // toggle is on. NEVER for export (an attacker-supplied export passphrase would
+        // reopen exfiltration — design §4.2). Set as a one-shot manager override.
+        val isImport = action in IMPORT_ACTIONS
+        if (isImport && prefs.getBoolean(PREF_ALLOW_INTENT_PASSPHRASE, false)) {
+            intent.getStringExtra("passphrase")?.let { p ->
+                if (p.isNotEmpty()) {
+                    android.util.Log.i(TAG, "Using --es passphrase override for $action (toggle on)")
+                    backupRestoreManager.setImportPassphraseOverride(p.toCharArray())
+                }
+            }
+        }
+
+        // Headless IMPORT of a plaintext (legacy) payload → reject (closes injection).
+        if (isImport && importUri != null && payloadIsPlaintext(importUri)) {
+            android.util.Log.w(TAG, "Headless $action rejected: plaintext payload not accepted")
+            Toast.makeText(
+                this,
+                "Import failed: plaintext backups are not accepted via automation — use the app's Import button",
+                Toast.LENGTH_LONG,
+            ).show()
+            finish()
+            return
+        }
+
+        val actionFn: (() -> Unit)? = when (action) {
             ACTION_EXPORT_SETTINGS -> fileUri?.let { { performExport(it) } }
             ACTION_IMPORT_SETTINGS -> importUri?.let { { performImportHeadless(it) } }
             ACTION_EXPORT_DICTIONARIES -> fileUri?.let { { performExportDictionaries(it) } }
@@ -91,8 +184,8 @@ class BackupRestoreActivity : ComponentActivity() {
             else -> null
         }
 
-        if (action != null) {
-            action()
+        if (actionFn != null) {
+            actionFn()
             // perform* coroutines call finish() in their finally block.
         } else {
             // No known action — redirect to the inline section in SettingsActivity.
@@ -128,6 +221,36 @@ class BackupRestoreActivity : ComponentActivity() {
             android.util.Log.e(TAG, "Failed to decode json_base64 extra", e)
             Toast.makeText(this, "Invalid base64 data: ${e.message}", Toast.LENGTH_LONG).show()
             null
+        }
+    }
+
+    /**
+     * Sniff the leading bytes of [uri] and return `true` when the payload is a legacy
+     * PLAINTEXT (JSON or ZIP) file (design §4.3 — headless plaintext import is rejected).
+     * ENCRYPTED and UNKNOWN both return `false` here: ENCRYPTED proceeds to decrypt, and
+     * a genuinely UNKNOWN file is left to fail in the downstream parser with its own
+     * message rather than being mislabeled a "plaintext backup".
+     */
+    private fun payloadIsPlaintext(uri: Uri): Boolean {
+        return try {
+            val head = contentResolver.openInputStream(uri)?.use { stream ->
+                val buffer = ByteArray(EncryptedBackupFormat.HEADER_LEN)
+                var filled = 0
+                while (filled < buffer.size) {
+                    val read = stream.read(buffer, filled, buffer.size - filled)
+                    if (read < 0) break
+                    filled += read
+                }
+                if (filled == buffer.size) buffer else buffer.copyOf(filled)
+            } ?: return false
+            when (EncryptedBackupFormat.sniff(head)) {
+                EncryptedBackupFormat.PayloadKind.PLAINTEXT_JSON,
+                EncryptedBackupFormat.PayloadKind.PLAINTEXT_ZIP -> true
+                else -> false
+            }
+        } catch (e: Exception) {
+            android.util.Log.w(TAG, "Could not sniff import payload for plaintext check", e)
+            false
         }
     }
 

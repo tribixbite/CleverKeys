@@ -104,6 +104,11 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal lateinit var prefs: SharedPreferences
     internal lateinit var backupRestoreManager: BackupRestoreManager
 
+    /** Stage B (backup encryption): the user's backup-passphrase store. */
+    internal val backupPassphraseStore: tribixbite.cleverkeys.backup.crypto.BackupPassphraseStore by lazy {
+        tribixbite.cleverkeys.backup.crypto.BackupPassphraseStore(this)
+    }
+
     // ViewModel hosts the import-preview state so plan + dialog state survive
     // configuration changes (rotation). See BackupRestoreViewModel for fields.
     internal val backupRestoreViewModel: BackupRestoreViewModel by viewModels()
@@ -116,11 +121,25 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
      */
     internal val settingsViewModel: SettingsViewModel by viewModels()
 
+    /**
+     * Stage B: when `true`, the NEXT export launcher callback writes a PLAINTEXT file
+     * (the "Export unencrypted…" opt-out). Consumed-and-reset by [consumePlaintextOptOut]
+     * so it never leaks into a later export. Only relevant while a passphrase is set.
+     */
+    internal var pendingPlaintextExport: Boolean = false
+
+    /** Read-and-clear [pendingPlaintextExport] (one-shot). */
+    internal fun consumePlaintextOptOut(): Boolean {
+        val v = pendingPlaintextExport
+        pendingPlaintextExport = false
+        return v
+    }
+
     // SAF file pickers for backup/restore
     internal val configExportLauncher = registerForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
     ) { uri: Uri? ->
-        uri?.let { performConfigExport(it) }
+        uri?.let { performConfigExport(it, consumePlaintextOptOut()) }
     }
 
     internal val configImportLauncher = registerForActivityResult(
@@ -132,7 +151,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal val dictionaryExportLauncher = registerForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
     ) { uri: Uri? ->
-        uri?.let { performDictionaryExport(it) }
+        uri?.let { performDictionaryExport(it, consumePlaintextOptOut()) }
     }
 
     internal val dictionaryImportLauncher = registerForActivityResult(
@@ -144,7 +163,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal val clipboardExportLauncher = registerForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
     ) { uri: Uri? ->
-        uri?.let { performClipboardExport(it) }
+        uri?.let { performClipboardExport(it, consumePlaintextOptOut()) }
     }
 
     internal val clipboardImportLauncher = registerForActivityResult(
@@ -157,7 +176,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal val clipboardZipExportLauncher = registerForActivityResult(
         ActivityResultContracts.CreateDocument("application/zip")
     ) { uri: Uri? ->
-        uri?.let { performClipboardZipExport(it) }
+        uri?.let { performClipboardZipExport(it, consumePlaintextOptOut()) }
     }
 
     internal val clipboardZipImportLauncher = registerForActivityResult(
@@ -170,7 +189,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal val fullBackupExportLauncher = registerForActivityResult(
         ActivityResultContracts.CreateDocument("application/zip")
     ) { uri: Uri? ->
-        uri?.let { performFullBackupExport(it) }
+        uri?.let { performFullBackupExport(it, consumePlaintextOptOut()) }
     }
 
     internal val fullBackupImportLauncher = registerForActivityResult(
@@ -698,6 +717,11 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                             }
                         )
                     }
+                    // Stage B: passphrase prompt for an encrypted import that couldn't be
+                    // decrypted with the stored passphrase (design §9).
+                    tribixbite.cleverkeys.ui.settings.sections.BackupPassphrasePromptDialog(
+                        backupRestoreViewModel
+                    )
                     if (backupRestoreViewModel.isProcessing) {
                         Box(
                             modifier = Modifier

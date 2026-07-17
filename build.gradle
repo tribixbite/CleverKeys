@@ -414,6 +414,11 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.TestRunnerListDriftTest',
     'tribixbite.cleverkeys.onnx.CloseOnceGuardTest',
     'tribixbite.cleverkeys.onnx.ModelLoaderReadBytesTest',
+    // Backup encryption (2026-07-17) — pure crypto substrate
+    'tribixbite.cleverkeys.backup.crypto.Pbkdf2Sha256VectorTest',
+    'tribixbite.cleverkeys.backup.crypto.BackupCryptoRoundTripTest',
+    'tribixbite.cleverkeys.backup.crypto.BackupCryptoTamperTest',
+    'tribixbite.cleverkeys.backup.crypto.EncryptedBackupFormatTest',
     // SwipePrunerTest excluded: requires android.util.Log (MockK + Robolectric)
   ]
 
@@ -473,6 +478,9 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.AutocapitalisationCallbackDedupeTest',
     'tribixbite.cleverkeys.ClipboardMediaManagerZipSlipTest',
     'tribixbite.cleverkeys.BackupRestoreArchiveLimitsTest',
+    // Backup encryption (2026-07-17) — Android-touching tests (need android.jar)
+    'tribixbite.cleverkeys.backup.crypto.BackupPassphraseStoreTest',
+    'tribixbite.cleverkeys.BackupRestoreManagerEncryptionTest',
   ]
 
   mainClass = 'org.junit.runner.JUnitCore'

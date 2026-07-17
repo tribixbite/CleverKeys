@@ -15,9 +15,28 @@ import tribixbite.cleverkeys.BackupRestoreActivity
 import tribixbite.cleverkeys.DirectBootAwarePreferences
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.ui.settings.loadCurrentSettings
+import tribixbite.cleverkeys.BackupRestoreManager
 import tribixbite.cleverkeys.backup.SettingsImportPlan
 import tribixbite.cleverkeys.backup.ShortSwipeImportMode
 import tribixbite.cleverkeys.buildSettingsResultMessage
+
+/**
+ * Stage B (backup encryption): resolve the [BackupRestoreManager.EncryptionPolicy]
+ * for an interactive EXPORT. [plaintextOptOut] is set by the "Export unencrypted…"
+ * confirm dialog; otherwise UI exports encrypt whenever a passphrase is configured.
+ */
+internal fun SettingsActivity.exportPolicy(plaintextOptOut: Boolean): BackupRestoreManager.EncryptionPolicy =
+    if (plaintextOptOut) BackupRestoreManager.EncryptionPolicy.UI_PLAINTEXT_OPTOUT
+    else BackupRestoreManager.EncryptionPolicy.UI_DEFAULT
+
+/**
+ * Prime the manager for an interactive IMPORT: UI_DEFAULT policy + the stored
+ * passphrase (any one-shot override is cleared unless a retry sets it).
+ */
+internal fun SettingsActivity.primeImport() {
+    backupRestoreManager.encryptionPolicy = BackupRestoreManager.EncryptionPolicy.UI_DEFAULT
+    backupRestoreManager.setImportPassphraseOverride(null)
+}
 
 // Inline backup/restore functions - launch SAF file pickers
 internal fun SettingsActivity.exportConfiguration() {
@@ -58,10 +77,11 @@ internal fun SettingsActivity.importFullBackup() {
     }
 }
 
-internal fun SettingsActivity.performConfigExport(uri: Uri) {
+internal fun SettingsActivity.performConfigExport(uri: Uri, plaintextOptOut: Boolean = false) {
     lifecycleScope.launch {
         backupRestoreViewModel.isProcessing = true
         try {
+            backupRestoreManager.encryptionPolicy = exportPolicy(plaintextOptOut)
             val count = withContext(Dispatchers.IO) {
                 backupRestoreManager.exportConfig(uri, prefs)
             }
@@ -86,9 +106,10 @@ internal fun SettingsActivity.performConfigExport(uri: Uri) {
  * and choose a short-swipe import mode. If the file matches current
  * settings exactly, jump straight to the "No changes" result dialog.
  */
-internal fun SettingsActivity.performConfigImport(uri: Uri) {
+internal fun SettingsActivity.performConfigImport(uri: Uri, retryPassphrase: CharArray? = null) {
     lifecycleScope.launch {
         backupRestoreViewModel.isProcessing = true
+        if (retryPassphrase == null) primeImport()
         try {
             val plan = withContext(Dispatchers.IO) {
                 backupRestoreManager.buildSettingsImportPlan(uri, prefs)
@@ -103,6 +124,11 @@ internal fun SettingsActivity.performConfigImport(uri: Uri) {
             } else {
                 backupRestoreViewModel.settingsPreviewPlan = plan
             }
+        } catch (e: BackupRestoreManager.BackupDecryptException) {
+            promptForPassphrase(e, retryPassphrase) { entered ->
+                backupRestoreManager.setImportPassphraseOverride(entered)
+                performConfigImport(uri, entered)
+            }
         } catch (e: Exception) {
             android.util.Log.e(SettingsActivity.TAG, "Build settings plan failed", e)
             backupRestoreViewModel.resultTitle = "Import Failed"
@@ -111,6 +137,26 @@ internal fun SettingsActivity.performConfigImport(uri: Uri) {
         } finally {
             backupRestoreViewModel.isProcessing = false
         }
+    }
+}
+
+/**
+ * Stage B: show the passphrase-prompt dialog for an encrypted import that failed to
+ * decrypt. On a WRONG-password retry ([retryPassphrase] non-null) the error text is
+ * surfaced. [onEntered] re-runs the specific import with the entered passphrase.
+ */
+internal fun SettingsActivity.promptForPassphrase(
+    e: BackupRestoreManager.BackupDecryptException,
+    retryPassphrase: CharArray?,
+    onEntered: (CharArray) -> Unit,
+) {
+    // A failed retry means the entered password was wrong (or the file is corrupt).
+    backupRestoreViewModel.passphrasePromptError =
+        if (retryPassphrase != null) BackupRestoreManager.WRONG_PASSWORD_OR_CORRUPT else null
+    android.util.Log.i(SettingsActivity.TAG, "Prompting for backup passphrase: ${e.message}")
+    backupRestoreViewModel.passphrasePromptRetry = { entered ->
+        backupRestoreViewModel.dismissPassphrasePrompt()
+        onEntered(entered)
     }
 }
 
@@ -152,10 +198,11 @@ internal fun SettingsActivity.applyPlannedSettings(
  * clipboard JSON + media. Reuses the shared [BackupRestoreManager] helpers
  * so output stays in lockstep with the per-section exporters.
  */
-internal fun SettingsActivity.performFullBackupExport(uri: Uri) {
+internal fun SettingsActivity.performFullBackupExport(uri: Uri, plaintextOptOut: Boolean = false) {
     lifecycleScope.launch {
         backupRestoreViewModel.isProcessing = true
         try {
+            backupRestoreManager.encryptionPolicy = exportPolicy(plaintextOptOut)
             val result = withContext(Dispatchers.IO) {
                 backupRestoreManager.exportFullBackup(uri, prefs)
             }
@@ -192,10 +239,11 @@ internal fun SettingsActivity.performFullBackupExport(uri: Uri) {
     }
 }
 
-internal fun SettingsActivity.performFullBackupImport(uri: Uri) {
+internal fun SettingsActivity.performFullBackupImport(uri: Uri, retryPassphrase: CharArray? = null) {
     val _self = this
     lifecycleScope.launch {
         backupRestoreViewModel.isProcessing = true
+        if (retryPassphrase == null) primeImport()
         try {
             val result = withContext(Dispatchers.IO) {
                 backupRestoreManager.importFullBackup(uri, prefs)
@@ -229,6 +277,11 @@ internal fun SettingsActivity.performFullBackupImport(uri: Uri) {
                     "Failed to import full backup:\n\n${result.errorMessage ?: "Unknown error"}"
             }
             backupRestoreViewModel.showResultDialog = true
+        } catch (e: tribixbite.cleverkeys.BackupRestoreManager.BackupDecryptException) {
+            promptForPassphrase(e, retryPassphrase) { entered ->
+                backupRestoreManager.setImportPassphraseOverride(entered)
+                performFullBackupImport(uri, entered)
+            }
         } catch (e: Exception) {
             android.util.Log.e(SettingsActivity.TAG, "Full backup import failed", e)
             backupRestoreViewModel.resultTitle = "Full Backup Import Failed"

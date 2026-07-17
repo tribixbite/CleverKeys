@@ -6,10 +6,17 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -42,6 +49,10 @@ internal fun SettingsActivity.BackupRestoreSection() {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 12.dp)
                 )
+
+                // Stage B: backup-password block + encryption indicator (design §9).
+                BackupPasswordBlock()
+                HorizontalDivider(modifier = Modifier.padding(bottom = 12.dp))
 
                 // Configuration backup/restore
                 Text(
@@ -180,6 +191,45 @@ internal fun SettingsActivity.BackupRestoreSection() {
                         modifier = Modifier.weight(1f)
                     ) {
                         Text("Import Full Backup")
+                    }
+                }
+
+                // Stage B: plaintext opt-out (design §10 decision 1 — kept). Only
+                // meaningful once a password is set (otherwise exports are already
+                // plaintext). Arms a one-shot flag consumed by the NEXT export tap.
+                if (backupPassphraseStore.hasPassphrase()) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    var showPlaintextConfirm by remember { mutableStateOf(false) }
+                    TextButton(onClick = { showPlaintextConfirm = true }) {
+                        Text(
+                            if (pendingPlaintextExport) "Next export will be UNENCRYPTED — tap an Export button"
+                            else "Export unencrypted…",
+                            color = MaterialTheme.colorScheme.error,
+                            fontSize = 12.sp,
+                        )
+                    }
+                    if (showPlaintextConfirm) {
+                        AlertDialog(
+                            onDismissRequest = { showPlaintextConfirm = false },
+                            title = { Text("Export without encryption?") },
+                            text = {
+                                Text(
+                                    "The next export you start will be written as PLAINTEXT — " +
+                                        "anyone who obtains the file can read your settings, " +
+                                        "dictionary, or clipboard contents. Only do this if you " +
+                                        "will post-process the file yourself. Continue?"
+                                )
+                            },
+                            confirmButton = {
+                                TextButton(onClick = {
+                                    pendingPlaintextExport = true
+                                    showPlaintextConfirm = false
+                                }) { Text("I understand — arm plaintext export") }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showPlaintextConfirm = false }) { Text("Cancel") }
+                            },
+                        )
                     }
                 }
 

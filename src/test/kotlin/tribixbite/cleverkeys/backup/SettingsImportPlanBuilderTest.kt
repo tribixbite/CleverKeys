@@ -224,6 +224,11 @@ class SettingsImportPlanBuilderTest {
             "voice_ime_known",                 // runtime IME state
             "voice_ime_last_used",             // runtime IME state
             "ime_prompt_shown_this_session",   // per-session UI flag
+            // Backup-encryption state (Stage B) — never exported (§8.2).
+            "backup_passphrase_ciphertext",    // Keystore-wrapped passphrase
+            "backup_passphrase_iv",            // GCM IV for the wrapped passphrase
+            "backup_allow_intent_passphrase",  // headless --es passphrase opt-in
+            "backup_last_headless_action_ms",  // in-prefs rate-limit timestamp
         )
         assertThat(SettingsValidation.INTERNAL_KEYS).isEqualTo(expected)
     }

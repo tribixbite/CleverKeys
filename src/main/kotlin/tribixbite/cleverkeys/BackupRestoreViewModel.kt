@@ -19,4 +19,20 @@ class BackupRestoreViewModel : ViewModel() {
     var resultTitle by mutableStateOf("")
     var resultMessage by mutableStateOf("")
     var showResultDialog by mutableStateOf(false)
+
+    /**
+     * Stage B (backup encryption): when non-null, a passphrase-prompt dialog is shown
+     * for an encrypted import that could not be decrypted with the stored passphrase
+     * (or none was stored). The lambda is invoked with the entered passphrase to retry
+     * the specific import that triggered it. [passphrasePromptError] carries the
+     * "wrong password" message on a failed retry (null on first prompt).
+     */
+    var passphrasePromptRetry by mutableStateOf<((CharArray) -> Unit)?>(null)
+    var passphrasePromptError by mutableStateOf<String?>(null)
+
+    /** Dismiss the passphrase prompt (user cancelled — import aborted, nothing touched). */
+    fun dismissPassphrasePrompt() {
+        passphrasePromptRetry = null
+        passphrasePromptError = null
+    }
 }

@@ -38,6 +38,14 @@ object SettingsValidation {
         "voice_ime_known",                  // Runtime voice-IME state (per device)
         "voice_ime_last_used",              // Runtime voice-IME state (per device)
         "ime_prompt_shown_this_session",    // Per-session UI flag (not portable)
+        // Backup-encryption state (Stage B). NEVER exported: exporting the
+        // wrapped passphrase inside the settings backup it protects would be
+        // circular, and the intent-passphrase toggle / rate-limit timestamp are
+        // device-local automation state.
+        "backup_passphrase_ciphertext",     // Keystore-wrapped backup passphrase (base64)
+        "backup_passphrase_iv",             // GCM IV for the wrapped passphrase (base64)
+        "backup_allow_intent_passphrase",   // Opt-in: accept --es passphrase on headless IMPORT
+        "backup_last_headless_action_ms",   // In-prefs rate-limit timestamp for headless actions
     )
 
     fun isInternalPreference(key: String): Boolean = key in INTERNAL_KEYS
