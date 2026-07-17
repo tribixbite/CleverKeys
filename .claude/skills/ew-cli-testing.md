@@ -17,10 +17,10 @@ Use this skill when running instrumented tests on emulator.wtf cloud infrastruct
 ## Prerequisites
 
 ```bash
-# emulator.wtf token must be exported. The var ew-cli reads is EW_API_TOKEN
-# (NOT EW_API_KEY). On this device it is injected into the Claude Code shell
-# env — verify with `env | grep EW_API_TOKEN`, do NOT rely on `source ~/.bashrc`
-# (it is not defined there). In a plain shell, export it yourself first.
+# emulator.wtf token must be exported as EW_API_TOKEN. On this device it is
+# injected into the Claude Code shell env — verify with `env | grep EW_API_TOKEN`.
+# It is NOT defined in ~/.bashrc, so re-sourcing your profile won't set it; in a
+# plain shell, export it yourself first.
 env | grep -q EW_API_TOKEN || echo "EW_API_TOKEN not set — export it before running ew-cli"
 
 # Verify ew-cli is installed (it's a wrapper at ~/bin/ew-cli that java -jars the CLI)
@@ -287,7 +287,7 @@ If wiring ew-cli into CI, the CLI reads `EW_API_TOKEN`:
 
 ### API Token Issues
 ```bash
-# The var ew-cli reads is EW_API_TOKEN (NOT EW_API_KEY). Verify it's exported:
+# The var ew-cli reads is EW_API_TOKEN. Verify it's exported:
 env | grep EW_API_TOKEN
 
 # If empty: it is injected into the Claude Code shell env, NOT ~/.bashrc, so
@@ -298,9 +298,10 @@ env | grep EW_API_TOKEN
 
 ### "Env not found" / trying to sign the test APK
 If an agent reports the env is missing and starts building a keystore-signed
-APK, it hit two doc traps: (1) it grepped `EW_API_KEY` (wrong name — see above),
-and (2) it assumed testing needs the release keystore. It does not — debug APKs
-self-sign via the committed `debug.keystore`. Don't touch `RELEASE_KEYSTORE`.
+APK, it made two mistakes: (1) it checked for the wrong token variable — the
+only one is `EW_API_TOKEN` (see above); and (2) it assumed testing needs the
+release keystore. It does not — debug APKs self-sign via the committed
+`debug.keystore`. Don't touch `RELEASE_KEYSTORE`.
 
 ### APK Not Found
 ```bash
