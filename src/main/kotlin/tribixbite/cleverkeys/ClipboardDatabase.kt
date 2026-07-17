@@ -85,7 +85,14 @@ class ClipboardDatabase private constructor(context: Context) :
                 db.execSQL("ALTER TABLE $TABLE_CLIPBOARD ADD COLUMN is_todo INTEGER DEFAULT 0")
                 Log.d(TAG, "Database upgraded v1→v2: added is_todo column")
             } catch (e: Exception) {
-                Log.e(TAG, "Error upgrading v1→v2: ${e.message}")
+                if (e.message?.contains("duplicate column", ignoreCase = true) == true) {
+                    // Column already exists — migration is idempotent, treat as already applied
+                    Log.w(TAG, "v1→v2 column already exists, treating as migrated")
+                } else {
+                    // Re-throw so SQLiteOpenHelper rolls back the transaction (matches v2→v3/v3→v4)
+                    Log.e(TAG, "Error upgrading v1→v2: ${e.message}", e)
+                    throw e
+                }
             }
         }
         if (oldVersion < 3) {
@@ -232,7 +239,9 @@ class ClipboardDatabase private constructor(context: Context) :
                         put(COLUMN_EXPIRY_TIMESTAMP, expiryTimestamp)
                     }
                     db.update(TABLE_CLIPBOARD, updateValues, "$COLUMN_ID = ?", arrayOf(existingId.toString()))
-                    Log.d(TAG, "Duplicate moved to top: ${trimmedContent.take(20)}... (id=$existingId)")
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                        Log.d(TAG, "Duplicate moved to top (len=${trimmedContent.length}, id=$existingId)")
+                    }
                     return true
                 }
             }
@@ -243,7 +252,9 @@ class ClipboardDatabase private constructor(context: Context) :
                 put(COLUMN_CONTENT_HASH, contentHash)
             }
             val result = db.insert(TABLE_CLIPBOARD, null, values)
-            Log.d(TAG, "Added clipboard entry: ${trimmedContent.take(20)}... (id=$result)")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                Log.d(TAG, "Added clipboard entry (len=${trimmedContent.length}, id=$result)")
+            }
             result != -1L
         } catch (e: Exception) {
             Log.e(TAG, "Error adding clipboard entry: ${e.message}")
@@ -285,7 +296,9 @@ class ClipboardDatabase private constructor(context: Context) :
                         put(COLUMN_EXPIRY_TIMESTAMP, expiryTimestamp)
                     }
                     db.update(TABLE_CLIPBOARD, updateValues, "$COLUMN_ID = ?", arrayOf(existingId.toString()))
-                    Log.d(TAG, "Duplicate media moved to top: $content (id=$existingId)")
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                        Log.d(TAG, "Duplicate media moved to top (len=${content.length}, id=$existingId)")
+                    }
                     return true
                 }
             }
@@ -300,7 +313,9 @@ class ClipboardDatabase private constructor(context: Context) :
                 put(COLUMN_MEDIA_PATH, mediaPath)
             }
             val result = db.insert(TABLE_CLIPBOARD, null, values)
-            Log.d(TAG, "Added media entry: $content ($mimeType, id=$result)")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                Log.d(TAG, "Added media entry ($mimeType, len=${content.length}, id=$result)")
+            }
             result != -1L
         } catch (e: Exception) {
             Log.e(TAG, "Error adding media clipboard entry: ${e.message}")
@@ -357,7 +372,9 @@ class ClipboardDatabase private constructor(context: Context) :
                 if (cursor.moveToFirst()) cursor.getString(0) else null
             }
             val deletedRows = db.delete(TABLE_CLIPBOARD, "$COLUMN_CONTENT = ?", arrayOf(contentKey))
-            Log.d(TAG, "Removed $deletedRows clipboard entries matching: ${contentKey.take(20)}...")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                Log.d(TAG, "Removed $deletedRows clipboard entries matching (len=${contentKey.length})")
+            }
             if (deletedRows > 0) mediaPath else null
         } catch (e: Exception) {
             Log.e(TAG, "Error removing clipboard entry: ${e.message}")
@@ -485,7 +502,9 @@ class ClipboardDatabase private constructor(context: Context) :
                 arrayOf(contentHash, trimmedContent)
             ).use { it.moveToFirst() }
             if (alreadyPinned) {
-                Log.d(TAG, "Already pinned: ${trimmedContent.take(20)}...")
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                    Log.d(TAG, "Already pinned (len=${trimmedContent.length})")
+                }
                 return false
             }
             val position = getMaxPinnedPosition(db) + 1.0
@@ -501,7 +520,9 @@ class ClipboardDatabase private constructor(context: Context) :
                 if (mediaPath != null) put(COLUMN_MEDIA_PATH, mediaPath)
             }
             val result = db.insert(TABLE_PINNED, null, values)
-            Log.d(TAG, "Pinned entry: ${trimmedContent.take(20)}... (id=$result, pos=$position)")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                Log.d(TAG, "Pinned entry (len=${trimmedContent.length}, id=$result, pos=$position)")
+            }
             result != -1L
         } catch (e: Exception) {
             Log.e(TAG, "Error pinning entry: ${e.message}")
@@ -526,7 +547,9 @@ class ClipboardDatabase private constructor(context: Context) :
                 if (cursor.moveToFirst()) cursor.getString(0) else null
             }
             val deletedRows = db.delete(TABLE_PINNED, "$COLUMN_CONTENT = ?", arrayOf(contentKey))
-            Log.d(TAG, "Unpinned $deletedRows entries: ${contentKey.take(20)}...")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                Log.d(TAG, "Unpinned $deletedRows entries (len=${contentKey.length})")
+            }
             if (deletedRows > 0) mediaPath else null
         } catch (e: Exception) {
             Log.e(TAG, "Error unpinning entry: ${e.message}")
@@ -658,7 +681,9 @@ class ClipboardDatabase private constructor(context: Context) :
                 arrayOf(contentHash, trimmedContent)
             ).use { it.moveToFirst() }
             if (alreadyTodo) {
-                Log.d(TAG, "Already a todo: ${trimmedContent.take(20)}...")
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                    Log.d(TAG, "Already a todo (len=${trimmedContent.length})")
+                }
                 return false
             }
             val position = getMaxTodoPosition(db) + 1.0
@@ -675,7 +700,9 @@ class ClipboardDatabase private constructor(context: Context) :
                 if (mediaPath != null) put(COLUMN_MEDIA_PATH, mediaPath)
             }
             val result = db.insert(TABLE_TODO, null, values)
-            Log.d(TAG, "Added todo: ${trimmedContent.take(20)}... (id=$result, pos=$position)")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                Log.d(TAG, "Added todo (len=${trimmedContent.length}, id=$result, pos=$position)")
+            }
             result != -1L
         } catch (e: Exception) {
             Log.e(TAG, "Error adding todo entry: ${e.message}")
@@ -699,7 +726,9 @@ class ClipboardDatabase private constructor(context: Context) :
                 if (cursor.moveToFirst()) cursor.getString(0) else null
             }
             val deletedRows = db.delete(TABLE_TODO, "$COLUMN_CONTENT = ?", arrayOf(contentKey))
-            Log.d(TAG, "Removed $deletedRows todo entries: ${contentKey.take(20)}...")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                Log.d(TAG, "Removed $deletedRows todo entries (len=${contentKey.length})")
+            }
             if (deletedRows > 0) mediaPath else null
         } catch (e: Exception) {
             Log.e(TAG, "Error removing todo entry: ${e.message}")
@@ -719,7 +748,9 @@ class ClipboardDatabase private constructor(context: Context) :
             val db = writableDatabase
             val values = ContentValues().apply { put(COLUMN_STATUS, status) }
             val updatedRows = db.update(TABLE_TODO, values, "$COLUMN_CONTENT = ?", arrayOf(contentKey))
-            Log.d(TAG, "Updated todo status to '$status' for $updatedRows entries: ${contentKey.take(20)}...")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                Log.d(TAG, "Updated todo status to '$status' for $updatedRows entries (len=${contentKey.length})")
+            }
             updatedRows > 0
         } catch (e: Exception) {
             Log.e(TAG, "Error updating todo status: ${e.message}")

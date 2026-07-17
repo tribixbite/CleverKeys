@@ -10,8 +10,8 @@ Security and privacy are core principles of CleverKeys. We take security vulnera
 
 | Version | Supported          | Status |
 | ------- | ------------------ | ------ |
-| 1.0.x   | :white_check_mark: | Current stable release |
-| < 1.0   | :x:                | Development versions (not released) |
+| 1.5.x   | :white_check_mark: | Current stable release |
+| < 1.5   | :x:                | Superseded releases (no longer maintained) |
 
 ---
 
@@ -367,8 +367,8 @@ We support safe harbor for security researchers:
 
 This security policy may be updated as CleverKeys evolves:
 
-- **Last Updated**: 2025-11-16
-- **Version**: 1.0
+- **Last Updated**: 2026-07-17
+- **Version**: 1.1
 - **Next Review**: 2026-11-16
 
 **Changes will be announced via**:
@@ -395,6 +395,6 @@ Together we protect user privacy and security.
 
 ---
 
-**Version**: 1.0
+**Version**: 1.1
 **Effective**: 2025-11-16
 **Contact**: security@cleverkeys.org *(to be set up)*

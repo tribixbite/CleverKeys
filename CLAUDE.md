@@ -8,11 +8,12 @@
 3.  **CHECK `docs/TABLE_OF_CONTENTS.md`** - Master navigation for project docs.
 4.  **CHECK `docs/specs/`** - Feature specifications for the area you are working on.
 
-**CURRENT STATUS (2026-03-26):**
-- ✅ Development 100% complete.
-- ✅ Production Ready (Grade A).
-- ✅ **New Features**: Short Swipe Customization, Profile System, Media Clipboard (v4).
-- ✅ Documentation updated and consolidated.
+**CURRENT STATUS (2026-07-17):**
+- Feature-complete and released (v1.5.x on F-Droid).
+- Latest code-quality audit: `docs/audit/2026-07-17-code-quality-audit.md`.
+- Tier-1/Tier-2 remediation from that audit is in progress (clipboard PII log
+  gating, migration rollback, Config null-safety, docs accuracy).
+- Features shipped: Short Swipe Customization, Profile System, Media Clipboard (v4).
 
 **SPEC-DRIVEN DEVELOPMENT WORKFLOW:**
 1. **Check Spec**: Is there a spec in `docs/specs/` for this feature?
@@ -88,16 +89,33 @@ CleverKeys is a **complete Kotlin rewrite** of `Julow/Unexpected-Keyboard` featu
 ## 📁 **ARCHITECTURE OVERVIEW**
 
 ```
-src/main/kotlin/tribixbite/keyboard2/
-├── core/                           # Core keyboard functionality
-├── neural/                         # ONNX neural prediction (NO CGR)
-├── data/                           # Data models
-├── config/                         # Configuration system
-├── ui/                             # User interfaces
-├── customization/                  # Customization logic (Short Swipes, Profiles)
-├── utils/                          # Utilities
-└── testing/                        # Quality assurance
+src/main/kotlin/tribixbite/cleverkeys/       # package tribixbite.cleverkeys
+├── *.kt                            # ~158 files flat at the package root
+│                                   #   (IME service, keyboard views, Config,
+│                                   #    ClipboardDatabase, predictors, etc.)
+├── onnx/                           # ONNX neural prediction (14 files, NO CGR)
+├── ui/                             # UI (36 files)
+│   └── settings/                   #   Settings screens
+│       ├── sections/               #     Per-section composables (17 files)
+│       └── io/                     #     Import/export UI (7 files)
+├── backup/                         # Backup & restore, import-plan diff (13 files)
+├── customization/                  # Short Swipes, Profiles (14 files)
+├── theme/                          # Theming (8 files)
+├── gif/                            # GIF panel (7 files)
+├── prefs/                          # Preference helpers (6 files)
+├── clipboard/sanitize/            # Clipboard PII sanitizers (4 files)
+├── personalization/               # Personalization
+├── contextaware/                  # Context-aware prediction
+├── autocorrect/                    # Autocorrect
+├── ml/                             # ML helpers
+├── langpack/                       # Language-pack import
+└── autofill/                       # Autofill integration
 ```
+
+> Counts derived via `rg --files … -g '*.kt'` on 2026-07-17. The old
+> `tribixbite/keyboard2/` tree with `core/neural/data/config/…` never existed —
+> the package is `tribixbite.cleverkeys` with a large flat root plus the
+> subpackages above.
 
 ---
 

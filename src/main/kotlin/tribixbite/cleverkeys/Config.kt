@@ -1180,10 +1180,20 @@ class Config private constructor(
         }
 
         @JvmStatic
-        fun globalConfig(): Config = _globalConfig!!
+        fun globalConfig(): Config = _globalConfig
+            ?: error("Config not initialized — initGlobalConfig() must run before globalConfig()")
+
+        /**
+         * Null-safe accessor for the global [Config] instance. Returns `null` when
+         * [initGlobalConfig] has not yet run, so callers that may execute before
+         * IME initialization (e.g. early static init, tests) can branch instead of
+         * crashing. Prefer [globalConfig] where init is guaranteed to have happened.
+         */
+        @JvmStatic
+        fun globalConfigOrNull(): Config? = _globalConfig
 
         @JvmStatic
-        fun globalPrefs(): SharedPreferences = _globalConfig!!._prefs
+        fun globalPrefs(): SharedPreferences = globalConfig()._prefs
 
         @JvmStatic
         fun safeGetInt(prefs: SharedPreferences, key: String, defaultValue: Int): Int {

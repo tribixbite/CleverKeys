@@ -11,7 +11,7 @@
 </br>
 
 <p align="center">
-  <img alt="API" src="https://img.shields.io/badge/Api%2026+-50f270?logo=android&logoColor=black&style=for-the-badge"/></a>
+  <img alt="API" src="https://img.shields.io/badge/Api%2021+-50f270?logo=android&logoColor=black&style=for-the-badge"/></a>
   <img alt="Kotlin" src="https://img.shields.io/badge/Kotlin-a503fc?logo=kotlin&logoColor=white&style=for-the-badge"/></a>
   <img alt="ONNX Runtime" src="https://img.shields.io/badge/ONNX-005CED?logo=onnx&logoColor=white&style=for-the-badge"/></a>
   <img alt="Material 3" src="https://custom-icon-badges.demolab.com/badge/material%20you-lightblue?style=for-the-badge&logoColor=333&logo=material-you"/></a>
@@ -347,7 +347,7 @@ Available in [`scripts/dictionaries/`](./scripts/dictionaries/) for testing, or 
 
 </div>
 
-- Minimum SDK level 26 (Android 8.0+)
+- Minimum SDK level 21 (Android 5.0+)
 - [Kotlin](https://kotlinlang.org/) based — 100% Kotlin, zero Java
 - [ONNX Runtime](https://onnxruntime.ai/) — Microsoft's cross-platform inference engine
 - [Kotlin Coroutines](https://github.com/Kotlin/kotlinx.coroutines) — Asynchronous processing
@@ -361,7 +361,7 @@ Available in [`scripts/dictionaries/`](./scripts/dictionaries/) for testing, or 
 </div>
 
 ### Requirements
-- Android SDK (API 26+)
+- Android SDK Platform 34 (compileSdk 34; minSdk 21)
 - Gradle 8.6+
 - Kotlin 1.9.20
 - JDK 17
