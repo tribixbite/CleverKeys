@@ -23,6 +23,38 @@
 #   4. NO IMPLICIT PUSH — pushing requires the literal argument `--push`.
 #      Without it the script stops after verification and prints the size.
 #
+# F-DROID GOTCHAS (hard-won, verified 2026-07-15/16):
+#   - fdroiddata build blocks pin `commit: <FULL SHA>` — NOT the tag name —
+#     even though AutoUpdateMode is "Version v%v". Published versions are
+#     never re-fetched (safe to orphan their SHAs); PENDING versions are not.
+#   - The update bot detects releases by scraping the GITHUB RELEASE BODY
+#     for the literal lines `Version: X.Y.Z` and `VersionCode: NNNNN`
+#     (UpdateCheckMode: HTTP + regex). release.yml emits them in the Build
+#     Information section. NEVER remove/reword those two lines when editing
+#     a release body (`gh release edit`) — v1.2.9–v1.3.0 were silently never
+#     picked up after they went missing.
+#   - Reproducible-build verification compares APK bytes rebuilt from the
+#     pinned source against the GitHub release APKs. It depends on the TREE
+#     (source content), not commit SHAs — which is why Gate 3 (tree
+#     identity) is sufficient to keep verification working across a rewrite.
+#   - Publish ≠ build: after a cycle builds the APK it still needs signing +
+#     index publication (typically a few extra hours). The gate here checks
+#     the PUBLISHED index (api/v1/packages), the only state that matters.
+#
+# GIF ASSET PACKS — MUST REMAIN DOWNLOADABLE:
+#   - All 22 pack files (~1.2 GB: discord-community-*.zip, thumbs-*.zip,
+#     gifs_v2.db.gz) are RELEASE ASSETS on the `CleverKeys-GIF` release.
+#     Users download them from GitHub (the app has no INTERNET permission;
+#     packs import via SAF). Release assets live in GitHub blob storage,
+#     OUTSIDE git objects — a history rewrite cannot touch them.
+#   - Releases stay attached to their tag NAME across force-updates, and
+#     `git push --mirror` re-creates the (rewritten) CleverKeys-GIF tag, so
+#     the release keeps its tag anchor. Do NOT delete that tag or release,
+#     and never prune it from the mirror before pushing.
+#   - The 601 MB stripped from history (tools/gif_pipeline/discord_processed)
+#     was the accidentally-committed WORKING SET used to build the packs —
+#     not the downloadable packs themselves.
+#
 # AFTER a successful --push run:
 #   - Re-clone all working copies (old clones' SHAs are orphaned):
 #       cd ~/git/swype && mv cleverkeys cleverkeys.old \
@@ -31,9 +63,9 @@
 #       (the old copy also carries an ~18 GB local pack — reclaim it).
 #   - Add .gitignore guards if not already present: .gradle/, build/,
 #     *.apk at repo root, release_apks/, *_apk/ dirs.
-#   - GIF packs are NOT affected: they are RELEASE ASSETS on the
-#     CleverKeys-GIF release (GitHub blob storage, outside git objects);
-#     releases stay attached to their tag NAME across force-updates.
+#   - Spot-check afterwards: CleverKeys-GIF release still lists 22 assets
+#     (`gh release view CleverKeys-GIF --json assets --jq '.assets|length'`),
+#     v1.5.0 release intact, CI green on rewritten main.
 #
 # Usage:
 #   scripts/strip-repo-history.sh            # dry run: clone, filter, verify
