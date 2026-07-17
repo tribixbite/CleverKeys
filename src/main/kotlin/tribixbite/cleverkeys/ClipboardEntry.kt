@@ -22,7 +22,11 @@ class ClipboardEntry(
     // Optional fields carried from pinned_entries/todo_entries tables for view rendering.
     // Defaults preserve backward compat — history entries get emptyList() + null.
     @JvmField val tags: List<String> = emptyList(),
-    @JvmField val todoStatus: String? = null
+    @JvmField val todoStatus: String? = null,
+    // #156: private-copy marker. isPrivate → 🔒 badge + confirm-before-OS-clipboard.
+    // sourcePackage → provenance line ("via <app>" / "direct launch"). Defaults preserve compat.
+    @JvmField val isPrivate: Boolean = false,
+    @JvmField val sourcePackage: String? = null
 ) {
     /** Whether this entry contains non-text media (image, video, PDF, etc.) */
     val isMedia: Boolean get() = mimeType != MIME_TEXT_PLAIN

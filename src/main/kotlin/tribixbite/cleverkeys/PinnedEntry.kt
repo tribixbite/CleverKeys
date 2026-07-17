@@ -29,7 +29,9 @@ data class PinnedEntry(
     val tags: List<String> = emptyList(),
     val mimeType: String = ClipboardEntry.MIME_TEXT_PLAIN,
     val thumbnailBlob: ByteArray? = null,
-    val mediaPath: String? = null
+    val mediaPath: String? = null,
+    val isPrivate: Boolean = false,     // #156: private-copy marker (COPY semantics — travels on pin)
+    val sourcePackage: String? = null   // #156: provenance
 ) {
     /** Whether this entry contains non-text media */
     val isMedia: Boolean get() = mimeType != ClipboardEntry.MIME_TEXT_PLAIN

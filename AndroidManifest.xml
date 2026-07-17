@@ -128,6 +128,27 @@
     <activity android:name="tribixbite.cleverkeys.ShortSwipeCalibrationActivity" android:label="Short Swipe Calibration" android:theme="@style/settingsTheme" android:exported="false" android:directBootAware="true"/>
 
     <activity android:name="tribixbite.cleverkeys.SwipeDebugActivity" android:label="Swipe Debug Log" android:theme="@style/settingsTheme" android:exported="false" android:directBootAware="true"/>
+
+    <!-- #156 Private copy: selection-toolbar receiver. Exported BY DESIGN (threat review:
+         docs/audit/remediation-plans/156-private-copy-paste.md §6) but android:enabled="false"
+         until the user opts in via Settings → Clipboard. Inbound-only: reads EXTRA_PROCESS_TEXT,
+         stores locally, returns no result (never setResult(RESULT_OK) → host text untouched). -->
+    <activity
+        android:name="tribixbite.cleverkeys.PrivateCopyProcessTextActivity"
+        android:label="@string/private_copy_toolbar_label"
+        android:exported="true"
+        android:enabled="false"
+        android:theme="@android:style/Theme.NoDisplay"
+        android:excludeFromRecents="true"
+        android:noHistory="true"
+        android:taskAffinity=""
+        android:directBootAware="false">
+      <intent-filter>
+        <action android:name="android.intent.action.PROCESS_TEXT"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+        <data android:mimeType="text/plain"/>
+      </intent-filter>
+    </activity>
   </application>
 
   <!-- To query enabled input methods for voice IME detection -->

@@ -233,6 +233,15 @@
     <string name="clipboard_empty_title">No clipboard history</string>
     <string name="clipboard_empty_message">Copy text to see it here</string>
 
+    <!-- #156 Private copy -->
+    <string name="private_copy_toolbar_label">CleverKeys: Private copy</string>
+    <string name="private_copy_toast">Copied privately to CleverKeys</string>
+    <string name="private_copy_badge">🔒 private</string>
+    <string name="private_copy_expose_dialog_title">Copy to system clipboard?</string>
+    <string name="private_copy_expose_dialog_message">This entry was copied privately. Copying it to the system clipboard exposes the text to the foreground app and other clipboard managers. Copy anyway?</string>
+    <string name="private_copy_expose_dialog_confirm">Copy anyway</string>
+    <string name="private_copy_expose_dialog_cancel">Cancel</string>
+
     <!-- Emoji Grid View (Material 3) -->
     <string name="emoji_loading">Loading emojis…</string>
     <string name="emoji_error_unknown">Unknown error</string>

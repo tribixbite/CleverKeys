@@ -9,8 +9,10 @@ import kotlinx.coroutines.launch
 import tribixbite.cleverkeys.Config
 import tribixbite.cleverkeys.Defaults
 import tribixbite.cleverkeys.Logs
+import tribixbite.cleverkeys.PrivateCopyProcessTextActivity
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
+import tribixbite.cleverkeys.ui.settings.sections.setPrivateCopyToolbarComponentEnabled
 import tribixbite.cleverkeys.ui.settings.io.detectAvailableV2Dictionaries
 import tribixbite.cleverkeys.ui.settings.io.recomputeCustomRulesStatus
 import tribixbite.cleverkeys.ui.settings.io.refreshInstalledGifPacks
@@ -284,6 +286,11 @@ internal fun SettingsActivity.loadCurrentSettings() {
         clipboardTextOnly = prefs.getSafeBoolean("clipboard_text_only", false)
         clipboardPinnedEnabled = prefs.getSafeBoolean("clipboard_pinned_enabled", true)
         clipboardTodoEnabled = prefs.getSafeBoolean("clipboard_todo_enabled", true)
+        // #156: PROCESS_TEXT selection-toolbar entry point — opt-in, default false (design §6.6).
+        clipboardPrivateCopyToolbarEnabled = prefs.getSafeBoolean(PrivateCopyProcessTextActivity.PREF_TOOLBAR_ENABLED, false)
+        // Reconcile the OS component-enabled state with the persisted pref (e.g. after a restore or
+        // reinstall the manifest default is disabled, but the pref may say the user opted in).
+        setPrivateCopyToolbarComponentEnabled(clipboardPrivateCopyToolbarEnabled)
 
         // URL sanitization toggles (Chunk 4) — defaults match Config.kt (all off)
         clipboardSanitizeLinksEnabled = prefs.getSafeBoolean("clipboard_sanitize_links_enabled", false)

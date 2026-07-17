@@ -655,6 +655,11 @@ class KeyboardReceiver(
         return context
     }
 
+    // #156: private-copy feedback via the suggestion bar (Toasts are IME-suppressed on Android 13+).
+    override fun showPrivateCopyFeedback(message: String) {
+        keyboard2.showSuggestionBarMessage(message)
+    }
+
     override fun getHandler(): Handler {
         return handler
     }

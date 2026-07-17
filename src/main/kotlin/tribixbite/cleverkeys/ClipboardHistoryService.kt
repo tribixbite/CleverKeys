@@ -69,11 +69,18 @@ class ClipboardHistoryService private constructor(ctx: Context) {
     init {
         // Listen for sanitization toggle/file changes so the cached ruleset stays fresh.
         // Mirrors the dictionary-import receiver pattern used by DictionaryManagerActivity.
-        LocalBroadcastManager.getInstance(_context).registerReceiver(
-            _sanitizationRulesReceiver,
-            IntentFilter(SettingsActivity.ACTION_SANITIZATION_RULES_CHANGED)
-        )
-        _sanitizationReceiverRegistered = true
+        // Defensive: a receiver-registration failure (e.g. LocalBroadcastManager unavailable in an
+        // edge/headless context) must NOT abort service construction — the core clipboard store
+        // still works; only the live sanitization-rules refresh is lost until next process start.
+        try {
+            LocalBroadcastManager.getInstance(_context).registerReceiver(
+                _sanitizationRulesReceiver,
+                IntentFilter(SettingsActivity.ACTION_SANITIZATION_RULES_CHANGED)
+            )
+            _sanitizationReceiverRegistered = true
+        } catch (e: Throwable) {
+            android.util.Log.w("ClipboardHistory", "Sanitization-rules receiver not registered: ${e.message}")
+        }
     }
 
     init {
@@ -264,7 +271,37 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         empty strings. */
     fun addClip(clip: String?) {
         if (!Config.globalConfig().clipboard_history_enabled) return
+        // OS-listener path: sanitize + optionally rewrite the OS clipboard, non-private insert.
+        storeClip(clip, rewriteOsClipboard = true, isPrivate = false, sourcePackage = null)
+    }
 
+    /**
+     * #156 private-copy write path. Stores [text] directly into the clipboard DB marked private,
+     * and — critically — NEVER calls [systemClipboardRewrite]/setPrimaryClip. That is the whole
+     * security point: the plaintext must not reach the OS clipboard. Enforced by review and by
+     * PrivateCopyServiceTest's `verify(exactly = 0) { setPrimaryClip(any()) }`.
+     *
+     * Own gate (Decision #4): unlike [addClip], this works even when `clipboard_history_enabled`
+     * is false — that pref governs OS-clipboard *monitoring*, and a privacy-focused user may want
+     * monitoring off with private copy as the only capture route.
+     */
+    fun addPrivateClip(text: String?, sourcePackage: String?) {
+        storeClip(text, rewriteOsClipboard = false, isPrivate = true, sourcePackage = sourcePackage)
+    }
+
+    /**
+     * Shared core of [addClip] and [addPrivateClip]. The two paths differ ONLY in:
+     *   - [rewriteOsClipboard]: the private path passes `false`, so the [systemClipboardRewrite]
+     *     branch (the only setPrimaryClip caller here) is structurally unreachable for it.
+     *   - [isPrivate] / [sourcePackage]: threaded into the DB insert.
+     * Size-cap, sanitize, insert and pruning are identical (store hygiene applies to both).
+     */
+    private fun storeClip(
+        clip: String?,
+        rewriteOsClipboard: Boolean,
+        isPrivate: Boolean,
+        sourcePackage: String?
+    ) {
         if (clip == null || clip.trim().isEmpty()) return
 
         // Check maximum item size limit
@@ -295,20 +332,25 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         val expiryTime = if (ttlMs == Long.MAX_VALUE) Long.MAX_VALUE else System.currentTimeMillis() + ttlMs
 
         // URL sanitization (text/plain only). No-op when all three toggles are off.
+        // Sanitizing the *stored* content is store hygiene — applies to private entries too.
         val processed = _sanitizationConfig.sanitizer().process(clip)
 
-        // If sanitization actually cleaned the URL and the user opted in, also overwrite the
-        // Android system clipboard so pastes from ANY app deliver the sanitized URL (not just
-        // CleverKeys' own panel). Idempotent: the re-fired listener re-sanitizes an already-clean
-        // value → no further change → no loop. See [systemClipboardRewrite].
-        systemClipboardRewrite(
-            original = clip,
-            processed = processed,
-            enabled = Config.globalConfig().clipboard_sanitize_system_clipboard,
-        )?.let { rewriteSystemClipboard(it) }
+        // OS-clipboard rewrite: ONLY on the OS-listener path. If sanitization actually cleaned
+        // the URL and the user opted in, overwrite the Android system clipboard so pastes from ANY
+        // app deliver the sanitized URL. Idempotent (re-fired listener re-sanitizes → no loop).
+        // #156 SECURITY INVARIANT: the private path passes rewriteOsClipboard=false, so this
+        // setPrimaryClip-bearing branch never runs for a private copy — plaintext never reaches
+        // the OS clipboard. See [systemClipboardRewrite].
+        if (rewriteOsClipboard) {
+            systemClipboardRewrite(
+                original = clip,
+                processed = processed,
+                enabled = Config.globalConfig().clipboard_sanitize_system_clipboard,
+            )?.let { rewriteSystemClipboard(it) }
+        }
 
-        // Add to database (handles duplicate detection automatically)
-        val added = _database.addClipboardEntry(processed, expiryTime)
+        // Add to database (handles duplicate detection + sticky-privacy merge automatically)
+        val added = _database.addClipboardEntry(processed, expiryTime, isPrivate, sourcePackage)
 
         if (added) {
             // Apply size limits if configured (based on limit type)
@@ -380,7 +422,9 @@ class ClipboardHistoryService private constructor(ctx: Context) {
     fun pinEntry(clip: String, createdTimestamp: Long = System.currentTimeMillis(),
                  mimeType: String = ClipboardEntry.MIME_TEXT_PLAIN,
                  thumbnailBlob: ByteArray? = null, mediaPath: String? = null): Boolean {
-        val added = _database.pinEntry(clip, createdTimestamp, mimeType, thumbnailBlob, mediaPath)
+        // #156 COPY semantics: preserve the private marker + provenance on the pinned copy.
+        val (isPrivate, sourcePackage) = _database.getPrivateMarker(clip)
+        val added = _database.pinEntry(clip, createdTimestamp, mimeType, thumbnailBlob, mediaPath, isPrivate, sourcePackage)
         if (added) _listener?.on_clipboard_history_change()
         return added
     }
@@ -402,7 +446,9 @@ class ClipboardHistoryService private constructor(ctx: Context) {
     fun addToTodo(clip: String, createdTimestamp: Long = System.currentTimeMillis(),
                   mimeType: String = ClipboardEntry.MIME_TEXT_PLAIN,
                   thumbnailBlob: ByteArray? = null, mediaPath: String? = null): Boolean {
-        val added = _database.addTodoEntry(clip, createdTimestamp, mimeType, thumbnailBlob, mediaPath)
+        // #156 COPY semantics: preserve the private marker + provenance on the todo copy.
+        val (isPrivate, sourcePackage) = _database.getPrivateMarker(clip)
+        val added = _database.addTodoEntry(clip, createdTimestamp, mimeType, thumbnailBlob, mediaPath, isPrivate, sourcePackage)
         if (added) _listener?.on_clipboard_history_change()
         return added
     }
@@ -865,6 +911,25 @@ class ClipboardHistoryService private constructor(ctx: Context) {
             }
         }
 
+        /**
+         * #156 entry point for both the in-IME "Private copy" action and the PROCESS_TEXT activity.
+         * Resolves (or lazily constructs) the singleton service and stores [text] privately.
+         * Safe from a bare activity context — the constructor does NOT register the OS-clipboard
+         * listener, so this never accidentally starts clipboard monitoring. Returns true on success.
+         *
+         * NEVER touches the OS clipboard (delegates to [addPrivateClip], the no-setPrimaryClip path).
+         */
+        @JvmStatic
+        fun privateCopy(ctx: Context, text: String?, sourcePackage: String?): Boolean {
+            if (text.isNullOrEmpty()) return false
+            val service = get_service(ctx) ?: run {
+                android.util.Log.w("ClipboardHistory", "privateCopy: service unavailable (unsupported SDK)")
+                return false
+            }
+            service.addPrivateClip(text, sourcePackage)
+            return true
+        }
+
         @JvmStatic
         fun set_history_enabled(e: Boolean) {
             Config.globalConfig().set_clipboard_history_enabled(e)
@@ -927,7 +992,10 @@ class ClipboardHistoryService private constructor(ctx: Context) {
          *  -1 = never expire (Long.MAX_VALUE). Default = -1 (never expire). */
         @JvmStatic
         fun getHistoryTtlMs(): Long {
-            val durationMinutes = Config.globalConfig().clipboard_history_duration
+            // Null-safe: the service can construct on a cold-start exported-activity path
+            // (PROCESS_TEXT / editing-key) where the IME never ran, so Config isn't initialized.
+            // Fall back to the documented default (-1 = never expire) rather than throwing.
+            val durationMinutes = Config.globalConfigOrNull()?.clipboard_history_duration ?: -1
             return if (durationMinutes >= 0) {
                 java.util.concurrent.TimeUnit.MINUTES.toMillis(durationMinutes.toLong())
             } else {

@@ -142,10 +142,15 @@ internal fun SettingsActivity.performClipboardExport(uri: Uri, plaintextOptOut: 
                 backupRestoreManager.exportClipboardHistory(uri)
             }
             backupRestoreViewModel.resultTitle = "Clipboard Export Successful"
+            // #156: a plaintext export omits private entries; tell the user how to include them.
+            val privateNote = if (result.privateSkipped > 0)
+                "\n\n🔒 ${result.privateSkipped} private ${if (result.privateSkipped == 1) "entry was" else "entries were"} excluded. Set a backup password (Settings → Backup & Restore) to include them in an encrypted export."
+            else ""
             backupRestoreViewModel.resultMessage = "Exported ${result.exportedCount} clipboard entries.\n\n" +
                     "File: ${uri.lastPathSegment}\n\n" +
                     "Includes timestamps, expiry, and pinned/todo status. " +
-                    "Media files are NOT included — use Export ZIP for a full backup."
+                    "Media files are NOT included — use Export ZIP for a full backup." +
+                    privateNote
             backupRestoreViewModel.showResultDialog = true
         } catch (e: Exception) {
             android.util.Log.e(SettingsActivity.TAG, "Clipboard export failed", e)
@@ -204,11 +209,16 @@ internal fun SettingsActivity.performClipboardZipExport(uri: Uri, plaintextOptOu
                 backupRestoreManager.exportClipboardHistoryZip(uri)
             }
             backupRestoreViewModel.resultTitle = "Full Clipboard Export Successful"
+            // #156: a plaintext ZIP omits private entries; tell the user how to include them.
+            val privateNote = if (result.privateSkipped > 0)
+                "\n🔒 ${result.privateSkipped} private excluded (set a backup password to include)\n"
+            else ""
             backupRestoreViewModel.resultMessage = "Clipboard backup with media saved.\n\n" +
                     "File: ${uri.lastPathSegment}\n\n" +
                     "• ${result.exportedCount} clipboard entries\n" +
-                    "• ${result.mediaFilesIncluded} media files\n\n" +
-                    "Restore via Import ZIP to recover all entries including images, videos, and other media."
+                    "• ${result.mediaFilesIncluded} media files\n" +
+                    privateNote +
+                    "\nRestore via Import ZIP to recover all entries including images, videos, and other media."
             backupRestoreViewModel.showResultDialog = true
         } catch (e: Exception) {
             android.util.Log.e(SettingsActivity.TAG, "Clipboard ZIP export failed", e)

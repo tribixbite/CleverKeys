@@ -225,6 +225,10 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     "clipboard_todo_enabled" to PrefValue.Bool(true),
     "clipboard_media_enabled" to PrefValue.Bool(true),
     "clipboard_max_media_size_mb" to PrefValue.IntV(10),
+    // #156: PROCESS_TEXT selection-toolbar entry point — opt-in, default false (design §6.6).
+    // A normal exportable UI toggle. The component-enabled state is derived from this pref
+    // (single source of truth); re-applied on load via setPrivateCopyToolbarComponentEnabled.
+    "clipboard_private_copy_toolbar_enabled" to PrefValue.Bool(false),
 
     // ── GIF panel ────────────────────────────────────────────────────
     "gif_enabled" to PrefValue.Bool(Defaults.GIF_ENABLED),

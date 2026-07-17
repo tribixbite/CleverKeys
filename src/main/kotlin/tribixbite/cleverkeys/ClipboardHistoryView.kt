@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys
 
+import android.app.AlertDialog
 import android.content.ClipData
 // NOTE: android.content.ClipboardManager is imported with alias to avoid shadowing by
 // tribixbite.cleverkeys.ClipboardManager (same-package takes priority in Kotlin resolution).
@@ -749,6 +750,38 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         }
     }
 
+    /**
+     * #156 read-path gating (design §5.5): move a stored entry's text onto the OS clipboard.
+     * For a NON-private entry this copies immediately. For a PRIVATE entry it asks first — copying
+     * a privately-copied clip to the system clipboard exposes it to the foreground app and other
+     * clipboard managers, which is exactly what private copy exists to prevent. The confirm dialog
+     * doubles as the discoverability moment for what "private" means. Single owner of the
+     * confirm-if-private branch so any future "copy entry" affordance inherits the rule.
+     */
+    fun copyEntryToSystemClipboard(entry: ClipboardEntry) {
+        if (entry.isPrivate) {
+            val dialog = AlertDialog.Builder(context)
+                .setTitle(R.string.private_copy_expose_dialog_title)
+                .setMessage(R.string.private_copy_expose_dialog_message)
+                .setPositiveButton(R.string.private_copy_expose_dialog_confirm) { _, _ ->
+                    writeToSystemClipboard(entry.content)
+                }
+                .setNegativeButton(R.string.private_copy_expose_dialog_cancel, null)
+                .create()
+            Utils.show_dialog_on_ime(dialog, windowToken)
+        } else {
+            writeToSystemClipboard(entry.content)
+        }
+    }
+
+    /** Actually place [text] on the OS clipboard + confirm to the user. Only reached after the
+     *  private-entry confirmation (or directly for non-private entries). */
+    private fun writeToSystemClipboard(text: String) {
+        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as SystemClipboardManager
+        clipboard.setPrimaryClip(ClipData.newPlainText("CleverKeys", text))
+        Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
+    }
+
     override fun on_clipboard_history_change() {
         // Suppress reload during inline edit to prevent view recreation that would
         // overwrite the user's in-progress text. Deferred reload fires on cancelEdit/save_edit.
@@ -930,6 +963,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             val thumbnailContainer = view.findViewById<FrameLayout>(R.id.clipboard_entry_thumbnail_container)
             val thumbnailView = view.findViewById<ImageView>(R.id.clipboard_entry_thumbnail)
             val playBadge = view.findViewById<ImageView>(R.id.clipboard_entry_play_badge)
+            // #156: 🔒 badge — VISIBLE only for entries copied privately (never on the OS clipboard).
+            val privateBadge = view.findViewById<TextView>(R.id.clipboard_entry_private_badge)
 
             // Secondary row buttons (shown on tap-expand, tab-specific)
             val pinButton = view.findViewById<View>(R.id.clipboard_entry_addpin)
@@ -954,6 +989,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 secondaryButtons.visibility = GONE
                 thumbnailContainer.visibility = GONE
                 playBadge.visibility = GONE
+                privateBadge.visibility = GONE  // #156: hidden during edit
 
                 // Bug #3 fix: use in-progress text (not DB content) to survive view recreation.
                 // Always set text+visibility — needed for correct height during measurement.
@@ -1020,6 +1056,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             primaryButtons.visibility = VISIBLE
             editButtons.visibility = GONE
             deleteRow.visibility = GONE
+            // #156: 🔒 badge on entries copied privately (marker travels through pin/todo copies).
+            privateBadge.visibility = if (entry.isPrivate) VISIBLE else GONE
 
             // Clean up TextWatcher from recycled edit views. If this view was previously
             // used for editing (scrap or real), the watcher's lambda captures saveButton
@@ -1179,12 +1217,12 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 notifyDataSetChanged()
             }
 
-            // Long-press copies entry text to system clipboard
+            // Long-press copies entry text to system clipboard.
+            // #156: routed through copyEntryToSystemClipboard, which confirms first for private
+            // entries so the user can't accidentally leak a privately-copied clip to the OS.
             textView.setOnLongClickListener {
                 if (isEditing()) return@setOnLongClickListener true  // Block during edit
-                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as SystemClipboardManager
-                clipboard.setPrimaryClip(ClipData.newPlainText("CleverKeys", text))
-                Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
+                copyEntryToSystemClipboard(entry)
                 true
             }
 

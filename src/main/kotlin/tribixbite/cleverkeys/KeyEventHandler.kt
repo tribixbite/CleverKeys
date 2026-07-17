@@ -642,6 +642,7 @@ class KeyEventHandler(
             return
         }
         when (ev) {
+            KeyValue.Editing.COPY_PRIVATE -> handlePrivateCopy()
             KeyValue.Editing.COPY -> if (isSelectionNotEmpty()) sendContextMenuAction(android.R.id.copy)
             KeyValue.Editing.PASTE -> handlePaste()
             KeyValue.Editing.CUT -> if (isSelectionNotEmpty()) sendContextMenuAction(android.R.id.cut)
@@ -679,6 +680,29 @@ class KeyEventHandler(
                 conn.endBatchEdit()
             }
         }
+    }
+
+    /**
+     * #156 Private copy (in-IME entry point A): read the current selection via
+     * [InputConnection.getSelectedText] and store it into CleverKeys' clipboard DB marked private.
+     * NEVER touches the OS clipboard (delegates to [ClipboardHistoryService.privateCopy], the
+     * no-setPrimaryClip path). Feedback via the suggestion bar (Toasts are IME-suppressed on 13+).
+     */
+    private fun handlePrivateCopy() {
+        val text = recv.getCurrentInputConnection()?.getSelectedText(0)?.toString()
+        if (text.isNullOrEmpty()) {
+            recv.showPrivateCopyFeedback("No text selected")
+            return
+        }
+        val ctx = recv.getContext()
+        if (ctx == null) {
+            recv.showPrivateCopyFeedback("Private copy unavailable")
+            return
+        }
+        // Provenance for entry point A is the target editor's package (EditorInfo.packageName).
+        val sourcePackage = recv.getCurrentEditorInfo()?.packageName
+        val stored = ClipboardHistoryService.privateCopy(ctx, text, sourcePackage)
+        recv.showPrivateCopyFeedback(if (stored) "Privately copied" else "Private copy unavailable")
     }
 
     /**
@@ -988,6 +1012,8 @@ class KeyEventHandler(
         // #110: Backspace undo autocorrect — expose autocorrect state to KeyEventHandler
         fun getLastAutocorrectOriginalWord(): String? = null
         fun clearAutocorrectUndoState() {}
+        // #156: private-copy feedback via the suggestion bar (Toasts are IME-suppressed on 13+).
+        fun showPrivateCopyFeedback(message: String) {}
     }
 
     private inner class AutocapitalisationCallback : Autocapitalisation.Callback {

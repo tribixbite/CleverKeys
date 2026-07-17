@@ -142,7 +142,7 @@ class BackupRestoreFullBackupTest {
         mockkObject(ClipboardDatabase.Companion)
         every { ClipboardDatabase.getInstance(any()) } returns clipboardDb
         // Empty clipboard by default
-        every { clipboardDb.exportToJSON(any()) } returns JSONObject().apply {
+        every { clipboardDb.exportToJSON(any(), any()) } returns JSONObject().apply {
             put("total_active", 0)
             put("total_pinned", 0)
             put("total_todo", 0)
@@ -268,7 +268,7 @@ class BackupRestoreFullBackupTest {
     @Test
     fun exportFullBackup_includesClipboardHistoryJson() {
         // Override clipboard mock to return a non-empty payload so the section is non-empty.
-        every { clipboardDb.exportToJSON(any()) } returns JSONObject().apply {
+        every { clipboardDb.exportToJSON(any(), any()) } returns JSONObject().apply {
             put("total_active", 1)
             put("total_pinned", 0)
             put("total_todo", 0)
@@ -299,7 +299,7 @@ class BackupRestoreFullBackupTest {
     @Test
     fun exportFullBackup_manifestEntryListsAllIncludedSections() {
         // Non-empty clipboard so the section IS included in entries[]
-        every { clipboardDb.exportToJSON(any()) } returns JSONObject().apply {
+        every { clipboardDb.exportToJSON(any(), any()) } returns JSONObject().apply {
             put("total_active", 2); put("total_pinned", 0); put("total_todo", 0)
         }
 
@@ -387,7 +387,7 @@ class BackupRestoreFullBackupTest {
     @Test
     fun fullBackupResult_failureCarriesErrorMessage() {
         // Force ClipboardDatabase to throw to exercise the error-path branch.
-        every { clipboardDb.exportToJSON(any()) } throws RuntimeException("simulated db failure")
+        every { clipboardDb.exportToJSON(any(), any()) } throws RuntimeException("simulated db failure")
 
         val mgr = newManager()
         val uri = fakeUriForOutput()

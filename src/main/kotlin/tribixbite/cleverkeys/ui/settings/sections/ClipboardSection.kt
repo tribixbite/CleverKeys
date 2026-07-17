@@ -1,5 +1,7 @@
 package tribixbite.cleverkeys.ui.settings.sections
 
+import android.content.ComponentName
+import android.content.pm.PackageManager
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -12,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import tribixbite.cleverkeys.ClipboardHistoryService
+import tribixbite.cleverkeys.PrivateCopyProcessTextActivity
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
 import tribixbite.cleverkeys.ui.settings.SettingsDropdown
@@ -219,6 +222,37 @@ internal fun SettingsActivity.ClipboardSection() {
                     }
                 )
 
+                // ── #156 Private copy subsection ─────────────────────────────
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = "🔒 Private copy",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                )
+
+                // PROCESS_TEXT selection-toolbar opt-in. Flips the exported (but manifest-disabled)
+                // PrivateCopyProcessTextActivity component so it appears in other apps' text-selection
+                // menus. Default OFF (design §6.6) — enabling re-expands an exported surface, so this
+                // is the sole enabler and the pref is the single source of truth for the state.
+                SettingsSwitch(
+                    title = "Private copy in other apps",
+                    description = "Add \"Private copy\" to other apps' text-selection menus. Copies selected text into CleverKeys only — never the system clipboard. Enabling adds an app entry other apps can see.",
+                    checked = clipboardPrivateCopyToolbarEnabled,
+                    onCheckedChange = {
+                        clipboardPrivateCopyToolbarEnabled = it
+                        saveSetting(PrivateCopyProcessTextActivity.PREF_TOOLBAR_ENABLED, it)
+                        setPrivateCopyToolbarComponentEnabled(it)
+                    }
+                )
+
+                Text(
+                    text = "In-app: the \"Private copy\" editing action can be bound to a short swipe or extra key (Short Swipe Customization). It stores the current selection into CleverKeys' private clipboard without touching the system clipboard. Private entries show a 🔒 badge; exporting one to the system clipboard always asks first, and plaintext backups exclude them (encrypted backups include them).",
+                    modifier = Modifier.padding(16.dp),
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+
                 // ── URL handling subsection (Chunk 4) ───────────────────────
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
@@ -303,4 +337,23 @@ internal fun SettingsActivity.ClipboardSection() {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
+}
+
+/**
+ * #156: flip the exported (but manifest-disabled) [PrivateCopyProcessTextActivity] component so it
+ * appears in — or vanishes from — other apps' text-selection menus. The pref
+ * `clipboard_private_copy_toolbar_enabled` is the single source of truth; this derives the OS
+ * component state from it. [PackageManager.DONT_KILL_APP] keeps the running IME alive across the
+ * flip. Uses `COMPONENT_ENABLED_STATE_DISABLED` (not `_DEFAULT`) on the off-path so the manifest
+ * default can change later without surprising users (design §6.6). Should be re-applied on settings
+ * load so a fresh install / restore reconciles the OS state with the persisted pref.
+ */
+internal fun SettingsActivity.setPrivateCopyToolbarComponentEnabled(enabled: Boolean) {
+    val component = ComponentName(this, PrivateCopyProcessTextActivity::class.java)
+    val newState = if (enabled) {
+        PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+    } else {
+        PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+    }
+    packageManager.setComponentEnabledSetting(component, newState, PackageManager.DONT_KILL_APP)
 }

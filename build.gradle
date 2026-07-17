@@ -419,6 +419,10 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.backup.crypto.BackupCryptoRoundTripTest',
     'tribixbite.cleverkeys.backup.crypto.BackupCryptoTamperTest',
     'tribixbite.cleverkeys.backup.crypto.EncryptedBackupFormatTest',
+    // Private copy/paste (#156) — pure helpers
+    'tribixbite.cleverkeys.clipboard.PrivateCopyIntentParserTest',
+    'tribixbite.cleverkeys.clipboard.PrivateCopyRateLimiterTest',
+    'tribixbite.cleverkeys.clipboard.PrivateClipMergeRuleTest',
     // SwipePrunerTest excluded: requires android.util.Log (MockK + Robolectric)
   ]
 
@@ -481,6 +485,8 @@ tasks.register('runMockTests', JavaExec) {
     // Backup encryption (2026-07-17) — Android-touching tests (need android.jar)
     'tribixbite.cleverkeys.backup.crypto.BackupPassphraseStoreTest',
     'tribixbite.cleverkeys.BackupRestoreManagerEncryptionTest',
+    // Private copy/paste (#156)
+    'tribixbite.cleverkeys.PrivateCopyServiceTest',
   ]
 
   mainClass = 'org.junit.runner.JUnitCore'

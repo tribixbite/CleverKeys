@@ -35,6 +35,19 @@
 
   </FrameLayout>
 
+  <!-- #156 Private-copy badge: VISIBLE only for is_private entries. Signals the text was captured
+       into CleverKeys only and never placed on the OS clipboard. -->
+  <TextView
+      android:id="@+id/clipboard_entry_private_badge"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_gravity="center_vertical"
+      android:layout_marginStart="8dp"
+      android:text="🔒"
+      android:textSize="14sp"
+      android:visibility="gone"
+      android:contentDescription="Private entry" />
+
   <!-- Normal text display (hidden during edit) -->
   <TextView
       android:id="@+id/clipboard_entry_text"

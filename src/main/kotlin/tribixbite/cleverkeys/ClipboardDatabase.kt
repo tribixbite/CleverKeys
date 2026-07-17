@@ -58,6 +58,28 @@ object ClipboardEditPolicy {
     }
 }
 
+/**
+ * Pure decision logic for merging the #156 private-copy markers when a clipboard insert
+ * deduplicates onto an existing row. Extracted so the sticky-privacy semantics are unit-tested
+ * (PrivateClipMergeRuleTest) independently of any Android/SQLite wiring.
+ *
+ * No Android dependencies.
+ */
+object PrivateClipMergeRule {
+    /**
+     * `is_private` is STICKY: once a row has been marked private by any copy, it stays private
+     * even if a later normal copy dedups onto it (design §5.4). This preserves the row's
+     * export-exclusion and push-gating promises. Result = old OR new.
+     */
+    fun mergeIsPrivate(existing: Boolean, incoming: Boolean): Boolean = existing || incoming
+
+    /**
+     * `source_package`: most-recent-non-null wins. A new copy that carries a provenance package
+     * overwrites the stored one; a null incoming source leaves the existing value untouched.
+     */
+    fun mergeSourcePackage(existing: String?, incoming: String?): String? = incoming ?: existing
+}
+
 class ClipboardDatabase private constructor(context: Context) :
     SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
@@ -100,6 +122,9 @@ class ClipboardDatabase private constructor(context: Context) :
         }
         if (oldVersion < 4) {
             migrateV3toV4(db)
+        }
+        if (oldVersion < 5) {
+            migrateV4toV5(db)
         }
     }
 
@@ -215,11 +240,36 @@ class ClipboardDatabase private constructor(context: Context) :
         }
     }
 
+    /**
+     * Migrate from v4 to v5 (#156 private copy): add is_private + source_package to all three tables.
+     *
+     * Uses ALTER TABLE ADD COLUMN which is non-destructive and O(1) — only schema metadata changes,
+     * no data is moved. Existing rows automatically get is_private=0 (not private) and
+     * source_package=NULL (no provenance recorded before this feature existed).
+     */
+    private fun migrateV4toV5(db: SQLiteDatabase) {
+        try {
+            for (table in arrayOf(TABLE_CLIPBOARD, TABLE_PINNED, TABLE_TODO)) {
+                db.execSQL("ALTER TABLE $table ADD COLUMN $COLUMN_IS_PRIVATE INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE $table ADD COLUMN $COLUMN_SOURCE_PACKAGE TEXT")
+            }
+            Log.d(TAG, "Database upgraded v4→v5: is_private + source_package added to all tables")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error upgrading v4→v5: ${e.message}", e)
+            throw e  // Re-throw so SQLiteOpenHelper rolls back the transaction
+        }
+    }
+
     // ═══════════════════════════════════════════════════════════════════
     // History CRUD (clipboard_entries — regular history items only)
     // ═══════════════════════════════════════════════════════════════════
 
-    fun addClipboardEntry(content: String?, expiryTimestamp: Long): Boolean {
+    fun addClipboardEntry(
+        content: String?,
+        expiryTimestamp: Long,
+        isPrivate: Boolean = false,
+        sourcePackage: String? = null
+    ): Boolean {
         if (content.isNullOrBlank()) return false
         val trimmedContent = content.trim()
         val contentHash = trimmedContent.hashCode().toString()
@@ -227,20 +277,28 @@ class ClipboardDatabase private constructor(context: Context) :
             val db = writableDatabase
             val currentTime = System.currentTimeMillis()
             val duplicateQuery = """
-                SELECT $COLUMN_ID FROM $TABLE_CLIPBOARD
+                SELECT $COLUMN_ID, $COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE FROM $TABLE_CLIPBOARD
                 WHERE $COLUMN_CONTENT_HASH = ? AND $COLUMN_CONTENT = ? AND $COLUMN_EXPIRY_TIMESTAMP > ?
             """.trimIndent()
             db.rawQuery(duplicateQuery, arrayOf(contentHash, trimmedContent, currentTime.toString())).use { cursor ->
                 if (cursor.moveToFirst()) {
                     // #108: Move duplicate to top by updating its timestamp instead of ignoring
                     val existingId = cursor.getLong(0)
+                    // #156: sticky-privacy merge — is_private ORs; source_package most-recent-non-null.
+                    val mergedPrivate = PrivateClipMergeRule.mergeIsPrivate(cursor.getInt(1) != 0, isPrivate)
+                    val mergedSource = PrivateClipMergeRule.mergeSourcePackage(
+                        if (cursor.isNull(2)) null else cursor.getString(2), sourcePackage
+                    )
                     val updateValues = ContentValues().apply {
                         put(COLUMN_TIMESTAMP, currentTime)
                         put(COLUMN_EXPIRY_TIMESTAMP, expiryTimestamp)
+                        put(COLUMN_IS_PRIVATE, if (mergedPrivate) 1 else 0)
+                        if (mergedSource != null) put(COLUMN_SOURCE_PACKAGE, mergedSource)
+                        else putNull(COLUMN_SOURCE_PACKAGE)
                     }
                     db.update(TABLE_CLIPBOARD, updateValues, "$COLUMN_ID = ?", arrayOf(existingId.toString()))
                     if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                        Log.d(TAG, "Duplicate moved to top (len=${trimmedContent.length}, id=$existingId)")
+                        Log.d(TAG, "Duplicate moved to top (len=${trimmedContent.length}, id=$existingId, private=$mergedPrivate)")
                     }
                     return true
                 }
@@ -250,6 +308,8 @@ class ClipboardDatabase private constructor(context: Context) :
                 put(COLUMN_TIMESTAMP, currentTime)
                 put(COLUMN_EXPIRY_TIMESTAMP, expiryTimestamp)
                 put(COLUMN_CONTENT_HASH, contentHash)
+                put(COLUMN_IS_PRIVATE, if (isPrivate) 1 else 0)
+                if (sourcePackage != null) put(COLUMN_SOURCE_PACKAGE, sourcePackage)
             }
             val result = db.insert(TABLE_CLIPBOARD, null, values)
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
@@ -329,7 +389,7 @@ class ClipboardDatabase private constructor(context: Context) :
         val currentTime = System.currentTimeMillis()
         val query = """
             SELECT $COLUMN_CONTENT, $COLUMN_TIMESTAMP, $COLUMN_MIME_TYPE,
-                   $COLUMN_THUMBNAIL_BLOB, $COLUMN_MEDIA_PATH
+                   $COLUMN_THUMBNAIL_BLOB, $COLUMN_MEDIA_PATH, $COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE
             FROM $TABLE_CLIPBOARD
             WHERE $COLUMN_EXPIRY_TIMESTAMP > ?
             ORDER BY $COLUMN_TIMESTAMP DESC
@@ -343,7 +403,9 @@ class ClipboardDatabase private constructor(context: Context) :
                             timestamp = cursor.getLong(1),
                             mimeType = cursor.getString(2) ?: ClipboardEntry.MIME_TEXT_PLAIN,
                             thumbnailBlob = cursor.getBlob(3),
-                            mediaPath = cursor.getString(4)
+                            mediaPath = cursor.getString(4),
+                            isPrivate = cursor.getInt(5) != 0,
+                            sourcePackage = if (cursor.isNull(6)) null else cursor.getString(6)
                         ))
                     } while (cursor.moveToNext())
                 }
@@ -489,7 +551,9 @@ class ClipboardDatabase private constructor(context: Context) :
         createdTimestamp: Long = System.currentTimeMillis(),
         mimeType: String = ClipboardEntry.MIME_TEXT_PLAIN,
         thumbnailBlob: ByteArray? = null,
-        mediaPath: String? = null
+        mediaPath: String? = null,
+        isPrivate: Boolean = false,
+        sourcePackage: String? = null
     ): Boolean {
         if (content.isNullOrBlank()) return false
         val trimmedContent = content.trim()
@@ -508,6 +572,13 @@ class ClipboardDatabase private constructor(context: Context) :
                 return false
             }
             val position = getMaxPinnedPosition(db) + 1.0
+            // #156: COPY semantics — the private marker travels from the source (history/other)
+            // row onto the pinned copy at the DATA layer. Look up the source row's marker and
+            // sticky-merge it with any explicitly-passed args: is_private ORs (once private, stays
+            // private); source_package is explicit-if-given else the source row's provenance.
+            val (sourceIsPrivate, sourceProvenance) = getPrivateMarker(trimmedContent)
+            val mergedPrivate = PrivateClipMergeRule.mergeIsPrivate(sourceIsPrivate, isPrivate)
+            val mergedSource = PrivateClipMergeRule.mergeSourcePackage(sourceProvenance, sourcePackage)
             val values = ContentValues().apply {
                 put(COLUMN_CONTENT, trimmedContent)
                 put(COLUMN_CONTENT_HASH, contentHash)
@@ -518,6 +589,8 @@ class ClipboardDatabase private constructor(context: Context) :
                 put(COLUMN_MIME_TYPE, mimeType)
                 if (thumbnailBlob != null) put(COLUMN_THUMBNAIL_BLOB, thumbnailBlob)
                 if (mediaPath != null) put(COLUMN_MEDIA_PATH, mediaPath)
+                put(COLUMN_IS_PRIVATE, if (mergedPrivate) 1 else 0)  // #156: COPY semantics — marker travels
+                if (mergedSource != null) put(COLUMN_SOURCE_PACKAGE, mergedSource)
             }
             val result = db.insert(TABLE_PINNED, null, values)
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
@@ -557,6 +630,37 @@ class ClipboardDatabase private constructor(context: Context) :
         }
     }
 
+    /**
+     * #156: look up the private-copy marker (is_private, source_package) for [content] across
+     * all three tables, so pin/todo COPY operations preserve privacy provenance. Prefers the
+     * history row; falls back to pinned/todo. Returns (isPrivate=false, source=null) if not found.
+     */
+    fun getPrivateMarker(content: String?): Pair<Boolean, String?> {
+        if (content.isNullOrBlank()) return Pair(false, null)
+        val trimmedContent = content.trim()
+        val contentHash = trimmedContent.hashCode().toString()
+        return try {
+            val db = readableDatabase
+            for (table in arrayOf(TABLE_CLIPBOARD, TABLE_PINNED, TABLE_TODO)) {
+                db.rawQuery(
+                    "SELECT $COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE FROM $table " +
+                        "WHERE $COLUMN_CONTENT_HASH = ? AND $COLUMN_CONTENT = ? LIMIT 1",
+                    arrayOf(contentHash, trimmedContent)
+                ).use { cursor ->
+                    if (cursor.moveToFirst()) {
+                        val isPrivate = cursor.getInt(0) != 0
+                        val source = if (cursor.isNull(1)) null else cursor.getString(1)
+                        if (isPrivate) return Pair(true, source)
+                    }
+                }
+            }
+            Pair(false, null)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error reading private marker: ${e.message}")
+            Pair(false, null)
+        }
+    }
+
     /** Check if content exists in pinned_entries */
     fun isPinned(content: String?): Boolean {
         if (content.isNullOrBlank()) return false
@@ -581,7 +685,8 @@ class ClipboardDatabase private constructor(context: Context) :
         val entries = mutableListOf<ClipboardEntry>()
         val query = """
             SELECT $COLUMN_CONTENT, $COLUMN_PINNED_TIMESTAMP, $COLUMN_MIME_TYPE,
-                   $COLUMN_THUMBNAIL_BLOB, $COLUMN_MEDIA_PATH, $COLUMN_TAGS
+                   $COLUMN_THUMBNAIL_BLOB, $COLUMN_MEDIA_PATH, $COLUMN_TAGS,
+                   $COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE
             FROM $TABLE_PINNED ORDER BY $COLUMN_POSITION ASC
         """.trimIndent()
         try {
@@ -594,7 +699,9 @@ class ClipboardDatabase private constructor(context: Context) :
                             mimeType = cursor.getString(2) ?: ClipboardEntry.MIME_TEXT_PLAIN,
                             thumbnailBlob = cursor.getBlob(3),
                             mediaPath = cursor.getString(4),
-                            tags = PinnedEntry.tagsFromJson(cursor.getString(5))
+                            tags = PinnedEntry.tagsFromJson(cursor.getString(5)),
+                            isPrivate = cursor.getInt(6) != 0,
+                            sourcePackage = if (cursor.isNull(7)) null else cursor.getString(7)
                         ))
                     } while (cursor.moveToNext())
                 }
@@ -613,7 +720,8 @@ class ClipboardDatabase private constructor(context: Context) :
             SELECT $COLUMN_ID, $COLUMN_CONTENT, $COLUMN_CONTENT_HASH,
                    $COLUMN_CREATED_TIMESTAMP, $COLUMN_PINNED_TIMESTAMP,
                    $COLUMN_POSITION, $COLUMN_TAGS, $COLUMN_MIME_TYPE,
-                   $COLUMN_THUMBNAIL_BLOB, $COLUMN_MEDIA_PATH
+                   $COLUMN_THUMBNAIL_BLOB, $COLUMN_MEDIA_PATH,
+                   $COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE
             FROM $TABLE_PINNED ORDER BY $COLUMN_POSITION ASC
         """.trimIndent()
         try {
@@ -630,7 +738,9 @@ class ClipboardDatabase private constructor(context: Context) :
                             tags = PinnedEntry.tagsFromJson(cursor.getString(6)),
                             mimeType = cursor.getString(7) ?: ClipboardEntry.MIME_TEXT_PLAIN,
                             thumbnailBlob = cursor.getBlob(8),
-                            mediaPath = cursor.getString(9)
+                            mediaPath = cursor.getString(9),
+                            isPrivate = cursor.getInt(10) != 0,
+                            sourcePackage = if (cursor.isNull(11)) null else cursor.getString(11)
                         ))
                     } while (cursor.moveToNext())
                 }
@@ -668,7 +778,9 @@ class ClipboardDatabase private constructor(context: Context) :
         createdTimestamp: Long = System.currentTimeMillis(),
         mimeType: String = ClipboardEntry.MIME_TEXT_PLAIN,
         thumbnailBlob: ByteArray? = null,
-        mediaPath: String? = null
+        mediaPath: String? = null,
+        isPrivate: Boolean = false,
+        sourcePackage: String? = null
     ): Boolean {
         if (content.isNullOrBlank()) return false
         val trimmedContent = content.trim()
@@ -687,6 +799,12 @@ class ClipboardDatabase private constructor(context: Context) :
                 return false
             }
             val position = getMaxTodoPosition(db) + 1.0
+            // #156: COPY semantics — the private marker travels from the source (history/other)
+            // row onto the todo copy at the DATA layer. Sticky-merge the source row's marker with
+            // any explicitly-passed args (see pinEntry for the identical rationale).
+            val (sourceIsPrivate, sourceProvenance) = getPrivateMarker(trimmedContent)
+            val mergedPrivate = PrivateClipMergeRule.mergeIsPrivate(sourceIsPrivate, isPrivate)
+            val mergedSource = PrivateClipMergeRule.mergeSourcePackage(sourceProvenance, sourcePackage)
             val values = ContentValues().apply {
                 put(COLUMN_CONTENT, trimmedContent)
                 put(COLUMN_CONTENT_HASH, contentHash)
@@ -698,6 +816,8 @@ class ClipboardDatabase private constructor(context: Context) :
                 put(COLUMN_MIME_TYPE, mimeType)
                 if (thumbnailBlob != null) put(COLUMN_THUMBNAIL_BLOB, thumbnailBlob)
                 if (mediaPath != null) put(COLUMN_MEDIA_PATH, mediaPath)
+                put(COLUMN_IS_PRIVATE, if (mergedPrivate) 1 else 0)  // #156: COPY semantics — marker travels
+                if (mergedSource != null) put(COLUMN_SOURCE_PACKAGE, mergedSource)
             }
             val result = db.insert(TABLE_TODO, null, values)
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
@@ -888,7 +1008,8 @@ class ClipboardDatabase private constructor(context: Context) :
         val entries = mutableListOf<ClipboardEntry>()
         val query = """
             SELECT $COLUMN_CONTENT, $COLUMN_ADDED_TIMESTAMP, $COLUMN_MIME_TYPE,
-                   $COLUMN_THUMBNAIL_BLOB, $COLUMN_MEDIA_PATH, $COLUMN_TAGS, $COLUMN_STATUS
+                   $COLUMN_THUMBNAIL_BLOB, $COLUMN_MEDIA_PATH, $COLUMN_TAGS, $COLUMN_STATUS,
+                   $COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE
             FROM $TABLE_TODO ORDER BY $COLUMN_POSITION ASC
         """.trimIndent()
         try {
@@ -902,7 +1023,9 @@ class ClipboardDatabase private constructor(context: Context) :
                             thumbnailBlob = cursor.getBlob(3),
                             mediaPath = cursor.getString(4),
                             tags = TodoEntry.tagsFromJson(cursor.getString(5)),
-                            todoStatus = cursor.getString(6) ?: TodoEntry.STATUS_ACTIVE
+                            todoStatus = cursor.getString(6) ?: TodoEntry.STATUS_ACTIVE,
+                            isPrivate = cursor.getInt(7) != 0,
+                            sourcePackage = if (cursor.isNull(8)) null else cursor.getString(8)
                         ))
                     } while (cursor.moveToNext())
                 }
@@ -921,7 +1044,8 @@ class ClipboardDatabase private constructor(context: Context) :
             SELECT $COLUMN_ID, $COLUMN_CONTENT, $COLUMN_CONTENT_HASH,
                    $COLUMN_CREATED_TIMESTAMP, $COLUMN_ADDED_TIMESTAMP,
                    $COLUMN_POSITION, $COLUMN_STATUS, $COLUMN_TAGS,
-                   $COLUMN_MIME_TYPE, $COLUMN_THUMBNAIL_BLOB, $COLUMN_MEDIA_PATH
+                   $COLUMN_MIME_TYPE, $COLUMN_THUMBNAIL_BLOB, $COLUMN_MEDIA_PATH,
+                   $COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE
             FROM $TABLE_TODO ORDER BY $COLUMN_POSITION ASC
         """.trimIndent()
         try {
@@ -939,7 +1063,9 @@ class ClipboardDatabase private constructor(context: Context) :
                             tags = TodoEntry.tagsFromJson(cursor.getString(7)),
                             mimeType = cursor.getString(8) ?: ClipboardEntry.MIME_TEXT_PLAIN,
                             thumbnailBlob = cursor.getBlob(9),
-                            mediaPath = cursor.getString(10)
+                            mediaPath = cursor.getString(10),
+                            isPrivate = cursor.getInt(11) != 0,
+                            sourcePackage = if (cursor.isNull(12)) null else cursor.getString(12)
                         ))
                     } while (cursor.moveToNext())
                 }
@@ -1261,25 +1387,37 @@ class ClipboardDatabase private constructor(context: Context) :
      * @param textOnly If true, skip media entries entirely (lightweight JSON export).
      *                 If false, include media metadata (for ZIP export manifest).
      */
-    fun exportToJSON(textOnly: Boolean = false): JSONObject? {
+    /**
+     * @param textOnly       skip media entries (media files don't survive a JSON-only export).
+     * @param includePrivate #156 option B: when false (plaintext export), private entries are
+     *                       excluded and counted in `private_skipped`; when true (encrypted CKENC
+     *                       export) they are included with the is_private/source_package markers so
+     *                       the marker round-trips on import.
+     */
+    fun exportToJSON(textOnly: Boolean = false, includePrivate: Boolean = true): JSONObject? {
         return try {
             val activeArray = JSONArray()
             val pinnedArray = JSONArray()
             val todoArray = JSONArray()
             var activeCount = 0; var pinnedCount = 0; var todoCount = 0
             var mediaSkipped = 0
+            var privateSkipped = 0  // #156: private entries omitted from a plaintext export
 
-            // Export history entries (v4: includes content_hash, mime_type, media_path)
+            // Export history entries (v5: includes content_hash, mime_type, media_path, is_private, source_package)
             readableDatabase.rawQuery("""
                 SELECT $COLUMN_CONTENT, $COLUMN_TIMESTAMP, $COLUMN_EXPIRY_TIMESTAMP,
-                       $COLUMN_MIME_TYPE, $COLUMN_MEDIA_PATH, $COLUMN_CONTENT_HASH
+                       $COLUMN_MIME_TYPE, $COLUMN_MEDIA_PATH, $COLUMN_CONTENT_HASH,
+                       $COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE
                 FROM $TABLE_CLIPBOARD ORDER BY $COLUMN_TIMESTAMP DESC
             """.trimIndent(), null).use { cursor ->
                 while (cursor.moveToNext()) {
                     val mimeType = cursor.getString(3) ?: ClipboardEntry.MIME_TEXT_PLAIN
                     val mediaPath = cursor.getString(4)
                     val contentHash = cursor.getString(5)
+                    val isPrivate = cursor.getInt(6) != 0
+                    val sourcePackage = if (cursor.isNull(7)) null else cursor.getString(7)
                     val isMedia = mimeType != ClipboardEntry.MIME_TEXT_PLAIN
+                    if (isPrivate && !includePrivate) { privateSkipped++; continue }
                     if (textOnly && isMedia) { mediaSkipped++; continue }
                     activeArray.put(JSONObject().apply {
                         put("content", cursor.getString(0))
@@ -1290,22 +1428,30 @@ class ClipboardDatabase private constructor(context: Context) :
                             put("mime_type", mimeType)
                             if (mediaPath != null) put("media_path", mediaPath)
                         }
+                        if (isPrivate) {
+                            put("is_private", 1)
+                            if (sourcePackage != null) put("source_package", sourcePackage)
+                        }
                     })
                     activeCount++
                 }
             }
 
-            // Export pinned entries with v4 media fields
+            // Export pinned entries with v5 media + private fields
             readableDatabase.rawQuery("""
                 SELECT $COLUMN_CONTENT, $COLUMN_CONTENT_HASH, $COLUMN_CREATED_TIMESTAMP,
                        $COLUMN_PINNED_TIMESTAMP, $COLUMN_POSITION, $COLUMN_TAGS,
-                       $COLUMN_MIME_TYPE, $COLUMN_MEDIA_PATH
+                       $COLUMN_MIME_TYPE, $COLUMN_MEDIA_PATH,
+                       $COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE
                 FROM $TABLE_PINNED ORDER BY $COLUMN_POSITION ASC
             """.trimIndent(), null).use { cursor ->
                 while (cursor.moveToNext()) {
                     val mimeType = cursor.getString(6) ?: ClipboardEntry.MIME_TEXT_PLAIN
                     val mediaPath = cursor.getString(7)
+                    val isPrivate = cursor.getInt(8) != 0
+                    val sourcePackage = if (cursor.isNull(9)) null else cursor.getString(9)
                     val isMedia = mimeType != ClipboardEntry.MIME_TEXT_PLAIN
+                    if (isPrivate && !includePrivate) { privateSkipped++; continue }
                     if (textOnly && isMedia) { mediaSkipped++; continue }
                     pinnedArray.put(JSONObject().apply {
                         put("content", cursor.getString(0))
@@ -1319,22 +1465,30 @@ class ClipboardDatabase private constructor(context: Context) :
                             put("mime_type", mimeType)
                             if (mediaPath != null) put("media_path", mediaPath)
                         }
+                        if (isPrivate) {
+                            put("is_private", 1)
+                            if (sourcePackage != null) put("source_package", sourcePackage)
+                        }
                     })
                     pinnedCount++
                 }
             }
 
-            // Export todo entries with v4 media fields
+            // Export todo entries with v5 media + private fields
             readableDatabase.rawQuery("""
                 SELECT $COLUMN_CONTENT, $COLUMN_CONTENT_HASH, $COLUMN_CREATED_TIMESTAMP,
                        $COLUMN_ADDED_TIMESTAMP, $COLUMN_POSITION, $COLUMN_STATUS, $COLUMN_TAGS,
-                       $COLUMN_MIME_TYPE, $COLUMN_MEDIA_PATH
+                       $COLUMN_MIME_TYPE, $COLUMN_MEDIA_PATH,
+                       $COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE
                 FROM $TABLE_TODO ORDER BY $COLUMN_POSITION ASC
             """.trimIndent(), null).use { cursor ->
                 while (cursor.moveToNext()) {
                     val mimeType = cursor.getString(7) ?: ClipboardEntry.MIME_TEXT_PLAIN
                     val mediaPath = cursor.getString(8)
+                    val isPrivate = cursor.getInt(9) != 0
+                    val sourcePackage = if (cursor.isNull(10)) null else cursor.getString(10)
                     val isMedia = mimeType != ClipboardEntry.MIME_TEXT_PLAIN
+                    if (isPrivate && !includePrivate) { privateSkipped++; continue }
                     if (textOnly && isMedia) { mediaSkipped++; continue }
                     todoArray.put(JSONObject().apply {
                         put("content", cursor.getString(0))
@@ -1349,6 +1503,10 @@ class ClipboardDatabase private constructor(context: Context) :
                             put("mime_type", mimeType)
                             if (mediaPath != null) put("media_path", mediaPath)
                         }
+                        if (isPrivate) {
+                            put("is_private", 1)
+                            if (sourcePackage != null) put("source_package", sourcePackage)
+                        }
                     })
                     todoCount++
                 }
@@ -1358,15 +1516,17 @@ class ClipboardDatabase private constructor(context: Context) :
                 put("active_entries", activeArray)
                 put("pinned_entries", pinnedArray)
                 put("todo_entries", todoArray)
-                put("export_version", 4)
+                put("export_version", 5)
                 put("export_date", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(Date()))
                 put("total_active", activeCount)
                 put("total_pinned", pinnedCount)
                 put("total_todo", todoCount)
                 if (mediaSkipped > 0) put("media_skipped", mediaSkipped)
+                if (privateSkipped > 0) put("private_skipped", privateSkipped)  // #156 option B
             }.also {
-                val suffix = if (textOnly) " (text-only, $mediaSkipped media skipped)" else ""
-                Log.d(TAG, "Exported $activeCount active, $pinnedCount pinned, $todoCount todo entries (v4)$suffix")
+                val mediaSuffix = if (textOnly) " (text-only, $mediaSkipped media skipped)" else ""
+                val privSuffix = if (privateSkipped > 0) " ($privateSkipped private excluded)" else ""
+                Log.d(TAG, "Exported $activeCount active, $pinnedCount pinned, $todoCount todo entries (v5)$mediaSuffix$privSuffix")
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error exporting clipboard data: ${e.message}")
@@ -1458,6 +1618,9 @@ class ClipboardDatabase private constructor(context: Context) :
                 put(COLUMN_MIME_TYPE, mimeType)
                 val mediaPath = if (entry.has("media_path")) entry.getString("media_path") else null
                 if (mediaPath != null) put(COLUMN_MEDIA_PATH, mediaPath)
+                // #156: round-trip the private marker (absent → non-private, per old backups)
+                put(COLUMN_IS_PRIVATE, if (entry.optInt("is_private", 0) != 0) 1 else 0)
+                if (entry.has("source_package")) put(COLUMN_SOURCE_PACKAGE, entry.getString("source_package"))
             }
             if (db.insert(TABLE_CLIPBOARD, null, values) != -1L) added++
         }
@@ -1512,6 +1675,9 @@ class ClipboardDatabase private constructor(context: Context) :
                 put(COLUMN_MIME_TYPE, mimeType)
                 val mediaPath = if (entry.has("media_path")) entry.getString("media_path") else null
                 if (mediaPath != null) put(COLUMN_MEDIA_PATH, mediaPath)
+                // #156: round-trip the private marker (absent → non-private, per old backups)
+                put(COLUMN_IS_PRIVATE, if (entry.optInt("is_private", 0) != 0) 1 else 0)
+                if (entry.has("source_package")) put(COLUMN_SOURCE_PACKAGE, entry.getString("source_package"))
             }
             if (db.insert(TABLE_PINNED, null, values) != -1L) added++
 
@@ -1594,6 +1760,9 @@ class ClipboardDatabase private constructor(context: Context) :
                 put(COLUMN_MIME_TYPE, mimeType)
                 val mediaPath = if (entry.has("media_path")) entry.getString("media_path") else null
                 if (mediaPath != null) put(COLUMN_MEDIA_PATH, mediaPath)
+                // #156: round-trip the private marker (absent → non-private, per old backups)
+                put(COLUMN_IS_PRIVATE, if (entry.optInt("is_private", 0) != 0) 1 else 0)
+                if (entry.has("source_package")) put(COLUMN_SOURCE_PACKAGE, entry.getString("source_package"))
             }
             if (db.insert(TABLE_TODO, null, values) != -1L) added++
 
@@ -1630,7 +1799,7 @@ class ClipboardDatabase private constructor(context: Context) :
 
     companion object {
         private const val DATABASE_NAME = "clipboard_history.db"
-        private const val DATABASE_VERSION = 4  // v4: Media clipboard (mime_type, thumbnail, media_path)
+        private const val DATABASE_VERSION = 5  // v5: #156 Private copy (is_private, source_package)
         private const val TABLE_CLIPBOARD = "clipboard_entries"
         private const val COLUMN_ID = "id"
         private const val COLUMN_CONTENT = "content"
@@ -1654,7 +1823,14 @@ class ClipboardDatabase private constructor(context: Context) :
         private const val COLUMN_THUMBNAIL_BLOB = "thumbnail_blob"
         private const val COLUMN_MEDIA_PATH = "media_path"
 
-        // DDL for v4 clipboard_entries (with media columns)
+        // ─── v5 schema: #156 private-copy columns (all three tables) ───
+        // is_private: 1 when the row was captured via the private-copy path (never on OS clipboard).
+        // source_package: provenance — target editor package (entry point A) or getCallingPackage()
+        //                 / "direct-launch" (entry point B). NULL for normal-copy and pre-v5 rows.
+        const val COLUMN_IS_PRIVATE = "is_private"
+        const val COLUMN_SOURCE_PACKAGE = "source_package"
+
+        // DDL for clipboard_entries (fresh install → final v5 schema: media + private columns)
         private const val CREATE_TABLE_CLIPBOARD_V4 = """
             CREATE TABLE $TABLE_CLIPBOARD (
                 $COLUMN_ID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1664,7 +1840,9 @@ class ClipboardDatabase private constructor(context: Context) :
                 $COLUMN_CONTENT_HASH TEXT NOT NULL,
                 $COLUMN_MIME_TYPE TEXT DEFAULT 'text/plain',
                 $COLUMN_THUMBNAIL_BLOB BLOB,
-                $COLUMN_MEDIA_PATH TEXT
+                $COLUMN_MEDIA_PATH TEXT,
+                $COLUMN_IS_PRIVATE INTEGER NOT NULL DEFAULT 0,
+                $COLUMN_SOURCE_PACKAGE TEXT
             )
         """
 
@@ -1694,7 +1872,7 @@ class ClipboardDatabase private constructor(context: Context) :
             )
         """
 
-        // v4 DDL for fresh installs (includes media columns)
+        // v5 DDL for fresh installs (includes media + private columns)
         private const val CREATE_TABLE_PINNED_V4 = """
             CREATE TABLE $TABLE_PINNED (
                 $COLUMN_ID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1706,7 +1884,9 @@ class ClipboardDatabase private constructor(context: Context) :
                 $COLUMN_TAGS TEXT DEFAULT '[]',
                 $COLUMN_MIME_TYPE TEXT DEFAULT 'text/plain',
                 $COLUMN_THUMBNAIL_BLOB BLOB,
-                $COLUMN_MEDIA_PATH TEXT
+                $COLUMN_MEDIA_PATH TEXT,
+                $COLUMN_IS_PRIVATE INTEGER NOT NULL DEFAULT 0,
+                $COLUMN_SOURCE_PACKAGE TEXT
             )
         """
 
@@ -1722,7 +1902,9 @@ class ClipboardDatabase private constructor(context: Context) :
                 $COLUMN_TAGS TEXT DEFAULT '[]',
                 $COLUMN_MIME_TYPE TEXT DEFAULT 'text/plain',
                 $COLUMN_THUMBNAIL_BLOB BLOB,
-                $COLUMN_MEDIA_PATH TEXT
+                $COLUMN_MEDIA_PATH TEXT,
+                $COLUMN_IS_PRIVATE INTEGER NOT NULL DEFAULT 0,
+                $COLUMN_SOURCE_PACKAGE TEXT
             )
         """
 
