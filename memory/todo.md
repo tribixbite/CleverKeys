@@ -1,5 +1,33 @@
 # CleverKeys TODO
 
+## ✅ Audit-remediation Tier 1–2 EXECUTED (2026-07-17) → docs/audit/2026-07-17-code-quality-audit.md
+Fresh 7-agent code-quality audit (grade C+) then Fable-5-plan / Opus-4.8-code / central-verify
+pipeline across 5 disjoint work-streams + a trimmed security stream. Verified compile-clean,
+**1405 pure + 245 MockK tests green**, then committed as 6 conventional commits (bb5c1e8e0 neural,
+68c7754a6 core-ime, d7377403c data/docs, dd831d5f9 ci/repo, b5033e67f docs/audit, 5c1dcdd6b security).
+- **Neural:** per-swipe encoder tensor/Result leak closed (CloseOnceGuard + AutoCloseable
+  EncoderResult); greedy EOS Result leak; predict/cleanup RW-lock; readBytes model load;
+  retryable init. **Core-IME:** 5s main-thread busy-wait → EngineInitGate latch + non-blocking
+  swipe replay; silent swipe-commit catch now logs+resets; PredictionTaskRunner executor shutdown
+  wired via CleanupHandler; PII hot-path logs gated (vlog); Autocap coalesce. **Data/docs:** 12
+  clipboard PII logs gated; v1→v2 migration rethrow; null-safe Config.globalConfig; CLAUDE.md/
+  SECURITY.md/README doc-drift fixed. **CI/repo:** release.yml gated on runPureTests+runMockTests;
+  ui-testing.yml de-theatered (real IME-smoke, correct .debug pkg); TestRunnerListDriftTest;
+  ~119k dead LOC pruned (archive/, 2 obsolete *_character_quant.onnx APK-bundled models, stray
+  artifacts); strip-repo-history.sh hardened (NOT run). **Security:** 10 internal activities
+  de-exported; ClipboardMediaManager zip-slip guard confined to clipboard_media/ (tightened from
+  filesDir after the on-device MockK test caught the looser guard); BackupRestoreManager bounded
+  reads (32MB/entry) + MAX_IMPORT_ENTRIES.
+- **Audit correction:** finding #4 (ew-cli) was overstated — the 1,371-test instrumented suite is
+  real and run manually via ew-cli/emulator.wtf; the gap is CI-gating only (P1→P2).
+- **DEFERRED (need decisions / larger):** backup-ENCRYPTION implementation
+  (docs/audit/remediation-plans/security-backup-encryption.md — AES-256-GCM+PBKDF2, keeps `am start`
+  automation; open Qs: mandatory-vs-opt-out plaintext, PBKDF2-vs-Argon2id, #156 at-rest sequencing);
+  ew-cli CI job (needs EW_API_TOKEN secret); git-history rewrite EXECUTION (strip script gated on
+  F-Droid publish of v1.5.0); R8 re-enable (needs soak); TalkBack a11y; UI i18n; pipeline
+  unification; ConfigSnapshot; package reorg. Also: BackupRestoreActivity export stays open until
+  encryption lands (per user: encrypt backups rather than lock down, to keep automation).
+
 ## ✅ Post-decomposition review EXECUTED (2026-07-13) → docs/todo/2026-07-13-post-decomposition-review.md
 3-agent review of the July settings-decomposition + dictionary + autocorrect work. Real bugs found:
 AC-1 (autocorrect min-freq default 500≠100 + slider 5000>SLIDER_MAX 2000), DICT-1 (gradle can
