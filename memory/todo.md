@@ -15,15 +15,21 @@ Full suite green: **1440 pure / 261 MockK**; instrumented E2E **9/9 green on emu
 (Pixel7/API34, verified real Keystore wrap + headless fail-closed/plaintext-reject).
 REMAINING: optional Argon2id upgrade (kdf_id reserved); wire ew-cli into CI (EW_API_TOKEN).
 
-## 🔜 #156 Encrypted Clipboard — direction chosen (2026-07-17): PRIVATE COPY/PASTE FIRST
-User picked private-copy/paste over at-rest DB encryption. At-rest is fully designed but DEFERRED
-→ docs/audit/remediation-plans/156-at-rest-clipboard-encryption.md (narrow anti-forensic gain,
-large blind-index/schema-V5 refactor; doesn't address the author's primary OS-clipboard concern).
-NOW building §7: in-IME "copy to CleverKeys only" (getSelectedText→addClip, never setPrimaryClip)
-+ a PROCESS_TEXT selection-toolbar activity so copied text bypasses the OS clipboard. Private-paste
-already exists (panel→commitText). Needs: exported-activity threat review, private badge/tab UX,
-export-exclusion decision. (Clipboard DB has NO FTS — search is in-memory regex; content_hash is
-32-bit hashCode — both established during the at-rest design.)
+## ✅ #156 Private copy/paste SHIPPED (2026-07-17, commits 520658ff5 + 168a2df9d) → docs/audit/remediation-plans/156-private-copy-paste.md
+User picked private-copy/paste over at-rest DB encryption. Copy selection into CleverKeys' clipboard
+WITHOUT it reaching the OS clipboard. Two entry points: in-IME COPY_PRIVATE key ("copy_private" 🔒⎘,
+KeyEventHandler + Keyboard2View) and a PROCESS_TEXT toolbar activity (PrivateCopyProcessTextActivity,
+exported+enabled=false opt-in, never setResult, rate-limited). Schema V5 (is_private+source_package,
+sticky merge, COPY-propagated through pin/todo). Export option B (private excluded from plaintext,
+in CKENC only). Panel 🔒 badge + confirm-before-OS-copy. SECURITY: never setPrimaryClip on the private
+path — MockK verify(exactly=0) + non-vacuous instrumented adoptShellPermissionIdentity clipboard reads.
+Verified: 30 pure + 7 MockK + **19/19 instrumented green on emulator.wtf** (Pixel7/API34). Full: 1470/268.
+Also fixed a regression from d7377403c: globalConfig()→ISE broke TestConfigHelper + ~12 instrumented
+NPE-catch sites → reverted to NPE-with-message (commit 520658ff5).
+AT-REST DB encryption still DEFERRED (156-at-rest-clipboard-encryption.md: narrow anti-forensic gain,
+large blind-index/V5-vs-V6 refactor). Clipboard DB has NO FTS (search is in-memory regex); content_hash
+is 32-bit hashCode. Follow-ups for private-copy: private-only-tab UX, whether to exclude private from
+history-monitoring entirely.
 
 ## ✅ Audit-remediation Tier 1–2 EXECUTED (2026-07-17) → docs/audit/2026-07-17-code-quality-audit.md
 Fresh 7-agent code-quality audit (grade C+) then Fable-5-plan / Opus-4.8-code / central-verify
