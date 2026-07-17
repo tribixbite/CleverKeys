@@ -1,6 +1,6 @@
 # Backup/Clipboard-Export Encryption — Design Document
 
-**Status:** DESIGN — not implemented. Awaiting user decisions (§10).
+**Status:** ✅ IMPLEMENTED 2026-07-17 (commit `1114bb749`). All §10 decisions resolved (see the resolution note at the head of §10). Verified: 35 pure crypto tests + 16 integration MockK tests green; full suite 1440 pure / 261 MockK. Instrumented E2E (`BackupRestoreEncryptionEndToEndTest`, `BackupRestoreActivityHeadlessEncryptionTest`) written, pending an ew-cli run.
 **Audit finding:** 2026-07-17 code-quality audit, finding #2 (P1): `BackupRestoreActivity`
 exported with 6 IMPORT/EXPORT actions and no caller authentication
 (`AndroidManifest.xml:140-157`, `BackupRestoreActivity.kt:82-106`).
@@ -414,6 +414,18 @@ that's the designed tripwire.
 ---
 
 ## 10. Open questions for the user (blocking decisions)
+
+> **RESOLVED 2026-07-17 (implemented in `1114bb749`):**
+> 1. Interactive plaintext opt-out — **KEPT** ("Export unencrypted…" with confirm).
+> 2. Foreign-restore `--es passphrase` escape hatch — **INCLUDED, default-off** behind
+>    `backup_allow_intent_passphrase` (IMPORT only; never accepted for EXPORT).
+> 3. Legacy plaintext headless import — **REJECTED immediately** (no grace toggle).
+> 4. KDF — **PBKDF2-SHA256 @ 600k**; `kdf_id` byte reserves Argon2id.
+> 5. `ckenc-decrypt.py` — **SHIPPED** in `scripts/` (documents the `cryptography` pip dep).
+> 6. #156 sequencing — **export-channel landed first**; at-rest clipboard-DB encryption
+>    (the actual #156 ask) is a follow-up that reuses `BackupPassphraseStore`/`BackupCrypto`.
+
+
 
 1. **Interactive plaintext opt-out** — keep the "Export unencrypted…" escape (this
    design's recommendation), or make encryption fully mandatory once a password is

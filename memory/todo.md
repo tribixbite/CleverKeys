@@ -1,5 +1,20 @@
 # CleverKeys TODO
 
+## ✅ Encrypted backups SHIPPED (2026-07-17, commit 1114bb749) → docs/audit/remediation-plans/security-backup-encryption.md
+Closes the exported-BackupRestoreActivity exfil/injection vector (audit #2) WITHOUT breaking
+Termux `am start` automation — backups are AES-256-GCM encrypted so an attacker triggering an
+export gets ciphertext and injection fails the GCM tag. Two-stage Fable-plan→Opus-code→verify:
+**Stage A** pure crypto substrate `backup/crypto/` (Pbkdf2Sha256 RFC-2898 over Mac, CKENC1 AEAD
+format, BackupCrypto AES-256-GCM + streaming; 35 pure tests, PBKDF2 checked vs JCE reference).
+**Stage B** BackupPassphraseStore (Keystore-wrapped prefs), decrypt/encrypt seams in
+BackupRestoreManager (encrypted import → byte-identical SettingsImportPlan, preview preserved),
+BackupRestoreActivity fail-closed + plaintext-reject + default-off `--es passphrase` import
+hatch + 2s rate-limit, SettingsValidation.INTERNAL_KEYS (4 new keys, drift-enforced), password
+Set/Change/Remove UX + plaintext opt-out + decrypt-prompt, scripts/ckenc-decrypt.py, wiki.
+Full suite green: **1440 pure / 261 MockK**. Instrumented E2E (2 classes) pending ew-cli.
+REMAINING: #156 at-rest clipboard encryption (reuse BackupPassphraseStore/BackupCrypto);
+run the 2 androidTest E2E via ew-cli; optional Argon2id upgrade (kdf_id reserved).
+
 ## ✅ Audit-remediation Tier 1–2 EXECUTED (2026-07-17) → docs/audit/2026-07-17-code-quality-audit.md
 Fresh 7-agent code-quality audit (grade C+) then Fable-5-plan / Opus-4.8-code / central-verify
 pipeline across 5 disjoint work-streams + a trimmed security stream. Verified compile-clean,
