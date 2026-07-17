@@ -1,6 +1,6 @@
 # Backup/Clipboard-Export Encryption — Design Document
 
-**Status:** ✅ IMPLEMENTED 2026-07-17 (commit `1114bb749`). All §10 decisions resolved (see the resolution note at the head of §10). Verified: 35 pure crypto tests + 16 integration MockK tests green; full suite 1440 pure / 261 MockK. Instrumented E2E (`BackupRestoreEncryptionEndToEndTest`, `BackupRestoreActivityHeadlessEncryptionTest`) written, pending an ew-cli run.
+**Status:** ✅ IMPLEMENTED 2026-07-17 (commit `1114bb749`). All §10 decisions resolved (see the resolution note at the head of §10). Verified: 35 pure crypto tests + 16 integration MockK tests green; full suite 1440 pure / 261 MockK. Instrumented E2E (`BackupRestoreEncryptionEndToEndTest`, `BackupRestoreActivityHeadlessEncryptionTest`) **9/9 green on emulator.wtf** (Pixel7/API34) — real Keystore wrap + headless fail-closed/plaintext-reject/encrypted-apply all verified on-device.
 **Audit finding:** 2026-07-17 code-quality audit, finding #2 (P1): `BackupRestoreActivity`
 exported with 6 IMPORT/EXPORT actions and no caller authentication
 (`AndroidManifest.xml:140-157`, `BackupRestoreActivity.kt:82-106`).

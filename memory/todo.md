@@ -11,9 +11,19 @@ BackupRestoreManager (encrypted import → byte-identical SettingsImportPlan, pr
 BackupRestoreActivity fail-closed + plaintext-reject + default-off `--es passphrase` import
 hatch + 2s rate-limit, SettingsValidation.INTERNAL_KEYS (4 new keys, drift-enforced), password
 Set/Change/Remove UX + plaintext opt-out + decrypt-prompt, scripts/ckenc-decrypt.py, wiki.
-Full suite green: **1440 pure / 261 MockK**. Instrumented E2E (2 classes) pending ew-cli.
-REMAINING: #156 at-rest clipboard encryption (reuse BackupPassphraseStore/BackupCrypto);
-run the 2 androidTest E2E via ew-cli; optional Argon2id upgrade (kdf_id reserved).
+Full suite green: **1440 pure / 261 MockK**; instrumented E2E **9/9 green on emulator.wtf**
+(Pixel7/API34, verified real Keystore wrap + headless fail-closed/plaintext-reject).
+REMAINING: optional Argon2id upgrade (kdf_id reserved); wire ew-cli into CI (EW_API_TOKEN).
+
+## 🔜 #156 Encrypted Clipboard — direction chosen (2026-07-17): PRIVATE COPY/PASTE FIRST
+User picked private-copy/paste over at-rest DB encryption. At-rest is fully designed but DEFERRED
+→ docs/audit/remediation-plans/156-at-rest-clipboard-encryption.md (narrow anti-forensic gain,
+large blind-index/schema-V5 refactor; doesn't address the author's primary OS-clipboard concern).
+NOW building §7: in-IME "copy to CleverKeys only" (getSelectedText→addClip, never setPrimaryClip)
++ a PROCESS_TEXT selection-toolbar activity so copied text bypasses the OS clipboard. Private-paste
+already exists (panel→commitText). Needs: exported-activity threat review, private badge/tab UX,
+export-exclusion decision. (Clipboard DB has NO FTS — search is in-memory regex; content_hash is
+32-bit hashCode — both established during the at-rest design.)
 
 ## ✅ Audit-remediation Tier 1–2 EXECUTED (2026-07-17) → docs/audit/2026-07-17-code-quality-audit.md
 Fresh 7-agent code-quality audit (grade C+) then Fable-5-plan / Opus-4.8-code / central-verify
