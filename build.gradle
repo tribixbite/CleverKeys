@@ -86,6 +86,14 @@ ext.VERSION_PATCH = 0
 // 4. F-Droid auto-detects tag and builds
 // =============================================================================
 ext.versionCode = ext.VERSION_MAJOR * 10000 + ext.VERSION_MINOR * 100 + ext.VERSION_PATCH
+// Overflow guard: the MAJOR*10000 + MINOR*100 + PATCH packing only stays
+// collision-free (and F-Droid-monotonic) while MINOR and PATCH are each < 100.
+// e.g. 1.5.100 would collide with 1.6.0. Fail the build loudly rather than ship
+// a colliding versionCode. Do NOT widen the scheme — F-Droid monotonicity depends
+// on it (see versionCode formula comment above).
+if (ext.VERSION_MINOR >= 100 || ext.VERSION_PATCH >= 100) {
+    throw new GradleException("versionCode scheme collision: MINOR/PATCH must stay < 100 (see build.gradle versionCode formula)")
+}
 ext.versionNameStr = "${ext.VERSION_MAJOR}.${ext.VERSION_MINOR}.${ext.VERSION_PATCH}"
 
 // Per-ABI versionCode mapping for split APKs
@@ -298,7 +306,10 @@ android {
 
   lint {
     baseline = file("lint-baseline.xml")
-    abortOnError = false
+    // Lint gate phase 1: the baseline suppresses the ~972 pre-existing issues,
+    // so only NEW issues introduced after the baseline will fail the build.
+    // Verified green locally (`./gradlew lint`, BUILD SUCCESSFUL) before flipping.
+    abortOnError = true
     checkReleaseBuilds = false
   }
 

@@ -97,4 +97,61 @@ object SmartAutoSpace {
         // Position stamp check — only enforced when both sides are known
         return stampedPosition < 0 || actualPosition < 0 || actualPosition == stampedPosition
     }
+
+    /**
+     * Trailing-space decision (#78/#82) — the outcome of committing a chosen
+     * suggestion. This is the SINGLE source of truth for the trailing-space
+     * branch that SuggestionHandler.onSuggestionSelected consumes.
+     *
+     * Note: the former Termux-app override was removed in #78 — Termux users who
+     * want no trailing space disable [autoSpaceAfterEnabled] instead. Do NOT
+     * re-add a termux branch here without re-adding it to SuggestionHandler.
+     */
+    enum class TrailingSpaceMode {
+        /** Branch 1: user turned off auto-space (tap only — swipe bypasses it). */
+        NO_SPACE_USER_DISABLED,
+
+        /** Branch 2: a space already follows the cursor (mid-sentence replacement). */
+        NO_SPACE_MID_SENTENCE,
+
+        /** Branch 3: normal — a trailing space is appended after the word. */
+        TRAILING_SPACE
+    }
+
+    /**
+     * Decide whether (and why) a trailing space is appended after a committed
+     * suggestion. Mirrors — and is CALLED BY — SuggestionHandler's
+     * `textToInsert` branch:
+     *
+     *   if (!auto_space_after && !isSwipe) → NO_SPACE_USER_DISABLED   (#82)
+     *   else if (hasSpaceAfter)            → NO_SPACE_MID_SENTENCE     (v1.2.6)
+     *   else                               → TRAILING_SPACE           (normal/swipe)
+     *
+     * @param autoSpaceAfterEnabled config.auto_space_after_suggestion (#82 toggle)
+     * @param isSwipeAutoInsert     true when the commit came from a swipe auto-insert
+     * @param hasSpaceAfter         true when the char after the cursor is whitespace
+     */
+    fun decideTrailingSpace(
+        autoSpaceAfterEnabled: Boolean,
+        isSwipeAutoInsert: Boolean,
+        hasSpaceAfter: Boolean
+    ): TrailingSpaceMode = when {
+        !autoSpaceAfterEnabled && !isSwipeAutoInsert -> TrailingSpaceMode.NO_SPACE_USER_DISABLED
+        hasSpaceAfter -> TrailingSpaceMode.NO_SPACE_MID_SENTENCE
+        else -> TrailingSpaceMode.TRAILING_SPACE
+    }
+
+    /**
+     * Whether the commit actually added a trailing space (used to arm the
+     * smart-punctuation "swallow" via markAutoSpacePending). Exactly the
+     * complement of the two NO_SPACE modes — kept as a derived helper so the
+     * `addedTrailingSpace` flag can never drift from [decideTrailingSpace].
+     */
+    fun addsTrailingSpace(
+        autoSpaceAfterEnabled: Boolean,
+        isSwipeAutoInsert: Boolean,
+        hasSpaceAfter: Boolean
+    ): Boolean =
+        decideTrailingSpace(autoSpaceAfterEnabled, isSwipeAutoInsert, hasSpaceAfter) ==
+            TrailingSpaceMode.TRAILING_SPACE
 }

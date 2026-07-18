@@ -714,26 +714,37 @@ class SuggestionHandler(
                 // 2. OR there's already a space after cursor (mid-sentence replacement)
                 // The previous Termux-app override has been removed — Termux users who want
                 // no trailing space should disable auto_space_after_suggestion.
+                // The decision itself lives in SmartAutoSpace (pure, unit-tested) so it
+                // can't drift from AutoSpaceLogicTest.
+                val trailingSpaceMode = SmartAutoSpace.decideTrailingSpace(
+                    autoSpaceAfterEnabled = config.auto_space_after_suggestion,
+                    isSwipeAutoInsert = isSwipeAutoInsert,
+                    hasSpaceAfter = hasSpaceAfter
+                )
                 val insertMode: String
-                val textToInsert = if (!config.auto_space_after_suggestion && !isSwipeAutoInsert) {
-                    // #82: User disabled auto-space after suggestion (tap selection only)
-                    insertMode = "AUTO-SPACE DISABLED"
-                    if (needsSpaceBefore) " $capitalizedWord" else capitalizedWord
-                } else if (hasSpaceAfter) {
-                    // v1.2.6: Mid-sentence replacement - don't add trailing space (already exists)
-                    insertMode = "MID-SENTENCE (hasSpaceAfter=true)"
-                    if (needsSpaceBefore) " $capitalizedWord" else capitalizedWord
-                } else {
-                    // Normal apps (incl. Termux when user opts in) or swipe: Insert word with trailing space
-                    insertMode = "NORMAL/SWIPE MODE (needsSpaceBefore=$needsSpaceBefore, isSwipe=$isSwipeAutoInsert, capitalize=$shouldCapitalize)"
-                    if (needsSpaceBefore) " $capitalizedWord " else "$capitalizedWord "
+                val textToInsert = when (trailingSpaceMode) {
+                    SmartAutoSpace.TrailingSpaceMode.NO_SPACE_USER_DISABLED -> {
+                        // #82: User disabled auto-space after suggestion (tap selection only)
+                        insertMode = "AUTO-SPACE DISABLED"
+                        if (needsSpaceBefore) " $capitalizedWord" else capitalizedWord
+                    }
+                    SmartAutoSpace.TrailingSpaceMode.NO_SPACE_MID_SENTENCE -> {
+                        // v1.2.6: Mid-sentence replacement - don't add trailing space (already exists)
+                        insertMode = "MID-SENTENCE (hasSpaceAfter=true)"
+                        if (needsSpaceBefore) " $capitalizedWord" else capitalizedWord
+                    }
+                    SmartAutoSpace.TrailingSpaceMode.TRAILING_SPACE -> {
+                        // Normal apps (incl. Termux when user opts in) or swipe: Insert word with trailing space
+                        insertMode = "NORMAL/SWIPE MODE (needsSpaceBefore=$needsSpaceBefore, isSwipe=$isSwipeAutoInsert, capitalize=$shouldCapitalize)"
+                        if (needsSpaceBefore) " $capitalizedWord " else "$capitalizedWord "
+                    }
                 }
                 vlog { "$insertMode: textToInsert len=${textToInsert.length}" }
 
                 // v1.2.7: Mark space as auto-inserted for smart punctuation
                 // #78: Trailing space is added when neither user-disabled nor mid-sentence applies
-                val addedTrailingSpace = !(!config.auto_space_after_suggestion && !isSwipeAutoInsert) &&
-                    !hasSpaceAfter
+                val addedTrailingSpace =
+                    trailingSpaceMode == SmartAutoSpace.TrailingSpaceMode.TRAILING_SPACE
 
                 // SAS-1: capture the pre-commit cursor position so the pending
                 // auto-space carries a position stamp (validated at punctuation time;

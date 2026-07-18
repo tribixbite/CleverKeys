@@ -2,93 +2,30 @@ package tribixbite.cleverkeys
 
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
+import tribixbite.cleverkeys.SmartAutoSpace.TrailingSpaceMode
 
 /**
- * Comprehensive tests for #82 — Auto-space after/before suggestion toggles.
+ * Tests for #82 — Auto-space after/before suggestion toggles.
  *
- * Tests the 4-way trailing space decision logic from SuggestionHandler.kt:
- * 1. !auto_space && !isSwipe → no trailing space (user disabled #82)
- * 2. termux_mode && !isSwipe && inTermuxApp → no trailing space (terminal)
- * 3. hasSpaceAfter → no trailing space (mid-sentence replacement)
- * 4. else → trailing space added (normal behavior)
+ * This test exercises the REAL production decision seam, not a mirror:
+ *   - [SmartAutoSpace.decideTrailingSpace] / [SmartAutoSpace.addsTrailingSpace]
+ *     is the exact function SuggestionHandler.onSuggestionSelected calls to
+ *     pick the trailing-space branch and to arm the smart-punctuation swallow.
+ *   - [SmartAutoSpace.needsLeadingSpace] is the char-level leading-space
+ *     decision consumed by both SuggestionHandler and InputCoordinator.
  *
- * Also tests the leading space (auto_space_before_suggestion) logic:
- * - When disabled + tap: no leading space (e.g. "this:" + tap "english" → "this:english")
- * - When disabled + swipe: leading space still added (swipe always separates words)
- * - When enabled: leading space whenever previous char is not whitespace/opening punct
- *
- * Also tests the addedTrailingSpace tracking for smart punctuation.
+ * Historical note: an earlier version of this file re-implemented a 4-way
+ * decision that included a `NO_SPACE_TERMUX` branch. That branch was removed
+ * from production in #78 (Termux users disable auto_space_after_suggestion
+ * instead), so the mirror was testing dead logic that could pass green forever
+ * while diverging from the shipped code. The Termux branch is intentionally
+ * absent below because it is absent in production.
  */
 class AutoSpaceLogicTest {
-
-    /**
-     * Determines if a trailing space should be added after word selection.
-     * Mirrors SuggestionHandler.kt lines 634-655 decision logic.
-     */
-    enum class SpaceMode {
-        NO_SPACE_USER_DISABLED,  // Branch 1: user turned off auto-space
-        NO_SPACE_TERMUX,         // Branch 2: in terminal app
-        NO_SPACE_MID_SENTENCE,   // Branch 3: already has space after cursor
-        TRAILING_SPACE           // Branch 4: normal — add space after word
-    }
-
-    private fun decideSpaceMode(
-        autoSpaceEnabled: Boolean,
-        isSwipeAutoInsert: Boolean,
-        termuxModeEnabled: Boolean,
-        inTermuxApp: Boolean,
-        hasSpaceAfter: Boolean
-    ): SpaceMode {
-        return if (!autoSpaceEnabled && !isSwipeAutoInsert) {
-            SpaceMode.NO_SPACE_USER_DISABLED
-        } else if (termuxModeEnabled && !isSwipeAutoInsert && inTermuxApp) {
-            SpaceMode.NO_SPACE_TERMUX
-        } else if (hasSpaceAfter) {
-            SpaceMode.NO_SPACE_MID_SENTENCE
-        } else {
-            SpaceMode.TRAILING_SPACE
-        }
-    }
-
-    /**
-     * Mirrors addedTrailingSpace logic from SuggestionHandler.kt lines 662-664:
-     *   !(!auto_space && !isSwipe) && !(termux_mode && !isSwipe && inTermux) && !hasSpaceAfter
-     */
-    private fun wasTrailingSpaceAdded(
-        autoSpaceEnabled: Boolean,
-        isSwipeAutoInsert: Boolean,
-        termuxModeEnabled: Boolean,
-        inTermuxApp: Boolean,
-        hasSpaceAfter: Boolean
-    ): Boolean {
-        return !(!autoSpaceEnabled && !isSwipeAutoInsert) &&
-            !(termuxModeEnabled && !isSwipeAutoInsert && inTermuxApp) &&
-            !hasSpaceAfter
-    }
 
     // =========================================================================
     // Config defaults
     // =========================================================================
-
-    /**
-     * Determines whether a leading space should be added before the word.
-     * Mirrors the needsSpaceBefore logic in SuggestionHandler.kt / InputCoordinator.kt.
-     *
-     * When auto_space_before_suggestion is false and it's a tap (not swipe),
-     * needsSpaceBefore is forced to false regardless of preceding character.
-     * Swipe auto-inserts always get the leading space.
-     */
-    private fun decideNeedsSpaceBefore(
-        autoSpaceBeforeEnabled: Boolean,
-        isSwipeAutoInsert: Boolean,
-        prevCharIsNonWhitespace: Boolean
-    ): Boolean {
-        return if (!isSwipeAutoInsert && !autoSpaceBeforeEnabled) {
-            false  // User disabled leading space before tapped suggestions
-        } else {
-            prevCharIsNonWhitespace
-        }
-    }
 
     @Test
     fun `auto space after suggestion is enabled by default`() {
@@ -111,376 +48,201 @@ class AutoSpaceLogicTest {
 
     @Test
     fun `user disabled auto-space — no trailing space on tap selection`() {
-        assertThat(decideSpaceMode(
-            autoSpaceEnabled = false,
-            isSwipeAutoInsert = false,
-            termuxModeEnabled = false,
-            inTermuxApp = false,
-            hasSpaceAfter = false
-        )).isEqualTo(SpaceMode.NO_SPACE_USER_DISABLED)
+        assertThat(
+            SmartAutoSpace.decideTrailingSpace(
+                autoSpaceAfterEnabled = false,
+                isSwipeAutoInsert = false,
+                hasSpaceAfter = false
+            )
+        ).isEqualTo(TrailingSpaceMode.NO_SPACE_USER_DISABLED)
     }
 
     @Test
     fun `user disabled auto-space — swipe still gets trailing space`() {
         // Even with auto-space off, swipe auto-insert bypasses the user preference
-        assertThat(decideSpaceMode(
-            autoSpaceEnabled = false,
-            isSwipeAutoInsert = true,
-            termuxModeEnabled = false,
-            inTermuxApp = false,
-            hasSpaceAfter = false
-        )).isEqualTo(SpaceMode.TRAILING_SPACE)
-    }
-
-    @Test
-    fun `user disabled auto-space — swipe in termux app gets trailing space`() {
-        // Swipe bypasses both user preference AND termux mode
-        assertThat(decideSpaceMode(
-            autoSpaceEnabled = false,
-            isSwipeAutoInsert = true,
-            termuxModeEnabled = true,
-            inTermuxApp = true,
-            hasSpaceAfter = false
-        )).isEqualTo(SpaceMode.TRAILING_SPACE)
+        assertThat(
+            SmartAutoSpace.decideTrailingSpace(
+                autoSpaceAfterEnabled = false,
+                isSwipeAutoInsert = true,
+                hasSpaceAfter = false
+            )
+        ).isEqualTo(TrailingSpaceMode.TRAILING_SPACE)
     }
 
     // =========================================================================
-    // Branch 2: Termux mode active and in terminal app
-    // =========================================================================
-
-    @Test
-    fun `termux mode in terminal app — no trailing space on tap`() {
-        assertThat(decideSpaceMode(
-            autoSpaceEnabled = true,
-            isSwipeAutoInsert = false,
-            termuxModeEnabled = true,
-            inTermuxApp = true,
-            hasSpaceAfter = false
-        )).isEqualTo(SpaceMode.NO_SPACE_TERMUX)
-    }
-
-    @Test
-    fun `termux mode enabled but NOT in terminal app — trailing space added`() {
-        // Setting enabled but Chrome is not a terminal app
-        assertThat(decideSpaceMode(
-            autoSpaceEnabled = true,
-            isSwipeAutoInsert = false,
-            termuxModeEnabled = true,
-            inTermuxApp = false,
-            hasSpaceAfter = false
-        )).isEqualTo(SpaceMode.TRAILING_SPACE)
-    }
-
-    @Test
-    fun `termux mode in terminal app — swipe gets trailing space`() {
-        // Swipe auto-insert always gets trailing space even in terminal
-        assertThat(decideSpaceMode(
-            autoSpaceEnabled = true,
-            isSwipeAutoInsert = true,
-            termuxModeEnabled = true,
-            inTermuxApp = true,
-            hasSpaceAfter = false
-        )).isEqualTo(SpaceMode.TRAILING_SPACE)
-    }
-
-    @Test
-    fun `termux mode disabled in terminal app — trailing space added`() {
-        // Even if in a terminal app, if termux_mode_enabled is off, normal behavior
-        assertThat(decideSpaceMode(
-            autoSpaceEnabled = true,
-            isSwipeAutoInsert = false,
-            termuxModeEnabled = false,
-            inTermuxApp = true,
-            hasSpaceAfter = false
-        )).isEqualTo(SpaceMode.TRAILING_SPACE)
-    }
-
-    // =========================================================================
-    // Branch 3: Mid-sentence replacement (hasSpaceAfter)
+    // Branch 2: Mid-sentence replacement (hasSpaceAfter)
     // =========================================================================
 
     @Test
     fun `mid-sentence replacement — no trailing space`() {
-        assertThat(decideSpaceMode(
-            autoSpaceEnabled = true,
-            isSwipeAutoInsert = false,
-            termuxModeEnabled = false,
-            inTermuxApp = false,
-            hasSpaceAfter = true
-        )).isEqualTo(SpaceMode.NO_SPACE_MID_SENTENCE)
+        assertThat(
+            SmartAutoSpace.decideTrailingSpace(
+                autoSpaceAfterEnabled = true,
+                isSwipeAutoInsert = false,
+                hasSpaceAfter = true
+            )
+        ).isEqualTo(TrailingSpaceMode.NO_SPACE_MID_SENTENCE)
     }
 
     @Test
     fun `mid-sentence with swipe — still no trailing space`() {
-        // hasSpaceAfter takes priority when branches 1 and 2 don't match
-        assertThat(decideSpaceMode(
-            autoSpaceEnabled = true,
-            isSwipeAutoInsert = true,
-            termuxModeEnabled = false,
-            inTermuxApp = false,
-            hasSpaceAfter = true
-        )).isEqualTo(SpaceMode.NO_SPACE_MID_SENTENCE)
-    }
-
-    @Test
-    fun `mid-sentence in termux app — termux branch takes priority over mid-sentence`() {
-        // Termux branch (2) is checked before mid-sentence (3)
-        assertThat(decideSpaceMode(
-            autoSpaceEnabled = true,
-            isSwipeAutoInsert = false,
-            termuxModeEnabled = true,
-            inTermuxApp = true,
-            hasSpaceAfter = true
-        )).isEqualTo(SpaceMode.NO_SPACE_TERMUX)
+        // hasSpaceAfter takes priority once the user-disabled branch doesn't match
+        assertThat(
+            SmartAutoSpace.decideTrailingSpace(
+                autoSpaceAfterEnabled = true,
+                isSwipeAutoInsert = true,
+                hasSpaceAfter = true
+            )
+        ).isEqualTo(TrailingSpaceMode.NO_SPACE_MID_SENTENCE)
     }
 
     // =========================================================================
-    // Branch 4: Normal — trailing space added
+    // Branch 3: Normal — trailing space added
     // =========================================================================
 
     @Test
     fun `normal mode — trailing space added`() {
-        assertThat(decideSpaceMode(
-            autoSpaceEnabled = true,
-            isSwipeAutoInsert = false,
-            termuxModeEnabled = false,
-            inTermuxApp = false,
-            hasSpaceAfter = false
-        )).isEqualTo(SpaceMode.TRAILING_SPACE)
+        assertThat(
+            SmartAutoSpace.decideTrailingSpace(
+                autoSpaceAfterEnabled = true,
+                isSwipeAutoInsert = false,
+                hasSpaceAfter = false
+            )
+        ).isEqualTo(TrailingSpaceMode.TRAILING_SPACE)
     }
 
     @Test
     fun `normal swipe — trailing space added`() {
-        assertThat(decideSpaceMode(
-            autoSpaceEnabled = true,
-            isSwipeAutoInsert = true,
-            termuxModeEnabled = false,
-            inTermuxApp = false,
-            hasSpaceAfter = false
-        )).isEqualTo(SpaceMode.TRAILING_SPACE)
+        assertThat(
+            SmartAutoSpace.decideTrailingSpace(
+                autoSpaceAfterEnabled = true,
+                isSwipeAutoInsert = true,
+                hasSpaceAfter = false
+            )
+        ).isEqualTo(TrailingSpaceMode.TRAILING_SPACE)
     }
 
     // =========================================================================
-    // addedTrailingSpace tracking (for smart punctuation)
+    // Priority/ordering: user-disabled branch is checked before mid-sentence
+    // =========================================================================
+
+    @Test
+    fun `user disabled takes priority over mid-sentence`() {
+        // Both branch-1 and branch-2 conditions met — branch 1 wins.
+        assertThat(
+            SmartAutoSpace.decideTrailingSpace(
+                autoSpaceAfterEnabled = false,
+                isSwipeAutoInsert = false,
+                hasSpaceAfter = true
+            )
+        ).isEqualTo(TrailingSpaceMode.NO_SPACE_USER_DISABLED)
+    }
+
+    // =========================================================================
+    // addsTrailingSpace tracking (arms the smart-punctuation swallow)
     // =========================================================================
 
     @Test
     fun `trailing space tracked when space is added in normal mode`() {
-        assertThat(wasTrailingSpaceAdded(
-            autoSpaceEnabled = true,
-            isSwipeAutoInsert = false,
-            termuxModeEnabled = false,
-            inTermuxApp = false,
-            hasSpaceAfter = false
-        )).isTrue()
+        assertThat(
+            SmartAutoSpace.addsTrailingSpace(
+                autoSpaceAfterEnabled = true,
+                isSwipeAutoInsert = false,
+                hasSpaceAfter = false
+            )
+        ).isTrue()
     }
 
     @Test
     fun `trailing space NOT tracked when user disabled auto-space`() {
-        assertThat(wasTrailingSpaceAdded(
-            autoSpaceEnabled = false,
-            isSwipeAutoInsert = false,
-            termuxModeEnabled = false,
-            inTermuxApp = false,
-            hasSpaceAfter = false
-        )).isFalse()
-    }
-
-    @Test
-    fun `trailing space NOT tracked in termux app`() {
-        assertThat(wasTrailingSpaceAdded(
-            autoSpaceEnabled = true,
-            isSwipeAutoInsert = false,
-            termuxModeEnabled = true,
-            inTermuxApp = true,
-            hasSpaceAfter = false
-        )).isFalse()
+        assertThat(
+            SmartAutoSpace.addsTrailingSpace(
+                autoSpaceAfterEnabled = false,
+                isSwipeAutoInsert = false,
+                hasSpaceAfter = false
+            )
+        ).isFalse()
     }
 
     @Test
     fun `trailing space NOT tracked when hasSpaceAfter`() {
-        assertThat(wasTrailingSpaceAdded(
-            autoSpaceEnabled = true,
-            isSwipeAutoInsert = false,
-            termuxModeEnabled = false,
-            inTermuxApp = false,
-            hasSpaceAfter = true
-        )).isFalse()
+        assertThat(
+            SmartAutoSpace.addsTrailingSpace(
+                autoSpaceAfterEnabled = true,
+                isSwipeAutoInsert = false,
+                hasSpaceAfter = true
+            )
+        ).isFalse()
     }
 
     @Test
     fun `trailing space tracked for swipe even with auto-space disabled`() {
-        // Swipe bypasses user preference, so space IS added → tracking should be true
-        assertThat(wasTrailingSpaceAdded(
-            autoSpaceEnabled = false,
-            isSwipeAutoInsert = true,
-            termuxModeEnabled = false,
-            inTermuxApp = false,
-            hasSpaceAfter = false
-        )).isTrue()
-    }
-
-    @Test
-    fun `trailing space tracked for swipe in termux`() {
-        // Swipe bypasses termux suppression too
-        assertThat(wasTrailingSpaceAdded(
-            autoSpaceEnabled = true,
-            isSwipeAutoInsert = true,
-            termuxModeEnabled = true,
-            inTermuxApp = true,
-            hasSpaceAfter = false
-        )).isTrue()
+        // Swipe bypasses the user preference, so a space IS added → tracking is true
+        assertThat(
+            SmartAutoSpace.addsTrailingSpace(
+                autoSpaceAfterEnabled = false,
+                isSwipeAutoInsert = true,
+                hasSpaceAfter = false
+            )
+        ).isTrue()
     }
 
     // =========================================================================
-    // Decision mode consistency with tracking
+    // Decision/tracking consistency — addsTrailingSpace is exactly the
+    // complement of the two NO_SPACE modes (the invariant SuggestionHandler
+    // relies on to keep addedTrailingSpace from drifting).
     // =========================================================================
 
     @Test
-    fun `space mode and tracking agree — trailing space mode tracks space`() {
-        val mode = decideSpaceMode(
-            autoSpaceEnabled = true, isSwipeAutoInsert = false,
-            termuxModeEnabled = false, inTermuxApp = false, hasSpaceAfter = false
-        )
-        val tracked = wasTrailingSpaceAdded(
-            autoSpaceEnabled = true, isSwipeAutoInsert = false,
-            termuxModeEnabled = false, inTermuxApp = false, hasSpaceAfter = false
-        )
-        assertThat(mode).isEqualTo(SpaceMode.TRAILING_SPACE)
-        assertThat(tracked).isTrue()
-    }
-
-    @Test
-    fun `space mode and tracking agree — no space modes do not track`() {
-        // Branch 1: user disabled
-        assertThat(decideSpaceMode(false, false, false, false, false))
-            .isEqualTo(SpaceMode.NO_SPACE_USER_DISABLED)
-        assertThat(wasTrailingSpaceAdded(false, false, false, false, false))
-            .isFalse()
-
-        // Branch 2: termux
-        assertThat(decideSpaceMode(true, false, true, true, false))
-            .isEqualTo(SpaceMode.NO_SPACE_TERMUX)
-        assertThat(wasTrailingSpaceAdded(true, false, true, true, false))
-            .isFalse()
-
-        // Branch 3: mid-sentence
-        assertThat(decideSpaceMode(true, false, false, false, true))
-            .isEqualTo(SpaceMode.NO_SPACE_MID_SENTENCE)
-        assertThat(wasTrailingSpaceAdded(true, false, false, false, true))
-            .isFalse()
+    fun `addsTrailingSpace agrees with decideTrailingSpace for every input`() {
+        val bools = listOf(false, true)
+        for (autoSpace in bools) {
+            for (isSwipe in bools) {
+                for (hasSpaceAfter in bools) {
+                    val mode = SmartAutoSpace.decideTrailingSpace(autoSpace, isSwipe, hasSpaceAfter)
+                    val added = SmartAutoSpace.addsTrailingSpace(autoSpace, isSwipe, hasSpaceAfter)
+                    assertThat(added).isEqualTo(mode == TrailingSpaceMode.TRAILING_SPACE)
+                }
+            }
+        }
     }
 
     // =========================================================================
-    // Priority/ordering tests
+    // Leading space (SmartAutoSpace.needsLeadingSpace) — the char-level seam.
+    //
+    // The pref/#151 gating (auto_space_before_suggestion, sync-suppressed
+    // fields, swipe-always-spaces) is applied by SuggestionHandler /
+    // InputCoordinator BEFORE consulting this; here we test the pure char rule:
+    // "add a leading space unless the previous char is whitespace or an opener."
     // =========================================================================
 
     @Test
-    fun `user disabled takes priority over termux mode`() {
-        // Both branch 1 and 2 conditions met — branch 1 should win
-        val mode = decideSpaceMode(
-            autoSpaceEnabled = false,
-            isSwipeAutoInsert = false,
-            termuxModeEnabled = true,
-            inTermuxApp = true,
-            hasSpaceAfter = false
-        )
-        assertThat(mode).isEqualTo(SpaceMode.NO_SPACE_USER_DISABLED)
-    }
-
-    @Test
-    fun `user disabled takes priority over mid-sentence`() {
-        val mode = decideSpaceMode(
-            autoSpaceEnabled = false,
-            isSwipeAutoInsert = false,
-            termuxModeEnabled = false,
-            inTermuxApp = false,
-            hasSpaceAfter = true
-        )
-        assertThat(mode).isEqualTo(SpaceMode.NO_SPACE_USER_DISABLED)
-    }
-
-    @Test
-    fun `termux takes priority over mid-sentence`() {
-        val mode = decideSpaceMode(
-            autoSpaceEnabled = true,
-            isSwipeAutoInsert = false,
-            termuxModeEnabled = true,
-            inTermuxApp = true,
-            hasSpaceAfter = true
-        )
-        assertThat(mode).isEqualTo(SpaceMode.NO_SPACE_TERMUX)
-    }
-
-    // =========================================================================
-    // Leading space (auto_space_before_suggestion)
-    // =========================================================================
-
-    @Test
-    fun `leading space enabled — tap after colon gets space before`() {
-        // "this:" + tap "english" → "this: english"
-        assertThat(decideNeedsSpaceBefore(
-            autoSpaceBeforeEnabled = true,
-            isSwipeAutoInsert = false,
-            prevCharIsNonWhitespace = true  // ':' is not whitespace
-        )).isTrue()
-    }
-
-    @Test
-    fun `leading space disabled — tap after colon gets no space before`() {
-        // "this:" + tap "english" → "this:english"
-        assertThat(decideNeedsSpaceBefore(
-            autoSpaceBeforeEnabled = false,
-            isSwipeAutoInsert = false,
-            prevCharIsNonWhitespace = true
-        )).isFalse()
-    }
-
-    @Test
-    fun `leading space disabled — swipe still gets space before`() {
-        // Swipe auto-insert always gets leading space regardless of setting
-        assertThat(decideNeedsSpaceBefore(
-            autoSpaceBeforeEnabled = false,
-            isSwipeAutoInsert = true,
-            prevCharIsNonWhitespace = true
-        )).isTrue()
-    }
-
-    @Test
-    fun `leading space enabled — swipe gets space before`() {
-        assertThat(decideNeedsSpaceBefore(
-            autoSpaceBeforeEnabled = true,
-            isSwipeAutoInsert = true,
-            prevCharIsNonWhitespace = true
-        )).isTrue()
+    fun `leading space — tap after colon gets space before`() {
+        // "this:" + tap "english" → "this: english" (':' is neither whitespace nor an opener)
+        assertThat(SmartAutoSpace.needsLeadingSpace(':', 's')).isTrue()
     }
 
     @Test
     fun `leading space — no space when previous char is whitespace`() {
-        // Regardless of setting, no double space when already preceded by whitespace
-        assertThat(decideNeedsSpaceBefore(
-            autoSpaceBeforeEnabled = true,
-            isSwipeAutoInsert = false,
-            prevCharIsNonWhitespace = false  // Previous char is space/newline
-        )).isFalse()
+        // Already preceded by whitespace → no double space
+        assertThat(SmartAutoSpace.needsLeadingSpace(' ', 'a')).isFalse()
     }
 
     @Test
-    fun `leading space disabled — no space even with whitespace prev (trivially false)`() {
-        assertThat(decideNeedsSpaceBefore(
-            autoSpaceBeforeEnabled = false,
-            isSwipeAutoInsert = false,
-            prevCharIsNonWhitespace = false
-        )).isFalse()
+    fun `leading space — no space after opening bracket`() {
+        // "(" + swipe "word" → "(word", never "( word"
+        assertThat(SmartAutoSpace.needsLeadingSpace('(', null)).isFalse()
     }
 
     @Test
-    fun `leading space — swipe no space when previous is whitespace`() {
-        // Even swipe doesn't add space if there's already whitespace
-        assertThat(decideNeedsSpaceBefore(
-            autoSpaceBeforeEnabled = true,
-            isSwipeAutoInsert = true,
-            prevCharIsNonWhitespace = false
-        )).isFalse()
+    fun `leading space — no space after opening quote at start of quote`() {
+        // He said " + swipe → He said "word (opening quote disambiguated by preceding space)
+        assertThat(SmartAutoSpace.needsLeadingSpace('"', ' ')).isFalse()
+    }
+
+    @Test
+    fun `leading space — space after possessive apostrophe`() {
+        // kids' + swipe "toys" → kids' toys (apostrophe after a letter is possessive/closing)
+        assertThat(SmartAutoSpace.needsLeadingSpace('\'', 's')).isTrue()
     }
 }

@@ -54,6 +54,9 @@ diff*.txt
 diff*.html
 local_*.txt
 remote_*.txt
+# Stray release-scratch dirs (remote_v16/, remote_v19_all/, ...) — downloaded
+# release bundles / CHANGELOGs that must never be tracked.
+remote_v*/
 github_*.txt
 lint_results.txt
 check_layout.output

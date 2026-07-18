@@ -244,7 +244,15 @@ def write_binary(entry_states, machine, output_path):
         # Write states array (unsigned shorts)
         for state, _ in machine:
             if isinstance(state, int):
-                f.write(struct.pack('>H', state & 0xFFFF))
+                # States pack into an unsigned 16-bit field. The only int > the
+                # normal 0..0xFFFE range is the deliberate 0xFFFF "-1 as unsigned"
+                # sentinel (see states.append((0xFFFF, ...)) above). Anything ABOVE
+                # 0xFFFF is an astral codepoint that `& 0xFFFF` would silently
+                # truncate/corrupt — fail loudly instead so it's caught at
+                # generation time rather than shipping a broken compose table.
+                if state > 0xFFFF:
+                    raise ValueError(f"compose state U+{state:X} exceeds U+FFFF")
+                f.write(struct.pack('>H', state))
             else:
                 f.write(struct.pack('>H', ord(state[0]) if state else 0))
 

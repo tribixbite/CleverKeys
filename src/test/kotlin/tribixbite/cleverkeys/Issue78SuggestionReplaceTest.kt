@@ -18,15 +18,16 @@ import org.junit.Test
  *     but Termux ignores them — Termux always skips trailing space regardless
  *     of the user's auto_space_after_suggestion preference.
  *
- * These tests are RED — they assert the EXPECTED-after-fix outcome against
- * helpers that mirror the CURRENT (buggy) impl, so they fail until the impl
- * is fixed. Do NOT modify the impl-mirror helpers below to make them pass
- * without an approved fix plan; they exist to document the symptom.
+ * STATUS: both bugs are FIXED (#78). These are now GREEN characterization tests:
+ *   • BUG A: the partial-word-replace fallback ([simulateImplCommit]) mirrors the
+ *     shipped editor-scan fallback for composing-text-free apps.
+ *   • BUG B: the trailing-space decision is asserted through the REAL production
+ *     seam [SmartAutoSpace.decideTrailingSpace] (see [decideSpaceMode]) — the
+ *     Termux override was removed, so the user pref drives regardless of the app.
  *
- * Reference: SuggestionHandler.kt onSuggestionSelected:
- *   • Lines 560-595: replace logic for typed-prefix-then-tap
- *   • Lines 644-664: 4-way space-mode decision (#82 toggle, Termux override,
- *     mid-sentence, normal)
+ * Reference: SuggestionHandler.kt onSuggestionSelected — the space-mode decision
+ * now lives in the pure, unit-tested SmartAutoSpace object (3-way: #82 toggle,
+ * mid-sentence, normal). There is NO Termux branch.
  *
  * Hypothesized root causes (for fix planning, not asserted by these tests):
  *   • Replace bug: contextTracker.getCurrentWordLength() returns 0 in apps that
@@ -78,25 +79,27 @@ class Issue78SuggestionReplaceTest {
     }
 
     /**
-     * Simulates SuggestionHandler's trailing-space decision in FIXED form.
-     * The Termux-app override has been removed — user pref drives. Termux
-     * users who want no trailing space disable auto_space_after_suggestion.
+     * SuggestionHandler's trailing-space decision, in FIXED form. The Termux-app
+     * override has been removed — user pref drives. Termux users who want no
+     * trailing space disable auto_space_after_suggestion.
+     *
+     * This calls the REAL production seam ([SmartAutoSpace.decideTrailingSpace])
+     * rather than a private copy, so it can't drift. The termuxModeEnabled /
+     * inTermuxApp parameters are ignored by design (kept for call-site clarity —
+     * the BUG B tests assert the Termux flags DON'T change the outcome).
      */
     private fun decideSpaceMode(
         autoSpaceEnabled: Boolean,
         isSwipeAutoInsert: Boolean,
-        termuxModeEnabled: Boolean,    // unused after fix; kept for sig compat
-        inTermuxApp: Boolean,           // unused after fix; kept for sig compat
+        @Suppress("UNUSED_PARAMETER") termuxModeEnabled: Boolean,
+        @Suppress("UNUSED_PARAMETER") inTermuxApp: Boolean,
         hasSpaceAfter: Boolean
-    ): AutoSpaceLogicTest.SpaceMode {
-        return if (!autoSpaceEnabled && !isSwipeAutoInsert) {
-            AutoSpaceLogicTest.SpaceMode.NO_SPACE_USER_DISABLED
-        } else if (hasSpaceAfter) {
-            AutoSpaceLogicTest.SpaceMode.NO_SPACE_MID_SENTENCE
-        } else {
-            AutoSpaceLogicTest.SpaceMode.TRAILING_SPACE
-        }
-    }
+    ): SmartAutoSpace.TrailingSpaceMode =
+        SmartAutoSpace.decideTrailingSpace(
+            autoSpaceAfterEnabled = autoSpaceEnabled,
+            isSwipeAutoInsert = isSwipeAutoInsert,
+            hasSpaceAfter = hasSpaceAfter
+        )
 
     // =========================================================================
     // BUG A — replace, not append (Termux + Fennec + Keep)
@@ -172,7 +175,7 @@ class Issue78SuggestionReplaceTest {
             hasSpaceAfter = false
         )
         // Expected after fix: TRAILING_SPACE (user pref takes precedence).
-        assertThat(current).isEqualTo(AutoSpaceLogicTest.SpaceMode.TRAILING_SPACE)
+        assertThat(current).isEqualTo(SmartAutoSpace.TrailingSpaceMode.TRAILING_SPACE)
     }
 
     @Test
@@ -186,7 +189,7 @@ class Issue78SuggestionReplaceTest {
             inTermuxApp = true,
             hasSpaceAfter = false
         )
-        assertThat(current).isEqualTo(AutoSpaceLogicTest.SpaceMode.NO_SPACE_USER_DISABLED)
+        assertThat(current).isEqualTo(SmartAutoSpace.TrailingSpaceMode.NO_SPACE_USER_DISABLED)
     }
 
     @Test
@@ -199,7 +202,7 @@ class Issue78SuggestionReplaceTest {
             inTermuxApp = false,  // Fennec — not Termux
             hasSpaceAfter = false
         )
-        assertThat(current).isEqualTo(AutoSpaceLogicTest.SpaceMode.TRAILING_SPACE)
+        assertThat(current).isEqualTo(SmartAutoSpace.TrailingSpaceMode.TRAILING_SPACE)
     }
 
     @Test
@@ -212,6 +215,6 @@ class Issue78SuggestionReplaceTest {
             inTermuxApp = true,
             hasSpaceAfter = false
         )
-        assertThat(current).isEqualTo(AutoSpaceLogicTest.SpaceMode.TRAILING_SPACE)
+        assertThat(current).isEqualTo(SmartAutoSpace.TrailingSpaceMode.TRAILING_SPACE)
     }
 }
