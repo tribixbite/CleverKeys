@@ -375,11 +375,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var numpadLayout by mutableStateOf("default") // "default", "low_first"
     internal var pinEntryEnabled by mutableStateOf(false)
 
-    // Accessibility settings (Bug #373, #368, #377)
-    internal var stickyKeysEnabled by mutableStateOf(false)
-    internal var stickyKeysTimeout by mutableStateOf(5000) // milliseconds
-    internal var voiceGuidanceEnabled by mutableStateOf(false)
-
     // Swipe Corrections settings (migrated from XML)
     internal var swipeBeamAutocorrectEnabled by mutableStateOf(true)
     internal var swipeFinalAutocorrectEnabled by mutableStateOf(true)

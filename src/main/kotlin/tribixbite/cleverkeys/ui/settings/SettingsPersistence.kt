@@ -59,15 +59,6 @@ internal fun SettingsActivity.handlePreferenceChanged(sharedPreferences: SharedP
             "autocapitalize_i_words" -> {
                 capitalizeIWords = prefs.getBoolean(key, Defaults.AUTOCAPITALIZE_I_WORDS)
             }
-            "sticky_keys_enabled" -> {
-                stickyKeysEnabled = prefs.getBoolean(key, Defaults.STICKY_KEYS_ENABLED)
-            }
-            "sticky_keys_timeout_ms" -> {
-                stickyKeysTimeout = prefs.getInt(key, Defaults.STICKY_KEYS_TIMEOUT)
-            }
-            "voice_guidance_enabled" -> {
-                voiceGuidanceEnabled = prefs.getBoolean(key, Defaults.VOICE_GUIDANCE_ENABLED)
-            }
             // Adaptive layout settings
             "keyboard_height_landscape" -> {
                 keyboardHeightLandscape = prefs.getInt(key, Defaults.KEYBOARD_HEIGHT_LANDSCAPE)
@@ -346,11 +337,6 @@ internal fun SettingsActivity.loadCurrentSettings() {
 
         // Advanced settings
         debugEnabled = prefs.getSafeBoolean("debug_enabled", Defaults.DEBUG_ENABLED)
-
-        // Accessibility settings
-        stickyKeysEnabled = prefs.getSafeBoolean("sticky_keys_enabled", Defaults.STICKY_KEYS_ENABLED)
-        stickyKeysTimeout = prefs.getSafeInt("sticky_keys_timeout_ms", Defaults.STICKY_KEYS_TIMEOUT)
-        voiceGuidanceEnabled = prefs.getSafeBoolean("voice_guidance_enabled", Defaults.VOICE_GUIDANCE_ENABLED)
 
         // Phase 1: Load exposed Config.kt settings
         wordPredictionEnabled = prefs.getSafeBoolean("word_prediction_enabled", Defaults.WORD_PREDICTION_ENABLED)

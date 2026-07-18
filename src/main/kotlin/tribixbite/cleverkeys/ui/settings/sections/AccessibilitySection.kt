@@ -1,6 +1,5 @@
 package tribixbite.cleverkeys.ui.settings.sections
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -27,57 +26,19 @@ internal fun SettingsActivity.AccessibilitySection() {
                 expanded = accessibilitySectionExpanded,
                 onExpandChange = { accessibilitySectionExpanded = it }
             ) {
-                SettingsSwitch(
-                    title = stringResource(R.string.settings_sticky_keys_title),
-                    description = stringResource(R.string.settings_sticky_keys_desc),
-                    checked = stickyKeysEnabled,
-                    onCheckedChange = {
-                        stickyKeysEnabled = it
-                        saveSetting("sticky_keys_enabled", it)
-                    }
-                )
-
-                if (stickyKeysEnabled) {
-                    SettingsSlider(
-                        title = stringResource(R.string.settings_sticky_keys_timeout_title),
-                        description = stringResource(R.string.settings_sticky_keys_timeout_desc),
-                        value = (stickyKeysTimeout / 1000f),
-                        valueRange = 1f..10f,
-                        steps = 9,
-                        onValueChange = {
-                            stickyKeysTimeout = (it * 1000).toInt()
-                            saveSetting("sticky_keys_timeout_ms", stickyKeysTimeout)
-                        },
-                        displayValue = stringResource(R.string.settings_sticky_keys_timeout_value, stickyKeysTimeout / 1000)
-                    )
-                }
-
-                SettingsSwitch(
-                    title = stringResource(R.string.settings_voice_guidance_title),
-                    description = stringResource(R.string.settings_voice_guidance_desc),
-                    checked = voiceGuidanceEnabled,
-                    onCheckedChange = {
-                        voiceGuidanceEnabled = it
-                        saveSetting("voice_guidance_enabled", it)
-
-                        // Show restart prompt
-                        if (it) {
-                            Toast.makeText(this@AccessibilitySection,
-                                getString(R.string.settings_voice_guidance_toast),
-                                Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                )
-
+                // TalkBack support is built into the keyboard view (see
+                // a11y/KeyboardAccessibilityHelper) — no toggle required. The
+                // former "Sticky Keys" and "Voice Guidance" switches were dead:
+                // sticky-keys duplicated the shipped modifier-latching, and
+                // voice-guidance was superseded by first-class TalkBack support.
                 Text(
                     text = stringResource(R.string.settings_screen_reader_note),
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 8.dp)
+                    modifier = Modifier.padding(bottom = 8.dp)
                 )
 
                 // v1.2.8: Vibration settings moved to Accessibility section
-                Spacer(modifier = Modifier.height(16.dp))
                 Text(
                     text = "Haptic Feedback",
                     fontWeight = FontWeight.Bold,

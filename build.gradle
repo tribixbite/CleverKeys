@@ -14,6 +14,10 @@ dependencies {
   implementation "androidx.recyclerview:recyclerview:1.3.2"
   implementation "androidx.preference:preference-ktx:1.2.1"
   implementation "androidx.autofill:autofill:1.1.0"
+  // ExploreByTouchHelper (TalkBack virtual-view tree for the custom keyboard).
+  // Transitively present via other AndroidX libs, but pin it explicitly so the
+  // a11y helper never silently loses its dependency.
+  implementation "androidx.customview:customview:1.1.0"
 
   implementation "org.jetbrains.kotlin:kotlin-stdlib:2.0.0"
   implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1"
@@ -433,6 +437,9 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.clipboard.PrivateCopyRateLimiterTest',
     'tribixbite.cleverkeys.clipboard.PrivateClipMergeRuleTest',
     'tribixbite.cleverkeys.customization.PrivateCopyCommandTest',
+    // TalkBack accessibility (a11y) — pure geometry + labeller
+    'tribixbite.cleverkeys.a11y.KeyboardGeometryTest',
+    'tribixbite.cleverkeys.a11y.KeyLabelsTest',
     // SwipePrunerTest excluded: requires android.util.Log (MockK + Robolectric)
   ]
 

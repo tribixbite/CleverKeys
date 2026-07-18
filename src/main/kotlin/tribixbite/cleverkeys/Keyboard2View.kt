@@ -15,11 +15,17 @@ import android.util.AttributeSet
 import android.util.DisplayMetrics
 import android.util.Log
 import android.util.LruCache
+import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
 import android.view.Window
 import android.view.WindowInsets
+import android.view.accessibility.AccessibilityManager
 import android.view.inputmethod.InputMethodManager
+import androidx.core.view.ViewCompat
+import tribixbite.cleverkeys.a11y.KeyLabels
+import tribixbite.cleverkeys.a11y.KeyboardAccessibilityHelper
+import tribixbite.cleverkeys.a11y.KeyboardGeometry
 import tribixbite.cleverkeys.customization.AvailableCommand
 import tribixbite.cleverkeys.customization.CustomShortSwipeExecutor
 import tribixbite.cleverkeys.customization.ShortSwipeCustomizationManager
@@ -79,6 +85,25 @@ class Keyboard2View @JvmOverloads constructor(
     private var _compose_key: KeyboardData.Key? = null
 
     private lateinit var _pointers: Pointers
+
+    /**
+     * TalkBack virtual-view tree. Constructed and installed in [init]. Cheap
+     * no-op when no accessibility service is enabled (its event sends are
+     * manager-gated by the platform).
+     */
+    private lateinit var _a11yHelper: KeyboardAccessibilityHelper
+
+    /** Cached at construction; touch-exploration state is polled per hover event. */
+    private val _a11yManager: AccessibilityManager? =
+        context.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager
+
+    /**
+     * Sentinel pointer id for accessibility-driven key activation. Must not
+     * collide with real touch ids (always >= 0) or the `-1` fake-latch pointer id
+     * that [Pointers] assigns to latched keys (Pointers.kt:607). `-2` is unused by
+     * any other Pointers code path, so getPtr(-2) only ever matches our own tap.
+     */
+    private val a11yPointerId = A11Y_POINTER_ID
 
     private var _mods: Pointers.Modifiers = Pointers.Modifiers.EMPTY
 
@@ -142,6 +167,25 @@ class Keyboard2View @JvmOverloads constructor(
         _pointers = Pointers(this, _config, getContext())
         _swipeRecognizer = _pointers._swipeRecognizer // Share the recognizer
         _themeCache = LruCache(5)
+
+        // Install the TalkBack virtual-view tree. Must use
+        // ViewCompat.setAccessibilityDelegate (NOT an override of
+        // getAccessibilityNodeProvider) — the delegate bridges the helper's
+        // provider to the platform. Node data is supplied via lambdas so the
+        // geometry/labeller stay decoupled from this view's private state.
+        _a11yHelper = KeyboardAccessibilityHelper(
+            host = this,
+            rectsProvider = ::computeAccessibilityKeyRects,
+            // Live modifier transform so a latched Shift announces "A", not "a".
+            describe = { kr ->
+                val effective = KeyModifier.modify(kr.kv, _mods) ?: kr.kv
+                KeyLabels.describe(effective) { id -> context.getString(id) }
+            },
+            // Route through Pointers (NOT the handler) so modifier latching works.
+            onActivate = ::activateKeyForAccessibility,
+            checkedState = ::accessibilityCheckedState,
+        )
+        ViewCompat.setAccessibilityDelegate(this, _a11yHelper)
 
         refresh_navigation_bar(context)
         setOnTouchListener(this)
@@ -367,6 +411,8 @@ class Keyboard2View @JvmOverloads constructor(
         }
 
         reset()
+        // Layout changed → rebuild the TalkBack virtual-view tree.
+        invalidateAccessibilityRoot()
     }
 
     fun reset() {
@@ -473,6 +519,10 @@ class Keyboard2View @JvmOverloads constructor(
     private fun updateFlags() {
         _mods = _pointers.getModifiers()
         _config.handler?.mods_changed(_mods)
+        // Latched Shift changes every letter's spoken label ("a" -> "A") and the
+        // Shift key's checked state — refresh the a11y tree. Cheap no-op when no
+        // a11y service is enabled; kept out of onDraw/onTouch for that reason.
+        invalidateAccessibilityRoot()
     }
 
     override fun onSwipeMove(x: Float, y: Float, recognizer: ImprovedSwipeGestureRecognizer) {
@@ -1130,102 +1180,116 @@ class Keyboard2View @JvmOverloads constructor(
         return true
     }
 
-    private fun getRowAtPosition(ty: Float): KeyboardData.Row? {
-        val keyboard = _keyboard ?: return null
+    /**
+     * Current hit-test geometry parameters, or null until the layout is measured.
+     * Single source of truth shared by [getKeyAtPosition] and the accessibility
+     * helper. marginLeft is computed dynamically (matching the historical
+     * getKeyAtPosition fix) to avoid a stale [_marginLeft] from a delayed
+     * onMeasure; marginTop uses the raw [Config.marginTop] (not tc.margin_top).
+     */
+    private fun geometryParams(): KeyboardGeometry.Params? {
         val tc = _tc ?: return null
-
-        var y = _config.marginTop.toFloat()
-
-        if (ty < y) {
-            return null
-        }
-
-        for (row in keyboard.rows) {
-            val rowBottom = y + (row.shift + row.height) * tc.row_height
-
-            if (ty < rowBottom) {
-                return row
-            }
-            y = rowBottom
-        }
-
-        return null
+        return KeyboardGeometry.Params(
+            keyWidth = _keyWidth,
+            rowHeight = tc.row_height,
+            marginTop = _config.marginTop.toFloat(),
+            marginLeft = maxOf(_config.margin_left, _insets_left.toFloat()),
+        )
     }
 
+    /**
+     * Find the key at the given coordinates. Thin wrapper over
+     * [KeyboardGeometry.keyAt] (the verbatim-extracted hit-test geometry) so tap
+     * and swipe hit-testing share one code path with the a11y virtual-view tree.
+     */
     private fun getKeyAtPosition(tx: Float, ty: Float): KeyboardData.Key? {
-        val row = getRowAtPosition(ty)
-        // CRITICAL FIX: Calculate margin dynamically to avoid stale _marginLeft from delayed onMeasure
-        val currentMarginLeft = maxOf(_config.margin_left, _insets_left.toFloat())
-        var x = currentMarginLeft
+        val keyboard = _keyboard ?: return null
+        val params = geometryParams() ?: return null
+        return KeyboardGeometry.keyAt(keyboard, params, tx, ty)
+    }
 
-        if (row == null) {
-            if (BuildConfig.ENABLE_VERBOSE_LOGGING) android.util.Log.e("SWIPE_LAG_DEBUG", "❌ No row found for y=$ty (marginTop=${_config.marginTop})")
-            return null
-        }
+    // ── Accessibility (TalkBack) ─────────────────────────────────────────────
 
-        // Check if this row contains 'a' and 'l' keys (middle letter row in QWERTY)
-        val hasAAndLKeys = rowContainsAAndL(row)
-        var aKey: KeyboardData.Key? = null
-        var lKey: KeyboardData.Key? = null
-
-        if (hasAAndLKeys) {
-            // Find the 'a' and 'l' keys in this row
-            for (key in row.keys) {
-                if (isCharacterKey(key, 'a')) aKey = key
-                if (isCharacterKey(key, 'l')) lKey = key
-            }
-        }
-
-        // Check if touch is before the first key and we have 'a' key - extend its touch zone
-        if (tx < x && aKey != null) {
-            return aKey
-        }
-
-        if (tx < x) {
-            return null
-        }
-
-        for (key in row.keys) {
-            val xLeft = x + key.shift * _keyWidth
-            val xRight = xLeft + key.width * _keyWidth
-
-            // GAP FIX: If touch is in the gap before this key (xLeft),
-            // consider it part of this key for swiping purposes.
-            if (tx < xRight) {
-                return key
-            }
-            x = xRight
-        }
-
-        // GAP FIX: If we reached here, tx > last key's right edge.
-        // Return the last key in the row to handle right-margin slop.
-        if (row.keys.isNotEmpty()) {
-            return row.keys[row.keys.size - 1]
-        }
-
-        return null
+    /**
+     * Per-key hit-test rects for the a11y virtual-view tree. Empty until the
+     * layout is measured. Uses the SAME [KeyboardGeometry] the tap/swipe path
+     * uses, so the box TalkBack highlights equals the tappable area.
+     */
+    private fun computeAccessibilityKeyRects(): List<KeyboardGeometry.KeyRect> {
+        val keyboard = _keyboard ?: return emptyList()
+        val params = geometryParams() ?: return emptyList()
+        return KeyboardGeometry.computeKeyRects(keyboard, params)
     }
 
     /**
-     * Check if this row contains both 'a' and 'l' keys (the middle QWERTY row)
+     * `(isCheckable, isChecked)` for Shift/CapsLock so TalkBack announces their
+     * toggle state; null for every other key. "Checked" means the key currently
+     * has a latched or locked pointer.
      */
-    private fun rowContainsAAndL(row: KeyboardData.Row): Boolean {
-        var hasA = false
-        var hasL = false
-        for (key in row.keys) {
-            if (isCharacterKey(key, 'a')) hasA = true
-            if (isCharacterKey(key, 'l')) hasL = true
-            if (hasA && hasL) return true
-        }
-        return false
+    private fun accessibilityCheckedState(kr: KeyboardGeometry.KeyRect): Pair<Boolean, Boolean>? {
+        val kv = kr.kv
+        val isShift = kv.getKind() == KeyValue.Kind.Modifier &&
+            kv.getModifier() == KeyValue.Modifier.SHIFT
+        val isCapsLock = kv.getKind() == KeyValue.Kind.Event &&
+            kv.getEvent() == KeyValue.Event.CAPS_LOCK
+        if (!isShift && !isCapsLock) return null
+        val flags = _pointers.getKeyFlags(kv)
+        val checked = flags != -1 &&
+            (flags and (Pointers.FLAG_P_LATCHED or Pointers.FLAG_P_LOCKED)) != 0
+        return true to checked
     }
 
     /**
-     * Check if a key represents the specified character
+     * Perform an accessibility ACTION_CLICK as a zero-movement tap at the key's
+     * center. Routes through [Pointers] (NOT `Config.handler.key_down/key_up`
+     * directly) because ALL modifier latching lives in Pointers —
+     * `KeyEventHandler.key_up` no-ops modifiers. This gives byte-identical tap
+     * behavior: key_down/up, latching, haptics, modifier application all for free.
      */
-    private fun isCharacterKey(key: KeyboardData.Key, character: Char): Boolean {
-        val kv = key.keys[0] ?: return false
-        return kv.getKind() == KeyValue.Kind.Char && kv.getChar() == character
+    private fun activateKeyForAccessibility(kr: KeyboardGeometry.KeyRect) {
+        val cx = (kr.bounds.left + kr.bounds.right) / 2f
+        val cy = (kr.bounds.top + kr.bounds.bottom) / 2f
+        _pointers.onTouchDown(cx, cy, a11yPointerId, kr.key)
+        _pointers.onTouchUp(a11yPointerId)
+    }
+
+    /**
+     * Rebuild the virtual-view tree (labels/bounds change on layout, shift, and
+     * modifier changes). Cheap no-op when no a11y service is enabled — safe to
+     * call from hot paths like [updateFlags]. Guarded until [_a11yHelper] is
+     * initialized (some setup calls fire during the constructor, before init
+     * completes).
+     */
+    private fun invalidateAccessibilityRoot() {
+        if (::_a11yHelper.isInitialized) {
+            _a11yHelper.invalidateRoot()
+        }
+    }
+
+    // public (widened from View's protected) so instrumented tests can drive the
+    // hover-routing gate directly.
+    public override fun dispatchHoverEvent(event: MotionEvent): Boolean {
+        // Only route hover events to the helper when touch-exploration is on. When
+        // TalkBack is off the platform never synthesizes hover events, but the
+        // explicit gate makes the fast-path guarantee greppable and defensive.
+        if (_a11yManager?.isTouchExplorationEnabled == true &&
+            _a11yHelper.dispatchHoverEvent(event)
+        ) {
+            return true
+        }
+        return super.dispatchHoverEvent(event)
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        // ExploreByTouchHelper consumes d-pad/Tab keys only while a virtual view
+        // holds accessibility focus (switch-access navigation). It leaves all
+        // other key events — including IME hardware-key input — untouched.
+        return _a11yHelper.dispatchKeyEvent(event) || super.dispatchKeyEvent(event)
+    }
+
+    override fun onFocusChanged(gainFocus: Boolean, direction: Int, previouslyFocusedRect: Rect?) {
+        super.onFocusChanged(gainFocus, direction, previouslyFocusedRect)
+        _a11yHelper.onFocusChanged(gainFocus, direction, previouslyFocusedRect)
     }
 
     private fun vibrate(event: HapticEvent = HapticEvent.KEY_PRESS) {
@@ -1315,6 +1379,8 @@ class Keyboard2View @JvmOverloads constructor(
 
         val height = (tc.row_height * keyboard.keysHeight + _config.marginTop + _marginBottom).toInt()
         setMeasuredDimension(width, height)
+        // Key geometry (bounds) just changed — rebuild the a11y virtual-view tree.
+        invalidateAccessibilityRoot()
     }
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
@@ -1718,38 +1784,6 @@ class Keyboard2View @JvmOverloads constructor(
     }
 
     /**
-     * Find the key at the given coordinates
-     */
-    private fun getKeyAt(x: Float, y: Float): KeyboardData.Key? {
-        val keyboard = _keyboard ?: return null
-        val tc = _tc ?: return null
-
-        var yPos = tc.margin_top
-        for (row in keyboard.rows) {
-            yPos += row.shift * tc.row_height
-            val keyH = row.height * tc.row_height - tc.vertical_margin
-
-            // Check if y coordinate is within this row
-            if (y >= yPos && y < yPos + keyH) {
-                var xPos = _marginLeft + tc.margin_left
-                for (key in row.keys) {
-                    xPos += key.shift * _keyWidth
-                    val keyW = _keyWidth * key.width - tc.horizontal_margin
-
-                    // Check if x coordinate is within this key
-                    if (x >= xPos && x < xPos + keyW) {
-                        return key
-                    }
-                    xPos += _keyWidth * key.width
-                }
-                break // Y is in this row but X didn't match any key
-            }
-            yPos += row.height * tc.row_height
-        }
-        return null
-    }
-
-    /**
      * CGR Prediction Support Methods
      */
 
@@ -1812,6 +1846,14 @@ class Keyboard2View @JvmOverloads constructor(
     companion object {
         private var _currentWhat = 0
         private val _tmpRect = RectF()
+
+        /**
+         * Pointer id for accessibility ACTION_CLICK taps. `-2` is deliberately
+         * distinct from real touch ids (>= 0) and the `-1` latched-pointer id
+         * Pointers assigns at Pointers.kt:607, so it never collides with the
+         * fake-pointer special-cases around Pointers.kt:506.
+         */
+        private const val A11Y_POINTER_ID = -2
 
         /** Horizontal and vertical position of the 9 indexes. */
         val LABEL_POSITION_H = arrayOf(

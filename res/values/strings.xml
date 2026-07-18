@@ -169,6 +169,38 @@
     <string name="key_descr_forward_delete_word">Delete a word on the right</string>
     <string name="key_descr_gesture">Gesture</string>
     <string name="key_descr_autofill">Password manager autofill</string>
+    <!-- TalkBack key descriptions (accessibility) — spoken names for keys whose
+         glyphs are Private Use Area characters that TTS would otherwise misread. -->
+    <string name="key_descr_shift">Shift</string>
+    <string name="key_descr_ctrl">Control</string>
+    <string name="key_descr_alt">Alt</string>
+    <string name="key_descr_meta">Meta</string>
+    <string name="key_descr_fn">Function</string>
+    <string name="key_descr_backspace">Backspace</string>
+    <string name="key_descr_delete">Delete</string>
+    <string name="key_descr_enter">Enter</string>
+    <string name="key_descr_space">Space</string>
+    <string name="key_descr_tab">Tab</string>
+    <string name="key_descr_esc">Escape</string>
+    <string name="key_descr_config">Settings</string>
+    <string name="key_descr_action">Enter</string>
+    <string name="key_descr_clear">Clear text field</string>
+    <string name="key_descr_selection_mode">Selection mode</string>
+    <string name="key_descr_selection_cancel">Cancel selection</string>
+    <string name="key_descr_arrow_left">Left arrow</string>
+    <string name="key_descr_arrow_right">Right arrow</string>
+    <string name="key_descr_arrow_up">Up arrow</string>
+    <string name="key_descr_arrow_down">Down arrow</string>
+    <string name="key_descr_cursor_left">Move cursor left</string>
+    <string name="key_descr_cursor_right">Move cursor right</string>
+    <string name="key_descr_cursor_up">Move cursor up</string>
+    <string name="key_descr_cursor_down">Move cursor down</string>
+    <string name="key_descr_selection_cursor_left">Extend selection left</string>
+    <string name="key_descr_selection_cursor_right">Extend selection right</string>
+    <string name="key_descr_switch_text">Letters keyboard</string>
+    <string name="key_descr_switch_numeric">Numbers and symbols keyboard</string>
+    <string name="key_descr_switch_emoji">Emoji keyboard</string>
+    <string name="key_descr_switch_gif">GIF keyboard</string>
     <string name="clipboard_history_heading">Recently copied text</string>
     <string name="clipboard_pin_heading">Pinned</string>
     <string name="clipboard_remove_confirm">Remove this clipboard item?</string>
@@ -328,14 +360,8 @@
 
     <!-- Accessibility Section -->
     <string name="settings_section_accessibility">♿ Accessibility</string>
-    <string name="settings_sticky_keys_title">Sticky Keys</string>
-    <string name="settings_sticky_keys_desc">Enable single-handed typing with modifier latching (OFF → LATCHED → LOCKED)</string>
-    <string name="settings_sticky_keys_timeout_title">Sticky Keys Timeout</string>
-    <string name="settings_sticky_keys_timeout_desc">Auto-release delay for latched modifiers (1-10 seconds)</string>
-    <string name="settings_sticky_keys_timeout_value">%1$ds</string>
-    <string name="settings_voice_guidance_title">Voice Guidance</string>
-    <string name="settings_voice_guidance_desc">Speak keys aloud for blind users (requires TTS)</string>
-    <string name="settings_voice_guidance_toast">Voice guidance will activate on keyboard restart</string>
+    <!-- Sticky-keys and voice-guidance strings removed with their dead toggles
+         when first-class TalkBack support landed. -->
     <string name="settings_screen_reader_note">✓ Screen Reader (TalkBack) support is always enabled</string>
 
     <!-- Advanced Section -->

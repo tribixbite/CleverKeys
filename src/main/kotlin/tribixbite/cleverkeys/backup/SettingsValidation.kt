@@ -75,6 +75,14 @@ object SettingsValidation {
         "autocorrect_min_frequency",      // Config reads `autocorrect_confidence_min_frequency`
         "keyboard_height_percent",        // Superseded by `keyboard_height`
         "extra_key_switch_greekmath",     // Never read; legacy
+        // Removed with first-class TalkBack support (dead accessibility toggles):
+        // sticky-keys duplicated shipped modifier latching; voice-guidance was
+        // superseded by the ExploreByTouchHelper virtual-view tree. No runtime
+        // reader ever existed. Legacy backups may still carry them.
+        "sticky_keys_enabled",
+        "sticky_keys_timeout",
+        "sticky_keys_timeout_ms",         // SettingsActivity duplicate of the above
+        "voice_guidance_enabled",
     )
 
     fun isDeprecatedPreference(key: String): Boolean = key in DEPRECATED_KEYS

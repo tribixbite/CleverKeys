@@ -239,10 +239,8 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     "privacy_collect_swipe" to PrefValue.Bool(Defaults.PRIVACY_COLLECT_SWIPE),
     "privacy_collect_performance" to PrefValue.Bool(Defaults.PRIVACY_COLLECT_PERFORMANCE),
     "privacy_collect_errors" to PrefValue.Bool(Defaults.PRIVACY_COLLECT_ERRORS),
-    "sticky_keys_enabled" to PrefValue.Bool(Defaults.STICKY_KEYS_ENABLED),
-    "sticky_keys_timeout" to PrefValue.IntV(Defaults.STICKY_KEYS_TIMEOUT),
-    "sticky_keys_timeout_ms" to PrefValue.IntV(Defaults.STICKY_KEYS_TIMEOUT),  // SettingsActivity duplicate
-    "voice_guidance_enabled" to PrefValue.Bool(Defaults.VOICE_GUIDANCE_ENABLED),
+    // NOTE: sticky_keys_* and voice_guidance_enabled were removed in the TalkBack
+    // release — they are now in SettingsValidation.DEPRECATED_KEYS (no reader).
 
     // ── Presets (string-valued UI selections) ────────────────────────
     "neural_preset" to PrefValue.Str("custom"),

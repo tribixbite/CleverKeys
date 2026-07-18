@@ -149,11 +149,6 @@ internal fun SettingsActivity.resetAllSettings() {
                     editor.putBoolean("clipboard_pinned_enabled", true)
                     editor.putBoolean("clipboard_todo_enabled", true)
 
-                    // Accessibility
-                    editor.putBoolean("sticky_keys_enabled", Defaults.STICKY_KEYS_ENABLED)
-                    editor.putInt("sticky_keys_timeout", Defaults.STICKY_KEYS_TIMEOUT)
-                    editor.putBoolean("voice_guidance_enabled", Defaults.VOICE_GUIDANCE_ENABLED)
-
                     // Debug (off by default)
                     editor.putBoolean("debug_enabled", Defaults.DEBUG_ENABLED)
                     editor.putBoolean("termux_mode_enabled", Defaults.TERMUX_MODE_ENABLED)
