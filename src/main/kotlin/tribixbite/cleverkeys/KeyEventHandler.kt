@@ -810,6 +810,9 @@ class KeyEventHandler(
     /** Move one of the two side of a selection. If [selLeft] is true, the left
      * position is moved, otherwise the right position is moved. */
     private fun moveCursorSel(d: Int, selLeft: Boolean, keyDown: Boolean) {
+        // d==0 is degenerate: the do/while below only mutates by d, so an empty
+        // selection would never satisfy (selStart != selEnd) and loop forever.
+        if (d == 0) return
         val conn = recv.getCurrentInputConnection() ?: return
         val et = getCursorPos(conn)
 

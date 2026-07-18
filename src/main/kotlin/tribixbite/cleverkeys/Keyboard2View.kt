@@ -816,7 +816,12 @@ class Keyboard2View @JvmOverloads constructor(
             val chooser = android.content.Intent.createChooser(intent, "Process text with...")
             chooser.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
             context.startActivity(chooser)
-            Log.d("Keyboard2View", "Launched text assist chooser for: $selectedText")
+            // PII: don't log the user's selected text in release builds.
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                Log.d("Keyboard2View", "Launched text assist chooser for: $selectedText")
+            } else {
+                Log.d("Keyboard2View", "Launched text assist chooser (len=${selectedText.length})")
+            }
         } catch (e: Exception) {
             Log.e("Keyboard2View", "Failed to launch text assist", e)
             // Fallback to context menu action
@@ -849,7 +854,12 @@ class Keyboard2View @JvmOverloads constructor(
             val chooser = android.content.Intent.createChooser(intent, "Replace text with...")
             chooser.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
             context.startActivity(chooser)
-            Log.d("Keyboard2View", "Launched replace text chooser for: $selectedText")
+            // PII: don't log the user's selected text in release builds.
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                Log.d("Keyboard2View", "Launched replace text chooser for: $selectedText")
+            } else {
+                Log.d("Keyboard2View", "Launched replace text chooser (len=${selectedText.length})")
+            }
         } catch (e: Exception) {
             Log.e("Keyboard2View", "Failed to launch replace text", e)
             // Fallback to context menu action
@@ -1072,7 +1082,10 @@ class Keyboard2View @JvmOverloads constructor(
                 try {
                     val keyString = key.toString()
                     if (keyString.length == 1 && Character.isLetter(keyString[0])) {
-                        val keyChar = keyString.toLowerCase()[0]
+                        // Locale.ROOT (Kotlin .lowercase() is Locale.ROOT-invariant): key
+                        // identity must not depend on device locale — default-locale
+                        // lowercasing maps 'I'->'ı' on Turkish devices, mislocating the key.
+                        val keyChar = keyString.lowercase()[0]
                         keyPositions[keyChar] = PointF(centerX, centerY)
                     }
                 } catch (e: Exception) {

@@ -124,10 +124,12 @@ class GreedySearchEngine(
         val greedyTime = (System.nanoTime() - greedyStart) / 1_000_000
         val wordStr = word.toString()
         
+        // Gate the decoded user word behind verbose logging so it never reaches
+        // release logs / debug sinks (debugLogger is only wired in debug sessions).
         if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
             Log.i(TAG, "🏆 Greedy search completed in ${greedyTime}ms: '$wordStr'")
+            debugLogger?.invoke("🏆 Greedy search completed in ${greedyTime}ms: '$wordStr'")
         }
-        debugLogger?.invoke("🏆 Greedy search completed in ${greedyTime}ms: '$wordStr'")
         
         val result = ArrayList<GreedyResult>()
         if (wordStr.isNotEmpty()) {
