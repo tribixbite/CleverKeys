@@ -21,10 +21,12 @@ Big multi-agent session (Fable audits/reviews/planning, Opus implementation). 16
 - **TalkBack accessibility** (the audit's #1 grade lever, UI a11y 1/10): ExploreByTouchHelper virtual
   view tree, pure geometry + labeller (22 pure tests), ACTION_CLICK via Pointers for modifier latching,
   removed dead sticky_keys/voice_guidance toggles — commit 73315ece6. Plan: docs/audit/2026-07-18-accessibility-implementation-plan.md.
-- **ew-cli full run**: 1395/1405, 10 failures ALL pre-existing test-drift (V4→V5 asserts, a leaked
-  backup passphrase making later exports encrypt, reflection signature drift, a >512KB payload over the
-  Binder limit) — zero production regressions; fixed in 11988e519. Second ew-cli validating a11y +
-  fixes in progress.
+- **ew-cli full run**: first pass 1395/1405, 10 failures ALL pre-existing test-drift (V4→V5 asserts,
+  a leaked backup passphrase making later exports encrypt, reflection signature drift, a >512KB payload
+  over the Binder limit) — zero production regressions; fixed in 11988e519. Second full pass 1408/1410,
+  only the 2 NEW a11y instrumented tests failing (test-env: dummy-node enumeration + ComposeKeyData not
+  initialized) — fixed in 11f3e9eba; targeted re-run 5/5 green incl. realTouchSwipeStillReachesThe
+  GesturePipeline (geometry extraction did NOT regress swipe). **FULL SUITE GREEN.**
 - **DEFERRED to reach A** (honest ceiling this session ≈ B+): pipeline unification (needs instrumented
   oracle + soak), R8 re-enable (device soak + reflection-keep audit), git-history rewrite (18.4 GiB,
   gated on F-Droid publish of v1.5.0), architecture strangler (ConfigSnapshot, package reorg). Also
