@@ -304,8 +304,15 @@ class ClipboardHistoryService private constructor(ctx: Context) {
     ) {
         if (clip == null || clip.trim().isEmpty()) return
 
+        // Null-safe Config reads: storeClip is reachable on a cold-start exported-activity path
+        // (PROCESS_TEXT / editing-key) where the IME never ran, so the global Config may be
+        // uninitialized. Fall back to the documented defaults rather than throwing (matches
+        // getHistoryTtlMs). PrivateCopyProcessTextActivity inits Config eagerly, but this keeps the
+        // service self-consistent for any future cold-start caller.
+        val config = Config.globalConfigOrNull()
+
         // Check maximum item size limit
-        val maxSizeKb = Config.globalConfig().clipboard_max_item_size_kb
+        val maxSizeKb = config?.clipboard_max_item_size_kb ?: Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB_FALLBACK
         if (maxSizeKb > 0) {
             try {
                 val sizeBytes = clip.toByteArray(java.nio.charset.StandardCharsets.UTF_8).size
@@ -315,9 +322,10 @@ class ClipboardHistoryService private constructor(ctx: Context) {
                     // Item exceeds size limit - reject and notify user
                     android.util.Log.w("ClipboardHistory", "Clipboard item too large: $sizeBytes bytes (limit: $maxSizeBytes bytes)")
 
-                    // Show toast notification to user
-                    val message = String.format("Clipboard item too large (%d KB). Limit is %d KB.",
-                        sizeBytes / 1024, maxSizeKb)
+                    // Show toast notification to user. Shares the string resource with the
+                    // PROCESS_TEXT entry point (Finding 10) so both surfaces show identical wording.
+                    val message = _context.getString(
+                        R.string.private_copy_too_large, sizeBytes / 1024, maxSizeKb)
                     Toast.makeText(_context, message, Toast.LENGTH_LONG).show()
                     return // Don't add to clipboard history
                 }
@@ -353,11 +361,12 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         val added = _database.addClipboardEntry(processed, expiryTime, isPrivate, sourcePackage)
 
         if (added) {
-            // Apply size limits if configured (based on limit type)
-            val limitType = Config.globalConfig().clipboard_limit_type
+            // Apply size limits if configured (based on limit type). Null-safe: same cold-start
+            // rationale as the size cap above — fall back to the documented defaults.
+            val limitType = config?.clipboard_limit_type ?: Defaults.CLIPBOARD_LIMIT_TYPE
             if ("size" == limitType) {
                 // Apply size-based limit (total MB — includes text + thumbnails + media files)
-                val maxSizeMB = Config.globalConfig().clipboard_size_limit_mb
+                val maxSizeMB = config?.clipboard_size_limit_mb ?: Defaults.CLIPBOARD_SIZE_LIMIT_MB_FALLBACK
                 if (maxSizeMB > 0) {
                     val (_, mediaPaths) = _database.applySizeLimitBytes(maxSizeMB, _context.filesDir)
                     // Delete media files of pruned entries (only if no other table references them)
@@ -367,7 +376,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
                 }
             } else {
                 // Apply count-based limit (default)
-                val maxHistorySize = Config.globalConfig().clipboard_history_limit
+                val maxHistorySize = config?.clipboard_history_limit ?: Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK
                 if (maxHistorySize > 0) {
                     _database.applySizeLimit(maxHistorySize)
                 }

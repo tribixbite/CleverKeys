@@ -766,22 +766,21 @@ class Keyboard2View @JvmOverloads constructor(
     }
 
     /**
-     * #156 Private copy (in-IME editing-pane surface): read the current selection and store it into
-     * CleverKeys' clipboard DB marked private. Mirrors [KeyEventHandler.handlePrivateCopy] — NEVER
-     * touches the OS clipboard (delegates to [ClipboardHistoryService.privateCopy], the
+     * #156 Private copy (in-IME editing-pane surface): store the current selection into CleverKeys'
+     * clipboard DB marked private via the shared [tribixbite.cleverkeys.clipboard.PrivateCopyDispatch]
+     * — the SAME code [KeyEventHandler.handlePrivateCopy] runs, so the two surfaces cannot drift.
+     * NEVER touches the OS clipboard (delegates to [ClipboardHistoryService.privateCopy], the
      * no-setPrimaryClip path). Provenance is the target editor's package. Feedback via the
      * suggestion bar (Toasts are IME-suppressed on Android 13+, per project convention).
      */
     private fun executePrivateCopy(inputConnection: android.view.inputmethod.InputConnection) {
-        val selectedText = inputConnection.getSelectedText(0)?.toString()
-        if (selectedText.isNullOrEmpty()) {
-            showNoTextSelectedMessage("Private Copy")
-            return
+        tribixbite.cleverkeys.clipboard.PrivateCopyDispatch.execute(
+            context,
+            inputConnection,
+            _keyboard2?.currentInputEditorInfo
+        ) { message ->
+            _keyboard2?.showSuggestionBarMessage(message)
         }
-        // Provenance = the target editor's package (EditorInfo.packageName), same as entry point A.
-        val sourcePackage = _keyboard2?.currentInputEditorInfo?.packageName
-        val stored = ClipboardHistoryService.privateCopy(context, selectedText, sourcePackage)
-        _keyboard2?.showSuggestionBarMessage(if (stored) "Privately copied" else "Private copy unavailable")
     }
 
     /**

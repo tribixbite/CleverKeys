@@ -200,6 +200,24 @@ class PrivateCopyProcessTextActivityTest {
         assertEquals(0, db.getActiveClipboardEntries().size)
     }
 
+    /**
+     * Finding 10: an oversized selection (> clipboard_max_item_size_kb) is rejected at the parser's
+     * OVER_CAP gate and stores NO row. The activity now surfaces a Toast for this case (mirroring the
+     * service's "too large" message) instead of a silent Log.w — the visible-feedback behavior can't
+     * be asserted from instrumentation without a UI hook, but this locks the no-row / no-crash
+     * contract so a payload just over the 512 KB-class cap is dropped cleanly rather than stored.
+     */
+    @Test
+    fun overCapText_noRow_noCrash() {
+        val capBytes = Config.globalConfig().clipboard_max_item_size_kb * 1024
+        // One byte over the cap (ASCII → 1 byte/char) guarantees OVER_CAP regardless of the exact cap.
+        val oversized = "a".repeat(capBytes + 1)
+        ActivityScenario.launch<PrivateCopyProcessTextActivity>(
+            processTextIntent(oversized, readonly = false)
+        ).use { }
+        assertEquals("oversized selection must not be stored", 0, db.getActiveClipboardEntries().size)
+    }
+
     // ── Component gating ──────────────────────────────────────────────────────
 
     @Test

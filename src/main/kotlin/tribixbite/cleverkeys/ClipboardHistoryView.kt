@@ -93,6 +93,11 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     // In-progress text that the user is typing — preserved across view recreation (Bug #3).
     // Initialized to DB content on edit_entry(), updated by TextWatcher.
     private var editingInProgressText: String? = null
+    // #156: whether the entry currently being edited is private (is_private). Set in edit_entry(),
+    // cleared in cancelEdit(). Gates cutFromEditText() so cutting a private entry's selection can't
+    // silently leak its plaintext to the OS clipboard — it routes through the same
+    // confirm-before-expose dialog copyEntryToSystemClipboard uses.
+    private var editingIsPrivate: Boolean = false
     // Cursor position preserved across view recycling — updated after every text op
     private var editingCursorPosition: Int? = null
     // Reference to the active EditText widget for key routing (insertEditText/backspaceEditText)
@@ -491,6 +496,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         editingOriginalContent = entry.content
         editingInProgressText = entry.content
         editingCursorPosition = entry.content.length
+        // #156: remember the entry's privacy so cutFromEditText() can gate the OS-clipboard write.
+        editingIsPrivate = entry.isPrivate
         // Re-render to show EditText + save/cancel buttons for this entry
         clipboardAdapter.notifyDataSetChanged()
     }
@@ -525,6 +532,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         editingOriginalContent = null
         editingInProgressText = null
         editingCursorPosition = null
+        editingIsPrivate = false
         // Remove TextWatcher via tag-based cleanup (matches getView tag management).
         // Also try field-based removal as belt-and-suspenders.
         editingEditText?.let { et ->
@@ -621,7 +629,15 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     }
 
     /** Cut selected text from the edit field to system clipboard.
-     *  Requires active selection (e.g., from selectAll) — no-op if no selection. */
+     *  Requires active selection (e.g., from selectAll) — no-op if no selection.
+     *
+     *  #156 privacy gate: when editing a PRIVATE (is_private) entry, the cut selection must NOT be
+     *  written to the OS clipboard silently — that would leak plaintext to the foreground app and
+     *  other clipboard managers, defeating private copy. Instead the OS-clipboard write is routed
+     *  through the SAME confirm-before-expose dialog copyEntryToSystemClipboard() uses. The text
+     *  removal from the edit field always happens (cut semantics are preserved regardless of the
+     *  clipboard decision); only the OS write is deferred behind the user's confirmation. Non-private
+     *  entries keep the immediate, unchanged copy-to-OS-clipboard behavior. */
     fun cutFromEditText() {
         activeEditingEditText?.let { et ->
             val oldText = et.text.toString()
@@ -633,9 +649,26 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 val hi = maxOf(selStart, selEnd).coerceIn(0, oldText.length)
                 val selected = oldText.substring(lo, hi)
 
-                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? SystemClipboardManager
-                clipboard?.setPrimaryClip(ClipData.newPlainText("CleverKeys", selected))
+                if (editingIsPrivate) {
+                    // Ask before exposing; the write to the OS clipboard only happens if the user
+                    // confirms. Reuses the exact dialog/strings of the read-path gate so the two
+                    // "expose a private clip" affordances stay consistent.
+                    val dialog = AlertDialog.Builder(context)
+                        .setTitle(R.string.private_copy_expose_dialog_title)
+                        .setMessage(R.string.private_copy_expose_dialog_message)
+                        .setPositiveButton(R.string.private_copy_expose_dialog_confirm) { _, _ ->
+                            writeToSystemClipboard(selected)
+                        }
+                        .setNegativeButton(R.string.private_copy_expose_dialog_cancel, null)
+                        .create()
+                    Utils.show_dialog_on_ime(dialog, windowToken)
+                } else {
+                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? SystemClipboardManager
+                    clipboard?.setPrimaryClip(ClipData.newPlainText("CleverKeys", selected))
+                }
 
+                // Text removal is unconditional — cut still removes the selection from the field
+                // whether or not the private-entry OS-clipboard write is confirmed.
                 val newText = oldText.removeRange(lo, hi)
                 et.setText(newText)
                 et.setSelection(lo.coerceIn(0, newText.length))

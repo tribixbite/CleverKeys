@@ -87,6 +87,42 @@ class PrivateCopyRateLimiterTest {
     }
 
     @Test
+    fun backwardClockStep_selfHeals_acceptsAgain() {
+        // Regression for the non-monotonic-clock hazard: the injected wall clock can step BACKWARDS
+        // (NTP correction, manual change, DST). Before the fix, timestamps recorded at the higher
+        // "now" sat in the future relative to the new lower "now", were never evicted, and blocked
+        // every subsequent accept for up to the size of the jump. The window must self-heal.
+        val clock = FakeClock(now = 10_000_000L)
+        val limiter = PrivateCopyRateLimiter(clock = clock)
+        // Fill the per-key budget at the current (high) clock value.
+        repeat(PrivateCopyRateLimiter.PER_KEY_LIMIT) { assertThat(limiter.tryAcquire("app")).isTrue() }
+        assertThat(limiter.tryAcquire("app")).isFalse()
+
+        // Clock steps BACKWARDS by more than the window — the recorded timestamps are now in the
+        // future. They must be treated as stale and evicted so accepts resume immediately.
+        clock.now -= PrivateCopyRateLimiter.WINDOW_MS * 2
+        assertThat(limiter.tryAcquire("app")).isTrue()
+
+        // And the global window recovers the same way (independent caller after a backward step).
+        assertThat(limiter.tryAcquire("other")).isTrue()
+    }
+
+    @Test
+    fun backwardClockStep_recoversGlobalWindow() {
+        // Same non-monotonic hazard for the GLOBAL cap: fill it, step the clock back past the window,
+        // and confirm the global window self-heals so new callers are accepted again.
+        val clock = FakeClock(now = 5_000_000L)
+        val limiter = PrivateCopyRateLimiter(perKeyLimit = 100, globalLimit = 3, clock = clock)
+        assertThat(limiter.tryAcquire("a")).isTrue()
+        assertThat(limiter.tryAcquire("b")).isTrue()
+        assertThat(limiter.tryAcquire("c")).isTrue()
+        assertThat(limiter.tryAcquire("d")).isFalse()  // global cap hit
+
+        clock.now -= PrivateCopyRateLimiter.WINDOW_MS * 2  // clock jumps backwards
+        assertThat(limiter.tryAcquire("d")).isTrue()  // future timestamps evicted → global freed
+    }
+
+    @Test
     fun freshLimiterHasFullBudget_processRestartResetSemantics() {
         // State is in-memory (process-lifetime); a new instance models a process restart resetting
         // the limiter — deliberate and acceptable (design §6.5).

@@ -83,4 +83,38 @@ class PrivateCopyEditingKeyTest {
         assertFalse(ClipboardHistoryService.privateCopy(context, null, "com.x"))
         assertEquals(0, db.getActiveClipboardEntries().size)
     }
+
+    /**
+     * Finding 8 regression: storeClip() reads clipboard limits from Config. On a genuine cold start
+     * (exported-activity entry point where the IME never ran) the global Config is uninitialized, and
+     * the private-copy chain (privateCopy → get_service → addPrivateClip → storeClip) NEVER inits it.
+     * Before the fix, storeClip's unguarded Config.globalConfig() reads threw NPE mid-store.
+     *
+     * This forces Config.globalConfig() into its uninitialized state (nulls the private static via
+     * reflection, restoring it after), then drives a private copy and asserts it stores WITHOUT
+     * crashing — proving storeClip's null-safe fallbacks to the documented defaults are wired up.
+     *
+     * FLAGGED: androidTest — run via ew-cli. Mutates a process-global static under try/finally so the
+     * original Config is always restored for other tests in the run.
+     */
+    @Test
+    fun privateCopy_worksWhenGlobalConfigUninitialized_coldStartNoCrash() {
+        val field = Config::class.java.getDeclaredField("_globalConfig").apply { isAccessible = true }
+        val saved = field.get(null)
+        try {
+            // Simulate the cold-start "Config never initialized" state storeClip must tolerate.
+            field.set(null, null)
+            assertNull("precondition: global config is null", Config.globalConfigOrNull())
+
+            val stored = ClipboardHistoryService.privateCopy(context, "cold start note", "com.cold.start")
+            assertTrue("private copy must store even with Config uninitialized", stored)
+
+            val entry = db.getActiveClipboardEntries().firstOrNull { it.content == "cold start note" }
+            assertNotNull("selection stored despite null Config", entry)
+            assertTrue("stored privately", entry!!.isPrivate)
+        } finally {
+            // Restore the original Config so subsequent tests in the run see an initialized instance.
+            field.set(null, saved)
+        }
+    }
 }

@@ -13,6 +13,7 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.ExtractedText
 import android.view.inputmethod.ExtractedTextRequest
 import android.view.inputmethod.InputConnection
+import tribixbite.cleverkeys.clipboard.PrivateCopyDispatch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -683,26 +684,24 @@ class KeyEventHandler(
     }
 
     /**
-     * #156 Private copy (in-IME entry point A): read the current selection via
-     * [InputConnection.getSelectedText] and store it into CleverKeys' clipboard DB marked private.
-     * NEVER touches the OS clipboard (delegates to [ClipboardHistoryService.privateCopy], the
-     * no-setPrimaryClip path). Feedback via the suggestion bar (Toasts are IME-suppressed on 13+).
+     * #156 Private copy (in-IME entry point A): store the current selection into CleverKeys'
+     * clipboard DB marked private via the shared [PrivateCopyDispatch]. NEVER touches the OS
+     * clipboard (delegates to [ClipboardHistoryService.privateCopy], the no-setPrimaryClip path).
+     * Feedback via the suggestion bar (Toasts are IME-suppressed on 13+). Dispatch logic is shared
+     * with the editing-pane surface so the two cannot drift.
      */
     private fun handlePrivateCopy() {
-        val text = recv.getCurrentInputConnection()?.getSelectedText(0)?.toString()
-        if (text.isNullOrEmpty()) {
-            recv.showPrivateCopyFeedback("No text selected")
+        val ic = recv.getCurrentInputConnection() ?: run {
+            recv.showPrivateCopyFeedback(PrivateCopyDispatch.MSG_NO_SELECTION)
             return
         }
-        val ctx = recv.getContext()
-        if (ctx == null) {
-            recv.showPrivateCopyFeedback("Private copy unavailable")
+        val ctx = recv.getContext() ?: run {
+            recv.showPrivateCopyFeedback(PrivateCopyDispatch.MSG_UNAVAILABLE)
             return
         }
-        // Provenance for entry point A is the target editor's package (EditorInfo.packageName).
-        val sourcePackage = recv.getCurrentEditorInfo()?.packageName
-        val stored = ClipboardHistoryService.privateCopy(ctx, text, sourcePackage)
-        recv.showPrivateCopyFeedback(if (stored) "Privately copied" else "Private copy unavailable")
+        PrivateCopyDispatch.execute(ctx, ic, recv.getCurrentEditorInfo()) { message ->
+            recv.showPrivateCopyFeedback(message)
+        }
     }
 
     /**

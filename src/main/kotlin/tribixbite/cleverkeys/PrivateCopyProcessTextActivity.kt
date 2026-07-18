@@ -75,11 +75,28 @@ class PrivateCopyProcessTextActivity : Activity() {
 
         // Parse + validate via the pure-JVM parser (the ONLY intent-reading code). READONLY is
         // irrelevant to behavior — we only ever read the text extra, never transform/return it.
-        val maxBytes = Config.globalConfig().clipboard_max_item_size_kb * 1024
+        // Single source of truth for the cap: the SAME clipboard_max_item_size_kb the service's
+        // storeClip enforces (design §6.2) — the parser only re-checks it so it stays unit-testable.
+        val maxSizeKb = Config.globalConfig().clipboard_max_item_size_kb
+        val maxBytes = maxSizeKb * 1024
         val processText = intent?.getCharSequenceExtra(Intent.EXTRA_PROCESS_TEXT)
         val result = PrivateCopyIntentParser.parse(intent?.action, processText, maxBytes)
         if (result !is PrivateCopyIntentParser.Result.Accept) {
-            Log.w(TAG, "Private copy rejected: ${(result as PrivateCopyIntentParser.Result.Reject).reason}")
+            val reason = (result as PrivateCopyIntentParser.Result.Reject).reason
+            Log.w(TAG, "Private copy rejected: $reason")
+            // Finding 10: give the user visible feedback for the OVER_CAP path. Entry point A (IME
+            // key) surfaces the service's "too large" toast; the toolbar path previously dropped
+            // silently (Log.w only) — a user selecting oversized text perceived silent data loss.
+            // Mirror the service's message (size + limit in KB) so both entry points behave alike.
+            if (reason == PrivateCopyIntentParser.Reason.OVER_CAP) {
+                val sizeKb = (processText?.toString()?.trim()
+                    ?.toByteArray(Charsets.UTF_8)?.size ?: 0) / 1024
+                Toast.makeText(
+                    applicationContext,
+                    getString(R.string.private_copy_too_large, sizeKb, maxSizeKb),
+                    Toast.LENGTH_LONG
+                ).show()
+            }
             return
         }
 

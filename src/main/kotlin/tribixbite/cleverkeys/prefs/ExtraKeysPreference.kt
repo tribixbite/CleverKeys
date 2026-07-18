@@ -108,6 +108,7 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
             "copy",
             "paste",
             "cut",
+            "copy_private",  // #156: copy selection into CleverKeys' private clipboard (never OS clipboard)
             "selectAll",
             "shareText",
             "pasteAsPlainText",
@@ -194,6 +195,7 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
                 "change_method" -> id = R.string.key_descr_change_method
                 "compose" -> id = R.string.key_descr_compose
                 "copy" -> id = R.string.key_descr_copy
+                "copy_private" -> id = R.string.key_descr_copy_private
                 "cut" -> id = R.string.key_descr_cut
                 "end" -> {
                     id = R.string.key_descr_end
@@ -299,6 +301,7 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
                 "copy" -> "Copy"
                 "paste" -> "Paste"
                 "cut" -> "Cut"
+                "copy_private" -> "Private Copy"
                 "selectAll" -> "Select All"
                 "shareText" -> "Share"
                 "pasteAsPlainText" -> "Paste Plain"

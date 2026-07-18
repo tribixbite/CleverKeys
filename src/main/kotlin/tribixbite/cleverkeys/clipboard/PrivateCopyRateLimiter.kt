@@ -38,15 +38,15 @@ class PrivateCopyRateLimiter(
         val now = clock()
         val cutoff = now - windowMs
 
-        // Evict expired timestamps from the global window.
-        while (globalTimestamps.isNotEmpty() && globalTimestamps.first() <= cutoff) {
-            globalTimestamps.removeFirst()
-        }
-        // Evict expired timestamps from this key's window.
+        // Evict from BOTH ends. Front: timestamps older than the window (`<= cutoff`) — normal aging.
+        // Back: timestamps in the FUTURE relative to `now` (`> now`) — the injected wall clock stepped
+        // BACKWARDS (NTP correction, manual clock change, DST). Without this, those future timestamps
+        // would never age out and would silently block every accept for up to the size of the backward
+        // jump. Deques are insertion-ordered (monotonic at insert time), so future entries cluster at
+        // the back; popping them lets the window self-heal. (design §6.5 robustness)
+        evictWindow(globalTimestamps, cutoff, now)
         val keyWindow = perKeyTimestamps.getOrPut(key) { ArrayDeque() }
-        while (keyWindow.isNotEmpty() && keyWindow.first() <= cutoff) {
-            keyWindow.removeFirst()
-        }
+        evictWindow(keyWindow, cutoff, now)
 
         // Deny if either cap is already reached within the window.
         if (keyWindow.size >= perKeyLimit) return false
@@ -56,6 +56,20 @@ class PrivateCopyRateLimiter(
         keyWindow.addLast(now)
         globalTimestamps.addLast(now)
         return true
+    }
+
+    /**
+     * Drop timestamps outside the live window from [window]: aged-out entries at the FRONT
+     * (`<= cutoff`) and clock-moved-back entries in the FUTURE at the BACK (`> now`). Both ends are
+     * bounded by the deque's insertion order so each pop is O(1) amortized.
+     */
+    private fun evictWindow(window: ArrayDeque<Long>, cutoff: Long, now: Long) {
+        while (window.isNotEmpty() && window.first() <= cutoff) {
+            window.removeFirst()
+        }
+        while (window.isNotEmpty() && window.last() > now) {
+            window.removeLast()
+        }
     }
 
     companion object {

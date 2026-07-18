@@ -141,6 +141,7 @@
     <string name="key_descr_change_method">Switch keyboard</string>
     <string name="key_descr_voice_typing">Voice typing</string>
     <string name="key_descr_copy">Copy</string>
+    <string name="key_descr_copy_private">Private copy (into CleverKeys only, not the system clipboard)</string>
     <string name="key_descr_paste">Paste</string>
     <string name="key_descr_cut">Cut</string>
     <string name="key_descr_selectAll">Select all</string>
@@ -241,6 +242,8 @@
     <string name="private_copy_expose_dialog_message">This entry was copied privately. Copying it to the system clipboard exposes the text to the foreground app and other clipboard managers. Copy anyway?</string>
     <string name="private_copy_expose_dialog_confirm">Copy anyway</string>
     <string name="private_copy_expose_dialog_cancel">Cancel</string>
+    <!-- Shown when a clipboard item exceeds the per-item size cap. %1$d = item size (KB), %2$d = limit (KB). -->
+    <string name="private_copy_too_large">Clipboard item too large (%1$d KB). Limit is %2$d KB.</string>
 
     <!-- Emoji Grid View (Material 3) -->
     <string name="emoji_loading">Loading emojis…</string>
