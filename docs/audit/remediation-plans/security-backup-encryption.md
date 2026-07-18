@@ -291,7 +291,7 @@ file is opened only post-verification.)
 |---|---|---|
 | Zero-perm app sends `EXPORT_CLIPBOARD` with its own `content://` sink | Gets full clipboard history plaintext (passwords/OTPs) | Gets AES-256-GCM ciphertext under a key derived from a passphrase it cannot read (app-private storage). If no passphrase set, gets **nothing** (export refuses). **Closed.** |
 | Same for dictionary/settings exfil | Plaintext | Same as above. **Closed.** |
-| Zero-perm app injects settings/dictionary/clipboard via `json_base64` or URI | Applied with no preview | Plaintext rejected on the headless path; forged ciphertext fails the GCM tag (existential forgery of AES-GCM without the key is computationally infeasible). **Closed.** |
+| Zero-perm app injects settings/dictionary/clipboard via `json_base64` or URI | Applied with no preview | Plaintext rejected on the headless path at the manager seam that hands bytes to the parser (`enforceHeadlessEncryptionPolicy`, TOCTOU-safe — 2026-07-18); forged ciphertext fails the GCM tag (existential forgery of AES-GCM without the key is computationally infeasible). **Closed** with `backup_allow_intent_passphrase` off (default); **reopened by design** only when that toggle is on — see residual risk #3. |
 | Legit user's Termux automation | Works | Works — identical `am start` commands, no secret on the command line; one-time setup: set a backup password in Settings. |
 
 **Residual risks (explicit):**
@@ -310,6 +310,27 @@ file is opened only post-verification.)
 3. **Passphrase-delivery escape hatch** — the optional `--es passphrase` import
    override leaks via shell history if the user enables and uses it carelessly.
    Default-off, export never accepts it, docs carry the warning.
+
+   **Reopens the injection channel when enabled.** With
+   `backup_allow_intent_passphrase` ON, a zero-permission app can supply its OWN
+   passphrase via `--es passphrase` *and* a payload it self-encrypted under that
+   same passphrase. GCM authenticates the ciphertext against the *supplied* key, so
+   the container decrypts cleanly and the attacker-controlled settings/dictionary/
+   clipboard are applied via the destructive headless `importConfig` (REPLACE
+   semantics). The AEAD tag guarantees the bytes came from *whoever holds the
+   passphrase* — and here the attacker chose it — not from the legitimate user. This
+   is why the toggle is **default-off and import-only** (export never consults an
+   override — design §4.2): with the toggle off, injection stays closed because a
+   forged payload must authenticate against the user's *stored* passphrase, which the
+   attacker cannot read. The reopening is **accepted by design**: the escape hatch
+   exists solely for cross-device restore of a foreign backup the user deliberately
+   possesses, it is import-only, and turning it on is an explicit informed choice
+   documented in the UI + troubleshooting wiki. The load-bearing plaintext gate
+   (`BackupRestoreManager.enforceHeadlessEncryptionPolicy`, added 2026-07-18 to close
+   a TOCTOU in the Activity's separate-stream sniff) is unaffected either way: it runs
+   on the same bytes handed to the parser, so plaintext is refused on the headless path
+   regardless of this toggle; the toggle only changes *which* passphrase authenticates
+   an *encrypted* payload.
 4. **Offline brute force of a leaked ciphertext** — bounded by passphrase strength ×
    600k PBKDF2 iterations. PBKDF2 is GPU-friendlier than Argon2id; a weak passphrase
    ("1234") remains crackable. UI enforces a minimum (8 chars) and warns below 12.

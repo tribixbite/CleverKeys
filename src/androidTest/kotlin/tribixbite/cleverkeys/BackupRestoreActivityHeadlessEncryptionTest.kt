@@ -135,6 +135,36 @@ class BackupRestoreActivityHeadlessEncryptionTest {
     }
 
     @Test
+    fun headlessImport_realManager_plaintextBase64_rejectedAtManagerSeam() {
+        // TOCTOU-closure end-to-end: use the REAL BackupRestoreManager (not the
+        // recording fake) so the plaintext rejection is decided at readJsonFromUri —
+        // the same bytes the parser would see — not only by the Activity's up-front
+        // sniff. Under HEADLESS_MANDATORY the manager throws BackupDecryptException,
+        // the Activity catches it, toasts, and applies nothing.
+        val store = FakeStore(present = true)
+        BackupRestoreActivity.testPassphraseStoreOverride = store
+        BackupRestoreActivity.testManagerOverride = BackupRestoreManager(context, passphraseStore = store)
+
+        val plaintextJson = """{"metadata":{},"preferences":{"keyboard_height":50}}"""
+        val b64 = android.util.Base64.encodeToString(
+            plaintextJson.toByteArray(Charsets.UTF_8), android.util.Base64.DEFAULT
+        )
+        val intent = Intent(context, BackupRestoreActivity::class.java).apply {
+            action = BackupRestoreActivity.ACTION_IMPORT_SETTINGS
+            putExtra("json_base64", b64)
+        }
+        ActivityScenario.launch<BackupRestoreActivity>(intent).use { }
+        Thread.sleep(800)
+
+        // The real manager never applied anything: prefs unchanged for our sentinel key.
+        val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
+        assertFalse(
+            "plaintext headless import must not have applied keyboard_height",
+            prefs.contains("keyboard_height"),
+        )
+    }
+
+    @Test
     fun headlessImport_encryptedBase64_isApplied() {
         install(present = true)
         val json = """{"metadata":{},"preferences":{"keyboard_height":50}}"""

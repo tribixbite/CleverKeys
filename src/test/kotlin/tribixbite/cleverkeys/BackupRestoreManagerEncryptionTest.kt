@@ -178,6 +178,78 @@ class BackupRestoreManagerEncryptionTest {
         assertTrue("plan should carry changes", encPlan.changes.isNotEmpty() || encPlan.parseSkippedKeys.isNotEmpty())
     }
 
+    // ── headless mandatory-encryption import gate (TOCTOU fix, 2026-07-18) ─────────
+
+    @Test
+    fun headlessMandatory_plaintextJsonImport_isRejectedAtManagerSeam() {
+        // The load-bearing gate: under HEADLESS_MANDATORY the manager must refuse a
+        // plaintext JSON payload on the SAME bytes it would parse — closing the
+        // separate-stream TOCTOU in the Activity's up-front sniff. Nothing imported.
+        val mgr = newManager()
+        mgr.encryptionPolicy = BackupRestoreManager.EncryptionPolicy.HEADLESS_MANDATORY
+        val uri = uriForInput(settingsJson.toByteArray(Charsets.UTF_8))
+        try {
+            mgr.buildSettingsImportPlan(uri, prefs)
+            fail("HEADLESS_MANDATORY must reject a plaintext JSON import")
+        } catch (e: BackupRestoreManager.BackupDecryptException) {
+            assertTrue(
+                "message should explain plaintext is not accepted via automation",
+                e.message!!.contains("Plaintext"),
+            )
+        }
+        // The short-swipe importer is only touched during APPLY; a rejected build
+        // must never reach it.
+        coVerify(exactly = 0) { shortSwipeImporter.importFromJson(any(), any()) }
+    }
+
+    @Test
+    fun headlessMandatory_encryptedJsonImport_stillSucceeds() {
+        // The legit encrypted path: an ENCRYPTED payload sniffs as ENCRYPTED, passes
+        // the gate, decrypts, and produces a real plan under the SAME policy.
+        val mgr = newManager()
+        mgr.encryptionPolicy = BackupRestoreManager.EncryptionPolicy.HEADLESS_MANDATORY
+        val uri = uriForInput(encryptSettings(settingsJson))
+
+        val plan = mgr.buildSettingsImportPlan(uri, prefs)
+
+        assertTrue(
+            "encrypted import under HEADLESS_MANDATORY must still build a plan",
+            plan.changes.isNotEmpty() || plan.parseSkippedKeys.isNotEmpty(),
+        )
+    }
+
+    @Test
+    fun uiDefault_plaintextJsonImport_isStillAccepted() {
+        // Regression guard: the interactive (UI) path is NOT gated — a user-driven
+        // plaintext import must keep working. Only HEADLESS_MANDATORY rejects.
+        val mgr = newManager()
+        mgr.encryptionPolicy = BackupRestoreManager.EncryptionPolicy.UI_DEFAULT
+        val uri = uriForInput(settingsJson.toByteArray(Charsets.UTF_8))
+
+        val plan = mgr.buildSettingsImportPlan(uri, prefs)
+
+        assertTrue(
+            "UI_DEFAULT plaintext import must still build a plan (not gated)",
+            plan.changes.isNotEmpty() || plan.parseSkippedKeys.isNotEmpty(),
+        )
+    }
+
+    @Test
+    fun headlessMandatory_plaintextClipboardJsonImport_isRejected() {
+        // Same gate, different action: clipboard JSON import also routes through
+        // readJsonFromUri, so the plaintext payload is rejected before importFromJSON.
+        val mgr = newManager()
+        mgr.encryptionPolicy = BackupRestoreManager.EncryptionPolicy.HEADLESS_MANDATORY
+        val clipboardJson = """{"version":4,"active":[],"pinned":[],"todo":[]}"""
+        val uri = uriForInput(clipboardJson.toByteArray(Charsets.UTF_8))
+        try {
+            mgr.importClipboardHistory(uri)
+            fail("HEADLESS_MANDATORY must reject a plaintext clipboard JSON import")
+        } catch (e: BackupRestoreManager.BackupDecryptException) {
+            assertTrue(e.message!!.contains("Plaintext"))
+        }
+    }
+
     @Test
     fun encryptedImport_wrongContentType_isRejectedBeforeParse() {
         val mgr = newManager()

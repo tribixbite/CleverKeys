@@ -229,6 +229,25 @@ object EncryptedBackupFormat {
         return PayloadKind.UNKNOWN
     }
 
+    /**
+     * Headless-import gate decision (design §4.3, TOCTOU fix 2026-07-18): given the
+     * leading [head] bytes of a candidate import payload, return `true` when it must be
+     * REJECTED on the mandatory-encryption (headless) path — i.e. everything EXCEPT a
+     * positively-identified [PayloadKind.ENCRYPTED] container.
+     *
+     * Fails CLOSED:
+     *  - `null` [head] (unopenable / hostile source that threw or yielded no stream) → reject.
+     *  - PLAINTEXT_JSON / PLAINTEXT_ZIP / UNKNOWN → reject.
+     *  - ENCRYPTED → `false` (the sole payload allowed to proceed to decrypt+authenticate).
+     *
+     * Pure JVM so both the Activity's up-front defense-in-depth sniff and unit tests can
+     * share the exact decision without touching Android APIs.
+     */
+    fun rejectAsPlaintextForHeadless(head: ByteArray?): Boolean {
+        if (head == null) return true // fail closed
+        return sniff(head) != PayloadKind.ENCRYPTED
+    }
+
     /** JSON insignificant whitespace: space, tab, CR, LF. */
     private fun isJsonWhitespace(b: Byte): Boolean =
         b == ' '.code.toByte() || b == '\t'.code.toByte() ||

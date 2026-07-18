@@ -225,11 +225,27 @@ class BackupRestoreActivity : ComponentActivity() {
     }
 
     /**
-     * Sniff the leading bytes of [uri] and return `true` when the payload is a legacy
-     * PLAINTEXT (JSON or ZIP) file (design §4.3 — headless plaintext import is rejected).
-     * ENCRYPTED and UNKNOWN both return `false` here: ENCRYPTED proceeds to decrypt, and
-     * a genuinely UNKNOWN file is left to fail in the downstream parser with its own
-     * message rather than being mislabeled a "plaintext backup".
+     * Sniff the leading bytes of [uri] and return `true` when the payload must be
+     * rejected on the headless path (design §4.3 — headless plaintext import is refused).
+     *
+     * This is DEFENSE-IN-DEPTH only. The load-bearing gate is
+     * [BackupRestoreManager.enforceHeadlessEncryptionPolicy], which runs at the same
+     * seam that hands bytes to the parser (so it is not TOCTOU-bypassable via a
+     * hostile ContentProvider that serves different bytes on separate stream opens).
+     * This up-front sniff opens a *separate* stream and only short-circuits obvious
+     * plaintext before the manager is even invoked.
+     *
+     * Returns `true` for:
+     *  - PLAINTEXT_JSON / PLAINTEXT_ZIP — legacy plaintext backups (rejected).
+     *  - UNKNOWN — an unrecognized/garbage payload (rejected; the manager would reject
+     *    it too, but there is no reason to proceed).
+     *  - ANY sniff FAILURE (stream throws / null) — **fail CLOSED**: an unsniffable
+     *    payload is treated as plaintext on the headless path. (Previously fail-open,
+     *    which — combined with the separate-stream TOCTOU — let an attacker throw on
+     *    this open and serve plaintext on the import read.)
+     *
+     * Returns `false` ONLY for ENCRYPTED — the sole payload allowed to proceed to
+     * the manager's decrypt-and-authenticate step, which is the real gate.
      */
     private fun payloadIsPlaintext(uri: Uri): Boolean {
         return try {
@@ -242,15 +258,13 @@ class BackupRestoreActivity : ComponentActivity() {
                     filled += read
                 }
                 if (filled == buffer.size) buffer else buffer.copyOf(filled)
-            } ?: return false
-            when (EncryptedBackupFormat.sniff(head)) {
-                EncryptedBackupFormat.PayloadKind.PLAINTEXT_JSON,
-                EncryptedBackupFormat.PayloadKind.PLAINTEXT_ZIP -> true
-                else -> false
             }
+            EncryptedBackupFormat.rejectAsPlaintextForHeadless(head)
         } catch (e: Exception) {
-            android.util.Log.w(TAG, "Could not sniff import payload for plaintext check", e)
-            false
+            // Unsniffable payload → fail CLOSED (reject) — the manager seam is the real
+            // gate, but a hostile source that throws here must NOT slip past.
+            android.util.Log.w(TAG, "Could not sniff import payload; treating as plaintext (fail closed)", e)
+            true
         }
     }
 

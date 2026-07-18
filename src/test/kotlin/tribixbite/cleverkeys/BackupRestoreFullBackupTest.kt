@@ -19,6 +19,9 @@ import org.junit.Before
 import org.junit.Test
 import tribixbite.cleverkeys.backup.RealShortSwipeImporter
 import tribixbite.cleverkeys.backup.ShortSwipeImporter
+import tribixbite.cleverkeys.backup.crypto.BackupCrypto
+import tribixbite.cleverkeys.backup.crypto.BackupPassphraseStore
+import tribixbite.cleverkeys.backup.crypto.EncryptedBackupFormat
 import tribixbite.cleverkeys.customization.ShortSwipeCustomizationManager
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -218,7 +221,93 @@ class BackupRestoreFullBackupTest {
         return baos.toByteArray()
     }
 
+    /** A `content://` URI whose input stream re-opens fresh [bytes] each call. */
+    private fun fakeReopenableUriForInput(bytes: ByteArray): Uri {
+        val uri = mockk<Uri>(relaxed = true)
+        every { uri.scheme } returns "content"
+        every { uri.lastPathSegment } returns "input.zip"
+        every { contentResolver.openInputStream(uri) } answers { ByteArrayInputStream(bytes) }
+        return uri
+    }
+
+    /** Passphrase store that always yields [pass] (fresh CharArray — manager zeroes it). */
+    private fun fixedPassphraseStore(pass: String): BackupPassphraseStore =
+        mockk<BackupPassphraseStore>(relaxed = true).also {
+            every { it.hasPassphrase() } returns true
+            every { it.getPassphrase() } answers { pass.toCharArray() }
+        }
+
     // ── tests ──────────────────────────────────────────────────────────────────
+
+    // ── headless mandatory-encryption ZIP import gate (TOCTOU fix, 2026-07-18) ────
+
+    @Test
+    fun headlessMandatory_plaintextZipImport_isRejectedAtManagerSeam() {
+        // Under HEADLESS_MANDATORY a plaintext (PK\x03\x04) ZIP must be refused in
+        // openZipForImport, on the same stream that would be parsed — nothing imported.
+        val mgr = newManager()
+        mgr.encryptionPolicy = BackupRestoreManager.EncryptionPolicy.HEADLESS_MANDATORY
+        val plaintextZip = buildZip(
+            listOf("clipboard_data.json" to """{"version":4,"active":[]}""".toByteArray(Charsets.UTF_8))
+        )
+        val uri = fakeReopenableUriForInput(plaintextZip)
+        try {
+            mgr.importClipboardHistoryZip(uri)
+            fail("HEADLESS_MANDATORY must reject a plaintext ZIP import")
+        } catch (e: BackupRestoreManager.BackupDecryptException) {
+            assertTrue(e.message!!.contains("Plaintext"))
+        }
+        // Rejection happens before any ZIP entry is parsed into the DB.
+        verify(exactly = 0) { clipboardDb.importFromJSON(any()) }
+    }
+
+    @Test
+    fun headlessMandatory_plaintextFullBackupZipImport_isRejected() {
+        // Same gate on the full-backup ZIP path (importFullBackup → openZipForImport).
+        // importFullBackup rethrows BackupDecryptException verbatim rather than
+        // burying it in a FullBackupImportResult.
+        val mgr = newManager()
+        mgr.encryptionPolicy = BackupRestoreManager.EncryptionPolicy.HEADLESS_MANDATORY
+        val plaintextZip = buildZip(
+            listOf(BackupRestoreManager.ENTRY_MANIFEST to
+                """{"format":"cleverkeys_full_backup","format_version":1}""".toByteArray(Charsets.UTF_8))
+        )
+        val uri = fakeReopenableUriForInput(plaintextZip)
+        try {
+            mgr.importFullBackup(uri, prefs)
+            fail("HEADLESS_MANDATORY must reject a plaintext full-backup ZIP import")
+        } catch (e: BackupRestoreManager.BackupDecryptException) {
+            assertTrue(e.message!!.contains("Plaintext"))
+        }
+    }
+
+    @Test
+    fun headlessMandatory_encryptedZipImport_stillSucceeds() {
+        // Legit encrypted ZIP: sniffs as ENCRYPTED, passes the gate, decrypts to a
+        // verified temp file, and imports normally under the SAME policy.
+        val pass = "zip-headless-pass"
+        every { context.cacheDir } returns
+            File(System.getProperty("java.io.tmpdir"), "ck-zip-enc-cache").also { it.mkdirs() }
+        val mgr = BackupRestoreManager(context, shortSwipeImporter, fixedPassphraseStore(pass))
+        mgr.encryptionPolicy = BackupRestoreManager.EncryptionPolicy.HEADLESS_MANDATORY
+
+        val plaintextZip = buildZip(
+            listOf("clipboard_data.json" to
+                """{"version":4,"export_date":"2026-07-18T00:00:00"}""".toByteArray(Charsets.UTF_8))
+        )
+        val encryptedZip = BackupCrypto.encrypt(
+            plaintextZip, pass.toCharArray(),
+            EncryptedBackupFormat.CLIPBOARD_ZIP, 1_700_000_000_000L,
+        )
+        val uri = fakeReopenableUriForInput(encryptedZip)
+
+        val result = mgr.importClipboardHistoryZip(uri)
+
+        // clipboardDb.importFromJSON is the relaxed stub returning [0,0,0,0]; the point
+        // is that we REACHED it (gate passed, decrypt succeeded, ZIP parsed).
+        assertEquals("2026-07-18T00:00:00", result.sourceVersion)
+        verify(atLeast = 1) { clipboardDb.importFromJSON(any()) }
+    }
 
     @Test
     fun exportFullBackup_writesManifestWithCurrentAppVersion() {

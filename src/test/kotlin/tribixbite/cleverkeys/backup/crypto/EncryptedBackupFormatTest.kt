@@ -115,6 +115,38 @@ class EncryptedBackupFormatTest {
         )
     }
 
+    // ── headless-import fail-closed gate (design §4.3, TOCTOU fix 2026-07-18) ─────
+
+    @Test
+    fun rejectAsPlaintextForHeadless_nullHead_failsClosed() {
+        // Unopenable / hostile source (null stream) must be REJECTED, not allowed.
+        assertTrue(EncryptedBackupFormat.rejectAsPlaintextForHeadless(null))
+    }
+
+    @Test
+    fun rejectAsPlaintextForHeadless_plaintextAndUnknown_areRejected() {
+        // JSON, ZIP, empty, and garbage all fail closed on the headless path.
+        assertTrue(EncryptedBackupFormat.rejectAsPlaintextForHeadless("  {\"a\":1}".toByteArray()))
+        assertTrue(EncryptedBackupFormat.rejectAsPlaintextForHeadless(byteArrayOf(0x50, 0x4B, 0x03, 0x04)))
+        assertTrue(EncryptedBackupFormat.rejectAsPlaintextForHeadless(ByteArray(0)))
+        assertTrue(EncryptedBackupFormat.rejectAsPlaintextForHeadless(byteArrayOf(0, 1, 2, 3, 4, 5)))
+    }
+
+    @Test
+    fun rejectAsPlaintextForHeadless_encryptedMagic_isAllowedThrough() {
+        // Only a positively-identified CKENC container proceeds to decrypt+authenticate.
+        val encryptedHead = EncryptedBackupFormat.MAGIC + ByteArray(16)
+        assertEquals(
+            "sanity: MAGIC head sniffs as ENCRYPTED",
+            EncryptedBackupFormat.PayloadKind.ENCRYPTED,
+            EncryptedBackupFormat.sniff(encryptedHead),
+        )
+        assertTrue(
+            "a genuine CKENC head must NOT be rejected",
+            !EncryptedBackupFormat.rejectAsPlaintextForHeadless(encryptedHead),
+        )
+    }
+
     @Test
     fun parseNewerVersionThrowsNewerVersionError() {
         val bytes = sampleHeader().serialize()
