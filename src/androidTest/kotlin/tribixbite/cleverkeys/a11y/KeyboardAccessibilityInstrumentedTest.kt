@@ -14,6 +14,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import tribixbite.cleverkeys.ComposeKeyData
 import tribixbite.cleverkeys.Config
 import tribixbite.cleverkeys.Keyboard2View
 import tribixbite.cleverkeys.KeyValue
@@ -76,6 +77,9 @@ class KeyboardAccessibilityInstrumentedTest {
             .putInt("margin_bottom", 0)
             .apply()
         Config.initGlobalConfig(prefs, context.resources, recorder, null)
+        // The real IME initializes this at service startup; the standalone-view test must too,
+        // or the modifier/compose path (e.g. modify('q', shift)) hits getStates() uninitialized.
+        ComposeKeyData.initialize(context)
 
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
             view = Keyboard2View(context)
@@ -100,32 +104,24 @@ class KeyboardAccessibilityInstrumentedTest {
         return p!!
     }
 
-    /** All non-root virtual nodes (ids 0..N-1 until the provider returns null). */
+    /** The real virtual-view ids (one per key) — NOT a 0..null scan, which never ends
+     *  because ExploreByTouchHelper returns a dummy node for unknown ids. */
+    private fun virtualIds(): List<Int> = view.accessibilityVirtualViewIdsForTest()
+
+    /** All real (non-dummy) key virtual nodes. */
     private fun virtualNodes(): List<AccessibilityNodeInfo> {
         val p = provider()
-        val out = ArrayList<AccessibilityNodeInfo>()
-        var id = 0
-        while (true) {
-            val node = p.createAccessibilityNodeInfo(id) ?: break
-            out.add(node)
-            id++
-            if (id > 200) break // safety
-        }
-        return out
+        return virtualIds().map { p.createAccessibilityNodeInfo(it)!! }
     }
 
     /** The virtual id whose char-label matches [target] (upper/lowercase), or -1. */
     private fun findKeyId(target: Char): Int {
         val p = provider()
-        var id = 0
-        while (true) {
-            val node = p.createAccessibilityNodeInfo(id) ?: break
-            val desc = node.contentDescription?.toString()
+        for (id in virtualIds()) {
+            val desc = p.createAccessibilityNodeInfo(id)?.contentDescription?.toString()
             if (desc != null && desc.length == 1 &&
                 desc[0].equals(target, ignoreCase = true)
             ) return id
-            id++
-            if (id > 200) break
         }
         return -1
     }
@@ -187,12 +183,9 @@ class KeyboardAccessibilityInstrumentedTest {
 
     private fun findShiftId(): Int {
         val p = provider()
-        var id = 0
-        while (true) {
-            val node = p.createAccessibilityNodeInfo(id) ?: break
+        for (id in virtualIds()) {
+            val node = p.createAccessibilityNodeInfo(id) ?: continue
             if (node.isCheckable) return id // Shift/CapsLock are the only checkable keys
-            id++
-            if (id > 200) break
         }
         return -1
     }

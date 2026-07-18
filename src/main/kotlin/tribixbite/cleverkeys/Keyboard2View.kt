@@ -1222,6 +1222,16 @@ class Keyboard2View @JvmOverloads constructor(
     }
 
     /**
+     * Test hook: the exact virtual-view ids currently exposed to the accessibility
+     * tree (one per real key). Instrumented tests must enumerate these rather than
+     * probing ids 0..N — [ExploreByTouchHelper] returns a defensive dummy node (not
+     * null) for unknown ids, so a null-terminated scan never ends.
+     */
+    @androidx.annotation.VisibleForTesting
+    fun accessibilityVirtualViewIdsForTest(): List<Int> =
+        computeAccessibilityKeyRects().map { it.virtualId }
+
+    /**
      * `(isCheckable, isChecked)` for Shift/CapsLock so TalkBack announces their
      * toggle state; null for every other key. "Checked" means the key currently
      * has a latched or locked pointer.
