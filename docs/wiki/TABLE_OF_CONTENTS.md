@@ -77,6 +77,7 @@ Welcome to the CleverKeys documentation. This guide covers everything you need t
 | Page | Description |
 |------|-------------|
 | [Clipboard History](./clipboard/clipboard-history.md) | Recent clips, pins, search |
+| [Private Copy](./clipboard/private-copy.md) | Copy to CleverKeys only, never the OS clipboard |
 | [Text Selection](./clipboard/text-selection.md) | Select, cut, copy, paste |
 | [Keyboard Shortcuts](./clipboard/shortcuts.md) | Standard shortcuts (Ctrl+C, etc.) |
 
@@ -106,6 +107,7 @@ Each user guide has a paired technical specification for developers:
 | [Themes](./customization/themes.md) | [Settings System Spec](../specs/settings-system.md) |
 | [Multi-Language](./layouts/multi-language.md) | [Dictionary & Language Spec](../specs/dictionary-and-language-system.md) |
 | [Clipboard History](./clipboard/clipboard-history.md) | [Clipboard History Spec](./specs/clipboard/clipboard-history-spec.md) |
+| [Private Copy](./clipboard/private-copy.md) | [Private Copy Spec](./specs/clipboard/private-copy-spec.md) |
 | [Privacy](./settings/privacy.md) | [Clipboard Privacy Spec](../specs/clipboard-privacy.md) |
 
 ---

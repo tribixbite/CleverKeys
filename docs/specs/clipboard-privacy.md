@@ -184,3 +184,61 @@ SettingsSwitch(
 - Requires UsageStats permission on some devices (optional, falls back to ActivityManager)
 - New password managers must be added to the package list manually
 - Does not analyze clipboard content - only checks source app
+
+## Private Copy (#156)
+
+> **Canonical spec:** [`docs/wiki/specs/clipboard/private-copy-spec.md`](../wiki/specs/clipboard/private-copy-spec.md)
+> (renders at <https://cleverkeys.app/specs/clipboard/private-copy-spec/>).
+> **User guide:** [`docs/wiki/clipboard/private-copy.md`](../wiki/clipboard/private-copy.md).
+> **Design doc:** [`docs/audit/remediation-plans/156-private-copy-paste.md`](audit/remediation-plans/156-private-copy-paste.md).
+> This section is an engineering-notes summary; see the canonical spec for full detail.
+
+Private copy adds a copy path that stores selected text directly into `ClipboardDatabase`
+with an `is_private` marker and **never** calls `ClipboardManager`. It complements the
+password-manager exclusion above: exclusion prevents *capture* of OS-clipboard content from
+sensitive apps, while private copy provides a *deliberate* capture route that bypasses the OS
+clipboard entirely.
+
+### Key Files
+
+| File | Class/Function | Purpose |
+|------|----------------|---------|
+| `PrivateCopyProcessTextActivity.kt` | `onCreate` → `handle()` | Exported (but `android:enabled="false"`) `ACTION_PROCESS_TEXT` selection-toolbar receiver; entry point B |
+| `clipboard/PrivateCopyIntentParser.kt` | `parse()` | Pure-JVM validation; the only intent-reading code (no `Intent` param, so no `clipData`/URI reachable) |
+| `clipboard/PrivateCopyRateLimiter.kt` | `tryAcquire()` | Sliding-window 10/caller/min + 30/min global |
+| `ClipboardHistoryService.kt` | `addPrivateClip()`, `privateCopy()`, `storeClip()` | Shared core with `addClip`; private path passes `rewriteOsClipboard = false` (never `systemClipboardRewrite`) |
+| `ClipboardDatabase.kt` | `PrivateClipMergeRule`, `onUpgrade` (V4→V5), `exportToJSON(includePrivate)` | V5 schema, sticky-privacy dedup, export exclusion |
+| `ClipboardHistoryView.kt` | `copyEntryToSystemClipboard()`, `privateBadge` | Confirm gate + lock badge |
+| `KeyValue.kt` | `Editing.COPY_PRIVATE`, `"copy_private"` (`🔒⎘`) | In-IME editing key; entry point A |
+| `ui/settings/sections/ClipboardSection.kt` | toggle + `setPrivateCopyToolbarComponentEnabled()` | Settings toggle flips the manifest-disabled component |
+
+### Schema V5
+
+`DATABASE_VERSION = 5`. O(1) `ALTER TABLE ADD COLUMN` on all three tables
+(`clipboard_entries`, `pinned_entries`, `todo_entries` — pin/todo COPY semantics carry the marker):
+
+- `is_private INTEGER NOT NULL DEFAULT 0`
+- `source_package TEXT` (nullable) — provenance (`EditorInfo.packageName`, `getCallingPackage()`, or `"direct-launch"`)
+
+Dedup is sticky: `is_private` ORs across duplicate copies; `source_package` most-recent-non-null wins.
+
+### Export policy (option B)
+
+`exportToJSON(includePrivate)` excludes private entries from **plaintext** exports (counted in the
+summary) and includes them in **encrypted (CKENC)** exports with the marker round-tripping through
+restore.
+
+### Threat model
+
+The PROCESS_TEXT activity is exported but ships disabled (`android:enabled="false"`); the settings
+toggle flips the component. It is strictly inbound (text in → local row + toast → `finish()` with
+`RESULT_CANCELED`), never returns a result, never reads a URI, is rate-limited, and records
+kernel-attested provenance. See the design doc §6 for the full exported-surface analysis.
+
+### Tests
+
+Pure JVM: `PrivateCopyIntentParserTest` (14), `PrivateCopyRateLimiterTest` (7),
+`PrivateClipMergeRuleTest` (9). MockK: `PrivateCopyServiceTest` (7, pins
+`verify(exactly = 0) { cm.setPrimaryClip(any()) }`). Instrumented:
+`PrivateCopyProcessTextActivityTest` (5), `ClipboardDatabaseV5MigrationTest` (8),
+`PrivateCopyEditingKeyTest` (2), `ClipboardPanelPrivateBadgeTest` (4).
