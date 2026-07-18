@@ -1,8 +1,10 @@
 package tribixbite.cleverkeys
 
 import android.app.Activity
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.UserManager
@@ -10,6 +12,41 @@ import android.util.Log
 import android.widget.Toast
 import tribixbite.cleverkeys.clipboard.PrivateCopyIntentParser
 import tribixbite.cleverkeys.clipboard.PrivateCopyRateLimiter
+
+/**
+ * #156 F5: reconcile the OS component-enabled state of [PrivateCopyProcessTextActivity] with the
+ * persisted `clipboard_private_copy_toolbar_enabled` pref. The activity is exported but
+ * `android:enabled="false"` in the manifest, so ANY path that writes the pref (Settings toggle,
+ * settings load, a settings IMPORT / headless restore) must also flip the component — otherwise the
+ * pref reads "on" while "Private copy" never appears in other apps' selection toolbars until the user
+ * happens to reopen CleverKeys Settings.
+ *
+ * [Context]-based (not tied to `SettingsActivity`) so the backup/restore manager can call it after an
+ * import commits prefs. Uses `COMPONENT_ENABLED_STATE_DISABLED` (not `_DEFAULT`) on the off-path so a
+ * later manifest-default change won't surprise users (design §6.6). [PackageManager.DONT_KILL_APP]
+ * keeps the running IME alive across the flip.
+ *
+ * Idempotent-guarded: reads the current component state and skips the `setComponentEnabledSetting`
+ * call when it already matches, so a no-op reconcile (the common case on a load/import that didn't
+ * change the toggle) doesn't churn the PackageManager or risk DONT_KILL_APP edge behavior.
+ */
+fun reconcilePrivateCopyToolbarComponent(context: Context, enabled: Boolean) {
+    val pm = context.packageManager
+    val component = ComponentName(context, PrivateCopyProcessTextActivity::class.java)
+    val desiredState = if (enabled) {
+        PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+    } else {
+        PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+    }
+    try {
+        // Skip the flip when the OS state already matches (avoids needless PackageManager churn).
+        if (pm.getComponentEnabledSetting(component) == desiredState) return
+        pm.setComponentEnabledSetting(component, desiredState, PackageManager.DONT_KILL_APP)
+    } catch (e: Exception) {
+        // Never let a component-reconcile failure abort an import/settings-load.
+        Log.w("PrivateCopyPT", "Failed to reconcile private-copy toolbar component: ${e.message}")
+    }
+}
 
 /**
  * #156 Private copy — entry point B: the exported `ACTION_PROCESS_TEXT` selection-toolbar target.

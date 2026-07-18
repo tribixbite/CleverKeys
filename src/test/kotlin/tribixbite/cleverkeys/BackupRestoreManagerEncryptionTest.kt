@@ -376,6 +376,51 @@ class BackupRestoreManagerEncryptionTest {
         }
     }
 
+    // ── #156 F7: passphrase resolved exactly ONCE per export ──────────────────────
+
+    @Test
+    fun jsonExport_resolvesPassphraseExactlyOnce() {
+        // Before F7, willEncryptExport() resolved (Keystore unwrap + binder) once and
+        // encryptIfRequired() resolved AGAIN — two round-trips + an extra plaintext heap copy.
+        // Now a single resolveExportEncryption() must serve both the decision and the cipher input.
+        clearMocks(passphraseStore, answers = false)
+        every { passphraseStore.hasPassphrase() } returns true
+        every { passphraseStore.getPassphrase() } answers { storedPassphrase.toCharArray() }
+
+        val mgr = newManager()
+        mgr.encryptionPolicy = BackupRestoreManager.EncryptionPolicy.UI_DEFAULT
+        val sink = ByteArrayOutputStream()
+        mgr.exportConfig(uriForOutput(sink), prefs)
+
+        // The output must still be a real encrypted container (behavior preserved)…
+        assertEquals(
+            EncryptedBackupFormat.PayloadKind.ENCRYPTED,
+            EncryptedBackupFormat.sniff(sink.toByteArray()),
+        )
+        // …and the passphrase was materialized only ONCE for the whole export op.
+        verify(exactly = 1) { passphraseStore.getPassphrase() }
+    }
+
+    @Test
+    fun plaintextOptOutExport_neverResolvesPassphrase() {
+        // The plaintext opt-out short-circuits shouldEncrypt() → the passphrase is never unwrapped
+        // (no Keystore binder round-trip, no plaintext heap copy) — strictly better than before.
+        clearMocks(passphraseStore, answers = false)
+        every { passphraseStore.hasPassphrase() } returns true
+        every { passphraseStore.getPassphrase() } answers { storedPassphrase.toCharArray() }
+
+        val mgr = newManager()
+        mgr.encryptionPolicy = BackupRestoreManager.EncryptionPolicy.UI_PLAINTEXT_OPTOUT
+        val sink = ByteArrayOutputStream()
+        mgr.exportConfig(uriForOutput(sink), prefs)
+
+        assertEquals(
+            EncryptedBackupFormat.PayloadKind.PLAINTEXT_JSON,
+            EncryptedBackupFormat.sniff(sink.toByteArray()),
+        )
+        verify(exactly = 0) { passphraseStore.getPassphrase() }
+    }
+
     @Test
     fun importPassphraseOverride_isNeverUsedForExport() {
         // Even if an override is set (import escape hatch), export uses the STORED

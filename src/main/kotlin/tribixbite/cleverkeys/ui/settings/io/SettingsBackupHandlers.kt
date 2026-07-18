@@ -219,6 +219,18 @@ internal fun SettingsActivity.performFullBackupExport(uri: Uri, plaintextOptOut:
                     if (result.totalBytes > 0) {
                         appendLine("• Bytes streamed: ${result.totalBytes}")
                     }
+                    // #156 F2: a plaintext full backup silently drops private clipboard entries.
+                    // Warn the user (matching the clipboard-only export paths) so they don't lose
+                    // privately-copied entries unknowingly and only discover it after a device wipe.
+                    if (result.privateSkipped > 0) {
+                        appendLine()
+                        appendLine(
+                            "🔒 ${result.privateSkipped} private " +
+                                (if (result.privateSkipped == 1) "entry was" else "entries were") +
+                                " excluded. Set a backup password (Settings → Backup & Restore) " +
+                                "to include them in an encrypted backup."
+                        )
+                    }
                     appendLine()
                     append("Restore via Import Full Backup to recover everything.")
                 }

@@ -193,6 +193,73 @@ class ClipboardDatabaseV5MigrationTest {
         assertEquals("com.src", source)
     }
 
+    // ── #156 F6: media-path packing filter (getReferencedMediaPaths includePrivate) ──────────
+
+    /**
+     * The core leak: a media row marked private must NOT contribute its file to a PLAINTEXT export
+     * pack (includePrivate=false), while a normal export/orphan-scan (includePrivate=true) still sees
+     * it. Mirrors exportToJSON's row filter so the packed media set matches the plaintext manifest.
+     */
+    @Test
+    fun getReferencedMediaPaths_excludesPrivateMediaFile_whenIncludePrivateFalse() {
+        // A non-private media row and a private media row, each referencing a distinct file.
+        db.addMediaClipboardEntry(
+            content = "public.png", expiryTimestamp = futureExpiry, mimeType = "image/png",
+            thumbnailBlob = null, mediaPath = "clipboard_media/00/public.png", contentHash = "pub-hash"
+        )
+        db.addMediaClipboardEntry(
+            content = "secret.png", expiryTimestamp = futureExpiry, mimeType = "image/png",
+            thumbnailBlob = null, mediaPath = "clipboard_media/00/secret.png", contentHash = "sec-hash"
+        )
+        // Mark the second media row private (sticky-privacy would set this via a matching private copy;
+        // we set it directly so the DB-query filter is exercised deterministically).
+        db.writableDatabase.execSQL(
+            "UPDATE clipboard_entries SET is_private = 1 WHERE media_path = ?",
+            arrayOf("clipboard_media/00/secret.png")
+        )
+
+        val plaintextPack = db.getReferencedMediaPaths(includePrivate = false)
+        assertTrue("public file must be packed in plaintext export",
+            plaintextPack.contains("clipboard_media/00/public.png"))
+        assertFalse("PRIVATE media file must NOT be packed in a plaintext export",
+            plaintextPack.contains("clipboard_media/00/secret.png"))
+
+        val fullPack = db.getReferencedMediaPaths(includePrivate = true)
+        assertTrue("encrypted/orphan scan includes public", fullPack.contains("clipboard_media/00/public.png"))
+        assertTrue("encrypted/orphan scan includes private", fullPack.contains("clipboard_media/00/secret.png"))
+
+        // getAllReferencedMediaPaths (orphan cleanup) must keep BOTH — deleting a private media file
+        // referenced by a live row would corrupt it.
+        val orphanSafe = db.getAllReferencedMediaPaths()
+        assertTrue(orphanSafe.contains("clipboard_media/00/public.png"))
+        assertTrue(orphanSafe.contains("clipboard_media/00/secret.png"))
+    }
+
+    /**
+     * A file referenced by BOTH a private and a non-private row IS still packed in a plaintext export
+     * (a non-private row legitimately points at it). The DISTINCT + is_private=0 filter yields exactly
+     * the set of files any exported plaintext row can reference.
+     */
+    @Test
+    fun getReferencedMediaPaths_keepsSharedFile_whenAlsoReferencedByNonPrivateRow() {
+        val sharedPath = "clipboard_media/01/shared.png"
+        // Non-private history row references the file.
+        db.addMediaClipboardEntry(
+            content = "shared-a.png", expiryTimestamp = futureExpiry, mimeType = "image/png",
+            thumbnailBlob = null, mediaPath = sharedPath, contentHash = "shared-a"
+        )
+        // Private pinned row references the SAME file (COPY semantics can duplicate the path).
+        db.writableDatabase.execSQL(
+            "INSERT INTO pinned_entries (content, content_hash, created_timestamp, pinned_timestamp, " +
+                "position, mime_type, media_path, is_private) VALUES (?, ?, ?, ?, ?, ?, ?, 1)",
+            arrayOf("shared-b.png", "shared-b", 1L, 1L, 1.0, "image/png", sharedPath)
+        )
+
+        val plaintextPack = db.getReferencedMediaPaths(includePrivate = false)
+        assertTrue("shared file referenced by a non-private row must still be packed",
+            plaintextPack.contains(sharedPath))
+    }
+
     @Test
     fun import_absentMarkerDefaultsToNonPrivate() {
         val json = JSONObject().apply {

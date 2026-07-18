@@ -1290,14 +1290,40 @@ class ClipboardDatabase private constructor(context: Context) :
     /**
      * Get all media_path values referenced by any table (for orphan cleanup).
      * Returns the set of all paths that should NOT be deleted from disk.
+     *
+     * Includes private rows — orphan-cleanup and thumbnail-regeneration must see
+     * EVERY referenced file (deleting a private media file would corrupt the row).
+     * For plaintext EXPORT packing, use [getReferencedMediaPaths] with
+     * `includePrivate = false` so private media bytes never land in an unencrypted ZIP.
      */
-    fun getAllReferencedMediaPaths(): Set<String> {
+    fun getAllReferencedMediaPaths(): Set<String> = getReferencedMediaPaths(includePrivate = true)
+
+    /**
+     * #156 option B (media): media_path values referenced by any table, optionally
+     * excluding rows marked private.
+     *
+     * When [includePrivate] is false (a plaintext export), a path is returned ONLY if
+     * at least one NON-private row references it — mirroring [exportToJSON]'s row filter
+     * so the packed media set matches the plaintext manifest. This closes the leak where
+     * a private media row (e.g. one flipped private by the sticky dedup merge) had its raw
+     * bytes written into an unencrypted ZIP even though the manifest excluded the entry.
+     *
+     * A path shared by both a private and a non-private row IS included (a non-private row
+     * still legitimately references the file); the DISTINCT + `is_private = 0` filter yields
+     * exactly the set of files any exported plaintext row can point at.
+     *
+     * @param includePrivate `true` (default via [getAllReferencedMediaPaths]) for orphan
+     *   cleanup / thumbnail regen / encrypted export; `false` for plaintext export packing.
+     */
+    fun getReferencedMediaPaths(includePrivate: Boolean): Set<String> {
         val paths = mutableSetOf<String>()
+        val privacyFilter = if (includePrivate) "" else " AND $COLUMN_IS_PRIVATE = 0"
         try {
             val db = readableDatabase
             for (table in listOf(TABLE_CLIPBOARD, TABLE_PINNED, TABLE_TODO)) {
                 db.rawQuery(
-                    "SELECT DISTINCT $COLUMN_MEDIA_PATH FROM $table WHERE $COLUMN_MEDIA_PATH IS NOT NULL",
+                    "SELECT DISTINCT $COLUMN_MEDIA_PATH FROM $table " +
+                        "WHERE $COLUMN_MEDIA_PATH IS NOT NULL$privacyFilter",
                     null
                 ).use { cursor ->
                     while (cursor.moveToNext()) {
@@ -1306,7 +1332,7 @@ class ClipboardDatabase private constructor(context: Context) :
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error collecting referenced media paths: ${e.message}")
+            Log.e(TAG, "Error collecting referenced media paths (includePrivate=$includePrivate): ${e.message}")
         }
         return paths
     }

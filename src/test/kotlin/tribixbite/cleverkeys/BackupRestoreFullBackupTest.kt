@@ -19,6 +19,7 @@ import org.junit.Before
 import org.junit.Test
 import tribixbite.cleverkeys.backup.RealShortSwipeImporter
 import tribixbite.cleverkeys.backup.ShortSwipeImporter
+import tribixbite.cleverkeys.backup.ShortSwipeImportMode
 import tribixbite.cleverkeys.backup.crypto.BackupCrypto
 import tribixbite.cleverkeys.backup.crypto.BackupPassphraseStore
 import tribixbite.cleverkeys.backup.crypto.EncryptedBackupFormat
@@ -94,6 +95,16 @@ class BackupRestoreFullBackupTest {
         every { context.resources } returns resources
         every { context.contentResolver } returns contentResolver
         every { context.filesDir } returns File(System.getProperty("java.io.tmpdir"), "ck-test-files")
+        // Encrypted ZIP exports materialize a temp file under cacheDir; needed by the F7 single-resolve
+        // + F6 encrypted-pack tests.
+        every { context.cacheDir } returns
+            File(System.getProperty("java.io.tmpdir"), "ck-fbtest-cache").also { it.mkdirs() }
+        // #156 F5: the top-level component reconciler touches android.jar-stub PackageManager /
+        // ComponentName APIs that throw "Stub!" under the unit-test classpath. Mock the reconciler
+        // itself so the tests assert the manager INVOKES it with the imported value — the real
+        // reconciler's PackageManager wiring is covered by its own instrumented path.
+        mockkStatic("tribixbite.cleverkeys.PrivateCopyProcessTextActivityKt")
+        every { reconcilePrivateCopyToolbarComponent(any(), any()) } just Runs
 
         // Package info with a known version. Use mockk instead of `PackageInfo()`
         // because the android.jar in the unit-test classpath provides only
@@ -152,6 +163,7 @@ class BackupRestoreFullBackupTest {
             put("export_date", "2026-05-21T00:00:00")
         }
         every { clipboardDb.getAllReferencedMediaPaths() } returns emptySet()
+        every { clipboardDb.getReferencedMediaPaths(any()) } returns emptySet()
         every { clipboardDb.importFromJSON(any()) } returns intArrayOf(0, 0, 0, 0)
 
         // Stub ShortSwipeCustomizationManager.getInstance + return empty mappings.
@@ -471,6 +483,113 @@ class BackupRestoreFullBackupTest {
         // SettingsImportPlanBuilder). configKeysApplied may be 0 when current matches defaults,
         // but configImported should be true since a config.json was present.
         assertTrue("config section was processed", importResult.configImported)
+    }
+
+    // ── #156 F2: surface excluded-private count on the full-backup path ───────────
+
+    @Test
+    fun exportFullBackup_plaintextDropsPrivate_surfacesPrivateSkippedCount() {
+        // A PLAINTEXT full backup (no passphrase configured) must report how many private clipboard
+        // entries it dropped, matching the clipboard-only export paths — otherwise the loss is silent.
+        every { clipboardDb.exportToJSON(any(), any()) } returns JSONObject().apply {
+            put("total_active", 3); put("total_pinned", 0); put("total_todo", 0)
+            put("private_skipped", 2)  // exportToJSON reports this when includePrivate=false dropped rows
+        }
+
+        val mgr = newManager()  // no passphrase store → UI_DEFAULT resolves to plaintext
+        mgr.encryptionPolicy = BackupRestoreManager.EncryptionPolicy.UI_DEFAULT
+        val result = mgr.exportFullBackup(fakeUriForOutput(), prefs)
+
+        assertTrue("export should succeed: err=${result.errorMessage}", result.success)
+        assertEquals("plaintext full backup must surface excluded-private count", 2, result.privateSkipped)
+    }
+
+    @Test
+    fun exportFullBackup_encrypted_reportsZeroPrivateSkipped() {
+        val pass = "full-backup-pass"
+        // Encrypted export includes private rows → exportToJSON omits private_skipped entirely.
+        every { clipboardDb.exportToJSON(any(), any()) } returns JSONObject().apply {
+            put("total_active", 3); put("total_pinned", 0); put("total_todo", 0)
+        }
+        val mgr = BackupRestoreManager(context, shortSwipeImporter, fixedPassphraseStore(pass))
+        mgr.encryptionPolicy = BackupRestoreManager.EncryptionPolicy.UI_DEFAULT
+
+        val result = mgr.exportFullBackup(fakeUriForOutput(), prefs)
+
+        assertTrue(result.success)
+        assertEquals("encrypted full backup drops nothing → 0 private skipped", 0, result.privateSkipped)
+    }
+
+    // ── #156 F6: private media excluded from the plaintext ZIP pack ───────────────
+
+    @Test
+    fun exportFullBackup_plaintext_packsMediaViaPrivateFilteredQuery() {
+        // The plaintext pack MUST use getReferencedMediaPaths(includePrivate=false) so private media
+        // bytes never land in the unencrypted ZIP. Assert the manager calls the FILTERED variant
+        // (false), and never the include-all variant, on the plaintext path.
+        every { clipboardDb.getReferencedMediaPaths(false) } returns emptySet()
+        every { clipboardDb.getReferencedMediaPaths(true) } returns emptySet()
+
+        val mgr = newManager()  // plaintext (no passphrase)
+        mgr.encryptionPolicy = BackupRestoreManager.EncryptionPolicy.UI_DEFAULT
+        val result = mgr.exportFullBackup(fakeUriForOutput(), prefs)
+        assertTrue(result.success)
+
+        verify(exactly = 1) { clipboardDb.getReferencedMediaPaths(false) }
+        verify(exactly = 0) { clipboardDb.getReferencedMediaPaths(true) }
+    }
+
+    @Test
+    fun exportFullBackup_encrypted_packsAllMediaViaIncludePrivateTrue() {
+        every { clipboardDb.getReferencedMediaPaths(false) } returns emptySet()
+        every { clipboardDb.getReferencedMediaPaths(true) } returns emptySet()
+
+        val mgr = BackupRestoreManager(context, shortSwipeImporter, fixedPassphraseStore("pw"))
+        mgr.encryptionPolicy = BackupRestoreManager.EncryptionPolicy.UI_DEFAULT
+        val result = mgr.exportFullBackup(fakeUriForOutput(), prefs)
+        assertTrue(result.success)
+
+        // Encrypted export packs EVERYTHING (private rows are inside the encrypted container).
+        verify(exactly = 1) { clipboardDb.getReferencedMediaPaths(true) }
+        verify(exactly = 0) { clipboardDb.getReferencedMediaPaths(false) }
+    }
+
+    // ── #156 F5: import reconciles the private-copy toolbar component ──────────────
+
+    @Test
+    fun importFullBackup_reconcilesPrivateCopyToolbarComponent() {
+        // The imported config sets clipboard_private_copy_toolbar_enabled=true; the manager must flip
+        // the manifest-disabled PrivateCopyProcessTextActivity component so the toolbar entry appears
+        // WITHOUT waiting for the user to reopen Settings (headless restore never re-enters it).
+        every { prefs.getBoolean(PrivateCopyProcessTextActivity.PREF_TOOLBAR_ENABLED, false) } returns true
+
+        val configJson = """{"preferences":{"clipboard_private_copy_toolbar_enabled":true}}"""
+        val zipBytes = buildZip(listOf(
+            BackupRestoreManager.ENTRY_MANIFEST to
+                """{"format":"cleverkeys_full_backup","format_version":1,"app_version":"1.4.0-test"}"""
+                    .toByteArray(Charsets.UTF_8),
+            BackupRestoreManager.ENTRY_CONFIG to configJson.toByteArray(Charsets.UTF_8),
+        ))
+        val mgr = newManager()
+        val result = mgr.importFullBackup(fakeUriForInput(zipBytes), prefs)
+
+        assertTrue("import should succeed: err=${result.errorMessage}", result.success)
+        // Reconcile derived from the imported pref (enabled=true) — covers the headless restore path.
+        verify(atLeast = 1) { reconcilePrivateCopyToolbarComponent(context, true) }
+    }
+
+    @Test
+    fun applySettingsImportPlan_reconcilesPrivateCopyToolbarComponent() {
+        // Same reconcile at the single-file / headless importConfig apply seam (applySettingsImportPlan).
+        every { prefs.getBoolean(PrivateCopyProcessTextActivity.PREF_TOOLBAR_ENABLED, false) } returns false
+
+        val configJson = """{"preferences":{"clipboard_private_copy_toolbar_enabled":false}}"""
+        val mgr = newManager()
+        val plan = mgr.buildSettingsImportPlan(fakeReopenableUriForInput(configJson.toByteArray(Charsets.UTF_8)), prefs)
+        mgr.applySettingsImportPlan(plan, emptySet(), ShortSwipeImportMode.REPLACE, prefs)
+
+        // enabled=false → reconciler invoked with false (covers single-file / headless importConfig).
+        verify(atLeast = 1) { reconcilePrivateCopyToolbarComponent(context, false) }
     }
 
     @Test

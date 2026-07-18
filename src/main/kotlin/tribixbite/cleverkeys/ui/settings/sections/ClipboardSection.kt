@@ -1,7 +1,5 @@
 package tribixbite.cleverkeys.ui.settings.sections
 
-import android.content.ComponentName
-import android.content.pm.PackageManager
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -349,11 +347,7 @@ internal fun SettingsActivity.ClipboardSection() {
  * load so a fresh install / restore reconciles the OS state with the persisted pref.
  */
 internal fun SettingsActivity.setPrivateCopyToolbarComponentEnabled(enabled: Boolean) {
-    val component = ComponentName(this, PrivateCopyProcessTextActivity::class.java)
-    val newState = if (enabled) {
-        PackageManager.COMPONENT_ENABLED_STATE_ENABLED
-    } else {
-        PackageManager.COMPONENT_ENABLED_STATE_DISABLED
-    }
-    packageManager.setComponentEnabledSetting(component, newState, PackageManager.DONT_KILL_APP)
+    // Delegate to the shared Context-based reconciler (single source of truth) so the Settings-load /
+    // toggle path and the backup/restore import path flip the component identically. #156 F5.
+    tribixbite.cleverkeys.reconcilePrivateCopyToolbarComponent(this, enabled)
 }
