@@ -151,35 +151,6 @@ class DictionaryManager(private val context: Context) {
     }
 
     /**
-     * Get word predictions for the given key sequence.
-     *
-     * Returns empty list if dictionary is still loading.
-     */
-    fun getPredictions(keySequence: String): List<String> {
-        val predictor = currentPredictor ?: return emptyList()
-
-        // OPTIMIZATION v3: Return empty list while dictionary is loading asynchronously
-        if (predictor.isLoading()) {
-            return emptyList()
-        }
-
-        val predictions = predictor.predictWords(keySequence).toMutableList()
-
-        // Add user words that match
-        val lowerSequence = keySequence.lowercase()
-        for (userWord in userWords) {
-            if (userWord.lowercase().startsWith(lowerSequence) && userWord !in predictions) {
-                predictions.add(0, userWord) // Add at beginning
-                if (predictions.size > 5) {
-                    predictions.removeAt(predictions.size - 1)
-                }
-            }
-        }
-
-        return predictions
-    }
-
-    /**
      * Add a word to the user dictionary for current language.
      * Uses same storage as CustomDictionarySource so words appear in Dictionary Manager.
      */

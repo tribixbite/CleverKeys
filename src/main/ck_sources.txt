@@ -22,12 +22,10 @@ ClipboardPinView.kt
 ClipboardSettingsActivity.kt
 ComposeKey.kt
 ComposeKeyData.kt
-ComprehensiveTraceAnalyzer.kt
 Config.kt
 ConfigChangeListener.kt
 ConfigPropagator.kt
 ConfigurationManager.kt
-ContinuousGestureRecognizer.kt
 ContinuousSwipeGestureRecognizer.kt
 ContractionManager.kt
 CoordinateNormalizer.kt
@@ -86,7 +84,6 @@ NeuralPerformanceStats.kt
 NeuralSettingsActivity.kt
 NeuralSwipeTypingEngine.kt
 NeuralVocabulary.kt
-NgramModel.kt
 NonScrollListView.kt
 NumberLayout.kt
 OptimizedVocabulary.kt
@@ -124,7 +121,6 @@ SwipePruner.kt
 SwipeResampler.kt
 SwipeTokenizer.kt
 SwipeTrajectoryProcessor.kt
-TemplateBrowserActivity.kt
 Theme.kt
 TrajectoryFeatureCalculator.kt
 TrajectoryObjectPool.kt
@@ -138,7 +134,6 @@ VocabularyTypes.kt
 VocabularyUtils.kt
 VoiceImeSwitcher.kt
 WindowLayoutUtils.kt
-WordGestureTemplateGenerator.kt
 WordListAdapter.kt
 WordListFragment.kt
 WordPredictor.kt
@@ -150,14 +145,10 @@ ml/SwipeMLData.kt
 ml/SwipeMLDataStore.kt
 ml/SwipeMLTrainer.kt
 onnx/BeamSearchEngine.kt
-onnx/BroadcastSupport.kt
-onnx/DecoderWrapper.kt
 onnx/EncoderWrapper.kt
 onnx/GreedySearchEngine.kt
-onnx/MemoryPool.kt
 onnx/ModelLoader.kt
 onnx/PredictionPostProcessor.kt
-onnx/SessionConfigurator.kt
 onnx/SwipePredictorOrchestrator.kt
 onnx/TensorFactory.kt
 personalization/PersonalizationEngine.kt

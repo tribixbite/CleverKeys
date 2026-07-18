@@ -74,29 +74,13 @@ class MultiLanguageManager(
             Log.i(TAG, "Loading language model: $language")
             val startTime = System.currentTimeMillis()
 
-            // ONNX Runtime environment (created once per app instance)
-            val ortEnvironment = ai.onnxruntime.OrtEnvironment.getEnvironment()
-            val modelLoader = tribixbite.cleverkeys.onnx.ModelLoader(context, ortEnvironment)
-
-            // Try to load encoder
-            val encoderPath = "models/swipe_encoder_${language}.onnx"
-            val encoder = try {
-                val result = modelLoader.loadModel(encoderPath, "encoder_$language")
-                result.session
-            } catch (e: Exception) {
-                Log.w(TAG, "Encoder not found for $language: $encoderPath", e)
-                null
-            }
-
-            // Try to load decoder
-            val decoderPath = "models/swipe_decoder_${language}.onnx"
-            val decoder = try {
-                val result = modelLoader.loadModel(decoderPath, "decoder_$language")
-                result.session
-            } catch (e: Exception) {
-                Log.w(TAG, "Decoder not found for $language: $decoderPath", e)
-                null
-            }
+            // Per-language neural models (swipe_encoder_<lang>.onnx / swipe_decoder_<lang>.onnx)
+            // do NOT exist — only the single builtin swipe_encoder_android/decoder_android pair ships.
+            // The neural swipe path is driven by SwipePredictorOrchestrator, not this manager, so
+            // there is no per-language encoder/decoder to load here. Only the per-language vocabulary
+            // (contraction mappings) is loaded below.
+            val encoder: OrtSession? = null
+            val decoder: OrtSession? = null
 
             // Load vocabulary with language-specific contractions
             // Note: Primary/secondary dictionaries are loaded via SwipePredictorOrchestrator

@@ -2,7 +2,6 @@ package tribixbite.cleverkeys
 
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
-import tribixbite.cleverkeys.onnx.MemoryPool
 
 /**
  * Pure JVM benchmark for the swipe prediction pipeline components.
@@ -12,7 +11,6 @@ import tribixbite.cleverkeys.onnx.MemoryPool
  * - VocabularyTrie: dictionary prefix lookups + allowed chars
  * - VocabularyUtils: scoring, fuzzy matching, Levenshtein distance
  * - AccentNormalizer: multilang accent stripping
- * - MemoryPool: buffer allocation for ONNX tensors
  *
  * NOTE: ONNX encoder/decoder inference requires Android native libs
  * and cannot run in pure JVM. This benchmark covers all other stages.
@@ -26,8 +24,6 @@ class PipelineBenchmarkTest {
         private const val WARMUP_ITERATIONS = 20
         private const val TARGET_SEQ_LENGTH = 32
         private const val NUM_FEATURES = 4 // x, y, dx, dy
-        private const val VOCAB_SIZE = 5000
-        private const val BEAM_WIDTH = 6
     }
 
     // =========================================================================
@@ -209,36 +205,6 @@ class PipelineBenchmarkTest {
         println("  AccentNorm:  avg=${"%.1f".format(avgUs)}µs  median=${"%.1f".format(medianUs)}µs")
 
         assertThat(medianUs).isLessThan(200.0) // < 200µs median (avg skewed by JIT warmup)
-    }
-
-    @Test
-    fun `benchmark memory pool allocation 100 swipes`() {
-        val pool = MemoryPool()
-
-        // Warm up
-        pool.initializePreallocatedBuffers(BEAM_WIDTH, 30, VOCAB_SIZE)
-        repeat(WARMUP_ITERATIONS) {
-            pool.getPreallocProbs()
-            pool.getPreallocSrcLengths()
-        }
-
-        val latencies = LongArray(NUM_SWIPES)
-        for (i in 0 until NUM_SWIPES) {
-            val start = System.nanoTime()
-            pool.getPreallocProbs()
-            pool.getPreallocSrcLengths()
-            pool.getPreallocBatchedTokens()
-            latencies[i] = System.nanoTime() - start
-        }
-
-        latencies.sort()
-        val avgUs = latencies.average() / 1000.0
-        val medianUs = latencies[NUM_SWIPES / 2] / 1000.0
-        println("  MemoryPool:  avg=${"%.1f".format(avgUs)}µs  median=${"%.1f".format(medianUs)}µs")
-
-        assertThat(avgUs).isLessThan(100.0) // < 100µs
-
-        pool.release()
     }
 
     // =========================================================================

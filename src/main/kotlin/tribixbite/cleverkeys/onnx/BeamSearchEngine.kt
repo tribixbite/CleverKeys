@@ -62,9 +62,6 @@ class BeamSearchEngine(
         private const val PRUNE_STEP_THRESHOLD = 2
         // Note: ADAPTIVE_WIDTH_STEP and SCORE_GAP_STEP are now constructor params
         // to allow user customization for long word prediction tuning
-
-        // Diversity parameters (4D: Diverse Beam Search)
-        private const val DIVERSITY_LAMBDA = 0.5f // Penalty weight for similar beams
     }
 
     data class BeamSearchCandidate(val word: String, val confidence: Float, val score: Float)
@@ -73,7 +70,6 @@ class BeamSearchEngine(
         val tokens: ArrayList<Long>,
         var score: Float, // Accumulated negative log-likelihood
         var finished: Boolean,
-        val parentBeam: BeamState? = null, // For diversity tracking (optional)
         var boostState: Int = 0, // Aho-Corasick trie state for O(1) prefix boost lookups
         var cumulativeBoost: Float = 0f // Total prefix boost applied (for capping)
     ) {
@@ -90,7 +86,6 @@ class BeamSearchEngine(
             tokens = ArrayList(other.tokens),
             score = other.score,
             finished = other.finished,
-            parentBeam = other.parentBeam,
             boostState = other.boostState,
             cumulativeBoost = other.cumulativeBoost
         )

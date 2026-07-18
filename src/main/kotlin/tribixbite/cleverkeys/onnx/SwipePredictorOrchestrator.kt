@@ -65,8 +65,7 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
     private val prefixBoostTrie = PrefixBoostTrie(context) // Language-specific prefix boosts (Aho-Corasick trie)
     private var tensorFactory: TensorFactory? = null
     private var encoderWrapper: EncoderWrapper? = null
-    private var decoderWrapper: DecoderWrapper? = null
-    
+
     // State
     @Volatile private var isInitialized = false
     @Volatile private var isModelLoaded = false
@@ -212,7 +211,7 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
                 isBuiltin = true
             )
 
-            // Use SessionConfigurator logic inside ModelLoader
+            // Session configuration (XNNPACK/NNAPI provider selection) lives inside ModelLoader.
             // Get XNNPACK thread count from config or prefs (config may not be set yet at init time)
             val xnnpackThreads = config?.onnx_xnnpack_threads
                 ?: DirectBootAwarePreferences.get_shared_preferences(context)
@@ -230,9 +229,8 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
                 // Initialize Wrappers
                 tensorFactory = TensorFactory(ortEnvironment, maxSequenceLength, TRAJECTORY_FEATURES)
                 encoderWrapper = EncoderWrapper(encoderSession!!, tensorFactory!!, ortEnvironment, enableVerboseLogging)
-                // Check broadcast support (simplified)
-                val broadcastEnabled = true // Assuming v2 models
-                decoderWrapper = DecoderWrapper(decoderSession!!, tensorFactory!!, ortEnvironment, broadcastEnabled, enableVerboseLogging)
+                // The decoder is driven directly via decoderSession (OrtDecoderSession /
+                // GreedySearchEngine) in predict(); no wrapper is needed on the decode path.
 
                 isModelLoaded = true
             }
@@ -271,7 +269,6 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
                 encoderSession = null
                 decoderSession = null
                 encoderWrapper = null
-                decoderWrapper = null
                 tensorFactory = null
                 isModelLoaded = false
             }
@@ -769,7 +766,6 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
             encoderSession = null
             decoderSession = null
             encoderWrapper = null
-            decoderWrapper = null
             tensorFactory = null
             isModelLoaded = false
             isInitialized = false // Allow re-initialization after cleanup

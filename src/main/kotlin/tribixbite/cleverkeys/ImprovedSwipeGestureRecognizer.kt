@@ -360,33 +360,19 @@ open class ImprovedSwipeGestureRecognizer {
         // Always keep first key
         filtered.add(keys[0])
         
-        // Filter middle keys - remove obvious zigzag patterns
+        // Keep all middle keys. A zigzag/noise filter based on key positions was
+        // never implemented (the old isLikelyNoise() was a no-op stub returning
+        // false, so every middle key was always retained). Preserve that behavior.
         for (i in 1 until keys.size - 1) {
-            val prev = keys[i - 1]
-            val curr = keys[i]
-            val next = keys[i + 1]
-            
-            // Skip if this creates a back-and-forth pattern
-            if (prev != next || !isLikelyNoise(prev, curr, next)) {
-                filtered.add(curr)
-            }
+            filtered.add(keys[i])
         }
-        
+
         // Always keep last key
         filtered.add(keys[keys.size - 1])
-        
+
         return filtered
     }
-    
-    /**
-     * Check if middle key is likely noise in a sequence
-     */
-    private fun isLikelyNoise(prev: KeyboardData.Key, curr: KeyboardData.Key, next: KeyboardData.Key): Boolean {
-        // This would check keyboard layout to see if curr is between prev and next
-        // For now, return false - actual implementation would use key positions
-        return false
-    }
-    
+
     /**
      * Check if the current gesture should be considered swipe typing
      */

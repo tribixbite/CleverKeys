@@ -109,43 +109,6 @@ class DictionaryManagerTest {
     }
 
     // =========================================================================
-    // Predictions tests
-    // =========================================================================
-
-    @Test
-    fun testGetPredictions() {
-        val predictions = manager.getPredictions("hel")
-        assertNotNull("Predictions should not be null", predictions)
-    }
-
-    @Test
-    fun testGetPredictionsEmptyPrefix() {
-        val predictions = manager.getPredictions("")
-        // Should handle empty prefix gracefully
-        assertNotNull(predictions)
-    }
-
-    @Test
-    fun testGetPredictionsForUnknownPrefix() {
-        val predictions = manager.getPredictions("xyzqwerty123")
-        assertNotNull(predictions)
-        // May return empty list for unknown prefix
-    }
-
-    @Test
-    fun testUserWordAppearsinPredictions() {
-        val testWord = "mytestword"
-        manager.addUserWord(testWord)
-
-        val predictions = manager.getPredictions("mytest")
-        // User word may or may not appear depending on dictionary state
-        // Just verify no crash and predictions is non-null
-        assertNotNull("Predictions should not be null", predictions)
-
-        manager.removeUserWord(testWord)
-    }
-
-    // =========================================================================
     // Clear dictionary tests
     // =========================================================================
 

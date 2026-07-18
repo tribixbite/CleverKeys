@@ -319,7 +319,6 @@ class InputCoordinator(
         val shouldCapitalize = rawPrefix.isNotEmpty() && rawPrefix[0].isUpperCase()
 
         // Cancel any running prediction task and run this one asynchronously
-        // (same pattern as updatePredictionsForCurrentWord)
         predictionTasks.cancelAndSubmit {
             if (Thread.currentThread().isInterrupted) return@cancelAndSubmit
 
@@ -585,41 +584,6 @@ class InputCoordinator(
 
         // Add word to WordPredictor for language detection
         predictionCoordinator.getWordPredictor()?.addWordToContext(word)
-    }
-
-    /**
-     * Updates predictions for the current partial word being typed.
-     * Uses contextual prediction with previous words.
-     */
-    private fun updatePredictionsForCurrentWord() {
-        if (contextTracker.getCurrentWordLength() > 0) {
-            val partial = contextTracker.getCurrentWord()
-
-            // Copy context to be thread-safe
-            val contextWords = ArrayList(contextTracker.getContextWords())
-
-            // Cancel previous task if running, then submit new prediction task
-            predictionTasks.cancelAndSubmit {
-                if (Thread.currentThread().isInterrupted) return@cancelAndSubmit
-
-                // Use contextual prediction (Heavy operation)
-                val result = predictionCoordinator.getWordPredictor()
-                    ?.predictWordsWithContext(partial, contextWords)
-
-                if (Thread.currentThread().isInterrupted || result == null) return@cancelAndSubmit
-
-                // Post result to UI thread
-                if (result.words.isNotEmpty()) {
-                    suggestionBar?.post {
-                        // Verify context hasn't changed drastically (optional, but good practice)
-                        suggestionBar?.let { bar ->
-                            bar.setShowDebugScores(config.swipe_show_debug_scores)
-                            bar.setSuggestionsWithScores(result.words, result.scores)
-                        }
-                    }
-                }
-            }
-        }
     }
 
     fun onSuggestionSelected(
@@ -977,101 +941,6 @@ class InputCoordinator(
     }
 
     /**
-     * Handle regular typing predictions (non-swipe)
-     */
-    fun handleRegularTyping(text: String, ic: InputConnection?, editorInfo: EditorInfo?) {
-        if (!config.word_prediction_enabled || predictionCoordinator.getWordPredictor() == null || suggestionBar == null) {
-            return
-        }
-
-        // Track current word being typed
-        when {
-            text.length == 1 && text[0].isLetter() -> {
-                // v1.2.6: Reset cursor sync state when user starts typing
-                // This ensures we use normal deletion (prefix only) for typed chars
-                contextTracker.resetCursorSyncState()
-
-                contextTracker.appendToCurrentWord(text)
-                updatePredictionsForCurrentWord()
-            }
-            text.length == 1 && !text[0].isLetter() -> {
-                // Any non-letter character - update context and reset current word
-
-                // If we had a word being typed, add it to context before clearing
-                if (contextTracker.getCurrentWordLength() > 0) {
-                    val completedWord = contextTracker.getCurrentWord()
-
-                    // Auto-correct the typed word if feature is enabled
-                    // DISABLED in Termux app due to erratic behavior with terminal input
-                    val inTermuxApp = try {
-                        editorInfo?.packageName == "com.termux"
-                    } catch (e: Exception) {
-                        false
-                    }
-
-                    if (config.autocorrect_enabled && text == " " && !inTermuxApp) {
-                        predictionCoordinator.getWordPredictor()?.autoCorrect(completedWord)?.let { correctedWord ->
-                            // If correction was made, replace the typed word
-                            if (correctedWord != completedWord && ic != null) {
-                                // Delete the typed word + space (already committed)
-                                ic.deleteSurroundingText(completedWord.length + 1, 0)
-
-                                // Insert the corrected word WITH trailing space (normal apps only)
-                                ic.commitText("$correctedWord ", 1)
-
-                                // Update context with corrected word
-                                updateContext(correctedWord)
-
-                                // Clear current word
-                                contextTracker.clearCurrentWord()
-
-                                // Show corrected word as first suggestion for easy undo
-                                suggestionBar?.let { bar ->
-                                    val undoSuggestions = listOf(completedWord, correctedWord)
-                                    val undoScores = listOf(0, 0)
-                                    bar.setSuggestionsWithScores(undoSuggestions, undoScores)
-                                }
-
-                                // Reset prediction state
-                                predictionCoordinator.getWordPredictor()?.reset()
-
-                                return // Skip normal text processing - we've handled everything
-                            }
-                        }
-                    }
-
-                    updateContext(completedWord)
-                }
-
-                // Reset current word
-                contextTracker.clearCurrentWord()
-                predictionCoordinator.getWordPredictor()?.reset()
-                suggestionBar?.clearSuggestions()
-            }
-            text.length > 1 -> {
-                // Multi-character input (paste, etc) - reset
-                contextTracker.clearCurrentWord()
-                predictionCoordinator.getWordPredictor()?.reset()
-                suggestionBar?.clearSuggestions()
-            }
-        }
-    }
-
-    /**
-     * Handle backspace for prediction tracking
-     */
-    fun handleBackspace() {
-        if (contextTracker.getCurrentWordLength() > 0) {
-            contextTracker.deleteLastChar()
-            if (contextTracker.getCurrentWordLength() > 0) {
-                updatePredictionsForCurrentWord()
-            } else {
-                suggestionBar?.clearSuggestions()
-            }
-        }
-    }
-
-    /**
      * Update predictions based on current partial word
      */
     fun handleDeleteLastWord(ic: InputConnection?, editorInfo: EditorInfo?) {
@@ -1201,44 +1070,6 @@ class InputCoordinator(
         // Clear tracking
         contextTracker.clearLastAutoInsertedWord()
         contextTracker.setLastCommitSource(PredictionSource.UNKNOWN)
-    }
-
-    /**
-     * Calculate dynamic keyboard height based on user settings (like calibration page)
-     * Supports orientation, foldable devices, and user height preferences
-     */
-    private fun calculateDynamicKeyboardHeight(): Float {
-        return try {
-            // Get screen dimensions
-            val metrics = android.util.DisplayMetrics()
-            val wm = context.getSystemService(Context.WINDOW_SERVICE) as android.view.WindowManager
-            wm.defaultDisplay.getMetrics(metrics)
-
-            // Check foldable state
-            val foldTracker = FoldStateTracker(context)
-            val foldableUnfolded = foldTracker.isUnfolded()
-
-            // Check orientation
-            val isLandscape = context.resources.configuration.orientation ==
-                    android.content.res.Configuration.ORIENTATION_LANDSCAPE
-
-            // Get user height preference (same logic as calibration)
-            val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
-            val key = when {
-                isLandscape && foldableUnfolded -> "keyboard_height_landscape_unfolded"
-                isLandscape -> "keyboard_height_landscape"
-                foldableUnfolded -> "keyboard_height_unfolded"
-                else -> "keyboard_height"
-            }
-            val keyboardHeightPref = prefs.getInt(key, if (isLandscape) 50 else 35)
-
-            // Calculate dynamic height
-            val keyboardHeightPercent = keyboardHeightPref / 100.0f
-            metrics.heightPixels * keyboardHeightPercent
-        } catch (e: Exception) {
-            // Fallback to view height
-            keyboardView.height.toFloat()
-        }
     }
 
     /**
