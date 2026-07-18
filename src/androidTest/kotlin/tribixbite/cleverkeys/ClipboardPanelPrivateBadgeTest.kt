@@ -82,6 +82,99 @@ class ClipboardPanelPrivateBadgeTest {
         return adapter.getView(pos, null, FrameLayout(context))
     }
 
+    /**
+     * Drive the REAL filter pipeline: inject [entries] as the view's backing `history`, run the
+     * private [applyFilter], and read back the resulting `filteredHistory`. Mirrors how the live
+     * filter dialog mutates state — exercises the actual predicate, not a re-implementation.
+     */
+    private fun filterFor(
+        entries: List<ClipboardEntry>,
+        privateOnly: Boolean,
+        search: String? = null
+    ): List<ClipboardEntry> {
+        val chv = ClipboardHistoryView(themedContext(), null)
+        setField(chv, "history", entries)
+        if (search != null) chv.setSearchFilter(search)   // sets searchFilter + applyFilter()
+        chv.setPrivateOnlyFilter(privateOnly)             // sets flag + applyFilter()
+        @Suppress("UNCHECKED_CAST")
+        return getField<List<ClipboardEntry>>(chv, "filteredHistory")!!
+    }
+
+    private val mixedEntries: List<ClipboardEntry>
+        get() = listOf(
+            ClipboardEntry("secret one", 1_000L, isPrivate = true, sourcePackage = "com.src"),
+            ClipboardEntry("public one", 2_000L, isPrivate = false),
+            ClipboardEntry("secret two", 3_000L, isPrivate = true, sourcePackage = "com.src"),
+            ClipboardEntry("public two", 4_000L, isPrivate = false)
+        )
+
+    @Test
+    fun privateOnlyFilter_showsOnlyPrivateEntries() {
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            val filtered = filterFor(mixedEntries, privateOnly = true)
+            assertEquals("only the two private entries survive", 2, filtered.size)
+            assertTrue("every surviving entry is private", filtered.all { it.isPrivate })
+            assertEquals(
+                "the private contents are the expected ones",
+                setOf("secret one", "secret two"),
+                filtered.map { it.content }.toSet()
+            )
+        }
+    }
+
+    @Test
+    fun privateOnlyFilter_off_showsAllEntries() {
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            val filtered = filterFor(mixedEntries, privateOnly = false)
+            assertEquals("with the filter off, all four entries show", 4, filtered.size)
+        }
+    }
+
+    @Test
+    fun privateOnlyFilter_composesWithSearch_asAndPredicate() {
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            // search "secret" matches both private entries and zero public ones; private-only is an
+            // additional AND that (here) doesn't further narrow — but proves both filters compose.
+            val bothSecret = filterFor(mixedEntries, privateOnly = true, search = "secret")
+            assertEquals("private AND search=secret → both private entries", 2, bothSecret.size)
+            assertTrue(bothSecret.all { it.isPrivate })
+
+            // search "one" matches "secret one" (private) + "public one" (not) — private-only must
+            // drop the public match, leaving exactly the private one. Proves the AND actually narrows.
+            val onlyPrivateOne = filterFor(mixedEntries, privateOnly = true, search = "one")
+            assertEquals("private AND search=one → just the private 'one'", 1, onlyPrivateOne.size)
+            assertEquals("secret one", onlyPrivateOne.single().content)
+        }
+    }
+
+    @Test
+    fun privateOnlyFilter_countsAsActiveFilter() {
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            val chv = ClipboardHistoryView(themedContext(), null)
+            assertFalse("no filters active by default", chv.hasActiveFilters())
+            chv.setPrivateOnlyFilter(true)
+            assertTrue("private-only on must tint the filter icon", chv.hasActiveFilters())
+            assertTrue(chv.isPrivateOnlyFilter())
+            chv.clearAllFilters()
+            assertFalse("clearAllFilters resets private-only", chv.hasActiveFilters())
+            assertFalse(chv.isPrivateOnlyFilter())
+        }
+    }
+
+    @Test
+    fun privateOnlyFilter_emptyResult_doesNotCrash() {
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            // No private entries → private-only yields an empty filtered list (empty-state renders,
+            // no stale rows). Assert the list is empty and getCount reflects it.
+            val allPublic = listOf(
+                ClipboardEntry("a", 1_000L, isPrivate = false),
+                ClipboardEntry("b", 2_000L, isPrivate = false)
+            )
+            val filtered = filterFor(allPublic, privateOnly = true)
+            assertTrue("no private entries → empty filtered list", filtered.isEmpty())
+        }
+    }
+
     @Test
     fun privateEntry_showsBadge() {
         InstrumentationRegistry.getInstrumentation().runOnMainSync {

@@ -17,6 +17,41 @@
         android:layout_height="wrap_content"
         android:padding="16dp">
 
+      <!-- ═══ Private-only Section (#156 — available on ALL tabs) ═══ -->
+      <LinearLayout
+          android:orientation="horizontal"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginBottom="4dp"
+          android:gravity="center_vertical">
+        <TextView
+            android:text="@string/clipboard_filter_private_only"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textSize="16sp"
+            android:textColor="?android:attr/textColorPrimary"/>
+        <Switch
+            android:id="@+id/filter_private_only"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="false"/>
+      </LinearLayout>
+      <TextView
+          android:text="@string/clipboard_filter_private_only_hint"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:textSize="12sp"
+          android:textColor="?android:attr/textColorSecondary"
+          android:layout_marginBottom="16dp"/>
+
+      <!-- Divider below the private-only section -->
+      <View
+          android:layout_width="match_parent"
+          android:layout_height="1dp"
+          android:layout_marginBottom="16dp"
+          android:background="?android:attr/listDivider"/>
+
       <!-- ═══ Date Section (existing, unchanged) ═══ -->
 
       <!-- Date Filter Enabled Toggle -->

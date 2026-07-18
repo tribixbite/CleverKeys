@@ -666,6 +666,10 @@ class ClipboardManager(
             R.layout.clipboard_filter_dialog, null
         )
 
+        // ─── Private-only section (#156 — all tabs) ───
+        val privateOnlySwitch = dialogView.findViewById<Switch>(R.id.filter_private_only)
+        privateOnlySwitch.isChecked = historyView.isPrivateOnlyFilter()
+
         // ─── Date section (existing logic, unchanged) ───
         val enabledSwitch = dialogView.findViewById<Switch>(R.id.date_filter_enabled)
         val beforeRadio = dialogView.findViewById<RadioButton>(R.id.date_filter_before)
@@ -797,6 +801,9 @@ class ClipboardManager(
 
         // ─── Apply button — reads all sections ───
         applyButton.setOnClickListener {
+            // Private-only filter (#156 — all tabs)
+            historyView.setPrivateOnlyFilter(privateOnlySwitch.isChecked)
+
             // Date filter
             val enabled = enabledSwitch.isChecked
             val isBefore = beforeRadio.isChecked

@@ -82,6 +82,12 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     private var statusFilterPlanned = false
     private var statusFilterCompleted = false
 
+    // #156 Private-only filter — when true, only entries with isPrivate (🔒) are shown.
+    // Available on all three tabs (COPY semantics propagate is_private to pinned/todo entries).
+    // Like the date filter, it persists across tab switches (private entries can live on any tab);
+    // it is only reset via clearAllFilters().
+    private var privateOnlyFilter = false
+
     // Pagination state
     private var currentPage = 0
     private var onPaginationChangeListener: ((needsPagination: Boolean, currentPage: Int, totalPages: Int) -> Unit)? = null
@@ -287,6 +293,11 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 }
             }
 
+            // Private-only filter (#156 — all tabs). Additional AND predicate: keep only 🔒 entries.
+            if (privateOnlyFilter && !entry.isPrivate) {
+                return@filter false
+            }
+
             // Tag filter (PINNED/TODOS tabs — when tags are selected)
             if (tagFilterSelected.isNotEmpty()) {
                 if (entry.tags.isEmpty()) {
@@ -322,7 +333,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         val hasStatusFilter = currentTab == ClipboardTab.TODOS &&
             !(statusFilterActive && statusFilterPlanned && statusFilterCompleted)
         filteredHistory = if (searchFilter.isEmpty() && !dateFilterEnabled &&
-            tagFilterSelected.isEmpty() && !hasStatusFilter) {
+            tagFilterSelected.isEmpty() && !hasStatusFilter && !privateOnlyFilter) {
             history
         } else {
             filtered
@@ -903,6 +914,17 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         applyFilter()
     }
 
+    // ─── Private-only filter methods (#156 — all tabs) ───
+
+    /** Enable/disable the private-only filter (show only 🔒 entries). */
+    fun setPrivateOnlyFilter(enabled: Boolean) {
+        privateOnlyFilter = enabled
+        applyFilter()
+    }
+
+    /** Whether the private-only filter is currently active. */
+    fun isPrivateOnlyFilter(): Boolean = privateOnlyFilter
+
     // ─── Tag filter methods ───
 
     /** Set which tags to filter by and whether to match all (AND) or any (OR) */
@@ -934,11 +956,12 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
 
     // ─── Combined filter operations ───
 
-    /** Clear all filters (date + tags + status) and reset to defaults */
+    /** Clear all filters (date + private-only + tags + status) and reset to defaults */
     fun clearAllFilters() {
         dateFilterEnabled = false
         dateFilterTimestamp = 0
         dateFilterBefore = false
+        privateOnlyFilter = false
         tagFilterSelected = emptySet()
         tagFilterMatchAll = false
         statusFilterActive = true
@@ -950,6 +973,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     /** Whether any filter is active (non-default state) — used for filter icon tinting */
     fun hasActiveFilters(): Boolean {
         if (dateFilterEnabled) return true
+        if (privateOnlyFilter) return true
         if (tagFilterSelected.isNotEmpty()) return true
         // Status filter is "active" when not at defaults (only Active checked)
         if (currentTab == ClipboardTab.TODOS) {
