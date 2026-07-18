@@ -31,6 +31,9 @@ class BackupRestoreManagerExportEndToEndTest {
     fun setUp() {
         context = ApplicationProvider.getApplicationContext()
         manager = BackupRestoreManager(context)
+        // Guarantee plaintext export regardless of a passphrase leaked by the encryption suites
+        // (shared app data survives the orchestrator's per-test processes).
+        tribixbite.cleverkeys.backup.crypto.BackupPassphraseStore(context).clear()
         tmpDir = context.cacheDir.resolve("export-test").apply { deleteRecursively(); mkdirs() }
     }
 

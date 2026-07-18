@@ -46,6 +46,13 @@ class BackupRestoreEncryptionEndToEndTest {
         tmpDir = context.cacheDir.resolve("enc-e2e").apply { deleteRecursively(); mkdirs() }
     }
 
+    @org.junit.After
+    fun tearDown() {
+        // Don't leak the stored passphrase into later suites' processes (shared app data under the
+        // orchestrator) — otherwise plaintext-export tests see CKENC output instead of plain JSON.
+        passphraseStore.clear()
+    }
+
     private fun newManager(): BackupRestoreManager =
         BackupRestoreManager(context, passphraseStore = passphraseStore)
 

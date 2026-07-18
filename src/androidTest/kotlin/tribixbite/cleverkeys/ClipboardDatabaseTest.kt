@@ -518,7 +518,7 @@ class ClipboardDatabaseTest {
         assertTrue("Should have active_entries", json!!.has("active_entries"))
         assertTrue("Should have pinned_entries", json.has("pinned_entries"))
         assertTrue("Should have todo_entries", json.has("todo_entries"))
-        assertEquals("Export version should be 4 (v4 media schema)", 4, json.getInt("export_version"))
+        assertEquals("Export version should be 5 (v5 private-copy schema)", 5, json.getInt("export_version"))
     }
 
     @Test

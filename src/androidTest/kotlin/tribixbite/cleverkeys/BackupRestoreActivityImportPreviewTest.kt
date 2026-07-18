@@ -96,9 +96,20 @@ class BackupRestoreActivityImportPreviewTest {
      */
     private fun invokeBackupHandler(name: String, activity: SettingsActivity, uri: Uri) {
         val cls = Class.forName("tribixbite.cleverkeys.ui.settings.io.SettingsBackupHandlersKt")
-        val method = cls.getDeclaredMethod(name, SettingsActivity::class.java, Uri::class.java)
+        // performConfigExport/Import gained trailing defaulted params (plaintextOptOut /
+        // retryPassphrase) in the encrypted-backup work, so match by name rather than a fixed
+        // 2-arg signature and invoke the real (non-$default) overload with the default for the extra.
+        val method = cls.declaredMethods.first { it.name == name && !it.isSynthetic }
         method.isAccessible = true
-        composeRule.runOnUiThread { method.invoke(null, activity, uri) }
+        val args: Array<Any?> = when {
+            method.parameterTypes.size >= 3 -> {
+                val extra: Any? =
+                    if (method.parameterTypes[2] == Boolean::class.javaPrimitiveType) false else null
+                arrayOf(activity, uri, extra)
+            }
+            else -> arrayOf(activity, uri)
+        }
+        composeRule.runOnUiThread { method.invoke(null, *args) }
     }
 
     @Test

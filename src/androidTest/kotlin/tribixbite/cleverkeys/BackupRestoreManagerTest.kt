@@ -28,6 +28,10 @@ class BackupRestoreManagerTest {
     fun setup() {
         context = InstrumentationRegistry.getInstrumentation().targetContext
         manager = BackupRestoreManager(context)
+        // A backup passphrase persisted by the encryption suites survives across the
+        // orchestrator's per-test processes (shared app data), which would make exportConfig
+        // emit CKENC bytes instead of the plain JSON these tests assert. Guarantee plaintext.
+        tribixbite.cleverkeys.backup.crypto.BackupPassphraseStore(context).clear()
         testPrefs = context.getSharedPreferences("backup_test_prefs", Context.MODE_PRIVATE)
         testPrefs.edit().clear().apply()
     }

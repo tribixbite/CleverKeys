@@ -759,13 +759,13 @@ class ClipboardFeatureTest {
     }
 
     // =========================================================================
-    // Export version — v4 format
+    // Export version — v5 format (private-copy schema)
     // =========================================================================
 
     @Test
-    fun export_versionIs4() {
+    fun export_versionIs5() {
         val json = db.exportToJSON()!!
-        assertEquals("Export version should be 4", 4, json.getInt("export_version"))
+        assertEquals("Export version should be 5", 5, json.getInt("export_version"))
     }
 
     @Test

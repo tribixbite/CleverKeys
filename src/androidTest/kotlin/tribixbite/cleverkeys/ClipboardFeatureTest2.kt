@@ -436,7 +436,7 @@ class ClipboardFeatureTest2 {
     fun export_emptyDatabaseReturnsValidJson() {
         val json = db.exportToJSON()!!
 
-        assertEquals(4, json.getInt("export_version"))
+        assertEquals(5, json.getInt("export_version"))
         assertTrue(json.has("export_date"))
         assertEquals(0, json.getJSONArray("active_entries").length())
         assertEquals(0, json.getJSONArray("pinned_entries").length())

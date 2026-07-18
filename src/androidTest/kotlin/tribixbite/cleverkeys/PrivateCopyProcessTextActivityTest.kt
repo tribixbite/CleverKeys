@@ -209,13 +209,22 @@ class PrivateCopyProcessTextActivityTest {
      */
     @Test
     fun overCapText_noRow_noCrash() {
-        val capBytes = Config.globalConfig().clipboard_max_item_size_kb * 1024
-        // One byte over the cap (ASCII → 1 byte/char) guarantees OVER_CAP regardless of the exact cap.
-        val oversized = "a".repeat(capBytes + 1)
-        ActivityScenario.launch<PrivateCopyProcessTextActivity>(
-            processTextIntent(oversized, readonly = false)
-        ).use { }
-        assertEquals("oversized selection must not be stored", 0, db.getActiveClipboardEntries().size)
+        // A payload just over the 512 KB-class default cap can't cross startActivity's Binder
+        // transaction (UTF-16 doubles it past the ~1 MB limit → "Failure from system"). Lower the
+        // cap so a small string is still over-cap, exercising the same OVER_CAP reject path via a
+        // legal Intent. clipboard_max_item_size_kb is the exact field the activity reads.
+        val cfg = Config.globalConfig()
+        val originalCap = cfg.clipboard_max_item_size_kb
+        cfg.clipboard_max_item_size_kb = 1
+        try {
+            val oversized = "a".repeat(2 * 1024)   // 2 KB > 1 KB cap, tiny for Binder
+            ActivityScenario.launch<PrivateCopyProcessTextActivity>(
+                processTextIntent(oversized, readonly = false)
+            ).use { }
+            assertEquals("oversized selection must not be stored", 0, db.getActiveClipboardEntries().size)
+        } finally {
+            cfg.clipboard_max_item_size_kb = originalCap
+        }
     }
 
     // ── Component gating ──────────────────────────────────────────────────────
