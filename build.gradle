@@ -423,6 +423,7 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.clipboard.PrivateCopyIntentParserTest',
     'tribixbite.cleverkeys.clipboard.PrivateCopyRateLimiterTest',
     'tribixbite.cleverkeys.clipboard.PrivateClipMergeRuleTest',
+    'tribixbite.cleverkeys.customization.PrivateCopyCommandTest',
     // SwipePrunerTest excluded: requires android.util.Log (MockK + Robolectric)
   ]
 

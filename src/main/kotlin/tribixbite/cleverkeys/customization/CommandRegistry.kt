@@ -73,6 +73,10 @@ object CommandRegistry {
         // ========== CLIPBOARD ==========
         Command("copy", "Copy", "Copy selected text to clipboard", Category.CLIPBOARD,
             keywords = listOf("copy", "clipboard", "ctrl+c")),
+        // #156: Private copy — stores the selection in CleverKeys' clipboard only, never the OS clipboard.
+        Command("copy_private", "Private Copy",
+            "Copy selection to CleverKeys only — never the system clipboard", Category.CLIPBOARD,
+            keywords = listOf("private", "copy", "clipboard", "secure", "lock")),
         Command("paste", "Paste", "Paste from clipboard", Category.CLIPBOARD,
             keywords = listOf("paste", "clipboard", "ctrl+v")),
         Command("cut", "Cut", "Cut selected text to clipboard", Category.CLIPBOARD,

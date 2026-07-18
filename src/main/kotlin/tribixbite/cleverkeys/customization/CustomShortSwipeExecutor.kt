@@ -360,6 +360,10 @@ class CustomShortSwipeExecutor(private val context: Context) {
                 "voice_typing", "voice_typing_chooser",
                 // Text action commands
                 "textAssist", "replaceText", "showTextMenu",
+                // #156: Private copy is an Editing-kind KeyValue — route through the
+                // keyboard service (Keyboard2View.executeEditingCommand → executePrivateCopy)
+                // so it reaches the same COPY_PRIVATE handling as pressing the copy_private key.
+                "copy_private",
                 // Timestamp commands
                 "timestamp_date", "timestamp_time", "timestamp_datetime",
                 "timestamp_time_seconds", "timestamp_date_short", "timestamp_date_long",
@@ -444,6 +448,14 @@ class CustomShortSwipeExecutor(private val context: Context) {
                 // Clipboard operations
                 AvailableCommand.COPY -> {
                     inputConnection.performContextMenuAction(android.R.id.copy)
+                }
+                // #156: Private copy needs keyboard-service handling (stores the selection into
+                // CleverKeys' private clipboard, never the OS clipboard). Return false so
+                // Keyboard2View.onCustomShortSwipe falls back to the copy_private KeyValue and
+                // routes to executeEditingCommand(COPY_PRIVATE) → executePrivateCopy.
+                AvailableCommand.PRIVATE_COPY -> {
+                    Log.d(TAG, "PRIVATE_COPY command - requires keyboard service handling")
+                    false
                 }
                 AvailableCommand.PASTE -> {
                     // #113: Terminal apps don't implement context menu protocol.

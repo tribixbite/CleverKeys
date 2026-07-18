@@ -719,6 +719,13 @@ class Keyboard2View @JvmOverloads constructor(
                     Log.d("Keyboard2View", "Executing SECONDARY_LANG_TOGGLE")
                     toggleSecondaryLanguage()
                 }
+                // #156: Legacy PRIVATE_COPY actionValue (SCREAMING_SNAKE) — CommandRegistry uses the
+                // "copy_private" name which already routes via the KeyValue.Kind.Editing branch above,
+                // but honor the AvailableCommand form too so both surfaces reach executePrivateCopy.
+                AvailableCommand.PRIVATE_COPY -> {
+                    Log.d("Keyboard2View", "Executing PRIVATE_COPY")
+                    executeEditingCommand(KeyValue.Editing.COPY_PRIVATE, inputConnection)
+                }
                 else -> {
                     if (command != null) {
                         Log.w("Keyboard2View", "Custom swipe command failed to execute: ${mapping.actionValue}")

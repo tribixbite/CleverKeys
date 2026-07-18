@@ -81,6 +81,12 @@ enum class AvailableCommand(
 ) {
     // Clipboard operations
     COPY("Copy", "Copy selected text to clipboard", "content_copy"),
+    // #156: Private copy — stores the selection in CleverKeys' clipboard only, never the OS clipboard.
+    PRIVATE_COPY(
+        "Private Copy",
+        "Copy selection to CleverKeys only — never the system clipboard",
+        "content_copy"
+    ),
     PASTE("Paste", "Paste from clipboard", "content_paste"),
     CUT("Cut", "Cut selected text to clipboard", "content_cut"),
     SELECT_ALL("Select All", "Select all text in field", "select_all"),
@@ -140,7 +146,7 @@ enum class AvailableCommand(
          * Get commands grouped by category for UI display.
          */
         fun groupedByCategory(): Map<String, List<AvailableCommand>> = mapOf(
-            "Clipboard" to listOf(COPY, PASTE, CUT, SELECT_ALL),
+            "Clipboard" to listOf(COPY, PRIVATE_COPY, PASTE, CUT, SELECT_ALL),
             "Edit" to listOf(UNDO, REDO),
             "Cursor" to listOf(CURSOR_LEFT, CURSOR_RIGHT, CURSOR_UP, CURSOR_DOWN),
             "Navigation" to listOf(CURSOR_HOME, CURSOR_END, CURSOR_DOC_START, CURSOR_DOC_END),
