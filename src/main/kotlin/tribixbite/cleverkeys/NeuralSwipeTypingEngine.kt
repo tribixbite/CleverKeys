@@ -123,6 +123,18 @@ class NeuralSwipeTypingEngine(
     fun getLastError(): String? = lastError
 
     /**
+     * Whether a fresh [initialize] attempt would actually run (vs. be suppressed by the retry
+     * backoff). True if not yet initialized AND either no prior failure or the backoff window
+     * has elapsed. Side-effect free — lets a caller decide whether to kick a (possibly
+     * background) retry without paying for the attempt itself.
+     */
+    fun isReadyToRetryInit(): Boolean {
+        if (initialized) return false
+        if (lastError == null) return true
+        return System.currentTimeMillis() - lastInitAttemptMs >= initRetryIntervalMs
+    }
+
+    /**
      * Main prediction method - maintains compatibility with legacy interface
      *
      * PERFORMANCE: Debug logging is gated behind verboseLoggingEnabled to avoid

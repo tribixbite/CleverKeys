@@ -160,4 +160,53 @@ class EngineInitGateTest {
         // Cleared before completion → never runs.
         assertThat(ran.get()).isEqualTo(0)
     }
+
+    // --- Re-arm support (F2): a completed gate can start a fresh attempt cycle so a persistent
+    // init failure can be retried in the background after backoff, off the main thread. ---
+
+    @Test
+    fun rearmAfterCompletionResetsCompletionAndAllowsSecondCycle() {
+        val gate = EngineInitGate()
+        gate.markAttemptComplete()
+        assertThat(gate.hasCompletedAttempt).isTrue()
+
+        // Re-arm: a new attempt is pending again, so a fresh waiter must park (not see completed).
+        assertThat(gate.rearmIfCompleted()).isTrue()
+        assertThat(gate.hasCompletedAttempt).isFalse()
+
+        // A pending action registered for the SECOND cycle must not fire until the second
+        // markAttemptComplete — proving the latch was genuinely reset, not left open.
+        val ran = AtomicInteger(0)
+        gate.setPending { ran.incrementAndGet() }
+        assertThat(ran.get()).isEqualTo(0)
+
+        gate.markAttemptComplete()
+        assertThat(ran.get()).isEqualTo(1)
+        assertThat(gate.hasCompletedAttempt).isTrue()
+    }
+
+    @Test
+    fun rearmIsNoOpWhileAttemptStillPending() {
+        val gate = EngineInitGate()
+        // Attempt not yet complete → nothing to re-arm.
+        assertThat(gate.rearmIfCompleted()).isFalse()
+        assertThat(gate.hasCompletedAttempt).isFalse()
+    }
+
+    @Test
+    fun rearmedWaiterParksUntilSecondCompletion() {
+        val gate = EngineInitGate()
+        gate.markAttemptComplete()
+        gate.rearmIfCompleted()
+
+        // A waiter on the re-armed cycle must time out while the second attempt is unfinished.
+        assertThat(gate.awaitAttempt(50, TimeUnit.MILLISECONDS)).isFalse()
+
+        Thread {
+            Thread.sleep(50)
+            gate.markAttemptComplete()
+        }.start()
+        // Then wake promptly once the second attempt completes.
+        assertThat(gate.awaitAttempt(2, TimeUnit.SECONDS)).isTrue()
+    }
 }

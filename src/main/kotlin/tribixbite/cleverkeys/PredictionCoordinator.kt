@@ -21,17 +21,36 @@ import kotlin.concurrent.thread
  * unit-testable on the JVM.
  */
 class EngineInitGate {
-    private val attemptDone = CountDownLatch(1)
+    // Replaceable so a completed gate can be re-armed for a NEW attempt cycle (e.g. after a
+    // failed init's retry backoff elapses). Read/replaced under `latchLock`; individual latch
+    // operations are themselves thread-safe.
+    @Volatile
+    private var attemptDone = CountDownLatch(1)
+    private val latchLock = Any()
     private val pending = AtomicReference<Runnable?>(null)
 
-    /** True once the (idempotent) initialization attempt has finished, regardless of outcome. */
+    /** True once the current attempt cycle has finished, regardless of outcome. */
     val hasCompletedAttempt: Boolean
         get() = attemptDone.count == 0L
 
-    /** Marks the single initialization attempt complete and flushes any pending action. Idempotent. */
+    /** Marks the current initialization attempt complete and flushes any pending action. Idempotent. */
     fun markAttemptComplete() {
         attemptDone.countDown()
         flushPending()
+    }
+
+    /**
+     * Re-arms the gate for a new attempt cycle if the previous one has completed: installs a
+     * fresh latch so new waiters park and [hasCompletedAttempt] reports false again. No-op if
+     * an attempt is already pending (latch still armed). Returns true if it re-armed.
+     */
+    fun rearmIfCompleted(): Boolean = synchronized(latchLock) {
+        if (attemptDone.count == 0L) {
+            attemptDone = CountDownLatch(1)
+            true
+        } else {
+            false
+        }
     }
 
     /** Parks the caller until the attempt completes or [timeout] elapses. Returns true if completed. */
@@ -93,13 +112,40 @@ class PredictionCoordinator(
     @Volatile
     private var asyncPredictionHandler: AsyncPredictionHandler? = null
 
+    // Engine instance retained ACROSS init attempts (published to [neuralEngine] only on
+    // success). Keeping one instance is what makes NeuralSwipeTypingEngine's per-instance
+    // retry backoff (lastInitAttemptMs/initRetryIntervalMs) actually engage: constructing a
+    // fresh engine every attempt would reset that state and defeat the retry-storm guard, so
+    // a persistent failure would otherwise run a full tokenizer/vocab/model-byte load on every
+    // swipe. Only ever touched under `synchronized(this)` alongside isInitializingNeuralEngine.
+    private var pendingEngine: NeuralSwipeTypingEngine? = null
+
     @Volatile
     private var isInitializingNeuralEngine = false // v1.32.529: Track initialization state
+
+    // Set once shutdown() runs so a background init that completes afterwards cleans up the
+    // engine it built (freshly-opened OrtSessions) instead of publishing it into a torn-down
+    // coordinator — which would leak the ONNX native sessions with nothing left to close them.
+    @Volatile
+    private var isShutdown = false
+
+    // Test-only override for the retained engine's retry-backoff interval, applied when the
+    // engine is first constructed. null in production (engine uses its own default). Lets tests
+    // drive backoff behavior deterministically without real-time delays.
+    @Volatile
+    private var neuralRetryIntervalOverrideMs: Long? = null
+
+    // Test-only: run background init on the caller's thread (deterministic, no Handler.post /
+    // Looper needed off-device). Never set in production. See setRunInitInlineForTest.
+    @Volatile
+    private var runInitInlineForTest = false
 
     // One-shot gate for background neural-engine init: lets callers park (no busy-wait) or
     // register a non-blocking continuation that fires when the attempt finishes.
     private val engineInitGate = EngineInitGate()
-    private val mainHandler = Handler(Looper.getMainLooper())
+    // Lazy so the coordinator can be constructed off-device (unit tests) without a real Looper;
+    // only materialized when a continuation is actually posted.
+    private val mainHandler by lazy { Handler(Looper.getMainLooper()) }
 
     // Supporting services
     private var mlDataStore: SwipeMLDataStore? = null
@@ -224,43 +270,83 @@ class PredictionCoordinator(
 
     /**
      * Initializes neural engine for swipe typing.
-     * OPTIMIZATION v1.32.529: Removed synchronized as it's now protected by double-checked locking
-     * in ensureNeuralEngineReady and initialize
+     *
+     * Retains a single [NeuralSwipeTypingEngine] instance across attempts (in [pendingEngine])
+     * and re-drives its [NeuralSwipeTypingEngine.initialize], which owns the retry backoff. On
+     * a persistent failure the re-attempt short-circuits inside the engine (cheap, no model
+     * load) until the backoff window elapses — so this method stays cheap even when called
+     * synchronously per swipe via [ensureInitialized].
+     *
+     * OPTIMIZATION v1.32.529: Removed synchronized as it's now protected by double-checked
+     * locking in [runWhenNeuralEngineReady]/[initialize].
      */
     private fun initializeNeuralEngine() {
-        // Skip if already initialized or initializing
-        if (neuralEngine != null || isInitializingNeuralEngine) {
-            return
+        // Atomically claim the single in-flight init slot: skip if already published or another
+        // attempt is running. Doing the check-and-set under the monitor closes the double-spawn
+        // window (two callers both seeing isInitializingNeuralEngine == false).
+        synchronized(this) {
+            if (neuralEngine != null || isInitializingNeuralEngine) {
+                return
+            }
+            isInitializingNeuralEngine = true
         }
 
         try {
-            isInitializingNeuralEngine = true
-            val engine = NeuralSwipeTypingEngine(context, config)
+            // Reuse the retained engine so its per-instance retry backoff persists across
+            // attempts; construct it only the first time.
+            val engine = pendingEngine ?: NeuralSwipeTypingEngine(context, config).also {
+                neuralRetryIntervalOverrideMs?.let { ms -> it.initRetryIntervalMs = ms }
+                pendingEngine = it
+            }
 
-            // Set debug logger before initialization so logs appear during model loading
+            // Set debug logger before initialization so logs appear during model loading.
+            // Idempotent, safe to re-apply on retries.
             debugLogger?.let {
                 engine.setDebugLogger(it)
                 Log.d(TAG, "Debug logger set on neural engine")
             }
 
-            // CRITICAL: Call initialize() to actually load the ONNX models
+            // CRITICAL: Call initialize() to actually load the ONNX models. On a prior failure
+            // still inside the backoff window this returns false WITHOUT re-loading the model.
             val success = engine.initialize()
             if (!success) {
-                Log.e(TAG, "Neural engine initialization returned false")
-                neuralEngine = null
-                asyncPredictionHandler = null
+                Log.e(TAG, "Neural engine initialization returned false (will retry after backoff)")
+                // Keep pendingEngine so the backoff state survives; do NOT publish.
                 return
             }
 
-            neuralEngine = engine
+            // Publish-or-cleanup decision must be atomic w.r.t. shutdown(): both read/write
+            // isShutdown + neuralEngine under `synchronized(this)` so a shutdown that runs
+            // concurrently can't slip between the check and the publish (which would leak the
+            // engine's freshly-opened OrtSessions with nothing left to close them).
+            val handler: AsyncPredictionHandler? = synchronized(this) {
+                if (isShutdown) {
+                    null // fall through to cleanup below
+                } else {
+                    neuralEngine = engine
+                    pendingEngine = null
+                    // Construct the handler under the lock so shutdown() observes it and can
+                    // shut it down (avoids a leaked handler thread).
+                    AsyncPredictionHandler(engine, context).also { asyncPredictionHandler = it }
+                }
+            }
 
-            // Initialize async prediction handler with context for performance stats
-            asyncPredictionHandler = AsyncPredictionHandler(engine, context)
+            if (handler == null) {
+                // Torn down while this (possibly background) attempt ran — clean up instead of
+                // publishing so the ONNX sessions are released.
+                Log.d(TAG, "Neural engine ready after shutdown — cleaning up instead of publishing")
+                try {
+                    engine.cleanup()
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error cleaning up post-shutdown neural engine", e)
+                }
+                return
+            }
 
             Log.d(TAG, "NeuralSwipeTypingEngine initialized successfully")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to initialize neural engine", e)
-            neuralEngine = null
+            // Retain pendingEngine (backoff state) but never publish a partially-built engine.
             asyncPredictionHandler = null
         } finally {
             isInitializingNeuralEngine = false
@@ -271,44 +357,17 @@ class PredictionCoordinator(
     }
 
     /**
-     * Ensures neural engine is initialized before use.
-     * OPTIMIZATION v1.32.529: Double-checked locking to prevent Main Thread blocking
-     * This allows check to be fast if already initialized, without acquiring lock.
-     * FIX v1.32.530: Wait for background initialization if in progress, with timeout
-     */
-    fun ensureNeuralEngineReady() {
-        if (!config.swipe_typing_enabled) return
-
-        // Fast path: already initialized
-        if (neuralEngine != null) return
-
-        // If background thread is initializing, park on the gate (no busy-wait) until the
-        // attempt completes, up to 5 seconds.
-        if (isInitializingNeuralEngine) {
-            Log.d(TAG, "Waiting for background ONNX initialization to complete...")
-            val completed = engineInitGate.awaitAttempt(5, TimeUnit.SECONDS)
-            if (!completed) {
-                Log.w(TAG, "Timeout waiting for ONNX initialization (5000ms)")
-            }
-            if (neuralEngine != null) return
-        }
-
-        // Fallback: synchronous initialization if not started or timed out
-        synchronized(this) {
-            if (neuralEngine == null && !isInitializingNeuralEngine) {
-                Log.d(TAG, "Lazy-loading neural engine on first swipe...")
-                initializeNeuralEngine()
-            }
-        }
-    }
-
-    /**
-     * Non-blocking counterpart to [ensureNeuralEngineReady]: never parks the caller's thread.
+     * Runs [action] once the neural engine is (or is confirmed not) ready — never parks the
+     * caller's thread, so it is safe to call from the UI thread on swipe end.
      *
      * Invokes [action] with true if the neural engine is ready, false otherwise. If the engine
      * is already available (or swipe typing is disabled) the action runs synchronously; otherwise
-     * a background init is kicked off (if not already running) and [action] is posted to the main
-     * thread once the single init attempt completes.
+     * a background init is kicked off (if eligible) and [action] is posted to the main thread once
+     * the attempt completes.
+     *
+     * On a PERSISTENT init failure the model load stays off the main thread: after the retry
+     * backoff (owned by [NeuralSwipeTypingEngine]) elapses, the gate is re-armed and a fresh
+     * background attempt is kicked — the caller never triggers a synchronous full model load.
      *
      * @param action callback receiving whether the neural engine is ready
      */
@@ -325,18 +384,50 @@ class PredictionCoordinator(
             return
         }
 
-        // Register the continuation to fire (on the main thread) when the attempt completes.
-        engineInitGate.setPending {
-            mainHandler.post { action(neuralEngine != null) }
-        }
-
-        // Kick off a single background init if none is running and none has completed yet.
+        // Kick off (or re-kick) a single background init if eligible. Guard so exactly one
+        // attempt cycle is in flight, and only re-arm/retry once the engine's backoff allows.
         synchronized(this) {
-            if (neuralEngine == null && !isInitializingNeuralEngine && !engineInitGate.hasCompletedAttempt) {
-                thread(name = "NeuralEngineInit") {
-                    initializeNeuralEngine()
+            if (neuralEngine == null && !isInitializingNeuralEngine && !isShutdown) {
+                val firstAttempt = !engineInitGate.hasCompletedAttempt
+                // Re-attempt only if the retained engine's backoff window has elapsed (or no
+                // attempt has run yet). isReadyToRetryInit() is side-effect free.
+                val backoffElapsed = pendingEngine?.isReadyToRetryInit() ?: true
+                if (firstAttempt || backoffElapsed) {
+                    // Re-arm a completed gate so this new attempt's waiters/continuation see a
+                    // fresh cycle; no-op on the very first attempt (gate not yet completed).
+                    engineInitGate.rearmIfCompleted()
+                    // Register the continuation to fire (on the main thread) when THIS attempt
+                    // completes. Registered under the lock, before the attempt can complete.
+                    // Tests run inline and dispatch the continuation directly (no Handler/Looper).
+                    engineInitGate.setPending {
+                        if (runInitInlineForTest) {
+                            action(neuralEngine != null)
+                        } else {
+                            mainHandler.post { action(neuralEngine != null) }
+                        }
+                    }
+                    if (runInitInlineForTest) {
+                        // Deterministic path for unit tests: run on the caller's thread.
+                        initializeNeuralEngine()
+                    } else {
+                        thread(name = "NeuralEngineInit") {
+                            initializeNeuralEngine()
+                        }
+                    }
+                    return
                 }
             }
+        }
+
+        // Not eligible to (re)attempt right now — either an attempt is already running (park the
+        // continuation on it) or we are inside the backoff window (report not-ready immediately
+        // rather than spin up a doomed attempt).
+        if (isInitializingNeuralEngine) {
+            engineInitGate.setPending {
+                mainHandler.post { action(neuralEngine != null) }
+            }
+        } else {
+            action(false)
         }
     }
 
@@ -376,8 +467,15 @@ class PredictionCoordinator(
             initializePiiComponents()
         }
 
-        if (config.swipe_typing_enabled && neuralEngine == null) {
-            initializeNeuralEngine()
+        // Neural engine: only (re)attempt when eligible. On a persistent failure the retained
+        // engine's backoff makes initializeNeuralEngine() a cheap no-op inside the window; the
+        // explicit isReadyToRetryInit() guard avoids even that roundtrip and, crucially, keeps a
+        // full model-load from being re-driven synchronously on the main thread per swipe.
+        if (config.swipe_typing_enabled && neuralEngine == null && !isShutdown) {
+            val eligible = pendingEngine?.isReadyToRetryInit() ?: true
+            if (eligible) {
+                initializeNeuralEngine()
+            }
         }
     }
 
@@ -543,26 +641,49 @@ class PredictionCoordinator(
      * Should be called during keyboard shutdown.
      */
     fun shutdown() {
-        // Shutdown async prediction handler
-        asyncPredictionHandler?.let {
-            it.shutdown()
+        // Mark shutdown FIRST (before the lock) so an in-flight background init observes it on
+        // its fast @Volatile check and stops early. The publish-vs-cleanup decision inside
+        // initializeNeuralEngine and the field teardown here BOTH run under `synchronized(this)`,
+        // so a racing init can't slip between checking isShutdown and publishing its engine —
+        // whichever wins the monitor either publishes-then-gets-cleaned-here, or sees isShutdown
+        // and cleans up its own engine. Either way no OrtSession leaks.
+        isShutdown = true
+
+        // Snapshot + clear the engine references under the lock so the init thread and this
+        // teardown agree on exactly one owner of each engine.
+        val (engineToClose, pendingToClose, handlerToShut) = synchronized(this) {
+            val e = neuralEngine
+            val p = pendingEngine
+            val h = asyncPredictionHandler
+            neuralEngine = null
+            pendingEngine = null
             asyncPredictionHandler = null
+            Triple(e, p, h)
         }
+
+        // Shutdown async prediction handler
+        handlerToShut?.shutdown()
 
         // Stop observing dictionary changes
         wordPredictor?.stopObservingDictionaryChanges()
 
-        // Clean up ONNX native resources (OrtSessions) explicitly — GC alone is unreliable
+        // Clean up ONNX native resources (OrtSessions) explicitly — GC alone is unreliable.
+        // Cover both the published engine and any retained-but-unpublished one (a failed/racing
+        // init may have left an engine in pendingEngine with open sessions).
         try {
-            neuralEngine?.cleanup()
+            engineToClose?.cleanup()
         } catch (e: Exception) {
             Log.e(TAG, "Error cleaning up neural engine", e)
+        }
+        try {
+            pendingToClose?.cleanup()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error cleaning up pending neural engine", e)
         }
 
         // Clean up all predictor instances held by DictionaryManager
         dictionaryManager?.cleanup()
 
-        neuralEngine = null
         wordPredictor = null
         dictionaryManager = null
 
@@ -570,6 +691,24 @@ class PredictionCoordinator(
         engineInitGate.clearPending()
 
         Log.d(TAG, "PredictionCoordinator shutdown complete")
+    }
+
+    /**
+     * TEST-ONLY: override the retained neural engine's retry-backoff interval, applied when the
+     * engine is first constructed. Must be called before the first init attempt. Not used in
+     * production (the engine keeps its own default).
+     */
+    internal fun setNeuralRetryIntervalForTest(intervalMs: Long) {
+        neuralRetryIntervalOverrideMs = intervalMs
+    }
+
+    /**
+     * TEST-ONLY: run background neural init inline on the caller's thread (avoids Handler.post /
+     * a real Looper off-device and makes the [runWhenNeuralEngineReady] flow deterministic).
+     * Not used in production.
+     */
+    internal fun setRunInitInlineForTest(enabled: Boolean) {
+        runInitInlineForTest = enabled
     }
 
     /**

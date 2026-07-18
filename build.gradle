@@ -479,6 +479,8 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.autocorrect.AutoCorrectEndToEndTest',
     // Audit remediation (2026-07-17) — new MockK tests
     'tribixbite.cleverkeys.NeuralSwipeTypingEngineInitRetryTest',
+    'tribixbite.cleverkeys.PredictionCoordinatorNeuralLifecycleTest',
+    'tribixbite.cleverkeys.InputCoordinatorReplayGuardTest',
     'tribixbite.cleverkeys.CleanupHandlerTeardownTest',
     'tribixbite.cleverkeys.AutocapitalisationCallbackDedupeTest',
     'tribixbite.cleverkeys.ClipboardMediaManagerZipSlipTest',

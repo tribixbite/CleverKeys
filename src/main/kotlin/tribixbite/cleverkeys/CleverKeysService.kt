@@ -438,6 +438,11 @@ class CleverKeysService : InputMethodService(),
         // This enables prediction selection/insertion logs to appear in SwipeDebugActivity
         _inputCoordinator.setDebugLogger { message -> _debugLoggingManager.sendDebugLog(message) }
 
+        // Provide the LIVE input connection/editor so the cold-start swipe replay can drop a
+        // deferred commit when the focused field has changed since the swipe (avoids writing
+        // into a stale/other field). Reads the service's current values at call time.
+        _inputCoordinator.setCurrentInputProvider { currentInputConnection to currentInputEditorInfo }
+
         // Initialize propagators (v1.32.396: extracted propagator initialization)
         // Creates and registers DebugModePropagator, builds ConfigPropagator with all managers
         val propagators = PropagatorInitializer.create(

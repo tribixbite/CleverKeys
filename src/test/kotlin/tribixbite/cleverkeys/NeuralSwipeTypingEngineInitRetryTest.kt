@@ -131,4 +131,67 @@ class NeuralSwipeTypingEngineInitRetryTest {
 
         verify(exactly = 2) { predictor.initialize() }
     }
+
+    // --- isReadyToRetryInit() (F2): the side-effect-free predicate PredictionCoordinator uses
+    // to decide whether a (re)attempt would actually run vs. be suppressed by the backoff. ---
+
+    @Test
+    fun `isReadyToRetryInit true before any attempt`() {
+        val engine = newEngine()
+        assertThat(engine.isReadyToRetryInit()).isTrue()
+    }
+
+    @Test
+    fun `isReadyToRetryInit false inside backoff window after failure`() {
+        every { predictor.initialize() } returns false
+        val engine = newEngine(retryIntervalMs = 60_000L)
+
+        assertThat(engine.initialize()).isFalse()
+        // Still inside the (huge) backoff window → not ready to retry, and a call would be
+        // suppressed without touching the predictor.
+        assertThat(engine.isReadyToRetryInit()).isFalse()
+        assertThat(engine.initialize()).isFalse()
+        verify(exactly = 1) { predictor.initialize() }
+    }
+
+    @Test
+    fun `isReadyToRetryInit true once backoff window elapses`() {
+        every { predictor.initialize() } returns false
+        // Zero interval → the window is immediately elapsed after a failure.
+        val engine = newEngine(retryIntervalMs = 0L)
+
+        assertThat(engine.initialize()).isFalse()
+        assertThat(engine.isReadyToRetryInit()).isTrue()
+    }
+
+    @Test
+    fun `isReadyToRetryInit false once initialized`() {
+        every { predictor.initialize() } returns true
+        val engine = newEngine()
+
+        assertThat(engine.initialize()).isTrue()
+        // Already initialized → never a candidate for retry.
+        assertThat(engine.isReadyToRetryInit()).isFalse()
+    }
+
+    /**
+     * F2 core: the retry backoff is state carried by ONE engine instance. This is exactly the
+     * property PredictionCoordinator now relies on by retaining a single engine across attempts.
+     * If the coordinator (or anything) built a fresh engine per attempt, this shared-state
+     * backoff would reset and the second back-to-back attempt would re-run — the very
+     * retry-storm the backoff exists to prevent. Here we prove that a SECOND attempt on the SAME
+     * instance, within the window, is suppressed.
+     */
+    @Test
+    fun `backoff state persists across attempts on a retained instance`() {
+        every { predictor.initialize() } returns false
+        val engine = newEngine(retryIntervalMs = 60_000L)
+
+        // Two attempts on the same retained instance within the window.
+        assertThat(engine.initialize()).isFalse()
+        assertThat(engine.initialize()).isFalse()
+
+        // Only the first actually drove the predictor; the second was skipped by backoff.
+        verify(exactly = 1) { predictor.initialize() }
+    }
 }

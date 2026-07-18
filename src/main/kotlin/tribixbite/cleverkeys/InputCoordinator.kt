@@ -99,6 +99,27 @@ class InputCoordinator(
          * Includes "I" and all its contractions.
          */
         private val I_WORDS = setOf("i", "i'm", "i'll", "i'd", "i've")
+
+        /**
+         * Pure identity check for the cold-start swipe replay guard (F4), extracted so it is
+         * unit-testable without constructing an [InputCoordinator].
+         *
+         * The replay may run seconds after the swipe; if the input field changed in the meantime
+         * the framework hands out a NEW [InputConnection] and [EditorInfo], so reference identity
+         * against the live pair reliably detects staleness. When the live pair is unavailable
+         * ([hasLiveInput] false — e.g. no provider wired) we fall back to only requiring the
+         * captured connection to be non-null (best-effort defensive guard).
+         */
+        internal fun isReplayInputStillCurrent(
+            capturedIc: InputConnection?,
+            capturedEditor: EditorInfo?,
+            liveIc: InputConnection?,
+            liveEditor: EditorInfo?,
+            hasLiveInput: Boolean
+        ): Boolean {
+            if (!hasLiveInput) return capturedIc != null
+            return capturedIc != null && capturedIc === liveIc && capturedEditor === liveEditor
+        }
     }
 
     /**
@@ -136,6 +157,26 @@ class InputCoordinator(
      */
     fun setDebugLogger(logger: ((String) -> Unit)?) {
         debugLogger = logger
+    }
+
+    /**
+     * Supplies the CURRENTLY-active input connection + editor info (i.e.
+     * `InputMethodService.currentInputConnection` / `currentInputEditorInfo` at call time).
+     *
+     * Used by the cold-start swipe replay to detect that the input field changed between the
+     * swipe and the (possibly seconds-later) engine-ready callback, so the replay does not
+     * commit text into a stale/other field. Optional — if unset the replay falls back to a
+     * best-effort guard on the captured references only.
+     */
+    fun interface CurrentInputProvider {
+        fun current(): Pair<InputConnection?, EditorInfo?>
+    }
+
+    private var currentInputProvider: CurrentInputProvider? = null
+
+    /** Wires the live-input provider (see [CurrentInputProvider]); set by the service. */
+    fun setCurrentInputProvider(provider: CurrentInputProvider?) {
+        currentInputProvider = provider
     }
 
     // Swipe ML data collection
@@ -1201,6 +1242,30 @@ class InputCoordinator(
     }
 
     /**
+     * Whether the input captured at swipe time is still the field that would receive text now,
+     * used to decide if a deferred cold-start swipe replay may safely commit.
+     *
+     * When a [CurrentInputProvider] is wired (production), compares the captured connection AND
+     * editor info against the live ones by reference identity — an input-field switch replaces
+     * both, so a mismatch means the target moved. Without a provider (e.g. some unit contexts),
+     * falls back to a best-effort check that the captured connection is at least non-null.
+     */
+    private fun isReplayInputStillCurrent(
+        capturedIc: InputConnection?,
+        capturedEditor: EditorInfo?
+    ): Boolean {
+        val provider = currentInputProvider
+        val live = provider?.current()
+        return isReplayInputStillCurrent(
+            capturedIc = capturedIc,
+            capturedEditor = capturedEditor,
+            liveIc = live?.first,
+            liveEditor = live?.second,
+            hasLiveInput = provider != null
+        )
+    }
+
+    /**
      * Handle swipe typing gesture completion.
      * @param wasShiftActive v1.32.926: True if shift was latched (single tap) - capitalize first letter
      * @param wasShiftLocked v1.33.8: True if shift was locked (caps lock) - uppercase entire word
@@ -1233,10 +1298,19 @@ class InputCoordinator(
         // performSwipeTyping directly, so there is no re-enqueue loop.
         if (config.swipe_typing_enabled && predictionCoordinator.getNeuralEngine() == null) {
             predictionCoordinator.runWhenNeuralEngineReady { _ ->
-                performSwipeTyping(
-                    swipedKeys, swipePath, timestamps, ic, editorInfo, resources,
-                    wasShiftActive, wasShiftLocked
-                )
+                // The replay fires after init settles (possibly seconds later). Guard against the
+                // input field having changed in the meantime — committing this swipe's word into a
+                // now-different field (or a closed connection) would corrupt unrelated text.
+                if (isReplayInputStillCurrent(ic, editorInfo)) {
+                    performSwipeTyping(
+                        swipedKeys, swipePath, timestamps, ic, editorInfo, resources,
+                        wasShiftActive, wasShiftLocked
+                    )
+                } else {
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                        android.util.Log.d(TAG, "Dropping cold-start swipe replay: input field changed since swipe")
+                    }
+                }
             }
             return
         }
