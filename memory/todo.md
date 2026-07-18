@@ -1,5 +1,36 @@
 # CleverKeys TODO
 
+## ✅ Private-copy audit + remediation re-eval + grade-A push (2026-07-18)
+Big multi-agent session (Fable audits/reviews/planning, Opus implementation). 16 commits.
+- **#156 private-copy audit** (workflow code-review, 8 finder angles + verify): fixed a HIGH cut-leak
+  (inline-edit CUT of a private entry bypassed the confirm gate, `ClipboardHistoryView.cutFromEditText`),
+  rate-limiter backward-clock jam, `storeClip` cold-start NPE, silent over-cap feedback, DRY IME dispatch
+  (`clipboard/PrivateCopyDispatch`), extra-keys binding — commit 1db22cd6b. Plus the design-vs-impl gap:
+  `copy_private` was never wired into the command layer (624725d9b) and had no wiki docs (91ecf6d54).
+- **Private-copy follow-ups**: 'Private only' filter across all tabs (2249dac0f); backup export
+  private-data fixes — silent full-backup private loss, private media in plaintext ZIP, import component
+  reconciliation, double passphrase resolution (dae96408b).
+- **Fable remediation re-eval** (7/8 commits SOLID, crypto hand-verified): found + fixed F1 headless
+  plaintext-import TOCTOU/fail-open (649441968), and F2/F3/F4 neural init-retry-backoff-never-engaged +
+  post-shutdown session leak + stale-IC replay (2352989f1).
+- **Grade-A batch** (roadmap docs/audit/2026-07-18-grade-a-roadmap.md): Turkish-i key mislocation,
+  moveCursorSel guard, supportsRtl, PII log gating (de097df8a); ~4,120 LOC verified-dead-code deletion
+  (de097df8a + 4c3d7ab72); Python dictionary-pipeline integrity — spell-oracle fail-loud, V2 truncation,
+  reproducible langpack ZIPs (457a30d3b); eng-practices — lint gate abortOnError=true + baseline regen,
+  versionCode overflow guard, AutoSpaceLogicTest→real seam, CI dedup (b7dfd5279).
+- **TalkBack accessibility** (the audit's #1 grade lever, UI a11y 1/10): ExploreByTouchHelper virtual
+  view tree, pure geometry + labeller (22 pure tests), ACTION_CLICK via Pointers for modifier latching,
+  removed dead sticky_keys/voice_guidance toggles — commit 73315ece6. Plan: docs/audit/2026-07-18-accessibility-implementation-plan.md.
+- **ew-cli full run**: 1395/1405, 10 failures ALL pre-existing test-drift (V4→V5 asserts, a leaked
+  backup passphrase making later exports encrypt, reflection signature drift, a >512KB payload over the
+  Binder limit) — zero production regressions; fixed in 11988e519. Second ew-cli validating a11y +
+  fixes in progress.
+- **DEFERRED to reach A** (honest ceiling this session ≈ B+): pipeline unification (needs instrumented
+  oracle + soak), R8 re-enable (device soak + reflection-keep audit), git-history rewrite (18.4 GiB,
+  gated on F-Droid publish of v1.5.0), architecture strangler (ConfigSnapshot, package reorg). Also
+  smaller: WP5 scope-cancel, WP6 SuggestionBar perf, WP8 i18n/theming.
+- **User rule recorded** (memory): Opus 4.8 subagents for code implementation, Fable for audits/reviews/planning.
+
 ## ✅ Encrypted backups SHIPPED (2026-07-17, commit 1114bb749) → docs/audit/remediation-plans/security-backup-encryption.md
 Closes the exported-BackupRestoreActivity exfil/injection vector (audit #2) WITHOUT breaking
 Termux `am start` automation — backups are AES-256-GCM encrypted so an attacker triggering an
