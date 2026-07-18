@@ -35,6 +35,27 @@ from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).parent
 
+# ZIP epoch for reproducible output. zipfile pulls the filesystem mtime when you
+# call ZipFile.write(path), so the same inputs produce byte-differing archives on
+# every rebuild. We instead pin every entry's timestamp to the DOS/ZIP epoch
+# (the earliest value the ZIP format can represent) so the archive is a pure
+# function of its file contents. (year, month, day, hour, minute, second)
+ZIP_EPOCH = (1980, 1, 1, 0, 0, 0)
+
+
+def _add_deterministic(zf: zipfile.ZipFile, arcname: str, data: bytes) -> None:
+    """Add one entry with a fixed timestamp so rebuilds are byte-identical.
+
+    Uses writestr() with a hand-built ZipInfo (fixed date_time, explicit
+    DEFLATE, standard 0o644 external attrs) rather than write(path), which would
+    embed the source file's mtime. Callers must add entries in a deterministic
+    (sorted) order for the whole archive to be reproducible.
+    """
+    info = zipfile.ZipInfo(filename=arcname, date_time=ZIP_EPOCH)
+    info.compress_type = zipfile.ZIP_DEFLATED
+    info.external_attr = 0o644 << 16  # -rw-r--r-- regular file permissions
+    zf.writestr(info, data)
+
 
 def run_build_dictionary(lang: str, input_file: Path, output_file: Path, use_wordfreq: bool) -> bool:
     """Run build_dictionary.py to generate dictionary.bin."""
@@ -187,28 +208,35 @@ def build_langpack(
         # Look for contractions file in assets
         contractions_file = SCRIPT_DIR.parent / f"src/main/assets/dictionaries/contractions_{lang}.json"
 
-        # Create ZIP
+        # Collect entries as (arcname -> bytes) so the archive is a pure
+        # function of file CONTENTS, independent of source mtimes/paths.
+        entries: dict[str, bytes] = {
+            "manifest.json": manifest_file.read_bytes(),
+            "dictionary.bin": final_dict.read_bytes(),
+        }
+        if final_unigrams and final_unigrams.exists():
+            entries["unigrams.txt"] = final_unigrams.read_bytes()
+            print(f"  + unigrams.txt")
+        if contractions_file.exists():
+            # Check if contractions file has content (not just "{}")
+            with open(contractions_file, 'r') as cf:
+                content = cf.read().strip()
+                if content and content != "{}":
+                    entries["contractions.json"] = contractions_file.read_bytes()
+                    print(f"  + contractions.json")
+                else:
+                    print(f"  (no contractions - language doesn't use apostrophes)")
+        # Include prefix boost trie (for non-English languages)
+        if has_prefix_boost and prefix_boost_file.exists():
+            entries["prefix_boost.bin"] = prefix_boost_file.read_bytes()
+            boost_size = prefix_boost_file.stat().st_size / 1024
+            print(f"  + prefix_boost.bin ({boost_size:.1f} KB)")
+
+        # Create ZIP deterministically: fixed per-entry timestamp + sorted order.
         print(f"\n=== Creating {output} ===")
-        with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED) as zf:
-            zf.write(manifest_file, "manifest.json")
-            zf.write(final_dict, "dictionary.bin")
-            if final_unigrams and final_unigrams.exists():
-                zf.write(final_unigrams, "unigrams.txt")
-                print(f"  + unigrams.txt")
-            if contractions_file.exists():
-                # Check if contractions file has content (not just "{}")
-                with open(contractions_file, 'r') as cf:
-                    content = cf.read().strip()
-                    if content and content != "{}":
-                        zf.write(contractions_file, "contractions.json")
-                        print(f"  + contractions.json")
-                    else:
-                        print(f"  (no contractions - language doesn't use apostrophes)")
-            # Include prefix boost trie (for non-English languages)
-            if has_prefix_boost and prefix_boost_file.exists():
-                zf.write(prefix_boost_file, "prefix_boost.bin")
-                boost_size = prefix_boost_file.stat().st_size / 1024
-                print(f"  + prefix_boost.bin ({boost_size:.1f} KB)")
+        with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED, compresslevel=6) as zf:
+            for arcname in sorted(entries):
+                _add_deterministic(zf, arcname, entries[arcname])
 
         # Print summary
         zip_size = output.stat().st_size

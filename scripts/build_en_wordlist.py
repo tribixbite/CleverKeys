@@ -108,23 +108,79 @@ def read_list_file(path: Path) -> set[str]:
 
 def hunspell_accepted(tokens: list[str], transform) -> set[str]:
     """Run hunspell -G (echo ACCEPTED) over transformed tokens; return the
-    lowercase originals that were accepted."""
+    lowercase originals that were accepted.
+
+    FAIL LOUD like aspell_accepted: hunspell feeds the primary `hun_lower`
+    oracle, so a silently-empty result (missing binary / dictionary) would
+    mark nothing spell-valid and cascade into over-aggressive drops. Abort the
+    build if hunspell can't run rather than shipping a mis-filtered dict.
+    """
+    if not tokens:
+        return set()
     mapped = [transform(t) for t in tokens]
-    proc = subprocess.run(
-        ["hunspell", "-d", "en_US", "-G"],
-        input="\n".join(mapped), capture_output=True, text=True,
-    )
+    try:
+        proc = subprocess.run(
+            ["hunspell", "-d", "en_US", "-G"],
+            input="\n".join(mapped), capture_output=True, text=True,
+            timeout=600,
+        )
+    except FileNotFoundError as exc:
+        sys.exit(f"hunspell oracle: binary not found ({exc}). Install hunspell + "
+                 f"hunspell-en dictionary before building the dict.")
+    except subprocess.TimeoutExpired:
+        sys.exit(f"hunspell oracle: timed out on {len(tokens)} tokens. Aborting.")
+    if proc.returncode != 0:
+        sys.exit(f"hunspell oracle: exited {proc.returncode}. "
+                 f"stderr: {proc.stderr.strip()!r}. Aborting.")
     accepted = {line.strip().lower() for line in proc.stdout.splitlines() if line.strip()}
+    # -G echoes every accepted word, so a large candidate stream that yields
+    # ZERO acceptances means hunspell did not run / had no dictionary loaded.
+    if not accepted and len(tokens) >= 100:
+        sys.exit(f"hunspell oracle: accepted 0 of {len(tokens)} tokens (no "
+                 f"parseable output). hunspell likely ran without a dictionary; "
+                 f"aborting rather than under-filtering.")
     return {t for t, m in zip(tokens, mapped) if m.lower() in accepted}
 
 
 def aspell_accepted(tokens: list[str], lang: str = "en_GB") -> set[str]:
-    """aspell list prints MISSPELLED tokens; accepted = complement."""
-    proc = subprocess.run(
-        ["aspell", "-l", lang, "list"],
-        input="\n".join(tokens), capture_output=True, text=True,
-    )
+    """aspell list prints MISSPELLED tokens; accepted = complement.
+
+    FAIL LOUD, never fail OPEN: the caller unions this oracle into `spell`,
+    which gates the typo/foreign negative-evidence filters. If aspell fails to
+    run (missing binary, missing dictionary, timeout) it emits no output → a
+    silently-empty `bad` set would mark EVERY token spell-valid, disabling the
+    filter and poisoning the shipped dict with corpus noise. So we distinguish
+    "aspell ran and found no misspellings" (valid, only plausible for tiny/clean
+    inputs) from "aspell did not run", and abort the build on the latter.
+    """
+    if not tokens:
+        return set()
+    try:
+        proc = subprocess.run(
+            ["aspell", "-l", lang, "list"],
+            input="\n".join(tokens), capture_output=True, text=True,
+            timeout=600,
+        )
+    except FileNotFoundError as exc:
+        sys.exit(f"aspell oracle: binary not found ({exc}). Install aspell + "
+                 f"aspell-{lang} dictionary, or the spell filter would fail open "
+                 f"and poison the dict.")
+    except subprocess.TimeoutExpired:
+        sys.exit(f"aspell oracle: timed out on {len(tokens)} tokens. Aborting "
+                 f"rather than shipping an unfiltered dict.")
+    if proc.returncode != 0:
+        sys.exit(f"aspell oracle: exited {proc.returncode}. "
+                 f"stderr: {proc.stderr.strip()!r}. Aborting rather than "
+                 f"treating every token as correctly spelled.")
     bad = {line.strip() for line in proc.stdout.splitlines() if line.strip()}
+    # aspell echoes nothing for a correctly-spelled token AND nothing when it
+    # never ran. A run over a large candidate stream that flags ZERO
+    # misspellings is not credible — it means aspell produced no parseable
+    # output despite non-empty input, so fail loud instead of trusting it.
+    if not bad and len(tokens) >= 100:
+        sys.exit(f"aspell oracle: flagged 0 misspellings across {len(tokens)} "
+                 f"tokens (no parseable output). This indicates aspell did not "
+                 f"run correctly; aborting rather than failing open.")
     return {t for t in tokens if t not in bad}
 
 
@@ -381,9 +437,12 @@ def main() -> None:
     words_sorted = sorted(keep)
     src = EN_DIR / "en_words.txt"
     with open(src, "w", encoding="utf-8") as fp:
+        # No build date in the header: embedding time.strftime() made the
+        # artifact byte-differ on every rebuild, defeating reproducibility.
+        # The parameters (top/band/keep) fully describe how the list was
+        # produced; provenance/date lives in git, not the file body.
         fp.write(f"# CleverKeys English word list — generated by build_en_wordlist.py\n"
-                 f"# top={args.top} band={args.band} keep={len(words_sorted)} "
-                 f"date={time.strftime('%Y-%m-%d')}\n"
+                 f"# top={args.top} band={args.band} keep={len(words_sorted)}\n"
                  f"# Oracles: hunspell en_US, aspell en_GB, NLTK, pyspellchecker, AOSP LatinIME,\n"
                  f"# allowlist/blocklist (scripts/dictionaries/en/), contraction keys.\n")
         fp.write("\n".join(words_sorted) + "\n")

@@ -74,49 +74,98 @@ def normalize_accents(word: str) -> str:
     return ''.join(c for c in normalized if unicodedata.category(c) != 'Mn')
 
 
-def load_word_list(input_path: Path) -> List[Tuple[str, Optional[int]]]:
+def _parse_frequency(token: str) -> Optional[float]:
+    """
+    Parse a frequency token into a numeric magnitude, or None if it isn't one.
+
+    frequency_to_rank() consumes the value as a raw magnitude on a log scale,
+    so BOTH integer counts ("12345") and float magnitudes ("3.5", a zipf-style
+    value, or "1.2e-05" scientific notation) are legitimate. Returns None when
+    the token carries no numeric frequency at all (so the caller can decide
+    between "look the word up" and "malformed line").
+    """
+    t = token.strip()
+    if not t:
+        return None
+    try:
+        # int() and float() together cover "12345", "3.5", "1e-5", "-2".
+        # A leading sign or decimal point is fine; anything non-numeric raises.
+        return float(t)
+    except ValueError:
+        return None
+
+
+def load_word_list(input_path: Path) -> List[Tuple[str, Optional[float]]]:
     """
     Load words from input file.
 
     Supports formats:
     - word (frequency will be looked up or defaulted)
-    - word<tab>frequency
-    - word<space>frequency
+    - word<tab>frequency   (integer OR float frequency)
+    - word<space>frequency (integer OR float frequency)
+
+    A line whose final whitespace-delimited token is NOT a number is treated
+    as a single multi-token entry with no explicit frequency (freq=None) rather
+    than being silently truncated to its first token. Truly malformed lines are
+    counted and reported, never silently dropped.
 
     Args:
         input_path: Path to input word list
 
     Returns:
-        List of (word, frequency) tuples. Frequency is None if not provided.
+        List of (word, frequency) tuples. Frequency is None if not provided;
+        it is a float so downstream log-scaling handles int and float uniformly.
     """
-    words = []
+    words: List[Tuple[str, Optional[float]]] = []
+    skipped_long = 0          # word too long (existing behaviour, now counted)
+    freqless_multitoken = 0   # multi-token line with no trailing numeric freq
+
     with open(input_path, 'r', encoding='utf-8') as f:
         for line_num, line in enumerate(f, 1):
             line = line.strip()
             if not line or line.startswith('#'):
                 continue
 
-            # Try tab-separated first
+            # Split off the LAST whitespace-delimited token and test whether it
+            # is a frequency. Prefer tab as the delimiter (explicit two-column
+            # format); fall back to the final space-delimited token.
             if '\t' in line:
-                parts = line.split('\t')
-                word = parts[0].strip()
-                freq = int(parts[1]) if len(parts) > 1 and parts[1].strip().isdigit() else None
-            # Try space-separated (word freq)
+                head, _, tail = line.rpartition('\t')
             elif ' ' in line:
-                parts = line.rsplit(' ', 1)
-                word = parts[0].strip()
-                freq = int(parts[1]) if len(parts) > 1 and parts[1].strip().isdigit() else None
+                head, _, tail = line.rpartition(' ')
             else:
-                word = line
-                freq = None
+                head, tail = line, ''
 
-            if word and len(word) <= 50:  # Skip very long "words"
-                words.append((word, freq))
+            freq = _parse_frequency(tail) if tail else None
+            if freq is not None:
+                # Well-formed "<word...> <freq>" — keep the head as the word.
+                word = head.strip()
+            else:
+                # No trailing numeric frequency: the WHOLE line is the entry
+                # (e.g. a multi-word key). Do NOT truncate to parts[0].
+                word = line
+                if head and tail:
+                    freqless_multitoken += 1
+
+            if not word:
+                continue
+            if len(word) > 50:  # Skip very long "words"
+                skipped_long += 1
+                continue
+            words.append((word, freq))
+
+    if skipped_long:
+        print(f"load_word_list: skipped {skipped_long} over-length (>50 char) entries",
+              file=sys.stderr)
+    if freqless_multitoken:
+        print(f"load_word_list: {freqless_multitoken} multi-token line(s) had no "
+              f"trailing numeric frequency; kept whole line as the entry "
+              f"(freq will be looked up/defaulted)", file=sys.stderr)
 
     return words
 
 
-def get_word_frequency(word: str, lang: str, provided_freq: Optional[int]) -> float:
+def get_word_frequency(word: str, lang: str, provided_freq: Optional[float]) -> float:
     """
     Get word frequency, using wordfreq if available.
 
