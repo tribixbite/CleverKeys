@@ -19,3 +19,6 @@ tools/gif_pipeline/raw_data
 tools/gif_pipeline/assets
 tools/gif_pipeline/packs
 tools/gif_pipeline/processed
+tribixbite main debug_apk
+cli-test/test_onnx_cli.jar
+s5.png

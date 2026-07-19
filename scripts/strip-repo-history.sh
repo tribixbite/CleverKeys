@@ -148,7 +148,7 @@ echo "Size: $PRE_SIZE -> $POST_SIZE"
 if [ "${1:-}" = "--push" ]; then
     echo "Force-pushing rewritten history (git push --mirror) in 5s — Ctrl-C to abort"
     sleep 5
-    git push --mirror "$REPO_URL"
+    git push --mirror --atomic "$REPO_URL"
     echo "PUSHED. Now re-clone working copies (see header) and verify:"
     echo "  gh run list --limit 3   # CI on rewritten main"
 else
