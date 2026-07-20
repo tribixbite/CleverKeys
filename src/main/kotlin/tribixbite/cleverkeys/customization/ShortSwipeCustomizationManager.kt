@@ -30,6 +30,35 @@ class ShortSwipeCustomizationManager private constructor(private val context: Co
     /** Fast lookup map: "keyCode:direction" -> ShortSwipeMapping */
     private val mappingCache = ConcurrentHashMap<String, ShortSwipeMapping>()
 
+    /**
+     * Per-key index derived from [mappingCache]: `keyCode` (lowercased) -> (direction -> mapping).
+     *
+     * Read once per key per frame from the render thread ([Keyboard2View.onDraw] ->
+     * `drawCustomMappings` -> [getMappingsForKey]). Previously [getMappingsForKey] did a full
+     * `mappingCache.values.filter{}.associateBy{}` scan + two allocations on every read; this
+     * pre-computed index makes the read an O(1), zero-allocation lookup (R2, ui-layer audit).
+     *
+     * Published via `@Volatile` reference-swap of an immutable snapshot. Mutations are rare and
+     * always serialized under [fileMutex] (they rebuild + replace this whole reference in
+     * [rebuildByKeyIndex]); reads are frequent and lock-free — they just observe the latest
+     * fully-built immutable map. The inner maps are immutable snapshots too, so a per-frame reader
+     * never sees a partially-populated key.
+     */
+    @Volatile
+    private var byKeyIndex: Map<String, Map<SwipeDirection, ShortSwipeMapping>> = emptyMap()
+
+    /**
+     * Rebuild [byKeyIndex] from the current [mappingCache] contents and publish it atomically.
+     *
+     * MUST be called while holding [fileMutex] (all callers already do) so the rebuild reads a
+     * quiescent [mappingCache]. The result is an immutable snapshot assigned to the `@Volatile`
+     * field in a single reference write — a concurrent reader sees either the old or the new map,
+     * never a half-built one.
+     */
+    private fun rebuildByKeyIndex() {
+        byKeyIndex = buildByKeyIndex(mappingCache.values)
+    }
+
     /** Mutex for file operations */
     private val fileMutex = Mutex()
 
@@ -76,6 +105,7 @@ class ShortSwipeCustomizationManager private constructor(private val context: Co
                             mappingList.forEach { mapping ->
                                 mappingCache[mapping.toStorageKey()] = mapping
                             }
+                            rebuildByKeyIndex()
                             _mappingsFlow.value = mappingList
                             Log.i(TAG, "Loaded ${mappingList.size} custom short swipe mappings")
                         }
@@ -101,6 +131,11 @@ class ShortSwipeCustomizationManager private constructor(private val context: Co
      * beatsWordCandidate under full-suite IO load.
      */
     private suspend fun saveMappingsLocked() {
+        // Refresh the per-key render index from the just-mutated cache BEFORE persisting, so the
+        // in-memory lookup used by onDraw stays consistent even if the file write below throws.
+        // All mutators route through here under [fileMutex], so this is the single maintenance
+        // point for the add/remove/clear/import paths (loadMappings rebuilds separately).
+        rebuildByKeyIndex()
         withContext(Dispatchers.IO) {
             try {
                 val file = getCustomizationsFile()
@@ -137,14 +172,16 @@ class ShortSwipeCustomizationManager private constructor(private val context: Co
     /**
      * Get all mappings for a specific key.
      *
+     * O(1), zero-allocation lookup against the pre-computed [byKeyIndex] (rebuilt on mutation).
+     * Called per key per frame from [Keyboard2View]'s `onDraw`, so it must not allocate. Returns
+     * the shared immutable inner map (or [emptyMap] when the key has no custom mappings); callers
+     * must treat the result as read-only.
+     *
      * @param keyCode The key identifier
-     * @return Map of direction to mapping
+     * @return Map of direction to mapping (immutable; empty when none)
      */
     fun getMappingsForKey(keyCode: String): Map<SwipeDirection, ShortSwipeMapping> {
-        val normalizedKey = keyCode.lowercase()
-        return mappingCache.values
-            .filter { it.keyCode == normalizedKey }
-            .associateBy { it.direction }
+        return byKeyIndex[keyCode.lowercase()] ?: emptyMap()
     }
 
     /**
@@ -305,6 +342,35 @@ class ShortSwipeCustomizationManager private constructor(private val context: Co
     companion object {
         private const val TAG = "ShortSwipeCustomMgr"
         private const val FILE_NAME = "short_swipe_customizations.json"
+
+        /**
+         * Build the per-key render index from a set of mappings.
+         *
+         * Pure (no Android/IO deps) so it is unit-testable and reused by [rebuildByKeyIndex].
+         *
+         * Semantics are byte-for-byte equivalent to the former per-frame lookup
+         * `values.filter { it.keyCode == normalizedKey }.associateBy { it.direction }`:
+         *  - grouped by the mapping's **raw** `keyCode` (NOT re-lowercased), because the old
+         *    filter compared `it.keyCode` against the already-lowercased query — a mapping whose
+         *    stored keyCode is uppercase was unreachable via a lowercase lookup then, and stays
+         *    unreachable now. [getMappingsForKey] lowercases the query key before indexing.
+         *  - within a key, later entries win on a direction collision, matching `associateBy`'s
+         *    "last wins" behavior. (In practice the storage key is `keyCode:direction`, so the
+         *    cache can hold at most one mapping per (keyCode,direction) pair anyway.)
+         *
+         * @return an immutable map of immutable inner maps, safe to publish and read lock-free.
+         */
+        internal fun buildByKeyIndex(
+            mappings: Collection<ShortSwipeMapping>
+        ): Map<String, Map<SwipeDirection, ShortSwipeMapping>> {
+            if (mappings.isEmpty()) return emptyMap()
+            val grouped = HashMap<String, LinkedHashMap<SwipeDirection, ShortSwipeMapping>>()
+            for (m in mappings) {
+                grouped.getOrPut(m.keyCode) { LinkedHashMap() }[m.direction] = m
+            }
+            // Freeze into immutable snapshots (inner maps too) for safe cross-thread publication.
+            return grouped.mapValues { (_, inner) -> inner.toMap() }
+        }
 
         @Volatile
         private var instance: ShortSwipeCustomizationManager? = null

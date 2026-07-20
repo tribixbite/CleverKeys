@@ -7,6 +7,8 @@ import android.os.Message
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import tribixbite.cleverkeys.customization.ShortSwipeCustomizationManager
 import tribixbite.cleverkeys.customization.ShortSwipeMapping
@@ -35,14 +37,33 @@ class Pointers(
     /** Custom short swipe manager for user-defined gesture mappings */
     private val _customSwipeManager = ShortSwipeCustomizationManager.getInstance(context)
 
+    /**
+     * Owned coroutine scope for this Pointers instance. A [SupervisorJob] child of
+     * [Dispatchers.IO] so the one-shot startup load (below) can be cancelled when the
+     * owning [Keyboard2View] is detached/recreated (theme change). Replaces the former
+     * ad-hoc `CoroutineScope(Dispatchers.IO).launch{}` in `init`, which leaked a fresh
+     * (never-cancelled) scope on every keyboard-view rebuild. See R-6 (core-ime audit).
+     */
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
     init {
         // Load custom short swipe mappings on keyboard startup
         // This ensures user-defined per-key actions work immediately without
         // needing to open the customization activity first
-        CoroutineScope(Dispatchers.IO).launch {
+        scope.launch {
             _customSwipeManager.loadMappings()
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Custom short swipe mappings loaded on startup")
         }
+    }
+
+    /**
+     * Cancel this instance's [scope]. Idempotent. Called by [Keyboard2View] when the
+     * view is detached / replaced (e.g. theme change) so the startup-load coroutine
+     * scope is not leaked. Safe to call even if the load already completed — the
+     * launch is a short one-shot and cancelling a finished job is a no-op.
+     */
+    fun close() {
+        scope.cancel()
     }
 
     /** Verbose-only debug log; message lambda is not evaluated unless verbose logging is enabled. */

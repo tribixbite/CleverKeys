@@ -130,6 +130,16 @@ class Keyboard2View @JvmOverloads constructor(
         ShortSwipeCustomizationManager.getInstance(context)
     }
 
+    /**
+     * Per-key cache of the main key's lowercased identifier, keyed by identity of the laid-out
+     * [KeyboardData.Key] instance. Rebuilt once in [setKeyboard]; read (never mutated) in
+     * [drawCustomMappings] to avoid a `mainKey.getString().lowercase()` String allocation per key
+     * per frame (R2, ui-layer audit). Absent/empty entries are stored so custom-mapping candidacy
+     * can be decided without re-deriving the code. Identity keys are safe because [onDraw] walks
+     * the very same `_keyboard.rows` Key instances captured here.
+     */
+    private val _keyCodeLowerCache = java.util.IdentityHashMap<KeyboardData.Key, String>()
+
     private var _keyWidth = 0f
     private var _mainLabelSize = 0f
     private var _subLabelSize = 0f
@@ -364,6 +374,7 @@ class Keyboard2View @JvmOverloads constructor(
 
     fun setKeyboard(kw: KeyboardData) {
         _keyboard = kw
+        rebuildKeyCodeLowerCache(kw)
         val shiftKv = KeyValue.getKeyByName("shift")
         _shift_kv = shiftKv
         _shift_key = kw.findKeyWithValue(shiftKv)
@@ -1478,6 +1489,10 @@ class Keyboard2View @JvmOverloads constructor(
 
         // Set keyboard background opacity
         background?.alpha = _config.keyboardOpacity
+        // R2: only walk the custom-short-swipe overlay when any mapping exists (the common case
+        // has none). Hoisted out of the per-key loop so the whole drawCustomMappings pass — call +
+        // index lookup per key — is skipped entirely when the feature is unused.
+        val hasCustomMappings = _shortSwipeManager.hasCustomMappings
         var y = tc.margin_top
 
         for (row in keyboard.rows) {
@@ -1498,8 +1513,10 @@ class Keyboard2View @JvmOverloads constructor(
                     if (k.keys[i] != null)
                         drawSubLabel(canvas, k.keys[i]!!, x, y, keyW, keyH, i, isKeyDown, tc_key)
                 }
-                // Draw custom short swipe mappings (override existing sublabels with accent color)
-                drawCustomMappings(canvas, k, x, y, keyW, keyH, tc)
+                // Draw custom short swipe mappings (override existing sublabels with accent color).
+                // Skip the whole overlay when no custom mappings are configured (R2 early-out).
+                if (hasCustomMappings)
+                    drawCustomMappings(canvas, k, x, y, keyW, keyH, tc)
                 drawIndication(canvas, k, x, y, keyW, keyH, tc)
                 x += _keyWidth * k.width
             }
@@ -1608,6 +1625,16 @@ class Keyboard2View @JvmOverloads constructor(
 
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
+        // R-6: cancel the Pointers-owned coroutine scope so the one-shot short-swipe
+        // startup load doesn't leak an uncancelled scope when this view is detached or
+        // replaced (theme change re-creates the whole Keyboard2View via
+        // CleverKeysService.onThemeChanged / stale-theme rebuild in onStartInputView).
+        // A Keyboard2View is never re-attached after its replacement; the mappings are
+        // held in the ShortSwipeCustomizationManager singleton, so cancelling the (idempotent,
+        // already-guarded) load here loses nothing.
+        if (::_pointers.isInitialized) {
+            _pointers.close()
+        }
     }
 
     /** Draw borders and background of the key. */
@@ -1677,6 +1704,26 @@ class Keyboard2View @JvmOverloads constructor(
     }
 
     /**
+     * Rebuild [_keyCodeLowerCache] for the given layout. Called once per [setKeyboard] so the
+     * per-frame [drawCustomMappings] path never re-derives the lowercased key code.
+     *
+     * Stores, per laid-out [KeyboardData.Key], its main key's lowercased identifier — but ONLY
+     * when it is a valid custom-mapping candidate (non-empty and at most 4 chars, matching the
+     * former inline guard). Non-candidates (null main key, empty, or too long / special keys) are
+     * cached as the empty-string sentinel so the draw path can early-return without a lookup.
+     */
+    private fun rebuildKeyCodeLowerCache(kw: KeyboardData) {
+        _keyCodeLowerCache.clear()
+        for (row in kw.rows) {
+            for (k in row.keys) {
+                val code = k.keys[0]?.getString()?.lowercase() ?: ""
+                // Empty or too long (likely a special key) → sentinel: not a candidate.
+                _keyCodeLowerCache[k] = if (code.isEmpty() || code.length > 4) "" else code
+            }
+        }
+    }
+
+    /**
      * Draw custom short swipe mappings for a key.
      * Custom mappings are drawn with accent color to distinguish from built-in mappings.
      */
@@ -1689,14 +1736,13 @@ class Keyboard2View @JvmOverloads constructor(
         keyH: Float,
         tc: Theme.Computed
     ) {
-        // Get the key identifier from the main key (index 0)
-        val mainKey = k.keys[0] ?: return
-        val keyCode = mainKey.getString().lowercase()
+        // Get the pre-lowercased key identifier (cached per Key in setKeyboard) instead of
+        // allocating a String via mainKey.getString().lowercase() every frame. Empty string is
+        // the cached sentinel for "no eligible main key / not a custom-mapping candidate".
+        val keyCode = _keyCodeLowerCache[k]
+        if (keyCode.isNullOrEmpty()) return
 
-        // Skip if empty or too long (likely a special key)
-        if (keyCode.isEmpty() || keyCode.length > 4) return
-
-        // Get custom mappings for this key
+        // Get custom mappings for this key (O(1), zero-alloc lookup)
         val customMappings = _shortSwipeManager.getMappingsForKey(keyCode)
         if (customMappings.isEmpty()) return
 

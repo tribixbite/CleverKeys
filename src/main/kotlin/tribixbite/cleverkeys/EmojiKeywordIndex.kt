@@ -149,6 +149,20 @@ object EmojiKeywordIndex {
     }
 
     /**
+     * Cancel the in-flight background load, if any.
+     *
+     * Called from the owner's teardown ([CleverKeysService.onDestroy] via
+     * [CleanupHandler.cleanup]) so the prewarm coroutine scope isn't left running
+     * past service death. Idempotent and null-safe: a no-op when nothing is loading
+     * or the load already completed. Callers of [awaitReady] must tolerate the join
+     * completing early via cancellation (the only production consumer, [search], gates
+     * on [isReady] and returns empty until the index is populated). See R-6.
+     */
+    fun cancel() {
+        loadJob?.cancel()
+    }
+
+    /**
      * Get stats about the loaded index (for debugging).
      */
     fun getStats(): String {

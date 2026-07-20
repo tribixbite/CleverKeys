@@ -45,6 +45,11 @@ class CleanupHandler(
         // Cleanup clipboard listener (static service)
         ClipboardHistoryService.on_shutdown()
 
+        // R-6: cancel the emoji-keyword prewarm coroutine (owned by the service, started in
+        // onCreate) so its background load scope isn't left running past service death.
+        // Idempotent no-op when nothing is loading.
+        EmojiKeywordIndex.cancel()
+
         // Cleanup clipboard manager
         clipboardManager?.cleanup()
 
