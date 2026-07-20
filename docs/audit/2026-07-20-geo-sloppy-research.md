@@ -3,6 +3,25 @@
 > Produced by a 4-lens Opus research round (prior ASK/Urik review notes, AnySoftKeyboard mining,
 > Urik mining, live failure diagnosis) + synthesis. Full lens reports in session task wc8732i7s.
 
+> **ERRATA + review outcome (2026-07-20, adversarial review of this doc + the in-flight fix):**
+> 1. §0's "confirmed: pruneRecall … invoked only at CLEAN/TYPICAL" is **FALSE** —
+>    `GeoAccuracyQwertyEnTest.sloppy_fullGrid_underGeoFull` already asserted SLOPPY
+>    pruneRecall ≥ 0.90 (and Thresholds records 93.4/94.0, which §`ask`-5-1 itself quotes).
+>    The genuine gap was only the two failing SMOKE layouts (Dvorak, weird_custom). Step 0
+>    remains worthwhile; the "never measured" framing is corrected. Same error in §4's
+>    "Instrumentation debt" line.
+> 2. §1 Rank 1's "4→≤8 start×end combinations" understates: union ≤4 starts × ≤4 ends =
+>    **16** pairs (36 on dense layouts at 3-nearest). Scored shortlist stays capped.
+> 3. §1 Rank 1's CLEAN-safety claim ("inset anchor mostly duplicates the raw bucket") is
+>    **wrong as stated** — a noiseless trace's inset point sits 0.20–0.40 kw into the path
+>    and near key boundaries recruits the penultimate key's bucket; CLEAN/TYPICAL widening
+>    is real and must be measured, not assumed.
+> 4. Step-0 MEASURED weird recall = **80.2%** — inside the decision rule's unhandled
+>    65–95% middle; post-inset decomposition shows weird is majority **scorer**-limited,
+>    which per Rank 3's own pre-registered promotion rule elevates the direction/tangent
+>    channel to must-try-before-any-floor-lowering. Course-correction issued to the
+>    implementing agent accordingly.
+
 # SYNTHESIS: Fixing the geometric-swipe SLOPPY top-3 floor on en/weird_custom (64.5%) and en/Dvorak (75.8%)
 
 ## 0. The one contradiction the reports must resolve first — and it decides everything
