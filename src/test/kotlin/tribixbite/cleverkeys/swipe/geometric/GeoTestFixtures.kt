@@ -27,6 +27,9 @@ object GeoTestFixtures {
     /** German CKDT binary. */
     private val DE_BIN = File("src/main/assets/dictionaries/de_enhanced.bin")
 
+    /** Spanish CKDT binary. */
+    private val ES_BIN = File("src/main/assets/dictionaries/es_enhanced.bin")
+
     /** Russian language-pack zip; `dictionary.bin` inside is CKDT, 50k words. */
     private val RU_ZIP = File("scripts/dictionaries/langpack-ru.zip")
 
@@ -42,6 +45,9 @@ object GeoTestFixtures {
     }
     private val deCkdt: GeometricDictionary by lazy {
         CkdtDictionaryReader.read(DE_BIN.inputStream(), "de", version = 1L)
+    }
+    private val esCkdt: GeometricDictionary by lazy {
+        CkdtDictionaryReader.read(ES_BIN.inputStream(), "es", version = 1L)
     }
     private val ruCkdt: GeometricDictionary by lazy {
         CkdtDictionaryReader.readFromZip(RU_ZIP, "ru", version = 1L)
@@ -59,10 +65,14 @@ object GeoTestFixtures {
     /** German via CKDT. */
     fun germanCkdt(): GeometricDictionary = deCkdt
 
+    /** Spanish via CKDT. */
+    fun spanishCkdt(): GeometricDictionary = esCkdt
+
     /** Russian via the langpack-ru.zip CKDT route. */
     fun russianCkdt(): GeometricDictionary = ruCkdt
 
     /** True iff every shipped fixture dictionary is present on disk. */
     fun allDictionariesPresent(): Boolean =
-        EN_BIN.exists() && EN_JSON.exists() && FR_BIN.exists() && DE_BIN.exists() && RU_ZIP.exists()
+        EN_BIN.exists() && EN_JSON.exists() && FR_BIN.exists() && DE_BIN.exists() &&
+            ES_BIN.exists() && RU_ZIP.exists()
 }

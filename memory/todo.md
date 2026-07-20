@@ -49,7 +49,24 @@ pure-JVM `swipe.geometric` package; NOT wired into live pipeline — WP9 stays d
       CRITICAL A≤B). Real is ~8-12 pts under synthetic TYPICAL (harder, near-SLOPPY);
       −4.9 pt gap to the paper's ~80.05% SHARK2 QWERTY anchor. PROVISIONAL floors ~4pts
       below measured + A≥B−1pt guard. Numbers in spec As-Built § "Real-corpus replay".
-      Still pending: JCUKEN (ru) real-corpus replay for the dense-layout regime.
+- [x] Real-corpus REPLAY on NON-QWERTY layouts DONE 2026-07-20 — `GeoRealCorpusMultiLayoutTest`
+      (`-PgeoFull` + per-layout local-cache gated) replays REAL FUTO **swipe-5/train** human
+      swipes on the layouts the engine actually serves: dvorak/en, azerty/fr, qwertz+german/de,
+      spanish/es (per-row `layout`/`language`/`dual_finger` cols; single-finger + lang-matched).
+      Sample by `scripts/fetch_futo_multilayout_sample.mjs` (local cache, data not committed);
+      OFFICIAL FUTO layout geometries committed at `src/test/resources/layouts/futo_<layout>.json`.
+      **A/B over 10,429 in-dict real traces — A≥B on EVERY metric of EVERY layout (non-circular
+      confirmed for the production regime):** dvorak 76.8/79.9/80.4, azerty 78.2/91.1/94.2,
+      qwertz 77.3/88.7/91.3, german 71.8/82.5/85.2, spanish 73.4/86.1/88.5 (t1/t3/t5). Coverage
+      dvorak 96% / spanish 93% / fr+de 84-87% (smaller 25k dicts → higher OOV, reported).
+      **DVORAK VERDICT (OQ-8): real top-3 = 79.9% ≥ 78%** → synthetic SLOPPY (77.0%) OVERSTATES
+      Dvorak difficulty; OQ-8 urgency DROPS (scorer gap is a synthetic-noise artifact, not a
+      real-world defect) — OQ-8 stays tracked but de-prioritized. ß untypeable (no NFD, no key)
+      → counted+reported (0 in sample); accents é/ä/ñ project via NFD/alias tiers. PROVISIONAL
+      per-layout floors ~4pts below A + A≥B−1pt guard. Spec As-Built § "Real-corpus replay —
+      MULTI-LAYOUT".
+      JCUKEN (ru) replay: **CONFIRMED not on HuggingFace** (FUTO swipe-5 has no Cyrillic layout
+      rows; Yandex Cup 2023 corpus is off-Hub) — still deferred (evaluation-only, Non-Goal 4).
 - [x] Follow-ups DONE 2026-07-20 (fixed directly per user, no issue filed): README en row
       52k→98,140 (binary-verified all bundled counts); grek_qwerty `script="latin"`→`"greek"`
 - [x] NOTE from lint session: LayoutProjection's UnicodeScript gate crashed API 21-23 (NewApi);

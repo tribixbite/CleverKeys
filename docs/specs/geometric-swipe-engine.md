@@ -665,6 +665,65 @@ zero-swipe layouts" bar (the engine never routes to English QWERTY in production
 top-5 ≥ 0.84) plus a hard A ≥ B − 1pt non-regression guard, mirroring the
 `GeoAccuracyThresholds` discipline (not tuning targets).
 
-**Still pending**: a JCUKEN (Russian) real-corpus replay (FUTO ~1.04M / Yandex Cup 2023)
-— the QWERTY-en non-circular check is now done; a Cyrillic replay would extend it to the
-smaller-kw dense-layout regime (evaluation-only per Non-Goal 4).
+## Real-corpus replay — MULTI-LAYOUT (FUTO swipe-5/train) — the non-QWERTY regime (2026-07-20)
+
+QWERTY-en is validated above, but the geometric engine never routes to English QWERTY
+in production — the transformer owns it. `GeoRealCorpusMultiLayoutTest` (pure JVM,
+`-PgeoFull` + per-layout local-cache gated) replays REAL human swipes on the layouts the
+engine actually EXISTS for: **Dvorak (en), AZERTY (fr), QWERTZ + German (de), Spanish
+(es)**, from the `swipe-5` `train` split of `futo-org/swipe.futo.org` (MIT), which carries
+per-row `layout` / `language` / `dual_finger` columns. This is the DIRECT real-world test
+of the synthetic Dvorak KNOWN PARTIAL.
+
+- **Corpus**: `scripts/fetch_futo_multilayout_sample.mjs` pulls ALL rows for each layout
+  via the datasets-server `/filter` API (`dual_finger=0 AND language=<mapped>`), writing
+  per-layout `~/.cache/cleverkeys-test/futo_swipe5_<layout>.jsonl.gz` (NOT committed; the
+  SCRIPT is the artifact). Dictionary mapping: dvorak→en (98k), azerty→fr (25k), qwertz &
+  german→de (25k), spanish→es (50k).
+- **Geometry**: the OFFICIAL FUTO per-layout `swipe-5/layouts/<layout>.json`, committed at
+  `src/test/resources/layouts/futo_<layout>.json` (26–29 keys incl. `'` / ä ö ü / ñ; NO
+  bottom row). The Dvorak geometry is a 4-row FUTO canvas (`q`/`z` on a separate low row,
+  `'` on the top row) — reconstructed faithfully, which is why Dvorak is denser / lower
+  prune-recall than the clean 3-row AZERTY/QWERTZ/German/Spanish.
+- **Coverage & projection**: decoded only if BOTH in-dictionary AND projectable. Accents
+  (é/ä/ñ) project via the engine's NFD/alias tiers (kept). `ß` has NO NFD decomposition and
+  no key on german/qwertz → untypeable → counted+reported (0 hit the decode set in this
+  sample; azerty's only proj-fail was 1 `œ`). The smaller 25k fr/de dicts show lower
+  coverage (OOV 84–87%) than en's 98k (96%) / es's 50k (93%) — reported prominently below.
+
+**A/B on 10 429 in-dict real traces (A = shipped defaults, B = pre-fix
+endpointInset=0/dirPenalty=0/cap=800):**
+```
+  layout   lang  decoded  cov     A t1/t3/t5           B t1/t3/t5           Δt3   recall A/B
+  dvorak   en     2444   96.4%   76.8/79.9/80.4       76.7/79.7/80.2       +0.2   83.0/82.6
+  azerty   fr     1994   87.0%   78.2/91.1/94.2       78.0/90.7/93.4       +0.4   97.7/96.3
+  qwertz   de     1139   84.0%   77.3/88.7/91.3       76.0/87.2/89.7       +1.5   94.6/92.2
+  german   de     2114   84.5%   71.8/82.5/85.2       71.1/81.5/83.7       +1.0   90.6/88.4
+  spanish  es     1758   93.4%   73.4/86.1/88.5       72.4/84.1/86.6       +2.0   94.8/92.2
+```
+**A ≥ B on EVERY headline metric of EVERY layout** (largest lifts on the layouts the
+tuning aimed at — qwertz/german/spanish top-3 +1.5/+1.0/+2.0). The SLOPPY-tier tuning that
+was validated only against synthetic noise **generalizes to real human swipes on the
+non-QWERTY layouts the engine actually serves** — no CRITICAL A ≤ B anywhere. This closes
+the non-circular caveat for the production regime, not just QWERTY-en.
+
+**DVORAK VERDICT (OQ-8) — the headline.** Synthetic SLOPPY measured Dvorak top-3 = **77.0%**
+(the KNOWN PARTIAL, ~1 pt below the shared 0.78 floor). **REAL Dvorak A top-3 = 79.9%** over
+2444 in-dict real swipes — **≥ 78%, clearing the floor.** IMPLICATION: the synthetic SLOPPY
+tier OVERSTATES Dvorak difficulty; real users are NOT in the sub-floor regime, so **OQ-8
+urgency DROPS** — the direction-channel scorer gap is largely a synthetic-noise artifact,
+not a real-world defect. OQ-8 (CLEAN-safe direction/tangent channel at higher weight) stays
+a tracked follow-up but is DE-PRIORITIZED. (Caveat: Dvorak's real top-1→top-3 spread is
+compressed — 76.8→79.9 — and prune-recall is 83% vs 90–98% elsewhere, a real property of
+the irregular 4-row FUTO Dvorak canvas, not a decode bug; the verdict rests on measured
+top-3 regardless.)
+
+**Regression floors**: PROVISIONAL per-layout, ~4 pts below measured A (e.g. dvorak
+0.72/0.75/0.76, azerty 0.74/0.87/0.90, german 0.67/0.78/0.81 — full table in the test
+companion) + the hard A ≥ B − 1pt non-regression guard per layout, mirroring the
+`GeoAccuracyThresholds` discipline (not tuning targets).
+
+**Still pending**: a JCUKEN (Russian) real-corpus replay — CONFIRMED not on HuggingFace
+(the FUTO `swipe-5` split has no `jcuken`/Cyrillic layout rows; the Yandex Cup 2023 swipe
+corpus is off-Hub). Deferred (evaluation-only per Non-Goal 4); the Latin non-QWERTY regime
+(above) plus QWERTY-en now cover the non-circular check for every shipping Latin layout.
