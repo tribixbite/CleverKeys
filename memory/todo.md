@@ -36,8 +36,20 @@ pure-JVM `swipe.geometric` package; NOT wired into live pipeline — WP9 stays d
       NOT lowered (real layout), documented KNOWN PARTIAL at 75.8% (only the CLEAN-breaking
       tunnel reaches 78.2%, by a brittle 0.2 pt) — OQ-8 direction-channel-at-higher-weight
       is the tracked CLEAN-safe closer. Numbers/decision trail in the spec As-Built Notes
-      addendum + `GeoAccuracyThresholds`. Caveat: synthetic-noise validation only; FUTO/
-      Yandex real-corpus JCUKEN replay is the pending non-circular check (not this round).
+      addendum + `GeoAccuracyThresholds`.
+- [x] Real-corpus REPLAY (non-circular check) DONE 2026-07-20 — `GeoRealCorpusReplayTest`
+      (`-PgeoFull` + local-cache gated) replays 3912 REAL FUTO swipe-1/test human swipes
+      (MIT) through the shipped engine on the OFFICIAL FUTO `qwerty.json` geometry (per-key
+      rects, letter-area, no bottom row; committed at `src/test/resources/layouts/`).
+      Sample fetched by `scripts/fetch_futo_replay_sample.mjs` to a local cache (data not
+      committed). Coverage 97.8% vs the 98k en dict. **A/B result — this week's SLOPPY
+      tuning is NOT circular**: A(shipped endpointInset=.30/dirPenalty=.30/cap=1200) 75.2/
+      85.4/87.9 (t1/t3/t5) + prune-recall 93.0% vs B(pre-fix 0/0/800) 74.6/84.3/86.3 +
+      90.6% → Δ +0.6/+1.1/+1.6/+2.4, A≥B on every metric & every length stratum (no
+      CRITICAL A≤B). Real is ~8-12 pts under synthetic TYPICAL (harder, near-SLOPPY);
+      −4.9 pt gap to the paper's ~80.05% SHARK2 QWERTY anchor. PROVISIONAL floors ~4pts
+      below measured + A≥B−1pt guard. Numbers in spec As-Built § "Real-corpus replay".
+      Still pending: JCUKEN (ru) real-corpus replay for the dense-layout regime.
 - [x] Follow-ups DONE 2026-07-20 (fixed directly per user, no issue filed): README en row
       52k→98,140 (binary-verified all bundled counts); grek_qwerty `script="latin"`→`"greek"`
 - [x] NOTE from lint session: LayoutProjection's UnicodeScript gate crashed API 21-23 (NewApi);

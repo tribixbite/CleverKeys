@@ -617,7 +617,54 @@ min-over-window relaxes clean-trace location discrimination, exactly why v1 drop
   synthesizer/seed/dictionary change; the CLEAN-safe closer (OQ-8 at higher weight /
   curvature-weighted variant) is a tracked follow-up, not a floor edit.
 
-**Validation caveat (non-circular check pending).** All the above is SYNTHETIC-noise
-validation (`GeoTraceSynthesizer`). A real-corpus JCUKEN replay (FUTO ~1.04M / Yandex Cup
-2023, evaluation-only per Non-Goal 4) is the pending non-circular check — NOT run this
-round (no corpus download).
+## Real-corpus replay (FUTO swipe-1/test) — non-circular validation (2026-07-20)
+
+The synthetic-noise caveat above is now RESOLVED for QWERTY-en. `GeoRealCorpusReplayTest`
+(pure JVM, `-PgeoFull` + local-cache gated) replays REAL human swipes through the shipped
+engine — the first validation that does not share assumptions with `GeoTraceSynthesizer`.
+
+- **Corpus**: HuggingFace `futo-org/swipe.futo.org`, config `swipe-1`, held-out `test`
+  split (MIT). A stratified sample of 4000 rows is fetched by
+  `scripts/fetch_futo_replay_sample.mjs` (60 evenly-spaced windows × 100 rows via the
+  datasets-server `/rows` JSON API, no parquet/deps) to a LOCAL cache
+  (`~/.cache/cleverkeys-test/futo_swipe1_test_sample.jsonl.gz` — NOT committed; the SCRIPT
+  is the reproducibility artifact). Filters: `potentially_invalid_sentence == false`,
+  ≥ 3 points, word lowercases to pure letters. 617/4870 dropped as capitalized proper
+  nouns / non-letter tokens.
+- **Geometry source**: the OFFICIAL FUTO QWERTY layout `swipe-5/layouts/qwerty.json`
+  (linked from the dataset card), committed at `src/test/resources/layouts/futo_qwerty.json`
+  — a per-key centroid+radius geometry over the normalized letter area (3 rows, 26 keys,
+  **no bottom row**; the corpus x,y are normalized over exactly this canvas). One
+  `LayoutGeometry` per aspect bucket (rounded to 0.1); traces processed grouped by bucket.
+  NOT the uniform-grid fallback — the official per-key rects are authoritative.
+- **Dictionary coverage**: 3912/4000 = **97.8%** of sample words present in the full 98,140
+  en CKDT (OOV are Wikipedia proper nouns / rare terms); only in-dict words are decoded.
+
+**A/B on 3912 real traces (proves this week's SLOPPY tuning is not circular):**
+```
+  config       top-1   top-3   top-5   prune-recall
+  A (shipped)  75.2%   85.4%   87.9%   93.0%       endpointInset=.30, dirPenalty=.30, cap=1200
+  B (pre-fix)  74.6%   84.3%   86.3%   90.6%       endpointInset=0,   dirPenalty=0,   cap=800
+  Δ (A−B)      +0.6    +1.1    +1.6    +2.4
+```
+A ≥ B on EVERY headline metric AND every length stratum (2-3 / 4-6 / 7+) — the tuning
+that was validated only against our own synthetic noise **generalizes to real human
+swipes** (no CRITICAL A ≤ B finding). The largest gains land exactly where the levers
+aimed: prune-recall (+2.4, the endpoint-inset lever) and top-5 (+1.6).
+
+**Synthetic-vs-real comparison.** Synthetic TYPICAL QWERTY sits at 83.4/95.9/98.2
+(t1/t3/t5); real top-1 is ~8 pts lower (75.2%) and real top-3/5 ~10-12 pts lower —
+i.e. real FUTO noise is HARDER than our TYPICAL tier and closer to (but not as extreme
+as) SLOPPY, consistent with the spec's expectation that "synthetic TYPICAL sits between
+CLEAN and real." **SHARK2-paper anchor**: FUTO (arXiv 2606.25247) measured a well-built
+SHARK2 at ~80.05% top-1 on real QWERTY; our zero-training / no-calibration / no-bottom-row
+decoder reaches 75.2% — a −4.9 pt gap, respectable for the "usable suggestions on
+zero-swipe layouts" bar (the engine never routes to English QWERTY in production).
+
+**Regression floors**: PROVISIONAL, ~4 pts below measured A (top-1 ≥ 0.71, top-3 ≥ 0.81,
+top-5 ≥ 0.84) plus a hard A ≥ B − 1pt non-regression guard, mirroring the
+`GeoAccuracyThresholds` discipline (not tuning targets).
+
+**Still pending**: a JCUKEN (Russian) real-corpus replay (FUTO ~1.04M / Yandex Cup 2023)
+— the QWERTY-en non-circular check is now done; a Cyrillic replay would extend it to the
+smaller-kw dense-layout regime (evaluation-only per Non-Goal 4).
