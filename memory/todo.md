@@ -54,8 +54,16 @@ pure-JVM `swipe.geometric` package; NOT wired into live pipeline — WP9 stays d
   placeholders, performClick overrides, DrawAllocation hoists, -v21 merge). lint-baseline.xml
   regenerated EMPTY — `lintDebug` → "No issues found." with abortOnError=true. From 1544
   baselined issues (656 errors + 888 warnings) to 0 masked, all real fixes.
-- **NEXT**: ew-cli full run in flight (validates wave-1/2 on-device + 31 oracle instrumented tests
-  green at HEAD) → then R-1 step 3 (shift capture into SH, flips 3 oracle pins).
+- **ew-cli full run DONE**: 1441 tests, only 2 failures = my own oracle pins that the DEVICE
+  disproved (static map wrong twice): dictionary carries possessive forms so "book's" surfaces on
+  every path (D1 delta is augmentation-function-only, swipe-path pin stands); cursor-sync posts
+  NOTHING for unknown words (exact-add neutralized by isInDictionary '?: true' + isNotEmpty guard)
+  — a REAL missed divergence, now ORACLE-FLIP(step 5). Re-pinned; targeted rerun 31/31 green.
+  **WP9 step 2 (characterization oracle) COMPLETE.**
+- **NEXT**: (a) R-1 step 3 — move shift/caps-at-swipe-start capture into SH (flips 3 oracle pins,
+  same-commit); (b) WP8 remainder — CleverKeysTheme wrapper replacing inline darkColorScheme()
+  forks + ~72 Compose Text("…") literal extraction (needs a 21-locale translation wave — the lint
+  gate enforces MissingTranslation as error now); wave-2 already covered all XML HardcodedText.
       + method.xml el subtype `script=greek` (pair-flip keeps ExtraKeys £/€ merge) +
       SwipeLayoutSupportTest Greek case now asserts isFalse (was codifying the bug).
       Note for geoswipe audit: LayoutProjection.kt:26 comment "grek_qwerty claims latin" is
