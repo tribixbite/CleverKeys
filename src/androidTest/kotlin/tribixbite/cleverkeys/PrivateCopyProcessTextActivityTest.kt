@@ -242,4 +242,51 @@ class PrivateCopyProcessTextActivityTest {
             context.packageManager.getComponentEnabledSetting(component)
         )
     }
+
+    /**
+     * Bug-report #3 (2026-07-20, "no 'Copy to private' in the text-selection menu"): pins the FULL
+     * settings-toggle chain. [reconcilePrivateCopyToolbarComponent] is the exact function the
+     * Settings switch ("Private copy in other apps", ClipboardSection) and the settings-load /
+     * backup-import reconcilers call. Toggle ON must (a) set the OS component state to ENABLED and
+     * (b) make the activity RESOLVE for ACTION_PROCESS_TEXT + text/plain — the query the system
+     * text-selection toolbar performs. Toggle OFF must remove it from resolution (design §6.6:
+     * default-off, zero exported surface until opt-in — so a user who has NOT enabled the toggle
+     * seeing no menu entry is BY DESIGN, not this bug).
+     */
+    @Test
+    fun reconcileToggle_enablesComponent_andProcessTextResolves() {
+        val pm = context.packageManager
+        // The toolbar's query: PROCESS_TEXT + text/plain, scoped to our package.
+        val processTextQuery = Intent(Intent.ACTION_PROCESS_TEXT)
+            .setType("text/plain")
+            .setPackage(context.packageName)
+
+        fun resolvesProcessText(): Boolean =
+            pm.queryIntentActivities(processTextQuery, PackageManager.MATCH_DEFAULT_ONLY)
+                .any { it.activityInfo.name == PrivateCopyProcessTextActivity::class.java.name }
+
+        // OFF path — the production off-state is explicit DISABLED (not DEFAULT, design §6.6).
+        reconcilePrivateCopyToolbarComponent(context, false)
+        assertEquals(
+            PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+            pm.getComponentEnabledSetting(component)
+        )
+        assertFalse(
+            "disabled component must be invisible to PROCESS_TEXT resolution",
+            resolvesProcessText()
+        )
+
+        // ON path — what flipping the settings switch runs.
+        reconcilePrivateCopyToolbarComponent(context, true)
+        assertEquals(
+            "toggle ON must enable the component",
+            PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+            pm.getComponentEnabledSetting(component)
+        )
+        assertTrue(
+            "enabled component must resolve for ACTION_PROCESS_TEXT text/plain — otherwise " +
+                "'Private copy' never appears in other apps' selection toolbars",
+            resolvesProcessText()
+        )
+    }
 }

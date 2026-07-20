@@ -18,8 +18,11 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RadioButton
+// NOTE: framework Switch on purpose — the filter dialog inflates under the framework
+// Theme_DeviceDefault_Dialog where SwitchCompat has no switchStyle and crashes at measure
+// (StaticLayout NPE via makeLayout(null)). See res/layout/clipboard_filter_dialog.xml header.
+import android.widget.Switch
 import android.widget.TextView
-import androidx.appcompat.widget.SwitchCompat
 import tribixbite.cleverkeys.theme.ThemeProvider
 import java.util.Calendar
 
@@ -657,6 +660,10 @@ class ClipboardManager(
      *
      * @param anchorView View to anchor the dialog window token
      */
+    // Framework Switch is REQUIRED here: the dialog inflates under a framework
+    // Theme.DeviceDefault_Dialog ContextThemeWrapper (no AppCompat ?attr/switchStyle),
+    // where SwitchCompat NPEs in makeLayout() at first measure (2026-07-20 crash).
+    @android.annotation.SuppressLint("UseSwitchCompatOrMaterialCode")
     fun showFilterDialog(anchorView: View) {
         val themedContext = ContextThemeWrapper(context, android.R.style.Theme_DeviceDefault_Dialog)
         val historyView = clipboardHistoryView ?: return
@@ -667,11 +674,11 @@ class ClipboardManager(
         )
 
         // ─── Private-only section (#156 — all tabs) ───
-        val privateOnlySwitch = dialogView.findViewById<SwitchCompat>(R.id.filter_private_only)
+        val privateOnlySwitch = dialogView.findViewById<Switch>(R.id.filter_private_only)
         privateOnlySwitch.isChecked = historyView.isPrivateOnlyFilter()
 
         // ─── Date section (existing logic, unchanged) ───
-        val enabledSwitch = dialogView.findViewById<SwitchCompat>(R.id.date_filter_enabled)
+        val enabledSwitch = dialogView.findViewById<Switch>(R.id.date_filter_enabled)
         val beforeRadio = dialogView.findViewById<RadioButton>(R.id.date_filter_before)
         val afterRadio = dialogView.findViewById<RadioButton>(R.id.date_filter_after)
         val datePicker = dialogView.findViewById<DatePicker>(R.id.date_picker)
@@ -720,7 +727,7 @@ class ClipboardManager(
         val tagsSection = dialogView.findViewById<View>(R.id.filter_tags_section)
         val tagsDivider = dialogView.findViewById<View>(R.id.filter_divider_tags)
         val tagContainer = dialogView.findViewById<LinearLayout>(R.id.filter_tags_container)
-        val matchAllToggle = dialogView.findViewById<SwitchCompat>(R.id.filter_tags_match_all)
+        val matchAllToggle = dialogView.findViewById<Switch>(R.id.filter_tags_match_all)
         val matchLabel = dialogView.findViewById<TextView>(R.id.filter_tags_match_label)
         val emptyHint = dialogView.findViewById<TextView>(R.id.filter_tags_empty_hint)
 

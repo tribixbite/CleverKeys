@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- IMPORTANT: this dialog is inflated by ClipboardManager.showFilterDialog with a
+     ContextThemeWrapper(imeService, android.R.style.Theme_DeviceDefault_Dialog) — a FRAMEWORK
+     theme with no AppCompat attrs. Toggles here MUST be framework <Switch>, not SwitchCompat:
+     without appcompat's ?attr/switchStyle, SwitchCompat falls back to showText=true with null
+     textOn/textOff and crashes at first measure (StaticLayout NPE in makeLayout(null) — seen
+     as an IME-process FATAL when the filter button is pressed), and its thumb/track drawables
+     resolve to null (invisible switch). Framework Switch is fully styled by Theme.DeviceDefault. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
@@ -32,11 +39,12 @@
             android:layout_weight="1"
             android:textSize="16sp"
             android:textColor="?android:attr/textColorPrimary"/>
-        <androidx.appcompat.widget.SwitchCompat
+        <Switch
             android:id="@+id/filter_private_only"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:checked="false"/>
+            android:checked="false"
+            tools:ignore="UseSwitchCompatOrMaterialXml"/>
       </LinearLayout>
       <TextView
           android:text="@string/clipboard_filter_private_only_hint"
@@ -69,11 +77,12 @@
             android:layout_weight="1"
             android:textSize="16sp"
             android:textColor="?android:attr/textColorPrimary"/>
-        <androidx.appcompat.widget.SwitchCompat
+        <Switch
             android:id="@+id/date_filter_enabled"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:checked="false"/>
+            android:checked="false"
+            tools:ignore="UseSwitchCompatOrMaterialXml"/>
       </LinearLayout>
 
       <!-- Before/After Toggle -->
@@ -241,11 +250,12 @@
               android:layout_weight="1"
               android:textSize="14sp"
               android:textColor="?android:attr/textColorPrimary"/>
-          <androidx.appcompat.widget.SwitchCompat
+          <Switch
               android:id="@+id/filter_tags_match_all"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
-              android:checked="false"/>
+              android:checked="false"
+              tools:ignore="UseSwitchCompatOrMaterialXml"/>
         </LinearLayout>
 
         <!-- Tag checkboxes container (populated programmatically) -->

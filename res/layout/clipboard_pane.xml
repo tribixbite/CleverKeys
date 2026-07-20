@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Overdraw suppressed: inflated into the IME window (CleverKeysIMETheme) whose
      windowBackground is TRANSPARENT, so this root MUST paint ?attr/colorKeyboard or the
-     clipboard pane would be see-through. Lint cannot detect the transparent IME window. -->
+     clipboard pane would be see-through. Lint cannot detect the transparent IME window.
+
+     UseAppTint suppressed ON PURPOSE: this pane is inflated by ClipboardManager via
+     View.inflate(ContextThemeWrapper(imeService, config.theme), …) — a FRAMEWORK LayoutInflater
+     with no AppCompat factory, so <ImageView>/<ImageButton> inflate as framework widgets that
+     IGNORE app:tint entirely (only AppCompatImageView reads it). android:tint is applied natively
+     (setImageTintList on API 21+) and keeps every icon on ?attr/colorLabel, matching the
+     programmatic tints (updateFilterIconTint / applyRuntimeThemeColors) that resolve the same attr. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:background="?attr/colorKeyboard"
@@ -29,7 +35,8 @@
         android:layout_width="36dp"
         android:layout_height="36dp"
         android:src="@drawable/ic_tab_history"
-        app:tint="?attr/colorLabel"
+        android:tint="?attr/colorLabel"
+        tools:ignore="UseAppTint"
         android:scaleType="centerInside"
         android:padding="6dp"
         android:clickable="true"
@@ -43,7 +50,8 @@
         android:layout_width="36dp"
         android:layout_height="36dp"
         android:src="@drawable/ic_tab_pinned"
-        app:tint="?attr/colorLabel"
+        android:tint="?attr/colorLabel"
+        tools:ignore="UseAppTint"
         android:scaleType="centerInside"
         android:padding="6dp"
         android:alpha="0.5"
@@ -58,7 +66,8 @@
         android:layout_width="36dp"
         android:layout_height="36dp"
         android:src="@drawable/ic_tab_todos"
-        app:tint="?attr/colorLabel"
+        android:tint="?attr/colorLabel"
+        tools:ignore="UseAppTint"
         android:scaleType="centerInside"
         android:padding="6dp"
         android:alpha="0.5"
@@ -93,7 +102,8 @@
         android:layout_width="28dp"
         android:layout_height="28dp"
         android:src="@android:drawable/ic_menu_close_clear_cancel"
-        app:tint="?attr/colorLabel"
+        android:tint="?attr/colorLabel"
+        tools:ignore="UseAppTint"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/clipboard_clear_search"
         android:scaleType="centerInside"
@@ -123,7 +133,8 @@
         android:layout_width="32dp"
         android:layout_height="32dp"
         android:src="@android:drawable/ic_menu_sort_by_size"
-        app:tint="?attr/colorLabel"
+        android:tint="?attr/colorLabel"
+        tools:ignore="UseAppTint"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/clipboard_date_filter"
         android:scaleType="centerInside"
@@ -135,7 +146,8 @@
         android:layout_width="32dp"
         android:layout_height="32dp"
         android:src="@android:drawable/arrow_down_float"
-        app:tint="?attr/colorLabel"
+        android:tint="?attr/colorLabel"
+        tools:ignore="UseAppTint"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/clipboard_close"
         android:scaleType="centerInside"
