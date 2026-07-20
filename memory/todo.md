@@ -133,9 +133,28 @@ pure-JVM `swipe.geometric` package; NOT wired into live pipeline — WP9 stays d
   (run 7082ad17). Also this round: full-tests + local release build both green pre-step-4
   (1650 pure/299 mock/1441 instrumented/BUILD SUCCESSFUL 3 ABIs), ew-cli timeout 30m→40m
   (suite outgrew it), SettingsActivityComposeTest search-hint resource fix.
-- **NEXT (R-1)**: step 5 — fold cursor-sync (IC.onCursorMoved/triggerPredictionsForPrefix) into SH
-  (resolves R-7 prompt race structurally; flips cursor-sync oracle pins incl. exact-add
-  unknownWordPostsNothingToday); step 6 — delete IC.onSuggestionSelected + route D5 ML capture +
+- **R-1 STEP 5 LANDED (pending orchestrator gate)**: cursor-sync prediction rerouted from IC to SH
+  under the SAME `unified_swipe_pipeline` flag. IC.onCursorMoved KEEPS bookkeeping
+  (onCursorPositionChanged + 100ms debounce + synchronizeWithCursor(ic,language,editorInfo)); only the
+  prediction+post phase (non-empty prefix) dispatches to new `SH.handleCursorSyncPrediction` →
+  `updatePredictionsForCurrentWord` (the SAME pipeline typing uses, incl. the specialPromptActive
+  guard) → R-7 resolved STRUCTURALLY (no new shared mutable state). Legacy `triggerPredictionsForPrefix`
+  kept for flag-off/unwired. Deltas: exact-add now surfaces for unknown word w/ zero predictions
+  (oracle 26 flipped: unknownWordPostsNothingToday → unknownWordShowsExactAdd); possessives = NO delta
+  (dictionary-supplied on both paths, scenario 25 unchanged). Dual-apostrophe search restored in
+  updatePredictionsForCurrentWord (no-op for letters-only typing path). New deterministic
+  `oracle_cursorSync_doesNotClobberAutocorrectUndoPrompt` (scenario 18, was SKIPPED) + 2 legacy-path
+  guards. Wired via ManagerInitializer.setCursorSyncDelegate. Files: SuggestionHandler.kt,
+  InputCoordinator.kt, ManagerInitializer.kt, PipelineCharacterizationTest.kt, wp9 oracle doc,
+  3-core-ime.md (R-7 marked RESOLVED). GATED: full ew-cli **1452/1452 green** (run 0a86ff66) incl. 4 new clipboard TDD tests. Committed 63ebf231.
+- **Clipboard bug batch FIXED (TDD, 33c8bdcd)**: filter crash = wave-1 SwitchCompat under framework
+  dialog theme (NPE at measure; reverted to framework Switch, documented); private-only filter was
+  crash-masked, intact; private-copy PROCESS_TEXT chain verified + test-pinned (default-off by design;
+  device: check selection-menu ⋮ overflow + restart target app after enabling); tab-icon tint = wave-1
+  app:tint ignored by framework inflater (reverted to android:tint=?attr/colorLabel in clipboard/
+  emoji/gif panes). ALSO: ew-cli 1.4.0 auto-update broke on-device (zstd JNI libpthread) — pin
+  EW_VERSION=1.3.4 (skill updated, 5f482fce).
+- **NEXT (R-1)**: step 6 — delete IC.onSuggestionSelected + route D5 ML capture via MLDataCollector +
   single executor; step 7 — Termux-deletion DECISION (user-visible, separate).
 - **WP8 FULLY COMPLETE** (bd8aafb3): the deferred index-sensitive batch — 285 control
   titles/descriptions/section headers/ColorAttributeRow labels/format-arg strings extracted
