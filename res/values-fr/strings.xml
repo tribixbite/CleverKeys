@@ -151,4 +151,7 @@
     <!-- Toast Messages -->
     <string name="settings_toast_error_saving">Erreur lors de l\'enregistrement du paramètre : %1$s</string>
     <string name="settings_toast_reset_success">Tous les paramètres réinitialisés aux valeurs par défaut</string>
+
+    <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
+    <string name="suggestion_add_to_dictionary">Ajouter « %1$s » au dictionnaire ?</string>
 </resources>

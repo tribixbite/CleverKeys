@@ -441,6 +441,12 @@ tasks.register('runPureTests', JavaExec) {
     // TalkBack accessibility (a11y) — pure geometry + labeller
     'tribixbite.cleverkeys.a11y.KeyboardGeometryTest',
     'tribixbite.cleverkeys.a11y.KeyLabelsTest',
+    // SuggestionBar rework (WP6-R3) — de-stringified suggestion protocol
+    'tribixbite.cleverkeys.SuggestionModelTest',
+    // Render-perf + lifecycle hygiene (2026-07-20) — WP5 (R-6) scope cancel + WP6 (R2) render index
+    'tribixbite.cleverkeys.customization.ShortSwipeByKeyIndexTest',
+    'tribixbite.cleverkeys.EmojiKeywordIndexLifecycleTest',
+    'tribixbite.cleverkeys.CoroutineScopeLifecycleTest',
     // SwipePrunerTest excluded: requires android.util.Log (MockK + Robolectric)
   ]
 

@@ -293,9 +293,13 @@ class BackspaceUndoTest {
     @Test
     fun `InputCoordinator has exact_add support matching SuggestionHandler`() {
         // Both pipelines must include exact_add so "+word" suggestions don't
-        // flicker when cursor sync overwrites SuggestionHandler's results
+        // flicker when cursor sync overwrites SuggestionHandler's results.
+        // R3: the exact_add wire string is now produced via the shared typed
+        // model (Suggestion.ExactAdd(...).wire) instead of an inline "exact_add:"
+        // literal — assert the new production seam, which SuggestionHandler uses
+        // identically.
         val source = readSource("InputCoordinator.kt")
-        assertThat(source).contains("exact_add:")
+        assertThat(source).contains("Suggestion.ExactAdd(")
         assertThat(source).contains("show_exact_typed_word")
     }
 

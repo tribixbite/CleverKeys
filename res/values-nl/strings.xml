@@ -160,4 +160,7 @@
     <!-- Toast Messages -->
     <string name="settings_toast_error_saving">Fout bij het opslaan van instelling: %1$s</string>
     <string name="settings_toast_reset_success">Alle instellingen teruggezet naar standaardwaarden</string>
+
+    <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
+    <string name="suggestion_add_to_dictionary">\'%1$s\' aan woordenboek toevoegen?</string>
 </resources>

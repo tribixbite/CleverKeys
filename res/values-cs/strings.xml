@@ -160,4 +160,7 @@
     <!-- Toast Messages -->
     <string name="settings_toast_error_saving">Chyba při ukládání nastavení: %1$s</string>
     <string name="settings_toast_reset_success">Všechna nastavení obnovena na výchozí hodnoty</string>
+
+    <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
+    <string name="suggestion_add_to_dictionary">Přidat „%1$s“ do slovníku?</string>
 </resources>

@@ -158,4 +158,7 @@
     <!-- Toast Messages -->
     <string name="settings_toast_error_saving">保存设置出错：%1$s</string>
     <string name="settings_toast_reset_success">已将所有设置重置为默认值</string>
+
+    <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
+    <string name="suggestion_add_to_dictionary">将“%1$s”添加到词典？</string>
 </resources>

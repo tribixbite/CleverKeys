@@ -396,19 +396,22 @@ class SuggestionHandler(
         // Null/empty check
         if (word.isNullOrBlank()) return
 
-        // Check if this is a "Add to dictionary?" tap (dict_add: prefix)
-        if (word.startsWith("dict_add:")) {
-            val wordToAdd = word.removePrefix("dict_add:")
-            handleAddToDictionary(wordToAdd)
-            return
-        }
-
-        // #42: Check if this is an exact typed word tap (exact_add: prefix)
-        // Commits the word and adds it to dictionary
-        if (word.startsWith("exact_add:")) {
-            val exactWord = word.removePrefix("exact_add:")
-            handleExactWordAdd(exactWord, ic, editorInfo)
-            return
+        // R3: Route the special-suggestion protocol through the shared typed
+        // routing decision (single source of truth) instead of ad-hoc prefix
+        // parsing. routeSuggestionSelection is pure and unit-tested.
+        when (val route = routeSuggestionSelection(word)) {
+            // "Add to dictionary?" tap → add the word to the user dictionary.
+            is SelectionRoute.AddToDictionary -> {
+                handleAddToDictionary(route.word)
+                return
+            }
+            // #42: "+word" tap → commit the exact typed word and add to dictionary.
+            is SelectionRoute.ExactAdd -> {
+                handleExactWordAdd(route.word, ic, editorInfo)
+                return
+            }
+            // Ordinary word: fall through to autocorrect/commit handling below.
+            is SelectionRoute.CommitWord -> Unit
         }
 
         // Check if this is an autocorrect undo (user tapped the original word after autocorrect)
@@ -1140,9 +1143,11 @@ class SuggestionHandler(
                             contextTracker.setLastAutocorrectOriginalWord(completedWord)
                             contextTracker.setLastCommitSource(PredictionSource.USER_TYPED_TAP)
 
-                            // Show "Add to dictionary?" prompt with special prefix
+                            // Show "Add to dictionary?" prompt. The wire string is
+                            // produced by the shared typed model (single source of
+                            // truth for the dict_add: protocol).
                             suggestionBar?.setSuggestionsWithScores(
-                                listOf("dict_add:$completedWord"),
+                                listOf(Suggestion.AddToDictionary(completedWord).wire),
                                 listOf(0)
                             )
 
@@ -1287,9 +1292,11 @@ class SuggestionHandler(
                     val isInDictionary = predictionCoordinator.getWordPredictor()?.isInDictionary(exactTyped) ?: true
 
                     if (!alreadyInPredictions && !isUserWord && !isInDictionary) {
-                        // Add exact typed word at the end with exact_add: prefix
-                        // Using end position so it doesn't displace the best prediction
-                        finalWords = transformedWords + "exact_add:$exactTyped"
+                        // Add exact typed word at the end as an ExactAdd suggestion.
+                        // Wire string from the shared typed model (single source of
+                        // truth for the exact_add: protocol). End position so it
+                        // doesn't displace the best prediction.
+                        finalWords = transformedWords + Suggestion.ExactAdd(exactTyped).wire
                         finalScores = mergedScores + 0  // Low score since it's at the end
                         vlog { "EXACT ADD: Added '$exactTyped' as tap-to-add option" }
                     } else {

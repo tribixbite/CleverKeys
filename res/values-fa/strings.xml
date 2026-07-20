@@ -184,4 +184,7 @@
     <!-- Toast Messages -->
     <string name="settings_toast_error_saving">خطا در ذخیره تنظیم: %1$s</string>
     <string name="settings_toast_reset_success">همه تنظیمات به پیش‌فرض بازنشانی شد</string>
+
+    <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
+    <string name="suggestion_add_to_dictionary">«%1$s» به واژه‌نامه افزوده شود؟</string>
 </resources>

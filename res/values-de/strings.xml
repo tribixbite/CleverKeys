@@ -161,4 +161,7 @@
     <!-- Toast Messages -->
     <string name="settings_toast_error_saving">Fehler beim Speichern der Einstellung: %1$s</string>
     <string name="settings_toast_reset_success">Alle Einstellungen auf Standardwerte zurückgesetzt</string>
+
+    <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
+    <string name="suggestion_add_to_dictionary">„%1$s“ zum Wörterbuch hinzufügen?</string>
 </resources>

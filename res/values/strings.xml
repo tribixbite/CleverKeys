@@ -163,6 +163,9 @@
     <string name="settings_toast_error_saving">Error saving setting: %1$s</string>
     <string name="settings_toast_reset_success">All settings reset to defaults</string>
 
+    <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
+    <string name="suggestion_add_to_dictionary">Add \'%1$s\' to dictionary?</string>
+
     <!-- Legacy UI (fallback) -->
 
     <!-- Dictionary Management Section (Bug #472 fix) -->

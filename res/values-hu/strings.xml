@@ -153,4 +153,7 @@
     <!-- Toast Messages -->
     <string name="settings_toast_error_saving">Hiba a beállítás mentésekor: %1$s</string>
     <string name="settings_toast_reset_success">Minden beállítás visszaállítva az alapértelmezettre</string>
+
+    <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
+    <string name="suggestion_add_to_dictionary">Hozzáadja a(z) „%1$s” szót a szótárhoz?</string>
 </resources>

@@ -160,4 +160,7 @@
     <!-- Toast Messages -->
     <string name="settings_toast_error_saving">설정 저장 오류: %1$s</string>
     <string name="settings_toast_reset_success">모든 설정을 기본값으로 초기화했습니다</string>
+
+    <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
+    <string name="suggestion_add_to_dictionary">\'%1$s\'을(를) 사전에 추가할까요?</string>
 </resources>

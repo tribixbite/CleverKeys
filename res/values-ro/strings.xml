@@ -184,4 +184,7 @@
     <!-- Toast Messages -->
     <string name="settings_toast_error_saving">Eroare la salvarea setării: %1$s</string>
     <string name="settings_toast_reset_success">Toate setările au fost resetate la valorile implicite</string>
+
+    <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
+    <string name="suggestion_add_to_dictionary">Adăugați „%1$s” în dicționar?</string>
 </resources>

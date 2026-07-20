@@ -159,4 +159,7 @@
     <!-- Toast Messages -->
     <string name="settings_toast_error_saving">設定の保存中にエラーが発生しました: %1$s</string>
     <string name="settings_toast_reset_success">すべての設定を既定値にリセットしました</string>
+
+    <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
+    <string name="suggestion_add_to_dictionary">「%1$s」を辞書に追加しますか？</string>
 </resources>

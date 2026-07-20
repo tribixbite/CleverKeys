@@ -160,4 +160,7 @@
     <!-- Toast Messages -->
     <string name="settings_toast_error_saving">Erro ao salvar a configuração: %1$s</string>
     <string name="settings_toast_reset_success">Todas as configurações redefinidas para os padrões</string>
+
+    <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
+    <string name="suggestion_add_to_dictionary">Adicionar \'%1$s\' ao dicionário?</string>
 </resources>

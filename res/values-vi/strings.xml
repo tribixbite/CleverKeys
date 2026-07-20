@@ -188,4 +188,7 @@
     <!-- Toast Messages -->
     <string name="settings_toast_error_saving">Lỗi khi lưu cài đặt: %1$s</string>
     <string name="settings_toast_reset_success">Đã đặt lại toàn bộ cài đặt về mặc định</string>
+
+    <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
+    <string name="suggestion_add_to_dictionary">Thêm \'%1$s\' vào từ điển?</string>
 </resources>

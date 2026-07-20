@@ -183,4 +183,7 @@
     <!-- Toast Messages -->
     <string name="settings_toast_error_saving">Errore durante il salvataggio dell\'impostazione: %1$s</string>
     <string name="settings_toast_reset_success">Tutte le impostazioni reimpostate ai valori predefiniti</string>
+
+    <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
+    <string name="suggestion_add_to_dictionary">Aggiungere «%1$s» al dizionario?</string>
 </resources>

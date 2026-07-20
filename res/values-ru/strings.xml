@@ -149,4 +149,7 @@
     <!-- Toast Messages -->
     <string name="settings_toast_error_saving">Ошибка сохранения настройки: %1$s</string>
     <string name="settings_toast_reset_success">Все настройки сброшены к значениям по умолчанию</string>
+
+    <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
+    <string name="suggestion_add_to_dictionary">Добавить «%1$s» в словарь?</string>
 </resources>

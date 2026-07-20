@@ -161,4 +161,7 @@
     <!-- Toast Messages -->
     <string name="settings_toast_error_saving">Error al guardar el ajuste: %1$s</string>
     <string name="settings_toast_reset_success">Todos los ajustes restablecidos a sus valores predeterminados</string>
+
+    <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
+    <string name="suggestion_add_to_dictionary">¿Añadir «%1$s» al diccionario?</string>
 </resources>

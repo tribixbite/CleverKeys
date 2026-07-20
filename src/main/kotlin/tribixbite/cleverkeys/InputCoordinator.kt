@@ -419,7 +419,9 @@ class InputCoordinator(
                     val isInDictionary = predictionCoordinator.getWordPredictor()?.isInDictionary(exactTyped) ?: true
 
                     if (!alreadyInPredictions && !isUserWord && !isInDictionary) {
-                        finalWords = transformedWords + "exact_add:$exactTyped"
+                        // R3: exact_add wire string from the shared typed model
+                        // (single source of truth), mirroring SuggestionHandler.
+                        finalWords = transformedWords + Suggestion.ExactAdd(exactTyped).wire
                         finalScores = mergedScores + 0
                     } else {
                         finalWords = transformedWords

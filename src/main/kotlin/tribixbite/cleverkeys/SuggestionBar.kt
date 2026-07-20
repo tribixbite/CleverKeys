@@ -30,7 +30,14 @@ import kotlin.math.round
  * View component that displays word suggestions above the keyboard
  */
 class SuggestionBar : LinearLayout {
+    // View pool for recycled suggestion TextViews. R3 (audit finding #5): instead
+    // of removeAllViews() + new TextView per suggestion per keystroke, we keep this
+    // pool sized to the current suggestion count, rebind text/typeface/color/click,
+    // and add/remove only the delta. Children are laid out as
+    // [sug0, div, sug1, div, sug2, …] so a parallel divider pool tracks the "div"
+    // slots (N-1 of them for N suggestions).
     private val suggestionViews: MutableList<TextView> = mutableListOf()
+    private val dividerViews: MutableList<View> = mutableListOf()
     private var listener: OnSuggestionSelectedListener? = null
     private val currentSuggestions: MutableList<String> = mutableListOf()
     private val currentScores: MutableList<Int> = mutableListOf()
@@ -168,6 +175,149 @@ class SuggestionBar : LinearLayout {
     }
 
     /**
+     * Default layout params for a (non-centered) suggestion TextView:
+     * WRAP_CONTENT width so the bar scrolls horizontally, MATCH_PARENT height,
+     * with a small right margin. Recreated per bind so a view that was previously
+     * used as the centered "Add to dictionary?" prompt (which switches to
+     * MATCH_PARENT width) is reset back to the scrollable layout.
+     */
+    private fun defaultSuggestionLayoutParams(): LayoutParams =
+        LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        ).apply {
+            setMargins(0, 0, dpToPx(context, 4), 0)
+        }
+
+    /**
+     * R3: Reconcile the child views to the current [currentSuggestions] by
+     * recycling pooled TextViews/dividers rather than reallocating them.
+     *
+     * Layout order is `[sug0, div0, sug1, div1, …, sug(n-1)]` — n suggestion
+     * views and (n-1) dividers. Pool slot `i` is dedicated to suggestion `i` and
+     * its click listener (bound once in [createSuggestionView]) references
+     * `currentSuggestions[i]`, so reuse never changes click semantics.
+     *
+     * Only the child-count delta touches the ViewGroup: already-attached pooled
+     * views stay put (the keystroke→keystroke hot path), views are re-attached
+     * only if a prior imperative mode (temporary message / password / autofill)
+     * detached them via removeAllViews(), and surplus children are detached.
+     */
+    private fun rebindSuggestionViews() {
+        val count = currentSuggestions.size
+
+        // Grow pools on demand (index-stable click closure captured at creation).
+        while (suggestionViews.size < count) {
+            suggestionViews.add(createSuggestionView(context, suggestionViews.size))
+        }
+        val dividerCount = if (count > 0) count - 1 else 0
+        while (dividerViews.size < dividerCount) {
+            dividerViews.add(createDivider(context))
+        }
+
+        // Build the desired ordered child sequence from the pools.
+        val desired = ArrayList<View>(count + dividerCount)
+        for (i in 0 until count) {
+            val suggestion = Suggestion.parse(currentSuggestions[i])
+            val isCenteredPrompt = suggestion is Suggestion.AddToDictionary && count == 1
+            bindSuggestionView(suggestionViews[i], i, suggestion, isCenteredPrompt)
+            if (i > 0) desired.add(dividerViews[i - 1])
+            desired.add(suggestionViews[i])
+        }
+
+        reconcileChildren(desired)
+    }
+
+    /**
+     * Rebind text, layout, typeface and color for a recycled suggestion view.
+     * All per-frame display transforms flow through the typed [Suggestion] here —
+     * no `startsWith`/`removePrefix` parsing remains in the render path.
+     */
+    private fun bindSuggestionView(
+        view: TextView,
+        index: Int,
+        suggestion: Suggestion,
+        isCenteredPrompt: Boolean
+    ) {
+        // Display text derived from the typed suggestion.
+        view.text = when (suggestion) {
+            is Suggestion.AddToDictionary ->
+                context.getString(R.string.suggestion_add_to_dictionary, suggestion.word)
+            is Suggestion.ExactAdd -> suggestion.label
+            is Suggestion.Word ->
+                if (showDebugScores && index < currentScores.size && currentScores.isNotEmpty()) {
+                    "${suggestion.text}\n${currentScores[index]}"
+                } else {
+                    suggestion.text
+                }
+        }
+
+        when {
+            // Centered "Add to dictionary?" prompt when it is the only suggestion.
+            isCenteredPrompt -> {
+                view.layoutParams = LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                )
+                view.gravity = Gravity.CENTER
+                view.typeface = Typeface.DEFAULT_BOLD
+                view.setTextColor(theme?.activatedColor?.takeIf { it != 0 } ?: Color.CYAN)
+            }
+            // #42: Exact typed word (italic, sublabel color for "tap to add").
+            suggestion is Suggestion.ExactAdd -> {
+                view.layoutParams = defaultSuggestionLayoutParams()
+                view.gravity = Gravity.CENTER
+                view.setTypeface(Typeface.DEFAULT_BOLD, Typeface.BOLD_ITALIC)
+                view.setTextColor(theme?.subLabelColor?.takeIf { it != 0 } ?: Color.LTGRAY)
+            }
+            // Highlight first suggestion with activated color.
+            index == 0 -> {
+                view.layoutParams = defaultSuggestionLayoutParams()
+                view.gravity = Gravity.CENTER
+                view.setTypeface(Typeface.DEFAULT_BOLD, Typeface.NORMAL)
+                view.setTextColor(theme?.activatedColor?.takeIf { it != 0 } ?: Color.CYAN)
+            }
+            else -> {
+                view.layoutParams = defaultSuggestionLayoutParams()
+                view.gravity = Gravity.CENTER
+                view.setTypeface(Typeface.DEFAULT, Typeface.NORMAL)
+                view.setTextColor(theme?.labelColor?.takeIf { it != 0 } ?: Color.WHITE)
+            }
+        }
+        view.visibility = VISIBLE
+    }
+
+    /**
+     * Reconcile the actual children of this LinearLayout to [desired] in order,
+     * touching only the delta: detach any leftover child, and (re)attach/reorder
+     * only where the current child differs from the desired one. Pooled views not
+     * in [desired] (surplus suggestions/dividers) are detached but retained in the
+     * pool for future reuse.
+     */
+    private fun reconcileChildren(desired: List<View>) {
+        // Fast path: already correct (common for the dedup-skipped hot loop and
+        // for repeated same-size updates where pooled views stayed attached).
+        var i = 0
+        while (i < desired.size) {
+            val want = desired[i]
+            val have = if (i < childCount) getChildAt(i) else null
+            if (have !== want) {
+                // Detach `want` from any stale position/parent, then insert at i.
+                (want.parent as? ViewGroup)?.let { p -> if (p !== this) p.removeView(want) }
+                if (indexOfChild(want) != -1) removeView(want)
+                addView(want, i)
+            }
+            i++
+        }
+        // Remove surplus trailing children (larger previous suggestion set, or
+        // leftover views from a prior imperative mode). Detach only — pooled
+        // views remain in suggestionViews/dividerViews for reuse.
+        while (childCount > desired.size) {
+            removeViewAt(childCount - 1)
+        }
+    }
+
+    /**
      * Set whether to show debug scores
      */
     fun setShowDebugScores(show: Boolean) {
@@ -256,78 +406,14 @@ class SuggestionBar : LinearLayout {
             }
         }
 
-        // Clear existing views and suggestion list
-        removeAllViews()
-        suggestionViews.clear()
-
-        // Dynamically create TextViews for all suggestions
+        // R3 (audit finding #5): Recycle TextViews instead of removeAllViews() +
+        // allocating a fresh TextView (and divider) per suggestion per keystroke.
+        // The view pools ([suggestionViews]/[dividerViews]) are grown on demand and
+        // rebound in place; only the child-count delta is added/removed. Click
+        // listeners are bound once at pool-creation with an index-stable closure
+        // (pool slot i always renders suggestion i), preserving click semantics.
         try {
-            currentSuggestions.forEachIndexed { i, suggestion ->
-                // Add divider before each suggestion except the first
-                if (i > 0) {
-                    addView(createDivider(context))
-                }
-
-                // Check if this is a centered prompt (single dict_add: suggestion)
-                val isDictAddPrompt = suggestion.startsWith("dict_add:")
-                val isCenteredPrompt = isDictAddPrompt && currentSuggestions.size == 1
-                // #42: Check if this is an exact typed word (tap to add)
-                val isExactAddPrompt = suggestion.startsWith("exact_add:")
-
-                // Transform special prefixes for display
-                val displayText = when {
-                    // "Add to dictionary?" prompt (dict_add:word -> Add 'word' to dictionary?)
-                    isDictAddPrompt -> {
-                        val wordToAdd = suggestion.removePrefix("dict_add:")
-                        "Add '$wordToAdd' to dictionary?"
-                    }
-                    // #42: Exact typed word with + indicator (exact_add:word -> +word)
-                    isExactAddPrompt -> {
-                        val exactWord = suggestion.removePrefix("exact_add:")
-                        "+$exactWord"
-                    }
-                    // Debug scores mode
-                    showDebugScores && i < currentScores.size && currentScores.isNotEmpty() -> {
-                        "$suggestion\n${currentScores[i]}"
-                    }
-                    // Normal display
-                    else -> suggestion
-                }
-
-                val textView = createSuggestionView(context, i).apply {
-                    text = displayText
-
-                    // Center the "Add to dictionary?" prompt when it's the only suggestion
-                    if (isCenteredPrompt) {
-                        layoutParams = LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            ViewGroup.LayoutParams.MATCH_PARENT
-                        )
-                        gravity = Gravity.CENTER
-                        typeface = Typeface.DEFAULT_BOLD
-                        setTextColor(theme?.activatedColor?.takeIf { it != 0 } ?: Color.CYAN)
-                    }
-                    // #42: Style exact_add prompt (italic, sublabel color for "tap to add" indicator)
-                    else if (isExactAddPrompt) {
-                        typeface = Typeface.DEFAULT_BOLD
-                        setTypeface(typeface, Typeface.BOLD_ITALIC)
-                        setTextColor(theme?.subLabelColor?.takeIf { it != 0 } ?: Color.LTGRAY)
-                    }
-                    // Highlight first suggestion with activated color
-                    else if (i == 0) {
-                        typeface = Typeface.DEFAULT_BOLD
-                        setTextColor(theme?.activatedColor?.takeIf { it != 0 } ?: Color.CYAN)
-                    } else {
-                        typeface = Typeface.DEFAULT
-                        setTextColor(theme?.labelColor?.takeIf { it != 0 } ?: Color.WHITE)
-                    }
-                }
-
-                // Remove from parent if already attached
-                (textView.parent as? ViewGroup)?.removeView(textView)
-                addView(textView)
-                suggestionViews.add(textView)
-            }
+            rebindSuggestionViews()
         } catch (e: Exception) {
             Log.e("SuggestionBar", "Error updating suggestion views: ${e.message}")
         }
@@ -393,6 +479,7 @@ class SuggestionBar : LinearLayout {
         // Clear and show single message
         removeAllViews()
         suggestionViews.clear()
+        dividerViews.clear()
         currentSuggestions.clear()
         currentScores.clear()
 
@@ -447,6 +534,7 @@ class SuggestionBar : LinearLayout {
         // Clear and show single status message
         removeAllViews()
         suggestionViews.clear()
+        dividerViews.clear()
         currentSuggestions.clear()
         currentScores.clear()
 
@@ -478,6 +566,7 @@ class SuggestionBar : LinearLayout {
         // Clear the display
         removeAllViews()
         suggestionViews.clear()
+        dividerViews.clear()
         currentSuggestions.clear()
         currentScores.clear()
 
@@ -518,6 +607,7 @@ class SuggestionBar : LinearLayout {
         // Clear existing suggestions and views
         removeAllViews()
         suggestionViews.clear()
+        dividerViews.clear()
         currentSuggestions.clear()
         currentScores.clear()
 
@@ -737,6 +827,7 @@ class SuggestionBar : LinearLayout {
         // Clear any existing suggestion views
         removeAllViews()
         suggestionViews.clear()
+        dividerViews.clear()
 
         // #109: Remove padding so password eye icon (36dp) and autofill chips
         // get the full 40dp bar height. Password views manage their own spacing.
@@ -963,6 +1054,7 @@ class SuggestionBar : LinearLayout {
         // Clear all views - suggestions will be recreated as needed
         removeAllViews()
         suggestionViews.clear()
+        dividerViews.clear()
 
         // #109: Restore normal padding after leaving password/autofill mode
         val padding = dpToPx(context, 8)
