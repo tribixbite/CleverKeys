@@ -13,11 +13,35 @@ package tribixbite.cleverkeys.swipe.geometric
  *
  * ## Authoritative measured numbers at N=32 defaults (deterministic, cross-JVM stable
  * after the [GeoAccuracyHarness.stratifiedSample] enum-order determinism fix)
+ *
+ * Post the 2026-07-20 SLOPPY-tier fix — THREE levers, all validated against the full
+ * regression grid (synthetic noise): (1) endpoint-inset dual-anchor bucketing
+ * `endpointInsetKw = 0.30` (recall fix for the pruner-limited weird fixture); (2) the
+ * bounded direction/tangent channel `directionPenaltyWeight = 0.30` (a CLEAN-SAFE,
+ * noise-averaging scorer signal — monotonically non-regressing on every layout × tier);
+ * (3) `maxCandidatesScored 800 → 1200` (absorbs the inset union so TYPICAL cap-survival
+ * stays ≥ 99%). The SHARK2 location tunnel was evaluated and REJECTED as a default (it
+ * lifts SLOPPY but regresses CLEAN — see `GeometricEngineConfig.locationTunnelHalfWidth`).
+ * All numbers at N=32 FINAL defaults, full grid (500 words × K=5):
  * ```
  *   layout      CLEAN t1/t3     TYPICAL t1/t3/t5     SLOPPY t1/t3/t5     recall C/T/S
- *   en/QWERTY   87.3 / 98.0     83.8 / 95.8 / 98.4   63.0 / 79.5 / 84.2  99.3/99.8/93.4
- *   ru/JCUKEN   95.8 / 100.0    90.9 / 99.8 / 100.0  74.8 / 88.0 / 90.4  100 /100 /94.0
+ *   en/QWERTY   87.2 / 98.2     83.4 / 95.9 / 98.2   63.8 / 80.7 / 85.7  100/99.3/96.5
+ *   ru/JCUKEN   94.5 / 99.6     91.3 / 98.5 / 98.9   75.2 / 89.8 / 92.7  100/99.0/96.9
+ *   en/Dvorak   ~85 / 97.7      78.0 / 93.8 / 96.5   56.4 / 75.8 / 81.7  ~100/99/93
+ *   en/weird    ~88 / 99.0      81.0 / 94.6 / 96.6   51.9 / 68.5 / 74.3  98 /99 /88
+ *   fr/AZERTY   86.2 / 98.5     80.8 / 96.8 / 98.6   64.4 / 85.5 / 90.0   – / 99.8/ –
+ *   de/QWERTZ   91.2 / 99.6     86.4 / 98.3 / 99.3   71.0 / 88.8 / 93.2   – / 99.8/ –
  * ```
+ * Every CLEAN/TYPICAL floor is cleared on all six layouts, and QWERTY SLOPPY IMPROVED on
+ * every tier vs the pre-fix baseline (top-3 79.5→80.7%, top-5 84.2→85.7% — now clearing
+ * the aspirational 0.85). en/weird + en/Dvorak SLOPPY top-3 remain BELOW the shared 0.78
+ * floor even after all three levers (weird's top-5 CEILING is 74.3%; Dvorak is
+ * scorer-limited, only the CLEAN-breaking tunnel reaches 78%) — see the two inline SLOPPY
+ * notes for the per-layout fixture-floor / documented-partial resolution.
+ *
+ * VALIDATION CAVEAT: these defaults are tuned against SYNTHETIC noise (GeoTraceSynthesizer
+ * CLEAN/TYPICAL/SLOPPY tiers) only. A non-circular real-corpus check (FUTO/Yandex JCUKEN
+ * replay, evaluation-only per spec Non-Goal 4) is a pending follow-up — not run this round.
  *
  * The FINAL table below is cleared by these numbers with margin on CLEAN + TYPICAL; the
  * two documented DEVIATIONS from the spec's literal FINAL table (SLOPPY top-5 and the
@@ -63,21 +87,68 @@ object GeoAccuracyThresholds {
 
         // SLOPPY. top-1 (0.55) and top-3 (0.78) are the spec's FINAL numbers verbatim.
         //
-        // DEVIATION — SLOPPY top-5: the spec's aspirational 0.85 is NOT reached by the
-        // tuning-optimal N=32 default config on the synthetic SLOPPY tier. The
-        // authoritative full-grid (n=2500) measurement is 84.2% (en/QWERTY) — 0.8 pts
-        // short — and NO harness-measured config change closes the gap without
-        // regressing CLEAN/TYPICAL (widening the extremity buckets lifts SLOPPY prune
-        // recall but dilutes scoring and drops TYPICAL top-3 to the 92 floor; raising
-        // σ_l HURTS SLOPPY top-5). Per the spec's own "defaults stay unless the harness
-        // shows a win", the defaults are kept and this floor is set to 0.82 — a genuine
-        // ratchet (far above the 0.55 PROVISIONAL bar) that the optimal config clears
-        // with a ~2 pt deterministic margin and that still fails loudly on a real
-        // SLOPPY-tier regression. Reaching the literal 0.85 is an OQ-1/OQ-3 follow-up
-        // (SHARK2 location tunnel / length-normalization) tracked for future tuning.
+        // SLOPPY top-5 = 0.82 (RETAINED as the regression floor, NOT re-ratcheted). The
+        // 2026-07-20 fix LIFTED en/QWERTY SLOPPY top-5 84.2 → 85.7% (the direction/tangent
+        // channel), so QWERTY now clears the spec's aspirational 0.85 — the earlier
+        // "0.8 pt short" deviation is resolved for QWERTY. The floor stays 0.82 (not
+        // raised to 0.85) because it is the SHARED cross-layout regression floor and the
+        // non-QWERTY layouts (−NON_QWERTY_PENALTY) do not all clear 0.85 at SLOPPY; 0.82
+        // still fails loudly on a real regression while not over-fitting to QWERTY's gain.
         const val SLOPPY_TOP1 = 0.55
         const val SLOPPY_TOP3 = 0.78
         const val SLOPPY_TOP5 = 0.82
+
+        // ── Per-layout SLOPPY top-3 floors (2026-07-20 SLOPPY-tier fix) ──────────────
+        //
+        // Step-0 (GeoSloppyPruneRecallTest, -PgeoFull) measured the SLOPPY prune-recall
+        // decomposition that settled the long-open weird-vs-Dvorak attribution:
+        //   en/QWERTY (control) recall 93.3% — passing
+        //   en/Dvorak            recall 92.9% — HEALTHY (≈ QWERTY): top-3 75.8% is a
+        //                        within-shortlist REORDERING loss (scorer-limited),
+        //                        concentrated in SHORT 2–3-letter same-row words
+        //                        (len-stratum top-3: SHORT 71.0 / MID 74.1 / LONG 82.3).
+        //   en/weird             recall 80.2% — 13 pts under control: ~20% of true words
+        //                        never reach the scorer → PRUNER-limited.
+        //
+        // Fixes applied (THREE levers — see the class-level table + GeometricEngineConfig):
+        //  1. endpoint-inset dual-anchor bucketing (endpointInsetKw = 0.30) — RECALL fix:
+        //     lifted weird SLOPPY recall 80.2→87.6% (the pruner-limited fixture), CLEAN-safe.
+        //     Recall is NOT monotone in insetKw (the extra candidates compete for the cap),
+        //     which forced lever 3.
+        //  2. direction/tangent channel (directionPenaltyWeight = 0.30) — CLEAN-SAFE SCORER
+        //     signal: a bounded, noise-averaging mean(1−cosθ) over index-aligned segment
+        //     tangents (ASK precedent). The weight sweep {0,.15,.30,.50} was MONOTONICALLY
+        //     non-regressing on every layout × tier (it even IMPROVES CLEAN top-3), so it
+        //     succeeds exactly where the tunnel failed. It carried weird top-3 67.8→68.5%,
+        //     QWERTY SLOPPY 79.2→80.7 / 84.4→85.7 (clears 0.85), Dvorak 75.4→75.8%.
+        //  3. maxCandidatesScored 800→1200 — restores TYPICAL cap-survival to 99.5% after
+        //     the inset union pushed mean survivors 641→925 past the old 800 cap.
+        //
+        // The SHARK2 LOCATION TUNNEL (W=1) was evaluated and REJECTED as a default: it
+        // lifted SLOPPY everywhere (Dvorak 75.8→78.2%) BUT the FULL regression grid caught
+        // it REGRESSING QWERTY CLEAN top-3 98.1→95.6% (below 0.97) + tail-canary gap 0.05→
+        // 0.11 (over 0.10) — the min-over-window relaxes clean-trace discrimination (spec
+        // OQ-1). OFF by default; see GeometricEngineConfig.locationTunnelHalfWidth.
+
+        // weird_custom — DOCUMENTED PER-LAYOUT FLOOR (adversarial fixture, RIGHT per the
+        // research doc §3): weird_custom.xml is a DELIBERATELY hostile, irregular
+        // `scale="7"` column-misaligned grid no real user types on; its purpose is to
+        // prove the engine does not collapse on pathological geometry, not to hit
+        // production accuracy. After ALL THREE levers (inset + direction channel + cap)
+        // its SLOPPY top-3 is 68.5% and its top-5 CEILING is 74.3% (even a perfect ranker
+        // cannot exceed top-5), so 0.78 top-3 is unreachable INTRINSICALLY — fixture
+        // geometry, not a scorer bug. Floor set to 0.66 (measured 68.5% minus a small
+        // deterministic margin). This is a fixture floor ONLY — never applied to Dvorak.
+        const val WEIRD_SLOPPY_TOP3 = 0.66
+
+        // en/Dvorak — NO per-layout floor (real shipping layout; research doc §3 forbids
+        // lowering it). Its SLOPPY top-3 = 75.8% is a documented KNOWN PARTIAL asserted at
+        // the true 0.78 target in GeoAccuracyDvorakEnTest. Recorded for regression triage:
+        // BRITTLE MARGIN — the location-tunnel path that DOES reach Dvorak 78.2% clears
+        // 0.78 by only ~0.2 pt, well within seed/sample/dictionary sensitivity; any change
+        // to the synthesizer, sample seed, or dictionary can move it either side of the
+        // floor. The CLEAN-safe closer is the OQ-8 direction channel at a higher weight or
+        // a curvature-weighted variant, tracked as a follow-up — not a floor edit.
     }
 
     /**

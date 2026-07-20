@@ -63,6 +63,10 @@ class CandidatePrunerTest {
             cornerIndices = IntArray(0),
             startNearest = start,
             endNearest = end,
+            // Ideal-trace gesture: no endpoint noise, so the inset anchors coincide with
+            // the raw endpoints (Step 1a no-op) — the pruner union stays bit-identical.
+            startNearestInset = start,
+            endNearestInset = end,
         )
     }
 

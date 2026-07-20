@@ -458,6 +458,8 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.swipe.geometric.TemplateGeneratorTest',
     'tribixbite.cleverkeys.swipe.geometric.CandidatePrunerTest',
     'tribixbite.cleverkeys.swipe.geometric.GeoDecoderCoreTest',
+    // Step-0 SLOPPY prune-recall decomposition (geoFull-gated measurement)
+    'tribixbite.cleverkeys.swipe.geometric.GeoSloppyPruneRecallTest',
     // Phase 5 — synthetic traces + accuracy harness (PROVISIONAL floors)
     'tribixbite.cleverkeys.swipe.geometric.GeoTraceSynthesizerTest',
     'tribixbite.cleverkeys.swipe.geometric.GeoAccuracyQwertyEnTest',

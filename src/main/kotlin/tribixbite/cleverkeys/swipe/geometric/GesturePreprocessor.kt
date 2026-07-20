@@ -90,6 +90,26 @@ class GesturePreprocessor(private val config: GeometricEngineConfig) {
         val startNearest = layout.nearestKeys(resampled[0], resampled[1], k)
         val endNearest = layout.nearestKeys(resampled[(n - 1) * 2], resampled[(n - 1) * 2 + 1], k)
 
+        // Endpoint-inset dual anchors (research doc §2 Step 1a). Back off each endpoint
+        // ALONG the path by `endpointInsetKw` to undo SLOPPY overshoot + endpoint-Gaussian
+        // jitter before a SECOND nearest-key lookup; the pruner unions the raw AND inset
+        // buckets so a noisy endpoint that lands on an adjacent key still enrolls the true
+        // word's bucket. At `endpointInsetKw == 0` (default) [pointAlongPath] returns the
+        // endpoint itself, so the inset arrays are bit-identical to the raw arrays and the
+        // pruner union is a no-op — the change is fully opt-in.
+        val insetKw = config.endpointInsetKw
+        val startNearestInset: IntArray
+        val endNearestInset: IntArray
+        if (insetKw <= 0f) {
+            startNearestInset = startNearest
+            endNearestInset = endNearest
+        } else {
+            val (sx, sy) = pointAlongPath(resampled, fromStart = true, insetKw = insetKw, layout = layout)
+            val (ex, ey) = pointAlongPath(resampled, fromStart = false, insetKw = insetKw, layout = layout)
+            startNearestInset = layout.nearestKeys(sx, sy, k)
+            endNearestInset = layout.nearestKeys(ex, ey, k)
+        }
+
         return ProcessedGesture(
             points = resampled,
             pathLengthKw = pathLenKw,
@@ -97,7 +117,70 @@ class GesturePreprocessor(private val config: GeometricEngineConfig) {
             cornerIndices = corners,
             startNearest = startNearest,
             endNearest = endNearest,
+            startNearestInset = startNearestInset,
+            endNearestInset = endNearestInset,
         )
+    }
+
+    /**
+     * Walk the resampled polyline inward from one endpoint, accumulating arc length in kw
+     * units (via [LayoutGeometry.dKw]) until [insetKw] is reached, and return that
+     * normalized (u, v) point (linear interpolation on the crossing segment).
+     *
+     * Used to derive the endpoint-inset dual anchors (Step 1a): the START inset walks
+     * forward from index 0; the END inset walks backward from index N−1. If the whole path
+     * is shorter than [insetKw] the walk clamps at the far endpoint (a degenerate short
+     * gesture — the inset point coincides with the opposite endpoint, harmless: the pruner
+     * merely probes one extra bucket).
+     *
+     * DESIGN NOTE (asymmetry): in the synthetic noise model the END anchor is the targeted
+     * one — SLOPPY adds end overshoot (p=0.6) that the inset undoes. The START anchor
+     * undoes nothing specific there (no start-overshoot term; the endpoint Gaussian is
+     * isotropic), so the start-side inset is untargeted widening — it measured harmless
+     * (CLEAN/TYPICAL floors unmoved) and is kept symmetric for simplicity and for real
+     * traces where a start hook is possible; a future refinement could inset the end only.
+     *
+     * @param poly interleaved normalized (u,v) resampled polyline (length `2 * n`).
+     * @param fromStart true → walk forward from point 0; false → walk backward from N−1.
+     * @param insetKw distance to back off along the path, in kw units (> 0 by caller).
+     * @param layout drives the kw-unit arc-length metric (anisotropy via `dKw`).
+     * @return the inset point as `(u, v)`.
+     */
+    internal fun pointAlongPath(
+        poly: FloatArray,
+        fromStart: Boolean,
+        insetKw: Float,
+        layout: LayoutGeometry,
+    ): Pair<Float, Float> {
+        val count = poly.size / 2
+        // Endpoint index and the inward step direction.
+        val startIdx = if (fromStart) 0 else count - 1
+        val step = if (fromStart) 1 else -1
+        var ux = poly[2 * startIdx]
+        var uy = poly[2 * startIdx + 1]
+        if (insetKw <= 0f || count < 2) return ux to uy
+
+        var remaining = insetKw
+        var i = startIdx
+        while (i + step in 0 until count) {
+            val nx = poly[2 * (i + step)]
+            val ny = poly[2 * (i + step) + 1]
+            val segLen = layout.dKw(ux, uy, nx, ny)
+            if (segLen <= 0f) {
+                // Coincident neighbor — no progress; advance the anchor and continue.
+                ux = nx; uy = ny; i += step; continue
+            }
+            if (segLen >= remaining) {
+                // The inset point lands inside this segment; linear-interpolate.
+                val f = (remaining / segLen).coerceIn(0f, 1f)
+                return (ux + (nx - ux) * f) to (uy + (ny - uy) * f)
+            }
+            remaining -= segLen
+            ux = nx; uy = ny // advance the running anchor to the next vertex
+            i += step
+        }
+        // Path shorter than insetKw: clamp at the far endpoint.
+        return ux to uy
     }
 
     // ── arc-length resampling (ported from SwipeResampler's family, not imported) ─

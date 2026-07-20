@@ -119,6 +119,9 @@ class PathScorer(private val config: GeometricEngineConfig) {
         // ── Bounded corner-anchor bonus (§6).
         s += cornerBonus(gesture, t, layout)
 
+        // ── Direction/tangent channel (OQ-8, default-off) — bounded, noise-averaging.
+        if (config.directionPenaltyWeight > 0f) s -= directionPenalty(g, t)
+
         return s
     }
 
@@ -176,13 +179,93 @@ class PathScorer(private val config: GeometricEngineConfig) {
     /**
      * `d_loc = Σ α(i) · d_kw(uᵢ, tᵢ)` (kw units, unnormalized points). The α weights
      * emphasize the endpoints (Σα = 1, min at the midpoint).
+     *
+     * With the SHARK2 location tunnel enabled (`locationTunnelHalfWidth = W > 0`), each
+     * gesture point `uᵢ` matches the CLOSEST template point within a ±W index window
+     * instead of the strictly index-aligned `tᵢ`:
+     * `d_loc(i) = α(i) · min over j∈[i−W, i+W] d_kw(uᵢ, t_j)` (research doc §2 Step 1b).
+     * This relaxes the mid-gesture penalty that SLOPPY per-point jitter inflates on tight
+     * same-row arcs. `W = 0` is the strict path (a single j = i term) — bit-identical to
+     * the pre-tunnel behavior, so the default cannot move any floor.
+     *
+     * DESIGN NOTE: at the endpoints (i = 0, i = N−1) the ±W window is clamped one-sided, so
+     * the min still relaxes location exactly where the α end-weights say fidelity matters
+     * MOST — one reason the tunnel regressed CLEAN. This is partially compensated by
+     * [endpointPenalty], which anchors the RAW (untunneled) endpoints; but it is a core
+     * reason the tunnel is OFF by default (see GeometricEngineConfig.locationTunnelHalfWidth).
      */
     internal fun locationDistance(g: FloatArray, t: FloatArray, layout: LayoutGeometry): Float {
+        val w = config.locationTunnelHalfWidth
         var acc = 0f
+        if (w <= 0) {
+            // Strict index-aligned location term (default) — single j = i comparison.
+            for (i in 0 until n) {
+                acc += alpha[i] * layout.dKw(g[2 * i], g[2 * i + 1], t[2 * i], t[2 * i + 1])
+            }
+            return acc
+        }
+        // Tunnel: minimum over the ±W template-index window around i (clamped to [0, N)).
         for (i in 0 until n) {
-            acc += alpha[i] * layout.dKw(g[2 * i], g[2 * i + 1], t[2 * i], t[2 * i + 1])
+            val gu = g[2 * i]; val gv = g[2 * i + 1]
+            val lo = if (i - w > 0) i - w else 0
+            val hi = if (i + w < n - 1) i + w else n - 1
+            var best = Float.POSITIVE_INFINITY
+            var j = lo
+            while (j <= hi) {
+                val d = layout.dKw(gu, gv, t[2 * j], t[2 * j + 1])
+                if (d < best) best = d
+                j++
+            }
+            acc += alpha[i] * best
         }
         return acc
+    }
+
+    // ── Direction / tangent channel (OQ-8) ───────────────────────────────────────
+
+    /**
+     * Bounded, α-end-weighted per-segment DIRECTION penalty (research doc Rank 3, ASK
+     * `1 + k·(1 − cosθ)` precedent). For each of the N−1 index-aligned segments, compare
+     * the gesture tangent `(gᵢ₊₁ − gᵢ)` to the template tangent `(tᵢ₊₁ − tᵢ)` by cosine
+     * similarity; accumulate `(1 − cosθ)` ∈ [0, 2], weighted so mid/approach segments
+     * count (endpoints already governed by [endpointPenalty]). The raw sum is scaled by
+     * [GeometricEngineConfig.directionPenaltyWeight] and CAPPED at
+     * [GeometricEngineConfig.directionPenaltyCap] so it can never dominate S(w).
+     *
+     * Why a NEW channel and not a σ re-tune: aggregate tangent direction is
+     * noise-AVERAGING (zero-mean per-point jitter cancels in a segment vector) whereas
+     * the positional shape sum is noise-ACCUMULATING — so this moves numbers the
+     * saturated σ sweep provably could not, on exactly the key-boundary-adjacent
+     * ambiguity that swamps absolute geometry at SLOPPY.
+     *
+     * Zero-length segments (coincident resampled points — possible on short/degenerate
+     * templates) contribute nothing (no defined tangent), so the penalty stays finite.
+     */
+    internal fun directionPenalty(g: FloatArray, t: FloatArray): Float {
+        val segCount = n - 1
+        if (segCount < 1) return 0f
+        var acc = 0f
+        var contributing = 0
+        for (i in 0 until segCount) {
+            val gdx = g[2 * (i + 1)] - g[2 * i]
+            val gdy = g[2 * (i + 1) + 1] - g[2 * i + 1]
+            val tdx = t[2 * (i + 1)] - t[2 * i]
+            val tdy = t[2 * (i + 1) + 1] - t[2 * i + 1]
+            val gn = sqrt(gdx * gdx + gdy * gdy)
+            val tn = sqrt(tdx * tdx + tdy * tdy)
+            if (gn <= 0f || tn <= 0f) continue // coincident points → no tangent
+            var cos = (gdx * tdx + gdy * tdy) / (gn * tn)
+            if (cos > 1f) cos = 1f
+            if (cos < -1f) cos = -1f
+            acc += 1f - cos // ∈ [0, 2]
+            contributing++
+        }
+        if (contributing == 0) return 0f
+        // Mean (1−cosθ) so the penalty is length-invariant (never a long-word bias),
+        // scaled by the weight, capped to bound its influence like the corner bonus.
+        val mean = acc / contributing
+        val raw = config.directionPenaltyWeight * mean
+        return if (raw > config.directionPenaltyCap) config.directionPenaltyCap else raw
     }
 
     // ── Bounded penalties / bonus (§6) ───────────────────────────────────────────

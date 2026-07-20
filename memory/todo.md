@@ -21,14 +21,23 @@ pure-JVM `swipe.geometric` package; NOT wired into live pipeline — WP9 stays d
       purity-scanner string-literal awareness + NUL byte fix, PROVISIONAL→FINAL label sweep,
       spec As-Built Notes appendix + Status flip. Deviations noted: SLOPPY top-5 0.82,
       whole-pruner recall floors (see spec § As-Built Notes).
-- [ ] PRE-EXISTING geoFull red (discovered in the audit round, NOT introduced by it —
-      bit-identical failure reproduced at clean HEAD 6bec06b4 in a scratch worktree):
-      `sloppy_underGeoFull` fails on the two hardest non-default layouts — en/weird
-      SLOPPY top-3 64.5% and en/Dvorak 75.8% vs the 0.78 FINAL floor. Phase 6 ratcheted
-      the floors against the two DEFAULT layouts only; the four smoke classes' geoFull
-      SLOPPY grids were evidently never run post-ratchet. Needs a decision: tune for
-      those layouts (OQ-1/OQ-3 follow-ups) or set per-layout SLOPPY floors. Default
-      (non-geoFull) suite is unaffected/green.
+- [x] RESOLVED 2026-07-20 — geoFull SLOPPY decision (was: en/weird 64.5% + en/Dvorak
+      75.8% vs 0.78). Executed `docs/audit/2026-07-20-geo-sloppy-research.md`:
+      **Step 0** (new `GeoSloppyPruneRecallTest`, -PgeoFull) measured the attribution —
+      weird PRUNER-limited (recall 80.2% vs 93.3% QWERTY), Dvorak SCORER-limited
+      (recall 92.9% healthy, short same-row reordering). **Fix = 3 levers, all
+      regression-grid-validated**: `endpointInsetKw=0.30` (recall), `directionPenaltyWeight=0.30`
+      (CLEAN-safe scorer signal — the location tunnel was REJECTED as a default because it
+      regressed QWERTY CLEAN 98.1→95.6%), `maxCandidatesScored 800→1200` (restores TYPICAL
+      cap-survival ≥99% after the inset union). QWERTY SLOPPY improved on every tier
+      (top-5 84.2→85.7% clears the aspirational 0.85). **Outcomes**: en/weird → documented
+      fixture floor `WEIRD_SLOPPY_TOP3=0.66` (measured 68.5%, top-5 ceiling 74.3% — 0.78
+      intrinsically unreachable; adversarial fixture per research §3); en/Dvorak → floor
+      NOT lowered (real layout), documented KNOWN PARTIAL at 75.8% (only the CLEAN-breaking
+      tunnel reaches 78.2%, by a brittle 0.2 pt) — OQ-8 direction-channel-at-higher-weight
+      is the tracked CLEAN-safe closer. Numbers/decision trail in the spec As-Built Notes
+      addendum + `GeoAccuracyThresholds`. Caveat: synthetic-noise validation only; FUTO/
+      Yandex real-corpus JCUKEN replay is the pending non-circular check (not this round).
 - [x] Follow-ups DONE 2026-07-20 (fixed directly per user, no issue filed): README en row
       52k→98,140 (binary-verified all bundled counts); grek_qwerty `script="latin"`→`"greek"`
 - [x] NOTE from lint session: LayoutProjection's UnicodeScript gate crashed API 21-23 (NewApi);

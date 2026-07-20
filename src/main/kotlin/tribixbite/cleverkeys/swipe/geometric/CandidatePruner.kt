@@ -43,13 +43,25 @@ class CandidatePruner(private val config: GeometricEngineConfig) {
         // Widen to 3-nearest per end on dense layouts (small kw ⇒ ≳13 columns) via
         // the shared config helper (MUST match GesturePreprocessor.neighborCount).
         val neighbors = config.effectiveExtremityNeighbors(layout)
-        val starts = takeUpTo(gesture.startNearest, neighbors)
-        val ends = takeUpTo(gesture.endNearest, neighbors)
+        // Endpoint-inset dual-anchor union (research doc §2 Step 1a): probe the nearest
+        // keys of the RAW endpoint AND the along-path-inset endpoint. At the default
+        // `endpointInsetKw == 0` the inset arrays are bit-identical to the raw arrays so
+        // `unionDistinct` returns exactly the raw ids — a no-op that leaves CLEAN/TYPICAL
+        // behavior unchanged. When turned up, a noisy endpoint that landed on an adjacent
+        // key still enrolls the true word's bucket. DEDUPE is mandatory: probing the same
+        // (s, e) pair twice would add a word's ordinal twice (double-scored/ranked).
+        val starts = unionDistinct(
+            takeUpTo(gesture.startNearest, neighbors), takeUpTo(gesture.startNearestInset, neighbors),
+        )
+        val ends = unionDistinct(
+            takeUpTo(gesture.endNearest, neighbors), takeUpTo(gesture.endNearestInset, neighbors),
+        )
 
         // Union the (start, end) buckets. A word can only ever land in ONE bucket
-        // (its own first/last pair), so unioning distinct buckets yields disjoint
-        // ordinal sets — no dedupe needed, and the total scan is bounded by the sum of
-        // bucket sizes (the "~4–16k" survivors row).
+        // (its own first/last pair), and the deduped start/end id sets make every probed
+        // (s, e) pair distinct — so unioning the buckets yields disjoint ordinal sets, no
+        // ordinal dedupe needed, and the total scan is bounded by the sum of bucket sizes
+        // (the "~4–16k" survivors row).
         val candidates = ArrayList<Int>(256)
         for (s in starts) {
             if (s < 0) continue // -1 sentinel from an unfilled nearest-key slot
@@ -121,4 +133,20 @@ class CandidatePruner(private val config: GeometricEngineConfig) {
     /** First [k] ids of [arr] (or all of them if shorter). */
     private fun takeUpTo(arr: IntArray, k: Int): IntArray =
         if (arr.size <= k) arr else arr.copyOf(k)
+
+    /**
+     * Order-preserving union of two key-id arrays (raw endpoint ∪ inset endpoint,
+     * Step 1a): all of [primary] in order, then any id of [secondary] not already
+     * present. Deterministic (fixed traversal order, NFR-4) and small (≤ 2·k ids),
+     * so a linear membership check is cheaper than a Set. When [secondary] is the SAME
+     * array instance as [primary] (the `endpointInsetKw == 0` no-op) it returns a copy
+     * equal to [primary] — bit-identical bucket probing.
+     */
+    private fun unionDistinct(primary: IntArray, secondary: IntArray): IntArray {
+        if (primary === secondary) return primary
+        val out = ArrayList<Int>(primary.size + secondary.size)
+        for (id in primary) out.add(id)
+        for (id in secondary) if (id !in out) out.add(id)
+        return out.toIntArray()
+    }
 }
