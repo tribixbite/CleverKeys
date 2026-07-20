@@ -310,9 +310,10 @@ android {
 
   lint {
     baseline = file("lint-baseline.xml")
-    // Lint gate phase 1: the baseline suppresses the ~972 pre-existing issues,
-    // so only NEW issues introduced after the baseline will fail the build.
-    // Verified green locally (`./gradlew lint`, BUILD SUCCESSFUL) before flipping.
+    // Lint gate phase 2 (2026-07-20): all 656 error/fatal issues fixed for real
+    // (unused-resource purge, NewApi guards, LongLogTag, backup rules, 21-locale
+    // translations). The baseline now suppresses only the remaining ~400 warnings
+    // + ~100 informational; any NEW error fails the build.
     abortOnError = true
     checkReleaseBuilds = false
   }
