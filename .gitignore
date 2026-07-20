@@ -119,6 +119,39 @@ scripts/dictionaries/en/*
 !scripts/dictionaries/en/en_blocklist.txt
 !scripts/dictionaries/en/en_enhanced.bin
 !scripts/dictionaries/en/unigrams.txt
+# Per-language classifier sources (build_wordlist.py): the generated word list
+# and the curated allow/blocklists are source-of-truth and stay tracked; the
+# per-language *_enhanced.bin/unigrams.txt intermediates are reproducible (the
+# shipped copies live in assets / langpack zips) and stay ignored.
+!scripts/dictionaries/es/
+!scripts/dictionaries/fr/
+!scripts/dictionaries/de/
+!scripts/dictionaries/it/
+!scripts/dictionaries/pt/
+!scripts/dictionaries/nl/
+!scripts/dictionaries/sv/
+!scripts/dictionaries/ru/
+!scripts/dictionaries/el/
+!scripts/dictionaries/tr/
+!scripts/dictionaries/id/
+!scripts/dictionaries/ms/
+!scripts/dictionaries/tl/
+scripts/dictionaries/es/*
+scripts/dictionaries/fr/*
+scripts/dictionaries/de/*
+scripts/dictionaries/it/*
+scripts/dictionaries/pt/*
+scripts/dictionaries/nl/*
+scripts/dictionaries/sv/*
+scripts/dictionaries/ru/*
+scripts/dictionaries/el/*
+scripts/dictionaries/tr/*
+scripts/dictionaries/id/*
+scripts/dictionaries/ms/*
+scripts/dictionaries/tl/*
+!scripts/dictionaries/*/*_words.txt
+!scripts/dictionaries/*/*_allowlist.txt
+!scripts/dictionaries/*/*_blocklist.txt
 scripts/norvig_missing.txt
 scripts/opensub_missing.txt
 

@@ -1,0 +1,2 @@
+# CleverKeys el force-drop blocklist (overrides everything, incl. the allowlist).
+# One word per line; "#" starts a comment.

@@ -349,8 +349,14 @@ def main():
     # See generate_binary_dict for the full rationale on why contraction
     # full-forms (dont/doesnt) are KEPT while left-fragments (doesn/isn) are
     # removed.
+    #
+    # ENGLISH-ONLY: the blocklist is English corpus noise ("hav" is the
+    # Swedish word for 'sea', "teh" is Indonesian for 'tea') — applying it to
+    # other languages would strip real vocabulary and break the classifier's
+    # bin==src artifact verification. The Latin-glyph gate stays language-wide
+    # (guarded by the >90%-ASCII share so el/ru are untouched).
     from generate_binary_dict import load_blocklist, _is_latin_word
-    _junk_blocklist = load_blocklist()
+    _junk_blocklist = load_blocklist() if args.lang == 'en' else frozenset()
     ascii_share = sum(1 for w, _ in raw_words if w.isascii()) / max(1, len(raw_words))
     latin_dict = ascii_share > 0.90
     before = len(raw_words)

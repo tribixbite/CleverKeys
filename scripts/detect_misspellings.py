@@ -154,24 +154,34 @@ def build_whitelist(our_words: list[str]) -> set[str]:
     return whitelist
 
 
-def find_misspellings(candidates: list[str], known_english: set[str], min_gap: float) -> list[tuple]:
-    """Find words within edit distance 1 of a known English word with large frequency gap."""
+ASCII_LOWER = 'abcdefghijklmnopqrstuvwxyz'
+
+
+def find_misspellings(candidates: list[str], known_english: set[str], min_gap: float,
+                      *, alphabet: str = ASCII_LOWER, lang: str = 'en') -> list[tuple]:
+    """Find words within edit distance 1 of a known-good word with large frequency gap.
+
+    `alphabet` is the substitution/insertion charset (per-language: accented
+    Latin, Cyrillic, Greek); `lang` selects the wordfreq corpus for the zipf
+    gap. Keyword-only with EN defaults so the standalone CLI and the English
+    build path are byte-identical to the pre-parametrization behaviour.
+    """
     results = []
 
     for word in candidates:
         best_match = None
         best_gap = 0.0
         best_rule = ''
-        wfreq = zipf_frequency(word, 'en')
+        wfreq = zipf_frequency(word, lang)
 
         # Single char substitution
         for i in range(len(word)):
-            for c in 'abcdefghijklmnopqrstuvwxyz':
+            for c in alphabet:
                 if c == word[i]:
                     continue
                 corrected = word[:i] + c + word[i+1:]
                 if corrected in known_english:
-                    gap = zipf_frequency(corrected, 'en') - wfreq
+                    gap = zipf_frequency(corrected, lang) - wfreq
                     if gap > best_gap:
                         best_match, best_gap, best_rule = corrected, gap, 'substitution'
 
@@ -179,16 +189,16 @@ def find_misspellings(candidates: list[str], known_english: set[str], min_gap: f
         for i in range(len(word)):
             corrected = word[:i] + word[i+1:]
             if corrected in known_english and len(corrected) >= 2:
-                gap = zipf_frequency(corrected, 'en') - wfreq
+                gap = zipf_frequency(corrected, lang) - wfreq
                 if gap > best_gap:
                     best_match, best_gap, best_rule = corrected, gap, 'deletion'
 
         # Single char insertion (word missing a char)
         for i in range(len(word) + 1):
-            for c in 'abcdefghijklmnopqrstuvwxyz':
+            for c in alphabet:
                 corrected = word[:i] + c + word[i:]
                 if corrected in known_english:
-                    gap = zipf_frequency(corrected, 'en') - wfreq
+                    gap = zipf_frequency(corrected, lang) - wfreq
                     if gap > best_gap:
                         best_match, best_gap, best_rule = corrected, gap, 'insertion'
 
@@ -196,7 +206,7 @@ def find_misspellings(candidates: list[str], known_english: set[str], min_gap: f
         for i in range(len(word) - 1):
             corrected = word[:i] + word[i+1] + word[i] + word[i+2:]
             if corrected in known_english and corrected != word:
-                gap = zipf_frequency(corrected, 'en') - wfreq
+                gap = zipf_frequency(corrected, lang) - wfreq
                 if gap > best_gap:
                     best_match, best_gap, best_rule = corrected, gap, 'transposition'
 
@@ -205,7 +215,7 @@ def find_misspellings(candidates: list[str], known_english: set[str], min_gap: f
             if word[i] == word[i+1]:
                 corrected = word[:i] + word[i+1:]
                 if corrected in known_english:
-                    gap = zipf_frequency(corrected, 'en') - wfreq
+                    gap = zipf_frequency(corrected, lang) - wfreq
                     if gap > best_gap:
                         best_match, best_gap, best_rule = corrected, gap, 'extra_double'
 
@@ -213,7 +223,7 @@ def find_misspellings(candidates: list[str], known_english: set[str], min_gap: f
         for i in range(len(word)):
             corrected = word[:i] + word[i] + word[i:]
             if corrected in known_english and corrected != word:
-                gap = zipf_frequency(corrected, 'en') - wfreq
+                gap = zipf_frequency(corrected, lang) - wfreq
                 if gap > best_gap:
                     best_match, best_gap, best_rule = corrected, gap, 'missing_double'
 

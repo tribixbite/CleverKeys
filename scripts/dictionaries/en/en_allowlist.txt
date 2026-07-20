@@ -1,5 +1,5 @@
 # CleverKeys English dictionary — curated ALLOWLIST
-# Words here are ALWAYS kept by scripts/build_en_wordlist.py, overriding the
+# Words here are ALWAYS kept by scripts/build_wordlist.py, overriding the
 # typo/foreign filters (but not the blocklist). One word per line; '#' comments.
 # Delete a line to stop force-keeping it. Sections preserve provenance.
 # NOTE (2026-07-03): words present in the user's dictionary exports were MOVED

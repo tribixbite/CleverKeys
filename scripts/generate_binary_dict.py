@@ -68,7 +68,7 @@ PREFIX_INDEX_MAX_LENGTH = 3
 #   (1) Blocklist — the union of ENGLISH_JUNK_BLOCKLIST (hardcoded fallback,
 #       kept for standalone / import use outside the repo tree) and
 #       scripts/dictionaries/en/en_blocklist.txt when that file exists.
-#       The file uses the same '#'-comment format as build_en_wordlist.py's
+#       The file uses the same '#'-comment format as build_wordlist.py's
 #       read_list_file(): one word per line, inline comments stripped.
 #       Call load_blocklist() to get the resolved union set.
 #
@@ -109,7 +109,7 @@ _EN_BLOCKLIST_PATH = Path(__file__).parent / "dictionaries" / "en" / "en_blockli
 def load_blocklist() -> frozenset:
     """Return the union of ENGLISH_JUNK_BLOCKLIST and en_blocklist.txt (when present).
 
-    The file uses '#'-comment syntax (same as build_en_wordlist.py's read_list_file):
+    The file uses '#'-comment syntax (same as build_wordlist.py's read_list_file):
     one word per line, everything from '#' onwards is ignored.  The result is the
     authoritative block-set used by both filter_junk() and build_dictionary.py's
     junk-filter pass.  Falls back gracefully to ENGLISH_JUNK_BLOCKLIST alone when the

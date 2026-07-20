@@ -620,7 +620,7 @@ tasks.register('generateBinaryDictionaries') {
       if (!binFile.exists() || jsonFile.lastModified() > binFile.lastModified()) {
         // DICT-1 guard: generate_binary_dict.py emits the V1 'DICT' format (no
         // accent map). The English dictionary ships as V2 'CKDT' (built by
-        // build_en_wordlist.py) and is the only bundled dict with a .json in
+        // build_wordlist.py) and is the only bundled dict with a .json in
         // assets. A stray json mtime bump (formatter, partial checkout/stash,
         // CI) would otherwise silently DOWNGRADE it to V1, losing accent-folding.
         // Never overwrite an existing CKDT bin with a DICT one.
@@ -628,7 +628,7 @@ tasks.register('generateBinaryDictionaries') {
           def magic = binFile.withInputStream { it.readNBytes(4) }
           if (new String(magic, "US-ASCII") == "CKDT") {
             logger.lifecycle("Skipping ${binFile.name}: existing bin is V2 (CKDT); " +
-              "regenerate it with build_en_wordlist.py --write, not generate_binary_dict.py (V1).")
+              "regenerate it with build_wordlist.py --write, not generate_binary_dict.py (V1).")
             return  // continue to next json
           }
         }

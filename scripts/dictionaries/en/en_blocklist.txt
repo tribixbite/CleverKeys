@@ -1,5 +1,5 @@
 # CleverKeys English dictionary — BLOCKLIST
-# Words here are NEVER admitted by scripts/build_en_wordlist.py, overriding every
+# Words here are NEVER admitted by scripts/build_wordlist.py, overriding every
 # positive oracle including the allowlist. One word per line; '#' comments.
 
 ## Apostrophe-split contraction LEFT-fragments (the real contraction keys are the
