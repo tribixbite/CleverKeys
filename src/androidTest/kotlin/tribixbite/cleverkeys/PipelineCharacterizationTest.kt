@@ -774,10 +774,15 @@ class PipelineCharacterizationTest {
         )
     }
 
-    /** Scenario 25 (D1): cursor-sync possessives ABSENT today. triggerPredictionsForPrefix
-     * injects contractions but NOT possessives. */
+    /** Scenario 25 (D1, re-pinned after first on-device run 2026-07-20): the original
+     * "possessives absent on cursor-sync" pin was WRONG — the dictionary itself carries
+     * possessive forms ("book's" is a dictionary word), so it appears on EVERY path via
+     * plain prediction. The D1 divergence is only about the augmentPredictionsWithPossessives
+     * FUNCTION (pinned by the swipe-path test where synthetic predictions carry no 's forms,
+     * and the SH-path reflection control). Step 5's fold into SH therefore produces no
+     * gateable visible delta here — this test pins that dictionary possessives DO surface. */
     @Test
-    fun oracle_cursorSync_possessivesAbsentToday() {
+    fun oracle_cursorSync_dictionaryPossessivesSurfaceToday() {
         val h = harness(initialText = "book")
         onMain { h.inputConnection.setSelection(4, 4) }
         drainMainThread()
@@ -785,17 +790,22 @@ class PipelineCharacterizationTest {
         Thread.sleep(1200)
         drainMainThread()
 
-        // ORACLE-FLIP(step 5): cursor-sync folds into SH and gains possessive augmentation —
-        // "book's" will appear then. Today the IC cursor-sync path emits no possessives.
-        assertFalse(
-            "TODAY cursor-sync has no possessives. Got: ${h.suggestionBar.getCurrentSuggestions()}",
+        assertTrue(
+            "dictionary possessive \"book's\" surfaces on cursor-sync. Got: ${h.suggestionBar.getCurrentSuggestions()}",
             h.suggestionBar.getCurrentSuggestions().any { it == "book's" }
         )
     }
 
-    /** Scenario 26: cursor-sync exact-add present for an unknown word. */
+    /** Scenario 26 (re-pinned after first on-device run 2026-07-20): the static map called
+     * cursor-sync exact-add "aligned" with typing — the device disproved it. For an unknown
+     * word with zero dictionary predictions, cursor-sync posts NOTHING: the exact-add branch
+     * (IC triggerPredictionsForPrefix:408-433) is neutralized by `isInDictionary ?: true`
+     * fail-closed default and the `finalWords.isNotEmpty()` post guard (:436). The typing
+     * path DOES show exact_add for the same input — a REAL divergence the map missed.
+     * ORACLE-FLIP(step 5): cursor-sync folds into SH's pipeline; exact_add will then appear
+     * and this assertion inverts. */
     @Test
-    fun oracle_cursorSync_exactAddPresentForUnknownWord() {
+    fun oracle_cursorSync_unknownWordPostsNothingToday() {
         val h = harness(initialText = "xyzq")
         h.config.show_exact_typed_word = true
         onMain { h.inputConnection.setSelection(4, 4) }
@@ -804,12 +814,9 @@ class PipelineCharacterizationTest {
         Thread.sleep(1200)
         drainMainThread()
 
-        // INVARIANT: cursor-sync mirrors the typing path's exact_add wire for unknown words.
         assertTrue(
-            "cursor-sync must include exact_add for 'xyzq'. Got: ${h.suggestionBar.getCurrentSuggestions()}",
-            h.suggestionBar.getCurrentSuggestions().any {
-                it.startsWith(Suggestion.EXACT_ADD_PREFIX) || it == "exact_add:xyzq"
-            }
+            "TODAY cursor-sync posts nothing for unknown 'xyzq' (no exact_add). Got: ${h.suggestionBar.getCurrentSuggestions()}",
+            h.suggestionBar.getCurrentSuggestions().isEmpty()
         )
     }
 
