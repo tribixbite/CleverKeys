@@ -14,6 +14,15 @@ Use this skill when running instrumented tests on emulator.wtf cloud infrastruct
   needed). The release APK has a different signature → "Permission Denial:
   signature mismatch". Never sign a test build with `RELEASE_KEYSTORE`.
 
+## Version pin (REQUIRED on this device)
+
+`~/bin/ew-cli` auto-downloads the LATEST jar from maven metadata. ew-cli 1.4.0
+(2026-07-20) bundles a glibc-linked zstd JNI that fails on this device with
+`UnsatisfiedLinkError: libpthread.so.0 not found` (JVM dlopen namespace doesn't
+include $PREFIX/glibc/lib). **Always run with `EW_VERSION=1.3.4 ew-cli ...`**
+until a newer version is verified to load (test: any run reaching "Uploaded
+app apk" is past the zstd path).
+
 ## Prerequisites
 
 ```bash
