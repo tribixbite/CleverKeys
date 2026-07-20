@@ -8,7 +8,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -23,6 +22,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -41,6 +41,7 @@ import androidx.compose.ui.window.Dialog
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import tribixbite.cleverkeys.customization.*
+import tribixbite.cleverkeys.theme.CleverKeysTheme
 import android.graphics.Typeface
 
 /**
@@ -66,10 +67,9 @@ class ShortSwipeCustomizationActivity : ComponentActivity() {
         CleverKeysService.setCustomizationMode(true)
 
         setContent {
-            // #35: Follow the system day/night setting (dark look unchanged)
-            MaterialTheme(
-                colorScheme = if (isSystemInDarkTheme()) darkColorScheme() else lightColorScheme()
-            ) {
+            // WP8: unified under CleverKeysTheme (branded scheme + keyboard type/shape scale),
+            // matching its sibling settings activities. Follows the system day/night setting.
+            CleverKeysTheme {
                 ShortSwipeCustomizationScreenV4(
                     onBack = {
                         CleverKeysService.setCustomizationMode(false)
@@ -151,15 +151,18 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
         }
     }
 
+    // Hoisted out of the semantics {} lambda (not a composable scope).
+    val showKeyboardDesc = stringResource(R.string.short_swipe_show_keyboard)
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Short Swipe Customization") },
+                title = { Text(stringResource(R.string.short_swipe_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.common_back)
                         )
                     }
                 },
@@ -171,7 +174,7 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
                             val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
                             imm.showSoftInput(rootView, 0)
                         },
-                        modifier = Modifier.semantics { contentDescription = "Show keyboard" }
+                        modifier = Modifier.semantics { contentDescription = showKeyboardDesc }
                     ) {
                         Text("⌨", fontSize = 22.sp)
                     }
@@ -184,7 +187,7 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
                             }
                         }
                     ) {
-                        Icon(Icons.Filled.Refresh, contentDescription = "Reset All")
+                        Icon(Icons.Filled.Refresh, contentDescription = stringResource(R.string.short_swipe_reset_all))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -210,7 +213,7 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "Tap any key below to customize its short swipe gestures",
+                        text = stringResource(R.string.short_swipe_tap_hint),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -259,14 +262,14 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "Type any key to customize it",
+                        text = stringResource(R.string.short_swipe_instruction_title),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "The keyboard below is your actual CleverKeys keyboard.\nTap a key to add short swipe actions to it.",
+                        text = stringResource(R.string.short_swipe_instruction_body),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                         textAlign = TextAlign.Center
@@ -495,7 +498,7 @@ fun KeyCustomizationDialog(
                 // Current mappings list
                 if (existingMappings.isNotEmpty()) {
                     Text(
-                        text = "Custom Mappings",
+                        text = stringResource(R.string.short_swipe_custom_mappings),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.fillMaxWidth()
@@ -517,7 +520,7 @@ fun KeyCustomizationDialog(
 
                 // Close button
                 TextButton(onClick = onDismiss) {
-                    Text("Close")
+                    Text(stringResource(R.string.common_close))
                 }
             }
         }
@@ -632,7 +635,7 @@ private fun MappingListItem(
             ) {
                 Icon(
                     Icons.Filled.Delete,
-                    contentDescription = "Delete",
+                    contentDescription = stringResource(R.string.common_delete),
                     modifier = Modifier.size(16.dp),
                     tint = MaterialTheme.colorScheme.error
                 )

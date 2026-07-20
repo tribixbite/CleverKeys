@@ -33,6 +33,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -129,6 +130,12 @@ class ThemeSettingsActivity : ComponentActivity() {
             // custom scheme verbatim; light derives from it (same purple/blue
             // accent hues darkened for contrast on light surfaces, neutrals
             // matching MaterialThemeManager's branded light scheme).
+            //
+            // WP8: this screen has a DELIBERATE purple identity that must NOT follow
+            // the app's branded-blue / dynamic scheme, so we pass its bespoke palette
+            // through CleverKeysTheme's colorSchemeOverride (colors preserved verbatim)
+            // rather than flattening it into the shared scheme. Typography/shapes and the
+            // keyboard color tokens are still shared for consistency.
             val colorScheme = if (isSystemInDarkTheme()) {
                 // Custom dark color scheme with visible surfaces (unchanged)
                 darkColorScheme(
@@ -163,7 +170,7 @@ class ThemeSettingsActivity : ComponentActivity() {
                     outline = Color(0xFFBDBDBD)
                 )
             }
-            MaterialTheme(colorScheme = colorScheme) {
+            CleverKeysTheme(colorSchemeOverride = colorScheme) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -253,10 +260,10 @@ fun ThemeSettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Keyboard Themes") },
+                title = { Text(stringResource(R.string.theme_settings_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.common_back))
                     }
                 },
                 actions = {
@@ -265,10 +272,10 @@ fun ThemeSettingsScreen(
                         android.os.Process.killProcess(android.os.Process.myPid())
                         System.exit(0)
                     }) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Restart Keyboard")
+                        Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.theme_restart_keyboard))
                     }
                     IconButton(onClick = { showCreateDialog = true }) {
-                        Icon(Icons.Default.Add, contentDescription = "Create Theme")
+                        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.theme_create))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -287,13 +294,13 @@ fun ThemeSettingsScreen(
             // Built-in XML Themes Section (these ACTUALLY work with the keyboard)
             item {
                 Text(
-                    "Built-in Themes",
+                    stringResource(R.string.theme_section_builtin),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
                 )
                 Text(
-                    "These themes apply directly to the keyboard",
+                    stringResource(R.string.theme_builtin_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -323,7 +330,7 @@ fun ThemeSettingsScreen(
                 item {
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        "Custom Themes",
+                        stringResource(R.string.theme_section_custom),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(vertical = 8.dp)
@@ -350,13 +357,13 @@ fun ThemeSettingsScreen(
             item {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    "Decorative Themes",
+                    stringResource(R.string.theme_section_decorative),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
                 )
                 Text(
-                    "Designer color schemes for your keyboard",
+                    stringResource(R.string.theme_decorative_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -432,8 +439,8 @@ fun ThemeSettingsScreen(
     showDeleteConfirm?.let { themeId ->
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = null },
-            title = { Text("Delete Theme") },
-            text = { Text("Are you sure you want to delete this custom theme?") },
+            title = { Text(stringResource(R.string.theme_delete_title)) },
+            text = { Text(stringResource(R.string.theme_delete_confirm)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -441,12 +448,12 @@ fun ThemeSettingsScreen(
                         showDeleteConfirm = null
                     }
                 ) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.common_delete), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirm = null }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.common_cancel))
                 }
             }
         )
@@ -513,7 +520,7 @@ fun ThemeCard(
                             IconButton(onClick = it, modifier = Modifier.size(32.dp)) {
                                 Icon(
                                     Icons.Default.Edit,
-                                    contentDescription = "Edit",
+                                    contentDescription = stringResource(R.string.theme_edit_desc),
                                     tint = Color(colorScheme.keyLabel.toArgb()),
                                     modifier = Modifier.size(18.dp)
                                 )
@@ -523,7 +530,7 @@ fun ThemeCard(
                             IconButton(onClick = it, modifier = Modifier.size(32.dp)) {
                                 Icon(
                                     Icons.Default.Delete,
-                                    contentDescription = "Delete",
+                                    contentDescription = stringResource(R.string.common_delete),
                                     tint = Color(colorScheme.keyLabel.toArgb()),
                                     modifier = Modifier.size(18.dp)
                                 )
@@ -588,7 +595,7 @@ fun ThemePreview(colorScheme: KeyboardColorScheme) {
             contentAlignment = Alignment.Center
         ) {
             Text(
-                "Trail",
+                stringResource(R.string.theme_trail_label),
                 color = Color.White,
                 fontSize = 10.sp
             )
@@ -646,7 +653,7 @@ fun BuiltinThemeCard(
                             Spacer(Modifier.width(8.dp))
                             Icon(
                                 Icons.Default.Check,
-                                contentDescription = "Selected",
+                                contentDescription = stringResource(R.string.theme_selected_desc),
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(18.dp)
                             )
@@ -726,10 +733,10 @@ fun ThemeCreatorDialog(
             Column(modifier = Modifier.fillMaxSize()) {
                 // Header
                 TopAppBar(
-                    title = { Text(if (initialTheme == null) "Create Theme" else "Edit Theme") },
+                    title = { Text(stringResource(if (initialTheme == null) R.string.theme_create else R.string.theme_edit)) },
                     navigationIcon = {
                         IconButton(onClick = onDismiss) {
-                            Icon(Icons.Default.Close, contentDescription = "Close")
+                            Icon(Icons.Default.Close, contentDescription = stringResource(R.string.common_close))
                         }
                     },
                     actions = {
@@ -743,7 +750,7 @@ fun ThemeCreatorDialog(
                                 onSave(theme)
                             }
                         ) {
-                            Text("Save")
+                            Text(stringResource(R.string.common_save))
                         }
                     }
                 )
@@ -758,7 +765,7 @@ fun ThemeCreatorDialog(
                     OutlinedTextField(
                         value = themeName,
                         onValueChange = { themeName = it },
-                        label = { Text("Theme Name") },
+                        label = { Text(stringResource(R.string.theme_name_label)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
@@ -767,7 +774,7 @@ fun ThemeCreatorDialog(
 
                     // Live Preview
                     Text(
-                        "Preview",
+                        stringResource(R.string.theme_section_preview),
                         style = MaterialTheme.typography.titleSmall,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
@@ -777,7 +784,7 @@ fun ThemeCreatorDialog(
 
                     // Color Attributes
                     Text(
-                        "Key Colors",
+                        stringResource(R.string.theme_section_key_colors),
                         style = MaterialTheme.typography.titleSmall,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
@@ -790,7 +797,7 @@ fun ThemeCreatorDialog(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        "Label Colors",
+                        stringResource(R.string.theme_section_label_colors),
                         style = MaterialTheme.typography.titleSmall,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
@@ -801,7 +808,7 @@ fun ThemeCreatorDialog(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        "Border Colors",
+                        stringResource(R.string.theme_section_border_colors),
                         style = MaterialTheme.typography.titleSmall,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
@@ -819,12 +826,12 @@ fun ThemeCreatorDialog(
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
                             Text(
-                                "✨ Swipe Trail",
+                                stringResource(R.string.theme_swipe_trail_card),
                                 style = MaterialTheme.typography.titleSmall,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                             Text(
-                                "The color shown while swiping to type",
+                                stringResource(R.string.theme_swipe_trail_desc),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                             )
@@ -837,7 +844,7 @@ fun ThemeCreatorDialog(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        "Suggestion Bar",
+                        stringResource(R.string.theme_section_suggestion_bar),
                         style = MaterialTheme.typography.titleSmall,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
@@ -848,7 +855,7 @@ fun ThemeCreatorDialog(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        "Background Colors",
+                        stringResource(R.string.theme_section_background_colors),
                         style = MaterialTheme.typography.titleSmall,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
@@ -958,7 +965,7 @@ fun ColorPickerDialog(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Hue Slider (Rainbow)
-                Text("Hue", style = MaterialTheme.typography.labelSmall)
+                Text(stringResource(R.string.theme_color_hue), style = MaterialTheme.typography.labelSmall)
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -978,7 +985,7 @@ fun ColorPickerDialog(
                 )
 
                 // Saturation Slider
-                Text("Saturation", style = MaterialTheme.typography.labelSmall)
+                Text(stringResource(R.string.theme_color_saturation), style = MaterialTheme.typography.labelSmall)
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1001,7 +1008,7 @@ fun ColorPickerDialog(
                 )
 
                 // Lightness Slider
-                Text("Lightness", style = MaterialTheme.typography.labelSmall)
+                Text(stringResource(R.string.theme_color_lightness), style = MaterialTheme.typography.labelSmall)
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1025,7 +1032,7 @@ fun ColorPickerDialog(
                 )
 
                 // Alpha Slider
-                Text("Opacity", style = MaterialTheme.typography.labelSmall)
+                Text(stringResource(R.string.theme_color_opacity), style = MaterialTheme.typography.labelSmall)
                 Slider(
                     value = alpha,
                     onValueChange = { alpha = it },
@@ -1041,6 +1048,8 @@ fun ColorPickerDialog(
                         hexText = expectedHex
                     }
                 }
+                // Hoisted out of the semantics {} lambda (not a composable scope).
+                val hexInputDesc = stringResource(R.string.theme_color_hex_desc)
                 OutlinedTextField(
                     value = hexText,
                     onValueChange = { newText ->
@@ -1061,17 +1070,17 @@ fun ColorPickerDialog(
                             alpha = parsed.alpha
                         }
                     },
-                    label = { Text("Hex") },
+                    label = { Text(stringResource(R.string.theme_color_hex)) },
                     singleLine = true,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .semantics { contentDescription = "Hex color input" }
+                        .semantics { contentDescription = hexInputDesc }
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Quick color presets
-                Text("Quick Colors", style = MaterialTheme.typography.labelSmall)
+                Text(stringResource(R.string.theme_quick_colors), style = MaterialTheme.typography.labelSmall)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly
@@ -1105,10 +1114,10 @@ fun ColorPickerDialog(
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.common_cancel))
                     }
                     TextButton(onClick = { onColorSelected(currentColor) }) {
-                        Text("Apply")
+                        Text(stringResource(R.string.common_apply))
                     }
                 }
             }

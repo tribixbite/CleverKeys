@@ -3,7 +3,6 @@ package tribixbite.cleverkeys
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -15,10 +14,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import tribixbite.cleverkeys.prefs.ExtraKeysPreference
+import tribixbite.cleverkeys.theme.CleverKeysTheme
 
 /**
  * Extra Keys Configuration Activity - Manage Extra Keyboard Keys
@@ -36,10 +37,9 @@ class ExtraKeysConfigActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            // #35: Follow the system day/night setting (dark look unchanged)
-            MaterialTheme(
-                colorScheme = if (isSystemInDarkTheme()) darkColorScheme() else lightColorScheme()
-            ) {
+            // WP8: unified under CleverKeysTheme (branded scheme + keyboard type/shape scale),
+            // matching its sibling settings activities. Follows the system day/night setting.
+            CleverKeysTheme {
                 ExtraKeysConfigScreen(
                     onBack = { finish() }
                 )
@@ -100,12 +100,12 @@ fun ExtraKeysConfigScreen(onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Extra Keys Configuration") },
+                title = { Text(stringResource(R.string.extra_keys_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.common_back)
                         )
                     }
                 },
@@ -128,14 +128,14 @@ fun ExtraKeysConfigScreen(onBack: () -> Unit) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
-                placeholder = { Text("Search extra keys...") },
+                placeholder = { Text(stringResource(R.string.extra_keys_search_hint)) },
                 leadingIcon = {
-                    Icon(Icons.Filled.Search, contentDescription = "Search")
+                    Icon(Icons.Filled.Search, contentDescription = stringResource(R.string.common_search))
                 },
                 trailingIcon = {
                     if (searchQuery.isNotEmpty()) {
                         IconButton(onClick = { searchQuery = "" }) {
-                            Icon(Icons.Filled.Close, contentDescription = "Clear")
+                            Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.common_clear))
                         }
                     }
                 },
@@ -160,7 +160,7 @@ fun ExtraKeysConfigScreen(onBack: () -> Unit) {
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                     Text(
-                        text = "Selected keys will appear on the keyboard based on their preferred positions",
+                        text = stringResource(R.string.extra_keys_info),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
@@ -182,7 +182,7 @@ fun ExtraKeysConfigScreen(onBack: () -> Unit) {
             ) {
                 Icon(Icons.Filled.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Reset to Defaults")
+                Text(stringResource(R.string.extra_keys_reset))
             }
 
             // Categorized keys list

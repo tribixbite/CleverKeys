@@ -21,10 +21,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import tribixbite.cleverkeys.PerKeyCustomizationButton
+import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.ShortSwipeCalibrationActivity
 import tribixbite.cleverkeys.ThemeSettingsActivity
@@ -39,7 +41,7 @@ internal fun SettingsActivity.ActivitiesSection() {
             // Activities Section (Special Feature Managers) - at top for quick access
             val activityContext = LocalContext.current
             CollapsibleSettingsSection(
-                title = "📱 Activities",
+                title = stringResource(R.string.activities_section_title),
                 expanded = activitiesSectionExpanded,
                 onExpandChange = { activitiesSectionExpanded = it }
             ) {
@@ -63,12 +65,12 @@ internal fun SettingsActivity.ActivitiesSection() {
                         Spacer(Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Dictionary Manager",
+                                text = stringResource(R.string.activities_dictionary_title),
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp
                             )
                             Text(
-                                text = "Custom words, disabled words & vocabulary",
+                                text = stringResource(R.string.activities_dictionary_desc),
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                             )
@@ -104,12 +106,12 @@ internal fun SettingsActivity.ActivitiesSection() {
                         Spacer(Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Theme Manager",
+                                text = stringResource(R.string.activities_theme_title),
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp
                             )
                             Text(
-                                text = "Neon, Pastel, DIY themes & custom colors",
+                                text = stringResource(R.string.activities_theme_desc),
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                             )
@@ -147,12 +149,12 @@ internal fun SettingsActivity.ActivitiesSection() {
                         Spacer(Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Configure Extra Keys",
+                                text = stringResource(R.string.activities_extra_keys_title),
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp
                             )
                             Text(
-                                text = "Add system keys, symbols & shortcuts",
+                                text = stringResource(R.string.activities_extra_keys_desc),
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
                             )
@@ -185,12 +187,12 @@ internal fun SettingsActivity.ActivitiesSection() {
                         Spacer(Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Layout Manager",
+                                text = stringResource(R.string.activities_layout_title),
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp
                             )
                             Text(
-                                text = "QWERTY, Dvorak, Colemak & more",
+                                text = stringResource(R.string.activities_layout_desc),
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                             )
@@ -226,12 +228,12 @@ internal fun SettingsActivity.ActivitiesSection() {
                         Spacer(Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Short Swipe Calibration",
+                                text = stringResource(R.string.activities_calibration_title),
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp
                             )
                             Text(
-                                text = "Practice and tune gesture sensitivity",
+                                text = stringResource(R.string.activities_calibration_desc),
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                             )
@@ -266,12 +268,12 @@ internal fun SettingsActivity.ActivitiesSection() {
                         Spacer(Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "What's New",
+                                text = stringResource(R.string.activities_whats_new_title),
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp
                             )
                             Text(
-                                text = "See latest features and changelog",
+                                text = stringResource(R.string.activities_whats_new_desc),
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                             )

@@ -44,11 +44,13 @@ internal fun SettingsActivity.VersionInfoCard() {
     val title = stringResource(R.string.settings_version_title)
     val buildText = stringResource(R.string.settings_version_build, versionInfo.getProperty("version", "unknown"))
     val toastCopied = stringResource(R.string.settings_version_copied)
+    // Hoisted out of the semantics {} lambda (not a composable scope).
+    val copyVersionDesc = stringResource(R.string.settings_copy_version_desc)
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .semantics { contentDescription = "Copy version info" }
+            .semantics { contentDescription = copyVersionDesc }
             .combinedClickable(
                 onClick = {},
                 onLongClick = {

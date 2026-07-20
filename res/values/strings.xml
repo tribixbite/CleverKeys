@@ -281,4 +281,94 @@
     <string name="debug_clear_logs" translatable="false">Clear logs</string>
     <string name="debug_input_hint" translatable="false">Type or swipe here…</string>
     <string name="debug_waiting_input" translatable="false">Waiting for swipe input…\n</string>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         WP8 — Compose Text-literal extraction (theme picker, short-swipe &
+         extra-keys activities, settings chrome/dialogs/activity cards).
+         Emoji prefixes preserved verbatim.
+         ══════════════════════════════════════════════════════════════════ -->
+
+    <!-- Common reusable button/label words -->
+    <string name="common_back">Back</string>
+    <string name="common_cancel">Cancel</string>
+    <string name="common_close">Close</string>
+    <string name="common_save">Save</string>
+    <string name="common_delete">Delete</string>
+    <string name="common_apply">Apply</string>
+    <string name="common_search">Search</string>
+    <string name="common_clear">Clear</string>
+    <string name="common_ok">OK</string>
+
+    <!-- ExtraKeysConfigActivity -->
+    <string name="extra_keys_title">Extra Keys Configuration</string>
+    <string name="extra_keys_search_hint">Search extra keys…</string>
+    <string name="extra_keys_info">Selected keys will appear on the keyboard based on their preferred positions</string>
+    <string name="extra_keys_reset">Reset to Defaults</string>
+
+    <!-- ShortSwipeCustomizationActivity -->
+    <string name="short_swipe_title">Short Swipe Customization</string>
+    <string name="short_swipe_show_keyboard">Show keyboard</string>
+    <string name="short_swipe_reset_all">Reset All</string>
+    <string name="short_swipe_tap_hint">Tap any key below to customize its short swipe gestures</string>
+    <string name="short_swipe_instruction_title">Type any key to customize it</string>
+    <string name="short_swipe_instruction_body">The keyboard below is your actual CleverKeys keyboard.\nTap a key to add short swipe actions to it.</string>
+    <string name="short_swipe_custom_mappings">Custom Mappings</string>
+
+    <!-- ThemeSettingsActivity -->
+    <string name="theme_settings_title">Keyboard Themes</string>
+    <string name="theme_restart_keyboard">Restart Keyboard</string>
+    <string name="theme_create">Create Theme</string>
+    <string name="theme_edit">Edit Theme</string>
+    <string name="theme_section_builtin">Built-in Themes</string>
+    <string name="theme_builtin_desc">These themes apply directly to the keyboard</string>
+    <string name="theme_section_custom">Custom Themes</string>
+    <string name="theme_section_decorative">Decorative Themes</string>
+    <string name="theme_decorative_desc">Designer color schemes for your keyboard</string>
+    <string name="theme_delete_title">Delete Theme</string>
+    <string name="theme_delete_confirm">Are you sure you want to delete this custom theme?</string>
+    <string name="theme_edit_desc">Edit</string>
+    <string name="theme_selected_desc">Selected</string>
+    <string name="theme_trail_label">Trail</string>
+    <string name="theme_name_label">Theme Name</string>
+    <string name="theme_section_preview">Preview</string>
+    <string name="theme_section_key_colors">Key Colors</string>
+    <string name="theme_section_label_colors">Label Colors</string>
+    <string name="theme_section_border_colors">Border Colors</string>
+    <string name="theme_swipe_trail_card">✨ Swipe Trail</string>
+    <string name="theme_swipe_trail_desc">The color shown while swiping to type</string>
+    <string name="theme_section_suggestion_bar">Suggestion Bar</string>
+    <string name="theme_section_background_colors">Background Colors</string>
+    <string name="theme_color_hue">Hue</string>
+    <string name="theme_color_saturation">Saturation</string>
+    <string name="theme_color_lightness">Lightness</string>
+    <string name="theme_color_opacity">Opacity</string>
+    <string name="theme_color_hex">Hex</string>
+    <string name="theme_color_hex_desc">Hex color input</string>
+    <string name="theme_quick_colors">Quick Colors</string>
+
+    <!-- SettingsScreen chrome + SettingsDialogs -->
+    <string name="settings_search_hint">Search settings…</string>
+    <string name="settings_swipe_data_title">Swipe Data</string>
+    <string name="settings_search_words_hint">Search words…</string>
+    <string name="settings_perf_stats_title">Performance Statistics</string>
+    <string name="settings_copy_version_desc">Copy version info</string>
+
+    <!-- ActivitiesSection cards -->
+    <string name="activities_section_title">📱 Activities</string>
+    <string name="activities_dictionary_title">Dictionary Manager</string>
+    <string name="activities_dictionary_desc">Custom words, disabled words &amp; vocabulary</string>
+    <string name="activities_theme_title">Theme Manager</string>
+    <string name="activities_theme_desc">Neon, Pastel, DIY themes &amp; custom colors</string>
+    <string name="activities_extra_keys_title">Configure Extra Keys</string>
+    <string name="activities_extra_keys_desc">Add system keys, symbols &amp; shortcuts</string>
+    <string name="activities_layout_title">Layout Manager</string>
+    <string name="activities_layout_desc">QWERTY, Dvorak, Colemak &amp; more</string>
+    <string name="activities_calibration_title">Short Swipe Calibration</string>
+    <string name="activities_calibration_desc">Practice and tune gesture sensitivity</string>
+    <string name="activities_whats_new_title">What\'s New</string>
+    <string name="activities_whats_new_desc">See latest features and changelog</string>
+
+    <!-- TestKeyboardSection -->
+    <string name="test_keyboard_section_title">⌨️ Test Keyboard</string>
+    <string name="test_keyboard_hint">Type here to test your keyboard…</string>
 </resources>

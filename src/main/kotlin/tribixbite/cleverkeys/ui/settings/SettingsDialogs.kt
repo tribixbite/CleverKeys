@@ -11,9 +11,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.ui.settings.io.loadCollectedDataPage
 
@@ -45,7 +47,7 @@ internal fun SettingsActivity.CollectedDataViewerDialog(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Swipe Data")
+                Text(stringResource(R.string.settings_swipe_data_title))
                 IconButton(
                     onClick = {
                         collectedDataSearchQuery = ""
@@ -71,7 +73,7 @@ internal fun SettingsActivity.CollectedDataViewerDialog(
                         collectedDataCurrentPage = 0
                         loadCollectedDataPage()
                     },
-                    placeholder = { Text("Search words...", fontSize = 13.sp) },
+                    placeholder = { Text(stringResource(R.string.settings_search_words_hint), fontSize = 13.sp) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 8.dp),
@@ -214,7 +216,7 @@ internal fun SettingsActivity.CollectedDataViewerDialog(
                 collectedDataCurrentPage = 0
                 onDismiss()
             }) {
-                Text("Close")
+                Text(stringResource(R.string.common_close))
             }
         }
     )
@@ -231,7 +233,7 @@ internal fun SettingsActivity.PerfStatsViewerDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text("Performance Statistics")
+            Text(stringResource(R.string.settings_perf_stats_title))
         },
         text = {
             Column(
@@ -253,7 +255,7 @@ internal fun SettingsActivity.PerfStatsViewerDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("Close")
+                Text(stringResource(R.string.common_close))
             }
         }
     )

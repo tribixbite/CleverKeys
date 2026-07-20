@@ -123,13 +123,13 @@ internal fun SettingsActivity.SettingsScreen() {
                 onValueChange = { query ->
                     settingsSearchQuery = query
                 },
-                label = { Text("Search settings...") },
+                label = { Text(stringResource(R.string.settings_search_hint)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Default.Search,
-                        contentDescription = "Search"
+                        contentDescription = stringResource(R.string.common_search)
                     )
                 },
                 trailingIcon = {

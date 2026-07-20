@@ -1,37 +1,21 @@
 package tribixbite.cleverkeys.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.ui.platform.LocalContext
 
 /**
- * Main theme composable for CleverKeys - Material 3 compliant.
+ * Legacy alias for the canonical [CleverKeysTheme] wrapper.
+ *
+ * Retained so the many existing `KeyboardTheme { … }` call sites keep working; all
+ * theming logic now lives in [CleverKeysTheme] (single source of truth). Prefer
+ * [CleverKeysTheme] for new code.
  *
  * Provides complete theming for all keyboard components:
  * - Material 3 ColorScheme (standard Material colors)
  * - KeyboardColorScheme (keyboard-specific colors)
  * - Typography (keyboard-optimized text styles)
  * - Shapes (rounded corners for keys, chips, dialogs)
- *
- * Features:
- * - Dynamic color support (Material You) on Android 12+
- * - Dark/light theme switching
- * - Reactive theme updates
- * - Custom keyboard color tokens
- *
- * Usage:
- * ```kotlin
- * KeyboardTheme(darkTheme = isSystemInDarkTheme()) {
- *     // Your keyboard UI components
- *     SuggestionBar(...)
- *     Keyboard2View(...)
- * }
- * ```
  *
  * Accessing keyboard colors:
  * ```kotlin
@@ -48,40 +32,7 @@ fun KeyboardTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
-) {
-    val context = LocalContext.current
-
-    // Initialize theme manager (singleton per context)
-    val themeManager = MaterialThemeManager(context)
-
-    // Subscribe to theme config via collectAsState so recomposition is triggered
-    // when the underlying StateFlow emits (initial value == themeConfig.value).
-    val themeConfig by themeManager.themeConfig.collectAsState()
-
-    // Update theme config if dynamic color preference changed
-    if (themeConfig.useDynamicColor != dynamicColor) {
-        themeManager.updateTheme(
-            themeConfig.copy(useDynamicColor = dynamicColor)
-        )
-    }
-
-    // Get Material 3 color scheme
-    val colorScheme = themeManager.getColorScheme(darkTheme)
-
-    // Get keyboard-specific color scheme
-    val keyboardColorScheme = themeManager.getKeyboardColorScheme(darkTheme)
-
-    // Provide keyboard colors via CompositionLocal
-    CompositionLocalProvider(LocalKeyboardColorScheme provides keyboardColorScheme) {
-        // Apply Material 3 theme
-        MaterialTheme(
-            colorScheme = colorScheme,
-            typography = KeyboardTypography,
-            shapes = KeyboardShapes,
-            content = content
-        )
-    }
-}
+) = CleverKeysTheme(darkTheme = darkTheme, dynamicColor = dynamicColor, content = content)
 
 /**
  * CompositionLocal for keyboard-specific colors.

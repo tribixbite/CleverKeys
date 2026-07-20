@@ -14,15 +14,17 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
+import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
 
 @Composable
 internal fun SettingsActivity.TestKeyboardSection() {
             CollapsibleSettingsSection(
-                title = "⌨️ Test Keyboard",
+                title = stringResource(R.string.test_keyboard_section_title),
                 expanded = testKeyboardExpanded,
                 onExpandChange = { testKeyboardExpanded = it }
             ) {
@@ -30,7 +32,7 @@ internal fun SettingsActivity.TestKeyboardSection() {
                     value = testKeyboardText,
                     onValueChange = { testKeyboardText = it },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Type here to test your keyboard...") },
+                    placeholder = { Text(stringResource(R.string.test_keyboard_hint)) },
                     minLines = 3,
                     maxLines = 5,
                     keyboardOptions = KeyboardOptions(
@@ -52,7 +54,7 @@ internal fun SettingsActivity.TestKeyboardSection() {
                     TextButton(
                         onClick = { testKeyboardText = "" }
                     ) {
-                        Text("Clear")
+                        Text(stringResource(R.string.common_clear))
                     }
                 }
             }

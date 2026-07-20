@@ -21,6 +21,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import tribixbite.cleverkeys.theme.KeyboardTheme
@@ -713,7 +714,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                             text = { Text(backupRestoreViewModel.resultMessage) },
                             confirmButton = {
                                 TextButton(onClick = { backupRestoreViewModel.showResultDialog = false }) {
-                                    Text("OK")
+                                    Text(stringResource(R.string.common_ok))
                                 }
                             }
                         )
