@@ -572,19 +572,31 @@ class GeoRealCorpusMultiLayoutTest {
          * A ≥ B − 1pt guard ([abMustNotRegress]) carry the authoritative non-circularity
          * check.
          *
-         * Measured A (top-1/top-3/top-5), floors are ~A−4 pt rounded down:
+         * Measured A (top-1/top-3/top-5), floors are ~A−4 pt rounded down.
+         * RE-MEASURED 2026-07-20 against the evidence-classifier dictionary
+         * regeneration (fr/de 25k→40k words, es re-curated 50k — see
+         * `scripts/build_wordlist.py`); dvorak/en is the unchanged control
+         * (en dict frozen — its numbers reproduced bit-identically):
          *   dvorak  76.8/79.9/80.4 → 0.72/0.75/0.76   (4-row FUTO geometry, dense; recall 83%)
-         *   azerty  78.2/91.1/94.2 → 0.74/0.87/0.90
-         *   qwertz  77.3/88.7/91.3 → 0.73/0.84/0.87
-         *   german  71.8/82.5/85.2 → 0.67/0.78/0.81
-         *   spanish 73.4/86.1/88.5 → 0.69/0.82/0.84
+         *   azerty  76.9/89.9/93.7 → 0.72/0.85/0.89   (coverage 87.0→89.6%)
+         *   qwertz  76.2/87.4/90.6 → 0.72/0.83/0.86   (coverage 84.0→87.5%)
+         *   german  71.1/81.7/84.3 → 0.67/0.77/0.80   (coverage 84.5→87.9%)
+         *   spanish 73.9/86.6/89.8 → 0.69/0.82/0.85   (coverage 93.3%; accuracy IMPROVED)
+         * Floor decreases (azerty −0.02 t3, qwertz −0.01, german −0.01) are the
+         * documented coverage/ambiguity tradeoff, NOT an engine regression: the
+         * 40k dicts decode 2.6–3.5 pts MORE of the corpus (previously-OOV rarer
+         * words are intrinsically harder), the per-row accuracy dip is ≤1.3 pt,
+         * A ≥ B still holds on every layout, and es (contamination-purged 50k)
+         * improved outright. Pre-regeneration basis for triage history:
+         *   azerty 78.2/91.1/94.2 (cov 87.0) · qwertz 77.3/88.7/91.3 (cov 84.0)
+         *   german 71.8/82.5/85.2 (cov 84.5) · spanish 73.4/86.1/88.5 (cov 93.4).
          */
         private val FLOORS: Map<String, Floor> = mapOf(
             "dvorak" to Floor(0.72, 0.75, 0.76),
-            "azerty" to Floor(0.74, 0.87, 0.90),
-            "qwertz" to Floor(0.73, 0.84, 0.87),
-            "german" to Floor(0.67, 0.78, 0.81),
-            "spanish" to Floor(0.69, 0.82, 0.84),
+            "azerty" to Floor(0.72, 0.85, 0.89),
+            "qwertz" to Floor(0.72, 0.83, 0.86),
+            "german" to Floor(0.67, 0.77, 0.80),
+            "spanish" to Floor(0.69, 0.82, 0.85),
         )
     }
 }

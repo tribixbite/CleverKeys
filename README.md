@@ -60,7 +60,7 @@ CleverKeys is a feature-rich open-source keyboard for Android. Neural swipe typi
 |---------|:----------:|:---------:|:----:|:-----------:|:---------------:|:----:|
 | **Gesture Typing in Termux** | ✅ | ⚠️ Corrupted⁴ | ❌ Broken | ⚠️ Disabled | ⚠️ Experimental | ❓ |
 | **Gesture/Swipe Typing** | ✅ Stable | ✅ Stable | ⚠️ Alpha | ⚠️ Disabled⁵ | ⚠️ Experimental | ✅ Geometric¹⁰ |
-| **Multi-Language Swipe**⁹ | ✅ 11 languages | ⚠️ Single | ⚠️ English only | ❌ | ❌ | ✅ Simultaneous |
+| **Multi-Language Swipe**⁹ | ✅ 15 languages | ⚠️ Single | ⚠️ English only | ❌ | ❌ | ✅ Simultaneous |
 | **Gesture Engine Open Source** | ✅ | ❌¹ | ✅² | ✅ | ✅ | ✅ |
 | **ML Training Code Public** | ✅ | N/A | ✅⁶ | N/A³ | N/A³ | N/A¹⁰ |
 | **Model Size** | 13MB | Proprietary | 62MB | N/A | N/A | N/A |
@@ -171,7 +171,7 @@ Build your own themes on-the-fly with full control over:
 - **100% on-device** — works in airplane mode, no cloud anything
 
 ### 🌍 Multi-Language with Hot-Swap
-- **11 swipe languages** — 6 bundled, 5 downloadable packs
+- **15 swipe languages** — 7 bundled, 8 downloadable packs
 - **Primary + secondary language** — neural network evaluates both dictionaries per swipe
 - **Instant language switch** — toggle between languages without reloading
 - **Per-language custom dictionaries** — add words, adjust frequency weights, disable entries
@@ -231,7 +231,7 @@ Assign custom actions to any key's 8 swipe directions:
 
 </div>
 
-CleverKeys supports swipe typing in **11 languages** with intelligent multi-language features:
+CleverKeys supports swipe typing in **15 languages** with intelligent multi-language features:
 
 > ⚠️ **Current swipe-typing scope** — The v1 gesture engine is trained on
 > **English + QWERTY**. It works well for other Latin-script languages that
@@ -244,28 +244,40 @@ CleverKeys supports swipe typing in **11 languages** with intelligent multi-lang
 > the roadmap for **Q2–Q3 2026**; in the interim, tap typing + autocorrect
 > works across every supported layout and language.
 
-### Bundled Languages (6)
-Included in the APK — no additional download required:
+### Bundled Languages (7)
+Included in the APK — no additional download required. All dictionaries are
+built by the one-pass evidence classifier (`scripts/build_wordlist.py`):
+frequency-ranked wordfreq candidates vetted by spellchecker/AOSP-LatinIME
+oracles with typo/foreign-word negative filters (see the oracle-tier notes).
 
-| Language | Code | Dictionary Size |
-|----------|:----:|---------------:|
-| English | en | 98,140 words |
-| Spanish | es | 50,000 words |
-| French | fr | 25,000 words |
-| Portuguese | pt | 25,000 words |
-| Italian | it | 25,000 words |
-| German | de | 25,000 words |
+| Language | Code | Dictionary Size | Oracle tier |
+|----------|:----:|---------------:|-------------|
+| English | en | 98,140 words | A (hunspell + aspell + NLTK + pyspell + AOSP) |
+| Spanish | es | 50,000 words | A (aspell + pyspell + AOSP) |
+| French | fr | 40,000 words | A (hunspell + aspell + pyspell + AOSP) |
+| Portuguese | pt | 40,000 words | B (pyspell + AOSP pt_BR∪pt_PT) |
+| Italian | it | 40,000 words | B (pyspell + AOSP) |
+| German | de | 40,000 words | A (aspell + pyspell + AOSP) |
+| Swedish | sv | 40,000 words | C (AOSP only) |
 
-### Downloadable Language Packs (5)
-Available via **Settings → Languages → Download Language Packs**:
+### Downloadable Language Packs (14)
+Import via **Settings → 🌐 Multi-Language → Import Pack**; prebuilt zips live
+in [`scripts/dictionaries/`](./scripts/dictionaries/):
 
-| Language | Code | Dictionary Size | Source |
-|----------|:----:|---------------:|--------|
-| Dutch | nl | 20,000 words | wordfreq |
-| Indonesian | id | 20,000 words | wordfreq |
-| Malay | ms | 20,000 words | wordfreq |
-| Tagalog | tl | 20,000 words | wordfreq |
-| Swahili | sw | 20,000 words | Wikipedia corpus |
+| Language | Code | Dictionary Size | Oracle tier / source |
+|----------|:----:|---------------:|----------------------|
+| Dutch | nl | 40,000 words | A (hunspell + pyspell + AOSP) |
+| Russian | ru | 50,000 words | A (hunspell + pyspell + AOSP) |
+| Greek | el | 39,860 words | C (AOSP only, curated down from 46,306) |
+| Turkish | tr | 40,000 words | C (AOSP only) |
+| Indonesian | id | 28,637 words | D (negatives-only; corpus ceiling ~31k) |
+| Malay | ms | 25,861 words | D (negatives-only; corpus ceiling ~28k) |
+| Tagalog | tl | 27,922 words | D (negatives-only; corpus ceiling ~30k) |
+| Swahili | sw | 20,000 words | Wikipedia corpus (no wordfreq data) |
+
+Packs for the bundled languages (es fr de it pt sv) plus English corpus
+variants (norvig / opensubtitles / wordfreq) are also prebuilt in the same
+directory.
 
 ### Multi-Language Features
 
@@ -297,31 +309,36 @@ cd scripts/
 # Install prerequisite
 pip install wordfreq
 
-# Option 1: Two-step build from wordfreq (any language wordfreq supports)
-python get_wordlist.py --lang fr --output fr_words.txt --count 50000
-python build_langpack.py --lang fr --name "French" --input fr_words.txt --use-wordfreq --output langpack-fr.zip
+# Option 1: Evidence-classifier build for a configured language (recommended)
+python build_wordlist.py --lang fr          # report mode: classification + review files
+python build_wordlist.py --lang fr --write  # regenerate fr_words.txt + CKDT binary
+python build_all_languages.py --lang fr     # + unigrams + prefix boosts + langpack zip
 
-# Option 2: Build from pre-existing binary dictionary (.bin file)
-python build_langpack.py --lang sv --name "Swedish" --dict ../src/main/assets/dictionaries/sv_enhanced.bin --output langpack-sv.zip
+# Option 2: Raw wordfreq build for a language without a LANG_CONFIG entry
+python get_wordlist.py --lang xx --output xx_words.txt --count 50000
+python build_langpack.py --lang xx --name "MyLang" --input xx_words.txt --use-wordfreq --output langpack-xx.zip
 
 # Option 3: Build from custom word frequency CSV (format: word,frequency per line)
-python build_dictionary.py --input my_words.csv --output my_lang.bin
+python build_dictionary.py --lang xx --input my_words.csv --output my_lang.bin
 python build_langpack.py --lang xx --name "MyLang" --dict my_lang.bin --output langpack-xx.zip
 
-# Option 4: Batch build all bundled languages (en, es, fr, de, it, pt, nl, id, ms, tl, sw)
+# Option 4: Batch build every configured language (all except frozen en)
 python build_all_languages.py
 ```
 
 **Script Details:**
-- `build_langpack.py` — Creates complete .zip language packs from wordfreq
-- `build_dictionary.py` — Builds binary dictionary from CSV word lists
-- `build_all_languages.py` — Batch builds all supported languages
+- `build_wordlist.py` — One-pass evidence classifier (all configured languages; per-language oracles/bands in its `LANG_CONFIG`)
+- `build_all_languages.py` — Orchestrates classifier → unigrams → prefix boosts → langpack per language
+- `build_langpack.py` — Creates deterministic .zip language packs
+- `build_dictionary.py` — Builds the CKDT V2 binary dictionary from word lists
 - `get_wordlist.py` — Extracts top N words from wordfreq for a language
 
 Language packs are simple .zip files containing:
-- `{lang}_enhanced.bin` — Binary dictionary with frequency data
-- `{lang}_enhanced.json` — Human-readable word list with frequencies
-- `manifest.json` — Metadata (language code, version, word count)
+- `dictionary.bin` — CKDT V2 binary dictionary (accent-normalization map + frequency ranks)
+- `manifest.json` — Metadata (language code, name, version, word count, prefix-boost flag)
+- `unigrams.txt` — Top-5k word list for automatic language detection
+- `contractions.json` — Apostrophe/elision mappings (languages that use them)
+- `prefix_boost.bin` — Aho-Corasick prefix-boost trie (Latin-script languages)
 
 **Pre-built Language Packs:**
 Available in [`scripts/dictionaries/`](./scripts/dictionaries/) for testing, or download directly from the app.

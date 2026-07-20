@@ -36,33 +36,53 @@ Use this skill when building, modifying, or quality-checking dictionaries and co
 
 ## Build Commands
 
-### English (V4, 98,140 words — one-pass evidence classifier, 2026-07-03)
+### All languages — one-pass evidence classifier (`build_wordlist.py`, 2026-07-20)
+`scripts/build_en_wordlist.py` was RENAMED + generalized to
+`scripts/build_wordlist.py` (`--lang <code>`, default en; `--lang en` is
+bit-identical to the old script). Per-language knobs live in its `LANG_CONFIG`
+table: script gate (latin/greek/cyrillic), ed1 alphabet, oracle set, case
+policy (`en` / `de_nouns` / `plain`), band boundaries, `--limit` size cap,
+carryover basis, MUST_INCLUDE guards.
 ```bash
-# Report mode (no files touched): classification counts + review artifacts + eval coverage
-python3 scripts/build_en_wordlist.py
-# Regenerate en_words.txt + en_enhanced.{json,bin} (assets + scripts copies) + verify
-python3 scripts/build_en_wordlist.py --write
-# Organic-coverage measurement mode (excludes eval words from allowlist force-keep)
-python3 scripts/build_en_wordlist.py --eval-blind
+# Report mode (no files touched): classification counts + review artifacts
+python3 scripts/build_wordlist.py --lang fr
+# Regenerate <lang>_words.txt + <lang>_enhanced.bin (assets copy for bundled langs) + verify
+python3 scripts/build_wordlist.py --lang fr --write
+# EN extras: --eval / --eval-blind (held-out user-export coverage; EN-only data)
+python3 scripts/build_wordlist.py --eval-blind
+# Full per-language pipeline (classifier → unigrams → prefix boosts → langpack):
+python3 scripts/build_all_languages.py --lang fr,de
 ```
-Inputs: wordfreq top-150k ∪ curated files. Oracles: hunspell en_US ×3 case forms
-(UPPER−Cap−lower = true initialisms — raw UPPER acceptance leaks every proper noun),
-aspell en_GB, NLTK, pyspellchecker, AOSP LatinIME snapshot
-(`scripts/data/aosp_en_wordlist.txt.gz`, Apache-2.0, `nonword` flag excluded).
-Curation: `scripts/dictionaries/en/en_allowlist.txt` (force-keep, delete-to-exclude)
-and `en_blocklist.txt` (force-drop; includes the AutocorrectTest inputs
-tge/broight/questin/… which must NEVER become dict words). Bands: rank<65k
-conservative, 65k+ requires a positive oracle. Guards hard-fail the build.
-Held-out eval: `en_user_export_eval.txt` (gitignored — personal vocabulary).
-
-### Rebuild a Dictionary (other languages)
-```bash
-cd scripts/
-
-# From wordfreq (any supported language)
-python3 get_wordlist.py --lang {code} --output {code}_words.txt --count 50000
-python3 build_dictionary.py --lang {code} --input {code}_words.txt --output ../src/main/assets/dictionaries/{code}_enhanced.bin --use-wordfreq
-```
+Oracle tiers (configured-but-missing oracle = hard build failure):
+- **Tier A** (spellcheckers + AOSP): en (hunspell en_US ×3 case forms + aspell
+  en_GB + NLTK + pyspell), fr (hunspell fr_FR + aspell fr + pyspell), de
+  (aspell de + pyspell, `case_policy=de_nouns` — cap-acceptance IS
+  spell-validity), es (aspell es + pyspell), nl (hunspell nl_NL + pyspell),
+  ru (hunspell ru_RU + pyspell)
+- **Tier B** (pyspellchecker + AOSP): it, pt
+- **Tier C** (AOSP-only band-2 oracle): sv, el, tr
+- **Tier D** (no oracles, band == top, negatives-only): id, ms, tl
+- **sw**: NOT ported (no wordfreq data) — corpus-file pipeline via
+  `scripts/sw_words.txt`, orchestrated by `build_all_languages.py`.
+EN-only elements (documented omissions elsewhere): BRITISH_RULES, NLTK,
+VALID_SEED_KEEP, held-out eval, flat-JSON asset fallback.
+Case forms: UPPER−Cap−lower = true initialisms (raw UPPER acceptance leaks
+every proper noun); `plain` languages use Cap−lower as name-rescue evidence.
+Curation: `scripts/dictionaries/<lang>/<lang>_allowlist.txt` (force-keep,
+delete-to-exclude) and `<lang>_blocklist.txt` (force-drop; en's includes the
+AutocorrectTest inputs tge/broight/questin/… which must NEVER become dict
+words). Bands: rank<band conservative, band..top requires a positive oracle.
+Guards hard-fail the build. Held-out eval: `en_user_export_eval.txt`
+(gitignored — personal vocabulary).
+Gotchas discovered 2026-07-20 (encoded in the script):
+- wordfreq CASEFOLDS: German ß→ss (dict ships strasse/grösse) and Greek final
+  sigma ς→σ (whole el stream + shipped pack are σ-final; the AOSP el oracle is
+  remapped to match — see `load_aosp`).
+- fr/it contraction maps are ~22–26k elision-expansion tables → demoted to
+  positive-evidence-only (`FUNC_FORCEKEEP_MAX`); small maps (en/nl/de) still
+  force-keep.
+- `build_dictionary.py`'s junk blocklist is ENGLISH-ONLY ("hav" is Swedish
+  'sea', "teh" is Indonesian 'tea') — gated on `--lang en`.
 
 ### Rebuild Contractions
 ```bash
@@ -152,13 +172,14 @@ See `docs/specs/english-dictionary-pipeline.md` "Misspelling Detection Pipeline"
 ## Supported Languages
 
 ### Bundled in App
-en, es, fr, de, it, pt, sv (dictionaries + prefix boosts)
+en (98,140), es (50k), fr/de/it/pt/sv (40k each) — dictionaries + prefix boosts
 
-### Available via `build_all_languages.py`
-en, es, fr, pt, it, de, nl, id, ms, tl, sw
+### Langpacks via `build_all_languages.py` (scripts/dictionaries/langpack-*.zip)
+es fr de it pt sv (40–50k) · nl tr (40k) · ru (50k) · el (~39.9k survivors)
+· id/ms/tl (~26–29k survivors) · sw (20k, corpus list)
 
-### Available via wordfreq (user-buildable)
-50+ languages including ar, bg, bn, cs, da, el, fi, he, hi, hu, ja, ko, pl, ro, ru, tr, uk, vi, zh
+### Available via wordfreq (user-buildable, add a LANG_CONFIG entry)
+50+ languages including ar, bg, bn, cs, da, fi, he, hi, hu, ja, ko, pl, ro, uk, vi, zh
 
 ## Common Pitfalls
 
@@ -166,4 +187,5 @@ en, es, fr, pt, it, de, nl, id, ms, tl, sw
 2. **`build_langpack.py` requires `--input` or `--dict`** — it cannot generate words from nothing.
 3. **`contractions_en.json` must match `contractions_non_paired.json`** — they're currently identical and both get loaded (harmless duplication but must stay in sync).
 4. **`compute_prefix_boosts.py` looks for `{lang}_enhanced.bin` in `src/main/assets/dictionaries/`** — the dictionary must be in assets before prefix boosts can be generated.
-5. **Swedish is NOT in `build_all_languages.py`'s SUPPORTED_LANGUAGES** — must be built manually via `build_langpack.py`.
+5. **`build_all_languages.py` refuses to regenerate en in bulk runs** — the English dict is frozen at 98,140 words; rebuild it only deliberately via `build_wordlist.py --lang en --write`.
+6. **Regenerating a dictionary REQUIRES regenerating its prefix boosts** — the boost trie encodes zipf deltas against the dict's own words; `build_all_languages.py` never skips that step for boost-enabled languages.

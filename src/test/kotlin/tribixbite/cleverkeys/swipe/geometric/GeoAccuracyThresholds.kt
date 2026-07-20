@@ -22,16 +22,34 @@ package tribixbite.cleverkeys.swipe.geometric
  * (3) `maxCandidatesScored 800 → 1200` (absorbs the inset union so TYPICAL cap-survival
  * stays ≥ 99%). The SHARK2 location tunnel was evaluated and REJECTED as a default (it
  * lifts SLOPPY but regresses CLEAN — see `GeometricEngineConfig.locationTunnelHalfWidth`).
- * All numbers at N=32 FINAL defaults, full grid (500 words × K=5):
+ * All numbers at N=32 FINAL defaults, full grid (500 words × K=5).
+ * fr/de/ru rows RE-MEASURED 2026-07-20 against the evidence-classifier
+ * dictionary regeneration (fr/de 25k→40k, ru re-curated 50k — see
+ * `scripts/build_wordlist.py`); en rows unchanged (en dict frozen):
  * ```
  *   layout      CLEAN t1/t3     TYPICAL t1/t3/t5     SLOPPY t1/t3/t5     recall C/T/S
  *   en/QWERTY   87.2 / 98.2     83.4 / 95.9 / 98.2   63.8 / 80.7 / 85.7  100/99.3/96.5
- *   ru/JCUKEN   94.5 / 99.6     91.3 / 98.5 / 98.9   75.2 / 89.8 / 92.7  100/99.0/96.9
+ *   ru/JCUKEN   95.3 /100.0     91.2 / 98.4 / 99.0   75.6 / 90.1 / 93.4  100/99.2/97.6
  *   en/Dvorak   ~85 / 97.7      78.0 / 93.8 / 96.5   56.4 / 75.8 / 81.7  ~100/99/93
  *   en/weird    ~88 / 99.0      81.0 / 94.6 / 96.6   51.9 / 68.5 / 74.3  98 /99 /88
- *   fr/AZERTY   86.2 / 98.5     80.8 / 96.8 / 98.6   64.4 / 85.5 / 90.0   – / 99.8/ –
- *   de/QWERTZ   91.2 / 99.6     86.4 / 98.3 / 99.3   71.0 / 88.8 / 93.2   – / 99.8/ –
+ *   fr/AZERTY   87.3 / 98.7     81.4 / 95.7 / 98.2   60.9 / 80.6 / 86.8   – / 99.6/ –
+ *   de/QWERTZ   91.1 / 98.9     85.7 / 97.6 / 99.2   70.0 / 86.9 / 92.2   – / 99.8/ –
  * ```
+ * Pre-regeneration fr/de/ru rows for triage history: fr 86.2/98.5 ·
+ * 80.8/96.8/98.6 · 64.4/85.5/90.0; de 91.2/99.6 · 86.4/98.3/99.3 ·
+ * 71.0/88.8/93.2; ru 94.5/99.6 · 91.3/98.5/98.9 · 75.2/89.8/92.7. The
+ * fr/de SLOPPY declines (fr top-3 −4.9 pt, de −1.9 pt) were investigated per
+ * the ratchet discipline before accepting: the stratified sample is drawn
+ * FROM the dictionary, so a 25k→40k dict adds rank-25k..40k tail words to the
+ * SLOPPY sample (intrinsically harder + 60% more shortlist competitors) — a
+ * sample-composition effect, not an engine/dict regression. The non-circular
+ * check is the FIXED-sample FUTO real-corpus replay (GeoRealCorpusMultiLayoutTest),
+ * where the same regeneration moved azerty top-3 only −1.2 pt while coverage
+ * rose +2.6 pt (qwertz −1.3/+3.5, german −0.8/+3.4, spanish IMPROVED
+ * +0.5/−0.1) and en controls were bit-identical. ru improved on every tier
+ * (uk/bg contamination removed by the foreign-dominance filter). CLEAN/TYPICAL
+ * fr top-1 improved (86.2→87.3, 80.8→81.4). All FINAL floors below remain
+ * cleared with ≥2.6 pt margin; no floor was moved.
  * Every CLEAN/TYPICAL floor is cleared on all six layouts, and QWERTY SLOPPY IMPROVED on
  * every tier vs the pre-fix baseline (top-3 79.5→80.7%, top-5 84.2→85.7% — now clearing
  * the aspirational 0.85). en/weird + en/Dvorak SLOPPY top-3 remain BELOW the shared 0.78

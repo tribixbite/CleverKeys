@@ -3,7 +3,10 @@
 ## Feature Overview
 **Feature Name**: Typo-Drop Rescue Pipeline (multi-oracle triage of dropped dictionary candidates)
 **Priority**: P1
-**Status**: SUPERSEDED (2026-07-02) — by `scripts/build_en_wordlist.py`, which folds the
+**Status**: SUPERSEDED (2026-07-02) — by `scripts/build_wordlist.py` (né
+`build_en_wordlist.py`, renamed 2026-07-20 when the classifier went
+multi-language — see the "As-Built (2026-07-20): multi-language
+generalization" section at the end of this spec), which folds the
 rescue oracles into the dictionary-expansion filter as a ONE-PASS evidence classifier
 (this spec's own "Future Enhancements" §1). Implemented lanes: spellchecker triple-case
 oracle (lower/Cap/UPPER — the UPPER−Cap−lower difference isolates true initialisms),
@@ -312,9 +315,68 @@ curated, is concatenated into the KEEP stream on the next build.
 - Optional LLM pre-labeling of the REVIEW pile only (deterministic core unchanged) to
   further shrink manual effort.
 
+## As-Built (2026-07-20): multi-language generalization
+
+`build_en_wordlist.py` was renamed (`git mv`) to **`scripts/build_wordlist.py`**
+and parametrized over a `LANG_CONFIG` table (14 languages; `--lang en` is
+bit-identical to the old script — verified keep-count 98,140 + identical
+reason-Counter before/after the refactor). The EN artifacts were NOT
+regenerated.
+
+**Shared verbatim** (parametrized only by config): band architecture (band 1
+conservative / band 2 oracle-required), carryover no-silent-regression
+guarantee, 1-/2-char rules, extras universe, elongation exemption, tiered ed1
+typo gaps (2.0/2.5/3.0), foreign-dominance +1.0 margin, review-artifact
+curation loop, Stage-H CKDT verify (magic 0x54444B43, version 2, bin==src
+word set).
+
+**Per-language additions**:
+- Script-aware candidate gate (`latin` / `greek` / `cyrillic`) replacing the
+  EN-only `_is_latin_word` call; ed1 alphabet per language (accented Latin,
+  Cyrillic incl. ё, Greek incl. tonos vowels + ς).
+- Case policies: `en` (original), `de_nouns` (cap-acceptance IS
+  spell-validity — German nouns are capitalized; probed aspell de:
+  Straße ok / straße flagged), `plain` (Cap−lower = name rescue evidence).
+- Oracle tiers: A = en fr de es nl ru (spellcheckers + AOSP); B = it pt
+  (pyspellchecker + AOSP); C = sv el tr (AOSP is the SOLE band-2 oracle);
+  D = id ms tl (no oracles → band == top, negatives-only; the typo detector's
+  known-good set degrades spell → AOSP∩universe → zipf≥3.5 corpus words).
+  A configured-but-missing oracle is a hard `sys.exit(1)`.
+- `--limit N` size cap: keep the N best-ranked survivors (func/allow/
+  MUST_INCLUDE protected); cut words carry the explicit `limit-cut` reason in
+  the review artifacts.
+- Per-language curation files `scripts/dictionaries/<lang>/<lang>_{allow,block}list.txt`
+  and MUST_INCLUDE guard sets (one representative per keep-class).
+
+**Deliberate omissions (EN-only, no non-EN analog)**: BRITISH_RULES (per-language
+variant maps like pt-BR/PT are future work), NLTK words/names, VALID_SEED_KEEP,
+the held-out `--eval` user-export coverage set, and the flat-JSON asset
+fallback (non-EN assets ship bin-only).
+
+**Corpus gotchas encoded in the script** (all measured 2026-07-20):
+- wordfreq casefolds ß→ss: the de dict ships strasse/grösse forms (as the old
+  25k build did).
+- wordfreq casefolds Greek final sigma ς→σ: the whole el stream AND the
+  shipped el pack are σ-final; the AOSP el oracle is remapped word-final ς→σ
+  (`load_aosp`) — without it 4,670 shipped words were mis-dropped as
+  band2-no-oracle. σ-final display forms remain a documented status-quo caveat.
+- fr/it `contractions_<lang>.json` are ~26k/22k elision-expansion tables, not
+  functional-key sets → demoted to positive-evidence-only
+  (`FUNC_FORCEKEEP_MAX = 1000`); en/nl/de small maps still force-keep.
+- `build_dictionary.py`'s English junk blocklist is gated on `--lang en`
+  ("hav" = Swedish 'sea', "teh" = Indonesian 'tea').
+- wordfreq foreign-language fallbacks: `sr`→`sh`, `tl`→`fil` (accepted).
+
+**Shipped sizes (2026-07-20 regeneration)**: es 50,000 · fr/de/it/pt/sv/nl/tr
+40,000 · ru 50,000 · el 39,860 (survivors of the full 46,306 stream,
+AOSP-banded) · id 28,637 · ms 25,861 · tl 27,922 (Tier-D survivor counts;
+corpus ceilings ~28–31k) · sw 20,000 (unchanged corpus pipeline). Orchestrated
+by `build_all_languages.py` (classifier → unigrams → prefix boosts → langpack,
+manifest v2, deterministic zips).
+
 ---
 
 **Created**: 2026-06-29
-**Last Updated**: 2026-06-29
+**Last Updated**: 2026-07-20 (multi-language As-Built)
 **Owner**: Dictionary tooling
 **Reviewers**: (pending maintainer review)

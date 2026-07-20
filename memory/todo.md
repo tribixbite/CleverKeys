@@ -1,5 +1,21 @@
 # CleverKeys TODO
 
+## ✅ Multi-language dictionary regeneration — evidence classifier ported, DONE 2026-07-20
+`build_en_wordlist.py` → `scripts/build_wordlist.py` (LANG_CONFIG, 14 langs; `--lang en`
+bit-identical — keep 98,140 + identical reason-Counter). Regenerated: bundled es 50k,
+fr/de/it/pt/sv 25k→40k; langpacks nl 40k, ru 50k (re-curated), el 39,860, tr 40k,
+id 28,637, ms 25,861, tl 27,922 (Tier-D corpus ceilings), sw determinism-fixed. Oracle
+tiers A–D per `.claude/skills/dictionary-pipeline.md`; AOSP snapshots + sha256 in
+`scripts/data/PROVENANCE.md`; As-Built in `docs/specs/typo-drop-rescue-pipeline.md`.
+Validation: full suite OK (1653), geo synthetic fr/de/ru re-measured (ru improved all
+tiers; fr/de SLOPPY dips root-caused as sample-composition — see GeoAccuracyThresholds),
+real-corpus coverage azerty 87.0→89.6 / qwertz 84.0→87.5 / german 84.5→87.9, spanish
+accuracy improved outright, en controls bit-identical; multi-layout floors re-set at
+measured−4pt (GeoRealCorpusMultiLayoutTest comment carries before→after).
+Open: non-EN allowlists seeded empty (curation via `cleverkeys-dictgen-<lang>-*` review
+artifacts); el ships σ-final forms (wordfreq casefold, documented); BRITISH_RULES/NLTK/
+held-out eval remain EN-only.
+
 ## ✅ Geometric swipe engine (standalone) — spec approved + IMPLEMENTED 2026-07-20
 Spec: `docs/specs/geometric-swipe-engine.md` (SHARK2-style, layout-agnostic, zero-training,
 pure-JVM `swipe.geometric` package; NOT wired into live pipeline — WP9 stays deferred).
