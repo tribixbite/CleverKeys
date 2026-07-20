@@ -1,111 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name_release">CleverKeys</string>
-    <string name="app_name_debug">CleverKeys (atkļūdošana)</string>
-    <string name="short_description">Mazizmēra virtuālā Android tastatūra, kurai rūp privātums.</string>
-    <string name="store_description">Galvenā tastatūras iespēja ir viegli ievadīt vairāk rakstzīmju ar pavilkšanu uz taustiņu stūriem.\n\nSākotnēji šī lietotne tika izstrādāta programmētājiem, kas izmanto Termux.\nTagad tā lieliski piemērota ikdienas lietošanai.\n\nLietotne nesatur reklāmas, neveic nekādus tīkla pieprasījumus, un tās pirmkods ir pieejams visiem.</string>
-    <string name="pref_portrait">Stateniski</string>
     <!-- <string name="pref_portrait_unfolded">In portrait mode unfolded</string> -->
-    <string name="pref_landscape">Līmeniski</string>
     <!-- <string name="pref_landscape_unfolded">In landscape mode unfolded</string> -->
-    <string name="pref_category_layout">Izkārtojums</string>
-    <string name="pref_label_brightness">Pielāgot iezīmju spilgtumu</string>
-    <string name="pref_keyboard_opacity">Pielāgot tastatūras fona necaurredzamību</string>
-    <string name="pref_key_opacity">Pielāgot taustiņu necaurredzamību</string>
-    <string name="pref_key_activated_opacity">Pielāgot piespiesta taustiņa necaurredzamību</string>
     <string name="pref_layout_e_system">Ierīces iestatījumi</string>
     <string name="pref_layout_e_custom">Pielāgots izkārtojums</string>
     <string name="pref_layouts_add">Pievienot aizstājējizkārtojumu</string>
     <string name="pref_layouts_item">Izkārtojums %1$d: %2$s</string>
     <string name="pref_layouts_remove_custom">Noņemt izkārtojumu</string>
     <string name="pref_custom_layout_title">Pielāgots izkārtojums</string>
+    <string name="pref_swipe_calibration_title">Vilkšanas rakstīšanas kalibrēšana</string>
     <!-- <string name="pref_show_number_row_no_number_row">No number row</string> -->
     <!-- <string name="pref_show_number_row_no_symbols">Number row without symbols</string> -->
     <!-- <string name="pref_show_number_row_symbols">Number row with symbols</string> -->
-    <string name="pref_show_numpad_title">Rādīt ciparnīcu</string>
-    <string name="pref_show_numpad_never">Nekad</string>
-    <string name="pref_show_numpad_landscape">Tikai līmeniskajā stāvoklī</string>
-    <string name="pref_show_numpad_always">Vienmēr</string>
-    <string name="pref_number_row_title">Rādīt ciparu rindu</string>
-    <string name="pref_number_row_summary">Pievienot ciparu rindu virs tastatūras, kad ciparnīca ir paslēpta</string>
-    <string name="pref_numpad_layout">Ciparnīcas izkārtojums</string>
-    <string name="pref_numpad_layout_e_high_first">Lielie cipari augšā</string>
-    <string name="pref_numpad_layout_e_low_first">Mazie cipari augšā</string>
-    <string name="pref_extra_keys_title">Pievienot tastatūrai taustiņus</string>
-    <string name="pref_extra_keys_custom">Pievienot pielāgotus taustiņus</string>
-    <string name="pref_extra_keys_internal">Atlasīt taustiņus, ko pievienot tastatūrai</string>
-    <string name="pref_category_typing">Rakstīšana</string>
-    <string name="pref_swipe_dist_title">Pavilkšanas attālums</string>
-    <string name="pref_swipe_dist_summary">Taustiņu stūros esošo rakstzīmju attālums (%s)</string>
-    <string name="pref_long_timeout_title">Ilgas piespiešanas noildze</string>
-    <string name="pref_long_interval_title">Laiks starp taustiņa atkārtošanos</string>
-    <string name="pref_keyrepeat_enabled">Taustiņa atkārtošanās ar ilgu piespiešanu</string>
-    <string name="pref_lock_double_tap_title">Divkāršs piesitiens pārslēdzējam, lai ieslēgtu burtslēgu</string>
-    <string name="pref_lock_double_tap_summary">Jebkuru pārveidotāju var slēgt ar tā turēšanu</string>
-    <string name="pref_category_behavior">Uzvedība</string>
-    <string name="pref_autocapitalisation_title">Automātiski lielie burti</string>
-    <string name="pref_autocapitalisation_summary">Piespiest pārslēdzēju teikuma sākumā</string>
-    <string name="pref_switch_input_immediate_title">Pārslēgties uz pēdējo izmantoto tastatūru</string>
-    <string name="pref_switch_input_immediate_summary">Tastatūras pārslēgšanas taustiņa uzvedība</string>
-    <string name="pref_vibrate_custom">Pielāgota trīcēšana</string>
-    <string name="pref_vibrate_duration_title">Trīcēšanas stiprums</string>
     <!-- <string name="pref_number_entry_title">Layout when typing numbers, dates and phone numbers</string> -->
     <!-- <string name="pref_number_entry_layout_pin">PIN Entry</string> -->
     <!-- <string name="pref_number_entry_layout_number">Number pane</string> -->
     <!-- <string name="pref_number_entry_layout_normal">Use the main layout</string> -->
-    <string name="pref_category_style">Izskata pielāgojumi</string>
-    <string name="pref_margin_bottom_title">Apakšējā apmale</string>
-    <string name="pref_keyboard_height_title">Tastatūras augstums</string>
-    <string name="pref_horizontal_margin_title">Līmeniskā apmale</string>
-    <string name="pref_character_size_title">Iezīmes izmērs</string>
-    <string name="pref_character_size_summary">Tastatūrā attēloto rakstzīmju izmērs (%.2fx)</string>
-    <string name="pref_theme">Izskats</string>
-    <string name="pref_theme_e_system">Ierīces iestatījumi</string>
-    <string name="pref_theme_e_dark">Tumšs</string>
-    <string name="pref_theme_e_light">Gaišs</string>
-    <string name="pref_theme_e_black">Melns</string>
-    <string name="pref_theme_e_altblack">Citādi melns</string>
-    <string name="pref_theme_e_white">Balts</string>
-    <string name="pref_theme_e_epaper">ePapīrs</string>
-    <string name="pref_theme_e_desert">Tuksnesis</string>
-    <string name="pref_theme_e_jungle">Džungļi</string>
-    <string name="pref_theme_e_monet">Monē (sistēmas)</string>
-    <string name="pref_theme_e_monetlight">Monē (gaišs)</string>
-    <string name="pref_theme_e_monetdark">Monē (tumšs)</string>
-    <string name="pref_theme_e_rosepine">Sārtā priede</string>
-    <string name="pref_swipe_dist_e_very_short">Ļoti tuvs</string>
-    <string name="pref_swipe_dist_e_short">Tuvs</string>
-    <string name="pref_swipe_dist_e_default">Vidējs</string>
-    <string name="pref_swipe_dist_e_far">Tāls</string>
-    <string name="pref_swipe_dist_e_very_far">Ļoti tāls</string>
-    <string name="pref_key_horizontal_space">Līmeniskais attālums starp taustiņiem</string>
-    <string name="pref_key_vertical_space">Stateniskais attālums starp taustiņiem</string>
-    <string name="pref_border_config_title">Pielāgot apmales</string>
-    <string name="pref_border_width_title">Apmales platums</string>
-    <string name="pref_corners_radius_title">Stūru rādiuss</string>
-    <string name="pref_circle_sensitivity_title">Apļveida kustības jutīgums</string>
-    <string name="pref_circle_sensitivity_e_high">Augsts</string>
-    <string name="pref_circle_sensitivity_e_medium">Vidējs</string>
-    <string name="pref_circle_sensitivity_e_low">Zems</string>
-    <string name="pref_circle_sensitivity_e_disabled">Atspējots</string>
     <string name="key_action_next">Nākamais</string>
     <string name="key_action_done">Darīts</string>
     <string name="key_action_go">Aiziet</string>
     <string name="key_action_prev">Iepriekšējais</string>
     <string name="key_action_search">Meklēt</string>
     <string name="key_action_send">Sūtīt</string>
-    <string name="launcher_button_imesettings">Iespējot tastatūru</string>
-    <string name="launcher_button_imepicker">Izvēlēties tastatūru</string>
-    <string name="launcher_description">Šī lietotne ir virtuālā tastatūra. Zemāk esošās pogas nospiešana atvērs sistēmas iestatījumus, lai varētu iespējot CleverKeys.</string>
-    <string name="launcher_sourcecode">Šī ir bezmaksas un atvērtā pirmkoda lietotne. GitHub var atrast pirmkodu un ziņot par nepilnībām.</string>
-    <string name="launcher_tryhere">Pēc iespējošanas šeit var izmēģināt tastatūru:</string>
-    <string name="launcher_tryhere_hint">Izmēģināt šeit</string>
     <string name="key_descr_capslock">Burtslēgs</string>
     <string name="key_descr_compose">Izveidot</string>
     <string name="key_descr_switch_greekmath">Grieķu un matemātikas rakstzīmes</string>
+    <string name="key_descr_switch_forward">Pārslēgt uz nākamo tastatūras izkārtojumu</string>
+    <string name="key_descr_switch_backward">Pārslēgt uz iepriekšējo tastatūras izkārtojumu</string>
     <string name="key_descr_change_method">Pārslēgt tastatūru</string>
     <string name="key_descr_voice_typing">Rakstīšana ar balsi</string>
     <string name="key_descr_copy">Ievietot starpliktuvē</string>
+    <string name="key_descr_copy_private">Privāta kopēšana (tikai CleverKeys, nevis sistēmas starpliktuvē)</string>
     <string name="key_descr_paste">Ielīmēt</string>
     <string name="key_descr_cut">Izgriezt</string>
     <string name="key_descr_selectAll">Atlasīt visu</string>
@@ -120,6 +45,8 @@
     <string name="key_descr_page_down">Lejupšķirt</string>
     <string name="key_descr_home">Sākums</string>
     <string name="key_descr_end">Beigas</string>
+    <string name="key_descr_doc_home">Dokumenta sākums</string>
+    <string name="key_descr_doc_end">Dokumenta beigas</string>
     <string name="key_descr_clipboard">Starpliktuves pārvaldnieks</string>
     <string name="key_descr_combining">Apvienojoša diakritiska zīme</string>
     <string name="key_descr_dead_key">Klusais taustiņš</string>
@@ -127,12 +54,108 @@
     <string name="key_descr_zwnj">Nulles platuma atdalītājs</string>
     <string name="key_descr_nbsp">Nedalāma atstarpe</string>
     <string name="key_descr_nnbsp">Šaura nedalāma atstarpe</string>
-    <!-- <string name="key_descr_delete_word">Delete a word</string> -->
-    <!-- <string name="key_descr_forward_delete_word">Delete a word on the right</string> -->
-    <!-- <string name="key_descr_gesture">Gesture</string> -->
-    <string name="clipboard_history_heading">Nesen starpliktuvē ievietots teksts</string>
-    <string name="clipboard_pin_heading">Piesprausts</string>
+    <string name="key_descr_delete_word">Dzēst vārdu</string>
+    <string name="key_descr_forward_delete_word">Dzēst vārdu pa labi</string>
+    <string name="key_descr_gesture">Žests</string>
+    <string name="key_descr_autofill">Automātiskā aizpilde no paroļu pārvaldnieka</string>
+    <!-- TalkBack key descriptions (accessibility) -->
+    <string name="key_descr_shift">Shift</string>
+    <string name="key_descr_ctrl">Control</string>
+    <string name="key_descr_alt">Alt</string>
+    <string name="key_descr_meta">Meta</string>
+    <string name="key_descr_fn">Function</string>
+    <string name="key_descr_backspace">Backspace</string>
+    <string name="key_descr_delete">Delete</string>
+    <string name="key_descr_enter">Enter</string>
+    <string name="key_descr_space">Atstarpe</string>
+    <string name="key_descr_tab">Tab</string>
+    <string name="key_descr_esc">Escape</string>
+    <string name="key_descr_config">Iestatījumi</string>
+    <string name="key_descr_action">Enter</string>
+    <string name="key_descr_clear">Notīrīt teksta lauku</string>
+    <string name="key_descr_selection_mode">Atlases režīms</string>
+    <string name="key_descr_selection_cancel">Atcelt atlasi</string>
+    <string name="key_descr_arrow_left">Kreisā bultiņa</string>
+    <string name="key_descr_arrow_right">Labā bultiņa</string>
+    <string name="key_descr_arrow_up">Bultiņa uz augšu</string>
+    <string name="key_descr_arrow_down">Bultiņa uz leju</string>
+    <string name="key_descr_cursor_left">Pārvietot kursoru pa kreisi</string>
+    <string name="key_descr_cursor_right">Pārvietot kursoru pa labi</string>
+    <string name="key_descr_cursor_up">Pārvietot kursoru uz augšu</string>
+    <string name="key_descr_cursor_down">Pārvietot kursoru uz leju</string>
+    <string name="key_descr_selection_cursor_left">Paplašināt atlasi pa kreisi</string>
+    <string name="key_descr_selection_cursor_right">Paplašināt atlasi pa labi</string>
+    <string name="key_descr_switch_text">Burtu tastatūra</string>
+    <string name="key_descr_switch_numeric">Ciparu un simbolu tastatūra</string>
+    <string name="key_descr_switch_emoji">Emocijzīmju tastatūra</string>
+    <string name="key_descr_switch_gif">GIF tastatūra</string>
     <string name="clipboard_remove_confirm">Noņemt šo starpliktuves vienumu?</string>
     <string name="clipboard_remove_confirmed">Jā</string>
-    <!-- <string name="toast_no_voice_input">No voice typing app installed</string> -->
+    <string name="toast_no_voice_input">Nav instalēta balss rakstīšanas lietotne</string>
+
+    <!-- Clipboard History View (Material 3) -->
+    <string name="clipboard_edit_duplicate">Ieraksts ar šādu saturu jau pastāv</string>
+    <string name="clipboard_edit_invalid">Saturs nevar būt tukšs</string>
+    <string name="clipboard_edit_error">Neizdevās atjaunināt ierakstu</string>
+
+    <!-- #156 Private copy -->
+    <string name="private_copy_toolbar_label">CleverKeys: Privāta kopēšana</string>
+    <string name="private_copy_toast">Privāti nokopēts uz CleverKeys</string>
+    <string name="private_copy_expose_dialog_title">Kopēt uz sistēmas starpliktuvi?</string>
+    <string name="private_copy_expose_dialog_message">Šis ieraksts tika nokopēts privāti. Tā kopēšana uz sistēmas starpliktuvi atklās tekstu priekšplāna lietotnei un citiem starpliktuves pārvaldniekiem. Vai tomēr kopēt?</string>
+    <string name="private_copy_expose_dialog_confirm">Tomēr kopēt</string>
+    <string name="private_copy_expose_dialog_cancel">Atcelt</string>
+    <string name="private_copy_too_large">Starpliktuves vienums ir pārāk liels (%1$d KB). Ierobežojums ir %2$d KB.</string>
+    <!-- #156 Private-only filter -->
+    <string name="clipboard_filter_private_only">Tikai privātie</string>
+    <string name="clipboard_filter_private_only_hint">Rādīt tikai privāti nokopētos ierakstus (🔒)</string>
+
+    <!-- Settings Activity (Material 3) -->
+    <string name="settings_title">⚙️ CleverKeys iestatījumi</string>
+    <string name="settings_description">Konfigurējiet tastatūras iestatījumus optimālai rakstīšanai.</string>
+
+    <!-- Neural Prediction Section -->
+    <string name="settings_section_neural">🧠 Neironu tīkla prognozēšana</string>
+    <string name="settings_neural_beam_width_title">Stara platums</string>
+    <string name="settings_neural_beam_width_desc">Prognozes kandidātu skaits (1–20). Vairāk = precīzāk.</string>
+    <string name="settings_neural_max_length_title">Maksimālais vārda garums</string>
+    <string name="settings_neural_max_length_desc">Maksimālais rakstzīmju skaits prognozētajos vārdos (5–35).</string>
+    <string name="settings_neural_confidence_title">Pārliecības slieksnis</string>
+    <string name="settings_neural_confidence_desc">Minimālā pārliecība prognozēm (0.0–0.4).</string>
+
+    <!-- Appearance Section -->
+    <string name="settings_section_appearance">🎨 Izskats</string>
+
+    <!-- Input Behavior Section -->
+    <string name="settings_section_input">📝 Ievades uzvedība</string>
+    <string name="settings_auto_capitalization_title">Automātiskie lielie burti</string>
+    <string name="settings_auto_capitalization_desc">Automātiski rakstīt teikuma sākumu ar lielo burtu</string>
+    <string name="settings_vibration_title">Vibrācijas atsauksme</string>
+    <string name="settings_vibration_desc">Vibrēt, nospiežot taustiņus</string>
+
+    <!-- Accessibility Section -->
+    <string name="settings_section_accessibility">♿ Pieejamība</string>
+    <string name="settings_screen_reader_note">✓ Ekrāna lasītāja (TalkBack) atbalsts vienmēr ir ieslēgts</string>
+
+    <!-- Advanced Section -->
+    <string name="settings_section_advanced">🔧 Papildu</string>
+    <string name="settings_debug_title">Atkļūdošanas informācija</string>
+    <string name="settings_debug_desc">Rādīt detalizētu žurnālošanu un veiktspējas metriku</string>
+    <string name="settings_calibration_button">🧪 Vilkšanas kalibrēšana</string>
+
+    <!-- Information &amp; Actions Section -->
+    <string name="settings_section_info">📋 Informācija un darbības</string>
+    <string name="settings_version_title">📱 Versijas informācija</string>
+    <string name="settings_version_build">Būvējums: %1$s</string>
+    <string name="settings_version_copied">Versijas informācija nokopēta</string>
+    <string name="settings_reset_button">🔄 Atiestatīt visu</string>
+
+    <!-- Dialog Messages -->
+    <string name="settings_reset_dialog_title">Iestatījumu atiestatīšana</string>
+    <string name="settings_reset_dialog_message">Tādējādi visi iestatījumi tiks atiestatīti uz noklusējuma vērtībām. Turpināt?</string>
+    <string name="settings_reset_dialog_confirm">Atiestatīt</string>
+
+    <!-- Toast Messages -->
+    <string name="settings_toast_error_saving">Kļūda, saglabājot iestatījumu: %1$s</string>
+    <string name="settings_toast_reset_success">Visi iestatījumi atiestatīti uz noklusējuma vērtībām</string>
 </resources>

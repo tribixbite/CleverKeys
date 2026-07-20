@@ -1,111 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name_release">CleverKeys</string>
-    <string name="app_name_debug">CleverKeys (debug)</string>
-    <string name="short_description">Android için hafif ve güvenlik odaklı bir sanal klavye uygulaması.</string>
-    <string name="store_description">Bu uygulama özünde tuşların kenarlarından kaydırarak daha fazla karakter yazabilmek amacıyla geliştirildi.\n\nBu uygulama aslında Termux kullanıcıları için geliştirildi.\nArtık gündelik kullanım için de uygun.\n\nBu uygulama açık kaynaklıdır. Reklam içermez ve internete bağlanmaz.</string>
-    <string name="pref_portrait">Portre modunda</string>
     <!-- <string name="pref_portrait_unfolded">In portrait mode unfolded</string> -->
-    <string name="pref_landscape">Manzara modunda</string>
     <!-- <string name="pref_landscape_unfolded">In landscape mode unfolded</string> -->
-    <string name="pref_category_layout">Tuş düzeni</string>
-    <string name="pref_label_brightness">Etiket parlaklığını ayarla</string>
-    <string name="pref_keyboard_opacity">Klavye arkaplanı opaklığını ayarla</string>
-    <string name="pref_key_opacity">Tuş opaklığını ayarla</string>
-    <string name="pref_key_activated_opacity">Tuşa basıldığındaki opaklığı ayarla</string>
     <string name="pref_layout_e_system">Sistem ayarlarını kullan</string>
     <string name="pref_layout_e_custom">Özel tuş düeni</string>
     <string name="pref_layouts_add">Alternatif bir tuş düzeni ekle</string>
     <string name="pref_layouts_item">Tuş düzeni %1$d: %2$s</string>
     <string name="pref_layouts_remove_custom">Tuş düzenini kaldır</string>
     <string name="pref_custom_layout_title">Özel tuş düzeni</string>
+    <string name="pref_swipe_calibration_title">Kaydırarak yazmayı kalibre et</string>
     <!-- <string name="pref_show_number_row_no_number_row">No number row</string> -->
     <!-- <string name="pref_show_number_row_no_symbols">Number row without symbols</string> -->
     <!-- <string name="pref_show_number_row_symbols">Number row with symbols</string> -->
-    <string name="pref_show_numpad_title">NumPadi göster</string>
-    <string name="pref_show_numpad_never">Asla</string>
-    <string name="pref_show_numpad_landscape">Sadece manzara modunda</string>
-    <string name="pref_show_numpad_always">Her zaman</string>
-    <string name="pref_number_row_title">Rakam satırını göster</string>
-    <string name="pref_number_row_summary">NumPad gizlendiğinde klavyenin üstüne rakam satırı ekle</string>
-    <string name="pref_numpad_layout">NumPad düzeni</string>
-    <string name="pref_numpad_layout_e_high_first">9dan 1e</string>
-    <string name="pref_numpad_layout_e_low_first">1den 9a</string>
-    <string name="pref_extra_keys_title">Tuş ekle</string>
-    <string name="pref_extra_keys_custom">Özel tuş ekle</string>
-    <string name="pref_extra_keys_internal">Klavyeye eklenecek tuşları seçin</string>
-    <string name="pref_category_typing">Yazma</string>
-    <string name="pref_swipe_dist_title">Kaydırma mesafesi</string>
-    <string name="pref_swipe_dist_summary">Tuşların köşelerinden kaydırma mesafesi (%s)</string>
-    <string name="pref_long_timeout_title">Uzun basma süresi</string>
-    <string name="pref_long_interval_title">Tuşların tekrarlama sıklığı</string>
-    <string name="pref_keyrepeat_enabled">Uzun basınca tuş tekrarlamaları</string>
-    <string name="pref_lock_double_tap_title">CapsLock için Shift tuşuna çift bas</string>
-    <string name="pref_lock_double_tap_summary">Uzun basarak CapsLock açılabilir</string>
-    <string name="pref_category_behavior">Klavye davranışı</string>
-    <string name="pref_autocapitalisation_title">Otomatik büyük harf</string>
-    <string name="pref_autocapitalisation_summary">Noktadan sonra ve her cümlenin başında büyük harf yapar</string>
-    <string name="pref_switch_input_immediate_title">Son kullanılan klavyeye geç</string>
-    <string name="pref_switch_input_immediate_summary">Klavye değistirme tuşunun davranışını belirler</string>
-    <string name="pref_vibrate_custom">Özel titreşim</string>
-    <string name="pref_vibrate_duration_title">Titreşim yoğunluğu</string>
     <!-- <string name="pref_number_entry_title">Layout when typing numbers, dates and phone numbers</string> -->
     <!-- <string name="pref_number_entry_layout_pin">PIN Entry</string> -->
     <!-- <string name="pref_number_entry_layout_number">Number pane</string> -->
     <!-- <string name="pref_number_entry_layout_normal">Use the main layout</string> -->
-    <string name="pref_category_style">Tarz</string>
-    <string name="pref_margin_bottom_title">Alt boşluk</string>
-    <string name="pref_keyboard_height_title">Klavye yüksekliği</string>
-    <string name="pref_horizontal_margin_title">Yatay boşluk</string>
-    <string name="pref_character_size_title">Etiket boyutu</string>
-    <string name="pref_character_size_summary">Klavye üzerindeki karakterlerin boyutu (%.2fx)</string>
-    <string name="pref_theme">Tema</string>
-    <string name="pref_theme_e_system">Sistem Temasını Kullan</string>
-    <string name="pref_theme_e_dark">Koyu</string>
-    <string name="pref_theme_e_light">Aydınlık</string>
-    <string name="pref_theme_e_black">Siyah</string>
-    <string name="pref_theme_e_altblack">Alternatif Siyah</string>
-    <string name="pref_theme_e_white">Beyaz</string>
-    <string name="pref_theme_e_epaper">E-Kağıt</string>
-    <string name="pref_theme_e_desert">Çöl</string>
-    <string name="pref_theme_e_jungle">Orman</string>
-    <string name="pref_theme_e_monet">Monet (Sisteme uyarla)</string>
-    <string name="pref_theme_e_monetlight">Monet (Açık)</string>
-    <string name="pref_theme_e_monetdark">Monet (Koyu)</string>
-    <string name="pref_theme_e_rosepine">Gül Çamı(Rosé Pine)</string>
-    <string name="pref_swipe_dist_e_very_short">Çok kısa</string>
-    <string name="pref_swipe_dist_e_short">Kısa</string>
-    <string name="pref_swipe_dist_e_default">Normal</string>
-    <string name="pref_swipe_dist_e_far">Uzun</string>
-    <string name="pref_swipe_dist_e_very_far">Çok uzun</string>
-    <string name="pref_key_horizontal_space">Tuşlar arasındaki yatay boşluk</string>
-    <string name="pref_key_vertical_space">Tuşlar arasındaki dikey boşluk</string>
-    <string name="pref_border_config_title">Çerçeveyi özelleştir</string>
-    <string name="pref_border_width_title">Çerçeve kalınlığı</string>
-    <string name="pref_corners_radius_title">Kenar yumuşaklığı</string>
-    <string name="pref_circle_sensitivity_title">Dairesel hareket hassasiyeti</string>
-    <string name="pref_circle_sensitivity_e_high">Yüksek</string>
-    <string name="pref_circle_sensitivity_e_medium">Orta</string>
-    <string name="pref_circle_sensitivity_e_low">Düşük</string>
-    <string name="pref_circle_sensitivity_e_disabled">Devre dışı</string>
     <string name="key_action_next">Sonraki</string>
     <string name="key_action_done">Tamam</string>
     <string name="key_action_go">ileri</string>
     <string name="key_action_prev">Önceki</string>
     <string name="key_action_search">Ara</string>
     <string name="key_action_send">Gönder</string>
-    <string name="launcher_button_imesettings">Ayarlarda aktif et</string>
-    <string name="launcher_button_imepicker">Klavye Seç</string>
-    <string name="launcher_description">Bu uygulama bir sanal klavye uygulamasıdır. Aşağıdaki butona basarak sistem ayarlarında etkinleştiriniz.</string>
-    <string name="launcher_sourcecode">Bu uygulama ücretsiz ve açık kaynaklıdır. Kaynak koduna erişmek veya bir hata raporlamak için GitHub\'a ulaşabilirsiniz.</string>
-    <string name="launcher_tryhere">Ayarlardan aktif ettikten sonra klavyeyi burada test edebilirsin:</string>
-    <string name="launcher_tryhere_hint">Burada dene</string>
     <string name="key_descr_capslock">CapsLock</string>
     <string name="key_descr_compose">Oluştur</string>
     <string name="key_descr_switch_greekmath">Greek &amp; math sembolleri</string>
+    <string name="key_descr_switch_forward">Sonraki klavye düzenine geç</string>
+    <string name="key_descr_switch_backward">Önceki klavye düzenine geç</string>
     <string name="key_descr_change_method">Klavye değiştir</string>
     <string name="key_descr_voice_typing">Sesle yazma</string>
     <string name="key_descr_copy">Kopyala</string>
+    <string name="key_descr_copy_private">Özel kopyala (yalnızca CleverKeys içine, sistem panosuna değil)</string>
     <string name="key_descr_paste">Yapıştır</string>
     <string name="key_descr_cut">Kes</string>
     <string name="key_descr_selectAll">Tümünü seç</string>
@@ -120,6 +45,8 @@
     <string name="key_descr_page_down">Aşağı</string>
     <string name="key_descr_home">BAŞ(Sol yön tuşu)</string>
     <string name="key_descr_end">SON(Sağ yön tuşu)</string>
+    <string name="key_descr_doc_home">Belge başı</string>
+    <string name="key_descr_doc_end">Belge sonu</string>
     <string name="key_descr_clipboard">Pano</string>
     <string name="key_descr_combining">Aksanları birleştir</string>
     <string name="key_descr_dead_key">Boş tuş</string>
@@ -127,12 +54,108 @@
     <string name="key_descr_zwnj">Sıfır genişlikte birleştirmeyen</string>
     <string name="key_descr_nbsp">Kırılmaz boşluk</string>
     <string name="key_descr_nnbsp">Dar kırılmaz boşluk</string>
-    <!-- <string name="key_descr_delete_word">Delete a word</string> -->
-    <!-- <string name="key_descr_forward_delete_word">Delete a word on the right</string> -->
-    <!-- <string name="key_descr_gesture">Gesture</string> -->
-    <string name="clipboard_history_heading">Son kopyalanan metin</string>
-    <string name="clipboard_pin_heading">Sabitlendi</string>
+    <string name="key_descr_delete_word">Bir sözcüğü sil</string>
+    <string name="key_descr_forward_delete_word">Sağdaki sözcüğü sil</string>
+    <string name="key_descr_gesture">Hareket</string>
+    <string name="key_descr_autofill">Parola yöneticisi otomatik doldurma</string>
+    <!-- TalkBack tuş açıklamaları (erişilebilirlik) -->
+    <string name="key_descr_shift">Shift</string>
+    <string name="key_descr_ctrl">Control</string>
+    <string name="key_descr_alt">Alt</string>
+    <string name="key_descr_meta">Meta</string>
+    <string name="key_descr_fn">Fn</string>
+    <string name="key_descr_backspace">Geri silme</string>
+    <string name="key_descr_delete">Sil</string>
+    <string name="key_descr_enter">Enter</string>
+    <string name="key_descr_space">Boşluk</string>
+    <string name="key_descr_tab">Sekme</string>
+    <string name="key_descr_esc">Escape</string>
+    <string name="key_descr_config">Ayarlar</string>
+    <string name="key_descr_action">Enter</string>
+    <string name="key_descr_clear">Metin alanını temizle</string>
+    <string name="key_descr_selection_mode">Seçim modu</string>
+    <string name="key_descr_selection_cancel">Seçimi iptal et</string>
+    <string name="key_descr_arrow_left">Sol ok</string>
+    <string name="key_descr_arrow_right">Sağ ok</string>
+    <string name="key_descr_arrow_up">Yukarı ok</string>
+    <string name="key_descr_arrow_down">Aşağı ok</string>
+    <string name="key_descr_cursor_left">İmleci sola taşı</string>
+    <string name="key_descr_cursor_right">İmleci sağa taşı</string>
+    <string name="key_descr_cursor_up">İmleci yukarı taşı</string>
+    <string name="key_descr_cursor_down">İmleci aşağı taşı</string>
+    <string name="key_descr_selection_cursor_left">Seçimi sola genişlet</string>
+    <string name="key_descr_selection_cursor_right">Seçimi sağa genişlet</string>
+    <string name="key_descr_switch_text">Harf klavyesi</string>
+    <string name="key_descr_switch_numeric">Sayı ve sembol klavyesi</string>
+    <string name="key_descr_switch_emoji">Emoji klavyesi</string>
+    <string name="key_descr_switch_gif">GIF klavyesi</string>
     <string name="clipboard_remove_confirm">Bu panodan silinsin mi?</string>
     <string name="clipboard_remove_confirmed">Evet</string>
-    <!-- <string name="toast_no_voice_input">No voice typing app installed</string> -->
+    <string name="toast_no_voice_input">Yüklü sesle yazma uygulaması yok</string>
+
+    <!-- Clipboard History View (Material 3) -->
+    <string name="clipboard_edit_duplicate">Bu içeriğe sahip bir kayıt zaten var</string>
+    <string name="clipboard_edit_invalid">İçerik boş olamaz</string>
+    <string name="clipboard_edit_error">Kayıt güncellenemedi</string>
+
+    <!-- #156 Private copy -->
+    <string name="private_copy_toolbar_label">CleverKeys: Özel kopya</string>
+    <string name="private_copy_toast">Gizli olarak CleverKeys\'e kopyalandı</string>
+    <string name="private_copy_expose_dialog_title">Sistem panosuna kopyalansın mı?</string>
+    <string name="private_copy_expose_dialog_message">Bu kayıt gizli olarak kopyalanmıştı. Sistem panosuna kopyalamak, metni ön plandaki uygulamaya ve diğer pano yöneticilerine açık hale getirir. Yine de kopyalansın mı?</string>
+    <string name="private_copy_expose_dialog_confirm">Yine de kopyala</string>
+    <string name="private_copy_expose_dialog_cancel">İptal</string>
+    <string name="private_copy_too_large">Pano öğesi çok büyük (%1$d KB). Sınır %2$d KB.</string>
+    <!-- #156 Private-only filter -->
+    <string name="clipboard_filter_private_only">Yalnızca gizli</string>
+    <string name="clipboard_filter_private_only_hint">Yalnızca gizli olarak kopyalanan kayıtları göster (🔒)</string>
+
+    <!-- Settings Activity (Material 3) -->
+    <string name="settings_title">⚙️ CleverKeys Ayarları</string>
+    <string name="settings_description">En iyi yazma deneyimi için klavye ayarlarınızı yapılandırın.</string>
+
+    <!-- Neural Prediction Section -->
+    <string name="settings_section_neural">🧠 Sinir Ağı Tahmini</string>
+    <string name="settings_neural_beam_width_title">Işın Genişliği</string>
+    <string name="settings_neural_beam_width_desc">Tahmin adayı sayısı (1-20). Yüksek = daha isabetli.</string>
+    <string name="settings_neural_max_length_title">Maksimum Kelime Uzunluğu</string>
+    <string name="settings_neural_max_length_desc">Tahmin edilen kelimelerdeki maksimum karakter (5-35).</string>
+    <string name="settings_neural_confidence_title">Güven Eşiği</string>
+    <string name="settings_neural_confidence_desc">Tahminler için minimum güven (0.0-0.4).</string>
+
+    <!-- Appearance Section -->
+    <string name="settings_section_appearance">🎨 Görünüm</string>
+
+    <!-- Input Behavior Section -->
+    <string name="settings_section_input">📝 Giriş Davranışı</string>
+    <string name="settings_auto_capitalization_title">Otomatik Büyük Harf</string>
+    <string name="settings_auto_capitalization_desc">Cümle başındaki kelimeleri otomatik olarak büyük harfle yaz</string>
+    <string name="settings_vibration_title">Titreşim Geri Bildirimi</string>
+    <string name="settings_vibration_desc">Tuşlara basıldığında titreşim ver</string>
+
+    <!-- Accessibility Section -->
+    <string name="settings_section_accessibility">♿ Erişilebilirlik</string>
+    <string name="settings_screen_reader_note">✓ Ekran Okuyucu (TalkBack) desteği her zaman etkindir</string>
+
+    <!-- Advanced Section -->
+    <string name="settings_section_advanced">🔧 Gelişmiş</string>
+    <string name="settings_debug_title">Hata Ayıklama Bilgisi</string>
+    <string name="settings_debug_desc">Ayrıntılı günlük kaydı ve performans ölçümlerini göster</string>
+    <string name="settings_calibration_button">🧪 Kaydırma Kalibrasyonu</string>
+
+    <!-- Information &amp; Actions Section -->
+    <string name="settings_section_info">📋 Bilgi ve İşlemler</string>
+    <string name="settings_version_title">📱 Sürüm Bilgisi</string>
+    <string name="settings_version_build">Yapı: %1$s</string>
+    <string name="settings_version_copied">Sürüm bilgisi kopyalandı</string>
+    <string name="settings_reset_button">🔄 Tümünü Sıfırla</string>
+
+    <!-- Dialog Messages -->
+    <string name="settings_reset_dialog_title">Ayarları Sıfırla</string>
+    <string name="settings_reset_dialog_message">Bu, tüm ayarları varsayılanlara sıfırlar. Devam edilsin mi?</string>
+    <string name="settings_reset_dialog_confirm">Sıfırla</string>
+
+    <!-- Toast Messages -->
+    <string name="settings_toast_error_saving">Ayar kaydedilirken hata: %1$s</string>
+    <string name="settings_toast_reset_success">Tüm ayarlar varsayılanlara sıfırlandı</string>
 </resources>

@@ -1,111 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name_release">CleverKeys</string>
     <!-- <string name="app_name_debug">CleverKeys (Debug)</string> -->
-    <string name="short_description">개발자들을 위한 가벼운 가상 키보드.</string>
-    <string name="store_description">주요 기능은 모서리 방향으로 키를 스와이프하여 더 많은 문자를 입력할 수 있다는 것입니다.\n\n이 앱은 처음에는 Termux를 사용하는 프로그래머들을 위한 것으로 개발되었습니다.\n지금은 일상적인 용도로도 완벽합니다.\n\n이 응용 프로그램에는 광고가 없으며 네트워크 요청을 하지 않고 오픈 소스입니다.</string>
-    <string name="pref_portrait">세로 화면</string>
     <!-- <string name="pref_portrait_unfolded">In portrait mode unfolded</string> -->
-    <string name="pref_landscape">가로 화면</string>
     <!-- <string name="pref_landscape_unfolded">In landscape mode unfolded</string> -->
-    <string name="pref_category_layout">레이아웃</string>
-    <string name="pref_label_brightness">라벨 밝기 조절</string>
-    <string name="pref_keyboard_opacity">키보드 배경 불투명도 조절</string>
-    <string name="pref_key_opacity">키 불투명도 조절</string>
-    <string name="pref_key_activated_opacity">누른 키 불투명도 조절</string>
     <string name="pref_layout_e_system">시스템 세팅</string>
     <string name="pref_layout_e_custom">사용자 정의 레이아웃</string>
     <string name="pref_layouts_add">대체 레이아웃 추가</string>
     <string name="pref_layouts_item">레이아웃 %1$d: %2$s</string>
     <string name="pref_layouts_remove_custom">레이아웃 제거</string>
     <string name="pref_custom_layout_title">사용자 정의 레이아웃</string>
+    <string name="pref_swipe_calibration_title">스와이프 입력 보정</string>
     <!-- <string name="pref_show_number_row_no_number_row">No number row</string> -->
     <!-- <string name="pref_show_number_row_no_symbols">Number row without symbols</string> -->
     <!-- <string name="pref_show_number_row_symbols">Number row with symbols</string> -->
-    <string name="pref_show_numpad_title">NumPad 표시</string>
-    <string name="pref_show_numpad_never">안 함</string>
-    <string name="pref_show_numpad_landscape">가로 모드에서만</string>
-    <string name="pref_show_numpad_always">항상</string>
-    <string name="pref_number_row_title">숫자 열 표시</string>
-    <string name="pref_number_row_summary">NumPad이 숨겨진 경우 키보드 상단에 숫자 행을 추가합니다.</string>
-    <string name="pref_numpad_layout">NumPad 레이아웃</string>
-    <string name="pref_numpad_layout_e_high_first">높은 자리수 우선</string>
-    <string name="pref_numpad_layout_e_low_first">낮은 자리수 우선</string>
-    <string name="pref_extra_keys_title">키보드에 추가 키 설정</string>
-    <string name="pref_extra_keys_custom">사용자 정의 키 추가</string>
-    <string name="pref_extra_keys_internal">키보드에 추가할 키 선택</string>
-    <string name="pref_category_typing">입력</string>
-    <string name="pref_swipe_dist_title">스와이프 범위</string>
-    <string name="pref_swipe_dist_summary">키 모서리 문자의 입력 범위 (%s)</string>
-    <string name="pref_long_timeout_title">길게 누르는 시간</string>
-    <string name="pref_long_interval_title">키 반복 간격</string>
-    <string name="pref_keyrepeat_enabled">키보드 입력을 길게 유지할 때 반복</string>
-    <string name="pref_lock_double_tap_title">쉬프트 키 더블 탭을 통해 대문자 잠금 설정</string>
-    <string name="pref_lock_double_tap_summary">modifier를 길게 누르고 있으면 해당 modifier가 잠긴 상태로 유지됩니다.</string>
-    <string name="pref_category_behavior">동작</string>
-    <string name="pref_autocapitalisation_title">자동 대문자 전환</string>
-    <string name="pref_autocapitalisation_summary">문장의 시작에서 Shift 키를 눌러 대문자로 전환합니다.</string>
-    <string name="pref_switch_input_immediate_title">마지막으로 사용한 키보드로 전환</string>
-    <string name="pref_switch_input_immediate_summary">키보드 전환 키의 동작 방식입니다.</string>
-    <string name="pref_vibrate_custom">사용자 정의 진동</string>
-    <string name="pref_vibrate_duration_title">진동 강도</string>
     <!-- <string name="pref_number_entry_title">Layout when typing numbers, dates and phone numbers</string> -->
     <!-- <string name="pref_number_entry_layout_pin">PIN Entry</string> -->
     <!-- <string name="pref_number_entry_layout_number">Number pane</string> -->
     <!-- <string name="pref_number_entry_layout_normal">Use the main layout</string> -->
-    <string name="pref_category_style">스타일</string>
-    <string name="pref_margin_bottom_title">아래 넓이</string>
-    <string name="pref_keyboard_height_title">키보드 높이</string>
-    <string name="pref_horizontal_margin_title">양 옆 넓이</string>
-    <string name="pref_character_size_title">폰트 크기</string>
-    <string name="pref_character_size_summary">키보드의 표시되는 폰트 크기 (%.2fx)</string>
-    <string name="pref_theme">테마</string>
-    <string name="pref_theme_e_system">시스템 테마</string>
-    <string name="pref_theme_e_dark">다크</string>
-    <string name="pref_theme_e_light">라이트</string>
-    <string name="pref_theme_e_black">블랙</string>
-    <string name="pref_theme_e_altblack">대체 블랙</string>
-    <string name="pref_theme_e_white">화이트</string>
-    <string name="pref_theme_e_epaper">종이</string>
-    <string name="pref_theme_e_desert">사막</string>
-    <string name="pref_theme_e_jungle">정글</string>
-    <string name="pref_theme_e_monet">모네트 (시스템)</string>
-    <string name="pref_theme_e_monetlight">모네트 (라이트)</string>
-    <string name="pref_theme_e_monetdark">모네트 (다크)</string>
     <!-- <string name="pref_theme_e_rosepine">Rosé Pine</string> -->
-    <string name="pref_swipe_dist_e_very_short">매우 짧음</string>
-    <string name="pref_swipe_dist_e_short">짧음</string>
-    <string name="pref_swipe_dist_e_default">보통</string>
-    <string name="pref_swipe_dist_e_far">넓음</string>
-    <string name="pref_swipe_dist_e_very_far">매우 넓음</string>
-    <string name="pref_key_horizontal_space">키보드 양 옆 간격</string>
-    <string name="pref_key_vertical_space">키보드 세로 간격</string>
-    <string name="pref_border_config_title">경계선 사용자 정의</string>
-    <string name="pref_border_width_title">경계선 너비</string>
-    <string name="pref_corners_radius_title">모서리 반지름</string>
-    <string name="pref_circle_sensitivity_title">원형 제스처 감도</string>
-    <string name="pref_circle_sensitivity_e_high">높음</string>
-    <string name="pref_circle_sensitivity_e_medium">중간</string>
-    <string name="pref_circle_sensitivity_e_low">낮음</string>
-    <string name="pref_circle_sensitivity_e_disabled">사용 안 함</string>
     <string name="key_action_next">다음</string>
     <string name="key_action_done">확인</string>
     <string name="key_action_go">엔터</string>
     <string name="key_action_prev">이전</string>
     <string name="key_action_search">검색</string>
     <string name="key_action_send">보내기</string>
-    <string name="launcher_button_imesettings">키보드 활성화</string>
-    <string name="launcher_button_imepicker">키보드 선택</string>
-    <string name="launcher_description">이 앱은 가상 키보드입니다.CleverKeys를 클릭하여 시스템 설정으로 이동하고 아래 버튼을 클릭하세요.</string>
-    <string name="launcher_sourcecode">이것은 무료이고 오픈 소스 응용 프로그램입니다. GitHub에서 원본 코드를 찾을 수 있습니다 또는 버그를 신고할 수 있습니다.</string>
-    <string name="launcher_tryhere">켜면 여기에서 키보드를 시험해 볼 수 있습니다:</string>
-    <string name="launcher_tryhere_hint">여기서 시험해 보기</string>
     <string name="key_descr_capslock">대문자 잠금</string>
     <string name="key_descr_compose">구성</string>
     <string name="key_descr_switch_greekmath">그리스 수학 기호 전환</string>
+    <string name="key_descr_switch_forward">다음 키보드 레이아웃으로 전환</string>
+    <string name="key_descr_switch_backward">이전 키보드 레이아웃으로 전환</string>
     <string name="key_descr_change_method">키보드 전환</string>
     <string name="key_descr_voice_typing">음성 입력</string>
     <string name="key_descr_copy">복사</string>
+    <string name="key_descr_copy_private">비공개 복사(시스템 클립보드가 아닌 CleverKeys 전용)</string>
     <string name="key_descr_paste">붙여넣기</string>
     <string name="key_descr_cut">자르기</string>
     <string name="key_descr_selectAll">전부 선택</string>
@@ -120,19 +47,117 @@
     <string name="key_descr_page_down">페이지 아래</string>
     <string name="key_descr_home">홈</string>
     <string name="key_descr_end">종료</string>
+    <string name="key_descr_doc_home">문서 시작</string>
+    <string name="key_descr_doc_end">문서 끝</string>
     <string name="key_descr_clipboard">클립보드 관리자</string>
-    <!-- <string name="key_descr_combining">Combining diacritic</string> -->
-    <!-- <string name="key_descr_dead_key">Dead key</string> -->
-    <!-- <string name="key_descr_zwj">Zero width joiner</string> -->
-    <!-- <string name="key_descr_zwnj">Zero width non-joiner</string> -->
-    <!-- <string name="key_descr_nbsp">Non-breaking space</string> -->
-    <!-- <string name="key_descr_nnbsp">Narrow non-breaking space</string> -->
-    <!-- <string name="key_descr_delete_word">Delete a word</string> -->
-    <!-- <string name="key_descr_forward_delete_word">Delete a word on the right</string> -->
-    <!-- <string name="key_descr_gesture">Gesture</string> -->
-    <string name="clipboard_history_heading">최근에 복사한 텍스트</string>
-    <string name="clipboard_pin_heading">고정</string>
+    <string name="key_descr_combining">조합용 발음 구별 기호</string>
+    <string name="key_descr_dead_key">데드 키</string>
+    <string name="key_descr_zwj">너비 없는 결합자</string>
+    <string name="key_descr_zwnj">너비 없는 비결합자</string>
+    <string name="key_descr_nbsp">줄바꿈 없는 공백</string>
+    <string name="key_descr_nnbsp">좁은 줄바꿈 없는 공백</string>
+    <string name="key_descr_delete_word">단어 삭제</string>
+    <string name="key_descr_forward_delete_word">오른쪽 단어 삭제</string>
+    <string name="key_descr_gesture">제스처</string>
+    <string name="key_descr_autofill">비밀번호 관리자 자동 완성</string>
+    <!-- TalkBack key descriptions (accessibility) -->
+    <string name="key_descr_shift">Shift</string>
+    <string name="key_descr_ctrl">Control</string>
+    <string name="key_descr_alt">Alt</string>
+    <string name="key_descr_meta">Meta</string>
+    <string name="key_descr_fn">Function</string>
+    <string name="key_descr_backspace">백스페이스</string>
+    <string name="key_descr_delete">삭제</string>
+    <string name="key_descr_enter">엔터</string>
+    <string name="key_descr_space">스페이스</string>
+    <string name="key_descr_tab">탭</string>
+    <string name="key_descr_esc">이스케이프</string>
+    <string name="key_descr_config">설정</string>
+    <string name="key_descr_action">엔터</string>
+    <string name="key_descr_clear">텍스트 입력란 지우기</string>
+    <string name="key_descr_selection_mode">선택 모드</string>
+    <string name="key_descr_selection_cancel">선택 취소</string>
+    <string name="key_descr_arrow_left">왼쪽 화살표</string>
+    <string name="key_descr_arrow_right">오른쪽 화살표</string>
+    <string name="key_descr_arrow_up">위쪽 화살표</string>
+    <string name="key_descr_arrow_down">아래쪽 화살표</string>
+    <string name="key_descr_cursor_left">커서를 왼쪽으로 이동</string>
+    <string name="key_descr_cursor_right">커서를 오른쪽으로 이동</string>
+    <string name="key_descr_cursor_up">커서를 위로 이동</string>
+    <string name="key_descr_cursor_down">커서를 아래로 이동</string>
+    <string name="key_descr_selection_cursor_left">선택 영역을 왼쪽으로 확장</string>
+    <string name="key_descr_selection_cursor_right">선택 영역을 오른쪽으로 확장</string>
+    <string name="key_descr_switch_text">문자 키보드</string>
+    <string name="key_descr_switch_numeric">숫자 및 기호 키보드</string>
+    <string name="key_descr_switch_emoji">이모지 키보드</string>
+    <string name="key_descr_switch_gif">GIF 키보드</string>
     <string name="clipboard_remove_confirm">이 클립보드를 제거하시겠습니까?</string>
     <string name="clipboard_remove_confirmed">예</string>
-    <!-- <string name="toast_no_voice_input">No voice typing app installed</string> -->
+    <string name="toast_no_voice_input">설치된 음성 입력 앱이 없습니다</string>
+
+    <!-- Clipboard History View (Material 3) -->
+    <string name="clipboard_edit_duplicate">이 내용의 항목이 이미 있습니다</string>
+    <string name="clipboard_edit_invalid">내용은 비워 둘 수 없습니다</string>
+    <string name="clipboard_edit_error">항목을 업데이트하지 못했습니다</string>
+
+    <!-- #156 Private copy -->
+    <string name="private_copy_toolbar_label">CleverKeys: 비공개 복사</string>
+    <string name="private_copy_toast">CleverKeys에 비공개로 복사했습니다</string>
+    <string name="private_copy_expose_dialog_title">시스템 클립보드에 복사하시겠습니까?</string>
+    <string name="private_copy_expose_dialog_message">이 항목은 비공개로 복사되었습니다. 시스템 클립보드에 복사하면 포그라운드 앱과 다른 클립보드 관리자에 텍스트가 노출됩니다. 그래도 복사하시겠습니까?</string>
+    <string name="private_copy_expose_dialog_confirm">복사</string>
+    <string name="private_copy_expose_dialog_cancel">취소</string>
+    <string name="private_copy_too_large">클립보드 항목이 너무 큽니다(%1$d KB). 제한은 %2$d KB입니다.</string>
+    <!-- #156 Private-only filter -->
+    <string name="clipboard_filter_private_only">비공개만</string>
+    <string name="clipboard_filter_private_only_hint">비공개로 복사한 항목(🔒)만 표시</string>
+
+    <!-- Settings Activity (Material 3) -->
+    <string name="settings_title">⚙️ CleverKeys 설정</string>
+    <string name="settings_description">최적의 입력 환경을 위해 키보드 설정을 구성합니다.</string>
+
+    <!-- Neural Prediction Section -->
+    <string name="settings_section_neural">🧠 신경망 예측</string>
+    <string name="settings_neural_beam_width_title">빔 너비</string>
+    <string name="settings_neural_beam_width_desc">예측 후보 수(1~20). 클수록 더 정확합니다.</string>
+    <string name="settings_neural_max_length_title">최대 단어 길이</string>
+    <string name="settings_neural_max_length_desc">예측 단어의 최대 문자 수(5~35).</string>
+    <string name="settings_neural_confidence_title">신뢰도 임계값</string>
+    <string name="settings_neural_confidence_desc">예측에 필요한 최소 신뢰도(0.0~0.4).</string>
+
+    <!-- Appearance Section -->
+    <string name="settings_section_appearance">🎨 모양</string>
+
+    <!-- Input Behavior Section -->
+    <string name="settings_section_input">📝 입력 동작</string>
+    <string name="settings_auto_capitalization_title">자동 대문자화</string>
+    <string name="settings_auto_capitalization_desc">문장 시작 단어를 자동으로 대문자로 만듭니다</string>
+    <string name="settings_vibration_title">진동 피드백</string>
+    <string name="settings_vibration_desc">키를 누를 때 진동합니다</string>
+
+    <!-- Accessibility Section -->
+    <string name="settings_section_accessibility">♿ 접근성</string>
+    <string name="settings_screen_reader_note">✓ 스크린 리더(TalkBack) 지원이 항상 켜져 있습니다</string>
+
+    <!-- Advanced Section -->
+    <string name="settings_section_advanced">🔧 고급</string>
+    <string name="settings_debug_title">디버그 정보</string>
+    <string name="settings_debug_desc">상세 로그와 성능 지표를 표시합니다</string>
+    <string name="settings_calibration_button">🧪 스와이프 보정</string>
+
+    <!-- Information &amp; Actions Section -->
+    <string name="settings_section_info">📋 정보 및 작업</string>
+    <string name="settings_version_title">📱 버전 정보</string>
+    <string name="settings_version_build">빌드: %1$s</string>
+    <string name="settings_version_copied">버전 정보를 복사했습니다</string>
+    <string name="settings_reset_button">🔄 모두 초기화</string>
+
+    <!-- Dialog Messages -->
+    <string name="settings_reset_dialog_title">설정 초기화</string>
+    <string name="settings_reset_dialog_message">모든 설정을 기본값으로 초기화합니다. 계속하시겠습니까?</string>
+    <string name="settings_reset_dialog_confirm">초기화</string>
+
+    <!-- Toast Messages -->
+    <string name="settings_toast_error_saving">설정 저장 오류: %1$s</string>
+    <string name="settings_toast_reset_success">모든 설정을 기본값으로 초기화했습니다</string>
 </resources>

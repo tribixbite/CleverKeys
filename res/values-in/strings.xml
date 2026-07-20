@@ -1,111 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name_release">CleverKeys</string>
-    <string name="app_name_debug">CleverKeys (Debug)</string>
-    <string name="short_description">Keyboard virtual yang ringan dan sadar privasi untuk Android.</string>
-    <string name="store_description">Fitur utamanya adalah Anda dapat mengetik lebih banyak karakter dengan menggeser tombol ke arah sudut.\n\nAplikasi ini awalnya dirancang untuk programmer yang menggunakan Termux.\nSekarang sempurna untuk penggunaan sehari-hari.\n\nAplikasi ini tidak berisi iklan, tidak membuat permintaan jaringan dan Open Source.</string>
-    <string name="pref_portrait">Dalam mode potret</string>
     <!-- <string name="pref_portrait_unfolded">In portrait mode unfolded</string> -->
-    <string name="pref_landscape">Dalam mode lansekap</string>
     <!-- <string name="pref_landscape_unfolded">In landscape mode unfolded</string> -->
-    <string name="pref_category_layout">Tata letak</string>
-    <string name="pref_label_brightness">Sesuaikan kecerahan label</string>
-    <string name="pref_keyboard_opacity">Sesuaikan Opacity Latar Belakang Keyboard</string>
-    <string name="pref_key_opacity">Sesuaikan opacity tombol</string>
-    <string name="pref_key_activated_opacity">Sesuaikan opacity tombol yang ditekan</string>
     <string name="pref_layout_e_system">Pengaturan sistem</string>
     <string name="pref_layout_e_custom">Tata letak kustom</string>
     <string name="pref_layouts_add">Tambahkan tata letak alternatif</string>
     <string name="pref_layouts_item">Tata letak %1$d: %2$s</string>
     <string name="pref_layouts_remove_custom">Hapus tata letak</string>
     <string name="pref_custom_layout_title">Tata letak khusus</string>
+    <string name="pref_swipe_calibration_title">Kalibrasi ketik geser</string>
     <!-- <string name="pref_show_number_row_no_number_row">No number row</string> -->
     <!-- <string name="pref_show_number_row_no_symbols">Number row without symbols</string> -->
     <!-- <string name="pref_show_number_row_symbols">Number row with symbols</string> -->
-    <string name="pref_show_numpad_title">Tampilkan NumPad</string>
-    <string name="pref_show_numpad_never">Tidak pernah</string>
-    <string name="pref_show_numpad_landscape">Hanya dalam mode lanskap</string>
-    <string name="pref_show_numpad_always">Selalu</string>
-    <string name="pref_number_row_title">Tampilkan baris nomor</string>
-    <string name="pref_number_row_summary">Menambahkan baris angka di bagian atas keyboard saat numpad disembunyikan</string>
-    <string name="pref_numpad_layout">Tata letak NumPad</string>
-    <string name="pref_numpad_layout_e_high_first">digit tinggi dulu</string>
-    <string name="pref_numpad_layout_e_low_first">digit rendah dulu</string>
-    <string name="pref_extra_keys_title">Tambahkan tombol ke keyboard</string>
-    <string name="pref_extra_keys_custom">Menambahkan tombol khusus</string>
-    <string name="pref_extra_keys_internal">Pilih tombol untuk ditambahkan ke keyboard</string>
-    <string name="pref_category_typing">Mengetik</string>
-    <string name="pref_swipe_dist_title">Jarak menggeser</string>
-    <string name="pref_swipe_dist_summary">Jarak karakter di sudut tombol (%s)</string>
-    <string name="pref_long_timeout_title">Waktu tekan lama</string>
-    <string name="pref_long_interval_title">Interval pengulangan tombol</string>
-    <string name="pref_keyrepeat_enabled">Ulangi tombol pada tekan lama</string>
-    <string name="pref_lock_double_tap_title">Ketuk dua kali pada shift untuk mengunci huruf kapital</string>
-    <string name="pref_lock_double_tap_summary">Kunci apapun dengan menahan pengubah</string>
-    <string name="pref_category_behavior">Perilaku</string>
-    <string name="pref_autocapitalisation_title">Kapitalisasi Otomatis</string>
-    <string name="pref_autocapitalisation_summary">Tekan shift di awal kalimat</string>
-    <string name="pref_switch_input_immediate_title">Beralih ke keyboard yang terakhir digunakan</string>
-    <string name="pref_switch_input_immediate_summary">Perilaku tombol penggantian keyboard</string>
-    <string name="pref_vibrate_custom">Getaran kustom</string>
-    <string name="pref_vibrate_duration_title">Intensitas getaran</string>
     <!-- <string name="pref_number_entry_title">Layout when typing numbers, dates and phone numbers</string> -->
     <!-- <string name="pref_number_entry_layout_pin">PIN Entry</string> -->
     <!-- <string name="pref_number_entry_layout_number">Number pane</string> -->
     <!-- <string name="pref_number_entry_layout_normal">Use the main layout</string> -->
-    <string name="pref_category_style">Gaya</string>
-    <string name="pref_margin_bottom_title">Batas bawah</string>
-    <string name="pref_keyboard_height_title">Tinggi keyboard</string>
-    <string name="pref_horizontal_margin_title">Garis tepi horizontal</string>
-    <string name="pref_character_size_title">Ukuran label</string>
-    <string name="pref_character_size_summary">Ukuran karakter yang ditampilkan pada keyboard (%.2fx)</string>
-    <string name="pref_theme">Tema</string>
-    <string name="pref_theme_e_system">Pengaturan Sistem</string>
-    <string name="pref_theme_e_dark">Gelap</string>
-    <string name="pref_theme_e_light">Terang</string>
-    <string name="pref_theme_e_black">Hitam</string>
-    <string name="pref_theme_e_altblack">Alternatif Hitam</string>
-    <string name="pref_theme_e_white">Putih</string>
-    <string name="pref_theme_e_epaper">ePaper</string>
-    <string name="pref_theme_e_desert">Desert</string>
-    <string name="pref_theme_e_jungle">Jungle</string>
-    <string name="pref_theme_e_monet">Monet (Sistem)</string>
-    <string name="pref_theme_e_monetlight">Monet (Terang)</string>
-    <string name="pref_theme_e_monetdark">Monet (Gelap)</string>
-    <string name="pref_theme_e_rosepine">Rosé Pine</string>
-    <string name="pref_swipe_dist_e_very_short">Sangat pendek</string>
-    <string name="pref_swipe_dist_e_short">Pendek</string>
-    <string name="pref_swipe_dist_e_default">Normal</string>
-    <string name="pref_swipe_dist_e_far">Jauh</string>
-    <string name="pref_swipe_dist_e_very_far">Sangat jauh</string>
-    <string name="pref_key_horizontal_space">Jarak horizontal di antara tombol</string>
-    <string name="pref_key_vertical_space">Jarak vertikal antara tombol</string>
-    <string name="pref_border_config_title">Kustomisasi tepi</string>
-    <string name="pref_border_width_title">Lebar tepi</string>
-    <string name="pref_corners_radius_title">Radius tepi</string>
-    <string name="pref_circle_sensitivity_title">Sensitivitas gestur melingkar</string>
-    <string name="pref_circle_sensitivity_e_high">Tinggi</string>
-    <string name="pref_circle_sensitivity_e_medium">Sedang</string>
-    <string name="pref_circle_sensitivity_e_low">Rendah</string>
-    <string name="pref_circle_sensitivity_e_disabled">Mati</string>
     <string name="key_action_next">Lanjut</string>
     <string name="key_action_done">Selesai</string>
     <string name="key_action_go">Pergi</string>
     <string name="key_action_prev">Sblm</string>
     <string name="key_action_search">Cari</string>
     <string name="key_action_send">Kirim</string>
-    <string name="launcher_button_imesettings">Aktifkan keyboard</string>
-    <string name="launcher_button_imepicker">Pilih keyboard</string>
-    <string name="launcher_description">Aplikasi ini adalah keyboard virtual. Buka pengaturan sistem dengan mengklik tombol di bawah ini dan aktifkan CleverKeys.</string>
-    <string name="launcher_sourcecode">Ini adalah aplikasi sumber terbuka dan gratis. Anda dapat menemukan kode sumber atau melaporkan bug di GitHub.</string>
-    <string name="launcher_tryhere">Setelah mengaktifkan, Anda dapat mencoba keyboard di sini:</string>
-    <string name="launcher_tryhere_hint">Ketik disini</string>
     <string name="key_descr_capslock">Kunci kapital</string>
     <string name="key_descr_compose">Menggabungkan</string>
     <string name="key_descr_switch_greekmath">Greek &amp; Simbol matematika</string>
+    <string name="key_descr_switch_forward">Beralih ke tata letak keyboard berikutnya</string>
+    <string name="key_descr_switch_backward">Beralih ke tata letak keyboard sebelumnya</string>
     <string name="key_descr_change_method">Beralih keyboard</string>
     <string name="key_descr_voice_typing">Pengetikan suara</string>
     <string name="key_descr_copy">Salin</string>
+    <string name="key_descr_copy_private">Salinan pribadi (hanya ke dalam CleverKeys, bukan clipboard sistem)</string>
     <string name="key_descr_paste">Tempel</string>
     <string name="key_descr_cut">Potong</string>
     <string name="key_descr_selectAll">Pilih semua</string>
@@ -120,6 +45,8 @@
     <string name="key_descr_page_down">Halaman bawah</string>
     <string name="key_descr_home">Beranda</string>
     <string name="key_descr_end">Akhir</string>
+    <string name="key_descr_doc_home">Awal dokumen</string>
+    <string name="key_descr_doc_end">Akhir dokumen</string>
     <string name="key_descr_clipboard">Manajer Clipboard</string>
     <string name="key_descr_combining">Menggabungkan diakritik</string>
     <string name="key_descr_dead_key">Tombol mati</string>
@@ -127,12 +54,108 @@
     <string name="key_descr_zwnj">Lebar nol non-joiner</string>
     <string name="key_descr_nbsp">Spasi non-pecah</string>
     <string name="key_descr_nnbsp">Spasi sempit non-pecah</string>
-    <!-- <string name="key_descr_delete_word">Delete a word</string> -->
-    <!-- <string name="key_descr_forward_delete_word">Delete a word on the right</string> -->
-    <!-- <string name="key_descr_gesture">Gesture</string> -->
-    <string name="clipboard_history_heading">Teks yang baru disalin</string>
-    <string name="clipboard_pin_heading">Disematkan</string>
+    <string name="key_descr_delete_word">Hapus satu kata</string>
+    <string name="key_descr_forward_delete_word">Hapus satu kata di sebelah kanan</string>
+    <string name="key_descr_gesture">Gestur</string>
+    <string name="key_descr_autofill">Isi otomatis pengelola kata sandi</string>
+    <!-- Deskripsi tombol TalkBack (aksesibilitas) -->
+    <string name="key_descr_shift">Shift</string>
+    <string name="key_descr_ctrl">Control</string>
+    <string name="key_descr_alt">Alt</string>
+    <string name="key_descr_meta">Meta</string>
+    <string name="key_descr_fn">Fn</string>
+    <string name="key_descr_backspace">Backspace</string>
+    <string name="key_descr_delete">Hapus</string>
+    <string name="key_descr_enter">Enter</string>
+    <string name="key_descr_space">Spasi</string>
+    <string name="key_descr_tab">Tab</string>
+    <string name="key_descr_esc">Escape</string>
+    <string name="key_descr_config">Pengaturan</string>
+    <string name="key_descr_action">Enter</string>
+    <string name="key_descr_clear">Bersihkan bidang teks</string>
+    <string name="key_descr_selection_mode">Mode seleksi</string>
+    <string name="key_descr_selection_cancel">Batalkan seleksi</string>
+    <string name="key_descr_arrow_left">Panah kiri</string>
+    <string name="key_descr_arrow_right">Panah kanan</string>
+    <string name="key_descr_arrow_up">Panah atas</string>
+    <string name="key_descr_arrow_down">Panah bawah</string>
+    <string name="key_descr_cursor_left">Pindahkan kursor ke kiri</string>
+    <string name="key_descr_cursor_right">Pindahkan kursor ke kanan</string>
+    <string name="key_descr_cursor_up">Pindahkan kursor ke atas</string>
+    <string name="key_descr_cursor_down">Pindahkan kursor ke bawah</string>
+    <string name="key_descr_selection_cursor_left">Perluas seleksi ke kiri</string>
+    <string name="key_descr_selection_cursor_right">Perluas seleksi ke kanan</string>
+    <string name="key_descr_switch_text">Keyboard huruf</string>
+    <string name="key_descr_switch_numeric">Keyboard angka dan simbol</string>
+    <string name="key_descr_switch_emoji">Keyboard emoji</string>
+    <string name="key_descr_switch_gif">Keyboard GIF</string>
     <string name="clipboard_remove_confirm">Hapus clipboard ini?</string>
     <string name="clipboard_remove_confirmed">Ya</string>
-    <!-- <string name="toast_no_voice_input">No voice typing app installed</string> -->
+    <string name="toast_no_voice_input">Tidak ada aplikasi pengetikan suara yang terpasang</string>
+
+    <!-- Clipboard History View (Material 3) -->
+    <string name="clipboard_edit_duplicate">Entri dengan konten ini sudah ada</string>
+    <string name="clipboard_edit_invalid">Konten tidak boleh kosong</string>
+    <string name="clipboard_edit_error">Gagal memperbarui entri</string>
+
+    <!-- #156 Private copy -->
+    <string name="private_copy_toolbar_label">CleverKeys: Salinan pribadi</string>
+    <string name="private_copy_toast">Disalin secara pribadi ke CleverKeys</string>
+    <string name="private_copy_expose_dialog_title">Salin ke clipboard sistem?</string>
+    <string name="private_copy_expose_dialog_message">Entri ini disalin secara pribadi. Menyalinnya ke clipboard sistem akan memaparkan teks ke aplikasi latar depan dan pengelola clipboard lainnya. Tetap salin?</string>
+    <string name="private_copy_expose_dialog_confirm">Tetap salin</string>
+    <string name="private_copy_expose_dialog_cancel">Batal</string>
+    <string name="private_copy_too_large">Item clipboard terlalu besar (%1$d KB). Batasnya %2$d KB.</string>
+    <!-- #156 Private-only filter -->
+    <string name="clipboard_filter_private_only">Hanya pribadi</string>
+    <string name="clipboard_filter_private_only_hint">Hanya tampilkan entri yang disalin secara pribadi (🔒)</string>
+
+    <!-- Settings Activity (Material 3) -->
+    <string name="settings_title">⚙️ Pengaturan CleverKeys</string>
+    <string name="settings_description">Konfigurasikan pengaturan keyboard Anda untuk pengalaman mengetik yang optimal.</string>
+
+    <!-- Neural Prediction Section -->
+    <string name="settings_section_neural">🧠 Prediksi Jaringan Saraf</string>
+    <string name="settings_neural_beam_width_title">Lebar Beam</string>
+    <string name="settings_neural_beam_width_desc">Jumlah kandidat prediksi (1-20). Lebih tinggi = lebih akurat.</string>
+    <string name="settings_neural_max_length_title">Panjang Kata Maksimum</string>
+    <string name="settings_neural_max_length_desc">Karakter maksimum dalam kata yang diprediksi (5-35).</string>
+    <string name="settings_neural_confidence_title">Ambang Keyakinan</string>
+    <string name="settings_neural_confidence_desc">Keyakinan minimum untuk prediksi (0.0-0.4).</string>
+
+    <!-- Appearance Section -->
+    <string name="settings_section_appearance">🎨 Tampilan</string>
+
+    <!-- Input Behavior Section -->
+    <string name="settings_section_input">📝 Perilaku Masukan</string>
+    <string name="settings_auto_capitalization_title">Kapitalisasi Otomatis</string>
+    <string name="settings_auto_capitalization_desc">Otomatis mengapitalkan kata di awal kalimat</string>
+    <string name="settings_vibration_title">Umpan Balik Getaran</string>
+    <string name="settings_vibration_desc">Bergetar saat tombol ditekan</string>
+
+    <!-- Accessibility Section -->
+    <string name="settings_section_accessibility">♿ Aksesibilitas</string>
+    <string name="settings_screen_reader_note">✓ Dukungan Pembaca Layar (TalkBack) selalu aktif</string>
+
+    <!-- Advanced Section -->
+    <string name="settings_section_advanced">🔧 Lanjutan</string>
+    <string name="settings_debug_title">Informasi Debug</string>
+    <string name="settings_debug_desc">Tampilkan pencatatan terperinci dan metrik kinerja</string>
+    <string name="settings_calibration_button">🧪 Kalibrasi Geser</string>
+
+    <!-- Information &amp; Actions Section -->
+    <string name="settings_section_info">📋 Informasi &amp; Tindakan</string>
+    <string name="settings_version_title">📱 Informasi Versi</string>
+    <string name="settings_version_build">Build: %1$s</string>
+    <string name="settings_version_copied">Info versi disalin</string>
+    <string name="settings_reset_button">🔄 Setel Ulang Semua</string>
+
+    <!-- Dialog Messages -->
+    <string name="settings_reset_dialog_title">Setel Ulang Pengaturan</string>
+    <string name="settings_reset_dialog_message">Ini akan menyetel ulang semua pengaturan ke default. Lanjutkan?</string>
+    <string name="settings_reset_dialog_confirm">Setel ulang</string>
+
+    <!-- Toast Messages -->
+    <string name="settings_toast_error_saving">Kesalahan menyimpan pengaturan: %1$s</string>
+    <string name="settings_toast_reset_success">Semua pengaturan disetel ulang ke default</string>
 </resources>

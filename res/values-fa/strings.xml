@@ -1,85 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name_release">صفحه کلید غیرمنتظره</string>
-    <string name="app_name_debug">صفحه کلید غیرمنتظره</string>
     <!-- <string name="short_description">Lightweight and privacy-conscious virtual keyboard for Android.</string> -->
     <!-- <string name="store_description">The main feature is that you can type more characters by swiping the keys towards the corners.\n\nThis application was originally designed for programmers using Termux.\nNow perfect for everyday use.\n\nThis application contains no ads, doesn\'t make any network requests and is Open Source.</string> -->
-    <string name="pref_portrait">در حالت عمودی</string>
     <!-- <string name="pref_portrait_unfolded">In portrait mode unfolded</string> -->
-    <string name="pref_landscape">در حالت افقی</string>
     <!-- <string name="pref_landscape_unfolded">In landscape mode unfolded</string> -->
-    <string name="pref_category_layout">طرح</string>
-    <string name="pref_label_brightness">تنظیم برچسب روشنایی</string>
-    <string name="pref_keyboard_opacity">تنظیم کدر بودن پس‌زمینه صفحه کلید</string>
-    <string name="pref_key_opacity">تنظیم کدر بودن کلید</string>
-    <string name="pref_key_activated_opacity">تنظیم کدر بودن کلید فشرده شده</string>
     <string name="pref_layout_e_system">تنظیمات سامانه</string>
     <string name="pref_layout_e_custom">طرح صفارشی</string>
-    <!-- <string name="pref_layouts_add">Add an alternate layout</string> -->
-    <!-- <string name="pref_layouts_item">Layout %1$d: %2$s</string> -->
-    <!-- <string name="pref_layouts_remove_custom">Remove layout</string> -->
+    <string name="pref_layouts_add">افزودن یک چیدمان جایگزین</string>
+    <string name="pref_layouts_item">چیدمان %1$d: %2$s</string>
+    <string name="pref_layouts_remove_custom">حذف چیدمان</string>
     <string name="pref_custom_layout_title">طرح شخصی</string>
+    <string name="pref_swipe_calibration_title">واسنجی تایپ کشیدنی</string>
     <!-- <string name="pref_show_number_row_no_number_row">No number row</string> -->
     <!-- <string name="pref_show_number_row_no_symbols">Number row without symbols</string> -->
     <!-- <string name="pref_show_number_row_symbols">Number row with symbols</string> -->
-    <string name="pref_show_numpad_title">نمایش پد شماره‌ها</string>
-    <string name="pref_show_numpad_never">هرگز</string>
-    <string name="pref_show_numpad_landscape">فقط در حالت افقی</string>
-    <string name="pref_show_numpad_always">همیشه</string>
-    <string name="pref_number_row_title">نمایش ردیف اعداد</string>
-    <string name="pref_number_row_summary">افزودن ردیف اعداد زمانیکه پد شماره‌ها پنهان است</string>
-    <string name="pref_numpad_layout">طرح پد شماره‌ها</string>
-    <string name="pref_numpad_layout_e_high_first">ابتدا اعداد بزرگ</string>
-    <string name="pref_numpad_layout_e_low_first">ابتدا اعداد کوچک</string>
-    <string name="pref_extra_keys_title">افزودن کلیدها به صفحه کلید</string>
     <!-- <string name="pref_extra_keys_custom">Add custom keys</string> -->
     <!-- <string name="pref_extra_keys_internal">Select keys to add to the keyboard</string> -->
-    <string name="pref_category_typing">درحال نوشتن</string>
-    <string name="pref_swipe_dist_title">فاصله کشیدن</string>
-    <string name="pref_swipe_dist_summary">فاصله حروف از گوشه‌های کلیدها )(%s)</string>
     <!-- <string name="pref_long_timeout_title">Long press timeout</string> -->
-    <string name="pref_long_interval_title">فاصله تکرار کلید</string>
     <!-- <string name="pref_keyrepeat_enabled">Key repeat on long press</string> -->
-    <string name="pref_lock_double_tap_title">دوبار ضربه روی دگرساز برای فعال شدن کپس لاک</string>
-    <string name="pref_lock_double_tap_summary">شما میتوانید قفل کنید هر میانبری را با نگه داشتن آن</string>
-    <string name="pref_category_behavior">ٰرفتار</string>
-    <string name="pref_autocapitalisation_title">بزرگسازی خودکار</string>
-    <string name="pref_autocapitalisation_summary">در شروع جملات دگرساز را فشار دهید</string>
-    <string name="pref_switch_input_immediate_title">انتقال به آخرین صفحه کلید استفاده شده</string>
-    <string name="pref_switch_input_immediate_summary">رفتار کلید تغییردهنده صفحه کلید</string>
     <!-- <string name="pref_vibrate_custom">Custom vibration</string> -->
     <!-- <string name="pref_vibrate_duration_title">Vibration intensity</string> -->
     <!-- <string name="pref_number_entry_title">Layout when typing numbers, dates and phone numbers</string> -->
     <!-- <string name="pref_number_entry_layout_pin">PIN Entry</string> -->
     <!-- <string name="pref_number_entry_layout_number">Number pane</string> -->
     <!-- <string name="pref_number_entry_layout_normal">Use the main layout</string> -->
-    <string name="pref_category_style">سبک</string>
-    <string name="pref_margin_bottom_title">حاشیه پایین</string>
-    <string name="pref_keyboard_height_title">ارتفاع صفحه کلید</string>
-    <string name="pref_horizontal_margin_title">حاشیه افقی</string>
-    <string name="pref_character_size_title">اندازه برچسب</string>
-    <string name="pref_character_size_summary">اندازه نویسه‌های نشان داده شده روی صفحه کلید (%.2fx)</string>
-    <string name="pref_theme">زمینه</string>
-    <string name="pref_theme_e_system">تنظیمات سامانه</string>
-    <string name="pref_theme_e_dark">تاریک</string>
-    <string name="pref_theme_e_light">روشن</string>
-    <string name="pref_theme_e_black">سیاه</string>
-    <string name="pref_theme_e_altblack">سیاه مشابه</string>
-    <string name="pref_theme_e_white">سفید</string>
-    <string name="pref_theme_e_epaper">ای-پیپر</string>
     <!-- <string name="pref_theme_e_desert">Desert</string> -->
     <!-- <string name="pref_theme_e_jungle">Jungle</string> -->
     <!-- <string name="pref_theme_e_monet">Monet (System)</string> -->
     <!-- <string name="pref_theme_e_monetlight">Monet (Light)</string> -->
     <!-- <string name="pref_theme_e_monetdark">Monet (Dark)</string> -->
     <!-- <string name="pref_theme_e_rosepine">Rosé Pine</string> -->
-    <string name="pref_swipe_dist_e_very_short">بسیار کوتاه</string>
-    <string name="pref_swipe_dist_e_short">کوتاه</string>
-    <string name="pref_swipe_dist_e_default">عادی</string>
-    <string name="pref_swipe_dist_e_far">دور</string>
-    <string name="pref_swipe_dist_e_very_far">بسیار دور</string>
-    <string name="pref_key_horizontal_space">فاصله افقی بین کلیدها</string>
-    <string name="pref_key_vertical_space">فاصله عمودی بین کلیدها</string>
     <!-- <string name="pref_border_config_title">Customize borders</string> -->
     <!-- <string name="pref_border_width_title">Border Width</string> -->
     <!-- <string name="pref_corners_radius_title">Corner radius</string> -->
@@ -94,45 +44,144 @@
     <string name="key_action_prev">قبلی</string>
     <string name="key_action_search">جستجو</string>
     <string name="key_action_send">ارسال</string>
-    <string name="launcher_button_imesettings">فعال کردن صفحه کلید</string>
     <!-- <string name="launcher_button_imepicker">Select keyboard</string> -->
-    <string name="launcher_description">این برنامه یک صفحه کلید مجازی است. با کلیک روی گزینه زیر به تنظیمات سامانه بروید و صفحه کلید غیرمنتظره را فعال کنید.</string>
-    <string name="launcher_sourcecode">این یک برنامه متن باز و آزاد است. شما می‌توانید کد منبع را در گیتهاب پیدا کرده و نیز باگ‌ها را گزارش کنید.</string>
-    <string name="launcher_tryhere">بعد از فعالسازی، صفحه کلید را اینجا امتحان کنید:</string>
     <!-- <string name="launcher_tryhere_hint">Try here</string> -->
-    <!-- <string name="key_descr_capslock">Caps lock</string> -->
-    <!-- <string name="key_descr_compose">Compose</string> -->
-    <!-- <string name="key_descr_switch_greekmath">Greek &amp; math symbols</string> -->
-    <!-- <string name="key_descr_change_method">Switch keyboard</string> -->
-    <!-- <string name="key_descr_voice_typing">Voice typing</string> -->
-    <!-- <string name="key_descr_copy">Copy</string> -->
-    <!-- <string name="key_descr_paste">Paste</string> -->
-    <!-- <string name="key_descr_cut">Cut</string> -->
-    <!-- <string name="key_descr_selectAll">Select all</string> -->
-    <!-- <string name="key_descr_pasteAsPlainText">Paste as plain text</string> -->
-    <!-- <string name="key_descr_undo">Undo</string> -->
-    <!-- <string name="key_descr_redo">Redo</string> -->
-    <!-- <string name="key_descr_ª">Ordinal Indicator</string> -->
-    <!-- <string name="key_descr_º">Ordinal Indicator</string> -->
-    <!-- <string name="key_descr_superscript">Superscript</string> -->
-    <!-- <string name="key_descr_subscript">Subscript</string> -->
-    <!-- <string name="key_descr_page_up">Page Up</string> -->
-    <!-- <string name="key_descr_page_down">Page Down</string> -->
-    <!-- <string name="key_descr_home">Home</string> -->
-    <!-- <string name="key_descr_end">End</string> -->
-    <!-- <string name="key_descr_clipboard">Clipboard manager</string> -->
-    <!-- <string name="key_descr_combining">Combining diacritic</string> -->
-    <!-- <string name="key_descr_dead_key">Dead key</string> -->
-    <!-- <string name="key_descr_zwj">Zero width joiner</string> -->
-    <!-- <string name="key_descr_zwnj">Zero width non-joiner</string> -->
-    <!-- <string name="key_descr_nbsp">Non-breaking space</string> -->
-    <!-- <string name="key_descr_nnbsp">Narrow non-breaking space</string> -->
-    <!-- <string name="key_descr_delete_word">Delete a word</string> -->
-    <!-- <string name="key_descr_forward_delete_word">Delete a word on the right</string> -->
-    <!-- <string name="key_descr_gesture">Gesture</string> -->
+    <string name="key_descr_capslock">قفل حروف بزرگ</string>
+    <string name="key_descr_compose">ترکیب</string>
+    <string name="key_descr_switch_greekmath">نمادهای یونانی و ریاضی</string>
+    <string name="key_descr_switch_forward">رفتن به چیدمان صفحه‌کلید بعدی</string>
+    <string name="key_descr_switch_backward">رفتن به چیدمان صفحه‌کلید قبلی</string>
+    <string name="key_descr_change_method">تعویض صفحه‌کلید</string>
+    <string name="key_descr_voice_typing">تایپ صوتی</string>
+    <string name="key_descr_copy">کپی</string>
+    <string name="key_descr_copy_private">کپی خصوصی (فقط داخل CleverKeys، نه در بریده‌دان سامانه)</string>
+    <string name="key_descr_paste">چسباندن</string>
+    <string name="key_descr_cut">بریدن</string>
+    <string name="key_descr_selectAll">انتخاب همه</string>
+    <string name="key_descr_pasteAsPlainText">چسباندن به‌صورت متن ساده</string>
+    <string name="key_descr_undo">واگرد</string>
+    <string name="key_descr_redo">ازنو</string>
+    <string name="key_descr_ª">نشانگر ترتیبی</string>
+    <string name="key_descr_º">نشانگر ترتیبی</string>
+    <string name="key_descr_superscript">بالانویس</string>
+    <string name="key_descr_subscript">زیرنویس</string>
+    <string name="key_descr_page_up">صفحه به بالا</string>
+    <string name="key_descr_page_down">صفحه به پایین</string>
+    <string name="key_descr_home">خانه</string>
+    <string name="key_descr_end">پایان</string>
+    <string name="key_descr_doc_home">ابتدای سند</string>
+    <string name="key_descr_doc_end">انتهای سند</string>
+    <string name="key_descr_clipboard">مدیر بریده‌دان</string>
+    <string name="key_descr_combining">نشانه ترکیبی</string>
+    <string name="key_descr_dead_key">کلید مرده</string>
+    <string name="key_descr_zwj">اتصال‌دهنده با عرض صفر</string>
+    <string name="key_descr_zwnj">نیم‌فاصله (بدون اتصال با عرض صفر)</string>
+    <string name="key_descr_nbsp">فاصله بی‌شکست</string>
+    <string name="key_descr_nnbsp">فاصله باریک بی‌شکست</string>
+    <string name="key_descr_delete_word">حذف یک واژه</string>
+    <string name="key_descr_forward_delete_word">حذف واژه سمت راست</string>
+    <string name="key_descr_gesture">اشاره</string>
+    <string name="key_descr_autofill">تکمیل خودکار مدیر گذرواژه</string>
+    <!-- توضیحات کلید TalkBack (دسترس‌پذیری) -->
+    <string name="key_descr_shift">Shift</string>
+    <string name="key_descr_ctrl">Control</string>
+    <string name="key_descr_alt">Alt</string>
+    <string name="key_descr_meta">Meta</string>
+    <string name="key_descr_fn">Fn</string>
+    <string name="key_descr_backspace">پس‌بر</string>
+    <string name="key_descr_delete">حذف</string>
+    <string name="key_descr_enter">Enter</string>
+    <string name="key_descr_space">فاصله</string>
+    <string name="key_descr_tab">Tab</string>
+    <string name="key_descr_esc">Escape</string>
+    <string name="key_descr_config">تنظیمات</string>
+    <string name="key_descr_action">Enter</string>
+    <string name="key_descr_clear">پاک کردن فیلد متن</string>
+    <string name="key_descr_selection_mode">حالت انتخاب</string>
+    <string name="key_descr_selection_cancel">لغو انتخاب</string>
+    <string name="key_descr_arrow_left">پیکان چپ</string>
+    <string name="key_descr_arrow_right">پیکان راست</string>
+    <string name="key_descr_arrow_up">پیکان بالا</string>
+    <string name="key_descr_arrow_down">پیکان پایین</string>
+    <string name="key_descr_cursor_left">جابه‌جایی مکان‌نما به چپ</string>
+    <string name="key_descr_cursor_right">جابه‌جایی مکان‌نما به راست</string>
+    <string name="key_descr_cursor_up">جابه‌جایی مکان‌نما به بالا</string>
+    <string name="key_descr_cursor_down">جابه‌جایی مکان‌نما به پایین</string>
+    <string name="key_descr_selection_cursor_left">گسترش انتخاب به چپ</string>
+    <string name="key_descr_selection_cursor_right">گسترش انتخاب به راست</string>
+    <string name="key_descr_switch_text">صفحه‌کلید حروف</string>
+    <string name="key_descr_switch_numeric">صفحه‌کلید اعداد و نمادها</string>
+    <string name="key_descr_switch_emoji">صفحه‌کلید ایموجی</string>
+    <string name="key_descr_switch_gif">صفحه‌کلید گیف</string>
     <!-- <string name="clipboard_history_heading">Recently copied text</string> -->
     <!-- <string name="clipboard_pin_heading">Pinned</string> -->
-    <!-- <string name="clipboard_remove_confirm">Remove this clipboard item?</string> -->
-    <!-- <string name="clipboard_remove_confirmed">Yes</string> -->
-    <!-- <string name="toast_no_voice_input">No voice typing app installed</string> -->
+    <string name="clipboard_remove_confirm">این مورد بریده‌دان حذف شود؟</string>
+    <string name="clipboard_remove_confirmed">بله</string>
+    <string name="toast_no_voice_input">هیچ برنامه تایپ صوتی نصب نشده است</string>
+
+    <!-- Clipboard History View (Material 3) -->
+    <string name="clipboard_edit_duplicate">موردی با این محتوا از قبل وجود دارد</string>
+    <string name="clipboard_edit_invalid">محتوا نمی‌تواند خالی باشد</string>
+    <string name="clipboard_edit_error">به‌روزرسانی مورد ناموفق بود</string>
+
+    <!-- #156 Private copy -->
+    <string name="private_copy_toolbar_label">CleverKeys: کپی خصوصی</string>
+    <string name="private_copy_toast">به‌صورت خصوصی در CleverKeys کپی شد</string>
+    <string name="private_copy_expose_dialog_title">در بریده‌دان سامانه کپی شود؟</string>
+    <string name="private_copy_expose_dialog_message">این مورد به‌صورت خصوصی کپی شده بود. کپی آن در بریده‌دان سامانه، متن را در معرض برنامه پیش‌زمینه و دیگر مدیران بریده‌دان قرار می‌دهد. با این حال کپی شود؟</string>
+    <string name="private_copy_expose_dialog_confirm">به هر حال کپی کن</string>
+    <string name="private_copy_expose_dialog_cancel">لغو</string>
+    <string name="private_copy_too_large">مورد بریده‌دان بسیار بزرگ است (%1$d کیلوبایت). محدودیت %2$d کیلوبایت است.</string>
+    <!-- #156 Private-only filter -->
+    <string name="clipboard_filter_private_only">فقط خصوصی</string>
+    <string name="clipboard_filter_private_only_hint">فقط موارد کپی‌شده به‌صورت خصوصی را نشان بده (🔒)</string>
+
+    <!-- Settings Activity (Material 3) -->
+    <string name="settings_title">⚙️ تنظیمات CleverKeys</string>
+    <string name="settings_description">تنظیمات صفحه‌کلید خود را برای بهترین تجربه تایپ پیکربندی کنید.</string>
+
+    <!-- Neural Prediction Section -->
+    <string name="settings_section_neural">🧠 پیش‌بینی شبکه عصبی</string>
+    <string name="settings_neural_beam_width_title">پهنای پرتو</string>
+    <string name="settings_neural_beam_width_desc">تعداد نامزدهای پیش‌بینی (۱ تا ۲۰). بیشتر = دقیق‌تر.</string>
+    <string name="settings_neural_max_length_title">حداکثر طول واژه</string>
+    <string name="settings_neural_max_length_desc">حداکثر تعداد نویسه در واژه‌های پیش‌بینی‌شده (۵ تا ۳۵).</string>
+    <string name="settings_neural_confidence_title">آستانه اطمینان</string>
+    <string name="settings_neural_confidence_desc">حداقل اطمینان برای پیش‌بینی‌ها (۰٫۰ تا ۰٫۴).</string>
+
+    <!-- Appearance Section -->
+    <string name="settings_section_appearance">🎨 ظاهر</string>
+
+    <!-- Input Behavior Section -->
+    <string name="settings_section_input">📝 رفتار ورودی</string>
+    <string name="settings_auto_capitalization_title">بزرگ‌نویسی خودکار</string>
+    <string name="settings_auto_capitalization_desc">واژه‌های ابتدای جمله را به‌صورت خودکار با حرف بزرگ بنویس</string>
+    <string name="settings_vibration_title">بازخورد لرزشی</string>
+    <string name="settings_vibration_desc">هنگام فشردن کلیدها بلرزان</string>
+
+    <!-- Accessibility Section -->
+    <string name="settings_section_accessibility">♿ دسترس‌پذیری</string>
+    <string name="settings_screen_reader_note">✓ پشتیبانی از صفحه‌خوان (TalkBack) همیشه فعال است</string>
+
+    <!-- Advanced Section -->
+    <string name="settings_section_advanced">🔧 پیشرفته</string>
+    <string name="settings_debug_title">اطلاعات اشکال‌زدایی</string>
+    <string name="settings_debug_desc">نمایش گزارش‌گیری دقیق و سنجه‌های کارایی</string>
+    <string name="settings_calibration_button">🧪 واسنجی کشیدن</string>
+
+    <!-- Information & Actions Section -->
+    <string name="settings_section_info">📋 اطلاعات و اقدامات</string>
+    <string name="settings_version_title">📱 اطلاعات نسخه</string>
+    <string name="settings_version_build">ساخت: %1$s</string>
+    <string name="settings_version_copied">اطلاعات نسخه کپی شد</string>
+    <string name="settings_reset_button">🔄 بازنشانی همه</string>
+
+    <!-- Dialog Messages -->
+    <string name="settings_reset_dialog_title">بازنشانی تنظیمات</string>
+    <string name="settings_reset_dialog_message">این کار همه تنظیمات را به مقادیر پیش‌فرض بازنشانی می‌کند. ادامه می‌دهید؟</string>
+    <string name="settings_reset_dialog_confirm">بازنشانی</string>
+
+    <!-- Toast Messages -->
+    <string name="settings_toast_error_saving">خطا در ذخیره تنظیم: %1$s</string>
+    <string name="settings_toast_reset_success">همه تنظیمات به پیش‌فرض بازنشانی شد</string>
 </resources>

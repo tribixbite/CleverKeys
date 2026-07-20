@@ -1,111 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name_release">CleverKeys</string>
-    <string name="app_name_debug">CleverKeys (отладка)</string>
-    <string name="short_description">Легкая клавиатура для пользователей, заботящихся о конфиденциальности.</string>
-    <string name="store_description">Главная особенность клавиатуры — это возможность легко напечатать любой ASCII-символ жестами в углы клавиш.\n\nПриложение изначально было разработано для использования с Termux.\nНа данный момент оно также удобно в повседневном использовании.\n\nПриложение не содержит рекламы, не осуществляет никаких запросов в сеть и имеет открытый исходный код.</string>
-    <string name="pref_portrait">В портретном режиме</string>
-    <string name="pref_portrait_unfolded">В развернутом портретном режиме</string>
-    <string name="pref_landscape">В ландшафтном режиме</string>
-    <string name="pref_landscape_unfolded">В развернутом ландшафтном режиме</string>
-    <string name="pref_category_layout">Расположение</string>
-    <string name="pref_label_brightness">Изменить яркость клавиатуры</string>
-    <string name="pref_keyboard_opacity">Изменить прозрачность фона</string>
-    <string name="pref_key_opacity">Изменить прозрачность клавиш</string>
-    <string name="pref_key_activated_opacity">Изменить прозрачность нажатой клавиши</string>
     <string name="pref_layout_e_system">Системные настройки</string>
     <string name="pref_layout_e_custom">Пользовательская раскладка</string>
     <string name="pref_layouts_add">Добавить альтернативную раскладку</string>
     <string name="pref_layouts_item">Раскладка %1$d: %2$s</string>
     <string name="pref_layouts_remove_custom">Удалить раскладку</string>
     <string name="pref_custom_layout_title">Пользовательская раскладка</string>
-    <string name="pref_show_number_row_no_number_row">Без ряда цифр</string>
-    <string name="pref_show_number_row_no_symbols">Ряд цифр без символов</string>
-    <string name="pref_show_number_row_symbols">Ряд цифр с символами</string>
-    <string name="pref_show_numpad_title">Показывать цифровой блок</string>
-    <string name="pref_show_numpad_never">Никогда</string>
-    <string name="pref_show_numpad_landscape">Только в ландшафтном режиме</string>
-    <string name="pref_show_numpad_always">Всегда</string>
-    <string name="pref_number_row_title">Показывать цифры</string>
-    <string name="pref_number_row_summary">Добавить ряд цифр над клавиатурой, когда цифровой блок не активен</string>
-    <string name="pref_numpad_layout">Раскладка цифрового блока</string>
-    <string name="pref_numpad_layout_e_high_first">Старшие цифры сверху</string>
-    <string name="pref_numpad_layout_e_low_first">Младшие цифры сверху</string>
-    <string name="pref_extra_keys_title">Добавить клавиши на клавиатуру</string>
-    <string name="pref_extra_keys_custom">Добавить пользовательские клавиши</string>
-    <string name="pref_extra_keys_internal">Выберите клавиши для добавления на клавиатуру</string>
-    <string name="pref_category_typing">Набор текста</string>
-    <string name="pref_swipe_dist_title">Длина жеста</string>
-    <string name="pref_swipe_dist_summary">Расстояние между символами в углах клавиш (%s)</string>
-    <string name="pref_long_timeout_title">Задержка долгого нажатия</string>
-    <string name="pref_long_interval_title">Интервал повтора клавиш</string>
-    <string name="pref_keyrepeat_enabled">Повтор клавиши при долгом нажатии</string>
-    <string name="pref_lock_double_tap_title">CapsLock двойным нажатием Shift</string>
-    <string name="pref_lock_double_tap_summary">Также можно активировать модификатор долгим нажатием</string>
-    <string name="pref_category_behavior">Поведение</string>
-    <string name="pref_autocapitalisation_title">Автоматическая смена регистра</string>
-    <string name="pref_autocapitalisation_summary">Автоматическое нажатие Shift в начале каждого предложения</string>
-    <string name="pref_switch_input_immediate_title">Активировать предыдущую клавиатуру</string>
-    <string name="pref_switch_input_immediate_summary">Поведение клавиши переключения клавиатуры</string>
-    <string name="pref_vibrate_custom">Настройка вибрации</string>
-    <string name="pref_vibrate_duration_title">Интенсивность вибрации</string>
-    <string name="pref_number_entry_title">Раскладка для ввода цифр, дат и телефонных номеров</string>
-    <string name="pref_number_entry_layout_pin">Ввод PIN-кодов</string>
-    <string name="pref_number_entry_layout_number">Цифровая панель</string>
-    <string name="pref_number_entry_layout_normal">Основная раскладка</string>
-    <string name="pref_category_style">Стиль</string>
-    <string name="pref_margin_bottom_title">Нижняя граница поля</string>
-    <string name="pref_keyboard_height_title">Высота клавиатуры</string>
-    <string name="pref_horizontal_margin_title">Горизонтальное поле</string>
-    <string name="pref_character_size_title">Размер символов</string>
-    <string name="pref_character_size_summary">Размер символов, отображаемых на клавиатуре (%.2fx)</string>
-    <string name="pref_theme">Тема</string>
-    <string name="pref_theme_e_system">Системная</string>
-    <string name="pref_theme_e_dark">Темная</string>
-    <string name="pref_theme_e_light">Светлая</string>
-    <string name="pref_theme_e_black">Черная</string>
-    <string name="pref_theme_e_altblack">Альтернативная черная</string>
-    <string name="pref_theme_e_white">Белая</string>
-    <string name="pref_theme_e_epaper">Электронная бумага</string>
-    <string name="pref_theme_e_desert">Пустыня</string>
-    <string name="pref_theme_e_jungle">Джунгли</string>
-    <string name="pref_theme_e_monet">Моне (системная)</string>
-    <string name="pref_theme_e_monetlight">Моне (светлая)</string>
-    <string name="pref_theme_e_monetdark">Моне (темная)</string>
-    <string name="pref_theme_e_rosepine">Розовая сосна</string>
-    <string name="pref_swipe_dist_e_very_short">Очень короткая</string>
-    <string name="pref_swipe_dist_e_short">Короткая</string>
-    <string name="pref_swipe_dist_e_default">Обычная</string>
-    <string name="pref_swipe_dist_e_far">Длинная</string>
-    <string name="pref_swipe_dist_e_very_far">Очень длинная</string>
-    <string name="pref_key_horizontal_space">Горизонтальное расстояние между клавишами</string>
-    <string name="pref_key_vertical_space">Расстояние по вертикали между клавишами</string>
-    <string name="pref_border_config_title">Настройка рамки</string>
-    <string name="pref_border_width_title">Ширина рамки</string>
-    <string name="pref_corners_radius_title">Радиус скругления</string>
-    <string name="pref_circle_sensitivity_title">Чувствительность круговых жестов</string>
-    <string name="pref_circle_sensitivity_e_high">Высокая</string>
-    <string name="pref_circle_sensitivity_e_medium">Средняя</string>
-    <string name="pref_circle_sensitivity_e_low">Низкая</string>
-    <string name="pref_circle_sensitivity_e_disabled">Отключено</string>
+    <string name="pref_swipe_calibration_title">Калибровка свайп-ввода</string>
     <string name="key_action_next">Вперед</string>
     <string name="key_action_done">Ввод</string>
     <string name="key_action_go">Перейти</string>
     <string name="key_action_prev">Назад</string>
     <string name="key_action_search">Поиск</string>
     <string name="key_action_send">Отправить</string>
-    <string name="launcher_button_imesettings">Включение клавиатуры</string>
-    <string name="launcher_button_imepicker">Выбор клавиатуры</string>
-    <string name="launcher_description">Данное приложение является виртуальной клавиатурой. Зайдите в настройки, нажав кнопку внизу, и активируйте CleverKeys.</string>
-    <string name="launcher_sourcecode">Это бесплатное приложение с открытым исходным кодом. Вы можете изучить код или сообщить об ошибках по ссылке GitHub.</string>
-    <string name="launcher_tryhere">После активации вы сможете попробовать клавиатуру прямо здесь:</string>
-    <string name="launcher_tryhere_hint">Попробуйте здесь</string>
     <string name="key_descr_capslock">CapsLock</string>
     <string name="key_descr_compose">Compose</string>
     <string name="key_descr_switch_greekmath">Греческие и математические символы</string>
+    <string name="key_descr_switch_forward">Переключить на следующую раскладку клавиатуры</string>
+    <string name="key_descr_switch_backward">Переключить на предыдущую раскладку клавиатуры</string>
     <string name="key_descr_change_method">Переключение клавиатуры</string>
     <string name="key_descr_voice_typing">Голосовой ввод</string>
     <string name="key_descr_copy">Копировать</string>
+    <string name="key_descr_copy_private">Приватное копирование (только в CleverKeys, не в системный буфер обмена)</string>
     <string name="key_descr_paste">Вставить</string>
     <string name="key_descr_cut">Вырезать</string>
     <string name="key_descr_selectAll">Выбрать все</string>
@@ -120,6 +36,8 @@
     <string name="key_descr_page_down">Страница вниз</string>
     <string name="key_descr_home">Home</string>
     <string name="key_descr_end">End</string>
+    <string name="key_descr_doc_home">В начало документа</string>
+    <string name="key_descr_doc_end">В конец документа</string>
     <string name="key_descr_clipboard">Менеджер буфера обмена</string>
     <string name="key_descr_combining">Сочетание диакритических знаков</string>
     <string name="key_descr_dead_key">Немая клавиша</string>
@@ -130,9 +48,105 @@
     <string name="key_descr_delete_word">Удалить слово</string>
     <string name="key_descr_forward_delete_word">Удалить слово справа</string>
     <string name="key_descr_gesture">Жест</string>
-    <string name="clipboard_history_heading">Недавно скопированный текст</string>
-    <string name="clipboard_pin_heading">Закреплено</string>
+    <string name="key_descr_autofill">Автозаполнение из менеджера паролей</string>
+    <!-- TalkBack key descriptions (accessibility) -->
+    <string name="key_descr_shift">Shift</string>
+    <string name="key_descr_ctrl">Control</string>
+    <string name="key_descr_alt">Alt</string>
+    <string name="key_descr_meta">Meta</string>
+    <string name="key_descr_fn">Function</string>
+    <string name="key_descr_backspace">Backspace</string>
+    <string name="key_descr_delete">Delete</string>
+    <string name="key_descr_enter">Enter</string>
+    <string name="key_descr_space">Пробел</string>
+    <string name="key_descr_tab">Tab</string>
+    <string name="key_descr_esc">Escape</string>
+    <string name="key_descr_config">Настройки</string>
+    <string name="key_descr_action">Enter</string>
+    <string name="key_descr_clear">Очистить поле ввода</string>
+    <string name="key_descr_selection_mode">Режим выделения</string>
+    <string name="key_descr_selection_cancel">Отменить выделение</string>
+    <string name="key_descr_arrow_left">Стрелка влево</string>
+    <string name="key_descr_arrow_right">Стрелка вправо</string>
+    <string name="key_descr_arrow_up">Стрелка вверх</string>
+    <string name="key_descr_arrow_down">Стрелка вниз</string>
+    <string name="key_descr_cursor_left">Переместить курсор влево</string>
+    <string name="key_descr_cursor_right">Переместить курсор вправо</string>
+    <string name="key_descr_cursor_up">Переместить курсор вверх</string>
+    <string name="key_descr_cursor_down">Переместить курсор вниз</string>
+    <string name="key_descr_selection_cursor_left">Расширить выделение влево</string>
+    <string name="key_descr_selection_cursor_right">Расширить выделение вправо</string>
+    <string name="key_descr_switch_text">Буквенная клавиатура</string>
+    <string name="key_descr_switch_numeric">Клавиатура цифр и символов</string>
+    <string name="key_descr_switch_emoji">Клавиатура эмодзи</string>
+    <string name="key_descr_switch_gif">Клавиатура GIF</string>
     <string name="clipboard_remove_confirm">Удалить этот буфер обмена?</string>
     <string name="clipboard_remove_confirmed">Да</string>
     <string name="toast_no_voice_input">Приложение для голосового ввода не установлено</string>
+
+    <!-- Clipboard History View (Material 3) -->
+    <string name="clipboard_edit_duplicate">Запись с таким содержимым уже существует</string>
+    <string name="clipboard_edit_invalid">Содержимое не может быть пустым</string>
+    <string name="clipboard_edit_error">Не удалось обновить запись</string>
+
+    <!-- #156 Private copy -->
+    <string name="private_copy_toolbar_label">CleverKeys: Приватное копирование</string>
+    <string name="private_copy_toast">Скопировано приватно в CleverKeys</string>
+    <string name="private_copy_expose_dialog_title">Скопировать в системный буфер обмена?</string>
+    <string name="private_copy_expose_dialog_message">Эта запись была скопирована приватно. Копирование её в системный буфер обмена откроет текст активному приложению и другим менеджерам буфера обмена. Всё равно скопировать?</string>
+    <string name="private_copy_expose_dialog_confirm">Всё равно скопировать</string>
+    <string name="private_copy_expose_dialog_cancel">Отмена</string>
+    <string name="private_copy_too_large">Элемент буфера обмена слишком большой (%1$d КБ). Ограничение — %2$d КБ.</string>
+    <!-- #156 Private-only filter -->
+    <string name="clipboard_filter_private_only">Только приватные</string>
+    <string name="clipboard_filter_private_only_hint">Показывать только приватно скопированные записи (🔒)</string>
+
+    <!-- Settings Activity (Material 3) -->
+    <string name="settings_title">⚙️ Настройки CleverKeys</string>
+    <string name="settings_description">Настройте параметры клавиатуры для оптимального набора текста.</string>
+
+    <!-- Neural Prediction Section -->
+    <string name="settings_section_neural">🧠 Нейросетевое предсказание</string>
+    <string name="settings_neural_beam_width_title">Ширина луча</string>
+    <string name="settings_neural_beam_width_desc">Количество вариантов предсказания (1–20). Больше — точнее.</string>
+    <string name="settings_neural_max_length_title">Максимальная длина слова</string>
+    <string name="settings_neural_max_length_desc">Максимальное число символов в предсказанных словах (5–35).</string>
+    <string name="settings_neural_confidence_title">Порог уверенности</string>
+    <string name="settings_neural_confidence_desc">Минимальная уверенность для предсказаний (0.0–0.4).</string>
+
+    <!-- Appearance Section -->
+    <string name="settings_section_appearance">🎨 Внешний вид</string>
+
+    <!-- Input Behavior Section -->
+    <string name="settings_section_input">📝 Поведение ввода</string>
+    <string name="settings_auto_capitalization_title">Автоматические заглавные</string>
+    <string name="settings_auto_capitalization_desc">Автоматически делать заглавной первую букву предложения</string>
+    <string name="settings_vibration_title">Виброотклик</string>
+    <string name="settings_vibration_desc">Вибрировать при нажатии клавиш</string>
+
+    <!-- Accessibility Section -->
+    <string name="settings_section_accessibility">♿ Специальные возможности</string>
+    <string name="settings_screen_reader_note">✓ Поддержка чтения с экрана (TalkBack) всегда включена</string>
+
+    <!-- Advanced Section -->
+    <string name="settings_section_advanced">🔧 Дополнительно</string>
+    <string name="settings_debug_title">Отладочная информация</string>
+    <string name="settings_debug_desc">Показывать подробное журналирование и метрики производительности</string>
+    <string name="settings_calibration_button">🧪 Калибровка свайпа</string>
+
+    <!-- Information &amp; Actions Section -->
+    <string name="settings_section_info">📋 Информация и действия</string>
+    <string name="settings_version_title">📱 Информация о версии</string>
+    <string name="settings_version_build">Сборка: %1$s</string>
+    <string name="settings_version_copied">Информация о версии скопирована</string>
+    <string name="settings_reset_button">🔄 Сбросить всё</string>
+
+    <!-- Dialog Messages -->
+    <string name="settings_reset_dialog_title">Сброс настроек</string>
+    <string name="settings_reset_dialog_message">Все настройки будут сброшены к значениям по умолчанию. Продолжить?</string>
+    <string name="settings_reset_dialog_confirm">Сбросить</string>
+
+    <!-- Toast Messages -->
+    <string name="settings_toast_error_saving">Ошибка сохранения настройки: %1$s</string>
+    <string name="settings_toast_reset_success">Все настройки сброшены к значениям по умолчанию</string>
 </resources>

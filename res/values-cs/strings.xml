@@ -1,111 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name_release">CleverKeys</string>
-    <string name="app_name_debug">CleverKeys (pro ladění)</string>
-    <string name="short_description">Nenáročná virtuální klávesnice pro vývojáře.</string>
-    <string name="store_description">Hlavní funkcí je možnost psát více znaků posunutím kláves směrem k rohům.\n\nTato aplikace byla původně navržena pro programátory používající Termux.\nNyní je ideální pro každodenní použití.\n\nTato aplikace neobsahuje žádné reklamy, nevyužívá připojení k síti a je Open Source.</string>
-    <string name="pref_portrait">V režimu na výšku</string>
     <!-- <string name="pref_portrait_unfolded">In portrait mode unfolded</string> -->
-    <string name="pref_landscape">V režimu na šířku</string>
     <!-- <string name="pref_landscape_unfolded">In landscape mode unfolded</string> -->
-    <string name="pref_category_layout">Rozvržení</string>
-    <string name="pref_label_brightness">Upravit jas nápisu</string>
-    <string name="pref_keyboard_opacity">Upravit průhlednost pozadí klávesnice</string>
-    <string name="pref_key_opacity">Upravit průhlednost kláves</string>
-    <string name="pref_key_activated_opacity">Upravit průhlednost stisknutých kláves</string>
     <string name="pref_layout_e_system">Dle nastavení systému</string>
     <string name="pref_layout_e_custom">Vlastní rozvržení</string>
     <string name="pref_layouts_add">Přidat alternativní rozložení</string>
     <string name="pref_layouts_item">Rozložení %1$d: %2$s</string>
     <string name="pref_layouts_remove_custom">Odebrat rozložení</string>
     <string name="pref_custom_layout_title">Vlastní rozložení</string>
+    <string name="pref_swipe_calibration_title">Kalibrovat psaní tahem</string>
     <!-- <string name="pref_show_number_row_no_number_row">No number row</string> -->
     <!-- <string name="pref_show_number_row_no_symbols">Number row without symbols</string> -->
     <!-- <string name="pref_show_number_row_symbols">Number row with symbols</string> -->
-    <string name="pref_show_numpad_title">Zobrazit NumPad</string>
-    <string name="pref_show_numpad_never">Nikdy</string>
-    <string name="pref_show_numpad_landscape">Pouze v režimu na šířku</string>
-    <string name="pref_show_numpad_always">Vždy</string>
-    <string name="pref_number_row_title">Zobrazit řádek s čísly</string>
-    <string name="pref_number_row_summary">Přidá řádek s čísly nad klávesnici, pokud je NumPad skrytý</string>
-    <string name="pref_numpad_layout">Rozložení NumPadu</string>
-    <string name="pref_numpad_layout_e_high_first">Vyšší číslice jako první (horní řádek 789)</string>
-    <string name="pref_numpad_layout_e_low_first">Nižší číslice jako první (horní řádek 123)</string>
-    <string name="pref_extra_keys_title">Přidat klávesy do klávesnice</string>
-    <string name="pref_extra_keys_custom">Přidat vlastní klávesy</string>
-    <string name="pref_extra_keys_internal">Výbrané klávesy k přidaní do klávesnice</string>
-    <string name="pref_category_typing">Psaní</string>
-    <string name="pref_swipe_dist_title">Vzdálenost posunutí prstem</string>
-    <string name="pref_swipe_dist_summary">Jak daleko je třeba posunout prst pro zadání znaku/znaménka v rohu klávey (%s)</string>
-    <string name="pref_long_timeout_title">Doba pro aktivaci dlouhého podržení</string>
-    <string name="pref_long_interval_title">Interval opakování znaků</string>
-    <string name="pref_keyrepeat_enabled">Opakování kláves při držení</string>
-    <string name="pref_lock_double_tap_title">Dvojklik pro aktivaci Capslock(u)</string>
-    <string name="pref_lock_double_tap_summary">Umožňuje zamknout Shift dvojklikem, namísto podržení</string>
-    <string name="pref_category_behavior">Chování</string>
-    <string name="pref_autocapitalisation_title">Automatická kapitalizace</string>
-    <string name="pref_autocapitalisation_summary">Stiskne Shift na začátku věty</string>
-    <string name="pref_switch_input_immediate_title">Přepnout na posledně užívanou klávesnici</string>
-    <string name="pref_switch_input_immediate_summary">Jak bude klávesa pro přepnutí klávesnice reagovat</string>
-    <string name="pref_vibrate_custom">Vlastní vibrace</string>
-    <string name="pref_vibrate_duration_title">Síla vibrace</string>
     <!-- <string name="pref_number_entry_title">Layout when typing numbers, dates and phone numbers</string> -->
     <!-- <string name="pref_number_entry_layout_pin">PIN Entry</string> -->
     <!-- <string name="pref_number_entry_layout_number">Number pane</string> -->
     <!-- <string name="pref_number_entry_layout_normal">Use the main layout</string> -->
-    <string name="pref_category_style">Styl</string>
-    <string name="pref_margin_bottom_title">Spodní odsazení</string>
-    <string name="pref_keyboard_height_title">Výška klávesnice</string>
-    <string name="pref_horizontal_margin_title">Boční odsazení</string>
-    <string name="pref_character_size_title">Velikost znaků</string>
-    <string name="pref_character_size_summary">Velikost znaků zobrazených na klávesnici (%.2fx)</string>
-    <string name="pref_theme">Motiv</string>
-    <string name="pref_theme_e_system">Dle systému</string>
-    <string name="pref_theme_e_dark">Tmavý</string>
-    <string name="pref_theme_e_light">Světlý</string>
-    <string name="pref_theme_e_black">Černý</string>
-    <string name="pref_theme_e_altblack">Černý (alternativní)</string>
-    <string name="pref_theme_e_white">Bílý</string>
-    <string name="pref_theme_e_epaper">ePapír</string>
-    <string name="pref_theme_e_desert">Poušťě</string>
-    <string name="pref_theme_e_jungle">Džungle</string>
-    <string name="pref_theme_e_monet">Monet (dle systému)</string>
-    <string name="pref_theme_e_monetlight">Monet (Světlý)</string>
-    <string name="pref_theme_e_monetdark">Monet (Tmavý)</string>
-    <string name="pref_theme_e_rosepine">Růžová borovice</string>
-    <string name="pref_swipe_dist_e_very_short">Velmi krátká</string>
-    <string name="pref_swipe_dist_e_short">Krátká</string>
-    <string name="pref_swipe_dist_e_default">Běžná</string>
-    <string name="pref_swipe_dist_e_far">Dlouhá</string>
-    <string name="pref_swipe_dist_e_very_far">Velmi dlouhá</string>
-    <string name="pref_key_horizontal_space">Horizontální mezery mezi klávesami</string>
-    <string name="pref_key_vertical_space">Vertikální mezery mezi klávesami</string>
-    <string name="pref_border_config_title">Přizpůsobit okraje</string>
-    <string name="pref_border_width_title">Šířka okraje</string>
-    <string name="pref_corners_radius_title">Poloměr okraje</string>
-    <string name="pref_circle_sensitivity_title">Citlivost kruhového gesta</string>
-    <string name="pref_circle_sensitivity_e_high">Vysoká</string>
-    <string name="pref_circle_sensitivity_e_medium">Střední</string>
-    <string name="pref_circle_sensitivity_e_low">Nízká</string>
-    <string name="pref_circle_sensitivity_e_disabled">Deaktivováno</string>
     <string name="key_action_next">Další</string>
     <string name="key_action_done">Dokončit</string>
     <string name="key_action_go">Spustit</string>
     <string name="key_action_prev">Předchozí</string>
     <string name="key_action_search">Hledat</string>
     <string name="key_action_send">Odeslat</string>
-    <string name="launcher_button_imesettings">Aktivovat klávesnici</string>
-    <string name="launcher_button_imepicker">Vybrat klávesnici</string>
-    <string name="launcher_description">Tato aplikace je pouhou virtuální klávesnicí. Přejděte do systémového nastavení, kliknutím na tlačítko níže a aktivujte ji.</string>
-    <string name="launcher_sourcecode">Toto je volná, open-source aplikace. Její zdrojový kód, či hlášení chyb, naleznete na Githubu.</string>
-    <string name="launcher_tryhere">Po aktivaci můžete klávesnici rovnou vyzkoušet zde:</string>
-    <string name="launcher_tryhere_hint">Zkoušejte zde</string>
     <string name="key_descr_capslock">Caps lock</string>
     <string name="key_descr_compose">Compose</string>
     <string name="key_descr_switch_greekmath">Řecké a matematické symboly</string>
+    <string name="key_descr_switch_forward">Přepnout na další rozložení klávesnice</string>
+    <string name="key_descr_switch_backward">Přepnout na předchozí rozložení klávesnice</string>
     <string name="key_descr_change_method">Přepnout klávesnici</string>
     <string name="key_descr_voice_typing">Hlasové zadávání</string>
     <string name="key_descr_copy">Kopírovat</string>
+    <string name="key_descr_copy_private">Soukromá kopie (pouze do CleverKeys, ne do systémové schránky)</string>
     <string name="key_descr_paste">Vložit</string>
     <string name="key_descr_cut">Vyjmout</string>
     <string name="key_descr_selectAll">Označit vše</string>
@@ -120,6 +45,8 @@
     <string name="key_descr_page_down">Page Down</string>
     <string name="key_descr_home">Home</string>
     <string name="key_descr_end">End</string>
+    <string name="key_descr_doc_home">Začátek dokumentu</string>
+    <string name="key_descr_doc_end">Konec dokumentu</string>
     <string name="key_descr_clipboard">Správce schránky</string>
     <string name="key_descr_combining">Kombinace diakritiky</string>
     <string name="key_descr_dead_key">Mrtvá klávesa</string>
@@ -127,12 +54,110 @@
     <string name="key_descr_zwnj">ne-Spojka nulové šířky (ZWNJ)</string>
     <string name="key_descr_nbsp">Nezlomitelná mezera</string>
     <string name="key_descr_nnbsp">Úzká nezlomitelná mezera</string>
-    <!-- <string name="key_descr_delete_word">Delete a word</string> -->
-    <!-- <string name="key_descr_forward_delete_word">Delete a word on the right</string> -->
-    <!-- <string name="key_descr_gesture">Gesture</string> -->
-    <string name="clipboard_history_heading">Nedávno kopírovaný text</string>
-    <string name="clipboard_pin_heading">Připnout</string>
+    <string name="key_descr_delete_word">Smazat slovo</string>
+    <string name="key_descr_forward_delete_word">Smazat slovo vpravo</string>
+    <string name="key_descr_gesture">Gesto</string>
+    <string name="key_descr_autofill">Automatické vyplnění správce hesel</string>
+    <!-- TalkBack key descriptions (accessibility) — spoken names for keys whose
+         glyphs are Private Use Area characters that TTS would otherwise misread. -->
+    <string name="key_descr_shift">Shift</string>
+    <string name="key_descr_ctrl">Control</string>
+    <string name="key_descr_alt">Alt</string>
+    <string name="key_descr_meta">Meta</string>
+    <string name="key_descr_fn">Funkce</string>
+    <string name="key_descr_backspace">Backspace</string>
+    <string name="key_descr_delete">Delete</string>
+    <string name="key_descr_enter">Enter</string>
+    <string name="key_descr_space">Mezerník</string>
+    <string name="key_descr_tab">Tab</string>
+    <string name="key_descr_esc">Escape</string>
+    <string name="key_descr_config">Nastavení</string>
+    <string name="key_descr_action">Enter</string>
+    <string name="key_descr_clear">Vymazat textové pole</string>
+    <string name="key_descr_selection_mode">Režim výběru</string>
+    <string name="key_descr_selection_cancel">Zrušit výběr</string>
+    <string name="key_descr_arrow_left">Šipka vlevo</string>
+    <string name="key_descr_arrow_right">Šipka vpravo</string>
+    <string name="key_descr_arrow_up">Šipka nahoru</string>
+    <string name="key_descr_arrow_down">Šipka dolů</string>
+    <string name="key_descr_cursor_left">Posunout kurzor vlevo</string>
+    <string name="key_descr_cursor_right">Posunout kurzor vpravo</string>
+    <string name="key_descr_cursor_up">Posunout kurzor nahoru</string>
+    <string name="key_descr_cursor_down">Posunout kurzor dolů</string>
+    <string name="key_descr_selection_cursor_left">Rozšířit výběr vlevo</string>
+    <string name="key_descr_selection_cursor_right">Rozšířit výběr vpravo</string>
+    <string name="key_descr_switch_text">Klávesnice s písmeny</string>
+    <string name="key_descr_switch_numeric">Klávesnice s čísly a symboly</string>
+    <string name="key_descr_switch_emoji">Klávesnice s emoji</string>
+    <string name="key_descr_switch_gif">Klávesnice s GIFy</string>
     <string name="clipboard_remove_confirm">Odebrat ze schránky?</string>
     <string name="clipboard_remove_confirmed">Ano</string>
-    <!-- <string name="toast_no_voice_input">No voice typing app installed</string> -->
+    <string name="toast_no_voice_input">Není nainstalována žádná aplikace pro hlasové zadávání</string>
+
+    <!-- Clipboard History View (Material 3) -->
+    <string name="clipboard_edit_duplicate">Položka s tímto obsahem již existuje</string>
+    <string name="clipboard_edit_invalid">Obsah nemůže být prázdný</string>
+    <string name="clipboard_edit_error">Aktualizace položky se nezdařila</string>
+
+    <!-- #156 Private copy -->
+    <string name="private_copy_toolbar_label">CleverKeys: Soukromá kopie</string>
+    <string name="private_copy_toast">Soukromě zkopírováno do CleverKeys</string>
+    <string name="private_copy_expose_dialog_title">Zkopírovat do systémové schránky?</string>
+    <string name="private_copy_expose_dialog_message">Tato položka byla zkopírována soukromě. Jejím zkopírováním do systémové schránky se text zpřístupní aplikaci v popředí a dalším správcům schránky. Přesto zkopírovat?</string>
+    <string name="private_copy_expose_dialog_confirm">Přesto zkopírovat</string>
+    <string name="private_copy_expose_dialog_cancel">Zrušit</string>
+    <!-- Shown when a clipboard item exceeds the per-item size cap. %1$d = item size (KB), %2$d = limit (KB). -->
+    <string name="private_copy_too_large">Položka schránky je příliš velká (%1$d KB). Limit je %2$d KB.</string>
+    <!-- #156 Private-only filter (clipboard filter dialog, all tabs) -->
+    <string name="clipboard_filter_private_only">Pouze soukromé</string>
+    <string name="clipboard_filter_private_only_hint">Zobrazit pouze soukromě zkopírované položky (🔒)</string>
+
+    <!-- Settings Activity (Material 3) -->
+    <string name="settings_title">⚙️ Nastavení CleverKeys</string>
+    <string name="settings_description">Nakonfigurujte nastavení klávesnice pro optimální zážitek z psaní.</string>
+
+    <!-- Neural Prediction Section -->
+    <string name="settings_section_neural">🧠 Predikce neuronovou sítí</string>
+    <string name="settings_neural_beam_width_title">Šířka paprsku</string>
+    <string name="settings_neural_beam_width_desc">Počet kandidátů na predikci (1-20). Vyšší = přesnější.</string>
+    <string name="settings_neural_max_length_title">Maximální délka slova</string>
+    <string name="settings_neural_max_length_desc">Maximální počet znaků v předpovězených slovech (5-35).</string>
+    <string name="settings_neural_confidence_title">Práh spolehlivosti</string>
+    <string name="settings_neural_confidence_desc">Minimální spolehlivost pro predikce (0.0-0.4).</string>
+
+    <!-- Appearance Section -->
+    <string name="settings_section_appearance">🎨 Vzhled</string>
+
+    <!-- Input Behavior Section -->
+    <string name="settings_section_input">📝 Chování vstupu</string>
+    <string name="settings_auto_capitalization_title">Automatická velká písmena</string>
+    <string name="settings_auto_capitalization_desc">Automaticky psát velké písmeno na začátku věty</string>
+    <string name="settings_vibration_title">Vibrační odezva</string>
+    <string name="settings_vibration_desc">Vibrovat při stisknutí kláves</string>
+
+    <!-- Accessibility Section -->
+    <string name="settings_section_accessibility">♿ Přístupnost</string>
+    <string name="settings_screen_reader_note">✓ Podpora čtečky obrazovky (TalkBack) je vždy zapnutá</string>
+
+    <!-- Advanced Section -->
+    <string name="settings_section_advanced">🔧 Pokročilé</string>
+    <string name="settings_debug_title">Ladicí informace</string>
+    <string name="settings_debug_desc">Zobrazit podrobné protokoly a metriky výkonu</string>
+    <string name="settings_calibration_button">🧪 Kalibrace tahu</string>
+
+    <!-- Information &amp; Actions Section -->
+    <string name="settings_section_info">📋 Informace &amp; Akce</string>
+    <string name="settings_version_title">📱 Informace o verzi</string>
+    <string name="settings_version_build">Sestavení: %1$s</string>
+    <string name="settings_version_copied">Informace o verzi zkopírovány</string>
+    <string name="settings_reset_button">🔄 Obnovit vše</string>
+
+    <!-- Dialog Messages -->
+    <string name="settings_reset_dialog_title">Obnovit nastavení</string>
+    <string name="settings_reset_dialog_message">Tímto se všechna nastavení obnoví na výchozí hodnoty. Pokračovat?</string>
+    <string name="settings_reset_dialog_confirm">Obnovit</string>
+
+    <!-- Toast Messages -->
+    <string name="settings_toast_error_saving">Chyba při ukládání nastavení: %1$s</string>
+    <string name="settings_toast_reset_success">Všechna nastavení obnovena na výchozí hodnoty</string>
 </resources>

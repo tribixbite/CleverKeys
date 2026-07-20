@@ -1,111 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name_release">CleverKeys</string>
-    <string name="app_name_debug">CleverKeys (Налагодження)</string>
-    <string name="short_description">Легка та конфіденційна віртуальна клавіатура для Android.</string>
-    <string name="store_description">Головна особливість полягає в тому, що ви можете вводити більше символів, проводячи клавіші до кутів.\n\nЦя програма спочатку була розроблена для програмістів, які використовують Termux.\nТепер ідеально підходить для щоденного використання.\n\nЦя програма не містить реклами, не надсилає жодних мережевих запитів і має відкритий код.</string>
-    <string name="pref_portrait">У портретному режимі</string>
     <!-- <string name="pref_portrait_unfolded">In portrait mode unfolded</string> -->
-    <string name="pref_landscape">У альбомному режимі</string>
     <!-- <string name="pref_landscape_unfolded">In landscape mode unfolded</string> -->
-    <string name="pref_category_layout">Макет</string>
-    <string name="pref_label_brightness">Налаштувати яскравість символів</string>
-    <string name="pref_keyboard_opacity">Налаштувати прозорість фону клавіатури</string>
-    <string name="pref_key_opacity">Налаштувати прозорість клавіш</string>
-    <string name="pref_key_activated_opacity">Налаштувати прозорість натиснутої клавіші</string>
     <string name="pref_layout_e_system">Системні налаштування</string>
     <string name="pref_layout_e_custom">Власний макет</string>
     <string name="pref_layouts_add">Додати альтернативний макет</string>
     <string name="pref_layouts_item">Макет %1$d: %2$s</string>
     <string name="pref_layouts_remove_custom">Видалити макет</string>
     <string name="pref_custom_layout_title">Власний макет</string>
+    <string name="pref_swipe_calibration_title">Калібрування свайп-введення</string>
     <!-- <string name="pref_show_number_row_no_number_row">No number row</string> -->
     <!-- <string name="pref_show_number_row_no_symbols">Number row without symbols</string> -->
     <!-- <string name="pref_show_number_row_symbols">Number row with symbols</string> -->
-    <string name="pref_show_numpad_title">Показувати числову клавіатуру</string>
-    <string name="pref_show_numpad_never">Ніколи</string>
-    <string name="pref_show_numpad_landscape">Тільки в альбомному режимі</string>
-    <string name="pref_show_numpad_always">Завжди</string>
-    <string name="pref_number_row_title">Показувати рядок чисел</string>
-    <string name="pref_number_row_summary">Додати рядок чисел у верхній частині клавіатури, коли числову клавіатуру приховано</string>
-    <string name="pref_numpad_layout">Макет числової клавіатури</string>
-    <string name="pref_numpad_layout_e_high_first">Від найбільшої цифри</string>
-    <string name="pref_numpad_layout_e_low_first">Від найменшої цифри</string>
-    <string name="pref_extra_keys_title">Додати клавіші до клавіатури</string>
-    <string name="pref_extra_keys_custom">Додайте власні клавіші</string>
-    <string name="pref_extra_keys_internal">Виберіть клавіші, які потрібно додати до клавіатури</string>
-    <string name="pref_category_typing">Введення</string>
-    <string name="pref_swipe_dist_title">Відстань проведення</string>
-    <string name="pref_swipe_dist_summary">Відстань між символами в кутах клавіш (%s)</string>
-    <string name="pref_long_timeout_title">Час очікування тривалого натискання</string>
-    <string name="pref_long_interval_title">Інтервал повторення клавіш</string>
-    <string name="pref_keyrepeat_enabled">Повторення клавіші при тривалому натисканні</string>
-    <string name="pref_lock_double_tap_title">Двічі торкніться Shift для Caps Lock</string>
-    <string name="pref_lock_double_tap_summary">Ви можете заблокувати будь-який модифікатор, утримуючи його</string>
-    <string name="pref_category_behavior">Поведінка</string>
-    <string name="pref_autocapitalisation_title">Автоматичне введення великих літер</string>
-    <string name="pref_autocapitalisation_summary">Натиснути Shift на початку речення</string>
-    <string name="pref_switch_input_immediate_title">Перейти до останньої використаної клавіатури</string>
-    <string name="pref_switch_input_immediate_summary">Поведінка клавіші перемикання клавіатури</string>
-    <string name="pref_vibrate_custom">Спеціальна вібрація</string>
-    <string name="pref_vibrate_duration_title">Інтенсивність вібрації</string>
     <!-- <string name="pref_number_entry_title">Layout when typing numbers, dates and phone numbers</string> -->
     <!-- <string name="pref_number_entry_layout_pin">PIN Entry</string> -->
     <!-- <string name="pref_number_entry_layout_number">Number pane</string> -->
     <!-- <string name="pref_number_entry_layout_normal">Use the main layout</string> -->
-    <string name="pref_category_style">Стиль</string>
-    <string name="pref_margin_bottom_title">Поле знизу</string>
-    <string name="pref_keyboard_height_title">Висота клавіатури</string>
-    <string name="pref_horizontal_margin_title">Горизонтальне поле</string>
-    <string name="pref_character_size_title">Розмір символів</string>
-    <string name="pref_character_size_summary">Розмір символів, що відображаються на клавіатурі (%.2fx)</string>
-    <string name="pref_theme">Тема</string>
-    <string name="pref_theme_e_system">Налаштування системи</string>
-    <string name="pref_theme_e_dark">Темна</string>
-    <string name="pref_theme_e_light">Світла</string>
-    <string name="pref_theme_e_black">Чорна</string>
-    <string name="pref_theme_e_altblack">Альтернативний чорний</string>
-    <string name="pref_theme_e_white">Біла</string>
-    <string name="pref_theme_e_epaper">ePaper</string>
-    <string name="pref_theme_e_desert">Пустеля</string>
-    <string name="pref_theme_e_jungle">Джунглі</string>
-    <string name="pref_theme_e_monet">Моне (Системна)</string>
-    <string name="pref_theme_e_monetlight">Моне (Світла)</string>
-    <string name="pref_theme_e_monetdark">Моне (Темна)</string>
-    <string name="pref_theme_e_rosepine">Рожева сосна</string>
-    <string name="pref_swipe_dist_e_very_short">Дуже коротка</string>
-    <string name="pref_swipe_dist_e_short">Коротка</string>
-    <string name="pref_swipe_dist_e_default">Звичайна</string>
-    <string name="pref_swipe_dist_e_far">Далека</string>
-    <string name="pref_swipe_dist_e_very_far">Дуже далека</string>
-    <string name="pref_key_horizontal_space">Горизонтальна відстань між клавішами</string>
-    <string name="pref_key_vertical_space">Вертикальна відстань між клавішами</string>
-    <string name="pref_border_config_title">Налаштувати межі</string>
-    <string name="pref_border_width_title">Ширина межі</string>
-    <string name="pref_corners_radius_title">Радіус кута</string>
-    <string name="pref_circle_sensitivity_title">Чутливість до колових жестів</string>
-    <string name="pref_circle_sensitivity_e_high">Висока</string>
-    <string name="pref_circle_sensitivity_e_medium">Середня</string>
-    <string name="pref_circle_sensitivity_e_low">Низька</string>
-    <string name="pref_circle_sensitivity_e_disabled">Вимкнено</string>
     <string name="key_action_next">Далі</string>
     <string name="key_action_done">Готово</string>
     <string name="key_action_go">Іти</string>
     <string name="key_action_prev">Назад</string>
     <string name="key_action_search">Пошук</string>
     <string name="key_action_send">Надіслати</string>
-    <string name="launcher_button_imesettings">Увімкнути клавіатуру</string>
-    <string name="launcher_button_imepicker">Вибрати клавіатуру</string>
-    <string name="launcher_description">Ця програма є віртуальною клавіатурою. Перейдіть до системних налаштувань, натиснувши кнопку нижче, і ввімкніть CleverKeys.</string>
-    <string name="launcher_sourcecode">Це безкоштовна програма з відкритим кодом. Ви можете знайти початковий код або повідомити про помилки на GitHub.</string>
-    <string name="launcher_tryhere">Після ввімкнення ви можете спробувати клавіатуру тут:</string>
-    <string name="launcher_tryhere_hint">Спробуйте тут</string>
     <string name="key_descr_capslock">Caps lock</string>
     <string name="key_descr_compose">Compose</string>
     <string name="key_descr_switch_greekmath">Грецькі та математичні символи</string>
+    <string name="key_descr_switch_forward">Перейти до наступного макета клавіатури</string>
+    <string name="key_descr_switch_backward">Перейти до попереднього макета клавіатури</string>
     <string name="key_descr_change_method">Переключити клавіатуру</string>
     <string name="key_descr_voice_typing">Голосове введення</string>
     <string name="key_descr_copy">Копіювати</string>
+    <string name="key_descr_copy_private">Приватне копіювання (лише в CleverKeys, не в системний буфер обміну)</string>
     <string name="key_descr_paste">Вставити</string>
     <string name="key_descr_cut">Вирізати</string>
     <string name="key_descr_selectAll">Вибрати все</string>
@@ -120,6 +45,8 @@
     <string name="key_descr_page_down">Page Down</string>
     <string name="key_descr_home">Home</string>
     <string name="key_descr_end">End</string>
+    <string name="key_descr_doc_home">На початок документа</string>
+    <string name="key_descr_doc_end">У кінець документа</string>
     <string name="key_descr_clipboard">Менеджер буфера обміну</string>
     <string name="key_descr_combining">Комбінування діакритики</string>
     <string name="key_descr_dead_key">Мертва клавіша</string>
@@ -127,12 +54,108 @@
     <string name="key_descr_zwnj">Разділювач нульової ширини</string>
     <string name="key_descr_nbsp">Нерозривний пробіл</string>
     <string name="key_descr_nnbsp">Вузький нерозривний пробіл</string>
-    <!-- <string name="key_descr_delete_word">Delete a word</string> -->
-    <!-- <string name="key_descr_forward_delete_word">Delete a word on the right</string> -->
-    <!-- <string name="key_descr_gesture">Gesture</string> -->
-    <string name="clipboard_history_heading">Нещодавно скопійований текст</string>
-    <string name="clipboard_pin_heading">Закріплено</string>
+    <string name="key_descr_delete_word">Видалити слово</string>
+    <string name="key_descr_forward_delete_word">Видалити слово праворуч</string>
+    <string name="key_descr_gesture">Жест</string>
+    <string name="key_descr_autofill">Автозаповнення з менеджера паролів</string>
+    <!-- TalkBack key descriptions (accessibility) -->
+    <string name="key_descr_shift">Shift</string>
+    <string name="key_descr_ctrl">Control</string>
+    <string name="key_descr_alt">Alt</string>
+    <string name="key_descr_meta">Meta</string>
+    <string name="key_descr_fn">Function</string>
+    <string name="key_descr_backspace">Backspace</string>
+    <string name="key_descr_delete">Delete</string>
+    <string name="key_descr_enter">Enter</string>
+    <string name="key_descr_space">Пробіл</string>
+    <string name="key_descr_tab">Tab</string>
+    <string name="key_descr_esc">Escape</string>
+    <string name="key_descr_config">Налаштування</string>
+    <string name="key_descr_action">Enter</string>
+    <string name="key_descr_clear">Очистити поле введення</string>
+    <string name="key_descr_selection_mode">Режим виділення</string>
+    <string name="key_descr_selection_cancel">Скасувати виділення</string>
+    <string name="key_descr_arrow_left">Стрілка ліворуч</string>
+    <string name="key_descr_arrow_right">Стрілка праворуч</string>
+    <string name="key_descr_arrow_up">Стрілка вгору</string>
+    <string name="key_descr_arrow_down">Стрілка вниз</string>
+    <string name="key_descr_cursor_left">Перемістити курсор ліворуч</string>
+    <string name="key_descr_cursor_right">Перемістити курсор праворуч</string>
+    <string name="key_descr_cursor_up">Перемістити курсор вгору</string>
+    <string name="key_descr_cursor_down">Перемістити курсор вниз</string>
+    <string name="key_descr_selection_cursor_left">Розширити виділення ліворуч</string>
+    <string name="key_descr_selection_cursor_right">Розширити виділення праворуч</string>
+    <string name="key_descr_switch_text">Літерна клавіатура</string>
+    <string name="key_descr_switch_numeric">Клавіатура цифр і символів</string>
+    <string name="key_descr_switch_emoji">Клавіатура емодзі</string>
+    <string name="key_descr_switch_gif">Клавіатура GIF</string>
     <string name="clipboard_remove_confirm">Видалити цей буфер обміну?</string>
     <string name="clipboard_remove_confirmed">Так</string>
-    <!-- <string name="toast_no_voice_input">No voice typing app installed</string> -->
+    <string name="toast_no_voice_input">Застосунок для голосового введення не встановлено</string>
+
+    <!-- Clipboard History View (Material 3) -->
+    <string name="clipboard_edit_duplicate">Запис із таким вмістом уже існує</string>
+    <string name="clipboard_edit_invalid">Вміст не може бути порожнім</string>
+    <string name="clipboard_edit_error">Не вдалося оновити запис</string>
+
+    <!-- #156 Private copy -->
+    <string name="private_copy_toolbar_label">CleverKeys: Приватне копіювання</string>
+    <string name="private_copy_toast">Скопійовано приватно в CleverKeys</string>
+    <string name="private_copy_expose_dialog_title">Скопіювати в системний буфер обміну?</string>
+    <string name="private_copy_expose_dialog_message">Цей запис було скопійовано приватно. Копіювання його в системний буфер обміну відкриє текст активному застосунку та іншим менеджерам буфера обміну. Усе одно скопіювати?</string>
+    <string name="private_copy_expose_dialog_confirm">Усе одно скопіювати</string>
+    <string name="private_copy_expose_dialog_cancel">Скасувати</string>
+    <string name="private_copy_too_large">Елемент буфера обміну завеликий (%1$d КБ). Обмеження — %2$d КБ.</string>
+    <!-- #156 Private-only filter -->
+    <string name="clipboard_filter_private_only">Лише приватні</string>
+    <string name="clipboard_filter_private_only_hint">Показувати лише приватно скопійовані записи (🔒)</string>
+
+    <!-- Settings Activity (Material 3) -->
+    <string name="settings_title">⚙️ Налаштування CleverKeys</string>
+    <string name="settings_description">Налаштуйте параметри клавіатури для оптимального введення тексту.</string>
+
+    <!-- Neural Prediction Section -->
+    <string name="settings_section_neural">🧠 Нейромережеве передбачення</string>
+    <string name="settings_neural_beam_width_title">Ширина променя</string>
+    <string name="settings_neural_beam_width_desc">Кількість варіантів передбачення (1–20). Більше — точніше.</string>
+    <string name="settings_neural_max_length_title">Максимальна довжина слова</string>
+    <string name="settings_neural_max_length_desc">Максимальна кількість символів у передбачених словах (5–35).</string>
+    <string name="settings_neural_confidence_title">Поріг упевненості</string>
+    <string name="settings_neural_confidence_desc">Мінімальна впевненість для передбачень (0.0–0.4).</string>
+
+    <!-- Appearance Section -->
+    <string name="settings_section_appearance">🎨 Вигляд</string>
+
+    <!-- Input Behavior Section -->
+    <string name="settings_section_input">📝 Поведінка введення</string>
+    <string name="settings_auto_capitalization_title">Автоматичні великі літери</string>
+    <string name="settings_auto_capitalization_desc">Автоматично робити велику першу літеру речення</string>
+    <string name="settings_vibration_title">Вібровідгук</string>
+    <string name="settings_vibration_desc">Вібрувати під час натискання клавіш</string>
+
+    <!-- Accessibility Section -->
+    <string name="settings_section_accessibility">♿ Спеціальні можливості</string>
+    <string name="settings_screen_reader_note">✓ Підтримка читання з екрана (TalkBack) завжди ввімкнена</string>
+
+    <!-- Advanced Section -->
+    <string name="settings_section_advanced">🔧 Додатково</string>
+    <string name="settings_debug_title">Налагоджувальна інформація</string>
+    <string name="settings_debug_desc">Показувати докладне журналювання та метрики продуктивності</string>
+    <string name="settings_calibration_button">🧪 Калібрування свайпу</string>
+
+    <!-- Information &amp; Actions Section -->
+    <string name="settings_section_info">📋 Інформація та дії</string>
+    <string name="settings_version_title">📱 Інформація про версію</string>
+    <string name="settings_version_build">Збірка: %1$s</string>
+    <string name="settings_version_copied">Інформацію про версію скопійовано</string>
+    <string name="settings_reset_button">🔄 Скинути все</string>
+
+    <!-- Dialog Messages -->
+    <string name="settings_reset_dialog_title">Скидання налаштувань</string>
+    <string name="settings_reset_dialog_message">Усі налаштування буде скинуто до значень за замовчуванням. Продовжити?</string>
+    <string name="settings_reset_dialog_confirm">Скинути</string>
+
+    <!-- Toast Messages -->
+    <string name="settings_toast_error_saving">Помилка збереження налаштування: %1$s</string>
+    <string name="settings_toast_reset_success">Усі налаштування скинуто до значень за замовчуванням</string>
 </resources>

@@ -1,111 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name_release">CleverKeys</string>
-    <string name="app_name_debug">CleverKeys (debug)</string>
-    <string name="short_description">适用于 Android 的轻量级、注重隐私的虚拟键盘。</string>
-    <string name="store_description">此应用的主要功能是，通过将按键沿四角滑动，您可以输入更多字符。\n\n此应用最初是为使用 Termux 的程序员而设计的。\n现在对于日常使用来说也很完美。\n\n此应用没有广告，不会发送任何网络请求，而且是开源的。</string>
-    <string name="pref_portrait">在竖屏模式下</string>
     <!-- <string name="pref_portrait_unfolded">In portrait mode unfolded</string> -->
-    <string name="pref_landscape">在横屏模式下</string>
     <!-- <string name="pref_landscape_unfolded">In landscape mode unfolded</string> -->
-    <string name="pref_category_layout">布局</string>
-    <string name="pref_label_brightness">调整字母亮度</string>
-    <string name="pref_keyboard_opacity">调整键盘背景透明度</string>
-    <string name="pref_key_opacity">调整按键透明度</string>
-    <string name="pref_key_activated_opacity">调整按下的按键的透明度</string>
     <string name="pref_layout_e_system">系统设置</string>
     <string name="pref_layout_e_custom">自定义布局</string>
     <string name="pref_layouts_add">添加其他布局</string>
     <string name="pref_layouts_item">布局 %1$d：%2$s</string>
     <string name="pref_layouts_remove_custom">移除布局</string>
     <string name="pref_custom_layout_title">自定义布局</string>
+    <string name="pref_swipe_calibration_title">校准滑动输入</string>
     <!-- <string name="pref_show_number_row_no_number_row">No number row</string> -->
     <!-- <string name="pref_show_number_row_no_symbols">Number row without symbols</string> -->
     <!-- <string name="pref_show_number_row_symbols">Number row with symbols</string> -->
-    <string name="pref_show_numpad_title">显示数字小键盘</string>
-    <string name="pref_show_numpad_never">从不</string>
-    <string name="pref_show_numpad_landscape">只在横屏显示</string>
-    <string name="pref_show_numpad_always">一直显示</string>
-    <string name="pref_number_row_title">显示数字行</string>
-    <string name="pref_number_row_summary">当数字小键盘隐藏时，在键盘上方显示数字按键</string>
-    <string name="pref_numpad_layout">数字小键盘布局</string>
-    <string name="pref_numpad_layout_e_high_first">大数字在上方</string>
-    <string name="pref_numpad_layout_e_low_first">小数字在上方</string>
-    <string name="pref_extra_keys_title">选择要显示的按键</string>
-    <string name="pref_extra_keys_custom">添加自定义按键</string>
-    <string name="pref_extra_keys_internal">选择要添加到键盘的按键</string>
-    <string name="pref_category_typing">输入</string>
-    <string name="pref_swipe_dist_title">滑动触发距离</string>
-    <string name="pref_swipe_dist_summary">输入按键四角的符号需要滑动的距离 (%s)</string>
-    <string name="pref_long_timeout_title">长按触发延时</string>
-    <string name="pref_long_interval_title">长按后每次重复输入的时间间隔</string>
-    <string name="pref_keyrepeat_enabled">长按重复输入</string>
-    <string name="pref_lock_double_tap_title">双击 Shift 键锁定大写</string>
-    <string name="pref_lock_double_tap_summary">任何时候长按修饰键均可将其锁定</string>
-    <string name="pref_category_behavior">行为</string>
-    <string name="pref_autocapitalisation_title">句首自动大写</string>
-    <string name="pref_autocapitalisation_summary">在句子的开头自动按下Shift</string>
-    <string name="pref_switch_input_immediate_title">切换到最近使用的键盘</string>
-    <string name="pref_switch_input_immediate_summary">切换键盘按钮的行为</string>
-    <string name="pref_vibrate_custom">自定义振动</string>
-    <string name="pref_vibrate_duration_title">振动强度</string>
     <!-- <string name="pref_number_entry_title">Layout when typing numbers, dates and phone numbers</string> -->
     <!-- <string name="pref_number_entry_layout_pin">PIN Entry</string> -->
     <!-- <string name="pref_number_entry_layout_number">Number pane</string> -->
     <!-- <string name="pref_number_entry_layout_normal">Use the main layout</string> -->
-    <string name="pref_category_style">样式</string>
-    <string name="pref_margin_bottom_title">键盘下边距</string>
-    <string name="pref_keyboard_height_title">键盘高度</string>
-    <string name="pref_horizontal_margin_title">键盘左右边距</string>
-    <string name="pref_character_size_title">字符大小</string>
-    <string name="pref_character_size_summary">按键上显示的字符的大小 (%.2fx)</string>
-    <string name="pref_theme">主题</string>
-    <string name="pref_theme_e_system">跟随系统设置</string>
-    <string name="pref_theme_e_dark">暗色</string>
-    <string name="pref_theme_e_light">亮色</string>
-    <string name="pref_theme_e_black">黑色</string>
-    <string name="pref_theme_e_altblack">黑色带边框</string>
-    <string name="pref_theme_e_white">白色</string>
-    <string name="pref_theme_e_epaper">白色带边框</string>
-    <string name="pref_theme_e_desert">沙漠</string>
-    <string name="pref_theme_e_jungle">雨林</string>
-    <string name="pref_theme_e_monet">莫奈（系统）</string>
-    <string name="pref_theme_e_monetlight">莫奈（浅色）</string>
-    <string name="pref_theme_e_monetdark">莫奈（深色）</string>
-    <string name="pref_theme_e_rosepine">桃红松韵（Rosé Pine）</string>
-    <string name="pref_swipe_dist_e_very_short">非常短</string>
-    <string name="pref_swipe_dist_e_short">短</string>
-    <string name="pref_swipe_dist_e_default">中（默认）</string>
-    <string name="pref_swipe_dist_e_far">长</string>
-    <string name="pref_swipe_dist_e_very_far">非常长</string>
-    <string name="pref_key_horizontal_space">按键的左右边距</string>
-    <string name="pref_key_vertical_space">按键的上下边距</string>
-    <string name="pref_border_config_title">自定义边界</string>
-    <string name="pref_border_width_title">边界宽度</string>
-    <string name="pref_corners_radius_title">圆角半径</string>
-    <string name="pref_circle_sensitivity_title">环形手势灵敏度</string>
-    <string name="pref_circle_sensitivity_e_high">高</string>
-    <string name="pref_circle_sensitivity_e_medium">中</string>
-    <string name="pref_circle_sensitivity_e_low">低</string>
-    <string name="pref_circle_sensitivity_e_disabled">禁用</string>
     <string name="key_action_next">下一项</string>
     <string name="key_action_done">完成</string>
     <string name="key_action_go">前往</string>
     <string name="key_action_prev">上一项</string>
     <string name="key_action_search">搜索</string>
     <string name="key_action_send">发送</string>
-    <string name="launcher_button_imesettings">启用键盘</string>
-    <string name="launcher_button_imepicker">选择键盘</string>
-    <string name="launcher_description">这是一个虚拟键盘软件。点击按钮进入系统设置，然后启用 CleverKeys 即可使用。</string>
-    <string name="launcher_sourcecode">这是一个免费且开源的软件。你可以在 GitHub 上找到源代码或反馈问题。</string>
-    <string name="launcher_tryhere">启用键盘后，可以在这里测试效果：</string>
-    <string name="launcher_tryhere_hint">在这里测试</string>
     <string name="key_descr_capslock">大写锁定</string>
     <string name="key_descr_compose">字符组合键</string>
     <string name="key_descr_switch_greekmath">希腊 &amp; 数学符号</string>
+    <string name="key_descr_switch_forward">切换到下一个键盘布局</string>
+    <string name="key_descr_switch_backward">切换到上一个键盘布局</string>
     <string name="key_descr_change_method">切换键盘</string>
     <string name="key_descr_voice_typing">语音输入</string>
     <string name="key_descr_copy">复制</string>
+    <string name="key_descr_copy_private">私密复制（仅存入 CleverKeys，不进入系统剪贴板）</string>
     <string name="key_descr_paste">粘贴</string>
     <string name="key_descr_cut">剪切</string>
     <string name="key_descr_selectAll">全选</string>
@@ -120,6 +45,8 @@
     <string name="key_descr_page_down">下一页</string>
     <string name="key_descr_home">Home</string>
     <string name="key_descr_end">End</string>
+    <string name="key_descr_doc_home">文档开头</string>
+    <string name="key_descr_doc_end">文档结尾</string>
     <string name="key_descr_clipboard">管理剪贴板</string>
     <string name="key_descr_combining">组合用附加符号</string>
     <string name="key_descr_dead_key">前置组合键</string>
@@ -127,12 +54,108 @@
     <string name="key_descr_zwnj">零宽连字符</string>
     <string name="key_descr_nbsp">不间断空格</string>
     <string name="key_descr_nnbsp">窄距不间断空格</string>
-    <!-- <string name="key_descr_delete_word">Delete a word</string> -->
-    <!-- <string name="key_descr_forward_delete_word">Delete a word on the right</string> -->
-    <!-- <string name="key_descr_gesture">Gesture</string> -->
-    <string name="clipboard_history_heading">最近剪贴内容</string>
-    <string name="clipboard_pin_heading">已固定</string>
+    <string name="key_descr_delete_word">删除一个单词</string>
+    <string name="key_descr_forward_delete_word">删除右侧的单词</string>
+    <string name="key_descr_gesture">手势</string>
+    <string name="key_descr_autofill">密码管理器自动填充</string>
+    <!-- TalkBack key descriptions (accessibility) -->
+    <string name="key_descr_shift">Shift</string>
+    <string name="key_descr_ctrl">Control</string>
+    <string name="key_descr_alt">Alt</string>
+    <string name="key_descr_meta">Meta</string>
+    <string name="key_descr_fn">Function</string>
+    <string name="key_descr_backspace">退格</string>
+    <string name="key_descr_delete">删除</string>
+    <string name="key_descr_enter">回车</string>
+    <string name="key_descr_space">空格</string>
+    <string name="key_descr_tab">制表符</string>
+    <string name="key_descr_esc">退出</string>
+    <string name="key_descr_config">设置</string>
+    <string name="key_descr_action">回车</string>
+    <string name="key_descr_clear">清空文本框</string>
+    <string name="key_descr_selection_mode">选择模式</string>
+    <string name="key_descr_selection_cancel">取消选择</string>
+    <string name="key_descr_arrow_left">左箭头</string>
+    <string name="key_descr_arrow_right">右箭头</string>
+    <string name="key_descr_arrow_up">上箭头</string>
+    <string name="key_descr_arrow_down">下箭头</string>
+    <string name="key_descr_cursor_left">光标左移</string>
+    <string name="key_descr_cursor_right">光标右移</string>
+    <string name="key_descr_cursor_up">光标上移</string>
+    <string name="key_descr_cursor_down">光标下移</string>
+    <string name="key_descr_selection_cursor_left">向左扩展选区</string>
+    <string name="key_descr_selection_cursor_right">向右扩展选区</string>
+    <string name="key_descr_switch_text">字母键盘</string>
+    <string name="key_descr_switch_numeric">数字和符号键盘</string>
+    <string name="key_descr_switch_emoji">表情键盘</string>
+    <string name="key_descr_switch_gif">GIF 键盘</string>
     <string name="clipboard_remove_confirm">确定移除此剪贴内容？</string>
     <string name="clipboard_remove_confirmed">确定</string>
-    <!-- <string name="toast_no_voice_input">No voice typing app installed</string> -->
+    <string name="toast_no_voice_input">未安装语音输入应用</string>
+
+    <!-- Clipboard History View (Material 3) -->
+    <string name="clipboard_edit_duplicate">已存在相同内容的条目</string>
+    <string name="clipboard_edit_invalid">内容不能为空</string>
+    <string name="clipboard_edit_error">更新条目失败</string>
+
+    <!-- #156 Private copy -->
+    <string name="private_copy_toolbar_label">CleverKeys：私密复制</string>
+    <string name="private_copy_toast">已私密复制到 CleverKeys</string>
+    <string name="private_copy_expose_dialog_title">复制到系统剪贴板？</string>
+    <string name="private_copy_expose_dialog_message">此条目是私密复制的。复制到系统剪贴板会将文本暴露给前台应用及其他剪贴板管理器。仍要复制吗？</string>
+    <string name="private_copy_expose_dialog_confirm">仍要复制</string>
+    <string name="private_copy_expose_dialog_cancel">取消</string>
+    <string name="private_copy_too_large">剪贴内容过大（%1$d KB）。上限为 %2$d KB。</string>
+    <!-- #156 Private-only filter -->
+    <string name="clipboard_filter_private_only">仅私密</string>
+    <string name="clipboard_filter_private_only_hint">仅显示私密复制的条目（🔒）</string>
+
+    <!-- Settings Activity (Material 3) -->
+    <string name="settings_title">⚙️ CleverKeys 设置</string>
+    <string name="settings_description">配置键盘设置以获得最佳输入体验。</string>
+
+    <!-- Neural Prediction Section -->
+    <string name="settings_section_neural">🧠 神经网络预测</string>
+    <string name="settings_neural_beam_width_title">束宽</string>
+    <string name="settings_neural_beam_width_desc">预测候选数量（1-20）。数值越大越准确。</string>
+    <string name="settings_neural_max_length_title">单词最大长度</string>
+    <string name="settings_neural_max_length_desc">预测单词的最大字符数（5-35）。</string>
+    <string name="settings_neural_confidence_title">置信度阈值</string>
+    <string name="settings_neural_confidence_desc">预测所需的最低置信度（0.0-0.4）。</string>
+
+    <!-- Appearance Section -->
+    <string name="settings_section_appearance">🎨 外观</string>
+
+    <!-- Input Behavior Section -->
+    <string name="settings_section_input">📝 输入行为</string>
+    <string name="settings_auto_capitalization_title">自动大写</string>
+    <string name="settings_auto_capitalization_desc">在句首自动将单词首字母大写</string>
+    <string name="settings_vibration_title">振动反馈</string>
+    <string name="settings_vibration_desc">按键时振动</string>
+
+    <!-- Accessibility Section -->
+    <string name="settings_section_accessibility">♿ 无障碍</string>
+    <string name="settings_screen_reader_note">✓ 屏幕阅读器（TalkBack）支持始终开启</string>
+
+    <!-- Advanced Section -->
+    <string name="settings_section_advanced">🔧 高级</string>
+    <string name="settings_debug_title">调试信息</string>
+    <string name="settings_debug_desc">显示详细日志和性能指标</string>
+    <string name="settings_calibration_button">🧪 滑动校准</string>
+
+    <!-- Information &amp; Actions Section -->
+    <string name="settings_section_info">📋 信息与操作</string>
+    <string name="settings_version_title">📱 版本信息</string>
+    <string name="settings_version_build">版本号：%1$s</string>
+    <string name="settings_version_copied">已复制版本信息</string>
+    <string name="settings_reset_button">🔄 全部重置</string>
+
+    <!-- Dialog Messages -->
+    <string name="settings_reset_dialog_title">重置设置</string>
+    <string name="settings_reset_dialog_message">这将把所有设置重置为默认值。要继续吗？</string>
+    <string name="settings_reset_dialog_confirm">重置</string>
+
+    <!-- Toast Messages -->
+    <string name="settings_toast_error_saving">保存设置出错：%1$s</string>
+    <string name="settings_toast_reset_success">已将所有设置重置为默认值</string>
 </resources>

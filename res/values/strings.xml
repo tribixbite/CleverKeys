@@ -1,138 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">CleverKeys</string>
-    <string name="app_name_release">CleverKeys</string>
-    <string name="app_name_debug">CleverKeys (Debug)</string>
-    <string name="short_description">AI-powered swipe typing keyboard with neural network predictions running entirely on-device.</string>
-    <string name="store_description">CleverKeys combines privacy-first design with cutting-edge neural network prediction technology. Features include:\n\n• Neural network swipe typing with ONNX transformer models\n• 8-directional gesture support for programming symbols\n• 100% local processing - no cloud, no data collection\n• Hardware acceleration for modern Android devices\n• Real-time calibration and personalized training\n\nBuilt upon CleverKeys with enhanced neural network intelligence.</string>
-    <string name="pref_portrait">In portrait mode</string>
-    <string name="pref_portrait_unfolded">In portrait mode unfolded</string>
-    <string name="pref_landscape">In landscape mode</string>
-    <string name="pref_landscape_unfolded">In landscape mode unfolded</string>
-    <string name="pref_category_layout">Layout</string>
-    <string name="pref_label_brightness">Adjust label brightness</string>
-    <string name="pref_keyboard_opacity">Adjust keyboard background opacity</string>
-    <string name="pref_key_opacity">Adjust key opacity</string>
-    <string name="pref_key_activated_opacity">Adjust pressed key opacity</string>
+    <string name="app_name" translatable="false">CleverKeys</string>
     <string name="pref_layout_e_system">System settings</string>
     <string name="pref_layout_e_custom">Custom layout</string>
     <string name="pref_layouts_add">Add an alternate layout</string>
     <string name="pref_layouts_item">Layout %1$d: %2$s</string>
     <string name="pref_layouts_remove_custom">Remove layout</string>
     <string name="pref_custom_layout_title">Custom layout</string>
-    <string name="pref_show_number_row_no_number_row">No number row</string>
-    <string name="pref_show_number_row_no_symbols">Number row without symbols</string>
-    <string name="pref_show_number_row_symbols">Number row with symbols</string>
-    <string name="pref_show_numpad_title">Show NumPad</string>
-    <string name="pref_show_numpad_never">Never</string>
-    <string name="pref_show_numpad_landscape">Only in landscape mode</string>
-    <string name="pref_show_numpad_always">Always</string>
-    <string name="pref_number_row_title">Show number row</string>
-    <string name="pref_number_row_summary">Add a number row at the top of the keyboard when the numpad is hidden</string>
-    <string name="pref_numpad_layout">NumPad layout</string>
-    <string name="pref_numpad_layout_e_high_first">High digits first</string>
-    <string name="pref_numpad_layout_e_low_first">Low digits first</string>
-    <string name="pref_extra_keys_title">Add keys to the keyboard</string>
-    <string name="pref_extra_keys_custom">Add custom keys</string>
-    <string name="pref_extra_keys_internal">Select keys to add to the keyboard</string>
-    <string name="pref_category_typing">Typing</string>
-    <string name="pref_short_gestures_enabled_title">Enable short gestures</string>
-    <string name="pref_short_gestures_enabled_summary">Enable directional swipes within a key (e.g., swipe-up on key for symbol)</string>
-    <string name="pref_short_gesture_distance_title">Short gesture sensitivity</string>
-    <string name="pref_short_gesture_distance_summary">Minimum swipe distance as %% of key diagonal (%s%%)</string>
-    <string name="pref_swipe_dist_title">Swiping distance</string>
-    <string name="pref_swipe_dist_summary">Distance of characters in the corners of the keys (%s)</string>
-    <string name="pref_long_timeout_title">Long press timeout</string>
-    <string name="pref_long_interval_title">Key repeat interval</string>
-    <string name="pref_keyrepeat_enabled">Key repeat on long press</string>
-    <string name="pref_lock_double_tap_title">Double tap on shift for caps lock</string>
-    <string name="pref_lock_double_tap_summary">You can lock any modifier by holding it</string>
-    <string name="pref_category_behavior">Behavior</string>
-    <string name="pref_autocapitalisation_title">Automatic capitalisation</string>
-    <string name="pref_autocapitalisation_summary">Press Shift at the beginning of a sentence</string>
-    <string name="pref_switch_input_immediate_title">Switch to the last used keyboard</string>
-    <string name="pref_switch_input_immediate_summary">Behavior of the keyboard-switching key</string>
-    <string name="pref_vibrate_custom">Custom vibration</string>
-    <string name="pref_vibrate_duration_title">Vibration intensity</string>
-    <string name="pref_number_entry_title">Layout when typing numbers, dates, and phone numbers</string>
-    <string name="pref_number_entry_layout_pin">PIN Entry</string>
-    <string name="pref_number_entry_layout_number">Number pane</string>
-    <string name="pref_number_entry_layout_normal">Use the main layout</string>
-    <string name="pref_category_style">Style</string>
-    <string name="pref_margin_bottom_title">Margin bottom</string>
-    <string name="pref_keyboard_height_title">Keyboard height</string>
-    <string name="pref_horizontal_margin_title">Horizontal margin</string>
-    <string name="pref_character_size_title">Label size</string>
-    <string name="pref_character_size_summary">Size of characters displayed on the keyboard (%.2fx)</string>
-    <string name="pref_theme">Theme</string>
-    <string name="pref_theme_e_system">System settings</string>
-    <string name="pref_theme_e_dark">Dark</string>
-    <string name="pref_theme_e_light">Light</string>
-    <string name="pref_theme_e_black">Black</string>
-    <string name="pref_theme_e_altblack">Alternative Black</string>
-    <string name="pref_theme_e_white">White</string>
-    <string name="pref_theme_e_epaper">ePaper</string>
-    <string name="pref_theme_e_desert">Desert</string>
-    <string name="pref_theme_e_jungle">Jungle</string>
-    <string name="pref_theme_e_monet">Monet (System)</string>
-    <string name="pref_theme_e_monetlight">Monet (Light)</string>
-    <string name="pref_theme_e_monetdark">Monet (Dark)</string>
-    <string name="pref_theme_e_rosepine">Rosé Pine</string>
-    <string name="pref_theme_e_jewel">Jewel (Purple/Silver)</string>
-    <string name="pref_theme_e_everforestlight">Everforest Light</string>
-    <string name="pref_theme_e_cobalt">Cobalt</string>
-    <string name="pref_theme_e_pine">Pine</string>
-    <string name="pref_theme_e_epaperblack">ePaper Black</string>
-    <string name="pref_swipe_dist_e_very_short">Very short</string>
-    <string name="pref_swipe_dist_e_short">Short</string>
-    <string name="pref_swipe_dist_e_default">Normal</string>
-    <string name="pref_swipe_dist_e_far">Far</string>
-    <string name="pref_swipe_dist_e_very_far">Very far</string>
-    <string name="pref_word_prediction_title">Enable word predictions</string>
-    <string name="pref_word_prediction_summary">Show word suggestions while typing</string>
-    <string name="pref_suggestion_bar_opacity_title">Suggestion bar opacity</string>
-    <string name="pref_swipe_typing_title">Enable swipe typing</string>
-    <string name="pref_swipe_typing_summary">Type words by swiping across letters</string>
     <string name="pref_swipe_calibration_title">Calibrate swipe typing</string>
-    <string name="pref_swipe_calibration_summary">Improve swipe accuracy by training with sample words</string>
-    <string name="pref_swipe_confidence_calibration_title">Calibrate swipe confidence</string>
-    <string name="pref_swipe_confidence_calibration_summary">Adjust the weights used to calculate swipe word confidence</string>
-    <string name="pref_swipe_confidence_shape_weight_title">Shape Weight</string>
-    <string name="pref_swipe_confidence_location_weight_title">Location Weight</string>
-    <string name="pref_swipe_confidence_frequency_weight_title">Frequency Weight</string>
-    <string name="pref_swipe_confidence_velocity_weight_title">Velocity Weight</string>
-    <string name="pref_swipe_velocity_std_title">Velocity Standard Deviation</string>
-    <string name="pref_swipe_turning_point_threshold_title">Turning Point Threshold</string>
-    <string name="pref_export_swipe_ml_data_title">Export swipe data</string>
-    <string name="pref_export_swipe_ml_data_summary">Export all collected swipe traces for ML training</string>
-    <string name="pref_train_swipe_ml_title">Train swipe model</string>
-    <string name="pref_train_swipe_ml_summary">Retrain gesture predictions with collected data (experimental)</string>
-    <string name="pref_key_horizontal_space">Horizontal spacing between the keys</string>
-    <string name="pref_key_vertical_space">Vertical spacing between the keys</string>
-    <string name="pref_border_config_title">Customize borders</string>
-    <string name="pref_border_width_title">Border Width</string>
-    <string name="pref_corners_radius_title">Corner radius</string>
-    <string name="pref_circle_sensitivity_title">Circle gesture sensitivity</string>
-    <string name="pref_circle_sensitivity_e_high">High</string>
-    <string name="pref_circle_sensitivity_e_medium">Medium</string>
-    <string name="pref_circle_sensitivity_e_low">Low</string>
-    <string name="pref_circle_sensitivity_e_disabled">Disabled</string>
-    <string name="pref_slider_sensitivity_title">Space bar slider sensitivity</string>
-    <string name="pref_slider_sensitivity_slow">Slow</string>
-    <string name="pref_slider_sensitivity_medium">Medium</string>
-    <string name="pref_slider_sensitivity_fast">Fast</string>
     <string name="key_action_next">Next</string>
     <string name="key_action_done">Done</string>
     <string name="key_action_go">Go</string>
     <string name="key_action_prev">Prev</string>
     <string name="key_action_search">Search</string>
     <string name="key_action_send">Send</string>
-    <string name="launcher_button_imesettings">Enable keyboard</string>
-    <string name="launcher_button_imepicker">Select keyboard</string>
-    <string name="launcher_description">This application is a virtual keyboard. Go to the system settings by clicking on the button below and enable CleverKeys.</string>
-    <string name="launcher_sourcecode">This is a free and open source application. You can find the source code or report bugs on GitHub.</string>
-    <string name="launcher_tryhere">After enabling, you can try the keyboard here:</string>
-    <string name="launcher_tryhere_hint">Try here</string>
     <string name="key_descr_capslock">Caps lock</string>
     <string name="key_descr_compose">Compose</string>
     <string name="key_descr_switch_greekmath">Greek &amp; math symbols</string>
@@ -201,75 +82,22 @@
     <string name="key_descr_switch_numeric">Numbers and symbols keyboard</string>
     <string name="key_descr_switch_emoji">Emoji keyboard</string>
     <string name="key_descr_switch_gif">GIF keyboard</string>
-    <string name="clipboard_history_heading">Recently copied text</string>
-    <string name="clipboard_pin_heading">Pinned</string>
     <string name="clipboard_remove_confirm">Remove this clipboard item?</string>
     <string name="clipboard_remove_confirmed">Yes</string>
     <string name="toast_no_voice_input">No voice typing app installed</string>
-    <string name="pref_category_clipboard">Clipboard History</string>
-    <string name="pref_clipboard_history_enabled_title">Enable clipboard history</string>
-    <string name="pref_clipboard_history_enabled_summary">Remember recently copied text</string>
-    <string name="pref_clipboard_history_limit_title">History limit</string>
-    <string name="pref_clipboard_history_limit_summary">Maximum number of clipboard entries to keep (%s)</string>
 
     <!-- Neural Model Settings -->
-    <string name="pref_neural_model_version_title">Neural Network Model Version</string>
-    <string name="pref_neural_model_version_summary">Select which ONNX model to use (%s)</string>
-    <string name="pref_neural_model_v1">v1 (External, 150-len, ~65%%)</string>
-    <string name="pref_neural_model_v2">v2 (Builtin, 250-len, 80.6%% ⭐)</string>
-    <string name="pref_neural_model_v3">v3 (External, 250-len, 72.1%%)</string>
-    <string name="pref_neural_model_custom">Custom (External files)</string>
-    <string name="pref_neural_model_info_title">Current Model Status</string>
-    <string name="pref_neural_model_info_summary">Loading model info...</string>
-    <string name="pref_neural_user_max_seq_length_title">Custom Max Sequence Length</string>
-    <string name="pref_neural_user_max_seq_length_summary">Override model default (0=auto, current: %s)</string>
-    <string name="pref_neural_resampling_mode_title">Trajectory Resampling</string>
-    <string name="pref_neural_resampling_mode_summary">How to handle swipes exceeding max length (%s)</string>
-    <string name="pref_neural_resampling_truncate">Truncate - Keep first N points</string>
-    <string name="pref_neural_resampling_discard">Discard - Drop uniformly (Recommended)</string>
-    <string name="pref_neural_resampling_merge">Merge - Average neighboring points</string>
-    <string name="pref_neural_resampling_info_title">About Resampling</string>
-    <string name="pref_neural_resampling_info_summary">When swipes exceed max length:\n\n• Truncate: Keeps first N points (fastest, may lose end)\n• Discard: Drops points evenly, preserves start/end (Recommended)\n• Merge: Averages neighbors, preserves shape\n\nDefault: Discard for best accuracy</string>
-    <string name="pref_neural_load_encoder_title">Load Encoder Model</string>
-    <string name="pref_neural_load_encoder_summary">Select swipe_encoder_android.onnx file</string>
-    <string name="pref_neural_load_decoder_title">Load Decoder Model</string>
-    <string name="pref_neural_load_decoder_summary">Select swipe_decoder_android.onnx file</string>
-    <string name="pref_neural_external_models_info_title">About External Models</string>
-    <string name="pref_neural_external_models_info_summary">v1 and v3 models not included in APK to save space.\n\nTo use them:\n1. Download model files\n2. Use file picker buttons above\n3. Select encoder and decoder files\n4. Switch to desired version\n\nBuiltin v2 recommended for best accuracy!</string>
 
     <!-- Custom Layout Editor Dialog (Material 3) -->
-    <string name="custom_layout_editor_title">Custom Layout Editor</string>
-    <string name="custom_layout_editor_hint">Enter keyboard layout definition…\n\nExample:\nq w e r t y\na s d f g h\nz x c v b n</string>
-    <string name="custom_layout_error_empty">Layout cannot be empty</string>
-    <string name="custom_layout_error_no_rows">Layout must contain at least one row</string>
-    <string name="custom_layout_error_line_too_long">Line too long: maximum 100 characters per line</string>
-    <string name="custom_layout_error_too_many_rows">Too many rows: maximum 10 rows allowed</string>
-    <string name="custom_layout_error_too_many_keys">Row %1$d: Too many keys (maximum 20 per row)</string>
-    <string name="custom_layout_error_invalid_key">Row %1$d: Invalid key format \'%2$s\'</string>
-    <string name="custom_layout_error_invalid_chars">Invalid characters found: %1$s</string>
 
     <!-- Clipboard History View (Material 3) -->
-    <string name="clipboard_history_title">Clipboard History</string>
-    <string name="clipboard_search_hint">Search clipboard…</string>
-    <string name="clipboard_no_results">No matching items found</string>
-    <string name="clipboard_clear_all">Clear all</string>
-    <string name="clipboard_close">Close</string>
-    <string name="clipboard_item_lines">%1$d lines</string>
-    <string name="clipboard_pin">Pin</string>
-    <string name="clipboard_unpin">Unpin</string>
-    <string name="clipboard_paste">Paste</string>
-    <string name="clipboard_delete">Delete</string>
-    <string name="clipboard_edit">Edit</string>
     <string name="clipboard_edit_duplicate">An entry with this content already exists</string>
     <string name="clipboard_edit_invalid">Content cannot be empty</string>
     <string name="clipboard_edit_error">Failed to update entry</string>
-    <string name="clipboard_empty_title">No clipboard history</string>
-    <string name="clipboard_empty_message">Copy text to see it here</string>
 
     <!-- #156 Private copy -->
     <string name="private_copy_toolbar_label">CleverKeys: Private copy</string>
     <string name="private_copy_toast">Copied privately to CleverKeys</string>
-    <string name="private_copy_badge">🔒 private</string>
     <string name="private_copy_expose_dialog_title">Copy to system clipboard?</string>
     <string name="private_copy_expose_dialog_message">This entry was copied privately. Copying it to the system clipboard exposes the text to the foreground app and other clipboard managers. Copy anyway?</string>
     <string name="private_copy_expose_dialog_confirm">Copy anyway</string>
@@ -281,45 +109,8 @@
     <string name="clipboard_filter_private_only_hint">Show only entries copied privately (🔒)</string>
 
     <!-- Emoji Grid View (Material 3) -->
-    <string name="emoji_loading">Loading emojis…</string>
-    <string name="emoji_error_unknown">Unknown error</string>
-    <string name="emoji_error_dismiss">Dismiss</string>
-    <string name="emoji_empty">No emojis found</string>
 
     <!-- Neural Settings Activity (Material 3) -->
-    <string name="neural_settings_title">Gesture Typing Network Settings</string>
-    <string name="neural_settings_description">Configure ONNX neural network parameters for swipe prediction.\nChanges apply immediately to the prediction engine.</string>
-    <string name="neural_section_core">Core Prediction Parameters</string>
-    <string name="neural_beam_width_title">Beam Width</string>
-    <string name="neural_beam_width_desc">Number of prediction candidates to consider (1-20). Higher = more accurate but slower.</string>
-    <string name="neural_max_length_title">Maximum Word Length</string>
-    <string name="neural_max_length_desc">Maximum characters in predicted words (5-35). Affects memory usage.</string>
-    <string name="neural_confidence_title">Confidence Threshold</string>
-    <string name="neural_confidence_desc">Minimum confidence for predictions (0.0-0.4). Lower = more suggestions.</string>
-    <string name="neural_section_advanced">Advanced Parameters</string>
-    <string name="neural_temperature_title">Temperature Scaling</string>
-    <string name="neural_temperature_desc">Controls prediction diversity (0.1-2.0). Lower = focused, higher = diverse.</string>
-    <string name="neural_repetition_title">Repetition Penalty</string>
-    <string name="neural_repetition_desc">Penalty for repeated characters (1.0-2.0). Higher = less repetitive.</string>
-    <string name="neural_topk_title">Top-K Filtering</string>
-    <string name="neural_topk_desc">Consider only top K tokens (1-100). Lower = focused, higher = diverse.</string>
-    <string name="neural_section_performance">Performance Options</string>
-    <string name="neural_batch_size_title">Batch Size</string>
-    <string name="neural_batch_size_desc">Number of predictions processed together (1-16). Higher = more efficient.</string>
-    <string name="neural_timeout_title">Prediction Timeout (ms)</string>
-    <string name="neural_timeout_desc">Maximum time for predictions (50-1000ms). Lower = more responsive.</string>
-    <string name="neural_enable_batching_title">Enable Batched Inference</string>
-    <string name="neural_enable_batching_desc">Process multiple predictions together for better performance</string>
-    <string name="neural_enable_caching_title">Enable Prediction Caching</string>
-    <string name="neural_enable_caching_desc">Cache predictions to avoid duplicate computations</string>
-    <string name="neural_reset_button">Reset to Defaults</string>
-    <string name="neural_save_button">Save &amp; Apply</string>
-    <string name="neural_performance_impact_title">Performance Impact</string>
-    <string name="neural_performance_impact_desc">• Higher beam width = better accuracy, slower speed\n• Lower confidence threshold = more suggestions\n• Batching improves throughput for multiple predictions\n• Caching reduces repeated computation overhead</string>
-    <string name="neural_toast_error_update">Error updating neural configuration: %1$s</string>
-    <string name="neural_toast_reset">Reset to default neural parameters</string>
-    <string name="neural_toast_save_success">Parameters saved and applied to neural engine</string>
-    <string name="neural_toast_error_apply">Error applying parameters: %1$s</string>
 
     <!-- Settings Activity (Material 3) -->
     <string name="settings_title">⚙️ CleverKeys Settings</string>
@@ -327,34 +118,20 @@
 
     <!-- Neural Prediction Section -->
     <string name="settings_section_neural">🧠 Neural Network Prediction</string>
-    <string name="settings_neural_enable_title">Enable Neural Network Swipe Prediction</string>
-    <string name="settings_neural_enable_desc">Use ONNX neural networks for accurate swipe prediction</string>
     <string name="settings_neural_beam_width_title">Beam Width</string>
     <string name="settings_neural_beam_width_desc">Number of prediction candidates (1-20). Higher = more accurate.</string>
     <string name="settings_neural_max_length_title">Maximum Word Length</string>
     <string name="settings_neural_max_length_desc">Maximum characters in predicted words (5-35).</string>
     <string name="settings_neural_confidence_title">Confidence Threshold</string>
     <string name="settings_neural_confidence_desc">Minimum confidence for predictions (0.0-0.4).</string>
-    <string name="settings_neural_advanced_button">🔧 Advanced Neural Network Settings</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 Appearance</string>
-    <string name="settings_theme_title">Theme</string>
-    <string name="settings_theme_desc">Choose keyboard appearance theme</string>
-    <string name="settings_theme_system">System</string>
-    <string name="settings_theme_light">Light</string>
-    <string name="settings_theme_dark">Dark</string>
-    <string name="settings_theme_black">Black</string>
-    <string name="settings_keyboard_height_title">Keyboard Height</string>
-    <string name="settings_keyboard_height_desc">Adjust keyboard height as percentage of screen (20-60%).</string>
-    <string name="settings_keyboard_height_value">%1$d%%</string>
 
     <!-- Input Behavior Section -->
     <string name="settings_section_input">📝 Input Behavior</string>
     <string name="settings_auto_capitalization_title">Auto-Capitalization</string>
     <string name="settings_auto_capitalization_desc">Automatically capitalize words at sentence start</string>
-    <string name="settings_clipboard_history_title">Clipboard History</string>
-    <string name="settings_clipboard_history_desc">Remember copied text for easy access</string>
     <string name="settings_vibration_title">Vibration Feedback</string>
     <string name="settings_vibration_desc">Vibrate when keys are pressed</string>
 
@@ -374,106 +151,37 @@
     <string name="settings_section_info">📋 Information &amp; Actions</string>
     <string name="settings_version_title">📱 Version Information</string>
     <string name="settings_version_build">Build: %1$s</string>
-    <string name="settings_version_commit">Commit: %1$s</string>
-    <string name="settings_version_date">Built: %1$s</string>
     <string name="settings_version_copied">Version info copied</string>
     <string name="settings_reset_button">🔄 Reset All</string>
-    <string name="settings_updates_button">📥 Check Updates</string>
 
     <!-- Dialog Messages -->
     <string name="settings_reset_dialog_title">Reset Settings</string>
     <string name="settings_reset_dialog_message">This will reset all settings to defaults. Continue?</string>
     <string name="settings_reset_dialog_confirm">Reset</string>
-    <string name="settings_update_dialog_title">Update Available</string>
-    <string name="settings_update_dialog_message">APK found at:\n%1$s\n\nSize: %2$d KB</string>
-    <string name="settings_update_dialog_install">Install</string>
-    <string name="settings_no_update_dialog_title">No Updates Found</string>
-    <string name="settings_no_update_dialog_message">Place APK file in one of these locations:\n\n• /sdcard/Download/cleverkeys-debug.apk\n• /sdcard/Download/tribixbite.cleverkeys.debug.apk\n• /sdcard/Download/cleverkeys.apk\n\nOr run from Termux:\n  ./install.sh</string>
 
     <!-- Toast Messages -->
     <string name="settings_toast_error_saving">Error saving setting: %1$s</string>
     <string name="settings_toast_reset_success">All settings reset to defaults</string>
-    <string name="settings_toast_error_update">Error checking for updates: %1$s</string>
-    <string name="settings_toast_install_copied">Opening installer (copied to Downloads)</string>
-    <string name="settings_toast_install_failed">Install failed: %1$s\nTry installing manually from file manager</string>
 
     <!-- Legacy UI (fallback) -->
-    <string name="settings_legacy_title">⚙️ CleverKeys Settings</string>
-    <string name="settings_legacy_neural_switch">Enable Neural Network Swipe Prediction</string>
-    <string name="settings_legacy_beam_width">Beam Width: %1$d</string>
-    <string name="settings_legacy_advanced_button">🔧 Advanced Neural Network Settings</string>
-    <string name="settings_legacy_calibration_button">📊 Neural Network Calibration</string>
-    <string name="settings_legacy_version">CleverKeys v2.0 (Kotlin)\n\nNote: Compose UI unavailable. Using legacy settings.</string>
-    <string name="settings_legacy_error">Settings UI failed to load: %1$s</string>
 
     <!-- Dictionary Management Section (Bug #472 fix) -->
-    <string name="settings_section_dictionary">📖 Dictionary</string>
-    <string name="settings_dictionary_manage_button">Manage Custom Words</string>
-    <string name="settings_dictionary_desc">Add custom words to improve predictions for technical terms, names, and specialized vocabulary</string>
 
     <!-- Dictionary Manager Activity -->
-    <string name="dictionary_title">Custom Dictionary</string>
-    <string name="dictionary_word_count">%1$d custom words</string>
-    <string name="dictionary_back">Back</string>
-    <string name="dictionary_add_word">Add Word</string>
-    <string name="dictionary_delete_word">Delete</string>
-    <string name="dictionary_empty_title">No custom words yet</string>
-    <string name="dictionary_empty_desc">Add words to improve predictions for terms not in the default dictionary</string>
-    <string name="dictionary_add_first_word">Add Your First Word</string>
 
     <!-- Add Word Dialog -->
-    <string name="dialog_add_word_title">Add Custom Word</string>
-    <string name="dialog_add_word_hint">Enter word</string>
-    <string name="dialog_add_word_confirm">Add</string>
-    <string name="dialog_add_word_error_empty">Word cannot be empty</string>
-    <string name="dialog_add_word_error_too_short">Word must be at least 2 characters</string>
-    <string name="dialog_add_word_error_duplicate">This word is already in your dictionary</string>
 
     <!-- Dictionary Error Messages -->
-    <string name="dictionary_error_init">Failed to initialize dictionary manager</string>
-    <string name="dictionary_error_load">Failed to load custom words</string>
-    <string name="dictionary_error_add">Failed to add word</string>
-    <string name="dictionary_error_delete">Failed to delete word</string>
-    <string name="dictionary_empty_search">No words match your search</string>
 
     <!-- Dictionary Toast Messages -->
-    <string name="dictionary_toast_word_added">Added \"%1$s\" to dictionary</string>
-    <string name="dictionary_toast_word_deleted">Removed \"%1$s\" from dictionary</string>
 
     <!-- Dictionary Tabs -->
-    <string name="tab_user_words">User Words</string>
-    <string name="tab_builtin_dict">Built-in (10k)</string>
-    <string name="tab_disabled_words">Disabled</string>
 
     <!-- Built-in Dictionary Tab -->
-    <string name="builtin_dict_search_hint">Search 10,000 words…</string>
-    <string name="builtin_dict_showing_count">Showing %1$d of %2$d words</string>
-    <string name="builtin_dict_all_count">%1$d words</string>
-    <string name="builtin_dict_disable_button">Disable</string>
-    <string name="builtin_dict_loading">Loading dictionary…</string>
-    <string name="builtin_dict_error_load">Failed to load built-in dictionary</string>
-    <string name="builtin_dict_no_results">No words match your search</string>
-    <string name="builtin_dict_language">Language:</string>
-    <string name="builtin_dict_rank">Rank #%1$d</string>
 
     <!-- Disabled Words Tab -->
-    <string name="disabled_words_search_hint">Search disabled words…</string>
-    <string name="disabled_words_count">%1$d words disabled</string>
-    <string name="disabled_words_empty_title">No disabled words</string>
-    <string name="disabled_words_empty_desc">Words you disable from the built-in dictionary will appear here</string>
-    <string name="disabled_words_enable_button">Enable</string>
-    <string name="disabled_words_clear_all">Clear All</string>
-    <string name="disabled_words_no_results">No disabled words match your search</string>
 
     <!-- User Dictionary Tab (Enhanced) -->
-    <string name="user_dict_search_hint">Search your words…</string>
-    <string name="user_dict_export">Export</string>
-    <string name="user_dict_import">Import</string>
 
     <!-- Actions Toast Messages -->
-    <string name="toast_word_disabled">Disabled \"%1$s\" from predictions</string>
-    <string name="toast_word_enabled">Enabled \"%1$s\" in predictions</string>
-    <string name="toast_all_disabled_cleared">All disabled words cleared</string>
-    <string name="toast_dictionary_exported">Dictionary exported to %1$s</string>
-    <string name="toast_dictionary_imported">Imported %1$d words</string>
 </resources>

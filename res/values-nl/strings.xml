@@ -1,111 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name_release">CleverKeys</string>
-    <string name="app_name_debug">CleverKeys (Debug)</string>
-    <string name="short_description">Lichtgewicht en privacy-bewust virtueel toetsenbord voor Android.</string>
-    <string name="store_description">De belangrijkste functie is dat je meer tekens kunt typen door de toetsen naar de hoeken te vegen.\n\nDeze applicatie is oorspronkelijk ontworpen voor programmeurs die Termux gebruiken.\nNu perfect voor dagelijks gebruik.\n\nDeze applicatie bevat geen advertenties, doet geen netwerkverzoeken en is Open Source.</string>
-    <string name="pref_portrait">In staande stand</string>
     <!-- <string name="pref_portrait_unfolded">In portrait mode unfolded</string> -->
-    <string name="pref_landscape">In liggende stand</string>
     <!-- <string name="pref_landscape_unfolded">In landscape mode unfolded</string> -->
-    <string name="pref_category_layout">Lay-out</string>
-    <string name="pref_label_brightness">Helderheid label aanpassen</string>
-    <string name="pref_keyboard_opacity">Dekking achtergrond van toetsenbord aanpassen</string>
-    <string name="pref_key_opacity">Dekking achtergrond toets aanpassen</string>
-    <string name="pref_key_activated_opacity">Dekking achtergrond ingedrukte toets aanpassen</string>
     <string name="pref_layout_e_system">Systeem instellingen</string>
     <string name="pref_layout_e_custom">Aangepaste lay-out</string>
     <string name="pref_layouts_add">Alternatieve lay-out toevoegen</string>
     <string name="pref_layouts_item">Lay-out %1$d: %2$s</string>
     <string name="pref_layouts_remove_custom">Lay-out verwijderen</string>
     <string name="pref_custom_layout_title">Aangepaste lay-out</string>
+    <string name="pref_swipe_calibration_title">Veegtypen kalibreren</string>
     <!-- <string name="pref_show_number_row_no_number_row">No number row</string> -->
     <!-- <string name="pref_show_number_row_no_symbols">Number row without symbols</string> -->
     <!-- <string name="pref_show_number_row_symbols">Number row with symbols</string> -->
-    <string name="pref_show_numpad_title">Toon NumPad</string>
-    <string name="pref_show_numpad_never">Nooit</string>
-    <string name="pref_show_numpad_landscape">Alleen in liggende stand</string>
-    <string name="pref_show_numpad_always">Altijd</string>
-    <string name="pref_number_row_title">Toon getallenrij</string>
-    <string name="pref_number_row_summary">Voeg getallenrij toe aan de bovenkant van het toetsenbord als het Num-Pad verborgen is</string>
-    <string name="pref_numpad_layout">NumPad lay-out</string>
-    <string name="pref_numpad_layout_e_high_first">Hoogste cijfers eerst</string>
-    <string name="pref_numpad_layout_e_low_first">Laagste cijfers eerst</string>
-    <string name="pref_extra_keys_title">Voeg toetsen toe aan toetsenbord</string>
-    <string name="pref_extra_keys_custom">Voeg aangepaste toetsen toe</string>
-    <string name="pref_extra_keys_internal">Selecteer toetsen om aan toetsenbord toe te voegen</string>
-    <string name="pref_category_typing">Typen</string>
-    <string name="pref_swipe_dist_title">Veeg afstand</string>
-    <string name="pref_swipe_dist_summary">Afstand van tekens in de hoeken van de toetsen (%s)</string>
-    <string name="pref_long_timeout_title">Time-out lang indrukken</string>
-    <string name="pref_long_interval_title">Toetsherhaalinterval</string>
-    <string name="pref_keyrepeat_enabled">Toetsherhaling bij lang indrukken</string>
-    <string name="pref_lock_double_tap_title">Dubbeltikken op shift voor caps lock</string>
-    <string name="pref_lock_double_tap_summary">Je kunt elke modifier vergrendelen door deze ingedrukt te houden</string>
-    <string name="pref_category_behavior">Gedrag</string>
-    <string name="pref_autocapitalisation_title">Automatische starthoofdletter</string>
-    <string name="pref_autocapitalisation_summary">Druk Shift aan de begin van een zin</string>
-    <string name="pref_switch_input_immediate_title">Wissel naar het laatst gebruikte toetsenbord</string>
-    <string name="pref_switch_input_immediate_summary">Gedrag van de toestsenbord-wissel-toets</string>
-    <string name="pref_vibrate_custom">Aangepaste trilling</string>
-    <string name="pref_vibrate_duration_title">Trillingsintensiteit</string>
     <!-- <string name="pref_number_entry_title">Layout when typing numbers, dates and phone numbers</string> -->
     <!-- <string name="pref_number_entry_layout_pin">PIN Entry</string> -->
     <!-- <string name="pref_number_entry_layout_number">Number pane</string> -->
     <!-- <string name="pref_number_entry_layout_normal">Use the main layout</string> -->
-    <string name="pref_category_style">Stijl</string>
-    <string name="pref_margin_bottom_title">Ondermarge</string>
-    <string name="pref_keyboard_height_title">Hoogte toetsenbord</string>
-    <string name="pref_horizontal_margin_title">Hor. marge</string>
-    <string name="pref_character_size_title">Label afmeting</string>
-    <string name="pref_character_size_summary">Afmeting van karakters getoond op het toetsenbord (%.2fx)</string>
-    <string name="pref_theme">Thema</string>
-    <string name="pref_theme_e_system">Systeem instellingen</string>
-    <string name="pref_theme_e_dark">Donker</string>
-    <string name="pref_theme_e_light">Licht</string>
-    <string name="pref_theme_e_black">Zwart</string>
-    <string name="pref_theme_e_altblack">Alternatief zwart</string>
-    <string name="pref_theme_e_white">Wit</string>
-    <string name="pref_theme_e_epaper">ePapier</string>
-    <string name="pref_theme_e_desert">Woestijn</string>
-    <string name="pref_theme_e_jungle">Oerwoud</string>
-    <string name="pref_theme_e_monet">Monet (Systeem)</string>
-    <string name="pref_theme_e_monetlight">Monet (Licht)</string>
-    <string name="pref_theme_e_monetdark">Monet (Donker)</string>
-    <string name="pref_theme_e_rosepine">Rosé Pine</string>
-    <string name="pref_swipe_dist_e_very_short">Zeer kort</string>
-    <string name="pref_swipe_dist_e_short">Kort</string>
-    <string name="pref_swipe_dist_e_default">Normaal</string>
-    <string name="pref_swipe_dist_e_far">Ver</string>
-    <string name="pref_swipe_dist_e_very_far">Zeer ver</string>
-    <string name="pref_key_horizontal_space">Hor. ruimte tussen toetsen</string>
-    <string name="pref_key_vertical_space">Vert. ruimte tussen toetsen</string>
-    <string name="pref_border_config_title">Randen aanpassen</string>
-    <string name="pref_border_width_title">Randbreedte</string>
-    <string name="pref_corners_radius_title">Hoekstraal</string>
-    <string name="pref_circle_sensitivity_title">Gevoeligheid cirkelbewegingen</string>
-    <string name="pref_circle_sensitivity_e_high">Hoog</string>
-    <string name="pref_circle_sensitivity_e_medium">Medium</string>
-    <string name="pref_circle_sensitivity_e_low">Laag</string>
-    <string name="pref_circle_sensitivity_e_disabled">Uitgeschakeld</string>
     <string name="key_action_next">Volgende</string>
     <string name="key_action_done">Klaar</string>
     <string name="key_action_go">Ga</string>
     <string name="key_action_prev">Vorig</string>
     <string name="key_action_search">Zoek</string>
     <string name="key_action_send">Stuur</string>
-    <string name="launcher_button_imesettings">Toetsenbord inschakelen</string>
-    <string name="launcher_button_imepicker">Selecteer toetsenbord</string>
-    <string name="launcher_description">Deze toepassing is een virtueel toetsenbord. Ga naar de systeeminstellingen door op onderstaande knop te klikken en schakel CleverKeys in.</string>
-    <string name="launcher_sourcecode">Dit is een gratis en open source toepassing. Je kunt de broncode vinden of bugs rapporteren op GitHub.</string>
-    <string name="launcher_tryhere">Na inschakelen kun je het toetsenbord hier proberen:</string>
-    <string name="launcher_tryhere_hint">Probeer hier</string>
     <string name="key_descr_capslock">Caps lock</string>
     <string name="key_descr_compose">Stel samen</string>
     <string name="key_descr_switch_greekmath">Griekse &amp; math. symbolen</string>
+    <string name="key_descr_switch_forward">Naar volgende toetsenbordindeling wisselen</string>
+    <string name="key_descr_switch_backward">Naar vorige toetsenbordindeling wisselen</string>
     <string name="key_descr_change_method">Wissel toetsenbord</string>
     <string name="key_descr_voice_typing">Spraakgestuurd typen</string>
     <string name="key_descr_copy">Kopieer</string>
+    <string name="key_descr_copy_private">Privé kopiëren (alleen naar CleverKeys, niet naar het systeemklembord)</string>
     <string name="key_descr_paste">Plak</string>
     <string name="key_descr_cut">Knip</string>
     <string name="key_descr_selectAll">Selecteer alles</string>
@@ -120,6 +45,8 @@
     <string name="key_descr_page_down">Pagina Omlaag</string>
     <string name="key_descr_home">Thuis</string>
     <string name="key_descr_end">Einde</string>
+    <string name="key_descr_doc_home">Begin van document</string>
+    <string name="key_descr_doc_end">Einde van document</string>
     <string name="key_descr_clipboard">Klembord beheerder</string>
     <string name="key_descr_combining">Diakritische tekens combineren</string>
     <string name="key_descr_dead_key">Dode toets</string>
@@ -127,12 +54,110 @@
     <string name="key_descr_zwnj">Zero width non-joiner</string>
     <string name="key_descr_nbsp">Niet-onderbrekende spatie</string>
     <string name="key_descr_nnbsp">Smalle niet-onderbrekende spatie</string>
-    <!-- <string name="key_descr_delete_word">Delete a word</string> -->
-    <!-- <string name="key_descr_forward_delete_word">Delete a word on the right</string> -->
-    <!-- <string name="key_descr_gesture">Gesture</string> -->
-    <string name="clipboard_history_heading">Recentelijk gekopieerde tekst</string>
-    <string name="clipboard_pin_heading">Vastgemaakt</string>
+    <string name="key_descr_delete_word">Een woord verwijderen</string>
+    <string name="key_descr_forward_delete_word">Een woord rechts verwijderen</string>
+    <string name="key_descr_gesture">Gebaar</string>
+    <string name="key_descr_autofill">Automatisch invullen van wachtwoordbeheerder</string>
+    <!-- TalkBack key descriptions (accessibility) — spoken names for keys whose
+         glyphs are Private Use Area characters that TTS would otherwise misread. -->
+    <string name="key_descr_shift">Shift</string>
+    <string name="key_descr_ctrl">Control</string>
+    <string name="key_descr_alt">Alt</string>
+    <string name="key_descr_meta">Meta</string>
+    <string name="key_descr_fn">Functie</string>
+    <string name="key_descr_backspace">Backspace</string>
+    <string name="key_descr_delete">Delete</string>
+    <string name="key_descr_enter">Enter</string>
+    <string name="key_descr_space">Spatie</string>
+    <string name="key_descr_tab">Tab</string>
+    <string name="key_descr_esc">Escape</string>
+    <string name="key_descr_config">Instellingen</string>
+    <string name="key_descr_action">Enter</string>
+    <string name="key_descr_clear">Tekstveld wissen</string>
+    <string name="key_descr_selection_mode">Selectiemodus</string>
+    <string name="key_descr_selection_cancel">Selectie annuleren</string>
+    <string name="key_descr_arrow_left">Pijl naar links</string>
+    <string name="key_descr_arrow_right">Pijl naar rechts</string>
+    <string name="key_descr_arrow_up">Pijl omhoog</string>
+    <string name="key_descr_arrow_down">Pijl omlaag</string>
+    <string name="key_descr_cursor_left">Cursor naar links verplaatsen</string>
+    <string name="key_descr_cursor_right">Cursor naar rechts verplaatsen</string>
+    <string name="key_descr_cursor_up">Cursor omhoog verplaatsen</string>
+    <string name="key_descr_cursor_down">Cursor omlaag verplaatsen</string>
+    <string name="key_descr_selection_cursor_left">Selectie naar links uitbreiden</string>
+    <string name="key_descr_selection_cursor_right">Selectie naar rechts uitbreiden</string>
+    <string name="key_descr_switch_text">Lettertoetsenbord</string>
+    <string name="key_descr_switch_numeric">Toetsenbord met cijfers en symbolen</string>
+    <string name="key_descr_switch_emoji">Emoji-toetsenbord</string>
+    <string name="key_descr_switch_gif">GIF-toetsenbord</string>
     <string name="clipboard_remove_confirm">Verwijder dit klembord?</string>
     <string name="clipboard_remove_confirmed">Ja</string>
-    <!-- <string name="toast_no_voice_input">No voice typing app installed</string> -->
+    <string name="toast_no_voice_input">Geen app voor spraakgestuurd typen geïnstalleerd</string>
+
+    <!-- Clipboard History View (Material 3) -->
+    <string name="clipboard_edit_duplicate">Er bestaat al een item met deze inhoud</string>
+    <string name="clipboard_edit_invalid">Inhoud mag niet leeg zijn</string>
+    <string name="clipboard_edit_error">Bijwerken van item mislukt</string>
+
+    <!-- #156 Private copy -->
+    <string name="private_copy_toolbar_label">CleverKeys: Privé kopiëren</string>
+    <string name="private_copy_toast">Privé gekopieerd naar CleverKeys</string>
+    <string name="private_copy_expose_dialog_title">Naar systeemklembord kopiëren?</string>
+    <string name="private_copy_expose_dialog_message">Dit item is privé gekopieerd. Het naar het systeemklembord kopiëren stelt de tekst bloot aan de app op de voorgrond en andere klembordbeheerders. Toch kopiëren?</string>
+    <string name="private_copy_expose_dialog_confirm">Toch kopiëren</string>
+    <string name="private_copy_expose_dialog_cancel">Annuleren</string>
+    <!-- Shown when a clipboard item exceeds the per-item size cap. %1$d = item size (KB), %2$d = limit (KB). -->
+    <string name="private_copy_too_large">Klemborditem te groot (%1$d KB). De limiet is %2$d KB.</string>
+    <!-- #156 Private-only filter (clipboard filter dialog, all tabs) -->
+    <string name="clipboard_filter_private_only">Alleen privé</string>
+    <string name="clipboard_filter_private_only_hint">Alleen privé gekopieerde items tonen (🔒)</string>
+
+    <!-- Settings Activity (Material 3) -->
+    <string name="settings_title">⚙️ CleverKeys-instellingen</string>
+    <string name="settings_description">Configureer je toetsenbordinstellingen voor de beste typervaring.</string>
+
+    <!-- Neural Prediction Section -->
+    <string name="settings_section_neural">🧠 Voorspelling met neuraal netwerk</string>
+    <string name="settings_neural_beam_width_title">Bundelbreedte</string>
+    <string name="settings_neural_beam_width_desc">Aantal voorspellingskandidaten (1-20). Hoger = nauwkeuriger.</string>
+    <string name="settings_neural_max_length_title">Maximale woordlengte</string>
+    <string name="settings_neural_max_length_desc">Maximaal aantal tekens in voorspelde woorden (5-35).</string>
+    <string name="settings_neural_confidence_title">Betrouwbaarheidsdrempel</string>
+    <string name="settings_neural_confidence_desc">Minimale betrouwbaarheid voor voorspellingen (0.0-0.4).</string>
+
+    <!-- Appearance Section -->
+    <string name="settings_section_appearance">🎨 Weergave</string>
+
+    <!-- Input Behavior Section -->
+    <string name="settings_section_input">📝 Invoergedrag</string>
+    <string name="settings_auto_capitalization_title">Automatische hoofdletters</string>
+    <string name="settings_auto_capitalization_desc">Woorden aan het begin van een zin automatisch met een hoofdletter beginnen</string>
+    <string name="settings_vibration_title">Trilfeedback</string>
+    <string name="settings_vibration_desc">Trillen wanneer toetsen worden ingedrukt</string>
+
+    <!-- Accessibility Section -->
+    <string name="settings_section_accessibility">♿ Toegankelijkheid</string>
+    <string name="settings_screen_reader_note">✓ Ondersteuning voor schermlezer (TalkBack) is altijd ingeschakeld</string>
+
+    <!-- Advanced Section -->
+    <string name="settings_section_advanced">🔧 Geavanceerd</string>
+    <string name="settings_debug_title">Foutopsporingsinformatie</string>
+    <string name="settings_debug_desc">Gedetailleerde logboeken en prestatiegegevens tonen</string>
+    <string name="settings_calibration_button">🧪 Veegkalibratie</string>
+
+    <!-- Information &amp; Actions Section -->
+    <string name="settings_section_info">📋 Informatie &amp; Acties</string>
+    <string name="settings_version_title">📱 Versie-informatie</string>
+    <string name="settings_version_build">Build: %1$s</string>
+    <string name="settings_version_copied">Versie-informatie gekopieerd</string>
+    <string name="settings_reset_button">🔄 Alles resetten</string>
+
+    <!-- Dialog Messages -->
+    <string name="settings_reset_dialog_title">Instellingen resetten</string>
+    <string name="settings_reset_dialog_message">Hiermee worden alle instellingen teruggezet naar de standaardwaarden. Doorgaan?</string>
+    <string name="settings_reset_dialog_confirm">Resetten</string>
+
+    <!-- Toast Messages -->
+    <string name="settings_toast_error_saving">Fout bij het opslaan van instelling: %1$s</string>
+    <string name="settings_toast_reset_success">Alle instellingen teruggezet naar standaardwaarden</string>
 </resources>

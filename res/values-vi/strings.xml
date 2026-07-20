@@ -1,50 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name_release">CleverKeys</string>
-    <string name="app_name_debug">CleverKeys (gỡ lỗi)</string>
-    <string name="short_description">Bàn phím ảo gọn nhẹ và tôn trọng quyền riêng tư cho Android.</string>
-    <string name="store_description">Chức năng chính là dễ dàng gõ nhiều ký tự bằng cách kéo phím về góc của nó.\n\nỨng dụng này ban đầu được thiết kế cho các lập trình viên dùng Termux.\nBây giờ đã hoàn hảo cho việc sử dụng hàng ngày.\n\nỨng dụng này không chứa quảng cáo, không cần đến mạng, và có mã nguồn mở.</string>
-    <string name="pref_portrait">Trong chế độ chân dung</string>
     <!-- <string name="pref_portrait_unfolded">In portrait mode unfolded</string> -->
-    <string name="pref_landscape">Trong chế độ phong cảnh</string>
     <!-- <string name="pref_landscape_unfolded">In landscape mode unfolded</string> -->
-    <string name="pref_category_layout">Bố cục</string>
-    <string name="pref_label_brightness">Tùy chỉnh độ sáng của phím</string>
-    <string name="pref_keyboard_opacity">Tùy chỉnh độ trong suốt của bàn phím</string>
-    <string name="pref_key_opacity">Tùy chỉnh độ trong suốt của phím</string>
-    <string name="pref_key_activated_opacity">Tùy chỉnh độ trong suốt của phím khi nhấn</string>
     <string name="pref_layout_e_system">Hệ thống</string>
     <string name="pref_layout_e_custom">Tùy chỉnh bố cục</string>
-    <!-- <string name="pref_layouts_add">Add an alternate layout</string> -->
-    <!-- <string name="pref_layouts_item">Layout %1$d: %2$s</string> -->
-    <!-- <string name="pref_layouts_remove_custom">Remove layout</string> -->
+    <string name="pref_layouts_add">Thêm bố cục thay thế</string>
+    <string name="pref_layouts_item">Bố cục %1$d: %2$s</string>
+    <string name="pref_layouts_remove_custom">Xóa bố cục</string>
     <string name="pref_custom_layout_title">Tùy chỉnh bố cục</string>
+    <string name="pref_swipe_calibration_title">Hiệu chỉnh gõ vuốt</string>
     <!-- <string name="pref_show_number_row_no_number_row">No number row</string> -->
     <!-- <string name="pref_show_number_row_no_symbols">Number row without symbols</string> -->
     <!-- <string name="pref_show_number_row_symbols">Number row with symbols</string> -->
-    <string name="pref_show_numpad_title">Hiện NumPad</string>
-    <string name="pref_show_numpad_never">Không bao giờ</string>
-    <string name="pref_show_numpad_landscape">Chỉ trong chế độ phong cảnh</string>
-    <string name="pref_show_numpad_always">Luôn luôn</string>
-    <string name="pref_number_row_title">Hiện số dòng</string>
-    <string name="pref_number_row_summary">Hiện số dòng trên đầu bàn phím khi NumPad ẩn</string>
-    <string name="pref_numpad_layout">Bố cục NumPad</string>
-    <string name="pref_numpad_layout_e_high_first">Số lớn nhất trước</string>
-    <string name="pref_numpad_layout_e_low_first">Số nhỏ nhất trước</string>
-    <string name="pref_extra_keys_title">Thêm phím vào bàn phím</string>
     <!-- <string name="pref_extra_keys_custom">Add custom keys</string> -->
     <!-- <string name="pref_extra_keys_internal">Select keys to add to the keyboard</string> -->
-    <string name="pref_category_typing">Gõ</string>
-    <string name="pref_swipe_dist_title">Khoảng cách vuốt</string>
-    <string name="pref_swipe_dist_summary">Khoảng cách giữa các ký tự ở góc phím (%s)</string>
     <!-- <string name="pref_long_timeout_title">Long press timeout</string> -->
-    <string name="pref_long_interval_title">Khoảng thời gian lặp phím</string>
     <!-- <string name="pref_keyrepeat_enabled">Key repeat on long press</string> -->
-    <string name="pref_lock_double_tap_title">Nhấn hai lần Shift để bật Caps Lock</string>
-    <string name="pref_lock_double_tap_summary">Bạn có thể khóa phím hỗ trợ bằng cách giữ vào nó</string>
     <!-- <string name="pref_category_behavior">Behavior</string> -->
-    <string name="pref_autocapitalisation_title">Tự động viết hoa</string>
-    <string name="pref_autocapitalisation_summary">Nhấn Shift ở đầu câu</string>
     <!-- <string name="pref_switch_input_immediate_title">Switch to the last used keyboard</string> -->
     <!-- <string name="pref_switch_input_immediate_summary">Behavior of the keyboard-switching key</string> -->
     <!-- <string name="pref_vibrate_custom">Custom vibration</string> -->
@@ -53,33 +25,13 @@
     <!-- <string name="pref_number_entry_layout_pin">PIN Entry</string> -->
     <!-- <string name="pref_number_entry_layout_number">Number pane</string> -->
     <!-- <string name="pref_number_entry_layout_normal">Use the main layout</string> -->
-    <string name="pref_category_style">Kiểu cách</string>
-    <string name="pref_margin_bottom_title">Căn lề dưới</string>
-    <string name="pref_keyboard_height_title">Chiều cao bàn phím</string>
-    <string name="pref_horizontal_margin_title">Căn lề chiều ngang</string>
-    <string name="pref_character_size_title">Kích cỡ ký tự phím</string>
-    <string name="pref_character_size_summary">Kích cỡ các ký tự hiển thị trên bàn phím (%.2fx)</string>
-    <string name="pref_theme">Chủ đề</string>
-    <string name="pref_theme_e_system">Hệ thống</string>
-    <string name="pref_theme_e_dark">Tối</string>
-    <string name="pref_theme_e_light">Sáng</string>
-    <string name="pref_theme_e_black">Đen</string>
     <!-- <string name="pref_theme_e_altblack">Alternative Black</string> -->
-    <string name="pref_theme_e_white">Trắng</string>
-    <string name="pref_theme_e_epaper">ePaper</string>
     <!-- <string name="pref_theme_e_desert">Desert</string> -->
     <!-- <string name="pref_theme_e_jungle">Jungle</string> -->
     <!-- <string name="pref_theme_e_monet">Monet (System)</string> -->
     <!-- <string name="pref_theme_e_monetlight">Monet (Light)</string> -->
     <!-- <string name="pref_theme_e_monetdark">Monet (Dark)</string> -->
     <!-- <string name="pref_theme_e_rosepine">Rosé Pine</string> -->
-    <string name="pref_swipe_dist_e_very_short">Rất gần</string>
-    <string name="pref_swipe_dist_e_short">Gần</string>
-    <string name="pref_swipe_dist_e_default">Trungbình</string>
-    <string name="pref_swipe_dist_e_far">Xa</string>
-    <string name="pref_swipe_dist_e_very_far">Rất xa</string>
-    <string name="pref_key_horizontal_space">Khoảng cách giữa các phím theo chiều ngang</string>
-    <string name="pref_key_vertical_space">Khoảng cách giữa các phím theo chiều dọc</string>
     <!-- <string name="pref_border_config_title">Customize borders</string> -->
     <!-- <string name="pref_border_width_title">Border Width</string> -->
     <!-- <string name="pref_corners_radius_title">Corner radius</string> -->
@@ -100,39 +52,140 @@
     <!-- <string name="launcher_sourcecode">This is a free and open source application. You can find the source code or report bugs on GitHub.</string> -->
     <!-- <string name="launcher_tryhere">After enabling, you can try the keyboard here:</string> -->
     <!-- <string name="launcher_tryhere_hint">Try here</string> -->
-    <!-- <string name="key_descr_capslock">Caps lock</string> -->
-    <!-- <string name="key_descr_compose">Compose</string> -->
-    <!-- <string name="key_descr_switch_greekmath">Greek &amp; math symbols</string> -->
-    <!-- <string name="key_descr_change_method">Switch keyboard</string> -->
-    <!-- <string name="key_descr_voice_typing">Voice typing</string> -->
-    <!-- <string name="key_descr_copy">Copy</string> -->
-    <!-- <string name="key_descr_paste">Paste</string> -->
-    <!-- <string name="key_descr_cut">Cut</string> -->
-    <!-- <string name="key_descr_selectAll">Select all</string> -->
-    <!-- <string name="key_descr_pasteAsPlainText">Paste as plain text</string> -->
-    <!-- <string name="key_descr_undo">Undo</string> -->
-    <!-- <string name="key_descr_redo">Redo</string> -->
-    <!-- <string name="key_descr_ª">Ordinal Indicator</string> -->
-    <!-- <string name="key_descr_º">Ordinal Indicator</string> -->
-    <!-- <string name="key_descr_superscript">Superscript</string> -->
-    <!-- <string name="key_descr_subscript">Subscript</string> -->
-    <!-- <string name="key_descr_page_up">Page Up</string> -->
-    <!-- <string name="key_descr_page_down">Page Down</string> -->
-    <!-- <string name="key_descr_home">Home</string> -->
-    <!-- <string name="key_descr_end">End</string> -->
-    <!-- <string name="key_descr_clipboard">Clipboard manager</string> -->
-    <!-- <string name="key_descr_combining">Combining diacritic</string> -->
-    <!-- <string name="key_descr_dead_key">Dead key</string> -->
-    <!-- <string name="key_descr_zwj">Zero width joiner</string> -->
-    <!-- <string name="key_descr_zwnj">Zero width non-joiner</string> -->
-    <!-- <string name="key_descr_nbsp">Non-breaking space</string> -->
-    <!-- <string name="key_descr_nnbsp">Narrow non-breaking space</string> -->
-    <!-- <string name="key_descr_delete_word">Delete a word</string> -->
-    <!-- <string name="key_descr_forward_delete_word">Delete a word on the right</string> -->
-    <!-- <string name="key_descr_gesture">Gesture</string> -->
-    <!-- <string name="clipboard_history_heading">Recently copied text</string> -->
-    <!-- <string name="clipboard_pin_heading">Pinned</string> -->
-    <!-- <string name="clipboard_remove_confirm">Remove this clipboard item?</string> -->
-    <!-- <string name="clipboard_remove_confirmed">Yes</string> -->
-    <!-- <string name="toast_no_voice_input">No voice typing app installed</string> -->
+    <string name="key_descr_capslock">Khóa chữ hoa</string>
+    <string name="key_descr_compose">Soạn thảo (Compose)</string>
+    <string name="key_descr_switch_greekmath">Ký hiệu Hy Lạp &amp; toán học</string>
+    <string name="key_descr_switch_forward">Chuyển sang bố cục bàn phím tiếp theo</string>
+    <string name="key_descr_switch_backward">Chuyển sang bố cục bàn phím trước đó</string>
+    <string name="key_descr_change_method">Chuyển bàn phím</string>
+    <string name="key_descr_voice_typing">Nhập bằng giọng nói</string>
+    <string name="key_descr_copy">Sao chép</string>
+    <string name="key_descr_copy_private">Sao chép riêng tư (chỉ vào CleverKeys, không vào bộ nhớ tạm hệ thống)</string>
+    <string name="key_descr_paste">Dán</string>
+    <string name="key_descr_cut">Cắt</string>
+    <string name="key_descr_selectAll">Chọn tất cả</string>
+    <string name="key_descr_pasteAsPlainText">Dán dưới dạng văn bản thuần</string>
+    <string name="key_descr_undo">Hoàn tác</string>
+    <string name="key_descr_redo">Làm lại</string>
+    <string name="key_descr_ª">Chỉ báo thứ tự</string>
+    <string name="key_descr_º">Chỉ báo thứ tự</string>
+    <string name="key_descr_superscript">Chỉ số trên</string>
+    <string name="key_descr_subscript">Chỉ số dưới</string>
+    <string name="key_descr_page_up">Lên trang</string>
+    <string name="key_descr_page_down">Xuống trang</string>
+    <string name="key_descr_home">Home</string>
+    <string name="key_descr_end">End</string>
+    <string name="key_descr_doc_home">Đầu tài liệu</string>
+    <string name="key_descr_doc_end">Cuối tài liệu</string>
+    <string name="key_descr_clipboard">Trình quản lý bộ nhớ tạm</string>
+    <string name="key_descr_combining">Dấu phụ kết hợp</string>
+    <string name="key_descr_dead_key">Phím chết (dead key)</string>
+    <string name="key_descr_zwj">Ký tự nối độ rộng bằng không</string>
+    <string name="key_descr_zwnj">Ký tự không nối độ rộng bằng không</string>
+    <string name="key_descr_nbsp">Khoảng trắng không ngắt</string>
+    <string name="key_descr_nnbsp">Khoảng trắng hẹp không ngắt</string>
+    <string name="key_descr_delete_word">Xóa một từ</string>
+    <string name="key_descr_forward_delete_word">Xóa một từ bên phải</string>
+    <string name="key_descr_gesture">Cử chỉ</string>
+    <string name="key_descr_autofill">Tự động điền của trình quản lý mật khẩu</string>
+    <!-- TalkBack key descriptions (accessibility) -->
+    <string name="key_descr_shift">Shift</string>
+    <string name="key_descr_ctrl">Control</string>
+    <string name="key_descr_alt">Alt</string>
+    <string name="key_descr_meta">Meta</string>
+    <string name="key_descr_fn">Function</string>
+    <string name="key_descr_backspace">Xóa lùi</string>
+    <string name="key_descr_delete">Xóa</string>
+    <string name="key_descr_enter">Enter</string>
+    <string name="key_descr_space">Dấu cách</string>
+    <string name="key_descr_tab">Tab</string>
+    <string name="key_descr_esc">Escape</string>
+    <string name="key_descr_config">Cài đặt</string>
+    <string name="key_descr_action">Enter</string>
+    <string name="key_descr_clear">Xóa trường văn bản</string>
+    <string name="key_descr_selection_mode">Chế độ chọn</string>
+    <string name="key_descr_selection_cancel">Hủy chọn</string>
+    <string name="key_descr_arrow_left">Mũi tên trái</string>
+    <string name="key_descr_arrow_right">Mũi tên phải</string>
+    <string name="key_descr_arrow_up">Mũi tên lên</string>
+    <string name="key_descr_arrow_down">Mũi tên xuống</string>
+    <string name="key_descr_cursor_left">Di chuyển con trỏ sang trái</string>
+    <string name="key_descr_cursor_right">Di chuyển con trỏ sang phải</string>
+    <string name="key_descr_cursor_up">Di chuyển con trỏ lên</string>
+    <string name="key_descr_cursor_down">Di chuyển con trỏ xuống</string>
+    <string name="key_descr_selection_cursor_left">Mở rộng vùng chọn sang trái</string>
+    <string name="key_descr_selection_cursor_right">Mở rộng vùng chọn sang phải</string>
+    <string name="key_descr_switch_text">Bàn phím chữ cái</string>
+    <string name="key_descr_switch_numeric">Bàn phím số và ký hiệu</string>
+    <string name="key_descr_switch_emoji">Bàn phím biểu tượng cảm xúc</string>
+    <string name="key_descr_switch_gif">Bàn phím GIF</string>
+    <string name="clipboard_remove_confirm">Xóa mục bộ nhớ tạm này?</string>
+    <string name="clipboard_remove_confirmed">Có</string>
+    <string name="toast_no_voice_input">Chưa cài ứng dụng nhập bằng giọng nói</string>
+
+    <!-- Clipboard History View (Material 3) -->
+    <string name="clipboard_edit_duplicate">Đã tồn tại mục có nội dung này</string>
+    <string name="clipboard_edit_invalid">Nội dung không được để trống</string>
+    <string name="clipboard_edit_error">Không cập nhật được mục</string>
+
+    <!-- #156 Private copy -->
+    <string name="private_copy_toolbar_label">CleverKeys: Sao chép riêng tư</string>
+    <string name="private_copy_toast">Đã sao chép riêng tư vào CleverKeys</string>
+    <string name="private_copy_expose_dialog_title">Sao chép vào bộ nhớ tạm hệ thống?</string>
+    <string name="private_copy_expose_dialog_message">Mục này đã được sao chép riêng tư. Sao chép nó vào bộ nhớ tạm hệ thống sẽ để lộ văn bản cho ứng dụng nền trước và các trình quản lý bộ nhớ tạm khác. Vẫn sao chép?</string>
+    <string name="private_copy_expose_dialog_confirm">Vẫn sao chép</string>
+    <string name="private_copy_expose_dialog_cancel">Hủy</string>
+    <string name="private_copy_too_large">Mục bộ nhớ tạm quá lớn (%1$d KB). Giới hạn là %2$d KB.</string>
+    <!-- #156 Private-only filter -->
+    <string name="clipboard_filter_private_only">Chỉ riêng tư</string>
+    <string name="clipboard_filter_private_only_hint">Chỉ hiển thị các mục đã sao chép riêng tư (🔒)</string>
+
+    <!-- Settings Activity (Material 3) -->
+    <string name="settings_title">⚙️ Cài đặt CleverKeys</string>
+    <string name="settings_description">Cấu hình bàn phím để có trải nghiệm gõ tối ưu.</string>
+
+    <!-- Neural Prediction Section -->
+    <string name="settings_section_neural">🧠 Dự đoán bằng mạng nơ-ron</string>
+    <string name="settings_neural_beam_width_title">Độ rộng chùm (beam)</string>
+    <string name="settings_neural_beam_width_desc">Số ứng viên dự đoán (1-20). Càng lớn càng chính xác.</string>
+    <string name="settings_neural_max_length_title">Độ dài từ tối đa</string>
+    <string name="settings_neural_max_length_desc">Số ký tự tối đa trong từ dự đoán (5-35).</string>
+    <string name="settings_neural_confidence_title">Ngưỡng độ tin cậy</string>
+    <string name="settings_neural_confidence_desc">Độ tin cậy tối thiểu cho dự đoán (0.0-0.4).</string>
+
+    <!-- Appearance Section -->
+    <string name="settings_section_appearance">🎨 Giao diện</string>
+
+    <!-- Input Behavior Section -->
+    <string name="settings_section_input">📝 Hành vi nhập liệu</string>
+    <string name="settings_auto_capitalization_title">Tự động viết hoa</string>
+    <string name="settings_auto_capitalization_desc">Tự động viết hoa từ ở đầu câu</string>
+    <string name="settings_vibration_title">Phản hồi rung</string>
+    <string name="settings_vibration_desc">Rung khi nhấn phím</string>
+
+    <!-- Accessibility Section -->
+    <string name="settings_section_accessibility">♿ Trợ năng</string>
+    <string name="settings_screen_reader_note">✓ Hỗ trợ trình đọc màn hình (TalkBack) luôn được bật</string>
+
+    <!-- Advanced Section -->
+    <string name="settings_section_advanced">🔧 Nâng cao</string>
+    <string name="settings_debug_title">Thông tin gỡ lỗi</string>
+    <string name="settings_debug_desc">Hiển thị nhật ký chi tiết và số liệu hiệu năng</string>
+    <string name="settings_calibration_button">🧪 Hiệu chỉnh gõ vuốt</string>
+
+    <!-- Information &amp; Actions Section -->
+    <string name="settings_section_info">📋 Thông tin &amp; Thao tác</string>
+    <string name="settings_version_title">📱 Thông tin phiên bản</string>
+    <string name="settings_version_build">Bản dựng: %1$s</string>
+    <string name="settings_version_copied">Đã sao chép thông tin phiên bản</string>
+    <string name="settings_reset_button">🔄 Đặt lại tất cả</string>
+
+    <!-- Dialog Messages -->
+    <string name="settings_reset_dialog_title">Đặt lại cài đặt</string>
+    <string name="settings_reset_dialog_message">Thao tác này sẽ đặt lại toàn bộ cài đặt về mặc định. Tiếp tục?</string>
+    <string name="settings_reset_dialog_confirm">Đặt lại</string>
+
+    <!-- Toast Messages -->
+    <string name="settings_toast_error_saving">Lỗi khi lưu cài đặt: %1$s</string>
+    <string name="settings_toast_reset_success">Đã đặt lại toàn bộ cài đặt về mặc định</string>
 </resources>

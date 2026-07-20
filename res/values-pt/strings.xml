@@ -1,111 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name_release">CleverKeys</string>
-    <string name="app_name_debug">CleverKeys (Depuração)</string>
-    <string name="short_description">Um teclado virtual leve para desenvolvedores.</string>
-    <string name="store_description">A principal característica é que você pode digitar mais caracteres deslizando as teclas para os cantos.\n\nO app foi criado originalmente para desenvolvedores que usam Termux.\nAgora aperfeiçoado para o uso diário.\n\nEste aplicativo não contém anúncios, não faz nenhuma solicitação de rede e é Open Source.</string>
-    <string name="pref_portrait">No modo retrato</string>
     <!-- <string name="pref_portrait_unfolded">In portrait mode unfolded</string> -->
-    <string name="pref_landscape">No modo paisagem</string>
     <!-- <string name="pref_landscape_unfolded">In landscape mode unfolded</string> -->
-    <string name="pref_category_layout">Layout</string>
-    <string name="pref_label_brightness">Ajustar brilho dos rótulos</string>
-    <string name="pref_keyboard_opacity">Ajustar opacidade do fundo do teclado</string>
-    <string name="pref_key_opacity">Ajustar opacidade das teclas</string>
-    <string name="pref_key_activated_opacity">Ajustar opacidade das teclas pressionadas</string>
     <string name="pref_layout_e_system">Mesmo do sistema</string>
     <string name="pref_layout_e_custom">Layout personalizado</string>
     <string name="pref_layouts_add">Adicione um layout alternativo</string>
     <string name="pref_layouts_item">Layout %1$d: %2$s</string>
     <string name="pref_layouts_remove_custom">Remover layout</string>
     <string name="pref_custom_layout_title">Layout personalizado</string>
+    <string name="pref_swipe_calibration_title">Calibrar digitação por deslize</string>
     <!-- <string name="pref_show_number_row_no_number_row">No number row</string> -->
     <!-- <string name="pref_show_number_row_no_symbols">Number row without symbols</string> -->
     <!-- <string name="pref_show_number_row_symbols">Number row with symbols</string> -->
-    <string name="pref_show_numpad_title">Mostrar Teclado Numérico</string>
-    <string name="pref_show_numpad_never">Nunca</string>
-    <string name="pref_show_numpad_landscape">Somente no modo paisagem</string>
-    <string name="pref_show_numpad_always">Sempre</string>
-    <string name="pref_number_row_title">Mostrar fileira de números</string>
-    <string name="pref_number_row_summary">Adicionar uma linha de números no topo do teclado quando o teclado numérico estiver oculto</string>
-    <string name="pref_numpad_layout">Layout do teclado numérico</string>
-    <string name="pref_numpad_layout_e_high_first">Dígitos maiores primeiro</string>
-    <string name="pref_numpad_layout_e_low_first">Dígitos menores primeiro</string>
-    <string name="pref_extra_keys_title">Adicionar teclas ao teclado</string>
-    <string name="pref_extra_keys_custom">Adicionar teclas customizadas</string>
-    <string name="pref_extra_keys_internal">Selecione teclas para serem adicionadas ao teclado</string>
-    <string name="pref_category_typing">Digitação</string>
-    <string name="pref_swipe_dist_title">Distância a deslizar</string>
-    <string name="pref_swipe_dist_summary">Distância até acionar os cantos das teclas (%s)</string>
-    <string name="pref_long_timeout_title">Tempo de pressionamento</string>
-    <string name="pref_long_interval_title">Intervalo de repetição de tecla</string>
-    <string name="pref_keyrepeat_enabled">Repetir tecla ao pressionar</string>
-    <string name="pref_lock_double_tap_title">Tecle duas vezes no shift para travá-lo acionado</string>
-    <string name="pref_lock_double_tap_summary">Ao invés de apertar e segurar por um tempo</string>
-    <string name="pref_category_behavior">Comportamento</string>
-    <string name="pref_autocapitalisation_title">Capitalização automática</string>
-    <string name="pref_autocapitalisation_summary">Aciona o shift no início de cada frase</string>
-    <string name="pref_switch_input_immediate_title">Alternar para o último teclado usado</string>
-    <string name="pref_switch_input_immediate_summary">Comportamento da tecla de troca de teclado</string>
-    <string name="pref_vibrate_custom">Vibração personalizada</string>
-    <string name="pref_vibrate_duration_title">Intensidade da vibração</string>
     <!-- <string name="pref_number_entry_title">Layout when typing numbers, dates and phone numbers</string> -->
     <!-- <string name="pref_number_entry_layout_pin">PIN Entry</string> -->
     <!-- <string name="pref_number_entry_layout_number">Number pane</string> -->
     <!-- <string name="pref_number_entry_layout_normal">Use the main layout</string> -->
-    <string name="pref_category_style">Estilo</string>
-    <string name="pref_margin_bottom_title">Margem inferior</string>
-    <string name="pref_keyboard_height_title">Altura do teclado</string>
-    <string name="pref_horizontal_margin_title">Margem horizontal</string>
-    <string name="pref_character_size_title">Tamanho dos indicadores</string>
-    <string name="pref_character_size_summary">Tamanho dos caracteres visíveis no teclado (%.2fx)</string>
-    <string name="pref_theme">Tema</string>
-    <string name="pref_theme_e_system">Mesmo do sistema</string>
-    <string name="pref_theme_e_dark">Escuro</string>
-    <string name="pref_theme_e_light">Claro</string>
-    <string name="pref_theme_e_black">Preto</string>
-    <string name="pref_theme_e_altblack">Preto Alternativo</string>
-    <string name="pref_theme_e_white">Branco</string>
-    <string name="pref_theme_e_epaper">Papel Eletrônico</string>
-    <string name="pref_theme_e_desert">Deserto</string>
-    <string name="pref_theme_e_jungle">Selva</string>
-    <string name="pref_theme_e_monet">Monet (Sistema)</string>
-    <string name="pref_theme_e_monetlight">Monet (Claro)</string>
-    <string name="pref_theme_e_monetdark">Monet (Escuro)</string>
-    <string name="pref_theme_e_rosepine">Rosé Pine</string>
-    <string name="pref_swipe_dist_e_very_short">Bem curta</string>
-    <string name="pref_swipe_dist_e_short">Curta</string>
-    <string name="pref_swipe_dist_e_default">Normal</string>
-    <string name="pref_swipe_dist_e_far">Longa</string>
-    <string name="pref_swipe_dist_e_very_far">Bem longa</string>
-    <string name="pref_key_horizontal_space">Distância horizontal entre teclas</string>
-    <string name="pref_key_vertical_space">Distância vertical entre teclas</string>
-    <string name="pref_border_config_title">Personalizar bordas</string>
-    <string name="pref_border_width_title">Largura de borda</string>
-    <string name="pref_corners_radius_title">Arredondamento de cantos</string>
-    <string name="pref_circle_sensitivity_title">Sensibilidade do gesto circular</string>
-    <string name="pref_circle_sensitivity_e_high">Alta</string>
-    <string name="pref_circle_sensitivity_e_medium">Média</string>
-    <string name="pref_circle_sensitivity_e_low">Baixa</string>
-    <string name="pref_circle_sensitivity_e_disabled">Desativada</string>
     <string name="key_action_next">Próximo</string>
     <string name="key_action_done">Pronto</string>
     <string name="key_action_go">Ir</string>
     <string name="key_action_prev">Anterior</string>
     <string name="key_action_search">Buscar</string>
     <string name="key_action_send">Enviar</string>
-    <string name="launcher_button_imesettings">Ativar teclado</string>
-    <string name="launcher_button_imepicker">Selecionar teclado</string>
-    <string name="launcher_description">Este app é um teclado virtual. Vá para as configurações do sistema clicando no botão abaixo e ative o CleverKeys.</string>
-    <string name="launcher_sourcecode">Este app é gratuito é de código aberto. Você pode consultar o código ou fazer sugestões em Github.</string>
-    <string name="launcher_tryhere">Após ativar, experimente aqui:</string>
-    <string name="launcher_tryhere_hint">Experimente aqui</string>
     <string name="key_descr_capslock">Caps lock</string>
     <string name="key_descr_compose">Compor</string>
     <string name="key_descr_switch_greekmath">Grego e símbolos matemáticos</string>
+    <string name="key_descr_switch_forward">Mudar para o próximo layout de teclado</string>
+    <string name="key_descr_switch_backward">Mudar para o layout de teclado anterior</string>
     <string name="key_descr_change_method">Trocar de teclado</string>
     <string name="key_descr_voice_typing">Digitação por voz</string>
     <string name="key_descr_copy">Copiar</string>
+    <string name="key_descr_copy_private">Cópia privada (apenas para o CleverKeys, não para a área de transferência do sistema)</string>
     <string name="key_descr_paste">Colar</string>
     <string name="key_descr_cut">Recortar</string>
     <string name="key_descr_selectAll">Selecionar tudo</string>
@@ -120,6 +45,8 @@
     <string name="key_descr_page_down">Page Down</string>
     <string name="key_descr_home">Home</string>
     <string name="key_descr_end">End</string>
+    <string name="key_descr_doc_home">Início do documento</string>
+    <string name="key_descr_doc_end">Fim do documento</string>
     <string name="key_descr_clipboard">Área de transferência</string>
     <string name="key_descr_combining">Combinação de diacríticos</string>
     <string name="key_descr_dead_key">Tecla morta</string>
@@ -127,12 +54,110 @@
     <string name="key_descr_zwnj">Sem junta de largura zero</string>
     <string name="key_descr_nbsp">Espaço não separável</string>
     <string name="key_descr_nnbsp">Espaço não separável estreito</string>
-    <!-- <string name="key_descr_delete_word">Delete a word</string> -->
-    <!-- <string name="key_descr_forward_delete_word">Delete a word on the right</string> -->
-    <!-- <string name="key_descr_gesture">Gesture</string> -->
-    <string name="clipboard_history_heading">Textos recém copiados</string>
-    <string name="clipboard_pin_heading">Fixados</string>
+    <string name="key_descr_delete_word">Apagar uma palavra</string>
+    <string name="key_descr_forward_delete_word">Apagar uma palavra à direita</string>
+    <string name="key_descr_gesture">Gesto</string>
+    <string name="key_descr_autofill">Preenchimento automático do gerenciador de senhas</string>
+    <!-- TalkBack key descriptions (accessibility) — spoken names for keys whose
+         glyphs are Private Use Area characters that TTS would otherwise misread. -->
+    <string name="key_descr_shift">Shift</string>
+    <string name="key_descr_ctrl">Control</string>
+    <string name="key_descr_alt">Alt</string>
+    <string name="key_descr_meta">Meta</string>
+    <string name="key_descr_fn">Função</string>
+    <string name="key_descr_backspace">Backspace</string>
+    <string name="key_descr_delete">Delete</string>
+    <string name="key_descr_enter">Enter</string>
+    <string name="key_descr_space">Espaço</string>
+    <string name="key_descr_tab">Tab</string>
+    <string name="key_descr_esc">Escape</string>
+    <string name="key_descr_config">Configurações</string>
+    <string name="key_descr_action">Enter</string>
+    <string name="key_descr_clear">Limpar campo de texto</string>
+    <string name="key_descr_selection_mode">Modo de seleção</string>
+    <string name="key_descr_selection_cancel">Cancelar seleção</string>
+    <string name="key_descr_arrow_left">Seta para a esquerda</string>
+    <string name="key_descr_arrow_right">Seta para a direita</string>
+    <string name="key_descr_arrow_up">Seta para cima</string>
+    <string name="key_descr_arrow_down">Seta para baixo</string>
+    <string name="key_descr_cursor_left">Mover cursor para a esquerda</string>
+    <string name="key_descr_cursor_right">Mover cursor para a direita</string>
+    <string name="key_descr_cursor_up">Mover cursor para cima</string>
+    <string name="key_descr_cursor_down">Mover cursor para baixo</string>
+    <string name="key_descr_selection_cursor_left">Estender seleção para a esquerda</string>
+    <string name="key_descr_selection_cursor_right">Estender seleção para a direita</string>
+    <string name="key_descr_switch_text">Teclado de letras</string>
+    <string name="key_descr_switch_numeric">Teclado de números e símbolos</string>
+    <string name="key_descr_switch_emoji">Teclado de emojis</string>
+    <string name="key_descr_switch_gif">Teclado de GIFs</string>
     <string name="clipboard_remove_confirm">Remover esta cópia?</string>
     <string name="clipboard_remove_confirmed">Sim</string>
-    <!-- <string name="toast_no_voice_input">No voice typing app installed</string> -->
+    <string name="toast_no_voice_input">Nenhum aplicativo de digitação por voz instalado</string>
+
+    <!-- Clipboard History View (Material 3) -->
+    <string name="clipboard_edit_duplicate">Já existe uma entrada com este conteúdo</string>
+    <string name="clipboard_edit_invalid">O conteúdo não pode estar vazio</string>
+    <string name="clipboard_edit_error">Falha ao atualizar a entrada</string>
+
+    <!-- #156 Private copy -->
+    <string name="private_copy_toolbar_label">CleverKeys: Cópia privada</string>
+    <string name="private_copy_toast">Copiado de forma privada para o CleverKeys</string>
+    <string name="private_copy_expose_dialog_title">Copiar para a área de transferência do sistema?</string>
+    <string name="private_copy_expose_dialog_message">Esta entrada foi copiada de forma privada. Copiá-la para a área de transferência do sistema expõe o texto ao aplicativo em primeiro plano e a outros gerenciadores de área de transferência. Copiar mesmo assim?</string>
+    <string name="private_copy_expose_dialog_confirm">Copiar mesmo assim</string>
+    <string name="private_copy_expose_dialog_cancel">Cancelar</string>
+    <!-- Shown when a clipboard item exceeds the per-item size cap. %1$d = item size (KB), %2$d = limit (KB). -->
+    <string name="private_copy_too_large">Item da área de transferência muito grande (%1$d KB). O limite é %2$d KB.</string>
+    <!-- #156 Private-only filter (clipboard filter dialog, all tabs) -->
+    <string name="clipboard_filter_private_only">Apenas privados</string>
+    <string name="clipboard_filter_private_only_hint">Mostrar apenas entradas copiadas de forma privada (🔒)</string>
+
+    <!-- Settings Activity (Material 3) -->
+    <string name="settings_title">⚙️ Configurações do CleverKeys</string>
+    <string name="settings_description">Configure as opções do teclado para uma experiência de digitação ideal.</string>
+
+    <!-- Neural Prediction Section -->
+    <string name="settings_section_neural">🧠 Previsão por Rede Neural</string>
+    <string name="settings_neural_beam_width_title">Largura do feixe</string>
+    <string name="settings_neural_beam_width_desc">Número de candidatos de previsão (1-20). Maior = mais preciso.</string>
+    <string name="settings_neural_max_length_title">Comprimento máximo da palavra</string>
+    <string name="settings_neural_max_length_desc">Máximo de caracteres nas palavras previstas (5-35).</string>
+    <string name="settings_neural_confidence_title">Limiar de confiança</string>
+    <string name="settings_neural_confidence_desc">Confiança mínima para previsões (0.0-0.4).</string>
+
+    <!-- Appearance Section -->
+    <string name="settings_section_appearance">🎨 Aparência</string>
+
+    <!-- Input Behavior Section -->
+    <string name="settings_section_input">📝 Comportamento de entrada</string>
+    <string name="settings_auto_capitalization_title">Maiúsculas automáticas</string>
+    <string name="settings_auto_capitalization_desc">Colocar automaticamente em maiúscula as palavras no início da frase</string>
+    <string name="settings_vibration_title">Vibração ao tocar</string>
+    <string name="settings_vibration_desc">Vibrar quando as teclas são pressionadas</string>
+
+    <!-- Accessibility Section -->
+    <string name="settings_section_accessibility">♿ Acessibilidade</string>
+    <string name="settings_screen_reader_note">✓ O suporte a leitor de tela (TalkBack) está sempre ativado</string>
+
+    <!-- Advanced Section -->
+    <string name="settings_section_advanced">🔧 Avançado</string>
+    <string name="settings_debug_title">Informações de depuração</string>
+    <string name="settings_debug_desc">Mostrar registros detalhados e métricas de desempenho</string>
+    <string name="settings_calibration_button">🧪 Calibração do deslize</string>
+
+    <!-- Information &amp; Actions Section -->
+    <string name="settings_section_info">📋 Informações &amp; Ações</string>
+    <string name="settings_version_title">📱 Informações da versão</string>
+    <string name="settings_version_build">Compilação: %1$s</string>
+    <string name="settings_version_copied">Informações da versão copiadas</string>
+    <string name="settings_reset_button">🔄 Redefinir tudo</string>
+
+    <!-- Dialog Messages -->
+    <string name="settings_reset_dialog_title">Redefinir configurações</string>
+    <string name="settings_reset_dialog_message">Isso redefinirá todas as configurações para os padrões. Continuar?</string>
+    <string name="settings_reset_dialog_confirm">Redefinir</string>
+
+    <!-- Toast Messages -->
+    <string name="settings_toast_error_saving">Erro ao salvar a configuração: %1$s</string>
+    <string name="settings_toast_reset_success">Todas as configurações redefinidas para os padrões</string>
 </resources>

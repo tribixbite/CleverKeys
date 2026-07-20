@@ -1,85 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name_release">CleverKeys</string>
-    <string name="app_name_debug">CleverKeys (depanare)</string>
-    <string name="short_description">Tastatură virtuală pentru Android, ușoară și respectuoasă cu viața privată.</string>
-    <string name="store_description">Funcționalitatea principală este accesul rapid la o mulțime de caractere ASCII prin glisarea către colțurile tastelor.\n\nAceastă aplicație a fost concepută inițial pentru programatori care folosec Termux.\nEste perfectă pentru uzul cotidian.\n\nAceastă aplicație nu conține publicitate, nu folosește rețeaua deloc și e Open Source.</string>
-    <string name="pref_portrait">În mod portret</string>
     <!-- <string name="pref_portrait_unfolded">In portrait mode unfolded</string> -->
-    <string name="pref_landscape">În mod panoramă</string>
     <!-- <string name="pref_landscape_unfolded">In landscape mode unfolded</string> -->
-    <string name="pref_category_layout">Aspect</string>
-    <string name="pref_label_brightness">Modifică luminozitatea denumirii</string>
-    <string name="pref_keyboard_opacity">Modifică opacitatea fundalului tastaturii</string>
-    <string name="pref_key_opacity">Modifică opacitatea tastelor</string>
-    <string name="pref_key_activated_opacity">Modifică opacitatea tastei apăsate</string>
     <string name="pref_layout_e_system">Setări de Sistem</string>
     <string name="pref_layout_e_custom">Aranjament personalizat</string>
-    <!-- <string name="pref_layouts_add">Add an alternate layout</string> -->
-    <!-- <string name="pref_layouts_item">Layout %1$d: %2$s</string> -->
-    <!-- <string name="pref_layouts_remove_custom">Remove layout</string> -->
+    <string name="pref_layouts_add">Adaugă un aranjament alternativ</string>
+    <string name="pref_layouts_item">Aranjament %1$d: %2$s</string>
+    <string name="pref_layouts_remove_custom">Elimină aranjamentul</string>
     <string name="pref_custom_layout_title">Aranjament personalizat</string>
+    <string name="pref_swipe_calibration_title">Calibrează scrierea prin glisare</string>
     <!-- <string name="pref_show_number_row_no_number_row">No number row</string> -->
     <!-- <string name="pref_show_number_row_no_symbols">Number row without symbols</string> -->
     <!-- <string name="pref_show_number_row_symbols">Number row with symbols</string> -->
-    <string name="pref_show_numpad_title">Arată NumPad</string>
-    <string name="pref_show_numpad_never">Niciodată</string>
-    <string name="pref_show_numpad_landscape">Doar în mod panoramă</string>
-    <string name="pref_show_numpad_always">Întotdeanuna</string>
-    <string name="pref_number_row_title">Arată rândul cu numere</string>
-    <string name="pref_number_row_summary">Adaugă un rând deasupra tastaturii când numpad-ul este ascuns</string>
-    <string name="pref_numpad_layout">Aspect NumPad</string>
-    <string name="pref_numpad_layout_e_high_first">Mai întâi cifrele mari</string>
-    <string name="pref_numpad_layout_e_low_first">Mai întâi cifrele mici</string>
-    <string name="pref_extra_keys_title">Adaugă taste pe tastatură</string>
     <!-- <string name="pref_extra_keys_custom">Add custom keys</string> -->
     <!-- <string name="pref_extra_keys_internal">Select keys to add to the keyboard</string> -->
-    <string name="pref_category_typing">Tipărire</string>
-    <string name="pref_swipe_dist_title">Distanța de glisare</string>
-    <string name="pref_swipe_dist_summary">Distanța dintre caracterele din colțurile tastelor (%s)</string>
     <!-- <string name="pref_long_timeout_title">Long press timeout</string> -->
-    <string name="pref_long_interval_title">Intervalul de repetare a tastelor</string>
     <!-- <string name="pref_keyrepeat_enabled">Key repeat on long press</string> -->
-    <string name="pref_lock_double_tap_title">Apăsare dublă pe Shift activează Caps Lock</string>
-    <string name="pref_lock_double_tap_summary">Puteți activa orice modificator, ținându-l apăsat</string>
-    <string name="pref_category_behavior">Comportament</string>
-    <string name="pref_autocapitalisation_title">Scriere automată cu majuscule</string>
-    <string name="pref_autocapitalisation_summary">Autoapăsare Shift la începutul fiecărei propoziții</string>
-    <string name="pref_switch_input_immediate_title">Schimbă la ultima tastatură folosită</string>
-    <string name="pref_switch_input_immediate_summary">Comportamentul tastei pentru schimbarea tastaturii</string>
     <!-- <string name="pref_vibrate_custom">Custom vibration</string> -->
     <!-- <string name="pref_vibrate_duration_title">Vibration intensity</string> -->
     <!-- <string name="pref_number_entry_title">Layout when typing numbers, dates and phone numbers</string> -->
     <!-- <string name="pref_number_entry_layout_pin">PIN Entry</string> -->
     <!-- <string name="pref_number_entry_layout_number">Number pane</string> -->
     <!-- <string name="pref_number_entry_layout_normal">Use the main layout</string> -->
-    <string name="pref_category_style">Stil</string>
-    <string name="pref_margin_bottom_title">Marginea de jos</string>
-    <string name="pref_keyboard_height_title">Înălțimea tastaturii</string>
-    <string name="pref_horizontal_margin_title">Marginea orizontală</string>
-    <string name="pref_character_size_title">Dimensiunea simbolurilor</string>
-    <string name="pref_character_size_summary">Dimensiumea caracterelor afișate pe tastatură (%.2fx)</string>
-    <string name="pref_theme">Tema</string>
-    <string name="pref_theme_e_system">Setări de sistem</string>
-    <string name="pref_theme_e_dark">Întunecată</string>
-    <string name="pref_theme_e_light">Luminoasă</string>
-    <string name="pref_theme_e_black">Neagră</string>
-    <string name="pref_theme_e_altblack">Negru Alternativ</string>
-    <string name="pref_theme_e_white">Albă</string>
-    <string name="pref_theme_e_epaper">ePaper</string>
     <!-- <string name="pref_theme_e_desert">Desert</string> -->
     <!-- <string name="pref_theme_e_jungle">Jungle</string> -->
     <!-- <string name="pref_theme_e_monet">Monet (System)</string> -->
     <!-- <string name="pref_theme_e_monetlight">Monet (Light)</string> -->
     <!-- <string name="pref_theme_e_monetdark">Monet (Dark)</string> -->
     <!-- <string name="pref_theme_e_rosepine">Rosé Pine</string> -->
-    <string name="pref_swipe_dist_e_very_short">Foarte apropiată</string>
-    <string name="pref_swipe_dist_e_short">Apropiată</string>
-    <string name="pref_swipe_dist_e_default">Normală</string>
-    <string name="pref_swipe_dist_e_far">Depărtată</string>
-    <string name="pref_swipe_dist_e_very_far">Foarte depărtată</string>
-    <string name="pref_key_horizontal_space">Distanța orizontală dintre taste</string>
-    <string name="pref_key_vertical_space">Distanța verticală dintre taste</string>
     <!-- <string name="pref_border_config_title">Customize borders</string> -->
     <!-- <string name="pref_border_width_title">Border Width</string> -->
     <!-- <string name="pref_corners_radius_title">Corner radius</string> -->
@@ -94,45 +42,146 @@
     <string name="key_action_prev">Precedent</string>
     <string name="key_action_search">Caută</string>
     <string name="key_action_send">Trimite</string>
-    <string name="launcher_button_imesettings">Activează tastatura</string>
     <!-- <string name="launcher_button_imepicker">Select keyboard</string> -->
-    <string name="launcher_description">Această aplicație este o tastatură virtuală. Accesați setările sistemului făcând clic pe butonul de mai jos și activați CleverKeys.</string>
-    <string name="launcher_sourcecode">Aceasta este o aplicație gratuită și open source. Puteți găsi codul sursă sau raporta erori folosind link-ul Github.</string>
-    <string name="launcher_tryhere">După activare, puteți să încercați tastatura aici:</string>
     <!-- <string name="launcher_tryhere_hint">Try here</string> -->
-    <!-- <string name="key_descr_capslock">Caps lock</string> -->
-    <!-- <string name="key_descr_compose">Compose</string> -->
-    <!-- <string name="key_descr_switch_greekmath">Greek &amp; math symbols</string> -->
-    <!-- <string name="key_descr_change_method">Switch keyboard</string> -->
-    <!-- <string name="key_descr_voice_typing">Voice typing</string> -->
-    <!-- <string name="key_descr_copy">Copy</string> -->
-    <!-- <string name="key_descr_paste">Paste</string> -->
-    <!-- <string name="key_descr_cut">Cut</string> -->
-    <!-- <string name="key_descr_selectAll">Select all</string> -->
-    <!-- <string name="key_descr_pasteAsPlainText">Paste as plain text</string> -->
-    <!-- <string name="key_descr_undo">Undo</string> -->
-    <!-- <string name="key_descr_redo">Redo</string> -->
-    <!-- <string name="key_descr_ª">Ordinal Indicator</string> -->
-    <!-- <string name="key_descr_º">Ordinal Indicator</string> -->
-    <!-- <string name="key_descr_superscript">Superscript</string> -->
-    <!-- <string name="key_descr_subscript">Subscript</string> -->
-    <!-- <string name="key_descr_page_up">Page Up</string> -->
-    <!-- <string name="key_descr_page_down">Page Down</string> -->
-    <!-- <string name="key_descr_home">Home</string> -->
-    <!-- <string name="key_descr_end">End</string> -->
-    <!-- <string name="key_descr_clipboard">Clipboard manager</string> -->
-    <!-- <string name="key_descr_combining">Combining diacritic</string> -->
-    <!-- <string name="key_descr_dead_key">Dead key</string> -->
-    <!-- <string name="key_descr_zwj">Zero width joiner</string> -->
-    <!-- <string name="key_descr_zwnj">Zero width non-joiner</string> -->
-    <!-- <string name="key_descr_nbsp">Non-breaking space</string> -->
-    <!-- <string name="key_descr_nnbsp">Narrow non-breaking space</string> -->
-    <!-- <string name="key_descr_delete_word">Delete a word</string> -->
-    <!-- <string name="key_descr_forward_delete_word">Delete a word on the right</string> -->
-    <!-- <string name="key_descr_gesture">Gesture</string> -->
+    <string name="key_descr_capslock">Caps lock</string>
+    <string name="key_descr_compose">Compunere</string>
+    <string name="key_descr_switch_greekmath">Simboluri grecești și matematice</string>
+    <string name="key_descr_switch_forward">Comută la următorul aranjament de tastatură</string>
+    <string name="key_descr_switch_backward">Comută la aranjamentul de tastatură anterior</string>
+    <string name="key_descr_change_method">Schimbă tastatura</string>
+    <string name="key_descr_voice_typing">Dictare vocală</string>
+    <string name="key_descr_copy">Copiază</string>
+    <string name="key_descr_copy_private">Copie privată (doar în CleverKeys, nu în clipboardul sistemului)</string>
+    <string name="key_descr_paste">Lipește</string>
+    <string name="key_descr_cut">Decupează</string>
+    <string name="key_descr_selectAll">Selectează tot</string>
+    <string name="key_descr_pasteAsPlainText">Lipește ca text simplu</string>
+    <string name="key_descr_undo">Anulează</string>
+    <string name="key_descr_redo">Refă</string>
+    <string name="key_descr_ª">Indicator ordinal</string>
+    <string name="key_descr_º">Indicator ordinal</string>
+    <string name="key_descr_superscript">Exponent</string>
+    <string name="key_descr_subscript">Indice</string>
+    <string name="key_descr_page_up">Page Up</string>
+    <string name="key_descr_page_down">Page Down</string>
+    <string name="key_descr_home">Home</string>
+    <string name="key_descr_end">End</string>
+    <string name="key_descr_doc_home">Începutul documentului</string>
+    <string name="key_descr_doc_end">Sfârșitul documentului</string>
+    <string name="key_descr_clipboard">Gestionar clipboard</string>
+    <string name="key_descr_combining">Diacritic combinat</string>
+    <string name="key_descr_dead_key">Tastă moartă</string>
+    <string name="key_descr_zwj">Liant de lățime zero</string>
+    <string name="key_descr_zwnj">Non-liant de lățime zero</string>
+    <string name="key_descr_nbsp">Spațiu neîntrerupt</string>
+    <string name="key_descr_nnbsp">Spațiu neîntrerupt îngust</string>
+    <string name="key_descr_delete_word">Șterge un cuvânt</string>
+    <string name="key_descr_forward_delete_word">Șterge un cuvânt la dreapta</string>
+    <string name="key_descr_gesture">Gest</string>
+    <string name="key_descr_autofill">Completare automată din gestionarul de parole</string>
+    <!-- TalkBack key descriptions (accessibility) — spoken names for keys whose
+         glyphs are Private Use Area characters that TTS would otherwise misread. -->
+    <string name="key_descr_shift">Shift</string>
+    <string name="key_descr_ctrl">Control</string>
+    <string name="key_descr_alt">Alt</string>
+    <string name="key_descr_meta">Meta</string>
+    <string name="key_descr_fn">Funcție</string>
+    <string name="key_descr_backspace">Backspace</string>
+    <string name="key_descr_delete">Delete</string>
+    <string name="key_descr_enter">Enter</string>
+    <string name="key_descr_space">Spațiu</string>
+    <string name="key_descr_tab">Tab</string>
+    <string name="key_descr_esc">Escape</string>
+    <string name="key_descr_config">Setări</string>
+    <string name="key_descr_action">Enter</string>
+    <string name="key_descr_clear">Golește câmpul de text</string>
+    <string name="key_descr_selection_mode">Mod de selecție</string>
+    <string name="key_descr_selection_cancel">Anulează selecția</string>
+    <string name="key_descr_arrow_left">Săgeată stânga</string>
+    <string name="key_descr_arrow_right">Săgeată dreapta</string>
+    <string name="key_descr_arrow_up">Săgeată sus</string>
+    <string name="key_descr_arrow_down">Săgeată jos</string>
+    <string name="key_descr_cursor_left">Mută cursorul la stânga</string>
+    <string name="key_descr_cursor_right">Mută cursorul la dreapta</string>
+    <string name="key_descr_cursor_up">Mută cursorul în sus</string>
+    <string name="key_descr_cursor_down">Mută cursorul în jos</string>
+    <string name="key_descr_selection_cursor_left">Extinde selecția la stânga</string>
+    <string name="key_descr_selection_cursor_right">Extinde selecția la dreapta</string>
+    <string name="key_descr_switch_text">Tastatură cu litere</string>
+    <string name="key_descr_switch_numeric">Tastatură cu numere și simboluri</string>
+    <string name="key_descr_switch_emoji">Tastatură cu emoji</string>
+    <string name="key_descr_switch_gif">Tastatură GIF</string>
     <!-- <string name="clipboard_history_heading">Recently copied text</string> -->
     <!-- <string name="clipboard_pin_heading">Pinned</string> -->
-    <!-- <string name="clipboard_remove_confirm">Remove this clipboard item?</string> -->
-    <!-- <string name="clipboard_remove_confirmed">Yes</string> -->
-    <!-- <string name="toast_no_voice_input">No voice typing app installed</string> -->
+    <string name="clipboard_remove_confirm">Elimini acest element din clipboard?</string>
+    <string name="clipboard_remove_confirmed">Da</string>
+    <string name="toast_no_voice_input">Nicio aplicație de dictare vocală instalată</string>
+
+    <!-- Clipboard History View (Material 3) -->
+    <string name="clipboard_edit_duplicate">Există deja o intrare cu acest conținut</string>
+    <string name="clipboard_edit_invalid">Conținutul nu poate fi gol</string>
+    <string name="clipboard_edit_error">Actualizarea intrării a eșuat</string>
+
+    <!-- #156 Private copy -->
+    <string name="private_copy_toolbar_label">CleverKeys: Copie privată</string>
+    <string name="private_copy_toast">Copiat privat în CleverKeys</string>
+    <string name="private_copy_expose_dialog_title">Copiezi în clipboardul sistemului?</string>
+    <string name="private_copy_expose_dialog_message">Această intrare a fost copiată privat. Copierea ei în clipboardul sistemului expune textul aplicației din prim-plan și altor gestionare de clipboard. Copiezi oricum?</string>
+    <string name="private_copy_expose_dialog_confirm">Copiază oricum</string>
+    <string name="private_copy_expose_dialog_cancel">Anulează</string>
+    <!-- Shown when a clipboard item exceeds the per-item size cap. %1$d = item size (KB), %2$d = limit (KB). -->
+    <string name="private_copy_too_large">Elementul din clipboard este prea mare (%1$d KB). Limita este %2$d KB.</string>
+    <!-- #156 Private-only filter (clipboard filter dialog, all tabs) -->
+    <string name="clipboard_filter_private_only">Doar private</string>
+    <string name="clipboard_filter_private_only_hint">Arată doar intrările copiate privat (🔒)</string>
+
+    <!-- Settings Activity (Material 3) -->
+    <string name="settings_title">⚙️ Setări CleverKeys</string>
+    <string name="settings_description">Configurează setările tastaturii pentru o experiență de scriere optimă.</string>
+
+    <!-- Neural Prediction Section -->
+    <string name="settings_section_neural">🧠 Predicție cu rețea neuronală</string>
+    <string name="settings_neural_beam_width_title">Lățimea fasciculului</string>
+    <string name="settings_neural_beam_width_desc">Numărul de candidați pentru predicție (1-20). Mai mare = mai precis.</string>
+    <string name="settings_neural_max_length_title">Lungimea maximă a cuvântului</string>
+    <string name="settings_neural_max_length_desc">Numărul maxim de caractere din cuvintele prezise (5-35).</string>
+    <string name="settings_neural_confidence_title">Prag de încredere</string>
+    <string name="settings_neural_confidence_desc">Încrederea minimă pentru predicții (0.0-0.4).</string>
+
+    <!-- Appearance Section -->
+    <string name="settings_section_appearance">🎨 Aspect</string>
+
+    <!-- Input Behavior Section -->
+    <string name="settings_section_input">📝 Comportamentul intrării</string>
+    <string name="settings_auto_capitalization_title">Scriere automată cu majusculă</string>
+    <string name="settings_auto_capitalization_desc">Scrie automat cu majusculă cuvintele de la începutul propoziției</string>
+    <string name="settings_vibration_title">Vibrație la apăsare</string>
+    <string name="settings_vibration_desc">Vibrează la apăsarea tastelor</string>
+
+    <!-- Accessibility Section -->
+    <string name="settings_section_accessibility">♿ Accesibilitate</string>
+    <string name="settings_screen_reader_note">✓ Suportul pentru cititorul de ecran (TalkBack) este întotdeauna activat</string>
+
+    <!-- Advanced Section -->
+    <string name="settings_section_advanced">🔧 Avansat</string>
+    <string name="settings_debug_title">Informații de depanare</string>
+    <string name="settings_debug_desc">Arată jurnale detaliate și indicatori de performanță</string>
+    <string name="settings_calibration_button">🧪 Calibrarea glisării</string>
+
+    <!-- Information &amp; Actions Section -->
+    <string name="settings_section_info">📋 Informații &amp; Acțiuni</string>
+    <string name="settings_version_title">📱 Informații despre versiune</string>
+    <string name="settings_version_build">Compilare: %1$s</string>
+    <string name="settings_version_copied">Informații despre versiune copiate</string>
+    <string name="settings_reset_button">🔄 Resetează tot</string>
+
+    <!-- Dialog Messages -->
+    <string name="settings_reset_dialog_title">Resetează setările</string>
+    <string name="settings_reset_dialog_message">Aceasta va reseta toate setările la valorile implicite. Continui?</string>
+    <string name="settings_reset_dialog_confirm">Resetează</string>
+
+    <!-- Toast Messages -->
+    <string name="settings_toast_error_saving">Eroare la salvarea setării: %1$s</string>
+    <string name="settings_toast_reset_success">Toate setările au fost resetate la valorile implicite</string>
 </resources>
