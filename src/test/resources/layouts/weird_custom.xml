@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Fixture: a deliberately non-QWERTY custom layout for the geometric swipe engine
+  Phase-1 tests. Exercises: 4 letter rows (not 3), non-uniform per-key widths, a
+  per-key shift, a per-row shift, and a per-row scale renormalization. NO QWERTY
+  row-shape assumption may leak into the engine — decoding must still work here.
+  Letters chosen so the whole English alphabet is coverable except q/x/z (kept off
+  to prove per-layout vocabulary filtering / DEAD-LAYOUT distinct from FULL).
+-->
+<keyboard name="Weird Custom" script="latin" bottom_row="false">
+  <row>
+    <key width="1.5" c="a"/>
+    <key c="b"/>
+    <key c="c"/>
+    <key c="d"/>
+    <key width="0.8" c="e"/>
+    <key c="f"/>
+    <key c="g"/>
+  </row>
+  <row shift="0.25">
+    <key shift="0.5" c="h"/>
+    <key c="i"/>
+    <key c="j"/>
+    <key width="1.2" c="k"/>
+    <key c="l"/>
+    <key c="m"/>
+    <key c="n"/>
+  </row>
+  <row scale="7">
+    <key c="o"/>
+    <key c="p"/>
+    <key c="r"/>
+    <key c="s"/>
+    <key c="t"/>
+    <key c="u"/>
+  </row>
+  <row>
+    <key c="v"/>
+    <key c="w"/>
+    <key c="y"/>
+    <key width="2.0" c="space"/>
+  </row>
+</keyboard>

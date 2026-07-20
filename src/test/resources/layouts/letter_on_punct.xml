@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Fixture: a letter hosted on the CORNER of a punctuation-center key. Without the
+  alias-host-only rule (Geometry & Script Abstraction: "Additionally include as an
+  alias-host node any key — even with a non-letter center — that hosts >= 1 letter
+  corner label"), the letter 'z' below would be silently untypeable and could kill
+  a whole dictionary. This fixture proves that rule: the '.' key is an
+  alias-host-only node (center not a letter, not in `chars`), and 'z' projects to
+  its centroid via the tier-4 alias table.
+-->
+<keyboard name="Letter On Punct" script="latin" bottom_row="false">
+  <row>
+    <key c="q"/>
+    <key c="w"/>
+    <key c="e"/>
+    <key c="r"/>
+    <key c="t"/>
+  </row>
+  <row>
+    <key c="a"/>
+    <key c="s"/>
+    <key c="d"/>
+    <key c="f"/>
+    <key c="." nw="z"/>
+  </row>
+</keyboard>
