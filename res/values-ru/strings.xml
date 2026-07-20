@@ -7,8 +7,8 @@
     <string name="pref_layouts_remove_custom">Удалить раскладку</string>
     <string name="pref_custom_layout_title">Пользовательская раскладка</string>
     <string name="pref_swipe_calibration_title">Калибровка свайп-ввода</string>
-    <string name="key_action_next">Вперед</string>
-    <string name="key_action_done">Ввод</string>
+    <string name="key_action_next">Далее</string>
+    <string name="key_action_done">Готово</string>
     <string name="key_action_go">Перейти</string>
     <string name="key_action_prev">Назад</string>
     <string name="key_action_search">Поиск</string>
@@ -30,8 +30,8 @@
     <string name="key_descr_redo">Повторить</string>
     <string name="key_descr_ª">Порядковый индикатор</string>
     <string name="key_descr_º">Порядковый индикатор</string>
-    <string name="key_descr_superscript">Надстрочные</string>
-    <string name="key_descr_subscript">Подстрочные</string>
+    <string name="key_descr_superscript">Надстрочный знак</string>
+    <string name="key_descr_subscript">Подстрочный знак</string>
     <string name="key_descr_page_up">Страница вверх</string>
     <string name="key_descr_page_down">Страница вниз</string>
     <string name="key_descr_home">Home</string>
@@ -39,7 +39,7 @@
     <string name="key_descr_doc_home">В начало документа</string>
     <string name="key_descr_doc_end">В конец документа</string>
     <string name="key_descr_clipboard">Менеджер буфера обмена</string>
-    <string name="key_descr_combining">Сочетание диакритических знаков</string>
+    <string name="key_descr_combining">Составной диакритический знак</string>
     <string name="key_descr_dead_key">Немая клавиша</string>
     <string name="key_descr_zwj">Соединитель нулевой ширины</string>
     <string name="key_descr_zwnj">Разделитель нулевой ширины</string>
@@ -80,7 +80,7 @@
     <string name="key_descr_switch_numeric">Клавиатура цифр и символов</string>
     <string name="key_descr_switch_emoji">Клавиатура эмодзи</string>
     <string name="key_descr_switch_gif">Клавиатура GIF</string>
-    <string name="clipboard_remove_confirm">Удалить этот буфер обмена?</string>
+    <string name="clipboard_remove_confirm">Удалить этот элемент буфера обмена?</string>
     <string name="clipboard_remove_confirmed">Да</string>
     <string name="toast_no_voice_input">Приложение для голосового ввода не установлено</string>
 

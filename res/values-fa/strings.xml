@@ -5,11 +5,11 @@
     <!-- <string name="pref_portrait_unfolded">In portrait mode unfolded</string> -->
     <!-- <string name="pref_landscape_unfolded">In landscape mode unfolded</string> -->
     <string name="pref_layout_e_system">تنظیمات سامانه</string>
-    <string name="pref_layout_e_custom">طرح صفارشی</string>
+    <string name="pref_layout_e_custom">طرح سفارشی</string>
     <string name="pref_layouts_add">افزودن یک چیدمان جایگزین</string>
     <string name="pref_layouts_item">چیدمان %1$d: %2$s</string>
     <string name="pref_layouts_remove_custom">حذف چیدمان</string>
-    <string name="pref_custom_layout_title">طرح شخصی</string>
+    <string name="pref_custom_layout_title">طرح سفارشی</string>
     <string name="pref_swipe_calibration_title">واسنجی تایپ کشیدنی</string>
     <!-- <string name="pref_show_number_row_no_number_row">No number row</string> -->
     <!-- <string name="pref_show_number_row_no_symbols">Number row without symbols</string> -->
@@ -75,7 +75,7 @@
     <string name="key_descr_combining">نشانه ترکیبی</string>
     <string name="key_descr_dead_key">کلید مرده</string>
     <string name="key_descr_zwj">اتصال‌دهنده با عرض صفر</string>
-    <string name="key_descr_zwnj">نیم‌فاصله (بدون اتصال با عرض صفر)</string>
+    <string name="key_descr_zwnj">نیم‌فاصله (جداساز بی‌عرض)</string>
     <string name="key_descr_nbsp">فاصله بی‌شکست</string>
     <string name="key_descr_nnbsp">فاصله باریک بی‌شکست</string>
     <string name="key_descr_delete_word">حذف یک واژه</string>

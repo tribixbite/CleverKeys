@@ -2,7 +2,7 @@
 <resources>
     <!-- <string name="pref_portrait_unfolded">In portrait mode unfolded</string> -->
     <!-- <string name="pref_landscape_unfolded">In landscape mode unfolded</string> -->
-    <string name="pref_layout_e_system">Igual al sistema</string>
+    <string name="pref_layout_e_system">Configuración del sistema</string>
     <string name="pref_layout_e_custom">Diseño personalizado</string>
     <string name="pref_layouts_add">Añadir distribución alterna</string>
     <string name="pref_layouts_item">Diseño %1$d: %2$s</string>
@@ -24,7 +24,7 @@
     <string name="key_action_send">Enviar</string>
     <string name="key_descr_capslock">Bloq Mayús</string>
     <string name="key_descr_compose">Componer</string>
-    <string name="key_descr_switch_greekmath">Símb. griegos y matemáticos</string>
+    <string name="key_descr_switch_greekmath">Símbolos griegos y matemáticos</string>
     <string name="key_descr_switch_forward">Cambiar a la siguiente distribución de teclado</string>
     <string name="key_descr_switch_backward">Cambiar a la distribución de teclado anterior</string>
     <string name="key_descr_change_method">Cambiar teclado</string>
@@ -41,16 +41,16 @@
     <string name="key_descr_º">Indicador de ordinal</string>
     <string name="key_descr_superscript">Superíndice</string>
     <string name="key_descr_subscript">Subíndice</string>
-    <string name="key_descr_page_up">Av Pág</string>
-    <string name="key_descr_page_down">Re Pág</string>
+    <string name="key_descr_page_up">Re Pág</string>
+    <string name="key_descr_page_down">Av Pág</string>
     <string name="key_descr_home">Inicio</string>
     <string name="key_descr_end">Fin</string>
     <string name="key_descr_doc_home">Inicio del documento</string>
     <string name="key_descr_doc_end">Fin del documento</string>
-    <string name="key_descr_clipboard">Arreglar portapapeles</string>
+    <string name="key_descr_clipboard">Administrador de portapapeles</string>
     <string name="key_descr_combining">Diacrítico combinante</string>
     <string name="key_descr_dead_key">Tecla muerta</string>
-    <string name="key_descr_zwj">Ensamblador de ancho cero</string>
+    <string name="key_descr_zwj">Conector de ancho cero</string>
     <string name="key_descr_zwnj">Separador de ancho cero</string>
     <string name="key_descr_nbsp">Espacio de no separación</string>
     <string name="key_descr_nnbsp">Espacio estrecho de no separación</string>
@@ -89,7 +89,7 @@
     <string name="key_descr_switch_numeric">Teclado de números y símbolos</string>
     <string name="key_descr_switch_emoji">Teclado de emojis</string>
     <string name="key_descr_switch_gif">Teclado de GIF</string>
-    <string name="clipboard_remove_confirm">¿Sacar este portapapeles?</string>
+    <string name="clipboard_remove_confirm">¿Eliminar este elemento del portapapeles?</string>
     <string name="clipboard_remove_confirmed">Sí</string>
     <string name="toast_no_voice_input">No hay ninguna app de dictado por voz instalada</string>
 
@@ -120,11 +120,11 @@
     <!-- Neural Prediction Section -->
     <string name="settings_section_neural">🧠 Predicción con red neuronal</string>
     <string name="settings_neural_beam_width_title">Ancho del haz</string>
-    <string name="settings_neural_beam_width_desc">Número de candidatos de predicción (1-20). Mayor = más preciso.</string>
+    <string name="settings_neural_beam_width_desc">Número de candidatos de predicción (1–20). Mayor = más preciso.</string>
     <string name="settings_neural_max_length_title">Longitud máxima de palabra</string>
-    <string name="settings_neural_max_length_desc">Número máximo de caracteres en las palabras predichas (5-35).</string>
+    <string name="settings_neural_max_length_desc">Número máximo de caracteres en las palabras predichas (5–35).</string>
     <string name="settings_neural_confidence_title">Umbral de confianza</string>
-    <string name="settings_neural_confidence_desc">Confianza mínima para las predicciones (0.0-0.4).</string>
+    <string name="settings_neural_confidence_desc">Confianza mínima para las predicciones (0,0–0,4).</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 Apariencia</string>

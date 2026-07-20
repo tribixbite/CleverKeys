@@ -51,7 +51,7 @@
     <string name="key_descr_combining">组合用附加符号</string>
     <string name="key_descr_dead_key">前置组合键</string>
     <string name="key_descr_zwj">零宽连字符</string>
-    <string name="key_descr_zwnj">零宽连字符</string>
+    <string name="key_descr_zwnj">零宽非连字符</string>
     <string name="key_descr_nbsp">不间断空格</string>
     <string name="key_descr_nnbsp">窄距不间断空格</string>
     <string name="key_descr_delete_word">删除一个单词</string>
@@ -117,11 +117,11 @@
     <!-- Neural Prediction Section -->
     <string name="settings_section_neural">🧠 神经网络预测</string>
     <string name="settings_neural_beam_width_title">束宽</string>
-    <string name="settings_neural_beam_width_desc">预测候选数量（1-20）。数值越大越准确。</string>
+    <string name="settings_neural_beam_width_desc">预测候选数量（1–20）。数值越大越准确。</string>
     <string name="settings_neural_max_length_title">单词最大长度</string>
-    <string name="settings_neural_max_length_desc">预测单词的最大字符数（5-35）。</string>
+    <string name="settings_neural_max_length_desc">预测单词的最大字符数（5–35）。</string>
     <string name="settings_neural_confidence_title">置信度阈值</string>
-    <string name="settings_neural_confidence_desc">预测所需的最低置信度（0.0-0.4）。</string>
+    <string name="settings_neural_confidence_desc">预测所需的最低置信度（0.0–0.4）。</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 外观</string>

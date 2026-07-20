@@ -2,7 +2,7 @@
 <resources>
     <!-- <string name="pref_portrait_unfolded">In portrait mode unfolded</string> -->
     <!-- <string name="pref_landscape_unfolded">In landscape mode unfolded</string> -->
-    <string name="pref_layout_e_system">Systemowy</string>
+    <string name="pref_layout_e_system">Ustawienia systemowe</string>
     <string name="pref_layout_e_custom">Własny układ</string>
     <string name="pref_layouts_add">Dodaj dodatkowy układ</string>
     <string name="pref_layouts_item">Układ %1$d: %2$s</string>
@@ -17,13 +17,13 @@
     <!-- <string name="pref_number_entry_layout_number">Number pane</string> -->
     <!-- <string name="pref_number_entry_layout_normal">Use the main layout</string> -->
     <string name="key_action_next">Dalej</string>
-    <string name="key_action_done">OK</string>
+    <string name="key_action_done">Gotowe</string>
     <string name="key_action_go">Przejdź</string>
     <string name="key_action_prev">Wstecz</string>
     <string name="key_action_search">Szukaj</string>
     <string name="key_action_send">Wyślij</string>
     <string name="key_descr_capslock">Caps lock</string>
-    <string name="key_descr_compose">Komponuj</string>
+    <string name="key_descr_compose">Compose</string>
     <string name="key_descr_switch_greekmath">Symbole greckie i matematyczne</string>
     <string name="key_descr_switch_forward">Przełącz na następny układ klawiatury</string>
     <string name="key_descr_switch_backward">Przełącz na poprzedni układ klawiatury</string>
@@ -48,7 +48,7 @@
     <string name="key_descr_doc_home">Początek dokumentu</string>
     <string name="key_descr_doc_end">Koniec dokumentu</string>
     <string name="key_descr_clipboard">Zarządzanie schowkiem</string>
-    <string name="key_descr_combining">Składający znak diakrytyczny</string>
+    <string name="key_descr_combining">Łączący znak diakrytyczny</string>
     <string name="key_descr_dead_key">Martwy klawisz</string>
     <string name="key_descr_zwj">Łącznik zerowej szerokości (ZWJ)</string>
     <string name="key_descr_zwnj">Rozdzielający łącznik zerowej szerokości (ZWNJ)</string>
@@ -140,11 +140,11 @@
     <!-- Advanced Section -->
     <string name="settings_section_advanced">🔧 Zaawansowane</string>
     <string name="settings_debug_title">Informacje debugowania</string>
-    <string name="settings_debug_desc">Pokaż szczegółowe logowanie i metryki wydajności</string>
+    <string name="settings_debug_desc">Pokazuj szczegółowe logi i metryki wydajności</string>
     <string name="settings_calibration_button">🧪 Kalibracja gestu</string>
 
     <!-- Information &amp; Actions Section -->
-    <string name="settings_section_info">📋 Informacje i akcje</string>
+    <string name="settings_section_info">📋 Informacje i działania</string>
     <string name="settings_version_title">📱 Informacje o wersji</string>
     <string name="settings_version_build">Kompilacja: %1$s</string>
     <string name="settings_version_copied">Skopiowano informacje o wersji</string>

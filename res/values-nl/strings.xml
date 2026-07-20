@@ -2,7 +2,7 @@
 <resources>
     <!-- <string name="pref_portrait_unfolded">In portrait mode unfolded</string> -->
     <!-- <string name="pref_landscape_unfolded">In landscape mode unfolded</string> -->
-    <string name="pref_layout_e_system">Systeem instellingen</string>
+    <string name="pref_layout_e_system">Systeeminstellingen</string>
     <string name="pref_layout_e_custom">Aangepaste lay-out</string>
     <string name="pref_layouts_add">Alternatieve lay-out toevoegen</string>
     <string name="pref_layouts_item">Lay-out %1$d: %2$s</string>
@@ -23,7 +23,7 @@
     <string name="key_action_search">Zoek</string>
     <string name="key_action_send">Stuur</string>
     <string name="key_descr_capslock">Caps lock</string>
-    <string name="key_descr_compose">Stel samen</string>
+    <string name="key_descr_compose">Compose</string>
     <string name="key_descr_switch_greekmath">Griekse &amp; math. symbolen</string>
     <string name="key_descr_switch_forward">Naar volgende toetsenbordindeling wisselen</string>
     <string name="key_descr_switch_backward">Naar vorige toetsenbordindeling wisselen</string>
@@ -36,14 +36,14 @@
     <string name="key_descr_selectAll">Selecteer alles</string>
     <string name="key_descr_pasteAsPlainText">Plak als platte tekst</string>
     <string name="key_descr_undo">Maak ongedaan</string>
-    <string name="key_descr_redo">Do opnieuw</string>
+    <string name="key_descr_redo">Opnieuw</string>
     <string name="key_descr_ª">Rangtelwoord Indicatie</string>
     <string name="key_descr_º">Rangtelwoord Indicatie</string>
     <string name="key_descr_superscript">Superscript</string>
     <string name="key_descr_subscript">Subscript</string>
     <string name="key_descr_page_up">Pagina Omhoog</string>
     <string name="key_descr_page_down">Pagina Omlaag</string>
-    <string name="key_descr_home">Thuis</string>
+    <string name="key_descr_home">Home</string>
     <string name="key_descr_end">Einde</string>
     <string name="key_descr_doc_home">Begin van document</string>
     <string name="key_descr_doc_end">Einde van document</string>
@@ -90,7 +90,7 @@
     <string name="key_descr_switch_numeric">Toetsenbord met cijfers en symbolen</string>
     <string name="key_descr_switch_emoji">Emoji-toetsenbord</string>
     <string name="key_descr_switch_gif">GIF-toetsenbord</string>
-    <string name="clipboard_remove_confirm">Verwijder dit klembord?</string>
+    <string name="clipboard_remove_confirm">Dit klembord-item verwijderen?</string>
     <string name="clipboard_remove_confirmed">Ja</string>
     <string name="toast_no_voice_input">Geen app voor spraakgestuurd typen geïnstalleerd</string>
 
@@ -119,11 +119,11 @@
     <!-- Neural Prediction Section -->
     <string name="settings_section_neural">🧠 Voorspelling met neuraal netwerk</string>
     <string name="settings_neural_beam_width_title">Bundelbreedte</string>
-    <string name="settings_neural_beam_width_desc">Aantal voorspellingskandidaten (1-20). Hoger = nauwkeuriger.</string>
+    <string name="settings_neural_beam_width_desc">Aantal voorspellingskandidaten (1–20). Hoger = nauwkeuriger.</string>
     <string name="settings_neural_max_length_title">Maximale woordlengte</string>
-    <string name="settings_neural_max_length_desc">Maximaal aantal tekens in voorspelde woorden (5-35).</string>
+    <string name="settings_neural_max_length_desc">Maximaal aantal tekens in voorspelde woorden (5–35).</string>
     <string name="settings_neural_confidence_title">Betrouwbaarheidsdrempel</string>
-    <string name="settings_neural_confidence_desc">Minimale betrouwbaarheid voor voorspellingen (0.0-0.4).</string>
+    <string name="settings_neural_confidence_desc">Minimale betrouwbaarheid voor voorspellingen (0,0–0,4).</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 Weergave</string>

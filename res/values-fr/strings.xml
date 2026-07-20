@@ -4,17 +4,17 @@
     <string name="pref_layout_e_custom">Disposition personnalisée</string>
     <string name="pref_layouts_add">Ajouter un clavier alternatif</string>
     <string name="pref_layouts_item">Disposition %1$d: %2$s</string>
-    <string name="pref_layouts_remove_custom">Supprimer</string>
+    <string name="pref_layouts_remove_custom">Supprimer le clavier</string>
     <string name="pref_custom_layout_title">Disposition personnalisée</string>
     <string name="key_action_next">Suiv.</string>
-    <string name="key_action_done">Fini</string>
+    <string name="key_action_done">Terminé</string>
     <string name="key_action_go">Aller</string>
-    <string name="key_action_prev">Prec.</string>
-    <string name="key_action_search">Chercher</string>
+    <string name="key_action_prev">Préc.</string>
+    <string name="key_action_search">Rechercher</string>
     <string name="key_action_send">Envoyer</string>
     <string name="key_descr_capslock">Verrouillage majuscules</string>
     <string name="key_descr_compose">Composition</string>
-    <string name="key_descr_switch_greekmath">Symboles mathématiques</string>
+    <string name="key_descr_switch_greekmath">Symboles grecs &amp; mathématiques</string>
     <string name="key_descr_switch_forward">Passer à la disposition de clavier suivante</string>
     <string name="key_descr_switch_backward">Passer à la disposition de clavier précédente</string>
     <string name="key_descr_change_method">Changer de clavier</string>
@@ -23,8 +23,8 @@
     <string name="key_descr_copy_private">Copie privée (dans CleverKeys uniquement, pas dans le presse-papiers système)</string>
     <string name="key_descr_paste">Coller</string>
     <string name="key_descr_cut">Couper</string>
-    <string name="key_descr_selectAll">Sel. tout</string>
-    <string name="key_descr_pasteAsPlainText">Copier en texte brut</string>
+    <string name="key_descr_selectAll">Tout sélectionner</string>
+    <string name="key_descr_pasteAsPlainText">Coller en texte brut</string>
     <string name="key_descr_undo">Annuler</string>
     <string name="key_descr_redo">Refaire</string>
     <string name="key_descr_ª">Ordinal</string>
@@ -37,7 +37,7 @@
     <string name="key_descr_end">Fin</string>
     <string name="key_descr_doc_home">Début du document</string>
     <string name="key_descr_doc_end">Fin du document</string>
-    <string name="key_descr_clipboard">Presse-papiers</string>
+    <string name="key_descr_clipboard">Gestionnaire de presse-papiers</string>
     <string name="key_descr_combining">Diacritique combinant</string>
     <string name="key_descr_dead_key">Touche morte</string>
     <string name="key_descr_zwj">Liant sans chasse</string>
@@ -79,7 +79,7 @@
     <string name="key_descr_switch_numeric">Clavier chiffres et symboles</string>
     <string name="key_descr_switch_emoji">Clavier emoji</string>
     <string name="key_descr_switch_gif">Clavier GIF</string>
-    <string name="clipboard_remove_confirm">Supprimer ce presse-papiers ?</string>
+    <string name="clipboard_remove_confirm">Supprimer cet élément du presse-papiers ?</string>
     <string name="clipboard_remove_confirmed">Oui</string>
     <string name="toast_no_voice_input">Pas d\'application de saisie vocale</string>
 
@@ -110,11 +110,11 @@
     <!-- Neural Prediction Section -->
     <string name="settings_section_neural">🧠 Prédiction par réseau neuronal</string>
     <string name="settings_neural_beam_width_title">Largeur de faisceau</string>
-    <string name="settings_neural_beam_width_desc">Nombre de candidats de prédiction (1-20). Plus élevé = plus précis.</string>
+    <string name="settings_neural_beam_width_desc">Nombre de candidats de prédiction (1–20). Plus élevé = plus précis.</string>
     <string name="settings_neural_max_length_title">Longueur maximale des mots</string>
-    <string name="settings_neural_max_length_desc">Nombre maximal de caractères dans les mots prédits (5-35).</string>
+    <string name="settings_neural_max_length_desc">Nombre maximal de caractères dans les mots prédits (5–35).</string>
     <string name="settings_neural_confidence_title">Seuil de confiance</string>
-    <string name="settings_neural_confidence_desc">Confiance minimale pour les prédictions (0.0-0.4).</string>
+    <string name="settings_neural_confidence_desc">Confiance minimale pour les prédictions (0,0–0,4).</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 Apparence</string>

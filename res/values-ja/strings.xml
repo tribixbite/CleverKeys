@@ -48,7 +48,7 @@
     <string name="key_descr_end">End</string>
     <string name="key_descr_doc_home">文書の先頭</string>
     <string name="key_descr_doc_end">文書の末尾</string>
-    <string name="key_descr_clipboard">クリップボード</string>
+    <string name="key_descr_clipboard">クリップボード管理</string>
     <string name="key_descr_combining">合成用ダイアクリティカルマーク</string>
     <string name="key_descr_dead_key">デッドキー</string>
     <string name="key_descr_zwj">ゼロ幅接合子</string>

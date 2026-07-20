@@ -18,7 +18,7 @@
     <!-- <string name="pref_number_entry_layout_normal">Use the main layout</string> -->
     <string name="key_action_next">Далі</string>
     <string name="key_action_done">Готово</string>
-    <string name="key_action_go">Іти</string>
+    <string name="key_action_go">Перейти</string>
     <string name="key_action_prev">Назад</string>
     <string name="key_action_search">Пошук</string>
     <string name="key_action_send">Надіслати</string>
@@ -35,7 +35,7 @@
     <string name="key_descr_cut">Вирізати</string>
     <string name="key_descr_selectAll">Вибрати все</string>
     <string name="key_descr_pasteAsPlainText">Вставити як звичайний текст</string>
-    <string name="key_descr_undo">Відмінити</string>
+    <string name="key_descr_undo">Скасувати</string>
     <string name="key_descr_redo">Повторити</string>
     <string name="key_descr_ª">Жіночий порядковий вказівник</string>
     <string name="key_descr_º">Чоловічий порядковий вказівник</string>
@@ -48,10 +48,10 @@
     <string name="key_descr_doc_home">На початок документа</string>
     <string name="key_descr_doc_end">У кінець документа</string>
     <string name="key_descr_clipboard">Менеджер буфера обміну</string>
-    <string name="key_descr_combining">Комбінування діакритики</string>
+    <string name="key_descr_combining">Комбінований діакритичний знак</string>
     <string name="key_descr_dead_key">Мертва клавіша</string>
     <string name="key_descr_zwj">З\'єднувач нульової ширини</string>
-    <string name="key_descr_zwnj">Разділювач нульової ширини</string>
+    <string name="key_descr_zwnj">Роздільник нульової ширини</string>
     <string name="key_descr_nbsp">Нерозривний пробіл</string>
     <string name="key_descr_nnbsp">Вузький нерозривний пробіл</string>
     <string name="key_descr_delete_word">Видалити слово</string>
@@ -89,7 +89,7 @@
     <string name="key_descr_switch_numeric">Клавіатура цифр і символів</string>
     <string name="key_descr_switch_emoji">Клавіатура емодзі</string>
     <string name="key_descr_switch_gif">Клавіатура GIF</string>
-    <string name="clipboard_remove_confirm">Видалити цей буфер обміну?</string>
+    <string name="clipboard_remove_confirm">Видалити цей елемент буфера обміну?</string>
     <string name="clipboard_remove_confirmed">Так</string>
     <string name="toast_no_voice_input">Застосунок для голосового введення не встановлено</string>
 

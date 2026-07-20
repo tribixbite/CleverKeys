@@ -3,7 +3,7 @@
     <!-- <string name="pref_portrait_unfolded">In portrait mode unfolded</string> -->
     <!-- <string name="pref_landscape_unfolded">In landscape mode unfolded</string> -->
     <string name="pref_layout_e_system">Sistem ayarlarını kullan</string>
-    <string name="pref_layout_e_custom">Özel tuş düeni</string>
+    <string name="pref_layout_e_custom">Özel tuş düzeni</string>
     <string name="pref_layouts_add">Alternatif bir tuş düzeni ekle</string>
     <string name="pref_layouts_item">Tuş düzeni %1$d: %2$s</string>
     <string name="pref_layouts_remove_custom">Tuş düzenini kaldır</string>
@@ -18,7 +18,7 @@
     <!-- <string name="pref_number_entry_layout_normal">Use the main layout</string> -->
     <string name="key_action_next">Sonraki</string>
     <string name="key_action_done">Tamam</string>
-    <string name="key_action_go">ileri</string>
+    <string name="key_action_go">Git</string>
     <string name="key_action_prev">Önceki</string>
     <string name="key_action_search">Ara</string>
     <string name="key_action_send">Gönder</string>
@@ -39,12 +39,12 @@
     <string name="key_descr_redo">İleri al</string>
     <string name="key_descr_ª">Sıralı göstergesi</string>
     <string name="key_descr_º">Sıralı göstergesi</string>
-    <string name="key_descr_superscript">Süperscript</string>
-    <string name="key_descr_subscript">Anascript</string>
-    <string name="key_descr_page_up">Yukarı</string>
-    <string name="key_descr_page_down">Aşağı</string>
-    <string name="key_descr_home">BAŞ(Sol yön tuşu)</string>
-    <string name="key_descr_end">SON(Sağ yön tuşu)</string>
+    <string name="key_descr_superscript">Üst simge</string>
+    <string name="key_descr_subscript">Alt simge</string>
+    <string name="key_descr_page_up">Sayfa yukarı</string>
+    <string name="key_descr_page_down">Sayfa aşağı</string>
+    <string name="key_descr_home">Satır başı</string>
+    <string name="key_descr_end">Satır sonu</string>
     <string name="key_descr_doc_home">Belge başı</string>
     <string name="key_descr_doc_end">Belge sonu</string>
     <string name="key_descr_clipboard">Pano</string>
@@ -117,11 +117,11 @@
     <!-- Neural Prediction Section -->
     <string name="settings_section_neural">🧠 Sinir Ağı Tahmini</string>
     <string name="settings_neural_beam_width_title">Işın Genişliği</string>
-    <string name="settings_neural_beam_width_desc">Tahmin adayı sayısı (1-20). Yüksek = daha isabetli.</string>
+    <string name="settings_neural_beam_width_desc">Tahmin adayı sayısı (1–20). Yüksek = daha isabetli.</string>
     <string name="settings_neural_max_length_title">Maksimum Kelime Uzunluğu</string>
-    <string name="settings_neural_max_length_desc">Tahmin edilen kelimelerdeki maksimum karakter (5-35).</string>
+    <string name="settings_neural_max_length_desc">Tahmin edilen kelimelerdeki maksimum karakter (5–35).</string>
     <string name="settings_neural_confidence_title">Güven Eşiği</string>
-    <string name="settings_neural_confidence_desc">Tahminler için minimum güven (0.0-0.4).</string>
+    <string name="settings_neural_confidence_desc">Tahminler için minimum güven (0,0–0,4).</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 Görünüm</string>

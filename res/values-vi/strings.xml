@@ -147,11 +147,11 @@
     <!-- Neural Prediction Section -->
     <string name="settings_section_neural">🧠 Dự đoán bằng mạng nơ-ron</string>
     <string name="settings_neural_beam_width_title">Độ rộng chùm (beam)</string>
-    <string name="settings_neural_beam_width_desc">Số ứng viên dự đoán (1-20). Càng lớn càng chính xác.</string>
+    <string name="settings_neural_beam_width_desc">Số ứng viên dự đoán (1–20). Càng lớn càng chính xác.</string>
     <string name="settings_neural_max_length_title">Độ dài từ tối đa</string>
-    <string name="settings_neural_max_length_desc">Số ký tự tối đa trong từ dự đoán (5-35).</string>
+    <string name="settings_neural_max_length_desc">Số ký tự tối đa trong từ dự đoán (5–35).</string>
     <string name="settings_neural_confidence_title">Ngưỡng độ tin cậy</string>
-    <string name="settings_neural_confidence_desc">Độ tin cậy tối thiểu cho dự đoán (0.0-0.4).</string>
+    <string name="settings_neural_confidence_desc">Độ tin cậy tối thiểu cho dự đoán (0.0–0.4).</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 Giao diện</string>

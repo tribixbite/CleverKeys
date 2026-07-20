@@ -19,11 +19,11 @@
     <string name="key_action_next">Lanjut</string>
     <string name="key_action_done">Selesai</string>
     <string name="key_action_go">Pergi</string>
-    <string name="key_action_prev">Sblm</string>
+    <string name="key_action_prev">Sebelum</string>
     <string name="key_action_search">Cari</string>
     <string name="key_action_send">Kirim</string>
     <string name="key_descr_capslock">Kunci kapital</string>
-    <string name="key_descr_compose">Menggabungkan</string>
+    <string name="key_descr_compose">Compose</string>
     <string name="key_descr_switch_greekmath">Greek &amp; Simbol matematika</string>
     <string name="key_descr_switch_forward">Beralih ke tata letak keyboard berikutnya</string>
     <string name="key_descr_switch_backward">Beralih ke tata letak keyboard sebelumnya</string>
@@ -48,7 +48,7 @@
     <string name="key_descr_doc_home">Awal dokumen</string>
     <string name="key_descr_doc_end">Akhir dokumen</string>
     <string name="key_descr_clipboard">Manajer Clipboard</string>
-    <string name="key_descr_combining">Menggabungkan diakritik</string>
+    <string name="key_descr_combining">Diakritik kombinasi</string>
     <string name="key_descr_dead_key">Tombol mati</string>
     <string name="key_descr_zwj">Joiner lebar nol</string>
     <string name="key_descr_zwnj">Lebar nol non-joiner</string>
@@ -117,11 +117,11 @@
     <!-- Neural Prediction Section -->
     <string name="settings_section_neural">🧠 Prediksi Jaringan Saraf</string>
     <string name="settings_neural_beam_width_title">Lebar Beam</string>
-    <string name="settings_neural_beam_width_desc">Jumlah kandidat prediksi (1-20). Lebih tinggi = lebih akurat.</string>
+    <string name="settings_neural_beam_width_desc">Jumlah kandidat prediksi (1–20). Lebih tinggi = lebih akurat.</string>
     <string name="settings_neural_max_length_title">Panjang Kata Maksimum</string>
-    <string name="settings_neural_max_length_desc">Karakter maksimum dalam kata yang diprediksi (5-35).</string>
+    <string name="settings_neural_max_length_desc">Karakter maksimum dalam kata yang diprediksi (5–35).</string>
     <string name="settings_neural_confidence_title">Ambang Keyakinan</string>
-    <string name="settings_neural_confidence_desc">Keyakinan minimum untuk prediksi (0.0-0.4).</string>
+    <string name="settings_neural_confidence_desc">Keyakinan minimum untuk prediksi (0.0–0.4).</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 Tampilan</string>

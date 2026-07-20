@@ -4,9 +4,9 @@
     <!-- <string name="pref_landscape_unfolded">In landscape mode unfolded</string> -->
     <string name="pref_layout_e_system">Impostazioni di sistema</string>
     <string name="pref_layout_e_custom">Layout personalizzato</string>
-    <string name="pref_layouts_add">Aggiungere un layout alternativo</string>
+    <string name="pref_layouts_add">Aggiungi un layout alternativo</string>
     <string name="pref_layouts_item">Layout %1$d: %2$s</string>
-    <string name="pref_layouts_remove_custom">Eliminare layout</string>
+    <string name="pref_layouts_remove_custom">Elimina layout</string>
     <string name="pref_custom_layout_title">Layout personalizzato</string>
     <!-- <string name="pref_show_number_row_no_number_row">No number row</string> -->
     <!-- <string name="pref_show_number_row_no_symbols">Number row without symbols</string> -->
@@ -61,17 +61,17 @@
     <string name="key_descr_redo">Ripeti</string>
     <string name="key_descr_ª">Ordinale</string>
     <string name="key_descr_º">Ordinale</string>
-    <string name="key_descr_superscript">All\'esponente</string>
+    <string name="key_descr_superscript">In apice</string>
     <string name="key_descr_subscript">A pedice</string>
     <string name="key_descr_page_up">Pagina su</string>
-    <string name="key_descr_page_down">Pagina giu`</string>
+    <string name="key_descr_page_down">Pagina giù</string>
     <string name="key_descr_home">Inizio</string>
     <string name="key_descr_end">Fine</string>
     <string name="key_descr_doc_home">Inizio del documento</string>
     <string name="key_descr_doc_end">Fine del documento</string>
-    <string name="key_descr_clipboard">Clipboard-Manager</string>
+    <string name="key_descr_clipboard">Gestione appunti</string>
     <string name="key_descr_combining">Segno diacritico combinante</string>
-    <string name="key_descr_dead_key">Tasto vuoto</string>
+    <string name="key_descr_dead_key">Tasto morto</string>
     <string name="key_descr_zwj">Combinatore a larghezza zero</string>
     <string name="key_descr_zwnj">Separatore a larghezza zero</string>
     <string name="key_descr_nbsp">Spazio senza interruzione</string>
@@ -111,8 +111,8 @@
     <string name="key_descr_switch_numeric">Tastiera numeri e simboli</string>
     <string name="key_descr_switch_emoji">Tastiera emoji</string>
     <string name="key_descr_switch_gif">Tastiera GIF</string>
-    <string name="clipboard_remove_confirm">Eliminare questi appunti?</string>
-    <string name="clipboard_remove_confirmed">Si</string>
+    <string name="clipboard_remove_confirm">Eliminare questa voce dagli appunti?</string>
+    <string name="clipboard_remove_confirmed">Sì</string>
     <string name="toast_no_voice_input">Nessuna app di digitazione vocale installata</string>
 
     <!-- Calibrazione dello scorrimento -->
@@ -142,11 +142,11 @@
     <!-- Neural Prediction Section -->
     <string name="settings_section_neural">🧠 Previsione con rete neurale</string>
     <string name="settings_neural_beam_width_title">Larghezza del fascio</string>
-    <string name="settings_neural_beam_width_desc">Numero di candidati di previsione (1-20). Più alto = più preciso.</string>
+    <string name="settings_neural_beam_width_desc">Numero di candidati di previsione (1–20). Più alto = più preciso.</string>
     <string name="settings_neural_max_length_title">Lunghezza massima parola</string>
-    <string name="settings_neural_max_length_desc">Numero massimo di caratteri nelle parole previste (5-35).</string>
+    <string name="settings_neural_max_length_desc">Numero massimo di caratteri nelle parole previste (5–35).</string>
     <string name="settings_neural_confidence_title">Soglia di confidenza</string>
-    <string name="settings_neural_confidence_desc">Confidenza minima per le previsioni (0.0-0.4).</string>
+    <string name="settings_neural_confidence_desc">Confidenza minima per le previsioni (0,0–0,4).</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 Aspetto</string>

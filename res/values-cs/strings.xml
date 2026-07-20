@@ -2,8 +2,8 @@
 <resources>
     <!-- <string name="pref_portrait_unfolded">In portrait mode unfolded</string> -->
     <!-- <string name="pref_landscape_unfolded">In landscape mode unfolded</string> -->
-    <string name="pref_layout_e_system">Dle nastavení systému</string>
-    <string name="pref_layout_e_custom">Vlastní rozvržení</string>
+    <string name="pref_layout_e_system">Nastavení systému</string>
+    <string name="pref_layout_e_custom">Vlastní rozložení</string>
     <string name="pref_layouts_add">Přidat alternativní rozložení</string>
     <string name="pref_layouts_item">Rozložení %1$d: %2$s</string>
     <string name="pref_layouts_remove_custom">Odebrat rozložení</string>
@@ -51,7 +51,7 @@
     <string name="key_descr_combining">Kombinace diakritiky</string>
     <string name="key_descr_dead_key">Mrtvá klávesa</string>
     <string name="key_descr_zwj">Spojka nulové šířky (ZWJ)</string>
-    <string name="key_descr_zwnj">ne-Spojka nulové šířky (ZWNJ)</string>
+    <string name="key_descr_zwnj">Oddělovač nulové šířky (ZWNJ)</string>
     <string name="key_descr_nbsp">Nezlomitelná mezera</string>
     <string name="key_descr_nnbsp">Úzká nezlomitelná mezera</string>
     <string name="key_descr_delete_word">Smazat slovo</string>
@@ -119,11 +119,11 @@
     <!-- Neural Prediction Section -->
     <string name="settings_section_neural">🧠 Predikce neuronovou sítí</string>
     <string name="settings_neural_beam_width_title">Šířka paprsku</string>
-    <string name="settings_neural_beam_width_desc">Počet kandidátů na predikci (1-20). Vyšší = přesnější.</string>
+    <string name="settings_neural_beam_width_desc">Počet kandidátů na predikci (1–20). Vyšší = přesnější.</string>
     <string name="settings_neural_max_length_title">Maximální délka slova</string>
-    <string name="settings_neural_max_length_desc">Maximální počet znaků v předpovězených slovech (5-35).</string>
+    <string name="settings_neural_max_length_desc">Maximální počet znaků v předpovězených slovech (5–35).</string>
     <string name="settings_neural_confidence_title">Práh spolehlivosti</string>
-    <string name="settings_neural_confidence_desc">Minimální spolehlivost pro predikce (0.0-0.4).</string>
+    <string name="settings_neural_confidence_desc">Minimální spolehlivost pro predikce (0,0–0,4).</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 Vzhled</string>

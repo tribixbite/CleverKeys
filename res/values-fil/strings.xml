@@ -32,7 +32,7 @@
     <string name="key_descr_copy">I-copy</string>
     <string name="key_descr_copy_private">Private na copy (sa CleverKeys lang, hindi sa system clipboard)</string>
     <string name="key_descr_paste">I-paste</string>
-    <string name="key_descr_cut">Ilipat</string>
+    <string name="key_descr_cut">I-cut</string>
     <string name="key_descr_selectAll">Piliin lahat</string>
     <string name="key_descr_pasteAsPlainText">I-paste bilang plain text</string>
     <string name="key_descr_undo">I-undo</string>
@@ -117,11 +117,11 @@
     <!-- Neural Prediction Section -->
     <string name="settings_section_neural">🧠 Neural Network Prediction</string>
     <string name="settings_neural_beam_width_title">Beam Width</string>
-    <string name="settings_neural_beam_width_desc">Bilang ng mga prediction candidate (1-20). Mas mataas = mas tumpak.</string>
+    <string name="settings_neural_beam_width_desc">Bilang ng mga prediction candidate (1–20). Mas mataas = mas tumpak.</string>
     <string name="settings_neural_max_length_title">Pinakamahabang Salita</string>
-    <string name="settings_neural_max_length_desc">Pinakamaraming character sa mga hinulaang salita (5-35).</string>
+    <string name="settings_neural_max_length_desc">Pinakamaraming character sa mga hinulaang salita (5–35).</string>
     <string name="settings_neural_confidence_title">Confidence Threshold</string>
-    <string name="settings_neural_confidence_desc">Pinakamababang confidence para sa mga prediction (0.0-0.4).</string>
+    <string name="settings_neural_confidence_desc">Pinakamababang confidence para sa mga prediction (0.0–0.4).</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 Hitsura</string>

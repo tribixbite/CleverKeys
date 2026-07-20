@@ -82,7 +82,7 @@
     <string name="key_descr_selection_cursor_right">Kijelölés bővítése jobbra</string>
     <string name="key_descr_switch_text">Betűbillentyűzet</string>
     <string name="key_descr_switch_numeric">Szám- és szimbólumbillentyűzet</string>
-    <string name="key_descr_switch_emoji">Emodzsi billentyűzet</string>
+    <string name="key_descr_switch_emoji">Emoji billentyűzet</string>
     <string name="key_descr_switch_gif">GIF billentyűzet</string>
     <string name="clipboard_remove_confirm">Eltávolítja ezt a vágólapelemet?</string>
     <string name="clipboard_remove_confirmed">Igen</string>

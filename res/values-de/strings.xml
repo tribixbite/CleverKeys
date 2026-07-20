@@ -16,10 +16,10 @@
     <!-- <string name="pref_number_entry_layout_number">Number pane</string> -->
     <!-- <string name="pref_number_entry_layout_normal">Use the main layout</string> -->
     <!-- <string name="pref_theme_e_rosepine">Rosé Pine</string> -->
-    <string name="key_action_next">Nächstes</string>
+    <string name="key_action_next">Weiter</string>
     <string name="key_action_done">Fertig</string>
     <string name="key_action_go">Los</string>
-    <string name="key_action_prev">Vorheriges</string>
+    <string name="key_action_prev">Zurück</string>
     <string name="key_action_search">Suchen</string>
     <string name="key_action_send">Senden</string>
     <string name="key_descr_capslock">Feststelltaste</string>
@@ -47,7 +47,7 @@
     <string name="key_descr_end">Ende</string>
     <string name="key_descr_doc_home">Dokumentanfang</string>
     <string name="key_descr_doc_end">Dokumentende</string>
-    <string name="key_descr_clipboard">Clipboard-Manager</string>
+    <string name="key_descr_clipboard">Zwischenablage-Manager</string>
     <string name="key_descr_combining">Kombinierendes diakritisches Zeichen</string>
     <string name="key_descr_dead_key">Tote Taste</string>
     <string name="key_descr_zwj">Zero-Width-Joiner</string>

@@ -2,9 +2,9 @@
 <resources>
     <!-- <string name="pref_portrait_unfolded">In portrait mode unfolded</string> -->
     <!-- <string name="pref_landscape_unfolded">In landscape mode unfolded</string> -->
-    <string name="pref_layout_e_system">Mesmo do sistema</string>
+    <string name="pref_layout_e_system">Configurações do sistema</string>
     <string name="pref_layout_e_custom">Layout personalizado</string>
-    <string name="pref_layouts_add">Adicione um layout alternativo</string>
+    <string name="pref_layouts_add">Adicionar um layout alternativo</string>
     <string name="pref_layouts_item">Layout %1$d: %2$s</string>
     <string name="pref_layouts_remove_custom">Remover layout</string>
     <string name="pref_custom_layout_title">Layout personalizado</string>
@@ -50,8 +50,8 @@
     <string name="key_descr_clipboard">Área de transferência</string>
     <string name="key_descr_combining">Combinação de diacríticos</string>
     <string name="key_descr_dead_key">Tecla morta</string>
-    <string name="key_descr_zwj">Junta de largura zero</string>
-    <string name="key_descr_zwnj">Sem junta de largura zero</string>
+    <string name="key_descr_zwj">Conector de largura zero</string>
+    <string name="key_descr_zwnj">Separador de largura zero</string>
     <string name="key_descr_nbsp">Espaço não separável</string>
     <string name="key_descr_nnbsp">Espaço não separável estreito</string>
     <string name="key_descr_delete_word">Apagar uma palavra</string>
@@ -90,7 +90,7 @@
     <string name="key_descr_switch_numeric">Teclado de números e símbolos</string>
     <string name="key_descr_switch_emoji">Teclado de emojis</string>
     <string name="key_descr_switch_gif">Teclado de GIFs</string>
-    <string name="clipboard_remove_confirm">Remover esta cópia?</string>
+    <string name="clipboard_remove_confirm">Remover este item da área de transferência?</string>
     <string name="clipboard_remove_confirmed">Sim</string>
     <string name="toast_no_voice_input">Nenhum aplicativo de digitação por voz instalado</string>
 
@@ -119,11 +119,11 @@
     <!-- Neural Prediction Section -->
     <string name="settings_section_neural">🧠 Previsão por Rede Neural</string>
     <string name="settings_neural_beam_width_title">Largura do feixe</string>
-    <string name="settings_neural_beam_width_desc">Número de candidatos de previsão (1-20). Maior = mais preciso.</string>
+    <string name="settings_neural_beam_width_desc">Número de candidatos de previsão (1–20). Maior = mais preciso.</string>
     <string name="settings_neural_max_length_title">Comprimento máximo da palavra</string>
-    <string name="settings_neural_max_length_desc">Máximo de caracteres nas palavras previstas (5-35).</string>
+    <string name="settings_neural_max_length_desc">Máximo de caracteres nas palavras previstas (5–35).</string>
     <string name="settings_neural_confidence_title">Limiar de confiança</string>
-    <string name="settings_neural_confidence_desc">Confiança mínima para previsões (0.0-0.4).</string>
+    <string name="settings_neural_confidence_desc">Confiança mínima para previsões (0,0–0,4).</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 Aparência</string>

@@ -126,8 +126,8 @@
     <!-- #156 Private copy -->
     <string name="private_copy_toolbar_label">CleverKeys: Copie privată</string>
     <string name="private_copy_toast">Copiat privat în CleverKeys</string>
-    <string name="private_copy_expose_dialog_title">Copiezi în clipboardul sistemului?</string>
-    <string name="private_copy_expose_dialog_message">Această intrare a fost copiată privat. Copierea ei în clipboardul sistemului expune textul aplicației din prim-plan și altor gestionare de clipboard. Copiezi oricum?</string>
+    <string name="private_copy_expose_dialog_title">Copiați în clipboard-ul sistemului?</string>
+    <string name="private_copy_expose_dialog_message">Această intrare a fost copiată privat. Copierea ei în clipboard-ul sistemului expune textul aplicației din prim-plan și altor manageri de clipboard. Copiați oricum?</string>
     <string name="private_copy_expose_dialog_confirm">Copiază oricum</string>
     <string name="private_copy_expose_dialog_cancel">Anulează</string>
     <!-- Shown when a clipboard item exceeds the per-item size cap. %1$d = item size (KB), %2$d = limit (KB). -->
@@ -143,11 +143,11 @@
     <!-- Neural Prediction Section -->
     <string name="settings_section_neural">🧠 Predicție cu rețea neuronală</string>
     <string name="settings_neural_beam_width_title">Lățimea fasciculului</string>
-    <string name="settings_neural_beam_width_desc">Numărul de candidați pentru predicție (1-20). Mai mare = mai precis.</string>
+    <string name="settings_neural_beam_width_desc">Numărul de candidați pentru predicție (1–20). Mai mare = mai precis.</string>
     <string name="settings_neural_max_length_title">Lungimea maximă a cuvântului</string>
-    <string name="settings_neural_max_length_desc">Numărul maxim de caractere din cuvintele prezise (5-35).</string>
+    <string name="settings_neural_max_length_desc">Numărul maxim de caractere din cuvintele prezise (5–35).</string>
     <string name="settings_neural_confidence_title">Prag de încredere</string>
-    <string name="settings_neural_confidence_desc">Încrederea minimă pentru predicții (0.0-0.4).</string>
+    <string name="settings_neural_confidence_desc">Încrederea minimă pentru predicții (0,0–0,4).</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 Aspect</string>
@@ -178,7 +178,7 @@
 
     <!-- Dialog Messages -->
     <string name="settings_reset_dialog_title">Resetează setările</string>
-    <string name="settings_reset_dialog_message">Aceasta va reseta toate setările la valorile implicite. Continui?</string>
+    <string name="settings_reset_dialog_message">Aceasta va reseta toate setările la valorile implicite. Continuați?</string>
     <string name="settings_reset_dialog_confirm">Resetează</string>
 
     <!-- Toast Messages -->
