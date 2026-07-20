@@ -2,52 +2,34 @@
 <!--
   Backup rules for Android Auto Backup (API 23-30).
 
-  PRIVACY-FIRST APPROACH: Only sync aesthetic/visual settings.
+  PRIVACY-FIRST APPROACH: only aesthetic/visual SharedPreferences are backed up.
   User data, learning samples, and privacy-sensitive data stay on-device only.
 
-  What IS backed up:
-  - Theme preferences (custom themes, Material You settings)
-  - Layout appearance (margins, height, key radius, sublabel style)
-  - Visual settings (opacity, brightness, font size)
+  ALLOWLIST SEMANTICS (important):
+  Because this file declares <include> entries, Auto Backup switches to
+  allowlist mode: ONLY the explicitly <include>-ed paths are backed up and
+  EVERYTHING ELSE is excluded automatically. There is therefore no need (and
+  it is invalid per the schema) to also <exclude> paths that are not under an
+  <include> — a stray <exclude> on an un-included path is a Fatal lint error
+  (FullBackupContent). The previous mix of <include> + orphan <exclude>s is
+  replaced by a pure allowlist below; the resulting backup surface is identical
+  in intent and strictly tighter.
 
-  What is NOT backed up:
-  - Custom dictionary (user_dictionary) - PII
-  - Clipboard history database - PII
-  - On-device learning samples (swipe_ml_data.db) - PII
-  - Privacy settings and consent
-  - Personalization/adaptation data
-  - Performance stats and model metadata
-  - Short swipe customizations
+  What IS backed up (the only 3 SharedPreferences files listed below):
+  - custom_theme_prefs.xml   custom theme definitions
+  - material_theme_prefs.xml Material You / dynamic-color settings
+  - emoji_last_use.xml       recently-used emoji ordering (non-PII)
+
+  What is NOT backed up (implicitly excluded by allowlist mode):
+  - The main settings file (tribixbite.cleverkeys_preferences.xml) and all
+    other SharedPreferences (privacy_settings, personalization/adaptation,
+    user_dictionary, neural stats/metadata, bigram store, etc.)
+  - ALL databases (clipboard history, ML training data)
+  - ALL files (short_swipe_customizations.json, clipboard_media/, everything)
 -->
 <full-backup-content>
-    <!-- Exclude all databases (clipboard history, ML training data) -->
-    <exclude domain="database" path="." />
-
-    <!-- Exclude privacy-sensitive SharedPreferences -->
-    <exclude domain="sharedpref" path="user_dictionary.xml" />
-    <exclude domain="sharedpref" path="privacy_settings.xml" />
-    <exclude domain="sharedpref" path="swipe_ml_stats.xml" />
-    <exclude domain="sharedpref" path="personalization_prefs.xml" />
-    <exclude domain="sharedpref" path="personalization_engine_prefs.xml" />
-    <exclude domain="sharedpref" path="user_adaptation_prefs.xml" />
-    <exclude domain="sharedpref" path="user_vocabulary_prefs.xml" />
-    <exclude domain="sharedpref" path="bigram_store.xml" />
-    <exclude domain="sharedpref" path="neural_performance_stats.xml" />
-    <exclude domain="sharedpref" path="neural_model_metadata.xml" />
-    <exclude domain="sharedpref" path="model_version_history.xml" />
-
-    <!-- Exclude files with user customizations (not aesthetic) -->
-    <exclude domain="file" path="short_swipe_customizations.json" />
-
-    <!-- Exclude clipboard media files (can be large, PII) -->
-    <exclude domain="file" path="clipboard_media/" />
-
-    <!-- Include only aesthetic SharedPreferences -->
+    <!-- Aesthetic SharedPreferences only. Everything not listed is excluded. -->
     <include domain="sharedpref" path="custom_theme_prefs.xml" />
     <include domain="sharedpref" path="material_theme_prefs.xml" />
     <include domain="sharedpref" path="emoji_last_use.xml" />
-
-    <!-- Include default prefs (contains theme, margins, appearance settings) -->
-    <!-- Note: This also includes some non-aesthetic settings, but the privacy-sensitive
-         ones are handled separately and excluded above -->
 </full-backup-content>

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -25,7 +26,7 @@
             android:contentDescription="Back"
             android:scaleType="centerInside"
             android:padding="12dp"
-            android:tint="#ffffff" />
+            app:tint="#ffffff" />
 
         <!-- Title -->
         <TextView
@@ -51,7 +52,7 @@
             android:contentDescription="Save to file"
             android:scaleType="centerInside"
             android:padding="12dp"
-            android:tint="#ffffff" />
+            app:tint="#ffffff" />
 
         <!-- Copy to clipboard icon -->
         <ImageButton
@@ -78,7 +79,7 @@
             android:contentDescription="Clear logs"
             android:scaleType="centerInside"
             android:padding="12dp"
-            android:tint="#ffffff" />
+            app:tint="#ffffff" />
     </RelativeLayout>
 
     <!-- Text input field - single line, scrollable, shows keyboard output -->
