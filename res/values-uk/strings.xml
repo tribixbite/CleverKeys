@@ -343,19 +343,19 @@
     <string name="appearance_height_landscape_title">Висота клавіатури (пейзаж)</string>
     <string name="appearance_height_landscape_desc">Налаштування висоти клавіатури в альбомному режимі</string>
     <string name="appearance_bottom_margin_portrait_title">Нижній відступ (портрет)</string>
-    <string name="appearance_bottom_margin_portrait_desc">Вертикальний відступ у % від висоти екрана</string>
+    <string name="appearance_bottom_margin_portrait_desc" formatted="false">Вертикальний відступ у % від висоти екрана</string>
     <string name="appearance_bottom_margin_landscape_title">Нижній відступ (пейзаж)</string>
-    <string name="appearance_bottom_margin_landscape_desc">Вертикальний відступ у % від висоти екрана</string>
+    <string name="appearance_bottom_margin_landscape_desc" formatted="false">Вертикальний відступ у % від висоти екрана</string>
     <string name="appearance_left_margin_portrait_title">Лівий відступ (портрет)</string>
-    <string name="appearance_left_margin_portrait_desc">Лівий відступ у % від ширини екрана</string>
+    <string name="appearance_left_margin_portrait_desc" formatted="false">Лівий відступ у % від ширини екрана</string>
     <string name="appearance_right_margin_portrait_title">Правий відступ (портрет)</string>
-    <string name="appearance_right_margin_portrait_desc">Правий відступ у % від ширини екрана</string>
+    <string name="appearance_right_margin_portrait_desc" formatted="false">Правий відступ у % від ширини екрана</string>
     <string name="appearance_left_margin_landscape_title">Лівий відступ (пейзаж)</string>
-    <string name="appearance_left_margin_landscape_desc">Лівий відступ у % від ширини екрана</string>
+    <string name="appearance_left_margin_landscape_desc" formatted="false">Лівий відступ у % від ширини екрана</string>
     <string name="appearance_right_margin_landscape_title">Правий відступ (пейзаж)</string>
-    <string name="appearance_right_margin_landscape_desc">Правий відступ у % від ширини екрана</string>
+    <string name="appearance_right_margin_landscape_desc" formatted="false">Правий відступ у % від ширини екрана</string>
     <string name="appearance_label_brightness_title">Яскравість написів</string>
-    <string name="appearance_label_brightness_desc">Яскравість написів на клавішах (0–100%)</string>
+    <string name="appearance_label_brightness_desc" formatted="false">Яскравість написів на клавішах (0–100%)</string>
     <string name="appearance_keyboard_opacity_title">Прозорість клавіатури</string>
     <string name="appearance_keyboard_opacity_desc">Непрозорість фону клавіатури</string>
     <string name="appearance_key_opacity_title">Прозорість клавіш</string>
@@ -409,7 +409,7 @@
     <string name="autocorrect_rare_penalty_title">Штраф рідкісних слів</string>
     <string name="autocorrect_rare_penalty_desc">Множник для рідкісних слів (0.25–1.0)</string>
     <string name="clipboard_history_title">Історія буфера обміну</string>
-    <string name="clipboard_history_desc">Запам'ятовувати скопійований текст для швидкого вставляння</string>
+    <string name="clipboard_history_desc">Запам\'ятовувати скопійований текст для швидкого вставляння</string>
     <string name="clipboard_limit_type_title">Тип обмеження</string>
     <string name="clipboard_limit_type_desc">Спосіб обмеження історії буфера обміну</string>
     <string name="clipboard_history_limit_title">Ліміт історії</string>
@@ -444,11 +444,11 @@
     <string name="gesture_enable_short_title">Увімкнути короткі жести</string>
     <string name="gesture_enable_short_desc">Розпізнавати короткі свайпи для швидких слів (it, is, at тощо)</string>
     <string name="gesture_min_distance_title">Мінімальна відстань</string>
-    <string name="gesture_min_distance_desc">Мінімальна відстань свайпу для спрацювання (% від діагоналі клавіші)</string>
+    <string name="gesture_min_distance_desc" formatted="false">Мінімальна відстань свайпу для спрацювання (% від діагоналі клавіші)</string>
     <string name="gesture_max_distance_title">Максимальна відстань</string>
-    <string name="gesture_max_distance_desc">Межа короткого/довгого свайпу (% від діагоналі клавіші): нижче або рівно = короткий свайп, вище = слово за свайпом.</string>
+    <string name="gesture_max_distance_desc" formatted="false">Межа короткого/довгого свайпу (% від діагоналі клавіші): нижче або рівно = короткий свайп, вище = слово за свайпом.</string>
     <string name="gesture_vertical_threshold_title">Вертикальний поріг</string>
-    <string name="gesture_vertical_threshold_desc">% висоти клавіші, на який потрібно зсунути палець для вибору рядка. Вище = складніше випадково вибрати рядок.</string>
+    <string name="gesture_vertical_threshold_desc" formatted="false">% висоти клавіші, на який потрібно зсунути палець для вибору рядка. Вище = складніше випадково вибрати рядок.</string>
     <string name="gesture_vertical_speed_title">Вертикальна швидкість</string>
     <string name="gesture_vertical_speed_desc">Множник швидкості вибору рядка (нижче = повільніше). Вибір символу залишається на повній швидкості.</string>
     <string name="gesture_tap_duration_title">Поріг тривалості дотику</string>
@@ -470,7 +470,7 @@
     <string name="gesture_high_velocity_title">Поріг високої швидкості</string>
     <string name="gesture_high_velocity_desc">Швидкість для визначення швидкого свайпу (піксел./с). Вище = допускає швидші свайпи.</string>
     <string name="gesture_finger_occlusion_title">Компенсація перекриття пальцем</string>
-    <string name="gesture_finger_occlusion_desc">Зміщення Y у % висоти ряду для компенсації перекриття клавіш пальцем. Вище = зміщення точки дотику нижче до центрів клавіш.</string>
+    <string name="gesture_finger_occlusion_desc" formatted="false">Зміщення Y у % висоти ряду для компенсації перекриття клавіш пальцем. Вище = зміщення точки дотику нижче до центрів клавіш.</string>
     <string name="gesture_speed_smoothing_title">Згладжування швидкості</string>
     <string name="gesture_speed_smoothing_desc">Коефіцієнт згладжування руху слайдера. Вище = плавніше, але менш чутливо.</string>
     <string name="gesture_max_speed_multiplier_title">Максимальний множник швидкості</string>
@@ -501,7 +501,7 @@
     <string name="input_frequency_scale_title">Масштаб частоти</string>
     <string name="input_frequency_scale_desc">Баланс між частими та рідкісними словами (100–5000)</string>
     <string name="input_capitalize_i_title">Велика «I»</string>
-    <string name="input_capitalize_i_desc">Автоматично писати «I» з великої та скорочення (I'm, I'll, I'd, I've)</string>
+    <string name="input_capitalize_i_desc">Автоматично писати «I» з великої та скорочення (I\'m, I\'ll, I\'d, I\'ve)</string>
     <string name="input_smart_punctuation_title">Розумна пунктуація</string>
     <string name="input_smart_punctuation_desc">Приєднувати знаки пунктуації до слів (видаляти пробіл перед . , ! ? тощо)</string>
     <string name="input_swipe_distance_threshold_title">Поріг відстані свайпу</string>

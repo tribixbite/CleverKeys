@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name" translatable="false">CleverKeys</string>
     <string name="pref_layout_e_system">System settings</string>
     <string name="pref_layout_e_custom">Custom layout</string>
@@ -425,19 +425,19 @@
     <string name="appearance_height_landscape_title">Keyboard Height (Landscape)</string>
     <string name="appearance_height_landscape_desc">Adjust keyboard height in landscape mode</string>
     <string name="appearance_bottom_margin_portrait_title">Bottom Margin (Portrait)</string>
-    <string name="appearance_bottom_margin_portrait_desc">Vertical margin as % of screen height</string>
+    <string name="appearance_bottom_margin_portrait_desc" formatted="false">Vertical margin as % of screen height</string>
     <string name="appearance_bottom_margin_landscape_title">Bottom Margin (Landscape)</string>
-    <string name="appearance_bottom_margin_landscape_desc">Vertical margin as % of screen height</string>
+    <string name="appearance_bottom_margin_landscape_desc" formatted="false">Vertical margin as % of screen height</string>
     <string name="appearance_left_margin_portrait_title">Left Margin (Portrait)</string>
-    <string name="appearance_left_margin_portrait_desc">Left margin as % of screen width</string>
+    <string name="appearance_left_margin_portrait_desc" formatted="false">Left margin as % of screen width</string>
     <string name="appearance_right_margin_portrait_title">Right Margin (Portrait)</string>
-    <string name="appearance_right_margin_portrait_desc">Right margin as % of screen width</string>
+    <string name="appearance_right_margin_portrait_desc" formatted="false">Right margin as % of screen width</string>
     <string name="appearance_left_margin_landscape_title">Left Margin (Landscape)</string>
-    <string name="appearance_left_margin_landscape_desc">Left margin as % of screen width</string>
+    <string name="appearance_left_margin_landscape_desc" formatted="false">Left margin as % of screen width</string>
     <string name="appearance_right_margin_landscape_title">Right Margin (Landscape)</string>
-    <string name="appearance_right_margin_landscape_desc">Right margin as % of screen width</string>
+    <string name="appearance_right_margin_landscape_desc" formatted="false">Right margin as % of screen width</string>
     <string name="appearance_label_brightness_title">Label Brightness</string>
-    <string name="appearance_label_brightness_desc">Brightness of key labels (0-100%)</string>
+    <string name="appearance_label_brightness_desc" formatted="false">Brightness of key labels (0–100%)</string>
     <string name="appearance_keyboard_opacity_title">Keyboard Opacity</string>
     <string name="appearance_keyboard_opacity_desc">Opacity of keyboard background</string>
     <string name="appearance_key_opacity_title">Key Opacity</string>
@@ -465,9 +465,9 @@
     <string name="autocorrect_backspace_undo_title">Backspace Undo Autocorrect</string>
     <string name="autocorrect_backspace_undo_desc">Pressing backspace immediately after autocorrect reverts to the original word</string>
     <string name="autocorrect_min_word_length_title">Minimum Word Length</string>
-    <string name="autocorrect_min_word_length_desc">Don\'t correct words shorter than this (2-5 letters)</string>
+    <string name="autocorrect_min_word_length_desc">Don\'t correct words shorter than this (2–5 letters)</string>
     <string name="autocorrect_char_match_threshold_title">Character Match Threshold</string>
-    <string name="autocorrect_char_match_threshold_desc">How many characters must match (0.5-0.9)</string>
+    <string name="autocorrect_char_match_threshold_desc">How many characters must match (0.5–0.9)</string>
     <string name="autocorrect_min_word_frequency_title">Minimum Word Frequency</string>
     <string name="autocorrect_min_word_frequency_desc">Only correct to words with frequency &gt;= this</string>
     <string name="autocorrect_beam_title">Beam Autocorrect</string>
@@ -479,19 +479,19 @@
     <string name="autocorrect_fuzzy_algorithm_title">Fuzzy Match Algorithm</string>
     <string name="autocorrect_fuzzy_algorithm_desc">Method for matching swipe patterns to words</string>
     <string name="autocorrect_typo_forgiveness_title">Typo Forgiveness</string>
-    <string name="autocorrect_typo_forgiveness_desc">Max character difference allowed (0-5)</string>
+    <string name="autocorrect_typo_forgiveness_desc">Max character difference allowed (0–5)</string>
     <string name="autocorrect_starting_letter_title">Starting Letter Accuracy</string>
-    <string name="autocorrect_starting_letter_desc">Required matching prefix length (0-4)</string>
+    <string name="autocorrect_starting_letter_desc">Required matching prefix length (0–4)</string>
     <string name="autocorrect_search_depth_title">Correction Search Depth</string>
-    <string name="autocorrect_search_depth_desc">Number of beam candidates to consider (1-10)</string>
+    <string name="autocorrect_search_depth_desc">Number of beam candidates to consider (1–10)</string>
     <string name="autocorrect_source_balance_title">Prediction Source Balance</string>
     <string name="autocorrect_source_balance_desc">Neural confidence vs dictionary frequency (0=dict, 100=neural)</string>
     <string name="autocorrect_common_boost_title">Common Words Boost</string>
-    <string name="autocorrect_common_boost_desc">Bonus multiplier for common words (0.5-2.0)</string>
+    <string name="autocorrect_common_boost_desc">Bonus multiplier for common words (0.5–2.0)</string>
     <string name="autocorrect_frequent_boost_title">Frequent Words Boost</string>
-    <string name="autocorrect_frequent_boost_desc">Bonus for top 5000 words (0.5-2.0)</string>
+    <string name="autocorrect_frequent_boost_desc">Bonus for top 5000 words (0.5–2.0)</string>
     <string name="autocorrect_rare_penalty_title">Rare Words Penalty</string>
-    <string name="autocorrect_rare_penalty_desc">Multiplier for uncommon words (0.25-1.0)</string>
+    <string name="autocorrect_rare_penalty_desc">Multiplier for uncommon words (0.25–1.0)</string>
 
     <!-- ClipboardSection -->
     <string name="clipboard_history_title">Clipboard History</string>
@@ -532,11 +532,11 @@
     <string name="gesture_enable_short_title">Enable Short Gestures</string>
     <string name="gesture_enable_short_desc">Recognize short swipes for quick words (it, is, at, etc.)</string>
     <string name="gesture_min_distance_title">Min Distance</string>
-    <string name="gesture_min_distance_desc">Minimum swipe distance to trigger (% of key diagonal)</string>
+    <string name="gesture_min_distance_desc" formatted="false">Minimum swipe distance to trigger (% of key diagonal)</string>
     <string name="gesture_max_distance_title">Max Distance</string>
-    <string name="gesture_max_distance_desc">The short/long boundary (% of key diagonal): at or below = short swipe, beyond = swipe-typed word. Low values turn slight overshoots into words; high values require longer swipes before word typing starts.</string>
+    <string name="gesture_max_distance_desc" formatted="false">The short/long boundary (% of key diagonal): at or below = short swipe, beyond = swipe-typed word. Low values turn slight overshoots into words; high values require longer swipes before word typing starts.</string>
     <string name="gesture_vertical_threshold_title">Vertical Threshold</string>
-    <string name="gesture_vertical_threshold_desc">% of key height finger must move to trigger line selection. Higher = harder to accidentally select lines.</string>
+    <string name="gesture_vertical_threshold_desc" formatted="false">% of key height finger must move to trigger line selection. Higher = harder to accidentally select lines.</string>
     <string name="gesture_vertical_speed_title">Vertical Speed</string>
     <string name="gesture_vertical_speed_desc">Speed multiplier for line selection (lower = slower). Character selection stays at full speed.</string>
     <string name="gesture_tap_duration_title">Tap Duration Threshold</string>
@@ -558,7 +558,7 @@
     <string name="gesture_high_velocity_title">High Velocity Threshold</string>
     <string name="gesture_high_velocity_desc">Velocity for fast swipe detection (px/sec). Higher allows faster swipes.</string>
     <string name="gesture_finger_occlusion_title">Finger Occlusion Compensation</string>
-    <string name="gesture_finger_occlusion_desc">Y-offset as % of row height to compensate for finger obscuring keys. Higher shifts touch point down toward key centers.</string>
+    <string name="gesture_finger_occlusion_desc" formatted="false">Y-offset as % of row height to compensate for finger obscuring keys. Higher shifts touch point down toward key centers.</string>
     <string name="gesture_speed_smoothing_title">Speed Smoothing</string>
     <string name="gesture_speed_smoothing_desc">Smoothing factor for slider movement. Higher is smoother but less responsive.</string>
     <string name="gesture_max_speed_multiplier_title">Maximum Speed Multiplier</string>
@@ -590,9 +590,9 @@
     <string name="input_learning_aggression_title">Learning Aggression</string>
     <string name="input_learning_aggression_desc">How strongly habits affect predictions</string>
     <string name="input_context_boost_title">Context Boost Multiplier</string>
-    <string name="input_context_boost_desc">How strongly context influences predictions (0.5-5.0)</string>
+    <string name="input_context_boost_desc">How strongly context influences predictions (0.5–5.0)</string>
     <string name="input_frequency_scale_title">Frequency Scale</string>
-    <string name="input_frequency_scale_desc">Balance common vs uncommon words (100-5000)</string>
+    <string name="input_frequency_scale_desc">Balance common vs uncommon words (100–5000)</string>
     <string name="input_capitalize_i_title">Capitalize I Words</string>
     <string name="input_capitalize_i_desc">Auto-capitalize \"I\" and contractions (I\'m, I\'ll, I\'d, I\'ve)</string>
     <string name="input_smart_punctuation_title">Smart Punctuation</string>
@@ -631,11 +631,11 @@
     <string name="multilang_primary_desc">Main language for predictions (NN works with any QWERTY language)</string>
     <string name="multilang_secondary_title">Secondary Language</string>
     <string name="multilang_secondary_weight_title">Secondary Language Weight</string>
-    <string name="multilang_secondary_weight_desc">Prediction weight for secondary dictionary (0.5-1.5)</string>
+    <string name="multilang_secondary_weight_desc">Prediction weight for secondary dictionary (0.5–1.5)</string>
     <string name="multilang_auto_detect_title">Auto-Detect Language</string>
     <string name="multilang_auto_detect_desc">Automatically detect and switch languages while typing</string>
     <string name="multilang_detection_sensitivity_title">Detection Sensitivity</string>
-    <string name="multilang_detection_sensitivity_desc">How quickly to switch languages (0.4-0.9)</string>
+    <string name="multilang_detection_sensitivity_desc">How quickly to switch languages (0.4–0.9)</string>
     <string name="multilang_boost_strength_title">Boost Strength</string>
     <string name="multilang_boost_strength_desc">0 = disabled, 1 = normal, 2+ = aggressive</string>
     <string name="multilang_max_boost_title">Max Boost</string>
@@ -701,11 +701,13 @@
          Kotlin string templates so translators can reorder.
          ══════════════════════════════════════════════════════════════════ -->
     <!-- %1$d = number of custom short-swipe mappings, %2$d = total available commands -->
-    <string name="short_swipe_mappings_summary">%1$d custom mappings • %2$d commands available</string>
+    <!-- TODO(i18n): convert the two count strings below to <plurals> (proper
+         Slavic/Baltic plural forms); deferred — needs a 21-locale re-translation pass. -->
+    <string name="short_swipe_mappings_summary" tools:ignore="PluralsCandidate">%1$d custom mappings • %2$d commands available</string>
     <!-- %1$s = the last key that was tapped (uppercased) -->
     <string name="short_swipe_last_key">Last key: %1$s</string>
     <!-- %1$s = the key being customized (uppercased) -->
     <string name="short_swipe_customize_key">Customize \"%1$s\" Key</string>
     <!-- %1$d = number of enabled extra keys, %2$d = total extra keys -->
-    <string name="extra_keys_enabled_count">%1$d of %2$d extra keys enabled</string>
+    <string name="extra_keys_enabled_count" tools:ignore="PluralsCandidate">%1$d of %2$d extra keys enabled</string>
 </resources>

@@ -36,13 +36,25 @@ class SettingsSearchCoverageTest {
     )
 
     private val controlRegex = Regex(
-        """\b(SettingsSwitch|SettingsSlider|SettingsDropdown)\s*\([\s\S]{0,400}?title\s*=\s*("([^"]*)"|stringResource)"""
+        """\b(SettingsSwitch|SettingsSlider|SettingsDropdown)\s*\([\s\S]{0,400}?title\s*=\s*("([^"]*)"|stringResource\(R\.string\.([A-Za-z0-9_]+)\))"""
     )
 
-    /** Literal control titles found in the UI source (skips `stringResource` titles). */
+    // name -> text map from res/values/strings.xml, mirroring the generator's resolution
+    // (after the 2026-07-20 WP8 extraction, control titles are stringResource refs).
+    private val stringResources: Map<String, String> by lazy {
+        val xml = File("res/values/strings.xml").readText()
+        Regex("""<string name="([^"]+)"[^>]*>([^<]*)</string>""")
+            .findAll(xml)
+            .associate { it.groupValues[1] to it.groupValues[2].replace("\\'", "'").replace("&amp;", "&") }
+    }
+
+    /** Control titles found in the UI source — literal or stringResource-resolved,
+     *  mirroring generate_settings_search_index.py. */
     private fun literalControlTitles(text: String): List<String> =
         controlRegex.findAll(text)
-            .map { it.groupValues[3] }
+            .mapNotNull { m ->
+                m.groupValues[3].ifEmpty { stringResources[m.groupValues[4]] }
+            }
             .filter { it.isNotEmpty() }
             .toList()
 

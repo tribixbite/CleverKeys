@@ -367,19 +367,19 @@
     <string name="appearance_height_landscape_title">ارتفاع صفحه‌کلید (افقی)</string>
     <string name="appearance_height_landscape_desc">ارتفاع صفحه‌کلید در حالت افقی را تنظیم کنید</string>
     <string name="appearance_bottom_margin_portrait_title">حاشیه پایین (عمودی)</string>
-    <string name="appearance_bottom_margin_portrait_desc">حاشیه عمودی به‌عنوان درصدی از ارتفاع صفحه</string>
+    <string name="appearance_bottom_margin_portrait_desc" formatted="false">حاشیه عمودی به‌عنوان درصدی از ارتفاع صفحه</string>
     <string name="appearance_bottom_margin_landscape_title">حاشیه پایین (افقی)</string>
-    <string name="appearance_bottom_margin_landscape_desc">حاشیه عمودی به‌عنوان درصدی از ارتفاع صفحه</string>
+    <string name="appearance_bottom_margin_landscape_desc" formatted="false">حاشیه عمودی به‌عنوان درصدی از ارتفاع صفحه</string>
     <string name="appearance_left_margin_portrait_title">حاشیه چپ (عمودی)</string>
-    <string name="appearance_left_margin_portrait_desc">حاشیه چپ به‌عنوان درصدی از عرض صفحه</string>
+    <string name="appearance_left_margin_portrait_desc" formatted="false">حاشیه چپ به‌عنوان درصدی از عرض صفحه</string>
     <string name="appearance_right_margin_portrait_title">حاشیه راست (عمودی)</string>
-    <string name="appearance_right_margin_portrait_desc">حاشیه راست به‌عنوان درصدی از عرض صفحه</string>
+    <string name="appearance_right_margin_portrait_desc" formatted="false">حاشیه راست به‌عنوان درصدی از عرض صفحه</string>
     <string name="appearance_left_margin_landscape_title">حاشیه چپ (افقی)</string>
-    <string name="appearance_left_margin_landscape_desc">حاشیه چپ به‌عنوان درصدی از عرض صفحه</string>
+    <string name="appearance_left_margin_landscape_desc" formatted="false">حاشیه چپ به‌عنوان درصدی از عرض صفحه</string>
     <string name="appearance_right_margin_landscape_title">حاشیه راست (افقی)</string>
-    <string name="appearance_right_margin_landscape_desc">حاشیه راست به‌عنوان درصدی از عرض صفحه</string>
+    <string name="appearance_right_margin_landscape_desc" formatted="false">حاشیه راست به‌عنوان درصدی از عرض صفحه</string>
     <string name="appearance_label_brightness_title">روشنایی برچسب</string>
-    <string name="appearance_label_brightness_desc">روشنایی برچسب‌های کلید (۰ تا ۱۰۰٪)</string>
+    <string name="appearance_label_brightness_desc" formatted="false">روشنایی برچسب‌های کلید (۰ تا ۱۰۰٪)</string>
     <string name="appearance_keyboard_opacity_title">کدری صفحه‌کلید</string>
     <string name="appearance_keyboard_opacity_desc">کدری پس‌زمینه صفحه‌کلید</string>
     <string name="appearance_key_opacity_title">کدری کلید</string>
@@ -468,11 +468,11 @@
     <string name="gesture_enable_short_title">فعال‌سازی اشاره‌های کوتاه</string>
     <string name="gesture_enable_short_desc">کشیدن‌های کوتاه را برای واژه‌های سریع بشناسید (it، is، at و غیره)</string>
     <string name="gesture_min_distance_title">حداقل فاصله</string>
-    <string name="gesture_min_distance_desc">حداقل فاصله کشیدن برای فعال‌سازی (٪ قطر کلید)</string>
+    <string name="gesture_min_distance_desc" formatted="false">حداقل فاصله کشیدن برای فعال‌سازی (٪ قطر کلید)</string>
     <string name="gesture_max_distance_title">حداکثر فاصله</string>
-    <string name="gesture_max_distance_desc">مرز کوتاه/بلند (٪ قطر کلید): در این مقدار یا زیر آن = کشیدن کوتاه، بیشتر از آن = واژه تایپ‌شده با کشیدن. مقادیر پایین انحرافات جزئی را به واژه تبدیل می‌کنند؛ مقادیر بالا نیاز به کشیدن طولانی‌تر دارند.</string>
+    <string name="gesture_max_distance_desc" formatted="false">مرز کوتاه/بلند (٪ قطر کلید): در این مقدار یا زیر آن = کشیدن کوتاه، بیشتر از آن = واژه تایپ‌شده با کشیدن. مقادیر پایین انحرافات جزئی را به واژه تبدیل می‌کنند؛ مقادیر بالا نیاز به کشیدن طولانی‌تر دارند.</string>
     <string name="gesture_vertical_threshold_title">آستانه عمودی</string>
-    <string name="gesture_vertical_threshold_desc">٪ ارتفاع کلید که انگشت باید برای انتخاب خط حرکت کند. بالاتر = انتخاب تصادفی سخت‌تر.</string>
+    <string name="gesture_vertical_threshold_desc" formatted="false">٪ ارتفاع کلید که انگشت باید برای انتخاب خط حرکت کند. بالاتر = انتخاب تصادفی سخت‌تر.</string>
     <string name="gesture_vertical_speed_title">سرعت عمودی</string>
     <string name="gesture_vertical_speed_desc">ضریب سرعت برای انتخاب خط (پایین‌تر = کندتر). انتخاب نویسه با سرعت کامل باقی می‌ماند.</string>
     <string name="gesture_tap_duration_title">آستانه مدت ضربه</string>
@@ -494,7 +494,7 @@
     <string name="gesture_high_velocity_title">آستانه سرعت بالا</string>
     <string name="gesture_high_velocity_desc">سرعت برای تشخیص کشیدن سریع (px/ثانیه). بالاتر اجازه می‌دهد سریع‌تر کشیده شود.</string>
     <string name="gesture_finger_occlusion_title">جبران پوشش انگشت</string>
-    <string name="gesture_finger_occlusion_desc">جابه‌جایی Y به‌عنوان ٪ ارتفاع ردیف برای جبران پوشش انگشت روی کلیدها. بالاتر نقطه لمس را به سمت مرکز کلیدها می‌برد.</string>
+    <string name="gesture_finger_occlusion_desc" formatted="false">جابه‌جایی Y به‌عنوان ٪ ارتفاع ردیف برای جبران پوشش انگشت روی کلیدها. بالاتر نقطه لمس را به سمت مرکز کلیدها می‌برد.</string>
     <string name="gesture_speed_smoothing_title">صاف‌سازی سرعت</string>
     <string name="gesture_speed_smoothing_desc">ضریب صاف‌سازی برای حرکت اسلایدر. بالاتر نرم‌تر اما کمتر پاسخگو است.</string>
     <string name="gesture_max_speed_multiplier_title">حداکثر ضریب سرعت</string>
@@ -525,7 +525,7 @@
     <string name="input_frequency_scale_title">مقیاس بسامد</string>
     <string name="input_frequency_scale_desc">تعادل بین واژه‌های رایج و غیررایج (۱۰۰ تا ۵۰۰۰)</string>
     <string name="input_capitalize_i_title">بزرگ‌نویسی واژه‌های I</string>
-    <string name="input_capitalize_i_desc">«I» و کوتاه‌نوشت‌ها را به‌طور خودکار با حرف بزرگ بنویسید (I'm، I'll، I'd، I've)</string>
+    <string name="input_capitalize_i_desc">«I» و کوتاه‌نوشت‌ها را به‌طور خودکار با حرف بزرگ بنویسید (I\'m، I\'ll، I\'d، I\'ve)</string>
     <string name="input_smart_punctuation_title">نگارگذاری هوشمند</string>
     <string name="input_smart_punctuation_desc">نشانه‌های نگارش را به انتهای واژه‌ها بچسبانید (فاصله قبل از . , ! ? و غیره حذف می‌شود)</string>
     <string name="input_swipe_distance_threshold_title">آستانه فاصله کشیدن</string>

@@ -343,19 +343,19 @@
     <string name="appearance_height_landscape_title">Tastatūras augstums (ainava)</string>
     <string name="appearance_height_landscape_desc">Pielāgot tastatūras augstumu ainavas režīmā</string>
     <string name="appearance_bottom_margin_portrait_title">Apakšējā mala (portrets)</string>
-    <string name="appearance_bottom_margin_portrait_desc">Vertikālā mala kā % no ekrāna augstuma</string>
+    <string name="appearance_bottom_margin_portrait_desc" formatted="false">Vertikālā mala kā % no ekrāna augstuma</string>
     <string name="appearance_bottom_margin_landscape_title">Apakšējā mala (ainava)</string>
-    <string name="appearance_bottom_margin_landscape_desc">Vertikālā mala kā % no ekrāna augstuma</string>
+    <string name="appearance_bottom_margin_landscape_desc" formatted="false">Vertikālā mala kā % no ekrāna augstuma</string>
     <string name="appearance_left_margin_portrait_title">Kreisā mala (portrets)</string>
-    <string name="appearance_left_margin_portrait_desc">Kreisā mala kā % no ekrāna platuma</string>
+    <string name="appearance_left_margin_portrait_desc" formatted="false">Kreisā mala kā % no ekrāna platuma</string>
     <string name="appearance_right_margin_portrait_title">Labā mala (portrets)</string>
-    <string name="appearance_right_margin_portrait_desc">Labā mala kā % no ekrāna platuma</string>
+    <string name="appearance_right_margin_portrait_desc" formatted="false">Labā mala kā % no ekrāna platuma</string>
     <string name="appearance_left_margin_landscape_title">Kreisā mala (ainava)</string>
-    <string name="appearance_left_margin_landscape_desc">Kreisā mala kā % no ekrāna platuma</string>
+    <string name="appearance_left_margin_landscape_desc" formatted="false">Kreisā mala kā % no ekrāna platuma</string>
     <string name="appearance_right_margin_landscape_title">Labā mala (ainava)</string>
-    <string name="appearance_right_margin_landscape_desc">Labā mala kā % no ekrāna platuma</string>
+    <string name="appearance_right_margin_landscape_desc" formatted="false">Labā mala kā % no ekrāna platuma</string>
     <string name="appearance_label_brightness_title">Uzrakstu spilgtums</string>
-    <string name="appearance_label_brightness_desc">Taustiņu uzrakstu spilgtums (0–100%)</string>
+    <string name="appearance_label_brightness_desc" formatted="false">Taustiņu uzrakstu spilgtums (0–100%)</string>
     <string name="appearance_keyboard_opacity_title">Tastatūras necaurredzamība</string>
     <string name="appearance_keyboard_opacity_desc">Tastatūras fona necaurredzamība</string>
     <string name="appearance_key_opacity_title">Taustiņu necaurredzamība</string>
@@ -444,11 +444,11 @@
     <string name="gesture_enable_short_title">Iespējot īsos žestus</string>
     <string name="gesture_enable_short_desc">Atpazīt īsus vilkumus ātriem vārdiem (it, is, at u.c.)</string>
     <string name="gesture_min_distance_title">Minimālais attālums</string>
-    <string name="gesture_min_distance_desc">Minimālais vilkuma attālums aktivizēšanai (% no taustiņa diagonāles)</string>
+    <string name="gesture_min_distance_desc" formatted="false">Minimālais vilkuma attālums aktivizēšanai (% no taustiņa diagonāles)</string>
     <string name="gesture_max_distance_title">Maksimālais attālums</string>
-    <string name="gesture_max_distance_desc">Īsā/garā vilkuma robeža (% no taustiņa diagonāles): zemāk vai vienāds = īss vilkums, augstāk = vārds ar vilkumu.</string>
+    <string name="gesture_max_distance_desc" formatted="false">Īsā/garā vilkuma robeža (% no taustiņa diagonāles): zemāk vai vienāds = īss vilkums, augstāk = vārds ar vilkumu.</string>
     <string name="gesture_vertical_threshold_title">Vertikālais slieksnis</string>
-    <string name="gesture_vertical_threshold_desc">% no taustiņa augstuma, par kuru pirkstam jāpārvietojas, lai aktivizētu rindas atlasi. Augstāk = grūtāk nejauši atlasīt rindu.</string>
+    <string name="gesture_vertical_threshold_desc" formatted="false">% no taustiņa augstuma, par kuru pirkstam jāpārvietojas, lai aktivizētu rindas atlasi. Augstāk = grūtāk nejauši atlasīt rindu.</string>
     <string name="gesture_vertical_speed_title">Vertikālais ātrums</string>
     <string name="gesture_vertical_speed_desc">Rindas atlases ātruma reizinātājs (zemāks = lēnāks). Rakstzīmju atlase paliek pilnā ātrumā.</string>
     <string name="gesture_tap_duration_title">Pieskaršanās ilguma slieksnis</string>
@@ -470,7 +470,7 @@
     <string name="gesture_high_velocity_title">Augsta ātruma slieksnis</string>
     <string name="gesture_high_velocity_desc">Ātrums ātram vilkuma noteikšanai (px/sek). Augstāk ļauj ātrākus vilkumus.</string>
     <string name="gesture_finger_occlusion_title">Pirksta aizsegšanas kompensācija</string>
-    <string name="gesture_finger_occlusion_desc">Y nobīde kā % no rindas augstuma, lai kompensētu taustiņu aizsegšanu ar pirkstu. Augstāk pārvieto pieskaršanās punktu zemāk uz taustiņu centriem.</string>
+    <string name="gesture_finger_occlusion_desc" formatted="false">Y nobīde kā % no rindas augstuma, lai kompensētu taustiņu aizsegšanu ar pirkstu. Augstāk pārvieto pieskaršanās punktu zemāk uz taustiņu centriem.</string>
     <string name="gesture_speed_smoothing_title">Ātruma izlīdzināšana</string>
     <string name="gesture_speed_smoothing_desc">Slīdņa kustības izlīdzināšanas koeficients. Augstāk = vienmērīgāk, bet mazāk atsaucīgi.</string>
     <string name="gesture_max_speed_multiplier_title">Maksimālais ātruma reizinātājs</string>
@@ -501,7 +501,7 @@
     <string name="input_frequency_scale_title">Biežuma skala</string>
     <string name="input_frequency_scale_desc">Līdzsvars starp izplatītiem un retiem vārdiem (100–5000)</string>
     <string name="input_capitalize_i_title">Lielais burts "I"</string>
-    <string name="input_capitalize_i_desc">Automātiski lietot lielo burtu "I" un saīsinājumos (I'm, I'll, I'd, I've)</string>
+    <string name="input_capitalize_i_desc">Automātiski lietot lielo burtu "I" un saīsinājumos (I\'m, I\'ll, I\'d, I\'ve)</string>
     <string name="input_smart_punctuation_title">Viedā pieturzīmju lietošana</string>
     <string name="input_smart_punctuation_desc">Pievienot pieturzīmes pie vārdiem (noņemt atstarpi pirms . , ! ? u.c.)</string>
     <string name="input_swipe_distance_threshold_title">Vilkuma attāluma slieksnis</string>

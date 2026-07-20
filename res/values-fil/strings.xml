@@ -341,19 +341,19 @@
     <string name="appearance_height_landscape_title">Taas ng Keyboard (Landscape)</string>
     <string name="appearance_height_landscape_desc">Ayusin ang taas ng keyboard sa landscape mode</string>
     <string name="appearance_bottom_margin_portrait_title">Bottom Margin (Portrait)</string>
-    <string name="appearance_bottom_margin_portrait_desc">Vertical na margin bilang % ng taas ng screen</string>
+    <string name="appearance_bottom_margin_portrait_desc" formatted="false">Vertical na margin bilang % ng taas ng screen</string>
     <string name="appearance_bottom_margin_landscape_title">Bottom Margin (Landscape)</string>
-    <string name="appearance_bottom_margin_landscape_desc">Vertical na margin bilang % ng taas ng screen</string>
+    <string name="appearance_bottom_margin_landscape_desc" formatted="false">Vertical na margin bilang % ng taas ng screen</string>
     <string name="appearance_left_margin_portrait_title">Left Margin (Portrait)</string>
-    <string name="appearance_left_margin_portrait_desc">Left na margin bilang % ng lapad ng screen</string>
+    <string name="appearance_left_margin_portrait_desc" formatted="false">Left na margin bilang % ng lapad ng screen</string>
     <string name="appearance_right_margin_portrait_title">Right Margin (Portrait)</string>
-    <string name="appearance_right_margin_portrait_desc">Right na margin bilang % ng lapad ng screen</string>
+    <string name="appearance_right_margin_portrait_desc" formatted="false">Right na margin bilang % ng lapad ng screen</string>
     <string name="appearance_left_margin_landscape_title">Left Margin (Landscape)</string>
-    <string name="appearance_left_margin_landscape_desc">Left na margin bilang % ng lapad ng screen</string>
+    <string name="appearance_left_margin_landscape_desc" formatted="false">Left na margin bilang % ng lapad ng screen</string>
     <string name="appearance_right_margin_landscape_title">Right Margin (Landscape)</string>
-    <string name="appearance_right_margin_landscape_desc">Right na margin bilang % ng lapad ng screen</string>
+    <string name="appearance_right_margin_landscape_desc" formatted="false">Right na margin bilang % ng lapad ng screen</string>
     <string name="appearance_label_brightness_title">Liwanag ng Label</string>
-    <string name="appearance_label_brightness_desc">Liwanag ng mga label ng key (0-100%)</string>
+    <string name="appearance_label_brightness_desc" formatted="false">Liwanag ng mga label ng key (0–100%)</string>
     <string name="appearance_keyboard_opacity_title">Opacity ng Keyboard</string>
     <string name="appearance_keyboard_opacity_desc">Opacity ng background ng keyboard</string>
     <string name="appearance_key_opacity_title">Opacity ng Key</string>
@@ -379,9 +379,9 @@
     <string name="autocorrect_backspace_undo_title">Backspace Undo ng Autocorrect</string>
     <string name="autocorrect_backspace_undo_desc">Ang pagpindot ng backspace kaagad pagkatapos ng autocorrect ay nagbabalik sa orihinal na salita</string>
     <string name="autocorrect_min_word_length_title">Minimum na Haba ng Salita</string>
-    <string name="autocorrect_min_word_length_desc">Huwag itama ang mga salitang mas maikli kaysa rito (2-5 titik)</string>
+    <string name="autocorrect_min_word_length_desc">Huwag itama ang mga salitang mas maikli kaysa rito (2–5 titik)</string>
     <string name="autocorrect_char_match_threshold_title">Threshold ng Pagtatugma ng Karakter</string>
-    <string name="autocorrect_char_match_threshold_desc">Ilang karakter ang dapat tumugma (0.5-0.9)</string>
+    <string name="autocorrect_char_match_threshold_desc">Ilang karakter ang dapat tumugma (0.5–0.9)</string>
     <string name="autocorrect_min_word_frequency_title">Minimum na Dalas ng Salita</string>
     <string name="autocorrect_min_word_frequency_desc">Itama lamang sa mga salitang may dalas &gt;= ito</string>
     <string name="autocorrect_beam_title">Beam Autocorrect</string>
@@ -393,19 +393,19 @@
     <string name="autocorrect_fuzzy_algorithm_title">Fuzzy Match Algorithm</string>
     <string name="autocorrect_fuzzy_algorithm_desc">Paraan ng pagtatugma ng mga swipe pattern sa mga salita</string>
     <string name="autocorrect_typo_forgiveness_title">Typo Forgiveness</string>
-    <string name="autocorrect_typo_forgiveness_desc">Maximum na pinapayagang pagkakaiba ng karakter (0-5)</string>
+    <string name="autocorrect_typo_forgiveness_desc">Maximum na pinapayagang pagkakaiba ng karakter (0–5)</string>
     <string name="autocorrect_starting_letter_title">Kawastuhan ng Unang Titik</string>
-    <string name="autocorrect_starting_letter_desc">Kinakailangang haba ng prefix na tumutugma (0-4)</string>
+    <string name="autocorrect_starting_letter_desc">Kinakailangang haba ng prefix na tumutugma (0–4)</string>
     <string name="autocorrect_search_depth_title">Lalim ng Paghahanap ng Pagwawasto</string>
-    <string name="autocorrect_search_depth_desc">Bilang ng mga beam candidate na isasaalang-alang (1-10)</string>
+    <string name="autocorrect_search_depth_desc">Bilang ng mga beam candidate na isasaalang-alang (1–10)</string>
     <string name="autocorrect_source_balance_title">Balanse ng Pinagmulan ng Prediction</string>
     <string name="autocorrect_source_balance_desc">Neural confidence vs dalas ng diksyunaryo (0=diksyunaryo, 100=neural)</string>
     <string name="autocorrect_common_boost_title">Boost ng Mga Karaniwang Salita</string>
-    <string name="autocorrect_common_boost_desc">Bonus multiplier para sa mga karaniwang salita (0.5-2.0)</string>
+    <string name="autocorrect_common_boost_desc">Bonus multiplier para sa mga karaniwang salita (0.5–2.0)</string>
     <string name="autocorrect_frequent_boost_title">Boost ng Mga Madalas na Salita</string>
-    <string name="autocorrect_frequent_boost_desc">Bonus para sa top 5000 na salita (0.5-2.0)</string>
+    <string name="autocorrect_frequent_boost_desc">Bonus para sa top 5000 na salita (0.5–2.0)</string>
     <string name="autocorrect_rare_penalty_title">Parusa sa Mga Bihirang Salita</string>
-    <string name="autocorrect_rare_penalty_desc">Multiplier para sa mga hindi karaniwang salita (0.25-1.0)</string>
+    <string name="autocorrect_rare_penalty_desc">Multiplier para sa mga hindi karaniwang salita (0.25–1.0)</string>
     <string name="clipboard_history_title">History ng Clipboard</string>
     <string name="clipboard_history_desc">Tandaan ang na-copy na teksto para sa mabilis na pag-paste</string>
     <string name="clipboard_limit_type_title">Uri ng Limitasyon</string>
@@ -442,11 +442,11 @@
     <string name="gesture_enable_short_title">I-enable ang Maikling Gesture</string>
     <string name="gesture_enable_short_desc">Kilalanin ang mga maikling swipe para sa mga mabilis na salita (it, is, at, atbp.)</string>
     <string name="gesture_min_distance_title">Minimum na Distansya</string>
-    <string name="gesture_min_distance_desc">Minimum na distansya ng swipe para mag-trigger (% ng diagonal ng key)</string>
+    <string name="gesture_min_distance_desc" formatted="false">Minimum na distansya ng swipe para mag-trigger (% ng diagonal ng key)</string>
     <string name="gesture_max_distance_title">Maximum na Distansya</string>
-    <string name="gesture_max_distance_desc">Hangganan ng maikli/mahaba (% ng diagonal ng key): sa o mas mababa = maikling swipe, higit pa = salitang na-swipe. Ang mababang halaga ay nagpapalit ng maliit na labis sa mga salita; ang mataas na halaga ay nangangailangan ng mas mahabang swipe.</string>
+    <string name="gesture_max_distance_desc" formatted="false">Hangganan ng maikli/mahaba (% ng diagonal ng key): sa o mas mababa = maikling swipe, higit pa = salitang na-swipe. Ang mababang halaga ay nagpapalit ng maliit na labis sa mga salita; ang mataas na halaga ay nangangailangan ng mas mahabang swipe.</string>
     <string name="gesture_vertical_threshold_title">Vertical na Threshold</string>
-    <string name="gesture_vertical_threshold_desc">% ng taas ng key na dapat galaw ng daliri para mag-trigger ng line selection. Mas mataas = mas mahirap na aksidenteng pumili ng linya.</string>
+    <string name="gesture_vertical_threshold_desc" formatted="false">% ng taas ng key na dapat galaw ng daliri para mag-trigger ng line selection. Mas mataas = mas mahirap na aksidenteng pumili ng linya.</string>
     <string name="gesture_vertical_speed_title">Vertical na Bilis</string>
     <string name="gesture_vertical_speed_desc">Speed multiplier para sa line selection (mas mababa = mas mabagal). Ang character selection ay nananatili sa buong bilis.</string>
     <string name="gesture_tap_duration_title">Threshold ng Tagal ng Tap</string>
@@ -468,7 +468,7 @@
     <string name="gesture_high_velocity_title">Threshold ng Mataas na Bilis</string>
     <string name="gesture_high_velocity_desc">Bilis para sa mabilis na pagtukoy ng swipe (px/sec). Ang mas mataas ay nagpapahintulot ng mas mabilis na pag-swipe.</string>
     <string name="gesture_finger_occlusion_title">Kompensasyon ng Finger Occlusion</string>
-    <string name="gesture_finger_occlusion_desc">Y-offset bilang % ng taas ng row para mabayaran ang daliring nagtatakip sa mga key. Mas mataas ang naggegeser ng touch point pababa tungo sa mga sentro ng key.</string>
+    <string name="gesture_finger_occlusion_desc" formatted="false">Y-offset bilang % ng taas ng row para mabayaran ang daliring nagtatakip sa mga key. Mas mataas ang naggegeser ng touch point pababa tungo sa mga sentro ng key.</string>
     <string name="gesture_speed_smoothing_title">Speed Smoothing</string>
     <string name="gesture_speed_smoothing_desc">Smoothing factor para sa galaw ng slider. Mas mataas ay mas maayos ngunit mas hindi tugon.</string>
     <string name="gesture_max_speed_multiplier_title">Maximum na Speed Multiplier</string>
@@ -495,11 +495,11 @@
     <string name="input_learning_aggression_title">Learning Aggression</string>
     <string name="input_learning_aggression_desc">Gaano kalakas ang mga gawi na nakakaapekto sa mga prediction</string>
     <string name="input_context_boost_title">Context Boost Multiplier</string>
-    <string name="input_context_boost_desc">Gaano kalakas ang konteksto na nakakaimpluwensya sa mga prediction (0.5-5.0)</string>
+    <string name="input_context_boost_desc">Gaano kalakas ang konteksto na nakakaimpluwensya sa mga prediction (0.5–5.0)</string>
     <string name="input_frequency_scale_title">Frequency Scale</string>
-    <string name="input_frequency_scale_desc">Balansein ang mga karaniwang kumpara sa mga hindi karaniwang salita (100-5000)</string>
+    <string name="input_frequency_scale_desc">Balansein ang mga karaniwang kumpara sa mga hindi karaniwang salita (100–5000)</string>
     <string name="input_capitalize_i_title">I-capitalize ang mga Salitang I</string>
-    <string name="input_capitalize_i_desc">Auto-capitalize ang "I" at mga contraction (I'm, I'll, I'd, I've)</string>
+    <string name="input_capitalize_i_desc">Auto-capitalize ang "I" at mga contraction (I\'m, I\'ll, I\'d, I\'ve)</string>
     <string name="input_smart_punctuation_title">Smart Punctuation</string>
     <string name="input_smart_punctuation_desc">Ilakip ang mga punctuation sa dulo ng mga salita (tinatanggal ang space bago ang . , ! ? atbp.)</string>
     <string name="input_swipe_distance_threshold_title">Swipe Distance Threshold</string>
@@ -534,11 +534,11 @@
     <string name="multilang_primary_desc">Pangunahing wika para sa mga prediction (ang NN ay gumagana sa anumang wikang QWERTY)</string>
     <string name="multilang_secondary_title">Pangalawang Wika</string>
     <string name="multilang_secondary_weight_title">Timbang ng Pangalawang Wika</string>
-    <string name="multilang_secondary_weight_desc">Timbang ng prediction para sa secondary na diksyunaryo (0.5-1.5)</string>
+    <string name="multilang_secondary_weight_desc">Timbang ng prediction para sa secondary na diksyunaryo (0.5–1.5)</string>
     <string name="multilang_auto_detect_title">Auto-Detect ng Wika</string>
     <string name="multilang_auto_detect_desc">Awtomatikong tuklasin at palitan ang mga wika habang nagtatype</string>
     <string name="multilang_detection_sensitivity_title">Sensitivity ng Pagtuklas</string>
-    <string name="multilang_detection_sensitivity_desc">Gaano kabilis ang paglipat ng mga wika (0.4-0.9)</string>
+    <string name="multilang_detection_sensitivity_desc">Gaano kabilis ang paglipat ng mga wika (0.4–0.9)</string>
     <string name="multilang_boost_strength_title">Lakas ng Boost</string>
     <string name="multilang_boost_strength_desc">0 = naka-disable, 1 = normal, 2+ = agresibo</string>
     <string name="multilang_max_boost_title">Maximum na Boost</string>

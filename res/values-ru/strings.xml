@@ -332,19 +332,19 @@
     <string name="appearance_height_landscape_title">Высота клавиатуры (пейзаж)</string>
     <string name="appearance_height_landscape_desc">Настройка высоты клавиатуры в альбомном режиме</string>
     <string name="appearance_bottom_margin_portrait_title">Нижний отступ (портрет)</string>
-    <string name="appearance_bottom_margin_portrait_desc">Вертикальный отступ в % от высоты экрана</string>
+    <string name="appearance_bottom_margin_portrait_desc" formatted="false">Вертикальный отступ в % от высоты экрана</string>
     <string name="appearance_bottom_margin_landscape_title">Нижний отступ (пейзаж)</string>
-    <string name="appearance_bottom_margin_landscape_desc">Вертикальный отступ в % от высоты экрана</string>
+    <string name="appearance_bottom_margin_landscape_desc" formatted="false">Вертикальный отступ в % от высоты экрана</string>
     <string name="appearance_left_margin_portrait_title">Левый отступ (портрет)</string>
-    <string name="appearance_left_margin_portrait_desc">Левый отступ в % от ширины экрана</string>
+    <string name="appearance_left_margin_portrait_desc" formatted="false">Левый отступ в % от ширины экрана</string>
     <string name="appearance_right_margin_portrait_title">Правый отступ (портрет)</string>
-    <string name="appearance_right_margin_portrait_desc">Правый отступ в % от ширины экрана</string>
+    <string name="appearance_right_margin_portrait_desc" formatted="false">Правый отступ в % от ширины экрана</string>
     <string name="appearance_left_margin_landscape_title">Левый отступ (пейзаж)</string>
-    <string name="appearance_left_margin_landscape_desc">Левый отступ в % от ширины экрана</string>
+    <string name="appearance_left_margin_landscape_desc" formatted="false">Левый отступ в % от ширины экрана</string>
     <string name="appearance_right_margin_landscape_title">Правый отступ (пейзаж)</string>
-    <string name="appearance_right_margin_landscape_desc">Правый отступ в % от ширины экрана</string>
+    <string name="appearance_right_margin_landscape_desc" formatted="false">Правый отступ в % от ширины экрана</string>
     <string name="appearance_label_brightness_title">Яркость меток</string>
-    <string name="appearance_label_brightness_desc">Яркость меток клавиш (0–100%)</string>
+    <string name="appearance_label_brightness_desc" formatted="false">Яркость меток клавиш (0–100%)</string>
     <string name="appearance_keyboard_opacity_title">Прозрачность клавиатуры</string>
     <string name="appearance_keyboard_opacity_desc">Непрозрачность фона клавиатуры</string>
     <string name="appearance_key_opacity_title">Прозрачность клавиш</string>
@@ -433,11 +433,11 @@
     <string name="gesture_enable_short_title">Включить короткие жесты</string>
     <string name="gesture_enable_short_desc">Распознавать короткие свайпы для быстрых слов (it, is, at и т.д.)</string>
     <string name="gesture_min_distance_title">Минимальное расстояние</string>
-    <string name="gesture_min_distance_desc">Минимальное расстояние свайпа для срабатывания (% от диагонали клавиши)</string>
+    <string name="gesture_min_distance_desc" formatted="false">Минимальное расстояние свайпа для срабатывания (% от диагонали клавиши)</string>
     <string name="gesture_max_distance_title">Максимальное расстояние</string>
-    <string name="gesture_max_distance_desc">Граница короткого/длинного свайпа (% от диагонали клавиши): ниже или равно = короткий свайп, выше = слово по свайпу. Малые значения делают небольшие выходы за границу словами; большие требуют более длинного свайпа.</string>
+    <string name="gesture_max_distance_desc" formatted="false">Граница короткого/длинного свайпа (% от диагонали клавиши): ниже или равно = короткий свайп, выше = слово по свайпу. Малые значения делают небольшие выходы за границу словами; большие требуют более длинного свайпа.</string>
     <string name="gesture_vertical_threshold_title">Вертикальный порог</string>
-    <string name="gesture_vertical_threshold_desc">% высоты клавиши, на который нужно сдвинуть палец для выбора строки. Выше = сложнее случайно выбрать строку.</string>
+    <string name="gesture_vertical_threshold_desc" formatted="false">% высоты клавиши, на который нужно сдвинуть палец для выбора строки. Выше = сложнее случайно выбрать строку.</string>
     <string name="gesture_vertical_speed_title">Вертикальная скорость</string>
     <string name="gesture_vertical_speed_desc">Множитель скорости выбора строки (ниже = медленнее). Выбор символа остаётся на полной скорости.</string>
     <string name="gesture_tap_duration_title">Порог длительности нажатия</string>
@@ -459,7 +459,7 @@
     <string name="gesture_high_velocity_title">Порог высокой скорости</string>
     <string name="gesture_high_velocity_desc">Скорость для определения быстрого свайпа (пикс./с). Выше = допускает более быстрые свайпы.</string>
     <string name="gesture_finger_occlusion_title">Компенсация перекрытия пальцем</string>
-    <string name="gesture_finger_occlusion_desc">Смещение Y в % высоты ряда для компенсации перекрытия клавиш пальцем. Выше = смещение точки касания ниже к центрам клавиш.</string>
+    <string name="gesture_finger_occlusion_desc" formatted="false">Смещение Y в % высоты ряда для компенсации перекрытия клавиш пальцем. Выше = смещение точки касания ниже к центрам клавиш.</string>
     <string name="gesture_speed_smoothing_title">Сглаживание скорости</string>
     <string name="gesture_speed_smoothing_desc">Коэффициент сглаживания движения слайдера. Выше = плавнее, но менее отзывчиво.</string>
     <string name="gesture_max_speed_multiplier_title">Максимальный множитель скорости</string>
@@ -490,7 +490,7 @@
     <string name="input_frequency_scale_title">Масштаб частоты</string>
     <string name="input_frequency_scale_desc">Баланс между частыми и редкими словами (100–5000)</string>
     <string name="input_capitalize_i_title">Заглавная «I»</string>
-    <string name="input_capitalize_i_desc">Автоматически делать заглавной букву «I» и сокращения (I'm, I'll, I'd, I've)</string>
+    <string name="input_capitalize_i_desc">Автоматически делать заглавной букву «I» и сокращения (I\'m, I\'ll, I\'d, I\'ve)</string>
     <string name="input_smart_punctuation_title">Умная пунктуация</string>
     <string name="input_smart_punctuation_desc">Присоединять знаки препинания к словам (убирать пробел перед . , ! ? и т.д.)</string>
     <string name="input_swipe_distance_threshold_title">Порог расстояния свайпа</string>
