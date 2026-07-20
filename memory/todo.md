@@ -1,5 +1,24 @@
 # CleverKeys TODO
 
+## ✅ Roadmap WP5+WP6 + R8 soak evidence (2026-07-20, commits 5b5d91dd..HEAD)
+- **WP5 scope-cancel** (R-6): Pointers member scope + close() via onDetachedFromWindow;
+  EmojiKeywordIndex.cancel() via CleanupHandler. **WP6-R2 render perf**: getMappingsForKey
+  O(1) @Volatile immutable byKey index (was per-key-per-frame filter+associateBy),
+  keyCodeLower cached at setKeyboard, hasCustomMappings early-out.
+- **WP6-R3 SuggestionBar**: sealed Suggestion/SelectionRoute (dict_add:/exact_add: literals only
+  in Suggestion.kt; wire format kept — List<String> hard-locked by RenderingTruth/ContractionFlicker/
+  SuggestionStateMachine instrumented contracts), TextView recycling (index-stable pools, dedup
+  preserved, 6 takeover modes clear pools), i18n suggestion_add_to_dictionary in all 21 locales.
+- **Verified on-device**: FULL ew-cli suite **1410/1410 green** (baseline run 9e7d96dd).
+- **R8 soak (gate evidence)**: shrink+optimize minified debug also **1410/1410 green**
+  (run f1f1100a) with audited keeps. proguard audit closed a REAL gap (personalization pkg
+  unkept while UserVocabulary Gson-deserializes List<UserWordUsage>). Tooling wall documented in
+  proguard-soak-testkeep.pro: AGP doesn't applymapping the test APK + lib dedupe → obfuscated-app
+  instrumented runs impossible ("No tests!"); soak uses -dontobfuscate. **Release R8 flip still
+  gated on**: obfuscated manual smoke + F-Droid reproducible-DEX verification → USER DECISION.
+- Remaining roadmap: WP8 i18n/theming unification, WP9 pipeline unification (DEFER, needs oracle
+  + soak), WP10 strangler, git-history rewrite (gated on F-Droid v1.5.0 publish).
+
 ## ✅ Lint debt burn-down: 656 errors → 0 (2026-07-20, commits 29f790fb..2b13a2ff)
 Full resolution of the baselined lint-error debt via 9 parallel Opus agents (4 fixers + 5 translators),
 Fable orchestration + central verify. Baseline now warnings-only (511, was 1544 mixed).
