@@ -239,6 +239,14 @@ space = 30, apostrophe = 31, hyphen = 32
 
 ## 5. Beam Search Parameters
 
+> **Scope note (2026-07-20)**: beam search belongs to the NEURAL pipeline only
+> (autoregressive ONNX decoder). The geometric swipe engine
+> (`swipe/geometric/`, spec: `docs/specs/geometric-swipe-engine.md`) does NOT
+> use beam search — it is a SHARK2-style whole-word template matcher (prune →
+> score → top-K). Its full tunable surface lives in `GeometricEngineConfig.kt`
+> and is documented in the spec's Config Surface + As-Built Notes sections;
+> values are not duplicated here to avoid drift.
+
 ### 5.1 Constants (BeamSearchEngine.kt)
 
 | Constant | Value | Description |

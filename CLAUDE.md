@@ -108,6 +108,9 @@ src/main/kotlin/tribixbite/cleverkeys/       # package tribixbite.cleverkeys
 │       ├── sections/               #     Per-section composables (17 files)
 │       └── io/                     #     Import/export UI (7 files)
 ├── backup/                         # Backup & restore, import-plan diff (13 files)
+├── swipe/geometric/                # Geometric swipe decoder (20 files, pure JVM,
+│                                   #   standalone — NOT wired; spec: docs/specs/
+│                                   #   geometric-swipe-engine.md; WP9 = future router)
 ├── customization/                  # Short Swipes, Profiles (14 files)
 ├── theme/                          # Theming (8 files)
 ├── gif/                            # GIF panel (7 files)
