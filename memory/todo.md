@@ -1,5 +1,22 @@
 # CleverKeys TODO
 
+## ✅ Lint debt burn-down: 656 errors → 0 (2026-07-20, commits 29f790fb..2b13a2ff)
+Full resolution of the baselined lint-error debt via 9 parallel Opus agents (4 fixers + 5 translators),
+Fable orchestration + central verify. Baseline now warnings-only (511, was 1544 mixed).
+- **Key insight**: all 292 unused strings were exactly the untranslated set — one deletion pass killed
+  292 errors + 292 warnings. Remaining 126 strings translated into all 21 locales (~1900 entries).
+- **Latent field bugs fixed** (were hidden in baseline): SlideBarPreference bare `min` resolving to
+  ProgressBar#getMin (API-26 crash on 21-25 + wrong math), Character.UnicodeScript companion class-load
+  crash on API<24 (PredictionContextTracker), 76 LongLogTag crashes (Log.isLoggable API<26), Keystore
+  path un-annotated, backup rules structurally broken (42 Fatal — rewritten as strict allowlists:
+  only theme/emoji aesthetic prefs back up; all sensitive data stays excluded).
+- **Verified**: lintDebug 0 errors/0 warnings (511 baseline-filtered), compile green,
+  runPureTests 1449 OK, runMockTests 299 OK. abortOnError=true stays on — new errors fail the build.
+- **Remaining (phase 3, optional)**: 511 warning/info in baseline — top buckets UnusedAttribute 82,
+  DefaultLocale 65, HardcodedText 58 (overlaps WP8 i18n extraction), TypographyDashes 39 (mostly
+  hyphens in new translations), SetTextI18n 37, AutoboxingStateCreation 104 (info). 3 UnusedResources
+  are false positives on generated raw/ resources (getIdentifier-loaded).
+
 ## ✅ Private-copy audit + remediation re-eval + grade-A push (2026-07-18)
 Big multi-agent session (Fable audits/reviews/planning, Opus implementation). 16 commits.
 - **#156 private-copy audit** (workflow code-review, 8 finder angles + verify): fixed a HIGH cut-leak
