@@ -87,6 +87,19 @@ pure-JVM `swipe.geometric` package; NOT wired into live pipeline — WP9 stays d
   same-commit, assertion values unchanged; targeted ew-cli 31/31 green (run b713a993).
   Next unification step: **step 4** — reroute swipe auto-insert to SH (possessives+password guard
   gain swipe; flips 2 oracle pins; feature-flag per plan).
+- **R-1 STEP 4 DONE** (first behavior-changing step): swipe result path reroutes IC→SH behind
+  debug pref `Config.unified_swipe_pipeline` (DEFAULT TRUE; `Defaults.UNIFIED_SWIPE_PIPELINE`,
+  loaded from `"unified_swipe_pipeline"`, classified in `SETTINGS_DEFAULTS` — drift-test safe).
+  New `SuggestionHandler.handleSwipePredictionResults` owns the BAR (case+shift transform,
+  `augmentPredictionsWithPossessives` → D1, password-field guard → D2) and delegates the COMMIT
+  back to extracted `InputCoordinator.autoInsertTopSuggestion` (byte-identical; `IC.onSuggestionSelected`
+  untouched) — smallest change keeping commit-oracles 1/4/5/5b/9/11/12 byte-identical. **D5 (ML via
+  MLDataCollector) DEFERRED to step 6** (kept IC commit holds the inline ML block; oracle skips D5's
+  pin). Oracle flips: scenario 7 `passwordField_stillCommitsToday`→`passwordField_suppressedWhenNotOptedIn`
+  (buffer ""); scenario 8 `possessivesAbsentFromBarToday`→`possessivesPresentInBar` ("book's" present).
+  Added 2 legacy-path tests (flag FALSE → old behavior). Harness wires
+  `setSwipeResultDelegate` + sets flag true. Wired in ManagerInitializer. NOT gradle-tested locally
+  (orchestrator runs pure/mock + full ew-cli). ORACLE-FLIP(step 4) comments marked LANDED.
 - **WP8 DONE** (717bbd19 + i18n commits): theme/CleverKeysTheme.kt single M3 source (KeyboardTheme
   now thin alias, zero call-site churn; ShortSwipe+ExtraKeys unified onto branded scheme —
   INTENDED visual change, worth an on-device glance; ThemeSettings keeps purple via override).

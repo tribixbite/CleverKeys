@@ -305,6 +305,10 @@ object Defaults {
     const val SWIPE_DEBUG_SHOW_RAW_OUTPUT = false  // Debug: show raw neural output in suggestions
     const val SWIPE_SHOW_RAW_BEAM_PREDICTIONS = false  // Debug: show beam search predictions
     const val TERMUX_MODE_ENABLED = true
+    // WP9 R-1 step 4: route the swipe auto-insert result path through SuggestionHandler
+    // (possessives + password guard + unified ML capture). Default TRUE; a debug escape
+    // hatch that, when FALSE, keeps the legacy InputCoordinator-only swipe path for QA.
+    const val UNIFIED_SWIPE_PIPELINE = true
     const val AUTO_SPACE_AFTER_SUGGESTION = true  // Add trailing space after selecting suggestion
     const val AUTO_SPACE_BEFORE_SUGGESTION = true  // Add leading space before tapped suggestion
     const val BACKSPACE_UNDO_SWIPE = true  // Backspace after swipe deletes entire swiped word
@@ -604,6 +608,9 @@ class Config private constructor(
     @JvmField var neural_batch_beams = false
     @JvmField var neural_greedy_search = false
     @JvmField var swipe_debug_detailed_logging = false
+    // WP9 R-1 step 4: unified swipe result pipeline (SuggestionHandler owns post-prediction
+    // flow). Default TRUE; set FALSE (QA-only) to fall back to the legacy IC-only swipe path.
+    @JvmField var unified_swipe_pipeline = true
     @JvmField var swipe_debug_show_raw_output = false
     @JvmField var swipe_show_raw_beam_predictions = false
     @JvmField var termux_mode_enabled = false
@@ -887,6 +894,7 @@ class Config private constructor(
         backspace_undo_swipe = _prefs.getBoolean("backspace_undo_swipe", Defaults.BACKSPACE_UNDO_SWIPE)
         backspace_undo_autocorrect = _prefs.getBoolean("backspace_undo_autocorrect", Defaults.BACKSPACE_UNDO_AUTOCORRECT)
         swipe_debug_detailed_logging = _prefs.getBoolean("swipe_debug_detailed_logging", Defaults.SWIPE_DEBUG_DETAILED_LOGGING)
+        unified_swipe_pipeline = _prefs.getBoolean("unified_swipe_pipeline", Defaults.UNIFIED_SWIPE_PIPELINE)
         swipe_debug_show_raw_output = _prefs.getBoolean("swipe_debug_show_raw_output", Defaults.SWIPE_DEBUG_SHOW_RAW_OUTPUT)
         swipe_show_raw_beam_predictions = _prefs.getBoolean("swipe_show_raw_beam_predictions", Defaults.SWIPE_SHOW_RAW_BEAM_PREDICTIONS)
 

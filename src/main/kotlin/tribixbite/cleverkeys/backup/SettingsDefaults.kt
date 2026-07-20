@@ -248,6 +248,7 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
 
     // ── Misc / runtime ───────────────────────────────────────────────
     "termux_mode_enabled" to PrefValue.Bool(Defaults.TERMUX_MODE_ENABLED),
+    "unified_swipe_pipeline" to PrefValue.Bool(Defaults.UNIFIED_SWIPE_PIPELINE),
     "swipe_debug_detailed_logging" to PrefValue.Bool(Defaults.SWIPE_DEBUG_DETAILED_LOGGING),
     "swipe_debug_show_raw_output" to PrefValue.Bool(Defaults.SWIPE_DEBUG_SHOW_RAW_OUTPUT),
     "swipe_show_debug_scores" to PrefValue.Bool(Defaults.SWIPE_SHOW_DEBUG_SCORES),

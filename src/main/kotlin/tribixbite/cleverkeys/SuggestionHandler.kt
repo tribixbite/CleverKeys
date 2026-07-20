@@ -411,6 +411,97 @@ class SuggestionHandler(
     }
 
     /**
+     * WP9 R-1 step 4 — unified swipe result path. Called by [InputCoordinator.handlePredictionResults]
+     * when [Config.unified_swipe_pipeline] is enabled (the default). This is the swipe-path sibling of
+     * the tap-path [handlePredictionResults] above: it owns the BAR presentation (case preservation,
+     * shift/caps transform, possessive augmentation, password guard) but delegates the actual COMMIT
+     * back to [InputCoordinator.autoInsertTopSuggestion] so the deletion/spacing/tracking engine stays
+     * byte-identical to the legacy IC path (the highest-risk area — never refactored here).
+     *
+     * Divergences closed vs. the legacy IC path:
+     *   - D1 (possessives): the posted + re-displayed bar list is augmented via
+     *     [augmentPredictionsWithPossessives], so a possessive-eligible top prediction (e.g. "book")
+     *     now surfaces "book's" in the swipe bar. Unlike the tap path — which re-displays the ORIGINAL
+     *     (non-augmented) list after auto-insert (transient possessives, pinned by oracle 16b) — the
+     *     swipe path re-displays the SAME augmented+transformed list it posted, matching the legacy IC
+     *     "re-display what you posted" behavior so the correction list the user sees is stable. This is
+     *     the deliberate D1 flip (oracle scenario 8).
+     *   - D2 (password guard): returns early (clearing the bar) when the field is a password field and
+     *     the user has not opted into swipe-on-password (config.swipe_on_password_fields=false),
+     *     mirroring the tap-path guard. Detects the field from EITHER the tracked password mode OR the
+     *     live EditorInfo, so it holds even before onStartInputView flips the mode flag.
+     *
+     * D5 (route swipe ML capture through MLDataCollector) is intentionally DEFERRED to step 6: the
+     * commit is still performed by [InputCoordinator.onSuggestionSelected], which contains the inline
+     * ML-capture block. Routing ML here would require touching that kept commit path (double capture or
+     * removing IC's inline block) — out of scope for step 4, which keeps the commit byte-identical. The
+     * oracle already skips D5's direct pin (scenario 10 ML sub-assertion), so deferring is safe.
+     *
+     * Casing note: [inputCoordinator] has already synced its wasShiftActive/wasShiftLocked fields from
+     * the request-carried [shiftActive]/[shiftLocked] before delegating, so IC.onSuggestionSelected's
+     * (untouched) shift-indicator clearing reads consistent state. We apply the SAME case+shift
+     * transform IC applied, keeping oracle scenarios 2/3 (shift/caps casing) byte-identical.
+     *
+     * @param inputCoordinator the delegating IC — commit is routed back to its byte-identical engine.
+     */
+    fun handleSwipePredictionResults(
+        predictions: List<String>?,
+        scores: List<Int>?,
+        ic: InputConnection?,
+        editorInfo: EditorInfo?,
+        resources: Resources,
+        shiftActive: Boolean,
+        shiftLocked: Boolean,
+        inputCoordinator: InputCoordinator
+    ) {
+        // D2: password-field guard. Detect from the tracked mode OR the live editor (the latter holds
+        // in tests / before onStartInputView sets the mode). Suppress the swipe unless the user opted in.
+        val passwordField = isPasswordMode || SuggestionBar.isPasswordField(editorInfo)
+        if (passwordField && !config.swipe_on_password_fields) {
+            vlog { "SWIPE password field + swipe_on_password_fields=false — suppressing" }
+            suggestionBar?.clearSuggestions()
+            return
+        }
+
+        if (predictions.isNullOrEmpty()) {
+            suggestionBar?.clearSuggestions()
+            return
+        }
+
+        // Apply user word case preservation BEFORE shift transformation (proper nouns like "Boston"),
+        // then the shift/caps-lock-at-swipe-start transform — IDENTICAL to the legacy IC path so
+        // shift/caps casing (oracle 2/3) is unchanged.
+        val casedPredictions = predictionCoordinator.getWordPredictor()
+            ?.applyUserWordCaseToList(predictions) ?: predictions
+        val transformedPredictions = casedPredictions.map {
+            applyShiftTransformation(it, shiftActive, shiftLocked)
+        }
+
+        // D1: augment the bar list with possessive forms (transient-style augment reused from the tap
+        // path). Kept aligned with scores; possessives appended at the end so the top prediction is
+        // unchanged and the auto-insert target below is still the highest-scoring word.
+        val barWords = transformedPredictions.toMutableList()
+        val barScores = (scores ?: emptyList()).toMutableList()
+        augmentPredictionsWithPossessives(barWords, barScores)
+
+        suggestionBar?.let { bar ->
+            bar.setShowDebugScores(config.swipe_show_debug_scores)
+            bar.setSuggestionsWithScores(barWords, barScores)
+
+            // Auto-insert the top (highest-scoring) prediction. Delegate the whole commit — deletion
+            // counts, leading/trailing space, Termux handling, raw: stripping, NEURAL_SWIPE tracking,
+            // shift-indicator clearing — to IC's byte-identical engine.
+            bar.getTopSuggestion()?.takeIf { it.isNotEmpty() }?.let { topPrediction ->
+                inputCoordinator.autoInsertTopSuggestion(topPrediction, ic, editorInfo, resources)
+
+                // Re-display the augmented+transformed correction list (D1: possessives persist in the
+                // final swipe bar, unlike the tap path's non-augmented re-display).
+                bar.setSuggestionsWithScores(barWords, barScores)
+            }
+        }
+    }
+
+    /**
      * Called when user selects a suggestion from the suggestion bar.
      * Handles autocorrect, text replacement, and context updates.
      *

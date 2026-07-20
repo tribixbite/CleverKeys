@@ -169,6 +169,9 @@ class PipelineCharacterizationTest {
         config.swipe_show_debug_scores = false
         config.autocapitalize_i_words = true
         config.primary_language = "en"
+        // WP9 R-1 step 4: unified swipe pipeline ON by default. Individual legacy-path tests flip
+        // this to false to exercise the QA escape hatch (old IC-only behavior).
+        config.unified_swipe_pipeline = true
         // Haptics off: swipe auto-insert calls keyboardView.triggerHaptic(SWIPE_COMPLETE);
         // VibratorCompat.vibrate returns early when disabled, keeping the (unattached) view
         // path free of vibrator side effects on the emulator.
@@ -215,6 +218,10 @@ class PipelineCharacterizationTest {
             context, config, contextTracker, predCoord,
             sharedContractionManager!!, bar, keyboardView, keyEventHandler
         )
+        // WP9 R-1 step 4: wire the unified-swipe delegate exactly as ManagerInitializer does in
+        // production, so IC.handlePredictionResults routes through SuggestionHandler when
+        // config.unified_swipe_pipeline is true.
+        inputCoordinator.setSwipeResultDelegate(suggestionHandler)
 
         return Harness(
             config, contextTracker, sharedContractionManager!!, bar,
@@ -420,17 +427,60 @@ class PipelineCharacterizationTest {
     }
 
     /**
-     * Scenario 7 (D2): password field + swipe_on_password_fields=false → swipe STILL commits
-     * TODAY. InputCoordinator.handlePredictionResults has no password guard (unlike
-     * SuggestionHandler.kt:301). Bar is not in password mode on the IC path.
+     * Scenario 7 (D2): password field + swipe_on_password_fields=false → swipe is SUPPRESSED.
+     * ORACLE-FLIP(step 4) LANDED 2026-07-20: the swipe result path now routes through
+     * SuggestionHandler.handleSwipePredictionResults, which returns early (clearing the bar) when the
+     * field is a password field and the user has not opted into swipe-on-password. Nothing is
+     * committed and the bar carries no prediction. (Previously — legacy IC path — the swipe still
+     * committed "hunter2 " with a NEURAL_SWIPE source; that legacy behavior is now pinned by
+     * oracle_swipe_passwordField_legacyPathStillCommits with the flag off.)
      */
     @Test
-    fun oracle_swipe_passwordField_stillCommitsToday() {
+    fun oracle_swipe_passwordField_suppressedWhenNotOptedIn() {
         val h = harness(initialText = "")
         h.config.swipe_on_password_fields = false
-        // ORACLE-FLIP(step 4): swipe reroutes through SuggestionHandler.handlePredictionResults,
-        // which returns early when isPasswordMode && !swipe_on_password_fields — after the flip
-        // this becomes SUPPRESSED (empty buffer, no commit).
+        swipeResults(h, listOf("hunter2"), listOf(300), passwordEditor())
+        drainMainThread()
+
+        // Suppressed: empty buffer, no commit, "hunter2" not posted to the bar.
+        assertEquals("", bufferOf(h))
+        assertFalse(h.suggestionBar.getCurrentSuggestions().any { it == "hunter2" })
+    }
+
+    /**
+     * Scenario 8 (D1): possessives PRESENT in the SWIPE bar for a possessive-eligible word.
+     * ORACLE-FLIP(step 4) LANDED 2026-07-20: the swipe result path routes through
+     * SuggestionHandler.handleSwipePredictionResults, which augments the posted (and re-displayed)
+     * bar list via augmentPredictionsWithPossessives — so "book's" now surfaces. (Previously — legacy
+     * IC path — InputCoordinator.handlePredictionResults never augmented; that legacy absence is now
+     * pinned by oracle_swipe_possessives_legacyPathAbsent with the flag off.)
+     */
+    @Test
+    fun oracle_swipe_possessivesPresentInBar() {
+        val h = harness(initialText = "")
+        val possessive = h.contractionManager.generatePossessive("book")
+        org.junit.Assume.assumeNotNull("'book' must be possessive-eligible", possessive)
+        swipeResults(h, listOf("book", "cook"), listOf(300, 200), textEditor())
+        drainMainThread()
+
+        assertTrue(
+            "swipe bar must now carry '$possessive'. Got: ${h.suggestionBar.getCurrentSuggestions()}",
+            h.suggestionBar.getCurrentSuggestions().any { it == possessive }
+        )
+        // Top prediction still auto-inserted (possessive appended at end, doesn't displace top).
+        assertEquals("book ", bufferOf(h))
+    }
+
+    /**
+     * Scenario 7 legacy (D — flag off): with config.unified_swipe_pipeline=false, the QA escape hatch
+     * runs the legacy IC-only path, which has NO password guard — the swipe STILL commits "hunter2 "
+     * with a NEURAL_SWIPE source. Pins the pre-flip behavior so the escape hatch is verifiable.
+     */
+    @Test
+    fun oracle_swipe_passwordField_legacyPathStillCommits() {
+        val h = harness(initialText = "")
+        h.config.unified_swipe_pipeline = false
+        h.config.swipe_on_password_fields = false
         swipeResults(h, listOf("hunter2"), listOf(300), passwordEditor())
         drainMainThread()
 
@@ -439,19 +489,19 @@ class PipelineCharacterizationTest {
     }
 
     /**
-     * Scenario 8 (D1): possessives absent from the SWIPE bar today for a possessive-eligible
-     * word. InputCoordinator.handlePredictionResults does NOT call augmentPredictionsWithPossessives.
+     * Scenario 8 legacy (D — flag off): with config.unified_swipe_pipeline=false, the legacy IC-only
+     * path does NOT augment possessives — "book's" is absent from the swipe bar. Pins the pre-flip
+     * behavior of the escape hatch.
      */
     @Test
-    fun oracle_swipe_possessivesAbsentFromBarToday() {
+    fun oracle_swipe_possessives_legacyPathAbsent() {
         val h = harness(initialText = "")
+        h.config.unified_swipe_pipeline = false
         swipeResults(h, listOf("book", "cook"), listOf(300, 200), textEditor())
         drainMainThread()
 
-        // ORACLE-FLIP(step 4): swipe gains possessive augmentation (via routing through SH) —
-        // after the flip "book's" WILL appear. Today it does not.
         assertFalse(
-            "TODAY the swipe bar has no possessives. Got: ${h.suggestionBar.getCurrentSuggestions()}",
+            "legacy IC path posts no possessives. Got: ${h.suggestionBar.getCurrentSuggestions()}",
             h.suggestionBar.getCurrentSuggestions().any { it == "book's" }
         )
     }

@@ -179,6 +179,21 @@ class InputCoordinator(
         currentInputProvider = provider
     }
 
+    /**
+     * WP9 R-1 step 4: SuggestionHandler that owns the unified swipe result flow (possessive
+     * augmentation + password guard). Wired post-construction (SH is created alongside this IC)
+     * to avoid a circular constructor dependency. When null (unit contexts that don't wire it)
+     * or when [Config.unified_swipe_pipeline] is false, [handlePredictionResults] runs the legacy
+     * IC-only path unchanged. The delegate calls back into [autoInsertTopSuggestion] for the
+     * byte-identical commit — SH does NOT re-implement the deletion/spacing commit engine.
+     */
+    private var swipeResultDelegate: SuggestionHandler? = null
+
+    /** Wires the unified-swipe delegate (see [swipeResultDelegate]); set by ManagerInitializer. */
+    fun setSwipeResultDelegate(handler: SuggestionHandler?) {
+        swipeResultDelegate = handler
+    }
+
     // Swipe ML data collection
     private var currentSwipeData: SwipeMLData? = null
 
@@ -496,6 +511,20 @@ class InputCoordinator(
         wasShiftActiveAtSwipeStart = shiftActive
         wasShiftLockedAtSwipeStart = shiftLocked
 
+        // WP9 R-1 step 4: when the unified-swipe pipeline is enabled (default), delegate the whole
+        // post-prediction flow to SuggestionHandler — it adds possessive augmentation (D1) and the
+        // password-field guard (D2) that the legacy IC path lacks, then calls back into
+        // [autoInsertTopSuggestion] for the byte-identical commit. The QA escape hatch
+        // (config.unified_swipe_pipeline=false) keeps the legacy IC-only path below unchanged.
+        // A null delegate (unwired unit contexts) also falls back to the legacy path.
+        val delegate = swipeResultDelegate
+        if (config.unified_swipe_pipeline && delegate != null) {
+            delegate.handleSwipePredictionResults(
+                predictions, scores, ic, editorInfo, resources, shiftActive, shiftLocked, this
+            )
+            return
+        }
+
         val handleStartTime = System.currentTimeMillis()
         debugLogger?.invoke("⏱️ HANDLE_PREDICTIONS START")
 
@@ -535,34 +564,7 @@ class InputCoordinator(
 
             // Auto-insert top prediction immediately after swipe completes
             bar.getTopSuggestion()?.takeIf { it.isNotEmpty() }?.let { topPrediction ->
-                debugLogger?.invoke("🎯 TOP SUGGESTION SELECTED FOR INSERT: \"$topPrediction\"")
-
-                // v1.2.8: Trigger haptic feedback for swipe completion
-                keyboardView.triggerHaptic(HapticEvent.SWIPE_COMPLETE)
-                // If manual typing in progress, add space after it
-                if (contextTracker.getCurrentWordLength() > 0 && ic != null) {
-                    val spaceCommitTime = System.currentTimeMillis()
-                    ic.commitText(" ", 1)
-                    debugLogger?.invoke("⏱️ commitText(space): ${System.currentTimeMillis() - spaceCommitTime}ms")
-                    contextTracker.clearCurrentWord()
-                    contextTracker.clearLastAutoInsertedWord()
-                    contextTracker.setLastCommitSource(PredictionSource.USER_TYPED_TAP)
-                }
-
-                // Clear tracking before selection to prevent deletion
-                contextTracker.clearLastAutoInsertedWord()
-                contextTracker.setLastCommitSource(PredictionSource.UNKNOWN)
-
-                // Insert the top prediction
-                val insertStartTime = System.currentTimeMillis()
-                onSuggestionSelected(topPrediction, ic, editorInfo, resources)
-                val insertDuration = System.currentTimeMillis() - insertStartTime
-                debugLogger?.invoke("⏱️ onSuggestionSelected('$topPrediction'): ${insertDuration}ms")
-
-                // Track as auto-inserted for replacement
-                val cleanPrediction = topPrediction.replace("^raw:".toRegex(), "")
-                contextTracker.setLastAutoInsertedWord(cleanPrediction)
-                contextTracker.setLastCommitSource(PredictionSource.NEURAL_SWIPE)
+                autoInsertTopSuggestion(topPrediction, ic, editorInfo, resources)
 
                 // Re-display suggestions after auto-insertion (use transformed predictions)
                 bar.setSuggestionsWithScores(transformedPredictions, scores)
@@ -571,6 +573,54 @@ class InputCoordinator(
 
         val handleDuration = System.currentTimeMillis() - handleStartTime
         debugLogger?.invoke("⏱️ HANDLE_PREDICTIONS COMPLETE: ${handleDuration}ms")
+    }
+
+    /**
+     * Auto-inserts [topPrediction] after a swipe: haptic, manual-typing space handling, tracking
+     * reset, the [onSuggestionSelected] commit (the byte-identical deletion/spacing engine), then
+     * NEURAL_SWIPE tracking for later replacement. Extracted (WP9 R-1 step 4) so BOTH the legacy IC
+     * path and the unified SuggestionHandler delegate ([SuggestionHandler.handleSwipePredictionResults])
+     * reuse the exact same commit — the delegate adds possessives/password-guard to the BAR only and
+     * leaves the commit untouched, so all commit-path oracle scenarios stay byte-identical.
+     *
+     * Does NOT post or re-display the suggestion bar — the caller owns bar presentation (legacy
+     * re-displays the transformed list; the delegate re-displays its own augmented/original list to
+     * preserve SH's transient-possessive semantics).
+     */
+    internal fun autoInsertTopSuggestion(
+        topPrediction: String,
+        ic: InputConnection?,
+        editorInfo: EditorInfo?,
+        resources: Resources
+    ) {
+        debugLogger?.invoke("🎯 TOP SUGGESTION SELECTED FOR INSERT: \"$topPrediction\"")
+
+        // v1.2.8: Trigger haptic feedback for swipe completion
+        keyboardView.triggerHaptic(HapticEvent.SWIPE_COMPLETE)
+        // If manual typing in progress, add space after it
+        if (contextTracker.getCurrentWordLength() > 0 && ic != null) {
+            val spaceCommitTime = System.currentTimeMillis()
+            ic.commitText(" ", 1)
+            debugLogger?.invoke("⏱️ commitText(space): ${System.currentTimeMillis() - spaceCommitTime}ms")
+            contextTracker.clearCurrentWord()
+            contextTracker.clearLastAutoInsertedWord()
+            contextTracker.setLastCommitSource(PredictionSource.USER_TYPED_TAP)
+        }
+
+        // Clear tracking before selection to prevent deletion
+        contextTracker.clearLastAutoInsertedWord()
+        contextTracker.setLastCommitSource(PredictionSource.UNKNOWN)
+
+        // Insert the top prediction
+        val insertStartTime = System.currentTimeMillis()
+        onSuggestionSelected(topPrediction, ic, editorInfo, resources)
+        val insertDuration = System.currentTimeMillis() - insertStartTime
+        debugLogger?.invoke("⏱️ onSuggestionSelected('$topPrediction'): ${insertDuration}ms")
+
+        // Track as auto-inserted for replacement
+        val cleanPrediction = topPrediction.replace("^raw:".toRegex(), "")
+        contextTracker.setLastAutoInsertedWord(cleanPrediction)
+        contextTracker.setLastCommitSource(PredictionSource.NEURAL_SWIPE)
     }
 
     /**

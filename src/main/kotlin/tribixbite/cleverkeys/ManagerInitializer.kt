@@ -127,6 +127,11 @@ class ManagerInitializer(
             keyEventHandler
         )
 
+        // WP9 R-1 step 4: wire the unified-swipe delegate now that both exist. When
+        // config.unified_swipe_pipeline is enabled (default), InputCoordinator routes its
+        // post-swipe-prediction flow through SuggestionHandler (possessives + password guard).
+        inputCoordinator.setSwipeResultDelegate(suggestionHandler)
+
         // Initialize neural layout helper (v1.32.362)
         val neuralLayoutHelper = NeuralLayoutHelper(
             context,

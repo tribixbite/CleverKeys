@@ -105,3 +105,33 @@ Naming: `oracle_<path>_<scenario>`. All INVARIANT unless marked FLIP.
 
 No production-code changes. No reroutes. The Termux-deletion decision (R-1 step 7) stays a
 separate, user-visible decision; scenario 9 pins current behavior so that decision is explicit.
+
+## Step 4 — LANDED (2026-07-20)
+
+First behavior-changing step. Feature-flagged via `Config.unified_swipe_pipeline` (debug pref,
+DEFAULT TRUE; registered in `Defaults.UNIFIED_SWIPE_PIPELINE`, `Config.unified_swipe_pipeline`,
+loaded from `"unified_swipe_pipeline"`, classified in `SETTINGS_DEFAULTS` for the drift test).
+
+**Delegation structure:** `InputCoordinator.handlePredictionResults` dispatches on the flag. When
+TRUE (default) + delegate wired, it calls the new `SuggestionHandler.handleSwipePredictionResults`,
+which owns BAR presentation (user-word case, shift/caps transform, possessive augmentation,
+password guard) and delegates the COMMIT back to the extracted `InputCoordinator.autoInsertTopSuggestion`
+(the byte-identical deletion/spacing/tracking engine — `IC.onSuggestionSelected` unchanged). This
+keeps every commit-path oracle (1,4,5,5b,9,11,12) byte-identical while closing D1/D2 on the bar.
+
+- **D1** (possessives): CLOSED — swipe bar posts + re-displays the augmented list (scenario 8 flip).
+- **D2** (password guard): CLOSED — swipe suppressed on password fields unless opted in (scenario 7 flip).
+- **D5** (ML via MLDataCollector): DEFERRED to step 6 — the kept `IC.onSuggestionSelected` still holds
+  the inline ML block; routing here would touch the commit path. Oracle already skips D5's pin.
+
+**Oracle changes (old → new):**
+- Scenario 7 `oracle_swipe_passwordField_stillCommitsToday` → `oracle_swipe_passwordField_suppressedWhenNotOptedIn`:
+  was `assertEquals("hunter2 ", buffer)` + NEURAL_SWIPE source → now `assertEquals("", buffer)` +
+  "hunter2" absent from bar.
+- Scenario 8 `oracle_swipe_possessivesAbsentFromBarToday` → `oracle_swipe_possessivesPresentInBar`:
+  was `assertFalse(bar has "book's")` → now `assertTrue(bar has "book's")` + `assertEquals("book ", buffer)`.
+- Added legacy-path guards (flag FALSE): `oracle_swipe_passwordField_legacyPathStillCommits` (commits
+  "hunter2 ") and `oracle_swipe_possessives_legacyPathAbsent` (no "book's").
+- Harness: `harness()` now sets `config.unified_swipe_pipeline = true` and calls
+  `inputCoordinator.setSwipeResultDelegate(suggestionHandler)` (mirrors ManagerInitializer). The
+  `swipeResults()` seam (`IC.handlePredictionResults`) is unchanged — IC still dispatches internally.
