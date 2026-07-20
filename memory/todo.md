@@ -31,8 +31,12 @@ pure-JVM `swipe.geometric` package; NOT wired into live pipeline — WP9 stays d
   yields "Book's's" (no ends-with-'s guard) — TODO post-unification. Suites: 1621 pure + 299 mock OK.
 - **Parallel-session collision**: concurrent sessions share this working tree; an uncommitted fix
   was clobbered by a checkout. Lesson recorded in CLAUDE.md header: commit immediately.
-- **NEXT**: wave-2 result → baseline regen (target ~0 warnings) → ew-cli full run (validates oracle
-  green at HEAD + wave-1/2 on-device) → R-1 step 3 (shift capture into SH, flips 3 oracle pins).
+- **LINT DEBT: ZERO (969c01a7).** Wave-2 landed (48 new strings × 21 locales, tools:text
+  placeholders, performClick overrides, DrawAllocation hoists, -v21 merge). lint-baseline.xml
+  regenerated EMPTY — `lintDebug` → "No issues found." with abortOnError=true. From 1544
+  baselined issues (656 errors + 888 warnings) to 0 masked, all real fixes.
+- **NEXT**: ew-cli full run in flight (validates wave-1/2 on-device + 31 oracle instrumented tests
+  green at HEAD) → then R-1 step 3 (shift capture into SH, flips 3 oracle pins).
       + method.xml el subtype `script=greek` (pair-flip keeps ExtraKeys £/€ merge) +
       SwipeLayoutSupportTest Greek case now asserts isFalse (was codifying the bug).
       Note for geoswipe audit: LayoutProjection.kt:26 comment "grek_qwerty claims latin" is
