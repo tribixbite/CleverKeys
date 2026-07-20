@@ -69,8 +69,8 @@ class BigramStore(private val context: Context) {
         if (normalizedWord1 == normalizedWord2) return  // Skip self-references
 
         synchronized(this) {
-            // Increment word1 total frequency
-            val word1Freq = word1Frequencies.getOrDefault(normalizedWord1, 0) + 1
+            // Increment word1 total frequency (non-null Int values → `?: 0` == getOrDefault).
+            val word1Freq = (word1Frequencies[normalizedWord1] ?: 0) + 1
             word1Frequencies[normalizedWord1] = word1Freq
 
             // Find or create bigram entry
@@ -262,8 +262,8 @@ class BigramStore(private val context: Context) {
 
                 bigramMap.getOrPut(entry.word1) { mutableListOf() }.add(entry)
 
-                // Reconstruct word1 frequencies
-                val currentFreq = word1Frequencies.getOrDefault(entry.word1, 0)
+                // Reconstruct word1 frequencies (non-null Int values → `?: 0` == getOrDefault).
+                val currentFreq = word1Frequencies[entry.word1] ?: 0
                 word1Frequencies[entry.word1] = currentFreq + entry.frequency
             }
 

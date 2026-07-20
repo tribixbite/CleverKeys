@@ -1,5 +1,7 @@
 package tribixbite.cleverkeys
 
+import android.annotation.SuppressLint
+import android.app.PendingIntent
 import android.content.Intent
 import android.os.Build
 import android.provider.Settings
@@ -26,6 +28,9 @@ class KeyboardTileService : TileService() {
         updateTileState()
     }
 
+    // Intent overload of startActivityAndCollapse is the only option below API 34;
+    // the call is version-guarded (PendingIntent overload used on UPSIDE_DOWN_CAKE+).
+    @SuppressLint("StartActivityAndCollapseDeprecated")
     override fun onClick() {
         super.onClick()
 
@@ -38,7 +43,21 @@ class KeyboardTileService : TileService() {
             val intent = Intent(Settings.ACTION_INPUT_METHOD_SETTINGS).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
-            startActivityAndCollapse(intent)
+            // TileService#startActivityAndCollapse(Intent) is deprecated and throws
+            // UnsupportedOperationException on API 34+ (UPSIDE_DOWN_CAKE); use the
+            // PendingIntent overload there and keep the Intent path for older APIs.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                val pendingIntent = PendingIntent.getActivity(
+                    this,
+                    0,
+                    intent,
+                    PendingIntent.FLAG_IMMUTABLE
+                )
+                startActivityAndCollapse(pendingIntent)
+            } else {
+                @Suppress("DEPRECATION")
+                startActivityAndCollapse(intent)
+            }
         }
     }
 

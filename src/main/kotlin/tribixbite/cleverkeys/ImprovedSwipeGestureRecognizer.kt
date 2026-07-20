@@ -379,15 +379,15 @@ open class ImprovedSwipeGestureRecognizer {
     private fun shouldConsiderSwipeTyping(): Boolean {
         // Add debug logging for swipe detection (only in debug builds for performance)
         if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-            Log.d("ImprovedSwipeGestureRecognizer", "🔍 SWIPE DETECTION CHECK:")
-            Log.d("ImprovedSwipeGestureRecognizer", "- Keys touched: ${_touchedKeys.size}")
-            Log.d("ImprovedSwipeGestureRecognizer", "- Total distance: ${_totalDistance} (need ${MIN_SWIPE_DISTANCE})")
+            Log.d("ImprovedSwipeGestRec", "🔍 SWIPE DETECTION CHECK:")
+            Log.d("ImprovedSwipeGestRec", "- Keys touched: ${_touchedKeys.size}")
+            Log.d("ImprovedSwipeGestRec", "- Total distance: ${_totalDistance} (need ${MIN_SWIPE_DISTANCE})")
         }
 
         // Need at least 2 alphabetic keys
         if (_touchedKeys.size < 2) {
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                Log.d("ImprovedSwipeGestureRecognizer", "❌ Too few keys: ${_touchedKeys.size} < 2")
+                Log.d("ImprovedSwipeGestRec", "❌ Too few keys: ${_touchedKeys.size} < 2")
             }
             return false
         }
@@ -395,7 +395,7 @@ open class ImprovedSwipeGestureRecognizer {
         // Check total distance
         if (_totalDistance < MIN_SWIPE_DISTANCE) {
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                Log.d("ImprovedSwipeGestureRecognizer", "❌ Distance too short: ${_totalDistance} < ${MIN_SWIPE_DISTANCE}")
+                Log.d("ImprovedSwipeGestRec", "❌ Distance too short: ${_totalDistance} < ${MIN_SWIPE_DISTANCE}")
             }
             return false
         }
@@ -404,14 +404,14 @@ open class ImprovedSwipeGestureRecognizer {
         for (key in _touchedKeys) {
             if (!isValidAlphabeticKey(key)) {
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                    Log.d("ImprovedSwipeGestureRecognizer", "❌ Non-alphabetic key touched")
+                    Log.d("ImprovedSwipeGestRec", "❌ Non-alphabetic key touched")
                 }
                 return false
             }
         }
 
         if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-            Log.d("ImprovedSwipeGestureRecognizer", "✅ SWIPE DETECTED - proceeding with swipe typing")
+            Log.d("ImprovedSwipeGestRec", "✅ SWIPE DETECTED - proceeding with swipe typing")
         }
         return true
     }

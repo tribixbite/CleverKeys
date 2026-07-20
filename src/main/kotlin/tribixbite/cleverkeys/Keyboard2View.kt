@@ -1461,7 +1461,15 @@ class Keyboard2View @JvmOverloads constructor(
             requestLayout()
         }
 
-        return WindowInsets.CONSUMED
+        // Consume the insets so child views don't re-apply them.
+        // WindowInsets.CONSUMED is API 30; consumeSystemWindowInsets() is the API 21-29
+        // equivalent (deprecated but functional — returns a fully-consumed WindowInsets).
+        return if (VERSION.SDK_INT >= 30) {
+            WindowInsets.CONSUMED
+        } else {
+            @Suppress("DEPRECATION")
+            wi.consumeSystemWindowInsets()
+        }
     }
 
     override fun onDraw(canvas: Canvas) {

@@ -135,7 +135,8 @@ class BeamSearchEngine(
                 // doesn't match the detected starting key from the swipe trace
                 if (step == 0 && strictStartChar && firstDetectedKey != null) {
                     val targetChar = firstDetectedKey.lowercaseChar()
-                    candidates.removeIf { beam ->
+                    // removeAll{} (Kotlin stdlib) replaces Collection#removeIf (API 24).
+                    candidates.removeAll { beam ->
                         // Get first non-SOS token
                         val firstCharToken = beam.tokens.getOrNull(1)?.toInt()
                         if (firstCharToken == null || firstCharToken == EOS_IDX) {
@@ -172,7 +173,7 @@ class BeamSearchEngine(
             
             // Filter low probability beams
             if (step >= PRUNE_STEP_THRESHOLD) {
-                candidates.removeIf { exp(-it.score) < 1e-6 }
+                candidates.removeAll { exp(-it.score) < 1e-6 } // removeIf is API 24
             }
             
             // Select top K with deduplication by token sequence

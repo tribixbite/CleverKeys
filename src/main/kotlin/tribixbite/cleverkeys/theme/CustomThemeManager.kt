@@ -101,7 +101,9 @@ class CustomThemeManager(private val context: Context) {
      */
     fun deleteCustomTheme(themeId: String): Boolean {
         val current = _customThemes.value.toMutableList()
-        val removed = current.removeIf { it.id == themeId }
+        // removeAll{} (Kotlin stdlib) replaces Collection#removeIf (API 24); both return
+        // whether the list changed, so the `removed` flag semantics are preserved.
+        val removed = current.removeAll { it.id == themeId }
 
         return if (removed && saveCustomThemesToPrefs(current)) {
             _customThemes.value = current

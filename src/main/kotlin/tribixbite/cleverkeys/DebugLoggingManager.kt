@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.Build
 import java.io.BufferedWriter
 import java.io.FileWriter
 import java.io.IOException
@@ -110,7 +111,15 @@ class DebugLoggingManager(
         }
 
         val filter = IntentFilter(DEBUG_MODE_ACTION)
-        context.registerReceiver(debugModeReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        // RECEIVER_NOT_EXPORTED (and the 4-arg registerReceiver) require API 26. On API
+        // 21-25 use the 3-arg form: an app-internal broadcast with no exported components
+        // is not reachable by other apps pre-26, so the security posture is unchanged.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.registerReceiver(debugModeReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            @Suppress("UnspecifiedRegisterReceiverFlag")
+            context.registerReceiver(debugModeReceiver, filter)
+        }
     }
 
     /**

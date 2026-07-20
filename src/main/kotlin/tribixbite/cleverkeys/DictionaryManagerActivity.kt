@@ -68,7 +68,8 @@ class DictionaryManagerActivity : AppCompatActivity() {
     companion object {
         private const val SEARCH_DEBOUNCE_MS = 300L
         private const val COUNT_UPDATE_DELAY_MS = 100L // Delay to ensure fragments have updated
-        private const val TAG = "DictionaryManagerActivity"
+        // Log tag kept <=23 chars so Log.isLoggable does not crash on API <26 (LongLogTag lint).
+        private const val TAG = "DictManagerActivity"
 
         // Language display names for tabs
         private val LANGUAGE_NAMES = mapOf(
@@ -467,10 +468,10 @@ class DictionaryManagerActivity : AppCompatActivity() {
             swipePredictor.reloadVocabulary()
 
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                android.util.Log.d("DictionaryManagerActivity", "Reloaded predictions after dictionary changes")
+                android.util.Log.d(TAG, "Reloaded predictions after dictionary changes")
             }
         } catch (e: Exception) {
-            android.util.Log.e("DictionaryManagerActivity", "Failed to reload predictions", e)
+            android.util.Log.e(TAG, "Failed to reload predictions", e)
         }
     }
 

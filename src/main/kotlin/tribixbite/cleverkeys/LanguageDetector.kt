@@ -315,7 +315,7 @@ class LanguageDetector {
 
         for (c in text) {
             if (c.isLetter()) {
-                actualCounts[c] = actualCounts.getOrDefault(c, 0) + 1
+                actualCounts[c] = (actualCounts[c] ?: 0) + 1
                 totalChars++
             }
         }
@@ -329,7 +329,7 @@ class LanguageDetector {
         var matchedChars = 0
 
         for ((c, expectedFreq) in expectedFreqs) {
-            val actualCount = actualCounts.getOrDefault(c, 0)
+            val actualCount = actualCounts[c] ?: 0
             val actualFreq = (actualCount * 100.0f) / totalChars
 
             // Use inverse of frequency difference as score contribution

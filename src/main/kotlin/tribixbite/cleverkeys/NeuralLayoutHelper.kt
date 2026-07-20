@@ -245,7 +245,7 @@ class NeuralLayoutHelper(
 
                 // Estimate row height from the distance between rows
                 // q is in row 0, a is in row 1, z/m are in row 2
-                val aPos = keyPositions.getOrDefault('a', qPos)
+                val aPos = keyPositions['a'] ?: qPos // getOrDefault is API 24; values are non-null
                 val rowHeight = (mPos.y - qPos.y) / 2.0f // Approximate row height
 
                 // QWERTY bounds: from top of first row to bottom of last row
@@ -299,7 +299,7 @@ class NeuralLayoutHelper(
                     sendDebugLog(String.format(">>> Neural engine: %d key positions set\n", keyPositions.size))
                     sendDebugLog(String.format(">>> QWERTY bounds: top=%.0f, height=%.0f\n", qwertyTop, qwertyHeight))
                     sendDebugLog(String.format(">>> Touch Y-offset: %.0f px (finger occlusion compensation)\n", touchYOffset))
-                    val zPos = keyPositions.getOrDefault('z', mPos)
+                    val zPos = keyPositions['z'] ?: mPos // getOrDefault is API 24; values are non-null
                     sendDebugLog(
                         String.format(
                             ">>> Samples: q=(%.0f,%.0f) a=(%.0f,%.0f) z=(%.0f,%.0f)\n",

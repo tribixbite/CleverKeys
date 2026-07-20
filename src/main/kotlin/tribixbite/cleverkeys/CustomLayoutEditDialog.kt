@@ -6,7 +6,7 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.os.Handler
 import android.text.InputType
-import android.widget.EditText
+import androidx.appcompat.widget.AppCompatEditText
 import kotlin.math.log10
 
 object CustomLayoutEditDialog {
@@ -66,7 +66,7 @@ object CustomLayoutEditDialog {
     }
 
     /** An editable text view that shows line numbers. */
-    class LayoutEntryEditText(ctx: Context) : EditText(ctx) {
+    class LayoutEntryEditText(ctx: Context) : AppCompatEditText(ctx) {
         /** Used to draw line numbers. */
         private val lnPaint: Paint = Paint(paint).apply {
             textSize = textSize * 0.8f

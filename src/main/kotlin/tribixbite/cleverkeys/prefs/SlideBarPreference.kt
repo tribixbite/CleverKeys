@@ -109,7 +109,10 @@ class SlideBarPreference(
         textView = view.findViewById(tribixbite.cleverkeys.R.id.slider_value)
         seekBar = view.findViewById<SeekBar>(tribixbite.cleverkeys.R.id.slider_seekbar)?.apply {
             max = STEPS
-            progress = ((value - min) * STEPS / (this@SlideBarPreference.max - min)).toInt()
+            // Qualify the preference's own min/max: inside this SeekBar `apply` block a bare
+            // `min` would resolve to SeekBar/ProgressBar#getMin (API 26, and the wrong value).
+            progress = ((value - this@SlideBarPreference.min) * STEPS /
+                (this@SlideBarPreference.max - this@SlideBarPreference.min)).toInt()
             setOnSeekBarChangeListener(this@SlideBarPreference)
         }
         updateText()

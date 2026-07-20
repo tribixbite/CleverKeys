@@ -5,7 +5,7 @@ import android.util.AttributeSet
 import android.view.ContextThemeWrapper
 import android.view.MotionEvent
 import android.view.View
-import android.widget.Button
+import androidx.appcompat.widget.AppCompatButton
 import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import tribixbite.cleverkeys.R
@@ -96,7 +96,7 @@ class GifGroupButtonsBar(context: Context, attrs: AttributeSet) : HorizontalScro
     inner class GifGroupButton(
         context: Context,
         private val category: GifCategory
-    ) : Button(ContextThemeWrapper(context, R.style.emojiTypeButton), null, 0),
+    ) : AppCompatButton(ContextThemeWrapper(context, R.style.emojiTypeButton), null, 0),
         View.OnTouchListener {
 
         init {

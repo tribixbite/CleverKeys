@@ -79,7 +79,9 @@ object DictImportPlanBuilder {
             if (wordsEl.isJsonObject) {
                 val map = merged.getOrPut(lang) { LinkedHashMap() }
                 wordsEl.asJsonObject.entrySet().forEach { (w, freqEl) ->
-                    map.putIfAbsent(w, freqEl.asInt)
+                    // Map#putIfAbsent is API 24; `if (w !in map)` is the API 21-safe
+                    // first-writer-wins equivalent (values are non-null Int).
+                    if (w !in map) map[w] = freqEl.asInt
                 }
             }
         }
@@ -87,7 +89,7 @@ object DictImportPlanBuilder {
         // 2. legacy custom_words → English
         root.getAsJsonObject("custom_words")?.entrySet()?.forEach { (w, freqEl) ->
             val map = merged.getOrPut("en") { LinkedHashMap() }
-            map.putIfAbsent(w, freqEl.asInt)
+            if (w !in map) map[w] = freqEl.asInt
         }
 
         // 3. legacy user_words → English (array of strings OR array of
@@ -107,7 +109,7 @@ object DictImportPlanBuilder {
                 else -> return@forEach
             }
             val map = merged.getOrPut("en") { LinkedHashMap() }
-            map.putIfAbsent(word, freq)
+            if (word !in map) map[word] = freq
         }
 
         return merged

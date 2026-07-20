@@ -205,8 +205,12 @@ class KeyEventHandler(
             val clip = android.content.ClipData.newUri(
                 context.contentResolver, mediaPath, contentUri
             )
-            clip.description.extras = android.os.PersistableBundle().apply {
-                putString("android.content.extra.MIME_TYPES", mimeType)
+            // ClipDescription#setExtras requires API 24. On API 21-23 the MIME type is
+            // already carried by ClipData.newUri's description, so skip the supplemental extras.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                clip.description.extras = android.os.PersistableBundle().apply {
+                    putString("android.content.extra.MIME_TYPES", mimeType)
+                }
             }
             val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
             cm.setPrimaryClip(clip)

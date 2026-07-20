@@ -57,7 +57,7 @@ class ProbabilisticKeyDetector(
 
             if (probability > MIN_PROBABILITY) {
                 // Accumulate probability
-                val currentProb = keyProbabilities.getOrDefault(kwd.key, 0f)
+                val currentProb = keyProbabilities[kwd.key] ?: 0f // getOrDefault is API 24
                 keyProbabilities[kwd.key] = currentProb + probability
             }
         }

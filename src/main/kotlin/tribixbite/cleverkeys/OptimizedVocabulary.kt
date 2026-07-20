@@ -1093,7 +1093,7 @@ class OptimizedVocabulary(private val context: Context) {
     }
 
     private fun getMinFrequency(length: Int): Float {
-        return minFrequencyByLength.getOrDefault(length, 1e-9f)
+        return minFrequencyByLength[length] ?: 1e-9f // getOrDefault is API 24; values non-null
     }
     
     /**

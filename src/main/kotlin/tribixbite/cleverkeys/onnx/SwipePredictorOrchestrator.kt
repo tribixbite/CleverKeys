@@ -33,7 +33,8 @@ import kotlin.concurrent.write
 class SwipePredictorOrchestrator private constructor(private val context: Context) {
 
     companion object {
-        private const val TAG = "SwipePredictorOrchestrator"
+        // Log tag kept <=23 chars so Log.isLoggable does not crash on API <26 (LongLogTag lint).
+        private const val TAG = "SwipePredictorOrch"
         private const val TRAJECTORY_FEATURES = 6
 
         // The encoder ONNX graph has its trajectory_features input shape baked

@@ -6,7 +6,7 @@ import android.view.ContextThemeWrapper
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
+import androidx.appcompat.widget.AppCompatButton
 import android.widget.LinearLayout
 
 /**
@@ -57,7 +57,7 @@ class EmojiGroupButtonsBar(context: Context, attrs: AttributeSet) : LinearLayout
         context: Context,
         private val groupId: Int,
         symbol: String
-    ) : Button(ContextThemeWrapper(context, R.style.emojiTypeButton), null, 0),
+    ) : AppCompatButton(ContextThemeWrapper(context, R.style.emojiTypeButton), null, 0),
         View.OnTouchListener {
 
         init {

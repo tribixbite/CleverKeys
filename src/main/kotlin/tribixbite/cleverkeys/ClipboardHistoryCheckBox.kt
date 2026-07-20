@@ -2,13 +2,13 @@ package tribixbite.cleverkeys
 
 import android.content.Context
 import android.util.AttributeSet
-import android.widget.CheckBox
 import android.widget.CompoundButton
+import androidx.appcompat.widget.AppCompatCheckBox
 
 class ClipboardHistoryCheckBox(
     ctx: Context,
     attrs: AttributeSet
-) : CheckBox(ctx, attrs), CompoundButton.OnCheckedChangeListener {
+) : AppCompatCheckBox(ctx, attrs), CompoundButton.OnCheckedChangeListener {
 
     init {
         isChecked = Config.globalConfig().clipboard_history_enabled

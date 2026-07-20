@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -125,7 +126,14 @@ class SwipeDebugActivity : Activity() {
 
         // Register broadcast receiver for debug logs
         val filter = IntentFilter(ACTION_DEBUG_LOG)
-        registerReceiver(logReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        // RECEIVER_NOT_EXPORTED (4-arg registerReceiver) requires API 26. On API 21-25 use
+        // the 3-arg form; an app-internal broadcast is not reachable by other apps pre-26.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            registerReceiver(logReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            @Suppress("UnspecifiedRegisterReceiverFlag")
+            registerReceiver(logReceiver, filter)
+        }
 
         // Enable debug mode
         setDebugMode(true)

@@ -13,7 +13,8 @@ import android.util.Log
  */
 class SwipeTrajectoryProcessor {
     companion object {
-        private const val TAG = "SwipeTrajectoryProcessor"
+        // Log tag kept <=23 chars so Log.isLoggable does not crash on API <26 (LongLogTag lint).
+        private const val TAG = "SwipeTrajProcessor"
     }
 
     // Keyboard layout for nearest key detection

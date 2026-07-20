@@ -24,7 +24,8 @@ class MultiLanguageDictionaryManager(
     private val context: Context
 ) {
     companion object {
-        private const val TAG = "MultiLanguageDictionaryManager"
+        // Log tag kept <=23 chars so Log.isLoggable does not crash on API <26 (LongLogTag lint).
+        private const val TAG = "MultiLangDictManager"
     }
 
     // Cached dictionaries (language code → OptimizedVocabulary)

@@ -210,8 +210,9 @@ class NormalizedPrefixIndex {
         val normalized = AccentNormalizer.normalize(canonical)
         val entries = canonicalMap[normalized] ?: return
 
-        // Remove the specific canonical entry
-        entries.removeIf { it.canonical == canonical }
+        // Remove the specific canonical entry.
+        // removeAll{} (Kotlin stdlib) replaces Collection#removeIf (API 24) — same semantics.
+        entries.removeAll { it.canonical == canonical }
 
         // If no more canonicals for this normalized form, remove from prefix index
         if (entries.isEmpty()) {

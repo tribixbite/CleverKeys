@@ -4,6 +4,8 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
 
@@ -52,10 +54,14 @@ fun KeyboardTheme(
     // Initialize theme manager (singleton per context)
     val themeManager = MaterialThemeManager(context)
 
+    // Subscribe to theme config via collectAsState so recomposition is triggered
+    // when the underlying StateFlow emits (initial value == themeConfig.value).
+    val themeConfig by themeManager.themeConfig.collectAsState()
+
     // Update theme config if dynamic color preference changed
-    if (themeManager.themeConfig.value.useDynamicColor != dynamicColor) {
+    if (themeConfig.useDynamicColor != dynamicColor) {
         themeManager.updateTheme(
-            themeManager.themeConfig.value.copy(useDynamicColor = dynamicColor)
+            themeConfig.copy(useDynamicColor = dynamicColor)
         )
     }
 

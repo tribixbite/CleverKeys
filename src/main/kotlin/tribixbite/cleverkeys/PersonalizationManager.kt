@@ -34,16 +34,19 @@ class PersonalizationManager(context: Context) {
 
         val normalizedWord = word.lowercase().trim()
 
-        // Update word frequency
-        val currentFreq = wordFrequencies.getOrDefault(normalizedWord, 0)
+        // Update word frequency (values are non-null Int, so `?: 0` == getOrDefault).
+        val currentFreq = wordFrequencies[normalizedWord] ?: 0
         val newFreq = min(currentFreq + FREQUENCY_INCREMENT, MAX_FREQUENCY)
         wordFrequencies[normalizedWord] = newFreq
 
         // Update bigram (word pair) frequency
         if (lastWord.isNotEmpty()) {
-            val lastWordBigrams = bigrams.computeIfAbsent(lastWord) { ConcurrentHashMap() }
+            // ConcurrentHashMap#computeIfAbsent is API 24; putIfAbsent (ConcurrentMap, API 1)
+            // gives the same atomic get-or-create without core-library desugaring.
+            val lastWordBigrams = bigrams[lastWord]
+                ?: ConcurrentHashMap<String, Int>().let { bigrams.putIfAbsent(lastWord, it) ?: it }
 
-            val bigramFreq = lastWordBigrams.getOrDefault(normalizedWord, 0)
+            val bigramFreq = lastWordBigrams[normalizedWord] ?: 0
             lastWordBigrams[normalizedWord] = min(bigramFreq + BIGRAM_INCREMENT, MAX_FREQUENCY)
         }
 
@@ -175,7 +178,9 @@ class PersonalizationManager(context: Context) {
                         val secondWord = parts[1]
                         val freq = value as Int
 
-                        val bigramMap = bigrams.computeIfAbsent(firstWord) { ConcurrentHashMap() }
+                        // computeIfAbsent is API 24; putIfAbsent (API 1) is the pre-24 idiom.
+                        val bigramMap = bigrams[firstWord]
+                            ?: ConcurrentHashMap<String, Int>().let { bigrams.putIfAbsent(firstWord, it) ?: it }
                         bigramMap[secondWord] = freq
                     }
                 }

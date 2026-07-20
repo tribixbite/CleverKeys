@@ -9,7 +9,7 @@ import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.BaseAdapter
 import android.widget.GridView
-import android.widget.TextView
+import androidx.appcompat.widget.AppCompatTextView
 
 class EmojiGridView(context: Context, attrs: AttributeSet?) :
     GridView(context, attrs), AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener {
@@ -198,7 +198,7 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
         return context.getSharedPreferences("emoji_last_use", Context.MODE_PRIVATE)
     }
 
-    class EmojiView(context: Context) : TextView(context) {
+    class EmojiView(context: Context) : AppCompatTextView(context) {
         private var defaultTextSize: Float = 0f
         private val density = context.resources.displayMetrics.density
 

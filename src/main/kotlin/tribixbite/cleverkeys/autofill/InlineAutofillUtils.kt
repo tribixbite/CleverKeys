@@ -7,6 +7,7 @@
  */
 package tribixbite.cleverkeys.autofill
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.PixelFormat
 import android.graphics.Rect
@@ -50,6 +51,13 @@ object InlineAutofillUtils {
      * @param context The context for accessing resources
      * @return An InlineSuggestionsRequest configured with styling specs
      */
+    // androidx.autofill's ViewStyle/ImageViewStyle Builder setters (setBackground,
+    // setPadding, setLayoutMargin) are declared on the @RestrictTo(LIBRARY_GROUP)
+    // BaseBuilder superclass, so lint flags RestrictedApi even though this is the
+    // documented inline-presentation styling pattern (see AOSP AutofillKeyboard
+    // sample and HeliBoard). Retyping the receiver cannot help — the concrete
+    // .Builder types are already used and the methods live on the restricted parent.
+    @SuppressLint("RestrictedApi")
     fun createInlineSuggestionsRequest(context: Context): InlineSuggestionsRequest {
         // #109: Improved chip styling for better readability and appearance
         val backgroundColor = 0xFF353535.toInt()  // Slightly lighter dark gray for contrast

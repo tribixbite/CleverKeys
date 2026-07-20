@@ -123,7 +123,7 @@ object SuggestionBarInitializer {
      */
     @JvmStatic
     fun switchToContentPaneMode(topPane: FrameLayout, contentPane: FrameLayout, scrollView: HorizontalScrollView, height: Int) {
-        android.util.Log.i("SuggestionBarInitializer", "switchToContentPaneMode: height=$height, contentPane.childCount=${contentPane.childCount}")
+        android.util.Log.i("SuggestionBarInit", "switchToContentPaneMode: height=$height, contentPane.childCount=${contentPane.childCount}")
 
         // Remove scrollView if present
         if (scrollView.parent == topPane) {
@@ -150,7 +150,7 @@ object SuggestionBarInitializer {
         }
 
         topPane.requestLayout()
-        android.util.Log.i("SuggestionBarInitializer", "switchToContentPaneMode complete: topPane.childCount=${topPane.childCount}")
+        android.util.Log.i("SuggestionBarInit", "switchToContentPaneMode complete: topPane.childCount=${topPane.childCount}")
     }
 
     /**
@@ -158,7 +158,7 @@ object SuggestionBarInitializer {
      */
     @JvmStatic
     fun switchToSuggestionBarMode(topPane: FrameLayout, contentPane: FrameLayout, scrollView: HorizontalScrollView, height: Int) {
-        android.util.Log.i("SuggestionBarInitializer", "switchToSuggestionBarMode: height=$height")
+        android.util.Log.i("SuggestionBarInit", "switchToSuggestionBarMode: height=$height")
 
         // Remove contentPane if present
         if (contentPane.parent == topPane) {
@@ -185,6 +185,6 @@ object SuggestionBarInitializer {
         }
 
         topPane.requestLayout()
-        android.util.Log.i("SuggestionBarInitializer", "switchToSuggestionBarMode complete: topPane.childCount=${topPane.childCount}")
+        android.util.Log.i("SuggestionBarInit", "switchToSuggestionBarMode complete: topPane.childCount=${topPane.childCount}")
     }
 }

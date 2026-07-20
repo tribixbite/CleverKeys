@@ -26,7 +26,8 @@ import java.text.Normalizer
  */
 class PredictionContextTracker {
     companion object {
-        private const val TAG = "PredictionContextTracker"
+        // ≤23 chars for Log tag (Android limit); shortened from "PredictionContextTracker".
+        private const val TAG = "PredictionCtxTracker"
 
         // Maximum number of previous words to track for context
         private const val MAX_CONTEXT_WORDS = 2
@@ -34,13 +35,24 @@ class PredictionContextTracker {
         // Maximum chars to read from InputConnection for word detection
         private const val MAX_TEXT_READ = 50
 
-        // CJK Unicode scripts that don't use space-based word boundaries
-        private val CJK_SCRIPTS = setOf(
-            Character.UnicodeScript.HAN,
-            Character.UnicodeScript.HIRAGANA,
-            Character.UnicodeScript.KATAKANA,
-            Character.UnicodeScript.THAI,
-            Character.UnicodeScript.HANGUL
+        // CJK Unicode blocks that don't use space-based word boundaries.
+        // Character.UnicodeScript (HAN/HIRAGANA/…) requires API 24; Character.UnicodeBlock
+        // is available on all supported APIs (21+) and covers the same scripts, so we key
+        // detection off blocks instead. Each script maps to its primary block(s):
+        //   HAN      → CJK_UNIFIED_IDEOGRAPHS (+ common extensions/compat)
+        //   HIRAGANA → HIRAGANA;  KATAKANA → KATAKANA
+        //   THAI     → THAI;      HANGUL   → HANGUL_SYLLABLES (+ jamo)
+        private val CJK_BLOCKS = setOf(
+            Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS,
+            Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_A,
+            Character.UnicodeBlock.CJK_COMPATIBILITY_IDEOGRAPHS,
+            Character.UnicodeBlock.CJK_SYMBOLS_AND_PUNCTUATION,
+            Character.UnicodeBlock.HIRAGANA,
+            Character.UnicodeBlock.KATAKANA,
+            Character.UnicodeBlock.THAI,
+            Character.UnicodeBlock.HANGUL_SYLLABLES,
+            Character.UnicodeBlock.HANGUL_JAMO,
+            Character.UnicodeBlock.HANGUL_COMPATIBILITY_JAMO
         )
 
         // Word boundary characters (not including apostrophe, which is context-dependent)
@@ -732,7 +744,8 @@ class PredictionContextTracker {
     private fun containsCJKCharacters(text: String): Boolean {
         return text.any { char ->
             try {
-                Character.UnicodeScript.of(char.code) in CJK_SCRIPTS
+                // UnicodeBlock.of (API 1) instead of UnicodeScript.of (API 24).
+                Character.UnicodeBlock.of(char.code) in CJK_BLOCKS
             } catch (e: Exception) {
                 false
             }

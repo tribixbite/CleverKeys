@@ -7,6 +7,7 @@ import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
 import android.util.Log
+import androidx.annotation.RequiresApi
 import java.security.KeyStore
 import java.util.Arrays
 import javax.crypto.Cipher
@@ -190,6 +191,10 @@ open class BackupPassphraseStore(private val context: Context) {
         return cipher.doFinal(ciphertext)
     }
 
+    // KeyGenParameterSpec + Keystore AES-GCM require API 23 (M). The only caller,
+    // tryWrapWithKeystore(), returns null on SDK_INT < M before reaching here, so this
+    // path never executes below API 23 — @RequiresApi lets lint see that guarantee.
+    @RequiresApi(Build.VERSION_CODES.M)
     private fun getOrCreateWrapKey(): SecretKey {
         val ks = KeyStore.getInstance(KEYSTORE_PROVIDER).apply { load(null) }
         (ks.getKey(KEY_ALIAS, null) as? SecretKey)?.let { return it }

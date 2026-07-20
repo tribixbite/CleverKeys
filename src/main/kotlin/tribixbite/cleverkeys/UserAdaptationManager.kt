@@ -29,8 +29,8 @@ class UserAdaptationManager private constructor(context: Context) {
 
         val normalizedWord = word.lowercase().trim()
 
-        // Increment selection count
-        val currentCount = selectionCounts.getOrDefault(normalizedWord, 0)
+        // Increment selection count (non-null Int values → `?: 0` == getOrDefault, API 21-safe).
+        val currentCount = selectionCounts[normalizedWord] ?: 0
         selectionCounts[normalizedWord] = currentCount + 1
         totalSelections++
 
@@ -57,7 +57,7 @@ class UserAdaptationManager private constructor(context: Context) {
         }
 
         val normalizedWord = word.lowercase().trim()
-        val selectionCount = selectionCounts.getOrDefault(normalizedWord, 0)
+        val selectionCount = selectionCounts[normalizedWord] ?: 0
 
         if (selectionCount == 0) {
             return 1.0f
@@ -81,7 +81,7 @@ class UserAdaptationManager private constructor(context: Context) {
      */
     fun getSelectionCount(word: String?): Int {
         if (word == null) return 0
-        return selectionCounts.getOrDefault(word.lowercase().trim(), 0)
+        return selectionCounts[word.lowercase().trim()] ?: 0
     }
 
     /**

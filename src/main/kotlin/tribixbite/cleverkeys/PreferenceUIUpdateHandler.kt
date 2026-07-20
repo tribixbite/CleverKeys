@@ -159,7 +159,8 @@ class PreferenceUIUpdateHandler(
     }
 
     companion object {
-        private const val TAG = "PreferenceUIUpdateHandler"
+        // Log tag kept <=23 chars so Log.isLoggable does not crash on API <26 (LongLogTag lint).
+        private const val TAG = "PrefUIUpdateHandler"
 
         /**
          * Preference keys that require neural engine config updates.

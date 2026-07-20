@@ -75,8 +75,10 @@ class IntSlideBarPreference(
     fun onBindDialogView(view: View) {
         textView = view.findViewById(tribixbite.cleverkeys.R.id.slider_value)
         seekBar = view.findViewById<SeekBar>(tribixbite.cleverkeys.R.id.slider_seekbar)?.apply {
-            max = this@IntSlideBarPreference.max - min
-            progress = value - min
+            // Qualify the preference's own min: inside this SeekBar `apply` block a bare
+            // `min` would resolve to SeekBar/ProgressBar#getMin (API 26, and the wrong value).
+            max = this@IntSlideBarPreference.max - this@IntSlideBarPreference.min
+            progress = value - this@IntSlideBarPreference.min
             setOnSeekBarChangeListener(this@IntSlideBarPreference)
         }
         updateText()
