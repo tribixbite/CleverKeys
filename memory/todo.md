@@ -82,6 +82,13 @@ pure-JVM `swipe.geometric` package; NOT wired into live pipeline — WP9 stays d
   translated (93465c91 + follow-up). DEFERRED from WP8: ~130 index-sensitive section control
   title=/description= params (needs generator-aware batch), ~17 ColorAttributeRow labels,
   interpolated strings (need format-args), ~40 AppearanceSection slider descriptions.
+- **WP8 FULLY COMPLETE** (bd8aafb3): the deferred index-sensitive batch — 285 control
+  titles/descriptions/section headers/ColorAttributeRow labels/format-arg strings extracted
+  (search index byte-identical, 134 entries), translated into all 21 locales (~5,985 entries,
+  7 Sonnet agents + central hardening: 28 unescaped apostrophes, formatted=false for literal-%
+  strings, en-dashes, SettingsSearchCoverageTest now stringResource-aware). lintDebug clean,
+  empty baseline. Remaining WP8-adjacent (low priority): <plurals> for 2 count strings (TODO'd),
+  conditional/dynamic description branches, non-control Text labels.
 - **Parallel-session note**: geoswipe WIP GesturePreprocessor.kt carries 2 SuspiciousIndentation
   lint errors (uncommitted, their session) — likely semicolon-joined-statement false positives
   (same pattern defused in CleverKeysService); their next lintDebug will fail until addressed.
