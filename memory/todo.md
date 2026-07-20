@@ -124,6 +124,19 @@ pure-JVM `swipe.geometric` package; NOT wired into live pipeline — WP9 stays d
   translated (93465c91 + follow-up). DEFERRED from WP8: ~130 index-sensitive section control
   title=/description= params (needs generator-aware batch), ~17 ColorAttributeRow labels,
   interpolated strings (need format-args), ~40 AppearanceSection slider descriptions.
+- **R-1 STEP 4 LANDED + GATED** (7fe65a17): swipe results now flow through
+  SuggestionHandler.handleSwipePredictionResults (bar presentation: case preservation, shift
+  transform, +possessives D1, +password guard D2) with the commit engine kept byte-identical in
+  IC.autoInsertTopSuggestion. Feature-flagged `unified_swipe_pipeline` (default TRUE, drift-test
+  registered); legacy path pinned by 2 new oracle tests. D5 (ML capture via MLDataCollector)
+  deferred to step 6 (would touch the kept commit path). FULL ew-cli gate: **1443/1443 green**
+  (run 7082ad17). Also this round: full-tests + local release build both green pre-step-4
+  (1650 pure/299 mock/1441 instrumented/BUILD SUCCESSFUL 3 ABIs), ew-cli timeout 30m→40m
+  (suite outgrew it), SettingsActivityComposeTest search-hint resource fix.
+- **NEXT (R-1)**: step 5 — fold cursor-sync (IC.onCursorMoved/triggerPredictionsForPrefix) into SH
+  (resolves R-7 prompt race structurally; flips cursor-sync oracle pins incl. exact-add
+  unknownWordPostsNothingToday); step 6 — delete IC.onSuggestionSelected + route D5 ML capture +
+  single executor; step 7 — Termux-deletion DECISION (user-visible, separate).
 - **WP8 FULLY COMPLETE** (bd8aafb3): the deferred index-sensitive batch — 285 control
   titles/descriptions/section headers/ColorAttributeRow labels/format-arg strings extracted
   (search index byte-identical, 134 entries), translated into all 21 locales (~5,985 entries,
