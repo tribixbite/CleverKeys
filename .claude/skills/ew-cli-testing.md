@@ -5,7 +5,7 @@ Use this skill when running instrumented tests on emulator.wtf cloud infrastruct
 ## Critical Defaults — ALWAYS USE THESE
 
 - **`--use-orchestrator`**: ALWAYS. Runs each test in its own process, preventing OOM cascades.
-- **`--timeout 30m`**: ALWAYS. Full suite was ~13 min at 887 tests, 22 min at 1272, and TIMED OUT at 25m with 1344 tests (2026-07-15 — alphabetical tail after UserAdaptationManagerTest was silently skipped). Scale up as the suite grows; a timeout shows as `ERROR Tests timed out` + missing tail classes in results.xml.
+- **`--timeout 40m`**: ALWAYS. Full suite was ~13 min at 887 tests, 22 min at 1272, TIMED OUT at 25m with 1344 (2026-07-15), and TIMED OUT at 30m with 1441 tests (2026-07-20 — 23 tests cut). Scale up as the suite grows; a timeout shows as `ERROR Tests timed out` + missing tests in results.xml. 1441 tests passed in ~31 min at 40m.
 - **`--device model=Pixel7,version=34`**: ALWAYS use API 34+. The APK has x86_64 native ONNX
   libraries and API 30 emulators are 32-bit x86 only — causes ABI mismatch install failure.
 - **`--outputs-dir ~/ew-output`**: ALWAYS. Must exist and be under home dir (Termux restricts /tmp).
@@ -315,7 +315,7 @@ ls -la build/outputs/apk/androidTest/debug/
 ```
 
 ### Test Timeout
-Always use `--timeout 30m` (suite outgrew 15m and then 25m; see Critical Defaults).
+Always use `--timeout 40m` (suite outgrew 15m, 25m, then 30m; see Critical Defaults).
 Without orchestrator: faster but OOM failures cascade.
 
 ### Signature Mismatch
