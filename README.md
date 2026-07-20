@@ -93,7 +93,7 @@ CleverKeys is a feature-rich open-source keyboard for Android. Neural swipe typi
 
 ⁸ Short-swipe actions: 8 directions × 26 keys = 208 one-touch gestures for navigation (arrows, home/end), editing (select all, undo, cut/copy/paste), function keys (F1-F12), and more — no long-press menus needed
 
-⁹ Multi-language swipe typing: CleverKeys uses the same neural network model for all languages — dictionaries provide word candidates, not language-specific models. 6 languages bundled (en, es, fr, pt, it, de), 5 downloadable (nl, id, ms, tl, sw). Primary + secondary language support with automatic best-match selection.
+⁹ Multi-language swipe typing: CleverKeys uses the same neural network model for all languages — dictionaries provide word candidates, not language-specific models. 7 languages bundled (en, es, fr, pt, it, de, sv), 8 downloadable (nl, ru, el, tr, id, ms, tl, sw). Primary + secondary language support with automatic best-match selection.
 
 ¹⁰ Urik uses a geometric/template path matcher (no ML model, no training code applicable) — German-friendly QWERTZ-native with simultaneous multilingual spell-check. CleverKeys is exploring a complementary geometric pipeline for non-QWERTY layouts and non-Latin scripts (Russian, etc.) — see [ROADMAP.md](./ROADMAP.md#-neural-network--prediction).
 
