@@ -1,5 +1,18 @@
 # CleverKeys TODO
 
+## 🚧 Geometric swipe engine (standalone) — spec approved 2026-07-20
+Spec: `docs/specs/geometric-swipe-engine.md` (SHARK2-style, layout-agnostic, zero-training,
+pure-JVM `swipe.geometric` package; NOT wired into live pipeline — WP9 stays deferred).
+- [ ] Phase 1 — Geometry core + fixtures (LayoutGeometry, fixture XML parser, purity drift test)
+- [ ] Phase 2 — Projection tiers, templates, CKDT/JSON/ru-zip dictionary loaders
+- [ ] Phase 3 — TemplateIndex/TemplateCache/CandidatePruner (+memory assertion)
+- [ ] Phase 4 — Preprocessor, PathScorer, CandidateRanker, engine facade
+- [ ] Phase 5 — Synthetic trace generator + accuracy harness (PROVISIONAL floors)
+- [ ] Phase 6 — Tuning, final threshold ratchet, adversarial + perf benches, -PgeoFull plumbing
+- [ ] Phase 7 (optional, gated) — neural characterization golden file
+- [ ] Follow-ups: README 52k→98,140 word-count fix; file grek_qwerty `script="latin"`
+      allowlist-leak bug (NEEDS USER APPROVAL — external platform)
+
 ## ✅ Roadmap WP5+WP6 + R8 soak evidence (2026-07-20, commits 5b5d91dd..HEAD)
 - **WP5 scope-cancel** (R-6): Pointers member scope + close() via onDetachedFromWindow;
   EmojiKeywordIndex.cancel() via CleanupHandler. **WP6-R2 render perf**: getMappingsForKey

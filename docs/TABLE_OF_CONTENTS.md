@@ -65,6 +65,7 @@
 | `testing-strategy.md` | Testing infrastructure (2050+ tests) | ✅ Active |
 | `short-swipe-customization.md` | **NEW** Short Swipe System | ✅ Implemented |
 | `profile_system_restoration.md` | **NEW** Profile Import/Export | ✅ Implemented |
+| `geometric-swipe-engine.md` | **NEW** Layout-agnostic geometric swipe decoder (standalone) | 📋 Planned |
 | `architectural-decisions.md` | Architectural Decision Records | ✅ Active |
 
 ### `/docs/history/` History
