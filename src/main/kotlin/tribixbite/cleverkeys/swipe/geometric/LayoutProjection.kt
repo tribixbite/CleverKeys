@@ -143,12 +143,25 @@ object LayoutProjection {
      * where precomposed forms are distinct letters resolved by their tier-4 corner
      * placement rather than collapsed to an identity-losing base.
      */
-    private fun nfdStripAppliesTo(cp: Int): Boolean = when (Character.UnicodeScript.of(cp)) {
-        Character.UnicodeScript.LATIN,
-        Character.UnicodeScript.GREEK,
-        Character.UnicodeScript.CYRILLIC,
-        Character.UnicodeScript.COMMON,
-        Character.UnicodeScript.INHERITED -> true
+    private fun nfdStripAppliesTo(cp: Int): Boolean = when (Character.UnicodeBlock.of(cp)) {
+        // NOTE: implemented via UnicodeBlock, NOT Character.UnicodeScript — UnicodeScript
+        // requires Android API 24 (crashes API 21-23; minSdk is 21) and android.os.Build
+        // version-guards are barred here by GeoPurityDriftTest (this engine package must
+        // stay pure JVM). Blocks below cover the same gate: Latin/Greek/Cyrillic letter
+        // blocks, combining-mark blocks (~script INHERITED), and Basic Latin/Latin-1 +
+        // General Punctuation (~the COMMON codepoints reachable from keyboard layouts).
+        Character.UnicodeBlock.BASIC_LATIN,
+        Character.UnicodeBlock.LATIN_1_SUPPLEMENT,
+        Character.UnicodeBlock.LATIN_EXTENDED_A,
+        Character.UnicodeBlock.LATIN_EXTENDED_B,
+        Character.UnicodeBlock.LATIN_EXTENDED_ADDITIONAL,
+        Character.UnicodeBlock.GREEK,
+        Character.UnicodeBlock.GREEK_EXTENDED,
+        Character.UnicodeBlock.CYRILLIC,
+        Character.UnicodeBlock.CYRILLIC_SUPPLEMENTARY,
+        Character.UnicodeBlock.GENERAL_PUNCTUATION,
+        Character.UnicodeBlock.COMBINING_DIACRITICAL_MARKS,
+        Character.UnicodeBlock.COMBINING_DIACRITICAL_MARKS_SUPPLEMENT -> true
         else -> false
     }
 
