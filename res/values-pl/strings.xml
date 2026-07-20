@@ -220,4 +220,88 @@
     <string name="gif_search_hint">Szukaj GIF-ów…</string>
     <string name="gif_close">Zamknij wybór GIF-ów</string>
     <string name="gif_no_results">Nie znaleziono GIF-ów</string>
+
+    <!-- Common actions (wp8 batch) -->
+    <string name="common_back">Wstecz</string>
+    <string name="common_cancel">Anuluj</string>
+    <string name="common_close">Zamknij</string>
+    <string name="common_save">Zapisz</string>
+    <string name="common_delete">Usuń</string>
+    <string name="common_apply">Zastosuj</string>
+    <string name="common_search">Szukaj</string>
+    <string name="common_clear">Wyczyść</string>
+    <string name="common_ok">OK</string>
+
+    <!-- Extra Keys (wp8 batch) -->
+    <string name="extra_keys_title">Konfiguracja dodatkowych klawiszy</string>
+    <string name="extra_keys_search_hint">Szukaj dodatkowych klawiszy…</string>
+    <string name="extra_keys_info">Wybrane klawisze pojawią się na klawiaturze w preferowanych pozycjach</string>
+    <string name="extra_keys_reset">Przywróć domyślne</string>
+
+    <!-- Short Swipe Customization (wp8 batch) -->
+    <string name="short_swipe_title">Dostosowanie krótkich gestów</string>
+    <string name="short_swipe_show_keyboard">Pokaż klawiaturę</string>
+    <string name="short_swipe_reset_all">Zresetuj wszystko</string>
+    <string name="short_swipe_tap_hint">Dotknij dowolnego klawisza poniżej, aby dostosować gesty krótkiego przesunięcia</string>
+    <string name="short_swipe_instruction_title">Dotknij dowolnego klawisza, aby go dostosować</string>
+    <string name="short_swipe_instruction_body">Klawiatura poniżej to Twoja prawdziwa klawiatura CleverKeys.\nDotknij klawisza, aby dodać akcje krótkiego gestu.</string>
+    <string name="short_swipe_custom_mappings">Własne przypisania</string>
+
+    <!-- Theme Settings (wp8 batch) -->
+    <string name="theme_settings_title">Motywy klawiatury</string>
+    <string name="theme_restart_keyboard">Zrestartuj klawiaturę</string>
+    <string name="theme_create">Utwórz motyw</string>
+    <string name="theme_edit">Edytuj motyw</string>
+    <string name="theme_section_builtin">Motywy wbudowane</string>
+    <string name="theme_builtin_desc">Te motywy są stosowane bezpośrednio do klawiatury</string>
+    <string name="theme_section_custom">Motywy własne</string>
+    <string name="theme_section_decorative">Motywy dekoracyjne</string>
+    <string name="theme_decorative_desc">Designerskie schematy kolorów dla klawiatury</string>
+    <string name="theme_delete_title">Usuń motyw</string>
+    <string name="theme_delete_confirm">Czy na pewno chcesz usunąć ten własny motyw?</string>
+    <string name="theme_edit_desc">Edytuj</string>
+    <string name="theme_selected_desc">Wybrany</string>
+    <string name="theme_trail_label">Ślad</string>
+    <string name="theme_name_label">Nazwa motywu</string>
+    <string name="theme_section_preview">Podgląd</string>
+    <string name="theme_section_key_colors">Kolory klawiszy</string>
+    <string name="theme_section_label_colors">Kolory etykiet</string>
+    <string name="theme_section_border_colors">Kolory obramowań</string>
+    <string name="theme_swipe_trail_card">✨ Ślad gestu</string>
+    <string name="theme_swipe_trail_desc">Kolor wyświetlany podczas pisania gestem</string>
+    <string name="theme_section_suggestion_bar">Pasek podpowiedzi</string>
+    <string name="theme_section_background_colors">Kolory tła</string>
+    <string name="theme_color_hue">Barwa</string>
+    <string name="theme_color_saturation">Nasycenie</string>
+    <string name="theme_color_lightness">Jasność</string>
+    <string name="theme_color_opacity">Krycie</string>
+    <string name="theme_color_hex">HEX</string>
+    <string name="theme_color_hex_desc">Wprowadzanie koloru w formacie HEX</string>
+    <string name="theme_quick_colors">Szybkie kolory</string>
+
+    <!-- Settings screen extras (wp8 batch) -->
+    <string name="settings_search_hint">Szukaj ustawień…</string>
+    <string name="settings_swipe_data_title">Dane gestów</string>
+    <string name="settings_search_words_hint">Szukaj słów…</string>
+    <string name="settings_perf_stats_title">Statystyki wydajności</string>
+    <string name="settings_copy_version_desc">Kopiuj informacje o wersji</string>
+
+    <!-- Activities section (wp8 batch) -->
+    <string name="activities_section_title">📱 Narzędzia</string>
+    <string name="activities_dictionary_title">Menedżer słownika</string>
+    <string name="activities_dictionary_desc">Własne słowa, wyłączone słowa i słownictwo</string>
+    <string name="activities_theme_title">Menedżer motywów</string>
+    <string name="activities_theme_desc">Neon, pastel, motywy DIY i własne kolory</string>
+    <string name="activities_extra_keys_title">Skonfiguruj dodatkowe klawisze</string>
+    <string name="activities_extra_keys_desc">Dodaj klawisze systemowe, symbole i skróty</string>
+    <string name="activities_layout_title">Menedżer układów</string>
+    <string name="activities_layout_desc">QWERTY, Dvorak, Colemak i nie tylko</string>
+    <string name="activities_calibration_title">Kalibracja krótkich gestów</string>
+    <string name="activities_calibration_desc">Ćwicz i dostosuj czułość gestów</string>
+    <string name="activities_whats_new_title">Co nowego</string>
+    <string name="activities_whats_new_desc">Zobacz najnowsze funkcje i historię zmian</string>
+
+    <!-- Test keyboard (wp8 batch) -->
+    <string name="test_keyboard_section_title">⌨️ Test klawiatury</string>
+    <string name="test_keyboard_hint">Wpisz tutaj, aby przetestować klawiaturę…</string>
 </resources>

@@ -220,4 +220,88 @@
     <string name="gif_search_hint">Пошук GIF…</string>
     <string name="gif_close">Закрити вибір GIF</string>
     <string name="gif_no_results">GIF не знайдено</string>
+
+    <!-- Common actions (wp8 batch) -->
+    <string name="common_back">Назад</string>
+    <string name="common_cancel">Скасувати</string>
+    <string name="common_close">Закрити</string>
+    <string name="common_save">Зберегти</string>
+    <string name="common_delete">Видалити</string>
+    <string name="common_apply">Застосувати</string>
+    <string name="common_search">Пошук</string>
+    <string name="common_clear">Очистити</string>
+    <string name="common_ok">ОК</string>
+
+    <!-- Extra Keys (wp8 batch) -->
+    <string name="extra_keys_title">Налаштування додаткових клавіш</string>
+    <string name="extra_keys_search_hint">Пошук додаткових клавіш…</string>
+    <string name="extra_keys_info">Вибрані клавіші з\'являться на клавіатурі відповідно до бажаних позицій</string>
+    <string name="extra_keys_reset">Скинути до стандартних</string>
+
+    <!-- Short Swipe Customization (wp8 batch) -->
+    <string name="short_swipe_title">Налаштування коротких свайпів</string>
+    <string name="short_swipe_show_keyboard">Показати клавіатуру</string>
+    <string name="short_swipe_reset_all">Скинути все</string>
+    <string name="short_swipe_tap_hint">Торкніться будь-якої клавіші нижче, щоб налаштувати жести коротких свайпів</string>
+    <string name="short_swipe_instruction_title">Торкніться будь-якої клавіші для налаштування</string>
+    <string name="short_swipe_instruction_body">Клавіатура нижче — це ваша справжня клавіатура CleverKeys.\nТоркніться клавіші, щоб додати дії коротких свайпів.</string>
+    <string name="short_swipe_custom_mappings">Власні призначення</string>
+
+    <!-- Theme Settings (wp8 batch) -->
+    <string name="theme_settings_title">Теми клавіатури</string>
+    <string name="theme_restart_keyboard">Перезапустити клавіатуру</string>
+    <string name="theme_create">Створити тему</string>
+    <string name="theme_edit">Змінити тему</string>
+    <string name="theme_section_builtin">Вбудовані теми</string>
+    <string name="theme_builtin_desc">Ці теми застосовуються безпосередньо до клавіатури</string>
+    <string name="theme_section_custom">Власні теми</string>
+    <string name="theme_section_decorative">Декоративні теми</string>
+    <string name="theme_decorative_desc">Дизайнерські колірні схеми для клавіатури</string>
+    <string name="theme_delete_title">Видалити тему</string>
+    <string name="theme_delete_confirm">Видалити цю власну тему?</string>
+    <string name="theme_edit_desc">Змінити</string>
+    <string name="theme_selected_desc">Вибрано</string>
+    <string name="theme_trail_label">Слід</string>
+    <string name="theme_name_label">Назва теми</string>
+    <string name="theme_section_preview">Попередній перегляд</string>
+    <string name="theme_section_key_colors">Кольори клавіш</string>
+    <string name="theme_section_label_colors">Кольори підписів</string>
+    <string name="theme_section_border_colors">Кольори рамок</string>
+    <string name="theme_swipe_trail_card">✨ Слід свайпу</string>
+    <string name="theme_swipe_trail_desc">Колір, що відображається під час свайп-введення</string>
+    <string name="theme_section_suggestion_bar">Панель підказок</string>
+    <string name="theme_section_background_colors">Кольори фону</string>
+    <string name="theme_color_hue">Відтінок</string>
+    <string name="theme_color_saturation">Насиченість</string>
+    <string name="theme_color_lightness">Світлість</string>
+    <string name="theme_color_opacity">Непрозорість</string>
+    <string name="theme_color_hex">HEX</string>
+    <string name="theme_color_hex_desc">Введення кольору у форматі HEX</string>
+    <string name="theme_quick_colors">Швидкі кольори</string>
+
+    <!-- Settings screen extras (wp8 batch) -->
+    <string name="settings_search_hint">Пошук налаштувань…</string>
+    <string name="settings_swipe_data_title">Дані свайпів</string>
+    <string name="settings_search_words_hint">Пошук слів…</string>
+    <string name="settings_perf_stats_title">Статистика продуктивності</string>
+    <string name="settings_copy_version_desc">Копіювати інформацію про версію</string>
+
+    <!-- Activities section (wp8 batch) -->
+    <string name="activities_section_title">📱 Інструменти</string>
+    <string name="activities_dictionary_title">Менеджер словника</string>
+    <string name="activities_dictionary_desc">Власні слова, вимкнені слова та словниковий запас</string>
+    <string name="activities_theme_title">Менеджер тем</string>
+    <string name="activities_theme_desc">Неон, пастель, DIY-теми та власні кольори</string>
+    <string name="activities_extra_keys_title">Налаштувати додаткові клавіші</string>
+    <string name="activities_extra_keys_desc">Додати системні клавіші, символи та швидкі команди</string>
+    <string name="activities_layout_title">Менеджер макетів</string>
+    <string name="activities_layout_desc">QWERTY, Dvorak, Colemak та інші</string>
+    <string name="activities_calibration_title">Калібрування коротких свайпів</string>
+    <string name="activities_calibration_desc">Практика та налаштування чутливості жестів</string>
+    <string name="activities_whats_new_title">Що нового</string>
+    <string name="activities_whats_new_desc">Перегляньте останні функції та журнал змін</string>
+
+    <!-- Test keyboard (wp8 batch) -->
+    <string name="test_keyboard_section_title">⌨️ Тест клавіатури</string>
+    <string name="test_keyboard_hint">Введіть тут, щоб перевірити клавіатуру…</string>
 </resources>

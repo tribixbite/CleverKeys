@@ -220,4 +220,88 @@
     <string name="gif_search_hint">Meklēt GIF…</string>
     <string name="gif_close">Aizvērt GIF atlasītāju</string>
     <string name="gif_no_results">GIF nav atrasti</string>
+
+    <!-- Common actions (wp8 batch) -->
+    <string name="common_back">Atpakaļ</string>
+    <string name="common_cancel">Atcelt</string>
+    <string name="common_close">Aizvērt</string>
+    <string name="common_save">Saglabāt</string>
+    <string name="common_delete">Dzēst</string>
+    <string name="common_apply">Lietot</string>
+    <string name="common_search">Meklēt</string>
+    <string name="common_clear">Notīrīt</string>
+    <string name="common_ok">Labi</string>
+
+    <!-- Extra Keys (wp8 batch) -->
+    <string name="extra_keys_title">Papildu taustiņu konfigurācija</string>
+    <string name="extra_keys_search_hint">Meklēt papildu taustiņus…</string>
+    <string name="extra_keys_info">Atlasītie taustiņi parādīsies uz tastatūras atbilstoši vēlamajai pozīcijai</string>
+    <string name="extra_keys_reset">Atiestatīt uz noklusējumu</string>
+
+    <!-- Short Swipe Customization (wp8 batch) -->
+    <string name="short_swipe_title">Īso vilkumu pielāgošana</string>
+    <string name="short_swipe_show_keyboard">Rādīt tastatūru</string>
+    <string name="short_swipe_reset_all">Atiestatīt visu</string>
+    <string name="short_swipe_tap_hint">Pieskarieties jebkuram taustiņam zemāk, lai pielāgotu īso vilkumu žestus</string>
+    <string name="short_swipe_instruction_title">Pieskarieties jebkuram taustiņam, lai to pielāgotu</string>
+    <string name="short_swipe_instruction_body">Zemāk redzamā tastatūra ir jūsu īstā CleverKeys tastatūra.\nPieskarieties taustiņam, lai pievienotu īso vilkumu darbības.</string>
+    <string name="short_swipe_custom_mappings">Pielāgotie piešķīrumi</string>
+
+    <!-- Theme Settings (wp8 batch) -->
+    <string name="theme_settings_title">Tastatūras tēmas</string>
+    <string name="theme_restart_keyboard">Restartēt tastatūru</string>
+    <string name="theme_create">Izveidot tēmu</string>
+    <string name="theme_edit">Rediģēt tēmu</string>
+    <string name="theme_section_builtin">Iebūvētās tēmas</string>
+    <string name="theme_builtin_desc">Šīs tēmas tiek piemērotas tieši tastatūrai</string>
+    <string name="theme_section_custom">Pielāgotās tēmas</string>
+    <string name="theme_section_decorative">Dekoratīvās tēmas</string>
+    <string name="theme_decorative_desc">Dizainera krāsu shēmas jūsu tastatūrai</string>
+    <string name="theme_delete_title">Dzēst tēmu</string>
+    <string name="theme_delete_confirm">Vai tiešām dzēst šo pielāgoto tēmu?</string>
+    <string name="theme_edit_desc">Rediģēt</string>
+    <string name="theme_selected_desc">Atlasīta</string>
+    <string name="theme_trail_label">Pēda</string>
+    <string name="theme_name_label">Tēmas nosaukums</string>
+    <string name="theme_section_preview">Priekšskatījums</string>
+    <string name="theme_section_key_colors">Taustiņu krāsas</string>
+    <string name="theme_section_label_colors">Uzrakstu krāsas</string>
+    <string name="theme_section_border_colors">Apmales krāsas</string>
+    <string name="theme_swipe_trail_card">✨ Vilkuma pēda</string>
+    <string name="theme_swipe_trail_desc">Krāsa, kas tiek rādīta vilkšanas laikā</string>
+    <string name="theme_section_suggestion_bar">Ieteikumu josla</string>
+    <string name="theme_section_background_colors">Fona krāsas</string>
+    <string name="theme_color_hue">Tonis</string>
+    <string name="theme_color_saturation">Piesātinājums</string>
+    <string name="theme_color_lightness">Spilgtums</string>
+    <string name="theme_color_opacity">Necaurredzamība</string>
+    <string name="theme_color_hex">HEX</string>
+    <string name="theme_color_hex_desc">Krāsas ievade HEX formātā</string>
+    <string name="theme_quick_colors">Ātrās krāsas</string>
+
+    <!-- Settings screen extras (wp8 batch) -->
+    <string name="settings_search_hint">Meklēt iestatījumus…</string>
+    <string name="settings_swipe_data_title">Vilkumu dati</string>
+    <string name="settings_search_words_hint">Meklēt vārdus…</string>
+    <string name="settings_perf_stats_title">Veiktspējas statistika</string>
+    <string name="settings_copy_version_desc">Kopēt versijas informāciju</string>
+
+    <!-- Activities section (wp8 batch) -->
+    <string name="activities_section_title">📱 Rīki</string>
+    <string name="activities_dictionary_title">Vārdnīcas pārvaldnieks</string>
+    <string name="activities_dictionary_desc">Pielāgoti vārdi, atspējoti vārdi un vārdu krājums</string>
+    <string name="activities_theme_title">Tēmu pārvaldnieks</string>
+    <string name="activities_theme_desc">Neona, pasteļu, DIY tēmas un pielāgotas krāsas</string>
+    <string name="activities_extra_keys_title">Konfigurēt papildu taustiņus</string>
+    <string name="activities_extra_keys_desc">Pievienot sistēmas taustiņus, simbolus un saīsnes</string>
+    <string name="activities_layout_title">Izkārtojuma pārvaldnieks</string>
+    <string name="activities_layout_desc">QWERTY, Dvorak, Colemak un citi</string>
+    <string name="activities_calibration_title">Īso vilkumu kalibrēšana</string>
+    <string name="activities_calibration_desc">Praktizējiet un pielāgojiet žestu jutīgumu</string>
+    <string name="activities_whats_new_title">Jaunumi</string>
+    <string name="activities_whats_new_desc">Skatiet jaunākās funkcijas un izmaiņu žurnālu</string>
+
+    <!-- Test keyboard (wp8 batch) -->
+    <string name="test_keyboard_section_title">⌨️ Tastatūras pārbaude</string>
+    <string name="test_keyboard_hint">Rakstiet šeit, lai pārbaudītu tastatūru…</string>
 </resources>
