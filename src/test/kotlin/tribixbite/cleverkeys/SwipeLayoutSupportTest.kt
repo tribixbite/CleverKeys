@@ -251,12 +251,12 @@ class SwipeLayoutSupportTest {
 
     @Test
     fun `Greek QWERTY does not support swipe`() {
-        // Has "QWERTY" in name BUT script is "latin" (per XML: script="latin")
-        // This is actually a tricky case — the Greek QWERTY layout in the XML
-        // has script="latin" because its base layer is Latin letters with Greek
-        // accessible via long-press. The QWERTY check passes, which is correct
-        // since the primary typing layer IS QWERTY Latin.
-        assertThat(Config.isSwipeTypingSupportedForLayout("QWERTY (Greek)", "latin")).isTrue()
+        // grek_qwerty.xml declares script="greek" (fixed 2026-07-20: it previously
+        // mis-declared script="latin", which defeated this gate's stated intent of
+        // excluding Greek QWERTY and routed the QWERTY-trained neural model onto
+        // Greek text). The layout's base layer is Greek letters (ς ε ρ τ υ θ ι ο…),
+        // NOT Latin-with-long-press-Greek, so the script check must reject it.
+        assertThat(Config.isSwipeTypingSupportedForLayout("QWERTY (Greek)", "greek")).isFalse()
     }
 
     @Test

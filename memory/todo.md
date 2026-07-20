@@ -10,8 +10,12 @@ pure-JVM `swipe.geometric` package; NOT wired into live pipeline — WP9 stays d
 - [ ] Phase 5 — Synthetic trace generator + accuracy harness (PROVISIONAL floors)
 - [ ] Phase 6 — Tuning, final threshold ratchet, adversarial + perf benches, -PgeoFull plumbing
 - [ ] Phase 7 (optional, gated) — neural characterization golden file
-- [ ] Follow-ups: README 52k→98,140 word-count fix; file grek_qwerty `script="latin"`
-      allowlist-leak bug (NEEDS USER APPROVAL — external platform)
+- [x] Follow-ups DONE 2026-07-20 (fixed directly per user, no issue filed): README en row
+      52k→98,140 (binary-verified all bundled counts); grek_qwerty `script="latin"`→`"greek"`
+      + method.xml el subtype `script=greek` (pair-flip keeps ExtraKeys £/€ merge) +
+      SwipeLayoutSupportTest Greek case now asserts isFalse (was codifying the bug).
+      Note for geoswipe audit: LayoutProjection.kt:26 comment "grek_qwerty claims latin" is
+      now stale (kept during impl to avoid conflicting with in-flight phase agents).
 
 ## ✅ Roadmap WP5+WP6 + R8 soak evidence (2026-07-20, commits 5b5d91dd..HEAD)
 - **WP5 scope-cancel** (R-6): Pointers member scope + close() via onDetachedFromWindow;

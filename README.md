@@ -249,7 +249,7 @@ Included in the APK — no additional download required:
 
 | Language | Code | Dictionary Size |
 |----------|:----:|---------------:|
-| English | en | 52,000 words |
+| English | en | 98,140 words |
 | Spanish | es | 50,000 words |
 | French | fr | 25,000 words |
 | Portuguese | pt | 25,000 words |
