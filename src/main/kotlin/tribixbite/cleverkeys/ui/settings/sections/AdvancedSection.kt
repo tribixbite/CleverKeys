@@ -27,8 +27,8 @@ internal fun SettingsActivity.AdvancedSection() {
             ) {
                 // Terminal Mode - moved from Neural section (layout setting, not prediction)
                 SettingsSwitch(
-                    title = "Terminal Mode",
-                    description = "Show Ctrl, Meta, PageUp/Down keys for terminal apps like Termux",
+                    title = stringResource(R.string.advanced_terminal_mode_title),
+                    description = stringResource(R.string.advanced_terminal_mode_desc),
                     checked = termuxModeEnabled,
                     onCheckedChange = {
                         termuxModeEnabled = it
@@ -48,8 +48,8 @@ internal fun SettingsActivity.AdvancedSection() {
 
                 // Phase 1: Swipe Debug Log Toggle
                 SettingsSwitch(
-                    title = "Swipe Debug Log",
-                    description = "Real-time pipeline analysis for swipe gestures (requires logcat)",
+                    title = stringResource(R.string.advanced_swipe_debug_log_title),
+                    description = stringResource(R.string.advanced_swipe_debug_log_desc),
                     checked = swipeDebugEnabled,
                     onCheckedChange = {
                         swipeDebugEnabled = it
@@ -59,8 +59,8 @@ internal fun SettingsActivity.AdvancedSection() {
 
                 if (swipeDebugEnabled) {
                     SettingsSwitch(
-                        title = "Detailed Logging",
-                        description = "Include verbose trace information",
+                        title = stringResource(R.string.advanced_detailed_logging_title),
+                        description = stringResource(R.string.advanced_detailed_logging_desc),
                         checked = swipeDebugDetailedLogging,
                         onCheckedChange = {
                             swipeDebugDetailedLogging = it
@@ -69,8 +69,8 @@ internal fun SettingsActivity.AdvancedSection() {
                     )
 
                     SettingsSwitch(
-                        title = "Show Raw Output",
-                        description = "Log raw neural outputs to debug log (doesn't affect suggestions)",
+                        title = stringResource(R.string.advanced_show_raw_output_title),
+                        description = stringResource(R.string.advanced_show_raw_output_desc),
                         checked = swipeDebugShowRawOutput,
                         onCheckedChange = {
                             swipeDebugShowRawOutput = it
@@ -79,8 +79,8 @@ internal fun SettingsActivity.AdvancedSection() {
                     )
 
                     SettingsSwitch(
-                        title = "Show Beam Predictions",
-                        description = "Add raw:word items to suggestion bar for debugging",
+                        title = stringResource(R.string.advanced_show_beam_predictions_title),
+                        description = stringResource(R.string.advanced_show_beam_predictions_desc),
                         checked = swipeShowRawBeamPredictions,
                         onCheckedChange = {
                             swipeShowRawBeamPredictions = it
@@ -94,7 +94,7 @@ internal fun SettingsActivity.AdvancedSection() {
                         onClick = { openSwipeDebugActivity() },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Open Debug Log")
+                        Text(stringResource(R.string.advanced_open_debug_log))
                     }
                 }
 

@@ -8,9 +8,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.ShortSwipeCalibrationActivity
 import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
@@ -25,7 +27,7 @@ import androidx.compose.material3.MaterialTheme
 @Composable
 internal fun SettingsActivity.GestureTuningSection() {
             CollapsibleSettingsSection(
-                title = "👆 Gesture Tuning",
+                title = stringResource(R.string.settings_section_gesture_tuning),
                 expanded = gestureTuningSectionExpanded,
                 onExpandChange = { gestureTuningSectionExpanded = it }
             ) {
@@ -44,8 +46,8 @@ internal fun SettingsActivity.GestureTuningSection() {
                 )
 
                 SettingsSwitch(
-                    title = "Enable Short Gestures",
-                    description = "Recognize short swipes for quick words (it, is, at, etc.)",
+                    title = stringResource(R.string.gesture_enable_short_title),
+                    description = stringResource(R.string.gesture_enable_short_desc),
                     checked = shortGesturesEnabled,
                     onCheckedChange = {
                         shortGesturesEnabled = it
@@ -56,8 +58,8 @@ internal fun SettingsActivity.GestureTuningSection() {
 
                 if (shortGesturesEnabled) {
                     SettingsSlider(
-                        title = "Min Distance",
-                        description = "Minimum swipe distance to trigger (% of key diagonal)",
+                        title = stringResource(R.string.gesture_min_distance_title),
+                        description = stringResource(R.string.gesture_min_distance_desc),
                         value = shortGestureMinDistance.toFloat(),
                         valueRange = 10f..60f,
                         steps = 10,
@@ -69,8 +71,8 @@ internal fun SettingsActivity.GestureTuningSection() {
                     )
 
                     SettingsSlider(
-                        title = "Max Distance",
-                        description = "The short/long boundary (% of key diagonal): at or below = short swipe, beyond = swipe-typed word. Low values turn slight overshoots into words; high values require longer swipes before word typing starts.",
+                        title = stringResource(R.string.gesture_max_distance_title),
+                        description = stringResource(R.string.gesture_max_distance_desc),
                         value = shortGestureMaxDistance.toFloat(),
                         valueRange = 50f..200f,
                         steps = 30,
@@ -109,8 +111,8 @@ internal fun SettingsActivity.GestureTuningSection() {
                 )
 
                 SettingsSlider(
-                    title = "Vertical Threshold",
-                    description = "% of key height finger must move to trigger line selection. Higher = harder to accidentally select lines.",
+                    title = stringResource(R.string.gesture_vertical_threshold_title),
+                    description = stringResource(R.string.gesture_vertical_threshold_desc),
                     value = selectionDeleteVerticalThreshold.toFloat(),
                     valueRange = 20f..80f,
                     steps = 12,
@@ -122,8 +124,8 @@ internal fun SettingsActivity.GestureTuningSection() {
                 )
 
                 SettingsSlider(
-                    title = "Vertical Speed",
-                    description = "Speed multiplier for line selection (lower = slower). Character selection stays at full speed.",
+                    title = stringResource(R.string.gesture_vertical_speed_title),
+                    description = stringResource(R.string.gesture_vertical_speed_desc),
                     value = selectionDeleteVerticalSpeed,
                     valueRange = 0.1f..1.0f,
                     steps = 18,
@@ -142,8 +144,8 @@ internal fun SettingsActivity.GestureTuningSection() {
                 )
 
                 SettingsSlider(
-                    title = "Tap Duration Threshold",
-                    description = "Maximum duration for a tap gesture (ms). Higher = easier taps but may interfere with swipes.",
+                    title = stringResource(R.string.gesture_tap_duration_title),
+                    description = stringResource(R.string.gesture_tap_duration_desc),
                     value = tapDurationThreshold.toFloat(),
                     valueRange = 50f..500f,
                     steps = 45,
@@ -155,8 +157,8 @@ internal fun SettingsActivity.GestureTuningSection() {
                 )
 
                 SettingsSwitch(
-                    title = "Double-Space to Period",
-                    description = "Tap space twice quickly to insert period. Only triggers after letters/numbers.",
+                    title = stringResource(R.string.gesture_double_space_period_title),
+                    description = stringResource(R.string.gesture_double_space_period_desc),
                     checked = doubleSpaceToPeriod,
                     onCheckedChange = {
                         doubleSpaceToPeriod = it
@@ -166,8 +168,8 @@ internal fun SettingsActivity.GestureTuningSection() {
 
                 if (doubleSpaceToPeriod) {
                     SettingsSlider(
-                        title = "Double-Space Timing",
-                        description = "Maximum time between spaces to trigger period (ms)",
+                        title = stringResource(R.string.gesture_double_space_timing_title),
+                        description = stringResource(R.string.gesture_double_space_timing_desc),
                         value = doubleSpaceThreshold.toFloat(),
                         valueRange = 200f..800f,
                         steps = 12,
@@ -190,8 +192,8 @@ internal fun SettingsActivity.GestureTuningSection() {
                 val sensitivityPresets = listOf("Low", "Medium", "High", "Custom")
                 val currentPresetIndex = sensitivityPresets.indexOf(getSwipeSensitivityPreset())
                 SettingsDropdown(
-                    title = "Sensitivity Preset",
-                    description = "Quick presets for swipe recognition. Custom shows when values differ from presets.",
+                    title = stringResource(R.string.gesture_sensitivity_preset_title),
+                    description = stringResource(R.string.gesture_sensitivity_preset_desc),
                     options = sensitivityPresets,
                     selectedIndex = if (currentPresetIndex >= 0) currentPresetIndex else 3,
                     onSelectionChange = { index ->
@@ -200,8 +202,8 @@ internal fun SettingsActivity.GestureTuningSection() {
                 )
 
                 SettingsSlider(
-                    title = "Minimum Swipe Distance",
-                    description = "Minimum traced path (px) before a gesture can qualify as a swipe-typed word. Lower helps very short words register; raise if stray touches misfire as words. (Short-vs-long is decided by Max Distance above.)",
+                    title = stringResource(R.string.gesture_min_swipe_distance_title),
+                    description = stringResource(R.string.gesture_min_swipe_distance_desc),
                     value = swipeMinDistance,
                     valueRange = 20f..100f,
                     steps = 16,
@@ -213,8 +215,8 @@ internal fun SettingsActivity.GestureTuningSection() {
                 )
 
                 SettingsSlider(
-                    title = "Minimum Key Distance",
-                    description = "Distance between keys during swipe (px). Lower captures more keys but may add noise.",
+                    title = stringResource(R.string.gesture_min_key_distance_title),
+                    description = stringResource(R.string.gesture_min_key_distance_desc),
                     value = swipeMinKeyDistance,
                     valueRange = 15f..80f,
                     steps = 13,
@@ -226,8 +228,8 @@ internal fun SettingsActivity.GestureTuningSection() {
                 )
 
                 SettingsSlider(
-                    title = "Minimum Key Dwell Time",
-                    description = "Time to register a key during swipe (ms). Lower allows faster swiping.",
+                    title = stringResource(R.string.gesture_min_key_dwell_title),
+                    description = stringResource(R.string.gesture_min_key_dwell_desc),
                     value = swipeMinDwellTime.toFloat(),
                     valueRange = 0f..50f,
                     steps = 10,
@@ -239,8 +241,8 @@ internal fun SettingsActivity.GestureTuningSection() {
                 )
 
                 SettingsSlider(
-                    title = "Movement Noise Filter",
-                    description = "Minimum movement to register (px). Higher filters jitter but may lose data.",
+                    title = stringResource(R.string.gesture_noise_filter_title),
+                    description = stringResource(R.string.gesture_noise_filter_desc),
                     value = swipeNoiseThreshold,
                     valueRange = 0.5f..10f,
                     steps = 19,
@@ -252,8 +254,8 @@ internal fun SettingsActivity.GestureTuningSection() {
                 )
 
                 SettingsSlider(
-                    title = "High Velocity Threshold",
-                    description = "Velocity for fast swipe detection (px/sec). Higher allows faster swipes.",
+                    title = stringResource(R.string.gesture_high_velocity_title),
+                    description = stringResource(R.string.gesture_high_velocity_desc),
                     value = swipeHighVelocityThreshold,
                     valueRange = 200f..2000f,
                     steps = 18,
@@ -265,8 +267,8 @@ internal fun SettingsActivity.GestureTuningSection() {
                 )
 
                 SettingsSlider(
-                    title = "Finger Occlusion Compensation",
-                    description = "Y-offset as % of row height to compensate for finger obscuring keys. Higher shifts touch point down toward key centers.",
+                    title = stringResource(R.string.gesture_finger_occlusion_title),
+                    description = stringResource(R.string.gesture_finger_occlusion_desc),
                     value = fingerOcclusionOffset,
                     valueRange = 0f..50f,
                     steps = 10,
@@ -285,8 +287,8 @@ internal fun SettingsActivity.GestureTuningSection() {
                 )
 
                 SettingsSlider(
-                    title = "Speed Smoothing",
-                    description = "Smoothing factor for slider movement. Higher is smoother but less responsive.",
+                    title = stringResource(R.string.gesture_speed_smoothing_title),
+                    description = stringResource(R.string.gesture_speed_smoothing_desc),
                     value = sliderSpeedSmoothing,
                     valueRange = 0.1f..0.95f,
                     steps = 17,
@@ -298,8 +300,8 @@ internal fun SettingsActivity.GestureTuningSection() {
                 )
 
                 SettingsSlider(
-                    title = "Maximum Speed Multiplier",
-                    description = "Maximum slider acceleration. Higher allows faster sliding.",
+                    title = stringResource(R.string.gesture_max_speed_multiplier_title),
+                    description = stringResource(R.string.gesture_max_speed_multiplier_desc),
                     value = sliderSpeedMax,
                     valueRange = 1.0f..10f,
                     steps = 18,

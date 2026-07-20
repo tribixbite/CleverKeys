@@ -64,8 +64,8 @@ internal fun SettingsActivity.AccessibilitySection() {
 
                 if (vibrationEnabled) {
                     SettingsSlider(
-                        title = "Custom Duration (optional)",
-                        description = "Set a custom vibration length. Leave at default to use the system haptic pattern (lowest latency, OEM-tuned).",
+                        title = stringResource(R.string.accessibility_custom_duration_title),
+                        description = stringResource(R.string.accessibility_custom_duration_desc),
                         value = vibrationDuration.toFloat(),
                         valueRange = 5f..100f,
                         steps = 19,
@@ -92,8 +92,8 @@ internal fun SettingsActivity.AccessibilitySection() {
                     )
 
                     SettingsSwitch(
-                        title = "Key Press",
-                        description = "Vibrate on key tap",
+                        title = stringResource(R.string.accessibility_key_press_title),
+                        description = stringResource(R.string.accessibility_key_press_desc),
                         checked = hapticKeyPress,
                         onCheckedChange = {
                             hapticKeyPress = it
@@ -103,8 +103,8 @@ internal fun SettingsActivity.AccessibilitySection() {
                     )
 
                     SettingsSwitch(
-                        title = "Suggestion Tap",
-                        description = "Vibrate when selecting a suggestion",
+                        title = stringResource(R.string.accessibility_suggestion_tap_title),
+                        description = stringResource(R.string.accessibility_suggestion_tap_desc),
                         checked = hapticPredictionTap,
                         onCheckedChange = {
                             hapticPredictionTap = it
@@ -114,8 +114,8 @@ internal fun SettingsActivity.AccessibilitySection() {
                     )
 
                     SettingsSwitch(
-                        title = "TrackPoint Mode",
-                        description = "Vibrate when entering cursor mode on nav keys",
+                        title = stringResource(R.string.accessibility_trackpoint_title),
+                        description = stringResource(R.string.accessibility_trackpoint_desc),
                         checked = hapticTrackpointActivate,
                         onCheckedChange = {
                             hapticTrackpointActivate = it
@@ -125,8 +125,8 @@ internal fun SettingsActivity.AccessibilitySection() {
                     )
 
                     SettingsSwitch(
-                        title = "Long Press",
-                        description = "Vibrate on modifier lock",
+                        title = stringResource(R.string.accessibility_long_press_title),
+                        description = stringResource(R.string.accessibility_long_press_desc),
                         checked = hapticLongPress,
                         onCheckedChange = {
                             hapticLongPress = it
@@ -136,8 +136,8 @@ internal fun SettingsActivity.AccessibilitySection() {
                     )
 
                     SettingsSwitch(
-                        title = "Swipe Complete",
-                        description = "Vibrate when swipe gesture finishes",
+                        title = stringResource(R.string.accessibility_swipe_complete_title),
+                        description = stringResource(R.string.accessibility_swipe_complete_desc),
                         checked = hapticSwipeComplete,
                         onCheckedChange = {
                             hapticSwipeComplete = it

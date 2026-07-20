@@ -13,10 +13,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import tribixbite.cleverkeys.NeuralPerformanceStats
+import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
 import tribixbite.cleverkeys.ui.settings.SettingsSwitch
@@ -32,7 +34,7 @@ import tribixbite.cleverkeys.ui.settings.saveSetting
 internal fun SettingsActivity.PrivacySection() {
             // Privacy Section (Collapsible)
             CollapsibleSettingsSection(
-                title = "🔒 Privacy & Data",
+                title = stringResource(R.string.settings_section_privacy),
                 expanded = privacySectionExpanded,
                 onExpandChange = { privacySectionExpanded = it }
             ) {
@@ -51,8 +53,8 @@ internal fun SettingsActivity.PrivacySection() {
                 )
 
                 SettingsSwitch(
-                    title = "Swipe Pattern Data",
-                    description = "Store swipe trajectories locally for on-device learning",
+                    title = stringResource(R.string.privacy_swipe_pattern_title),
+                    description = stringResource(R.string.privacy_swipe_pattern_desc),
                     checked = privacyCollectSwipe,
                     onCheckedChange = {
                         privacyCollectSwipe = it
@@ -61,8 +63,8 @@ internal fun SettingsActivity.PrivacySection() {
                 )
 
                 SettingsSwitch(
-                    title = "Performance Metrics",
-                    description = "Store timing data locally for optimization",
+                    title = stringResource(R.string.privacy_performance_metrics_title),
+                    description = stringResource(R.string.privacy_performance_metrics_desc),
                     checked = privacyCollectPerformance,
                     onCheckedChange = {
                         privacyCollectPerformance = it

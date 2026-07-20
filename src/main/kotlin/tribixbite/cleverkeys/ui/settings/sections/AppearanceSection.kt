@@ -19,8 +19,8 @@ internal fun SettingsActivity.AppearanceSection() {
                 // Theme Manager moved to Activities section at top
 
                 SettingsSlider(
-                    title = "Keyboard Height (Portrait)",
-                    description = "Adjust keyboard height in portrait mode",
+                    title = stringResource(R.string.appearance_height_portrait_title),
+                    description = stringResource(R.string.appearance_height_portrait_desc),
                     value = keyboardHeight.toFloat(),
                     valueRange = 20f..60f,
                     steps = 40,
@@ -32,8 +32,8 @@ internal fun SettingsActivity.AppearanceSection() {
                 )
 
                 SettingsSlider(
-                    title = "Keyboard Height (Landscape)",
-                    description = "Adjust keyboard height in landscape mode",
+                    title = stringResource(R.string.appearance_height_landscape_title),
+                    description = stringResource(R.string.appearance_height_landscape_desc),
                     value = keyboardHeightLandscape.toFloat(),
                     valueRange = 20f..60f,
                     steps = 40,
@@ -45,8 +45,8 @@ internal fun SettingsActivity.AppearanceSection() {
                 )
 
                 SettingsSlider(
-                    title = "Bottom Margin (Portrait)",
-                    description = "Vertical margin as % of screen height",
+                    title = stringResource(R.string.appearance_bottom_margin_portrait_title),
+                    description = stringResource(R.string.appearance_bottom_margin_portrait_desc),
                     value = marginBottomPortrait.toFloat(),
                     valueRange = 0f..30f,
                     steps = 30,
@@ -58,8 +58,8 @@ internal fun SettingsActivity.AppearanceSection() {
                 )
 
                 SettingsSlider(
-                    title = "Bottom Margin (Landscape)",
-                    description = "Vertical margin as % of screen height",
+                    title = stringResource(R.string.appearance_bottom_margin_landscape_title),
+                    description = stringResource(R.string.appearance_bottom_margin_landscape_desc),
                     value = marginBottomLandscape.toFloat(),
                     valueRange = 0f..30f,
                     steps = 30,
@@ -73,8 +73,8 @@ internal fun SettingsActivity.AppearanceSection() {
                 // Portrait left/right margins with 90% total cap
                 val maxLeftPortrait = (90 - marginRightPortrait).coerceAtLeast(0)
                 SettingsSlider(
-                    title = "Left Margin (Portrait)",
-                    description = "Left margin as % of screen width",
+                    title = stringResource(R.string.appearance_left_margin_portrait_title),
+                    description = stringResource(R.string.appearance_left_margin_portrait_desc),
                     value = marginLeftPortrait.toFloat(),
                     valueRange = 0f..maxLeftPortrait.toFloat(),
                     steps = maxLeftPortrait.coerceAtLeast(1),
@@ -87,8 +87,8 @@ internal fun SettingsActivity.AppearanceSection() {
 
                 val maxRightPortrait = (90 - marginLeftPortrait).coerceAtLeast(0)
                 SettingsSlider(
-                    title = "Right Margin (Portrait)",
-                    description = "Right margin as % of screen width",
+                    title = stringResource(R.string.appearance_right_margin_portrait_title),
+                    description = stringResource(R.string.appearance_right_margin_portrait_desc),
                     value = marginRightPortrait.toFloat(),
                     valueRange = 0f..maxRightPortrait.toFloat(),
                     steps = maxRightPortrait.coerceAtLeast(1),
@@ -102,8 +102,8 @@ internal fun SettingsActivity.AppearanceSection() {
                 // Landscape left/right margins with 90% total cap
                 val maxLeftLandscape = (90 - marginRightLandscape).coerceAtLeast(0)
                 SettingsSlider(
-                    title = "Left Margin (Landscape)",
-                    description = "Left margin as % of screen width",
+                    title = stringResource(R.string.appearance_left_margin_landscape_title),
+                    description = stringResource(R.string.appearance_left_margin_landscape_desc),
                     value = marginLeftLandscape.toFloat(),
                     valueRange = 0f..maxLeftLandscape.toFloat(),
                     steps = maxLeftLandscape.coerceAtLeast(1),
@@ -116,8 +116,8 @@ internal fun SettingsActivity.AppearanceSection() {
 
                 val maxRightLandscape = (90 - marginLeftLandscape).coerceAtLeast(0)
                 SettingsSlider(
-                    title = "Right Margin (Landscape)",
-                    description = "Right margin as % of screen width",
+                    title = stringResource(R.string.appearance_right_margin_landscape_title),
+                    description = stringResource(R.string.appearance_right_margin_landscape_desc),
                     value = marginRightLandscape.toFloat(),
                     valueRange = 0f..maxRightLandscape.toFloat(),
                     steps = maxRightLandscape.coerceAtLeast(1),
@@ -129,8 +129,8 @@ internal fun SettingsActivity.AppearanceSection() {
                 )
 
                 SettingsSlider(
-                    title = "Label Brightness",
-                    description = "Brightness of key labels (0-100%)",
+                    title = stringResource(R.string.appearance_label_brightness_title),
+                    description = stringResource(R.string.appearance_label_brightness_desc),
                     value = labelBrightness.toFloat(),
                     valueRange = 0f..100f,
                     steps = 100,
@@ -142,8 +142,8 @@ internal fun SettingsActivity.AppearanceSection() {
                 )
 
                 SettingsSlider(
-                    title = "Keyboard Opacity",
-                    description = "Opacity of keyboard background",
+                    title = stringResource(R.string.appearance_keyboard_opacity_title),
+                    description = stringResource(R.string.appearance_keyboard_opacity_desc),
                     value = keyboardOpacity.toFloat(),
                     valueRange = 0f..100f,
                     steps = 100,
@@ -155,8 +155,8 @@ internal fun SettingsActivity.AppearanceSection() {
                 )
 
                 SettingsSlider(
-                    title = "Key Opacity",
-                    description = "Opacity of individual keys",
+                    title = stringResource(R.string.appearance_key_opacity_title),
+                    description = stringResource(R.string.appearance_key_opacity_desc),
                     value = keyOpacity.toFloat(),
                     valueRange = 0f..100f,
                     steps = 100,
@@ -168,8 +168,8 @@ internal fun SettingsActivity.AppearanceSection() {
                 )
 
                 SettingsSlider(
-                    title = "Activated Key Opacity",
-                    description = "Opacity when key is pressed",
+                    title = stringResource(R.string.appearance_activated_key_opacity_title),
+                    description = stringResource(R.string.appearance_activated_key_opacity_desc),
                     value = keyActivatedOpacity.toFloat(),
                     valueRange = 0f..100f,
                     steps = 100,
@@ -181,8 +181,8 @@ internal fun SettingsActivity.AppearanceSection() {
                 )
 
                 SettingsSlider(
-                    title = "Character Size",
-                    description = "Size multiplier for key labels",
+                    title = stringResource(R.string.appearance_character_size_title),
+                    description = stringResource(R.string.appearance_character_size_desc),
                     value = characterSize.toFloat(),
                     valueRange = 50f..200f,
                     steps = 150,
@@ -196,8 +196,8 @@ internal fun SettingsActivity.AppearanceSection() {
                 // #133: independent sizing for the small secondary (flick) labels
                 // so increasing primary Character Size doesn't crowd/overlap them.
                 SettingsSlider(
-                    title = "Secondary Label Size",
-                    description = "Size of the small corner (flick) labels, independent of Character Size",
+                    title = stringResource(R.string.appearance_secondary_label_size_title),
+                    description = stringResource(R.string.appearance_secondary_label_size_desc),
                     value = secondaryLabelSizeScale.toFloat(),
                     valueRange = 50f..200f,
                     steps = 150,
@@ -209,8 +209,8 @@ internal fun SettingsActivity.AppearanceSection() {
                 )
 
                 SettingsSlider(
-                    title = "Key Vertical Margin",
-                    description = "Vertical spacing between keys",
+                    title = stringResource(R.string.appearance_key_vertical_margin_title),
+                    description = stringResource(R.string.appearance_key_vertical_margin_desc),
                     value = keyVerticalMargin.toFloat(),
                     valueRange = 0f..500f,
                     steps = 100,
@@ -222,8 +222,8 @@ internal fun SettingsActivity.AppearanceSection() {
                 )
 
                 SettingsSlider(
-                    title = "Key Horizontal Margin",
-                    description = "Horizontal spacing between keys",
+                    title = stringResource(R.string.appearance_key_horizontal_margin_title),
+                    description = stringResource(R.string.appearance_key_horizontal_margin_desc),
                     value = keyHorizontalMargin.toFloat(),
                     valueRange = 0f..500f,
                     steps = 100,
@@ -235,8 +235,8 @@ internal fun SettingsActivity.AppearanceSection() {
                 )
 
                 SettingsSwitch(
-                    title = "Custom Border Config",
-                    description = "Enable custom key border styling",
+                    title = stringResource(R.string.appearance_custom_border_title),
+                    description = stringResource(R.string.appearance_custom_border_desc),
                     checked = borderConfigEnabled,
                     onCheckedChange = {
                         borderConfigEnabled = it
@@ -246,8 +246,8 @@ internal fun SettingsActivity.AppearanceSection() {
 
                 if (borderConfigEnabled) {
                     SettingsSlider(
-                        title = "Border Radius",
-                        description = "Corner radius for keys (dp)",
+                        title = stringResource(R.string.appearance_border_radius_title),
+                        description = stringResource(R.string.appearance_border_radius_desc),
                         value = customBorderRadius.toFloat(),
                         valueRange = 0f..20f,
                         steps = 20,
@@ -259,8 +259,8 @@ internal fun SettingsActivity.AppearanceSection() {
                     )
 
                     SettingsSlider(
-                        title = "Border Line Width",
-                        description = "Width of key borders (dp)",
+                        title = stringResource(R.string.appearance_border_line_width_title),
+                        description = stringResource(R.string.appearance_border_line_width_desc),
                         value = customBorderLineWidth.toFloat(),
                         valueRange = 0f..10f,
                         steps = 10,

@@ -4,9 +4,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import tribixbite.cleverkeys.Config
+import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
 import tribixbite.cleverkeys.ui.settings.SettingsDropdown
@@ -17,14 +19,14 @@ import tribixbite.cleverkeys.ui.settings.saveSetting
 @Composable
 internal fun SettingsActivity.AutoCorrectionSection() {
             CollapsibleSettingsSection(
-                title = "✏️ Auto-Correction",
+                title = stringResource(R.string.settings_section_autocorrection),
                 expanded = swipeCorrectionsSectionExpanded,
                 onExpandChange = { swipeCorrectionsSectionExpanded = it }
             ) {
                 // Master toggle
                 SettingsSwitch(
-                    title = "Enable Auto-Correction",
-                    description = "Automatically correct misspelled words",
+                    title = stringResource(R.string.autocorrect_enable_title),
+                    description = stringResource(R.string.autocorrect_enable_desc),
                     checked = autoCorrectEnabled,
                     onCheckedChange = {
                         autoCorrectEnabled = it
@@ -35,8 +37,8 @@ internal fun SettingsActivity.AutoCorrectionSection() {
                 if (autoCorrectEnabled) {
                     // #110: Backspace undo autocorrect — revert to original word on immediate backspace
                     SettingsSwitch(
-                        title = "Backspace Undo Autocorrect",
-                        description = "Pressing backspace immediately after autocorrect reverts to the original word",
+                        title = stringResource(R.string.autocorrect_backspace_undo_title),
+                        description = stringResource(R.string.autocorrect_backspace_undo_desc),
                         checked = backspaceUndoAutocorrect,
                         highlightId = "backspace_undo_autocorrect",
                         onCheckedChange = {
@@ -54,8 +56,8 @@ internal fun SettingsActivity.AutoCorrectionSection() {
                     )
 
                     SettingsSlider(
-                        title = "Minimum Word Length",
-                        description = "Don't correct words shorter than this (2-5 letters)",
+                        title = stringResource(R.string.autocorrect_min_word_length_title),
+                        description = stringResource(R.string.autocorrect_min_word_length_desc),
                         value = autocorrectMinWordLength.toFloat(),
                         valueRange = 2f..5f,
                         steps = 3,
@@ -67,8 +69,8 @@ internal fun SettingsActivity.AutoCorrectionSection() {
                     )
 
                     SettingsSlider(
-                        title = "Character Match Threshold",
-                        description = "How many characters must match (0.5-0.9)",
+                        title = stringResource(R.string.autocorrect_char_match_threshold_title),
+                        description = stringResource(R.string.autocorrect_char_match_threshold_desc),
                         value = autocorrectCharMatchThreshold,
                         valueRange = 0.5f..0.9f,
                         steps = 8,
@@ -80,8 +82,8 @@ internal fun SettingsActivity.AutoCorrectionSection() {
                     )
 
                     SettingsSlider(
-                        title = "Minimum Word Frequency",
-                        description = "Only correct to words with frequency >= this",
+                        title = stringResource(R.string.autocorrect_min_word_frequency_title),
+                        description = stringResource(R.string.autocorrect_min_word_frequency_desc),
                         value = autocorrectMinFrequency.toFloat(),
                         valueRange = 100f..2000f,
                         steps = 49,
@@ -100,8 +102,8 @@ internal fun SettingsActivity.AutoCorrectionSection() {
                     )
 
                     SettingsSwitch(
-                        title = "Beam Autocorrect",
-                        description = "Apply fuzzy corrections during beam search decoding",
+                        title = stringResource(R.string.autocorrect_beam_title),
+                        description = stringResource(R.string.autocorrect_beam_desc),
                         checked = swipeBeamAutocorrectEnabled,
                         onCheckedChange = {
                             swipeBeamAutocorrectEnabled = it
@@ -110,8 +112,8 @@ internal fun SettingsActivity.AutoCorrectionSection() {
                     )
 
                     SettingsSwitch(
-                        title = "Final Autocorrect",
-                        description = "Apply dictionary-based corrections to final output",
+                        title = stringResource(R.string.autocorrect_final_title),
+                        description = stringResource(R.string.autocorrect_final_desc),
                         checked = swipeFinalAutocorrectEnabled,
                         onCheckedChange = {
                             swipeFinalAutocorrectEnabled = it
@@ -127,8 +129,8 @@ internal fun SettingsActivity.AutoCorrectionSection() {
                     )
 
                     SettingsDropdown(
-                        title = "Correction Style",
-                        description = "Overall correction aggressiveness preset",
+                        title = stringResource(R.string.autocorrect_style_title),
+                        description = stringResource(R.string.autocorrect_style_desc),
                         options = listOf("Strict (High Accuracy)", "Balanced (Default)", "Lenient (Flexible)"),
                         selectedIndex = when (swipeCorrectionPreset) {
                             "strict" -> 0
@@ -148,8 +150,8 @@ internal fun SettingsActivity.AutoCorrectionSection() {
                     )
 
                     SettingsDropdown(
-                        title = "Fuzzy Match Algorithm",
-                        description = "Method for matching swipe patterns to words",
+                        title = stringResource(R.string.autocorrect_fuzzy_algorithm_title),
+                        description = stringResource(R.string.autocorrect_fuzzy_algorithm_desc),
                         options = listOf("Edit Distance (Recommended)", "Positional Matching (Legacy)"),
                         selectedIndex = if (swipeFuzzyMatchMode == "edit_distance") 0 else 1,
                         onSelectionChange = { index ->
@@ -159,8 +161,8 @@ internal fun SettingsActivity.AutoCorrectionSection() {
                     )
 
                     SettingsSlider(
-                        title = "Typo Forgiveness",
-                        description = "Max character difference allowed (0-5)",
+                        title = stringResource(R.string.autocorrect_typo_forgiveness_title),
+                        description = stringResource(R.string.autocorrect_typo_forgiveness_desc),
                         value = autocorrectMaxLengthDiff.toFloat(),
                         valueRange = 0f..5f,
                         steps = 5,
@@ -172,8 +174,8 @@ internal fun SettingsActivity.AutoCorrectionSection() {
                     )
 
                     SettingsSlider(
-                        title = "Starting Letter Accuracy",
-                        description = "Required matching prefix length (0-4)",
+                        title = stringResource(R.string.autocorrect_starting_letter_title),
+                        description = stringResource(R.string.autocorrect_starting_letter_desc),
                         value = autocorrectPrefixLength.toFloat(),
                         valueRange = 0f..4f,
                         steps = 4,
@@ -185,8 +187,8 @@ internal fun SettingsActivity.AutoCorrectionSection() {
                     )
 
                     SettingsSlider(
-                        title = "Correction Search Depth",
-                        description = "Number of beam candidates to consider (1-10)",
+                        title = stringResource(R.string.autocorrect_search_depth_title),
+                        description = stringResource(R.string.autocorrect_search_depth_desc),
                         value = autocorrectMaxBeamCandidates.toFloat(),
                         valueRange = 1f..10f,
                         steps = 9,
@@ -207,8 +209,8 @@ internal fun SettingsActivity.AutoCorrectionSection() {
 
                 // Prediction source balance
                 SettingsSlider(
-                    title = "Prediction Source Balance",
-                    description = "Neural confidence vs dictionary frequency (0=dict, 100=neural)",
+                    title = stringResource(R.string.autocorrect_source_balance_title),
+                    description = stringResource(R.string.autocorrect_source_balance_desc),
                     value = swipePredictionSource.toFloat(),
                     valueRange = 0f..100f,
                     steps = 20,
@@ -221,8 +223,8 @@ internal fun SettingsActivity.AutoCorrectionSection() {
 
                 // Common words boost
                 SettingsSlider(
-                    title = "Common Words Boost",
-                    description = "Bonus multiplier for common words (0.5-2.0)",
+                    title = stringResource(R.string.autocorrect_common_boost_title),
+                    description = stringResource(R.string.autocorrect_common_boost_desc),
                     value = swipeCommonWordsBoost,
                     valueRange = 0.5f..2.0f,
                     steps = 15,
@@ -235,8 +237,8 @@ internal fun SettingsActivity.AutoCorrectionSection() {
 
                 // Top 5000 boost
                 SettingsSlider(
-                    title = "Frequent Words Boost",
-                    description = "Bonus for top 5000 words (0.5-2.0)",
+                    title = stringResource(R.string.autocorrect_frequent_boost_title),
+                    description = stringResource(R.string.autocorrect_frequent_boost_desc),
                     value = swipeTop5000Boost,
                     valueRange = 0.5f..2.0f,
                     steps = 15,
@@ -249,8 +251,8 @@ internal fun SettingsActivity.AutoCorrectionSection() {
 
                 // Rare words penalty
                 SettingsSlider(
-                    title = "Rare Words Penalty",
-                    description = "Multiplier for uncommon words (0.25-1.0)",
+                    title = stringResource(R.string.autocorrect_rare_penalty_title),
+                    description = stringResource(R.string.autocorrect_rare_penalty_desc),
                     value = swipeRareWordsPenalty,
                     valueRange = 0.25f..1.0f,
                     steps = 15,

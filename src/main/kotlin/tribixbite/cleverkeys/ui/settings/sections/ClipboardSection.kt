@@ -9,10 +9,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import tribixbite.cleverkeys.ClipboardHistoryService
 import tribixbite.cleverkeys.PrivateCopyProcessTextActivity
+import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
 import tribixbite.cleverkeys.ui.settings.SettingsDropdown
@@ -25,14 +27,14 @@ import tribixbite.cleverkeys.ui.settings.saveSetting
 internal fun SettingsActivity.ClipboardSection() {
             // Clipboard Section (Collapsible)
             CollapsibleSettingsSection(
-                title = "📋 Clipboard",
+                title = stringResource(R.string.settings_section_clipboard),
                 expanded = clipboardSectionExpanded,
                 onExpandChange = { clipboardSectionExpanded = it }
             ) {
                 // Enable/disable clipboard history
                 SettingsSwitch(
-                    title = "Clipboard History",
-                    description = "Remember copied text for quick pasting",
+                    title = stringResource(R.string.clipboard_history_title),
+                    description = stringResource(R.string.clipboard_history_desc),
                     checked = clipboardHistoryEnabled,
                     onCheckedChange = {
                         clipboardHistoryEnabled = it
@@ -44,8 +46,8 @@ internal fun SettingsActivity.ClipboardSection() {
                 val limitTypeOptions = listOf("By Count", "By Size")
                 val limitTypeIndex = if (clipboardLimitType == "count") 0 else 1
                 SettingsDropdown(
-                    title = "Limit Type",
-                    description = "How to limit clipboard history",
+                    title = stringResource(R.string.clipboard_limit_type_title),
+                    description = stringResource(R.string.clipboard_limit_type_desc),
                     options = limitTypeOptions,
                     selectedIndex = limitTypeIndex,
                     onSelectionChange = { idx ->
@@ -57,8 +59,8 @@ internal fun SettingsActivity.ClipboardSection() {
                 // History limit (only shown if limit type is "count")
                 if (clipboardLimitType == "count") {
                     SettingsSlider(
-                        title = "History Limit",
-                        description = "Maximum number of clipboard entries (0 = unlimited)",
+                        title = stringResource(R.string.clipboard_history_limit_title),
+                        description = stringResource(R.string.clipboard_history_limit_desc),
                         value = clipboardHistoryLimit.toFloat(),
                         valueRange = 0f..500f,
                         steps = 50,  // 50 steps = increments of 10
@@ -87,7 +89,7 @@ internal fun SettingsActivity.ClipboardSection() {
                         else -> "How long entries persist before auto-deletion (-1 = never)"
                     }
                     SettingsSlider(
-                        title = "Entry Duration",
+                        title = stringResource(R.string.clipboard_entry_duration_title),
                         description = durationDesc,
                         value = currentIndex.toFloat(),
                         valueRange = 0f..(durationPresets.size - 1).toFloat(),
@@ -122,8 +124,8 @@ internal fun SettingsActivity.ClipboardSection() {
                 // Size limit (only shown if limit type is "size")
                 if (clipboardLimitType == "size") {
                     SettingsSlider(
-                        title = "Size Limit",
-                        description = "Maximum total clipboard storage",
+                        title = stringResource(R.string.clipboard_size_limit_title),
+                        description = stringResource(R.string.clipboard_size_limit_desc),
                         value = clipboardSizeLimitMb.toFloat(),
                         valueRange = 1f..100f,
                         steps = 99,
@@ -137,8 +139,8 @@ internal fun SettingsActivity.ClipboardSection() {
 
                 // Pane height percentage
                 SettingsSlider(
-                    title = "Pane Height",
-                    description = "Clipboard pane height as percentage of keyboard",
+                    title = stringResource(R.string.clipboard_pane_height_title),
+                    description = stringResource(R.string.clipboard_pane_height_desc),
                     value = clipboardPaneHeightPercent.toFloat(),
                     valueRange = 10f..50f,
                     steps = 40,
@@ -151,8 +153,8 @@ internal fun SettingsActivity.ClipboardSection() {
 
                 // Max item size
                 SettingsSlider(
-                    title = "Max Item Size",
-                    description = "Maximum size per clipboard entry (Android Binder limit: ~1MB)",
+                    title = stringResource(R.string.clipboard_max_item_size_title),
+                    description = stringResource(R.string.clipboard_max_item_size_desc),
                     value = clipboardMaxItemSizeKb.toFloat(),
                     valueRange = 64f..1024f,
                     steps = 14,  // 64, 128, 192, 256, ... 1024
@@ -167,8 +169,8 @@ internal fun SettingsActivity.ClipboardSection() {
 
                 // Privacy: Exclude password managers
                 SettingsSwitch(
-                    title = "Exclude Password Managers",
-                    description = "Don't store clipboard from Bitwarden, 1Password, LastPass, KeePass, etc.",
+                    title = stringResource(R.string.clipboard_exclude_password_managers_title),
+                    description = stringResource(R.string.clipboard_exclude_password_managers_desc),
                     checked = clipboardExcludePasswordManagers,
                     onCheckedChange = {
                         clipboardExcludePasswordManagers = it
@@ -178,8 +180,8 @@ internal fun SettingsActivity.ClipboardSection() {
 
                 // #86: Privacy: Respect IS_SENSITIVE flag (Android 13+)
                 SettingsSwitch(
-                    title = "Respect Sensitive Flag",
-                    description = "Skip clipboard marked as sensitive by password managers (Android 13+)",
+                    title = stringResource(R.string.clipboard_respect_sensitive_title),
+                    description = stringResource(R.string.clipboard_respect_sensitive_desc),
                     checked = clipboardRespectSensitiveFlag,
                     onCheckedChange = {
                         clipboardRespectSensitiveFlag = it
@@ -191,8 +193,8 @@ internal fun SettingsActivity.ClipboardSection() {
 
                 // v4: Feature toggles
                 SettingsSwitch(
-                    title = "Text Only",
-                    description = "Hide media entries and disable media capture",
+                    title = stringResource(R.string.clipboard_text_only_title),
+                    description = stringResource(R.string.clipboard_text_only_desc),
                     checked = clipboardTextOnly,
                     onCheckedChange = {
                         clipboardTextOnly = it
@@ -201,8 +203,8 @@ internal fun SettingsActivity.ClipboardSection() {
                 )
 
                 SettingsSwitch(
-                    title = "Pinned Tab",
-                    description = "Show pinned tab for saving important clips",
+                    title = stringResource(R.string.clipboard_pinned_tab_title),
+                    description = stringResource(R.string.clipboard_pinned_tab_desc),
                     checked = clipboardPinnedEnabled,
                     onCheckedChange = {
                         clipboardPinnedEnabled = it
@@ -211,8 +213,8 @@ internal fun SettingsActivity.ClipboardSection() {
                 )
 
                 SettingsSwitch(
-                    title = "Todo Tab",
-                    description = "Show todo tab for marking clips as tasks",
+                    title = stringResource(R.string.clipboard_todo_tab_title),
+                    description = stringResource(R.string.clipboard_todo_tab_desc),
                     checked = clipboardTodoEnabled,
                     onCheckedChange = {
                         clipboardTodoEnabled = it
@@ -234,8 +236,8 @@ internal fun SettingsActivity.ClipboardSection() {
                 // menus. Default OFF (design §6.6) — enabling re-expands an exported surface, so this
                 // is the sole enabler and the pref is the single source of truth for the state.
                 SettingsSwitch(
-                    title = "Private copy in other apps",
-                    description = "Add \"Private copy\" to other apps' text-selection menus. Copies selected text into CleverKeys only — never the system clipboard. Enabling adds an app entry other apps can see.",
+                    title = stringResource(R.string.clipboard_private_copy_other_apps_title),
+                    description = stringResource(R.string.clipboard_private_copy_other_apps_desc),
                     checked = clipboardPrivateCopyToolbarEnabled,
                     onCheckedChange = {
                         clipboardPrivateCopyToolbarEnabled = it
@@ -261,8 +263,8 @@ internal fun SettingsActivity.ClipboardSection() {
                 )
 
                 SettingsSwitch(
-                    title = "Sanitize tracking parameters",
-                    description = "Strip utm_*, fbclid, etc. from URLs you copy. Powered by ClearURLs.",
+                    title = stringResource(R.string.clipboard_sanitize_links_title),
+                    description = stringResource(R.string.clipboard_sanitize_links_desc),
                     checked = clipboardSanitizeLinksEnabled,
                     onCheckedChange = {
                         clipboardSanitizeLinksEnabled = it
@@ -272,8 +274,8 @@ internal fun SettingsActivity.ClipboardSection() {
                 )
 
                 SettingsSwitch(
-                    title = "Also clean system clipboard",
-                    description = "When a copied URL is cleaned, overwrite the system clipboard too, so pastes in any app are sanitized — not just CleverKeys' panel.",
+                    title = stringResource(R.string.clipboard_sanitize_system_title),
+                    description = stringResource(R.string.clipboard_sanitize_system_desc),
                     checked = clipboardSanitizeSystemClipboard,
                     onCheckedChange = {
                         clipboardSanitizeSystemClipboard = it
@@ -283,8 +285,8 @@ internal fun SettingsActivity.ClipboardSection() {
                 )
 
                 SettingsSwitch(
-                    title = "Enrich embeds for sharing",
-                    description = "Rewrite x.com → fxtwitter.com, reddit.com → rxddit.com, etc.",
+                    title = stringResource(R.string.clipboard_embed_enrich_title),
+                    description = stringResource(R.string.clipboard_embed_enrich_desc),
                     checked = clipboardEmbedEnrichEnabled,
                     onCheckedChange = {
                         clipboardEmbedEnrichEnabled = it
@@ -294,8 +296,8 @@ internal fun SettingsActivity.ClipboardSection() {
                 )
 
                 SettingsSwitch(
-                    title = "Use custom rules",
-                    description = "Apply your own ClearURLs-format JSON.",
+                    title = stringResource(R.string.clipboard_custom_rules_title),
+                    description = stringResource(R.string.clipboard_custom_rules_desc),
                     checked = clipboardCustomRulesEnabled,
                     onCheckedChange = {
                         clipboardCustomRulesEnabled = it

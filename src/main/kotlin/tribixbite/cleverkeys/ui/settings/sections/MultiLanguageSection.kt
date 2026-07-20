@@ -21,9 +21,11 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
 import tribixbite.cleverkeys.ui.settings.SettingsDropdown
@@ -39,13 +41,13 @@ import tribixbite.cleverkeys.ui.settings.saveSetting
 internal fun SettingsActivity.MultiLanguageSection() {
             // Multi-Language Section (Collapsible)
             CollapsibleSettingsSection(
-                title = "🌐 Multi-Language",
+                title = stringResource(R.string.settings_section_multilang),
                 expanded = multiLangSectionExpanded,
                 onExpandChange = { multiLangSectionExpanded = it }
             ) {
                 SettingsSwitch(
-                    title = "Enable Multi-Language",
-                    description = "Support typing in multiple languages",
+                    title = stringResource(R.string.multilang_enable_title),
+                    description = stringResource(R.string.multilang_enable_desc),
                     checked = multiLangEnabled,
                     onCheckedChange = {
                         multiLangEnabled = it
@@ -63,8 +65,8 @@ internal fun SettingsActivity.MultiLanguageSection() {
                     val primarySelectedIndex = primaryOptions.indexOf(primaryLanguage).coerceAtLeast(0)
 
                     SettingsDropdown(
-                        title = "Primary Language",
-                        description = "Main language for predictions (NN works with any QWERTY language)",
+                        title = stringResource(R.string.multilang_primary_title),
+                        description = stringResource(R.string.multilang_primary_desc),
                         options = primaryDisplayOptions,
                         selectedIndex = primarySelectedIndex,
                         onSelectionChange = { index ->
@@ -81,7 +83,7 @@ internal fun SettingsActivity.MultiLanguageSection() {
                     val secondarySelectedIndex = secondaryOptions.indexOf(secondaryLanguage).coerceAtLeast(0)
 
                     SettingsDropdown(
-                        title = "Secondary Language",
+                        title = stringResource(R.string.multilang_secondary_title),
                         description = if (availableSecondaryLanguages.isEmpty())
                             "No additional dictionaries available"
                         else
@@ -106,8 +108,8 @@ internal fun SettingsActivity.MultiLanguageSection() {
 
                         // v1.1.94: Secondary language prediction weight slider
                         SettingsSlider(
-                            title = "Secondary Language Weight",
-                            description = "Prediction weight for secondary dictionary (0.5-1.5)",
+                            title = stringResource(R.string.multilang_secondary_weight_title),
+                            description = stringResource(R.string.multilang_secondary_weight_desc),
                             value = secondaryPredictionWeight,
                             valueRange = 0.5f..1.5f,
                             steps = 20,
@@ -120,8 +122,8 @@ internal fun SettingsActivity.MultiLanguageSection() {
                     }
 
                     SettingsSwitch(
-                        title = "Auto-Detect Language",
-                        description = "Automatically detect and switch languages while typing",
+                        title = stringResource(R.string.multilang_auto_detect_title),
+                        description = stringResource(R.string.multilang_auto_detect_desc),
                         checked = autoDetectLanguage,
                         onCheckedChange = {
                             autoDetectLanguage = it
@@ -131,8 +133,8 @@ internal fun SettingsActivity.MultiLanguageSection() {
 
                     if (autoDetectLanguage) {
                         SettingsSlider(
-                            title = "Detection Sensitivity",
-                            description = "How quickly to switch languages (0.4-0.9)",
+                            title = stringResource(R.string.multilang_detection_sensitivity_title),
+                            description = stringResource(R.string.multilang_detection_sensitivity_desc),
                             value = languageDetectionSensitivity,
                             valueRange = 0.4f..0.9f,
                             steps = 10,
@@ -166,8 +168,8 @@ internal fun SettingsActivity.MultiLanguageSection() {
                         )
 
                         SettingsSlider(
-                            title = "Boost Strength",
-                            description = "0 = disabled, 1 = normal, 2+ = aggressive",
+                            title = stringResource(R.string.multilang_boost_strength_title),
+                            description = stringResource(R.string.multilang_boost_strength_desc),
                             value = prefixBoostMultiplier,
                             valueRange = 0f..3f,
                             steps = 30,
@@ -180,8 +182,8 @@ internal fun SettingsActivity.MultiLanguageSection() {
                         )
 
                         SettingsSlider(
-                            title = "Max Boost",
-                            description = "Cap on boost values (higher = stronger correction)",
+                            title = stringResource(R.string.multilang_max_boost_title),
+                            description = stringResource(R.string.multilang_max_boost_desc),
                             value = prefixBoostMax,
                             valueRange = 1f..15f,
                             steps = 28,
@@ -194,8 +196,8 @@ internal fun SettingsActivity.MultiLanguageSection() {
                         )
 
                         SettingsSlider(
-                            title = "Max Cumulative Boost",
-                            description = "Total boost cap across all chars. Lower = more conservative, prevents long words from dominating.",
+                            title = stringResource(R.string.multilang_max_cumulative_boost_title),
+                            description = stringResource(R.string.multilang_max_cumulative_boost_desc),
                             value = maxCumulativeBoost,
                             valueRange = 5f..30f,
                             steps = 25,
@@ -207,8 +209,8 @@ internal fun SettingsActivity.MultiLanguageSection() {
                         )
 
                         SettingsSwitch(
-                            title = "Strict Start Character",
-                            description = "Only keep predictions starting with detected first key. Helps short swipes.",
+                            title = stringResource(R.string.multilang_strict_start_title),
+                            description = stringResource(R.string.multilang_strict_start_desc),
                             checked = strictStartChar,
                             onCheckedChange = {
                                 strictStartChar = it
@@ -243,8 +245,8 @@ internal fun SettingsActivity.MultiLanguageSection() {
                         val altPrimarySelectedIndex = altPrimaryOptions.indexOf(primaryLanguageAlt).coerceAtLeast(0)
 
                         SettingsDropdown(
-                            title = "Alternate Primary",
-                            description = "Toggle between $primaryLanguage ↔ ${primaryLanguageAlt}",
+                            title = stringResource(R.string.multilang_alternate_primary_title),
+                            description = stringResource(R.string.multilang_toggle_between, primaryLanguage, primaryLanguageAlt),
                             options = altPrimaryDisplayOptions,
                             selectedIndex = altPrimarySelectedIndex,
                             onSelectionChange = { index ->
@@ -262,8 +264,8 @@ internal fun SettingsActivity.MultiLanguageSection() {
                     val altSecondarySelectedIndex = altSecondaryOptions.indexOf(secondaryLanguageAlt).coerceAtLeast(0)
 
                     SettingsDropdown(
-                        title = "Alternate Secondary",
-                        description = "Toggle between ${getLanguageDisplayName(secondaryLanguage)} ↔ ${getLanguageDisplayName(secondaryLanguageAlt)}",
+                        title = stringResource(R.string.multilang_alternate_secondary_title),
+                        description = stringResource(R.string.multilang_toggle_between, getLanguageDisplayName(secondaryLanguage), getLanguageDisplayName(secondaryLanguageAlt)),
                         options = altSecondaryDisplayOptions,
                         selectedIndex = altSecondarySelectedIndex,
                         onSelectionChange = { index ->

@@ -154,7 +154,7 @@ fun ExtraKeysConfigScreen(onBack: () -> Unit) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     val enabledCount = enabledKeys.values.count { it }
                     Text(
-                        text = "$enabledCount of ${ExtraKeysPreference.extraKeys.size} extra keys enabled",
+                        text = stringResource(R.string.extra_keys_enabled_count, enabledCount, ExtraKeysPreference.extraKeys.size),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer

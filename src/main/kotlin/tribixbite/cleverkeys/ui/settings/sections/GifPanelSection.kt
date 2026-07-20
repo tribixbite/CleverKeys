@@ -16,7 +16,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.sp
+import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
 import tribixbite.cleverkeys.ui.settings.SettingsSlider
@@ -29,7 +31,7 @@ import tribixbite.cleverkeys.ui.settings.saveSetting
 internal fun SettingsActivity.GifPanelSection() {
             // GIF Panel Section (Collapsible) — opt-in, off by default
             CollapsibleSettingsSection(
-                title = "🎬 GIF Panel",
+                title = stringResource(R.string.settings_section_gif_panel),
                 expanded = gifSectionExpanded,
                 onExpandChange = { gifSectionExpanded = it }
             ) {
@@ -44,8 +46,8 @@ internal fun SettingsActivity.GifPanelSection() {
                 // gatedBy="gif_enabled"; highlightId registers a scroll position
                 // so search redirect can reach it when GIF is disabled.
                 SettingsSwitch(
-                    title = "Enable GIF Panel",
-                    description = "Show GIF key on keyboard and enable reaction picker",
+                    title = stringResource(R.string.gif_enable_title),
+                    description = stringResource(R.string.gif_enable_desc),
                     checked = gifEnabled,
                     highlightId = "gif_enabled",
                     onCheckedChange = {
@@ -153,8 +155,8 @@ internal fun SettingsActivity.GifPanelSection() {
 
                     // Grid columns slider
                     SettingsSlider(
-                        title = "Grid Columns",
-                        description = "Number of columns in GIF picker grid",
+                        title = stringResource(R.string.gif_grid_columns_title),
+                        description = stringResource(R.string.gif_grid_columns_desc),
                         value = gifThumbnailColumns.toFloat(),
                         valueRange = 2f..5f,
                         steps = 3,
@@ -203,7 +205,7 @@ internal fun SettingsActivity.GifPanelSection() {
                 val packName = installedGifPacks.find { it.packId == packId }?.name ?: packId
                 androidx.compose.material3.AlertDialog(
                     onDismissRequest = { showGifRemovePackDialog = null },
-                    title = { Text("Remove $packName?") },
+                    title = { Text(stringResource(R.string.gif_remove_pack_confirm, packName)) },
                     text = { Text("This will delete all GIFs from this pack and reclaim storage space.") },
                     confirmButton = {
                         androidx.compose.material3.TextButton(onClick = {

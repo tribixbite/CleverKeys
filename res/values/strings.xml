@@ -371,4 +371,341 @@
     <!-- TestKeyboardSection -->
     <string name="test_keyboard_section_title">⌨️ Test Keyboard</string>
     <string name="test_keyboard_hint">Type here to test your keyboard…</string>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         WP8 (deferred batch) — Settings control titles/descriptions
+         (SettingsSwitch/Slider/Dropdown) extracted from the per-section
+         composables under ui/settings/sections/. Titles feed the generated
+         settings-search index; descriptions are the sub-labels. Emoji
+         prefixes preserved verbatim. Section prefixes match their file.
+         ══════════════════════════════════════════════════════════════════ -->
+
+    <!-- Collapsible section headers -->
+    <string name="settings_section_autocorrection">✏️ Auto-Correction</string>
+    <string name="settings_section_backup_restore">💾 Backup &amp; Restore</string>
+    <string name="settings_section_clipboard">📋 Clipboard</string>
+    <string name="settings_section_gesture_tuning">👆 Gesture Tuning</string>
+    <string name="settings_section_gif_panel">🎬 GIF Panel</string>
+    <string name="settings_section_help">❓ Help &amp; FAQ</string>
+    <string name="settings_section_multilang">🌐 Multi-Language</string>
+    <string name="settings_section_privacy">🔒 Privacy &amp; Data</string>
+    <string name="settings_section_swipe_trail">✨ Swipe Trail</string>
+
+    <!-- AccessibilitySection -->
+    <string name="accessibility_custom_duration_title">Custom Duration (optional)</string>
+    <string name="accessibility_custom_duration_desc">Set a custom vibration length. Leave at default to use the system haptic pattern (lowest latency, OEM-tuned).</string>
+    <string name="accessibility_key_press_title">Key Press</string>
+    <string name="accessibility_key_press_desc">Vibrate on key tap</string>
+    <string name="accessibility_suggestion_tap_title">Suggestion Tap</string>
+    <string name="accessibility_suggestion_tap_desc">Vibrate when selecting a suggestion</string>
+    <string name="accessibility_trackpoint_title">TrackPoint Mode</string>
+    <string name="accessibility_trackpoint_desc">Vibrate when entering cursor mode on nav keys</string>
+    <string name="accessibility_long_press_title">Long Press</string>
+    <string name="accessibility_long_press_desc">Vibrate on modifier lock</string>
+    <string name="accessibility_swipe_complete_title">Swipe Complete</string>
+    <string name="accessibility_swipe_complete_desc">Vibrate when swipe gesture finishes</string>
+
+    <!-- AdvancedSection (debug controls — kept translatable to match the
+         settings_debug_* siblings already in this file) -->
+    <string name="advanced_terminal_mode_title">Terminal Mode</string>
+    <string name="advanced_terminal_mode_desc">Show Ctrl, Meta, PageUp/Down keys for terminal apps like Termux</string>
+    <string name="advanced_swipe_debug_log_title">Swipe Debug Log</string>
+    <string name="advanced_swipe_debug_log_desc">Real-time pipeline analysis for swipe gestures (requires logcat)</string>
+    <string name="advanced_detailed_logging_title">Detailed Logging</string>
+    <string name="advanced_detailed_logging_desc">Include verbose trace information</string>
+    <string name="advanced_show_raw_output_title">Show Raw Output</string>
+    <string name="advanced_show_raw_output_desc">Log raw neural outputs to debug log (doesn\'t affect suggestions)</string>
+    <string name="advanced_show_beam_predictions_title">Show Beam Predictions</string>
+    <string name="advanced_show_beam_predictions_desc">Add raw:word items to suggestion bar for debugging</string>
+    <string name="advanced_open_debug_log">Open Debug Log</string>
+
+    <!-- AppearanceSection -->
+    <string name="appearance_height_portrait_title">Keyboard Height (Portrait)</string>
+    <string name="appearance_height_portrait_desc">Adjust keyboard height in portrait mode</string>
+    <string name="appearance_height_landscape_title">Keyboard Height (Landscape)</string>
+    <string name="appearance_height_landscape_desc">Adjust keyboard height in landscape mode</string>
+    <string name="appearance_bottom_margin_portrait_title">Bottom Margin (Portrait)</string>
+    <string name="appearance_bottom_margin_portrait_desc">Vertical margin as % of screen height</string>
+    <string name="appearance_bottom_margin_landscape_title">Bottom Margin (Landscape)</string>
+    <string name="appearance_bottom_margin_landscape_desc">Vertical margin as % of screen height</string>
+    <string name="appearance_left_margin_portrait_title">Left Margin (Portrait)</string>
+    <string name="appearance_left_margin_portrait_desc">Left margin as % of screen width</string>
+    <string name="appearance_right_margin_portrait_title">Right Margin (Portrait)</string>
+    <string name="appearance_right_margin_portrait_desc">Right margin as % of screen width</string>
+    <string name="appearance_left_margin_landscape_title">Left Margin (Landscape)</string>
+    <string name="appearance_left_margin_landscape_desc">Left margin as % of screen width</string>
+    <string name="appearance_right_margin_landscape_title">Right Margin (Landscape)</string>
+    <string name="appearance_right_margin_landscape_desc">Right margin as % of screen width</string>
+    <string name="appearance_label_brightness_title">Label Brightness</string>
+    <string name="appearance_label_brightness_desc">Brightness of key labels (0-100%)</string>
+    <string name="appearance_keyboard_opacity_title">Keyboard Opacity</string>
+    <string name="appearance_keyboard_opacity_desc">Opacity of keyboard background</string>
+    <string name="appearance_key_opacity_title">Key Opacity</string>
+    <string name="appearance_key_opacity_desc">Opacity of individual keys</string>
+    <string name="appearance_activated_key_opacity_title">Activated Key Opacity</string>
+    <string name="appearance_activated_key_opacity_desc">Opacity when key is pressed</string>
+    <string name="appearance_character_size_title">Character Size</string>
+    <string name="appearance_character_size_desc">Size multiplier for key labels</string>
+    <string name="appearance_secondary_label_size_title">Secondary Label Size</string>
+    <string name="appearance_secondary_label_size_desc">Size of the small corner (flick) labels, independent of Character Size</string>
+    <string name="appearance_key_vertical_margin_title">Key Vertical Margin</string>
+    <string name="appearance_key_vertical_margin_desc">Vertical spacing between keys</string>
+    <string name="appearance_key_horizontal_margin_title">Key Horizontal Margin</string>
+    <string name="appearance_key_horizontal_margin_desc">Horizontal spacing between keys</string>
+    <string name="appearance_custom_border_title">Custom Border Config</string>
+    <string name="appearance_custom_border_desc">Enable custom key border styling</string>
+    <string name="appearance_border_radius_title">Border Radius</string>
+    <string name="appearance_border_radius_desc">Corner radius for keys (dp)</string>
+    <string name="appearance_border_line_width_title">Border Line Width</string>
+    <string name="appearance_border_line_width_desc">Width of key borders (dp)</string>
+
+    <!-- AutoCorrectionSection -->
+    <string name="autocorrect_enable_title">Enable Auto-Correction</string>
+    <string name="autocorrect_enable_desc">Automatically correct misspelled words</string>
+    <string name="autocorrect_backspace_undo_title">Backspace Undo Autocorrect</string>
+    <string name="autocorrect_backspace_undo_desc">Pressing backspace immediately after autocorrect reverts to the original word</string>
+    <string name="autocorrect_min_word_length_title">Minimum Word Length</string>
+    <string name="autocorrect_min_word_length_desc">Don\'t correct words shorter than this (2-5 letters)</string>
+    <string name="autocorrect_char_match_threshold_title">Character Match Threshold</string>
+    <string name="autocorrect_char_match_threshold_desc">How many characters must match (0.5-0.9)</string>
+    <string name="autocorrect_min_word_frequency_title">Minimum Word Frequency</string>
+    <string name="autocorrect_min_word_frequency_desc">Only correct to words with frequency &gt;= this</string>
+    <string name="autocorrect_beam_title">Beam Autocorrect</string>
+    <string name="autocorrect_beam_desc">Apply fuzzy corrections during beam search decoding</string>
+    <string name="autocorrect_final_title">Final Autocorrect</string>
+    <string name="autocorrect_final_desc">Apply dictionary-based corrections to final output</string>
+    <string name="autocorrect_style_title">Correction Style</string>
+    <string name="autocorrect_style_desc">Overall correction aggressiveness preset</string>
+    <string name="autocorrect_fuzzy_algorithm_title">Fuzzy Match Algorithm</string>
+    <string name="autocorrect_fuzzy_algorithm_desc">Method for matching swipe patterns to words</string>
+    <string name="autocorrect_typo_forgiveness_title">Typo Forgiveness</string>
+    <string name="autocorrect_typo_forgiveness_desc">Max character difference allowed (0-5)</string>
+    <string name="autocorrect_starting_letter_title">Starting Letter Accuracy</string>
+    <string name="autocorrect_starting_letter_desc">Required matching prefix length (0-4)</string>
+    <string name="autocorrect_search_depth_title">Correction Search Depth</string>
+    <string name="autocorrect_search_depth_desc">Number of beam candidates to consider (1-10)</string>
+    <string name="autocorrect_source_balance_title">Prediction Source Balance</string>
+    <string name="autocorrect_source_balance_desc">Neural confidence vs dictionary frequency (0=dict, 100=neural)</string>
+    <string name="autocorrect_common_boost_title">Common Words Boost</string>
+    <string name="autocorrect_common_boost_desc">Bonus multiplier for common words (0.5-2.0)</string>
+    <string name="autocorrect_frequent_boost_title">Frequent Words Boost</string>
+    <string name="autocorrect_frequent_boost_desc">Bonus for top 5000 words (0.5-2.0)</string>
+    <string name="autocorrect_rare_penalty_title">Rare Words Penalty</string>
+    <string name="autocorrect_rare_penalty_desc">Multiplier for uncommon words (0.25-1.0)</string>
+
+    <!-- ClipboardSection -->
+    <string name="clipboard_history_title">Clipboard History</string>
+    <string name="clipboard_history_desc">Remember copied text for quick pasting</string>
+    <string name="clipboard_limit_type_title">Limit Type</string>
+    <string name="clipboard_limit_type_desc">How to limit clipboard history</string>
+    <string name="clipboard_history_limit_title">History Limit</string>
+    <string name="clipboard_history_limit_desc">Maximum number of clipboard entries (0 = unlimited)</string>
+    <string name="clipboard_entry_duration_title">Entry Duration</string>
+    <string name="clipboard_size_limit_title">Size Limit</string>
+    <string name="clipboard_size_limit_desc">Maximum total clipboard storage</string>
+    <string name="clipboard_pane_height_title">Pane Height</string>
+    <string name="clipboard_pane_height_desc">Clipboard pane height as percentage of keyboard</string>
+    <string name="clipboard_max_item_size_title">Max Item Size</string>
+    <string name="clipboard_max_item_size_desc">Maximum size per clipboard entry (Android Binder limit: ~1MB)</string>
+    <string name="clipboard_exclude_password_managers_title">Exclude Password Managers</string>
+    <string name="clipboard_exclude_password_managers_desc">Don\'t store clipboard from Bitwarden, 1Password, LastPass, KeePass, etc.</string>
+    <string name="clipboard_respect_sensitive_title">Respect Sensitive Flag</string>
+    <string name="clipboard_respect_sensitive_desc">Skip clipboard marked as sensitive by password managers (Android 13+)</string>
+    <string name="clipboard_text_only_title">Text Only</string>
+    <string name="clipboard_text_only_desc">Hide media entries and disable media capture</string>
+    <string name="clipboard_pinned_tab_title">Pinned Tab</string>
+    <string name="clipboard_pinned_tab_desc">Show pinned tab for saving important clips</string>
+    <string name="clipboard_todo_tab_title">Todo Tab</string>
+    <string name="clipboard_todo_tab_desc">Show todo tab for marking clips as tasks</string>
+    <string name="clipboard_private_copy_other_apps_title">Private copy in other apps</string>
+    <string name="clipboard_private_copy_other_apps_desc">Add \"Private copy\" to other apps\' text-selection menus. Copies selected text into CleverKeys only — never the system clipboard. Enabling adds an app entry other apps can see.</string>
+    <string name="clipboard_sanitize_links_title">Sanitize tracking parameters</string>
+    <string name="clipboard_sanitize_links_desc">Strip utm_*, fbclid, etc. from URLs you copy. Powered by ClearURLs.</string>
+    <string name="clipboard_sanitize_system_title">Also clean system clipboard</string>
+    <string name="clipboard_sanitize_system_desc">When a copied URL is cleaned, overwrite the system clipboard too, so pastes in any app are sanitized — not just CleverKeys\' panel.</string>
+    <string name="clipboard_embed_enrich_title">Enrich embeds for sharing</string>
+    <string name="clipboard_embed_enrich_desc">Rewrite x.com → fxtwitter.com, reddit.com → rxddit.com, etc.</string>
+    <string name="clipboard_custom_rules_title">Use custom rules</string>
+    <string name="clipboard_custom_rules_desc">Apply your own ClearURLs-format JSON.</string>
+
+    <!-- GestureTuningSection -->
+    <string name="gesture_enable_short_title">Enable Short Gestures</string>
+    <string name="gesture_enable_short_desc">Recognize short swipes for quick words (it, is, at, etc.)</string>
+    <string name="gesture_min_distance_title">Min Distance</string>
+    <string name="gesture_min_distance_desc">Minimum swipe distance to trigger (% of key diagonal)</string>
+    <string name="gesture_max_distance_title">Max Distance</string>
+    <string name="gesture_max_distance_desc">The short/long boundary (% of key diagonal): at or below = short swipe, beyond = swipe-typed word. Low values turn slight overshoots into words; high values require longer swipes before word typing starts.</string>
+    <string name="gesture_vertical_threshold_title">Vertical Threshold</string>
+    <string name="gesture_vertical_threshold_desc">% of key height finger must move to trigger line selection. Higher = harder to accidentally select lines.</string>
+    <string name="gesture_vertical_speed_title">Vertical Speed</string>
+    <string name="gesture_vertical_speed_desc">Speed multiplier for line selection (lower = slower). Character selection stays at full speed.</string>
+    <string name="gesture_tap_duration_title">Tap Duration Threshold</string>
+    <string name="gesture_tap_duration_desc">Maximum duration for a tap gesture (ms). Higher = easier taps but may interfere with swipes.</string>
+    <string name="gesture_double_space_period_title">Double-Space to Period</string>
+    <string name="gesture_double_space_period_desc">Tap space twice quickly to insert period. Only triggers after letters/numbers.</string>
+    <string name="gesture_double_space_timing_title">Double-Space Timing</string>
+    <string name="gesture_double_space_timing_desc">Maximum time between spaces to trigger period (ms)</string>
+    <string name="gesture_sensitivity_preset_title">Sensitivity Preset</string>
+    <string name="gesture_sensitivity_preset_desc">Quick presets for swipe recognition. Custom shows when values differ from presets.</string>
+    <string name="gesture_min_swipe_distance_title">Minimum Swipe Distance</string>
+    <string name="gesture_min_swipe_distance_desc">Minimum traced path (px) before a gesture can qualify as a swipe-typed word. Lower helps very short words register; raise if stray touches misfire as words. (Short-vs-long is decided by Max Distance above.)</string>
+    <string name="gesture_min_key_distance_title">Minimum Key Distance</string>
+    <string name="gesture_min_key_distance_desc">Distance between keys during swipe (px). Lower captures more keys but may add noise.</string>
+    <string name="gesture_min_key_dwell_title">Minimum Key Dwell Time</string>
+    <string name="gesture_min_key_dwell_desc">Time to register a key during swipe (ms). Lower allows faster swiping.</string>
+    <string name="gesture_noise_filter_title">Movement Noise Filter</string>
+    <string name="gesture_noise_filter_desc">Minimum movement to register (px). Higher filters jitter but may lose data.</string>
+    <string name="gesture_high_velocity_title">High Velocity Threshold</string>
+    <string name="gesture_high_velocity_desc">Velocity for fast swipe detection (px/sec). Higher allows faster swipes.</string>
+    <string name="gesture_finger_occlusion_title">Finger Occlusion Compensation</string>
+    <string name="gesture_finger_occlusion_desc">Y-offset as % of row height to compensate for finger obscuring keys. Higher shifts touch point down toward key centers.</string>
+    <string name="gesture_speed_smoothing_title">Speed Smoothing</string>
+    <string name="gesture_speed_smoothing_desc">Smoothing factor for slider movement. Higher is smoother but less responsive.</string>
+    <string name="gesture_max_speed_multiplier_title">Maximum Speed Multiplier</string>
+    <string name="gesture_max_speed_multiplier_desc">Maximum slider acceleration. Higher allows faster sliding.</string>
+
+    <!-- GifPanelSection -->
+    <string name="gif_enable_title">Enable GIF Panel</string>
+    <string name="gif_enable_desc">Show GIF key on keyboard and enable reaction picker</string>
+    <string name="gif_grid_columns_title">Grid Columns</string>
+    <string name="gif_grid_columns_desc">Number of columns in GIF picker grid</string>
+    <!-- %1$s = the GIF pack name being removed -->
+    <string name="gif_remove_pack_confirm">Remove %1$s?</string>
+
+    <!-- InputBehaviorSection -->
+    <string name="input_enable_predictions_title">Enable Word Predictions</string>
+    <string name="input_enable_predictions_desc">Show word suggestions while typing</string>
+    <string name="input_suggestion_bar_opacity_title">Suggestion Bar Opacity</string>
+    <string name="input_suggestion_bar_opacity_desc">Transparency of the suggestion bar</string>
+    <string name="input_auto_space_after_title">Auto-Space After Suggestion</string>
+    <string name="input_auto_space_after_desc">Add trailing space when selecting a suggestion</string>
+    <string name="input_auto_space_before_title">Auto-Space Before Suggestion</string>
+    <string name="input_auto_space_before_desc">Insert leading space before a tapped suggestion (swipe always adds space)</string>
+    <string name="input_backspace_undo_swipe_title">Backspace Undo Swipe</string>
+    <string name="input_backspace_undo_swipe_desc">Tapping backspace immediately after a swiped word deletes the entire word</string>
+    <string name="input_context_aware_title">Context-Aware Predictions</string>
+    <string name="input_context_aware_desc">Learn from typing patterns (N-gram model)</string>
+    <string name="input_personalized_learning_title">Personalized Learning</string>
+    <string name="input_personalized_learning_desc">Boost predictions for frequently typed words</string>
+    <string name="input_learning_aggression_title">Learning Aggression</string>
+    <string name="input_learning_aggression_desc">How strongly habits affect predictions</string>
+    <string name="input_context_boost_title">Context Boost Multiplier</string>
+    <string name="input_context_boost_desc">How strongly context influences predictions (0.5-5.0)</string>
+    <string name="input_frequency_scale_title">Frequency Scale</string>
+    <string name="input_frequency_scale_desc">Balance common vs uncommon words (100-5000)</string>
+    <string name="input_capitalize_i_title">Capitalize I Words</string>
+    <string name="input_capitalize_i_desc">Auto-capitalize \"I\" and contractions (I\'m, I\'ll, I\'d, I\'ve)</string>
+    <string name="input_smart_punctuation_title">Smart Punctuation</string>
+    <string name="input_smart_punctuation_desc">Attach punctuation to end of words (removes space before . , ! ? etc.)</string>
+    <string name="input_swipe_distance_threshold_title">Swipe Distance Threshold</string>
+    <string name="input_swipe_distance_threshold_desc">Distance (device-scaled units) to activate slider/event subkeys mid-swipe (e.g. spacebar cursor slider). Also caps the short-swipe minimum on wide keys like backspace so their flicks stay easy.</string>
+    <string name="input_circle_gesture_title">Circle Gesture Sensitivity</string>
+    <string name="input_circle_gesture_desc">Sensitivity for loop/circle gestures</string>
+    <string name="input_space_slider_title">Space Bar Slider Sensitivity</string>
+    <string name="input_space_slider_desc">Sensitivity for cursor movement via space bar horizontal swipe</string>
+    <string name="input_long_press_timeout_title">Long Press Timeout</string>
+    <string name="input_long_press_timeout_desc">Duration to trigger long press (milliseconds)</string>
+    <string name="input_long_press_interval_title">Long Press Interval</string>
+    <string name="input_long_press_interval_desc">Key repeat interval when long-pressed (milliseconds)</string>
+    <string name="input_key_repeat_title">Key Repeat Enabled</string>
+    <string name="input_key_repeat_desc">Allow keys to repeat when long-pressed</string>
+    <string name="input_backspace_only_repeat_title">Backspace Only Repeat</string>
+    <string name="input_backspace_only_repeat_desc">Only repeat backspace/navigation keys, not character keys</string>
+    <string name="input_double_tap_shift_title">Double Tap Shift for Caps Lock</string>
+    <string name="input_double_tap_shift_desc">Lock shift key by tapping twice quickly</string>
+    <string name="input_immediate_switching_title">Immediate Keyboard Switching</string>
+    <string name="input_immediate_switching_desc">Switch keyboards immediately instead of showing menu</string>
+    <string name="input_number_row_title">Number Row</string>
+    <string name="input_number_row_desc">Show number row at top of keyboard</string>
+    <string name="input_show_numpad_title">Show Numpad</string>
+    <string name="input_show_numpad_desc">When to display the numeric keypad</string>
+    <string name="input_numpad_layout_title">Numpad Layout</string>
+    <string name="input_numpad_layout_desc">Digit order on numeric keypad</string>
+    <string name="input_pin_entry_layout_title">Pin Entry Layout</string>
+    <string name="input_pin_entry_layout_desc">Activate specialized layout for typing numbers/dates/phone numbers</string>
+
+    <!-- MultiLanguageSection -->
+    <string name="multilang_enable_title">Enable Multi-Language</string>
+    <string name="multilang_enable_desc">Support typing in multiple languages</string>
+    <string name="multilang_primary_title">Primary Language</string>
+    <string name="multilang_primary_desc">Main language for predictions (NN works with any QWERTY language)</string>
+    <string name="multilang_secondary_title">Secondary Language</string>
+    <string name="multilang_secondary_weight_title">Secondary Language Weight</string>
+    <string name="multilang_secondary_weight_desc">Prediction weight for secondary dictionary (0.5-1.5)</string>
+    <string name="multilang_auto_detect_title">Auto-Detect Language</string>
+    <string name="multilang_auto_detect_desc">Automatically detect and switch languages while typing</string>
+    <string name="multilang_detection_sensitivity_title">Detection Sensitivity</string>
+    <string name="multilang_detection_sensitivity_desc">How quickly to switch languages (0.4-0.9)</string>
+    <string name="multilang_boost_strength_title">Boost Strength</string>
+    <string name="multilang_boost_strength_desc">0 = disabled, 1 = normal, 2+ = aggressive</string>
+    <string name="multilang_max_boost_title">Max Boost</string>
+    <string name="multilang_max_boost_desc">Cap on boost values (higher = stronger correction)</string>
+    <string name="multilang_max_cumulative_boost_title">Max Cumulative Boost</string>
+    <string name="multilang_max_cumulative_boost_desc">Total boost cap across all chars. Lower = more conservative, prevents long words from dominating.</string>
+    <string name="multilang_strict_start_title">Strict Start Character</string>
+    <string name="multilang_strict_start_desc">Only keep predictions starting with detected first key. Helps short swipes.</string>
+    <string name="multilang_alternate_primary_title">Alternate Primary</string>
+    <string name="multilang_alternate_secondary_title">Alternate Secondary</string>
+    <!-- %1$s = current language name, %2$s = alternate language name -->
+    <string name="multilang_toggle_between">Toggle between %1$s ↔ %2$s</string>
+
+    <!-- NeuralPredictionSection -->
+    <string name="neural_enable_swipe_title">Enable Swipe Typing</string>
+    <string name="neural_enable_swipe_desc">Swipe across keys to type words using neural prediction.</string>
+    <string name="neural_swipe_password_title">Swipe on Password Fields</string>
+    <string name="neural_swipe_password_desc">Enable swipe typing even in password fields. Predictions will be shown but individual typed characters remain hidden.</string>
+
+    <!-- PrivacySection -->
+    <string name="privacy_swipe_pattern_title">Swipe Pattern Data</string>
+    <string name="privacy_swipe_pattern_desc">Store swipe trajectories locally for on-device learning</string>
+    <string name="privacy_performance_metrics_title">Performance Metrics</string>
+    <string name="privacy_performance_metrics_desc">Store timing data locally for optimization</string>
+
+    <!-- SwipeTrailSection -->
+    <string name="swipe_trail_enable_title">Enable Swipe Trail</string>
+    <string name="swipe_trail_enable_desc">Show visual trail while swiping across keys</string>
+    <string name="swipe_trail_effect_title">Trail Effect</string>
+    <string name="swipe_trail_effect_desc">Visual style of the swipe trail</string>
+    <string name="swipe_trail_width_title">Trail Width</string>
+    <string name="swipe_trail_width_desc">Thickness of the swipe trail</string>
+    <string name="swipe_trail_glow_radius_title">Glow Radius</string>
+    <string name="swipe_trail_glow_radius_desc">Size of the glow effect around trail</string>
+    <string name="swipe_trail_color_title">Trail Color</string>
+    <string name="swipe_trail_color_desc">Color of the swipe trail</string>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         WP8 (deferred batch) — Theme creator color-attribute row labels
+         (ThemeSettingsActivity ColorAttributeRow). Follows theme_* naming.
+         ══════════════════════════════════════════════════════════════════ -->
+    <string name="theme_color_key_default">Key Default</string>
+    <string name="theme_color_key_activated">Key Activated</string>
+    <string name="theme_color_key_locked">Key Locked</string>
+    <string name="theme_color_key_modifier">Key Modifier</string>
+    <string name="theme_color_key_special">Key Special</string>
+    <string name="theme_color_key_label">Key Label</string>
+    <string name="theme_color_sub_label">Sub Label</string>
+    <string name="theme_color_secondary_label">Secondary Label</string>
+    <string name="theme_color_key_border">Key Border</string>
+    <string name="theme_color_border_activated">Border Activated</string>
+    <string name="theme_color_swipe_trail">Swipe Trail Color</string>
+    <string name="theme_color_ripple">Ripple Effect</string>
+    <string name="theme_color_suggestion_text">Suggestion Text</string>
+    <string name="theme_color_suggestion_background">Suggestion Background</string>
+    <string name="theme_color_high_confidence">High Confidence</string>
+    <string name="theme_color_keyboard_background">Keyboard Background</string>
+    <string name="theme_color_keyboard_surface">Keyboard Surface</string>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         WP8 (deferred batch) — Interpolated user-facing Compose strings
+         (short-swipe & extra-keys activities). Format args instead of
+         Kotlin string templates so translators can reorder.
+         ══════════════════════════════════════════════════════════════════ -->
+    <!-- %1$d = number of custom short-swipe mappings, %2$d = total available commands -->
+    <string name="short_swipe_mappings_summary">%1$d custom mappings • %2$d commands available</string>
+    <!-- %1$s = the last key that was tapped (uppercased) -->
+    <string name="short_swipe_last_key">Last key: %1$s</string>
+    <!-- %1$s = the key being customized (uppercased) -->
+    <string name="short_swipe_customize_key">Customize \"%1$s\" Key</string>
+    <!-- %1$d = number of enabled extra keys, %2$d = total extra keys -->
+    <string name="extra_keys_enabled_count">%1$d of %2$d extra keys enabled</string>
 </resources>

@@ -9,7 +9,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
 import tribixbite.cleverkeys.ui.settings.FAQSection
@@ -19,7 +21,7 @@ import tribixbite.cleverkeys.ui.settings.openWikiInBrowser
 internal fun SettingsActivity.HelpSection() {
             // Help Section (Collapsible) - FAQ and Wiki
             CollapsibleSettingsSection(
-                title = "❓ Help & FAQ",
+                title = stringResource(R.string.settings_section_help),
                 expanded = helpSectionExpanded,
                 onExpandChange = { helpSectionExpanded = it }
             ) {

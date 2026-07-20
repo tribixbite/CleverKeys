@@ -55,8 +55,8 @@ internal fun SettingsActivity.InputBehaviorSection() {
 
                 // Phase 1: Typing/Prediction Settings
                 SettingsSwitch(
-                    title = "Enable Word Predictions",
-                    description = "Show word suggestions while typing",
+                    title = stringResource(R.string.input_enable_predictions_title),
+                    description = stringResource(R.string.input_enable_predictions_desc),
                     checked = wordPredictionEnabled,
                     onCheckedChange = {
                         wordPredictionEnabled = it
@@ -66,8 +66,8 @@ internal fun SettingsActivity.InputBehaviorSection() {
 
                 if (wordPredictionEnabled) {
                     SettingsSlider(
-                        title = "Suggestion Bar Opacity",
-                        description = "Transparency of the suggestion bar",
+                        title = stringResource(R.string.input_suggestion_bar_opacity_title),
+                        description = stringResource(R.string.input_suggestion_bar_opacity_desc),
                         value = suggestionBarOpacity.toFloat(),
                         valueRange = 0f..100f,
                         steps = 100,
@@ -80,8 +80,8 @@ internal fun SettingsActivity.InputBehaviorSection() {
 
                     // #82: Auto-space after selecting suggestion
                     SettingsSwitch(
-                        title = "Auto-Space After Suggestion",
-                        description = "Add trailing space when selecting a suggestion",
+                        title = stringResource(R.string.input_auto_space_after_title),
+                        description = stringResource(R.string.input_auto_space_after_desc),
                         checked = autoSpaceAfterSuggestion,
                         onCheckedChange = {
                             autoSpaceAfterSuggestion = it
@@ -92,8 +92,8 @@ internal fun SettingsActivity.InputBehaviorSection() {
 
                     // Auto-space before tapped suggestion (leading space)
                     SettingsSwitch(
-                        title = "Auto-Space Before Suggestion",
-                        description = "Insert leading space before a tapped suggestion (swipe always adds space)",
+                        title = stringResource(R.string.input_auto_space_before_title),
+                        description = stringResource(R.string.input_auto_space_before_desc),
                         checked = autoSpaceBeforeSuggestion,
                         onCheckedChange = {
                             autoSpaceBeforeSuggestion = it
@@ -105,8 +105,8 @@ internal fun SettingsActivity.InputBehaviorSection() {
                     // #110: Backspace undo swipe — delete entire swiped word on immediate backspace
                     if (swipeTypingEnabled) {
                         SettingsSwitch(
-                            title = "Backspace Undo Swipe",
-                            description = "Tapping backspace immediately after a swiped word deletes the entire word",
+                            title = stringResource(R.string.input_backspace_undo_swipe_title),
+                            description = stringResource(R.string.input_backspace_undo_swipe_desc),
                             checked = backspaceUndoSwipe,
                             highlightId = "backspace_undo_swipe",
                             onCheckedChange = {
@@ -136,8 +136,8 @@ internal fun SettingsActivity.InputBehaviorSection() {
                     AnimatedVisibility(visible = wordPredictionAdvancedExpanded) {
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             SettingsSwitch(
-                                title = "Context-Aware Predictions",
-                                description = "Learn from typing patterns (N-gram model)",
+                                title = stringResource(R.string.input_context_aware_title),
+                                description = stringResource(R.string.input_context_aware_desc),
                                 checked = contextAwarePredictionsEnabled,
                                 onCheckedChange = {
                                     contextAwarePredictionsEnabled = it
@@ -146,8 +146,8 @@ internal fun SettingsActivity.InputBehaviorSection() {
                             )
 
                             SettingsSwitch(
-                                title = "Personalized Learning",
-                                description = "Boost predictions for frequently typed words",
+                                title = stringResource(R.string.input_personalized_learning_title),
+                                description = stringResource(R.string.input_personalized_learning_desc),
                                 checked = personalizedLearningEnabled,
                                 onCheckedChange = {
                                     personalizedLearningEnabled = it
@@ -157,8 +157,8 @@ internal fun SettingsActivity.InputBehaviorSection() {
 
                             if (personalizedLearningEnabled) {
                                 SettingsDropdown(
-                                    title = "Learning Aggression",
-                                    description = "How strongly habits affect predictions",
+                                    title = stringResource(R.string.input_learning_aggression_title),
+                                    description = stringResource(R.string.input_learning_aggression_desc),
                                     options = listOf("Conservative", "Balanced", "Aggressive"),
                                     selectedIndex = when (learningAggression) {
                                         "CONSERVATIVE" -> 0
@@ -179,8 +179,8 @@ internal fun SettingsActivity.InputBehaviorSection() {
                             }
 
                             SettingsSlider(
-                                title = "Context Boost Multiplier",
-                                description = "How strongly context influences predictions (0.5-5.0)",
+                                title = stringResource(R.string.input_context_boost_title),
+                                description = stringResource(R.string.input_context_boost_desc),
                                 value = predictionContextBoost,
                                 valueRange = 0.5f..5.0f,
                                 steps = 45,
@@ -192,8 +192,8 @@ internal fun SettingsActivity.InputBehaviorSection() {
                             )
 
                             SettingsSlider(
-                                title = "Frequency Scale",
-                                description = "Balance common vs uncommon words (100-5000)",
+                                title = stringResource(R.string.input_frequency_scale_title),
+                                description = stringResource(R.string.input_frequency_scale_desc),
                                 value = predictionFrequencyScale,
                                 valueRange = 100f..5000f,
                                 steps = 49,
@@ -221,8 +221,8 @@ internal fun SettingsActivity.InputBehaviorSection() {
 
                 // #72: Capitalize I words (I, I'm, I'll, I'd, I've)
                 SettingsSwitch(
-                    title = "Capitalize I Words",
-                    description = "Auto-capitalize \"I\" and contractions (I'm, I'll, I'd, I've)",
+                    title = stringResource(R.string.input_capitalize_i_title),
+                    description = stringResource(R.string.input_capitalize_i_desc),
                     checked = capitalizeIWords,
                     onCheckedChange = {
                         capitalizeIWords = it
@@ -233,8 +233,8 @@ internal fun SettingsActivity.InputBehaviorSection() {
                 )
 
                 SettingsSwitch(
-                    title = "Smart Punctuation",
-                    description = "Attach punctuation to end of words (removes space before . , ! ? etc.)",
+                    title = stringResource(R.string.input_smart_punctuation_title),
+                    description = stringResource(R.string.input_smart_punctuation_desc),
                     checked = smartPunctuationEnabled,
                     onCheckedChange = {
                         smartPunctuationEnabled = it
@@ -247,8 +247,8 @@ internal fun SettingsActivity.InputBehaviorSection() {
                 // v1.2.8: Vibration settings moved to Accessibility section
 
                 SettingsSlider(
-                    title = "Swipe Distance Threshold",
-                    description = "Distance (device-scaled units) to activate slider/event subkeys mid-swipe (e.g. spacebar cursor slider). Also caps the short-swipe minimum on wide keys like backspace so their flicks stay easy.",
+                    title = stringResource(R.string.input_swipe_distance_threshold_title),
+                    description = stringResource(R.string.input_swipe_distance_threshold_desc),
                     value = swipeDistance.toFloat(),
                     valueRange = 5f..30f,
                     steps = 25,
@@ -260,8 +260,8 @@ internal fun SettingsActivity.InputBehaviorSection() {
                 )
 
                 SettingsSlider(
-                    title = "Circle Gesture Sensitivity",
-                    description = "Sensitivity for loop/circle gestures",
+                    title = stringResource(R.string.input_circle_gesture_title),
+                    description = stringResource(R.string.input_circle_gesture_desc),
                     value = circleSensitivity.toFloat(),
                     valueRange = 1f..5f,
                     steps = 4,
@@ -273,8 +273,8 @@ internal fun SettingsActivity.InputBehaviorSection() {
                 )
 
                 SettingsSlider(
-                    title = "Space Bar Slider Sensitivity",
-                    description = "Sensitivity for cursor movement via space bar horizontal swipe",
+                    title = stringResource(R.string.input_space_slider_title),
+                    description = stringResource(R.string.input_space_slider_desc),
                     value = sliderSensitivity.toFloat(),
                     valueRange = 0f..100f,
                     steps = 100,
@@ -286,8 +286,8 @@ internal fun SettingsActivity.InputBehaviorSection() {
                 )
 
                 SettingsSlider(
-                    title = "Long Press Timeout",
-                    description = "Duration to trigger long press (milliseconds)",
+                    title = stringResource(R.string.input_long_press_timeout_title),
+                    description = stringResource(R.string.input_long_press_timeout_desc),
                     value = longPressTimeout.toFloat(),
                     valueRange = 200f..1000f,
                     steps = 16,
@@ -299,8 +299,8 @@ internal fun SettingsActivity.InputBehaviorSection() {
                 )
 
                 SettingsSlider(
-                    title = "Long Press Interval",
-                    description = "Key repeat interval when long-pressed (milliseconds)",
+                    title = stringResource(R.string.input_long_press_interval_title),
+                    description = stringResource(R.string.input_long_press_interval_desc),
                     value = longPressInterval.toFloat(),
                     valueRange = 25f..200f,
                     steps = 35,
@@ -312,8 +312,8 @@ internal fun SettingsActivity.InputBehaviorSection() {
                 )
 
                 SettingsSwitch(
-                    title = "Key Repeat Enabled",
-                    description = "Allow keys to repeat when long-pressed",
+                    title = stringResource(R.string.input_key_repeat_title),
+                    description = stringResource(R.string.input_key_repeat_desc),
                     checked = keyRepeatEnabled,
                     onCheckedChange = {
                         keyRepeatEnabled = it
@@ -324,8 +324,8 @@ internal fun SettingsActivity.InputBehaviorSection() {
                 // #81: Only show when key repeat is enabled
                 if (keyRepeatEnabled) {
                     SettingsSwitch(
-                        title = "Backspace Only Repeat",
-                        description = "Only repeat backspace/navigation keys, not character keys",
+                        title = stringResource(R.string.input_backspace_only_repeat_title),
+                        description = stringResource(R.string.input_backspace_only_repeat_desc),
                         checked = keyRepeatBackspaceOnly,
                         onCheckedChange = {
                             keyRepeatBackspaceOnly = it
@@ -336,8 +336,8 @@ internal fun SettingsActivity.InputBehaviorSection() {
                 }
 
                 SettingsSwitch(
-                    title = "Double Tap Shift for Caps Lock",
-                    description = "Lock shift key by tapping twice quickly",
+                    title = stringResource(R.string.input_double_tap_shift_title),
+                    description = stringResource(R.string.input_double_tap_shift_desc),
                     checked = doubleTapLockShift,
                     onCheckedChange = {
                         doubleTapLockShift = it
@@ -346,8 +346,8 @@ internal fun SettingsActivity.InputBehaviorSection() {
                 )
 
                 SettingsSwitch(
-                    title = "Immediate Keyboard Switching",
-                    description = "Switch keyboards immediately instead of showing menu",
+                    title = stringResource(R.string.input_immediate_switching_title),
+                    description = stringResource(R.string.input_immediate_switching_desc),
                     checked = switchInputImmediate,
                     onCheckedChange = {
                         switchInputImmediate = it
@@ -356,8 +356,8 @@ internal fun SettingsActivity.InputBehaviorSection() {
                 )
 
                 SettingsDropdown(
-                    title = "Number Row",
-                    description = "Show number row at top of keyboard",
+                    title = stringResource(R.string.input_number_row_title),
+                    description = stringResource(R.string.input_number_row_desc),
                     options = listOf("Hidden", "Numbers Only", "Numbers + Symbols"),
                     selectedIndex = when (numberRowMode) {
                         "no_number_row" -> 0
@@ -377,8 +377,8 @@ internal fun SettingsActivity.InputBehaviorSection() {
                 )
 
                 SettingsDropdown(
-                    title = "Show Numpad",
-                    description = "When to display the numeric keypad",
+                    title = stringResource(R.string.input_show_numpad_title),
+                    description = stringResource(R.string.input_show_numpad_desc),
                     options = listOf("Never", "Landscape Only", "Always"),
                     selectedIndex = when (showNumpadMode) {
                         "never" -> 0
@@ -398,8 +398,8 @@ internal fun SettingsActivity.InputBehaviorSection() {
                 )
 
                 SettingsDropdown(
-                    title = "Numpad Layout",
-                    description = "Digit order on numeric keypad",
+                    title = stringResource(R.string.input_numpad_layout_title),
+                    description = stringResource(R.string.input_numpad_layout_desc),
                     options = listOf("High First (7-8-9 on top)", "Low First (1-2-3 on top)"),
                     selectedIndex = if (numpadLayout == "low_first") 1 else 0,
                     onSelectionChange = { index ->
@@ -409,8 +409,8 @@ internal fun SettingsActivity.InputBehaviorSection() {
                 )
 
                 SettingsSwitch(
-                    title = "Pin Entry Layout",
-                    description = "Activate specialized layout for typing numbers/dates/phone numbers",
+                    title = stringResource(R.string.input_pin_entry_layout_title),
+                    description = stringResource(R.string.input_pin_entry_layout_desc),
                     checked = pinEntryEnabled,
                     onCheckedChange = {
                         pinEntryEnabled = it

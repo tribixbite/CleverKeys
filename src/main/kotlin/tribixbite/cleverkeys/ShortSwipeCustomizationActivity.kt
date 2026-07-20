@@ -220,7 +220,7 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "${mappings.size} custom mappings • ${CommandRegistry.totalCount} commands available",
+                        text = stringResource(R.string.short_swipe_mappings_summary, mappings.size, CommandRegistry.totalCount),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                     )
@@ -278,7 +278,7 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
                     if (lastCapturedKey != null) {
                         Spacer(modifier = Modifier.height(24.dp))
                         Text(
-                            text = "Last key: ${lastCapturedKey?.uppercase()}",
+                            text = stringResource(R.string.short_swipe_last_key, lastCapturedKey?.uppercase().orEmpty()),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -414,7 +414,7 @@ fun KeyCustomizationDialog(
             ) {
                 // Header
                 Text(
-                    text = "Customize \"${keyCode.uppercase()}\" Key",
+                    text = stringResource(R.string.short_swipe_customize_key, keyCode.uppercase()),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )

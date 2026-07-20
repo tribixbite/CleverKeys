@@ -788,11 +788,11 @@ fun ThemeCreatorDialog(
                         style = MaterialTheme.typography.titleSmall,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
-                    ColorAttributeRow("Key Default", colors.keyDefault, ColorAttribute.KEY_DEFAULT) { selectedColorAttribute = it }
-                    ColorAttributeRow("Key Activated", colors.keyActivated, ColorAttribute.KEY_ACTIVATED) { selectedColorAttribute = it }
-                    ColorAttributeRow("Key Locked", colors.keyLocked, ColorAttribute.KEY_LOCKED) { selectedColorAttribute = it }
-                    ColorAttributeRow("Key Modifier", colors.keyModifier, ColorAttribute.KEY_MODIFIER) { selectedColorAttribute = it }
-                    ColorAttributeRow("Key Special", colors.keySpecial, ColorAttribute.KEY_SPECIAL) { selectedColorAttribute = it }
+                    ColorAttributeRow(stringResource(R.string.theme_color_key_default), colors.keyDefault, ColorAttribute.KEY_DEFAULT) { selectedColorAttribute = it }
+                    ColorAttributeRow(stringResource(R.string.theme_color_key_activated), colors.keyActivated, ColorAttribute.KEY_ACTIVATED) { selectedColorAttribute = it }
+                    ColorAttributeRow(stringResource(R.string.theme_color_key_locked), colors.keyLocked, ColorAttribute.KEY_LOCKED) { selectedColorAttribute = it }
+                    ColorAttributeRow(stringResource(R.string.theme_color_key_modifier), colors.keyModifier, ColorAttribute.KEY_MODIFIER) { selectedColorAttribute = it }
+                    ColorAttributeRow(stringResource(R.string.theme_color_key_special), colors.keySpecial, ColorAttribute.KEY_SPECIAL) { selectedColorAttribute = it }
 
                     Spacer(modifier = Modifier.height(12.dp))
 
@@ -801,9 +801,9 @@ fun ThemeCreatorDialog(
                         style = MaterialTheme.typography.titleSmall,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
-                    ColorAttributeRow("Key Label", colors.keyLabel, ColorAttribute.KEY_LABEL) { selectedColorAttribute = it }
-                    ColorAttributeRow("Sub Label", colors.keySubLabel, ColorAttribute.KEY_SUB_LABEL) { selectedColorAttribute = it }
-                    ColorAttributeRow("Secondary Label", colors.keySecondaryLabel, ColorAttribute.KEY_SECONDARY_LABEL) { selectedColorAttribute = it }
+                    ColorAttributeRow(stringResource(R.string.theme_color_key_label), colors.keyLabel, ColorAttribute.KEY_LABEL) { selectedColorAttribute = it }
+                    ColorAttributeRow(stringResource(R.string.theme_color_sub_label), colors.keySubLabel, ColorAttribute.KEY_SUB_LABEL) { selectedColorAttribute = it }
+                    ColorAttributeRow(stringResource(R.string.theme_color_secondary_label), colors.keySecondaryLabel, ColorAttribute.KEY_SECONDARY_LABEL) { selectedColorAttribute = it }
 
                     Spacer(modifier = Modifier.height(12.dp))
 
@@ -812,8 +812,8 @@ fun ThemeCreatorDialog(
                         style = MaterialTheme.typography.titleSmall,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
-                    ColorAttributeRow("Key Border", colors.keyBorder, ColorAttribute.KEY_BORDER) { selectedColorAttribute = it }
-                    ColorAttributeRow("Border Activated", colors.keyBorderActivated, ColorAttribute.KEY_BORDER_ACTIVATED) { selectedColorAttribute = it }
+                    ColorAttributeRow(stringResource(R.string.theme_color_key_border), colors.keyBorder, ColorAttribute.KEY_BORDER) { selectedColorAttribute = it }
+                    ColorAttributeRow(stringResource(R.string.theme_color_border_activated), colors.keyBorderActivated, ColorAttribute.KEY_BORDER_ACTIVATED) { selectedColorAttribute = it }
 
                     Spacer(modifier = Modifier.height(12.dp))
 
@@ -836,8 +836,8 @@ fun ThemeCreatorDialog(
                                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                             )
                             Spacer(modifier = Modifier.height(8.dp))
-                            ColorAttributeRow("Swipe Trail Color", colors.swipeTrail, ColorAttribute.SWIPE_TRAIL) { selectedColorAttribute = it }
-                            ColorAttributeRow("Ripple Effect", colors.ripple, ColorAttribute.RIPPLE) { selectedColorAttribute = it }
+                            ColorAttributeRow(stringResource(R.string.theme_color_swipe_trail), colors.swipeTrail, ColorAttribute.SWIPE_TRAIL) { selectedColorAttribute = it }
+                            ColorAttributeRow(stringResource(R.string.theme_color_ripple), colors.ripple, ColorAttribute.RIPPLE) { selectedColorAttribute = it }
                         }
                     }
 
@@ -848,9 +848,9 @@ fun ThemeCreatorDialog(
                         style = MaterialTheme.typography.titleSmall,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
-                    ColorAttributeRow("Suggestion Text", colors.suggestionText, ColorAttribute.SUGGESTION_TEXT) { selectedColorAttribute = it }
-                    ColorAttributeRow("Suggestion Background", colors.suggestionBackground, ColorAttribute.SUGGESTION_BACKGROUND) { selectedColorAttribute = it }
-                    ColorAttributeRow("High Confidence", colors.suggestionHighConfidence, ColorAttribute.SUGGESTION_HIGH_CONFIDENCE) { selectedColorAttribute = it }
+                    ColorAttributeRow(stringResource(R.string.theme_color_suggestion_text), colors.suggestionText, ColorAttribute.SUGGESTION_TEXT) { selectedColorAttribute = it }
+                    ColorAttributeRow(stringResource(R.string.theme_color_suggestion_background), colors.suggestionBackground, ColorAttribute.SUGGESTION_BACKGROUND) { selectedColorAttribute = it }
+                    ColorAttributeRow(stringResource(R.string.theme_color_high_confidence), colors.suggestionHighConfidence, ColorAttribute.SUGGESTION_HIGH_CONFIDENCE) { selectedColorAttribute = it }
 
                     Spacer(modifier = Modifier.height(12.dp))
 
@@ -859,8 +859,8 @@ fun ThemeCreatorDialog(
                         style = MaterialTheme.typography.titleSmall,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
-                    ColorAttributeRow("Keyboard Background", colors.keyboardBackground, ColorAttribute.KEYBOARD_BACKGROUND) { selectedColorAttribute = it }
-                    ColorAttributeRow("Keyboard Surface", colors.keyboardSurface, ColorAttribute.KEYBOARD_SURFACE) { selectedColorAttribute = it }
+                    ColorAttributeRow(stringResource(R.string.theme_color_keyboard_background), colors.keyboardBackground, ColorAttribute.KEYBOARD_BACKGROUND) { selectedColorAttribute = it }
+                    ColorAttributeRow(stringResource(R.string.theme_color_keyboard_surface), colors.keyboardSurface, ColorAttribute.KEYBOARD_SURFACE) { selectedColorAttribute = it }
                 }
             }
         }

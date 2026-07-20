@@ -18,9 +18,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
 import tribixbite.cleverkeys.ui.settings.io.exportClipboardHistory
@@ -38,7 +40,7 @@ import tribixbite.cleverkeys.ui.settings.io.importFullBackup
 internal fun SettingsActivity.BackupRestoreSection() {
             // Backup & Restore Section (Collapsible)
             CollapsibleSettingsSection(
-                title = "💾 Backup & Restore",
+                title = stringResource(R.string.settings_section_backup_restore),
                 expanded = backupRestoreSectionExpanded,
                 onExpandChange = { backupRestoreSectionExpanded = it },
                 sectionId = "backup_restore"

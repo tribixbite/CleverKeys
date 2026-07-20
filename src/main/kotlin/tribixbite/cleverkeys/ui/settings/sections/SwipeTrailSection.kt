@@ -1,6 +1,8 @@
 package tribixbite.cleverkeys.ui.settings.sections
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
 import tribixbite.cleverkeys.ui.settings.SettingsDropdown
@@ -11,13 +13,13 @@ import tribixbite.cleverkeys.ui.settings.saveSetting
 @Composable
 internal fun SettingsActivity.SwipeTrailSection() {
             CollapsibleSettingsSection(
-                title = "✨ Swipe Trail",
+                title = stringResource(R.string.settings_section_swipe_trail),
                 expanded = swipeTrailSectionExpanded,
                 onExpandChange = { swipeTrailSectionExpanded = it }
             ) {
                 SettingsSwitch(
-                    title = "Enable Swipe Trail",
-                    description = "Show visual trail while swiping across keys",
+                    title = stringResource(R.string.swipe_trail_enable_title),
+                    description = stringResource(R.string.swipe_trail_enable_desc),
                     checked = swipeTrailEnabled,
                     onCheckedChange = {
                         swipeTrailEnabled = it
@@ -28,8 +30,8 @@ internal fun SettingsActivity.SwipeTrailSection() {
                 if (swipeTrailEnabled) {
                     // Trail effect dropdown
                     SettingsDropdown(
-                        title = "Trail Effect",
-                        description = "Visual style of the swipe trail",
+                        title = stringResource(R.string.swipe_trail_effect_title),
+                        description = stringResource(R.string.swipe_trail_effect_desc),
                         options = listOf("Glow", "Solid", "Fade", "Rainbow", "None"),
                         selectedIndex = when (swipeTrailEffect) {
                             "glow" -> 0
@@ -54,8 +56,8 @@ internal fun SettingsActivity.SwipeTrailSection() {
 
                     // Trail width
                     SettingsSlider(
-                        title = "Trail Width",
-                        description = "Thickness of the swipe trail",
+                        title = stringResource(R.string.swipe_trail_width_title),
+                        description = stringResource(R.string.swipe_trail_width_desc),
                         value = swipeTrailWidth,
                         valueRange = 2f..20f,
                         steps = 18,
@@ -69,8 +71,8 @@ internal fun SettingsActivity.SwipeTrailSection() {
                     // Glow radius (only for glow effect)
                     if (swipeTrailEffect == "glow") {
                         SettingsSlider(
-                            title = "Glow Radius",
-                            description = "Size of the glow effect around trail",
+                            title = stringResource(R.string.swipe_trail_glow_radius_title),
+                            description = stringResource(R.string.swipe_trail_glow_radius_desc),
                             value = swipeTrailGlowRadius,
                             valueRange = 4f..30f,
                             steps = 26,
@@ -84,8 +86,8 @@ internal fun SettingsActivity.SwipeTrailSection() {
 
                     // Color picker (simple preset colors)
                     SettingsDropdown(
-                        title = "Trail Color",
-                        description = "Color of the swipe trail",
+                        title = stringResource(R.string.swipe_trail_color_title),
+                        description = stringResource(R.string.swipe_trail_color_desc),
                         options = listOf(
                             "Jewel Purple",
                             "Electric Blue",

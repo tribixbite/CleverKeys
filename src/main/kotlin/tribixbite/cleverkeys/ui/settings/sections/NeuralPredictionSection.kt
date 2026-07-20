@@ -29,8 +29,8 @@ internal fun SettingsActivity.NeuralPredictionSection() {
             ) {
                 // Master switch for swipe typing (neural prediction is always used when enabled)
                 SettingsSwitch(
-                    title = "Enable Swipe Typing",
-                    description = "Swipe across keys to type words using neural prediction.",
+                    title = stringResource(R.string.neural_enable_swipe_title),
+                    description = stringResource(R.string.neural_enable_swipe_desc),
                     checked = swipeTypingEnabled,
                     onCheckedChange = {
                         swipeTypingEnabled = it
@@ -66,8 +66,8 @@ internal fun SettingsActivity.NeuralPredictionSection() {
                 if (swipeTypingEnabled) {
                     // #39: Option to enable swipe typing on password fields
                     SettingsSwitch(
-                        title = "Swipe on Password Fields",
-                        description = "Enable swipe typing even in password fields. Predictions will be shown but individual typed characters remain hidden.",
+                        title = stringResource(R.string.neural_swipe_password_title),
+                        description = stringResource(R.string.neural_swipe_password_desc),
                         checked = swipeOnPasswordFields,
                         onCheckedChange = {
                             swipeOnPasswordFields = it
