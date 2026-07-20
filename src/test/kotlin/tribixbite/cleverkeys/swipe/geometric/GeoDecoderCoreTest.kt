@@ -400,6 +400,157 @@ class GeoDecoderCoreTest {
         assertThat(decoded).isGreaterThan(0)
     }
 
+    @Test
+    fun engine_nonFiniteCoordinates_returnEmpty_neverThrow() {
+        // A single NaN/Inf coordinate used to defeat every downstream guard (NaN
+        // comparisons are all false → the resampler and nearestKeys silently pass a
+        // poisoned polyline through to a negative-key-id CSR lookup → AIOOBE out of
+        // decode). The contract is empty result, NEVER throws.
+        val layout = GeoLayoutFixtures.loadShipped("latn_qwerty_us")
+        val dict = GeoTestFixtures.englishCkdt()
+        val engine = GeometricSwipeEngine(config)
+        engine.warmUp(layout, dict)
+        val nanMid = listOf(
+            TracePoint(100f, 250f, 0), TracePoint(Float.NaN, 250f, 1),
+            TracePoint(500f, 250f, 2), TracePoint(700f, 250f, 3),
+        )
+        val infFirst = listOf(
+            TracePoint(Float.POSITIVE_INFINITY, 250f, 0), TracePoint(300f, 250f, 1),
+            TracePoint(500f, 250f, 2), TracePoint(700f, 250f, 3),
+        )
+        for ((label, trace) in listOf("NaN mid-trace" to nanMid, "Inf first point" to infFirst)) {
+            val result = engine.decode(request(trace, layout, dict))
+            assertWithMessage("$label must yield an empty result (Error Handling, never throws)")
+                .that(result.words).isEmpty()
+        }
+    }
+
+    // ── Corner feature liveness (positive path) ───────────────────────────────────
+
+    @Test
+    fun preprocessor_detectsCorners_onSharpTurn_andNoneOnStraight() {
+        // The corner-anchor bonus is only alive if the preprocessor actually emits
+        // corners for a sharp turn (and none for a straight trace) — the ablation's
+        // "does not regress" assertion would also pass with corner detection dead.
+        val layout = GeoLayoutFixtures.loadShipped("latn_qwerty_us")
+        // A hairpin (~170° direction reversal): even when the vertex falls BETWEEN two
+        // resampled points (splitting the turn across two indices — a piecewise-linear
+        // artifact, see the Phase-4 equidistance note), each half still clears the 55°
+        // threshold. A plain 90° L can split into 2×45° and legitimately detect nothing.
+        val hairpin = listOf(
+            TracePoint(100f, 100f, 0), TracePoint(400f, 120f, 1), TracePoint(700f, 140f, 2),
+            TracePoint(400f, 180f, 3), TracePoint(100f, 200f, 4),
+        )
+        val straight = listOf(
+            TracePoint(100f, 100f, 0), TracePoint(300f, 200f, 1),
+            TracePoint(500f, 300f, 2), TracePoint(700f, 400f, 3),
+        )
+        val gSharp = preprocessor.process(hairpin, keyAreaWidthPx, keyAreaHeightPx, layout)
+        val gStraight = preprocessor.process(straight, keyAreaWidthPx, keyAreaHeightPx, layout)
+        assertWithMessage("a hairpin turn must produce at least one detected corner")
+            .that(gSharp.cornerIndices.size).isAtLeast(1)
+        assertWithMessage("a straight trace must produce no corners")
+            .that(gStraight.cornerIndices).isEmpty()
+    }
+
+    @Test
+    fun pathScorer_cornerBonus_isPositive_forCorneredWordIdealTrace() {
+        // Liveness of the full bonus path: a cornered word's OWN ideal trace must earn
+        // a strictly positive, capped bonus against its own template (template corners
+        // detected + index-window matching fires), and the two corner detectors
+        // (gesture-side and template-side) must agree on the same polyline.
+        val layout = GeoLayoutFixtures.loadShipped("latn_qwerty_us")
+        val scorer = PathScorer(config)
+        val word = "vim" // v→i is a long up-right stroke, i→m a sharp down-left turn
+        val trace = idealTrace(word, layout)!!
+        val gesture = preprocessor.process(trace, keyAreaWidthPx, keyAreaHeightPx, layout)
+        assertWithMessage("'$word' ideal trace must have detectable corners")
+            .that(gesture.cornerIndices.size).isAtLeast(1)
+        val t = gen.generate(word, 0, layout)!!
+        val buf = FloatArray(t.pointCount * 2)
+        t.copyVariantInto(0, buf)
+        // Pin: the template-side detector must equal the gesture-side detector on the
+        // SAME polyline (corner matching is index-proximity-based — asymmetric edits
+        // would silently kill the bonus).
+        assertWithMessage("template/gesture corner detectors must agree on the same polyline")
+            .that(scorer.templateCornerIndices(buf).toList())
+            .isEqualTo(preprocessor.detectCorners(buf).toList())
+        val bonus = scorer.cornerBonus(gesture, buf, layout)
+        assertWithMessage("cornered word's ideal trace must earn a positive corner bonus")
+            .that(bonus).isGreaterThan(0f)
+        assertWithMessage("corner bonus must stay capped at cornerAnchorBonus")
+            .that(bonus).isAtMost(config.cornerAnchorBonus)
+    }
+
+    // ── Engine-level concurrency stress (spec threading contract / NFR-4) ─────────
+
+    @Test
+    fun engine_concurrency_decode_warmUp_evict_noExceptions_andBitIdentical() {
+        // The spec's named stress test: 4 threads interleaving decode/warmUp/evict on
+        // ONE engine — exercising decode racing evict (synchronous-fallback rebuild),
+        // decode racing warmUp's outside-the-lock build + last-writer-wins install,
+        // and concurrent Tier-B memo materialization. No exceptions allowed, every
+        // concurrent decode must be bit-identical to the single-threaded reference,
+        // and a post-stress rerun must reproduce it exactly (NFR-4).
+        val layout = GeoLayoutFixtures.loadShipped("latn_qwerty_us")
+        val dict = GeoTestFixtures.englishCkdt()
+        val engine = GeometricSwipeEngine(config)
+        engine.warmUp(layout, dict)
+        val traces = listOf("the", "keyboard", "hello").map { idealTrace(it, layout)!! }
+        val reference = traces.map { engine.decode(request(it, layout, dict)) }
+        val fingerprint = layout.fingerprint()
+
+        val threads = 4
+        val iterations = 12
+        val error = java.util.concurrent.atomic.AtomicReference<Throwable?>(null)
+        val start = java.util.concurrent.CountDownLatch(1)
+        val done = java.util.concurrent.CountDownLatch(threads)
+        val workers = (0 until threads).map { tid ->
+            Thread {
+                try {
+                    start.await()
+                    for (it in 0 until iterations) {
+                        when ((tid + it) % 4) {
+                            0 -> engine.warmUp(layout, dict)
+                            1 -> engine.evict(fingerprint, dict.language)
+                            else -> {
+                                val ti = (tid + it) % traces.size
+                                val out = engine.decode(request(traces[ti], layout, dict))
+                                if (out.words != reference[ti].words ||
+                                    out.scores != reference[ti].scores
+                                ) {
+                                    error.compareAndSet(
+                                        null,
+                                        AssertionError(
+                                            "decode diverged under concurrency: " +
+                                                "${out.words.take(3)} vs ${reference[ti].words.take(3)}"
+                                        ),
+                                    )
+                                }
+                            }
+                        }
+                    }
+                } catch (t: Throwable) {
+                    error.compareAndSet(null, t)
+                } finally {
+                    done.countDown()
+                }
+            }.also { it.isDaemon = true; it.start() }
+        }
+        start.countDown()
+        done.await()
+        workers.forEach { it.join(10_000) }
+        assertWithMessage("no thread may throw under interleaved decode/warmUp/evict")
+            .that(error.get()).isNull()
+        // Post-stress single-threaded rerun: bit-identical words AND scores (NFR-4).
+        for (ti in traces.indices) {
+            val out = engine.decode(request(traces[ti], layout, dict))
+            assertWithMessage("post-stress decode of trace $ti must be bit-identical (NFR-4)")
+                .that(out.words).isEqualTo(reference[ti].words)
+            assertThat(out.scores).isEqualTo(reference[ti].scores)
+        }
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────────
 
     /** Arc-length resample a short interleaved polyline to [target] via the preprocessor. */

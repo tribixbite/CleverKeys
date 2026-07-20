@@ -120,11 +120,12 @@ class GeoBenchmarkTest {
             if (gesture.pathLengthKw <= 0f) continue
             val survivors = pruner.prune(gesture, cached.index, qwerty)
             for (ord in survivors) {
-                val before = cached.memoSize()
+                // Non-mutating peek BEFORE the lookup: a size-delta heuristic would
+                // miscount once the LRU saturates (a miss at capacity evicts+inserts,
+                // leaving the size unchanged — inflating the "hit" rate toward 100%).
+                if (cached.memoContains(ord)) hits++
                 cached.template(ord)
                 lookups++
-                // A hit does not grow the memo; a miss materializes (grows it, until LRU cap).
-                if (cached.memoSize() == before) hits++
             }
         }
         val hitRate = if (lookups > 0) hits.toDouble() / lookups else 0.0

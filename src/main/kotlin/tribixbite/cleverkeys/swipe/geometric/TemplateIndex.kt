@@ -5,9 +5,12 @@ package tribixbite.cleverkeys.swipe.geometric
  * of the cheap, projection-derived scalars every word contributes, plus a CSR
  * extremity-bucket index for O(bucket) candidate lookup by (start, end) key pair.
  *
- * This is built ONCE per index in [warmUp]'s single dictionary pass (centroid
- * lookups only — no full-template materialization; that is Tier B, lazily memoized
- * in [TemplateCache]). The index retains ZERO `String` references — every word's
+ * This is built ONCE per index in [warmUp]'s single dictionary pass. During the
+ * pass each word's plain-variant template IS transiently generated (and immediately
+ * discarded — only the u16 path length is retained) so the Tier-A `idealPathLen`
+ * stays bit-consistent with the template the scorer will materialize in Tier B
+ * (the lazily-memoized full-template tier in [TemplateCache]). The index retains
+ * ZERO `String` references and ZERO templates — every word's
  * identity is its ordinal rank (the array position), and the actual strings stay in
  * the caller-owned [GeometricDictionary] (NFR-2 memory math; see Cache Design).
  *
@@ -25,7 +28,8 @@ package tribixbite.cleverkeys.swipe.geometric
  *  - [bboxQ] (4 × u8 per word): the template's axis-aligned bounding box
  *    `[minU, minV, maxU, maxV]` quantized over `[0,1]`, used by the bbox-overlap
  *    prune. Single-key (loop-primary) words get a NON-degenerate bbox expanded by
- *    the loop half-side, matching the actual [WordTemplate] extent.
+ *    the half-key coarse-filter margin (which subsumes the loop extent — the loop
+ *    half-side is 0.125·kw, well inside the 0.5·kw margin).
  *
  * ## Extremity buckets (CSR)
  * Word ordinals are grouped by the flat bucket key `firstKeyId * keyCount + lastKeyId`.
@@ -40,12 +44,17 @@ package tribixbite.cleverkeys.swipe.geometric
  * @property keyCount number of layout keys (bucket-key radix; also uint8 key-id bound).
  * @property typeableCount number of words with a template (`collapsedLen >= 1`).
  * @property deadLayout `typeableFraction < deadLayoutCoverageThreshold` (FR-4 guard).
+ * @property overLengthExcludedCount words excluded (marked untypeable) because their
+ *   plain-variant template exceeded [PATH_LEN_QUANT_MAX] — reachable only on very
+ *   dense layouts (kw-unit lengths scale as 1/meanKeyWidth). Diagnostic counter;
+ *   graceful degradation instead of a build failure (Error Handling: never throws).
  */
 class TemplateIndex private constructor(
     val size: Int,
     val keyCount: Int,
     val typeableCount: Int,
     val deadLayout: Boolean,
+    val overLengthExcludedCount: Int,
     // SoA scalars (indexed by ordinal). Stored as raw byte/short arrays for the NFR-2
     // budget; accessors below unpack the unsigned view.
     private val firstKeyId: ByteArray,
@@ -127,6 +136,13 @@ class TemplateIndex private constructor(
          * the length-ratio prune. Widening to **128 kw** clears the measured max with
          * headroom; granularity 128/65535 ≈ 0.00195 kw stays three orders of magnitude
          * below the length-ratio window, so it still cannot alias the prune.
+         *
+         * Because kw-unit lengths scale as `1/meanKeyWidth`, a legitimate very dense
+         * layout (~17+ columns) CAN push a long word past this bound. Such words are
+         * gracefully excluded from the index (marked untypeable, surfaced via
+         * [overLengthExcludedCount]) rather than aliased or crashed on — `build` runs
+         * under both `warmUp` and `decode`'s synchronous fallback, where the spec's
+         * Error-Handling contract forbids throwing on caller-supplied data.
          */
         const val PATH_LEN_QUANT_MAX = 128f
 
@@ -191,22 +207,26 @@ class TemplateIndex private constructor(
             // First pass: fill the SoA scalars + count words per (first,last) bucket.
             val bucketCounts = IntArray(keyCount * keyCount)
             var typeable = 0
-            var overLenClamped = 0
-            val collapsedScratch = IntArray(64) // reused per word (max collapsedLen ~24)
+            var overLenExcluded = 0
             for (i in 0 until n) {
                 val pre = LayoutProjection.project(dictionary.word(i), layout)
                 if (pre == null) {
                     collapsedLen[i] = 0 // untypeable sentinel
                     continue
                 }
-                // Collapse consecutive duplicates into the scratch buffer, tracking the
-                // template bbox over the collapsed centroids.
+                // Collapse consecutive duplicates by tracking the previous key id only
+                // (no scratch buffer — the collapsed sequence itself is never needed
+                // here, just its length, last id, and the bbox over its centroids).
+                // A plain `prevId` local handles ANY collapsed length; the earlier
+                // fixed-size scratch overflowed (silently mis-recording `last` at 65
+                // collapsed keys, AIOOBE at 66+) for pathological caller dictionaries.
                 var cLen = 0
+                var prevId = -1
                 var minU = Float.POSITIVE_INFINITY; var minV = Float.POSITIVE_INFINITY
                 var maxU = Float.NEGATIVE_INFINITY; var maxV = Float.NEGATIVE_INFINITY
                 for (id in pre) {
-                    if (cLen == 0 || collapsedScratch[cLen - 1] != id) {
-                        if (cLen < collapsedScratch.size) collapsedScratch[cLen] = id
+                    if (cLen == 0 || prevId != id) {
+                        prevId = id
                         cLen++
                         val k = keys[id]
                         if (k.cx < minU) minU = k.cx; if (k.cx > maxU) maxU = k.cx
@@ -225,17 +245,25 @@ class TemplateIndex private constructor(
                 minU -= marginU; maxU += marginU
                 minV -= marginV; maxV += marginV
 
-                val first = pre[0]
-                val last = collapsedScratch[minOf(cLen, collapsedScratch.size) - 1]
-                firstKeyId[i] = first.toByte()
-                lastKeyId[i] = last.toByte()
-                collapsedLen[i] = (if (cLen > 255) 255 else cLen).toByte()
-
                 // Plain-variant path length via the SAME generator the scorer uses.
                 val template = generator.fromKeyIds(pre, i, layout)
                 val plainLen = template.pathLengthsKw[0]
-                if (plainLen > PATH_LEN_QUANT_MAX) overLenClamped++
+                if (plainLen > PATH_LEN_QUANT_MAX) {
+                    // Graceful degradation (Error Handling: build never throws): a
+                    // template beyond the u16 quant range would saturate and alias the
+                    // length-ratio prune, so the word is marked untypeable on this
+                    // (very dense) layout instead — surfaced via overLengthExcludedCount.
+                    collapsedLen[i] = 0
+                    overLenExcluded++
+                    continue
+                }
                 idealPathLenQ[i] = quantLen(plainLen)
+
+                val first = pre[0]
+                val last = prevId // last collapsed key id (cLen >= 1 ⇒ prevId is set)
+                firstKeyId[i] = first.toByte()
+                lastKeyId[i] = last.toByte()
+                collapsedLen[i] = (if (cLen > 255) 255 else cLen).toByte()
 
                 bboxQ[i * 4] = quantUnit(minU)
                 bboxQ[i * 4 + 1] = quantUnit(minV)
@@ -244,12 +272,6 @@ class TemplateIndex private constructor(
 
                 bucketCounts[first * keyCount + last]++
                 typeable++
-            }
-            // If a long-word template ever exceeds PATH_LEN_QUANT_MAX we clamp, but the
-            // range was chosen (128 kw) to clear the real max — this must stay zero.
-            require(overLenClamped == 0) {
-                "PATH_LEN_QUANT_MAX ($PATH_LEN_QUANT_MAX kw) too small: $overLenClamped words " +
-                    "exceeded it (would alias the length-ratio prune) — widen the range"
             }
 
             // Build CSR offsets by prefix-summing the bucket counts.
@@ -281,6 +303,7 @@ class TemplateIndex private constructor(
                 keyCount = keyCount,
                 typeableCount = typeable,
                 deadLayout = dead,
+                overLengthExcludedCount = overLenExcluded,
                 firstKeyId = firstKeyId,
                 lastKeyId = lastKeyId,
                 collapsedLen = collapsedLen,

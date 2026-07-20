@@ -40,12 +40,9 @@ class CandidatePruner(private val config: GeometricEngineConfig) {
         if (index.typeableCount == 0) return IntArray(0)
 
         // ── Stage 1: extremity buckets ────────────────────────────────────────
-        // Widen to 3-nearest per end on dense layouts (small kw ⇒ ≳13 columns).
-        val neighbors = if (layout.meanKeyWidth < config.denseLayoutKwThreshold) {
-            maxOf(3, config.extremityNeighbors)
-        } else {
-            config.extremityNeighbors
-        }
+        // Widen to 3-nearest per end on dense layouts (small kw ⇒ ≳13 columns) via
+        // the shared config helper (MUST match GesturePreprocessor.neighborCount).
+        val neighbors = config.effectiveExtremityNeighbors(layout)
         val starts = takeUpTo(gesture.startNearest, neighbors)
         val ends = takeUpTo(gesture.endNearest, neighbors)
 
@@ -55,7 +52,9 @@ class CandidatePruner(private val config: GeometricEngineConfig) {
         // bucket sizes (the "~4–16k" survivors row).
         val candidates = ArrayList<Int>(256)
         for (s in starts) {
+            if (s < 0) continue // -1 sentinel from an unfilled nearest-key slot
             for (e in ends) {
+                if (e < 0) continue // defense-in-depth for directly-built gestures
                 val w = index.bucket(s, e)
                 var p = w.from
                 while (p < w.toExclusive) {

@@ -21,6 +21,39 @@ class TemplateGeneratorTest {
 
     private val gen = TemplateGenerator(GeometricEngineConfig())
 
+    // ── Duplicate-algorithm pin: generator vs preprocessor resampling ─────────
+    //
+    // The arc-length resampler + kw path length are deliberately duplicated in
+    // [TemplateGenerator] and [GesturePreprocessor] (locality over extraction). The
+    // proportional index-aligned matching REQUIRES the two copies to stay identical;
+    // this pin fails loudly on drift (previously a divergence would only surface
+    // indirectly as an accuracy-floor regression).
+
+    @Test
+    fun resampler_andPathLength_arePinnedIdentical_acrossGeneratorAndPreprocessor() {
+        val config = GeometricEngineConfig()
+        val pre = GesturePreprocessor(config)
+        val layout = GeoLayoutFixtures.loadShipped("latn_qwerty_us")
+        val fixtures = listOf(
+            // Straight diagonal, uneven input spacing.
+            floatArrayOf(0.0f, 0.0f, 0.05f, 0.025f, 0.08f, 0.04f, 0.8f, 0.4f),
+            // L-shaped with a sharp corner.
+            floatArrayOf(0.1f, 0.1f, 0.7f, 0.1f, 0.7f, 0.8f),
+            // Zigzag.
+            floatArrayOf(0.1f, 0.2f, 0.5f, 0.3f, 0.2f, 0.7f, 0.9f, 0.9f),
+            // Degenerate: all coincident.
+            floatArrayOf(0.3f, 0.3f, 0.3f, 0.3f),
+        )
+        for ((fi, poly) in fixtures.withIndex()) {
+            val a = gen.resampleArcLength(poly, config.resamplePoints)
+            val b = pre.resampleArcLength(poly, config.resamplePoints)
+            assertWithMessage("fixture $fi: the two resampler copies must be bit-identical")
+                .that(a.toList()).isEqualTo(b.toList())
+            assertWithMessage("fixture $fi: the two kw path-length copies must be bit-identical")
+                .that(gen.polylineLengthKw(a, layout)).isEqualTo(pre.polylineLengthKw(b, layout))
+        }
+    }
+
     // ── Structural finiteness helpers ─────────────────────────────────────────
 
     /** Assert every coordinate of every variant is finite ∈ [0,1] and the span > 0. */

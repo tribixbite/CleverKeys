@@ -3,11 +3,11 @@ package tribixbite.cleverkeys.swipe.geometric
 import java.util.Random
 
 /**
- * TEST-ONLY shared driver for the Phase-5 accuracy classes (one per layout). Owns the
- * word stratification, the synthetic decode grid, top-K accounting, per-stage prune
- * recall, and the tail-canary measurement — so each `GeoAccuracy*Test` is a thin
- * per-layout wrapper that only supplies its layout + dictionary and asserts the
- * PROVISIONAL floors.
+ * TEST-ONLY shared driver for the accuracy classes (one per layout). Owns the
+ * word stratification, the synthetic decode grid, top-K accounting, prune-recall,
+ * ambiguity-ceiling, and tail-canary measurements — so each `GeoAccuracy*Test` is a
+ * thin per-layout wrapper that only supplies its layout + dictionary and asserts the
+ * FINAL floors from [GeoAccuracyThresholds].
  *
  * Carries no `Test` suffix so `TestRunnerListDriftTest` skips it (test hygiene).
  * Purity (NFR-3): `kotlin.*` + `java.util.Random` + the pure engine only.
@@ -225,6 +225,39 @@ class GeoAccuracyHarness(
         val headAcc = runGrid(head, GeoTraceSynthesizer.Tier.CLEAN, seeds)
         val tailAcc = runGrid(tail, GeoTraceSynthesizer.Tier.CLEAN, seeds)
         return headAcc.top3 to tailAcc.top3
+    }
+
+    /**
+     * The spec's AMBIGUITY CEILING (Testing Strategy): decode each sample word's
+     * IDEAL trace — its own plain-variant template polyline, zero noise — against the
+     * FULL dictionary; the ceiling is the fraction whose true word ranks top-1, i.e.
+     * is NOT frequency-outranked by a colliding template. Even a perfect matcher
+     * cannot beat this on noisy traces, so CLEAN top-1 is asserted RELATIVE to it
+     * (spec: ≥ ceiling − 3 pts) in addition to the fixed regression floor.
+     */
+    fun ambiguityCeiling(words: List<SampleWord>): Double {
+        var decodes = 0
+        var top1 = 0
+        for (sw in words) {
+            val t = generator.generate(sw.word, sw.ordinal, layout) ?: continue
+            val np = t.pointCount
+            val buf = FloatArray(np * 2)
+            t.copyVariantInto(0, buf)
+            val trace = ArrayList<TracePoint>(np)
+            for (k in 0 until np) {
+                trace.add(
+                    TracePoint(buf[2 * k] * keyAreaWidthPx, buf[2 * k + 1] * keyAreaHeightPx, k.toLong()),
+                )
+            }
+            val result = engine.decode(
+                GeometricSwipeRequest(trace, keyAreaWidthPx, keyAreaHeightPx, layout, dict),
+            )
+            decodes++
+            if (rankOf(sw.word, result) == 0) top1++
+        }
+        val ceiling = if (decodes > 0) top1.toDouble() / decodes else 0.0
+        println("[ceiling] $label ambiguity ceiling (ideal-trace top-1) = ${pct(ceiling)} over $decodes words")
+        return ceiling
     }
 
     // ── helpers ─────────────────────────────────────────────────────────────────

@@ -12,7 +12,7 @@ import org.junit.Test
  *
  * Decode is ALWAYS against the FULL 98,140-word English dictionary — the sample only
  * selects typeable words. Smoke by default; full grid under `-PgeoFull` (spec M25).
- * PROVISIONAL floors (this custom layout is ~7 wide with an appended bottom row → not
+ * FINAL floors (this custom layout is ~7 wide with an appended bottom row → not
  * dense, so the QWERTY floors apply without the dense penalty).
  */
 class GeoAccuracyWeirdLayoutTest {
@@ -30,25 +30,27 @@ class GeoAccuracyWeirdLayoutTest {
     }
 
     @Test
-    fun smoke_typical_topK_meetsProvisionalFloors() {
+    fun smoke_typical_topK_meetsFinalFloors() {
         val n = if (harness.geoFull()) GeoAccuracyHarness.FULL_SAMPLE_SIZE else GeoAccuracyHarness.SMOKE_SAMPLE_SIZE
         val seeds = if (harness.geoFull()) GeoAccuracyHarness.FULL_SEEDS else GeoAccuracyHarness.DEFAULT_SEEDS
         val sample = harness.stratifiedSample(n)
         assertWithMessage("weird layout must yield a non-empty typeable sample")
             .that(sample).isNotEmpty()
         val acc = harness.runGrid(sample, GeoTraceSynthesizer.Tier.TYPICAL, seeds)
-        assertWithMessage("en/weird TYPICAL top-3 (PROVISIONAL smoke floor)")
+        assertWithMessage("en/weird TYPICAL top-3 (FINAL smoke floor)")
             .that(acc.top3).isAtLeast(GeoAccuracyThresholds.Floors.TYPICAL_TOP3)
         val recall = harness.pruneRecall(sample, GeoTraceSynthesizer.Tier.TYPICAL, seeds)
-        assertWithMessage("en/weird TYPICAL prune recall (PROVISIONAL)")
+        assertWithMessage("en/weird TYPICAL prune recall (FINAL)")
             .that(recall).isAtLeast(GeoAccuracyThresholds.PruneRecall.TYPICAL)
     }
 
     @Test
-    fun clean_topK_meetsProvisionalFloors() {
-        val sample = harness.stratifiedSample(GeoAccuracyHarness.SMOKE_SAMPLE_SIZE)
-        val acc = harness.runGrid(sample, GeoTraceSynthesizer.Tier.CLEAN, GeoAccuracyHarness.DEFAULT_SEEDS)
-        assertWithMessage("en/weird CLEAN top-3 (PROVISIONAL floor)")
+    fun clean_topK_meetsFinalFloors() {
+        val n = if (harness.geoFull()) GeoAccuracyHarness.FULL_SAMPLE_SIZE else GeoAccuracyHarness.SMOKE_SAMPLE_SIZE
+        val seeds = if (harness.geoFull()) GeoAccuracyHarness.FULL_SEEDS else GeoAccuracyHarness.DEFAULT_SEEDS
+        val sample = harness.stratifiedSample(n)
+        val acc = harness.runGrid(sample, GeoTraceSynthesizer.Tier.CLEAN, seeds)
+        assertWithMessage("en/weird CLEAN top-3 (FINAL floor)")
             .that(acc.top3).isAtLeast(GeoAccuracyThresholds.Floors.CLEAN_TOP3)
     }
 
@@ -60,7 +62,7 @@ class GeoAccuracyWeirdLayoutTest {
         }
         val full = harness.stratifiedSample(GeoAccuracyHarness.FULL_SAMPLE_SIZE)
         val sloppy = harness.runGrid(full, GeoTraceSynthesizer.Tier.SLOPPY, GeoAccuracyHarness.FULL_SEEDS)
-        assertWithMessage("en/weird SLOPPY top-3 (PROVISIONAL, full grid)")
+        assertWithMessage("en/weird SLOPPY top-3 (FINAL, full grid)")
             .that(sloppy.top3).isAtLeast(GeoAccuracyThresholds.Floors.SLOPPY_TOP3)
     }
 }

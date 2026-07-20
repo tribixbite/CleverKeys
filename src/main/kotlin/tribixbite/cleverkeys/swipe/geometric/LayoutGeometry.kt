@@ -28,6 +28,20 @@ class LayoutGeometry(
     val aspect: Float,
     val meanKeyWidth: Float,
 ) {
+    init {
+        // Fail-fast on geometry that would silently poison every d_kw into NaN/Inf
+        // (aspect divides dv; meanKeyWidth divides the whole distance) — the same
+        // loud-failure policy GeometricEngineConfig's init applies to its knobs. A
+        // WP9 adapter computing aspect from live pixel extents could otherwise feed
+        // a 0-height race here and get garbage decodes instead of a clear error.
+        require(aspect > 0f && aspect.isFinite()) {
+            "aspect must be positive and finite, was $aspect"
+        }
+        require(meanKeyWidth > 0f && meanKeyWidth.isFinite()) {
+            "meanKeyWidth must be positive and finite, was $meanKeyWidth"
+        }
+    }
+
     /** Number of letter nodes (excludes alias-host-only nodes). Coverage/DEAD-LAYOUT guard. */
     val letterNodeCount: Int = keys.count { it.isLetterNode }
 
@@ -56,9 +70,9 @@ class LayoutGeometry(
         val take = if (k < n) k else n
         if (take <= 0) return IntArray(0)
 
-        // Small-k partial selection: for the tiny k (2–3) this is used with, a
-        // linear scan keeping a sorted top-k window beats a full sort/heap and
-        // allocates nothing beyond the two result arrays.
+        // Small-k partial selection: for the tiny k (2–3) used here, a linear scan
+        // keeping a sorted top-k window beats a full sort/heap and allocates
+        // nothing beyond the two result arrays.
         val bestId = IntArray(take) { -1 }
         val bestDist = FloatArray(take) { Float.POSITIVE_INFINITY }
         for (key in keys) {

@@ -49,6 +49,14 @@ class GeometricSwipeEngine(
         val points = request.points
         if (points.size < 3) return emptyResult
         if (request.keyAreaWidthPx <= 0f || request.keyAreaHeightPx <= 0f) return emptyResult
+        // Non-finite coordinates defeat every downstream guard (NaN comparisons are
+        // uniformly false, so the resampler's zero-length check and nearestKeys'
+        // insertion window both silently pass a poisoned polyline through to a
+        // negative-key-id CSR lookup). Reject them up front.
+        for (k in points.indices) {
+            val p = points[k]
+            if (!p.x.isFinite() || !p.y.isFinite()) return emptyResult
+        }
         val layout = request.layout
         val dictionary = request.dictionary
         if (dictionary.size == 0) return emptyResult
@@ -117,10 +125,11 @@ class GeometricSwipeEngine(
         fun offer(ordinal: Int, word: String, score: Float) {
             if (items.size >= capacity && score < worstAdmitted) return // fail-fast reject
             items.add(CandidateRanker.Scored(ordinal, word, score))
-            // Recompute the worst-admitted threshold as the K-th largest score. This is
-            // O(size) but only runs when we are at/over capacity, and `size` is bounded
-            // by capacity + the number of boundary ties (tiny); the dominant cost stays
-            // the per-candidate scoring, not this bookkeeping.
+            // Recompute the worst-admitted threshold as the K-th largest score. This
+            // sorts a fresh copy — O(size·log size) per admitted offer — but only runs
+            // when we are at/over capacity, and `size` is bounded by capacity + the
+            // number of boundary ties (tiny, maxResults=10 default); the dominant cost
+            // stays the per-candidate scoring, not this bookkeeping.
             if (items.size >= capacity) {
                 worstAdmitted = kthLargest(capacity)
                 // Prune anything strictly below the new threshold (boundary ties kept).

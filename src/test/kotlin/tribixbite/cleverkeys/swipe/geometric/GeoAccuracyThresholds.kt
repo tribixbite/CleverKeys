@@ -44,12 +44,17 @@ object GeoAccuracyThresholds {
      *   SLOPPY  top-1 ≥ 55%, top-3 ≥ 78%, top-5 ≥ 85%
      */
     object Floors {
-        // CLEAN. The spec expresses CLEAN top-1 as "ceiling − 3 pts" (the ambiguity
-        // ceiling is measured per layer in GeoConfusablesTest); as a fixed regression
-        // floor we assert a concrete 0.82 (QWERTY CLEAN top-1 = 87.3, JCUKEN 95.8 —
-        // both clear it with margin). CLEAN top-3 is the spec's literal 0.97.
+        // CLEAN. The spec expresses CLEAN top-1 as "ceiling − 3 pts". The ambiguity
+        // ceiling IS measured (GeoAccuracyHarness.ambiguityCeiling: ideal-trace decode
+        // over the sample vs the full dictionary) and the two default accuracy classes
+        // assert CLEAN top-1 ≥ ceiling − CEILING_MARGIN alongside this fixed 0.82
+        // regression floor (QWERTY CLEAN top-1 = 87.3, JCUKEN 95.8 — both clear it
+        // with margin). CLEAN top-3 is the spec's literal 0.97.
         const val CLEAN_TOP1 = 0.82
         const val CLEAN_TOP3 = 0.97
+
+        /** Allowed CLEAN top-1 shortfall below the measured ambiguity ceiling (spec: 3 pts). */
+        const val CEILING_MARGIN = 0.03
 
         // TYPICAL — the spec's FINAL numbers verbatim.
         const val TYPICAL_TOP1 = 0.78

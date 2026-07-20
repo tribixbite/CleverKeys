@@ -53,7 +53,13 @@ data class GeometricEngineConfig(
     val extremityNeighbors: Int = 2,
     /** kw below this (≳13 columns) ⇒ widen extremity buckets to 3-nearest per end. */
     val denseLayoutKwThreshold: Float = 0.075f,
-    /** DTW band width; 0 = proportional (index-aligned) matching (default). >0 experimental. */
+    /**
+     * RESERVED: DTW band width. Only `0` (proportional, index-aligned matching) is
+     * implemented — the banded-DTW experimental path was evaluated and not built
+     * (Phase 6 found no accuracy win to justify it). Any non-zero value fails fast in
+     * `init` instead of silently no-oping, so a future calibration flow cannot believe
+     * it enabled DTW when nothing reads the knob.
+     */
     val dtwBand: Int = 0,
     /** Square-loop side length (kw) inserted at doubled letters for the loop template variant. */
     val doubleLetterLoopRadius: Float = 0.25f,
@@ -87,5 +93,23 @@ data class GeometricEngineConfig(
         require(lengthRatioMin > 0f && lengthRatioMax > lengthRatioMin) {
             "length-ratio window invalid: [$lengthRatioMin, $lengthRatioMax]"
         }
+        require(dtwBand == 0) {
+            "DTW matching is not implemented; dtwBand must be 0 (reserved knob), was $dtwBand"
+        }
     }
+
+    /**
+     * The effective k-nearest extremity-neighbor count for [layout]: widened to at
+     * least 3 on dense layouts (`meanKeyWidth < denseLayoutKwThreshold`, ≳13 columns)
+     * where noisy endpoints are the real recall risk. Single source of truth shared by
+     * [GesturePreprocessor] (how many neighbors to compute) and [CandidatePruner]
+     * (how many buckets to union) — they MUST agree or the widened bucket silently
+     * never materializes.
+     */
+    fun effectiveExtremityNeighbors(layout: LayoutGeometry): Int =
+        if (layout.meanKeyWidth < denseLayoutKwThreshold) {
+            maxOf(3, extremityNeighbors)
+        } else {
+            extremityNeighbors
+        }
 }

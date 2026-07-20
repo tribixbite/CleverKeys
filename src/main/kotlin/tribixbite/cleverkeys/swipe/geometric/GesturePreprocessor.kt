@@ -35,13 +35,13 @@ class GesturePreprocessor(private val config: GeometricEngineConfig) {
     /** Resample target N (points in the output polyline). */
     private val n: Int = config.resamplePoints
 
-    /** Extremity-neighbor count; widened on dense layouts so the pruner has data. */
+    /**
+     * Extremity-neighbor count; widened on dense layouts so the pruner has data.
+     * Shared with [CandidatePruner] via [GeometricEngineConfig.effectiveExtremityNeighbors]
+     * (both sides MUST agree — see that KDoc).
+     */
     private fun neighborCount(layout: LayoutGeometry): Int =
-        if (layout.meanKeyWidth < config.denseLayoutKwThreshold) {
-            maxOf(3, config.extremityNeighbors)
-        } else {
-            config.extremityNeighbors
-        }
+        config.effectiveExtremityNeighbors(layout)
 
     /**
      * Preprocess [rawPoints] (key-area-local pixels) against [layout].

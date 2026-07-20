@@ -242,14 +242,17 @@ class CandidatePrunerTest {
 
     @Test
     fun pathLengthQuantRange_clearsRealDictionaryMax_noClamping() {
-        // Build.build() asserts internally that no word exceeds PATH_LEN_QUANT_MAX;
-        // the German lexicon holds the longest real word ("nationalsozialistischen",
-        // ~85.6 kw) so a too-small range (the spec's draft 64 kw) would trip build().
-        // A successful build IS the assertion that the widened 128 kw range clears it.
+        // The German lexicon holds the longest real word ("nationalsozialistischen",
+        // ~85.6 kw); the spec's draft 64 kw range would have clamped it. On the
+        // fixture layouts the widened 128 kw range must exclude NOTHING — the
+        // over-length graceful-degradation path is for pathological dense layouts
+        // only (see index_overLengthWord_gracefullyExcluded below).
         val layout = GeoLayoutFixtures.loadShipped("latn_qwertz_de")
         val dict = GeoTestFixtures.germanCkdt()
         val index = TemplateIndex.build(layout, dict, config, gen)
         assertThat(index.typeableCount).isGreaterThan(0)
+        assertWithMessage("no real German word may be over-length-excluded at 128 kw")
+            .that(index.overLengthExcludedCount).isEqualTo(0)
         // The longest word's stored length must not saturate at the range ceiling.
         var maxStored = 0f
         for (i in 0 until dict.size) if (index.isTypeable(i)) {
@@ -260,6 +263,75 @@ class CandidatePrunerTest {
             .that(maxStored).isLessThan(TemplateIndex.PATH_LEN_QUANT_MAX)
         assertWithMessage("longest German template really does exceed the old 64 kw draft range")
             .that(maxStored).isGreaterThan(64f)
+    }
+
+    // ── Long-word robustness: no fixed scratch bound in the Tier-A build ──────
+
+    @Test
+    fun index_longCollapsedWords_neverCrash_andRecordCorrectExtremities() {
+        // Regression guard for the removed fixed-size (64) collapse scratch buffer:
+        // it silently mis-recorded lastKeyId at exactly 65 collapsed keys and threw
+        // ArrayIndexOutOfBoundsException at 66+ — reachable from decode()'s
+        // synchronous-fallback build with a caller-supplied dictionary (e.g. a pasted
+        // 70-letter custom word), violating the never-throws Error-Handling contract.
+        val letters = ('a'..'z') + ('а'..'я') + ('α'..'μ') // 26 + 32 + 12 = 70 distinct
+        check(letters.size == 70)
+        val layout = singleRowLayout(letters)
+        // Three shapes: 65 collapsed keys (the old silent-wrong-last case), 66 keys via
+        // a 2-key alternation (the old minimal crash case), and 70 distinct keys.
+        val w65 = letters.take(65).joinToString("")
+        val w66alt = "ab".repeat(33) // 66 collapsed keys from only 2 distinct letters
+        val w70 = letters.joinToString("")
+        val dict = ArrayBackedDictionary("xx", 1L, arrayOf(w65, w66alt, w70))
+        val index = TemplateIndex.build(layout, dict, config, gen) // must not throw
+
+        assertThat(index.isTypeable(0)).isTrue()
+        assertThat(index.collapsedLenOf(0)).isEqualTo(65)
+        assertWithMessage("65-collapsed-key word must record its TRUE last key (old code clamped to slot 63)")
+            .that(index.lastKeyOf(0)).isEqualTo(64)
+
+        assertThat(index.isTypeable(1)).isTrue()
+        assertThat(index.collapsedLenOf(1)).isEqualTo(66)
+        assertThat(index.firstKeyOf(1)).isEqualTo(0)
+        assertThat(index.lastKeyOf(1)).isEqualTo(1)
+
+        assertThat(index.isTypeable(2)).isTrue()
+        assertThat(index.collapsedLenOf(2)).isEqualTo(70)
+        assertThat(index.firstKeyOf(2)).isEqualTo(0)
+        assertThat(index.lastKeyOf(2)).isEqualTo(69)
+        // Each word must live in its own (first,last) extremity bucket.
+        val w = index.bucket(0, 69)
+        var found = false
+        for (p in w.from until w.toExclusive) if (w.entries[p] == 2) { found = true; break }
+        assertWithMessage("the 70-key word must be findable via its extremity bucket").that(found).isTrue()
+    }
+
+    @Test
+    fun index_overLengthWord_gracefullyExcluded_notThrown() {
+        // A legitimate DENSE layout (kw scales template lengths as 1/meanKeyWidth) can
+        // push a long word past PATH_LEN_QUANT_MAX. The build must NOT throw (it runs
+        // under decode()'s synchronous fallback — never-throws contract); the word is
+        // excluded (untypeable) and surfaced via overLengthExcludedCount.
+        val rows = listOf("abcdefghijklmnopqrst", "uvwxyzабвгдежзийклмн") // 2 × 20 dense
+        val layout = denseGridLayout(rows)
+        // A triangle-cycling word (three mutually distant keys) whose template length
+        // exceeds the quant range without fold-cancellation under resampling.
+        val a = 'a'; val far = rows[1][19]; val mid = 'k'
+        val longWord = buildString { repeat(6) { append(a); append(far); append(mid) } }
+        val shortWord = "ak"
+        // Precondition: this word's plain template really is beyond the quant range.
+        val pre = LayoutProjection.project(longWord, layout)!!
+        val plainLen = gen.fromKeyIds(pre, 0, layout).pathLengthsKw[0]
+        assertWithMessage("precondition: synthetic dense-layout word must exceed PATH_LEN_QUANT_MAX")
+            .that(plainLen).isGreaterThan(TemplateIndex.PATH_LEN_QUANT_MAX)
+
+        val dict = ArrayBackedDictionary("xx", 1L, arrayOf(longWord, shortWord))
+        val index = TemplateIndex.build(layout, dict, config, gen) // must not throw
+        assertWithMessage("over-length word must be excluded, not aliased")
+            .that(index.isTypeable(0)).isFalse()
+        assertThat(index.overLengthExcludedCount).isEqualTo(1)
+        assertWithMessage("normal words on the same layout stay typeable")
+            .that(index.isTypeable(1)).isTrue()
     }
 
     // ── Cache: eviction, fingerprint miss, dictVersion miss ───────────────────
@@ -286,6 +358,10 @@ class CandidatePrunerTest {
         assertWithMessage("eldest (qwerty/en) must have been evicted at capacity")
             .that(cache.contains(qwerty.fingerprint(), "en", en.version)).isFalse()
         assertThat(cache.contains(jcuken.fingerprint(), "ru", ru.version)).isTrue()
+
+        // Test hygiene: clear() drops everything (also exercises the API).
+        cache.clear()
+        assertThat(cache.indexCount()).isEqualTo(0)
     }
 
     @Test
@@ -457,20 +533,29 @@ class CandidatePrunerTest {
     // ── Fixtures ──────────────────────────────────────────────────────────────
 
     /** A minimal 5-key layout typing only the vowels a/e/i/o/u (dead for English). */
-    private fun vowelLayout(): LayoutGeometry {
+    private fun vowelLayout(): LayoutGeometry = denseGridLayout(listOf("aeiou"))
+
+    /** One row of unit-width letter keys, one per char of [letters] (dense ids 0..n-1). */
+    private fun singleRowLayout(letters: List<Char>): LayoutGeometry =
+        denseGridLayout(listOf(letters.joinToString("")))
+
+    /** A grid of unit-width letter keys from [rows] (one key per char, row-major ids). */
+    private fun denseGridLayout(rows: List<String>): LayoutGeometry {
         val builder = LayoutGeometry.Builder(aspect = 2.0f)
-        builder.addRow(
-            LayoutGeometry.Builder.RawRow(
-                keys = "aeiou".map { c ->
-                    LayoutGeometry.Builder.RawKey(
-                        centerLabel = c.toString(), widthUnits = 1f, shiftUnits = 0f,
-                        isLetterNode = true, charCodepoints = intArrayOf(c.code),
-                        aliasCodepoints = IntArray(0),
-                    )
-                },
-                heightUnits = 1f, shiftUnits = 0f, scaleUnits = 0f,
+        for (row in rows) {
+            builder.addRow(
+                LayoutGeometry.Builder.RawRow(
+                    keys = row.map { c ->
+                        LayoutGeometry.Builder.RawKey(
+                            centerLabel = c.toString(), widthUnits = 1f, shiftUnits = 0f,
+                            isLetterNode = true, charCodepoints = intArrayOf(c.code),
+                            aliasCodepoints = IntArray(0),
+                        )
+                    },
+                    heightUnits = 1f, shiftUnits = 0f, scaleUnits = 0f,
+                )
             )
-        )
+        }
         return builder.build()
     }
 

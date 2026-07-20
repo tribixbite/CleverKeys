@@ -1,15 +1,34 @@
 # CleverKeys TODO
 
-## 🚧 Geometric swipe engine (standalone) — spec approved 2026-07-20
+## ✅ Geometric swipe engine (standalone) — spec approved + IMPLEMENTED 2026-07-20
 Spec: `docs/specs/geometric-swipe-engine.md` (SHARK2-style, layout-agnostic, zero-training,
 pure-JVM `swipe.geometric` package; NOT wired into live pipeline — WP9 stays deferred).
-- [ ] Phase 1 — Geometry core + fixtures (LayoutGeometry, fixture XML parser, purity drift test)
-- [ ] Phase 2 — Projection tiers, templates, CKDT/JSON/ru-zip dictionary loaders
-- [ ] Phase 3 — TemplateIndex/TemplateCache/CandidatePruner (+memory assertion)
-- [ ] Phase 4 — Preprocessor, PathScorer, CandidateRanker, engine facade
-- [ ] Phase 5 — Synthetic trace generator + accuracy harness (PROVISIONAL floors)
-- [ ] Phase 6 — Tuning, final threshold ratchet, adversarial + perf benches, -PgeoFull plumbing
+- [x] Phase 1 — Geometry core + fixtures (6a7f08f10)
+- [x] Phase 2 — Projection tiers, templates, CKDT/JSON/ru-zip dictionary loaders (6d26088c)
+- [x] Phase 3 — TemplateIndex/TemplateCache/CandidatePruner (+memory assertion) (e4b996ba)
+- [x] Phase 4 — Preprocessor, PathScorer, CandidateRanker, engine facade (4b721d6b)
+- [x] Phase 5 — Synthetic trace generator + accuracy harness (0db90bf8)
+- [x] Phase 6 — Tuning, FINAL threshold ratchet, adversarial + perf benches, -PgeoFull (20f33197)
 - [ ] Phase 7 (optional, gated) — neural characterization golden file
+- [x] Audit-remediation round 2026-07-20: TemplateIndex collapse-scratch overflow fixed
+      (AIOOBE at 66+ collapsed keys / wrong lastKeyId at 65), decode() NaN/Inf trace guard,
+      over-128-kw templates gracefully excluded (was a require() throw reachable from decode),
+      ambiguity ceiling now measured + asserted (CLEAN top-1 ≥ ceiling−3pts), SLOPPY top-1 +
+      SLOPPY prune-recall floors enforced under -PgeoFull, engine-level 4-thread
+      decode/warmUp/evict stress test, resampler/corner-detector duplicate-copy pin tests,
+      path-collision census (-PgeoFull), memo hit-rate measurement fixed (LRU-saturation
+      miscount), dtwBand enforced 0 (reserved), LayoutGeometry aspect/kw validation,
+      purity-scanner string-literal awareness + NUL byte fix, PROVISIONAL→FINAL label sweep,
+      spec As-Built Notes appendix + Status flip. Deviations noted: SLOPPY top-5 0.82,
+      whole-pruner recall floors (see spec § As-Built Notes).
+- [ ] PRE-EXISTING geoFull red (discovered in the audit round, NOT introduced by it —
+      bit-identical failure reproduced at clean HEAD a626933d in a scratch worktree):
+      `sloppy_underGeoFull` fails on the two hardest non-default layouts — en/weird
+      SLOPPY top-3 64.5% and en/Dvorak 75.8% vs the 0.78 FINAL floor. Phase 6 ratcheted
+      the floors against the two DEFAULT layouts only; the four smoke classes' geoFull
+      SLOPPY grids were evidently never run post-ratchet. Needs a decision: tune for
+      those layouts (OQ-1/OQ-3 follow-ups) or set per-layout SLOPPY floors. Default
+      (non-geoFull) suite is unaffected/green.
 - [x] Follow-ups DONE 2026-07-20 (fixed directly per user, no issue filed): README en row
       52k→98,140 (binary-verified all bundled counts); grek_qwerty `script="latin"`→`"greek"`
 - [x] NOTE from lint session: LayoutProjection's UnicodeScript gate crashed API 21-23 (NewApi);

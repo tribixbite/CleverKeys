@@ -70,11 +70,14 @@ class TemplateCache(private val config: GeometricEngineConfig) {
          * (which the pruner never proposes, but the guard keeps this total).
          */
         fun template(ordinal: Int): WordTemplate? {
-            synchronized(memo) { memo[ordinal] }?.let { return it }
-            // Build outside the lock is unsafe for the LRU accounting; templates are
-            // cheap (µs) so build under the memo monitor to keep the LRU consistent.
+            // One synchronized block: check → build → memoize. The build is
+            // DELIBERATELY done under the memo monitor — template generation is
+            // µs-cheap, so holding the lock across it is far simpler than an
+            // outside-lock build + re-check and keeps the LRU accounting trivially
+            // consistent (contrast getOrBuild, whose ~100s-of-ms Tier-A build
+            // genuinely must happen outside the coarse lock).
             synchronized(memo) {
-                memo[ordinal]?.let { return it } // double-check after acquiring
+                memo[ordinal]?.let { return it }
                 val built = generator.generate(dictionary.word(ordinal), ordinal, layout) ?: return null
                 memo[ordinal] = built
                 return built
@@ -83,6 +86,15 @@ class TemplateCache(private val config: GeometricEngineConfig) {
 
         /** Current number of memoized templates (diagnostic / memory accounting). */
         fun memoSize(): Int = synchronized(memo) { memo.size }
+
+        /**
+         * Non-mutating memo peek: whether [ordinal] is currently memoized.
+         * `containsKey` does NOT touch the LRU access order (only get/put do), so
+         * benchmarks can measure the true hit rate without perturbing eviction — a
+         * size-delta heuristic miscounts once the LRU saturates (every miss at
+         * capacity evicts+inserts, leaving the size unchanged).
+         */
+        fun memoContains(ordinal: Int): Boolean = synchronized(memo) { memo.containsKey(ordinal) }
 
         /**
          * Sum of the actual quantized-coordinate payload bytes across memoized
@@ -129,9 +141,21 @@ class TemplateCache(private val config: GeometricEngineConfig) {
         val built = buildCached(layout, dictionary)
         val elapsed = System.currentTimeMillis() - start
         synchronized(lock) {
-            // Prefer an index another thread already cached; else install ours.
+            // Prefer an index another thread already cached; else install ours. The
+            // lost-race branch still reports THIS thread's real build time (it did
+            // perform a full build) — only the true cache-hit path reports 0.
             val existing = indices[key]
-            if (existing != null) return coverageOf(existing.index)
+            if (existing != null) {
+                val idxExisting = existing.index
+                return WarmUpResult(
+                    typeableFraction = if (idxExisting.size > 0) {
+                        idxExisting.typeableCount.toFloat() / idxExisting.size
+                    } else 0f,
+                    typeableWordCount = idxExisting.typeableCount,
+                    buildMillis = elapsed,
+                    deadLayout = idxExisting.deadLayout,
+                )
+            }
             indices[key] = built
         }
         val idx = built.index

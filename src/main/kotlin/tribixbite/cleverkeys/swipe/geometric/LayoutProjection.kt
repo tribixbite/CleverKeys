@@ -21,10 +21,15 @@ import java.util.Locale
  *     keys — tier 1 wins — so the `لا` ligature key is effectively ignored), but a
  *     fully-digraph-grouped custom layout projects instead of dying.
  *  3. **NFD base match** — strip Mn (non-spacing mark) codepoints from this
- *     codepoint's Unicode decomposition and retry tiers 1–2 on the base. The Mn gate
- *     is per-codepoint `Character.getType`, NEVER the untrustworthy layout `script`
- *     attribute (`grek_qwerty` claims `latin`) and NEVER the dictionary language code
- *     (wrong for loanwords). Full Mn coverage (Latin accents, Greek tonos, Arabic
+ *     codepoint's Unicode decomposition and retry tiers 1–2 on the base. Two
+ *     per-codepoint decisions gate this tier: mark DETECTION is
+ *     `Character.getType == NON_SPACING_MARK`, and the SCRIPT gate (which scripts
+ *     the strip applies to at all) is the per-codepoint Unicode block
+ *     ([nfdStripAppliesTo]) — NEVER the untrustworthy layout `script` attribute
+ *     (grek_qwerty.xml WAS mis-declared `script="latin"` until 2026-07-20, fixed in
+ *     d988b23e — proof the attribute can't be trusted) and NEVER the dictionary
+ *     language code (wrong for loanwords). Full Mn coverage (Latin accents, Greek
+ *     tonos, Arabic
  *     harakat U+064B–0652 + U+0670 the legacy `AccentNormalizer` regex misses,
  *     Hebrew niqqud). é→`e` on QWERTY *and* AZERTY — "école" passes over `e`.
  *  4. **Corner-host match** — the codepoint is a (loc-resolved) corner label in the
@@ -89,8 +94,10 @@ object LayoutProjection {
         // and retry tiers 1–2 on the base. Only fires because tiers 1–2 already failed
         // (so `й` — a real center — never reaches here).
         //
-        // GATED per-codepoint by `Character.UnicodeScript` (§ Script Abstraction, NOT
-        // the layout `script` attr, NOT the dictionary language). The NFD strip is the
+        // GATED per-codepoint by Unicode block ([nfdStripAppliesTo] — the spec's
+        // `Character.UnicodeScript` concept implemented via `Character.UnicodeBlock`
+        // because UnicodeScript is Android API 24+; see the NOTE there). Never the
+        // layout `script` attr, never the dictionary language. The NFD strip is the
         // ACCENT-RECOVERY model — correct for scripts whose combining marks are
         // diacritics that don't change letter identity (Latin é→e, Greek ώ→ω, Cyrillic
         // ё→е / ў→у). It is DELIBERATELY NOT applied to Arabic/Hebrew precomposed
@@ -135,13 +142,18 @@ object LayoutProjection {
     }
 
     /**
-     * Per-codepoint `Character.UnicodeScript` gate for the tier-3 NFD strip.
+     * Per-codepoint Unicode-BLOCK gate for the tier-3 NFD strip (the spec's
+     * `Character.UnicodeScript` gate, implemented via blocks — see the NOTE below).
      *
      * `true` for scripts where combining marks are pure diacritics (accent recovery is
      * the right model): Latin, Greek, Cyrillic, plus COMMON/INHERITED so a stray
      * combining sequence still resolves. `false` for Arabic/Hebrew and everything else,
      * where precomposed forms are distinct letters resolved by their tier-4 corner
      * placement rather than collapsed to an identity-losing base.
+     *
+     * A new diacritic-model script family (or a new Latin/Cyrillic extension block)
+     * MUST be added here explicitly, or its decomposable codepoints silently skip
+     * tier 3 and the containing words are dropped (FR-4-safe but coverage-narrowing).
      */
     private fun nfdStripAppliesTo(cp: Int): Boolean = when (Character.UnicodeBlock.of(cp)) {
         // NOTE: implemented via UnicodeBlock, NOT Character.UnicodeScript — UnicodeScript
@@ -150,15 +162,24 @@ object LayoutProjection {
         // stay pure JVM). Blocks below cover the same gate: Latin/Greek/Cyrillic letter
         // blocks, combining-mark blocks (~script INHERITED), and Basic Latin/Latin-1 +
         // General Punctuation (~the COMMON codepoints reachable from keyboard layouts).
+        // API constraint: only UnicodeBlock CONSTANTS available at minSdk 21 may appear
+        // (a missing static field is a NoSuchFieldError at class-init on old devices) —
+        // COMBINING_DIACRITICAL_MARKS_EXTENDED and CYRILLIC_EXTENDED_C are Android
+        // API 26+ and are therefore deliberately absent; codepoints there fall to the
+        // `else -> false` FR-4-safe skip.
         Character.UnicodeBlock.BASIC_LATIN,
         Character.UnicodeBlock.LATIN_1_SUPPLEMENT,
         Character.UnicodeBlock.LATIN_EXTENDED_A,
         Character.UnicodeBlock.LATIN_EXTENDED_B,
+        Character.UnicodeBlock.LATIN_EXTENDED_C,
+        Character.UnicodeBlock.LATIN_EXTENDED_D,
         Character.UnicodeBlock.LATIN_EXTENDED_ADDITIONAL,
         Character.UnicodeBlock.GREEK,
         Character.UnicodeBlock.GREEK_EXTENDED,
         Character.UnicodeBlock.CYRILLIC,
         Character.UnicodeBlock.CYRILLIC_SUPPLEMENTARY,
+        Character.UnicodeBlock.CYRILLIC_EXTENDED_A,
+        Character.UnicodeBlock.CYRILLIC_EXTENDED_B,
         Character.UnicodeBlock.GENERAL_PUNCTUATION,
         Character.UnicodeBlock.COMBINING_DIACRITICAL_MARKS,
         Character.UnicodeBlock.COMBINING_DIACRITICAL_MARKS_SUPPLEMENT -> true

@@ -32,7 +32,6 @@ import org.junit.Test
 class GeoDoubleLetterTest {
 
     private val config = GeometricEngineConfig()
-    private val gen = TemplateGenerator(config)
     private val synth = GeoTraceSynthesizer(config)
     private val qwerty = GeoLayoutFixtures.loadShipped("latn_qwerty_us")
     private val jcuken = GeoLayoutFixtures.loadShipped("cyrl_jcuken_ru")

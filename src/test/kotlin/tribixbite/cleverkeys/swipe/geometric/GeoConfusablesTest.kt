@@ -177,6 +177,51 @@ class GeoConfusablesTest {
             .that(verified).isAtLeast(2)
     }
 
+    // ── Path-collision census (98k full sweep, -PgeoFull only) ────────────────────
+
+    @Test
+    fun pathCollisionCensus_fullLexicon_underGeoFull() {
+        // Spec Phase 6: "path-collision census + one 98k full-sweep run behind
+        // -PgeoFull". Project EVERY English word on QWERTY, group by the collapsed
+        // key-id sequence, and characterize the collision structure: known collapse
+        // pairs must group together, and no group may be pathologically large (a
+        // projection bug collapsing unrelated words would produce a giant group).
+        if (System.getProperty("geoFull") != "true") {
+            println("[skip] path-collision census — set -PgeoFull to run")
+            return
+        }
+        val groups = HashMap<String, MutableList<Int>>()
+        var typeable = 0
+        for (i in 0 until en.size) {
+            val pre = LayoutProjection.project(en.word(i), qwerty) ?: continue
+            typeable++
+            // Collapse consecutive duplicates into the canonical template key path.
+            val sb = StringBuilder(pre.size * 3)
+            var prev = -1
+            for (id in pre) {
+                if (id != prev) { sb.append(id).append(','); prev = id }
+            }
+            groups.getOrPut(sb.toString()) { ArrayList(1) }.add(i)
+        }
+        val colliding = groups.values.filter { it.size > 1 }
+        val largest = groups.values.maxByOrNull { it.size }!!
+        val collidingWords = colliding.sumOf { it.size }
+        println("[census] en/QWERTY: $typeable typeable words → ${groups.size} distinct key paths; " +
+            "${colliding.size} colliding groups covering $collidingWords words; " +
+            "largest group=${largest.size} ${largest.take(6).map { en.word(it) }}")
+        // Known doubled-letter collapse pairs must share a group.
+        for ((a, b) in listOf("of" to "off", "all" to "al")) {
+            val ga = groups.entries.firstOrNull { (_, v) -> v.any { en.word(it) == a } }
+            assertWithMessage("census must contain '$a'").that(ga).isNotNull()
+            assertWithMessage("'$a' and '$b' must share a collapsed key path (known collision)")
+                .that(ga!!.value.any { en.word(it) == b }).isTrue()
+        }
+        // Generous structural bound: even at 98k, no single key path should attract a
+        // pathologically large word group (a projection bug signature).
+        assertWithMessage("largest collision group must stay small (projection sanity)")
+            .that(largest.size).isAtMost(24)
+    }
+
     // ── ذ/د accepted collision (arab_pc, projection-level) ────────────────────────
 
     @Test

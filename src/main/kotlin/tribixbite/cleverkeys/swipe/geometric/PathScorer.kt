@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys.swipe.geometric
 
+import kotlin.math.acos
 import kotlin.math.ln
 import kotlin.math.max
 import kotlin.math.sqrt
@@ -128,7 +129,8 @@ class PathScorer(private val config: GeometricEngineConfig) {
      * centroid-translated to the origin and scaled by
      * `s = max(bboxLongestSide, minShapeScaleKw · kw)` (the clamp kills jitter
      * amplification and div-by-0 for degenerate short spans). Points are compared
-     * index-aligned (proportional matching; `dtwBand = 0` default).
+     * index-aligned (proportional matching — the only implemented mode; `dtwBand`
+     * is a reserved knob enforced to 0 by the config init).
      */
     internal fun shapeDistance(g: FloatArray, t: FloatArray, layout: LayoutGeometry): Float {
         // Centroids.
@@ -232,10 +234,13 @@ class PathScorer(private val config: GeometricEngineConfig) {
      * bonus is 0 (collinear words rely on the shape/location channels).
      */
     internal fun cornerBonus(gesture: ProcessedGesture, t: FloatArray, layout: LayoutGeometry): Float {
-        val templateCorners = templateCornerIndices(t)
-        if (templateCorners.isEmpty()) return 0f
+        // Free early-out FIRST: a corner-less gesture (straight/collinear words —
+        // common) can never earn a bonus, so skip the O(N) template corner detection
+        // entirely for it.
         val gestureCorners = gesture.cornerIndices
         if (gestureCorners.isEmpty()) return 0f
+        val templateCorners = templateCornerIndices(t)
+        if (templateCorners.isEmpty()) return 0f
         var matched = 0
         for (tc in templateCorners) {
             var hit = false
@@ -247,8 +252,13 @@ class PathScorer(private val config: GeometricEngineConfig) {
         return config.cornerAnchorBonus * matched / templateCorners.size
     }
 
-    /** Corner indices of a resampled TEMPLATE polyline (same threshold as the gesture). */
-    private fun templateCornerIndices(t: FloatArray): IntArray {
+    /**
+     * Corner indices of a resampled TEMPLATE polyline — the same turn-angle rule as
+     * [GesturePreprocessor.detectCorners] (a pin test asserts the two stay identical;
+     * corner matching is index-proximity-based, so asymmetric edits would silently
+     * break the bonus). `internal` for that pin test.
+     */
+    internal fun templateCornerIndices(t: FloatArray): IntArray {
         if (n < 3) return IntArray(0)
         val thresholdRad = Math.toRadians(config.cornerAngleThresholdDeg.toDouble())
         val out = ArrayList<Int>()
@@ -263,7 +273,7 @@ class PathScorer(private val config: GeometricEngineConfig) {
             var cos = (ax * bx + ay * by) / (na * nb)
             if (cos > 1f) cos = 1f
             if (cos < -1f) cos = -1f
-            val turn = Math.acos(cos.toDouble())
+            val turn = acos(cos.toDouble())
             if (turn >= thresholdRad) out.add(i)
         }
         return out.toIntArray()
