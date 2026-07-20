@@ -60,10 +60,22 @@ pure-JVM `swipe.geometric` package; NOT wired into live pipeline — WP9 stays d
   NOTHING for unknown words (exact-add neutralized by isInDictionary '?: true' + isNotEmpty guard)
   — a REAL missed divergence, now ORACLE-FLIP(step 5). Re-pinned; targeted rerun 31/31 green.
   **WP9 step 2 (characterization oracle) COMPLETE.**
-- **NEXT**: (a) R-1 step 3 — move shift/caps-at-swipe-start capture into SH (flips 3 oracle pins,
-  same-commit); (b) WP8 remainder — CleverKeysTheme wrapper replacing inline darkColorScheme()
-  forks + ~72 Compose Text("…") literal extraction (needs a 21-locale translation wave — the lint
-  gate enforces MissingTranslation as error now); wave-2 already covered all XML HardcodedText.
+- **R-1 STEP 3 DONE** (b8c24a9d): shift/caps transform on SuggestionHandler companion (static —
+  IC constructs before SH), state rides the swipe request's PredictionCallback closure; IC fields
+  kept only for onSuggestionSelected indicator-clear (delete at step 6). Oracle harness re-seamed
+  same-commit, assertion values unchanged; targeted ew-cli 31/31 green (run b713a993).
+  Next unification step: **step 4** — reroute swipe auto-insert to SH (possessives+password guard
+  gain swipe; flips 2 oracle pins; feature-flag per plan).
+- **WP8 DONE** (717bbd19 + i18n commits): theme/CleverKeysTheme.kt single M3 source (KeyboardTheme
+  now thin alias, zero call-site churn; ShortSwipe+ExtraKeys unified onto branded scheme —
+  INTENDED visual change, worth an on-device glance; ThemeSettings keeps purple via override).
+  70 Compose literals extracted, search index byte-identical (134 entries), 70×21 locales
+  translated (93465c91 + follow-up). DEFERRED from WP8: ~130 index-sensitive section control
+  title=/description= params (needs generator-aware batch), ~17 ColorAttributeRow labels,
+  interpolated strings (need format-args), ~40 AppearanceSection slider descriptions.
+- **Parallel-session note**: geoswipe WIP GesturePreprocessor.kt carries 2 SuspiciousIndentation
+  lint errors (uncommitted, their session) — likely semicolon-joined-statement false positives
+  (same pattern defused in CleverKeysService); their next lintDebug will fail until addressed.
       + method.xml el subtype `script=greek` (pair-flip keeps ExtraKeys £/€ merge) +
       SwipeLayoutSupportTest Greek case now asserts isFalse (was codifying the bug).
       Note for geoswipe audit: LayoutProjection.kt:26 comment "grek_qwerty claims latin" is
