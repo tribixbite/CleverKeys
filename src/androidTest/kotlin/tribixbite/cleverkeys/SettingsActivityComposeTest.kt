@@ -36,6 +36,11 @@ class SettingsActivityComposeTest {
     @get:Rule
     val composeTestRule = createAndroidComposeRule<SettingsActivity>()
 
+    // WP8 extracted the hint to a resource (and normalized "..." to "…") — resolve it
+    // instead of hardcoding so the test tracks the string source of truth.
+    private val searchHint: String
+        get() = composeTestRule.activity.getString(R.string.settings_search_hint)
+
     @Test
     fun activity_launches() {
         composeTestRule.onNodeWithText("CleverKeys", substring = true).assertIsDisplayed()
@@ -43,19 +48,19 @@ class SettingsActivityComposeTest {
 
     @Test
     fun searchField_isPresent() {
-        composeTestRule.onNodeWithText("Search settings...", substring = true).assertIsDisplayed()
+        composeTestRule.onNodeWithText(searchHint, substring = true).assertIsDisplayed()
     }
 
     @Test
     fun searchField_acceptsQuery() {
-        val field = composeTestRule.onNodeWithText("Search settings...", substring = true)
+        val field = composeTestRule.onNodeWithText(searchHint, substring = true)
         field.performTextInput("beam")
         composeTestRule.waitForIdle()
     }
 
     @Test
     fun searchField_clearButton_reachable() {
-        val field = composeTestRule.onNodeWithText("Search settings...", substring = true)
+        val field = composeTestRule.onNodeWithText(searchHint, substring = true)
         field.performTextInput("xyz")
         composeTestRule.waitForIdle()
         // Clear button has content description "Clear search" or visible text "Clear"
