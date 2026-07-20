@@ -244,4 +244,88 @@
     <string name="gif_search_hint">جستجوی گیف…</string>
     <string name="gif_close">بستن انتخابگر گیف</string>
     <string name="gif_no_results">گیفی یافت نشد</string>
+
+    <!-- دکمه‌های مشترک / Common buttons -->
+    <string name="common_back">برگشت</string>
+    <string name="common_cancel">لغو</string>
+    <string name="common_close">بستن</string>
+    <string name="common_save">ذخیره</string>
+    <string name="common_delete">حذف</string>
+    <string name="common_apply">اعمال</string>
+    <string name="common_search">جستجو</string>
+    <string name="common_clear">پاک کردن</string>
+    <string name="common_ok">تأیید</string>
+
+    <!-- کلیدهای اضافی / Extra Keys -->
+    <string name="extra_keys_title">پیکربندی کلیدهای اضافی</string>
+    <string name="extra_keys_search_hint">جستجوی کلیدهای اضافی…</string>
+    <string name="extra_keys_info">کلیدهای انتخاب‌شده بر اساس موقعیت ترجیحی روی صفحه‌کلید نمایش داده می‌شوند</string>
+    <string name="extra_keys_reset">بازگشت به پیش‌فرض</string>
+
+    <!-- سفارشی‌سازی کشیدن کوتاه / Short Swipe Customization -->
+    <string name="short_swipe_title">سفارشی‌سازی کشیدن کوتاه</string>
+    <string name="short_swipe_show_keyboard">نمایش صفحه‌کلید</string>
+    <string name="short_swipe_reset_all">بازنشانی همه</string>
+    <string name="short_swipe_tap_hint">برای سفارشی‌سازی اشاره کشیدن کوتاه، روی هر کلید زیر ضربه بزنید</string>
+    <string name="short_swipe_instruction_title">برای سفارشی‌سازی یک کلید، آن را تایپ کنید</string>
+    <string name="short_swipe_instruction_body">صفحه‌کلید زیر همان صفحه‌کلید واقعی CleverKeys شماست.\nبرای افزودن اشاره کشیدن کوتاه، روی یک کلید ضربه بزنید.</string>
+    <string name="short_swipe_custom_mappings">نگاشت‌های سفارشی</string>
+
+    <!-- تنظیمات تم / Theme Settings -->
+    <string name="theme_settings_title">تم‌های صفحه‌کلید</string>
+    <string name="theme_restart_keyboard">راه‌اندازی مجدد صفحه‌کلید</string>
+    <string name="theme_create">ایجاد تم</string>
+    <string name="theme_edit">ویرایش تم</string>
+    <string name="theme_section_builtin">تم‌های داخلی</string>
+    <string name="theme_builtin_desc">این تم‌ها مستقیماً روی صفحه‌کلید اعمال می‌شوند</string>
+    <string name="theme_section_custom">تم‌های سفارشی</string>
+    <string name="theme_section_decorative">تم‌های تزئینی</string>
+    <string name="theme_decorative_desc">طرح‌های رنگی طراح برای صفحه‌کلید شما</string>
+    <string name="theme_delete_title">حذف تم</string>
+    <string name="theme_delete_confirm">آیا مطمئن هستید که می‌خواهید این تم سفارشی را حذف کنید؟</string>
+    <string name="theme_edit_desc">ویرایش</string>
+    <string name="theme_selected_desc">انتخاب‌شده</string>
+    <string name="theme_trail_label">ردپا</string>
+    <string name="theme_name_label">نام تم</string>
+    <string name="theme_section_preview">پیش‌نمایش</string>
+    <string name="theme_section_key_colors">رنگ‌های کلید</string>
+    <string name="theme_section_label_colors">رنگ‌های برچسب</string>
+    <string name="theme_section_border_colors">رنگ‌های حاشیه</string>
+    <string name="theme_swipe_trail_card">✨ ردپای کشیدن</string>
+    <string name="theme_swipe_trail_desc">رنگ نمایش داده‌شده هنگام کشیدن برای تایپ</string>
+    <string name="theme_section_suggestion_bar">نوار پیشنهاد</string>
+    <string name="theme_section_background_colors">رنگ‌های پس‌زمینه</string>
+    <string name="theme_color_hue">رنگ‌مایه</string>
+    <string name="theme_color_saturation">اشباع</string>
+    <string name="theme_color_lightness">روشنایی</string>
+    <string name="theme_color_opacity">کدری</string>
+    <string name="theme_color_hex">هگز</string>
+    <string name="theme_color_hex_desc">ورودی رنگ هگزادسیمال</string>
+    <string name="theme_quick_colors">رنگ‌های سریع</string>
+
+    <!-- تنظیمات / Settings -->
+    <string name="settings_search_hint">جستجوی تنظیمات…</string>
+    <string name="settings_swipe_data_title">داده‌های کشیدن</string>
+    <string name="settings_search_words_hint">جستجوی واژه‌ها…</string>
+    <string name="settings_perf_stats_title">آمار کارایی</string>
+    <string name="settings_copy_version_desc">کپی اطلاعات نسخه</string>
+
+    <!-- فعالیت‌ها / Activities -->
+    <string name="activities_section_title">📱 فعالیت‌ها</string>
+    <string name="activities_dictionary_title">مدیر واژه‌نامه</string>
+    <string name="activities_dictionary_desc">واژه‌های سفارشی، واژه‌های غیرفعال و واژگان</string>
+    <string name="activities_theme_title">مدیر تم</string>
+    <string name="activities_theme_desc">تم‌های نئون، پاستل، دست‌ساز و رنگ‌های سفارشی</string>
+    <string name="activities_extra_keys_title">پیکربندی کلیدهای اضافی</string>
+    <string name="activities_extra_keys_desc">افزودن کلیدهای سامانه، نمادها و میان‌برها</string>
+    <string name="activities_layout_title">مدیر چیدمان</string>
+    <string name="activities_layout_desc">QWERTY، Dvorak، Colemak و بیشتر</string>
+    <string name="activities_calibration_title">واسنجی کشیدن کوتاه</string>
+    <string name="activities_calibration_desc">تمرین و تنظیم دقیق حساسیت اشاره</string>
+    <string name="activities_whats_new_title">چه چیزی جدید است</string>
+    <string name="activities_whats_new_desc">آخرین ویژگی‌ها و گزارش تغییرات را ببینید</string>
+
+    <!-- آزمایش صفحه‌کلید / Test Keyboard -->
+    <string name="test_keyboard_section_title">⌨️ آزمایش صفحه‌کلید</string>
+    <string name="test_keyboard_hint">برای آزمایش صفحه‌کلید خود اینجا تایپ کنید…</string>
 </resources>

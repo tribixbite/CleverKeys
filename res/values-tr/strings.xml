@@ -218,4 +218,88 @@
     <string name="gif_search_hint">GIF ara…</string>
     <string name="gif_close">GIF seçiciyi kapat</string>
     <string name="gif_no_results">GIF bulunamadı</string>
+
+    <!-- Ortak düğmeler / Common buttons -->
+    <string name="common_back">Geri</string>
+    <string name="common_cancel">İptal</string>
+    <string name="common_close">Kapat</string>
+    <string name="common_save">Kaydet</string>
+    <string name="common_delete">Sil</string>
+    <string name="common_apply">Uygula</string>
+    <string name="common_search">Ara</string>
+    <string name="common_clear">Temizle</string>
+    <string name="common_ok">Tamam</string>
+
+    <!-- Ek tuşlar / Extra Keys -->
+    <string name="extra_keys_title">Ek Tuş Yapılandırması</string>
+    <string name="extra_keys_search_hint">Ek tuş ara…</string>
+    <string name="extra_keys_info">Seçilen tuşlar tercih edilen konumlarına göre klavyede görünür</string>
+    <string name="extra_keys_reset">Varsayılanlara Sıfırla</string>
+
+    <!-- Kısa kaydırma özelleştirme / Short Swipe Customization -->
+    <string name="short_swipe_title">Kısa Kaydırma Özelleştirmesi</string>
+    <string name="short_swipe_show_keyboard">Klavyeyi göster</string>
+    <string name="short_swipe_reset_all">Tümünü Sıfırla</string>
+    <string name="short_swipe_tap_hint">Kısa kaydırma hareketini özelleştirmek için aşağıdaki herhangi bir tuşa dokunun</string>
+    <string name="short_swipe_instruction_title">Özelleştirmek için herhangi bir tuşa yazın</string>
+    <string name="short_swipe_instruction_body">Aşağıdaki klavye gerçek CleverKeys klavyenizdir.\nBir tuşa kısa kaydırma eylemleri eklemek için ona dokunun.</string>
+    <string name="short_swipe_custom_mappings">Özel Eşlemeler</string>
+
+    <!-- Tema ayarları / Theme Settings -->
+    <string name="theme_settings_title">Klavye Temaları</string>
+    <string name="theme_restart_keyboard">Klavyeyi Yeniden Başlat</string>
+    <string name="theme_create">Tema Oluştur</string>
+    <string name="theme_edit">Temayı Düzenle</string>
+    <string name="theme_section_builtin">Yerleşik Temalar</string>
+    <string name="theme_builtin_desc">Bu temalar doğrudan klavyeye uygulanır</string>
+    <string name="theme_section_custom">Özel Temalar</string>
+    <string name="theme_section_decorative">Dekoratif Temalar</string>
+    <string name="theme_decorative_desc">Klavyeniz için tasarımcı renk şemaları</string>
+    <string name="theme_delete_title">Temayı Sil</string>
+    <string name="theme_delete_confirm">Bu özel temayı silmek istediğinizden emin misiniz?</string>
+    <string name="theme_edit_desc">Düzenle</string>
+    <string name="theme_selected_desc">Seçili</string>
+    <string name="theme_trail_label">İz</string>
+    <string name="theme_name_label">Tema Adı</string>
+    <string name="theme_section_preview">Önizleme</string>
+    <string name="theme_section_key_colors">Tuş Renkleri</string>
+    <string name="theme_section_label_colors">Etiket Renkleri</string>
+    <string name="theme_section_border_colors">Kenarlık Renkleri</string>
+    <string name="theme_swipe_trail_card">✨ Kaydırma İzi</string>
+    <string name="theme_swipe_trail_desc">Kaydırarak yazarken gösterilen renk</string>
+    <string name="theme_section_suggestion_bar">Öneri Çubuğu</string>
+    <string name="theme_section_background_colors">Arka Plan Renkleri</string>
+    <string name="theme_color_hue">Ton</string>
+    <string name="theme_color_saturation">Doygunluk</string>
+    <string name="theme_color_lightness">Parlaklık</string>
+    <string name="theme_color_opacity">Opaklık</string>
+    <string name="theme_color_hex">Onaltılık</string>
+    <string name="theme_color_hex_desc">Onaltılık renk girişi</string>
+    <string name="theme_quick_colors">Hızlı Renkler</string>
+
+    <!-- Ayarlar / Settings -->
+    <string name="settings_search_hint">Ayarlarda ara…</string>
+    <string name="settings_swipe_data_title">Kaydırma Verisi</string>
+    <string name="settings_search_words_hint">Kelime ara…</string>
+    <string name="settings_perf_stats_title">Performans İstatistikleri</string>
+    <string name="settings_copy_version_desc">Sürüm bilgisini kopyala</string>
+
+    <!-- Etkinlikler / Activities -->
+    <string name="activities_section_title">📱 Etkinlikler</string>
+    <string name="activities_dictionary_title">Sözlük Yöneticisi</string>
+    <string name="activities_dictionary_desc">Özel kelimeler, devre dışı kelimeler ve sözcük dağarcığı</string>
+    <string name="activities_theme_title">Tema Yöneticisi</string>
+    <string name="activities_theme_desc">Neon, Pastel, Kendin Yap temaları ve özel renkler</string>
+    <string name="activities_extra_keys_title">Ek Tuşları Yapılandır</string>
+    <string name="activities_extra_keys_desc">Sistem tuşları, semboller ve kısayollar ekle</string>
+    <string name="activities_layout_title">Tuş Düzeni Yöneticisi</string>
+    <string name="activities_layout_desc">QWERTY, Dvorak, Colemak ve daha fazlası</string>
+    <string name="activities_calibration_title">Kısa Kaydırma Kalibrasyonu</string>
+    <string name="activities_calibration_desc">Hareket hassasiyetini pratik yaparak ayarla</string>
+    <string name="activities_whats_new_title">Yenilikler</string>
+    <string name="activities_whats_new_desc">En son özellikler ve değişiklik günlüğünü gör</string>
+
+    <!-- Klavye testi / Test Keyboard -->
+    <string name="test_keyboard_section_title">⌨️ Klavyeyi Test Et</string>
+    <string name="test_keyboard_hint">Klavyenizi test etmek için buraya yazın…</string>
 </resources>

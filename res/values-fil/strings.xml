@@ -218,4 +218,88 @@
     <string name="gif_search_hint">Maghanap ng mga GIF…</string>
     <string name="gif_close">Isara ang GIF picker</string>
     <string name="gif_no_results">Walang nahanap na GIF</string>
+
+    <!-- Mga karaniwang button / Common buttons -->
+    <string name="common_back">Bumalik</string>
+    <string name="common_cancel">Kanselahin</string>
+    <string name="common_close">Isara</string>
+    <string name="common_save">I-save</string>
+    <string name="common_delete">I-delete</string>
+    <string name="common_apply">I-apply</string>
+    <string name="common_search">Maghanap</string>
+    <string name="common_clear">I-clear</string>
+    <string name="common_ok">OK</string>
+
+    <!-- Mga karagdagang key / Extra Keys -->
+    <string name="extra_keys_title">Pagsasaayos ng Karagdagang Key</string>
+    <string name="extra_keys_search_hint">Maghanap ng karagdagang key…</string>
+    <string name="extra_keys_info">Ang mga napiling key ay lilitaw sa keyboard batay sa kanilang mga ginustong posisyon</string>
+    <string name="extra_keys_reset">I-reset sa Default</string>
+
+    <!-- Pag-customize ng maikling swipe / Short Swipe Customization -->
+    <string name="short_swipe_title">Pag-customize ng Maikling Swipe</string>
+    <string name="short_swipe_show_keyboard">Ipakita ang keyboard</string>
+    <string name="short_swipe_reset_all">I-reset Lahat</string>
+    <string name="short_swipe_tap_hint">I-tap ang anumang key sa ibaba para i-customize ang mga maikling swipe gesture nito</string>
+    <string name="short_swipe_instruction_title">I-type ang anumang key para i-customize ito</string>
+    <string name="short_swipe_instruction_body">Ang keyboard sa ibaba ay ang iyong tunay na CleverKeys keyboard.\nI-tap ang isang key para magdagdag ng mga maikling swipe action dito.</string>
+    <string name="short_swipe_custom_mappings">Mga Custom na Mapping</string>
+
+    <!-- Mga setting ng tema / Theme Settings -->
+    <string name="theme_settings_title">Mga Tema ng Keyboard</string>
+    <string name="theme_restart_keyboard">I-restart ang Keyboard</string>
+    <string name="theme_create">Gumawa ng Tema</string>
+    <string name="theme_edit">I-edit ang Tema</string>
+    <string name="theme_section_builtin">Mga Built-in na Tema</string>
+    <string name="theme_builtin_desc">Ang mga temang ito ay direktang inilalapat sa keyboard</string>
+    <string name="theme_section_custom">Mga Custom na Tema</string>
+    <string name="theme_section_decorative">Mga Dekoratibong Tema</string>
+    <string name="theme_decorative_desc">Mga color scheme ng designer para sa iyong keyboard</string>
+    <string name="theme_delete_title">I-delete ang Tema</string>
+    <string name="theme_delete_confirm">Sigurado ka bang gusto mong i-delete ang custom na temang ito?</string>
+    <string name="theme_edit_desc">I-edit</string>
+    <string name="theme_selected_desc">Napili</string>
+    <string name="theme_trail_label">Trail</string>
+    <string name="theme_name_label">Pangalan ng Tema</string>
+    <string name="theme_section_preview">Preview</string>
+    <string name="theme_section_key_colors">Mga Kulay ng Key</string>
+    <string name="theme_section_label_colors">Mga Kulay ng Label</string>
+    <string name="theme_section_border_colors">Mga Kulay ng Hangganan</string>
+    <string name="theme_swipe_trail_card">✨ Swipe Trail</string>
+    <string name="theme_swipe_trail_desc">Ang kulay na ipinapakita habang nagswi-swipe para mag-type</string>
+    <string name="theme_section_suggestion_bar">Suggestion Bar</string>
+    <string name="theme_section_background_colors">Mga Kulay ng Background</string>
+    <string name="theme_color_hue">Hue</string>
+    <string name="theme_color_saturation">Saturation</string>
+    <string name="theme_color_lightness">Lightness</string>
+    <string name="theme_color_opacity">Opacity</string>
+    <string name="theme_color_hex">Hex</string>
+    <string name="theme_color_hex_desc">Hex color input</string>
+    <string name="theme_quick_colors">Mga Mabilis na Kulay</string>
+
+    <!-- Mga setting / Settings -->
+    <string name="settings_search_hint">Maghanap ng mga setting…</string>
+    <string name="settings_swipe_data_title">Swipe Data</string>
+    <string name="settings_search_words_hint">Maghanap ng mga salita…</string>
+    <string name="settings_perf_stats_title">Mga Istatistika ng Performance</string>
+    <string name="settings_copy_version_desc">Kopyahin ang impormasyon ng bersyon</string>
+
+    <!-- Mga aktibidad / Activities -->
+    <string name="activities_section_title">📱 Mga Aktibidad</string>
+    <string name="activities_dictionary_title">Dictionary Manager</string>
+    <string name="activities_dictionary_desc">Mga custom na salita, mga disabled na salita at bokabularyo</string>
+    <string name="activities_theme_title">Theme Manager</string>
+    <string name="activities_theme_desc">Mga temang Neon, Pastel, DIY at mga custom na kulay</string>
+    <string name="activities_extra_keys_title">I-configure ang Karagdagang Key</string>
+    <string name="activities_extra_keys_desc">Magdagdag ng mga system key, simbolo at shortcut</string>
+    <string name="activities_layout_title">Layout Manager</string>
+    <string name="activities_layout_desc">QWERTY, Dvorak, Colemak at marami pa</string>
+    <string name="activities_calibration_title">Short Swipe Calibration</string>
+    <string name="activities_calibration_desc">Magsanay at i-tune ang sensitivity ng gesture</string>
+    <string name="activities_whats_new_title">Mga Bagong Bagay</string>
+    <string name="activities_whats_new_desc">Tingnan ang pinakabagong mga feature at changelog</string>
+
+    <!-- Pagsubok ng keyboard / Test Keyboard -->
+    <string name="test_keyboard_section_title">⌨️ Subukan ang Keyboard</string>
+    <string name="test_keyboard_hint">Mag-type dito para subukan ang iyong keyboard…</string>
 </resources>

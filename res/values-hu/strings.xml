@@ -215,4 +215,88 @@
     <string name="gif_search_hint">GIF-ek keresése…</string>
     <string name="gif_close">GIF-választó bezárása</string>
     <string name="gif_no_results">Nem található GIF</string>
+
+    <!-- Általános gombok / Common buttons -->
+    <string name="common_back">Vissza</string>
+    <string name="common_cancel">Mégse</string>
+    <string name="common_close">Bezárás</string>
+    <string name="common_save">Mentés</string>
+    <string name="common_delete">Törlés</string>
+    <string name="common_apply">Alkalmaz</string>
+    <string name="common_search">Keresés</string>
+    <string name="common_clear">Törlés</string>
+    <string name="common_ok">OK</string>
+
+    <!-- Extra billentyűk / Extra Keys -->
+    <string name="extra_keys_title">Extra billentyűk konfigurációja</string>
+    <string name="extra_keys_search_hint">Extra billentyű keresése…</string>
+    <string name="extra_keys_info">A kiválasztott billentyűk az előnyben részesített pozíciójuknak megfelelően jelennek meg a billentyűzeten</string>
+    <string name="extra_keys_reset">Visszaállítás alapértelmezettre</string>
+
+    <!-- Rövid csúsztatás testreszabása / Short Swipe Customization -->
+    <string name="short_swipe_title">Rövid csúsztatás testreszabása</string>
+    <string name="short_swipe_show_keyboard">Billentyűzet megjelenítése</string>
+    <string name="short_swipe_reset_all">Összes visszaállítása</string>
+    <string name="short_swipe_tap_hint">Koppintson az alábbi billentyűk bármelyikére a rövid csúsztatási geszt testreszabásához</string>
+    <string name="short_swipe_instruction_title">Koppintson bármelyik billentyűre a testreszabáshoz</string>
+    <string name="short_swipe_instruction_body">Az alábbi billentyűzet a valódi CleverKeys billentyűzete.\nKoppintson egy billentyűre rövid csúsztatási műveletek hozzáadásához.</string>
+    <string name="short_swipe_custom_mappings">Egyéni leképezések</string>
+
+    <!-- Témabeállítások / Theme Settings -->
+    <string name="theme_settings_title">Billentyűzet-témák</string>
+    <string name="theme_restart_keyboard">Billentyűzet újraindítása</string>
+    <string name="theme_create">Téma létrehozása</string>
+    <string name="theme_edit">Téma szerkesztése</string>
+    <string name="theme_section_builtin">Beépített témák</string>
+    <string name="theme_builtin_desc">Ezek a témák közvetlenül a billentyűzetre kerülnek alkalmazásra</string>
+    <string name="theme_section_custom">Egyéni témák</string>
+    <string name="theme_section_decorative">Dekoratív témák</string>
+    <string name="theme_decorative_desc">Tervezői színsémák a billentyűzetéhez</string>
+    <string name="theme_delete_title">Téma törlése</string>
+    <string name="theme_delete_confirm">Biztosan törli ezt az egyéni témát?</string>
+    <string name="theme_edit_desc">Szerkesztés</string>
+    <string name="theme_selected_desc">Kiválasztva</string>
+    <string name="theme_trail_label">Nyomvonal</string>
+    <string name="theme_name_label">Téma neve</string>
+    <string name="theme_section_preview">Előnézet</string>
+    <string name="theme_section_key_colors">Billentyűszínek</string>
+    <string name="theme_section_label_colors">Feliratszínek</string>
+    <string name="theme_section_border_colors">Szegélyszínek</string>
+    <string name="theme_swipe_trail_card">✨ Csúsztatási nyomvonal</string>
+    <string name="theme_swipe_trail_desc">A csúsztatásos gépelés közben megjelenő szín</string>
+    <string name="theme_section_suggestion_bar">Javaslatsáv</string>
+    <string name="theme_section_background_colors">Háttérszínek</string>
+    <string name="theme_color_hue">Árnyalat</string>
+    <string name="theme_color_saturation">Telítettség</string>
+    <string name="theme_color_lightness">Világosság</string>
+    <string name="theme_color_opacity">Átlátszatlanság</string>
+    <string name="theme_color_hex">Hexa</string>
+    <string name="theme_color_hex_desc">Hexadecimális színbevitel</string>
+    <string name="theme_quick_colors">Gyors színek</string>
+
+    <!-- Beállítások / Settings -->
+    <string name="settings_search_hint">Beállítások keresése…</string>
+    <string name="settings_swipe_data_title">Csúsztatási adatok</string>
+    <string name="settings_search_words_hint">Szavak keresése…</string>
+    <string name="settings_perf_stats_title">Teljesítménystatisztikák</string>
+    <string name="settings_copy_version_desc">Verzióinformáció másolása</string>
+
+    <!-- Tevékenységek / Activities -->
+    <string name="activities_section_title">📱 Tevékenységek</string>
+    <string name="activities_dictionary_title">Szótárkezelő</string>
+    <string name="activities_dictionary_desc">Egyéni szavak, letiltott szavak és szókincs</string>
+    <string name="activities_theme_title">Témakezelő</string>
+    <string name="activities_theme_desc">Neon, pasztell, barkács témák és egyéni színek</string>
+    <string name="activities_extra_keys_title">Extra billentyűk beállítása</string>
+    <string name="activities_extra_keys_desc">Rendszerbillentyűk, szimbólumok és gyorsbillentyűk hozzáadása</string>
+    <string name="activities_layout_title">Kiosztáskezelő</string>
+    <string name="activities_layout_desc">QWERTY, Dvorak, Colemak és egyebek</string>
+    <string name="activities_calibration_title">Rövid csúsztatás kalibrálása</string>
+    <string name="activities_calibration_desc">Gesztus-érzékenység gyakorlása és finomhangolása</string>
+    <string name="activities_whats_new_title">Újdonságok</string>
+    <string name="activities_whats_new_desc">Legújabb funkciók és változásnapló megtekintése</string>
+
+    <!-- Billentyűzet tesztelése / Test Keyboard -->
+    <string name="test_keyboard_section_title">⌨️ Billentyűzet tesztelése</string>
+    <string name="test_keyboard_hint">Gépeljen ide a billentyűzet teszteléséhez…</string>
 </resources>

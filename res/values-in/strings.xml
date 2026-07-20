@@ -220,4 +220,88 @@
     <string name="gif_search_hint">Cari GIF…</string>
     <string name="gif_close">Tutup pemilih GIF</string>
     <string name="gif_no_results">Tidak ada GIF ditemukan</string>
+
+    <!-- Tombol umum / Common buttons -->
+    <string name="common_back">Kembali</string>
+    <string name="common_cancel">Batal</string>
+    <string name="common_close">Tutup</string>
+    <string name="common_save">Simpan</string>
+    <string name="common_delete">Hapus</string>
+    <string name="common_apply">Terapkan</string>
+    <string name="common_search">Cari</string>
+    <string name="common_clear">Bersihkan</string>
+    <string name="common_ok">OKE</string>
+
+    <!-- Tombol tambahan / Extra Keys -->
+    <string name="extra_keys_title">Konfigurasi Tombol Tambahan</string>
+    <string name="extra_keys_search_hint">Cari tombol tambahan…</string>
+    <string name="extra_keys_info">Tombol yang dipilih akan muncul di keyboard berdasarkan posisi yang diinginkan</string>
+    <string name="extra_keys_reset">Setel Ulang ke Default</string>
+
+    <!-- Kustomisasi geser pendek / Short Swipe Customization -->
+    <string name="short_swipe_title">Kustomisasi Geser Pendek</string>
+    <string name="short_swipe_show_keyboard">Tampilkan keyboard</string>
+    <string name="short_swipe_reset_all">Setel Ulang Semua</string>
+    <string name="short_swipe_tap_hint">Ketuk tombol mana saja di bawah untuk menyesuaikan gestur geser pendeknya</string>
+    <string name="short_swipe_instruction_title">Ketuk tombol apa saja untuk menyesuaikannya</string>
+    <string name="short_swipe_instruction_body">Keyboard di bawah ini adalah keyboard CleverKeys Anda yang sebenarnya.\nKetuk tombol untuk menambahkan aksi geser pendek padanya.</string>
+    <string name="short_swipe_custom_mappings">Pemetaan Kustom</string>
+
+    <!-- Pengaturan tema / Theme Settings -->
+    <string name="theme_settings_title">Tema Keyboard</string>
+    <string name="theme_restart_keyboard">Mulai Ulang Keyboard</string>
+    <string name="theme_create">Buat Tema</string>
+    <string name="theme_edit">Edit Tema</string>
+    <string name="theme_section_builtin">Tema Bawaan</string>
+    <string name="theme_builtin_desc">Tema ini diterapkan langsung ke keyboard</string>
+    <string name="theme_section_custom">Tema Kustom</string>
+    <string name="theme_section_decorative">Tema Dekoratif</string>
+    <string name="theme_decorative_desc">Skema warna desainer untuk keyboard Anda</string>
+    <string name="theme_delete_title">Hapus Tema</string>
+    <string name="theme_delete_confirm">Apakah Anda yakin ingin menghapus tema kustom ini?</string>
+    <string name="theme_edit_desc">Edit</string>
+    <string name="theme_selected_desc">Dipilih</string>
+    <string name="theme_trail_label">Jejak</string>
+    <string name="theme_name_label">Nama Tema</string>
+    <string name="theme_section_preview">Pratinjau</string>
+    <string name="theme_section_key_colors">Warna Tombol</string>
+    <string name="theme_section_label_colors">Warna Label</string>
+    <string name="theme_section_border_colors">Warna Batas</string>
+    <string name="theme_swipe_trail_card">✨ Jejak Geser</string>
+    <string name="theme_swipe_trail_desc">Warna yang ditampilkan saat menggeser untuk mengetik</string>
+    <string name="theme_section_suggestion_bar">Baku Saran</string>
+    <string name="theme_section_background_colors">Warna Latar Belakang</string>
+    <string name="theme_color_hue">Rona</string>
+    <string name="theme_color_saturation">Saturasi</string>
+    <string name="theme_color_lightness">Kecerahan</string>
+    <string name="theme_color_opacity">Opasitas</string>
+    <string name="theme_color_hex">Hex</string>
+    <string name="theme_color_hex_desc">Masukan warna heksadesimal</string>
+    <string name="theme_quick_colors">Warna Cepat</string>
+
+    <!-- Pengaturan / Settings -->
+    <string name="settings_search_hint">Cari pengaturan…</string>
+    <string name="settings_swipe_data_title">Data Geser</string>
+    <string name="settings_search_words_hint">Cari kata…</string>
+    <string name="settings_perf_stats_title">Statistik Performa</string>
+    <string name="settings_copy_version_desc">Salin info versi</string>
+
+    <!-- Aktivitas / Activities -->
+    <string name="activities_section_title">📱 Aktivitas</string>
+    <string name="activities_dictionary_title">Pengelola Kamus</string>
+    <string name="activities_dictionary_desc">Kata kustom, kata yang dinonaktifkan &amp; kosakata</string>
+    <string name="activities_theme_title">Pengelola Tema</string>
+    <string name="activities_theme_desc">Tema Neon, Pastel, DIY &amp; warna kustom</string>
+    <string name="activities_extra_keys_title">Konfigurasikan Tombol Tambahan</string>
+    <string name="activities_extra_keys_desc">Tambahkan tombol sistem, simbol &amp; pintasan</string>
+    <string name="activities_layout_title">Pengelola Tata Letak</string>
+    <string name="activities_layout_desc">QWERTY, Dvorak, Colemak &amp; lainnya</string>
+    <string name="activities_calibration_title">Kalibrasi Geser Pendek</string>
+    <string name="activities_calibration_desc">Praktik dan sesuaikan sensitivitas gestur</string>
+    <string name="activities_whats_new_title">Yang Baru</string>
+    <string name="activities_whats_new_desc">Lihat fitur terbaru dan catatan perubahan</string>
+
+    <!-- Uji keyboard / Test Keyboard -->
+    <string name="test_keyboard_section_title">⌨️ Uji Keyboard</string>
+    <string name="test_keyboard_hint">Ketik di sini untuk menguji keyboard Anda…</string>
 </resources>
