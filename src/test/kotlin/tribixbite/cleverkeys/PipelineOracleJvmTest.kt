@@ -20,7 +20,9 @@ import java.util.Locale
  *    Context, so the string forms are pinned in the instrumented twin; here we pin the
  *    list-mutation contract with an injected possessive generator.
  *  - Shift / caps-lock transformation — the exact string ops of
- *    InputCoordinator.applyShiftTransformation (D4, pinned).
+ *    SuggestionHandler.applyShiftTransformation (D4, pinned). WP9 step 3 (2026-07-20) relocated
+ *    this transform from InputCoordinator into SuggestionHandler's companion; the string ops are
+ *    byte-identical, so this mirror is unchanged in behavior — only its production source moved.
  *  - I-word capitalization — the exact ops of {SuggestionHandler,InputCoordinator}.capitalizeIWord.
  *  - Suggestion wire round-trips + routeSuggestionSelection (scenario 30: the
  *    getCurrentSuggestions/onSuggestionSelected wire format is List<String>, prefixes
@@ -33,10 +35,11 @@ import java.util.Locale
 class PipelineOracleJvmTest {
 
     // ---------------------------------------------------------------------------
-    // Reference reimplementations of the two production private helpers. They are
-    // byte-for-byte copies of the pipeline code (SuggestionHandler.kt:68-79,
-    // InputCoordinator.kt:471-485) so the oracle FAILS if the production logic drifts
-    // away from this pinned behavior. Kept private to this test; production is untouched.
+    // Reference reimplementations of the two production helpers. They are byte-for-byte copies
+    // of the pipeline code (capitalizeIWord: {SuggestionHandler,InputCoordinator}.kt;
+    // applyShiftTransformation: SuggestionHandler.kt companion — WP9 step 3 relocated it there
+    // from InputCoordinator) so the oracle FAILS if the production logic drifts away from this
+    // pinned behavior. Kept private to this test; production is untouched.
     // ---------------------------------------------------------------------------
 
     private val I_WORDS = setOf("i", "i'm", "i'll", "i'd", "i've")
@@ -47,7 +50,8 @@ class PipelineOracleJvmTest {
         return if (lower in I_WORDS) word.replaceFirstChar { it.uppercaseChar() } else word
     }
 
-    /** Mirror of InputCoordinator.applyShiftTransformation (D4). */
+    /** Mirror of SuggestionHandler.applyShiftTransformation (D4; WP9 step 3 moved it here from
+     * InputCoordinator — string ops byte-identical). */
     private fun applyShiftTransformation(
         word: String,
         shiftActive: Boolean,
@@ -96,8 +100,10 @@ class PipelineOracleJvmTest {
 
     @Test
     fun oracle_jvm_shiftTransformation_capitalizesFirstLetterOnly() {
-        // ORACLE-FLIP(step 3): the transform relocates from InputCoordinator into
-        // SuggestionHandler.handlePredictionResults; the string result stays identical.
+        // ORACLE-FLIP(step 3) LANDED 2026-07-20: the transform relocated from InputCoordinator into
+        // SuggestionHandler.applyShiftTransformation (companion); IC.handlePredictionResults now
+        // delegates to it with the request-carried shift state. The string result is IDENTICAL —
+        // these assertion VALUES are unchanged.
         assertEquals("Book", applyShiftTransformation("book", shiftActive = true, shiftLocked = false))
         assertEquals("Hello", applyShiftTransformation("hello", shiftActive = true, shiftLocked = false))
         // Already-capitalized first char is preserved (titlecase is a no-op on uppercase).
@@ -106,7 +112,8 @@ class PipelineOracleJvmTest {
 
     @Test
     fun oracle_jvm_capsLockTransformation_uppercasesEntireWord() {
-        // ORACLE-FLIP(step 3): relocation only; result identical.
+        // ORACLE-FLIP(step 3) LANDED 2026-07-20: transform relocated to SuggestionHandler; result
+        // identical (assertion VALUES unchanged).
         assertEquals("BOOK", applyShiftTransformation("book", shiftActive = false, shiftLocked = true))
         // Caps-lock wins over shift when both flags are set (locked branch is first).
         assertEquals("BOOK", applyShiftTransformation("book", shiftActive = true, shiftLocked = true))

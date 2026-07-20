@@ -56,6 +56,41 @@ class SuggestionHandler(
          * Includes "I" and all its contractions.
          */
         private val I_WORDS = setOf("i", "i'm", "i'll", "i'd", "i've")
+
+        /**
+         * Apply shift/caps-lock-at-swipe-start transformation to a prediction.
+         *
+         * v1.33.9: Used for both the auto-inserted top prediction and the alternates shown in
+         * the suggestion bar so every entry shares the same casing.
+         *
+         * WP9 step 3 (2026-07-20): relocated verbatim from InputCoordinator.applyShiftTransformation.
+         * SuggestionHandler now OWNS this transform; the swipe request carries the shift state
+         * (threaded through handleSwipeTyping → AsyncPredictionHandler → handlePredictionResults)
+         * instead of the transform reading InputCoordinator's private fields. Pure (no instance
+         * state) so it is a companion function callable by both pipelines during the migration.
+         *
+         * Semantics (unchanged): caps-lock wins over shift; caps-lock uppercases the whole word;
+         * shift capitalizes only the first letter (no-op if already uppercase); neither → verbatim.
+         *
+         * @param word Prediction word to transform.
+         * @param shiftActive True if shift was latched (single tap) when the swipe started.
+         * @param shiftLocked True if shift was LOCKED (caps lock) when the swipe started.
+         */
+        fun applyShiftTransformation(word: String, shiftActive: Boolean, shiftLocked: Boolean): String {
+            return when {
+                shiftLocked -> {
+                    // Caps Lock: uppercase entire word
+                    word.uppercase(java.util.Locale.getDefault())
+                }
+                shiftActive -> {
+                    // Shift: capitalize first letter only
+                    word.replaceFirstChar {
+                        if (it.isLowerCase()) it.titlecase(java.util.Locale.getDefault()) else it.toString()
+                    }
+                }
+                else -> word
+            }
+        }
     }
 
     /**

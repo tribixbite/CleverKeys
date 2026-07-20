@@ -465,36 +465,37 @@ class InputCoordinator(
     fun getCurrentSwipeData(): SwipeMLData? = currentSwipeData
 
     /**
-     * Apply shift/caps-lock transformation to a prediction.
-     * v1.33.9: Used for both top prediction and alternates in suggestion bar.
-     */
-    private fun applyShiftTransformation(word: String): String {
-        return when {
-            wasShiftLockedAtSwipeStart -> {
-                // Caps Lock: uppercase entire word
-                word.uppercase(java.util.Locale.getDefault())
-            }
-            wasShiftActiveAtSwipeStart -> {
-                // Shift: capitalize first letter only
-                word.replaceFirstChar {
-                    if (it.isLowerCase()) it.titlecase(java.util.Locale.getDefault()) else it.toString()
-                }
-            }
-            else -> word
-        }
-    }
-
-    /**
      * Handle prediction results from async swipe typing prediction.
      * Called when neural network predictions are ready.
+     *
+     * WP9 step 3 (2026-07-20): the shift/caps-lock-at-swipe-start state is now CARRIED by the
+     * swipe request (threaded through [handleSwipeTyping] → AsyncPredictionHandler → here) rather
+     * than read from this class's private fields. The casing transform itself was relocated to
+     * [SuggestionHandler.applyShiftTransformation] (SH owns it). The carried [shiftActive] /
+     * [shiftLocked] default to this instance's fields so any caller that doesn't thread the state
+     * (there are none in production — the async callback always passes it) stays behavior-identical.
+     * The fields are also synced FROM the carried params here so [onSuggestionSelected]'s
+     * shift-indicator clearing (which still reads them, unchanged in step 3) sees the same state.
+     *
+     * @param shiftActive True if shift was latched (single tap) when the swipe started.
+     * @param shiftLocked True if shift was LOCKED (caps lock) when the swipe started.
      */
     fun handlePredictionResults(
         predictions: List<String>?,
         scores: List<Int>?,
         ic: InputConnection?,
         editorInfo: EditorInfo?,
-        resources: Resources
+        resources: Resources,
+        shiftActive: Boolean = wasShiftActiveAtSwipeStart,
+        shiftLocked: Boolean = wasShiftLockedAtSwipeStart
     ) {
+        // WP9 step 3: adopt the request-carried shift state as the single source of truth so both
+        // the casing transform (below, via SuggestionHandler) and onSuggestionSelected's untouched
+        // shift-clearing read consistent state. Production sets these to the same values at swipe
+        // start (handleSwipeTyping), so this re-sync is a no-op there and behavior is identical.
+        wasShiftActiveAtSwipeStart = shiftActive
+        wasShiftLockedAtSwipeStart = shiftLocked
+
         val handleStartTime = System.currentTimeMillis()
         debugLogger?.invoke("⏱️ HANDLE_PREDICTIONS START")
 
@@ -509,8 +510,11 @@ class InputCoordinator(
         val casedPredictions = predictionCoordinator.getWordPredictor()
             ?.applyUserWordCaseToList(predictions) ?: predictions
 
-        // v1.33.9: Apply shift/caps-lock transformation to ALL predictions for consistent display
-        val transformedPredictions = casedPredictions.map { applyShiftTransformation(it) }
+        // v1.33.9: Apply shift/caps-lock transformation to ALL predictions for consistent display.
+        // WP9 step 3: delegate to SuggestionHandler (owner of the transform) with the carried state.
+        val transformedPredictions = casedPredictions.map {
+            SuggestionHandler.applyShiftTransformation(it, shiftActive, shiftLocked)
+        }
 
         // Update suggestion bar
         suggestionBar?.let { bar ->
@@ -1234,8 +1238,14 @@ class InputCoordinator(
             predictionCoordinator.getAsyncPredictionHandler()?.let { handler ->
                 handler.requestPredictions(swipeInput, object : AsyncPredictionHandler.PredictionCallback {
                     override fun onPredictionsReady(predictions: List<String>, scores: List<Int>) {
-                        // Process predictions on UI thread
-                        handlePredictionResults(predictions, scores, ic, editorInfo, resources)
+                        // Process predictions on UI thread. WP9 step 3: thread this swipe request's
+                        // shift-at-start state through to handlePredictionResults (the callback
+                        // closure carries the captured wasShiftActive/wasShiftLocked) so the casing
+                        // transform reads the request-carried state, not shared fields.
+                        handlePredictionResults(
+                            predictions, scores, ic, editorInfo, resources,
+                            wasShiftActive, wasShiftLocked
+                        )
                     }
 
                     override fun onPredictionError(error: String) {

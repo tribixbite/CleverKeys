@@ -48,20 +48,25 @@ import java.util.concurrent.TimeUnit
  * Swipe determinism: the neural engine is NEVER run. The post-prediction transform chain
  * is characterized by calling InputCoordinator.handlePredictionResults / onSuggestionSelected
  * directly with SYNTHETIC prediction lists — the exact seam AsyncPredictionHandler invokes
- * (InputCoordinator.kt:1236-1238). Shift-at-swipe-start state (a private IC field set by
- * handleSwipeTyping) is set via reflection since we bypass handleSwipeTyping.
+ * (InputCoordinator.kt:1238-1243). WP9 step 3 (2026-07-20): shift-at-swipe-start state is now
+ * CARRIED by the swipe request (threaded through the async callback into handlePredictionResults)
+ * rather than read from a private IC field, so the oracle passes it as the trailing carrier params
+ * of handlePredictionResults (via swipeResults) — no reflection onto private fields.
  *
  * ── HEAD drift from the spec's line references (verified 2026-07-20) ──────────────────
  * The spec was written against an older HEAD; R-2 (IC dead-code delete) and R-4 (log the
- * swallowed catch) already landed, shifting IC line numbers. Corrected anchors used here:
- *   - IC.handlePredictionResults  491-570  (spec said 491-570 — still accurate)
- *   - IC.onSuggestionSelected     591-943  (spec said 535-880; IC dead code removed)
- *   - IC.applyShiftTransformation 471-485  (spec said 471-485 — accurate)
+ * swallowed catch) already landed, then WP9 step 3 moved the shift transform, shifting IC line
+ * numbers. Corrected anchors used here:
+ *   - IC.handlePredictionResults  491-570 (now carries shiftActive/shiftLocked params; step 3)
+ *   - IC.onSuggestionSelected     595-947 (spec said 535-880; IC dead code removed)
+ *   - applyShiftTransformation now lives on SuggestionHandler's companion (step 3); IC's private
+ *     copy was deleted — IC.handlePredictionResults delegates to SuggestionHandler.
  *   - IC.triggerPredictionsForPrefix 309-451 (spec said 214-357 / 262-339)
- *   - IC's silent catch is GONE: 925-934 now logs (R-4 done) — so D4/D5 pins hold but the
+ *   - IC's silent catch is GONE: now logs (R-4 done) — so D4/D5 pins hold but the
  *     "silent swallow" scenario is not characterized (already remediated).
  *   - SH.handlePredictionResults  293-376 (spec 290+ — accurate); possessive augment SH:324.
  *   - SH.onSuggestionSelected     389-790 (spec 378-758).
+ *   - SH.applyShiftTransformation companion fn (step 3 destination).
  *   - SH.augmentPredictionsWithPossessives 1474-1508 (spec 1441/1474).
  */
 @RunWith(AndroidJUnit4::class)
@@ -256,33 +261,33 @@ class PipelineCharacterizationTest {
 
     /**
      * Invokes the swipe post-prediction seam exactly as AsyncPredictionHandler does
-     * (InputCoordinator.kt:1236-1238), on the main thread. Sets wasLastInputSwipe=true first —
+     * (InputCoordinator.kt:1236-1249), on the main thread. Sets wasLastInputSwipe=true first —
      * the precondition performSwipeTyping establishes (InputCoordinator.kt:1183) before the
      * async callback fires, which the trailing-space + Termux + ML branches read. We bypass
      * performSwipeTyping (it runs the neural engine); this reproduces its tracker precondition.
+     *
+     * WP9 step 3 (2026-07-20): shift-at-swipe-start state is now CARRIED by the request — the
+     * production callback threads the captured wasShiftActive/wasShiftLocked into
+     * handlePredictionResults (InputCoordinator.kt:1240-1243). The oracle mirrors that exactly by
+     * passing [shiftActive] / [shiftLocked] as the trailing carrier params, so it no longer
+     * reflects onto private fields; handlePredictionResults syncs the fields from the carrier for
+     * onSuggestionSelected's (untouched) shift-clearing. Casing behavior is IDENTICAL to before —
+     * only the plumbing moved (D4, ORACLE-FLIP step 3).
      */
     private fun swipeResults(
         h: Harness,
         predictions: List<String>,
         scores: List<Int>,
-        editorInfo: EditorInfo
+        editorInfo: EditorInfo,
+        shiftActive: Boolean = false,
+        shiftLocked: Boolean = false
     ) {
         onMain {
             h.contextTracker.setWasLastInputSwipe(true)
             h.inputCoordinator.handlePredictionResults(
-                predictions, scores, h.inputConnection, editorInfo, h.resources
+                predictions, scores, h.inputConnection, editorInfo, h.resources,
+                shiftActive, shiftLocked
             )
-        }
-    }
-
-    /** Sets IC's private shift-at-swipe-start fields (normally set by handleSwipeTyping,
-     * which we bypass to keep the swipe path deterministic). Documented reflection seam. */
-    private fun setSwipeShiftState(ic: InputCoordinator, active: Boolean, locked: Boolean) {
-        InputCoordinator::class.java.getDeclaredField("wasShiftActiveAtSwipeStart").apply {
-            isAccessible = true; setBoolean(ic, active)
-        }
-        InputCoordinator::class.java.getDeclaredField("wasShiftLockedAtSwipeStart").apply {
-            isAccessible = true; setBoolean(ic, locked)
         }
     }
 
@@ -330,11 +335,14 @@ class PipelineCharacterizationTest {
     @Test
     fun oracle_swipe_shiftAtStart_capitalizesFirstLetterAcrossBar() {
         val h = harness(initialText = "")
-        // ORACLE-FLIP(step 3): shift/caps capture relocates from InputCoordinator into
-        // SuggestionHandler; the committed casing + bar casing stay IDENTICAL, only the
-        // code location moves. This assertion (behavior) survives; the wiring flips.
-        setSwipeShiftState(h.inputCoordinator, active = true, locked = false)
-        swipeResults(h, listOf("hello", "help"), listOf(300, 200), textEditor())
+        // ORACLE-FLIP(step 3) LANDED 2026-07-20: shift/caps capture + the casing transform moved
+        // out of InputCoordinator's private fields into SuggestionHandler.applyShiftTransformation
+        // (SH owns it), and the swipe request now CARRIES the shift state — the oracle passes it as
+        // the swipeResults carrier params (mirroring the production async callback) instead of
+        // reflecting onto private fields. The committed casing + bar casing are IDENTICAL to before;
+        // only the wiring moved. These assertion VALUES are unchanged.
+        swipeResults(h, listOf("hello", "help"), listOf(300, 200), textEditor(),
+            shiftActive = true, shiftLocked = false)
         drainMainThread()
 
         assertEquals("Hello ", bufferOf(h))
@@ -347,9 +355,11 @@ class PipelineCharacterizationTest {
     @Test
     fun oracle_swipe_capsLockAtStart_uppercasesEntireWordAcrossBar() {
         val h = harness(initialText = "")
-        // ORACLE-FLIP(step 3): relocation only; casing identical after the move.
-        setSwipeShiftState(h.inputCoordinator, active = false, locked = true)
-        swipeResults(h, listOf("hello", "help"), listOf(300, 200), textEditor())
+        // ORACLE-FLIP(step 3) LANDED 2026-07-20: transform relocated to SH and shift state carried
+        // by the request (via swipeResults carrier params, not reflection). Casing identical after
+        // the move; assertion VALUES unchanged.
+        swipeResults(h, listOf("hello", "help"), listOf(300, 200), textEditor(),
+            shiftActive = false, shiftLocked = true)
         drainMainThread()
 
         assertEquals("HELLO ", bufferOf(h))
