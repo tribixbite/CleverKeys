@@ -48,9 +48,9 @@ class AutoCorrectionSettingsActivity : ComponentActivity(), SharedPreferences.On
 
     // Settings state
     private var autoCorrectEnabled by mutableStateOf(true)
-    private var minWordLength by mutableStateOf(Defaults.AUTOCORRECT_MIN_WORD_LENGTH)
-    private var charMatchThreshold by mutableStateOf(Defaults.AUTOCORRECT_CHAR_MATCH_THRESHOLD)
-    private var minFrequency by mutableStateOf(Defaults.AUTOCORRECT_MIN_FREQUENCY)
+    private var minWordLength by mutableIntStateOf(Defaults.AUTOCORRECT_MIN_WORD_LENGTH)
+    private var charMatchThreshold by mutableFloatStateOf(Defaults.AUTOCORRECT_CHAR_MATCH_THRESHOLD)
+    private var minFrequency by mutableIntStateOf(Defaults.AUTOCORRECT_MIN_FREQUENCY)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

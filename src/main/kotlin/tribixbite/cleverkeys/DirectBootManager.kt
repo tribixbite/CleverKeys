@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys
 
+import android.annotation.SuppressLint
 import android.app.KeyguardManager
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -47,6 +48,9 @@ class DirectBootManager private constructor(private val context: Context) {
     companion object {
         private const val TAG = "DirectBootManager"
 
+        // Process-lifetime singleton holding only the applicationContext (see getInstance),
+        // so it never leaks an Activity/Service. The reference lives as long as the process.
+        @SuppressLint("StaticFieldLeak")
         @Volatile
         private var instance: DirectBootManager? = null
 

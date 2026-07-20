@@ -60,7 +60,7 @@ class ClipboardEntry(
             hours < 24 -> "${hours}h ago"
             days == 1L -> "Yesterday"
             days < 7 -> "${days}d ago"
-            else -> DATE_FORMAT.format(Date(timestamp))
+            else -> dateFormat().format(Date(timestamp))
         }
     }
 
@@ -68,7 +68,7 @@ class ClipboardEntry(
      * Format timestamp as date string (e.g., "Nov 12")
      */
     fun formatDate(): String {
-        return DATE_FORMAT.format(Date(timestamp))
+        return dateFormat().format(Date(timestamp))
     }
 
     /**
@@ -98,8 +98,10 @@ class ClipboardEntry(
     companion object {
         const val MIME_TEXT_PLAIN = "text/plain"
 
-        // Reuse across all instances — all calls are on Main thread (no thread-safety needed)
-        private val DATE_FORMAT = SimpleDateFormat("MMM d", Locale.getDefault())
+        // Built per call so the user's current default locale is honored even
+        // after a runtime locale change (SimpleDateFormat is not thread-safe, so
+        // a fresh instance also avoids sharing mutable state across threads).
+        private fun dateFormat() = SimpleDateFormat("MMM d", Locale.getDefault())
 
         // Cache the secondary text color to avoid per-call resource lookups
         private var cachedSecondaryColor: Int? = null

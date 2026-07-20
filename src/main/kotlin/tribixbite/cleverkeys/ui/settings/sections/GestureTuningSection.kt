@@ -131,7 +131,7 @@ internal fun SettingsActivity.GestureTuningSection() {
                         selectionDeleteVerticalSpeed = it
                         saveSetting("selection_delete_vertical_speed", selectionDeleteVerticalSpeed)
                     },
-                    displayValue = String.format("%.1fx", selectionDeleteVerticalSpeed)
+                    displayValue = String.format(java.util.Locale.getDefault(), "%.1fx", selectionDeleteVerticalSpeed)
                 )
 
                 // Tap and Typing subsection

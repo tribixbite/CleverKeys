@@ -1,2 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<tribixbite.cleverkeys.Keyboard2View xmlns:android="http://schemas.android.com/apk/res/android" android:hardwareAccelerated="false" android:background="?attr/colorKeyboard"/>
+<!-- Overdraw suppressed: the IME window theme (CleverKeysIMETheme) uses a TRANSPARENT
+     windowBackground, so this root MUST paint ?attr/colorKeyboard or the keyboard would be
+     see-through. Lint cannot detect the transparent IME window. -->
+<tribixbite.cleverkeys.Keyboard2View xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools" android:hardwareAccelerated="false" android:background="?attr/colorKeyboard" tools:ignore="Overdraw"/>

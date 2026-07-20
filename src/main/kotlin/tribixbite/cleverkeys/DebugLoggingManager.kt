@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys
 
+import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -48,7 +49,7 @@ class DebugLoggingManager(
     companion object {
         private const val DEBUG_MODE_ACTION = "tribixbite.cleverkeys.SET_DEBUG_MODE"
         private const val EXTRA_DEBUG_ENABLED = "debug_enabled"
-        private const val LOG_FILE_PATH = "/data/data/com.termux/files/home/swipe_log.txt"
+        private const val LOG_FILE_NAME = "swipe_log.txt"
         private const val TAG = "DebugLoggingManager"
     }
 
@@ -63,6 +64,10 @@ class DebugLoggingManager(
          */
         fun onDebugModeChanged(enabled: Boolean)
     }
+
+    // App-private storage path — always writable and portable across devices/UIDs.
+    // (Was previously hardcoded to a Termux home path that only worked on the dev's box.)
+    private val logFilePath: String = java.io.File(context.filesDir, LOG_FILE_NAME).absolutePath
 
     private var logWriter: BufferedWriter? = null
     private var debugModeReceiver: BroadcastReceiver? = null
@@ -79,7 +84,7 @@ class DebugLoggingManager(
      */
     fun initializeLogWriter(): Boolean {
         try {
-            logWriter = BufferedWriter(FileWriter(LOG_FILE_PATH, true))
+            logWriter = BufferedWriter(FileWriter(logFilePath, true))
             logWriter?.write("\n=== CleverKeysService Started: ${java.util.Date()} ===\n")
             logWriter?.flush()
             return true
@@ -98,6 +103,10 @@ class DebugLoggingManager(
      *
      * @param context Application context for receiver registration
      */
+    // Context.RECEIVER_NOT_EXPORTED is a compile-time-inlined int constant (public API 33).
+    // The flag value (0x4) is honored by registerReceiver from API 26 onward, which is why
+    // it's used inside the SDK_INT >= O guard here; on API 21-25 the 3-arg form is used.
+    @SuppressLint("InlinedApi")
     fun registerDebugModeReceiver(context: Context) {
         if (debugModeReceiver != null) return // Already registered
 
@@ -238,5 +247,5 @@ class DebugLoggingManager(
      *
      * @return Absolute path to the log file
      */
-    fun getLogFilePath(): String = LOG_FILE_PATH
+    fun getLogFilePath(): String = logFilePath
 }

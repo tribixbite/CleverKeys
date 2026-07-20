@@ -14,6 +14,7 @@ import android.widget.FrameLayout
 import tribixbite.cleverkeys.Config
 import tribixbite.cleverkeys.Keyboard2View
 import tribixbite.cleverkeys.KeyboardData
+import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.prefs.LayoutsPreference
 
 /**
@@ -163,8 +164,8 @@ class KeyboardPreviewHost @JvmOverloads constructor(
         try {
             // Default to QWERTY
             val resources = context.resources
-            val resId = resources.getIdentifier("latn_qwerty_us", "raw", context.packageName)
-            val layout = KeyboardData.load(resources, resId)
+            // Static resource name → direct R reference (no reflection needed).
+            val layout = KeyboardData.load(resources, R.raw.latn_qwerty_us)
             if (layout != null) {
                 keyboardData = layout
                 keyboardView?.setKeyboard(layout)

@@ -143,12 +143,10 @@ internal object VoiceImeSwitcher {
          * Localised display name.
          */
         fun getDisplayName(ctx: Context): String {
-            var subtypeName = ""
-            if (Build.VERSION.SDK_INT >= 14) {
-                subtypeName = subtype.getDisplayName(ctx, im.packageName, null).toString()
-                if (subtypeName.isNotEmpty()) {
-                    subtypeName = " - $subtypeName"
-                }
+            // minSdk 21: InputMethodSubtype.getDisplayName (API 14) is always available.
+            var subtypeName = subtype.getDisplayName(ctx, im.packageName, null).toString()
+            if (subtypeName.isNotEmpty()) {
+                subtypeName = " - $subtypeName"
             }
             return im.loadLabel(ctx.packageManager).toString() + subtypeName
         }

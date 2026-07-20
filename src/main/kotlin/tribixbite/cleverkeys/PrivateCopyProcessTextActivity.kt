@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ComponentName
 import android.content.Context
@@ -85,6 +86,10 @@ class PrivateCopyProcessTextActivity : Activity() {
         }
     }
 
+    // Intent.EXTRA_PROCESS_TEXT is a String constant (API 23) inlined at compile time.
+    // This activity is only ever launched via the ACTION_PROCESS_TEXT mechanism (API 23+),
+    // so the constant is always valid at runtime here.
+    @SuppressLint("InlinedApi")
     private fun handle() {
         // Config-init trap: Config.globalConfig() THROWS on a cold start. This activity is a valid
         // cold-start entry point of the process, so initialize the global config first, mirroring

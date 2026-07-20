@@ -82,11 +82,11 @@ private fun ShortSwipeCalibrationScreen(
     onSave: (Int, Int) -> Unit,
     onBack: () -> Unit
 ) {
-    var minDistance by remember { mutableStateOf(initialMinDistance.toFloat()) }
-    var maxDistance by remember { mutableStateOf(initialMaxDistance.toFloat()) }
+    var minDistance by remember { mutableFloatStateOf(initialMinDistance.toFloat()) }
+    var maxDistance by remember { mutableFloatStateOf(initialMaxDistance.toFloat()) }
     var feedbackText by remember { mutableStateOf("Touch and drag to test") }
     var feedbackColor by remember { mutableStateOf(Color.Gray) }
-    var lastDistance by remember { mutableStateOf(0f) }
+    var lastDistance by remember { mutableFloatStateOf(0f) }
 
     // The thresholds are PERCENT OF KEY DIAGONAL (the engine compares displacement against
     // getKeyHypotenuse(key) * pct/100 of the actual touched key). The practice pad has no

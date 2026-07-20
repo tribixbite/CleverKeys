@@ -940,12 +940,12 @@ class Config private constructor(
 
     fun set_clipboard_history_enabled(e: Boolean) {
         clipboard_history_enabled = e
-        _prefs.edit().putBoolean("clipboard_history_enabled", e).commit()
+        _prefs.edit().putBoolean("clipboard_history_enabled", e).apply()
     }
 
     fun set_clipboard_history_limit(limit: Int) {
         clipboard_history_limit = limit
-        _prefs.edit().putInt("clipboard_history_limit", limit).commit()
+        _prefs.edit().putInt("clipboard_history_limit", limit).apply()
     }
 
     /** Re-read clipboard_history_duration from SharedPreferences.
@@ -972,12 +972,12 @@ class Config private constructor(
 
     fun set_clipboard_pane_height_percent(percent: Int) {
         clipboard_pane_height_percent = percent.coerceIn(10, 50)
-        _prefs.edit().putInt("clipboard_pane_height_percent", clipboard_pane_height_percent).commit()
+        _prefs.edit().putInt("clipboard_pane_height_percent", clipboard_pane_height_percent).apply()
     }
 
     fun set_gif_enabled(enabled: Boolean) {
         gif_enabled = enabled
-        _prefs.edit().putBoolean("gif_enabled", enabled).commit()
+        _prefs.edit().putBoolean("gif_enabled", enabled).apply()
     }
 
     private fun get_dip_pref(dm: DisplayMetrics, pref_name: String, def: Float): Float {

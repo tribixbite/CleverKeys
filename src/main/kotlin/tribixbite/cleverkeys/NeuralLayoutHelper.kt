@@ -265,6 +265,7 @@ class NeuralLayoutHelper(
                 Log.d(
                     TAG,
                     String.format(
+                        java.util.Locale.ROOT,
                         "Set QWERTY bounds: top=%.0f, height=%.0f (q.y=%.0f, m.y=%.0f)",
                         qwertyTop, qwertyHeight, qPos.y, mPos.y
                     )
@@ -279,6 +280,7 @@ class NeuralLayoutHelper(
                 Log.d(
                     TAG,
                     String.format(
+                        java.util.Locale.ROOT,
                         "Touch Y-offset: %.0f pixels (%.1f%% of row height %.0f)",
                         touchYOffset, _config.finger_occlusion_offset, rowHeight
                     )
@@ -291,17 +293,18 @@ class NeuralLayoutHelper(
                 _predictionCoordinator.getNeuralEngine()!!.setMargins(marginLeft, marginRight)
                 Log.d(
                     TAG,
-                    String.format("Margins: left=%.0f, right=%.0f pixels", marginLeft, marginRight)
+                    String.format(java.util.Locale.ROOT, "Margins: left=%.0f, right=%.0f pixels", marginLeft, marginRight)
                 )
 
                 // Debug output only when debug mode is active
                 if (_debugMode) {
-                    sendDebugLog(String.format(">>> Neural engine: %d key positions set\n", keyPositions.size))
-                    sendDebugLog(String.format(">>> QWERTY bounds: top=%.0f, height=%.0f\n", qwertyTop, qwertyHeight))
-                    sendDebugLog(String.format(">>> Touch Y-offset: %.0f px (finger occlusion compensation)\n", touchYOffset))
+                    sendDebugLog(String.format(java.util.Locale.ROOT, ">>> Neural engine: %d key positions set\n", keyPositions.size))
+                    sendDebugLog(String.format(java.util.Locale.ROOT, ">>> QWERTY bounds: top=%.0f, height=%.0f\n", qwertyTop, qwertyHeight))
+                    sendDebugLog(String.format(java.util.Locale.ROOT, ">>> Touch Y-offset: %.0f px (finger occlusion compensation)\n", touchYOffset))
                     val zPos = keyPositions['z'] ?: mPos // getOrDefault is API 24; values are non-null
                     sendDebugLog(
                         String.format(
+                            java.util.Locale.ROOT,
                             ">>> Samples: q=(%.0f,%.0f) a=(%.0f,%.0f) z=(%.0f,%.0f)\n",
                             qPos.x, qPos.y, aPos.x, aPos.y, zPos.x, zPos.y
                         )
@@ -311,7 +314,7 @@ class NeuralLayoutHelper(
                 Log.w(TAG, "Cannot calculate QWERTY bounds - missing q or m key positions")
                 // Debug output only when debug mode is active
                 if (_debugMode) {
-                    sendDebugLog(String.format(">>> Neural engine: %d key positions set\n", keyPositions.size))
+                    sendDebugLog(String.format(java.util.Locale.ROOT, ">>> Neural engine: %d key positions set\n", keyPositions.size))
                 }
             }
         } else {

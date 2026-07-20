@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys.theme
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.view.ContextThemeWrapper
 import tribixbite.cleverkeys.Config
@@ -295,6 +296,9 @@ class ThemeProvider(
     }
 
     companion object {
+        // Process-lifetime singleton holding only the applicationContext (see getInstance),
+        // so it never leaks an Activity/Service. The reference lives as long as the process.
+        @SuppressLint("StaticFieldLeak")
         @Volatile
         private var instance: ThemeProvider? = null
 

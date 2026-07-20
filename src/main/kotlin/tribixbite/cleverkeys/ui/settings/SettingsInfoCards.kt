@@ -223,11 +223,10 @@ internal fun SettingsActivity.FAQItemCard(item: FAQItem) {
 internal fun SettingsActivity.loadVersionInfo(): Properties {
     val props = Properties()
     try {
+        // Static resource name → direct R reference (no reflection needed).
         val reader = BufferedReader(
             InputStreamReader(
-                resources.openRawResource(
-                    resources.getIdentifier("version_info", "raw", packageName)
-                )
+                resources.openRawResource(R.raw.version_info)
             )
         )
         props.load(reader)

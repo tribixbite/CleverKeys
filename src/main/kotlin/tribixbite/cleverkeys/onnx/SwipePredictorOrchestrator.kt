@@ -1,6 +1,7 @@
 package tribixbite.cleverkeys.onnx
 
 import ai.onnxruntime.OrtEnvironment
+import android.annotation.SuppressLint
 import ai.onnxruntime.OrtSession
 import android.content.Context
 import android.graphics.PointF
@@ -43,6 +44,9 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
         // user-supplied override MUST be clamped to this ceiling.
         const val MODEL_MAX_SEQUENCE_LENGTH = 250
         private val instanceLock = Any()
+        // Process-lifetime singleton holding only the applicationContext (see getInstance),
+        // so it never leaks an Activity/Service. The reference lives as long as the process.
+        @SuppressLint("StaticFieldLeak")
         @Volatile private var instance: SwipePredictorOrchestrator? = null
 
         @JvmStatic
@@ -321,13 +325,13 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
                 val showCount = minOf(5, coords.size)
                 for (i in 0 until showCount) {
                     val p = coords[i]
-                    sb.append("  [$i] (${String.format("%.1f", p.x)}, ${String.format("%.1f", p.y)})\n")
+                    sb.append("  [$i] (${String.format(java.util.Locale.ROOT, "%.1f", p.x)}, ${String.format(java.util.Locale.ROOT, "%.1f", p.y)})\n")
                 }
                 if (coords.size > 10) {
                     sb.append("  ... ${coords.size - 10} more points ...\n")
                     for (i in coords.size - 5 until coords.size) {
                         val p = coords[i]
-                        sb.append("  [$i] (${String.format("%.1f", p.x)}, ${String.format("%.1f", p.y)})\n")
+                        sb.append("  [$i] (${String.format(java.util.Locale.ROOT, "%.1f", p.x)}, ${String.format(java.util.Locale.ROOT, "%.1f", p.y)})\n")
                     }
                 }
                 logDebug(sb.toString())
@@ -398,16 +402,16 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
                                 features.actualLength - 1 -> "LAST"
                                 else -> "MID"
                             }
-                            sb.append("   $label[$idx]: pos=(${String.format("%.3f", p.x)}, ${String.format("%.3f", p.y)})")
-                            sb.append(" vel=(${String.format("%.4f", p.vx)}, ${String.format("%.4f", p.vy)})")
-                            sb.append(" acc=(${String.format("%.4f", p.ax)}, ${String.format("%.4f", p.ay)})\n")
+                            sb.append("   $label[$idx]: pos=(${String.format(java.util.Locale.ROOT, "%.3f", p.x)}, ${String.format(java.util.Locale.ROOT, "%.3f", p.y)})")
+                            sb.append(" vel=(${String.format(java.util.Locale.ROOT, "%.4f", p.vx)}, ${String.format(java.util.Locale.ROOT, "%.4f", p.vy)})")
+                            sb.append(" acc=(${String.format(java.util.Locale.ROOT, "%.4f", p.ax)}, ${String.format(java.util.Locale.ROOT, "%.4f", p.ay)})\n")
                         }
                     }
                     // Also show first padded position to verify padding
                     if (features.actualLength < features.normalizedPoints.size) {
                         val padIdx = features.actualLength
                         val p = features.normalizedPoints[padIdx]
-                        sb.append("   PAD[$padIdx]: pos=(${String.format("%.3f", p.x)}, ${String.format("%.3f", p.y)}) (should be 0.0)\n")
+                        sb.append("   PAD[$padIdx]: pos=(${String.format(java.util.Locale.ROOT, "%.3f", p.x)}, ${String.format(java.util.Locale.ROOT, "%.3f", p.y)}) (should be 0.0)\n")
                     }
                     sb.append("─────────────────────────────────────────────────────────\n")
                     logDebug(sb.toString())
@@ -488,7 +492,7 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
                 sb.append("\n🔬 RAW BEAM SEARCH OUTPUT (before vocab filtering):\n")
                 sb.append("─────────────────────────────────────────────────────────\n")
                 candidates.take(15).forEachIndexed { idx, c ->
-                    sb.append("  #${idx + 1}: \"${c.word}\" (raw_conf=${String.format("%.4f", c.confidence)})\n")
+                    sb.append("  #${idx + 1}: \"${c.word}\" (raw_conf=${String.format(java.util.Locale.ROOT, "%.4f", c.confidence)})\n")
                 }
                 if (candidates.size > 15) {
                     sb.append("  ... and ${candidates.size - 15} more\n")

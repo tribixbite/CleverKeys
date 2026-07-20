@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys.ml
 
+import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
@@ -708,6 +709,9 @@ class SwipeMLDataStore private constructor(context: Context) :
         private const val PREF_CALIBRATION_COUNT = "calibration_swipes"
         private const val PREF_USER_COUNT = "user_swipes"
 
+        // Process-lifetime singleton holding only the applicationContext (see getInstance),
+        // so it never leaks an Activity/Service. The reference lives as long as the process.
+        @SuppressLint("StaticFieldLeak")
         @Volatile
         private var _instance: SwipeMLDataStore? = null
 

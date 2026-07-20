@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys.gif
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -275,6 +276,9 @@ class GifPackManager private constructor(private val context: Context) {
         const val GITHUB_RELEASES_URL =
             "https://github.com/tribixbite/CleverKeys/releases/tag/CleverKeys-GIF"
 
+        // Process-lifetime singleton holding only the applicationContext (see getInstance),
+        // so it never leaks an Activity/Service. release() clears it when GIF is disabled.
+        @SuppressLint("StaticFieldLeak")
         @Volatile
         private var instance: GifPackManager? = null
 

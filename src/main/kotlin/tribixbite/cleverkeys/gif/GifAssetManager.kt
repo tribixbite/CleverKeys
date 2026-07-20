@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys.gif
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.drawable.Drawable
 import android.net.Uri
@@ -281,6 +282,9 @@ class GifAssetManager private constructor(private val context: Context) {
     companion object {
         private const val TAG = "GifAssetManager"
 
+        // Process-lifetime singleton holding only the applicationContext (see getInstance),
+        // so it never leaks an Activity/Service. release() clears it when GIF is disabled.
+        @SuppressLint("StaticFieldLeak")
         @Volatile
         private var instance: GifAssetManager? = null
 

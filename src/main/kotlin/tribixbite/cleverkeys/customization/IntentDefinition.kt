@@ -1,5 +1,7 @@
 package tribixbite.cleverkeys.customization
 
+import android.annotation.SuppressLint
+
 /**
  * Definition of an intent to be executed.
  */
@@ -53,6 +55,11 @@ data class IntentDefinition(
         /**
          * Common intent presets for quick selection.
          */
+        // The "/data/data/com.termux/files/usr/bin/echo" paths below are Termux's OWN
+        // binary path (a foreign package), passed as the RUN_COMMAND_PATH extra to Termux's
+        // RunCommandService. They are intentionally absolute Termux paths — NOT this app's
+        // storage — so Context.getFilesDir() is inapplicable here.
+        @SuppressLint("SdCardPath")
         val PRESETS: List<IntentDefinition> = listOf(
             // Browser
             IntentDefinition(

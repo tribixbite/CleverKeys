@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys.gif
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
@@ -104,6 +105,9 @@ class GifGridManager(
     /**
      * Search GIFs by query.
      */
+    // notifyDataSetChanged is correct here: the entire gifList is swapped for a new page/
+    // search result set (every item changes), so there is no meaningful granular delta.
+    @SuppressLint("NotifyDataSetChanged")
     fun search(query: String) {
         currentSearchQuery = query
         currentPage = 0
@@ -141,6 +145,9 @@ class GifGridManager(
     fun hasNextPage(): Boolean = (currentPage + 1) * ITEMS_PER_PAGE < totalItems
     fun hasPreviousPage(): Boolean = currentPage > 0
 
+    // notifyDataSetChanged is correct here: the entire gifList is swapped for a new category
+    // page (every item changes), so there is no meaningful granular delta.
+    @SuppressLint("NotifyDataSetChanged")
     private suspend fun loadCategory(category: GifCategory) {
         totalItems = database.getCategoryCount(category)
         gifList = database.getGifsByCategory(category, ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
@@ -152,6 +159,9 @@ class GifGridManager(
     }
 
     /** Reload current view (category or search) at current page offset. */
+    // notifyDataSetChanged is correct here: the entire gifList is swapped for a new page
+    // (every item changes), so there is no meaningful granular delta.
+    @SuppressLint("NotifyDataSetChanged")
     private suspend fun reloadCurrentView() {
         if (currentSearchQuery.isNotBlank()) {
             gifList = database.searchGifs(currentSearchQuery, ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)

@@ -356,7 +356,7 @@ class OptimizedVocabulary(private val context: Context) {
             val numToShow = min(10, rawPredictions.size)
             for (i in 0 until numToShow) {
                 val candidate = rawPredictions[i]
-                debug.append(String.format("#%d: \"%s\" (NN confidence: %.4f)\n", i + 1, candidate.word, candidate.confidence))
+                debug.append(String.format(Locale.ROOT, "#%d: \"%s\" (NN confidence: %.4f)\n", i + 1, candidate.word, candidate.confidence))
             }
             val debugMsg = debug.toString()
             Log.d(TAG, debugMsg)
@@ -493,7 +493,7 @@ class OptimizedVocabulary(private val context: Context) {
                     val effectiveMinFreq = max(hardcodedMinFreq, configNormalizedMinFreq)
 
                     if (info.frequency < effectiveMinFreq) {
-                        if (debugMode) detailedLog?.append(String.format("❌ \"%s\" - BELOW FREQUENCY THRESHOLD (freq=%.4f < effective_min=%.4f (hardcoded=%.4f, config=%.4f) for length %d)\n",
+                        if (debugMode) detailedLog?.append(String.format(Locale.ROOT, "❌ \"%s\" - BELOW FREQUENCY THRESHOLD (freq=%.4f < effective_min=%.4f (hardcoded=%.4f, config=%.4f) for length %d)\n",
                             word, info.frequency, effectiveMinFreq, hardcodedMinFreq, configNormalizedMinFreq, word.length))
                         continue // Below threshold
                     }
@@ -521,7 +521,7 @@ class OptimizedVocabulary(private val context: Context) {
             // DEBUG: Show successful candidates with all scoring details
             if (debugMode) {
                 val displayInfo = if (displayWord != word) " [mapped from \"$word\"]" else ""
-                detailedLog?.append(String.format("✅ \"%s\"%s - KEPT (tier=%d, freq=%.4f, boost=%.2fx, NN=%.4f → score=%.4f) [%s]\n",
+                detailedLog?.append(String.format(Locale.ROOT, "✅ \"%s\"%s - KEPT (tier=%d, freq=%.4f, boost=%.2fx, NN=%.4f → score=%.4f) [%s]\n",
                     displayWord, displayInfo, info.tier, info.frequency, boost, candidate.confidence, score, sourceLabel))
             }
         }
@@ -574,7 +574,7 @@ class OptimizedVocabulary(private val context: Context) {
                                 validPredictions.add(FilteredPrediction(customWord, score, confidence, normalizedFreq, "autocorrect"))
 
                                 if (debugMode) {
-                                    val matchMsg = String.format("🔄 AUTOCORRECT: \"%s\" (custom) matches \"%s\" (beam) → added with score=%.4f\n",
+                                    val matchMsg = String.format(Locale.ROOT, "🔄 AUTOCORRECT: \"%s\" (custom) matches \"%s\" (beam) → added with score=%.4f\n",
                                         customWord, beamWord, score)
                                     Log.d(TAG, matchMsg)
                                     sendDebugLog(matchMsg)
@@ -605,7 +605,7 @@ class OptimizedVocabulary(private val context: Context) {
         if (shouldFuzzyMatch) {
             try {
                 if (debugMode) {
-                    val fuzzyMsg = String.format("\n🔍 MAIN DICTIONARY FUZZY MATCHING (validPredictions=%d, trying to rescue rejected beam outputs):\n", validPredictions.size)
+                    val fuzzyMsg = String.format(Locale.ROOT, "\n🔍 MAIN DICTIONARY FUZZY MATCHING (validPredictions=%d, trying to rescue rejected beam outputs):\n", validPredictions.size)
                     Log.d(TAG, fuzzyMsg)
                     sendDebugLog(fuzzyMsg)
                 }
@@ -698,7 +698,7 @@ class OptimizedVocabulary(private val context: Context) {
                             val actualFirst = bestMatch[0]
                             if (actualFirst != expectedFirst) {
                                 if (debugMode) {
-                                    val matchMsg = String.format("❌ DICT FUZZY REJECTED: \"%s\" (dict) for \"%s\" (beam #%d, NN=%.4f) - wrong starting letter (expected '%c', got '%c')\n",
+                                    val matchMsg = String.format(Locale.ROOT, "❌ DICT FUZZY REJECTED: \"%s\" (dict) for \"%s\" (beam #%d, NN=%.4f) - wrong starting letter (expected '%c', got '%c')\n",
                                         bestMatch, beamWord, i + 1, beamConfidence, expectedFirst, actualFirst)
                                     Log.d(TAG, matchMsg)
                                     sendDebugLog(matchMsg)
@@ -711,7 +711,7 @@ class OptimizedVocabulary(private val context: Context) {
                             validPredictions.add(FilteredPrediction(bestMatch, bestScore, beamConfidence, bestFrequency, bestSource!!))
 
                             if (debugMode) {
-                                val matchMsg = String.format("🔄 DICT FUZZY: \"%s\" (dict) matches \"%s\" (beam #%d, NN=%.4f) → added with score=%.4f\n",
+                                val matchMsg = String.format(Locale.ROOT, "🔄 DICT FUZZY: \"%s\" (dict) matches \"%s\" (beam #%d, NN=%.4f) → added with score=%.4f\n",
                                     bestMatch, beamWord, i + 1, beamConfidence, bestScore)
                                 Log.d(TAG, matchMsg)
                                 sendDebugLog(matchMsg)
@@ -810,7 +810,7 @@ class OptimizedVocabulary(private val context: Context) {
                             )
 
                             if (debugMode) {
-                                val msg = String.format("📝 NON-PAIRED CONTRACTION: \"%s\" → REPLACED with \"%s\" (score=%.4f)\n",
+                                val msg = String.format(Locale.ROOT, "📝 NON-PAIRED CONTRACTION: \"%s\" → REPLACED with \"%s\" (score=%.4f)\n",
                                     word, contraction, pred.score)
                                 Log.d(TAG, msg)
                                 sendDebugLog(msg)
@@ -840,7 +840,7 @@ class OptimizedVocabulary(private val context: Context) {
                             )
 
                             if (debugMode) {
-                                val msg = String.format("📝 CONTRACTION VARIANT: \"%s\" → added \"%s\" (freq=%.4f, score=%.4f vs base=%.4f)\n",
+                                val msg = String.format(Locale.ROOT, "📝 CONTRACTION VARIANT: \"%s\" → added \"%s\" (freq=%.4f, score=%.4f vs base=%.4f)\n",
                                     word, contraction, contractionFreq, variantScore, pred.score)
                                 Log.d(TAG, msg)
                                 sendDebugLog(msg)
@@ -904,7 +904,7 @@ class OptimizedVocabulary(private val context: Context) {
                         )
 
                         if (debugMode) {
-                            val msg = String.format("🌍 SECONDARY: \"%s\" → \"%s\" (score=%.4f)\n",
+                            val msg = String.format(Locale.ROOT, "🌍 SECONDARY: \"%s\" → \"%s\" (score=%.4f)\n",
                                 word, result.bestCanonical, score)
                             Log.d(TAG, msg)
                             sendDebugLog(msg)
@@ -929,7 +929,7 @@ class OptimizedVocabulary(private val context: Context) {
             for (i in 0 until numToShow) {
                 val pred = validPredictions[i]
                 val displayInfo = if (pred.word == pred.displayText) "" else " (display=\"" + pred.displayText + "\")"
-                ranking.append(String.format("#%d: \"%s\"%s (score=%.4f, NN=%.4f, freq=%.4f) [%s]\n",
+                ranking.append(String.format(Locale.ROOT, "#%d: \"%s\"%s (score=%.4f, NN=%.4f, freq=%.4f) [%s]\n",
                     i + 1, pred.word, displayInfo, pred.score, pred.confidence, pred.frequency, pred.source))
             }
             ranking.append("─────────────────────────────────────────────────────────\n")
@@ -1721,7 +1721,7 @@ class OptimizedVocabulary(private val context: Context) {
 
                         // DEBUG: Log each custom word loaded
                         if (Log.isLoggable(TAG, Log.DEBUG)) {
-                            val debugMsg = String.format("  Custom word loaded: \"%s\" (freq=%d → normalized=%.4f, tier=%d)\n",
+                            val debugMsg = String.format(Locale.ROOT, "  Custom word loaded: \"%s\" (freq=%d → normalized=%.4f, tier=%d)\n",
                                 word, frequency, normalizedFreq, tier)
                             Log.d(TAG, debugMsg)
                             sendDebugLog(debugMsg)

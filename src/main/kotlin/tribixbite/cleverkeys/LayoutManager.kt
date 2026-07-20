@@ -202,12 +202,11 @@ class LayoutManager(
             InputType.TYPE_CLASS_DATETIME -> {
                 return when (config.selected_number_layout) {
                     NumberLayout.PIN -> {
-                        val pinId = context.resources.getIdentifier("pin", "raw", context.packageName)
-                        loadPinentry(pinId)
+                        // Static resource names → direct R references (no reflection needed).
+                        loadPinentry(R.raw.pin)
                     }
                     NumberLayout.NUMBER -> {
-                        val numId = context.resources.getIdentifier("numeric", "raw", context.packageName)
-                        loadNumpad(numId)
+                        loadNumpad(R.raw.numeric)
                     }
                     else -> null
                 }

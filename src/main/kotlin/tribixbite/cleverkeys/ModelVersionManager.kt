@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Build
@@ -52,6 +53,9 @@ class ModelVersionManager(private val context: Context) {
         private const val MIN_SUCCESS_RATE = 0.5f // 50%
         private const val ROLLBACK_COOLDOWN_MS = 60000L // 1 minute
 
+        // Process-lifetime singleton holding only the applicationContext (see getInstance),
+        // so it never leaks an Activity/Service. The reference lives as long as the process.
+        @SuppressLint("StaticFieldLeak")
         @Volatile
         private var instance: ModelVersionManager? = null
 
@@ -371,7 +375,7 @@ class ModelVersionManager(private val context: Context) {
             sb.append("  ${current.versionName}\n")
             sb.append("  Successes: ${current.successCount}\n")
             sb.append("  Failures: ${current.failureCount}\n")
-            sb.append("  Success Rate: ${String.format("%.1f", current.getSuccessRate() * 100)}%\n")
+            sb.append("  Success Rate: ${String.format(java.util.Locale.ROOT, "%.1f", current.getSuccessRate() * 100)}%\n")
             sb.append("  Status: ${if (current.isHealthy()) "✅ Healthy" else "⚠️ Unhealthy"}\n")
             if (current.isPinned) {
                 sb.append("  📌 PINNED\n")
@@ -385,7 +389,7 @@ class ModelVersionManager(private val context: Context) {
         if (previous != null) {
             sb.append("Previous Version:\n")
             sb.append("  ${previous.versionName}\n")
-            sb.append("  Success Rate: ${String.format("%.1f", previous.getSuccessRate() * 100)}%\n")
+            sb.append("  Success Rate: ${String.format(java.util.Locale.ROOT, "%.1f", previous.getSuccessRate() * 100)}%\n")
             sb.append("\n")
         }
 

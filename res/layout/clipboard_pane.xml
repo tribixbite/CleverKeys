@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Overdraw suppressed: inflated into the IME window (CleverKeysIMETheme) whose
+     windowBackground is TRANSPARENT, so this root MUST paint ?attr/colorKeyboard or the
+     clipboard pane would be see-through. Lint cannot detect the transparent IME window. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:background="?attr/colorKeyboard"
     android:hardwareAccelerated="false"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    tools:ignore="Overdraw">
 
   <!-- Combined row: Tabs + Search + Close -->
   <LinearLayout

@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.ContextWrapper
 import android.graphics.Canvas
@@ -229,6 +230,12 @@ class Keyboard2View @JvmOverloads constructor(
      * Get navigation bar height from system resources.
      * Fallback for when WindowInsets aren't available yet.
      */
+    // Intentional resource reflection: this is the pre-WindowInsets fallback for
+    // positioning the IME above the nav bar. The framework exposes no public API for
+    // the nav-bar height, so reading the internal "config_showNavigationBar" bool and
+    // "navigation_bar_height" dimen via getIdentifier is the established technique.
+    // The primary path is onApplyWindowInsets(); this only runs when insets are 0.
+    @SuppressLint("DiscouragedApi", "InternalInsetResource")
     private fun getNavigationBarHeight(): Int {
         // Check if device has navigation bar
         val hasNavBar = resources.getIdentifier("config_showNavigationBar", "bool", "android")
@@ -325,8 +332,7 @@ class Keyboard2View @JvmOverloads constructor(
 
     @Suppress("DEPRECATION")
     fun refresh_navigation_bar(context: Context) {
-        if (VERSION.SDK_INT < 21)
-            return
+        // minSdk 21: no lower SDK guard needed here.
         val w = getParentWindow(context) ?: return
 
         // KEY FIX: Allow IME window to draw behind system bars
@@ -856,6 +862,11 @@ class Keyboard2View @JvmOverloads constructor(
      * Launch text assist activity using ACTION_PROCESS_TEXT intent.
      * This allows apps like Google Assistant, translation services, etc. to process selected text.
      */
+    // Intent.ACTION_PROCESS_TEXT / EXTRA_PROCESS_TEXT* (API 23) and android.R.id.textAssist
+    // (API 26) are compile-time-inlined constants. On older APIs the process-text intent
+    // resolves to no handler (chooser empty / caught) and performContextMenuAction() is a
+    // safe no-op, so this degrades gracefully rather than crashing.
+    @SuppressLint("InlinedApi")
     private fun launchTextAssistActivity(inputConnection: android.view.inputmethod.InputConnection) {
         // Get selected text
         val selectedText = inputConnection.getSelectedText(0)?.toString()
@@ -894,6 +905,10 @@ class Keyboard2View @JvmOverloads constructor(
      * Launch replace text activity. Since most apps don't support android.R.id.replaceText,
      * we use ACTION_PROCESS_TEXT with a hint that this is for replacement.
      */
+    // Intent.ACTION_PROCESS_TEXT / EXTRA_PROCESS_TEXT* (API 23) and android.R.id.replaceText
+    // (API 23) are compile-time-inlined constants. On older APIs the process-text intent
+    // resolves to no handler (caught) and performContextMenuAction() is a safe no-op.
+    @SuppressLint("InlinedApi")
     private fun launchReplaceTextActivity(inputConnection: android.view.inputmethod.InputConnection) {
         // Get selected text
         val selectedText = inputConnection.getSelectedText(0)?.toString()
@@ -1041,7 +1056,11 @@ class Keyboard2View @JvmOverloads constructor(
             prefs.edit()
                 .putString("pref_primary_language", alternatePrimary)
                 .putString("pref_primary_language_alt", currentPrimary)
-                .commit() // Use commit() for synchronous save
+                // apply() is sufficient: the result isn't inspected and the
+                // language switch is driven by the OnSharedPreferenceChangeListener
+                // in CleverKeysService, which fires for apply() writes too. apply()
+                // also flushes on process stop, so the swap survives IME teardown.
+                .apply()
 
             // Show feedback in suggestion bar (Toast suppressed on Android 13+ IME)
             val langName = getLanguageDisplayName(alternatePrimary)
@@ -1456,8 +1475,9 @@ class Keyboard2View @JvmOverloads constructor(
             _insets_right = insets.right
             _insets_bottom = insets.bottom
         }
-        // API 21-28: Use individual deprecated methods (getSystemWindowInsets() not available)
-        else if (VERSION.SDK_INT >= 21) {
+        // API 21-28: Use individual deprecated methods (getSystemWindowInsets() not available).
+        // minSdk 21 guarantees we're at API 21-28 here, so no explicit lower guard is needed.
+        else {
             @Suppress("DEPRECATION")
             _insets_left = wi.systemWindowInsetLeft
             @Suppress("DEPRECATION")

@@ -473,7 +473,7 @@ class SwipeCalibrationActivity : Activity() {
         }
 
         currentWordText.text = currentWord.uppercase()
-        progressText.text = String.format("Word %d of %d", currentIndex + 1, WORDS_PER_SESSION)
+        progressText.text = String.format(Locale.getDefault(), "Word %d of %d", currentIndex + 1, WORDS_PER_SESSION)
         progressBar.progress = currentIndex
 
         updateBenchmarkDisplay()
@@ -487,6 +487,7 @@ class SwipeCalibrationActivity : Activity() {
             val avgTime = predictionTimes.map { it.toLong() }.sum() / predictionTimes.size
 
             benchmarkText.text = String.format(
+                Locale.getDefault(),
                 "📊 Neural Performance: %.1f%% accuracy, %.1fms avg prediction time",
                 accuracy, avgTime / 1000000.0f // Convert nanoseconds to milliseconds
             )
@@ -520,7 +521,7 @@ class SwipeCalibrationActivity : Activity() {
             export.append("    \"trajectory\": [\n")
 
             for (point in data.getTracePoints()) {
-                export.append(String.format("      {\"x\": %.4f, \"y\": %.4f, \"t\": %d},\n",
+                export.append(String.format(Locale.ROOT, "      {\"x\": %.4f, \"y\": %.4f, \"t\": %d},\n",
                     point.x, point.y, point.tDeltaMs))
             }
 
@@ -646,7 +647,7 @@ class SwipeCalibrationActivity : Activity() {
         setter: (Int) -> Unit
     ) {
         val label = TextView(this)
-        label.text = String.format("%s: %d", name, currentValue)
+        label.text = String.format(Locale.getDefault(), "%s: %d", name, currentValue)
         label.setTextColor(0xFFFFFFFF.toInt())
         parent.addView(label)
 
@@ -656,7 +657,7 @@ class SwipeCalibrationActivity : Activity() {
         slider.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
                 val value = min + progress
-                label.text = String.format("%s: %d", name, value)
+                label.text = String.format(Locale.getDefault(), "%s: %d", name, value)
                 setter(value)
             }
             override fun onStartTrackingTouch(seekBar: SeekBar) {}
@@ -674,7 +675,7 @@ class SwipeCalibrationActivity : Activity() {
         setter: (Float) -> Unit
     ) {
         val label = TextView(this)
-        label.text = String.format("%s: %.3f", name, currentValue)
+        label.text = String.format(Locale.getDefault(), "%s: %.3f", name, currentValue)
         label.setTextColor(0xFFFFFFFF.toInt())
         parent.addView(label)
 
@@ -684,7 +685,7 @@ class SwipeCalibrationActivity : Activity() {
         slider.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
                 val value = min + (progress / 1000.0f) * (max - min)
-                label.text = String.format("%s: %.3f", name, value)
+                label.text = String.format(Locale.getDefault(), "%s: %.3f", name, value)
                 setter(value)
             }
             override fun onStartTrackingTouch(seekBar: SeekBar) {}

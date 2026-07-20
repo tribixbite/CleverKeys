@@ -6,7 +6,6 @@ import android.content.SharedPreferences
 import android.os.Build
 import androidx.preference.PreferenceManager
 
-@TargetApi(24)
 object DirectBootAwarePreferences {
     /**
      * On API >= 24, preferences are read from the device protected storage. This
@@ -38,6 +37,10 @@ object DirectBootAwarePreferences {
         }
     }
 
+    // Scoped to this method (not the whole object): createDeviceProtectedStorageContext()
+    // is API 24+. Callers gate this behind a runtime SDK_INT check, so the annotation
+    // stays local and the runtime guards in the public methods remain valid for API 21-23.
+    @TargetApi(24)
     private fun getProtectedPrefs(context: Context): SharedPreferences {
         // AndroidX PreferenceManager.getDefaultSharedPreferencesName is private
         // The standard default name is "${packageName}_preferences"

@@ -472,6 +472,7 @@ class BigramModel private constructor() {
         val totalUnigramCount = languageUnigramProbs.values.sumOf { it.size }
 
         return String.format(
+            java.util.Locale.ROOT,
             "BigramModel: Current Language: %s (%d bigrams, %d unigrams), Total: %d languages, %d bigrams, %d unigrams",
             currentLanguage,
             currentBigrams?.size ?: 0,

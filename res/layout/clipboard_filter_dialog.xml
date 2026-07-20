@@ -31,7 +31,7 @@
             android:layout_weight="1"
             android:textSize="16sp"
             android:textColor="?android:attr/textColorPrimary"/>
-        <Switch
+        <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/filter_private_only"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -68,7 +68,7 @@
             android:layout_weight="1"
             android:textSize="16sp"
             android:textColor="?android:attr/textColorPrimary"/>
-        <Switch
+        <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/date_filter_enabled"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -89,7 +89,7 @@
             android:layout_height="wrap_content"
             android:textSize="16sp"
             android:textColor="?android:attr/textColorPrimary"
-            android:layout_marginRight="8dp"/>
+            android:layout_marginEnd="8dp"/>
         <RadioGroup
             android:id="@+id/date_filter_mode"
             android:orientation="horizontal"
@@ -101,7 +101,7 @@
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
               android:textColor="?android:attr/textColorPrimary"
-              android:layout_marginRight="8dp"/>
+              android:layout_marginEnd="8dp"/>
           <RadioButton
               android:id="@+id/date_filter_after"
               android:text="After"
@@ -240,7 +240,7 @@
               android:layout_weight="1"
               android:textSize="14sp"
               android:textColor="?android:attr/textColorPrimary"/>
-          <Switch
+          <androidx.appcompat.widget.SwitchCompat
               android:id="@+id/filter_tags_match_all"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
@@ -279,18 +279,18 @@
       android:paddingBottom="8dp"
       android:gravity="end">
     <Button
-        android:id="@+id/date_filter_clear"
-        android:text="Clear"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginRight="8dp"
-        style="?android:attr/buttonBarButtonStyle"/>
-    <Button
         android:id="@+id/date_filter_cancel"
         android:text="@android:string/cancel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginRight="8dp"
+        android:layout_marginEnd="8dp"
+        style="?android:attr/buttonBarButtonStyle"/>
+    <Button
+        android:id="@+id/date_filter_clear"
+        android:text="Clear"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
         style="?android:attr/buttonBarButtonStyle"/>
     <Button
         android:id="@+id/date_filter_apply"

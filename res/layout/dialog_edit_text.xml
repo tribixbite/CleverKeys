@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="fill_parent" android:layout_height="wrap_content">
-  <EditText android:id="@+id/text" android:inputType="text" android:importantForAutofill="no" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="10dp"/>
+<!-- Generic single-field dialog body. The accessible label comes from the hosting
+     AlertDialog's title (set per use-site: rename layout, edit extra keys). A static
+     hint/contentDescription here would either shadow the pre-filled value for TalkBack
+     or add a hardcoded string, so LabelFor is suppressed with the dialog title as the
+     label source. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools" android:layout_width="fill_parent" android:layout_height="wrap_content">
+  <EditText android:id="@+id/text" android:inputType="text" android:importantForAutofill="no" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="10dp" tools:ignore="LabelFor"/>
 </LinearLayout>

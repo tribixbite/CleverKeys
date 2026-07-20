@@ -68,10 +68,7 @@ private fun getLayoutXml(context: android.content.Context, layoutName: String): 
             res.openRawResource(id).use { Utils.read_all_utf8(it) }
         } else {
             // Fallback for System or unknown
-            val qwertyId = res.getIdentifier("latn_qwerty_us", "raw", null)
-            if (qwertyId != 0) {
-                res.openRawResource(qwertyId).use { Utils.read_all_utf8(it) }
-            } else ""
+            res.openRawResource(R.raw.latn_qwerty_us).use { Utils.read_all_utf8(it) }
         }
     } catch (e: Exception) {
         ""
@@ -104,12 +101,7 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
     val layoutNames = remember { LayoutsPreference.getLayoutNames(context.resources) }
     val layoutDisplayNames = remember {
         try {
-            val displayNamesId = context.resources.getIdentifier("pref_layout_entries", "array", null)
-            if (displayNamesId != 0) {
-                context.resources.getStringArray(displayNamesId)
-            } else {
-                layoutNames.toTypedArray()
-            }
+            context.resources.getStringArray(R.array.pref_layout_entries)
         } catch (e: Exception) {
             layoutNames.toTypedArray()
         }
@@ -429,7 +421,7 @@ fun AddLayoutDialog(
     onSelectNamed: (String) -> Unit,
     onSelectCustom: () -> Unit
 ) {
-    var selectedTab by remember { mutableStateOf(0) }
+    var selectedTab by remember { mutableIntStateOf(0) }
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -720,13 +712,8 @@ private fun saveLayouts(
 
 private fun readInitialCustomLayout(context: android.content.Context): String {
     return try {
-        val qwertyId = context.resources.getIdentifier("latn_qwerty_us", "raw", null)
-        if (qwertyId != 0) {
-            context.resources.openRawResource(qwertyId).use { inputStream ->
-                Utils.read_all_utf8(inputStream)
-            }
-        } else {
-            ""
+        context.resources.openRawResource(R.raw.latn_qwerty_us).use { inputStream ->
+            Utils.read_all_utf8(inputStream)
         }
     } catch (e: Exception) {
         ""

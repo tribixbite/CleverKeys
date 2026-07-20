@@ -141,13 +141,9 @@ object VibratorCompat {
             }
 
             HapticEvent.TRACKPOINT_ACTIVATE -> {
-                // CLOCK_TICK is extremely subtle - perfect for mode activation
-                // Available from API 21+ (LOLLIPOP)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    HapticFeedbackConstants.CLOCK_TICK
-                } else {
-                    HapticFeedbackConstants.VIRTUAL_KEY
-                }
+                // CLOCK_TICK is extremely subtle - perfect for mode activation.
+                // Available from API 21 (LOLLIPOP), so always present at minSdk 21.
+                HapticFeedbackConstants.CLOCK_TICK
             }
 
             HapticEvent.LONG_PRESS -> {

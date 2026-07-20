@@ -32,31 +32,31 @@ import tribixbite.cleverkeys.theme.KeyboardTheme
 class NeuralSettingsActivity : ComponentActivity() {
 
     // Current parameter values with reactive state - MUST match Defaults in Config.kt
-    private var beamWidth by mutableStateOf(Defaults.NEURAL_BEAM_WIDTH)
-    private var maxLength by mutableStateOf(Defaults.NEURAL_MAX_LENGTH)
-    private var confidenceThreshold by mutableStateOf(Defaults.NEURAL_CONFIDENCE_THRESHOLD)
+    private var beamWidth by mutableIntStateOf(Defaults.NEURAL_BEAM_WIDTH)
+    private var maxLength by mutableIntStateOf(Defaults.NEURAL_MAX_LENGTH)
+    private var confidenceThreshold by mutableFloatStateOf(Defaults.NEURAL_CONFIDENCE_THRESHOLD)
 
     // Advanced Beam Search Parameters - MUST match Defaults in Config.kt
-    private var beamAlpha by mutableStateOf(Defaults.NEURAL_BEAM_ALPHA)
-    private var beamPruneConfidence by mutableStateOf(Defaults.NEURAL_BEAM_PRUNE_CONFIDENCE)
-    private var beamScoreGap by mutableStateOf(Defaults.NEURAL_BEAM_SCORE_GAP)
-    private var adaptiveWidthStep by mutableStateOf(Defaults.NEURAL_ADAPTIVE_WIDTH_STEP)
-    private var scoreGapStep by mutableStateOf(Defaults.NEURAL_SCORE_GAP_STEP)
-    private var temperature by mutableStateOf(Defaults.NEURAL_TEMPERATURE)
-    private var frequencyWeight by mutableStateOf(Defaults.NEURAL_FREQUENCY_WEIGHT)
-    private var smoothingWindow by mutableStateOf(Defaults.SWIPE_SMOOTHING_WINDOW)
+    private var beamAlpha by mutableFloatStateOf(Defaults.NEURAL_BEAM_ALPHA)
+    private var beamPruneConfidence by mutableFloatStateOf(Defaults.NEURAL_BEAM_PRUNE_CONFIDENCE)
+    private var beamScoreGap by mutableFloatStateOf(Defaults.NEURAL_BEAM_SCORE_GAP)
+    private var adaptiveWidthStep by mutableIntStateOf(Defaults.NEURAL_ADAPTIVE_WIDTH_STEP)
+    private var scoreGapStep by mutableIntStateOf(Defaults.NEURAL_SCORE_GAP_STEP)
+    private var temperature by mutableFloatStateOf(Defaults.NEURAL_TEMPERATURE)
+    private var frequencyWeight by mutableFloatStateOf(Defaults.NEURAL_FREQUENCY_WEIGHT)
+    private var smoothingWindow by mutableIntStateOf(Defaults.SWIPE_SMOOTHING_WINDOW)
 
     // Model Configuration - MUST match Defaults in Config.kt
     private var resamplingMode by mutableStateOf(Defaults.NEURAL_RESAMPLING_MODE)
 
     // Prefix Boost Safety - MUST match Defaults in Config.kt
-    private var maxCumulativeBoost by mutableStateOf(Defaults.NEURAL_MAX_CUMULATIVE_BOOST)
+    private var maxCumulativeBoost by mutableFloatStateOf(Defaults.NEURAL_MAX_CUMULATIVE_BOOST)
     private var strictStartChar by mutableStateOf(Defaults.NEURAL_STRICT_START_CHAR)
 
     // Runtime Configuration - MUST match Defaults in Config.kt
     private var batchBeams by mutableStateOf(Defaults.NEURAL_BATCH_BEAMS)
     private var greedySearch by mutableStateOf(Defaults.NEURAL_GREEDY_SEARCH)
-    private var onnxThreads by mutableStateOf(Defaults.ONNX_XNNPACK_THREADS)
+    private var onnxThreads by mutableIntStateOf(Defaults.ONNX_XNNPACK_THREADS)
 
     // Currently selected preset (null = custom settings)
     private var selectedPreset by mutableStateOf<NeuralPreset?>(null)

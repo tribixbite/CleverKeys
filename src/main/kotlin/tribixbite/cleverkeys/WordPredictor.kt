@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
 import android.provider.UserDictionary
@@ -1592,6 +1593,11 @@ class WordPredictor {
      * UNIFIED prediction logic with early fusion of all signals
      * Context is applied to ALL candidates BEFORE selecting top N
      */
+    // The beginSection("WordPredictor.predictInternal") below IS balanced: it is immediately
+    // followed by a try { ... } finally { Trace.endSection() } (see the finally near the end of
+    // this method), so the section always closes on every path. Lint's early-return heuristic
+    // can't see the pairing across the try/finally.
+    @SuppressLint("UnclosedTrace")
     private fun predictInternal(keySequence: String, context: List<String>): PredictionResult {
         if (keySequence.isEmpty()) {
             return PredictionResult(emptyList(), emptyList())

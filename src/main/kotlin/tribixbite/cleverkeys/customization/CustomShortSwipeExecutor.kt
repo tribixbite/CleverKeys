@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys.customization
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
@@ -225,6 +226,10 @@ class CustomShortSwipeExecutor(private val context: Context) {
     /**
      * Execute a command from the CommandRegistry.
      */
+    // android.R.id.undo/redo are int constants (added API 23) inlined at compile time.
+    // On API 21-22 performContextMenuAction() with an unknown id is a safe no-op, so
+    // undo/redo simply degrade gracefully rather than crash.
+    @SuppressLint("InlinedApi")
     private fun executeRegistryCommand(
         command: CommandRegistry.Command,
         inputConnection: InputConnection,
@@ -433,6 +438,10 @@ class CustomShortSwipeExecutor(private val context: Context) {
     /**
      * Execute a command action.
      */
+    // android.R.id.undo/redo are int constants (added API 23) inlined at compile time.
+    // On API 21-22 performContextMenuAction() with an unknown id is a safe no-op, so
+    // undo/redo simply degrade gracefully rather than crash.
+    @SuppressLint("InlinedApi")
     private fun executeCommand(
         command: AvailableCommand?,
         inputConnection: InputConnection,

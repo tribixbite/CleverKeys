@@ -62,12 +62,12 @@ data class TodoEntry(
             hours < 24 -> "${hours}h ago"
             days == 1L -> "Yesterday"
             days < 7 -> "${days}d ago"
-            else -> DATE_FORMAT.format(Date(addedTimestamp))
+            else -> dateFormat().format(Date(addedTimestamp))
         }
     }
 
     /** Format added timestamp as date string (e.g., "Nov 12") */
-    fun formatDate(): String = DATE_FORMAT.format(Date(addedTimestamp))
+    fun formatDate(): String = dateFormat().format(Date(addedTimestamp))
 
     /**
      * Get formatted text with status indicator and time appended.
@@ -126,7 +126,10 @@ data class TodoEntry(
         /** All valid status values */
         val VALID_STATUSES = setOf(STATUS_ACTIVE, STATUS_PLANNED, STATUS_COMPLETED)
 
-        private val DATE_FORMAT = SimpleDateFormat("MMM d", Locale.getDefault())
+        // Built per call so the user's current default locale is honored even
+        // after a runtime locale change (SimpleDateFormat is not thread-safe, so
+        // a fresh instance also avoids sharing mutable state across threads).
+        private fun dateFormat() = SimpleDateFormat("MMM d", Locale.getDefault())
 
         private var cachedSecondaryColor: Int? = null
 

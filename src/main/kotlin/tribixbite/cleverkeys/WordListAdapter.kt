@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys
 
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -21,6 +22,9 @@ abstract class BaseWordAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>()
      * Update word list - instant update without diff calculation
      * PERFORMANCE: No diff means no delay, critical for 50k word searches
      */
+    // notifyDataSetChanged is a deliberate design choice (see class KDoc): the whole 50k-word
+    // list is replaced wholesale, and AsyncListDiffer's granular diff was too slow (~19s).
+    @SuppressLint("NotifyDataSetChanged")
     fun setWords(words: List<DictionaryWord>) {
         currentList = words
         notifyDataSetChanged()

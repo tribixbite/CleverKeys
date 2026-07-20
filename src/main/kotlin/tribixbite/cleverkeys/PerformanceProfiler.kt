@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys
 
+import android.annotation.SuppressLint
 import android.os.Trace
 import android.util.Log
 import java.util.concurrent.ConcurrentHashMap
@@ -55,6 +56,10 @@ object PerformanceProfiler {
      *
      * @param section Section name (max 127 characters)
      */
+    // beginSection() is intentionally decoupled from endSection() (called in end()): this
+    // mirrors android.os.Trace's own start/stop API. Callers own the pairing contract, so
+    // lint cannot verify closure within this method.
+    @SuppressLint("UnclosedTrace")
     @JvmStatic
     fun start(section: String) {
         // Android Trace API (compiled out in release builds)

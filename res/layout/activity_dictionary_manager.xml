@@ -3,8 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="?android:attr/colorBackground">
+    android:orientation="vertical"><!-- Overdraw: window (settingsTheme=AppCompat) already paints ?android:colorBackground; root bg removed to avoid double-paint. -->
 
     <!-- Toolbar -->
     <androidx.appcompat.widget.Toolbar
@@ -14,19 +13,16 @@
         android:background="?attr/colorPrimary"
         android:theme="@style/ThemeOverlay.AppCompat.ActionBar" />
 
-    <!-- Search and Filter Header -->
+    <!-- Search and Filter Header (single-row: EditText + Spinner + Reset).
+         Merged the former outer vertical wrapper into this row — it added only
+         padding + background around this one child (fixes UselessParent). -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
         android:padding="16dp"
         android:background="@color/dict_mgr_header_bg">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
 
             <!-- Search Input -->
             <EditText
@@ -41,6 +37,8 @@
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
                 android:singleLine="true"
+                android:inputType="text"
+                android:importantForAutofill="no"
                 android:imeOptions="actionSearch" />
 
             <!-- Filter Dropdown -->
@@ -62,7 +60,6 @@
                 android:text="Reset"
                 android:background="@color/dict_mgr_button_bg"
                 android:textColor="@color/dict_mgr_button_text" />
-        </LinearLayout>
     </LinearLayout>
 
     <!-- Tab Layout -->

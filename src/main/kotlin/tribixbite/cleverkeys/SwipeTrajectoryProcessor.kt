@@ -392,8 +392,8 @@ class SwipeTrajectoryProcessor {
             val sb = StringBuilder()
             sb.append("\n📐 COORDINATE NORMALIZATION:\n")
             sb.append("─────────────────────────────────────────────────────────\n")
-            sb.append("   Raw X range: [${String.format("%.1f", minRawX)}, ${String.format("%.1f", maxRawX)}] px\n")
-            sb.append("   Raw Y range: [${String.format("%.1f", minRawY)}, ${String.format("%.1f", maxRawY)}] px\n")
+            sb.append("   Raw X range: [${String.format(java.util.Locale.ROOT, "%.1f", minRawX)}, ${String.format(java.util.Locale.ROOT, "%.1f", maxRawX)}] px\n")
+            sb.append("   Raw Y range: [${String.format(java.util.Locale.ROOT, "%.1f", minRawY)}, ${String.format(java.util.Locale.ROOT, "%.1f", maxRawY)}] px\n")
 
             // Show sample transformations (first, middle, last)
             val sampleIndices = listOf(0, coordinates.size / 2, coordinates.size - 1)
@@ -406,7 +406,7 @@ class SwipeTrajectoryProcessor {
                     coordinates.size - 1 -> "LAST"
                     else -> "MID"
                 }
-                sb.append("     $label: raw=(${String.format("%.1f", raw.x)}, ${String.format("%.1f", raw.y)}) → norm=(${String.format("%.3f", norm.x)}, ${String.format("%.3f", norm.y)})\n")
+                sb.append("     $label: raw=(${String.format(java.util.Locale.ROOT, "%.1f", raw.x)}, ${String.format(java.util.Locale.ROOT, "%.1f", raw.y)}) → norm=(${String.format(java.util.Locale.ROOT, "%.3f", norm.x)}, ${String.format(java.util.Locale.ROOT, "%.3f", norm.y)})\n")
             }
 
             if (clampedCount > 0) {

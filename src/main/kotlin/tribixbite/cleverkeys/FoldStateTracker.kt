@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import androidx.core.util.Consumer
@@ -52,6 +53,10 @@ class FoldStateTracker(context: Context) {
     }
 
     companion object {
+        // FEATURE_SENSOR_HINGE_ANGLE is a String constant (public API 30) that is inlined
+        // at compile time. hasSystemFeature() with an unknown feature string simply returns
+        // false on API 21-29, so this safely reports "not foldable" on older devices.
+        @SuppressLint("InlinedApi")
         @JvmStatic
         fun isFoldableDevice(context: Context): Boolean {
             return context.packageManager.hasSystemFeature(PackageManager.FEATURE_SENSOR_HINGE_ANGLE)

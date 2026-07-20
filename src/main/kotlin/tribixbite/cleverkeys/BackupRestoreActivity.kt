@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
@@ -59,12 +60,18 @@ class BackupRestoreActivity : ComponentActivity() {
          * it in @Before, clear it in @After. NOT thread-safe by design —
          * instrumented tests run sequentially.
          */
+        // Test-only hook: non-null ONLY while an instrumented test is running (set in
+        // @Before, cleared in @After), so it never retains a context in production.
+        @SuppressLint("StaticFieldLeak")
         @androidx.annotation.VisibleForTesting
         var testManagerOverride: BackupRestoreManager? = null
 
         /**
          * Test-only override for the passphrase store (mirrors [testManagerOverride]).
          */
+        // Test-only hook: non-null ONLY while an instrumented test is running (set in
+        // @Before, cleared in @After), so it never retains a context in production.
+        @SuppressLint("StaticFieldLeak")
         @androidx.annotation.VisibleForTesting
         var testPassphraseStoreOverride: BackupPassphraseStore? = null
 

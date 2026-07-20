@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Build
@@ -94,6 +95,11 @@ class ThemeSettingsActivity : ComponentActivity() {
 
     private lateinit var prefs: SharedPreferences
 
+    // commit() (not apply()) is required in onThemeSelected: the theme write is
+    // immediately followed by Process.killProcess()/System.exit() to force a clean
+    // restart, so the preference MUST be flushed to disk synchronously before the
+    // process dies — an async apply() could lose the write to the kill.
+    @SuppressLint("ApplySharedPref")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 

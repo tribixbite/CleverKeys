@@ -110,7 +110,7 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
     // Selected key for customization modal - now includes both keyCode and optional KeyboardData.Key
     var selectedKeyCode by remember { mutableStateOf<String?>(null) }
     var selectedKey by remember { mutableStateOf<KeyboardData.Key?>(null) }
-    var selectedKeyRowHeight by remember { mutableStateOf(1.0f) }
+    var selectedKeyRowHeight by remember { mutableFloatStateOf(1.0f) }
 
     // Direction being edited
     var editingDirection by remember { mutableStateOf<SwipeDirection?>(null) }

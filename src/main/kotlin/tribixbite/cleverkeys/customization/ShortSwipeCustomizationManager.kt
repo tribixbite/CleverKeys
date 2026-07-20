@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys.customization
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Build
 import android.util.Log
@@ -372,6 +373,9 @@ class ShortSwipeCustomizationManager private constructor(private val context: Co
             return grouped.mapValues { (_, inner) -> inner.toMap() }
         }
 
+        // Process-lifetime singleton holding only the applicationContext (see getInstance),
+        // so it never leaks an Activity/Service. The reference lives as long as the process.
+        @SuppressLint("StaticFieldLeak")
         @Volatile
         private var instance: ShortSwipeCustomizationManager? = null
 

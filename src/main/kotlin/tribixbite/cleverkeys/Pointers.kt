@@ -440,6 +440,7 @@ class Pointers(
 
                         vlog {
                             String.format(
+                                java.util.Locale.ROOT,
                                 "SHORT_SWIPE: key=%s dx=%.1f dy=%.1f dist=%.1f angle=%.1f° dir=%d→idx=%d(%s)",
                                 ptr.key.keys[0], dx, dy, distance, angleDeg, direction, keyIndex, posName
                             )
@@ -484,6 +485,7 @@ class Pointers(
 
                         vlog {
                             String.format(
+                                java.util.Locale.ROOT,
                                 "SHORT_SWIPE_RESULT: dir=%d found=%s wordCandidate=%b",
                                 direction, gestureValue?.toString() ?: "null", isWordCandidate
                             )

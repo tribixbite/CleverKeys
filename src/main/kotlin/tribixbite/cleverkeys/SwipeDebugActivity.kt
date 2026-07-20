@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.BroadcastReceiver
 import android.content.ClipData
@@ -60,6 +61,10 @@ class SwipeDebugActivity : Activity() {
         }
     }
 
+    // Context.RECEIVER_NOT_EXPORTED is a compile-time-inlined int constant (public API 33).
+    // The flag value is honored by registerReceiver from API 26 onward, which is why it's
+    // used inside the SDK_INT >= O guard below; on API 21-25 the 3-arg form is used.
+    @SuppressLint("InlinedApi")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.swipe_debug_activity)

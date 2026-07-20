@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys
 
+import android.annotation.SuppressLint
 import android.app.ActivityManager
 import android.app.usage.UsageStatsManager
 import android.content.BroadcastReceiver
@@ -206,7 +207,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         }
 
         val activeEntries = _database.getActiveEntryCount()
-        return String.format("Clipboard monitoring active (%d entries)", activeEntries)
+        return String.format(java.util.Locale.ROOT, "Clipboard monitoring active (%d entries)", activeEntries)
     }
 
     fun clearExpiredAndGetHistory(): List<ClipboardEntry> {
@@ -554,10 +555,10 @@ class ClipboardHistoryService private constructor(ctx: Context) {
 
         // Build multi-line summary with active and pinned breakdown
         val sb = StringBuilder()
-        sb.append(String.format("%d active entries (%s)", stats.activeEntries, activeSize))
+        sb.append(String.format(java.util.Locale.ROOT, "%d active entries (%s)", stats.activeEntries, activeSize))
 
         if (stats.pinnedEntries > 0) {
-            sb.append(String.format("\n%d pinned (%s)", stats.pinnedEntries, pinnedSize))
+            sb.append(String.format(java.util.Locale.ROOT, "\n%d pinned (%s)", stats.pinnedEntries, pinnedSize))
         }
 
         return sb.toString()
@@ -567,8 +568,8 @@ class ClipboardHistoryService private constructor(ctx: Context) {
     private fun formatBytes(bytes: Long): String {
         return when {
             bytes < 1024 -> "$bytes B"
-            bytes < 1024 * 1024 -> String.format("%.1f KB", bytes / 1024.0)
-            else -> String.format("%.2f MB", bytes / (1024.0 * 1024.0))
+            bytes < 1024 * 1024 -> String.format(java.util.Locale.ROOT, "%.1f KB", bytes / 1024.0)
+            else -> String.format(java.util.Locale.ROOT, "%.2f MB", bytes / (1024.0 * 1024.0))
         }
     }
 
@@ -849,6 +850,9 @@ class ClipboardHistoryService private constructor(ctx: Context) {
     companion object {
         // Stored callback for deferred initialization
         private var _pendingCallback: ClipboardPasteCallback? = null
+        // Only ever holds ctx.applicationContext (assigned in on_startup) and is nulled after
+        // deferred init runs — never retains an Activity/Service context.
+        @SuppressLint("StaticFieldLeak")
         private var _pendingContext: Context? = null
 
         /**
@@ -914,7 +918,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
             feature is unsupported. Thread-safe via double-checked locking. */
         @JvmStatic
         fun get_service(ctx: Context): ClipboardHistoryService? {
-            if (VERSION.SDK_INT <= 11) return null
+            // minSdk 21 always exceeds the old API<=11 unsupported floor, so no gate is needed.
             return _service ?: synchronized(this) {
                 _service ?: ClipboardHistoryService(ctx).also { _service = it }
             }
@@ -1012,6 +1016,9 @@ class ClipboardHistoryService private constructor(ctx: Context) {
             }
         }
 
+        // Process-lifetime singleton. The service's own constructor stores only
+        // ctx.applicationContext (see `_context`), so this never leaks a shorter-lived context.
+        @SuppressLint("StaticFieldLeak")
         @Volatile private var _service: ClipboardHistoryService? = null
 
         // Deprecated snake_case aliases for Java compatibility

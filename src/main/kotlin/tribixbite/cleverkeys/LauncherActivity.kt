@@ -652,11 +652,11 @@ fun SparkleMagicBackground(isPaused: Boolean = false) {
     // State
     val spells = remember { mutableStateListOf<MagicSpell>() }
     val sparkles = remember { mutableStateListOf<Sparkle>() }
-    var lastSpawnTime by remember { mutableStateOf(0L) }
+    var lastSpawnTime by remember { mutableLongStateOf(0L) }
 
     // Track pause time to adjust animation timing when resuming
-    var pauseStartTime by remember { mutableStateOf(0L) }
-    var totalPausedDuration by remember { mutableStateOf(0L) }
+    var pauseStartTime by remember { mutableLongStateOf(0L) }
+    var totalPausedDuration by remember { mutableLongStateOf(0L) }
 
     // Animation Loop - pause when keyboard is visible to reduce input lag
     LaunchedEffect(isPaused) {

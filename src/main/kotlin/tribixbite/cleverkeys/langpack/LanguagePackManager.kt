@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys.langpack
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
 import android.util.Log
@@ -36,6 +37,9 @@ class LanguagePackManager(private val context: Context) {
         // V2 dictionary magic number: "CKDT"
         private const val DICT_MAGIC = 0x54444B43
 
+        // Process-lifetime singleton holding only the applicationContext (see getInstance),
+        // so it never leaks an Activity/Service. The reference lives as long as the process.
+        @SuppressLint("StaticFieldLeak")
         @Volatile
         private var instance: LanguagePackManager? = null
 

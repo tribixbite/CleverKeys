@@ -1,6 +1,7 @@
 package tribixbite.cleverkeys
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -85,8 +86,8 @@ class SettingsViewModel : ViewModel() {
     var collectedDataList by mutableStateOf<List<SwipeMLData>>(emptyList())
     var collectedDataStats by mutableStateOf<SwipeMLDataStore.DataStatistics?>(null)
     var collectedDataSearchQuery by mutableStateOf("")
-    var collectedDataCurrentPage by mutableStateOf(0)
-    var collectedDataTotalCount by mutableStateOf(0)
+    var collectedDataCurrentPage by mutableIntStateOf(0)
+    var collectedDataTotalCount by mutableIntStateOf(0)
 
     // ── Performance stats viewer ──────────────────────────────────────────────
 

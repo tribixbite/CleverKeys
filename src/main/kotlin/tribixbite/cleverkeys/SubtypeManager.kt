@@ -1,6 +1,5 @@
 package tribixbite.cleverkeys
 
-import android.annotation.TargetApi
 import android.content.Context
 import android.content.res.Resources
 import android.os.Build
@@ -63,7 +62,6 @@ class SubtypeManager(private val context: Context) {
      * @param subtype Input method subtype
      * @return ExtraKeys parsed from subtype, or EMPTY if none
      */
-    @TargetApi(12)
     fun extra_keys_of_subtype(subtype: InputMethodSubtype): ExtraKeys {
         val extraKeys = subtype.getExtraValueOf("extra_keys")
         val script = subtype.getExtraValueOf("script")
@@ -92,7 +90,6 @@ class SubtypeManager(private val context: Context) {
      * @param enabled_subtypes List of enabled subtypes
      * @return Default subtype, or null if none found
      */
-    @TargetApi(12)
     fun defaultSubtypes(enabled_subtypes: List<InputMethodSubtype>): InputMethodSubtype? {
         if (Build.VERSION.SDK_INT < 24) {
             return imm.currentInputMethodSubtype
@@ -123,17 +120,16 @@ class SubtypeManager(private val context: Context) {
         var defaultLayout: KeyboardData? = null
         config.extra_keys_subtype = null
 
-        if (Build.VERSION.SDK_INT >= 12) {
-            val enabledSubtypes = getEnabledSubtypes()
-            val subtype = defaultSubtypes(enabledSubtypes)
+        // minSdk 21: InputMethodSubtype (API 11/12) is always available, no SDK gate needed.
+        val enabledSubtypes = getEnabledSubtypes()
+        val subtype = defaultSubtypes(enabledSubtypes)
 
-            if (subtype != null) {
-                val s = subtype.getExtraValueOf("default_layout")
-                if (s != null) {
-                    defaultLayout = LayoutsPreference.layoutOfString(resources, s)
-                }
-                config.extra_keys_subtype = refreshAccentsOption(enabledSubtypes)
+        if (subtype != null) {
+            val s = subtype.getExtraValueOf("default_layout")
+            if (s != null) {
+                defaultLayout = LayoutsPreference.layoutOfString(resources, s)
             }
+            config.extra_keys_subtype = refreshAccentsOption(enabledSubtypes)
         }
 
         return defaultLayout

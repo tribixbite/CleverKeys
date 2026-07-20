@@ -95,7 +95,12 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
          * [BackupRestoreActivity.testManagerOverride] — used by the migrated
          * ImportPreview tests that exercise the inline preview dispatch.
          */
+        // Not a real leak: this is a test-only hook that instrumented tests set in
+        // @Before and null out in @After, so the BackupRestoreManager (and its Context)
+        // is never retained beyond a single test. Mirrors
+        // BackupRestoreActivity.testManagerOverride, which follows the same pattern.
         @androidx.annotation.VisibleForTesting
+        @android.annotation.SuppressLint("StaticFieldLeak")
         var testBackupRestoreManagerOverride: BackupRestoreManager? = null
     }
 
@@ -239,20 +244,20 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     }
 
     // Settings state for reactive UI
-    internal var beamWidth by mutableStateOf(6)
-    internal var maxLength by mutableStateOf(20)
-    internal var confidenceThreshold by mutableStateOf(0.01f)
-    internal var keyboardHeight by mutableStateOf(28)
-    internal var keyboardHeightLandscape by mutableStateOf(50)
+    internal var beamWidth by mutableIntStateOf(6)
+    internal var maxLength by mutableIntStateOf(20)
+    internal var confidenceThreshold by mutableFloatStateOf(0.01f)
+    internal var keyboardHeight by mutableIntStateOf(28)
+    internal var keyboardHeightLandscape by mutableIntStateOf(50)
     internal var vibrationEnabled by mutableStateOf(false)
     internal var debugEnabled by mutableStateOf(false)
     internal var clipboardHistoryEnabled by mutableStateOf(true)
-    internal var clipboardHistoryLimit by mutableStateOf(Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK)
-    internal var clipboardHistoryDuration by mutableStateOf(-1)  // Minutes; -1 = never expire
-    internal var clipboardPaneHeightPercent by mutableStateOf(30)
-    internal var clipboardMaxItemSizeKb by mutableStateOf(500)
+    internal var clipboardHistoryLimit by mutableIntStateOf(Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK)
+    internal var clipboardHistoryDuration by mutableIntStateOf(-1)  // Minutes; -1 = never expire
+    internal var clipboardPaneHeightPercent by mutableIntStateOf(30)
+    internal var clipboardMaxItemSizeKb by mutableIntStateOf(500)
     internal var clipboardLimitType by mutableStateOf("count") // "count" or "size"
-    internal var clipboardSizeLimitMb by mutableStateOf(10)
+    internal var clipboardSizeLimitMb by mutableIntStateOf(10)
     internal var clipboardExcludePasswordManagers by mutableStateOf(true)  // Privacy: skip password managers
     internal var clipboardRespectSensitiveFlag by mutableStateOf(true)  // #86: Respect IS_SENSITIVE flag
     internal var clipboardTextOnly by mutableStateOf(false)  // v4: Hide media entries
@@ -272,7 +277,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     // GIF Panel (opt-in, off by default)
     internal var gifEnabled by mutableStateOf(Defaults.GIF_ENABLED)
-    internal var gifThumbnailColumns by mutableStateOf(Defaults.GIF_THUMBNAIL_COLUMNS)
+    internal var gifThumbnailColumns by mutableIntStateOf(Defaults.GIF_THUMBNAIL_COLUMNS)
     internal var installedGifPacks by mutableStateOf(listOf<tribixbite.cleverkeys.gif.InstalledPackInfo>())
     // gifImportInProgress/gifImportStatus delegated to settingsViewModel (survive rotation)
     internal var gifImportInProgress: Boolean
@@ -288,7 +293,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var showGifRemovePackDialog: String?
         get() = settingsViewModel.showGifRemovePackDialog
         set(value) { settingsViewModel.showGifRemovePackDialog = value }
-    internal var gifStorageUsed by mutableStateOf(0L)
+    internal var gifStorageUsed by mutableLongStateOf(0L)
 
     internal var autoCapitalizationEnabled by mutableStateOf(true)
     internal var capitalizeIWords by mutableStateOf(true)  // #72: Auto-capitalize I, I'm, I'll, etc.
@@ -303,10 +308,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var autoSpaceBeforeSuggestion by mutableStateOf(true)  // Add leading space before tapped suggestion
     internal var backspaceUndoSwipe by mutableStateOf(true)  // #110: Backspace after swipe deletes entire swiped word
     internal var backspaceUndoAutocorrect by mutableStateOf(true)  // #110: Backspace after autocorrect reverts to original word
-    internal var suggestionBarOpacity by mutableStateOf(90)
+    internal var suggestionBarOpacity by mutableIntStateOf(90)
     internal var autoCorrectEnabled by mutableStateOf(true)
     internal var termuxModeEnabled by mutableStateOf(false)
-    internal var vibrationDuration by mutableStateOf(20)
+    internal var vibrationDuration by mutableIntStateOf(20)
     // Per-event haptic feedback toggles
     internal var hapticKeyPress by mutableStateOf(Defaults.HAPTIC_KEY_PRESS)
     internal var hapticPredictionTap by mutableStateOf(Defaults.HAPTIC_PREDICTION_TAP)
@@ -316,40 +321,40 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var swipeDebugEnabled by mutableStateOf(false)
 
     // Adaptive layout settings (percentages of screen dimensions)
-    internal var marginBottomPortrait by mutableStateOf(Defaults.MARGIN_BOTTOM_PORTRAIT)
-    internal var marginBottomLandscape by mutableStateOf(Defaults.MARGIN_BOTTOM_LANDSCAPE)
-    internal var marginLeftPortrait by mutableStateOf(Defaults.MARGIN_LEFT_PORTRAIT)
-    internal var marginLeftLandscape by mutableStateOf(Defaults.MARGIN_LEFT_LANDSCAPE)
-    internal var marginRightPortrait by mutableStateOf(Defaults.MARGIN_RIGHT_PORTRAIT)
-    internal var marginRightLandscape by mutableStateOf(Defaults.MARGIN_RIGHT_LANDSCAPE)
+    internal var marginBottomPortrait by mutableIntStateOf(Defaults.MARGIN_BOTTOM_PORTRAIT)
+    internal var marginBottomLandscape by mutableIntStateOf(Defaults.MARGIN_BOTTOM_LANDSCAPE)
+    internal var marginLeftPortrait by mutableIntStateOf(Defaults.MARGIN_LEFT_PORTRAIT)
+    internal var marginLeftLandscape by mutableIntStateOf(Defaults.MARGIN_LEFT_LANDSCAPE)
+    internal var marginRightPortrait by mutableIntStateOf(Defaults.MARGIN_RIGHT_PORTRAIT)
+    internal var marginRightLandscape by mutableIntStateOf(Defaults.MARGIN_RIGHT_LANDSCAPE)
 
     // Gesture sensitivity settings
-    internal var swipeDistance by mutableStateOf(23)
-    internal var circleSensitivity by mutableStateOf(2)
-    internal var sliderSensitivity by mutableStateOf(30) // Phase 5: Space bar slider (0-100%)
+    internal var swipeDistance by mutableIntStateOf(23)
+    internal var circleSensitivity by mutableIntStateOf(2)
+    internal var sliderSensitivity by mutableIntStateOf(30) // Phase 5: Space bar slider (0-100%)
 
     // Long press settings
-    internal var longPressTimeout by mutableStateOf(600)
-    internal var longPressInterval by mutableStateOf(65)
+    internal var longPressTimeout by mutableIntStateOf(600)
+    internal var longPressInterval by mutableIntStateOf(65)
     internal var keyRepeatEnabled by mutableStateOf(true)
     internal var keyRepeatBackspaceOnly by mutableStateOf(false)  // #81: Only repeat backspace/nav
 
     // Visual customization settings
-    internal var labelBrightness by mutableStateOf(100)
-    internal var keyboardOpacity by mutableStateOf(100)
-    internal var keyOpacity by mutableStateOf(100)
-    internal var keyActivatedOpacity by mutableStateOf(100)
+    internal var labelBrightness by mutableIntStateOf(100)
+    internal var keyboardOpacity by mutableIntStateOf(100)
+    internal var keyOpacity by mutableIntStateOf(100)
+    internal var keyActivatedOpacity by mutableIntStateOf(100)
 
     // Spacing and sizing settings
-    internal var characterSize by mutableStateOf(115)
-    internal var secondaryLabelSizeScale by mutableStateOf(100) // #133: percent; 100 = unchanged
-    internal var keyVerticalMargin by mutableStateOf(150)
-    internal var keyHorizontalMargin by mutableStateOf(200)
+    internal var characterSize by mutableIntStateOf(115)
+    internal var secondaryLabelSizeScale by mutableIntStateOf(100) // #133: percent; 100 = unchanged
+    internal var keyVerticalMargin by mutableIntStateOf(150)
+    internal var keyHorizontalMargin by mutableIntStateOf(200)
 
     // Border customization settings
     internal var borderConfigEnabled by mutableStateOf(false)
-    internal var customBorderRadius by mutableStateOf(0)
-    internal var customBorderLineWidth by mutableStateOf(0)
+    internal var customBorderRadius by mutableIntStateOf(0)
+    internal var customBorderLineWidth by mutableIntStateOf(0)
 
     // Behavior settings
     internal var doubleTapLockShift by mutableStateOf(false)
@@ -357,17 +362,17 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var smartPunctuationEnabled by mutableStateOf(true) // Attach punctuation to end of last word
 
     // Gesture tuning settings
-    internal var tapDurationThreshold by mutableStateOf(150) // ms
+    internal var tapDurationThreshold by mutableIntStateOf(150) // ms
     internal var doubleSpaceToPeriod by mutableStateOf(true) // Enable double-space-to-period
-    internal var doubleSpaceThreshold by mutableStateOf(500) // ms
-    internal var swipeMinDistance by mutableStateOf(72f) // pixels
-    internal var swipeMinKeyDistance by mutableStateOf(38f) // pixels
-    internal var swipeMinDwellTime by mutableStateOf(10) // ms
-    internal var swipeNoiseThreshold by mutableStateOf(2.0f) // pixels
-    internal var swipeHighVelocityThreshold by mutableStateOf(1000f) // px/sec
-    internal var fingerOcclusionOffset by mutableStateOf(12.5f) // % of row height
-    internal var sliderSpeedSmoothing by mutableStateOf(0.7f) // 0.0-1.0
-    internal var sliderSpeedMax by mutableStateOf(4.0f) // multiplier
+    internal var doubleSpaceThreshold by mutableIntStateOf(500) // ms
+    internal var swipeMinDistance by mutableFloatStateOf(72f) // pixels
+    internal var swipeMinKeyDistance by mutableFloatStateOf(38f) // pixels
+    internal var swipeMinDwellTime by mutableIntStateOf(10) // ms
+    internal var swipeNoiseThreshold by mutableFloatStateOf(2.0f) // pixels
+    internal var swipeHighVelocityThreshold by mutableFloatStateOf(1000f) // px/sec
+    internal var fingerOcclusionOffset by mutableFloatStateOf(12.5f) // % of row height
+    internal var sliderSpeedSmoothing by mutableFloatStateOf(0.7f) // 0.0-1.0
+    internal var sliderSpeedMax by mutableFloatStateOf(4.0f) // multiplier
 
     // Number row and numpad settings
     internal var numberRowMode by mutableStateOf("no_number_row") // "no_number_row", "no_symbols", "symbols"
@@ -380,43 +385,43 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var swipeFinalAutocorrectEnabled by mutableStateOf(true)
     internal var swipeCorrectionPreset by mutableStateOf("balanced")
     internal var swipeFuzzyMatchMode by mutableStateOf("edit_distance")
-    internal var autocorrectMaxLengthDiff by mutableStateOf(2)
-    internal var autocorrectPrefixLength by mutableStateOf(1)
-    internal var autocorrectMaxBeamCandidates by mutableStateOf(3)
-    internal var swipePredictionSource by mutableStateOf(80)
-    internal var swipeCommonWordsBoost by mutableStateOf(1.0f)
-    internal var swipeTop5000Boost by mutableStateOf(1.0f)
-    internal var swipeRareWordsPenalty by mutableStateOf(1.0f)
+    internal var autocorrectMaxLengthDiff by mutableIntStateOf(2)
+    internal var autocorrectPrefixLength by mutableIntStateOf(1)
+    internal var autocorrectMaxBeamCandidates by mutableIntStateOf(3)
+    internal var swipePredictionSource by mutableIntStateOf(80)
+    internal var swipeCommonWordsBoost by mutableFloatStateOf(1.0f)
+    internal var swipeTop5000Boost by mutableFloatStateOf(1.0f)
+    internal var swipeRareWordsPenalty by mutableFloatStateOf(1.0f)
 
     // Swipe trail appearance settings
     internal var swipeTrailEnabled by mutableStateOf(true)
     internal var swipeTrailEffect by mutableStateOf("glow")
-    internal var swipeTrailColor by mutableStateOf(0xFF9B59B6.toInt()) // Jewel purple
-    internal var swipeTrailWidth by mutableStateOf(8.0f)
-    internal var swipeTrailGlowRadius by mutableStateOf(12.0f)
+    internal var swipeTrailColor by mutableIntStateOf(0xFF9B59B6.toInt()) // Jewel purple
+    internal var swipeTrailWidth by mutableFloatStateOf(8.0f)
+    internal var swipeTrailGlowRadius by mutableFloatStateOf(12.0f)
 
     // Word Prediction Advanced settings
     internal var contextAwarePredictionsEnabled by mutableStateOf(true)
     internal var personalizedLearningEnabled by mutableStateOf(true)
     internal var learningAggression by mutableStateOf("BALANCED")
-    internal var predictionContextBoost by mutableStateOf(2.0f)
-    internal var predictionFrequencyScale by mutableStateOf(1000f)
+    internal var predictionContextBoost by mutableFloatStateOf(2.0f)
+    internal var predictionFrequencyScale by mutableFloatStateOf(1000f)
 
     // Auto-correction advanced settings
-    internal var autocorrectMinWordLength by mutableStateOf(3)
-    internal var autocorrectCharMatchThreshold by mutableStateOf(0.67f)
-    internal var autocorrectMinFrequency by mutableStateOf(500)
+    internal var autocorrectMinWordLength by mutableIntStateOf(3)
+    internal var autocorrectCharMatchThreshold by mutableFloatStateOf(0.67f)
+    internal var autocorrectMinFrequency by mutableIntStateOf(500)
 
     // Multi-language settings
     internal var multiLangEnabled by mutableStateOf(false)
     internal var primaryLanguage by mutableStateOf("en")
     internal var secondaryLanguage by mutableStateOf("none") // "none", "es", "fr", etc.
     internal var autoDetectLanguage by mutableStateOf(true)
-    internal var languageDetectionSensitivity by mutableStateOf(0.6f)
-    internal var secondaryPredictionWeight by mutableStateOf(0.9f) // v1.1.94: Secondary dictionary weight
-    internal var prefixBoostMultiplier by mutableStateOf(Defaults.NEURAL_PREFIX_BOOST_MULTIPLIER)
-    internal var prefixBoostMax by mutableStateOf(Defaults.NEURAL_PREFIX_BOOST_MAX)
-    internal var maxCumulativeBoost by mutableStateOf(Defaults.NEURAL_MAX_CUMULATIVE_BOOST)
+    internal var languageDetectionSensitivity by mutableFloatStateOf(0.6f)
+    internal var secondaryPredictionWeight by mutableFloatStateOf(0.9f) // v1.1.94: Secondary dictionary weight
+    internal var prefixBoostMultiplier by mutableFloatStateOf(Defaults.NEURAL_PREFIX_BOOST_MULTIPLIER)
+    internal var prefixBoostMax by mutableFloatStateOf(Defaults.NEURAL_PREFIX_BOOST_MAX)
+    internal var maxCumulativeBoost by mutableFloatStateOf(Defaults.NEURAL_MAX_CUMULATIVE_BOOST)
     internal var strictStartChar by mutableStateOf(Defaults.NEURAL_STRICT_START_CHAR)
     internal var primaryLanguageAlt by mutableStateOf("es") // v1.2.0: Alternate primary for quick toggle
     internal var secondaryLanguageAlt by mutableStateOf("none") // v1.2.0: Alternate secondary for quick toggle
@@ -436,12 +441,12 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     // Short gesture settings
     internal var shortGesturesEnabled by mutableStateOf(true)
-    internal var shortGestureMinDistance by mutableStateOf(37)
-    internal var shortGestureMaxDistance by mutableStateOf(141)
+    internal var shortGestureMinDistance by mutableIntStateOf(37)
+    internal var shortGestureMaxDistance by mutableIntStateOf(141)
 
     // Selection-delete mode settings (backspace swipe+hold)
-    internal var selectionDeleteVerticalThreshold by mutableStateOf(40)
-    internal var selectionDeleteVerticalSpeed by mutableStateOf(0.4f)
+    internal var selectionDeleteVerticalThreshold by mutableIntStateOf(40)
+    internal var selectionDeleteVerticalSpeed by mutableFloatStateOf(0.4f)
 
     // Swipe debug advanced settings
     internal var swipeDebugDetailedLogging by mutableStateOf(false)

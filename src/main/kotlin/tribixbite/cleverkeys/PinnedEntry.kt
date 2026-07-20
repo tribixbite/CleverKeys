@@ -51,12 +51,12 @@ data class PinnedEntry(
             hours < 24 -> "${hours}h ago"
             days == 1L -> "Yesterday"
             days < 7 -> "${days}d ago"
-            else -> DATE_FORMAT.format(Date(pinnedTimestamp))
+            else -> dateFormat().format(Date(pinnedTimestamp))
         }
     }
 
     /** Format pinned timestamp as date string (e.g., "Nov 12") */
-    fun formatDate(): String = DATE_FORMAT.format(Date(pinnedTimestamp))
+    fun formatDate(): String = dateFormat().format(Date(pinnedTimestamp))
 
     /**
      * Get formatted text with pinned time appended.
@@ -89,7 +89,10 @@ data class PinnedEntry(
     }
 
     companion object {
-        private val DATE_FORMAT = SimpleDateFormat("MMM d", Locale.getDefault())
+        // Built per call so the user's current default locale is honored even
+        // after a runtime locale change (SimpleDateFormat is not thread-safe, so
+        // a fresh instance also avoids sharing mutable state across threads).
+        private fun dateFormat() = SimpleDateFormat("MMM d", Locale.getDefault())
 
         private var cachedSecondaryColor: Int? = null
 

@@ -54,8 +54,8 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
 
     // Settings state
     private var clipboardEnabled by mutableStateOf(false)
-    private var historyLimit by mutableStateOf(6)
-    private var historyDuration by mutableStateOf(-1) // minutes; -1 = never expire (default)
+    private var historyLimit by mutableIntStateOf(6)
+    private var historyDuration by mutableIntStateOf(-1) // minutes; -1 = never expire (default)
 
     // Feature toggles
     private var clipboardTextOnly by mutableStateOf(false)
@@ -64,16 +64,16 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
 
     // Media settings state
     private var mediaClipboardEnabled by mutableStateOf(true)
-    private var maxMediaSizeMb by mutableStateOf(10)
+    private var maxMediaSizeMb by mutableIntStateOf(10)
 
     // Statistics state
     private var statsLoading by mutableStateOf(true)
-    private var totalEntries by mutableStateOf(0)
-    private var activeEntries by mutableStateOf(0)
-    private var pinnedEntries by mutableStateOf(0)
-    private var todoEntries by mutableStateOf(0)
-    private var expiredEntries by mutableStateOf(0)
-    private var mediaFileCount by mutableStateOf(0)
+    private var totalEntries by mutableIntStateOf(0)
+    private var activeEntries by mutableIntStateOf(0)
+    private var pinnedEntries by mutableIntStateOf(0)
+    private var todoEntries by mutableIntStateOf(0)
+    private var expiredEntries by mutableIntStateOf(0)
+    private var mediaFileCount by mutableIntStateOf(0)
     private var mediaTotalSizeMb by mutableStateOf("0")
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -167,7 +167,7 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
                     val mediaManager = ClipboardMediaManager(this@ClipboardSettingsActivity)
                     val mediaStats = mediaManager.getStorageStats()
                     mediaFileCount = mediaStats.first
-                    mediaTotalSizeMb = String.format("%.1f", mediaStats.second / (1024.0 * 1024.0))
+                    mediaTotalSizeMb = String.format(java.util.Locale.getDefault(), "%.1f", mediaStats.second / (1024.0 * 1024.0))
                 } catch (e: Exception) {
                     android.util.Log.w(TAG, "Error loading media stats: ${e.message}")
                 }

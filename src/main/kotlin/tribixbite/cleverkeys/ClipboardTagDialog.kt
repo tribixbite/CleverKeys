@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
@@ -342,6 +343,11 @@ object ClipboardTagPanel {
      * Simple flow layout that wraps children horizontally.
      * Used for tag chips that may overflow a single line.
      */
+    // Instantiated programmatically only (see currentChipsContainer/suggestionChipsContainer),
+    // never inflated from XML — its required hSpacing/vSpacing args intentionally preclude the
+    // (Context, AttributeSet) constructors the tools/layout editor look for. Adding those would
+    // create a mis-configured, zero-spacing view inflatable from XML, which we don't want.
+    @SuppressLint("ViewConstructor")
     class FlowLayout(
         context: Context,
         private val hSpacing: Int,

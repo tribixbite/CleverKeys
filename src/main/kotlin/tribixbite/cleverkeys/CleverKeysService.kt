@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys
 
+import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -155,6 +156,11 @@ class CleverKeysService : InputMethodService(),
         private var _customizationMode: Boolean = false
 
         /** Reference to the current service instance for UI components */
+        // Self-reference to the live IME service (a Context). Not a leak: it is assigned in
+        // onCreate() and cleared in onDestroy() (guarded by `_instance == this`), so it never
+        // outlives the service. Callers need the actual service instance for IME operations,
+        // so applicationContext cannot substitute here.
+        @SuppressLint("StaticFieldLeak")
         @Volatile
         private var _instance: CleverKeysService? = null
 
@@ -960,13 +966,15 @@ class CleverKeysService : InputMethodService(),
         return _neuralLayoutBridge.getUserKeyboardHeightPercent()
     }
 
-    // Called by Keyboard2View when swipe typing completes
+    // Called by Keyboard2View when swipe typing completes.
+    // wasShiftActive (v1.32.926): shift state for capitalize-first-letter;
+    // wasShiftLocked (v1.33.8): caps-lock state for ALL CAPS.
     fun handleSwipeTyping(
         swipedKeys: List<KeyboardData.Key>,
         swipePath: List<android.graphics.PointF>,
         timestamps: List<Long>,
-        wasShiftActive: Boolean = false,  // v1.32.926: Pass shift state for capitalize first letter
-        wasShiftLocked: Boolean = false   // v1.33.8: Pass caps lock state for ALL CAPS
+        wasShiftActive: Boolean = false,
+        wasShiftLocked: Boolean = false
     ) {
         // v1.32.350: Delegated to InputCoordinator
         val ic = currentInputConnection

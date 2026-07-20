@@ -51,6 +51,13 @@
     <item name="android:fitsSystemWindows">true</item>
   </style>
 
+  <!-- Swipe Debug Log screen: dark #1e1e1e window background painted by the theme
+       (not the layout root) so the opaque root no longer double-paints over the
+       window background (fixes Overdraw). Everything else inherits settingsTheme. -->
+  <style name="swipeDebugTheme" parent="settingsTheme">
+    <item name="android:windowBackground">#1e1e1e</item>
+  </style>
+
   <!-- Transparent IME Theme to prevent white bar during animation -->
   <style name="CleverKeysIMETheme" parent="android:Theme.DeviceDefault.InputMethod">
     <item name="android:windowBackground">@android:color/transparent</item>
