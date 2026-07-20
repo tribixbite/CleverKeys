@@ -211,4 +211,91 @@
     <string name="gif_search_hint">Rechercher des GIF…</string>
     <string name="gif_close">Fermer le sélecteur de GIF</string>
     <string name="gif_no_results">Aucun GIF trouvé</string>
+
+    <!-- WP8 — Boutons communs, thèmes, personnalisation des glissés courts,
+         touches supplémentaires, chrome des paramètres, cartes d'activités, test clavier -->
+
+    <!-- Boutons communs -->
+    <string name="common_back">Retour</string>
+    <string name="common_cancel">Annuler</string>
+    <string name="common_close">Fermer</string>
+    <string name="common_save">Enregistrer</string>
+    <string name="common_delete">Supprimer</string>
+    <string name="common_apply">Appliquer</string>
+    <string name="common_search">Rechercher</string>
+    <string name="common_clear">Effacer</string>
+    <string name="common_ok">OK</string>
+
+    <!-- Configuration des touches supplémentaires -->
+    <string name="extra_keys_title">Configuration des touches supplémentaires</string>
+    <string name="extra_keys_search_hint">Rechercher des touches supplémentaires…</string>
+    <string name="extra_keys_info">Les touches sélectionnées apparaîtront sur le clavier en fonction de leurs positions préférées</string>
+    <string name="extra_keys_reset">Rétablir les valeurs par défaut</string>
+
+    <!-- Personnalisation des glissés courts -->
+    <string name="short_swipe_title">Personnalisation des glissés courts</string>
+    <string name="short_swipe_show_keyboard">Afficher le clavier</string>
+    <string name="short_swipe_reset_all">Tout réinitialiser</string>
+    <string name="short_swipe_tap_hint">Appuyez sur une touche ci-dessous pour personnaliser ses glissés courts</string>
+    <string name="short_swipe_instruction_title">Appuyez sur une touche pour la personnaliser</string>
+    <string name="short_swipe_instruction_body">Le clavier ci-dessous est votre vrai clavier CleverKeys.\nAppuyez sur une touche pour lui ajouter des actions de glissé court.</string>
+    <string name="short_swipe_custom_mappings">Mappages personnalisés</string>
+
+    <!-- Paramètres de thème -->
+    <string name="theme_settings_title">Thèmes du clavier</string>
+    <string name="theme_restart_keyboard">Redémarrer le clavier</string>
+    <string name="theme_create">Créer un thème</string>
+    <string name="theme_edit">Modifier le thème</string>
+    <string name="theme_section_builtin">Thèmes intégrés</string>
+    <string name="theme_builtin_desc">Ces thèmes s\'appliquent directement au clavier</string>
+    <string name="theme_section_custom">Thèmes personnalisés</string>
+    <string name="theme_section_decorative">Thèmes décoratifs</string>
+    <string name="theme_decorative_desc">Palettes de couleurs design pour votre clavier</string>
+    <string name="theme_delete_title">Supprimer le thème</string>
+    <string name="theme_delete_confirm">Voulez-vous vraiment supprimer ce thème personnalisé ?</string>
+    <string name="theme_edit_desc">Modifier</string>
+    <string name="theme_selected_desc">Sélectionné</string>
+    <string name="theme_trail_label">Traînée</string>
+    <string name="theme_name_label">Nom du thème</string>
+    <string name="theme_section_preview">Aperçu</string>
+    <string name="theme_section_key_colors">Couleurs des touches</string>
+    <string name="theme_section_label_colors">Couleurs des étiquettes</string>
+    <string name="theme_section_border_colors">Couleurs des bordures</string>
+    <string name="theme_swipe_trail_card">✨ Traînée de glissé</string>
+    <string name="theme_swipe_trail_desc">La couleur affichée lors d\'un glissé pour saisir</string>
+    <string name="theme_section_suggestion_bar">Barre de suggestions</string>
+    <string name="theme_section_background_colors">Couleurs d\'arrière-plan</string>
+    <string name="theme_color_hue">Teinte</string>
+    <string name="theme_color_saturation">Saturation</string>
+    <string name="theme_color_lightness">Luminosité</string>
+    <string name="theme_color_opacity">Opacité</string>
+    <string name="theme_color_hex">Hex</string>
+    <string name="theme_color_hex_desc">Saisie de couleur hexadécimale</string>
+    <string name="theme_quick_colors">Couleurs rapides</string>
+
+    <!-- Chrome des paramètres et dialogues -->
+    <string name="settings_search_hint">Rechercher dans les paramètres…</string>
+    <string name="settings_swipe_data_title">Données de glissé</string>
+    <string name="settings_search_words_hint">Rechercher des mots…</string>
+    <string name="settings_perf_stats_title">Statistiques de performances</string>
+    <string name="settings_copy_version_desc">Copier les informations de version</string>
+
+    <!-- Cartes d'activités -->
+    <string name="activities_section_title">📱 Activités</string>
+    <string name="activities_dictionary_title">Gestionnaire de dictionnaire</string>
+    <string name="activities_dictionary_desc">Mots personnalisés, mots désactivés &amp; vocabulaire</string>
+    <string name="activities_theme_title">Gestionnaire de thèmes</string>
+    <string name="activities_theme_desc">Thèmes néon, pastel, DIY &amp; couleurs personnalisées</string>
+    <string name="activities_extra_keys_title">Configurer les touches supplémentaires</string>
+    <string name="activities_extra_keys_desc">Ajouter des touches système, symboles &amp; raccourcis</string>
+    <string name="activities_layout_title">Gestionnaire de dispositions</string>
+    <string name="activities_layout_desc">QWERTY, Dvorak, Colemak &amp; plus</string>
+    <string name="activities_calibration_title">Calibrage des glissés courts</string>
+    <string name="activities_calibration_desc">Entraînez-vous et ajustez la sensibilité des gestes</string>
+    <string name="activities_whats_new_title">Nouveautés</string>
+    <string name="activities_whats_new_desc">Voir les dernières fonctionnalités et le journal des modifications</string>
+
+    <!-- Test du clavier -->
+    <string name="test_keyboard_section_title">⌨️ Tester le clavier</string>
+    <string name="test_keyboard_hint">Saisissez ici pour tester votre clavier…</string>
 </resources>

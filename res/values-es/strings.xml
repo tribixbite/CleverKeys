@@ -223,4 +223,91 @@
     <string name="gif_search_hint">Buscar GIF…</string>
     <string name="gif_close">Cerrar selector de GIF</string>
     <string name="gif_no_results">No se encontraron GIF</string>
+
+    <!-- WP8 — Botones comunes, temas, personalización de deslizamientos cortos,
+         teclas adicionales, ajustes, tarjetas de actividades, prueba de teclado -->
+
+    <!-- Botones comunes -->
+    <string name="common_back">Atrás</string>
+    <string name="common_cancel">Cancelar</string>
+    <string name="common_close">Cerrar</string>
+    <string name="common_save">Guardar</string>
+    <string name="common_delete">Eliminar</string>
+    <string name="common_apply">Aplicar</string>
+    <string name="common_search">Buscar</string>
+    <string name="common_clear">Limpiar</string>
+    <string name="common_ok">Aceptar</string>
+
+    <!-- Configuración de teclas adicionales -->
+    <string name="extra_keys_title">Configuración de teclas adicionales</string>
+    <string name="extra_keys_search_hint">Buscar teclas adicionales…</string>
+    <string name="extra_keys_info">Las teclas seleccionadas aparecerán en el teclado según sus posiciones preferidas</string>
+    <string name="extra_keys_reset">Restablecer valores predeterminados</string>
+
+    <!-- Personalización de deslizamientos cortos -->
+    <string name="short_swipe_title">Personalización de deslizamientos cortos</string>
+    <string name="short_swipe_show_keyboard">Mostrar teclado</string>
+    <string name="short_swipe_reset_all">Restablecer todo</string>
+    <string name="short_swipe_tap_hint">Toca cualquier tecla de abajo para personalizar sus deslizamientos cortos</string>
+    <string name="short_swipe_instruction_title">Toca una tecla para personalizarla</string>
+    <string name="short_swipe_instruction_body">El teclado de abajo es tu teclado CleverKeys real.\nToca una tecla para añadirle acciones de deslizamiento corto.</string>
+    <string name="short_swipe_custom_mappings">Asignaciones personalizadas</string>
+
+    <!-- Ajustes de tema -->
+    <string name="theme_settings_title">Temas de teclado</string>
+    <string name="theme_restart_keyboard">Reiniciar teclado</string>
+    <string name="theme_create">Crear tema</string>
+    <string name="theme_edit">Editar tema</string>
+    <string name="theme_section_builtin">Temas integrados</string>
+    <string name="theme_builtin_desc">Estos temas se aplican directamente al teclado</string>
+    <string name="theme_section_custom">Temas personalizados</string>
+    <string name="theme_section_decorative">Temas decorativos</string>
+    <string name="theme_decorative_desc">Esquemas de color de diseñador para tu teclado</string>
+    <string name="theme_delete_title">Eliminar tema</string>
+    <string name="theme_delete_confirm">¿Seguro que quieres eliminar este tema personalizado?</string>
+    <string name="theme_edit_desc">Editar</string>
+    <string name="theme_selected_desc">Seleccionado</string>
+    <string name="theme_trail_label">Trazo</string>
+    <string name="theme_name_label">Nombre del tema</string>
+    <string name="theme_section_preview">Vista previa</string>
+    <string name="theme_section_key_colors">Colores de teclas</string>
+    <string name="theme_section_label_colors">Colores de etiquetas</string>
+    <string name="theme_section_border_colors">Colores de bordes</string>
+    <string name="theme_swipe_trail_card">✨ Trazo de deslizamiento</string>
+    <string name="theme_swipe_trail_desc">El color que se muestra al deslizar para escribir</string>
+    <string name="theme_section_suggestion_bar">Barra de sugerencias</string>
+    <string name="theme_section_background_colors">Colores de fondo</string>
+    <string name="theme_color_hue">Matiz</string>
+    <string name="theme_color_saturation">Saturación</string>
+    <string name="theme_color_lightness">Luminosidad</string>
+    <string name="theme_color_opacity">Opacidad</string>
+    <string name="theme_color_hex">Hex</string>
+    <string name="theme_color_hex_desc">Entrada de color hexadecimal</string>
+    <string name="theme_quick_colors">Colores rápidos</string>
+
+    <!-- Búsqueda de ajustes y diálogos -->
+    <string name="settings_search_hint">Buscar ajustes…</string>
+    <string name="settings_swipe_data_title">Datos de deslizamiento</string>
+    <string name="settings_search_words_hint">Buscar palabras…</string>
+    <string name="settings_perf_stats_title">Estadísticas de rendimiento</string>
+    <string name="settings_copy_version_desc">Copiar información de versión</string>
+
+    <!-- Tarjetas de actividades -->
+    <string name="activities_section_title">📱 Actividades</string>
+    <string name="activities_dictionary_title">Gestor de diccionario</string>
+    <string name="activities_dictionary_desc">Palabras personalizadas, palabras desactivadas &amp; vocabulario</string>
+    <string name="activities_theme_title">Gestor de temas</string>
+    <string name="activities_theme_desc">Temas neón, pastel, DIY &amp; colores personalizados</string>
+    <string name="activities_extra_keys_title">Configurar teclas adicionales</string>
+    <string name="activities_extra_keys_desc">Añadir teclas del sistema, símbolos &amp; atajos</string>
+    <string name="activities_layout_title">Gestor de distribuciones</string>
+    <string name="activities_layout_desc">QWERTY, Dvorak, Colemak &amp; más</string>
+    <string name="activities_calibration_title">Calibración de deslizamientos cortos</string>
+    <string name="activities_calibration_desc">Practica y ajusta la sensibilidad de los gestos</string>
+    <string name="activities_whats_new_title">Novedades</string>
+    <string name="activities_whats_new_desc">Ver las últimas funciones y el registro de cambios</string>
+
+    <!-- Prueba de teclado -->
+    <string name="test_keyboard_section_title">⌨️ Probar teclado</string>
+    <string name="test_keyboard_hint">Escribe aquí para probar tu teclado…</string>
 </resources>

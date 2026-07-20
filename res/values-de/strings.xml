@@ -225,4 +225,91 @@
     <string name="gif_search_hint">GIFs suchen…</string>
     <string name="gif_close">GIF-Auswahl schließen</string>
     <string name="gif_no_results">Keine GIFs gefunden</string>
+
+    <!-- WP8 — Allgemeine Schaltflächen, Theme-Einstellungen, Wischgesten-Anpassung,
+         Zusatztasten, Einstellungsdialog, Aktivitätskarten, Tastaturtest -->
+
+    <!-- Allgemeine Schaltflächen -->
+    <string name="common_back">Zurück</string>
+    <string name="common_cancel">Abbrechen</string>
+    <string name="common_close">Schließen</string>
+    <string name="common_save">Speichern</string>
+    <string name="common_delete">Löschen</string>
+    <string name="common_apply">Anwenden</string>
+    <string name="common_search">Suchen</string>
+    <string name="common_clear">Leeren</string>
+    <string name="common_ok">OK</string>
+
+    <!-- Zusatztasten-Konfiguration -->
+    <string name="extra_keys_title">Konfiguration der Zusatztasten</string>
+    <string name="extra_keys_search_hint">Zusatztasten suchen…</string>
+    <string name="extra_keys_info">Ausgewählte Tasten werden je nach bevorzugter Position auf der Tastatur angezeigt</string>
+    <string name="extra_keys_reset">Auf Standard zurücksetzen</string>
+
+    <!-- Wischgesten-Anpassung -->
+    <string name="short_swipe_title">Kurze Wischgesten anpassen</string>
+    <string name="short_swipe_show_keyboard">Tastatur anzeigen</string>
+    <string name="short_swipe_reset_all">Alles zurücksetzen</string>
+    <string name="short_swipe_tap_hint">Tippen Sie unten auf eine Taste, um ihre kurzen Wischgesten anzupassen</string>
+    <string name="short_swipe_instruction_title">Tippen Sie auf eine Taste, um sie anzupassen</string>
+    <string name="short_swipe_instruction_body">Die folgende Tastatur ist Ihre eigentliche CleverKeys-Tastatur.\nTippen Sie auf eine Taste, um ihr kurze Wischaktionen hinzuzufügen.</string>
+    <string name="short_swipe_custom_mappings">Benutzerdefinierte Zuordnungen</string>
+
+    <!-- Theme-Einstellungen -->
+    <string name="theme_settings_title">Tastatur-Themes</string>
+    <string name="theme_restart_keyboard">Tastatur neu starten</string>
+    <string name="theme_create">Theme erstellen</string>
+    <string name="theme_edit">Theme bearbeiten</string>
+    <string name="theme_section_builtin">Integrierte Themes</string>
+    <string name="theme_builtin_desc">Diese Themes werden direkt auf die Tastatur angewendet</string>
+    <string name="theme_section_custom">Benutzerdefinierte Themes</string>
+    <string name="theme_section_decorative">Dekorative Themes</string>
+    <string name="theme_decorative_desc">Designer-Farbschemata für Ihre Tastatur</string>
+    <string name="theme_delete_title">Theme löschen</string>
+    <string name="theme_delete_confirm">Möchten Sie dieses benutzerdefinierte Theme wirklich löschen?</string>
+    <string name="theme_edit_desc">Bearbeiten</string>
+    <string name="theme_selected_desc">Ausgewählt</string>
+    <string name="theme_trail_label">Spur</string>
+    <string name="theme_name_label">Theme-Name</string>
+    <string name="theme_section_preview">Vorschau</string>
+    <string name="theme_section_key_colors">Tastenfarben</string>
+    <string name="theme_section_label_colors">Beschriftungsfarben</string>
+    <string name="theme_section_border_colors">Rahmenfarben</string>
+    <string name="theme_swipe_trail_card">✨ Wischspur</string>
+    <string name="theme_swipe_trail_desc">Die beim Wischen angezeigte Farbe</string>
+    <string name="theme_section_suggestion_bar">Vorschlagsleiste</string>
+    <string name="theme_section_background_colors">Hintergrundfarben</string>
+    <string name="theme_color_hue">Farbton</string>
+    <string name="theme_color_saturation">Sättigung</string>
+    <string name="theme_color_lightness">Helligkeit</string>
+    <string name="theme_color_opacity">Deckkraft</string>
+    <string name="theme_color_hex">Hex</string>
+    <string name="theme_color_hex_desc">Hex-Farbeingabe</string>
+    <string name="theme_quick_colors">Schnellfarben</string>
+
+    <!-- Einstellungssuche und weitere Dialoge -->
+    <string name="settings_search_hint">Einstellungen suchen…</string>
+    <string name="settings_swipe_data_title">Wischdaten</string>
+    <string name="settings_search_words_hint">Wörter suchen…</string>
+    <string name="settings_perf_stats_title">Leistungsstatistiken</string>
+    <string name="settings_copy_version_desc">Versionsinformationen kopieren</string>
+
+    <!-- Aktivitätskarten -->
+    <string name="activities_section_title">📱 Aktivitäten</string>
+    <string name="activities_dictionary_title">Wörterbuch-Manager</string>
+    <string name="activities_dictionary_desc">Eigene Wörter, gesperrte Wörter &amp; Vokabular</string>
+    <string name="activities_theme_title">Theme-Manager</string>
+    <string name="activities_theme_desc">Neon-, Pastell-, DIY-Themes &amp; eigene Farben</string>
+    <string name="activities_extra_keys_title">Zusatztasten konfigurieren</string>
+    <string name="activities_extra_keys_desc">Systemtasten, Symbole &amp; Tastenkürzel hinzufügen</string>
+    <string name="activities_layout_title">Layout-Manager</string>
+    <string name="activities_layout_desc">QWERTY, Dvorak, Colemak &amp; mehr</string>
+    <string name="activities_calibration_title">Kurze Wischgesten kalibrieren</string>
+    <string name="activities_calibration_desc">Gestensensitivität üben und anpassen</string>
+    <string name="activities_whats_new_title">Neuigkeiten</string>
+    <string name="activities_whats_new_desc">Neueste Funktionen und Änderungsprotokoll ansehen</string>
+
+    <!-- Tastaturtest -->
+    <string name="test_keyboard_section_title">⌨️ Tastatur testen</string>
+    <string name="test_keyboard_hint">Hier tippen, um Ihre Tastatur zu testen…</string>
 </resources>

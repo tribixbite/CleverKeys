@@ -269,7 +269,7 @@
     <string name="theme_section_border_colors">Warna Batas</string>
     <string name="theme_swipe_trail_card">✨ Jejak Geser</string>
     <string name="theme_swipe_trail_desc">Warna yang ditampilkan saat menggeser untuk mengetik</string>
-    <string name="theme_section_suggestion_bar">Baku Saran</string>
+    <string name="theme_section_suggestion_bar">Bilah Saran</string>
     <string name="theme_section_background_colors">Warna Latar Belakang</string>
     <string name="theme_color_hue">Rona</string>
     <string name="theme_color_saturation">Saturasi</string>

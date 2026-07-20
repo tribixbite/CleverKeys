@@ -245,4 +245,91 @@
     <string name="gif_search_hint">Cerca GIF…</string>
     <string name="gif_close">Chiudi selettore GIF</string>
     <string name="gif_no_results">Nessuna GIF trovata</string>
+
+    <!-- WP8 — Pulsanti comuni, temi, personalizzazione scorrimenti brevi,
+         tasti aggiuntivi, impostazioni, schede attività, test tastiera -->
+
+    <!-- Pulsanti comuni -->
+    <string name="common_back">Indietro</string>
+    <string name="common_cancel">Annulla</string>
+    <string name="common_close">Chiudi</string>
+    <string name="common_save">Salva</string>
+    <string name="common_delete">Elimina</string>
+    <string name="common_apply">Applica</string>
+    <string name="common_search">Cerca</string>
+    <string name="common_clear">Cancella</string>
+    <string name="common_ok">OK</string>
+
+    <!-- Configurazione tasti aggiuntivi -->
+    <string name="extra_keys_title">Configurazione tasti aggiuntivi</string>
+    <string name="extra_keys_search_hint">Cerca tasti aggiuntivi…</string>
+    <string name="extra_keys_info">I tasti selezionati verranno visualizzati sulla tastiera in base alle posizioni preferite</string>
+    <string name="extra_keys_reset">Ripristina predefiniti</string>
+
+    <!-- Personalizzazione scorrimenti brevi -->
+    <string name="short_swipe_title">Personalizzazione scorrimenti brevi</string>
+    <string name="short_swipe_show_keyboard">Mostra tastiera</string>
+    <string name="short_swipe_reset_all">Reimposta tutto</string>
+    <string name="short_swipe_tap_hint">Tocca un tasto qui sotto per personalizzare i suoi scorrimenti brevi</string>
+    <string name="short_swipe_instruction_title">Tocca un tasto per personalizzarlo</string>
+    <string name="short_swipe_instruction_body">La tastiera qui sotto è la tua vera tastiera CleverKeys.\nTocca un tasto per aggiungere azioni di scorrimento breve.</string>
+    <string name="short_swipe_custom_mappings">Mappature personalizzate</string>
+
+    <!-- Impostazioni tema -->
+    <string name="theme_settings_title">Temi tastiera</string>
+    <string name="theme_restart_keyboard">Riavvia tastiera</string>
+    <string name="theme_create">Crea tema</string>
+    <string name="theme_edit">Modifica tema</string>
+    <string name="theme_section_builtin">Temi integrati</string>
+    <string name="theme_builtin_desc">Questi temi si applicano direttamente alla tastiera</string>
+    <string name="theme_section_custom">Temi personalizzati</string>
+    <string name="theme_section_decorative">Temi decorativi</string>
+    <string name="theme_decorative_desc">Combinazioni di colori di design per la tua tastiera</string>
+    <string name="theme_delete_title">Elimina tema</string>
+    <string name="theme_delete_confirm">Eliminare definitivamente questo tema personalizzato?</string>
+    <string name="theme_edit_desc">Modifica</string>
+    <string name="theme_selected_desc">Selezionato</string>
+    <string name="theme_trail_label">Scia</string>
+    <string name="theme_name_label">Nome tema</string>
+    <string name="theme_section_preview">Anteprima</string>
+    <string name="theme_section_key_colors">Colori tasti</string>
+    <string name="theme_section_label_colors">Colori etichette</string>
+    <string name="theme_section_border_colors">Colori bordi</string>
+    <string name="theme_swipe_trail_card">✨ Scia di scorrimento</string>
+    <string name="theme_swipe_trail_desc">Il colore visualizzato durante lo scorrimento per digitare</string>
+    <string name="theme_section_suggestion_bar">Barra dei suggerimenti</string>
+    <string name="theme_section_background_colors">Colori di sfondo</string>
+    <string name="theme_color_hue">Tonalità</string>
+    <string name="theme_color_saturation">Saturazione</string>
+    <string name="theme_color_lightness">Luminosità</string>
+    <string name="theme_color_opacity">Opacità</string>
+    <string name="theme_color_hex">Hex</string>
+    <string name="theme_color_hex_desc">Inserimento colore esadecimale</string>
+    <string name="theme_quick_colors">Colori rapidi</string>
+
+    <!-- Ricerca impostazioni e dialoghi -->
+    <string name="settings_search_hint">Cerca impostazioni…</string>
+    <string name="settings_swipe_data_title">Dati scorrimento</string>
+    <string name="settings_search_words_hint">Cerca parole…</string>
+    <string name="settings_perf_stats_title">Statistiche delle prestazioni</string>
+    <string name="settings_copy_version_desc">Copia informazioni versione</string>
+
+    <!-- Schede attività -->
+    <string name="activities_section_title">📱 Attività</string>
+    <string name="activities_dictionary_title">Gestione dizionario</string>
+    <string name="activities_dictionary_desc">Parole personalizzate, parole disabilitate &amp; vocabolario</string>
+    <string name="activities_theme_title">Gestione temi</string>
+    <string name="activities_theme_desc">Temi neon, pastello, fai-da-te &amp; colori personalizzati</string>
+    <string name="activities_extra_keys_title">Configura tasti aggiuntivi</string>
+    <string name="activities_extra_keys_desc">Aggiungi tasti di sistema, simboli &amp; scorciatoie</string>
+    <string name="activities_layout_title">Gestione layout</string>
+    <string name="activities_layout_desc">QWERTY, Dvorak, Colemak &amp; altro</string>
+    <string name="activities_calibration_title">Calibrazione scorrimenti brevi</string>
+    <string name="activities_calibration_desc">Esercita e regola la sensibilità dei gesti</string>
+    <string name="activities_whats_new_title">Novità</string>
+    <string name="activities_whats_new_desc">Scopri le ultime funzionalità e il registro delle modifiche</string>
+
+    <!-- Test tastiera -->
+    <string name="test_keyboard_section_title">⌨️ Prova tastiera</string>
+    <string name="test_keyboard_hint">Digita qui per testare la tua tastiera…</string>
 </resources>
