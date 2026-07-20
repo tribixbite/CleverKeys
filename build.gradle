@@ -455,6 +455,7 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.swipe.geometric.GeoProjectionTest',
     'tribixbite.cleverkeys.swipe.geometric.TemplateGeneratorTest',
     'tribixbite.cleverkeys.swipe.geometric.CandidatePrunerTest',
+    'tribixbite.cleverkeys.swipe.geometric.GeoDecoderCoreTest',
     // SwipePrunerTest excluded: requires android.util.Log (MockK + Robolectric)
   ]
 
