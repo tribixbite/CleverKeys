@@ -35,6 +35,9 @@ class DebugLoggingManagerTest {
         every { Log.w(any(), any<String>()) } returns 0
 
         mockContext = mockk(relaxed = true)
+        // DebugLoggingManager's constructor resolves context.filesDir (app-private log
+        // path); a relaxed mock returns a File with null path -> NPE. Stub a real temp dir.
+        every { mockContext.filesDir } returns java.io.File(System.getProperty("java.io.tmpdir"), "dlm-test").apply { mkdirs() }
         manager = DebugLoggingManager(mockContext, testPackageName)
     }
 

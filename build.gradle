@@ -443,6 +443,8 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.a11y.KeyLabelsTest',
     // SuggestionBar rework (WP6-R3) — de-stringified suggestion protocol
     'tribixbite.cleverkeys.SuggestionModelTest',
+    // WP9 pipeline-unification characterization oracle (R-1 step 2) — pure JVM twin
+    'tribixbite.cleverkeys.PipelineOracleJvmTest',
     // Render-perf + lifecycle hygiene (2026-07-20) — WP5 (R-6) scope cancel + WP6 (R2) render index
     'tribixbite.cleverkeys.customization.ShortSwipeByKeyIndexTest',
     'tribixbite.cleverkeys.EmojiKeywordIndexLifecycleTest',
@@ -479,6 +481,12 @@ tasks.register('runPureTests', JavaExec) {
     "${buildDir}/tmp/kotlin-classes/debug",
     "${buildDir}/intermediates/java_res/debugUnitTest/processDebugUnitTestJavaRes/out",
   ) + configurations.debugUnitTestRuntimeClasspath + configurations.debugRuntimeClasspath
+
+  // Forward the geometric-swipe full-grid flag into the forked JVM. Gradle `-P`
+  // properties do NOT reach a forked JavaExec, so the geometric accuracy/benchmark
+  // tests read System.getProperty("geoFull") — this line bridges `-PgeoFull=true`
+  // into that system property (default "false"). See spec Phase-6 item m27.
+  systemProperty 'geoFull', (project.findProperty('geoFull') ?: 'false')
 
   // Allow single test via -PtestClass=ClassName
   if (project.hasProperty('testClass')) {
