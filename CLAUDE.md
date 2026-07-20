@@ -1,5 +1,14 @@
 # CLAUDE.md - CleverKeys Development Context
 
+## ⚠️ CONCURRENT SESSIONS SHARE THIS WORKING TREE
+Multiple Claude sessions may work this repo simultaneously in the SAME directory
+(confirmed 2026-07-20: a geoswipe session clobbered another session's uncommitted
+edit via checkout). Rules: commit small and IMMEDIATELY after verifying a fix;
+check `git log` for foreign commits before assuming tree state; never assume an
+uncommitted working-tree edit survives across long waits; before editing a file
+another session may own (check recent commit authorship/subjects), prefer
+committed coordination over working-tree edits.
+
 ## 🚨 **SESSION STARTUP PROTOCOL - ALWAYS CHECK FIRST!**
 
 **BEFORE STARTING ANY SESSION:**

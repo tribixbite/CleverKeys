@@ -12,6 +12,27 @@ pure-JVM `swipe.geometric` package; NOT wired into live pipeline — WP9 stays d
 - [ ] Phase 7 (optional, gated) — neural characterization golden file
 - [x] Follow-ups DONE 2026-07-20 (fixed directly per user, no issue filed): README en row
       52k→98,140 (binary-verified all bundled counts); grek_qwerty `script="latin"`→`"greek"`
+- [x] NOTE from lint session: LayoutProjection's UnicodeScript gate crashed API 21-23 (NewApi);
+      rewritten as UnicodeBlock (purity-compliant, GeoProjection/Accuracy suites green) in 76afe69f.
+
+## ✅ Translation review + warning burn-down + WP9 oracle (2026-07-20 cont., 4c9fe31f..ab9ceba4+)
+- **21-locale native review** (5 Sonnet agents): 96 corrections — fr paste-as-plain-text said
+  "Copier", es PageUp/Down swapped, ZWNJ translated as its opposite in 4 locales, tr debug notes in
+  TalkBack labels, lv/uk wrong-register action keys, clipboard_remove_confirm asked to delete the
+  whole clipboard in 7 locales. Commit 4c9fe31f.
+- **Warning burn-down** (3 Opus): 1544-entry baseline → 113 remaining. DefaultLocale 64 (ROOT vs
+  getDefault per-site, JSON-export ROOT load-bearing), Autoboxing 104, UnusedAttribute 82 targetApi,
+  DirectBoot @TargetApi rescope saved a latent API 21-23 crash, debug swipe-log moved off hardcoded
+  Termux path (DebugLoggingManagerTest stubs filesDir now). Commit ab9ceba4. Wave-2 agent running
+  for the final 113 (HardcodedText 58 triage + SetTextI18n 37 + tail).
+- **WP9 oracle SHIPPED** (design 9fbdc487): PipelineCharacterizationTest 31 instrumented +
+  PipelineOracleJvmTest 15 pure; 5 ORACLE-FLIP divergence pins (possessives/password/prompt-guard/
+  shift-location/ML-split) tied to R-1 steps 3-5; pinned real quirk: augmentPredictionsWithPossessives
+  yields "Book's's" (no ends-with-'s guard) — TODO post-unification. Suites: 1621 pure + 299 mock OK.
+- **Parallel-session collision**: concurrent sessions share this working tree; an uncommitted fix
+  was clobbered by a checkout. Lesson recorded in CLAUDE.md header: commit immediately.
+- **NEXT**: wave-2 result → baseline regen (target ~0 warnings) → ew-cli full run (validates oracle
+  green at HEAD + wave-1/2 on-device) → R-1 step 3 (shift capture into SH, flips 3 oracle pins).
       + method.xml el subtype `script=greek` (pair-flip keeps ExtraKeys £/€ merge) +
       SwipeLayoutSupportTest Greek case now asserts isFalse (was codifying the bug).
       Note for geoswipe audit: LayoutProjection.kt:26 comment "grek_qwerty claims latin" is
