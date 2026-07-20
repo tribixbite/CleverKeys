@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -22,19 +23,21 @@
             android:layout_centerVertical="true"
             android:src="@android:drawable/ic_menu_revert"
             android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Back"
+            android:contentDescription="@string/debug_back"
             android:scaleType="centerInside"
             android:padding="12dp"
             app:tint="#ffffff" />
 
-        <!-- Title -->
+        <!-- Title (debug-only screen; title string is translatable=false so
+             localized expansion into clear_button cannot occur). -->
         <TextView
             android:id="@+id/title_text"
+            tools:ignore="RelativeOverlap"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_toEndOf="@id/back_button"
             android:layout_centerVertical="true"
-            android:text="Swipe Debug Log"
+            android:text="@string/debug_swipe_log_title"
             android:textColor="#ffffff"
             android:textSize="20sp"
             android:textStyle="bold" />
@@ -48,7 +51,7 @@
             android:layout_centerVertical="true"
             android:src="@android:drawable/ic_menu_save"
             android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Save to file"
+            android:contentDescription="@string/debug_save_to_file"
             android:scaleType="centerInside"
             android:padding="12dp"
             app:tint="#ffffff" />
@@ -62,7 +65,7 @@
             android:layout_centerVertical="true"
             android:src="@drawable/ic_content_copy"
             android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Copy to clipboard"
+            android:contentDescription="@string/debug_copy_to_clipboard"
             android:scaleType="centerInside"
             android:padding="12dp" />
 
@@ -75,7 +78,7 @@
             android:layout_centerVertical="true"
             android:src="@android:drawable/ic_menu_delete"
             android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Clear logs"
+            android:contentDescription="@string/debug_clear_logs"
             android:scaleType="centerInside"
             android:padding="12dp"
             app:tint="#ffffff" />
@@ -94,7 +97,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:minWidth="300dp"
-            android:hint="Type or swipe here..."
+            android:hint="@string/debug_input_hint"
             android:textColor="#ffffff"
             android:textColorHint="#808080"
             android:background="@android:color/transparent"
@@ -131,7 +134,7 @@
             android:id="@+id/log_output"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Waiting for swipe input...\n"
+            android:text="@string/debug_waiting_input"
             android:textColor="#00ff00"
             android:textSize="11sp"
             android:fontFamily="monospace"

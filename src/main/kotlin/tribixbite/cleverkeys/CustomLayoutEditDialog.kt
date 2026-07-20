@@ -4,6 +4,7 @@ import android.app.AlertDialog
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.graphics.Rect
 import android.os.Handler
 import android.text.InputType
 import androidx.appcompat.widget.AppCompatEditText
@@ -72,6 +73,9 @@ object CustomLayoutEditDialog {
             textSize = textSize * 0.8f
         }
 
+        /** Reused across onDraw calls to avoid per-frame Rect allocation. */
+        private val clipBounds = Rect()
+
         private var onChangeListener: OnChangeListener? = null
 
         /** Delay validation to when user stops typing for a second. */
@@ -99,7 +103,7 @@ object CustomLayoutEditDialog {
             super.onDraw(canvas)
 
             lnPaint.color = paint.color
-            val clipBounds = canvas.clipBounds
+            canvas.getClipBounds(clipBounds)
             val layout = layout
             val offset = clipBounds.left + (digitWidth / 2f).toInt()
             var line = layout.getLineForVertical(clipBounds.top)

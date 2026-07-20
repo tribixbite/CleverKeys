@@ -152,4 +152,61 @@
 
     <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
     <string name="suggestion_add_to_dictionary">Добавить «%1$s» в словарь?</string>
+
+    <!-- Dictionary manager -->
+    <string name="dict_search_hint">Поиск слов…</string>
+    <string name="dict_reset">Сбросить</string>
+    <string name="dict_add_new_word">+ Добавить новое слово</string>
+    <string name="dict_add_new_word_hint">Нажмите, чтобы добавить пользовательское слово</string>
+    <string name="dict_word_frequency">Частота: %1$d</string>
+    <string name="dict_edit">Изменить</string>
+    <string name="dict_delete">Удалить</string>
+    <string name="dict_no_words">Слова не найдены</string>
+    <string name="dict_error_loading">Ошибка загрузки слов: %1$s</string>
+
+    <!-- Clipboard filter dialog -->
+    <string name="clipboard_filter_date_enable">Включить фильтр по дате</string>
+    <string name="clipboard_filter_show_entries">Показывать записи</string>
+    <string name="clipboard_filter_before">До</string>
+    <string name="clipboard_filter_after">После</string>
+    <string name="clipboard_filter_select_date">Выбрать дату</string>
+    <string name="clipboard_filter_status">Статус</string>
+    <string name="clipboard_filter_status_active">Активные</string>
+    <string name="clipboard_filter_status_planned">Запланированные</string>
+    <string name="clipboard_filter_status_completed">Завершённые</string>
+    <string name="clipboard_filter_status_hint">Выберите хотя бы один статус</string>
+    <string name="clipboard_filter_tags">Теги</string>
+    <string name="clipboard_filter_no_tags">Тегов пока нет</string>
+    <string name="clipboard_filter_clear">Очистить</string>
+    <string name="clipboard_filter_apply">Применить</string>
+
+    <!-- Clipboard panel -->
+    <string name="clipboard_tab_history">Недавняя история буфера обмена</string>
+    <string name="clipboard_tab_pinned">Закреплённые элементы</string>
+    <string name="clipboard_tab_todos">Элементы списка дел</string>
+    <string name="clipboard_search_hint">Поиск…</string>
+    <string name="clipboard_clear_search">Очистить поиск</string>
+    <string name="clipboard_toggle_regex">Переключить поиск по regex</string>
+    <string name="clipboard_date_filter">Фильтр по дате</string>
+    <string name="clipboard_close">Закрыть буфер обмена</string>
+    <string name="clipboard_media_thumbnail">Миниатюра медиа</string>
+    <string name="clipboard_animated">Анимированное</string>
+    <string name="clipboard_private_entry">Приватная запись</string>
+    <string name="clipboard_tags_header">Теги: %1$s</string>
+    <string name="clipboard_current_tags">Текущие теги</string>
+    <string name="clipboard_add_from_existing">Добавить из существующих</string>
+    <string name="clipboard_tag_add">Добавить</string>
+    <string name="clipboard_no_tags">Нет тегов</string>
+    <string name="clipboard_new_tag_hint">Новый тег…</string>
+    <string name="clipboard_close_tag_panel">Закрыть панель тегов</string>
+
+    <!-- Emoji picker -->
+    <string name="emoji_search_hint">Поиск эмодзи…</string>
+    <string name="emoji_close">Закрыть выбор эмодзи</string>
+    <string name="emoji_no_results_query">Эмодзи для «%1$s» не найдены</string>
+
+    <!-- GIF picker -->
+    <string name="gif_search_hint">Поиск GIF…</string>
+    <string name="gif_close">Закрыть выбор GIF</string>
+    <string name="gif_no_results">GIF не найдены</string>
 </resources>

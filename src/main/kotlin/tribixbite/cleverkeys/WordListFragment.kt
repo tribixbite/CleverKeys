@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys
 
+import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.os.Bundle
 import android.text.InputType
@@ -148,7 +149,7 @@ class WordListFragment : Fragment() {
                 // Notify activity to update tab counts after load completes
                 (activity as? DictionaryManagerActivity)?.onFragmentDataLoaded()
             } catch (e: Exception) {
-                emptyText.text = "Error loading words: ${e.message}"
+                emptyText.text = getString(R.string.dict_error_loading, e.message ?: "")
                 emptyText.visibility = View.VISIBLE
             } finally {
                 loadingProgress.visibility = View.GONE
@@ -298,6 +299,10 @@ class WordListFragment : Fragment() {
             .show()
     }
 
+    // SetTextI18n: the frequency EditText is prefilled with a raw integer that is
+    // parsed back via toIntOrNull(); locale-formatting it (grouping separators)
+    // would break parsing, so the plain digit string is intentional.
+    @SuppressLint("SetTextI18n")
     private fun showAddDialog() {
         // Create layout with word and frequency inputs
         val layout = android.widget.LinearLayout(requireContext())
@@ -345,6 +350,9 @@ class WordListFragment : Fragment() {
             .show()
     }
 
+    // SetTextI18n: same as showAddDialog — the frequency field holds a raw integer
+    // that must stay machine-parseable (toIntOrNull), so no locale formatting.
+    @SuppressLint("SetTextI18n")
     private fun showEditDialog(word: DictionaryWord) {
         // Create layout with word and frequency inputs
         val layout = android.widget.LinearLayout(requireContext())

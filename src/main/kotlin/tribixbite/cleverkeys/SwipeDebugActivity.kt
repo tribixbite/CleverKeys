@@ -161,6 +161,9 @@ class SwipeDebugActivity : Activity() {
         }
     }
 
+    // SetTextI18n: this is the Swipe Debug Log viewer — raw diagnostic log text,
+    // not localized product UI.
+    @SuppressLint("SetTextI18n")
     private fun appendLog(message: String) {
         runOnUiThread {
             logBuffer.append(message)
@@ -173,6 +176,8 @@ class SwipeDebugActivity : Activity() {
         }
     }
 
+    // Debug-only tool: raw diagnostic text is intentionally not localized.
+    @android.annotation.SuppressLint("SetTextI18n")
     private fun clearLogs() {
         logBuffer.setLength(0)
         logOutput.text = "Logs cleared. Waiting for swipe input...\n"

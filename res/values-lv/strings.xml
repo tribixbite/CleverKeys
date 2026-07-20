@@ -161,4 +161,63 @@
 
     <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
     <string name="suggestion_add_to_dictionary">Pievienot “%1$s” vārdnīcai?</string>
+
+    <!-- Dictionary Manager -->
+    <string name="dict_search_hint">Meklēt vārdus…</string>
+    <string name="dict_reset">Atiestatīt</string>
+    <string name="dict_add_new_word">+ Pievienot jaunu vārdu</string>
+    <string name="dict_add_new_word_hint">Pieskarieties, lai pievienotu pielāgotu vārdu</string>
+    <string name="dict_word_frequency">Biežums: %1$d</string>
+    <string name="dict_edit">Rediģēt</string>
+    <string name="dict_delete">Dzēst</string>
+    <string name="dict_no_words">Vārdi nav atrasti</string>
+    <string name="dict_error_loading">Kļūda, ielādējot vārdus: %1$s</string>
+
+    <!-- Clipboard Filter -->
+    <string name="clipboard_filter_date_enable">Iespējot datuma filtru</string>
+    <string name="clipboard_filter_show_entries">Rādīt ierakstus</string>
+    <string name="clipboard_filter_before">Pirms</string>
+    <string name="clipboard_filter_after">Pēc</string>
+    <string name="clipboard_filter_select_date">Atlasīt datumu</string>
+    <string name="clipboard_filter_status">Statuss</string>
+    <string name="clipboard_filter_status_active">Aktīvs</string>
+    <string name="clipboard_filter_status_planned">Plānots</string>
+    <string name="clipboard_filter_status_completed">Pabeigts</string>
+    <string name="clipboard_filter_status_hint">Atlasiet vismaz vienu statusu</string>
+    <string name="clipboard_filter_tags">Atzīmes</string>
+    <string name="clipboard_filter_no_tags">Vēl nav atzīmju</string>
+    <string name="clipboard_filter_clear">Notīrīt</string>
+    <string name="clipboard_filter_apply">Lietot</string>
+
+    <!-- Clipboard Panel -->
+    <string name="clipboard_tab_history">Nesenā starpliktuves vēsture</string>
+    <string name="clipboard_tab_pinned">Piespraustie vienumi</string>
+    <string name="clipboard_tab_todos">Darāmo darbu vienumi</string>
+    <string name="clipboard_search_hint">Meklēt…</string>
+    <string name="clipboard_clear_search">Notīrīt meklēšanu</string>
+    <string name="clipboard_toggle_regex">Pārslēgt regulārās izteiksmes meklēšanu</string>
+    <string name="clipboard_date_filter">Datuma filtrs</string>
+    <string name="clipboard_close">Aizvērt starpliktuvi</string>
+    <string name="clipboard_media_thumbnail">Multivides sīktēls</string>
+    <string name="clipboard_animated">Animēts</string>
+    <string name="clipboard_private_entry">Privāts ieraksts</string>
+
+    <!-- Clipboard Tags -->
+    <string name="clipboard_tags_header">Atzīmes: %1$s</string>
+    <string name="clipboard_current_tags">Pašreizējās atzīmes</string>
+    <string name="clipboard_add_from_existing">Pievienot no esošajām</string>
+    <string name="clipboard_tag_add">Pievienot</string>
+    <string name="clipboard_no_tags">Nav atzīmju</string>
+    <string name="clipboard_new_tag_hint">Jauna atzīme…</string>
+    <string name="clipboard_close_tag_panel">Aizvērt atzīmju paneli</string>
+
+    <!-- Emoji Picker -->
+    <string name="emoji_search_hint">Meklēt emocijzīmes…</string>
+    <string name="emoji_close">Aizvērt emocijzīmju atlasītāju</string>
+    <string name="emoji_no_results_query">Vaicājumam \"%1$s\" nav atrasta neviena emocijzīme</string>
+
+    <!-- GIF Picker -->
+    <string name="gif_search_hint">Meklēt GIF…</string>
+    <string name="gif_close">Aizvērt GIF atlasītāju</string>
+    <string name="gif_no_results">GIF nav atrasti</string>
 </resources>

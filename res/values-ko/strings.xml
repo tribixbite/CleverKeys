@@ -163,4 +163,63 @@
 
     <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
     <string name="suggestion_add_to_dictionary">\'%1$s\'을(를) 사전에 추가할까요?</string>
+
+    <!-- Dictionary Manager -->
+    <string name="dict_search_hint">단어 검색…</string>
+    <string name="dict_reset">초기화</string>
+    <string name="dict_add_new_word">+ 새 단어 추가</string>
+    <string name="dict_add_new_word_hint">탭하여 사용자 정의 단어 추가</string>
+    <string name="dict_word_frequency">빈도: %1$d</string>
+    <string name="dict_edit">편집</string>
+    <string name="dict_delete">삭제</string>
+    <string name="dict_no_words">단어를 찾을 수 없습니다</string>
+    <string name="dict_error_loading">단어 로드 오류: %1$s</string>
+
+    <!-- Clipboard Filter -->
+    <string name="clipboard_filter_date_enable">날짜 필터 사용</string>
+    <string name="clipboard_filter_show_entries">항목 표시</string>
+    <string name="clipboard_filter_before">이전</string>
+    <string name="clipboard_filter_after">이후</string>
+    <string name="clipboard_filter_select_date">날짜 선택</string>
+    <string name="clipboard_filter_status">상태</string>
+    <string name="clipboard_filter_status_active">진행 중</string>
+    <string name="clipboard_filter_status_planned">예정</string>
+    <string name="clipboard_filter_status_completed">완료</string>
+    <string name="clipboard_filter_status_hint">하나 이상의 상태를 선택하세요</string>
+    <string name="clipboard_filter_tags">태그</string>
+    <string name="clipboard_filter_no_tags">아직 태그가 없습니다</string>
+    <string name="clipboard_filter_clear">지우기</string>
+    <string name="clipboard_filter_apply">적용</string>
+
+    <!-- Clipboard Panel -->
+    <string name="clipboard_tab_history">최근 클립보드 기록</string>
+    <string name="clipboard_tab_pinned">고정된 항목</string>
+    <string name="clipboard_tab_todos">할 일 항목</string>
+    <string name="clipboard_search_hint">검색…</string>
+    <string name="clipboard_clear_search">검색 지우기</string>
+    <string name="clipboard_toggle_regex">정규식 검색 전환</string>
+    <string name="clipboard_date_filter">날짜 필터</string>
+    <string name="clipboard_close">클립보드 닫기</string>
+    <string name="clipboard_media_thumbnail">미디어 썸네일</string>
+    <string name="clipboard_animated">움직이는 이미지</string>
+    <string name="clipboard_private_entry">비공개 항목</string>
+
+    <!-- Clipboard Tags -->
+    <string name="clipboard_tags_header">태그: %1$s</string>
+    <string name="clipboard_current_tags">현재 태그</string>
+    <string name="clipboard_add_from_existing">기존에서 추가</string>
+    <string name="clipboard_tag_add">추가</string>
+    <string name="clipboard_no_tags">태그 없음</string>
+    <string name="clipboard_new_tag_hint">새 태그…</string>
+    <string name="clipboard_close_tag_panel">태그 패널 닫기</string>
+
+    <!-- Emoji Picker -->
+    <string name="emoji_search_hint">이모지 검색…</string>
+    <string name="emoji_close">이모지 선택기 닫기</string>
+    <string name="emoji_no_results_query">\"%1$s\"에 대한 이모지를 찾을 수 없습니다</string>
+
+    <!-- GIF Picker -->
+    <string name="gif_search_hint">GIF 검색…</string>
+    <string name="gif_close">GIF 선택기 닫기</string>
+    <string name="gif_no_results">GIF를 찾을 수 없습니다</string>
 </resources>

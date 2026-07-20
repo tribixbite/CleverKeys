@@ -116,6 +116,9 @@ class KeyMagnifierView @JvmOverloads constructor(
     // Cached bounds for hit testing
     private val directionBounds = mutableMapOf<SwipeDirection, RectF>()
 
+    /** Reused across onDraw calls to avoid per-frame RectF allocation. */
+    private val keyRect = RectF()
+
     init {
         loadTheme()
         // Enable touch events - required for AndroidView in Compose
@@ -321,9 +324,10 @@ class KeyMagnifierView @JvmOverloads constructor(
             return
         }
 
-        // Calculate key bounds (centered with padding)
+        // Calculate key bounds (centered with padding). Reuse the field-level
+        // RectF instead of allocating one every frame.
         val padding = width * 0.1f
-        val keyRect = RectF(padding, padding, width - padding, height - padding)
+        keyRect.set(padding, padding, width - padding, height - padding)
         val cornerRadius = 12f * resources.displayMetrics.density
 
         // Draw key background
@@ -595,6 +599,9 @@ class KeyMagnifierView @JvmOverloads constructor(
                 }
                 hoveredDirection = null
                 invalidate()
+                // A tap on a direction zone is a click; route it through
+                // performClick() so accessibility services announce it.
+                performClick()
                 return true
             }
             MotionEvent.ACTION_CANCEL -> {
@@ -604,6 +611,11 @@ class KeyMagnifierView @JvmOverloads constructor(
             }
         }
         return super.onTouchEvent(event)
+    }
+
+    override fun performClick(): Boolean {
+        super.performClick()
+        return true
     }
 
     /**

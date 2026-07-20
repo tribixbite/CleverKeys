@@ -191,4 +191,63 @@
 
     <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
     <string name="suggestion_add_to_dictionary">Thêm \'%1$s\' vào từ điển?</string>
+
+    <!-- Dictionary management -->
+    <string name="dict_search_hint">Tìm từ…</string>
+    <string name="dict_reset">Đặt lại</string>
+    <string name="dict_add_new_word">+ Thêm từ mới</string>
+    <string name="dict_add_new_word_hint">Chạm để thêm từ tùy chỉnh</string>
+    <string name="dict_word_frequency">Tần suất: %1$d</string>
+    <string name="dict_edit">Sửa</string>
+    <string name="dict_delete">Xóa</string>
+    <string name="dict_no_words">Không tìm thấy từ nào</string>
+    <string name="dict_error_loading">Lỗi khi tải từ: %1$s</string>
+
+    <!-- Clipboard filters -->
+    <string name="clipboard_filter_date_enable">Bật bộ lọc theo ngày</string>
+    <string name="clipboard_filter_show_entries">Hiển thị các mục</string>
+    <string name="clipboard_filter_before">Trước</string>
+    <string name="clipboard_filter_after">Sau</string>
+    <string name="clipboard_filter_select_date">Chọn ngày</string>
+    <string name="clipboard_filter_status">Trạng thái</string>
+    <string name="clipboard_filter_status_active">Đang hoạt động</string>
+    <string name="clipboard_filter_status_planned">Đã lên kế hoạch</string>
+    <string name="clipboard_filter_status_completed">Đã hoàn thành</string>
+    <string name="clipboard_filter_status_hint">Chọn ít nhất một trạng thái</string>
+    <string name="clipboard_filter_tags">Thẻ</string>
+    <string name="clipboard_filter_no_tags">Chưa có thẻ nào</string>
+    <string name="clipboard_filter_clear">Xóa</string>
+    <string name="clipboard_filter_apply">Áp dụng</string>
+
+    <!-- Clipboard tabs &amp; toolbar -->
+    <string name="clipboard_tab_history">Lịch sử bộ nhớ tạm gần đây</string>
+    <string name="clipboard_tab_pinned">Mục đã ghim</string>
+    <string name="clipboard_tab_todos">Việc cần làm</string>
+    <string name="clipboard_search_hint">Tìm kiếm…</string>
+    <string name="clipboard_clear_search">Xóa tìm kiếm</string>
+    <string name="clipboard_toggle_regex">Bật/tắt tìm kiếm regex</string>
+    <string name="clipboard_date_filter">Bộ lọc theo ngày</string>
+    <string name="clipboard_close">Đóng bộ nhớ tạm</string>
+    <string name="clipboard_media_thumbnail">Hình thu nhỏ phương tiện</string>
+    <string name="clipboard_animated">Động</string>
+    <string name="clipboard_private_entry">Mục riêng tư</string>
+
+    <!-- Clipboard tags -->
+    <string name="clipboard_tags_header">Thẻ: %1$s</string>
+    <string name="clipboard_current_tags">Thẻ hiện tại</string>
+    <string name="clipboard_add_from_existing">Thêm từ thẻ hiện có</string>
+    <string name="clipboard_tag_add">Thêm</string>
+    <string name="clipboard_no_tags">Không có thẻ</string>
+    <string name="clipboard_new_tag_hint">Thẻ mới…</string>
+    <string name="clipboard_close_tag_panel">Đóng bảng thẻ</string>
+
+    <!-- Emoji picker -->
+    <string name="emoji_search_hint">Tìm emoji…</string>
+    <string name="emoji_close">Đóng bộ chọn emoji</string>
+    <string name="emoji_no_results_query">Không tìm thấy emoji cho \"%1$s\"</string>
+
+    <!-- GIF picker -->
+    <string name="gif_search_hint">Tìm GIF…</string>
+    <string name="gif_close">Đóng bộ chọn GIF</string>
+    <string name="gif_no_results">Không tìm thấy GIF</string>
 </resources>

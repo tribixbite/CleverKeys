@@ -211,6 +211,9 @@ class KeyboardPreviewHost @JvmOverloads constructor(
                 val distance = kotlin.math.sqrt(deltaX * deltaX + deltaY * deltaY)
                 if (distance < tapThreshold && deltaTime < tapTimeThreshold) {
                     handleTap(event.x, event.y)
+                    // A qualifying tap is a click; route through performClick()
+                    // so accessibility services announce it.
+                    performClick()
                 }
                 return true
             }
@@ -219,6 +222,11 @@ class KeyboardPreviewHost @JvmOverloads constructor(
             }
         }
         return super.onTouchEvent(event)
+    }
+
+    override fun performClick(): Boolean {
+        super.performClick()
+        return true
     }
 
     /**

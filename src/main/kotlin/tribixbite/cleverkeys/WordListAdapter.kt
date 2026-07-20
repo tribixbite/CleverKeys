@@ -63,7 +63,7 @@ class WordToggleAdapter(
 
         fun bind(word: DictionaryWord, onToggle: (DictionaryWord, Boolean) -> Unit) {
             wordText.text = word.word
-            frequencyText.text = "Frequency: ${word.frequency}"
+            frequencyText.text = itemView.context.getString(R.string.dict_word_frequency, word.frequency)
 
             // Remove previous listener to avoid triggering during bind
             enableToggle.setOnCheckedChangeListener(null)
@@ -133,8 +133,8 @@ class WordEditableAdapter(
         private val deleteButton: Button = itemView.findViewById(R.id.delete_button)
 
         fun bind(onAdd: () -> Unit) {
-            wordText.text = "+ Add New Word"
-            frequencyText.text = "Tap to add a custom word"
+            wordText.text = itemView.context.getString(R.string.dict_add_new_word)
+            frequencyText.text = itemView.context.getString(R.string.dict_add_new_word_hint)
             editButton.visibility = View.GONE
             deleteButton.visibility = View.GONE
 
@@ -154,7 +154,7 @@ class WordEditableAdapter(
             onDelete: (DictionaryWord) -> Unit
         ) {
             wordText.text = word.word
-            frequencyText.text = "Frequency: ${word.frequency}"
+            frequencyText.text = itemView.context.getString(R.string.dict_word_frequency, word.frequency)
             editButton.visibility = View.VISIBLE
             deleteButton.visibility = View.VISIBLE
 

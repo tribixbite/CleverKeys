@@ -22,7 +22,7 @@
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:scaleType="centerCrop"
-        android:contentDescription="Media thumbnail" />
+        android:contentDescription="@string/clipboard_media_thumbnail" />
 
     <!-- Play badge overlay for animated GIF/WebP (bottom-right corner) -->
     <ImageView
@@ -32,7 +32,7 @@
         android:layout_gravity="bottom|end"
         android:src="@drawable/ic_media_play_badge"
         android:visibility="gone"
-        android:contentDescription="Animated" />
+        android:contentDescription="@string/clipboard_animated" />
 
   </FrameLayout>
 
@@ -44,10 +44,10 @@
       android:layout_height="wrap_content"
       android:layout_gravity="center_vertical"
       android:layout_marginStart="8dp"
-      android:text="🔒"
+      android:text="@string/glyph_private_badge"
       android:textSize="14sp"
       android:visibility="gone"
-      android:contentDescription="Private entry" />
+      android:contentDescription="@string/clipboard_private_entry" />
 
   <!-- Normal text display (hidden during edit) -->
   <TextView

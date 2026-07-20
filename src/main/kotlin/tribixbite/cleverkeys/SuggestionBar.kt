@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
 import android.os.Handler
@@ -823,6 +824,11 @@ class SuggestionBar : LinearLayout {
      * Key insight: Use START_OF constraint to make scroll view end where icon begins.
      * This prevents the scroll view content from pushing the icon off screen.
      */
+    // ClickableViewAccessibility: the scrollView touch listener below only
+    // coordinates scroll interception (requestDisallowInterceptTouchEvent) and
+    // returns false so the ScrollView handles scrolling itself. It never consumes
+    // a tap as a click, so performClick() has no meaning here.
+    @SuppressLint("ClickableViewAccessibility")
     private fun setupPasswordModeViews() {
         // Clear any existing suggestion views
         removeAllViews()

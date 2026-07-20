@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <!-- <string name="pref_portrait_unfolded">In portrait mode unfolded</string> -->
     <!-- <string name="pref_landscape_unfolded">In landscape mode unfolded</string> -->
     <string name="pref_layout_e_system">Systemeinstellung</string>
@@ -43,7 +43,9 @@
     <string name="key_descr_subscript">Tiefgestellt</string>
     <string name="key_descr_page_up">Bild auf</string>
     <string name="key_descr_page_down">Bild ab</string>
-    <string name="key_descr_home">Pos1</string>
+    <!-- "Pos1" is the standard German keyboard label for the Home key (Position 1),
+         not a typo; lint suggests the nonsensical "Pos!". -->
+    <string name="key_descr_home" tools:ignore="Typos">Pos1</string>
     <string name="key_descr_end">Ende</string>
     <string name="key_descr_doc_home">Dokumentanfang</string>
     <string name="key_descr_doc_end">Dokumentende</string>
@@ -164,4 +166,63 @@
 
     <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
     <string name="suggestion_add_to_dictionary">„%1$s“ zum Wörterbuch hinzufügen?</string>
+
+    <!-- Dictionary management -->
+    <string name="dict_search_hint">Wörter suchen…</string>
+    <string name="dict_reset">Zurücksetzen</string>
+    <string name="dict_add_new_word">+ Neues Wort hinzufügen</string>
+    <string name="dict_add_new_word_hint">Zum Hinzufügen eines eigenen Worts tippen</string>
+    <string name="dict_word_frequency">Häufigkeit: %1$d</string>
+    <string name="dict_edit">Bearbeiten</string>
+    <string name="dict_delete">Löschen</string>
+    <string name="dict_no_words">Keine Wörter gefunden</string>
+    <string name="dict_error_loading">Fehler beim Laden der Wörter: %1$s</string>
+
+    <!-- Clipboard filter dialog -->
+    <string name="clipboard_filter_date_enable">Datumsfilter aktivieren</string>
+    <string name="clipboard_filter_show_entries">Einträge anzeigen</string>
+    <string name="clipboard_filter_before">Vor</string>
+    <string name="clipboard_filter_after">Nach</string>
+    <string name="clipboard_filter_select_date">Datum auswählen</string>
+    <string name="clipboard_filter_status">Status</string>
+    <string name="clipboard_filter_status_active">Aktiv</string>
+    <string name="clipboard_filter_status_planned">Geplant</string>
+    <string name="clipboard_filter_status_completed">Erledigt</string>
+    <string name="clipboard_filter_status_hint">Mindestens einen Status auswählen</string>
+    <string name="clipboard_filter_tags">Tags</string>
+    <string name="clipboard_filter_no_tags">Noch keine Tags</string>
+    <string name="clipboard_filter_clear">Leeren</string>
+    <string name="clipboard_filter_apply">Anwenden</string>
+
+    <!-- Clipboard tabs, search and controls -->
+    <string name="clipboard_tab_history">Aktueller Zwischenablageverlauf</string>
+    <string name="clipboard_tab_pinned">Angeheftete Elemente</string>
+    <string name="clipboard_tab_todos">Aufgaben</string>
+    <string name="clipboard_search_hint">Suchen…</string>
+    <string name="clipboard_clear_search">Suche leeren</string>
+    <string name="clipboard_toggle_regex">Regex-Suche umschalten</string>
+    <string name="clipboard_date_filter">Datumsfilter</string>
+    <string name="clipboard_close">Zwischenablage schließen</string>
+    <string name="clipboard_media_thumbnail">Medien-Vorschaubild</string>
+    <string name="clipboard_animated">Animiert</string>
+    <string name="clipboard_private_entry">Privater Eintrag</string>
+
+    <!-- Clipboard tag panel -->
+    <string name="clipboard_tags_header">Tags: %1$s</string>
+    <string name="clipboard_current_tags">Aktuelle Tags</string>
+    <string name="clipboard_add_from_existing">Aus vorhandenen hinzufügen</string>
+    <string name="clipboard_tag_add">Hinzufügen</string>
+    <string name="clipboard_no_tags">Keine Tags</string>
+    <string name="clipboard_new_tag_hint">Neuer Tag…</string>
+    <string name="clipboard_close_tag_panel">Tag-Panel schließen</string>
+
+    <!-- Emoji picker -->
+    <string name="emoji_search_hint">Emoji suchen…</string>
+    <string name="emoji_close">Emoji-Auswahl schließen</string>
+    <string name="emoji_no_results_query">Keine Emojis für „%1$s“ gefunden</string>
+
+    <!-- GIF picker -->
+    <string name="gif_search_hint">GIFs suchen…</string>
+    <string name="gif_close">GIF-Auswahl schließen</string>
+    <string name="gif_no_results">Keine GIFs gefunden</string>
 </resources>

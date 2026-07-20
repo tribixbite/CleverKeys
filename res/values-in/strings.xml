@@ -161,4 +161,63 @@
 
     <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
     <string name="suggestion_add_to_dictionary">Tambahkan \'%1$s\' ke kamus?</string>
+
+    <!-- Dictionary editor -->
+    <string name="dict_search_hint">Cari kata…</string>
+    <string name="dict_reset">Setel ulang</string>
+    <string name="dict_add_new_word">+ Tambah Kata Baru</string>
+    <string name="dict_add_new_word_hint">Ketuk untuk menambahkan kata kustom</string>
+    <string name="dict_word_frequency">Frekuensi: %1$d</string>
+    <string name="dict_edit">Edit</string>
+    <string name="dict_delete">Hapus</string>
+    <string name="dict_no_words">Tidak ada kata ditemukan</string>
+    <string name="dict_error_loading">Kesalahan memuat kata: %1$s</string>
+
+    <!-- Clipboard filters -->
+    <string name="clipboard_filter_date_enable">Aktifkan Filter Tanggal</string>
+    <string name="clipboard_filter_show_entries">Tampilkan entri</string>
+    <string name="clipboard_filter_before">Sebelum</string>
+    <string name="clipboard_filter_after">Sesudah</string>
+    <string name="clipboard_filter_select_date">Pilih Tanggal</string>
+    <string name="clipboard_filter_status">Status</string>
+    <string name="clipboard_filter_status_active">Aktif</string>
+    <string name="clipboard_filter_status_planned">Direncanakan</string>
+    <string name="clipboard_filter_status_completed">Selesai</string>
+    <string name="clipboard_filter_status_hint">Pilih setidaknya satu status</string>
+    <string name="clipboard_filter_tags">Tag</string>
+    <string name="clipboard_filter_no_tags">Belum ada tag</string>
+    <string name="clipboard_filter_clear">Bersihkan</string>
+    <string name="clipboard_filter_apply">Terapkan</string>
+
+    <!-- Clipboard tabs & controls -->
+    <string name="clipboard_tab_history">Riwayat clipboard terbaru</string>
+    <string name="clipboard_tab_pinned">Item yang disematkan</string>
+    <string name="clipboard_tab_todos">Item to-do</string>
+    <string name="clipboard_search_hint">Cari…</string>
+    <string name="clipboard_clear_search">Bersihkan pencarian</string>
+    <string name="clipboard_toggle_regex">Alihkan pencarian regex</string>
+    <string name="clipboard_date_filter">Filter tanggal</string>
+    <string name="clipboard_close">Tutup clipboard</string>
+    <string name="clipboard_media_thumbnail">Gambar mini media</string>
+    <string name="clipboard_animated">Animasi</string>
+    <string name="clipboard_private_entry">Entri pribadi</string>
+
+    <!-- Clipboard tag panel -->
+    <string name="clipboard_tags_header">Tag: %1$s</string>
+    <string name="clipboard_current_tags">Tag saat ini</string>
+    <string name="clipboard_add_from_existing">Tambah dari yang ada</string>
+    <string name="clipboard_tag_add">Tambah</string>
+    <string name="clipboard_no_tags">Tidak ada tag</string>
+    <string name="clipboard_new_tag_hint">Tag baru…</string>
+    <string name="clipboard_close_tag_panel">Tutup panel tag</string>
+
+    <!-- Emoji picker -->
+    <string name="emoji_search_hint">Cari emoji…</string>
+    <string name="emoji_close">Tutup pemilih emoji</string>
+    <string name="emoji_no_results_query">Tidak ada emoji ditemukan untuk \"%1$s\"</string>
+
+    <!-- GIF picker -->
+    <string name="gif_search_hint">Cari GIF…</string>
+    <string name="gif_close">Tutup pemilih GIF</string>
+    <string name="gif_no_results">Tidak ada GIF ditemukan</string>
 </resources>

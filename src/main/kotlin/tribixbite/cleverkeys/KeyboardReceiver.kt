@@ -402,7 +402,7 @@ class KeyboardReceiver(
 
                 gifGrid?.onPaginationChanged = { needsPagination, currentPage, totalPages ->
                     paginationBar?.visibility = if (needsPagination) View.VISIBLE else View.GONE
-                    pageInfo?.text = "$currentPage / $totalPages"
+                    pageInfo?.text = context.getString(R.string.page_indicator, currentPage, totalPages)
                     pagePrev?.alpha = if (gifGrid.hasPreviousPage()) 1.0f else 0.3f
                     pageNext?.alpha = if (gifGrid.hasNextPage()) 1.0f else 0.3f
                 }

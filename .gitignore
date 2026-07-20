@@ -2,6 +2,8 @@
 .gradle/
 build/
 */build/
+# Kotlin daemon/build cache (sessions + errors)
+.kotlin/
 
 # Local configuration
 local.properties

@@ -162,4 +162,63 @@
 
     <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
     <string name="suggestion_add_to_dictionary">「%1$s」を辞書に追加しますか？</string>
+
+    <!-- Dictionary Manager -->
+    <string name="dict_search_hint">単語を検索…</string>
+    <string name="dict_reset">リセット</string>
+    <string name="dict_add_new_word">+ 新しい単語を追加</string>
+    <string name="dict_add_new_word_hint">タップしてカスタム単語を追加</string>
+    <string name="dict_word_frequency">頻度: %1$d</string>
+    <string name="dict_edit">編集</string>
+    <string name="dict_delete">削除</string>
+    <string name="dict_no_words">単語が見つかりません</string>
+    <string name="dict_error_loading">単語の読み込みエラー: %1$s</string>
+
+    <!-- Clipboard Filter -->
+    <string name="clipboard_filter_date_enable">日付フィルターを有効にする</string>
+    <string name="clipboard_filter_show_entries">項目を表示</string>
+    <string name="clipboard_filter_before">これより前</string>
+    <string name="clipboard_filter_after">これより後</string>
+    <string name="clipboard_filter_select_date">日付を選択</string>
+    <string name="clipboard_filter_status">ステータス</string>
+    <string name="clipboard_filter_status_active">進行中</string>
+    <string name="clipboard_filter_status_planned">予定</string>
+    <string name="clipboard_filter_status_completed">完了</string>
+    <string name="clipboard_filter_status_hint">少なくとも 1 つのステータスを選択してください</string>
+    <string name="clipboard_filter_tags">タグ</string>
+    <string name="clipboard_filter_no_tags">タグはまだありません</string>
+    <string name="clipboard_filter_clear">クリア</string>
+    <string name="clipboard_filter_apply">適用</string>
+
+    <!-- Clipboard Panel -->
+    <string name="clipboard_tab_history">最近のクリップボード履歴</string>
+    <string name="clipboard_tab_pinned">ピン留めした項目</string>
+    <string name="clipboard_tab_todos">To-Do 項目</string>
+    <string name="clipboard_search_hint">検索…</string>
+    <string name="clipboard_clear_search">検索をクリア</string>
+    <string name="clipboard_toggle_regex">正規表現検索を切替</string>
+    <string name="clipboard_date_filter">日付フィルター</string>
+    <string name="clipboard_close">クリップボードを閉じる</string>
+    <string name="clipboard_media_thumbnail">メディアのサムネイル</string>
+    <string name="clipboard_animated">アニメーション</string>
+    <string name="clipboard_private_entry">プライベート項目</string>
+
+    <!-- Clipboard Tags -->
+    <string name="clipboard_tags_header">タグ: %1$s</string>
+    <string name="clipboard_current_tags">現在のタグ</string>
+    <string name="clipboard_add_from_existing">既存から追加</string>
+    <string name="clipboard_tag_add">追加</string>
+    <string name="clipboard_no_tags">タグなし</string>
+    <string name="clipboard_new_tag_hint">新しいタグ…</string>
+    <string name="clipboard_close_tag_panel">タグパネルを閉じる</string>
+
+    <!-- Emoji Picker -->
+    <string name="emoji_search_hint">絵文字を検索…</string>
+    <string name="emoji_close">絵文字ピッカーを閉じる</string>
+    <string name="emoji_no_results_query">\"%1$s\" に一致する絵文字が見つかりません</string>
+
+    <!-- GIF Picker -->
+    <string name="gif_search_hint">GIF を検索…</string>
+    <string name="gif_close">GIF ピッカーを閉じる</string>
+    <string name="gif_no_results">GIF が見つかりません</string>
 </resources>

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
@@ -62,7 +63,7 @@
           android:layout_marginBottom="16dp"
           android:gravity="center_vertical">
         <TextView
-            android:text="Enable Date Filter"
+            android:text="@string/clipboard_filter_date_enable"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -84,7 +85,7 @@
           android:layout_marginBottom="16dp"
           android:gravity="center_vertical">
         <TextView
-            android:text="Show entries"
+            android:text="@string/clipboard_filter_show_entries"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="16sp"
@@ -97,14 +98,14 @@
             android:layout_height="wrap_content">
           <RadioButton
               android:id="@+id/date_filter_before"
-              android:text="Before"
+              android:text="@string/clipboard_filter_before"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
               android:textColor="?android:attr/textColorPrimary"
               android:layout_marginEnd="8dp"/>
           <RadioButton
               android:id="@+id/date_filter_after"
-              android:text="After"
+              android:text="@string/clipboard_filter_after"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
               android:textColor="?android:attr/textColorPrimary"
@@ -119,7 +120,7 @@
           android:layout_width="match_parent"
           android:layout_height="wrap_content">
         <TextView
-            android:text="Select Date"
+            android:text="@string/clipboard_filter_select_date"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="16sp"
@@ -153,7 +154,7 @@
           android:visibility="gone">
 
         <TextView
-            android:text="Status"
+            android:text="@string/clipboard_filter_status"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="16sp"
@@ -163,7 +164,7 @@
 
         <CheckBox
             android:id="@+id/filter_status_active"
-            android:text="Active"
+            android:text="@string/clipboard_filter_status_active"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="?android:attr/textColorPrimary"
@@ -171,7 +172,7 @@
 
         <CheckBox
             android:id="@+id/filter_status_planned"
-            android:text="Planned"
+            android:text="@string/clipboard_filter_status_planned"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="?android:attr/textColorPrimary"
@@ -179,7 +180,7 @@
 
         <CheckBox
             android:id="@+id/filter_status_completed"
-            android:text="Completed"
+            android:text="@string/clipboard_filter_status_completed"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="?android:attr/textColorPrimary"
@@ -188,7 +189,7 @@
         <!-- Warning when all unchecked -->
         <TextView
             android:id="@+id/filter_status_hint"
-            android:text="Select at least one status"
+            android:text="@string/clipboard_filter_status_hint"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="12sp"
@@ -217,7 +218,7 @@
 
         <!-- Tags header -->
         <TextView
-            android:text="Tags"
+            android:text="@string/clipboard_filter_tags"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="16sp"
@@ -234,7 +235,7 @@
             android:gravity="center_vertical">
           <TextView
               android:id="@+id/filter_tags_match_label"
-              android:text="Match: Any"
+              tools:text="Match: Any"
               android:layout_width="0dp"
               android:layout_height="wrap_content"
               android:layout_weight="1"
@@ -257,7 +258,7 @@
         <!-- Hint when no tags exist yet -->
         <TextView
             android:id="@+id/filter_tags_empty_hint"
-            android:text="No tags yet"
+            android:text="@string/clipboard_filter_no_tags"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="13sp"
@@ -287,14 +288,14 @@
         style="?android:attr/buttonBarButtonStyle"/>
     <Button
         android:id="@+id/date_filter_clear"
-        android:text="Clear"
+        android:text="@string/clipboard_filter_clear"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
         style="?android:attr/buttonBarButtonStyle"/>
     <Button
         android:id="@+id/date_filter_apply"
-        android:text="Apply"
+        android:text="@string/clipboard_filter_apply"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         style="?android:attr/buttonBarButtonStyle"/>

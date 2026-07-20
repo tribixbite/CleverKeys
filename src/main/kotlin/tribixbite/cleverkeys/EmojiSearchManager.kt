@@ -141,7 +141,7 @@ class EmojiSearchManager {
      */
     private fun showNoResults(query: String) {
         emojiGrid?.visibility = View.GONE
-        noResultsView?.text = "No emoji found for \"$query\""
+        noResultsView?.let { it.text = it.context.getString(R.string.emoji_no_results_query, query) }
         noResultsView?.visibility = View.VISIBLE
     }
 

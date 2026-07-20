@@ -211,9 +211,9 @@ fun ThemePreviewCard(
     theme: ThemeInfo,
     isSelected: Boolean,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
     onDelete: (() -> Unit)? = null,
-    onExport: (() -> Unit)? = null,
-    modifier: Modifier = Modifier
+    onExport: (() -> Unit)? = null
 ) {
     val borderColor = if (isSelected) {
         MaterialTheme.colorScheme.primary

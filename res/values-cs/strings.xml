@@ -163,4 +163,63 @@
 
     <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
     <string name="suggestion_add_to_dictionary">Přidat „%1$s“ do slovníku?</string>
+
+    <!-- Dictionary management -->
+    <string name="dict_search_hint">Hledat slova…</string>
+    <string name="dict_reset">Obnovit</string>
+    <string name="dict_add_new_word">+ Přidat nové slovo</string>
+    <string name="dict_add_new_word_hint">Klepnutím přidáte vlastní slovo</string>
+    <string name="dict_word_frequency">Četnost: %1$d</string>
+    <string name="dict_edit">Upravit</string>
+    <string name="dict_delete">Smazat</string>
+    <string name="dict_no_words">Nenalezena žádná slova</string>
+    <string name="dict_error_loading">Chyba při načítání slov: %1$s</string>
+
+    <!-- Clipboard filter dialog -->
+    <string name="clipboard_filter_date_enable">Zapnout filtr podle data</string>
+    <string name="clipboard_filter_show_entries">Zobrazit položky</string>
+    <string name="clipboard_filter_before">Před</string>
+    <string name="clipboard_filter_after">Po</string>
+    <string name="clipboard_filter_select_date">Vybrat datum</string>
+    <string name="clipboard_filter_status">Stav</string>
+    <string name="clipboard_filter_status_active">Aktivní</string>
+    <string name="clipboard_filter_status_planned">Plánované</string>
+    <string name="clipboard_filter_status_completed">Dokončené</string>
+    <string name="clipboard_filter_status_hint">Vyberte alespoň jeden stav</string>
+    <string name="clipboard_filter_tags">Štítky</string>
+    <string name="clipboard_filter_no_tags">Zatím žádné štítky</string>
+    <string name="clipboard_filter_clear">Vymazat</string>
+    <string name="clipboard_filter_apply">Použít</string>
+
+    <!-- Clipboard tabs, search and controls -->
+    <string name="clipboard_tab_history">Nedávná historie schránky</string>
+    <string name="clipboard_tab_pinned">Připnuté položky</string>
+    <string name="clipboard_tab_todos">Úkoly</string>
+    <string name="clipboard_search_hint">Hledat…</string>
+    <string name="clipboard_clear_search">Vymazat hledání</string>
+    <string name="clipboard_toggle_regex">Přepnout hledání pomocí regulárních výrazů</string>
+    <string name="clipboard_date_filter">Filtr podle data</string>
+    <string name="clipboard_close">Zavřít schránku</string>
+    <string name="clipboard_media_thumbnail">Náhled média</string>
+    <string name="clipboard_animated">Animované</string>
+    <string name="clipboard_private_entry">Soukromá položka</string>
+
+    <!-- Clipboard tag panel -->
+    <string name="clipboard_tags_header">Štítky: %1$s</string>
+    <string name="clipboard_current_tags">Aktuální štítky</string>
+    <string name="clipboard_add_from_existing">Přidat z existujících</string>
+    <string name="clipboard_tag_add">Přidat</string>
+    <string name="clipboard_no_tags">Žádné štítky</string>
+    <string name="clipboard_new_tag_hint">Nový štítek…</string>
+    <string name="clipboard_close_tag_panel">Zavřít panel štítků</string>
+
+    <!-- Emoji picker -->
+    <string name="emoji_search_hint">Hledat emoji…</string>
+    <string name="emoji_close">Zavřít výběr emoji</string>
+    <string name="emoji_no_results_query">Pro „%1$s“ nenalezeno žádné emoji</string>
+
+    <!-- GIF picker -->
+    <string name="gif_search_hint">Hledat GIFy…</string>
+    <string name="gif_close">Zavřít výběr GIFů</string>
+    <string name="gif_no_results">Nenalezeny žádné GIFy</string>
 </resources>

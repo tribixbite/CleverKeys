@@ -161,4 +161,61 @@
 
     <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
     <string name="suggestion_add_to_dictionary">Idagdag ang \'%1$s\' sa diksyunaryo?</string>
+
+    <!-- Dictionary editor -->
+    <string name="dict_search_hint">Maghanap ng mga salita…</string>
+    <string name="dict_reset">I-reset</string>
+    <string name="dict_add_new_word">+ Magdagdag ng Bagong Salita</string>
+    <string name="dict_add_new_word_hint">I-tap para magdagdag ng custom na salita</string>
+    <string name="dict_word_frequency">Dalas: %1$d</string>
+    <string name="dict_edit">I-edit</string>
+    <string name="dict_delete">Tanggalin</string>
+    <string name="dict_no_words">Walang nahanap na salita</string>
+    <string name="dict_error_loading">Error sa pag-load ng mga salita: %1$s</string>
+
+    <!-- Clipboard filter -->
+    <string name="clipboard_filter_date_enable">I-enable ang Date Filter</string>
+    <string name="clipboard_filter_show_entries">Ipakita ang mga entry</string>
+    <string name="clipboard_filter_before">Bago</string>
+    <string name="clipboard_filter_after">Pagkatapos</string>
+    <string name="clipboard_filter_select_date">Pumili ng Petsa</string>
+    <string name="clipboard_filter_status">Status</string>
+    <string name="clipboard_filter_status_active">Aktibo</string>
+    <string name="clipboard_filter_status_planned">Nakaplano</string>
+    <string name="clipboard_filter_status_completed">Tapos na</string>
+    <string name="clipboard_filter_status_hint">Pumili ng kahit isang status</string>
+    <string name="clipboard_filter_tags">Mga Tag</string>
+    <string name="clipboard_filter_no_tags">Wala pang tag</string>
+    <string name="clipboard_filter_clear">I-clear</string>
+    <string name="clipboard_filter_apply">I-apply</string>
+
+    <!-- Clipboard panel -->
+    <string name="clipboard_tab_history">Kamakailang history ng clipboard</string>
+    <string name="clipboard_tab_pinned">Mga naka-pin na item</string>
+    <string name="clipboard_tab_todos">Mga To-do na item</string>
+    <string name="clipboard_search_hint">Maghanap…</string>
+    <string name="clipboard_clear_search">I-clear ang paghahanap</string>
+    <string name="clipboard_toggle_regex">I-toggle ang regex search</string>
+    <string name="clipboard_date_filter">Date filter</string>
+    <string name="clipboard_close">Isara ang clipboard</string>
+    <string name="clipboard_media_thumbnail">Thumbnail ng media</string>
+    <string name="clipboard_animated">Animated</string>
+    <string name="clipboard_private_entry">Private na entry</string>
+    <string name="clipboard_tags_header">Mga Tag: %1$s</string>
+    <string name="clipboard_current_tags">Kasalukuyang mga tag</string>
+    <string name="clipboard_add_from_existing">Magdagdag mula sa mga umiiral na</string>
+    <string name="clipboard_tag_add">Idagdag</string>
+    <string name="clipboard_no_tags">Walang tag</string>
+    <string name="clipboard_new_tag_hint">Bagong tag…</string>
+    <string name="clipboard_close_tag_panel">Isara ang tag panel</string>
+
+    <!-- Emoji picker -->
+    <string name="emoji_search_hint">Maghanap ng emoji…</string>
+    <string name="emoji_close">Isara ang emoji picker</string>
+    <string name="emoji_no_results_query">Walang nahanap na emoji para sa \"%1$s\"</string>
+
+    <!-- GIF picker -->
+    <string name="gif_search_hint">Maghanap ng mga GIF…</string>
+    <string name="gif_close">Isara ang GIF picker</string>
+    <string name="gif_no_results">Walang nahanap na GIF</string>
 </resources>

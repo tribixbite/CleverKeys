@@ -86,8 +86,8 @@ object ClipboardTagPanel {
         // "Tags for:" label + truncated entry content
         val headerText = TextView(context).apply {
             val preview = entry.content.take(40).replace('\n', ' ')
-            val suffix = if (entry.content.length > 40) "..." else ""
-            text = "Tags: $preview$suffix"
+            val suffix = if (entry.content.length > 40) "…" else ""
+            text = context.getString(R.string.clipboard_tags_header, "$preview$suffix")
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
             setTextColor(labelColor)
             maxLines = 1
@@ -104,7 +104,7 @@ object ClipboardTagPanel {
             setColorFilter(labelColor)
             setBackgroundResource(android.R.drawable.list_selector_background)
             layoutParams = LinearLayout.LayoutParams(dp(32), dp(32))
-            contentDescription = "Close tag panel"
+            contentDescription = context.getString(R.string.clipboard_close_tag_panel)
             setOnClickListener { onClose() }
         }
         headerRow.addView(closeButton)
@@ -114,7 +114,7 @@ object ClipboardTagPanel {
         val currentTags = entry.tags.toMutableList()
 
         val currentLabel = TextView(context).apply {
-            text = "Current tags"
+            text = context.getString(R.string.clipboard_current_tags)
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
             setTextColor(subLabelColor)
             setPadding(0, 0, 0, dp(4))
@@ -136,7 +136,7 @@ object ClipboardTagPanel {
 
         // ── Suggestion section (existing tags not on this entry) ──
         val suggestionLabel = TextView(context).apply {
-            text = "Add from existing"
+            text = context.getString(R.string.clipboard_add_from_existing)
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
             setTextColor(subLabelColor)
             setPadding(0, 0, 0, dp(4))
@@ -162,7 +162,7 @@ object ClipboardTagPanel {
         }
 
         val newTagInput = EditText(context).apply {
-            hint = "New tag..."
+            hint = context.getString(R.string.clipboard_new_tag_hint)
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
             setTextColor(labelColor)
             setHintTextColor(subLabelColor)
@@ -177,7 +177,7 @@ object ClipboardTagPanel {
 
         // Add button
         val addButton = TextView(context).apply {
-            text = "Add"
+            text = context.getString(R.string.clipboard_tag_add)
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
             setTextColor(labelColor)
             setPadding(dp(12), dp(6), dp(12), dp(6))
@@ -206,9 +206,9 @@ object ClipboardTagPanel {
             // Current tag chips (with remove "x" action)
             currentChipsContainer.removeAllViews()
             if (currentTags.isEmpty()) {
-                currentLabel.text = "No tags"
+                currentLabel.text = context.getString(R.string.clipboard_no_tags)
             } else {
-                currentLabel.text = "Current tags"
+                currentLabel.text = context.getString(R.string.clipboard_current_tags)
                 for (tag in currentTags) {
                     currentChipsContainer.addView(
                         createChip(context, dp, tag, labelColor, subLabelColor, keyBg,

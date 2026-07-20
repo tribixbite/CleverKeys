@@ -226,7 +226,7 @@ class ClipboardManager(
             // Listen for pagination state changes
             clipboardHistoryView?.setOnPaginationChangeListener { needsPagination, currentPage, totalPages ->
                 paginationBar?.visibility = if (needsPagination) View.VISIBLE else View.GONE
-                pageInfo?.text = "$currentPage / $totalPages"
+                pageInfo?.text = context.getString(R.string.page_indicator, currentPage, totalPages)
                 pagePrev?.alpha = if (clipboardHistoryView?.hasPreviousPage() == true) 1.0f else 0.3f
                 pageNext?.alpha = if (clipboardHistoryView?.hasNextPage() == true) 1.0f else 0.3f
             }
@@ -524,7 +524,7 @@ class ClipboardManager(
 
         // Visual feedback: show what's being tagged in the search bar
         clipboardSearchBox?.let {
-            it.text = "Tags: ${entry.content.take(30)}"
+            it.text = context.getString(R.string.clipboard_tags_header, entry.content.take(30))
             it.hint = ""
         }
         // Swap visibility: hide entry list, show tag panel

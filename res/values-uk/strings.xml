@@ -161,4 +161,63 @@
 
     <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
     <string name="suggestion_add_to_dictionary">Додати «%1$s» до словника?</string>
+
+    <!-- Dictionary management -->
+    <string name="dict_search_hint">Пошук слів…</string>
+    <string name="dict_reset">Скинути</string>
+    <string name="dict_add_new_word">+ Додати нове слово</string>
+    <string name="dict_add_new_word_hint">Торкніться, щоб додати власне слово</string>
+    <string name="dict_word_frequency">Частота: %1$d</string>
+    <string name="dict_edit">Редагувати</string>
+    <string name="dict_delete">Видалити</string>
+    <string name="dict_no_words">Слів не знайдено</string>
+    <string name="dict_error_loading">Помилка завантаження слів: %1$s</string>
+
+    <!-- Clipboard filters -->
+    <string name="clipboard_filter_date_enable">Увімкнути фільтр за датою</string>
+    <string name="clipboard_filter_show_entries">Показувати записи</string>
+    <string name="clipboard_filter_before">До</string>
+    <string name="clipboard_filter_after">Після</string>
+    <string name="clipboard_filter_select_date">Вибрати дату</string>
+    <string name="clipboard_filter_status">Статус</string>
+    <string name="clipboard_filter_status_active">Активні</string>
+    <string name="clipboard_filter_status_planned">Заплановані</string>
+    <string name="clipboard_filter_status_completed">Завершені</string>
+    <string name="clipboard_filter_status_hint">Виберіть щонайменше один статус</string>
+    <string name="clipboard_filter_tags">Теги</string>
+    <string name="clipboard_filter_no_tags">Тегів ще немає</string>
+    <string name="clipboard_filter_clear">Очистити</string>
+    <string name="clipboard_filter_apply">Застосувати</string>
+
+    <!-- Clipboard tabs &amp; toolbar -->
+    <string name="clipboard_tab_history">Недавня історія буфера обміну</string>
+    <string name="clipboard_tab_pinned">Закріплені елементи</string>
+    <string name="clipboard_tab_todos">Завдання</string>
+    <string name="clipboard_search_hint">Пошук…</string>
+    <string name="clipboard_clear_search">Очистити пошук</string>
+    <string name="clipboard_toggle_regex">Перемкнути пошук за регулярним виразом</string>
+    <string name="clipboard_date_filter">Фільтр за датою</string>
+    <string name="clipboard_close">Закрити буфер обміну</string>
+    <string name="clipboard_media_thumbnail">Мініатюра медіа</string>
+    <string name="clipboard_animated">Анімоване</string>
+    <string name="clipboard_private_entry">Приватний запис</string>
+
+    <!-- Clipboard tags -->
+    <string name="clipboard_tags_header">Теги: %1$s</string>
+    <string name="clipboard_current_tags">Поточні теги</string>
+    <string name="clipboard_add_from_existing">Додати з наявних</string>
+    <string name="clipboard_tag_add">Додати</string>
+    <string name="clipboard_no_tags">Тегів немає</string>
+    <string name="clipboard_new_tag_hint">Новий тег…</string>
+    <string name="clipboard_close_tag_panel">Закрити панель тегів</string>
+
+    <!-- Emoji picker -->
+    <string name="emoji_search_hint">Пошук емодзі…</string>
+    <string name="emoji_close">Закрити вибір емодзі</string>
+    <string name="emoji_no_results_query">Емодзі не знайдено за запитом «%1$s»</string>
+
+    <!-- GIF picker -->
+    <string name="gif_search_hint">Пошук GIF…</string>
+    <string name="gif_close">Закрити вибір GIF</string>
+    <string name="gif_no_results">GIF не знайдено</string>
 </resources>

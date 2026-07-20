@@ -287,12 +287,20 @@ class KeyboardPreviewView @JvmOverloads constructor(
                     if (rect.contains(x, y)) {
                         Log.d(TAG, "Key tapped: $keyName at rect $rect")
                         onKeyTap?.invoke(keyName, rect)
+                        // Tapping a key is a click; route through performClick()
+                        // so accessibility services announce it.
+                        performClick()
                         return true
                     }
                 }
                 Log.d(TAG, "No key found at tap location")
             }
         }
+        return true
+    }
+
+    override fun performClick(): Boolean {
+        super.performClick()
         return true
     }
 

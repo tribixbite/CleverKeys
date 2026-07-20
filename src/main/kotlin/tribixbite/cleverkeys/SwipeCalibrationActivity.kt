@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.ClipData
@@ -297,6 +298,10 @@ class SwipeCalibrationActivity : Activity() {
         }
     }
 
+    // SetTextI18n: this is an internal neural-diagnostic / calibration screen.
+    // Its labels ("Neural Results Log", "Test Tensors", emoji status markers) are
+    // developer-facing technical output, not localized product UI.
+    @SuppressLint("SetTextI18n")
     private fun setupUI() {
         // Main RelativeLayout like original
         val mainLayout = RelativeLayout(this)
@@ -481,6 +486,8 @@ class SwipeCalibrationActivity : Activity() {
         Log.d(TAG, "Showing word: $currentWord")
     }
 
+    // SetTextI18n: developer-facing neural benchmark readout (accuracy / timing).
+    @SuppressLint("SetTextI18n")
     private fun updateBenchmarkDisplay() {
         if (totalPredictions > 0) {
             val accuracy = (correctPredictions * 100.0f) / totalPredictions
@@ -587,6 +594,8 @@ class SwipeCalibrationActivity : Activity() {
         }
     }
 
+    // SetTextI18n: diagnostic calibration completion marker.
+    @SuppressLint("SetTextI18n")
     private fun showCompletionMessage() {
         instructionText.text = "🎉 Neural Calibration Complete!"
         currentWordText.text = "✓"
@@ -933,6 +942,11 @@ class SwipeCalibrationActivity : Activity() {
             }
         }
 
+        // ClickableViewAccessibility: this view records raw swipe gestures for
+        // calibration. There is no click semantic — a tap (<5 points) is discarded,
+        // only continuous drags produce a swipe — so performClick() would be
+        // meaningless here.
+        @SuppressLint("ClickableViewAccessibility")
         override fun onTouchEvent(event: MotionEvent): Boolean {
             val x = event.x
             val y = event.y

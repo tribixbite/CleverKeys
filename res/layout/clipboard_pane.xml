@@ -35,7 +35,7 @@
         android:clickable="true"
         android:focusable="true"
         android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:contentDescription="Recent clipboard history"/>
+        android:contentDescription="@string/clipboard_tab_history"/>
 
     <!-- Pinned tab -->
     <ImageView
@@ -50,7 +50,7 @@
         android:clickable="true"
         android:focusable="true"
         android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:contentDescription="Pinned items"/>
+        android:contentDescription="@string/clipboard_tab_pinned"/>
 
     <!-- Todos tab -->
     <ImageView
@@ -65,12 +65,12 @@
         android:clickable="true"
         android:focusable="true"
         android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:contentDescription="To-do items"/>
+        android:contentDescription="@string/clipboard_tab_todos"/>
 
     <!-- Search field (fills remaining space) -->
     <TextView
         android:id="@+id/clipboard_search"
-        android:hint="Search..."
+        android:hint="@string/clipboard_search_hint"
         android:layout_width="0dp"
         android:layout_height="32dp"
         android:layout_weight="1"
@@ -95,7 +95,7 @@
         android:src="@android:drawable/ic_menu_close_clear_cancel"
         app:tint="?attr/colorLabel"
         android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:contentDescription="Clear search"
+        android:contentDescription="@string/clipboard_clear_search"
         android:scaleType="centerInside"
         android:padding="4dp"
         android:visibility="gone"/>
@@ -103,7 +103,7 @@
     <!-- Regex toggle button (VSCode-style .* toggle, shown when search is active) -->
     <TextView
         android:id="@+id/clipboard_regex_toggle"
-        android:text=".*"
+        android:text="@string/glyph_regex_toggle"
         android:layout_width="28dp"
         android:layout_height="28dp"
         android:gravity="center"
@@ -114,7 +114,7 @@
         android:clickable="true"
         android:focusable="true"
         android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:contentDescription="Toggle regex search"
+        android:contentDescription="@string/clipboard_toggle_regex"
         android:visibility="gone"/>
 
     <!-- Date filter icon -->
@@ -125,7 +125,7 @@
         android:src="@android:drawable/ic_menu_sort_by_size"
         app:tint="?attr/colorLabel"
         android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:contentDescription="Date filter"
+        android:contentDescription="@string/clipboard_date_filter"
         android:scaleType="centerInside"
         android:padding="4dp"/>
 
@@ -137,7 +137,7 @@
         android:src="@android:drawable/arrow_down_float"
         app:tint="?attr/colorLabel"
         android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:contentDescription="Close clipboard"
+        android:contentDescription="@string/clipboard_close"
         android:scaleType="centerInside"
         android:padding="4dp"/>
 
@@ -198,7 +198,7 @@
 
     <TextView
         android:id="@+id/clipboard_page_prev"
-        android:text="◀"
+        android:text="@string/glyph_page_prev"
         android:layout_width="48dp"
         android:layout_height="match_parent"
         android:gravity="center"
@@ -210,7 +210,7 @@
 
     <TextView
         android:id="@+id/clipboard_page_info"
-        android:text="1 / 1"
+        tools:text="1 / 1"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
@@ -220,7 +220,7 @@
 
     <TextView
         android:id="@+id/clipboard_page_next"
-        android:text="▶"
+        android:text="@string/glyph_page_next"
         android:layout_width="48dp"
         android:layout_height="match_parent"
         android:gravity="center"

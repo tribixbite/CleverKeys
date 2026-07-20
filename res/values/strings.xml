@@ -119,11 +119,11 @@
     <!-- Neural Prediction Section -->
     <string name="settings_section_neural">🧠 Neural Network Prediction</string>
     <string name="settings_neural_beam_width_title">Beam Width</string>
-    <string name="settings_neural_beam_width_desc">Number of prediction candidates (1-20). Higher = more accurate.</string>
+    <string name="settings_neural_beam_width_desc">Number of prediction candidates (1–20). Higher = more accurate.</string>
     <string name="settings_neural_max_length_title">Maximum Word Length</string>
-    <string name="settings_neural_max_length_desc">Maximum characters in predicted words (5-35).</string>
+    <string name="settings_neural_max_length_desc">Maximum characters in predicted words (5–35).</string>
     <string name="settings_neural_confidence_title">Confidence Threshold</string>
-    <string name="settings_neural_confidence_desc">Minimum confidence for predictions (0.0-0.4).</string>
+    <string name="settings_neural_confidence_desc">Minimum confidence for predictions (0.0–0.4).</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 Appearance</string>
@@ -187,4 +187,98 @@
     <!-- User Dictionary Tab (Enhanced) -->
 
     <!-- Actions Toast Messages -->
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         Dictionary Manager (activity_dictionary_manager / fragment_word_list /
+         item_word_editable / WordListAdapter / WordListFragment)
+         ══════════════════════════════════════════════════════════════════ -->
+    <string name="dict_search_hint">Search words…</string>
+    <string name="dict_reset">Reset</string>
+    <string name="dict_add_new_word">+ Add New Word</string>
+    <string name="dict_add_new_word_hint">Tap to add a custom word</string>
+    <!-- %1$d = frequency count of a dictionary word -->
+    <string name="dict_word_frequency">Frequency: %1$d</string>
+    <string name="dict_edit">Edit</string>
+    <string name="dict_delete">Delete</string>
+    <string name="dict_no_words">No words found</string>
+    <!-- %1$s = error message from the failed dictionary load -->
+    <string name="dict_error_loading">Error loading words: %1$s</string>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         Clipboard filter dialog (clipboard_filter_dialog)
+         ══════════════════════════════════════════════════════════════════ -->
+    <string name="clipboard_filter_date_enable">Enable Date Filter</string>
+    <string name="clipboard_filter_show_entries">Show entries</string>
+    <string name="clipboard_filter_before">Before</string>
+    <string name="clipboard_filter_after">After</string>
+    <string name="clipboard_filter_select_date">Select Date</string>
+    <string name="clipboard_filter_status">Status</string>
+    <string name="clipboard_filter_status_active">Active</string>
+    <string name="clipboard_filter_status_planned">Planned</string>
+    <string name="clipboard_filter_status_completed">Completed</string>
+    <string name="clipboard_filter_status_hint">Select at least one status</string>
+    <string name="clipboard_filter_tags">Tags</string>
+    <string name="clipboard_filter_no_tags">No tags yet</string>
+    <string name="clipboard_filter_clear">Clear</string>
+    <string name="clipboard_filter_apply">Apply</string>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         Clipboard pane (clipboard_pane) — tab / control accessibility labels
+         ══════════════════════════════════════════════════════════════════ -->
+    <string name="clipboard_tab_history">Recent clipboard history</string>
+    <string name="clipboard_tab_pinned">Pinned items</string>
+    <string name="clipboard_tab_todos">To-do items</string>
+    <string name="clipboard_search_hint">Search…</string>
+    <string name="clipboard_clear_search">Clear search</string>
+    <string name="clipboard_toggle_regex">Toggle regex search</string>
+    <string name="clipboard_date_filter">Date filter</string>
+    <string name="clipboard_close">Close clipboard</string>
+
+    <!-- Clipboard entry accessibility labels (clipboard_history_entry) -->
+    <string name="clipboard_media_thumbnail">Media thumbnail</string>
+    <string name="clipboard_animated">Animated</string>
+    <string name="clipboard_private_entry">Private entry</string>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         Clipboard tag panel (ClipboardTagDialog / ClipboardManager)
+         ══════════════════════════════════════════════════════════════════ -->
+    <!-- %1$s = truncated preview of the entry being tagged -->
+    <string name="clipboard_tags_header">Tags: %1$s</string>
+    <string name="clipboard_current_tags">Current tags</string>
+    <string name="clipboard_add_from_existing">Add from existing</string>
+    <string name="clipboard_tag_add">Add</string>
+    <string name="clipboard_no_tags">No tags</string>
+    <string name="clipboard_new_tag_hint">New tag…</string>
+    <string name="clipboard_close_tag_panel">Close tag panel</string>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         Emoji & GIF panels (emoji_pane / gif_pane / EmojiSearchManager)
+         ══════════════════════════════════════════════════════════════════ -->
+    <string name="emoji_search_hint">Search emoji…</string>
+    <string name="emoji_close">Close emoji picker</string>
+    <!-- %1$s = the search query with no matching emoji -->
+    <string name="emoji_no_results_query">No emoji found for \"%1$s\"</string>
+    <string name="gif_search_hint">Search GIFs…</string>
+    <string name="gif_close">Close GIF picker</string>
+    <string name="gif_no_results">No GIFs found</string>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         Non-translatable helpers
+         ══════════════════════════════════════════════════════════════════ -->
+    <!-- Page indicator "current / total" — purely numeric, locale-independent. -->
+    <string name="page_indicator" translatable="false">%1$d / %2$d</string>
+    <!-- Decorative navigation / toggle glyphs (not words) -->
+    <string name="glyph_page_prev" translatable="false">◀</string>
+    <string name="glyph_page_next" translatable="false">▶</string>
+    <string name="glyph_regex_toggle" translatable="false">.*</string>
+    <string name="glyph_private_badge" translatable="false">🔒</string>
+
+    <!-- Swipe Debug Log — internal diagnostic tool, not localized (swipe_debug_activity) -->
+    <string name="debug_back" translatable="false">Back</string>
+    <string name="debug_swipe_log_title" translatable="false">Swipe Debug Log</string>
+    <string name="debug_save_to_file" translatable="false">Save to file</string>
+    <string name="debug_copy_to_clipboard" translatable="false">Copy to clipboard</string>
+    <string name="debug_clear_logs" translatable="false">Clear logs</string>
+    <string name="debug_input_hint" translatable="false">Type or swipe here…</string>
+    <string name="debug_waiting_input" translatable="false">Waiting for swipe input…\n</string>
 </resources>

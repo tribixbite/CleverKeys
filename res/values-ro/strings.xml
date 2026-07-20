@@ -187,4 +187,61 @@
 
     <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
     <string name="suggestion_add_to_dictionary">Adăugați „%1$s” în dicționar?</string>
+
+    <!-- Dictionary manager -->
+    <string name="dict_search_hint">Caută cuvinte…</string>
+    <string name="dict_reset">Resetează</string>
+    <string name="dict_add_new_word">+ Adaugă un cuvânt nou</string>
+    <string name="dict_add_new_word_hint">Atinge pentru a adăuga un cuvânt personalizat</string>
+    <string name="dict_word_frequency">Frecvență: %1$d</string>
+    <string name="dict_edit">Editează</string>
+    <string name="dict_delete">Șterge</string>
+    <string name="dict_no_words">Niciun cuvânt găsit</string>
+    <string name="dict_error_loading">Eroare la încărcarea cuvintelor: %1$s</string>
+
+    <!-- Clipboard filter dialog -->
+    <string name="clipboard_filter_date_enable">Activează filtrul de dată</string>
+    <string name="clipboard_filter_show_entries">Arată intrările</string>
+    <string name="clipboard_filter_before">Înainte de</string>
+    <string name="clipboard_filter_after">După</string>
+    <string name="clipboard_filter_select_date">Selectează data</string>
+    <string name="clipboard_filter_status">Stare</string>
+    <string name="clipboard_filter_status_active">Activ</string>
+    <string name="clipboard_filter_status_planned">Planificat</string>
+    <string name="clipboard_filter_status_completed">Finalizat</string>
+    <string name="clipboard_filter_status_hint">Selectează cel puțin o stare</string>
+    <string name="clipboard_filter_tags">Etichete</string>
+    <string name="clipboard_filter_no_tags">Nicio etichetă încă</string>
+    <string name="clipboard_filter_clear">Golește</string>
+    <string name="clipboard_filter_apply">Aplică</string>
+
+    <!-- Clipboard panel -->
+    <string name="clipboard_tab_history">Istoric recent al clipboardului</string>
+    <string name="clipboard_tab_pinned">Elemente fixate</string>
+    <string name="clipboard_tab_todos">Elemente de făcut</string>
+    <string name="clipboard_search_hint">Caută…</string>
+    <string name="clipboard_clear_search">Golește căutarea</string>
+    <string name="clipboard_toggle_regex">Comută căutarea regex</string>
+    <string name="clipboard_date_filter">Filtru de dată</string>
+    <string name="clipboard_close">Închide clipboardul</string>
+    <string name="clipboard_media_thumbnail">Miniatură media</string>
+    <string name="clipboard_animated">Animat</string>
+    <string name="clipboard_private_entry">Intrare privată</string>
+    <string name="clipboard_tags_header">Etichete: %1$s</string>
+    <string name="clipboard_current_tags">Etichete curente</string>
+    <string name="clipboard_add_from_existing">Adaugă din cele existente</string>
+    <string name="clipboard_tag_add">Adaugă</string>
+    <string name="clipboard_no_tags">Nicio etichetă</string>
+    <string name="clipboard_new_tag_hint">Etichetă nouă…</string>
+    <string name="clipboard_close_tag_panel">Închide panoul de etichete</string>
+
+    <!-- Emoji picker -->
+    <string name="emoji_search_hint">Caută emoji…</string>
+    <string name="emoji_close">Închide selectorul de emoji</string>
+    <string name="emoji_no_results_query">Niciun emoji găsit pentru „%1$s”</string>
+
+    <!-- GIF picker -->
+    <string name="gif_search_hint">Caută GIF-uri…</string>
+    <string name="gif_close">Închide selectorul de GIF-uri</string>
+    <string name="gif_no_results">Niciun GIF găsit</string>
 </resources>

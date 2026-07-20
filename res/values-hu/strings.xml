@@ -156,4 +156,63 @@
 
     <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
     <string name="suggestion_add_to_dictionary">Hozzáadja a(z) „%1$s” szót a szótárhoz?</string>
+
+    <!-- Dictionary editor -->
+    <string name="dict_search_hint">Szavak keresése…</string>
+    <string name="dict_reset">Visszaállítás</string>
+    <string name="dict_add_new_word">+ Új szó hozzáadása</string>
+    <string name="dict_add_new_word_hint">Koppintson egyéni szó hozzáadásához</string>
+    <string name="dict_word_frequency">Gyakoriság: %1$d</string>
+    <string name="dict_edit">Szerkesztés</string>
+    <string name="dict_delete">Törlés</string>
+    <string name="dict_no_words">Nem található szó</string>
+    <string name="dict_error_loading">Hiba a szavak betöltésekor: %1$s</string>
+
+    <!-- Clipboard filters -->
+    <string name="clipboard_filter_date_enable">Dátumszűrő engedélyezése</string>
+    <string name="clipboard_filter_show_entries">Bejegyzések megjelenítése</string>
+    <string name="clipboard_filter_before">Előtte</string>
+    <string name="clipboard_filter_after">Utána</string>
+    <string name="clipboard_filter_select_date">Dátum kiválasztása</string>
+    <string name="clipboard_filter_status">Állapot</string>
+    <string name="clipboard_filter_status_active">Aktív</string>
+    <string name="clipboard_filter_status_planned">Tervezett</string>
+    <string name="clipboard_filter_status_completed">Befejezett</string>
+    <string name="clipboard_filter_status_hint">Válasszon ki legalább egy állapotot</string>
+    <string name="clipboard_filter_tags">Címkék</string>
+    <string name="clipboard_filter_no_tags">Még nincsenek címkék</string>
+    <string name="clipboard_filter_clear">Törlés</string>
+    <string name="clipboard_filter_apply">Alkalmaz</string>
+
+    <!-- Clipboard tabs & controls -->
+    <string name="clipboard_tab_history">Legutóbbi vágólap-előzmények</string>
+    <string name="clipboard_tab_pinned">Rögzített elemek</string>
+    <string name="clipboard_tab_todos">Teendők</string>
+    <string name="clipboard_search_hint">Keresés…</string>
+    <string name="clipboard_clear_search">Keresés törlése</string>
+    <string name="clipboard_toggle_regex">Regex keresés be-/kikapcsolása</string>
+    <string name="clipboard_date_filter">Dátumszűrő</string>
+    <string name="clipboard_close">Vágólap bezárása</string>
+    <string name="clipboard_media_thumbnail">Médiabélyegkép</string>
+    <string name="clipboard_animated">Animált</string>
+    <string name="clipboard_private_entry">Privát bejegyzés</string>
+
+    <!-- Clipboard tag panel -->
+    <string name="clipboard_tags_header">Címkék: %1$s</string>
+    <string name="clipboard_current_tags">Aktuális címkék</string>
+    <string name="clipboard_add_from_existing">Hozzáadás a meglévők közül</string>
+    <string name="clipboard_tag_add">Hozzáadás</string>
+    <string name="clipboard_no_tags">Nincsenek címkék</string>
+    <string name="clipboard_new_tag_hint">Új címke…</string>
+    <string name="clipboard_close_tag_panel">Címkepanel bezárása</string>
+
+    <!-- Emoji picker -->
+    <string name="emoji_search_hint">Emoji keresése…</string>
+    <string name="emoji_close">Emoji-választó bezárása</string>
+    <string name="emoji_no_results_query">Nem található emoji erre: \"%1$s\"</string>
+
+    <!-- GIF picker -->
+    <string name="gif_search_hint">GIF-ek keresése…</string>
+    <string name="gif_close">GIF-választó bezárása</string>
+    <string name="gif_no_results">Nem található GIF</string>
 </resources>

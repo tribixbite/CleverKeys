@@ -141,6 +141,9 @@ class Keyboard2View @JvmOverloads constructor(
      */
     private val _keyCodeLowerCache = java.util.IdentityHashMap<KeyboardData.Key, String>()
 
+    // Reused by onLayout for systemGestureExclusionRects (avoid layout-time allocation)
+    private val _gestureExclusionRect = Rect()
+
     private var _keyWidth = 0f
     private var _mainLabelSize = 0f
     private var _subLabelSize = 0f
@@ -1344,6 +1347,13 @@ class Keyboard2View @JvmOverloads constructor(
         vibrate(event)
     }
 
+    // DrawAllocation: onMeasure runs only on size/config changes (not per frame).
+    // The two flagged allocations are structurally required and cannot be
+    // preallocated: (1) WindowInsets.getInsets()/systemWindowInsets return a fresh
+    // Insets object owned by the platform, and (2) the theme-cache key is a String
+    // derived from mutable geometry (keyWidth/config.version) used for HashMap
+    // lookup. Both are dwarfed by the Theme.Computed build on a cache miss.
+    @SuppressLint("DrawAllocation")
     override fun onMeasure(wSpec: Int, hSpec: Int) {
         val keyboard = _keyboard
         if (keyboard == null) {
@@ -1427,14 +1437,15 @@ class Keyboard2View @JvmOverloads constructor(
         if (!changed)
             return
         if (VERSION.SDK_INT >= 29) {
-            // Disable the back-gesture on the keyboard area
-            val keyboard_area = Rect(
+            // Disable the back-gesture on the keyboard area (reused Rect — onLayout
+            // is a layout op, lint DrawAllocation applies)
+            _gestureExclusionRect.set(
                 left + _marginLeft.toInt(),
                 top + _config.marginTop.toInt(),
                 right - _marginRight.toInt(),
                 bottom - _marginBottom.toInt()
             )
-            systemGestureExclusionRects = listOf(keyboard_area)
+            systemGestureExclusionRects = listOf(_gestureExclusionRect)
         }
 
         // Push current layout's key positions to the autocorrect adjacency

@@ -163,4 +163,63 @@
 
     <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
     <string name="suggestion_add_to_dictionary">\'%1$s\' aan woordenboek toevoegen?</string>
+
+    <!-- Dictionary editor -->
+    <string name="dict_search_hint">Woorden zoeken…</string>
+    <string name="dict_reset">Resetten</string>
+    <string name="dict_add_new_word">+ Nieuw woord toevoegen</string>
+    <string name="dict_add_new_word_hint">Tik om een aangepast woord toe te voegen</string>
+    <string name="dict_word_frequency">Frequentie: %1$d</string>
+    <string name="dict_edit">Bewerken</string>
+    <string name="dict_delete">Verwijderen</string>
+    <string name="dict_no_words">Geen woorden gevonden</string>
+    <string name="dict_error_loading">Fout bij het laden van woorden: %1$s</string>
+
+    <!-- Clipboard filter dialog -->
+    <string name="clipboard_filter_date_enable">Datumfilter inschakelen</string>
+    <string name="clipboard_filter_show_entries">Items tonen</string>
+    <string name="clipboard_filter_before">Vóór</string>
+    <string name="clipboard_filter_after">Na</string>
+    <string name="clipboard_filter_select_date">Datum selecteren</string>
+    <string name="clipboard_filter_status">Status</string>
+    <string name="clipboard_filter_status_active">Actief</string>
+    <string name="clipboard_filter_status_planned">Gepland</string>
+    <string name="clipboard_filter_status_completed">Voltooid</string>
+    <string name="clipboard_filter_status_hint">Selecteer ten minste één status</string>
+    <string name="clipboard_filter_tags">Tags</string>
+    <string name="clipboard_filter_no_tags">Nog geen tags</string>
+    <string name="clipboard_filter_clear">Wissen</string>
+    <string name="clipboard_filter_apply">Toepassen</string>
+
+    <!-- Clipboard tabs and controls -->
+    <string name="clipboard_tab_history">Recente klembordgeschiedenis</string>
+    <string name="clipboard_tab_pinned">Vastgezette items</string>
+    <string name="clipboard_tab_todos">To-do-items</string>
+    <string name="clipboard_search_hint">Zoeken…</string>
+    <string name="clipboard_clear_search">Zoekopdracht wissen</string>
+    <string name="clipboard_toggle_regex">Regex-zoekopdracht in-/uitschakelen</string>
+    <string name="clipboard_date_filter">Datumfilter</string>
+    <string name="clipboard_close">Klembord sluiten</string>
+    <string name="clipboard_media_thumbnail">Mediaminiatuur</string>
+    <string name="clipboard_animated">Geanimeerd</string>
+    <string name="clipboard_private_entry">Privé-item</string>
+
+    <!-- Clipboard tag panel -->
+    <string name="clipboard_tags_header">Tags: %1$s</string>
+    <string name="clipboard_current_tags">Huidige tags</string>
+    <string name="clipboard_add_from_existing">Toevoegen uit bestaande</string>
+    <string name="clipboard_tag_add">Toevoegen</string>
+    <string name="clipboard_no_tags">Geen tags</string>
+    <string name="clipboard_new_tag_hint">Nieuwe tag…</string>
+    <string name="clipboard_close_tag_panel">Tagpaneel sluiten</string>
+
+    <!-- Emoji picker -->
+    <string name="emoji_search_hint">Emoji zoeken…</string>
+    <string name="emoji_close">Emojikiezer sluiten</string>
+    <string name="emoji_no_results_query">Geen emoji gevonden voor \"%1$s\"</string>
+
+    <!-- GIF picker -->
+    <string name="gif_search_hint">GIF\'s zoeken…</string>
+    <string name="gif_close">GIF-kiezer sluiten</string>
+    <string name="gif_no_results">Geen GIF\'s gevonden</string>
 </resources>

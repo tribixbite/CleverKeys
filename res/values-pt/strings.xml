@@ -163,4 +163,63 @@
 
     <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
     <string name="suggestion_add_to_dictionary">Adicionar \'%1$s\' ao dicionário?</string>
+
+    <!-- Dictionary editor -->
+    <string name="dict_search_hint">Buscar palavras…</string>
+    <string name="dict_reset">Redefinir</string>
+    <string name="dict_add_new_word">+ Adicionar nova palavra</string>
+    <string name="dict_add_new_word_hint">Toque para adicionar uma palavra personalizada</string>
+    <string name="dict_word_frequency">Frequência: %1$d</string>
+    <string name="dict_edit">Editar</string>
+    <string name="dict_delete">Excluir</string>
+    <string name="dict_no_words">Nenhuma palavra encontrada</string>
+    <string name="dict_error_loading">Erro ao carregar palavras: %1$s</string>
+
+    <!-- Clipboard filter dialog -->
+    <string name="clipboard_filter_date_enable">Ativar filtro de data</string>
+    <string name="clipboard_filter_show_entries">Mostrar entradas</string>
+    <string name="clipboard_filter_before">Antes</string>
+    <string name="clipboard_filter_after">Depois</string>
+    <string name="clipboard_filter_select_date">Selecionar data</string>
+    <string name="clipboard_filter_status">Status</string>
+    <string name="clipboard_filter_status_active">Ativo</string>
+    <string name="clipboard_filter_status_planned">Planejado</string>
+    <string name="clipboard_filter_status_completed">Concluído</string>
+    <string name="clipboard_filter_status_hint">Selecione ao menos um status</string>
+    <string name="clipboard_filter_tags">Tags</string>
+    <string name="clipboard_filter_no_tags">Ainda não há tags</string>
+    <string name="clipboard_filter_clear">Limpar</string>
+    <string name="clipboard_filter_apply">Aplicar</string>
+
+    <!-- Clipboard tabs and controls -->
+    <string name="clipboard_tab_history">Histórico recente da área de transferência</string>
+    <string name="clipboard_tab_pinned">Itens fixados</string>
+    <string name="clipboard_tab_todos">Itens To-do</string>
+    <string name="clipboard_search_hint">Buscar…</string>
+    <string name="clipboard_clear_search">Limpar busca</string>
+    <string name="clipboard_toggle_regex">Alternar busca por regex</string>
+    <string name="clipboard_date_filter">Filtro de data</string>
+    <string name="clipboard_close">Fechar área de transferência</string>
+    <string name="clipboard_media_thumbnail">Miniatura de mídia</string>
+    <string name="clipboard_animated">Animado</string>
+    <string name="clipboard_private_entry">Entrada privada</string>
+
+    <!-- Clipboard tag panel -->
+    <string name="clipboard_tags_header">Tags: %1$s</string>
+    <string name="clipboard_current_tags">Tags atuais</string>
+    <string name="clipboard_add_from_existing">Adicionar de existentes</string>
+    <string name="clipboard_tag_add">Adicionar</string>
+    <string name="clipboard_no_tags">Sem tags</string>
+    <string name="clipboard_new_tag_hint">Nova tag…</string>
+    <string name="clipboard_close_tag_panel">Fechar painel de tags</string>
+
+    <!-- Emoji picker -->
+    <string name="emoji_search_hint">Buscar emoji…</string>
+    <string name="emoji_close">Fechar seletor de emojis</string>
+    <string name="emoji_no_results_query">Nenhum emoji encontrado para \"%1$s\"</string>
+
+    <!-- GIF picker -->
+    <string name="gif_search_hint">Buscar GIFs…</string>
+    <string name="gif_close">Fechar seletor de GIFs</string>
+    <string name="gif_no_results">Nenhum GIF encontrado</string>
 </resources>

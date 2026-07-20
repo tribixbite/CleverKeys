@@ -187,4 +187,61 @@
 
     <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
     <string name="suggestion_add_to_dictionary">«%1$s» به واژه‌نامه افزوده شود؟</string>
+
+    <!-- Dictionary editor -->
+    <string name="dict_search_hint">جستجوی واژه‌ها…</string>
+    <string name="dict_reset">بازنشانی</string>
+    <string name="dict_add_new_word">+ افزودن واژه جدید</string>
+    <string name="dict_add_new_word_hint">برای افزودن واژه سفارشی ضربه بزنید</string>
+    <string name="dict_word_frequency">بسامد: %1$d</string>
+    <string name="dict_edit">ویرایش</string>
+    <string name="dict_delete">حذف</string>
+    <string name="dict_no_words">واژه‌ای یافت نشد</string>
+    <string name="dict_error_loading">خطا در بارگذاری واژه‌ها: %1$s</string>
+
+    <!-- Clipboard filter -->
+    <string name="clipboard_filter_date_enable">فعال‌سازی صافی تاریخ</string>
+    <string name="clipboard_filter_show_entries">نمایش موارد</string>
+    <string name="clipboard_filter_before">پیش از</string>
+    <string name="clipboard_filter_after">پس از</string>
+    <string name="clipboard_filter_select_date">انتخاب تاریخ</string>
+    <string name="clipboard_filter_status">وضعیت</string>
+    <string name="clipboard_filter_status_active">فعال</string>
+    <string name="clipboard_filter_status_planned">برنامه‌ریزی‌شده</string>
+    <string name="clipboard_filter_status_completed">انجام‌شده</string>
+    <string name="clipboard_filter_status_hint">دست‌کم یک وضعیت را انتخاب کنید</string>
+    <string name="clipboard_filter_tags">برچسب‌ها</string>
+    <string name="clipboard_filter_no_tags">هنوز برچسبی نیست</string>
+    <string name="clipboard_filter_clear">پاک کردن</string>
+    <string name="clipboard_filter_apply">اعمال</string>
+
+    <!-- Clipboard panel -->
+    <string name="clipboard_tab_history">تاریخچه اخیر بریده‌دان</string>
+    <string name="clipboard_tab_pinned">موارد سنجاق‌شده</string>
+    <string name="clipboard_tab_todos">موارد کارها</string>
+    <string name="clipboard_search_hint">جستجو…</string>
+    <string name="clipboard_clear_search">پاک کردن جستجو</string>
+    <string name="clipboard_toggle_regex">تغییر وضعیت جستجوی عبارت باقاعده</string>
+    <string name="clipboard_date_filter">صافی تاریخ</string>
+    <string name="clipboard_close">بستن بریده‌دان</string>
+    <string name="clipboard_media_thumbnail">بندانگشتی رسانه</string>
+    <string name="clipboard_animated">پویانمایی</string>
+    <string name="clipboard_private_entry">مورد خصوصی</string>
+    <string name="clipboard_tags_header">برچسب‌ها: %1$s</string>
+    <string name="clipboard_current_tags">برچسب‌های کنونی</string>
+    <string name="clipboard_add_from_existing">افزودن از موارد موجود</string>
+    <string name="clipboard_tag_add">افزودن</string>
+    <string name="clipboard_no_tags">بدون برچسب</string>
+    <string name="clipboard_new_tag_hint">برچسب جدید…</string>
+    <string name="clipboard_close_tag_panel">بستن پنل برچسب</string>
+
+    <!-- Emoji picker -->
+    <string name="emoji_search_hint">جستجوی ایموجی…</string>
+    <string name="emoji_close">بستن انتخابگر ایموجی</string>
+    <string name="emoji_no_results_query">ایموجی‌ای برای \"%1$s\" یافت نشد</string>
+
+    <!-- GIF picker -->
+    <string name="gif_search_hint">جستجوی گیف…</string>
+    <string name="gif_close">بستن انتخابگر گیف</string>
+    <string name="gif_no_results">گیفی یافت نشد</string>
 </resources>

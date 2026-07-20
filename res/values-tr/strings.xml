@@ -161,4 +161,61 @@
 
     <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
     <string name="suggestion_add_to_dictionary">\'%1$s\' sözlüğe eklensin mi?</string>
+
+    <!-- Dictionary manager -->
+    <string name="dict_search_hint">Kelime ara…</string>
+    <string name="dict_reset">Sıfırla</string>
+    <string name="dict_add_new_word">+ Yeni Kelime Ekle</string>
+    <string name="dict_add_new_word_hint">Özel bir kelime eklemek için dokunun</string>
+    <string name="dict_word_frequency">Sıklık: %1$d</string>
+    <string name="dict_edit">Düzenle</string>
+    <string name="dict_delete">Sil</string>
+    <string name="dict_no_words">Kelime bulunamadı</string>
+    <string name="dict_error_loading">Kelimeler yüklenirken hata: %1$s</string>
+
+    <!-- Clipboard filter dialog -->
+    <string name="clipboard_filter_date_enable">Tarih Filtresini Etkinleştir</string>
+    <string name="clipboard_filter_show_entries">Kayıtları göster</string>
+    <string name="clipboard_filter_before">Önce</string>
+    <string name="clipboard_filter_after">Sonra</string>
+    <string name="clipboard_filter_select_date">Tarih Seç</string>
+    <string name="clipboard_filter_status">Durum</string>
+    <string name="clipboard_filter_status_active">Etkin</string>
+    <string name="clipboard_filter_status_planned">Planlanmış</string>
+    <string name="clipboard_filter_status_completed">Tamamlanmış</string>
+    <string name="clipboard_filter_status_hint">En az bir durum seçin</string>
+    <string name="clipboard_filter_tags">Etiketler</string>
+    <string name="clipboard_filter_no_tags">Henüz etiket yok</string>
+    <string name="clipboard_filter_clear">Temizle</string>
+    <string name="clipboard_filter_apply">Uygula</string>
+
+    <!-- Clipboard panel -->
+    <string name="clipboard_tab_history">Son pano geçmişi</string>
+    <string name="clipboard_tab_pinned">Sabitlenmiş öğeler</string>
+    <string name="clipboard_tab_todos">Yapılacak öğeler</string>
+    <string name="clipboard_search_hint">Ara…</string>
+    <string name="clipboard_clear_search">Aramayı temizle</string>
+    <string name="clipboard_toggle_regex">Regex aramasını aç/kapat</string>
+    <string name="clipboard_date_filter">Tarih filtresi</string>
+    <string name="clipboard_close">Panoyu kapat</string>
+    <string name="clipboard_media_thumbnail">Medya küçük resmi</string>
+    <string name="clipboard_animated">Animasyonlu</string>
+    <string name="clipboard_private_entry">Gizli kayıt</string>
+    <string name="clipboard_tags_header">Etiketler: %1$s</string>
+    <string name="clipboard_current_tags">Mevcut etiketler</string>
+    <string name="clipboard_add_from_existing">Mevcutlardan ekle</string>
+    <string name="clipboard_tag_add">Ekle</string>
+    <string name="clipboard_no_tags">Etiket yok</string>
+    <string name="clipboard_new_tag_hint">Yeni etiket…</string>
+    <string name="clipboard_close_tag_panel">Etiket panelini kapat</string>
+
+    <!-- Emoji picker -->
+    <string name="emoji_search_hint">Emoji ara…</string>
+    <string name="emoji_close">Emoji seçiciyi kapat</string>
+    <string name="emoji_no_results_query">\"%1$s\" için emoji bulunamadı</string>
+
+    <!-- GIF picker -->
+    <string name="gif_search_hint">GIF ara…</string>
+    <string name="gif_close">GIF seçiciyi kapat</string>
+    <string name="gif_no_results">GIF bulunamadı</string>
 </resources>

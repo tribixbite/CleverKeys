@@ -154,4 +154,61 @@
 
     <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
     <string name="suggestion_add_to_dictionary">Ajouter « %1$s » au dictionnaire ?</string>
+
+    <!-- Dictionary editor -->
+    <string name="dict_search_hint">Rechercher des mots…</string>
+    <string name="dict_reset">Réinitialiser</string>
+    <string name="dict_add_new_word">+ Ajouter un nouveau mot</string>
+    <string name="dict_add_new_word_hint">Appuyez pour ajouter un mot personnalisé</string>
+    <string name="dict_word_frequency">Fréquence : %1$d</string>
+    <string name="dict_edit">Modifier</string>
+    <string name="dict_delete">Supprimer</string>
+    <string name="dict_no_words">Aucun mot trouvé</string>
+    <string name="dict_error_loading">Erreur lors du chargement des mots : %1$s</string>
+
+    <!-- Clipboard filter -->
+    <string name="clipboard_filter_date_enable">Activer le filtre par date</string>
+    <string name="clipboard_filter_show_entries">Afficher les entrées</string>
+    <string name="clipboard_filter_before">Avant</string>
+    <string name="clipboard_filter_after">Après</string>
+    <string name="clipboard_filter_select_date">Sélectionner une date</string>
+    <string name="clipboard_filter_status">Statut</string>
+    <string name="clipboard_filter_status_active">Actif</string>
+    <string name="clipboard_filter_status_planned">Planifié</string>
+    <string name="clipboard_filter_status_completed">Terminé</string>
+    <string name="clipboard_filter_status_hint">Sélectionnez au moins un statut</string>
+    <string name="clipboard_filter_tags">Étiquettes</string>
+    <string name="clipboard_filter_no_tags">Aucune étiquette pour l\'instant</string>
+    <string name="clipboard_filter_clear">Effacer</string>
+    <string name="clipboard_filter_apply">Appliquer</string>
+
+    <!-- Clipboard panel -->
+    <string name="clipboard_tab_history">Historique récent du presse-papiers</string>
+    <string name="clipboard_tab_pinned">Éléments épinglés</string>
+    <string name="clipboard_tab_todos">Tâches à faire</string>
+    <string name="clipboard_search_hint">Rechercher…</string>
+    <string name="clipboard_clear_search">Effacer la recherche</string>
+    <string name="clipboard_toggle_regex">Activer la recherche par expression régulière</string>
+    <string name="clipboard_date_filter">Filtre par date</string>
+    <string name="clipboard_close">Fermer le presse-papiers</string>
+    <string name="clipboard_media_thumbnail">Miniature du média</string>
+    <string name="clipboard_animated">Animé</string>
+    <string name="clipboard_private_entry">Entrée privée</string>
+    <string name="clipboard_tags_header">Étiquettes : %1$s</string>
+    <string name="clipboard_current_tags">Étiquettes actuelles</string>
+    <string name="clipboard_add_from_existing">Ajouter à partir des existantes</string>
+    <string name="clipboard_tag_add">Ajouter</string>
+    <string name="clipboard_no_tags">Aucune étiquette</string>
+    <string name="clipboard_new_tag_hint">Nouvelle étiquette…</string>
+    <string name="clipboard_close_tag_panel">Fermer le panneau des étiquettes</string>
+
+    <!-- Emoji picker -->
+    <string name="emoji_search_hint">Rechercher un emoji…</string>
+    <string name="emoji_close">Fermer le sélecteur d\'emoji</string>
+    <string name="emoji_no_results_query">Aucun emoji trouvé pour « %1$s »</string>
+
+    <!-- GIF picker -->
+    <string name="gif_search_hint">Rechercher des GIF…</string>
+    <string name="gif_close">Fermer le sélecteur de GIF</string>
+    <string name="gif_no_results">Aucun GIF trouvé</string>
 </resources>
