@@ -4,11 +4,11 @@
 Spec: `docs/specs/geometric-swipe-engine.md` (SHARK2-style, layout-agnostic, zero-training,
 pure-JVM `swipe.geometric` package; NOT wired into live pipeline — WP9 stays deferred).
 - [x] Phase 1 — Geometry core + fixtures (6a7f08f10)
-- [x] Phase 2 — Projection tiers, templates, CKDT/JSON/ru-zip dictionary loaders (6d26088c)
-- [x] Phase 3 — TemplateIndex/TemplateCache/CandidatePruner (+memory assertion) (e4b996ba)
-- [x] Phase 4 — Preprocessor, PathScorer, CandidateRanker, engine facade (4b721d6b)
-- [x] Phase 5 — Synthetic trace generator + accuracy harness (0db90bf8)
-- [x] Phase 6 — Tuning, FINAL threshold ratchet, adversarial + perf benches, -PgeoFull (20f33197)
+- [x] Phase 2 — Projection tiers, templates, CKDT/JSON/ru-zip dictionary loaders (4afb333d)
+- [x] Phase 3 — TemplateIndex/TemplateCache/CandidatePruner (+memory assertion) (0985aea6)
+- [x] Phase 4 — Preprocessor, PathScorer, CandidateRanker, engine facade (d41944d3)
+- [x] Phase 5 — Synthetic trace generator + accuracy harness (d20d6c9a)
+- [x] Phase 6 — Tuning, FINAL threshold ratchet, adversarial + perf benches, -PgeoFull (b260b8be)
 - [ ] Phase 7 (optional, gated) — neural characterization golden file
 - [x] Audit-remediation round 2026-07-20: TemplateIndex collapse-scratch overflow fixed
       (AIOOBE at 66+ collapsed keys / wrong lastKeyId at 65), decode() NaN/Inf trace guard,
@@ -22,7 +22,7 @@ pure-JVM `swipe.geometric` package; NOT wired into live pipeline — WP9 stays d
       spec As-Built Notes appendix + Status flip. Deviations noted: SLOPPY top-5 0.82,
       whole-pruner recall floors (see spec § As-Built Notes).
 - [ ] PRE-EXISTING geoFull red (discovered in the audit round, NOT introduced by it —
-      bit-identical failure reproduced at clean HEAD a626933d in a scratch worktree):
+      bit-identical failure reproduced at clean HEAD 6bec06b4 in a scratch worktree):
       `sloppy_underGeoFull` fails on the two hardest non-default layouts — en/weird
       SLOPPY top-3 64.5% and en/Dvorak 75.8% vs the 0.78 FINAL floor. Phase 6 ratcheted
       the floors against the two DEFAULT layouts only; the four smoke classes' geoFull
@@ -32,25 +32,25 @@ pure-JVM `swipe.geometric` package; NOT wired into live pipeline — WP9 stays d
 - [x] Follow-ups DONE 2026-07-20 (fixed directly per user, no issue filed): README en row
       52k→98,140 (binary-verified all bundled counts); grek_qwerty `script="latin"`→`"greek"`
 - [x] NOTE from lint session: LayoutProjection's UnicodeScript gate crashed API 21-23 (NewApi);
-      rewritten as UnicodeBlock (purity-compliant, GeoProjection/Accuracy suites green) in 76afe69f.
+      rewritten as UnicodeBlock (purity-compliant, GeoProjection/Accuracy suites green) in e92c948e.
 
-## ✅ Translation review + warning burn-down + WP9 oracle (2026-07-20 cont., 4c9fe31f..ab9ceba4+)
+## ✅ Translation review + warning burn-down + WP9 oracle (2026-07-20 cont., 7a9bf03c..d54109d1+)
 - **21-locale native review** (5 Sonnet agents): 96 corrections — fr paste-as-plain-text said
   "Copier", es PageUp/Down swapped, ZWNJ translated as its opposite in 4 locales, tr debug notes in
   TalkBack labels, lv/uk wrong-register action keys, clipboard_remove_confirm asked to delete the
-  whole clipboard in 7 locales. Commit 4c9fe31f.
+  whole clipboard in 7 locales. Commit 7a9bf03c.
 - **Warning burn-down** (3 Opus): 1544-entry baseline → 113 remaining. DefaultLocale 64 (ROOT vs
   getDefault per-site, JSON-export ROOT load-bearing), Autoboxing 104, UnusedAttribute 82 targetApi,
   DirectBoot @TargetApi rescope saved a latent API 21-23 crash, debug swipe-log moved off hardcoded
-  Termux path (DebugLoggingManagerTest stubs filesDir now). Commit ab9ceba4. Wave-2 agent running
+  Termux path (DebugLoggingManagerTest stubs filesDir now). Commit d54109d1. Wave-2 agent running
   for the final 113 (HardcodedText 58 triage + SetTextI18n 37 + tail).
-- **WP9 oracle SHIPPED** (design 9fbdc487): PipelineCharacterizationTest 31 instrumented +
+- **WP9 oracle SHIPPED** (design 3a7a402e): PipelineCharacterizationTest 31 instrumented +
   PipelineOracleJvmTest 15 pure; 5 ORACLE-FLIP divergence pins (possessives/password/prompt-guard/
   shift-location/ML-split) tied to R-1 steps 3-5; pinned real quirk: augmentPredictionsWithPossessives
   yields "Book's's" (no ends-with-'s guard) — TODO post-unification. Suites: 1621 pure + 299 mock OK.
 - **Parallel-session collision**: concurrent sessions share this working tree; an uncommitted fix
   was clobbered by a checkout. Lesson recorded in CLAUDE.md header: commit immediately.
-- **LINT DEBT: ZERO (969c01a7).** Wave-2 landed (48 new strings × 21 locales, tools:text
+- **LINT DEBT: ZERO (3c6d6916).** Wave-2 landed (48 new strings × 21 locales, tools:text
   placeholders, performClick overrides, DrawAllocation hoists, -v21 merge). lint-baseline.xml
   regenerated EMPTY — `lintDebug` → "No issues found." with abortOnError=true. From 1544
   baselined issues (656 errors + 888 warnings) to 0 masked, all real fixes.

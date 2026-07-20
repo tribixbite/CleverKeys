@@ -507,8 +507,8 @@ Non-QWERTY layouts: same floors − 3 pts initially (ЙЦУКЕН: 31 center let
 
 ## As-Built Notes (2026-07-20)
 
-Phases 1–6 shipped in commits `6a7f08f10` (P1), `6d26088c` (P2), `e4b996ba` (P3),
-`4b721d6b` (P4), `0db90bf8` (P5), `20f33197` (P6); each phase's full deviation log
+Phases 1–6 shipped in commits `6a7f08f10` (P1), `4afb333d` (P2), `0985aea6` (P3),
+`d41944d3` (P4), `d20d6c9a` (P5), `b260b8be` (P6); each phase's full deviation log
 lives in its commit message / phase report. Deltas vs the tables above:
 
 **Final measured numbers (N=32 tuning-optimal defaults, deterministic):**
@@ -545,6 +545,6 @@ lives in its commit message / phase report. Deltas vs the tables above:
    layouts) are gracefully excluded — surfaced via
    `TemplateIndex.overLengthExcludedCount`, never thrown.
 5. **Tier-3 script gate uses `Character.UnicodeBlock`, not `UnicodeScript`**
-   (UnicodeScript is Android API 24+; minSdk is 21 — commit `76afe69f`).
+   (UnicodeScript is Android API 24+; minSdk is 21 — commit `e92c948e`).
 6. **dtwBand is a reserved knob enforced to 0** — the experimental DTW path was
    evaluated and not implemented (no measured win).
