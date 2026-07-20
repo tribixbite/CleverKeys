@@ -1,5 +1,31 @@
 # CleverKeys TODO
 
+## 🔜 NEXT — geo-engine queued implementation (state as of 2026-07-20 context-clear)
+- [ ] **Local-corpus replay (neural-vs-geo bridge)**: `~/storage/shared/Download/
+      combined_english_swipes_test.jsonl.txt` = 8,607 REAL en/QWERTY swipes in proshian
+      format `{curve:{x[],y[],t[],grid_name:"qwerty_english"},word}`, PIXEL coords
+      (~360×189 canvas), the neural model's held-out test distribution. Grid geometry
+      for "qwerty_english" lives in `tools/test_cli_predict.py` / `.ts` +
+      `model/train_character_model.py`. Value: (a) third independent real-corpus source;
+      (b) SAME traces the neural pipeline can decode → enables the Phase-7-adjacent
+      geometric-vs-neural head-to-head on identical inputs, informing the WP9 router.
+      Pattern: follow `GeoRealCorpusReplayTest` (fetch→cache→Assume+geoFull→A/B→
+      report-first floors). (`equix_training_data.jsonl` in same dir is unrelated PoW data.)
+- [ ] JCUKEN real replay: still blocked on corpus (NOT on HF — verified; Yandex Cup 2023
+      is off-Hub; proshian/neural-swipe-typing repo has acquisition pointers).
+- [ ] OQ-8 (Dvorak direction-channel closer): DE-PRIORITIZED — real Dvorak top-3 79.9%
+      clears the 0.78 floor; synthetic-only gap. Revisit only with real evidence.
+- [ ] Phase 7 (optional, gated): neural characterization golden file — partially superseded
+      by the local-corpus replay above (same comparison, better data).
+- [ ] WP9 wiring: owned by the CONCURRENT session (oracle + `unified_swipe_pipeline` flag
+      landing); geo router seam (`SwipeDecodingEngine`) ready — do not wire from this track
+      without checking that session's todo entries first.
+- Hard-won this round (also in project memory `geo-engine-datasets` file): HF datasets-server
+  `/filter?where="col"='val'` endpoint slices big datasets server-side (rare-slice fetch in
+  ~30 reqs vs 592); FUTO swipe-5 = multi-layout run (layout/language/dual_finger cols +
+  official layout JSONs at swipe-5/layouts/); corpus caches at
+  `~/.cache/cleverkeys-test/futo_*.jsonl.gz` (regenerate via scripts/fetch_futo_*.mjs).
+
 ## ✅ Multi-language dictionary regeneration — evidence classifier ported, DONE 2026-07-20
 `build_en_wordlist.py` → `scripts/build_wordlist.py` (LANG_CONFIG, 14 langs; `--lang en`
 bit-identical — keep 98,140 + identical reason-Counter). Regenerated: bundled es 50k,
