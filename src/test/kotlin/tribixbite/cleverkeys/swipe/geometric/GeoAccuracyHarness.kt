@@ -98,8 +98,18 @@ class GeoAccuracyHarness(
 
         // Round-robin fill from the buckets so every stratum is represented, shuffling
         // each bucket deterministically first.
+        //
+        // NFR-4 (cross-JVM determinism): iterate the buckets in a FIXED order keyed by
+        // the (freq, len) enum ordinals — NOT `byBucket.values` HashMap-iteration order.
+        // `Enum.hashCode()` is identity-based (`Object.hashCode`), so a `Pair<enum,enum>`
+        // HashMap iterates in a JVM-invocation-dependent order; that would make both the
+        // shuffle-RNG consumption order and the round-robin fill order (hence the whole
+        // sample and every accuracy number) differ between JVM runs. Sorting on the enum
+        // ordinals makes the sample bit-identical across invocations.
         val rng = Random(seed)
-        val buckets = byBucket.values.toList()
+        val buckets = byBucket.entries
+            .sortedWith(compareBy({ it.key.first.ordinal }, { it.key.second.ordinal }))
+            .map { it.value }
         for (b in buckets) shuffleDeterministic(b, rng)
         val out = ArrayList<SampleWord>(sampleSize)
         val cursors = IntArray(buckets.size)

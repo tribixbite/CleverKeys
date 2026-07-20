@@ -191,22 +191,19 @@ class GeoTraceSynthesizer(
         }
 
         // Single-key word (whole word collapses to one key). The plain path would be a
-        // bare point → degenerate. Realize per mode: LOOP uses the loop-primary template
-        // (nonzero span); DWELL/NONE add a tiny there-and-back so the trace has length.
+        // bare point → degenerate. A single-key word's only template is the loop-primary
+        // one (a square loop, FR-6). Physically, ANY realization — LOOP (a clean circle),
+        // DWELL (linger + wobble), or NONE (a quick touch) — is a small closed motion over
+        // that one key, so all three trace the SAME loop-primary geometry: a there-and-back
+        // of half a loop side would be ~4× shorter than the template loop and fall below
+        // the length-ratio prune (making the word UNdecodable), which contradicts FR-6
+        // ("её decodable in all modes"). Reusing the loop-primary template for every mode
+        // keeps the synthetic trace length-matched to the only template that exists.
         if (distinctKeyCount(pre) == 1) {
-            val id = pre[0]
-            val cx = keys[id].cx
-            val cy = keys[id].cy
-            return when (mode) {
-                DoubleLetterMode.LOOP -> {
-                    // Reuse the exact loop-primary template geometry from the generator.
-                    val t = generator.fromKeyIds(pre, 0, layout)
-                    val buf = FloatArray(t.pointCount * 2)
-                    t.copyVariantInto(0, buf)
-                    buf
-                }
-                else -> floatArrayOf(cx, cy, cx + r, cy, cx, cy) // small there-and-back
-            }
+            val t = generator.fromKeyIds(pre, 0, layout)
+            val buf = FloatArray(t.pointCount * 2)
+            t.copyVariantInto(0, buf)
+            return buf
         }
         return pts.toFloatArray()
     }

@@ -466,6 +466,12 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.swipe.geometric.GeoAccuracyQwertzDeTest',
     'tribixbite.cleverkeys.swipe.geometric.GeoAccuracyDvorakEnTest',
     'tribixbite.cleverkeys.swipe.geometric.GeoAccuracyWeirdLayoutTest',
+    // Phase 6 — tuning, final thresholds, adversarial + perf
+    'tribixbite.cleverkeys.swipe.geometric.GeoConfusablesTest',
+    'tribixbite.cleverkeys.swipe.geometric.GeoDoubleLetterTest',
+    'tribixbite.cleverkeys.swipe.geometric.GeoShortWordTest',
+    'tribixbite.cleverkeys.swipe.geometric.GeoAblationTest',
+    'tribixbite.cleverkeys.swipe.geometric.GeoBenchmarkTest',
     // SwipePrunerTest excluded: requires android.util.Log (MockK + Robolectric)
   ]
 
