@@ -61,7 +61,15 @@ large unification (#1/#2) last behind its own test gate.
 - **Test:** none needed (logging only); covered incidentally when R-1 merges behavior.
 - **Risk:** Trivial.
 
-### R-7 [P1] Add prompt guard to IC cursor-sync post
+### R-7 [P1] Add prompt guard to IC cursor-sync post — RESOLVED (WP9 step 5, 2026-07-20)
+- **Status:** LANDED structurally via the preferred option (1). `InputCoordinator.onCursorMoved`
+  now routes its prediction+post phase to `SuggestionHandler.handleCursorSyncPrediction` →
+  `updatePredictionsForCurrentWord` (behind `config.unified_swipe_pipeline`, default TRUE), which
+  already guards on `specialPromptActive`. Cursor-sync and typing share ONE guarded pipeline, so a
+  cursor-sync pass can no longer clobber an SH prompt — no shared mutable state added. Deterministic
+  `oracle_cursorSync_doesNotClobberAutocorrectUndoPrompt` pins it. Legacy IC path (flag off) retains
+  the old unguarded `triggerPredictionsForPrefix`. See
+  `docs/audit/remediation-plans/wp9-pipeline-unification-oracle.md` §"Step 5 — LANDED".
 - **File:** `InputCoordinator.kt:342–350` (post block) and `triggerPredictionsForPrefix` 214–357.
 - **Change:** IC must not clobber a special prompt owned by SH. The `specialPromptActive` flag lives on SH (SuggestionHandler 174–175). Two options:
   1. **Preferred (post-unification):** once one pipeline owns suggestions (R-1), this race disappears; sequence R-7 to fold into R-1.

@@ -194,6 +194,23 @@ class InputCoordinator(
         swipeResultDelegate = handler
     }
 
+    /**
+     * WP9 R-1 step 5: SuggestionHandler that owns the unified cursor-sync prediction flow. When
+     * wired AND [Config.unified_swipe_pipeline] is true, [onCursorMoved]'s debounced runnable — after
+     * the (retained) cursor bookkeeping + [PredictionContextTracker.synchronizeWithCursor] — routes the
+     * prediction+post phase to [SuggestionHandler.handleCursorSyncPrediction] instead of the legacy
+     * [triggerPredictionsForPrefix]. This folds cursor-sync into SH's single guarded pipeline
+     * (contraction injection, exact-add, I-word cap, capitalization-from-prefix, AND the
+     * `specialPromptActive` prompt guard) — structurally resolving R-7. When null (unwired unit
+     * contexts) or the flag is false, the legacy IC-only cursor-sync path runs unchanged.
+     */
+    private var cursorSyncDelegate: SuggestionHandler? = null
+
+    /** Wires the unified cursor-sync delegate (see [cursorSyncDelegate]); set by ManagerInitializer. */
+    fun setCursorSyncDelegate(handler: SuggestionHandler?) {
+        cursorSyncDelegate = handler
+    }
+
     // Swipe ML data collection
     private var currentSwipeData: SwipeMLData? = null
 
@@ -265,7 +282,20 @@ class InputCoordinator(
             val rawPrefix = contextTracker.getRawPrefix()
 
             if (prefix.isNotEmpty()) {
-                triggerPredictionsForPrefix(prefix, rawPrefix, ic, editorInfo)
+                // WP9 R-1 step 5: when the unified pipeline is enabled (default) and the cursor-sync
+                // delegate is wired, route the prediction+post phase to SuggestionHandler — it reuses
+                // its single guarded pipeline (contraction injection, exact-add, I-word cap,
+                // capitalization-from-prefix, `specialPromptActive` prompt guard) via the already-synced
+                // contextTracker.currentWord, structurally resolving R-7. The bookkeeping above
+                // (onCursorPositionChanged, debounce, synchronizeWithCursor with the caller's language)
+                // stays here. The QA escape hatch (flag off) or an unwired delegate runs the legacy
+                // IC-only path below unchanged.
+                val delegate = cursorSyncDelegate
+                if (config.unified_swipe_pipeline && delegate != null) {
+                    delegate.handleCursorSyncPrediction()
+                } else {
+                    triggerPredictionsForPrefix(prefix, rawPrefix, ic, editorInfo)
+                }
             } else {
                 // v1.2.6 FIX: Don't clear suggestions if showing special prompts or swipe corrections
                 // After autocorrect/swipe, cursor moves to after space (prefix empty), but we want

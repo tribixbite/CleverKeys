@@ -26,11 +26,15 @@ import java.util.concurrent.TimeUnit
  * Spec: `docs/audit/remediation-plans/wp9-pipeline-unification-oracle.md`.
  * Parent: `docs/audit/remediation/3-core-ime.md` (R-1 unification).
  *
- * Records TODAY's exact suggestion + COMMIT behavior for both live pipelines —
- *   - InputCoordinator (swipe auto-insert + cursor-sync), and
- *   - SuggestionHandler (typing + manual tap)
+ * Records the exact suggestion + COMMIT behavior for both live pipelines —
+ *   - InputCoordinator (swipe auto-insert front-end + cursor-sync bookkeeping), and
+ *   - SuggestionHandler (typing + manual tap + — since step 5 — the swipe & cursor-sync
+ *     prediction/post phases)
  * — INCLUDING their known divergences, so the unification (SH survives, IC becomes a
- * thin swipe front-end) can be verified step-by-step.
+ * thin swipe/cursor-sync front-end) can be verified step-by-step. As of WP9 step 5 (2026-07-20)
+ * cursor-sync's prediction+post phase routes through SuggestionHandler.handleCursorSyncPrediction
+ * behind the same config.unified_swipe_pipeline flag (default TRUE); IC retains the cursor
+ * bookkeeping (onCursorPositionChanged, the 100ms debounce, synchronizeWithCursor).
  *
  * Two assertion kinds (per spec §"What the oracle is"):
  *   - INVARIANT — must never change; a failure at any migration step is a regression.
@@ -61,7 +65,10 @@ import java.util.concurrent.TimeUnit
  *   - IC.onSuggestionSelected     595-947 (spec said 535-880; IC dead code removed)
  *   - applyShiftTransformation now lives on SuggestionHandler's companion (step 3); IC's private
  *     copy was deleted — IC.handlePredictionResults delegates to SuggestionHandler.
- *   - IC.triggerPredictionsForPrefix 309-451 (spec said 214-357 / 262-339)
+ *   - IC.triggerPredictionsForPrefix 309-451 (spec said 214-357 / 262-339) — since step 5 this is
+ *     the LEGACY cursor-sync path, reached only when config.unified_swipe_pipeline is false or the
+ *     cursor-sync delegate is unwired. IC.onCursorMoved now dispatches on the flag:
+ *     SuggestionHandler.handleCursorSyncPrediction (default) vs. triggerPredictionsForPrefix (legacy).
  *   - IC's silent catch is GONE: now logs (R-4 done) — so D4/D5 pins hold but the
  *     "silent swallow" scenario is not characterized (already remediated).
  *   - SH.handlePredictionResults  293-376 (spec 290+ — accurate); possessive augment SH:324.
@@ -222,6 +229,10 @@ class PipelineCharacterizationTest {
         // production, so IC.handlePredictionResults routes through SuggestionHandler when
         // config.unified_swipe_pipeline is true.
         inputCoordinator.setSwipeResultDelegate(suggestionHandler)
+        // WP9 R-1 step 5: wire the unified cursor-sync delegate (also mirrors ManagerInitializer), so
+        // IC.onCursorMoved routes the prediction+post phase through SuggestionHandler's single guarded
+        // pipeline when config.unified_swipe_pipeline is true.
+        inputCoordinator.setCursorSyncDelegate(suggestionHandler)
 
         return Harness(
             config, contextTracker, sharedContractionManager!!, bar,
@@ -839,8 +850,15 @@ class PipelineCharacterizationTest {
      * possessive forms ("book's" is a dictionary word), so it appears on EVERY path via
      * plain prediction. The D1 divergence is only about the augmentPredictionsWithPossessives
      * FUNCTION (pinned by the swipe-path test where synthetic predictions carry no 's forms,
-     * and the SH-path reflection control). Step 5's fold into SH therefore produces no
-     * gateable visible delta here — this test pins that dictionary possessives DO surface. */
+     * and the SH-path reflection control).
+     *
+     * ORACLE-FLIP(step 5) VERIFIED NO-DELTA 2026-07-20: step 5 folds cursor-sync into SH's
+     * updatePredictionsForCurrentWord, which does NOT call augmentPredictionsWithPossessives
+     * (that lives only in the swipe/tap handlePredictionResults). So there is genuinely no gateable
+     * visible possessive delta — the possessive surfaces purely as a dictionary prediction on both
+     * the pre-flip (legacy IC) and post-flip (SH) paths. The assertion is UNCHANGED (per the task:
+     * "do NOT weaken it"); this test now pins that dictionary possessives STILL surface after the
+     * fold, and the legacy variant below confirms the escape hatch is likewise unchanged. */
     @Test
     fun oracle_cursorSync_dictionaryPossessivesSurfaceToday() {
         val h = harness(initialText = "book")
@@ -851,21 +869,47 @@ class PipelineCharacterizationTest {
         drainMainThread()
 
         assertTrue(
-            "dictionary possessive \"book's\" surfaces on cursor-sync. Got: ${h.suggestionBar.getCurrentSuggestions()}",
+            "dictionary possessive \"book's\" surfaces on cursor-sync (SH path). Got: ${h.suggestionBar.getCurrentSuggestions()}",
             h.suggestionBar.getCurrentSuggestions().any { it == "book's" }
         )
     }
 
-    /** Scenario 26 (re-pinned after first on-device run 2026-07-20): the static map called
-     * cursor-sync exact-add "aligned" with typing — the device disproved it. For an unknown
-     * word with zero dictionary predictions, cursor-sync posts NOTHING: the exact-add branch
-     * (IC triggerPredictionsForPrefix:408-433) is neutralized by `isInDictionary ?: true`
-     * fail-closed default and the `finalWords.isNotEmpty()` post guard (:436). The typing
-     * path DOES show exact_add for the same input — a REAL divergence the map missed.
-     * ORACLE-FLIP(step 5): cursor-sync folds into SH's pipeline; exact_add will then appear
-     * and this assertion inverts. */
+    /** Scenario 25 legacy (flag off): with config.unified_swipe_pipeline=false, the legacy IC-only
+     * cursor-sync ALSO surfaces the dictionary possessive "book's" — confirming the fold introduced
+     * no possessive regression on the escape hatch (possessives are dictionary predictions, not the
+     * augmentPredictionsWithPossessives function, so they are path-independent here). */
     @Test
-    fun oracle_cursorSync_unknownWordPostsNothingToday() {
+    fun oracle_cursorSync_dictionaryPossessives_legacyPathAlsoSurfaces() {
+        val h = harness(initialText = "book")
+        h.config.unified_swipe_pipeline = false
+        onMain { h.inputConnection.setSelection(4, 4) }
+        drainMainThread()
+        onMain { h.inputCoordinator.onCursorMoved(4, h.inputConnection, "en", textEditor()) }
+        Thread.sleep(1200)
+        drainMainThread()
+
+        assertTrue(
+            "legacy IC cursor-sync also surfaces dictionary possessive \"book's\". Got: ${h.suggestionBar.getCurrentSuggestions()}",
+            h.suggestionBar.getCurrentSuggestions().any { it == "book's" }
+        )
+    }
+
+    /**
+     * Scenario 26 — ORACLE-FLIP(step 5) LANDED 2026-07-20. Before step 5 the legacy IC cursor-sync
+     * (triggerPredictionsForPrefix) posted NOTHING for an unknown word with zero dictionary
+     * predictions: its dual-search early-returned on `allResults.isEmpty()` BEFORE the exact-add
+     * branch, and the branch was further neutralized by `isInDictionary ?: true` + the
+     * `finalWords.isNotEmpty()` post guard. The typing path DID show exact_add for the same input —
+     * a real divergence.
+     *
+     * Step 5 folds cursor-sync into SuggestionHandler.handleCursorSyncPrediction →
+     * updatePredictionsForCurrentWord (the SAME pipeline the typing path uses), which runs the
+     * exact-add branch even on an empty prediction list. So cursor-sync now posts the exact_add wire
+     * for unknown 'xyzq', exactly like typing. The assertion is INVERTED here in the same commit.
+     * (Legacy-path absence is pinned by oracle_cursorSync_unknownWord_legacyPathPostsNothing.)
+     */
+    @Test
+    fun oracle_cursorSync_unknownWordShowsExactAdd() {
         val h = harness(initialText = "xyzq")
         h.config.show_exact_typed_word = true
         onMain { h.inputConnection.setSelection(4, 4) }
@@ -875,7 +919,34 @@ class PipelineCharacterizationTest {
         drainMainThread()
 
         assertTrue(
-            "TODAY cursor-sync posts nothing for unknown 'xyzq' (no exact_add). Got: ${h.suggestionBar.getCurrentSuggestions()}",
+            "cursor-sync must now surface exact_add for unknown 'xyzq' (folded into SH pipeline). " +
+                "Got: ${h.suggestionBar.getCurrentSuggestions()}",
+            h.suggestionBar.getCurrentSuggestions().any {
+                it.startsWith(Suggestion.EXACT_ADD_PREFIX) || it == "exact_add:xyzq"
+            }
+        )
+    }
+
+    /**
+     * Scenario 26 legacy (D — flag off): with config.unified_swipe_pipeline=false, the QA escape
+     * hatch runs the legacy IC-only cursor-sync (triggerPredictionsForPrefix), which posts NOTHING
+     * for an unknown word with zero predictions (dual-search early-return + finalWords.isNotEmpty()
+     * post guard). Pins the pre-flip behavior so the escape hatch is verifiable.
+     */
+    @Test
+    fun oracle_cursorSync_unknownWord_legacyPathPostsNothing() {
+        val h = harness(initialText = "xyzq")
+        h.config.unified_swipe_pipeline = false
+        h.config.show_exact_typed_word = true
+        onMain { h.inputConnection.setSelection(4, 4) }
+        drainMainThread()
+        onMain { h.inputCoordinator.onCursorMoved(4, h.inputConnection, "en", textEditor()) }
+        Thread.sleep(1200)
+        drainMainThread()
+
+        assertTrue(
+            "legacy IC cursor-sync posts nothing for unknown 'xyzq' (no exact_add). " +
+                "Got: ${h.suggestionBar.getCurrentSuggestions()}",
             h.suggestionBar.getCurrentSuggestions().isEmpty()
         )
     }
@@ -900,6 +971,74 @@ class PipelineCharacterizationTest {
         // valid prediction pass completes.)
         assertTrue(
             "debounced cursor-sync must still produce 'it's'. Got: ${h.suggestionBar.getCurrentSuggestions()}",
+            h.suggestionBar.getCurrentSuggestions().any { it == "it's" }
+        )
+    }
+
+    /**
+     * Scenario 18 — R-7 prompt-race, now DETERMINISTIC (step 5 LANDED 2026-07-20).
+     *
+     * The oracle originally SKIPPED this: pre-step-5, IC's cursor-sync post had NO specialPromptActive
+     * check (the flag lived only on SH), so a cursor-sync racing an SH prompt could clobber it — there
+     * was no stable assertion of "prompt survives on the IC side", only timing-dependent flakiness.
+     *
+     * Step 5 folds cursor-sync into SuggestionHandler.handleCursorSyncPrediction →
+     * updatePredictionsForCurrentWord, the SINGLE pipeline that already guards on specialPromptActive
+     * (checked before submit AND inside the posted runnable). So a cursor-sync prediction pass that
+     * fires WHILE an SH autocorrect-undo prompt is active can no longer overwrite it — the race is
+     * resolved STRUCTURALLY (one guarded pipeline), which is exactly what R-7 required.
+     *
+     * Setup (all real components, no reflection on the guard beyond the read-only confirmation):
+     *   1. Seed "its " so a fresh word starts after it; type "teh " → SH autocorrects "teh"→"the",
+     *      raises the undo prompt (bar = ["teh","the"]) and sets specialPromptActive=true.
+     *      Buffer is now "its the ".
+     *   2. Move the cursor back INTO the pre-existing "its" (pos 3) and fire onCursorMoved. The synced
+     *      prefix "its" is NON-EMPTY, so cursor-sync routes to handleCursorSyncPrediction and a real
+     *      prediction pass runs (it WOULD post "it's"/"its"… absent the guard).
+     *   3. Assert the autocorrect-undo prompt SURVIVES — the bar still leads with "teh" and the
+     *      cursor-sync's "it's" did NOT appear — proving the guard blocked the clobber.
+     */
+    @Test
+    fun oracle_cursorSync_doesNotClobberAutocorrectUndoPrompt() {
+        val corrected = sharedPredictor!!.autoCorrect("teh")
+        org.junit.Assume.assumeTrue("dictionary must autocorrect 'teh'", corrected != "teh")
+
+        val h = harness(initialText = "its ")
+        h.config.autocorrect_enabled = true
+
+        // (1) Raise the SH autocorrect-undo prompt; sets specialPromptActive.
+        typeInto(h, "teh ", textEditor())
+        Thread.sleep(500)
+        drainMainThread()
+
+        // Precondition: prompt is up (original word first) and the guard is set.
+        assertEquals(
+            "undo prompt must lead with original 'teh'. Got: ${h.suggestionBar.getCurrentSuggestions()}",
+            "teh", h.suggestionBar.getCurrentSuggestions().firstOrNull()
+        )
+        val guardBefore = SuggestionHandler::class.java.getDeclaredField("specialPromptActive").apply {
+            isAccessible = true
+        }.getBoolean(h.suggestionHandler)
+        assertTrue("precondition: specialPromptActive must be set by the autocorrect prompt", guardBefore)
+
+        // (2) Fire a cursor-sync into the pre-existing "its" (non-empty prefix → real prediction pass).
+        onMain { h.inputConnection.setSelection(3, 3) } // cursor at end of leading "its"
+        drainMainThread()
+        onMain { h.inputCoordinator.onCursorMoved(3, h.inputConnection, "en", textEditor()) }
+        Thread.sleep(1200)
+        drainMainThread()
+
+        // (3) The prompt SURVIVES: bar still leads with "teh", and the cursor-sync's "it's" did not
+        // clobber it. Structural R-7 resolution — the shared SH pipeline's specialPromptActive guard
+        // suppressed the racing cursor-sync post.
+        assertEquals(
+            "autocorrect-undo prompt must survive the racing cursor-sync (R-7). " +
+                "Got: ${h.suggestionBar.getCurrentSuggestions()}",
+            "teh", h.suggestionBar.getCurrentSuggestions().firstOrNull()
+        )
+        assertFalse(
+            "cursor-sync must not have injected 'it's' over the active prompt. " +
+                "Got: ${h.suggestionBar.getCurrentSuggestions()}",
             h.suggestionBar.getCurrentSuggestions().any { it == "it's" }
         )
     }
@@ -995,15 +1134,13 @@ class PipelineCharacterizationTest {
      * oracle. The word-REPLACEMENT + CANDIDATE_SELECTION half of scenario 10 IS covered by
      * oracle_swipe_tapAlternateAfterAutoInsert_replacesAutoInsertedWord.
      *
-     * Scenario 18 (add-to-dictionary prompt survives an IC cursor-sync racing, tap side) is
-     * SKIPPED as an end-to-end race: it needs SH to raise a dict_add prompt and set
-     * specialPromptActive, then an IC cursor-sync post to be shown to NOT clobber it. But TODAY
-     * IC's cursor-sync post has NO specialPromptActive check (that flag lives only on SH — the
-     * R-7 finding), so the "prompt survives on the IC side" is exactly the divergence that
-     * does NOT hold today; there is no stable ASSERTION of current behavior other than "IC can
-     * clobber", which is inherently timing-dependent (debounce + executor) and would be flaky.
-     * The SH-side guard IS pinned by scenario 17 (specialPromptActive set). SKIP the racing
-     * half; the R-7 fix (step 5) will add the guard and a deterministic PromptRaceTest. Reported.
+     * Scenario 18 (prompt survives a cursor-sync racing it) is NO LONGER SKIPPED — step 5 (2026-07-20)
+     * folded cursor-sync into SuggestionHandler's single specialPromptActive-guarded pipeline, making
+     * the race deterministic. It is now implemented as
+     * oracle_cursorSync_doesNotClobberAutocorrectUndoPrompt (autocorrect-undo prompt variant): raise an
+     * SH prompt via the real typing path, fire a real cursor-sync prediction pass into a pre-existing
+     * word, and assert the prompt survives (the shared guard suppresses the racing post). This is the
+     * R-7 structural fix — the guard is no longer SH-only-and-bypassed-by-IC; there is ONE pipeline.
      */
     @Test
     fun oracle_skipped_scenarios_documented() {

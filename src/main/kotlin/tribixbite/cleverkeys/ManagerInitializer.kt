@@ -132,6 +132,13 @@ class ManagerInitializer(
         // post-swipe-prediction flow through SuggestionHandler (possessives + password guard).
         inputCoordinator.setSwipeResultDelegate(suggestionHandler)
 
+        // WP9 R-1 step 5: wire the unified cursor-sync delegate. When the flag is enabled (default),
+        // InputCoordinator.onCursorMoved routes the prediction+post phase through SuggestionHandler's
+        // single guarded pipeline (contraction/exact-add/I-word/capitalization + specialPromptActive
+        // guard), structurally resolving the R-7 prompt race. Bookkeeping (debounce, cursor sync)
+        // stays in InputCoordinator.
+        inputCoordinator.setCursorSyncDelegate(suggestionHandler)
+
         // Initialize neural layout helper (v1.32.362)
         val neuralLayoutHelper = NeuralLayoutHelper(
             context,

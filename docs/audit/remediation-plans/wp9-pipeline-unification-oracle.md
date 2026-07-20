@@ -135,3 +135,62 @@ keeps every commit-path oracle (1,4,5,5b,9,11,12) byte-identical while closing D
 - Harness: `harness()` now sets `config.unified_swipe_pipeline = true` and calls
   `inputCoordinator.setSwipeResultDelegate(suggestionHandler)` (mirrors ManagerInitializer). The
   `swipeResults()` seam (`IC.handlePredictionResults`) is unchanged — IC still dispatches internally.
+
+## Step 5 — LANDED (2026-07-20)
+
+Cursor-sync prediction rerouted from InputCoordinator to SuggestionHandler under the SAME
+`Config.unified_swipe_pipeline` flag (default TRUE) — one flag governs the whole reroute program.
+
+**Delegation structure:** `InputCoordinator.onCursorMoved`'s debounced runnable KEEPS all cursor
+bookkeeping — `PredictionContextTracker.onCursorPositionChanged` (SAS-1 auto-space invalidation,
+synchronous), the 100ms `syncHandler` debounce (oracle scenario 27), and
+`PredictionContextTracker.synchronizeWithCursor(ic, language, editorInfo)` (which populates
+`currentWord` with the synced rawPrefix; the `language` param is the ONLY consumer of that arg —
+CJK skip + input-type gating). Only the prediction+post phase (when the synced prefix is non-empty)
+dispatches on the flag: TRUE + delegate wired → new `SuggestionHandler.handleCursorSyncPrediction`
+(which calls the private `updatePredictionsForCurrentWord` — the SAME pipeline the typing path uses,
+reading the already-synced `currentWord`); FALSE / unwired → legacy `IC.triggerPredictionsForPrefix`
+unchanged. The empty-prefix else-branch (preserve-vs-clear the bar on autocorrect-undo / swipe) stays
+in IC for both paths; SH is only reached with a non-empty prefix, so there is no double-clear race.
+
+**Language selection preserved:** both `IC.triggerPredictionsForPrefix` and
+`SH.updatePredictionsForCurrentWord` call `predictionCoordinator.getWordPredictor()` — the identical
+shared active predictor (its language set by DictionaryManager). Neither passes a language into the
+predictor call; the `onCursorMoved` `language` param flows only to `synchronizeWithCursor`, which IC
+still owns and calls exactly as before. So predictor language is byte-identical.
+
+**R-7 resolved structurally:** `updatePredictionsForCurrentWord` already guards on
+`specialPromptActive` (before submit AND inside the posted runnable). Folding cursor-sync into it
+means a cursor-sync pass can no longer clobber an SH autocorrect-undo / add-to-dictionary prompt —
+there is ONE guarded pipeline, no new shared mutable state across classes.
+
+**Behavior deltas (only these):**
+- **D-exactAdd**: cursor-sync now surfaces `exact_add:` for an unknown word even with ZERO
+  predictions. Legacy IC early-returned on `allResults.isEmpty()` before its exact-add branch and
+  post-guarded on `finalWords.isNotEmpty()`; SH runs the exact-add branch on the empty list. (Oracle
+  scenario 26 flip.)
+- **Prompt-guard**: cursor-sync respects `specialPromptActive` (R-7). (Oracle scenario 18, now
+  deterministic + implemented.)
+- **Possessives (scenario 25)**: NO gateable delta — `updatePredictionsForCurrentWord` does NOT call
+  `augmentPredictionsWithPossessives`; dictionary possessives ("book's") arrive as ordinary
+  predictions on BOTH paths. Assertion UNCHANGED (not weakened).
+
+**Dual-apostrophe search preserved:** `updatePredictionsForCurrentWord` gained an apostrophe-stripped
+secondary search term that fires ONLY when the primary (apostrophe-carrying) search is empty —
+restoring the legacy IC cursor-sync dual-search for prefixes like "don'". For the typing path the
+partial is letters-only, so the second term equals the first and is skipped (pure no-op → tap path
+byte-identical).
+
+**Oracle changes (old → new):**
+- Scenario 26 `oracle_cursorSync_unknownWordPostsNothingToday` → `oracle_cursorSync_unknownWordShowsExactAdd`:
+  assertion INVERTED — was `assertTrue(bar.isEmpty())`, now `assertTrue(bar has exact_add:xyzq)`.
+- Added legacy-path guards (flag FALSE): `oracle_cursorSync_unknownWord_legacyPathPostsNothing`
+  (empty bar) and `oracle_cursorSync_dictionaryPossessives_legacyPathAlsoSurfaces` ("book's" present).
+- Scenario 25 `oracle_cursorSync_dictionaryPossessivesSurfaceToday`: assertion UNCHANGED; comment
+  updated to record the verified no-delta.
+- Scenario 18: NEW deterministic test `oracle_cursorSync_doesNotClobberAutocorrectUndoPrompt`
+  (previously SKIPPED). Raises an SH autocorrect-undo prompt via the real typing path, fires a real
+  cursor-sync pass into a pre-existing word, asserts the prompt survives (bar still leads "teh", no
+  "it's" injected). The skip rationale block was updated to point at it.
+- Harness: `harness()` now also calls `inputCoordinator.setCursorSyncDelegate(suggestionHandler)`
+  (mirrors ManagerInitializer).

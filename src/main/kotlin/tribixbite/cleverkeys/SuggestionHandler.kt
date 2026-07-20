@@ -1323,13 +1323,64 @@ class SuggestionHandler(
     }
 
     /**
+     * WP9 R-1 step 5 — unified cursor-sync entry. Called by [InputCoordinator.onCursorMoved]'s
+     * debounced runnable when [Config.unified_swipe_pipeline] is enabled (the default), AFTER
+     * InputCoordinator has done its cursor bookkeeping ([PredictionContextTracker.onCursorPositionChanged],
+     * the 100ms debounce, and [PredictionContextTracker.synchronizeWithCursor] which populates
+     * [PredictionContextTracker.currentWord] with the synced rawPrefix). This is the cursor-sync
+     * sibling of the tap-path [handleRegularTyping] → it delegates straight into the SAME
+     * [updatePredictionsForCurrentWord] pipeline the typing path uses, so cursor-sync now shares
+     * ONE contraction-injection / exact-add / I-word-capitalization / capitalization-from-prefix
+     * implementation — and, crucially, the [specialPromptActive] guard that lives inside it. That
+     * guard is what structurally resolves R-7: a cursor-sync pass can no longer clobber an
+     * autocorrect-undo / add-to-dictionary prompt owned by SH, because the SINGLE pipeline both
+     * paths share checks the flag before submitting and inside the posted runnable.
+     *
+     * Structural note on the delegation split (R-1 step 5): InputCoordinator KEEPS
+     *   - [PredictionContextTracker.onCursorPositionChanged] (SAS-1 auto-space invalidation),
+     *   - the 100ms debounce (oracle scenario 27 pins that two rapid moves collapse to one pass),
+     *   - [PredictionContextTracker.synchronizeWithCursor] with the caller's `language` param
+     *     (CJK skip + input-type gating — the ONLY consumer of that param; both pipelines then use
+     *     the SAME `predictionCoordinator.getWordPredictor()`, so predictor language is preserved),
+     *   - the empty-prefix else-branch (preserve-vs-clear the bar on autocorrect-undo / swipe).
+     * Only the prediction+post phase moves here — reached exactly when the synced prefix is non-empty,
+     * so the empty-prefix branch never reaches SH and there is no double-clear race.
+     *
+     * Behavior deltas vs. the legacy [InputCoordinator.triggerPredictionsForPrefix] (intentional):
+     *   - exact_add now surfaces for an unknown word even when the predictor returns ZERO
+     *     predictions. The legacy IC path early-returned on `allResults.isEmpty()` BEFORE its
+     *     exact-add branch and additionally post-guarded on `finalWords.isNotEmpty()`; SH's
+     *     [updatePredictionsForCurrentWord] runs the exact-add branch on the empty list, so
+     *     `finalWords = [exact_add wire]` is posted (oracle scenario 26 flip, step 5).
+     *   - the [specialPromptActive] guard (see above) — R-7 resolved structurally.
+     * Dictionary possessives are unaffected: they arrive as ordinary predictions on BOTH paths,
+     * so there is no gateable possessive delta here (oracle scenario 25 stays as-is).
+     */
+    fun handleCursorSyncPrediction() {
+        // Password mode: never surface predictions from a cursor move (matches the tap-path guard
+        // in handleRegularTyping and handlePredictionResults). synchronizeWithCursor already skips
+        // password input types, so currentWord is normally empty here — this is defence in depth.
+        if (isPasswordMode) return
+        updatePredictionsForCurrentWord()
+    }
+
+    /**
      * Update predictions based on current partial word.
+     *
+     * Shared by the typing path ([handleRegularTyping] / [handleBackspace]) and, since WP9 R-1
+     * step 5, the cursor-sync path ([handleCursorSyncPrediction]). Reads the partial from
+     * [PredictionContextTracker.currentWord], which typing populates letter-by-letter and cursor-sync
+     * populates via [PredictionContextTracker.synchronizeWithCursor] (the synced rawPrefix, which may
+     * contain an apostrophe — e.g. cursor after "don'"). The apostrophe-stripped secondary search
+     * term below is a no-op for the typing path (typed partials are letters-only) and restores the
+     * legacy IC cursor-sync's dual-search so contraction bases hidden behind an apostrophe still hit.
      */
     private fun updatePredictionsForCurrentWord() {
         if (contextTracker.getCurrentWordLength() > 0) {
             val partial = contextTracker.getCurrentWord()
 
-            // Check if first letter is uppercase (user typed with Shift)
+            // Check if first letter is uppercase (user typed with Shift, or cursor-synced from a
+            // capitalized token). Mirrors the legacy IC cursor-sync rawPrefix capitalization check.
             val shouldCapitalize = partial.isNotEmpty() && partial[0].isUpperCase()
 
             // Copy context to be thread-safe
@@ -1339,10 +1390,30 @@ class SuggestionHandler(
             predictionTasks.cancelAndSubmit {
                 if (Thread.currentThread().isInterrupted) return@cancelAndSubmit
 
-                // Use contextual prediction (Heavy operation)
-                val result = predictionCoordinator.getWordPredictor()?.predictWordsWithContext(partial, contextWords)
+                // Use contextual prediction (Heavy operation). WP9 step 5: search the partial AND,
+                // if it carries an apostrophe (cursor-synced mid-contraction, e.g. "don'"), the
+                // apostrophe-free form too — restoring the legacy IC cursor-sync dual-search so a
+                // contraction base hidden behind an apostrophe still hits. For the typing path the
+                // partial is letters-only, so `noApostrophe == partial` and the second search is
+                // skipped entirely (pure no-op — the tap path is byte-identical to before).
+                var result = predictionCoordinator.getWordPredictor()?.predictWordsWithContext(partial, contextWords)
+                val noApostrophe = partial.replace("'", "").replace("’", "")
+                if (noApostrophe != partial && noApostrophe.isNotEmpty() &&
+                    (result?.words?.isEmpty() != false)
+                ) {
+                    // Primary (apostrophe-carrying) search found nothing — retry apostrophe-free.
+                    // Only overrides when the primary was empty, so the apostrophe form keeps its
+                    // ranking whenever it does produce results.
+                    predictionCoordinator.getWordPredictor()
+                        ?.predictWordsWithContext(noApostrophe, contextWords)
+                        ?.takeIf { it.words.isNotEmpty() }
+                        ?.let { result = it }
+                }
 
-                if (Thread.currentThread().isInterrupted || result == null) return@cancelAndSubmit
+                // Bind a stable non-null local: `result` is a reassignable `var` captured by the
+                // lambda (WP9 step 5 dual-search), so Kotlin can't smart-cast it after the guard.
+                val prediction = result ?: return@cancelAndSubmit
+                if (Thread.currentThread().isInterrupted) return@cancelAndSubmit
 
                 // v1.2.0: Apply contraction transformation (e.g., "dont" -> "don't")
                 // Check if the typed partial matches a contraction key
@@ -1355,7 +1426,7 @@ class SuggestionHandler(
                     // Add contraction as first suggestion with high score
                     // Issue #72: Also capitalize I-contractions (im → I'm, ill → I'll)
                     contractionWords.add(capitalizeIWord(contractionMapping))
-                    contractionScores.add(result.scores.firstOrNull()?.plus(1000) ?: 10000)
+                    contractionScores.add(prediction.scores.firstOrNull()?.plus(1000) ?: 10000)
                 }
 
                 // Check if the exact partial is a paired contraction base (e.g., its → it's)
@@ -1367,14 +1438,14 @@ class SuggestionHandler(
                     // Add paired variants as high-priority suggestions alongside the base word
                     for (variant in pairedVariants) {
                         contractionWords.add(capitalizeIWord(variant))
-                        contractionScores.add(result.scores.firstOrNull()?.plus(500) ?: 5000)
+                        contractionScores.add(prediction.scores.firstOrNull()?.plus(500) ?: 5000)
                     }
                 }
 
                 // v1.2.6 FIX: Transform ALL predictions through contraction manager
                 // e.g., if predictor suggests "cant", transform to "can't"
                 // Issue #72: Also capitalize I-words (i → I, i'm → I'm)
-                val transformedPredictions = result.words.map { word ->
+                val transformedPredictions = prediction.words.map { word ->
                     val contracted = contractionManager.getNonPairedMapping(word) ?: word
                     capitalizeIWord(contracted)
                 }
@@ -1386,7 +1457,7 @@ class SuggestionHandler(
                     it.lowercase() !in injectedLowerSet
                 }
                 val filteredCount = transformedPredictions.size - (transformedPredictions.count { it.lowercase() in injectedLowerSet })
-                val mergedScores = contractionScores + result.scores.take(filteredCount)
+                val mergedScores = contractionScores + prediction.scores.take(filteredCount)
 
                 // Apply capitalization transformation if user started with uppercase
                 val transformedWords = if (shouldCapitalize) {
