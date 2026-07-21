@@ -197,6 +197,12 @@ byte-identical).
 
 ## Step 6 — LANDED (2026-07-21)
 
+**Gates (all green):** compileDebug + compileDebugAndroidTest clean; `runPureTests` 1654/1654;
+targeted ew-cli (PipelineCharacterization + ContractionFlicker×2 + Issue151 + StateMachine +
+BackspaceUndo + SmartAutoSpace) 119/119; **FULL ew-cli suite 1447/1447** (Pixel7 API 34,
+orchestrator, 29.7 min); gate grep confirms zero remaining IC selection callers.
+IC: 1356 → 568 lines; net −811 lines of divergent duplication.
+
 Unification COMPLETE: InputCoordinator's divergent commit engine and all legacy pipelines were
 DELETED; SuggestionHandler is the single pipeline end-to-end. The `unified_swipe_pipeline` flag
 was removed (key moved to `SettingsValidation.DEPRECATED_KEYS`; drift test satisfied).

@@ -257,7 +257,8 @@ pure-JVM `swipe.geometric` package; NOT wired into live pipeline — WP9 stays d
   pipeline/executor + dead CKS→bridge→SH legacy chain + `unified_swipe_pipeline` flag DELETED;
   swipe commit runs SH.onSuggestionSelected(isManualSelection=false); D5 ML via MLDataCollector;
   #82-for-swipe production semantic preserved in SmartAutoSpace (2 JVM pins flipped); oracle
-  updated (4 legacy guards deleted, 5b rerouted, 16b deleted, 19 rewritten). Full JVM 1654 green.
+  updated (4 legacy guards deleted, 5b rerouted, 16b deleted, 19 rewritten). Full JVM 1654 green;
+  FULL ew-cli 1447/1447 green (949bdcf9 + gate).
   Details: wp9-pipeline-unification-oracle.md §"Step 6 — LANDED".
 - **NEXT (R-1)**: step 7+ — geo-engine wiring (SwipeEngineRouter + GeometricEngineAdapter + oracle
   round, per 3-core-ime.md Addendum 2026-07-21); Termux-deletion DECISION (user-visible, separate)
