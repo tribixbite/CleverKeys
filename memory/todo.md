@@ -46,6 +46,25 @@
   official layout JSONs at swipe-5/layouts/); corpus caches at
   `~/.cache/cleverkeys-test/futo_*.jsonl.gz` (regenerate via scripts/fetch_futo_*.mjs).
 
+## ✅ Web-demo neural pipeline parity audit + fix (2026-07-21, web_demo/ only)
+- Audited `web_demo/demo/index.html` + `swipe-vocabulary.js` against the production Kotlin
+  (BeamSearchEngine/PrefixBoostTrie/OptimizedVocabulary/PredictionPostProcessor/
+  SwipeTrajectoryProcessor) with shipped Config defaults. Headline gaps FIXED:
+  (a) NO vocab-trie logit masking (beam was unconstrained) — ported applyTrieMasking incl.
+  EOS-only-if-word + masked re-log-softmax (idempotent on the model's log_probs);
+  (b) NO length normalization / real confidences — ported GNMT normFactor (alpha=1.4),
+  convertToCandidate confidence + 0.01 threshold (UI previously FABRICATED confidences
+  1.0−0.1·rank); (c) rerank formula was 0.6/0.4 log-freq — now (0.8·conf+0.2·0.57·freq)·boost
+  with (raw−128)/127 byte-score normalization, rank tiers 100/3000, min-freq gate
+  max(len-floor, 0.01); (d) nearest keys were DOM hit-tests (PAD in gaps) — now KeyboardGrid
+  port per point; accel off-by-one (started i=2 not i=1) + accel-from-clipped-v fixed;
+  zero-pad parity. Beam loop: token-seq dedupe, low-prob prune, adaptive width @12,
+  score-gap 80 @12, finished≥beamWidth stop (was ≥3@10). Defaults beamWidth 6 / maxLength 20.
+  Stale 52k dict → APK's 98,140-word en_enhanced.json. PREFIX BOOST = correctly N/A for en
+  (production unloads trie for "en"; assets ship no en.bin) — documented no-op hook at the
+  masking site. Verified: headless node VM smoke running the SHIPPED inline JS + real ONNX
+  (onnxruntime-web wasm) — 7/7 synthetic swipes top-1 (the/hello/keyboard/dont/world/this/about).
+
 ## ✅ Multi-language dictionary regeneration — evidence classifier ported, DONE 2026-07-20
 `build_en_wordlist.py` → `scripts/build_wordlist.py` (LANG_CONFIG, 14 langs; `--lang en`
 bit-identical — keep 98,140 + identical reason-Counter). Regenerated: bundled es 50k,

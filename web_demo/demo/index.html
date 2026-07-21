@@ -10,7 +10,7 @@
     <!-- Swipe Vocabulary Module -->
     <!-- ?v=<hash> cache-busts Cloudflare/Fastly edge + browser cache so users
          don't get stranded on an old JS that predates loadFromFlatFreq et al. -->
-    <script src="swipe-vocabulary.js?v=20260419b"></script>
+    <script src="swipe-vocabulary.js?v=20260721"></script>
     <!-- Custom Dictionary Support -->
     <script src="custom-dictionary.js?v=20260419b"></script>
     <!-- Niche Words Loader -->
@@ -182,7 +182,7 @@
                         <label class="flex-1 cursor-pointer">
                             <input type="radio" name="settingsDict" value="apk" class="peer sr-only" />
                             <div class="px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-center text-gray-300 peer-checked:border-neon-blue peer-checked:bg-neon-blue/20 peer-checked:text-white transition-all">
-                                APK <span class="text-xs text-gray-500">(52k, default)</span>
+                                APK <span class="text-xs text-gray-500">(98k, default)</span>
                             </div>
                         </label>
                         <label class="flex-1 cursor-pointer">
@@ -489,9 +489,9 @@
         // who cranks beamWidth down once doesn't have to redo it next visit.
         // ============================================================
         const DEFAULT_CONFIG = {
-            beamWidth: 6,           // 4 / 6 / 8 / 12
-            maxLength: 25,          // 15 / 20 / 25 / 35
-            dictionary: 'apk',      // 'apk' = 52k en_enhanced | 'full' = 150k swipe_vocabulary
+            beamWidth: 6,           // 4 / 6 / 8 / 12 — default matches Defaults.NEURAL_BEAM_WIDTH
+            maxLength: 20,          // 15 / 20 / 25 / 35 — default matches Defaults.NEURAL_MAX_LENGTH
+            dictionary: 'apk',      // 'apk' = 98k en_enhanced | 'full' = 150k swipe_vocabulary
             autoInsert: true,       // auto-append top filtered word after swipe
             showRaw: false,         // show non-dictionary beam outputs alongside filtered
             batchBeams: true,       // run one decoder per step with a batched target_tokens tensor
@@ -513,6 +513,73 @@
         }
         const DEMO_CONFIG = loadConfig();
         window.DEMO_CONFIG = DEMO_CONFIG;
+
+        // ============================================================
+        // Production beam-search parity constants — the v1.5.x SHIPPED
+        // defaults from Config.kt Defaults, wired into BeamSearchEngine.kt.
+        // beamWidth / maxLength stay user-tunable via the settings panel.
+        // ============================================================
+        const PROD_BEAM = {
+            ALPHA: 1.4,                  // Defaults.NEURAL_BEAM_ALPHA — length-penalty exponent
+            CONFIDENCE_THRESHOLD: 0.01,  // Defaults.NEURAL_CONFIDENCE_THRESHOLD
+            PRUNE_CONFIDENCE: 0.8,       // Defaults.NEURAL_BEAM_PRUNE_CONFIDENCE
+            SCORE_GAP: 80.0,             // Defaults.NEURAL_BEAM_SCORE_GAP
+            ADAPTIVE_WIDTH_STEP: 12,     // Defaults.NEURAL_ADAPTIVE_WIDTH_STEP
+            SCORE_GAP_STEP: 12,          // Defaults.NEURAL_SCORE_GAP_STEP
+            PRUNE_STEP_THRESHOLD: 2,     // BeamSearchEngine.PRUNE_STEP_THRESHOLD
+            LOW_PROB_FLOOR: 1e-6,        // exp(-score) prune floor (BeamSearchEngine.kt:176)
+        };
+        // GNMT-style length-normalization factor shared by beam ranking and
+        // final confidence (BeamSearchEngine.kt:167-172, 566-570).
+        function beamNormFactor(len) {
+            return Math.pow(5.0 + len, PROD_BEAM.ALPHA) / Math.pow(6.0, PROD_BEAM.ALPHA);
+        }
+
+        // ============================================================
+        // KeyboardGrid port (KeyboardGrid.kt) — the model was trained on this
+        // fixed 3-row grid, so nearest-key detection must use it for EVERY
+        // trajectory point (not DOM hit-testing, which returns nothing in the
+        // gaps between keys and for pre-key travel).
+        // ============================================================
+        const KEYBOARD_GRID = (() => {
+            const rows = [
+                { keys: 'qwertyuiop', offset: 0.0 },
+                { keys: 'asdfghjkl', offset: 0.05 },
+                { keys: 'zxcvbnm', offset: 0.15 },
+            ];
+            const KEY_WIDTH = 0.1;
+            const ROW_HEIGHT = 1 / 3;
+            const centers = []; // [{char, cx, cy}]
+            rows.forEach((row, r) => {
+                for (let i = 0; i < row.keys.length; i++) {
+                    centers.push({
+                        char: row.keys[i],
+                        cx: row.offset + i * KEY_WIDTH + KEY_WIDTH / 2,
+                        cy: r * ROW_HEIGHT + ROW_HEIGHT / 2,
+                    });
+                }
+            });
+            return {
+                // Normalized [0,1] coords → token index (a=4..z=29), squared-
+                // distance nearest key (KeyboardGrid.getNearestKeyToken).
+                nearestKeyToken(nx, ny) {
+                    const x = Math.min(1, Math.max(0, nx));
+                    const y = Math.min(1, Math.max(0, ny));
+                    let best = 'a';
+                    let bestDist = Infinity;
+                    for (const k of centers) {
+                        const dx = x - k.cx;
+                        const dy = y - k.cy;
+                        const d = dx * dx + dy * dy;
+                        if (d < bestDist) {
+                            bestDist = d;
+                            best = k.char;
+                        }
+                    }
+                    return best.charCodeAt(0) - 97 + 4; // charToTokenIndex
+                },
+            };
+        })();
         let swipeStartPos = null;
         let swipeStartTime = null;
         let tapTimeout = null;
@@ -670,6 +737,14 @@
                     loadContractions(),
                 ]);
 
+                // Register contraction aliases with the vocabulary so the
+                // beam-search trie and the filter's alias fallback can accept
+                // them (production adds aliases to the vocabulary + trie).
+                if (contractionMap && swipeVocabulary &&
+                    typeof swipeVocabulary.setContractions === 'function') {
+                    swipeVocabulary.setContractions(contractionMap);
+                }
+
                 isModelReady = true;
                 window.isModelReady = true;  // Expose for debugging
                 hideLoadingOverlay();
@@ -726,7 +801,7 @@
         }
         
         // Load vocabulary for spell correction.
-        // Default: the APK's curated 52k en_enhanced.json (matches what the
+        // Default: the APK's curated 98k en_enhanced.json (matches what the
         // Android keyboard actually uses). Users can flip `DEMO_CONFIG.dictionary`
         // to 'full' to swap in the broader 150k swipe_vocabulary.json.
         async function loadVocabulary() {
@@ -744,8 +819,9 @@
                 }
 
                 if (DEMO_CONFIG.dictionary === 'apk' && canLoadFlat) {
-                    updateLoadingStatus('Loading APK dictionary (52k, ~930KB)...');
-                    loaded = await swipeVocabulary.loadFromFlatFreq('en_enhanced.json');
+                    updateLoadingStatus('Loading APK dictionary (98k, ~1.8MB)...');
+                    // ?v= busts force-cache when the dictionary snapshot updates
+                    loaded = await swipeVocabulary.loadFromFlatFreq('en_enhanced.json?v=20260721');
                     if (!loaded) {
                         console.warn('APK dict load failed, falling back to full 150k vocab');
                     }
@@ -1504,26 +1580,22 @@
         }
         
         function prepareSwipeFeatures(swipeData) {
-            // Normalize swipe path to fixed length, preserving timestamps
+            // Normalize real points to [0,1]; padding is applied tensor-side
+            // in runInference with ZEROS (features) and PAD=0 (keys), matching
+            // SwipeTrajectoryProcessor.extractFeatures steps 5-6.
+            // NOTE: production resamples >250-point swipes (DISCARD mode);
+            // the demo truncates — only affects multi-second swipes.
             const path = swipeData.path;
             const normalizedPath = [];
             const originalLength = Math.min(path.length, MAX_SEQUENCE_LENGTH);
 
-            // Take up to MAX_SEQUENCE_LENGTH points, preserving timestamps
-            for (let i = 0; i < Math.min(path.length, MAX_SEQUENCE_LENGTH); i++) {
+            for (let i = 0; i < originalLength; i++) {
                 const point = path[i];
                 normalizedPath.push({
                     x: point.x / NORMALIZED_WIDTH,
                     y: point.y / NORMALIZED_HEIGHT,
-                    key: point.key || null,
-                    timestamp: point.timestamp || 0  // Preserve timestamp for velocity calc
+                    timestamp: point.timestamp || 0  // ms, for velocity calc
                 });
-            }
-
-            // Pad with last point if too short (use same timestamp for padded points)
-            const lastPoint = normalizedPath[normalizedPath.length - 1] || { x: 0, y: 0, key: null, timestamp: 0 };
-            while (normalizedPath.length < MAX_SEQUENCE_LENGTH) {
-                normalizedPath.push({ ...lastPoint });
             }
 
             return {
@@ -1532,7 +1604,7 @@
                 keySequence: swipeData.keySequence,
                 duration: swipeData.duration
             };
-        }        
+        }
         async function runInference(features) {
             // The Android encoder expects (exact match with src/main/.../EncoderWrapper.kt):
             // - trajectory_features: [1, MAX_SEQUENCE_LENGTH, 6] float32  — x, y, vx, vy, ax, ay
@@ -1540,42 +1612,37 @@
             // - actual_length:       [1]                         int32   — # of real points
             // Output: memory [1, seq_len, hidden_dim] float32
 
-            // Prepare trajectory features
+            // Prepare trajectory features. Beyond actualLength both arrays stay
+            // at their zero initialization — production pads features with
+            // [0,0,0,0,0,0] and nearest_keys with PAD=0
+            // (SwipeTrajectoryProcessor.kt:247-278).
             const trajectoryData = new Float32Array(MAX_SEQUENCE_LENGTH * 6);
             const nearestKeysData = new Int32Array(MAX_SEQUENCE_LENGTH);  // int32 (Android arch)
-            
-            // Use tokenizer mapping if available, otherwise use defaults
-            const keyMap = tokenizer ? tokenizer.char_to_idx : {
-                'a': 4, 'b': 5, 'c': 6, 'd': 7, 'e': 8, 'f': 9, 'g': 10, 'h': 11,
-                'i': 12, 'j': 13, 'k': 14, 'l': 15, 'm': 16, 'n': 17, 'o': 18, 'p': 19,
-                'q': 20, 'r': 21, 's': 22, 't': 23, 'u': 24, 'v': 25, 'w': 26, 'x': 27,
-                'y': 28, 'z': 29
-            };
-            
+
             // Track actual swipe length for masking
             const actualLength = features.originalLength || MAX_SEQUENCE_LENGTH;
 
             // Helper function to clip values to [-VELOCITY_CLIP, VELOCITY_CLIP]
             const clip = (val) => Math.max(-VELOCITY_CLIP, Math.min(VELOCITY_CLIP, val));
 
-            // First pass: calculate positions and time deltas
-            // Matches Python training: dt = np.diff(ts, prepend=ts[0]); dt = np.maximum(dt, 1e-6)
-            const dt = new Float32Array(MAX_SEQUENCE_LENGTH);
-            dt[0] = 1e-6;  // First dt is 0, but we use minimum to avoid division by zero
+            // Time deltas in ms, clamped ≥1e-6 (TrajectoryFeatureCalculator.kt:71-85)
+            const dt = new Float32Array(actualLength);
             for (let i = 1; i < actualLength; i++) {
-                const timeDiff = (features.path[i].timestamp - features.path[i-1].timestamp);
-                dt[i] = Math.max(timeDiff, 1e-6);  // Minimum 1e-6 to avoid division by zero
-            }
-            // Padded points get same dt as last real point
-            for (let i = actualLength; i < MAX_SEQUENCE_LENGTH; i++) {
-                dt[i] = dt[actualLength - 1] || 1e-6;
+                dt[i] = Math.max(features.path[i].timestamp - features.path[i - 1].timestamp, 1e-6);
             }
 
-            // Arrays for velocity (needed for acceleration calculation)
-            const vxArr = new Float32Array(MAX_SEQUENCE_LENGTH);
-            const vyArr = new Float32Array(MAX_SEQUENCE_LENGTH);
+            // Velocities from index 1 (index 0 stays 0). IMPORTANT: keep RAW
+            // (unclipped) velocities for the acceleration derivative — the
+            // Kotlin calculator clips v and a only AFTER both are computed
+            // (TrajectoryFeatureCalculator.kt:87-115).
+            const vxArr = new Float32Array(actualLength);
+            const vyArr = new Float32Array(actualLength);
+            for (let i = 1; i < actualLength; i++) {
+                vxArr[i] = (features.path[i].x - features.path[i - 1].x) / dt[i];
+                vyArr[i] = (features.path[i].y - features.path[i - 1].y) / dt[i];
+            }
 
-            for (let i = 0; i < MAX_SEQUENCE_LENGTH; i++) {
+            for (let i = 0; i < actualLength; i++) {
                 const point = features.path[i];
                 const baseIdx = i * 6;
 
@@ -1583,37 +1650,23 @@
                 trajectoryData[baseIdx + 0] = point.x;
                 trajectoryData[baseIdx + 1] = point.y;
 
-                // Velocity: v = dx / dt (time-normalized, matching Python training)
-                if (i > 0 && i < actualLength) {
-                    const prevPoint = features.path[i - 1];
-                    const dx = point.x - prevPoint.x;
-                    const dy = point.y - prevPoint.y;
-                    vxArr[i] = clip(dx / dt[i]);
-                    vyArr[i] = clip(dy / dt[i]);
-                } else {
-                    vxArr[i] = 0;
-                    vyArr[i] = 0;
-                }
-                trajectoryData[baseIdx + 2] = vxArr[i];
-                trajectoryData[baseIdx + 3] = vyArr[i];
+                // Velocity (clipped)
+                trajectoryData[baseIdx + 2] = clip(vxArr[i]);
+                trajectoryData[baseIdx + 3] = clip(vyArr[i]);
 
-                // Acceleration: a = dv / dt (time-normalized, matching Python training)
-                if (i > 1 && i < actualLength) {
-                    const dvx = vxArr[i] - vxArr[i - 1];
-                    const dvy = vyArr[i] - vyArr[i - 1];
-                    trajectoryData[baseIdx + 4] = clip(dvx / dt[i]);
-                    trajectoryData[baseIdx + 5] = clip(dvy / dt[i]);
-                } else {
-                    trajectoryData[baseIdx + 4] = 0;
-                    trajectoryData[baseIdx + 5] = 0;
+                // Acceleration a[i] = (v[i]-v[i-1])/dt[i] from index 1 — NOT
+                // index 2; a[1] = v[1]/dt[1] in production
+                // (TrajectoryFeatureCalculator.kt:98-107).
+                if (i >= 1) {
+                    trajectoryData[baseIdx + 4] = clip((vxArr[i] - vxArr[i - 1]) / dt[i]);
+                    trajectoryData[baseIdx + 5] = clip((vyArr[i] - vyArr[i - 1]) / dt[i]);
                 }
-                
-                // Nearest key index (int32 for Android model)
-                if (point.key && keyMap.hasOwnProperty(point.key)) {
-                    nearestKeysData[i] = keyMap[point.key] | 0;
-                } else {
-                    nearestKeysData[i] = 0; // Default to PAD_IDX for unknown
-                }
+
+                // Nearest key for EVERY point from the fixed training grid
+                // (SwipeTrajectoryProcessor.detectNearestKeys → KeyboardGrid),
+                // not DOM hit-testing — points between keys must still map to
+                // their nearest key, never PAD.
+                nearestKeysData[i] = KEYBOARD_GRID.nearestKeyToken(point.x, point.y);
             }
 
             // Create tensors with correct shapes and types for Android arch
@@ -1650,11 +1703,18 @@
         }
         
         async function decodeLogits(encoderOutput, actualSrcLength) {
-            // Beam search with the Android-arch decoder. If batchBeams is on
-            // (default), we feed target_tokens with shape [num_active_beams,
-            // DECODER_SEQ_LENGTH] and keep memory at [1, seq_len, hidden_dim]
-            // — the model's broadcast mode expands memory internally, which
-            // is 6–8× faster than running one decoder session per beam.
+            // Production-parity beam search (BeamSearchEngine.kt) with the
+            // Android-arch decoder:
+            //   - vocabulary-trie logit masking (applyTrieMasking)
+            //   - prefix-boost hook (no-op for English — see below)
+            //   - masked re-log-softmax, negative-log-prob scoring
+            //   - length-normalized ranking (alpha=1.4), token-seq dedupe
+            //   - low-prob prune, adaptive width, score-gap early stop
+            //   - length-normalized confidence + 0.01 threshold
+            // If batchBeams is on (default), target_tokens is
+            // [num_active_beams, DECODER_SEQ_LENGTH] with memory kept at
+            // [1, seq_len, hidden_dim] — the model's broadcast mode expands
+            // memory internally, 6–8× faster than one call per beam.
 
             if (!decoderSession) {
                 console.error('Decoder not loaded, cannot decode');
@@ -1662,12 +1722,10 @@
             }
 
             const beamWidth = Number(DEMO_CONFIG.beamWidth) || 6;
-            // The model's target_tokens input is fixed at DECODER_SEQ_LENGTH=20.
-            // Every step past token-index 19 re-reads the same clamped position
-            // and burns decoder time for zero new information, so cap here.
-            // Keep settings panel value in place for user visibility, but
-            // clamp the actual loop ceiling.
-            const maxLength = Math.min(Number(DEMO_CONFIG.maxLength) || 25, 19);
+            // Defaults.NEURAL_MAX_LENGTH=20 decode steps. Beams whose current
+            // position falls outside the fixed 20-token decoder window simply
+            // stop expanding (same guard as BeamSearchEngine.kt:253,300).
+            const maxLength = Number(DEMO_CONFIG.maxLength) || 20;
             const useBatched = DEMO_CONFIG.batchBeams !== false;
             
             // Special tokens from tokenizer config
@@ -1697,9 +1755,71 @@
             // Create reusable tensors
             const actualSrcLenTensor = new ort.Tensor('int32', Int32Array.from([actualSrcLength]), [1]);
 
-            // Initialize beams with SOS token
+            // Vocabulary trie for logit masking (guard against a stale cached
+            // swipe-vocabulary.js that predates the trie methods).
+            const vocabTrie = (swipeVocabulary && swipeVocabulary.isLoaded &&
+                               typeof swipeVocabulary.getAllowedNextChars === 'function')
+                ? swipeVocabulary : null;
+            if (vocabTrie) {
+                vocabTrie.ensureTrie();
+            } else {
+                console.warn('Vocab trie unavailable — beam search UNCONSTRAINED (stale swipe-vocabulary.js?)');
+            }
+
+            // Word accumulated so far for a beam (specials skipped)
+            const beamWord = (tokens) => {
+                let w = '';
+                for (const t of tokens) {
+                    const ch = idxToChar[t];
+                    if (ch && !ch.startsWith('<')) w += ch;
+                }
+                return w;
+            };
+
+            // applyTrieMasking parity (BeamSearchEngine.kt:367-415): SOS/PAD
+            // always masked; EOS masked unless the prefix is a complete word;
+            // characters masked unless the trie allows them after the prefix.
+            // The decoder's log_probs are already log-softmaxed, but since
+            // log-softmax is idempotent, masking + re-log-softmax here is
+            // EXACTLY the Kotlin mask-raw-logits → logSoftmax computation.
+            function maskLogits(logits, tokens) {
+                logits[SOS_IDX] = -Infinity;
+                logits[PAD_IDX] = -Infinity;
+                if (!vocabTrie) return;
+                const prefix = beamWord(tokens);
+                const allowed = vocabTrie.getAllowedNextChars(prefix);
+                const isWord = vocabTrie.containsWord(prefix);
+                if (!isWord) logits[EOS_IDX] = -Infinity;
+                for (let i = 0; i < logits.length; i++) {
+                    if (i === SOS_IDX || i === PAD_IDX || i === EOS_IDX) continue;
+                    const c = idxToChar[i];
+                    if (!c || c.startsWith('<') || !allowed.has(c)) {
+                        logits[i] = -Infinity;
+                    }
+                }
+                // PREFIX BOOSTS (BeamSearchEngine.applyPrefixBoosts) would be
+                // added to the masked logits HERE, before the log-softmax.
+                // Production derives them from assets/prefix_boosts/<lang>.bin
+                // via an Aho-Corasick trie — but explicitly unloads for
+                // English (PrefixBoostTrie.kt:72-77) and ships no en boosts,
+                // so the faithful English port is a no-op.
+            }
+
+            // Numerically stable log-softmax (BeamSearchEngine.kt:480-505,
+            // temperature=1.0 shipped default so no scaling).
+            function logSoftmax(logits) {
+                let maxLogit = -Infinity;
+                for (const l of logits) if (l > maxLogit) maxLogit = l;
+                let sumExp = 0;
+                for (const l of logits) sumExp += Math.exp(l - maxLogit);
+                const logSumExp = maxLogit + Math.log(sumExp);
+                return logits.map((l) => l - logSumExp);
+            }
+
+            // Initialize beams with SOS token. score accumulates NEGATIVE
+            // log-probs — lower is better (BeamSearchEngine.kt:71,160-161).
             let beams = [{
-                tokens: [BigInt(SOS_IDX)],
+                tokens: [SOS_IDX],
                 score: 0,
                 finished: false
             }];
@@ -1759,11 +1879,13 @@
             let decoderStepCount = 0;
             const tDec0 = performance.now();
 
-            // Beam search
+            // Beam search main loop (BeamSearchEngine.search)
             for (let step = 0; step < maxLength; step++) {
                 const active = beams.filter((b) => !b.finished);
                 if (active.length === 0) break;
-                const finishedCarry = beams.filter((b) => b.finished);
+                // Carry finished beams into candidate ranking (kt:108-112)
+                const candidates = beams.filter((b) => b.finished)
+                    .map((b) => ({ tokens: b.tokens.slice(), score: b.score, finished: true }));
 
                 let perBeamLogProbs;
                 try {
@@ -1782,25 +1904,65 @@
                     }
                 }
 
-                const candidates = finishedCarry.slice();
                 active.forEach((beam, i) => {
-                    const stepLogProbs = perBeamLogProbs[i];
+                    // Beams past the fixed decoder window stop expanding (kt:253,300)
+                    const currentPos = beam.tokens.length - 1;
+                    if (currentPos < 0 || currentPos >= DECODER_SEQ_LENGTH) return;
+
+                    // Trie masking + (no-op en) prefix boosts + renormalize
+                    // (processLogitsForBeam, kt:313-362)
+                    const logits = perBeamLogProbs[i].slice();
+                    maskLogits(logits, beam.tokens);
+                    const stepLogProbs = logSoftmax(logits);
+
                     const topK = getTopKIndices(stepLogProbs, beamWidth);
                     for (const idx of topK) {
+                        if (idx === SOS_IDX || idx === PAD_IDX) continue;
                         candidates.push({
-                            tokens: [...beam.tokens, BigInt(idx)],
-                            score: beam.score + stepLogProbs[idx],
+                            tokens: [...beam.tokens, idx],
+                            score: beam.score - stepLogProbs[idx], // accumulate -logP
                             finished: idx === EOS_IDX,
                         });
                     }
                 });
-                
-                // Select top beams
-                candidates.sort((a, b) => b.score - a.score);
-                beams = candidates.slice(0, beamWidth);
-                
-                // Check if all beams are finished or if we have enough good predictions
-                if (beams.every(b => b.finished) || (step >= 10 && beams.filter(b => b.finished).length >= 3)) {
+
+                // Length-normalized ranking, lower normalized score is better
+                // (kt:167-172; normFactor over token count incl. SOS/EOS)
+                candidates.sort((a, b) =>
+                    a.score / beamNormFactor(a.tokens.length) - b.score / beamNormFactor(b.tokens.length));
+
+                // Low-probability prune after step 2 (kt:175-177)
+                const pruned = step >= PROD_BEAM.PRUNE_STEP_THRESHOLD
+                    ? candidates.filter((c) => Math.exp(-c.score) >= PROD_BEAM.LOW_PROB_FLOOR)
+                    : candidates;
+
+                // Top-K selection with token-sequence dedupe (kt:180-194)
+                beams = [];
+                const seenTokenSeqs = new Set();
+                for (const cand of pruned) {
+                    if (beams.length >= beamWidth) break;
+                    const key = cand.tokens.join(',');
+                    if (!seenTokenSeqs.has(key)) {
+                        seenTokenSeqs.add(key);
+                        beams.push(cand);
+                    }
+                }
+
+                // Adaptive width reduction (kt:197-204)
+                if (step === PROD_BEAM.ADAPTIVE_WIDTH_STEP && beams.length > 3 &&
+                    Math.exp(-beams[0].score) > PROD_BEAM.PRUNE_CONFIDENCE) {
+                    beams.length = 3;
+                }
+
+                // Score-gap early stopping (kt:207-216)
+                if (beams.length >= 2 && step >= PROD_BEAM.SCORE_GAP_STEP &&
+                    beams[0].finished && (beams[1].score - beams[0].score) > PROD_BEAM.SCORE_GAP) {
+                    break;
+                }
+
+                // All-finished check (kt:219-221)
+                const nFinished = beams.reduce((n, b) => n + (b.finished ? 1 : 0), 0);
+                if (nFinished === beams.length || nFinished >= beamWidth) {
                     break;
                 }
             }
@@ -1808,20 +1970,25 @@
             const decoderTotalMs = Math.round(performance.now() - tDec0);
             console.log(`🔁 decoder: ${decoderStepCount} steps · ${decoderTotalMs}ms total · mode=${batchedFailed ? 'per-beam (fallback)' : (useBatched ? 'batched' : 'per-beam')}`);
 
-            // Convert token sequences to words
-            const predictions = beams.map(beam => {
+            // convertToCandidate parity (kt:534-576): rebuild word, apply the
+            // SAME length normalization to the final confidence so long words
+            // are comparable to short ones, then threshold at 0.01.
+            const predictions = [];
+            for (const beam of beams) {
                 const chars = [];
-                for (const token of beam.tokens) {
-                    const idx = Number(token);
+                for (const idx of beam.tokens) {
                     if (idx === SOS_IDX || idx === EOS_IDX || idx === PAD_IDX) continue;
                     if (idxToChar[idx] && !idxToChar[idx].startsWith('<')) {
                         chars.push(idxToChar[idx]);
                     }
                 }
-                return chars.join('');
-            }).filter(word => word.length > 0);
-            
-            return predictions.length > 0 ? predictions : [];
+                const word = chars.join('');
+                if (!word) continue;
+                const confidence = Math.exp(-beam.score / beamNormFactor(word.length));
+                if (confidence < PROD_BEAM.CONFIDENCE_THRESHOLD) continue;
+                predictions.push({ word, confidence });
+            }
+            return predictions;
         }
         
         function softmax(logits) {
@@ -1832,73 +1999,61 @@
         }
         
         function getTopKIndices(array, k) {
-            const indexed = array.map((val, idx) => ({val, idx}));
+            // Skip -Infinity (trie-masked) entries — BeamSearchEngine.kt:518
+            const indexed = [];
+            for (let idx = 0; idx < array.length; idx++) {
+                if (array[idx] !== -Infinity) indexed.push({ val: array[idx], idx });
+            }
             indexed.sort((a, b) => b.val - a.val);
             return indexed.slice(0, k).map(item => item.idx);
-        }        
+        }
         function displayPredictions(predictions) {
             const suggestionsDiv = document.getElementById('suggestions');
             suggestionsDiv.innerHTML = '';
             
             console.log('Raw predictions from model:', predictions);
-            
-            // Apply vocabulary filtering if vocab is loaded
+
+            // predictions: [{word, confidence}] — real length-normalized NN
+            // confidences from the beam search (no fabricated values).
             let filteredPredictions = [];
-            
+
             if (swipeVocabulary && swipeVocabulary.isLoaded) {
-                console.log('Vocabulary loaded, applying intelligent filtering with custom dictionary support...');
-                
-                // First, check for 2-character words if it's a straight line
-                if (swipePath && swipePath.length > 0 && isNearlyStraightLine(swipePath)) {
-                    const twoCharWord = getTwoCharWordFromSwipe(keySequence);
-                    if (twoCharWord) {
-                        // Add valid 2-char word to the beginning of predictions
-                        filteredPredictions.push(twoCharWord);
-                    }
-                }
-                
-                // Convert predictions to format expected by SwipeVocabulary
-                const nnPredictions = predictions.map((word, index) => ({
-                    word: word,
-                    confidence: 1.0 - (index * 0.1) // Assign decreasing confidence based on order
-                }));
-                
-                // Calculate swipe statistics
+                // SwipeStats parity (PredictionPostProcessor.kt:98-114):
+                // expectedLength = number of keys crossed during the swipe.
                 const swipeStats = {
                     pathLength: swipePath ? swipePath.length : 0,
-                    expectedLength: keySequence ? Math.round(keySequence.length * 0.8) : 0
+                    expectedLength: keySequence ? keySequence.length : 0
                 };
-                
-                // Use SwipeVocabulary's intelligent filtering (which now includes custom dictionary support)
-                const filtered = swipeVocabulary.filterPredictions(nnPredictions, swipeStats);
-                
-                // Extract words from filtered results and mark sources
+
+                // Production-parity rerank (OptimizedVocabulary.filterPredictions)
+                const filtered = swipeVocabulary.filterPredictions(predictions, swipeStats);
+
+                // Dedupe keep-best-score parity (PredictionPostProcessor.kt:119-130).
+                // Map preserves insertion order = score-desc order from the filter.
+                const bestByWord = new Map();
                 filtered.forEach(result => {
-                    if (!filteredPredictions.includes(result.word)) {
-                        filteredPredictions.push(result.word);
-                        
-                        // Log custom/personal word boost for debugging
-                        if (result.source === 'personal') {
-                            console.log(`🎯 Personal word boosted: ${result.word} (score: ${result.score.toFixed(4)})`);
-                        } else if (dictionaryManager && dictionaryManager.personalWords.has(result.word)) {
-                            console.log(`📚 Custom word found: ${result.word}`);
-                        }
+                    const key = result.word.toLowerCase();
+                    const intScore = Math.round(result.score * 1000); // 0-1000 scaling
+                    if (!bestByWord.has(key) || intScore > bestByWord.get(key).score) {
+                        bestByWord.set(key, { word: result.word, score: intScore });
+                    }
+                    if (dictionaryManager && dictionaryManager.personalWords.has(result.word)) {
+                        console.log(`📚 Custom word found: ${result.word} (score: ${result.score.toFixed(4)})`);
                     }
                 });
-                
-                // Limit to top predictions but ensure we have at least 5
-                filteredPredictions = filteredPredictions.slice(0, 10); // Get more initially
-                console.log('Filtered predictions (with custom dictionary):', filteredPredictions);
+                filteredPredictions = Array.from(bestByWord.values()).map(e => e.word);
+
+                console.log('Filtered predictions (production rerank):', filteredPredictions);
             } else {
                 console.warn('Vocabulary not loaded! Filtering with basic validation.');
                 // Fallback: only show predictions that look like valid English words
                 const validPredictions = predictions
+                    .map(p => p.word)
                     .filter(word => word && word.match(/^[a-zA-Z]+$/) && word.length >= 2 && word.length <= 35)
-                    .map(word => word.toLowerCase())
-                    .filter(word => !filteredPredictions.includes(word));
-                filteredPredictions.push(...validPredictions);
+                    .map(word => word.toLowerCase());
+                filteredPredictions.push(...new Set(validPredictions));
             }
-            
+
             // "Raw output" mode: show ALL beam candidates as non-dictionary
             // chips below the filtered set. Default behaviour hides them so
             // gibberish beam outputs never reach the UI. We keep filtered
@@ -1908,7 +2063,7 @@
             if (DEMO_CONFIG.showRaw) {
                 const seen = new Set(filteredPredictions);
                 for (const raw of predictions) {
-                    const w = (raw || '').toLowerCase().trim();
+                    const w = (raw.word || '').toLowerCase().trim();
                     if (!w || seen.has(w)) continue;
                     if (!/^[a-z]+$/.test(w)) continue;
                     seen.add(w);
@@ -2136,6 +2291,13 @@
                 swipeVocabulary.top5000.add(cleanWord);
             }
             
+            // Keep the beam-search masking trie in sync so the new word is
+            // actually reachable during decoding (production inserts custom
+            // words into VocabularyTrie too).
+            if (typeof swipeVocabulary.insertWordIntoTrie === 'function') {
+                swipeVocabulary.insertWordIntoTrie(cleanWord);
+            }
+
             // Update words by length structure if it exists
             if (swipeVocabulary.wordsByLength) {
                 const length = cleanWord.length;
