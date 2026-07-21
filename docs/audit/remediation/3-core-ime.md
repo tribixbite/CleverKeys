@@ -238,6 +238,12 @@ so geo can be disabled independently of the unification.
 
 ### Steps 7–9 — LANDED (2026-07-21)
 
+**Gates (all green):** compileDebug + compileDebugAndroidTest clean; `runPureTests` 1663/1663;
+targeted ew-cli GeometricSwipeOracleTest 6/6 (all executed — first run silently SKIPPED all 6
+on a raw-vs-xml resource lookup; fixed + hardened assume→assert so a missing layout fails
+loudly) + PipelineCharacterizationTest 26/26; **FULL ew-cli suite 1453/1453, 0 skipped**
+(Pixel7 API 34, orchestrator). Commit `38df84ce`.
+
 - **Step 7**: `swipe/SwipeEngineRouter.kt` (pure object, KeyboardData + string overloads) at the
   IC `handleSwipeTyping` gate: QWERTY-Latin → NEURAL (unchanged), else GEOMETRIC iff
   `Config.geometric_swipe_engine` (default FALSE, classified in `SETTINGS_DEFAULTS`; no UI —
