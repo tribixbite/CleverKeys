@@ -34,6 +34,24 @@
       implication: length-aware routing (neural ≤6 / geo 7+) or rank-merge beats either alone.
       Spec § "Neural head-to-head (local corpus)". Per-trace results LOCAL-ONLY at
       `~/.cache/cleverkeys-test/neural_head2head_pos_beam8.jsonl`.
+- [x] **Corrected head-to-head: PRODUCTION-equivalent neural decode DONE 2026-07-21** — the
+      bare decode above was not apples-to-apples (geo ran its full pipeline, neural a partial
+      one). `tools/test_cli_predict.py` extended in place with `--production`: faithful port of
+      the on-device English path — trie-CONSTRAINED beam (width 6, α=1.4 length-norm,
+      `BeamSearchEngine.kt`) + `OptimizedVocabulary.filterPredictions` rerank
+      (0.80·conf + 0.114·freq, tier boosts 1.0, dict-fuzzy rescue, top-10). Audit findings:
+      prefix boost is a NO-OP for en (`loadFromAssets("en")` unloads; no en.bin asset);
+      strictStartChar off by default; swipe-stats gates inert (SwipeInput built with empty
+      touchedKeys). Full 8,521-trace rerun (62.5 min, 0 errors; bare columns reproduced
+      bit-identically): **PRODUCTION 53.7/63.2/66.7** vs bare-filt 56.7/62.2/62.9 vs geo A
+      55.2/68.0/71.7 — top-1 −3.0 but top-3/5 +1.0/+3.8 (trie fixes candidate exhaustion:
+      top-5>top-3 now). Verified faithful, not a port bug (probe demotions are NN-confidence
+      driven, e.g. otello 0.70 vs own 0.19). **Router implication REVISED: geo now leads
+      overall top-1 (+1.5) and all depth; neural keeps 2-3 (+21.6 top-1); 4-6 near-tie;
+      split becomes neural ≤3 / geo 4+ (or rank-merge)** — old "neural ≤6" was a bare-decode
+      artifact. Spec section rewritten (old neural column relabeled "bare decode
+      (underrepresents production)"). Per-trace LOCAL-ONLY at
+      `~/.cache/cleverkeys-test/neural_head2head_production.jsonl`.
 - [ ] Phase 7 (optional, gated): neural characterization golden file (`GeoNeuralCharacterizationTest`
       consistency oracle) — the head-to-head above provides the evidence base; golden-file
       generation for a CI-checkable consistency assert remains open.

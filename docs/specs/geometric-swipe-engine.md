@@ -834,36 +834,88 @@ which was a 100-sample smoke over a different file (`swype-model-training/swipes
   "with velocity: 29%" collapse came from a non-time-normalized variant. Position-only is
   the model's ceiling on this corpus either way.
 
-**Neural on the 8,521 in-dict traces (beam=8, position-only):**
+**Neural on the 8,521 in-dict traces (position-only). Three decode variants** — the
+first two are the original BARE decode (beam=8, plain-sum scoring, unconstrained; it
+**underrepresents production**: the on-device pipeline is trie-constrained and reranked);
+the third is the PRODUCTION-EQUIVALENT decode added 2026-07-21 (`--production` mode,
+same file; 62.5 min, 0 errors; bare columns reproduced bit-identically, validating the
+harness):
 ```
                     top-1   top-3   top-5
-  RAW  (any string)  47.9%   57.4%   60.9%
-  DICT-FILTERED      56.7%   62.2%   62.9%   <- fair comparison vs dictionary-constrained geo
+  RAW  (any string)  47.9%   57.4%   60.9%   <- bare decode (underrepresents production)
+  DICT-FILTERED      56.7%   62.2%   62.9%   <- bare decode + post-hoc dict filter
+  PRODUCTION-EQUIV   53.7%   63.2%   66.7%   <- faithful on-device pipeline (below)
 ```
 By length stratum (top-1/3/5): RAW 2-3 `63.7/72.0/74.5` (n=1291), 4-6 `54.5/63.8/67.6`
 (n=3877), 7+ `34.1/44.2/48.0` (n=3353); DICT-FILTERED 2-3 `66.0/73.5/75.1`,
-4-6 `61.8/68.4/69.3`, 7+ `47.2/50.6/50.7`.
+4-6 `61.8/68.4/69.3`, 7+ `47.2/50.6/50.7`; PRODUCTION 2-3 `63.7/69.9/73.0`,
+4-6 `57.5/66.4/70.1`, 7+ `45.4/57.0/60.4`.
 
-**Head-to-head (identical traces, dictionary-constrained both sides):**
+**What `--production` replicates (transcribed from the Kotlin, with citations)**:
+trie-CONSTRAINED beam search — logits masked against the 98,140-word vocabulary trie,
+EOS allowed only at complete words (`applyTrieMasking`, `onnx/BeamSearchEngine.kt:367-415`);
+beam width **6** (`Config.kt:134`); length-normalized scoring
+`score/((5+len)^α/6^α)` with **α=1.4** (`Config.kt:145` via
+`SwipePredictorOrchestrator.kt:125` — not the 1.0 constructor fallback); per-candidate
+confidence `exp(-score/normFactor)` thresholded at 0.01 (`BeamSearchEngine.kt:566-573`);
+then the `OptimizedVocabulary.filterPredictions` rerank (`OptimizedVocabulary.kt:331`):
+`score = (0.80·NNconf + 0.20·0.57·freq)·boost` (prediction-source 80 ⇒ conf/freq weights
+0.80/0.20, `Config.kt:198,848-849`; neural_frequency_weight 0.57, `Config.kt:151`; all
+tier boosts default 1.0, `Config.kt:199-201`), freq normalized `((raw−128)/127)≥0.001`
+from `en_enhanced.json` (`OptimizedVocabulary.kt:1006`), rare-tier frequency floor
+`max(perLengthFloor, 100/10000)` (`OptimizedVocabulary.kt:484-499`), Levenshtein
+dict-fuzzy rescue when <3 survivors (`OptimizedVocabulary.kt:600-730`), dedupe
+keep-best, top-10. **Two audit findings that reframe the original fairness concern**:
+(a) **prefix boost is a NO-OP for English** — `PrefixBoostTrie.loadFromAssets("en")`
+unloads and reports `hasBoosts()=false` (`PrefixBoostTrie.kt:72-77`); the orchestrator
+only loads boost tries for non-English primaries (`SwipePredictorOrchestrator.kt:568,595-598`)
+and no `en.bin` asset exists (only de/es/fr/it/nl/pt/sv/id/ms/sw/tl).
+(b) **the swipe-stats gates are inert** — production constructs `SwipeInput` with an
+EMPTY `touchedKeys` list (`InputCoordinator.kt:1304-1308`), so
+firstChar/lastChar/expectedLength never filter, and `autocorrect_prefix_length`
+defaults to 0 (`Config.kt:189`); `strictStartChar` is off by default (`Config.kt:158`).
 
-| stratum | n | geo A top-1/3/5 | neural filt top-1/3/5 | winner |
-|---|---|---|---|---|
-| overall | 8521 | 55.2 / 68.0 / 71.7 | 56.7 / 62.2 / 62.9 | neural +1.5 top-1; **geo +5.8 top-3, +8.8 top-5** |
-| 2-3 | 1291 | 42.1 / 58.6 / 64.4 | 66.0 / 73.5 / 75.1 | **neural by +23.9 top-1** |
-| 4-6 | 3877 | 56.0 / 70.0 / 74.1 | 61.8 / 68.4 / 69.3 | neural +5.8 top-1; geo better top-3/5 |
-| 7+ | 3353 | 59.4 / 69.3 / 71.6 | 47.2 / 50.6 / 50.7 | **geo by +12.2 top-1, +20.9 top-5** |
+**Head-to-head (identical traces, production-equivalent both sides):**
 
-**Router implication (WP9)**: the engines are strongly COMPLEMENTARY by word length —
-neural dominates short words (where geometric templates are ambiguous), geometric
-dominates long words (where beam search drifts) and always has deeper top-3/5 (its 10-name
-candidate list vs 8 beams that thin to <5 dictionary words after dedup+filter — note
-neural top-5 ≈ top-3, candidate exhaustion). A length-aware router (neural ≤6 letters /
-geometric 7+) or a rank-merge would beat either engine alone on this corpus.
+| stratum | n | geo A top-1/3/5 | neural PROD top-1/3/5 | (bare-filt, superseded) | winner |
+|---|---|---|---|---|---|
+| overall | 8521 | 55.2 / 68.0 / 71.7 | 53.7 / 63.2 / 66.7 | 56.7 / 62.2 / 62.9 | **geo +1.5 top-1, +4.8 top-3, +5.0 top-5** |
+| 2-3 | 1291 | 42.1 / 58.6 / 64.4 | 63.7 / 69.9 / 73.0 | 66.0 / 73.5 / 75.1 | **neural by +21.6 top-1** |
+| 4-6 | 3877 | 56.0 / 70.0 / 74.1 | 57.5 / 66.4 / 70.1 | 61.8 / 68.4 / 69.3 | near-tie top-1 (neural +1.5); geo better top-3/5 |
+| 7+ | 3353 | 59.4 / 69.3 / 71.6 | 45.4 / 57.0 / 60.4 | 47.2 / 50.6 / 50.7 | **geo by +14.0 top-1, +11.2 top-5** |
 
-**Honest caveats**: (1) this CLI runner reproduces encoder+beam-search only — the
-on-device pipeline adds `PrefixBoostTrie`, vocabulary filtering, frequency reranking
-(`PredictionPostProcessor`) and would likely score somewhat higher than the raw-beam
-numbers (its production beam default is 6, this run used the reference 8); (2) the
-timestamp handicap above (position-only) is real but measured to be ~free on this corpus;
-(3) per-trace outputs live LOCAL-ONLY at
-`~/.cache/cleverkeys-test/neural_head2head_pos_beam8.jsonl` (never committed).
+Production vs bare-filt is NOT uniformly better: top-1 drops 3.0 pts while top-3/5 rise
+(+1.0/+3.8 overall; +9.7 top-5 at 7+). Investigated per-trace BEFORE the full run
+(score decomposition of the 500-probe demotions): the top-1 loss is a FAITHFUL property
+of the production pipeline, not a port bug — the α=1.4 length-normalized, trie-constrained
+beam sometimes assigns a confident-but-wrong complete word (e.g. `otello` NN-conf 0.70 vs
+`own` 0.19 on an o-t-e… trace; `newark` 0.82 vs `nearby` 0.36) that the small frequency
+term (effective weight 0.114) cannot overturn; in exchange the trie constraint eliminates
+non-word beams so the candidate list stays deep — production top-5 66.7% > top-3 63.2%,
+whereas the bare decode's "candidate exhaustion" (top-5 ≈ top-3) was an artifact of the
+unconstrained width-8 beam thinning to <5 dictionary words.
+
+**Router implication (WP9, revised on production-equivalent numbers)**: the
+length-complementarity conclusion HOLDS, and the overall picture shifts toward
+geometric — measured faithfully, **geo now leads overall top-1 (+1.5) as well as all
+depth metrics** (the bare-decode comparison had flattered neural's top-1 and understated
+its depth). Neural's short-word dominance is intact (+21.6 top-1 at 2-3); geo's long-word
+top-1 lead widens (+14.0 at 7+) while its depth lead narrows (+11.2 top-5, was +20.9 vs
+bare); the 4-6 band becomes a top-1 near-tie where geo has better depth. A length-aware
+router has a cleaner split than previously stated: **neural for ≤3 letters, geometric for
+4+ (or a rank-merge)** — the earlier "neural ≤6" threshold was an artifact of the bare
+decode overstating neural's mid-band top-1 (61.8 bare-filt vs 57.5 production at 4-6).
+
+**Honest caveats**: (1) the production-equivalent decode replicates beam + vocab-trie +
+filterPredictions with shipped defaults, but NOT: personalization/UserVocabulary and
+custom-words autocorrect (empty on first-install and in eval), context-aware/next-word
+reranking (no sentence context in the corpus), language-detection & secondary-dictionary
+paths (en-only corpus), contraction display mapping (corpus targets are apostrophe-free),
+or `PersonalizationManager` frequency adaptation — these are user-state-dependent and
+inert on first-install defaults, so the PRODUCTION column models a fresh install.
+(2) Production defaults `neural_batch_beams=false` (sequential decode); the runner uses
+the batched decoder call, which returns numerically identical per-position log-probs
+(same logits, same top-K) — a speed-only difference. (3) The timestamp handicap
+(position-only) is unchanged and measured ~free on this corpus. (4) Per-trace outputs
+LOCAL-ONLY at `~/.cache/cleverkeys-test/neural_head2head_pos_beam8.jsonl` (bare) and
+`~/.cache/cleverkeys-test/neural_head2head_production.jsonl` (production; never committed).
