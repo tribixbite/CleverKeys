@@ -174,3 +174,53 @@ The unification (R-1) dominates and carries the real risk; everything else is a 
 low-risk cleanup. Reaching an A grade specifically requires R-1 (eliminates the diverged
 dual pipeline and the swipe/tap behavior inconsistency) plus R-3 (no main-thread block) —
 the P2/P3 items are needed for polish but are not the grade-limiting factors.
+
+## Addendum (2026-07-21): WP9 × geometric engine — proposed R-1 step 7+ ("geo wiring")
+
+*Proposal from the geo-engine track for the unification track to adopt/amend. Context:
+the standalone geometric engine (`swipe.geometric`, spec `docs/specs/geometric-swipe-engine.md`)
+is implemented, audited, and real-corpus-validated (en/QWERTY + dvorak/azerty/qwertz/german/
+spanish + 8.5k neural-testset traces). R-1 steps 4–5 landed `SH.handleSwipePredictionResults(
+PredictionResult)` as the single flag-gated swipe-results entry — which is EXACTLY the seam
+the geo engine was built to feed (it emits the same `PredictionResult`). These steps slot in
+AFTER step 6 (IC deletion + soak), so the router lands on the unified path only.*
+
+### Step 7 — SwipeEngineRouter (layout-routed v1)
+- Insert at the existing gate site: `Config.isSwipeTypingSupportedForLayout` currently
+  returns false → swipe silently disabled (`InputCoordinator.kt` swipe entry; the gate's own
+  KDoc anticipates this: "#9: When algorithmic swipe is implemented, this can expand").
+  v1 routing = **layout-based only**: QWERTY-Latin → neural (unchanged), everything else →
+  geometric. Do NOT do length-based routing in v1 — the measured head-to-head (spec As-Built:
+  neural wins ≤3-letter top-1 by +21.6, geo wins 4+/depth) supports a later QWERTY-en
+  rank-merge experiment, but that is a phase-2 enhancement with its own oracle round.
+- **Score comparability is a hard constraint**: geo scores are engine-relative softmax×1000
+  (KDoc warning on `SwipeDecodingEngine`; spec OQ-5). The router must never numerically
+  compare scores across engines. v1 = single engine owns each swipe end-to-end.
+
+### Step 8 — GeometricEngineAdapter (the spec's named-not-built component)
+Checklist (each item is a spec-documented adapter duty):
+1. `KeyboardData` → `LayoutGeometry` via `a11y/KeyboardGeometry.computeKeyRects` (proven rect
+   math); memoize per immutable KeyboardData instance; fingerprint churn on orientation is
+   by-design.
+2. `PointF` trace → `TracePoint` (key-area-local px + `keyAreaWidthPx/HeightPx`).
+3. `DictionaryManager` words → `GeometricDictionary`: **merge custom words, filter disabled
+   words, bump `version` on every mutation** (the existing ContentObserver is the trigger).
+   This closes the two features the standalone engine deliberately does not see.
+4. `warmUp(layout, dict)` on layout/language switch, background — avoid the 150–400 ms
+   synchronous fallback on first swipe. Memory ceiling: indexCacheCapacity=3 ⇒ ≤7.5 MB.
+5. Pref `geometric_swipe_engine` (name reserved in the spec) — MUST be classified in
+   `SETTINGS_DEFAULTS` or `SettingsDefaultsDriftTest` fails (deliberate tripwire).
+
+### Step 9 — oracle additions (extend the R-1 characterization suite)
+- NEW-behavior pin: non-QWERTY layout (e.g. cyrl_jcuken_ru) now yields swipe suggestions
+  (previously none) when flag on; yields none when flag off.
+- Parity pins on the geo path (should be free since geo rides the same SH entry, pin anyway):
+  password-field guard, possessive augmentation, case/shift transform, contraction alias
+  display mapping (geo emits `dont` — assert the bar shows the mapped form per SH rules).
+- Perf gate (instrumented): p95 decode+adapter overhead on-device for a JCUKEN swipe
+  (engine core measured 1.8 ms warm on 98k JVM-side; adapter conversion must not dominate).
+
+### Sequencing + effort
+Step 7–9 ≈ 2–3 days on top of R-1's 4–6, strictly after step 6 soak. Router flag can reuse
+`unified_swipe_pipeline` gating semantics but should be a separate pref (`geometric_swipe_engine`)
+so geo can be disabled independently of the unification.
