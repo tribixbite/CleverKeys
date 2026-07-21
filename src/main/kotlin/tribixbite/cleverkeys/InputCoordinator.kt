@@ -7,6 +7,8 @@ import android.os.Looper
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
 import tribixbite.cleverkeys.ml.SwipeMLData
+import tribixbite.cleverkeys.swipe.GeometricEngineAdapter
+import tribixbite.cleverkeys.swipe.SwipeEngineRouter
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
@@ -285,12 +287,14 @@ class InputCoordinator(
     }
 
     /**
-     * Releases coordinator resources: cancels any pending cursor sync. Called during IME
-     * teardown. (Step 6: IC no longer owns a prediction executor — the single executor lives
-     * on SuggestionHandler and is shut down there.)
+     * Releases coordinator resources: cancels any pending cursor sync and stops the
+     * geometric adapter's background thread (if it was ever created). (Step 6: IC no longer
+     * owns a prediction executor — the single suggestion executor lives on SuggestionHandler
+     * and is shut down there; step 8 adds the geometric decode thread, owned here.)
      */
     fun shutdown() {
         cancelPendingCursorSync()
+        geometricAdapter?.shutdown()
     }
 
     /**
@@ -418,8 +422,21 @@ class InputCoordinator(
         contextTracker.clearLastAutoInsertedWord()
 
         if (!config.swipe_typing_enabled) return
-        // #9: Neural model is QWERTY-trained — disable swipe for non-QWERTY layouts
-        if (!Config.isSwipeTypingSupportedForLayout(keyboardView.getKeyboard())) return
+        // WP9 R-1 step 7: layout-routed engine selection. QWERTY-Latin → neural (the #9
+        // QWERTY-trained-model gate, unchanged); non-QWERTY → geometric when enabled, else
+        // no swipe (today's behavior). One engine owns each swipe end-to-end; both feed the
+        // same SuggestionHandler seam downstream.
+        when (SwipeEngineRouter.route(keyboardView.getKeyboard(), config.geometric_swipe_engine)) {
+            SwipeEngineRouter.Engine.NONE -> return
+            SwipeEngineRouter.Engine.GEOMETRIC -> {
+                performGeometricSwipeTyping(
+                    swipedKeys, swipePath, timestamps, ic, editorInfo, resources,
+                    wasShiftActive, wasShiftLocked
+                )
+                return
+            }
+            SwipeEngineRouter.Engine.NEURAL -> Unit // falls through to the neural flow below
+        }
 
         // OPTIMIZATION: Ensure the neural engine is loaded before running the swipe. If it is
         // not yet ready, initialize it OFF the main thread and resume via performSwipeTyping
@@ -451,6 +468,119 @@ class InputCoordinator(
     }
 
     /**
+     * Marks swipe state + prepares the ML trace capture shared by BOTH engines (WP9 step 8):
+     * sets `wasLastInputSwipe`, snapshots the raw path/timestamps into [currentSwipeData], and
+     * records the gesture tracker's key sequence (ML data only — each engine recalculates keys
+     * from the raw path independently).
+     */
+    private fun beginSwipeCapture(
+        swipedKeys: List<KeyboardData.Key>,
+        swipePath: List<android.graphics.PointF>?,
+        timestamps: List<Long>?,
+        resources: Resources
+    ) {
+        // Mark that last input was a swipe for ML data collection
+        contextTracker.setWasLastInputSwipe(true)
+
+        // Prepare ML data (will be saved if user selects a prediction)
+        val metrics = resources.displayMetrics
+        currentSwipeData = SwipeMLData(
+            "", "user_selection",
+            metrics.widthPixels, metrics.heightPixels,
+            keyboardView.height
+        )
+
+        // Add swipe path points with timestamps
+        if (swipePath != null && timestamps != null && swipePath.size == timestamps.size) {
+            swipePath.indices.forEach { i ->
+                val point = swipePath[i]
+                val timestamp = timestamps[i]
+                currentSwipeData?.addRawPoint(point.x, point.y, timestamp)
+            }
+        }
+
+        // Build key sequence from swiped keys for ML data ONLY
+        swipedKeys.forEach { key ->
+            key.keys[0]?.let { kv ->
+                if (kv.getKind() == KeyValue.Kind.Char) {
+                    currentSwipeData?.addRegisteredKey(kv.getChar().toString())
+                }
+            }
+        }
+    }
+
+    // ── WP9 R-1 steps 7-8: geometric engine path (non-QWERTY layouts) ──────────────────
+
+    private var geometricAdapter: GeometricEngineAdapter? = null
+
+    private fun geometricAdapterOrCreate(): GeometricEngineAdapter =
+        geometricAdapter ?: GeometricEngineAdapter(context).also { geometricAdapter = it }
+
+    /**
+     * Decodes a non-QWERTY swipe with the geometric engine (off the main thread) and feeds
+     * the result into the SAME pipeline as neural results — [handlePredictionResults] →
+     * [SuggestionHandler.handleSwipePredictionResults] — so the geometric path inherits the
+     * password guard, possessive augmentation, shift/caps transform, and THE commit engine.
+     * An empty decode (no dictionary for the language, dead layout, degenerate trace) flows
+     * through as an empty prediction list → the pipeline clears the bar.
+     */
+    private fun performGeometricSwipeTyping(
+        swipedKeys: List<KeyboardData.Key>,
+        swipePath: List<android.graphics.PointF>?,
+        timestamps: List<Long>?,
+        ic: InputConnection?,
+        editorInfo: EditorInfo?,
+        resources: Resources,
+        wasShiftActive: Boolean,
+        wasShiftLocked: Boolean
+    ) {
+        if (swipePath.isNullOrEmpty() || timestamps == null) return
+        val keyboard = keyboardView.getKeyboard() ?: return
+        val params = keyboardView.geometryParams() ?: return
+        val frameW = keyboardView.width.toFloat()
+        val frameH = keyboardView.height.toFloat()
+        if (frameW <= 0f || frameH <= 0f) return
+
+        // Same swipe-state + ML-trace capture as the neural path (D5 collection works
+        // identically for geometric selections).
+        beginSwipeCapture(swipedKeys, swipePath, timestamps, resources)
+
+        val language = predictionCoordinator.getDictionaryManager()?.getCurrentLanguage()
+            ?: config.primary_language
+        geometricAdapterOrCreate().decodeAsync(
+            keyboard, params, frameW, frameH, swipePath, timestamps, language
+        ) { result ->
+            handlePredictionResults(
+                result.words, result.scores, ic, editorInfo, resources,
+                wasShiftActive, wasShiftLocked
+            )
+        }
+    }
+
+    /**
+     * Proactive background warm-up of the geometric engine (WP9 step 8 duty 4): called on
+     * layout switches (CleverKeysService.onStartInputView) so the first non-QWERTY swipe
+     * avoids the 150-400 ms synchronous Tier-A index build. Posted to the view so the frame
+     * dimensions are the post-layout ones; a no-op unless the router would pick GEOMETRIC.
+     */
+    fun prewarmGeometricEngine() {
+        if (!config.swipe_typing_enabled || !config.geometric_swipe_engine) return
+        keyboardView.post {
+            val keyboard = keyboardView.getKeyboard() ?: return@post
+            if (SwipeEngineRouter.route(keyboard, config.geometric_swipe_engine) !=
+                SwipeEngineRouter.Engine.GEOMETRIC
+            ) return@post
+            val params = keyboardView.geometryParams() ?: return@post
+            val frameW = keyboardView.width.toFloat()
+            val frameH = keyboardView.height.toFloat()
+            if (frameW <= 0f || frameH <= 0f) return@post
+            val language = predictionCoordinator.getDictionaryManager()?.getCurrentLanguage()
+                ?: config.primary_language
+            geometricAdapterOrCreate().warmUpAsync(keyboard, params, frameW, frameH, language)
+        }
+    }
+
+    /**
      * Runs the actual swipe prediction once the neural engine is (or is confirmed not) ready.
      *
      * Split out of [handleSwipeTyping] so the engine-readiness wait can be non-blocking: the
@@ -475,39 +605,7 @@ class InputCoordinator(
             predictionCoordinator.ensureInitialized()
         }
 
-        // Mark that last input was a swipe for ML data collection
-        contextTracker.setWasLastInputSwipe(true)
-
-        // Prepare ML data (will be saved if user selects a prediction)
-        val metrics = resources.displayMetrics
-        currentSwipeData = SwipeMLData(
-            "", "user_selection",
-            metrics.widthPixels, metrics.heightPixels,
-            keyboardView.height
-        )
-
-        // Add swipe path points with timestamps
-        if (swipePath != null && timestamps != null && swipePath.size == timestamps.size) {
-            swipePath.indices.forEach { i ->
-                val point = swipePath[i]
-                val timestamp = timestamps[i]
-                currentSwipeData?.addRawPoint(point.x, point.y, timestamp)
-            }
-        }
-
-        // Build key sequence from swiped keys for ML data ONLY
-        // NOTE: This is gesture tracker's detection - neural network will recalculate independently
-        val gestureTrackerKeys = StringBuilder()
-        swipedKeys.forEach { key ->
-            key.keys[0]?.let { kv ->
-                if (kv.getKind() == KeyValue.Kind.Char) {
-                    val c = kv.getChar()
-                    gestureTrackerKeys.append(c)
-                    // Add to ML data
-                    currentSwipeData?.addRegisteredKey(c.toString())
-                }
-            }
-        }
+        beginSwipeCapture(swipedKeys, swipePath, timestamps, resources)
 
         if (!swipePath.isNullOrEmpty()) {
             // Create SwipeInput exactly like SwipeCalibrationActivity (empty swipedKeys)

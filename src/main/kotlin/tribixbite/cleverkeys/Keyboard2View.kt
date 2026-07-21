@@ -1220,7 +1220,9 @@ class Keyboard2View @JvmOverloads constructor(
      * getKeyAtPosition fix) to avoid a stale [_marginLeft] from a delayed
      * onMeasure; marginTop uses the raw [Config.marginTop] (not tc.margin_top).
      */
-    private fun geometryParams(): KeyboardGeometry.Params? {
+    // WP9 R-1 step 8: `internal` (was private) so GeometricEngineAdapter can build
+    // LayoutGeometry from the exact same rect math the a11y tree and hit-testing use.
+    internal fun geometryParams(): KeyboardGeometry.Params? {
         val tc = _tc ?: return null
         return KeyboardGeometry.Params(
             keyWidth = _keyWidth,

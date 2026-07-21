@@ -55,9 +55,10 @@
 - [ ] Phase 7 (optional, gated): neural characterization golden file (`GeoNeuralCharacterizationTest`
       consistency oracle) — the head-to-head above provides the evidence base; golden-file
       generation for a CI-checkable consistency assert remains open.
-- [ ] WP9 wiring: R-1 **step 6 LANDED 2026-07-21** (single pipeline; `unified_swipe_pipeline`
-      flag removed) — geo router (steps 7-9 per 3-core-ime.md addendum) can now wire into the
-      sole `SH.handleSwipePredictionResults` seam; check the unification track's todo first.
+- [x] WP9 wiring COMPLETE: step 6 (single pipeline) + steps 7-9 (geo router/adapter/oracle)
+      ALL LANDED 2026-07-21. `geometric_swipe_engine` pref (default OFF, no UI yet) routes
+      non-QWERTY swipes to the geometric engine through the sole SH seam. Remaining: settings
+      UI toggle when geo graduates from experimental; phase-2 QWERTY-en rank-merge experiment.
 - Hard-won this round (also in project memory `geo-engine-datasets` file): HF datasets-server
   `/filter?where="col"='val'` endpoint slices big datasets server-side (rare-slice fetch in
   ~30 reqs vs 592); FUTO swipe-5 = multi-layout run (layout/language/dual_finger cols +
@@ -260,9 +261,13 @@ pure-JVM `swipe.geometric` package; NOT wired into live pipeline — WP9 stays d
   updated (4 legacy guards deleted, 5b rerouted, 16b deleted, 19 rewritten). Full JVM 1654 green;
   FULL ew-cli 1447/1447 green (949bdcf9 + gate).
   Details: wp9-pipeline-unification-oracle.md §"Step 6 — LANDED".
-- **NEXT (R-1)**: step 7+ — geo-engine wiring (SwipeEngineRouter + GeometricEngineAdapter + oracle
-  round, per 3-core-ime.md Addendum 2026-07-21); Termux-deletion DECISION (user-visible, separate)
-  remains open.
+- **R-1 STEPS 7-9 LANDED (2026-07-21)**: SwipeEngineRouter (layout-routed v1) at the IC gate;
+  GeometricEngineAdapter (KeyboardData→LayoutGeometry via a11y rect math, prod dictionaries +
+  custom/disabled overlay w/ content-hash versioning, background warmup from onStartInputView);
+  `geometric_swipe_engine` pref default OFF (no UI — debug-pref pattern). Oracle:
+  SwipeEngineRouterTest (9 JVM) + GeometricSwipeOracleTest (6 instrumented incl. p95<150ms gate).
+- **NEXT (R-1)**: Termux-deletion DECISION (user-visible, separate) remains open; geo settings UI
+  + phase-2 rank-merge when geo graduates.
 - **WP8 FULLY COMPLETE** (bd8aafb3): the deferred index-sensitive batch — 285 control
   titles/descriptions/section headers/ColorAttributeRow labels/format-arg strings extracted
   (search index byte-identical, 134 entries), translated into all 21 locales (~5,985 entries,

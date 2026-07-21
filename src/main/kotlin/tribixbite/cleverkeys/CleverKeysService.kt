@@ -681,6 +681,10 @@ class CleverKeysService : InputMethodService(),
         _keyboardView.setKeyboard(current_layout())
         // TODO #9: toast on non-QWERTY layout switch — disabled (not showing reliably across devices)
         // checkSwipeSupportForCurrentLayout()
+        // WP9 R-1 step 8: background-warm the geometric engine when this layout routes to it,
+        // so the first non-QWERTY swipe avoids the synchronous template-index build. No-op
+        // unless swipe typing + the geometric_swipe_engine pref are both enabled.
+        if (::_inputCoordinator.isInitialized) _inputCoordinator.prewarmGeometricEngine()
         _keyeventhandler.started(info)
 
         // Setup prediction views (v1.32.400: extracted prediction/swipe setup logic)

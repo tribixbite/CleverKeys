@@ -307,6 +307,9 @@ object Defaults {
     const val TERMUX_MODE_ENABLED = true
     // WP9 R-1 step 6: UNIFIED_SWIPE_PIPELINE (the step-4 QA escape hatch) was removed — the
     // SuggestionHandler pipeline is the only one; the pref key is in DEPRECATED_KEYS.
+    // WP9 R-1 step 7: geometric (SHARK2) swipe engine for non-QWERTY layouts. Default OFF —
+    // experimental; no settings UI yet (same debug-pref pattern the step-4 flag used).
+    const val GEOMETRIC_SWIPE_ENGINE = false
     const val AUTO_SPACE_AFTER_SUGGESTION = true  // Add trailing space after selecting suggestion
     const val AUTO_SPACE_BEFORE_SUGGESTION = true  // Add leading space before tapped suggestion
     const val BACKSPACE_UNDO_SWIPE = true  // Backspace after swipe deletes entire swiped word
@@ -606,6 +609,8 @@ class Config private constructor(
     @JvmField var neural_batch_beams = false
     @JvmField var neural_greedy_search = false
     @JvmField var swipe_debug_detailed_logging = false
+    // WP9 R-1 step 7: route non-QWERTY-layout swipes to the geometric engine (default off).
+    @JvmField var geometric_swipe_engine = false
     @JvmField var swipe_debug_show_raw_output = false
     @JvmField var swipe_show_raw_beam_predictions = false
     @JvmField var termux_mode_enabled = false
@@ -889,6 +894,7 @@ class Config private constructor(
         backspace_undo_swipe = _prefs.getBoolean("backspace_undo_swipe", Defaults.BACKSPACE_UNDO_SWIPE)
         backspace_undo_autocorrect = _prefs.getBoolean("backspace_undo_autocorrect", Defaults.BACKSPACE_UNDO_AUTOCORRECT)
         swipe_debug_detailed_logging = _prefs.getBoolean("swipe_debug_detailed_logging", Defaults.SWIPE_DEBUG_DETAILED_LOGGING)
+        geometric_swipe_engine = _prefs.getBoolean("geometric_swipe_engine", Defaults.GEOMETRIC_SWIPE_ENGINE)
         swipe_debug_show_raw_output = _prefs.getBoolean("swipe_debug_show_raw_output", Defaults.SWIPE_DEBUG_SHOW_RAW_OUTPUT)
         swipe_show_raw_beam_predictions = _prefs.getBoolean("swipe_show_raw_beam_predictions", Defaults.SWIPE_SHOW_RAW_BEAM_PREDICTIONS)
 

@@ -235,3 +235,28 @@ Checklist (each item is a spec-documented adapter duty):
 Step 7–9 ≈ 2–3 days on top of R-1's 4–6, strictly after step 6 soak. Router flag can reuse
 `unified_swipe_pipeline` gating semantics but should be a separate pref (`geometric_swipe_engine`)
 so geo can be disabled independently of the unification.
+
+### Steps 7–9 — LANDED (2026-07-21)
+
+- **Step 7**: `swipe/SwipeEngineRouter.kt` (pure object, KeyboardData + string overloads) at the
+  IC `handleSwipeTyping` gate: QWERTY-Latin → NEURAL (unchanged), else GEOMETRIC iff
+  `Config.geometric_swipe_engine` (default FALSE, classified in `SETTINGS_DEFAULTS`; no UI —
+  same debug-pref pattern the step-4 flag used), else NONE. No cross-engine score comparison;
+  one engine owns each swipe end-to-end.
+- **Step 8**: `swipe/GeometricEngineAdapter.kt` — all five spec duties: (1) KeyboardData →
+  LayoutGeometry via `KeyboardGeometry.computeKeyRects` (view-pixel frame == trace frame),
+  memoized per KeyboardData instance; (2) PointF → TracePoint snapshotting; (3) dictionary from
+  the SAME production sources (langpack `files/langpacks/{code}/dictionary.bin`, else
+  `dictionaries/{code}_enhanced.bin` asset, both V2 CKDT) with custom words prepended +
+  disabled filtered, `version` = content hash over (source, custom JSON, disabled set) —
+  recomputed per ensure, so mutations invalidate the engine cache without ContentObserver
+  wiring; (4) `warmUpAsync` from `CleverKeysService.onStartInputView` →
+  `IC.prewarmGeometricEngine()` (posted past layout); (5) pref classified (drift test green).
+  Decode runs on the adapter's own `PredictionTaskRunner` thread (last-swipe-wins), results
+  post to main → `IC.handlePredictionResults` → the step-6 `SH.handleSwipePredictionResults`
+  seam, inheriting password guard/possessives/shift transform/THE commit engine for free.
+- **Step 9**: `SwipeEngineRouterTest` (9 JVM routing pins incl. the Greek-QWERTY trap) +
+  `GeometricSwipeOracleTest` (instrumented, Dvorak+bundled-en so no langpack import needed):
+  real-engine decode pin ("world" in top-3), seam commit + NEURAL_SWIPE tracking, password
+  suppression on geo results, shift-capitalized commit, router re-pin on real KeyboardData,
+  and a p95<150 ms warm decode gate (engine core is ~ms-scale; gate absorbs emulator noise).
