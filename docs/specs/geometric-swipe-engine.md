@@ -802,3 +802,68 @@ test lands the geometric half and the identical-input harness it needs.
   `GeoAccuracyThresholds` discipline (not tuning targets).
 - **Run**: `sh gradlew runPureTests -PtestClass=swipe.geometric.GeoLocalCorpusReplayTest -PgeoFull=true`
   (registered in `build.gradle` pureTestClasses; drift-test safe; default suite 1654 green).
+
+## Neural head-to-head (local corpus) (2026-07-21)
+
+The NEURAL half of the geometric-vs-neural bridge: the SAME 8,521 in-dict traces the
+geometric replay above decodes were decoded through the CURRENT production ONNX models
+(`src/main/assets/models/swipe_{encoder,decoder}_android.onnx`) with
+`tools/test_cli_predict.py` (extended in place with a `--corpus` head-to-head mode).
+Fresh full-corpus measurement — it SUPERSEDES the historical "~53% top-1" anecdote,
+which was a 100-sample smoke over a different file (`swype-model-training/swipes.jsonl`).
+
+- **Runner + environment**: Python/onnxruntime 1.27.0 under proot-distro Ubuntu (glibc —
+  ORT does not load on bionic Termux), venv `~/ckvenv` inside the rootfs. Model I/O
+  signatures verified by inspection probe before the run: encoder
+  `trajectory_features [b,250,6] f32 / nearest_keys [b,250] i32 / actual_length [b] i32 →
+  encoder_output [b,250,256]`; decoder `memory [1,seq,256] / target_tokens [beams,20] i32 /
+  actual_src_length [1] i32 → log_probs [beams,20,30]` (pre-log-softmaxed) — no drift vs
+  the runner; broadcast batched beam search (web_demo `stepBatched` semantics: score = sum
+  log-probs, EOS carry, early-stop when all finished or step≥10 ∧ ≥3 finished). The
+  standalone Kotlin runner (`tools/standalone_tests/test_onnx_cli.kt`) targets the OLD
+  `swipe_model_character_quant` models (150-len, `src_mask`/`target_mask` bool, int64) and
+  was NOT used. Decode settings: **beam=8, max-len 19 (decoder seq cap), position-only
+  features** (below); same in-dict filter as the geo test (word ∈ 98,140-word
+  `en_enhanced.json`) → identical n=8,521 @ 99.0% coverage; 0 decode errors; 106 min CPU.
+- **TIMESTAMP HANDICAP (stated per protocol)**: this corpus has corrupt timestamps
+  (t resets/broken deltas), so the run used POSITION-ONLY features (velocity/accel zeroed).
+  A 500-trace probe with the production velocity formula (normalized-coord delta / dt(ms),
+  clip ±10 — verbatim web_demo/training) scored 49.4/61.8/65.0 RAW vs 49.0/61.6/65.0
+  position-only on the IDENTICAL traces: at ms scale the velocity features are ~1e-4
+  magnitude, so they carry no usable signal here — no catastrophe, no gain. The historical
+  "with velocity: 29%" collapse came from a non-time-normalized variant. Position-only is
+  the model's ceiling on this corpus either way.
+
+**Neural on the 8,521 in-dict traces (beam=8, position-only):**
+```
+                    top-1   top-3   top-5
+  RAW  (any string)  47.9%   57.4%   60.9%
+  DICT-FILTERED      56.7%   62.2%   62.9%   <- fair comparison vs dictionary-constrained geo
+```
+By length stratum (top-1/3/5): RAW 2-3 `63.7/72.0/74.5` (n=1291), 4-6 `54.5/63.8/67.6`
+(n=3877), 7+ `34.1/44.2/48.0` (n=3353); DICT-FILTERED 2-3 `66.0/73.5/75.1`,
+4-6 `61.8/68.4/69.3`, 7+ `47.2/50.6/50.7`.
+
+**Head-to-head (identical traces, dictionary-constrained both sides):**
+
+| stratum | n | geo A top-1/3/5 | neural filt top-1/3/5 | winner |
+|---|---|---|---|---|
+| overall | 8521 | 55.2 / 68.0 / 71.7 | 56.7 / 62.2 / 62.9 | neural +1.5 top-1; **geo +5.8 top-3, +8.8 top-5** |
+| 2-3 | 1291 | 42.1 / 58.6 / 64.4 | 66.0 / 73.5 / 75.1 | **neural by +23.9 top-1** |
+| 4-6 | 3877 | 56.0 / 70.0 / 74.1 | 61.8 / 68.4 / 69.3 | neural +5.8 top-1; geo better top-3/5 |
+| 7+ | 3353 | 59.4 / 69.3 / 71.6 | 47.2 / 50.6 / 50.7 | **geo by +12.2 top-1, +20.9 top-5** |
+
+**Router implication (WP9)**: the engines are strongly COMPLEMENTARY by word length —
+neural dominates short words (where geometric templates are ambiguous), geometric
+dominates long words (where beam search drifts) and always has deeper top-3/5 (its 10-name
+candidate list vs 8 beams that thin to <5 dictionary words after dedup+filter — note
+neural top-5 ≈ top-3, candidate exhaustion). A length-aware router (neural ≤6 letters /
+geometric 7+) or a rank-merge would beat either engine alone on this corpus.
+
+**Honest caveats**: (1) this CLI runner reproduces encoder+beam-search only — the
+on-device pipeline adds `PrefixBoostTrie`, vocabulary filtering, frequency reranking
+(`PredictionPostProcessor`) and would likely score somewhat higher than the raw-beam
+numbers (its production beam default is 6, this run used the reference 8); (2) the
+timestamp handicap above (position-only) is real but measured to be ~free on this corpus;
+(3) per-trace outputs live LOCAL-ONLY at
+`~/.cache/cleverkeys-test/neural_head2head_pos_beam8.jsonl` (never committed).

@@ -22,11 +22,21 @@
       is off-Hub; proshian/neural-swipe-typing repo has acquisition pointers).
 - [ ] OQ-8 (Dvorak direction-channel closer): DE-PRIORITIZED — real Dvorak top-3 79.9%
       clears the 0.78 floor; synthetic-only gap. Revisit only with real evidence.
-- [ ] Phase 7 (optional, gated): neural characterization golden file — geometric HALF now
-      landed (local-corpus replay above decodes the neural held-out set through the geo engine;
-      the identical-input harness is ready). Remaining = decode the SAME cached traces through
-      the ONNX pipeline for the true head-to-head. Bridge datapoint already visible: geo 55.2%
-      top-1 ≈ neural ~53% on this exact distribution.
+- [x] **Neural half of the head-to-head DONE 2026-07-21** — SAME 8,521 in-dict traces decoded
+      through the CURRENT production ONNX models (`tools/test_cli_predict.py` extended in place
+      with `--corpus` mode; onnxruntime 1.27.0 under proot-distro Ubuntu; signatures verified,
+      beam=8, position-only per corrupt-t handicap; 0 errors, 106 min). **Neural RAW
+      47.9/57.4/60.9, DICT-FILTERED 56.7/62.2/62.9 vs geo A 55.2/68.0/71.7** — supersedes the
+      "~53%" 100-sample anecdote. STRONGLY COMPLEMENTARY by length: neural wins 2-3
+      (66.0 vs 42.1 top-1, +23.9), geo wins 7+ (59.4 vs 47.2 top-1, +12.2; +20.9 top-5) and all
+      top-3/5 depth (neural candidate exhaustion: filt top-5≈top-3). Velocity probe (500, prod
+      formula ms-scale clipped): 49.4 vs 49.0 pos-only — no signal, no catastrophe. WP9 router
+      implication: length-aware routing (neural ≤6 / geo 7+) or rank-merge beats either alone.
+      Spec § "Neural head-to-head (local corpus)". Per-trace results LOCAL-ONLY at
+      `~/.cache/cleverkeys-test/neural_head2head_pos_beam8.jsonl`.
+- [ ] Phase 7 (optional, gated): neural characterization golden file (`GeoNeuralCharacterizationTest`
+      consistency oracle) — the head-to-head above provides the evidence base; golden-file
+      generation for a CI-checkable consistency assert remains open.
 - [ ] WP9 wiring: owned by the CONCURRENT session (oracle + `unified_swipe_pipeline` flag
       landing); geo router seam (`SwipeDecodingEngine`) ready — do not wire from this track
       without checking that session's todo entries first.
