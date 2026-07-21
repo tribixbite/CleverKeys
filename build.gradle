@@ -464,6 +464,8 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.swipe.geometric.GeoRealCorpusReplayTest',
     // Real-corpus REPLAY on NON-QWERTY layouts (FUTO swipe-5/train dvorak/azerty/qwertz/german/spanish)
     'tribixbite.cleverkeys.swipe.geometric.GeoRealCorpusMultiLayoutTest',
+    // Real-corpus REPLAY on the NEURAL model's held-out combined-corpus test set (local-only, geoFull-gated)
+    'tribixbite.cleverkeys.swipe.geometric.GeoLocalCorpusReplayTest',
     // Phase 5 — synthetic traces + accuracy harness (PROVISIONAL floors)
     'tribixbite.cleverkeys.swipe.geometric.GeoTraceSynthesizerTest',
     'tribixbite.cleverkeys.swipe.geometric.GeoAccuracyQwertyEnTest',

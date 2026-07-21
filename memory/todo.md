@@ -1,22 +1,32 @@
 # CleverKeys TODO
 
 ## 🔜 NEXT — geo-engine queued implementation (state as of 2026-07-20 context-clear)
-- [ ] **Local-corpus replay (neural-vs-geo bridge)**: `~/storage/shared/Download/
-      combined_english_swipes_test.jsonl.txt` = 8,607 REAL en/QWERTY swipes in proshian
-      format `{curve:{x[],y[],t[],grid_name:"qwerty_english"},word}`, PIXEL coords
-      (~360×189 canvas), the neural model's held-out test distribution. Grid geometry
-      for "qwerty_english" lives in `tools/test_cli_predict.py` / `.ts` +
-      `model/train_character_model.py`. Value: (a) third independent real-corpus source;
-      (b) SAME traces the neural pipeline can decode → enables the Phase-7-adjacent
-      geometric-vs-neural head-to-head on identical inputs, informing the WP9 router.
-      Pattern: follow `GeoRealCorpusReplayTest` (fetch→cache→Assume+geoFull→A/B→
-      report-first floors). (`equix_training_data.jsonl` in same dir is unrelated PoW data.)
+- [x] **Local-corpus replay (neural-vs-geo bridge) DONE 2026-07-21** —
+      `GeoLocalCorpusReplayTest` (`-PgeoFull` + local-cache gated) replays ALL 8,607 REAL
+      en/QWERTY swipes from `~/storage/shared/Download/combined_english_swipes_test.jsonl.txt`
+      (the NEURAL model's held-out test set) through the shipped engine on the repo-authoritative
+      `qwerty_english` grid (26 centroids from `tools/test_cli_predict.py`, 360×215px canvas
+      reconciled from measured extents — NOT srcs XML). Converter `scripts/build_local_corpus_replay.mjs`
+      → `~/.cache/cleverkeys-test/combined_english_swipes.jsonl.gz` (DATA local-only; 0 rows
+      dropped — corpus already clean; apostrophe class 0 but sub-tallied). Geometry sanity:
+      start-key 73.1% / end-key 66.4% (median start dist 14.3px < 36px pitch = adjacent-key
+      noise, NOT bad grid) + 88.7% per-word letter coverage. **A/B over 8,521 in-dict traces
+      (99.0% cov): A(shipped) 55.2/68.0/71.7 (t1/t3/t5) recall 82.8% vs B(pre-fix) 53.3/64.6/67.6
+      recall 76.5% → Δ +2.0/+3.5/+4.1/+6.3, A≥B on EVERY metric & stratum** (biggest A/B deltas
+      of all 3 corpora). This corpus is ~20pts HARDER than FUTO (75.2/85.4/87.9) — it's the
+      neural set (ONNX ~53% top-1). Bridge headline: **zero-training geo (55.2%) ≈ trained neural
+      (~53%) on identical inputs.** Neural side of the head-to-head deliberately NOT implemented
+      (Phase-7/WP9). PROVISIONAL floors ~4pts below A + A≥B−1pt guard. Full suite 1654 green.
+      Spec As-Built § "Real-corpus replay — LOCAL COMBINED CORPUS".
 - [ ] JCUKEN real replay: still blocked on corpus (NOT on HF — verified; Yandex Cup 2023
       is off-Hub; proshian/neural-swipe-typing repo has acquisition pointers).
 - [ ] OQ-8 (Dvorak direction-channel closer): DE-PRIORITIZED — real Dvorak top-3 79.9%
       clears the 0.78 floor; synthetic-only gap. Revisit only with real evidence.
-- [ ] Phase 7 (optional, gated): neural characterization golden file — partially superseded
-      by the local-corpus replay above (same comparison, better data).
+- [ ] Phase 7 (optional, gated): neural characterization golden file — geometric HALF now
+      landed (local-corpus replay above decodes the neural held-out set through the geo engine;
+      the identical-input harness is ready). Remaining = decode the SAME cached traces through
+      the ONNX pipeline for the true head-to-head. Bridge datapoint already visible: geo 55.2%
+      top-1 ≈ neural ~53% on this exact distribution.
 - [ ] WP9 wiring: owned by the CONCURRENT session (oracle + `unified_swipe_pipeline` flag
       landing); geo router seam (`SwipeDecodingEngine`) ready — do not wire from this track
       without checking that session's todo entries first.

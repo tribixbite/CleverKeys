@@ -727,3 +727,78 @@ companion) + the hard A ≥ B − 1pt non-regression guard per layout, mirroring
 (the FUTO `swipe-5` split has no `jcuken`/Cyrillic layout rows; the Yandex Cup 2023 swipe
 corpus is off-Hub). Deferred (evaluation-only per Non-Goal 4); the Latin non-QWERTY regime
 (above) plus QWERTY-en now cover the non-circular check for every shipping Latin layout.
+
+## Real-corpus replay — LOCAL COMBINED CORPUS (the NEURAL model's held-out test set) (2026-07-21)
+
+A THIRD independent real-corpus source, and the one that matters most for the future
+geometric-vs-neural bridge: `GeoLocalCorpusReplayTest` (pure JVM, `-PgeoFull` +
+local-cache gated) replays the **8,607 real en/QWERTY swipes** the ONNX neural pipeline is
+itself scored on — the "combined English swipes" held-out test set — through the SHIPPED
+geometric engine on the default Latin QWERTY layout. Same engine as the FUTO replays,
+DIFFERENT collection methodology (this is the neural model's own private test distribution),
+so it is a genuinely independent non-circular check AND enables a head-to-head on identical
+inputs (neural side NOT implemented here — that is the Phase-7 / WP9 bridge).
+
+- **Corpus**: `~/storage/shared/Download/combined_english_swipes_test.jsonl.txt` — 8,607
+  lines, proshian format `{"curve":{x[],y[],t[],grid_name:"qwerty_english"},"word"}`, RAW
+  PIXEL coords. `scripts/build_local_corpus_replay.mjs` normalizes and caches to
+  `~/.cache/cleverkeys-test/combined_english_swipes.jsonl.gz` in the `{word,w,h,pts}` shape
+  the existing replay loaders consume (DATA never committed — LOCAL-ONLY; the SCRIPT is the
+  reproducibility artifact). **Filters (every drop counted): 0 dropped** — this corpus is
+  already clean (all rows ≥3 points, all words lowercase to pure ASCII letters, all finite).
+  The apostrophe class is 0 here but is still explicitly sub-tallied by the converter, since
+  the shipped en dictionary carries ZERO apostrophe words → apostrophe words are untypeable
+  by construction.
+- **Geometry source (repo-authoritative, NOT srcs/layouts XML)**: the `qwerty_english` grid
+  per-key PIXEL centroids from `tools/test_cli_predict.py` / `.ts` (`QWERTY_KEYS`), identical
+  to the `KeyboardGrid` derived from `model/train_character_model.py`'s
+  `data/data_preprocessed/gridname_to_grid.json`. 26 letter keys on a 36 px horizontal /
+  59 px vertical pitch, NO bottom row. Transcribed verbatim into the test's
+  `QWERTY_ENGLISH_KEYS`; centroids normalized to [0,1] over the canvas.
+- **Canvas reconciliation (evidence-checked, per the GEOMETRY CAUTION)**: measured extents
+  across all 8,607 traces are x ∈ [0.87, 360.00], y ∈ [0.00, 215.00] → canonical canvas is
+  **360 × 215 px**. The `/280` divisor in `test_cli_predict.py` is an unrelated NEURAL-input
+  squash, not the geometric coordinate frame, and is deliberately ignored. Two independent
+  geometry sanity checks were run BEFORE the full grid:
+  - **START-key nearest-match 73.1% / END-key 66.4%** — much lower than FUTO's 94.7% start,
+    BUT the median start-point distance to the true first-key centroid is only **14.3 px**
+    (< the 36 px key pitch) and misses are to ADJACENT keys (`d`→`f`, `e`→`r`). This is
+    intrinsic corpus DIFFICULTY, not a geometry mismatch.
+  - **Per-word letter coverage 88.7%** (fraction of a word's unique letters whose key the
+    path passes over) — confirms the paths genuinely traverse their letters on this grid.
+
+**A/B on 8,521 in-dict real traces (99.0% coverage; A = shipped defaults, B = pre-fix
+endpointInset=0/dirPenalty=0/cap=800):**
+```
+  config       top-1   top-3   top-5   prune-recall
+  A (shipped)  55.2%   68.0%   71.7%   82.8%       endpointInset=.30, dirPenalty=.30, cap=1200
+  B (pre-fix)  53.3%   64.6%   67.6%   76.5%       endpointInset=0,   dirPenalty=0,   cap=800
+  Δ (A−B)      +2.0    +3.5    +4.1   (+6.3 recall)
+```
+By length stratum (A top-1/3/5): 2-3 `42.1/58.6/64.4` (n=1291), 4-6 `56.0/70.0/74.1`
+(n=3877), 7+ `59.4/69.3/71.6` (n=3353). **A ≥ B on EVERY headline metric AND every length
+stratum** — no CRITICAL A ≤ B. The A/B deltas here (+2.0/+3.5/+4.1) are even LARGER than the
+FUTO replay's (+0.6/+1.1/+1.6), so the SLOPPY-tier tuning generalizes to this harder,
+independently-collected distribution most strongly of all three corpora.
+
+**Cross-corpus comparison (spec deliverable 3).** Same shipped engine:
+
+| corpus | collection | coverage | top-1 | top-3 | top-5 |
+|---|---|---|---|---|---|
+| FUTO swipe-1/test | FUTO app, held-out test | 97.8% | 75.2% | 85.4% | 87.9% |
+| **LOCAL combined-test** | **neural model held-out test** | **99.0%** | **55.2%** | **68.0%** | **71.7%** |
+
+The local combined corpus is ~**20 pts harder** on top-1 than FUTO — consistent with it
+being the NEURAL model's deliberately-hard held-out set (the ONNX decoder itself reaches
+only ~53% top-1 on it, per `tools/test_cli_predict.py`'s own comment). Striking bridge data
+point: the **zero-training geometric engine (55.2% top-1) is on par with the trained neural
+model (~53% top-1) on this exact distribution** — the first apples-to-apples signal for the
+Phase-7 / WP9 geometric-vs-neural router. The neural half of the head-to-head (decoding the
+SAME cached traces through the ONNX pipeline) is deliberately NOT implemented here; this
+test lands the geometric half and the identical-input harness it needs.
+
+- **Regression floors**: PROVISIONAL, ~4 pts below measured A (top-1 ≥ 0.51, top-3 ≥ 0.64,
+  top-5 ≥ 0.67) plus a hard A ≥ B − 1pt non-regression guard, mirroring the
+  `GeoAccuracyThresholds` discipline (not tuning targets).
+- **Run**: `sh gradlew runPureTests -PtestClass=swipe.geometric.GeoLocalCorpusReplayTest -PgeoFull=true`
+  (registered in `build.gradle` pureTestClasses; drift-test safe; default suite 1654 green).
