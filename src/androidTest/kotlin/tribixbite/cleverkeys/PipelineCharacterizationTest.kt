@@ -31,10 +31,11 @@ import java.util.concurrent.TimeUnit
  *   - SuggestionHandler (typing + manual tap + — since step 5 — the swipe & cursor-sync
  *     prediction/post phases)
  * — INCLUDING their known divergences, so the unification (SH survives, IC becomes a
- * thin swipe/cursor-sync front-end) can be verified step-by-step. As of WP9 step 5 (2026-07-20)
- * cursor-sync's prediction+post phase routes through SuggestionHandler.handleCursorSyncPrediction
- * behind the same config.unified_swipe_pipeline flag (default TRUE); IC retains the cursor
- * bookkeeping (onCursorPositionChanged, the 100ms debounce, synchronizeWithCursor).
+ * thin swipe/cursor-sync front-end) can be verified step-by-step. As of WP9 step 6 (2026-07-21)
+ * the unification is COMPLETE: SuggestionHandler owns the single pipeline (bar presentation,
+ * cursor-sync prediction, and THE commit engine); InputCoordinator is a thin swipe/ML front-end
+ * plus cursor bookkeeping (onCursorPositionChanged, the 100ms debounce, synchronizeWithCursor);
+ * the config.unified_swipe_pipeline flag and all legacy IC pipelines were deleted.
  *
  * Two assertion kinds (per spec §"What the oracle is"):
  *   - INVARIANT — must never change; a failure at any migration step is a regression.
@@ -65,10 +66,9 @@ import java.util.concurrent.TimeUnit
  *   - IC.onSuggestionSelected     595-947 (spec said 535-880; IC dead code removed)
  *   - applyShiftTransformation now lives on SuggestionHandler's companion (step 3); IC's private
  *     copy was deleted — IC.handlePredictionResults delegates to SuggestionHandler.
- *   - IC.triggerPredictionsForPrefix 309-451 (spec said 214-357 / 262-339) — since step 5 this is
- *     the LEGACY cursor-sync path, reached only when config.unified_swipe_pipeline is false or the
- *     cursor-sync delegate is unwired. IC.onCursorMoved now dispatches on the flag:
- *     SuggestionHandler.handleCursorSyncPrediction (default) vs. triggerPredictionsForPrefix (legacy).
+ *   - IC.triggerPredictionsForPrefix — DELETED in step 6 along with IC's onSuggestionSelected,
+ *     autoInsertTopSuggestion, handleDeleteLastWord dup, and the unified_swipe_pipeline flag.
+ *     IC.onCursorMoved delegates unconditionally to SuggestionHandler.handleCursorSyncPrediction.
  *   - IC's silent catch is GONE: now logs (R-4 done) — so D4/D5 pins hold but the
  *     "silent swallow" scenario is not characterized (already remediated).
  *   - SH.handlePredictionResults  293-376 (spec 290+ — accurate); possessive augment SH:324.
@@ -176,9 +176,6 @@ class PipelineCharacterizationTest {
         config.swipe_show_debug_scores = false
         config.autocapitalize_i_words = true
         config.primary_language = "en"
-        // WP9 R-1 step 4: unified swipe pipeline ON by default. Individual legacy-path tests flip
-        // this to false to exercise the QA escape hatch (old IC-only behavior).
-        config.unified_swipe_pipeline = true
         // Haptics off: swipe auto-insert calls keyboardView.triggerHaptic(SWIPE_COMPLETE);
         // VibratorCompat.vibrate returns early when disabled, keeping the (unattached) view
         // path free of vibrator side effects on the emulator.
@@ -222,16 +219,11 @@ class PipelineCharacterizationTest {
         ).apply { setSuggestionBar(bar) }
 
         val inputCoordinator = InputCoordinator(
-            context, config, contextTracker, predCoord,
-            sharedContractionManager!!, bar, keyboardView, keyEventHandler
+            context, config, contextTracker, predCoord, bar, keyboardView
         )
-        // WP9 R-1 step 4: wire the unified-swipe delegate exactly as ManagerInitializer does in
-        // production, so IC.handlePredictionResults routes through SuggestionHandler when
-        // config.unified_swipe_pipeline is true.
+        // WP9 R-1 steps 4-6: wire the unified delegates exactly as ManagerInitializer does in
+        // production. MANDATORY since step 6 — IC has no fallback pipelines.
         inputCoordinator.setSwipeResultDelegate(suggestionHandler)
-        // WP9 R-1 step 5: wire the unified cursor-sync delegate (also mirrors ManagerInitializer), so
-        // IC.onCursorMoved routes the prediction+post phase through SuggestionHandler's single guarded
-        // pipeline when config.unified_swipe_pipeline is true.
         inputCoordinator.setCursorSyncDelegate(suggestionHandler)
 
         return Harness(
@@ -426,14 +418,20 @@ class PipelineCharacterizationTest {
 
         // Now tap the alternate "help": lastAutoInserted="hello", source=NEURAL_SWIPE,
         // so onSuggestionSelected deletes "hello " (word+space) then commits "help ".
+        // ORACLE-FLIP(step 6) LANDED 2026-07-21: routed through SuggestionHandler — the engine
+        // production taps ALWAYS used (SuggestionBridge → SH, isManualSelection=true). The old
+        // direct IC.onSuggestionSelected call exercised IC's now-deleted divergent clone; the
+        // assertion VALUES are unchanged because both engines agreed on this scenario.
         onMain {
-            h.inputCoordinator.onSuggestionSelected("help", h.inputConnection, textEditor(), h.resources)
+            h.suggestionHandler.onSuggestionSelected(
+                "help", h.inputConnection, textEditor(), h.resources, isManualSelection = true
+            )
         }
         drainMainThread()
 
         // INVARIANT: the auto-inserted word is replaced (not appended).
         assertEquals("help ", bufferOf(h))
-        // Scenario 10 pin: tap selection sets CANDIDATE_SELECTION source on IC path.
+        // Scenario 10 pin: tap selection sets CANDIDATE_SELECTION source.
         assertEquals(PredictionSource.CANDIDATE_SELECTION, h.contextTracker.getLastCommitSource())
     }
 
@@ -482,40 +480,11 @@ class PipelineCharacterizationTest {
         assertEquals("book ", bufferOf(h))
     }
 
-    /**
-     * Scenario 7 legacy (D — flag off): with config.unified_swipe_pipeline=false, the QA escape hatch
-     * runs the legacy IC-only path, which has NO password guard — the swipe STILL commits "hunter2 "
-     * with a NEURAL_SWIPE source. Pins the pre-flip behavior so the escape hatch is verifiable.
-     */
-    @Test
-    fun oracle_swipe_passwordField_legacyPathStillCommits() {
-        val h = harness(initialText = "")
-        h.config.unified_swipe_pipeline = false
-        h.config.swipe_on_password_fields = false
-        swipeResults(h, listOf("hunter2"), listOf(300), passwordEditor())
-        drainMainThread()
-
-        assertEquals("hunter2 ", bufferOf(h))
-        assertEquals(PredictionSource.NEURAL_SWIPE, h.contextTracker.getLastCommitSource())
-    }
-
-    /**
-     * Scenario 8 legacy (D — flag off): with config.unified_swipe_pipeline=false, the legacy IC-only
-     * path does NOT augment possessives — "book's" is absent from the swipe bar. Pins the pre-flip
-     * behavior of the escape hatch.
-     */
-    @Test
-    fun oracle_swipe_possessives_legacyPathAbsent() {
-        val h = harness(initialText = "")
-        h.config.unified_swipe_pipeline = false
-        swipeResults(h, listOf("book", "cook"), listOf(300, 200), textEditor())
-        drainMainThread()
-
-        assertFalse(
-            "legacy IC path posts no possessives. Got: ${h.suggestionBar.getCurrentSuggestions()}",
-            h.suggestionBar.getCurrentSuggestions().any { it == "book's" }
-        )
-    }
+    // NOTE (step 6, 2026-07-21): the four "legacy (flag off)" escape-hatch guards
+    // (oracle_swipe_passwordField_legacyPathStillCommits, oracle_swipe_possessives_legacyPathAbsent,
+    // oracle_cursorSync_dictionaryPossessives_legacyPathAlsoSurfaces,
+    // oracle_cursorSync_unknownWord_legacyPathPostsNothing) were DELETED together with the
+    // legacy InputCoordinator pipelines and the config.unified_swipe_pipeline flag they pinned.
 
     /**
      * Scenario 9: Termux editor — swipe path is UNCHANGED (uses InputConnection deletion, gets
@@ -530,7 +499,9 @@ class PipelineCharacterizationTest {
         drainMainThread()
 
         // INVARIANT: swipe auto-insert commits with a trailing space even in Termux mode —
-        // IC's shouldAddTrailingSpace suppresses the trailing space only for NON-swipe.
+        // termux_mode_enabled suppresses the trailing space only for NON-swipe (tap) commits.
+        // (Step 6: unchanged through the SH engine — SmartAutoSpace has no termux branch and
+        // auto_space_after_suggestion is on, so the swipe still gets TRAILING_SPACE.)
         assertEquals("ls ", bufferOf(h))
     }
 
@@ -634,12 +605,11 @@ class PipelineCharacterizationTest {
     }
 
     /**
-     * Scenario 16 (D1 control): SuggestionHandler HAS possessive augmentation (which IC lacks,
-     * D1). Characterized at the method level because SH.handlePredictionResults augments the bar
-     * at SH:329 but then RE-DISPLAYS the ORIGINAL (non-augmented) list at SH:370 after auto-insert
-     * — so the possessives are transient in the final bar. The load-bearing D1 asymmetry is that
-     * the augmentation FUNCTION exists on SH and produces possessives; assert it directly via the
-     * private-method reflection seam (production untouched).
+     * Scenario 16 (D1 control): SuggestionHandler owns possessive augmentation. Since step 6 the
+     * only production caller is handleSwipePredictionResults (the swipe-path D1 flip, scenario 8);
+     * this test pins the augmentation FUNCTION itself via the private-method reflection seam.
+     * (The former 16b test pinned the legacy SH.handlePredictionResults transient re-display; that
+     * entry was DELETED in step 6 — dead chain, zero production callers — so 16b went with it.)
      */
     @Test
     fun oracle_tap_possessiveAugmentationExistsAndProducesForms() {
@@ -664,33 +634,6 @@ class PipelineCharacterizationTest {
         // Appended at the END (after the base predictions), scores stay aligned in length.
         assertTrue(words.size > 3)
         assertEquals(words.size, scores.size)
-    }
-
-    /**
-     * Scenario 16b (D1 nuance): after a FULL SH.handlePredictionResults, the possessive is NOT in
-     * the final bar — the re-display at SH:370 restores the original list. Pins this exact
-     * transient behavior so a future change that keeps possessives visible is a deliberate flip.
-     */
-    @Test
-    fun oracle_tap_handlePredictionResults_reDisplaysNonAugmentedListAfterAutoInsert() {
-        val h = harness(initialText = "")
-        val possessive = h.contractionManager.generatePossessive("book")
-        org.junit.Assume.assumeNotNull("'book' must be possessive-eligible", possessive)
-        onMain {
-            h.suggestionHandler.handlePredictionResults(
-                listOf("book", "cook", "look"), listOf(300, 200, 100),
-                h.inputConnection, textEditor(), h.resources
-            )
-        }
-        drainMainThread()
-
-        // INVARIANT: top prediction auto-inserted (SH path also auto-inserts).
-        assertEquals("book ", bufferOf(h))
-        // INVARIANT: final bar is the NON-augmented list (possessive stripped by SH:370 re-display).
-        assertFalse(
-            "possessive must be transient — absent from final bar. Got: ${h.suggestionBar.getCurrentSuggestions()}",
-            h.suggestionBar.getCurrentSuggestions().any { it == possessive }
-        )
     }
 
     /** Scenario 17 (D3 control): autocorrect-on-space raises an undo prompt and sets the
@@ -722,21 +665,21 @@ class PipelineCharacterizationTest {
         assertTrue("specialPromptActive must be set after autocorrect prompt", guard)
     }
 
-    /** Scenario 19 (D2 control): SuggestionHandler.handlePredictionResults returns early in
-     * password mode → suggestions cleared / no commit. */
+    /** Scenario 19 (D2 control): the TRACKED password mode (setPasswordMode, flipped by
+     * onStartInputView) suppresses the swipe pipeline even when the EditorInfo alone would not
+     * reveal a password field — the guard is `isPasswordMode || isPasswordField(editorInfo)`.
+     * (Rewritten in step 6: the former target, SH's legacy auto-inserting handlePredictionResults,
+     * was deleted as a dead chain; scenario 7 covers the EditorInfo leg of the same guard.) */
     @Test
     fun oracle_tap_passwordMode_suggestionsSuppressed() {
         val h = harness(initialText = "")
         h.config.swipe_on_password_fields = false
         h.suggestionHandler.setPasswordMode(true)
-        onMain {
-            h.suggestionHandler.handlePredictionResults(
-                listOf("hunter2"), listOf(300), h.inputConnection, passwordEditor(), h.resources
-            )
-        }
+        // Plain-text EditorInfo: only the tracked mode marks this as a password context.
+        swipeResults(h, listOf("hunter2"), listOf(300), textEditor())
         drainMainThread()
 
-        // INVARIANT (D2 control): the tap-path handler guards password mode — nothing committed.
+        // INVARIANT (D2 control): tracked password mode guards the pipeline — nothing committed.
         assertEquals("", bufferOf(h))
         assertFalse(h.suggestionBar.getCurrentSuggestions().any { it == "hunter2" })
     }
@@ -832,7 +775,7 @@ class PipelineCharacterizationTest {
         drainMainThread()
 
         onMain {
-            // onCursorMoved debounces then runs triggerPredictionsForPrefix on the executor.
+            // onCursorMoved debounces then runs SH.handleCursorSyncPrediction (single pipeline).
             h.inputCoordinator.onCursorMoved(9, h.inputConnection, "en", textEditor())
         }
         // Debounce (100ms) + async prediction.
@@ -874,26 +817,6 @@ class PipelineCharacterizationTest {
         )
     }
 
-    /** Scenario 25 legacy (flag off): with config.unified_swipe_pipeline=false, the legacy IC-only
-     * cursor-sync ALSO surfaces the dictionary possessive "book's" — confirming the fold introduced
-     * no possessive regression on the escape hatch (possessives are dictionary predictions, not the
-     * augmentPredictionsWithPossessives function, so they are path-independent here). */
-    @Test
-    fun oracle_cursorSync_dictionaryPossessives_legacyPathAlsoSurfaces() {
-        val h = harness(initialText = "book")
-        h.config.unified_swipe_pipeline = false
-        onMain { h.inputConnection.setSelection(4, 4) }
-        drainMainThread()
-        onMain { h.inputCoordinator.onCursorMoved(4, h.inputConnection, "en", textEditor()) }
-        Thread.sleep(1200)
-        drainMainThread()
-
-        assertTrue(
-            "legacy IC cursor-sync also surfaces dictionary possessive \"book's\". Got: ${h.suggestionBar.getCurrentSuggestions()}",
-            h.suggestionBar.getCurrentSuggestions().any { it == "book's" }
-        )
-    }
-
     /**
      * Scenario 26 — ORACLE-FLIP(step 5) LANDED 2026-07-20. Before step 5 the legacy IC cursor-sync
      * (triggerPredictionsForPrefix) posted NOTHING for an unknown word with zero dictionary
@@ -924,30 +847,6 @@ class PipelineCharacterizationTest {
             h.suggestionBar.getCurrentSuggestions().any {
                 it.startsWith(Suggestion.EXACT_ADD_PREFIX) || it == "exact_add:xyzq"
             }
-        )
-    }
-
-    /**
-     * Scenario 26 legacy (D — flag off): with config.unified_swipe_pipeline=false, the QA escape
-     * hatch runs the legacy IC-only cursor-sync (triggerPredictionsForPrefix), which posts NOTHING
-     * for an unknown word with zero predictions (dual-search early-return + finalWords.isNotEmpty()
-     * post guard). Pins the pre-flip behavior so the escape hatch is verifiable.
-     */
-    @Test
-    fun oracle_cursorSync_unknownWord_legacyPathPostsNothing() {
-        val h = harness(initialText = "xyzq")
-        h.config.unified_swipe_pipeline = false
-        h.config.show_exact_typed_word = true
-        onMain { h.inputConnection.setSelection(4, 4) }
-        drainMainThread()
-        onMain { h.inputCoordinator.onCursorMoved(4, h.inputConnection, "en", textEditor()) }
-        Thread.sleep(1200)
-        drainMainThread()
-
-        assertTrue(
-            "legacy IC cursor-sync posts nothing for unknown 'xyzq' (no exact_add). " +
-                "Got: ${h.suggestionBar.getCurrentSuggestions()}",
-            h.suggestionBar.getCurrentSuggestions().isEmpty()
         )
     }
 
@@ -1125,8 +1024,9 @@ class PipelineCharacterizationTest {
      * (IC:539) — the two use different tracking. SKIP: needs the real service to couple the
      * KeyEventHandler-commit and tracker-append. Reported.
      *
-     * Scenario 10's "ML capture fires (D5)" sub-assertion is SKIPPED: IC's inline ML capture
-     * (IC:673-707) is gated on config.swipe_debug_detailed_logging AND
+     * Scenario 10's "ML capture fires (D5)" sub-assertion remains SKIPPED after step 6 LANDED
+     * D5 (capture now routes through MLDataCollector inside SH.handleSwipePredictionResults):
+     * it is still gated on config.swipe_debug_detailed_logging AND
      * PrivacyManager.canCollectSwipeData() AND a non-null currentSwipeData populated by
      * performSwipeTyping (which we bypass to stay off the neural engine). Verifying the store
      * write would require driving handleSwipeTyping end-to-end (neural engine) or a

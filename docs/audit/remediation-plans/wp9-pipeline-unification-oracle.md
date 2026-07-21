@@ -194,3 +194,75 @@ byte-identical).
   "it's" injected). The skip rationale block was updated to point at it.
 - Harness: `harness()` now also calls `inputCoordinator.setCursorSyncDelegate(suggestionHandler)`
   (mirrors ManagerInitializer).
+
+## Step 6 — LANDED (2026-07-21)
+
+Unification COMPLETE: InputCoordinator's divergent commit engine and all legacy pipelines were
+DELETED; SuggestionHandler is the single pipeline end-to-end. The `unified_swipe_pipeline` flag
+was removed (key moved to `SettingsValidation.DEPRECATED_KEYS`; drift test satisfied).
+
+**What was deleted:**
+- `IC.onSuggestionSelected` (the divergent commit clone — finding #1's core), `IC.autoInsertTopSuggestion`,
+  `IC.updateContext`, `IC.capitalizeIWord`/`I_WORDS`, `IC.triggerPredictionsForPrefix` (legacy
+  cursor-sync), `IC.handleDeleteLastWord` (dead dup — production routed via bridge→SH since the
+  initial port), IC's `PredictionTaskRunner` instance + `mainHandler` (**R-5 executor consolidation:
+  ONE prediction executor remains, SH's, already wired to CleanupHandler shutdown**).
+- The dead legacy auto-inserting chain `CleverKeysService.handlePredictionResults` →
+  `SuggestionBridge.handlePredictionResults` → `SH.handlePredictionResults` (zero production
+  callers — verified; this was the entry the oracle's 16b/19 exercised).
+- `Config.unified_swipe_pipeline` + `Defaults.UNIFIED_SWIPE_PIPELINE` + load line +
+  `SETTINGS_DEFAULTS` entry (→ `DEPRECATED_KEYS`).
+- IC constructor params `contractionManager` + `keyEventHandler` (no longer used).
+
+**Delegation structure (final):** `IC.handlePredictionResults` = thin mandatory delegation to
+`SH.handleSwipePredictionResults`, which now owns bar presentation AND the auto-insert
+orchestration (haptic → manual-typing space termination → tracking clear →
+`SH.onSuggestionSelected(isManualSelection=false)` → **D5 ML capture via MLDataCollector** →
+latched-shift clear → NEURAL_SWIPE tracking → augmented re-display). IC keeps only thin
+view-side helpers (`triggerSwipeCompleteHaptic`, `clearLatchedShiftAfterSwipe`,
+`keyboardHeightPx`) + swipe-gesture/ML-trace ownership + cursor bookkeeping.
+`SH.onSuggestionSelected` now returns the committed word (for ML capture), gained the
+`isContractionKey` autocorrect skip (parity with the deleted IC engine — scenario 11 stays
+pinned even with final autocorrect ON), and its catch ports IC's state-reset hardening
+(`clearLastAutoInsertedWord` / `UNKNOWN` source / `expectingSelectionUpdate=false` /
+`clearCurrentWordSuffix` — CoreImeHygieneDriftTest re-targeted to SH).
+
+**Why the commit merge is behavior-safe:** IC's "dangerous" branches were unreachable on the
+live auto-insert path — replace-after-swipe/partial-word deletion can't fire because tracking
+is cleared immediately before every auto-insert, and production TAPS always used SH's engine
+(bridge → SH, isManualSelection=true). The only live deltas (all deliberate, documented in
+`SH.handleSwipePredictionResults` KDoc):
+- **#82 pref scope preserved**: `SmartAutoSpace.decideTrailingSpace` branch 1 now applies to
+  swipe too (`!autoSpaceAfterEnabled`, dropping `&& !isSwipeAutoInsert`) — this PRESERVES
+  production (IC respected the pref on swipe); the "swipe bypasses it" semantic only ever
+  existed on SH's dead legacy entry. Two AutoSpaceLogicTest pins flipped accordingly.
+- Mid-sentence swipe no longer double-spaces (NO_SPACE_MID_SENTENCE now reachable on swipe).
+- #151 sync-suppressed fields (URL/email) never get a leading space on swipe.
+- Final autocorrect on auto-insert now case-preserves (`preserveCapitalization`).
+- `updateContext` on swipe now also feeds `SwipePredictorOrchestrator.trackCommittedWord`
+  (multi-language detection — parity with tap).
+- D5 gating note: capture still requires `swipe_debug_detailed_logging` (call-site) + privacy
+  consent (inside MLDataCollector) — same effective gate as IC's inline block.
+- Termux REPLACE deletion now uses SH's key-event branches *in principle*, but the branch is
+  unreachable on auto-insert (see above) and taps already used it — the deliberate
+  Termux-unification decision (original plan's step 7) remains open and untouched.
+
+**Oracle changes (old → new):**
+- Scenario 5b: reroutes through `SH.onSuggestionSelected(isManualSelection=true)` — the engine
+  production taps always used. Assertion VALUES unchanged (both engines agreed here).
+- Scenario 16b DELETED (pinned the deleted dead SH legacy entry); scenario 16's doc updated.
+- Scenario 19 REWRITTEN: now pins the tracked-`isPasswordMode` leg of the swipe-pipeline guard
+  via `swipeResults()` + plain-text EditorInfo (scenario 7 covers the EditorInfo leg).
+- The four legacy flag-off guards DELETED with the flag
+  (`oracle_swipe_passwordField_legacyPathStillCommits`, `oracle_swipe_possessives_legacyPathAbsent`,
+  `oracle_cursorSync_dictionaryPossessives_legacyPathAlsoSurfaces`,
+  `oracle_cursorSync_unknownWord_legacyPathPostsNothing`).
+- BackspaceUndoTest source scans re-targeted from "both pipelines match" to "IC delegates and
+  must NOT regrow a parallel pipeline" (doesNotContain guards).
+- Harness: flag line removed; IC constructed with the slimmed signature; delegates mandatory.
+
+**Geo-engine seam note (Addendum 2026-07-21 in 3-core-ime.md):** step 6 preserves and
+finalizes the seam steps 7-9 need — `SH.handleSwipePredictionResults(predictions, scores, …,
+inputCoordinator)` is now the ONLY swipe-results path, so the SwipeEngineRouter (step 7, at
+IC's `isSwipeTypingSupportedForLayout` gate) feeds geo results through the identical
+guard/augment/commit stack with no legacy fork to worry about.

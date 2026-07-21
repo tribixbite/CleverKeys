@@ -1,11 +1,9 @@
 package tribixbite.cleverkeys
 
 import android.content.Context
-import android.content.SharedPreferences
 import android.content.res.Resources
 import android.os.Handler
 import android.os.Looper
-import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
 import tribixbite.cleverkeys.ml.SwipeMLData
@@ -55,37 +53,36 @@ class PredictionTaskRunner(
 }
 
 /**
- * Coordinates all text input operations including typing, backspace, word deletion,
- * swipe typing, and suggestion selection.
+ * Thin swipe-gesture / ML front-end and cursor-sync bookkeeper (WP9 R-1 step 6).
  *
- * This class centralizes input handling logic that was previously in CleverKeysService.java.
- * It manages:
- * - Regular typing with word predictions
- * - Autocorrection during typing
- * - Backspace and smart word deletion
- * - Swipe typing gesture recognition and prediction
- * - Suggestion selection and text insertion
- * - ML data collection for swipe training
+ * Owns:
+ * - Swipe gesture completion → neural prediction request ([handleSwipeTyping] /
+ *   [performSwipeTyping], incl. the cold-start engine-ready replay guard)
+ * - Swipe ML trace capture ([getCurrentSwipeData] / [resetSwipeData]) — consumed by
+ *   SuggestionHandler (auto-insert path) and SuggestionBridge (tap path) via MLDataCollector
+ * - Cursor-sync bookkeeping: SAS-1 position invalidation, the 100ms debounce, and
+ *   [PredictionContextTracker.synchronizeWithCursor] ([onCursorMoved])
+ * - View-side helpers for the unified commit path (haptics, latched-shift clear,
+ *   keyboard height)
  *
- * Dependencies:
- * - PredictionContextTracker: Tracks typing context
- * - PredictionCoordinator: Manages prediction engines
- * - ContractionManager: Handles contraction mappings
- * - SuggestionBar: Displays predictions to user
- * - Keyboard2View: For keyboard dimensions
+ * Does NOT own suggestion presentation or the commit engine: both the swipe-results flow
+ * ([handlePredictionResults]) and the cursor-sync prediction+post phase delegate to
+ * [SuggestionHandler] — THE single pipeline (possessive augmentation, password guard,
+ * contraction injection, exact-add, `specialPromptActive` prompt guard, and the one
+ * deletion/spacing/tracking commit engine). InputCoordinator's divergent duplicates were
+ * deleted in R-1 step 6 (see docs/audit/remediation/3-core-ime.md).
  *
- * This class is extracted from CleverKeysService.java for better separation of concerns
- * and testability (v1.32.350).
+ * This is also the planned insertion site for the R-1 step 7 SwipeEngineRouter (geometric
+ * engine for non-QWERTY layouts): any engine's prediction list feeds the same
+ * [SuggestionHandler.handleSwipePredictionResults] seam.
  */
 class InputCoordinator(
     private val context: Context,
     private var config: Config,
     private val contextTracker: PredictionContextTracker,
     private val predictionCoordinator: PredictionCoordinator,
-    private val contractionManager: ContractionManager,
     private var suggestionBar: SuggestionBar?,
-    private val keyboardView: Keyboard2View,
-    private val keyeventhandler: KeyEventHandler
+    private val keyboardView: Keyboard2View
 ) {
     companion object {
         private const val TAG = "InputCoordinator"
@@ -93,12 +90,6 @@ class InputCoordinator(
         // v1.2.6: Debounce delay for cursor sync (ms)
         // Prevents excessive IPC calls during drag selection
         private const val CURSOR_SYNC_DEBOUNCE_MS = 100L
-
-        /**
-         * Issue #72: Words that should always be capitalized.
-         * Includes "I" and all its contractions.
-         */
-        private val I_WORDS = setOf("i", "i'm", "i'll", "i'd", "i've")
 
         /**
          * Pure identity check for the cold-start swipe replay guard (F4), extracted so it is
@@ -119,25 +110,6 @@ class InputCoordinator(
         ): Boolean {
             if (!hasLiveInput) return capturedIc != null
             return capturedIc != null && capturedIc === liveIc && capturedEditor === liveEditor
-        }
-    }
-
-    /**
-     * Issue #72: Capitalize "I" words if the setting is enabled.
-     * Transforms "i" → "I", "i'm" → "I'm", "i'll" → "I'll", etc.
-     *
-     * @param word Word to potentially capitalize
-     * @return Capitalized word if it's an I-word, otherwise unchanged
-     */
-    private fun capitalizeIWord(word: String): String {
-        // v1.2.8: Use globalConfig to ensure setting is always current
-        if (!Config.globalConfig().autocapitalize_i_words) return word
-
-        val lower = word.lowercase()
-        return if (lower in I_WORDS) {
-            word.replaceFirstChar { it.uppercaseChar() }
-        } else {
-            word
         }
     }
 
@@ -180,12 +152,12 @@ class InputCoordinator(
     }
 
     /**
-     * WP9 R-1 step 4: SuggestionHandler that owns the unified swipe result flow (possessive
-     * augmentation + password guard). Wired post-construction (SH is created alongside this IC)
-     * to avoid a circular constructor dependency. When null (unit contexts that don't wire it)
-     * or when [Config.unified_swipe_pipeline] is false, [handlePredictionResults] runs the legacy
-     * IC-only path unchanged. The delegate calls back into [autoInsertTopSuggestion] for the
-     * byte-identical commit — SH does NOT re-implement the deletion/spacing commit engine.
+     * WP9 R-1 steps 4+6: SuggestionHandler that owns the ENTIRE swipe result flow — bar
+     * presentation (possessives, password guard, shift/caps transform) AND the commit engine.
+     * Wired post-construction (SH is created alongside this IC) to avoid a circular constructor
+     * dependency. Step 6 removed the legacy IC-only path and the `unified_swipe_pipeline` flag:
+     * an unwired delegate (misconfigured unit context) now clears the bar and logs instead of
+     * running a divergent fallback.
      */
     private var swipeResultDelegate: SuggestionHandler? = null
 
@@ -195,14 +167,13 @@ class InputCoordinator(
     }
 
     /**
-     * WP9 R-1 step 5: SuggestionHandler that owns the unified cursor-sync prediction flow. When
-     * wired AND [Config.unified_swipe_pipeline] is true, [onCursorMoved]'s debounced runnable — after
-     * the (retained) cursor bookkeeping + [PredictionContextTracker.synchronizeWithCursor] — routes the
-     * prediction+post phase to [SuggestionHandler.handleCursorSyncPrediction] instead of the legacy
-     * [triggerPredictionsForPrefix]. This folds cursor-sync into SH's single guarded pipeline
-     * (contraction injection, exact-add, I-word cap, capitalization-from-prefix, AND the
-     * `specialPromptActive` prompt guard) — structurally resolving R-7. When null (unwired unit
-     * contexts) or the flag is false, the legacy IC-only cursor-sync path runs unchanged.
+     * WP9 R-1 steps 5+6: SuggestionHandler that owns the cursor-sync prediction flow.
+     * [onCursorMoved]'s debounced runnable — after the (retained) cursor bookkeeping +
+     * [PredictionContextTracker.synchronizeWithCursor] — routes the prediction+post phase to
+     * [SuggestionHandler.handleCursorSyncPrediction]: SH's single guarded pipeline (contraction
+     * injection, exact-add, I-word cap, capitalization-from-prefix, AND the `specialPromptActive`
+     * prompt guard) — structurally resolving R-7. Step 6 deleted the legacy
+     * `triggerPredictionsForPrefix` fallback along with the `unified_swipe_pipeline` flag.
      */
     private var cursorSyncDelegate: SuggestionHandler? = null
 
@@ -218,11 +189,6 @@ class InputCoordinator(
     private var wasShiftActiveAtSwipeStart: Boolean = false
     // v1.33.8: Track if shift was LOCKED (caps lock) when swipe started (for ALL CAPS output)
     private var wasShiftLockedAtSwipeStart: Boolean = false
-
-    // Async prediction execution
-    private val predictionTasks = PredictionTaskRunner()
-    // Post to main thread explicitly — View.post() silently drops runnables for detached views
-    private val mainHandler = Handler(Looper.getMainLooper())
 
     /**
      * Updates configuration.
@@ -279,23 +245,17 @@ class InputCoordinator(
             // The suffix is only used for deletion when a prediction is selected
             val prefix = contextTracker.getCurrentWord()
             val suffix = contextTracker.getCurrentWordSuffix()
-            val rawPrefix = contextTracker.getRawPrefix()
 
             if (prefix.isNotEmpty()) {
-                // WP9 R-1 step 5: when the unified pipeline is enabled (default) and the cursor-sync
-                // delegate is wired, route the prediction+post phase to SuggestionHandler — it reuses
-                // its single guarded pipeline (contraction injection, exact-add, I-word cap,
-                // capitalization-from-prefix, `specialPromptActive` prompt guard) via the already-synced
-                // contextTracker.currentWord, structurally resolving R-7. The bookkeeping above
-                // (onCursorPositionChanged, debounce, synchronizeWithCursor with the caller's language)
-                // stays here. The QA escape hatch (flag off) or an unwired delegate runs the legacy
-                // IC-only path below unchanged.
-                val delegate = cursorSyncDelegate
-                if (config.unified_swipe_pipeline && delegate != null) {
-                    delegate.handleCursorSyncPrediction()
-                } else {
-                    triggerPredictionsForPrefix(prefix, rawPrefix, ic, editorInfo)
-                }
+                // WP9 R-1 steps 5+6: route the prediction+post phase to SuggestionHandler's single
+                // guarded pipeline (contraction injection, exact-add, I-word cap,
+                // capitalization-from-prefix, `specialPromptActive` prompt guard) via the
+                // already-synced contextTracker.currentWord — structurally resolving R-7. The
+                // bookkeeping above (onCursorPositionChanged, debounce, synchronizeWithCursor with
+                // the caller's language) stays here. Step 6 deleted the legacy IC-only pipeline;
+                // an unwired delegate means a misconfigured harness, not a fallback.
+                cursorSyncDelegate?.handleCursorSyncPrediction()
+                    ?: android.util.Log.e(TAG, "cursorSyncDelegate not wired — cursor-sync predictions dropped")
             } else {
                 // v1.2.6 FIX: Don't clear suggestions if showing special prompts or swipe corrections
                 // After autocorrect/swipe, cursor moves to after space (prefix empty), but we want
@@ -325,174 +285,12 @@ class InputCoordinator(
     }
 
     /**
-     * Releases coordinator resources: cancels any pending cursor sync, shuts down the prediction
-     * executor (interrupting in-flight work), and clears main-thread callbacks. Called during
-     * IME teardown so no prediction thread outlives the service.
+     * Releases coordinator resources: cancels any pending cursor sync. Called during IME
+     * teardown. (Step 6: IC no longer owns a prediction executor — the single executor lives
+     * on SuggestionHandler and is shut down there.)
      */
     fun shutdown() {
         cancelPendingCursorSync()
-        predictionTasks.shutdown()
-        mainHandler.removeCallbacksAndMessages(null)
-    }
-
-    /** True once the prediction executor has been shut down (test/diagnostic hook). */
-    fun isPredictionExecutorShutdown(): Boolean = predictionTasks.isShutdown
-
-    /**
-     * Triggers predictions for the prefix (chars before cursor).
-     * Used after cursor sync to show predictions for the word being typed.
-     *
-     * v1.2.7: Uses PREFIX ONLY for prediction lookup, not fullWord.
-     * When cursor is at "per|fect", we search for "per" words, not "perfect".
-     * The suffix is only used for deletion when a prediction is selected.
-     *
-     * @param prefix Prefix to search for predictions (chars before cursor)
-     * @param rawPrefix Raw (non-normalized) prefix for capitalization check
-     * @param ic InputConnection (for context)
-     * @param editorInfo Editor info
-     */
-    private fun triggerPredictionsForPrefix(
-        prefix: String,
-        rawPrefix: String,
-        ic: InputConnection?,
-        editorInfo: EditorInfo?
-    ) {
-        // Copy context to be thread-safe
-        val contextWords = ArrayList(contextTracker.getContextWords())
-
-        // v1.2.6 FIX: Use RAW prefix for capitalization check (normalized is always lowercase)
-        val shouldCapitalize = rawPrefix.isNotEmpty() && rawPrefix[0].isUpperCase()
-
-        // Cancel any running prediction task and run this one asynchronously
-        predictionTasks.cancelAndSubmit {
-            if (Thread.currentThread().isInterrupted) return@cancelAndSubmit
-
-            try {
-                // v1.2.7: Search using PREFIX only (chars before cursor)
-                // For contractions like "don't", also try searching without apostrophe
-                val searchTerms = mutableListOf(prefix)
-                val noApostrophe = prefix.replace("'", "").replace("\u2019", "")
-                if (noApostrophe != prefix && noApostrophe.isNotEmpty()) {
-                    searchTerms.add(noApostrophe)
-                }
-
-                val allResults = mutableListOf<String>()
-                val allScores = mutableListOf<Int>()
-
-                // Search for each term and combine results
-                for (term in searchTerms) {
-                    val result = predictionCoordinator.getWordPredictor()
-                        ?.predictWordsWithContext(term, contextWords)
-
-                    if (result != null && result.words.isNotEmpty()) {
-                        result.words.forEachIndexed { index, word ->
-                            if (word !in allResults) {
-                                allResults.add(word)
-                                allScores.add(result.scores.getOrElse(index) { 0 })
-                            }
-                        }
-                    }
-                }
-
-                if (Thread.currentThread().isInterrupted || allResults.isEmpty()) return@cancelAndSubmit
-
-                // Build contraction-aware suggestions matching SuggestionHandler's pipeline:
-                // 1. Inject paired contraction variants (its → it's, well → we'll)
-                // 2. Inject non-paired contraction mapping (dont → don't)
-                // 3. Transform all predictions through non-paired mapping
-                // 4. Deduplicate and merge
-                val contractionWords = mutableListOf<String>()
-                val contractionScores = mutableListOf<Int>()
-
-                val nonPairedMapping = contractionManager.getNonPairedMapping(prefix)
-                if (nonPairedMapping != null) {
-                    contractionWords.add(capitalizeIWord(nonPairedMapping))
-                    contractionScores.add(allScores.firstOrNull()?.plus(1000) ?: 10000)
-                }
-
-                // Only inject paired contractions for prefixes >= 3 chars to avoid
-                // corrupting frequency ranking with possessive forms (t→t's, a→a's)
-                val pairedVariants = if (prefix.length >= 3) contractionManager.getPairedContractions(prefix) else null
-                if (pairedVariants != null && nonPairedMapping == null) {
-                    for (variant in pairedVariants) {
-                        contractionWords.add(capitalizeIWord(variant))
-                        contractionScores.add(allScores.firstOrNull()?.plus(500) ?: 5000)
-                    }
-                }
-
-                // Transform all predictions through contraction manager + I-word capitalization
-                val transformedPredictions = allResults.map { word ->
-                    val contracted = contractionManager.getNonPairedMapping(word) ?: word
-                    capitalizeIWord(contracted)
-                }
-
-                // Merge: contraction words first, then predictions (deduped)
-                val injectedLowerSet = contractionWords.map { it.lowercase() }.toSet()
-                val mergedWords = contractionWords + transformedPredictions.filter {
-                    it.lowercase() !in injectedLowerSet
-                }
-                val filteredCount = transformedPredictions.size -
-                    transformedPredictions.count { it.lowercase() in injectedLowerSet }
-                val mergedScores = contractionScores + allScores.take(filteredCount)
-
-                // Apply capitalization if prefix was capitalized
-                val transformedWords = if (shouldCapitalize) {
-                    mergedWords.map { word ->
-                        word.replaceFirstChar {
-                            if (it.isLowerCase()) it.titlecase(java.util.Locale.getDefault()) else it.toString()
-                        }
-                    }
-                } else {
-                    mergedWords
-                }
-
-                // #42: Add exact typed word option — must match SuggestionHandler's
-                // pipeline to prevent "+word" flicker when cursor sync overwrites bar
-                val finalWords: List<String>
-                val finalScores: List<Int>
-                if (config.show_exact_typed_word && prefix.length >= 2) {
-                    val exactTyped = if (shouldCapitalize) {
-                        prefix.replaceFirstChar {
-                            if (it.isLowerCase()) it.titlecase(java.util.Locale.getDefault()) else it.toString()
-                        }
-                    } else {
-                        prefix
-                    }
-                    val exactLower = exactTyped.lowercase()
-                    val alreadyInPredictions = transformedWords.any { it.lowercase() == exactLower }
-                    val isUserWord = predictionCoordinator.getDictionaryManager()?.isUserWord(exactTyped) ?: false
-                    val isInDictionary = predictionCoordinator.getWordPredictor()?.isInDictionary(exactTyped) ?: true
-
-                    if (!alreadyInPredictions && !isUserWord && !isInDictionary) {
-                        // R3: exact_add wire string from the shared typed model
-                        // (single source of truth), mirroring SuggestionHandler.
-                        finalWords = transformedWords + Suggestion.ExactAdd(exactTyped).wire
-                        finalScores = mergedScores + 0
-                    } else {
-                        finalWords = transformedWords
-                        finalScores = mergedScores
-                    }
-                } else {
-                    finalWords = transformedWords
-                    finalScores = mergedScores
-                }
-
-                // Update UI on main thread
-                if (finalWords.isNotEmpty()) {
-                    mainHandler.post {
-                        suggestionBar?.let { bar ->
-                            bar.setShowDebugScores(config.swipe_show_debug_scores)
-                            bar.setSuggestionsWithScores(finalWords, finalScores)
-                        }
-                        debugLogger?.invoke("📊 Cursor-sync predictions: ${finalWords.take(5)}")
-                    }
-                }
-            } catch (e: Exception) {
-                if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                    android.util.Log.e(TAG, "Error getting predictions for cursor sync", e)
-                }
-            }
-        }
     }
 
     /**
@@ -510,17 +308,17 @@ class InputCoordinator(
     fun getCurrentSwipeData(): SwipeMLData? = currentSwipeData
 
     /**
-     * Handle prediction results from async swipe typing prediction.
-     * Called when neural network predictions are ready.
+     * Handle prediction results from async swipe typing prediction — thin delegation to
+     * [SuggestionHandler.handleSwipePredictionResults], THE single swipe-results pipeline
+     * (bar presentation + possessives + password guard + the unified commit engine).
      *
-     * WP9 step 3 (2026-07-20): the shift/caps-lock-at-swipe-start state is now CARRIED by the
-     * swipe request (threaded through [handleSwipeTyping] → AsyncPredictionHandler → here) rather
-     * than read from this class's private fields. The casing transform itself was relocated to
-     * [SuggestionHandler.applyShiftTransformation] (SH owns it). The carried [shiftActive] /
-     * [shiftLocked] default to this instance's fields so any caller that doesn't thread the state
-     * (there are none in production — the async callback always passes it) stays behavior-identical.
-     * The fields are also synced FROM the carried params here so [onSuggestionSelected]'s
-     * shift-indicator clearing (which still reads them, unchanged in step 3) sees the same state.
+     * WP9 step 3 (2026-07-20): the shift/caps-lock-at-swipe-start state is CARRIED by the swipe
+     * request (threaded through [handleSwipeTyping] → AsyncPredictionHandler → here). The carried
+     * [shiftActive] / [shiftLocked] default to this instance's fields so callers that don't thread
+     * the state (none in production — the async callback always passes it) stay behavior-identical.
+     * WP9 step 6: the legacy IC-only presentation/commit path and the `unified_swipe_pipeline`
+     * flag were deleted; the delegate is mandatory (ManagerInitializer wires it) and an unwired
+     * delegate clears the bar and logs rather than running a divergent fallback.
      *
      * @param shiftActive True if shift was latched (single tap) when the swipe started.
      * @param shiftLocked True if shift was LOCKED (caps lock) when the swipe started.
@@ -534,629 +332,43 @@ class InputCoordinator(
         shiftActive: Boolean = wasShiftActiveAtSwipeStart,
         shiftLocked: Boolean = wasShiftLockedAtSwipeStart
     ) {
-        // WP9 step 3: adopt the request-carried shift state as the single source of truth so both
-        // the casing transform (below, via SuggestionHandler) and onSuggestionSelected's untouched
-        // shift-clearing read consistent state. Production sets these to the same values at swipe
-        // start (handleSwipeTyping), so this re-sync is a no-op there and behavior is identical.
+        // Keep the fields in sync with the request-carried state (single source of truth for the
+        // default-param seam used by tests and the oracle).
         wasShiftActiveAtSwipeStart = shiftActive
         wasShiftLockedAtSwipeStart = shiftLocked
 
-        // WP9 R-1 step 4: when the unified-swipe pipeline is enabled (default), delegate the whole
-        // post-prediction flow to SuggestionHandler — it adds possessive augmentation (D1) and the
-        // password-field guard (D2) that the legacy IC path lacks, then calls back into
-        // [autoInsertTopSuggestion] for the byte-identical commit. The QA escape hatch
-        // (config.unified_swipe_pipeline=false) keeps the legacy IC-only path below unchanged.
-        // A null delegate (unwired unit contexts) also falls back to the legacy path.
         val delegate = swipeResultDelegate
-        if (config.unified_swipe_pipeline && delegate != null) {
-            delegate.handleSwipePredictionResults(
-                predictions, scores, ic, editorInfo, resources, shiftActive, shiftLocked, this
-            )
-            return
-        }
-
-        val handleStartTime = System.currentTimeMillis()
-        debugLogger?.invoke("⏱️ HANDLE_PREDICTIONS START")
-
-        if (predictions.isNullOrEmpty()) {
+        if (delegate == null) {
+            android.util.Log.e(TAG, "swipeResultDelegate not wired — swipe predictions dropped")
             suggestionBar?.clearSuggestions()
-            debugLogger?.invoke("⏱️ HANDLE_PREDICTIONS COMPLETE (empty): ${System.currentTimeMillis() - handleStartTime}ms")
             return
         }
-
-        // v1.2.7: Apply user word case preservation BEFORE shift transformation
-        // This preserves proper nouns like "Boston" → "Boston" from user dictionary
-        val casedPredictions = predictionCoordinator.getWordPredictor()
-            ?.applyUserWordCaseToList(predictions) ?: predictions
-
-        // v1.33.9: Apply shift/caps-lock transformation to ALL predictions for consistent display.
-        // WP9 step 3: delegate to SuggestionHandler (owner of the transform) with the carried state.
-        val transformedPredictions = casedPredictions.map {
-            SuggestionHandler.applyShiftTransformation(it, shiftActive, shiftLocked)
-        }
-
-        // Update suggestion bar
-        suggestionBar?.let { bar ->
-            val suggestionsStartTime = System.currentTimeMillis()
-            bar.setShowDebugScores(config.swipe_show_debug_scores)
-            bar.setSuggestionsWithScores(transformedPredictions, scores)
-            debugLogger?.invoke("⏱️ setSuggestionsWithScores: ${System.currentTimeMillis() - suggestionsStartTime}ms")
-
-            // DEBUG: Log what's in suggestion bar before auto-insert
-            if (debugLogger != null) {
-                val allSuggestions = bar.getCurrentSuggestions()
-                val sb = StringBuilder("📋 SUGGESTION BAR CONTENTS BEFORE AUTO-INSERT:\n")
-                allSuggestions.take(5).forEachIndexed { idx, s ->
-                    sb.append("   #${idx + 1}: \"$s\"\n")
-                }
-                debugLogger?.invoke(sb.toString())
-            }
-
-            // Auto-insert top prediction immediately after swipe completes
-            bar.getTopSuggestion()?.takeIf { it.isNotEmpty() }?.let { topPrediction ->
-                autoInsertTopSuggestion(topPrediction, ic, editorInfo, resources)
-
-                // Re-display suggestions after auto-insertion (use transformed predictions)
-                bar.setSuggestionsWithScores(transformedPredictions, scores)
-            }
-        }
-
-        val handleDuration = System.currentTimeMillis() - handleStartTime
-        debugLogger?.invoke("⏱️ HANDLE_PREDICTIONS COMPLETE: ${handleDuration}ms")
+        delegate.handleSwipePredictionResults(
+            predictions, scores, ic, editorInfo, resources, shiftActive, shiftLocked, this
+        )
     }
 
-    /**
-     * Auto-inserts [topPrediction] after a swipe: haptic, manual-typing space handling, tracking
-     * reset, the [onSuggestionSelected] commit (the byte-identical deletion/spacing engine), then
-     * NEURAL_SWIPE tracking for later replacement. Extracted (WP9 R-1 step 4) so BOTH the legacy IC
-     * path and the unified SuggestionHandler delegate ([SuggestionHandler.handleSwipePredictionResults])
-     * reuse the exact same commit — the delegate adds possessives/password-guard to the BAR only and
-     * leaves the commit untouched, so all commit-path oracle scenarios stay byte-identical.
-     *
-     * Does NOT post or re-display the suggestion bar — the caller owns bar presentation (legacy
-     * re-displays the transformed list; the delegate re-displays its own augmented/original list to
-     * preserve SH's transient-possessive semantics).
-     */
-    internal fun autoInsertTopSuggestion(
-        topPrediction: String,
-        ic: InputConnection?,
-        editorInfo: EditorInfo?,
-        resources: Resources
-    ) {
-        debugLogger?.invoke("🎯 TOP SUGGESTION SELECTED FOR INSERT: \"$topPrediction\"")
+    // ── Thin view-side helpers for the unified commit path (SuggestionHandler-owned since
+    // step 6; IC keeps the Keyboard2View reference, so these stay here) ─────────────────────
 
-        // v1.2.8: Trigger haptic feedback for swipe completion
+    /** Haptic feedback for a completed swipe auto-insert (was IC.autoInsertTopSuggestion's). */
+    internal fun triggerSwipeCompleteHaptic() {
         keyboardView.triggerHaptic(HapticEvent.SWIPE_COMPLETE)
-        // If manual typing in progress, add space after it
-        if (contextTracker.getCurrentWordLength() > 0 && ic != null) {
-            val spaceCommitTime = System.currentTimeMillis()
-            ic.commitText(" ", 1)
-            debugLogger?.invoke("⏱️ commitText(space): ${System.currentTimeMillis() - spaceCommitTime}ms")
-            contextTracker.clearCurrentWord()
-            contextTracker.clearLastAutoInsertedWord()
-            contextTracker.setLastCommitSource(PredictionSource.USER_TYPED_TAP)
-        }
-
-        // Clear tracking before selection to prevent deletion
-        contextTracker.clearLastAutoInsertedWord()
-        contextTracker.setLastCommitSource(PredictionSource.UNKNOWN)
-
-        // Insert the top prediction
-        val insertStartTime = System.currentTimeMillis()
-        onSuggestionSelected(topPrediction, ic, editorInfo, resources)
-        val insertDuration = System.currentTimeMillis() - insertStartTime
-        debugLogger?.invoke("⏱️ onSuggestionSelected('$topPrediction'): ${insertDuration}ms")
-
-        // Track as auto-inserted for replacement
-        val cleanPrediction = topPrediction.replace("^raw:".toRegex(), "")
-        contextTracker.setLastAutoInsertedWord(cleanPrediction)
-        contextTracker.setLastCommitSource(PredictionSource.NEURAL_SWIPE)
     }
 
     /**
-     * Updates context with a completed word.
-     * Commits the word to context tracker and adds to word predictor.
-     *
-     * @param word Completed word to add to context
+     * Clears the latched (single-tap) shift indicator after a shift+swipe commit — the word is
+     * already capitalized, so the NEXT word should be lowercase. Caps lock is never cleared here.
+     * Posted to the view's thread (was IC.onSuggestionSelected's post-commit clearing).
      */
-    private fun updateContext(word: String) {
-        if (word.isEmpty()) return
-
-        // Use the current source from tracker, or UNKNOWN if not set
-        val source = contextTracker.getLastCommitSource() ?: PredictionSource.UNKNOWN
-
-        // Commit word to context tracker (not auto-inserted since this is manual update)
-        contextTracker.commitWord(word, source, false)
-
-        // Add word to WordPredictor for language detection
-        predictionCoordinator.getWordPredictor()?.addWordToContext(word)
-    }
-
-    fun onSuggestionSelected(
-        word: String?,
-        ic: InputConnection?,
-        editorInfo: EditorInfo?,
-        resources: Resources
-    ) {
-        // DEBUG: Log incoming word for selection tracking
-        debugLogger?.invoke("📥 onSuggestionSelected CALLED with word: \"$word\"")
-
-        // Null/empty check
-        var processedWord = word?.trim() ?: return
-        if (processedWord.isEmpty()) return
-
-        // Check if this is a raw prediction (user explicitly selected neural network output)
-        // Raw predictions should skip autocorrect
-        val isRawPrediction = processedWord.startsWith("raw:")
-
-        // Strip "raw:" prefix before processing (v1.33.7: fixed regex to match actual prefix format)
-        // Prefix format: "raw:word" not " [raw:0.08]"
-        processedWord = processedWord.replace("^raw:".toRegex(), "")
-
-        // Check if this is a known contraction (already has apostrophes from displayText)
-        // If it is, skip autocorrect to prevent fuzzy matching to wrong words
-        // v1.32.341: Use ContractionManager for lookup
-        val isKnownContraction = contractionManager.isKnownContraction(processedWord)
-
-        // v1.1.87: Also check if this is a contraction KEY (apostrophe-free form)
-        // Words like "cest", "jai", "dun" should NOT be autocorrected to similar words
-        // They will be transformed to "c'est", "j'ai", "d'un" by contraction mapping
-        val isContractionKey = contractionManager.isContractionKey(processedWord)
-
-        // Skip autocorrect for:
-        // 1. Known contractions (prevent fuzzy matching)
-        // 2. Contraction keys (will be transformed to apostrophe form)
-        // 3. Raw predictions (user explicitly selected this neural output)
-        if (isKnownContraction) {
-            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                android.util.Log.d("CleverKeysService", "KNOWN CONTRACTION: \"$processedWord\" - skipping autocorrect")
-            }
-        }
-        if (isContractionKey) {
-            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                android.util.Log.d("CleverKeysService", "CONTRACTION KEY: \"$processedWord\" - skipping autocorrect (will become apostrophe form)")
-            }
-        }
-        if (isRawPrediction) {
-            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                android.util.Log.d("CleverKeysService", "RAW PREDICTION: \"$processedWord\" - skipping autocorrect")
-            }
-        }
-
-        if (!isKnownContraction && !isContractionKey && !isRawPrediction) {
-            // v1.33.7: Final autocorrect - second chance autocorrect after beam search
-            // Applies when user selects/auto-inserts a prediction (even if beam autocorrect was OFF)
-            // Useful for correcting vocabulary misses
-            // SKIP for known contractions and raw predictions
-            if (config.swipe_final_autocorrect_enabled) {
-                predictionCoordinator.getWordPredictor()?.autoCorrect(processedWord)?.let { correctedWord ->
-                    // If autocorrect found a better match, use it
-                    if (correctedWord != processedWord) {
-                        debugLogger?.invoke("⚠️ FINAL AUTOCORRECT: \"$processedWord\" → \"$correctedWord\"")
-                        processedWord = correctedWord
-                    }
-                }
-            }
-        }
-
-        // Issue #72: Capitalize "I" words (i → I, i'm → I'm, i'll → I'll)
-        // Apply after autocorrect to handle both direct predictions and corrected words
-        processedWord = capitalizeIWord(processedWord)
-
-        debugLogger?.invoke("📝 FINAL WORD TO INSERT: \"$processedWord\" (after autocorrect + I-word check)")
-
-        // Record user selection for adaptation learning
-        predictionCoordinator.getAdaptationManager()?.recordSelection(processedWord.trim())
-
-        // CRITICAL: Save swipe flag before resetting for use in spacing logic below
-        val isSwipeAutoInsert = contextTracker.wasLastInputSwipe()
-
-        // Store ML data if this was a swipe prediction selection
-        // Requires: detailed logging enabled AND privacy consent
-        // Check config.swipe_debug_detailed_logging FIRST (fast boolean) to skip all work when disabled
-        if (isSwipeAutoInsert && currentSwipeData != null && config.swipe_debug_detailed_logging &&
-            PrivacyManager.getInstance(context).canCollectSwipeData()) {
-            predictionCoordinator.getMlDataStore()?.let { dataStore ->
-                // Create a new ML data object with the selected word
-                val metrics = resources.displayMetrics
-                val mlData = SwipeMLData(
-                    processedWord, "user_selection",
-                    metrics.widthPixels, metrics.heightPixels,
-                    keyboardView.height
-                )
-
-                // Copy trace points from the temporary data
-                // FIX: tDeltaMs values are deltas from PREVIOUS point, not offsets from start
-                // Must accumulate them to reconstruct absolute timestamps
-                var runningTimestamp = System.currentTimeMillis() - 1000
-                currentSwipeData?.getTracePoints()?.forEach { point ->
-                    // Add points with their original normalized values and timestamps
-                    // Since they're already normalized, we need to denormalize then renormalize
-                    // to ensure proper storage
-                    val rawX = point.x * metrics.widthPixels
-                    val rawY = point.y * metrics.heightPixels
-                    // Accumulate delta to get correct absolute timestamp
-                    runningTimestamp += point.tDeltaMs
-                    mlData.addRawPoint(rawX, rawY, runningTimestamp)
-                }
-
-                // Copy registered keys
-                currentSwipeData?.getRegisteredKeys()?.forEach { key ->
-                    mlData.addRegisteredKey(key)
-                }
-
-                // Store the ML data
-                dataStore.storeSwipeData(mlData)
-            }
-        }
-
-        // Reset swipe tracking
-        contextTracker.setWasLastInputSwipe(false)
-        currentSwipeData = null
-
-        ic?.let { connection ->
-            try {
-                // Detect if we're in Termux for special handling
-                val inTermuxApp = try {
-                    editorInfo?.packageName == "com.termux"
-                } catch (e: Exception) {
-                    false
-                }
-
-                // CRITICAL: If we just auto-inserted a word from neural swipe, delete it for replacement
-                // This allows user to tap a different prediction instead of appending
-                // Only delete if the last commit was from neural swipe (not from other sources)
-                val lastAutoInserted = contextTracker.getLastAutoInsertedWord()
-                if (!lastAutoInserted.isNullOrEmpty() && contextTracker.getLastCommitSource() == PredictionSource.NEURAL_SWIPE) {
-                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                        android.util.Log.d("CleverKeysService", "REPLACE: Deleting auto-inserted word: '$lastAutoInserted'")
-                    }
-
-                    val deleteCount = lastAutoInserted.length + 1 // Word + trailing space
-
-                    val deleteStartTime = System.currentTimeMillis()
-
-                    // UNIFIED DELETION: Use InputConnection methods for ALL apps
-                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                        val debugBefore = connection.getTextBeforeCursor(50, 0)
-                        android.util.Log.d("CleverKeysService", "REPLACE: Text before cursor (50 chars): '$debugBefore'")
-                        android.util.Log.d("CleverKeysService", "REPLACE: Delete count = $deleteCount")
-                    }
-
-                    // Delete the auto-inserted word and its space
-                    connection.deleteSurroundingText(deleteCount, 0)
-
-                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                        val debugAfter = connection.getTextBeforeCursor(50, 0)
-                        android.util.Log.d("CleverKeysService", "REPLACE: After deleting word, text before cursor: '$debugAfter'")
-                    }
-
-                    // Also need to check if there was a space added before it
-                    val textBefore = connection.getTextBeforeCursor(1, 0)
-                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                        android.util.Log.d("CleverKeysService", "REPLACE: Checking for leading space, got: '$textBefore'")
-                    }
-                    if (textBefore?.isNotEmpty() == true && textBefore[0] == ' ') {
-                        if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                            android.util.Log.d("CleverKeysService", "REPLACE: Deleting leading space")
-                        }
-                        // Delete the leading space too
-                        connection.deleteSurroundingText(1, 0)
-
-                        if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                            val debugFinal = connection.getTextBeforeCursor(50, 0)
-                            android.util.Log.d("CleverKeysService", "REPLACE: After deleting leading space: '$debugFinal'")
-                        }
-                    }
-
-                    val deleteDuration = System.currentTimeMillis() - deleteStartTime
-                    debugLogger?.invoke("⏱️ UNIFIED DELETE (was auto-inserted): ${deleteDuration}ms")
-
-                    // Clear the tracking variables
-                    contextTracker.clearLastAutoInsertedWord()
-                    contextTracker.setLastCommitSource(PredictionSource.UNKNOWN)
-                }
-                // ALSO: If user is selecting a prediction during regular typing, delete the partial word
-                // This handles typing "hel" then selecting "hello" - we need to delete "hel" first
-                // v1.2.6: Also handles cursor mid-word - deletes both prefix AND suffix
-                else if (contextTracker.getCurrentWordLength() > 0 && !isSwipeAutoInsert) {
-                    // v1.2.6: CRITICAL FIX - Always do immediate sync before deletion
-                    // The debounced sync may not have completed if user taps prediction quickly
-                    // This ensures we have accurate prefix/suffix counts for mid-word editing
-                    cancelPendingCursorSync()
-                    // v1.2.7: Clear expectingSelectionUpdate to ensure sync isn't skipped
-                    // A stale flag from previous deletion could block the sync
-                    contextTracker.expectingSelectionUpdate = false
-                    contextTracker.synchronizeWithCursor(
-                        connection,
-                        config.primary_language,
-                        editorInfo
-                    )
-
-                    // v1.2.6: Get both prefix and suffix deletion counts from fresh sync
-                    val (prefixDelete, suffixDelete) = contextTracker.getCharsToDeleteForPrediction()
-
-                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                        android.util.Log.d("CleverKeysService", "TYPING PREDICTION: Deleting partial word: " +
-                            "prefix='${contextTracker.getCurrentWord()}' ($prefixDelete chars), " +
-                            "suffix='${contextTracker.getCurrentWordSuffix()}' ($suffixDelete chars)")
-                    }
-
-                    val partialDeleteStart = System.currentTimeMillis()
-
-                    // Set flag to skip cursor sync during programmatic delete
-                    contextTracker.expectingSelectionUpdate = true
-
-                    // FIX: Use InputConnection for ALL apps (no more slow Termux backspaces)
-                    // v1.2.6: Delete both before AND after cursor for mid-word selection
-                    connection.deleteSurroundingText(prefixDelete, suffixDelete)
-
-                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                        val debugAfter = connection.getTextBeforeCursor(50, 0)
-                        android.util.Log.d("CleverKeysService", "TYPING PREDICTION: After deleting partial, text before cursor: '$debugAfter'")
-                    }
-
-                    val partialDeleteDuration = System.currentTimeMillis() - partialDeleteStart
-                    debugLogger?.invoke("⏱️ UNIFIED DELETE (partial word, prefix=$prefixDelete, suffix=$suffixDelete): ${partialDeleteDuration}ms")
-
-                    // v1.2.6: Clear suffix state after deletion
-                    contextTracker.clearCurrentWordSuffix()
-                }
-
-                // Add space before word if previous character isn't whitespace.
-                // For tapped suggestions (not swipe), respect auto_space_before_suggestion setting.
-                // Swipe auto-inserts always get the leading space since the swipe replaces no typed text.
-                val needsSpaceBefore = if (!isSwipeAutoInsert && !config.auto_space_before_suggestion) {
-                    false  // User disabled leading space before tapped suggestions
-                } else {
-                    try {
-                        // SAS-1: read TWO chars — straight quotes " and ' are opener vs
-                        // possessive/closing depending on the char before them
-                        val textBefore = connection.getTextBeforeCursor(2, 0)
-                        if (textBefore?.isNotEmpty() == true) {
-                            val prevChar = textBefore.last()
-                            val charBeforePrev =
-                                if (textBefore.length >= 2) textBefore[textBefore.length - 2] else null
-                            // SAS-1: no leading auto-space after opening punctuation
-                            // ( [ { " ' “ ‘ ¿ ¡ — `("` + swipe "word" → `(word`, not `( word`
-                            SmartAutoSpace.needsLeadingSpace(prevChar, charBeforePrev)
-                        } else {
-                            false
-                        }
-                    } catch (e: Exception) {
-                        false
-                    }
-                }
-
-                // v1.33.9: Shift/caps-lock transformation is now applied in handlePredictionResults
-                // for ALL predictions (including alternates), so we don't need to transform again here.
-                // The word from suggestion bar is already capitalized/uppercased as needed.
-
-                // Commit the selected word - check auto-space and Termux mode settings
-                // Logic: Add trailing space unless:
-                // 1. auto_space_after_suggestion is disabled (user preference #82)
-                // 2. OR Termux mode is enabled for non-swipe selections (terminal compatibility)
-                val shouldAddTrailingSpace = config.auto_space_after_suggestion &&
-                    !(config.termux_mode_enabled && !isSwipeAutoInsert)
-
-                val textToInsert = when {
-                    shouldAddTrailingSpace -> {
-                        // Add trailing space (and space before if needed)
-                        (if (needsSpaceBefore) " $processedWord " else "$processedWord ")
-                    }
-                    else -> {
-                        // No trailing space (Termux mode non-swipe OR user disabled auto-space)
-                        (if (needsSpaceBefore) " " else "") + processedWord
-                    }
-                }
-
-                if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                    android.util.Log.d("CleverKeysService", "TERMUX/NORMAL MODE: textToInsert = '$textToInsert' (needsSpaceBefore=$needsSpaceBefore, isSwipe=$isSwipeAutoInsert)")
-                    android.util.Log.d("CleverKeysService", "Committing text: '$textToInsert' (length=${textToInsert.length})")
-                }
-
-                // SAS-1: capture the pre-commit cursor position so the pending
-                // auto-space carries a position stamp (validated at punctuation time;
-                // -1 when the editor doesn't support ExtractedText → legacy check)
-                val preCommitCursorPos = if (shouldAddTrailingSpace) {
-                    PredictionContextTracker.currentCursorPosition(connection)
-                } else {
-                    -1
-                }
-
-                val commitStartTime = System.currentTimeMillis()
-                connection.commitText(textToInsert, 1)
-                val commitDuration = System.currentTimeMillis() - commitStartTime
-                debugLogger?.invoke("⏱️ commitText('$textToInsert'): ${commitDuration}ms")
-
-                // v1.2.7: Mark space as auto-inserted for smart punctuation
-                if (shouldAddTrailingSpace) {
-                    contextTracker.markAutoSpacePending(
-                        if (preCommitCursorPos >= 0) preCommitCursorPos + textToInsert.length else -1
-                    )
-                } else {
-                    // SAS-1: a re-commit without a fresh trailing space makes any
-                    // previously pending auto-space stale — invalidate it
-                    contextTracker.invalidateAutoSpacePending()
-                }
-
-                // Notify auto-capitalization system about the inserted text
-                // This ensures shift is enabled after sentence-ending punctuation (. ! ?)
-                keyeventhandler.notifyTextTyped(textToInsert)
-
-                // CRITICAL FIX: Clear shift state AFTER swipe word is committed
-                // If shift was active when swipe started, we've already capitalized the word,
-                // now we need to turn off the shift indicator for the NEXT word
-                // NOTE: Only clear latched shift, NOT locked (caps lock) - user should manually unlock caps lock
-                if (wasShiftActiveAtSwipeStart && !wasShiftLockedAtSwipeStart && isSwipeAutoInsert) {
-                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                        android.util.Log.d("CleverKeysService", "SHIFT+SWIPE: Clearing shift after word commit")
-                    }
-                    // Post to UI thread to ensure keyboard view update happens correctly
-                    keyboardView.post {
-                        keyboardView.clearLatchedModifiers()
-                    }
-                }
-                // Reset state tracking for next swipe
-                wasShiftActiveAtSwipeStart = false
-                wasShiftLockedAtSwipeStart = false
-
-                // Track that this commit was from candidate selection (manual tap)
-                // Note: Auto-insertions set this separately to NEURAL_SWIPE
-                if (contextTracker.getLastCommitSource() != PredictionSource.NEURAL_SWIPE) {
-                    contextTracker.setLastCommitSource(PredictionSource.CANDIDATE_SELECTION)
-                }
-            } catch (e: Exception) {
-                // Log the failure (type/message only, never committed text) and reset the
-                // selection-tracking state so a botched commit can't leave stale context.
-                android.util.Log.e(TAG, "Error in onSuggestionSelected", e)
-                debugLogger?.invoke("❌ onSuggestionSelected FAILED: ${e.javaClass.simpleName}: ${e.message}")
-                contextTracker.clearLastAutoInsertedWord()
-                contextTracker.setLastCommitSource(PredictionSource.UNKNOWN)
-                contextTracker.expectingSelectionUpdate = false
-                contextTracker.clearCurrentWordSuffix()
-            }
-
-            // Update context with the selected word
-            updateContext(processedWord)
-
-            // Clear current word
-            // NOTE: Don't clear suggestions here - they're re-displayed after auto-insertion
-            contextTracker.clearCurrentWord()
+    internal fun clearLatchedShiftAfterSwipe() {
+        keyboardView.post {
+            keyboardView.clearLatchedModifiers()
         }
     }
 
-    /**
-     * Update predictions based on current partial word
-     */
-    fun handleDeleteLastWord(ic: InputConnection?, editorInfo: EditorInfo?) {
-        ic ?: return
-
-        // Check if we're in Termux - if so, use Ctrl+Backspace fallback
-        val inTermux = try {
-            editorInfo?.packageName == "com.termux"
-        } catch (e: Exception) {
-            debugLogger?.invoke("DELETE_LAST_WORD: Error detecting Termux: ${e.message}")
-            false
-        }
-
-        // For Termux, use Ctrl+W key event which Termux handles correctly
-        // Termux doesn't support InputConnection methods, but processes terminal control sequences
-        if (inTermux) {
-            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                android.util.Log.d("CleverKeysService", "DELETE_LAST_WORD: Using Ctrl+W (^W) for Termux")
-            }
-            // Send Ctrl+W which is the standard terminal "delete word backward" sequence
-            keyeventhandler.send_key_down_up(KeyEvent.KEYCODE_W, KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON)
-            // Clear tracking
-            contextTracker.clearLastAutoInsertedWord()
-            contextTracker.setLastCommitSource(PredictionSource.UNKNOWN)
-            return
-        }
-
-        // First, try to delete the last auto-inserted word if it exists
-        val lastAutoInserted = contextTracker.getLastAutoInsertedWord()
-        if (!lastAutoInserted.isNullOrEmpty()) {
-            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                android.util.Log.d("CleverKeysService", "DELETE_LAST_WORD: Deleting auto-inserted word: '$lastAutoInserted'")
-            }
-
-            // Get text before cursor to verify
-            val textBefore = ic.getTextBeforeCursor(100, 0)
-            if (textBefore != null) {
-                val beforeStr = textBefore.toString()
-
-                // Check if the last auto-inserted word is actually at the end
-                // Account for trailing space that swipe words have
-                val hasTrailingSpace = beforeStr.endsWith(" ")
-                val lastWord = if (hasTrailingSpace) {
-                    beforeStr.substring(0, beforeStr.length - 1).trim()
-                } else {
-                    beforeStr.trim()
-                }
-
-                // Find last word in the text
-                val lastSpaceIdx = lastWord.lastIndexOf(' ')
-                val actualLastWord = if (lastSpaceIdx >= 0) {
-                    lastWord.substring(lastSpaceIdx + 1)
-                } else {
-                    lastWord
-                }
-
-                // Verify this matches our tracked word (case-insensitive to be safe)
-                if (actualLastWord.equals(lastAutoInserted, ignoreCase = true)) {
-                    // Delete the word + trailing space if present
-                    var deleteCount = lastAutoInserted.length
-                    if (hasTrailingSpace) deleteCount += 1
-
-                    ic.deleteSurroundingText(deleteCount, 0)
-                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                        android.util.Log.d("CleverKeysService", "DELETE_LAST_WORD: Deleted $deleteCount characters")
-                    }
-
-                    // Clear tracking
-                    contextTracker.clearLastAutoInsertedWord()
-                    contextTracker.setLastCommitSource(PredictionSource.UNKNOWN)
-                    return
-                }
-            }
-
-            // If verification failed, fall through to delete last word generically
-            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                android.util.Log.d("CleverKeysService", "DELETE_LAST_WORD: Auto-inserted word verification failed, using generic delete")
-            }
-        }
-
-        // Fallback: Delete the last word before cursor (generic approach)
-        val textBefore = ic.getTextBeforeCursor(100, 0)
-        if (textBefore.isNullOrEmpty()) {
-            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                android.util.Log.d("CleverKeysService", "DELETE_LAST_WORD: No text before cursor")
-            }
-            return
-        }
-
-        val beforeStr = textBefore.toString()
-        var cursorPos = beforeStr.length
-
-        // Skip trailing whitespace
-        while (cursorPos > 0 && beforeStr[cursorPos - 1].isWhitespace()) {
-            cursorPos--
-        }
-
-        if (cursorPos == 0) {
-            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                android.util.Log.d("CleverKeysService", "DELETE_LAST_WORD: Only whitespace before cursor")
-            }
-            return
-        }
-
-        // Find the start of the last word
-        var wordStart = cursorPos
-        while (wordStart > 0 && !beforeStr[wordStart - 1].isWhitespace()) {
-            wordStart--
-        }
-
-        // Calculate delete count (word + any trailing spaces we skipped)
-        var deleteCount = beforeStr.length - wordStart
-
-        // Safety check: don't delete more than 50 characters at once
-        if (deleteCount > 50) {
-            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                android.util.Log.d("CleverKeysService", "DELETE_LAST_WORD: Refusing to delete $deleteCount characters (safety limit)")
-            }
-            deleteCount = 50
-        }
-
-        if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-            android.util.Log.d("CleverKeysService", "DELETE_LAST_WORD: Deleting last word (generic), count=$deleteCount")
-        }
-        ic.deleteSurroundingText(deleteCount, 0)
-
-        // Clear tracking
-        contextTracker.clearLastAutoInsertedWord()
-        contextTracker.setLastCommitSource(PredictionSource.UNKNOWN)
-    }
+    /** Current keyboard view height in px — for swipe ML data capture (MLDataCollector). */
+    internal fun keyboardHeightPx(): Int = keyboardView.height
 
     /**
      * Whether the input captured at swipe time is still the field that would receive text now,

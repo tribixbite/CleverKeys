@@ -32,24 +32,6 @@ class SuggestionBridge(
     private val keyboardView: Keyboard2View
 ) {
     /**
-     * Handle prediction results from async prediction handler.
-     *
-     * Gathers InputConnection, EditorInfo, and Resources from the keyboard service,
-     * then delegates to SuggestionHandler.
-     *
-     * @param predictions List of predicted words
-     * @param scores Confidence scores for each prediction
-     */
-    fun handlePredictionResults(predictions: List<String>, scores: List<Int>) {
-        suggestionHandler?.let { handler ->
-            val ic = keyboard2.currentInputConnection
-            val editorInfo = keyboard2.currentInputEditorInfo
-            val resources = keyboard2.resources
-            handler.handlePredictionResults(predictions, scores, ic, editorInfo, resources)
-        }
-    }
-
-    /**
      * Handle regular typing predictions (non-swipe).
      *
      * Gathers InputConnection and EditorInfo, then delegates to SuggestionHandler.

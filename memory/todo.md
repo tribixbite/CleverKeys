@@ -55,9 +55,9 @@
 - [ ] Phase 7 (optional, gated): neural characterization golden file (`GeoNeuralCharacterizationTest`
       consistency oracle) — the head-to-head above provides the evidence base; golden-file
       generation for a CI-checkable consistency assert remains open.
-- [ ] WP9 wiring: owned by the CONCURRENT session (oracle + `unified_swipe_pipeline` flag
-      landing); geo router seam (`SwipeDecodingEngine`) ready — do not wire from this track
-      without checking that session's todo entries first.
+- [ ] WP9 wiring: R-1 **step 6 LANDED 2026-07-21** (single pipeline; `unified_swipe_pipeline`
+      flag removed) — geo router (steps 7-9 per 3-core-ime.md addendum) can now wire into the
+      sole `SH.handleSwipePredictionResults` seam; check the unification track's todo first.
 - Hard-won this round (also in project memory `geo-engine-datasets` file): HF datasets-server
   `/filter?where="col"='val'` endpoint slices big datasets server-side (rare-slice fetch in
   ~30 reqs vs 592); FUTO swipe-5 = multi-layout run (layout/language/dual_finger cols +
@@ -253,8 +253,15 @@ pure-JVM `swipe.geometric` package; NOT wired into live pipeline — WP9 stays d
   app:tint ignored by framework inflater (reverted to android:tint=?attr/colorLabel in clipboard/
   emoji/gif panes). ALSO: ew-cli 1.4.0 auto-update broke on-device (zstd JNI libpthread) — pin
   EW_VERSION=1.3.4 (skill updated, 5f482fce).
-- **NEXT (R-1)**: step 6 — delete IC.onSuggestionSelected + route D5 ML capture via MLDataCollector +
-  single executor; step 7 — Termux-deletion DECISION (user-visible, separate).
+- **R-1 STEP 6 LANDED (2026-07-21)**: unification COMPLETE — IC's commit engine/cursor-sync
+  pipeline/executor + dead CKS→bridge→SH legacy chain + `unified_swipe_pipeline` flag DELETED;
+  swipe commit runs SH.onSuggestionSelected(isManualSelection=false); D5 ML via MLDataCollector;
+  #82-for-swipe production semantic preserved in SmartAutoSpace (2 JVM pins flipped); oracle
+  updated (4 legacy guards deleted, 5b rerouted, 16b deleted, 19 rewritten). Full JVM 1654 green.
+  Details: wp9-pipeline-unification-oracle.md §"Step 6 — LANDED".
+- **NEXT (R-1)**: step 7+ — geo-engine wiring (SwipeEngineRouter + GeometricEngineAdapter + oracle
+  round, per 3-core-ime.md Addendum 2026-07-21); Termux-deletion DECISION (user-visible, separate)
+  remains open.
 - **WP8 FULLY COMPLETE** (bd8aafb3): the deferred index-sensitive batch — 285 control
   titles/descriptions/section headers/ColorAttributeRow labels/format-arg strings extracted
   (search index byte-identical, 134 entries), translated into all 21 locales (~5,985 entries,

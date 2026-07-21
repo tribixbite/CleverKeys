@@ -31,18 +31,26 @@ class CoreImeHygieneDriftTest {
 
     @Test
     fun noSilentCatchOnSwipeCommitPath() {
-        val text = source("tribixbite/cleverkeys/InputCoordinator.kt")
+        // WP9 R-1 step 6: the commit engine (incl. the swipe auto-insert path) now lives
+        // solely in SuggestionHandler.onSuggestionSelected; InputCoordinator's divergent
+        // engine was deleted. The invariant follows the engine.
+        val handler = source("tribixbite/cleverkeys/SuggestionHandler.kt")
+        val coordinator = source("tribixbite/cleverkeys/InputCoordinator.kt")
 
         assertWithMessage(
-            "InputCoordinator.onSuggestionSelected must not silently swallow exceptions. " +
-                "The empty '// Silently catch' handler was replaced with an explicit error " +
-                "log + state reset; do not reintroduce it."
-        ).that(text).doesNotContain("Silently catch")
+            "The commit path must not silently swallow exceptions. The empty " +
+                "'// Silently catch' handler was replaced with an explicit error " +
+                "log + state reset; do not reintroduce it in either class."
+        ).that(handler + coordinator).doesNotContain("Silently catch")
 
         assertWithMessage(
-            "The swipe-commit catch must log the failure explicitly via " +
-                "\"Error in onSuggestionSelected\"."
-        ).that(text).contains("Error in onSuggestionSelected")
+            "The commit-path catch must log the failure explicitly via " +
+                "\"Error in onSuggestionSelected\" and reset selection-tracking state."
+        ).that(handler).contains("Error in onSuggestionSelected")
+        assertWithMessage(
+            "The commit-path catch must reset expectingSelectionUpdate so a botched " +
+                "commit cannot leave stale context (hardening ported from InputCoordinator)."
+        ).that(handler).contains("contextTracker.expectingSelectionUpdate = false")
     }
 
     @Test

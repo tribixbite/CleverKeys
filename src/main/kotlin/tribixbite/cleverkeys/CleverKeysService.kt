@@ -928,9 +928,9 @@ class CleverKeysService : InputMethodService(),
     }
 
     // Suggestion/Prediction Methods (v1.32.406: Delegated to SuggestionBridge)
-    private fun handlePredictionResults(predictions: List<String>, scores: List<Int>) {
-        _suggestionBridge.handlePredictionResults(predictions, scores)
-    }
+    // WP9 R-1 step 6: the dead handlePredictionResults chain (service → bridge → SH's legacy
+    // auto-inserting entry; zero callers) was deleted — swipe results flow only through
+    // InputCoordinator → SuggestionHandler.handleSwipePredictionResults.
 
     override fun onSuggestionSelected(word: String) {
         _suggestionBridge.onSuggestionSelected(word)

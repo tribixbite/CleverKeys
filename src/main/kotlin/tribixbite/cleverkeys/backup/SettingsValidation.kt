@@ -83,6 +83,10 @@ object SettingsValidation {
         "sticky_keys_timeout",
         "sticky_keys_timeout_ms",         // SettingsActivity duplicate of the above
         "voice_guidance_enabled",
+        // WP9 R-1 step 6 (2026-07-21): step-4's QA escape hatch for the unified swipe
+        // pipeline, removed together with the legacy InputCoordinator-only path — the
+        // SuggestionHandler pipeline is the only one. v1.5.x backups may still carry it.
+        "unified_swipe_pipeline",
     )
 
     fun isDeprecatedPreference(key: String): Boolean = key in DEPRECATED_KEYS

@@ -200,6 +200,10 @@ class SuggestionHandler(
     // Post to main thread explicitly — View.post() silently drops runnables for detached views
     private val mainHandler = Handler(Looper.getMainLooper())
 
+    // WP9 R-1 step 6 (D5): single ML-capture implementation for the swipe auto-insert path —
+    // the same collector SuggestionBridge uses for the tap path (privacy-gated internally).
+    private val mlDataCollector = MLDataCollector(context)
+
     // v1.2.6: Flag to prevent async prediction task from overwriting special prompts
     // (autocorrect undo, add-to-dictionary)
     @Volatile
@@ -316,133 +320,34 @@ class SuggestionHandler(
     }
 
     /**
-     * Handle prediction results from async prediction handler.
-     * Displays predictions in suggestion bar and auto-inserts top prediction.
+     * WP9 R-1 steps 4+6 — THE swipe result path (single pipeline). Called unconditionally by
+     * [InputCoordinator.handlePredictionResults] (step 6 removed the `unified_swipe_pipeline`
+     * flag and the legacy IC-only path). Owns the BAR presentation (case preservation, shift/caps
+     * transform, possessive augmentation D1, password guard D2) AND — since step 6 — the COMMIT,
+     * which now runs through THIS class's [onSuggestionSelected] (isManualSelection=false), the
+     * same engine the manual-tap path uses. InputCoordinator's divergent commit engine was deleted.
      *
-     * @param predictions List of predicted words
-     * @param scores Confidence scores for predictions
-     * @param ic InputConnection for text manipulation
-     * @param editorInfo Editor info for context
-     * @param resources Resources for metrics
-     */
-    fun handlePredictionResults(
-        predictions: List<String>,
-        scores: List<Int>?,
-        ic: InputConnection?,
-        editorInfo: EditorInfo?,
-        resources: Resources
-    ) {
-        // Skip predictions in password mode, unless swipe_on_password_fields is enabled (#39)
-        if (isPasswordMode && !config.swipe_on_password_fields) {
-            return
-        }
-
-        // DEBUG: Log predictions received
-        sendDebugLog("Predictions received: ${predictions.size}\n")
-        if (predictions.isNotEmpty()) {
-            predictions.take(5).forEachIndexed { i, pred ->
-                val score = scores?.getOrNull(i) ?: 0
-                sendDebugLog("  [${i + 1}] \"$pred\" (score: $score)\n")
-            }
-        }
-
-        if (predictions.isEmpty()) {
-            sendDebugLog("No predictions - clearing suggestions\n")
-            suggestionBar?.clearSuggestions()
-            return
-        }
-
-        // OPTIMIZATION v5 (perftodos5.md): Augment predictions with possessives
-        // Generate possessive forms for top predictions and add them to the list
-        val augmentedPredictions = predictions.toMutableList()
-        val augmentedScores = (scores ?: emptyList()).toMutableList()
-        augmentPredictionsWithPossessives(augmentedPredictions, augmentedScores)
-
-        // Update suggestion bar (scores are already integers from neural system)
-        suggestionBar?.let { bar ->
-            bar.setShowDebugScores(config.swipe_show_debug_scores)
-            bar.setSuggestionsWithScores(augmentedPredictions, augmentedScores)
-
-            // Auto-insert top (highest scoring) prediction immediately after swipe completes
-            // This enables rapid consecutive swiping without manual taps
-            val topPrediction = bar.getTopSuggestion()
-            if (!topPrediction.isNullOrEmpty()) {
-                // If manual typing in progress, add space after it (don't re-commit the text!)
-                if (contextTracker.getCurrentWordLength() > 0 && ic != null) {
-                    sendDebugLog("Manual typing in progress before swipe: \"${contextTracker.getCurrentWord()}\"\n")
-
-                    // IMPORTANT: Characters from manual typing are already committed via KeyEventHandler.send_text()
-                    // _currentWord is just a tracking buffer - the text is already in the editor!
-                    // We only need to add a space after the manually typed word and clear the tracking buffer
-                    ic.commitText(" ", 1)
-                    contextTracker.clearCurrentWord()
-
-                    // Clear any previous auto-inserted word tracking since user was manually typing
-                    contextTracker.clearLastAutoInsertedWord()
-                    contextTracker.setLastCommitSource(PredictionSource.USER_TYPED_TAP)
-                }
-
-                // DEBUG: Log auto-insertion
-                sendDebugLog("Auto-inserting top prediction: \"$topPrediction\"\n")
-
-                // CRITICAL: Clear auto-inserted tracking BEFORE calling onSuggestionSelected
-                // This prevents the deletion logic from removing the previous auto-inserted word
-                // For consecutive swipes, we want to APPEND words, not replace them
-                contextTracker.clearLastAutoInsertedWord()
-                contextTracker.setLastCommitSource(PredictionSource.UNKNOWN) // Temporarily clear
-
-                // onSuggestionSelected handles spacing logic (no space if first text, space otherwise)
-                onSuggestionSelected(topPrediction, ic, editorInfo, resources)
-
-                // NOW track this as auto-inserted so tapping another suggestion will replace ONLY this word
-                // CRITICAL: Strip "raw:" prefix BEFORE storing (v1.33.7: fixed regex to match actual prefix format)
-                val cleanPrediction = topPrediction.replace(Regex("^raw:"), "")
-                contextTracker.setLastAutoInsertedWord(cleanPrediction)
-                contextTracker.setLastCommitSource(PredictionSource.NEURAL_SWIPE)
-
-                // CRITICAL: Re-display suggestions after auto-insertion
-                // User can still tap a different prediction if the auto-inserted one was wrong
-                bar.setSuggestionsWithScores(predictions, scores ?: emptyList())
-
-                sendDebugLog("Suggestions re-displayed for correction\n")
-            }
-        }
-        sendDebugLog("========== SWIPE COMPLETE ==========\n\n")
-    }
-
-    /**
-     * WP9 R-1 step 4 — unified swipe result path. Called by [InputCoordinator.handlePredictionResults]
-     * when [Config.unified_swipe_pipeline] is enabled (the default). This is the swipe-path sibling of
-     * the tap-path [handlePredictionResults] above: it owns the BAR presentation (case preservation,
-     * shift/caps transform, possessive augmentation, password guard) but delegates the actual COMMIT
-     * back to [InputCoordinator.autoInsertTopSuggestion] so the deletion/spacing/tracking engine stays
-     * byte-identical to the legacy IC path (the highest-risk area — never refactored here).
+     * This is also the seam the geometric engine feeds in R-1 steps 7-9 (see
+     * `docs/audit/remediation/3-core-ime.md` Addendum 2026-07-21): any engine producing a
+     * prediction list routes through here, inheriting the guard/augment/commit stack.
      *
-     * Divergences closed vs. the legacy IC path:
-     *   - D1 (possessives): the posted + re-displayed bar list is augmented via
-     *     [augmentPredictionsWithPossessives], so a possessive-eligible top prediction (e.g. "book")
-     *     now surfaces "book's" in the swipe bar. Unlike the tap path — which re-displays the ORIGINAL
-     *     (non-augmented) list after auto-insert (transient possessives, pinned by oracle 16b) — the
-     *     swipe path re-displays the SAME augmented+transformed list it posted, matching the legacy IC
-     *     "re-display what you posted" behavior so the correction list the user sees is stable. This is
-     *     the deliberate D1 flip (oracle scenario 8).
-     *   - D2 (password guard): returns early (clearing the bar) when the field is a password field and
-     *     the user has not opted into swipe-on-password (config.swipe_on_password_fields=false),
-     *     mirroring the tap-path guard. Detects the field from EITHER the tracked password mode OR the
-     *     live EditorInfo, so it holds even before onStartInputView flips the mode flag.
+     * Swipe-commit deltas landed by step 6 (deliberate, previously divergent from tap):
+     *   - Termux REPLACE deletion now uses key events (this engine's Termux branches) — but the
+     *     replace branch is unreachable on auto-insert (tracking is cleared just below), and
+     *     production taps already used this engine, so no live behavior changed.
+     *   - Mid-sentence swipe (space already after cursor) no longer double-spaces
+     *     ([SmartAutoSpace.decideTrailingSpace] NO_SPACE_MID_SENTENCE now applies to swipe).
+     *   - #151 sync-suppressed fields (URL/email) never get a leading space on swipe.
+     *   - Final autocorrect on auto-insert now preserves capitalization
+     *     ([preserveCapitalization]) and skips contraction KEYS (isContractionKey — parity
+     *     with the deleted IC engine, oracle scenario 11).
+     *   - auto_space_after_suggestion=false suppresses the swipe trailing space exactly as the
+     *     production IC engine did (SmartAutoSpace branch 1 updated in the same commit).
+     *   - D5 LANDED: swipe ML capture routes through [MLDataCollector] (single implementation,
+     *     same `swipe_debug_detailed_logging` + privacy-consent gating as IC's inline block).
      *
-     * D5 (route swipe ML capture through MLDataCollector) is intentionally DEFERRED to step 6: the
-     * commit is still performed by [InputCoordinator.onSuggestionSelected], which contains the inline
-     * ML-capture block. Routing ML here would require touching that kept commit path (double capture or
-     * removing IC's inline block) — out of scope for step 4, which keeps the commit byte-identical. The
-     * oracle already skips D5's direct pin (scenario 10 ML sub-assertion), so deferring is safe.
-     *
-     * Casing note: [inputCoordinator] has already synced its wasShiftActive/wasShiftLocked fields from
-     * the request-carried [shiftActive]/[shiftLocked] before delegating, so IC.onSuggestionSelected's
-     * (untouched) shift-indicator clearing reads consistent state. We apply the SAME case+shift
-     * transform IC applied, keeping oracle scenarios 2/3 (shift/caps casing) byte-identical.
-     *
-     * @param inputCoordinator the delegating IC — commit is routed back to its byte-identical engine.
+     * @param inputCoordinator the delegating swipe front-end — supplies haptics, the latched-shift
+     *   clear, keyboard height, and the captured swipe ML trace (IC remains the gesture/ML owner).
      */
     fun handleSwipePredictionResults(
         predictions: List<String>?,
@@ -488,14 +393,65 @@ class SuggestionHandler(
             bar.setShowDebugScores(config.swipe_show_debug_scores)
             bar.setSuggestionsWithScores(barWords, barScores)
 
-            // Auto-insert the top (highest-scoring) prediction. Delegate the whole commit — deletion
-            // counts, leading/trailing space, Termux handling, raw: stripping, NEURAL_SWIPE tracking,
-            // shift-indicator clearing — to IC's byte-identical engine.
+            // Auto-insert the top (highest-scoring) prediction through THE single commit engine
+            // (step 6): haptic + manual-typing termination + tracking clear were absorbed verbatim
+            // from the deleted InputCoordinator.autoInsertTopSuggestion.
             bar.getTopSuggestion()?.takeIf { it.isNotEmpty() }?.let { topPrediction ->
-                inputCoordinator.autoInsertTopSuggestion(topPrediction, ic, editorInfo, resources)
+                inputCoordinator.triggerSwipeCompleteHaptic()
 
-                // Re-display the augmented+transformed correction list (D1: possessives persist in the
-                // final swipe bar, unlike the tap path's non-augmented re-display).
+                // If manual typing was in progress, terminate it with a space. The typed chars are
+                // already committed via KeyEventHandler.send_text() — currentWord is only a tracking
+                // buffer, so committing just the space preserves them ("i" + swipe "think" → "i think ").
+                if (contextTracker.getCurrentWordLength() > 0 && ic != null) {
+                    ic.commitText(" ", 1)
+                    contextTracker.clearCurrentWord()
+                    contextTracker.clearLastAutoInsertedWord()
+                    contextTracker.setLastCommitSource(PredictionSource.USER_TYPED_TAP)
+                }
+
+                // Clear tracking BEFORE the commit so consecutive swipes APPEND (the replace branch
+                // in onSuggestionSelected must not fire on an auto-insert).
+                contextTracker.clearLastAutoInsertedWord()
+                contextTracker.setLastCommitSource(PredictionSource.UNKNOWN)
+
+                // D5: snapshot swipe state before the commit resets wasLastInputSwipe.
+                val wasSwipeAutoInsert = contextTracker.wasLastInputSwipe()
+                val swipeData = inputCoordinator.getCurrentSwipeData()
+
+                val committedWord = onSuggestionSelected(
+                    topPrediction, ic, editorInfo, resources, isManualSelection = false
+                )
+
+                // D5 LANDED (step 6): swipe ML capture through MLDataCollector — the single
+                // implementation the tap path (SuggestionBridge) already uses. Gating preserved
+                // from IC's inline block: detailed logging on AND swipe data present (the collector
+                // itself re-checks privacy consent before storing).
+                if (wasSwipeAutoInsert && swipeData != null && config.swipe_debug_detailed_logging) {
+                    mlDataCollector.collectAndStoreSwipeData(
+                        committedWord ?: topPrediction,
+                        swipeData,
+                        inputCoordinator.keyboardHeightPx(),
+                        predictionCoordinator.getMlDataStore()
+                    )
+                }
+                inputCoordinator.resetSwipeData()
+
+                // Clear the latched shift indicator after a shift+swipe commit; caps lock stays
+                // until the user unlocks it (was IC.onSuggestionSelected's post-commit clearing).
+                if (shiftActive && !shiftLocked) {
+                    inputCoordinator.clearLatchedShiftAfterSwipe()
+                }
+
+                // Track the auto-inserted word so tapping an alternate replaces ONLY this word.
+                // TODO: when final autocorrect rewrites the word, this still records the raw
+                // prediction (pre-existing behavior preserved from IC) — replacement deletion
+                // counts can drift when the correction changes the word length.
+                val cleanPrediction = topPrediction.replace(Regex("^raw:"), "")
+                contextTracker.setLastAutoInsertedWord(cleanPrediction)
+                contextTracker.setLastCommitSource(PredictionSource.NEURAL_SWIPE)
+
+                // Re-display the augmented+transformed correction list (D1: possessives persist in
+                // the final swipe bar).
                 bar.setSuggestionsWithScores(barWords, barScores)
             }
         }
@@ -511,6 +467,9 @@ class SuggestionHandler(
      * @param resources Resources for metrics
      * @param isManualSelection True if user explicitly tapped a suggestion (skip final autocorrect),
      *                          false for auto-insert after swipe (final autocorrect may apply)
+     * @return the processed word that was committed (post autocorrect / I-word handling), or null
+     *         when nothing was committed (blank input, special-suggestion routes, autocorrect undo,
+     *         or no InputConnection). Step 6: the swipe auto-insert path uses this for ML capture.
      */
     fun onSuggestionSelected(
         word: String?,
@@ -518,9 +477,9 @@ class SuggestionHandler(
         editorInfo: EditorInfo?,
         resources: Resources,
         isManualSelection: Boolean = false
-    ) {
+    ): String? {
         // Null/empty check
-        if (word.isNullOrBlank()) return
+        if (word.isNullOrBlank()) return null
 
         // R3: Route the special-suggestion protocol through the shared typed
         // routing decision (single source of truth) instead of ad-hoc prefix
@@ -529,12 +488,12 @@ class SuggestionHandler(
             // "Add to dictionary?" tap → add the word to the user dictionary.
             is SelectionRoute.AddToDictionary -> {
                 handleAddToDictionary(route.word)
-                return
+                return null
             }
             // #42: "+word" tap → commit the exact typed word and add to dictionary.
             is SelectionRoute.ExactAdd -> {
                 handleExactWordAdd(route.word, ic, editorInfo)
-                return
+                return null
             }
             // Ordinary word: fall through to autocorrect/commit handling below.
             is SelectionRoute.CommitWord -> Unit
@@ -547,7 +506,7 @@ class SuggestionHandler(
             word.equals(lastAutocorrectOriginal, ignoreCase = true)
         ) {
             handleAutocorrectUndo(word, lastAutocorrectOriginal, ic, editorInfo)
-            return
+            return null
         }
 
         var processedWord = word
@@ -567,13 +526,22 @@ class SuggestionHandler(
         // If it is, skip autocorrect to prevent fuzzy matching to wrong words
         val isKnownContraction = contractionManager.isKnownContraction(processedWord)
 
+        // v1.1.87 / step 6: also protect contraction KEYS (apostrophe-free forms like "dont",
+        // "cest") — they must not be fuzzy-matched to similar words. Parity with the deleted
+        // InputCoordinator engine; oracle scenario 11 pins "dont" committing verbatim.
+        val isContractionKey = contractionManager.isContractionKey(processedWord)
+
         // Skip autocorrect for:
         // 1. Known contractions (prevent fuzzy matching)
-        // 2. Raw predictions (user explicitly selected this neural output)
-        // 3. Manual selections (user explicitly tapped a neural prediction - issue #63 fix)
-        if (isKnownContraction || isRawPrediction || isManualSelection) {
+        // 2. Contraction keys (apostrophe-free forms — same protection)
+        // 3. Raw predictions (user explicitly selected this neural output)
+        // 4. Manual selections (user explicitly tapped a neural prediction - issue #63 fix)
+        if (isKnownContraction || isContractionKey || isRawPrediction || isManualSelection) {
             if (isKnownContraction) {
                 vlog { "KNOWN CONTRACTION: \"$processedWord\" - skipping autocorrect" }
+            }
+            if (isContractionKey) {
+                vlog { "CONTRACTION KEY: \"$processedWord\" - skipping autocorrect" }
             }
             if (isRawPrediction) {
                 vlog { "RAW PREDICTION: \"$processedWord\" - skipping autocorrect" }
@@ -903,7 +871,14 @@ class SuggestionHandler(
                     contextTracker.setLastCommitSource(PredictionSource.CANDIDATE_SELECTION)
                 }
             } catch (e: Exception) {
+                // Log the failure (type/message only, never committed text) and reset the
+                // selection-tracking state so a botched commit can't leave stale context
+                // (hardening ported from the deleted InputCoordinator engine, step 6).
                 Log.e(TAG, "Error in onSuggestionSelected", e)
+                contextTracker.clearLastAutoInsertedWord()
+                contextTracker.setLastCommitSource(PredictionSource.UNKNOWN)
+                contextTracker.expectingSelectionUpdate = false
+                contextTracker.clearCurrentWordSuffix()
             }
 
             // Update context with the selected word
@@ -913,6 +888,8 @@ class SuggestionHandler(
             // NOTE: Don't clear suggestions here - they're re-displayed after auto-insertion
             contextTracker.clearCurrentWord()
         }
+
+        return if (ic != null) processedWord else null
     }
 
     /**
@@ -1323,8 +1300,8 @@ class SuggestionHandler(
     }
 
     /**
-     * WP9 R-1 step 5 — unified cursor-sync entry. Called by [InputCoordinator.onCursorMoved]'s
-     * debounced runnable when [Config.unified_swipe_pipeline] is enabled (the default), AFTER
+     * WP9 R-1 steps 5+6 — THE cursor-sync prediction entry. Called by
+     * [InputCoordinator.onCursorMoved]'s debounced runnable (unconditionally since step 6), AFTER
      * InputCoordinator has done its cursor bookkeeping ([PredictionContextTracker.onCursorPositionChanged],
      * the 100ms debounce, and [PredictionContextTracker.synchronizeWithCursor] which populates
      * [PredictionContextTracker.currentWord] with the synced rawPrefix). This is the cursor-sync

@@ -58,15 +58,19 @@ class AutoSpaceLogicTest {
     }
 
     @Test
-    fun `user disabled auto-space — swipe still gets trailing space`() {
-        // Even with auto-space off, swipe auto-insert bypasses the user preference
+    fun `user disabled auto-space — swipe also gets no trailing space`() {
+        // ORACLE-FLIP(WP9 R-1 step 6, 2026-07-21): #82 now applies to swipe too. The old
+        // "swipe bypasses the pref" pin reflected SuggestionHandler's LEGACY auto-insert entry,
+        // which had no production callers — real swipes ran InputCoordinator's engine, which
+        // respected the pref. Step 6 unified the commit onto SuggestionHandler and preserved
+        // the production (IC) semantic in SmartAutoSpace branch 1.
         assertThat(
             SmartAutoSpace.decideTrailingSpace(
                 autoSpaceAfterEnabled = false,
                 isSwipeAutoInsert = true,
                 hasSpaceAfter = false
             )
-        ).isEqualTo(TrailingSpaceMode.TRAILING_SPACE)
+        ).isEqualTo(TrailingSpaceMode.NO_SPACE_USER_DISABLED)
     }
 
     // =========================================================================
@@ -176,15 +180,17 @@ class AutoSpaceLogicTest {
     }
 
     @Test
-    fun `trailing space tracked for swipe even with auto-space disabled`() {
-        // Swipe bypasses the user preference, so a space IS added → tracking is true
+    fun `no trailing space tracked for swipe with auto-space disabled`() {
+        // ORACLE-FLIP(WP9 R-1 step 6, 2026-07-21): #82 applies to swipe too (production IC
+        // semantic preserved through the unified SuggestionHandler engine) — no space is
+        // added, so tracking must be false.
         assertThat(
             SmartAutoSpace.addsTrailingSpace(
                 autoSpaceAfterEnabled = false,
                 isSwipeAutoInsert = true,
                 hasSpaceAfter = false
             )
-        ).isTrue()
+        ).isFalse()
     }
 
     // =========================================================================

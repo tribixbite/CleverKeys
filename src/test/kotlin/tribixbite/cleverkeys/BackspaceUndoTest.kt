@@ -281,36 +281,34 @@ class BackspaceUndoTest {
     }
 
     @Test
-    fun `InputCoordinator has paired contraction support in prediction path`() {
-        // Both prediction pipelines must produce the same contraction results.
-        // Without this, the cursor sync path overwrites SuggestionHandler's
-        // contraction-aware results with results missing paired contractions.
+    fun `cursor sync delegates to the single SuggestionHandler pipeline`() {
+        // WP9 R-1 step 6: the contraction-flicker class of bugs was caused by TWO prediction
+        // pipelines drifting apart. The structural fix is ONE pipeline — InputCoordinator
+        // must delegate its cursor-sync prediction phase to SuggestionHandler and must NOT
+        // grow a parallel contraction/exact-add implementation again.
         val source = readSource("InputCoordinator.kt")
-        assertThat(source).contains("getPairedContractions(prefix)")
-        assertThat(source).contains("getNonPairedMapping(prefix)")
+        assertThat(source).contains("handleCursorSyncPrediction")
+        assertThat(source).doesNotContain("getPairedContractions")
+        assertThat(source).doesNotContain("Suggestion.ExactAdd(")
     }
 
     @Test
-    fun `InputCoordinator has exact_add support matching SuggestionHandler`() {
-        // Both pipelines must include exact_add so "+word" suggestions don't
-        // flicker when cursor sync overwrites SuggestionHandler's results.
-        // R3: the exact_add wire string is now produced via the shared typed
-        // model (Suggestion.ExactAdd(...).wire) instead of an inline "exact_add:"
-        // literal — assert the new production seam, which SuggestionHandler uses
-        // identically.
-        val source = readSource("InputCoordinator.kt")
+    fun `SuggestionHandler pipeline has contraction and exact_add support`() {
+        // The single pipeline (typing + cursor-sync since step 5) must carry paired/non-paired
+        // contraction injection and the exact_add wire (via the shared typed model).
+        val source = readSource("SuggestionHandler.kt")
+        assertThat(source).contains("getPairedContractions(partial)")
+        assertThat(source).contains("getNonPairedMapping(partial)")
         assertThat(source).contains("Suggestion.ExactAdd(")
         assertThat(source).contains("show_exact_typed_word")
     }
 
     @Test
-    fun `both pipelines have minimum prefix length for paired contractions`() {
+    fun `pipeline has minimum prefix length for paired contractions`() {
         // Paired contraction injection for 1-2 char prefixes corrupts frequency
-        // ranking (e.g., "t" → "t's" outranks "the"). Both pipelines must guard.
+        // ranking (e.g., "t" → "t's" outranks "the"). The single pipeline must guard.
         val sugHandler = readSource("SuggestionHandler.kt")
-        val inputCoord = readSource("InputCoordinator.kt")
         assertThat(sugHandler).contains("partial.length >= 3")
-        assertThat(inputCoord).contains("prefix.length >= 3")
     }
 
     @Test

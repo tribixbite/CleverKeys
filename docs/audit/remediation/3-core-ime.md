@@ -143,6 +143,17 @@ Each step compiles, passes `runPureTests` + targeted instrumented tests, and is 
 4. **Reroute swipe auto-insert to SH.** Change IC `handlePredictionResults` (or the `AsyncPredictionHandler` callback wiring in IC `handleSwipeTyping` 1238–1249) to call `SuggestionHandler.handlePredictionResults` / `SuggestionHandler.onSuggestionSelected(isManualSelection=false)` instead of IC's own. Add possessive-augment + password guard coverage to swipe. Route swipe ML capture through `MLDataCollector`. Gate: step-2 oracle green; specifically assert possessives now appear on swipe and password swipe respects `swipe_on_password_fields`.
 5. **Reroute cursor-sync prediction to SH.** Fold IC `onCursorMoved`/`triggerPredictionsForPrefix` (145–357) into SH (SH gains a cursor-sync entry that reuses its `updatePredictionsForCurrentWord` contraction pipeline and the `specialPromptActive` guard). This resolves R-7 structurally. Gate: prompt-race test (R-7) green; cursor-sync predictions unchanged.
 6. **Delete IC `onSuggestionSelected` and the now-dead swipe-selection body.** IC shrinks to a thin swipe-gesture/ML front-end that delegates to SH. Consolidate to a single `predictionExecutor` (SH's) and apply R-5 shutdown to it. Gate: full JVM + instrumented suite; grep confirms no remaining IC selection callers.
+   — **LANDED 2026-07-21.** Swipe commit now runs `SH.onSuggestionSelected(isManualSelection=false)`;
+   IC's engine, `triggerPredictionsForPrefix`, `handleDeleteLastWord` dup, executor, and the
+   `unified_swipe_pipeline` flag are deleted; D5 (ML via MLDataCollector) landed; the dead
+   `CKS→bridge→SH.handlePredictionResults` legacy chain deleted. Deliberate deltas (#82-for-swipe
+   preserved from production, mid-sentence/no-URL-leading-space/case-preserving-autocorrect
+   adopted from SH) + full details in
+   `docs/audit/remediation-plans/wp9-pipeline-unification-oracle.md` §"Step 6 — LANDED".
+   Step 6 deliberately did NOT touch the Termux-deletion decision (step 7 below): SH's Termux
+   branches are live for taps as before; the swipe auto-insert path cannot reach the replace
+   branch. Per the Addendum below, the geo-engine steps 7-9 slot in next — the
+   `SH.handleSwipePredictionResults` seam is now the only swipe-results path.
 7. **Deliberate Termux-deletion decision** (separate commit): either keep SH Termux branches or, if validated, unify to InputConnection for all apps — with a dedicated Termux instrumented test either way. Never bundle this into the mechanical rerouting steps.
 
 ### Risk assessment

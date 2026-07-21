@@ -111,10 +111,8 @@ class ManagerInitializer(
             config,
             contextTracker,
             predictionCoordinator,
-            contractionManager,
             null, // suggestionBar created later
-            keyboardView,
-            keyEventHandler
+            keyboardView
         )
 
         // Initialize suggestion handler (v1.32.361)
@@ -127,16 +125,12 @@ class ManagerInitializer(
             keyEventHandler
         )
 
-        // WP9 R-1 step 4: wire the unified-swipe delegate now that both exist. When
-        // config.unified_swipe_pipeline is enabled (default), InputCoordinator routes its
-        // post-swipe-prediction flow through SuggestionHandler (possessives + password guard).
+        // WP9 R-1 steps 4-6: wire the unified delegates now that both exist. MANDATORY since
+        // step 6 — InputCoordinator has no fallback pipelines anymore. SuggestionHandler owns
+        // the whole swipe-results flow (possessives, password guard, THE single commit engine)
+        // and the cursor-sync prediction+post phase (guarded pipeline, R-7). Bookkeeping
+        // (debounce, cursor sync, swipe gesture/ML capture) stays in InputCoordinator.
         inputCoordinator.setSwipeResultDelegate(suggestionHandler)
-
-        // WP9 R-1 step 5: wire the unified cursor-sync delegate. When the flag is enabled (default),
-        // InputCoordinator.onCursorMoved routes the prediction+post phase through SuggestionHandler's
-        // single guarded pipeline (contraction/exact-add/I-word/capitalization + specialPromptActive
-        // guard), structurally resolving the R-7 prompt race. Bookkeeping (debounce, cursor sync)
-        // stays in InputCoordinator.
         inputCoordinator.setCursorSyncDelegate(suggestionHandler)
 
         // Initialize neural layout helper (v1.32.362)

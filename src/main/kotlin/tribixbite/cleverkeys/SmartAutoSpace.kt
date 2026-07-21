@@ -108,7 +108,14 @@ object SmartAutoSpace {
      * re-add a termux branch here without re-adding it to SuggestionHandler.
      */
     enum class TrailingSpaceMode {
-        /** Branch 1: user turned off auto-space (tap only — swipe bypasses it). */
+        /**
+         * Branch 1: user turned off auto-space (#82) — applies to BOTH tap and swipe.
+         * WP9 R-1 step 6: the swipe commit now runs through SuggestionHandler; the
+         * production swipe behavior being preserved is InputCoordinator's, which
+         * respected the pref for swipe auto-inserts. The earlier "tap only — swipe
+         * bypasses it" semantic existed only on SH's legacy auto-insert entry, which
+         * had no production callers.
+         */
         NO_SPACE_USER_DISABLED,
 
         /** Branch 2: a space already follows the cursor (mid-sentence replacement). */
@@ -123,12 +130,14 @@ object SmartAutoSpace {
      * suggestion. Mirrors — and is CALLED BY — SuggestionHandler's
      * `textToInsert` branch:
      *
-     *   if (!auto_space_after && !isSwipe) → NO_SPACE_USER_DISABLED   (#82)
-     *   else if (hasSpaceAfter)            → NO_SPACE_MID_SENTENCE     (v1.2.6)
-     *   else                               → TRAILING_SPACE           (normal/swipe)
+     *   if (!auto_space_after)  → NO_SPACE_USER_DISABLED   (#82, tap AND swipe — step 6)
+     *   else if (hasSpaceAfter) → NO_SPACE_MID_SENTENCE     (v1.2.6)
+     *   else                    → TRAILING_SPACE           (normal/swipe)
      *
      * @param autoSpaceAfterEnabled config.auto_space_after_suggestion (#82 toggle)
      * @param isSwipeAutoInsert     true when the commit came from a swipe auto-insert
+     *                              (no longer affects branch 1; retained for call-site
+     *                              clarity and future branch needs)
      * @param hasSpaceAfter         true when the char after the cursor is whitespace
      */
     fun decideTrailingSpace(
@@ -136,7 +145,7 @@ object SmartAutoSpace {
         isSwipeAutoInsert: Boolean,
         hasSpaceAfter: Boolean
     ): TrailingSpaceMode = when {
-        !autoSpaceAfterEnabled && !isSwipeAutoInsert -> TrailingSpaceMode.NO_SPACE_USER_DISABLED
+        !autoSpaceAfterEnabled -> TrailingSpaceMode.NO_SPACE_USER_DISABLED
         hasSpaceAfter -> TrailingSpaceMode.NO_SPACE_MID_SENTENCE
         else -> TrailingSpaceMode.TRAILING_SPACE
     }
