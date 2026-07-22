@@ -56,9 +56,10 @@
       consistency oracle) — the head-to-head above provides the evidence base; golden-file
       generation for a CI-checkable consistency assert remains open.
 - [x] WP9 wiring COMPLETE: step 6 (single pipeline) + steps 7-9 (geo router/adapter/oracle)
-      ALL LANDED 2026-07-21. `geometric_swipe_engine` pref (default OFF, no UI yet) routes
-      non-QWERTY swipes to the geometric engine through the sole SH seam. Remaining: settings
-      UI toggle when geo graduates from experimental; phase-2 QWERTY-en rank-merge experiment.
+      ALL LANDED 2026-07-21, plus same-day v1.1: `swipe_engine_mode` selector
+      (neural|hybrid|geometric, default neural) with full Settings UI — section renamed
+      "👆 Swipe Typing" (22 locales), Prediction Engine dropdown, neural sliders moved to
+      Full Neural Settings only. Remaining: phase-2 QWERTY-en rank-merge experiment.
 - Hard-won this round (also in project memory `geo-engine-datasets` file): HF datasets-server
   `/filter?where="col"='val'` endpoint slices big datasets server-side (rare-slice fetch in
   ~30 reqs vs 592); FUTO swipe-5 = multi-layout run (layout/language/dual_finger cols +
@@ -266,8 +267,8 @@ pure-JVM `swipe.geometric` package; NOT wired into live pipeline — WP9 stays d
   custom/disabled overlay w/ content-hash versioning, background warmup from onStartInputView);
   `geometric_swipe_engine` pref default OFF (no UI — debug-pref pattern). Oracle:
   SwipeEngineRouterTest (9 JVM) + GeometricSwipeOracleTest (6 instrumented incl. p95<150ms gate).
-- **NEXT (R-1)**: Termux-deletion DECISION (user-visible, separate) remains open; geo settings UI
-  + phase-2 rank-merge when geo graduates.
+- **NEXT (R-1)**: Termux-deletion DECISION (user-visible, separate) remains open; phase-2
+  QWERTY-en rank-merge when justified by usage.
 - **WP8 FULLY COMPLETE** (bd8aafb3): the deferred index-sensitive batch — 285 control
   titles/descriptions/section headers/ColorAttributeRow labels/format-arg strings extracted
   (search index byte-identical, 134 entries), translated into all 21 locales (~5,985 entries,

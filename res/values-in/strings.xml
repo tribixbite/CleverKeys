@@ -115,7 +115,7 @@
     <string name="settings_description">Konfigurasikan pengaturan keyboard Anda untuk pengalaman mengetik yang optimal.</string>
 
     <!-- Neural Prediction Section -->
-    <string name="settings_section_neural">🧠 Prediksi Jaringan Saraf</string>
+    <string name="settings_section_neural">👆 Ketik Geser</string>
     <string name="settings_neural_beam_width_title">Lebar Beam</string>
     <string name="settings_neural_beam_width_desc">Jumlah kandidat prediksi (1–20). Lebih tinggi = lebih akurat.</string>
     <string name="settings_neural_max_length_title">Panjang Kata Maksimum</string>

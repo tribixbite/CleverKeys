@@ -141,7 +141,7 @@
     <string name="settings_description">Configurează setările tastaturii pentru o experiență de scriere optimă.</string>
 
     <!-- Neural Prediction Section -->
-    <string name="settings_section_neural">🧠 Predicție cu rețea neuronală</string>
+    <string name="settings_section_neural">👆 Tastare prin glisare</string>
     <string name="settings_neural_beam_width_title">Lățimea fasciculului</string>
     <string name="settings_neural_beam_width_desc">Numărul de candidați pentru predicție (1–20). Mai mare = mai precis.</string>
     <string name="settings_neural_max_length_title">Lungimea maximă a cuvântului</string>

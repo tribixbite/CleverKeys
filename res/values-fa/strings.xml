@@ -141,7 +141,7 @@
     <string name="settings_description">تنظیمات صفحه‌کلید خود را برای بهترین تجربه تایپ پیکربندی کنید.</string>
 
     <!-- Neural Prediction Section -->
-    <string name="settings_section_neural">🧠 پیش‌بینی شبکه عصبی</string>
+    <string name="settings_section_neural">👆 تایپ کشیدنی</string>
     <string name="settings_neural_beam_width_title">پهنای پرتو</string>
     <string name="settings_neural_beam_width_desc">تعداد نامزدهای پیش‌بینی (۱ تا ۲۰). بیشتر = دقیق‌تر.</string>
     <string name="settings_neural_max_length_title">حداکثر طول واژه</string>

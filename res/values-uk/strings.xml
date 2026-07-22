@@ -115,7 +115,7 @@
     <string name="settings_description">Налаштуйте параметри клавіатури для оптимального введення тексту.</string>
 
     <!-- Neural Prediction Section -->
-    <string name="settings_section_neural">🧠 Нейромережеве передбачення</string>
+    <string name="settings_section_neural">👆 Введення свайпом</string>
     <string name="settings_neural_beam_width_title">Ширина променя</string>
     <string name="settings_neural_beam_width_desc">Кількість варіантів передбачення (1–20). Більше — точніше.</string>
     <string name="settings_neural_max_length_title">Максимальна довжина слова</string>

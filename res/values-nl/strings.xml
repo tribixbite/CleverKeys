@@ -117,7 +117,7 @@
     <string name="settings_description">Configureer je toetsenbordinstellingen voor de beste typervaring.</string>
 
     <!-- Neural Prediction Section -->
-    <string name="settings_section_neural">🧠 Voorspelling met neuraal netwerk</string>
+    <string name="settings_section_neural">👆 Veegtypen</string>
     <string name="settings_neural_beam_width_title">Bundelbreedte</string>
     <string name="settings_neural_beam_width_desc">Aantal voorspellingskandidaten (1–20). Hoger = nauwkeuriger.</string>
     <string name="settings_neural_max_length_title">Maximale woordlengte</string>

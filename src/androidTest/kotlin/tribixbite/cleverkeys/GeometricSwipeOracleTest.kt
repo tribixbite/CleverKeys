@@ -164,7 +164,7 @@ class GeometricSwipeOracleTest {
     private fun harness(): Harness {
         val config = Config.globalConfig()
         config.swipe_typing_enabled = true
-        config.geometric_swipe_engine = true
+        config.swipe_engine_mode = "hybrid"
         config.swipe_final_autocorrect_enabled = false
         config.swipe_on_password_fields = false
         config.auto_space_after_suggestion = true
@@ -218,15 +218,20 @@ class GeometricSwipeOracleTest {
 
     // ═════════════════════════════════ tests ═════════════════════════════════
 
-    /** Router re-pin against REAL KeyboardData: dvorak → GEOMETRIC/NONE, qwerty → NEURAL. */
+    /** Router re-pin against REAL KeyboardData across all three modes. */
     @Test
     fun oracle_geo_router_realLayouts() {
         val dvorak = loadLayout("latn_dvorak")
         val qwerty = loadLayout("latn_qwerty_us")
-        assertEquals(SwipeEngineRouter.Engine.GEOMETRIC, SwipeEngineRouter.route(dvorak, true))
-        assertEquals(SwipeEngineRouter.Engine.NONE, SwipeEngineRouter.route(dvorak, false))
-        assertEquals(SwipeEngineRouter.Engine.NEURAL, SwipeEngineRouter.route(qwerty, true))
-        assertEquals(SwipeEngineRouter.Engine.NEURAL, SwipeEngineRouter.route(qwerty, false))
+        val hybrid = SwipeEngineRouter.Mode.HYBRID
+        val neural = SwipeEngineRouter.Mode.NEURAL
+        val geometric = SwipeEngineRouter.Mode.GEOMETRIC
+        assertEquals(SwipeEngineRouter.Engine.GEOMETRIC, SwipeEngineRouter.route(dvorak, hybrid))
+        assertEquals(SwipeEngineRouter.Engine.NONE, SwipeEngineRouter.route(dvorak, neural))
+        assertEquals(SwipeEngineRouter.Engine.GEOMETRIC, SwipeEngineRouter.route(dvorak, geometric))
+        assertEquals(SwipeEngineRouter.Engine.NEURAL, SwipeEngineRouter.route(qwerty, hybrid))
+        assertEquals(SwipeEngineRouter.Engine.NEURAL, SwipeEngineRouter.route(qwerty, neural))
+        assertEquals(SwipeEngineRouter.Engine.GEOMETRIC, SwipeEngineRouter.route(qwerty, geometric))
     }
 
     /** NEW-behavior pin: a Dvorak swipe decodes usable suggestions from the real engine. */

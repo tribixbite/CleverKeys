@@ -115,7 +115,7 @@
     <string name="settings_description">Konfigurējiet tastatūras iestatījumus optimālai rakstīšanai.</string>
 
     <!-- Neural Prediction Section -->
-    <string name="settings_section_neural">🧠 Neironu tīkla prognozēšana</string>
+    <string name="settings_section_neural">👆 Vilkšanas rakstīšana</string>
     <string name="settings_neural_beam_width_title">Stara platums</string>
     <string name="settings_neural_beam_width_desc">Prognozes kandidātu skaits (1–20). Vairāk = precīzāk.</string>
     <string name="settings_neural_max_length_title">Maksimālais vārda garums</string>

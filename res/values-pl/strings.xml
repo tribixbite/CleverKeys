@@ -115,7 +115,7 @@
     <string name="settings_description">Skonfiguruj ustawienia klawiatury dla optymalnego pisania.</string>
 
     <!-- Neural Prediction Section -->
-    <string name="settings_section_neural">🧠 Predykcja sieci neuronowej</string>
+    <string name="settings_section_neural">👆 Pisanie gestem</string>
     <string name="settings_neural_beam_width_title">Szerokość wiązki</string>
     <string name="settings_neural_beam_width_desc">Liczba kandydatów predykcji (1–20). Więcej = dokładniej.</string>
     <string name="settings_neural_max_length_title">Maksymalna długość słowa</string>

@@ -117,7 +117,7 @@
     <string name="settings_description">Configure as opções do teclado para uma experiência de digitação ideal.</string>
 
     <!-- Neural Prediction Section -->
-    <string name="settings_section_neural">🧠 Previsão por Rede Neural</string>
+    <string name="settings_section_neural">👆 Digitação por deslize</string>
     <string name="settings_neural_beam_width_title">Largura do feixe</string>
     <string name="settings_neural_beam_width_desc">Número de candidatos de previsão (1–20). Maior = mais preciso.</string>
     <string name="settings_neural_max_length_title">Comprimento máximo da palavra</string>

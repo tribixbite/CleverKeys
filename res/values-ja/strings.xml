@@ -116,7 +116,7 @@
     <string name="settings_description">最適な入力体験のためにキーボードを設定します。</string>
 
     <!-- Neural Prediction Section -->
-    <string name="settings_section_neural">🧠 ニューラルネットワーク予測</string>
+    <string name="settings_section_neural">👆 スワイプ入力</string>
     <string name="settings_neural_beam_width_title">ビーム幅</string>
     <string name="settings_neural_beam_width_desc">予測候補の数(1〜20)。大きいほど正確になります。</string>
     <string name="settings_neural_max_length_title">単語の最大文字数</string>

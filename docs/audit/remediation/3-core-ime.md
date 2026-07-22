@@ -244,11 +244,19 @@ on a raw-vs-xml resource lookup; fixed + hardened assume→assert so a missing l
 loudly) + PipelineCharacterizationTest 26/26; **FULL ew-cli suite 1453/1453, 0 skipped**
 (Pixel7 API 34, orchestrator). Commit `38df84ce`.
 
-- **Step 7**: `swipe/SwipeEngineRouter.kt` (pure object, KeyboardData + string overloads) at the
-  IC `handleSwipeTyping` gate: QWERTY-Latin → NEURAL (unchanged), else GEOMETRIC iff
-  `Config.geometric_swipe_engine` (default FALSE, classified in `SETTINGS_DEFAULTS`; no UI —
-  same debug-pref pattern the step-4 flag used), else NONE. No cross-engine score comparison;
-  one engine owns each swipe end-to-end.
+- **Step 7** (v1.1 same-day): `swipe/SwipeEngineRouter.kt` (pure object, KeyboardData + string
+  overloads) at the IC `handleSwipeTyping` gate, MODE-based via the user-facing
+  `swipe_engine_mode` String pref (default `"neural"`; supersedes the hours-lived
+  `geometric_swipe_engine` Boolean, never released, dropped without deprecation):
+  NEURAL = QWERTY-only swipe (pre-geo behavior); HYBRID = neural on QWERTY + geometric
+  elsewhere; GEOMETRIC = SHARK2 on ALL layouts (incl. QWERTY). `Mode.fromPref` falls back to
+  NEURAL on junk values. Settings UI: the "🧠 Neural Network Prediction" section is renamed
+  "👆 Swipe Typing" (all 22 locales); a "Prediction Engine" dropdown (Hybrid/Neural/Geometric,
+  gated on Enable Swipe Typing) selects the mode; the Beam Width / Maximum Word Length /
+  Confidence Threshold sliders moved out of the main section (they remain in the Full Neural
+  Settings screen, which already had them); the #9 non-QWERTY warning card shows only in
+  Neural mode and now suggests switching the engine. No cross-engine score comparison; one
+  engine owns each swipe end-to-end.
 - **Step 8**: `swipe/GeometricEngineAdapter.kt` — all five spec duties: (1) KeyboardData →
   LayoutGeometry via `KeyboardGeometry.computeKeyRects` (view-pixel frame == trace frame),
   memoized per KeyboardData instance; (2) PointF → TracePoint snapshotting; (3) dictionary from

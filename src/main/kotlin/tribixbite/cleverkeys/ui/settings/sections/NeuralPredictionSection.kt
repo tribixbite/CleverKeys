@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
-import tribixbite.cleverkeys.ui.settings.SettingsSlider
+import tribixbite.cleverkeys.ui.settings.SettingsDropdown
 import tribixbite.cleverkeys.ui.settings.SettingsSwitch
 import tribixbite.cleverkeys.ui.settings.openNeuralSettings
 import tribixbite.cleverkeys.ui.settings.saveSetting
@@ -27,7 +27,7 @@ internal fun SettingsActivity.NeuralPredictionSection() {
                 expanded = neuralSectionExpanded,
                 onExpandChange = { neuralSectionExpanded = it }
             ) {
-                // Master switch for swipe typing (neural prediction is always used when enabled)
+                // Master switch for swipe typing
                 SettingsSwitch(
                     title = stringResource(R.string.neural_enable_swipe_title),
                     description = stringResource(R.string.neural_enable_swipe_desc),
@@ -39,8 +39,33 @@ internal fun SettingsActivity.NeuralPredictionSection() {
                     highlightId = "swipe_typing"
                 )
 
-                // #9: Warning when swipe is enabled but layout doesn't support it
-                if (swipeTypingEnabled && !currentLayoutSupportsSwipe) {
+                if (swipeTypingEnabled) {
+                    // WP9 R-1 step 7 (v1.1): engine mode selector. Hybrid = neural on QWERTY +
+                    // geometric elsewhere; Neural = QWERTY-only swipe (pre-geo behavior);
+                    // Geometric = SHARK2 on all layouts.
+                    SettingsDropdown(
+                        title = stringResource(R.string.swipe_engine_mode_title),
+                        description = stringResource(R.string.swipe_engine_mode_desc),
+                        options = listOf("Hybrid", "Neural", "Geometric"),
+                        selectedIndex = when (swipeEngineMode) {
+                            "hybrid" -> 0
+                            "geometric" -> 2
+                            else -> 1 // "neural" (default)
+                        },
+                        onSelectionChange = { index ->
+                            swipeEngineMode = when (index) {
+                                0 -> "hybrid"
+                                2 -> "geometric"
+                                else -> "neural"
+                            }
+                            saveSetting("swipe_engine_mode", swipeEngineMode)
+                        }
+                    )
+                }
+
+                // #9: Warning when the layout has no swipe engine — only in Neural mode
+                // (Hybrid/Geometric cover non-QWERTY layouts via the geometric engine).
+                if (swipeTypingEnabled && !currentLayoutSupportsSwipe && swipeEngineMode == "neural") {
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -51,11 +76,11 @@ internal fun SettingsActivity.NeuralPredictionSection() {
                         )
                     ) {
                         Text(
-                            text = "Swipe typing requires a QWERTY layout. " +
+                            text = "The neural engine requires a QWERTY layout. " +
                                 "Your current layout ($currentLayoutName) uses different key positions — " +
-                                "swipe predictions would be inaccurate.\n\n" +
-                                "Swipe typing is temporarily disabled. It will re-enable " +
-                                "automatically when you switch to a QWERTY layout.",
+                                "swipe typing is temporarily disabled on it.\n\n" +
+                                "Switch the Prediction Engine to Hybrid or Geometric to enable " +
+                                "swipe typing on this layout, or switch to a QWERTY layout.",
                             modifier = Modifier.padding(12.dp),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onErrorContainer
@@ -75,46 +100,9 @@ internal fun SettingsActivity.NeuralPredictionSection() {
                         }
                     )
 
-                    SettingsSlider(
-                        title = stringResource(R.string.settings_neural_beam_width_title),
-                        description = stringResource(R.string.settings_neural_beam_width_desc),
-                        value = beamWidth.toFloat(),
-                        valueRange = 1f..20f,
-                        steps = 19,
-                        onValueChange = {
-                            beamWidth = it.toInt()
-                            saveSetting("neural_beam_width", beamWidth)
-                        },
-                        displayValue = beamWidth.toString()
-                    )
-
-                    SettingsSlider(
-                        title = stringResource(R.string.settings_neural_max_length_title),
-                        description = stringResource(R.string.settings_neural_max_length_desc),
-                        value = maxLength.toFloat(),
-                        valueRange = 5f..35f,
-                        steps = 30,
-                        onValueChange = {
-                            maxLength = it.toInt()
-                            saveSetting("neural_max_length", maxLength)
-                        },
-                        displayValue = maxLength.toString()
-                    )
-
-                    SettingsSlider(
-                        title = stringResource(R.string.settings_neural_confidence_title),
-                        description = stringResource(R.string.settings_neural_confidence_desc),
-                        value = confidenceThreshold,
-                        valueRange = 0.0f..0.4f,
-                        steps = 40,
-                        onValueChange = {
-                            confidenceThreshold = it
-                            saveSetting("neural_confidence_threshold", confidenceThreshold)
-                        },
-                        displayValue = "%.3f".format(confidenceThreshold)
-                    )
-
-                    // Full Neural Settings Activity button (batch/greedy/onnx threads moved there)
+                    // Beam Width / Maximum Word Length / Confidence Threshold moved into the
+                    // Full Neural Settings screen (they were duplicated there already) — the
+                    // main section stays engine-agnostic.
                     Button(
                         onClick = { openNeuralSettings() },
                         modifier = Modifier

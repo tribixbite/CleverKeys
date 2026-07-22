@@ -118,7 +118,7 @@
     <string name="settings_description">Configura los ajustes del teclado para una experiencia de escritura óptima.</string>
 
     <!-- Neural Prediction Section -->
-    <string name="settings_section_neural">🧠 Predicción con red neuronal</string>
+    <string name="settings_section_neural">👆 Escritura deslizante</string>
     <string name="settings_neural_beam_width_title">Ancho del haz</string>
     <string name="settings_neural_beam_width_desc">Número de candidatos de predicción (1–20). Mayor = más preciso.</string>
     <string name="settings_neural_max_length_title">Longitud máxima de palabra</string>

@@ -245,6 +245,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     }
 
     // Settings state for reactive UI
+    internal var swipeEngineMode by mutableStateOf("neural")
     internal var beamWidth by mutableIntStateOf(6)
     internal var maxLength by mutableIntStateOf(20)
     internal var confidenceThreshold by mutableFloatStateOf(0.01f)

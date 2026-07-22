@@ -422,11 +422,13 @@ class InputCoordinator(
         contextTracker.clearLastAutoInsertedWord()
 
         if (!config.swipe_typing_enabled) return
-        // WP9 R-1 step 7: layout-routed engine selection. QWERTY-Latin → neural (the #9
-        // QWERTY-trained-model gate, unchanged); non-QWERTY → geometric when enabled, else
-        // no swipe (today's behavior). One engine owns each swipe end-to-end; both feed the
-        // same SuggestionHandler seam downstream.
-        when (SwipeEngineRouter.route(keyboardView.getKeyboard(), config.geometric_swipe_engine)) {
+        // WP9 R-1 step 7: mode+layout-routed engine selection (swipe_engine_mode pref —
+        // neural = QWERTY-only swipe as before; hybrid = neural on QWERTY + geometric
+        // elsewhere; geometric = SHARK2 everywhere). One engine owns each swipe end-to-end;
+        // both feed the same SuggestionHandler seam downstream.
+        when (SwipeEngineRouter.route(
+            keyboardView.getKeyboard(), SwipeEngineRouter.Mode.fromPref(config.swipe_engine_mode)
+        )) {
             SwipeEngineRouter.Engine.NONE -> return
             SwipeEngineRouter.Engine.GEOMETRIC -> {
                 performGeometricSwipeTyping(
@@ -564,12 +566,14 @@ class InputCoordinator(
      * dimensions are the post-layout ones; a no-op unless the router would pick GEOMETRIC.
      */
     fun prewarmGeometricEngine() {
-        if (!config.swipe_typing_enabled || !config.geometric_swipe_engine) return
+        if (!config.swipe_typing_enabled) return
+        val mode = SwipeEngineRouter.Mode.fromPref(config.swipe_engine_mode)
+        if (mode == SwipeEngineRouter.Mode.NEURAL) return
         keyboardView.post {
             val keyboard = keyboardView.getKeyboard() ?: return@post
-            if (SwipeEngineRouter.route(keyboard, config.geometric_swipe_engine) !=
-                SwipeEngineRouter.Engine.GEOMETRIC
-            ) return@post
+            if (SwipeEngineRouter.route(keyboard, mode) != SwipeEngineRouter.Engine.GEOMETRIC) {
+                return@post
+            }
             val params = keyboardView.geometryParams() ?: return@post
             val frameW = keyboardView.width.toFloat()
             val frameH = keyboardView.height.toFloat()

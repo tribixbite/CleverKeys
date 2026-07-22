@@ -28,6 +28,9 @@ internal fun SettingsActivity.handlePreferenceChanged(sharedPreferences: SharedP
             "swipe_typing_enabled" -> {
                 swipeTypingEnabled = prefs.getBoolean(key, Defaults.SWIPE_TYPING_ENABLED)
             }
+            "swipe_engine_mode" -> {
+                swipeEngineMode = prefs.getSafeString(key, Defaults.SWIPE_ENGINE_MODE)
+            }
             "neural_beam_width" -> {
                 beamWidth = prefs.getInt(key, Defaults.NEURAL_BEAM_WIDTH)
             }
@@ -226,6 +229,7 @@ internal fun SettingsActivity.loadCurrentSettings() {
         currentLayoutName = currentLayout?.name ?: "System"
 
         // Neural prediction settings
+        swipeEngineMode = prefs.getSafeString("swipe_engine_mode", Defaults.SWIPE_ENGINE_MODE)
         beamWidth = prefs.getSafeInt("neural_beam_width", Defaults.NEURAL_BEAM_WIDTH)
         maxLength = prefs.getSafeInt("neural_max_length", Defaults.NEURAL_MAX_LENGTH)
         confidenceThreshold = prefs.getSafeFloat("neural_confidence_threshold", Defaults.NEURAL_CONFIDENCE_THRESHOLD)
@@ -476,6 +480,7 @@ internal fun SettingsActivity.updateConfigFromSettings() {
         // was the root cause of #154 (it forced every user into the slow createOneShot path).
         config.apply {
             keyboardHeightPercent = keyboardHeight
+            swipe_engine_mode = swipeEngineMode
             neural_beam_width = beamWidth
             neural_max_length = maxLength
             neural_confidence_threshold = confidenceThreshold

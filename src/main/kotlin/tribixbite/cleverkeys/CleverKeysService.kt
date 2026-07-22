@@ -683,7 +683,7 @@ class CleverKeysService : InputMethodService(),
         // checkSwipeSupportForCurrentLayout()
         // WP9 R-1 step 8: background-warm the geometric engine when this layout routes to it,
         // so the first non-QWERTY swipe avoids the synchronous template-index build. No-op
-        // unless swipe typing + the geometric_swipe_engine pref are both enabled.
+        // unless swipe typing is on AND swipe_engine_mode is hybrid/geometric.
         if (::_inputCoordinator.isInitialized) _inputCoordinator.prewarmGeometricEngine()
         _keyeventhandler.started(info)
 

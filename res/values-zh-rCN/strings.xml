@@ -115,7 +115,7 @@
     <string name="settings_description">配置键盘设置以获得最佳输入体验。</string>
 
     <!-- Neural Prediction Section -->
-    <string name="settings_section_neural">🧠 神经网络预测</string>
+    <string name="settings_section_neural">👆 滑动输入</string>
     <string name="settings_neural_beam_width_title">束宽</string>
     <string name="settings_neural_beam_width_desc">预测候选数量（1–20）。数值越大越准确。</string>
     <string name="settings_neural_max_length_title">单词最大长度</string>

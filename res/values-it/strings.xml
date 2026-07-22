@@ -140,7 +140,7 @@
     <string name="settings_description">Configura le impostazioni della tastiera per un\'esperienza di digitazione ottimale.</string>
 
     <!-- Neural Prediction Section -->
-    <string name="settings_section_neural">🧠 Previsione con rete neurale</string>
+    <string name="settings_section_neural">👆 Digitazione a scorrimento</string>
     <string name="settings_neural_beam_width_title">Larghezza del fascio</string>
     <string name="settings_neural_beam_width_desc">Numero di candidati di previsione (1–20). Più alto = più preciso.</string>
     <string name="settings_neural_max_length_title">Lunghezza massima parola</string>

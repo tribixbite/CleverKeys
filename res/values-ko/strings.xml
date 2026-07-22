@@ -117,7 +117,7 @@
     <string name="settings_description">최적의 입력 환경을 위해 키보드 설정을 구성합니다.</string>
 
     <!-- Neural Prediction Section -->
-    <string name="settings_section_neural">🧠 신경망 예측</string>
+    <string name="settings_section_neural">👆 스와이프 입력</string>
     <string name="settings_neural_beam_width_title">빔 너비</string>
     <string name="settings_neural_beam_width_desc">예측 후보 수(1~20). 클수록 더 정확합니다.</string>
     <string name="settings_neural_max_length_title">최대 단어 길이</string>

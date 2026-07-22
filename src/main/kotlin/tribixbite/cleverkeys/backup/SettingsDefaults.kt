@@ -250,8 +250,9 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     "termux_mode_enabled" to PrefValue.Bool(Defaults.TERMUX_MODE_ENABLED),
     // NOTE: unified_swipe_pipeline (WP9 step-4 QA escape hatch) was removed in step 6 —
     // now in SettingsValidation.DEPRECATED_KEYS (no reader).
-    // WP9 R-1 step 7: geometric swipe engine for non-QWERTY layouts (experimental, no UI yet).
-    "geometric_swipe_engine" to PrefValue.Bool(Defaults.GEOMETRIC_SWIPE_ENGINE),
+    // WP9 R-1 step 7 (v1.1): swipe engine mode selector ("neural" | "hybrid" | "geometric").
+    // Supersedes the short-lived (never-released) geometric_swipe_engine Boolean.
+    "swipe_engine_mode" to PrefValue.Str(Defaults.SWIPE_ENGINE_MODE),
     "swipe_debug_detailed_logging" to PrefValue.Bool(Defaults.SWIPE_DEBUG_DETAILED_LOGGING),
     "swipe_debug_show_raw_output" to PrefValue.Bool(Defaults.SWIPE_DEBUG_SHOW_RAW_OUTPUT),
     "swipe_show_debug_scores" to PrefValue.Bool(Defaults.SWIPE_SHOW_DEBUG_SCORES),

@@ -115,7 +115,7 @@
     <string name="settings_description">I-configure ang mga setting ng iyong keyboard para sa pinakamahusay na karanasan sa pagtatype.</string>
 
     <!-- Neural Prediction Section -->
-    <string name="settings_section_neural">🧠 Neural Network Prediction</string>
+    <string name="settings_section_neural">👆 Swipe Typing</string>
     <string name="settings_neural_beam_width_title">Beam Width</string>
     <string name="settings_neural_beam_width_desc">Bilang ng mga prediction candidate (1–20). Mas mataas = mas tumpak.</string>
     <string name="settings_neural_max_length_title">Pinakamahabang Salita</string>

@@ -110,7 +110,7 @@
     <string name="settings_description">Állítsa be a billentyűzetet az optimális gépelési élményhez.</string>
 
     <!-- Neural Prediction Section -->
-    <string name="settings_section_neural">🧠 Neurális hálózati előrejelzés</string>
+    <string name="settings_section_neural">👆 Húzásos gépelés</string>
     <string name="settings_neural_beam_width_title">Nyalábszélesség</string>
     <string name="settings_neural_beam_width_desc">Az előrejelzési jelöltek száma (1–20). Magasabb = pontosabb.</string>
     <string name="settings_neural_max_length_title">Maximális szóhossz</string>

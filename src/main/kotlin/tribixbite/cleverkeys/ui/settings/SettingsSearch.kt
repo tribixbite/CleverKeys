@@ -75,7 +75,7 @@ internal fun SettingsActivity.settingSlug(title: String): String =
 
 /** Display name shown as "in <section>" for an auto-derived (generated) search result. */
 internal fun SettingsActivity.sectionDisplayName(sectionKey: String): String = when (sectionKey) {
-    "neural" -> "Neural Prediction"
+    "neural" -> "Swipe Typing"
     "appearance" -> "Appearance"
     "swipeTrail" -> "Swipe Trail"
     "input" -> "Word Prediction"

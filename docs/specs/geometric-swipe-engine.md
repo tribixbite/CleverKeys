@@ -3,7 +3,7 @@
 ## Feature Overview
 **Feature Name**: Geometric Swipe Engine (`swipe.geometric`) — dictionary-driven, zero-training swipe decoder for arbitrary layouts and scripts
 **Priority**: P1
-**Status**: Implemented AND WIRED (WP9 R-1 steps 7-9 landed 2026-07-21: `swipe/SwipeEngineRouter` + `swipe/GeometricEngineAdapter` + `geometric_swipe_engine` pref, default OFF; see `docs/audit/remediation/3-core-ime.md` § "Steps 7-9 — LANDED") — all 6 phases committed and green; as-built deltas in § As-Built Notes (2026-07-20)
+**Status**: Implemented AND WIRED (WP9 R-1 steps 7-9 landed 2026-07-21: `swipe/SwipeEngineRouter` + `swipe/GeometricEngineAdapter` + `swipe_engine_mode` pref (neural|hybrid|geometric, default neural; Settings → Swipe Typing → Prediction Engine); see `docs/audit/remediation/3-core-ime.md` § "Steps 7-9 — LANDED") — all 6 phases committed and green; as-built deltas in § As-Built Notes (2026-07-20)
 **Target Version**: v1.6.x (engine + pure-JVM tests only; router/wiring deferred to WP9)
 
 ### Summary
