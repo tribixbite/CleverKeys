@@ -370,7 +370,7 @@ class CleverKeysService : InputMethodService(),
                 if (intent?.action == ACTION_THEME_CHANGED) {
                     // 1. Refresh config to pick up new values (colors, etc.)
                     _configManager.refresh(resources)
-                    
+
                     // 2. FORCE view recreation.
                     // Even if the theme ID hasn't changed (e.g. editing custom theme colors),
                     // we need to recreate the view to pick up the new colors.
@@ -564,6 +564,17 @@ class CleverKeysService : InputMethodService(),
     private fun refresh_config() {
         // Delegate to ConfigurationManager, which will trigger listener callbacks
         _configManager.refresh(resources)
+    }
+
+    /**
+    * Recalculate the keyboard height based on current orientation/foldable state
+    * and apply it to the keyboard view. Call this whenever the height might have changed.
+    */
+    private fun refreshKeyboardHeight() {
+        if (!::_neuralLayoutBridge.isInitialized) return
+        val height = _neuralLayoutBridge.calculateDynamicKeyboardHeight()
+        _keyboardView.layoutParams?.height = height.toInt()
+        _keyboardView.requestLayout()
     }
 
     // ConfigChangeListener implementation (v1.32.345)
@@ -774,6 +785,7 @@ class CleverKeysService : InputMethodService(),
         // Without this, landscape margins are never applied because Config.orientation_landscape
         // isn't updated when the device rotates
         refresh_config()
+        refreshKeyboardHeight()
     }
 
     override fun onUpdateSelection(
@@ -871,6 +883,12 @@ class CleverKeysService : InputMethodService(),
         // triggers preference changes before keyboard has been used)
         if (!::_layoutBridge.isInitialized) {
             return
+        }
+
+        if (key in setOf("keyboard_height", "keyboard_height_landscape",
+                     "keyboard_height_unfolded", "keyboard_height_landscape_unfolded")) {
+            refreshKeyboardHeight()
+            // Do NOT return here – let the existing handler also run if needed
         }
 
         // Initialize handler lazily (depends on components that may not exist yet)
