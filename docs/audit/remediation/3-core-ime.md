@@ -269,6 +269,15 @@ loudly) + PipelineCharacterizationTest 26/26; **FULL ew-cli suite 1453/1453, 0 s
   Decode runs on the adapter's own `PredictionTaskRunner` thread (last-swipe-wins), results
   post to main → `IC.handlePredictionResults` → the step-6 `SH.handleSwipePredictionResults`
   seam, inheriting password guard/possessives/shift transform/THE commit engine for free.
+- **Step 8 addendum (2026-07-23, field report)**: contraction display mapping added to the
+  adapter — geo decodes the dictionary's apostrophe-free ALIAS forms ("theyd", "dont"; the
+  canonical "they'd" is untypeable, apostrophe is not a key) and now maps them at emission
+  via `ContractionManager.getNonPairedMapping` (per-language, lazily loaded on the decode
+  thread, post-map dedupe) — the exact mirror of the neural vocab's
+  `displayWord = nonPairedContractions[word]` (OptimizedVocabulary:448). Non-paired only:
+  paired bases ("its") are real words and stay as decoded. This was the one addendum step-9
+  parity pin ("geo emits `dont` — assert the bar shows the mapped form") missing from the
+  first oracle round; `oracle_geo_contractionAlias_displaysApostropheForm` now pins it.
 - **Step 9**: `SwipeEngineRouterTest` (9 JVM routing pins incl. the Greek-QWERTY trap) +
   `GeometricSwipeOracleTest` (instrumented, Dvorak+bundled-en so no langpack import needed):
   real-engine decode pin ("world" in top-3), seam commit + NEURAL_SWIPE tracking, password

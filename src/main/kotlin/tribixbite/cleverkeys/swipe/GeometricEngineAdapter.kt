@@ -7,6 +7,7 @@ import android.os.Looper
 import android.util.Log
 import org.json.JSONObject
 import tribixbite.cleverkeys.BuildConfig
+import tribixbite.cleverkeys.ContractionManager
 import tribixbite.cleverkeys.DirectBootAwarePreferences
 import tribixbite.cleverkeys.KeyValue
 import tribixbite.cleverkeys.KeyboardData
@@ -87,6 +88,46 @@ class GeometricEngineAdapter(private val context: Context) {
     @Volatile
     private var dictionaryMemo: GeometricDictionary? = null
 
+    // ── Contraction display mapping (parity with the neural vocab layer) ────────────
+    // The dictionary deliberately contains apostrophe-free contraction ALIASES ("theyd",
+    // "dont") because the canonical forms ("they'd") are untypeable — apostrophe is not a
+    // swipe key, so LayoutProjection tier-5 skips them. The neural engine decodes the same
+    // alias forms and maps them at emission (OptimizedVocabulary:448 `displayWord =
+    // nonPairedContractions[word]`); this is the geometric mirror of that step. Non-paired
+    // mapping ONLY — paired bases ("its", "well") are real words and stay as decoded.
+    private var contractionManager: ContractionManager? = null
+    private var contractionLanguage: String? = null
+
+    /** Lazily builds/reloads the contraction mapping for [language] (decode thread only). */
+    private fun contractionsFor(language: String): ContractionManager {
+        val existing = contractionManager
+        if (existing != null && contractionLanguage == language) return existing
+        val cm = existing ?: ContractionManager(context)
+        cm.loadMappings() // clears + loads the bundled (en) base set
+        if (language != "en") cm.loadLanguageContractions(language)
+        contractionManager = cm
+        contractionLanguage = language
+        return cm
+    }
+
+    /** Maps alias forms to display forms ("theyd" → "they'd"), deduping post-map collisions. */
+    private fun applyContractionDisplay(result: PredictionResult, language: String): PredictionResult {
+        if (result.words.isEmpty()) return result
+        val cm = contractionsFor(language)
+        val words = ArrayList<String>(result.words.size)
+        val scores = ArrayList<Int>(result.scores.size)
+        val seen = HashSet<String>(result.words.size * 2)
+        for (i in result.words.indices) {
+            val mapped = cm.getNonPairedMapping(result.words[i]) ?: result.words[i]
+            // Keep the first (highest-scored) occurrence if mapping causes a collision.
+            if (seen.add(mapped.lowercase(Locale.ROOT))) {
+                words.add(mapped)
+                scores.add(result.scores.getOrElse(i) { 0 })
+            }
+        }
+        return PredictionResult(words, scores)
+    }
+
     /**
      * Decode a completed swipe on a background thread and deliver the engine's
      * [PredictionResult] to [onResult] ON THE MAIN THREAD. Delivers an EMPTY result when
@@ -123,8 +164,11 @@ class GeometricEngineAdapter(private val context: Context) {
                 val result = if (geometry == null || dictionary == null) {
                     PredictionResult(emptyList(), emptyList())
                 } else {
-                    engine.decode(
-                        GeometricSwipeRequest(points, frameWidthPx, frameHeightPx, geometry, dictionary)
+                    applyContractionDisplay(
+                        engine.decode(
+                            GeometricSwipeRequest(points, frameWidthPx, frameHeightPx, geometry, dictionary)
+                        ),
+                        language
                     )
                 }
                 if (!Thread.currentThread().isInterrupted) {

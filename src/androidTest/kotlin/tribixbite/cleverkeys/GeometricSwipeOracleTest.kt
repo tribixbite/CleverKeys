@@ -338,6 +338,34 @@ class GeometricSwipeOracleTest {
         }
     }
 
+    /**
+     * Parity pin (contraction display mapping — the addendum's step-9 pin, added after a
+     * field report): swiping the alias key-path "theyd" must surface the display form
+     * "they'd" in the results, exactly as the neural vocab maps at emission
+     * (OptimizedVocabulary `displayWord = nonPairedContractions[word]`). The canonical
+     * "they'd" is untypeable in projection (apostrophe is not a key), so the dictionary's
+     * alias entry decodes and the adapter maps it.
+     */
+    @Test
+    fun oracle_geo_contractionAlias_displaysApostropheForm() {
+        val kd = loadLayout("latn_dvorak")
+        val params = paramsFor(kd)
+        val adapter = GeometricEngineAdapter(context)
+        try {
+            val result = decodeBlocking(adapter, kd, params, "theyd")
+            assertTrue(
+                "geo results must contain the mapped form \"they'd\". Got: ${result.words.take(8)}",
+                result.words.any { it.equals("they'd", ignoreCase = true) }
+            )
+            assertFalse(
+                "the raw alias \"theyd\" must NOT appear post-mapping. Got: ${result.words.take(8)}",
+                result.words.any { it.equals("theyd", ignoreCase = true) }
+            )
+        } finally {
+            adapter.shutdown()
+        }
+    }
+
     /** Perf gate: p95 warm adapter+engine round-trip must stay far under budget. */
     @Test
     fun oracle_geo_perf_p95WarmDecodeUnderBudget() {
