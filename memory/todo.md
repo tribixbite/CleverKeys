@@ -269,8 +269,27 @@ pure-JVM `swipe.geometric` package; NOT wired into live pipeline — WP9 stays d
   custom/disabled overlay w/ content-hash versioning, background warmup from onStartInputView);
   `geometric_swipe_engine` pref default OFF (no UI — debug-pref pattern). Oracle:
   SwipeEngineRouterTest (9 JVM) + GeometricSwipeOracleTest (6 instrumented incl. p95<150ms gate).
-- **NEXT (R-1)**: Termux-deletion DECISION (user-visible, separate) remains open; phase-2
-  QWERTY-en rank-merge when justified by usage.
+- **VERIFICATION 2026-07-23 (neural + tap contraction audit)**: NEURAL = defended (v1.1.88
+  clears en contractions for non-en; freq>0.65 replace-vs-variant guard; paired guard at
+  OptimizedVocabulary:463; minor: cached path clears en for non-en but non-cached keeps en
+  fallback — guard covers both). TAP = two real bugs found:
+  (a) FIXED: paired bases (well/were/hell/girls/states) polluted the non-paired map from BOTH
+  sources → SH's transform REPLACED those real words in the bar (typing "wer" showed "we're",
+  no "were"). ContractionManager.loadMappings now reclassifies paired bases out of nonPaired
+  (contract-restoring); ContractionManagerTest pin flipped.
+  (b) OPEN [P2]: non-en tap typing — PreferenceUIUpdateHandler ALWAYS loads en contractions
+  for every language, and SH's updatePredictionsForCurrentWord injects/transforms via
+  getNonPairedMapping UNGUARDED → German typing "im" (16th most common de word) shows "I'm"
+  top + loses "im"; same for fr/it collisions NOT in the paired map. Geo path is already
+  immune (ContractionOverlay ordinal guard). Design: mirror OptimizedVocabulary's isolation —
+  SH's CM should load primary+secondary languages' contractions ONLY (en only when en is one
+  of them), OR thread a WordPredictor frequency guard (scale 100-10000; neural 0.65 ≈ 6500)
+  into the SH transform. Needs its own oracle round (hot typing path; multilang
+  primary/secondary matrix; BackspaceUndoTest scans reference the injection patterns).
+- **PROPOSED**: hybrid engine rank fusion (per-swipe RRF merge on QWERTY, wait-both timing,
+  neural-timeout→geo fallback) — `docs/audit/remediation-plans/hybrid-engine-rank-fusion.md`;
+  offline corpus-replay go/no-go gate BEFORE wiring; awaiting user sign-off.
+- **NEXT (R-1)**: Termux-deletion DECISION (user-visible, separate) remains open.
 - **WP8 FULLY COMPLETE** (bd8aafb3): the deferred index-sensitive batch — 285 control
   titles/descriptions/section headers/ColorAttributeRow labels/format-arg strings extracted
   (search index byte-identical, 134 entries), translated into all 21 locales (~5,985 entries,

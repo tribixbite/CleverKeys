@@ -77,6 +77,22 @@ class ContractionManager(private val context: Context) {
                 loadPairedContractions()
             }
 
+            // 2026-07-23 (multilingual audit): COMPLETE the paired-classification fix.
+            // Both sources put paired bases into the non-paired map (the shipped binary
+            // carries well→we'll, were→we're, hell→he'll, girls→girls', states→states'),
+            // which violates getNonPairedMapping's documented contract ("only where the
+            // apostrophe-free form is not a valid word") and made the typing pipeline
+            // REPLACE those real words in the suggestion bar (typing "wer" showed "we're"
+            // and no "were"). Paired bases belong ONLY in pairedContractions, where
+            // consumers inject the variant ALONGSIDE the base instead of replacing it.
+            val pairedBases = pairedContractions.keys.intersect(nonPairedContractions.keys)
+            if (pairedBases.isNotEmpty()) {
+                pairedBases.forEach { nonPairedContractions.remove(it) }
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                    Log.d(TAG, "Reclassified ${pairedBases.size} paired bases out of the non-paired map")
+                }
+            }
+
             Log.d(TAG, "Loaded ${nonPairedContractions.size} non-paired contractions, " +
                     "${knownContractions.size} total known contractions")
         } catch (e: Exception) {

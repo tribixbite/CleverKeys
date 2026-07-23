@@ -121,10 +121,16 @@ class ContractionManagerTest {
     }
 
     @Test
-    fun getNonPairedMappingReturnsValueForWell() {
-        // "well" -> "we'll" is stored as a non-paired mapping in the binary data
-        val result = manager.getNonPairedMapping("well")
-        assertEquals("we'll", result)
+    fun getNonPairedMappingNullForPairedBase() {
+        // ORACLE-FLIP(2026-07-23 multilingual audit): "well" IS a valid word with a
+        // contraction sibling — a PAIRED base. The shipped binary misclassified it into
+        // the non-paired map (violating this method's documented contract), which made
+        // the typing pipeline REPLACE "well"/"were" in the bar. loadMappings now
+        // reclassifies paired bases out of the non-paired map; the mapping lives in
+        // getPairedContractions (asserted below) and consumers inject it ALONGSIDE.
+        assertNull(manager.getNonPairedMapping("well"))
+        assertNull(manager.getNonPairedMapping("were"))
+        assertEquals(listOf("we'll"), manager.getPairedContractions("well"))
     }
 
     // =========================================================================
