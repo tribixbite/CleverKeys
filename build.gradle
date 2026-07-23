@@ -454,6 +454,7 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.swipe.geometric.LayoutGeometryTest',
     // WP9 R-1 step 9: layout-routed engine selection (steps 7-8 wiring)
     'tribixbite.cleverkeys.swipe.SwipeEngineRouterTest',
+    'tribixbite.cleverkeys.swipe.ContractionOverlayTest',
     'tribixbite.cleverkeys.swipe.geometric.GeoPurityDriftTest',
     'tribixbite.cleverkeys.swipe.geometric.CkdtReaderTest',
     'tribixbite.cleverkeys.swipe.geometric.GeoProjectionTest',

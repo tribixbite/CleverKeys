@@ -115,16 +115,25 @@ class GeometricEngineAdapter(private val context: Context) {
     private var geometryMemo: GeometryMemo? = null
 
     // ── Dictionary memo (per language + content-hash version) ───────────────────────
-    @Volatile
-    private var dictionaryMemo: GeometricDictionary? = null
+    /**
+     * The merged dictionary plus its lowercase word → ordinal-rank map. The ordinal map
+     * feeds [ContractionOverlay]'s real-word guard (see its KDoc for the audit numbers):
+     * an alias that ranks among the language's common words must never be replaced.
+     */
+    private class DictMemo(
+        val dictionary: GeometricDictionary,
+        val ordinals: HashMap<String, Int>,
+    )
 
-    // ── Contraction display mapping (parity with the neural vocab layer) ────────────
-    // The dictionary deliberately contains apostrophe-free contraction ALIASES ("theyd",
-    // "dont") because the canonical forms ("they'd") are untypeable — apostrophe is not a
-    // swipe key, so LayoutProjection tier-5 skips them. The neural engine decodes the same
-    // alias forms and maps them at emission (OptimizedVocabulary:448 `displayWord =
-    // nonPairedContractions[word]`); this is the geometric mirror of that step. Non-paired
-    // mapping ONLY — paired bases ("its", "well") are real words and stay as decoded.
+    @Volatile
+    private var dictionaryMemo: DictMemo? = null
+
+    // ── Contraction display overlay (parity with the neural vocab layer) ────────────
+    // Every dictionary stores contractions as apostrophe-free ALIASES ("theyd", "cest")
+    // because the display forms are untypeable — apostrophe is not a swipe key
+    // (LayoutProjection tier-5 skips them). The overlay mirrors neural's emission logic
+    // (paired-first, real-word-guarded replace-vs-variant); the pure decision matrix
+    // lives in [ContractionOverlay] and is unit-tested in runPureTests.
     private var contractionManager: ContractionManager? = null
     private var contractionLanguage: String? = null
 
@@ -133,28 +142,33 @@ class GeometricEngineAdapter(private val context: Context) {
         val existing = contractionManager
         if (existing != null && contractionLanguage == language) return existing
         val cm = existing ?: ContractionManager(context)
-        cm.loadMappings() // clears + loads the bundled (en) base set
+        // Mirror production loading (PreferenceUIUpdateHandler / ManagerInitializer):
+        // base set (clears), then language-specific, then the extra contractions_en.json
+        // entries — earlier loads win on key collisions, so the active language's own
+        // mappings take precedence over the English extras.
+        cm.loadMappings()
         if (language != "en") cm.loadLanguageContractions(language)
+        cm.loadLanguageContractions("en")
         contractionManager = cm
         contractionLanguage = language
         return cm
     }
 
-    /** Maps alias forms to display forms ("theyd" → "they'd"), deduping post-map collisions. */
-    private fun applyContractionDisplay(result: PredictionResult, language: String): PredictionResult {
+    /** Applies [ContractionOverlay] with this language's mappings + dictionary ranks. */
+    private fun applyContractionDisplay(
+        result: PredictionResult,
+        language: String,
+        ordinals: HashMap<String, Int>,
+    ): PredictionResult {
         if (result.words.isEmpty()) return result
         val cm = contractionsFor(language)
-        val words = ArrayList<String>(result.words.size)
-        val scores = ArrayList<Int>(result.scores.size)
-        val seen = HashSet<String>(result.words.size * 2)
-        for (i in result.words.indices) {
-            val mapped = cm.getNonPairedMapping(result.words[i]) ?: result.words[i]
-            // Keep the first (highest-scored) occurrence if mapping causes a collision.
-            if (seen.add(mapped.lowercase(Locale.ROOT))) {
-                words.add(mapped)
-                scores.add(result.scores.getOrElse(i) { 0 })
-            }
-        }
+        val (words, scores) = ContractionOverlay.apply(
+            words = result.words,
+            scores = result.scores,
+            pairedVariants = { cm.getPairedContractions(it) },
+            nonPairedMapping = { cm.getNonPairedMapping(it) },
+            wordOrdinal = { ordinals[it] },
+        )
         return PredictionResult(words, scores)
     }
 
@@ -190,15 +204,16 @@ class GeometricEngineAdapter(private val context: Context) {
         tasks.cancelAndSubmit {
             try {
                 val geometry = geometryFor(keyboard, params, frameWidthPx, frameHeightPx)
-                val dictionary = if (geometry != null) dictionaryFor(language) else null
-                val result = if (geometry == null || dictionary == null) {
+                val memo = if (geometry != null) dictionaryFor(language) else null
+                val result = if (geometry == null || memo == null) {
                     PredictionResult(emptyList(), emptyList())
                 } else {
                     applyContractionDisplay(
                         engineFor().decode(
-                            GeometricSwipeRequest(points, frameWidthPx, frameHeightPx, geometry, dictionary)
+                            GeometricSwipeRequest(points, frameWidthPx, frameHeightPx, geometry, memo.dictionary)
                         ),
-                        language
+                        language,
+                        memo.ordinals
                     )
                 }
                 if (!Thread.currentThread().isInterrupted) {
@@ -231,8 +246,8 @@ class GeometricEngineAdapter(private val context: Context) {
         tasks.cancelAndSubmit {
             try {
                 val geometry = geometryFor(keyboard, params, frameWidthPx, frameHeightPx) ?: return@cancelAndSubmit
-                val dictionary = dictionaryFor(language) ?: return@cancelAndSubmit
-                val warm = engineFor().warmUp(geometry, dictionary)
+                val memo = dictionaryFor(language) ?: return@cancelAndSubmit
+                val warm = engineFor().warmUp(geometry, memo.dictionary)
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                     Log.d(
                         TAG,
@@ -401,7 +416,7 @@ class GeometricEngineAdapter(private val context: Context) {
 
     // ═══════════════════════════ Dictionary conversion ═══════════════════════════
 
-    private fun dictionaryFor(language: String): GeometricDictionary? {
+    private fun dictionaryFor(language: String): DictMemo? {
         val lang = language.lowercase(Locale.ROOT)
         val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
         val customJson = prefs.getString(LanguagePreferenceKeys.customWordsKey(lang), "{}") ?: "{}"
@@ -417,7 +432,7 @@ class GeometricEngineAdapter(private val context: Context) {
         val version = contentVersion(sourceId, customJson, disabled)
 
         dictionaryMemo?.let { memo ->
-            if (memo.language == lang && memo.version == version) return memo
+            if (memo.dictionary.language == lang && memo.dictionary.version == version) return memo
         }
 
         val base = try {
@@ -436,8 +451,15 @@ class GeometricEngineAdapter(private val context: Context) {
         }
 
         val merged = mergeUserWords(base, customJson, disabled, lang, version)
-        dictionaryMemo = merged
-        return merged
+        // Lowercase word → ordinal rank, for ContractionOverlay's real-word guard. First
+        // occurrence wins (ties can only come from case-variant duplicates).
+        val ordinals = HashMap<String, Int>(merged.size * 2)
+        for (i in 0 until merged.size) {
+            ordinals.putIfAbsent(merged.word(i).lowercase(Locale.ROOT), i)
+        }
+        val built = DictMemo(merged, ordinals)
+        dictionaryMemo = built
+        return built
     }
 
     /**

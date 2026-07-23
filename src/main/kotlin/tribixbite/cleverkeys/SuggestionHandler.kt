@@ -385,9 +385,16 @@ class SuggestionHandler(
         // D1: augment the bar list with possessive forms (transient-style augment reused from the tap
         // path). Kept aligned with scores; possessives appended at the end so the top prediction is
         // unchanged and the auto-insert target below is still the highest-scoring word.
+        // ENGLISH ONLY (2026-07-23): generatePossessive appends English "'s" morphology —
+        // on the geometric path's non-English languages (Cyrillic ЙЦУКЕН, French AZERTY…)
+        // it would fabricate junk like "maison's"/"дом's". Gate on the ACTIVE dictionary
+        // language (null → "en" preserves the pre-gate behavior in en-only contexts).
         val barWords = transformedPredictions.toMutableList()
         val barScores = (scores ?: emptyList()).toMutableList()
-        augmentPredictionsWithPossessives(barWords, barScores)
+        val activeLanguage = predictionCoordinator.getDictionaryManager()?.getCurrentLanguage() ?: "en"
+        if (activeLanguage == "en") {
+            augmentPredictionsWithPossessives(barWords, barScores)
+        }
 
         suggestionBar?.let { bar ->
             bar.setShowDebugScores(config.swipe_show_debug_scores)

@@ -278,6 +278,28 @@ loudly) + PipelineCharacterizationTest 26/26; **FULL ew-cli suite 1453/1453, 0 s
   paired bases ("its") are real words and stay as decoded. This was the one addendum step-9
   parity pin ("geo emits `dont` — assert the bar shows the mapped form") missing from the
   first oracle round; `oracle_geo_contractionAlias_displaysApostropheForm` now pins it.
+- **Step 8 addendum 2 (2026-07-23, multilingual contraction/possessive audit)**: measured
+  audit of all 7 bundled CKDT bins: NO dictionary in ANY language stores apostrophe words —
+  aliases are apostrophe-free by design, display forms exist only as runtime mappings, and
+  possessives are always generated dynamically (never stored; WordPredictor:1976). The
+  first-pass unconditional alias replacement was a SEVERE latent multilingual bug: de "im"
+  (ordinal 16 — 16th most common German word), fr la/les/dans/ma/dont (≤ 285), it del/loro/ai
+  would all have been rewritten to English contractions. Fixed by `swipe/ContractionOverlay`
+  (pure, 12 JVM tests): paired-first (the binary contraction store pollutes the non-paired
+  map — OptimizedVocabulary:463 carries the same guard), then a real-word ordinal guard at
+  1200 (the geo equivalent of neural's `frequency > 0.65`; measured gap: real ≤ 285 vs junk
+  ≥ 1506) choosing keep+variant vs replace, then case-insensitive dedupe. Paired bases now
+  inject their variants ("its" → "its" + "it's" — neural parity). Variants are APPENDED after
+  all engine candidates (on-device the first splice-after-base placement pushed "world" out of
+  the top-3 behind "would"'s variants — replacements keep the base's slot, injections go to
+  the end, matching SH's possessive placement). Adapter loads contractions
+  per production semantics (base + language + en extras) and memoizes a word→ordinal map with
+  the dictionary. ALSO: possessive augmentation at the SH swipe seam is now gated to
+  English — `generatePossessive` is English "'s" morphology and would fabricate "дом's" /
+  "maison's" on the geo path's non-English languages.
+  Known minor (accepted): no geo prewarm on mid-session language toggle (decode falls back
+  synchronously once, 150-400 ms); dictionary memo is single-slot (language toggling re-reads
+  the bin per switch, background thread).
 - **Step 9**: `SwipeEngineRouterTest` (9 JVM routing pins incl. the Greek-QWERTY trap) +
   `GeometricSwipeOracleTest` (instrumented, Dvorak+bundled-en so no langpack import needed):
   real-engine decode pin ("world" in top-3), seam commit + NEURAL_SWIPE tracking, password

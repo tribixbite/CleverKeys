@@ -366,6 +366,33 @@ class GeometricSwipeOracleTest {
         }
     }
 
+    /**
+     * Parity pin (paired contractions, 2026-07-23 overlay): swiping the paired base "its"
+     * must surface BOTH "its" (kept — it is a real word) and the injected variant "it's",
+     * mirroring the neural vocab's contraction-variant emission. Also asserts the base is
+     * NOT replaced (the binary contraction store's paired-into-non-paired pollution must
+     * not leak through — paired-first rule).
+     */
+    @Test
+    fun oracle_geo_pairedBase_keepsWordAndInjectsVariant() {
+        val kd = loadLayout("latn_dvorak")
+        val params = paramsFor(kd)
+        val adapter = GeometricEngineAdapter(context)
+        try {
+            val result = decodeBlocking(adapter, kd, params, "its")
+            assertTrue(
+                "geo results must keep the real word \"its\". Got: ${result.words.take(8)}",
+                result.words.any { it.equals("its", ignoreCase = true) }
+            )
+            assertTrue(
+                "geo results must inject the paired variant \"it's\". Got: ${result.words.take(8)}",
+                result.words.any { it.equals("it's", ignoreCase = true) }
+            )
+        } finally {
+            adapter.shutdown()
+        }
+    }
+
     /** Perf gate: p95 warm adapter+engine round-trip must stay far under budget. */
     @Test
     fun oracle_geo_perf_p95WarmDecodeUnderBudget() {
