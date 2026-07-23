@@ -59,7 +59,9 @@
       ALL LANDED 2026-07-21, plus same-day v1.1: `swipe_engine_mode` selector
       (neural|hybrid|geometric, default neural) with full Settings UI — section renamed
       "👆 Swipe Typing" (22 locales), Prediction Engine dropdown, neural sliders moved to
-      Full Neural Settings only. Remaining: phase-2 QWERTY-en rank-merge experiment.
+      Full Neural Settings only; + Full Geometric Settings screen (GeometricSettingsActivity:
+      geo_max_results / geo_frequency_weight / geo_endpoint_inset_kw, adapter rebuilds engine
+      on change). Remaining: phase-2 QWERTY-en rank-merge experiment.
 - Hard-won this round (also in project memory `geo-engine-datasets` file): HF datasets-server
   `/filter?where="col"='val'` endpoint slices big datasets server-side (rare-slice fetch in
   ~30 reqs vs 592); FUTO swipe-5 = multi-layout run (layout/language/dual_finger cols +

@@ -16,8 +16,10 @@ import tribixbite.cleverkeys.PredictionResult
 import tribixbite.cleverkeys.PredictionTaskRunner
 import tribixbite.cleverkeys.a11y.KeyboardGeometry
 import tribixbite.cleverkeys.swipe.geometric.ArrayBackedDictionary
+import tribixbite.cleverkeys.Config
 import tribixbite.cleverkeys.swipe.geometric.CkdtDictionaryReader
 import tribixbite.cleverkeys.swipe.geometric.GeometricDictionary
+import tribixbite.cleverkeys.swipe.geometric.GeometricEngineConfig
 import tribixbite.cleverkeys.swipe.geometric.GeometricSwipeEngine
 import tribixbite.cleverkeys.swipe.geometric.GeometricSwipeRequest
 import tribixbite.cleverkeys.swipe.geometric.LayoutGeometry
@@ -68,9 +70,37 @@ class GeometricEngineAdapter(private val context: Context) {
         private const val LAST_CORNER_SLOT = 8
     }
 
-    private val engine = GeometricSwipeEngine()
     private val tasks = PredictionTaskRunner()
     private val mainHandler = Handler(Looper.getMainLooper())
+
+    // ── Engine (rebuilt when the user-tunable knobs change) ─────────────────────────
+    // The three Full Geometric Settings knobs are baked into the immutable
+    // GeometricEngineConfig, so a knob change requires a fresh engine (and with it a fresh
+    // TemplateCache — the next decode/warmUp re-warms in background; settings changes are
+    // rare, so the occasional rebuild is fine). All other knobs stay at the calibrated
+    // defaults. Accessed only on the adapter's single background thread.
+    private var engineInstance: GeometricSwipeEngine? = null
+    private var engineKnobs: Triple<Int, Float, Float>? = null
+
+    private fun engineFor(): GeometricSwipeEngine {
+        val config = Config.globalConfig()
+        val knobs = Triple(
+            config.geo_max_results.coerceIn(1, 32),
+            config.geo_frequency_weight.coerceIn(0f, 1f),
+            config.geo_endpoint_inset_kw.coerceIn(0f, 2f),
+        )
+        engineInstance?.let { if (engineKnobs == knobs) return it }
+        val built = GeometricSwipeEngine(
+            GeometricEngineConfig(
+                maxResults = knobs.first,
+                frequencyWeight = knobs.second,
+                endpointInsetKw = knobs.third,
+            )
+        )
+        engineInstance = built
+        engineKnobs = knobs
+        return built
+    }
 
     // ── Geometry memo (per immutable KeyboardData instance + frame + params) ────────
     private class GeometryMemo(
@@ -165,7 +195,7 @@ class GeometricEngineAdapter(private val context: Context) {
                     PredictionResult(emptyList(), emptyList())
                 } else {
                     applyContractionDisplay(
-                        engine.decode(
+                        engineFor().decode(
                             GeometricSwipeRequest(points, frameWidthPx, frameHeightPx, geometry, dictionary)
                         ),
                         language
@@ -202,7 +232,7 @@ class GeometricEngineAdapter(private val context: Context) {
             try {
                 val geometry = geometryFor(keyboard, params, frameWidthPx, frameHeightPx) ?: return@cancelAndSubmit
                 val dictionary = dictionaryFor(language) ?: return@cancelAndSubmit
-                val warm = engine.warmUp(geometry, dictionary)
+                val warm = engineFor().warmUp(geometry, dictionary)
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                     Log.d(
                         TAG,

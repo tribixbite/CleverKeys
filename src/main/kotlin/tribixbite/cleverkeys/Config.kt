@@ -311,6 +311,12 @@ object Defaults {
     // the long-standing default), "hybrid" (neural on QWERTY + geometric elsewhere), or
     // "geometric" (SHARK2 on all layouts). Settings → Swipe Typing → Prediction Engine.
     const val SWIPE_ENGINE_MODE = "neural"
+    // Full Geometric Settings — the three user-tunable geo knobs (defaults MUST equal
+    // GeometricEngineConfig's; the rest of the engine's 28 knobs stay code-only because
+    // they are calibrated against the spec's measured accuracy floors).
+    const val GEO_MAX_RESULTS = 10           // ranked candidates emitted (bar length)
+    const val GEO_FREQUENCY_WEIGHT = 0.12f   // λ_f: common-words vs shape-fidelity bias
+    const val GEO_ENDPOINT_INSET_KW = 0.30f  // sloppy start/end tolerance (key-widths)
     const val AUTO_SPACE_AFTER_SUGGESTION = true  // Add trailing space after selecting suggestion
     const val AUTO_SPACE_BEFORE_SUGGESTION = true  // Add leading space before tapped suggestion
     const val BACKSPACE_UNDO_SWIPE = true  // Backspace after swipe deletes entire swiped word
@@ -612,6 +618,10 @@ class Config private constructor(
     @JvmField var swipe_debug_detailed_logging = false
     // WP9 R-1 step 7 (v1.1): swipe engine mode — "neural" | "hybrid" | "geometric".
     @JvmField var swipe_engine_mode = Defaults.SWIPE_ENGINE_MODE
+    // Full Geometric Settings knobs (read by GeometricEngineAdapter per decode).
+    @JvmField var geo_max_results = Defaults.GEO_MAX_RESULTS
+    @JvmField var geo_frequency_weight = Defaults.GEO_FREQUENCY_WEIGHT
+    @JvmField var geo_endpoint_inset_kw = Defaults.GEO_ENDPOINT_INSET_KW
     @JvmField var swipe_debug_show_raw_output = false
     @JvmField var swipe_show_raw_beam_predictions = false
     @JvmField var termux_mode_enabled = false
@@ -896,6 +906,9 @@ class Config private constructor(
         backspace_undo_autocorrect = _prefs.getBoolean("backspace_undo_autocorrect", Defaults.BACKSPACE_UNDO_AUTOCORRECT)
         swipe_debug_detailed_logging = _prefs.getBoolean("swipe_debug_detailed_logging", Defaults.SWIPE_DEBUG_DETAILED_LOGGING)
         swipe_engine_mode = safeGetString(_prefs, "swipe_engine_mode", Defaults.SWIPE_ENGINE_MODE)
+        geo_max_results = safeGetInt(_prefs, "geo_max_results", Defaults.GEO_MAX_RESULTS)
+        geo_frequency_weight = safeGetFloat(_prefs, "geo_frequency_weight", Defaults.GEO_FREQUENCY_WEIGHT)
+        geo_endpoint_inset_kw = safeGetFloat(_prefs, "geo_endpoint_inset_kw", Defaults.GEO_ENDPOINT_INSET_KW)
         swipe_debug_show_raw_output = _prefs.getBoolean("swipe_debug_show_raw_output", Defaults.SWIPE_DEBUG_SHOW_RAW_OUTPUT)
         swipe_show_raw_beam_predictions = _prefs.getBoolean("swipe_show_raw_beam_predictions", Defaults.SWIPE_SHOW_RAW_BEAM_PREDICTIONS)
 

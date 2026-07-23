@@ -8,6 +8,7 @@ import tribixbite.cleverkeys.BackupRestoreActivity
 import tribixbite.cleverkeys.DictionaryManagerActivity
 import tribixbite.cleverkeys.ExtraKeysConfigActivity
 import tribixbite.cleverkeys.LayoutManagerActivity
+import tribixbite.cleverkeys.GeometricSettingsActivity
 import tribixbite.cleverkeys.NeuralSettingsActivity
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.ShortSwipeCustomizationActivity
@@ -25,6 +26,10 @@ internal fun SettingsActivity.openWikiInBrowser() {
 
 internal fun SettingsActivity.openNeuralSettings() {
         startActivity(Intent(this, NeuralSettingsActivity::class.java))
+}
+
+internal fun SettingsActivity.openGeometricSettings() {
+        startActivity(Intent(this, GeometricSettingsActivity::class.java))
 }
 
 internal fun SettingsActivity.openCalibration() {

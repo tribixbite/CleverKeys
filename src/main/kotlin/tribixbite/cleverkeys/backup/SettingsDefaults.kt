@@ -253,6 +253,10 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     // WP9 R-1 step 7 (v1.1): swipe engine mode selector ("neural" | "hybrid" | "geometric").
     // Supersedes the short-lived (never-released) geometric_swipe_engine Boolean.
     "swipe_engine_mode" to PrefValue.Str(Defaults.SWIPE_ENGINE_MODE),
+    // Full Geometric Settings (GeometricSettingsActivity) — user-tunable geo engine knobs.
+    "geo_max_results" to PrefValue.IntV(Defaults.GEO_MAX_RESULTS),
+    "geo_frequency_weight" to PrefValue.FloatV(Defaults.GEO_FREQUENCY_WEIGHT),
+    "geo_endpoint_inset_kw" to PrefValue.FloatV(Defaults.GEO_ENDPOINT_INSET_KW),
     "swipe_debug_detailed_logging" to PrefValue.Bool(Defaults.SWIPE_DEBUG_DETAILED_LOGGING),
     "swipe_debug_show_raw_output" to PrefValue.Bool(Defaults.SWIPE_DEBUG_SHOW_RAW_OUTPUT),
     "swipe_show_debug_scores" to PrefValue.Bool(Defaults.SWIPE_SHOW_DEBUG_SCORES),

@@ -17,6 +17,7 @@ import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
 import tribixbite.cleverkeys.ui.settings.SettingsDropdown
 import tribixbite.cleverkeys.ui.settings.SettingsSwitch
+import tribixbite.cleverkeys.ui.settings.openGeometricSettings
 import tribixbite.cleverkeys.ui.settings.openNeuralSettings
 import tribixbite.cleverkeys.ui.settings.saveSetting
 
@@ -110,6 +111,18 @@ internal fun SettingsActivity.NeuralPredictionSection() {
                             .padding(top = 8.dp)
                     ) {
                         Text("Full Neural Settings")
+                    }
+
+                    // Geometric engine tuning — only meaningful when a mode that uses it is on.
+                    if (swipeEngineMode != "neural") {
+                        Button(
+                            onClick = { openGeometricSettings() },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp)
+                        ) {
+                            Text("Full Geometric Settings")
+                        }
                     }
                 }
             }

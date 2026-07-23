@@ -84,6 +84,7 @@
     <activity android:name="tribixbite.cleverkeys.SwipeCalibrationActivity" android:label="@string/pref_swipe_calibration_title" android:theme="@style/settingsTheme" android:exported="false" android:directBootAware="true" tools:targetApi="24"/>
 
     <activity android:name="tribixbite.cleverkeys.NeuralSettingsActivity" android:label="Neural Settings" android:theme="@style/settingsTheme" android:exported="false" android:directBootAware="true" tools:targetApi="24"/>
+    <activity android:name="tribixbite.cleverkeys.GeometricSettingsActivity" android:label="Geometric Settings" android:theme="@style/settingsTheme" android:exported="false" android:directBootAware="true" tools:targetApi="24"/>
 
     <activity android:name="tribixbite.cleverkeys.DictionaryManagerActivity" android:label="Dictionary Manager" android:theme="@style/settingsTheme" android:exported="false" android:directBootAware="true" tools:targetApi="24"/>
 
