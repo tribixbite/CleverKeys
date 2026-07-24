@@ -98,6 +98,30 @@ QWERTY_KEYS = {
 KEY_IDX_TO_CHAR = ['<pad>', '<unk>', '<sos>', '<eos>'] + list('abcdefghijklmnopqrstuvwxyz')
 CHAR_TO_KEY_IDX = {c: i for i, c in enumerate(KEY_IDX_TO_CHAR)}
 
+# Authoritative normalized keyboard grid (KeyboardGrid.kt / web_demo KEYBOARD_GRID,
+# post-a22b76ad). Rows q/a/z with X offsets 0.0/0.05/0.15, KEY_WIDTH=0.1,
+# ROW_HEIGHT=1/3 → key centers cx=off+i*0.1+0.05, cy=1/6,1/2,5/6. Vert:horiz pitch
+# ratio 3.333 (vs the legacy QWERTY_KEYS pixel grid's wrong 1.639). Matches the
+# FUTO official layout (futo_qwerty.json) to <=0.0005 in normalized space.
+_GRID_ROWS = [('qwertyuiop', 0.0), ('asdfghjkl', 0.05), ('zxcvbnm', 0.15)]
+_KEY_W, _ROW_H = 0.1, 1.0 / 3.0
+_GRID_NORM = {}
+for _r, (_keys, _off) in enumerate(_GRID_ROWS):
+    for _i, _c in enumerate(_keys):
+        _GRID_NORM[_c] = (_off + _i * _KEY_W + _KEY_W / 2, _r * _ROW_H + _ROW_H / 2)
+
+
+def get_nearest_key_norm(nx, ny):
+    """KeyboardGrid.getNearestKeyToken — normalized [0,1] coords (Android parity)."""
+    x = min(1.0, max(0.0, nx))
+    y = min(1.0, max(0.0, ny))
+    best, bd = 'a', float('inf')
+    for c, (cx, cy) in _GRID_NORM.items():
+        d = (x - cx) ** 2 + (y - cy) ** 2
+        if d < bd:
+            bd, best = d, c
+    return CHAR_TO_KEY_IDX.get(best, 1)
+
 
 def get_nearest_key(x, y):
     """Nearest keyboard key token index to a raw-pixel point (2D)."""
@@ -156,6 +180,66 @@ def extract_features(xs, ys, ts, use_velocity):
 
 def _clip(v, lo=-10.0, hi=10.0):
     return max(lo, min(hi, v))
+
+
+def resample_discard(xs, ys, ts, target=250):
+    """Resample >target-point traces to `target`, preserving start+end (audit D).
+
+    Production (SwipeResampler DISCARD, SwipeTrajectoryProcessor.kt:172-209)
+    resamples long swipes to MAX_SEQUENCE_LENGTH before feature calc; the legacy
+    harness HEAD-truncated, dropping the ending key. Uniform index map keeps
+    endpoints (idx[0]=0, idx[-1]=n-1)."""
+    n = len(xs)
+    if n <= target:
+        return xs, ys, ts
+    idx = [round(i * (n - 1) / (target - 1)) for i in range(target)]
+    rxs = [xs[j] for j in idx]
+    rys = [ys[j] for j in idx]
+    rts = [ts[j] for j in idx] if ts is not None else ts
+    return rxs, rys, rts
+
+
+def extract_features_training(nxs, nys, ts):
+    """Training-EXACT feature extraction (model/train_character_model.py:160-196).
+
+    Positions are the raw 0-1 normalized coords (xs/width, ys/height) fed DIRECTLY
+    — NOT squashed through a pixel band. Velocity from index 1 using 0-1 coords;
+    acceleration from index 1 using RAW (unclipped) velocity; clip v and a to
+    [-10,10] AFTER both are computed. dt clamped to >=1e-6 (real ms timestamps).
+
+    This is the production/web_demo path (TrajectoryFeatureCalculator.kt parity).
+    ``nxs``/``nys`` are already 0-1 normalized (FUTO frame == training frame).
+
+    Returns (trajectory_features [N,6], nearest_keys [N]).
+    """
+    n = len(nxs)
+    vxs = [0.0] * n
+    vys = [0.0] * n
+    axs = [0.0] * n
+    ays = [0.0] * n
+    # dt[i] = max(t[i]-t[i-1], 1e-6); dt[0] = max(t[0]-t[0], 1e-6)=1e-6 (np.diff prepend=t[0]).
+    for i in range(1, n):
+        dt = max((ts[i] - ts[i - 1]) if ts is not None else 1.0, 1e-6)
+        vxs[i] = (nxs[i] - nxs[i - 1]) / dt          # raw (unclipped) velocity
+        vys[i] = (nys[i] - nys[i - 1]) / dt
+    for i in range(1, n):                             # accel from index 1, RAW velocity
+        dt = max((ts[i] - ts[i - 1]) if ts is not None else 1.0, 1e-6)
+        axs[i] = (vxs[i] - vxs[i - 1]) / dt
+        ays[i] = (vys[i] - vys[i - 1]) / dt
+    # Clip AFTER both computed (matches np.clip order in training).
+    vxs = [_clip(v) for v in vxs]
+    vys = [_clip(v) for v in vys]
+    axs = [_clip(a) for a in axs]
+    ays = [_clip(a) for a in ays]
+
+    trajectory_features = []
+    nearest_keys = []
+    for i in range(n):
+        trajectory_features.append([nxs[i], nys[i], vxs[i], vys[i], axs[i], ays[i]])
+        # Authoritative normalized KeyboardGrid nearest-key (pitch ratio 3.333),
+        # NOT the legacy pixel grid (ratio 1.639) — fixes audit defect C.
+        nearest_keys.append(get_nearest_key_norm(nxs[i], nys[i]))
+    return trajectory_features, nearest_keys
 
 
 def create_tensors(trajectory_features, nearest_keys):
@@ -724,11 +808,18 @@ def load_legacy_swipes(path):
     return out
 
 
-def load_corpus_cache(path):
+def load_corpus_cache(path, frame_remap=None):
     """Gzipped ``{word, w, h, pts:[[nx,ny,t],...]}`` cache (normalized coords).
 
-    Reconstructs raw px = nx*w, ny*h so the model-input normalization band applies
-    the same way as on the legacy raw-pixel corpus. Yields (word, xs_px, ys_px, ts).
+    Default: reconstructs raw px = nx*w, ny*h so the model-input normalization band
+    applies the same way as on the legacy raw-pixel corpus (the LOCAL corpus canvases
+    are already the model's ~360x189 frame). Yields (word, xs_px, ys_px, ts).
+
+    ``frame_remap='futo'``: FUTO rows carry per-DEVICE canvas px (e.g. 1080-wide) but
+    the model expects the fixed 360-wide QWERTY frame (QWERTY_KEYS: q=18..p=342 ->
+    x = 360*nx exactly; rows at y=34/93/152 with pitch 59 -> letter area spans
+    [4.5, 181.5] -> y = 4.5 + 177*ny). Ignores stored w/h for coordinates (they
+    remain provenance) and maps normalized pts straight into the model frame.
     """
     opener = gzip.open if str(path).endswith('.gz') else open
     out = []
@@ -742,8 +833,20 @@ def load_corpus_cache(path):
             h = float(obj['h'])
             xs, ys, ts = [], [], []
             for p in obj['pts']:
-                xs.append(float(p[0]) * w)
-                ys.append(float(p[1]) * h)
+                nx = float(p[0])
+                ny = float(p[1])
+                if frame_remap == 'identity':
+                    # Pass the raw 0-1 normalized coords straight through (training
+                    # frame == FUTO frame: xs/width, ys/height). Consumed by
+                    # extract_features_training, which does NOT divide by NORM_*.
+                    xs.append(nx)
+                    ys.append(ny)
+                elif frame_remap == 'futo':
+                    xs.append(nx * 360.0)
+                    ys.append(4.5 + ny * 177.0)
+                else:
+                    xs.append(nx * w)
+                    ys.append(ny * h)
                 ts.append(float(p[2]) if len(p) > 2 else 0.0)
             out.append((obj['word'], xs, ys, ts))
     return out
@@ -882,7 +985,7 @@ def run_head_to_head(args):
         print(f"ProdVocab built: {len(prod_vocab.vocab)} words, "
               f"trie+tiers in {time.time() - pt0:.1f}s")
 
-    rows = load_corpus_cache(corpus_path)
+    rows = load_corpus_cache(corpus_path, frame_remap=args.frame_remap)
     print(f"corpus rows: {len(rows)}")
 
     in_dict = [r for r in rows if r[0] in dictionary]
@@ -890,11 +993,17 @@ def run_head_to_head(args):
     coverage = len(in_dict) / len(rows) if rows else 0.0
     print(f"in-dict: {len(in_dict)}/{len(rows)} = {coverage * 100:.1f}%  (OOV={oov})")
 
+    if args.skip:
+        in_dict = in_dict[args.skip:]
+        print(f"SKIP applied: starting at in-dict trace {args.skip}")
     if args.limit:
         in_dict = in_dict[:args.limit]
-        print(f"LIMIT applied: decoding first {len(in_dict)} in-dict traces")
+        print(f"LIMIT applied: decoding {len(in_dict)} in-dict traces")
 
-    feat_mode = "velocity+accel (time-normalized)" if args.velocity else "position-only (velocity/accel ZEROED)"
+    if args.training_features:
+        feat_mode = "TRAINING-EXACT (0-1 pos + index-1 accel, raw velocity — production-faithful)"
+    else:
+        feat_mode = "velocity+accel (time-normalized)" if args.velocity else "position-only (velocity/accel ZEROED)"
     print(f"features: {feat_mode}   beam={args.beam}   max_len={args.max_len}")
     if args.production:
         print(f"PRODUCTION mode ON: trie-constrained beam (width={PROD_BEAM_WIDTH}, "
@@ -917,7 +1026,12 @@ def run_head_to_head(args):
     errors = 0
     for i, (word, xs, ys, ts) in enumerate(in_dict):
         try:
-            traj, keys = extract_features(xs, ys, ts if args.velocity else None, args.velocity)
+            if args.training_features:
+                # Resample >250-pt traces preserving start+end (audit D) before feats.
+                rxs, rys, rts = resample_discard(xs, ys, ts, MAX_SEQUENCE_LENGTH)
+                traj, keys = extract_features_training(rxs, rys, rts)
+            else:
+                traj, keys = extract_features(xs, ys, ts if args.velocity else None, args.velocity)
             traj_t, keys_t, alen_t = create_tensors(traj, keys)
             actual_length = int(alen_t[0])
 
@@ -1061,6 +1175,13 @@ def run_legacy_smoke(args):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--corpus', help='gzipped {word,w,h,pts} cache — enables head-to-head mode')
+    ap.add_argument('--frame-remap', choices=['futo', 'identity'], default=None, dest='frame_remap',
+                    help='map normalized pts into the model frame '
+                         '(futo: x=360*nx, y=4.5+177*ny squashed by NORM; '
+                         'identity: pass raw 0-1 coords for --training-features)')
+    ap.add_argument('--training-features', action='store_true', dest='training_features',
+                    help='training-EXACT features (0-1 pos fed directly, index-1 accel, '
+                         'raw velocity; requires --frame-remap identity). Production-faithful.')
     ap.add_argument('--dict', default='src/main/assets/dictionaries/en_enhanced.json',
                     help='flat {word:score} dictionary for the in-dict filter')
     ap.add_argument('--beam', type=int, default=BEAM_WIDTH, help='beam width (default 8)')
@@ -1073,6 +1194,7 @@ def main():
                          'length-normalized beam (width=6, alpha=1.4) + OptimizedVocabulary '
                          'conf/freq rerank. Reports a PRODUCTION column alongside bare RAW/DICT.')
     ap.add_argument('--limit', type=int, default=0, help='decode only first N in-dict traces (0=all)')
+    ap.add_argument('--skip', type=int, default=0, help='skip first N in-dict traces (chunked runs)')
     ap.add_argument('--threads', type=int, default=4, help='ORT intra-op threads')
     ap.add_argument('--out', help='write per-trace results jsonl (LOCAL-ONLY artifact)')
     args = ap.parse_args()
