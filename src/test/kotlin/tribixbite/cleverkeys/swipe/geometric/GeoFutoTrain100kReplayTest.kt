@@ -30,7 +30,9 @@ class GeoFutoTrain100kReplayTest {
         if (!override.isNullOrEmpty()) File(override)
         else File(System.getProperty("user.home"), ".cache/cleverkeys-test")
     }
-    private val sampleFile = File(cacheDir, "futo_train100k.jsonl.gz")
+    // Input corpus: defaults to the 100k train sample; override via FUTO100K_IN for the
+    // 2,400-row test-split head-to-head (test2400_ordered.jsonl.gz, same {word,w,h,pts} shape).
+    private val sampleFile = File(cacheDir, System.getenv("FUTO100K_IN") ?: "futo_train100k.jsonl.gz")
     private val outFile: File = run {
         val name = System.getenv("FUTO100K_OUT") ?: "geo_futo100k.jsonl"
         File(cacheDir, name)
@@ -66,24 +68,32 @@ class GeoFutoTrain100kReplayTest {
         val dictWords = HashSet<String>(dict.size * 2)
         for (i in 0 until dict.size) dictWords.add(dict.word(i).lowercase())
 
+        // GEO_ALL_ROWS=true: skip the in-dict filter and key every row by its ORIGINAL
+        // file index, so the geo cache aligns 1:1 with the FUTO reference + neural caches
+        // (which score every trace; OOV = miss). Used for the 2,400-row test-split
+        // head-to-head. Default (false) preserves the 100k in-dict-sequence contract.
+        val allRows = System.getenv("GEO_ALL_ROWS") == "true"
         var totalRows = 0
         val inDict = ArrayList<ReplayRow>(110_000)
         GZIPInputStream(sampleFile.inputStream()).bufferedReader().useLines { seq ->
             for (line in seq) {
                 if (line.isBlank()) continue
+                val origIdx = totalRows // 0-based index over non-blank input lines
                 totalRows++
                 val r = parseLine(line) ?: continue
-                if (dictWords.contains(r.word)) {
+                if (allRows) {
+                    inDict.add(ReplayRow(origIdx, r.word, r.w, r.h, r.pts))
+                } else if (dictWords.contains(r.word)) {
                     inDict.add(ReplayRow(inDict.size, r.word, r.w, r.h, r.pts))
                 }
             }
         }
         val limit = System.getenv("FUTO100K_LIMIT")?.toIntOrNull() ?: 0
         val work = if (limit in 1 until inDict.size) inDict.subList(0, limit) else inDict
-        println("[futo100k] rows=$totalRows inDict=${inDict.size} " +
-            "(coverage ${"%.1f".format(inDict.size * 100.0 / totalRows)}%) decoding=${work.size}")
+        println("[futo100k] rows=$totalRows kept=${inDict.size} " +
+            "(coverage ${"%.1f".format(inDict.size * 100.0 / totalRows)}%) allRows=$allRows decoding=${work.size}")
 
-        // Group by aspect bucket (0.1 rounding) but PRESERVE the in-dict index in output.
+        // Group by aspect bucket (0.1 rounding) but PRESERVE the row index in output.
         val byBucket = LinkedHashMap<Float, MutableList<ReplayRow>>()
         for (r in work) {
             val bucket = Math.round((r.w / r.h) * 10f) / 10f
@@ -92,7 +102,9 @@ class GeoFutoTrain100kReplayTest {
         println("[futo100k] aspect buckets: ${byBucket.entries.sortedBy { it.key }
             .joinToString(" ") { "${it.key}=${it.value.size}" }}")
 
-        val results = arrayOfNulls<String>(work.size) // idx-ordered output lines
+        // In allRows mode r.idx is the ORIGINAL file index (may exceed work.size if any
+        // line failed to parse); size the output array to cover the max index.
+        val results = arrayOfNulls<String>(if (allRows) totalRows else work.size)
         var decoded = 0
         var t1 = 0; var t3 = 0; var t5 = 0
         val t0 = System.currentTimeMillis()
