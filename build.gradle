@@ -484,6 +484,10 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.swipe.geometric.GeoShortWordTest',
     'tribixbite.cleverkeys.swipe.geometric.GeoAblationTest',
     'tribixbite.cleverkeys.swipe.geometric.GeoBenchmarkTest',
+    // FUTO-style CTC swipe module (DESIGN-ONLY, NOT wired) — pure JVM golden-trace parity
+    // vs the Python port (scripts/futo_decoder_{eval,ceiling}.py) + module unit tests.
+    'tribixbite.cleverkeys.swipe.ctc.CtcParityTest',
+    'tribixbite.cleverkeys.swipe.ctc.CtcModuleTest',
     // SwipePrunerTest excluded: requires android.util.Log (MockK + Robolectric)
   ]
 
