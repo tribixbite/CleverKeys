@@ -168,6 +168,8 @@ Build your own themes on-the-fly with full control over:
 - **Sub-200ms predictions** with XNNPACK hardware acceleration
 - **Autocorrect with contraction support** — "dont" to "don't", "im" to "I'm"
 - **Full inference control** — beam width, length normalization, pruning, early stopping
+- **Next-word prediction (opt-in)** — learned-phrase suggestions before you type a letter, with tap-to-chain
+- **Suggestion transparency** — long-press any suggestion to see which engine produced it and its full score breakdown; optional per-origin markers
 - **100% on-device** — works in airplane mode, no cloud anything
 
 ### 🌍 Multi-Language with Hot-Swap
@@ -211,6 +213,9 @@ Assign custom actions to any key's 8 swipe directions:
 ### 🔒 Privacy First
 - **Zero network permissions** — literally cannot phone home
 - **No analytics, telemetry, or cloud sync**
+- **One-switch learning control** — "Learn From My Typing" gates ALL on-device learning (phrases, word usage, selection adaptation, swipe traces); turning it off stops recording AND stops using what was learned, with a one-tap forget
+- **Learned-data manager** — browse and delete individual learned phrases and words, per language
+- **Incognito-field aware** — honors apps that request no personalized learning (e.g. browser private tabs)
 - **Password manager privacy** — exclude clipboard from 1Password, Bitwarden, KeePassDX, etc.
 - **Open source = auditable**
 
