@@ -175,3 +175,47 @@ interesting finding: FUTO leads on length, our engine leads on brevity.
 CAVEAT: FUTO's number is encoder-ONLY via a textbook Python CTC beam; their paper
 reports 92.54% test top-1 with their optimized C++ beam + optional decoder+LM. So 79.25%
 is a conservative floor for FUTO-on-our-data, not their ceiling.
+
+## ═══ CEILING (decoder + optimized beam) — 2026-07-31 ═══
+
+Pushed the encoder-only floor toward FUTO's paper number via two levers, measured
+independently (`scripts/futo_decoder_ceiling.py` in proot ExecuTorch; decomposition via
+`scripts/futo_decoder_ceiling_metrics.py`). Same 2,400 test traces, idx-aligned.
+
+- **A = floor**: encoder-only, textbook logaddexp CTC prefix beam (no length prune).
+- **B = beamB (lever 2)**: encoder-only emissions + FUTO's OPTIMIZED single-stream Viterbi
+  trie beam with length-aware pruning (exact port of `beam_search.cpp`).
+- **D = beamD (lever 1) = the CEILING**: encoder + `magic_macaw` DFSMN decoder (its refined
+  `log_probs[32,27]` REPLACE the encoder emissions; decoder_input[32,92] = concat of sliced
+  emissions[27] + DCT coefficients[64] + intention λ[1] per timestep) + FUTO Viterbi beam.
+
+### Results (all 2,400, incl 99 OOV; per-trace caches futo_decoder_test2400_{beamB,ceiling}.jsonl)
+
+| Config | overall t1/t3/t5 | in-vocab t1/t3/t5 | greedy-CTC t1 |
+|---|---|---|---|
+| A floor (enc, logaddexp beam) | 79.25 / 87.71 / 89.58 | 82.66 / 91.48 / 93.44 | 43.96% |
+| B beamB (enc, FUTO Viterbi beam) | 78.96 / 88.17 / 90.12 | 82.36 / 91.96 / 94.00 | 43.96% |
+| **D beamD (enc+decoder) = CEILING** | **84.83 / 91.04 / 92.08** | **88.48 / 94.96 / 96.05** | **69.12%** |
+
+Strata (overall): ceiling ≤3-char **89.57** / 4+-char **82.40** top-1 (floor was 82.45 / 77.60).
+Macro top-1 (58 words ≥5 ex): ceiling **91.39%** (floor 83.28%).
+
+### Per-lever decomposition (overall top-1) — the surprising part
+- Lever 2 (FUTO optimized beam), B−A: **−0.29 pt** (78.96 vs 79.25) — the bespoke Viterbi
+  beam did NOT help top-1 (it lifts top-3/5 by +0.46/+0.54, i.e. slightly better ordering
+  deeper in the list, but the top-1 pick is unchanged/marginally worse).
+- Lever 1 (magic_macaw decoder), D−B: **+5.88 pt** (84.83 vs 78.96) — the DFSMN decoder is
+  where ALL the gain is; greedy-CTC jumps 43.96% → 69.12% once the decoder refines emissions.
+- TOTAL floor→ceiling, D−A: **+5.58 pt**. (t3 +3.33, t5 +2.50.)
+- **Corrects the floor-note hypothesis** that the beam was the bigger lever — empirically the
+  DECODER is, and the optimized beam is ~neutral on top-1 for this data.
+
+### Distance to the paper (still a floor on THEIR ceiling)
+Paper: enc-only 92.54 t1 / enc+dec 93.30. Ours: enc-only (beamB) 78.96 (+13.58 gap),
+enc+dec (beamD) 84.83 (+8.47 gap). Residual attributable to: our 2,400 being a harder
+subset of the 48,538-trace test split, and our Viterbi/featurization port not being
+bit-identical to FUTO's production C++ (no context LM either). So 84.83% remains a
+CONSERVATIVE ceiling estimate — FUTO's true number on our data is ≥ this.
+
+Files: `scripts/futo_decoder_ceiling.py`, `scripts/futo_decoder_ceiling_metrics.py`,
+caches `~/.cache/cleverkeys-test/futo_decoder_test2400_{beamB,ceiling}.jsonl`.
