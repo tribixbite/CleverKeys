@@ -137,6 +137,13 @@ class DictionaryManager(private val context: Context) {
             WordPredictor().apply {
                 setContext(context) // Enable disabled words filtering
 
+                // M2 (review 2026-08-06): thread the global Config in so this
+                // predictor's learning/read gates reflect the user's REAL
+                // preferences. Config.refresh() mutates the same instance, so the
+                // reference stays current. Without a config the gates fail
+                // CLOSED (WordPredictor defaults `?: false`), never open.
+                Config.globalConfigOrNull()?.let { setConfig(it) }
+
                 // CRITICAL: Use async loading to prevent UI freeze during language switching
                 val capturedCode = code
                 loadDictionaryAsync(context, capturedCode) {
@@ -250,6 +257,10 @@ class DictionaryManager(private val context: Context) {
                 WordPredictor().apply {
                     setContext(context) // Enable disabled words filtering
 
+                    // M2: same global-config threading as setLanguage — without a
+                    // config, learning/read gates fail CLOSED.
+                    Config.globalConfigOrNull()?.let { setConfig(it) }
+
                     // CRITICAL: Use async loading to prevent UI freeze during preloading
                     loadDictionaryAsync(context, capturedCode) {
                         // Prevent orphaned observer if predictor was evicted before load finished
@@ -288,10 +299,15 @@ class DictionaryManager(private val context: Context) {
     /**
      * Flush all live predictors' learned data (context LM bigrams + user
      * vocabulary) to persistent storage. Cheap no-op when nothing is dirty.
+     *
+     * Called at input-session boundaries (PredictionCoordinator.flushLearnedData);
+     * H1 (review 2026-08-06): also clears each predictor's rolling recent-words
+     * window so no learned bigram can span a field/app boundary.
      */
     fun flushLearnedData() {
         for ((_, predictor) in predictors) {
             predictor.persistLearnedData()
+            predictor.clearContext()
         }
     }
 

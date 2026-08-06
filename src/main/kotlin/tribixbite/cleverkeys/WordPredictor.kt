@@ -436,6 +436,12 @@ class WordPredictor {
     fun setConfig(config: Config) {
         this.config = config
 
+        // H3 (review 2026-08-06): keep the selection-adaptation store's enabled
+        // flag synced to the master gate so its multiplier READS are inert with
+        // the master off — belt-and-braces alongside the canUseAdaptation guard
+        // at every read site below.
+        syncAdaptationEnabled()
+
         // Phase 7.2: Update personalization engine settings when config changes.
         // Task A (2026-08-06): the MASTER on-device-learning gate ANDs into the
         // engine's enabled state, so with the master off the engine neither
@@ -464,6 +470,23 @@ class WordPredictor {
      */
     fun setUserAdaptationManager(adaptationManager: UserAdaptationManager) {
         this.adaptationManager = adaptationManager
+        // H3: setConfig may already have run — sync the read gate now.
+        syncAdaptationEnabled()
+    }
+
+    /**
+     * H3 (review 2026-08-06): may the learned selection-adaptation history be
+     * read right now? Master off (or config not yet supplied — fail CLOSED)
+     * makes the store inert, not just frozen.
+     */
+    private fun canUseAdaptation(): Boolean =
+        LearningGate.canUseAdaptation(config?.on_device_learning_enabled ?: false)
+
+    /** Mirror the master gate into the adaptation store's own enabled flag. */
+    private fun syncAdaptationEnabled() {
+        config?.let { cfg ->
+            adaptationManager?.setEnabled(LearningGate.canUseAdaptation(cfg.on_device_learning_enabled))
+        }
     }
 
     /**
@@ -473,6 +496,12 @@ class WordPredictor {
      * v1.1.92: Reloads disabled words for language-specific key.
      */
     fun setLanguage(language: String) {
+        // L6 (review 2026-08-06): the rolling learn window must not straddle a
+        // language switch — otherwise the first commits after the switch record
+        // mixed-language pairs into the NEW language's store.
+        if (language != currentLanguage) {
+            recentWords.clear()
+        }
         currentLanguage = language
         bigramModel?.let {
             it.setLanguage(language)
@@ -527,7 +556,10 @@ class WordPredictor {
         if (dictionary.get().containsKey(lowerWord)) {
             return true
         }
-        // Check if user has typed it frequently (adaptation manager)
+        // Check if user has typed it frequently (adaptation manager) — gated
+        // (H3): with the master off, learned selection history must not
+        // suppress add-to-dictionary prompts.
+        if (!canUseAdaptation()) return false
         val adaptationMultiplier = adaptationManager?.getAdaptationMultiplier(lowerWord) ?: 0f
         return adaptationMultiplier > 1.0f
     }
@@ -555,9 +587,15 @@ class WordPredictor {
     }
 
     /**
-     * Add a word to the recent words list for language detection
+     * Add a word to the recent words list for language detection and run the
+     * gated learn funnel.
+     *
+     * @param fieldAllowsPersonalizedLearning false when the active editor set
+     *   `IME_FLAG_NO_PERSONALIZED_LEARNING` (M5 incognito contract) — the
+     *   language-detection window still updates (detection is not learning),
+     *   but NO learn path runs.
      */
-    fun addWordToContext(word: String?) {
+    fun addWordToContext(word: String?, fieldAllowsPersonalizedLearning: Boolean = true) {
         if (word.isNullOrBlank()) return
 
         val normalizedWord = word.lowercase().trim()
@@ -575,14 +613,23 @@ class WordPredictor {
         // in-RAM mutation or persistence when the master gate (or the
         // per-feature gate) is off. The gate logic is pure and unit-tested
         // (OnDeviceLearningPrivacyTest).
+        //
+        // M2 (review 2026-08-06): gate reads fail CLOSED — a predictor whose
+        // Config was never supplied (e.g. constructed by DictionaryManager
+        // before global config threading) must never learn.
+        //
+        // M3: the context sink is recordCommit (NEWEST bigram/trigram only) —
+        // the previous full-window recordSequence replay re-recorded earlier
+        // pairs on every commit, inflating a single typing past the ≥2 floor.
         LearningGate.learnCommittedWord(
             recentWords = recentWords,
             committedWord = normalizedWord,
-            onDeviceLearningEnabled = config?.on_device_learning_enabled ?: true,
-            contextAwareEnabled = config?.context_aware_predictions_enabled ?: true,
-            personalizedLearningEnabled = config?.personalized_learning_enabled ?: true,
-            recordSequence = { sequence -> contextModel?.recordSequence(sequence) },
-            recordWordUsage = { word -> personalizationEngine?.recordWordTyped(word) }
+            onDeviceLearningEnabled = config?.on_device_learning_enabled ?: false,
+            contextAwareEnabled = config?.context_aware_predictions_enabled ?: false,
+            personalizedLearningEnabled = config?.personalized_learning_enabled ?: false,
+            recordSequence = { sequence -> contextModel?.recordCommit(sequence) },
+            recordWordUsage = { word -> personalizationEngine?.recordWordTyped(word) },
+            fieldAllowsPersonalizedLearning = fieldAllowsPersonalizedLearning
         )
 
         // Try to detect language change if we have enough words
@@ -610,6 +657,10 @@ class WordPredictor {
                 }
                 bigramModel?.setLanguage(detected)
                 contextModel?.language = detected
+                // L6: the window that triggered detection holds PRIOR-language
+                // words — clear it so the first post-switch commits don't learn
+                // mixed-language pairs into the new language's store.
+                recentWords.clear()
                 return
             }
         }
@@ -670,10 +721,11 @@ class WordPredictor {
         maxResults: Int = 10
     ): List<tribixbite.cleverkeys.contextaware.ContextContinuation> {
         // Task A: the master gate makes the learned store inert for READS too —
-        // next-word candidates come exclusively from learned data.
+        // next-word candidates come exclusively from learned data. Null config
+        // fails CLOSED (M2).
         val canUse = LearningGate.canUseLearnedContext(
-            config?.on_device_learning_enabled ?: true,
-            config?.context_aware_predictions_enabled ?: true
+            config?.on_device_learning_enabled ?: false,
+            config?.context_aware_predictions_enabled ?: false
         )
         if (!canUse) return emptyList()
         return contextModel?.getNextWordCandidates(contextWords, maxResults) ?: emptyList()
@@ -685,9 +737,10 @@ class WordPredictor {
      * next-word re-ranking.
      */
     fun getPersonalizationBoostFor(word: String): Float {
+        // Null config fails CLOSED (M2).
         val canUse = LearningGate.canLearnPersonalization(
-            config?.on_device_learning_enabled ?: true,
-            config?.personalized_learning_enabled ?: true
+            config?.on_device_learning_enabled ?: false,
+            config?.personalized_learning_enabled ?: false
         )
         if (!canUse) return 0f
         return personalizationEngine?.getPersonalizationBoost(word) ?: 0f
@@ -1858,7 +1911,13 @@ class WordPredictor {
         val prefixScore = calculatePrefixScore(word, keySequence)
         if (prefixScore == 0) return null // Should not happen if caller does prefix check
 
-        val adaptationMultiplier = adaptationManager?.getAdaptationMultiplier(word) ?: 1.0f
+        // H3: the selection-adaptation multiplier is a READ of learned data —
+        // inert (1.0) when the master gate is off or config is absent.
+        val adaptationMultiplier = if (canUseAdaptation()) {
+            adaptationManager?.getAdaptationMultiplier(word) ?: 1.0f
+        } else {
+            1.0f
+        }
 
         val staticContextMultiplier = if (bigramModel != null && context.isNotEmpty()) {
             bigramModel?.getContextMultiplier(word, context) ?: 1.0f
@@ -1866,9 +1925,10 @@ class WordPredictor {
             1.0f
         }
 
+        // Null config fails CLOSED (M2).
         val canUseLearned = LearningGate.canUseLearnedContext(
-            config?.on_device_learning_enabled ?: true,
-            config?.context_aware_predictions_enabled ?: true
+            config?.on_device_learning_enabled ?: false,
+            config?.context_aware_predictions_enabled ?: false
         )
         val dynamicContextBoost = if (canUseLearned && contextModel != null && context.isNotEmpty()) {
             contextModel?.getContextBoost(word, context) ?: 1.0f
@@ -1876,7 +1936,11 @@ class WordPredictor {
             1.0f
         }
 
-        val personalizationEnabled = config?.personalized_learning_enabled ?: true
+        // Personalization boost read: master AND feature gate, fail closed (M2).
+        val personalizationEnabled = LearningGate.canLearnPersonalization(
+            config?.on_device_learning_enabled ?: false,
+            config?.personalized_learning_enabled ?: false
+        )
         val personalizationBoost = if (personalizationEnabled && personalizationEngine != null) {
             personalizationEngine?.getPersonalizationBoost(word) ?: 0.0f
         } else {
@@ -2019,7 +2083,8 @@ class WordPredictor {
         val typedWordDisabled = disabledWords.isNotEmpty() && isWordDisabled(lowerTypedWord)
         if (!typedWordDisabled &&
             (dictionary.get().containsKey(lowerTypedWord) ||
-                (adaptationManager?.getAdaptationMultiplier(lowerTypedWord) ?: 0f) > 1.0f)
+                (canUseAdaptation() &&
+                    (adaptationManager?.getAdaptationMultiplier(lowerTypedWord) ?: 0f) > 1.0f))
         ) {
             return typedWord
         }

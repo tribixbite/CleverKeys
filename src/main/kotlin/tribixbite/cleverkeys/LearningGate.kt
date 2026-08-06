@@ -24,11 +24,40 @@ package tribixbite.cleverkeys
  * ([tribixbite.cleverkeys.OnDeviceLearningPrivacyTest] wires this funnel to the
  * real stores over in-memory storage and asserts nothing is recorded or
  * persisted with the master gate off).
+ *
+ * OUT OF SCOPE — deliberate (L7, review 2026-08-06; the settings toggle copy is
+ * scoped to match): the master gate covers AUTOMATIC recording of typing
+ * behavior. Data the user EXPLICITLY creates is governed by its own controls:
+ * - `SwipeCalibrationActivity` traces — recorded only during a calibration
+ *   session the user starts, behind its own consent flow.
+ * - `NeuralPerformanceStats` — prediction latency/accuracy aggregates behind
+ *   the separate performance-stats preference (no text content).
+ * - Backup restore — importing a backup repopulates learned stores even with
+ *   the master off; restoring one's own exported data is an explicit act.
  */
 object LearningGate {
 
     /** Longest word window handed to the context LM (trigram-ready, audit §1.3-D). */
     const val CONTEXT_WINDOW = 4
+
+    /**
+     * Mirror of `android.view.inputmethod.EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING`
+     * (`0x1000000`, API 26+). Duplicated here so the incognito-field gate logic is
+     * pure JVM and unit-testable without android.jar; [LearningGateTest] pins the
+     * value against the platform constant.
+     */
+    const val IME_FLAG_NO_PERSONALIZED_LEARNING = 0x1000000
+
+    /**
+     * Incognito-keyboard contract (M5, review 2026-08-06): an editor that sets
+     * `IME_FLAG_NO_PERSONALIZED_LEARNING` (e.g. a browser's private tab) asks the
+     * IME not to learn from — or personalize based on — what is typed in it.
+     *
+     * @param imeOptions the raw `EditorInfo.imeOptions` bits for the active field
+     * @return false when the field forbids personalized learning
+     */
+    fun fieldAllowsPersonalizedLearning(imeOptions: Int): Boolean =
+        (imeOptions and IME_FLAG_NO_PERSONALIZED_LEARNING) == 0
 
     /** May the context LM (bigram/trigram stores) record new sequences? */
     fun canLearnContext(onDeviceLearningEnabled: Boolean, contextAwareEnabled: Boolean): Boolean =
@@ -46,6 +75,15 @@ object LearningGate {
      */
     fun canLearnAdaptation(onDeviceLearningEnabled: Boolean): Boolean = onDeviceLearningEnabled
 
+    /**
+     * May previously learned SELECTION history be READ (H3, review 2026-08-06)?
+     * The adaptation multiplier re-ranks predictions and suppresses
+     * add-to-dictionary prompts from persisted selection counts — with the
+     * master off that history must be inert, not just frozen (same contract as
+     * [canUseLearnedContext] for the context LM).
+     */
+    fun canUseAdaptation(onDeviceLearningEnabled: Boolean): Boolean = onDeviceLearningEnabled
+
     /** May swipe-ML trajectory data be collected/stored? */
     fun canCollectSwipeMl(onDeviceLearningEnabled: Boolean, collectSwipeEnabled: Boolean): Boolean =
         onDeviceLearningEnabled && collectSwipeEnabled
@@ -61,13 +99,23 @@ object LearningGate {
     /**
      * THE learn funnel for a committed word (production caller:
      * `WordPredictor.addWordToContext`). Runs each learn path only when its
-     * gate passes — with the master gate off, NEITHER lambda is invoked, so no
-     * in-RAM state mutates and nothing can be persisted.
+     * gate passes — with the master gate off (or the active field forbidding
+     * personalized learning, M5), NEITHER lambda is invoked, so no in-RAM
+     * state mutates and nothing can be persisted.
+     *
+     * The context sink receives the trailing [CONTEXT_WINDOW]-word window; the
+     * production sink (`ContextModel.recordCommit`) records ONLY the NEWEST
+     * bigram/trigram ending at [committedWord] (M3, review 2026-08-06 — the
+     * previous full-window replay re-recorded earlier pairs on every commit,
+     * so a single typing inflated frequencies past the "seen ≥2×" floor).
      *
      * @param recentWords rolling committed-word window, most recent last,
      *   INCLUDING [committedWord]
      * @param committedWord the normalized word just committed
-     * @param recordSequence context-LM sink (`ContextModel.recordSequence`)
+     * @param fieldAllowsPersonalizedLearning false when the active editor set
+     *   `IME_FLAG_NO_PERSONALIZED_LEARNING` (incognito field) — suppresses
+     *   BOTH learn paths regardless of user preferences
+     * @param recordSequence context-LM sink (`ContextModel.recordCommit`)
      * @param recordWordUsage personalization sink (`PersonalizationEngine.recordWordTyped`)
      */
     fun learnCommittedWord(
@@ -77,13 +125,16 @@ object LearningGate {
         contextAwareEnabled: Boolean,
         personalizedLearningEnabled: Boolean,
         recordSequence: (List<String>) -> Unit,
-        recordWordUsage: (String) -> Unit
+        recordWordUsage: (String) -> Unit,
+        fieldAllowsPersonalizedLearning: Boolean = true
     ) {
-        if (canLearnContext(onDeviceLearningEnabled, contextAwareEnabled) && recentWords.size >= 2) {
+        // M5: an incognito field's no-learning request outranks every user pref.
+        val master = onDeviceLearningEnabled && fieldAllowsPersonalizedLearning
+        if (canLearnContext(master, contextAwareEnabled) && recentWords.size >= 2) {
             val sequenceLength = kotlin.math.min(CONTEXT_WINDOW, recentWords.size)
             recordSequence(recentWords.takeLast(sequenceLength))
         }
-        if (canLearnPersonalization(onDeviceLearningEnabled, personalizedLearningEnabled)) {
+        if (canLearnPersonalization(master, personalizedLearningEnabled)) {
             recordWordUsage(committedWord)
         }
     }

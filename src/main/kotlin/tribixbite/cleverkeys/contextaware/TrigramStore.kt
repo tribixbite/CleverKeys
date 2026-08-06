@@ -186,6 +186,23 @@ class TrigramStore internal constructor(
         }
     }
 
+    /**
+     * Probability with the min-frequency confidence floor applied: 0 when the
+     * trigram has been observed fewer than [setMinimumFrequency] times (L2,
+     * review 2026-08-06). [getProbability] stays RAW; the boost path
+     * (`ContextModel.getContextBoost`) must use this so a once-seen trigram
+     * can't claim the near-max 4× boost off a single observation.
+     */
+    fun getConfidentProbability(language: String, word1: String, word2: String, word3: String): Float {
+        val key = prefixKey(TrigramEntry.normalizeWord(word1), TrigramEntry.normalizeWord(word2))
+        val w3 = TrigramEntry.normalizeWord(word3)
+        val entries = forLanguage(language).trigramMap[key] ?: return 0f
+        synchronized(this) {
+            val entry = entries.find { it.word3 == w3 } ?: return 0f
+            return if (entry.frequency >= minFrequency) entry.probability else 0f
+        }
+    }
+
     /** Total number of unique trigrams stored for a language. */
     fun getTotalTrigramCount(language: String): Int {
         synchronized(this) {
@@ -199,25 +216,28 @@ class TrigramStore internal constructor(
      */
     fun clear(language: String) {
         val lang = BigramStore.normalizeLanguage(language)
+        // M1 (review 2026-08-06): storage removal INSIDE the serialize+write lock —
+        // see BigramStore.clear for the interleaving this forbids.
         synchronized(this) {
             val data = forLanguage(lang)
             data.trigramMap.clear()
             data.prefixFrequencies.clear()
+            dirtyLanguages.remove(lang)
+            storage.remove(storageKey(lang))
         }
-        dirtyLanguages.remove(lang)
-        storage.remove(storageKey(lang))
     }
 
     /** Clear ALL learned trigram data across every language, including persisted blobs. */
     fun clearAll() {
+        // M1: same lock discipline as [clear].
         synchronized(this) {
             languages.values.forEach {
                 it.trigramMap.clear()
                 it.prefixFrequencies.clear()
             }
+            dirtyLanguages.clear()
+            storage.keys().filter { it.startsWith(KEY_PREFIX) }.forEach { storage.remove(it) }
         }
-        dirtyLanguages.clear()
-        storage.keys().filter { it.startsWith(KEY_PREFIX) }.forEach { storage.remove(it) }
     }
 
     /** Languages with learned trigram data (loaded in RAM or persisted). */
@@ -264,11 +284,27 @@ class TrigramStore internal constructor(
         val toWrite = dirtyLanguages.toList()
         dirtyLanguages.removeAll(toWrite.toSet())
 
+        var failure: Exception? = null
         for (lang in toWrite) {
             val data = languages[lang] ?: continue
-            val json = synchronized(this) { serialize(data) }
-            storage.putString(storageKey(lang), json)
+            try {
+                // M1: serialize+write under ONE lock (shared with [clear]/[clearAll])
+                // so a forget can never be resurrected by an in-flight flush; an
+                // empty table maps to key removal. See BigramStore.writeDirtyLanguages.
+                synchronized(this) {
+                    if (data.trigramMap.isEmpty()) {
+                        storage.remove(storageKey(lang))
+                    } else {
+                        storage.putString(storageKey(lang), serialize(data))
+                    }
+                }
+            } catch (e: Exception) {
+                // L9: re-add so the persister's dirty-restore retry finds it.
+                dirtyLanguages.add(lang)
+                failure = e
+            }
         }
+        failure?.let { throw it }
     }
 
     /** Serialize a language table to the persisted JSON-array format. Caller holds the lock. */

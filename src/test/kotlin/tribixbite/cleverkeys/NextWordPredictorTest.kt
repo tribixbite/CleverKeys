@@ -56,12 +56,14 @@ class NextWordPredictorTest {
             termux: Boolean = false,
             context: Boolean = true,
             wordPrediction: Boolean = true,
-            master: Boolean = true
+            master: Boolean = true,
+            fieldAllows: Boolean = true
         ) = NextWordPredictor.shouldShow(
             featureEnabled = true, onDeviceLearningEnabled = master,
             wordPredictionEnabled = wordPrediction,
             isPasswordMode = password, specialPromptActive = prompt,
-            inTermuxApp = termux, hasContext = context
+            inTermuxApp = termux, hasContext = context,
+            fieldAllowsPersonalizedLearning = fieldAllows
         )
 
         assertTrue(show())
@@ -71,6 +73,8 @@ class NextWordPredictorTest {
         assertFalse(show(context = false))
         assertFalse(show(wordPrediction = false))
         assertFalse(show(master = false))
+        // M5 (review 2026-08-06): incognito fields suppress next-word surfacing.
+        assertFalse(show(fieldAllows = false))
     }
 
     // ------------------------------------------------------------- generation

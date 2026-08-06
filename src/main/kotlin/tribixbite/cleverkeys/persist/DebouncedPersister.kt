@@ -56,6 +56,12 @@ class DebouncedPersister(
 
     private val lock = Any()
 
+    // Serializes flushAction executions so a SYNCHRONOUS flush() that loses the
+    // dirty-flag claim to an in-flight async flush still BLOCKS until that
+    // flush's write completes (2026-08-06: requestFlush-after-user-delete raced
+    // a subsequent flush() into returning before data hit storage).
+    private val flushExecutionLock = Any()
+
     @Volatile
     private var dirty = false
     private var firstDirtyAtMs = 0L
@@ -98,26 +104,32 @@ class DebouncedPersister(
     /**
      * Flush now, on the calling thread. Idempotent; no-op when clean.
      * On failure the dirty flag is restored for retry.
+     *
+     * Returns only after any concurrently-running flush has finished its write
+     * ([flushExecutionLock]) — callers rely on "flush() returned ⇒ previously
+     * dirty data is in storage".
      */
     fun flush() {
-        val shouldRun = synchronized(lock) {
-            pending?.cancel(false)
-            pending = null
-            if (dirty) {
-                dirty = false
-                true
-            } else {
-                false
+        synchronized(flushExecutionLock) {
+            val shouldRun = synchronized(lock) {
+                pending?.cancel(false)
+                pending = null
+                if (dirty) {
+                    dirty = false
+                    true
+                } else {
+                    false
+                }
             }
-        }
-        if (!shouldRun) return
-        try {
-            flushAction()
-        } catch (e: Exception) {
-            synchronized(lock) {
-                if (!dirty) {
-                    dirty = true
-                    firstDirtyAtMs = System.currentTimeMillis()
+            if (!shouldRun) return
+            try {
+                flushAction()
+            } catch (e: Exception) {
+                synchronized(lock) {
+                    if (!dirty) {
+                        dirty = true
+                        firstDirtyAtMs = System.currentTimeMillis()
+                    }
                 }
             }
         }

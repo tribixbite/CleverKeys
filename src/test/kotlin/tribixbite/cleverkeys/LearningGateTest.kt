@@ -36,6 +36,28 @@ class LearningGateTest {
     }
 
     @Test
+    fun `adaptation READS are gated too - master off makes selection history inert`() {
+        // H3 (review 2026-08-06): the multiplier read re-ranks predictions and
+        // suppresses add-to-dictionary prompts — it must go dark with master off.
+        assertTrue(LearningGate.canUseAdaptation(true))
+        assertFalse(LearningGate.canUseAdaptation(false))
+    }
+
+    @Test
+    fun `incognito field flag decodes IME_FLAG_NO_PERSONALIZED_LEARNING`() {
+        // M5: mirrors EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING (0x1000000).
+        assertEquals(0x1000000, LearningGate.IME_FLAG_NO_PERSONALIZED_LEARNING)
+        assertTrue(LearningGate.fieldAllowsPersonalizedLearning(0))
+        assertFalse(LearningGate.fieldAllowsPersonalizedLearning(LearningGate.IME_FLAG_NO_PERSONALIZED_LEARNING))
+        // Flag combined with unrelated imeOptions bits still detected.
+        assertFalse(
+            LearningGate.fieldAllowsPersonalizedLearning(
+                LearningGate.IME_FLAG_NO_PERSONALIZED_LEARNING or 0x00000006
+            )
+        )
+    }
+
+    @Test
     fun `swipe ML collection requires master AND collection toggle`() {
         assertTrue(LearningGate.canCollectSwipeMl(true, true))
         assertFalse(LearningGate.canCollectSwipeMl(false, true))
@@ -60,7 +82,8 @@ class LearningGateTest {
             word: String,
             master: Boolean,
             contextAware: Boolean = true,
-            personalized: Boolean = true
+            personalized: Boolean = true,
+            fieldAllows: Boolean = true
         ) = LearningGate.learnCommittedWord(
             recentWords = recent,
             committedWord = word,
@@ -68,7 +91,8 @@ class LearningGateTest {
             contextAwareEnabled = contextAware,
             personalizedLearningEnabled = personalized,
             recordSequence = { sequences.add(it) },
-            recordWordUsage = { words.add(it) }
+            recordWordUsage = { words.add(it) },
+            fieldAllowsPersonalizedLearning = fieldAllows
         )
     }
 
@@ -99,6 +123,15 @@ class LearningGateTest {
     fun `master off short-circuits BOTH sinks - no lambda runs at all`() {
         val r = Recorder()
         repeat(50) { i -> r.learn(listOf("w$i", "x$i"), "x$i", master = false) }
+        assertTrue(r.sequences.isEmpty())
+        assertTrue(r.words.isEmpty())
+    }
+
+    @Test
+    fun `incognito field short-circuits BOTH sinks despite every pref being on`() {
+        // M5: IME_FLAG_NO_PERSONALIZED_LEARNING outranks all user preferences.
+        val r = Recorder()
+        repeat(20) { i -> r.learn(listOf("a$i", "b$i"), "b$i", master = true, fieldAllows = false) }
         assertTrue(r.sequences.isEmpty())
         assertTrue(r.words.isEmpty())
     }

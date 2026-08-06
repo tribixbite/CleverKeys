@@ -505,6 +505,12 @@ tasks.register('runPureTests', JavaExec) {
     // Task C (2026-08-06): TrigramStore activation — same persistence discipline as BigramStore
     'tribixbite.cleverkeys.contextaware.TrigramStorePersistenceTest',
     'tribixbite.cleverkeys.contextaware.ContextModelTrigramTest',
+    // Review fixes 2026-08-06 (H1/H3/M1/M3/M4/M5/M7 + LOWs): learn-window boundaries,
+    // forget-vs-flush races, selection-history retention, wiring drift guards
+    'tribixbite.cleverkeys.ContextLearningBoundaryTest',
+    'tribixbite.cleverkeys.contextaware.LearnedStoreForgetRaceTest',
+    'tribixbite.cleverkeys.SelectionHistoryTest',
+    'tribixbite.cleverkeys.LearningWiringDriftTest',
     // SwipePrunerTest excluded: requires android.util.Log (MockK + Robolectric)
   ]
 

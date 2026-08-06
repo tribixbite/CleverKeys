@@ -641,11 +641,19 @@ class PredictionCoordinator(
      * vocabulary) held by the primary predictor and every per-language predictor
      * in [DictionaryManager]. Asynchronous debounced-store flush — cheap no-op
      * when nothing is dirty. Called from CleverKeysService.onFinishInputView and
-     * from [shutdown].
+     * from [shutdown] — i.e. exactly at input-session boundaries.
+     *
+     * H1 (review 2026-08-06): after the flush, every predictor's rolling
+     * recent-words window is CLEARED. Without this, the learn funnel's window
+     * straddled the field/app boundary — the last words typed in app A were
+     * joined to the first word committed in app B, learned as a bigram, and
+     * surfaced cross-app by next-word prediction. (`_contextTracker.clearAll()`
+     * only cleared the surface tracker, not this buffer.)
      */
     fun flushLearnedData() {
         try {
             wordPredictor?.persistLearnedData()
+            wordPredictor?.clearContext()
             dictionaryManager?.flushLearnedData()
         } catch (e: Exception) {
             Log.e(TAG, "Error flushing learned data", e)

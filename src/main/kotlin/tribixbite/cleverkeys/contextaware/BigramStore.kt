@@ -109,8 +109,12 @@ class BigramStore internal constructor(
             val keyed = storage.getString(storageKey(code))
             if (keyed != null) {
                 loadInto(data, keyed)
-            } else {
-                // Legacy migration: pre-language-keying blob → first-loaded language.
+            } else if (code == "en") {
+                // Legacy migration: the pre-language-keying blob was recorded when
+                // "en" was the only (implicit) language, so it belongs to "en"
+                // EXPLICITLY (L10, review 2026-08-06 — the previous
+                // first-language-to-load rule mis-keyed en pairs into whatever
+                // language a non-en-primary user loaded first).
                 val legacy = storage.getString(LEGACY_KEY_BIGRAMS)
                 if (legacy != null) {
                     loadInto(data, legacy)
@@ -157,9 +161,8 @@ class BigramStore internal constructor(
             if (existingEntry != null) {
                 // Update existing entry
                 val newFreq = existingEntry.frequency + 1
-                val newProb = BigramEntry.calculateProbability(newFreq, word1Freq)
                 entries.remove(existingEntry)
-                entries.add(existingEntry.copy(frequency = newFreq, probability = newProb))
+                entries.add(existingEntry.copy(frequency = newFreq))
             } else {
                 // Add new entry
                 entries.add(
@@ -167,10 +170,22 @@ class BigramStore internal constructor(
                         word1 = normalizedWord1,
                         word2 = normalizedWord2,
                         frequency = 1,
-                        probability = BigramEntry.calculateProbability(1, word1Freq)
+                        probability = 0f // Recomputed below with every sibling
                     )
                 )
             }
+
+            // M4 (review 2026-08-06): the denominator (word1's total) changed, so
+            // EVERY sibling's conditional probability is stale — renormalize the
+            // whole list (≤ MAX_BIGRAMS_PER_WORD entries), exactly as
+            // TrigramStore.recordTrigram and importFromJson already do. Without
+            // this, an early-recorded sibling kept its inflated probability
+            // forever and later, more frequent continuations could never outrank it.
+            val renormalized = entries.map {
+                it.copy(probability = BigramEntry.calculateProbability(it.frequency, word1Freq))
+            }
+            entries.clear()
+            entries.addAll(renormalized)
 
             // Sort by probability (descending) and limit size
             entries.sortByDescending { it.probability }
@@ -223,6 +238,24 @@ class BigramStore internal constructor(
         val entries = forLanguage(language).bigramMap[normalized1] ?: return 0f
         synchronized(this) {
             return entries.find { it.word2 == normalized2 }?.probability ?: 0f
+        }
+    }
+
+    /**
+     * Probability with the min-frequency confidence floor applied: 0 when the
+     * pair has been observed fewer than [setMinimumFrequency] times (L2, review
+     * 2026-08-06). [getProbability] stays RAW (export/statistics accessor);
+     * ranking/boost consumers must use this so a once-seen pair can't claim a
+     * conditional probability of 1.0.
+     */
+    fun getConfidentProbability(language: String, word1: String, word2: String): Float {
+        val normalized1 = BigramEntry.normalizeWord(word1)
+        val normalized2 = BigramEntry.normalizeWord(word2)
+
+        val entries = forLanguage(language).bigramMap[normalized1] ?: return 0f
+        synchronized(this) {
+            val entry = entries.find { it.word2 == normalized2 } ?: return 0f
+            return if (entry.frequency >= minFrequency) entry.probability else 0f
         }
     }
 
@@ -294,6 +327,10 @@ class BigramStore internal constructor(
         if (removed) {
             dirtyLanguages.add(lang)
             persister.markDirty()
+            // L4 (review 2026-08-06): a USER-initiated delete must not sit in the
+            // ~30 s debounce window — process death would resurrect the word the
+            // user explicitly removed. Flush the removal promptly (async).
+            persister.requestFlush()
         }
         return removed
     }
@@ -304,26 +341,34 @@ class BigramStore internal constructor(
      */
     fun clear(language: String) {
         val lang = normalizeLanguage(language)
+        // M1 (review 2026-08-06): the storage removal happens INSIDE the same
+        // lock that [writeDirtyLanguages] holds across serialize+write, so an
+        // in-flight flush can never re-persist ("resurrect") data the user just
+        // forgot: either the flush completes first and this remove erases its
+        // write, or this clear completes first and the flush serializes the
+        // now-empty table (which maps to a key removal, not a write).
         synchronized(this) {
             val data = forLanguage(lang)
             data.bigramMap.clear()
             data.word1Frequencies.clear()
+            dirtyLanguages.remove(lang)
+            storage.remove(storageKey(lang))
         }
-        dirtyLanguages.remove(lang)
-        storage.remove(storageKey(lang))
     }
 
     /** Clear ALL learned bigram data across every language, including persisted blobs. */
     fun clearAll() {
+        // M1: same lock discipline as [clear] — no flush can interleave between
+        // the in-RAM wipe and the persisted-blob removal.
         synchronized(this) {
             languages.values.forEach {
                 it.bigramMap.clear()
                 it.word1Frequencies.clear()
             }
+            dirtyLanguages.clear()
+            storage.remove(LEGACY_KEY_BIGRAMS)
+            storage.keys().filter { it.startsWith(KEY_PREFIX) }.forEach { storage.remove(it) }
         }
-        dirtyLanguages.clear()
-        storage.remove(LEGACY_KEY_BIGRAMS)
-        storage.keys().filter { it.startsWith(KEY_PREFIX) }.forEach { storage.remove(it) }
     }
 
     /**
@@ -396,11 +441,34 @@ class BigramStore internal constructor(
         val toWrite = dirtyLanguages.toList()
         dirtyLanguages.removeAll(toWrite.toSet())
 
+        var failure: Exception? = null
         for (lang in toWrite) {
             val data = languages[lang] ?: continue
-            val json = synchronized(this) { serialize(data) }
-            storage.putString(storageKey(lang), json)
+            try {
+                // M1 (review 2026-08-06): serialize AND write under ONE lock so a
+                // concurrent [clear]/[clearAll] (which also holds this lock while
+                // removing the persisted key) can never interleave between them —
+                // that interleaving re-persisted just-forgotten data. An empty
+                // table maps to key REMOVAL (post-clear flush, or last entry
+                // removed) so a forget is never overwritten by an empty blob.
+                synchronized(this) {
+                    if (data.bigramMap.isEmpty()) {
+                        storage.remove(storageKey(lang))
+                    } else {
+                        storage.putString(storageKey(lang), serialize(data))
+                    }
+                }
+            } catch (e: Exception) {
+                // L9: put this language back so the persister's dirty-restore
+                // actually retries it — draining first and failing later left the
+                // data stranded-unpersisted until the next record happened to
+                // re-mark the same language.
+                dirtyLanguages.add(lang)
+                failure = e
+            }
         }
+        // Propagate so DebouncedPersister.flush restores its dirty flag for retry.
+        failure?.let { throw it }
     }
 
     /** Serialize a language table to the persisted JSON-array format. Caller holds the lock. */

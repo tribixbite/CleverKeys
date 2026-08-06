@@ -203,6 +203,9 @@ class UserVocabulary internal constructor(
         val removed = synchronized(this) { vocabulary.remove(normalized) != null }
         if (removed) {
             persister.markDirty()
+            // L4 (review 2026-08-06): user-initiated delete — flush promptly so
+            // process death inside the debounce window can't resurrect the word.
+            persister.requestFlush()
         }
         return removed
     }
@@ -257,12 +260,14 @@ class UserVocabulary internal constructor(
      * Clear all vocabulary data (user reset). Persists the removal immediately.
      */
     fun clearAll() {
+        // M1 (review 2026-08-06): the storage removal happens INSIDE the same
+        // lock [writeToStorage] holds across serialize+write, so an in-flight
+        // flush can never re-persist the just-forgotten vocabulary.
         synchronized(this) {
             vocabulary.clear()
             lastCleanup = System.currentTimeMillis()
+            storage.remove(PREFS_KEY_WORDS)
         }
-
-        storage.remove(PREFS_KEY_WORDS)
         log("User vocabulary cleared", null)
     }
 
@@ -343,10 +348,19 @@ class UserVocabulary internal constructor(
      * Runs on the persistence thread (or the caller of [flush]).
      */
     private fun writeToStorage() {
-        val data = getAllWords()
-        val json = gson.toJson(data)
-        storage.putString(PREFS_KEY_WORDS, json)
-        log("Saved ${data.size} words to storage", null)
+        // M1 (review 2026-08-06): serialize AND write under ONE lock (shared with
+        // [clearAll]) so a forget can never interleave between them and be
+        // resurrected. An empty vocabulary maps to key REMOVAL (post-clear flush,
+        // or last word removed) — never an empty-blob overwrite of a forget.
+        val size = synchronized(this) {
+            if (vocabulary.isEmpty()) {
+                storage.remove(PREFS_KEY_WORDS)
+            } else {
+                storage.putString(PREFS_KEY_WORDS, gson.toJson(getAllWords()))
+            }
+            vocabulary.size
+        }
+        log("Saved $size words to storage", null)
     }
 
     /**

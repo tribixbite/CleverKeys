@@ -78,11 +78,18 @@ class PersonalizationEngine(private val context: Context) {
      * Enable or disable personalization.
      *
      * When disabled, no learning occurs and getPersonalizationBoost() returns 0.0.
+     *
+     * SESSION-ONLY (L8, review 2026-08-06): the caller passes the master-ANDed
+     * result of the real preferences (`WordPredictor.setConfig` →
+     * `LearningGate.canLearnPersonalization`), so persisting it here rewrote a
+     * REDUNDANT derived source of truth into `personalization_enabled` — e.g.
+     * master-off froze the engine pref at `false` even after the user re-enabled
+     * the master. The engine flag now lives in RAM only; the persisted pref is
+     * kept solely as the conservative initial state until the first setConfig sync.
      */
     fun setEnabled(enabled: Boolean) {
         this.enabled = enabled
-        prefs.edit().putBoolean(PREF_ENABLED, enabled).apply()
-        Log.d(TAG, "Personalization enabled=$enabled")
+        Log.d(TAG, "Personalization enabled=$enabled (session-only)")
     }
 
     /**

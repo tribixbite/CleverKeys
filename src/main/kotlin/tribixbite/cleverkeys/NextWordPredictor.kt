@@ -45,9 +45,15 @@ object NextWordPredictor {
      *
      * Inherits every existing suggestion-bar guard (§4.4): the feature pref,
      * the MASTER on-device-learning gate (Task A — next-word reads the learned
-     * store, so it must go dark with the master off), password mode, special
-     * prompts (autocorrect-undo / add-to-dictionary), Termux/terminal fields,
-     * and requires non-empty committed context.
+     * store, so it must go dark with the master off), the per-field incognito
+     * flag (M5 — `IME_FLAG_NO_PERSONALIZED_LEARNING` fields must not surface
+     * personalized predictions either), password mode, special prompts
+     * (autocorrect-undo / add-to-dictionary), Termux/terminal fields, and
+     * requires non-empty committed context.
+     *
+     * @param fieldAllowsPersonalizedLearning false when the active editor set
+     *   `IME_FLAG_NO_PERSONALIZED_LEARNING` (see
+     *   [LearningGate.fieldAllowsPersonalizedLearning])
      */
     fun shouldShow(
         featureEnabled: Boolean,
@@ -56,10 +62,12 @@ object NextWordPredictor {
         isPasswordMode: Boolean,
         specialPromptActive: Boolean,
         inTermuxApp: Boolean,
-        hasContext: Boolean
+        hasContext: Boolean,
+        fieldAllowsPersonalizedLearning: Boolean = true
     ): Boolean {
         return featureEnabled &&
             onDeviceLearningEnabled &&
+            fieldAllowsPersonalizedLearning &&
             wordPredictionEnabled &&
             !isPasswordMode &&
             !specialPromptActive &&

@@ -218,6 +218,25 @@ class SuggestionHandler(
     @Volatile
     private var nextWordSuggestionsActive = false
 
+    // M5 (review 2026-08-06): incognito-field contract. False while the active
+    // editor sets IME_FLAG_NO_PERSONALIZED_LEARNING — suppresses the learn
+    // funnel, selection-adaptation recording, and next-word surfacing for that
+    // field. Set from CleverKeysService.onStartInputView; reset to true is the
+    // safe default only because every consumer ANDs it with its own gates.
+    @Volatile
+    private var fieldAllowsPersonalizedLearning = true
+
+    /**
+     * Per-field incognito flag (M5): called from `onStartInputView` with
+     * [LearningGate.fieldAllowsPersonalizedLearning] of the field's
+     * `EditorInfo.imeOptions`. While false, nothing typed in this field is
+     * learned and no personalized next-word candidates are surfaced.
+     */
+    fun setFieldPersonalizedLearningAllowed(allowed: Boolean) {
+        fieldAllowsPersonalizedLearning = allowed
+        if (!allowed) vlog { "Field requests no personalized learning (incognito)" }
+    }
+
     /**
      * Updates configuration.
      *
@@ -331,6 +350,10 @@ class SuggestionHandler(
         if (enabled) {
             // Clear predictions when entering password mode
             suggestionBar?.clearSuggestions()
+            // H1 (review 2026-08-06): drop the learn-funnel's rolling word window
+            // too — a bigram must never join pre-password context to whatever is
+            // committed after the password field.
+            predictionCoordinator.getWordPredictor()?.clearContext()
         }
         vlog { "Password mode ${if (enabled) "enabled" else "disabled"}" }
     }
@@ -556,6 +579,13 @@ class SuggestionHandler(
      * so swipe correction still works; the appended entries carry NEXT_WORD
      * metas, which [onSuggestionSelected] uses to APPEND the tapped word
      * instead of replacing the auto-inserted swipe word.
+     *
+     * L3 (review 2026-08-06): candidate generation runs on the shared
+     * [predictionTasks] executor, not the UI thread — the first lookup of a
+     * language lazily LOADS its persisted n-gram blobs, which caused
+     * first-swipe jank inline. The append post is guarded by the bar
+     * generation (M6): if the bar changed while queued (user typed, new swipe),
+     * the stale append is dropped.
      */
     private fun appendNextWordToSwipeAlternates(
         bar: SuggestionBar,
@@ -564,26 +594,39 @@ class SuggestionHandler(
         barMetas: MutableList<SuggestionMeta>,
         editorInfo: EditorInfo?
     ) {
-        val candidates = generateNextWordCandidates(editorInfo) ?: return
-        val existingLower = barWords.map { it.lowercase() }.toHashSet()
-        var appended = 0
-        for (candidate in candidates) {
-            if (appended >= NextWordPredictor.MAX_SWIPE_APPEND) break
-            if (candidate.word.lowercase() in existingLower) continue
-            barWords.add(capitalizeIWord(candidate.word))
-            barScores.add(candidate.score)
-            barMetas.add(
-                SuggestionMeta(
-                    SuggestionOrigin.NEXT_WORD,
-                    note = NextWordPredictor.provenanceNote(
-                        candidate, contextTracker.getContextWords().toList()
+        val generationAtSubmit = bar.contentGeneration()
+        val contextWords = contextTracker.getContextWords().toList()
+        predictionTasks.cancelAndSubmit {
+            if (Thread.currentThread().isInterrupted) return@cancelAndSubmit
+            val candidates = generateNextWordCandidates(editorInfo) ?: return@cancelAndSubmit
+
+            val existingLower = barWords.map { it.lowercase() }.toHashSet()
+            val appendWords = mutableListOf<String>()
+            val appendScores = mutableListOf<Int>()
+            val appendMetas = mutableListOf<SuggestionMeta>()
+            for (candidate in candidates) {
+                if (appendWords.size >= NextWordPredictor.MAX_SWIPE_APPEND) break
+                if (candidate.word.lowercase() in existingLower) continue
+                appendWords.add(capitalizeIWord(candidate.word))
+                appendScores.add(candidate.score)
+                appendMetas.add(
+                    SuggestionMeta(
+                        SuggestionOrigin.NEXT_WORD,
+                        note = NextWordPredictor.provenanceNote(candidate, contextWords)
                     )
                 )
-            )
-            appended++
-        }
-        if (appended > 0) {
-            bar.setSuggestionsWithScores(barWords, barScores, barMetas)
+            }
+            if (appendWords.isEmpty() || Thread.currentThread().isInterrupted) return@cancelAndSubmit
+
+            mainHandler.post {
+                // M6: the swipe-alternates bar this append targets must still be
+                // the live content — abort if anything replaced it while queued.
+                if (bar.contentGeneration() != generationAtSubmit) return@post
+                barWords.addAll(appendWords)
+                barScores.addAll(appendScores)
+                barMetas.addAll(appendMetas)
+                bar.setSuggestionsWithScores(barWords, barScores, barMetas)
+            }
         }
     }
 
@@ -606,7 +649,8 @@ class SuggestionHandler(
                 isPasswordMode = isPasswordMode,
                 specialPromptActive = specialPromptActive,
                 inTermuxApp = inTermuxApp,
-                hasContext = contextWords.isNotEmpty()
+                hasContext = contextWords.isNotEmpty(),
+                fieldAllowsPersonalizedLearning = fieldAllowsPersonalizedLearning // M5
             )
         ) {
             return null
@@ -749,7 +793,11 @@ class SuggestionHandler(
         // Record user selection for adaptation learning — behind the MASTER
         // on-device-learning gate (Task A): UserAdaptationManager persists
         // selection counts to prefs and previously had NO preference gate.
-        if (LearningGate.canLearnAdaptation(config.on_device_learning_enabled)) {
+        // M5: an incognito field (IME_FLAG_NO_PERSONALIZED_LEARNING) suppresses
+        // this learning path too.
+        if (LearningGate.canLearnAdaptation(config.on_device_learning_enabled) &&
+            fieldAllowsPersonalizedLearning
+        ) {
             predictionCoordinator.getAdaptationManager()?.recordSelection(processedWord.trim())
         }
 
@@ -1084,10 +1132,18 @@ class SuggestionHandler(
             // NOTE: Don't clear suggestions here - they're re-displayed after auto-insertion
             contextTracker.clearCurrentWord()
 
-            // Next-word prediction call-site 2 (audit §4.4): after a tap commit the
-            // context just grew — chain another round of context-only candidates
-            // (this is what makes "want" → tap "to" → suggest "go/see/be" flow).
-            maybeShowNextWordPredictions(editorInfo)
+            // Next-word prediction call-site 2 (audit §4.4): after a MANUAL tap
+            // commit the context just grew — chain another round of context-only
+            // candidates (this is what makes "want" → tap "to" → suggest
+            // "go/see/be" flow). H2 (review 2026-08-06): gated on
+            // isManualSelection — the swipe AUTO-INSERT also routes through this
+            // method, and an ungated call here replaced the swipe-alternates bar
+            // (breaking swipe correction); the auto-insert path composes
+            // next-word candidates via call-site 3 (appendNextWordToSwipeAlternates)
+            // instead, which APPENDS after the alternates.
+            if (isManualSelection) {
+                maybeShowNextWordPredictions(editorInfo)
+            }
         }
 
         return if (ic != null) processedWord else null
@@ -1121,12 +1177,19 @@ class SuggestionHandler(
                 isPasswordMode = isPasswordMode,
                 specialPromptActive = specialPromptActive,
                 inTermuxApp = inTermuxApp,
-                hasContext = contextWords.isNotEmpty()
+                hasContext = contextWords.isNotEmpty(),
+                fieldAllowsPersonalizedLearning = fieldAllowsPersonalizedLearning // M5
             )
         ) {
             return
         }
         val predictor = predictionCoordinator.getWordPredictor() ?: return
+
+        // M6 (review 2026-08-06): snapshot the bar generation at submit time —
+        // any bar-content change between now and the queued post (swipe results,
+        // autocorrect prompt, another prediction pass) bumps it, and the post
+        // aborts instead of overwriting the newer state.
+        val generationAtSubmit = suggestionBar?.contentGeneration() ?: return
 
         predictionTasks.cancelAndSubmit {
             if (Thread.currentThread().isInterrupted) return@cancelAndSubmit
@@ -1165,6 +1228,8 @@ class SuggestionHandler(
                 if (specialPromptActive || isPasswordMode) return@post
                 if (contextTracker.getCurrentWordLength() > 0) return@post
                 suggestionBar?.let { bar ->
+                    // M6: abort when the bar changed since submit — this post is stale.
+                    if (bar.contentGeneration() != generationAtSubmit) return@post
                     nextWordSuggestionsActive = true
                     bar.setShowDebugScores(config.swipe_show_debug_scores)
                     bar.setShowOriginMarkers(config.suggestion_provenance_markers)
@@ -1181,6 +1246,15 @@ class SuggestionHandler(
      * clearing the bar directly, so context-only candidates can surface exactly
      * like Gboard's tap-into-text behavior. Every next-word guard applies; when
      * the feature is off this degrades to the original clear.
+     *
+     * SCOPE (L5, review 2026-08-06 — accepted limitation): candidates derive
+     * from the SESSION's committed-word context (`contextTracker`), not from
+     * the editor text preceding the parked cursor. Parking mid-way into text
+     * typed in an earlier session therefore predicts from the wrong (or empty)
+     * context and usually shows nothing — safe but not Gboard-complete. Reading
+     * the words before the cursor via InputConnection would need a guarded
+     * editor scan on every park; deferred until the feature (default OFF)
+     * earns it.
      */
     fun handleCursorParkPrediction(editorInfo: EditorInfo?) {
         if (isPasswordMode) return
@@ -1359,8 +1433,11 @@ class SuggestionHandler(
         // Commit word to context tracker (not auto-inserted since this is manual update)
         contextTracker.commitWord(word, source, false)
 
-        // Add word to WordPredictor for language detection
-        predictionCoordinator.getWordPredictor()?.addWordToContext(word)
+        // Add word to WordPredictor for language detection + the gated learn
+        // funnel. M5: the per-field incognito flag rides along so nothing typed
+        // in an IME_FLAG_NO_PERSONALIZED_LEARNING field is learned.
+        predictionCoordinator.getWordPredictor()
+            ?.addWordToContext(word, fieldAllowsPersonalizedLearning)
 
         // Track word for multi-language detection
         try {

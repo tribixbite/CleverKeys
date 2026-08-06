@@ -129,6 +129,35 @@ class ContextModel internal constructor(
     }
 
     /**
+     * Record ONLY the newest n-grams ending at the just-committed word: the
+     * final bigram (last two words) and the final trigram (last three words).
+     *
+     * M3 (review 2026-08-06): this is THE per-commit hot-path entry
+     * (`LearningGate.learnCommittedWord` via `WordPredictor.addWordToContext`).
+     * The previous behavior replayed [recordSequence] over the whole rolling
+     * window on EVERY commit, so each earlier pair was re-recorded once per
+     * subsequent commit — a single typing of "the cat sat" yielded
+     * freq(the→cat)=2, silently defeating the "seen ≥2×" confidence floors
+     * (`BigramStore.DEFAULT_MIN_FREQUENCY`, `NextWordPredictor.MIN_LEARNED_FREQUENCY`).
+     * With newest-only recording, frequency == number of times the user
+     * actually typed the pair.
+     *
+     * [recordSequence] remains for bulk paths (import replay, tests) where the
+     * whole sequence is genuinely new.
+     *
+     * @param words rolling committed-word window, most recent last (only the
+     *   trailing 3 words are consulted)
+     */
+    fun recordCommit(words: List<String>) {
+        val n = words.size
+        if (n < 2) return
+        bigramStore.recordBigram(language, words[n - 2], words[n - 1])
+        if (trigramStore != null && n >= 3) {
+            trigramStore.recordTrigram(language, words[n - 3], words[n - 2], words[n - 1])
+        }
+    }
+
+    /**
      * Get context-based boost for a candidate word.
      *
      * Calculates a multiplier (≥1.0) based on how likely the candidate is given previous words.
@@ -157,10 +186,14 @@ class ContextModel internal constructor(
 
         // Prefer the trigram model when two words of context are available —
         // P(word | w1, w2) is a sharper signal than P(word | w2) (audit §4.2).
+        // L2 (review 2026-08-06): use the CONFIDENT probability (0 below the
+        // store's min-frequency floor) — a once-seen n-gram must not hand a
+        // candidate the near-max boost just because its conditional probability
+        // is 1.0 on a single observation.
         if (trigramStore != null && previousWords.size >= TRIGRAM_WINDOW) {
             val w1 = previousWords[previousWords.size - 2]
             val w2 = previousWords.last()
-            val trigramProb = trigramStore.getProbability(language, w1, w2, candidateWord)
+            val trigramProb = trigramStore.getConfidentProbability(language, w1, w2, candidateWord)
             if (trigramProb >= MIN_TRIGRAM_PROB) {
                 return calculateBoost(trigramProb)
             }
@@ -168,7 +201,7 @@ class ContextModel internal constructor(
 
         // Back off to bigram with most recent previous word
         val prevWord = previousWords.last()
-        val bigramProb = bigramStore.getProbability(language, prevWord, candidateWord)
+        val bigramProb = bigramStore.getConfidentProbability(language, prevWord, candidateWord)
 
         if (bigramProb >= MIN_BIGRAM_PROB) {
             return calculateBoost(bigramProb)

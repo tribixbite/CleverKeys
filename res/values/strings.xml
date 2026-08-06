@@ -667,7 +667,7 @@
 
     <!-- PrivacySection -->
     <string name="privacy_on_device_learning_title">Learn From My Typing</string>
-    <string name="privacy_on_device_learning_desc">Build private on-device phrase and word-usage models from what you type. Turn off to stop ALL recording of typing behavior — nothing is stored while off.</string>
+    <string name="privacy_on_device_learning_desc">Build private on-device phrase and word-usage models from what you type. Turn off to stop all automatic recording of typing behavior — nothing new is stored while off. Data you explicitly create is separate: swipe-calibration sessions you run, prediction performance statistics, and learned data restored from a backup.</string>
     <string name="privacy_swipe_pattern_title">Swipe Pattern Data</string>
     <string name="privacy_swipe_pattern_desc">Store swipe trajectories locally for on-device learning</string>
     <string name="privacy_performance_metrics_title">Performance Metrics</string>

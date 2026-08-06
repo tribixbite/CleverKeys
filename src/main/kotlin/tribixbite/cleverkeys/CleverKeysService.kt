@@ -723,6 +723,13 @@ class CleverKeysService : InputMethodService(),
             val isPasswordField = SuggestionBar.isPasswordField(info)
             _suggestionBar?.setPasswordMode(isPasswordField)
             _suggestionHandler?.setPasswordMode(isPasswordField)
+
+            // M5 (review 2026-08-06): honor IME_FLAG_NO_PERSONALIZED_LEARNING —
+            // incognito fields (private browser tabs etc.) suppress the learn
+            // funnel, selection-adaptation recording, and next-word surfacing.
+            _suggestionHandler?.setFieldPersonalizedLearningAllowed(
+                LearningGate.fieldAllowsPersonalizedLearning(info.imeOptions)
+            )
             // #39: Allow swipe predictions in password fields if enabled
             _suggestionBar?.setAllowSwipeInPasswordMode(_config?.swipe_on_password_fields ?: false)
             // Wire up InputConnectionProvider for accurate password text reading

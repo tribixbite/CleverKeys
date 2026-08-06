@@ -49,6 +49,15 @@ class SuggestionBar : LinearLayout {
     private val currentMetas: MutableList<SuggestionMeta> = mutableListOf()
     private var showOriginMarkers = false
     private var provenancePopup: android.widget.PopupWindow? = null
+
+    // M6 (review 2026-08-06): monotonic content generation, bumped on every
+    // APPLIED bar-content change (setSuggestionsWithScores past the identical-
+    // content skip, and showTemporaryMessage). Async producers snapshot it at
+    // submit time and abort their post when the bar has moved on — prevents a
+    // stale queued next-word post from overwriting newer bar state. Main-thread
+    // only (all bar writes are), @Volatile so executor threads can snapshot.
+    @Volatile
+    private var contentGeneration = 0
     private var selectedIndex = -1
     private val theme: Theme?
     private var showDebugScores = false
@@ -464,6 +473,14 @@ class SuggestionBar : LinearLayout {
         provenancePopup = null
     }
 
+    /**
+     * Current bar-content generation (M6). Snapshot before submitting async
+     * work that will post bar content; compare on the main thread before
+     * applying — a mismatch means the bar changed in between and the queued
+     * post is stale.
+     */
+    fun contentGeneration(): Int = contentGeneration
+
     override fun onDetachedFromWindow() {
         dismissProvenancePopup()
         super.onDetachedFromWindow()
@@ -554,6 +571,11 @@ class SuggestionBar : LinearLayout {
         // Any content change invalidates an open provenance sheet.
         dismissProvenancePopup()
 
+        // M6 (review 2026-08-06): every applied content change bumps the bar
+        // generation so queued async posts (next-word prediction) can detect
+        // that the bar moved on and abort instead of clobbering newer state.
+        contentGeneration++
+
         currentSuggestions.clear()
         currentScores.clear()
         currentMetas.clear()
@@ -593,6 +615,13 @@ class SuggestionBar : LinearLayout {
      * Clear all suggestions (MODIFIED: always keep bar visible when CGR active)
      */
     fun clearSuggestions() {
+        // L1 (review 2026-08-06): the provenance sheet must never outlive its
+        // content — dismiss BEFORE the guards below (password mode and the
+        // temporary-message skip both early-return, and the identical-content
+        // skip inside setSuggestionsWithScores bypasses its dismiss when the
+        // bar is already empty).
+        dismissProvenancePopup()
+
         // Don't clear password mode views
         if (isPasswordMode) {
             return
@@ -623,6 +652,12 @@ class SuggestionBar : LinearLayout {
      */
     fun showTemporaryMessage(message: String, durationMs: Long = 1500L, clearAfter: Boolean = false) {
         if (isPasswordMode) return  // Don't interrupt password mode
+
+        // L1: temporary messages replace the bar content the sheet described.
+        dismissProvenancePopup()
+
+        // M6: this is an applied content change — stale async posts must abort.
+        contentGeneration++
 
         // Cancel any pending restore
         mainHandler.removeCallbacks(restoreRunnable)
