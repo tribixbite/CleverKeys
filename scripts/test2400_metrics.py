@@ -141,22 +141,30 @@ def main() -> None:
     ap.add_argument("--cache", default=os.path.expanduser("~/.cache/cleverkeys-test"))
     ap.add_argument("--dict", default="src/main/assets/dictionaries/en_enhanced.json",
                     help="our vocab; used to recover which traces the neural harness skipped (OOV)")
+    ap.add_argument("--label", default="test2400", help="split label for the header")
+    # Explicit cache paths override the test2400 defaults (e.g. for the val split).
+    ap.add_argument("--neural", default=None)
+    ap.add_argument("--geo", default=None)
+    ap.add_argument("--floor", default=None)
+    ap.add_argument("--ceiling", default=None)
     args = ap.parse_args()
     c = args.cache
+    floor_p = args.floor or os.path.join(c, "futo_decoder_test2400.jsonl")
+    geo_p = args.geo or os.path.join(c, "test2400_geo.jsonl")
+    neural_p = args.neural or os.path.join(c, "test2400_neural.jsonl")
+    ceiling_path = args.ceiling or os.path.join(c, "futo_decoder_test2400_ceiling.jsonl")
+    print(f"[{args.label}]")
 
-    # Floor cache carries all 2,400 targets by original idx -> the authoritative trace set.
-    floor_ranks, floor_words = load_idx_keyed(os.path.join(c, "futo_decoder_test2400.jsonl"))
-    geo_ranks, _ = load_idx_keyed(os.path.join(c, "test2400_geo.jsonl"))
+    # Floor cache carries every target by original idx -> the authoritative trace set.
+    floor_ranks, floor_words = load_idx_keyed(floor_p)
+    geo_ranks, _ = load_idx_keyed(geo_p)
 
     # In-dict idxs (original order) = the traces the neural harness actually decoded.
     our_vocab = {k.lower() for k in json.load(open(args.dict)).keys()}
     indict_idxs = [i for i in sorted(floor_words.keys()) if floor_words[i] in our_vocab]
-    neural_ranks, neural_words = load_neural(
-        os.path.join(c, "test2400_neural.jsonl"), indict_idxs, floor_words)
+    neural_ranks, neural_words = load_neural(neural_p, indict_idxs, floor_words)
     print(f"[join] our-vocab in-dict traces={len(indict_idxs)} "
           f"(OOV to us={len(floor_words)-len(indict_idxs)})")
-
-    ceiling_path = os.path.join(c, "futo_decoder_test2400_ceiling.jsonl")
     ceiling_ranks: dict[int, int] | None = None
     if os.path.exists(ceiling_path):
         ceiling_ranks, _ = load_idx_keyed(ceiling_path)
