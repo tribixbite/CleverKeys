@@ -233,8 +233,14 @@ def load_combined_vocab(path: Path) -> LexTrie:
                         pass
             if not word:
                 continue
-            wl = word.lower()
-            if wl and all("a" <= c <= "z" for c in wl):
+            # FUTO's swipe model emits a-z only, so the lexicon MUST be a-z-normalized for
+            # the beam to reach any word: STRIP apostrophes/hyphens (don't->dont, can't->cant,
+            # aaron's->aarons) rather than DROP the word. Dropping made every apostrophe-only
+            # surface form (don't, didn't, you're, i've, isn't, ...) unreachable, understating
+            # FUTO on the contraction subset (42.9% -> misses dont/didnt/youre/ive) while our
+            # a-z-aliased en_enhanced hit them (89.3%). This matches FUTO's normalize_word (a-z).
+            wl = "".join(c for c in word.lower() if "a" <= c <= "z")
+            if wl:
                 trie.insert(wl, freq if freq > 0 else 1.0)
     return trie
 
