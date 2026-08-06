@@ -243,12 +243,70 @@ class SuggestionHandler(
     fun isPredictionExecutorShutdown(): Boolean = predictionTasks.isShutdown
 
     /**
-     * Sets the suggestion bar reference.
+     * Sets the suggestion bar reference and registers this handler as the
+     * long-press provenance inspector (Task B — SuggestionHandler owns the
+     * pipeline knowledge; the bar stays a dumb display surface).
      *
      * @param suggestionBar Suggestion bar for displaying predictions
      */
     fun setSuggestionBar(suggestionBar: SuggestionBar?) {
         this.suggestionBar = suggestionBar
+        suggestionBar?.setOnSuggestionInspectedListener { index, word, meta ->
+            inspectSuggestion(index, word, meta)
+        }
+    }
+
+    /**
+     * Task B Tier 1: compose and display the provenance sheet for a long-pressed
+     * suggestion — which engine/source produced it plus its score components
+     * (wires the previously dead `PersonalizationEngine.explainBoost()`).
+     *
+     * Available with all debug prefs off: inspection is on-demand and costs
+     * nothing until invoked. When the at-generation breakdown is missing (e.g.
+     * a restored bar without metas), it is lazily recomputed from the current
+     * partial + context — the inputs are all still known (audit §2.3).
+     */
+    private fun inspectSuggestion(index: Int, word: String, meta: SuggestionMeta?) {
+        val bar = suggestionBar ?: return
+
+        // Special-suggestion wires (dict_add:/exact_add:) resolve to their word
+        // for display; ordinary words pass through unchanged.
+        val displayWord = when (val route = routeSuggestionSelection(word)) {
+            is SelectionRoute.AddToDictionary -> route.word
+            is SelectionRoute.ExactAdd -> route.word
+            is SelectionRoute.CommitWord -> route.wire.removePrefix("raw:")
+        }
+
+        val predictor = predictionCoordinator.getWordPredictor()
+
+        // Lazily recompute the unified-score breakdown when absent and the word
+        // came from the unified scorer's world (typed-path origins).
+        val breakdown = meta?.breakdown ?: run {
+            val partial = contextTracker.getCurrentWord()
+            if (partial.isNotEmpty() &&
+                (meta == null || meta.origin == SuggestionOrigin.DICTIONARY_PREFIX)
+            ) {
+                predictor?.explainScore(displayWord, partial, contextTracker.getContextWords().toList())
+            } else {
+                null
+            }
+        }
+        val effectiveMeta = when {
+            meta == null && breakdown != null ->
+                SuggestionMeta(SuggestionOrigin.DICTIONARY_PREFIX, breakdown)
+            meta != null && meta.breakdown == null && breakdown != null ->
+                meta.copy(breakdown = breakdown)
+            else -> meta
+        }
+
+        val text = ProvenanceFormatter.format(
+            word = displayWord,
+            meta = effectiveMeta,
+            barScore = null, // breakdown carries the meaningful score; raw bar ints are debug-only
+            personalizationExplanation = predictor?.explainPersonalization(displayWord)
+                ?.takeIf { it.inVocabulary }?.explanation
+        )
+        bar.showProvenancePopup(text)
     }
 
     /**
@@ -401,13 +459,23 @@ class SuggestionHandler(
         val barWords = transformedPredictions.toMutableList()
         val barScores = (scores ?: emptyList()).toMutableList()
         val activeLanguage = predictionCoordinator.getDictionaryManager()?.getCurrentLanguage() ?: "en"
+        val engineWordCount = barWords.size
         if (activeLanguage == "en") {
             augmentPredictionsWithPossessives(barWords, barScores)
         }
 
+        // Task B: provenance metas — engine outputs first, then any appended
+        // possessive forms (augment appends at the end, so index >= engineWordCount
+        // means POSSESSIVE).
+        val swipeOrigin = SuggestionOrigin.forSwipeEngineMode(config.swipe_engine_mode)
+        val barMetas = MutableList(barWords.size) { i ->
+            SuggestionMeta(if (i < engineWordCount) swipeOrigin else SuggestionOrigin.POSSESSIVE)
+        }
+
         suggestionBar?.let { bar ->
             bar.setShowDebugScores(config.swipe_show_debug_scores)
-            bar.setSuggestionsWithScores(barWords, barScores)
+            bar.setShowOriginMarkers(config.suggestion_provenance_markers)
+            bar.setSuggestionsWithScores(barWords, barScores, barMetas)
 
             // Auto-insert the top (highest-scoring) prediction through THE single commit engine
             // (step 6): haptic + manual-typing termination + tracking clear were absorbed verbatim
@@ -468,9 +536,94 @@ class SuggestionHandler(
 
                 // Re-display the augmented+transformed correction list (D1: possessives persist in
                 // the final swipe bar).
-                bar.setSuggestionsWithScores(barWords, barScores)
+                bar.setSuggestionsWithScores(barWords, barScores, barMetas)
+
+                // Next-word call-site 3 (audit §4.4): keep the swipe ALTERNATES
+                // (the user may still correct the swipe) and APPEND up to
+                // MAX_SWIPE_APPEND next-word candidates. Per-suggestion NEXT_WORD
+                // metas make the tap path append-after (not replace) for these
+                // entries. Store lookups are in-RAM map reads — cheap enough to
+                // run inline on the result path.
+                appendNextWordToSwipeAlternates(bar, barWords, barScores, barMetas, editorInfo)
             }
         }
+    }
+
+    /**
+     * Next-word call-site 3 (audit §4.4 recommended composition): after a swipe
+     * auto-insert, append up to [NextWordPredictor.MAX_SWIPE_APPEND] learned
+     * next-word candidates AFTER the swipe alternates. The alternates are kept
+     * so swipe correction still works; the appended entries carry NEXT_WORD
+     * metas, which [onSuggestionSelected] uses to APPEND the tapped word
+     * instead of replacing the auto-inserted swipe word.
+     */
+    private fun appendNextWordToSwipeAlternates(
+        bar: SuggestionBar,
+        barWords: MutableList<String>,
+        barScores: MutableList<Int>,
+        barMetas: MutableList<SuggestionMeta>,
+        editorInfo: EditorInfo?
+    ) {
+        val candidates = generateNextWordCandidates(editorInfo) ?: return
+        val existingLower = barWords.map { it.lowercase() }.toHashSet()
+        var appended = 0
+        for (candidate in candidates) {
+            if (appended >= NextWordPredictor.MAX_SWIPE_APPEND) break
+            if (candidate.word.lowercase() in existingLower) continue
+            barWords.add(capitalizeIWord(candidate.word))
+            barScores.add(candidate.score)
+            barMetas.add(
+                SuggestionMeta(
+                    SuggestionOrigin.NEXT_WORD,
+                    note = NextWordPredictor.provenanceNote(
+                        candidate, contextTracker.getContextWords().toList()
+                    )
+                )
+            )
+            appended++
+        }
+        if (appended > 0) {
+            bar.setSuggestionsWithScores(barWords, barScores, barMetas)
+        }
+    }
+
+    /**
+     * Shared gated next-word generation (call-sites 1–4). Returns null when any
+     * guard fails (feature off, master learning gate off, password/prompt/
+     * Termux, empty context) or nothing clears the confidence floor.
+     */
+    private fun generateNextWordCandidates(editorInfo: EditorInfo?): List<NextWordPredictor.Candidate>? {
+        val inTermuxApp = try {
+            editorInfo?.packageName == "com.termux"
+        } catch (e: Exception) {
+            false
+        }
+        val contextWords = contextTracker.getContextWords().toList()
+        if (!NextWordPredictor.shouldShow(
+                featureEnabled = config.next_word_prediction_enabled,
+                onDeviceLearningEnabled = config.on_device_learning_enabled,
+                wordPredictionEnabled = config.word_prediction_enabled,
+                isPasswordMode = isPasswordMode,
+                specialPromptActive = specialPromptActive,
+                inTermuxApp = inTermuxApp,
+                hasContext = contextWords.isNotEmpty()
+            )
+        ) {
+            return null
+        }
+        val predictor = predictionCoordinator.getWordPredictor() ?: return null
+
+        val learned = predictor.getNextWordCandidates(contextWords, maxResults = 10)
+        val candidates = NextWordPredictor.generate(
+            learned = learned,
+            lastCommittedWord = contextWords.lastOrNull(),
+            personalizationBoost = { predictor.getPersonalizationBoostFor(it) },
+            isWordAllowed = { w ->
+                !predictor.isWordDisabled(w) &&
+                    (predictor.isInDictionary(w) || predictor.isInUserVocabulary(w))
+            }
+        )
+        return candidates.ifEmpty { null }
     }
 
     /**
@@ -497,10 +650,13 @@ class SuggestionHandler(
         // Null/empty check
         if (word.isNullOrBlank()) return null
 
-        // Next-word tap (audit §4.4): remember whether the bar was showing
-        // context-only candidates so the commit is tagged NEXT_WORD below.
-        // Consumed either way — any selection ends the next-word display state.
-        val wasNextWordSelection = nextWordSuggestionsActive
+        // Next-word tap (audit §4.4): a whole-bar next-word display OR (call-site
+        // 3) a per-suggestion NEXT_WORD meta on a mixed swipe-alternates bar —
+        // either way the commit is tagged NEXT_WORD below. Consumed either way —
+        // any selection ends the next-word display state.
+        val tappedOrigin = suggestionBar?.getMetaForSuggestion(word)?.origin
+        val wasNextWordSelection =
+            nextWordSuggestionsActive || tappedOrigin == SuggestionOrigin.NEXT_WORD
         nextWordSuggestionsActive = false
 
         // R3: Route the special-suggestion protocol through the shared typed
@@ -590,8 +746,12 @@ class SuggestionHandler(
             }
         }
 
-        // Record user selection for adaptation learning
-        predictionCoordinator.getAdaptationManager()?.recordSelection(processedWord.trim())
+        // Record user selection for adaptation learning — behind the MASTER
+        // on-device-learning gate (Task A): UserAdaptationManager persists
+        // selection counts to prefs and previously had NO preference gate.
+        if (LearningGate.canLearnAdaptation(config.on_device_learning_enabled)) {
+            predictionCoordinator.getAdaptationManager()?.recordSelection(processedWord.trim())
+        }
 
         // CRITICAL: Save swipe flag before resetting for use in spacing logic below
         val isSwipeAutoInsert = contextTracker.wasLastInputSwipe()
@@ -619,6 +779,17 @@ class SuggestionHandler(
                 // these fields up front and (a) force the editor-scan fallback,
                 // (b) never inject a leading space (it would corrupt the value).
                 val syncSuppressedField = !contextTracker.shouldSyncForInputType(editorInfo)
+
+                // Next-word call-site 3 (audit §4.4): a NEXT_WORD candidate that
+                // was APPENDED after swipe alternates must append after the
+                // auto-inserted word — clearing the tracking here prevents the
+                // REPLACE branch below from deleting the swiped word.
+                if (wasNextWordSelection &&
+                    contextTracker.getLastCommitSource() == PredictionSource.NEURAL_SWIPE
+                ) {
+                    contextTracker.clearLastAutoInsertedWord()
+                    contextTracker.setLastCommitSource(PredictionSource.UNKNOWN)
+                }
 
                 // IMPORTANT: _currentWord tracks typed characters, but they're already committed to input!
                 // When typing normally (not swipe), each character is committed immediately via KeyEventHandler
@@ -945,6 +1116,7 @@ class SuggestionHandler(
         val contextWords = contextTracker.getContextWords().toList()
         if (!NextWordPredictor.shouldShow(
                 featureEnabled = config.next_word_prediction_enabled,
+                onDeviceLearningEnabled = config.on_device_learning_enabled,
                 wordPredictionEnabled = config.word_prediction_enabled,
                 isPasswordMode = isPasswordMode,
                 specialPromptActive = specialPromptActive,
@@ -977,6 +1149,14 @@ class SuggestionHandler(
                 candidates.map { capitalizeIWord(it.word) }
             )
             val scores = candidates.map { it.score }
+            // Task B: NEXT_WORD metas with the learned statistics behind each
+            // candidate (frequency + conditional probability) as the sheet note.
+            val metas = candidates.map { candidate ->
+                SuggestionMeta(
+                    SuggestionOrigin.NEXT_WORD,
+                    note = NextWordPredictor.provenanceNote(candidate, contextWords)
+                )
+            }
 
             if (Thread.currentThread().isInterrupted || specialPromptActive) return@cancelAndSubmit
             mainHandler.post {
@@ -987,10 +1167,25 @@ class SuggestionHandler(
                 suggestionBar?.let { bar ->
                     nextWordSuggestionsActive = true
                     bar.setShowDebugScores(config.swipe_show_debug_scores)
-                    bar.setSuggestionsWithScores(displayWords, scores)
+                    bar.setShowOriginMarkers(config.suggestion_provenance_markers)
+                    bar.setSuggestionsWithScores(displayWords, scores, metas)
                 }
             }
         }
+    }
+
+    /**
+     * Next-word call-site 4 (audit §4.4): the cursor parked after existing text
+     * with NO partial word under it — e.g. tapping at the end of a sentence.
+     * InputCoordinator's empty-prefix cursor-sync branch routes here instead of
+     * clearing the bar directly, so context-only candidates can surface exactly
+     * like Gboard's tap-into-text behavior. Every next-word guard applies; when
+     * the feature is off this degrades to the original clear.
+     */
+    fun handleCursorParkPrediction(editorInfo: EditorInfo?) {
+        if (isPasswordMode) return
+        suggestionBar?.clearSuggestions()
+        maybeShowNextWordPredictions(editorInfo)
     }
 
     /**
@@ -1305,7 +1500,11 @@ class SuggestionHandler(
                                 // Show original word as first suggestion for easy undo
                                 suggestionBar?.setSuggestionsWithScores(
                                     listOf(completedWord, correctedWord), // Original word first for undo
-                                    listOf(0, 0)
+                                    listOf(0, 0),
+                                    listOf(
+                                        SuggestionMeta(SuggestionOrigin.AUTOCORRECT, note = "Your typed word (tap to undo)"),
+                                        SuggestionMeta(SuggestionOrigin.AUTOCORRECT, note = "Autocorrected from “$completedWord”")
+                                    )
                                 )
 
                                 // Reset prediction state
@@ -1558,13 +1757,25 @@ class SuggestionHandler(
                 }
 
                 // Merge contraction with predictions (contraction first, then transformed predictions)
-                // Filter out duplicates (contraction/paired variants might already be in list)
+                // Filter out duplicates (contraction/paired variants might already be in list).
+                // Task B: aligned (word, score, meta) merge — filtering a dup out of the
+                // middle keeps each score/meta attached to ITS word (the old
+                // `scores.take(filteredCount)` could shift scores past a mid-list dup).
                 val injectedLowerSet = contractionWords.map { it.lowercase() }.toSet()
-                val mergedWords = contractionWords + transformedPredictions.filter {
-                    it.lowercase() !in injectedLowerSet
+                val mergedWords = contractionWords.toMutableList()
+                val mergedScores = contractionScores.toMutableList()
+                val mergedMetas = MutableList(contractionWords.size) {
+                    SuggestionMeta(SuggestionOrigin.CONTRACTION)
                 }
-                val filteredCount = transformedPredictions.size - (transformedPredictions.count { it.lowercase() in injectedLowerSet })
-                val mergedScores = contractionScores + prediction.scores.take(filteredCount)
+                transformedPredictions.forEachIndexed { i, transformed ->
+                    if (transformed.lowercase() in injectedLowerSet) return@forEachIndexed
+                    mergedWords.add(transformed)
+                    mergedScores.add(prediction.scores.getOrElse(i) { 0 })
+                    mergedMetas.add(
+                        prediction.metas?.getOrNull(i)
+                            ?: SuggestionMeta(SuggestionOrigin.DICTIONARY_PREFIX)
+                    )
+                }
 
                 // Apply capitalization transformation if user started with uppercase
                 val transformedWords = if (shouldCapitalize) {
@@ -1581,6 +1792,7 @@ class SuggestionHandler(
                 // This allows users to tap the exact typed word to add it to dictionary
                 val finalWords: List<String>
                 val finalScores: List<Int>
+                val finalMetas: List<SuggestionMeta>
                 if (config.show_exact_typed_word && partial.length >= 2) {
                     // Check if the exact partial (with capitalization) is already in predictions
                     val exactTyped = if (shouldCapitalize) {
@@ -1602,14 +1814,17 @@ class SuggestionHandler(
                         // doesn't displace the best prediction.
                         finalWords = transformedWords + Suggestion.ExactAdd(exactTyped).wire
                         finalScores = mergedScores + 0  // Low score since it's at the end
+                        finalMetas = mergedMetas + SuggestionMeta(SuggestionOrigin.EXACT_ADD)
                         vlog { "EXACT ADD: Added '$exactTyped' as tap-to-add option" }
                     } else {
                         finalWords = transformedWords
                         finalScores = mergedScores
+                        finalMetas = mergedMetas
                     }
                 } else {
                     finalWords = transformedWords
                     finalScores = mergedScores
+                    finalMetas = mergedMetas
                 }
 
                 // Post result to UI thread
@@ -1628,8 +1843,9 @@ class SuggestionHandler(
                             // cleared the flag in the letter branch).
                             nextWordSuggestionsActive = false
                             bar.setShowDebugScores(config.swipe_show_debug_scores)
+                            bar.setShowOriginMarkers(config.suggestion_provenance_markers)
                             // v1.2.0: Use merged scores that include contraction scores
-                            bar.setSuggestionsWithScores(finalWords, finalScores)
+                            bar.setSuggestionsWithScores(finalWords, finalScores, finalMetas)
                         }
                     }
                 }

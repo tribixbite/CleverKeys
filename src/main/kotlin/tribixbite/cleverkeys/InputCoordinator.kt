@@ -266,7 +266,13 @@ class InputCoordinator(
                 val hasSwipeCorrections = contextTracker.getLastCommitSource() == PredictionSource.NEURAL_SWIPE
 
                 if (!hasAutocorrectUndo && !hasSwipeCorrections) {
-                    suggestionBar?.clearSuggestions()
+                    // Next-word call-site 4 (audit §4.4): cursor parked with no
+                    // partial word — route through SuggestionHandler so the
+                    // opt-in next-word feature can surface context-only
+                    // candidates. With the feature (or master learning gate)
+                    // off, the delegate clears the bar exactly as before.
+                    cursorSyncDelegate?.handleCursorParkPrediction(editorInfo)
+                        ?: suggestionBar?.clearSuggestions()
                 } else {
                     debugLogger?.invoke("🔄 Preserving suggestions (autocorrect=$hasAutocorrectUndo, swipe=$hasSwipeCorrections)")
                 }

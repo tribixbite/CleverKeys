@@ -436,9 +436,18 @@ class WordPredictor {
     fun setConfig(config: Config) {
         this.config = config
 
-        // Phase 7.2: Update personalization engine settings when config changes
+        // Phase 7.2: Update personalization engine settings when config changes.
+        // Task A (2026-08-06): the MASTER on-device-learning gate ANDs into the
+        // engine's enabled state, so with the master off the engine neither
+        // records (recordWordTyped no-ops) nor boosts (getPersonalizationBoost
+        // returns 0) — the learned vocabulary becomes fully inert.
         personalizationEngine?.let { engine ->
-            engine.setEnabled(config.personalized_learning_enabled)
+            engine.setEnabled(
+                LearningGate.canLearnPersonalization(
+                    config.on_device_learning_enabled,
+                    config.personalized_learning_enabled
+                )
+            )
 
             // Parse learning aggression from config
             val aggression = try {
@@ -559,22 +568,22 @@ class WordPredictor {
             recentWords.removeAt(0)
         }
 
-        // Phase 7.1: Record word sequences for dynamic N-gram learning
-        // Only record if feature is enabled and we have at least 2 words (minimum for bigrams)
-        val contextAwareEnabled = config?.context_aware_predictions_enabled ?: true
-        if (contextAwareEnabled && recentWords.size >= 2 && contextModel != null) {
-            // Record last few words as a sequence (up to 4 words for trigram future-proofing)
-            val sequenceLength = kotlin.math.min(4, recentWords.size)
-            val sequence = recentWords.takeLast(sequenceLength)
-            contextModel?.recordSequence(sequence)
-        }
-
-        // Phase 7.2: Record word usage for personalized learning
-        // Learn individual word frequencies for adaptive prediction boosting
-        val personalizationEnabled = config?.personalized_learning_enabled ?: true
-        if (personalizationEnabled && personalizationEngine != null) {
-            personalizationEngine?.recordWordTyped(normalizedWord)
-        }
+        // THE learn funnel (Task A master privacy gate, 2026-08-06): every
+        // typing-derived learn path — context LM (bigrams + trigrams, Phase 7.1)
+        // and personalization vocabulary (Phase 7.2) — flows through
+        // LearningGate.learnCommittedWord, which short-circuits BEFORE any
+        // in-RAM mutation or persistence when the master gate (or the
+        // per-feature gate) is off. The gate logic is pure and unit-tested
+        // (OnDeviceLearningPrivacyTest).
+        LearningGate.learnCommittedWord(
+            recentWords = recentWords,
+            committedWord = normalizedWord,
+            onDeviceLearningEnabled = config?.on_device_learning_enabled ?: true,
+            contextAwareEnabled = config?.context_aware_predictions_enabled ?: true,
+            personalizedLearningEnabled = config?.personalized_learning_enabled ?: true,
+            recordSequence = { sequence -> contextModel?.recordSequence(sequence) },
+            recordWordUsage = { word -> personalizationEngine?.recordWordTyped(word) }
+        )
 
         // Try to detect language change if we have enough words
         if (recentWords.size >= 5) {
@@ -659,19 +668,28 @@ class WordPredictor {
     fun getNextWordCandidates(
         contextWords: List<String>,
         maxResults: Int = 10
-    ): List<tribixbite.cleverkeys.contextaware.BigramEntry> {
-        val contextAwareEnabled = config?.context_aware_predictions_enabled ?: true
-        if (!contextAwareEnabled) return emptyList()
+    ): List<tribixbite.cleverkeys.contextaware.ContextContinuation> {
+        // Task A: the master gate makes the learned store inert for READS too —
+        // next-word candidates come exclusively from learned data.
+        val canUse = LearningGate.canUseLearnedContext(
+            config?.on_device_learning_enabled ?: true,
+            config?.context_aware_predictions_enabled ?: true
+        )
+        if (!canUse) return emptyList()
         return contextModel?.getNextWordCandidates(contextWords, maxResults) ?: emptyList()
     }
 
     /**
-     * Personalization boost (0..6) for a word — 0 when personalization is
-     * disabled or the word is unknown. Used by next-word re-ranking.
+     * Personalization boost (0..6) for a word — 0 when personalization or the
+     * master on-device-learning gate is off, or the word is unknown. Used by
+     * next-word re-ranking.
      */
     fun getPersonalizationBoostFor(word: String): Float {
-        val personalizationEnabled = config?.personalized_learning_enabled ?: true
-        if (!personalizationEnabled) return 0f
+        val canUse = LearningGate.canLearnPersonalization(
+            config?.on_device_learning_enabled ?: true,
+            config?.personalized_learning_enabled ?: true
+        )
+        if (!canUse) return 0f
         return personalizationEngine?.getPersonalizationBoost(word) ?: 0f
     }
 
@@ -1767,12 +1785,26 @@ class WordPredictor {
             // Issue #72: Apply proper noun case from user dictionary
             val casedPredictions = applyUserWordCaseToList(predictions)
 
+            // Task B transparency: provenance metas for the FINAL top-N only
+            // (N ≤ MAX_PREDICTIONS_TYPING — a handful of cheap map lookups per
+            // keystroke, NOT the per-candidate hot loop). Breakdown re-resolves
+            // through the same UnifiedScore path that produced the score.
+            val metas = predictions.map { predicted ->
+                val lower = predicted.lowercase()
+                SuggestionMeta(
+                    origin = SuggestionOrigin.DICTIONARY_PREFIX,
+                    breakdown = dictionary.get()[lower]?.let { freq ->
+                        resolveScoreBreakdown(lower, lowerSequence, freq, context)
+                    }
+                )
+            }
+
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                 Log.d(TAG, "Final predictions (${casedPredictions.size}): $casedPredictions")
                 Log.d(TAG, "Scores: $scores")
             }
 
-            return PredictionResult(casedPredictions, scores)
+            return PredictionResult(casedPredictions, scores, metas)
         } finally {
             android.os.Trace.endSection()
         }
@@ -1794,75 +1826,94 @@ class WordPredictor {
      * @return Combined score
      */
     private fun calculateUnifiedScore(word: String, keySequence: String, frequency: Int, context: List<String>): Int {
-        // 1. Base score from prefix match quality
-        val prefixScore = calculatePrefixScore(word, keySequence)
-        if (prefixScore == 0) return 0 // Should not happen if caller does prefix check
+        return resolveScoreBreakdown(word, keySequence, frequency, context)?.finalScore ?: 0
+    }
 
-        // 2. User adaptation multiplier (learns user's vocabulary)
+    /**
+     * Resolve every scoring signal for one candidate and combine them via the
+     * pure [UnifiedScore] combiner — the SINGLE implementation shared by the
+     * hot-path [calculateUnifiedScore], the top-N provenance metas in
+     * [predictInternal], and the long-press [explainScore] sheet (Task B), so
+     * the displayed breakdown can never drift from the real score.
+     *
+     * Signals resolved here:
+     * 1. prefix-match quality; 2. selection-adaptation multiplier;
+     * 3a. static BigramModel context multiplier; 3b. learned ContextModel boost
+     * (per-feature toggle AND — Task A — the master on-device-learning gate:
+     * with the master off, learned data is not read at all);
+     * 3d. raw personalization boost (engine returns 0 when disabled, incl. via
+     * the master-gate sync in [setConfig]).
+     * The static-vs-learned combination (context_source, audit §3.2-2), the
+     * personalization weight (§3.2-1), the log frequency damping, and the final
+     * formula all live in [UnifiedScore.combine].
+     *
+     * @return null when the word does not prefix-match the sequence (score 0)
+     */
+    private fun resolveScoreBreakdown(
+        word: String,
+        keySequence: String,
+        frequency: Int,
+        context: List<String>
+    ): ScoreBreakdown? {
+        val prefixScore = calculatePrefixScore(word, keySequence)
+        if (prefixScore == 0) return null // Should not happen if caller does prefix check
+
         val adaptationMultiplier = adaptationManager?.getAdaptationMultiplier(word) ?: 1.0f
 
-        // 3a. Static context multiplier (bigram probability boost from hardcoded model)
         val staticContextMultiplier = if (bigramModel != null && context.isNotEmpty()) {
             bigramModel?.getContextMultiplier(word, context) ?: 1.0f
         } else {
             1.0f
         }
 
-        // 3b. Phase 7.1: Dynamic context boost from learned N-gram model
-        // ContextModel provides personalized boost based on user's actual typing patterns
-        // Only apply if feature is enabled in settings
-        val contextAwareEnabled = config?.context_aware_predictions_enabled ?: true
-        val dynamicContextBoost = if (contextAwareEnabled && contextModel != null && context.isNotEmpty()) {
+        val canUseLearned = LearningGate.canUseLearnedContext(
+            config?.on_device_learning_enabled ?: true,
+            config?.context_aware_predictions_enabled ?: true
+        )
+        val dynamicContextBoost = if (canUseLearned && contextModel != null && context.isNotEmpty()) {
             contextModel?.getContextBoost(word, context) ?: 1.0f
         } else {
             1.0f
         }
 
-        // 3c. Combine static and dynamic context signals per the user's
-        // context_source pref (audit 2026-08-06 §3.2-2):
-        //   both (default) — max of the two (user patterns override static when stronger)
-        //   learned_only   — only the user's own learned n-grams
-        //   static_only    — only the shipped bigram tables
-        val contextMultiplier = when (config?.context_source ?: Defaults.CONTEXT_SOURCE) {
-            "learned_only" -> dynamicContextBoost
-            "static_only" -> staticContextMultiplier
-            else -> kotlin.math.max(staticContextMultiplier, dynamicContextBoost)
-        }
-
-        // 3d. Phase 7.2: Personalization boost from user vocabulary
-        // Boosts words the user frequently types, independent of context
-        // Combines frequency and recency scoring for adaptive predictions
         val personalizationEnabled = config?.personalized_learning_enabled ?: true
-        val personalizationMultiplier = if (personalizationEnabled && personalizationEngine != null) {
-            val boost = personalizationEngine?.getPersonalizationBoost(word) ?: 0.0f
-            // Convert boost (0-6 range) to multiplier (1.0-2.5 range at weight 1.0)
-            // Formula: 1.0 + (boost × weight / 4.0). personalization_weight (audit
-            // §3.2-1) slides the strength continuously: 0 = off … 2 = double.
-            val weight = config?.personalization_weight ?: Defaults.PERSONALIZATION_WEIGHT
-            1.0f + (boost * weight / 4.0f)
+        val personalizationBoost = if (personalizationEnabled && personalizationEngine != null) {
+            personalizationEngine?.getPersonalizationBoost(word) ?: 0.0f
         } else {
-            1.0f
+            0.0f
         }
 
-        // 4. Frequency scaling (log to prevent common words from dominating)
-        // Using log1p helps balance: "the" (freq ~10000) vs "think" (freq ~100)
-        // Without log: "the" would always win. With log: context can override frequency
-        // Scale factor is configurable (default: Defaults.PREDICTION_FREQUENCY_SCALE = 100.0)
-        val frequencyScale = config?.prediction_frequency_scale ?: Defaults.PREDICTION_FREQUENCY_SCALE
-        val frequencyFactor = 1.0f + ln1p((frequency / frequencyScale).toDouble()).toFloat()
+        return UnifiedScore.combine(
+            prefixScore = prefixScore,
+            adaptationMultiplier = adaptationMultiplier,
+            staticContextMultiplier = staticContextMultiplier,
+            dynamicContextBoost = dynamicContextBoost,
+            contextSource = config?.context_source ?: Defaults.CONTEXT_SOURCE,
+            personalizationBoost = personalizationBoost,
+            personalizationWeight = config?.personalization_weight ?: Defaults.PERSONALIZATION_WEIGHT,
+            frequency = frequency,
+            frequencyScale = config?.prediction_frequency_scale ?: Defaults.PREDICTION_FREQUENCY_SCALE,
+            contextBoost = config?.prediction_context_boost ?: Defaults.PREDICTION_CONTEXT_BOOST
+        )
+    }
 
-        // COMBINE ALL SIGNALS
-        // Formula: prefixScore × adaptation × personalization × (1 + boosted_context) × freq_factor
-        // Context boost is configurable (default: Defaults.PREDICTION_CONTEXT_BOOST = 0.5)
-        // Higher boost = context has more influence on predictions
-        val contextBoost = config?.prediction_context_boost ?: Defaults.PREDICTION_CONTEXT_BOOST
-        val finalScore = prefixScore *
-            adaptationMultiplier *
-            personalizationMultiplier *  // Phase 7.2: Personalization boost
-            (1.0f + (contextMultiplier - 1.0f) * contextBoost) *  // Configurable context boost
-            frequencyFactor
+    /**
+     * Transparency API (Task B): full per-signal breakdown for one candidate,
+     * recomputed on demand (long-press provenance sheet). Returns null when the
+     * word is not in the primary dictionary or does not match the sequence.
+     */
+    fun explainScore(word: String, keySequence: String, context: List<String>): ScoreBreakdown? {
+        val lower = word.lowercase()
+        val frequency = dictionary.get()[lower] ?: return null
+        return resolveScoreBreakdown(lower, keySequence.lowercase(), frequency, context)
+    }
 
-        return finalScore.toInt()
+    /**
+     * Transparency API (Task B): wires the previously dead
+     * `PersonalizationEngine.explainBoost()` into the provenance sheet.
+     */
+    fun explainPersonalization(word: String): tribixbite.cleverkeys.personalization.BoostExplanation? {
+        return personalizationEngine?.explainBoost(word.lowercase())
     }
 
     /**
@@ -2408,5 +2459,15 @@ class WordPredictor {
     /**
      * Result class containing predictions and their scores
      */
-    data class PredictionResult(@JvmField val words: List<String>, @JvmField val scores: List<Int>)
+    /**
+     * @property metas per-suggestion provenance parallel to [words] (Task B
+     *   transparency); null on legacy/empty paths. Origin is DICTIONARY_PREFIX
+     *   for every unified-scorer word; breakdowns are present for primary-
+     *   dictionary words (secondary-dictionary entries carry origin only).
+     */
+    data class PredictionResult(
+        @JvmField val words: List<String>,
+        @JvmField val scores: List<Int>,
+        @JvmField val metas: List<SuggestionMeta>? = null
+    )
 }

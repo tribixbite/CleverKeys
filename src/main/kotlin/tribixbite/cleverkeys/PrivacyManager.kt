@@ -188,8 +188,15 @@ class PrivacyManager(private val context: Context) {
      * the toggle in Settings is the sole control - no separate "consent" layer needed.
      */
     fun canCollectSwipeData(): Boolean {
-        // Read directly from main prefs - toggle is the only control
-        return mainPrefs.getBoolean("privacy_collect_swipe", Defaults.PRIVACY_COLLECT_SWIPE)
+        // Read directly from main prefs - the collection toggle ANDed with the
+        // MASTER on-device-learning gate (Task A 2026-08-06): master off means
+        // no typing-behavior data is recorded anywhere, including swipe traces.
+        // Enforced here at the write layer — MLDataCollector checks this before
+        // any SwipeMLDataStore.storeSwipeData call.
+        return LearningGate.canCollectSwipeMl(
+            mainPrefs.getBoolean("on_device_learning_enabled", Defaults.ON_DEVICE_LEARNING_ENABLED),
+            mainPrefs.getBoolean("privacy_collect_swipe", Defaults.PRIVACY_COLLECT_SWIPE)
+        )
     }
 
     fun canCollectPerformanceData(): Boolean {

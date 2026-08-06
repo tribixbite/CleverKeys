@@ -441,6 +441,9 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         set(value) { settingsViewModel.languagePackImportStatus = value }
 
     // Privacy settings - all OFF by default (CleverKeys is fully offline)
+    // MASTER on-device learning gate (Task A 2026-08-06): opt-out for ALL
+    // typing-behavior learning (context LM, personalization, adaptation, swipe-ML)
+    internal var onDeviceLearningEnabled by mutableStateOf(true)
     internal var privacyCollectSwipe by mutableStateOf(false)
     internal var privacyCollectPerformance by mutableStateOf(false)
 
@@ -457,6 +460,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var swipeDebugDetailedLogging by mutableStateOf(false)
     internal var swipeDebugShowRawOutput by mutableStateOf(true)
     internal var swipeShowRawBeamPredictions by mutableStateOf(false)
+    // Task B Tier 2: opt-in per-suggestion origin markers (pipeline transparency)
+    internal var suggestionProvenanceMarkers by mutableStateOf(false)
 
     // Section expanded states — delegated to settingsViewModel (survive rotation)
     // v1.2.6: dictionarySectionExpanded removed - Dictionary Manager moved to Activities

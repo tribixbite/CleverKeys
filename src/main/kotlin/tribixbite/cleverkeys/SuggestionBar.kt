@@ -40,8 +40,15 @@ class SuggestionBar : LinearLayout {
     private val suggestionViews: MutableList<TextView> = mutableListOf()
     private val dividerViews: MutableList<View> = mutableListOf()
     private var listener: OnSuggestionSelectedListener? = null
+    private var inspectListener: OnSuggestionInspectedListener? = null
     private val currentSuggestions: MutableList<String> = mutableListOf()
     private val currentScores: MutableList<Int> = mutableListOf()
+
+    // Task B (pipeline transparency): per-suggestion provenance parallel to
+    // currentSuggestions. Empty when the caller provided no metas.
+    private val currentMetas: MutableList<SuggestionMeta> = mutableListOf()
+    private var showOriginMarkers = false
+    private var provenancePopup: android.widget.PopupWindow? = null
     private var selectedIndex = -1
     private val theme: Theme?
     private var showDebugScores = false
@@ -62,10 +69,11 @@ class SuggestionBar : LinearLayout {
     private val mainHandler = Handler(Looper.getMainLooper())
     private var savedSuggestions: List<String> = emptyList()
     private var savedScores: List<Int> = emptyList()
+    private var savedMetas: List<SuggestionMeta> = emptyList()
     private var isShowingTemporaryMessage = false
     private val restoreRunnable = Runnable {
         isShowingTemporaryMessage = false
-        setSuggestionsWithScores(savedSuggestions, savedScores)
+        setSuggestionsWithScores(savedSuggestions, savedScores, savedMetas)
     }
 
     // #41: Emoji search mode properties
@@ -86,6 +94,14 @@ class SuggestionBar : LinearLayout {
 
     fun interface OnSuggestionSelectedListener {
         fun onSuggestionSelected(word: String)
+    }
+
+    /**
+     * Task B: long-press provenance inspection. Fired when the user long-presses
+     * a suggestion; the handler composes and displays the provenance sheet.
+     */
+    fun interface OnSuggestionInspectedListener {
+        fun onSuggestionInspected(index: Int, word: String, meta: SuggestionMeta?)
     }
 
     constructor(context: Context) : this(context, null as AttributeSet?)
@@ -150,6 +166,17 @@ class SuggestionBar : LinearLayout {
                     NeuralPerformanceStats.getInstance(context).recordSelection(index)
 
                     listener?.onSuggestionSelected(currentSuggestions[index])
+                }
+            }
+
+            // Task B: long-press opens the provenance sheet for this suggestion.
+            setOnLongClickListener {
+                val inspector = inspectListener
+                if (inspector != null && index < currentSuggestions.size) {
+                    inspector.onSuggestionInspected(index, currentSuggestions[index], metaAt(index))
+                    true
+                } else {
+                    false
                 }
             }
         }
@@ -241,7 +268,7 @@ class SuggestionBar : LinearLayout {
         isCenteredPrompt: Boolean
     ) {
         // Display text derived from the typed suggestion.
-        view.text = when (suggestion) {
+        val baseText: CharSequence = when (suggestion) {
             is Suggestion.AddToDictionary ->
                 context.getString(R.string.suggestion_add_to_dictionary, suggestion.word)
             is Suggestion.ExactAdd -> suggestion.label
@@ -251,6 +278,28 @@ class SuggestionBar : LinearLayout {
                 } else {
                     suggestion.text
                 }
+        }
+
+        // Task B Tier 2 (opt-in `suggestion_provenance_markers`): small colored
+        // dot per suggestion showing which pipeline stage produced it.
+        val meta = metaAt(index)
+        view.text = if (showOriginMarkers && meta != null && suggestion is Suggestion.Word) {
+            android.text.SpannableStringBuilder(baseText).apply {
+                val start = length
+                append(" ●")
+                setSpan(
+                    android.text.style.ForegroundColorSpan(originMarkerColor(meta.origin)),
+                    start + 1, length,
+                    android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+                setSpan(
+                    android.text.style.RelativeSizeSpan(0.6f),
+                    start + 1, length,
+                    android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+            }
+        } else {
+            baseText
         }
 
         when {
@@ -325,6 +374,101 @@ class SuggestionBar : LinearLayout {
         showDebugScores = show
     }
 
+    /** Task B Tier 2: toggle per-suggestion origin markers (opt-in pref). */
+    fun setShowOriginMarkers(show: Boolean) {
+        showOriginMarkers = show
+    }
+
+    /** Provenance meta for suggestion slot [index], or null when none was supplied. */
+    fun metaAt(index: Int): SuggestionMeta? = currentMetas.getOrNull(index)
+
+    /**
+     * Provenance meta for a displayed suggestion word (first match). Used by the
+     * commit path to route taps by origin (e.g. a NEXT_WORD candidate appended
+     * after swipe alternates must APPEND, not replace the auto-inserted word).
+     */
+    fun getMetaForSuggestion(word: String): SuggestionMeta? {
+        val index = currentSuggestions.indexOf(word)
+        return if (index >= 0) metaAt(index) else null
+    }
+
+    /** Fixed marker palette per origin (readable on light and dark key themes). */
+    private fun originMarkerColor(origin: SuggestionOrigin): Int = when (origin) {
+        SuggestionOrigin.NEURAL_BEAM -> 0xFFB39DDB.toInt()       // purple
+        SuggestionOrigin.GEOMETRIC -> 0xFF80CBC4.toInt()         // teal
+        SuggestionOrigin.DICTIONARY_PREFIX -> 0xFF90CAF9.toInt() // blue
+        SuggestionOrigin.CONTRACTION -> 0xFFFFCC80.toInt()       // orange
+        SuggestionOrigin.POSSESSIVE -> 0xFFFFE082.toInt()        // amber
+        SuggestionOrigin.EXACT_ADD -> 0xFFB0BEC5.toInt()         // gray
+        SuggestionOrigin.NEXT_WORD -> 0xFFA5D6A7.toInt()         // green
+        SuggestionOrigin.AUTOCORRECT -> 0xFFEF9A9A.toInt()       // red
+    }
+
+    /** Task B: register the long-press provenance inspection listener. */
+    fun setOnSuggestionInspectedListener(listener: OnSuggestionInspectedListener?) {
+        inspectListener = listener
+    }
+
+    /**
+     * Task B Tier 1: display the provenance sheet as a popup anchored above the
+     * bar (an IME cannot casually launch dialogs; a PopupWindow inside the IME
+     * window is the same mechanism key previews use). Tapping the sheet or
+     * outside it dismisses it.
+     */
+    fun showProvenancePopup(text: String) {
+        dismissProvenancePopup()
+
+        val content = TextView(context).apply {
+            this.text = text
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
+            setTextColor(theme?.labelColor?.takeIf { it != 0 } ?: Color.WHITE)
+            val pad = dpToPx(context, 14)
+            setPadding(pad, pad, pad, pad)
+            background = android.graphics.drawable.GradientDrawable().apply {
+                cornerRadius = dpToPx(context, 10).toFloat()
+                val bg = theme?.colorKey?.takeIf { it != 0 } ?: Color.DKGRAY
+                setColor(
+                    Color.argb(242, Color.red(bg), Color.green(bg), Color.blue(bg))
+                )
+                setStroke(dpToPx(context, 1), theme?.subLabelColor?.takeIf { it != 0 } ?: Color.GRAY)
+            }
+        }
+        val scroller = android.widget.ScrollView(context).apply { addView(content) }
+
+        val popupWidth = (width * 0.92f).toInt().coerceAtLeast(dpToPx(context, 220))
+        val popup = android.widget.PopupWindow(scroller, popupWidth, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+            isOutsideTouchable = true
+            isFocusable = false // never steal focus from the edited field
+            setBackgroundDrawable(android.graphics.drawable.ColorDrawable(Color.TRANSPARENT))
+        }
+        content.setOnClickListener { popup.dismiss() }
+        popup.setOnDismissListener { if (provenancePopup === popup) provenancePopup = null }
+
+        // Measure so the sheet opens fully ABOVE the bar.
+        scroller.measure(
+            View.MeasureSpec.makeMeasureSpec(popupWidth, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        )
+        provenancePopup = popup
+        try {
+            popup.showAsDropDown(this, (width - popupWidth) / 2, -height - scroller.measuredHeight)
+        } catch (e: Exception) {
+            // Window token gone mid-teardown — drop silently
+            provenancePopup = null
+        }
+    }
+
+    /** Dismiss any open provenance sheet (bar content changed / view detached). */
+    fun dismissProvenancePopup() {
+        provenancePopup?.dismiss()
+        provenancePopup = null
+    }
+
+    override fun onDetachedFromWindow() {
+        dismissProvenancePopup()
+        super.onDetachedFromWindow()
+    }
+
     /**
      * Set whether the suggestion bar should always remain visible
      * This prevents UI rerendering issues from constant appear/disappear
@@ -377,9 +521,15 @@ class SuggestionBar : LinearLayout {
     }
 
     /**
-     * Update the displayed suggestions with scores
+     * Update the displayed suggestions with scores (and optional provenance
+     * metas parallel to the suggestion list — Task B transparency).
      */
-    fun setSuggestionsWithScores(suggestions: List<String>?, scores: List<Int>?) {
+    @JvmOverloads
+    fun setSuggestionsWithScores(
+        suggestions: List<String>?,
+        scores: List<Int>?,
+        metas: List<SuggestionMeta>? = null
+    ) {
         // Skip suggestion updates in password mode, unless swipe on password is enabled (#39)
         if (isPasswordMode && !allowSwipeInPasswordMode) {
             return
@@ -392,18 +542,29 @@ class SuggestionBar : LinearLayout {
         }
 
         // Skip re-render if content is identical — prevents visual flicker when
-        // SuggestionHandler and InputCoordinator both post the same predictions
-        if (suggestions != null && suggestions == currentSuggestions.toList()) {
+        // SuggestionHandler and InputCoordinator both post the same predictions.
+        // Metas participate so a provenance change (e.g. swipe alternates gaining
+        // appended next-word candidates) still re-renders.
+        if (suggestions != null && suggestions == currentSuggestions.toList() &&
+            (metas ?: emptyList()) == currentMetas.toList()
+        ) {
             return
         }
 
+        // Any content change invalidates an open provenance sheet.
+        dismissProvenancePopup()
+
         currentSuggestions.clear()
         currentScores.clear()
+        currentMetas.clear()
 
         if (suggestions != null) {
             currentSuggestions.addAll(suggestions)
             if (scores != null && scores.size == suggestions.size) {
                 currentScores.addAll(scores)
+            }
+            if (metas != null && metas.size == suggestions.size) {
+                currentMetas.addAll(metas)
             }
         }
 
@@ -470,10 +631,12 @@ class SuggestionBar : LinearLayout {
         if (!isShowingTemporaryMessage && !clearAfter) {
             savedSuggestions = currentSuggestions.toList()
             savedScores = currentScores.toList()
+            savedMetas = currentMetas.toList()
         } else if (clearAfter) {
             // Clear saved suggestions so nothing gets restored
             savedSuggestions = emptyList()
             savedScores = emptyList()
+            savedMetas = emptyList()
         }
         isShowingTemporaryMessage = true
 
@@ -483,6 +646,7 @@ class SuggestionBar : LinearLayout {
         dividerViews.clear()
         currentSuggestions.clear()
         currentScores.clear()
+        currentMetas.clear()
 
         val messageView = TextView(context).apply {
             layoutParams = LayoutParams(
@@ -538,6 +702,7 @@ class SuggestionBar : LinearLayout {
         dividerViews.clear()
         currentSuggestions.clear()
         currentScores.clear()
+        currentMetas.clear()
 
         val statusView = TextView(context).apply {
             layoutParams = LayoutParams(
@@ -570,6 +735,7 @@ class SuggestionBar : LinearLayout {
         dividerViews.clear()
         currentSuggestions.clear()
         currentScores.clear()
+        currentMetas.clear()
 
         // Show empty suggestions (maintains bar visibility if alwaysVisible)
         visibility = if (alwaysVisible) VISIBLE else GONE
@@ -611,6 +777,7 @@ class SuggestionBar : LinearLayout {
         dividerViews.clear()
         currentSuggestions.clear()
         currentScores.clear()
+        currentMetas.clear()
 
         // #109: Remove padding so autofill chips get the full bar height.
         // Normal text suggestions use 8dp padding for spacing, but autofill chips

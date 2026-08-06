@@ -226,6 +226,17 @@ class BigramStore internal constructor(
         }
     }
 
+    /**
+     * All learned bigrams for a language, most frequent first — the learned-data
+     * manager's browse list (audit §3.3 per-word browse/delete UI).
+     */
+    fun getAllEntries(language: String): List<BigramEntry> {
+        synchronized(this) {
+            return forLanguage(language).bigramMap.values.flatten()
+                .sortedWith(compareByDescending<BigramEntry> { it.frequency }.thenBy { it.word1 })
+        }
+    }
+
     /** Get all bigrams for a specific previous word in a language. */
     fun getAllBigrams(language: String, word1: String): List<BigramEntry> {
         val normalized = BigramEntry.normalizeWord(word1)

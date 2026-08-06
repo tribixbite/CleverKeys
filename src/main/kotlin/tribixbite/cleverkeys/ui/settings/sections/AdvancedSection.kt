@@ -98,6 +98,21 @@ internal fun SettingsActivity.AdvancedSection() {
                     }
                 }
 
+                // Task B Tier 2 (pipeline transparency): opt-in per-suggestion
+                // origin markers. A user feature (not debug-gated) — long-press
+                // provenance inspection is always available; this adds the
+                // at-a-glance colored dots.
+                SettingsSwitch(
+                    title = stringResource(R.string.advanced_provenance_markers_title),
+                    description = stringResource(R.string.advanced_provenance_markers_desc),
+                    checked = suggestionProvenanceMarkers,
+                    onCheckedChange = {
+                        suggestionProvenanceMarkers = it
+                        saveSetting("suggestion_provenance_markers", it)
+                        tribixbite.cleverkeys.Config.globalConfig()?.suggestion_provenance_markers = it
+                    }
+                )
+
                 // #136: "Max Sequence Length Override" slider removed.
                 // The encoder ONNX graph is exported with max_seq_length=250 baked
                 // in. A user-set value > 250 caused every swipe to crash with

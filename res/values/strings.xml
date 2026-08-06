@@ -420,6 +420,8 @@
     <string name="advanced_show_beam_predictions_title">Show Beam Predictions</string>
     <string name="advanced_show_beam_predictions_desc">Add raw:word items to suggestion bar for debugging</string>
     <string name="advanced_open_debug_log">Open Debug Log</string>
+    <string name="advanced_provenance_markers_title">Suggestion Origin Markers</string>
+    <string name="advanced_provenance_markers_desc">Show a colored dot on each suggestion indicating which engine produced it (long-press any suggestion for full details)</string>
 
     <!-- AppearanceSection -->
     <string name="appearance_height_portrait_title">Keyboard Height (Portrait)</string>
@@ -664,6 +666,8 @@
     <string name="neural_swipe_password_desc">Enable swipe typing even in password fields. Predictions will be shown but individual typed characters remain hidden.</string>
 
     <!-- PrivacySection -->
+    <string name="privacy_on_device_learning_title">Learn From My Typing</string>
+    <string name="privacy_on_device_learning_desc">Build private on-device phrase and word-usage models from what you type. Turn off to stop ALL recording of typing behavior — nothing is stored while off.</string>
     <string name="privacy_swipe_pattern_title">Swipe Pattern Data</string>
     <string name="privacy_swipe_pattern_desc">Store swipe trajectories locally for on-device learning</string>
     <string name="privacy_performance_metrics_title">Performance Metrics</string>

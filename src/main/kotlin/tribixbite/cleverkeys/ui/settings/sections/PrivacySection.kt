@@ -6,20 +6,30 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import tribixbite.cleverkeys.Config
 import tribixbite.cleverkeys.NeuralPerformanceStats
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
+import tribixbite.cleverkeys.UserAdaptationManager
+import tribixbite.cleverkeys.contextaware.BigramStore
+import tribixbite.cleverkeys.contextaware.TrigramStore
+import tribixbite.cleverkeys.personalization.UserVocabulary
 import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
 import tribixbite.cleverkeys.ui.settings.SettingsSwitch
 import tribixbite.cleverkeys.ui.settings.io.deleteCollectedData
@@ -45,6 +55,63 @@ internal fun SettingsActivity.PrivacySection() {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
+
+                // ── MASTER on-device learning gate (Task A 2026-08-06) ──────
+                // One clear switch that stops ALL typing-behavior learning at
+                // the write layer: context LM (bigrams/trigrams), personalization
+                // vocabulary, selection adaptation, and swipe-ML collection.
+                var showForgetLearnedDialog by remember { mutableStateOf(false) }
+                Text(
+                    text = "On-Device Learning",
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                )
+                SettingsSwitch(
+                    title = stringResource(R.string.privacy_on_device_learning_title),
+                    description = stringResource(R.string.privacy_on_device_learning_desc),
+                    checked = onDeviceLearningEnabled,
+                    onCheckedChange = { enabled ->
+                        onDeviceLearningEnabled = enabled
+                        saveSetting("on_device_learning_enabled", enabled)
+                        Config.globalConfig()?.on_device_learning_enabled = enabled
+                        if (!enabled) {
+                            // Offer a one-tap "and forget what's already learned"
+                            showForgetLearnedDialog = true
+                        }
+                    }
+                )
+                if (showForgetLearnedDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showForgetLearnedDialog = false },
+                        title = { Text("Also forget learned data?") },
+                        text = {
+                            Text(
+                                "Learning is now off — nothing new will be recorded. " +
+                                    "Do you also want to delete everything already learned " +
+                                    "(phrase patterns, word usage, and selection history)? " +
+                                    "This cannot be undone."
+                            )
+                        },
+                        confirmButton = {
+                            TextButton(onClick = {
+                                showForgetLearnedDialog = false
+                                val appContext = applicationContext
+                                Thread {
+                                    // Reuse the learned-data manager's forget APIs
+                                    BigramStore.getInstance(appContext).clearAll()
+                                    TrigramStore.getInstance(appContext).clearAll()
+                                    UserVocabulary.getInstance(appContext).clearAll()
+                                    UserAdaptationManager.getInstance(appContext).resetAdaptation()
+                                }.start()
+                            }) { Text("Delete learned data") }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showForgetLearnedDialog = false }) {
+                                Text("Keep it")
+                            }
+                        }
+                    )
+                }
 
                 Text(
                     text = "Local Data Collection (Optional)",

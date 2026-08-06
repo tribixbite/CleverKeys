@@ -422,7 +422,9 @@ internal fun SettingsActivity.loadCurrentSettings() {
         // Load installed language packs
         refreshInstalledLanguagePacks()
 
-        // Privacy settings - all OFF by default (CleverKeys is fully offline)
+        // Privacy settings - collection OFF by default (CleverKeys is fully offline);
+        // the MASTER on-device learning gate defaults ON (it is the opt-OUT)
+        onDeviceLearningEnabled = prefs.getSafeBoolean("on_device_learning_enabled", Defaults.ON_DEVICE_LEARNING_ENABLED)
         privacyCollectSwipe = prefs.getSafeBoolean("privacy_collect_swipe", Defaults.PRIVACY_COLLECT_SWIPE)
         privacyCollectPerformance = prefs.getSafeBoolean("privacy_collect_performance", Defaults.PRIVACY_COLLECT_PERFORMANCE)
 
@@ -439,6 +441,7 @@ internal fun SettingsActivity.loadCurrentSettings() {
         swipeDebugDetailedLogging = prefs.getSafeBoolean("swipe_debug_detailed_logging", Defaults.SWIPE_DEBUG_DETAILED_LOGGING)
         swipeDebugShowRawOutput = prefs.getSafeBoolean("swipe_debug_show_raw_output", Defaults.SWIPE_DEBUG_SHOW_RAW_OUTPUT)
         swipeShowRawBeamPredictions = prefs.getSafeBoolean("swipe_show_raw_beam_predictions", Defaults.SWIPE_SHOW_RAW_BEAM_PREDICTIONS)
+        suggestionProvenanceMarkers = prefs.getSafeBoolean("suggestion_provenance_markers", Defaults.SUGGESTION_PROVENANCE_MARKERS)
 }
 
 internal fun SettingsActivity.saveSetting(key: String, value: Any) {

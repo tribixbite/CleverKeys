@@ -101,8 +101,9 @@ class ContextModelLanguageTest {
 
         val candidates = model.getNextWordCandidates(listOf("good"))
         assertEquals(1, candidates.size)
-        assertEquals("morning", candidates.first().word2)
+        assertEquals("morning", candidates.first().word)
         assertEquals(3, candidates.first().frequency)
+        assertFalse(candidates.first().fromTrigram)
     }
 
     @Test

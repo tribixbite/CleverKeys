@@ -496,6 +496,15 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.personalization.UserVocabularyPersistenceTest',
     // Opt-in next-word prediction (audit 2026-08-06 §4) — pure gating + generation
     'tribixbite.cleverkeys.NextWordPredictorTest',
+    // Task A (2026-08-06): MASTER on-device-learning privacy gate — pure gate logic
+    // + write-layer enforcement over the real stores (nothing recorded/persisted when off)
+    'tribixbite.cleverkeys.LearningGateTest',
+    'tribixbite.cleverkeys.OnDeviceLearningPrivacyTest',
+    // Task B (2026-08-06): pipeline transparency — UnifiedScore combiner + provenance model
+    'tribixbite.cleverkeys.SuggestionProvenanceTest',
+    // Task C (2026-08-06): TrigramStore activation — same persistence discipline as BigramStore
+    'tribixbite.cleverkeys.contextaware.TrigramStorePersistenceTest',
+    'tribixbite.cleverkeys.contextaware.ContextModelTrigramTest',
     // SwipePrunerTest excluded: requires android.util.Log (MockK + Robolectric)
   ]
 

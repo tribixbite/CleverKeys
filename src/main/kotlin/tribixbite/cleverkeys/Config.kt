@@ -304,6 +304,8 @@ object Defaults {
     // Debug
     const val DEBUG_ENABLED = false
     const val SWIPE_SHOW_DEBUG_SCORES = false
+    // Opt-in per-suggestion origin markers (pipeline transparency, audit §2.3 Tier 2)
+    const val SUGGESTION_PROVENANCE_MARKERS = false
     const val SWIPE_DEBUG_DETAILED_LOGGING = false
     const val SWIPE_DEBUG_SHOW_RAW_OUTPUT = false  // Debug: show raw neural output in suggestions
     const val SWIPE_SHOW_RAW_BEAM_PREDICTIONS = false  // Debug: show beam search predictions
@@ -329,6 +331,11 @@ object Defaults {
     const val PRIVACY_COLLECT_SWIPE = false
     const val PRIVACY_COLLECT_PERFORMANCE = false
     const val PRIVACY_COLLECT_ERRORS = false
+    // MASTER on-device learning gate (Task A, 2026-08-06): opt-OUT switch that
+    // short-circuits ALL typing-behavior learning (bigram/trigram context LM,
+    // personalization vocabulary, selection adaptation, swipe-ML collection)
+    // at the write layer. Default ON — learning is on-device only and clearable.
+    const val ON_DEVICE_LEARNING_ENABLED = true
 
     // Accessibility
     const val STICKY_KEYS_ENABLED = false
@@ -534,6 +541,7 @@ class Config private constructor(
     @JvmField var swipe_typing_enabled = true  // Default to enabled for CleverKeys
     @JvmField var swipe_on_password_fields = false  // #39: Reenable swipe typing on password fields
     @JvmField var swipe_show_debug_scores = false
+    @JvmField var suggestion_provenance_markers = false // Opt-in origin markers in the suggestion bar (audit §2.3 Tier 2)
     @JvmField var show_exact_typed_word = true  // #42: Tap-to-add exact typed word to dictionary
     @JvmField var word_prediction_enabled = false
     @JvmField var suggestion_bar_opacity = 0
@@ -543,6 +551,7 @@ class Config private constructor(
     @JvmField var prediction_frequency_scale = 0f
     @JvmField var context_aware_predictions_enabled = false // Phase 7.1: Dynamic N-gram learning
     @JvmField var personalized_learning_enabled = false // Phase 7.2: Personalized word frequency learning
+    @JvmField var on_device_learning_enabled = true // MASTER privacy gate over ALL typing-behavior learning (Task A 2026-08-06)
     @JvmField var next_word_prediction_enabled = false // Opt-in Gboard-style next-word from learned context (2026-08-06)
     @JvmField var context_source = "both" // which context LM feeds scoring: both | learned_only | static_only
     @JvmField var personalization_weight = 1.0f // continuous personalization strength (0=off … 2=double)
@@ -827,6 +836,7 @@ class Config private constructor(
         swipe_typing_enabled = _prefs.getBoolean("swipe_typing_enabled", Defaults.SWIPE_TYPING_ENABLED)
         swipe_on_password_fields = _prefs.getBoolean("swipe_on_password_fields", Defaults.SWIPE_ON_PASSWORD_FIELDS)
         swipe_show_debug_scores = _prefs.getBoolean("swipe_show_debug_scores", Defaults.SWIPE_SHOW_DEBUG_SCORES)
+        suggestion_provenance_markers = _prefs.getBoolean("suggestion_provenance_markers", Defaults.SUGGESTION_PROVENANCE_MARKERS)
         show_exact_typed_word = _prefs.getBoolean("show_exact_typed_word", Defaults.SHOW_EXACT_TYPED_WORD)
         word_prediction_enabled = _prefs.getBoolean("word_prediction_enabled", Defaults.WORD_PREDICTION_ENABLED)
         suggestion_bar_opacity = safeGetInt(_prefs, "suggestion_bar_opacity", Defaults.SUGGESTION_BAR_OPACITY)
@@ -835,6 +845,7 @@ class Config private constructor(
         prediction_frequency_scale = safeGetFloat(_prefs, "prediction_frequency_scale", Defaults.PREDICTION_FREQUENCY_SCALE)
         context_aware_predictions_enabled = _prefs.getBoolean("context_aware_predictions_enabled", Defaults.CONTEXT_AWARE_PREDICTIONS_ENABLED)
         personalized_learning_enabled = _prefs.getBoolean("personalized_learning_enabled", Defaults.PERSONALIZED_LEARNING_ENABLED)
+        on_device_learning_enabled = _prefs.getBoolean("on_device_learning_enabled", Defaults.ON_DEVICE_LEARNING_ENABLED)
         next_word_prediction_enabled = _prefs.getBoolean("next_word_prediction_enabled", Defaults.NEXT_WORD_PREDICTION_ENABLED)
         context_source = safeGetString(_prefs, "context_source", Defaults.CONTEXT_SOURCE)
         personalization_weight = safeGetFloat(_prefs, "personalization_weight", Defaults.PERSONALIZATION_WEIGHT)

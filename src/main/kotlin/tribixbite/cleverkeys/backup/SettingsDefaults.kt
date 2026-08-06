@@ -239,6 +239,10 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
 
     // ── Privacy / debug / accessibility ──────────────────────────────
     "debug_enabled" to PrefValue.Bool(Defaults.DEBUG_ENABLED),
+    // MASTER on-device learning gate (Task A 2026-08-06) — opt-OUT, default ON
+    "on_device_learning_enabled" to PrefValue.Bool(Defaults.ON_DEVICE_LEARNING_ENABLED),
+    // Task B Tier 2: opt-in suggestion origin markers
+    "suggestion_provenance_markers" to PrefValue.Bool(Defaults.SUGGESTION_PROVENANCE_MARKERS),
     "privacy_collect_swipe" to PrefValue.Bool(Defaults.PRIVACY_COLLECT_SWIPE),
     "privacy_collect_performance" to PrefValue.Bool(Defaults.PRIVACY_COLLECT_PERFORMANCE),
     "privacy_collect_errors" to PrefValue.Bool(Defaults.PRIVACY_COLLECT_ERRORS),
