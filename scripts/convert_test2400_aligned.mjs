@@ -32,12 +32,13 @@ function arg(flag, dflt) {
   return i >= 0 && i + 1 < process.argv.length ? process.argv[i + 1] : dflt;
 }
 const SRC_DIR = arg("--src", "/data/data/com.termux/files/home/storage/shared/swipedata");
+const SPLIT = arg("--split", "test"); // test | val | train — reads <split>_hwsfuto.jsonl
 const CACHE = process.env.CLEVERKEYS_TEST_CACHE || join(homedir(), ".cache", "cleverkeys-test");
-const OUT = arg("--out", join(CACHE, "test2400_ordered.jsonl.gz"));
+const OUT = arg("--out", join(CACHE, SPLIT === "test" ? "test2400_ordered.jsonl.gz" : `${SPLIT}_ordered.jsonl.gz`));
 
 async function main() {
   mkdirSync(CACHE, { recursive: true });
-  const srcFile = join(SRC_DIR, "test_hwsfuto.jsonl");
+  const srcFile = join(SRC_DIR, `${SPLIT}_hwsfuto.jsonl`);
   const rl = createInterface({ input: createReadStream(srcFile), crlfDelay: Infinity });
 
   const gz = createGzip();
