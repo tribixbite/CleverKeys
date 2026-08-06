@@ -906,13 +906,25 @@ class Tally:
         return f"{self.top1() * 100:5.1f}%  {self.top3() * 100:5.1f}%  {self.top5() * 100:5.1f}%"
 
 
-def make_session(path, threads):
+def make_session(path, threads, ep='cpu'):
     """ONNX session with explicit thread count (silences pthread affinity warnings
-    under proot) and CPU provider."""
+    under proot).
+
+    ep='cpu'     -> providers=['CPUExecutionProvider']  (DEFAULT, unchanged behavior).
+    ep='xnnpack' -> providers=['XnnpackExecutionProvider','CPUExecutionProvider'].
+        XNNPACK prefers STATIC shapes; the decoder's dynamic beam/seq dims force most
+        nodes to fall back to CPU (only a handful of static MatMuls get placed on
+        XNNPACK). CPU is always kept as the fallback provider so any node XNNPACK
+        cannot claim still executes correctly.
+    """
     so = ort.SessionOptions()
     so.intra_op_num_threads = threads
     so.inter_op_num_threads = 1
-    return ort.InferenceSession(str(path), sess_options=so, providers=['CPUExecutionProvider'])
+    if ep == 'xnnpack':
+        providers = ['XnnpackExecutionProvider', 'CPUExecutionProvider']
+    else:
+        providers = ['CPUExecutionProvider']
+    return ort.InferenceSession(str(path), sess_options=so, providers=providers)
 
 
 def rank_of(target, words):
@@ -937,7 +949,11 @@ def dedup(words):
 def run_head_to_head(args):
     root = Path(__file__).resolve().parents[1]
     encoder_path = root / "src/main/assets/models/swipe_encoder_android.onnx"
-    decoder_path = root / "src/main/assets/models/swipe_decoder_android.onnx"
+    # --decoder-model overrides the default decoder (e.g. an int8-quantized scratch
+    # model). The encoder is always the shipped fp32 model (encoder quant is low value).
+    decoder_path = (Path(args.decoder_model).expanduser()
+                    if getattr(args, 'decoder_model', None)
+                    else root / "src/main/assets/models/swipe_decoder_android.onnx")
     for p in (encoder_path, decoder_path):
         if not p.exists():
             print(f"ERROR: model not found: {p}")
@@ -960,8 +976,11 @@ def run_head_to_head(args):
     print(f"corpus:  {corpus_path}")
     print(f"dict:    {dict_path}")
 
-    encoder = make_session(encoder_path, args.threads)
-    decoder = make_session(decoder_path, args.threads)
+    ep = getattr(args, 'ep', 'cpu')
+    print(f"execution provider: {ep}")
+    encoder = make_session(encoder_path, args.threads, ep)
+    decoder = make_session(decoder_path, args.threads, ep)
+    print(f"decoder providers registered: {decoder.get_providers()}")
 
     # Signature sanity — abort loudly on drift.
     enc_inputs = {i.name for i in encoder.get_inputs()}
@@ -1104,6 +1123,21 @@ def run_head_to_head(args):
     elapsed = time.time() - t0
     print("-" * 78)
     print(f"decoded {raw.n} traces in {elapsed / 60:.1f} min  ({errors} errors)")
+    # Machine-readable summary for the benchmark harness (additive; does not alter
+    # any existing output line). traces/min = traces / (elapsed_s / 60).
+    summary = {
+        'ep': getattr(args, 'ep', 'cpu'),
+        'decoder_model': str(decoder_path),
+        'traces': raw.n,
+        'elapsed_s': round(elapsed, 3),
+        'traces_per_min': round(raw.n / (elapsed / 60), 2) if elapsed else 0.0,
+        'errors': errors,
+        'raw': [raw.top1(), raw.top3(), raw.top5()],
+        'filt': [filt.top1(), filt.top3(), filt.top5()],
+    }
+    if prod_vocab is not None:
+        summary['prod'] = [prod.top1(), prod.top3(), prod.top5()]
+    print("SUMMARY_JSON " + json.dumps(summary))
     print()
     print(f"features: {feat_mode}   beam={args.beam}")
     print("                 top-1    top-3    top-5")
@@ -1199,6 +1233,14 @@ def main():
     ap.add_argument('--limit', type=int, default=0, help='decode only first N in-dict traces (0=all)')
     ap.add_argument('--skip', type=int, default=0, help='skip first N in-dict traces (chunked runs)')
     ap.add_argument('--threads', type=int, default=4, help='ORT intra-op threads')
+    ap.add_argument('--ep', choices=['cpu', 'xnnpack'], default='cpu',
+                    help='ORT execution provider (default cpu; xnnpack adds '
+                         'XnnpackExecutionProvider ahead of CPU — opt-in speedup lever, '
+                         'CPU kept as fallback). Does NOT change default behavior.')
+    ap.add_argument('--decoder-model', dest='decoder_model', default=None,
+                    help='override the decoder .onnx path (e.g. an int8-quantized '
+                         'scratch model built with quantize_dynamic). Encoder is '
+                         'always the shipped fp32 model.')
     ap.add_argument('--out', help='write per-trace results jsonl (LOCAL-ONLY artifact)')
     args = ap.parse_args()
 
