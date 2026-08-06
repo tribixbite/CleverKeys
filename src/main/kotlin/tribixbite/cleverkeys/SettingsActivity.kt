@@ -404,7 +404,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     // Word Prediction Advanced settings
     internal var contextAwarePredictionsEnabled by mutableStateOf(true)
+    internal var nextWordPredictionEnabled by mutableStateOf(false) // Opt-in (2026-08-06)
+    internal var contextSource by mutableStateOf("both") // both | learned_only | static_only
     internal var personalizedLearningEnabled by mutableStateOf(true)
+    internal var personalizationWeight by mutableFloatStateOf(1.0f) // 0=off … 2=double
     internal var learningAggression by mutableStateOf("BALANCED")
     internal var predictionContextBoost by mutableFloatStateOf(2.0f)
     internal var predictionFrequencyScale by mutableFloatStateOf(1000f)

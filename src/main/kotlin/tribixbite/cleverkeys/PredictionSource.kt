@@ -31,5 +31,11 @@ enum class PredictionSource {
     /**
      * Auto-corrected text
      */
-    AUTOCORRECT
+    AUTOCORRECT,
+
+    /**
+     * User selected a next-word prediction (context-only candidate surfaced
+     * before any letter was typed — opt-in `next_word_prediction_enabled`)
+     */
+    NEXT_WORD
 }

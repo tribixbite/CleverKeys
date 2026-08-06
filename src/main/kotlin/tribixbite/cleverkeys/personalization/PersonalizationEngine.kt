@@ -58,8 +58,9 @@ class PersonalizationEngine(private val context: Context) {
         AGGRESSIVE(AGGRESSIVE_MULTIPLIER)
     }
 
-    // User vocabulary tracker
-    private val vocabulary: UserVocabulary = UserVocabulary(context)
+    // User vocabulary tracker — process-wide singleton (2026-08-06 persistence fix:
+    // per-engine instances over the same prefs file clobbered each other's saves)
+    private val vocabulary: UserVocabulary = UserVocabulary.getInstance(context)
 
     // Settings
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -208,6 +209,24 @@ class PersonalizationEngine(private val context: Context) {
     fun clearAllData() {
         vocabulary.clearAll()
         Log.d(TAG, "All personalization data cleared")
+    }
+
+    /**
+     * Remove a single word from the user's learned vocabulary
+     * (learned-data manager per-word delete).
+     *
+     * @return true if the word was present and removed
+     */
+    fun removeWord(word: String): Boolean {
+        return vocabulary.removeWord(word)
+    }
+
+    /**
+     * Checkpoint learned vocabulary to persistent storage (async flush of the
+     * debounced write-back). No-op when clean. Called from lifecycle boundaries.
+     */
+    fun persist() {
+        vocabulary.requestFlush()
     }
 
     /**

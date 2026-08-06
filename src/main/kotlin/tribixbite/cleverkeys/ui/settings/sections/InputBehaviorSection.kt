@@ -145,6 +145,42 @@ internal fun SettingsActivity.InputBehaviorSection() {
                                 }
                             )
 
+                            // Opt-in next-word prediction (audit 2026-08-06 §4.3) —
+                            // meaningless without the context LM, so gated on it.
+                            if (contextAwarePredictionsEnabled) {
+                                SettingsSwitch(
+                                    title = stringResource(R.string.input_next_word_title),
+                                    description = stringResource(R.string.input_next_word_desc),
+                                    checked = nextWordPredictionEnabled,
+                                    onCheckedChange = {
+                                        nextWordPredictionEnabled = it
+                                        saveSetting("next_word_prediction_enabled", it)
+                                        Config.globalConfig()?.next_word_prediction_enabled = it
+                                    }
+                                )
+                            }
+
+                            // Which phrase model feeds the context boost (audit §3.2-2)
+                            SettingsDropdown(
+                                title = stringResource(R.string.input_context_source_title),
+                                description = stringResource(R.string.input_context_source_desc),
+                                options = listOf("Built-in + Learned", "Learned Only", "Built-in Only"),
+                                selectedIndex = when (contextSource) {
+                                    "learned_only" -> 1
+                                    "static_only" -> 2
+                                    else -> 0
+                                },
+                                onSelectionChange = { index ->
+                                    contextSource = when (index) {
+                                        1 -> "learned_only"
+                                        2 -> "static_only"
+                                        else -> "both"
+                                    }
+                                    saveSetting("context_source", contextSource)
+                                    Config.globalConfig()?.context_source = contextSource
+                                }
+                            )
+
                             SettingsSwitch(
                                 title = stringResource(R.string.input_personalized_learning_title),
                                 description = stringResource(R.string.input_personalized_learning_desc),
@@ -156,6 +192,22 @@ internal fun SettingsActivity.InputBehaviorSection() {
                             )
 
                             if (personalizedLearningEnabled) {
+                                // Continuous personalization strength (audit §3.2-1) —
+                                // the aggression enum below stays as a preset on top.
+                                SettingsSlider(
+                                    title = stringResource(R.string.input_personalization_weight_title),
+                                    description = stringResource(R.string.input_personalization_weight_desc),
+                                    value = personalizationWeight,
+                                    valueRange = 0f..2f,
+                                    steps = 19,
+                                    onValueChange = {
+                                        personalizationWeight = it
+                                        saveSetting("personalization_weight", personalizationWeight)
+                                        Config.globalConfig()?.personalization_weight = personalizationWeight
+                                    },
+                                    displayValue = "%.1fx".format(personalizationWeight)
+                                )
+
                                 SettingsDropdown(
                                     title = stringResource(R.string.input_learning_aggression_title),
                                     description = stringResource(R.string.input_learning_aggression_desc),
@@ -203,6 +255,10 @@ internal fun SettingsActivity.InputBehaviorSection() {
                                 },
                                 displayValue = "%.0f".format(predictionFrequencyScale)
                             )
+
+                            // Learned-data manager (audit 2026-08-06 §3.3): inspect +
+                            // clear the on-device context-LM / personalization stores.
+                            LearningDataManagerBlock()
                         }
                     }
                 }

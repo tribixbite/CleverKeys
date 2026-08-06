@@ -1,11 +1,13 @@
 package tribixbite.cleverkeys.personalization
 
 import android.content.Context
-import android.content.SharedPreferences
-import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import tribixbite.cleverkeys.persist.DebouncedPersister
+import tribixbite.cleverkeys.persist.LearnedDataStorage
+import tribixbite.cleverkeys.persist.SharedPrefsLearnedStorage
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ScheduledExecutorService
 import kotlin.concurrent.thread
 
 /**
@@ -15,17 +17,33 @@ import kotlin.concurrent.thread
  * that enable adaptive prediction boosting. All data is stored locally in SharedPreferences
  * for privacy preservation.
  *
+ * PROCESS-WIDE SINGLETON (2026-08-06 persistence fix): every per-language
+ * `WordPredictor` used to construct its own instance over the SAME prefs file —
+ * concurrent whole-map saves from different instances clobbered each other.
+ * [getInstance] guarantees a single writer.
+ *
+ * Persistence is dirty-flag + debounced write-back (~5 s debounce, ~30 s cap) via
+ * [DebouncedPersister] — the previous implementation spawned a raw Thread and
+ * re-serialized all ~5000 entries on EVERY committed word. Lifecycle call sites
+ * flush via [flush]/[requestFlush].
+ *
  * Thread-safe for concurrent access during typing.
  *
  * Example:
  * ```kotlin
- * val vocabulary = UserVocabulary(context)
+ * val vocabulary = UserVocabulary.getInstance(context)
  * vocabulary.recordWordUsage("kotlin") // Learn from typing
  * val boost = vocabulary.getPersonalizationBoost("kotlin") // Get prediction boost
  * vocabulary.cleanupStaleWords() // Periodic maintenance
  * ```
  */
-class UserVocabulary(private val context: Context) {
+class UserVocabulary internal constructor(
+    private val storage: LearnedDataStorage,
+    debounceMs: Long = DebouncedPersister.DEFAULT_DEBOUNCE_MS,
+    maxDelayMs: Long = DebouncedPersister.DEFAULT_MAX_DELAY_MS,
+    scheduler: ScheduledExecutorService = DebouncedPersister.sharedScheduler(),
+    private val log: (String, Throwable?) -> Unit = { _, _ -> }
+) {
     companion object {
         private const val TAG = "UserVocabulary"
         private const val PREFS_NAME = "user_vocabulary"
@@ -37,23 +55,45 @@ class UserVocabulary(private val context: Context) {
 
         // Cleanup frequency
         private const val CLEANUP_INTERVAL_MS = 86400000L // 24 hours
+
+        @Volatile
+        private var instance: UserVocabulary? = null
+
+        /** Process-wide singleton backed by the `user_vocabulary` SharedPreferences file. */
+        @JvmStatic
+        fun getInstance(context: Context): UserVocabulary {
+            return instance ?: synchronized(this) {
+                instance ?: UserVocabulary(
+                    storage = SharedPrefsLearnedStorage(
+                        context.applicationContext
+                            .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                    ),
+                    log = { msg, e ->
+                        if (e != null) android.util.Log.e(TAG, msg, e)
+                        else android.util.Log.d(TAG, msg)
+                    }
+                ).also { instance = it }
+            }
+        }
     }
 
     // Primary storage: word → usage data
     private val vocabulary: ConcurrentHashMap<String, UserWordUsage> = ConcurrentHashMap()
 
-    // Preferences for persistence
-    private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-
     // Gson for JSON serialization
     private val gson = Gson()
+
+    // Debounced write-back — coalesces the per-word save storm into one write.
+    private val persister = DebouncedPersister(debounceMs, maxDelayMs, scheduler) {
+        writeToStorage()
+    }
 
     // Track last cleanup time
     private var lastCleanup: Long = System.currentTimeMillis()
 
     init {
-        loadFromPreferences()
-        Log.d(TAG, "UserVocabulary initialized with ${vocabulary.size} words")
+        loadFromStorage()
+        log("UserVocabulary initialized with ${vocabulary.size} words", null)
     }
 
     /**
@@ -61,6 +101,9 @@ class UserVocabulary(private val context: Context) {
      *
      * If the word is already tracked, increments usage count and updates timestamp.
      * If new, adds to vocabulary with initial usage count of 1.
+     *
+     * Persistence: marks the store dirty; the debounced persister writes back
+     * in the background (NOT a per-word serialization).
      */
     fun recordWordUsage(word: String, timestamp: Long = System.currentTimeMillis()) {
         val normalized = UserWordUsage.normalizeWord(word)
@@ -77,23 +120,16 @@ class UserVocabulary(private val context: Context) {
                 vocabulary[normalized] = existing.recordNewUsage(timestamp)
             } else {
                 // Add new entry
-                if (vocabulary.size < MAX_VOCABULARY_SIZE) {
-                    vocabulary[normalized] = UserWordUsage(
-                        word = normalized,
-                        usageCount = 1,
-                        lastUsed = timestamp,
-                        firstUsed = timestamp
-                    )
-                } else {
+                if (vocabulary.size >= MAX_VOCABULARY_SIZE) {
                     // At capacity, remove least valuable word before adding
                     removeLowestValueWord()
-                    vocabulary[normalized] = UserWordUsage(
-                        word = normalized,
-                        usageCount = 1,
-                        lastUsed = timestamp,
-                        firstUsed = timestamp
-                    )
                 }
+                vocabulary[normalized] = UserWordUsage(
+                    word = normalized,
+                    usageCount = 1,
+                    lastUsed = timestamp,
+                    firstUsed = timestamp
+                )
             }
 
             // Periodic cleanup (async, non-blocking)
@@ -102,8 +138,7 @@ class UserVocabulary(private val context: Context) {
             }
         }
 
-        // Save to preferences asynchronously
-        saveToPreferencesAsync()
+        persister.markDirty()
     }
 
     /**
@@ -158,6 +193,21 @@ class UserVocabulary(private val context: Context) {
     fun size(): Int = vocabulary.size
 
     /**
+     * Remove a single word from the vocabulary (user-initiated edit from the
+     * learned-data manager).
+     *
+     * @return true if the word was present and removed
+     */
+    fun removeWord(word: String): Boolean {
+        val normalized = UserWordUsage.normalizeWord(word)
+        val removed = synchronized(this) { vocabulary.remove(normalized) != null }
+        if (removed) {
+            persister.markDirty()
+        }
+        return removed
+    }
+
+    /**
      * Remove stale words from vocabulary.
      *
      * A word is stale if:
@@ -179,8 +229,8 @@ class UserVocabulary(private val context: Context) {
         }
 
         if (removedCount > 0) {
-            Log.d(TAG, "Cleaned up $removedCount stale words")
-            saveToPreferencesAsync()
+            log("Cleaned up $removedCount stale words", null)
+            persister.markDirty()
         }
 
         return removedCount
@@ -199,12 +249,12 @@ class UserVocabulary(private val context: Context) {
 
         lowestValueWord?.let {
             vocabulary.remove(it.word)
-            Log.d(TAG, "Removed low-value word: ${it.word} (boost=${it.getPersonalizationBoost(currentTime)})")
+            log("Removed low-value word: ${it.word}", null)
         }
     }
 
     /**
-     * Clear all vocabulary data (user reset).
+     * Clear all vocabulary data (user reset). Persists the removal immediately.
      */
     fun clearAll() {
         synchronized(this) {
@@ -212,8 +262,8 @@ class UserVocabulary(private val context: Context) {
             lastCleanup = System.currentTimeMillis()
         }
 
-        prefs.edit().clear().apply()
-        Log.d(TAG, "User vocabulary cleared")
+        storage.remove(PREFS_KEY_WORDS)
+        log("User vocabulary cleared", null)
     }
 
     /**
@@ -225,7 +275,9 @@ class UserVocabulary(private val context: Context) {
     }
 
     /**
-     * Import vocabulary from JSON string.
+     * Import vocabulary from JSON string (replaces current vocabulary).
+     *
+     * @return number of words imported (0 on parse failure)
      */
     fun importFromJson(json: String): Int {
         return try {
@@ -242,20 +294,35 @@ class UserVocabulary(private val context: Context) {
                 }
             }
 
-            saveToPreferencesAsync()
-            Log.d(TAG, "Imported ${vocabulary.size} words from JSON")
+            persister.markDirty()
+            persister.flush()
+            log("Imported ${vocabulary.size} words from JSON", null)
             vocabulary.size
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to import vocabulary from JSON", e)
+            log("Failed to import vocabulary from JSON", e)
             0
         }
     }
 
+    /** @return true if there are unflushed in-RAM changes. */
+    fun isDirty(): Boolean = persister.isDirty()
+
     /**
-     * Load vocabulary from SharedPreferences.
+     * Synchronously flush unflushed changes (idempotent, no-op when clean).
      */
-    private fun loadFromPreferences() {
-        val json = prefs.getString(PREFS_KEY_WORDS, null) ?: return
+    fun flush() = persister.flush()
+
+    /**
+     * Asynchronously flush on the persistence thread — preferred from
+     * main-thread lifecycle call sites. No-op when clean.
+     */
+    fun requestFlush() = persister.requestFlush()
+
+    /**
+     * Load vocabulary from storage.
+     */
+    private fun loadFromStorage() {
+        val json = storage.getString(PREFS_KEY_WORDS) ?: return
 
         try {
             val type = object : TypeToken<List<UserWordUsage>>() {}.type
@@ -265,27 +332,21 @@ class UserVocabulary(private val context: Context) {
                 vocabulary[usage.word] = usage
             }
 
-            Log.d(TAG, "Loaded ${vocabulary.size} words from SharedPreferences")
+            log("Loaded ${vocabulary.size} words from storage", null)
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to load vocabulary from SharedPreferences", e)
+            log("Failed to load vocabulary from storage", e)
         }
     }
 
     /**
-     * Save vocabulary to SharedPreferences (async, non-blocking).
+     * Serialize the whole vocabulary and write it to storage.
+     * Runs on the persistence thread (or the caller of [flush]).
      */
-    private fun saveToPreferencesAsync() {
-        thread {
-            try {
-                val data = getAllWords()
-                val json = gson.toJson(data)
-
-                prefs.edit().putString(PREFS_KEY_WORDS, json).apply()
-                Log.d(TAG, "Saved ${data.size} words to SharedPreferences")
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to save vocabulary to SharedPreferences", e)
-            }
-        }
+    private fun writeToStorage() {
+        val data = getAllWords()
+        val json = gson.toJson(data)
+        storage.putString(PREFS_KEY_WORDS, json)
+        log("Saved ${data.size} words to storage", null)
     }
 
     /**

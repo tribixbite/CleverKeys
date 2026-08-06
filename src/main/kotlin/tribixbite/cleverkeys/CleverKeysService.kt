@@ -821,6 +821,11 @@ class CleverKeysService : InputMethodService(),
         // (e.g., typing "t" in app A then "h" in app B showing "th" predictions)
         _contextTracker.clearAll()
 
+        // Checkpoint learned data (context LM bigrams + user vocabulary) — the
+        // natural "user left the field" moment. Async debounced-store flush;
+        // no-op when nothing is dirty (2026-08-06 persistence fix).
+        _predictionCoordinator?.flushLearnedData()
+
         // Reset content pane state (hide emoji/clipboard if open)
         _receiver?.resetContentPaneState()
     }

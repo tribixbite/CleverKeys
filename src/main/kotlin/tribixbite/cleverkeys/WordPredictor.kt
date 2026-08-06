@@ -242,9 +242,10 @@ class WordPredictor {
         loadDisabledWords()
 
         // Phase 7.1: Initialize ContextModel for dynamic N-gram predictions
+        // (language-keyed view over the singleton BigramStore — 2026-08-06 persistence fix)
         if (contextModel == null) {
-            contextModel = ContextModel(context)
-            Log.d(TAG, "ContextModel initialized for dynamic N-gram predictions")
+            contextModel = ContextModel(context, currentLanguage)
+            Log.d(TAG, "ContextModel initialized for dynamic N-gram predictions (lang=$currentLanguage)")
         }
 
         // Phase 7.2: Initialize PersonalizationEngine for personalized learning
@@ -469,6 +470,9 @@ class WordPredictor {
             Log.d(TAG, "N-gram language set to: $language")
         }
 
+        // Keep the learned context LM language-isolated (2026-08-06 keying fix)
+        contextModel?.language = language
+
         // Phase 8.3: Switch multi-language models if enabled
         multiLanguageManager?.let {
             val switched = it.switchLanguage(language)
@@ -596,6 +600,7 @@ class WordPredictor {
                     Log.d(TAG, "MultiLanguageManager auto-detected and switched to: $detected")
                 }
                 bigramModel?.setLanguage(detected)
+                contextModel?.language = detected
                 return
             }
         }
@@ -633,6 +638,64 @@ class WordPredictor {
      */
     fun clearContext() {
         recentWords.clear()
+    }
+
+    /**
+     * Sentence boundary hook (2026-08-06, audit §4.6): called when the user types
+     * sentence-final punctuation (`.` `?` `!`). Clears the learning window so
+     * [addWordToContext]'s recordSequence never learns bigrams that span a
+     * sentence boundary (cross-boundary pairs are noise for both context boosting
+     * and next-word generation).
+     */
+    fun onSentenceBoundary() {
+        recentWords.clear()
+    }
+
+    /**
+     * Next-word prediction support (audit 2026-08-06 §4): learned continuations
+     * for the given committed-word context, ranked by conditional probability.
+     * Empty when the context LM is disabled or has no data for the context.
+     */
+    fun getNextWordCandidates(
+        contextWords: List<String>,
+        maxResults: Int = 10
+    ): List<tribixbite.cleverkeys.contextaware.BigramEntry> {
+        val contextAwareEnabled = config?.context_aware_predictions_enabled ?: true
+        if (!contextAwareEnabled) return emptyList()
+        return contextModel?.getNextWordCandidates(contextWords, maxResults) ?: emptyList()
+    }
+
+    /**
+     * Personalization boost (0..6) for a word — 0 when personalization is
+     * disabled or the word is unknown. Used by next-word re-ranking.
+     */
+    fun getPersonalizationBoostFor(word: String): Float {
+        val personalizationEnabled = config?.personalized_learning_enabled ?: true
+        if (!personalizationEnabled) return 0f
+        return personalizationEngine?.getPersonalizationBoost(word) ?: 0f
+    }
+
+    /**
+     * @return true if the word is in the user's learned personal vocabulary.
+     * Next-word filter: membership here OR in the dictionary is required so
+     * typo'd garbage absorbed by the bigram store never surfaces.
+     */
+    fun isInUserVocabulary(word: String): Boolean {
+        return personalizationEngine?.hasWord(word) ?: false
+    }
+
+    /**
+     * Checkpoint all learned data (context LM bigrams + personalization vocabulary)
+     * to persistent storage. Asynchronous flush of the debounced write-back stores;
+     * cheap no-op when nothing is dirty.
+     *
+     * Called from lifecycle boundaries: input-view finish (CleverKeysService),
+     * predictor eviction (DictionaryManager.setLanguage), and coordinator shutdown
+     * (PredictionCoordinator.shutdown).
+     */
+    fun persistLearnedData() {
+        contextModel?.save()
+        personalizationEngine?.persist()
     }
 
     /**
@@ -1755,10 +1818,16 @@ class WordPredictor {
             1.0f
         }
 
-        // 3c. Combine static and dynamic context signals
-        // Both contribute to final context multiplier: static for common phrases, dynamic for personal patterns
-        // Maximum of the two to take best prediction (user patterns override static when stronger)
-        val contextMultiplier = kotlin.math.max(staticContextMultiplier, dynamicContextBoost)
+        // 3c. Combine static and dynamic context signals per the user's
+        // context_source pref (audit 2026-08-06 §3.2-2):
+        //   both (default) — max of the two (user patterns override static when stronger)
+        //   learned_only   — only the user's own learned n-grams
+        //   static_only    — only the shipped bigram tables
+        val contextMultiplier = when (config?.context_source ?: Defaults.CONTEXT_SOURCE) {
+            "learned_only" -> dynamicContextBoost
+            "static_only" -> staticContextMultiplier
+            else -> kotlin.math.max(staticContextMultiplier, dynamicContextBoost)
+        }
 
         // 3d. Phase 7.2: Personalization boost from user vocabulary
         // Boosts words the user frequently types, independent of context
@@ -1766,9 +1835,11 @@ class WordPredictor {
         val personalizationEnabled = config?.personalized_learning_enabled ?: true
         val personalizationMultiplier = if (personalizationEnabled && personalizationEngine != null) {
             val boost = personalizationEngine?.getPersonalizationBoost(word) ?: 0.0f
-            // Convert boost (0-6 range) to multiplier (1.0-2.5 range)
-            // Formula: 1.0 + (boost / 4.0) gives smooth 1.0-2.5x range
-            1.0f + (boost / 4.0f)
+            // Convert boost (0-6 range) to multiplier (1.0-2.5 range at weight 1.0)
+            // Formula: 1.0 + (boost × weight / 4.0). personalization_weight (audit
+            // §3.2-1) slides the strength continuously: 0 = off … 2 = double.
+            val weight = config?.personalization_weight ?: Defaults.PERSONALIZATION_WEIGHT
+            1.0f + (boost * weight / 4.0f)
         } else {
             1.0f
         }
@@ -1776,15 +1847,15 @@ class WordPredictor {
         // 4. Frequency scaling (log to prevent common words from dominating)
         // Using log1p helps balance: "the" (freq ~10000) vs "think" (freq ~100)
         // Without log: "the" would always win. With log: context can override frequency
-        // Scale factor is configurable (default: 1000.0)
-        val frequencyScale = config?.prediction_frequency_scale ?: 1000.0f
+        // Scale factor is configurable (default: Defaults.PREDICTION_FREQUENCY_SCALE = 100.0)
+        val frequencyScale = config?.prediction_frequency_scale ?: Defaults.PREDICTION_FREQUENCY_SCALE
         val frequencyFactor = 1.0f + ln1p((frequency / frequencyScale).toDouble()).toFloat()
 
         // COMBINE ALL SIGNALS
         // Formula: prefixScore × adaptation × personalization × (1 + boosted_context) × freq_factor
-        // Context boost is configurable (default: 2.0)
+        // Context boost is configurable (default: Defaults.PREDICTION_CONTEXT_BOOST = 0.5)
         // Higher boost = context has more influence on predictions
-        val contextBoost = config?.prediction_context_boost ?: 2.0f
+        val contextBoost = config?.prediction_context_boost ?: Defaults.PREDICTION_CONTEXT_BOOST
         val finalScore = prefixScore *
             adaptationMultiplier *
             personalizationMultiplier *  // Phase 7.2: Personalization boost

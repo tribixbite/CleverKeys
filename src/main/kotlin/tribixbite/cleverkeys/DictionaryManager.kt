@@ -123,9 +123,12 @@ class DictionaryManager(private val context: Context) {
             val keepSet = getConfiguredLanguages()
             val keysToEvict = predictors.keys.filter { it !in keepSet }
             for (k in keysToEvict) {
+                // Flush learned data (context LM + user vocabulary) BEFORE eviction —
+                // otherwise the evicted language's unsaved learning is lost (2026-08-06 fix)
+                predictors[k]?.persistLearnedData()
                 predictors[k]?.stopObservingDictionaryChanges()
                 predictors.remove(k)
-                Log.i(TAG, "Evicted predictor for '$k' (memory freed)")
+                Log.i(TAG, "Evicted predictor for '$k' (learned data flushed, memory freed)")
             }
         }
 
@@ -282,9 +285,21 @@ class DictionaryManager(private val context: Context) {
         ).filter { it != "none" && it.isNotEmpty() }.toSet()
     }
 
+    /**
+     * Flush all live predictors' learned data (context LM bigrams + user
+     * vocabulary) to persistent storage. Cheap no-op when nothing is dirty.
+     */
+    fun flushLearnedData() {
+        for ((_, predictor) in predictors) {
+            predictor.persistLearnedData()
+        }
+    }
+
     /** Release all predictor instances and their observers. */
     fun cleanup() {
         for ((lang, predictor) in predictors) {
+            // Checkpoint learned data before teardown (2026-08-06 persistence fix)
+            predictor.persistLearnedData()
             predictor.stopObservingDictionaryChanges()
         }
         predictors.clear()

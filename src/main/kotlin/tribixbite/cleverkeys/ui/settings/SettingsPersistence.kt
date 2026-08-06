@@ -383,6 +383,9 @@ internal fun SettingsActivity.loadCurrentSettings() {
         // Word Prediction Advanced settings
         contextAwarePredictionsEnabled = prefs.getSafeBoolean("context_aware_predictions_enabled", Defaults.CONTEXT_AWARE_PREDICTIONS_ENABLED)
         personalizedLearningEnabled = prefs.getSafeBoolean("personalized_learning_enabled", Defaults.PERSONALIZED_LEARNING_ENABLED)
+        nextWordPredictionEnabled = prefs.getSafeBoolean("next_word_prediction_enabled", Defaults.NEXT_WORD_PREDICTION_ENABLED)
+        contextSource = prefs.getSafeString("context_source", Defaults.CONTEXT_SOURCE)
+        personalizationWeight = Config.safeGetFloat(prefs, "personalization_weight", Defaults.PERSONALIZATION_WEIGHT)
         learningAggression = prefs.getSafeString("learning_aggression", Defaults.LEARNING_AGGRESSION)
         predictionContextBoost = Config.safeGetFloat(prefs, "prediction_context_boost", Defaults.PREDICTION_CONTEXT_BOOST)
         predictionFrequencyScale = Config.safeGetFloat(prefs, "prediction_frequency_scale", Defaults.PREDICTION_FREQUENCY_SCALE)

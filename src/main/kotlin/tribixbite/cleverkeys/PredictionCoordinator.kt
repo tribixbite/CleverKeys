@@ -637,6 +637,22 @@ class PredictionCoordinator(
     }
 
     /**
+     * Checkpoint all learned data (context LM bigrams + personalization
+     * vocabulary) held by the primary predictor and every per-language predictor
+     * in [DictionaryManager]. Asynchronous debounced-store flush — cheap no-op
+     * when nothing is dirty. Called from CleverKeysService.onFinishInputView and
+     * from [shutdown].
+     */
+    fun flushLearnedData() {
+        try {
+            wordPredictor?.persistLearnedData()
+            dictionaryManager?.flushLearnedData()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error flushing learned data", e)
+        }
+    }
+
+    /**
      * Shuts down all prediction engines and cleans up resources.
      * Should be called during keyboard shutdown.
      */
@@ -663,6 +679,11 @@ class PredictionCoordinator(
 
         // Shutdown async prediction handler
         handlerToShut?.shutdown()
+
+        // Checkpoint learned data (context LM bigrams + user vocabulary) BEFORE the
+        // predictor/dictionary teardown below discards the live instances
+        // (2026-08-06 persistence fix)
+        flushLearnedData()
 
         // Stop observing dictionary changes
         wordPredictor?.stopObservingDictionaryChanges()

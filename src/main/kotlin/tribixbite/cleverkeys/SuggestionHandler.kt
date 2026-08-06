@@ -212,6 +212,12 @@ class SuggestionHandler(
     // Password mode tracking
     private var isPasswordMode = false
 
+    // Next-word prediction (audit 2026-08-06 §4): true while the bar is showing
+    // context-only next-word candidates (no partial typed). Lets backspace dismiss
+    // them and lets onSuggestionSelected tag the commit PredictionSource.NEXT_WORD.
+    @Volatile
+    private var nextWordSuggestionsActive = false
+
     /**
      * Updates configuration.
      *
@@ -359,6 +365,9 @@ class SuggestionHandler(
         shiftLocked: Boolean,
         inputCoordinator: InputCoordinator
     ) {
+        // Swipe results replace whatever the bar shows — any next-word display state ends here.
+        nextWordSuggestionsActive = false
+
         // D2: password-field guard. Detect from the tracked mode OR the live editor (the latter holds
         // in tests / before onStartInputView sets the mode). Suppress the swipe unless the user opted in.
         val passwordField = isPasswordMode || SuggestionBar.isPasswordField(editorInfo)
@@ -487,6 +496,12 @@ class SuggestionHandler(
     ): String? {
         // Null/empty check
         if (word.isNullOrBlank()) return null
+
+        // Next-word tap (audit §4.4): remember whether the bar was showing
+        // context-only candidates so the commit is tagged NEXT_WORD below.
+        // Consumed either way — any selection ends the next-word display state.
+        val wasNextWordSelection = nextWordSuggestionsActive
+        nextWordSuggestionsActive = false
 
         // R3: Route the special-suggestion protocol through the shared typed
         // routing decision (single source of truth) instead of ad-hoc prefix
@@ -875,7 +890,10 @@ class SuggestionHandler(
                 // Track that this commit was from candidate selection (manual tap)
                 // Note: Auto-insertions set this separately to NEURAL_SWIPE
                 if (contextTracker.getLastCommitSource() != PredictionSource.NEURAL_SWIPE) {
-                    contextTracker.setLastCommitSource(PredictionSource.CANDIDATE_SELECTION)
+                    contextTracker.setLastCommitSource(
+                        if (wasNextWordSelection) PredictionSource.NEXT_WORD
+                        else PredictionSource.CANDIDATE_SELECTION
+                    )
                 }
             } catch (e: Exception) {
                 // Log the failure (type/message only, never committed text) and reset the
@@ -894,9 +912,85 @@ class SuggestionHandler(
             // Clear current word
             // NOTE: Don't clear suggestions here - they're re-displayed after auto-insertion
             contextTracker.clearCurrentWord()
+
+            // Next-word prediction call-site 2 (audit §4.4): after a tap commit the
+            // context just grew — chain another round of context-only candidates
+            // (this is what makes "want" → tap "to" → suggest "go/see/be" flow).
+            maybeShowNextWordPredictions(editorInfo)
         }
 
         return if (ic != null) processedWord else null
+    }
+
+    /**
+     * Next-word prediction (audit 2026-08-06 §4, opt-in `next_word_prediction_enabled`,
+     * default OFF): generate context-only candidates from the learned bigram LM and
+     * show them in the (otherwise empty) suggestion bar.
+     *
+     * Pure gating + generation live in [NextWordPredictor] (unit-tested); this method
+     * owns only the impure wiring — config/tracker reads, the shared
+     * [predictionTasks] executor (same cancellation semantics as
+     * [updatePredictionsForCurrentWord]), and the main-thread bar post. Runs the
+     * store lookups off the UI thread.
+     *
+     * An empty candidate set leaves the bar untouched (empty) — showing nothing
+     * is the designed common case (§4.2 confidence floor).
+     */
+    private fun maybeShowNextWordPredictions(editorInfo: EditorInfo?) {
+        val inTermuxApp = try {
+            editorInfo?.packageName == "com.termux"
+        } catch (e: Exception) {
+            false
+        }
+        val contextWords = contextTracker.getContextWords().toList()
+        if (!NextWordPredictor.shouldShow(
+                featureEnabled = config.next_word_prediction_enabled,
+                wordPredictionEnabled = config.word_prediction_enabled,
+                isPasswordMode = isPasswordMode,
+                specialPromptActive = specialPromptActive,
+                inTermuxApp = inTermuxApp,
+                hasContext = contextWords.isNotEmpty()
+            )
+        ) {
+            return
+        }
+        val predictor = predictionCoordinator.getWordPredictor() ?: return
+
+        predictionTasks.cancelAndSubmit {
+            if (Thread.currentThread().isInterrupted) return@cancelAndSubmit
+
+            val learned = predictor.getNextWordCandidates(contextWords, maxResults = 10)
+            val candidates = NextWordPredictor.generate(
+                learned = learned,
+                lastCommittedWord = contextWords.lastOrNull(),
+                personalizationBoost = { predictor.getPersonalizationBoostFor(it) },
+                isWordAllowed = { w ->
+                    !predictor.isWordDisabled(w) &&
+                        (predictor.isInDictionary(w) || predictor.isInUserVocabulary(w))
+                }
+            )
+            if (candidates.isEmpty()) return@cancelAndSubmit
+
+            // Presentation (§4.4): stored lowercase → restore "I" forms and
+            // user-dictionary proper-noun case for display.
+            val displayWords = predictor.applyUserWordCaseToList(
+                candidates.map { capitalizeIWord(it.word) }
+            )
+            val scores = candidates.map { it.score }
+
+            if (Thread.currentThread().isInterrupted || specialPromptActive) return@cancelAndSubmit
+            mainHandler.post {
+                // Skip if state moved on while queued: special prompt appeared or the
+                // user already started typing the next word.
+                if (specialPromptActive || isPasswordMode) return@post
+                if (contextTracker.getCurrentWordLength() > 0) return@post
+                suggestionBar?.let { bar ->
+                    nextWordSuggestionsActive = true
+                    bar.setShowDebugScores(config.swipe_show_debug_scores)
+                    bar.setSuggestionsWithScores(displayWords, scores)
+                }
+            }
+        }
     }
 
     /**
@@ -1103,6 +1197,9 @@ class SuggestionHandler(
         // Track current word being typed
         when {
             text.length == 1 && text[0].isLetter() -> {
+                // A typed letter starts/extends a partial — next-word candidates (if
+                // showing) are superseded by ordinary prefix predictions below.
+                nextWordSuggestionsActive = false
                 contextTracker.appendToCurrentWord(text)
                 // If just started a new word (first letter), clear auto-insert and autocorrect tracking
                 // This prevents incorrectly deleting a previously swiped word when
@@ -1271,15 +1368,33 @@ class SuggestionHandler(
                     }
                 }
 
+                // Sentence boundary (audit 2026-08-06 §4.6): after `.` `?` `!` the
+                // learned-context window resets so recordSequence never learns
+                // bigrams spanning a sentence boundary (noise for both context
+                // boosting and next-word generation).
+                if (text[0] == '.' || text[0] == '?' || text[0] == '!') {
+                    predictionCoordinator.getWordPredictor()?.onSentenceBoundary()
+                }
+
                 // Reset current word
                 contextTracker.clearCurrentWord()
                 predictionCoordinator.getWordPredictor()?.reset()
+                nextWordSuggestionsActive = false
                 suggestionBar?.clearSuggestions()
+
+                // Next-word prediction call-site 1 (audit §4.4): after a typed word
+                // completes with a space, offer context-only candidates instead of
+                // leaving the bar empty. Space only — after sentence-final punct the
+                // context was just cleared, and other punctuation keeps the bar empty.
+                if (text == " ") {
+                    maybeShowNextWordPredictions(editorInfo)
+                }
             }
             text.length > 1 -> {
                 // Multi-character input (paste, etc) - reset
                 contextTracker.clearCurrentWord()
                 predictionCoordinator.getWordPredictor()?.reset()
+                nextWordSuggestionsActive = false
                 suggestionBar?.clearSuggestions()
             }
         }
@@ -1293,6 +1408,14 @@ class SuggestionHandler(
         // Handle password mode: update password display
         if (isPasswordMode) {
             handlePasswordBackspace()
+            return
+        }
+
+        // Backspace dismisses next-word candidates (audit §4.4 replacement
+        // semantics — the only new state next-word introduces).
+        if (nextWordSuggestionsActive && contextTracker.getCurrentWordLength() == 0) {
+            nextWordSuggestionsActive = false
+            suggestionBar?.clearSuggestions()
             return
         }
 
@@ -1500,6 +1623,10 @@ class SuggestionHandler(
                         if (specialPromptActive) return@post
 
                         suggestionBar?.let { bar ->
+                            // Prefix predictions supersede any next-word display state
+                            // (covers the cursor-sync path; the typing path already
+                            // cleared the flag in the letter branch).
+                            nextWordSuggestionsActive = false
                             bar.setShowDebugScores(config.swipe_show_debug_scores)
                             // v1.2.0: Use merged scores that include contraction scores
                             bar.setSuggestionsWithScores(finalWords, finalScores)

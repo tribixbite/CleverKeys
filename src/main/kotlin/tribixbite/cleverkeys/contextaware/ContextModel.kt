@@ -5,12 +5,14 @@ import android.content.Context
 /**
  * Context-aware N-gram model for prediction enhancement.
  *
- * Manages both bigram and trigram models to provide context-based prediction boosts.
- * Uses a hybrid approach: try trigrams first (stronger context), fall back to bigrams.
+ * A thin, language-aware view over the process-wide [BigramStore] singleton
+ * (2026-08-06 persistence fix). Each `WordPredictor` owns one ContextModel and
+ * keeps [language] in sync with its active language; all reads/writes are
+ * isolated to that language's learned data.
  *
  * Usage Example:
  * ```kotlin
- * val contextModel = ContextModel(context)
+ * val contextModel = ContextModel(context, "en")
  * contextModel.recordSequence(listOf("I", "want", "to"))  // Learn from typing
  *
  * // Later, when predicting after "want to"
@@ -22,16 +24,14 @@ import android.content.Context
  * ```
  *
  * Architecture:
- * - BigramStore: P(word2 | word1)
+ * - BigramStore: P(word2 | word1) — singleton, language-keyed, debounced persistence
  * - TrigramStore: P(word3 | word1, word2) [future implementation]
  * - Hybrid scoring: Prefer trigrams when available, else use bigrams
- *
- * Performance:
- * - Lookup: O(1) average case
- * - Memory: ~10-20MB for typical usage (10,000 bigrams)
- * - Learning: Async background updates
  */
-class ContextModel(context: Context) {
+class ContextModel internal constructor(
+    private val bigramStore: BigramStore,
+    language: String
+) {
     companion object {
         // Boost multipliers for context probabilities
         private const val MAX_BOOST = 5.0f  // Maximum 5x boost for very likely words
@@ -47,15 +47,31 @@ class ContextModel(context: Context) {
         private const val MIN_TRIGRAM_PROB = 0.001f  // 0.1% minimum (future)
     }
 
-    // Bigram model
-    private val bigramStore: BigramStore = BigramStore(context)
+    /**
+     * Production constructor: language-keyed view over the singleton store.
+     */
+    constructor(context: Context, language: String = "en") :
+        this(BigramStore.getInstance(context), language)
+
+    /**
+     * Active language for this model's view of the store. WordPredictor updates
+     * this on language switch / auto-detection so learning and lookups stay
+     * language-isolated.
+     */
+    @Volatile
+    var language: String = BigramStore.normalizeLanguage(language)
+        set(value) {
+            field = BigramStore.normalizeLanguage(value)
+        }
 
     // Trigram model (future implementation)
     // private val trigramStore: TrigramStore = TrigramStore(context)
 
     /**
      * Record a word sequence from user typing.
-     * Extracts and records all bigrams (and trigrams in future).
+     * Extracts and records all bigrams (and trigrams in future) into the active
+     * language's store. Persistence is handled by the store's debounced
+     * write-back — call [save] at lifecycle boundaries to checkpoint explicitly.
      *
      * Example: ["I", "want", "to", "go"] records:
      * - Bigrams: (I, want), (want, to), (to, go)
@@ -68,7 +84,7 @@ class ContextModel(context: Context) {
 
         // Record bigrams
         for (i in 0 until words.size - 1) {
-            bigramStore.recordBigram(words[i], words[i + 1])
+            bigramStore.recordBigram(language, words[i], words[i + 1])
         }
 
         // Future: Record trigrams
@@ -107,18 +123,10 @@ class ContextModel(context: Context) {
         }
 
         // Future: Try trigram first if we have 2+ previous words
-        // if (previousWords.size >= 2) {
-        //     val word1 = previousWords[previousWords.size - 2]
-        //     val word2 = previousWords[previousWords.size - 1]
-        //     val trigramProb = trigramStore.getProbability(word1, word2, candidateWord)
-        //     if (trigramProb >= MIN_TRIGRAM_PROB) {
-        //         return calculateBoost(trigramProb)
-        //     }
-        // }
 
         // Try bigram with most recent previous word
         val prevWord = previousWords.last()
-        val bigramProb = bigramStore.getProbability(prevWord, candidateWord)
+        val bigramProb = bigramStore.getProbability(language, prevWord, candidateWord)
 
         if (bigramProb >= MIN_BIGRAM_PROB) {
             return calculateBoost(bigramProb)
@@ -130,8 +138,9 @@ class ContextModel(context: Context) {
     /**
      * Get top N predictions given context words.
      *
-     * Returns candidate words ranked by context probability.
-     * Useful for showing contextually relevant suggestions.
+     * Returns candidate words ranked by context probability from the active
+     * language's learned data. Used by next-word prediction (§4) and for showing
+     * contextually relevant suggestions.
      *
      * @param previousWords List of previous words (most recent last)
      * @param maxResults Maximum number of predictions
@@ -144,22 +153,26 @@ class ContextModel(context: Context) {
         if (previousWords.isEmpty()) return emptyList()
 
         // Future: Try trigram predictions first
-        // if (previousWords.size >= 2) {
-        //     val word1 = previousWords[previousWords.size - 2]
-        //     val word2 = previousWords[previousWords.size - 1]
-        //     val trigramPredictions = trigramStore.getPredictions(word1, word2, maxResults)
-        //     if (trigramPredictions.isNotEmpty()) {
-        //         return trigramPredictions.map { it.word3 to calculateBoost(it.probability) }
-        //     }
-        // }
 
         // Use bigram predictions
         val prevWord = previousWords.last()
-        val bigramPredictions = bigramStore.getPredictions(prevWord, maxResults)
+        val bigramPredictions = bigramStore.getPredictions(language, prevWord, maxResults)
 
         return bigramPredictions.map { entry ->
             entry.word2 to calculateBoost(entry.probability)
         }
+    }
+
+    /**
+     * Get ranked next-word candidates with raw learned statistics
+     * (frequency + conditional probability) for filtering/floors.
+     */
+    fun getNextWordCandidates(
+        previousWords: List<String>,
+        maxResults: Int = 10
+    ): List<BigramEntry> {
+        if (previousWords.isEmpty()) return emptyList()
+        return bigramStore.getPredictions(language, previousWords.last(), maxResults)
     }
 
     /**
@@ -169,7 +182,7 @@ class ContextModel(context: Context) {
      * @return True if we have predictions for this word
      */
     fun hasContextFor(previousWord: String): Boolean {
-        return bigramStore.getAllBigrams(previousWord).isNotEmpty()
+        return bigramStore.getAllBigrams(language, previousWord).isNotEmpty()
     }
 
     /**
@@ -180,28 +193,40 @@ class ContextModel(context: Context) {
      * @return Probability (0.0 to 1.0)
      */
     fun getProbability(previousWord: String, candidateWord: String): Float {
-        return bigramStore.getProbability(previousWord, candidateWord)
+        return bigramStore.getProbability(language, previousWord, candidateWord)
     }
 
     /**
-     * Clear all context data (for testing or user reset).
+     * Clear this language's context data (for testing or user reset).
      */
     fun clear() {
-        bigramStore.clear()
-        // Future: trigramStore.clear()
+        bigramStore.clear(language)
+        // Future: trigramStore.clear(language)
     }
 
     /**
-     * Save all context data to persistent storage.
-     * Called automatically during recordSequence, but can be called manually.
+     * Checkpoint learned context data to persistent storage.
+     *
+     * NOT called per record — [recordSequence] only marks the store dirty and the
+     * store's debounced persister writes back in the background. This method
+     * requests an immediate asynchronous flush and is invoked from lifecycle
+     * boundaries (input-view finish, predictor eviction, coordinator shutdown).
+     * No-op when there are no unflushed changes.
      */
     fun save() {
-        bigramStore.saveToPreferences()
-        // Future: trigramStore.saveToPreferences()
+        bigramStore.requestFlush()
+        // Future: trigramStore.requestFlush()
     }
 
     /**
-     * Get statistics about the context model.
+     * Synchronous flush for tests and hard-teardown paths.
+     */
+    fun saveBlocking() {
+        bigramStore.flush()
+    }
+
+    /**
+     * Get statistics about the context model for the active language.
      */
     data class ContextStats(
         val bigramStats: BigramStore.BigramStats,
@@ -210,12 +235,12 @@ class ContextModel(context: Context) {
     )
 
     fun getStatistics(): ContextStats {
-        val bigramStats = bigramStore.getStatistics()
+        val bigramStats = bigramStore.getStatistics(language)
 
         // Calculate average boost potential (average of all bigram probabilities)
         val allProbabilities = mutableListOf<Float>()
         for (word1 in bigramStats.topContextWords.map { it.first }) {
-            val bigrams = bigramStore.getAllBigrams(word1)
+            val bigrams = bigramStore.getAllBigrams(language, word1)
             allProbabilities.addAll(bigrams.map { it.probability })
         }
 
@@ -233,18 +258,18 @@ class ContextModel(context: Context) {
     }
 
     /**
-     * Export context model data as JSON.
+     * Export the active language's context data as JSON.
      */
     fun exportToJson(): String {
-        return bigramStore.exportToJson()
+        return bigramStore.exportToJson(language)
         // Future: Combine with trigramStore.exportToJson()
     }
 
     /**
-     * Import context model data from JSON.
+     * Import context data for the active language from JSON.
      */
     fun importFromJson(jsonString: String) {
-        bigramStore.importFromJson(jsonString)
+        bigramStore.importFromJson(language, jsonString)
         // Future: trigramStore.importFromJson(jsonString)
     }
 
