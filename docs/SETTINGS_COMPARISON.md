@@ -503,6 +503,23 @@ These settings are implemented in the backend (Config.kt) but have no user-facin
 
 ---
 
-**Last Updated**: 2025-11-18 04:45
-**Analysis By**: Claude (Sonnet 4.5)
+---
+
+## 📌 **ADDENDUM 2026-08-06 — CleverKeys-only settings added since this analysis**
+
+These settings have NO Unexpected-Keyboard counterpart (CleverKeys-original features).
+Canonical reference: `docs/SETTINGS_MAPPING.md` + `docs/specs/context-learning-and-next-word.md`.
+
+| Setting | Key | Default | UI Location | Notes |
+|---------|-----|---------|-------------|-------|
+| Learn From My Typing | `on_device_learning_enabled` | true | 🔒 Privacy & Data | MASTER opt-out gate over ALL typing-behavior learning (context LM, personalization vocab, selection adaptation, swipe-ML); read paths go dark too; one-tap forget-on-disable |
+| Next-Word Prediction | `next_word_prediction_enabled` | false | ⌨️ Input Behavior → Word Prediction | Opt-in Gboard-style next-word from the learned n-gram store |
+| Context Source | `context_source` | "both" | ⌨️ Input Behavior → Word Prediction | both \| learned_only \| static_only |
+| Personalization Strength | `personalization_weight` | 1.0 | ⌨️ Input Behavior → Word Prediction | 0.0–2.0 continuous |
+| Suggestion Origin Markers | `suggestion_provenance_markers` | false | 🔧 Advanced | Per-origin colored dot; long-press provenance sheet is always available |
+
+---
+
+**Last Updated**: 2026-08-06 (addendum); original analysis 2025-11-18 04:45
+**Analysis By**: Claude (Sonnet 4.5); addendum — Fable 5
 **Session**: Part 6.18 - Settings Comparison & TODO Generation

@@ -1,7 +1,7 @@
 # CleverKeys Master Architecture Document
 
-**Version**: 1.1.0
-**Last Updated**: 2025-12-04
+**Version**: 1.2.0
+**Last Updated**: 2026-08-06 (added §6.5-6.7: learned context LM, next-word, learning privacy gate)
 **Status**: Complete (Triple-Checked)
 
 This document contains all parameters, weights, coefficients, thresholds, and configuration values used in CleverKeys.
@@ -301,6 +301,44 @@ space = 30, apostrophe = 31, hyphen = 32
 | Constant | Value | Description |
 |----------|-------|-------------|
 | `MIN_CONFIDENCE_THRESHOLD` | 0.6 | Minimum detection confidence |
+
+### 6.5 Learned Context LM (contextaware/, 2026-08-06)
+
+Persistent, language-keyed, process-singleton learned n-gram stores. Full spec:
+`docs/specs/context-learning-and-next-word.md`.
+
+| Constant | Value | Source | Description |
+|----------|-------|--------|-------------|
+| `DEFAULT_MIN_FREQUENCY` | 2 | `BigramStore.kt` / `TrigramStore.kt` | Surface floor — ignore single occurrences |
+| `MAX_BIGRAMS_PER_WORD` | 20 | `BigramStore.kt` | Top continuations kept per previous word |
+| `MAX_TOTAL_BIGRAMS` | 10000 | `BigramStore.kt` | Per-language storage cap |
+| `MAX_TRIGRAMS_PER_PREFIX` | 10 | `TrigramStore.kt` | Continuations per (w1,w2) prefix |
+| `MAX_TOTAL_TRIGRAMS` | 10000 | `TrigramStore.kt` | Per-language storage cap |
+| `DEFAULT_DEBOUNCE_MS` | 5000 | `persist/DebouncedPersister.kt` | Write-back debounce |
+| `DEFAULT_MAX_DELAY_MS` | 30000 | `persist/DebouncedPersister.kt` | Max delay before forced flush |
+| `CONTEXT_WINDOW` | 4 | `LearningGate.kt` | Trailing word window handed to the context LM |
+| `MAX_BOOST` / `BOOST_EXPONENT` | 5.0 / 2.0 | `ContextModel.kt` | Context boost = (1 + prob)^2, capped 5x |
+| Storage keys | `bigrams_json_<lang>` / `trigrams_json_<lang>` | SharedPrefs files `bigram_store` / `trigram_store` | Language-keyed persistence |
+
+### 6.6 Next-Word Prediction (NextWordPredictor.kt, 2026-08-06)
+
+| Constant | Value | Description |
+|----------|-------|-------------|
+| `MAX_SUGGESTIONS` | 3 | Whole-bar candidate cap |
+| `MAX_SWIPE_APPEND` | 2 | Candidates appended after swipe alternates |
+| `MIN_LEARNED_FREQUENCY` | 2 | Confidence floor (learned count) |
+| `MIN_LEARNED_PROBABILITY` | 0.05 | Confidence floor (conditional probability) |
+
+### 6.7 Learning Privacy Gate & Provenance (2026-08-06)
+
+| Parameter | Key | Default | Description |
+|-----------|-----|---------|-------------|
+| Master learning gate | `on_device_learning_enabled` | true | Opt-OUT switch over ALL typing-behavior learning (write + read paths); `LearningGate.kt` |
+| Next-word prediction | `next_word_prediction_enabled` | false | Opt-in learned next-word suggestions |
+| Context source | `context_source` | "both" | `both` \| `learned_only` \| `static_only` — which context LM feeds `UnifiedScore.combine` |
+| Personalization weight | `personalization_weight` | 1.0 | 0–2 continuous strength; multiplier = 1 + boost×weight/4 |
+| Origin markers | `suggestion_provenance_markers` | false | Colored per-origin dot on suggestions (long-press sheet always available) |
+| Incognito flag | `IME_FLAG_NO_PERSONALIZED_LEARNING` | 0x1000000 | Per-field learning suppression (mirrored in `LearningGate.kt`) |
 
 ---
 

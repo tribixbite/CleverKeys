@@ -148,7 +148,7 @@ prediction pipeline that mirrors `SuggestionHandler.updatePredictionsForCurrentW
 | Cursor at end: `hello\|` | "hello" | "" | Normal predictions |
 | Cursor mid-word: `hel\|lo` | "hel" | "lo" | Delete both on select |
 | Cursor at start: `\|hello` | "" | "hello" | Clear predictions |
-| After space: `hello \|` | "" | "" | Next-word predictions |
+| After space: `hello \|` | "" | "" | Cursor-park next-word predictions (see below) |
 | After emoji: `hi 👋 \|` | "" | "" | Reset prediction |
 | Numbers: `test\|123` | "test" | "" | Numbers break word |
 | Contraction: `don'\|t` | "don'" | "t" | Treated as single word |
@@ -165,6 +165,21 @@ prediction pipeline that mirrors `SuggestionHandler.updatePredictionsForCurrentW
 | RTL (Arabic, Hebrew) | Normal - InputConnection is logical order |
 | German compounds | Treated as single word |
 | French elision (l'homme) | Single unit treatment |
+
+## Cursor-Park Next-Word Predictions (2026-08-06)
+
+When cursor sync resolves an EMPTY prefix (cursor parked after existing text with no
+partial word under it), InputCoordinator's empty-prefix branch no longer just clears the
+bar — it routes to `SuggestionHandler.handleCursorParkPrediction(editorInfo)`, which runs
+the fully-gated next-word pipeline (`NextWordPredictor.shouldShow` — opt-in
+`next_word_prediction_enabled`, master `on_device_learning_enabled`, incognito-field flag,
+password/prompt/Termux guards). With the feature off (default) this degrades to the
+original clear.
+
+SCOPE (review L5, accepted): candidates derive from the SESSION's committed-word context
+(`contextTracker`), not the editor text preceding the parked cursor — parking into text
+typed in an earlier session usually shows nothing. See
+`docs/specs/context-learning-and-next-word.md` for the full next-word system.
 
 ## Performance
 

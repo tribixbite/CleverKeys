@@ -159,6 +159,21 @@ All in Settings → **Word Prediction**. Most users only ever touch the top thre
 > [!NOTE]
 > `neural_frequency_weight` lives in the Neural Settings activity (Settings → Neural prediction). It controls the swipe pipeline; autocorrect's tap-typing path uses the absolute frequency directly via `autocorrect_confidence_min_frequency`.
 
+## Suggestion Transparency
+
+Every suggestion in the bar knows where it came from. To inspect one:
+
+- **Long-press any suggestion** — a sheet shows its source (neural swipe, geometric
+  decoder, dictionary prefix match, contraction, next-word, etc.), its score, and — for
+  dictionary predictions — the full score breakdown: prefix match, adaptation, built-in
+  vs. learned context boost (and which one won), personalization, and frequency factor.
+- **Suggestion Origin Markers** (Settings > Advanced, off by default) — adds a small
+  colored dot to each suggestion indicating which engine produced it.
+
+This makes it possible to answer "why is the keyboard suggesting THAT?" — for example, a
+learned next-word candidate will show the statistics behind it, like
+*After "want to": seen 14×, 63%*.
+
 ## Tips and Tricks
 
 - **Proper nouns:** Add names and places to prevent miscorrection. They'll then short-circuit the dictionary scan and never get autocorrected.
@@ -192,6 +207,7 @@ A: They're separate paths. Swipe typing produces candidates via the neural model
 ## Related Features
 
 - [Swipe Typing](swipe-typing.md) - Neural word prediction for gesture input
+- [Next-Word Prediction](next-word-prediction.md) - Learned-phrase suggestions after each word
 - [User Dictionary](user-dictionary.md) - Add custom words
 - [Special Characters](special-characters.md) - Symbols and accents
 - [Smart Punctuation](smart-punctuation.md) - Punctuation attachment and smart auto-space around punctuation

@@ -20,6 +20,9 @@ Technical documentation for CleverKeys, an Android keyboard with neural swipe ty
 | [Neural Prediction](./neural-prediction.md) | ONNX transformer, beam search, vocabulary |
 | [Neural Multilanguage](./neural-multilanguage-architecture.md) | Multi-language swipe typing architecture |
 | [Cursor-Aware Predictions](./cursor-aware-predictions.md) | Dual pipeline cursor sync, exact_add, contraction prefix guard |
+| [Context Learning & Next-Word](./context-learning-and-next-word.md) | Persistent learned n-gram LM, master privacy gate, opt-in next-word prediction, suggestion provenance, learned-data manager |
+| [Geometric Swipe Engine](./geometric-swipe-engine.md) | Layout-agnostic geometric swipe decoder (`swipe/geometric/`) |
+| [CTC Swipe Engine](./ctc-swipe-engine.md) | FUTO-style CTC trie-beam decode module (design-only, NOT wired; blocked on model export) |
 | [KV-Cache Optimization](./kv-cache-optimization.md) | ONNX inference optimization |
 | [Memory Pool Optimization](./memory-pool-optimization.md) | Memory management for neural inference |
 

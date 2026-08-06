@@ -26,6 +26,57 @@ CleverKeys is designed with privacy as a core principle:
 - **No analytics**: No usage tracking or telemetry
 - **You control data**: Export or delete anytime
 
+## On-Device Learning (Master Switch)
+
+Found at the top of the **Privacy & Data** section:
+
+### Learn From My Typing
+
+One switch controls ALL automatic learning from your typing behavior. **Default: On.**
+
+When ON, CleverKeys builds private, on-device models from what you type:
+
+| What is learned | Used for |
+|-----------------|----------|
+| **Phrase patterns** (word pairs and triples) | Context-aware suggestion boosting, next-word prediction |
+| **Word usage** (personal vocabulary) | Personalized suggestion ranking |
+| **Suggestion selections** | Adapting which suggestions rank higher |
+| **Swipe traces** (only if Swipe Data Collection is also on) | Potential future model tuning |
+
+When OFF:
+
+- **Nothing new is recorded** — every learning path is stopped at the write layer.
+- **Already-learned data goes inert** — it is neither updated nor used for suggestions
+  (next-word prediction and learned-context boosting turn off entirely).
+- Turning the switch off offers a one-tap **"Also forget learned data?"** dialog that
+  deletes everything already learned (phrase patterns, word usage, and selection
+  history). Choose "Keep it" to retain the data in case you re-enable learning later.
+
+> [!NOTE]
+> The switch covers *automatic* recording of typing behavior. Data you explicitly create
+> is governed separately: swipe-calibration sessions you start yourself, prediction
+> performance statistics (a separate toggle, no text content), and learned data you
+> restore from your own backup.
+
+### Private/incognito fields
+
+Apps can mark a text field as "no personalized learning" (for example, a browser's
+private tab). CleverKeys honors this automatically: nothing typed in such a field is
+learned, and no personalized next-word suggestions appear there — regardless of your
+settings.
+
+### Reviewing and deleting learned data
+
+Settings > Input Behavior > **Learning & Data** shows what has been learned (per-language
+phrase counts, word usage) and lets you:
+
+- **Browse phrases** — see every learned word pair with its count, delete individually
+- **Browse words** — see your learned vocabulary with usage counts, delete individually
+- **Forget phrases / Forget words** — bulk delete with confirmation
+
+Learned phrases and words are included in dictionary exports (Backup & Restore), so your
+learning survives reinstalls if you back up.
+
 ## Clipboard Privacy
 
 ### Clipboard Settings
@@ -124,6 +175,7 @@ Use Settings > Backup & Restore to:
 
 | Setting | Section | Default |
 |---------|---------|---------|
+| **Learn From My Typing** | Privacy & Data | On |
 | **Clipboard History** | Clipboard | On |
 | **History Limit** | Clipboard | 50 items |
 | **History Duration** | Clipboard | Never expire |
@@ -165,7 +217,15 @@ A: Go to Android Settings > Apps > CleverKeys > Storage > Clear Data. This remov
 
 A: Enable Incognito Mode for reduced data retention (predictions will be less personalized).
 
+### Q: How do I stop the keyboard from learning my typing?
+
+A: Turn off Privacy & Data > Learn From My Typing. Nothing new will be recorded, and
+already-learned data stops being used. You will also be offered a one-tap delete of
+everything already learned.
+
 ## Related Features
 
 - [Clipboard History](../clipboard/clipboard-history.md) - Manage clipboard
 - [Backup & Restore](../troubleshooting/backup-restore.md) - Data management
+- [Next-Word Prediction](../typing/next-word-prediction.md) - Uses learned phrases (opt-in)
+- [Input Behavior Settings](./input-behavior.md) - Learning & Data manager

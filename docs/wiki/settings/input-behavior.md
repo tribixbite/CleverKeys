@@ -36,6 +36,34 @@ Automatically capitalize "I" and its contractions:
 |----------------|
 | I, I'm, I'll, I'd, I've |
 
+### Next-Word Prediction
+
+Suggest the next word from your learned phrases before you type a letter. **Default: Off.**
+Requires the Privacy & Data > Learn From My Typing master switch to be on.
+See [Next-Word Prediction](../typing/next-word-prediction.md) for a full walkthrough.
+
+### Context Source
+
+Which phrase model boosts predictions while you type:
+
+| Option | Behavior |
+|--------|----------|
+| **Both** (default) | Best of the built-in phrase model and your learned patterns |
+| **Learned only** | Only your own learned phrase patterns |
+| **Built-in only** | Only the shipped phrase model |
+
+### Personalization Strength
+
+How strongly your personal word usage boosts predictions, from 0.0 (off) to 2.0
+(double strength). Default: 1.0.
+
+### Learning & Data
+
+Shows what the keyboard has learned on this device — per-language phrase-pattern counts
+and word-usage stats — with **Browse phrases**, **Browse words**, **Forget phrases**, and
+**Forget words** controls. Individual learned entries can be deleted from the browse
+dialogs. Learned data is included in dictionary exports (Backup & Restore).
+
 ## Input Section
 
 ### Autocapitalization
@@ -125,3 +153,5 @@ A: Settings > Gesture Tuning > Double-Space to Period > Off.
 
 - [Short Swipes](../gestures/short-swipes.md) - Gesture configuration
 - [Accessibility](accessibility.md) - Haptic feedback settings
+- [Next-Word Prediction](../typing/next-word-prediction.md) - Learned-phrase suggestions
+- [Privacy Settings](privacy.md) - The Learn From My Typing master switch

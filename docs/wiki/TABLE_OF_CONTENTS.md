@@ -1,7 +1,7 @@
 # CleverKeys User Guide
 
-**Last Updated**: 2026-03-26
-**Version**: v1.3.0
+**Last Updated**: 2026-08-06
+**Version**: v1.5.x
 
 Welcome to the CleverKeys documentation. This guide covers everything you need to know to get the most out of your keyboard.
 
@@ -31,6 +31,7 @@ Welcome to the CleverKeys documentation. This guide covers everything you need t
 |------|-------------|
 | [Swipe Typing](./typing/swipe-typing.md) | How neural swipe prediction works |
 | [Autocorrect & Predictions](./typing/autocorrect.md) | Smart text correction settings |
+| [Next-Word Prediction](./typing/next-word-prediction.md) | Learned-phrase suggestions before you type a letter (opt-in) |
 | [Smart Punctuation](./typing/smart-punctuation.md) | Automatic punctuation attachment and smart auto-space (v1.5.0) |
 | [User Dictionary](./typing/user-dictionary.md) | Custom words and case preservation |
 | [Special Characters](./typing/special-characters.md) | Symbols, accents, and compose key |

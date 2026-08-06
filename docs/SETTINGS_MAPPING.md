@@ -41,6 +41,10 @@ Complete mapping of settings to search terms, wiki guides, and implementation fi
 | Show Exact Typed Word | exact, typed, add to dictionary | [autocorrect.md](wiki/typing/autocorrect.md) | `SuggestionHandler.kt` |
 | Context-Aware Predictions | context, aware, intelligent | [autocorrect.md](wiki/typing/autocorrect.md) | `PredictionContextTracker.kt` |
 | Personalized Learning | learning, personalized, adapt | [autocorrect.md](wiki/typing/autocorrect.md) | `UserAdaptationManager.kt` |
+| Next-Word Prediction | next word, phrase, predict, gboard | [next-word-prediction.md](wiki/typing/next-word-prediction.md) | `NextWordPredictor.kt`, `SuggestionHandler.kt` |
+| Context Source | context, learned, built-in, source | [input-behavior.md](wiki/settings/input-behavior.md) | `SuggestionProvenance.kt` (`UnifiedScore`), `WordPredictor.kt` |
+| Personalization Strength | personalization, weight, strength | [input-behavior.md](wiki/settings/input-behavior.md) | `PersonalizationEngine.kt`, `WordPredictor.kt` |
+| Learning & Data Manager | learned, phrases, browse, forget, delete | [input-behavior.md](wiki/settings/input-behavior.md) | `LearningDataSection.kt`, `BigramStore.kt`, `UserVocabulary.kt` |
 | Autocorrect | autocorrect, fix, error, typo | [autocorrect.md](wiki/typing/autocorrect.md) | `WordPredictor.kt` |
 | Capitalize I Words | capitalize, i'm, i'll, uppercase | [autocorrect.md](wiki/typing/autocorrect.md) | `SuggestionHandler.kt`, `InputCoordinator.kt` |
 
@@ -135,6 +139,7 @@ Complete mapping of settings to search terms, wiki guides, and implementation fi
 
 | Setting | Search Keywords | Wiki | Files |
 |---------|-----------------|------|-------|
+| Learn From My Typing (master gate) | learning, privacy, on-device, forget | [privacy.md](wiki/settings/privacy.md) | `LearningGate.kt`, `PrivacySection.kt` |
 | Incognito Mode | private, secret, hide | [privacy.md](wiki/settings/privacy.md) | `Config.kt` |
 | Swipe Data Collection | data, collection | [privacy.md](wiki/settings/privacy.md) | `PrivacyManager.kt` |
 | Performance Metrics | performance, analytics | [privacy.md](wiki/settings/privacy.md) | `NeuralPerformanceStats.kt` |
@@ -145,6 +150,7 @@ Complete mapping of settings to search terms, wiki guides, and implementation fi
 
 | Setting | Search Keywords | Wiki | Files |
 |---------|-----------------|------|-------|
+| Suggestion Origin Markers | origin, marker, provenance, transparency | [autocorrect.md](wiki/typing/autocorrect.md) | `SuggestionBar.kt`, `SuggestionProvenance.kt` |
 | Debug Logging | log, developer, verbose | [common-issues.md](wiki/troubleshooting/common-issues.md) | `Config.kt` |
 | Terminal Mode | terminal, termux | [basic-typing.md](wiki/getting-started/basic-typing.md) | `Config.kt` |
 | Detailed Swipe Logging | detailed, swipe, logging | [performance.md](wiki/troubleshooting/performance.md) | `SwipeDebugActivity.kt` |
@@ -196,6 +202,11 @@ For backup/restore and preference access:
 // Multi-language
 "multi_lang_enabled", "pref_primary_language", "pref_secondary_language"
 
-// Privacy
+// Privacy & learning (2026-08-06)
 "incognito_mode", "privacy_collect_swipe_data", "privacy_collect_performance"
+"on_device_learning_enabled"        // master gate over ALL typing-behavior learning (default true)
+"next_word_prediction_enabled"      // opt-in learned next-word suggestions (default false)
+"context_source"                    // "both" | "learned_only" | "static_only" (default "both")
+"personalization_weight"            // 0.0-2.0 continuous strength (default 1.0)
+"suggestion_provenance_markers"     // opt-in origin dots on suggestions (default false)
 ```

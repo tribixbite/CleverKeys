@@ -272,8 +272,24 @@ fun deleteWord(ic: InputConnection) {
 | **Delete Mode** | `delete_mode` | CHARACTER | Character/SelectionFirst |
 | **Delete Word Mode** | `delete_word_mode` | TO_BOUNDARY | WholeWord/ToBoundary |
 
+### Word Prediction subsection (added 2026-08-06)
+
+The Word Prediction block of the Input Behavior section (`InputBehaviorSection.kt`) also
+hosts the context-learning controls and the Learning & Data manager
+(`LearningDataSection.kt`, rendered in the Advanced Prediction block):
+
+| Setting | Key | Default | Values |
+|---------|-----|---------|--------|
+| **Next-Word Prediction** | `next_word_prediction_enabled` | false | bool |
+| **Context Source** | `context_source` | "both" | both / learned_only / static_only |
+| **Personalization Strength** | `personalization_weight` | 1.0 | 0.0–2.0 |
+
+The master learning gate `on_device_learning_enabled` (default true) lives in the
+Privacy & Data section and overrides all of the above at the write AND read layers.
+
 ## Related Specifications
 
 - [Gesture System](../../../specs/gesture-system.md) - Gesture recognition
 - [Settings System](../../../specs/settings-system.md) - Preferences
 - [Autocorrect](../typing/autocorrect-spec.md) - Text correction
+- [Next-Word Prediction](../typing/next-word-prediction-spec.md) - Learned-phrase suggestions

@@ -1,5 +1,51 @@
 # CleverKeys TODO
 
+## ✅ Context-LM wave COMPLETE (2026-08-06, commits 997d8f78 → 295edc43 → f6824477)
+- [x] **Persistent context LM** — BigramStore/TrigramStore singletons, language-keyed
+      (`bigrams_json_<lang>` / `trigrams_json_<lang>`), `persist/DebouncedPersister`
+      (5s debounce / 30s max) write-back; legacy blob migration; UserVocabulary save-storm
+      fixed; trigram→bigram backoff in `ContextModel.getNextWordCandidates`.
+- [x] **MASTER privacy gate** — `on_device_learning_enabled` (default ON, opt-OUT) +
+      `LearningGate` chokepoint: ALL learn paths write-gated (bigram/trigram, personalization
+      vocab, selection adaptation, swipe-ML) AND read paths inert with master off;
+      `IME_FLAG_NO_PERSONALIZED_LEARNING` honored per-field; forget-on-disable dialog;
+      closed the ungated UserAdaptationManager gap.
+- [x] **Opt-in next-word prediction** — `next_word_prediction_enabled` (default OFF),
+      `NextWordPredictor` (floors freq≥2 / prob≥5%, dict/user-vocab filter), 4 call-sites
+      (space-complete, tap-chain, swipe-append ≤2, cursor-park), bar-generation staleness
+      guards, backspace dismissal, sentence-boundary context reset.
+- [x] **Transparency** — `SuggestionProvenance` (SuggestionOrigin per bar entry,
+      `UnifiedScore.combine` = single score implementation + breakdown), long-press
+      provenance sheet, opt-in `suggestion_provenance_markers`; `context_source` +
+      `personalization_weight` knobs.
+- [x] **Learned-data manager** — `LearningDataSection`: per-language counts, browse/delete
+      phrases + words, bulk forget; learned n-grams + vocab ride Backup & Restore.
+- [x] All 20 independent-review findings resolved (f6824477): H2 swipe-alternates
+      regression, H3 adaptation read gate, M3 window-replay inflation, M5 incognito,
+      M6 generation guards, races (LearnedStoreForgetRaceTest), LearningWiringDriftTest.
+- [x] Docs (2026-08-06): `docs/specs/context-learning-and-next-word.md` (canonical spec +
+      UX walkthrough), wiki `typing/next-word-prediction.md` (+ paired spec), privacy /
+      input-behavior / autocorrect wiki updates, ARCHITECTURE_MASTER §6.5-6.7,
+      SETTINGS_MAPPING/COMPARISON, README.
+- DEFERRED (documented, not scheduled): cursor-park reads session context only (L5 —
+  no InputConnection editor scan); trigrams not individually browsable (bulk clear only);
+  backup restore repopulates learned stores with master off (L7 out-of-scope by design);
+  hybrid swipe mode provenance-tagged NEURAL_BEAM.
+
+## ✅ FUTO decoder eval + CTC engine decision COMPLETE (2026-08-06)
+- [x] Same-split head-to-head (2,400 test + 9,918 held-out val): neural/geo/FUTO floor +
+      Viterbi-beam ceiling; contraction-lexicon fix (a-z normalize) measured; fusion GO
+      on every stratum. `docs/eval/2026-07-24-test2400-head2head.md` + companions.
+- [x] Offline decoder speedup: **adopt neither** — XNNPACK EP 0.80× (slower, partition
+      copies), int8 no-op (decoder already int8-dynamic-quantized). Bit-identical outputs.
+      `docs/eval/2026-08-06-offline-decoder-speedup.md`.
+- [x] FUTO engine integration decision: .pte→ONNX infeasible; ExecuTorch-in-app costly;
+      **retrain own CTC → ONNX recommended** (license-clean).
+      `docs/audit/2026-08-06-futo-engine-integration-decision.md`.
+- [x] `swipe/ctc/` design-only module landed (decode+featurize+trie, pure-JVM tested, NOT
+      wired; blocked on CTC model export) — `docs/specs/ctc-swipe-engine.md`; training
+      guide for GPU box: `docs/guides/train-ctc-swipe-model.md`.
+
 ## 🔜 NEXT — geo-engine queued implementation (state as of 2026-07-20 context-clear)
 - [x] **Local-corpus replay (neural-vs-geo bridge) DONE 2026-07-21** —
       `GeoLocalCorpusReplayTest` (`-PgeoFull` + local-cache gated) replays ALL 8,607 REAL

@@ -1,6 +1,6 @@
 # CleverKeys Documentation - Table of Contents
 
-**Last Updated**: 2026-03-15
+**Last Updated**: 2026-08-06
 **Review Status**: Files 251 of 251 (100% complete) ✅
 
 ## 📋 Quick Navigation
@@ -65,8 +65,37 @@
 | `testing-strategy.md` | Testing infrastructure (2050+ tests) | ✅ Active |
 | `short-swipe-customization.md` | **NEW** Short Swipe System | ✅ Implemented |
 | `profile_system_restoration.md` | **NEW** Profile Import/Export | ✅ Implemented |
-| `geometric-swipe-engine.md` | **NEW** Layout-agnostic geometric swipe decoder (standalone) | ✅ Implemented |
+| `geometric-swipe-engine.md` | Layout-agnostic geometric swipe decoder (standalone) | ✅ Implemented |
+| `context-learning-and-next-word.md` | **NEW 2026-08-06** Persistent context LM, master learning privacy gate, opt-in next-word prediction, suggestion provenance, learned-data manager | ✅ Implemented |
+| `ctc-swipe-engine.md` | **NEW 2026-08-06** FUTO-style CTC trie-beam decode module (`swipe/ctc/`) — design-only, NOT wired, blocked on model export | 📐 Design |
+| `cursor-aware-predictions.md` | Cursor sync + cursor-park next-word integration | ✅ Implemented |
 | `architectural-decisions.md` | Architectural Decision Records | ✅ Active |
+
+### `/docs/eval/` Decoder Evaluations (2026-07/08)
+*Neural / geometric / FUTO-reference head-to-head evidence base*
+
+| File | Purpose | Status |
+|------|---------|--------|
+| `2026-07-24-test2400-head2head.md` | Same-split 2,400-row head-to-head (neural/geo/FUTO floor+ceiling) + fusion go/no-go; held-out VAL (9,918) corroboration with contraction-fixed lexicon | ✅ Complete |
+| `2026-07-23-futo100k-head2head.md` | FUTO 100k corpus head-to-head | ✅ Complete |
+| `2026-08-06-offline-decoder-speedup.md` | Offline ONNX decode speedup investigation — verdict: adopt neither (XNNPACK 0.80× slower; decoder already int8-dynamic-quantized) | ✅ Complete |
+| `2026-07-24-harness-conversion-audit.md` | Eval harness conversion fixes | ✅ Complete |
+| `2026-07-24-swipedata-onnx-validation.md` | Swipedata → ONNX input validation | ✅ Complete |
+| `futo-decoder-eval-notes.md` | FUTO reference decoder porting notes (floor + Viterbi-beam ceiling) | ✅ Complete |
+
+### `/docs/guides/` Guides
+
+| File | Purpose | Status |
+|------|---------|--------|
+| `train-ctc-swipe-model.md` | End-to-end CTC swipe-model training → ONNX export guide (for a GPU box) | ✅ Active |
+
+### `/docs/audit/` Key Decision Records (2026-08-06)
+
+| File | Purpose | Status |
+|------|---------|--------|
+| `2026-08-06-futo-engine-integration-decision.md` | FUTO engine adoption decision — .pte→ONNX infeasible; ExecuTorch-in-app costly; **recommended: retrain own CTC model → ONNX** (license-clean) | ✅ Decided |
+| `2026-08-06-futo-decoder-integration-study.md` | Algorithm ground truth for the CTC decode port | ✅ Complete |
+| `2026-08-06-context-lm-review-findings.md` | Independent review of context-LM/privacy wave (H1-H3, M1-M7, L1-L10 — all resolved) | ✅ Resolved |
 
 ### `/docs/history/` History
 | File | Purpose | Status |
