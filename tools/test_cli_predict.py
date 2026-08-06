@@ -1007,7 +1007,7 @@ def run_head_to_head(args):
     print(f"features: {feat_mode}   beam={args.beam}   max_len={args.max_len}")
     if args.production:
         print(f"PRODUCTION mode ON: trie-constrained beam (width={PROD_BEAM_WIDTH}, "
-              f"alpha={PROD_BEAM_ALPHA}) + filterPredictions rerank; bare decode also run for delta")
+              f"alpha={args.prod_alpha}) + filterPredictions rerank; bare decode also run for delta")
     print("-" * 78)
 
     raw = Tally()
@@ -1059,7 +1059,7 @@ def run_head_to_head(args):
                 # Trie-constrained, length-normalized beam (production width/alpha)
                 prod_beams = run_production_beam(
                     decoder, memory, actual_length, prod_vocab.trie,
-                    PROD_BEAM_WIDTH, args.max_len, PROD_BEAM_ALPHA)
+                    PROD_BEAM_WIDTH, args.max_len, args.prod_alpha)
                 # conf+freq rerank -> deduped top-10 (word, score)
                 reranked = prod_vocab.filter_predictions(prod_beams)
                 prod_words = [w for w, _ in reranked]
@@ -1193,6 +1193,9 @@ def main():
                     help='ALSO run the production-equivalent decode: trie-constrained '
                          'length-normalized beam (width=6, alpha=1.4) + OptimizedVocabulary '
                          'conf/freq rerank. Reports a PRODUCTION column alongside bare RAW/DICT.')
+    ap.add_argument('--prod-alpha', type=float, default=PROD_BEAM_ALPHA, dest='prod_alpha',
+                    help=f'length-penalty alpha for the PRODUCTION beam (default {PROD_BEAM_ALPHA} '
+                         '= Config.kt NEURAL_BEAM_ALPHA; override to match a user config).')
     ap.add_argument('--limit', type=int, default=0, help='decode only first N in-dict traces (0=all)')
     ap.add_argument('--skip', type=int, default=0, help='skip first N in-dict traces (chunked runs)')
     ap.add_argument('--threads', type=int, default=4, help='ORT intra-op threads')
