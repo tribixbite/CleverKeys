@@ -271,7 +271,10 @@ class InputCoordinator(
                     // opt-in next-word feature can surface context-only
                     // candidates. With the feature (or master learning gate)
                     // off, the delegate clears the bar exactly as before.
-                    cursorSyncDelegate?.handleCursorParkPrediction(editorInfo)
+                    // L5 (resolved): the InputConnection rides along so the
+                    // delegate can predict from the text before the parked
+                    // cursor instead of session-typed context.
+                    cursorSyncDelegate?.handleCursorParkPrediction(editorInfo, ic)
                         ?: suggestionBar?.clearSuggestions()
                 } else {
                     debugLogger?.invoke("🔄 Preserving suggestions (autocorrect=$hasAutocorrectUndo, swipe=$hasSwipeCorrections)")

@@ -142,6 +142,65 @@ class LearningWiringDriftTest {
         assertThat(manager).contains("remove(KEY_WORD_SELECTIONS + word)")
     }
 
+    // ------------------------------------------ TODO-553 (resolved 2026-08-06)
+
+    @Test
+    fun `swipe auto-insert tracks the COMMITTED word, not the raw prediction`() {
+        val handler = readSource("SuggestionHandler.kt")
+        // Replacement tracking uses onSuggestionSelected's RETURN (post final
+        // autocorrect + I-word handling) so REPLACE deletion counts match the
+        // editor even when the correction changed the word's length.
+        assertThat(handler).containsMatch(
+            """setLastAutoInsertedWord\(\s*committedWord \?: topPrediction\.removePrefix\("raw:"\)"""
+        )
+        // And the learn funnel records the FINAL word: the final-autocorrect
+        // rewrite (processedWord = correctedWord) happens BEFORE the single
+        // updateContext(processedWord) learn call in onSuggestionSelected.
+        val rewriteIdx = handler.indexOf("processedWord = correctedWord")
+        val learnIdx = handler.indexOf("updateContext(processedWord)")
+        assertThat(rewriteIdx).isGreaterThan(-1)
+        assertThat(learnIdx).isGreaterThan(rewriteIdx)
+        assertThat(handler.indexOf("updateContext(processedWord)", learnIdx + 1)).isEqualTo(-1)
+    }
+
+    // -------------------------------------------- L5 (resolved 2026-08-06)
+
+    @Test
+    fun `L5 - cursor park predicts from the editor text before the cursor`() {
+        // InputCoordinator threads the live InputConnection into the delegate.
+        val ic = readSource("InputCoordinator.kt")
+        assertThat(ic).contains("handleCursorParkPrediction(editorInfo, ic)")
+
+        val handler = readSource("SuggestionHandler.kt")
+        // The park path tokenizes real editor text via the pure helper …
+        assertThat(handler).contains("NextWordPredictor.contextFromEditorText")
+        // … and the editor read stays behind the cheap next-word prerequisites
+        // (feature pref, master gate, per-field incognito flag) so fields that
+        // can never surface candidates are never even read.
+        assertThat(handler).containsMatch(
+            """(?s)fun readEditorParkContext.{0,600}next_word_prediction_enabled.{0,200}on_device_learning_enabled.{0,200}fieldAllowsPersonalizedLearning"""
+        )
+    }
+
+    // ------------------------------- autocorrect-undo learning rollback (2026-08-06)
+
+    @Test
+    fun `autocorrect undo rolls the rejected word back out of the learn funnel`() {
+        // Behavior of the store-side inverse is covered by
+        // [tribixbite.cleverkeys.contextaware.NgramRollbackTest]; this pins the
+        // production wiring: undo → WordPredictor.rollbackCommittedWord →
+        // ContextModel.rollbackCommit, with the field's incognito flag riding
+        // along so a gate-suppressed learn is never decremented.
+        val handler = readSource("SuggestionHandler.kt")
+        assertThat(handler).contains(
+            "rollbackCommittedWord(correctedWord, fieldAllowsPersonalizedLearning)"
+        )
+
+        val predictor = readSource("WordPredictor.kt")
+        assertThat(predictor).contains("fun rollbackCommittedWord")
+        assertThat(predictor).contains("contextModel?.rollbackCommit")
+    }
+
     // ---------------------------------------------------------------- L1
 
     @Test

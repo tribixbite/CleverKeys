@@ -22,7 +22,13 @@ import androidx.compose.ui.unit.sp
  * Keyboard font family.
  *
  * Currently uses system default font.
- * TODO: Load special_font.ttf from assets for better character rendering.
+ *
+ * DEFERRED BY DESIGN (was a TODO; clarified 2026-08-06): `special_font.ttf` is
+ * the private-use-area ICON font for key glyphs and is already loaded where it
+ * belongs — the View-layer keyboard renderer (`Theme.kt`,
+ * `Typeface.createFromAsset`). Compose settings typography deliberately stays
+ * on the system font; a Compose surface that needs PUA key glyphs should load
+ * the asset font for that composable only, not switch this global typography.
  */
 private val keyboardFontFamily = FontFamily.Default
 

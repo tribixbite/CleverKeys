@@ -203,6 +203,57 @@ class TrigramStore internal constructor(
         }
     }
 
+    /**
+     * Inverse of [recordTrigram] (autocorrect-undo rollback, 2026-08-06): decrement
+     * ONE observation of `(word1 word2 → word3)`. Removes the entry at frequency 0
+     * and renormalizes surviving siblings against the reduced prefix total —
+     * mirror of [BigramStore.unrecordBigram]. No-op when the trigram is unknown.
+     *
+     * @return true if an observation was removed
+     */
+    fun unrecordTrigram(language: String, word1: String, word2: String, word3: String): Boolean {
+        val w1 = TrigramEntry.normalizeWord(word1)
+        val w2 = TrigramEntry.normalizeWord(word2)
+        val w3 = TrigramEntry.normalizeWord(word3)
+        if (w1.isEmpty() || w2.isEmpty() || w3.isEmpty()) return false
+
+        val lang = BigramStore.normalizeLanguage(language)
+        val data = forLanguage(lang)
+        val key = prefixKey(w1, w2)
+
+        synchronized(this) {
+            val entries = data.trigramMap[key] ?: return false
+            val existing = entries.find { it.word3 == w3 } ?: return false
+
+            entries.remove(existing)
+            if (existing.frequency > 1) {
+                entries.add(existing.copy(frequency = existing.frequency - 1))
+            }
+
+            val newTotal = maxOf(0, (data.prefixFrequencies[key] ?: 0) - 1)
+            if (newTotal <= 0 || entries.isEmpty()) {
+                if (entries.isEmpty()) data.trigramMap.remove(key)
+                if (newTotal <= 0) {
+                    data.prefixFrequencies.remove(key)
+                } else {
+                    data.prefixFrequencies[key] = newTotal
+                }
+            } else {
+                data.prefixFrequencies[key] = newTotal
+                val renormalized = entries.map {
+                    it.copy(probability = TrigramEntry.calculateProbability(it.frequency, newTotal))
+                }
+                entries.clear()
+                entries.addAll(renormalized)
+                entries.sortByDescending { it.probability }
+            }
+        }
+
+        dirtyLanguages.add(lang)
+        persister.markDirty()
+        return true
+    }
+
     /** Total number of unique trigrams stored for a language. */
     fun getTotalTrigramCount(language: String): Int {
         synchronized(this) {

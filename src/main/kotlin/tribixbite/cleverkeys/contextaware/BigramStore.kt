@@ -291,6 +291,61 @@ class BigramStore internal constructor(
     }
 
     /**
+     * Inverse of [recordBigram] (autocorrect-undo rollback, 2026-08-06): decrement
+     * ONE observation of `(word1 → word2)`. Removes the entry when its frequency
+     * reaches 0 and renormalizes the surviving siblings against the reduced
+     * word1 total, so an undone autocorrect leaves the store exactly as if the
+     * rejected word had never been committed. No-op when the pair (or its
+     * context word) is unknown — safe to call even when the original record was
+     * suppressed by a learning gate.
+     *
+     * Contrast with [removeBigram], which deletes ALL accumulated observations
+     * of a pair (user-initiated edit).
+     *
+     * @return true if an observation was removed
+     */
+    fun unrecordBigram(language: String, word1: String, word2: String): Boolean {
+        val normalizedWord1 = BigramEntry.normalizeWord(word1)
+        val normalizedWord2 = BigramEntry.normalizeWord(word2)
+        if (normalizedWord1.isEmpty() || normalizedWord2.isEmpty()) return false
+
+        val lang = normalizeLanguage(language)
+        val data = forLanguage(lang)
+
+        synchronized(this) {
+            val entries = data.bigramMap[normalizedWord1] ?: return false
+            val existing = entries.find { it.word2 == normalizedWord2 } ?: return false
+
+            entries.remove(existing)
+            if (existing.frequency > 1) {
+                entries.add(existing.copy(frequency = existing.frequency - 1))
+            }
+
+            val newTotal = maxOf(0, (data.word1Frequencies[normalizedWord1] ?: 0) - 1)
+            if (newTotal <= 0 || entries.isEmpty()) {
+                if (entries.isEmpty()) data.bigramMap.remove(normalizedWord1)
+                if (newTotal <= 0) {
+                    data.word1Frequencies.remove(normalizedWord1)
+                } else {
+                    data.word1Frequencies[normalizedWord1] = newTotal
+                }
+            } else {
+                data.word1Frequencies[normalizedWord1] = newTotal
+                val renormalized = entries.map {
+                    it.copy(probability = BigramEntry.calculateProbability(it.frequency, newTotal))
+                }
+                entries.clear()
+                entries.addAll(renormalized)
+                entries.sortByDescending { it.probability }
+            }
+        }
+
+        dirtyLanguages.add(lang)
+        persister.markDirty()
+        return true
+    }
+
+    /**
      * Remove a single learned bigram (user-initiated edit from the learned-data manager).
      *
      * @return true if the entry existed and was removed

@@ -139,8 +139,13 @@ internal fun SettingsActivity.PrivacySection() {
                     }
                 )
 
-                // TODO: Error Reports toggle hidden - no actual logging implementation yet
-                // When implemented, should use async file logging to avoid latency impact
+                // DEFERRED BY DESIGN (was a TODO; clarified 2026-08-06): the Error
+                // Reports toggle stays hidden because no error-logging pipeline
+                // exists — shipping the switch would be a placebo control, which
+                // this settings screen must never do. If an error-report feature
+                // is ever built, it should use async file logging (no keystroke
+                // latency impact) and surface its toggle here, behind the same
+                // privacy framing as the other collection switches.
 
                 // Collected Data Stats and Export
                 Text(

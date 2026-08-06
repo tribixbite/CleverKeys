@@ -52,6 +52,13 @@ class SuggestionHandler(
         private const val TAG = "SuggestionHandler"
 
         /**
+         * L5: how many chars to read before a parked cursor for next-word
+         * context — enough for the [LearningGate.CONTEXT_WINDOW] trailing
+         * words plus the sentence tail they sit in.
+         */
+        private const val EDITOR_PARK_CONTEXT_CHARS = 96
+
+        /**
          * Issue #72: Words that should always be capitalized.
          * Includes "I" and all its contractions.
          */
@@ -550,11 +557,18 @@ class SuggestionHandler(
                 }
 
                 // Track the auto-inserted word so tapping an alternate replaces ONLY this word.
-                // TODO: when final autocorrect rewrites the word, this still records the raw
-                // prediction (pre-existing behavior preserved from IC) — replacement deletion
-                // counts can drift when the correction changes the word length.
-                val cleanPrediction = topPrediction.replace(Regex("^raw:"), "")
-                contextTracker.setLastAutoInsertedWord(cleanPrediction)
+                // Resolved 2026-08-06 (was a TODO carried from the deleted IC engine): the word
+                // actually sitting in the editor is onSuggestionSelected's RETURN — final
+                // autocorrect and I-word handling may have rewritten the raw prediction, and the
+                // REPLACE branch deletes lastAutoInsertedWord.length + 1 chars, so tracking the
+                // raw word desynced deletion counts whenever the correction changed the length.
+                // (The learn funnel was already correct either way: updateContext() inside
+                // onSuggestionSelected records the post-autocorrect word.) A null return means
+                // nothing was committed (no InputConnection) — fall back to the raw prediction
+                // so the tracking state stays populated exactly as before.
+                contextTracker.setLastAutoInsertedWord(
+                    committedWord ?: topPrediction.removePrefix("raw:")
+                )
                 contextTracker.setLastCommitSource(PredictionSource.NEURAL_SWIPE)
 
                 // Re-display the augmented+transformed correction list (D1: possessives persist in
@@ -1162,14 +1176,25 @@ class SuggestionHandler(
      *
      * An empty candidate set leaves the bar untouched (empty) — showing nothing
      * is the designed common case (§4.2 confidence floor).
+     *
+     * @param contextOverride when non-null, use THESE words as the prediction
+     *   context instead of the session's committed-word history — the
+     *   cursor-park path (L5) supplies the words read from the editor text
+     *   before the parked cursor. An EMPTY override means "parked at a
+     *   sentence start / empty field": no candidates are generated (the
+     *   session context must NOT be used as a fallback there, or parking in
+     *   unrelated text would predict from stale session words).
      */
-    private fun maybeShowNextWordPredictions(editorInfo: EditorInfo?) {
+    private fun maybeShowNextWordPredictions(
+        editorInfo: EditorInfo?,
+        contextOverride: List<String>? = null
+    ) {
         val inTermuxApp = try {
             editorInfo?.packageName == "com.termux"
         } catch (e: Exception) {
             false
         }
-        val contextWords = contextTracker.getContextWords().toList()
+        val contextWords = contextOverride ?: contextTracker.getContextWords().toList()
         if (!NextWordPredictor.shouldShow(
                 featureEnabled = config.next_word_prediction_enabled,
                 onDeviceLearningEnabled = config.on_device_learning_enabled,
@@ -1247,19 +1272,45 @@ class SuggestionHandler(
      * like Gboard's tap-into-text behavior. Every next-word guard applies; when
      * the feature is off this degrades to the original clear.
      *
-     * SCOPE (L5, review 2026-08-06 — accepted limitation): candidates derive
-     * from the SESSION's committed-word context (`contextTracker`), not from
-     * the editor text preceding the parked cursor. Parking mid-way into text
-     * typed in an earlier session therefore predicts from the wrong (or empty)
-     * context and usually shows nothing — safe but not Gboard-complete. Reading
-     * the words before the cursor via InputConnection would need a guarded
-     * editor scan on every park; deferred until the feature (default OFF)
-     * earns it.
+     * L5 (review 2026-08-06 — RESOLVED): candidates derive from the text
+     * actually before the parked cursor. [readEditorParkContext] performs a
+     * guarded, gate-checked `getTextBeforeCursor` read and tokenizes it via
+     * the pure [NextWordPredictor.contextFromEditorText] (sentence-boundary
+     * aware), so parking in an unrelated paragraph predicts from THAT
+     * paragraph. When the editor cannot be read (no InputConnection, provider
+     * failure) the session context is the fallback — the pre-fix behavior.
      */
-    fun handleCursorParkPrediction(editorInfo: EditorInfo?) {
+    fun handleCursorParkPrediction(editorInfo: EditorInfo?, ic: InputConnection? = null) {
         if (isPasswordMode) return
         suggestionBar?.clearSuggestions()
-        maybeShowNextWordPredictions(editorInfo)
+        maybeShowNextWordPredictions(editorInfo, readEditorParkContext(ic))
+    }
+
+    /**
+     * L5: read + tokenize the words before the parked cursor.
+     *
+     * Guarded on the CHEAP next-word prerequisites (feature pref, master
+     * learning gate, per-field incognito flag) so fields that can never
+     * surface candidates are never read — the editor text of an incognito
+     * field must not even be inspected for personalization. Returns null on
+     * any read failure so the caller falls back to session context; an empty
+     * list is a REAL result ("parked at a sentence start — show nothing").
+     */
+    private fun readEditorParkContext(ic: InputConnection?): List<String>? {
+        if (ic == null) return null
+        if (!config.next_word_prediction_enabled ||
+            !config.on_device_learning_enabled ||
+            !fieldAllowsPersonalizedLearning
+        ) {
+            return null
+        }
+        return try {
+            ic.getTextBeforeCursor(EDITOR_PARK_CONTEXT_CHARS, 0)
+                ?.let { NextWordPredictor.contextFromEditorText(it) }
+        } catch (e: Exception) {
+            Log.w(TAG, "Cursor-park editor read failed; falling back to session context", e)
+            null
+        }
     }
 
     /**
@@ -1391,6 +1442,15 @@ class SuggestionHandler(
 
             // Insert the original word with trailing space
             inputConnection.commitText("$tappedWord ", 1)
+
+            // Learning rollback (2026-08-06): the REJECTED correction was already
+            // fed through the learn funnel when it was committed. Remove it from
+            // the rolling window (so the replacement commit below can't learn a
+            // bogus "rejected → original" pair) and decrement the n-grams its
+            // commit recorded — the final committed word is the ORIGINAL, and
+            // the learned stores must reflect that.
+            predictionCoordinator.getWordPredictor()
+                ?.rollbackCommittedWord(correctedWord, fieldAllowsPersonalizedLearning)
 
             // Update context with the original word
             updateContext(tappedWord)

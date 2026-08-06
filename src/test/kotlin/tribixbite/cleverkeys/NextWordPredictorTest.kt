@@ -182,6 +182,99 @@ class NextWordPredictorTest {
         assertFalse(out[1].fromTrigram)
     }
 
+    // ------------------------------------- editor-context tokenizer (L5 fix)
+
+    @Test
+    fun `editor context extracts trailing words oldest-first`() {
+        assertEquals(
+            listOf("i", "want", "to"),
+            NextWordPredictor.contextFromEditorText("i want to ")
+        )
+        // No trailing space: park branch guarantees no partial word, so the
+        // token touching the cursor is complete and must be included.
+        assertEquals(
+            listOf("i", "want", "to"),
+            NextWordPredictor.contextFromEditorText("i want to")
+        )
+    }
+
+    @Test
+    fun `editor context is capped at the learn window, keeping the newest words`() {
+        assertEquals(
+            listOf("two", "three", "four", "five"),
+            NextWordPredictor.contextFromEditorText("one two three four five ")
+        )
+        assertEquals(
+            listOf("five"),
+            NextWordPredictor.contextFromEditorText("one two three four five ", maxWords = 1)
+        )
+        assertEquals(
+            emptyList<String>(),
+            NextWordPredictor.contextFromEditorText("one two ", maxWords = 0)
+        )
+    }
+
+    @Test
+    fun `editor context stops at the last sentence boundary`() {
+        // Mirrors WordPredictor.onSentenceBoundary: learned context never spans
+        // a sentence boundary, so neither may park-derived context.
+        assertEquals(
+            listOf("i", "want"),
+            NextWordPredictor.contextFromEditorText("Hello there. i want ")
+        )
+        assertEquals(
+            emptyList<String>(),
+            NextWordPredictor.contextFromEditorText("All done! ")
+        )
+        assertEquals(
+            emptyList<String>(),
+            NextWordPredictor.contextFromEditorText("Really? ")
+        )
+        // Line breaks are paragraph boundaries too.
+        assertEquals(
+            listOf("new", "para"),
+            NextWordPredictor.contextFromEditorText("line one\nnew para ")
+        )
+    }
+
+    @Test
+    fun `editor context normalizes case and keeps word-internal apostrophes and hyphens`() {
+        assertEquals(
+            listOf("can't", "stop"),
+            NextWordPredictor.contextFromEditorText("Can't STOP ")
+        )
+        assertEquals(
+            listOf("co-op", "board"),
+            NextWordPredictor.contextFromEditorText("co-op board ")
+        )
+        // Edge quotes are trimmed; the quoted word still matches store keys.
+        assertEquals(
+            listOf("hello", "world"),
+            NextWordPredictor.contextFromEditorText("'hello' world ")
+        )
+    }
+
+    @Test
+    fun `editor context treats digits and symbols as separators`() {
+        // The typing tracker only accumulates letters into committed words, so
+        // learned keys never contain digits — digit runs must not glue tokens.
+        assertEquals(
+            listOf("call", "now"),
+            NextWordPredictor.contextFromEditorText("call 911 now ")
+        )
+        assertEquals(
+            listOf("see", "you"),
+            NextWordPredictor.contextFromEditorText("see @ you ")
+        )
+    }
+
+    @Test
+    fun `editor context of an empty or blank field is empty`() {
+        assertEquals(emptyList<String>(), NextWordPredictor.contextFromEditorText(""))
+        assertEquals(emptyList<String>(), NextWordPredictor.contextFromEditorText("   "))
+        assertEquals(emptyList<String>(), NextWordPredictor.contextFromEditorText("--- '' "))
+    }
+
     // ------------------------------------------------------- provenance notes
 
     @Test

@@ -158,6 +158,25 @@ class ContextModel internal constructor(
     }
 
     /**
+     * Inverse of [recordCommit] (autocorrect-undo rollback, 2026-08-06): decrement
+     * the NEWEST bigram/trigram ending at the just-rejected word. Called with the
+     * SAME window [recordCommit] consumed, so exactly the n-grams that commit
+     * recorded are un-recorded. Unknown n-grams no-op (safe when the original
+     * record was gate-suppressed).
+     *
+     * @param words rolling committed-word window, most recent (the rejected
+     *   word) last — only the trailing 3 words are consulted
+     */
+    fun rollbackCommit(words: List<String>) {
+        val n = words.size
+        if (n < 2) return
+        bigramStore.unrecordBigram(language, words[n - 2], words[n - 1])
+        if (trigramStore != null && n >= 3) {
+            trigramStore.unrecordTrigram(language, words[n - 3], words[n - 2], words[n - 1])
+        }
+    }
+
+    /**
      * Get context-based boost for a candidate word.
      *
      * Calculates a multiplier (≥1.0) based on how likely the candidate is given previous words.

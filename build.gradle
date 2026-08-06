@@ -511,6 +511,10 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.contextaware.LearnedStoreForgetRaceTest',
     'tribixbite.cleverkeys.SelectionHistoryTest',
     'tribixbite.cleverkeys.LearningWiringDriftTest',
+    // TODO-sweep 2026-08-06: autocorrect-undo learning rollback (inverse of recordCommit)
+    // + language-slot eviction coverage drift guard (formerly a DictionaryManager TODO)
+    'tribixbite.cleverkeys.contextaware.NgramRollbackTest',
+    'tribixbite.cleverkeys.LanguageSlotCoverageDriftTest',
     // SwipePrunerTest excluded: requires android.util.Log (MockK + Robolectric)
   ]
 

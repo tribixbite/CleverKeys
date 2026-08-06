@@ -701,6 +701,43 @@ class WordPredictor {
     }
 
     /**
+     * Autocorrect-undo rollback (2026-08-06): the user REJECTED an autocorrect
+     * whose result had already been fed through the learn funnel by
+     * [addWordToContext]. Removes the rejected word from the rolling learn
+     * window and decrements the n-grams its commit recorded, so:
+     * - the undo's replacement commit cannot learn a bogus
+     *   `rejected → original` pair (the rejected word is gone from the window),
+     * - the `previous → rejected` pair's frequency returns to its pre-commit
+     *   value (a once-mislearned pair stays below the ≥2 confidence floors).
+     *
+     * The store decrement runs only under the SAME gate conditions the learn
+     * used ([LearningGate.canLearnContext] + the per-field incognito flag) —
+     * if the original record was suppressed, nothing is decremented, so
+     * legitimately-accumulated frequencies are never reduced. The one-count
+     * personalization usage of the rejected word is deliberately left in place
+     * (benign: final autocorrect only ever produces dictionary words).
+     *
+     * No-op when [word] is not the newest window entry (e.g. a sentence
+     * boundary or session flush cleared the window in between).
+     *
+     * @param word the autocorrected word being undone (as committed)
+     * @param fieldAllowsPersonalizedLearning the active field's incognito flag,
+     *   as passed to [addWordToContext] for the original commit
+     */
+    fun rollbackCommittedWord(word: String, fieldAllowsPersonalizedLearning: Boolean = true) {
+        val normalized = word.lowercase().trim()
+        if (recentWords.isEmpty() || recentWords.last() != normalized) return
+
+        val master = (config?.on_device_learning_enabled ?: false) && fieldAllowsPersonalizedLearning
+        val contextAware = config?.context_aware_predictions_enabled ?: false
+        if (LearningGate.canLearnContext(master, contextAware) && recentWords.size >= 2) {
+            val sequenceLength = kotlin.math.min(LearningGate.CONTEXT_WINDOW, recentWords.size)
+            contextModel?.rollbackCommit(recentWords.takeLast(sequenceLength))
+        }
+        recentWords.removeAt(recentWords.size - 1)
+    }
+
+    /**
      * Sentence boundary hook (2026-08-06, audit §4.6): called when the user types
      * sentence-final punctuation (`.` `?` `!`). Clears the learning window so
      * [addWordToContext]'s recordSequence never learns bigrams that span a

@@ -132,6 +132,62 @@ object NextWordPredictor {
     }
 
     /**
+     * L5 (review 2026-08-06 — resolved): derive next-word context from the
+     * EDITOR text preceding a parked cursor, so parking in text typed earlier
+     * (or pre-existing in the field) predicts from the words actually before
+     * the cursor instead of this session's committed-word history.
+     *
+     * Rules (kept consistent with the learn path):
+     * - Only the segment AFTER the last sentence-final punctuation (`.` `?` `!`)
+     *   or line break is considered — mirrors `WordPredictor.onSentenceBoundary`'s
+     *   contract that learned context never spans a sentence boundary. Parking
+     *   right after a sentence end therefore yields an EMPTY context (show
+     *   nothing) rather than predicting across the boundary.
+     * - Tokens are runs of letters plus word-internal apostrophes/hyphens
+     *   ("don't", "co-op"), lowercased to match the stores' normalized keys.
+     *   Digit/symbol runs separate tokens, matching the typing tracker (which
+     *   only accumulates letters into words).
+     * - The trailing [maxWords] tokens are returned oldest-first. The caller
+     *   guarantees the cursor is not inside a partial word (the cursor-park
+     *   branch only fires with an empty prefix), so the token touching the
+     *   cursor is complete.
+     *
+     * @param textBeforeCursor editor text immediately before the cursor
+     * @param maxWords context window cap (default [LearningGate.CONTEXT_WINDOW])
+     * @return trailing complete words, oldest first; empty when the cursor is
+     *   parked at a sentence start or the field is empty
+     */
+    fun contextFromEditorText(
+        textBeforeCursor: CharSequence,
+        maxWords: Int = LearningGate.CONTEXT_WINDOW
+    ): List<String> {
+        if (maxWords <= 0) return emptyList()
+
+        // Start of the segment after the last sentence boundary.
+        var segmentStart = 0
+        for (i in textBeforeCursor.indices) {
+            val c = textBeforeCursor[i]
+            if (c == '.' || c == '?' || c == '!' || c == '\n') segmentStart = i + 1
+        }
+
+        val tokens = ArrayList<String>()
+        val current = StringBuilder()
+        fun flushToken() {
+            // Trim edge apostrophes/hyphens ('quoted' → quoted); keep internal ones.
+            val token = current.toString().trim('\'', '-')
+            if (token.isNotEmpty() && token.any { it.isLetter() }) tokens.add(token.lowercase())
+            current.setLength(0)
+        }
+        for (i in segmentStart until textBeforeCursor.length) {
+            val c = textBeforeCursor[i]
+            if (c.isLetter() || c == '\'' || c == '-') current.append(c) else flushToken()
+        }
+        flushToken()
+
+        return if (tokens.size > maxWords) tokens.takeLast(maxWords) else tokens
+    }
+
+    /**
      * Provenance note for a next-word candidate (Task B): the learned
      * statistics behind the suggestion, e.g. `after "want to": seen 14×, 63%`.
      */

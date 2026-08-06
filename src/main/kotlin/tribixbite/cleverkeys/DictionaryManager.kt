@@ -281,10 +281,14 @@ class DictionaryManager(private val context: Context) {
      * Includes primary, secondary, and their alternates (up to 4 languages).
      * "none" and empty strings are excluded.
      *
-     * # TODO: If more simultaneous language slots are added beyond the current 4
-     * (primary, secondary, alt_primary, alt_secondary), add their pref keys here.
-     * The eviction logic in setLanguage() only evicts predictors NOT in this set,
-     * so any new slot just needs its pref key added to the setOfNotNull() call.
+     * NOTE (resolved TODO, 2026-08-06): if more simultaneous language slots are
+     * added beyond the current 4 (primary, secondary, alt_primary,
+     * alt_secondary), their pref keys MUST be added to the setOfNotNull() call
+     * below — the eviction logic in setLanguage() only retains predictors in
+     * this set. This invariant is now ENFORCED by
+     * [tribixbite.cleverkeys.LanguageSlotCoverageDriftTest], which scans the
+     * codebase for `pref_*_language(_alt)` slot keys and fails when one is not
+     * read here.
      */
     private fun getConfiguredLanguages(): Set<String> {
         val langPrefs = PreferenceManager.getDefaultSharedPreferences(context)
@@ -313,7 +317,7 @@ class DictionaryManager(private val context: Context) {
 
     /** Release all predictor instances and their observers. */
     fun cleanup() {
-        for ((lang, predictor) in predictors) {
+        for ((_, predictor) in predictors) {
             // Checkpoint learned data before teardown (2026-08-06 persistence fix)
             predictor.persistLearnedData()
             predictor.stopObservingDictionaryChanges()
