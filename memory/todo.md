@@ -1,5 +1,51 @@
 # CleverKeys TODO
 
+## 🔴 HANDOFF — OUTSTANDING TASKS (read first; as of 2026-08-07, HEAD af9634f9)
+
+**Session context:** completed the context-LM/privacy/next-word wave + a full FUTO-decoder
+eval + the CTC-engine decision. Everything below is committed & green (runPureTests 1854,
+runMockTests 299, androidTest compiles; full ew-cli on the *pipeline* tests green — 42
+pre-existing Compose-UI flakes are NOT ours). Detailed DONE lists are in the two ✅ sections
+just below. Outstanding, prioritized:
+
+### A. Context-LM — small follow-ups (shipped features, verify/finish)
+- [ ] **Manual on-device UX check** of next-word + learned-data manager + the "Learn From My
+      Typing" master privacy toggle — these are opt-in and NOT device-validated yet. UX walkthrough:
+      `docs/wiki/typing/next-word-prediction.md`.
+- [x] **`ContextLearningInstrumentedTest`** (new, 9 tests) — **PASSED 9/9 on-device** (ew-cli
+      Pixel7/API34, 2026-08-07): real-SharedPreferences persistence round-trips + master-gate-OFF
+      and incognito-field write-suppression + next-word on a real bar. Privacy gate validated on
+      real prefs. Re-run: `--test-targets "class tribixbite.cleverkeys.ContextLearningInstrumentedTest"`.
+- [ ] Trigram **individual** browse/delete in `LearningDataSection` (bulk-clear only today).
+- [ ] `hybrid` swipe mode is provenance-tagged `NEURAL_BEAM` (minor; give it its own origin).
+- [ ] (by-design, documented) backup *restore* repopulates learned stores even with master OFF (L7).
+
+### B. FUTO / CTC swipe engine — the big future path (spec+module+guide all landed, NOT wired)
+- [ ] **Train the CTC model on a GPU box** per `docs/guides/train-ctc-swipe-model.md` → produces the
+      CTC ONNX encoder. **This is the gating dependency (needs GPU infra — user's machine).** The
+      Kotlin decode module (`swipe/ctc/`, parity-tested) + spec (`docs/specs/ctc-swipe-engine.md`)
+      already exist; only the model is missing.
+- [ ] After a model: wire `ctc` into `swipe_engine_mode` (plan step G5); then Phase-2 refinement head
+      (measured **+5.88 pt** lever). Decisions already made: **retrain→ONNX** (not FUTO `.pte`),
+      **confidence-gated cascade** over a pure router, train-from-scratch = license-clean. Full
+      rationale: `docs/audit/2026-08-06-futo-engine-integration-decision.md`.
+- [ ] **Neural+geo rank fusion** — a parallel hedge, NO model/license deps (~2.5 days). Fusion is GO
+      on every stratum (**+14 pt** long-word union headroom, measured on test+val). Plan:
+      `docs/audit/remediation-plans/hybrid-engine-rank-fusion.md`; go/no-go gate already passed offline.
+- Reference eval: `docs/eval/2026-07-24-test2400-head2head.md` (2,400 test + 9,918 val, 4-engine
+      + fusion) and `docs/eval/2026-08-06-offline-decoder-speedup.md` (speedup verdict: adopt neither).
+
+### C. Older still-open (from the log below — not touched this session)
+- [ ] **P2 non-en tap contraction bug** (German "im"→"I'm" top, loses "im"): `SuggestionHandler`'s
+      ContractionManager loads en contractions for every language, unguarded — mirror
+      OptimizedVocabulary's per-language isolation. Details in the 2026-07-23 verification note below.
+- [ ] 42 pre-existing **Compose-UI test flakes** (activity-resolution, infinite-animation idle timeout,
+      scroll-reach) — separate CI-stability tech debt, fail on `main` too, not caused by this session.
+- [ ] Older gated items (unchanged): R8 release flip (device soak), git-history rewrite (gated on
+      F-Droid v1.5.0 publish), JCUKEN real-corpus replay (off-Hub). See the ✅ log below.
+
+---
+
 ## ✅ Context-LM wave COMPLETE (2026-08-06, commits 997d8f78 → 295edc43 → f6824477)
 - [x] **Persistent context LM** — BigramStore/TrigramStore singletons, language-keyed
       (`bigrams_json_<lang>` / `trigrams_json_<lang>`), `persist/DebouncedPersister`
