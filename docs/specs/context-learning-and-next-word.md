@@ -104,12 +104,19 @@ on service restart (and multiple instances clobbered each other's view). Now:
 - **UserVocabulary save-storm fixed** — `personalization/UserVocabulary.kt` now rides the
   same `DebouncedPersister` discipline instead of eager per-mutation saves.
 
-### Capacity + floors
+### Storage limits / capacity
 
-| Store | Per-context cap | Per-language cap | Min frequency surfaced |
-|-------|-----------------|------------------|------------------------|
-| `BigramStore` | `MAX_BIGRAMS_PER_WORD = 20` | `MAX_TOTAL_BIGRAMS = 10000` | `DEFAULT_MIN_FREQUENCY = 2` |
-| `TrigramStore` | `MAX_TRIGRAMS_PER_PREFIX = 10` | `MAX_TOTAL_TRIGRAMS = 10000` | `DEFAULT_MIN_FREQUENCY = 2` |
+| Store | Per-context cap | Overall cap | Eviction / floor |
+|-------|-----------------|-------------|------------------|
+| `BigramStore` | `MAX_BIGRAMS_PER_WORD = 20` (per previous word) | `MAX_TOTAL_BIGRAMS = 10000` per language | lowest-frequency trimmed; `DEFAULT_MIN_FREQUENCY = 2` to surface |
+| `TrigramStore` | `MAX_TRIGRAMS_PER_PREFIX = 10` (per two-word prefix) | `MAX_TOTAL_TRIGRAMS = 10000` per language | lowest-frequency trimmed; `DEFAULT_MIN_FREQUENCY = 2` to surface |
+| `UserVocabulary` (personalization) | — | **user-configurable** via `personalization_max_words` (default `Defaults.PERSONALIZATION_MAX_WORDS = 5000`, slider 1000–20000, floor `MIN_VOCABULARY_CAP = 100`) | rolling least-value eviction (lowest `getPersonalizationBoost` first) on add; `enforceCap()` trims down on load and when the user lowers the cap; stale words (>90 days, or single-use >30 days) cleaned daily |
+| `UserAdaptationManager` / `SelectionHistory` | — | `MAX_TRACKED_WORDS = SelectionHistory.DEFAULT_MAX_TRACKED_WORDS = 1000` selection-count entries | over cap, least-selected words pruned down to 80% of capacity (`PRUNE_KEEP_FRACTION = 0.8`) |
+
+The `UserVocabulary` cap is threaded in as a dynamic provider
+(`maxWords: () -> Int` reading `Config.personalization_max_words`), so the
+process-wide singleton picks up preference changes without reconstruction —
+covered by `UserVocabularyCapTest` (pure JVM).
 
 ### Trigram → bigram backoff
 `ContextModel.getNextWordCandidates(previousWords, maxResults=10)`: when a `TrigramStore`
@@ -257,6 +264,10 @@ Prediction block of `InputBehaviorSection` ("Learning & Data").
   — bulk-cleared by "Forget phrases" (documented scope).
 - **Browse words**: top personalization-vocabulary words with usage counts, per-entry
   delete via `UserVocabulary.removeWord`.
+- **Max Learned Words slider**: sets `personalization_max_words` (default 5000,
+  1000–20000 in 500-word steps) — the cap on the personalization vocabulary. Lowering
+  it below the current word count evicts least-valuable words down to the new cap
+  (debounced, off the main thread, via `UserVocabulary.enforceCap`).
 - **Forget phrases / Forget words**: count-bearing confirm dialogs, off-main-thread clears.
 - **Backup**: learned n-grams + vocabulary ride the standard Backup & Restore dictionary
   payload (`learned_bigrams_by_language` / `user_vocabulary` keys in
@@ -281,9 +292,10 @@ Prediction block of `InputBehaviorSection` ("Learning & Data").
 | Next-Word Prediction | `next_word_prediction_enabled` | `false` | bool | ⌨️ Input Behavior → Word Prediction |
 | Context Source | `context_source` | `"both"` | `both` \| `learned_only` \| `static_only` | ⌨️ Input Behavior → Word Prediction |
 | Personalization Strength | `personalization_weight` | `1.0` | 0.0–2.0 (0 = off, 2 = double) | ⌨️ Input Behavior → Word Prediction |
+| Max Learned Words | `personalization_max_words` | `5000` | 1000–20000 (500-word steps) | ⌨️ Input Behavior → Learning & Data |
 | Suggestion Origin Markers | `suggestion_provenance_markers` | `false` | bool | 🔧 Advanced |
 
-All five are registered in `Config.kt` and classified in
+All six are registered in `Config.kt` and classified in
 `backup/SettingsDefaults.kt` (`SETTINGS_DEFAULTS`), so they diff correctly in
 Backup & Restore import previews.
 
@@ -300,6 +312,7 @@ Existing related prefs (unchanged keys, now composed with the master gate):
 | `NextWordPredictorTest` | Gating matrix, floors, self-repetition, dedup, personalization reorder |
 | `SuggestionProvenanceTest` | UnifiedScore combine + breakdown + formatter |
 | `BigramStorePersistenceTest`, `TrigramStorePersistenceTest`, `UserVocabularyPersistenceTest` | Language keying, legacy migration, debounced write-back |
+| `UserVocabularyCapTest` | Configurable `personalization_max_words` cap: default, live provider changes, least-value eviction at capacity, lower-cap trim (enforceCap/on-load/import), floor clamp |
 | `DebouncedPersisterTest` | Debounce/max-delay/flush semantics |
 | `ContextModelTrigramTest`, `ContextModelLanguageTest` | Backoff order, language isolation |
 | `ContextLearningBoundaryTest`, `SelectionHistoryTest`, `LearnedStoreForgetRaceTest`, `LearningWiringDriftTest` | Review-fix regression coverage |

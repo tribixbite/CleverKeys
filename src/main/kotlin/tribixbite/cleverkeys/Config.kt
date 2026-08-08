@@ -171,6 +171,7 @@ object Defaults {
     const val NEXT_WORD_PREDICTION_ENABLED = false // Opt-in (audit 2026-08-06 §4.3)
     const val CONTEXT_SOURCE = "both" // both | learned_only | static_only (audit §3.2-2)
     const val PERSONALIZATION_WEIGHT = 1.0f // 0=off … 2=double (audit §3.2-1)
+    const val PERSONALIZATION_MAX_WORDS = 5000 // learned-vocabulary size cap (least-value rolling eviction)
     const val LEARNING_AGGRESSION = "BALANCED"
     const val PREDICTION_CONTEXT_BOOST = 0.5f
     const val PREDICTION_FREQUENCY_SCALE = 100.0f
@@ -555,6 +556,7 @@ class Config private constructor(
     @JvmField var next_word_prediction_enabled = false // Opt-in Gboard-style next-word from learned context (2026-08-06)
     @JvmField var context_source = "both" // which context LM feeds scoring: both | learned_only | static_only
     @JvmField var personalization_weight = 1.0f // continuous personalization strength (0=off … 2=double)
+    @JvmField var personalization_max_words = Defaults.PERSONALIZATION_MAX_WORDS // learned-vocabulary size cap
     @JvmField var learning_aggression = "BALANCED" // Phase 7.2: Learning aggression level
 
     // Multi-language support (Phase 8.3 & 8.4)
@@ -849,6 +851,7 @@ class Config private constructor(
         next_word_prediction_enabled = _prefs.getBoolean("next_word_prediction_enabled", Defaults.NEXT_WORD_PREDICTION_ENABLED)
         context_source = safeGetString(_prefs, "context_source", Defaults.CONTEXT_SOURCE)
         personalization_weight = safeGetFloat(_prefs, "personalization_weight", Defaults.PERSONALIZATION_WEIGHT)
+        personalization_max_words = safeGetInt(_prefs, "personalization_max_words", Defaults.PERSONALIZATION_MAX_WORDS)
         learning_aggression = safeGetString(_prefs, "learning_aggression", Defaults.LEARNING_AGGRESSION)
 
         // Multi-language settings (Phase 8.3 & 8.4)

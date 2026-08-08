@@ -22,14 +22,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import kotlin.math.roundToInt
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import tribixbite.cleverkeys.Config
+import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.contextaware.BigramStore
 import tribixbite.cleverkeys.contextaware.TrigramStore
 import tribixbite.cleverkeys.personalization.UserVocabulary
+import tribixbite.cleverkeys.ui.settings.SettingsSlider
+import tribixbite.cleverkeys.ui.settings.saveSetting
 
 /**
  * Learning & Data manager (audit 2026-08-06 §3.3): shows what the keyboard has
@@ -92,6 +99,17 @@ internal fun SettingsActivity.LearningDataManagerBlock() {
         vocabTotal = stats.vocabCount
     }
 
+    // Enforce a LOWERED vocabulary cap off the hot path: debounce past slider
+    // drag, then evict lowest-value words down to the new cap on IO. No-op
+    // (and no stats refresh) when already within the cap.
+    LaunchedEffect(personalizationMaxWords) {
+        delay(600)
+        val evicted = withContext(Dispatchers.IO) {
+            UserVocabulary.getInstance(this@LearningDataManagerBlock).enforceCap()
+        }
+        if (evicted > 0) refreshKey++
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -106,6 +124,26 @@ internal fun SettingsActivity.LearningDataManagerBlock() {
         )
         Text("Phrase patterns — $bigramSummary", style = MaterialTheme.typography.bodySmall)
         Text("Word usage — $vocabSummary", style = MaterialTheme.typography.bodySmall)
+
+        // User-configurable learned-vocabulary size cap (personalization_max_words).
+        // Lowering below the current word count evicts least-valuable words first
+        // (debounced enforcement above).
+        SettingsSlider(
+            title = stringResource(R.string.input_personalization_max_words_title),
+            description = stringResource(R.string.input_personalization_max_words_desc),
+            value = personalizationMaxWords.toFloat(),
+            valueRange = 1000f..20000f,
+            steps = 37, // 500-word increments
+            onValueChange = {
+                val snapped = ((it / 500f).roundToInt() * 500).coerceIn(1000, 20000)
+                if (snapped != personalizationMaxWords) {
+                    personalizationMaxWords = snapped
+                    saveSetting("personalization_max_words", snapped)
+                    Config.globalConfig()?.personalization_max_words = snapped
+                }
+            },
+            displayValue = "$personalizationMaxWords words"
+        )
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(

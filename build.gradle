@@ -494,6 +494,8 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.contextaware.BigramStorePersistenceTest',
     'tribixbite.cleverkeys.contextaware.ContextModelLanguageTest',
     'tribixbite.cleverkeys.personalization.UserVocabularyPersistenceTest',
+    // User-configurable learned-vocabulary cap (personalization_max_words, 2026-08-08)
+    'tribixbite.cleverkeys.personalization.UserVocabularyCapTest',
     // Opt-in next-word prediction (audit 2026-08-06 §4) — pure gating + generation
     'tribixbite.cleverkeys.NextWordPredictorTest',
     // Task A (2026-08-06): MASTER on-device-learning privacy gate — pure gate logic

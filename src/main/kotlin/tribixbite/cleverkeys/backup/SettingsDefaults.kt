@@ -158,6 +158,7 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     "next_word_prediction_enabled" to PrefValue.Bool(Defaults.NEXT_WORD_PREDICTION_ENABLED),
     "context_source" to PrefValue.Str(Defaults.CONTEXT_SOURCE),
     "personalization_weight" to PrefValue.FloatV(Defaults.PERSONALIZATION_WEIGHT),
+    "personalization_max_words" to PrefValue.IntV(Defaults.PERSONALIZATION_MAX_WORDS),
     "learning_aggression" to PrefValue.Str(Defaults.LEARNING_AGGRESSION),
     "prediction_context_boost" to PrefValue.FloatV(Defaults.PREDICTION_CONTEXT_BOOST),
     "prediction_frequency_scale" to PrefValue.FloatV(Defaults.PREDICTION_FREQUENCY_SCALE),

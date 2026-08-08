@@ -283,6 +283,7 @@ hosts the context-learning controls and the Learning & Data manager
 | **Next-Word Prediction** | `next_word_prediction_enabled` | false | bool |
 | **Context Source** | `context_source` | "both" | both / learned_only / static_only |
 | **Personalization Strength** | `personalization_weight` | 1.0 | 0.0–2.0 |
+| **Max Learned Words** | `personalization_max_words` | 5000 | 1000–20000 (500 steps; least-value eviction) |
 
 The master learning gate `on_device_learning_enabled` (default true) lives in the
 Privacy & Data section and overrides all of the above at the write AND read layers.

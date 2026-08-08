@@ -3,6 +3,8 @@ package tribixbite.cleverkeys.personalization
 import android.content.Context
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import tribixbite.cleverkeys.Config
+import tribixbite.cleverkeys.Defaults
 import tribixbite.cleverkeys.persist.DebouncedPersister
 import tribixbite.cleverkeys.persist.LearnedDataStorage
 import tribixbite.cleverkeys.persist.SharedPrefsLearnedStorage
@@ -42,15 +44,19 @@ class UserVocabulary internal constructor(
     debounceMs: Long = DebouncedPersister.DEFAULT_DEBOUNCE_MS,
     maxDelayMs: Long = DebouncedPersister.DEFAULT_MAX_DELAY_MS,
     scheduler: ScheduledExecutorService = DebouncedPersister.sharedScheduler(),
-    private val log: (String, Throwable?) -> Unit = { _, _ -> }
+    private val log: (String, Throwable?) -> Unit = { _, _ -> },
+    private val maxWords: () -> Int = { Defaults.PERSONALIZATION_MAX_WORDS }
 ) {
     companion object {
         private const val TAG = "UserVocabulary"
         private const val PREFS_NAME = "user_vocabulary"
         private const val PREFS_KEY_WORDS = "vocabulary_data"
 
-        // Limits to prevent unbounded growth
-        private const val MAX_VOCABULARY_SIZE = 5000
+        // Limits to prevent unbounded growth. The size cap is user-configurable
+        // via the `personalization_max_words` pref (default
+        // Defaults.PERSONALIZATION_MAX_WORDS = 5000) and threaded in as the
+        // [maxWords] provider; MIN_VOCABULARY_CAP guards corrupt/absurd values.
+        const val MIN_VOCABULARY_CAP = 100
         private const val MIN_USAGE_THRESHOLD = 2 // Must use word 2+ times to keep it
 
         // Cleanup frequency
@@ -71,6 +77,13 @@ class UserVocabulary internal constructor(
                     log = { msg, e ->
                         if (e != null) android.util.Log.e(TAG, msg, e)
                         else android.util.Log.d(TAG, msg)
+                    },
+                    // Dynamic provider: the singleton picks up preference
+                    // changes without reconstruction. Falls back to the
+                    // compile-time default before Config is initialized.
+                    maxWords = {
+                        Config.globalConfig()?.personalization_max_words
+                            ?: Defaults.PERSONALIZATION_MAX_WORDS
                     }
                 ).also { instance = it }
             }
@@ -93,7 +106,47 @@ class UserVocabulary internal constructor(
 
     init {
         loadFromStorage()
-        log("UserVocabulary initialized with ${vocabulary.size} words", null)
+        // The user may have lowered the cap while nothing was loaded (or the
+        // persisted store predates a smaller cap) — trim down on load, off the
+        // typing hot path.
+        val trimmed = enforceCap()
+        log(
+            "UserVocabulary initialized with ${vocabulary.size} words" +
+                if (trimmed > 0) " ($trimmed trimmed to cap ${currentCap()})" else "",
+            null
+        )
+    }
+
+    /**
+     * Effective vocabulary size cap: the user-configured
+     * `personalization_max_words` value (default
+     * [Defaults.PERSONALIZATION_MAX_WORDS]), clamped to [MIN_VOCABULARY_CAP]
+     * to guard against corrupt preference values.
+     */
+    fun currentCap(): Int = maxWords().coerceAtLeast(MIN_VOCABULARY_CAP)
+
+    /**
+     * Evict lowest-value words until the vocabulary fits [currentCap].
+     *
+     * Called on load and when the user lowers the cap (settings slider) — NOT
+     * on the per-word hot path, which only ever needs to free one slot.
+     * Persists via the debounced persister + async flush when anything was
+     * evicted.
+     *
+     * @return number of words evicted (0 when already within the cap)
+     */
+    fun enforceCap(currentTime: Long = System.currentTimeMillis()): Int {
+        val removed: Int
+        synchronized(this) {
+            val overflow = vocabulary.size - currentCap()
+            if (overflow <= 0) return 0
+            removeLowestValueWords(overflow, currentTime)
+            removed = overflow
+        }
+        log("Evicted $removed words to enforce cap ${currentCap()}", null)
+        persister.markDirty()
+        persister.requestFlush()
+        return removed
     }
 
     /**
@@ -120,9 +173,12 @@ class UserVocabulary internal constructor(
                 vocabulary[normalized] = existing.recordNewUsage(timestamp)
             } else {
                 // Add new entry
-                if (vocabulary.size >= MAX_VOCABULARY_SIZE) {
-                    // At capacity, remove least valuable word before adding
-                    removeLowestValueWord()
+                val cap = currentCap()
+                if (vocabulary.size >= cap) {
+                    // At capacity, remove least valuable word(s) before adding.
+                    // Normally frees exactly one slot; also absorbs a cap that
+                    // was lowered without an intervening enforceCap().
+                    removeLowestValueWords(vocabulary.size - cap + 1, timestamp)
                 }
                 vocabulary[normalized] = UserWordUsage(
                     word = normalized,
@@ -240,20 +296,18 @@ class UserVocabulary internal constructor(
     }
 
     /**
-     * Remove words below minimum usage threshold.
+     * Evict the [count] words with the lowest personalization boost.
+     * Caller must hold the instance lock.
      */
-    private fun removeLowestValueWord() {
-        val currentTime = System.currentTimeMillis()
-
-        // Find word with lowest personalization boost
-        val lowestValueWord = vocabulary.values.minByOrNull {
-            it.getPersonalizationBoost(currentTime)
-        }
-
-        lowestValueWord?.let {
-            vocabulary.remove(it.word)
-            log("Removed low-value word: ${it.word}", null)
-        }
+    private fun removeLowestValueWords(count: Int, currentTime: Long) {
+        if (count <= 0) return
+        vocabulary.values
+            .sortedBy { it.getPersonalizationBoost(currentTime) }
+            .take(count)
+            .forEach { usage ->
+                vocabulary.remove(usage.word)
+                log("Removed low-value word: ${usage.word}", null)
+            }
     }
 
     /**
@@ -292,8 +346,12 @@ class UserVocabulary internal constructor(
             synchronized(this) {
                 vocabulary.clear()
 
+                // Exports are sorted by boost descending (getAllWords), so a
+                // first-N cut keeps the highest-value words when the payload
+                // exceeds the configured cap.
+                val cap = currentCap()
                 imported.forEach { usage ->
-                    if (vocabulary.size < MAX_VOCABULARY_SIZE) {
+                    if (vocabulary.size < cap) {
                         vocabulary[usage.word] = usage
                     }
                 }

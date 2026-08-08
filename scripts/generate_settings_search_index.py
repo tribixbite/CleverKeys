@@ -57,6 +57,14 @@ SYNONYMS = {
     "incognito": ["private", "secret"],
 }
 
+# Section files whose controls render inside ANOTHER file's CollapsibleSettingsSection
+# (they contain no section marker themselves, so position-based inference can't see it).
+# Without an entry here such files fall back to "advanced".
+FILE_DEFAULT_SECTION = {
+    # LearningDataManagerBlock renders inside InputBehaviorSection's input section
+    "LearningDataSection.kt": "input",
+}
+
 CONTROL_RE = re.compile(r"\b(SettingsSwitch|SettingsSlider|SettingsDropdown)\s*\(")
 TITLE_RE = re.compile(
     r'title\s*=\s*(?:"([^"]*)"|stringResource\(\s*R\.string\.(\w+)\s*\))'
@@ -124,7 +132,7 @@ def section_for(pos, sections):
     return cur
 
 
-def scan_file(text, strings, entries, seen):
+def scan_file(text, strings, entries, seen, default_key="advanced"):
     """Scan a single Kotlin source text for controls, appending to entries."""
     sections = find_sections(text)
     for m in CONTROL_RE.finditer(text):
@@ -139,7 +147,7 @@ def scan_file(text, strings, entries, seen):
         if not title:
             continue
         var = section_for(m.start(), sections)
-        key = section_key(var) if var else "advanced"
+        key = section_key(var) if var else default_key
         dedup = (title, key)
         if dedup in seen:
             continue
@@ -162,7 +170,8 @@ def main():
         for fname in sorted(os.listdir(SECTIONS_DIR)):
             if fname.endswith(".kt"):
                 fpath = os.path.join(SECTIONS_DIR, fname)
-                scan_file(open(fpath, encoding="utf-8").read(), strings, entries, seen)
+                scan_file(open(fpath, encoding="utf-8").read(), strings, entries, seen,
+                          default_key=FILE_DEFAULT_SECTION.get(fname, "advanced"))
 
     if not entries:
         sys.exit("generate_settings_search_index: no controls found — parser broken")

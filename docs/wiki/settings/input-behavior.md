@@ -64,6 +64,12 @@ and word-usage stats — with **Browse phrases**, **Browse words**, **Forget phr
 **Forget words** controls. Individual learned entries can be deleted from the browse
 dialogs. Learned data is included in dictionary exports (Backup & Restore).
 
+#### Max Learned Words
+
+Caps how many words the personalization vocabulary keeps (1000–20000, default 5000).
+When the vocabulary is full — or you lower the cap below the current word count — the
+least-valuable words (rarely and least-recently used) are evicted first.
+
 ## Input Section
 
 ### Autocapitalization

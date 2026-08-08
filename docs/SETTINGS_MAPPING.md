@@ -208,5 +208,6 @@ For backup/restore and preference access:
 "next_word_prediction_enabled"      // opt-in learned next-word suggestions (default false)
 "context_source"                    // "both" | "learned_only" | "static_only" (default "both")
 "personalization_weight"            // 0.0-2.0 continuous strength (default 1.0)
+"personalization_max_words"         // learned-vocabulary size cap, 1000-20000 (default 5000)
 "suggestion_provenance_markers"     // opt-in origin dots on suggestions (default false)
 ```

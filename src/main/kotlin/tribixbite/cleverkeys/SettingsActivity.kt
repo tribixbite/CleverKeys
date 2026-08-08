@@ -408,6 +408,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var contextSource by mutableStateOf("both") // both | learned_only | static_only
     internal var personalizedLearningEnabled by mutableStateOf(true)
     internal var personalizationWeight by mutableFloatStateOf(1.0f) // 0=off … 2=double
+    internal var personalizationMaxWords by mutableIntStateOf(Defaults.PERSONALIZATION_MAX_WORDS) // learned-vocab cap
     internal var learningAggression by mutableStateOf("BALANCED")
     internal var predictionContextBoost by mutableFloatStateOf(2.0f)
     internal var predictionFrequencyScale by mutableFloatStateOf(1000f)

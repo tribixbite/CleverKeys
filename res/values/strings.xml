@@ -595,6 +595,8 @@
     <string name="input_context_source_desc">Which phrase model boosts predictions: built-in, your learned patterns, or both</string>
     <string name="input_personalization_weight_title">Personalization Strength</string>
     <string name="input_personalization_weight_desc">How strongly your word usage boosts predictions (0 = off, 2 = double)</string>
+    <string name="input_personalization_max_words_title">Max Learned Words</string>
+    <string name="input_personalization_max_words_desc">Cap on the learned-word vocabulary; least-valuable words are evicted first (default 5000)</string>
     <string name="input_personalized_learning_title">Personalized Learning</string>
     <string name="input_personalized_learning_desc">Boost predictions for frequently typed words</string>
     <string name="input_learning_aggression_title">Learning Aggression</string>
