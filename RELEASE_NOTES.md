@@ -1,16 +1,12 @@
-v1.5.0 - Smarter Autocorrect & 98k Dictionary
+v1.6.0 - Next-Word & On-Device Privacy Controls
 
 NEW:
-• 98,140-word English dictionary (was 52k)
-• Smart spacing around quotes & punctuation
-• URL cleaner strips trackers from links
-• Full backup ZIP in one tap (#142)
-• Import preview: choose what to restore
-• Light mode follows system theme (#35)
+• Next-word prediction (opt-in) — suggests your likely next word as you type
+• "Learn from my typing" master switch — one toggle for all on-device learning
+• Learned-data manager — view, clear, and export what's learned; adjustable word limit
+• Suggestion transparency — long-press a suggestion to see why it was offered
 
 FIXES:
-• Autocorrect: possessives, plurals, URLs
-• Suggestion tap in URL bars (#151)
-• Instant keypress haptics (#154)
-• Swipe overshoot fixed
-• Settings search finds everything
+• Privacy: personalized learning is now fully disable-able and stays on your device — fixed selection history being recorded even with the setting off, and excluded learned data from cloud backup
+• Swipe correction alternates no longer replaced by next-word suggestions
+• Rejected autocorrections are no longer learned
