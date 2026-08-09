@@ -145,6 +145,18 @@ src/main/kotlin/tribixbite/cleverkeys/       # package tribixbite.cleverkeys
 ./gradlew test
 ```
 
+**On the WSL/Linux checkout** (not Termux) Gradle needs both of these exported first,
+or it fails with "requires Java 17 ... currently using Java 11" then "SDK location not found"
+(sdkman's `current` JDK is 11 and there is no `local.properties`):
+```bash
+export JAVA_HOME=/home/will/.sdkman/candidates/java/17.0.13-tem
+export PATH=$JAVA_HOME/bin:$PATH
+export ANDROID_HOME=/home/will/Android/Sdk ANDROID_SDK_ROOT=$ANDROID_HOME
+```
+`~/Android/Sdk` is the complete one (platforms 19/34/36, build-tools 34/35); `~/android-sdk`
+is the older Termux-style tree. `ew-cli` is NOT installed here and `EW_API_TOKEN` is NOT in
+this environment — instrumented runs happen on the Termux device.
+
 ### **IMPORTANT: Always Install RELEASE APK**
 **NEVER install debug APK for testing.** Always use release builds:
 - `build/outputs/apk/release/CleverKeys-v*.apk` ✅
