@@ -5,8 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CleverKeys - Neural Swipe Prediction Demo</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- ONNX Runtime Web -->
-    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/ort.min.js"></script>
+    <!-- ONNX Runtime Web 1.18.0 — vendored under vendor/ort/ (see
+         models/PROVENANCE.md). Previously pulled from jsdelivr; serving it
+         locally keeps the demo runnable from any bare static host and removes
+         the CDN as a single point of failure. -->
+    <script src="vendor/ort/ort.wasm.min.js"></script>
+    <!-- CTC swipe engines (ch128 / resbn80) — featurizer, lexicon trie and
+         FUTO Viterbi beam ported from CleverKeys-ML/ctc. -->
+    <script src="ctc-engine.js?v=20260808"></script>
     <!-- Swipe Vocabulary Module -->
     <!-- ?v=<hash> cache-busts Cloudflare/Fastly edge + browser cache so users
          don't get stranded on an old JS that predates loadFromFlatFreq et al. -->
@@ -253,9 +259,33 @@
             <div id="inputText" class="text-white text-lg min-h-[25px] break-words"></div>
         </div>
 
+        <!-- Engine switcher + per-swipe latency breakdown -->
+        <div class="px-4 py-2 bg-dark-surface/40 backdrop-blur flex-shrink-0 flex flex-wrap items-center gap-x-3 gap-y-2">
+            <label for="engineSelect" class="text-gray-400 text-xs uppercase tracking-wide">Engine</label>
+            <select id="engineSelect" onchange="onEngineChange()"
+                    class="bg-black/40 border border-white/15 rounded-lg px-3 py-1.5 text-sm text-gray-200
+                           focus:outline-none focus:border-neon-blue/60 min-w-[15rem]">
+                <option value="transformer">Neural (shipped transformer)</option>
+                <option value="ctc_ch128">CTC accurate (ch128)</option>
+                <option value="ctc_resbn80">CTC fast (resbn80)</option>
+            </select>
+            <span id="engineStatus" class="text-xs text-gray-500">initialising…</span>
+            <span id="latencyReadout"
+                  class="ml-auto text-xs font-mono text-gray-400 whitespace-nowrap"></span>
+        </div>
+
         <!-- Word Suggestions -->
         <div id="suggestions" class="px-4 py-3 flex gap-2 flex-wrap bg-dark-surface/40 backdrop-blur flex-shrink-0 min-h-[60px]">
             <div class="text-gray-500 text-sm">Tap or swipe on the keyboard to begin</div>
+        </div>
+
+        <!-- CTC candidate table (top-8 with raw beam scores) -->
+        <div id="ctcDetail" class="hidden px-4 pb-3 bg-dark-surface/40 backdrop-blur flex-shrink-0 text-xs">
+            <div class="flex items-baseline gap-3 mb-1">
+                <span class="text-gray-500 uppercase tracking-wide">CTC top-8</span>
+                <span id="ctcGreedy" class="font-mono text-gray-500"></span>
+            </div>
+            <div id="ctcCandidates" class="flex flex-wrap gap-x-4 gap-y-1 font-mono text-gray-400"></div>
         </div>
 
         <!-- Debug Output -->
@@ -648,8 +678,13 @@
             }
         }
 
-        async function loadModels() {
-            try {
+        /**
+         * Configure the shared onnxruntime-web environment. Every engine runs
+         * on it, so a failure here is fatal for the whole demo (unlike a single
+         * engine's model failing, which only disables that dropdown entry).
+         */
+        function initOnnxRuntime() {
+            {
                 updateLoadingStatus('Initializing ONNX Runtime...');
 
                 // Configure ONNX Runtime Web WASM paths + perf flags.
@@ -659,20 +694,30 @@
                 // browser refuses SharedArrayBuffer, so enabling this is a
                 // free optimisation where it's available.
                 if (typeof ort !== 'undefined') {
-                    ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/';
+                    // Vendored locally (vendor/ort/) — only the SIMD, single-
+                    // threaded binary is shipped. The threaded build needs
+                    // COOP/COEP cross-origin isolation, which neither GH Pages
+                    // nor a bare `python3 -m http.server` sends, so ORT would
+                    // fall back to 1 thread anyway; shipping the extra 10 MB
+                    // .wasm to never use it isn't worth it.
+                    ort.env.wasm.wasmPaths = 'vendor/ort/';
                     ort.env.wasm.simd = DEMO_CONFIG.wasmSimd !== false;
-                    if (DEMO_CONFIG.wasmThreads !== false) {
-                        const maxThreads = Math.min(navigator.hardwareConcurrency || 1, 4);
-                        ort.env.wasm.numThreads = maxThreads;
-                    } else {
-                        ort.env.wasm.numThreads = 1;
-                    }
+                    ort.env.wasm.numThreads = 1;
                     console.log('ONNX Runtime initialized, version:', ort.env.versions?.onnxruntime,
                                 'SIMD:', ort.env.wasm.simd, 'threads:', ort.env.wasm.numThreads);
                 } else {
                     throw new Error('ONNX Runtime library not loaded. Try refreshing.');
                 }
+            }
+        }
 
+        /**
+         * Load the shipped-transformer engine: tokenizer, encoder/decoder ONNX
+         * and the 98k en_enhanced lexicon. Throws on failure; the caller
+         * degrades to CTC-only rather than killing the page.
+         */
+        async function loadTransformerEngine() {
+            {
                 // Pre-flight validation: check all required files are accessible
                 // NOTE: these are the same Android ONNX files shipped inside the APK
                 // (swipe_encoder_android.onnx / swipe_decoder_android.onnx), so the
@@ -745,13 +790,70 @@
                     swipeVocabulary.setContractions(contractionMap);
                 }
 
-                isModelReady = true;
-                window.isModelReady = true;  // Expose for debugging
-                hideLoadingOverlay();
-                updateStatus('Ready', 'success');
-                console.log('All models and vocabulary loaded successfully!');
-                
+                console.log('Transformer engine loaded successfully!');
+            }
+        }
+
+        /**
+         * Bring up every engine. The transformer and the CTC pair are loaded
+         * independently so one missing model set can't blank the demo — the
+         * dropdown just disables whatever failed. Only an ONNX Runtime failure
+         * (or losing every engine) is fatal.
+         */
+        async function loadModels() {
+            try {
+                initOnnxRuntime();
             } catch (error) {
+                reportFatalLoadError(error);
+                return;
+            }
+
+            try {
+                await loadTransformerEngine();
+                transformerAvailable = true;
+            } catch (error) {
+                console.error('Transformer engine unavailable:', error);
+            }
+
+            // The CTC lexicon is shared by both CTC engines; their ONNX
+            // sessions stay lazy until the dropdown selects them.
+            await initCtcEngines();
+
+            if (!transformerAvailable && !ctcRuntime) {
+                reportFatalLoadError(ctcInitError || new Error('no engine could be loaded'));
+                return;
+            }
+
+            // Contractions are engine-independent (they rewrite the final word),
+            // so load them even when the transformer path is down.
+            if (!contractionMap) await loadContractions();
+
+            if (!transformerAvailable) {
+                // Default the dropdown to a working engine and warm it, so the
+                // first swipe isn't a 3 MB download.
+                const select = document.getElementById('engineSelect');
+                const fallback = ENGINE_SPECS.find(s => engineAvailable(s.id));
+                if (fallback) {
+                    select.value = fallback.id;
+                    await onEngineChange();
+                }
+            }
+            syncEngineOptions();
+
+            isModelReady = true;
+            window.isModelReady = true;  // Expose for debugging
+            hideLoadingOverlay();
+            updateStatus('Ready', 'success');
+            console.log('Engines ready:',
+                        ENGINE_SPECS.filter(s => engineAvailable(s.id)).map(s => s.id));
+        }
+
+        /**
+         * Render the unrecoverable-load-failure state (no engine can run).
+         * @param {Error} error
+         */
+        function reportFatalLoadError(error) {
+            {
                 console.error('Error loading models:', error);
                 console.error('Error details:', {
                     message: error.message,
@@ -1057,7 +1159,14 @@
             
             if (type === 'success') {
                 statusIndicator.className = 'w-2 h-2 bg-neon-blue rounded-full animate-pulse-neon';
-                modelStatus.textContent = 'ONNX Models Ready • Character-level Transformer';
+                // Name the engine actually in use — the header used to hard-code
+                // the transformer, which is wrong once a CTC engine is selected.
+                const spec = typeof engineSpec === 'function' ? engineSpec(activeEngineId) : null;
+                const descriptor = !spec ? 'Character-level Transformer'
+                    : spec.kind === 'ctc'
+                        ? `${spec.label} • CTC + FUTO trie beam (147k)`
+                        : 'Character-level Transformer (98k)';
+                modelStatus.textContent = `ONNX Models Ready • ${descriptor}`;
             } else if (type === 'error') {
                 statusIndicator.className = 'w-2 h-2 bg-red-500 rounded-full';
                 modelStatus.textContent = 'Models Failed to Load';
@@ -1503,13 +1612,283 @@
                 }
             }, 300);
         }        
-        // Process swipe path and generate predictions
+        // ============================================================
+        // ENGINE REGISTRY
+        //
+        // Three decode paths share one gesture capture. The transformer is the
+        // pipeline that ships in the APK (encoder+decoder ONNX, GNMT-normalised
+        // beam over the 98k en_enhanced lexicon). The two CTC engines are the
+        // from-scratch encoders trained in CleverKeys-ML/ctc, decoded by the
+        // FUTO Viterbi trie beam in ctc-engine.js over the full 147k FUTO
+        // lexicon. Engines differ ONLY after gesture capture — the same
+        // swipePath feeds all three.
+        // ============================================================
+        const ENGINE_SPECS = [
+            { id: 'transformer', kind: 'transformer', label: 'Neural (shipped transformer)' },
+            { id: 'ctc_ch128', kind: 'ctc', label: 'CTC accurate (ch128)',
+              modelUrl: 'models/ch128_s1234.onnx' },
+            { id: 'ctc_resbn80', kind: 'ctc', label: 'CTC fast (resbn80)',
+              modelUrl: 'models/fast_resbn80_s1234.onnx' },
+        ];
+        /** @type {?{trie:object, layout:object, engines:Map, stats:object}} */
+        let ctcRuntime = null;
+        let ctcInitError = null;
+        let transformerAvailable = false;
+        let activeEngineId = 'transformer';
+        // Last decode result, kept for debugging and for the automated
+        // in-browser test harness (web_demo/tests/).
+        window.lastDecode = null;
+
+        /** @param {string} id @returns {object|undefined} */
+        function engineSpec(id) {
+            return ENGINE_SPECS.find(s => s.id === id);
+        }
+
+        /** @returns {boolean} whether `id` has everything it needs to decode */
+        function engineAvailable(id) {
+            const spec = engineSpec(id);
+            if (!spec) return false;
+            if (spec.kind === 'transformer') return transformerAvailable;
+            return !!(ctcRuntime && ctcRuntime.engines.has(id));
+        }
+
+        /**
+         * Load the 147k lexicon + layout and register the CTC engines. Never
+         * throws: a CTC failure must not take the transformer down with it (and
+         * vice versa), so each path records its own error and the dropdown
+         * disables whatever is unusable.
+         */
+        async function initCtcEngines() {
+            try {
+                updateLoadingStatus('Loading CTC lexicon (147k words)...');
+                ctcRuntime = await CTC.createEngines({
+                    vocabUrl: 'models/ctc_vocab.bin',
+                    layoutUrl: 'models/en_qwerty.json',
+                    engines: ENGINE_SPECS
+                        .filter(s => s.kind === 'ctc')
+                        .map(s => ({ id: s.id, label: s.label, modelUrl: s.modelUrl })),
+                });
+                const st = ctcRuntime.stats;
+                console.log(`CTC lexicon: ${st.words} words / ${st.nodes} trie nodes, ` +
+                            `${(st.vocabBytes / 1e6).toFixed(2)} MB, ` +
+                            `fetch ${st.fetchMs.toFixed(0)}ms + trie ${st.trieMs.toFixed(0)}ms`);
+                window.ctcVocabStats = st;
+            } catch (error) {
+                ctcInitError = error;
+                console.error('CTC engine init failed:', error);
+            }
+            syncEngineOptions();
+        }
+
+        /**
+         * Create the ONNX session for an engine on first use. Sessions are
+         * lazy so a visitor who never leaves the default engine never pays to
+         * download the other models.
+         * @param {string} id
+         */
+        async function ensureEngineLoaded(id) {
+            const spec = engineSpec(id);
+            if (!spec || spec.kind !== 'ctc') return;
+            const engine = ctcRuntime && ctcRuntime.engines.get(id);
+            if (!engine) throw new Error(`CTC engine ${id} unavailable`);
+            if (!engine.session) {
+                setEngineStatus(`loading ${spec.label}…`);
+                await engine.load();
+            }
+        }
+
+        /** @param {string} text */
+        function setEngineStatus(text) {
+            const el = document.getElementById('engineStatus');
+            if (el) el.textContent = text;
+        }
+
+        /** Reflect availability into the <select>, disabling dead engines. */
+        function syncEngineOptions() {
+            const select = document.getElementById('engineSelect');
+            if (!select) return;
+            for (const option of select.options) {
+                const spec = engineSpec(option.value);
+                const ok = engineAvailable(option.value);
+                option.disabled = !ok;
+                option.textContent = ok ? spec.label : `${spec.label} — unavailable`;
+            }
+            if (!engineAvailable(select.value)) {
+                const fallback = ENGINE_SPECS.find(s => engineAvailable(s.id));
+                if (fallback) {
+                    select.value = fallback.id;
+                    activeEngineId = fallback.id;
+                }
+            }
+            const notes = [];
+            if (!transformerAvailable) notes.push('transformer unavailable');
+            if (ctcInitError) notes.push(`CTC unavailable (${ctcInitError.message})`);
+            setEngineStatus(notes.length ? notes.join(' · ') : 'ready');
+        }
+
+        /** Dropdown handler — swaps the decode path, warming the model. */
+        async function onEngineChange() {
+            const select = document.getElementById('engineSelect');
+            const id = select.value;
+            activeEngineId = id;
+            document.getElementById('ctcDetail').classList.toggle(
+                'hidden', engineSpec(id).kind !== 'ctc');
+            try {
+                await ensureEngineLoaded(id);
+                setEngineStatus('ready');
+            } catch (error) {
+                console.error('Engine switch failed:', error);
+                setEngineStatus(`load failed: ${error.message}`);
+            }
+        }
+        window.onEngineChange = onEngineChange;
+
+        /**
+         * Convert a captured gesture into the CTC engine's input frame.
+         *
+         * swipePath points carry the demo's 360x215 normalised coordinates;
+         * the CTC models want the letter area mapped to [0,1]x[0,1], which is
+         * the same frame en_qwerty.json's key centres live in. Values are NOT
+         * clamped here — `featurize` clamps after the 60 Hz stage, exactly as
+         * the Python `resample_fixed` does, and clamping early would change
+         * the interpolation.
+         * @param {{path: Array<{x:number,y:number,timestamp:number}>}} swipeData
+         * @returns {{x:number[], y:number[], t:number[]}}
+         */
+        function toCtcPoints(swipeData) {
+            const x = [];
+            const y = [];
+            const t = [];
+            for (const point of swipeData.path) {
+                x.push(point.x / NORMALIZED_WIDTH);
+                y.push(point.y / NORMALIZED_HEIGHT);
+                t.push(point.timestamp || 0);
+            }
+            return { x, y, t };
+        }
+
+        /**
+         * Render the CTC top-8 with raw beam scores plus the lexicon-free
+         * greedy readout, and push the top candidates into the suggestion bar.
+         * @param {{candidates: Array<{word:string,score:number}>, greedy: string}} result
+         * @returns {string[]} the words shown, best first
+         */
+        function displayCtcPredictions(result) {
+            const suggestionsDiv = document.getElementById('suggestions');
+            suggestionsDiv.innerHTML = '';
+            const words = result.candidates.map(c => c.word);
+
+            currentPredictions = [...words];
+            hasPendingPredictions = words.length > 0;
+            userMadeManualSelection = false;
+
+            if (words.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'text-gray-500 text-sm';
+                empty.textContent = 'No lexicon candidates for that gesture';
+                suggestionsDiv.appendChild(empty);
+            }
+            words.slice(0, 5).forEach((word, index) => {
+                const chip = document.createElement('div');
+                chip.className = index === 0
+                    ? 'px-4 py-1.5 rounded-full bg-gradient-to-r from-neon-blue/20 to-neon-purple/20 border border-neon-blue/50 text-white text-sm cursor-pointer hover:scale-105 transition-transform'
+                    : 'px-4 py-1.5 rounded-full bg-white/5 border border-white/20 text-gray-300 text-sm cursor-pointer hover:bg-white/10 transition-all';
+                chip.textContent = applyContractionFixup(word);
+                chip.onclick = () => selectWord(word);
+                suggestionsDiv.appendChild(chip);
+            });
+
+            const detail = document.getElementById('ctcDetail');
+            detail.classList.remove('hidden');
+            document.getElementById('ctcGreedy').textContent =
+                `greedy: ${result.greedy || '∅'}`;
+            const list = document.getElementById('ctcCandidates');
+            list.innerHTML = '';
+            result.candidates.forEach((candidate, index) => {
+                const item = document.createElement('span');
+                item.className = index === 0 ? 'text-neon-blue' : '';
+                item.textContent = `${index + 1}. ${candidate.word} (${candidate.score.toFixed(3)})`;
+                list.appendChild(item);
+            });
+            return words;
+        }
+
+        /**
+         * Format the featurize / inference / beam split for the header readout.
+         * @param {{featurizeMs:number, inferMs:number, beamMs:number, totalMs:number}} timing
+         */
+        function renderLatency(timing) {
+            const el = document.getElementById('latencyReadout');
+            if (!el) return;
+            el.textContent =
+                `${timing.totalMs.toFixed(1)} ms  ` +
+                `(feat ${timing.featurizeMs.toFixed(1)} · nn ${timing.inferMs.toFixed(1)}` +
+                (timing.beamMs !== undefined ? ` · beam ${timing.beamMs.toFixed(1)}` : '') + ')';
+        }
+
+        // Process swipe path and generate predictions.
+        // Routes to the engine currently selected in the dropdown; returns the
+        // decode result so the automated harness can assert on it.
         async function processSwipe(swipeData) {
             if (!isModelReady) {
                 console.warn('Models not ready yet');
-                return;
+                return null;
             }
+            const spec = engineSpec(activeEngineId);
+            if (spec && spec.kind === 'ctc') {
+                return processSwipeCtc(swipeData, activeEngineId);
+            }
+            return processSwipeTransformer(swipeData);
+        }
+        window.processSwipe = processSwipe;
 
+        /**
+         * CTC decode path: featurize -> ONNX encoder -> FUTO Viterbi trie beam.
+         * @param {object} swipeData
+         * @param {string} engineId
+         */
+        async function processSwipeCtc(swipeData, engineId) {
+            try {
+                updateStatus('Processing swipe...', 'processing');
+                await ensureEngineLoaded(engineId);
+                const engine = ctcRuntime.engines.get(engineId);
+                const result = await engine.decode(toCtcPoints(swipeData));
+
+                console.log(`⏱ ${engineId} total ${result.timing.totalMs.toFixed(1)}ms ` +
+                            `(featurize ${result.timing.featurizeMs.toFixed(1)} · ` +
+                            `nn ${result.timing.inferMs.toFixed(1)} · ` +
+                            `beam ${result.timing.beamMs.toFixed(1)})`, result.candidates);
+
+                const shown = displayCtcPredictions(result);
+                renderLatency(result.timing);
+                if (DEMO_CONFIG.autoInsert && shown.length > 0) {
+                    autoInsertBestCandidate(shown[0]);
+                }
+                updateStatus(`Ready (${Math.round(result.timing.totalMs)}ms)`, 'success');
+
+                const decode = {
+                    engine: engineId,
+                    words: shown,
+                    candidates: result.candidates,
+                    greedy: result.greedy,
+                    timing: result.timing,
+                };
+                window.lastDecode = decode;
+                return decode;
+            } catch (error) {
+                console.error('Error processing swipe (CTC):', error);
+                updateStatus('Processing error', 'error');
+                return null;
+            }
+        }
+
+        /**
+         * The original, production-parity transformer path (encoder+decoder
+         * ONNX + GNMT-normalised beam + OptimizedVocabulary rerank), unchanged
+         * apart from returning its result and reporting latency to the header.
+         * @param {object} swipeData
+         */
+        async function processSwipeTransformer(swipeData) {
             try {
                 updateStatus('Processing swipe...', 'processing');
 
@@ -1517,12 +1896,21 @@
                 const features = prepareSwipeFeatures(swipeData);
                 const tFeat = performance.now();
                 const predictions = await runInference(features);
-                const dtMs = Math.round(performance.now() - t0);
-                const featMs = Math.round(tFeat - t0);
-                const infMs = dtMs - featMs;
-                console.log(`⏱ total ${dtMs}ms  (features ${featMs}ms · inference ${infMs}ms · beam=${DEMO_CONFIG.beamWidth} maxLen=${DEMO_CONFIG.maxLength} batched=${DEMO_CONFIG.batchBeams})`);
+                const t1 = performance.now();
+                const timing = {
+                    featurizeMs: tFeat - t0,
+                    // The transformer's beam is interleaved with the decoder
+                    // sessions, so unlike the CTC path there's no separable
+                    // beam term — search time is inside inferMs.
+                    inferMs: t1 - tFeat,
+                    totalMs: t1 - t0,
+                };
+                const dtMs = Math.round(timing.totalMs);
+                console.log(`⏱ total ${dtMs}ms  (features ${Math.round(timing.featurizeMs)}ms · inference ${Math.round(timing.inferMs)}ms · beam=${DEMO_CONFIG.beamWidth} maxLen=${DEMO_CONFIG.maxLength} batched=${DEMO_CONFIG.batchBeams})`);
 
                 const shown = displayPredictions(predictions);
+                renderLatency(timing);
+                document.getElementById('ctcDetail').classList.add('hidden');
 
                 // Auto-insert the best filtered candidate if enabled.
                 // displayPredictions returns the filtered list so we don't
@@ -1532,9 +1920,19 @@
                 }
 
                 updateStatus(`Ready (${dtMs}ms)`, 'success');
+
+                const decode = {
+                    engine: 'transformer',
+                    words: shown || [],
+                    candidates: predictions,
+                    timing,
+                };
+                window.lastDecode = decode;
+                return decode;
             } catch (error) {
                 console.error('Error processing swipe:', error);
                 updateStatus('Processing error', 'error');
+                return null;
             }
         }
 
