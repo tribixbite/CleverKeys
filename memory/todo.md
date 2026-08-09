@@ -47,8 +47,19 @@ harness. Full write-up + results tables: `web_demo/README.md`.
       paths (out-of-distribution for its velocity features — NOT a model-quality comparison).
       Latency: transformer 356.1 ms · ch128 3.13 ms · resbn80 2.32 ms
 - [x] `web_demo/README.md` — run instructions, format rationale, full results tables
+- [x] **Deployed + verified LIVE at https://cleverkeys.app/demo/** (2026-08-08). No workflow
+      change was needed: `deploy-web-demo.yml` already recurses `web_demo/demo/` into
+      `site/dist/demo/`, so `models/` + `vendor/ort/` rode along (dist 36 MB, run 31290929882).
+      Live browser check with real mouse-path swipes (curved, eased, dwell-at-key; key centres
+      read from the live DOM) on 4 words × 3 engines: ch128 4/4 (6.1–11.3 ms), resbn80 4/4
+      (3.9–4.7 ms), transformer 3/4 (`hello`→`herpetological`; 327–472 ms). All model/vocab/
+      wasm requests 200, `ort-wasm-simd.wasm` served as `application/wasm`; only console error
+      is a site-wide `/favicon.ico` 404. Astro docs routes (`/`, `/wiki/`, `/specs/`) unaffected.
 
 Follow-ups (not blocking):
+- [ ] `/favicon.ico` 404s site-wide — add one to `site/public/`.
+- [ ] The demo styles itself from `cdn.tailwindcss.com` at runtime (Tailwind logs its
+      "not for production" warning). Works on Pages, but it is the demo's last CDN dependency.
 - [ ] Replay real human traces (not synthetic splines) through the demo so the transformer
       column is a fair comparison; the synthetic fixture only validates plumbing + parity.
 - [ ] The CTC engines are demo-only — wiring `ctc` into `swipe_engine_mode` on-device is still
