@@ -1,5 +1,21 @@
 # CleverKeys TODO
 
+## 🟣 IN PROGRESS — web demo CTC engine switcher (2026-08-08)
+
+Goal: `web_demo/demo/` gets an engine `<select>` (shipped transformer / CTC accurate ch128 /
+CTC fast resbn80), full 146,964-word FUTO vocab for the CTC path, JS featurizer + FUTO
+Viterbi trie beam ported from `CleverKeys-ML/ctc/`, no CDN deps, in-browser puppeteer tests.
+
+- [ ] Convert `futo_en_wordlist.combined` → compact browser trie blob (`tools/build_ctc_vocab.py`)
+- [ ] Vendor `onnxruntime-web` dist locally (`demo/vendor/ort/`) — drop the jsdelivr CDN
+- [ ] Copy CTC ONNX artifacts + `en_qwerty.json` into `demo/models/` with sha256 provenance
+- [ ] `demo/ctc-engine.js`: featurize() port (60 Hz → fixed-64), CSR trie, `futo_viterbi_beam` port
+- [ ] Wire engine dropdown + per-swipe latency breakdown + top-8 with scores into `demo/index.html`
+- [ ] Local dev server mirroring the deploy layout (`web_demo/serve.py`)
+- [ ] Parity harness: JS featurizer vs Python (<1e-6) and beam top-1 exact, 3 fixed paths
+- [ ] In-browser puppeteer test: 8+ words × 3 engines, top-1 assertions, screenshots, latency table
+- [ ] `web_demo/README.md` — run instructions + test results
+
 ## 🔴 HANDOFF — OUTSTANDING TASKS (read first; as of 2026-08-07, HEAD af9634f9)
 
 **Session context:** completed the context-LM/privacy/next-word wave + a full FUTO-decoder
