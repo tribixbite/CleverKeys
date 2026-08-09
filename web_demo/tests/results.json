@@ -7,7 +7,7 @@
   "vocab": {
     "vocabBytes": 918638,
     "fetchMs": 7.5,
-    "trieMs": 23,
+    "trieMs": 22.5,
     "words": 146964,
     "nodes": 330762
   },
@@ -24,7 +24,7 @@
             "thee",
             "theda"
           ],
-          "totalMs": 326.7
+          "totalMs": 329.8
         },
         "hello": {
           "top1": "hello",
@@ -36,7 +36,7 @@
             "helton",
             "heloise"
           ],
-          "totalMs": 298.7
+          "totalMs": 296.9
         },
         "keyboard": {
           "top1": "kettering",
@@ -48,7 +48,7 @@
             "keyboardist",
             "ketamine"
           ],
-          "totalMs": 358
+          "totalMs": 359.2
         },
         "dont": {
           "top1": "dolmen",
@@ -60,7 +60,7 @@
             "dolmens",
             "dolomite"
           ],
-          "totalMs": 312.5
+          "totalMs": 303.1
         },
         "world": {
           "top1": "world",
@@ -72,7 +72,7 @@
             "worked",
             "workday"
           ],
-          "totalMs": 271
+          "totalMs": 268.4
         },
         "this": {
           "top1": "this",
@@ -84,7 +84,7 @@
             "thirst",
             "thisbe"
           ],
-          "totalMs": 261.1
+          "totalMs": 262.8
         },
         "about": {
           "top1": "about",
@@ -96,7 +96,7 @@
             "abort",
             "acoma"
           ],
-          "totalMs": 303.6
+          "totalMs": 301.8
         },
         "four": {
           "top1": "for",
@@ -108,7 +108,7 @@
             "foo",
             "fot"
           ],
-          "totalMs": 180
+          "totalMs": 182.4
         },
         "something": {
           "top1": "stomper",
@@ -120,7 +120,7 @@
             "syllogistic",
             "stollen"
           ],
-          "totalMs": 361.8
+          "totalMs": 358.4
         }
       },
       "top1": 5,
@@ -138,7 +138,7 @@
             "then",
             "them"
           ],
-          "totalMs": 12
+          "totalMs": 11.5
         },
         "hello": {
           "top1": "hello",
@@ -150,7 +150,7 @@
             "hells",
             "jello"
           ],
-          "totalMs": 5.6
+          "totalMs": 5.9
         },
         "keyboard": {
           "top1": "keyboard",
@@ -174,7 +174,7 @@
             "sony",
             "dong"
           ],
-          "totalMs": 6
+          "totalMs": 5.9
         },
         "world": {
           "top1": "world",
@@ -198,7 +198,7 @@
             "thirds",
             "his"
           ],
-          "totalMs": 5.5
+          "totalMs": 6.1
         },
         "about": {
           "top1": "about",
@@ -210,7 +210,7 @@
             "abut",
             "abort"
           ],
-          "totalMs": 4.3
+          "totalMs": 4.4
         },
         "four": {
           "top1": "for",
@@ -222,7 +222,7 @@
             "foot",
             "foe"
           ],
-          "totalMs": 6.6
+          "totalMs": 6.4
         },
         "something": {
           "top1": "something",
@@ -252,7 +252,7 @@
             "then",
             "them"
           ],
-          "totalMs": 4.6
+          "totalMs": 5.6
         },
         "hello": {
           "top1": "hello",
@@ -264,7 +264,7 @@
             "hell",
             "jello"
           ],
-          "totalMs": 4.1
+          "totalMs": 4.3
         },
         "keyboard": {
           "top1": "keyboard",
@@ -276,7 +276,7 @@
             "leeboard",
             "leeboards"
           ],
-          "totalMs": 2.5
+          "totalMs": 2.6
         },
         "dont": {
           "top1": "dont",
@@ -288,7 +288,7 @@
             "sony",
             "wont"
           ],
-          "totalMs": 4.2
+          "totalMs": 4.3
         },
         "world": {
           "top1": "world",
@@ -324,7 +324,7 @@
             "abut",
             "abbot"
           ],
-          "totalMs": 3.1
+          "totalMs": 3.3
         },
         "four": {
           "top1": "for",
@@ -336,7 +336,7 @@
             "fort",
             "fours"
           ],
-          "totalMs": 5.1
+          "totalMs": 5.2
         },
         "something": {
           "top1": "something",
@@ -348,7 +348,7 @@
             "soldering",
             "summering"
           ],
-          "totalMs": 2.7
+          "totalMs": 3.4
         }
       },
       "top1": 8,
@@ -537,30 +537,30 @@
   "latency": {
     "transformer": {
       "repeats": 10,
-      "meanTotalMs": 356.11,
+      "meanTotalMs": 355.4,
       "meanFeaturizeMs": 0.01,
-      "meanInferMs": 356.1,
+      "meanInferMs": 355.39,
       "meanBeamMs": null,
-      "minTotalMs": 353.5,
-      "maxTotalMs": 360.8
+      "minTotalMs": 352.5,
+      "maxTotalMs": 359.6
     },
     "ctc_ch128": {
       "repeats": 10,
-      "meanTotalMs": 3.13,
+      "meanTotalMs": 3.08,
       "meanFeaturizeMs": 0.01,
-      "meanInferMs": 1.52,
+      "meanInferMs": 1.47,
       "meanBeamMs": 1.6,
-      "minTotalMs": 3,
-      "maxTotalMs": 3.5
+      "minTotalMs": 2.9,
+      "maxTotalMs": 3.6
     },
     "ctc_resbn80": {
       "repeats": 10,
-      "meanTotalMs": 2.32,
+      "meanTotalMs": 2.34,
       "meanFeaturizeMs": 0.01,
-      "meanInferMs": 0.76,
-      "meanBeamMs": 1.55,
+      "meanInferMs": 0.77,
+      "meanBeamMs": 1.56,
       "minTotalMs": 2.2,
-      "maxTotalMs": 2.7
+      "maxTotalMs": 2.8
     }
   },
   "pythonTop1": {

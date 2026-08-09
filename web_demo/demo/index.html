@@ -233,9 +233,14 @@
                         <span class="text-gray-300">WASM SIMD</span>
                         <input type="checkbox" id="settingsWasmSimd" class="w-4 h-4 accent-neon-purple" />
                     </label>
-                    <label class="flex items-center justify-between cursor-pointer">
-                        <span class="text-gray-300">WASM threads <span class="text-xs text-gray-500">(needs COOP/COEP)</span></span>
-                        <input type="checkbox" id="settingsWasmThreads" class="w-4 h-4 accent-neon-purple" />
+                    <!-- Disabled since onnxruntime-web was vendored: only the
+                         single-threaded SIMD .wasm is shipped, so this control
+                         could not do anything. Shown rather than removed so the
+                         reason is visible instead of the option just vanishing. -->
+                    <label class="flex items-center justify-between opacity-50 cursor-not-allowed"
+                           title="The vendored onnxruntime-web build is single-threaded">
+                        <span class="text-gray-300">WASM threads <span class="text-xs text-gray-500">(vendored build is single-threaded)</span></span>
+                        <input type="checkbox" id="settingsWasmThreads" class="w-4 h-4 accent-neon-purple" disabled />
                     </label>
                 </div>
             </div>
@@ -526,7 +531,9 @@
             showRaw: false,         // show non-dictionary beam outputs alongside filtered
             batchBeams: true,       // run one decoder per step with a batched target_tokens tensor
             wasmSimd: true,
-            wasmThreads: true,
+            // Kept only so an existing saved config still round-trips; the
+            // vendored ORT build ships no threaded .wasm, so this is inert.
+            wasmThreads: false,
         };
         const CONFIG_KEY = 'cleverkeys.demo.config.v2';
         function loadConfig() {
@@ -4028,15 +4035,17 @@
             DEMO_CONFIG.showRaw = document.getElementById('settingsShowRaw').checked;
             DEMO_CONFIG.batchBeams = document.getElementById('settingsBatchBeams').checked;
             DEMO_CONFIG.wasmSimd = document.getElementById('settingsWasmSimd').checked;
-            DEMO_CONFIG.wasmThreads = document.getElementById('settingsWasmThreads').checked;
+            // wasmThreads is intentionally NOT read back: the control is
+            // disabled (the vendored ORT build has no threaded .wasm), and a
+            // disabled checkbox reads as false, which would flip a returning
+            // user's saved `true` and trigger a pointless reload prompt.
 
             saveConfig();
             toggleSettingsPanel();
 
             const needsReload = (
                 prev.dictionary !== DEMO_CONFIG.dictionary ||
-                prev.wasmSimd !== DEMO_CONFIG.wasmSimd ||
-                prev.wasmThreads !== DEMO_CONFIG.wasmThreads
+                prev.wasmSimd !== DEMO_CONFIG.wasmSimd
             );
             if (needsReload) {
                 console.log('Settings requiring reload changed — reloading page');
