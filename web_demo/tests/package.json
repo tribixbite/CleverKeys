@@ -1,0 +1,12 @@
+{
+  "name": "cleverkeys-web-demo-tests",
+  "private": true,
+  "type": "module",
+  "description": "Headless browser harness for the CleverKeys web demo engine sweep.",
+  "scripts": {
+    "test": "node run_browser_tests.mjs"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^25.5.0"
+  }
+}

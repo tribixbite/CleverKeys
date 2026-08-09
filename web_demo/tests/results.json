@@ -1,0 +1,578 @@
+{
+  "engines": [
+    "transformer",
+    "ctc_ch128",
+    "ctc_resbn80"
+  ],
+  "vocab": {
+    "vocabBytes": 918638,
+    "fetchMs": 7.5,
+    "trieMs": 23,
+    "words": 146964,
+    "nodes": 330762
+  },
+  "words": {
+    "transformer": {
+      "words": {
+        "the": {
+          "top1": "the",
+          "ok": true,
+          "top5": [
+            "the",
+            "there",
+            "three",
+            "thee",
+            "theda"
+          ],
+          "totalMs": 326.7
+        },
+        "hello": {
+          "top1": "hello",
+          "ok": true,
+          "top5": [
+            "hello",
+            "herkimer",
+            "help",
+            "helton",
+            "heloise"
+          ],
+          "totalMs": 298.7
+        },
+        "keyboard": {
+          "top1": "kettering",
+          "ok": false,
+          "top5": [
+            "kettering",
+            "keyboard",
+            "keyboards",
+            "keyboardist",
+            "ketamine"
+          ],
+          "totalMs": 358
+        },
+        "dont": {
+          "top1": "dolmen",
+          "ok": false,
+          "top5": [
+            "dolmen",
+            "dolman",
+            "dolomitic",
+            "dolmens",
+            "dolomite"
+          ],
+          "totalMs": 312.5
+        },
+        "world": {
+          "top1": "world",
+          "ok": true,
+          "top5": [
+            "world",
+            "would",
+            "works",
+            "worked",
+            "workday"
+          ],
+          "totalMs": 271
+        },
+        "this": {
+          "top1": "this",
+          "ok": true,
+          "top5": [
+            "this",
+            "thistle",
+            "thither",
+            "thirst",
+            "thisbe"
+          ],
+          "totalMs": 261.1
+        },
+        "about": {
+          "top1": "about",
+          "ok": true,
+          "top5": [
+            "about",
+            "abolition",
+            "acoustic",
+            "abort",
+            "acoma"
+          ],
+          "totalMs": 303.6
+        },
+        "four": {
+          "top1": "for",
+          "ok": false,
+          "top5": [
+            "for",
+            "four",
+            "foot",
+            "foo",
+            "fot"
+          ],
+          "totalMs": 180
+        },
+        "something": {
+          "top1": "stomper",
+          "ok": false,
+          "top5": [
+            "stomper",
+            "stolen",
+            "stompers",
+            "syllogistic",
+            "stollen"
+          ],
+          "totalMs": 361.8
+        }
+      },
+      "top1": 5,
+      "total": 9
+    },
+    "ctc_ch128": {
+      "words": {
+        "the": {
+          "top1": "the",
+          "ok": true,
+          "top5": [
+            "the",
+            "thee",
+            "they",
+            "then",
+            "them"
+          ],
+          "totalMs": 12
+        },
+        "hello": {
+          "top1": "hello",
+          "ok": true,
+          "top5": [
+            "hello",
+            "help",
+            "hell",
+            "hells",
+            "jello"
+          ],
+          "totalMs": 5.6
+        },
+        "keyboard": {
+          "top1": "keyboard",
+          "ok": true,
+          "top5": [
+            "keyboard",
+            "keyboards",
+            "keyboardist",
+            "leeboard",
+            "leeboards"
+          ],
+          "totalMs": 4.2
+        },
+        "dont": {
+          "top1": "dont",
+          "ok": true,
+          "top5": [
+            "dont",
+            "done",
+            "font",
+            "sony",
+            "dong"
+          ],
+          "totalMs": 6
+        },
+        "world": {
+          "top1": "world",
+          "ok": true,
+          "top5": [
+            "world",
+            "would",
+            "worlds",
+            "works",
+            "worked"
+          ],
+          "totalMs": 5.6
+        },
+        "this": {
+          "top1": "this",
+          "ok": true,
+          "top5": [
+            "this",
+            "thus",
+            "thins",
+            "thirds",
+            "his"
+          ],
+          "totalMs": 5.5
+        },
+        "about": {
+          "top1": "about",
+          "ok": true,
+          "top5": [
+            "about",
+            "abbott",
+            "abbot",
+            "abut",
+            "abort"
+          ],
+          "totalMs": 4.3
+        },
+        "four": {
+          "top1": "for",
+          "ok": false,
+          "top5": [
+            "for",
+            "four",
+            "fort",
+            "foot",
+            "foe"
+          ],
+          "totalMs": 6.6
+        },
+        "something": {
+          "top1": "something",
+          "ok": true,
+          "top5": [
+            "something",
+            "simmering",
+            "soldering",
+            "silvering",
+            "summering"
+          ],
+          "totalMs": 4.1
+        }
+      },
+      "top1": 8,
+      "total": 9
+    },
+    "ctc_resbn80": {
+      "words": {
+        "the": {
+          "top1": "the",
+          "ok": true,
+          "top5": [
+            "the",
+            "thee",
+            "they",
+            "then",
+            "them"
+          ],
+          "totalMs": 4.6
+        },
+        "hello": {
+          "top1": "hello",
+          "ok": true,
+          "top5": [
+            "hello",
+            "help",
+            "hero",
+            "hell",
+            "jello"
+          ],
+          "totalMs": 4.1
+        },
+        "keyboard": {
+          "top1": "keyboard",
+          "ok": true,
+          "top5": [
+            "keyboard",
+            "keyboards",
+            "keyboardist",
+            "leeboard",
+            "leeboards"
+          ],
+          "totalMs": 2.5
+        },
+        "dont": {
+          "top1": "dont",
+          "ok": true,
+          "top5": [
+            "dont",
+            "done",
+            "font",
+            "sony",
+            "wont"
+          ],
+          "totalMs": 4.2
+        },
+        "world": {
+          "top1": "world",
+          "ok": true,
+          "top5": [
+            "world",
+            "would",
+            "worked",
+            "worlds",
+            "word"
+          ],
+          "totalMs": 3.9
+        },
+        "this": {
+          "top1": "this",
+          "ok": true,
+          "top5": [
+            "this",
+            "thus",
+            "thisd",
+            "his",
+            "thin"
+          ],
+          "totalMs": 4
+        },
+        "about": {
+          "top1": "about",
+          "ok": true,
+          "top5": [
+            "about",
+            "abbott",
+            "abort",
+            "abut",
+            "abbot"
+          ],
+          "totalMs": 3.1
+        },
+        "four": {
+          "top1": "for",
+          "ok": false,
+          "top5": [
+            "for",
+            "four",
+            "ford",
+            "fort",
+            "fours"
+          ],
+          "totalMs": 5.1
+        },
+        "something": {
+          "top1": "something",
+          "ok": true,
+          "top5": [
+            "something",
+            "simmering",
+            "somethings",
+            "soldering",
+            "summering"
+          ],
+          "totalMs": 2.7
+        }
+      },
+      "top1": 8,
+      "total": 9
+    }
+  },
+  "parity": {
+    "featurizer": {
+      "the": {
+        "maxAbsDiff": 0,
+        "length": 128
+      },
+      "hello": {
+        "maxAbsDiff": 0,
+        "length": 128
+      },
+      "something": {
+        "maxAbsDiff": 0,
+        "length": 128
+      }
+    },
+    "beam": {
+      "ctc_ch128": {
+        "the": {
+          "top1Match": true,
+          "top8Match": true,
+          "greedyMatch": true,
+          "maxScoreDiff": 0.0000012759249594651578,
+          "js": [
+            "the",
+            "thee",
+            "they",
+            "then",
+            "them",
+            "theo",
+            "there",
+            "three"
+          ],
+          "py": [
+            "the",
+            "thee",
+            "they",
+            "then",
+            "them",
+            "theo",
+            "there",
+            "three"
+          ]
+        },
+        "hello": {
+          "top1Match": true,
+          "top8Match": true,
+          "greedyMatch": true,
+          "maxScoreDiff": 0.0000018905940866176252,
+          "js": [
+            "hello",
+            "help",
+            "hell",
+            "hells",
+            "jello",
+            "hero",
+            "helm",
+            "heller"
+          ],
+          "py": [
+            "hello",
+            "help",
+            "hell",
+            "hells",
+            "jello",
+            "hero",
+            "helm",
+            "heller"
+          ]
+        },
+        "something": {
+          "top1Match": true,
+          "top8Match": true,
+          "greedyMatch": true,
+          "maxScoreDiff": 9.901917232824076e-7,
+          "js": [
+            "something",
+            "simmering",
+            "soldering",
+            "silvering",
+            "summering",
+            "simpering",
+            "somethings",
+            "silverton"
+          ],
+          "py": [
+            "something",
+            "simmering",
+            "soldering",
+            "silvering",
+            "summering",
+            "simpering",
+            "somethings",
+            "silverton"
+          ]
+        }
+      },
+      "ctc_resbn80": {
+        "the": {
+          "top1Match": true,
+          "top8Match": true,
+          "greedyMatch": true,
+          "maxScoreDiff": 0.0000013625274331019455,
+          "js": [
+            "the",
+            "thee",
+            "they",
+            "then",
+            "them",
+            "three",
+            "tho",
+            "there"
+          ],
+          "py": [
+            "the",
+            "thee",
+            "they",
+            "then",
+            "them",
+            "three",
+            "tho",
+            "there"
+          ]
+        },
+        "hello": {
+          "top1Match": true,
+          "top8Match": true,
+          "greedyMatch": true,
+          "maxScoreDiff": 0.0000011102816070973631,
+          "js": [
+            "hello",
+            "help",
+            "hero",
+            "hell",
+            "jello",
+            "halo",
+            "helps",
+            "helot"
+          ],
+          "py": [
+            "hello",
+            "help",
+            "hero",
+            "hell",
+            "jello",
+            "halo",
+            "helps",
+            "helot"
+          ]
+        },
+        "something": {
+          "top1Match": true,
+          "top8Match": true,
+          "greedyMatch": true,
+          "maxScoreDiff": 0.000001935561726895685,
+          "js": [
+            "something",
+            "simmering",
+            "somethings",
+            "soldering",
+            "summering",
+            "sobering",
+            "sometime",
+            "summertime"
+          ],
+          "py": [
+            "something",
+            "simmering",
+            "somethings",
+            "soldering",
+            "summering",
+            "sobering",
+            "sometime",
+            "summertime"
+          ]
+        }
+      }
+    },
+    "featurizerMaxAbsDiff": 0
+  },
+  "latency": {
+    "transformer": {
+      "repeats": 10,
+      "meanTotalMs": 356.11,
+      "meanFeaturizeMs": 0.01,
+      "meanInferMs": 356.1,
+      "meanBeamMs": null,
+      "minTotalMs": 353.5,
+      "maxTotalMs": 360.8
+    },
+    "ctc_ch128": {
+      "repeats": 10,
+      "meanTotalMs": 3.13,
+      "meanFeaturizeMs": 0.01,
+      "meanInferMs": 1.52,
+      "meanBeamMs": 1.6,
+      "minTotalMs": 3,
+      "maxTotalMs": 3.5
+    },
+    "ctc_resbn80": {
+      "repeats": 10,
+      "meanTotalMs": 2.32,
+      "meanFeaturizeMs": 0.01,
+      "meanInferMs": 0.76,
+      "meanBeamMs": 1.55,
+      "minTotalMs": 2.2,
+      "maxTotalMs": 2.7
+    }
+  },
+  "pythonTop1": {
+    "ctc_ch128": 8,
+    "ctc_resbn80": 8
+  },
+  "pageErrors": [
+    "console.error: Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "screenshots": {
+    "transformer": "/home/will/git/swype/CleverKeys/web_demo/tests/screenshots/transformer.png",
+    "ctc_ch128": "/home/will/git/swype/CleverKeys/web_demo/tests/screenshots/ctc_ch128.png",
+    "ctc_resbn80": "/home/will/git/swype/CleverKeys/web_demo/tests/screenshots/ctc_resbn80.png"
+  }
+}
