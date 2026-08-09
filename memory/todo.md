@@ -1,20 +1,34 @@
 # CleverKeys TODO
 
-## 🟣 IN PROGRESS — web demo CTC engine switcher (2026-08-08)
+## ✅ DONE — web demo CTC engine switcher (2026-08-08)
 
-Goal: `web_demo/demo/` gets an engine `<select>` (shipped transformer / CTC accurate ch128 /
-CTC fast resbn80), full 146,964-word FUTO vocab for the CTC path, JS featurizer + FUTO
-Viterbi trie beam ported from `CleverKeys-ML/ctc/`, no CDN deps, in-browser puppeteer tests.
+`web_demo/demo/` now has an engine `<select>` (shipped transformer / CTC accurate ch128 /
+CTC fast resbn80) with the full 146,964-word FUTO vocab on the CTC path, a JS port of the
+`CleverKeys-ML/ctc` featurizer + FUTO Viterbi trie beam, no CDN deps, and an in-browser test
+harness. Full write-up + results tables: `web_demo/README.md`.
 
-- [ ] Convert `futo_en_wordlist.combined` → compact browser trie blob (`tools/build_ctc_vocab.py`)
-- [ ] Vendor `onnxruntime-web` dist locally (`demo/vendor/ort/`) — drop the jsdelivr CDN
-- [ ] Copy CTC ONNX artifacts + `en_qwerty.json` into `demo/models/` with sha256 provenance
-- [ ] `demo/ctc-engine.js`: featurize() port (60 Hz → fixed-64), CSR trie, `futo_viterbi_beam` port
-- [ ] Wire engine dropdown + per-swipe latency breakdown + top-8 with scores into `demo/index.html`
-- [ ] Local dev server mirroring the deploy layout (`web_demo/serve.py`)
-- [ ] Parity harness: JS featurizer vs Python (<1e-6) and beam top-1 exact, 3 fixed paths
-- [ ] In-browser puppeteer test: 8+ words × 3 engines, top-1 assertions, screenshots, latency table
-- [ ] `web_demo/README.md` — run instructions + test results
+- [x] `tools/build_ctc_vocab.py` — 165,644 AOSP entries → 146,964-word front-coded blob,
+      918,638 B (409 KB gz); `--verify` matches the Python loader with 0.000e+00 log_freq deviation
+- [x] Vendored `onnxruntime-web` 1.18.0 in `demo/vendor/ort/` — jsdelivr CDN removed
+- [x] CTC ONNX + `en_qwerty.json` in `demo/models/` with sha256s in `PROVENANCE.md`
+- [x] `demo/ctc-engine.js` — featurize (60 Hz → fixed-64), CSR trie (330,762 nodes, ~21 ms build),
+      `futoViterbiBeam`, `greedyCtc`
+- [x] Engine dropdown + latency breakdown (featurize/nn/beam) + CTC top-8 with scores;
+      `loadModels` split so one engine's models failing only disables that dropdown entry
+- [x] `web_demo/serve.py` — local server mirroring the CI deploy flatten
+- [x] Parity: featurizer **bit-identical** (max abs deviation 0), beam **top-8 ordering** exact
+      on 3 paths × 2 engines; residual ~1.9e-6 on scores is WASM-vs-native encoder float drift
+- [x] Browser sweep (headless Chrome + puppeteer MCP): CTC 8/9 both engines (matching Python
+      exactly, same single `four`→`for` miss), transformer 5/9 on these synthetic constant-speed
+      paths (out-of-distribution for its velocity features — NOT a model-quality comparison).
+      Latency: transformer 356.1 ms · ch128 3.13 ms · resbn80 2.32 ms
+- [x] `web_demo/README.md` — run instructions, format rationale, full results tables
+
+Follow-ups (not blocking):
+- [ ] Replay real human traces (not synthetic splines) through the demo so the transformer
+      column is a fair comparison; the synthetic fixture only validates plumbing + parity.
+- [ ] The CTC engines are demo-only — wiring `ctc` into `swipe_engine_mode` on-device is still
+      item B below.
 
 ## 🔴 HANDOFF — OUTSTANDING TASKS (read first; as of 2026-08-07, HEAD af9634f9)
 
