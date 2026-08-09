@@ -1,5 +1,29 @@
 # CleverKeys TODO
 
+## 🟡 IN PROGRESS — CTC on-device latency measurement (G3) (2026-08-08)
+
+`src/androidTest/kotlin/tribixbite/cleverkeys/swipe/ctc/CtcOnnxLatencyBenchmarkTest.kt` +
+`src/androidTest/assets/ctc_bench/*.onnx` (4 models, 11 MB, **androidTest APK only** —
+verified absent from the app APK). Measures the four Phase-E/F candidate encoders under two
+session configs (production `ModelLoader` mirror w/ XNNPACK@2, and the `bench_latency.py`
+`intra_op=inter_op=1` CPU protocol) plus the full featurize→NN→slice→beam@100 path over the
+real bundled 98k `en_enhanced.json` trie at the tunedV2/E1 preset.
+
+- [x] Test + frozen fixture (`CtcBenchFixture.kt`: golden `en_qwerty` layout + the 85-sample
+      "keyboard" trace) written; `compileDebugKotlin` + `compileDebugAndroidTestKotlin` green
+- [x] Debug + androidTest APKs built; assets confirmed packaged in the test APK only
+- [x] **Desktop cross-check** (temporary JVM probe against the same ORT Java API, deleted after
+      use, WSL x86_64 `intra_op=inter_op=1`): ch128 **0.554 ms** / ch192 **1.001** /
+      resbn80 **0.257** / resbn72 **0.211** (PHASE_F laptop: 0.455 / 0.877 / 0.215 / 0.186 —
+      this box reads 14–22 % high, ratios preserved). Trie build **90 ms**, beam@100 mean
+      **7.3 ms** (p90 12.6), NN+beam total mean **9.6 ms**, greedy + beam top-1 both `keyboard`.
+      ⇒ well inside the 100–300 ms neural budget on desktop; on-device number still needed.
+- [ ] **BLOCKED: run on emulator.wtf.** `EW_API_TOKEN` is NOT set in this environment and
+      `ew-cli` is not installed here (the skill's install is on the Termux device). Exact
+      command is in the test's KDoc header; re-run there:
+      `EW_VERSION=1.3.4 ew-cli --app build/outputs/apk/debug/CleverKeys-*-x86_64.apk --test build/outputs/apk/androidTest/debug/CleverKeys-debug-androidTest.apk --outputs-dir ~/ew-output --timeout 40m --device model=Pixel7,version=34 --use-orchestrator --test-targets "class tribixbite.cleverkeys.swipe.ctc.CtcOnnxLatencyBenchmarkTest"`
+      then pull mean/p50/p90/p99 from the `CtcLatencyBench` logcat lines in `~/ew-output`.
+
 ## ✅ DONE — web demo CTC engine switcher (2026-08-08)
 
 `web_demo/demo/` now has an engine `<select>` (shipped transformer / CTC accurate ch128 /
