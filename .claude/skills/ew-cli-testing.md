@@ -9,6 +9,9 @@ Use this skill when running instrumented tests on emulator.wtf cloud infrastruct
 - **`--device model=Pixel7,version=34`**: ALWAYS use API 34+. The APK has x86_64 native ONNX
   libraries and API 30 emulators are 32-bit x86 only — causes ABI mismatch install failure.
 - **`--outputs-dir ~/ew-output`**: ALWAYS. Must exist and be under home dir (Termux restricts /tmp).
+- **`--outputs logcat`**: REQUIRED whenever the payload is `Log.i` output (benchmarks,
+  instrumented measurement harnesses). Without it ew-cli downloads only `results.xml` and the
+  logcat is never pulled — the run "passes" and the numbers are gone.
 - **Debug APK for `--app`**: ALWAYS use debug APK, NOT release. Both `--app` and
   `--test` are debug-signed automatically (committed `debug.keystore`, no env
   needed). The release APK has a different signature → "Permission Denial:
@@ -165,6 +168,20 @@ composeTestRule.mainClock.advanceTimeBy(2_000)   // get past initial composition
 // ...interact...
 composeTestRule.mainClock.advanceTimeBy(1_000)   // let click effects run
 ```
+
+## A Test Cannot Write to the Test APK's Own Data Dir (hard-won, 2026-08-11)
+
+Instrumentation runs **inside the app-under-test's process, under the app's uid**, so
+`getInstrumentation().context` (the *test* package's context) hands out a `cacheDir` /
+`filesDir` the running process has no permission to write. Reads are fine — assets come
+out of the world-readable APK — but any write fails. Symptom seen in
+`CtcOnnxLatencyBenchmarkTest`: ORT aborted every session creation with
+`ORT_FAIL … SaveToOrtFormat Failed to save ORT format model to file:
+/data/user/0/tribixbite.cleverkeys.debug.test/cache/…`.
+
+Rule: read test-only assets from `getInstrumentation().context.assets`, but take **every
+writable path from `getInstrumentation().targetContext`** — which is also the faithful
+mirror of production, since the app caches into its own dir.
 
 ## Cross-Test State Leaks Under the Orchestrator (hard-won, 2026-07-03)
 
