@@ -9,10 +9,10 @@
 
 | Id | Sev | Description | Status | Evidence |
 |---|---|---|---|---|
-| F1 | major | "Full 150k" `swipe_vocabulary.json` mode functionally gutted: rare-word gate `max(minFreqByLength, CONFIG_MIN_FREQ=0.01)` applies the APK-scale floor to raw probabilities. Measured: **6 of 150,252** words have freq ≥ 0.01; every tier-0 word (~138k) is filtered, leaving only the ~12k tier-listed (`common_words` 7,002 ∪ `top_5000` 5,000) surfaceable. | **FIXED** (`fix(web-demo): remediate F1-F6`) | `web_demo/swipe-vocabulary.js:21` (CONFIG_MIN_FREQ), `:219-222` (tier synthesis), `:328-331` (gate) |
-| F2 | minor | Tap-typing pools shrunk: `findWordCompletions` iterates `commonWords` (now 100 in default APK mode) then `top5000` (now 3,000); `findFuzzyMatches` slices `commonWords` to 200 but it only holds 100. Repurposing the sets as tier ranks starved the readers. | **FIXED** (`fix(web-demo): remediate F1-F6`) | `web_demo/demo/index.html:3105-3120`, `:3166`; sets built at `web_demo/swipe-vocabulary.js:164-165` |
-| F3 | cosmetic | `removePersonalWord` → `unboostWord` deletes from `wordFreq`/`commonWords`/`top5000` but never removes the word from (or invalidates) the masking trie — removed word stays beam-reachable until page reload. | **FIXED** (`fix(web-demo): remediate F1-F6`) | `web_demo/custom-dictionary.js:291-298`, `:204-217`; no `trieRoot` touch |
-| F4 | pre-existing | `applyContractionFixup` rewrites PAIRED contraction bases unconditionally (`well`→`we'll`, `were`→`we're`); production skips paired bases via `contractionPairings` (`OptimizedVocabulary.kt:463-466`, v1.2.2 fix). **Scope WIDENED by the rework**: the same fixup now also runs on CTC suggestion chips and on auto-insert for all three engines. | **FIXED** (`fix(web-demo): remediate F1-F6`) | `web_demo/demo/index.html:1976-1984` (fixup), `:1803` (CTC chips), `:1954` (auto-insert); `web_demo/contractions_en.json:89-90` |
+| F1 | major | "Full 150k" `swipe_vocabulary.json` mode functionally gutted: rare-word gate `max(minFreqByLength, CONFIG_MIN_FREQ=0.01)` applies the APK-scale floor to raw probabilities. Measured: **6 of 150,252** words have freq ≥ 0.01; every tier-0 word (~138k) is filtered, leaving only the ~12k tier-listed (`common_words` 7,002 ∪ `top_5000` 5,000) surfaceable. | **FIXED** (35cbaee3) | `web_demo/swipe-vocabulary.js:21` (CONFIG_MIN_FREQ), `:219-222` (tier synthesis), `:328-331` (gate) |
+| F2 | minor | Tap-typing pools shrunk: `findWordCompletions` iterates `commonWords` (now 100 in default APK mode) then `top5000` (now 3,000); `findFuzzyMatches` slices `commonWords` to 200 but it only holds 100. Repurposing the sets as tier ranks starved the readers. | **FIXED** (35cbaee3) | `web_demo/demo/index.html:3105-3120`, `:3166`; sets built at `web_demo/swipe-vocabulary.js:164-165` |
+| F3 | cosmetic | `removePersonalWord` → `unboostWord` deletes from `wordFreq`/`commonWords`/`top5000` but never removes the word from (or invalidates) the masking trie — removed word stays beam-reachable until page reload. | **FIXED** (35cbaee3) | `web_demo/custom-dictionary.js:291-298`, `:204-217`; no `trieRoot` touch |
+| F4 | pre-existing | `applyContractionFixup` rewrites PAIRED contraction bases unconditionally (`well`→`we'll`, `were`→`we're`); production skips paired bases via `contractionPairings` (`OptimizedVocabulary.kt:463-466`, v1.2.2 fix). **Scope WIDENED by the rework**: the same fixup now also runs on CTC suggestion chips and on auto-insert for all three engines. | **FIXED** (35cbaee3) | `web_demo/demo/index.html:1976-1984` (fixup), `:1803` (CTC chips), `:1954` (auto-insert); `web_demo/contractions_en.json:89-90` |
 
 ## Rework regression check (transformer path): NO REGRESSION
 
@@ -27,8 +27,8 @@ The CTC path is **fully independent** of `SwipeVocabulary`: `CtcTrie` over `ctc_
 
 | Id | Sev | New finding | Status |
 |---|---|---|---|
-| F5 | minor | CTC engines ignore custom/personal words entirely — the 147k lexicon is fixed at blob-build time with no insertion API, so a word added via the demo's personal-dictionary UI is unreachable whenever a CTC engine is selected. Demo-only engines, but the UI doesn't say so. (`ctc-engine.js:211-343`; only `swipeVocabulary` gets custom words) | **FIXED** (`fix(web-demo): remediate F1-F6`) |
-| F6 | cosmetic | README overclaims "there is no CDN dependency" (`web_demo/README.md:12`) while the page still pulls Tailwind from `cdn.tailwindcss.com` (`demo/index.html:7`) — already logged as a follow-up in `memory/todo.md` by 62c9419f, but the README asserts the opposite. | **FIXED** (`fix(web-demo): remediate F1-F6`) |
+| F5 | minor | CTC engines ignore custom/personal words entirely — the 147k lexicon is fixed at blob-build time with no insertion API, so a word added via the demo's personal-dictionary UI is unreachable whenever a CTC engine is selected. Demo-only engines, but the UI doesn't say so. (`ctc-engine.js:211-343`; only `swipeVocabulary` gets custom words) | **FIXED** (35cbaee3) |
+| F6 | cosmetic | README overclaims "there is no CDN dependency" (`web_demo/README.md:12`) while the page still pulls Tailwind from `cdn.tailwindcss.com` (`demo/index.html:7`) — already logged as a follow-up in `memory/todo.md` by 62c9419f, but the README asserts the opposite. | **FIXED** (35cbaee3) |
 
 **Sweep-test claims spot-check (1663e4bf): sound.** `browser_test.mjs` replays the same synthetic trajectories `ctc_reference.py` decoded, through the production entry point `window.processSwipe`. Parity = featurizer elementwise vs Python float32 (`results.json`: maxAbsDiff **0**) + beam top-1 string, full top-8 ordering, and greedy string vs Python (3/3 words × both engines all match; maxScoreDiff ~2e-6). Honest caveats are in-file: the beam comparison runs on browser-WASM emissions vs native-Python emissions (end-to-end, not beam-isolated), and the transformer's 5/9 synthetic top-1 is labeled out-of-distribution, not a quality claim. `maxScoreDiff` stops accumulating at the first ordering mismatch (`browser_test.mjs:192-197`) — irrelevant while top-8 matches, but would under-report drift if it ever diverged.
 
@@ -45,7 +45,7 @@ Per the todo record: no workflow change needed (`deploy-web-demo.yml` already re
 5. **F3** — on `removePersonalWord`, set `swipeVocabulary.trieRoot = null` (lazy rebuild on next swipe) — cheaper than implementing trie node deletion.
 6. **F6** — reword the README claim to "no CDN dependency for models/runtime; Tailwind styling still loads from CDN (follow-up filed)" or land the Tailwind vendoring follow-up and keep the claim.
 
-## Remediation landed (2026-08-11, `fix(web-demo): remediate F1-F6`)
+## Remediation landed (2026-08-11, 35cbaee3)
 
 **F1 — scale-aware frequency handling** (`swipe-vocabulary.js`). `SwipeVocabulary`
 now records which scale `wordFreq` is on (`freqScale`: `'normalized'` for the
