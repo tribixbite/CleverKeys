@@ -1,6 +1,6 @@
 # CleverKeys TODO
 
-## 🟡 IN PROGRESS — CTC on-device latency measurement (G3) (2026-08-08)
+## ✅ DONE — CTC on-device latency measurement (G3) (2026-08-11)
 
 `src/androidTest/kotlin/tribixbite/cleverkeys/swipe/ctc/CtcOnnxLatencyBenchmarkTest.kt` +
 `src/androidTest/assets/ctc_bench/*.onnx` (4 models, 11 MB, **androidTest APK only** —
@@ -18,11 +18,56 @@ real bundled 98k `en_enhanced.json` trie at the tunedV2/E1 preset.
       this box reads 14–22 % high, ratios preserved). Trie build **90 ms**, beam@100 mean
       **7.3 ms** (p90 12.6), NN+beam total mean **9.6 ms**, greedy + beam top-1 both `keyboard`.
       ⇒ well inside the 100–300 ms neural budget on desktop; on-device number still needed.
-- [ ] **BLOCKED: run on emulator.wtf.** `EW_API_TOKEN` is NOT set in this environment and
-      `ew-cli` is not installed here (the skill's install is on the Termux device). Exact
-      command is in the test's KDoc header; re-run there:
-      `EW_VERSION=1.3.4 ew-cli --app build/outputs/apk/debug/CleverKeys-*-x86_64.apk --test build/outputs/apk/androidTest/debug/CleverKeys-debug-androidTest.apk --outputs-dir ~/ew-output --timeout 40m --device model=Pixel7,version=34 --use-orchestrator --test-targets "class tribixbite.cleverkeys.swipe.ctc.CtcOnnxLatencyBenchmarkTest"`
-      then pull mean/p50/p90/p99 from the `CtcLatencyBench` logcat lines in `~/ew-output`.
+- [x] **RAN on emulator.wtf** — Pixel7/API 34, ew-cli 1.3.4, orchestrator, 2026-08-11,
+      run `66333372-bdaa-4981-9f98-49a3fb21e71c` (`--outputs logcat` is REQUIRED, otherwise
+      only `results.xml` is pulled and the numbers are lost). **2/2 tests PASSED.**
+      One test-only fix was needed first: the optimized-graph cache must go to
+      `getInstrumentation().targetContext.cacheDir`, not `.context.cacheDir` — instrumentation
+      runs inside the app-under-test's process/uid, so writing to the *test* package's data dir
+      fails and ORT aborts session creation with
+      `ORT_FAIL … SaveToOrtFormat Failed to save ORT format model to file`.
+
+      **Encoder, `session.run` + read of `log_emissions`, n=300 each (ms):**
+
+      | model | production (XNNPACK@2) mean / p50 / p90 / p99 | cpu-1thread mean / p50 / p90 / p99 | desktop cpu-1thread | load ms |
+      |---|---|---|---|---|
+      | `ch128_s1234`        | **0.555** / 0.551 / 0.570 / 0.611 | **0.774** / 0.772 / 0.784 / 0.802 | 0.554 | 17.4 |
+      | `ch192_s1234`        | **0.919** / 0.914 / 0.930 / 0.973 | **1.435** / 1.432 / 1.448 / 1.484 | 1.001 | 20.5 |
+      | `fast_resbn80_s1234` | **0.303** / 0.301 / 0.309 / 0.322 | **0.388** / 0.386 / 0.395 / 0.435 | 0.257 | 10.1 |
+      | `fast_resbn72_s1234` | **0.265** / 0.263 / 0.271 / 0.281 | **0.347** / 0.343 / 0.355 / 0.395 | 0.211 | 8.7 |
+
+      XNNPACK@2 was really acquired for all four (no `XNNPACK unavailable` fallback in logcat);
+      it beats the 1-thread CPU protocol by 1.3–1.6×. On the comparable 1-thread column the
+      emulator reads 1.4–1.6× the WSL desktop and 1.6–1.9× the PHASE_F laptop — ratios between
+      models are preserved everywhere.
+
+      **Full path (ch128 + XNNPACK, featurize→NN→slice→beam@100 over the real 98,081-word
+      `en_enhanced.json` trie, tunedV2/E1 preset, n=30, ms):**
+
+      | stage | mean | p50 | p90 | p99 |
+      |---|---|---|---|---|
+      | featurize | 0.121 | 0.122 | 0.124 | 0.126 |
+      | NN | 1.017 | 1.023 | 1.039 | 1.057 |
+      | slice | 0.006 | 0.006 | 0.006 | 0.008 |
+      | beam@100 | 23.131 | 18.873 | 40.852 | 45.958 |
+      | **TOTAL** | **24.276** | 20.038 | **41.954** | 47.138 |
+
+      Top-1 `keyboard` (7.030), slate `keyboard, keyboards, keyword, keyboardist, keynotes,
+      keyboarding, keywords, keyholes` — same top-1 as desktop. ⇒ **G3 answered: the whole
+      post-gesture path costs ~24 ms mean / ~42 ms p90 on an x86_64 emulator, comfortably
+      inside the 100–300 ms neural budget.**
+
+      **D1 (ch128) CONFIRMED, with a caveat about the axis it was argued on:** the encoder is
+      only ~4 % of the path; the beam is ~95 %. The entire spread between the four candidates
+      (0.265→0.919 ms) is smaller than one p50→p90 swing of the beam, so encoder latency is
+      *not* a real differentiator on-device — ch128 stands on accuracy, and even ch192 would
+      have been affordable. If the path ever needs to get cheaper, cut beam width, not the encoder.
+
+      **Anomaly worth an integration follow-up:** the trie build (read + `org.json` parse of the
+      1.8 MB `en_enhanced.json`, then `loadStrippingNonAlphabet`) took **2001 ms** on-device vs
+      90 ms on desktop — a 22× blow-up, one-off per process but far too slow to sit on a
+      keyboard's startup path. The adapter must build it lazily/off-thread, or ship a
+      precompiled trie blob (the web demo's front-coded format is the obvious precedent).
 
 ## ✅ DONE — web demo CTC engine switcher (2026-08-08)
 

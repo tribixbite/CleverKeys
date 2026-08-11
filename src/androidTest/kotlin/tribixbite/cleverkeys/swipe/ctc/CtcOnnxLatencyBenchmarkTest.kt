@@ -192,7 +192,15 @@ class CtcOnnxLatencyBenchmarkTest {
             SessionConfig.PRODUCTION -> {
                 opts.setIntraOpNumThreads(0) // auto-detect first, exactly as ModelLoader does
                 try {
-                    val cacheDir = InstrumentationRegistry.getInstrumentation().context.cacheDir
+                    // MUST be the TARGET app's cacheDir, not the test APK's: instrumentation runs
+                    // inside the app-under-test process (uid of `tribixbite.cleverkeys.debug`), so
+                    // `getInstrumentation().context.cacheDir` — which points at
+                    // `…/tribixbite.cleverkeys.debug.test/cache`, owned by a different uid — is
+                    // NOT writable and ORT dies with
+                    // "ORT_FAIL … SaveToOrtFormat Failed to save ORT format model to file".
+                    // Production's ModelLoader caches into the app's own cacheDir, which is what
+                    // targetContext gives us, so this is also the faithful mirror.
+                    val cacheDir = InstrumentationRegistry.getInstrumentation().targetContext.cacheDir
                     opts.setOptimizedModelFilePath(File(cacheDir, "ctc_bench_$cacheKey.ort").absolutePath)
                 } catch (e: Exception) {
                     Log.w(TAG, "optimized-model cache unavailable ($cacheKey): ${e.message}")
