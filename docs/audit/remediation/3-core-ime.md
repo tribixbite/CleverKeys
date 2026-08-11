@@ -305,3 +305,41 @@ loudly) + PipelineCharacterizationTest 26/26; **FULL ew-cli suite 1453/1453, 0 s
   real-engine decode pin ("world" in top-3), seam commit + NEURAL_SWIPE tracking, password
   suppression on geo results, shift-capitalized commit, router re-pin on real KeyboardData,
   and a p95<150 ms warm decode gate (engine core is ~ms-scale; gate absorbs emulator noise).
+
+### Review findings (2026-08-11): steps 6-9 implementation audit
+
+Independent review of `949bdcf9..d0b242bd` against the Addendum above; every status
+re-verified at HEAD `62c9419f` (2026-08-11). Intervening commits are CTC-eval/context-LM
+work and touch the geo wiring only where noted (m-1).
+
+| # | Finding | Sev | Status @ HEAD |
+|---|---------|-----|---------------|
+| M-1 | Step-6 soak was skipped — steps 7-9 landed 2h41m after step 6, so the unified pipeline never soloed in the field | M | CLOSED-BY-EXPOSURE — not retroactively fixable; the unified+geo path now has ~3 weeks of field exposure (2026-07-21 → 08-11) with no pipeline regressions reported. Lesson: a declared soak gate must be *scheduled* (dated follow-up commit), not just intended. |
+| M-2 | Prewarm/decode race: `warmUpAsync` and `decodeAsync` share ONE `PredictionTaskRunner`, both via `cancelAndSubmit` (GeometricEngineAdapter.kt:73,:204,:246) — the `onStartInputView` prewarm (CleverKeysService.kt:687 → `IC.prewarmGeometricEngine`) can cancel an in-flight swipe decode → silently lost swipe on same-field restart. The decode callback also replays captured `ic`/`editorInfo` with no `isReplayInputStillCurrent`-style stale-field guard (contrast InputCoordinator.kt:461 on the neural replay path). | M | OPEN — undocumented, untested |
+| m-1 | Geo commits provenance-tagged `PredictionSource.NEURAL_SWIPE` (SuggestionHandler.kt:572); the oracle PINS the mislabel (GeometricSwipeOracleTest.kt:277) with no deliberately-wrong marker | m | OPEN, partially mitigated — post-review `295edc43` added `SuggestionOrigin.GEOMETRIC` for *bar* provenance in pure geometric mode (SuggestionProvenance.kt:57), but hybrid-mode geo results still show NEURAL_BEAM and commit-source tracking is unchanged; todo filing survives only as the hybrid-origin item (memory/todo.md:85) |
+| m-2 | Settings-import can set geo knobs outside UI ranges: adapter clamps 1..32 / 0..1 / 0..2 (GeometricEngineAdapter.kt:88-90) vs UI 3-15 / 0-0.4 / 0-0.8 (GeometricSettingsActivity.kt:98,:112,:126) — outside validated-floor territory and the slider can't display it | m | OPEN |
+| m-3 | "background re-warm on knob change" claim (spec §292, GeometricSettingsActivity.kt:46, commit `11e7f644`) oversold: `updateParameters` (:224-239) only writes Config+prefs; the adapter re-reads knobs per decode (:88-90) so the rebuild is lazy — first post-change swipe pays the 150-400 ms build (background thread, no jank) | m | OPEN — doc/comment fix |
+| m-4 | Contraction load-order comment (GeometricEngineAdapter.kt:146-149) misleads: base `loadMappings()` (English contractions.bin) loads FIRST, and earlier-wins semantics (ContractionManager.kt:161-163) mean it *shadows* same-key language mappings — the comment claims the active language takes precedence | m | OPEN — comment fix |
+| m-5 | Three oracle parity tests soft-skip via `assumeTrue` on non-empty geo predictions (GeometricSwipeOracleTest.kt:265,:292,:320) — a decode-to-empty regression silently skips them | m | OPEN — mitigated by the hard-asserting `oracle_geo_dvorakSwipe_yieldsTargetWord` (:239) |
+| n-1 | Possessive en-gate (SuggestionHandler.kt:485-495, `b2d7b908`) changed the NEURAL path too — fr/es-on-QWERTY users lose possessive augmentation. Correct fix, but no test pins either side of the gate | n | OPEN — note + pin wanted |
+| n-2 | Non-QWERTY geo swipes flow into `SwipeMLData` via the shared `beginSwipeCapture` (InputCoordinator.kt:487-521; called from both paths :557,:621) | n | OPEN — CONFIRMED UNTAGGED: `SwipeMLData` carries only trace/word/screen-dims/`collection_source` (ml/SwipeMLData.kt:20-30, `toJSON` :131-143) and `SwipeMLDataStore` persists only that JSON (:96-101) — NO layout or engine field anywhere, so non-QWERTY geo traces are indistinguishable from QWERTY neural traces in ML exports and would pollute the QWERTY-trained training corpus |
+
+**Positives**: content-hash dictionary versioning (adapter :49,:432-435) is *better* than the
+spec's ContentObserver proposal (mutations invalidate without wiring); the mode enum is a
+strict superset of the spec's reserved boolean; the engine core is untouched, so the measured
+accuracy floors remain valid; no cross-engine score comparison (comparability respected); and
+strong self-auditing — `b2d7b908`/`d0b242bd` each found and fixed their own latent
+multilingual bugs before field reports. Overall implementation grade: **A-**.
+
+**Recommended actions** (by severity):
+1. **M-2**: separate runner slot for warmUp (or submit-only-if-idle prewarm) + an
+   `isReplayInputStillCurrent` guard in the geo decode callback; pin both with an oracle test.
+2. **n-2**: add `layout`/`engine` fields to `SwipeMLData` + export JSON (legacy rows default
+   `qwerty`/`neural`) before non-QWERTY trace collection accumulates.
+3. **m-2**: tighten adapter clamps to the UI ranges (3..15 / 0..0.4 / 0..0.8), or clamp at
+   settings-import validation.
+4. **m-1/m-3/m-4** comment+doc fixes: mark the oracle NEURAL_SWIPE pin deliberately-wrong,
+   correct the re-warm claim (spec §292 + activity header), fix the contraction load-order
+   comment; optionally add a geo commit source.
+5. **m-5/n-1**: add an empty-decode canary (or harden one assumeTrue) + pin the possessive
+   en-gate on both sides.
