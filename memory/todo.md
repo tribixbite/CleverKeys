@@ -19,9 +19,11 @@ detail).
 - [x] **m-4** contraction load-order comment corrected (English base shadows, earlier-wins)
 - [x] **m-5 / m-1 / n-1** oracle `assumeTrue` → hard asserts; deliberately-wrong marker on the
       NEURAL_SWIPE commit-source pin; possessive en-gate pinned on both sides
-- [ ] **Instrumented gate still owed**: run ew-cli for `GeometricSwipeOracleTest` (2 NEW race
-      tests + 3 hardened parity tests) and `SwipeMLDataStoreTest` (1 NEW legacy-row test +
-      2 augmented JSON tests). Compiled only this round.
+- [x] **Instrumented gate PAID (2026-08-11)**: ew-cli run `78ff4561-8285-4c7d-b976-de7caf86cb86`
+      on Pixel7 API 34 — `GeometricSwipeOracleTest` **10/10** (incl. the 2 NEW M-2 race pins +
+      3 hardened parity tests + the m-1 marker) and `SwipeMLDataStoreTest` **38/38** (incl. the
+      NEW legacy-row test + 2 augmented JSON tests) = **48/48, 0 failed, 0 ignored**, and zero
+      `AssumptionViolated` lines (proves the `assumeTrue`→assert hardening really asserts).
 - [ ] m-1 remains PARTIAL by design — geo commits are still tracked as `PredictionSource.NEURAL_SWIPE`
       (the provenance refactor is the separate hybrid-origin item below)
 

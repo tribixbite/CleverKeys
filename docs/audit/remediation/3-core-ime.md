@@ -348,8 +348,9 @@ multilingual bugs before field reports. Overall implementation grade: **A-**.
 
 All eight rows above are closed (m-1 PARTIAL by design — the label itself is out of scope).
 Gates: `compileDebugKotlin` + `compileDebugAndroidTestKotlin` clean; `runPureTests`
-**1876/1876**; `runMockTests` **299/299**. Instrumented tests were compiled but NOT executed
-this round — see "instrumented follow-up" below.
+**1876/1876**; `runMockTests` **299/299**. The instrumented tests were compiled but not
+executed in the `fb86a641` round; they were run and went green on 2026-08-11 — **48/48** on
+Pixel7 API 34 — see "instrumented follow-up" below.
 
 **M-2 fix — two-slot task runner + stale-field guard.** `PredictionTaskRunner`
 (`InputCoordinator.kt`) now tracks a FOREGROUND and a BACKGROUND in-flight task on the SAME
@@ -399,9 +400,30 @@ state — no new locks, no new races):
   `SwipeMLDataStoreTest` (instrumented, +1 legacy-row test, +assertions on the two existing
   JSON tests).
 
-**Instrumented follow-up (not run this round).** New/changed instrumented tests that a later
-ew-cli gate must execute: `GeometricSwipeOracleTest` —
-`oracle_geo_prewarmDuringDecode_doesNotCancelDecode` (NEW),
-`oracle_geo_newerDecodeSupersedesOlder` (NEW), plus the three m-5 hardened parity tests and
-the m-1 marker; `SwipeMLDataStoreTest` — `testSwipeMLDataFromLegacyJSONWithoutProvenance`
-(NEW) and the two provenance-augmented JSON tests.
+**Instrumented follow-up — RUN AND GREEN (2026-08-11).** The owed ew-cli gate executed on
+Pixel7 API 34 (`--use-orchestrator`, ew-cli 1.3.4), run
+`78ff4561-8285-4c7d-b976-de7caf86cb86`:
+
+| Class | Tests | Result |
+|---|---|---|
+| `GeometricSwipeOracleTest` | 10 | 10 passed |
+| `SwipeMLDataStoreTest` | 38 | 38 passed |
+| **Total** | **48** | **48 passed, 0 failed, 0 ignored** |
+
+Every test the audit owed executed and passed: the two NEW M-2 race pins
+(`oracle_geo_prewarmDuringDecode_doesNotCancelDecode` — a prewarm issued mid-cold-decode no
+longer cancels it; `oracle_geo_newerDecodeSupersedesOlder` — last-swipe-wins is intact and the
+superseded callback never fires), the three m-5 hardened parity tests
+(`oracle_geo_shiftAtStart_capitalizesCommit`, `oracle_geo_contractionAlias_displaysApostropheForm`,
+`oracle_geo_pairedBase_keepsWordAndInjectsVariant`), the m-1 marker, the NEW n-2 legacy-row
+test (`testSwipeMLDataFromLegacyJSONWithoutProvenance` — pre-provenance rows read `unknown`
+rather than throwing), and the two provenance-augmented JSON tests. The run logged **zero**
+`AssumptionViolated` lines, which is the positive proof that the m-5 `assumeTrue` → hard-assert
+conversion actually asserts instead of silently skipping.
+
+Gate caveat for whoever reruns this: `--outputs logcat` is an allowlist that REPLACES ew-cli's
+default `merged_results_xml,coverage,pulled_dirs`, so that invocation writes no `results.xml`
+and a stale one from an earlier run stays in `--outputs-dir`. Counts above were taken from the
+run's logcat (`TestRunner: run finished: 48 tests, 0 failed, 0 ignored`) plus ew-cli's own
+`All tests passed`. Use `--outputs merged_results_xml,logcat` next time; noted in
+`.claude/skills/ew-cli-testing.md`.

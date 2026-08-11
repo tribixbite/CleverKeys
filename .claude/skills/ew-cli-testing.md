@@ -9,9 +9,15 @@ Use this skill when running instrumented tests on emulator.wtf cloud infrastruct
 - **`--device model=Pixel7,version=34`**: ALWAYS use API 34+. The APK has x86_64 native ONNX
   libraries and API 30 emulators are 32-bit x86 only — causes ABI mismatch install failure.
 - **`--outputs-dir ~/ew-output`**: ALWAYS. Must exist and be under home dir (Termux restricts /tmp).
-- **`--outputs logcat`**: REQUIRED whenever the payload is `Log.i` output (benchmarks,
-  instrumented measurement harnesses). Without it ew-cli downloads only `results.xml` and the
-  logcat is never pulled — the run "passes" and the numbers are gone.
+- **`--outputs merged_results_xml,logcat`**: use whenever the payload is `Log.i` output
+  (benchmarks, instrumented measurement harnesses). By default ew-cli fetches
+  `merged_results_xml,coverage,pulled_dirs` and the logcat is never pulled — the run "passes"
+  and the numbers are gone. **`--outputs` is an allowlist that REPLACES the default set, not
+  an addition to it**: bare `--outputs logcat` downloads logcat ONLY and `results.xml` is
+  never written, so a stale `results.xml` from an earlier run silently sits in `--outputs-dir`
+  and will be misread as this run's result (hit 2026-08-11 on the WP9 owed gate). Always
+  comma-list `merged_results_xml` alongside `logcat`. Verdict of last resort: ew-cli's own
+  `All tests passed` line plus the logcat's `TestRunner: run finished: N tests, 0 failed`.
 - **Debug APK for `--app`**: ALWAYS use debug APK, NOT release. Both `--app` and
   `--test` are debug-signed automatically (committed `debug.keystore`, no env
   needed). The release APK has a different signature → "Permission Denial:
@@ -115,6 +121,25 @@ ew-cli \
 ```
 
 The first class needs the `class ` prefix; subsequent ones are bare FQCNs. Format mirrors `am instrument -e class A,B,C` semantics.
+
+## Reading Per-Class Counts Out of logcat (orchestrator doubles every test)
+
+When `results.xml` is missing (see the `--outputs` trap above), the logcat is the fallback —
+but the orchestrator logs each test **twice**. It first does a *collection* pass that emits a
+`started:`/`finished:` pair for every test within milliseconds (`run started: 48 tests` →
+`run finished: 48 tests` ~50 ms later, nothing actually executed), then runs each test in its
+own process (48 × `run started: 1 tests`). So raw `started:` greps report exactly 2× the real
+test count. Count DISTINCT names per class instead:
+
+```bash
+rg -o 'TestRunner: finished: (\S+)\(tribixbite\.cleverkeys\.MyTest\)' -r '$1' logcat.txt | sort -u | wc -l
+# every orchestrated process must report 0 failed / 0 ignored:
+rg -o 'run finished: (\d+) tests, (\d+) failed, (\d+) ignored' -r 'tests=$1 failed=$2 ignored=$3' logcat.txt | sort | uniq -c
+```
+
+A test hardened from `assumeTrue` to a hard assert should also leave **zero**
+`AssumptionViolated` lines — grep for them to prove the assertion path really ran rather than
+silently skipping.
 
 ## Compose UI Tests
 
