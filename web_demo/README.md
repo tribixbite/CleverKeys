@@ -9,8 +9,11 @@ one shared gesture capture, selected from the **Engine** dropdown:
 | CTC accurate (ch128) | `demo/models/ch128_s1234.onnx` (2.8 MB) | 146,964-word `ctc_vocab.bin` | FUTO single-stream Viterbi trie beam |
 | CTC fast (resbn80) | `demo/models/fast_resbn80_s1234.onnx` (1.1 MB) | same | same |
 
-Everything is served from the repo — there is no CDN dependency.
-onnxruntime-web 1.18.0 is vendored under `demo/vendor/ort/`.
+Every model, lexicon and runtime is served from the repo — no CDN takes part in
+decoding. onnxruntime-web 1.18.0 is vendored under `demo/vendor/ort/`. One CDN
+dependency does remain, and it is cosmetic: `demo/index.html` still pulls
+Tailwind from `cdn.tailwindcss.com` for styling. Vendoring it is a filed
+follow-up (`memory/todo.md`).
 
 ## Run it
 

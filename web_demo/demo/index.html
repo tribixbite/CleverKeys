@@ -787,6 +787,7 @@
                 await Promise.all([
                     loadVocabulary(),
                     loadContractions(),
+                    loadPairedContractionBases(),
                 ]);
 
                 // Register contraction aliases with the vocabulary so the
@@ -834,6 +835,11 @@
             // Contractions are engine-independent (they rewrite the final word),
             // so load them even when the transformer path is down.
             if (!contractionMap) await loadContractions();
+            if (!pairedContractionBases) await loadPairedContractionBases();
+
+            // Personal/custom words the user already saved must reach the CTC
+            // lexicon too — the transformer path gets them via SwipeVocabulary.
+            seedCtcCustomWords();
 
             if (!transformerAvailable) {
                 // Default the dropdown to a working engine and warm it, so the
@@ -1020,9 +1026,13 @@
             if (s1.length === 0) return s2.length;
             if (s2.length === 0) return s1.length;
             
-            // Use single array optimization
-            const prevRow = new Array(s2.length + 1);
-            const currRow = new Array(s2.length + 1);
+            // Use single array optimization.
+            // `let`, not `const`: the two rows are SWAPPED at the end of every
+            // outer iteration below — as consts that swap threw
+            // "Assignment to constant variable" on every call, which took the
+            // whole tap-prediction path down with it (findFuzzyMatches).
+            let prevRow = new Array(s2.length + 1);
+            let currRow = new Array(s2.length + 1);
             
             // Initialize first row
             for (let j = 0; j <= s2.length; j++) {
@@ -1688,6 +1698,56 @@
         }
 
         /**
+         * Overlay one custom/personal word onto the CTC lexicon trie so the
+         * FUTO beam can actually reach it. The CTC engines carry their own
+         * 147k-word blob (`ctc_vocab.bin`) which knows nothing about
+         * SwipeVocabulary, so every custom-word add has to be mirrored here.
+         * No-op until the lexicon has loaded.
+         * @param {string} word
+         * @returns {boolean} true when the lexicon changed
+         */
+        function insertCustomWordIntoCtc(word) {
+            if (!ctcRuntime || !ctcRuntime.trie || typeof ctcRuntime.trie.insert !== 'function') {
+                return false;
+            }
+            return ctcRuntime.trie.insert(word);
+        }
+
+        /**
+         * Undo insertCustomWordIntoCtc — blob words keep their shipped
+         * frequency, words we introduced stop being decodable.
+         * @param {string} word
+         * @returns {boolean}
+         */
+        function removeCustomWordFromCtc(word) {
+            if (!ctcRuntime || !ctcRuntime.trie || typeof ctcRuntime.trie.remove !== 'function') {
+                return false;
+            }
+            return ctcRuntime.trie.remove(word);
+        }
+
+        /**
+         * Push every word the personal dictionary already holds into the CTC
+         * lexicon. Runs once after the lexicon loads, because localStorage
+         * words are merged into SwipeVocabulary before the CTC blob exists.
+         */
+        function seedCtcCustomWords() {
+            if (!ctcRuntime || !dictionaryManager) return;
+            const words = new Set([
+                ...dictionaryManager.personalWords,
+                ...dictionaryManager.customWords.keys(),
+                ...dictionaryManager.androidDictionary.keys(),
+            ]);
+            let inserted = 0;
+            for (const word of words) {
+                if (insertCustomWordIntoCtc(word)) inserted++;
+            }
+            if (inserted > 0) {
+                console.log(`Seeded ${inserted} custom words into the CTC lexicon`);
+            }
+        }
+
+        /**
          * Create the ONNX session for an engine on first use. Sessions are
          * lazy so a visitor who never leaves the default engine never pays to
          * download the other models.
@@ -1963,6 +2023,23 @@
         // on a prediction before it gets shown or inserted. Keeps the output in
         // sync with what the on-device keyboard produces.
         let contractionMap = null;
+        /**
+         * Bases that are themselves dictionary words ("well", "were", "hell",
+         * "wed", "shed", "hes"). Production keeps these UNREWRITTEN — a swipe
+         * that decodes to "well" means the word "well", not the contraction of
+         * "we will" (OptimizedVocabulary.kt:463-466, the v1.2.2 fix). Without
+         * the skip the demo can never produce those words at all.
+         * @type {?Set<string>}
+         */
+        let pairedContractionBases = null;
+        // Last-resort fallback if the pairings asset can't be fetched: the
+        // exact intersection of contraction_pairings.json with the shipped
+        // contractions_en.json, so the rewrite stays correct for the map we
+        // actually ship even with no network.
+        const PAIRED_BASES_FALLBACK = [
+            'editors', 'girls', 'hell', 'hes', 'intl', 'readers', 'shed',
+            'shell', 'shes', 'states', 'wed', 'well', 'were', 'whore',
+        ];
         async function loadContractions() {
             try {
                 const r = await fetch('contractions_en.json', { cache: 'force-cache' });
@@ -1973,14 +2050,38 @@
                 console.warn('Contractions load failed:', e?.message);
             }
         }
+        async function loadPairedContractionBases() {
+            try {
+                const r = await fetch('contraction_pairings_en.json', { cache: 'force-cache' });
+                if (r.ok) {
+                    const data = await r.json();
+                    if (Array.isArray(data?.bases) && data.bases.length > 0) {
+                        pairedContractionBases = new Set(data.bases);
+                        console.log(`Loaded ${pairedContractionBases.size} paired contraction bases`);
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.warn('Paired contraction bases load failed:', e?.message);
+            }
+            pairedContractionBases = new Set(PAIRED_BASES_FALLBACK);
+            console.warn('Using built-in paired contraction base fallback ' +
+                         `(${pairedContractionBases.size} entries)`);
+        }
         function applyContractionFixup(word) {
             if (!word || !contractionMap) return word;
             const lower = word.toLowerCase();
+            // Capitalize 'i' → 'I' to match on-device behaviour. Checked FIRST:
+            // "i" is also a paired contraction base ("i'd"/"i'll"/"i've"), and
+            // capitalization has nothing to do with the contraction map.
+            if (lower === 'i') return 'I';
+            // Paired bases are real words — never swap them for a contraction.
+            if (pairedContractionBases && pairedContractionBases.has(lower)) {
+                return word;
+            }
             if (Object.prototype.hasOwnProperty.call(contractionMap, lower)) {
                 return contractionMap[lower];
             }
-            // Capitalize 'i' → 'I' to match on-device behaviour
-            if (lower === 'i') return 'I';
             return word;
         }
         
@@ -2703,6 +2804,15 @@
                 swipeVocabulary.insertWordIntoTrie(cleanWord);
             }
 
+            // The tap-typing pools are derived from wordFreq — rebuild lazily.
+            if (typeof swipeVocabulary.invalidateTapPools === 'function') {
+                swipeVocabulary.invalidateTapPools();
+            }
+
+            // Mirror into the CTC lexicon so the word is reachable on every
+            // engine, not just the transformer.
+            insertCustomWordIntoCtc(cleanWord);
+
             // Update words by length structure if it exists
             if (swipeVocabulary.wordsByLength) {
                 const length = cleanWord.length;
@@ -2872,7 +2982,10 @@
         
         function removePersonalWord(word) {
             if (dictionaryManager) {
+                // Drops it from wordFreq + the masking trie + the tap pools…
                 dictionaryManager.removePersonalWord(word);
+                // …and from the CTC lexicon, which the manager can't see.
+                removeCustomWordFromCtc(word);
                 updateDictionaryStats();
                 updatePersonalWordsList();
             }
@@ -2895,7 +3008,15 @@
             if (!dictionaryManager) return;
             
             if (confirm('Are you sure you want to clear all custom and personal words?')) {
+                // Snapshot before clearAll() empties the manager — the CTC
+                // lexicon overlay has to be undone word by word.
+                const words = new Set([
+                    ...dictionaryManager.personalWords,
+                    ...dictionaryManager.customWords.keys(),
+                    ...dictionaryManager.androidDictionary.keys(),
+                ]);
                 dictionaryManager.clearAll();
+                for (const word of words) removeCustomWordFromCtc(word);
                 updateDictionaryStats();
                 updatePersonalWordsList();
                 alert('Custom dictionary cleared!');
@@ -3094,38 +3215,37 @@
             displayTapPredictions(predictions, typedWord);
         }
         
-        // Find word completions that start with typed text
+        // Find word completions that start with typed text.
+        //
+        // Reads the DEDICATED tap pool (top-20k of wordFreq, freq-descending),
+        // NOT commonWords/top5000: those two are production TIER-RANK sets
+        // (100 and 3000 entries) and completing from them starves the
+        // suggestions — the pre-fix code could only ever complete from 3,100
+        // words, and only 100 of them on the first pass.
         function findWordCompletions(prefix) {
             if (!swipeVocabulary || !swipeVocabulary.isLoaded) return [];
-            
+            if (typeof swipeVocabulary.ensureTapPools !== 'function') return [];
+            swipeVocabulary.ensureTapPools();
+
             const completions = [];
             const prefixLower = prefix.toLowerCase();
-            
-            // Check common words first
-            for (const word of swipeVocabulary.commonWords) {
+
+            // The pool is frequency-descending, so the first 10 hits ARE the 10
+            // most frequent completions; no post-sort needed for correctness,
+            // but keep it so a pool built from an unsorted source stays right.
+            for (const word of swipeVocabulary.tapCompletionPool) {
                 if (word.startsWith(prefixLower) && word !== prefixLower) {
                     completions.push(word);
                     if (completions.length >= 10) break;
                 }
             }
-            
-            // Check top5000 if we need more
-            if (completions.length < 10) {
-                for (const word of swipeVocabulary.top5000) {
-                    if (word.startsWith(prefixLower) && word !== prefixLower && !completions.includes(word)) {
-                        completions.push(word);
-                        if (completions.length >= 10) break;
-                    }
-                }
-            }
-            
-            // Sort by frequency
+
             completions.sort((a, b) => {
                 const freqA = swipeVocabulary.getWordFrequency(a);
                 const freqB = swipeVocabulary.getWordFrequency(b);
                 return freqB - freqA;
             });
-            
+
             return completions.slice(0, 5);
         }
         
@@ -3155,16 +3275,20 @@
         // Find fuzzy matches for potential typos
         function findFuzzyMatches(typedWord) {
             if (!swipeVocabulary || !swipeVocabulary.isLoaded) return [];
-            
+            if (typeof swipeVocabulary.ensureTapPools !== 'function') return [];
+            swipeVocabulary.ensureTapPools();
+
             const matches = [];
             const typedLower = typedWord.toLowerCase();
-            
+
             // Check words of similar length (±1)
             const targetLength = typedWord.length;
-            
-            // Sample from common words to avoid performance issues
-            const wordsToCheck = Array.from(swipeVocabulary.commonWords).slice(0, 200);
-            
+
+            // Dedicated freq-descending pool (2,000 words). The old code sliced
+            // commonWords to 200, but commonWords holds only the 100 tier-2
+            // words — the slice was a no-op over a pool 20x too small.
+            const wordsToCheck = swipeVocabulary.tapFuzzyPool;
+
             for (const word of wordsToCheck) {
                 if (Math.abs(word.length - targetLength) <= 1) {
                     const distance = levenshteinDistance(typedLower, word);

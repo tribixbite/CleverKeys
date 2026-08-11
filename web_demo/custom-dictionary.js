@@ -199,7 +199,12 @@ class CustomDictionaryManager {
     }
 
     /**
-     * Remove boost from a word, restoring original frequency
+     * Remove boost from a word, restoring original frequency.
+     *
+     * A word we introduced ourselves is also pulled out of the beam-search
+     * masking trie and the tap pools — otherwise it stays decodable (and
+     * completable) until a page reload, which is exactly the state the user
+     * asked us to leave.
      */
     unboostWord(word) {
         if (!this.vocab || !this.vocab.isLoaded) return;
@@ -210,9 +215,17 @@ class CustomDictionaryManager {
             this.vocab.wordFreq.delete(word);
             this.vocab.commonWords.delete(word);
             this.vocab.top5000.delete(word);
+            // Must run AFTER the wordFreq delete: removeWordFromTrie refuses to
+            // unmap anything still reachable from wordFreq / contraction aliases.
+            if (typeof this.vocab.removeWordFromTrie === 'function') {
+                this.vocab.removeWordFromTrie(word);
+            }
         } else if (originalFreq !== undefined) {
             // Restore original frequency
             this.vocab.wordFreq.set(word, originalFreq);
+        }
+        if (typeof this.vocab.invalidateTapPools === 'function') {
+            this.vocab.invalidateTapPools();
         }
         this.originalFrequencies.delete(word);
     }
@@ -258,6 +271,17 @@ class CustomDictionaryManager {
             if (freq && freq > 1e-5) {
                 this.vocab.commonWords.add(word);
             }
+        }
+
+        // Keep the derived structures in sync: the masking trie (no-op while it
+        // is still unbuilt — ensureTrie will pick these words up from wordFreq)
+        // and the tap pools, which are rebuilt lazily from wordFreq.
+        if (typeof this.vocab.insertWordIntoTrie === 'function' && this.vocab.trieRoot) {
+            for (const word of this.androidDictionary.keys()) this.vocab.insertWordIntoTrie(word);
+            for (const word of this.customWords.keys()) this.vocab.insertWordIntoTrie(word);
+        }
+        if (typeof this.vocab.invalidateTapPools === 'function') {
+            this.vocab.invalidateTapPools();
         }
 
         console.log(`Merged ${merged} custom words into vocabulary`);

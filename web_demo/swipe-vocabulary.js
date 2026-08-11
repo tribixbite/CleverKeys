@@ -24,7 +24,17 @@ const PROD_FILTER = {
     // Hardcoded per-length minimum frequency floor (OptimizedVocabulary.kt:1081-1091); 9+ → 1e-9
     MIN_FREQ_BY_LENGTH: { 1: 1e-4, 2: 1e-5, 3: 1e-6, 4: 1e-6, 5: 1e-7, 6: 1e-7, 7: 1e-8, 8: 1e-8 },
     CONTRACTION_ALIAS_FREQ: 0.88, // contraction alias fallback WordInfo(0.88f, tier 2) (OptimizedVocabulary.kt:444-449)
+    // Lower clamp of the production frequency scale: OptimizedVocabulary.kt:1004-1006
+    // clamps (byteScore-128)/127 to >= 0.001, so every production frequency
+    // lives in [0.001, 1.0].
+    FREQ_FLOOR: 0.001,
 };
+
+// Tap-typing helper pools (F2). These are DEDICATED to the tap
+// completion/fuzzy helpers — they must never be conflated with `commonWords` /
+// `top5000`, which carry production TIER RANKS (100 / 3000) for the filter.
+const TAP_COMPLETION_POOL_SIZE = 20000; // prefix scan, freq-desc
+const TAP_FUZZY_POOL_SIZE = 2000;       // Levenshtein scan, freq-desc
 
 // Shared immutable empty set for missing trie prefixes (avoids per-call alloc).
 const EMPTY_SET = new Set();
@@ -48,6 +58,22 @@ class SwipeVocabulary {
         // Lazily-built prefix trie mirroring VocabularyTrie.kt — used by the
         // demo's beam search for logit masking (BeamSearchEngine.applyTrieMasking).
         this.trieRoot = null;
+        // Which scale `wordFreq` values live on:
+        //   'normalized'  — production scale, [0.001, 1.0] (byte score
+        //                   (raw-128)/127, or a dict mapped onto it at load)
+        //   'probability' — raw corpus probabilities (sum ~= 1 over the dict)
+        // The APK's configured min-frequency floor is only meaningful on the
+        // normalized scale, so filterPredictions gates on this. Default is the
+        // conservative one: callers that populate `wordFreq` directly (the
+        // demo's vocabulary_words.txt fallback) get no APK-scale floor applied.
+        this.freqScale = 'probability';
+        // Diagnostics for the probability → production-scale mapping (or null
+        // when no mapping was needed). Exposed for the headless smoke harness.
+        this.freqScaleInfo = null;
+        // Dedicated tap-typing pools (see ensureTapPools) — built lazily,
+        // invalidated whenever the vocabulary changes.
+        this.tapCompletionPool = null;
+        this.tapFuzzyPool = null;
     }
 
     /**
@@ -94,6 +120,69 @@ class SwipeVocabulary {
             node = node[ch] || (node[ch] = {});
         }
         node.$ = true;
+    }
+
+    /**
+     * Remove a word from the masking trie, pruning nodes that become empty.
+     *
+     * The trie is the union of `wordFreq` ∪ contraction aliases, so a word that
+     * is still reachable from either source is NEVER unmapped — that guard
+     * lives here rather than at the call sites so a caller cannot get it wrong.
+     * Removing a personal word therefore has to delete it from `wordFreq`
+     * first (CustomDictionaryManager.unboostWord does exactly that).
+     *
+     * @param {string} word
+     * @returns {boolean} true when the word was actually removed
+     */
+    removeWordFromTrie(word) {
+        if (!this.trieRoot || !word) return false;
+        const lower = word.toLowerCase();
+        if (this.wordFreq.has(lower)) return false;
+        if (this.contractions &&
+            Object.prototype.hasOwnProperty.call(this.contractions, lower)) {
+            return false;
+        }
+
+        // Walk down, recording the node chain so empty nodes can be pruned.
+        const chain = [this.trieRoot];
+        let node = this.trieRoot;
+        for (const ch of lower) {
+            node = node[ch];
+            if (!node) return false;
+            chain.push(node);
+        }
+        if (node.$ !== true) return false;
+        delete node.$;
+
+        // Prune bottom-up while a node has neither children nor an end marker.
+        for (let i = chain.length - 1; i >= 1; i--) {
+            if (Object.keys(chain[i]).length > 0) break;
+            delete chain[i - 1][lower[i - 1]];
+        }
+        return true;
+    }
+
+    /**
+     * Build the dedicated tap-typing pools: the top-N of `wordFreq` by
+     * frequency, freq-descending.
+     *
+     * These exist so the tap helpers stop borrowing `commonWords` / `top5000`,
+     * which are TIER-RANK sets (100 / 3000 entries, production parity) and far
+     * too small to complete from.
+     */
+    ensureTapPools() {
+        if (this.tapCompletionPool) return;
+        const sorted = Array.from(this.wordFreq.entries())
+            .sort((a, b) => b[1] - a[1])
+            .map((e) => e[0]);
+        this.tapCompletionPool = sorted.slice(0, TAP_COMPLETION_POOL_SIZE);
+        this.tapFuzzyPool = sorted.slice(0, TAP_FUZZY_POOL_SIZE);
+    }
+
+    /** Drop the tap pools so the next tap rebuilds them (vocabulary changed). */
+    invalidateTapPools() {
+        this.tapCompletionPool = null;
+        this.tapFuzzyPool = null;
     }
 
     /**
@@ -169,7 +258,12 @@ class SwipeVocabulary {
             // Production hardcoded per-length floor (OptimizedVocabulary.kt:1081-1091).
             this.minFreqByLength = { ...PROD_FILTER.MIN_FREQ_BY_LENGTH };
 
+            // Byte-score normalization above IS the production scale.
+            this.freqScale = 'normalized';
+            this.freqScaleInfo = null;
+
             this.trieRoot = null; // rebuild lazily on first beam search
+            this.invalidateTapPools();
             this.isLoaded = true;
             console.log(`Loaded ${this.wordFreq.size} words from flat-freq dict (production tiering)`);
             return true;
@@ -180,38 +274,103 @@ class SwipeVocabulary {
     }
 
     /**
-     * Load vocabulary from JSON file with frequency data
+     * Load vocabulary from JSON file with frequency data (the optional "full
+     * 150k" `swipe_vocabulary.json` mode).
+     *
+     * SCALE ADAPTATION — demo-only, deliberate divergence from production:
+     * this file ships RAW CORPUS PROBABILITIES (`the` = 5.4e-2 … rarest =
+     * 1.0e-8, summing to ~0.79 over 150,252 words), whereas production only
+     * ever sees the byte-score scale, where frequency = clamp((raw-128)/127,
+     * 0.001, 1.0) and en_enhanced's 98k words occupy [0.047, 1.0]. Two pieces
+     * of the ported filter are calibrated for that scale and are nonsense on
+     * probabilities:
+     *
+     *   1. the configured rare-word floor CONFIG_MIN_FREQ = 0.01 — only 6 of
+     *      150,252 probabilities clear it, so every tier-0 word (~143k) was
+     *      dropped and this mode was reduced to its ~12k tier-listed words;
+     *   2. the LINEAR frequency term in calculateScore — at p ~ 1e-6 the term
+     *      0.114·p is ~1e-7 against a confidence term of ~0.8, i.e. ranking
+     *      silently degenerated to confidence-only.
+     *
+     * So the probabilities are mapped ONCE, here, onto the production scale
+     * with a monotone log10 min-max transform: it is rank-preserving, lands in
+     * the same [0.001, 1.0] band as the byte-score clamp, and lets the rest of
+     * the pipeline (gate, boosts, linear score term, tap-pool ordering) run
+     * BYTE-FOR-BYTE the production code path with no per-dict branching. The
+     * shipped `min_frequency_by_length` floors are mapped through the same
+     * transform, so the dictionary author's per-length intent is preserved
+     * (they reject 9.2% of tier-0 words on the raw scale, 10.7% after mapping
+     * + the 0.01 config floor — versus 100% before this fix).
+     *
+     * NOT restored: the pre-a22b76ad mapping `log10(freq + 1e-10) / -10`. It
+     * did bring probabilities into ~[0,1], but it is rank-INVERTING (rarer
+     * words scored HIGHER), which is a bug, not a calibration.
      */
     async loadFromJSON(url) {
         try {
             console.log('Loading optimized vocabulary from:', url);
             const response = await fetch(url);
-            
+
             if (!response.ok) {
                 throw new Error(`Failed to load vocabulary: ${response.status}`);
             }
-            
+
             const data = await response.json();
             console.log('Vocabulary data loaded:', data.metadata);
-            
-            // Load word frequencies
-            this.wordFreq = new Map(Object.entries(data.word_frequencies));
-            
+
+            // Load word frequencies (raw probabilities as shipped)
+            const rawFreq = Object.entries(data.word_frequencies);
+            let pMin = Infinity;
+            let pMax = 0;
+            for (const [, p] of rawFreq) {
+                if (p > 0 && p < pMin) pMin = p;
+                if (p > pMax) pMax = p;
+            }
+
+            // A probability dict spans decades below 1.0; anything already in
+            // the production band is left untouched (defensive — a future
+            // `swipe_vocabulary.json` could ship normalized values).
+            const isProbabilityScale = pMax > 0 && pMax < PROD_FILTER.FREQ_FLOOR * 100;
+            const log10Min = Math.log10(pMin);
+            const decades = Math.log10(pMax) - log10Min;
+            const mappable = isProbabilityScale && Number.isFinite(decades) && decades > 0;
+            const toProdScale = (p) => (mappable
+                ? Math.min(1.0, Math.max((Math.log10(p) - log10Min) / decades, PROD_FILTER.FREQ_FLOOR))
+                : p);
+
+            this.wordFreq = new Map();
+            for (const [word, p] of rawFreq) {
+                this.wordFreq.set(word, toProdScale(p));
+            }
+            this.freqScale = mappable ? 'normalized' : 'probability';
+            this.freqScaleInfo = mappable
+                ? { source: 'probability', pMin, pMax, decades, words: rawFreq.length }
+                : null;
+
             // Load common words set for fast path
             this.commonWords = new Set(data.common_words);
-            
+
             // Load top 5000 for quick filtering
             this.top5000 = new Set(data.top_5000 || data.top5000);
-            
+
             // Load words by length
             this.wordsByLength = new Map();
             for (const [length, words] of Object.entries(data.words_by_length)) {
                 this.wordsByLength.set(parseInt(length), words);
             }
-            
+
             // Load configuration
             this.keyboardAdjacency = data.keyboard_adjacency;
-            this.minFreqByLength = data.min_frequency_by_length;
+            // Per-length floors ride the same transform as the frequencies they
+            // are compared against — otherwise the gate mixes two scales again.
+            this.minFreqByLength = null;
+            if (data.min_frequency_by_length) {
+                this.minFreqByLength = {};
+                for (const [k, v] of Object.entries(data.min_frequency_by_length)) {
+                    const floor = parseFloat(v);
+                    this.minFreqByLength[k] = Number.isFinite(floor) ? toProdScale(floor) : v;
+                }
+            }
 
             // Synthesize tiers from membership sets so the production-parity
             // scoring path works for the extended dict too (tier2 = common,
@@ -222,11 +381,15 @@ class SwipeVocabulary {
             }
 
             this.trieRoot = null; // rebuild lazily on first beam search
+            this.invalidateTapPools();
             this.isLoaded = true;
-            console.log(`Loaded ${this.wordFreq.size} words with frequency data`);
-            
+            console.log(`Loaded ${this.wordFreq.size} words with frequency data` +
+                        (mappable
+                            ? ` (probabilities ${pMin.toExponential(2)}..${pMax.toExponential(2)} mapped onto the production [${PROD_FILTER.FREQ_FLOOR}, 1.0] scale over ${decades.toFixed(2)} decades)`
+                            : ''));
+
             return true;
-            
+
         } catch (error) {
             console.error('Error loading vocabulary JSON:', error);
             this.loadFallback();
@@ -257,6 +420,11 @@ class SwipeVocabulary {
         this.top5000 = new Set(fallbackWords);
         this.tiers = new Map(fallbackWords.map((w, i) => [w, i < 10 ? 2 : 1]));
         this.trieRoot = null;
+        // Hand-assigned 1e-4-scale values — NOT the production byte-score
+        // scale, so the APK config floor must not be applied to them.
+        this.freqScale = 'probability';
+        this.freqScaleInfo = null;
+        this.invalidateTapPools();
         this.isLoaded = true;
     }
 
@@ -324,8 +492,17 @@ class SwipeVocabulary {
                 source = 'top5000';
             } else {
                 // Rare-word frequency gate: max(hardcoded floor, config floor)
-                // (OptimizedVocabulary.kt:484-499)
-                const effectiveMinFreq = Math.max(this.getMinFrequency(wordClean.length), PROD_FILTER.CONFIG_MIN_FREQ);
+                // (OptimizedVocabulary.kt:484-499).
+                // CONFIG_MIN_FREQ encodes AUTOCORRECT_MIN_FREQUENCY on the
+                // production byte-score scale; applying it to a dictionary that
+                // was never mapped onto that scale rejects the whole tail (see
+                // loadFromJSON). Dicts that ARE on it (flat-freq, and the full
+                // dict after its load-time mapping) get the production gate
+                // verbatim — on en_enhanced it rejects 0 of 98,140 words.
+                const configMinFreq = this.freqScale === 'normalized'
+                    ? PROD_FILTER.CONFIG_MIN_FREQ
+                    : 0;
+                const effectiveMinFreq = Math.max(this.getMinFrequency(wordClean.length), configMinFreq);
                 if (freq < effectiveMinFreq) {
                     continue;
                 }
@@ -359,6 +536,10 @@ class SwipeVocabulary {
      * Combined score from NN confidence and word frequency.
      * VocabularyUtils.calculateCombinedScore parity: frequency is used
      * linearly (already normalized to [0,1] at load) — no log scaling.
+     *
+     * The linear term only carries signal when `frequency` is on the
+     * production [0.001, 1.0] scale; that is why loadFromJSON maps raw
+     * probabilities onto it at load rather than log-scaling here.
      */
     calculateScore(confidence, frequency, boost = 1.0,
                    confidenceWeight = PROD_FILTER.CONFIDENCE_WEIGHT,

@@ -199,6 +199,20 @@
     const VOCAB_HEADER_LEN = 20;
 
     /**
+     * Frequency assigned to a user's custom/personal word when it is inserted
+     * into the lexicon trie. The blob's AOSP frequencies run 1..222 (median 50,
+     * p95 110), and the beam adds `lambda * log(freq + 1e-10)` to the final
+     * score — so 128 puts a personal word above ~97% of the lexicon without
+     * letting it outrank the true high-frequency words ("the" and friends sit
+     * at 200+). Deliberately NOT the maximum: a typo'd personal word should
+     * still lose to an obviously-intended common word.
+     */
+    const CUSTOM_WORD_FREQ = 128;
+
+    /** Node-array growth granularity for custom-word insertion. */
+    const NODE_GROWTH_CHUNK = 256;
+
+    /**
      * CSR trie over the 146,964-word a-z lexicon, built from the front-coded
      * blob produced by `web_demo/tools/build_ctc_vocab.py`.
      *
@@ -207,6 +221,14 @@
      * `nodeDepth` supply everything `futo_viterbi_beam` reads from `prefix`
      * (`prefix[-1]` and `len(prefix)`). Words are only materialised for the
      * handful of finalists, by walking `nodeParent` back to the root.
+     *
+     * CSR is immutable by construction, so custom words (the demo's personal
+     * dictionary) are supported by a small mutable overlay rather than a
+     * rebuild: node attribute arrays grow in place, and children added after
+     * build time live in `extraChildren` (node -> flat [char, target, ...]),
+     * which the beam consults only when the overlay is non-empty. Insert cost
+     * is O(word length) plus an occasional attribute-array copy; the 147k-word
+     * blob is never re-parsed.
      */
     class CtcTrie {
         /** @param {ArrayBuffer} buffer raw ctc_vocab.bin */
@@ -307,6 +329,156 @@
             /** @type {Int32Array} */ this.nodeParent = nodeParent;
             /** @type {Uint8Array} */ this.isWord = isWord;
             /** @type {Float64Array} */ this.logFreq = logFreq;
+
+            // ── custom-word overlay (empty for a freshly parsed blob) ───────
+            /** @type {number} node ids [0, staticNodeCount) come from the blob */
+            this.staticNodeCount = nodeCount;
+            /** @type {number} allocated capacity of the node attribute arrays */
+            this.capacity = nodeCount;
+            /** @type {?Map<number, number[]>} node -> flat [char, target, ...] */
+            this.extraChildren = null;
+            /**
+             * word -> {node, existed, prevLogFreq}. `existed` records whether
+             * the word was already a blob entry, so remove() restores rather
+             * than deletes it.
+             * @type {Map<string, {node:number, existed:boolean, prevLogFreq:number}>}
+             */
+            this.customEntries = new Map();
+        }
+
+        /**
+         * Child lookup that also sees post-build children.
+         * @param {number} node
+         * @param {number} charIdx 0..25
+         * @returns {number} child node id, or -1
+         */
+        findChild(node, charIdx) {
+            // Nodes created after build have an empty CSR range (childStart is
+            // grown with a constant), so this loop is a no-op for them.
+            for (let e = this.childStart[node]; e < this.childStart[node + 1]; e++) {
+                if (this.childChar[e] === charIdx) return this.childTarget[e];
+            }
+            if (this.extraChildren !== null) {
+                const list = this.extraChildren.get(node);
+                if (list !== undefined) {
+                    for (let i = 0; i < list.length; i += 2) {
+                        if (list[i] === charIdx) return list[i + 1];
+                    }
+                }
+            }
+            return -1;
+        }
+
+        /**
+         * Grow every node attribute array so at least `needed` more nodes fit.
+         * @param {number} needed
+         */
+        _reserve(needed) {
+            const required = this.nodeCount + needed;
+            if (required <= this.capacity) return;
+            const capacity = Math.max(required, this.capacity + NODE_GROWTH_CHUNK);
+            const grow = (Ctor, src, length) => {
+                const next = new Ctor(length);
+                next.set(src);
+                return next;
+            };
+            // childStart is padded with its final value so every new node has
+            // an EMPTY CSR range; their children live in `extraChildren`.
+            const edgeEnd = this.childStart[this.nodeCount];
+            const childStart = new Int32Array(capacity + 1);
+            childStart.set(this.childStart.subarray(0, this.nodeCount + 1));
+            childStart.fill(edgeEnd, this.nodeCount + 1);
+            this.childStart = childStart;
+            this.nodeChar = grow(Uint8Array, this.nodeChar, capacity);
+            this.nodeDepth = grow(Uint8Array, this.nodeDepth, capacity);
+            this.nodeParent = grow(Int32Array, this.nodeParent, capacity);
+            this.isWord = grow(Uint8Array, this.isWord, capacity);
+            this.logFreq = grow(Float64Array, this.logFreq, capacity);
+            this.capacity = capacity;
+        }
+
+        /**
+         * Append a child to `node`, allocating the node.
+         * @param {number} node @param {number} charIdx
+         * @returns {number} the new node id
+         */
+        _addChild(node, charIdx) {
+            this._reserve(1);
+            const child = this.nodeCount++;
+            this.nodeChar[child] = charIdx;
+            this.nodeDepth[child] = this.nodeDepth[node] + 1;
+            this.nodeParent[child] = node;
+            this.isWord[child] = 0;
+            this.logFreq[child] = 0;
+            if (this.extraChildren === null) this.extraChildren = new Map();
+            const list = this.extraChildren.get(node);
+            if (list === undefined) this.extraChildren.set(node, [charIdx, child]);
+            else list.push(charIdx, child);
+            return child;
+        }
+
+        /**
+         * Add (or boost) a word so the beam can reach it — the CTC counterpart
+         * of production's custom-word insertion into `VocabularyTrie`.
+         *
+         * @param {string} word a-z only
+         * @param {number} [freq=CUSTOM_WORD_FREQ] AOSP-scale frequency
+         * @returns {boolean} true when the lexicon changed
+         */
+        insert(word, freq) {
+            const clean = String(word || '').toLowerCase();
+            if (!/^[a-z]+$/.test(clean)) return false;
+            // nodeDepth is a Uint8Array (the blob's maxWordLen guard); keep the
+            // overlay inside the same bound.
+            if (clean.length > 255) return false;
+            if (this.customEntries.has(clean)) return false;
+
+            let node = 0;
+            for (let i = 0; i < clean.length; i++) {
+                const charIdx = clean.charCodeAt(i) - 97;
+                let child = this.findChild(node, charIdx);
+                if (child === -1) child = this._addChild(node, charIdx);
+                node = child;
+            }
+
+            // LexTrie.insert semantics: log_freq = log(freq + 1e-10), keep-max.
+            const lf = Math.log((freq === undefined ? CUSTOM_WORD_FREQ : freq) + 1e-10);
+            const existed = this.isWord[node] === 1;
+            this.customEntries.set(clean, { node, existed, prevLogFreq: this.logFreq[node] });
+            if (!existed) {
+                this.isWord[node] = 1;
+                this.logFreq[node] = lf;
+            } else if (lf > this.logFreq[node]) {
+                this.logFreq[node] = lf;
+            }
+            return true;
+        }
+
+        /**
+         * Undo a previous insert(). Blob words are restored to their shipped
+         * frequency rather than deleted. Nodes created for a since-removed
+         * word are left in place (a handful of dead edges the beam can walk
+         * into but never finalise on — cheaper than compacting CSR).
+         * @param {string} word
+         * @returns {boolean} true when something was removed/restored
+         */
+        remove(word) {
+            const clean = String(word || '').toLowerCase();
+            const entry = this.customEntries.get(clean);
+            if (entry === undefined) return false;
+            if (entry.existed) {
+                this.logFreq[entry.node] = entry.prevLogFreq;
+            } else {
+                this.isWord[entry.node] = 0;
+                this.logFreq[entry.node] = 0;
+            }
+            this.customEntries.delete(clean);
+            return true;
+        }
+
+        /** @returns {number} how many custom words are currently overlaid */
+        get customWordCount() {
+            return this.customEntries.size;
         }
 
         /**
@@ -331,12 +503,9 @@
          */
         contains(word) {
             let node = 0;
-            outer: for (let i = 0; i < word.length; i++) {
-                const target = word.charCodeAt(i) - 97;
-                for (let e = this.childStart[node]; e < this.childStart[node + 1]; e++) {
-                    if (this.childChar[e] === target) { node = this.childTarget[e]; continue outer; }
-                }
-                return false;
+            for (let i = 0; i < word.length; i++) {
+                node = this.findChild(node, word.charCodeAt(i) - 97);
+                if (node === -1) return false;
             }
             return this.isWord[node] === 1;
         }
@@ -368,6 +537,9 @@
     function futoViterbiBeam(logProbs, T, trie, params) {
         const { beamWidth, topK, gamma, lambda, beta, gammaPrune, betaPrune } = params;
         const { childStart, childChar, childTarget, nodeChar, nodeDepth, isWord, logFreq } = trie;
+        // Custom-word overlay: null for a pristine blob, so the hot loop pays a
+        // single null check per hypothesis when nobody added a personal word.
+        const extraChildren = trie.extraChildren;
         const lpOnly = gammaPrune === 0.0 && betaPrune === 0.0;
 
         /** @param {number} score @param {number} depth @returns {number} */
@@ -422,6 +594,16 @@
                 for (let e = childStart[node]; e < eEnd; e++) {
                     const child = childTarget[e];
                     offer(child * 2, score + logProbs[row + childChar[e]], child, 0);
+                }
+                // B' — the same expansion over children added after build time
+                if (extraChildren !== null) {
+                    const extras = extraChildren.get(node);
+                    if (extras !== undefined) {
+                        for (let i = 0; i < extras.length; i += 2) {
+                            const child = extras[i + 1];
+                            offer(child * 2, score + logProbs[row + extras[i]], child, 0);
+                        }
+                    }
                 }
 
                 // C — repeat the last letter (CTC collapse), stay put
@@ -657,6 +839,7 @@
         BLANK_IDX,
         CLASSES,
         CTC_SCORING,
+        CUSTOM_WORD_FREQ,
         pyRound,
         bisectLeft,
         resampleTo60Hz,
