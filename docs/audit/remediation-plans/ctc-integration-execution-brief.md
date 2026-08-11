@@ -81,3 +81,17 @@ Default engine stays `neural` — every phase is dark until P4, and even then `c
 4. **n-2 gate:** confirm DEFERRED-with-filing (engine tagging before any default flip) vs tagging traces now.
 
 — Fable 5
+
+## Sign-off outcomes (2026-08-11, user)
+- **Q1 model choice: SUPERSEDED-PENDING** — a new model is training and an ML-side agent is
+  running comparisons on a batch of new candidates. Wave-3 implementation HOLDS until that
+  batch concludes; the model+preset+fixture seam (§P1) makes the eventual choice a single
+  commit. Relay package for the ML comparison effort recorded in the session log (latency
+  weighting ≈ 0, per-layout geo baselines, fixture contract, on-device bench harness).
+- **Q3 release vehicle: FOLD INTO v1.6.0** — release notes/content not finalized; note the
+  geo engine itself is still under evaluation for v1.6.0 inclusion, so the release framing
+  should treat BOTH new engines as opt-in/experimental until the engine-choice evaluation
+  settles.
+- Q2 (asset budget) implicitly deferred to the model outcome; Q4 (n-2) now MOOT — provenance
+  tagging landed in fb86a641 (layoutName+engine in SwipeMLData); the CTC adapter must simply
+  populate engine="ctc".
