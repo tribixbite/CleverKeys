@@ -1,5 +1,33 @@
 # CleverKeys TODO
 
+## ✅ DONE — WP9 geo-wiring audit remediation (2026-08-11, `fb86a641`)
+
+Closed the open findings of the steps 6-9 implementation audit
+(`docs/audit/remediation/3-core-ime.md` → "Review findings (2026-08-11)"; the status table
+now carries per-row FIXED/PARTIAL entries and a "Remediation LANDED" section with the design
+detail).
+
+- [x] **M-2** prewarm/decode race — `PredictionTaskRunner` gained a BACKGROUND slot (prewarm
+      can no longer cancel an in-flight decode; a decode still supersedes both), stale-interrupt
+      clear on every task, monotonic decode-generation delivery gate, and the geo decode
+      callback now applies `isReplayInputStillCurrent` before committing
+- [x] **n-2** ML-trace provenance — `SwipeMLData.layoutName` + `.engine` (legacy rows read
+      `unknown`; no DB migration; both export paths inherit the fields)
+- [x] **m-2** adapter clamps unified with the slider ranges via `GeoKnobRanges`
+- [x] **m-3** background re-warm on knob change implemented (debounced
+      `CleverKeysService.requestGeometricRewarm()`), spec §292 + activity header restated
+- [x] **m-4** contraction load-order comment corrected (English base shadows, earlier-wins)
+- [x] **m-5 / m-1 / n-1** oracle `assumeTrue` → hard asserts; deliberately-wrong marker on the
+      NEURAL_SWIPE commit-source pin; possessive en-gate pinned on both sides
+- [ ] **Instrumented gate still owed**: run ew-cli for `GeometricSwipeOracleTest` (2 NEW race
+      tests + 3 hardened parity tests) and `SwipeMLDataStoreTest` (1 NEW legacy-row test +
+      2 augmented JSON tests). Compiled only this round.
+- [ ] m-1 remains PARTIAL by design — geo commits are still tracked as `PredictionSource.NEURAL_SWIPE`
+      (the provenance refactor is the separate hybrid-origin item below)
+
+Gates: `compileDebugKotlin` + `compileDebugAndroidTestKotlin` clean, `runPureTests` 1876/1876,
+`runMockTests` 299/299.
+
 ## ✅ DONE — CTC on-device latency measurement (G3) (2026-08-11)
 
 `src/androidTest/kotlin/tribixbite/cleverkeys/swipe/ctc/CtcOnnxLatencyBenchmarkTest.kt` +
