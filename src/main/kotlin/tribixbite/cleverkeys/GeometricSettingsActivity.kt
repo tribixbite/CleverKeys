@@ -1,6 +1,8 @@
 package tribixbite.cleverkeys
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -42,15 +44,30 @@ import tribixbite.cleverkeys.theme.KeyboardTheme
  * comprehensible user story and a bounded blast radius (suggestion count, frequency bias,
  * sloppy-endpoint tolerance). The rest are calibrated against the spec's measured accuracy
  * floors and stay code-only. Defaults MUST match `Defaults.GEO_*` == the engine's
- * `GeometricEngineConfig` defaults; GeometricEngineAdapter rebuilds its engine (cheap,
- * background re-warm) when any of these change.
+ * `GeometricEngineConfig` defaults, and the slider ranges come from [GeoKnobRanges] — the same
+ * object `GeometricEngineAdapter` clamps against, so UI and engine bounds cannot drift.
+ *
+ * On change: the new values are pushed to the live [Config] and persisted immediately (the
+ * adapter re-reads Config on its next decode and rebuilds the engine + template cache when a
+ * knob moved), AND a debounced [CleverKeysService.requestGeometricRewarm] runs that rebuild in
+ * the background so the first post-change swipe does not pay for it (WP9 audit m-3 — before
+ * that hook existed the re-warm claim here was aspirational; the rebuild was lazy).
  */
 class GeometricSettingsActivity : ComponentActivity() {
+
+    private companion object {
+        /** Slider-tick coalescing window for the background re-warm (audit m-3). */
+        const val REWARM_DEBOUNCE_MS = 500L
+    }
 
     // Reactive state — MUST match Defaults in Config.kt
     private var maxResults by mutableIntStateOf(Defaults.GEO_MAX_RESULTS)
     private var frequencyWeight by mutableFloatStateOf(Defaults.GEO_FREQUENCY_WEIGHT)
     private var endpointInsetKw by mutableFloatStateOf(Defaults.GEO_ENDPOINT_INSET_KW)
+
+    // Debounced background re-warm of the live IME's geometric engine (audit m-3).
+    private val rewarmHandler = Handler(Looper.getMainLooper())
+    private val rewarmRunnable = Runnable { CleverKeysService.requestGeometricRewarm() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -95,8 +112,10 @@ class GeometricSettingsActivity : ComponentActivity() {
                     title = "Max Suggestions",
                     description = "Ranked candidates emitted per swipe (suggestion bar shows the top few).",
                     value = maxResults.toFloat(),
-                    valueRange = 3f..15f,
-                    steps = 11,
+                    // Ranges come from GeoKnobRanges (shared with the adapter's clamps, m-2).
+                    valueRange = GeoKnobRanges.MAX_RESULTS.first.toFloat()..
+                        GeoKnobRanges.MAX_RESULTS.last.toFloat(),
+                    steps = GeoKnobRanges.MAX_RESULTS.last - GeoKnobRanges.MAX_RESULTS.first - 1,
                     onValueChange = {
                         maxResults = it.toInt()
                         updateParameters()
@@ -109,7 +128,7 @@ class GeometricSettingsActivity : ComponentActivity() {
                     description = "Bias toward common words vs. exact shape fidelity. Higher = " +
                         "common words win more often; 0 = pure shape matching.",
                     value = frequencyWeight,
-                    valueRange = 0.0f..0.4f,
+                    valueRange = GeoKnobRanges.FREQUENCY_WEIGHT,
                     steps = 39,
                     onValueChange = {
                         frequencyWeight = it
@@ -123,7 +142,7 @@ class GeometricSettingsActivity : ComponentActivity() {
                     description = "Forgiveness for sloppy swipe start/end positions, in key widths. " +
                         "Higher = more forgiving; too high can surface wrong first/last letters.",
                     value = endpointInsetKw,
-                    valueRange = 0.0f..0.8f,
+                    valueRange = GeoKnobRanges.ENDPOINT_INSET_KW,
                     steps = 15,
                     onValueChange = {
                         endpointInsetKw = it
@@ -220,7 +239,14 @@ class GeometricSettingsActivity : ComponentActivity() {
         }
     }
 
-    /** Push to the live Config and persist — the adapter reads Config per decode. */
+    /**
+     * Push to the live Config, persist, then schedule the background re-warm.
+     *
+     * The adapter reads Config per decode and rebuilds its engine (and template cache) when a
+     * knob changed, so the values take effect immediately; the re-warm just moves the rebuild
+     * OFF the first post-change swipe (audit m-3 — the claim used to be aspirational).
+     * Debounced because this runs on every slider tick.
+     */
     private fun updateParameters() {
         try {
             val config = Config.globalConfig()
@@ -236,12 +262,38 @@ class GeometricSettingsActivity : ComponentActivity() {
             .putFloat("geo_frequency_weight", frequencyWeight)
             .putFloat("geo_endpoint_inset_kw", endpointInsetKw)
             .apply()
+        scheduleRewarm()
     }
 
+    /**
+     * Coalesces a burst of slider ticks into ONE re-warm request. A rebuild is ~150-400 ms of
+     * background work, so re-warming per tick would thrash the decode thread for no benefit.
+     */
+    private fun scheduleRewarm() {
+        rewarmHandler.removeCallbacks(rewarmRunnable)
+        rewarmHandler.postDelayed(rewarmRunnable, REWARM_DEBOUNCE_MS)
+    }
+
+    override fun onDestroy() {
+        rewarmHandler.removeCallbacks(rewarmRunnable)
+        super.onDestroy()
+    }
+
+    /**
+     * Loads persisted knobs, clamped into [GeoKnobRanges] — a settings import can carry values
+     * the sliders cannot represent, and an out-of-range Slider value silently pins to an end
+     * of the track while the label shows the raw number (audit m-2).
+     */
     private fun loadSavedParameters() {
         val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
-        maxResults = Config.safeGetInt(prefs, "geo_max_results", Defaults.GEO_MAX_RESULTS)
-        frequencyWeight = Config.safeGetFloat(prefs, "geo_frequency_weight", Defaults.GEO_FREQUENCY_WEIGHT)
-        endpointInsetKw = Config.safeGetFloat(prefs, "geo_endpoint_inset_kw", Defaults.GEO_ENDPOINT_INSET_KW)
+        maxResults = GeoKnobRanges.clampMaxResults(
+            Config.safeGetInt(prefs, "geo_max_results", Defaults.GEO_MAX_RESULTS)
+        )
+        frequencyWeight = GeoKnobRanges.clampFrequencyWeight(
+            Config.safeGetFloat(prefs, "geo_frequency_weight", Defaults.GEO_FREQUENCY_WEIGHT)
+        )
+        endpointInsetKw = GeoKnobRanges.clampEndpointInsetKw(
+            Config.safeGetFloat(prefs, "geo_endpoint_inset_kw", Defaults.GEO_ENDPOINT_INSET_KW)
+        )
     }
 }

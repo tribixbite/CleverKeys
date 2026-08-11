@@ -15,8 +15,30 @@ import java.util.concurrent.Future
 import java.util.concurrent.RejectedExecutionException
 
 /**
- * Owns a single-threaded prediction executor and its in-flight task, exposing a small
+ * Owns a single-threaded prediction executor and its in-flight tasks, exposing a small
  * cancel/submit/shutdown surface. Pure JVM (no Android types) so it is unit-testable.
+ *
+ * ## Two priority slots (WP9 audit M-2, 2026-08-11)
+ *
+ * The runner tracks the in-flight task of each slot independently while still executing
+ * everything on ONE thread (so callers keep single-thread confinement of their own state):
+ *
+ *  - **Foreground** ([cancelAndSubmit]) — user-visible work whose result is awaited (a swipe
+ *    decode, a typing prediction). A new foreground submission cancels the previous foreground
+ *    task AND any in-flight background task: the newest user gesture always wins the thread.
+ *  - **Background** ([submitBackground]) — opportunistic work nobody is waiting on (an engine
+ *    prewarm). A new background submission cancels only the previous *background* task; it
+ *    NEVER cancels foreground work. This is the M-2 fix: before it existed, a prewarm posted
+ *    from `onStartInputView` could cancel an in-flight swipe decode, silently losing the swipe.
+ *
+ * Both slots run FIFO on the same executor, so a queued background task delays (but never
+ * cancels) a later foreground task; that is bounded by the prewarm's own build cost and was
+ * the pre-existing behavior.
+ *
+ * Every submitted task starts with a cleared interrupt status: cancelling a *running* task
+ * interrupts the shared worker thread, and a task that returns without consuming that
+ * interrupt would otherwise leak the flag into the next task (which typically treats
+ * `isInterrupted` as "I was superseded, drop my result" — a silent result loss).
  *
  * Submissions after [shutdown] are silently dropped rather than throwing, which matches the
  * lifecycle where predictions can be requested while the IME is tearing down.
@@ -27,29 +49,63 @@ class PredictionTaskRunner(
     @Volatile
     private var currentTask: Future<*>? = null
 
+    @Volatile
+    private var backgroundTask: Future<*>? = null
+
     /** True once the underlying executor has been shut down. */
     val isShutdown: Boolean
         get() = executor.isShutdown
 
-    /** Cancels (interrupting) the currently-running task, if any. */
+    /** Cancels (interrupting) the currently-running FOREGROUND task, if any. */
     fun cancelCurrent() {
         currentTask?.cancel(true)
     }
 
-    /** Cancels the current task then submits [task]; a no-op if the executor is already shut down. */
-    fun cancelAndSubmit(task: Runnable) {
-        cancelCurrent()
-        if (executor.isShutdown) return
-        currentTask = try {
-            executor.submit(task)
-        } catch (e: RejectedExecutionException) {
-            null
-        }
+    /** Cancels (interrupting) the currently-running BACKGROUND task, if any. */
+    fun cancelBackground() {
+        backgroundTask?.cancel(true)
     }
 
-    /** Cancels the in-flight task and shuts the executor down, interrupting running work. */
+    /**
+     * Cancels the in-flight foreground AND background tasks, then submits [task] in the
+     * foreground slot; a no-op if the executor is already shut down.
+     */
+    fun cancelAndSubmit(task: Runnable) {
+        cancelCurrent()
+        cancelBackground()
+        if (executor.isShutdown) return
+        currentTask = submitGuarded(task)
+    }
+
+    /**
+     * Submits [task] in the background slot, superseding (cancelling) only a previous
+     * background task. Foreground work in flight is left running — see the class KDoc.
+     * A no-op if the executor is already shut down.
+     */
+    fun submitBackground(task: Runnable) {
+        cancelBackground()
+        if (executor.isShutdown) return
+        backgroundTask = submitGuarded(task)
+    }
+
+    /** Submits [task] with a stale-interrupt clear, swallowing post-shutdown rejection. */
+    private fun submitGuarded(task: Runnable): Future<*>? = try {
+        executor.submit {
+            // Drop an interrupt left over from a cancelled predecessor before this task's own
+            // work starts (see class KDoc). Harmless for this task's own cancellation: a task
+            // cancelled while still queued never runs at all, and a cancel landing after this
+            // point sets the flag again.
+            Thread.interrupted()
+            task.run()
+        }
+    } catch (e: RejectedExecutionException) {
+        null
+    }
+
+    /** Cancels the in-flight tasks and shuts the executor down, interrupting running work. */
     fun shutdown() {
         cancelCurrent()
+        cancelBackground()
         executor.shutdownNow()
     }
 }
@@ -483,12 +539,20 @@ class InputCoordinator(
      * sets `wasLastInputSwipe`, snapshots the raw path/timestamps into [currentSwipeData], and
      * records the gesture tracker's key sequence (ML data only — each engine recalculates keys
      * from the raw path independently).
+     *
+     * [engine] tags the capture with the decoder that produced its suggestions
+     * ([SwipeMLData.ENGINE_NEURAL] / [SwipeMLData.ENGINE_GEOMETRIC]) and the layout name is
+     * read from the live keyboard. Audit n-2 (2026-08-11): without those two fields a
+     * ЙЦУКЕН/Dvorak geometric trace is indistinguishable from a QWERTY neural one in an ML
+     * export, so a future neural-training corpus built from exports would silently mix
+     * incompatible key geometries.
      */
     private fun beginSwipeCapture(
         swipedKeys: List<KeyboardData.Key>,
         swipePath: List<android.graphics.PointF>?,
         timestamps: List<Long>?,
-        resources: Resources
+        resources: Resources,
+        engine: String
     ) {
         // Mark that last input was a swipe for ML data collection
         contextTracker.setWasLastInputSwipe(true)
@@ -498,7 +562,9 @@ class InputCoordinator(
         currentSwipeData = SwipeMLData(
             "", "user_selection",
             metrics.widthPixels, metrics.heightPixels,
-            keyboardView.height
+            keyboardView.height,
+            layoutName = keyboardView.getKeyboard()?.name ?: SwipeMLData.UNKNOWN,
+            engine = engine
         )
 
         // Add swipe path points with timestamps
@@ -553,18 +619,28 @@ class InputCoordinator(
         if (frameW <= 0f || frameH <= 0f) return
 
         // Same swipe-state + ML-trace capture as the neural path (D5 collection works
-        // identically for geometric selections).
-        beginSwipeCapture(swipedKeys, swipePath, timestamps, resources)
+        // identically for geometric selections), tagged with the geometric engine + layout
+        // so ML exports stay separable from QWERTY/neural traces (audit n-2).
+        beginSwipeCapture(swipedKeys, swipePath, timestamps, resources, SwipeMLData.ENGINE_GEOMETRIC)
 
         val language = predictionCoordinator.getDictionaryManager()?.getCurrentLanguage()
             ?: config.primary_language
         geometricAdapterOrCreate().decodeAsync(
             keyboard, params, frameW, frameH, swipePath, timestamps, language
         ) { result ->
-            handlePredictionResults(
-                result.words, result.scores, ic, editorInfo, resources,
-                wasShiftActive, wasShiftLocked
-            )
+            // The decode callback replays the InputConnection/EditorInfo captured at swipe
+            // time. A decode can land after the field changed (cold Tier-A build takes
+            // 150-400 ms, and a same-field restart or an app switch replaces both handles),
+            // so apply the SAME staleness guard the neural cold-start replay uses — otherwise
+            // this word would be committed into an unrelated field (audit M-2).
+            if (isReplayInputStillCurrent(ic, editorInfo)) {
+                handlePredictionResults(
+                    result.words, result.scores, ic, editorInfo, resources,
+                    wasShiftActive, wasShiftLocked
+                )
+            } else if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                android.util.Log.d(TAG, "Dropping geometric decode: input field changed since swipe")
+            }
         }
     }
 
@@ -618,7 +694,7 @@ class InputCoordinator(
             predictionCoordinator.ensureInitialized()
         }
 
-        beginSwipeCapture(swipedKeys, swipePath, timestamps, resources)
+        beginSwipeCapture(swipedKeys, swipePath, timestamps, resources, SwipeMLData.ENGINE_NEURAL)
 
         if (!swipePath.isNullOrEmpty()) {
             // Create SwipeInput exactly like SwipeCalibrationActivity (empty swipedKeys)

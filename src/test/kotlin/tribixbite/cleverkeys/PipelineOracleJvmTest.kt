@@ -1,6 +1,7 @@
 package tribixbite.cleverkeys
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.util.Locale
@@ -181,6 +182,37 @@ class PipelineOracleJvmTest {
         augmentPredictionsWithPossessives(words, scores) { "$it's" }
         assertEquals(listOf("book", "Book's", "Book's's"), words)
         assertEquals(listOf(100, 50, 40), scores)
+    }
+
+    // =========================================================================
+    // n-1 (WP9 audit 2026-08-11) — the ENGLISH-ONLY possessive gate, both sides.
+    // Unlike the array-behavior mirrors above, these call the PRODUCTION helper
+    // (SuggestionHandler.shouldAugmentPossessives) so the gate itself is pinned,
+    // not a copy of it. The gate covers the NEURAL path too — that is deliberate:
+    // "maison's" / "дом's" were wrong on QWERTY-fr/es as well.
+    // =========================================================================
+
+    @Test
+    fun oracle_jvm_possessiveGate_englishAndNullLanguageAugment() {
+        assertTrue(
+            "English must keep possessive augmentation",
+            SuggestionHandler.shouldAugmentPossessives("en")
+        )
+        assertTrue(
+            "A null active language (no DictionaryManager yet) preserves the pre-gate " +
+                "English behavior",
+            SuggestionHandler.shouldAugmentPossessives(null)
+        )
+    }
+
+    @Test
+    fun oracle_jvm_possessiveGate_nonEnglishLanguagesDoNotAugment() {
+        for (language in listOf("fr", "es", "de", "it", "ru", "el", "pt", "nl")) {
+            assertFalse(
+                "'$language' must NOT get English \"'s\" possessives (n-1)",
+                SuggestionHandler.shouldAugmentPossessives(language)
+            )
+        }
     }
 
     @Test

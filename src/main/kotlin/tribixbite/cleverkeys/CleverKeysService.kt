@@ -179,6 +179,31 @@ class CleverKeysService : InputMethodService(),
         fun getInstance(): CleverKeysService? = _instance
 
         /**
+         * Re-warms the geometric swipe engine after a Full Geometric Settings knob change
+         * (WP9 audit m-3). The adapter bakes the three user knobs into an immutable
+         * `GeometricEngineConfig`, so a change invalidates the built engine AND its template
+         * cache; without this hook the rebuild happened lazily inside the first post-change
+         * swipe (150-400 ms on the decode thread — no jank, but the first swipe pays it),
+         * which made the "background re-warm" claim in the spec and the activity header
+         * aspirational rather than true.
+         *
+         * Safe to call from any UI in this process (settings run in the IME's process): a
+         * no-op when the service is not running, when swipe typing is off, when the mode does
+         * not route to the geometric engine, or when the keyboard view is not laid out yet —
+         * in which case `onStartInputView`'s prewarm covers the next appearance anyway. The
+         * warm-up itself runs in the adapter's BACKGROUND task slot, so it can never cancel an
+         * in-flight decode (audit M-2).
+         *
+         * Must be called on the main thread (it touches the live keyboard view).
+         */
+        @JvmStatic
+        fun requestGeometricRewarm() {
+            val instance = _instance ?: return
+            if (!instance::_inputCoordinator.isInitialized) return
+            instance._inputCoordinator.prewarmGeometricEngine()
+        }
+
+        /**
          * Find a key by its main character in the current keyboard layout.
          * This looks through all rows and keys to find one where the main key (index 0)
          * matches the given character.

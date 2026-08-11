@@ -14,7 +14,6 @@ import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -158,6 +157,24 @@ class GeometricSwipeOracleTest {
         return result!!
     }
 
+    /**
+     * HARD gate on a non-empty decode (WP9 audit m-5, 2026-08-11).
+     *
+     * The parity pins below used to `assumeTrue` here, which turned a decode-to-empty
+     * regression — dead layout, missing dictionary, broken projection — into three SILENT
+     * skips: the exact failure the geo path most needs to catch. The engine has been stable
+     * on this fixture (Dvorak + bundled `en_enhanced.bin`) since it landed, and
+     * `oracle_geo_dvorakSwipe_yieldsTargetWord` already hard-asserts the same decode, so a
+     * skip here could only ever have masked a real regression.
+     */
+    private fun assertGeoDecodeNonEmpty(result: PredictionResult) {
+        assertTrue(
+            "geo decode must yield predictions — an empty result means the engine, layout " +
+                "projection or bundled dictionary regressed (audit m-5: this used to skip).",
+            result.words.isNotEmpty()
+        )
+    }
+
     // ── SH-seam harness (condensed from PipelineCharacterizationTest — no WordPredictor:
     //    the geo path must behave with a predictor-less coordinator too) ───────────────
 
@@ -262,7 +279,7 @@ class GeometricSwipeOracleTest {
         val adapter = GeometricEngineAdapter(context)
         try {
             val result = decodeBlocking(adapter, kd, params, "world")
-            assumeTrue("need non-empty geo predictions", result.words.isNotEmpty())
+            assertGeoDecodeNonEmpty(result)
             val h = harness()
             onMain {
                 h.contextTracker.setWasLastInputSwipe(true)
@@ -274,6 +291,12 @@ class GeometricSwipeOracleTest {
 
             val top = h.suggestionBar.getCurrentSuggestions().firstOrNull() ?: result.words.first()
             assertEquals("$top ", h.inputConnection.bufferText())
+            // DELIBERATE MISLABEL PIN (audit m-1): geometric commits are tracked as
+            // NEURAL_SWIPE because the commit-source enum has no geometric member yet. This
+            // asserts TODAY's behavior, not the desired one — the provenance refactor
+            // (SuggestionOrigin.GEOMETRIC already exists for BAR provenance) is tracked in
+            // docs/audit/remediation/3-core-ime.md m-1. Update this pin WITH that refactor,
+            // never on its own.
             assertEquals(PredictionSource.NEURAL_SWIPE, h.contextTracker.getLastCommitSource())
             assertTrue(h.suggestionBar.getCurrentSuggestions().isNotEmpty())
         } finally {
@@ -289,7 +312,7 @@ class GeometricSwipeOracleTest {
         val adapter = GeometricEngineAdapter(context)
         try {
             val result = decodeBlocking(adapter, kd, params, "world")
-            assumeTrue("need non-empty geo predictions", result.words.isNotEmpty())
+            assertGeoDecodeNonEmpty(result)
             val h = harness()
             h.config.swipe_on_password_fields = false
             onMain {
@@ -317,7 +340,7 @@ class GeometricSwipeOracleTest {
         val adapter = GeometricEngineAdapter(context)
         try {
             val result = decodeBlocking(adapter, kd, params, "world")
-            assumeTrue("need non-empty geo predictions", result.words.isNotEmpty())
+            assertGeoDecodeNonEmpty(result)
             val h = harness()
             onMain {
                 h.contextTracker.setWasLastInputSwipe(true)
@@ -388,6 +411,83 @@ class GeometricSwipeOracleTest {
                 "geo results must inject the paired variant \"it's\". Got: ${result.words.take(8)}",
                 result.words.any { it.equals("it's", ignoreCase = true) }
             )
+        } finally {
+            adapter.shutdown()
+        }
+    }
+
+    /**
+     * WP9 audit M-2 (2026-08-11): a prewarm fired while a decode is in flight must NOT cancel
+     * it. Production trigger: `CleverKeysService.onStartInputView` → `prewarmGeometricEngine`
+     * on a same-field restart (rotation, app re-focus, IME restart) landing during the
+     * 150-400 ms cold decode — the swipe would vanish with no error path.
+     *
+     * The adapter is COLD here on purpose so the decode is slow enough for the prewarm to
+     * land mid-flight; with the pre-fix shared task slot the decode's callback never fired
+     * and this test times out on the latch.
+     */
+    @Test
+    fun oracle_geo_prewarmDuringDecode_doesNotCancelDecode() {
+        val kd = loadLayout("latn_dvorak")
+        val params = paramsFor(kd)
+        val adapter = GeometricEngineAdapter(context)
+        try {
+            val (path, times) = traceFor(kd, params, "world")
+            val latch = CountDownLatch(1)
+            var result: PredictionResult? = null
+            onMain {
+                adapter.decodeAsync(kd, params, frameW, frameH, path, times, "en") {
+                    result = it
+                    latch.countDown()
+                }
+                // Same call the service's onStartInputView prewarm makes, while the cold
+                // decode above is still building its Tier-A index.
+                adapter.warmUpAsync(kd, params, frameW, frameH, "en")
+            }
+
+            assertTrue(
+                "the in-flight decode must still deliver after a concurrent prewarm (M-2)",
+                latch.await(30, TimeUnit.SECONDS)
+            )
+            assertGeoDecodeNonEmpty(result!!)
+        } finally {
+            adapter.shutdown()
+        }
+    }
+
+    /**
+     * Companion pin: a NEW decode still supersedes the previous one — the M-2 fix must not
+     * turn "last swipe wins" into "every swipe delivers" (two suggestion lists racing for the
+     * bar). Only the newest decode's callback may fire.
+     */
+    @Test
+    fun oracle_geo_newerDecodeSupersedesOlder() {
+        val kd = loadLayout("latn_dvorak")
+        val params = paramsFor(kd)
+        val adapter = GeometricEngineAdapter(context)
+        try {
+            // Warm first so both decodes below are fast and deterministic.
+            decodeBlocking(adapter, kd, params, "world")
+
+            val (firstPath, firstTimes) = traceFor(kd, params, "world")
+            val (secondPath, secondTimes) = traceFor(kd, params, "there")
+            var firstFired = false
+            val secondLatch = CountDownLatch(1)
+            var secondResult: PredictionResult? = null
+            onMain {
+                adapter.decodeAsync(kd, params, frameW, frameH, firstPath, firstTimes, "en") {
+                    firstFired = true
+                }
+                adapter.decodeAsync(kd, params, frameW, frameH, secondPath, secondTimes, "en") {
+                    secondResult = it
+                    secondLatch.countDown()
+                }
+            }
+
+            assertTrue("newest decode must deliver", secondLatch.await(30, TimeUnit.SECONDS))
+            drainMainThread()
+            assertFalse("a superseded decode must not deliver results", firstFired)
+            assertGeoDecodeNonEmpty(secondResult!!)
         } finally {
             adapter.shutdown()
         }

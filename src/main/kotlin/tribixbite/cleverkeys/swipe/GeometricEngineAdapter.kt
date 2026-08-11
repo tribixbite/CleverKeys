@@ -17,6 +17,7 @@ import tribixbite.cleverkeys.PredictionTaskRunner
 import tribixbite.cleverkeys.a11y.KeyboardGeometry
 import tribixbite.cleverkeys.swipe.geometric.ArrayBackedDictionary
 import tribixbite.cleverkeys.Config
+import tribixbite.cleverkeys.GeoKnobRanges
 import tribixbite.cleverkeys.swipe.geometric.CkdtDictionaryReader
 import tribixbite.cleverkeys.swipe.geometric.GeometricDictionary
 import tribixbite.cleverkeys.swipe.geometric.GeometricEngineConfig
@@ -29,6 +30,7 @@ import java.io.File
 import java.lang.ref.WeakReference
 import java.security.MessageDigest
 import java.util.Locale
+import java.util.concurrent.atomic.AtomicLong
 
 /**
  * WP9 R-1 step 8 — the impurity boundary between the Android IME and the pure-JVM
@@ -54,9 +56,30 @@ import java.util.Locale
  *     150-400 ms synchronous Tier-A build. Memory ceiling is the engine's own
  *     `indexCacheCapacity=3` (≤ ~7.5 MB, spec NFR-2).
  *
- * Threading: conversion + decode run on a single background thread (the engine's `decode`
- * is synchronous and allocation-light); results post to the main thread. A new decode
- * cancels the in-flight one (last-swipe-wins, mirroring AsyncPredictionHandler).
+ * ## Concurrency contract (WP9 audit M-2, 2026-08-11)
+ *
+ * All engine-side state (`engineInstance`, the geometry/dictionary memos, the
+ * [ContractionManager]) is confined to ONE background thread — the single thread of [tasks].
+ * [decodeAsync] and [warmUpAsync] therefore never run concurrently, and none of that state
+ * needs synchronization. What they do NOT share is cancellation:
+ *
+ *  - [decodeAsync] submits in the runner's FOREGROUND slot: a new swipe cancels the previous
+ *    swipe's decode (last-swipe-wins, mirroring AsyncPredictionHandler) and also cancels an
+ *    in-flight prewarm so the user's gesture gets the thread immediately.
+ *  - [warmUpAsync] submits in the BACKGROUND slot: a prewarm supersedes an older prewarm but
+ *    NEVER cancels a decode. Before this split, the `onStartInputView` prewarm
+ *    (`CleverKeysService` → `InputCoordinator.prewarmGeometricEngine`) could cancel an
+ *    in-flight decode on a same-field restart, silently losing the swipe.
+ *
+ * Result delivery is guarded by a monotonic decode generation rather than the worker's
+ * interrupt flag: only the newest decode may post to the main thread, so a superseded decode
+ * can never deliver stale suggestions even if its cancellation interrupt is missed.
+ *
+ * Staleness of the *input field* is NOT this class's concern: the decode callback runs on the
+ * main thread with the caller's captured InputConnection/EditorInfo, and the caller
+ * (`InputCoordinator.performGeometricSwipeTyping`) re-checks
+ * `InputCoordinator.isReplayInputStillCurrent` before committing.
+ *
  * KeyboardData is immutable and safe to read off-main; the PointF trace is snapshotted
  * into pure [TracePoint]s on the caller thread before hopping.
  */
@@ -73,6 +96,12 @@ class GeometricEngineAdapter(private val context: Context) {
     private val tasks = PredictionTaskRunner()
     private val mainHandler = Handler(Looper.getMainLooper())
 
+    /**
+     * Monotonic decode counter — see the class KDoc. Incremented on the main thread by every
+     * [decodeAsync]; a decode may only deliver while it still holds the newest value.
+     */
+    private val decodeGeneration = AtomicLong(0)
+
     // ── Engine (rebuilt when the user-tunable knobs change) ─────────────────────────
     // The three Full Geometric Settings knobs are baked into the immutable
     // GeometricEngineConfig, so a knob change requires a fresh engine (and with it a fresh
@@ -84,10 +113,14 @@ class GeometricEngineAdapter(private val context: Context) {
 
     private fun engineFor(): GeometricSwipeEngine {
         val config = Config.globalConfig()
+        // Clamp to the SAME ranges the Full Geometric Settings sliders expose
+        // ([GeoKnobRanges] is the single source of truth both sides read). Config values can
+        // arrive from a hand-edited or imported settings backup, which bypasses the sliders —
+        // without this the engine could run knobs the UI cannot display or undo (audit m-2).
         val knobs = Triple(
-            config.geo_max_results.coerceIn(1, 32),
-            config.geo_frequency_weight.coerceIn(0f, 1f),
-            config.geo_endpoint_inset_kw.coerceIn(0f, 2f),
+            GeoKnobRanges.clampMaxResults(config.geo_max_results),
+            GeoKnobRanges.clampFrequencyWeight(config.geo_frequency_weight),
+            GeoKnobRanges.clampEndpointInsetKw(config.geo_endpoint_inset_kw),
         )
         engineInstance?.let { if (engineKnobs == knobs) return it }
         val built = GeometricSwipeEngine(
@@ -143,9 +176,18 @@ class GeometricEngineAdapter(private val context: Context) {
         if (existing != null && contractionLanguage == language) return existing
         val cm = existing ?: ContractionManager(context)
         // Mirror production loading (PreferenceUIUpdateHandler / ManagerInitializer):
-        // base set (clears), then language-specific, then the extra contractions_en.json
-        // entries — earlier loads win on key collisions, so the active language's own
-        // mappings take precedence over the English extras.
+        // base set (clears + loads the bundled ENGLISH contractions.bin), then the active
+        // language's contractions, then the extra contractions_en.json entries.
+        //
+        // Load order matters and is EARLIER-WINS: `loadContractionsFromStream` skips any key
+        // already mapped (ContractionManager.kt:161-163). Because the English base loads
+        // FIRST, English SHADOWS same-key mappings from the active language — e.g. a language
+        // whose own file maps a key that English also maps keeps the English display form.
+        // That is production's behavior (this adapter deliberately mirrors it rather than
+        // inventing a different one), and the damage it could do is contained by
+        // [ContractionOverlay]'s real-word ordinal guard: a shadowed alias that is itself a
+        // common word in the active language (de "im", fr "dont", it "del") is KEPT and the
+        // English form is at most appended as a variant, never substituted for the base.
         cm.loadMappings()
         if (language != "en") cm.loadLanguageContractions(language)
         cm.loadLanguageContractions("en")
@@ -178,6 +220,11 @@ class GeometricEngineAdapter(private val context: Context) {
      * the layout yields no usable geometry or no dictionary exists for [language] — the
      * caller treats that exactly like a no-prediction swipe (bar cleared by the pipeline).
      *
+     * Runs in the runner's FOREGROUND slot: it supersedes both an older decode and any
+     * in-flight prewarm, and only the newest decode may deliver a result (see the class
+     * KDoc's concurrency contract). A superseded decode calls back NOT AT ALL — callers must
+     * not treat "no callback" as an error.
+     *
      * Must be called on the main thread (reads live view-derived state; snapshots the
      * mutable PointF trace before hopping threads).
      */
@@ -192,6 +239,9 @@ class GeometricEngineAdapter(private val context: Context) {
         onResult: (PredictionResult) -> Unit,
     ) {
         if (frameWidthPx <= 0f || frameHeightPx <= 0f || swipePath.isEmpty()) {
+            // Still claim a generation: this degenerate swipe is the newest one, so an older
+            // decode already in flight must not land on the bar after our empty result.
+            decodeGeneration.incrementAndGet()
             onResult(PredictionResult(emptyList(), emptyList()))
             return
         }
@@ -201,6 +251,10 @@ class GeometricEngineAdapter(private val context: Context) {
             val p = swipePath[i]
             points.add(TracePoint(p.x, p.y, timestamps.getOrElse(i) { 0L }))
         }
+        // Claim a generation BEFORE submitting: whichever decode holds the newest generation
+        // when the work finishes is the only one allowed to post. Independent of the worker's
+        // interrupt flag, so a missed/absorbed interrupt cannot leak a stale suggestion list.
+        val generation = decodeGeneration.incrementAndGet()
         tasks.cancelAndSubmit {
             try {
                 val geometry = geometryFor(keyboard, params, frameWidthPx, frameHeightPx)
@@ -216,17 +270,27 @@ class GeometricEngineAdapter(private val context: Context) {
                         memo.ordinals
                     )
                 }
-                if (!Thread.currentThread().isInterrupted) {
-                    mainHandler.post { onResult(result) }
-                }
+                postIfNewest(generation, result, onResult)
             } catch (e: InterruptedException) {
                 // Cancelled by a newer swipe — drop silently.
             } catch (e: Exception) {
                 Log.e(TAG, "Geometric decode failed", e)
-                if (!Thread.currentThread().isInterrupted) {
-                    mainHandler.post { onResult(PredictionResult(emptyList(), emptyList())) }
-                }
+                postIfNewest(generation, PredictionResult(emptyList(), emptyList()), onResult)
             }
+        }
+    }
+
+    /** Posts [result] to the main thread iff [generation] is still the newest decode. */
+    private fun postIfNewest(
+        generation: Long,
+        result: PredictionResult,
+        onResult: (PredictionResult) -> Unit,
+    ) {
+        if (decodeGeneration.get() != generation) return
+        mainHandler.post {
+            // Re-check on the main thread: a newer swipe can land between the background
+            // check and this runnable, and the newest decode always owns the bar.
+            if (decodeGeneration.get() == generation) onResult(result)
         }
     }
 
@@ -234,6 +298,10 @@ class GeometricEngineAdapter(private val context: Context) {
      * Background warm-up: builds the layout geometry, the merged dictionary, and the
      * engine's Tier-A template index so the first real swipe decodes in warm-path time.
      * Idempotent — the engine's cache makes a repeat warmUp a no-op.
+     *
+     * Runs in the runner's BACKGROUND slot (audit M-2): a prewarm supersedes an older prewarm
+     * but never cancels an in-flight [decodeAsync]. A decode may cancel THIS work — that is
+     * intended (the user's swipe owns the thread; the decode then builds what it needs).
      */
     fun warmUpAsync(
         keyboard: KeyboardData,
@@ -243,10 +311,11 @@ class GeometricEngineAdapter(private val context: Context) {
         language: String,
     ) {
         if (frameWidthPx <= 0f || frameHeightPx <= 0f) return
-        tasks.cancelAndSubmit {
+        tasks.submitBackground {
             try {
-                val geometry = geometryFor(keyboard, params, frameWidthPx, frameHeightPx) ?: return@cancelAndSubmit
-                val memo = dictionaryFor(language) ?: return@cancelAndSubmit
+                val geometry = geometryFor(keyboard, params, frameWidthPx, frameHeightPx)
+                    ?: return@submitBackground
+                val memo = dictionaryFor(language) ?: return@submitBackground
                 val warm = engineFor().warmUp(geometry, memo.dictionary)
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                     Log.d(

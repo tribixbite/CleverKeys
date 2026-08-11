@@ -53,6 +53,13 @@ class SwipeCalibrationActivity : Activity() {
         // Calibration settings
         private const val WORDS_PER_SESSION = 20
 
+        /**
+         * ML-provenance layout tag for calibration traces (audit n-2): this screen renders its
+         * own fixed QWERTY grid, not one of the app's KeyboardData layouts, so it gets its own
+         * name rather than borrowing `latn_qwerty_us`.
+         */
+        private const val CALIBRATION_LAYOUT_NAME = "calibration_qwerty"
+
         // QWERTY layout
         private val KEYBOARD_LAYOUT = arrayOf(
             arrayOf("q", "w", "e", "r", "t", "y", "u", "i", "o", "p"),
@@ -1062,9 +1069,12 @@ class SwipeCalibrationActivity : Activity() {
 
         val swipeInput = SwipeInput(points, currentSwipeTimestamps, ArrayList())
 
-        // Record ML data
+        // Record ML data. Provenance (audit n-2): calibration draws its OWN hard-coded QWERTY
+        // grid (see NeuralKeyboardView.fullLayout) rather than a KeyboardData layout resource,
+        // and always decodes with the neural engine — tag it as such so exports stay filterable.
         val mlData = SwipeMLData(currentWord, "neural_calibration",
-            screenWidth, screenHeight, keyboardHeight)
+            screenWidth, screenHeight, keyboardHeight,
+            CALIBRATION_LAYOUT_NAME, SwipeMLData.ENGINE_NEURAL)
 
         // Add trace points with actual timestamps
         for (i in points.indices) {

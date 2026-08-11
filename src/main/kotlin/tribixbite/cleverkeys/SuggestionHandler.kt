@@ -98,6 +98,26 @@ class SuggestionHandler(
                 else -> word
             }
         }
+
+        /**
+         * Whether the swipe bar may be augmented with generated possessive forms, given the
+         * ACTIVE dictionary language.
+         *
+         * ENGLISH ONLY: [ContractionManager.generatePossessive] applies English `'s` morphology.
+         * Before the geometric engine, swipe was QWERTY-only and de-facto English-dominant, so
+         * the augmentation ran unconditionally; on non-QWERTY layouts it fabricates junk like
+         * "дом's" / "maison's". The gate (`b2d7b908`) therefore also removed possessives from
+         * the NEURAL path for fr/es-on-QWERTY users — deliberate: those forms were wrong there
+         * too (audit n-1).
+         *
+         * A null language (no DictionaryManager yet — early startup, unit contexts) is treated
+         * as English, preserving the pre-gate behavior in en-only contexts.
+         *
+         * Pure + extracted so both sides of the gate are pinned by runPureTests
+         * (`PipelineOracleJvmTest`) without standing up a DictionaryManager.
+         */
+        internal fun shouldAugmentPossessives(activeLanguage: String?): Boolean =
+            (activeLanguage ?: "en") == "en"
     }
 
     /**
@@ -482,15 +502,13 @@ class SuggestionHandler(
         // D1: augment the bar list with possessive forms (transient-style augment reused from the tap
         // path). Kept aligned with scores; possessives appended at the end so the top prediction is
         // unchanged and the auto-insert target below is still the highest-scoring word.
-        // ENGLISH ONLY (2026-07-23): generatePossessive appends English "'s" morphology —
-        // on the geometric path's non-English languages (Cyrillic ЙЦУКЕН, French AZERTY…)
-        // it would fabricate junk like "maison's"/"дом's". Gate on the ACTIVE dictionary
-        // language (null → "en" preserves the pre-gate behavior in en-only contexts).
+        // ENGLISH ONLY (2026-07-23): see [shouldAugmentPossessives] for the rule and why the
+        // gate deliberately covers the neural path too (audit n-1).
         val barWords = transformedPredictions.toMutableList()
         val barScores = (scores ?: emptyList()).toMutableList()
-        val activeLanguage = predictionCoordinator.getDictionaryManager()?.getCurrentLanguage() ?: "en"
+        val activeLanguage = predictionCoordinator.getDictionaryManager()?.getCurrentLanguage()
         val engineWordCount = barWords.size
-        if (activeLanguage == "en") {
+        if (shouldAugmentPossessives(activeLanguage)) {
             augmentPredictionsWithPossessives(barWords, barScores)
         }
 

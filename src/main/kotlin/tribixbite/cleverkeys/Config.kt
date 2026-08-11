@@ -345,6 +345,43 @@ object Defaults {
 }
 
 /**
+ * Validated ranges of the three user-tunable geometric-engine knobs — the SINGLE source of
+ * truth shared by the settings sliders ([GeometricSettingsActivity]) and the defensive clamps
+ * in `swipe.GeometricEngineAdapter`.
+ *
+ * WP9 audit m-2 (2026-08-11): the adapter previously clamped far wider (1..32 / 0..1 / 0..2)
+ * than the sliders allow, so a hand-edited or imported settings backup could push the engine
+ * into un-validated territory (values the UI can neither display nor undo — e.g. a frequency
+ * weight of 1.0 that drowns shape fidelity). Both sides now read these constants, so widening
+ * a slider automatically widens the clamp and the two can never drift apart again.
+ *
+ * The bounds themselves are the spec's calibrated envelope: candidate count stays inside the
+ * bar's usable depth, λ_f stays below the point where frequency out-votes shape, and the
+ * endpoint inset stays under one key width.
+ */
+object GeoKnobRanges {
+    /** Ranked candidates emitted per swipe (`geo_max_results`). */
+    val MAX_RESULTS: IntRange = 3..15
+
+    /** λ_f — common-words vs shape-fidelity bias (`geo_frequency_weight`). */
+    val FREQUENCY_WEIGHT: ClosedFloatingPointRange<Float> = 0.0f..0.4f
+
+    /** Sloppy start/end tolerance in key widths (`geo_endpoint_inset_kw`). */
+    val ENDPOINT_INSET_KW: ClosedFloatingPointRange<Float> = 0.0f..0.8f
+
+    /** Clamps a raw `geo_max_results` (pref/import/Config) into [MAX_RESULTS]. */
+    fun clampMaxResults(value: Int): Int = value.coerceIn(MAX_RESULTS.first, MAX_RESULTS.last)
+
+    /** Clamps a raw `geo_frequency_weight` into [FREQUENCY_WEIGHT]. */
+    fun clampFrequencyWeight(value: Float): Float =
+        value.coerceIn(FREQUENCY_WEIGHT.start, FREQUENCY_WEIGHT.endInclusive)
+
+    /** Clamps a raw `geo_endpoint_inset_kw` into [ENDPOINT_INSET_KW]. */
+    fun clampEndpointInsetKw(value: Float): Float =
+        value.coerceIn(ENDPOINT_INSET_KW.start, ENDPOINT_INSET_KW.endInclusive)
+}
+
+/**
  * One-time cleanup for the stale `vibrate_custom=true` written by the #154 bug.
  *
  * Before the fix (fa00cb0ae / 538122f1d-era), the settings layer force-set

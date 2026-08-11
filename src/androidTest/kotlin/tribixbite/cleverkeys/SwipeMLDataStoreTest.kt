@@ -45,9 +45,11 @@ class SwipeMLDataStoreTest {
     // Helper to create valid SwipeMLData with required minimum points/keys
     private fun createTestSwipeData(
         word: String,
-        source: String = "calibration"
+        source: String = "calibration",
+        layoutName: String = "latn_qwerty_us",
+        engine: String = SwipeMLData.ENGINE_NEURAL
     ): SwipeMLData {
-        val data = SwipeMLData(word, source, 1080, 1920, 480)
+        val data = SwipeMLData(word, source, 1080, 1920, 480, layoutName, engine)
         // Add enough raw points and registered keys to pass isValid()
         val baseTime = System.currentTimeMillis()
         data.addRawPoint(100f, 200f, baseTime)
@@ -423,11 +425,18 @@ class SwipeMLDataStoreTest {
         assertNotNull(json.getJSONObject("metadata"))
         assertNotNull(json.getJSONArray("trace_points"))
         assertNotNull(json.getJSONArray("registered_keys"))
+        // Provenance (WP9 audit n-2): exports MUST carry the layout + decoder engine so a
+        // non-QWERTY/geometric trace can be filtered out of a neural training corpus.
+        val metadata = json.getJSONObject("metadata")
+        assertEquals("latn_qwerty_us", metadata.getString("layout_name"))
+        assertEquals(SwipeMLData.ENGINE_NEURAL, metadata.getString("engine"))
     }
 
     @Test
     fun testSwipeMLDataFromJSON() {
-        val original = createTestSwipeData("roundtrip")
+        val original = createTestSwipeData(
+            "roundtrip", layoutName = "cyrl_jcuken_ru", engine = SwipeMLData.ENGINE_GEOMETRIC
+        )
         val json = original.toJSON()
         val reconstructed = SwipeMLData(json)
 
@@ -437,6 +446,28 @@ class SwipeMLDataStoreTest {
         assertEquals(original.screenWidthPx, reconstructed.screenWidthPx)
         assertEquals(original.screenHeightPx, reconstructed.screenHeightPx)
         assertEquals(original.keyboardHeightPx, reconstructed.keyboardHeightPx)
+        assertEquals(original.layoutName, reconstructed.layoutName)
+        assertEquals(original.engine, reconstructed.engine)
+    }
+
+    /**
+     * WP9 audit n-2 backwards compatibility: rows stored BEFORE provenance tagging carry no
+     * `layout_name`/`engine` keys. Loading one must succeed and report "unknown" — never throw
+     * (which would make the whole export/list call drop the row).
+     */
+    @Test
+    fun testSwipeMLDataFromLegacyJSONWithoutProvenance() {
+        val json = createTestSwipeData("legacy").toJSON()
+        val metadata = json.getJSONObject("metadata")
+        metadata.remove("layout_name")
+        metadata.remove("engine")
+
+        val reconstructed = SwipeMLData(json)
+
+        assertEquals(SwipeMLData.UNKNOWN, reconstructed.layoutName)
+        assertEquals(SwipeMLData.UNKNOWN, reconstructed.engine)
+        assertEquals("legacy", reconstructed.targetWord)
+        assertEquals(3, reconstructed.getTracePoints().size)
     }
 
     @Test

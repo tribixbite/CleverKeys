@@ -76,12 +76,17 @@ class MLDataCollector(private val context: Context) {
             // Strip "raw:" prefix before storing ML data
             val cleanWord = word.replace(Regex("^raw:"), "")
 
-            // Create a new ML data object with the selected word
+            // Create a new ML data object with the selected word. Provenance (layout + decoder
+            // engine) is CARRIED OVER from the captured swipe — this object is a copy made at
+            // selection time, so re-deriving it here would lose the geometry the trace was
+            // actually drawn on (audit n-2).
             val metrics = context.resources.displayMetrics
             val mlData = SwipeMLData(
                 cleanWord, "user_selection",
                 metrics.widthPixels, metrics.heightPixels,
-                keyboardHeight
+                keyboardHeight,
+                currentSwipeData.layoutName,
+                currentSwipeData.engine
             )
 
             // Copy trace points from the temporary data

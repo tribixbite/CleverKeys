@@ -100,4 +100,48 @@ class CoreImeHygieneDriftTest {
                 "the EngineInitGate CountDownLatch replaced the spin loop."
         ).that(text).doesNotContain("Thread.sleep")
     }
+
+    /**
+     * WP9 audit M-2 (2026-08-11): the geometric prewarm must stay in the runner's BACKGROUND
+     * slot. If it regains `cancelAndSubmit`, an `onStartInputView` prewarm can once again
+     * cancel an in-flight swipe decode — a silently lost swipe with no error path.
+     */
+    @Test
+    fun geometricWarmUpUsesBackgroundTaskSlot() {
+        val adapter = source("tribixbite/cleverkeys/swipe/GeometricEngineAdapter.kt")
+
+        val warmUpBody = adapter.substringAfter("fun warmUpAsync(").substringBefore("fun shutdown(")
+        assertWithMessage(
+            "GeometricEngineAdapter.warmUpAsync must submit in the BACKGROUND slot " +
+                "(tasks.submitBackground) so a prewarm can never cancel an in-flight decode."
+        ).that(warmUpBody).contains("tasks.submitBackground")
+        assertWithMessage(
+            "warmUpAsync must NOT use the foreground cancelAndSubmit slot (audit M-2)."
+        ).that(warmUpBody).doesNotContain("tasks.cancelAndSubmit")
+
+        val decodeBody = adapter.substringAfter("fun decodeAsync(").substringBefore("fun postIfNewest(")
+        assertWithMessage(
+            "decodeAsync must stay in the FOREGROUND slot: a new swipe supersedes the " +
+                "previous decode AND any in-flight prewarm."
+        ).that(decodeBody).contains("tasks.cancelAndSubmit")
+    }
+
+    /**
+     * WP9 audit M-2 (b): the geometric decode callback replays the InputConnection/EditorInfo
+     * captured at swipe time, so it must re-check that the field is still current before
+     * committing — the same guard the neural cold-start replay uses.
+     */
+    @Test
+    fun geometricDecodeCallbackGuardsAgainstStaleInputField() {
+        val coordinator = source("tribixbite/cleverkeys/InputCoordinator.kt")
+        val geoPath = coordinator
+            .substringAfter("private fun performGeometricSwipeTyping(")
+            .substringBefore("fun prewarmGeometricEngine(")
+
+        assertWithMessage(
+            "performGeometricSwipeTyping's decode callback must guard with " +
+                "isReplayInputStillCurrent before handing results to the commit pipeline; " +
+                "without it a late decode commits into whatever field is focused now."
+        ).that(geoPath).contains("isReplayInputStillCurrent(ic, editorInfo)")
+    }
 }

@@ -10,10 +10,31 @@ import kotlin.math.sqrt
 /**
  * ML data model for swipe typing training data.
  * Captures normalized swipe traces with metadata for neural network training.
+ *
+ * Provenance (WP9 audit n-2, 2026-08-11): every trace also carries the KEYBOARD LAYOUT it was
+ * drawn on and the DECODER ENGINE that produced its suggestions. Since the geometric engine
+ * shipped, swipes can originate on non-QWERTY layouts (Dvorak, ЙЦУКЕН, AZERTY…) whose key
+ * geometry is incompatible with the QWERTY-trained neural model — untagged, those traces would
+ * be indistinguishable from QWERTY/neural ones in an export and would silently poison any
+ * corpus built from it. Rows written before tagging (and any import of an older export) read
+ * back as [UNKNOWN] rather than failing to load.
  */
 class SwipeMLData {
     companion object {
         private const val TAG = "SwipeMLData"
+
+        /** Provenance value for traces recorded before layout/engine tagging existed. */
+        const val UNKNOWN = "unknown"
+
+        /** [engine] value for the ONNX neural decoder (QWERTY-only routing). */
+        const val ENGINE_NEURAL = "neural"
+
+        /** [engine] value for the geometric SHARK2 decoder (any layout). */
+        const val ENGINE_GEOMETRIC = "geometric"
+
+        /** Blank/missing provenance normalizes to [UNKNOWN] so exports never carry "". */
+        private fun normalizeProvenance(value: String?): String =
+            value?.takeIf { it.isNotBlank() } ?: UNKNOWN
     }
 
     // Data fields matching ML requirements
@@ -24,18 +45,27 @@ class SwipeMLData {
     val screenHeightPx: Int
     val keyboardHeightPx: Int
     val collectionSource: String // "calibration" or "user_selection"
+
+    /** Layout the trace was drawn on (e.g. "latn_qwerty_us", "cyrl_jcuken_ru") or [UNKNOWN]. */
+    val layoutName: String
+
+    /** Decoder that produced the suggestions: [ENGINE_NEURAL], [ENGINE_GEOMETRIC] or [UNKNOWN]. */
+    val engine: String
     private val tracePoints: MutableList<TracePoint> = mutableListOf()
     private val registeredKeys: MutableList<String> = mutableListOf()
     private var keyboardOffsetY = 0 // Y offset of keyboard from top of screen
     private var lastAbsoluteTimestamp: Long // Track last point's absolute timestamp for delta calculation
 
     // Constructor for new swipe data
+    @JvmOverloads
     constructor(
         targetWord: String,
         collectionSource: String,
         screenWidth: Int,
         screenHeight: Int,
-        keyboardHeight: Int
+        keyboardHeight: Int,
+        layoutName: String = UNKNOWN,
+        engine: String = UNKNOWN
     ) {
         this.traceId = UUID.randomUUID().toString()
         this.targetWord = targetWord.lowercase()
@@ -44,6 +74,8 @@ class SwipeMLData {
         this.screenHeightPx = screenHeight
         this.keyboardHeightPx = keyboardHeight
         this.collectionSource = collectionSource
+        this.layoutName = normalizeProvenance(layoutName)
+        this.engine = normalizeProvenance(engine)
         this.lastAbsoluteTimestamp = timestampUtc // Initialize to start time
     }
 
@@ -59,6 +91,11 @@ class SwipeMLData {
         this.screenHeightPx = metadata.getInt("screen_height_px")
         this.keyboardHeightPx = metadata.getInt("keyboard_height_px")
         this.collectionSource = metadata.getString("collection_source")
+        // Backwards compatibility: rows stored before provenance tagging have neither key.
+        // optString's own default only covers a MISSING key, so normalize explicit nulls /
+        // empty strings too — an untagged row must read UNKNOWN, never "" (audit n-2).
+        this.layoutName = normalizeProvenance(metadata.optString("layout_name", UNKNOWN))
+        this.engine = normalizeProvenance(metadata.optString("engine", UNKNOWN))
 
         // Load trace points
         val pointsArray = json.getJSONArray("trace_points")
@@ -139,6 +176,11 @@ class SwipeMLData {
             put("keyboard_height_px", keyboardHeightPx)
             put("keyboard_offset_y", keyboardOffsetY)
             put("collection_source", collectionSource)
+            // Provenance (audit n-2): which layout the trace was drawn on and which decoder
+            // produced its suggestions. Consumers of an export MUST filter on these before
+            // training — a geometric/non-QWERTY trace is not QWERTY-neural training data.
+            put("layout_name", layoutName)
+            put("engine", engine)
         }
         json.put("metadata", metadata)
 
