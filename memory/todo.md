@@ -173,10 +173,16 @@ just below. Outstanding, prioritized:
       IME wiring (race-guard + ML-provenance conventions) 617155a7, settings surface
       (dropdown 4th option + CtcSettingsActivity beam-width knob) 811eeb7d, instrumented
       parity + latency-gate tests d99dd41f. Refinement head NOT needed (encoder alone beats all bars).
-- [ ] **Instrumented gate evidence**: targeted ew-cli run of CtcEmissionModelParityTest +
-      CtcLatencyGateTest (kicked off 2026-08-08; check ~/ew-output) then a FULL suite pass before
-      any release tag. Manual QA per plan §4.5 (first-swipe warmup, long-word feel, non-QWERTY
-      hedge, provenance label, thermals).
+- [x] **Instrumented gate evidence COMPLETE (2026-08-08)**: CTC parity + latency gates green
+      on-device; FULL ew-cli sweep run — all CTC/pipeline/oracle classes passed; the sweep's only
+      real catch (44 wholesale DictionaryManagerTest/WordPredictorTest failures) was the
+      e0f757ca UserVocabulary cap lambda calling throwing globalConfig() — fixed 2b24b95c,
+      confirmed on-device 44/44 + gates re-green. Seam audit (settings UI / backup / orientation /
+      language+layout): 3 SOUND, Q4 bugs H1 (contractions committed as dont/im), M1 (non-en empty
+      bar) , M2 (mode-keyed provenance) all FIXED fb77b422 (+27 tests, 1907 pure green).
+- [ ] Manual QA per plan §4.5 before any v1.6.0 tag (first-swipe warmup, long-word feel,
+      non-QWERTY hedge, non-en fallback-to-neural, don't/I'm contraction display, provenance
+      label, thermals). Tag only on explicit user go.
 - [ ] **Neural+geo rank fusion** — still a valid parallel option but LOWER priority now (CTC beats
       both engines' union on most strata). Re-evaluate vs a CTC+neural cascade (decision doc §3)
       after CTC field feedback.
