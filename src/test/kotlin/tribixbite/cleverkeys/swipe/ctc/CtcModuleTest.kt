@@ -121,6 +121,20 @@ class CtcModuleTest {
         // FUTO commit-phase defaults: beam 300, top-4.
         assertThat(enc.beamWidth).isEqualTo(300)
         assertThat(enc.topK).isEqualTo(4)
+
+        // tunedV2 — the SHIP preset for the bundled CleverKeys-trained encoder
+        // (phaseM_kd_fresh_w1, test-validated on the app-trie footing via UNSEALING_4;
+        // must equal the golden fixture's top-level `preset` [0.9, 4.0, 0.25, 0.25, 0.9882]).
+        val ship = CtcScoringParams.tunedV2()
+        assertThat(ship.gamma).isEqualTo(0.9)
+        assertThat(ship.lambda).isEqualTo(4.0)
+        assertThat(ship.beta).isEqualTo(0.25)
+        assertThat(ship.alpha).isEqualTo(0.0)
+        assertThat(ship.gammaPrune).isEqualTo(0.25)
+        assertThat(ship.betaPrune).isEqualTo(0.9882)
+        // Validated operating point: beam 100 (NOT FUTO's 300), top-4 slate default.
+        assertThat(ship.beamWidth).isEqualTo(100)
+        assertThat(ship.topK).isEqualTo(4)
     }
 
     // ── Featurizer resampler branches + layout tensors ────────────────────────────

@@ -75,6 +75,36 @@ data class CtcScoringParams(
                 beamWidth = beamWidth, topK = topK,
             )
 
+        /**
+         * The SHIP preset for the CleverKeys-trained CTC encoder bundled as
+         * `models/ctc_swipe_encoder.onnx` (CleverKeys-ML `ctc/` Phase M finalist
+         * `phaseM_kd_fresh_w1`, fp16w). Fitted and validated on the APP-TRIE footing —
+         * the STRIP trie built from `dictionaries/en_enhanced.json` (98,081 words after
+         * a–z stripping) — and TEST-VALIDATED there: the fourth unsealing of test-2400
+         * (`ctc/UNSEALING_4.md`) decoded this model at exactly this preset and cleared
+         * all five trie-matched FUTO-ceiling bars on every seed (seed-mean top-1 89.31,
+         * worst-seed top-5 margin +1.50).
+         *
+         * λ = 4.0 is deliberately far above the FUTO presets' 0.013–0.018: it multiplies
+         * `en_enhanced.json`'s COMPRESSED 134–255 byte-score scale (`ln f ∈ [4.9, 5.54]`,
+         * a much narrower log range than the raw AOSP counts FUTO's λ was fitted to), so
+         * a large λ is required for frequency to carry comparable weight. The golden
+         * fixture (`ctc_golden.json`, top-level `preset` `[0.9, 4.0, 0.25, 0.25,
+         * 0.9882]`) is generated at this preset — model, preset and fixture always move
+         * together.
+         *
+         * @param beamWidth commit-phase width. Every campaign accuracy number was
+         *   decoded at width **100** (not FUTO's 300), so 100 is the default; the
+         *   `ctc_beam_width` pref feeds this.
+         * @param topK size of the returned slate.
+         */
+        fun tunedV2(beamWidth: Int = 100, topK: Int = 4): CtcScoringParams =
+            CtcScoringParams(
+                gamma = 0.9, lambda = 4.0, beta = 0.25, alpha = 0.0,
+                gammaPrune = 0.25, betaPrune = 0.9882,
+                beamWidth = beamWidth, topK = topK,
+            )
+
         /** `scoring.json` "fallback" — used when no signature-specific set matches. */
         fun fallback(beamWidth: Int = 300, topK: Int = 4): CtcScoringParams =
             CtcScoringParams(
