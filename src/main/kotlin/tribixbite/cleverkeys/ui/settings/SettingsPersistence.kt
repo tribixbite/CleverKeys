@@ -29,7 +29,10 @@ internal fun SettingsActivity.handlePreferenceChanged(sharedPreferences: SharedP
                 swipeTypingEnabled = prefs.getBoolean(key, Defaults.SWIPE_TYPING_ENABLED)
             }
             "swipe_engine_mode" -> {
+                // L1: case-canonical at read, matching Config.refresh — an imported "CTC"
+                // must select the same dropdown row/knob visibility as "ctc".
                 swipeEngineMode = prefs.getSafeString(key, Defaults.SWIPE_ENGINE_MODE)
+                    .lowercase(java.util.Locale.ROOT)
             }
             "neural_beam_width" -> {
                 beamWidth = prefs.getInt(key, Defaults.NEURAL_BEAM_WIDTH)
@@ -228,8 +231,10 @@ internal fun SettingsActivity.loadCurrentSettings() {
         // null layout = SystemLayout → resolves to latn_qwerty_us at runtime
         currentLayoutName = currentLayout?.name ?: "System"
 
-        // Neural prediction settings
+        // Neural prediction settings (swipe_engine_mode case-canonicalized — L1, see
+        // handlePreferenceChanged)
         swipeEngineMode = prefs.getSafeString("swipe_engine_mode", Defaults.SWIPE_ENGINE_MODE)
+            .lowercase(java.util.Locale.ROOT)
         beamWidth = prefs.getSafeInt("neural_beam_width", Defaults.NEURAL_BEAM_WIDTH)
         maxLength = prefs.getSafeInt("neural_max_length", Defaults.NEURAL_MAX_LENGTH)
         confidenceThreshold = prefs.getSafeFloat("neural_confidence_threshold", Defaults.NEURAL_CONFIDENCE_THRESHOLD)

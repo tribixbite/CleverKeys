@@ -17,6 +17,12 @@ import tribixbite.cleverkeys.KeyboardData
  *    top-1 on synthetic QWERTY in the spec; useful for comparison and battery-lean decoding).
  *  - [Mode.CTC]: QWERTY-Latin → [Engine.CTC]; every other layout → [Engine.GEOMETRIC]
  *    (same non-QWERTY coverage as HYBRID, so selecting CTC never removes swipe elsewhere).
+ *    LANGUAGE dimension (audit M1): the v1 CTC model/lexicon is English-only, and language
+ *    is runtime state the layout-only router deliberately doesn't see —
+ *    `InputCoordinator.performCtcSwipeTyping` reads the active language BEFORE dispatch and
+ *    falls through to the SAME neural flow [Engine.NEURAL] takes when it isn't English.
+ *    Net ctc semantics: CTC(en QWERTY) / neural(non-en QWERTY) / geometric(non-QWERTY) —
+ *    never less coverage than HYBRID.
  *
  * A single engine owns each swipe end-to-end. Scores are NEVER compared across engines —
  * geometric scores are engine-relative softmax×1000 (see `SwipeDecodingEngine` KDoc) and
@@ -58,8 +64,11 @@ object SwipeEngineRouter {
 
         /**
          * G5: CTC on QWERTY-Latin (the layouts the shipped encoder was trained
-         * for), geometric on every other layout — the same non-QWERTY coverage
-         * as [HYBRID], so selecting CTC never removes swipe from other layouts.
+         * for) when the active language is English, geometric on every other
+         * layout — and NEURAL for non-English languages on QWERTY (audit M1:
+         * the language fallthrough lives in `InputCoordinator.performCtcSwipeTyping`
+         * because language is runtime state this layout-only router doesn't see).
+         * Selecting CTC therefore never yields less coverage than [HYBRID].
          */
         CTC;
 

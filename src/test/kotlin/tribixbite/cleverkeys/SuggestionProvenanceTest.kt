@@ -4,6 +4,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import tribixbite.cleverkeys.swipe.SwipeEngineRouter
 import kotlin.math.ln1p
 
 /**
@@ -114,6 +115,57 @@ class SuggestionProvenanceTest {
         assertEquals(SuggestionOrigin.NEURAL_BEAM, SuggestionOrigin.forSwipeEngineMode("neural"))
         assertEquals(SuggestionOrigin.NEURAL_BEAM, SuggestionOrigin.forSwipeEngineMode("hybrid"))
         assertEquals(SuggestionOrigin.NEURAL_BEAM, SuggestionOrigin.forSwipeEngineMode(null))
+    }
+
+    /**
+     * Audit M2: the marker/long-press sheet must report the engine that ACTUALLY
+     * decoded, not the configured mode. [SuggestionOrigin.forRoutedEngine] is the
+     * routed-engine derivation InputCoordinator threads through
+     * `handleSwipePredictionResults` — a geometric decode under ctc/hybrid mode tags
+     * GEOMETRIC, and M1's non-English ctc fallthrough dispatches through the neural
+     * flow whose callback tags NEURAL_BEAM (= forRoutedEngine(NEURAL)).
+     */
+    @Test
+    fun `routed engine maps to the origin of the engine that actually decoded`() {
+        assertEquals(
+            SuggestionOrigin.GEOMETRIC,
+            SuggestionOrigin.forRoutedEngine(SwipeEngineRouter.Engine.GEOMETRIC)
+        )
+        assertEquals(
+            SuggestionOrigin.CTC,
+            SuggestionOrigin.forRoutedEngine(SwipeEngineRouter.Engine.CTC)
+        )
+        // M1 neural-fallback case: a non-en swipe under ctc mode decodes neurally.
+        assertEquals(
+            SuggestionOrigin.NEURAL_BEAM,
+            SuggestionOrigin.forRoutedEngine(SwipeEngineRouter.Engine.NEURAL)
+        )
+        // NONE never produces suggestions; the total mapping falls back to NEURAL_BEAM.
+        assertEquals(
+            SuggestionOrigin.NEURAL_BEAM,
+            SuggestionOrigin.forRoutedEngine(SwipeEngineRouter.Engine.NONE)
+        )
+    }
+
+    /**
+     * The mode-derived fallback ([SuggestionOrigin.forSwipeEngineMode]) and the routed
+     * derivation must AGREE on each mode's QWERTY-English default routing — the fallback
+     * only diverges on the per-layout/-language branches M2 exists to fix.
+     */
+    @Test
+    fun `mode fallback agrees with routed derivation on each mode's default engine`() {
+        assertEquals(
+            SuggestionOrigin.forSwipeEngineMode("ctc"),
+            SuggestionOrigin.forRoutedEngine(SwipeEngineRouter.Engine.CTC)
+        )
+        assertEquals(
+            SuggestionOrigin.forSwipeEngineMode("geometric"),
+            SuggestionOrigin.forRoutedEngine(SwipeEngineRouter.Engine.GEOMETRIC)
+        )
+        assertEquals(
+            SuggestionOrigin.forSwipeEngineMode("hybrid"),
+            SuggestionOrigin.forRoutedEngine(SwipeEngineRouter.Engine.NEURAL)
+        )
     }
 
     @Test

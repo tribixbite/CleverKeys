@@ -297,7 +297,20 @@ object SettingsImportPlanBuilder {
         "clipboard_size_limit_mb",
     )
 
+    /**
+     * Enum-like string prefs whose consumers compare lowercase (`SwipeEngineRouter.
+     * Mode.fromPref`, the settings dropdown). Canonicalized to lowercase at parse
+     * time (audit L1) so an imported "CTC" both diffs against a stored "ctc" as
+     * unchanged AND applies in the canonical form every reader expects.
+     */
+    private val CASE_CANONICAL_STRING_KEYS = setOf(
+        "swipe_engine_mode",
+    )
+
     private fun canonicalize(key: String, v: PrefValue): PrefValue {
+        if (key in CASE_CANONICAL_STRING_KEYS && v is PrefValue.Str) {
+            return PrefValue.Str(v.v.lowercase(java.util.Locale.ROOT))
+        }
         if (key !in STRING_BUT_NUMERIC_KEYS) return v
         return when (v) {
             is PrefValue.IntV -> PrefValue.Str(v.v.toString())

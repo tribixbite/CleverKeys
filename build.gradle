@@ -484,10 +484,14 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.swipe.geometric.GeoShortWordTest',
     'tribixbite.cleverkeys.swipe.geometric.GeoAblationTest',
     'tribixbite.cleverkeys.swipe.geometric.GeoBenchmarkTest',
-    // FUTO-style CTC swipe module (DESIGN-ONLY, NOT wired) — pure JVM golden-trace parity
-    // vs the Python port (scripts/futo_decoder_{eval,ceiling}.py) + module unit tests.
+    // FUTO-style CTC swipe module (wired as the `ctc` engine mode, G5) — pure JVM
+    // golden-trace parity vs the Python port (scripts/futo_decoder_{eval,ceiling}.py)
+    // + module unit tests + the adapter's merge/ordinal + contraction-display oracles
+    // (CTC integration audit H1/L3, 2026-08-14).
     'tribixbite.cleverkeys.swipe.ctc.CtcParityTest',
     'tribixbite.cleverkeys.swipe.ctc.CtcModuleTest',
+    'tribixbite.cleverkeys.swipe.ctc.CtcLexiconMergeTest',
+    'tribixbite.cleverkeys.swipe.ctc.CtcContractionDisplayTest',
     // Context-LM persistence fix (audit 2026-08-06) — debounced write-back substrate,
     // language-keyed singleton BigramStore, UserVocabulary save-storm fix
     'tribixbite.cleverkeys.persist.DebouncedPersisterTest',

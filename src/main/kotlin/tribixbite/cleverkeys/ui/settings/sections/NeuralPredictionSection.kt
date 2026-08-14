@@ -45,7 +45,8 @@ internal fun SettingsActivity.NeuralPredictionSection() {
                     // WP9 R-1 step 7 (v1.1): engine mode selector. Hybrid = neural on QWERTY +
                     // geometric elsewhere; Neural = QWERTY-only swipe (pre-geo behavior);
                     // Geometric = SHARK2 on all layouts; CTC (G5) = CTC trie-beam on
-                    // QWERTY + geometric elsewhere.
+                    // QWERTY for English (neural for other languages — audit M1) +
+                    // geometric elsewhere.
                     SettingsDropdown(
                         title = stringResource(R.string.swipe_engine_mode_title),
                         description = stringResource(R.string.swipe_engine_mode_desc),

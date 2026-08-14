@@ -144,4 +144,125 @@ class CoreImeHygieneDriftTest {
                 "without it a late decode commits into whatever field is focused now."
         ).that(geoPath).contains("isReplayInputStillCurrent(ic, editorInfo)")
     }
+
+    // ── G5 CTC twins of the geometric pins (CTC integration audit, 2026-08-14) ──────────
+
+    /**
+     * CTC twin of [geometricWarmUpUsesBackgroundTaskSlot]: the CTC prewarm must stay in
+     * the runner's BACKGROUND slot so an `onStartInputView` prewarm can never cancel an
+     * in-flight decode; the decode must stay FOREGROUND (last-swipe-wins).
+     */
+    @Test
+    fun ctcWarmUpUsesBackgroundTaskSlot() {
+        val adapter = source("tribixbite/cleverkeys/swipe/CtcEngineAdapter.kt")
+
+        val warmUpBody = adapter.substringAfter("fun warmUpAsync(").substringBefore("fun shutdown(")
+        assertWithMessage(
+            "CtcEngineAdapter.warmUpAsync must submit in the BACKGROUND slot " +
+                "(tasks.submitBackground) so a prewarm can never cancel an in-flight decode."
+        ).that(warmUpBody).contains("tasks.submitBackground")
+        assertWithMessage(
+            "CtcEngineAdapter.warmUpAsync must NOT use the foreground cancelAndSubmit slot."
+        ).that(warmUpBody).doesNotContain("tasks.cancelAndSubmit")
+
+        val decodeBody = adapter.substringAfter("fun decodeAsync(").substringBefore("fun postIfNewest(")
+        assertWithMessage(
+            "CtcEngineAdapter.decodeAsync must stay in the FOREGROUND slot: a new swipe " +
+                "supersedes the previous decode AND any in-flight prewarm."
+        ).that(decodeBody).contains("tasks.cancelAndSubmit")
+    }
+
+    /**
+     * CTC twin of [geometricDecodeCallbackGuardsAgainstStaleInputField]: the CTC decode
+     * callback replays captured input handles and must re-check field currency.
+     */
+    @Test
+    fun ctcDecodeCallbackGuardsAgainstStaleInputField() {
+        val coordinator = source("tribixbite/cleverkeys/InputCoordinator.kt")
+        val ctcPath = coordinator
+            .substringAfter("private fun performCtcSwipeTyping(")
+            .substringBefore("fun prewarmGeometricEngine(")
+
+        assertWithMessage(
+            "performCtcSwipeTyping's decode callback must guard with " +
+                "isReplayInputStillCurrent before handing results to the commit pipeline."
+        ).that(ctcPath).contains("isReplayInputStillCurrent(ic, editorInfo)")
+    }
+
+    /**
+     * Audit M1: ctc mode must never degrade below hybrid. performCtcSwipeTyping reads the
+     * active language BEFORE dispatch and falls through to the SAME neural flow
+     * Engine.NEURAL takes ([dispatchNeuralSwipeTyping]) when it isn't English — a
+     * mode=ctc + QWERTY + language=de swipe must decode neurally, not hit the adapter's
+     * en-gate and permanently empty the bar.
+     */
+    @Test
+    fun ctcModeFallsThroughToNeuralForNonEnglishLanguage() {
+        val coordinator = source("tribixbite/cleverkeys/InputCoordinator.kt")
+        val ctcPath = coordinator
+            .substringAfter("private fun performCtcSwipeTyping(")
+            .substringBefore("fun prewarmGeometricEngine(")
+
+        val gateIdx = ctcPath.indexOf("CtcEngineAdapter.LANGUAGE")
+        assertWithMessage(
+            "performCtcSwipeTyping must gate on the adapter's language constant " +
+                "(CtcEngineAdapter.LANGUAGE) before dispatching to the CTC adapter."
+        ).that(gateIdx).isAtLeast(0)
+        val fallthroughIdx = ctcPath.indexOf("dispatchNeuralSwipeTyping(")
+        assertWithMessage(
+            "performCtcSwipeTyping must fall through to dispatchNeuralSwipeTyping — the " +
+                "same flow the NEURAL routing branch takes — for non-English languages."
+        ).that(fallthroughIdx).isAtLeast(0)
+        assertWithMessage(
+            "The neural fallthrough must sit right after the language gate, BEFORE any " +
+                "CTC dispatch (the language read precedes engine dispatch)."
+        ).that(fallthroughIdx).isGreaterThan(gateIdx)
+        assertWithMessage(
+            "The language gate must run before the CTC ML-trace capture, so a neural " +
+                "fallthrough swipe is captured as ENGINE_NEURAL by performSwipeTyping."
+        ).that(ctcPath.indexOf("beginSwipeCapture")).isGreaterThan(fallthroughIdx)
+    }
+
+    /**
+     * G5 defense-in-depth pins on CtcEngineAdapter.decodeAsync: the adapter keeps its own
+     * English gate (upstream M1 fallthrough is the primary), and EVERY decodeAsync entry —
+     * including the degenerate/non-en early-return — claims a decode generation so an
+     * older in-flight decode can never land on the bar after the newer empty result.
+     */
+    @Test
+    fun ctcDecodeKeepsEnGateAndAlwaysClaimsGeneration() {
+        val adapter = source("tribixbite/cleverkeys/swipe/CtcEngineAdapter.kt")
+        val decodeBody = adapter.substringAfter("fun decodeAsync(").substringBefore("fun postIfNewest(")
+
+        assertWithMessage(
+            "decodeAsync must keep the language gate (defense-in-depth under the M1 " +
+                "InputCoordinator fallthrough)."
+        ).that(decodeBody).contains("language.equals(LANGUAGE, ignoreCase = true)")
+
+        val earlyReturn = decodeBody.substringBefore("tasks.cancelAndSubmit")
+        assertWithMessage(
+            "decodeAsync's early-return branch must claim a decode generation " +
+                "(decodeGeneration.incrementAndGet()) before delivering the empty result."
+        ).that(earlyReturn).contains("decodeGeneration.incrementAndGet()")
+    }
+
+    /**
+     * Audit L5: an ONNX-session load failure must retry a bounded number of times before
+     * latching off — the old `modelLoadFailed` boolean permanently disabled ctc for the
+     * IME's whole lifetime on the first (possibly transient) failure.
+     */
+    @Test
+    fun ctcModelLoadFailureRetriesBoundedThenLatches() {
+        val adapter = source("tribixbite/cleverkeys/swipe/CtcEngineAdapter.kt")
+
+        assertWithMessage(
+            "CtcEngineAdapter must bound model-load retries via MAX_MODEL_LOAD_ATTEMPTS."
+        ).that(adapter).contains("MAX_MODEL_LOAD_ATTEMPTS")
+        assertWithMessage(
+            "modelOrNull must stop attempting once the retry budget is exhausted."
+        ).that(adapter).contains("modelLoadAttempts >= MAX_MODEL_LOAD_ATTEMPTS")
+        assertWithMessage(
+            "The permanent first-failure latch (modelLoadFailed) must not return."
+        ).that(adapter).doesNotContain("modelLoadFailed")
+    }
 }

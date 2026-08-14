@@ -973,7 +973,10 @@ class Config private constructor(
         backspace_undo_swipe = _prefs.getBoolean("backspace_undo_swipe", Defaults.BACKSPACE_UNDO_SWIPE)
         backspace_undo_autocorrect = _prefs.getBoolean("backspace_undo_autocorrect", Defaults.BACKSPACE_UNDO_AUTOCORRECT)
         swipe_debug_detailed_logging = _prefs.getBoolean("swipe_debug_detailed_logging", Defaults.SWIPE_DEBUG_DETAILED_LOGGING)
+        // L1: canonicalize case at read — an imported/hand-edited "CTC" must drive the
+        // router, provenance tagging, and the settings UI exactly like "ctc".
         swipe_engine_mode = safeGetString(_prefs, "swipe_engine_mode", Defaults.SWIPE_ENGINE_MODE)
+            .lowercase(java.util.Locale.ROOT)
         geo_max_results = safeGetInt(_prefs, "geo_max_results", Defaults.GEO_MAX_RESULTS)
         geo_frequency_weight = safeGetFloat(_prefs, "geo_frequency_weight", Defaults.GEO_FREQUENCY_WEIGHT)
         geo_endpoint_inset_kw = safeGetFloat(_prefs, "geo_endpoint_inset_kw", Defaults.GEO_ENDPOINT_INSET_KW)

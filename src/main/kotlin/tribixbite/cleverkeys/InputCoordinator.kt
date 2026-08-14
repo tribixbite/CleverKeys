@@ -394,6 +394,11 @@ class InputCoordinator(
      *
      * @param shiftActive True if shift was latched (single tap) when the swipe started.
      * @param shiftLocked True if shift was LOCKED (caps lock) when the swipe started.
+     * @param origin the [SuggestionOrigin] of the engine that ACTUALLY decoded this swipe
+     *   (audit M2 — each dispatch path passes its own engine, so a geometric decode under
+     *   ctc/hybrid mode is tagged GEOMETRIC, and M1's non-en neural fallback NEURAL_BEAM).
+     *   Null falls back to the old mode-derived approximation
+     *   ([SuggestionOrigin.forSwipeEngineMode]) for callers predating the threading.
      */
     fun handlePredictionResults(
         predictions: List<String>?,
@@ -402,7 +407,8 @@ class InputCoordinator(
         editorInfo: EditorInfo?,
         resources: Resources,
         shiftActive: Boolean = wasShiftActiveAtSwipeStart,
-        shiftLocked: Boolean = wasShiftLockedAtSwipeStart
+        shiftLocked: Boolean = wasShiftLockedAtSwipeStart,
+        origin: SuggestionOrigin? = null
     ) {
         // Keep the fields in sync with the request-carried state (single source of truth for the
         // default-param seam used by tests and the oracle).
@@ -416,7 +422,7 @@ class InputCoordinator(
             return
         }
         delegate.handleSwipePredictionResults(
-            predictions, scores, ic, editorInfo, resources, shiftActive, shiftLocked, this
+            predictions, scores, ic, editorInfo, resources, shiftActive, shiftLocked, this, origin
         )
     }
 
@@ -516,10 +522,31 @@ class InputCoordinator(
             SwipeEngineRouter.Engine.NEURAL -> Unit // falls through to the neural flow below
         }
 
-        // OPTIMIZATION: Ensure the neural engine is loaded before running the swipe. If it is
-        // not yet ready, initialize it OFF the main thread and resume via performSwipeTyping
-        // once the attempt completes — never busy-wait on the UI thread. The replay path calls
-        // performSwipeTyping directly, so there is no re-enqueue loop.
+        dispatchNeuralSwipeTyping(
+            swipedKeys, swipePath, timestamps, ic, editorInfo, resources,
+            wasShiftActive, wasShiftLocked
+        )
+    }
+
+    /**
+     * THE neural swipe flow ([SwipeEngineRouter.Engine.NEURAL]'s dispatch), shared by the
+     * NEURAL routing branch and [performCtcSwipeTyping]'s non-English fallthrough (audit M1).
+     *
+     * Ensures the neural engine is loaded before running the swipe. If it is not yet ready,
+     * initializes it OFF the main thread and resumes via [performSwipeTyping] once the attempt
+     * completes — never busy-waits on the UI thread. The replay path calls performSwipeTyping
+     * directly, so there is no re-enqueue loop.
+     */
+    private fun dispatchNeuralSwipeTyping(
+        swipedKeys: List<KeyboardData.Key>,
+        swipePath: List<android.graphics.PointF>?,
+        timestamps: List<Long>?,
+        ic: InputConnection?,
+        editorInfo: EditorInfo?,
+        resources: Resources,
+        wasShiftActive: Boolean,
+        wasShiftLocked: Boolean
+    ) {
         if (config.swipe_typing_enabled && predictionCoordinator.getNeuralEngine() == null) {
             predictionCoordinator.runWhenNeuralEngineReady { _ ->
                 // The replay fires after init settles (possibly seconds later). Guard against the
@@ -647,7 +674,10 @@ class InputCoordinator(
             if (isReplayInputStillCurrent(ic, editorInfo)) {
                 handlePredictionResults(
                     result.words, result.scores, ic, editorInfo, resources,
-                    wasShiftActive, wasShiftLocked
+                    wasShiftActive, wasShiftLocked,
+                    // M2: tag with the engine that ACTUALLY decoded (a hybrid/ctc-mode
+                    // non-QWERTY swipe is geometric, not the mode's namesake engine).
+                    SuggestionOrigin.GEOMETRIC
                 )
             } else if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                 android.util.Log.d(TAG, "Dropping geometric decode: input field changed since swipe")
@@ -667,8 +697,16 @@ class InputCoordinator(
      * into the SAME pipeline as neural/geometric results — [handlePredictionResults]
      * → [SuggestionHandler.handleSwipePredictionResults] — inheriting the password
      * guard, possessive augmentation, shift/caps transform, and THE commit engine.
-     * An empty decode (no model, non-English dictionary, degenerate trace) flows
-     * through as an empty prediction list → the pipeline clears the bar.
+     * An empty decode (no model, degenerate trace) flows through as an empty
+     * prediction list → the pipeline clears the bar.
+     *
+     * Audit M1 — the v1 CTC model/lexicon is English-only, so the active language is
+     * read BEFORE dispatch: a non-English swipe falls through to
+     * [dispatchNeuralSwipeTyping], the SAME flow [SwipeEngineRouter.Engine.NEURAL]
+     * takes. Net ctc-mode semantics: CTC(en QWERTY) / neural(non-en QWERTY) /
+     * geometric(non-QWERTY) — never less coverage than hybrid (which would have
+     * served the non-en QWERTY swipe neurally). The adapter keeps its own en-gate
+     * as defense-in-depth.
      */
     private fun performCtcSwipeTyping(
         swipedKeys: List<KeyboardData.Key>,
@@ -680,6 +718,17 @@ class InputCoordinator(
         wasShiftActive: Boolean,
         wasShiftLocked: Boolean
     ) {
+        val language = predictionCoordinator.getDictionaryManager()?.getCurrentLanguage()
+            ?: config.primary_language
+        if (!language.equals(CtcEngineAdapter.LANGUAGE, ignoreCase = true)) {
+            // M1: non-English on a QWERTY layout under ctc mode → the neural flow
+            // (performSwipeTyping tags its own ENGINE_NEURAL ML capture).
+            dispatchNeuralSwipeTyping(
+                swipedKeys, swipePath, timestamps, ic, editorInfo, resources,
+                wasShiftActive, wasShiftLocked
+            )
+            return
+        }
         if (swipePath.isNullOrEmpty() || timestamps == null) return
         val keyboard = keyboardView.getKeyboard() ?: return
         val params = keyboardView.geometryParams() ?: return
@@ -691,8 +740,6 @@ class InputCoordinator(
         // the CTC engine + layout so ML exports stay separable per decoder (audit n-2).
         beginSwipeCapture(swipedKeys, swipePath, timestamps, resources, SwipeMLData.ENGINE_CTC)
 
-        val language = predictionCoordinator.getDictionaryManager()?.getCurrentLanguage()
-            ?: config.primary_language
         ctcAdapterOrCreate().decodeAsync(
             keyboard, params, frameW, frameH, swipePath, timestamps, language
         ) { result ->
@@ -704,7 +751,9 @@ class InputCoordinator(
             if (isReplayInputStillCurrent(ic, editorInfo)) {
                 handlePredictionResults(
                     result.words, result.scores, ic, editorInfo, resources,
-                    wasShiftActive, wasShiftLocked
+                    wasShiftActive, wasShiftLocked,
+                    // M2: this dispatch IS the CTC adapter, so the tag is exact.
+                    SuggestionOrigin.CTC
                 )
             } else if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                 android.util.Log.d(TAG, "Dropping CTC decode: input field changed since swipe")
@@ -797,7 +846,10 @@ class InputCoordinator(
                         // transform reads the request-carried state, not shared fields.
                         handlePredictionResults(
                             predictions, scores, ic, editorInfo, resources,
-                            wasShiftActive, wasShiftLocked
+                            wasShiftActive, wasShiftLocked,
+                            // M2: the neural flow always decodes with the transformer —
+                            // including M1's ctc-mode non-English fallthrough.
+                            SuggestionOrigin.NEURAL_BEAM
                         )
                     }
 

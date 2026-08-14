@@ -568,6 +568,62 @@ class SettingsImportPlanBuilderTest {
         assertThat(plan.changes.map { it.key }).contains("clipboard_history_limit")
     }
 
+    // ── G5 ctc engine settings round-trip (CTC integration audit, missing-test 3) ─────
+
+    @Test
+    fun ctcEngineSettings_modeAndBeamWidth_surviveTheImportPlan() {
+        // A backup that switches the engine mode to ctc and carries a non-default
+        // beam width must surface BOTH as applyable changes.
+        val json = """{"preferences":{"swipe_engine_mode":"ctc","ctc_beam_width":180}}"""
+        val plan = SettingsImportPlanBuilder.fromJson(
+            json,
+            currentSnapshot = mapOf("swipe_engine_mode" to "neural"),
+            screen = screen,
+            defaultSnapshot = SETTINGS_DEFAULTS,
+        )
+
+        val mode = plan.changes.single { it.key == "swipe_engine_mode" }
+        assertThat(mode.type).isEqualTo(ChangeType.MODIFIED)
+        assertThat(mode.current).isEqualTo(PrefValue.Str("neural"))
+        assertThat(mode.proposed).isEqualTo(PrefValue.Str("ctc"))
+
+        val beam = plan.changes.single { it.key == "ctc_beam_width" }
+        assertThat(beam.type).isEqualTo(ChangeType.ADDED)
+        // Effective current renders as the compile-time default (100), not Unset.
+        assertThat(beam.current).isEqualTo(PrefValue.IntV(100))
+        assertThat(beam.proposed).isEqualTo(PrefValue.IntV(180))
+        assertThat(plan.parseSkippedKeys).isEmpty()
+    }
+
+    @Test
+    fun ctcMode_uppercaseImport_canonicalizedToLowercase() {
+        // Audit L1: an uppercase "CTC" from a hand-edited/foreign backup must apply in
+        // the canonical lowercase form every reader (router, dropdown) expects.
+        val json = """{"preferences":{"swipe_engine_mode":"CTC"}}"""
+        val plan = SettingsImportPlanBuilder.fromJson(
+            json,
+            currentSnapshot = mapOf("swipe_engine_mode" to "neural"),
+            screen = screen,
+        )
+
+        val mode = plan.changes.single { it.key == "swipe_engine_mode" }
+        assertThat(mode.proposed).isEqualTo(PrefValue.Str("ctc"))
+    }
+
+    @Test
+    fun ctcMode_uppercaseImportMatchingStoredLowercase_isNoChange() {
+        // Case-only difference must not surface as a change row (L1: both sides
+        // canonicalize before the diff).
+        val json = """{"preferences":{"swipe_engine_mode":"CTC"}}"""
+        val plan = SettingsImportPlanBuilder.fromJson(
+            json,
+            currentSnapshot = mapOf("swipe_engine_mode" to "ctc"),
+            screen = screen,
+        )
+
+        assertThat(plan.changes).isEmpty()
+    }
+
     @Test
     fun emptyDefaults_behavesAsBeforeFix() {
         // Backward-compat sanity: empty defaults map = pre-fix behavior.

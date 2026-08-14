@@ -462,6 +462,11 @@ class SuggestionHandler(
      *
      * @param inputCoordinator the delegating swipe front-end — supplies haptics, the latched-shift
      *   clear, keyboard height, and the captured swipe ML trace (IC remains the gesture/ML owner).
+     * @param origin the [SuggestionOrigin] of the engine that ACTUALLY decoded this swipe,
+     *   threaded from InputCoordinator's routing decision (audit M2: under ctc/hybrid modes the
+     *   routed engine differs per layout/language, so deriving from the MODE mislabeled e.g. a
+     *   Dvorak geometric decode as CTC). Null falls back to the legacy mode-derived
+     *   approximation ([SuggestionOrigin.forSwipeEngineMode]).
      */
     fun handleSwipePredictionResults(
         predictions: List<String>?,
@@ -471,7 +476,8 @@ class SuggestionHandler(
         resources: Resources,
         shiftActive: Boolean,
         shiftLocked: Boolean,
-        inputCoordinator: InputCoordinator
+        inputCoordinator: InputCoordinator,
+        origin: SuggestionOrigin? = null
     ) {
         // Swipe results replace whatever the bar shows — any next-word display state ends here.
         nextWordSuggestionsActive = false
@@ -514,8 +520,9 @@ class SuggestionHandler(
 
         // Task B: provenance metas — engine outputs first, then any appended
         // possessive forms (augment appends at the end, so index >= engineWordCount
-        // means POSSESSIVE).
-        val swipeOrigin = SuggestionOrigin.forSwipeEngineMode(config.swipe_engine_mode)
+        // means POSSESSIVE). M2: prefer the routed-engine origin threaded by the
+        // caller; the mode-derived fallback only covers legacy callers.
+        val swipeOrigin = origin ?: SuggestionOrigin.forSwipeEngineMode(config.swipe_engine_mode)
         val barMetas = MutableList(barWords.size) { i ->
             SuggestionMeta(if (i < engineWordCount) swipeOrigin else SuggestionOrigin.POSSESSIVE)
         }
