@@ -405,6 +405,7 @@ class SuggestionBar : LinearLayout {
     private fun originMarkerColor(origin: SuggestionOrigin): Int = when (origin) {
         SuggestionOrigin.NEURAL_BEAM -> 0xFFB39DDB.toInt()       // purple
         SuggestionOrigin.GEOMETRIC -> 0xFF80CBC4.toInt()         // teal
+        SuggestionOrigin.CTC -> 0xFF9FA8DA.toInt()               // indigo
         SuggestionOrigin.DICTIONARY_PREFIX -> 0xFF90CAF9.toInt() // blue
         SuggestionOrigin.CONTRACTION -> 0xFFFFCC80.toInt()       // orange
         SuggestionOrigin.POSSESSIVE -> 0xFFFFE082.toInt()        // amber

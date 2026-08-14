@@ -32,6 +32,9 @@ class SwipeMLData {
         /** [engine] value for the geometric SHARK2 decoder (any layout). */
         const val ENGINE_GEOMETRIC = "geometric"
 
+        /** [engine] value for the CTC trie-beam decoder (G5 `ctc` mode, QWERTY-Latin). */
+        const val ENGINE_CTC = "ctc"
+
         /** Blank/missing provenance normalizes to [UNKNOWN] so exports never carry "". */
         private fun normalizeProvenance(value: String?): String =
             value?.takeIf { it.isNotBlank() } ?: UNKNOWN
@@ -49,7 +52,7 @@ class SwipeMLData {
     /** Layout the trace was drawn on (e.g. "latn_qwerty_us", "cyrl_jcuken_ru") or [UNKNOWN]. */
     val layoutName: String
 
-    /** Decoder that produced the suggestions: [ENGINE_NEURAL], [ENGINE_GEOMETRIC] or [UNKNOWN]. */
+    /** Decoder that produced the suggestions: [ENGINE_NEURAL], [ENGINE_GEOMETRIC], [ENGINE_CTC] or [UNKNOWN]. */
     val engine: String
     private val tracePoints: MutableList<TracePoint> = mutableListOf()
     private val registeredKeys: MutableList<String> = mutableListOf()

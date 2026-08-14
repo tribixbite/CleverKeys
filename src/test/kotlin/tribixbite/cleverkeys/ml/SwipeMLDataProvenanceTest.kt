@@ -106,6 +106,7 @@ class SwipeMLDataProvenanceTest {
     fun engineTagsAreStableAndDistinct() {
         assertThat(SwipeMLData.ENGINE_NEURAL).isEqualTo("neural")
         assertThat(SwipeMLData.ENGINE_GEOMETRIC).isEqualTo("geometric")
+        assertThat(SwipeMLData.ENGINE_CTC).isEqualTo("ctc")
         assertThat(SwipeMLData.UNKNOWN).isEqualTo("unknown")
 
         val neural = SwipeMLData("hi", "user_selection", 1080, 1920, 480, "latn_qwerty_us", SwipeMLData.ENGINE_NEURAL)

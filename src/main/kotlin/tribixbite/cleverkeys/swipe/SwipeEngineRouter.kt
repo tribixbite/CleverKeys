@@ -15,6 +15,8 @@ import tribixbite.cleverkeys.KeyboardData
  *    (best of both: transformer accuracy where it was trained, SHARK2 everywhere else).
  *  - [Mode.GEOMETRIC]: ALL layouts → [Engine.GEOMETRIC] (including QWERTY — measured ~84%
  *    top-1 on synthetic QWERTY in the spec; useful for comparison and battery-lean decoding).
+ *  - [Mode.CTC]: QWERTY-Latin → [Engine.CTC]; every other layout → [Engine.GEOMETRIC]
+ *    (same non-QWERTY coverage as HYBRID, so selecting CTC never removes swipe elsewhere).
  *
  * A single engine owns each swipe end-to-end. Scores are NEVER compared across engines —
  * geometric scores are engine-relative softmax×1000 (see `SwipeDecodingEngine` KDoc) and
@@ -36,6 +38,9 @@ object SwipeEngineRouter {
         /** Pure-JVM geometric (SHARK2) engine. */
         GEOMETRIC,
 
+        /** CTC trie-beam engine (ONNX encoder + pure-JVM beam, `swipe/ctc/`). */
+        CTC,
+
         /** No engine — non-QWERTY layout in NEURAL-only mode. */
         NONE,
     }
@@ -49,7 +54,14 @@ object SwipeEngineRouter {
         HYBRID,
 
         /** Geometric on ALL layouts, including QWERTY. */
-        GEOMETRIC;
+        GEOMETRIC,
+
+        /**
+         * G5: CTC on QWERTY-Latin (the layouts the shipped encoder was trained
+         * for), geometric on every other layout — the same non-QWERTY coverage
+         * as [HYBRID], so selecting CTC never removes swipe from other layouts.
+         */
+        CTC;
 
         companion object {
             /**
@@ -60,6 +72,7 @@ object SwipeEngineRouter {
             fun fromPref(value: String?): Mode = when (value?.lowercase()) {
                 "hybrid" -> HYBRID
                 "geometric" -> GEOMETRIC
+                "ctc" -> CTC
                 else -> NEURAL
             }
         }
@@ -73,15 +86,19 @@ object SwipeEngineRouter {
     @JvmStatic
     fun route(layout: KeyboardData?, mode: Mode): Engine {
         if (mode == Mode.GEOMETRIC) return Engine.GEOMETRIC
-        if (Config.isSwipeTypingSupportedForLayout(layout)) return Engine.NEURAL
-        return if (mode == Mode.HYBRID) Engine.GEOMETRIC else Engine.NONE
+        if (Config.isSwipeTypingSupportedForLayout(layout)) {
+            return if (mode == Mode.CTC) Engine.CTC else Engine.NEURAL
+        }
+        return if (mode == Mode.HYBRID || mode == Mode.CTC) Engine.GEOMETRIC else Engine.NONE
     }
 
     /** String-based overload for pure-JVM tests (mirrors Config's testing overload). */
     @JvmStatic
     fun route(layoutName: String?, script: String?, mode: Mode): Engine {
         if (mode == Mode.GEOMETRIC) return Engine.GEOMETRIC
-        if (Config.isSwipeTypingSupportedForLayout(layoutName, script)) return Engine.NEURAL
-        return if (mode == Mode.HYBRID) Engine.GEOMETRIC else Engine.NONE
+        if (Config.isSwipeTypingSupportedForLayout(layoutName, script)) {
+            return if (mode == Mode.CTC) Engine.CTC else Engine.NEURAL
+        }
+        return if (mode == Mode.HYBRID || mode == Mode.CTC) Engine.GEOMETRIC else Engine.NONE
     }
 }

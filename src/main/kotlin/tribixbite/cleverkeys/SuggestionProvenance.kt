@@ -28,6 +28,9 @@ enum class SuggestionOrigin {
     /** Geometric swipe-decoder output. */
     GEOMETRIC,
 
+    /** CTC trie-beam swipe-decoder output (G5 `ctc` engine mode). */
+    CTC,
+
     /** Dictionary prefix completion of the typed partial (WordPredictor). */
     DICTIONARY_PREFIX,
 
@@ -49,12 +52,17 @@ enum class SuggestionOrigin {
     companion object {
         /**
          * Origin tag for the swipe path from the configured engine mode
-         * ("neural" | "hybrid" | "geometric"). Hybrid routes per-layout at
-         * swipe time; it is tagged NEURAL_BEAM here because the neural engine
-         * serves its QWERTY-family default (documented approximation).
+         * ("neural" | "hybrid" | "geometric" | "ctc"). Hybrid and ctc route
+         * per-layout at swipe time; each is tagged by the engine serving its
+         * QWERTY-family default (documented approximation — a non-QWERTY swipe
+         * under ctc mode is actually geometric but tagged CTC).
          */
         fun forSwipeEngineMode(mode: String?): SuggestionOrigin =
-            if (mode == "geometric") GEOMETRIC else NEURAL_BEAM
+            when (mode) {
+                "geometric" -> GEOMETRIC
+                "ctc" -> CTC
+                else -> NEURAL_BEAM
+            }
     }
 }
 
@@ -192,6 +200,7 @@ object ProvenanceFormatter {
     fun originLabel(origin: SuggestionOrigin): String = when (origin) {
         SuggestionOrigin.NEURAL_BEAM -> "Neural swipe (beam search)"
         SuggestionOrigin.GEOMETRIC -> "Geometric swipe decoder"
+        SuggestionOrigin.CTC -> "CTC swipe (trie beam)"
         SuggestionOrigin.DICTIONARY_PREFIX -> "Dictionary prefix match"
         SuggestionOrigin.CONTRACTION -> "Contraction injection"
         SuggestionOrigin.POSSESSIVE -> "Possessive form"

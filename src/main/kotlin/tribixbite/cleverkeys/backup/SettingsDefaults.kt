@@ -265,6 +265,10 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     "geo_max_results" to PrefValue.IntV(Defaults.GEO_MAX_RESULTS),
     "geo_frequency_weight" to PrefValue.FloatV(Defaults.GEO_FREQUENCY_WEIGHT),
     "geo_endpoint_inset_kw" to PrefValue.FloatV(Defaults.GEO_ENDPOINT_INSET_KW),
+    // Full CTC Settings (CtcSettingsActivity) — G5 ctc engine knob. The "ctc"
+    // engine-mode VALUE needs no migration: fromPref falls back to NEURAL on
+    // versions that predate it.
+    "ctc_beam_width" to PrefValue.IntV(Defaults.CTC_BEAM_WIDTH),
     "swipe_debug_detailed_logging" to PrefValue.Bool(Defaults.SWIPE_DEBUG_DETAILED_LOGGING),
     "swipe_debug_show_raw_output" to PrefValue.Bool(Defaults.SWIPE_DEBUG_SHOW_RAW_OUTPUT),
     "swipe_show_debug_scores" to PrefValue.Bool(Defaults.SWIPE_SHOW_DEBUG_SCORES),

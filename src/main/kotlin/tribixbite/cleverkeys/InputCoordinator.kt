@@ -7,6 +7,7 @@ import android.os.Looper
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
 import tribixbite.cleverkeys.ml.SwipeMLData
+import tribixbite.cleverkeys.swipe.CtcEngineAdapter
 import tribixbite.cleverkeys.swipe.GeometricEngineAdapter
 import tribixbite.cleverkeys.swipe.SwipeEngineRouter
 import java.util.concurrent.ExecutorService
@@ -353,13 +354,15 @@ class InputCoordinator(
 
     /**
      * Releases coordinator resources: cancels any pending cursor sync and stops the
-     * geometric adapter's background thread (if it was ever created). (Step 6: IC no longer
-     * owns a prediction executor — the single suggestion executor lives on SuggestionHandler
-     * and is shut down there; step 8 adds the geometric decode thread, owned here.)
+     * geometric/CTC adapters' background threads (if they were ever created). (Step 6: IC no
+     * longer owns a prediction executor — the single suggestion executor lives on
+     * SuggestionHandler and is shut down there; step 8 adds the geometric decode thread and
+     * G5 the CTC decode thread, owned here.)
      */
     fun shutdown() {
         cancelPendingCursorSync()
         geometricAdapter?.shutdown()
+        ctcAdapter?.shutdown()
     }
 
     /**
@@ -489,14 +492,22 @@ class InputCoordinator(
         if (!config.swipe_typing_enabled) return
         // WP9 R-1 step 7: mode+layout-routed engine selection (swipe_engine_mode pref —
         // neural = QWERTY-only swipe as before; hybrid = neural on QWERTY + geometric
-        // elsewhere; geometric = SHARK2 everywhere). One engine owns each swipe end-to-end;
-        // both feed the same SuggestionHandler seam downstream.
+        // elsewhere; geometric = SHARK2 everywhere; ctc (G5) = CTC trie-beam on QWERTY +
+        // geometric elsewhere). One engine owns each swipe end-to-end; all feed the same
+        // SuggestionHandler seam downstream.
         when (SwipeEngineRouter.route(
             keyboardView.getKeyboard(), SwipeEngineRouter.Mode.fromPref(config.swipe_engine_mode)
         )) {
             SwipeEngineRouter.Engine.NONE -> return
             SwipeEngineRouter.Engine.GEOMETRIC -> {
                 performGeometricSwipeTyping(
+                    swipedKeys, swipePath, timestamps, ic, editorInfo, resources,
+                    wasShiftActive, wasShiftLocked
+                )
+                return
+            }
+            SwipeEngineRouter.Engine.CTC -> {
+                performCtcSwipeTyping(
                     swipedKeys, swipePath, timestamps, ic, editorInfo, resources,
                     wasShiftActive, wasShiftLocked
                 )
@@ -644,11 +655,69 @@ class InputCoordinator(
         }
     }
 
+    // ── G5: CTC engine path (QWERTY-Latin layouts under ctc mode) ───────────────────────
+
+    private var ctcAdapter: CtcEngineAdapter? = null
+
+    private fun ctcAdapterOrCreate(): CtcEngineAdapter =
+        ctcAdapter ?: CtcEngineAdapter(context).also { ctcAdapter = it }
+
     /**
-     * Proactive background warm-up of the geometric engine (WP9 step 8 duty 4): called on
-     * layout switches (CleverKeysService.onStartInputView) so the first non-QWERTY swipe
-     * avoids the 150-400 ms synchronous Tier-A index build. Posted to the view so the frame
-     * dimensions are the post-layout ones; a no-op unless the router would pick GEOMETRIC.
+     * Decodes a swipe with the CTC engine (off the main thread) and feeds the result
+     * into the SAME pipeline as neural/geometric results — [handlePredictionResults]
+     * → [SuggestionHandler.handleSwipePredictionResults] — inheriting the password
+     * guard, possessive augmentation, shift/caps transform, and THE commit engine.
+     * An empty decode (no model, non-English dictionary, degenerate trace) flows
+     * through as an empty prediction list → the pipeline clears the bar.
+     */
+    private fun performCtcSwipeTyping(
+        swipedKeys: List<KeyboardData.Key>,
+        swipePath: List<android.graphics.PointF>?,
+        timestamps: List<Long>?,
+        ic: InputConnection?,
+        editorInfo: EditorInfo?,
+        resources: Resources,
+        wasShiftActive: Boolean,
+        wasShiftLocked: Boolean
+    ) {
+        if (swipePath.isNullOrEmpty() || timestamps == null) return
+        val keyboard = keyboardView.getKeyboard() ?: return
+        val params = keyboardView.geometryParams() ?: return
+        val frameW = keyboardView.width.toFloat()
+        val frameH = keyboardView.height.toFloat()
+        if (frameW <= 0f || frameH <= 0f) return
+
+        // Same swipe-state + ML-trace capture as the neural/geometric paths, tagged with
+        // the CTC engine + layout so ML exports stay separable per decoder (audit n-2).
+        beginSwipeCapture(swipedKeys, swipePath, timestamps, resources, SwipeMLData.ENGINE_CTC)
+
+        val language = predictionCoordinator.getDictionaryManager()?.getCurrentLanguage()
+            ?: config.primary_language
+        ctcAdapterOrCreate().decodeAsync(
+            keyboard, params, frameW, frameH, swipePath, timestamps, language
+        ) { result ->
+            // The decode callback replays the InputConnection/EditorInfo captured at swipe
+            // time. A decode can land after the field changed (cold path builds the ONNX
+            // session + 98k-word trie, and a same-field restart or an app switch replaces
+            // both handles), so apply the SAME staleness guard as the geometric path
+            // (audit M-2) — otherwise this word could commit into an unrelated field.
+            if (isReplayInputStillCurrent(ic, editorInfo)) {
+                handlePredictionResults(
+                    result.words, result.scores, ic, editorInfo, resources,
+                    wasShiftActive, wasShiftLocked
+                )
+            } else if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                android.util.Log.d(TAG, "Dropping CTC decode: input field changed since swipe")
+            }
+        }
+    }
+
+    /**
+     * Proactive background warm-up of the geometric/CTC engine (WP9 step 8 duty 4): called on
+     * layout switches (CleverKeysService.onStartInputView) so the first swipe avoids the
+     * synchronous cold build (geometric: 150-400 ms Tier-A index; ctc: ONNX session +
+     * 98k-word trie). Posted to the view so the frame dimensions are the post-layout ones;
+     * a no-op unless the router would pick GEOMETRIC or CTC.
      */
     fun prewarmGeometricEngine() {
         if (!config.swipe_typing_enabled) return
@@ -656,16 +725,21 @@ class InputCoordinator(
         if (mode == SwipeEngineRouter.Mode.NEURAL) return
         keyboardView.post {
             val keyboard = keyboardView.getKeyboard() ?: return@post
-            if (SwipeEngineRouter.route(keyboard, mode) != SwipeEngineRouter.Engine.GEOMETRIC) {
-                return@post
-            }
             val params = keyboardView.geometryParams() ?: return@post
             val frameW = keyboardView.width.toFloat()
             val frameH = keyboardView.height.toFloat()
             if (frameW <= 0f || frameH <= 0f) return@post
             val language = predictionCoordinator.getDictionaryManager()?.getCurrentLanguage()
                 ?: config.primary_language
-            geometricAdapterOrCreate().warmUpAsync(keyboard, params, frameW, frameH, language)
+            when (SwipeEngineRouter.route(keyboard, mode)) {
+                SwipeEngineRouter.Engine.GEOMETRIC ->
+                    geometricAdapterOrCreate().warmUpAsync(keyboard, params, frameW, frameH, language)
+                // G5: front-load the ONNX session + 98k-word trie build (~100-300 ms
+                // background) so the first ctc swipe decodes in warm-path time.
+                SwipeEngineRouter.Engine.CTC ->
+                    ctcAdapterOrCreate().warmUpAsync(keyboard, params, frameW, frameH, language)
+                else -> return@post
+            }
         }
     }
 

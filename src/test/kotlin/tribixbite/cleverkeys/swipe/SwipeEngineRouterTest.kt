@@ -11,8 +11,9 @@ import tribixbite.cleverkeys.swipe.SwipeEngineRouter.Mode
  *
  * Routing is (mode, layout)-based: NEURAL = QWERTY-only swipe (the #9 gate, pre-geo
  * behavior); HYBRID = neural on QWERTY + geometric elsewhere; GEOMETRIC = geometric on ALL
- * layouts. Uses the string overload (same seam SwipeLayoutSupportTest exercises for the
- * underlying QWERTY-Latin predicate).
+ * layouts; CTC (G5) = CTC trie-beam on QWERTY + geometric elsewhere. Uses the string
+ * overload (same seam SwipeLayoutSupportTest exercises for the underlying QWERTY-Latin
+ * predicate).
  */
 class SwipeEngineRouterTest {
 
@@ -85,13 +86,46 @@ class SwipeEngineRouterTest {
         assertThat(SwipeEngineRouter.route(null, null, Mode.HYBRID)).isEqualTo(Engine.GEOMETRIC)
     }
 
+    // ── Mode.CTC (G5) — CTC on QWERTY, geometric elsewhere, never NONE ──────────────
+
+    @Test
+    fun `qwerty routes ctc in ctc mode`() {
+        assertThat(SwipeEngineRouter.route("QWERTY (US)", "latin", Mode.CTC))
+            .isEqualTo(Engine.CTC)
+    }
+
+    @Test
+    fun `dvorak and azerty route geometric in ctc mode — latin non-qwerty keeps swipe`() {
+        assertThat(SwipeEngineRouter.route("Dvorak", "latin", Mode.CTC))
+            .isEqualTo(Engine.GEOMETRIC)
+        assertThat(SwipeEngineRouter.route("AZERTY (FR)", "latin", Mode.CTC))
+            .isEqualTo(Engine.GEOMETRIC)
+    }
+
+    @Test
+    fun `cyrillic and greek route geometric in ctc mode`() {
+        assertThat(SwipeEngineRouter.route("ЙЦУКЕН", "cyrillic", Mode.CTC))
+            .isEqualTo(Engine.GEOMETRIC)
+        assertThat(SwipeEngineRouter.route("QWERTY (Ελληνικά)", "greek", Mode.CTC))
+            .isEqualTo(Engine.GEOMETRIC)
+    }
+
+    @Test
+    fun `unknown metadata routes geometric in ctc mode — never neural, never none`() {
+        assertThat(SwipeEngineRouter.route(null, "latin", Mode.CTC)).isEqualTo(Engine.GEOMETRIC)
+        assertThat(SwipeEngineRouter.route("Dvorak", null, Mode.CTC)).isEqualTo(Engine.GEOMETRIC)
+        assertThat(SwipeEngineRouter.route(null, null, Mode.CTC)).isEqualTo(Engine.GEOMETRIC)
+    }
+
     // ── Mode.fromPref parsing (the pref → enum seam the IME uses) ───────────────────
 
     @Test
-    fun `fromPref parses the three modes case-insensitively`() {
+    fun `fromPref parses the four modes case-insensitively`() {
         assertThat(Mode.fromPref("hybrid")).isEqualTo(Mode.HYBRID)
         assertThat(Mode.fromPref("Geometric")).isEqualTo(Mode.GEOMETRIC)
         assertThat(Mode.fromPref("neural")).isEqualTo(Mode.NEURAL)
+        assertThat(Mode.fromPref("ctc")).isEqualTo(Mode.CTC)
+        assertThat(Mode.fromPref("CTC")).isEqualTo(Mode.CTC)
     }
 
     @Test

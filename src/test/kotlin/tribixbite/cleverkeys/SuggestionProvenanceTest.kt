@@ -110,6 +110,7 @@ class SuggestionProvenanceTest {
     @Test
     fun `swipe engine mode maps to the right origin`() {
         assertEquals(SuggestionOrigin.GEOMETRIC, SuggestionOrigin.forSwipeEngineMode("geometric"))
+        assertEquals(SuggestionOrigin.CTC, SuggestionOrigin.forSwipeEngineMode("ctc"))
         assertEquals(SuggestionOrigin.NEURAL_BEAM, SuggestionOrigin.forSwipeEngineMode("neural"))
         assertEquals(SuggestionOrigin.NEURAL_BEAM, SuggestionOrigin.forSwipeEngineMode("hybrid"))
         assertEquals(SuggestionOrigin.NEURAL_BEAM, SuggestionOrigin.forSwipeEngineMode(null))

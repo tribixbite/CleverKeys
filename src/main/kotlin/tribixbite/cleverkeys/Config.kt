@@ -314,8 +314,9 @@ object Defaults {
     // WP9 R-1 step 6: UNIFIED_SWIPE_PIPELINE (the step-4 QA escape hatch) was removed — the
     // SuggestionHandler pipeline is the only one; the pref key is in DEPRECATED_KEYS.
     // WP9 R-1 step 7 (v1.1): swipe prediction engine mode — "neural" (QWERTY-only swipe,
-    // the long-standing default), "hybrid" (neural on QWERTY + geometric elsewhere), or
-    // "geometric" (SHARK2 on all layouts). Settings → Swipe Typing → Prediction Engine.
+    // the long-standing default), "hybrid" (neural on QWERTY + geometric elsewhere),
+    // "geometric" (SHARK2 on all layouts), or "ctc" (G5: CTC trie-beam on QWERTY +
+    // geometric elsewhere). Settings → Swipe Typing → Prediction Engine.
     const val SWIPE_ENGINE_MODE = "neural"
     // Full Geometric Settings — the three user-tunable geo knobs (defaults MUST equal
     // GeometricEngineConfig's; the rest of the engine's 28 knobs stay code-only because
@@ -323,6 +324,10 @@ object Defaults {
     const val GEO_MAX_RESULTS = 10           // ranked candidates emitted (bar length)
     const val GEO_FREQUENCY_WEIGHT = 0.12f   // λ_f: common-words vs shape-fidelity bias
     const val GEO_ENDPOINT_INSET_KW = 0.30f  // sloppy start/end tolerance (key-widths)
+    // CTC engine (G5) — commit-phase trie-beam width. 100 is the width every
+    // CleverKeys-ML campaign-2 validation number was decoded at; wider buys little
+    // (the beam is Viterbi-max over a 26-ary trie) and costs linear CPU per swipe.
+    const val CTC_BEAM_WIDTH = 100
     const val AUTO_SPACE_AFTER_SUGGESTION = true  // Add trailing space after selecting suggestion
     const val AUTO_SPACE_BEFORE_SUGGESTION = true  // Add leading space before tapped suggestion
     const val BACKSPACE_UNDO_SWIPE = true  // Backspace after swipe deletes entire swiped word
@@ -671,11 +676,14 @@ class Config private constructor(
     @JvmField var neural_greedy_search = false
     @JvmField var swipe_debug_detailed_logging = false
     // WP9 R-1 step 7 (v1.1): swipe engine mode — "neural" | "hybrid" | "geometric".
+    // G5 adds "ctc".
     @JvmField var swipe_engine_mode = Defaults.SWIPE_ENGINE_MODE
     // Full Geometric Settings knobs (read by GeometricEngineAdapter per decode).
     @JvmField var geo_max_results = Defaults.GEO_MAX_RESULTS
     @JvmField var geo_frequency_weight = Defaults.GEO_FREQUENCY_WEIGHT
     @JvmField var geo_endpoint_inset_kw = Defaults.GEO_ENDPOINT_INSET_KW
+    // CTC engine knob (read by CtcEngineAdapter per decode).
+    @JvmField var ctc_beam_width = Defaults.CTC_BEAM_WIDTH
     @JvmField var swipe_debug_show_raw_output = false
     @JvmField var swipe_show_raw_beam_predictions = false
     @JvmField var termux_mode_enabled = false
@@ -969,6 +977,8 @@ class Config private constructor(
         geo_max_results = safeGetInt(_prefs, "geo_max_results", Defaults.GEO_MAX_RESULTS)
         geo_frequency_weight = safeGetFloat(_prefs, "geo_frequency_weight", Defaults.GEO_FREQUENCY_WEIGHT)
         geo_endpoint_inset_kw = safeGetFloat(_prefs, "geo_endpoint_inset_kw", Defaults.GEO_ENDPOINT_INSET_KW)
+        ctc_beam_width = safeGetInt(_prefs, "ctc_beam_width", Defaults.CTC_BEAM_WIDTH)
+            .coerceIn(10, 300)  // clamp mirrors onnx_xnnpack_threads' defensive pattern
         swipe_debug_show_raw_output = _prefs.getBoolean("swipe_debug_show_raw_output", Defaults.SWIPE_DEBUG_SHOW_RAW_OUTPUT)
         swipe_show_raw_beam_predictions = _prefs.getBoolean("swipe_show_raw_beam_predictions", Defaults.SWIPE_SHOW_RAW_BEAM_PREDICTIONS)
 
