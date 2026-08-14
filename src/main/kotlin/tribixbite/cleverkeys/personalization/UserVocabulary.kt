@@ -82,7 +82,10 @@ class UserVocabulary internal constructor(
                     // changes without reconstruction. Falls back to the
                     // compile-time default before Config is initialized.
                     maxWords = {
-                        Config.globalConfig()?.personalization_max_words
+                        // globalConfigOrNull, NOT globalConfig(): the latter THROWS
+                        // before initGlobalConfig() (Config-less contexts: instrumented
+                        // tests, early activity starts) — the ?. can't catch a throw.
+                        Config.globalConfigOrNull()?.personalization_max_words
                             ?: Defaults.PERSONALIZATION_MAX_WORDS
                     }
                 ).also { instance = it }
