@@ -577,6 +577,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             SearchableSetting("What's New", listOf("changelog", "release", "update", "features", "version"), "Activities", settingId = "whats_new"),
             SearchableSetting("Neural Settings", listOf("neural", "ai", "prediction", "model", "onnx"), "Neural Prediction", NeuralSettingsActivity::class.java),
             SearchableSetting("Geometric Settings", listOf("geometric", "shape", "shark", "swipe engine", "tolerance"), "Neural Prediction", GeometricSettingsActivity::class.java),
+            SearchableSetting("CTC Settings", listOf("ctc", "futo", "swipe engine", "beam", "trie"), "Neural Prediction", CtcSettingsActivity::class.java, gatedBy = "swipe_typing", settingId = "ctc_settings"),
             SearchableSetting("ONNX Threads", listOf("threads", "cpu", "xnnpack", "performance", "onnx"), "Neural Prediction", NeuralSettingsActivity::class.java, gatedBy = "swipe_typing", settingId = "onnx_threads"),
             SearchableSetting("GIF Import Pack", listOf("gif", "import", "pack", "zip", "download"), "GIF Panel", expandSection = { gifSectionExpanded = true }, gatedBy = "gif_enabled", settingId = "gif_import"),
             SearchableSetting("Help & FAQ", listOf("help", "faq", "documentation", "wiki", "questions"), "Help & FAQ", expandSection = { helpSectionExpanded = true }, settingId = "help_faq"),

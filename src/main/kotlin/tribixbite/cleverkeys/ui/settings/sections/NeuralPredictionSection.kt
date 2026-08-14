@@ -17,6 +17,7 @@ import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
 import tribixbite.cleverkeys.ui.settings.SettingsDropdown
 import tribixbite.cleverkeys.ui.settings.SettingsSwitch
+import tribixbite.cleverkeys.ui.settings.openCtcSettings
 import tribixbite.cleverkeys.ui.settings.openGeometricSettings
 import tribixbite.cleverkeys.ui.settings.openNeuralSettings
 import tribixbite.cleverkeys.ui.settings.saveSetting
@@ -43,20 +44,23 @@ internal fun SettingsActivity.NeuralPredictionSection() {
                 if (swipeTypingEnabled) {
                     // WP9 R-1 step 7 (v1.1): engine mode selector. Hybrid = neural on QWERTY +
                     // geometric elsewhere; Neural = QWERTY-only swipe (pre-geo behavior);
-                    // Geometric = SHARK2 on all layouts.
+                    // Geometric = SHARK2 on all layouts; CTC (G5) = CTC trie-beam on
+                    // QWERTY + geometric elsewhere.
                     SettingsDropdown(
                         title = stringResource(R.string.swipe_engine_mode_title),
                         description = stringResource(R.string.swipe_engine_mode_desc),
-                        options = listOf("Hybrid", "Neural", "Geometric"),
+                        options = listOf("Hybrid", "Neural", "Geometric", "CTC"),
                         selectedIndex = when (swipeEngineMode) {
                             "hybrid" -> 0
                             "geometric" -> 2
+                            "ctc" -> 3
                             else -> 1 // "neural" (default)
                         },
                         onSelectionChange = { index ->
                             swipeEngineMode = when (index) {
                                 0 -> "hybrid"
                                 2 -> "geometric"
+                                3 -> "ctc"
                                 else -> "neural"
                             }
                             saveSetting("swipe_engine_mode", swipeEngineMode)
@@ -113,8 +117,11 @@ internal fun SettingsActivity.NeuralPredictionSection() {
                         Text("Full Neural Settings")
                     }
 
-                    // Geometric engine tuning — only meaningful when a mode that uses it is on.
-                    if (swipeEngineMode != "neural") {
+                    // Geometric engine tuning — only meaningful when a mode that uses it
+                    // is on (hybrid/geometric always; ctc uses it for non-QWERTY layouts).
+                    if (swipeEngineMode == "hybrid" || swipeEngineMode == "geometric" ||
+                        swipeEngineMode == "ctc"
+                    ) {
                         Button(
                             onClick = { openGeometricSettings() },
                             modifier = Modifier
@@ -122,6 +129,18 @@ internal fun SettingsActivity.NeuralPredictionSection() {
                                 .padding(top = 8.dp)
                         ) {
                             Text("Full Geometric Settings")
+                        }
+                    }
+
+                    // CTC engine tuning (G5) — only under the ctc mode.
+                    if (swipeEngineMode == "ctc") {
+                        Button(
+                            onClick = { openCtcSettings() },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp)
+                        ) {
+                            Text("Full CTC Settings")
                         }
                     }
                 }

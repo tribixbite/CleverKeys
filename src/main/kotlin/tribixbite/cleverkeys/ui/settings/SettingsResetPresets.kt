@@ -99,6 +99,10 @@ internal fun SettingsActivity.resetAllSettings() {
                     editor.putBoolean("neural_batch_beams", Defaults.NEURAL_BATCH_BEAMS)
                     editor.putBoolean("neural_greedy_search", Defaults.NEURAL_GREEDY_SEARCH)
                     editor.putInt("onnx_xnnpack_threads", Defaults.ONNX_XNNPACK_THREADS)
+                    // CTC engine (G5). NOTE: swipe_engine_mode and geo_* are deliberately
+                    // NOT reset here (pre-existing behavior — engine choice survives a
+                    // preset reset); ctc_beam_width follows the geo_* precedent and is
+                    // also left alone. Remove this comment if that decision changes.
 
                     // Input behavior
                     editor.putBoolean("vibrate_custom", Defaults.VIBRATE_CUSTOM)

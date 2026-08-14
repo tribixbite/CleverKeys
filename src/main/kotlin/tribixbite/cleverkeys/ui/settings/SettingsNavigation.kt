@@ -5,6 +5,7 @@ import android.net.Uri
 import android.widget.Toast
 import tribixbite.cleverkeys.AutoCorrectionSettingsActivity
 import tribixbite.cleverkeys.BackupRestoreActivity
+import tribixbite.cleverkeys.CtcSettingsActivity
 import tribixbite.cleverkeys.DictionaryManagerActivity
 import tribixbite.cleverkeys.ExtraKeysConfigActivity
 import tribixbite.cleverkeys.LayoutManagerActivity
@@ -30,6 +31,10 @@ internal fun SettingsActivity.openNeuralSettings() {
 
 internal fun SettingsActivity.openGeometricSettings() {
         startActivity(Intent(this, GeometricSettingsActivity::class.java))
+}
+
+internal fun SettingsActivity.openCtcSettings() {
+        startActivity(Intent(this, CtcSettingsActivity::class.java))
 }
 
 internal fun SettingsActivity.openCalibration() {

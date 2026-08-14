@@ -119,7 +119,7 @@
     <!-- Neural Prediction Section -->
     <string name="settings_section_neural">👆 Swipe Typing</string>
     <string name="swipe_engine_mode_title">Prediction Engine</string>
-    <string name="swipe_engine_mode_desc">Hybrid: neural on QWERTY, geometric on other layouts. Neural: QWERTY layouts only. Geometric: all layouts.</string>
+    <string name="swipe_engine_mode_desc">Hybrid: neural on QWERTY, geometric on other layouts. Neural: QWERTY layouts only. Geometric: all layouts. CTC: CTC beam on QWERTY, geometric on other layouts.</string>
     <string name="settings_neural_beam_width_title">Beam Width</string>
     <string name="settings_neural_beam_width_desc">Number of prediction candidates (1–20). Higher = more accurate.</string>
     <string name="settings_neural_max_length_title">Maximum Word Length</string>
