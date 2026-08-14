@@ -1,7 +1,16 @@
-# Feature Specification: FUTO-style CTC Swipe Engine (`ctc` mode — DESIGN ONLY, NOT WIRED)
+# Feature Specification: CTC Swipe Engine (`ctc` mode — WIRED, opt-in)
 
-**Status:** Prototype landed (decode + featurize + trie, pure-JVM, tested). BLOCKED on a
-CTC-emission model export before it can decode a real swipe or be exposed to users.
+**Status (2026-08-08):** WIRED behind the opt-in Prediction Engine dropdown (default stays
+`neural`). The CleverKeys-trained CTC encoder ships as `models/ctc_swipe_encoder.onnx`
+(CleverKeys-ML `phaseM_kd_fresh_w1_s1234_fp16w`, 2.91 MB — TEST-VALIDATED on the shipping
+configuration: en_enhanced STRIP trie at preset 0.9/4.0/0.25/0.25/0.9882 → test-2400
+seed-mean 89.31/93.79/94.50 t1/3/5, beating FUTO's ceiling and our neural on every
+stratum; UNSEALING_4). Integration per `CleverKeys-ML/ctc/APP_INTEGRATION_PLAN.md`
+(commits 3b9dd666..d99dd41f): `OnnxCtcEmissionModel` + `CtcEngineAdapter` +
+`SwipeEngineRouter.Mode.CTC` (QWERTY→CTC, other layouts→geometric hedge) +
+`CtcSettingsActivity` (beam-width knob, default 100). v1 is en-only (empty slate on other
+dictionary languages); per-language presets (ru λ 2.0 on CKDT scale), the two-model
+ensemble, the rescorer, and contract-v2 remain future options recorded in the plan.
 **Package:** `tribixbite.cleverkeys.swipe.ctc` (`src/main/kotlin/.../swipe/ctc/`)
 **Origin:** Track (ii) of `docs/audit/2026-08-06-futo-upgrade-plan.md`; algorithm ground
 truth is the integration study `docs/audit/2026-08-06-futo-decoder-integration-study.md`
@@ -58,9 +67,13 @@ and trie are validated against the offline port before any model investment.
   beam in the one call shape a `ctc` engine mode would invoke. — **DONE** (seam), with the
   emission model itself **BLOCKED** (see FR-5).
 - **FR-5** Obtain per-frame emissions from a CTC-emission encoder (+ optional refinement
-  head). — **BLOCKED on retrain/re-export** (`CtcEmissionModel` has no production impl).
+  head). — **DONE (2026-08-08)**: `OnnxCtcEmissionModel` over the shipped
+  `models/ctc_swipe_encoder.onnx` (refinement head not needed — the trained encoder beats
+  all bars without it).
 - **FR-6** Slot a `ctc` value into `swipe_engine_mode` so the selector routes qualifying
-  swipes to this engine. — **DESIGN ONLY** (see "Engine-selector integration"); not wired.
+  swipes to this engine. — **DONE (2026-08-08)**: `Mode.CTC`/`Engine.CTC` wired end-to-end
+  (router → `CtcEngineAdapter` → the unified suggestion pipeline), opt-in via the
+  Prediction Engine dropdown.
 
 ### Non-Functional Requirements
 - **NFR-1 (purity)** The core never touches Android or SharedPreferences — pure JVM,

@@ -41,3 +41,33 @@ scripts/data/PROVENANCE.md for per-snapshot provenance).
 Apache-2.0 is one-way compatible with GPLv3; the derived word selections
 distributed with CleverKeys are redistributed under GPL-3.0, with attribution
 preserved here.
+
+================================================================================
+FUTO swipe gesture corpus (swipe.futo.org)
+================================================================================
+The bundled CTC swipe-emission encoder
+(src/main/assets/models/ctc_swipe_encoder.onnx) was trained from scratch by the
+CleverKeys project on gesture data derived from the FUTO swipe corpus. No FUTO
+model weights and no FUTO model outputs were used at any point in training; the
+bundled weights are original CleverKeys work distributed under GPL-3.0 with the
+app. (The FUTO Model Weights License therefore does not apply to this asset;
+the decode algorithms in src/main/kotlin/.../swipe/ctc/ are a clean-room port of
+FUTO's GPL-3.0 swipe-library, license-compatible with this project.)
+
+  swipe.futo.org dataset — FUTO
+  https://huggingface.co/datasets/futo-org/swipe.futo.org
+  License: MIT
+
+================================================================================
+How-We-Swipe shape-writing dataset
+================================================================================
+Training of the CTC swipe-emission encoder additionally used the How-We-Swipe
+shape-writing dataset.
+
+  How-We-Swipe — Luis A. Leiva, Sunjun Kim, Wenzhe Cui, Xiaojun Bi,
+  Antti Oulasvirta (OSF node sj67f)
+  https://osf.io/sj67f/
+  License: MIT (Copyright (c) 2021 the authors above, as declared on the OSF node)
+
+MIT is GPLv3-compatible; the trained weights distributed with CleverKeys are
+redistributed under GPL-3.0, with attribution preserved here.

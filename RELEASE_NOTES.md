@@ -1,6 +1,7 @@
 v1.6.0 - Next-Word & On-Device Privacy Controls
 
 NEW:
+• CTC swipe engine (opt-in) — new from-scratch swipe decoder, most accurate engine yet on our benchmarks; Prediction Engine → CTC
 • Next-word prediction (opt-in) — suggests your likely next word as you type
 • "Learn from my typing" master switch — one toggle for all on-device learning
 • Learned-data manager — view, clear, and export what's learned; adjustable word limit

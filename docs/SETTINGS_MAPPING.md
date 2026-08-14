@@ -15,6 +15,7 @@ Complete mapping of settings to search terms, wiki guides, and implementation fi
 | Per-Key Customization | short swipe, gesture, actions, commands | [per-key-actions.md](wiki/customization/per-key-actions.md) | `ShortSwipeCustomizationActivity.kt` |
 | Short Swipe Calibration | calibrate, practice, tutorial, test | [short-swipes.md](wiki/gestures/short-swipes.md) | `ShortSwipeCalibrationActivity.kt` |
 | Extra Keys | toolbar, arrows, numbers | [extra-keys.md](wiki/customization/extra-keys.md) | `ExtraKeysConfigActivity.kt` |
+| CTC Settings | ctc, futo, swipe engine, beam, trie | — | `CtcSettingsActivity.kt` (`ctc_beam_width`, default 100, range 10–300; engine opt-in via `swipe_engine_mode` = `ctc`) |
 | Backup & Restore | backup, export, import, restore | [backup-restore.md](wiki/troubleshooting/backup-restore.md) | `BackupRestoreActivity.kt` |
 
 ---

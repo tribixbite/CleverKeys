@@ -160,20 +160,31 @@ just below. Outstanding, prioritized:
 - [ ] `hybrid` swipe mode is provenance-tagged `NEURAL_BEAM` (minor; give it its own origin).
 - [ ] (by-design, documented) backup *restore* repopulates learned stores even with master OFF (L7).
 
-### B. FUTO / CTC swipe engine — the big future path (spec+module+guide all landed, NOT wired)
-- [ ] **Train the CTC model on a GPU box** per `docs/guides/train-ctc-swipe-model.md` → produces the
-      CTC ONNX encoder. **This is the gating dependency (needs GPU infra — user's machine).** The
-      Kotlin decode module (`swipe/ctc/`, parity-tested) + spec (`docs/specs/ctc-swipe-engine.md`)
-      already exist; only the model is missing.
-- [ ] After a model: wire `ctc` into `swipe_engine_mode` (plan step G5); then Phase-2 refinement head
-      (measured **+5.88 pt** lever). Decisions already made: **retrain→ONNX** (not FUTO `.pte`),
-      **confidence-gated cascade** over a pure router, train-from-scratch = license-clean. Full
-      rationale: `docs/audit/2026-08-06-futo-engine-integration-decision.md`.
-- [ ] **Neural+geo rank fusion** — a parallel hedge, NO model/license deps (~2.5 days). Fusion is GO
-      on every stratum (**+14 pt** long-word union headroom, measured on test+val). Plan:
-      `docs/audit/remediation-plans/hybrid-engine-rank-fusion.md`; go/no-go gate already passed offline.
-- Reference eval: `docs/eval/2026-07-24-test2400-head2head.md` (2,400 test + 9,918 val, 4-engine
-      + fusion) and `docs/eval/2026-08-06-offline-decoder-speedup.md` (speedup verdict: adopt neither).
+### B. FUTO / CTC swipe engine — TRAINED + WIRED (2026-08-08, commits 3b9dd666..d99dd41f)
+- [x] **CTC model trained** (user's GPU, CleverKeys-ML repo, Phases E→M): ship model
+      `phaseM_kd_fresh_w1_s1234_fp16w` (2.91 MB), **TEST-VALIDATED on the shipping config**
+      (en_enhanced STRIP trie, preset 0.9/4.0/0.25/0.25/0.9882): test-2400 seed-mean
+      **89.31/93.79/94.50 t1/3/5** (≤3 93.70, 4+ 87.05) — beats FUTO's ceiling (84.83) AND our
+      neural (74.62) on every stratum; equal-footing McNemar 3/3 seeds p<5e-4. Plan of record:
+      `CleverKeys-ML/ctc/APP_INTEGRATION_PLAN.md` (§9.5 ship menu; per-language ru λ 2.0,
+      ensemble/rescorer/contract-v2 = recorded future options).
+- [x] **Wired into the app** (opt-in; default engine stays neural): asset+fixture 3b9dd666,
+      OnnxCtcEmissionModel + tunedV2 SHIP preset 4efda6e5, CtcEngineAdapter + Mode.CTC router +
+      IME wiring (race-guard + ML-provenance conventions) 617155a7, settings surface
+      (dropdown 4th option + CtcSettingsActivity beam-width knob) 811eeb7d, instrumented
+      parity + latency-gate tests d99dd41f. Refinement head NOT needed (encoder alone beats all bars).
+- [ ] **Instrumented gate evidence**: targeted ew-cli run of CtcEmissionModelParityTest +
+      CtcLatencyGateTest (kicked off 2026-08-08; check ~/ew-output) then a FULL suite pass before
+      any release tag. Manual QA per plan §4.5 (first-swipe warmup, long-word feel, non-QWERTY
+      hedge, provenance label, thermals).
+- [ ] **Neural+geo rank fusion** — still a valid parallel option but LOWER priority now (CTC beats
+      both engines' union on most strata). Re-evaluate vs a CTC+neural cascade (decision doc §3)
+      after CTC field feedback.
+- [ ] Future (recorded in the plan, not scheduled): per-language presets (ru λ 2.0 on CKDT scale —
+      prerequisite for relaxing the en-only gate), two-model ensemble (4.39 MB, val-only),
+      22 KB rescorer, contract-v2 T′=64, user-dictionary alpha-boost with cap (plan §7.3).
+- Reference eval: `docs/eval/2026-07-24-test2400-head2head.md` (superseded as the best-engine
+      record by the CTC test-validated numbers above) + `docs/eval/2026-08-06-offline-decoder-speedup.md`.
 
 ### C. Older still-open (from the log below — not touched this session)
 - [ ] **P2 non-en tap contraction bug** (German "im"→"I'm" top, loses "im"): `SuggestionHandler`'s
