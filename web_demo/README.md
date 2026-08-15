@@ -1,13 +1,24 @@
 # CleverKeys web demo
 
-`demo/index.html` is the browser swipe demo. It runs three decode engines over
-one shared gesture capture, selected from the **Engine** dropdown:
+`demo/index.html` is the browser swipe demo. It runs four decode engines over
+one shared gesture capture, selected from the **Engine** dropdown (the choice
+persists in the demo config):
 
 | Dropdown entry | Model | Lexicon | Decoder |
 |---|---|---|---|
 | Neural (shipped transformer) | `swipe_encoder_android.onnx` + `swipe_decoder_android.onnx` — the pair inside the APK | 98,140-word `en_enhanced.json` | GNMT length-normalised beam + `OptimizedVocabulary` rerank (production parity, audited 2026-07-21) |
-| CTC accurate (ch128) | `demo/models/ch128_s1234.onnx` (2.8 MB) | 146,964-word `ctc_vocab.bin` | FUTO single-stream Viterbi trie beam |
+| CTC (shipped app engine) | `ctc_swipe_encoder.onnx` (2.9 MB) — byte-identical to the APK asset `models/ctc_swipe_encoder.onnx`, sha256 `84718e6e…` | 98k `en_enhanced.json`, a-z-STRIPPED (98,081 words) | FUTO single-stream Viterbi trie beam at the SHIP preset `CtcScoringParams.tunedV2` (γ 0.9, λ 4.0, β 0.25, γₚ 0.25, βₚ 0.9882, width 100) |
+| CTC accurate (ch128) | `demo/models/ch128_s1234.onnx` (2.8 MB) | 146,964-word `ctc_vocab.bin` | FUTO single-stream Viterbi trie beam (demo-tuned preset) |
 | CTC fast (resbn80) | `demo/models/fast_resbn80_s1234.onnx` (1.1 MB) | same | same |
+
+**CTC (shipped app engine)** is the browser twin of the Kotlin
+`CtcEngineAdapter` / `swipe.ctc` engine that ships in the app: same ONNX, same
+STRIP lexicon policy (`CtcLexiconTrie.loadStrippingNonAlphabet` — `don't` →
+`dont`, so apostrophe forms are reachable on an a-z-only model), same scoring
+preset, and it is gated on the same golden fixture the Kotlin port is
+(`src/test/resources/ctc/ctc_golden.json`) via `tests/ctc_app_parity.mjs`.
+The two "accurate/fast" entries are the earlier from-scratch experimental
+encoders, kept for comparison.
 
 Every model, lexicon and runtime is served from the repo — no CDN takes part in
 decoding. onnxruntime-web 1.18.0 is vendored under `demo/vendor/ort/`. One CDN
@@ -41,8 +52,36 @@ either is a parity bug:
 | `sliceEmissions()` | `futo_decoder_ceiling.py::slice_emissions` |
 | `futoViterbiBeam()` | `futo_decoder_ceiling.py::futo_viterbi_beam` |
 
-Scoring preset (`CTC_SCORING`): `gamma=1.05`, `lambda=1.1`, `beta=0.2`,
-`gammaPrune=0.3734`, `betaPrune=0.9882`, beam width 100, top-k 8.
+Two scoring presets live in `ctc-engine.js`:
+
+* `CTC_SCORING` (experimental engines, FUTO 147k lexicon): `gamma=1.05`,
+  `lambda=1.1`, `beta=0.2`, `gammaPrune=0.3734`, `betaPrune=0.9882`,
+  beam width 100, top-k 8.
+* `CTC_APP_SCORING` (shipped app engine, en_enhanced STRIP trie): `gamma=0.9`,
+  `lambda=4.0`, `beta=0.25`, `gammaPrune=0.25`, `betaPrune=0.9882`, beam width
+  100, top-k 8 — a 1:1 port of the app's `CtcScoringParams.tunedV2()`. λ=4.0
+  is deliberate: it multiplies en_enhanced's compressed 134–255 byte-score
+  scale (`ln f ∈ [4.9, 5.54]`), not the raw AOSP counts the FUTO-blob λ sees.
+
+The app engine's trie is built at page load by `CtcTrie.fromFrequencyMap`
+(~98k words in well under a second), a port of the Kotlin
+`CtcLexiconTrie.loadStrippingNonAlphabet` insertion semantics: lowercase,
+strip non-a-z, floor frequency at 1, `log_freq = ln(freq + 1e-10)` with
+keep-max retention, children in insertion order (Kotlin's LinkedHashMap) so
+beam tie-breaks match the app exactly.
+
+### Contraction display
+
+CTC candidates are raw a-z surfaces (`dont`, `im`) because the lexicons store
+contractions as apostrophe-free aliases. The demo maps them to display forms
+at the chip/auto-insert layer via `applyContractionFixup` — the shipped
+`contractions_en.json` (120 non-paired aliases, e.g. `dont`→`don't`,
+`im`→`i'm`) plus the paired-base guard (`well`, `were`, `hes`… are real words
+and never rewritten). This mirrors the app's `ContractionOverlay` rules 1/2b
+for English; the overlay's remaining behaviours — appending paired variants
+("well" + "we'll") and the frequency-ordinal guard for real-word aliases —
+are not implemented in the demo (the ordinal guard only matters for non-en
+languages, which the demo doesn't decode).
 
 Two details worth knowing:
 
@@ -95,9 +134,36 @@ Model provenance and sha256 sums: [`demo/models/PROVENANCE.md`](demo/models/PROV
 ```bash
 python3 web_demo/tests/ctc_reference.py       # regenerate reference.json
 python3 web_demo/serve.py --port 8765 &
-cd web_demo/tests && bun install              # once — puppeteer-core
+cd web_demo/tests && bun install              # once — puppeteer-core + onnxruntime-web
 node web_demo/tests/run_browser_tests.mjs     # drives headless Chrome
+
+# App-engine gates (pure Node, no browser or server needed):
+node web_demo/tests/ctc_app_parity.mjs        # golden-fixture parity gate
+node web_demo/tests/ctc_app_smoke.mjs         # headless end-to-end smoke
 ```
+
+### App-engine golden parity (`ctc_app_parity.mjs`, 2026-08-15)
+
+Runs the real `demo/ctc-engine.js` in a Node VM plus the real
+`ctc_swipe_encoder.onnx` via onnxruntime-web against
+`src/test/resources/ctc/ctc_golden.json` — the same fixture that gates the
+Kotlin port. Result: all 6 featurize cases **bit-exact float32 (128/128)**;
+all 4 beam cases reproduce `greedy` and the top-k **words and order exactly**,
+with max score delta **3.3e-6** (gate: 1e-3) and ORT-web-vs-fixture emission
+drift ≤ 2.7e-5.
+
+### App-engine end-to-end smoke (`ctc_app_smoke.mjs`, 2026-08-15)
+
+Loads the shipped inline demo script (VM + DOM stubs, the a22b76ad pattern),
+switches to `ctc_app` through the real dropdown handler, and replays the nine
+`reference.json` trajectories through `processSwipe`. 7/9 decode to themselves
+at top-1; `four` → `for` (`four` #2, all CTC engines do this) and `hello` →
+`help` (`hello` #2 — the 98k en_enhanced trie ranks the far-more-frequent
+`help` above `hello` on this synthetic constant-speed trace; the golden gate
+proves this is a model+lexicon outcome, not port drift). Also asserts the
+`dont`→`don't` display mapping, the `well` paired-base guard, and
+custom-word insert/remove on the app trie. Decode latency in Node-WASM:
+~17–55 ms per swipe.
 
 `ctc_reference.py` synthesises deterministic Catmull-Rom swipe trajectories and
 decodes them with the CleverKeys-ML pipeline itself (the featurizer, slicer and
@@ -108,25 +174,28 @@ gesture. Results land in `tests/results.json` and `tests/screenshots/`.
 
 ### Top-1 per engine, per word
 
-Nine synthetic gestures, top-1 only. ✓ = top-1 correct.
+Nine synthetic gestures, top-1 only. ✓ = top-1 correct. The `CTC app` column
+is from the Node smoke (`ctc_app_smoke.mjs`, same trajectories through the
+same `processSwipe` entry point); the other three are the headless-Chrome run.
 
-| word | transformer | CTC ch128 | CTC resbn80 |
-|---|---|---|---|
-| the | ✓ | ✓ | ✓ |
-| hello | ✓ | ✓ | ✓ |
-| keyboard | ✗ `kettering` | ✓ | ✓ |
-| dont | ✗ `dolmen` | ✓ | ✓ |
-| world | ✓ | ✓ | ✓ |
-| this | ✓ | ✓ | ✓ |
-| about | ✓ | ✓ | ✓ |
-| four | ✗ `for` | ✗ `for` | ✗ `for` |
-| something | ✗ `stomper` | ✓ | ✓ |
-| **total** | **5/9** | **8/9** | **8/9** |
+| word | transformer | CTC app | CTC ch128 | CTC resbn80 |
+|---|---|---|---|---|
+| the | ✓ | ✓ | ✓ | ✓ |
+| hello | ✓ | ✗ `help` (#2) | ✓ | ✓ |
+| keyboard | ✗ `kettering` | ✓ | ✓ | ✓ |
+| dont | ✗ `dolmen` | ✓ | ✓ | ✓ |
+| world | ✓ | ✓ | ✓ | ✓ |
+| this | ✓ | ✓ | ✓ | ✓ |
+| about | ✓ | ✓ | ✓ | ✓ |
+| four | ✗ `for` | ✗ `for` (#2) | ✗ `for` | ✗ `for` |
+| something | ✗ `stomper` | ✓ | ✓ | ✓ |
+| **total** | **5/9** | **7/9** | **8/9** | **8/9** |
 
-Both CTC engines reproduce the Python reference exactly, including the single
-miss. `four` → `for` is a genuine outcome, not a port defect: the `f-o-u-r`
-path passes within a key-width of the `f-o-r` path, and `for` is far more
-frequent.
+Both experimental CTC engines reproduce the Python reference exactly,
+including the single miss. `four` → `for` is a genuine outcome, not a port
+defect: the `f-o-u-r` path passes within a key-width of the `f-o-r` path, and
+`for` is far more frequent. The app engine's `hello` → `help` is the same
+category of outcome on its 98k lexicon (see the smoke section below).
 
 The transformer's 5/9 is a property of the **test fixture, not the engine**.
 These synthetic trajectories are constant-speed spline walks; the transformer
@@ -173,12 +242,13 @@ Screenshots: `tests/screenshots/{transformer,ctc_ch128,ctc_resbn80}.png`.
 ```
 web_demo/
 ├── demo/
-│   ├── index.html              the demo (engine dropdown, capture, both decode paths)
-│   ├── ctc-engine.js           featurizer + CSR trie + FUTO Viterbi beam
-│   ├── models/                 CTC ONNX, en_qwerty.json, ctc_vocab.bin, PROVENANCE.md
+│   ├── index.html              the demo (engine dropdown, capture, all decode paths)
+│   ├── ctc-engine.js           featurizer + CSR trie (+ from-map builder) + FUTO Viterbi beam
+│   ├── models/                 experimental CTC ONNX, en_qwerty.json, ctc_vocab.bin, PROVENANCE.md
 │   └── vendor/ort/             onnxruntime-web 1.18.0 (MIT)
+├── ctc_swipe_encoder.onnx      shipped app CTC encoder (== APK asset, sha256 84718e6e…)
 ├── tools/build_ctc_vocab.py    wordlist -> ctc_vocab.bin (with --verify)
-├── tests/                      reference harness, browser harness, results, screenshots
+├── tests/                      reference + browser harnesses, app-engine parity/smoke, results
 ├── serve.py                    local server mirroring the deploy layout
-└── *.onnx, en_enhanced.json…   transformer assets, flattened into /demo/ at deploy
+└── *.onnx, en_enhanced.json…   transformer + app-CTC assets, flattened into /demo/ at deploy
 ```

@@ -179,7 +179,12 @@ export async function runParityTests(reference) {
     out.featurizerMaxAbsDiff = worstFeature;
 
     // ── beam: run the browser's emissions through the JS beam ───────────────
-    for (const engineId of availableEngineIds().filter((id) => id.startsWith('ctc_'))) {
+    // Only engines with a recorded Python reference take part: reference.json
+    // covers the two CleverKeys-ML experimental encoders; the shipped app
+    // engine (ctc_app) is gated by the repo golden fixture instead
+    // (tests/ctc_app_parity.mjs against src/test/resources/ctc/ctc_golden.json).
+    for (const engineId of availableEngineIds()
+        .filter((id) => id.startsWith('ctc_') && reference.engines[id] !== undefined)) {
         await selectEngine(engineId);
         const perWord = {};
         for (const word of reference.parityWords) {

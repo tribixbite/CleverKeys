@@ -47,6 +47,33 @@
         topK: 8,
     });
 
+    /**
+     * The SHIP preset for the APP's bundled CTC encoder
+     * (`ctc_swipe_encoder.onnx`, CleverKeys-ML `phaseM_kd_fresh_w1` fp16w) —
+     * a 1:1 port of `CtcScoringParams.tunedV2()` in
+     * `src/main/kotlin/tribixbite/cleverkeys/swipe/ctc/CtcScoringParams.kt`.
+     * Fitted and test-validated on the APP-TRIE footing: the a–z-STRIPPED trie
+     * built from `en_enhanced.json` (NOT the 147k FUTO blob). λ=4.0 is far
+     * above `CTC_SCORING`'s 1.1 on purpose — it multiplies en_enhanced's
+     * COMPRESSED 134–255 byte-score scale (`ln f ∈ [4.9, 5.54]`), a much
+     * narrower log range than the AOSP counts the FUTO-blob λ sees. The golden
+     * fixture `src/test/resources/ctc/ctc_golden.json` (top-level `preset`
+     * `[0.9, 4.0, 0.25, 0.25, 0.9882]`) is generated at this preset — model,
+     * preset and fixture always move together.
+     * @type {Readonly<{gamma:number, lambda:number, beta:number,
+     *                  gammaPrune:number, betaPrune:number,
+     *                  beamWidth:number, topK:number}>}
+     */
+    const CTC_APP_SCORING = Object.freeze({
+        gamma: 0.9,
+        lambda: 4.0,
+        beta: 0.25,
+        gammaPrune: 0.25,
+        betaPrune: 0.9882,
+        beamWidth: 100,
+        topK: 8,
+    });
+
     // ── featurization ───────────────────────────────────────────────────────
 
     /**
@@ -344,6 +371,117 @@
              * @type {Map<string, {node:number, existed:boolean, prevLogFreq:number}>}
              */
             this.customEntries = new Map();
+        }
+
+        /**
+         * Build a trie from `{word: frequency}` entries with the APP's lexicon
+         * semantics — a 1:1 port of
+         * `CtcLexiconTrie.loadStrippingNonAlphabet` (the STRIP policy the
+         * shipped `CtcEngineAdapter` uses over `en_enhanced.json`):
+         *
+         *  - words are lowercased and non-a-z characters are STRIPPED
+         *    (`don't` → `dont`), never skipped; empty-after-strip is dropped;
+         *  - non-positive frequencies floor to 1.0;
+         *  - `log_freq = ln(freq + 1e-10)`, keep-max retention with the port's
+         *    `0.0`-sentinel overwrite quirk (`CtcLexiconTrie.insert`);
+         *  - children stay in INSERTION order (Kotlin's LinkedHashMap), so the
+         *    beam's tie-breaking order matches the app/golden fixture exactly —
+         *    unlike the sorted CSR the front-coded blob constructor produces.
+         *
+         * The result carries the full `CtcTrie` surface (CSR arrays + the
+         * custom-word overlay), so `insert`/`remove`/`wordAt`/`contains` and
+         * `futoViterbiBeam` all work on it unchanged.
+         *
+         * @param {Iterable<[string, number]>} entries `[word, freq]` pairs in
+         *        the source's iteration order (e.g. `Object.entries(json)`)
+         * @returns {CtcTrie}
+         */
+        static fromFrequencyMap(entries) {
+            // Dynamic pointer build (plain arrays), flattened to CSR below.
+            const nodeCharD = [0];
+            const nodeDepthD = [0];
+            const nodeParentD = [0];
+            const isWordD = [0];
+            const logFreqD = [0.0];
+            /** per node: flat [charIdx, child, ...] in insertion order */
+            const childList = [[]];
+            let wordCount = 0;
+
+            for (const [raw, freqRaw] of entries) {
+                const lower = String(raw).toLowerCase();
+                let stripped = '';
+                for (let i = 0; i < lower.length; i++) {
+                    const c = lower.charCodeAt(i);
+                    if (c >= 97 && c <= 122) stripped += lower[i];
+                }
+                if (stripped.length === 0) continue;
+                // nodeDepth is a Uint8Array; unreachable for real dictionaries.
+                if (stripped.length > 255) continue;
+                const freq = typeof freqRaw === 'number' && freqRaw > 0 ? freqRaw : 1.0;
+
+                let node = 0;
+                for (let i = 0; i < stripped.length; i++) {
+                    const ci = stripped.charCodeAt(i) - 97;
+                    const list = childList[node];
+                    let child = -1;
+                    for (let e = 0; e < list.length; e += 2) {
+                        if (list[e] === ci) { child = list[e + 1]; break; }
+                    }
+                    if (child === -1) {
+                        child = nodeCharD.length;
+                        nodeCharD.push(ci);
+                        nodeDepthD.push(nodeDepthD[node] + 1);
+                        nodeParentD.push(node);
+                        isWordD.push(0);
+                        logFreqD.push(0.0);
+                        childList.push([]);
+                        list.push(ci, child);
+                    }
+                    node = child;
+                }
+                if (!isWordD[node]) { wordCount++; isWordD[node] = 1; }
+                // LexTrie.insert retention: keep-max, but always overwrite the
+                // 0.0 "unset" sentinel (matters only for freq < 1, which the
+                // floor above already rules out — kept for exact parity).
+                const lf = Math.log(freq + 1e-10);
+                if (lf > logFreqD[node] || logFreqD[node] === 0.0) logFreqD[node] = lf;
+            }
+
+            // Flatten to CSR, preserving per-node insertion order.
+            const nodeCount = nodeCharD.length;
+            const childStart = new Int32Array(nodeCount + 1);
+            for (let n = 0; n < nodeCount; n++) {
+                childStart[n + 1] = childStart[n] + (childList[n].length >> 1);
+            }
+            const edgeCount = childStart[nodeCount];
+            const childChar = new Uint8Array(edgeCount);
+            const childTarget = new Int32Array(edgeCount);
+            for (let n = 0; n < nodeCount; n++) {
+                let w = childStart[n];
+                const list = childList[n];
+                for (let e = 0; e < list.length; e += 2) {
+                    childChar[w] = list[e];
+                    childTarget[w] = list[e + 1];
+                    w++;
+                }
+            }
+
+            const trie = Object.create(CtcTrie.prototype);
+            trie.wordCount = wordCount;
+            trie.nodeCount = nodeCount;
+            trie.childStart = childStart;
+            trie.childChar = childChar;
+            trie.childTarget = childTarget;
+            trie.nodeChar = Uint8Array.from(nodeCharD);
+            trie.nodeDepth = Uint8Array.from(nodeDepthD);
+            trie.nodeParent = Int32Array.from(nodeParentD);
+            trie.isWord = Uint8Array.from(isWordD);
+            trie.logFreq = Float64Array.from(logFreqD);
+            trie.staticNodeCount = nodeCount;
+            trie.capacity = nodeCount;
+            trie.extraChildren = null;
+            trie.customEntries = new Map();
+            return trie;
         }
 
         /**
@@ -791,7 +929,8 @@
      * Load the lexicon + layout once and construct every CTC engine (lazily
      * loading their ONNX sessions).
      * @param {{vocabUrl: string, layoutUrl: string,
-     *          engines: Array<{id:string, label:string, modelUrl:string}>}} config
+     *          engines: Array<{id:string, label:string, modelUrl:string,
+     *                          trie?:CtcTrie, scoring?:object}>}} config
      * @returns {Promise<{trie: CtcTrie, layout: object,
      *                    engines: Map<string, CtcEngine>,
      *                    stats: {vocabBytes:number, fetchMs:number,
@@ -816,7 +955,11 @@
         const layout = buildLayout(layoutJson);
         const engines = new Map();
         for (const spec of config.engines) {
-            engines.set(spec.id, new CtcEngine(spec, trie, layout, config.scoring));
+            // A spec may bring its own lexicon trie (the app engine decodes over
+            // the en_enhanced STRIP trie, not the shared FUTO blob) and its own
+            // scoring preset; the shared trie/config scoring are the defaults.
+            engines.set(spec.id, new CtcEngine(
+                spec, spec.trie || trie, layout, spec.scoring || config.scoring));
         }
 
         return {
@@ -839,6 +982,7 @@
         BLANK_IDX,
         CLASSES,
         CTC_SCORING,
+        CTC_APP_SCORING,
         CUSTOM_WORD_FREQ,
         pyRound,
         bisectLeft,

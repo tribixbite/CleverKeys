@@ -271,6 +271,7 @@
                     class="bg-black/40 border border-white/15 rounded-lg px-3 py-1.5 text-sm text-gray-200
                            focus:outline-none focus:border-neon-blue/60 min-w-[15rem]">
                 <option value="transformer">Neural (shipped transformer)</option>
+                <option value="ctc_app">CTC (shipped app engine)</option>
                 <option value="ctc_ch128">CTC accurate (ch128)</option>
                 <option value="ctc_resbn80">CTC fast (resbn80)</option>
             </select>
@@ -534,6 +535,10 @@
             // Kept only so an existing saved config still round-trips; the
             // vendored ORT build ships no threaded .wasm, so this is inert.
             wasmThreads: false,
+            // Selected decode engine (ENGINE_SPECS id). Additive field — an
+            // older saved .v2 config without it merges the default in, so no
+            // key-version bump is needed.
+            engine: 'transformer',
         };
         const CONFIG_KEY = 'cleverkeys.demo.config.v2';
         function loadConfig() {
@@ -841,7 +846,14 @@
             // lexicon too — the transformer path gets them via SwipeVocabulary.
             seedCtcCustomWords();
 
-            if (!transformerAvailable) {
+            // Restore the persisted engine choice when it can actually decode;
+            // otherwise (or with no saved choice) fall back exactly as before.
+            const savedEngine = DEMO_CONFIG.engine;
+            if (savedEngine && savedEngine !== activeEngineId && engineAvailable(savedEngine)) {
+                const select = document.getElementById('engineSelect');
+                select.value = savedEngine;
+                await onEngineChange();
+            } else if (!transformerAvailable) {
                 // Default the dropdown to a working engine and warm it, so the
                 // first swipe isn't a 3 MB download.
                 const select = document.getElementById('engineSelect');
@@ -1632,16 +1644,28 @@
         // ============================================================
         // ENGINE REGISTRY
         //
-        // Three decode paths share one gesture capture. The transformer is the
-        // pipeline that ships in the APK (encoder+decoder ONNX, GNMT-normalised
-        // beam over the 98k en_enhanced lexicon). The two CTC engines are the
-        // from-scratch encoders trained in CleverKeys-ML/ctc, decoded by the
-        // FUTO Viterbi trie beam in ctc-engine.js over the full 147k FUTO
-        // lexicon. Engines differ ONLY after gesture capture — the same
-        // swipePath feeds all three.
+        // Four decode paths share one gesture capture. The transformer is the
+        // neural pipeline that ships in the APK (encoder+decoder ONNX, GNMT-
+        // normalised beam over the 98k en_enhanced lexicon). "CTC (shipped app
+        // engine)" is the APK's OTHER swipe engine: the bundled
+        // `ctc_swipe_encoder.onnx` (byte-identical to the app asset
+        // models/ctc_swipe_encoder.onnx) decoded by the same FUTO Viterbi trie
+        // beam at the SHIP preset (CtcScoringParams.tunedV2) over the
+        // a-z-STRIPPED en_enhanced trie — the exact footing the Kotlin
+        // CtcEngineAdapter uses, gated by src/test/resources/ctc/ctc_golden.json
+        // (web_demo/tests/ctc_app_parity.mjs). The last two CTC engines are the
+        // from-scratch experimental encoders trained in CleverKeys-ML/ctc,
+        // decoded over the full 147k FUTO lexicon at their own tuned preset.
+        // Engines differ ONLY after gesture capture — the same swipePath feeds
+        // all four.
         // ============================================================
         const ENGINE_SPECS = [
             { id: 'transformer', kind: 'transformer', label: 'Neural (shipped transformer)' },
+            // `trie` (the en_enhanced STRIP trie) and `scoring`
+            // (CTC.CTC_APP_SCORING) are attached in initCtcEngines once the
+            // dictionary JSON has loaded.
+            { id: 'ctc_app', kind: 'ctc', label: 'CTC (shipped app engine)',
+              modelUrl: 'ctc_swipe_encoder.onnx' },
             { id: 'ctc_ch128', kind: 'ctc', label: 'CTC accurate (ch128)',
               modelUrl: 'models/ch128_s1234.onnx' },
             { id: 'ctc_resbn80', kind: 'ctc', label: 'CTC fast (resbn80)',
@@ -1670,20 +1694,66 @@
         }
 
         /**
-         * Load the 147k lexicon + layout and register the CTC engines. Never
+         * The APP engine's lexicon trie: en_enhanced.json (the APK's 98k
+         * dictionary, same file the transformer path loads) run through
+         * `CtcTrie.fromFrequencyMap` — the a-z STRIP builder that mirrors the
+         * Kotlin `CtcLexiconTrie.loadStrippingNonAlphabet` policy the shipped
+         * `CtcEngineAdapter` uses. Separate from `ctcRuntime.trie` (the 147k
+         * FUTO blob the two experimental engines decode over).
+         * @type {?object}
+         */
+        let ctcAppTrie = null;
+
+        /**
+         * Build the app-engine trie from the raw `{word: byteScore}` map.
+         * Fetched independently of SwipeVocabulary (which normalises the
+         * frequencies away) — force-cache makes this free when the transformer
+         * path already pulled the same URL.
+         * @returns {Promise<object>} the trie
+         */
+        async function buildCtcAppTrie() {
+            const r = await fetch('en_enhanced.json?v=20260721', { cache: 'force-cache' });
+            if (!r.ok) throw new Error(`en_enhanced.json: HTTP ${r.status}`);
+            const flat = await r.json();
+            const start = performance.now();
+            // Object.entries preserves the JSON's own key order, matching the
+            // Android org.json iteration the Kotlin adapter documents — order
+            // only affects beam tie-breaks.
+            const trie = CTC.CtcTrie.fromFrequencyMap(Object.entries(flat));
+            console.log(`CTC app trie: ${trie.wordCount} words / ${trie.nodeCount} nodes ` +
+                        `in ${(performance.now() - start).toFixed(0)}ms (en_enhanced STRIP)`);
+            return trie;
+        }
+
+        /**
+         * Load the CTC lexicons + layout and register the CTC engines. Never
          * throws: a CTC failure must not take the transformer down with it (and
          * vice versa), so each path records its own error and the dropdown
-         * disables whatever is unusable.
+         * disables whatever is unusable. The app engine's trie failing only
+         * disables THAT engine — the two FUTO-lexicon engines stay up.
          */
         async function initCtcEngines() {
             try {
+                updateLoadingStatus('Building CTC app lexicon (98k words)...');
+                try {
+                    ctcAppTrie = await buildCtcAppTrie();
+                } catch (error) {
+                    console.error('CTC app trie build failed — ctc_app disabled:', error);
+                }
+
                 updateLoadingStatus('Loading CTC lexicon (147k words)...');
                 ctcRuntime = await CTC.createEngines({
                     vocabUrl: 'models/ctc_vocab.bin',
                     layoutUrl: 'models/en_qwerty.json',
                     engines: ENGINE_SPECS
                         .filter(s => s.kind === 'ctc')
-                        .map(s => ({ id: s.id, label: s.label, modelUrl: s.modelUrl })),
+                        // ctc_app decodes over its own trie at the SHIP preset;
+                        // without the trie it is not registered at all.
+                        .filter(s => s.id !== 'ctc_app' || ctcAppTrie !== null)
+                        .map(s => (s.id === 'ctc_app'
+                            ? { id: s.id, label: s.label, modelUrl: s.modelUrl,
+                                trie: ctcAppTrie, scoring: CTC.CTC_APP_SCORING }
+                            : { id: s.id, label: s.label, modelUrl: s.modelUrl })),
                 });
                 const st = ctcRuntime.stats;
                 console.log(`CTC lexicon: ${st.words} words / ${st.nodes} trie nodes, ` +
@@ -1698,32 +1768,61 @@
         }
 
         /**
-         * Overlay one custom/personal word onto the CTC lexicon trie so the
-         * FUTO beam can actually reach it. The CTC engines carry their own
-         * 147k-word blob (`ctc_vocab.bin`) which knows nothing about
-         * SwipeVocabulary, so every custom-word add has to be mirrored here.
-         * No-op until the lexicon has loaded.
+         * Frequency for a custom word inserted into the APP trie. The Kotlin
+         * merge (`CtcLexiconMerge`) clamps the user dictionary's stored
+         * frequency to 1..255; the app's custom-word default frequency is 100
+         * (`CustomDictionarySource` — "Use stored frequency or default to
+         * 100"). The demo's personal dictionary stores normalised floats that
+         * carry no 1..255 information, so every custom word gets the app's
+         * default. Distinct from CTC.CUSTOM_WORD_FREQ (128), which is
+         * calibrated for the FUTO blob's 1..222 AOSP scale.
+         */
+        const CTC_APP_CUSTOM_WORD_FREQ = 100;
+
+        /**
+         * Overlay one custom/personal word onto BOTH CTC lexicon tries so the
+         * beams can actually reach it: the 147k FUTO blob (`ctc_vocab.bin`)
+         * behind the two experimental engines, and the en_enhanced STRIP trie
+         * behind the shipped app engine. Neither knows about SwipeVocabulary,
+         * so every custom-word add has to be mirrored here. For the app trie
+         * the word is a-z-STRIPPED first ("don't" → "dont"), exactly like the
+         * Kotlin merge feeds `loadStrippingNonAlphabet`. No-op until the
+         * lexicons have loaded.
          * @param {string} word
-         * @returns {boolean} true when the lexicon changed
+         * @returns {boolean} true when either lexicon changed
          */
         function insertCustomWordIntoCtc(word) {
-            if (!ctcRuntime || !ctcRuntime.trie || typeof ctcRuntime.trie.insert !== 'function') {
-                return false;
+            let changed = false;
+            if (ctcRuntime && ctcRuntime.trie && typeof ctcRuntime.trie.insert === 'function') {
+                changed = ctcRuntime.trie.insert(word) || changed;
             }
-            return ctcRuntime.trie.insert(word);
+            if (ctcAppTrie) {
+                const stripped = String(word || '').toLowerCase().replace(/[^a-z]/g, '');
+                if (stripped.length > 0) {
+                    changed = ctcAppTrie.insert(stripped, CTC_APP_CUSTOM_WORD_FREQ) || changed;
+                }
+            }
+            return changed;
         }
 
         /**
-         * Undo insertCustomWordIntoCtc — blob words keep their shipped
-         * frequency, words we introduced stop being decodable.
+         * Undo insertCustomWordIntoCtc on both tries — shipped words keep
+         * their bundled frequency, words we introduced stop being decodable.
          * @param {string} word
          * @returns {boolean}
          */
         function removeCustomWordFromCtc(word) {
-            if (!ctcRuntime || !ctcRuntime.trie || typeof ctcRuntime.trie.remove !== 'function') {
-                return false;
+            let changed = false;
+            if (ctcRuntime && ctcRuntime.trie && typeof ctcRuntime.trie.remove === 'function') {
+                changed = ctcRuntime.trie.remove(word) || changed;
             }
-            return ctcRuntime.trie.remove(word);
+            if (ctcAppTrie) {
+                const stripped = String(word || '').toLowerCase().replace(/[^a-z]/g, '');
+                if (stripped.length > 0) {
+                    changed = ctcAppTrie.remove(stripped) || changed;
+                }
+            }
+            return changed;
         }
 
         /**
@@ -1797,9 +1896,13 @@
         async function onEngineChange() {
             const select = document.getElementById('engineSelect');
             const id = select.value;
+            const spec = engineSpec(id);
+            if (!spec) return; // unknown/empty selection — nothing to switch to
             activeEngineId = id;
+            DEMO_CONFIG.engine = id;
+            saveConfig();
             document.getElementById('ctcDetail').classList.toggle(
-                'hidden', engineSpec(id).kind !== 'ctc');
+                'hidden', spec.kind !== 'ctc');
             try {
                 await ensureEngineLoaded(id);
                 setEngineStatus('ready');
