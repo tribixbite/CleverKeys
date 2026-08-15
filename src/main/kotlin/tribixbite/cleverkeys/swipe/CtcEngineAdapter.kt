@@ -95,6 +95,12 @@ class CtcEngineAdapter(private val context: Context) {
          * performCtcSwipeTyping` reads the active language BEFORE dispatch and falls
          * through to the neural flow for non-English (audit M1: ctc mode must never
          * offer less coverage than hybrid, which serves non-en QWERTY neurally).
+         *
+         * This gate is about the MODEL and the LEXICON, not the scoring preset: the
+         * preset axis is already language-keyed ([CtcScoringParams.presetFor], plan
+         * O10), so relaxing this constant for a script needs a bundled encoder for it
+         * plus a trie source on the scale its preset was fitted to — not a preset
+         * change.
          */
         const val LANGUAGE = "en"
 
@@ -370,18 +376,39 @@ class CtcEngineAdapter(private val context: Context) {
         return v
     }
 
-    // ── Decoder memo (per layout + trie + beam width) ───────────────────────────
+    // ── Decoder memo (per layout + trie + beam width + language) ────────────────
+
+    /**
+     * Memo identity for [decoderFor]. [mapped] and [trie] compare by REFERENCE (neither
+     * is a data class) — that is the intent: both are rebuilt-on-change memo outputs, so
+     * reference equality is exactly "the same layout/lexicon build".
+     *
+     * [language] is part of the key because the scoring preset is language-keyed
+     * ([CtcScoringParams.presetFor], integration-plan O10): without it, switching
+     * dictionary language would silently reuse the previous language's λ.
+     */
+    private data class DecoderKey(
+        val mapped: MappedLayout,
+        val trie: CtcLexiconTrie,
+        val beamWidth: Int,
+        val language: String,
+    )
 
     private var decoderMemo: CtcSwipeDecoder? = null
-    private var decoderKey: Triple<MappedLayout, CtcLexiconTrie, Int>? = null
+    private var decoderKey: DecoderKey? = null
 
-    private fun decoderFor(mapped: MappedLayout, trie: CtcLexiconTrie, beamWidth: Int): CtcSwipeDecoder {
-        val key = Triple(mapped, trie, beamWidth)
+    private fun decoderFor(
+        mapped: MappedLayout,
+        trie: CtcLexiconTrie,
+        beamWidth: Int,
+        language: String,
+    ): CtcSwipeDecoder {
+        val key = DecoderKey(mapped, trie, beamWidth, language)
         decoderMemo?.let { if (decoderKey == key) return it }
         val model = modelOrNull() ?: throw IllegalStateException("CTC model unavailable")
         val built = CtcSwipeDecoder(
             model, mapped.layout, trie,
-            CtcScoringParams.tunedV2(beamWidth = beamWidth, topK = TOP_K)
+            CtcScoringParams.presetFor(language, beamWidth = beamWidth, topK = TOP_K)
         )
         decoderMemo = built
         decoderKey = key
@@ -487,7 +514,8 @@ class CtcEngineAdapter(private val context: Context) {
                     val py = DoubleArray(n) { ((rawY[it] - mapped.originY) * mapped.invH).toDouble() }
                     val pt = DoubleArray(n) { rawT[it].toDouble() }
                     val beamWidth = Config.globalConfig().ctc_beam_width.coerceIn(10, 300)
-                    val candidates = decoderFor(mapped, lexicon.trie, beamWidth).decode(px, py, pt)
+                    val candidates = decoderFor(mapped, lexicon.trie, beamWidth, language)
+                        .decode(px, py, pt)
                     // H1: map contraction aliases to display forms ("dont" → "don't")
                     // before the shared pipeline — see the overlay section above.
                     applyContractionDisplay(toPredictionResult(candidates), lexicon.ordinals)

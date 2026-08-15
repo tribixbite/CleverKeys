@@ -1,5 +1,7 @@
 package tribixbite.cleverkeys.swipe.ctc
 
+import java.util.Locale
+
 /**
  * Scoring parameters for the FUTO-style CTC trie beam decoder.
  *
@@ -104,6 +106,74 @@ data class CtcScoringParams(
                 gammaPrune = 0.25, betaPrune = 0.9882,
                 beamWidth = beamWidth, topK = topK,
             )
+
+        /**
+         * The Cyrillic sibling of [tunedV2]: the benchmark **E1** preset
+         * (`1.05 / 1.1 / 0.2 / 0.3734 / 0.9882`) with **λ raised 1.1 → 2.0**.
+         *
+         * λ is the only term that moves, and it moves because the FREQUENCY SCALE
+         * differs, not because the model does. The app's Cyrillic lexicon is the
+         * importable `langpack-ru` CKDT v2 pack, whose per-word byte is `255 − rank`
+         * — a compressed scale that wants a larger λ than the raw AOSP counts E1 was
+         * fitted on (CleverKeys-ML `ctc/PHASE_I.md` §7.4). The sweep is
+         * `ctc/PHASE_J.md` §6.9 / `ctc/APP_INTEGRATION_PLAN.md` §7.1: tuned on ru val
+         * rows `0:4708`, confirmed on the untouched `4708:9416`, over BOTH ru models,
+         * λ ∈ {1.1, 2.0, 3.0, 4.0} — 2.0 wins on every half of both models and is worth
+         * **≈ +1.2 in-dict top-1** (75.73/76.70 → 76.91/77.92 for the shippable
+         * synth-only model). The lever is model-independent: it lifted the joint
+         * challenger by the same order, which is why it is recorded as a decode
+         * constant rather than a property of any one Cyrillic artifact.
+         *
+         * **Evidence tier — read before quoting.** These are **val-only** Cyrillic
+         * numbers (`eval_cyrillic.py`); no Cyrillic model was ever decoded on
+         * test-2400, and the seal is spent permanently. The preset is registered here
+         * so the axis exists; **no Cyrillic CTC encoder ships in the app today**, and
+         * [CtcEngineAdapter][tribixbite.cleverkeys.swipe.CtcEngineAdapter]'s en-only
+         * gate stays closed until one does (integration plan O5).
+         *
+         * **Caveat that travels with λ:** no campaign evaluation included a user
+         * dictionary, and λ multiplies the frequency term, so a larger λ amplifies
+         * top-of-scale injected competitors. λ = 2.0 should be re-confirmed with user
+         * dictionary entries present before the ru path ships (plan §7.1, §7.3).
+         */
+        fun tunedRuCkdt(beamWidth: Int = 100, topK: Int = 4): CtcScoringParams =
+            CtcScoringParams(
+                gamma = 1.05, lambda = 2.0, beta = 0.2, alpha = 0.0,
+                gammaPrune = 0.3734, betaPrune = 0.9882,
+                beamWidth = beamWidth, topK = topK,
+            )
+
+        /**
+         * The per-language preset axis (integration-plan decision **O10**): the decode
+         * preset is a property of the (emission model, lexicon FREQUENCY SCALE) pair,
+         * and the app serves more than one such scale.
+         *
+         * | [language] | preset | scale it is fitted to |
+         * |---|---|---|
+         * | `ru` | [tunedRuCkdt] (λ 2.0) | langpack CKDT v2 `255 − rank` |
+         * | anything else (incl. `en`) | [tunedV2] (λ 4.0) | bundled `en_enhanced.json` 134..255 |
+         *
+         * The default is deliberately [tunedV2] rather than a throw: the only decoder
+         * the app can currently build is the English one (the en-only gate upstream),
+         * so an unrecognized tag can only ever arrive as a bug, and a working English
+         * decode is a better failure mode than a crashed swipe.
+         *
+         * @param language BCP-47-ish dictionary language tag (`en`, `ru`, `en-US`, …);
+         *   only the primary subtag is significant and matching is case-insensitive.
+         */
+        fun presetFor(
+            language: String,
+            beamWidth: Int = 100,
+            topK: Int = 4,
+        ): CtcScoringParams {
+            val primary = language
+                .substringBefore('-').substringBefore('_')
+                .lowercase(Locale.ROOT)
+            return when (primary) {
+                "ru" -> tunedRuCkdt(beamWidth = beamWidth, topK = topK)
+                else -> tunedV2(beamWidth = beamWidth, topK = topK)
+            }
+        }
 
         /** `scoring.json` "fallback" — used when no signature-specific set matches. */
         fun fallback(beamWidth: Int = 300, topK: Int = 4): CtcScoringParams =
