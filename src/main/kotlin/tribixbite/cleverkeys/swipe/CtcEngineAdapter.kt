@@ -385,7 +385,9 @@ class CtcEngineAdapter(private val context: Context) {
      *
      * [language] is part of the key because the scoring preset is language-keyed
      * ([CtcScoringParams.presetFor], integration-plan O10): without it, switching
-     * dictionary language would silently reuse the previous language's λ.
+     * dictionary language would silently reuse the previous language's λ. It is stored
+     * case-folded because the upstream gate compares case-insensitively — "en" and "EN"
+     * must not look like two different decoders.
      */
     private data class DecoderKey(
         val mapped: MappedLayout,
@@ -403,7 +405,7 @@ class CtcEngineAdapter(private val context: Context) {
         beamWidth: Int,
         language: String,
     ): CtcSwipeDecoder {
-        val key = DecoderKey(mapped, trie, beamWidth, language)
+        val key = DecoderKey(mapped, trie, beamWidth, language.lowercase(Locale.ROOT))
         decoderMemo?.let { if (decoderKey == key) return it }
         val model = modelOrNull() ?: throw IllegalStateException("CTC model unavailable")
         val built = CtcSwipeDecoder(
