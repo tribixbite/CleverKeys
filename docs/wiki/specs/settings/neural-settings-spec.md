@@ -21,6 +21,9 @@ All facts in the [Neural Settings wiki page](../../settings/neural-settings.md) 
 | ONNX threads range 1-8 | `onnx/ModelLoader.kt` | `tryXnnpack()` | `threadCount.coerceIn(1, 8)` |
 | Swipe typing default on | `Config.kt` | 90 | `SWIPE_TYPING_ENABLED = true` |
 | Swipe on password default off | `Config.kt` | 91 | `SWIPE_ON_PASSWORD_FIELDS = false` |
+| Prediction Engine default | `Config.kt` | 320 | `SWIPE_ENGINE_MODE = "neural"` |
+| CTC beam width default | `Config.kt` | 330 | `CTC_BEAM_WIDTH = 100` |
+| CTC beam width range 10-300 | `CtcSettingsActivity.kt` | slider + `loadSavedParameters()` | `valueRange = 10f..300f`, `.coerceIn(10, 300)` |
 | ONNX model format | `onnx/ModelLoader.kt` | class | ONNX Runtime Android |
 | Beam search decoder | `neural/BeamSearchDecoder.kt` | class | Vocabulary-constrained beam search |
 
@@ -29,17 +32,21 @@ All facts in the [Neural Settings wiki page](../../settings/neural-settings.md) 
 | Component | File | Purpose |
 |-----------|------|---------|
 | Neural Defaults | `Config.kt:Defaults` (line 114-135) | All default values |
-| Settings UI | `SettingsActivity.kt` (line 1370-1450) | Neural Prediction section |
+| Settings UI | `ui/settings/sections/NeuralPredictionSection.kt` | Swipe Typing section (engine dropdown, toggles, engine-settings buttons) |
 | Model Loader | `onnx/ModelLoader.kt` | ONNX model initialization and XNNPACK config |
 | Beam Decoder | `neural/BeamSearchDecoder.kt` | Word prediction from swipe trajectories |
 | Prediction Engine | `neural/NeuralPredictionEngine.kt` | Coordinates model inference and ranking |
+| Engine Router | `swipe/SwipeEngineRouter.kt` | Routes swipes per `swipe_engine_mode` (neural/hybrid/geometric/ctc) |
+| CTC Settings UI | `CtcSettingsActivity.kt` | Full CTC Settings screen (single beam-width knob) |
 
 ## Settings Preference Keys
 
 | Preference Key | Type | Default | Config.kt field |
 |---------------|------|---------|-----------------|
-| `swipe_typing` | Boolean | true | `swipe_typing_enabled` |
-| `swipe_on_password` | Boolean | false | `swipe_on_password_fields` |
+| `swipe_typing_enabled` | Boolean | true | `swipe_typing_enabled` |
+| `swipe_on_password_fields` | Boolean | false | `swipe_on_password_fields` |
+| `swipe_engine_mode` | String | "neural" | `swipe_engine_mode` (values `neural`/`hybrid`/`geometric`/`ctc`, lowercased at read) |
+| `ctc_beam_width` | Int | 100 | `ctc_beam_width` (10-300) |
 | `neural_beam_width` | Int | 6 | `neural_beam_width` |
 | `neural_confidence_threshold` | Float | 0.01 | `neural_confidence_threshold` |
 | `neural_max_length` | Int | 20 | `neural_max_length` |

@@ -163,8 +163,8 @@ All in Settings → **Word Prediction**. Most users only ever touch the top thre
 
 Every suggestion in the bar knows where it came from. To inspect one:
 
-- **Long-press any suggestion** — a sheet shows its source (neural swipe, geometric
-  decoder, dictionary prefix match, contraction, next-word, etc.), its score, and — for
+- **Long-press any suggestion** — a sheet shows its source (neural swipe, CTC swipe,
+  geometric decoder, dictionary prefix match, contraction, next-word, etc.), its score, and — for
   dictionary predictions — the full score breakdown: prefix match, adaptation, built-in
   vs. learned context boost (and which one won), personalization, and frequency factor.
 - **Suggestion Origin Markers** (Settings > Advanced, off by default) — adds a small

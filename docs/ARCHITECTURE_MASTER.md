@@ -1,7 +1,7 @@
 # CleverKeys Master Architecture Document
 
-**Version**: 1.2.0
-**Last Updated**: 2026-08-06 (added §6.5-6.7: learned context LM, next-word, learning privacy gate)
+**Version**: 1.3.0
+**Last Updated**: 2026-08-15 (added §5.3: CTC swipe engine — opt-in `ctc` mode, tunedV2 preset, routing/lexicon/provenance)
 **Status**: Complete (Triple-Checked)
 
 This document contains all parameters, weights, coefficients, thresholds, and configuration values used in CleverKeys.
@@ -239,13 +239,14 @@ space = 30, apostrophe = 31, hyphen = 32
 
 ## 5. Beam Search Parameters
 
-> **Scope note (2026-07-20)**: beam search belongs to the NEURAL pipeline only
-> (autoregressive ONNX decoder). The geometric swipe engine
-> (`swipe/geometric/`, spec: `docs/specs/geometric-swipe-engine.md`) does NOT
-> use beam search — it is a SHARK2-style whole-word template matcher (prune →
-> score → top-K). Its full tunable surface lives in `GeometricEngineConfig.kt`
-> and is documented in the spec's Config Surface + As-Built Notes sections;
-> values are not duplicated here to avoid drift.
+> **Scope note (2026-07-20, updated 2026-08-08)**: §5.1-5.2 belong to the
+> NEURAL pipeline only (autoregressive ONNX decoder). The geometric swipe
+> engine (`swipe/geometric/`, spec: `docs/specs/geometric-swipe-engine.md`)
+> does NOT use beam search — it is a SHARK2-style whole-word template matcher
+> (prune → score → top-K). Its full tunable surface lives in
+> `GeometricEngineConfig.kt` and is documented in the spec's Config Surface +
+> As-Built Notes sections; values are not duplicated here to avoid drift. The
+> CTC engine (§5.3) uses its OWN trie beam with separate parameters.
 
 ### 5.1 Constants (BeamSearchEngine.kt)
 
@@ -270,6 +271,36 @@ space = 30, apostrophe = 31, hyphen = 32
 | `PAD_IDX` | 0 | Padding token index |
 | `SOS_IDX` | 2 | Start token index |
 | `EOS_IDX` | 3 | End token index |
+
+### 5.3 CTC Swipe Engine (`swipe/ctc/` + `CtcEngineAdapter.kt`, opt-in `ctc` mode, 2026-08-08)
+
+The fourth swipe engine (spec: `docs/specs/ctc-swipe-engine.md`): a non-autoregressive
+CTC trie-beam decoder over a 2.91 MB CleverKeys-trained ONNX emission encoder
+(`models/ctc_swipe_encoder.onnx`, `OnnxCtcEmissionModel`). Opt-in via
+`swipe_engine_mode = "ctc"`; routing is CTC on QWERTY for English, neural for other
+languages on QWERTY, geometric on non-QWERTY layouts (`SwipeEngineRouter.Mode.CTC` +
+`InputCoordinator.performCtcSwipeTyping`'s language fallthrough) — never less coverage
+than `hybrid`. Test-validated at 89.31/93.79/94.50 top-1/3/5 on the FUTO test-2400 split
+(see `docs/eval/2026-07-24-test2400-head2head.md` addendum).
+
+Ship preset `CtcScoringParams.tunedV2` (scoring constants deliberately not user-exposed):
+
+| Parameter | Value | Description |
+|-----------|-------|-------------|
+| `gamma` | 0.9 | Final length-normalization exponent |
+| `lambda` | 4.0 | Log-frequency weight (AOSP 1..255 log scale) |
+| `beta` | 0.25 | Final length bonus |
+| `alpha` | 0.0 | (unused in ship preset) |
+| `gammaPrune` | 0.25 | Length-aware prune exponent |
+| `betaPrune` | 0.9882 | Length-aware prune bonus |
+| `beamWidth` | 100 | Default; user-tunable via `ctc_beam_width` (10–300, `CtcSettingsActivity`) |
+| `topK` | 8 | Adapter slate size handed to the suggestion pipeline |
+
+Lexicon: bundled `dictionaries/en_enhanced.json` a-z-stripped + user custom words −
+disabled words (`CtcLexiconMerge`), rebuilt on content-hash change. Contraction aliases
+are overlaid to display forms in the adapter (`ContractionOverlay`). Suggestion
+provenance tags `SuggestionOrigin.CTC` for CTC-decoded swipes
+(`SuggestionProvenance.forRoutedEngine`).
 
 ---
 
@@ -516,6 +547,7 @@ All settings are stored in SharedPreferences with these keys:
 ### Neural/Swipe Keys
 - `neural_prediction_enabled`, `neural_beam_width`, `neural_max_length`
 - `swipe_typing_enabled`, `swipe_min_distance`, `swipe_trail_enabled`
+- `swipe_engine_mode` (neural/hybrid/geometric/ctc), `ctc_beam_width`
 
 ### Auto-correction Keys
 - `autocorrect_enabled`, `autocorrect_min_word_length`

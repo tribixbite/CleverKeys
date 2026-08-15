@@ -8,7 +8,7 @@ featured: true
 
 # Swipe Typing
 
-Swipe typing lets you type words by drawing a continuous path through letters. CleverKeys uses a neural AI model to predict words from your swipe patterns.
+Swipe typing lets you type words by drawing a continuous path through letters. CleverKeys ships several on-device prediction engines — a neural transformer (the default), a CTC model, and a geometric decoder — and you choose how they are combined with the Prediction Engine setting.
 
 ## Quick Summary
 
@@ -16,7 +16,7 @@ Swipe typing lets you type words by drawing a continuous path through letters. C
 |------|-------------|
 | **Purpose** | Type words faster by swiping |
 | **Gesture** | Draw path through letters without lifting finger |
-| **AI Model** | ONNX transformer neural network |
+| **Engines** | Neural transformer (default), CTC, geometric — selectable in Settings |
 
 ## How It Works
 
@@ -66,14 +66,43 @@ After swiping, predictions appear in a horizontal row ordered by confidence (bes
 
 Tap any prediction to use it instead.
 
+## Choosing a Prediction Engine
+
+The **Prediction Engine** dropdown (Settings > Swipe Typing) selects which decoder handles your swipes. The right engine is picked automatically per swipe, based on your layout and language:
+
+| Mode | QWERTY layout, English | QWERTY layout, other language | Non-QWERTY layout (Dvorak, Cyrillic, ...) |
+|------|------------------------|-------------------------------|-------------------------------------------|
+| **Neural** (default) | Neural | Neural | No swipe typing |
+| **Hybrid** | Neural | Neural | Geometric |
+| **Geometric** | Geometric | Geometric | Geometric |
+| **CTC** | CTC | Neural | Geometric |
+
+- **Neural** — the transformer model swipe typing has always used. It is trained on QWERTY, so non-QWERTY layouts get no swipe typing in this mode.
+- **Hybrid** — neural where it was trained (QWERTY), geometric everywhere else, so every layout has swipe typing.
+- **Geometric** — a pure shape-matching decoder (no neural network) on all layouts. Useful for comparison and battery-lean decoding.
+- **CTC** — a newer CleverKeys-trained model for English on QWERTY. In our benchmark on 2,400 held-out swipes it got the intended word right on the first try about 89% of the time, ahead of the neural engine (~75%) on the same set. It currently supports English only — swiping in another language automatically uses the neural engine instead, and non-QWERTY layouts use the geometric engine, so choosing CTC never gives you less coverage than Hybrid.
+
+Whichever engine decodes a swipe, the results flow through the same suggestion bar, autocorrect, and contraction handling ("dont" is shown as "don't"). If you enable suggestion origin markers, each suggestion is tagged with the engine that actually produced it.
+
+### CTC Settings
+
+With the CTC engine selected, a **Full CTC Settings** button appears with one tuning knob:
+
+| Setting | Default | Range | Description |
+|---------|---------|-------|-------------|
+| **Beam Width** | 100 | 10–300 | How many word hypotheses the decoder keeps while tracing your swipe. 100 is the validated default; higher values cost CPU per swipe for marginal accuracy. |
+
+The CTC scoring constants are calibrated offline and deliberately not user-tunable.
+
 ## Settings
 
-Tune swipe typing in Settings > Neural Prediction:
+Tune swipe typing in Settings > Swipe Typing:
 
 | Setting | Description |
 |---------|-------------|
 | **Swipe Typing** | Enable/disable swipe input |
-| **Beam Width** | More candidates = more accurate but slower (default: 6, max: 20) |
+| **Prediction Engine** | Neural / Hybrid / Geometric / CTC (see above) |
+| **Beam Width** (neural) | More candidates = more accurate but slower (default: 6, max: 20) |
 | **Confidence Threshold** | Minimum confidence for predictions |
 | **Max Word Length** | Maximum predicted word length in characters (default: 20) |
 | **Backspace Undo Swipe** | Backspace deletes entire swiped word + auto-space (default: on) |

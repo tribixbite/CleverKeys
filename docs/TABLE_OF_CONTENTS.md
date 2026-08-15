@@ -1,6 +1,6 @@
 # CleverKeys Documentation - Table of Contents
 
-**Last Updated**: 2026-08-06
+**Last Updated**: 2026-08-15
 **Review Status**: Files 251 of 251 (100% complete) ✅
 
 ## 📋 Quick Navigation
@@ -67,7 +67,7 @@
 | `profile_system_restoration.md` | **NEW** Profile Import/Export | ✅ Implemented |
 | `geometric-swipe-engine.md` | Layout-agnostic geometric swipe decoder (standalone) | ✅ Implemented |
 | `context-learning-and-next-word.md` | **NEW 2026-08-06** Persistent context LM, master learning privacy gate, opt-in next-word prediction, suggestion provenance, learned-data manager | ✅ Implemented |
-| `ctc-swipe-engine.md` | **NEW 2026-08-06** FUTO-style CTC trie-beam decode module (`swipe/ctc/`) — design-only, NOT wired, blocked on model export | 📐 Design |
+| `ctc-swipe-engine.md` | **UPDATED 2026-08-15** CTC trie-beam swipe engine — WIRED opt-in `ctc` mode (2026-08-08): CleverKeys-trained ONNX encoder, router/adapter/settings/provenance As-Built | ✅ Implemented |
 | `cursor-aware-predictions.md` | Cursor sync + cursor-park next-word integration | ✅ Implemented |
 | `architectural-decisions.md` | Architectural Decision Records | ✅ Active |
 
@@ -76,7 +76,7 @@
 
 | File | Purpose | Status |
 |------|---------|--------|
-| `2026-07-24-test2400-head2head.md` | Same-split 2,400-row head-to-head (neural/geo/FUTO floor+ceiling) + fusion go/no-go; held-out VAL (9,918) corroboration with contraction-fixed lexicon | ✅ Complete |
+| `2026-07-24-test2400-head2head.md` | Same-split 2,400-row head-to-head (neural/geo/FUTO floor+ceiling) + fusion go/no-go; held-out VAL (9,918) corroboration; **2026-08-08 addendum: shipped CTC engine (89.31 t1) now tops the table** | ✅ Complete |
 | `2026-07-23-futo100k-head2head.md` | FUTO 100k corpus head-to-head | ✅ Complete |
 | `2026-08-06-offline-decoder-speedup.md` | Offline ONNX decode speedup investigation — verdict: adopt neither (XNNPACK 0.80× slower; decoder already int8-dynamic-quantized) | ✅ Complete |
 | `2026-07-24-harness-conversion-audit.md` | Eval harness conversion fixes | ✅ Complete |

@@ -15,7 +15,7 @@ Complete mapping of settings to search terms, wiki guides, and implementation fi
 | Per-Key Customization | short swipe, gesture, actions, commands | [per-key-actions.md](wiki/customization/per-key-actions.md) | `ShortSwipeCustomizationActivity.kt` |
 | Short Swipe Calibration | calibrate, practice, tutorial, test | [short-swipes.md](wiki/gestures/short-swipes.md) | `ShortSwipeCalibrationActivity.kt` |
 | Extra Keys | toolbar, arrows, numbers | [extra-keys.md](wiki/customization/extra-keys.md) | `ExtraKeysConfigActivity.kt` |
-| CTC Settings | ctc, futo, swipe engine, beam, trie | — | `CtcSettingsActivity.kt` (`ctc_beam_width`, default 100, range 10–300; engine opt-in via `swipe_engine_mode` = `ctc`) |
+| CTC Settings | ctc, futo, swipe engine, beam, trie | [swipe-typing.md](wiki/typing/swipe-typing.md) | `CtcSettingsActivity.kt` (`ctc_beam_width`, default 100, range 10–300; engine opt-in via `swipe_engine_mode` = `ctc`; search entry ungated by engine mode) |
 | Backup & Restore | backup, export, import, restore | [backup-restore.md](wiki/troubleshooting/backup-restore.md) | `BackupRestoreActivity.kt` |
 
 ---
@@ -26,6 +26,7 @@ Complete mapping of settings to search terms, wiki guides, and implementation fi
 |---------|-----------------|------|-------|
 | Neural Settings | neural, ai, prediction, model, onnx | [neural-settings.md](wiki/settings/neural-settings.md) | `NeuralSettingsActivity.kt` |
 | Swipe Typing | gesture, neural, glide, swipe | [swipe-typing.md](wiki/typing/swipe-typing.md) | `SwipePredictorOrchestrator.kt` |
+| Prediction Engine | engine, neural, hybrid, geometric, ctc | [swipe-typing.md](wiki/typing/swipe-typing.md) | `ui/settings/sections/NeuralPredictionSection.kt` (`swipe_engine_mode`: neural/hybrid/geometric/ctc, default neural), `swipe/SwipeEngineRouter.kt` |
 | Swipe on Password Fields | password, swipe, security | [privacy.md](wiki/settings/privacy.md) | `Config.kt`, `SuggestionHandler.kt` |
 | Beam Width | accuracy, prediction, candidates | [neural-settings.md](wiki/settings/neural-settings.md) | `BeamSearchEngine.kt` |
 | Confidence Threshold | accuracy, filter, confidence | [neural-settings.md](wiki/settings/neural-settings.md) | `BeamSearchEngine.kt` |

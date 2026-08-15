@@ -95,7 +95,7 @@ CleverKeys is a feature-rich open-source keyboard for Android. Neural swipe typi
 
 ⁹ Multi-language swipe typing: CleverKeys uses the same neural network model for all languages — dictionaries provide word candidates, not language-specific models. 7 languages bundled (en, es, fr, pt, it, de, sv), 8 downloadable (nl, ru, el, tr, id, ms, tl, sw). Primary + secondary language support with automatic best-match selection.
 
-¹⁰ Urik uses a geometric/template path matcher (no ML model, no training code applicable) — German-friendly QWERTZ-native with simultaneous multilingual spell-check. CleverKeys is exploring a complementary geometric pipeline for non-QWERTY layouts and non-Latin scripts (Russian, etc.) — see [ROADMAP.md](./ROADMAP.md#-neural-network--prediction).
+¹⁰ Urik uses a geometric/template path matcher (no ML model, no training code applicable) — German-friendly QWERTZ-native with simultaneous multilingual spell-check. CleverKeys ships a complementary geometric decoder for non-QWERTY layouts and non-Latin scripts (Russian, etc.), selectable via the Prediction Engine setting (Hybrid/Geometric modes) — see [ROADMAP.md](./ROADMAP.md#-neural-network--prediction).
 
 ¹¹ Urik short-swipe is limited to Space (cursor movement) and Backspace (delete word) — no general short-swipe action mapping system.
 
@@ -165,6 +165,7 @@ Build your own themes on-the-fly with full control over:
 
 ### 🧠 Neural Swipe & Autocorrect
 - **Custom transformer model** (encoder-decoder, 13MB) trained on real swipe data
+- **Four selectable swipe engines** — neural transformer (default), hybrid (neural + geometric), geometric (all layouts, no NN), and an opt-in CTC engine: a 2.9 MB CleverKeys-trained model for English on QWERTY that scores 89.3% top-1 on a 2,400-swipe held-out benchmark (vs 74.6% for the neural engine on the same set)
 - **Sub-200ms predictions** with XNNPACK hardware acceleration
 - **Autocorrect with contraction support** — "dont" to "don't", "im" to "I'm"
 - **Full inference control** — beam width, length normalization, pruning, early stopping
@@ -238,16 +239,18 @@ Assign custom actions to any key's 8 swipe directions:
 
 CleverKeys supports swipe typing in **15 languages** with intelligent multi-language features:
 
-> ⚠️ **Current swipe-typing scope** — The v1 gesture engine is trained on
+> ⚠️ **Current swipe-typing scope** — The neural gesture engine is trained on
 > **English + QWERTY**. It works well for other Latin-script languages that
 > share the QWERTY keyboard (Spanish, French, Portuguese, Italian, German,
-> etc.), but quality degrades for non-QWERTY layouts (AZERTY, QWERTZ, Dvorak,
-> Colemak) and for non-Latin / non-romance scripts, where swipe is
-> automatically disabled on keyboards whose row shape diverges from QWERTY
-> (see [#9](https://github.com/tribixbite/CleverKeys/issues/9)). A new
-> multi-layout / multi-script gesture model with layout-aware decoding is on
-> the roadmap for **Q2–Q3 2026**; in the interim, tap typing + autocorrect
-> works across every supported layout and language.
+> etc.), but in the default **Neural** engine mode swipe is automatically
+> disabled on keyboards whose row shape diverges from QWERTY (AZERTY, QWERTZ,
+> Dvorak, Colemak, non-Latin scripts — see
+> [#9](https://github.com/tribixbite/CleverKeys/issues/9)). Switching the
+> **Prediction Engine** setting to **Hybrid** or **Geometric** enables swipe
+> on those layouts via the layout-agnostic geometric decoder. The opt-in
+> **CTC** engine currently covers English on QWERTY (other languages fall
+> back to neural, non-QWERTY layouts to geometric). Tap typing + autocorrect
+> works across every supported layout and language regardless of mode.
 
 ### Bundled Languages (7)
 Included in the APK — no additional download required. All dictionaries are

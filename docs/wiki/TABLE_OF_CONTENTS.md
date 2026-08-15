@@ -29,7 +29,7 @@ Welcome to the CleverKeys documentation. This guide covers everything you need t
 ### 2. Typing and Input (P0)
 | Page | Description |
 |------|-------------|
-| [Swipe Typing](./typing/swipe-typing.md) | How neural swipe prediction works |
+| [Swipe Typing](./typing/swipe-typing.md) | Swipe prediction engines (neural, CTC, geometric) and how to use them |
 | [Autocorrect & Predictions](./typing/autocorrect.md) | Smart text correction settings |
 | [Next-Word Prediction](./typing/next-word-prediction.md) | Learned-phrase suggestions before you type a letter (opt-in) |
 | [Smart Punctuation](./typing/smart-punctuation.md) | Automatic punctuation attachment and smart auto-space (v1.5.0) |
@@ -70,7 +70,7 @@ Welcome to the CleverKeys documentation. This guide covers everything you need t
 | [Appearance](./settings/appearance.md) | Height, opacity, key borders |
 | [Input Behavior](./settings/input-behavior.md) | Autocorrect, autocaps, double-space |
 | [Haptics & Sound](./settings/haptics.md) | Vibration and key press sounds |
-| [Neural Settings](./settings/neural-settings.md) | Beam width, prediction profiles |
+| [Neural Settings](./settings/neural-settings.md) | Prediction engine selection, beam width, CTC settings |
 | [Privacy](./settings/privacy.md) | Data collection and clipboard settings |
 | [Accessibility](./settings/accessibility.md) | Switch Access, TalkBack, large keys |
 

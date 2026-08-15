@@ -45,6 +45,19 @@ Allow swipe typing in password fields:
 | **On** | Swipe works in password fields |
 | **Off** | Only tap typing in password fields (default) |
 
+### Prediction Engine
+
+Selects which decoder handles swipes (see [Swipe Typing](../typing/swipe-typing.md#choosing-a-prediction-engine) for the full per-layout/per-language table):
+
+| Option | Behavior |
+|--------|----------|
+| **Neural** (default) | Transformer model on QWERTY layouts; no swipe on other layouts |
+| **Hybrid** | Neural on QWERTY, geometric decoder on all other layouts |
+| **Geometric** | Geometric decoder on every layout |
+| **CTC** | CTC model on QWERTY for English; neural for other languages; geometric on non-QWERTY layouts |
+
+With CTC selected, a **Full CTC Settings** button opens the CTC beam-width knob (default 100, range 10–300). The **Full Geometric Settings** button is available whenever a mode that can use the geometric engine is selected (Hybrid, Geometric, or CTC).
+
 ### Beam Width
 
 The most important setting for prediction quality. Controls how many parallel word candidates the decoder tracks:
@@ -89,11 +102,13 @@ For advanced tuning (batch processing, greedy search, ONNX threads, beam search 
 | Setting | Default | Range/Options |
 |---------|---------|---------------|
 | **Swipe Typing** | On | On/Off |
+| **Prediction Engine** | Neural | Neural / Hybrid / Geometric / CTC |
 | **Swipe on Password Fields** | Off | On/Off |
-| **Beam Width** | 6 | 1-20 |
+| **Beam Width** (neural) | 6 | 1-20 |
 | **Confidence Threshold** | 0.01 | 0.01-0.5 |
 | **Max Word Length** | 20 | 5-50 |
 | **ONNX Threads** | 2 | 1-8 |
+| **CTC Beam Width** (CTC engine) | 100 | 10-300 |
 
 ## Common Questions
 

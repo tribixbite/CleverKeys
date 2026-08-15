@@ -22,7 +22,7 @@ Technical documentation for CleverKeys, an Android keyboard with neural swipe ty
 | [Cursor-Aware Predictions](./cursor-aware-predictions.md) | Dual pipeline cursor sync, exact_add, contraction prefix guard |
 | [Context Learning & Next-Word](./context-learning-and-next-word.md) | Persistent learned n-gram LM, master privacy gate, opt-in next-word prediction, suggestion provenance, learned-data manager |
 | [Geometric Swipe Engine](./geometric-swipe-engine.md) | Layout-agnostic geometric swipe decoder (`swipe/geometric/`) |
-| [CTC Swipe Engine](./ctc-swipe-engine.md) | FUTO-style CTC trie-beam decode module (design-only, NOT wired; blocked on model export) |
+| [CTC Swipe Engine](./ctc-swipe-engine.md) | CTC trie-beam swipe engine — WIRED opt-in `ctc` mode (2026-08-08), CleverKeys-trained ONNX encoder |
 | [KV-Cache Optimization](./kv-cache-optimization.md) | ONNX inference optimization |
 | [Memory Pool Optimization](./memory-pool-optimization.md) | Memory management for neural inference |
 

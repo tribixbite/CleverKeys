@@ -9,15 +9,19 @@ version: v1.2.7
 
 ## Overview
 
-Neural swipe typing uses an ONNX transformer model with beam search to predict words from gesture paths.
+Swipe typing routes each completed gesture to one of three decode engines — the neural ONNX transformer (default), the CTC trie-beam engine, or the geometric (SHARK2-style) engine — selected by the `swipe_engine_mode` preference plus the active layout and language. All engines feed the same downstream suggestion pipeline.
 
 ## Key Components
 
 | Component | File | Purpose |
 |-----------|------|---------|
-| Trajectory Processor | `SwipeTrajectoryProcessor.kt` | Convert touch points to key sequence |
+| Engine Router | `swipe/SwipeEngineRouter.kt` | Mode + layout → engine selection (`Mode.NEURAL/HYBRID/GEOMETRIC/CTC`) |
+| Trajectory Processor | `SwipeTrajectoryProcessor.kt` | Convert touch points to key sequence (neural path) |
 | Neural Engine | `NeuralPredictionEngine.kt` | ONNX model inference |
-| Beam Search | `BeamSearchDecoder.kt` | Find top-k word predictions |
+| Beam Search | `BeamSearchDecoder.kt` | Find top-k word predictions (neural path) |
+| CTC Adapter | `swipe/CtcEngineAdapter.kt` | CTC engine boundary: layout/trie/session memos, contraction display, warm-up |
+| CTC Core | `swipe/ctc/` (`CtcBeamDecoder.kt`, `CtcFeaturizer.kt`, `CtcLexiconTrie.kt`, ...) | Pure-JVM CTC Viterbi trie beam over ONNX emissions |
+| Geometric Adapter | `swipe/GeometricEngineAdapter.kt` | Geometric engine boundary (non-QWERTY layouts) |
 | Vocabulary | `OptimizedVocabulary.kt` | Dictionary and trie lookup |
 | Keyboard Grid | `KeyboardGrid.kt` | Map coordinates to keys |
 
@@ -26,14 +30,28 @@ Neural swipe typing uses an ONNX transformer model with beam search to predict w
 ```
 Touch Events (Pointers.kt)
     ↓
-SwipeTrajectoryProcessor
-    ↓ (key sequence)
-NeuralPredictionEngine
-    ↓ (token probabilities)
-BeamSearchDecoder
-    ↓ (top-k candidates)
-SuggestionHandler → UI
+InputCoordinator.handleSwipeTyping
+    ↓ SwipeEngineRouter.route(layout, mode)
+    ├─ NEURAL    → SwipeTrajectoryProcessor → NeuralPredictionEngine → BeamSearchDecoder
+    ├─ CTC       → CtcEngineAdapter (en only; non-en falls through to the neural branch)
+    ├─ GEOMETRIC → GeometricEngineAdapter
+    └─ NONE      → no swipe typing (non-QWERTY layout in Neural mode)
+    ↓ (top-k candidates, engine-relative scores)
+SuggestionHandler.handleSwipePredictionResults → UI
 ```
+
+## Engine Routing (`swipe_engine_mode`)
+
+The router (`swipe/SwipeEngineRouter.kt`) is layout-only; the `ctc` mode's language gate lives in `InputCoordinator.performCtcSwipeTyping`, which reads the active dictionary language before dispatch and falls through to the neural flow for non-English:
+
+| Mode | QWERTY-Latin + English | QWERTY-Latin + other language | Non-QWERTY layout |
+|------|------------------------|-------------------------------|-------------------|
+| `neural` (default) | NEURAL | NEURAL | NONE |
+| `hybrid` | NEURAL | NEURAL | GEOMETRIC |
+| `geometric` | GEOMETRIC | GEOMETRIC | GEOMETRIC |
+| `ctc` | CTC | NEURAL | GEOMETRIC |
+
+One engine owns each swipe end-to-end; scores are engine-relative and never compared across engines. Suggestion provenance tags the engine that actually decoded (`SuggestionProvenance.forRoutedEngine`) — e.g. a non-QWERTY swipe under `ctc` mode is tagged GEOMETRIC. The CTC engine maps contraction aliases to display forms ("dont" → "don't") inside its adapter before the shared pipeline. Full CTC engine internals: `docs/specs/ctc-swipe-engine.md` (engineering spec).
 
 ## Gesture Sampling Robustness
 
@@ -57,10 +75,12 @@ From `Config.kt`:
 
 | Setting | Key | Default | Range | Source |
 |---------|-----|---------|-------|--------|
+| **Prediction Engine** | `swipe_engine_mode` | `"neural"` | `neural` / `hybrid` / `geometric` / `ctc` (case-canonicalized at read) | `Config.kt` (SWIPE_ENGINE_MODE), `swipe/SwipeEngineRouter.kt` |
 | **Beam Width** | `neural_beam_width` | 6 | 1-32 | `Config.kt:130`, validator `backup/SettingsValidation.kt` |
 | **Max Length** | `neural_max_length` | 20 | 10-50 | `Config.kt` (NEURAL_MAX_LENGTH) |
 | **Confidence Threshold** | `neural_confidence_threshold` | 0.01 | 0.0-1.0 | `Config.kt:132` (NEURAL_CONFIDENCE_THRESHOLD) |
-| **ONNX Models** | bundled assets | — | — | `src/main/assets/models/swipe_{encoder,decoder}_android.onnx` |
+| **CTC Beam Width** | `ctc_beam_width` | 100 | 10-300 (clamped at load and per decode) | `Config.kt` (CTC_BEAM_WIDTH), `CtcSettingsActivity.kt` |
+| **ONNX Models** | bundled assets | — | — | `src/main/assets/models/swipe_{encoder,decoder}_android.onnx` (neural), `models/ctc_swipe_encoder.onnx` (CTC, 2.91 MB) |
 
 ## Key Methods
 
