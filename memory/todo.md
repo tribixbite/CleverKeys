@@ -160,14 +160,29 @@ just below. Outstanding, prioritized:
 - [ ] `hybrid` swipe mode is provenance-tagged `NEURAL_BEAM` (minor; give it its own origin).
 - [ ] (by-design, documented) backup *restore* repopulates learned stores even with master OFF (L7).
 
-### B. FUTO / CTC swipe engine — TRAINED + WIRED (2026-08-08, commits 3b9dd666..d99dd41f)
-- [x] **CTC model trained** (user's GPU, CleverKeys-ML repo, Phases E→M): ship model
-      `phaseM_kd_fresh_w1_s1234_fp16w` (2.91 MB), **TEST-VALIDATED on the shipping config**
-      (en_enhanced STRIP trie, preset 0.9/4.0/0.25/0.25/0.9882): test-2400 seed-mean
-      **89.31/93.79/94.50 t1/3/5** (≤3 93.70, 4+ 87.05) — beats FUTO's ceiling (84.83) AND our
-      neural (74.62) on every stratum; equal-footing McNemar 3/3 seeds p<5e-4. Plan of record:
-      `CleverKeys-ML/ctc/APP_INTEGRATION_PLAN.md` (§9.5 ship menu; per-language ru λ 2.0,
-      ensemble/rescorer/contract-v2 = recorded future options).
+### B. FUTO / CTC swipe engine — TRAINED + WIRED, campaign CLOSED (commits 3b9dd666..HEAD)
+- [x] **CTC model trained** (user's GPU, CleverKeys-ML repo, Phases A→M — the campaign is
+      now CLOSED, ledger empty, no further training): ship model
+      **`phaseM_kd_fresh_w1_s1234_fp16w`** (3,052,318 B / 2.91 MB, sha256 `84718e6e…`), the
+      Phase-M distilled single model (a ch192 student distilled from the coupled pair).
+      **TEST-VALIDATED on BOTH footings, every seed** — the fourth and FINAL unsealing of
+      test-2400 (`ctc/UNSEALING_4.md`, pre-registered at `b91f179` before any decode; six
+      decodes, no retries; ledger 3→4, **there is no fifth**):
+      · config A (AOSP STRIP 146,964 @ E1) seed-mean 88.931/92.681/93.361/92.597/87.045 vs the
+      published FUTO bar → +4.10/+1.64/+1.28/+3.03/+4.64;
+      · config B = **the shipping config** (en_enhanced STRIP 98,081 @ preset
+      0.9/4.0/0.25/0.25/0.9882) seed-mean **89.306/93.792/94.500/93.701/87.045** vs the
+      trie-matched bar → +4.39/+2.25/+1.54/+4.13/+4.53, worst-seed t5 margin **+1.50**;
+      · **equal footing** (both engines val-tuned) all five clear every seed, exact paired
+      McNemar on t1 resolved **3/3 seeds at p < 5e-4** → a **qualified equal-footing win**
+      (the registered ceiling on that claim — NOT a general superiority claim).
+      **Two limitations that must travel with the numbers:** (1) the equal-footing lead is
+      bought **entirely on the HWS corpus half** — FUTO's engine is **+0.38 ahead on its own
+      corpus half** (95.89 vs 95.51); (2) **ch 192 keeps t5 by 0.14** (93.50 vs 93.361), the
+      one metric where an older/2× larger model stays ahead. Also: the ship preset was fitted
+      on `resbn80g` and has never been swept for this family (disclosed gap), and the fp16w
+      artifact was not itself decoded (fp32 was; fp16w ≡ fp32 to 0.00 at the app footing).
+      Plan of record: `CleverKeys-ML/ctc/{UNSEALING_4,PHASE_M,MODEL_COMPARISON,APP_INTEGRATION_PLAN}.md`.
 - [x] **Wired into the app** (opt-in; default engine stays neural): asset+fixture 3b9dd666,
       OnnxCtcEmissionModel + tunedV2 SHIP preset 4efda6e5, CtcEngineAdapter + Mode.CTC router +
       IME wiring (race-guard + ML-provenance conventions) 617155a7, settings surface
@@ -180,15 +195,44 @@ just below. Outstanding, prioritized:
       confirmed on-device 44/44 + gates re-green. Seam audit (settings UI / backup / orientation /
       language+layout): 3 SOUND, Q4 bugs H1 (contractions committed as dont/im), M1 (non-en empty
       bar) , M2 (mode-keyed provenance) all FIXED fb77b422 (+27 tests, 1907 pure green).
+- [x] **Ship-model + fixture pairing VERIFIED and gated (2026-08-15)**: the asset is the
+      Phase-M ship artifact (sha `84718e6e…`, landed 3b9dd666 — NOT the superseded
+      `resbn192i_s1234_fp16w`, which is byte-size-identical at 3,052,318 B but sha
+      `d55624cc…`), and both fixture copies are the **ship-preset** regeneration
+      `phaseM_kd_fresh_w1_fp16w_golden.json` sha `2a449c4f…` (the earlier 140,480-byte cut was
+      generated at E1 and is superseded, PHASE_M §11.1). The fixture-and-preset rule is now a
+      **pure-JVM gate**: `CtcParityTest.fixture_model_and_shipPreset_travelTogether` hashes the
+      asset against `source_onnx_sha256`, compares the fixture `preset` term-by-term against
+      `tunedV2`, checks every beam case decodes at that preset, and pins the two fixture copies
+      byte-identical. Device half (`CtcEmissionModelParityTest`, `CtcLatencyGateTest`) still
+      needs ew-cli on the Termux device — not runnable on the WSL checkout.
+- [x] **Per-language decode preset axis (plan O10) — IMPLEMENTED (2026-08-15)**:
+      `CtcScoringParams.presetFor(language, …)` + `tunedRuCkdt()` (E1 with λ 1.1→2.0 for the
+      CKDT `255 − rank` scale, worth ≈ +1.2 in-dict ru t1, PHASE_J §6.9 — **val-only**), and
+      `language` added to `CtcEngineAdapter`'s decoder memo key so a language switch cannot
+      silently reuse the previous λ. No new pref, no SETTINGS_DEFAULTS change, **en-only gate
+      untouched** (relaxing O5 needs a Cyrillic encoder + CKDT-scale trie, not a preset).
+      λ = 2.0 must be re-confirmed with user-dictionary entries present before any ru ship.
 - [ ] Manual QA per plan §4.5 before any v1.6.0 tag (first-swipe warmup, long-word feel,
       non-QWERTY hedge, non-en fallback-to-neural, don't/I'm contraction display, provenance
       label, thermals). Tag only on explicit user go.
 - [ ] **Neural+geo rank fusion** — still a valid parallel option but LOWER priority now (CTC beats
       both engines' union on most strata). Re-evaluate vs a CTC+neural cascade (decision doc §3)
       after CTC field feedback.
-- [ ] Future (recorded in the plan, not scheduled): per-language presets (ru λ 2.0 on CKDT scale —
-      prerequisite for relaxing the en-only gate), two-model ensemble (4.39 MB, val-only),
-      22 KB rescorer, contract-v2 T′=64, user-dictionary alpha-boost with cap (plan §7.3).
+- [ ] Future, recorded and NOT scheduled — all documented in `docs/specs/ctc-swipe-engine.md`:
+      **"max accuracy" pair mode** (`v2pair-s1234`: a 2nd ONNX member + per-frame probability
+      averaging before the beam, 4.39 MB total = **+1.5 MB per ABI**, two sessions, 1.79 ms vs
+      0.83 ms; 11/11 campaign bars on **all five seeds** but **val-only PERMANENTLY** — it was
+      deliberately never decoded and the seal is spent; recipe is trustworthy because pair
+      compatibility is trained in via a KL coupling term at weight 0.3, 6/6 pairs at 98.05–98.33 %
+      agreement vs the `--pair-weight 0` control's 92.09 % and collapsed mix — unlike
+      `mix2-i8f16`, whose one-off recipe did not reproduce; it is also the teacher the shipped
+      model was distilled from. Adopting it would touch: 2nd asset+session in the adapter, an
+      averaging `CtcEmissionModel` decorator at the `CtcSwipeDecoder` seam, a regenerated
+      two-member fixture (the `source_onnx_sha256` field is already an array), a preset answer
+      for averaged emissions, and both device gates). Also: 21.8 KB rescorer, contract-v2 T′=64,
+      two-phase preview decode, user-dictionary alpha-boost with cap (plan §7.3), relaxing the
+      en-only gate (O5).
 - Reference eval: `docs/eval/2026-07-24-test2400-head2head.md` (superseded as the best-engine
       record by the CTC test-validated numbers above) + `docs/eval/2026-08-06-offline-decoder-speedup.md`.
 
