@@ -5,7 +5,8 @@ dropdown (default stays `neural`). The CleverKeys-trained CTC encoder ships as
 `models/ctc_swipe_encoder.onnx` = CleverKeys-ML **`phaseM_kd_fresh_w1_s1234_fp16w`**
 (3,052,318 B / 2.91 MB, sha256 `84718e6e…549e88e5`), the Phase-M distilled single model —
 a ch192 student distilled from the coupled pair. Integration per
-`CleverKeys-ML/ctc/APP_INTEGRATION_PLAN.md` (commits 3b9dd666..d99dd41f):
+`CleverKeys-ML/ctc/APP_INTEGRATION_PLAN.md` (commits 3b9dd666..743b58fa for the wiring,
+fdfb0ea7/23599e51 for the parity gate and the O10 preset axis):
 `OnnxCtcEmissionModel` + `CtcEngineAdapter` + `SwipeEngineRouter.Mode.CTC` (QWERTY→CTC,
 other layouts→geometric hedge) + `CtcSettingsActivity` (beam-width knob, default 100).
 **Package:** `tribixbite.cleverkeys.swipe.ctc` (`src/main/kotlin/.../swipe/ctc/`)
