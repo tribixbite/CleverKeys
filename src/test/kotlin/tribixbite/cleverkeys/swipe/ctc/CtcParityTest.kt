@@ -3,6 +3,7 @@ package tribixbite.cleverkeys.swipe.ctc
 import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
 import java.io.File
+import java.security.MessageDigest
 import org.json.JSONObject
 import org.junit.Test
 
@@ -29,6 +30,12 @@ class CtcParityTest {
     private companion object {
         /** Project-root-relative (runPureTests runs with cwd = project root, per GeoLayoutFixtures). */
         const val GOLDEN_PATH = "src/test/resources/ctc/ctc_golden.json"
+
+        /** The instrumented copy the on-device parity gate reads from test assets. */
+        const val GOLDEN_ASSET_PATH = "src/androidTest/assets/ctc/ctc_golden.json"
+
+        /** The shipped emission encoder the fixture was generated from. */
+        const val MODEL_ASSET_PATH = "src/main/assets/models/ctc_swipe_encoder.onnx"
 
         /** Score parity: word order is exact; scores tolerate libm pow/log drift. */
         const val SCORE_TOL = 1e-4
@@ -109,7 +116,86 @@ class CtcParityTest {
         assertWithMessage("must have exercised beam cases").that(checked).isGreaterThan(0)
     }
 
+    // ── The fixture-and-preset rule (CleverKeys-ML MODEL_COMPARISON.md §5.1) ──────
+
+    /**
+     * **Model, preset and fixture move together — always.**
+     *
+     * The fixture records the artifact it was generated from (`source_onnx_sha256`) and
+     * the preset it was generated at (`preset`). Shipping the model at one preset and
+     * the fixture at another means the parity gate asserts against a configuration
+     * nothing runs — the exact failure mode `MODEL_COMPARISON.md` §5.1 exists to
+     * prevent, and the one that put an E1-generated fixture next to an app-preset model
+     * mid-campaign (`PHASE_M.md` §11.1, "Fixture correction").
+     *
+     * This is the pure-JVM half of the gate and it needs no device: it pins all three
+     * corners of the triangle. The instrumented `CtcEmissionModelParityTest` covers the
+     * fourth thing only a device can check — that the artifact actually *produces* the
+     * fixture's emissions through ORT.
+     *
+     * Current ship state (CleverKeys-ML `ctc/UNSEALING_4.md`, `ctc/PHASE_M.md` §11.1):
+     * `phaseM_kd_fresh_w1_s1234_fp16w.onnx` sha `84718e6e…`, fixture
+     * `phaseM_kd_fresh_w1_fp16w_golden.json` sha `2a449c4f…`, preset
+     * `0.9 / 4.0 / 0.25 / 0.25 / 0.9882` = [CtcScoringParams.tunedV2].
+     */
+    @Test
+    fun fixture_model_and_shipPreset_travelTogether() {
+        val golden = loadGolden()
+
+        // 1. The fixture's preset IS the runtime ship preset (tunedV2), term by term.
+        //    The fixture stores the five scoring terms alpha omits (it is unused by the
+        //    CTC core): [gamma, lambda, beta, gammaPrune, betaPrune].
+        val preset = golden.getJSONArray("preset")
+        val ship = CtcScoringParams.tunedV2()
+        assertWithMessage("fixture preset must have the 5 scoring terms").that(preset.length())
+            .isEqualTo(5)
+        assertWithMessage("fixture gamma vs tunedV2").that(preset.getDouble(0)).isEqualTo(ship.gamma)
+        assertWithMessage("fixture lambda vs tunedV2").that(preset.getDouble(1)).isEqualTo(ship.lambda)
+        assertWithMessage("fixture beta vs tunedV2").that(preset.getDouble(2)).isEqualTo(ship.beta)
+        assertWithMessage("fixture gammaPrune vs tunedV2").that(preset.getDouble(3))
+            .isEqualTo(ship.gammaPrune)
+        assertWithMessage("fixture betaPrune vs tunedV2").that(preset.getDouble(4))
+            .isEqualTo(ship.betaPrune)
+
+        // 2. Every beam case decodes at that same preset (a case generated at another
+        //    preset would silently weaken the parity assertion above it).
+        val cases = golden.getJSONArray("cases")
+        for (i in 0 until cases.length()) {
+            val c = cases.getJSONObject(i)
+            if (c.getString("kind") != "beam") continue
+            val p = readParams(c.getJSONObject("params"))
+            assertWithMessage("${c.getString("name")}: beam case must use the ship preset")
+                .that(listOf(p.gamma, p.lambda, p.beta, p.gammaPrune, p.betaPrune))
+                .isEqualTo(listOf(ship.gamma, ship.lambda, ship.beta, ship.gammaPrune, ship.betaPrune))
+        }
+
+        // 3. The bundled ONNX asset IS the artifact the fixture was generated from.
+        val model = File(MODEL_ASSET_PATH)
+        assertWithMessage("shipped encoder must exist at $MODEL_ASSET_PATH")
+            .that(model.exists()).isTrue()
+        val expectedSha = golden.getJSONArray("source_onnx_sha256").getString(0).lowercase()
+        assertWithMessage(
+            "sha256($MODEL_ASSET_PATH) must equal the fixture's source_onnx_sha256 — the " +
+                "shipped model and the golden fixture must be the same artifact"
+        ).that(sha256(model)).isEqualTo(expectedSha)
+
+        // 4. The instrumented copy is byte-identical, so the device gate asserts the
+        //    same contract this one does.
+        val asset = File(GOLDEN_ASSET_PATH)
+        assertWithMessage("instrumented fixture copy must exist at $GOLDEN_ASSET_PATH")
+            .that(asset.exists()).isTrue()
+        assertWithMessage(
+            "$GOLDEN_ASSET_PATH must be byte-identical to $GOLDEN_PATH (one fixture, two " +
+                "consumers: runPureTests reads resources, the device gate reads test assets)"
+        ).that(sha256(asset)).isEqualTo(sha256(File(GOLDEN_PATH)))
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────────
+
+    private fun sha256(f: File): String {
+        val digest = MessageDigest.getInstance("SHA-256").digest(f.readBytes())
+        return digest.joinToString("") { "%02x".format(it) }
+    }
 
     private fun org.json.JSONArray.toDoubleArray(): DoubleArray =
         DoubleArray(length()) { getDouble(it) }
