@@ -590,4 +590,19 @@
     <string name="short_swipe_last_key">Ostatni klawisz: %1$s</string>
     <string name="short_swipe_customize_key">Dostosuj klawisz "%1$s"</string>
     <string name="extra_keys_enabled_count">%1$d z %2$d dodatkowych klawiszy włączonych</string>
+    <!-- Context-LM / next-word / swipe-engine settings -->
+    <string name="swipe_engine_mode_title">Silnik przewidywania</string>
+    <string name="swipe_engine_mode_desc">Hybrydowy: neuronowy na QWERTY, geometryczny na innych układach. Neuronowy: tylko układy QWERTY. Geometryczny: wszystkie układy. CTC: wiązka CTC na układach łacińskich dla angielskiego, francuskiego, niemieckiego i hiszpańskiego; dla pozostałych języków neuronowy na QWERTY, a poza tym geometryczny.</string>
+    <string name="advanced_provenance_markers_title">Znaczniki pochodzenia podpowiedzi</string>
+    <string name="advanced_provenance_markers_desc">Pokazuje przy każdej podpowiedzi kolorową kropkę wskazującą silnik, który ją utworzył (przytrzymaj podpowiedź, aby zobaczyć pełne szczegóły)</string>
+    <string name="input_next_word_title">Przewidywanie następnego słowa</string>
+    <string name="input_next_word_desc">Podpowiada następne słowo z wyuczonych zwrotów, zanim wpiszesz literę</string>
+    <string name="input_context_source_title">Źródło kontekstu</string>
+    <string name="input_context_source_desc">Który model zwrotów wzmacnia przewidywania: wbudowany, wyuczone wzorce lub oba</string>
+    <string name="input_personalization_weight_title">Siła personalizacji</string>
+    <string name="input_personalization_weight_desc">Jak mocno używanie słów wzmacnia przewidywania (0 = wyłączone, 2 = podwójnie)</string>
+    <string name="input_personalization_max_words_title">Maksymalna liczba wyuczonych słów</string>
+    <string name="input_personalization_max_words_desc">Limit wyuczonego słownika; najmniej wartościowe słowa są usuwane jako pierwsze (domyślnie 5000)</string>
+    <string name="privacy_on_device_learning_title">Ucz się z mojego pisania</string>
+    <string name="privacy_on_device_learning_desc">Buduje bezpośrednio na urządzeniu prywatne modele zwrotów i użycia słów na podstawie wpisywanego tekstu. Wyłączenie zatrzymuje całe automatyczne rejestrowanie zachowań podczas pisania — gdy opcja jest wyłączona, nic nowego nie jest zapisywane. Dane tworzone celowo są osobne: uruchamiane przez Ciebie sesje kalibracji przesuwania, statystyki skuteczności przewidywań oraz dane wyuczone przywrócone z kopii zapasowej.</string>
 </resources>

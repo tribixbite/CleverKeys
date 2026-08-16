@@ -598,4 +598,19 @@
     <string name="short_swipe_customize_key">Personalizar tecla \"%1$s\"</string>
     <string name="extra_keys_enabled_count">%1$d de %2$d teclas adicionales activadas</string>
     <!-- END wp8b_new_strings block -->
+    <!-- Context-LM / next-word / swipe-engine settings -->
+    <string name="swipe_engine_mode_title">Motor de predicción</string>
+    <string name="swipe_engine_mode_desc">Híbrido: neuronal en QWERTY, geométrico en otras distribuciones. Neuronal: solo distribuciones QWERTY. Geométrico: todas las distribuciones. CTC: haz CTC en distribuciones latinas para inglés, francés, alemán y español; neuronal para otros idiomas en QWERTY y geométrico en el resto.</string>
+    <string name="advanced_provenance_markers_title">Marcadores de origen de las sugerencias</string>
+    <string name="advanced_provenance_markers_desc">Muestra en cada sugerencia un punto de color que indica qué motor la generó (mantén pulsada una sugerencia para ver todos los detalles)</string>
+    <string name="input_next_word_title">Predicción de la siguiente palabra</string>
+    <string name="input_next_word_desc">Sugiere la siguiente palabra a partir de las frases aprendidas antes de escribir una letra</string>
+    <string name="input_context_source_title">Fuente de contexto</string>
+    <string name="input_context_source_desc">Qué modelo de frases refuerza las predicciones: el integrado, los patrones aprendidos o ambos</string>
+    <string name="input_personalization_weight_title">Intensidad de la personalización</string>
+    <string name="input_personalization_weight_desc">Cuánto refuerzan las predicciones tus palabras más usadas (0 = desactivado, 2 = el doble)</string>
+    <string name="input_personalization_max_words_title">Máximo de palabras aprendidas</string>
+    <string name="input_personalization_max_words_desc">Límite del vocabulario aprendido; las palabras menos valiosas se eliminan primero (5000 por defecto)</string>
+    <string name="privacy_on_device_learning_title">Aprender de mi escritura</string>
+    <string name="privacy_on_device_learning_desc">Crea en el dispositivo modelos privados de frases y de uso de palabras a partir de lo que escribes. Desactívalo para detener todo registro automático del comportamiento de escritura: mientras está desactivado no se almacena nada nuevo. Los datos que creas expresamente son aparte: las sesiones de calibración de deslizamiento que inicias, las estadísticas de rendimiento de las predicciones y los datos aprendidos restaurados desde una copia de seguridad.</string>
 </resources>

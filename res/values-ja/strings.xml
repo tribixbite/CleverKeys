@@ -579,4 +579,19 @@
     <string name="short_swipe_last_key">最後のキー: %1$s</string>
     <string name="short_swipe_customize_key">「%1$s」キーをカスタマイズ</string>
     <string name="extra_keys_enabled_count">%1$d / %2$d 個の追加キーが有効</string>
+    <!-- Context-LM / next-word / swipe-engine settings -->
+    <string name="swipe_engine_mode_title">予測エンジン</string>
+    <string name="swipe_engine_mode_desc">ハイブリッド: QWERTYではニューラル、その他のレイアウトでは幾何。ニューラル: QWERTYレイアウトのみ。幾何: すべてのレイアウト。CTC: 英語・フランス語・ドイツ語・スペイン語のラテン系レイアウトではCTCビーム、その他の言語ではQWERTYでニューラル、それ以外は幾何。</string>
+    <string name="advanced_provenance_markers_title">候補の生成元マーカー</string>
+    <string name="advanced_provenance_markers_desc">各候補に、それを生成したエンジンを示す色付きの点を表示します（候補を長押しすると詳細が表示されます）</string>
+    <string name="input_next_word_title">次単語予測</string>
+    <string name="input_next_word_desc">文字を入力する前に、学習したフレーズから次の単語を提案します</string>
+    <string name="input_context_source_title">コンテキストの取得元</string>
+    <string name="input_context_source_desc">予測を強化するフレーズモデル: 内蔵、学習したパターン、またはその両方</string>
+    <string name="input_personalization_weight_title">パーソナライズの強さ</string>
+    <string name="input_personalization_weight_desc">単語の使用状況が予測をどれだけ強化するか（0 = オフ、2 = 2倍）</string>
+    <string name="input_personalization_max_words_title">学習単語の上限</string>
+    <string name="input_personalization_max_words_desc">学習した語彙の上限。価値の低い単語から先に削除されます（既定値 5000）</string>
+    <string name="privacy_on_device_learning_title">入力内容から学習する</string>
+    <string name="privacy_on_device_learning_desc">入力した内容から、フレーズと単語使用のプライベートなモデルを端末内で構築します。オフにすると入力動作の自動記録がすべて停止し、オフの間は新しいデータは保存されません。明示的に作成したデータは別扱いです: 自分で実行したスワイプ較正セッション、予測性能の統計、バックアップから復元した学習データ。</string>
 </resources>

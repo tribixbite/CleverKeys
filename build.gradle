@@ -537,6 +537,10 @@ tasks.register('runPureTests', JavaExec) {
     // WP9 implementation-audit remediation 2026-08-11 (docs/audit/remediation/3-core-ime.md):
     // n-2 ML-trace provenance (layout + decoder engine) incl. legacy-row compatibility
     'tribixbite.cleverkeys.ml.SwipeMLDataProvenanceTest',
+    // minSdk-21 guard: source scan for Java-8/API-24 Map & Set idioms
+    // (newKeySet/computeIfAbsent/merge/getOrDefault/putIfAbsent-on-HashMap), which
+    // are NoSuchMethodError crashes on Android 5.0–6.0. Backs up lint's NewApi.
+    'tribixbite.cleverkeys.MinSdkApiUsageDriftTest',
     // SwipePrunerTest excluded: requires android.util.Log (MockK + Robolectric)
   ]
 

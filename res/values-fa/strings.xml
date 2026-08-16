@@ -615,4 +615,19 @@
     <string name="short_swipe_last_key">آخرین کلید: %1$s</string>
     <string name="short_swipe_customize_key">سفارشی‌سازی کلید "%1$s"</string>
     <string name="extra_keys_enabled_count">%1$d از %2$d کلید اضافی فعال</string>
+    <!-- Context-LM / next-word / swipe-engine settings -->
+    <string name="swipe_engine_mode_title">موتور پیش‌بینی</string>
+    <string name="swipe_engine_mode_desc">ترکیبی: عصبی روی QWERTY و هندسی روی چیدمان‌های دیگر. عصبی: فقط چیدمان‌های QWERTY. هندسی: همهٔ چیدمان‌ها. CTC: جست‌وجوی پرتویی CTC روی چیدمان‌های لاتین برای انگلیسی، فرانسوی، آلمانی و اسپانیایی؛ برای زبان‌های دیگر عصبی روی QWERTY و در بقیهٔ موارد هندسی.</string>
+    <string name="advanced_provenance_markers_title">نشانگرهای منشأ پیشنهاد</string>
+    <string name="advanced_provenance_markers_desc">روی هر پیشنهاد یک نقطهٔ رنگی نشان می‌دهد که مشخص می‌کند کدام موتور آن را ساخته است (برای جزئیات کامل، پیشنهاد را لمس طولانی کنید)</string>
+    <string name="input_next_word_title">پیش‌بینی واژهٔ بعدی</string>
+    <string name="input_next_word_desc">پیش از تایپ کردن حرف، واژهٔ بعدی را از عبارت‌های آموخته‌شده پیشنهاد می‌دهد</string>
+    <string name="input_context_source_title">منبع بافتار</string>
+    <string name="input_context_source_desc">کدام مدل عبارت‌ها پیش‌بینی‌ها را تقویت کند: مدل داخلی، الگوهای آموخته‌شده، یا هر دو</string>
+    <string name="input_personalization_weight_title">شدت شخصی‌سازی</string>
+    <string name="input_personalization_weight_desc">میزان تقویت پیش‌بینی‌ها بر پایهٔ کاربرد واژه‌های شما (0 = خاموش، 2 = دو برابر)</string>
+    <string name="input_personalization_max_words_title">بیشینهٔ واژه‌های آموخته‌شده</string>
+    <string name="input_personalization_max_words_desc">سقف واژگان آموخته‌شده؛ کم‌ارزش‌ترین واژه‌ها زودتر حذف می‌شوند (پیش‌فرض 5000)</string>
+    <string name="privacy_on_device_learning_title">از تایپ من یاد بگیر</string>
+    <string name="privacy_on_device_learning_desc">از آنچه تایپ می‌کنید، مدل‌های خصوصی عبارت‌ها و کاربرد واژه‌ها را روی خود دستگاه می‌سازد. با خاموش کردن، همهٔ ضبط خودکار رفتار تایپ متوقف می‌شود — تا زمانی که خاموش است چیز تازه‌ای ذخیره نمی‌شود. داده‌هایی که آشکارا خودتان می‌سازید جدا هستند: جلسه‌های واسنجی کشیدن که خودتان اجرا می‌کنید، آمار کارایی پیش‌بینی، و داده‌های آموخته‌شده‌ای که از پشتیبان بازیابی شده‌اند.</string>
 </resources>

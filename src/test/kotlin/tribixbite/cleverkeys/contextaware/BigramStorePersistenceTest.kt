@@ -7,8 +7,13 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import tribixbite.cleverkeys.persist.InMemoryLearnedStorage
+import tribixbite.cleverkeys.persist.LearnedDataStorage
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.CyclicBarrier
 import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.concurrent.thread
 
 /**
  * Pure-JVM persistence tests for the language-keyed singleton [BigramStore]
@@ -308,5 +313,116 @@ class BigramStorePersistenceTest {
 
         val fr = store.getStatistics("fr")
         assertEquals(1, fr.totalBigrams)
+    }
+
+    // ------------------------------------------------- concurrent first touch
+
+    /**
+     * The lazy per-language table must be built exactly ONCE even when several
+     * threads touch a brand-new language simultaneously.
+     *
+     * Guards the API-21 replacement for `ConcurrentHashMap#computeIfAbsent`
+     * (API 24, `NoSuchMethodError` on Android 5.0–6.0): Kotlin's `getOrPut` is
+     * the tempting one-liner and is a get-then-`put`, so a second builder
+     * REPLACES the table a first thread is already recording into and those
+     * records vanish from the store.
+     */
+    @Test
+    fun `concurrent first touch of a new language loses no records`() {
+        val storage = InMemoryLearnedStorage()
+        val store = newStore(storage)
+        val threads = 4
+        val perThread = 15 // < MAX_BIGRAMS_PER_WORD (20), so nothing is capped away
+        val rounds = 10    // 10 never-seen languages ⇒ 10 independent first-touch races
+        val barrier = CyclicBarrier(threads)
+
+        val workers = (0 until threads).map { t ->
+            thread {
+                for (r in 0 until rounds) {
+                    barrier.await() // all threads enter language "l$r" together
+                    repeat(perThread) { i -> store.recordBigram("l$r", "w$t", "x$i") }
+                }
+            }
+        }
+        workers.forEach { it.join(30_000) }
+
+        for (r in 0 until rounds) {
+            assertEquals("language l$r", threads * perThread, store.getTotalBigramCount("l$r"))
+            assertEquals("language l$r", threads, store.getContextWordCount("l$r"))
+        }
+    }
+
+    /**
+     * Same race, on the side-effecting path: the legacy un-keyed blob is loaded
+     * and then DELETED during construction, so a duplicated construction could
+     * lose it entirely (one thread deletes the key, the other's empty table wins).
+     */
+    /**
+     * The construction of the "en" table has SIDE EFFECTS — it loads the legacy
+     * un-keyed blob and then DELETES it — so running it twice can lose the
+     * migration outright: the second builder reads a legacy key that is already
+     * gone and its empty table can win the publish race.
+     *
+     * [ConstructionRaceGate] forces that interleaving deterministically instead
+     * of hoping a thread scheduler produces it: with a correct once-only
+     * construction the second thread never reaches storage at all, which is what
+     * `keyedReads == 1` asserts.
+     */
+    @Test
+    fun `a forced construction race still migrates the legacy blob exactly once`() {
+        val backing = InMemoryLearnedStorage()
+        backing.seed(
+            BigramStore.LEGACY_KEY_BIGRAMS,
+            """[{"word1":"i","word2":"am","frequency":4,"probability":1.0}]"""
+        )
+        val gate = ConstructionRaceGate(backing, "bigrams_json_en")
+        val store = BigramStore(gate, 60_000, 120_000, scheduler)
+        val start = CountDownLatch(1)
+
+        val workers = (0 until 2).map {
+            thread {
+                start.await()
+                // getContextWordCount reaches forLanguage WITHOUT holding the data
+                // lock — the same unsynchronized entry recordBigram/getPredictions
+                // use, and therefore the path where the construction can race.
+                store.getContextWordCount("en")
+            }
+        }
+        start.countDown()
+        workers.forEach { it.join(10_000) }
+
+        assertEquals("the language table must be built exactly once", 1, gate.keyedReads.get())
+        assertEquals(1, store.getTotalBigramCount("en"))
+        assertEquals(4, store.getAllBigrams("en", "i").first().frequency)
+        assertNull(backing.getString(BigramStore.LEGACY_KEY_BIGRAMS))
+    }
+
+    /**
+     * Holds every thread that reaches [gatedKey] until a second one arrives (or
+     * [gateMs] elapses), turning the lazy-construction race from "maybe, if the
+     * scheduler cooperates" into a deterministic interleaving. A correct
+     * implementation makes the second arrival impossible, so the gate times out.
+     */
+    private class ConstructionRaceGate(
+        private val delegate: InMemoryLearnedStorage,
+        private val gatedKey: String,
+        private val gateMs: Long = 400
+    ) : LearnedDataStorage {
+        /** How many threads reached storage for the gated language's own key. */
+        val keyedReads = AtomicInteger(0)
+        private val bothInside = CountDownLatch(2)
+
+        override fun getString(key: String): String? {
+            if (key == gatedKey) {
+                keyedReads.incrementAndGet()
+                bothInside.countDown()
+                bothInside.await(gateMs, TimeUnit.MILLISECONDS)
+            }
+            return delegate.getString(key)
+        }
+
+        override fun putString(key: String, value: String) = delegate.putString(key, value)
+        override fun remove(key: String) = delegate.remove(key)
+        override fun keys(): Set<String> = delegate.keys()
     }
 }

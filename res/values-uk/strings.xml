@@ -591,4 +591,19 @@
     <string name="short_swipe_last_key">Остання клавіша: %1$s</string>
     <string name="short_swipe_customize_key">Налаштувати клавішу «%1$s»</string>
     <string name="extra_keys_enabled_count">%1$d із %2$d додаткових клавіш увімкнено</string>
+    <!-- Context-LM / next-word / swipe-engine settings -->
+    <string name="swipe_engine_mode_title">Рушій передбачень</string>
+    <string name="swipe_engine_mode_desc">Гібридний: нейромережевий на QWERTY, геометричний на інших розкладках. Нейромережевий: лише розкладки QWERTY. Геометричний: усі розкладки. CTC: променевий пошук CTC на латинських розкладках для англійської, французької, німецької та іспанської; для інших мов — нейромережевий на QWERTY і геометричний в решті випадків.</string>
+    <string name="advanced_provenance_markers_title">Позначки джерела підказок</string>
+    <string name="advanced_provenance_markers_desc">Показувати біля кожної підказки кольорову точку, яка вказує рушій, що її створив (довге натискання на підказку — усі подробиці)</string>
+    <string name="input_next_word_title">Передбачення наступного слова</string>
+    <string name="input_next_word_desc">Пропонувати наступне слово з вивчених сполучень ще до введення першої літери</string>
+    <string name="input_context_source_title">Джерело контексту</string>
+    <string name="input_context_source_desc">Яка модель сполучень підсилює передбачення: вбудована, вивчені закономірності чи обидві</string>
+    <string name="input_personalization_weight_title">Сила персоналізації</string>
+    <string name="input_personalization_weight_desc">Наскільки сильно ваше слововживання підсилює передбачення (0 = вимк., 2 = удвічі)</string>
+    <string name="input_personalization_max_words_title">Максимум вивчених слів</string>
+    <string name="input_personalization_max_words_desc">Обмеження вивченого словника; найменш цінні слова вилучаються першими (типово 5000)</string>
+    <string name="privacy_on_device_learning_title">Навчатися з мого набору</string>
+    <string name="privacy_on_device_learning_desc">Будувати безпосередньо на пристрої приватні моделі сполучень і слововживання на основі набраного тексту. Вимкнення зупиняє весь автоматичний запис поведінки під час набору — доки опція вимкнена, нічого нового не зберігається. Дані, які ви створюєте явно, зберігаються окремо: запущені вами сеанси калібрування свайпу, статистика якості передбачень і вивчені дані, відновлені з резервної копії.</string>
 </resources>

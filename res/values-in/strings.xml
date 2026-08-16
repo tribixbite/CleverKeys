@@ -591,4 +591,19 @@
     <string name="short_swipe_last_key">Tombol terakhir: %1$s</string>
     <string name="short_swipe_customize_key">Sesuaikan Tombol "%1$s"</string>
     <string name="extra_keys_enabled_count">%1$d dari %2$d tombol tambahan diaktifkan</string>
+    <!-- Context-LM / next-word / swipe-engine settings -->
+    <string name="swipe_engine_mode_title">Mesin prediksi</string>
+    <string name="swipe_engine_mode_desc">Hibrida: neural pada QWERTY, geometris pada tata letak lain. Neural: hanya tata letak QWERTY. Geometris: semua tata letak. CTC: pencarian berkas CTC pada tata letak Latin untuk bahasa Inggris, Prancis, Jerman, dan Spanyol; neural untuk bahasa lain pada QWERTY dan geometris di selainnya.</string>
+    <string name="advanced_provenance_markers_title">Penanda asal saran</string>
+    <string name="advanced_provenance_markers_desc">Menampilkan titik berwarna pada setiap saran yang menunjukkan mesin pembuatnya (tekan lama sebuah saran untuk detail lengkap)</string>
+    <string name="input_next_word_title">Prediksi kata berikutnya</string>
+    <string name="input_next_word_desc">Menyarankan kata berikutnya dari frasa yang telah dipelajari sebelum Anda mengetik satu huruf</string>
+    <string name="input_context_source_title">Sumber konteks</string>
+    <string name="input_context_source_desc">Model frasa mana yang memperkuat prediksi: bawaan, pola yang dipelajari, atau keduanya</string>
+    <string name="input_personalization_weight_title">Kekuatan personalisasi</string>
+    <string name="input_personalization_weight_desc">Seberapa kuat penggunaan kata Anda memperkuat prediksi (0 = mati, 2 = dua kali lipat)</string>
+    <string name="input_personalization_max_words_title">Maksimum kata yang dipelajari</string>
+    <string name="input_personalization_max_words_desc">Batas kosakata yang dipelajari; kata yang paling tidak berharga dihapus lebih dulu (bawaan 5000)</string>
+    <string name="privacy_on_device_learning_title">Belajar dari ketikan saya</string>
+    <string name="privacy_on_device_learning_desc">Membangun model frasa dan penggunaan kata yang privat di perangkat dari apa yang Anda ketik. Matikan untuk menghentikan semua perekaman otomatis perilaku mengetik — selama mati, tidak ada yang baru disimpan. Data yang Anda buat secara eksplisit terpisah: sesi kalibrasi gesek yang Anda jalankan, statistik performa prediksi, dan data pembelajaran yang dipulihkan dari cadangan.</string>
 </resources>

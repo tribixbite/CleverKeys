@@ -588,4 +588,19 @@
     <string name="short_swipe_last_key">Son tuş: %1$s</string>
     <string name="short_swipe_customize_key">\"%1$s\" Tuşunu Özelleştir</string>
     <string name="extra_keys_enabled_count">%2$d ek tuştan %1$d tanesi etkin</string>
+    <!-- Context-LM / next-word / swipe-engine settings -->
+    <string name="swipe_engine_mode_title">Tahmin motoru</string>
+    <string name="swipe_engine_mode_desc">Karma: QWERTY\'de sinir ağı, diğer düzenlerde geometrik. Sinir ağı: yalnızca QWERTY düzenleri. Geometrik: tüm düzenler. CTC: İngilizce, Fransızca, Almanca ve İspanyolcada Latin düzenlerinde CTC ışın araması; diğer diller için QWERTY\'de sinir ağı, başka yerlerde geometrik.</string>
+    <string name="advanced_provenance_markers_title">Öneri kaynağı işaretleri</string>
+    <string name="advanced_provenance_markers_desc">Her öneride, onu üreten motoru gösteren renkli bir nokta gösterir (tüm ayrıntılar için bir öneriye uzun basın)</string>
+    <string name="input_next_word_title">Sonraki kelime tahmini</string>
+    <string name="input_next_word_desc">Bir harf yazmadan önce öğrenilen ifadelerden sonraki kelimeyi önerir</string>
+    <string name="input_context_source_title">Bağlam kaynağı</string>
+    <string name="input_context_source_desc">Tahminleri hangi ifade modelinin güçlendireceği: yerleşik model, öğrenilen kalıplar veya her ikisi</string>
+    <string name="input_personalization_weight_title">Kişiselleştirme gücü</string>
+    <string name="input_personalization_weight_desc">Kelime kullanımınızın tahminleri ne kadar güçlendireceği (0 = kapalı, 2 = iki katı)</string>
+    <string name="input_personalization_max_words_title">En fazla öğrenilen kelime</string>
+    <string name="input_personalization_max_words_desc">Öğrenilen kelime dağarcığının üst sınırı; en az değerli kelimeler önce silinir (varsayılan 5000)</string>
+    <string name="privacy_on_device_learning_title">Yazdıklarımdan öğren</string>
+    <string name="privacy_on_device_learning_desc">Yazdıklarınızdan cihazda özel ifade ve kelime kullanım modelleri oluşturur. Kapatmak, yazma davranışının tüm otomatik kaydını durdurur — kapalıyken yeni hiçbir şey saklanmaz. Açıkça oluşturduğunuz veriler ayrıdır: başlattığınız kaydırma kalibrasyon oturumları, tahmin performansı istatistikleri ve bir yedekten geri yüklenen öğrenilmiş veriler.</string>
 </resources>

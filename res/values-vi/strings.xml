@@ -608,4 +608,19 @@
     <string name="short_swipe_last_key">Phím cuối: %1$s</string>
     <string name="short_swipe_customize_key">Tùy chỉnh phím \"%1$s\"</string>
     <string name="extra_keys_enabled_count">%1$d trong số %2$d phím bổ sung được bật</string>
+    <!-- Context-LM / next-word / swipe-engine settings -->
+    <string name="swipe_engine_mode_title">Công cụ dự đoán</string>
+    <string name="swipe_engine_mode_desc">Kết hợp: mạng nơ-ron trên QWERTY, hình học trên các bố cục khác. Mạng nơ-ron: chỉ các bố cục QWERTY. Hình học: mọi bố cục. CTC: tìm kiếm chùm CTC trên các bố cục Latinh cho tiếng Anh, tiếng Pháp, tiếng Đức và tiếng Tây Ban Nha; mạng nơ-ron cho các ngôn ngữ khác trên QWERTY, còn lại dùng hình học.</string>
+    <string name="advanced_provenance_markers_title">Dấu nguồn gốc gợi ý</string>
+    <string name="advanced_provenance_markers_desc">Hiển thị trên mỗi gợi ý một chấm màu cho biết công cụ nào đã tạo ra nó (nhấn giữ một gợi ý để xem đầy đủ chi tiết)</string>
+    <string name="input_next_word_title">Dự đoán từ tiếp theo</string>
+    <string name="input_next_word_desc">Gợi ý từ tiếp theo từ các cụm từ đã học trước khi bạn gõ một chữ cái</string>
+    <string name="input_context_source_title">Nguồn ngữ cảnh</string>
+    <string name="input_context_source_desc">Mô hình cụm từ nào tăng cường dự đoán: tích hợp sẵn, các mẫu đã học của bạn, hoặc cả hai</string>
+    <string name="input_personalization_weight_title">Mức độ cá nhân hóa</string>
+    <string name="input_personalization_weight_desc">Mức độ cách dùng từ của bạn tăng cường dự đoán (0 = tắt, 2 = gấp đôi)</string>
+    <string name="input_personalization_max_words_title">Số từ đã học tối đa</string>
+    <string name="input_personalization_max_words_desc">Giới hạn của vốn từ đã học; những từ ít giá trị nhất bị loại bỏ trước (mặc định 5000)</string>
+    <string name="privacy_on_device_learning_title">Học từ cách tôi gõ</string>
+    <string name="privacy_on_device_learning_desc">Xây dựng ngay trên thiết bị các mô hình riêng tư về cụm từ và cách dùng từ dựa trên những gì bạn gõ. Tắt để dừng mọi ghi nhận tự động về hành vi gõ phím — khi tắt, không có gì mới được lưu. Dữ liệu bạn tạo ra một cách rõ ràng thì tách biệt: các phiên hiệu chỉnh vuốt bạn chạy, thống kê hiệu năng dự đoán và dữ liệu đã học được khôi phục từ bản sao lưu.</string>
 </resources>

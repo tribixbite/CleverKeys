@@ -6,6 +6,7 @@ import org.json.JSONObject
 import tribixbite.cleverkeys.persist.DebouncedPersister
 import tribixbite.cleverkeys.persist.LearnedDataStorage
 import tribixbite.cleverkeys.persist.SharedPrefsLearnedStorage
+import java.util.Collections
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ScheduledExecutorService
 
@@ -88,8 +89,24 @@ class BigramStore internal constructor(
 
     private val languages: ConcurrentHashMap<String, LanguageBigrams> = ConcurrentHashMap()
 
-    // Languages with unflushed in-RAM changes (drained by writeDirtyLanguages()).
-    private val dirtyLanguages: MutableSet<String> = ConcurrentHashMap.newKeySet()
+    /**
+     * Serializes [forLanguage]'s table CONSTRUCTION (see the API 21 note there).
+     * Deliberately NOT `this`: the build path touches only local state, `storage`
+     * and the persister, so it can never be held while waiting on the data lock —
+     * no lock-order cycle with [writeDirtyLanguages]/[clear], which hold `this`.
+     */
+    private val loadLock = Any()
+
+    /**
+     * Languages with unflushed in-RAM changes (drained by writeDirtyLanguages()).
+     *
+     * API 21 HAZARD: `ConcurrentHashMap.newKeySet()` is API 24 (Java 8) and throws
+     * `NoSuchMethodError` on Android 5.0–6.0 — `minSdk` here is 21.
+     * [Collections.newSetFromMap] over a [ConcurrentHashMap] is API 9 and returns
+     * the same concurrent, weakly consistent Set view `newKeySet()` would.
+     */
+    private val dirtyLanguages: MutableSet<String> =
+        Collections.newSetFromMap(ConcurrentHashMap<String, Boolean>())
 
     private val persister = DebouncedPersister(debounceMs, maxDelayMs, scheduler) {
         writeDirtyLanguages()
@@ -101,32 +118,55 @@ class BigramStore internal constructor(
     /**
      * Get (lazily loading) the table for a language. First access migrates a legacy
      * un-keyed `bigrams_json` blob into this language, then deletes the legacy key.
+     *
+     * API 21 HAZARD: this used to be `languages.computeIfAbsent(lang) { … }`, a
+     * Java 8 default method — API 24 — that throws `NoSuchMethodError` on Android
+     * 5.0–6.0 (`minSdk` is 21). Neither of the usual API 21 substitutes is safe
+     * here, so the double-checked [loadLock] reproduces `computeIfAbsent`'s
+     * once-only CONSTRUCTION guarantee instead:
+     * - `map[k] ?: (putIfAbsent(k, build()) ?: k)` would run [build] twice, and
+     *   [build] has SIDE EFFECTS — it deletes the legacy blob after loading it,
+     *   so the loser's discarded table takes the migrated data with it
+     *   (`BigramStorePersistenceTest` forces exactly that interleaving).
+     * - Kotlin's `getOrPut` is worse: its plain `put` REPLACES a table another
+     *   thread already holds, silently dropping everything recorded into it.
+     * Note [forLanguage] is also called from inside `synchronized(this)` blocks;
+     * nothing under [loadLock] ever waits on `this`, so there is no lock cycle.
      */
     private fun forLanguage(language: String): LanguageBigrams {
         val lang = normalizeLanguage(language)
-        return languages.computeIfAbsent(lang) { code ->
-            val data = LanguageBigrams()
-            val keyed = storage.getString(storageKey(code))
-            if (keyed != null) {
-                loadInto(data, keyed)
-            } else if (code == "en") {
-                // Legacy migration: the pre-language-keying blob was recorded when
-                // "en" was the only (implicit) language, so it belongs to "en"
-                // EXPLICITLY (L10, review 2026-08-06 — the previous
-                // first-language-to-load rule mis-keyed en pairs into whatever
-                // language a non-en-primary user loaded first).
-                val legacy = storage.getString(LEGACY_KEY_BIGRAMS)
-                if (legacy != null) {
-                    loadInto(data, legacy)
-                    storage.remove(LEGACY_KEY_BIGRAMS)
-                    // Persist under the new key so the legacy data survives even if
-                    // no new bigram is ever recorded.
-                    dirtyLanguages.add(code)
-                    persister.markDirty()
-                }
-            }
-            data
+        languages[lang]?.let { return it }
+        synchronized(loadLock) {
+            languages[lang]?.let { return it }
+            val data = build(lang)
+            languages[lang] = data
+            return data
         }
+    }
+
+    /** Construct + populate one language's table. Caller holds [loadLock]. */
+    private fun build(code: String): LanguageBigrams {
+        val data = LanguageBigrams()
+        val keyed = storage.getString(storageKey(code))
+        if (keyed != null) {
+            loadInto(data, keyed)
+        } else if (code == "en") {
+            // Legacy migration: the pre-language-keying blob was recorded when
+            // "en" was the only (implicit) language, so it belongs to "en"
+            // EXPLICITLY (L10, review 2026-08-06 — the previous
+            // first-language-to-load rule mis-keyed en pairs into whatever
+            // language a non-en-primary user loaded first).
+            val legacy = storage.getString(LEGACY_KEY_BIGRAMS)
+            if (legacy != null) {
+                loadInto(data, legacy)
+                storage.remove(LEGACY_KEY_BIGRAMS)
+                // Persist under the new key so the legacy data survives even if
+                // no new bigram is ever recorded.
+                dirtyLanguages.add(code)
+                persister.markDirty()
+            }
+        }
+        return data
     }
 
     /**

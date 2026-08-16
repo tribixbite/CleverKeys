@@ -589,4 +589,19 @@
     <string name="short_swipe_last_key">Huling key: %1$s</string>
     <string name="short_swipe_customize_key">I-customize ang "%1$s" Key</string>
     <string name="extra_keys_enabled_count">%1$d ng %2$d extra key ang naka-enable</string>
+    <!-- Context-LM / next-word / swipe-engine settings -->
+    <string name="swipe_engine_mode_title">Makina ng hula</string>
+    <string name="swipe_engine_mode_desc">Hybrid: neural sa QWERTY, geometric sa ibang layout. Neural: mga layout na QWERTY lamang. Geometric: lahat ng layout. CTC: CTC beam sa mga Latin na layout para sa Ingles, Pranses, Aleman at Espanyol; neural para sa ibang wika sa QWERTY at geometric sa iba pa.</string>
+    <string name="advanced_provenance_markers_title">Mga marka ng pinagmulan ng mungkahi</string>
+    <string name="advanced_provenance_markers_desc">Nagpapakita sa bawat mungkahi ng may kulay na tuldok na nagsasaad kung aling makina ang gumawa nito (pindutin nang matagal ang isang mungkahi para sa buong detalye)</string>
+    <string name="input_next_word_title">Hula sa susunod na salita</string>
+    <string name="input_next_word_desc">Nagmumungkahi ng susunod na salita mula sa mga natutunang parirala bago ka mag-type ng letra</string>
+    <string name="input_context_source_title">Pinagmulan ng konteksto</string>
+    <string name="input_context_source_desc">Aling modelo ng parirala ang nagpapalakas sa mga hula: ang built-in, ang mga natutunang pattern, o pareho</string>
+    <string name="input_personalization_weight_title">Lakas ng personalisasyon</string>
+    <string name="input_personalization_weight_desc">Kung gaano kalakas pinapalakas ng paggamit mo ng salita ang mga hula (0 = naka-off, 2 = doble)</string>
+    <string name="input_personalization_max_words_title">Maximum na natutunang salita</string>
+    <string name="input_personalization_max_words_desc">Hangganan ng natutunang bokabularyo; ang mga salitang pinakamababa ang halaga ang unang tinatanggal (default na 5000)</string>
+    <string name="privacy_on_device_learning_title">Matuto mula sa aking pag-type</string>
+    <string name="privacy_on_device_learning_desc">Bumubuo sa mismong device ng pribadong modelo ng mga parirala at paggamit ng salita mula sa tino-type mo. I-off para itigil ang lahat ng awtomatikong pagtatala ng gawi sa pag-type — habang naka-off, walang bagong iniimbak. Hiwalay ang datos na sadya mong ginagawa: ang mga session ng swipe calibration na pinapatakbo mo, ang istatistika ng performance ng hula, at ang natutunang datos na ibinalik mula sa backup.</string>
 </resources>

@@ -591,4 +591,19 @@
     <string name="short_swipe_last_key">Pēdējais taustiņš: %1$s</string>
     <string name="short_swipe_customize_key">Pielāgot taustiņu "%1$s"</string>
     <string name="extra_keys_enabled_count">%1$d no %2$d papildu taustiņiem iespējoti</string>
+    <!-- Context-LM / next-word / swipe-engine settings -->
+    <string name="swipe_engine_mode_title">Prognozēšanas dzinis</string>
+    <string name="swipe_engine_mode_desc">Hibrīds: neironu tīkls QWERTY izkārtojumos, ģeometriskais pārējos. Neironu tīkls: tikai QWERTY izkārtojumi. Ģeometriskais: visi izkārtojumi. CTC: CTC staru meklēšana latīņu izkārtojumos angļu, franču, vācu un spāņu valodā; citām valodām neironu tīkls QWERTY izkārtojumos un ģeometriskais pārējos.</string>
+    <string name="advanced_provenance_markers_title">Ieteikumu izcelsmes atzīmes</string>
+    <string name="advanced_provenance_markers_desc">Rāda pie katra ieteikuma krāsainu punktu, kas norāda, kurš dzinis to izveidoja (ilgi nospiediet ieteikumu, lai redzētu visas detaļas)</string>
+    <string name="input_next_word_title">Nākamā vārda prognoze</string>
+    <string name="input_next_word_desc">Iesaka nākamo vārdu no apgūtajām frāzēm, pirms tiek ierakstīts kāds burts</string>
+    <string name="input_context_source_title">Konteksta avots</string>
+    <string name="input_context_source_desc">Kurš frāžu modelis pastiprina prognozes: iebūvētais, apgūtie paradumi vai abi</string>
+    <string name="input_personalization_weight_title">Personalizācijas stiprums</string>
+    <string name="input_personalization_weight_desc">Cik stipri vārdu lietojums pastiprina prognozes (0 = izslēgts, 2 = divkārt)</string>
+    <string name="input_personalization_max_words_title">Maksimālais apgūto vārdu skaits</string>
+    <string name="input_personalization_max_words_desc">Apgūtās vārdnīcas ierobežojums; vismazāk vērtīgie vārdi tiek dzēsti pirmie (noklusējums 5000)</string>
+    <string name="privacy_on_device_learning_title">Mācīties no manas rakstīšanas</string>
+    <string name="privacy_on_device_learning_desc">Veido ierīcē privātus frāžu un vārdu lietojuma modeļus no ierakstītā teksta. Izslēdzot tiek pārtraukta visa automātiskā rakstīšanas uzvedības reģistrēšana — kamēr tas ir izslēgts, nekas jauns netiek saglabāts. Dati, ko izveidojat tieši paši, ir atsevišķi: jūsu palaistās vilkšanas kalibrēšanas sesijas, prognožu veiktspējas statistika un no dublējuma atjaunotie apgūtie dati.</string>
 </resources>

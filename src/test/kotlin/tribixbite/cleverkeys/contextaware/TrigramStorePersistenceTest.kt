@@ -6,8 +6,10 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import tribixbite.cleverkeys.persist.InMemoryLearnedStorage
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+import kotlin.concurrent.thread
 
 /**
  * Pure-JVM tests for [TrigramStore] (Task C trigram activation): the same
@@ -170,5 +172,34 @@ class TrigramStorePersistenceTest {
         assertTrue("cap enforced, got ${entries.size}", entries.size <= 10)
         assertEquals("top", entries.first().word3)
         assertEquals(20, entries.first().frequency)
+    }
+
+    // ------------------------------------------------- concurrent first touch
+
+    /**
+     * The lazy per-language table must be built exactly ONCE even when several
+     * threads touch a brand-new language simultaneously.
+     *
+     * Guards the API-21 replacement for `ConcurrentHashMap#computeIfAbsent`
+     * (API 24, `NoSuchMethodError` on Android 5.0–6.0): a plain
+     * get-then-`putIfAbsent` race would hand the losing threads a table that is
+     * then discarded, silently dropping everything they recorded into it.
+     */
+    @Test
+    fun `concurrent first touch of a new language loses no records`() {
+        val threads = 6
+        val perThread = 8 // < MAX_TRIGRAMS_PER_PREFIX (10), so nothing is capped away
+        val start = CountDownLatch(1)
+
+        val workers = (0 until threads).map { t ->
+            thread {
+                start.await()
+                repeat(perThread) { i -> store.recordTrigram("sv", "w$t", "v$t", "x$i") }
+            }
+        }
+        start.countDown()
+        workers.forEach { it.join(10_000) }
+
+        assertEquals(threads * perThread, store.getTotalTrigramCount("sv"))
     }
 }

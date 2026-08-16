@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys
 
+import java.util.Collections
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.min
@@ -17,9 +18,13 @@ import kotlin.math.min
  *   wrapper can DELETE the pruned `word_selections_<word>` preference keys.
  *   (The previous implementation pruned in RAM only — every word ever selected
  *   persisted forever and resurrected on the next load.)
- * - **Concurrency**: counts live in a [ConcurrentHashMap] with atomic
- *   [ConcurrentHashMap.merge] increments — selections are recorded on the main
- *   thread while the prediction executor reads multipliers concurrently.
+ * - **Concurrency**: counts live in a [ConcurrentHashMap] incremented by an
+ *   atomic compare-and-set loop ([incrementCount]) — selections are recorded on
+ *   the main thread while the prediction executor reads multipliers concurrently.
+ *   NOTE: `Map#merge`/`computeIfAbsent`/`ConcurrentHashMap.newKeySet()` are Java 8
+ *   default methods that only exist in the Android runtime from **API 24**; this
+ *   app's `minSdk` is 21, so they throw `NoSuchMethodError` on Android 5.0–6.0.
+ *   Guarded by `MinSdkApiUsageDriftTest` + lint's `NewApi`.
  * - **Read gating** (H3): [multiplierFor] is inert (1.0) while [enabled] is
  *   false, mirroring the write-side no-op — the production wrapper keeps
  *   [enabled] synced to the master `on_device_learning_enabled` gate.
@@ -47,8 +52,17 @@ class SelectionHistory(
     /** word (normalized lowercase) → selection count. Thread-safe. */
     private val selectionCounts = ConcurrentHashMap<String, Int>()
 
-    /** Words pruned from RAM whose persisted keys still need deletion. */
-    private val pendingRemovals: MutableSet<String> = ConcurrentHashMap.newKeySet()
+    /**
+     * Words pruned from RAM whose persisted keys still need deletion.
+     *
+     * API 21 HAZARD: `ConcurrentHashMap.newKeySet()` is API 24 (Java 8) and
+     * throws `NoSuchMethodError` on Android 5.0–6.0 — `minSdk` here is 21.
+     * [Collections.newSetFromMap] over a [ConcurrentHashMap] is available since
+     * API 9 and is exactly what `newKeySet()` returns (a concurrent, weakly
+     * consistent, non-blocking Set view backed by the map's keys).
+     */
+    private val pendingRemovals: MutableSet<String> =
+        Collections.newSetFromMap(ConcurrentHashMap<String, Boolean>())
 
     private val totalSelections = AtomicInteger(0)
 
@@ -78,11 +92,38 @@ class SelectionHistory(
         if (!enabled || word.isNullOrBlank()) return false
 
         val normalized = word.lowercase().trim()
-        selectionCounts.merge(normalized, 1, Int::plus)
+        incrementCount(normalized)
         val total = totalSelections.incrementAndGet()
 
         val pruned = pruneIfNeeded()
         return pruned || total % SAVE_EVERY_N_SELECTIONS == 0
+    }
+
+    /**
+     * Atomically `selectionCounts[key] += 1`, creating the entry at 1 when absent.
+     *
+     * API 21 HAZARD: the obvious `selectionCounts.merge(key, 1, Int::plus)` is a
+     * Java 8 default method — API 24 — and throws `NoSuchMethodError` on Android
+     * 5.0–6.0 (`minSdk` is 21). This is the pre-Java-8 CAS idiom over
+     * [ConcurrentHashMap]'s own `putIfAbsent` / `replace(k, old, new)`, both
+     * abstract `ConcurrentMap` methods present since API 1. It is lock-free and
+     * loses no increment under concurrent recording (`SelectionHistoryTest`'s
+     * multi-thread test asserts exactly that); a plain get-then-put would.
+     *
+     * The value type stays `Int` (not `AtomicInteger`) so [snapshotForPersist]
+     * and [load] keep their `Map<String, Int>` contract and the persisted
+     * `word_selections_<word>` preference format is unchanged.
+     */
+    private fun incrementCount(key: String) {
+        while (true) {
+            val current = selectionCounts[key]
+            if (current == null) {
+                if (selectionCounts.putIfAbsent(key, 1) == null) return
+            } else if (selectionCounts.replace(key, current, current + 1)) {
+                return
+            }
+            // Lost the race (concurrent insert or update) — re-read and retry.
+        }
     }
 
     /**

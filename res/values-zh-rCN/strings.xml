@@ -578,4 +578,19 @@
     <string name="short_swipe_last_key">上一个键：%1$s</string>
     <string name="short_swipe_customize_key">自定义「%1$s」键</string>
     <string name="extra_keys_enabled_count">%1$d / %2$d 个附加键已启用</string>
+    <!-- Context-LM / next-word / swipe-engine settings -->
+    <string name="swipe_engine_mode_title">预测引擎</string>
+    <string name="swipe_engine_mode_desc">混合：QWERTY 上使用神经网络，其他布局使用几何算法。神经网络：仅限 QWERTY 布局。几何：所有布局。CTC：在英语、法语、德语和西班牙语的拉丁布局上使用 CTC 集束搜索；其他语言在 QWERTY 上使用神经网络，其余情况使用几何算法。</string>
+    <string name="advanced_provenance_markers_title">候选来源标记</string>
+    <string name="advanced_provenance_markers_desc">在每个候选词上显示彩色圆点，指示生成它的引擎（长按候选词可查看完整详情）。</string>
+    <string name="input_next_word_title">下一个词预测</string>
+    <string name="input_next_word_desc">在你输入字母之前，根据已学习的短语建议下一个词。</string>
+    <string name="input_context_source_title">上下文来源</string>
+    <string name="input_context_source_desc">用于增强预测的短语模型：内置模型、你学习到的规律，或两者。</string>
+    <string name="input_personalization_weight_title">个性化强度</string>
+    <string name="input_personalization_weight_desc">你的用词习惯对预测的增强程度（0 = 关闭，2 = 双倍）。</string>
+    <string name="input_personalization_max_words_title">学习词数上限</string>
+    <string name="input_personalization_max_words_desc">已学习词汇量的上限；价值最低的词会被优先移除（默认 5000）。</string>
+    <string name="privacy_on_device_learning_title">从我的输入中学习</string>
+    <string name="privacy_on_device_learning_desc">根据你输入的内容，在设备本地构建私密的短语和用词模型。关闭后将停止一切对输入行为的自动记录——关闭期间不会存储任何新数据。你主动创建的数据不在此列：你运行的滑行校准会话、预测性能统计，以及从备份恢复的学习数据。</string>
 </resources>

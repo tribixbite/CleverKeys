@@ -61,7 +61,7 @@ object CtcLexiconMerge {
      * clamped-to-255 custom words rank ahead of equal-frequency base words —
      * the same "user words get favorable rank" bias the geometric merge gets by
      * prepending). First case-folded occurrence wins, matching the geometric
-     * adapter's `putIfAbsent` ordinal build.
+     * adapter's first-wins ordinal build.
      *
      * Threshold sanity (measured 2026-08-14 on the shipped `en_enhanced.json`,
      * locked in by `CtcContractionDisplayTest`): under this ranking the en
@@ -77,7 +77,13 @@ object CtcLexiconMerge {
         )
         val ordinals = HashMap<String, Int>(entries.size * 2)
         for ((rank, idx) in order.withIndex()) {
-            ordinals.putIfAbsent(entries[idx].key.lowercase(Locale.ROOT), rank)
+            // API 21 HAZARD: the *default* `Map#putIfAbsent` is API 24 (Java 8) and
+            // throws NoSuchMethodError on Android 5.0–6.0 — `minSdk` is 21. Only
+            // `ConcurrentMap#putIfAbsent` is API 1, and this receiver is a plain
+            // HashMap. `containsKey` + set is the API 21-safe first-wins insert
+            // (single-threaded build, so no atomicity is lost).
+            val key = entries[idx].key.lowercase(Locale.ROOT)
+            if (!ordinals.containsKey(key)) ordinals[key] = rank
         }
         return ordinals
     }

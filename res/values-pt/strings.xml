@@ -580,4 +580,19 @@
     <string name="short_swipe_customize_key">Personalizar tecla \"%1$s\"</string>
     <string name="extra_keys_enabled_count">%1$d de %2$d teclas extras ativadas</string>
     <!-- END auto-generated translations (wp8b) -->
+    <!-- Context-LM / next-word / swipe-engine settings -->
+    <string name="swipe_engine_mode_title">Motor de previsão</string>
+    <string name="swipe_engine_mode_desc">Híbrido: neural no QWERTY, geométrico nas outras disposições. Neural: apenas disposições QWERTY. Geométrico: todas as disposições. CTC: feixe CTC em disposições latinas para inglês, francês, alemão e espanhol; neural para outros idiomas no QWERTY e geométrico nos demais.</string>
+    <string name="advanced_provenance_markers_title">Marcadores de origem das sugestões</string>
+    <string name="advanced_provenance_markers_desc">Mostrar em cada sugestão um ponto colorido indicando qual motor a produziu (toque longo numa sugestão para ver todos os detalhes)</string>
+    <string name="input_next_word_title">Previsão da próxima palavra</string>
+    <string name="input_next_word_desc">Sugerir a próxima palavra a partir das frases aprendidas antes de digitar uma letra</string>
+    <string name="input_context_source_title">Fonte de contexto</string>
+    <string name="input_context_source_desc">Qual modelo de frases reforça as previsões: o integrado, os padrões aprendidos ou ambos</string>
+    <string name="input_personalization_weight_title">Intensidade da personalização</string>
+    <string name="input_personalization_weight_desc">O quanto o seu uso das palavras reforça as previsões (0 = desativado, 2 = o dobro)</string>
+    <string name="input_personalization_max_words_title">Máximo de palavras aprendidas</string>
+    <string name="input_personalization_max_words_desc">Limite do vocabulário aprendido; as palavras menos valiosas são removidas primeiro (padrão 5000)</string>
+    <string name="privacy_on_device_learning_title">Aprender com a minha digitação</string>
+    <string name="privacy_on_device_learning_desc">Criar no dispositivo modelos privados de frases e de uso de palavras a partir do que você digita. Desative para interromper todo o registo automático do comportamento de digitação — nada de novo é armazenado enquanto estiver desativado. Os dados que você cria explicitamente são separados: as sessões de calibração de deslize que você executa, as estatísticas de desempenho das previsões e os dados aprendidos restaurados de uma cópia de segurança.</string>
 </resources>

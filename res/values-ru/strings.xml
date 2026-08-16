@@ -580,4 +580,19 @@
     <string name="short_swipe_last_key">Последняя клавиша: %1$s</string>
     <string name="short_swipe_customize_key">Настроить клавишу «%1$s»</string>
     <string name="extra_keys_enabled_count">%1$d из %2$d дополнительных клавиш включено</string>
+    <!-- Context-LM / next-word / swipe-engine settings -->
+    <string name="swipe_engine_mode_title">Движок предсказаний</string>
+    <string name="swipe_engine_mode_desc">Гибридный: нейросетевой на QWERTY, геометрический на других раскладках. Нейросетевой: только раскладки QWERTY. Геометрический: все раскладки. CTC: лучевой поиск CTC на латинских раскладках для английского, французского, немецкого и испанского; для других языков — нейросетевой на QWERTY и геометрический в остальных случаях.</string>
+    <string name="advanced_provenance_markers_title">Метки источника подсказок</string>
+    <string name="advanced_provenance_markers_desc">Показывать у каждой подсказки цветную точку, обозначающую создавший её движок (долгое нажатие на подсказку — все подробности)</string>
+    <string name="input_next_word_title">Предсказание следующего слова</string>
+    <string name="input_next_word_desc">Предлагать следующее слово из выученных сочетаний ещё до ввода первой буквы</string>
+    <string name="input_context_source_title">Источник контекста</string>
+    <string name="input_context_source_desc">Какая модель сочетаний усиливает предсказания: встроенная, выученные закономерности или обе</string>
+    <string name="input_personalization_weight_title">Сила персонализации</string>
+    <string name="input_personalization_weight_desc">Насколько сильно ваше словоупотребление усиливает предсказания (0 = выкл., 2 = вдвое)</string>
+    <string name="input_personalization_max_words_title">Максимум выученных слов</string>
+    <string name="input_personalization_max_words_desc">Ограничение выученного словаря; наименее ценные слова удаляются первыми (по умолчанию 5000)</string>
+    <string name="privacy_on_device_learning_title">Учиться на моём наборе</string>
+    <string name="privacy_on_device_learning_desc">Строить прямо на устройстве частные модели сочетаний и словоупотребления на основе набранного текста. Выключение останавливает всю автоматическую запись поведения при наборе — пока опция выключена, ничего нового не сохраняется. Данные, создаваемые вами явно, хранятся отдельно: запущенные вами сеансы калибровки свайпа, статистика качества предсказаний и выученные данные, восстановленные из резервной копии.</string>
 </resources>

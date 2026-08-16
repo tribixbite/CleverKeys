@@ -535,7 +535,13 @@ class GeometricEngineAdapter(private val context: Context) {
         // occurrence wins (ties can only come from case-variant duplicates).
         val ordinals = HashMap<String, Int>(merged.size * 2)
         for (i in 0 until merged.size) {
-            ordinals.putIfAbsent(merged.word(i).lowercase(Locale.ROOT), i)
+            // API 21 HAZARD: the *default* `Map#putIfAbsent` is API 24 (Java 8) and
+            // throws NoSuchMethodError on Android 5.0–6.0 — `minSdk` is 21. Only
+            // `ConcurrentMap#putIfAbsent` is API 1, and this receiver is a plain
+            // HashMap. `containsKey` + set is the API 21-safe first-wins insert
+            // (single-threaded build, so no atomicity is lost).
+            val key = merged.word(i).lowercase(Locale.ROOT)
+            if (!ordinals.containsKey(key)) ordinals[key] = i
         }
         val built = DictMemo(merged, ordinals)
         dictionaryMemo = built

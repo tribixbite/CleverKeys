@@ -6,6 +6,7 @@ import org.json.JSONObject
 import tribixbite.cleverkeys.persist.DebouncedPersister
 import tribixbite.cleverkeys.persist.LearnedDataStorage
 import tribixbite.cleverkeys.persist.SharedPrefsLearnedStorage
+import java.util.Collections
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ScheduledExecutorService
 
@@ -77,8 +78,24 @@ class TrigramStore internal constructor(
 
     private val languages: ConcurrentHashMap<String, LanguageTrigrams> = ConcurrentHashMap()
 
-    // Languages with unflushed in-RAM changes (drained by writeDirtyLanguages()).
-    private val dirtyLanguages: MutableSet<String> = ConcurrentHashMap.newKeySet()
+    /**
+     * Serializes [forLanguage]'s table CONSTRUCTION (see the API 21 note there).
+     * Deliberately NOT `this`: the build path touches only local state and
+     * `storage`, so it is never held while waiting on the data lock — no
+     * lock-order cycle with [writeDirtyLanguages]/[clear], which hold `this`.
+     */
+    private val loadLock = Any()
+
+    /**
+     * Languages with unflushed in-RAM changes (drained by writeDirtyLanguages()).
+     *
+     * API 21 HAZARD: `ConcurrentHashMap.newKeySet()` is API 24 (Java 8) and throws
+     * `NoSuchMethodError` on Android 5.0–6.0 — `minSdk` here is 21.
+     * [Collections.newSetFromMap] over a [ConcurrentHashMap] is API 9 and returns
+     * the same concurrent, weakly consistent Set view `newKeySet()` would.
+     */
+    private val dirtyLanguages: MutableSet<String> =
+        Collections.newSetFromMap(ConcurrentHashMap<String, Boolean>())
 
     private val persister = DebouncedPersister(debounceMs, maxDelayMs, scheduler) {
         writeDirtyLanguages()
@@ -86,13 +103,28 @@ class TrigramStore internal constructor(
 
     private var minFrequency: Int = DEFAULT_MIN_FREQUENCY
 
-    /** Get (lazily loading from storage) the table for a language. */
+    /**
+     * Get (lazily loading from storage) the table for a language.
+     *
+     * API 21 HAZARD: this used to be `languages.computeIfAbsent(lang) { … }`, a
+     * Java 8 default method — API 24 — that throws `NoSuchMethodError` on Android
+     * 5.0–6.0 (`minSdk` is 21). The double-checked [loadLock] reproduces
+     * `computeIfAbsent`'s once-only CONSTRUCTION guarantee, which matters even
+     * though this build path is side-effect free: Kotlin's `getOrPut` (the
+     * tempting one-liner) is a get-then-`put`, so a second builder would REPLACE
+     * a table another thread already holds and drop its records — see the same
+     * note on [BigramStore.forLanguage], whose build additionally deletes the
+     * legacy blob and must therefore never run twice.
+     */
     private fun forLanguage(language: String): LanguageTrigrams {
         val lang = BigramStore.normalizeLanguage(language)
-        return languages.computeIfAbsent(lang) { code ->
+        languages[lang]?.let { return it }
+        synchronized(loadLock) {
+            languages[lang]?.let { return it }
             val data = LanguageTrigrams()
-            storage.getString(storageKey(code))?.let { loadInto(data, it) }
-            data
+            storage.getString(storageKey(lang))?.let { loadInto(data, it) }
+            languages[lang] = data
+            return data
         }
     }
 

@@ -580,4 +580,19 @@
     <string name="short_swipe_last_key">Poslední klávesa: %1$s</string>
     <string name="short_swipe_customize_key">Přizpůsobit klávesu "%1$s"</string>
     <string name="extra_keys_enabled_count">%1$d z %2$d extra kláves povoleno</string>
+    <!-- Context-LM / next-word / swipe-engine settings -->
+    <string name="swipe_engine_mode_title">Modul předpovědí</string>
+    <string name="swipe_engine_mode_desc">Hybridní: neuronový na QWERTY, geometrický na ostatních rozloženích. Neuronový: pouze rozložení QWERTY. Geometrický: všechna rozložení. CTC: paprskové hledání CTC na latinských rozloženích pro angličtinu, francouzštinu, němčinu a španělštinu; pro ostatní jazyky neuronový na QWERTY a jinak geometrický.</string>
+    <string name="advanced_provenance_markers_title">Značky původu návrhů</string>
+    <string name="advanced_provenance_markers_desc">U každého návrhu zobrazí barevnou tečku označující modul, který jej vytvořil (úplné podrobnosti zobrazíte dlouhým stiskem návrhu)</string>
+    <string name="input_next_word_title">Předpověď dalšího slova</string>
+    <string name="input_next_word_desc">Navrhne další slovo z naučených spojení ještě před napsáním písmene</string>
+    <string name="input_context_source_title">Zdroj kontextu</string>
+    <string name="input_context_source_desc">Který model spojení posiluje předpovědi: vestavěný, naučené vzorce, nebo oba</string>
+    <string name="input_personalization_weight_title">Síla personalizace</string>
+    <string name="input_personalization_weight_desc">Jak silně používání slov posiluje předpovědi (0 = vypnuto, 2 = dvojnásobně)</string>
+    <string name="input_personalization_max_words_title">Maximum naučených slov</string>
+    <string name="input_personalization_max_words_desc">Limit naučené slovní zásoby; nejméně hodnotná slova se odstraňují jako první (výchozí 5000)</string>
+    <string name="privacy_on_device_learning_title">Učit se z mého psaní</string>
+    <string name="privacy_on_device_learning_desc">Vytváří přímo v zařízení soukromé modely spojení a používání slov z toho, co píšete. Vypnutím se zastaví veškeré automatické zaznamenávání chování při psaní — dokud je volba vypnutá, nic nového se neukládá. Data, která vytvoříte výslovně, jsou oddělená: vámi spuštěné relace kalibrace tahů, statistiky výkonu předpovědí a naučená data obnovená ze zálohy.</string>
 </resources>

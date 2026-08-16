@@ -603,4 +603,19 @@
     <string name="short_swipe_customize_key">Personalizați tasta \"%1$s\"</string>
     <string name="extra_keys_enabled_count">%1$d din %2$d taste extra activate</string>
     <!-- END auto-generated translations (wp8b) -->
+    <!-- Context-LM / next-word / swipe-engine settings -->
+    <string name="swipe_engine_mode_title">Motor de predicție</string>
+    <string name="swipe_engine_mode_desc">Hibrid: neuronal pe QWERTY, geometric pe celelalte aranjamente. Neuronal: doar aranjamente QWERTY. Geometric: toate aranjamentele. CTC: căutare în fascicul CTC pe aranjamente latine pentru engleză, franceză, germană și spaniolă; neuronal pentru alte limbi pe QWERTY și geometric în rest.</string>
+    <string name="advanced_provenance_markers_title">Marcaje de origine a sugestiilor</string>
+    <string name="advanced_provenance_markers_desc">Afișează pe fiecare sugestie un punct colorat care indică motorul care a generat-o (apăsare lungă pe o sugestie pentru toate detaliile)</string>
+    <string name="input_next_word_title">Predicția cuvântului următor</string>
+    <string name="input_next_word_desc">Sugerează cuvântul următor din expresiile învățate înainte de a tasta o literă</string>
+    <string name="input_context_source_title">Sursa contextului</string>
+    <string name="input_context_source_desc">Ce model de expresii întărește predicțiile: cel integrat, tiparele învățate sau ambele</string>
+    <string name="input_personalization_weight_title">Intensitatea personalizării</string>
+    <string name="input_personalization_weight_desc">Cât de mult întărește utilizarea cuvintelor predicțiile (0 = dezactivat, 2 = dublu)</string>
+    <string name="input_personalization_max_words_title">Număr maxim de cuvinte învățate</string>
+    <string name="input_personalization_max_words_desc">Limita vocabularului învățat; cuvintele cel mai puțin valoroase sunt eliminate primele (implicit 5000)</string>
+    <string name="privacy_on_device_learning_title">Învață din felul în care scriu</string>
+    <string name="privacy_on_device_learning_desc">Construiește pe dispozitiv modele private de expresii și de utilizare a cuvintelor pornind de la ceea ce tastați. Dezactivarea oprește orice înregistrare automată a comportamentului de tastare — cât timp este dezactivată, nu se stochează nimic nou. Datele create explicit de dumneavoastră sunt separate: sesiunile de calibrare a glisării pe care le porniți, statisticile de performanță a predicțiilor și datele învățate restaurate dintr-o copie de rezervă.</string>
 </resources>

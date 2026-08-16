@@ -585,4 +585,19 @@
     <string name="short_swipe_last_key">Utolsó billentyű: %1$s</string>
     <string name="short_swipe_customize_key">\"%1$s\" billentyű testreszabása</string>
     <string name="extra_keys_enabled_count">%2$d extra billentyűből %1$d engedélyezve</string>
+    <!-- Context-LM / next-word / swipe-engine settings -->
+    <string name="swipe_engine_mode_title">Előrejelző motor</string>
+    <string name="swipe_engine_mode_desc">Hibrid: neurális QWERTY-n, geometriai a többi kiosztáson. Neurális: csak QWERTY kiosztások. Geometriai: minden kiosztás. CTC: CTC-nyalábkeresés latin kiosztásokon angol, francia, német és spanyol nyelven; más nyelveknél neurális QWERTY-n, egyébként geometriai.</string>
+    <string name="advanced_provenance_markers_title">Javaslatok eredetjelölői</string>
+    <string name="advanced_provenance_markers_desc">Színes pont megjelenítése minden javaslatnál, amely jelzi az azt előállító motort (a teljes részletekhez tartsa nyomva a javaslatot)</string>
+    <string name="input_next_word_title">Következő szó előrejelzése</string>
+    <string name="input_next_word_desc">A következő szó javaslata a megtanult kifejezésekből, még mielőtt betűt gépelne</string>
+    <string name="input_context_source_title">Kontextusforrás</string>
+    <string name="input_context_source_desc">Melyik kifejezésmodell erősíti az előrejelzéseket: a beépített, a megtanult minták, vagy mindkettő</string>
+    <string name="input_personalization_weight_title">Személyre szabás erőssége</string>
+    <string name="input_personalization_weight_desc">Mennyire erősíti a szóhasználat az előrejelzéseket (0 = ki, 2 = kétszeres)</string>
+    <string name="input_personalization_max_words_title">Megtanult szavak maximuma</string>
+    <string name="input_personalization_max_words_desc">A megtanult szókincs felső korlátja; a legkevésbé értékes szavak törlődnek először (alapértelmezés 5000)</string>
+    <string name="privacy_on_device_learning_title">Tanulás a gépelésemből</string>
+    <string name="privacy_on_device_learning_desc">Privát kifejezés- és szóhasználati modellek építése az eszközön a begépelt szövegből. Kikapcsolva minden automatikus gépelési rögzítés leáll — amíg ki van kapcsolva, semmi új nem tárolódik. A kifejezetten Ön által létrehozott adatok külön kezelendők: az elindított csúsztatás-kalibrálási munkamenetek, az előrejelzési teljesítmény statisztikái és a biztonsági mentésből visszaállított tanult adatok.</string>
 </resources>

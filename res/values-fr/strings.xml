@@ -586,4 +586,19 @@
     <string name="short_swipe_customize_key">Personnaliser la touche « %1$s »</string>
     <string name="extra_keys_enabled_count">%1$d sur %2$d touches supplémentaires activées</string>
     <!-- END wp8b_new_strings block -->
+    <!-- Context-LM / next-word / swipe-engine settings -->
+    <string name="swipe_engine_mode_title">Moteur de prédiction</string>
+    <string name="swipe_engine_mode_desc">Hybride : neuronal sur QWERTY, géométrique sur les autres dispositions. Neuronal : dispositions QWERTY uniquement. Géométrique : toutes les dispositions. CTC : faisceau CTC sur les dispositions latines en anglais, français, allemand et espagnol ; neuronal pour les autres langues sur QWERTY, géométrique ailleurs.</string>
+    <string name="advanced_provenance_markers_title">Marqueurs d\'origine des suggestions</string>
+    <string name="advanced_provenance_markers_desc">Afficher sur chaque suggestion un point coloré indiquant le moteur qui l\'a produite (appui long sur une suggestion pour tous les détails)</string>
+    <string name="input_next_word_title">Prédiction du mot suivant</string>
+    <string name="input_next_word_desc">Suggérer le mot suivant à partir des expressions apprises avant la saisie d\'une lettre</string>
+    <string name="input_context_source_title">Source du contexte</string>
+    <string name="input_context_source_desc">Quel modèle d\'expressions renforce les prédictions : intégré, les habitudes apprises, ou les deux</string>
+    <string name="input_personalization_weight_title">Force de la personnalisation</string>
+    <string name="input_personalization_weight_desc">À quel point l\'usage des mots renforce les prédictions (0 = désactivé, 2 = double)</string>
+    <string name="input_personalization_max_words_title">Nombre maximal de mots appris</string>
+    <string name="input_personalization_max_words_desc">Limite du vocabulaire appris ; les mots les moins utiles sont supprimés en premier (5000 par défaut)</string>
+    <string name="privacy_on_device_learning_title">Apprendre de ma frappe</string>
+    <string name="privacy_on_device_learning_desc">Construire sur l\'appareil des modèles privés d\'expressions et d\'usage des mots à partir de ce qui est saisi. Désactiver arrête tout enregistrement automatique du comportement de frappe — rien de nouveau n\'est stocké tant que l\'option est désactivée. Les données créées explicitement restent distinctes : les sessions de calibrage du glissé lancées manuellement, les statistiques de performance des prédictions et les données apprises restaurées depuis une sauvegarde.</string>
 </resources>

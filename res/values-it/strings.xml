@@ -619,4 +619,19 @@
     <string name="short_swipe_customize_key">Personalizza il tasto \"%1$s\"</string>
     <string name="extra_keys_enabled_count">%1$d di %2$d tasti extra abilitati</string>
     <!-- END auto-generated translations (wp8b) -->
+    <!-- Context-LM / next-word / swipe-engine settings -->
+    <string name="swipe_engine_mode_title">Motore di previsione</string>
+    <string name="swipe_engine_mode_desc">Ibrido: neurale su QWERTY, geometrico sulle altre disposizioni. Neurale: solo disposizioni QWERTY. Geometrico: tutte le disposizioni. CTC: fascio CTC sulle disposizioni latine in inglese, francese, tedesco e spagnolo; neurale per le altre lingue su QWERTY, geometrico altrove.</string>
+    <string name="advanced_provenance_markers_title">Indicatori di origine dei suggerimenti</string>
+    <string name="advanced_provenance_markers_desc">Mostra su ogni suggerimento un punto colorato che indica il motore che lo ha prodotto (tieni premuto un suggerimento per tutti i dettagli)</string>
+    <string name="input_next_word_title">Previsione della parola successiva</string>
+    <string name="input_next_word_desc">Suggerisce la parola successiva dalle frasi apprese prima di digitare una lettera</string>
+    <string name="input_context_source_title">Origine del contesto</string>
+    <string name="input_context_source_desc">Quale modello di frasi potenzia le previsioni: quello integrato, i pattern appresi o entrambi</string>
+    <string name="input_personalization_weight_title">Intensità della personalizzazione</string>
+    <string name="input_personalization_weight_desc">Quanto l\'uso delle parole potenzia le previsioni (0 = disattivato, 2 = doppio)</string>
+    <string name="input_personalization_max_words_title">Numero massimo di parole apprese</string>
+    <string name="input_personalization_max_words_desc">Limite del vocabolario appreso; le parole meno utili vengono rimosse per prime (predefinito 5000)</string>
+    <string name="privacy_on_device_learning_title">Impara dalla mia digitazione</string>
+    <string name="privacy_on_device_learning_desc">Crea sul dispositivo modelli privati di frasi e di utilizzo delle parole a partire da ciò che digiti. Disattiva per interrompere ogni registrazione automatica del comportamento di digitazione: mentre è disattivato non viene memorizzato nulla di nuovo. I dati che crei esplicitamente restano separati: le sessioni di calibrazione dello scorrimento che avvii, le statistiche sulle prestazioni delle previsioni e i dati appresi ripristinati da un backup.</string>
 </resources>

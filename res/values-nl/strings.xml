@@ -580,4 +580,19 @@
     <string name="short_swipe_last_key">Laatste toets: %1$s</string>
     <string name="short_swipe_customize_key">Toets "%1$s" aanpassen</string>
     <string name="extra_keys_enabled_count">%1$d van %2$d extra toetsen ingeschakeld</string>
+    <!-- Context-LM / next-word / swipe-engine settings -->
+    <string name="swipe_engine_mode_title">Voorspellingsengine</string>
+    <string name="swipe_engine_mode_desc">Hybride: neuraal op QWERTY, geometrisch op andere indelingen. Neuraal: alleen QWERTY-indelingen. Geometrisch: alle indelingen. CTC: CTC-beam op Latijnse indelingen voor Engels, Frans, Duits en Spaans; neuraal voor andere talen op QWERTY, elders geometrisch.</string>
+    <string name="advanced_provenance_markers_title">Herkomstmarkeringen voor suggesties</string>
+    <string name="advanced_provenance_markers_desc">Toont bij elke suggestie een gekleurde stip die aangeeft welke engine haar heeft gemaakt (houd een suggestie ingedrukt voor alle details)</string>
+    <string name="input_next_word_title">Voorspelling van volgend woord</string>
+    <string name="input_next_word_desc">Stelt het volgende woord voor uit de geleerde uitdrukkingen voordat er een letter wordt getypt</string>
+    <string name="input_context_source_title">Contextbron</string>
+    <string name="input_context_source_desc">Welk uitdrukkingsmodel de voorspellingen versterkt: ingebouwd, de geleerde patronen of beide</string>
+    <string name="input_personalization_weight_title">Sterkte van personalisatie</string>
+    <string name="input_personalization_weight_desc">Hoe sterk het eigen woordgebruik de voorspellingen versterkt (0 = uit, 2 = dubbel)</string>
+    <string name="input_personalization_max_words_title">Maximum aantal geleerde woorden</string>
+    <string name="input_personalization_max_words_desc">Limiet voor de geleerde woordenschat; de minst waardevolle woorden worden als eerste verwijderd (standaard 5000)</string>
+    <string name="privacy_on_device_learning_title">Leren van mijn typen</string>
+    <string name="privacy_on_device_learning_desc">Bouwt op het apparaat privémodellen van uitdrukkingen en woordgebruik op basis van wat er wordt getypt. Uitschakelen stopt elke automatische registratie van typgedrag — zolang het uit staat wordt er niets nieuws opgeslagen. Gegevens die je zelf uitdrukkelijk maakt staan hier los van: de veegkalibratiesessies die je uitvoert, statistieken over de voorspellingsprestaties en geleerde gegevens die uit een back-up zijn hersteld.</string>
 </resources>

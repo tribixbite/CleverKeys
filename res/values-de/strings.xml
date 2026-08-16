@@ -600,4 +600,19 @@
     <string name="short_swipe_customize_key">Taste \"%1$s\" anpassen</string>
     <string name="extra_keys_enabled_count">%1$d von %2$d Zusatztasten aktiviert</string>
     <!-- END wp8b_new_strings block -->
+    <!-- Context-LM / next-word / swipe-engine settings -->
+    <string name="swipe_engine_mode_title">Vorhersage-Engine</string>
+    <string name="swipe_engine_mode_desc">Hybrid: neuronal auf QWERTY, geometrisch auf anderen Layouts. Neuronal: nur QWERTY-Layouts. Geometrisch: alle Layouts. CTC: CTC-Beam auf lateinischen Layouts für Englisch, Französisch, Deutsch und Spanisch; für andere Sprachen neuronal auf QWERTY, sonst geometrisch.</string>
+    <string name="advanced_provenance_markers_title">Herkunftsmarkierungen für Vorschläge</string>
+    <string name="advanced_provenance_markers_desc">Einen farbigen Punkt an jedem Vorschlag anzeigen, der die erzeugende Engine angibt (für alle Details lange auf einen Vorschlag drücken)</string>
+    <string name="input_next_word_title">Nächstes-Wort-Vorhersage</string>
+    <string name="input_next_word_desc">Das nächste Wort aus den gelernten Wendungen vorschlagen, bevor ein Buchstabe getippt wird</string>
+    <string name="input_context_source_title">Kontextquelle</string>
+    <string name="input_context_source_desc">Welches Wendungsmodell die Vorhersagen verstärkt: integriert, die gelernten Muster oder beides</string>
+    <string name="input_personalization_weight_title">Stärke der Personalisierung</string>
+    <string name="input_personalization_weight_desc">Wie stark die eigene Wortnutzung die Vorhersagen verstärkt (0 = aus, 2 = doppelt)</string>
+    <string name="input_personalization_max_words_title">Maximal gelernte Wörter</string>
+    <string name="input_personalization_max_words_desc">Obergrenze für den gelernten Wortschatz; die am wenigsten wertvollen Wörter werden zuerst entfernt (Standard 5000)</string>
+    <string name="privacy_on_device_learning_title">Aus meinen Eingaben lernen</string>
+    <string name="privacy_on_device_learning_desc">Private Modelle für Wendungen und Wortnutzung direkt auf dem Gerät aus den eigenen Eingaben aufbauen. Ausschalten stoppt jede automatische Aufzeichnung des Tippverhaltens — im ausgeschalteten Zustand wird nichts Neues gespeichert. Ausdrücklich selbst erzeugte Daten sind davon getrennt: selbst gestartete Wisch-Kalibrierungen, Statistiken zur Vorhersageleistung und aus einer Sicherung wiederhergestellte Lerndaten.</string>
 </resources>
