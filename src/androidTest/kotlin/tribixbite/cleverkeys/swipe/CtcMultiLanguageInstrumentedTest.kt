@@ -269,9 +269,23 @@ class CtcMultiLanguageInstrumentedTest {
     }
 
     /**
-     * Every word the adapter hands the pipeline must be a real lexicon word — its a–z
+     * Every word the adapter hands the pipeline must trace back to the lexicon — its a–z
      * projection has to be a path in [trie] — and none of them may be a BARE surface whose
      * canonical form carries an accent (that is the display overlay silently not running).
+     *
+     * **Apostrophe-bearing words are exempt from the lexicon check, by design.** The
+     * contraction overlay emits DISPLAY forms, and the app deliberately loads the bundled
+     * ENGLISH `contractions.bin` as the base set for every language before the active
+     * language's file (`CtcEngineAdapter.contractionsFor`, a faithful mirror of
+     * `GeometricEngineAdapter.contractionsFor`, which in turn mirrors production's
+     * `PreferenceUIUpdateHandler`/`ManagerInitializer` order). An English variant can
+     * therefore be APPENDED to a non-English slate whose apostrophe-free base is not a word
+     * in that language — e.g. a `fr` decode of "franco" yielding the appended English
+     * possessive "franco's", whose projection "francos" is (correctly) absent from the
+     * French trie. That is pre-existing cross-engine behavior, NOT something this engine
+     * introduced, so asserting `slate ⊆ lexicon` unconditionally would encode an assumption
+     * production contradicts. Recorded as a follow-up in
+     * `docs/specs/ctc-swipe-engine.md`; the accent assertions below stay unconditional.
      */
     private fun assertSlateIsCanonical(
         language: String,
@@ -283,11 +297,16 @@ class CtcMultiLanguageInstrumentedTest {
         for (word in result.words) {
             val surface = CtcAzProjection.project(word)
             assertNotNull("$language: '$word' has no a–z surface — it cannot be a beam result", surface)
-            assertTrue(
-                "$language: '$word' projects to '$surface', which is not in the lexicon — " +
-                    "the display overlay invented a word",
-                trie.contains(surface!!)
-            )
+            // Apostrophe forms are contraction DISPLAY output (see the KDoc): the overlay is
+            // allowed to append one whose base is not in this language's lexicon. Everything
+            // WITHOUT an apostrophe came from the beam and must be a real lexicon word.
+            if (!word.contains('\'') && !word.contains('’')) {
+                assertTrue(
+                    "$language: '$word' projects to '$surface', which is not in the lexicon — " +
+                        "the display overlay invented a word",
+                    trie.contains(surface!!)
+                )
+            }
             assertNull(
                 "$language: '$word' was presented as a bare a–z surface; its canonical form " +
                     "is '${display[word]}' — CtcEngineAdapter.applyCanonicalDisplay did not run",

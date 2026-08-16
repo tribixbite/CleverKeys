@@ -78,6 +78,31 @@ tagging, and the settings UI.
   as the null-default for callers that don't thread an origin — it mislabeled hybrid's
   geometric swipes as NEURAL_BEAM and would have mislabeled ctc's.
 
+### Known behavior: English contraction variants can appear in non-English slates
+
+Found by `CtcMultiLanguageInstrumentedTest` on device (2026-08-16), then traced to
+**pre-existing cross-engine behavior — not introduced by this engine**.
+
+`CtcEngineAdapter.contractionsFor` loads the bundled ENGLISH `contractions.bin` as the base
+set for every language before the active language's file, because that is the order
+production uses (`PreferenceUIUpdateHandler`/`ManagerInitializer`) and the order
+`GeometricEngineAdapter.contractionsFor` already mirrors. Loading is EARLIER-WINS, so an
+English display form can be APPENDED as a variant to a non-English slate even when its
+apostrophe-free base is not a word in that language. Observed: a `fr` decode of the real
+French word `franco` also offered the English possessive `franco's` (whose base `francos`
+is correctly absent from the 37,949-word French trie).
+
+`ContractionOverlay`'s real-word ordinal guard bounds the damage — a shadowed alias that is
+itself a common word in the active language (de `im`, fr `dont`, it `del`) is KEPT and the
+English form is at most appended, never substituted. So the failure mode is slate NOISE
+(one wasted suggestion slot), not a wrong commit.
+
+**Deliberately not "fixed" here**: suppressing the English base for non-English languages
+would diverge the CTC engine from the geometric engine's shipped behavior and change what
+users of BOTH engines see. It is a product decision affecting two engines and deserves its
+own round (does a French user benefit from English contractions for code-switching?), not a
+silent unilateral change inside the CTC adapter.
+
 ### `CtcEngineAdapter` — the impurity boundary
 
 `swipe/CtcEngineAdapter.kt` mirrors `GeometricEngineAdapter`'s duties for the `ctc` mode:
