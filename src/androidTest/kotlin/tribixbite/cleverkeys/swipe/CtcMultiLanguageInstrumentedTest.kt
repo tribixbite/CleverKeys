@@ -273,19 +273,22 @@ class CtcMultiLanguageInstrumentedTest {
      * projection has to be a path in [trie] — and none of them may be a BARE surface whose
      * canonical form carries an accent (that is the display overlay silently not running).
      *
-     * **Apostrophe-bearing words are exempt from the lexicon check, by design.** The
-     * contraction overlay emits DISPLAY forms, and the app deliberately loads the bundled
-     * ENGLISH `contractions.bin` as the base set for every language before the active
-     * language's file (`CtcEngineAdapter.contractionsFor`, a faithful mirror of
-     * `GeometricEngineAdapter.contractionsFor`, which in turn mirrors production's
-     * `PreferenceUIUpdateHandler`/`ManagerInitializer` order). An English variant can
-     * therefore be APPENDED to a non-English slate whose apostrophe-free base is not a word
-     * in that language — e.g. a `fr` decode of "franco" yielding the appended English
-     * possessive "franco's", whose projection "francos" is (correctly) absent from the
-     * French trie. That is pre-existing cross-engine behavior, NOT something this engine
-     * introduced, so asserting `slate ⊆ lexicon` unconditionally would encode an assumption
-     * production contradicts. Recorded as a follow-up in
-     * `docs/specs/ctc-swipe-engine.md`; the accent assertions below stay unconditional.
+     * For a NON-ENGLISH language the lexicon check is unconditional, apostrophes included.
+     * It briefly was not: the adapters used to load the bundled ENGLISH contraction base for
+     * every language, so a `fr` decode of the real French word "franco" also offered the
+     * English possessive "franco's" — whose projection "francos" is (correctly) absent from
+     * the French trie, i.e. no beam could have produced it. Contractions are now scoped to
+     * the ACTIVE DECODE LANGUAGE (`SwipeContractionPolicy` /
+     * `ContractionManager.loadSwipeDisplayMappings`), and every bundled non-English
+     * contraction file maps an a–z key to a display form that differs only by
+     * apostrophes/hyphens — so the display form projects back onto the beam surface it came
+     * from, and `slate ⊆ lexicon` holds exactly. Guarding it here is what keeps it holding.
+     *
+     * **English keeps one narrow exemption**, unchanged by that fix and asserted nowhere
+     * else: `contraction_pairings.json` augments an English slate with POSSESSIVES, and
+     * 1,178 of its 1,744 entries have a display form whose projection differs from the base
+     * ("africa" → "africa's" → "africas"), 400 of which are not `en_enhanced.json` words. An
+     * unconditional check would therefore fail on English by beam luck, not by regression.
      */
     private fun assertSlateIsCanonical(
         language: String,
@@ -293,17 +296,17 @@ class CtcMultiLanguageInstrumentedTest {
         trie: CtcLexiconTrie,
         display: Map<String, String>,
     ) {
+        val englishPossessiveExemption = language == "en"
         assertEquals("$language: one score per word", result.words.size, result.scores.size)
         for (word in result.words) {
             val surface = CtcAzProjection.project(word)
             assertNotNull("$language: '$word' has no a–z surface — it cannot be a beam result", surface)
-            // Apostrophe forms are contraction DISPLAY output (see the KDoc): the overlay is
-            // allowed to append one whose base is not in this language's lexicon. Everything
-            // WITHOUT an apostrophe came from the beam and must be a real lexicon word.
-            if (!word.contains('\'') && !word.contains('’')) {
+            val apostrophe = word.contains('\'') || word.contains('’')
+            if (!englishPossessiveExemption || !apostrophe) {
                 assertTrue(
                     "$language: '$word' projects to '$surface', which is not in the lexicon — " +
-                        "the display overlay invented a word",
+                        "the display overlay invented a word (English morphology leaking into " +
+                        "a non-English slate is the 2026-08-16 regression)",
                     trie.contains(surface!!)
                 )
             }
@@ -311,6 +314,43 @@ class CtcMultiLanguageInstrumentedTest {
                 "$language: '$word' was presented as a bare a–z surface; its canonical form " +
                     "is '${display[word]}' — CtcEngineAdapter.applyCanonicalDisplay did not run",
                 display[word]
+            )
+        }
+    }
+
+    /**
+     * The bundled display forms of [language]'s OWN contraction file, read out of the APK
+     * (`dictionaries/contractions_<lang>.json`; empty when the language ships none, as
+     * es/pt/sv do — those files are literally `{}`).
+     */
+    private fun contractionDisplayForms(language: String): Set<String> = try {
+        val json = context.assets.open("dictionaries/contractions_$language.json")
+            .use { org.json.JSONObject(it.readBytes().decodeToString()) }
+        val forms = HashSet<String>(json.length() * 2)
+        val keys = json.keys()
+        while (keys.hasNext()) forms.add(json.getString(keys.next()).lowercase())
+        forms
+    } catch (e: java.io.FileNotFoundException) {
+        emptySet()
+    }
+
+    /**
+     * No word in a non-English slate may carry an apostrophe form that [language]'s OWN
+     * contraction file does not define — i.e. no ENGLISH contraction or possessive. States
+     * the product rule directly (code-switching is a bug: English forms may only appear
+     * when the user is actually decoding English) on top of the lexicon check above, which
+     * implies it only indirectly.
+     */
+    private fun assertNoForeignContractions(language: String, result: PredictionResult) {
+        val own = contractionDisplayForms(language)
+        for (word in result.words) {
+            if (!word.contains('\'') && !word.contains('’')) continue
+            assertTrue(
+                "$language: '$word' is an apostrophe form that contractions_$language.json " +
+                    "does not define — an English contraction/possessive in a $language " +
+                    "slate is the code-switching bug fixed on 2026-08-16 " +
+                    "(SwipeContractionPolicy). Slate: ${result.words}",
+                own.contains(word.lowercase())
             )
         }
     }
@@ -415,6 +455,7 @@ class CtcMultiLanguageInstrumentedTest {
                     result.words.isNotEmpty()
                 )
                 assertSlateIsCanonical(language, result, trie!!, projected.display)
+                assertNoForeignContractions(language, result)
                 assertTrue(
                     "$language: expected '${target.canonical}' in the slate for a " +
                         "straight-line '${target.surface}' trace (it is the top-1 beam result " +
@@ -555,6 +596,57 @@ class CtcMultiLanguageInstrumentedTest {
                     "decoder memo would still be walking the English trie. Got: ${frSlate.words}",
                 frSlate.words.contains(target.canonical)
             )
+            // The contraction manager is memoized by language on the SAME adapter instance,
+            // so this fr decode also proves the en→fr switch dropped the English base.
+            assertNoForeignContractions("fr", frSlate)
+        } finally {
+            adapter.shutdown()
+        }
+    }
+
+    /**
+     * The reported regression, decoded on device: a `fr` swipe of the real French word
+     * `franco` must not offer the English possessive `franco's`.
+     *
+     * `franco` is a French lexicon word (rank ~2,937), so the beam legitimately emits it —
+     * and `contraction_pairings.json` pairs it with `franco's`, which the adapters used to
+     * load for EVERY language. `ContractionOverlay`'s real-word ordinal guard cannot stop
+     * this: the PAIRED rule fires before the guard is consulted. The only fix is not having
+     * the English mappings loaded at all, which is what
+     * `ContractionManager.loadSwipeDisplayMappings` now guarantees.
+     *
+     * The equivalent data-level matrix (every language, both policies, over the shipped
+     * assets) is `SwipeContractionLanguageIsolationTest` in `runPureTests`; this leg proves
+     * the packaged app really loads that way.
+     */
+    @Test
+    fun frenchSwipe_neverOffersAnEnglishPossessiveOfAFrenchWord() {
+        val kd = loadLayout(LAYOUT)
+        val params = paramsFor(kd)
+        val adapter = CtcEngineAdapter(context)
+        try {
+            val trie = adapter.trieFor("fr")
+            assertNotNull("fr: no trie", trie)
+            assertTrue(
+                "fixture: 'franco' must be a French lexicon word (else the probe is vacuous)",
+                trie!!.contains("franco")
+            )
+            assertFalse(
+                "fixture: 'francos' must NOT be a French word — that is what makes an " +
+                    "appended \"franco's\" provably foreign",
+                trie.contains("francos")
+            )
+
+            val result = decodeBlocking(adapter, kd, params, "franco", "fr")
+            Log.i(TAG, "fr 'franco' → ${result.words}")
+            assertTrue("fr decode of 'franco' returned nothing", result.words.isNotEmpty())
+            assertFalse(
+                "the English possessive \"franco's\" leaked into a French slate: " +
+                    "${result.words}",
+                result.words.any { it.lowercase() == "franco's" }
+            )
+            assertNoForeignContractions("fr", result)
+            assertSlateIsCanonical("fr", result, trie, projectionFor("fr").display)
         } finally {
             adapter.shutdown()
         }

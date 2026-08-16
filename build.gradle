@@ -455,6 +455,10 @@ tasks.register('runPureTests', JavaExec) {
     // WP9 R-1 step 9: layout-routed engine selection (steps 7-8 wiring)
     'tribixbite.cleverkeys.swipe.SwipeEngineRouterTest',
     'tribixbite.cleverkeys.swipe.ContractionOverlayTest',
+    // Contraction language isolation (2026-08-16): English morphology must not leak into
+    // a non-English swipe slate (the fr "franco" → "franco's" regression). Runs the real
+    // ContractionOverlay over the shipped contraction assets + CKDT frequency ordinals.
+    'tribixbite.cleverkeys.swipe.SwipeContractionLanguageIsolationTest',
     'tribixbite.cleverkeys.swipe.geometric.GeoPurityDriftTest',
     'tribixbite.cleverkeys.swipe.geometric.CkdtReaderTest',
     'tribixbite.cleverkeys.swipe.geometric.GeoProjectionTest',

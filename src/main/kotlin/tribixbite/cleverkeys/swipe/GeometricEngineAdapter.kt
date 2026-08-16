@@ -170,27 +170,38 @@ class GeometricEngineAdapter(private val context: Context) {
     private var contractionManager: ContractionManager? = null
     private var contractionLanguage: String? = null
 
-    /** Lazily builds/reloads the contraction mapping for [language] (decode thread only). */
+    /**
+     * Lazily builds/reloads the contraction mapping for [language] (decode thread only).
+     *
+     * The mappings are scoped to the ACTIVE DECODE LANGUAGE
+     * ([ContractionManager.loadSwipeDisplayMappings] executes the policy; the rule and its
+     * rationale live in [SwipeContractionPolicy]): English keeps the bundled base set, every
+     * other language gets ONLY its own file. Code-switching is a bug — English morphology
+     * must not bleed into a sentence the user is typing in another language, which is the
+     * same call the NEURAL engine made in v1.1.88 (`OptimizedVocabulary` clears the English
+     * contractions before loading the target language's) and the same call the shared
+     * pipeline already makes for possessives (`SuggestionHandler.shouldAugmentPossessives`).
+     *
+     * Until 2026-08-16 this adapter loaded the bundled ENGLISH base for EVERY language
+     * (mirroring the typing pipeline's `PreferenceUIUpdateHandler`/`ManagerInitializer`
+     * order), which let an English pairing keyed on a word that also exists in the active
+     * language inject an English variant — a `fr` decode of `franco` also offering
+     * `franco's`, whose base `francos` is not a French word.
+     *
+     * The manager instance is REUSED across language switches (the memo below is keyed by
+     * [contractionLanguage]), so the loader must start from a cleared state on every switch
+     * — it does, in both branches.
+     *
+     * [ContractionOverlay]'s real-word ordinal guard stays as defense in depth: it is still
+     * load-bearing WITHIN a language, where a language's own file maps a key that is also
+     * one of its common words (fr `la`→`l'a`, `les`→`l'es`, `ma`→`m'a`; de `im`). Those are
+     * KEPT with the contraction merely appended, never substituted.
+     */
     private fun contractionsFor(language: String): ContractionManager {
         val existing = contractionManager
         if (existing != null && contractionLanguage == language) return existing
         val cm = existing ?: ContractionManager(context)
-        // Mirror production loading (PreferenceUIUpdateHandler / ManagerInitializer):
-        // base set (clears + loads the bundled ENGLISH contractions.bin), then the active
-        // language's contractions, then the extra contractions_en.json entries.
-        //
-        // Load order matters and is EARLIER-WINS: `loadContractionsFromStream` skips any key
-        // already mapped (ContractionManager.kt:161-163). Because the English base loads
-        // FIRST, English SHADOWS same-key mappings from the active language — e.g. a language
-        // whose own file maps a key that English also maps keeps the English display form.
-        // That is production's behavior (this adapter deliberately mirrors it rather than
-        // inventing a different one), and the damage it could do is contained by
-        // [ContractionOverlay]'s real-word ordinal guard: a shadowed alias that is itself a
-        // common word in the active language (de "im", fr "dont", it "del") is KEPT and the
-        // English form is at most appended as a variant, never substituted for the base.
-        cm.loadMappings()
-        if (language != "en") cm.loadLanguageContractions(language)
-        cm.loadLanguageContractions("en")
+        cm.loadSwipeDisplayMappings(language)
         contractionManager = cm
         contractionLanguage = language
         return cm

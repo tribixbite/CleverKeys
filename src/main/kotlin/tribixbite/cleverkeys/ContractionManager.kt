@@ -5,6 +5,7 @@ import android.content.res.AssetManager
 import android.util.Log
 import org.json.JSONObject
 import tribixbite.cleverkeys.langpack.LanguagePackManager
+import tribixbite.cleverkeys.swipe.SwipeContractionPolicy
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStream
@@ -98,6 +99,57 @@ class ContractionManager(private val context: Context) {
         } catch (e: Exception) {
             Log.e(TAG, "Failed to load contraction mappings", e)
         }
+    }
+
+    /**
+     * Loads the contraction mappings a SWIPE ENGINE may overlay onto a slate decoded in
+     * [langCode] — and nothing else. The single loader for both swipe adapters
+     * (`CtcEngineAdapter` / `GeometricEngineAdapter`), so the two can never drift apart.
+     *
+     * Policy ([SwipeContractionPolicy] — read its KDoc for the product rule):
+     *
+     *  - **English** (incl. `en-GB`/`en_US`, and a blank/unknown-yet code): the bundled base
+     *    set then `contractions_en.json`, i.e. byte-for-byte the pre-2026-08-16 behavior
+     *    both adapters had. This path is test-2400-validated and deliberately unchanged.
+     *  - **Any other language**: the previously loaded set is DROPPED and ONLY that
+     *    language's file is loaded. Without the drop, the bundled ENGLISH base
+     *    (`contractions.bin`'s 1,183 paired display forms — 1,116 of them possessives — plus
+     *    `contraction_pairings.json`) stays resident and injects English morphology into a
+     *    non-English slate: a `fr` decode of the real French word `franco` also offered
+     *    `franco's`, whose base `francos` is absent from the French lexicon
+     *    (`CtcMultiLanguageInstrumentedTest`, 2026-08-16).
+     *
+     * This mirrors the NEURAL engine's v1.1.88 fix (`OptimizedVocabulary`: clear the English
+     * contractions before loading the target language's) — the geo/CTC adapters were the
+     * last engines still contaminating non-English slates.
+     *
+     * NOTE — swipe only. The TYPING pipeline's shared manager (`ManagerInitializer` /
+     * `PreferenceUIUpdateHandler`) keeps its own load order; changing that is a separate
+     * decision with a separate blast radius.
+     *
+     * Idempotent, and safe to call repeatedly on ONE instance across language switches:
+     * both branches start from a cleared state, so no previous language's mappings survive.
+     *
+     * @param langCode active decode language (ISO 639-1, optionally region-suffixed).
+     */
+    fun loadSwipeDisplayMappings(langCode: String) {
+        if (SwipeContractionPolicy.usesEnglishBase(langCode)) {
+            loadMappings()
+            loadLanguageContractions(SwipeContractionPolicy.ENGLISH)
+            return
+        }
+        val dropped = nonPairedContractions.size + pairedContractions.size
+        // The drop is the fix: loadLanguageContractions is EARLIER-WINS and never clears,
+        // so anything still resident here would shadow — and outlive — the active language.
+        nonPairedContractions.clear()
+        pairedContractions.clear()
+        knownContractions.clear()
+        loadLanguageContractions(langCode)
+        Log.d(
+            TAG,
+            "Swipe contractions for '$langCode': dropped $dropped English/previous-language " +
+                "mappings, loaded ${nonPairedContractions.size} non-paired"
+        )
     }
 
     /**

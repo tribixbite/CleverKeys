@@ -205,4 +205,92 @@ class ContractionManagerTest {
         // No crash = success
         assertTrue(manager.getNonPairedCount() > 0) // English still loaded
     }
+
+    // =========================================================================
+    // loadSwipeDisplayMappings — the swipe engines' language-scoped loader
+    // =========================================================================
+
+    /**
+     * The swipe adapters overlay contractions on a slate decoded in ONE language, so they
+     * must see ONLY that language's mappings. Loading the bundled ENGLISH base for every
+     * language put English morphology in non-English slates — a `fr` decode of the real
+     * French word `franco` also offered the English possessive `franco's`
+     * (`CtcMultiLanguageInstrumentedTest`, 2026-08-16). `franco` is the exact probe here:
+     * it is a French word, so a French beam CAN emit it, and its English pairing is what
+     * used to fire.
+     */
+    @Test
+    fun loadSwipeDisplayMappingsDropsEnglishForAnotherLanguage() {
+        // Pre-condition: the English base (loaded by setup) really does pair "franco".
+        assertNotNull(
+            "fixture: the bundled English base must pair 'franco' with its possessive",
+            manager.getPairedContractions("franco")
+        )
+        assertEquals("don't", manager.getNonPairedMapping("dont"))
+
+        manager.loadSwipeDisplayMappings("fr")
+
+        assertNull(
+            "French swipes must not see the English possessive pairing for 'franco'",
+            manager.getPairedContractions("franco")
+        )
+        assertNull(
+            "French swipes must not see the English 'dont' -> \"don't\" alias ('dont' is " +
+                "the 104th most common FRENCH word)",
+            manager.getNonPairedMapping("dont")
+        )
+        // ...while French's own contractions ARE loaded.
+        assertEquals("c'est", manager.getNonPairedMapping("cest"))
+        assertEquals("j'ai", manager.getNonPairedMapping("jai"))
+    }
+
+    /** A language that ships no contraction file must end up with NO overlay at all. */
+    @Test
+    fun loadSwipeDisplayMappingsLeavesNoMappingsForALanguageWithoutContractions() {
+        manager.loadSwipeDisplayMappings("es")
+
+        assertEquals(
+            "contractions_es.json is empty — Spanish must get no contractions, not English's",
+            0, manager.getNonPairedCount()
+        )
+        assertEquals(0, manager.getTotalKnownCount())
+        assertNull(manager.getPairedContractions("franco"))
+        assertNull(manager.getNonPairedMapping("dont"))
+    }
+
+    /**
+     * The adapters reuse ONE manager instance across language switches, so every switch
+     * must start from a cleared state — including the switch BACK to English, which must
+     * restore the full base set.
+     */
+    @Test
+    fun loadSwipeDisplayMappingsSwitchesLanguagesWithoutRetainingThePreviousOne() {
+        manager.loadSwipeDisplayMappings("fr")
+        assertEquals("c'est", manager.getNonPairedMapping("cest"))
+
+        manager.loadSwipeDisplayMappings("de")
+        assertNull(
+            "German swipes must not retain French mappings",
+            manager.getNonPairedMapping("cest")
+        )
+        assertEquals("d'or", manager.getNonPairedMapping("dor"))
+        assertNull(
+            "German swipes must not see the English 'im' -> \"i'm\" alias ('im' is the " +
+                "16th most common GERMAN word)",
+            manager.getNonPairedMapping("im")
+        )
+
+        manager.loadSwipeDisplayMappings("en")
+        assertEquals("don't", manager.getNonPairedMapping("dont"))
+        assertNotNull(manager.getPairedContractions("well"))
+        assertNull("English must not retain German mappings", manager.getNonPairedMapping("dor"))
+    }
+
+    /** Regional English variants keep the pre-fix English behavior. */
+    @Test
+    fun loadSwipeDisplayMappingsTreatsRegionalEnglishAsEnglish() {
+        manager.loadSwipeDisplayMappings("en-GB")
+        assertEquals("don't", manager.getNonPairedMapping("dont"))
+        assertTrue(manager.getTotalKnownCount() > 0)
+    }
 }

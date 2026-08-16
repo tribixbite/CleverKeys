@@ -62,8 +62,8 @@ tagging, and the settings UI.
   contractions exist only as a–z aliases (`dont`, `im`, `theyd`), so a raw decode would
   present/commit "dont". `CtcEngineAdapter.applyContractionDisplay` overlays decoded alias
   surfaces with their apostrophe forms via the shared pure `swipe/ContractionOverlay`
-  (paired-first keep+variant, real-word ordinal guard, junk-alias replace) using the en
-  `ContractionManager` mappings + the merged-lexicon frequency ordinals
+  (paired-first keep+variant, real-word ordinal guard, junk-alias replace) using the ACTIVE
+  LANGUAGE's `ContractionManager` mappings + the merged-lexicon frequency ordinals
   (`CtcLexiconMerge.ordinals`) — exact parity with `GeometricEngineAdapter`'s duty. This
   happens IN the adapter, before the shared pipeline (the pipeline does not map aliases).
 - **M1 — unsupported-language fallback.** See the routing table above: `ctc` mode on a
@@ -78,30 +78,66 @@ tagging, and the settings UI.
   as the null-default for callers that don't thread an origin — it mislabeled hybrid's
   geometric swipes as NEURAL_BEAM and would have mislabeled ctc's.
 
-### Known behavior: English contraction variants can appear in non-English slates
+### Fixed 2026-08-16: contractions are scoped to the ACTIVE decode language
 
-Found by `CtcMultiLanguageInstrumentedTest` on device (2026-08-16), then traced to
-**pre-existing cross-engine behavior — not introduced by this engine**.
+**Found:** `CtcMultiLanguageInstrumentedTest` on device — a `fr` decode of the real French
+word `franco` also offered the English possessive `franco's`, whose base `francos` is
+(correctly) absent from the 37,949-word French trie, so no beam could have produced it.
 
-`CtcEngineAdapter.contractionsFor` loads the bundled ENGLISH `contractions.bin` as the base
-set for every language before the active language's file, because that is the order
-production uses (`PreferenceUIUpdateHandler`/`ManagerInitializer`) and the order
-`GeometricEngineAdapter.contractionsFor` already mirrors. Loading is EARLIER-WINS, so an
-English display form can be APPENDED as a variant to a non-English slate even when its
-apostrophe-free base is not a word in that language. Observed: a `fr` decode of the real
-French word `franco` also offered the English possessive `franco's` (whose base `francos`
-is correctly absent from the 37,949-word French trie).
+**Cause:** `CtcEngineAdapter.contractionsFor` and `GeometricEngineAdapter.contractionsFor`
+both loaded the bundled ENGLISH base (`contractions.bin` — 120 non-paired aliases + 1,183
+paired display forms, 1,116 of them possessives — plus `contraction_pairings.json`'s 1,744
+bases) for EVERY language before the active language's file. Loading is EARLIER-WINS, so
+English also SHADOWED same-key mappings from the active language. The real-word ordinal
+guard did **not** contain it, contrary to the earlier note here: `ContractionOverlay`'s
+PAIRED rule fires before the guard is consulted, so the possessive was injected even though
+`franco` ranks 2,937 in French (far past `REAL_WORD_ORDINAL_MAX` = 1200).
 
-`ContractionOverlay`'s real-word ordinal guard bounds the damage — a shadowed alias that is
-itself a common word in the active language (de `im`, fr `dont`, it `del`) is KEPT and the
-English form is at most appended, never substituted. So the failure mode is slate NOISE
-(one wasted suggestion slot), not a wrong commit.
+**Product decision (maintainer, 2026-08-16): code-switching is a BUG, not a feature.**
+English words may only come out of a swipe when the user has selected English, and English
+morphology must never bleed into a sentence being typed in another language.
 
-**Deliberately not "fixed" here**: suppressing the English base for non-English languages
-would diverge the CTC engine from the geometric engine's shipped behavior and change what
-users of BOTH engines see. It is a product decision affecting two engines and deserves its
-own round (does a French user benefit from English contractions for code-switching?), not a
-silent unilateral change inside the CTC adapter.
+**Fix:** the gate is the ACTIVE DECODE LANGUAGE, not "en is somewhere in the configured
+set". `getCurrentLanguage()` can only ever return a CONFIGURED language (manual switch and
+auto-detect both select from `DictionaryManager.getConfiguredLanguages()`), so an
+active-language gate already satisfies the rule — and it additionally fixes the fr+en
+bilingual case, where an "en ∈ configured" gate would still leak English forms into French
+sentences. Implementation:
+
+- `swipe/SwipeContractionPolicy` (pure) — `usesEnglishBase(language)`: English (incl.
+  `en-GB`/`en_US`, and a blank "not known yet" code) keeps the bundled base; every other
+  code does not.
+- `ContractionManager.loadSwipeDisplayMappings(langCode)` — the ONE loader both adapters
+  call. English: `loadMappings()` + `contractions_en.json`, byte-for-byte the previous
+  behavior. Otherwise: CLEAR the non-paired/paired/known maps, then load only
+  `contractions_<lang>.json`. The clear is required because `loadLanguageContractions` never
+  clears and the adapters reuse one manager instance across language switches.
+
+This aligns geo + CTC with what the NEURAL engine already did in v1.1.88
+(`OptimizedVocabulary`: clear the English contractions before loading the target language's)
+and with the shared pipeline's English-gated possessive augmentation
+(`SuggestionHandler.shouldAugmentPossessives`).
+
+**This changes GEOMETRIC behavior too, not just CTC** — the geometric engine serves every
+non-CTC language (it, pt, sv, nl, ru, …), so the leak was broader there.
+
+**User-visible consequence (intended):** a fr+en bilingual typing French no longer sees
+English contractions or possessives in the swipe bar. Languages that ship no contraction
+data (`contractions_{es,pt,sv,id,ms,tl,sw}.json` are literally `{}`) now get NO contraction
+overlay instead of the English one; `contractions_de.json` is 96 bytes and holds only four
+French-origin proper-noun elisions (`d'Estaing`, `d'Italia`, `d'Ivoire`, `d'or`), so German
+is effectively in the same position — correctly, since German has no apostrophe contractions
+to display. English is untouched, including its possessive augmentation.
+
+**Guarded by:** `SwipeContractionLanguageIsolationTest` (pure — both policies over the real
+assets: the `franco` leak, in-language survival for fr/it/de, the still-load-bearing
+real-word guard for fr `la`/`les`/`ma` and it `del`, English parity),
+`CoreImeHygieneDriftTest.swipeAdaptersScopeContractionsToTheActiveLanguage` (neither adapter
+may hand-roll a load order again), `ContractionManagerTest` (instrumented loader over real
+assets) and `CtcMultiLanguageInstrumentedTest` (the on-device slate; its
+`assertSlateIsCanonical` is once again a strict `slate ⊆ lexicon` for non-English languages
+— English keeps a narrow exemption because its possessive pairings deliberately project
+outside the lexicon: "africa" → "africa's" → `africas`).
 
 ### `CtcEngineAdapter` — the impurity boundary
 
@@ -233,10 +269,12 @@ form has to survive somewhere. `CtcAzProjection`:
 
 Contractions: the CKDT dictionaries contain ZERO apostrophe words (fr "jai"/"cest", de
 "dor"), exactly like `en_enhanced.json`, so `ContractionOverlay` runs for the active
-language with `contractions_<lang>.json` loaded the same EARLIER-WINS way
-`GeometricEngineAdapter` loads it (English base first, then the language, then
-`contractions_en.json`). That preserves the display behaviour those languages already had
-under the geometric engine.
+language with ONLY `contractions_<lang>.json` loaded — the same
+`ContractionManager.loadSwipeDisplayMappings` call `GeometricEngineAdapter` makes, so both
+engines display identically. The bundled ENGLISH base is loaded for English only (see
+"Fixed 2026-08-16: contractions are scoped to the ACTIVE decode language"); before that fix
+both adapters loaded it EARLIER-WINS for every language, which both shadowed the active
+language's own mappings and injected English possessives into non-English slates.
 
 ### Shipped model + preset
 

@@ -455,4 +455,70 @@ class CoreImeHygieneDriftTest {
             "The permanent first-failure latch (modelLoadFailed) must not return."
         ).that(adapter).doesNotContain("modelLoadFailed")
     }
+
+    /**
+     * Contraction display must be scoped to the ACTIVE DECODE LANGUAGE (2026-08-16).
+     *
+     * Both swipe adapters used to load the bundled ENGLISH base (`contractions.bin` +
+     * `contraction_pairings.json`) for EVERY language before the active language's file,
+     * which injected English morphology into non-English slates — a `fr` decode of the real
+     * French word `franco` also offered `franco's` (`CtcMultiLanguageInstrumentedTest`).
+     * Code-switching is a bug, not a feature: the neural engine drew this line in v1.1.88
+     * (`OptimizedVocabulary` clears the English contractions before loading the target
+     * language's) and the shared pipeline already draws it for possessives
+     * (`SuggestionHandler.shouldAugmentPossessives`).
+     *
+     * The policy therefore has exactly ONE implementation
+     * ([tribixbite.cleverkeys.ContractionManager.loadSwipeDisplayMappings], gated by
+     * `SwipeContractionPolicy`), and neither adapter may hand-roll its own load order again
+     * — that is how the two drifted into mirroring each other's bug in the first place.
+     * Behavior is covered by `SwipeContractionLanguageIsolationTest` (pure, real assets),
+     * `ContractionManagerTest` (instrumented loader) and `CtcMultiLanguageInstrumentedTest`
+     * (end-to-end slate).
+     */
+    @Test
+    fun swipeAdaptersScopeContractionsToTheActiveLanguage() {
+        val adapters = listOf(
+            "tribixbite/cleverkeys/swipe/CtcEngineAdapter.kt",
+            "tribixbite/cleverkeys/swipe/GeometricEngineAdapter.kt",
+        )
+        for (relative in adapters) {
+            // The function BODY only (the KDoc above it legitimately names the old calls
+            // while explaining what changed).
+            val body = source(relative)
+                .substringAfter("private fun contractionsFor(")
+                .substringBefore("private fun apply")
+            assertWithMessage(
+                "$relative: contractionsFor must load through the single policy entry point " +
+                    "ContractionManager.loadSwipeDisplayMappings(language)."
+            ).that(body).contains("loadSwipeDisplayMappings(language)")
+            assertWithMessage(
+                "$relative: contractionsFor must NOT load the bundled English base itself — " +
+                    "loadMappings() for a non-English language is exactly the leak that put " +
+                    "\"franco's\" in a French slate."
+            ).that(body).doesNotContain("loadMappings()")
+            assertWithMessage(
+                "$relative: contractionsFor must NOT hand-roll a per-language load order; " +
+                    "the policy lives in ContractionManager/SwipeContractionPolicy."
+            ).that(body).doesNotContain("loadLanguageContractions(")
+        }
+
+        // The loader itself: the non-English branch must DROP whatever was loaded before
+        // (loadLanguageContractions is earlier-wins and never clears, and the adapters reuse
+        // ONE manager instance across language switches).
+        val loader = source("tribixbite/cleverkeys/ContractionManager.kt")
+            .substringAfter("fun loadSwipeDisplayMappings(")
+            .substringBefore("fun loadLanguageContractions(")
+        assertWithMessage(
+            "loadSwipeDisplayMappings must decide via SwipeContractionPolicy (one rule, " +
+                "shared with the pure tests), not an inline language literal."
+        ).that(loader).contains("SwipeContractionPolicy.usesEnglishBase(")
+        for (map in listOf("nonPairedContractions", "pairedContractions", "knownContractions")) {
+            assertWithMessage(
+                "loadSwipeDisplayMappings' non-English branch must clear $map before loading " +
+                    "the active language's file, or the previous language's (English's) " +
+                    "mappings survive the switch."
+            ).that(loader).contains("$map.clear()")
+        }
+    }
 }
