@@ -15,14 +15,24 @@ import tribixbite.cleverkeys.KeyboardData
  *    (best of both: transformer accuracy where it was trained, SHARK2 everywhere else).
  *  - [Mode.GEOMETRIC]: ALL layouts → [Engine.GEOMETRIC] (including QWERTY — measured ~84%
  *    top-1 on synthetic QWERTY in the spec; useful for comparison and battery-lean decoding).
- *  - [Mode.CTC]: QWERTY-Latin → [Engine.CTC]; every other layout → [Engine.GEOMETRIC]
- *    (same non-QWERTY coverage as HYBRID, so selecting CTC never removes swipe elsewhere).
+ *  - [Mode.CTC]: ANY Latin-script layout → [Engine.CTC]; non-Latin/unknown-script layouts
+ *    → [Engine.GEOMETRIC] (so selecting CTC never removes swipe anywhere).
+ *    LAYOUT dimension (gate widened 2026-08-15): unlike the QWERTY-trained transformer,
+ *    the CTC encoder is layout-agnostic — key geometry is a model input (`layout_keys`) —
+ *    and the ship model was validated on alt-layouts during training: dvorak 89.87 /
+ *    dvorak-app-geometry 88.98 top-1 (3 seeds, en lexicon — the SAME `en_enhanced` trie +
+ *    tunedV2 λ the app ships). So Latin non-QWERTY layouts (Dvorak, Colemak, AZERTY, …)
+ *    route CTC instead of geometric (~77% top-1), a ~13 pt gain for English users there.
+ *    A Latin layout the adapter cannot serve (missing an a–z letter → no `CtcLayout`)
+ *    falls through to geometric at dispatch time via `CtcEngineAdapter.supportsLayout` —
+ *    the router stays layout-metadata-only and doesn't see key inventories.
  *    LANGUAGE dimension (audit M1): the v1 CTC model/lexicon is English-only, and language
  *    is runtime state the layout-only router deliberately doesn't see —
  *    `InputCoordinator.performCtcSwipeTyping` reads the active language BEFORE dispatch and
- *    falls through to the SAME neural flow [Engine.NEURAL] takes when it isn't English.
- *    Net ctc semantics: CTC(en QWERTY) / neural(non-en QWERTY) / geometric(non-QWERTY) —
- *    never less coverage than HYBRID.
+ *    falls through per layout: the SAME neural flow [Engine.NEURAL] takes on QWERTY, the
+ *    geometric path on non-QWERTY Latin (the transformer cannot decode that geometry).
+ *    Net ctc semantics: CTC(en, any full-a–z Latin layout) / neural(non-en QWERTY) /
+ *    geometric(everywhere else) — never less coverage than HYBRID or than pre-widening ctc.
  *
  * A single engine owns each swipe end-to-end. Scores are NEVER compared across engines —
  * geometric scores are engine-relative softmax×1000 (see `SwipeDecodingEngine` KDoc) and
@@ -63,11 +73,14 @@ object SwipeEngineRouter {
         GEOMETRIC,
 
         /**
-         * G5: CTC on QWERTY-Latin (the layouts the shipped encoder was trained
-         * for) when the active language is English, geometric on every other
-         * layout — and NEURAL for non-English languages on QWERTY (audit M1:
+         * G5: CTC on ANY Latin-script layout when the active language is English
+         * (gate widened 2026-08-15 — the encoder is layout-agnostic and was
+         * validated on alt-layouts: dvorak 89.87 / dvorak-app-geometry 88.98
+         * top-1, 3 seeds, the shipped en lexicon+λ), geometric on non-Latin
+         * layouts — and NEURAL for non-English languages on QWERTY (audit M1:
          * the language fallthrough lives in `InputCoordinator.performCtcSwipeTyping`
-         * because language is runtime state this layout-only router doesn't see).
+         * because language is runtime state this layout-only router doesn't see;
+         * non-English on non-QWERTY Latin falls through to geometric there too).
          * Selecting CTC therefore never yields less coverage than [HYBRID].
          */
         CTC;
@@ -95,10 +108,10 @@ object SwipeEngineRouter {
     @JvmStatic
     fun route(layout: KeyboardData?, mode: Mode): Engine {
         if (mode == Mode.GEOMETRIC) return Engine.GEOMETRIC
-        if (Config.isSwipeTypingSupportedForLayout(layout)) {
-            return if (mode == Mode.CTC) Engine.CTC else Engine.NEURAL
-        }
-        return if (mode == Mode.HYBRID || mode == Mode.CTC) Engine.GEOMETRIC else Engine.NONE
+        // A null layout is unresolved SystemLayout → QWERTY-Latin default (mirrors
+        // Config.isSwipeTypingSupportedForLayout's null contract) → the neural-capable branch.
+        if (layout == null) return if (mode == Mode.CTC) Engine.CTC else Engine.NEURAL
+        return route(layout.name, layout.script, mode)
     }
 
     /** String-based overload for pure-JVM tests (mirrors Config's testing overload). */
@@ -108,6 +121,17 @@ object SwipeEngineRouter {
         if (Config.isSwipeTypingSupportedForLayout(layoutName, script)) {
             return if (mode == Mode.CTC) Engine.CTC else Engine.NEURAL
         }
+        // Gate widening 2026-08-15 (ctc mode only): the CTC encoder is layout-agnostic
+        // (key geometry is a model input) and was validated on alt-layouts (dvorak 89.87
+        // top-1 — see the class KDoc), so ANY known-Latin layout routes CTC. The
+        // dispatch-time CtcEngineAdapter.supportsLayout check guards letter-incomplete
+        // Latin layouts back to geometric. Non-Latin/unknown scripts can never build an
+        // a–z CtcLayout → geometric, unchanged.
+        if (mode == Mode.CTC && isLatinScript(script)) return Engine.CTC
         return if (mode == Mode.HYBRID || mode == Mode.CTC) Engine.GEOMETRIC else Engine.NONE
     }
+
+    /** Script-metadata Latin check (same case posture as Config's QWERTY-Latin gate). */
+    private fun isLatinScript(script: String?): Boolean =
+        script != null && script.equals("latin", ignoreCase = true)
 }

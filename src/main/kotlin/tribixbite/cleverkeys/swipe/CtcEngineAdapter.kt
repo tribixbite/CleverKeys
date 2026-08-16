@@ -215,6 +215,31 @@ class CtcEngineAdapter(private val context: Context) {
         return built
     }
 
+    /**
+     * True when this adapter can actually decode on [keyboard] — i.e. the layout exposes
+     * all 26 a–z letter keys, so [buildMappedLayout] yields a `CtcLayout`.
+     *
+     * The router's gate is layout-METADATA only (name + Latin script, widened 2026-08-15 so
+     * Dvorak/Colemak reach the layout-agnostic encoder). A Latin layout can still be missing
+     * a letter — a custom/partial layout, say — and for those the caller MUST fall through
+     * to the geometric engine rather than dispatch here, or the user gets a dead suggestion
+     * bar where they previously had working geometric swipe. Callers:
+     * `InputCoordinator.performCtcSwipeTyping` (dispatch) and the prewarm switch.
+     *
+     * Cheap: it reuses the same [layoutFor] memo the decode path fills, so a check
+     * immediately followed by a decode costs one geometry build, not two. Safe to call from
+     * the main thread (the underlying build is pure geometry — no ONNX, no dictionary I/O).
+     */
+    fun supportsLayout(
+        keyboard: KeyboardData,
+        params: KeyboardGeometry.Params,
+        frameWidthPx: Float,
+        frameHeightPx: Float,
+    ): Boolean {
+        if (frameWidthPx <= 0f || frameHeightPx <= 0f) return false
+        return layoutFor(keyboard, params, frameWidthPx, frameHeightPx) != null
+    }
+
     /** The lowercase a–z letter of [kv] iff its label is exactly one such char. */
     private fun letterOf(kv: KeyValue): Char? {
         val raw = when (kv.getKind()) {

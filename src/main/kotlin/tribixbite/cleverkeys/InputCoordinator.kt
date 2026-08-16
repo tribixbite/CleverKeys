@@ -721,12 +721,22 @@ class InputCoordinator(
         val language = predictionCoordinator.getDictionaryManager()?.getCurrentLanguage()
             ?: config.primary_language
         if (!language.equals(CtcEngineAdapter.LANGUAGE, ignoreCase = true)) {
-            // M1: non-English on a QWERTY layout under ctc mode → the neural flow
-            // (performSwipeTyping tags its own ENGINE_NEURAL ML capture).
-            dispatchNeuralSwipeTyping(
-                swipedKeys, swipePath, timestamps, ic, editorInfo, resources,
-                wasShiftActive, wasShiftLocked
-            )
+            // M1 (layout-aware since the 2026-08-15 gate widening): the v1 CTC lexicon is
+            // English-only, so a non-English swipe falls through to whichever engine can
+            // actually serve THIS layout — neural only where neural works (the QWERTY-Latin
+            // family it was trained on), geometric otherwise. Routing non-English on Dvorak
+            // to neural would be a REGRESSION: pre-widening that swipe was geometric.
+            if (Config.isSwipeTypingSupportedForLayout(keyboardView.getKeyboard())) {
+                dispatchNeuralSwipeTyping(
+                    swipedKeys, swipePath, timestamps, ic, editorInfo, resources,
+                    wasShiftActive, wasShiftLocked
+                )
+            } else {
+                performGeometricSwipeTyping(
+                    swipedKeys, swipePath, timestamps, ic, editorInfo, resources,
+                    wasShiftActive, wasShiftLocked
+                )
+            }
             return
         }
         if (swipePath.isNullOrEmpty() || timestamps == null) return
@@ -735,6 +745,18 @@ class InputCoordinator(
         val frameW = keyboardView.width.toFloat()
         val frameH = keyboardView.height.toFloat()
         if (frameW <= 0f || frameH <= 0f) return
+
+        // The router gates on layout METADATA (Latin script); this layout may still lack an
+        // a–z key, which yields no CtcLayout and would leave the bar empty. Geometric can
+        // decode it, so hand the swipe over rather than degrade coverage. Memoized — the
+        // decode below reuses this same geometry build.
+        if (!ctcAdapterOrCreate().supportsLayout(keyboard, params, frameW, frameH)) {
+            performGeometricSwipeTyping(
+                swipedKeys, swipePath, timestamps, ic, editorInfo, resources,
+                wasShiftActive, wasShiftLocked
+            )
+            return
+        }
 
         // Same swipe-state + ML-trace capture as the neural/geometric paths, tagged with
         // the CTC engine + layout so ML exports stay separable per decoder (audit n-2).
@@ -785,8 +807,26 @@ class InputCoordinator(
                     geometricAdapterOrCreate().warmUpAsync(keyboard, params, frameW, frameH, language)
                 // G5: front-load the ONNX session + 98k-word trie build (~100-300 ms
                 // background) so the first ctc swipe decodes in warm-path time.
-                SwipeEngineRouter.Engine.CTC ->
-                    ctcAdapterOrCreate().warmUpAsync(keyboard, params, frameW, frameH, language)
+                // Warm the engine that will ACTUALLY serve this (layout, language) pair —
+                // the CTC dispatch falls through to neural (non-English on QWERTY) or to
+                // geometric (non-English elsewhere / letter-incomplete Latin layouts), and
+                // warming CTC for those would leave the real engine cold. `warmUpAsync`
+                // itself no-ops on a non-English language, so the geometric branch here is
+                // what actually front-loads the fallthrough case.
+                SwipeEngineRouter.Engine.CTC -> {
+                    val ctc = ctcAdapterOrCreate()
+                    val ctcServes = language.equals(CtcEngineAdapter.LANGUAGE, ignoreCase = true) &&
+                        ctc.supportsLayout(keyboard, params, frameW, frameH)
+                    when {
+                        ctcServes -> ctc.warmUpAsync(keyboard, params, frameW, frameH, language)
+                        // Non-English on a neural-capable layout: nothing to prewarm (the
+                        // neural engine warms through its own init path), same as HYBRID.
+                        Config.isSwipeTypingSupportedForLayout(keyboard) -> Unit
+                        // Keep this call on ONE line: CoreImeHygieneDriftTest source-scans
+                        // for the literal `geometricAdapterOrCreate().warmUpAsync`.
+                        else -> geometricAdapterOrCreate().warmUpAsync(keyboard, params, frameW, frameH, language)
+                    }
+                }
                 else -> return@post
             }
         }

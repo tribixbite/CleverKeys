@@ -41,7 +41,7 @@ level up, in `InputCoordinator.performCtcSwipeTyping` (audit M1).
 | `neural` (default) | NEURAL | NEURAL | none (no swipe) |
 | `hybrid` | NEURAL | NEURAL | GEOMETRIC |
 | `geometric` | GEOMETRIC | GEOMETRIC | GEOMETRIC |
-| `ctc` | **CTC** | NEURAL (M1 fallthrough) | GEOMETRIC |
+| `ctc` | **CTC** | NEURAL (M1 fallthrough) | **CTC** if Latin script + all a–z present (gate widened 2026-08-15); GEOMETRIC otherwise, and GEOMETRIC for non-English there |
 
 Net `ctc` semantics: CTC(en QWERTY) / neural(non-en QWERTY) / geometric(non-QWERTY) —
 **never less coverage than `hybrid`**. The active language is read BEFORE dispatch

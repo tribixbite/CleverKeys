@@ -190,11 +190,12 @@ class CoreImeHygieneDriftTest {
     }
 
     /**
-     * Audit M1: ctc mode must never degrade below hybrid. performCtcSwipeTyping reads the
-     * active language BEFORE dispatch and falls through to the SAME neural flow
-     * Engine.NEURAL takes ([dispatchNeuralSwipeTyping]) when it isn't English — a
-     * mode=ctc + QWERTY + language=de swipe must decode neurally, not hit the adapter's
-     * en-gate and permanently empty the bar.
+     * Audit M1 (layout-aware since the 2026-08-15 gate widening): ctc mode must never
+     * degrade below what the layout gets today. performCtcSwipeTyping reads the active
+     * language BEFORE dispatch and, when it isn't English, falls through PER LAYOUT:
+     * neural ([dispatchNeuralSwipeTyping] — the SAME flow Engine.NEURAL takes) only on a
+     * QWERTY-supported layout; geometric ([performGeometricSwipeTyping]) on a widened
+     * non-QWERTY Latin layout, where the QWERTY-trained transformer would decode garbage.
      */
     @Test
     fun ctcModeFallsThroughToNeuralForNonEnglishLanguage() {
@@ -208,19 +209,122 @@ class CoreImeHygieneDriftTest {
             "performCtcSwipeTyping must gate on the adapter's language constant " +
                 "(CtcEngineAdapter.LANGUAGE) before dispatching to the CTC adapter."
         ).that(gateIdx).isAtLeast(0)
+        val layoutGateIdx = ctcPath.indexOf("isSwipeTypingSupportedForLayout")
+        assertWithMessage(
+            "The non-English fallback must be LAYOUT-AWARE (gate widening 2026-08-15): " +
+                "it must consult Config.isSwipeTypingSupportedForLayout so neural is only " +
+                "dispatched where the transformer was trained (QWERTY-Latin)."
+        ).that(layoutGateIdx).isAtLeast(0)
         val fallthroughIdx = ctcPath.indexOf("dispatchNeuralSwipeTyping(")
         assertWithMessage(
             "performCtcSwipeTyping must fall through to dispatchNeuralSwipeTyping — the " +
-                "same flow the NEURAL routing branch takes — for non-English languages."
+                "same flow the NEURAL routing branch takes — for non-English on QWERTY."
         ).that(fallthroughIdx).isAtLeast(0)
         assertWithMessage(
             "The neural fallthrough must sit right after the language gate, BEFORE any " +
                 "CTC dispatch (the language read precedes engine dispatch)."
         ).that(fallthroughIdx).isGreaterThan(gateIdx)
+        val geoFallbackIdx = ctcPath.indexOf("performGeometricSwipeTyping(")
+        assertWithMessage(
+            "Non-English on a NON-QWERTY (widened Latin) layout must fall through to " +
+                "performGeometricSwipeTyping — NEVER neural (the transformer cannot " +
+                "decode non-QWERTY geometry)."
+        ).that(geoFallbackIdx).isAtLeast(0)
         assertWithMessage(
             "The language gate must run before the CTC ML-trace capture, so a neural " +
                 "fallthrough swipe is captured as ENGINE_NEURAL by performSwipeTyping."
         ).that(ctcPath.indexOf("beginSwipeCapture")).isGreaterThan(fallthroughIdx)
+    }
+
+    /**
+     * Gate widening 2026-08-15 — missing-letter safety: the router now routes ANY
+     * Latin-script layout to CTC under ctc mode, but a Latin layout lacking any a–z
+     * letter cannot build a CtcLayout (the adapter would return an empty slate — a
+     * coverage regression vs the geometric engine that served it before the widening).
+     * performCtcSwipeTyping must therefore check CtcEngineAdapter.supportsLayout BEFORE
+     * the CTC ML-trace capture and fall through to performGeometricSwipeTyping when it
+     * is false.
+     */
+    @Test
+    fun ctcModeFallsThroughToGeometricWhenLayoutIncomplete() {
+        val coordinator = source("tribixbite/cleverkeys/InputCoordinator.kt")
+        val ctcPath = coordinator
+            .substringAfter("private fun performCtcSwipeTyping(")
+            .substringBefore("fun prewarmGeometricEngine(")
+
+        val supportsIdx = ctcPath.indexOf("supportsLayout(")
+        assertWithMessage(
+            "performCtcSwipeTyping must gate on CtcEngineAdapter.supportsLayout so a " +
+                "letter-incomplete Latin layout never dead-ends in an empty CTC slate."
+        ).that(supportsIdx).isAtLeast(0)
+        val captureIdx = ctcPath.indexOf("beginSwipeCapture")
+        assertWithMessage(
+            "The supportsLayout gate must run BEFORE the CTC ML-trace capture (the " +
+                "geometric fallthrough does its own ENGINE_GEOMETRIC capture)."
+        ).that(supportsIdx).isLessThan(captureIdx)
+        val geoAfterSupports = ctcPath.indexOf("performGeometricSwipeTyping(", supportsIdx)
+        assertWithMessage(
+            "A supportsLayout=false layout must fall through to performGeometricSwipeTyping."
+        ).that(geoAfterSupports).isAtLeast(0)
+        assertWithMessage(
+            "The geometric fallthrough for an unsupported layout must precede the CTC " +
+                "capture/dispatch."
+        ).that(geoAfterSupports).isLessThan(captureIdx)
+    }
+
+    /**
+     * Gate widening 2026-08-15 — the prewarm must warm the engine that will ACTUALLY
+     * serve the next swipe, mirroring performCtcSwipeTyping's dispatch: CTC only when
+     * the language is English AND supportsLayout holds; geometric when the serving
+     * engine is geometric (en + letter-incomplete Latin layout, or non-en + non-QWERTY).
+     */
+    @Test
+    fun ctcPrewarmWarmsTheServingEngine() {
+        val coordinator = source("tribixbite/cleverkeys/InputCoordinator.kt")
+        val prewarmBody = coordinator
+            .substringAfter("fun prewarmGeometricEngine(")
+            .substringBefore("private fun performSwipeTyping(")
+        val ctcBranch = prewarmBody.substringAfter("Engine.CTC")
+
+        assertWithMessage(
+            "The prewarm's Engine.CTC branch must gate on supportsLayout — warming the " +
+                "CTC adapter for a layout it cannot serve wastes the warm-up AND leaves " +
+                "the actually-serving geometric engine cold."
+        ).that(ctcBranch).contains("supportsLayout(")
+        assertWithMessage(
+            "The prewarm's Engine.CTC branch must gate on the adapter's language constant " +
+                "(non-en → CTC never serves)."
+        ).that(ctcBranch).contains("CtcEngineAdapter.LANGUAGE")
+        assertWithMessage(
+            "When CTC will not serve (letter-incomplete layout, or non-en on non-QWERTY), " +
+                "the prewarm must warm the geometric engine instead."
+        ).that(ctcBranch).contains("geometricAdapterOrCreate().warmUpAsync")
+    }
+
+    /**
+     * Gate widening 2026-08-15 — supportsLayout must be the CHEAP memoized check: it
+     * delegates to the same layoutFor memo the decode path uses (a reference-compare
+     * after the first call), never a parallel rebuild path.
+     */
+    @Test
+    fun ctcSupportsLayoutDelegatesToTheLayoutMemo() {
+        val adapter = source("tribixbite/cleverkeys/swipe/CtcEngineAdapter.kt")
+
+        val supportsIdx = adapter.indexOf("fun supportsLayout(")
+        assertWithMessage(
+            "CtcEngineAdapter must expose supportsLayout(keyboard, params, frameW, frameH) " +
+                "for the dispatch-time gate."
+        ).that(supportsIdx).isAtLeast(0)
+        val body = adapter.substring(supportsIdx).substringBefore("private fun")
+        assertWithMessage(
+            "supportsLayout must delegate to the memoized layoutFor (the layout memo " +
+                "already computes exactly 'can a full a–z CtcLayout be built') — not a " +
+                "fresh buildMappedLayout."
+        ).that(body).contains("layoutFor(")
+        assertWithMessage(
+            "supportsLayout must NOT call buildMappedLayout directly (that would bypass " +
+                "the memo and recompute key rects on every swipe)."
+        ).that(body).doesNotContain("buildMappedLayout(")
     }
 
     /**

@@ -75,7 +75,7 @@ The **Prediction Engine** dropdown (Settings > Swipe Typing) selects which decod
 | **Neural** (default) | Neural | Neural | No swipe typing |
 | **Hybrid** | Neural | Neural | Geometric |
 | **Geometric** | Geometric | Geometric | Geometric |
-| **CTC** | CTC | Neural | Geometric |
+| **CTC** | CTC | Neural | CTC on other Latin layouts (Dvorak, Colemak…) in English; Geometric otherwise |
 
 - **Neural** — the transformer model swipe typing has always used. It is trained on QWERTY, so non-QWERTY layouts get no swipe typing in this mode.
 - **Hybrid** — neural where it was trained (QWERTY), geometric everywhere else, so every layout has swipe typing.

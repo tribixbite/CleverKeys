@@ -11,9 +11,9 @@ import tribixbite.cleverkeys.swipe.SwipeEngineRouter.Mode
  *
  * Routing is (mode, layout)-based: NEURAL = QWERTY-only swipe (the #9 gate, pre-geo
  * behavior); HYBRID = neural on QWERTY + geometric elsewhere; GEOMETRIC = geometric on ALL
- * layouts; CTC (G5) = CTC trie-beam on QWERTY + geometric elsewhere. Uses the string
- * overload (same seam SwipeLayoutSupportTest exercises for the underlying QWERTY-Latin
- * predicate).
+ * layouts; CTC (G5, gate widened 2026-08-15) = CTC trie-beam on ANY Latin-script layout +
+ * geometric on non-Latin/unknown scripts. Uses the string overload (same seam
+ * SwipeLayoutSupportTest exercises for the underlying QWERTY-Latin predicate).
  */
 class SwipeEngineRouterTest {
 
@@ -86,7 +86,11 @@ class SwipeEngineRouterTest {
         assertThat(SwipeEngineRouter.route(null, null, Mode.HYBRID)).isEqualTo(Engine.GEOMETRIC)
     }
 
-    // ── Mode.CTC (G5) — CTC on QWERTY, geometric elsewhere, never NONE ──────────────
+    // ── Mode.CTC (G5) — CTC on ANY Latin layout, geometric elsewhere, never NONE ────
+    // Gate widened 2026-08-15: the CTC encoder is layout-agnostic (key geometry is a
+    // model input), validated on dvorak 89.87 / dvorak-app-geometry 88.98 top-1, so
+    // Latin non-QWERTY layouts route CTC instead of geometric. Non-Latin/unknown
+    // scripts stay geometric (the adapter can't build an a–z CtcLayout from them).
 
     @Test
     fun `qwerty routes ctc in ctc mode`() {
@@ -95,11 +99,21 @@ class SwipeEngineRouterTest {
     }
 
     @Test
-    fun `dvorak and azerty route geometric in ctc mode — latin non-qwerty keeps swipe`() {
+    fun `dvorak and azerty route ctc in ctc mode — the encoder is layout-agnostic`() {
         assertThat(SwipeEngineRouter.route("Dvorak", "latin", Mode.CTC))
-            .isEqualTo(Engine.GEOMETRIC)
+            .isEqualTo(Engine.CTC)
         assertThat(SwipeEngineRouter.route("AZERTY (FR)", "latin", Mode.CTC))
+            .isEqualTo(Engine.CTC)
+    }
+
+    @Test
+    fun `colemak routes ctc in ctc mode, geometric in hybrid — widening is ctc-only`() {
+        assertThat(SwipeEngineRouter.route("Colemak", "latin", Mode.CTC))
+            .isEqualTo(Engine.CTC)
+        assertThat(SwipeEngineRouter.route("Colemak", "latin", Mode.HYBRID))
             .isEqualTo(Engine.GEOMETRIC)
+        assertThat(SwipeEngineRouter.route("Colemak", "latin", Mode.NEURAL))
+            .isEqualTo(Engine.NONE)
     }
 
     @Test
@@ -111,10 +125,17 @@ class SwipeEngineRouterTest {
     }
 
     @Test
-    fun `unknown metadata routes geometric in ctc mode — never neural, never none`() {
-        assertThat(SwipeEngineRouter.route(null, "latin", Mode.CTC)).isEqualTo(Engine.GEOMETRIC)
+    fun `unknown script routes geometric in ctc mode — never neural, never none`() {
         assertThat(SwipeEngineRouter.route("Dvorak", null, Mode.CTC)).isEqualTo(Engine.GEOMETRIC)
         assertThat(SwipeEngineRouter.route(null, null, Mode.CTC)).isEqualTo(Engine.GEOMETRIC)
+    }
+
+    @Test
+    fun `unknown name with latin script routes ctc in ctc mode — script decides`() {
+        // The name only mattered for the QWERTY predicate; under the widened gate any
+        // known-Latin layout is CTC-eligible (dispatch-time supportsLayout guards a
+        // letter-incomplete layout back to geometric).
+        assertThat(SwipeEngineRouter.route(null, "latin", Mode.CTC)).isEqualTo(Engine.CTC)
     }
 
     // ── Mode.fromPref parsing (the pref → enum seam the IME uses) ───────────────────
