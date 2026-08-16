@@ -70,17 +70,21 @@ Tap any prediction to use it instead.
 
 The **Prediction Engine** dropdown (Settings > Swipe Typing) selects which decoder handles your swipes. The right engine is picked automatically per swipe, based on your layout and language:
 
-| Mode | QWERTY layout, English | QWERTY layout, other language | Non-QWERTY layout (Dvorak, Cyrillic, ...) |
-|------|------------------------|-------------------------------|-------------------------------------------|
+| Mode | QWERTY layout, supported language | QWERTY layout, other language | Non-QWERTY layout (Dvorak, Cyrillic, ...) |
+|------|-----------------------------------|-------------------------------|-------------------------------------------|
 | **Neural** (default) | Neural | Neural | No swipe typing |
 | **Hybrid** | Neural | Neural | Geometric |
 | **Geometric** | Geometric | Geometric | Geometric |
-| **CTC** | CTC | Neural | CTC on other Latin layouts (Dvorak, Colemak…) in English; Geometric otherwise |
+| **CTC** | CTC | Neural | CTC on other Latin layouts (Dvorak, Colemak, AZERTY, QWERTZ…) in a supported language; Geometric otherwise |
 
 - **Neural** — the transformer model swipe typing has always used. It is trained on QWERTY, so non-QWERTY layouts get no swipe typing in this mode.
 - **Hybrid** — neural where it was trained (QWERTY), geometric everywhere else, so every layout has swipe typing.
 - **Geometric** — a pure shape-matching decoder (no neural network) on all layouts. Useful for comparison and battery-lean decoding.
-- **CTC** — a newer CleverKeys-trained model for English on QWERTY. In our benchmark on 2,400 held-out swipes it got the intended word right on the first try about 89% of the time, ahead of the neural engine (~75%) on the same set. It currently supports English only — swiping in another language automatically uses the neural engine instead, and non-QWERTY layouts use the geometric engine, so choosing CTC never gives you less coverage than Hybrid.
+- **CTC** — a newer CleverKeys-trained model. In our benchmark on 2,400 held-out English swipes it got the intended word right on the first try about 89% of the time, ahead of the neural engine (~75%) on the same set. It covers **English, French, German and Spanish** on any Latin layout that has all 26 letters (QWERTY, AZERTY, QWERTZ, Dvorak, Colemak…). Other languages automatically use the neural engine on QWERTY layouts and the geometric engine elsewhere, so choosing CTC never gives you less coverage than Hybrid.
+
+  Italian, Portuguese and Swedish ship a dictionary but are **not** on the CTC list yet: we only enable a language once both the model and the decoder settings have been measured on it, and those three have not been measured. They keep using the neural/geometric engines.
+
+  Accented words work normally: a swipe traces the unaccented letters (there is no separate "é" key on the path), and the engine inserts the dictionary's accented spelling — swipe `c-a-f-e` in French and you get "café". Where two words share the same unaccented spelling, the more common one is offered.
 
 Whichever engine decodes a swipe, the results flow through the same suggestion bar, autocorrect, and contraction handling ("dont" is shown as "don't"). If you enable suggestion origin markers, each suggestion is tagged with the engine that actually produced it.
 

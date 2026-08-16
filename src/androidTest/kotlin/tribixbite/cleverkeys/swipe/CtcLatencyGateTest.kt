@@ -29,8 +29,9 @@ import tribixbite.cleverkeys.swipe.ctc.CtcSwipeDecoder
  *    through [CtcEngineAdapter.trieFor] — the SHIPPING merge path (custom/disabled
  *    words + content-hash memo), not a test replica;
  *  - decode of the golden fixture's `model_keyboard` trace (the longest, most
- *    beam-expensive case) at `tunedV2(beamWidth = 100, topK = 8)` — the adapter's
- *    production preset and slate size.
+ *    beam-expensive case) at `presetFor("en", beamWidth = 100, topK = 8)` — the
+ *    adapter's production preset and slate size for the largest bundled lexicon
+ *    (en 98k words; fr/de are 40k and es 50k, so en is the worst case).
  *
  * Budget: G3's bar is "≤ our current neural ~100–300 ms". Expected actuals are
  * ~1 ms encoder + a trie beam in the tens of ms on an emulator core, so
@@ -56,6 +57,12 @@ class CtcLatencyGateTest {
         /** Production preset at the validated width and the adapter's slate size. */
         const val BEAM_WIDTH = 100
         const val TOP_K = 8
+
+        /**
+         * The gate measures the WORST-CASE lexicon: en's 98k-word trie (the largest
+         * bundled CTC lexicon — fr/de are 40k, es 50k), decoded at the en preset.
+         */
+        const val GATE_LANGUAGE = "en"
     }
 
     private class FixtureCase(
@@ -108,7 +115,7 @@ class CtcLatencyGateTest {
         // and one full decode. Timed as the memo-reuse baseline.
         val adapter = CtcEngineAdapter(target)
         val coldStart = System.nanoTime()
-        val trieOrNull = adapter.trieFor()
+        val trieOrNull = adapter.trieFor(GATE_LANGUAGE)
         assertNotNull("adapter merge path produced no trie", trieOrNull)
         val trie = trieOrNull!!
         assertTrue("bundled trie looks empty (${trie.wordCount} words)", trie.wordCount > 50_000)
@@ -121,7 +128,7 @@ class CtcLatencyGateTest {
         val model = OnnxCtcEmissionModel(env, loaded.session)
         val decoder = CtcSwipeDecoder(
             model, case.layout, trie,
-            CtcScoringParams.tunedV2(beamWidth = BEAM_WIDTH, topK = TOP_K)
+            CtcScoringParams.presetFor(GATE_LANGUAGE, beamWidth = BEAM_WIDTH, topK = TOP_K)
         )
         val coldCandidates = decoder.decode(case.px, case.py, case.pt)
         val coldMs = (System.nanoTime() - coldStart) / 1e6
@@ -131,7 +138,7 @@ class CtcLatencyGateTest {
         // Must be cheaper than the cold pass (trie build + session load skipped) —
         // this pins the warm path (a per-swipe trie rebuild would break it).
         val secondStart = System.nanoTime()
-        val trie2 = adapter.trieFor()
+        val trie2 = adapter.trieFor(GATE_LANGUAGE)
         assertTrue("trieFor did not memoize (rebuilt a different trie)", trie2 === trie)
         val secondCandidates = decoder.decode(case.px, case.py, case.pt)
         val secondMs = (System.nanoTime() - secondStart) / 1e6

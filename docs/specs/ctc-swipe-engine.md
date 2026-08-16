@@ -8,11 +8,11 @@ seed-mean 89.31/93.79/94.50 t1/3/5, beating FUTO's ceiling and our neural on eve
 stratum; UNSEALING_4). Integration per `CleverKeys-ML/ctc/APP_INTEGRATION_PLAN.md`
 (commits 3b9dd666..d99dd41f, seam-audit fixes fb77b422): `OnnxCtcEmissionModel` +
 `CtcEngineAdapter` + `SwipeEngineRouter.Mode.CTC` (QWERTY→CTC, other layouts→geometric
-hedge) + `CtcSettingsActivity` (beam-width knob, default 100). v1 is en-only — non-English
-QWERTY swipes under `ctc` mode fall through to the NEURAL flow (audit M1), so selecting
-CTC never yields less coverage than `hybrid`. Per-language presets (ru λ 2.0 on CKDT
-scale), the two-model ensemble, the rescorer, and contract-v2 remain future options
-recorded in the plan.
+hedge) + `CtcSettingsActivity` (beam-width knob, default 100). **Languages: en, fr, de,
+es** (fr/de/es added 2026-08-16 — see "Per-language enablement" below); any other language
+under `ctc` mode falls through to the NEURAL flow on QWERTY and to GEOMETRIC elsewhere
+(audit M1), so selecting CTC never yields less coverage than `hybrid`. The two-model
+ensemble, the rescorer, and contract-v2 remain future options recorded in the plan.
 **Package:** `tribixbite.cleverkeys.swipe.ctc` (`src/main/kotlin/.../swipe/ctc/`), with the
 Android-side adapter at `swipe/CtcEngineAdapter.kt` + `swipe/OnnxCtcEmissionModel.kt`.
 **Origin:** Track (ii) of `docs/audit/2026-08-06-futo-upgrade-plan.md`; algorithm ground
@@ -26,7 +26,7 @@ truth is the integration study `docs/audit/2026-08-06-futo-decoder-integration-s
 
 ---
 
-## As-Built (2026-08-08, commits 3b9dd666..743b58fa)
+## As-Built (2026-08-08, commits 3b9dd666..743b58fa; layout gate widened 2026-08-15, languages fr/de/es added 2026-08-16)
 
 ### Routing: mode × layout × language → engine
 
@@ -36,19 +36,22 @@ QWERTY-Latin gate = `Config.isSwipeTypingSupportedForLayout`). Language is runti
 the router deliberately doesn't see — the `ctc` mode's language dimension is handled one
 level up, in `InputCoordinator.performCtcSwipeTyping` (audit M1).
 
-| `swipe_engine_mode` | QWERTY-Latin + English | QWERTY-Latin + other language | Non-QWERTY layout |
+| `swipe_engine_mode` | QWERTY-Latin + supported language | QWERTY-Latin + other language | Non-QWERTY layout |
 |---|---|---|---|
 | `neural` (default) | NEURAL | NEURAL | none (no swipe) |
 | `hybrid` | NEURAL | NEURAL | GEOMETRIC |
 | `geometric` | GEOMETRIC | GEOMETRIC | GEOMETRIC |
-| `ctc` | **CTC** | NEURAL (M1 fallthrough) | **CTC** if Latin script + all a–z present (gate widened 2026-08-15); GEOMETRIC otherwise, and GEOMETRIC for non-English there |
+| `ctc` | **CTC** | NEURAL (M1 fallthrough) | **CTC** if Latin script + all a–z present (gate widened 2026-08-15) + supported language; GEOMETRIC otherwise, and GEOMETRIC for an unsupported language there |
 
-Net `ctc` semantics: CTC(en QWERTY) / neural(non-en QWERTY) / geometric(non-QWERTY) —
-**never less coverage than `hybrid`**. The active language is read BEFORE dispatch
-(`DictionaryManager.getCurrentLanguage()`, falling back to `config.primary_language`); a
-non-English swipe takes `dispatchNeuralSwipeTyping`, the SAME flow `Engine.NEURAL` takes.
-The adapter keeps its own en-gate (`CtcEngineAdapter.LANGUAGE == "en"` checked in both
-`decodeAsync` and `warmUpAsync`) as defense-in-depth. Unknown/legacy pref values parse to
+"Supported language" = `swipe/ctc/CtcLanguageSupport.SUPPORTED` = **en, fr, de, es**
+(evidence in "Per-language enablement" below). Net `ctc` semantics: CTC(supported language
+on an a–z-complete Latin layout) / neural(other language on QWERTY) / geometric(everything
+else) — **never less coverage than `hybrid`**. The active language is read BEFORE dispatch
+(`DictionaryManager.getCurrentLanguage()`, falling back to `config.primary_language`); an
+unsupported-language swipe takes `dispatchNeuralSwipeTyping`, the SAME flow
+`Engine.NEURAL` takes. The adapter keeps its own gate
+(`CtcEngineAdapter.supportsLanguage(language)` checked in both `decodeAsync` and
+`warmUpAsync`) as defense-in-depth. Unknown/legacy pref values parse to
 `NEURAL` (`Mode.fromPref`); the pref is case-canonicalized at read (`Config.kt` refresh,
 audit L1), so an imported `"CTC"` behaves exactly like `"ctc"` in the router, provenance
 tagging, and the settings UI.
@@ -63,9 +66,9 @@ tagging, and the settings UI.
   `ContractionManager` mappings + the merged-lexicon frequency ordinals
   (`CtcLexiconMerge.ordinals`) — exact parity with `GeometricEngineAdapter`'s duty. This
   happens IN the adapter, before the shared pipeline (the pipeline does not map aliases).
-- **M1 — non-en neural fallback.** See the routing table above: `ctc` mode on a QWERTY
-  layout with a non-English active language dispatches the neural flow instead of showing
-  an empty bar.
+- **M1 — unsupported-language fallback.** See the routing table above: `ctc` mode on a
+  QWERTY layout with an unsupported active language dispatches the neural flow instead of
+  showing an empty bar.
 - **M2 — engine-true provenance.** Suggestion origin markers/long-press sheets tag the
   ROUTED engine, not the configured mode: `SuggestionProvenance.forRoutedEngine(engine)`
   is threaded from `InputCoordinator` through `handleSwipePredictionResults`. A non-QWERTY
@@ -87,19 +90,28 @@ tagging, and the settings UI.
    here). The raw `PointF` trace is normalized under the SAME letter-box affine. Layouts
    missing any a–z letter build no `CtcLayout` → empty result (unexpected behind the
    router's QWERTY gate).
-2. **Lexicon.** Bundled `dictionaries/en_enhanced.json` only ({word: freq}, frequencies
-   already on the AOSP-like 134..255 log scale the tuned λ=4.0 was fitted against —
-   NFR-4), a–z-STRIPPED (`don't`→`dont`), merged with user custom words (freq clamped
-   1..255; custom overrides disabled) minus disabled words (`CtcLexiconMerge.merge`,
-   unit-tested). **Langpack swap is deliberately unsupported** (audit L2): an installed en
-   langpack's CKDT `dictionary.bin` stores the INVERTED 255−rank scale λ was NOT fitted
-   for — swapping the source requires its own λ validation round (plan §7.1). Known
-   limitation: the CTC vocabulary can diverge from the en dictionary source the other
-   engines see.
-3. **Per-decode trie freshness.** The trie memo is keyed by a SHA-256 content-hash over
-   (source id, custom-words JSON, disabled-words set), recomputed per `lexiconFor()` call
-   — any user dictionary mutation rebuilds the trie on the next decode with no
-   ContentObserver plumbing.
+2. **Lexicon, per language** (`CtcLanguageSupport` is the table; see "Per-language
+   enablement" for the λ/source matrix). **en** reads the bundled
+   `dictionaries/en_enhanced.json` ({word: freq}, frequencies already on the AOSP-like
+   134..255 log scale the tuned λ=4.0 was fitted against — NFR-4), a–z-STRIPPED
+   (`don't`→`dont`) with NO accent folding — byte-for-byte the vocabulary test-2400
+   validated. **fr/de/es** read the bundled CKDT `dictionaries/<lang>_enhanced.bin` — the
+   SAME asset the geometric engine uses, through the SAME `CkdtDictionaryReader` (extended
+   with `readEntries`, which exposes the uint8 rank byte; `read` is now a projection of it)
+   — at `freq = max(1, 255 − rank)` (`CtcCkdtLexicon`), then projected onto a–z
+   (`CtcAzProjection`). Both merge the ACTIVE LANGUAGE's user custom words (freq clamped
+   1..255; custom overrides disabled) minus its disabled words (`CtcLexiconMerge.merge`,
+   unit-tested), read from the per-language pref keys. **Langpack swap is deliberately
+   unsupported** (audit L2): an installed en langpack's CKDT `dictionary.bin` stores the
+   INVERTED 255−rank scale the en λ was NOT fitted for — swapping THAT source requires its
+   own λ validation round (plan §7.1). Known limitation: the CTC en vocabulary can diverge
+   from the en dictionary source the other engines see.
+3. **Per-decode trie freshness.** The trie memo is keyed by (LANGUAGE, SHA-256
+   content-hash over source id + custom-words JSON + disabled-words set), recomputed per
+   `lexiconFor(language)` call — any user dictionary mutation rebuilds the trie on the next
+   decode with no ContentObserver plumbing, and a language switch can never reuse the
+   previous language's trie. The decoder memo carries the language too, because the preset
+   (λ) is language-dependent; both are pinned by `CoreImeHygieneDriftTest`.
 4. **ONNX session.** Loaded lazily on the decode thread via the existing `ModelLoader`
    (XNNPACK-first, `onnx_xnnpack_threads` pref coerced 1..8). **Bounded model-load retry**
    (audit L5): up to 3 failed attempts (cold-boot transients must not permanently disable
@@ -133,6 +145,74 @@ inheriting the password guard, possessive augmentation, shift/caps transform, an
 commit engine. ML trace capture is tagged `SwipeMLData.ENGINE_CTC` + layout name so
 exports stay separable per decoder (audit n-2 conventions).
 
+### Per-language enablement (2026-08-16)
+
+The shipped encoder is layout- and language-agnostic (it emits a–z posteriors from
+geometry alone), so enabling a language is a LEXICON + PRESET question, not a model one. A
+language is enabled only with BOTH kinds of evidence:
+
+| Language | Model evidence (alt-layout top-1, CleverKeys-ML `ctc/`) | λ evidence | Lexicon source | λ |
+|---|---|---|---|---|
+| `en` | test-2400 89.31 (QWERTY family) | fitted + test-validated | `dictionaries/en_enhanced.json` (134–255 byte scores) | **4.0** |
+| `fr` | azerty 83.81 | sweep tune-half winner, confirm 86.25 | `dictionaries/fr_enhanced.bin` (CKDT, `255 − rank`) | **2.0** |
+| `de` | qwertz 83.01 / german 80.64 | sweep tune-half winner, confirm 87.85 / 81.57 | `dictionaries/de_enhanced.bin` | **2.0** |
+| `es` | spanish 88.45 | sweep tune-half winner, confirm 89.33 | `dictionaries/es_enhanced.bin` | **2.0** |
+| `it`, `pt`, `sv` | **none** | **none** | (bundled `.bin` exists, unused by CTC) | — |
+
+λ is selected by the lexicon's frequency SCALE, not by the language: `en_enhanced.json`'s
+compressed 134–255 byte scores give `ln f ∈ [4.9, 5.54]`, while a CKDT `.bin` read at
+`freq = max(1, 255 − rank)` spans `ln f ∈ [0, 5.54]` (~8× the log spread), so the same λ
+weights frequency very differently. Measured in
+`docs/eval/2026-08-15-ctc-per-language-lambda.md` (tune/confirm split over real FUTO human
+traces on the app's own dictionaries): the English control is monotone increasing to λ 4.0
+on both halves, while λ 4.0 is never a tune-half winner for a CKDT-scale corpus and costs
+−1.5 to −3.2 pt on the confirm half. λ 2.0 also independently matches the earlier Cyrillic
+sweep (CleverKeys-ML `PHASE_J.md` §6.9). **Everything else in `tunedV2` (γ 0.9, β 0.25,
+α 0.0, γ_prune 0.25, β_prune 0.9882, beam 100) is language-invariant** —
+`CtcScoringParams.presetFor(language, …)` varies λ and nothing else.
+
+**it / pt / sv need a validation round before enabling**: no alt-layout accuracy bar and
+no λ sweep exist for them. They stay on the pre-existing fallback (neural on QWERTY,
+geometric elsewhere). Enabling one is a row in `CtcLanguageSupport.SUPPORTED` plus its
+evidence — the code path, memo keys, projection and display map are already general.
+
+#### Accent display (the CKDT duty)
+
+The beam emits a–z surfaces and `CtcLexiconTrie` reconstructs a word from the root→node
+path, so a CKDT lexicon has to be projected before it can be a trie, and the canonical
+form has to survive somewhere. `CtcAzProjection`:
+
+- **Projection** (`project`): NFD → drop combining marks → drop `'`/`’`/`-` → require a–z,
+  else the word is UNTYPEABLE and is DROPPED (not mangled: `ß`, `œ`, `æ`, `ø` have no a–z
+  decomposition). This is a 1:1 port of the `project_az` policy the λ sweep's lexicons were
+  built with, so the shipped λ matches the shipped vocabulary exactly.
+- **Display map**: stripped surface → canonical form, stored ONLY where they differ.
+  `CtcEngineAdapter.applyCanonicalDisplay` rewrites the slate through it before the shared
+  pipeline (`display[word] ?: word`), the same overlay shape as the contraction mapping and
+  the same accent-recovery model the geometric engine uses (it returns CKDT canonical
+  forms directly). Composition order is **accents first, contractions second** — contraction
+  keys are a–z aliases, so they must see the a–z surface of anything the accent map did not
+  rewrite.
+- **Collisions**: several canonical words can share one a–z surface (`côte`/`cote`/`coté`).
+  The HIGHEST-frequency canonical wins both the frequency and the display slot; ties keep
+  insertion order (custom words first, then rank ascending). Known limitation: only that
+  form is reachable by swipe — French `à` cannot be produced when `a` outranks it.
+- Measured on the shipped dictionaries (pinned by `CtcCkdtLexiconTest`, matching the sweep
+  harness's numbers):
+
+| Language | records | untypeable | trie words | accent-strip collisions |
+|---|---:|---:|---:|---:|
+| `fr` | 40,000 | 31 | 37,949 | 2,020 |
+| `de` | 40,000 | 0 | 39,594 | 406 |
+| `es` | 50,000 | 0 | 47,955 | 2,045 |
+
+Contractions: the CKDT dictionaries contain ZERO apostrophe words (fr "jai"/"cest", de
+"dor"), exactly like `en_enhanced.json`, so `ContractionOverlay` runs for the active
+language with `contractions_<lang>.json` loaded the same EARLIER-WINS way
+`GeometricEngineAdapter` loads it (English base first, then the language, then
+`contractions_en.json`). That preserves the display behaviour those languages already had
+under the geometric engine.
+
 ### Shipped model + preset
 
 - Asset `src/main/assets/models/ctc_swipe_encoder.onnx` — 2.91 MB fp16-weight CTC
@@ -143,7 +223,9 @@ exports stay separable per decoder (audit n-2 conventions).
 - Ship preset `CtcScoringParams.tunedV2`: γ=0.9, λ=4.0, β=0.25, α=0.0, γ_prune=0.25,
   β_prune=0.9882; beam width default 100 (`Defaults.CTC_BEAM_WIDTH`), adapter topK=8.
   Fitted offline on the app-trie footing; the published-preset control measured −2.3 pt
-  top-1, which is why the scoring constants are not user-exposed.
+  top-1, which is why the scoring constants are not user-exposed. The adapter builds its
+  decoder through `CtcScoringParams.presetFor(language, …)`, which is `tunedV2` with λ
+  swapped for the language's lexicon scale (λ=2.0 for CKDT-scale fr/de/es).
 - Validation (test-2400, seed-mean): **89.31 / 93.79 / 94.50** top-1/3/5
   (≤3-char 93.70, 4+ 87.05) — above FUTO's own decoder ceiling (84.83) and our neural
   (74.62) on every stratum; equal-footing McNemar 3/3 seeds p<5e-4. Evidence:
@@ -182,11 +264,13 @@ Pure JVM (`runPureTests`; registered + drift-checked by `TestRunnerListDriftTest
 | `swipe/ctc/CtcModuleTest` | 12 | Emissions slice, trie loaders, preset constants, featurizer branches, beam behavior, facade seam |
 | `swipe/ctc/CtcLexiconMergeTest` | 10 | Merge policy: custom-first, 1..255 clamp, custom-overrides-disabled, case-folded dedupe, ordinals |
 | `swipe/ctc/CtcContractionDisplayTest` | 7 | Alias→apostrophe display over the real merged-lexicon ordinals (H1) |
+| `swipe/ctc/CtcLanguagePresetTest` | 15 | `presetFor` λ-by-lexicon-scale (en 4.0 / fr,de,es 2.0 / unknown→en), language-invariance of every other constant, the `CtcLanguageSupport` table (supported set, it/pt/sv held back, asset paths, normalization) |
+| `swipe/ctc/CtcCkdtLexiconTest` | 18 | The a–z projection policy (folding, untypeable ß/œ/ø, joiners) + the REAL bundled fr/de/es dictionaries: record/untypeable/word/collision counts, the `255 − rank` scale, the canonical display map (`cafe`→`café`, `uber`→`über`, `nino`→`niño`), highest-frequency-wins collisions, and trie totality |
 | `swipe/ContractionOverlayTest` | 12 | The shared pure overlay decision matrix (geometric + ctc twin duty) |
 | `swipe/SwipeEngineRouterTest` | 15 | Routing table incl. `Mode.CTC` rows + `fromPref` canonicalization |
 | `SuggestionProvenanceTest` | 12 | `forRoutedEngine` totality + origin labels (M2) |
 | `ml/SwipeMLDataProvenanceTest` | 5 | `ENGINE_CTC`/layout tagging of ML captures (n-2) |
-| `CoreImeHygieneDriftTest` | 10 (class total) | Source-scan pins incl. the CTC twins of the geometric pins: prewarm stays BACKGROUND slot, decode stays FOREGROUND, staleness guard present, M1 fallthrough present |
+| `CoreImeHygieneDriftTest` | 15 (class total) | Source-scan pins incl. the CTC twins of the geometric pins: prewarm stays BACKGROUND slot, decode stays FOREGROUND, staleness guard present, M1 fallthrough present (via `supportsLanguage`, same predicate in dispatch and prewarm), trie+decoder memos keyed by language, both display overlays applied in order |
 | `backup/SettingsImportPlanBuilderTest` | 34 | Incl. `swipe_engine_mode` case-insensitive diff cases |
 
 Instrumented (ew-cli, Pixel7/API34 — all green on-device 2026-08-08):
@@ -194,12 +278,16 @@ Instrumented (ew-cli, Pixel7/API34 — all green on-device 2026-08-08):
 | Suite | Cases | What it gates |
 |---|---|---|
 | `swipe/CtcEmissionModelParityTest` | 2 | The SHIPPED ONNX asset's on-device emissions/decodes match the golden fixture |
-| `swipe/CtcLatencyGateTest` | 1 | Production-path decode budget: median < 150 ms / p90 < 250 ms (ModelLoader+XNNPACK, real `trieFor()` merge path, tunedV2 beam 100 topK 8, worst-case golden trace) |
+| `swipe/CtcLatencyGateTest` | 1 | Production-path decode budget: median < 150 ms / p90 < 250 ms (ModelLoader+XNNPACK, real `trieFor("en")` merge path — en is the largest bundled lexicon at 98k words vs fr/de 40k and es 50k — `presetFor("en")` beam 100 topK 8, worst-case golden trace) |
 | `swipe/ctc/CtcOnnxLatencyBenchmarkTest` | 2 | Loose-bound measurement harness (informational, not the gate) |
 
 Remaining before any v1.6.0 tag: manual QA per plan §4.5 (first-swipe warmup, long-word
-feel, non-QWERTY hedge, non-en neural fallback, don't/I'm display, provenance label,
-thermals) — tag only on explicit user go. See `memory/todo.md` HANDOFF §B.
+feel, non-QWERTY hedge, unsupported-language neural fallback, don't/I'm display,
+provenance label, thermals) — plus, for the 2026-08-16 language enablement: an accented
+commit per language (fr "café", de "über", es "niño"), a language SWITCH mid-session (the
+next swipe must decode against the new language's trie/λ, not the previous one's), and a
+first-swipe warmup on a fr/de/es layout. Tag only on explicit user go. See
+`memory/todo.md` HANDOFF §B.
 
 ---
 
@@ -354,8 +442,9 @@ the deltas: opt-in dropdown instead of hidden pref; commit beam default 100, not
 (during-gesture preview decode) was NOT implemented — v1 decodes at gesture end only.
 
 The design note that "a mature model can serve ALL layouts" (the encoder is
-layout-parameterized, study D2) remains a future option; the shipped v1 gate is
-QWERTY-Latin + English.
+layout-parameterized, study D2) has partly landed: the layout gate was widened to any
+a–z-complete Latin layout (2026-08-15) and the language gate to en/fr/de/es (2026-08-16).
+Non-Latin scripts still need their own alphabet/emission contract.
 
 ### Implementation plan (historical)
 

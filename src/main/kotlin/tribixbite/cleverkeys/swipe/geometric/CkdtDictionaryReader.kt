@@ -8,7 +8,10 @@ import java.util.zip.ZipFile
 
 /**
  * Pure-JVM reader for the CleverKeys V2 `CKDT` binary dictionary format, producing a
- * [GeometricDictionary] whose index i IS the word's ordinal frequency rank r(w).
+ * [GeometricDictionary] whose index i IS the word's ordinal frequency rank r(w), or —
+ * via [readEntries] — the raw `(canonical word, uint8 rank)` records for consumers that
+ * need the rank BYTE rather than the ordinal (the CTC lexicon's `255 − rank` scale).
+ * There is ONE parser; [read] is a projection of [readEntries].
  *
  * This PORTS (does not import) the V2 canonical-section layout documented at
  * `BinaryDictionaryLoader.kt:55-90`; that loader imports `android.content.Context` /
@@ -54,6 +57,31 @@ object CkdtDictionaryReader {
 
     /** Read a CKDT dictionary from an in-memory byte array. */
     fun read(bytes: ByteArray, language: String, version: Long = 1L): GeometricDictionary {
+        val ordered = readEntries(bytes)
+        return ArrayBackedDictionary(language, version, Array(ordered.size) { ordered[it].word })
+    }
+
+    /**
+     * One canonical record: the accent-preserving word and its uint8 frequency rank
+     * (0 = most common, 255 = least).
+     *
+     * The rank BYTE is what a frequency-scored consumer needs — the CTC lexicon reads it
+     * as `freq = max(1, 255 − rank)` ([tribixbite.cleverkeys.swipe.ctc.CtcCkdtLexicon]) —
+     * whereas [GeometricDictionary] exposes only the ORDINAL (array index), which is a
+     * different quantity: thousands of words share one rank byte.
+     */
+    data class Entry(val word: String, val rank: Int)
+
+    /**
+     * Parse the canonical section into [Entry] records in the same deterministic order
+     * [read] uses: rank ascending, original file order as the (stable) tie-break.
+     *
+     * This is THE parser — [read] is a thin projection of it onto [GeometricDictionary].
+     */
+    fun readEntries(input: InputStream): List<Entry> = readEntries(input.readBytes())
+
+    /** [readEntries] over an in-memory byte array. */
+    fun readEntries(bytes: ByteArray): List<Entry> {
         require(bytes.size >= HEADER_SIZE_V2) {
             "CKDT file too short: ${bytes.size} bytes < header $HEADER_SIZE_V2"
         }
@@ -91,9 +119,7 @@ object CkdtDictionaryReader {
         // rank; ties keep file order because we sort the ascending 0..n index list
         // with a stable comparator keyed on rank only.
         val order = (0 until wordCount).sortedBy { ranks[it] }  // sortedBy is stable
-        val ordered = Array(wordCount) { words[order[it]]!! }
-
-        return ArrayBackedDictionary(language, version, ordered)
+        return List(wordCount) { Entry(words[order[it]]!!, ranks[order[it]]) }
     }
 
     /**

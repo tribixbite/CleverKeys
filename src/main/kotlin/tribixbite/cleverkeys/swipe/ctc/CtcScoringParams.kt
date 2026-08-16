@@ -1,7 +1,5 @@
 package tribixbite.cleverkeys.swipe.ctc
 
-import java.util.Locale
-
 /**
  * Scoring parameters for the FUTO-style CTC trie beam decoder.
  *
@@ -18,7 +16,9 @@ import java.util.Locale
  * The tiny [lambda] (0.006–0.022) is deliberate: it multiplies an AOSP-scale
  * `log_frequency ∈ [1,255]` (see [CtcLexiconTrie]), NOT a normalized `[0,1]` frequency,
  * so the effective frequency contribution is meaningful. Feeding a normalized frequency
- * here would make lambda ~2 orders of magnitude too weak (study H5).
+ * here would make lambda ~2 orders of magnitude too weak (study H5). Because [lambda] is
+ * tied to the lexicon's frequency SCALE, the shipping preset is selected per language via
+ * [presetFor] — see its KDoc for the measured per-scale values.
  *
  * [alpha] is the context-LM rerank weight; it is carried for completeness and preset
  * fidelity but is UNUSED by [CtcBeamDecoder], which decodes the CTC core only. A future
@@ -108,71 +108,51 @@ data class CtcScoringParams(
             )
 
         /**
-         * The Cyrillic sibling of [tunedV2]: the benchmark **E1** preset
-         * (`1.05 / 1.1 / 0.2 / 0.3734 / 0.9882`) with **λ raised 1.1 → 2.0**.
-         *
-         * λ is the only term that moves, and it moves because the FREQUENCY SCALE
-         * differs, not because the model does. The app's Cyrillic lexicon is the
-         * importable `langpack-ru` CKDT v2 pack, whose per-word byte is `255 − rank`
-         * — a compressed scale that wants a larger λ than the raw AOSP counts E1 was
-         * fitted on (CleverKeys-ML `ctc/PHASE_I.md` §7.4). The sweep is
-         * `ctc/PHASE_J.md` §6.9 / `ctc/APP_INTEGRATION_PLAN.md` §7.1: tuned on ru val
-         * rows `0:4708`, confirmed on the untouched `4708:9416`, over BOTH ru models,
-         * λ ∈ {1.1, 2.0, 3.0, 4.0} — 2.0 wins on every half of both models and is worth
-         * **≈ +1.2 in-dict top-1** (75.73/76.70 → 76.91/77.92 for the shippable
-         * synth-only model). The lever is model-independent: it lifted the joint
-         * challenger by the same order, which is why it is recorded as a decode
-         * constant rather than a property of any one Cyrillic artifact.
-         *
-         * **Evidence tier — read before quoting.** These are **val-only** Cyrillic
-         * numbers (`eval_cyrillic.py`); no Cyrillic model was ever decoded on
-         * test-2400, and the seal is spent permanently. The preset is registered here
-         * so the axis exists; **no Cyrillic CTC encoder ships in the app today**, and
-         * [CtcEngineAdapter][tribixbite.cleverkeys.swipe.CtcEngineAdapter]'s en-only
-         * gate stays closed until one does (integration plan O5).
-         *
-         * **Caveat that travels with λ:** no campaign evaluation included a user
-         * dictionary, and λ multiplies the frequency term, so a larger λ amplifies
-         * top-of-scale injected competitors. λ = 2.0 should be re-confirmed with user
-         * dictionary entries present before the ru path ships (plan §7.1, §7.3).
+         * λ for the COMPRESSED `en_enhanced.json` byte scale (134–255, `ln f ∈ [4.9, 5.54]`)
+         * — the value [tunedV2] was fitted and test-validated at.
          */
-        fun tunedRuCkdt(beamWidth: Int = 100, topK: Int = 4): CtcScoringParams =
-            CtcScoringParams(
-                gamma = 1.05, lambda = 2.0, beta = 0.2, alpha = 0.0,
-                gammaPrune = 0.3734, betaPrune = 0.9882,
-                beamWidth = beamWidth, topK = topK,
-            )
+        const val LAMBDA_EN_JSON_SCALE = 4.0
 
         /**
-         * The per-language preset axis (integration-plan decision **O10**): the decode
-         * preset is a property of the (emission model, lexicon FREQUENCY SCALE) pair,
-         * and the app serves more than one such scale.
+         * λ for the CKDT `freq = max(1, 255 − rank)` scale (`ln f ∈ [0, 5.54]`, ~8× the
+         * log spread of the en JSON scale, so frequency needs proportionally less weight).
+         */
+        const val LAMBDA_CKDT_SCALE = 2.0
+
+        /**
+         * The ship preset for [language] — [tunedV2]'s constants with λ selected by the
+         * language's LEXICON SCALE, which is the thing λ is actually calibrated against.
          *
-         * | [language] | preset | scale it is fitted to |
-         * |---|---|---|
-         * | `ru` | [tunedRuCkdt] (λ 2.0) | langpack CKDT v2 `255 − rank` |
-         * | anything else (incl. `en`) | [tunedV2] (λ 4.0) | bundled `en_enhanced.json` 134..255 |
+         * λ multiplies the trie's `ln(freq)` term, so it depends on how the lexicon's
+         * frequencies are distributed, not on the language: `en_enhanced.json`'s
+         * compressed 134–255 byte scores need λ = [LAMBDA_EN_JSON_SCALE]; a CKDT `.bin`
+         * read at `freq = max(1, 255 − rank)` ([CtcCkdtLexicon]) spans the full 1–255
+         * range and needs λ = [LAMBDA_CKDT_SCALE]. The mapping language → scale is
+         * [CtcLanguageSupport.SUPPORTED]; an unsupported language falls back to the
+         * English value (defense-in-depth — the adapter never decodes one).
          *
-         * The default is deliberately [tunedV2] rather than a throw: the only decoder
-         * the app can currently build is the English one (the en-only gate upstream),
-         * so an unrecognized tag can only ever arrive as a bug, and a working English
-         * decode is a better failure mode than a crashed swipe.
+         * **Evidence** — `docs/eval/2026-08-15-ctc-per-language-lambda.md`: tune/confirm
+         * split sweep over real FUTO human traces on the app's own bundled dictionaries.
+         * The English control is monotone increasing to λ 4.0 on both halves (92.30 /
+         * 92.72 t1), while every CKDT-scale corpus inverts that ordering — λ 4.0 is never
+         * a tune-half winner and costs −1.5 to −3.2 pt on the confirm half for fr /
+         * de-german / es. λ 2.0 wins the tune half in 3 of 4 corpora and independently
+         * matches the earlier Cyrillic sweep (CleverKeys-ML `PHASE_J.md` §6.9), two
+         * unrelated scripts converging on the same value for the same scale.
          *
-         * @param language BCP-47-ish dictionary language tag (`en`, `ru`, `en-US`, …);
-         *   only the primary subtag is significant and matching is case-insensitive.
+         * Everything else (γ 0.9, β 0.25, α 0.0, γ_prune 0.25, β_prune 0.9882) is
+         * language-INVARIANT — λ is the only constant the sweep varied.
          */
         fun presetFor(
-            language: String,
+            language: String?,
             beamWidth: Int = 100,
             topK: Int = 4,
         ): CtcScoringParams {
-            val primary = language
-                .substringBefore('-').substringBefore('_')
-                .lowercase(Locale.ROOT)
-            return when (primary) {
-                "ru" -> tunedRuCkdt(beamWidth = beamWidth, topK = topK)
-                else -> tunedV2(beamWidth = beamWidth, topK = topK)
+            val lambda = when (CtcLanguageSupport.sourceFor(language)) {
+                CtcLanguageSupport.LexiconSource.CKDT_BIN -> LAMBDA_CKDT_SCALE
+                CtcLanguageSupport.LexiconSource.EN_JSON, null -> LAMBDA_EN_JSON_SCALE
             }
+            return tunedV2(beamWidth = beamWidth, topK = topK).copy(lambda = lambda)
         }
 
         /** `scoring.json` "fallback" — used when no signature-specific set matches. */

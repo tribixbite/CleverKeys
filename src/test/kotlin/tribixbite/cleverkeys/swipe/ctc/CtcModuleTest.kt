@@ -137,42 +137,13 @@ class CtcModuleTest {
         assertThat(ship.topK).isEqualTo(4)
     }
 
-    /**
-     * The per-language preset axis (integration-plan O10): λ is fitted to the LEXICON's
-     * frequency scale, and the app serves two of them — `en_enhanced.json`'s compressed
-     * 134..255 byte scores (λ 4.0) and the langpack CKDT v2 `255 − rank` (λ 2.0, swept
-     * in CleverKeys-ML `ctc/PHASE_J.md` §6.9). Everything but λ stays on its own
-     * footing's base preset: en on the app-trie `tunedV2`, ru on benchmark E1.
-     */
-    @Test
-    fun scoringParams_perLanguageAxis_selectsTheFittedLambda() {
-        val ru = CtcScoringParams.tunedRuCkdt()
-        // E1 base (1.05 / 1.1 / 0.2 / 0.3734 / 0.9882) with lambda 1.1 → 2.0. Only
-        // lambda moves: the sweep varied lambda alone, holding E1 fixed.
-        assertThat(ru.gamma).isEqualTo(1.05)
-        assertThat(ru.lambda).isEqualTo(2.0)
-        assertThat(ru.beta).isEqualTo(0.2)
-        assertThat(ru.alpha).isEqualTo(0.0)
-        assertThat(ru.gammaPrune).isEqualTo(0.3734)
-        assertThat(ru.betaPrune).isEqualTo(0.9882)
-
-        // en (and every other tag, including unknown ones) → the shipped tunedV2.
-        assertThat(CtcScoringParams.presetFor("en")).isEqualTo(CtcScoringParams.tunedV2())
-        assertThat(CtcScoringParams.presetFor("de")).isEqualTo(CtcScoringParams.tunedV2())
-        assertThat(CtcScoringParams.presetFor("")).isEqualTo(CtcScoringParams.tunedV2())
-
-        // ru resolves through the CKDT preset, case- and region-insensitively.
-        assertThat(CtcScoringParams.presetFor("ru")).isEqualTo(ru)
-        assertThat(CtcScoringParams.presetFor("RU")).isEqualTo(ru)
-        assertThat(CtcScoringParams.presetFor("ru-RU")).isEqualTo(ru)
-        assertThat(CtcScoringParams.presetFor("ru_RU")).isEqualTo(ru)
-
-        // beamWidth/topK are pass-through on every branch (the `ctc_beam_width` pref).
-        val wide = CtcScoringParams.presetFor("ru", beamWidth = 250, topK = 8)
-        assertThat(wide.beamWidth).isEqualTo(250)
-        assertThat(wide.topK).isEqualTo(8)
-        assertThat(wide.lambda).isEqualTo(2.0)
-    }
+    // The per-language preset axis (integration-plan O10) is covered by
+    // `CtcLanguagePresetTest`, NOT here. An earlier revision of this class asserted a
+    // language-keyed axis (`ru` → an E1-based preset, everything else → `tunedV2`); that
+    // shape was superseded in this commit by a SCALE-keyed one — λ is chosen from the
+    // language's lexicon source (`CtcLanguageSupport.LexiconSource`), so every CKDT-scale
+    // language gets λ 2.0 without being named. Asserting the old shape here would pin a
+    // rule the decoder no longer follows.
 
     // ── Featurizer resampler branches + layout tensors ────────────────────────────
 

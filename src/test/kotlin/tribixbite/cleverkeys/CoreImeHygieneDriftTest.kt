@@ -190,24 +190,27 @@ class CoreImeHygieneDriftTest {
     }
 
     /**
-     * Audit M1 (layout-aware since the 2026-08-15 gate widening): ctc mode must never
-     * degrade below what the layout gets today. performCtcSwipeTyping reads the active
-     * language BEFORE dispatch and, when it isn't English, falls through PER LAYOUT:
-     * neural ([dispatchNeuralSwipeTyping] — the SAME flow Engine.NEURAL takes) only on a
-     * QWERTY-supported layout; geometric ([performGeometricSwipeTyping]) on a widened
-     * non-QWERTY Latin layout, where the QWERTY-trained transformer would decode garbage.
+     * Audit M1 (layout-aware since the 2026-08-15 gate widening; language-table since the
+     * fr/de/es enablement): ctc mode must never degrade below what the layout gets today.
+     * performCtcSwipeTyping reads the active language BEFORE dispatch and, when CTC does
+     * not support it, falls through PER LAYOUT: neural ([dispatchNeuralSwipeTyping] — the
+     * SAME flow Engine.NEURAL takes) only on a QWERTY-supported layout; geometric
+     * ([performGeometricSwipeTyping]) on a widened non-QWERTY Latin layout, where the
+     * QWERTY-trained transformer would decode garbage.
      */
     @Test
-    fun ctcModeFallsThroughToNeuralForNonEnglishLanguage() {
+    fun ctcModeFallsThroughToNeuralForUnsupportedLanguage() {
         val coordinator = source("tribixbite/cleverkeys/InputCoordinator.kt")
         val ctcPath = coordinator
             .substringAfter("private fun performCtcSwipeTyping(")
             .substringBefore("fun prewarmGeometricEngine(")
 
-        val gateIdx = ctcPath.indexOf("CtcEngineAdapter.LANGUAGE")
+        val gateIdx = ctcPath.indexOf("CtcEngineAdapter.supportsLanguage(")
         assertWithMessage(
-            "performCtcSwipeTyping must gate on the adapter's language constant " +
-                "(CtcEngineAdapter.LANGUAGE) before dispatching to the CTC adapter."
+            "performCtcSwipeTyping must gate on the adapter's language table " +
+                "(CtcEngineAdapter.supportsLanguage) before dispatching to the CTC adapter " +
+                "— a hard-coded language literal here would silently diverge from " +
+                "CtcLanguageSupport.SUPPORTED."
         ).that(gateIdx).isAtLeast(0)
         val layoutGateIdx = ctcPath.indexOf("isSwipeTypingSupportedForLayout")
         assertWithMessage(
@@ -218,7 +221,8 @@ class CoreImeHygieneDriftTest {
         val fallthroughIdx = ctcPath.indexOf("dispatchNeuralSwipeTyping(")
         assertWithMessage(
             "performCtcSwipeTyping must fall through to dispatchNeuralSwipeTyping — the " +
-                "same flow the NEURAL routing branch takes — for non-English on QWERTY."
+                "same flow the NEURAL routing branch takes — for an unsupported language " +
+                "on QWERTY."
         ).that(fallthroughIdx).isAtLeast(0)
         assertWithMessage(
             "The neural fallthrough must sit right after the language gate, BEFORE any " +
@@ -226,9 +230,9 @@ class CoreImeHygieneDriftTest {
         ).that(fallthroughIdx).isGreaterThan(gateIdx)
         val geoFallbackIdx = ctcPath.indexOf("performGeometricSwipeTyping(")
         assertWithMessage(
-            "Non-English on a NON-QWERTY (widened Latin) layout must fall through to " +
-                "performGeometricSwipeTyping — NEVER neural (the transformer cannot " +
-                "decode non-QWERTY geometry)."
+            "An unsupported language on a NON-QWERTY (widened Latin) layout must fall " +
+                "through to performGeometricSwipeTyping — NEVER neural (the transformer " +
+                "cannot decode non-QWERTY geometry)."
         ).that(geoFallbackIdx).isAtLeast(0)
         assertWithMessage(
             "The language gate must run before the CTC ML-trace capture, so a neural " +
@@ -292,9 +296,10 @@ class CoreImeHygieneDriftTest {
                 "the actually-serving geometric engine cold."
         ).that(ctcBranch).contains("supportsLayout(")
         assertWithMessage(
-            "The prewarm's Engine.CTC branch must gate on the adapter's language constant " +
-                "(non-en → CTC never serves)."
-        ).that(ctcBranch).contains("CtcEngineAdapter.LANGUAGE")
+            "The prewarm's Engine.CTC branch must gate on the adapter's language table " +
+                "(unsupported language → CTC never serves), by the SAME predicate the " +
+                "dispatch uses — otherwise prewarm and dispatch can disagree."
+        ).that(ctcBranch).contains("CtcEngineAdapter.supportsLanguage(")
         assertWithMessage(
             "When CTC will not serve (letter-incomplete layout, or non-en on non-QWERTY), " +
                 "the prewarm must warm the geometric engine instead."
@@ -329,25 +334,106 @@ class CoreImeHygieneDriftTest {
 
     /**
      * G5 defense-in-depth pins on CtcEngineAdapter.decodeAsync: the adapter keeps its own
-     * English gate (upstream M1 fallthrough is the primary), and EVERY decodeAsync entry —
-     * including the degenerate/non-en early-return — claims a decode generation so an
-     * older in-flight decode can never land on the bar after the newer empty result.
+     * language gate (upstream M1 fallthrough is the primary), and EVERY decodeAsync entry —
+     * including the degenerate/unsupported-language early-return — claims a decode
+     * generation so an older in-flight decode can never land on the bar after the newer
+     * empty result.
      */
     @Test
-    fun ctcDecodeKeepsEnGateAndAlwaysClaimsGeneration() {
+    fun ctcDecodeKeepsLanguageGateAndAlwaysClaimsGeneration() {
         val adapter = source("tribixbite/cleverkeys/swipe/CtcEngineAdapter.kt")
         val decodeBody = adapter.substringAfter("fun decodeAsync(").substringBefore("fun postIfNewest(")
 
         assertWithMessage(
             "decodeAsync must keep the language gate (defense-in-depth under the M1 " +
                 "InputCoordinator fallthrough)."
-        ).that(decodeBody).contains("language.equals(LANGUAGE, ignoreCase = true)")
+        ).that(decodeBody).contains("supportsLanguage(language)")
 
         val earlyReturn = decodeBody.substringBefore("tasks.cancelAndSubmit")
         assertWithMessage(
             "decodeAsync's early-return branch must claim a decode generation " +
                 "(decodeGeneration.incrementAndGet()) before delivering the empty result."
         ).that(earlyReturn).contains("decodeGeneration.incrementAndGet()")
+    }
+
+    /**
+     * Per-language enablement (2026-08-16, fr/de/es): the trie and the decoder are
+     * LANGUAGE-KEYED. A language switch must rebuild both — reusing the previous
+     * language's trie would decode against the wrong vocabulary, and reusing the previous
+     * decoder would decode at the wrong λ (4.0 on the en JSON scale vs 2.0 on the CKDT
+     * scale, `docs/eval/2026-08-15-ctc-per-language-lambda.md`). This is the audit's
+     * stale-memo hazard; the memo keys are the only thing standing between a language
+     * switch and a silently mis-scored slate.
+     */
+    @Test
+    fun ctcMemosAreKeyedByLanguage() {
+        val adapter = source("tribixbite/cleverkeys/swipe/CtcEngineAdapter.kt")
+
+        val trieMemoCheck = adapter
+            .substringAfter("private fun lexiconFor(")
+            .substringBefore("private fun contentVersion(")
+        assertWithMessage(
+            "lexiconFor's memo hit must require the LANGUAGE to match, not just the " +
+                "content-hash version — a language switch may never reuse the previous " +
+                "language's trie."
+        ).that(trieMemoCheck).contains("it.language == lang && it.version == version")
+        assertWithMessage(
+            "lexiconFor must resolve its asset/source through the CtcLanguageSupport " +
+                "table (adding a language is a table entry, not an adapter edit)."
+        ).that(trieMemoCheck).contains("CtcLanguageSupport.assetFor(")
+
+        val decoderKeyBlock = adapter
+            .substringAfter("private data class DecoderKey(")
+            .substringBefore(")")
+        assertWithMessage(
+            "The decoder memo key must include the language so the per-language preset " +
+                "(λ) cannot be carried across a language switch."
+        ).that(decoderKeyBlock).contains("val language: String")
+
+        val decoderBody = adapter
+            .substringAfter("private fun decoderFor(")
+            .substringBefore("// ── Display overlays")
+        assertWithMessage(
+            "decoderFor must actually put the language into the memo key."
+        ).that(decoderBody).contains("DecoderKey(mapped, trie, beamWidth, language)")
+        assertWithMessage(
+            "The decoder must be built with the per-language preset (CtcScoringParams." +
+                "presetFor), never the fixed en tunedV2 constants."
+        ).that(decoderBody).contains("CtcScoringParams.presetFor(language")
+        assertWithMessage(
+            "The decoder must NOT hard-code tunedV2 (that is the en-scale λ)."
+        ).that(decoderBody).doesNotContain("CtcScoringParams.tunedV2(")
+    }
+
+    /**
+     * Per-language enablement (2026-08-16): the decoded slate is a–z, so BOTH display
+     * overlays must run inside the adapter before the shared pipeline — canonical accents
+     * (CKDT languages: "cafe" → "café") and then contraction aliases ("dont" → "don't").
+     * Dropping the accent overlay would commit unaccented words in fr/de/es; dropping the
+     * contraction overlay would regress the en H1 fix.
+     */
+    @Test
+    fun ctcAppliesAccentThenContractionDisplay() {
+        val adapter = source("tribixbite/cleverkeys/swipe/CtcEngineAdapter.kt")
+
+        assertWithMessage(
+            "The adapter must expose an accent/canonical display overlay."
+        ).that(adapter).contains("private fun applyCanonicalDisplay(")
+        val composed = adapter.substringAfter("private fun applyDisplay(")
+            .substringBefore("// ── Public surface")
+        assertWithMessage(
+            "applyDisplay must compose BOTH overlays with accents applied FIRST " +
+                "(contraction keys are a–z aliases, so they must see the a–z surface " +
+                "of any word the accent map did not rewrite)."
+        ).that(composed).contains("applyCanonicalDisplay(")
+        assertWithMessage("applyDisplay must still apply the contraction overlay.")
+            .that(composed).contains("applyContractionDisplay(")
+
+        val decodeBody = adapter.substringAfter("fun decodeAsync(").substringBefore("fun postIfNewest(")
+        assertWithMessage(
+            "decodeAsync must route its slate through applyDisplay before delivering it " +
+                "to the shared pipeline (the pipeline does not map surfaces)."
+        ).that(decodeBody).contains("applyDisplay(")
     }
 
     /**

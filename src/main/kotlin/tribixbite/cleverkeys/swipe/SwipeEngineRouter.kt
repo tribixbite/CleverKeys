@@ -26,13 +26,16 @@ import tribixbite.cleverkeys.KeyboardData
  *    A Latin layout the adapter cannot serve (missing an a–z letter → no `CtcLayout`)
  *    falls through to geometric at dispatch time via `CtcEngineAdapter.supportsLayout` —
  *    the router stays layout-metadata-only and doesn't see key inventories.
- *    LANGUAGE dimension (audit M1): the v1 CTC model/lexicon is English-only, and language
- *    is runtime state the layout-only router deliberately doesn't see —
+ *    LANGUAGE dimension (audit M1): the CTC model is language-agnostic but the LEXICON and
+ *    the λ preset are per-language, so only validated languages are served —
+ *    `swipe/ctc/CtcLanguageSupport.SUPPORTED` = en, fr, de, es (2026-08-16). Language is
+ *    runtime state the layout-only router deliberately doesn't see —
  *    `InputCoordinator.performCtcSwipeTyping` reads the active language BEFORE dispatch and
  *    falls through per layout: the SAME neural flow [Engine.NEURAL] takes on QWERTY, the
  *    geometric path on non-QWERTY Latin (the transformer cannot decode that geometry).
- *    Net ctc semantics: CTC(en, any full-a–z Latin layout) / neural(non-en QWERTY) /
- *    geometric(everywhere else) — never less coverage than HYBRID or than pre-widening ctc.
+ *    Net ctc semantics: CTC(supported language, any full-a–z Latin layout) /
+ *    neural(other language on QWERTY) / geometric(everywhere else) — never less coverage
+ *    than HYBRID or than pre-widening ctc.
  *
  * A single engine owns each swipe end-to-end. Scores are NEVER compared across engines —
  * geometric scores are engine-relative softmax×1000 (see `SwipeDecodingEngine` KDoc) and
@@ -73,15 +76,17 @@ object SwipeEngineRouter {
         GEOMETRIC,
 
         /**
-         * G5: CTC on ANY Latin-script layout when the active language is English
-         * (gate widened 2026-08-15 — the encoder is layout-agnostic and was
-         * validated on alt-layouts: dvorak 89.87 / dvorak-app-geometry 88.98
-         * top-1, 3 seeds, the shipped en lexicon+λ), geometric on non-Latin
-         * layouts — and NEURAL for non-English languages on QWERTY (audit M1:
+         * G5: CTC on ANY Latin-script layout when the active language is one CTC
+         * serves (en/fr/de/es — `swipe/ctc/CtcLanguageSupport`; gate widened
+         * 2026-08-15 for layouts — the encoder is layout-agnostic and was validated
+         * on alt-layouts: dvorak 89.87 / dvorak-app-geometry 88.98 top-1, 3 seeds,
+         * the shipped en lexicon+λ; azerty 83.81 / qwertz 83.01 / german 80.64 /
+         * spanish 88.45 for the 2026-08-16 language additions), geometric on
+         * non-Latin layouts — and NEURAL for any other language on QWERTY (audit M1:
          * the language fallthrough lives in `InputCoordinator.performCtcSwipeTyping`
-         * because language is runtime state this layout-only router doesn't see;
-         * non-English on non-QWERTY Latin falls through to geometric there too).
-         * Selecting CTC therefore never yields less coverage than [HYBRID].
+         * because language is runtime state this layout-only router doesn't see; an
+         * unsupported language on non-QWERTY Latin falls through to geometric there
+         * too). Selecting CTC therefore never yields less coverage than [HYBRID].
          */
         CTC;
 

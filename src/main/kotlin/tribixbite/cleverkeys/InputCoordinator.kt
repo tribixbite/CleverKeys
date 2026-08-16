@@ -700,13 +700,15 @@ class InputCoordinator(
      * An empty decode (no model, degenerate trace) flows through as an empty
      * prediction list → the pipeline clears the bar.
      *
-     * Audit M1 — the v1 CTC model/lexicon is English-only, so the active language is
-     * read BEFORE dispatch: a non-English swipe falls through to
-     * [dispatchNeuralSwipeTyping], the SAME flow [SwipeEngineRouter.Engine.NEURAL]
-     * takes. Net ctc-mode semantics: CTC(en QWERTY) / neural(non-en QWERTY) /
-     * geometric(non-QWERTY) — never less coverage than hybrid (which would have
-     * served the non-en QWERTY swipe neurally). The adapter keeps its own en-gate
-     * as defense-in-depth.
+     * Audit M1 — the CTC model is layout-agnostic but the lexicon + λ preset are
+     * per-language and only en/fr/de/es are validated
+     * ([tribixbite.cleverkeys.swipe.ctc.CtcLanguageSupport]), so the active language is
+     * read BEFORE dispatch: an unsupported-language swipe falls through to
+     * [dispatchNeuralSwipeTyping] (the SAME flow [SwipeEngineRouter.Engine.NEURAL] takes)
+     * on a QWERTY-Latin layout, else to [performGeometricSwipeTyping]. Net ctc-mode
+     * semantics: CTC(supported language, a–z-complete Latin layout) / neural(other
+     * language on QWERTY) / geometric(everything else) — never less coverage than hybrid.
+     * The adapter keeps its own language gate as defense-in-depth.
      */
     private fun performCtcSwipeTyping(
         swipedKeys: List<KeyboardData.Key>,
@@ -720,12 +722,13 @@ class InputCoordinator(
     ) {
         val language = predictionCoordinator.getDictionaryManager()?.getCurrentLanguage()
             ?: config.primary_language
-        if (!language.equals(CtcEngineAdapter.LANGUAGE, ignoreCase = true)) {
-            // M1 (layout-aware since the 2026-08-15 gate widening): the v1 CTC lexicon is
-            // English-only, so a non-English swipe falls through to whichever engine can
-            // actually serve THIS layout — neural only where neural works (the QWERTY-Latin
-            // family it was trained on), geometric otherwise. Routing non-English on Dvorak
-            // to neural would be a REGRESSION: pre-widening that swipe was geometric.
+        if (!CtcEngineAdapter.supportsLanguage(language)) {
+            // M1 (layout-aware since the 2026-08-15 gate widening): CTC serves only the
+            // validated languages (en/fr/de/es — CtcLanguageSupport), so any other language
+            // falls through to whichever engine can actually serve THIS layout — neural
+            // only where neural works (the QWERTY-Latin family it was trained on),
+            // geometric otherwise. Routing e.g. Russian on Dvorak to neural would be a
+            // REGRESSION: pre-widening that swipe was geometric.
             if (Config.isSwipeTypingSupportedForLayout(keyboardView.getKeyboard())) {
                 dispatchNeuralSwipeTyping(
                     swipedKeys, swipePath, timestamps, ic, editorInfo, resources,
@@ -808,19 +811,19 @@ class InputCoordinator(
                 // G5: front-load the ONNX session + 98k-word trie build (~100-300 ms
                 // background) so the first ctc swipe decodes in warm-path time.
                 // Warm the engine that will ACTUALLY serve this (layout, language) pair —
-                // the CTC dispatch falls through to neural (non-English on QWERTY) or to
-                // geometric (non-English elsewhere / letter-incomplete Latin layouts), and
-                // warming CTC for those would leave the real engine cold. `warmUpAsync`
-                // itself no-ops on a non-English language, so the geometric branch here is
-                // what actually front-loads the fallthrough case.
+                // the CTC dispatch falls through to neural (unsupported language on QWERTY)
+                // or to geometric (unsupported language elsewhere / letter-incomplete Latin
+                // layouts), and warming CTC for those would leave the real engine cold.
+                // `warmUpAsync` itself no-ops on an unsupported language, so the geometric
+                // branch here is what actually front-loads the fallthrough case.
                 SwipeEngineRouter.Engine.CTC -> {
                     val ctc = ctcAdapterOrCreate()
-                    val ctcServes = language.equals(CtcEngineAdapter.LANGUAGE, ignoreCase = true) &&
+                    val ctcServes = CtcEngineAdapter.supportsLanguage(language) &&
                         ctc.supportsLayout(keyboard, params, frameW, frameH)
                     when {
                         ctcServes -> ctc.warmUpAsync(keyboard, params, frameW, frameH, language)
-                        // Non-English on a neural-capable layout: nothing to prewarm (the
-                        // neural engine warms through its own init path), same as HYBRID.
+                        // Unsupported language on a neural-capable layout: nothing to
+                        // prewarm (the neural engine warms via its own init path), as HYBRID.
                         Config.isSwipeTypingSupportedForLayout(keyboard) -> Unit
                         // Keep this call on ONE line: CoreImeHygieneDriftTest source-scans
                         // for the literal `geometricAdapterOrCreate().warmUpAsync`.

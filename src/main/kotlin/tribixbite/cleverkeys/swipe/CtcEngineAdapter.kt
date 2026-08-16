@@ -19,13 +19,17 @@ import tribixbite.cleverkeys.PredictionResult
 import tribixbite.cleverkeys.PredictionTaskRunner
 import tribixbite.cleverkeys.a11y.KeyboardGeometry
 import tribixbite.cleverkeys.onnx.ModelLoader
+import tribixbite.cleverkeys.swipe.ctc.CtcAzProjection
 import tribixbite.cleverkeys.swipe.ctc.CtcCandidate
+import tribixbite.cleverkeys.swipe.ctc.CtcCkdtLexicon
 import tribixbite.cleverkeys.swipe.ctc.CtcFeaturizer
+import tribixbite.cleverkeys.swipe.ctc.CtcLanguageSupport
 import tribixbite.cleverkeys.swipe.ctc.CtcLayout
 import tribixbite.cleverkeys.swipe.ctc.CtcLexiconMerge
 import tribixbite.cleverkeys.swipe.ctc.CtcLexiconTrie
 import tribixbite.cleverkeys.swipe.ctc.CtcScoringParams
 import tribixbite.cleverkeys.swipe.ctc.CtcSwipeDecoder
+import tribixbite.cleverkeys.swipe.geometric.CkdtDictionaryReader
 import java.lang.ref.WeakReference
 import java.security.MessageDigest
 import java.util.Locale
@@ -45,19 +49,24 @@ import kotlin.math.roundToInt
  *     4/3-aspect device frame; do not use [CtcFeaturizer.normalizeRawY] here).
  *     Memoized per immutable KeyboardData instance + frame + params.
  *  2. `PointF` trace → normalized double arrays under the SAME letter-box affine.
- *  3. Dictionary → [CtcLexiconTrie]: bundled `dictionaries/en_enhanced.json`
- *     ({word: freq}, freq already on the AOSP-like 134..255 log scale the tuned
- *     λ expects — spec NFR-4), a–z-STRIPPED (`don't`→`dont`), with user custom
- *     words merged (freq clamped 1..255; custom overrides disabled) and disabled
- *     words removed. Content-hash `version` recomputed per ensure, so any user
- *     dictionary mutation rebuilds the trie without ContentObserver plumbing.
+ *  3. Dictionary → [CtcLexiconTrie], PER LANGUAGE ([CtcLanguageSupport]): en reads the
+ *     bundled `dictionaries/en_enhanced.json` ({word: freq} on the AOSP-like 134..255
+ *     scale the tuned λ=4.0 expects — spec NFR-4), a–z-STRIPPED (`don't`→`dont`);
+ *     fr/de/es read the bundled CKDT `dictionaries/<lang>_enhanced.bin` via the
+ *     geometric engine's [CkdtDictionaryReader] at `freq = max(1, 255 − rank)`
+ *     ([CtcCkdtLexicon]) and project it onto a–z ([CtcAzProjection]), keeping the
+ *     canonical accented form for display. Both merge the language's user custom words
+ *     (freq clamped 1..255; custom overrides disabled) minus its disabled words.
+ *     Content-hash `version` (plus the language) keys the memo, so any user dictionary
+ *     mutation rebuilds the trie without ContentObserver plumbing.
  *  4. ONNX session via the existing [ModelLoader] (XNNPACK-first,
  *     `onnx_xnnpack_threads` pref), built lazily on the decode thread;
  *     [warmUpAsync] front-loads session + trie + layout on layout/language switch.
- *  5. Contraction DISPLAY mapping (audit H1): decoded a-z alias surfaces ("dont",
- *     "im") are overlaid with their apostrophe forms via [ContractionOverlay] +
- *     the merged-lexicon frequency ordinals, mirroring [GeometricEngineAdapter]'s
- *     `applyContractionDisplay` (paired-first, real-word-ordinal-guarded).
+ *  5. DISPLAY mapping of the a–z slate, before the shared pipeline: canonical accents
+ *     ("cafe"→"café", CKDT languages) then contraction aliases ("dont"→"don't") via
+ *     [ContractionOverlay] + the merged-lexicon frequency ordinals, mirroring
+ *     [GeometricEngineAdapter]'s `applyContractionDisplay` (paired-first,
+ *     real-word-ordinal-guarded).
  *
  * ## Concurrency contract (mirrors [GeometricEngineAdapter]'s WP9-audit-M-2 shape)
  *
@@ -87,22 +96,23 @@ class CtcEngineAdapter(private val context: Context) {
         /** Shipped CTC emission encoder (CleverKeys-ML ctc/, `phaseM_kd_fresh_w1` fp16w). */
         const val MODEL_ASSET = "models/ctc_swipe_encoder.onnx"
 
-        private const val DICT_ASSET = "dictionaries/en_enhanced.json"
+        /**
+         * True when the CTC engine serves [language] — the table lives in
+         * [CtcLanguageSupport] (en + the 2026-08-15 validated additions fr/de/es).
+         *
+         * [decodeAsync]/[warmUpAsync] gate on this as defense-in-depth; the PRIMARY gate
+         * is upstream — `InputCoordinator.performCtcSwipeTyping` reads the active language
+         * BEFORE dispatch and falls through per layout for an unsupported one (audit M1:
+         * ctc mode must never offer less coverage than hybrid).
+         */
+        fun supportsLanguage(language: String?): Boolean = CtcLanguageSupport.isSupported(language)
 
         /**
-         * v1 model + lexicon are English. [decodeAsync]/[warmUpAsync] gate on this as
-         * defense-in-depth; the PRIMARY gate is upstream — `InputCoordinator.
-         * performCtcSwipeTyping` reads the active language BEFORE dispatch and falls
-         * through to the neural flow for non-English (audit M1: ctc mode must never
-         * offer less coverage than hybrid, which serves non-en QWERTY neurally).
-         *
-         * This gate is about the MODEL and the LEXICON, not the scoring preset: the
-         * preset axis is already language-keyed ([CtcScoringParams.presetFor], plan
-         * O10), so relaxing this constant for a script needs a bundled encoder for it
-         * plus a trie source on the scale its preset was fitted to — not a preset
-         * change.
+         * The language whose contraction mappings load FIRST and therefore shadow the
+         * active language's (production's `ContractionManager` load order — see
+         * [contractionsFor]).
          */
-        const val LANGUAGE = "en"
+        private const val BASE_CONTRACTION_LANGUAGE = "en"
 
         /** Emission-column alphabet — a..z, the shipped model's training order. */
         private val ALPHABET = CharArray(26) { ('a' + it) }
@@ -295,17 +305,29 @@ class CtcEngineAdapter(private val context: Context) {
         )
     }
 
-    // ── Lexicon trie memo (per user-dictionary content version) ─────────────────
+    // ── Lexicon trie memo (per language + user-dictionary content version) ─────
 
     /**
-     * The merged lexicon trie plus its lowercase word → frequency-ordinal map. The
-     * ordinal map feeds [ContractionOverlay]'s real-word guard exactly like
-     * [GeometricEngineAdapter]'s `DictMemo.ordinals` (see [CtcLexiconMerge.ordinals]
-     * for the threshold-separation numbers on the shipped asset).
+     * The merged lexicon trie for ONE language, plus the two overlay tables the decode
+     * results are rewritten through:
+     *
+     *  - [ordinals] — lowercase word → frequency-ordinal rank, feeding
+     *    [ContractionOverlay]'s real-word guard exactly like [GeometricEngineAdapter]'s
+     *    `DictMemo.ordinals` (see [CtcLexiconMerge.ordinals] for the threshold-separation
+     *    numbers on the shipped en asset);
+     *  - [display] — a–z surface → canonical accented form, EMPTY for the en JSON source
+     *    and populated for CKDT sources ([CtcAzProjection.projectLexicon]).
+     *
+     * [language] is part of the memo IDENTITY, not just the content hash: a language
+     * switch must never reuse the previous language's trie (the content hash alone would
+     * be a very unlikely but silent way to do so, and reading it as identity makes the
+     * invariant explicit).
      */
     private class TrieMemo(
+        val language: String,
         val trie: CtcLexiconTrie,
         val ordinals: HashMap<String, Int>,
+        val display: Map<String, String>,
         val version: Long,
     )
 
@@ -313,46 +335,85 @@ class CtcEngineAdapter(private val context: Context) {
     private var trieMemo: TrieMemo? = null
 
     /**
-     * The merged en lexicon trie — see [lexiconFor]. `internal` so the instrumented
-     * latency gate can build the production trie through the exact shipping merge path.
+     * The merged lexicon trie for [language] — see [lexiconFor]. `internal` so the
+     * instrumented latency gate can build the production trie through the exact shipping
+     * merge path.
      */
-    internal fun trieFor(): CtcLexiconTrie? = lexiconFor()?.trie
+    internal fun trieFor(language: String): CtcLexiconTrie? = lexiconFor(language)?.trie
 
     /**
-     * The merged en lexicon (bundled base + custom − disabled) plus contraction-guard
-     * ordinals, memoized by content-hash version.
+     * The merged lexicon for [language] (bundled base + custom − disabled) plus the
+     * contraction-guard ordinals and the accent-display map, memoized by
+     * (language, content-hash version).
      *
-     * SOURCE NOTE (audit L2 — deliberate, do NOT "unify"): the base is the bundled
-     * [DICT_ASSET] `{word: freq}` JSON, whose frequencies are already on the
-     * AOSP-like 134..255 log scale the tuned λ=4.0 was fitted against (spec NFR-4).
-     * An installed en LANGPACK's CKDT `dictionary.bin` (which the geometric/neural
-     * paths would prefer) stores the INVERTED 255−rank scale that λ was NOT fitted
-     * for — swapping this source requires its own λ validation round (integration
-     * plan §7.1). Known limitation: the CTC vocabulary can therefore diverge from
-     * the active en dictionary source the other engines see.
+     * SOURCE per language ([CtcLanguageSupport.SUPPORTED]):
+     *
+     *  - **en → `dictionaries/en_enhanced.json`** (audit L2 — deliberate, do NOT "unify"):
+     *    `{word: freq}` whose frequencies are already on the AOSP-like 134..255 log scale
+     *    the tuned λ=4.0 was fitted against (spec NFR-4), loaded a–z-STRIPPING without
+     *    accent folding — byte-for-byte the vocabulary test-2400 validated. An installed
+     *    en LANGPACK's CKDT `dictionary.bin` stores the INVERTED 255−rank scale that λ was
+     *    NOT fitted for, so the langpack swap stays unsupported here (plan §7.1). Known
+     *    limitation: the CTC en vocabulary can diverge from the source other engines see.
+     *  - **fr/de/es → `dictionaries/<lang>_enhanced.bin`** (CKDT v2, the SAME asset the
+     *    geometric engine reads, parsed by the SAME [CkdtDictionaryReader]) at
+     *    `freq = max(1, 255 − rank)` and projected onto a–z with the canonical accented
+     *    form kept for display. λ = 2.0 for that scale — see
+     *    [CtcScoringParams.presetFor] and `docs/eval/2026-08-15-ctc-per-language-lambda.md`.
+     *
+     * User custom/disabled words are read from the PER-LANGUAGE preference keys
+     * ([LanguagePreferenceKeys.customWordsKey] / [LanguagePreferenceKeys.disabledWordsKey]),
+     * so each language merges its own personal dictionary.
      */
-    private fun lexiconFor(): TrieMemo? {
+    private fun lexiconFor(language: String): TrieMemo? {
+        val lang = CtcLanguageSupport.normalize(language)
+        val source = CtcLanguageSupport.SUPPORTED[lang]
+        val asset = CtcLanguageSupport.assetFor(lang)
+        if (source == null || asset == null) {
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                Log.d(TAG, "No CTC lexicon for unsupported language '$language'")
+            }
+            return null
+        }
         val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
-        val customJson = prefs.getString(LanguagePreferenceKeys.customWordsKey(LANGUAGE), "{}") ?: "{}"
-        val disabled = prefs.getStringSet(LanguagePreferenceKeys.disabledWordsKey(LANGUAGE), emptySet())
+        val customJson = prefs.getString(LanguagePreferenceKeys.customWordsKey(lang), "{}") ?: "{}"
+        val disabled = prefs.getStringSet(LanguagePreferenceKeys.disabledWordsKey(lang), emptySet())
             ?: emptySet()
-        val version = contentVersion("asset:$DICT_ASSET", customJson, disabled)
-        trieMemo?.let { if (it.version == version) return it }
+        val version = contentVersion("asset:$asset", customJson, disabled)
+        trieMemo?.let { if (it.language == lang && it.version == version) return it }
 
         val start = System.currentTimeMillis()
-        val base = try {
-            context.assets.open(DICT_ASSET).use { JSONObject(it.readBytes().decodeToString()) }
+
+        // Parse the Android-side inputs into pure pair lists, then delegate the merge
+        // policy (custom-first, 1..255 clamp, custom-overrides-disabled, case-folded
+        // dedupe — audit L3) to the unit-tested [CtcLexiconMerge]. Insertion order only
+        // affects beam tie-breaks; LinkedHashMap keeps it deterministic (en: asset JSON
+        // order on Android's org.json; CKDT: rank ascending, file order as tie-break).
+        val basePairs = try {
+            when (source) {
+                CtcLanguageSupport.LexiconSource.EN_JSON -> {
+                    val base = context.assets.open(asset)
+                        .use { JSONObject(it.readBytes().decodeToString()) }
+                    val pairs = ArrayList<Pair<String, Double>>(base.length())
+                    val keys = base.keys()
+                    while (keys.hasNext()) {
+                        val word = keys.next()
+                        pairs.add(word to base.optInt(word, 1).toDouble())
+                    }
+                    pairs
+                }
+                CtcLanguageSupport.LexiconSource.CKDT_BIN -> {
+                    val entries = context.assets.open(asset)
+                        .use { CkdtDictionaryReader.readEntries(it) }
+                    CtcCkdtLexicon.frequencyPairs(entries)
+                }
+            }
         } catch (e: Exception) {
-            Log.e(TAG, "No CTC lexicon source ($DICT_ASSET)", e)
+            Log.e(TAG, "No CTC lexicon source ($asset)", e)
             trieMemo = null
             return null
         }
 
-        // Parse the two Android-side inputs into pure pair lists, then delegate the
-        // merge policy (custom-first, 1..255 clamp, custom-overrides-disabled,
-        // case-folded dedupe — audit L3) to the unit-tested [CtcLexiconMerge].
-        // Insertion order only affects beam tie-breaks; LinkedHashMap keeps it
-        // deterministic (base order = asset JSON order on Android's org.json).
         val customPairs = ArrayList<Pair<String, Int>>()
         if (customJson != "{}") {
             try {
@@ -363,26 +424,42 @@ class CtcEngineAdapter(private val context: Context) {
                     customPairs.add(word to obj.optInt(word, 1000))
                 }
             } catch (e: Exception) {
-                Log.w(TAG, "Malformed custom-words JSON — ignoring", e)
+                Log.w(TAG, "Malformed custom-words JSON for '$lang' — ignoring", e)
             }
         }
-        val basePairs = ArrayList<Pair<String, Double>>(base.length())
-        val keys = base.keys()
-        while (keys.hasNext()) {
-            val word = keys.next()
-            basePairs.add(word to base.optInt(word, 1).toDouble())
-        }
         val merged = CtcLexiconMerge.merge(basePairs, customPairs, disabled)
-
-        // STRIP loader: same non-alphabet policy as the offline tuning trie
-        // (apostrophe forms reachable as their a-z surface).
-        val trie = CtcLexiconTrie.loadStrippingNonAlphabet(ALPHABET, merged)
         val ordinals = CtcLexiconMerge.ordinals(merged)
+
+        val trie: CtcLexiconTrie
+        val display: Map<String, String>
+        when (source) {
+            CtcLanguageSupport.LexiconSource.EN_JSON -> {
+                // STRIP loader: same non-alphabet policy as the offline tuning trie
+                // (apostrophe forms reachable as their a-z surface). NO accent folding —
+                // this is the exact vocabulary the shipped λ/model were validated on;
+                // en contractions are restored by the ContractionOverlay instead.
+                trie = CtcLexiconTrie.loadStrippingNonAlphabet(ALPHABET, merged)
+                display = emptyMap()
+            }
+            CtcLanguageSupport.LexiconSource.CKDT_BIN -> {
+                // NFD → drop combining marks → a–z, with the canonical accented form kept
+                // for display. Words with no a–z spelling (ß, œ, æ, ø) are DROPPED, not
+                // mangled — the projection the λ sweep's lexicons were built with.
+                val projected = CtcAzProjection.projectLexicon(merged)
+                trie = CtcLexiconTrie.loadFromFrequencyMap(ALPHABET, projected.freqs)
+                display = projected.display
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                    Log.d(TAG, "CTC '$lang' projection: ${projected.records} records, " +
+                        "${projected.untypeable} untypeable, ${projected.collisions} " +
+                        "accent-strip collisions, ${display.size} display forms")
+                }
+            }
+        }
         if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-            Log.d(TAG, "CTC trie: ${trie.wordCount} words in " +
+            Log.d(TAG, "CTC trie[$lang]: ${trie.wordCount} words in " +
                 "${System.currentTimeMillis() - start}ms (v=$version)")
         }
-        val built = TrieMemo(trie, ordinals, version)
+        val built = TrieMemo(lang, trie, ordinals, display, version)
         trieMemo = built
         return built
     }
@@ -404,15 +481,10 @@ class CtcEngineAdapter(private val context: Context) {
     // ── Decoder memo (per layout + trie + beam width + language) ────────────────
 
     /**
-     * Memo identity for [decoderFor]. [mapped] and [trie] compare by REFERENCE (neither
-     * is a data class) — that is the intent: both are rebuilt-on-change memo outputs, so
-     * reference equality is exactly "the same layout/lexicon build".
-     *
-     * [language] is part of the key because the scoring preset is language-keyed
-     * ([CtcScoringParams.presetFor], integration-plan O10): without it, switching
-     * dictionary language would silently reuse the previous language's λ. It is stored
-     * case-folded because the upstream gate compares case-insensitively — "en" and "EN"
-     * must not look like two different decoders.
+     * Decoder identity. [language] is a KEY FIELD, not decoration: the scoring preset is
+     * per-language ([CtcScoringParams.presetFor] — λ 4.0 on the en JSON scale, λ 2.0 on
+     * the CKDT scale), so a language switch must rebuild the decoder even in the
+     * (impossible-in-practice) case where layout, trie and beam width all compare equal.
      */
     private data class DecoderKey(
         val mapped: MappedLayout,
@@ -430,7 +502,7 @@ class CtcEngineAdapter(private val context: Context) {
         beamWidth: Int,
         language: String,
     ): CtcSwipeDecoder {
-        val key = DecoderKey(mapped, trie, beamWidth, language.lowercase(Locale.ROOT))
+        val key = DecoderKey(mapped, trie, beamWidth, language)
         decoderMemo?.let { if (decoderKey == key) return it }
         val model = modelOrNull() ?: throw IllegalStateException("CTC model unavailable")
         val built = CtcSwipeDecoder(
@@ -442,36 +514,69 @@ class CtcEngineAdapter(private val context: Context) {
         return built
     }
 
-    // ── Contraction display overlay (audit H1 — parity with GeometricEngineAdapter) ──
-    // en_enhanced.json has ZERO apostrophe words: contractions exist only as a-z
-    // ALIASES ("dont", "im", "theyd"), so a raw decode would present/commit "dont".
-    // The pure decision matrix (paired-first keep+variant, real-word ordinal guard,
-    // junk-alias replace) lives in [ContractionOverlay] and is unit-tested in
-    // runPureTests; this adapter supplies the en mappings + the merged-lexicon
-    // frequency ordinals ([CtcLexiconMerge.ordinals]) exactly like the geometric twin.
+    // ── Display overlays (audit H1 — parity with GeometricEngineAdapter) ─────────────
+    //
+    // The beam emits a-z SURFACES; two things have to be put back before the slate
+    // reaches the pipeline, in this order:
+    //
+    //  1. ACCENTS (CKDT languages) — the trie path is the a-z projection of a canonical
+    //     word, so "café" would commit as "cafe" without the per-lexicon display map.
+    //  2. APOSTROPHES (contractions) — every dictionary stores contractions as
+    //     apostrophe-free ALIASES because apostrophe is not a swipe key: en_enhanced.json
+    //     has ZERO apostrophe words ("dont", "im", "theyd") and the CKDT dictionaries have
+    //     zero as well (fr "jai"/"cest", de "dor"). The pure decision matrix (paired-first
+    //     keep+variant, real-word ordinal guard, junk-alias replace) lives in
+    //     [ContractionOverlay] and is unit-tested in runPureTests; this adapter supplies
+    //     the active language's mappings + the merged-lexicon frequency ordinals
+    //     ([CtcLexiconMerge.ordinals]) exactly like the geometric twin.
+    //
+    // Accents first: contraction keys are a-z aliases, so an accented display form never
+    // matches one, while an un-accented alias is unaffected by step 1.
     private var contractionManager: ContractionManager? = null
+    private var contractionLanguage: String? = null
 
-    /** Lazily builds the en contraction mapping (decode thread only). */
-    private fun contractionsFor(): ContractionManager {
-        contractionManager?.let { return it }
-        val cm = ContractionManager(context)
-        // Mirror GeometricEngineAdapter.contractionsFor for language == "en": the base
-        // set (bundled English contractions.bin) then the extra contractions_en.json
-        // entries. [LANGUAGE] is fixed to en (v1), so the non-en shadowing branch the
-        // geometric twin documents does not arise here.
+    /** Lazily builds/reloads the contraction mapping for [language] (decode thread only). */
+    private fun contractionsFor(language: String): ContractionManager {
+        val existing = contractionManager
+        if (existing != null && contractionLanguage == language) return existing
+        val cm = existing ?: ContractionManager(context)
+        // Mirror GeometricEngineAdapter.contractionsFor (which mirrors production's
+        // PreferenceUIUpdateHandler / ManagerInitializer): the bundled English base set
+        // first, then the active language's file, then contractions_en.json. Loading is
+        // EARLIER-WINS, so English SHADOWS same-key mappings from the active language —
+        // production's behavior, deliberately mirrored rather than reinvented, and
+        // contained by [ContractionOverlay]'s real-word ordinal guard (a shadowed alias
+        // that is itself a common word in the active language is KEPT).
         cm.loadMappings()
-        cm.loadLanguageContractions(LANGUAGE)
+        if (language != BASE_CONTRACTION_LANGUAGE) cm.loadLanguageContractions(language)
+        cm.loadLanguageContractions(BASE_CONTRACTION_LANGUAGE)
         contractionManager = cm
+        contractionLanguage = language
         return cm
     }
 
-    /** Applies [ContractionOverlay] with the en mappings + merged-lexicon ordinals. */
+    /**
+     * Rewrites a-z surfaces to their canonical accented forms (`cafe` → `café`) using the
+     * lexicon's stripped→canonical map. A no-op for the en JSON source (empty map) and for
+     * any surface whose canonical form is already un-accented.
+     */
+    private fun applyCanonicalDisplay(
+        result: PredictionResult,
+        display: Map<String, String>,
+    ): PredictionResult {
+        if (display.isEmpty() || result.words.isEmpty()) return result
+        if (result.words.none { display.containsKey(it) }) return result
+        return PredictionResult(result.words.map { display[it] ?: it }, result.scores)
+    }
+
+    /** Applies [ContractionOverlay] with [language]'s mappings + merged-lexicon ordinals. */
     private fun applyContractionDisplay(
         result: PredictionResult,
+        language: String,
         ordinals: HashMap<String, Int>,
     ): PredictionResult {
         if (result.words.isEmpty()) return result
-        val cm = contractionsFor()
+        val cm = contractionsFor(language)
         val (words, scores) = ContractionOverlay.apply(
             words = result.words,
             scores = result.scores,
@@ -482,13 +587,21 @@ class CtcEngineAdapter(private val context: Context) {
         return PredictionResult(words, scores)
     }
 
+    /** Both display overlays, in the order documented above. */
+    private fun applyDisplay(result: PredictionResult, lexicon: TrieMemo): PredictionResult =
+        applyContractionDisplay(
+            applyCanonicalDisplay(result, lexicon.display),
+            lexicon.language,
+            lexicon.ordinals,
+        )
+
     // ── Public surface (mirrors GeometricEngineAdapter) ─────────────────────────
 
     /**
      * Decode a completed swipe on the background thread and deliver a
      * [PredictionResult] to [onResult] ON THE MAIN THREAD. Empty result when the
-     * layout/model/lexicon is unavailable or [language] isn't English (v1) — the
-     * caller treats that as a no-prediction swipe.
+     * layout/model/lexicon is unavailable or [language] is not CTC-supported
+     * ([supportsLanguage]) — the caller treats that as a no-prediction swipe.
      *
      * Runs in the runner's FOREGROUND slot: it supersedes both an older decode and
      * any in-flight prewarm, and only the newest decode may deliver (see the class
@@ -509,7 +622,7 @@ class CtcEngineAdapter(private val context: Context) {
         onResult: (PredictionResult) -> Unit,
     ) {
         if (frameWidthPx <= 0f || frameHeightPx <= 0f || swipePath.isEmpty() ||
-            !language.equals(LANGUAGE, ignoreCase = true)
+            !supportsLanguage(language)
         ) {
             // Still claim a generation: this degenerate swipe is the newest one, so an
             // older decode already in flight must not land on the bar after our empty result.
@@ -532,7 +645,7 @@ class CtcEngineAdapter(private val context: Context) {
         tasks.cancelAndSubmit {
             try {
                 val mapped = layoutFor(keyboard, params, frameWidthPx, frameHeightPx)
-                val lexicon = if (mapped != null) lexiconFor() else null
+                val lexicon = if (mapped != null) lexiconFor(language) else null
                 val model = if (lexicon != null) modelOrNull() else null
                 val result = if (mapped == null || lexicon == null || model == null) {
                     PredictionResult(emptyList(), emptyList())
@@ -541,11 +654,11 @@ class CtcEngineAdapter(private val context: Context) {
                     val py = DoubleArray(n) { ((rawY[it] - mapped.originY) * mapped.invH).toDouble() }
                     val pt = DoubleArray(n) { rawT[it].toDouble() }
                     val beamWidth = Config.globalConfig().ctc_beam_width.coerceIn(10, 300)
-                    val candidates = decoderFor(mapped, lexicon.trie, beamWidth, language)
+                    val candidates = decoderFor(mapped, lexicon.trie, beamWidth, lexicon.language)
                         .decode(px, py, pt)
-                    // H1: map contraction aliases to display forms ("dont" → "don't")
+                    // Accents then contraction aliases ("cafe" → "café", "dont" → "don't")
                     // before the shared pipeline — see the overlay section above.
-                    applyContractionDisplay(toPredictionResult(candidates), lexicon.ordinals)
+                    applyDisplay(toPredictionResult(candidates), lexicon)
                 }
                 postIfNewest(generation, result, onResult)
             } catch (e: InterruptedException) {
@@ -599,12 +712,12 @@ class CtcEngineAdapter(private val context: Context) {
         language: String,
     ) {
         if (frameWidthPx <= 0f || frameHeightPx <= 0f) return
-        if (!language.equals(LANGUAGE, ignoreCase = true)) return
+        if (!supportsLanguage(language)) return
         tasks.submitBackground {
             try {
                 val mapped = layoutFor(keyboard, params, frameWidthPx, frameHeightPx)
                     ?: return@submitBackground
-                val trie = trieFor() ?: return@submitBackground
+                val trie = trieFor(language) ?: return@submitBackground
                 modelOrNull() ?: return@submitBackground
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                     Log.d(TAG, "warmUp: model+trie(${trie.wordCount})+layout ready " +
