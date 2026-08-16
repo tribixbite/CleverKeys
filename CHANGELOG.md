@@ -19,6 +19,115 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.6.0] - UNRELEASED
+
+> Note: this file has gaps — v1.2.1, v1.2.2, v1.2.5 and v1.2.6 were tagged and shipped
+> but never given entries here. They are not backfilled by this release.
+
+### Added
+
+- **Geometric swipe engine**: a layout-agnostic, zero-training shape decoder that matches
+  the traced path against word shapes on the actual key grid. Swipe typing is no longer
+  limited to QWERTY — Dvorak, Colemak, AZERTY, QWERTZ, JCUKEN, Greek and custom layouts
+  work, using whichever dictionary is installed for the language you are typing in.
+  Previously swipe was silently disabled on non-QWERTY layouts (#9). Select it via
+  Hybrid or Geometric in the new engine picker.
+- **CTC swipe engine (opt-in)**: a new swipe model trained from scratch for CleverKeys.
+  On a held-out 2,400-swipe English benchmark it gets the intended word first try
+  **89.3%** of the time versus **74.6%** for the existing neural engine on the same set
+  (`docs/eval/2026-07-24-test2400-head2head.md`). Enabled for English on any full Latin
+  layout, and for French, German and Spanish. Italian, Portuguese and Swedish are not
+  enabled — they lack the validation data — and fall back to the other engines.
+- **Prediction Engine selector** (Settings → 👆 Swipe Typing): Hybrid (neural on QWERTY,
+  geometric elsewhere), Neural, Geometric, or CTC. **The default is unchanged (Neural).**
+  Under CTC, unsupported language/layout combinations fall through to neural or geometric
+  rather than leaving an empty suggestion bar.
+- **Full Geometric Settings** screen: Max Suggestions, Frequency Weight, Endpoint
+  Tolerance. **Full CTC Settings** screen: beam width (10–300, default 100).
+- Both new engines display contractions rather than their internal spelling
+  (`dont` → `don't`, `cest` → `c'est`) and commit accented forms (`cafe` → `café`).
+  The bundled English contraction set is gated on the language you are typing in, so a
+  French or German swipe never offers English contractions or possessives.
+- **"Learn From My Typing" master switch** (Privacy & Data, on by default): a single
+  toggle that gates every on-device learning path — learned phrases, personalization
+  vocabulary, selection adaptation and swipe-gesture capture — plus the read paths that
+  consume them. Turning it off offers a one-tap "forget everything learned".
+- **Learned data now persists** across restarts and is kept per language. Previously the
+  phrase model lived only in RAM and was lost every time the keyboard process restarted.
+- **Learned-data manager** (Settings → 📝 Input Behavior → Learning & Data): per-language
+  counts, browse and delete individual learned phrases and words, bulk forget, and an
+  adjustable learned-word cap (default 5,000; range 1,000–20,000). Learned data is
+  included in Backup & Restore.
+- **Next-word prediction (opt-in, default off)**: after you finish a word, the bar can
+  offer likely next words from your own learned phrases.
+- **Suggestion transparency**: long-press a suggestion to see why it was offered
+  (dictionary frequency, learned context, personalization, engine); optional origin
+  markers on the bar.
+- **Private copy (#156)**: copy selected text straight into CleverKeys' clipboard history
+  without it ever reaching the Android OS clipboard. Available as an in-keyboard key, an
+  extra key, a short-swipe action, and an opt-in entry in the text-selection toolbar.
+  A new **"Private only"** filter works across History, Pinned and Todos.
+- **Encrypted backups (AES-256-GCM)**: set a backup password and exports are encrypted;
+  imports auto-detect and decrypt. Private clipboard entries are excluded from plaintext
+  exports (with the excluded count shown) and included in encrypted ones.
+- **TalkBack support for the keyboard itself**: the custom-drawn keyboard now exposes a
+  virtual view tree, so keys can be explored by touch and activated by double-tap, with
+  spoken labels for every key kind and working modifier latching. The settings UI also
+  mirrors correctly on right-to-left locales.
+
+### Changed
+
+- **Non-English dictionaries rebuilt** with the evidence classifier used for the English
+  rebuild: bundled Spanish re-curated at 50k, French/German/Italian/Portuguese 25k → 40k,
+  Swedish 40k; language packs Dutch 20k → 40k, Russian 50k (Ukrainian/Bulgarian
+  contamination removed), Greek ~40k curated, Turkish 40k, Indonesian/Malay/Filipino
+  rebuilt. Language-pack ZIPs are now byte-reproducible.
+- **Complete UI translation coverage across 21 locales**: roughly 9,000 translated
+  strings added, plus a native-quality review pass that corrected 96 wrong or inverted
+  translations — including French "paste as plain text" that read "Copy", Spanish Page
+  Up/Down swapped, and a clipboard confirmation in seven locales that asked whether to
+  delete the *entire* clipboard rather than one entry.
+- Settings section "🧠 Neural Network Prediction" renamed to "👆 Swipe Typing"; the beam
+  width / max word length / confidence sliders moved out of it (they already live in Full
+  Neural Settings).
+- The non-QWERTY swipe warning now appears only in Neural mode and points at the engine
+  selector instead of telling you to change layout.
+- Ten internal settings screens are no longer exported to other apps.
+- Android cloud backup and device transfer are now a strict allowlist: only theme and
+  recent-emoji preferences leave the device. Learned data, clipboard history, the
+  dictionary and all settings stay local.
+
+### Fixed
+
+- **Selection history was recorded even with personalized learning turned off** (present
+  in v1.0.0–v1.5.0). All learning paths are now gated behind the master switch, and
+  fields that ask for no personalized learning (password and incognito fields) are
+  honored.
+- Learned phrases could carry from one app into another; context is now cleared when the
+  keyboard leaves a field.
+- An autocorrection you rejected stayed in the learned phrase model; it is now rolled back.
+- Common words were displaced by contraction variants in the suggestion bar: typing `wer`
+  showed `we're` with no `were`. Paired contraction bases now keep their own slot and the
+  contraction is offered alongside them.
+- Greek QWERTY was declared as a Latin layout, which routed Greek text through the
+  QWERTY-trained English model.
+- Every swipe leaked an ONNX tensor; the encoder result is now released after decoding.
+- A cold-start swipe could block the UI thread for up to 5 seconds waiting for the model
+  to load (an ANR risk). It now replays once the engine is ready.
+- Suggestion bar rebuilt every view on every keystroke and the key renderer allocated per
+  frame; both are now pooled/indexed.
+- Crashes on Android 5.0–6.0 from API-24-only calls in the prediction path and in a
+  settings slider.
+- On Turkish devices the capital "I" key was mislocated for prediction.
+- Backup/restore hardening: ZIP path-traversal guard on clipboard media and backup
+  archives, and bounded reads on untrusted archive entries.
+- Content-bearing debug logs (clipboard text, selected text, predicted words) are gated
+  out of release builds.
+- A file named with a control character had been tracked since an early migration, which
+  broke every checkout of the repository on Windows (#150, contributed by @rubahness).
+
+---
+
 ## [1.5.0] - 2026-07-15
 
 ### Added
