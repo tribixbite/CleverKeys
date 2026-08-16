@@ -82,6 +82,26 @@ Everything else in `tunedV2` (γ 0.9, β 0.25, γp 0.25, βp 0.9882, beam 100) i
 the one the integration plan §7.1 specifies: select the preset by language, add `language` to
 the decoder-memo key, then relax the adapter's en-gate **per validated language**.
 
+## Which languages this can and cannot cover (verified 2026-08-16)
+
+The app bundles dictionaries for de, en, es, fr, it, pt, sv. This sweep covers **fr, de, es**
+(plus the en control) because those are the languages a swipe corpus exists for.
+
+**`it`, `pt` and `sv` cannot be swept or model-validated with any data available to this
+project.** The only multi-layout human-swipe source is HuggingFace
+`futo-org/swipe.futo.org` (config `swipe-5`), and its `language` column contains **zero
+rows** for those three (datasets-server `/filter`: `language='it'|'pt'|'sv'|'nl'` →
+`num_rows_total = 0`; en 47,364 / fr 3,124 for comparison). The blocker is therefore
+**corpus acquisition, not engineering effort** — a future attempt should start by sourcing
+Italian/Portuguese/Swedish swipe data, not by re-running this harness.
+
+Note the λ recommendation would *mechanically* extend to them (identical CKDT scale), and
+the encoder is language-agnostic (it emits per-key probabilities from geometry; the lexicon
+does the language work). But the measured spread across the languages we DID validate is
+wide — german 80.64 vs spanish 88.45 top-1 — so lexicon properties clearly matter, and
+enabling an unmeasured language on the scale argument alone would be a guess. They keep the
+working neural/geometric fallback instead.
+
 ## Caveats (read before acting)
 
 - **This does not by itself unlock non-English CTC.** Two pieces are still missing: accent

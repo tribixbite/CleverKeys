@@ -57,6 +57,18 @@ object CtcLanguageSupport {
     /**
      * Bundled-dictionary languages deliberately NOT enabled: no alt-layout model bar and
      * no λ sweep. Documented here so the omission reads as a decision, not an oversight.
+     *
+     * **The blocker is DATA, not effort (verified 2026-08-16).** Both validations need a
+     * real swipe corpus in the language, and the only multi-layout human-swipe source this
+     * project has — HuggingFace `futo-org/swipe.futo.org`, config `swipe-5` — contains
+     * **zero rows** for `it`, `pt` and `sv` (queried via the datasets-server `/filter`
+     * endpoint: `language='it'|'pt'|'sv'|'nl'` all return `num_rows_total = 0`, against
+     * en 47,364 / fr 3,124). So these languages cannot be swept or model-validated until a
+     * corpus is acquired — do not re-attempt a sweep expecting to find data.
+     *
+     * They are NOT broken meanwhile: they keep the pre-existing neural (QWERTY) /
+     * geometric (elsewhere) coverage. Enabling one later needs (a) a swipe corpus in that
+     * language, then (b) a [SUPPORTED] row plus its evidence.
      */
     val NEEDS_VALIDATION: Set<String> = setOf("it", "pt", "sv")
 
