@@ -275,7 +275,7 @@ class SwipeContractionLanguageIsolationTest {
         // device: every displayed word projects back to a beam-reachable lexicon surface.
         val slates = mapOf(
             "fr" to listOf("franco", "cest", "jai", "dont", "la", "quil", "dor", "france"),
-            "de" to listOf("franco", "im", "dor", "destaing", "und"),
+            "de" to listOf("franco", "im", "dor", "destaing", "und", "gehts", "gibts", "wenns"),
             "es" to listOf("franco", "como", "del"),
         )
         for ((language, slate) in slates) {
@@ -335,24 +335,76 @@ class SwipeContractionLanguageIsolationTest {
     }
 
     @Test
-    fun `the German contraction file is four French-origin elisions, and they still fire`() {
-        // Honest content pin: `contractions_de.json` is 96 bytes and contains NO German
-        // contraction — only four French-origin proper-noun elisions that occur in German
-        // text (Giscard d'Estaing, Côte d'Ivoire, Banca d'Italia, "d'or"). Dropping the
-        // English base therefore leaves German with essentially no contraction overlay,
-        // which is correct: German has none to display.
-        val de = languageFiles.getValue("de")
-        assertThat(de).containsExactly(
-            "destaing", "d'estaing",
-            "ditalia", "d'italia",
-            "divoire", "d'ivoire",
-            "dor", "d'or",
+    fun `German clitic contractions fire under the shipped policy`() {
+        // Dropping the English base left German with only four French-origin proper-noun
+        // elisions (`d'Estaing`, `d'Ivoire`, `d'Italia`, `d'or`) — no GERMAN form at all,
+        // because `scripts/extract_apostrophe_words.py`'s source (the AnySoftKeyboard German
+        // wordlist) holds just 18 apostrophe words, all proper nouns, and its `'s` filter
+        // would have dropped the clitics anyway. `contractions_de.json` now also carries the
+        // one genuine German apostrophe contraction: the elided "e" of the clitic "es"
+        // (Duden D 16 — "geht's", "gibt's", "hab's"), hand-curated so that every key is a
+        // word the German beam can actually emit ([BundledContractionDataTest]).
+        val expected = mapOf(
+            "gehts" to "geht's",
+            "gibts" to "gibt's",
+            "ists" to "ist's",
+            "habs" to "hab's",
+            "wenns" to "wenn's",
+            "weils" to "weil's",
+            "wirds" to "wird's",
+            "kanns" to "kann's",
+            "reichts" to "reicht's",
         )
-        for ((alias, display) in de) {
+        for ((alias, display) in expected) {
+            assertWithMessage("'$alias' must be a German lexicon word (else no beam can emit it)")
+                .that(lexicons.getValue("de")).contains(alias)
+            assertThat(languageFiles.getValue("de")[alias]).isEqualTo(display)
+            assertWithMessage(
+                "de: '$alias' is a misspelling of '$display' with no other reading, so the " +
+                    "overlay must REPLACE it and keep the slot"
+            ).that(overlay("de", Policy.SHIPPED, listOf(alias))).containsExactly(display)
+            assertWithMessage("de: '$alias' must be past the real-word guard to be replaced")
+                .that(ordinals.getValue("de")[alias]!!)
+                .isGreaterThan(ContractionOverlay.REAL_WORD_ORDINAL_MAX)
+        }
+
+        // The four pre-existing French-origin proper-noun elisions still fire.
+        for ((alias, display) in mapOf(
+            "destaing" to "d'estaing",
+            "ditalia" to "d'italia",
+            "divoire" to "d'ivoire",
+            "dor" to "d'or",
+        )) {
+            assertThat(languageFiles.getValue("de")[alias]).isEqualTo(display)
             assertWithMessage("'$alias' must be a German lexicon word for this to be reachable")
                 .that(lexicons.getValue("de")).contains(alias)
             assertThat(overlay("de", Policy.SHIPPED, listOf(alias))).containsExactly(display)
         }
+    }
+
+    @Test
+    fun `the German clitics are German morphology, not the English base coming back`() {
+        // The point of the whole change: German now has something OF ITS OWN, and it is
+        // reached without re-admitting a single English mapping. A mixed German slate must
+        // come back with German apostrophes only — no "i'm" for "im", no English possessive.
+        val slate = listOf("gehts", "im", "und", "gibts", "franco", "wenns")
+        for (word in slate) {
+            assertWithMessage("fixture: '$word' must be a German lexicon word")
+                .that(lexicons.getValue("de")).contains(word)
+        }
+
+        val fixed = overlay("de", Policy.SHIPPED, slate)
+        assertWithMessage("de: the clitics are displayed with their apostrophe")
+            .that(fixed).containsExactly("geht's", "im", "und", "gibt's", "franco", "wenn's")
+            .inOrder()
+        assertWithMessage("de: no English morphology may appear")
+            .that(fixed.filter { it == "i'm" || it.endsWith("o's") }).isEmpty()
+
+        // Pre-fix, the SAME slate leaked English on top: the base's `im` → "i'm" alias and
+        // the `franco` possessive pairing both fired. (The clitics are read from the German
+        // file under either policy, so only the English additions differ here.)
+        val leaked = overlay("de", Policy.PRE_FIX_ENGLISH_BASE, slate)
+        assertThat(leaked).containsAtLeast("franco's", "i'm")
     }
 
     @Test

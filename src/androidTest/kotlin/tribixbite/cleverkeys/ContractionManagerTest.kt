@@ -274,6 +274,11 @@ class ContractionManagerTest {
             manager.getNonPairedMapping("cest")
         )
         assertEquals("d'or", manager.getNonPairedMapping("dor"))
+        // German's OWN morphology: the clitic-"es" elisions added 2026-08-16 (Duden D 16),
+        // every key verified present in the bundled German dictionary.
+        assertEquals("geht's", manager.getNonPairedMapping("gehts"))
+        assertEquals("gibt's", manager.getNonPairedMapping("gibts"))
+        assertEquals("wenn's", manager.getNonPairedMapping("wenns"))
         assertNull(
             "German swipes must not see the English 'im' -> \"i'm\" alias ('im' is the " +
                 "16th most common GERMAN word)",

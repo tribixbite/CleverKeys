@@ -459,6 +459,10 @@ tasks.register('runPureTests', JavaExec) {
     // a non-English swipe slate (the fr "franco" → "franco's" regression). Runs the real
     // ContractionOverlay over the shipped contraction assets + CKDT frequency ordinals.
     'tribixbite.cleverkeys.swipe.SwipeContractionLanguageIsolationTest',
+    // Per-language contraction DATA quality (2026-08-16): every shipped mapping must key on
+    // a word the beam can emit, values may differ from their key by apostrophes/hyphens
+    // only, and the empty files (es/pt/sv) are pinned as linguistically correct.
+    'tribixbite.cleverkeys.swipe.BundledContractionDataTest',
     'tribixbite.cleverkeys.swipe.geometric.GeoPurityDriftTest',
     'tribixbite.cleverkeys.swipe.geometric.CkdtReaderTest',
     'tribixbite.cleverkeys.swipe.geometric.GeoProjectionTest',

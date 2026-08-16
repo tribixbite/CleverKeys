@@ -124,14 +124,30 @@ non-CTC language (it, pt, sv, nl, ru, …), so the leak was broader there.
 **User-visible consequence (intended):** a fr+en bilingual typing French no longer sees
 English contractions or possessives in the swipe bar. Languages that ship no contraction
 data (`contractions_{es,pt,sv,id,ms,tl,sw}.json` are literally `{}`) now get NO contraction
-overlay instead of the English one; `contractions_de.json` is 96 bytes and holds only four
-French-origin proper-noun elisions (`d'Estaing`, `d'Italia`, `d'Ivoire`, `d'or`), so German
-is effectively in the same position — correctly, since German has no apostrophe contractions
-to display. English is untouched, including its possessive augmentation.
+overlay instead of the English one. English is untouched, including its possessive
+augmentation.
+
+#### Per-language contraction DATA (2026-08-16)
+
+Dropping the English base exposed which languages had nothing of their own. The verdict per
+bundled language, and what was done:
+
+| lang | verdict |
+|---|---|
+| `de` | **Real gap, filled.** German's one genuine apostrophe contraction is the elided `e` of the clitic `es` (Duden D 16: `geht's`, `gibt's`, `hab's`). `contractions_de.json` held only four French-origin proper-noun elisions (`d'Estaing`, `d'Italia`, `d'Ivoire`, `d'or`) because its generator's only source — the ASK German wordlist — has 18 apostrophe words, all proper nouns, and the extractor drops every `'s` token as a possessive. 17 curated clitic mappings added, each with its key verified present in `de_enhanced.bin`. The solid preposition+article fusions (`ins`, `zum`, `vom`, `aufs`, `fürs`, `durchs`, `ums`) are ordinary words and must never be given an apostrophe. |
+| `es` | **Correctly empty.** `al` (a + el) and `del` (de + el) are the only standard contractions and both are written solid; RAE never inserts an apostrophe. |
+| `pt` | **Correctly empty.** `do`/`da`/`no`/`na`/`pelo` are solid. The genuine `d'`-forms (`d'água`, `d'alho`, `d'olho`, `d'angola`) are absent from `pt_enhanced.bin`, so a mapping could never fire; the two swipeable near-candidates (`douro`, `dalva`) are the apostrophe-FREE canonical spellings and mapping them would be a regression. |
+| `sv` | **Correctly empty.** No apostrophe genitive, and the reduced forms are written solid in modern Swedish (`stan`, not `sta'n`). |
+| `fr`, `it` | **Substantial but polluted.** Both were bulk-extracted from the ASK wordlists without checking the key against CleverKeys' own dictionary: of 27,494 fr entries only 206 have a key the beam can emit (17,875 dead a–z keys + 9,413 non-a–z keys); it is 116 live out of 22,474. Part of the live remainder is actively harmful — the key is a common word of the same language ranked past `REAL_WORD_ORDINAL_MAX`, so the overlay REPLACES it (`lune`→`l'une`, `larme`→`l'arme`, `davantage`→`d'avantage`, `lago`→`l'ago`, `luna`→`l'una`). Curating that list is an open product decision; the counts are pinned in `BundledContractionDataTest` so they stay visible and cannot grow. |
+
+`scripts/extract_apostrophe_words.py` carries a `CURATED_CONTRACTIONS` overlay merged on top
+of the extraction, so re-running the generator cannot wipe the hand-curated German data.
 
 **Guarded by:** `SwipeContractionLanguageIsolationTest` (pure — both policies over the real
-assets: the `franco` leak, in-language survival for fr/it/de, the still-load-bearing
-real-word guard for fr `la`/`les`/`ma` and it `del`, English parity),
+assets: the `franco` leak, in-language survival for fr/it/de including the German clitics,
+the still-load-bearing real-word guard for fr `la`/`les`/`ma` and it `del`, English parity),
+`BundledContractionDataTest` (pure — the dead-data guard, the apostrophes-and-hyphens-only
+value invariant, and the linguistic-correctness pins for the empty es/pt/sv files),
 `CoreImeHygieneDriftTest.swipeAdaptersScopeContractionsToTheActiveLanguage` (neither adapter
 may hand-roll a load order again), `ContractionManagerTest` (instrumented loader over real
 assets) and `CtcMultiLanguageInstrumentedTest` (the on-device slate; its

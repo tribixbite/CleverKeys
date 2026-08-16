@@ -51,6 +51,56 @@ OUTPUT_DIR = Path(__file__).parent.parent / "src/main/assets/dictionaries"
 # Regex to parse ASK word format: word=c'est,f=159,flags=,originalFreq=159
 WORD_PATTERN = re.compile(r"word=([^,]+),f=(\d+)")
 
+# ---------------------------------------------------------------------------
+# Hand-curated mappings this extractor CANNOT produce, merged on top of the
+# extraction so that re-running the script is non-destructive.
+#
+# Why they are needed: the extractor's only source is the ASK wordlists, and it
+# drops every token containing "'s" for non-Dutch languages (the possessive
+# filter below). German's genuine apostrophe contraction is exactly that shape —
+# the elided "e" of the clitic "es" (Duden D 16: "geht's", "gibt's", "hab's") —
+# and the ASK German wordlist holds only 18 apostrophe words anyway, all proper
+# nouns. So German would forever come out with just the four "d'" proper-noun
+# elisions the filter happens to let through.
+#
+# Curation rules applied (2026-08-16), all three required:
+#   1. The apostrophe form is the standard spelling of a clitic-"es" elision.
+#   2. The apostrophe-free KEY is a word in CleverKeys' own bundled dictionary
+#      (src/main/assets/dictionaries/de_enhanced.bin, projected onto a-z) —
+#      otherwise the swipe beam can never emit it and the mapping is dead data.
+#      54 of 76 hand-enumerated candidates were dropped by this rule.
+#   3. The key has no competing reading in German, confirmed against wordfreq
+#      ('de'): rejected "wies" (past tense of weisen), "versuchs"/"halts"
+#      (genitives), "wars"/"wills" (proper nouns) — ContractionOverlay REPLACES
+#      a key ranked past REAL_WORD_ORDINAL_MAX, so a homograph would be lost.
+#
+# Guarded by src/test/kotlin/tribixbite/cleverkeys/swipe/BundledContractionDataTest.kt.
+CURATED_CONTRACTIONS = {
+    "de": {
+        "fands": "fand's",
+        "gabs": "gab's",
+        "gehts": "geht's",
+        "gibts": "gibt's",
+        "gings": "ging's",
+        "habs": "hab's",
+        "hats": "hat's",
+        "ichs": "ich's",
+        "ists": "ist's",
+        "kanns": "kann's",
+        "mans": "man's",
+        "obs": "ob's",
+        "reichts": "reicht's",
+        "sags": "sag's",
+        "weils": "weil's",
+        "wenns": "wenn's",
+        "wirds": "wird's",
+    },
+    # es/pt/sv deliberately have NO curated entries: Spanish ("al", "del") and
+    # Portuguese ("do", "da", "no", "na", "pelo") amalgams are written solid, and
+    # modern Swedish writes its reduced forms solid too ("stan", not "sta'n").
+    # An empty file is the linguistically correct answer for those languages.
+}
+
 
 def extract_apostrophe_words(dict_path: Path, lang: str = "") -> dict:
     """
@@ -128,6 +178,12 @@ def extract_all_languages():
     for lang, dict_path in LANG_DICT_PATHS.items():
         print(f"Processing {lang}...")
         contractions = extract_apostrophe_words(dict_path, lang)
+        curated = CURATED_CONTRACTIONS.get(lang, {})
+        if curated:
+            # Curated entries WIN: they were verified against the app's own dictionary,
+            # while the extraction cannot see it (see CURATED_CONTRACTIONS' comment).
+            contractions.update(curated)
+            print(f"  Merged {len(curated)} hand-curated mappings")
         results[lang] = contractions
         print(f"  Found {len(contractions)} apostrophe word mappings")
 
