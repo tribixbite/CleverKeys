@@ -181,6 +181,31 @@ Outstanding, in priority order:
       for the CKDT `255−rank` scale and ships for fr/de/es); it is an unwritten ~20-line
       lexicon loader, plus the open question of what evidence tier an arbitrary user language
       can satisfy. CTC also ignores an imported *English* langpack entirely.
+- [ ] **P2 — Russian is the one non-Latin script with a trained, swept, benchmarked CTC model
+      — treat it separately from "non-Latin is blocked on data".** Two ru models exist and were
+      λ-swept symmetrically (tune rows 0:4708, confirm on the untouched 4708:9416,
+      `eval_cyrillic.py`, ML `PHASE_J.md` §6.9): λ 2.0 gives **76.91/77.92** and **77.83/78.23**
+      in-dict top-1, worth ~+1.2 over the published λ 1.1. `CtcScoringParams.tunedRuCkdt` carries
+      the result and is deliberately unwired. Marginal cost is small — the ru model is the
+      standard resbn80 graph at 1,142,727 B (~0.55 MiB fp16w), ~1.5 GPU-h for 3 seeds.
+      What is actually missing: (a) a `"ru" to CKDT_BIN` row in `CtcLanguageSupport.SUPPORTED`
+      — without it `presetFor("ru")` returns the ENGLISH λ 4.0, the wrong scale; (b) the a–z
+      `ALPHABET` hardcode and `MAX_CHILDREN = 26` (Cyrillic needs 33); (c) a bundled ru
+      dictionary — `dictionaries/` is Latin-only today; (d) a ru projection policy (lowercase,
+      strip `-`/`'`, ё→е, ъ→ь, **no NFD**) as a sibling to the Latin-specific `CtcAzProjection`;
+      (e) the ONNX itself — **no `.onnx` exists anywhere in CleverKeys-ML**, the ru checkpoints
+      are on the GPU box, so this is an export, not a training run; (f) a footing decision —
+      `tunedRuCkdt` is E1-based while `presetFor` is tunedV2-based, and the two sweeps agree on
+      λ and nothing else.
+      **The real argument against is not capability, it is that geo may already be better here.**
+      Geo's synthetic ru/JCUKEN TYPICAL t1 is **91.3** vs CTC's 77.4 on real Yandex val — not
+      comparable. But geo's *own* en/QWERTY reads 83.4 on that same synthetic grid against 67.50
+      on real test-2400, a ~15.9 pt inflation; discounting ru by the same amount gives ≈75.4,
+      i.e. roughly at parity with CTC's 77.4. That is a one-point calibration across different
+      corpora, not a validated mapping — it is enough to say the comparison is OPEN, not enough
+      to decide it. Resolving it needs both engines on one ru dataset. Note also that all
+      Cyrillic numbers are **val-tier permanently** (no Cyrillic model was decoded on test-2400;
+      the seal is spent), so ru can never reach en/fr/de/es's evidence tier.
 - [ ] **P2 — geo fallback CANNOT yet be removed under `ctc`.** 4 of 15 routing cells survive;
       dead would be it/pt/sv, all langpacks, 36 of 83 bundled layouts, and two bundled Latin
       layouts whose letters sit on corners (`latn_qwerty_az`, `latn_qwerty_tly`).
