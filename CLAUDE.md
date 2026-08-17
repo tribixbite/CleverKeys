@@ -174,3 +174,11 @@ This gives best of both worlds: release performance + debug visibility.
 # Tail logs for debugging
 logcat -s "CleverKeys" "System.err" "AndroidRuntime"
 ```
+
+**`ENABLE_VERBOSE_LOGGING` const-inlining trap (2026-08-17).** `BuildConfig.ENABLE_VERBOSE_LOGGING`
+is `System.env.LOCAL_BUILD == "true"`, and Kotlin inlines it at every call site. Running
+`gradlew compileReleaseKotlin` *without* `LOCAL_BUILD` bakes `false` into the consuming class,
+and **incremental compilation keeps the stale constant** even after a later `LOCAL_BUILD=true`
+build regenerates the flag as `true` — so debug-gated code silently no-ops with no error.
+Fix: `rm -rf build/tmp/kotlin-classes/release`. Bit the `MemoryProbe` work; costs a whole
+measurement run if unnoticed, because the symptom is *absence of log output*, not a failure.
