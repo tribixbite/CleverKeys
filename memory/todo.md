@@ -160,7 +160,7 @@ just below. Outstanding, prioritized:
 - [ ] `hybrid` swipe mode is provenance-tagged `NEURAL_BEAM` (minor; give it its own origin).
 - [ ] (by-design, documented) backup *restore* repopulates learned stores even with master OFF (L7).
 
-### B. FUTO / CTC swipe engine — TRAINED + WIRED, campaign CLOSED (commits 3b9dd666..HEAD)
+### B. FUTO / CTC swipe engine — TRAINED + WIRED (en/fr/de/es), campaign CLOSED (3b9dd666..HEAD)
 - [x] **CTC model trained** (user's GPU, CleverKeys-ML repo, Phases A→M — the campaign is
       now CLOSED, ledger empty, no further training): ship model
       **`phaseM_kd_fresh_w1_s1234_fp16w`** (3,052,318 B / 2.91 MB, sha256 `84718e6e…`), the
@@ -206,13 +206,50 @@ just below. Outstanding, prioritized:
       `tunedV2`, checks every beam case decodes at that preset, and pins the two fixture copies
       byte-identical. Device half (`CtcEmissionModelParityTest`, `CtcLatencyGateTest`) still
       needs ew-cli on the Termux device — not runnable on the WSL checkout.
-- [x] **Per-language decode preset axis (plan O10) — IMPLEMENTED (2026-08-15)**:
-      `CtcScoringParams.presetFor(language, …)` + `tunedRuCkdt()` (E1 with λ 1.1→2.0 for the
-      CKDT `255 − rank` scale, worth ≈ +1.2 in-dict ru t1, PHASE_J §6.9 — **val-only**), and
-      `language` added to `CtcEngineAdapter`'s decoder memo key so a language switch cannot
-      silently reuse the previous λ. No new pref, no SETTINGS_DEFAULTS change, **en-only gate
-      untouched** (relaxing O5 needs a Cyrillic encoder + CKDT-scale trie, not a preset).
-      λ = 2.0 must be re-confirmed with user-dictionary entries present before any ru ship.
+- [x] **Per-language decode preset axis (plan O10) — IMPLEMENTED, then SUPERSEDED by the
+      scale-keyed form (2026-08-15 → 2026-08-16)**: `CtcScoringParams.presetFor(language, …)`
+      + `language` in `CtcEngineAdapter`'s decoder memo key, so a language switch cannot
+      silently reuse the previous λ. This axis was built twice, in parallel, on two
+      checkouts — once language-keyed (`ru` → an E1-based preset, everything else →
+      `tunedV2`) and once **scale-keyed** (λ chosen from the language's
+      `CtcLanguageSupport.LexiconSource`). The scale-keyed one shipped: it generalises, so
+      every CKDT-scale language gets λ 2.0 without being named, and it is what the fr/de/es
+      enablement below rides on. No new pref, no SETTINGS_DEFAULTS change.
+      `tunedRuCkdt()` survives as a **recorded, unwired** datapoint (E1 base with λ 1.1→2.0,
+      ≈ +1.2 in-dict ru t1, PHASE_J §6.9 — **val-only, permanently**). It is deliberately
+      NOT what `presetFor("ru")` returns: the two sweeps agree on λ and disagree on γ/β/
+      γ_prune because they were run around different base presets, so a ru ship starts with
+      a FOOTING decision, not a λ lookup (pinned by `CtcLanguagePresetTest`). λ = 2.0 still
+      needs re-confirming with user-dictionary entries present before any ru ship.
+- [x] **CTC for French, German and Spanish + a widened layout gate (2026-08-16)**: the
+      en-only gate is GONE. `CtcLanguageSupport.SUPPORTED` now carries en (en_enhanced JSON
+      scale, λ 4.0) + fr/de/es (CKDT `.bin` at `255 − rank`, λ 2.0), each read through
+      `CtcCkdtLexicon` and projected onto the a–z decode alphabet by `CtcAzProjection` with
+      the accented form retained for display (`cafe`→`café`, `nino`→`niño`). The English
+      layout gate widened from QWERTY to any Latin layout, so Dvorak/Colemak get CTC.
+      it/pt/sv are held back on DATA, not effort: HuggingFace `futo-org/swipe.futo.org`
+      config `swipe-5` has **zero rows** for those languages, so they cannot be swept or
+      model-validated — do not re-attempt expecting to find a corpus. λ evidence:
+      `docs/eval/2026-08-15-ctc-per-language-lambda.md`.
+- [x] **SWIPE contractions scoped to the ACTIVE decode language (2026-08-16)** — swipe path
+      ONLY, see the tap caveat below. English contractions no longer leak into non-English
+      slates: `SwipeContractionPolicy` gates the overlay by base subtag and both the
+      geometric and CTC adapters load through `ContractionManager.loadSwipeDisplayMappings`,
+      which DROPS the previously-loaded set before loading the target language's. Real
+      German contraction data landed; the fr/it bundled files are pinned by test at their
+      current live-entry counts (fr 206 of 27,494; it 116 of 22,474) so the pollution is
+      visible and cannot grow.
+      ⚠️ **This did NOT close the section-C tap bug.** There are two `ContractionManager`
+      instances with two different loaders: the adapters construct their own and call the
+      language-scoped `loadSwipeDisplayMappings(language)`
+      (`CtcEngineAdapter.kt:555`, `GeometricEngineAdapter.kt:203`), while
+      `ManagerInitializer.kt:84-85` constructs the instance injected into
+      `SuggestionHandler` and calls the UNGUARDED `loadMappings()` — the English-base
+      loader, for every language. So the TAP path still leaks (German "im"→"I'm").
+- [x] **Web demo runs the shipped CTC engine** (`ctc_app`) behind a golden-fixture parity
+      gate, and the v1.6.0 release notes were rewritten for the true scope (three swipe
+      engines, not one). Also fixed: the learning stores crashed on Android 5.0–6.0 —
+      minSdk is 21 but the code used Java-8 `Map` default methods.
 - [ ] Manual QA per plan §4.5 before any v1.6.0 tag (first-swipe warmup, long-word feel,
       non-QWERTY hedge, non-en fallback-to-neural, don't/I'm contraction display, provenance
       label, thermals). Tag only on explicit user go.
@@ -240,6 +277,15 @@ just below. Outstanding, prioritized:
 - [ ] **P2 non-en tap contraction bug** (German "im"→"I'm" top, loses "im"): `SuggestionHandler`'s
       ContractionManager loads en contractions for every language, unguarded — mirror
       OptimizedVocabulary's per-language isolation. Details in the 2026-07-23 verification note below.
+      **STILL OPEN after the 2026-08-16 swipe fix, and the machinery to close it now exists.**
+      Root cause is narrower than it looks: `ManagerInitializer.kt:84-85` builds the
+      `SuggestionHandler` instance and calls the unguarded `loadMappings()`, while the swipe
+      adapters build their own and call `loadSwipeDisplayMappings(language)` — same class,
+      two instances, two loaders. Fix is to route the tap instance through the
+      language-scoped loader (and re-load it on language change, as
+      `PreferenceUIUpdateHandler.kt:127` already does for the unguarded one), NOT to write
+      a second policy. Guard rails already in place: `SwipeContractionPolicy.usesEnglishBase`
+      and the per-language bundled data + counts pinned by `BundledContractionDataTest`.
 - [ ] 42 pre-existing **Compose-UI test flakes** (activity-resolution, infinite-animation idle timeout,
       scroll-reach) — separate CI-stability tech debt, fail on `main` too, not caused by this session.
 - [ ] Older gated items (unchanged): R8 release flip (device soak), git-history rewrite (gated on
