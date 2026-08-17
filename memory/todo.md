@@ -148,6 +148,61 @@ runMockTests 299, androidTest compiles; full ew-cli on the *pipeline* tests gree
 pre-existing Compose-UI flakes are NOT ours). Detailed DONE lists are in the two ✅ sections
 just below. Outstanding, prioritized:
 
+### 0. NEW (2026-08-17) — startup OOM fixed, contractions restored, CTC parity audited
+
+**Landed:** `8230333b` (memory + restore) and `f8baa94b` (parity audit). Nine fatal startup
+OOMs are gone (Dalvik alloc 184.1 → 114.0 MiB, headroom 26% → 55%, crash buffer empty); the
+49.6k fr/it contraction mappings trimmed on 2026-08-17 are restored (fr 18,114 / it 21,362)
+with the replace/append split intact and every engine entering alias keys at its scale's
+floor. GIF subsystem refuted as the memory cause three ways. Neural NOT removed — it is the
+audit-M1 fallthrough for languages CTC does not serve. Gates: lint 0 errors, runPureTests
+**1996**, both compiles clean. Full findings: `docs/audit/2026-08-17-neural-vs-ctc-parity.md`.
+
+Outstanding, in priority order:
+
+- [ ] **P0 — flip `Defaults.SWIPE_ENGINE_MODE` to `ctc`** (`Config.kt:320`, still `"neural"`).
+      Out of the box a non-QWERTY layout gets **no swipe at all**. Largest coverage win
+      available and it needs no new code. No migration concern: the pref shipped with the geo
+      work (`96cb37e3`), which is not an ancestor of v1.5.0, so no stored values exist.
+- [ ] **P0 — `CtcLexiconTrie.MAX_CHILDREN = 26` cannot grow** (`:115`; `minOf(chars.size * 2,
+      MAX_CHILDREN)`). The 27th distinct child throws `ArrayIndexOutOfBounds`. Latent crash
+      the moment any wider alphabet is passed — Cyrillic 33, Arabic 28, Georgian 33, Armenian 38.
+- [ ] **P1 — German `ß`/`œ`/`æ`/`ø` are unswipeable under CTC today.** `CtcAzProjection` drops
+      words with no a–z decomposition, so `groß`/`Straße`/`weiß` cannot be produced in a
+      language CTC is *enabled* for. The drop is deliberate (ß is one key, not two `s`
+      presses) but the consequence shipped. Needs a projection that maps ß to its own slot.
+- [ ] **P1 — CTC has no main-dictionary fuzzy rescue** (neural: `OptimizedVocabulary:611-746`).
+      A bad swipe yields whatever the trie beam found, possibly nothing. This is the single
+      largest behavioural gap and a hard blocker on deleting neural.
+- [ ] **P1 — secondary-language blending is absent in `ctc` mode**, silently. CTC decodes one
+      trie, so a fr-primary/en-secondary user gets no English from swipe — the code-switching
+      rule failing in the permissive direction, against stated intent.
+- [ ] **P2 — langpack languages get no CTC.** λ is NOT the blocker (λ 2.0 is already fitted
+      for the CKDT `255−rank` scale and ships for fr/de/es); it is an unwritten ~20-line
+      lexicon loader, plus the open question of what evidence tier an arbitrary user language
+      can satisfy. CTC also ignores an imported *English* langpack entirely.
+- [ ] **P2 — geo fallback CANNOT yet be removed under `ctc`.** 4 of 15 routing cells survive;
+      dead would be it/pt/sv, all langpacks, 36 of 83 bundled layouts, and two bundled Latin
+      layouts whose letters sit on corners (`latn_qwerty_az`, `latn_qwerty_tly`).
+- [ ] **P2 — doc corrections.** `docs/specs/ctc-swipe-engine.md:235` quotes German confirm
+      81.57, which is the λ 3.0 row (shipped λ 2.0 = 81.66). The azerty/qwertz/german/spanish
+      alt-layout bars may have been decoded at 27–29 slots while the app always builds 26 —
+      only dvorak has a published app-geometry counterpart; do not quote until re-checked.
+- [ ] **P3 — measure CTC on LOCAL combined**, the real-user corpus and the one dataset where
+      geo beat neural (55.2 vs 53.7). CTC has never been run on it, and no accuracy number
+      exists for the shipped *Kotlin* engine at all (all figures are from the Python harness,
+      tied in only by golden-fixture parity).
+- [ ] **P3 — `MemoryProbe` settle passes** cost ~2.4 s of IME cold start in `LOCAL_BUILD=true`
+      builds (2×GC + 2×120 ms sleep on the main thread). Debug-gated so releases are
+      unaffected. Kept deliberately so the pending per-phase table can be captured — it lands
+      in `logcat -s CKMemProbe` on the next keyboard open. Strip the settles once captured.
+- [ ] **P3 — `DictionaryManager` holds up to 4 fully-loaded `WordPredictor`s (~40 MB) behind
+      no prediction API**, and `en` is loaded twice. `LearningWiringDriftTest` (M2) encodes the
+      intent that they exist, so removing them is a product decision, not a cleanup.
+- [ ] **P3 — the French neural trie is being built from English words** (`OptimizedVocabulary`
+      logs `🚨 TRIE BUILT WITH ENGLISH: New fr trie contains: [the, brother, open, …]`).
+- [ ] Non-English **tap** contraction bug still open (pre-existing, not swipe-related).
+
 ### A. Context-LM — small follow-ups (shipped features, verify/finish)
 - [ ] **Manual on-device UX check** of next-word + learned-data manager + the "Learn From My
       Typing" master privacy toggle — these are opt-in and NOT device-validated yet. UX walkthrough:
