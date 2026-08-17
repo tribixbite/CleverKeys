@@ -822,9 +822,14 @@ class InputCoordinator(
                         ctc.supportsLayout(keyboard, params, frameW, frameH)
                     when {
                         ctcServes -> ctc.warmUpAsync(keyboard, params, frameW, frameH, language)
-                        // Unsupported language on a neural-capable layout: nothing to
-                        // prewarm (the neural engine warms via its own init path), as HYBRID.
-                        Config.isSwipeTypingSupportedForLayout(keyboard) -> Unit
+                        // Unsupported language on a neural-capable layout: the next swipe
+                        // falls through to neural (audit M1), so warm THAT engine here.
+                        // In ctc mode the neural engine is no longer built eagerly at IME
+                        // startup (PredictionCoordinator.shouldPreloadNeuralEngine — it costs
+                        // ~30 MB of Java heap that a CTC-served user never touches), so this
+                        // is now the path that front-loads the fallthrough. Non-blocking.
+                        Config.isSwipeTypingSupportedForLayout(keyboard) ->
+                            predictionCoordinator.warmNeuralEngineAsync()
                         // Keep this call on ONE line: CoreImeHygieneDriftTest source-scans
                         // for the literal `geometricAdapterOrCreate().warmUpAsync`.
                         else -> geometricAdapterOrCreate().warmUpAsync(keyboard, params, frameW, frameH, language)

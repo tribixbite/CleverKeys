@@ -521,4 +521,93 @@ class CoreImeHygieneDriftTest {
             ).that(loader).contains("$map.clear()")
         }
     }
+
+    /**
+     * Contraction alias keys are REACHABLE, never PREFERRED — at **both** sites, not just one.
+     *
+     * ### The bug this pins
+     *
+     * `loadContractionsFromInputStream` injects every non-paired alias key into `vocabulary`
+     * at the frequency floor, precisely so the 17,931 fr / 21,214 it mappings restored on
+     * 2026-08-17 cannot outrank real vocabulary. But `filterPredictions` reads `vocabulary`
+     * only behind `_englishFallbackEnabled`, which is `(primary == "en") || (secondary == "en")`
+     * — the code-switching rule. So in a French slate with no English secondary that lookup is
+     * SKIPPED, control falls through to the `nonPairedContractions` fallback, and whatever that
+     * fallback assigns is the score the word actually gets.
+     *
+     * That fallback used to fabricate `WordInfo(0.88f, tier 2)` — a top-100 common-word boost —
+     * which silently defeated the load-time floor in exactly the configuration the floor was
+     * written for. Fixing one site and not the other is the failure mode; this test pins both.
+     *
+     * The English aliases ("doesnt", "cant") are unaffected: they are reached at the
+     * `vocabulary` lookup whenever English is primary or secondary, which is the only
+     * configuration in which English words may surface at all.
+     */
+    @Test
+    fun contractionAliasKeysEnterAtTheFloorAtEveryScoringSite() {
+        val relative = "tribixbite/cleverkeys/OptimizedVocabulary.kt"
+        val vocab = source(relative)
+
+        // The constants themselves must be a floor, not a boost. Read from source rather than
+        // referenced directly: the companion is private, and widening production visibility to
+        // suit a test is the wrong trade.
+        val declaredFrequency = Regex("const val CONTRACTION_ALIAS_FREQUENCY = ([0-9.]+)f")
+            .find(vocab)?.groupValues?.get(1)?.toFloat()
+        assertWithMessage(
+            "$relative must declare CONTRACTION_ALIAS_FREQUENCY as a plain float literal so " +
+                "this test can check its magnitude."
+        ).that(declaredFrequency).isNotNull()
+        assertWithMessage(
+            "CONTRACTION_ALIAS_FREQUENCY must be a floor. Anything a real word can reach makes " +
+                "tens of thousands of injected pseudo-words competitive with real vocabulary."
+        ).that(declaredFrequency!!).isLessThan(0.01f)
+        assertWithMessage(
+            "CONTRACTION_ALIAS_TIER must be the ordinary tier — tier 2 is the common-word boost."
+        ).that(vocab).contains("const val CONTRACTION_ALIAS_TIER: Byte = 0")
+
+        // Both regions are stripped of comments before the negative assertions: the comments
+        // deliberately NAME the rejected value ("this used to be 0.88f") so the next reader knows
+        // why the constant is there, and a raw text search cannot tell that from a live boost.
+        fun code(region: String): String = region
+            .lineSequence()
+            .filterNot { val t = it.trim(); t.startsWith("//") || t.startsWith("*") || t.startsWith("/*") }
+            .joinToString("\n")
+
+        // Site 1 — the runtime fallback in filterPredictions. This is the ONLY site that scores
+        // the key in a non-English slate, because the `vocabulary` lookup above it is gated.
+        val fallback = code(
+            vocab
+                .substringAfter("if (info == null && nonPairedContractions.containsKey(word)) {")
+                .substringBefore("if (info == null) {")
+        )
+        assertWithMessage(
+            "$relative: the nonPairedContractions fallback in filterPredictions must assign the " +
+                "shared alias constants. It is reached only when English fallback is OFF, so a " +
+                "hard-coded frequency here overrides the load-time floor for every non-English " +
+                "alias key without touching the injection code that appears to set the policy."
+        ).that(fallback).contains("WordInfo(CONTRACTION_ALIAS_FREQUENCY, CONTRACTION_ALIAS_TIER)")
+        assertWithMessage(
+            "$relative: the nonPairedContractions fallback must not re-fabricate a frequency. " +
+                "0.88f/tier 2 is the top-100 common-word boost this test exists to keep out."
+        ).that(fallback).doesNotContain("0.88f")
+
+        // Site 2 — the load-time injection. The `!containsKey` branch is the productive-elision
+        // case (fr `dabaissement`); the else branch is the attested-alias upgrade and is
+        // deliberately left alone, so scope the assertion to the injection branch only.
+        val injection = code(
+            vocab
+                .substringAfter("if (!vocabulary.containsKey(withoutApostrophe)) {")
+                .substringBefore("} else {")
+        )
+        assertWithMessage(
+            "$relative: load-time injection of an alias key the vocabulary does not attest must " +
+                "use the same floor constants as the runtime fallback and as the other two " +
+                "engines (CtcContractionKeys.INJECTED_FREQUENCY, WordPredictor" +
+                ".CONTRACTION_ALIAS_RANK)."
+        ).that(injection).contains("WordInfo(CONTRACTION_ALIAS_FREQUENCY, CONTRACTION_ALIAS_TIER)")
+        assertWithMessage(
+            "$relative: the injection branch must not boost. A key the vocabulary lacks is by " +
+                "construction not a word of the language."
+        ).that(injection).doesNotContain("0.88f")
+    }
 }

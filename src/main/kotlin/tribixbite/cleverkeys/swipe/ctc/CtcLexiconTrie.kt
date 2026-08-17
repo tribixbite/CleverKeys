@@ -15,9 +15,24 @@ import kotlin.math.ln
  *  - [isWord] / [logFreq] — terminal flag and AOSP-scale log-frequency (`is_word` /
  *    `get_log_frequency`).
  *
- * Children are held in an insertion-ordered map so beam expansion visits them in the
- * same order the Python port does (dict-insertion order), keeping golden-trace parity
- * exact under tie conditions.
+ * Children are held in insertion order so beam expansion visits them in the same order the
+ * Python port does (dict-insertion order), keeping golden-trace parity exact under tie
+ * conditions.
+ *
+ * ## Why parallel arrays and not a `LinkedHashMap`
+ *
+ * This node type is instantiated ~231,000 times for the shipped English lexicon, so its
+ * per-node overhead IS the trie's memory cost. A `LinkedHashMap<Char, CtcTrieNode>` child
+ * map costs, per node, a map instance (~56 B) plus — for any node with children — a 16-slot
+ * table array (~80 B) plus a 32 B `LinkedHashMap.Entry` per edge. Measured against the ART
+ * object layout that is ~42 MB for the English trie, of which only ~9 MB is the nodes
+ * themselves.
+ *
+ * Two lazily-allocated parallel arrays (`char` keys + node references, appended in insertion
+ * order) reproduce the same semantics — ordered iteration, by-character lookup — for ~19 MB,
+ * a ~23 MB saving on a 256 MB-growth-limit device. Lookup is a linear scan, which is FASTER
+ * here than hashing: the trie's average branching factor is 1.44 children per internal node
+ * and the hard maximum is the alphabet size (26).
  */
 class CtcTrieNode internal constructor(
     /** Stable unique node identity (assigned at creation; only used as a dedup key). */
@@ -31,7 +46,74 @@ class CtcTrieNode internal constructor(
     /** Parent node, or `null` for the root (used to reconstruct the surface word). */
     internal val parent: CtcTrieNode?,
 ) {
-    internal val childMap = LinkedHashMap<Char, CtcTrieNode>()
+    /**
+     * Edge characters in insertion order; `null` until this node gets its first child, so a
+     * leaf (30% of nodes in the English trie) pays nothing for children it will never have.
+     */
+    private var childChars: CharArray? = null
+
+    /** Child nodes, parallel to [childChars]. Slots past [childCount] are unset. */
+    private var childNodes: Array<CtcTrieNode?>? = null
+
+    /** Number of children (`get_child_count`). */
+    var childCount: Int = 0
+        private set
+
+    /** The child reached by [ch], or `null`. Linear scan — see the class KDoc. */
+    internal fun childFor(ch: Char): CtcTrieNode? {
+        val chars = childChars ?: return null
+        val nodes = childNodes ?: return null
+        for (i in 0 until childCount) {
+            if (chars[i] == ch) return nodes[i]
+        }
+        return null
+    }
+
+    /**
+     * Appends a child edge, preserving insertion order. Callers MUST have checked
+     * [childFor] first — this does not deduplicate.
+     */
+    internal fun addChild(ch: Char, node: CtcTrieNode) {
+        var chars = childChars
+        var nodes = childNodes
+        if (chars == null || nodes == null) {
+            // Capacity 2 is free relative to capacity 1: both round to the same 24-byte
+            // allocation under ART's 8-byte alignment, and it covers the common 2-way branch.
+            chars = CharArray(INITIAL_CHILD_CAPACITY)
+            nodes = arrayOfNulls(INITIAL_CHILD_CAPACITY)
+            childChars = chars
+            childNodes = nodes
+        } else if (childCount == chars.size) {
+            val grown = minOf(chars.size * 2, MAX_CHILDREN)
+            chars = chars.copyOf(grown)
+            nodes = nodes.copyOf(grown)
+            childChars = chars
+            childNodes = nodes
+        }
+        chars[childCount] = ch
+        nodes[childCount] = node
+        childCount++
+    }
+
+    /**
+     * The [index]-th child in insertion order. The beam iterates children by index to avoid
+     * allocating an iterator per node per timestep.
+     *
+     * @throws IndexOutOfBoundsException if [index] is not in `0 until childCount`.
+     */
+    fun childAt(index: Int): CtcTrieNode {
+        if (index < 0 || index >= childCount) {
+            throw IndexOutOfBoundsException("child $index of $childCount")
+        }
+        return childNodes!![index]!!
+    }
+
+    private companion object {
+        const val INITIAL_CHILD_CAPACITY = 2
+
+        /** Hard bound: a node can have at most one child per alphabet character. */
+        const val MAX_CHILDREN = 26
+    }
 
     /**
      * The surface word spelled by the root→this path (`get_word`). Reconstructed by
@@ -63,11 +145,14 @@ class CtcTrieNode internal constructor(
     var logFreq: Double = 0.0
         internal set
 
-    /** Child nodes in insertion order (for deterministic beam expansion). */
-    val children: Collection<CtcTrieNode> get() = childMap.values
-
-    /** Number of children (`get_child_count`). */
-    val childCount: Int get() = childMap.size
+    /**
+     * Child nodes in insertion order (for deterministic beam expansion).
+     *
+     * Allocates a view list, so the HOT beam path uses [childAt]/[childCount] instead; this
+     * accessor exists for tests and diagnostics.
+     */
+    val children: List<CtcTrieNode>
+        get() = List(childCount) { childAt(it) }
 }
 
 /**
@@ -103,6 +188,12 @@ class CtcLexiconTrie(val alphabet: CharArray) {
     var wordCount: Int = 0
         private set
 
+    /**
+     * Number of nodes allocated, including the root — the trie's real memory driver
+     * (words share prefixes, so this is 2–3× [wordCount]). Reported by the memory probe.
+     */
+    val nodeCount: Int get() = nextNodeId
+
     /** Emission-column index of [ch], or `-1` if [ch] is not in the alphabet. */
     fun charIndexOf(ch: Char): Int = charToIndex[ch] ?: -1
 
@@ -123,12 +214,10 @@ class CtcLexiconTrie(val alphabet: CharArray) {
             val ci = charToIndex[ch]
                 ?: throw IllegalArgumentException("char '$ch' in \"$word\" is not in the alphabet")
             val parent = node
-            node = parent.childMap.getOrPut(ch) {
-                CtcTrieNode(
-                    nextNodeId++, charIdx = ci, incomingChar = ch,
-                    depth = parent.depth + 1, parent = parent,
-                )
-            }
+            node = parent.childFor(ch) ?: CtcTrieNode(
+                nextNodeId++, charIdx = ci, incomingChar = ch,
+                depth = parent.depth + 1, parent = parent,
+            ).also { parent.addChild(ch, it) }
         }
         if (!node.isWord) {
             wordCount++
@@ -146,9 +235,26 @@ class CtcLexiconTrie(val alphabet: CharArray) {
     fun contains(word: String): Boolean {
         var node = root
         for (ch in word) {
-            node = node.childMap[ch] ?: return false
+            node = node.childFor(ch) ?: return false
         }
         return node.isWord
+    }
+
+    /**
+     * The stored `ln(freq + 1e-10)` for [word], or `null` when [word] is not a complete
+     * word in the lexicon.
+     *
+     * Exposed so the frequency POLICY (which words the beam's `lambda * logFreq` term
+     * favours) is directly assertable — in particular that an injected contraction alias
+     * carries a ~0 term while real vocabulary carries a positive one, and that injection
+     * never lowers an existing word's frequency.
+     */
+    fun logFrequencyOf(word: String): Double? {
+        var node = root
+        for (ch in word) {
+            node = node.childFor(ch) ?: return null
+        }
+        return if (node.isWord) node.logFreq else null
     }
 
     companion object {

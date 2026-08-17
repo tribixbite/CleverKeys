@@ -2,6 +2,12 @@
   "ai": [
     "a'i"
   ],
+  "allarma": [
+    "all'arma"
+  ],
+  "allarmata": [
+    "all'armata"
+  ],
   "allarmi": [
     "all'armi"
   ],
@@ -13,6 +19,9 @@
   ],
   "allerta": [
     "all'erta"
+  ],
+  "allevo": [
+    "all'evo"
   ],
   "allo": [
     "all'o"
@@ -26,11 +35,23 @@
   "alloro": [
     "all'oro"
   ],
+  "alluci": [
+    "all'uci"
+  ],
+  "alluso": [
+    "all'uso"
+  ],
   "belle": [
     "bell'e"
   ],
   "centra": [
     "c'entra"
+  ],
+  "centrano": [
+    "c'entrano"
+  ],
+  "centrava": [
+    "c'entrava"
   ],
   "centri": [
     "c'entri"
@@ -41,11 +62,17 @@
   "cera": [
     "c'era"
   ],
+  "cerano": [
+    "c'erano"
+  ],
   "ceri": [
     "c'eri"
   ],
   "cero": [
     "c'ero"
+  ],
+  "chio": [
+    "ch'io"
   ],
   "dada": [
     "d'ada"
@@ -68,8 +95,17 @@
   "darti": [
     "d'arti"
   ],
+  "dazione": [
+    "d'azione"
+  ],
   "del": [
     "d'el"
+  ],
+  "delio": [
+    "d'elio"
+  ],
+  "desistenza": [
+    "d'esistenza"
   ],
   "desistere": [
     "d'esistere"
@@ -80,11 +116,20 @@
   "dessi": [
     "d'essi"
   ],
+  "desso": [
+    "d'esso"
+  ],
+  "deste": [
+    "d'este"
+  ],
   "destro": [
     "d'estro"
   ],
   "deva": [
     "d'eva"
+  ],
+  "devoluzione": [
+    "d'evoluzione"
   ],
   "dici": [
     "d'ici"
@@ -143,11 +188,23 @@
   "labile": [
     "l'abile"
   ],
+  "lacero": [
+    "l'acero"
+  ],
   "lago": [
     "l'ago"
   ],
+  "laida": [
+    "l'aida"
+  ],
   "lama": [
     "l'ama"
+  ],
+  "lambita": [
+    "l'ambita"
+  ],
+  "lambito": [
+    "l'ambito"
   ],
   "lancia": [
     "l'ancia"
@@ -158,11 +215,23 @@
   "largo": [
     "l'argo"
   ],
+  "lari": [
+    "l'ari"
+  ],
+  "lariano": [
+    "l'ariano"
+  ],
   "lasci": [
     "l'asci"
   ],
   "lascia": [
     "l'ascia"
+  ],
+  "lasco": [
+    "l'asco"
+  ],
+  "lasse": [
+    "l'asse"
   ],
   "lasso": [
     "l'asso"
@@ -173,20 +242,44 @@
   "lati": [
     "l'ati"
   ],
+  "latro": [
+    "l'atro"
+  ],
+  "lattica": [
+    "l'attica"
+  ],
+  "lattico": [
+    "l'attico"
+  ],
+  "laudi": [
+    "l'audi"
+  ],
   "laura": [
     "l'aura"
   ],
   "laurea": [
     "l'aurea"
   ],
+  "laureo": [
+    "l'aureo"
+  ],
+  "lauto": [
+    "l'auto"
+  ],
   "lava": [
     "l'ava"
+  ],
+  "lave": [
+    "l'ave"
   ],
   "lavello": [
     "l'avello"
   ],
   "lavo": [
     "l'avo"
+  ],
+  "lavorio": [
+    "l'avorio"
   ],
   "lecce": [
     "l'ecce"
@@ -200,6 +293,9 @@
   "lente": [
     "l'ente"
   ],
+  "lenza": [
+    "l'enza"
+  ],
   "leone": [
     "l'eone"
   ],
@@ -209,8 +305,14 @@
   "lesse": [
     "l'esse"
   ],
+  "leste": [
+    "l'este"
+  ],
   "leva": [
     "l'eva"
+  ],
+  "levitare": [
+    "l'evitare"
   ],
   "levo": [
     "l'evo"
@@ -218,17 +320,26 @@
   "lido": [
     "l'ido"
   ],
+  "limitatore": [
+    "l'imitatore"
+  ],
   "limitazione": [
     "l'imitazione"
   ],
   "lindo": [
     "l'indo"
   ],
+  "linguine": [
+    "l'inguine"
+  ],
   "lira": [
     "l'ira"
   ],
   "lisa": [
     "l'isa"
+  ],
+  "listone": [
+    "l'istone"
   ],
   "livrea": [
     "l'ivrea"
@@ -238,6 +349,9 @@
   ],
   "loca": [
     "l'oca"
+  ],
+  "loculo": [
+    "l'oculo"
   ],
   "lode": [
     "l'ode"
@@ -254,8 +368,14 @@
   "losanna": [
     "l'osanna"
   ],
+  "losca": [
+    "l'osca"
+  ],
   "losco": [
     "l'osco"
+  ],
+  "lottava": [
+    "l'ottava"
   ],
   "lotto": [
     "l'otto"
@@ -263,17 +383,26 @@
   "luci": [
     "l'uci"
   ],
+  "ludi": [
+    "l'udi"
+  ],
   "luna": [
     "l'una"
   ],
   "lune": [
     "l'une"
   ],
+  "luni": [
+    "l'uni"
+  ],
   "lutero": [
     "l'utero"
   ],
   "mera": [
     "m'era"
+  ],
+  "mezzala": [
+    "mezz'ala"
   ],
   "mezzora": [
     "mezz'ora"
@@ -290,6 +419,12 @@
   "signora": [
     "s'ignora"
   ],
+  "terzultima": [
+    "terz'ultima"
+  ],
+  "terzultimo": [
+    "terz'ultimo"
+  ],
   "tutte": [
     "tutt'e"
   ],
@@ -299,7 +434,13 @@
   "tè": [
     "t'è"
   ],
+  "ventiquattrore": [
+    "ventiquattr'ore"
+  ],
   "vera": [
     "v'era"
+  ],
+  "verano": [
+    "v'erano"
   ]
 }

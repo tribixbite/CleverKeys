@@ -7,6 +7,8 @@ import android.os.Looper
 import android.os.UserManager
 import android.util.Log
 import tribixbite.cleverkeys.ml.SwipeMLDataStore
+import tribixbite.cleverkeys.swipe.CtcEngineAdapter
+import tribixbite.cleverkeys.swipe.SwipeEngineRouter
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
@@ -192,13 +194,65 @@ class PredictionCoordinator(
             }
         }
 
-        // Initialize neural engine if swipe typing is enabled
-        // This uses DE storage so it's safe before unlock
+        // Initialize neural engine if swipe typing is enabled AND the configured engine
+        // actually routes swipes to it. This uses DE storage so it's safe before unlock.
         // CRITICAL: Must be SYNCHRONOUS to ensure first swipe works
         // ~200ms load is acceptable for cold start; singleton persists after
-        if (config.swipe_typing_enabled) {
+        if (config.swipe_typing_enabled && shouldPreloadNeuralEngine()) {
             initializeNeuralEngine()
+            MemoryProbe.mark("coordinator.neuralEngine", settle = true) {
+                "mode=${config.swipe_engine_mode}"
+            }
+        } else {
+            MemoryProbe.mark("coordinator.neuralEngine.skipped") {
+                "mode=${config.swipe_engine_mode} lang=${config.primary_language}"
+            }
         }
+    }
+
+    /**
+     * Whether the neural engine should be built EAGERLY at IME startup.
+     *
+     * The neural engine is not free: [SwipePredictorOrchestrator.initialize] loads the 98k-word
+     * English [OptimizedVocabulary] and its ~231k-node trie, the per-language dictionary and
+     * normalized prefix index, the unigram language detector, and two ONNX sessions. Paying
+     * that at `onCreate` for a user whose swipes are all served by another engine is pure
+     * waste — and it was a measured contributor to the startup `OutOfMemoryError` this gate
+     * was added for (9 fatal crashes, 2026-08-12..17, on a 256 MB-growth-limit device).
+     *
+     * The engine is NOT removed and NOT made unavailable: [runWhenNeuralEngineReady] already
+     * builds it lazily on a background thread and is the ONLY way the swipe path reaches it
+     * (`InputCoordinator.dispatchNeuralSwipeTyping`), so every routing decision below still
+     * ends up at a working neural engine. This gate only decides who pays for it at startup.
+     *
+     *  - [SwipeEngineRouter.Mode.NEURAL] / [SwipeEngineRouter.Mode.HYBRID]: neural serves
+     *    QWERTY-Latin, the common case — preload, exactly as before.
+     *  - [SwipeEngineRouter.Mode.GEOMETRIC]: every layout routes geometric; neural is
+     *    unreachable — never preload.
+     *  - [SwipeEngineRouter.Mode.CTC]: neural is the audit-M1 fallthrough for a language CTC
+     *    does not serve (`InputCoordinator.performCtcSwipeTyping`). Preload only when the
+     *    active language IS that fallthrough case; when CTC serves the language, the neural
+     *    engine is warmed on demand by `InputCoordinator.prewarmGeometricEngine` if the
+     *    language later changes to an unsupported one.
+     */
+    private fun shouldPreloadNeuralEngine(): Boolean =
+        when (SwipeEngineRouter.Mode.fromPref(config.swipe_engine_mode)) {
+            SwipeEngineRouter.Mode.NEURAL, SwipeEngineRouter.Mode.HYBRID -> true
+            SwipeEngineRouter.Mode.GEOMETRIC -> false
+            SwipeEngineRouter.Mode.CTC -> !CtcEngineAdapter.supportsLanguage(config.primary_language)
+        }
+
+    /**
+     * Builds the neural engine in the background if it is not already up, without blocking
+     * the caller and without requiring a swipe to trigger it.
+     *
+     * Used by the prewarm path when the active (layout, language) pair means the next swipe
+     * will fall through to the neural engine — see [shouldPreloadNeuralEngine] for why that
+     * is no longer guaranteed to have happened at startup.
+     */
+    fun warmNeuralEngineAsync() {
+        if (!config.swipe_typing_enabled || neuralEngine != null) return
+        runWhenNeuralEngineReady { /* readiness is the point; nothing to do with it here */ }
     }
 
     /**
@@ -238,6 +292,7 @@ class PredictionCoordinator(
         dictionaryManager = DictionaryManager(context).apply {
             setLanguage(primaryLang)
         }
+        MemoryProbe.mark("wordPredictor.dictionaryManager", settle = true) { "lang=$primaryLang" }
 
         wordPredictor = WordPredictor().apply {
             setContext(context) // Enable disabled words filtering
@@ -259,6 +314,7 @@ class PredictionCoordinator(
             if (multiLangEnabled && secondaryLang != "none" && secondaryLang.isNotEmpty()) {
                 Log.d(TAG, "Loading secondary dictionary for touch typing: $secondaryLang")
                 loadSecondaryDictionary(secondaryLang)
+                MemoryProbe.mark("wordPredictor.secondary", settle = true) { "lang=$secondaryLang" }
             }
 
             // OPTIMIZATION: Start observing dictionary changes for automatic updates

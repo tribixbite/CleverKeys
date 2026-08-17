@@ -118,7 +118,11 @@ object CtcBeamDecoder {
                 }
 
                 // B: emit character -> advance to each child, blankEnded = false.
-                for (child in node.children) {
+                // Indexed rather than for-in: this runs beamWidth x timesteps times per
+                // decode, and `children` materializes a view list (see CtcTrieNode).
+                // Insertion order is identical, so golden-trace parity is unaffected.
+                for (childIndex in 0 until node.childCount) {
+                    val child = node.childAt(childIndex)
                     val s = score + emissions.at(t, child.charIdx).toDouble()
                     val key = child.id.toLong() shl 1
                     val cur = nxt[key]

@@ -500,6 +500,9 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.swipe.ctc.CtcModuleTest',
     'tribixbite.cleverkeys.swipe.ctc.CtcLexiconMergeTest',
     'tribixbite.cleverkeys.swipe.ctc.CtcContractionDisplayTest',
+    // Contraction-alias injection into the lexicon trie: what makes the mapping table
+    // reachable by the beam at all, and the floor frequency that keeps it safe (2026-08-17).
+    'tribixbite.cleverkeys.swipe.ctc.CtcContractionKeysTest',
     // Per-language CTC enablement (fr/de/es, 2026-08-16): the λ-by-lexicon-scale preset
     // table (docs/eval/2026-08-15-ctc-per-language-lambda.md) + the CKDT→a-z projection
     // and accent-display map, verified against the REAL bundled dictionaries.

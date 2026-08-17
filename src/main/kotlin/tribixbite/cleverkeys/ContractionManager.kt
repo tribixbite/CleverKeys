@@ -392,6 +392,23 @@ class ContractionManager(private val context: Context) {
     }
 
     /**
+     * Every alias KEY currently loaded — the apostrophe-free surfaces the overlay can
+     * rewrite, from BOTH the REPLACE file ([nonPairedContractions]) and the APPEND file
+     * ([pairedContractions]).
+     *
+     * The swipe engines use this to make the mapping table actually reachable: a key the
+     * decoder cannot spell is an inert mapping, so `CtcContractionKeys.inject` inserts these
+     * into the lexicon trie (at a floor frequency — see that class). Keys, not variants:
+     * the variants carry apostrophes and are never decoder output.
+     */
+    fun getAliasKeys(): Set<String> {
+        val keys = HashSet<String>(nonPairedContractions.size + pairedContractions.size)
+        keys.addAll(nonPairedContractions.keys)
+        keys.addAll(pairedContractions.keys)
+        return keys
+    }
+
+    /**
      * Gets the number of non-paired contractions loaded.
      * Useful for testing and diagnostics.
      */

@@ -14,6 +14,7 @@ import tribixbite.cleverkeys.Defaults
 import tribixbite.cleverkeys.DirectBootAwarePreferences
 import tribixbite.cleverkeys.KeyValue
 import tribixbite.cleverkeys.KeyboardData
+import tribixbite.cleverkeys.MemoryProbe
 import tribixbite.cleverkeys.LanguagePreferenceKeys
 import tribixbite.cleverkeys.PredictionResult
 import tribixbite.cleverkeys.PredictionTaskRunner
@@ -22,6 +23,7 @@ import tribixbite.cleverkeys.onnx.ModelLoader
 import tribixbite.cleverkeys.swipe.ctc.CtcAzProjection
 import tribixbite.cleverkeys.swipe.ctc.CtcCandidate
 import tribixbite.cleverkeys.swipe.ctc.CtcCkdtLexicon
+import tribixbite.cleverkeys.swipe.ctc.CtcContractionKeys
 import tribixbite.cleverkeys.swipe.ctc.CtcFeaturizer
 import tribixbite.cleverkeys.swipe.ctc.CtcLanguageSupport
 import tribixbite.cleverkeys.swipe.ctc.CtcLayout
@@ -420,8 +422,11 @@ class CtcEngineAdapter(private val context: Context) {
                 Log.w(TAG, "Malformed custom-words JSON for '$lang' — ignoring", e)
             }
         }
+        MemoryProbe.mark("ctc.baseParse", settle = true) { "lang=$lang entries=${basePairs.size}" }
+
         val merged = CtcLexiconMerge.merge(basePairs, customPairs, disabled)
         val ordinals = CtcLexiconMerge.ordinals(merged)
+        MemoryProbe.mark("ctc.mergeAndOrdinals", settle = true) { "merged=${merged.size}" }
 
         val trie: CtcLexiconTrie
         val display: Map<String, String>
@@ -451,6 +456,17 @@ class CtcEngineAdapter(private val context: Context) {
         if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
             Log.d(TAG, "CTC trie[$lang]: ${trie.wordCount} words in " +
                 "${System.currentTimeMillis() - start}ms (v=$version)")
+        }
+        // Make the contraction mapping table REACHABLE. The overlay can only rewrite a
+        // surface the beam actually produced, and a productive elision (fr "dabaissement" →
+        // "d'abaissement") is not a dictionary word, so without this the mapping is inert.
+        // Injected at a floor frequency so a pseudo-word never outranks real vocabulary —
+        // see [CtcContractionKeys].
+        val injected = CtcContractionKeys.inject(trie, contractionsFor(lang).getAliasKeys())
+
+        MemoryProbe.mark("ctc.trie", settle = true) {
+            "lang=$lang words=${trie.wordCount} nodes=${trie.nodeCount} " +
+                "injectedAliases=$injected display=${display.size}"
         }
         val built = TrieMemo(lang, trie, ordinals, display, version)
         trieMemo = built

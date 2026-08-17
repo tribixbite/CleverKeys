@@ -7,6 +7,8 @@ import org.junit.BeforeClass
 import org.junit.Test
 import tribixbite.cleverkeys.swipe.ctc.CtcAzProjection
 import tribixbite.cleverkeys.swipe.ctc.CtcCkdtLexicon
+import tribixbite.cleverkeys.swipe.ctc.CtcContractionKeys
+import tribixbite.cleverkeys.swipe.ctc.CtcLexiconTrie
 import tribixbite.cleverkeys.swipe.ctc.CtcLexiconMerge
 import tribixbite.cleverkeys.swipe.geometric.CkdtDictionaryReader
 import java.io.File
@@ -42,8 +44,12 @@ import java.io.File
  *
  *  1. **every shipped key is REACHABLE** — a mapping whose key no engine can emit can never
  *     fire; it is dead weight in the APK and it hides the real coverage behind a big entry
- *     count. fr/it used to be ~99% dead (27,256 of 27,494 / 22,355 of 22,474 mappings);
- *     they are now 100% live, like the hand-curated German file.
+ *     count. Reachability has TWO routes and both count (see `isReachable`): the bundled
+ *     lexicon can emit the key, or the swipe engines INJECT it as its own decodable surface
+ *     (`CtcContractionKeys.inject`, and the neural vocabulary's equivalent). Judging by the
+ *     first route alone is what wrongly deleted 27,256 fr + 22,355 it productive elisions on
+ *     2026-08-17; they are restored, and what stays trimmed is only the keys no a–z decoder
+ *     can spell at all (accents, hyphens).
  *  2. **the two files are disjoint, and the REPLACE file holds no common word** — the
  *     classification is explicit, so nothing is left for the runtime rank guard to catch.
  *  3. **every value differs from its key by apostrophes/hyphens ONLY** — no accent change, no
@@ -92,6 +98,12 @@ class BundledContractionDataTest {
 
         /** language → lowercase word → frequency ordinal over the bundled CKDT lexicon. */
         lateinit var ordinals: Map<String, HashMap<String, Int>>
+
+        /** language → the a–z surface → frequency map the production trie is built from. */
+        lateinit var projectedFreqs: Map<String, Map<String, Double>>
+
+        /** The CTC emission alphabet — the only characters an injected key may use. */
+        val AZ_ALPHABET = CharArray(26) { 'a' + it }
 
         fun jsonObject(name: String): Map<String, String> {
             val file = File("$DICT_DIR/$name")
@@ -149,6 +161,7 @@ class BundledContractionDataTest {
             val canon = HashMap<String, Map<String, String>>()
             val emit = HashMap<String, Set<String>>()
             val ord = HashMap<String, HashMap<String, Int>>()
+            val projFreqs = HashMap<String, Map<String, Double>>()
             for (language in LEXICON_LANGUAGES) {
                 val bin = File("$DICT_DIR/${language}_enhanced.bin")
                 check(bin.isFile) { "expected shipped lexicon at ${bin.path}" }
@@ -165,27 +178,45 @@ class BundledContractionDataTest {
                 }
                 emit[language] = emittedFor(merged)
                 ord[language] = CtcLexiconMerge.ordinals(merged)
+                projFreqs[language] = projected.freqs
             }
             lexicons = lex
             canonical = canon
             emitted = emit
             ordinals = ord
+            projectedFreqs = projFreqs
         }
     }
 
+    /**
+     * True when [key] can reach the suggestion bar for [language] AT ALL — by either of the
+     * two production routes:
+     *
+     *  1. the bundled lexicon can emit it ([emittedFor]), or
+     *  2. the swipe engines INJECT it as its own decodable surface — `CtcEngineAdapter`
+     *     inserts every alias key into the lexicon trie via [CtcContractionKeys.inject], and
+     *     `OptimizedVocabulary.loadContractionsFromInputStream` does the equivalent for the
+     *     neural vocabulary. Injection is limited to keys spelled from the a–z alphabet,
+     *     which is exactly [CtcContractionKeys.isInjectable].
+     *
+     * Route 2 is why the 2026-08-17 restore is correct: a productive elision such as fr
+     * `dabaissement` → `d'abaissement` is not, and never will be, a dictionary word, but it
+     * is precisely what a French user swipes. Judging reachability by route 1 alone declared
+     * 27,256 fr + 22,355 it mappings dead and deleted them.
+     */
+    private fun isReachable(language: String, key: String): Boolean =
+        key in emitted.getValue(language) || CtcContractionKeys.isInjectable(key, AZ_ALPHABET)
+
     private fun coverageOf(language: String): Coverage {
-        val reachable = emitted.getValue(language)
         val keys = files.getValue(language).keys + pairFiles.getValue(language).keys
-        return Coverage(entries = keys.size, live = keys.count { it in reachable })
+        return Coverage(entries = keys.size, live = keys.count { isReachable(language, it) })
     }
 
     /** The dead keys of [language], named — a count alone is useless when this breaks. */
-    private fun deadKeysOf(language: String): List<String> {
-        val reachable = emitted.getValue(language)
-        return (files.getValue(language).keys + pairFiles.getValue(language).keys)
-            .filterNot { it in reachable }
+    private fun deadKeysOf(language: String): List<String> =
+        (files.getValue(language).keys + pairFiles.getValue(language).keys)
+            .filterNot { isReachable(language, it) }
             .sorted()
-    }
 
     // ── 1. the dead-data guard ──────────────────────────────────────────────────────
 
@@ -209,25 +240,75 @@ class BundledContractionDataTest {
     }
 
     @Test
-    fun `the French and Italian files are now fully reachable, and their sizes are pinned`() {
-        // THE RATCHET. `scripts/extract_apostrophe_words.py` used to lift every apostrophe
-        // token out of the AnySoftKeyboard wordlists without checking the apostrophe-free key
-        // against CleverKeys' own dictionary, so ~99% of both files could never fire:
-        // fr 27,494 mappings of which 27,256 were dead, it 22,474 of which 22,355 were dead.
-        // The generator now filters against the bundled dictionary, so the shipped files are
-        // exactly the reachable remainder — split into REPLACE (alias-only keys) and APPEND
-        // (keys that are real words). These numbers may only move when the DICTIONARY moves.
-        assertThat(files.getValue("fr")).hasSize(84)
-        assertThat(pairFiles.getValue("fr")).hasSize(154)
+    fun `the French and Italian files are fully reachable, and their sizes are pinned`() {
+        // THE RATCHET. These numbers may only move when the DICTIONARY or the generator's
+        // classifier moves — re-run `scripts/extract_apostrophe_words.py --lang fr,it`.
+        //
+        // History, because the counts swung twice: the generator originally lifted every
+        // apostrophe token out of the AnySoftKeyboard wordlists (fr 27,494 / it 22,474). A
+        // 2026-08-17 pass judged reachability by "is the key a form the bundled LEXICON can
+        // emit" and deleted 27,256 fr + 22,355 it as dead. That model was wrong: the swipe
+        // engines INJECT the alias keys as decodable surfaces, so a productive elision like
+        // `dabaissement` → `d'abaissement` — not a dictionary word, and exactly what French
+        // users type — IS reachable. The restore keeps every a–z key and drops only the keys
+        // no a–z decoder can ever spell (accents, hyphens: `cest-à-dire`, `ceût`).
+        assertThat(files.getValue("fr")).hasSize(17_931)
+        assertThat(pairFiles.getValue("fr")).hasSize(183)
         val fr = coverageOf("fr")
         assertWithMessage("dead French mappings: ${deadKeysOf("fr")}").that(fr.dead).isEqualTo(0)
-        assertThat(fr.entries).isEqualTo(238)
+        assertThat(fr.entries).isEqualTo(18_114)
 
-        assertThat(files.getValue("it")).hasSize(18)
-        assertThat(pairFiles.getValue("it")).hasSize(101)
+        assertThat(files.getValue("it")).hasSize(21_214)
+        assertThat(pairFiles.getValue("it")).hasSize(148)
         val it = coverageOf("it")
         assertWithMessage("dead Italian mappings: ${deadKeysOf("it")}").that(it.dead).isEqualTo(0)
-        assertThat(it.entries).isEqualTo(119)
+        assertThat(it.entries).isEqualTo(21_362)
+    }
+
+    @Test
+    fun `the restored French elisions are reachable ONLY because the trie injects them`() {
+        // The assertion the old `unreachable ⇒ dead` rule replaced. It is not enough that the
+        // mapping ships: the beam has to be able to SPELL the key, or the overlay has nothing
+        // to rewrite. This walks the real production path — the bundled CKDT lexicon, the
+        // same a–z projection `CtcEngineAdapter` uses, then `CtcContractionKeys.inject`.
+        val trie = CtcLexiconTrie.loadFromFrequencyMap(
+            AZ_ALPHABET, projectedFreqs.getValue("fr")
+        )
+
+        // Productive elisions: NOT French words, so the lexicon alone cannot emit them.
+        val productive = listOf("dabaissement", "dabandon", "dabaisser")
+        for (key in productive) {
+            assertWithMessage("$key must be a shipped French mapping").that(files.getValue("fr"))
+                .containsKey(key)
+            assertWithMessage("$key is not a French word — the lexicon cannot emit it")
+                .that(trie.contains(key)).isFalse()
+        }
+
+        val keys = files.getValue("fr").keys + pairFiles.getValue("fr").keys
+        val inserted = CtcContractionKeys.inject(trie, keys)
+        assertWithMessage("injection must add the keys the lexicon lacks")
+            .that(inserted).isGreaterThan(17_000)
+
+        for (key in productive) {
+            assertWithMessage("$key must be decodable after injection")
+                .that(trie.contains(key)).isTrue()
+            // ...and it must be the FLOOR frequency, so a pseudo-word can never outrank real
+            // vocabulary on the beam's lambda * logFreq term.
+            assertThat(trie.logFrequencyOf(key)!!).isWithin(1e-6).of(0.0)
+        }
+
+        // The everyday elisions the maintainer called crucial resolve to their apostrophe form.
+        assertThat(files.getValue("fr")["lhomme"]).isEqualTo("l'homme")
+        assertThat(files.getValue("fr")["dabaissement"]).isEqualTo("d'abaissement")
+        assertThat(files.getValue("fr")["quil"]).isEqualTo("qu'il")
+
+        // Injecting a key that IS a real word must not touch its frequency — the overlay's
+        // real-word ordinal guard depends on it.
+        val realWord = "lune"
+        assertThat(pairFiles.getValue("fr")).containsKey(realWord)
+        val lexiconFreq = trie.logFrequencyOf(realWord)
+        assertWithMessage("$realWord is a French word and must keep its lexicon frequency")
+            .that(lexiconFreq!!).isGreaterThan(1.0)
     }
 
     @Test

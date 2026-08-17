@@ -30,6 +30,19 @@ class WordPredictor {
         private const val MAX_PREDICTIONS_TYPING = 5
         private const val MAX_PREDICTIONS_SWIPE = 10
 
+        /**
+         * Frequency rank given to a contraction alias key that is NOT itself a word of the
+         * secondary dictionary (`NormalizedPrefixIndex` ranks run 0 = most common …
+         * 255 = least).
+         *
+         * 254 is the floor above "absent". The secondary path scores a hit as
+         * `((255 - rank) * 4000) + 1000`, so this yields 5,000 — the same anchor
+         * [loadPrimaryContractionKeys] already gives a new alias in the primary dictionary,
+         * and the bottom of the range real dictionary words occupy. An alias is therefore
+         * REACHABLE by prefix search but can never outrank a real word of the language.
+         */
+        private const val CONTRACTION_ALIAS_RANK = 254
+
         // ── Autocorrect tuning constants ────────────────────────────
         // Used by the dual-gate scoring in `autoCorrect`. Constants
         // (not config knobs) because they're calibration values that
@@ -1004,6 +1017,11 @@ class WordPredictor {
                 val sampleWords = this@WordPredictor.dictionary.get().keys.take(5).joinToString(", ")
                 Log.i(TAG, "Async dictionary load complete for '$language': ${this@WordPredictor.dictionary.get().size} words, " +
                     "${this@WordPredictor.prefixIndex.get().size} prefixes (sample: $sampleWords)")
+                MemoryProbe.mark("primary.dictionary", settle = true) {
+                    val idx = this@WordPredictor.prefixIndex.get()
+                    "lang=$language words=${this@WordPredictor.dictionary.get().size} " +
+                        "prefixes=${idx.size} setEntries=${idx.values.sumOf { it.size }}"
+                }
 
                 callback?.run()
             }
@@ -1074,12 +1092,19 @@ class WordPredictor {
             }
 
             if (loaded && index.size() > 0) {
+                MemoryProbe.mark("secondary.binaryIndex", settle = true) {
+                    "lang=$language words=${index.size()} normalized=${index.normalizedCount()}"
+                }
+
                 // v1.1.94: Also load custom words for secondary language
                 val customWordsAdded = loadSecondaryCustomWords(ctx, index, language)
 
                 // v1.2.6: Also add contraction keys (apostrophe-free forms) for secondary language
                 // This allows typing "dont" to find "don't" in secondary English dictionary
                 val contractionsAdded = loadSecondaryContractionKeys(ctx, index, language)
+                MemoryProbe.mark("secondary.contractionKeys", settle = true) {
+                    "lang=$language added=$contractionsAdded custom=$customWordsAdded"
+                }
 
                 secondaryIndex = index
                 secondaryLanguageCode = language
@@ -1173,25 +1198,15 @@ class WordPredictor {
                 }
             }
 
-            inputStream.use { stream ->
-                val reader = java.io.BufferedReader(java.io.InputStreamReader(stream))
-                val jsonBuilder = StringBuilder()
-                var line: String?
-                while (reader.readLine().also { line = it } != null) {
-                    jsonBuilder.append(line)
-                }
-
-                val jsonObj = org.json.JSONObject(jsonBuilder.toString())
-                val keys = jsonObj.keys()
-
+            run {
                 val aliases = mutableMapOf<String, String>()
 
-                while (keys.hasNext()) {
-                    val withoutApostrophe = keys.next().lowercase(java.util.Locale.ROOT)
-                    val withApostrophe = jsonObj.getString(withoutApostrophe).lowercase(java.util.Locale.ROOT)
-
+                // Streaming parse — see [ContractionJsonReader]. The restored fr/it files hold
+                // ~18k/~21k mappings, so the old whole-file-into-String parse was a multi-MB
+                // transient spike on every dictionary load.
+                ContractionJsonReader.forEachEntry(inputStream) { withoutApostrophe, withApostrophe ->
                     // Skip real English words that are also contraction bases
-                    if (withoutApostrophe in REAL_WORD_CONTRACTION_BASES) continue
+                    if (withoutApostrophe in REAL_WORD_CONTRACTION_BASES) return@forEachEntry
 
                     // Base form is NOT a real word → create alias and add to dictionary.
                     // Preserve existing freq (same fix as `loadPrimaryContractionKeys`
@@ -1252,28 +1267,16 @@ class WordPredictor {
                 }
             }
 
-            inputStream.use { stream ->
-                val reader = java.io.BufferedReader(java.io.InputStreamReader(stream))
-                val jsonBuilder = StringBuilder()
-                var line: String?
-                while (reader.readLine().also { line = it } != null) {
-                    jsonBuilder.append(line)
-                }
-
-                val jsonObj = org.json.JSONObject(jsonBuilder.toString())
-                val keys = jsonObj.keys()
-
+            run {
                 val currentDict = dictionary.get()
                 val currentPrefixIndex = prefixIndex.get()
                 val aliases = mutableMapOf<String, String>()
 
-                while (keys.hasNext()) {
-                    val withoutApostrophe = keys.next().lowercase(java.util.Locale.ROOT)
-                    val withApostrophe = jsonObj.getString(withoutApostrophe).lowercase(java.util.Locale.ROOT)
-
+                // Streaming parse — see [ContractionJsonReader].
+                ContractionJsonReader.forEachEntry(inputStream) { withoutApostrophe, withApostrophe ->
                     // Skip real English words that also happen to be contraction bases
                     // (e.g., "well" should stay "well", not autocorrect to "we'll")
-                    if (withoutApostrophe in REAL_WORD_CONTRACTION_BASES) continue
+                    if (withoutApostrophe in REAL_WORD_CONTRACTION_BASES) return@forEachEntry
 
                     // Base form is NOT a real word (e.g., "dont", "im", "thats", "hes")
                     // → create autocorrect alias and add to dictionary for predictions.
@@ -1354,26 +1357,26 @@ class WordPredictor {
                 }
             }
 
-            inputStream.use { stream ->
-                val reader = java.io.BufferedReader(java.io.InputStreamReader(stream))
-                val jsonBuilder = StringBuilder()
-                var line: String?
-                while (reader.readLine().also { line = it } != null) {
-                    jsonBuilder.append(line)
-                }
-
-                val jsonObj = org.json.JSONObject(jsonBuilder.toString())
-                val keys = jsonObj.keys()
-
-                while (keys.hasNext()) {
-                    val withoutApostrophe = keys.next().lowercase(java.util.Locale.ROOT)
-                    val withApostrophe = jsonObj.getString(withoutApostrophe).lowercase(java.util.Locale.ROOT)
-
-                    // Add the apostrophe-free form as an alias pointing to the contraction
-                    // Use high frequency (low rank = common word) so it shows up in predictions
-                    index.addWord(withoutApostrophe, 50) // rank 50 = common
-
-                    count++
+            // Keys only: the display form is not needed here (the index stores the
+            // apostrophe-free surface), and streaming avoids materializing the whole file —
+            // this is the exact call that ran out of heap on a 256 MB device.
+            count = ContractionJsonReader.forEachKey(inputStream) { withoutApostrophe ->
+                // Add the apostrophe-free form as an alias so prefix search can reach the
+                // contraction. Two rules, both load-bearing since the 2026-08-17 restore took
+                // the French/Italian files from ~100 curated aliases to 18k/21k:
+                //
+                //  1. SKIP a key the index already holds. Every English alias (`dont`,
+                //     `cant`, …) is itself a dictionary entry, so this preserves its real
+                //     frequency instead of overwriting it — and avoids a duplicate canonical.
+                //  2. Add a NEW key at the RANK FLOOR, never as a common word. These are
+                //     mostly productive elisions (`allabbaiare`, `dabaissement`); at the old
+                //     hard-coded rank 50 all 21k of them scored ≈821k — above nearly every
+                //     real word — and would have buried genuine Italian suggestions under
+                //     pseudo-words. Findable, never preferred: the same call the swipe side
+                //     makes in [CtcContractionKeys].
+                val normalized = AccentNormalizer.normalize(withoutApostrophe)
+                if (normalized.isNotEmpty() && !index.contains(normalized)) {
+                    index.addWord(withoutApostrophe, CONTRACTION_ALIAS_RANK)
                 }
             }
 

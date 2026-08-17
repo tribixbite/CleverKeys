@@ -10,6 +10,7 @@ import tribixbite.cleverkeys.Config
 import tribixbite.cleverkeys.Defaults
 import tribixbite.cleverkeys.DirectBootAwarePreferences
 import tribixbite.cleverkeys.KeyboardGrid
+import tribixbite.cleverkeys.MemoryProbe
 import tribixbite.cleverkeys.NeuralSwipeTypingEngine
 import tribixbite.cleverkeys.ModelVersionManager
 import tribixbite.cleverkeys.NeuralModelMetadata
@@ -193,15 +194,21 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
                 val primaryLang = prefs.getString("pref_primary_language", "en") ?: "en"
                 vocabulary.loadVocabulary(primaryLang)
             }
+            MemoryProbe.mark("neural.vocabulary", settle = true) {
+                "words=${vocabulary.getStats().totalWords}"
+            }
 
             // Load primary language dictionary if not English
             loadPrimaryDictionaryFromPrefs()
+            MemoryProbe.mark("neural.primaryDictionary", settle = true)
 
             // Load secondary language dictionary if configured
             loadSecondaryDictionaryFromPrefs()
+            MemoryProbe.mark("neural.secondaryDictionary", settle = true)
 
             // Initialize language detector with available languages
             initializeLanguageDetector()
+            MemoryProbe.mark("neural.languageDetector", settle = true)
 
             // Load Models
             val encoderPath = "models/swipe_encoder_android.onnx"

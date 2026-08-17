@@ -33,6 +33,22 @@ class OptimizedVocabulary(private val context: Context) {
 
     private val TAG = "OptimizedVocabulary"
 
+    private companion object {
+        /**
+         * Frequency given to a contraction alias key the vocabulary does not already hold.
+         *
+         * Matches the clamp `loadFromFlatFreq` applies to the least frequent real word
+         * (`((raw - 128) / 127).coerceAtLeast(0.001f)`), so an injected pseudo-word sits at
+         * the very bottom of the same scale: reachable by the filter, never preferred over a
+         * genuine word. See [loadContractionsFromInputStream] for why a boost here is unsafe
+         * now that the French/Italian files carry ~18k/~21k productive elisions.
+         */
+        const val CONTRACTION_ALIAS_FREQUENCY = 0.001f
+
+        /** Tier 0 = "regular": no common-word or top-5000 boost. */
+        const val CONTRACTION_ALIAS_TIER: Byte = 0
+    }
+
     // OPTIMIZATION: Single unified lookup structure (1 hash lookup instead of 3)
     private val vocabulary: MutableMap<String, WordInfo> = HashMap()
 
@@ -442,9 +458,23 @@ class OptimizedVocabulary(private val context: Context) {
             // Contractions were added to vocabulary in loadContractionsFromInputStream()
             // but vocabulary lookup is guarded by _englishFallbackEnabled
             if (info == null && nonPairedContractions.containsKey(word)) {
-                // Word is a contraction key — use tier 2 (common boost) with high frequency
-                // so contractions like "doesn't", "can't" compete fairly with common words
-                info = WordInfo(0.88f, 2.toByte())
+                // Reachable, never preferred — the same policy as the load-time injection in
+                // loadContractionsFromInputStream() and as the other two engines apply to this
+                // data (CtcContractionKeys.INJECTED_FREQUENCY, WordPredictor.CONTRACTION_ALIAS_RANK).
+                //
+                // This is NOT the path the curated English aliases ("doesnt", "cant") take: those
+                // are reached at the `vocabulary` lookup above whenever English is primary or
+                // secondary, which is the only configuration in which English words may surface.
+                // Control reaches HERE only when English fallback is off — i.e. a non-English
+                // slate — and the word is absent from that language's primary dictionary. By
+                // construction it is then a productive elision (fr `dabaissement` ->
+                // `d'abaissement`), which must be reachable but must never outrank real vocabulary.
+                //
+                // This used to fabricate WordInfo(0.88f, tier 2). The `vocabulary` map that the
+                // load-time floor is written into is gated by _englishFallbackEnabled, so for a
+                // French slate this site — not that one — decides the score, and the boost would
+                // have ranked 17,931 French pseudo-words as top-100 common words.
+                info = WordInfo(CONTRACTION_ALIAS_FREQUENCY, CONTRACTION_ALIAS_TIER)
                 displayWord = nonPairedContractions[word]!!
                 if (debugMode) detailedLog?.append(String.format("🔤 \"%s\" → \"%s\" (contraction mapping)\n", word, displayWord))
             }
@@ -2026,21 +2056,11 @@ class OptimizedVocabulary(private val context: Context) {
      * - contraction map converts display to "m'appelle"
      */
     private fun loadContractionsFromInputStream(inputStream: InputStream): Int {
-        val reader = BufferedReader(InputStreamReader(inputStream))
-        val jsonBuilder = StringBuilder()
-        var line: String?
-        while (reader.readLine().also { line = it } != null) {
-            jsonBuilder.append(line)
-        }
-        reader.close()
-
-        val jsonObj = org.json.JSONObject(jsonBuilder.toString())
-        val keys = jsonObj.keys()
+        // Streaming parse — see [ContractionJsonReader]. The restored French/Italian files
+        // hold 18k/21k mappings, so the previous read-whole-file-into-StringBuilder-then-
+        // JSONObject shape was a multi-MB transient spike on every vocabulary load.
         var count = 0
-
-        while (keys.hasNext()) {
-            val withoutApostrophe = keys.next().lowercase(Locale.ROOT)
-            val withApostrophe = jsonObj.getString(withoutApostrophe).lowercase(Locale.ROOT)
+        ContractionJsonReader.forEachEntry(inputStream) { withoutApostrophe, withApostrophe ->
             // Don't overwrite existing mappings (primary language takes precedence)
             if (!nonPairedContractions.containsKey(withoutApostrophe)) {
                 nonPairedContractions[withoutApostrophe] = withApostrophe
@@ -2048,21 +2068,33 @@ class OptimizedVocabulary(private val context: Context) {
                 // Add contraction key to vocabulary so it passes the filter
                 // This allows NN predictions like "mappelle" to be accepted and then
                 // converted to "m'appelle" via the contraction map
-                // Use tier 1 (top5000 equivalent) with mid-range frequency
                 // NOTE: Do NOT insert into activeBeamSearchTrie here - it may point to wrong trie!
                 // Trie insertion is handled by loadPrimaryDictionary() after creating the language trie
                 if (!vocabulary.containsKey(withoutApostrophe)) {
-                    // Common contractions (don't, can't, doesn't, etc.) are among the most
-                    // frequent English words. Use tier 2 (common boost) with high frequency
-                    // so they compete fairly with top-100 words in swipe predictions.
-                    vocabulary[withoutApostrophe] = WordInfo(0.88f, 2.toByte())
+                    // A key the vocabulary does NOT already have is, by construction, not a
+                    // word of the language: it is a productive elision (fr `dabaissement` ->
+                    // `d'abaissement`, `mappelle` -> `m'appelle`). Those must be REACHABLE —
+                    // that is the whole point of injecting them — but they must never be
+                    // PREFERRED, so they enter at the frequency floor and tier 0.
+                    //
+                    // This used to be WordInfo(0.88f, tier 2), a top-100-common-word boost.
+                    // With the ~100 curated entries the files held before 2026-08-17 that was
+                    // survivable; with the restored 17,931 fr / 21,214 it mappings it would
+                    // rank eighteen thousand pseudo-words above nearly all real French
+                    // vocabulary. The floor is the same call the other two engines make for
+                    // the same data: [CtcContractionKeys.INJECTED_FREQUENCY] on the swipe
+                    // side and `WordPredictor.CONTRACTION_ALIAS_RANK` on the typing side.
+                    vocabulary[withoutApostrophe] =
+                        WordInfo(CONTRACTION_ALIAS_FREQUENCY, CONTRACTION_ALIAS_TIER)
                     // Add to length-based buckets for fuzzy matching
                     vocabularyByLength.getOrPut(withoutApostrophe.length) { ArrayList() }
                         .add(withoutApostrophe)
                 } else {
                     // Contraction key already in vocabulary (e.g., synthetic "doesnt" from
-                    // binary dict). Ensure it has tier 2 + competitive frequency so swipe
-                    // predictions rank it alongside common words.
+                    // the binary dict, or a genuine word like fr `cest`/`jai` that the
+                    // language dictionary ships). It IS attested, so keep the common-word
+                    // standing: this is the branch every one of the 119 curated English
+                    // aliases takes, and it is deliberately unchanged.
                     val existing = vocabulary[withoutApostrophe]!!
                     if (existing.tier < 2 || existing.frequency < 0.85f) {
                         vocabulary[withoutApostrophe] = WordInfo(

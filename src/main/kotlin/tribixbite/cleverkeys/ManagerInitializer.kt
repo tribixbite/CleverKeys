@@ -80,6 +80,9 @@ class ManagerInitializer(
      * @return InitializationResult containing all initialized managers
      */
     fun initialize(): InitializationResult {
+        MemoryProbe.reset()
+        MemoryProbe.mark("init.enter", settle = true)
+
         // Load contraction mappings for apostrophe insertion (v1.32.341)
         val contractionManager = ContractionManager(context)
         contractionManager.loadMappings()
@@ -92,17 +95,22 @@ class ManagerInitializer(
         }
         // Always load English as fallback (already loaded in loadMappings, but language-specific file may have more)
         contractionManager.loadLanguageContractions("en")
+        MemoryProbe.mark("init.contractionManager", settle = true) {
+            "known=${contractionManager.getTotalKnownCount()}"
+        }
 
         // Initialize clipboard manager (v1.32.349)
         val clipboardManager = ClipboardManager(context, config)
 
         // Initialize prediction context tracker (v1.32.342)
         val contextTracker = PredictionContextTracker()
+        MemoryProbe.mark("init.clipboard+contextTracker", settle = true)
 
         // Initialize prediction coordinator (v1.32.346)
         val predictionCoordinator = PredictionCoordinator(context, config)
         // v1.1.90: CRITICAL - Must call initialize() to load dictionary and neural engine
         predictionCoordinator.initialize()
+        MemoryProbe.mark("init.predictionCoordinator", settle = true)
 
         // Initialize input coordinator (v1.32.350)
         // Note: SuggestionBar will be set later in onStartInputView
@@ -143,6 +151,7 @@ class ManagerInitializer(
 
         // Initialize ML data collector (v1.32.370)
         val mlDataCollector = MLDataCollector(context)
+        MemoryProbe.mark("init.done", settle = true)
 
         return InitializationResult(
             contractionManager,

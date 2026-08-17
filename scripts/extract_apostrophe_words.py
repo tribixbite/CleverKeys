@@ -376,6 +376,27 @@ def emitted_forms(lexicon: dict) -> set:
     return out
 
 
+def is_ctc_injectable(key: str) -> bool:
+    """
+    True when `key` can be INJECTED into the CTC lexicon trie as its own surface.
+
+    Mirrors `CtcContractionKeys.isInjectable` (swipe/ctc/CtcContractionKeys.kt).  The
+    CTC alphabet is a-z, so a key made only of a-z characters can be inserted verbatim
+    and the beam can then walk it; a key carrying anything else (the hyphen in en
+    "high-falutin", the accent in fr "cest-a-dire") has no trie path and stays dead no
+    matter what the lexicon holds.
+
+    This is why `emitted_forms` alone UNDERSTATES reachability: it asks only what the
+    bundled lexicon can emit.  A productive elision such as fr "dabaissement" is not a
+    dictionary word and never will be, but it IS swipeable once injected - which is
+    exactly what the French user needs, French being full of elisions.
+    """
+    if not key:
+        return False
+    lowered = key.lower()
+    return all("a" <= ch <= "z" for ch in lowered)
+
+
 def frequency_ordinals(lexicon: dict) -> dict:
     """CtcLexiconMerge.ordinals: lowercase word -> rank, frequency descending."""
     items = list(lexicon.items())
@@ -533,10 +554,20 @@ def build_language(lang: str, dict_path: Path) -> dict:
         contractions.update(curated)
 
     dead = 0
+    injected = 0
     if spec["lexicon"]:
         lexicon = load_lexicon(spec["lexicon"])
-        reachable = emitted_forms(lexicon)
-        live = {k: v for k, v in contractions.items() if k in reachable}
+        emitted = emitted_forms(lexicon)
+        # An entry is REACHABLE if either the bundled lexicon can already emit its key,
+        # or the key is a pure a-z string that the CTC adapter injects into the lexicon
+        # trie (CtcEngineAdapter.lexiconFor -> CtcContractionKeys.inject).  Before that
+        # injection existed the second clause was empty, which is why 27,256 fr + 22,355
+        # it productive elisions looked dead and were trimmed - they are not.
+        live = {
+            k: v for k, v in contractions.items()
+            if k in emitted or is_ctc_injectable(k)
+        }
+        injected = sum(1 for k in live if k not in emitted)
         dead = len(contractions) - len(live)
         contractions = live
     else:
@@ -554,6 +585,7 @@ def build_language(lang: str, dict_path: Path) -> dict:
         "extracted": extracted,
         "curated": len(curated),
         "dead": dead,
+        "injected": injected,
         "replace": dict(sorted(replace.items())),
         "append": dict(sorted(append.items())),
     }
@@ -627,6 +659,7 @@ def main():
             f"  extracted {report['extracted']}"
             f" + {report['curated']} curated"
             f" - {report['dead']} unreachable"
+            f" ({report['injected']} reachable only via CTC injection)"
             f" = {len(report['replace'])} REPLACE + {len(report['append'])} APPEND"
         )
         write_language(lang, report, args.dry_run)

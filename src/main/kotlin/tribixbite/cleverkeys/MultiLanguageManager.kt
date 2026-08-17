@@ -17,6 +17,24 @@ class MultiLanguageManager(
     companion object {
         private const val TAG = "MultiLanguageManager"
         private const val SWITCH_LATENCY_TARGET_MS = 100
+
+        /**
+         * How many [LanguageModel]s may stay resident.
+         *
+         * Each one owns a whole [OptimizedVocabulary] — the 98k-entry English word map, its
+         * ~231k-node [VocabularyTrie] and the length buckets, which
+         * `OptimizedVocabulary.loadVocabulary` builds for EVERY language — so a cached model
+         * costs roughly 29 MB of Java heap. The cache used to be unbounded and keyed by
+         * auto-DETECTED language (`detectAndSwitch`, and `auto_detect_language` defaults on),
+         * so a user writing in several languages accumulated 29 MB per language for the rest
+         * of the process's life. On the 256 MB-growth-limit device that produced the
+         * 2026-08-17 startup `OutOfMemoryError`, three detections would have been fatal on
+         * their own.
+         *
+         * Only [activeLanguage] is ever read, so 1 is the honest bound: caching the previous
+         * language would spend ~29 MB to save one ~200 ms reload on a rare event.
+         */
+        private const val MAX_CACHED_MODELS = 1
     }
 
     // Active language
@@ -98,6 +116,10 @@ class MultiLanguageManager(
             // Create model (may have null components if not available)
             val model = LanguageModel(language, encoder, decoder, vocabulary)
             modelCache[language] = model
+            trimCache(keep = language)
+            MemoryProbe.mark("multiLanguage.modelCache", settle = true) {
+                "added=$language cached=${modelCache.size} keys=${modelCache.keys}"
+            }
 
             val loadTime = System.currentTimeMillis() - startTime
             Log.i(TAG, "Loaded language model: $language (${loadTime}ms)")
@@ -107,6 +129,31 @@ class MultiLanguageManager(
         } catch (e: Exception) {
             Log.e(TAG, "Failed to load language model: $language", e)
             return null
+        }
+    }
+
+    /**
+     * Evicts cached models until at most [MAX_CACHED_MODELS] remain, never evicting [keep]
+     * (the language that is about to become, or already is, active).
+     *
+     * Eviction order is insertion order — the oldest load goes first — and each evicted model
+     * gets the same session teardown [unloadLanguage] performs. Callers hold the instance
+     * monitor (`@Synchronized`), so iteration cannot race a concurrent load.
+     */
+    private fun trimCache(keep: String) {
+        if (modelCache.size <= MAX_CACHED_MODELS) return
+        val evictable = modelCache.keys.filter { it != keep }
+        val excess = modelCache.size - MAX_CACHED_MODELS
+        for (language in evictable.take(excess)) {
+            modelCache.remove(language)?.let { model ->
+                try {
+                    model.encoder?.close()
+                    model.decoder?.close()
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error evicting language model: $language", e)
+                }
+            }
+            Log.i(TAG, "Evicted cached language model '$language' (cap $MAX_CACHED_MODELS)")
         }
     }
 
