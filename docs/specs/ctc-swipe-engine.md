@@ -309,7 +309,73 @@ language's own mappings and injected English possessives into non-English slates
   (≤3-char 93.70, 4+ 87.05) — above FUTO's own decoder ceiling (84.83) and our neural
   (74.62) on every stratum; equal-footing McNemar 3/3 seeds p<5e-4. Evidence:
   `CleverKeys-ML/ctc/UNSEALING_4.md`; app-side cross-reference
-  `docs/eval/2026-07-24-test2400-head2head.md` (addendum).
+  `docs/eval/2026-07-24-test2400-head2head.md` (addendum). **Do not quote these numbers
+  without the footings and the two limitations that travel with them** — both are spelled
+  out in "Evidence tier of the shipped model" immediately below.
+
+### Evidence tier of the shipped model — quote it with its limitations
+
+The fourth and **final** unsealing of the sealed `test-2400` split
+(`CleverKeys-ML/ctc/UNSEALING_4.md`, pre-registered and pushed at `b91f179` *before* any
+decode; six decodes, one per (config, seed), no retries; ledger 3 → 4, **there is no
+fifth**) put this model on both footings:
+
+| footing | seed-mean t1/t3/t5/≤3/4+ | bar | Δ |
+|---|---|---|---|
+| **A** — AOSP STRIP 146,964 at benchmark preset E1 | 88.931 / 92.681 / 93.361 / 92.597 / 87.045 | FUTO published `84.83/91.04/92.08/89.57/82.40` | +4.10 / +1.64 / +1.28 / +3.03 / +4.64 |
+| **B** — the SHIPPING footing: `en_enhanced` STRIP trie 98,081 at the app preset `0.9/4.0/0.25/0.25/0.9882` | **89.306 / 93.792 / 94.500 / 93.701 / 87.045** | trie-matched `84.92/91.54/92.96/89.57/82.52` | +4.39 / +2.25 / +1.54 / +4.13 / +4.53 |
+| **equal footing** (both engines val-tuned, same rows/trie/beam/OOV rule) | same as A | `87.12/92.29/92.96/89.94/85.68` | +1.81 / +0.39 / +0.40 / +2.66 / +1.36 |
+
+All five clear on the seed-mean **and on every individual seed** on all three, worst-seed
+top-5 margin **+1.50** on the shipping footing. Exact paired two-sided McNemar on top-1
+against FUTO's val-tuned per-row output resolved **3 of 3 seeds at p < 5e-4** (+45/+46/+39
+rows) → the model is **TEST-VALIDATED** and holds a **qualified equal-footing win** — the
+registered ceiling on that claim, *not* a general superiority claim.
+
+**Two limitations travel with those numbers and must not be dropped when quoting them:**
+
+1. **The equal-footing lead is bought entirely on the HWS corpus half.** Per-source top-1:
+   FUTO's val-tuned engine **beats us by +0.38 on its own corpus half** (95.89 vs 95.51);
+   our +1.81 aggregate comes from the HWS half (+4.05). What is demonstrated is better
+   *coverage across two corpora*, not better decoding per se (`UNSEALING_4.md` §8.4).
+2. **ch 192 keeps top-5 by 0.14** (93.50 vs our 93.361 on config A) — it is the one metric,
+   of the five, on which an earlier model stays ahead, at 6.14 MB against our 2.91 MB.
+
+Further caveats that travel with every test-2400 number: T3 contributor contamination, the
+dedup defect, the ~12–14 pt FUTO/HWS internal spread, and the preset asymmetry on
+published-bar comparisons (ours tuned, FUTO's published). The fp16w artifact that actually
+ships was **not itself decoded** — fp32 was; fp16w ≡ fp32 to 0.00 on all five metrics at the
+app footing on val (§2.2 of `UNSEALING_4.md`), so the numbers carry by measurement, not
+assumption.
+
+**Preset provenance (a disclosed gap, not a fitted result):** `0.9/4.0/0.25/0.25/0.9882`
+was fitted on `resbn80g` and has **never been swept for this model family** on the app
+trie. Config B validates it on the sealed split at that preset; it is not this model's own
+optimum, which was never sought. The λ term is the one constant since re-fitted per lexicon
+scale — see "Per-language enablement" above and `CtcScoringParams.presetFor`.
+
+### The fixture-and-preset rule (why three things move together)
+
+`MODEL_COMPARISON.md` §5.1: the shipped ONNX, the runtime preset, and the golden fixture
+**always move together**. The fixture records its own `source_onnx_sha256` and `preset`;
+shipping the model at one preset and the fixture at another makes the parity gate assert
+against a configuration nothing runs. Current triple:
+
+| corner | value |
+|---|---|
+| model asset | `src/main/assets/models/ctc_swipe_encoder.onnx` sha256 `84718e6ebc8020176f27b9668e50922a765c96838307b640a8db9ab0549e88e5` |
+| fixture (both copies) | `src/test/resources/ctc/ctc_golden.json` + `src/androidTest/assets/ctc/ctc_golden.json`, byte-identical, sha256 `2a449c4f2de19505131b396655ae01d3e3c325e40249446ff6e7a40c2b27559c` (= ML `artifacts/phaseM_kd_fresh_w1_fp16w_golden.json`, regenerated 2026-08-14 at the **ship** preset — the first cut was generated at E1 and is superseded, `PHASE_M.md` §11.1) |
+| runtime preset | `CtcScoringParams.tunedV2()` = `0.9 / 4.0 / 0.25 / 0.25 / 0.9882`, beam 100, top-4 — the en-scale λ, which is what the fixture's `en_enhanced` trie is on |
+
+All three corners are pinned by `CtcParityTest.fixture_model_and_shipPreset_travelTogether`
+(pure JVM, no device: hashes the asset, compares the fixture preset term-by-term against
+`tunedV2`, asserts every beam case decodes at that preset, and pins the two fixture copies
+byte-identical). The device half — "the artifact actually *produces* those emissions
+through ORT" — is `CtcEmissionModelParityTest` (see Testing Strategy).
+
+The decoy this guards against is real: the superseded `resbn192i_s1234_fp16w` is
+**byte-size-identical** to the ship artifact at 3,052,318 B but hashes `d55624cc…`, so a
+wrong-artifact swap survives every eyeball check and only a hash catches it.
 
 ### Settings surface
 
@@ -339,11 +405,11 @@ Pure JVM (`runPureTests`; registered + drift-checked by `TestRunnerListDriftTest
 
 | Suite | Cases | What it pins |
 |---|---|---|
-| `swipe/ctc/CtcParityTest` | 2 | Golden parity vs the Python port: featurizer tensor bit-identical; beam top-k words identical, scores within 1e-4 |
+| `swipe/ctc/CtcParityTest` | 3 | Golden parity vs the Python port: featurizer tensor bit-identical; beam top-k words identical, scores within 1e-4. Plus `fixture_model_and_shipPreset_travelTogether` — the device-free half of the fixture-and-preset rule above (asset sha256 vs the fixture's `source_onnx_sha256`, fixture preset vs `tunedV2` term-by-term, every beam case at the ship preset, both fixture copies byte-identical) |
 | `swipe/ctc/CtcModuleTest` | 12 | Emissions slice, trie loaders, preset constants, featurizer branches, beam behavior, facade seam |
 | `swipe/ctc/CtcLexiconMergeTest` | 10 | Merge policy: custom-first, 1..255 clamp, custom-overrides-disabled, case-folded dedupe, ordinals |
 | `swipe/ctc/CtcContractionDisplayTest` | 7 | Alias→apostrophe display over the real merged-lexicon ordinals (H1) |
-| `swipe/ctc/CtcLanguagePresetTest` | 15 | `presetFor` λ-by-lexicon-scale (en 4.0 / fr,de,es 2.0 / unknown→en), language-invariance of every other constant, the `CtcLanguageSupport` table (supported set, it/pt/sv held back, asset paths, normalization) |
+| `swipe/ctc/CtcLanguagePresetTest` | 17 | `presetFor` λ-by-lexicon-scale (en 4.0 / fr,de,es 2.0 / unknown→en), language-invariance of every other constant, the `CtcLanguageSupport` table (supported set, it/pt/sv held back, asset paths, normalization). Plus `tunedRuCkdt`'s E1 constants and the pinned fact that it is on a DIFFERENT footing than the shipping axis (see "Recorded, not wired" below) |
 | `swipe/ctc/CtcCkdtLexiconTest` | 18 | The a–z projection policy (folding, untypeable ß/œ/ø, joiners) + the REAL bundled fr/de/es dictionaries: record/untypeable/word/collision counts, the `255 − rank` scale, the canonical display map (`cafe`→`café`, `uber`→`über`, `nino`→`niño`), highest-frequency-wins collisions, and trie totality |
 | `swipe/ContractionOverlayTest` | 12 | The shared pure overlay decision matrix (geometric + ctc twin duty) |
 | `swipe/SwipeEngineRouterTest` | 15 | Routing table incl. `Mode.CTC` rows + `fromPref` canonicalization |
@@ -551,6 +617,102 @@ Non-Latin scripts still need their own alphabet/emission contract.
   recorded future option).
 - No during-gesture preview decode (commit-phase only).
 - No langpack-backed lexicon (λ-scale constraint, As-Built "Lexicon").
+
+---
+
+## Recorded, not wired — options the app deliberately did not take
+
+Written down so each choice stays visible instead of being rediscovered. Nothing in this
+section is reachable from the decoder.
+
+### The Cyrillic λ datapoint (`CtcScoringParams.tunedRuCkdt`)
+
+`ru` is **not** in `CtcLanguageSupport.SUPPORTED`, so the adapter can never build this
+preset. It is kept because it is the independent corroboration behind
+`LAMBDA_CKDT_SCALE`: a Cyrillic λ sweep (CleverKeys-ML `ctc/PHASE_J.md` §6.9 — tuned on ru
+val rows `0:4708`, confirmed on `4708:9416`, over both ru models, worth ≈ +1.2 in-dict
+top-1) landed on **λ 2.0** for the CKDT `255 − rank` scale, the same value the Latin sweep
+(`docs/eval/2026-08-15-ctc-per-language-lambda.md`) reached for fr/de/es.
+
+**The two sweeps agree on λ and nothing else**, because they were run around different base
+presets — E1 (benchmark footing) for ru, `tunedV2` (app footing) for the shipping axis — so
+they differ on γ, β and γ_prune. Enabling a Cyrillic path therefore starts with a **footing
+decision**, not a λ lookup, and the disagreement is pinned by test so it cannot decay into a
+bug. Evidence tier: **val-only, permanently** — no Cyrillic model was decoded on test-2400
+and the seal is spent. The λ also needs re-confirming with user-dictionary entries present
+(λ multiplies the frequency term, so a larger λ amplifies top-of-scale injected
+competitors) before any ru ship.
+
+### "Max accuracy" pair mode — FUTURE-OPTIONAL, **not implemented**
+
+`CleverKeys-ML/ctc/MODEL_COMPARISON.md` and `PHASE_M.md` §11.2 record a second ship option
+(**option A**) the app did not take.
+
+**What it is.** `v2pair-s1234`: the **two members of one coupled training run**, run as two
+ONNX sessions, with their per-frame emission probabilities **averaged before the beam**
+(probability space, one averaged log-emission matrix into the existing `CtcBeamDecoder` —
+*not* a fusion of two candidate lists). Members ship at different numeric formats because
+that was measured free:
+
+| member | artifact | bytes |
+|---|---|---|
+| A | `phaseL_v2pair_s1234_a_int8w.onnx` | 1,554,355 |
+| B | `phaseL_v2pair_s1234_b_fp16w.onnx` | 3,052,318 |
+| | **total** | **4,606,673 (4.39 MB)** |
+
+Against the shipped single model that is **+1,554,355 B ≈ +1.5 MB per ABI** and a second
+ORT session (encoder 1.79 ms vs the single model's 0.83 ms class).
+
+**Why the recipe is trustworthy.** Pair compatibility is **trained in, not gated for**: the
+members are trained together with a KL coupling term (`--pair-weight`, coupling weight
+**0.3**, confirmed interior-optimal on a four-point sweep). Six of six coupled pairs passed
+the label-free ≥ 95 % per-frame agreement gate at **98.05–98.33 %**; the identical
+`--pair-weight 0` control finished at 92.09 % and its averaged mix **collapsed to greedy
+29.10** (individual members 72.6 / 71.8). That is the distinction from the older
+`mix2-i8f16` "card", which hit similar numbers as a one-off draw whose recipe demonstrably
+**did not** reproduce. The pair reproduces by construction — and it is also the **teacher**
+the shipped model was distilled from, so shipping it is not a different bet, it is the
+undistilled version of the same one.
+
+**Its evidence tier — val-only, permanently.**
+
+| claim | tier |
+|---|---|
+| 11 of 11 campaign bars on **all five seeds** (five-seed mean margins +0.12 … +2.76) — the only configuration in the campaign to do so | **val + alt-layout only** |
+| val 88.86 / 92.82 / 93.59 / **91.56** / 87.46; dvorak 92.88, dvorak-app 92.59, azerty 84.11, qwertz 84.41, german 82.26, spanish 89.76 | **val + alt-layout only** |
+| anything on test-2400 | **none — it was never decoded and never will be** |
+
+The seal is spent: four unsealings, no fifth, by pre-registration. The pair was
+*deliberately* not decoded (`UNSEALING_4.md` §1) because only one model ships. So the pair
+is more accurate **on val** (s1234 t1 88.90 vs 88.62) with **deeper seed evidence** (5 vs 3),
+while the shipped single model is the one with **sealed-split evidence**. Choosing the pair
+trades an evidence tier for a few tenths — an accuracy-first call, and the ML campaign's own
+recommendation was **B, the single model**.
+
+**What implementing it would touch.**
+
+1. `CtcEngineAdapter` — a second `MODEL_ASSET` + a second `OnnxCtcEmissionModel`, both under
+   the existing bounded-retry/latch logic; warm-up and teardown cover both.
+2. A new averaging decorator at the `CtcEmissionModel` seam (the `CtcSwipeDecoder`
+   constructor arg): run both sessions, exponentiate, mean, re-log, hand one `CtcEmissions`
+   to the beam. The beam, featurizer, trie and preset are untouched.
+3. **A regenerated golden fixture** from the pair configuration at whatever preset ships —
+   the fixture-and-preset rule is not optional. The fixture already stores
+   `source_onnx_sha256` as an **array**, so a two-member fixture fits without a schema
+   change; `CtcParityTest.fixture_model_and_shipPreset_travelTogether` would extend to hash
+   both assets.
+4. The app-trie preset would need its own answer: `tunedV2` was fitted on `resbn80g` and
+   validated on the *single* model; nothing validates it on averaged emissions.
+5. Re-run both device gates — `CtcEmissionModelParityTest` and the latency gate (budget
+   roughly doubles on the encoder leg; the beam, which dominates, is unchanged).
+6. APK **+~1.5 MB per ABI**, plus a second resident session's memory and a longer cold warm-up.
+
+**Verdict recorded here: not now.** Revisit only if field feedback says the last few tenths
+matter more than the sealed-split evidence tier and the size, and never without regenerating
+the fixture in the same change.
+
+Also recorded and not scheduled: the 21.8 KB rescorer, contract-v2 T′=64, a two-phase
+preview decode, and user-dictionary alpha-boost with a cap (plan §7.3).
 
 ---
 
