@@ -244,6 +244,40 @@ class ContractionManagerTest {
         assertEquals("j'ai", manager.getNonPairedMapping("jai"))
     }
 
+    /**
+     * A language ships its mappings in TWO files and the loader must read both: the
+     * REPLACE-mode `contractions_fr.json` (the key is an alias with no reading of its own)
+     * and the APPEND-mode `contraction_pairs_fr.json` (the key IS a French word, so the
+     * overlay keeps it and merely offers the elision). Before 2026-08-17 there was only the
+     * first file and the mode was guessed from frequency rank at runtime, which REPLACED
+     * common French words: swiping the moon ("lune", rank 2,055) produced only "l'une".
+     */
+    @Test
+    fun loadSwipeDisplayMappingsLoadsBothTheReplaceAndTheAppendFile() {
+        manager.loadSwipeDisplayMappings("fr")
+
+        assertEquals(
+            "'lune' is a French word: it must be a PAIRED base, so the overlay keeps it",
+            listOf("l'une"), manager.getPairedContractions("lune")
+        )
+        assertNull(
+            "'lune' must not also be a non-paired alias — that would REPLACE the word",
+            manager.getNonPairedMapping("lune")
+        )
+        assertTrue(manager.isKnownContraction("l'une"))
+        // The alias half of the split is unchanged: "cest" is not a French word.
+        assertNull(manager.getPairedContractions("cest"))
+        assertEquals("c'est", manager.getNonPairedMapping("cest"))
+
+        manager.loadSwipeDisplayMappings("it")
+        assertEquals(listOf("l'ago"), manager.getPairedContractions("lago"))
+        assertNull(
+            "Italian swipes must not retain the French pairs file ('danse' is French-only; " +
+                "the two files do share 9 keys, 'lune' among them)",
+            manager.getPairedContractions("danse")
+        )
+    }
+
     /** A language that ships no contraction file must end up with NO overlay at all. */
     @Test
     fun loadSwipeDisplayMappingsLeavesNoMappingsForALanguageWithoutContractions() {

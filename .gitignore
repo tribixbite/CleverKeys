@@ -172,6 +172,12 @@ pal_generated.code
 !site/package.json
 !site/tsconfig.json
 !web_demo/**/*.json
+# Bundled dictionary assets are SHIPPED data, not scratch output. Every file here
+# is read from the APK at runtime (contractions_<lang>.json,
+# contraction_pairs_<lang>.json, contraction_pairings.json, en_enhanced.json);
+# without this exception a newly generated one is silently never committed and the
+# feature dies on CI while working locally.
+!src/main/assets/dictionaries/*.json
 generated_*.kt
 .env
 

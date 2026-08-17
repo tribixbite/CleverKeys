@@ -112,7 +112,8 @@ class ContractionManager(private val context: Context) {
      *    set then `contractions_en.json`, i.e. byte-for-byte the pre-2026-08-16 behavior
      *    both adapters had. This path is test-2400-validated and deliberately unchanged.
      *  - **Any other language**: the previously loaded set is DROPPED and ONLY that
-     *    language's file is loaded. Without the drop, the bundled ENGLISH base
+     *    language's own files are loaded (both of them — see [loadLanguageContractions] for
+     *    the REPLACE/APPEND split). Without the drop, the bundled ENGLISH base
      *    (`contractions.bin`'s 1,183 paired display forms — 1,116 of them possessives — plus
      *    `contraction_pairings.json`) stays resident and injects English morphology into a
      *    non-English slate: a `fr` decode of the real French word `franco` also offered
@@ -148,7 +149,8 @@ class ContractionManager(private val context: Context) {
         Log.d(
             TAG,
             "Swipe contractions for '$langCode': dropped $dropped English/previous-language " +
-                "mappings, loaded ${nonPairedContractions.size} non-paired"
+                "mappings, loaded ${nonPairedContractions.size} non-paired + " +
+                "${pairedContractions.size} paired"
         )
     }
 
@@ -156,9 +158,27 @@ class ContractionManager(private val context: Context) {
      * Load language-specific contractions for the given language.
      * Called when keyboard language changes to load appropriate contraction mappings.
      *
+     * A language ships its mappings in TWO bundled files, and which file an entry lives in
+     * IS its display mode (see [tribixbite.cleverkeys.swipe.ContractionOverlay]):
+     *
+     *  - `contractions_<lang>.json` → [nonPairedContractions]: the key has no reading of its
+     *    own (`cest`, `jai`, `gehts`), so the display form REPLACES it and keeps its slot.
+     *  - `contraction_pairs_<lang>.json` → [pairedContractions]: the key IS a word of the
+     *    language (`lune`, `danse`, `lago`), so it is KEPT and the elision is APPENDED as a
+     *    variant. Both spellings stay reachable, which is the product requirement — the
+     *    keyboard may not decide for the user whether they meant the moon or "l'une".
+     *
+     * The split is resolved at data-generation time from corpus attestation of the bare form
+     * (`scripts/extract_apostrophe_words.py`), NOT at runtime from its frequency rank: rank
+     * works for English by luck and destroyed common French/Italian words, which rank past
+     * `REAL_WORD_ORDINAL_MAX` (fr `lune` is 2,055th). The overlay's rank guard stays as
+     * defense in depth for IMPORTED language packs, whose `contractions.json` is uncurated.
+     *
      * Tries to load from:
-     * 1. Installed language pack (files/langpacks/{code}/contractions.json)
-     * 2. Bundled assets (assets/dictionaries/contractions_{code}.json)
+     * 1. Installed language pack (files/langpacks/{code}/contractions.json) — REPLACE-mode
+     *    only; a pack that supplies its own file wins outright and the bundled files for
+     *    that language are skipped, exactly as before.
+     * 2. Bundled assets (assets/dictionaries/contractions_{code}.json + the pairs file).
      *
      * @param langCode Language code (e.g., "fr", "it", "de", "es", "pt", "nl")
      */
@@ -187,6 +207,54 @@ class ContractionManager(private val context: Context) {
             Log.d(TAG, "No contraction file for $langCode (this is normal for some languages)")
         } catch (e: Exception) {
             Log.w(TAG, "Failed to load contractions for $langCode: ${e.message}")
+        }
+        loadLanguagePairedContractions(langCode)
+    }
+
+    /**
+     * Loads [langCode]'s APPEND-mode mappings from
+     * `assets/dictionaries/contraction_pairs_<lang>.json` (`{word: [variant, …]}`) into
+     * [pairedContractions] — see [loadLanguageContractions] for why the file exists.
+     *
+     * Deliberately a different shape from English's `contraction_pairings.json`
+     * (`{word: [{contraction, frequency}]}`): that file carries the frequency the English
+     * possessive generator was built around, which a per-language elision list has no
+     * equivalent of, and inventing one would be fabricated data.
+     *
+     * Absent file → no-op: only fr/it ship one, and es/pt/sv/id/ms/tl/sw must stay at zero
+     * mappings (`ContractionManagerTest`).
+     *
+     * @return the number of variants added.
+     */
+    private fun loadLanguagePairedContractions(langCode: String): Int {
+        val filename = "dictionaries/contraction_pairs_$langCode.json"
+        return try {
+            val jsonObj = JSONObject(readStream(assetManager.open(filename)))
+            val keys = jsonObj.keys()
+            var count = 0
+            while (keys.hasNext()) {
+                val baseWord = keys.next()
+                val lowerBase = baseWord.lowercase()
+                val variants = jsonObj.getJSONArray(baseWord)
+                for (i in 0 until variants.length()) {
+                    val variant = variants.getString(i).lowercase()
+                    knownContractions.add(variant)
+                    // EARLIER-WINS on the variant list, mirroring loadContractionsFromStream:
+                    // the first language loaded takes precedence and a re-load is idempotent.
+                    val existing = pairedContractions.getOrPut(lowerBase) { mutableListOf() }
+                    if (variant !in existing) {
+                        existing.add(variant)
+                        count++
+                    }
+                }
+            }
+            Log.d(TAG, "Loaded $count paired contractions for $langCode from assets")
+            count
+        } catch (e: java.io.FileNotFoundException) {
+            0 // Most languages ship no APPEND-mode mappings — not an error.
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to load paired contractions for $langCode: ${e.message}")
+            0
         }
     }
 

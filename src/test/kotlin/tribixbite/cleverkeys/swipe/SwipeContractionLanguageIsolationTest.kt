@@ -79,8 +79,15 @@ class SwipeContractionLanguageIsolationTest {
         /** `contraction_pairings.json` — base word → English contraction/possessive forms. */
         lateinit var englishPaired: Map<String, List<String>>
 
-        /** language → `contractions_<lang>.json`. */
+        /** language → `contractions_<lang>.json` (REPLACE mode). */
         lateinit var languageFiles: Map<String, Map<String, String>>
+
+        /**
+         * language → `contraction_pairs_<lang>.json` (APPEND mode) — the keys that ARE words
+         * of the language, so the overlay keeps them and merely offers the elision too
+         * (`lune` + `l'une`). Empty for a language that ships no such file.
+         */
+        lateinit var languagePairFiles: Map<String, Map<String, List<String>>>
 
         /** language → lowercase word → frequency ordinal over the bundled CKDT lexicon. */
         lateinit var ordinals: Map<String, HashMap<String, Int>>
@@ -112,9 +119,18 @@ class SwipeContractionLanguageIsolationTest {
             }
             englishPaired = paired
 
-            languageFiles = (ORDINAL_LANGUAGES + EMPTY_CONTRACTION_FILES + "nl" + "en")
-                .distinct()
-                .associateWith { jsonObject("contractions_$it.json") }
+            val languages = (ORDINAL_LANGUAGES + EMPTY_CONTRACTION_FILES + "nl" + "en").distinct()
+            languageFiles = languages.associateWith { jsonObject("contractions_$it.json") }
+            languagePairFiles = languages.associateWith { language ->
+                val file = File("$DICT_DIR/contraction_pairs_$language.json")
+                if (!file.isFile) return@associateWith emptyMap<String, List<String>>()
+                val root = JsonParser.parseString(file.readText()).asJsonObject
+                val out = LinkedHashMap<String, List<String>>(root.size() * 2)
+                for ((base, variants) in root.entrySet()) {
+                    out[base.lowercase()] = variants.asJsonArray.map { it.asString.lowercase() }
+                }
+                out
+            }
 
             val ord = HashMap<String, HashMap<String, Int>>()
             val lex = HashMap<String, Set<String>>()
@@ -151,9 +167,13 @@ class SwipeContractionLanguageIsolationTest {
     /** The mappings a swipe decoding [language] sees under [policy]. */
     private fun mappingsFor(language: String, policy: Policy): Mappings {
         val languageFile = languageFiles[language] ?: emptyMap()
+        val languagePairs = languagePairFiles[language] ?: emptyMap()
         val english = policy == Policy.PRE_FIX_ENGLISH_BASE ||
             SwipeContractionPolicy.usesEnglishBase(language)
-        if (!english) return Mappings(nonPaired = languageFile, paired = emptyMap())
+        // `ContractionManager.loadLanguageContractions` loads BOTH of the language's files:
+        // the REPLACE map and the APPEND map. Only English additionally keeps the bundled
+        // base below them (SwipeContractionPolicy).
+        if (!english) return Mappings(nonPaired = languageFile, paired = languagePairs)
         // EARLIER-WINS: `loadContractionsFromStream` skips any key already mapped, so the
         // English base shadows the active language's file. That is the pre-fix order, and
         // (for English itself) still the shipped one.
@@ -323,9 +343,10 @@ class SwipeContractionLanguageIsolationTest {
     @Test
     fun `Italian contractions still fire under the shipped policy`() {
         // it is a GEOMETRIC-engine language (no CTC λ sweep yet) — the same adapter change
-        // applies to it. `contractions_it.json` holds 22,474 entries but only 119 of its
-        // keys are Italian lexicon words, so most can never be swiped; these two are.
-        val expected = mapOf("tuttora" to "tutt'ora", "finora" to "fin'ora")
+        // applies to it. `contractions_it.json` used to hold 22,474 entries of which only 119
+        // could ever be decoded; it now holds exactly the alias-only remainder. These are
+        // REPLACE-mode: no Italian reading, so the display form takes the slot.
+        val expected = mapOf("daccordo" to "d'accordo", "mama" to "m'ama", "lun" to "l'un")
         for ((alias, display) in expected) {
             assertThat(lexicons.getValue("it")).contains(alias)
             assertThat(languageFiles.getValue("it")[alias]).isEqualTo(display)
@@ -421,25 +442,117 @@ class SwipeContractionLanguageIsolationTest {
     }
 
     @Test
-    fun `the real-word ordinal guard is still load-bearing WITHIN a language`() {
-        // Defense in depth is not redundant: a language's OWN file maps keys that are also
-        // its common words (fr la/les/ma, it del). Those must be KEPT with the contraction
-        // merely appended, never substituted.
-        for ((language, alias, display) in listOf(
-            Triple("fr", "la", "l'a"),
-            Triple("fr", "les", "l'es"),
-            Triple("fr", "ma", "m'a"),
-            Triple("it", "del", "d'el"),
-        )) {
-            assertThat(languageFiles.getValue(language)[alias]).isEqualTo(display)
-            assertThat(ordinals.getValue(language)[alias]!!)
+    fun `the real-word ordinal guard is still load-bearing for an UNCURATED file`() {
+        // The guard's job moved, it did not disappear. The BUNDLED files are curated: a key
+        // that is a real word now lives in `contraction_pairs_<lang>.json` and reaches the
+        // PAIRED rule directly, so the bundled REPLACE files contain nothing the guard has
+        // to rescue (pinned by BundledContractionDataTest).
+        for (language in listOf("fr", "it")) {
+            val ranks = ordinals.getValue(language)
+            val rescued = languageFiles.getValue(language).keys.filter {
+                (ranks[it] ?: Int.MAX_VALUE) < ContractionOverlay.REAL_WORD_ORDINAL_MAX
+            }
+            assertWithMessage("$language: the curated REPLACE file must need no rank rescue")
+                .that(rescued).isEmpty()
+        }
+
+        // An IMPORTED language pack ships only `contractions.json` (LanguagePackManager has
+        // no pairs file), so its mappings are uncurated and the guard is the ONLY thing that
+        // stops a common word from being replaced. Feed such a file — the pre-curation fr
+        // mappings for `la`/`les`/`ma` — through the real overlay with the real fr ordinals.
+        val uncurated = mapOf("la" to "l'a", "les" to "l'es", "ma" to "m'a")
+        for ((alias, display) in uncurated) {
+            assertThat(ordinals.getValue("fr")[alias]!!)
                 .isLessThan(ContractionOverlay.REAL_WORD_ORDINAL_MAX)
-            val out = overlay(language, Policy.SHIPPED, listOf(alias))
-            assertWithMessage("$language: '$alias' must keep the top slot")
+            val out = ContractionOverlay.apply(
+                words = listOf(alias),
+                scores = listOf(900),
+                pairedVariants = { null },
+                nonPairedMapping = { uncurated[it] },
+                wordOrdinal = { ordinals.getValue("fr")[it] },
+            ).first
+            assertWithMessage("fr: '$alias' must keep the top slot")
                 .that(out.first()).isEqualTo(alias)
-            assertWithMessage("$language: '$display' must be appended, not substituted")
+            assertWithMessage("fr: '$display' must be appended, not substituted")
                 .that(out).contains(display)
         }
+    }
+
+    // ── 3b. the APPEND classification: both spellings stay reachable ────────────────
+
+    @Test
+    fun `swiping lune in French offers both the word lune and the elision l'une`() {
+        // THE requirement. "lune" (the moon) is the 2,055th most common French word — past
+        // REAL_WORD_ORDINAL_MAX — so the rank guard could not save it and the overlay
+        // REPLACED it with "l'une": the user could not swipe the moon at all. The word is
+        // now APPEND-mode, so both spellings are on the slate and the user picks.
+        assertWithMessage("fixture: 'lune' must be a French lexicon word")
+            .that(lexicons.getValue("fr")).contains("lune")
+        assertThat(ordinals.getValue("fr")["lune"]!!)
+            .isGreaterThan(ContractionOverlay.REAL_WORD_ORDINAL_MAX)
+
+        val slate = overlay("fr", Policy.SHIPPED, listOf("lune", "lutte"))
+        assertWithMessage(
+            "fr: the swiped word keeps its slot and the elision is APPENDED after the " +
+                "engine's own candidates (ContractionOverlay's variant placement)"
+        ).that(slate).containsExactly("lune", "lutte", "l'une").inOrder()
+
+        // The same for the rest of the class of French words that used to be destroyed.
+        for ((word, elision) in mapOf(
+            "danse" to "d'anse",
+            "lion" to "l'ion",
+            "larme" to "l'arme",
+            "laide" to "l'aide",
+            "lavoir" to "l'avoir",
+        )) {
+            val out = overlay("fr", Policy.SHIPPED, listOf(word))
+            assertWithMessage("fr: '$word' must survive its own elision")
+                .that(out).containsExactly(word, elision).inOrder()
+        }
+    }
+
+    @Test
+    fun `swiping lago in Italian offers both the word lago and the elision l'ago`() {
+        assertWithMessage("fixture: 'lago' must be an Italian lexicon word")
+            .that(lexicons.getValue("it")).contains("lago")
+        assertThat(overlay("it", Policy.SHIPPED, listOf("lago")))
+            .containsExactly("lago", "l'ago").inOrder()
+
+        for ((word, elision) in mapOf(
+            "luna" to "l'una",
+            "lira" to "l'ira",
+            "signora" to "s'ignora",
+            "duomo" to "d'uomo",
+            // Modern Italian writes these solid (Treccani); the apostrophe form is the
+            // variant, so replacing them destroyed the STANDARD spelling.
+            "tuttora" to "tutt'ora",
+            "finora" to "fin'ora",
+        )) {
+            assertWithMessage("it: '$word' must survive its own elision")
+                .that(overlay("it", Policy.SHIPPED, listOf(word)))
+                .containsExactly(word, elision).inOrder()
+        }
+    }
+
+    @Test
+    fun `an alias with no reading of its own is still REPLACED, never offered bare`() {
+        // The other half of the split: these keys are not words, so keeping them would put a
+        // misspelling on the bar. "cest" is in the French lexicon (that is why the beam can
+        // emit it) and is still not a French word — dictionary membership is not the test.
+        for ((alias, display) in mapOf(
+            "cest" to "c'est",
+            "jai" to "j'ai",
+            "quil" to "qu'il",
+            "lhomme" to "l'homme",
+        )) {
+            assertThat(lexicons.getValue("fr")).contains(alias)
+            val out = overlay("fr", Policy.SHIPPED, listOf(alias))
+            assertWithMessage("fr: '$alias' must be replaced by '$display'")
+                .that(out).containsExactly(display)
+            assertWithMessage("fr: the bare alias must not be offered")
+                .that(out).doesNotContain(alias)
+        }
+        assertThat(overlay("it", Policy.SHIPPED, listOf("daccordo"))).containsExactly("d'accordo")
     }
 
     // ── 4. English must be byte-for-byte unchanged ──────────────────────────────────
@@ -474,9 +587,10 @@ class SwipeContractionLanguageIsolationTest {
         // beam surface, so they are excluded — as is English, whose possessive pairings
         // deliberately project elsewhere ("africa" → "africa's" → "africas").
         for (language in listOf("fr", "de", "it", "nl")) {
-            val file = languageFiles.getValue(language)
+            val mappings = languageFiles.getValue(language).map { (k, v) -> k to v } +
+                languagePairFiles.getValue(language).flatMap { (k, vs) -> vs.map { k to it } }
             var checked = 0
-            for ((alias, display) in file) {
+            for ((alias, display) in mappings) {
                 if (CtcAzProjection.project(alias) != alias) continue // not swipeable
                 assertWithMessage(
                     "$language: '$alias' → '$display' projects to " +

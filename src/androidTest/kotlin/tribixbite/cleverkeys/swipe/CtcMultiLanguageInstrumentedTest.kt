@@ -319,19 +319,34 @@ class CtcMultiLanguageInstrumentedTest {
     }
 
     /**
-     * The bundled display forms of [language]'s OWN contraction file, read out of the APK
-     * (`dictionaries/contractions_<lang>.json`; empty when the language ships none, as
-     * es/pt/sv do — those files are literally `{}`).
+     * The bundled display forms of [language]'s OWN contraction files, read out of the APK —
+     * BOTH `dictionaries/contractions_<lang>.json` (REPLACE mode) and
+     * `dictionaries/contraction_pairs_<lang>.json` (APPEND mode, the keys that are real
+     * words of the language: fr `lune` → `l'une`). Empty when the language ships neither,
+     * as es/pt/sv do — those files are literally `{}`.
      */
-    private fun contractionDisplayForms(language: String): Set<String> = try {
-        val json = context.assets.open("dictionaries/contractions_$language.json")
-            .use { org.json.JSONObject(it.readBytes().decodeToString()) }
-        val forms = HashSet<String>(json.length() * 2)
-        val keys = json.keys()
-        while (keys.hasNext()) forms.add(json.getString(keys.next()).lowercase())
-        forms
-    } catch (e: java.io.FileNotFoundException) {
-        emptySet()
+    private fun contractionDisplayForms(language: String): Set<String> {
+        val forms = HashSet<String>()
+        try {
+            val json = context.assets.open("dictionaries/contractions_$language.json")
+                .use { org.json.JSONObject(it.readBytes().decodeToString()) }
+            val keys = json.keys()
+            while (keys.hasNext()) forms.add(json.getString(keys.next()).lowercase())
+        } catch (e: java.io.FileNotFoundException) {
+            // Language ships no REPLACE-mode file.
+        }
+        try {
+            val json = context.assets.open("dictionaries/contraction_pairs_$language.json")
+                .use { org.json.JSONObject(it.readBytes().decodeToString()) }
+            val keys = json.keys()
+            while (keys.hasNext()) {
+                val variants = json.getJSONArray(keys.next())
+                for (i in 0 until variants.length()) forms.add(variants.getString(i).lowercase())
+            }
+        } catch (e: java.io.FileNotFoundException) {
+            // Language ships no APPEND-mode file.
+        }
+        return forms
     }
 
     /**

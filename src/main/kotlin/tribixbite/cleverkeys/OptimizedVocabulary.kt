@@ -1963,6 +1963,57 @@ class OptimizedVocabulary(private val context: Context) {
         } catch (e: Exception) {
             Log.w(TAG, "Failed to load contractions for $langCode: ${e.message}")
         }
+        loadLanguagePairedContractions(langCode)
+    }
+
+    /**
+     * Load [langCode]'s APPEND-mode contractions from
+     * `assets/dictionaries/contraction_pairs_<lang>.json` (`{word: [variant, …]}`) into
+     * [contractionPairings] — the same file, and the same meaning, the swipe overlay reads
+     * through `ContractionManager.loadLanguageContractions`.
+     *
+     * These keys are words of the language that also elide (fr `lune`/`l'une`, it
+     * `lago`/`l'ago`), so they must reach the PAIRED branch above and be KEPT with the
+     * elision merely added — the non-paired branch would REPLACE them, which is how the
+     * bare word became unreachable before 2026-08-17.
+     *
+     * They are deliberately NOT injected into [vocabulary]: unlike an alias, each one is
+     * already a dictionary word with its own frequency, and re-adding it at the alias tier
+     * would distort its ranking.
+     *
+     * @return the number of variants added (0 when the language ships no such file).
+     */
+    private fun loadLanguagePairedContractions(langCode: String): Int {
+        val filename = "dictionaries/contraction_pairs_$langCode.json"
+        return try {
+            val json = context!!.assets.open(filename).use {
+                String(it.readBytes(), Charsets.UTF_8)
+            }
+            val jsonObj = org.json.JSONObject(json)
+            val keys = jsonObj.keys()
+            var count = 0
+            while (keys.hasNext()) {
+                val baseWord = keys.next()
+                val lowerBase = baseWord.lowercase(Locale.ROOT)
+                val variants = jsonObj.getJSONArray(baseWord)
+                val list = contractionPairings.getOrPut(lowerBase) { ArrayList() }
+                for (i in 0 until variants.length()) {
+                    val variant = variants.getString(i).lowercase(Locale.ROOT)
+                    // First language loaded wins, matching loadContractionsFromInputStream.
+                    if (variant !in list) {
+                        list.add(variant)
+                        count++
+                    }
+                }
+            }
+            Log.d(TAG, "Loaded $count paired contractions for $langCode from assets")
+            count
+        } catch (e: java.io.FileNotFoundException) {
+            0 // Only fr/it ship APPEND-mode mappings — absence is the normal case.
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to load paired contractions for $langCode: ${e.message}")
+            0
+        }
     }
 
     /**
