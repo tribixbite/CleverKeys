@@ -193,8 +193,10 @@ Outstanding, in priority order:
       `ALPHABET` hardcode and `MAX_CHILDREN = 26` (Cyrillic needs 33); (c) a bundled ru
       dictionary — `dictionaries/` is Latin-only today; (d) a ru projection policy (lowercase,
       strip `-`/`'`, ё→е, ъ→ь, **no NFD**) as a sibling to the Latin-specific `CtcAzProjection`;
-      (e) the ONNX itself — **no `.onnx` exists anywhere in CleverKeys-ML**, the ru checkpoints
-      are on the GPU box, so this is an export, not a training run; (f) a footing decision —
+      (e) a **ru** ONNX. The *English* one ships here already
+      (`src/main/assets/models/ctc_swipe_encoder.onnx`, 3,052,318 B), but no `.onnx` of any kind
+      exists in CleverKeys-ML — exports land in the app repo, and the ru checkpoints are still
+      on the GPU box, so this is an export step, not a training run; (f) a footing decision —
       `tunedRuCkdt` is E1-based while `presetFor` is tunedV2-based, and the two sweeps agree on
       λ and nothing else.
       **The real argument against is not capability, it is that geo may already be better here.**
