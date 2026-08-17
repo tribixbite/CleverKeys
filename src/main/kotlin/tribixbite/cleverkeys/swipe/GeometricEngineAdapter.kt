@@ -497,6 +497,16 @@ class GeometricEngineAdapter(private val context: Context) {
     // ═══════════════════════════ Dictionary conversion ═══════════════════════════
 
     private fun dictionaryFor(language: String): DictMemo? {
+        // TODO: this is the THIRD language-normalization in the swipe package and the only
+        // one that does not strip a region subtag — `CtcLanguageSupport.normalize` and
+        // `SwipeContractionPolicy.baseSubtag` (which delegates to it) both cut at `-`/`_`.
+        // A region-bearing tag would therefore key this path's custom/disabled words to
+        // `custom_words_fr-ca` while the CTC path uses `custom_words_fr`, silently splitting
+        // one user's personal dictionary across two engines. Latent today, NOT a live bug:
+        // every producer feeds a bare code (`Locale.getDefault().language`, and the
+        // `pref_primary_language*` settings lists), and `DictionaryManager.setLanguage`
+        // stores what it is given without normalizing. Fix by normalizing here too if a
+        // region-bearing tag ever becomes reachable — do not add a fourth copy.
         val lang = language.lowercase(Locale.ROOT)
         val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
         val customJson = prefs.getString(LanguagePreferenceKeys.customWordsKey(lang), "{}") ?: "{}"

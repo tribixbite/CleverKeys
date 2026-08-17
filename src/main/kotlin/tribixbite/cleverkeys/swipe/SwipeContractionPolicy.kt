@@ -1,6 +1,6 @@
 package tribixbite.cleverkeys.swipe
 
-import java.util.Locale
+import tribixbite.cleverkeys.swipe.ctc.CtcLanguageSupport
 
 /**
  * WHICH language's contraction mappings a swipe engine may overlay onto a decoded slate.
@@ -44,16 +44,19 @@ object SwipeContractionPolicy {
 
     /**
      * The base subtag of [language], lowercased: `en-GB` / `en_US` → `en`, `fr-CA` → `fr`.
-     * Matches `CtcLanguageSupport.normalize`'s shape (the CTC lexicon table normalizes the
-     * same way, so the contraction gate and the lexicon can never disagree about which
-     * language is active).
+     *
+     * DELEGATES to [CtcLanguageSupport.normalize] rather than reimplementing it. The two
+     * were written independently — on two checkouts, from the same requirement — and were
+     * character-for-character identical, which is a drift waiting to happen: the
+     * contraction gate and the lexicon table MUST agree about which language is active, and
+     * two copies can only guarantee that until someone edits one of them.
+     *
+     * TODO: the canonical definition currently lives under `swipe.ctc` because that is the
+     * consumer whose result also picks preference keys, so `swipe` depends on `swipe.ctc`
+     * here. If a third consumer appears, lift it to a neutral pure helper instead of adding
+     * a copy — `GeometricEngineAdapter.dictionaryFor` is already a near-miss (see its TODO).
      */
-    fun baseSubtag(language: String?): String {
-        if (language.isNullOrBlank()) return ""
-        val lower = language.trim().lowercase(Locale.ROOT)
-        val cut = lower.indexOfFirst { it == '-' || it == '_' }
-        return if (cut >= 0) lower.substring(0, cut) else lower
-    }
+    fun baseSubtag(language: String?): String = CtcLanguageSupport.normalize(language)
 
     /**
      * True when a swipe decoding [language] may use the bundled ENGLISH contraction base
