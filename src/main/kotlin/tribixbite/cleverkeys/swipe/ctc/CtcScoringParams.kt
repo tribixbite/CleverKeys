@@ -116,6 +116,15 @@ data class CtcScoringParams(
         /**
          * λ for the CKDT `freq = max(1, 255 − rank)` scale (`ln f ∈ [0, 5.54]`, ~8× the
          * log spread of the en JSON scale, so frequency needs proportionally less weight).
+         *
+         * **Two independent sweeps landed here**, which is the strongest thing that can be
+         * said for a decode constant: the Latin sweep behind [presetFor]
+         * (`docs/eval/2026-08-15-ctc-per-language-lambda.md`, fr / de / es on the app
+         * footing around [tunedV2]) and the earlier Cyrillic sweep behind [tunedRuCkdt]
+         * (CleverKeys-ML `ctc/PHASE_J.md` §6.9, ru on the benchmark footing around E1).
+         * Different script, different corpus, different lexicon build, different base
+         * preset — same λ for the same frequency scale. That the value survives a change
+         * of base is what makes it a property of the SCALE rather than of either footing.
          */
         const val LAMBDA_CKDT_SCALE = 2.0
 
@@ -154,6 +163,51 @@ data class CtcScoringParams(
             }
             return tunedV2(beamWidth = beamWidth, topK = topK).copy(lambda = lambda)
         }
+
+        /**
+         * The Cyrillic λ datapoint, recorded on ITS OWN FOOTING: benchmark preset **E1**
+         * (`1.05 / 1.1 / 0.2 / 0.3734 / 0.9882`) with **λ raised 1.1 → 2.0**.
+         *
+         * **This is deliberately NOT what [presetFor] returns for any language, and it is
+         * not reachable from the decoder.** [presetFor] builds on [tunedV2] (the app
+         * footing); this builds on E1 (the benchmark footing), and the two disagree on
+         * γ (0.9 vs 1.05), β (0.25 vs 0.2) and γ_prune (0.25 vs 0.3734). Both sweeps
+         * moved λ and only λ — but around different operating points, so neither result
+         * transfers to the other's base. Shipping a Cyrillic path therefore starts with a
+         * FOOTING decision (which base preset the ru trie is decoded at), not with a λ
+         * lookup. It is kept here because the λ it establishes is the independent
+         * corroboration cited by [LAMBDA_CKDT_SCALE], and that evidence should not live
+         * only in a sibling repo.
+         *
+         * **Evidence** — CleverKeys-ML `ctc/PHASE_J.md` §6.9 / `ctc/APP_INTEGRATION_PLAN.md`
+         * §7.1: tuned on ru val rows `0:4708`, confirmed on the untouched `4708:9416`,
+         * over BOTH ru models, λ ∈ {1.1, 2.0, 3.0, 4.0}. λ 2.0 wins on every half of both
+         * models and is worth **≈ +1.2 in-dict top-1** (75.73/76.70 → 76.91/77.92 for the
+         * shippable synth-only model). The lever is model-independent — it lifted the joint
+         * challenger by the same order — which is why it is recorded as a decode constant
+         * rather than a property of one artifact. Scale rationale: the ru lexicon is the
+         * importable `langpack-ru` CKDT v2 pack, whose per-word byte is `255 − rank`, a
+         * compressed scale wanting a larger λ than the raw AOSP counts E1 was fitted on
+         * (`ctc/PHASE_I.md` §7.4).
+         *
+         * **Evidence tier — read before quoting.** These are **val-only** numbers
+         * (`eval_cyrillic.py`). No Cyrillic model was ever decoded on test-2400 and the
+         * seal is spent permanently, so this can never be upgraded to test-validated.
+         *
+         * **Caveat that travels with λ:** no campaign evaluation included a user
+         * dictionary, and λ multiplies the frequency term, so a larger λ amplifies
+         * top-of-scale injected competitors. λ = 2.0 must be re-confirmed with user
+         * dictionary entries present before any ru path ships (plan §7.1, §7.3).
+         *
+         * No Cyrillic CTC encoder ships today and `ru` is absent from
+         * [CtcLanguageSupport.SUPPORTED], so the adapter can never build this preset.
+         */
+        fun tunedRuCkdt(beamWidth: Int = 100, topK: Int = 4): CtcScoringParams =
+            CtcScoringParams(
+                gamma = 1.05, lambda = LAMBDA_CKDT_SCALE, beta = 0.2, alpha = 0.0,
+                gammaPrune = 0.3734, betaPrune = 0.9882,
+                beamWidth = beamWidth, topK = topK,
+            )
 
         /** `scoring.json` "fallback" — used when no signature-specific set matches. */
         fun fallback(beamWidth: Int = 300, topK: Int = 4): CtcScoringParams =

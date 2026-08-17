@@ -145,4 +145,47 @@ class CtcLanguagePresetTest {
             assertThat(CtcScoringParams.presetFor(lang).lambda).isGreaterThan(0.0)
         }
     }
+
+    @Test
+    fun `the recorded ru preset keeps E1's base and only moves lambda`() {
+        val ru = CtcScoringParams.tunedRuCkdt()
+        // E1 (1.05 / 1.1 / 0.2 / 0.3734 / 0.9882) with lambda 1.1 -> 2.0. The Cyrillic
+        // sweep varied lambda alone, holding E1 fixed (CleverKeys-ML PHASE_J.md 6.9).
+        assertThat(ru.gamma).isEqualTo(1.05)
+        assertThat(ru.lambda).isEqualTo(CtcScoringParams.LAMBDA_CKDT_SCALE)
+        assertThat(ru.beta).isEqualTo(0.2)
+        assertThat(ru.alpha).isEqualTo(0.0)
+        assertThat(ru.gammaPrune).isEqualTo(0.3734)
+        assertThat(ru.betaPrune).isEqualTo(0.9882)
+        // beamWidth/topK are pass-through, like every other preset factory.
+        val wide = CtcScoringParams.tunedRuCkdt(beamWidth = 250, topK = 8)
+        assertThat(wide.beamWidth).isEqualTo(250)
+        assertThat(wide.topK).isEqualTo(8)
+    }
+
+    @Test
+    fun `the ru preset is on a different footing than the shipping axis`() {
+        // The two sweeps agree on lambda and on NOTHING ELSE, because they were run
+        // around different base presets (E1 = benchmark footing, tunedV2 = app footing).
+        // Pinned so the disagreement stays a documented decision instead of decaying
+        // into a bug the first time someone enables a Cyrillic path: shipping ru starts
+        // with a FOOTING choice, not a lambda lookup.
+        val ru = CtcScoringParams.tunedRuCkdt()
+        val axis = CtcScoringParams.presetFor("ru")
+
+        // ru is absent from SUPPORTED, so the axis cannot know it is a CKDT-scale
+        // language: presetFor falls through to the ENGLISH lambda, not the Cyrillic one.
+        // That is correct defense-in-depth, and it is also exactly why tunedRuCkdt has to
+        // be requested by name rather than reached through the axis.
+        assertThat(axis.lambda).isEqualTo(CtcScoringParams.LAMBDA_EN_JSON_SCALE)
+        assertThat(ru.lambda).isEqualTo(CtcScoringParams.LAMBDA_CKDT_SCALE)
+        assertThat(ru).isNotEqualTo(axis)
+
+        // The bases differ too — E1 vs tunedV2 on gamma, beta and gammaPrune.
+        assertThat(listOf(ru.gamma, ru.beta, ru.gammaPrune))
+            .isNotEqualTo(listOf(axis.gamma, axis.beta, axis.gammaPrune))
+
+        // And ru is NOT decodable today, so the adapter can never build either one.
+        assertThat(CtcLanguageSupport.isSupported("ru")).isFalse()
+    }
 }
