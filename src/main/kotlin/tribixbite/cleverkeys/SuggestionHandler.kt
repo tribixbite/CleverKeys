@@ -9,7 +9,6 @@ import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
 import tribixbite.cleverkeys.ml.SwipeMLData
-import tribixbite.cleverkeys.onnx.SwipePredictorOrchestrator
 import tribixbite.cleverkeys.autocorrect.AutocorrectContextGuard
 
 /**
@@ -1524,9 +1523,11 @@ class SuggestionHandler(
         predictionCoordinator.getWordPredictor()
             ?.addWordToContext(word, fieldAllowsPersonalizedLearning)
 
-        // Track word for multi-language detection
+        // Track word for multi-language detection. Re-homed onto PredictionCoordinator
+        // 2026-08-18 (was SwipePredictorOrchestrator, which is being deleted with the
+        // neural engine): the detector is fed by EVERY commit, not just neural swipes.
         try {
-            SwipePredictorOrchestrator.getInstance(context).trackCommittedWord(word)
+            predictionCoordinator.trackCommittedWord(word)
         } catch (e: Exception) {
             Log.w(TAG, "Failed to track word for language detection", e)
         }

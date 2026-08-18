@@ -602,4 +602,86 @@ class CoreImeHygieneDriftTest {
                 "construction not a word of the language."
         ).that(injection).doesNotContain("0.88f")
     }
+
+    /**
+     * Re-home guard (2026-08-18): the unigram language detector moved off the dying
+     * `onnx.SwipePredictorOrchestrator` onto [PredictionCoordinator].
+     *
+     * This wiring is UNUSUALLY easy to break silently. The feed call site
+     * (`SuggestionHandler.updateContextWithSelectedWord`) is wrapped in a try/catch that
+     * only logs a warning, so a detector that never loads — or a call that lands on a
+     * different object — degrades to "language detection quietly stops" with no crash, no
+     * failing assertion and no user-visible error. Pin both ends of the wire.
+     */
+    @Test
+    fun languageDetectorIsFedFromTheCoordinatorOnEveryCommit() {
+        val handler = source("tribixbite/cleverkeys/SuggestionHandler.kt")
+        val service = source("tribixbite/cleverkeys/CleverKeysService.kt")
+        val coordinator = source("tribixbite/cleverkeys/PredictionCoordinator.kt")
+
+        assertWithMessage(
+            "SuggestionHandler must feed committed words to " +
+                "PredictionCoordinator.trackCommittedWord. Every commit — tap, CTC swipe " +
+                "and geometric swipe — flows through here; it is the ONLY feed."
+        ).that(handler).contains("predictionCoordinator.trackCommittedWord(word)")
+        assertWithMessage(
+            "SuggestionHandler must not reach the deleted neural orchestrator for language " +
+                "detection."
+        ).that(handler).doesNotContain("SwipePredictorOrchestrator.getInstance")
+        assertWithMessage(
+            "CleverKeysService.onStartInputView must clear the detector's history on a new " +
+                "field via the coordinator, so one field's language profile cannot bleed " +
+                "into the next."
+        ).that(service).contains("clearLanguageHistory()")
+        assertWithMessage(
+            "CleverKeysService must not reach the deleted neural orchestrator."
+        ).that(service).doesNotContain("SwipePredictorOrchestrator.getInstance")
+
+        assertWithMessage(
+            "PredictionCoordinator must own the UnigramLanguageDetector."
+        ).that(coordinator).contains("UnigramLanguageDetector(context)")
+        val track = coordinator
+            .substringAfter("fun trackCommittedWord(word: String) {")
+            .substringBefore("}")
+        assertWithMessage(
+            "PredictionCoordinator.trackCommittedWord must actually reach the detector's " +
+                "addWord — an empty body here is the exact silent failure this guards."
+        ).that(track).contains("addWord(word)")
+        assertWithMessage(
+            "The detector must be loaded lazily through languageDetectorOrLoad(), not " +
+                "assumed non-null: it is built on first commit, not at IME startup."
+        ).that(track).contains("languageDetectorOrLoad()")
+    }
+
+    /**
+     * Re-home guard (2026-08-18): `LanguagePreferenceKeys.migrateToLanguageSpecific` used
+     * to be invoked from inside `OptimizedVocabulary`, which the neural-engine removal
+     * deletes. It now runs from [DictionaryManager]'s init.
+     *
+     * ORDER IS LOAD-BEARING. `migrateToLanguageSpecific` writes `custom_words_en` only when
+     * that key does NOT already exist, and `migrateLegacyCustomWords` creates
+     * `custom_words_<systemLang>`. Run them the other way round on an `en` device and every
+     * pre-v1.1.86 user's global custom and disabled words are silently stranded — with the
+     * version flag set, so it never retries.
+     */
+    @Test
+    fun preV1_1_86CustomWordMigrationRunsFromDictionaryManagerAndRunsFirst() {
+        val dm = source("tribixbite/cleverkeys/DictionaryManager.kt")
+
+        val langSpecificIdx = dm.indexOf("LanguagePreferenceKeys.migrateToLanguageSpecific(prefs)")
+        assertWithMessage(
+            "DictionaryManager must invoke LanguagePreferenceKeys.migrateToLanguageSpecific. " +
+                "Its previous (and only other) caller, OptimizedVocabulary, is deleted; " +
+                "without this call pre-v1.1.86 upgraders lose their custom/disabled words."
+        ).that(langSpecificIdx).isAtLeast(0)
+
+        val legacyIdx = dm.indexOf("migrateLegacyCustomWords()")
+        assertWithMessage("DictionaryManager must still run migrateLegacyCustomWords().")
+            .that(legacyIdx).isAtLeast(0)
+        assertWithMessage(
+            "migrateToLanguageSpecific must run BEFORE migrateLegacyCustomWords: the latter " +
+                "creates custom_words_<lang>, and the former skips whenever custom_words_en " +
+                "already exists."
+        ).that(langSpecificIdx).isLessThan(legacyIdx)
+    }
 }

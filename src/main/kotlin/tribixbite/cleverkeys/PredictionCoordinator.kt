@@ -622,6 +622,91 @@ class PredictionCoordinator(
         neuralEngine?.reloadCustomWords()
     }
 
+    // ── Unigram language detection ────────────────────────────────────────────────────
+    //
+    // Re-homed from SwipePredictorOrchestrator (2026-08-18). The detector is fed on EVERY
+    // word commit — tap, CTC swipe and geometric swipe alike — so it never belonged to the
+    // neural swipe stack. Owning it here also stops the first commit of a session from
+    // constructing the orchestrator and its 98k-word OptimizedVocabulary as a side effect.
+    //
+    // Built lazily on first use and guarded by `detectorLock`: commits arrive on the IME
+    // main thread today, but the lazy load reads asset files and the field is also read by
+    // [getLanguageScores]/[getDetectedLanguage], so cheap synchronization beats a latent
+    // double-load. Loading is attempted ONCE — a failed load must not re-read the assets on
+    // every keystroke.
+
+    private val detectorLock = Any()
+
+    @Volatile
+    private var languageDetector: UnigramLanguageDetector? = null
+
+    private var languageDetectorLoadAttempted = false
+
+    /**
+     * Returns the loaded detector, loading it on first call. Null if loading failed —
+     * callers treat language detection as unavailable rather than retrying per word.
+     *
+     * Languages loaded: English always (the shipped baseline profile), plus the configured
+     * secondary language when multi-language mode is on. This mirrors the pre-2026-08-18
+     * `SwipePredictorOrchestrator.initializeLanguageDetector` selection exactly.
+     */
+    private fun languageDetectorOrLoad(): UnigramLanguageDetector? {
+        languageDetector?.let { return it }
+        synchronized(detectorLock) {
+            languageDetector?.let { return it }
+            if (languageDetectorLoadAttempted) return null
+            languageDetectorLoadAttempted = true
+            return try {
+                val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
+                val multiLangEnabled = prefs.getBoolean("pref_enable_multilang", false)
+                val secondaryLang = prefs.getString("pref_secondary_language", "none") ?: "none"
+
+                val languagesToLoad = mutableListOf("en")
+                if (multiLangEnabled && secondaryLang != "none") {
+                    languagesToLoad.add(secondaryLang)
+                }
+
+                val detector = UnigramLanguageDetector(context)
+                val loaded = detector.loadLanguages(languagesToLoad)
+                Log.i(TAG, "Language detector initialized: $loaded/${languagesToLoad.size} languages")
+                languageDetector = detector
+                detector
+            } catch (t: Throwable) {
+                // Throwable, not Exception: an OOM or asset Error here must not kill the IME.
+                Log.e(TAG, "Error initializing language detector", t)
+                null
+            }
+        }
+    }
+
+    /**
+     * Track a committed word for language detection. Called for every word the user
+     * commits, whatever produced it (tap, CTC swipe, geometric swipe).
+     *
+     * The caller ([SuggestionHandler.updateContextWithSelectedWord]) wraps this in a
+     * try/catch, so a throw here degrades SILENTLY to "no language detection" — hence the
+     * defensive null handling rather than an assertion.
+     */
+    fun trackCommittedWord(word: String) {
+        languageDetectorOrLoad()?.addWord(word)
+    }
+
+    /** Current language-detection scores: language code → confidence (0.0–1.0). */
+    fun getLanguageScores(): Map<String, Float> =
+        languageDetector?.getLanguageScores() ?: emptyMap()
+
+    /** The currently detected primary language, or null if no profile is loaded. */
+    fun getDetectedLanguage(): String? = languageDetector?.getPrimaryLanguage()
+
+    /**
+     * Clear language-detection history — called when the IME moves to a new text field so
+     * the previous field's language profile does not bleed into the next one. Deliberately
+     * does NOT force the lazy load: a field switch is not evidence anyone will type.
+     */
+    fun clearLanguageHistory() {
+        languageDetector?.clearHistory()
+    }
+
     /**
      * Gets the WordPredictor instance.
      *

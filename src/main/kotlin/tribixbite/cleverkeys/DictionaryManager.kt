@@ -25,6 +25,14 @@ class DictionaryManager(private val context: Context) {
     private var currentPredictor: WordPredictor? = null
 
     init {
+        // Pre-v1.1.86 GLOBAL custom_words/disabled_words → the per-language `_en` keys.
+        // Re-homed here 2026-08-18: this ran inside OptimizedVocabulary's load, which is
+        // being deleted with the neural engine. It must run BEFORE migrateLegacyCustomWords
+        // below, because that one CREATES custom_words_<lang> and this one skips whenever
+        // custom_words_en already exists — reversing the order would strand every
+        // pre-v1.1.86 user's custom and disabled words. Idempotent (version-flagged).
+        LanguagePreferenceKeys.migrateToLanguageSpecific(prefs)
+
         // Migrate legacy custom words BEFORE loading (one-time migration)
         migrateLegacyCustomWords()
         setLanguage(Locale.getDefault().language)

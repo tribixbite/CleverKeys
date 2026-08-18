@@ -50,6 +50,12 @@ class CtcSettingsActivity : ComponentActivity() {
 
     private var beamWidth by mutableIntStateOf(Defaults.CTC_BEAM_WIDTH)
 
+    // Re-homed from the deleted NeuralSettingsActivity (2026-08-18). The pref is an
+    // ONNX Runtime session option, not a neural-model knob: CtcEngineAdapter reads it
+    // when it builds the CTC encoder session through `onnx.ModelLoader`, so this is now
+    // the only screen that owns it.
+    private var onnxThreads by mutableIntStateOf(Defaults.ONNX_XNNPACK_THREADS)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         loadSavedParameters()
@@ -80,7 +86,7 @@ class CtcSettingsActivity : ComponentActivity() {
             )
 
             Text(
-                text = "Tuning for the CTC swipe engine (QWERTY layouts under the " +
+                text = "Tuning for the CTC swipe engine (Latin layouts under the " +
                     "CTC prediction engine). Scoring constants are calibrated " +
                     "offline and not user-tunable.",
                 fontSize = 14.sp,
@@ -105,9 +111,27 @@ class CtcSettingsActivity : ComponentActivity() {
                 )
             }
 
+            ParameterSection("Inference") {
+                ParameterSlider(
+                    title = "ONNX Threads",
+                    description = "CPU threads for XNNPACK inference in the ONNX Runtime " +
+                        "session that runs the CTC encoder. Applies when the session is " +
+                        "next built (restart the keyboard).",
+                    value = onnxThreads.toFloat(),
+                    valueRange = 1f..8f,
+                    steps = 6,
+                    onValueChange = {
+                        onnxThreads = it.toInt()
+                        updateParameters()
+                    },
+                    displayValue = "$onnxThreads threads"
+                )
+            }
+
             Button(
                 onClick = {
                     beamWidth = Defaults.CTC_BEAM_WIDTH
+                    onnxThreads = Defaults.ONNX_XNNPACK_THREADS
                     updateParameters()
                 },
                 modifier = Modifier.fillMaxWidth()
@@ -193,13 +217,16 @@ class CtcSettingsActivity : ComponentActivity() {
     /** Push to the live Config and persist — the adapter reads Config per decode. */
     private fun updateParameters() {
         try {
-            Config.globalConfig().ctc_beam_width = beamWidth
+            val config = Config.globalConfig()
+            config.ctc_beam_width = beamWidth
+            config.onnx_xnnpack_threads = onnxThreads
         } catch (e: Exception) {
             android.util.Log.e("CtcSettings", "Error updating configuration", e)
         }
         DirectBootAwarePreferences.get_shared_preferences(this)
             .edit()
             .putInt("ctc_beam_width", beamWidth)
+            .putInt("onnx_xnnpack_threads", onnxThreads)
             .apply()
     }
 
@@ -212,5 +239,7 @@ class CtcSettingsActivity : ComponentActivity() {
         val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
         beamWidth = Config.safeGetInt(prefs, "ctc_beam_width", Defaults.CTC_BEAM_WIDTH)
             .coerceIn(10, 300)
+        onnxThreads = Config.safeGetInt(prefs, "onnx_xnnpack_threads", Defaults.ONNX_XNNPACK_THREADS)
+            .coerceIn(1, 8)
     }
 }
