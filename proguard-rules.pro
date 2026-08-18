@@ -17,7 +17,7 @@
 -keep class tribixbite.cleverkeys.CleverKeysService { *; }
 
 # Keep the ONNX session loader (onnx/ModelLoader) — the CTC encoder builds its
-# OrtSession through it. The rest of the onnx package was deleted with the neural
+# OrtSession through it. The rest of the onnx package was deleted with the transformer
 # engine on 2026-08-18.
 -keep class tribixbite.cleverkeys.onnx.** { *; }
 -dontwarn tribixbite.cleverkeys.onnx.**
@@ -25,7 +25,7 @@
 # CRITICAL: Keep gesture recognizer types
 -keep class tribixbite.cleverkeys.SwipeResult { *; }
 
-# CRITICAL: Keep PredictionResult - THE main return type for neural predictions
+# CRITICAL: Keep PredictionResult - THE main return type for swipe predictions
 -keep class tribixbite.cleverkeys.PredictionResult { *; }
 
 # Keep dictionary loading classes
@@ -59,8 +59,7 @@
 # Keep swipe processing classes
 -keep class tribixbite.cleverkeys.SwipeResampler { *; }
 -keep class tribixbite.cleverkeys.SwipeResampler$** { *; }
--keep class tribixbite.cleverkeys.NeuralLayoutBridge { *; }
--keep class tribixbite.cleverkeys.NeuralLayoutHelper { *; }
+-keep class tribixbite.cleverkeys.KeyboardDimensionsHelper { *; }
 
 # CRITICAL: Keep KeyboardGrid - used for nearest key detection during swipe
 -keep class tribixbite.cleverkeys.KeyboardGrid { *; }
@@ -106,8 +105,8 @@
 -keep class tribixbite.cleverkeys.KeyboardData$Key { *; }
 
 # Keep Keyboard2View wholesale. The reflection consumer that motivated this
-# (NeuralLayoutHelper.extractKeyPositionsFromLayout, reading the private _keyboard field)
-# was deleted with the neural engine on 2026-08-18; the keep is retained because the view
+# (the layout helper's reflection into the private _keyboard field) was deleted with the
+# transformer engine on 2026-08-18; the keep is retained because the view
 # is the IME's inflated root and is referenced from XML.
 -keep class tribixbite.cleverkeys.Keyboard2View { *; }
 -keepclassmembers class tribixbite.cleverkeys.Keyboard2View {

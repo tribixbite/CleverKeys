@@ -17,7 +17,7 @@
   <!-- No explicit permission needed for app-specific directories (getExternalFilesDir()) -->
 
   <application android:label="@string/app_name" android:allowBackup="true" android:fullBackupContent="@xml/backup_rules" android:dataExtractionRules="@xml/data_extraction_rules" android:icon="@mipmap/ic_launcher" android:hardwareAccelerated="true" android:supportsRtl="true">
-    <!-- CleverKeys Neural Keyboard Service -->
+    <!-- CleverKeys Keyboard Service -->
     <!-- FIX: Removed applicationIdSuffix ".debug" from build.gradle to fix keyboard crash -->
     <service android:name="tribixbite.cleverkeys.CleverKeysService"
              android:label="CleverKeys Keyboard"
@@ -108,7 +108,8 @@
           android:resource="@xml/gif_file_paths" />
     </provider>
 
-    <!-- Ghost activities removed: NeuralBrowserActivity, NeuralBrowserActivityM3, TestActivity (no source files) -->
+    <!-- Ghost activities removed (no source files); SwipeCalibrationActivity + the swipe-engine
+         settings screen for the removed transformer went on 2026-08-18 (ADR-011) -->
 
     <activity android:name="tribixbite.cleverkeys.BackupRestoreActivity" android:label="Backup &amp; Restore" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true" tools:targetApi="24">
       <intent-filter>

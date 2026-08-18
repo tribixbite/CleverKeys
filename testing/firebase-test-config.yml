@@ -97,7 +97,7 @@ CleverKeys-Performance-Tests:
   app: build/outputs/apk/debug/tribixbite.cleverkeys.debug.apk
   test: build/outputs/apk/androidTest/debug/tribixbite.cleverkeys.debug-androidTest.apk
 
-  # Focus on high-performance devices for neural benchmarks
+  # Focus on high-performance devices for decode benchmarks
   device-ids:
     - model: Pixel7Pro
       version: 33
@@ -195,37 +195,6 @@ CleverKeys-Multi-Language-Tests:
 
   timeout: 25m
 
-CleverKeys-Neural-Stress-Tests:
-  type: instrumentation
-  app: build/outputs/apk/debug/tribixbite.cleverkeys.debug.apk
-  test: build/outputs/apk/androidTest/debug/tribixbite.cleverkeys.debug-androidTest.apk
-
-  # Use highest-performance devices for neural stress testing
-  device-ids:
-    - model: Pixel7Pro
-      version: 33
-      locale: en_US
-      orientation: portrait
-
-    - model: SamsungGalaxyS22Ultra
-      version: 32
-      locale: en_US
-      orientation: portrait
-
-  test-targets:
-    - class: tribixbite.cleverkeys.test.NeuralStressTestSuite
-
-  # Extended timeout for stress testing
-  timeout: 60m
-
-  performance-metrics:
-    - cpu
-    - memory
-    - gpu
-    - thermal
-    - battery
-
-  environment-variables:
-    clearPackageData: true
-    stress-test-duration: 1800  # 30 minutes
-    neural-intensive-mode: true
+# CleverKeys-Neural-Stress-Tests (removed 2026-08-18, ADR-011): the suite targeted
+# tribixbite.cleverkeys.test.NeuralStressTestSuite, a class that never existed on disk,
+# and stress-tested the transformer swipe engine that has since been deleted.
