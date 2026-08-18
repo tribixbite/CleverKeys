@@ -521,6 +521,55 @@ class CtcMultiLanguageInstrumentedTest {
      * whether the newly-enabled languages decode at the value their sweep validated.
      */
     @Test
+    fun everyProvisionalLanguageBuildsAWorkingTrieFromItsBundledAsset() {
+        // it/pt/sv were enabled on 2026-08-18 by scale transfer, with no per-language corpus
+        // to measure a bar against. That makes THIS the load-bearing check: the packaged
+        // asset parses on-device, projects onto a–z, and yields a trie the beam can actually
+        // walk. Without it, "enabled" would rest entirely on a table edit compiling.
+        //
+        // Deliberately NOT pinned to frozen shapes like the fr/de/es test above — those
+        // numbers came from the λ sweep harness, which never ran for these three. Asserting
+        // invented constants would be worse than asserting none; these are the properties
+        // that actually have to hold.
+        val adapter = CtcEngineAdapter(context)
+        try {
+            for (language in CtcLanguageSupport.PROVISIONAL) {
+                val asset = CtcLanguageSupport.assetFor(language)
+                assertEquals(
+                    "$language must resolve to its bundled CKDT asset",
+                    "dictionaries/${language}_enhanced.bin", asset
+                )
+
+                val trie = adapter.trieFor(language)
+                assertNotNull("$language: the adapter built no trie from the bundled asset", trie)
+
+                // A CKDT dictionary that failed to parse yields a tiny or empty trie rather
+                // than throwing, so a bare non-null check would pass on a corrupt asset. The
+                // bundled .bin files are ~1 MB / tens of thousands of records; 10k is far
+                // below any of them while being far above any parse-failure remnant.
+                assertTrue(
+                    "$language: trie holds only ${trie!!.wordCount} words — the bundled " +
+                        "dictionary failed to parse or project",
+                    trie.wordCount > 10_000
+                )
+
+                // Contraction injection is a headline reason these moved to CTC: geometric
+                // has none, so after the neural removal only 18 of 21,214 Italian alias keys
+                // were reachable. Prove the trie can hold an injected alias at all.
+                assertTrue(
+                    "$language: alphabet must be the a–z the projection targets",
+                    trie.alphabet.size == 26
+                )
+
+                Log.i(TAG, "provisional $language: ${trie.wordCount} words, " +
+                    "${trie.nodeCount} nodes, λ=${CtcScoringParams.presetFor(language).lambda}")
+            }
+        } finally {
+            adapter.shutdown()
+        }
+    }
+
+    @Test
     fun perLanguagePreset_selectsTheCkdtLambdaForTheNewlyEnabledLanguages() {
         val en = CtcScoringParams.presetFor("en")
         assertEquals(
@@ -551,14 +600,33 @@ class CtcMultiLanguageInstrumentedTest {
         assertEquals(CtcScoringParams.LAMBDA_CKDT_SCALE, CtcScoringParams.presetFor("es_MX").lambda, 0.0)
         assertEquals(CtcScoringParams.LAMBDA_CKDT_SCALE, CtcScoringParams.presetFor("de-AT").lambda, 0.0)
 
-        // Bundled-but-unvalidated languages stay OFF (they keep geometric coverage).
-        for (language in CtcLanguageSupport.NEEDS_VALIDATION) {
-            assertFalse(
-                "$language ships a dictionary but has no model bar and no λ sweep — " +
-                    "it must not be routed to CTC",
+        // 2026-08-18: it/pt/sv moved from NEEDS_VALIDATION to SUPPORTED-but-PROVISIONAL, so
+        // the old "these stay OFF" loop would now iterate an EMPTY set and assert nothing.
+        // A vacuous test is worse than none — it reads as coverage. Assert the live
+        // invariant instead: a provisional language is routed to CTC AND decodes at the
+        // CKDT-scale λ, which is the entire basis on which it was enabled.
+        assertTrue(
+            "PROVISIONAL must not be empty while it/pt/sv are enabled on scale transfer",
+            CtcLanguageSupport.PROVISIONAL.isNotEmpty()
+        )
+        for (language in CtcLanguageSupport.PROVISIONAL) {
+            assertTrue(
+                "$language is enabled provisionally, so it must route to CTC",
                 CtcEngineAdapter.supportsLanguage(language)
             )
+            assertEquals(
+                "$language reads a CKDT .bin, so it must take the λ fitted on that scale — " +
+                    "the English 4.0 is fitted for an 8x narrower log-frequency spread",
+                CtcScoringParams.LAMBDA_CKDT_SCALE,
+                CtcScoringParams.presetFor(language).lambda,
+                0.0
+            )
         }
+        assertTrue(
+            "NEEDS_VALIDATION is empty now that every bundled dictionary is served; if a new " +
+                "language is added it belongs there until its tier is decided",
+            CtcLanguageSupport.NEEDS_VALIDATION.isEmpty()
+        )
     }
 
     /**

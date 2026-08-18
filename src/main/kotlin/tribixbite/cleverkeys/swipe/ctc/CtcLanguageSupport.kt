@@ -32,10 +32,12 @@ import java.util.Locale
  *  2. **A decoder preset validated on THIS language's lexicon scale**: the λ sweep in
  *     `docs/eval/2026-08-15-ctc-per-language-lambda.md`.
  *
- * `it`, `pt` and `sv` ship a bundled dictionary but have NEITHER (see
- * [NEEDS_VALIDATION]); they stay on the pre-existing fallback (geometric everywhere,
- * geometric elsewhere) until a validation round exists. Enabling one later is a row in
- * [SUPPORTED] plus its evidence — not a refactor.
+ * `it`, `pt` and `sv` have (2) by scale transfer but not (1) — no corpus exists to measure a
+ * bar against. They were enabled anyway on 2026-08-18 and are flagged [PROVISIONAL]: the
+ * fallback they would otherwise sit on (geometric) has no per-language bar EITHER and is
+ * 15–22 points worse wherever both engines were measured, so withholding CTC was protecting
+ * an evidence standard the alternative never met. Read [PROVISIONAL] before quoting any
+ * number for these three.
  */
 object CtcLanguageSupport {
 
@@ -65,25 +67,65 @@ object CtcLanguageSupport {
         "fr" to LexiconSource.CKDT_BIN,
         "de" to LexiconSource.CKDT_BIN,
         "es" to LexiconSource.CKDT_BIN,
+        // 2026-08-18, PROVISIONAL — see [PROVISIONAL] for the evidence tier and why these
+        // are enabled anyway.
+        "it" to LexiconSource.CKDT_BIN,
+        "pt" to LexiconSource.CKDT_BIN,
+        "sv" to LexiconSource.CKDT_BIN,
     )
 
     /**
-     * Bundled-dictionary languages deliberately NOT enabled: no alt-layout model bar and
-     * no λ sweep. Documented here so the omission reads as a decision, not an oversight.
+     * Languages served on SCALE-TRANSFERRED evidence rather than their own measured bar.
      *
-     * **The blocker is DATA, not effort (verified 2026-08-16).** Both validations need a
-     * real swipe corpus in the language, and the only multi-layout human-swipe source this
-     * project has — HuggingFace `futo-org/swipe.futo.org`, config `swipe-5` — contains
-     * **zero rows** for `it`, `pt` and `sv` (queried via the datasets-server `/filter`
-     * endpoint: `language='it'|'pt'|'sv'|'nl'` all return `num_rows_total = 0`, against
-     * en 47,364 / fr 3,124). So these languages cannot be swept or model-validated until a
-     * corpus is acquired — do not re-attempt a sweep expecting to find data.
+     * ## Why these are enabled without a per-language accuracy bar
      *
-     * They are NOT broken meanwhile: they keep the pre-existing
-     * geometric (elsewhere) coverage. Enabling one later needs (a) a swipe corpus in that
-     * language, then (b) a [SUPPORTED] row plus its evidence.
+     * The honest position: no swipe corpus exists for it/pt/sv (HuggingFace
+     * `futo-org/swipe.futo.org` `swipe-5` returns `num_rows_total = 0` for all three), so no
+     * per-language bar can be produced and none is claimed here.
+     *
+     * What DOES transfer is the preset, by the project's own stated principle: λ is calibrated
+     * against the LEXICON'S FREQUENCY SCALE, not against the language ([presetFor]'s KDoc).
+     * These three read the same CKDT `.bin` scale as fr/de/es, where λ 2.0 won the tune half in
+     * 3 of 4 corpora and was independently confirmed by a Cyrillic sweep around a different
+     * base preset. The encoder itself is language-agnostic — it emits a–z posteriors from
+     * geometry, and never sees a language.
+     *
+     * The alternative was NOT "wait for evidence". It was geometric, which has no per-language
+     * bar either and which CTC beat by 15–22 points on every language where both were measured
+     * (test-2400: CTC 89.31 vs geometric 67.50). Declining to enable would have kept these
+     * users on the measurably worse engine in the name of an evidence standard the fallback
+     * does not meet.
+     *
+     * It also fixes a real defect: geometric has NO contraction-alias injection, so after the
+     * neural engine's removal only 18 of 21,214 Italian alias keys were reachable —
+     * `dell'acqua`, `un'altra` and `l'ago` could not be swiped at all. CTC injects
+     * ([CtcContractionKeys]), so enabling restores them.
+     *
+     * **Consequence to respect:** anything measured on these languages is val-tier at best and
+     * may never be quoted beside en/fr/de/es's test-validated numbers. Promote a language out
+     * of this set only by adding its own bar, never by familiarity.
      */
-    val NEEDS_VALIDATION: Set<String> = setOf("it", "pt", "sv")
+    val PROVISIONAL: Set<String> = setOf("it", "pt", "sv")
+
+    /**
+     * Bundled-dictionary languages CTC does not serve. **Empty since 2026-08-18** — every
+     * bundled dictionary now has a [SUPPORTED] row, the last three ([PROVISIONAL]) on
+     * scale-transferred evidence.
+     *
+     * Kept as a named concept rather than deleted, because the distinction it encodes is
+     * still the one that matters when a NEW language is added: a bundled dictionary alone is
+     * not sufficient, and the entry belongs here until someone decides which tier it enters
+     * [SUPPORTED] at.
+     *
+     * **The missing evidence is DATA, not effort (verified 2026-08-16).** A per-language bar
+     * needs a real swipe corpus, and the only multi-layout human-swipe source this project has
+     * — HuggingFace `futo-org/swipe.futo.org`, config `swipe-5` — contains **zero rows** for
+     * `it`, `pt`, `sv` and `nl` (datasets-server `/filter`, against en 47,364 / fr 3,124). Do
+     * not re-attempt that sweep expecting to find data. That is why it/pt/sv shipped
+     * provisional rather than measured — see [PROVISIONAL] for why waiting was the worse
+     * option.
+     */
+    val NEEDS_VALIDATION: Set<String> = emptySet()
 
     /**
      * Canonical lookup key for [language]: lowercased, region subtag dropped

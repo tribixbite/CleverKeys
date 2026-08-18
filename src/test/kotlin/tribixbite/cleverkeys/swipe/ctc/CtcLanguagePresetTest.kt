@@ -1,6 +1,7 @@
 package tribixbite.cleverkeys.swipe.ctc
 
 import com.google.common.truth.Truth.assertThat
+import com.google.common.truth.Truth.assertWithMessage
 import org.junit.Test
 
 /**
@@ -33,9 +34,25 @@ class CtcLanguagePresetTest {
     @Test
     fun `unknown language falls back to the english preset`() {
         // Defense-in-depth only: the adapter never decodes an unsupported language.
-        for (lang in listOf("ru", "zz", "", "it", "pt", "sv")) {
+        // `it`/`pt`/`sv` were in this list until 2026-08-18, when they were enabled
+        // provisionally — they are now KNOWN CKDT-scale languages and are asserted below to
+        // take λ 2.0, not the English fallback.
+        for (lang in listOf("ru", "zz", "", "nl", "xx-YY")) {
             assertThat(CtcScoringParams.presetFor(lang).lambda)
                 .isEqualTo(CtcScoringParams.tunedV2().lambda)
+        }
+    }
+
+    @Test
+    fun `provisional languages take the ckdt lambda, not the english fallback`() {
+        // The scale-transfer argument that justified enabling them IS this assignment: these
+        // read a CKDT `.bin`, so they must get the λ fitted on that scale. Landing on the
+        // English 4.0 would apply a λ fitted for an 8x narrower log-frequency spread and
+        // silently over-weight frequency — the exact failure the per-language sweep found.
+        for (lang in CtcLanguageSupport.PROVISIONAL) {
+            assertWithMessage("provisional language '$lang' must decode at the CKDT-scale λ")
+                .that(CtcScoringParams.presetFor(lang).lambda)
+                .isEqualTo(2.0)
         }
     }
 
@@ -89,19 +106,41 @@ class CtcLanguagePresetTest {
     // ── The language table ─────────────────────────────────────────────────────────
 
     @Test
-    fun `supported languages are exactly the validated four`() {
+    fun `supported languages are every bundled dictionary language`() {
         assertThat(CtcLanguageSupport.SUPPORTED.keys)
-            .containsExactly("en", "fr", "de", "es")
+            .containsExactly("en", "fr", "de", "es", "it", "pt", "sv")
     }
 
     @Test
-    fun `bundled but unvalidated languages are not enabled`() {
-        // it/pt/sv ship a dictionary but have neither an alt-layout model bar nor a λ
-        // sweep — they stay on the existing fallback until a validation round exists.
+    fun `provisional languages are enabled but flagged as scale-transferred`() {
+        // 2026-08-18: it/pt/sv were enabled WITHOUT a per-language accuracy bar, because no
+        // swipe corpus exists to measure one against and the alternative (geometric) has no
+        // bar either while being 15–22 pt worse where both were measured. The flag is what
+        // keeps that honest — anything measured on these is val-tier at best and must never
+        // be quoted beside the test-validated four.
         for (lang in listOf("it", "pt", "sv")) {
-            assertThat(CtcLanguageSupport.isSupported(lang)).isFalse()
-            assertThat(CtcLanguageSupport.NEEDS_VALIDATION).contains(lang)
+            assertThat(CtcLanguageSupport.isSupported(lang)).isTrue()
+            assertThat(CtcLanguageSupport.PROVISIONAL).contains(lang)
+            // Scale transfer is the entire justification, so it must actually hold: a
+            // provisional language MUST read the CKDT scale λ 2.0 was fitted on. Enabling one
+            // on the EN_JSON scale would silently apply the wrong λ.
+            assertThat(CtcLanguageSupport.sourceFor(lang))
+                .isEqualTo(CtcLanguageSupport.LexiconSource.CKDT_BIN)
         }
+        // Provisional is a subset of supported, never a parallel list that can drift.
+        assertThat(CtcLanguageSupport.SUPPORTED.keys)
+            .containsAtLeastElementsIn(CtcLanguageSupport.PROVISIONAL)
+        // The test-validated four must never silently acquire a provisional flag.
+        assertThat(CtcLanguageSupport.PROVISIONAL)
+            .containsNoneIn(listOf("en", "fr", "de", "es"))
+    }
+
+    @Test
+    fun `no bundled dictionary language is left unserved`() {
+        // Every language with a bundled CTC lexicon is now routed to CTC; NEEDS_VALIDATION is
+        // empty. It is retained as a concept for the NEXT language added, so this asserts the
+        // invariant rather than the emptiness: nothing may be both bundled and unserved.
+        assertThat(CtcLanguageSupport.NEEDS_VALIDATION).isEmpty()
         assertThat(CtcLanguageSupport.SUPPORTED.keys)
             .containsNoneIn(CtcLanguageSupport.NEEDS_VALIDATION)
     }
