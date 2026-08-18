@@ -102,16 +102,6 @@ internal fun SettingsActivity.AutoCorrectionSection() {
                     )
 
                     SettingsSwitch(
-                        title = stringResource(R.string.autocorrect_beam_title),
-                        description = stringResource(R.string.autocorrect_beam_desc),
-                        checked = swipeBeamAutocorrectEnabled,
-                        onCheckedChange = {
-                            swipeBeamAutocorrectEnabled = it
-                            saveSetting("swipe_beam_autocorrect_enabled", it)
-                        }
-                    )
-
-                    SettingsSwitch(
                         title = stringResource(R.string.autocorrect_final_title),
                         description = stringResource(R.string.autocorrect_final_desc),
                         checked = swipeFinalAutocorrectEnabled,

@@ -67,26 +67,6 @@ internal fun SettingsActivity.AdvancedSection() {
                         }
                     )
 
-                    SettingsSwitch(
-                        title = stringResource(R.string.advanced_show_raw_output_title),
-                        description = stringResource(R.string.advanced_show_raw_output_desc),
-                        checked = swipeDebugShowRawOutput,
-                        onCheckedChange = {
-                            swipeDebugShowRawOutput = it
-                            saveSetting("swipe_debug_show_raw_output", it)
-                        }
-                    )
-
-                    SettingsSwitch(
-                        title = stringResource(R.string.advanced_show_beam_predictions_title),
-                        description = stringResource(R.string.advanced_show_beam_predictions_desc),
-                        checked = swipeShowRawBeamPredictions,
-                        onCheckedChange = {
-                            swipeShowRawBeamPredictions = it
-                            saveSetting("swipe_show_raw_beam_predictions", it)
-                        }
-                    )
-
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Button(
@@ -111,14 +91,6 @@ internal fun SettingsActivity.AdvancedSection() {
                         tribixbite.cleverkeys.Config.globalConfig()?.suggestion_provenance_markers = it
                     }
                 )
-
-                // #136: "Max Sequence Length Override" slider removed.
-                // The encoder ONNX graph is exported with max_seq_length=250 baked
-                // in. A user-set value > 250 caused every swipe to crash with
-                // ORT_INVALID_ARGUMENT (got: <user value>, expected: 250). Any
-                // legacy stored pref is now clamped at the orchestrator level.
-                // Setting key `neural_user_max_seq_length` is preserved in Config
-                // so backup/restore round-trips still work.
 
                 // The "Keyboard Calibration" button opened SwipeCalibrationActivity, which was
                 // deleted with the neural engine on 2026-08-18: the screen existed to record and

@@ -774,12 +774,6 @@ class AutocorrectTest {
     // =========================================================================
 
     @Test
-    fun testSwipeBeamAutocorrectSetting() {
-        val enabled = config.swipe_beam_autocorrect_enabled
-        // Just verify accessible
-    }
-
-    @Test
     fun testSwipeFinalAutocorrectSetting() {
         val enabled = config.swipe_final_autocorrect_enabled
         // Just verify accessible

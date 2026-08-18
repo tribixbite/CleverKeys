@@ -34,7 +34,6 @@ import tribixbite.cleverkeys.ui.settings.SettingsSwitch
 import tribixbite.cleverkeys.ui.settings.io.deleteLanguagePack
 import tribixbite.cleverkeys.ui.settings.io.getLanguageDisplayName
 import tribixbite.cleverkeys.ui.settings.io.importLanguagePack
-import tribixbite.cleverkeys.ui.settings.io.loadPrefixBoostForLanguage
 import tribixbite.cleverkeys.ui.settings.saveSetting
 
 @Composable
@@ -73,7 +72,6 @@ internal fun SettingsActivity.MultiLanguageSection() {
                             primaryLanguage = primaryOptions.getOrElse(index) { "en" }
                             saveSetting("pref_primary_language", primaryLanguage)
                             // Reload per-language prefix boost settings
-                            loadPrefixBoostForLanguage(primaryLanguage)
                         }
                     )
 
@@ -146,78 +144,11 @@ internal fun SettingsActivity.MultiLanguageSection() {
                         )
                     }
 
-                    // Prefix Boost Settings - only shown for non-English primary
-                    // Per-language settings: each language has its own boost multiplier and max
-                    if (primaryLanguage != "en") {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        HorizontalDivider()
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        Text(
-                            text = "Prefix Boost (${getLanguageDisplayName(primaryLanguage)})",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp,
-                            modifier = Modifier.padding(bottom = 4.dp)
-                        )
-                        Text(
-                            text = "Boost prefixes common in ${getLanguageDisplayName(primaryLanguage)} but rare in English. " +
-                                   "Settings are saved per language.",
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-
-                        SettingsSlider(
-                            title = stringResource(R.string.multilang_boost_strength_title),
-                            description = stringResource(R.string.multilang_boost_strength_desc),
-                            value = prefixBoostMultiplier,
-                            valueRange = 0f..3f,
-                            steps = 30,
-                            onValueChange = {
-                                prefixBoostMultiplier = it
-                                // Save per-language: neural_prefix_boost_multiplier_fr, _de, etc.
-                                saveSetting("neural_prefix_boost_multiplier_$primaryLanguage", prefixBoostMultiplier)
-                            },
-                            displayValue = "%.2f".format(prefixBoostMultiplier)
-                        )
-
-                        SettingsSlider(
-                            title = stringResource(R.string.multilang_max_boost_title),
-                            description = stringResource(R.string.multilang_max_boost_desc),
-                            value = prefixBoostMax,
-                            valueRange = 1f..15f,
-                            steps = 28,
-                            onValueChange = {
-                                prefixBoostMax = it
-                                // Save per-language: neural_prefix_boost_max_fr, _de, etc.
-                                saveSetting("neural_prefix_boost_max_$primaryLanguage", prefixBoostMax)
-                            },
-                            displayValue = "%.1f".format(prefixBoostMax)
-                        )
-
-                        SettingsSlider(
-                            title = stringResource(R.string.multilang_max_cumulative_boost_title),
-                            description = stringResource(R.string.multilang_max_cumulative_boost_desc),
-                            value = maxCumulativeBoost,
-                            valueRange = 5f..30f,
-                            steps = 25,
-                            onValueChange = {
-                                maxCumulativeBoost = it
-                                saveSetting("neural_max_cumulative_boost", maxCumulativeBoost)
-                            },
-                            displayValue = "%.1f".format(maxCumulativeBoost)
-                        )
-
-                        SettingsSwitch(
-                            title = stringResource(R.string.multilang_strict_start_title),
-                            description = stringResource(R.string.multilang_strict_start_desc),
-                            checked = strictStartChar,
-                            onCheckedChange = {
-                                strictStartChar = it
-                                saveSetting("neural_strict_start_char", strictStartChar)
-                            }
-                        )
-                    }
+                    // The per-language "Prefix Boost" block (boost strength / max boost /
+                    // max cumulative boost / strict start char) was removed on 2026-08-18.
+                    // Every one of those sliders wrote a `neural_prefix_boost_*` pref read
+                    // ONLY by the deleted transformer's beam search; the CTC and geometric
+                    // engines score candidates from the lexicon and key geometry instead.
 
                     Spacer(modifier = Modifier.height(16.dp))
                     HorizontalDivider()

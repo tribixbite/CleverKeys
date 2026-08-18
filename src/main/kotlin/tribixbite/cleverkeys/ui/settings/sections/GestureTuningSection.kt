@@ -266,19 +266,6 @@ internal fun SettingsActivity.GestureTuningSection() {
                     displayValue = "%.0f px/s".format(swipeHighVelocityThreshold)
                 )
 
-                SettingsSlider(
-                    title = stringResource(R.string.gesture_finger_occlusion_title),
-                    description = stringResource(R.string.gesture_finger_occlusion_desc),
-                    value = fingerOcclusionOffset,
-                    valueRange = 0f..50f,
-                    steps = 10,
-                    onValueChange = {
-                        fingerOcclusionOffset = it
-                        saveSetting("finger_occlusion_offset", fingerOcclusionOffset)
-                    },
-                    displayValue = "%.1f%%".format(fingerOcclusionOffset)
-                )
-
                 // Slider Key Behavior subsection
                 Text(
                     text = "Slider Key Behavior",

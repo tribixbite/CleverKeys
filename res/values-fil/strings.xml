@@ -113,14 +113,8 @@
     <string name="settings_title">⚙️ Mga Setting ng CleverKeys</string>
     <string name="settings_description">I-configure ang mga setting ng iyong keyboard para sa pinakamahusay na karanasan sa pagtatype.</string>
 
-    <!-- Neural Prediction Section -->
-    <string name="settings_section_neural">👆 Swipe Typing</string>
-    <string name="settings_neural_beam_width_title">Beam Width</string>
-    <string name="settings_neural_beam_width_desc">Bilang ng mga prediction candidate (1–20). Mas mataas = mas tumpak.</string>
-    <string name="settings_neural_max_length_title">Pinakamahabang Salita</string>
-    <string name="settings_neural_max_length_desc">Pinakamaraming character sa mga hinulaang salita (5–35).</string>
-    <string name="settings_neural_confidence_title">Confidence Threshold</string>
-    <string name="settings_neural_confidence_desc">Pinakamababang confidence para sa mga prediction (0.0–0.4).</string>
+    <!-- Swipe Typing Section -->
+    <string name="settings_section_swipe_typing">👆 Swipe Typing</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 Hitsura</string>
@@ -329,10 +323,6 @@
     <string name="advanced_swipe_debug_log_desc">Real-time na pagsusuri ng pipeline para sa mga swipe gesture (kailangan ang logcat)</string>
     <string name="advanced_detailed_logging_title">Detalyadong Logging</string>
     <string name="advanced_detailed_logging_desc">Isama ang detalyadong impormasyon ng trace</string>
-    <string name="advanced_show_raw_output_title">Ipakita ang Raw Output</string>
-    <string name="advanced_show_raw_output_desc">I-log ang raw neural output sa debug log (hindi nakakaapekto sa mga suhestiyon)</string>
-    <string name="advanced_show_beam_predictions_title">Ipakita ang Beam Prediction</string>
-    <string name="advanced_show_beam_predictions_desc">Magdagdag ng mga raw:word na item sa suggestion bar para sa debugging</string>
     <string name="advanced_open_debug_log">Buksan ang Debug Log</string>
     <string name="appearance_height_portrait_title">Taas ng Keyboard (Portrait)</string>
     <string name="appearance_height_portrait_desc">Ayusin ang taas ng keyboard sa portrait mode</string>
@@ -382,8 +372,6 @@
     <string name="autocorrect_char_match_threshold_desc">Ilang karakter ang dapat tumugma (0.5–0.9)</string>
     <string name="autocorrect_min_word_frequency_title">Minimum na Dalas ng Salita</string>
     <string name="autocorrect_min_word_frequency_desc">Itama lamang sa mga salitang may dalas &gt;= ito</string>
-    <string name="autocorrect_beam_title">Beam Autocorrect</string>
-    <string name="autocorrect_beam_desc">Mag-apply ng fuzzy na pagwawasto sa panahon ng beam search decoding</string>
     <string name="autocorrect_final_title">Final na Autocorrect</string>
     <string name="autocorrect_final_desc">Mag-apply ng mga pagwawasto batay sa diksyunaryo sa final na output</string>
     <string name="autocorrect_style_title">Estilo ng Pagwawasto</string>
@@ -397,7 +385,7 @@
     <string name="autocorrect_search_depth_title">Lalim ng Paghahanap ng Pagwawasto</string>
     <string name="autocorrect_search_depth_desc">Bilang ng mga beam candidate na isasaalang-alang (1–10)</string>
     <string name="autocorrect_source_balance_title">Balanse ng Pinagmulan ng Prediction</string>
-    <string name="autocorrect_source_balance_desc">Neural confidence vs dalas ng diksyunaryo (0=diksyunaryo, 100=neural)</string>
+    <string name="autocorrect_source_balance_desc">Kumpiyansa sa hugis ng swipe vs dalas ng diksyunaryo (0=diksyunaryo, 100=hugis)</string>
     <string name="autocorrect_common_boost_title">Boost ng Mga Karaniwang Salita</string>
     <string name="autocorrect_common_boost_desc">Bonus multiplier para sa mga karaniwang salita (0.5–2.0)</string>
     <string name="autocorrect_frequent_boost_title">Boost ng Mga Madalas na Salita</string>
@@ -465,8 +453,6 @@
     <string name="gesture_noise_filter_desc">Minimum na kilusan para mairehistro (px). Mas mataas ang nag-filter ng jitter ngunit maaaring mawala ang data.</string>
     <string name="gesture_high_velocity_title">Threshold ng Mataas na Bilis</string>
     <string name="gesture_high_velocity_desc">Bilis para sa mabilis na pagtukoy ng swipe (px/sec). Ang mas mataas ay nagpapahintulot ng mas mabilis na pag-swipe.</string>
-    <string name="gesture_finger_occlusion_title">Kompensasyon ng Finger Occlusion</string>
-    <string name="gesture_finger_occlusion_desc" formatted="false">Y-offset bilang % ng taas ng row para mabayaran ang daliring nagtatakip sa mga key. Mas mataas ang naggegeser ng touch point pababa tungo sa mga sentro ng key.</string>
     <string name="gesture_speed_smoothing_title">Speed Smoothing</string>
     <string name="gesture_speed_smoothing_desc">Smoothing factor para sa galaw ng slider. Mas mataas ay mas maayos ngunit mas hindi tugon.</string>
     <string name="gesture_max_speed_multiplier_title">Maximum na Speed Multiplier</string>
@@ -529,7 +515,7 @@
     <string name="multilang_enable_title">I-enable ang Multi-Wika</string>
     <string name="multilang_enable_desc">Suportahan ang pagtatype sa maraming wika</string>
     <string name="multilang_primary_title">Pangunahing Wika</string>
-    <string name="multilang_primary_desc">Pangunahing wika para sa mga prediction (ang NN ay gumagana sa anumang wikang QWERTY)</string>
+    <string name="multilang_primary_desc">Pangunahing wika para sa mga prediksyon at pag-decode ng swipe</string>
     <string name="multilang_secondary_title">Pangalawang Wika</string>
     <string name="multilang_secondary_weight_title">Timbang ng Pangalawang Wika</string>
     <string name="multilang_secondary_weight_desc">Timbang ng prediction para sa secondary na diksyunaryo (0.5–1.5)</string>
@@ -537,21 +523,13 @@
     <string name="multilang_auto_detect_desc">Awtomatikong tuklasin at palitan ang mga wika habang nagtatype</string>
     <string name="multilang_detection_sensitivity_title">Sensitivity ng Pagtuklas</string>
     <string name="multilang_detection_sensitivity_desc">Gaano kabilis ang paglipat ng mga wika (0.4–0.9)</string>
-    <string name="multilang_boost_strength_title">Lakas ng Boost</string>
-    <string name="multilang_boost_strength_desc">0 = naka-disable, 1 = normal, 2+ = agresibo</string>
-    <string name="multilang_max_boost_title">Maximum na Boost</string>
-    <string name="multilang_max_boost_desc">Cap sa mga halaga ng boost (mas mataas = mas malakas na pagwawasto)</string>
-    <string name="multilang_max_cumulative_boost_title">Maximum na Cumulative Boost</string>
-    <string name="multilang_max_cumulative_boost_desc">Kabuuang cap ng boost sa lahat ng karakter. Mas mababa = mas konserbatibo, pinipigilan ang mahahabang salitang mangugulong.</string>
-    <string name="multilang_strict_start_title">Mahigpit na Unang Karakter</string>
-    <string name="multilang_strict_start_desc">Panatilihin lang ang mga prediction na nagsisimula sa natukoy na unang key. Nakatulong sa mga maikling swipe.</string>
     <string name="multilang_alternate_primary_title">Alternatibong Pangunahing Wika</string>
     <string name="multilang_alternate_secondary_title">Alternatibong Pangalawang Wika</string>
     <string name="multilang_toggle_between">I-toggle sa pagitan ng %1$s ↔ %2$s</string>
-    <string name="neural_enable_swipe_title">I-enable ang Swipe Typing</string>
-    <string name="neural_enable_swipe_desc">Mag-swipe sa mga key para mag-type ng mga salita gamit ang neural prediction.</string>
-    <string name="neural_swipe_password_title">Swipe sa Mga Password Field</string>
-    <string name="neural_swipe_password_desc">I-enable ang swipe typing kahit sa mga password field. Ipapakita ang mga prediction ngunit ang mga indibidwal na na-type na karakter ay mananatiling nakatago.</string>
+    <string name="swipe_enable_title">I-enable ang Swipe Typing</string>
+    <string name="swipe_enable_desc">Mag-swipe sa mga key para mag-type ng buong salita.</string>
+    <string name="swipe_password_title">Swipe sa Mga Password Field</string>
+    <string name="swipe_password_desc">I-enable ang swipe typing kahit sa mga password field. Ipapakita ang mga prediction ngunit ang mga indibidwal na na-type na karakter ay mananatiling nakatago.</string>
     <string name="privacy_swipe_pattern_title">Swipe Pattern Data</string>
     <string name="privacy_swipe_pattern_desc">Itago ang mga swipe trajectory nang lokal para sa on-device na pagkatuto</string>
     <string name="privacy_performance_metrics_title">Mga Sukatan ng Performance</string>

@@ -21,7 +21,7 @@
   What is NOT backed up (implicitly excluded by allowlist mode):
   - The main settings file (tribixbite.cleverkeys_preferences.xml) and all
     other SharedPreferences (privacy_settings, personalization/adaptation,
-    user_dictionary, neural stats/metadata, bigram store, etc.)
+    user_dictionary, swipe selection stats, bigram store, etc.)
   - ALL databases (clipboard history, ML training data)
   - ALL files (short_swipe_customizations.json, clipboard_media/, everything)
 -->

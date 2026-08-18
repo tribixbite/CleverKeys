@@ -113,14 +113,8 @@
     <string name="settings_title">⚙️ CleverKeys iestatījumi</string>
     <string name="settings_description">Konfigurējiet tastatūras iestatījumus optimālai rakstīšanai.</string>
 
-    <!-- Neural Prediction Section -->
-    <string name="settings_section_neural">👆 Vilkšanas rakstīšana</string>
-    <string name="settings_neural_beam_width_title">Stara platums</string>
-    <string name="settings_neural_beam_width_desc">Prognozes kandidātu skaits (1–20). Vairāk = precīzāk.</string>
-    <string name="settings_neural_max_length_title">Maksimālais vārda garums</string>
-    <string name="settings_neural_max_length_desc">Maksimālais rakstzīmju skaits prognozētajos vārdos (5–35).</string>
-    <string name="settings_neural_confidence_title">Pārliecības slieksnis</string>
-    <string name="settings_neural_confidence_desc">Minimālā pārliecība prognozēm (0.0–0.4).</string>
+    <!-- Swipe Typing Section -->
+    <string name="settings_section_swipe_typing">👆 Vilkšanas rakstīšana</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 Izskats</string>
@@ -331,10 +325,6 @@
     <string name="advanced_swipe_debug_log_desc">Reāllaikā analizē vilkuma žestu konveijeru (nepieciešams logcat)</string>
     <string name="advanced_detailed_logging_title">Detalizēta žurnālošana</string>
     <string name="advanced_detailed_logging_desc">Iekļaut izvērstu izsekošanas informāciju</string>
-    <string name="advanced_show_raw_output_title">Rādīt neapstrādātu izvadi</string>
-    <string name="advanced_show_raw_output_desc">Ierakstīt neironu tīkla neapstrādāto izvadi atkļūdošanas žurnālā (neietekmē ieteikumus)</string>
-    <string name="advanced_show_beam_predictions_title">Rādīt stara prognozes</string>
-    <string name="advanced_show_beam_predictions_desc">Pievienot raw:word vienumus ieteikumu joslai atkļūdošanai</string>
     <string name="advanced_open_debug_log">Atvērt atkļūdošanas žurnālu</string>
     <string name="appearance_height_portrait_title">Tastatūras augstums (portrets)</string>
     <string name="appearance_height_portrait_desc">Pielāgot tastatūras augstumu portreta režīmā</string>
@@ -384,8 +374,6 @@
     <string name="autocorrect_char_match_threshold_desc">Cik rakstzīmēm jāatbilst (0.5–0.9)</string>
     <string name="autocorrect_min_word_frequency_title">Minimālā vārda biežuma vērtība</string>
     <string name="autocorrect_min_word_frequency_desc">Labot tikai uz vārdiem ar biežumu >= šai vērtībai</string>
-    <string name="autocorrect_beam_title">Stara autokorektūra</string>
-    <string name="autocorrect_beam_desc">Lietot neskaidrus labojumus stara meklēšanas dekodēšanas laikā</string>
     <string name="autocorrect_final_title">Galīgā autokorektūra</string>
     <string name="autocorrect_final_desc">Lietot vārdnīcas labojumus galīgajam rezultātam</string>
     <string name="autocorrect_style_title">Labošanas stils</string>
@@ -399,7 +387,7 @@
     <string name="autocorrect_search_depth_title">Labošanas meklēšanas dziļums</string>
     <string name="autocorrect_search_depth_desc">Apskatāmo stara kandidātu skaits (1–10)</string>
     <string name="autocorrect_source_balance_title">Prognozes avotu līdzsvars</string>
-    <string name="autocorrect_source_balance_desc">Neironu tīkla pārliecība pret vārdnīcas biežumu (0=vārdnīca, 100=neironi)</string>
+    <string name="autocorrect_source_balance_desc">Vilkuma formas pārliecība pret vārdnīcas biežumu (0=vārdnīca, 100=forma)</string>
     <string name="autocorrect_common_boost_title">Izplatītu vārdu pastiprinājums</string>
     <string name="autocorrect_common_boost_desc">Bonusa reizinātājs izplatītiem vārdiem (0.5–2.0)</string>
     <string name="autocorrect_frequent_boost_title">Biežu vārdu pastiprinājums</string>
@@ -467,8 +455,6 @@
     <string name="gesture_noise_filter_desc">Minimālā kustība, lai reģistrētu (px). Augstāk filtrē drebēšanu, bet var zaudēt datus.</string>
     <string name="gesture_high_velocity_title">Augsta ātruma slieksnis</string>
     <string name="gesture_high_velocity_desc">Ātrums ātram vilkuma noteikšanai (px/sek). Augstāk ļauj ātrākus vilkumus.</string>
-    <string name="gesture_finger_occlusion_title">Pirksta aizsegšanas kompensācija</string>
-    <string name="gesture_finger_occlusion_desc" formatted="false">Y nobīde kā % no rindas augstuma, lai kompensētu taustiņu aizsegšanu ar pirkstu. Augstāk pārvieto pieskaršanās punktu zemāk uz taustiņu centriem.</string>
     <string name="gesture_speed_smoothing_title">Ātruma izlīdzināšana</string>
     <string name="gesture_speed_smoothing_desc">Slīdņa kustības izlīdzināšanas koeficients. Augstāk = vienmērīgāk, bet mazāk atsaucīgi.</string>
     <string name="gesture_max_speed_multiplier_title">Maksimālais ātruma reizinātājs</string>
@@ -531,7 +517,7 @@
     <string name="multilang_enable_title">Iespējot daudzvalodību</string>
     <string name="multilang_enable_desc">Atbalstīt rakstīšanu vairākās valodās</string>
     <string name="multilang_primary_title">Primārā valoda</string>
-    <string name="multilang_primary_desc">Galvenā valoda prognozēm (NN darbojas ar jebkuru QWERTY valodu)</string>
+    <string name="multilang_primary_desc">Galvenā valoda prognozēm un vilkumu atpazīšanai</string>
     <string name="multilang_secondary_title">Sekundārā valoda</string>
     <string name="multilang_secondary_weight_title">Sekundārās valodas svars</string>
     <string name="multilang_secondary_weight_desc">Prognozes svars sekundārajai vārdnīcai (0.5–1.5)</string>
@@ -539,21 +525,13 @@
     <string name="multilang_auto_detect_desc">Automātiski noteikt un pārslēgt valodas rakstīšanas laikā</string>
     <string name="multilang_detection_sensitivity_title">Noteikšanas jutīgums</string>
     <string name="multilang_detection_sensitivity_desc">Cik ātri pārslēgt valodas (0.4–0.9)</string>
-    <string name="multilang_boost_strength_title">Pastiprinājuma stiprums</string>
-    <string name="multilang_boost_strength_desc">0 = atspējots, 1 = normāls, 2+ = agresīvs</string>
-    <string name="multilang_max_boost_title">Maksimālais pastiprinājums</string>
-    <string name="multilang_max_boost_desc">Pastiprinājuma vērtību ierobežojums (augstāks = stiprāka korekcija)</string>
-    <string name="multilang_max_cumulative_boost_title">Maksimālais kumulatīvais pastiprinājums</string>
-    <string name="multilang_max_cumulative_boost_desc">Kopējais pastiprinājuma ierobežojums visiem burtiem. Zemāks = konservatīvāks, garie vārdi nedominēs.</string>
-    <string name="multilang_strict_start_title">Stingrs sākuma burts</string>
-    <string name="multilang_strict_start_desc">Paturēt tikai prognozes, kas sākas ar noteikto pirmo taustiņu. Palīdz īsiem vilkumiem.</string>
     <string name="multilang_alternate_primary_title">Alternatīvā primārā valoda</string>
     <string name="multilang_alternate_secondary_title">Alternatīvā sekundārā valoda</string>
     <string name="multilang_toggle_between">Pārslēgt starp %1$s ↔ %2$s</string>
-    <string name="neural_enable_swipe_title">Iespējot vilkuma rakstīšanu</string>
-    <string name="neural_enable_swipe_desc">Velciet pa taustiņiem, lai rakstītu vārdus, izmantojot neironu prognozēšanu.</string>
-    <string name="neural_swipe_password_title">Vilkums paroles laukos</string>
-    <string name="neural_swipe_password_desc">Iespējot vilkuma rakstīšanu arī paroles laukos. Prognozes tiks rādītas, bet ievadītās rakstzīmes paliks slēptas.</string>
+    <string name="swipe_enable_title">Iespējot vilkuma rakstīšanu</string>
+    <string name="swipe_enable_desc">Velciet pa taustiņiem, lai rakstītu veselus vārdus.</string>
+    <string name="swipe_password_title">Vilkums paroles laukos</string>
+    <string name="swipe_password_desc">Iespējot vilkuma rakstīšanu arī paroles laukos. Prognozes tiks rādītas, bet ievadītās rakstzīmes paliks slēptas.</string>
     <string name="privacy_swipe_pattern_title">Vilkuma modeļu dati</string>
     <string name="privacy_swipe_pattern_desc">Glabāt vilkuma trajektorijas lokāli uz ierīces mācīšanās vajadzībām</string>
     <string name="privacy_performance_metrics_title">Veiktspējas rādītāji</string>

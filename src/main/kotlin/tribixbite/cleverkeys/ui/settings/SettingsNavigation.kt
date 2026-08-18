@@ -10,7 +10,6 @@ import tribixbite.cleverkeys.DictionaryManagerActivity
 import tribixbite.cleverkeys.ExtraKeysConfigActivity
 import tribixbite.cleverkeys.LayoutManagerActivity
 import tribixbite.cleverkeys.GeometricSettingsActivity
-import tribixbite.cleverkeys.NeuralSettingsActivity
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.ShortSwipeCustomizationActivity
 import tribixbite.cleverkeys.SwipeDebugActivity
@@ -22,10 +21,6 @@ internal fun SettingsActivity.openWikiInBrowser() {
         } catch (e: Exception) {
             android.util.Log.e(SettingsActivity.TAG, "Failed to open wiki", e)
         }
-}
-
-internal fun SettingsActivity.openNeuralSettings() {
-        startActivity(Intent(this, NeuralSettingsActivity::class.java))
 }
 
 internal fun SettingsActivity.openGeometricSettings() {

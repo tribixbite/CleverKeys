@@ -113,14 +113,8 @@
     <string name="settings_title">⚙️ CleverKeys Ayarları</string>
     <string name="settings_description">En iyi yazma deneyimi için klavye ayarlarınızı yapılandırın.</string>
 
-    <!-- Neural Prediction Section -->
-    <string name="settings_section_neural">👆 Kaydırarak yazma</string>
-    <string name="settings_neural_beam_width_title">Işın Genişliği</string>
-    <string name="settings_neural_beam_width_desc">Tahmin adayı sayısı (1–20). Yüksek = daha isabetli.</string>
-    <string name="settings_neural_max_length_title">Maksimum Kelime Uzunluğu</string>
-    <string name="settings_neural_max_length_desc">Tahmin edilen kelimelerdeki maksimum karakter (5–35).</string>
-    <string name="settings_neural_confidence_title">Güven Eşiği</string>
-    <string name="settings_neural_confidence_desc">Tahminler için minimum güven (0,0–0,4).</string>
+    <!-- Swipe Typing Section -->
+    <string name="settings_section_swipe_typing">👆 Kaydırarak yazma</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 Görünüm</string>
@@ -328,10 +322,6 @@
     <string name="advanced_swipe_debug_log_desc">Kaydırma hareketleri için gerçek zamanlı ardışık düzen analizi (logcat gerektirir)</string>
     <string name="advanced_detailed_logging_title">Ayrıntılı Günlük Kaydı</string>
     <string name="advanced_detailed_logging_desc">Ayrıntılı izleme bilgilerini dahil et</string>
-    <string name="advanced_show_raw_output_title">Ham Çıktıyı Göster</string>
-    <string name="advanced_show_raw_output_desc">Ham sinir çıktılarını hata ayıklama günlüğüne kaydet (önerileri etkilemez)</string>
-    <string name="advanced_show_beam_predictions_title">Beam Tahminlerini Göster</string>
-    <string name="advanced_show_beam_predictions_desc">Hata ayıklama için öneri çubuğuna raw:kelime öğeleri ekle</string>
     <string name="advanced_open_debug_log">Hata Ayıklama Günlüğünü Aç</string>
     <string name="appearance_height_portrait_title">Klavye Yüksekliği (Dikey)</string>
     <string name="appearance_height_portrait_desc">Dikey modda klavye yüksekliğini ayarla</string>
@@ -381,8 +371,6 @@
     <string name="autocorrect_char_match_threshold_desc">Kaç karakterin eşleşmesi gerektiği (0,5–0,9)</string>
     <string name="autocorrect_min_word_frequency_title">Minimum Sözcük Sıklığı</string>
     <string name="autocorrect_min_word_frequency_desc">Yalnızca sıklığı bu değere &gt;= olan sözcüklere düzelt</string>
-    <string name="autocorrect_beam_title">Beam Otomatik Düzeltme</string>
-    <string name="autocorrect_beam_desc">Beam arama kod çözme sırasında bulanık düzeltmeler uygula</string>
     <string name="autocorrect_final_title">Son Otomatik Düzeltme</string>
     <string name="autocorrect_final_desc">Son çıktıya sözlük tabanlı düzeltmeler uygula</string>
     <string name="autocorrect_style_title">Düzeltme Stili</string>
@@ -396,7 +384,7 @@
     <string name="autocorrect_search_depth_title">Düzeltme Arama Derinliği</string>
     <string name="autocorrect_search_depth_desc">Değerlendirilecek beam adayı sayısı (1–10)</string>
     <string name="autocorrect_source_balance_title">Tahmin Kaynağı Dengesi</string>
-    <string name="autocorrect_source_balance_desc">Sinir güveni ile sözlük sıklığı (0=sözlük, 100=sinir)</string>
+    <string name="autocorrect_source_balance_desc">Kaydırma şekli güveni ile sözlük sıklığı (0=sözlük, 100=şekil)</string>
     <string name="autocorrect_common_boost_title">Yaygın Sözcük Artırımı</string>
     <string name="autocorrect_common_boost_desc">Yaygın sözcükler için bonus çarpanı (0,5–2,0)</string>
     <string name="autocorrect_frequent_boost_title">Sık Sözcük Artırımı</string>
@@ -464,8 +452,6 @@
     <string name="gesture_noise_filter_desc">Kaydetmek için minimum hareket (piksel). Yüksek değer titreşimi filtreler ama veri kaybedebilir.</string>
     <string name="gesture_high_velocity_title">Yüksek Hız Eşiği</string>
     <string name="gesture_high_velocity_desc">Hızlı kaydırma tespiti için hız (piksel/saniye). Yüksek değer daha hızlı kaydırmaya izin verir.</string>
-    <string name="gesture_finger_occlusion_title">Parmak Örtme Telafisi</string>
-    <string name="gesture_finger_occlusion_desc" formatted="false">Parmağın tuşları kapatmasını telafi etmek için satır yüksekliğinin % oranı olarak Y ofseti. Yüksek değer dokunma noktasını tuş merkezlerine doğru aşağı kaydırır.</string>
     <string name="gesture_speed_smoothing_title">Hız Yumuşatma</string>
     <string name="gesture_speed_smoothing_desc">Kaydırıcı hareketi için yumuşatma faktörü. Yüksek değer daha pürüzsüz ama daha az duyarlı.</string>
     <string name="gesture_max_speed_multiplier_title">Maksimum Hız Çarpanı</string>
@@ -528,7 +514,7 @@
     <string name="multilang_enable_title">Çoklu Dili Etkinleştir</string>
     <string name="multilang_enable_desc">Birden fazla dilde yazmayı destekle</string>
     <string name="multilang_primary_title">Birincil Dil</string>
-    <string name="multilang_primary_desc">Tahminler için ana dil (NN herhangi bir QWERTY diliyle çalışır)</string>
+    <string name="multilang_primary_desc">Tahminler ve kaydırma çözümlemesi için ana dil</string>
     <string name="multilang_secondary_title">İkincil Dil</string>
     <string name="multilang_secondary_weight_title">İkincil Dil Ağırlığı</string>
     <string name="multilang_secondary_weight_desc">İkincil sözlük için tahmin ağırlığı (0,5–1,5)</string>
@@ -536,21 +522,13 @@
     <string name="multilang_auto_detect_desc">Yazarken dilleri otomatik algıla ve değiştir</string>
     <string name="multilang_detection_sensitivity_title">Algılama Duyarlılığı</string>
     <string name="multilang_detection_sensitivity_desc">Dillerin ne kadar hızlı değiştirileceği (0,4–0,9)</string>
-    <string name="multilang_boost_strength_title">Artırım Gücü</string>
-    <string name="multilang_boost_strength_desc">0 = devre dışı, 1 = normal, 2+ = agresif</string>
-    <string name="multilang_max_boost_title">Maks. Artırım</string>
-    <string name="multilang_max_boost_desc">Artırım değerlerindeki üst sınır (yüksek = daha güçlü düzeltme)</string>
-    <string name="multilang_max_cumulative_boost_title">Maks. Kümülatif Artırım</string>
-    <string name="multilang_max_cumulative_boost_desc">Tüm karakterler genelinde toplam artırım sınırı. Düşük = daha tutucı, uzun sözcüklerin baskın olmasını engeller.</string>
-    <string name="multilang_strict_start_title">Kesin Başlangıç Karakteri</string>
-    <string name="multilang_strict_start_desc">Yalnızca algılanan ilk tuşla başlayan tahminleri tut. Kısa kaydırmalara yardımcı olur.</string>
     <string name="multilang_alternate_primary_title">Alternatif Birincil</string>
     <string name="multilang_alternate_secondary_title">Alternatif İkincil</string>
     <string name="multilang_toggle_between">%1$s ↔ %2$s arasında geçiş</string>
-    <string name="neural_enable_swipe_title">Kaydırarak Yazmayı Etkinleştir</string>
-    <string name="neural_enable_swipe_desc">Sinir tahmini kullanarak sözcük yazmak için tuşları kaydır.</string>
-    <string name="neural_swipe_password_title">Şifre Alanlarında Kaydır</string>
-    <string name="neural_swipe_password_desc" tools:ignore="Typos">Şifre alanlarında bile kaydırarak yazmayı etkinleştir. Tahminler gösterilecek ancak tek tek yazılan karakterler gizli kalacak.</string>
+    <string name="swipe_enable_title">Kaydırarak Yazmayı Etkinleştir</string>
+    <string name="swipe_enable_desc">Sözcükleri tek seferde yazmak için tuşları kaydırın.</string>
+    <string name="swipe_password_title">Şifre Alanlarında Kaydır</string>
+    <string name="swipe_password_desc" tools:ignore="Typos">Şifre alanlarında bile kaydırarak yazmayı etkinleştir. Tahminler gösterilecek ancak tek tek yazılan karakterler gizli kalacak.</string>
     <string name="privacy_swipe_pattern_title">Kaydırma Düzeni Verisi</string>
     <string name="privacy_swipe_pattern_desc">Cihaz üzerinde öğrenme için kaydırma yörüngelerini yerel olarak sakla</string>
     <string name="privacy_performance_metrics_title">Performans Metrikleri</string>

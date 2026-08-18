@@ -115,14 +115,8 @@
     <string name="settings_title">⚙️ Nastavení CleverKeys</string>
     <string name="settings_description">Nakonfigurujte nastavení klávesnice pro optimální zážitek z psaní.</string>
 
-    <!-- Neural Prediction Section -->
-    <string name="settings_section_neural">👆 Psaní tahem</string>
-    <string name="settings_neural_beam_width_title">Šířka paprsku</string>
-    <string name="settings_neural_beam_width_desc">Počet kandidátů na predikci (1–20). Vyšší = přesnější.</string>
-    <string name="settings_neural_max_length_title">Maximální délka slova</string>
-    <string name="settings_neural_max_length_desc">Maximální počet znaků v předpovězených slovech (5–35).</string>
-    <string name="settings_neural_confidence_title">Práh spolehlivosti</string>
-    <string name="settings_neural_confidence_desc">Minimální spolehlivost pro predikce (0,0–0,4).</string>
+    <!-- Swipe Typing Section -->
+    <string name="settings_section_swipe_typing">👆 Psaní tahem</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 Vzhled</string>
@@ -320,10 +314,6 @@
     <string name="advanced_swipe_debug_log_desc">Analýza pipeline v reálném čase pro tahová gesta (vyžaduje logcat)</string>
     <string name="advanced_detailed_logging_title">Podrobné protokolování</string>
     <string name="advanced_detailed_logging_desc">Zahrnout podrobné trasovací informace</string>
-    <string name="advanced_show_raw_output_title">Zobrazit hrubý výstup</string>
-    <string name="advanced_show_raw_output_desc">Zaznamenat surové neuronové výstupy do protokolu ladění (neovlivňuje návrhy)</string>
-    <string name="advanced_show_beam_predictions_title">Zobrazit předpovědi beam search</string>
-    <string name="advanced_show_beam_predictions_desc">Přidat položky raw:slovo do panelu návrhů pro ladění</string>
     <string name="advanced_open_debug_log">Otevřít protokol ladění</string>
     <string name="appearance_height_portrait_title">Výška klávesnice (na výšku)</string>
     <string name="appearance_height_portrait_desc">Upravte výšku klávesnice v režimu na výšku</string>
@@ -373,8 +363,6 @@
     <string name="autocorrect_char_match_threshold_desc">Kolik znaků musí souhlasit (0,5–0,9)</string>
     <string name="autocorrect_min_word_frequency_title">Minimální frekvence slova</string>
     <string name="autocorrect_min_word_frequency_desc">Opravovat pouze na slova s frekvencí >= tato hodnota</string>
-    <string name="autocorrect_beam_title">Automatické opravy beam search</string>
-    <string name="autocorrect_beam_desc">Použít přibližné opravy během dekódování beam search</string>
     <string name="autocorrect_final_title">Konečná automatická oprava</string>
     <string name="autocorrect_final_desc">Použít opravy ze slovníku na konečný výstup</string>
     <string name="autocorrect_style_title">Styl oprav</string>
@@ -388,7 +376,7 @@
     <string name="autocorrect_search_depth_title">Hloubka hledání oprav</string>
     <string name="autocorrect_search_depth_desc">Počet kandidátů beam search k posouzení (1–10)</string>
     <string name="autocorrect_source_balance_title">Vyvážení zdrojů předpovědí</string>
-    <string name="autocorrect_source_balance_desc">Neuronová spolehlivost vs. frekvence slovníku (0=slovník, 100=neuronová)</string>
+    <string name="autocorrect_source_balance_desc">Spolehlivost tvaru tahu vs. frekvence slovníku (0=slovník, 100=tvar)</string>
     <string name="autocorrect_common_boost_title">Posílení běžných slov</string>
     <string name="autocorrect_common_boost_desc">Bonusový násobitel pro běžná slova (0,5–2,0)</string>
     <string name="autocorrect_frequent_boost_title">Posílení častých slov</string>
@@ -456,8 +444,6 @@
     <string name="gesture_noise_filter_desc">Minimální pohyb pro registraci (px). Vyšší filtruje jitter, ale může ztratit data.</string>
     <string name="gesture_high_velocity_title">Práh vysoké rychlosti</string>
     <string name="gesture_high_velocity_desc">Rychlost pro detekci rychlého tahu (px/sek). Vyšší umožňuje rychlejší tahy.</string>
-    <string name="gesture_finger_occlusion_title">Kompenzace zakrytí prstem</string>
-    <string name="gesture_finger_occlusion_desc" formatted="false">Y-offset jako % výšky řady pro kompenzaci zakrytí prstem. Vyšší posune bod dotyku dolů k středu kláves.</string>
     <string name="gesture_speed_smoothing_title">Vyhlazování rychlosti</string>
     <string name="gesture_speed_smoothing_desc">Faktor vyhlazení pohybu posuvníku. Vyšší je plynulejší, ale méně citlivé.</string>
     <string name="gesture_max_speed_multiplier_title">Maximální násobitel rychlosti</string>
@@ -520,7 +506,7 @@
     <string name="multilang_enable_title">Povolit více jazyků</string>
     <string name="multilang_enable_desc">Podpora psaní ve více jazycích</string>
     <string name="multilang_primary_title">Primární jazyk</string>
-    <string name="multilang_primary_desc">Hlavní jazyk pro předpovědi (NN funguje s jakýmkoli jazykem QWERTY)</string>
+    <string name="multilang_primary_desc">Hlavní jazyk pro předpovědi a rozpoznávání tahů</string>
     <string name="multilang_secondary_title">Sekundární jazyk</string>
     <string name="multilang_secondary_weight_title">Váha sekundárního jazyka</string>
     <string name="multilang_secondary_weight_desc">Váha předpovědí pro sekundární slovník (0,5–1,5)</string>
@@ -528,21 +514,13 @@
     <string name="multilang_auto_detect_desc">Automaticky rozpoznávat a přepínat jazyk při psaní</string>
     <string name="multilang_detection_sensitivity_title">Citlivost detekce</string>
     <string name="multilang_detection_sensitivity_desc">Jak rychle přepínat jazyky (0,4–0,9)</string>
-    <string name="multilang_boost_strength_title">Síla posílení</string>
-    <string name="multilang_boost_strength_desc">0 = zakázáno, 1 = normální, 2+ = agresivní</string>
-    <string name="multilang_max_boost_title">Maximální posílení</string>
-    <string name="multilang_max_boost_desc">Omezení hodnot posílení (vyšší = silnější oprava)</string>
-    <string name="multilang_max_cumulative_boost_title">Maximální kumulativní posílení</string>
-    <string name="multilang_max_cumulative_boost_desc">Celkový limit posílení přes všechny znaky. Nižší = konzervativnější, brání dominanci dlouhých slov.</string>
-    <string name="multilang_strict_start_title">Přísný první znak</string>
-    <string name="multilang_strict_start_desc">Zachovat pouze předpovědi začínající detekovanou první klávesou. Pomáhá u krátkých tahů.</string>
     <string name="multilang_alternate_primary_title">Alternativní primární jazyk</string>
     <string name="multilang_alternate_secondary_title">Alternativní sekundární jazyk</string>
     <string name="multilang_toggle_between">Přepínat mezi %1$s ↔ %2$s</string>
-    <string name="neural_enable_swipe_title">Povolit psaní tahem</string>
-    <string name="neural_enable_swipe_desc">Táhněte přes klávesy pro psaní slov pomocí neuronové předpovědi.</string>
-    <string name="neural_swipe_password_title">Psaní tahem v polích hesel</string>
-    <string name="neural_swipe_password_desc">Povolit psaní tahem i v polích hesel. Návrhy budou zobrazeny, ale jednotlivé zadané znaky zůstanou skryty.</string>
+    <string name="swipe_enable_title">Povolit psaní tahem</string>
+    <string name="swipe_enable_desc">Táhněte přes klávesy pro psaní celých slov.</string>
+    <string name="swipe_password_title">Psaní tahem v polích hesel</string>
+    <string name="swipe_password_desc">Povolit psaní tahem i v polích hesel. Návrhy budou zobrazeny, ale jednotlivé zadané znaky zůstanou skryty.</string>
     <string name="privacy_swipe_pattern_title">Data vzorů tahů</string>
     <string name="privacy_swipe_pattern_desc">Ukládat trajektorie tahů lokálně pro učení na zařízení</string>
     <string name="privacy_performance_metrics_title">Metriky výkonu</string>

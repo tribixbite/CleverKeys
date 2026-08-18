@@ -193,10 +193,9 @@ class SettingsImportPlanBuilderTest {
         // Spot-check the ported set covers the categories listed in the
         // legacy method's source comments. Update as the legacy method evolves.
         val expectedFloatKeys = listOf(
-            "character_size", "neural_temperature", "swipe_trail_width",
-            "neural_beam_alpha", "swipe_min_distance",
-            "neural_prefix_boost_multiplier_en",   // prefix pattern
-            "neural_prefix_boost_max_de",           // prefix pattern
+            "character_size", "swipe_trail_width", "swipe_trail_glow_radius",
+            "swipe_min_distance", "prediction_context_boost",
+            "autocorrect_char_match_threshold", "slider_speed_max",
         )
         expectedFloatKeys.forEach {
             assertThat(SettingsValidation.isFloatPreference(it)).isTrue()
@@ -270,12 +269,12 @@ class SettingsImportPlanBuilderTest {
     fun perRuleCategoryCoverage_intRangeFloatRangeStringAllowlist() {
         // One key per category:
         //   - keyboard_height (Int range 10..100 — out at 99999)
-        //   - neural_temperature (Float range 0.1..3.0 — out at 99.0)
+        //   - prediction_context_boost (Float range 0.5..5.0 — out at 99.0)
         //   - theme (String — empty rejected by isNotEmpty())
         val json = """{
             "preferences": {
                 "keyboard_height": 99999,
-                "neural_temperature": 99.0,
+                "prediction_context_boost": 99.0,
                 "theme": ""
             }
         }""".trimIndent()
@@ -283,7 +282,7 @@ class SettingsImportPlanBuilderTest {
 
         val rejectedKeys = plan.parseSkippedKeys.map { it.key }.toSet()
         assertThat(rejectedKeys).containsAtLeast(
-            "keyboard_height", "neural_temperature", "theme"
+            "keyboard_height", "prediction_context_boost", "theme"
         )
     }
 
@@ -390,14 +389,14 @@ class SettingsImportPlanBuilderTest {
             "swipe_typing_enabled":true,
             "autocorrect_enabled":true,
             "keyboard_opacity":75,
-            "neural_temperature":1.5
+            "swipe_trail_width":12.0
         }}""".trimIndent()
         val defaults = mapOf<String, PrefValue>(
             "gif_enabled" to PrefValue.Bool(false),
             "swipe_typing_enabled" to PrefValue.Bool(true),
             "autocorrect_enabled" to PrefValue.Bool(true),
             "keyboard_opacity" to PrefValue.IntV(100),
-            "neural_temperature" to PrefValue.FloatV(1.0f),
+            "swipe_trail_width" to PrefValue.FloatV(8.0f),
         )
 
         val plan = SettingsImportPlanBuilder.fromJson(
@@ -408,56 +407,51 @@ class SettingsImportPlanBuilderTest {
         )
 
         // Three rows (gif_enabled, swipe_typing_enabled, autocorrect_enabled)
-        // equal defaults → skipped. Two rows (keyboard_opacity, neural_temperature)
+        // equal defaults → skipped. Two rows (keyboard_opacity, swipe_trail_width)
         // differ from defaults → emitted with default-as-current.
         assertThat(plan.changes.map { it.key }.toSet())
-            .containsExactly("keyboard_opacity", "neural_temperature")
+            .containsExactly("keyboard_opacity", "swipe_trail_width")
         val byKey = plan.changes.associateBy { it.key }
         assertThat(byKey["keyboard_opacity"]!!.current).isEqualTo(PrefValue.IntV(100))
-        assertThat(byKey["neural_temperature"]!!.current).isEqualTo(PrefValue.FloatV(1.0f))
+        assertThat(byKey["swipe_trail_width"]!!.current).isEqualTo(PrefValue.FloatV(8.0f))
     }
 
     @Test
-    fun patternDefault_perLanguageKey_resolvedViaPrefix() {
-        // `neural_prefix_boost_multiplier_<lang>` keys share the
-        // NEURAL_PREFIX_BOOST_MULTIPLIER default. Importing
-        // `neural_prefix_boost_multiplier_fr` = 1.0 (== default) on a
-        // fresh install should NOT surface as a change row.
+    fun deprecatedNeuralKeys_filteredFromThePreview() {
+        // Neural-engine removal (2026-08-18). A v1.5.x backup still carries ~20 `neural_*`
+        // keys plus the per-language prefix-boost variants. Nothing reads them now, so
+        // surfacing them would be pure preview noise AND would write dead keys into prefs.
+        // The per-language forms need PREFIX matching — DEPRECATED_KEYS is exact-match — so
+        // they are the case most likely to regress; pin both forms plus a live control key
+        // that must still come through.
         val json = """{"preferences":{
-            "neural_prefix_boost_multiplier_fr": 1.0,
-            "neural_prefix_boost_multiplier_es": 2.5
+            "neural_temperature": 1.5,
+            "neural_beam_width": 12,
+            "neural_prefix_boost_multiplier_es": 2.5,
+            "neural_prefix_boost_max_de": 7.0,
+            "swipe_beam_autocorrect_enabled": false,
+            "finger_occlusion_offset": 30.0,
+            "keyboard_opacity": 55
         }}""".trimIndent()
-        val plan = SettingsImportPlanBuilder.fromJson(
-            json,
-            currentSnapshot = emptyMap(),
-            screen = screen,
-            // Empty literal map — pattern lookup is exercised directly via
-            // the production lookupDefault() fallback.
-        )
-
-        // The _fr one equals the default → suppressed.
-        // The _es one differs from the default → emitted with default as `current`.
-        val keys = plan.changes.map { it.key }.toSet()
-        assertThat(keys).containsExactly("neural_prefix_boost_multiplier_es")
-        val esRow = plan.changes.single()
-        assertThat(esRow.current).isEqualTo(PrefValue.FloatV(1.0f))   // not Unset
-        assertThat(esRow.proposed).isEqualTo(PrefValue.FloatV(2.5f))
-    }
-
-    @Test
-    fun patternDefault_doesNotShadowExactMatch() {
-        // `neural_prefix_boost_multiplier` (no language suffix) is its own
-        // entry in SETTINGS_DEFAULTS — the pattern fallback must NOT match
-        // it (the prefix requires trailing `_<something>`).
-        val json = """{"preferences":{"neural_prefix_boost_multiplier": 1.0}}"""
         val plan = SettingsImportPlanBuilder.fromJson(
             json,
             currentSnapshot = emptyMap(),
             screen = screen,
             defaultSnapshot = SETTINGS_DEFAULTS,
         )
-        // Default = 1.0 = proposed → suppressed regardless of which lookup path fires.
-        assertThat(plan.changes).isEmpty()
+        assertThat(plan.changes.map { it.key }).containsExactly("keyboard_opacity")
+    }
+
+    @Test
+    fun deprecatedPrefixMatchDoesNotSwallowLiveKeys() {
+        // The prefix rule must not become a `startsWith("neural")` catch-all that also eats
+        // an unrelated future key. Only the two documented per-language bases match.
+        assertThat(SettingsValidation.isDeprecatedPreference("neural_prefix_boost_max_de")).isTrue()
+        assertThat(SettingsValidation.isDeprecatedPreference("neural_prefix_boost_multiplier_es"))
+            .isTrue()
+        assertThat(SettingsValidation.isDeprecatedPreference("keyboard_opacity")).isFalse()
+        assertThat(SettingsValidation.isDeprecatedPreference("swipe_engine_mode")).isFalse()
+        assertThat(SettingsValidation.isDeprecatedPreference("ctc_beam_width")).isFalse()
     }
 
     @Test
@@ -469,7 +463,7 @@ class SettingsImportPlanBuilderTest {
         val json = """{"preferences":{
             "custom_words_fr": "{\"oui\":100}",
             "disabled_words_en": "[\"nope\"]",
-            "neural_temperature": 1.5
+            "keyboard_opacity": 55
         }}""".trimIndent()
         val plan = SettingsImportPlanBuilder.fromJson(
             json,
@@ -477,8 +471,8 @@ class SettingsImportPlanBuilderTest {
             screen = screen,
             defaultSnapshot = SETTINGS_DEFAULTS,
         )
-        // Only neural_temperature in changes; dictionary keys filtered.
-        assertThat(plan.changes.map { it.key }).containsExactly("neural_temperature")
+        // Only keyboard_opacity in changes; dictionary keys filtered.
+        assertThat(plan.changes.map { it.key }).containsExactly("keyboard_opacity")
         val skippedKeys = plan.parseSkippedKeys.map { it.key }.toSet()
         assertThat(skippedKeys).contains("custom_words_fr")
         assertThat(skippedKeys).contains("disabled_words_en")

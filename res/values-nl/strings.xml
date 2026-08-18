@@ -115,14 +115,8 @@
     <string name="settings_title">⚙️ CleverKeys-instellingen</string>
     <string name="settings_description">Configureer je toetsenbordinstellingen voor de beste typervaring.</string>
 
-    <!-- Neural Prediction Section -->
-    <string name="settings_section_neural">👆 Veegtypen</string>
-    <string name="settings_neural_beam_width_title">Bundelbreedte</string>
-    <string name="settings_neural_beam_width_desc">Aantal voorspellingskandidaten (1–20). Hoger = nauwkeuriger.</string>
-    <string name="settings_neural_max_length_title">Maximale woordlengte</string>
-    <string name="settings_neural_max_length_desc">Maximaal aantal tekens in voorspelde woorden (5–35).</string>
-    <string name="settings_neural_confidence_title">Betrouwbaarheidsdrempel</string>
-    <string name="settings_neural_confidence_desc">Minimale betrouwbaarheid voor voorspellingen (0,0–0,4).</string>
+    <!-- Swipe Typing Section -->
+    <string name="settings_section_swipe_typing">👆 Veegtypen</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 Weergave</string>
@@ -320,10 +314,6 @@
     <string name="advanced_swipe_debug_log_desc">Realtime pijplijnanalyse voor veeggebaren (vereist logcat)</string>
     <string name="advanced_detailed_logging_title">Gedetailleerde logging</string>
     <string name="advanced_detailed_logging_desc">Uitgebreide traceerinformatie opnemen</string>
-    <string name="advanced_show_raw_output_title">Onbewerkte uitvoer tonen</string>
-    <string name="advanced_show_raw_output_desc">Onbewerkte neurale uitvoer naar debuglogboek schrijven (heeft geen invloed op suggesties)</string>
-    <string name="advanced_show_beam_predictions_title">Bundelvoorspellingen tonen</string>
-    <string name="advanced_show_beam_predictions_desc">Ruwe:woord-items toevoegen aan de suggestiebalk voor foutopsporing</string>
     <string name="advanced_open_debug_log">Debuglogboek openen</string>
     <string name="appearance_height_portrait_title">Toetsenbordhoogte (staand)</string>
     <string name="appearance_height_portrait_desc">Pas de toetsenbordhoogte aan in de staande modus</string>
@@ -373,8 +363,6 @@
     <string name="autocorrect_char_match_threshold_desc">Hoeveel tekens moeten overeenkomen (0,5–0,9)</string>
     <string name="autocorrect_min_word_frequency_title">Minimale woordfrequentie</string>
     <string name="autocorrect_min_word_frequency_desc">Alleen corrigeren naar woorden met frequentie >= dit</string>
-    <string name="autocorrect_beam_title">Bundelautocorrectie</string>
-    <string name="autocorrect_beam_desc">Vage correcties toepassen tijdens beam search-decodering</string>
     <string name="autocorrect_final_title">Definitieve autocorrectie</string>
     <string name="autocorrect_final_desc">Woordenboekgebaseerde correcties toepassen op de uiteindelijke uitvoer</string>
     <string name="autocorrect_style_title">Correctiestijl</string>
@@ -388,7 +376,7 @@
     <string name="autocorrect_search_depth_title">Zoekdiepte correctie</string>
     <string name="autocorrect_search_depth_desc">Aantal bundelkandidaten om te overwegen (1–10)</string>
     <string name="autocorrect_source_balance_title">Saldo voorspellingsbronnen</string>
-    <string name="autocorrect_source_balance_desc">Neurale betrouwbaarheid vs. woordenboekfrequentie (0=woordenboek, 100=neuraal)</string>
+    <string name="autocorrect_source_balance_desc">Betrouwbaarheid van de veegvorm vs. woordenboekfrequentie (0=woordenboek, 100=vorm)</string>
     <string name="autocorrect_common_boost_title">Boost veelgebruikte woorden</string>
     <string name="autocorrect_common_boost_desc">Bonusvermenigvuldiger voor veelgebruikte woorden (0,5–2,0)</string>
     <string name="autocorrect_frequent_boost_title">Boost frequente woorden</string>
@@ -456,8 +444,6 @@
     <string name="gesture_noise_filter_desc">Minimale beweging om te registreren (px). Hoger filtert jitter maar kan gegevens missen.</string>
     <string name="gesture_high_velocity_title">Hoge-snelheidsdrempelwaarde</string>
     <string name="gesture_high_velocity_desc">Snelheid voor snelle veegdetectie (px/sec). Hoger maakt snellere vegen mogelijk.</string>
-    <string name="gesture_finger_occlusion_title">Compensatie vingerafdekking</string>
-    <string name="gesture_finger_occlusion_desc" formatted="false">Y-verschuiving als % van rijhoogte ter compensatie van vingerafdekking. Hoger verschuift aanraakpunt naar beneden richting toetsmidden.</string>
     <string name="gesture_speed_smoothing_title">Snelheidsafvlakking</string>
     <string name="gesture_speed_smoothing_desc">Afvlakkingsfactor voor schuifbewegingen. Hoger is vloeiender maar minder responsief.</string>
     <string name="gesture_max_speed_multiplier_title">Maximale snelheidsvermenigvuldiger</string>
@@ -520,7 +506,7 @@
     <string name="multilang_enable_title">Meertalig inschakelen</string>
     <string name="multilang_enable_desc">Typen in meerdere talen ondersteunen</string>
     <string name="multilang_primary_title">Primaire taal</string>
-    <string name="multilang_primary_desc">Hoofdtaal voor voorspellingen (NN werkt met elke QWERTY-taal)</string>
+    <string name="multilang_primary_desc">Hoofdtaal voor voorspellingen en veegherkenning</string>
     <string name="multilang_secondary_title">Secundaire taal</string>
     <string name="multilang_secondary_weight_title">Gewicht secundaire taal</string>
     <string name="multilang_secondary_weight_desc">Voorspellingsgewicht voor secundair woordenboek (0,5–1,5)</string>
@@ -528,21 +514,13 @@
     <string name="multilang_auto_detect_desc">Automatisch taal detecteren en wisselen tijdens het typen</string>
     <string name="multilang_detection_sensitivity_title">Detectiegevoeligheid</string>
     <string name="multilang_detection_sensitivity_desc">Hoe snel van taal te wisselen (0,4–0,9)</string>
-    <string name="multilang_boost_strength_title">Booststerkte</string>
-    <string name="multilang_boost_strength_desc">0 = uitgeschakeld, 1 = normaal, 2+ = agressief</string>
-    <string name="multilang_max_boost_title">Maximale boost</string>
-    <string name="multilang_max_boost_desc">Limiet voor boostwaarden (hoger = sterkere correctie)</string>
-    <string name="multilang_max_cumulative_boost_title">Maximale cumulatieve boost</string>
-    <string name="multilang_max_cumulative_boost_desc">Totale boostlimiet voor alle tekens. Lager = conservatiever, voorkomt dat lange woorden domineren.</string>
-    <string name="multilang_strict_start_title">Strikt eerste teken</string>
-    <string name="multilang_strict_start_desc">Alleen voorspellingen behouden die beginnen met het gedetecteerde eerste teken. Helpt bij korte vegen.</string>
     <string name="multilang_alternate_primary_title">Alternatieve primaire taal</string>
     <string name="multilang_alternate_secondary_title">Alternatieve secundaire taal</string>
     <string name="multilang_toggle_between">Wisselen tussen %1$s ↔ %2$s</string>
-    <string name="neural_enable_swipe_title">Vegen inschakelen</string>
-    <string name="neural_enable_swipe_desc">Veeg over toetsen om woorden te typen met neurale voorspelling.</string>
-    <string name="neural_swipe_password_title">Vegen in wachtwoordvelden</string>
-    <string name="neural_swipe_password_desc">Vegen inschakelen ook in wachtwoordvelden. Voorspellingen worden getoond maar individuele getypte tekens blijven verborgen.</string>
+    <string name="swipe_enable_title">Vegen inschakelen</string>
+    <string name="swipe_enable_desc">Veeg over toetsen om hele woorden te typen.</string>
+    <string name="swipe_password_title">Vegen in wachtwoordvelden</string>
+    <string name="swipe_password_desc">Vegen inschakelen ook in wachtwoordvelden. Voorspellingen worden getoond maar individuele getypte tekens blijven verborgen.</string>
     <string name="privacy_swipe_pattern_title">Veegpatroongegevens</string>
     <string name="privacy_swipe_pattern_desc">Veegtrajecten lokaal opslaan voor leren op het apparaat</string>
     <string name="privacy_performance_metrics_title">Prestatiestatistieken</string>

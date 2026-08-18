@@ -113,14 +113,8 @@
     <string name="settings_title">⚙️ Ustawienia CleverKeys</string>
     <string name="settings_description">Skonfiguruj ustawienia klawiatury dla optymalnego pisania.</string>
 
-    <!-- Neural Prediction Section -->
-    <string name="settings_section_neural">👆 Pisanie gestem</string>
-    <string name="settings_neural_beam_width_title">Szerokość wiązki</string>
-    <string name="settings_neural_beam_width_desc">Liczba kandydatów predykcji (1–20). Więcej = dokładniej.</string>
-    <string name="settings_neural_max_length_title">Maksymalna długość słowa</string>
-    <string name="settings_neural_max_length_desc">Maksymalna liczba znaków w przewidywanych słowach (5–35).</string>
-    <string name="settings_neural_confidence_title">Próg pewności</string>
-    <string name="settings_neural_confidence_desc">Minimalna pewność predykcji (0.0–0.4).</string>
+    <!-- Swipe Typing Section -->
+    <string name="settings_section_swipe_typing">👆 Pisanie gestem</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 Wygląd</string>
@@ -330,10 +324,6 @@
     <string name="advanced_swipe_debug_log_desc">Analiza potoku w czasie rzeczywistym dla gestów przesuwania (wymaga logcat)</string>
     <string name="advanced_detailed_logging_title">Szczegółowe rejestrowanie</string>
     <string name="advanced_detailed_logging_desc">Dołącz szczegółowe informacje śledzenia</string>
-    <string name="advanced_show_raw_output_title">Pokaż surowe dane wyjściowe</string>
-    <string name="advanced_show_raw_output_desc">Zapisuj surowe wyjścia sieci neuronowej do dziennika (nie wpływa na podpowiedzi)</string>
-    <string name="advanced_show_beam_predictions_title">Pokaż przewidywania beam search</string>
-    <string name="advanced_show_beam_predictions_desc">Dodaj pozycje raw:słowo do paska podpowiedzi na potrzeby debugowania</string>
     <string name="advanced_open_debug_log">Otwórz dziennik debugowania</string>
     <string name="appearance_height_portrait_title">Wysokość klawiatury (pionowa)</string>
     <string name="appearance_height_portrait_desc">Dostosuj wysokość klawiatury w trybie pionowym</string>
@@ -383,8 +373,6 @@
     <string name="autocorrect_char_match_threshold_desc">Ile znaków musi pasować (0,5–0,9)</string>
     <string name="autocorrect_min_word_frequency_title">Minimalna częstotliwość słowa</string>
     <string name="autocorrect_min_word_frequency_desc">Poprawiaj tylko do słów o częstotliwości >= tej wartości</string>
-    <string name="autocorrect_beam_title">Autokorekta beam search</string>
-    <string name="autocorrect_beam_desc">Stosuj rozmyte korekty podczas dekodowania beam search</string>
     <string name="autocorrect_final_title">Końcowa autokorekta</string>
     <string name="autocorrect_final_desc">Stosuj korekty słownikowe do ostatecznego wyniku</string>
     <string name="autocorrect_style_title">Styl korekty</string>
@@ -398,7 +386,7 @@
     <string name="autocorrect_search_depth_title">Głębokość wyszukiwania korekty</string>
     <string name="autocorrect_search_depth_desc">Liczba kandydatów beam search do rozważenia (1–10)</string>
     <string name="autocorrect_source_balance_title">Balans źródeł przewidywań</string>
-    <string name="autocorrect_source_balance_desc">Pewność sieci neuronowej vs. częstotliwość słownikowa (0=słownik, 100=neuronowa)</string>
+    <string name="autocorrect_source_balance_desc">Pewność kształtu gestu vs. częstotliwość słownikowa (0=słownik, 100=kształt)</string>
     <string name="autocorrect_common_boost_title">Wzmocnienie popularnych słów</string>
     <string name="autocorrect_common_boost_desc">Mnożnik bonusowy dla popularnych słów (0,5–2,0)</string>
     <string name="autocorrect_frequent_boost_title">Wzmocnienie częstych słów</string>
@@ -466,8 +454,6 @@
     <string name="gesture_noise_filter_desc">Minimalny ruch do rejestracji (px). Wyższy filtruje jitter, ale może tracić dane.</string>
     <string name="gesture_high_velocity_title">Próg wysokiej prędkości</string>
     <string name="gesture_high_velocity_desc">Prędkość do wykrywania szybkiego gestu (px/sek). Wyższy umożliwia szybsze gesty.</string>
-    <string name="gesture_finger_occlusion_title">Kompensacja zasłonięcia palcem</string>
-    <string name="gesture_finger_occlusion_desc" formatted="false">Przesunięcie Y jako % wysokości wiersza kompensujące zasłonięcie palcem. Wyższy przesuwa punkt dotyku w dół ku środkowi klawiszy.</string>
     <string name="gesture_speed_smoothing_title">Wygładzanie prędkości</string>
     <string name="gesture_speed_smoothing_desc">Współczynnik wygładzania ruchu suwaka. Wyższy jest płynniejszy, ale mniej responsywny.</string>
     <string name="gesture_max_speed_multiplier_title">Maksymalny mnożnik prędkości</string>
@@ -530,7 +516,7 @@
     <string name="multilang_enable_title">Włącz wiele języków</string>
     <string name="multilang_enable_desc">Obsługuj pisanie w wielu językach</string>
     <string name="multilang_primary_title">Język główny</string>
-    <string name="multilang_primary_desc">Główny język do przewidywań (NN działa z każdym językiem QWERTY)</string>
+    <string name="multilang_primary_desc">Główny język przewidywań i rozpoznawania gestów</string>
     <string name="multilang_secondary_title">Język pomocniczy</string>
     <string name="multilang_secondary_weight_title">Waga języka pomocniczego</string>
     <string name="multilang_secondary_weight_desc">Waga przewidywań dla słownika pomocniczego (0,5–1,5)</string>
@@ -538,21 +524,13 @@
     <string name="multilang_auto_detect_desc">Automatycznie wykrywaj i przełączaj język podczas pisania</string>
     <string name="multilang_detection_sensitivity_title">Czułość wykrywania</string>
     <string name="multilang_detection_sensitivity_desc">Jak szybko przełączać języki (0,4–0,9)</string>
-    <string name="multilang_boost_strength_title">Siła wzmocnienia</string>
-    <string name="multilang_boost_strength_desc">0 = wyłączone, 1 = normalne, 2+ = agresywne</string>
-    <string name="multilang_max_boost_title">Maksymalne wzmocnienie</string>
-    <string name="multilang_max_boost_desc">Limit wartości wzmocnienia (wyższy = silniejsza korekta)</string>
-    <string name="multilang_max_cumulative_boost_title">Maksymalne łączne wzmocnienie</string>
-    <string name="multilang_max_cumulative_boost_desc">Łączny limit wzmocnienia dla wszystkich znaków. Niższy = bardziej konserwatywny, zapobiega dominacji długich słów.</string>
-    <string name="multilang_strict_start_title">Ścisły pierwszy znak</string>
-    <string name="multilang_strict_start_desc">Zachowaj tylko podpowiedzi zaczynające się od wykrytego pierwszego klawisza. Pomaga przy krótkich gestach.</string>
     <string name="multilang_alternate_primary_title">Alternatywny język główny</string>
     <string name="multilang_alternate_secondary_title">Alternatywny język pomocniczy</string>
     <string name="multilang_toggle_between">Przełączaj między %1$s ↔ %2$s</string>
-    <string name="neural_enable_swipe_title">Włącz pisanie gestem</string>
-    <string name="neural_enable_swipe_desc">Przeciągaj po klawiszach, aby pisać słowa przy użyciu przewidywania neuronowego.</string>
-    <string name="neural_swipe_password_title">Pisanie gestem w polach hasła</string>
-    <string name="neural_swipe_password_desc">Włącz pisanie gestem również w polach hasła. Podpowiedzi będą wyświetlane, ale poszczególne wpisane znaki pozostaną ukryte.</string>
+    <string name="swipe_enable_title">Włącz pisanie gestem</string>
+    <string name="swipe_enable_desc">Przeciągaj po klawiszach, aby pisać całe słowa.</string>
+    <string name="swipe_password_title">Pisanie gestem w polach hasła</string>
+    <string name="swipe_password_desc">Włącz pisanie gestem również w polach hasła. Podpowiedzi będą wyświetlane, ale poszczególne wpisane znaki pozostaną ukryte.</string>
     <string name="privacy_swipe_pattern_title">Dane wzorców gestów</string>
     <string name="privacy_swipe_pattern_desc">Przechowuj trajektorie gestów lokalnie do nauki na urządzeniu</string>
     <string name="privacy_performance_metrics_title">Metryki wydajności</string>

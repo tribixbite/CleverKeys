@@ -37,7 +37,7 @@ import tribixbite.cleverkeys.theme.KeyboardTheme
 /**
  * Full Geometric Settings — the user-tunable knobs of the geometric (SHARK2) swipe engine
  * (WP9 R-1; spec `docs/specs/geometric-swipe-engine.md`). Companion to
- * [NeuralSettingsActivity], reached from Settings → Swipe Typing when the Prediction
+ * [CtcSettingsActivity], reached from Settings → Swipe Typing when the Prediction
  * Engine is Hybrid or Geometric.
  *
  * Deliberately exposes only THREE of the engine's 28 knobs — the ones with a

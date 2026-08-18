@@ -104,14 +104,8 @@
     <string name="settings_title">⚙️ Настройки CleverKeys</string>
     <string name="settings_description">Настройте параметры клавиатуры для оптимального набора текста.</string>
 
-    <!-- Neural Prediction Section -->
-    <string name="settings_section_neural">👆 Свайп-ввод</string>
-    <string name="settings_neural_beam_width_title">Ширина луча</string>
-    <string name="settings_neural_beam_width_desc">Количество вариантов предсказания (1–20). Больше — точнее.</string>
-    <string name="settings_neural_max_length_title">Максимальная длина слова</string>
-    <string name="settings_neural_max_length_desc">Максимальное число символов в предсказанных словах (5–35).</string>
-    <string name="settings_neural_confidence_title">Порог уверенности</string>
-    <string name="settings_neural_confidence_desc">Минимальная уверенность для предсказаний (0.0–0.4).</string>
+    <!-- Swipe Typing Section -->
+    <string name="settings_section_swipe_typing">👆 Свайп-ввод</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 Внешний вид</string>
@@ -320,10 +314,6 @@
     <string name="advanced_swipe_debug_log_desc">Анализ конвейера свайп-жестов в реальном времени (требует logcat)</string>
     <string name="advanced_detailed_logging_title">Подробное журналирование</string>
     <string name="advanced_detailed_logging_desc">Включить расширенную трассировку</string>
-    <string name="advanced_show_raw_output_title">Показывать сырой вывод</string>
-    <string name="advanced_show_raw_output_desc">Записывать необработанные выходные данные нейросети в журнал отладки (не влияет на подсказки)</string>
-    <string name="advanced_show_beam_predictions_title">Показывать beam-предсказания</string>
-    <string name="advanced_show_beam_predictions_desc">Добавлять элементы raw:word в панель подсказок для отладки</string>
     <string name="advanced_open_debug_log">Открыть журнал отладки</string>
     <string name="appearance_height_portrait_title">Высота клавиатуры (портрет)</string>
     <string name="appearance_height_portrait_desc">Настройка высоты клавиатуры в портретном режиме</string>
@@ -373,8 +363,6 @@
     <string name="autocorrect_char_match_threshold_desc">Сколько символов должны совпасть (0.5–0.9)</string>
     <string name="autocorrect_min_word_frequency_title">Минимальная частота слова</string>
     <string name="autocorrect_min_word_frequency_desc">Исправлять только на слова с частотой >= этого значения</string>
-    <string name="autocorrect_beam_title">Beam-автокоррекция</string>
-    <string name="autocorrect_beam_desc">Применять нечёткие исправления при beam-поиске</string>
     <string name="autocorrect_final_title">Финальная автокоррекция</string>
     <string name="autocorrect_final_desc">Применять словарные исправления к финальному результату</string>
     <string name="autocorrect_style_title">Стиль коррекции</string>
@@ -388,7 +376,7 @@
     <string name="autocorrect_search_depth_title">Глубина поиска коррекции</string>
     <string name="autocorrect_search_depth_desc">Количество beam-кандидатов для анализа (1–10)</string>
     <string name="autocorrect_source_balance_title">Баланс источников предсказания</string>
-    <string name="autocorrect_source_balance_desc">Нейросеть vs словарная частота (0 = словарь, 100 = нейросеть)</string>
+    <string name="autocorrect_source_balance_desc">Форма жеста vs словарная частота (0 = словарь, 100 = форма)</string>
     <string name="autocorrect_common_boost_title">Усиление частых слов</string>
     <string name="autocorrect_common_boost_desc">Бонусный множитель для распространённых слов (0.5–2.0)</string>
     <string name="autocorrect_frequent_boost_title">Усиление популярных слов</string>
@@ -456,8 +444,6 @@
     <string name="gesture_noise_filter_desc">Минимальное движение для регистрации (пикс.). Выше = меньше дрожания, но возможна потеря данных.</string>
     <string name="gesture_high_velocity_title">Порог высокой скорости</string>
     <string name="gesture_high_velocity_desc">Скорость для определения быстрого свайпа (пикс./с). Выше = допускает более быстрые свайпы.</string>
-    <string name="gesture_finger_occlusion_title">Компенсация перекрытия пальцем</string>
-    <string name="gesture_finger_occlusion_desc" formatted="false">Смещение Y в % высоты ряда для компенсации перекрытия клавиш пальцем. Выше = смещение точки касания ниже к центрам клавиш.</string>
     <string name="gesture_speed_smoothing_title">Сглаживание скорости</string>
     <string name="gesture_speed_smoothing_desc">Коэффициент сглаживания движения слайдера. Выше = плавнее, но менее отзывчиво.</string>
     <string name="gesture_max_speed_multiplier_title">Максимальный множитель скорости</string>
@@ -520,7 +506,7 @@
     <string name="multilang_enable_title">Включить мультиязычность</string>
     <string name="multilang_enable_desc">Поддержка набора на нескольких языках</string>
     <string name="multilang_primary_title">Основной язык</string>
-    <string name="multilang_primary_desc">Главный язык для предсказаний (НС работает с любым языком QWERTY)</string>
+    <string name="multilang_primary_desc">Основной язык для подсказок и распознавания жестов</string>
     <string name="multilang_secondary_title">Дополнительный язык</string>
     <string name="multilang_secondary_weight_title">Вес дополнительного языка</string>
     <string name="multilang_secondary_weight_desc">Вес предсказания для дополнительного словаря (0.5–1.5)</string>
@@ -528,21 +514,13 @@
     <string name="multilang_auto_detect_desc">Автоматически определять и переключать языки при наборе</string>
     <string name="multilang_detection_sensitivity_title">Чувствительность определения</string>
     <string name="multilang_detection_sensitivity_desc">Скорость переключения языков (0.4–0.9)</string>
-    <string name="multilang_boost_strength_title">Сила усиления</string>
-    <string name="multilang_boost_strength_desc">0 = отключено, 1 = нормально, 2+ = агрессивно</string>
-    <string name="multilang_max_boost_title">Максимальное усиление</string>
-    <string name="multilang_max_boost_desc">Ограничение значений усиления (больше = сильнее коррекция)</string>
-    <string name="multilang_max_cumulative_boost_title">Максимальное суммарное усиление</string>
-    <string name="multilang_max_cumulative_boost_desc">Суммарный предел усиления по всем символам. Ниже = консервативнее, длинные слова не будут доминировать.</string>
-    <string name="multilang_strict_start_title">Строгий начальный символ</string>
-    <string name="multilang_strict_start_desc">Оставлять только предсказания, начинающиеся с определённой первой клавиши. Помогает коротким свайпам.</string>
     <string name="multilang_alternate_primary_title">Альтернативный основной язык</string>
     <string name="multilang_alternate_secondary_title">Альтернативный дополнительный язык</string>
     <string name="multilang_toggle_between">Переключить между %1$s ↔ %2$s</string>
-    <string name="neural_enable_swipe_title">Включить свайп-ввод</string>
-    <string name="neural_enable_swipe_desc">Проводите по клавишам для набора слов с помощью нейросети.</string>
-    <string name="neural_swipe_password_title">Свайп в полях пароля</string>
-    <string name="neural_swipe_password_desc">Включить свайп-ввод даже в полях пароля. Подсказки будут показаны, но введённые символы остаются скрытыми.</string>
+    <string name="swipe_enable_title">Включить свайп-ввод</string>
+    <string name="swipe_enable_desc">Проводите по клавишам для набора слов целиком.</string>
+    <string name="swipe_password_title">Свайп в полях пароля</string>
+    <string name="swipe_password_desc">Включить свайп-ввод даже в полях пароля. Подсказки будут показаны, но введённые символы остаются скрытыми.</string>
     <string name="privacy_swipe_pattern_title">Данные паттернов свайпов</string>
     <string name="privacy_swipe_pattern_desc">Хранить траектории свайпов локально для обучения на устройстве</string>
     <string name="privacy_performance_metrics_title">Метрики производительности</string>

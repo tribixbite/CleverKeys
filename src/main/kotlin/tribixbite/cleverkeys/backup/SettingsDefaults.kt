@@ -105,7 +105,6 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     "swipe_min_dwell_time" to PrefValue.IntV(Defaults.SWIPE_MIN_DWELL_TIME),
     "swipe_noise_threshold" to PrefValue.FloatV(Defaults.SWIPE_NOISE_THRESHOLD),
     "swipe_high_velocity_threshold" to PrefValue.FloatV(Defaults.SWIPE_HIGH_VELOCITY_THRESHOLD),
-    "finger_occlusion_offset" to PrefValue.FloatV(Defaults.FINGER_OCCLUSION_OFFSET),
     "slider_speed_smoothing" to PrefValue.FloatV(Defaults.SLIDER_SPEED_SMOOTHING),
     "slider_speed_max" to PrefValue.FloatV(Defaults.SLIDER_SPEED_MAX),
 
@@ -126,24 +125,6 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     "swipe_trail_glow_radius" to PrefValue.FloatV(Defaults.SWIPE_TRAIL_GLOW_RADIUS),
 
     // ── Neural prediction ────────────────────────────────────────────
-    "neural_beam_width" to PrefValue.IntV(Defaults.NEURAL_BEAM_WIDTH),
-    "neural_max_length" to PrefValue.IntV(Defaults.NEURAL_MAX_LENGTH),
-    "neural_confidence_threshold" to PrefValue.FloatV(Defaults.NEURAL_CONFIDENCE_THRESHOLD),
-    "neural_batch_beams" to PrefValue.Bool(Defaults.NEURAL_BATCH_BEAMS),
-    "neural_greedy_search" to PrefValue.Bool(Defaults.NEURAL_GREEDY_SEARCH),
-    "neural_beam_alpha" to PrefValue.FloatV(Defaults.NEURAL_BEAM_ALPHA),
-    "neural_beam_prune_confidence" to PrefValue.FloatV(Defaults.NEURAL_BEAM_PRUNE_CONFIDENCE),
-    "neural_beam_score_gap" to PrefValue.FloatV(Defaults.NEURAL_BEAM_SCORE_GAP),
-    "neural_adaptive_width_step" to PrefValue.IntV(Defaults.NEURAL_ADAPTIVE_WIDTH_STEP),
-    "neural_score_gap_step" to PrefValue.IntV(Defaults.NEURAL_SCORE_GAP_STEP),
-    "neural_temperature" to PrefValue.FloatV(Defaults.NEURAL_TEMPERATURE),
-    "neural_frequency_weight" to PrefValue.FloatV(Defaults.NEURAL_FREQUENCY_WEIGHT),
-    "neural_prefix_boost_multiplier" to PrefValue.FloatV(Defaults.NEURAL_PREFIX_BOOST_MULTIPLIER),
-    "neural_prefix_boost_max" to PrefValue.FloatV(Defaults.NEURAL_PREFIX_BOOST_MAX),
-    "neural_max_cumulative_boost" to PrefValue.FloatV(Defaults.NEURAL_MAX_CUMULATIVE_BOOST),
-    "neural_strict_start_char" to PrefValue.Bool(Defaults.NEURAL_STRICT_START_CHAR),
-    "neural_resampling_mode" to PrefValue.Str(Defaults.NEURAL_RESAMPLING_MODE),
-    "neural_user_max_seq_length" to PrefValue.IntV(Defaults.NEURAL_USER_MAX_SEQ_LENGTH),
     "swipe_smoothing_window" to PrefValue.IntV(Defaults.SWIPE_SMOOTHING_WINDOW),
     "onnx_xnnpack_threads" to PrefValue.IntV(Defaults.ONNX_XNNPACK_THREADS),
 
@@ -176,7 +157,6 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     "autocorrect_max_length_diff" to PrefValue.IntV(Defaults.AUTOCORRECT_MAX_LENGTH_DIFF),
     "autocorrect_prefix_length" to PrefValue.IntV(Defaults.AUTOCORRECT_PREFIX_LENGTH),
     "autocorrect_max_beam_candidates" to PrefValue.IntV(Defaults.AUTOCORRECT_MAX_BEAM_CANDIDATES),
-    "swipe_beam_autocorrect_enabled" to PrefValue.Bool(Defaults.SWIPE_BEAM_AUTOCORRECT_ENABLED),
     "swipe_final_autocorrect_enabled" to PrefValue.Bool(Defaults.SWIPE_FINAL_AUTOCORRECT_ENABLED),
     "autocapitalize_i_words" to PrefValue.Bool(Defaults.AUTOCAPITALIZE_I_WORDS),
     "swipe_fuzzy_match_mode" to PrefValue.Str(Defaults.SWIPE_FUZZY_MATCH_MODE),
@@ -251,7 +231,6 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     // release — they are now in SettingsValidation.DEPRECATED_KEYS (no reader).
 
     // ── Presets (string-valued UI selections) ────────────────────────
-    "neural_preset" to PrefValue.Str("custom"),
     "swipe_correction_preset" to PrefValue.Str("balanced"),
 
     // ── Misc / runtime ───────────────────────────────────────────────
@@ -270,39 +249,20 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     // versions that predate it.
     "ctc_beam_width" to PrefValue.IntV(Defaults.CTC_BEAM_WIDTH),
     "swipe_debug_detailed_logging" to PrefValue.Bool(Defaults.SWIPE_DEBUG_DETAILED_LOGGING),
-    "swipe_debug_show_raw_output" to PrefValue.Bool(Defaults.SWIPE_DEBUG_SHOW_RAW_OUTPUT),
     "swipe_show_debug_scores" to PrefValue.Bool(Defaults.SWIPE_SHOW_DEBUG_SCORES),
-    "swipe_show_raw_beam_predictions" to PrefValue.Bool(Defaults.SWIPE_SHOW_RAW_BEAM_PREDICTIONS),
 )
 
 /**
- * Per-language pref keys whose name is `<base>_<lang>` (e.g.
- * `neural_prefix_boost_multiplier_fr`, `custom_words_en`). One default
- * applies to every language variant. Lookup: if a key matches a prefix
- * here, the corresponding `PrefValue` is used as the effective default.
+ * Resolve a key's effective default. Used by `SettingsImportPlanBuilder` to decide
+ * whether a key represents a real change vs. a no-op against the default.
  *
- * Prefix MUST end with `_` so the language code can't accidentally be a
- * full match (e.g. `neural_prefix_boost_multiplier` itself is a separate
- * entry in SETTINGS_DEFAULTS — only `neural_prefix_boost_multiplier_<x>`
- * matches the per-language pattern).
+ * The former `PATTERN_DEFAULTS` prefix map went with the neural engine (2026-08-18): its
+ * only two entries were `neural_prefix_boost_{multiplier,max}_<lang>`, and those keys are
+ * now filtered out upstream by `SettingsValidation.isDeprecatedPreference`, which grew the
+ * matching prefix rule. No surviving pref key is per-language except the dictionary blobs,
+ * which `isDictionaryPreference` routes to the separate DictImportPlan flow.
  */
-internal val PATTERN_DEFAULTS: Map<String, PrefValue> = mapOf(
-    "neural_prefix_boost_multiplier_" to PrefValue.FloatV(Defaults.NEURAL_PREFIX_BOOST_MULTIPLIER),
-    "neural_prefix_boost_max_" to PrefValue.FloatV(Defaults.NEURAL_PREFIX_BOOST_MAX),
-)
-
-/**
- * Resolve a key's effective default via either the literal map or the
- * pattern map. Used by `SettingsImportPlanBuilder` to decide whether a
- * key represents a real change vs. a no-op against the default.
- */
-internal fun lookupDefault(key: String): PrefValue? {
-    SETTINGS_DEFAULTS[key]?.let { return it }
-    for ((prefix, value) in PATTERN_DEFAULTS) {
-        if (key.startsWith(prefix)) return value
-    }
-    return null
-}
+internal fun lookupDefault(key: String): PrefValue? = SETTINGS_DEFAULTS[key]
 
 /**
  * Keys whose runtime default is literally `null` (read site passes `null`

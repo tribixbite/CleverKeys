@@ -87,9 +87,56 @@ object SettingsValidation {
         // pipeline, removed together with the legacy InputCoordinator-only path — the
         // SuggestionHandler pipeline is the only one. v1.5.x backups may still carry it.
         "unified_swipe_pipeline",
+        // Neural swipe engine removal (2026-08-18). Every key below was READ ONLY by the
+        // transformer decoder, its vocabulary or its settings screen, all deleted. They are
+        // MOVED here rather than copied: SettingsDefaultsDriftTest asserts the four
+        // classification buckets are disjoint, so leaving a stale SETTINGS_DEFAULTS entry
+        // behind fails the build. Backups from v1.5.x and earlier still carry them, and
+        // without this list the import preview would show ~20 meaningless rows and then
+        // write dead keys into prefs.
+        "neural_beam_width",
+        "neural_max_length",
+        "neural_confidence_threshold",
+        "neural_batch_beams",
+        "neural_greedy_search",
+        "neural_beam_alpha",
+        "neural_beam_prune_confidence",
+        "neural_beam_score_gap",
+        "neural_adaptive_width_step",
+        "neural_score_gap_step",
+        "neural_temperature",
+        "neural_frequency_weight",
+        "neural_prefix_boost_multiplier",
+        "neural_prefix_boost_max",
+        "neural_max_cumulative_boost",
+        "neural_strict_start_char",
+        "neural_resampling_mode",
+        "neural_user_max_seq_length",
+        "neural_preset",
+        // Read only by the deleted engine's key-position setup (touch-Y compensation for the
+        // QWERTY-trained transformer). CTC and geometric take key geometry as an input.
+        "finger_occlusion_offset",
+        // Beam-search-only autocorrect and the two raw-beam debug toggles: all three named
+        // stages of the deleted decoder.
+        "swipe_beam_autocorrect_enabled",
+        "swipe_debug_show_raw_output",
+        "swipe_show_raw_beam_predictions",
     )
 
-    fun isDeprecatedPreference(key: String): Boolean = key in DEPRECATED_KEYS
+    /**
+     * Deprecated keys whose name carries a language suffix (`neural_prefix_boost_max_fr`).
+     * [DEPRECATED_KEYS] is an exact-match set, so the per-language variants — which the
+     * Multi-Language settings screen wrote one-per-language — need prefix matching or they
+     * would slip through the filter and surface as import-preview noise for every language
+     * the user ever selected.
+     */
+    private val DEPRECATED_KEY_PREFIXES = listOf(
+        "neural_prefix_boost_multiplier_",
+        "neural_prefix_boost_max_",
+    )
+
+    fun isDeprecatedPreference(key: String): Boolean =
+        key in DEPRECATED_KEYS || DEPRECATED_KEY_PREFIXES.any { key.startsWith(it) }
 
     /**
      * Per-language dictionary words and disabled-words lists. These are
@@ -115,8 +162,6 @@ object SettingsValidation {
      * prefix patterns.
      */
     fun isFloatPreference(key: String): Boolean {
-        if (key.startsWith("neural_prefix_boost_multiplier_") ||
-            key.startsWith("neural_prefix_boost_max_")) return true
         return when (key) {
             // Character and UI sizing
             "character_size", "secondary_label_size_scale", "key_vertical_margin", "key_horizontal_margin", "custom_border_line_width",
@@ -124,23 +169,17 @@ object SettingsValidation {
             "prediction_context_boost", "prediction_frequency_scale",
             // Auto-correction threshold
             "autocorrect_char_match_threshold",
-            // Neural confidence threshold
-            "neural_confidence_threshold",
             // Swipe typing boost parameters (SlideBarPreference floats)
             "swipe_rare_words_penalty", "swipe_common_words_boost", "swipe_top5000_boost",
             // Advanced gesture tuning floats
             "slider_speed_smoothing", "slider_speed_max",
             "swipe_min_distance", "swipe_min_key_distance", "swipe_noise_threshold",
             "swipe_high_velocity_threshold",
-            // Neural beam search floats
-            "neural_beam_score_gap", "neural_beam_prune_confidence", "neural_beam_alpha",
-            "neural_temperature", "neural_frequency_weight",
             // Language detection
             "pref_language_detection_sensitivity",
             // Swipe trail appearance
             "swipe_trail_width", "swipe_trail_glow_radius",
-            // Global prefix boost defaults (fallback)
-            "neural_prefix_boost_multiplier", "neural_prefix_boost_max" -> true
+            -> true
             else -> false
         }
     }
@@ -223,11 +262,6 @@ object SettingsValidation {
             "short_gesture_max_distance" -> value in 50..200
 
             // Neural network parameters
-            "neural_beam_width" -> value in 1..32
-            "neural_max_length" -> value in 10..100
-            "neural_user_max_seq_length" -> value in 0..500
-            "neural_adaptive_width_step" -> value in 3..20
-            "neural_score_gap_step" -> value in 3..20
             "swipe_smoothing_window" -> value in 1..7
 
             // Auto-correction parameters
@@ -250,13 +284,6 @@ object SettingsValidation {
      * Verbatim port of BackupRestoreManager.validateFloatPreference (lines 812-858).
      */
     private fun validateFloat(key: String, value: Float): String? {
-        if (key.startsWith("neural_prefix_boost_multiplier_")) {
-            return if (value in 0.0f..3.0f) null else "out of range, got $value"
-        }
-        if (key.startsWith("neural_prefix_boost_max_")) {
-            return if (value in 0.0f..10.0f) null else "out of range, got $value"
-        }
-
         val ok = when (key) {
             // Character size (0.75-1.5)
             "character_size" -> value in 0.75f..1.5f
@@ -277,22 +304,8 @@ object SettingsValidation {
             // Auto-correction threshold
             "autocorrect_char_match_threshold" -> value in 0.5f..0.9f
 
-            // Neural confidence threshold
-            "neural_confidence_threshold" -> value in 0.0f..1.0f
-
-            // Neural beam search parameters
-            "neural_beam_score_gap" -> value in 0.0f..150.0f
-            "neural_beam_prune_confidence" -> value in 0.0f..1.0f
-            "neural_beam_alpha" -> value in 0.0f..10.0f
-            "neural_temperature" -> value in 0.1f..3.0f
-            "neural_frequency_weight" -> value in 0.0f..2.0f
-
             // Swipe typing boost parameters (0.0-2.0 range)
             "swipe_rare_words_penalty", "swipe_common_words_boost", "swipe_top5000_boost" -> value in 0.0f..2.0f
-
-            // Global prefix boost defaults
-            "neural_prefix_boost_multiplier" -> value in 0.0f..3.0f
-            "neural_prefix_boost_max" -> value in 0.0f..10.0f
 
             // Unknown float preference - allow it (version-tolerant)
             else -> true
@@ -364,8 +377,7 @@ object SettingsValidation {
         "custom_border_radius",
         "vibrate_duration", "longpress_timeout", "longpress_interval",
         "short_gesture_min_distance", "short_gesture_max_distance",
-        "neural_beam_width", "neural_max_length", "neural_user_max_seq_length",
-        "neural_adaptive_width_step", "neural_score_gap_step", "swipe_smoothing_window",
+        "swipe_smoothing_window",
         "autocorrect_min_word_length", "autocorrect_confidence_min_frequency" -> true
         // `clipboard_history_limit` and `circle_sensitivity` were here, but
         // both are stored as String (`Defaults.CIRCLE_SENSITIVITY = "2"`,

@@ -37,55 +37,6 @@ class SettingsViewModelRotationTest {
     }
 
     @Test
-    fun transientState_survivesActivityRecreation() {
-        val scenario = ActivityScenario.launch(SettingsActivity::class.java)
-        try {
-            // Mutate three representative transient vars via the Activity's delegating properties
-            scenario.onActivity { activity ->
-                // Section expansion flag
-                activity.gifSectionExpanded = true
-                // Search query
-                activity.settingsSearchQuery = "haptic"
-                // Data-viewer paging
-                activity.collectedDataCurrentPage = 3
-            }
-
-            // Trigger recreation (rotation simulation)
-            scenario.recreate()
-
-            // Assert that all three transient vars survived via the ViewModel
-            scenario.onActivity { activity ->
-                val vm = extractSettingsViewModel(activity)
-                assertTrue(
-                    "gifSectionExpanded must survive rotation",
-                    vm.gifSectionExpanded
-                )
-                assertEquals(
-                    "settingsSearchQuery must survive rotation",
-                    "haptic",
-                    vm.settingsSearchQuery
-                )
-                assertEquals(
-                    "collectedDataCurrentPage must survive rotation",
-                    3,
-                    vm.collectedDataCurrentPage
-                )
-
-                // Sanity: a prefs-backed var must still have a valid value after recreate
-                // (confirms loadCurrentSettings() still runs and isn't broken).
-                // beamWidth is loaded from SharedPreferences — default is 6, any non-negative
-                // value is acceptable; the test simply verifies it isn't zero from a failed load.
-                assertTrue(
-                    "beamWidth (prefs-backed) must be non-negative after recreate",
-                    activity.beamWidth >= 0
-                )
-            }
-        } finally {
-            scenario.close()
-        }
-    }
-
-    @Test
     fun searchQuery_defaultsToEmpty_onFirstCreate() {
         val scenario = ActivityScenario.launch(SettingsActivity::class.java)
         try {

@@ -15,20 +15,19 @@ import tribixbite.cleverkeys.ui.settings.SettingsDropdown
 import tribixbite.cleverkeys.ui.settings.SettingsSwitch
 import tribixbite.cleverkeys.ui.settings.openCtcSettings
 import tribixbite.cleverkeys.ui.settings.openGeometricSettings
-import tribixbite.cleverkeys.ui.settings.openNeuralSettings
 import tribixbite.cleverkeys.ui.settings.saveSetting
 
 @Composable
 internal fun SettingsActivity.NeuralPredictionSection() {
             CollapsibleSettingsSection(
-                title = stringResource(R.string.settings_section_neural),
+                title = stringResource(R.string.settings_section_swipe_typing),
                 expanded = neuralSectionExpanded,
                 onExpandChange = { neuralSectionExpanded = it }
             ) {
                 // Master switch for swipe typing
                 SettingsSwitch(
-                    title = stringResource(R.string.neural_enable_swipe_title),
-                    description = stringResource(R.string.neural_enable_swipe_desc),
+                    title = stringResource(R.string.swipe_enable_title),
+                    description = stringResource(R.string.swipe_enable_desc),
                     checked = swipeTypingEnabled,
                     onCheckedChange = {
                         swipeTypingEnabled = it
@@ -66,26 +65,14 @@ internal fun SettingsActivity.NeuralPredictionSection() {
                 if (swipeTypingEnabled) {
                     // #39: Option to enable swipe typing on password fields
                     SettingsSwitch(
-                        title = stringResource(R.string.neural_swipe_password_title),
-                        description = stringResource(R.string.neural_swipe_password_desc),
+                        title = stringResource(R.string.swipe_password_title),
+                        description = stringResource(R.string.swipe_password_desc),
                         checked = swipeOnPasswordFields,
                         onCheckedChange = {
                             swipeOnPasswordFields = it
                             saveSetting("swipe_on_password_fields", it)
                         }
                     )
-
-                    // Beam Width / Maximum Word Length / Confidence Threshold moved into the
-                    // Full Neural Settings screen (they were duplicated there already) — the
-                    // main section stays engine-agnostic.
-                    Button(
-                        onClick = { openNeuralSettings() },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 8.dp)
-                    ) {
-                        Text("Full Neural Settings")
-                    }
 
                     // Geometric engine tuning — always reachable: geometric mode uses it
                     // everywhere, and ctc mode uses it for every language/layout CTC does

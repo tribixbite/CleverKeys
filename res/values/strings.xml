@@ -85,7 +85,7 @@
     <string name="clipboard_remove_confirmed">Yes</string>
     <string name="toast_no_voice_input">No voice typing app installed</string>
 
-    <!-- Neural Model Settings -->
+    <!-- Swipe Model Settings -->
 
     <!-- Custom Layout Editor Dialog (Material 3) -->
 
@@ -109,22 +109,16 @@
 
     <!-- Emoji Grid View (Material 3) -->
 
-    <!-- Neural Settings Activity (Material 3) -->
+    <!-- Swipe Engine Settings (Material 3) -->
 
     <!-- Settings Activity (Material 3) -->
     <string name="settings_title">⚙️ CleverKeys Settings</string>
     <string name="settings_description">Configure your keyboard settings for optimal typing experience.</string>
 
-    <!-- Neural Prediction Section -->
-    <string name="settings_section_neural">👆 Swipe Typing</string>
+    <!-- Swipe Typing Section -->
+    <string name="settings_section_swipe_typing">👆 Swipe Typing</string>
     <string name="swipe_engine_mode_title">Prediction Engine</string>
     <string name="swipe_engine_mode_desc">CTC: CTC beam search on Latin layouts for English, French, German and Spanish; geometric for other languages and non-Latin layouts. Geometric: all layouts.</string>
-    <string name="settings_neural_beam_width_title">Beam Width</string>
-    <string name="settings_neural_beam_width_desc">Number of prediction candidates (1–20). Higher = more accurate.</string>
-    <string name="settings_neural_max_length_title">Maximum Word Length</string>
-    <string name="settings_neural_max_length_desc">Maximum characters in predicted words (5–35).</string>
-    <string name="settings_neural_confidence_title">Confidence Threshold</string>
-    <string name="settings_neural_confidence_desc">Minimum confidence for predictions (0.0–0.4).</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 Appearance</string>
@@ -413,10 +407,6 @@
     <string name="advanced_swipe_debug_log_desc">Real-time pipeline analysis for swipe gestures (requires logcat)</string>
     <string name="advanced_detailed_logging_title">Detailed Logging</string>
     <string name="advanced_detailed_logging_desc">Include verbose trace information</string>
-    <string name="advanced_show_raw_output_title">Show Raw Output</string>
-    <string name="advanced_show_raw_output_desc">Log raw neural outputs to debug log (doesn\'t affect suggestions)</string>
-    <string name="advanced_show_beam_predictions_title">Show Beam Predictions</string>
-    <string name="advanced_show_beam_predictions_desc">Add raw:word items to suggestion bar for debugging</string>
     <string name="advanced_open_debug_log">Open Debug Log</string>
     <string name="advanced_provenance_markers_title">Suggestion Origin Markers</string>
     <string name="advanced_provenance_markers_desc">Show a colored dot on each suggestion indicating which engine produced it (long-press any suggestion for full details)</string>
@@ -472,8 +462,6 @@
     <string name="autocorrect_char_match_threshold_desc">How many characters must match (0.5–0.9)</string>
     <string name="autocorrect_min_word_frequency_title">Minimum Word Frequency</string>
     <string name="autocorrect_min_word_frequency_desc">Only correct to words with frequency &gt;= this</string>
-    <string name="autocorrect_beam_title">Beam Autocorrect</string>
-    <string name="autocorrect_beam_desc">Apply fuzzy corrections during beam search decoding</string>
     <string name="autocorrect_final_title">Final Autocorrect</string>
     <string name="autocorrect_final_desc">Apply dictionary-based corrections to final output</string>
     <string name="autocorrect_style_title">Correction Style</string>
@@ -487,7 +475,7 @@
     <string name="autocorrect_search_depth_title">Correction Search Depth</string>
     <string name="autocorrect_search_depth_desc">Number of beam candidates to consider (1–10)</string>
     <string name="autocorrect_source_balance_title">Prediction Source Balance</string>
-    <string name="autocorrect_source_balance_desc">Neural confidence vs dictionary frequency (0=dict, 100=neural)</string>
+    <string name="autocorrect_source_balance_desc">Swipe shape confidence vs dictionary frequency (0=dict, 100=shape)</string>
     <string name="autocorrect_common_boost_title">Common Words Boost</string>
     <string name="autocorrect_common_boost_desc">Bonus multiplier for common words (0.5–2.0)</string>
     <string name="autocorrect_frequent_boost_title">Frequent Words Boost</string>
@@ -559,8 +547,6 @@
     <string name="gesture_noise_filter_desc">Minimum movement to register (px). Higher filters jitter but may lose data.</string>
     <string name="gesture_high_velocity_title">High Velocity Threshold</string>
     <string name="gesture_high_velocity_desc">Velocity for fast swipe detection (px/sec). Higher allows faster swipes.</string>
-    <string name="gesture_finger_occlusion_title">Finger Occlusion Compensation</string>
-    <string name="gesture_finger_occlusion_desc" formatted="false">Y-offset as % of row height to compensate for finger obscuring keys. Higher shifts touch point down toward key centers.</string>
     <string name="gesture_speed_smoothing_title">Speed Smoothing</string>
     <string name="gesture_speed_smoothing_desc">Smoothing factor for slider movement. Higher is smoother but less responsive.</string>
     <string name="gesture_max_speed_multiplier_title">Maximum Speed Multiplier</string>
@@ -638,7 +624,7 @@
     <string name="multilang_enable_title">Enable Multi-Language</string>
     <string name="multilang_enable_desc">Support typing in multiple languages</string>
     <string name="multilang_primary_title">Primary Language</string>
-    <string name="multilang_primary_desc">Main language for predictions (NN works with any QWERTY language)</string>
+    <string name="multilang_primary_desc">Main language for predictions and swipe decoding</string>
     <string name="multilang_secondary_title">Secondary Language</string>
     <string name="multilang_secondary_weight_title">Secondary Language Weight</string>
     <string name="multilang_secondary_weight_desc">Prediction weight for secondary dictionary (0.5–1.5)</string>
@@ -646,24 +632,16 @@
     <string name="multilang_auto_detect_desc">Automatically detect and switch languages while typing</string>
     <string name="multilang_detection_sensitivity_title">Detection Sensitivity</string>
     <string name="multilang_detection_sensitivity_desc">How quickly to switch languages (0.4–0.9)</string>
-    <string name="multilang_boost_strength_title">Boost Strength</string>
-    <string name="multilang_boost_strength_desc">0 = disabled, 1 = normal, 2+ = aggressive</string>
-    <string name="multilang_max_boost_title">Max Boost</string>
-    <string name="multilang_max_boost_desc">Cap on boost values (higher = stronger correction)</string>
-    <string name="multilang_max_cumulative_boost_title">Max Cumulative Boost</string>
-    <string name="multilang_max_cumulative_boost_desc">Total boost cap across all chars. Lower = more conservative, prevents long words from dominating.</string>
-    <string name="multilang_strict_start_title">Strict Start Character</string>
-    <string name="multilang_strict_start_desc">Only keep predictions starting with detected first key. Helps short swipes.</string>
     <string name="multilang_alternate_primary_title">Alternate Primary</string>
     <string name="multilang_alternate_secondary_title">Alternate Secondary</string>
     <!-- %1$s = current language name, %2$s = alternate language name -->
     <string name="multilang_toggle_between">Toggle between %1$s ↔ %2$s</string>
 
-    <!-- NeuralPredictionSection -->
-    <string name="neural_enable_swipe_title">Enable Swipe Typing</string>
-    <string name="neural_enable_swipe_desc">Swipe across keys to type words using neural prediction.</string>
-    <string name="neural_swipe_password_title">Swipe on Password Fields</string>
-    <string name="neural_swipe_password_desc">Enable swipe typing even in password fields. Predictions will be shown but individual typed characters remain hidden.</string>
+    <!-- SwipeTypingSection -->
+    <string name="swipe_enable_title">Enable Swipe Typing</string>
+    <string name="swipe_enable_desc">Swipe across keys to type whole words.</string>
+    <string name="swipe_password_title">Swipe on Password Fields</string>
+    <string name="swipe_password_desc">Enable swipe typing even in password fields. Predictions will be shown but individual typed characters remain hidden.</string>
 
     <!-- PrivacySection -->
     <string name="privacy_on_device_learning_title">Learn From My Typing</string>

@@ -84,20 +84,8 @@ internal fun SettingsActivity.resetAllSettings() {
                     editor.putInt("short_gesture_min_distance", Defaults.SHORT_GESTURE_MIN_DISTANCE)
                     editor.putInt("short_gesture_max_distance", Defaults.SHORT_GESTURE_MAX_DISTANCE)
 
-                    // Neural prediction - BALANCED profile (using Defaults constants)
-                    editor.putInt("neural_beam_width", Defaults.NEURAL_BEAM_WIDTH)
-                    editor.putInt("neural_max_length", Defaults.NEURAL_MAX_LENGTH)
-                    editor.putFloat("neural_confidence_threshold", Defaults.NEURAL_CONFIDENCE_THRESHOLD)
-                    editor.putFloat("neural_beam_alpha", Defaults.NEURAL_BEAM_ALPHA)
-                    editor.putFloat("neural_beam_prune_confidence", Defaults.NEURAL_BEAM_PRUNE_CONFIDENCE)
-                    editor.putFloat("neural_beam_score_gap", Defaults.NEURAL_BEAM_SCORE_GAP)
-                    editor.putInt("neural_adaptive_width_step", Defaults.NEURAL_ADAPTIVE_WIDTH_STEP)
-                    editor.putInt("neural_score_gap_step", Defaults.NEURAL_SCORE_GAP_STEP)
-                    editor.putFloat("neural_temperature", Defaults.NEURAL_TEMPERATURE)
-                    editor.putFloat("neural_frequency_weight", Defaults.NEURAL_FREQUENCY_WEIGHT)
+                    // Swipe decoding
                     editor.putInt("swipe_smoothing_window", Defaults.SWIPE_SMOOTHING_WINDOW)
-                    editor.putBoolean("neural_batch_beams", Defaults.NEURAL_BATCH_BEAMS)
-                    editor.putBoolean("neural_greedy_search", Defaults.NEURAL_GREEDY_SEARCH)
                     editor.putInt("onnx_xnnpack_threads", Defaults.ONNX_XNNPACK_THREADS)
                     // CTC engine (G5). NOTE: swipe_engine_mode and geo_* are deliberately
                     // NOT reset here (pre-existing behavior — engine choice survives a
@@ -131,7 +119,6 @@ internal fun SettingsActivity.resetAllSettings() {
 
                     // Autocorrect
                     editor.putBoolean("autocorrect_enabled", Defaults.AUTOCORRECT_ENABLED)
-                    editor.putBoolean("swipe_beam_autocorrect_enabled", Defaults.SWIPE_BEAM_AUTOCORRECT_ENABLED)
                     editor.putBoolean("swipe_final_autocorrect_enabled", Defaults.SWIPE_FINAL_AUTOCORRECT_ENABLED)
                     editor.putString("swipe_fuzzy_match_mode", Defaults.SWIPE_FUZZY_MATCH_MODE)
 

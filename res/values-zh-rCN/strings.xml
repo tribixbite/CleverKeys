@@ -113,14 +113,8 @@
     <string name="settings_title">⚙️ CleverKeys 设置</string>
     <string name="settings_description">配置键盘设置以获得最佳输入体验。</string>
 
-    <!-- Neural Prediction Section -->
-    <string name="settings_section_neural">👆 滑动输入</string>
-    <string name="settings_neural_beam_width_title">束宽</string>
-    <string name="settings_neural_beam_width_desc">预测候选数量（1–20）。数值越大越准确。</string>
-    <string name="settings_neural_max_length_title">单词最大长度</string>
-    <string name="settings_neural_max_length_desc">预测单词的最大字符数（5–35）。</string>
-    <string name="settings_neural_confidence_title">置信度阈值</string>
-    <string name="settings_neural_confidence_desc">预测所需的最低置信度（0.0–0.4）。</string>
+    <!-- Swipe Typing Section -->
+    <string name="settings_section_swipe_typing">👆 滑动输入</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 外观</string>
@@ -318,10 +312,6 @@
     <string name="advanced_swipe_debug_log_desc">滑动手势的实时管道分析（需要 logcat）。</string>
     <string name="advanced_detailed_logging_title">详细日志</string>
     <string name="advanced_detailed_logging_desc">包含详细的追踪信息。</string>
-    <string name="advanced_show_raw_output_title">显示原始输出</string>
-    <string name="advanced_show_raw_output_desc">将神经网络原始输出记录到调试日志（不影响候选词）。</string>
-    <string name="advanced_show_beam_predictions_title">显示束搜索预测</string>
-    <string name="advanced_show_beam_predictions_desc">在候选栏添加 raw:word 条目以供调试。</string>
     <string name="advanced_open_debug_log">打开调试日志</string>
     <string name="appearance_height_portrait_title">键盘高度（竖屏）</string>
     <string name="appearance_height_portrait_desc">调整竖屏模式下的键盘高度。</string>
@@ -371,8 +361,6 @@
     <string name="autocorrect_char_match_threshold_desc">需要匹配的字符比例（0.5~0.9）。</string>
     <string name="autocorrect_min_word_frequency_title">最低单词频率</string>
     <string name="autocorrect_min_word_frequency_desc">仅纠正到频率不低于此值的单词。</string>
-    <string name="autocorrect_beam_title">束搜索纠错</string>
-    <string name="autocorrect_beam_desc">在束搜索解码期间应用模糊纠错。</string>
     <string name="autocorrect_final_title">最终纠错</string>
     <string name="autocorrect_final_desc">对最终输出应用基于词典的纠错。</string>
     <string name="autocorrect_style_title">纠错风格</string>
@@ -386,7 +374,7 @@
     <string name="autocorrect_search_depth_title">纠错搜索深度</string>
     <string name="autocorrect_search_depth_desc">考虑的束候选数量（1~10）。</string>
     <string name="autocorrect_source_balance_title">预测来源权重</string>
-    <string name="autocorrect_source_balance_desc">神经网络置信度与词典频率的权重（0=词典，100=神经网络）。</string>
+    <string name="autocorrect_source_balance_desc">滑动轨迹置信度与词典频率的权重（0=词典，100=轨迹）。</string>
     <string name="autocorrect_common_boost_title">常用词提升</string>
     <string name="autocorrect_common_boost_desc">常用词的奖励倍率（0.5~2.0）。</string>
     <string name="autocorrect_frequent_boost_title">高频词提升</string>
@@ -454,8 +442,6 @@
     <string name="gesture_noise_filter_desc">注册的最小移动量（像素）。值越高，过滤抖动越多，但可能丢失数据。</string>
     <string name="gesture_high_velocity_title">高速滑动阈值</string>
     <string name="gesture_high_velocity_desc">快速滑动检测的速度（像素/秒）。值越高，允许越快的滑动。</string>
-    <string name="gesture_finger_occlusion_title">手指遮挡补偿</string>
-    <string name="gesture_finger_occlusion_desc" formatted="false">补偿手指遮挡按键的 Y 轴偏移（行高的百分比）。值越高，触点越接近按键中心。</string>
     <string name="gesture_speed_smoothing_title">速度平滑</string>
     <string name="gesture_speed_smoothing_desc">滑块运动的平滑系数。值越高越平滑，但响应越慢。</string>
     <string name="gesture_max_speed_multiplier_title">最大速度倍率</string>
@@ -518,7 +504,7 @@
     <string name="multilang_enable_title">启用多语言</string>
     <string name="multilang_enable_desc">支持多语言输入。</string>
     <string name="multilang_primary_title">主要语言</string>
-    <string name="multilang_primary_desc">预测的主要语言（神经网络适用于所有 QWERTY 语言）。</string>
+    <string name="multilang_primary_desc">用于预测和滑动解码的主要语言</string>
     <string name="multilang_secondary_title">次要语言</string>
     <string name="multilang_secondary_weight_title">次要语言权重</string>
     <string name="multilang_secondary_weight_desc">次要词典的预测权重（0.5~1.5）。</string>
@@ -526,21 +512,13 @@
     <string name="multilang_auto_detect_desc">输入时自动检测并切换语言。</string>
     <string name="multilang_detection_sensitivity_title">检测灵敏度</string>
     <string name="multilang_detection_sensitivity_desc">切换语言的速度（0.4~0.9）。</string>
-    <string name="multilang_boost_strength_title">提升强度</string>
-    <string name="multilang_boost_strength_desc">0=禁用，1=正常，2+=激进。</string>
-    <string name="multilang_max_boost_title">最大提升</string>
-    <string name="multilang_max_boost_desc">提升值的上限（越高纠错越强）。</string>
-    <string name="multilang_max_cumulative_boost_title">最大累积提升</string>
-    <string name="multilang_max_cumulative_boost_desc">所有字符的总提升上限。值越低越保守，防止长词主导预测。</string>
-    <string name="multilang_strict_start_title">严格起始字符</string>
-    <string name="multilang_strict_start_desc">仅保留以检测到的第一个键开头的预测。有助于短滑动。</string>
     <string name="multilang_alternate_primary_title">备用主要语言</string>
     <string name="multilang_alternate_secondary_title">备用次要语言</string>
     <string name="multilang_toggle_between">在 %1$s ↔ %2$s 之间切换</string>
-    <string name="neural_enable_swipe_title">启用滑动输入</string>
-    <string name="neural_enable_swipe_desc">在键盘上滑动以通过神经预测输入单词。</string>
-    <string name="neural_swipe_password_title">密码框中的滑动</string>
-    <string name="neural_swipe_password_desc">在密码框中也启用滑动输入。预测将显示，但单个字符输入保持隐藏。</string>
+    <string name="swipe_enable_title">启用滑动输入</string>
+    <string name="swipe_enable_desc">在键盘上滑动以整词输入。</string>
+    <string name="swipe_password_title">密码框中的滑动</string>
+    <string name="swipe_password_desc">在密码框中也启用滑动输入。预测将显示，但单个字符输入保持隐藏。</string>
     <string name="privacy_swipe_pattern_title">滑动模式数据</string>
     <string name="privacy_swipe_pattern_desc">在本地存储滑动轨迹以供设备端学习。</string>
     <string name="privacy_performance_metrics_title">性能指标</string>

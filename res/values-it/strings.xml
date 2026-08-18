@@ -138,14 +138,8 @@
     <string name="settings_title">⚙️ Impostazioni CleverKeys</string>
     <string name="settings_description">Configura le impostazioni della tastiera per un\'esperienza di digitazione ottimale.</string>
 
-    <!-- Neural Prediction Section -->
-    <string name="settings_section_neural">👆 Digitazione a scorrimento</string>
-    <string name="settings_neural_beam_width_title">Larghezza del fascio</string>
-    <string name="settings_neural_beam_width_desc">Numero di candidati di previsione (1–20). Più alto = più preciso.</string>
-    <string name="settings_neural_max_length_title">Lunghezza massima parola</string>
-    <string name="settings_neural_max_length_desc">Numero massimo di caratteri nelle parole previste (5–35).</string>
-    <string name="settings_neural_confidence_title">Soglia di confidenza</string>
-    <string name="settings_neural_confidence_desc">Confidenza minima per le previsioni (0,0–0,4).</string>
+    <!-- Swipe Typing Section -->
+    <string name="settings_section_swipe_typing">👆 Digitazione a scorrimento</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 Aspetto</string>
@@ -358,10 +352,6 @@
     <string name="advanced_swipe_debug_log_desc">Analisi in tempo reale della pipeline per i gesti di scorrimento (richiede logcat)</string>
     <string name="advanced_detailed_logging_title">Registrazione dettagliata</string>
     <string name="advanced_detailed_logging_desc">Includi informazioni di traccia dettagliate</string>
-    <string name="advanced_show_raw_output_title">Mostra output grezzo</string>
-    <string name="advanced_show_raw_output_desc">Registra gli output neurali grezzi nel registro debug (non influisce sui suggerimenti)</string>
-    <string name="advanced_show_beam_predictions_title">Mostra previsioni beam</string>
-    <string name="advanced_show_beam_predictions_desc">Aggiunge voci raw:parola alla barra dei suggerimenti per il debug</string>
     <string name="advanced_open_debug_log">Apri registro debug</string>
     <string name="appearance_height_portrait_title">Altezza tastiera (verticale)</string>
     <string name="appearance_height_portrait_desc">Regola l\'altezza della tastiera in modalità verticale</string>
@@ -411,8 +401,6 @@
     <string name="autocorrect_char_match_threshold_desc">Quanti caratteri devono corrispondere (0,5–0,9)</string>
     <string name="autocorrect_min_word_frequency_title">Frequenza minima parola</string>
     <string name="autocorrect_min_word_frequency_desc">Correggi solo con parole aventi frequenza >= questo valore</string>
-    <string name="autocorrect_beam_title">Autocorrezione beam</string>
-    <string name="autocorrect_beam_desc">Applica correzioni fuzzy durante la decodifica beam search</string>
     <string name="autocorrect_final_title">Autocorrezione finale</string>
     <string name="autocorrect_final_desc">Applica correzioni basate sul dizionario all\'output finale</string>
     <string name="autocorrect_style_title">Stile di correzione</string>
@@ -426,7 +414,7 @@
     <string name="autocorrect_search_depth_title">Profondità ricerca correzione</string>
     <string name="autocorrect_search_depth_desc">Numero di candidati beam da considerare (1–10)</string>
     <string name="autocorrect_source_balance_title">Bilanciamento sorgenti predizione</string>
-    <string name="autocorrect_source_balance_desc">Confidenza neurale vs frequenza dizionario (0=dizionario, 100=neurale)</string>
+    <string name="autocorrect_source_balance_desc">Confidenza della forma del tratto vs frequenza dizionario (0=dizionario, 100=forma)</string>
     <string name="autocorrect_common_boost_title">Boost parole comuni</string>
     <string name="autocorrect_common_boost_desc">Moltiplicatore bonus per parole comuni (0,5–2,0)</string>
     <string name="autocorrect_frequent_boost_title">Boost parole frequenti</string>
@@ -494,8 +482,6 @@
     <string name="gesture_noise_filter_desc">Movimento minimo da registrare (px). Valori più alti filtrano il jitter ma possono perdere dati.</string>
     <string name="gesture_high_velocity_title">Soglia alta velocità</string>
     <string name="gesture_high_velocity_desc">Velocità per il rilevamento di scorrimento rapido (px/sec). Più alto consente scorrimenti più veloci.</string>
-    <string name="gesture_finger_occlusion_title">Compensazione occlusione dito</string>
-    <string name="gesture_finger_occlusion_desc" formatted="false">Offset Y in % dell\'altezza della riga per compensare il dito che oscura i tasti. Valori più alti spostano il punto di tocco verso il centro dei tasti.</string>
     <string name="gesture_speed_smoothing_title">Smussamento velocità</string>
     <string name="gesture_speed_smoothing_desc">Fattore di smussamento per il movimento del cursore. Più alto = più fluido ma meno reattivo.</string>
     <string name="gesture_max_speed_multiplier_title">Moltiplicatore velocità massima</string>
@@ -558,7 +544,7 @@
     <string name="multilang_enable_title">Abilita multilingua</string>
     <string name="multilang_enable_desc">Supporta la digitazione in più lingue</string>
     <string name="multilang_primary_title">Lingua principale</string>
-    <string name="multilang_primary_desc">Lingua principale per le previsioni (la NN funziona con qualsiasi lingua QWERTY)</string>
+    <string name="multilang_primary_desc">Lingua principale per previsioni e decodifica dello scorrimento</string>
     <string name="multilang_secondary_title">Lingua secondaria</string>
     <string name="multilang_secondary_weight_title">Peso lingua secondaria</string>
     <string name="multilang_secondary_weight_desc">Peso della previsione per il dizionario secondario (0,5–1,5)</string>
@@ -566,21 +552,13 @@
     <string name="multilang_auto_detect_desc">Rileva e cambia automaticamente lingua durante la digitazione</string>
     <string name="multilang_detection_sensitivity_title">Sensibilità rilevamento</string>
     <string name="multilang_detection_sensitivity_desc">Velocità di cambio lingua (0,4–0,9)</string>
-    <string name="multilang_boost_strength_title">Intensità boost</string>
-    <string name="multilang_boost_strength_desc">0 = disabilitato, 1 = normale, 2+ = aggressivo</string>
-    <string name="multilang_max_boost_title">Boost massimo</string>
-    <string name="multilang_max_boost_desc">Limite sui valori di boost (più alto = correzione più forte)</string>
-    <string name="multilang_max_cumulative_boost_title">Boost cumulativo massimo</string>
-    <string name="multilang_max_cumulative_boost_desc">Limite totale di boost su tutti i caratteri. Più basso = più conservativo, evita che le parole lunghe dominino.</string>
-    <string name="multilang_strict_start_title">Carattere iniziale rigoroso</string>
-    <string name="multilang_strict_start_desc">Mantieni solo le previsioni che iniziano con il primo tasto rilevato. Aiuta i gesti brevi.</string>
     <string name="multilang_alternate_primary_title">Principale alternativo</string>
     <string name="multilang_alternate_secondary_title">Secondario alternativo</string>
     <string name="multilang_toggle_between">Alterna tra %1$s ↔ %2$s</string>
-    <string name="neural_enable_swipe_title">Abilita digitazione a scorrimento</string>
-    <string name="neural_enable_swipe_desc">Scorri sui tasti per digitare parole con la previsione neurale.</string>
-    <string name="neural_swipe_password_title">Scorrimento nei campi password</string>
-    <string name="neural_swipe_password_desc">Abilita la digitazione a scorrimento anche nei campi password. Le previsioni vengono mostrate ma i singoli caratteri digitati rimangono nascosti.</string>
+    <string name="swipe_enable_title">Abilita digitazione a scorrimento</string>
+    <string name="swipe_enable_desc">Scorri sui tasti per digitare parole intere.</string>
+    <string name="swipe_password_title">Scorrimento nei campi password</string>
+    <string name="swipe_password_desc">Abilita la digitazione a scorrimento anche nei campi password. Le previsioni vengono mostrate ma i singoli caratteri digitati rimangono nascosti.</string>
     <string name="privacy_swipe_pattern_title">Dati pattern scorrimento</string>
     <string name="privacy_swipe_pattern_desc">Memorizza le traiettorie di scorrimento localmente per l\'apprendimento sul dispositivo</string>
     <string name="privacy_performance_metrics_title">Metriche di prestazione</string>

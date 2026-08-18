@@ -144,28 +144,6 @@ class ConfigIntegrationTest {
     // Neural prediction settings
     // =========================================================================
 
-    @Test
-    fun testNeuralBeamWidth() {
-        val cfg = config ?: return
-        val beamWidth = cfg.neural_beam_width
-        assertTrue("Beam width should be non-negative", beamWidth >= 0)
-    }
-
-    @Test
-    fun testNeuralMaxLength() {
-        val cfg = config ?: return
-        val maxLength = cfg.neural_max_length
-        assertTrue("Max length should be non-negative", maxLength >= 0)
-    }
-
-    @Test
-    fun testNeuralConfidenceThreshold() {
-        val cfg = config ?: return
-        val threshold = cfg.neural_confidence_threshold
-        assertTrue("Confidence threshold should be between 0 and 1",
-            threshold in 0f..1f)
-    }
-
     // =========================================================================
     // Tap settings
     // =========================================================================

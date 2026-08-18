@@ -39,7 +39,6 @@ class GesturePrefAccessDriftTest {
         "Config.kt",                  // the canonical typed surface
         "SettingsActivity.kt",        // display/persist layer (reads to populate sliders)
         "SettingsPersistence.kt",     // extracted display/persist layer (loadCurrentSettings)
-        "NeuralSettingsActivity.kt"   // same display/persist role for the neural panel
     )
 
     private val rawReadPattern = Regex(

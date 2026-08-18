@@ -246,9 +246,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     // Settings state for reactive UI
     internal var swipeEngineMode by mutableStateOf("neural")
-    internal var beamWidth by mutableIntStateOf(6)
-    internal var maxLength by mutableIntStateOf(20)
-    internal var confidenceThreshold by mutableFloatStateOf(0.01f)
     internal var keyboardHeight by mutableIntStateOf(28)
     internal var keyboardHeightLandscape by mutableIntStateOf(50)
     internal var vibrationEnabled by mutableStateOf(false)
@@ -370,7 +367,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var swipeMinDwellTime by mutableIntStateOf(10) // ms
     internal var swipeNoiseThreshold by mutableFloatStateOf(2.0f) // pixels
     internal var swipeHighVelocityThreshold by mutableFloatStateOf(1000f) // px/sec
-    internal var fingerOcclusionOffset by mutableFloatStateOf(12.5f) // % of row height
     internal var sliderSpeedSmoothing by mutableFloatStateOf(0.7f) // 0.0-1.0
     internal var sliderSpeedMax by mutableFloatStateOf(4.0f) // multiplier
 
@@ -381,7 +377,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var pinEntryEnabled by mutableStateOf(false)
 
     // Swipe Corrections settings (migrated from XML)
-    internal var swipeBeamAutocorrectEnabled by mutableStateOf(true)
     internal var swipeFinalAutocorrectEnabled by mutableStateOf(true)
     internal var swipeCorrectionPreset by mutableStateOf("balanced")
     internal var swipeFuzzyMatchMode by mutableStateOf("edit_distance")
@@ -423,10 +418,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var autoDetectLanguage by mutableStateOf(true)
     internal var languageDetectionSensitivity by mutableFloatStateOf(0.6f)
     internal var secondaryPredictionWeight by mutableFloatStateOf(0.9f) // v1.1.94: Secondary dictionary weight
-    internal var prefixBoostMultiplier by mutableFloatStateOf(Defaults.NEURAL_PREFIX_BOOST_MULTIPLIER)
-    internal var prefixBoostMax by mutableFloatStateOf(Defaults.NEURAL_PREFIX_BOOST_MAX)
-    internal var maxCumulativeBoost by mutableFloatStateOf(Defaults.NEURAL_MAX_CUMULATIVE_BOOST)
-    internal var strictStartChar by mutableStateOf(Defaults.NEURAL_STRICT_START_CHAR)
     internal var primaryLanguageAlt by mutableStateOf("es") // v1.2.0: Alternate primary for quick toggle
     internal var secondaryLanguageAlt by mutableStateOf("none") // v1.2.0: Alternate secondary for quick toggle
     internal var availableSecondaryLanguages by mutableStateOf(listOf<String>()) // V2 dictionaries
@@ -457,8 +448,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     // Swipe debug advanced settings
     internal var swipeDebugDetailedLogging by mutableStateOf(false)
-    internal var swipeDebugShowRawOutput by mutableStateOf(true)
-    internal var swipeShowRawBeamPredictions by mutableStateOf(false)
     // Task B Tier 2: opt-in per-suggestion origin markers (pipeline transparency)
     internal var suggestionProvenanceMarkers by mutableStateOf(false)
 
@@ -572,7 +561,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             SearchableSetting("Extra Keys", listOf("toolbar", "arrows", "numbers"), "Activities", ExtraKeysConfigActivity::class.java),
             SearchableSetting("Backup & Restore", listOf("backup", "export", "import", "restore", "zip", "preview", "deselect"), "Backup & Restore", expandSection = { backupRestoreSectionExpanded = true }, settingId = "backup_restore"),
             SearchableSetting("What's New", listOf("changelog", "release", "update", "features", "version"), "Activities", settingId = "whats_new"),
-            SearchableSetting("Neural Settings", listOf("neural", "ai", "prediction", "model", "onnx"), "Neural Prediction", NeuralSettingsActivity::class.java),
             SearchableSetting("Geometric Settings", listOf("geometric", "shape", "shark", "swipe engine", "tolerance"), "Neural Prediction", GeometricSettingsActivity::class.java),
             // L4: ungated, matching the "Geometric Settings" twin — a search-driven visit
             // to a tuning screen is harmless with swipe typing off, and the asymmetric

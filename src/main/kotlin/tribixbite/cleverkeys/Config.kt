@@ -110,7 +110,6 @@ object Defaults {
     const val SWIPE_MIN_DWELL_TIME = 7
     const val SWIPE_NOISE_THRESHOLD = 1.26f
     const val SWIPE_HIGH_VELOCITY_THRESHOLD = 1000f
-    const val FINGER_OCCLUSION_OFFSET = 12.5f // Touch Y-offset as % of row height (0-50%)
     const val SLIDER_SPEED_SMOOTHING = 0.6f  // Slightly more responsive smoothing
     const val SLIDER_SPEED_MAX = 6.0f  // Higher max for faster long-distance cursor movement
 
@@ -131,34 +130,16 @@ object Defaults {
     const val SWIPE_TRAIL_GLOW_RADIUS = 6.0f
 
     // Neural prediction - Core parameters
-    const val NEURAL_BEAM_WIDTH = 6
-    const val NEURAL_MAX_LENGTH = 20            // Match model's max_word_length
-    const val NEURAL_CONFIDENCE_THRESHOLD = 0.01f
-    const val NEURAL_BATCH_BEAMS = false
-    const val NEURAL_GREEDY_SEARCH = false
 
     // Neural prediction - Beam search tuning
     // NOTE: These MUST match the working defaults in BeamSearchEngine.kt
     // 2026-05-15: increased from 1.0 to 1.4 — favors longer candidate words
     // slightly. Empirically catches more complete swiped words than the
     // pure-linear normalization on average input.
-    const val NEURAL_BEAM_ALPHA = 1.4f
-    const val NEURAL_BEAM_PRUNE_CONFIDENCE = 0.8f  // Adaptive width pruning threshold
-    const val NEURAL_BEAM_SCORE_GAP = 80.0f     // Early stopping score gap (high = search longer for long words)
-    const val NEURAL_ADAPTIVE_WIDTH_STEP = 12   // Step when to start adaptive width pruning
-    const val NEURAL_SCORE_GAP_STEP = 12        // Step when to start score gap early stopping
-    const val NEURAL_TEMPERATURE = 1.0f         // Softmax temperature (lower = more confident)
-    const val NEURAL_FREQUENCY_WEIGHT = 0.57f   // Vocab frequency weight in scoring (0=NN only, 2=heavy freq)
     const val SWIPE_SMOOTHING_WINDOW = 3        // Points for moving average smoothing (1 = disabled, 3 = optimal)
 
     // Language-specific prefix boost (for non-English primary languages)
-    const val NEURAL_PREFIX_BOOST_MULTIPLIER = 1.0f  // Scaling factor for prefix boosts (0=disabled, 1=default)
-    const val NEURAL_PREFIX_BOOST_MAX = 5.0f         // Maximum boost value per character (clamping)
-    const val NEURAL_MAX_CUMULATIVE_BOOST = 15.0f    // Maximum total boost across all chars (prevents runaway)
-    const val NEURAL_STRICT_START_CHAR = false       // If true, only keep beams matching first detected key
 
-    const val NEURAL_RESAMPLING_MODE = "discard"
-    const val NEURAL_USER_MAX_SEQ_LENGTH = 0
 
     // Word prediction
     const val SWIPE_TYPING_ENABLED = true
@@ -192,7 +173,6 @@ object Defaults {
     // we no longer hard-require even the first character to match.
     const val AUTOCORRECT_PREFIX_LENGTH = 0
     const val AUTOCORRECT_MAX_BEAM_CANDIDATES = 3
-    const val SWIPE_BEAM_AUTOCORRECT_ENABLED = true
     const val SWIPE_FINAL_AUTOCORRECT_ENABLED = true
 
     // Issue #72: Auto-capitalize "I" and its contractions
@@ -308,8 +288,6 @@ object Defaults {
     // Opt-in per-suggestion origin markers (pipeline transparency, audit §2.3 Tier 2)
     const val SUGGESTION_PROVENANCE_MARKERS = false
     const val SWIPE_DEBUG_DETAILED_LOGGING = false
-    const val SWIPE_DEBUG_SHOW_RAW_OUTPUT = false  // Debug: show raw neural output in suggestions
-    const val SWIPE_SHOW_RAW_BEAM_PREDICTIONS = false  // Debug: show beam search predictions
     const val TERMUX_MODE_ENABLED = true
     // WP9 R-1 step 6: UNIFIED_SWIPE_PIPELINE (the step-4 QA escape hatch) was removed — the
     // SuggestionHandler pipeline is the only one; the pref key is in DEPRECATED_KEYS.
@@ -420,74 +398,6 @@ object HapticsMigration {
         alreadyMigrated: Boolean,
         paramsAtDefaults: Boolean
     ): Boolean = !alreadyMigrated && vibrateCustom && paramsAtDefaults
-}
-
-/**
- * Neural prediction presets for different use cases.
- *
- * These presets trade off between speed and accuracy:
- * - SPEED: Fast predictions, lower beam width, earlier stopping
- * - BALANCED: Default configuration, good for most users
- * - ACCURACY: Thorough search, higher beam width, better for long/rare words
- */
-enum class NeuralPreset(
-    val displayName: String,
-    val beamWidth: Int,
-    val maxLength: Int,
-    val confidenceThreshold: Float,
-    val beamAlpha: Float,
-    val beamPruneConfidence: Float,
-    val beamScoreGap: Float,
-    val adaptiveWidthStep: Int,
-    val scoreGapStep: Int,
-    val temperature: Float,
-    val frequencyWeight: Float
-) {
-    SPEED(
-        displayName = "Speed",
-        beamWidth = 4,
-        maxLength = 15,
-        confidenceThreshold = 0.02f,
-        beamAlpha = 0.8f,           // Slight length normalization
-        beamPruneConfidence = 0.7f, // Earlier pruning
-        beamScoreGap = 40.0f,       // Earlier stopping but still allows medium words
-        adaptiveWidthStep = 8,      // Start pruning early
-        scoreGapStep = 6,           // Start gap check early
-        temperature = 1.0f,
-        frequencyWeight = 1.2f      // Favor common words
-    ),
-    BALANCED(
-        displayName = "Balanced",
-        beamWidth = Defaults.NEURAL_BEAM_WIDTH,
-        maxLength = Defaults.NEURAL_MAX_LENGTH,
-        confidenceThreshold = Defaults.NEURAL_CONFIDENCE_THRESHOLD,
-        beamAlpha = Defaults.NEURAL_BEAM_ALPHA,
-        beamPruneConfidence = Defaults.NEURAL_BEAM_PRUNE_CONFIDENCE,
-        beamScoreGap = Defaults.NEURAL_BEAM_SCORE_GAP,
-        adaptiveWidthStep = Defaults.NEURAL_ADAPTIVE_WIDTH_STEP,
-        scoreGapStep = Defaults.NEURAL_SCORE_GAP_STEP,
-        temperature = Defaults.NEURAL_TEMPERATURE,
-        frequencyWeight = Defaults.NEURAL_FREQUENCY_WEIGHT
-    ),
-    ACCURACY(
-        displayName = "Accuracy",
-        beamWidth = 10,
-        maxLength = 20,
-        confidenceThreshold = 0.005f,  // Keep more candidates
-        beamAlpha = 1.2f,              // Favor longer words slightly
-        beamPruneConfidence = 0.9f,    // Later pruning
-        beamScoreGap = 100.0f,         // Search thoroughly for long words
-        adaptiveWidthStep = 15,        // Delay pruning
-        scoreGapStep = 14,             // Delay gap check
-        temperature = 0.9f,            // Slightly more confident
-        frequencyWeight = 0.8f         // Less frequency bias, trust NN more
-    );
-
-    companion object {
-        fun fromName(name: String): NeuralPreset? {
-            return values().find { it.name.equals(name, ignoreCase = true) }
-        }
-    }
 }
 
 class Config private constructor(
@@ -631,7 +541,6 @@ class Config private constructor(
     @JvmField var swipe_rare_words_penalty = 0f
 
     // Swipe autocorrect configuration
-    @JvmField var swipe_beam_autocorrect_enabled = false
     @JvmField var swipe_final_autocorrect_enabled = false
     @JvmField var swipe_fuzzy_match_mode: String? = null
 
@@ -657,7 +566,6 @@ class Config private constructor(
     @JvmField var swipe_high_velocity_threshold = 1000.0f // Velocity threshold for fast swipes (px/sec)
     @JvmField var swipe_min_distance = 50.0f // Minimum total distance to recognize a swipe (pixels)
     @JvmField var swipe_min_key_distance = 40.0f // Minimum distance between keys during swipe (pixels)
-    @JvmField var finger_occlusion_offset = 12.5f // Touch Y-offset as % of row height (0-50%, default 12.5%)
 
     // Slider speed configuration
     @JvmField var slider_speed_smoothing = 0.7f // Smoothing factor for slider speed (0.0-1.0)
@@ -671,11 +579,6 @@ class Config private constructor(
     @JvmField var swipe_trail_glow_radius = 6.0f // Glow effect radius in dp (smaller = crisper)
 
     // Neural swipe prediction configuration
-    @JvmField var neural_beam_width = 0
-    @JvmField var neural_max_length = 0
-    @JvmField var neural_confidence_threshold = 0f
-    @JvmField var neural_batch_beams = false
-    @JvmField var neural_greedy_search = false
     @JvmField var swipe_debug_detailed_logging = false
     // WP9 R-1 step 7 (v1.1): swipe engine mode — "neural" | "hybrid" | "geometric".
     // G5 adds "ctc".
@@ -686,8 +589,6 @@ class Config private constructor(
     @JvmField var geo_endpoint_inset_kw = Defaults.GEO_ENDPOINT_INSET_KW
     // CTC engine knob (read by CtcEngineAdapter per decode).
     @JvmField var ctc_beam_width = Defaults.CTC_BEAM_WIDTH
-    @JvmField var swipe_debug_show_raw_output = false
-    @JvmField var swipe_show_raw_beam_predictions = false
     @JvmField var termux_mode_enabled = false
     @JvmField var auto_space_after_suggestion = true  // Add trailing space after selecting suggestion
     @JvmField var auto_space_before_suggestion = true  // Add leading space before tapped suggestion
@@ -695,25 +596,12 @@ class Config private constructor(
     @JvmField var backspace_undo_autocorrect = true  // #110: Backspace after autocorrect reverts to original word
 
     // Beam search tuning
-    @JvmField var neural_beam_alpha = 0f
-    @JvmField var neural_beam_prune_confidence = 0f
-    @JvmField var neural_beam_score_gap = 0f
-    @JvmField var neural_adaptive_width_step = 0
-    @JvmField var neural_score_gap_step = 0
-    @JvmField var neural_temperature = 0f
-    @JvmField var neural_frequency_weight = 0f
     @JvmField var swipe_smoothing_window = 0
 
     // Neural model resampling
-    @JvmField var neural_user_max_seq_length = 0
-    @JvmField var neural_resampling_mode: String? = null
     // NOTE: Custom encoder/decoder paths removed - feature not implemented
 
     // Language-specific prefix boost (for non-English primary languages)
-    @JvmField var neural_prefix_boost_multiplier = Defaults.NEURAL_PREFIX_BOOST_MULTIPLIER
-    @JvmField var neural_prefix_boost_max = Defaults.NEURAL_PREFIX_BOOST_MAX
-    @JvmField var neural_max_cumulative_boost = Defaults.NEURAL_MAX_CUMULATIVE_BOOST
-    @JvmField var neural_strict_start_char = Defaults.NEURAL_STRICT_START_CHAR
 
     // ONNX Runtime settings (requires app restart to take effect)
     @JvmField var onnx_xnnpack_threads = Defaults.ONNX_XNNPACK_THREADS
@@ -921,10 +809,18 @@ class Config private constructor(
         autocorrect_prefix_length = safeGetInt(_prefs, "autocorrect_prefix_length", Defaults.AUTOCORRECT_PREFIX_LENGTH)
         autocorrect_max_beam_candidates = safeGetInt(_prefs, "autocorrect_max_beam_candidates", Defaults.AUTOCORRECT_MAX_BEAM_CANDIDATES)
 
-        swipe_beam_autocorrect_enabled = _prefs.getBoolean("swipe_beam_autocorrect_enabled", Defaults.SWIPE_BEAM_AUTOCORRECT_ENABLED)
         swipe_final_autocorrect_enabled = _prefs.getBoolean("swipe_final_autocorrect_enabled", Defaults.SWIPE_FINAL_AUTOCORRECT_ENABLED)
         swipe_fuzzy_match_mode = safeGetString(_prefs, "swipe_fuzzy_match_mode", Defaults.SWIPE_FUZZY_MATCH_MODE)
 
+        // TODO(neural-removal follow-up): swipe_prediction_source, swipe_common_words_boost,
+        // swipe_top5000_boost, swipe_rare_words_penalty, swipe_fuzzy_match_mode and
+        // autocorrect_max_beam_candidates lost their ONLY consumer when OptimizedVocabulary
+        // and the beam search were deleted (2026-08-18) — verified by grep: nothing outside
+        // Config/settings-plumbing reads the derived fields any more. They are still read,
+        // still exported and still surfaced as sliders in the Auto-Correction section, where
+        // they now do nothing. The 2026-08-18 removal plan's pref inventory did not list
+        // them, so deprecating them (and removing their controls) is left as an explicit
+        // maintainer decision rather than folded into that plan silently.
         val predictionSource = safeGetInt(_prefs, "swipe_prediction_source", Defaults.SWIPE_PREDICTION_SOURCE)
         swipe_confidence_weight = predictionSource / 100.0f
         swipe_frequency_weight = 1.0f - swipe_confidence_weight
@@ -951,7 +847,6 @@ class Config private constructor(
         swipe_high_velocity_threshold = safeGetFloat(_prefs, "swipe_high_velocity_threshold", Defaults.SWIPE_HIGH_VELOCITY_THRESHOLD)
         swipe_min_distance = safeGetFloat(_prefs, "swipe_min_distance", Defaults.SWIPE_MIN_DISTANCE)
         swipe_min_key_distance = safeGetFloat(_prefs, "swipe_min_key_distance", Defaults.SWIPE_MIN_KEY_DISTANCE)
-        finger_occlusion_offset = safeGetFloat(_prefs, "finger_occlusion_offset", Defaults.FINGER_OCCLUSION_OFFSET)
 
         // Slider speed configuration
         slider_speed_smoothing = safeGetFloat(_prefs, "slider_speed_smoothing", Defaults.SLIDER_SPEED_SMOOTHING)
@@ -964,11 +859,6 @@ class Config private constructor(
         swipe_trail_width = safeGetFloat(_prefs, "swipe_trail_width", Defaults.SWIPE_TRAIL_WIDTH)
         swipe_trail_glow_radius = safeGetFloat(_prefs, "swipe_trail_glow_radius", Defaults.SWIPE_TRAIL_GLOW_RADIUS)
 
-        neural_beam_width = safeGetInt(_prefs, "neural_beam_width", Defaults.NEURAL_BEAM_WIDTH)
-        neural_max_length = safeGetInt(_prefs, "neural_max_length", Defaults.NEURAL_MAX_LENGTH)
-        neural_confidence_threshold = safeGetFloat(_prefs, "neural_confidence_threshold", Defaults.NEURAL_CONFIDENCE_THRESHOLD)
-        neural_batch_beams = _prefs.getBoolean("neural_batch_beams", Defaults.NEURAL_BATCH_BEAMS)
-        neural_greedy_search = _prefs.getBoolean("neural_greedy_search", Defaults.NEURAL_GREEDY_SEARCH)
         termux_mode_enabled = _prefs.getBoolean("termux_mode_enabled", Defaults.TERMUX_MODE_ENABLED)
         auto_space_after_suggestion = _prefs.getBoolean("auto_space_after_suggestion", Defaults.AUTO_SPACE_AFTER_SUGGESTION)
         auto_space_before_suggestion = _prefs.getBoolean("auto_space_before_suggestion", Defaults.AUTO_SPACE_BEFORE_SUGGESTION)
@@ -984,31 +874,12 @@ class Config private constructor(
         geo_endpoint_inset_kw = safeGetFloat(_prefs, "geo_endpoint_inset_kw", Defaults.GEO_ENDPOINT_INSET_KW)
         ctc_beam_width = safeGetInt(_prefs, "ctc_beam_width", Defaults.CTC_BEAM_WIDTH)
             .coerceIn(10, 300)  // clamp mirrors onnx_xnnpack_threads' defensive pattern
-        swipe_debug_show_raw_output = _prefs.getBoolean("swipe_debug_show_raw_output", Defaults.SWIPE_DEBUG_SHOW_RAW_OUTPUT)
-        swipe_show_raw_beam_predictions = _prefs.getBoolean("swipe_show_raw_beam_predictions", Defaults.SWIPE_SHOW_RAW_BEAM_PREDICTIONS)
 
-        neural_beam_alpha = safeGetFloat(_prefs, "neural_beam_alpha", Defaults.NEURAL_BEAM_ALPHA)
-        neural_beam_prune_confidence = safeGetFloat(_prefs, "neural_beam_prune_confidence", Defaults.NEURAL_BEAM_PRUNE_CONFIDENCE)
-        neural_beam_score_gap = safeGetFloat(_prefs, "neural_beam_score_gap", Defaults.NEURAL_BEAM_SCORE_GAP)
-        neural_adaptive_width_step = safeGetInt(_prefs, "neural_adaptive_width_step", Defaults.NEURAL_ADAPTIVE_WIDTH_STEP)
-        neural_score_gap_step = safeGetInt(_prefs, "neural_score_gap_step", Defaults.NEURAL_SCORE_GAP_STEP)
-        neural_temperature = safeGetFloat(_prefs, "neural_temperature", Defaults.NEURAL_TEMPERATURE)
-        neural_frequency_weight = safeGetFloat(_prefs, "neural_frequency_weight", Defaults.NEURAL_FREQUENCY_WEIGHT)
         swipe_smoothing_window = safeGetInt(_prefs, "swipe_smoothing_window", Defaults.SWIPE_SMOOTHING_WINDOW)
 
-        neural_user_max_seq_length = safeGetInt(_prefs, "neural_user_max_seq_length", Defaults.NEURAL_USER_MAX_SEQ_LENGTH)
-        neural_resampling_mode = safeGetString(_prefs, "neural_resampling_mode", Defaults.NEURAL_RESAMPLING_MODE)
 
         // Language-specific prefix boost settings (per-language keys)
         // Try per-language key first, fall back to global default
-        neural_prefix_boost_multiplier = safeGetFloat(_prefs, "neural_prefix_boost_multiplier_$primary_language",
-            safeGetFloat(_prefs, "neural_prefix_boost_multiplier", Defaults.NEURAL_PREFIX_BOOST_MULTIPLIER))
-        neural_prefix_boost_max = safeGetFloat(_prefs, "neural_prefix_boost_max_$primary_language",
-            safeGetFloat(_prefs, "neural_prefix_boost_max", Defaults.NEURAL_PREFIX_BOOST_MAX))
-        neural_max_cumulative_boost = safeGetFloat(_prefs, "neural_max_cumulative_boost",
-            Defaults.NEURAL_MAX_CUMULATIVE_BOOST)
-        neural_strict_start_char = _prefs.getBoolean("neural_strict_start_char",
-            Defaults.NEURAL_STRICT_START_CHAR)
 
         // ONNX Runtime settings (requires app restart to take effect)
         onnx_xnnpack_threads = safeGetInt(_prefs, "onnx_xnnpack_threads", Defaults.ONNX_XNNPACK_THREADS)
@@ -1310,12 +1181,6 @@ class Config private constructor(
                 arrayOf("prediction_frequency_scale", "${Defaults.PREDICTION_FREQUENCY_SCALE}"),
                 arrayOf("personalization_weight", "${Defaults.PERSONALIZATION_WEIGHT}"),
                 arrayOf("autocorrect_char_match_threshold", "${Defaults.AUTOCORRECT_CHAR_MATCH_THRESHOLD}"),
-                arrayOf("neural_confidence_threshold", "${Defaults.NEURAL_CONFIDENCE_THRESHOLD}"),
-                arrayOf("neural_beam_alpha", "${Defaults.NEURAL_BEAM_ALPHA}"),
-                arrayOf("neural_beam_prune_confidence", "${Defaults.NEURAL_BEAM_PRUNE_CONFIDENCE}"),
-                arrayOf("neural_beam_score_gap", "${Defaults.NEURAL_BEAM_SCORE_GAP}"),
-                arrayOf("neural_temperature", "${Defaults.NEURAL_TEMPERATURE}"),
-                arrayOf("neural_frequency_weight", "${Defaults.NEURAL_FREQUENCY_WEIGHT}"),
                 arrayOf("swipe_rare_words_penalty", "${Defaults.SWIPE_RARE_WORDS_PENALTY}"),
                 arrayOf("swipe_common_words_boost", "${Defaults.SWIPE_COMMON_WORDS_BOOST}"),
                 arrayOf("swipe_top5000_boost", "${Defaults.SWIPE_TOP5000_BOOST}")

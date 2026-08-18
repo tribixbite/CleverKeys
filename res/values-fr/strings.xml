@@ -106,14 +106,8 @@
     <string name="settings_title">⚙️ Paramètres CleverKeys</string>
     <string name="settings_description">Configurez les paramètres de votre clavier pour une expérience de saisie optimale.</string>
 
-    <!-- Neural Prediction Section -->
-    <string name="settings_section_neural">👆 Saisie par glissement</string>
-    <string name="settings_neural_beam_width_title">Largeur de faisceau</string>
-    <string name="settings_neural_beam_width_desc">Nombre de candidats de prédiction (1–20). Plus élevé = plus précis.</string>
-    <string name="settings_neural_max_length_title">Longueur maximale des mots</string>
-    <string name="settings_neural_max_length_desc">Nombre maximal de caractères dans les mots prédits (5–35).</string>
-    <string name="settings_neural_confidence_title">Seuil de confiance</string>
-    <string name="settings_neural_confidence_desc">Confiance minimale pour les prédictions (0,0–0,4).</string>
+    <!-- Swipe Typing Section -->
+    <string name="settings_section_swipe_typing">👆 Saisie par glissement</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 Apparence</string>
@@ -325,10 +319,6 @@
     <string name="advanced_swipe_debug_log_desc">Analyse de pipeline en temps réel pour les gestes de glissé (nécessite logcat)</string>
     <string name="advanced_detailed_logging_title">Journalisation détaillée</string>
     <string name="advanced_detailed_logging_desc">Inclure des informations de trace détaillées</string>
-    <string name="advanced_show_raw_output_title">Afficher la sortie brute</string>
-    <string name="advanced_show_raw_output_desc">Consigner les sorties neuronales brutes dans le journal de débogage (n\'affecte pas les suggestions)</string>
-    <string name="advanced_show_beam_predictions_title">Afficher les prédictions Beam</string>
-    <string name="advanced_show_beam_predictions_desc">Ajouter des éléments raw:mot à la barre de suggestions pour le débogage</string>
     <string name="advanced_open_debug_log">Ouvrir le journal de débogage</string>
     <string name="appearance_height_portrait_title">Hauteur du clavier (portrait)</string>
     <string name="appearance_height_portrait_desc">Ajuster la hauteur du clavier en mode portrait</string>
@@ -378,8 +368,6 @@
     <string name="autocorrect_char_match_threshold_desc">Nombre de caractères devant correspondre (0,5–0,9)</string>
     <string name="autocorrect_min_word_frequency_title">Fréquence minimale du mot</string>
     <string name="autocorrect_min_word_frequency_desc">Ne corriger qu\'avec des mots ayant une fréquence ≥ à cette valeur</string>
-    <string name="autocorrect_beam_title">Correction automatique Beam</string>
-    <string name="autocorrect_beam_desc">Appliquer des corrections approximatives lors du décodage par recherche en faisceau</string>
     <string name="autocorrect_final_title">Correction automatique finale</string>
     <string name="autocorrect_final_desc">Appliquer des corrections basées sur le dictionnaire à la sortie finale</string>
     <string name="autocorrect_style_title">Style de correction</string>
@@ -393,7 +381,7 @@
     <string name="autocorrect_search_depth_title">Profondeur de recherche de correction</string>
     <string name="autocorrect_search_depth_desc">Nombre de candidats Beam à considérer (1–10)</string>
     <string name="autocorrect_source_balance_title">Équilibre des sources de prédiction</string>
-    <string name="autocorrect_source_balance_desc">Confiance neuronale vs fréquence du dictionnaire (0 = dictionnaire, 100 = neuronal)</string>
+    <string name="autocorrect_source_balance_desc">Confiance dans le tracé vs fréquence du dictionnaire (0 = dictionnaire, 100 = tracé)</string>
     <string name="autocorrect_common_boost_title">Bonus mots courants</string>
     <string name="autocorrect_common_boost_desc">Multiplicateur de bonus pour les mots courants (0,5–2,0)</string>
     <string name="autocorrect_frequent_boost_title">Bonus mots fréquents</string>
@@ -461,8 +449,6 @@
     <string name="gesture_noise_filter_desc">Mouvement minimal pour enregistrer (px). Plus élevé filtre les tremblements mais peut perdre des données.</string>
     <string name="gesture_high_velocity_title">Seuil de haute vitesse</string>
     <string name="gesture_high_velocity_desc">Vitesse pour la détection de glissé rapide (px/s). Plus élevé permet des glissés plus rapides.</string>
-    <string name="gesture_finger_occlusion_title">Compensation d\'occultation du doigt</string>
-    <string name="gesture_finger_occlusion_desc" formatted="false">Décalage Y en % de la hauteur de ligne pour compenser l\'occultation des touches par le doigt. Plus élevé déplace le point de touche vers les centres des touches.</string>
     <string name="gesture_speed_smoothing_title">Lissage de vitesse</string>
     <string name="gesture_speed_smoothing_desc">Facteur de lissage pour le mouvement du curseur. Plus élevé est plus fluide mais moins réactif.</string>
     <string name="gesture_max_speed_multiplier_title">Multiplicateur de vitesse maximale</string>
@@ -525,7 +511,7 @@
     <string name="multilang_enable_title">Activer le multilangue</string>
     <string name="multilang_enable_desc">Prendre en charge la saisie en plusieurs langues</string>
     <string name="multilang_primary_title">Langue principale</string>
-    <string name="multilang_primary_desc">Langue principale pour les prédictions (le NN fonctionne avec toute langue QWERTY)</string>
+    <string name="multilang_primary_desc">Langue principale pour les prédictions et le décodage des glissements</string>
     <string name="multilang_secondary_title">Langue secondaire</string>
     <string name="multilang_secondary_weight_title">Poids de la langue secondaire</string>
     <string name="multilang_secondary_weight_desc">Poids de prédiction pour le dictionnaire secondaire (0,5–1,5)</string>
@@ -533,21 +519,13 @@
     <string name="multilang_auto_detect_desc">Détecter et changer automatiquement de langue lors de la saisie</string>
     <string name="multilang_detection_sensitivity_title">Sensibilité de détection</string>
     <string name="multilang_detection_sensitivity_desc">À quelle vitesse changer de langue (0,4–0,9)</string>
-    <string name="multilang_boost_strength_title">Force de boost</string>
-    <string name="multilang_boost_strength_desc">0 = désactivé, 1 = normal, 2+ = agressif</string>
-    <string name="multilang_max_boost_title">Boost maximal</string>
-    <string name="multilang_max_boost_desc">Plafond des valeurs de boost (plus élevé = correction plus forte)</string>
-    <string name="multilang_max_cumulative_boost_title">Boost cumulatif maximal</string>
-    <string name="multilang_max_cumulative_boost_desc">Plafond total du boost sur tous les caractères. Valeur plus basse = plus conservateur, évite que les mots longs dominent.</string>
-    <string name="multilang_strict_start_title">Caractère de départ strict</string>
-    <string name="multilang_strict_start_desc">Ne conserver que les prédictions commençant par la première touche détectée. Aide pour les glissés courts.</string>
     <string name="multilang_alternate_primary_title">Langue principale alternative</string>
     <string name="multilang_alternate_secondary_title">Langue secondaire alternative</string>
     <string name="multilang_toggle_between">Basculer entre %1$s ↔ %2$s</string>
-    <string name="neural_enable_swipe_title">Activer la saisie par glissé</string>
-    <string name="neural_enable_swipe_desc">Glissez sur les touches pour saisir des mots avec la prédiction neuronale.</string>
-    <string name="neural_swipe_password_title">Glissé dans les champs de mot de passe</string>
-    <string name="neural_swipe_password_desc">Activer la saisie par glissé même dans les champs de mot de passe. Les suggestions seront affichées mais les caractères individuels saisis resteront masqués.</string>
+    <string name="swipe_enable_title">Activer la saisie par glissé</string>
+    <string name="swipe_enable_desc">Glissez sur les touches pour saisir des mots entiers.</string>
+    <string name="swipe_password_title">Glissé dans les champs de mot de passe</string>
+    <string name="swipe_password_desc">Activer la saisie par glissé même dans les champs de mot de passe. Les suggestions seront affichées mais les caractères individuels saisis resteront masqués.</string>
     <string name="privacy_swipe_pattern_title">Données de schéma de glissé</string>
     <string name="privacy_swipe_pattern_desc">Stocker les trajectoires de glissé localement pour l\'apprentissage sur l\'appareil</string>
     <string name="privacy_performance_metrics_title">Métriques de performance</string>

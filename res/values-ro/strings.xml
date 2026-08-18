@@ -139,14 +139,8 @@
     <string name="settings_title">⚙️ Setări CleverKeys</string>
     <string name="settings_description">Configurează setările tastaturii pentru o experiență de scriere optimă.</string>
 
-    <!-- Neural Prediction Section -->
-    <string name="settings_section_neural">👆 Tastare prin glisare</string>
-    <string name="settings_neural_beam_width_title">Lățimea fasciculului</string>
-    <string name="settings_neural_beam_width_desc">Numărul de candidați pentru predicție (1–20). Mai mare = mai precis.</string>
-    <string name="settings_neural_max_length_title">Lungimea maximă a cuvântului</string>
-    <string name="settings_neural_max_length_desc">Numărul maxim de caractere din cuvintele prezise (5–35).</string>
-    <string name="settings_neural_confidence_title">Prag de încredere</string>
-    <string name="settings_neural_confidence_desc">Încrederea minimă pentru predicții (0,0–0,4).</string>
+    <!-- Swipe Typing Section -->
+    <string name="settings_section_swipe_typing">👆 Tastare prin glisare</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 Aspect</string>
@@ -342,10 +336,6 @@
     <string name="advanced_swipe_debug_log_desc">Analiză în timp real a pipeline-ului pentru gesturile de glisare (necesită logcat)</string>
     <string name="advanced_detailed_logging_title">Jurnalizare detaliată</string>
     <string name="advanced_detailed_logging_desc">Include informații de urmărire detaliate</string>
-    <string name="advanced_show_raw_output_title">Afișează ieșire brută</string>
-    <string name="advanced_show_raw_output_desc">Înregistrează ieșirile neuronale brute în jurnalul de depanare (nu afectează sugestiile)</string>
-    <string name="advanced_show_beam_predictions_title">Afișează predicțiile fasciculului</string>
-    <string name="advanced_show_beam_predictions_desc">Adaugă elemente raw:cuvânt în bara de sugestii pentru depanare</string>
     <string name="advanced_open_debug_log">Deschide jurnalul de depanare</string>
     <string name="appearance_height_portrait_title">Înălțimea tastaturii (portret)</string>
     <string name="appearance_height_portrait_desc">Reglează înălțimea tastaturii în modul portret</string>
@@ -395,8 +385,6 @@
     <string name="autocorrect_char_match_threshold_desc">Câte caractere trebuie să corespundă (0,5–0,9)</string>
     <string name="autocorrect_min_word_frequency_title">Frecvență minimă cuvânt</string>
     <string name="autocorrect_min_word_frequency_desc">Corectează doar cu cuvinte cu frecvență >= această valoare</string>
-    <string name="autocorrect_beam_title">Autocorectare fascicul</string>
-    <string name="autocorrect_beam_desc">Aplică corecții fuzzy în timpul decodificării beam search</string>
     <string name="autocorrect_final_title">Autocorectare finală</string>
     <string name="autocorrect_final_desc">Aplică corecții bazate pe dicționar la rezultatul final</string>
     <string name="autocorrect_style_title">Stil de corectare</string>
@@ -410,7 +398,7 @@
     <string name="autocorrect_search_depth_title">Adâncime căutare corectare</string>
     <string name="autocorrect_search_depth_desc">Numărul de candidați ai fasciculului de luat în considerare (1–10)</string>
     <string name="autocorrect_source_balance_title">Echilibru surse predicție</string>
-    <string name="autocorrect_source_balance_desc">Încredere neurală vs frecvență dicționar (0=dicționar, 100=neural)</string>
+    <string name="autocorrect_source_balance_desc">Încredere în traseu vs frecvență dicționar (0=dicționar, 100=traseu)</string>
     <string name="autocorrect_common_boost_title">Amplificare cuvinte comune</string>
     <string name="autocorrect_common_boost_desc">Multiplicator bonus pentru cuvinte comune (0,5–2,0)</string>
     <string name="autocorrect_frequent_boost_title">Amplificare cuvinte frecvente</string>
@@ -478,8 +466,6 @@
     <string name="gesture_noise_filter_desc">Mișcarea minimă de înregistrat (px). Mai mare filtrează tremuratul, dar poate pierde date.</string>
     <string name="gesture_high_velocity_title">Prag viteză mare</string>
     <string name="gesture_high_velocity_desc">Viteza pentru detectarea glisării rapide (px/s). Mai mare permite glisări mai rapide.</string>
-    <string name="gesture_finger_occlusion_title">Compensare ocluzie deget</string>
-    <string name="gesture_finger_occlusion_desc" formatted="false">Offset Y ca % din înălțimea rândului pentru a compensa degetul care acoperă tastele. Mai mare mută punctul de atingere spre centrul tastelor.</string>
     <string name="gesture_speed_smoothing_title">Netezire viteză</string>
     <string name="gesture_speed_smoothing_desc">Factor de netezire pentru mișcarea cursorului. Mai mare = mai fluid, dar mai puțin responsiv.</string>
     <string name="gesture_max_speed_multiplier_title">Multiplicator viteză maximă</string>
@@ -542,7 +528,7 @@
     <string name="multilang_enable_title">Activează multilingv</string>
     <string name="multilang_enable_desc">Suportă scrierea în mai multe limbi</string>
     <string name="multilang_primary_title">Limbă principală</string>
-    <string name="multilang_primary_desc">Limba principală pentru predicții (rețeaua neuronală funcționează cu orice limbă QWERTY)</string>
+    <string name="multilang_primary_desc">Limba principală pentru predicții și decodarea glisărilor</string>
     <string name="multilang_secondary_title">Limbă secundară</string>
     <string name="multilang_secondary_weight_title">Pondere limbă secundară</string>
     <string name="multilang_secondary_weight_desc">Ponderea predicției pentru dicționarul secundar (0,5–1,5)</string>
@@ -550,21 +536,13 @@
     <string name="multilang_auto_detect_desc">Detectează și comută automat limbile în timp ce scrieți</string>
     <string name="multilang_detection_sensitivity_title">Sensibilitate detectare</string>
     <string name="multilang_detection_sensitivity_desc">Viteza de comutare a limbii (0,4–0,9)</string>
-    <string name="multilang_boost_strength_title">Intensitate amplificare</string>
-    <string name="multilang_boost_strength_desc">0 = dezactivat, 1 = normal, 2+ = agresiv</string>
-    <string name="multilang_max_boost_title">Amplificare maximă</string>
-    <string name="multilang_max_boost_desc">Limita valorile de amplificare (mai mare = corecție mai puternică)</string>
-    <string name="multilang_max_cumulative_boost_title">Amplificare cumulată maximă</string>
-    <string name="multilang_max_cumulative_boost_desc">Limita totală de amplificare pe toate caracterele. Mai mică = mai conservatoare, împiedică dominarea cuvintelor lungi.</string>
-    <string name="multilang_strict_start_title">Caracter de start strict</string>
-    <string name="multilang_strict_start_desc">Păstrează doar predicțiile care încep cu prima tastă detectată. Ajută glisările scurte.</string>
     <string name="multilang_alternate_primary_title">Principal alternativ</string>
     <string name="multilang_alternate_secondary_title">Secundar alternativ</string>
     <string name="multilang_toggle_between">Comutați între %1$s ↔ %2$s</string>
-    <string name="neural_enable_swipe_title">Activează scrierea prin glisare</string>
-    <string name="neural_enable_swipe_desc">Glisați peste taste pentru a scrie cuvinte folosind predicția neurală.</string>
-    <string name="neural_swipe_password_title">Glisare în câmpuri de parolă</string>
-    <string name="neural_swipe_password_desc">Activează scrierea prin glisare chiar și în câmpurile de parolă. Predicțiile vor fi afișate, dar caracterele individuale tastate rămân ascunse.</string>
+    <string name="swipe_enable_title">Activează scrierea prin glisare</string>
+    <string name="swipe_enable_desc">Glisați peste taste pentru a scrie cuvinte întregi.</string>
+    <string name="swipe_password_title">Glisare în câmpuri de parolă</string>
+    <string name="swipe_password_desc">Activează scrierea prin glisare chiar și în câmpurile de parolă. Predicțiile vor fi afișate, dar caracterele individuale tastate rămân ascunse.</string>
     <string name="privacy_swipe_pattern_title">Date tipar glisare</string>
     <string name="privacy_swipe_pattern_desc">Stochează traiectoriile de glisare local pentru învățare pe dispozitiv</string>
     <string name="privacy_performance_metrics_title">Indicatori de performanță</string>

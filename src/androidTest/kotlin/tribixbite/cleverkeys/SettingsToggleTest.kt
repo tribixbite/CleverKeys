@@ -185,66 +185,6 @@ class SettingsToggleTest {
     // Debug Settings Defaults (should be OFF by default)
     // =========================================================================
 
-    @Test
-    fun testSwipeDebugShowRawOutput_DefaultIsFalse() {
-        // Debug setting should be OFF by default
-        assertFalse("Default SWIPE_DEBUG_SHOW_RAW_OUTPUT should be false",
-            Defaults.SWIPE_DEBUG_SHOW_RAW_OUTPUT)
-    }
-
-    @Test
-    fun testSwipeShowRawBeamPredictions_DefaultIsFalse() {
-        // Debug setting should be OFF by default
-        assertFalse("Default SWIPE_SHOW_RAW_BEAM_PREDICTIONS should be false",
-            Defaults.SWIPE_SHOW_RAW_BEAM_PREDICTIONS)
-    }
-
-    @Test
-    fun testSwipeDebugShowRawOutput_ConfigToggle() {
-        try {
-            val config = Config.globalConfig()
-            if (config != null) {
-                val original = config.swipe_debug_show_raw_output
-                try {
-                    config.swipe_debug_show_raw_output = true
-                    assertTrue("swipe_debug_show_raw_output should be true after setting",
-                        config.swipe_debug_show_raw_output)
-
-                    config.swipe_debug_show_raw_output = false
-                    assertFalse("swipe_debug_show_raw_output should be false after setting",
-                        config.swipe_debug_show_raw_output)
-                } finally {
-                    config.swipe_debug_show_raw_output = original
-                }
-            }
-        } catch (e: NullPointerException) {
-            // Config not available in test context without full keyboard init
-        }
-    }
-
-    @Test
-    fun testSwipeShowRawBeamPredictions_ConfigToggle() {
-        try {
-            val config = Config.globalConfig()
-            if (config != null) {
-                val original = config.swipe_show_raw_beam_predictions
-                try {
-                    config.swipe_show_raw_beam_predictions = true
-                    assertTrue("swipe_show_raw_beam_predictions should be true after setting",
-                        config.swipe_show_raw_beam_predictions)
-
-                    config.swipe_show_raw_beam_predictions = false
-                    assertFalse("swipe_show_raw_beam_predictions should be false after setting",
-                        config.swipe_show_raw_beam_predictions)
-                } finally {
-                    config.swipe_show_raw_beam_predictions = original
-                }
-            }
-        } catch (e: NullPointerException) {
-            // Config not available in test context without full keyboard init
-        }
-    }
-
     // =========================================================================
     // Autocapitalization immediate Config update
     // =========================================================================

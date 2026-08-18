@@ -113,14 +113,8 @@
     <string name="settings_title">⚙️ Pengaturan CleverKeys</string>
     <string name="settings_description">Konfigurasikan pengaturan keyboard Anda untuk pengalaman mengetik yang optimal.</string>
 
-    <!-- Neural Prediction Section -->
-    <string name="settings_section_neural">👆 Ketik Geser</string>
-    <string name="settings_neural_beam_width_title">Lebar Beam</string>
-    <string name="settings_neural_beam_width_desc">Jumlah kandidat prediksi (1–20). Lebih tinggi = lebih akurat.</string>
-    <string name="settings_neural_max_length_title">Panjang Kata Maksimum</string>
-    <string name="settings_neural_max_length_desc">Karakter maksimum dalam kata yang diprediksi (5–35).</string>
-    <string name="settings_neural_confidence_title">Ambang Keyakinan</string>
-    <string name="settings_neural_confidence_desc">Keyakinan minimum untuk prediksi (0.0–0.4).</string>
+    <!-- Swipe Typing Section -->
+    <string name="settings_section_swipe_typing">👆 Ketik Geser</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 Tampilan</string>
@@ -331,10 +325,6 @@
     <string name="advanced_swipe_debug_log_desc">Analisis jalur real-time untuk gestur geser (membutuhkan logcat)</string>
     <string name="advanced_detailed_logging_title">Pencatatan Terperinci</string>
     <string name="advanced_detailed_logging_desc">Sertakan informasi jejak verbose</string>
-    <string name="advanced_show_raw_output_title">Tampilkan Keluaran Mentah</string>
-    <string name="advanced_show_raw_output_desc">Catat keluaran neural mentah ke log debug (tidak mempengaruhi saran)</string>
-    <string name="advanced_show_beam_predictions_title">Tampilkan Prediksi Beam</string>
-    <string name="advanced_show_beam_predictions_desc">Tambahkan item raw:word ke bilah saran untuk debugging</string>
     <string name="advanced_open_debug_log">Buka Log Debug</string>
     <string name="appearance_height_portrait_title">Tinggi Keyboard (Potret)</string>
     <string name="appearance_height_portrait_desc">Sesuaikan tinggi keyboard dalam mode potret</string>
@@ -384,8 +374,6 @@
     <string name="autocorrect_char_match_threshold_desc">Berapa banyak karakter yang harus cocok (0.5–0.9)</string>
     <string name="autocorrect_min_word_frequency_title">Frekuensi Kata Minimum</string>
     <string name="autocorrect_min_word_frequency_desc">Hanya koreksi ke kata dengan frekuensi &gt;= ini</string>
-    <string name="autocorrect_beam_title">Autokoreksi Beam</string>
-    <string name="autocorrect_beam_desc">Terapkan koreksi fuzzy selama dekode beam search</string>
     <string name="autocorrect_final_title">Autokoreksi Akhir</string>
     <string name="autocorrect_final_desc">Terapkan koreksi berbasis kamus pada keluaran akhir</string>
     <string name="autocorrect_style_title">Gaya Koreksi</string>
@@ -399,7 +387,7 @@
     <string name="autocorrect_search_depth_title">Kedalaman Pencarian Koreksi</string>
     <string name="autocorrect_search_depth_desc">Jumlah kandidat beam yang dipertimbangkan (1–10)</string>
     <string name="autocorrect_source_balance_title">Keseimbangan Sumber Prediksi</string>
-    <string name="autocorrect_source_balance_desc">Keyakinan neural vs frekuensi kamus (0=kamus, 100=neural)</string>
+    <string name="autocorrect_source_balance_desc">Keyakinan bentuk gesekan vs frekuensi kamus (0=kamus, 100=bentuk)</string>
     <string name="autocorrect_common_boost_title">Dorongan Kata Umum</string>
     <string name="autocorrect_common_boost_desc">Pengganda bonus untuk kata umum (0.5–2.0)</string>
     <string name="autocorrect_frequent_boost_title">Dorongan Kata Sering</string>
@@ -467,8 +455,6 @@
     <string name="gesture_noise_filter_desc">Gerakan minimum untuk didaftarkan (px). Lebih tinggi menyaring jitter tetapi mungkin kehilangan data.</string>
     <string name="gesture_high_velocity_title">Ambang Kecepatan Tinggi</string>
     <string name="gesture_high_velocity_desc">Kecepatan untuk deteksi geser cepat (px/detik). Lebih tinggi memungkinkan geser lebih cepat.</string>
-    <string name="gesture_finger_occlusion_title">Kompensasi Oklusi Jari</string>
-    <string name="gesture_finger_occlusion_desc" formatted="false">Offset-Y sebagai % tinggi baris untuk mengompensasi jari yang menghalangi tombol. Lebih tinggi menggeser titik sentuh ke bawah menuju pusat tombol.</string>
     <string name="gesture_speed_smoothing_title">Penghalusan Kecepatan</string>
     <string name="gesture_speed_smoothing_desc">Faktor penghalusan untuk pergerakan slider. Lebih tinggi lebih halus tetapi kurang responsif.</string>
     <string name="gesture_max_speed_multiplier_title">Pengganda Kecepatan Maksimum</string>
@@ -531,7 +517,7 @@
     <string name="multilang_enable_title">Aktifkan Multi-Bahasa</string>
     <string name="multilang_enable_desc">Mendukung pengetikan dalam berbagai bahasa</string>
     <string name="multilang_primary_title">Bahasa Utama</string>
-    <string name="multilang_primary_desc">Bahasa utama untuk prediksi (NN bekerja dengan bahasa QWERTY apa pun)</string>
+    <string name="multilang_primary_desc">Bahasa utama untuk prediksi dan pengenalan gesekan</string>
     <string name="multilang_secondary_title">Bahasa Sekunder</string>
     <string name="multilang_secondary_weight_title">Bobot Bahasa Sekunder</string>
     <string name="multilang_secondary_weight_desc">Bobot prediksi untuk kamus sekunder (0.5–1.5)</string>
@@ -539,21 +525,13 @@
     <string name="multilang_auto_detect_desc">Otomatis mendeteksi dan mengganti bahasa saat mengetik</string>
     <string name="multilang_detection_sensitivity_title">Sensitivitas Deteksi</string>
     <string name="multilang_detection_sensitivity_desc">Seberapa cepat beralih bahasa (0.4–0.9)</string>
-    <string name="multilang_boost_strength_title">Kekuatan Dorongan</string>
-    <string name="multilang_boost_strength_desc">0 = dinonaktifkan, 1 = normal, 2+ = agresif</string>
-    <string name="multilang_max_boost_title">Dorongan Maksimum</string>
-    <string name="multilang_max_boost_desc">Batas pada nilai dorongan (lebih tinggi = koreksi lebih kuat)</string>
-    <string name="multilang_max_cumulative_boost_title">Dorongan Kumulatif Maksimum</string>
-    <string name="multilang_max_cumulative_boost_desc">Batas dorongan total di semua karakter. Lebih rendah = lebih konservatif, mencegah kata panjang mendominasi.</string>
-    <string name="multilang_strict_start_title">Karakter Awal Ketat</string>
-    <string name="multilang_strict_start_desc">Hanya pertahankan prediksi yang dimulai dengan kunci pertama yang terdeteksi. Membantu geser pendek.</string>
     <string name="multilang_alternate_primary_title">Bahasa Utama Alternatif</string>
     <string name="multilang_alternate_secondary_title">Bahasa Sekunder Alternatif</string>
     <string name="multilang_toggle_between">Beralih antara %1$s ↔ %2$s</string>
-    <string name="neural_enable_swipe_title">Aktifkan Ketik Geser</string>
-    <string name="neural_enable_swipe_desc">Geser melintasi tombol untuk mengetik kata menggunakan prediksi neural.</string>
-    <string name="neural_swipe_password_title">Geser di Kolom Kata Sandi</string>
-    <string name="neural_swipe_password_desc">Aktifkan ketik geser bahkan di kolom kata sandi. Prediksi akan ditampilkan tetapi karakter yang diketik tetap tersembunyi.</string>
+    <string name="swipe_enable_title">Aktifkan Ketik Geser</string>
+    <string name="swipe_enable_desc">Geser melintasi tombol untuk mengetik kata utuh.</string>
+    <string name="swipe_password_title">Geser di Kolom Kata Sandi</string>
+    <string name="swipe_password_desc">Aktifkan ketik geser bahkan di kolom kata sandi. Prediksi akan ditampilkan tetapi karakter yang diketik tetap tersembunyi.</string>
     <string name="privacy_swipe_pattern_title">Data Pola Geser</string>
     <string name="privacy_swipe_pattern_desc">Simpan jalur geser secara lokal untuk pembelajaran di perangkat</string>
     <string name="privacy_performance_metrics_title">Metrik Kinerja</string>

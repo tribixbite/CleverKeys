@@ -118,14 +118,8 @@
     <string name="settings_title">⚙️ CleverKeys-Einstellungen</string>
     <string name="settings_description">Konfigurieren Sie Ihre Tastatureinstellungen für ein optimales Tipperlebnis.</string>
 
-    <!-- Neural Prediction Section -->
-    <string name="settings_section_neural">👆 Wischeingabe</string>
-    <string name="settings_neural_beam_width_title">Strahlbreite</string>
-    <string name="settings_neural_beam_width_desc">Anzahl der Vorhersagekandidaten (1–20). Höher = genauer.</string>
-    <string name="settings_neural_max_length_title">Maximale Wortlänge</string>
-    <string name="settings_neural_max_length_desc">Maximale Zeichenanzahl in vorhergesagten Wörtern (5–35).</string>
-    <string name="settings_neural_confidence_title">Konfidenzschwelle</string>
-    <string name="settings_neural_confidence_desc">Mindestkonfidenz für Vorhersagen (0,0–0,4).</string>
+    <!-- Swipe Typing Section -->
+    <string name="settings_section_swipe_typing">👆 Wischeingabe</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 Darstellung</string>
@@ -339,10 +333,6 @@
     <string name="advanced_swipe_debug_log_desc">Echtzeit-Pipeline-Analyse für Wischgesten (erfordert logcat)</string>
     <string name="advanced_detailed_logging_title">Detaillierte Protokollierung</string>
     <string name="advanced_detailed_logging_desc">Ausführliche Trace-Informationen einschließen</string>
-    <string name="advanced_show_raw_output_title">Rohausgabe anzeigen</string>
-    <string name="advanced_show_raw_output_desc">Rohe neuronale Ausgaben im Debug-Protokoll protokollieren (hat keinen Einfluss auf Vorschläge)</string>
-    <string name="advanced_show_beam_predictions_title">Beam-Vorhersagen anzeigen</string>
-    <string name="advanced_show_beam_predictions_desc">raw:Wort-Einträge zur Vorschlagsleiste für das Debugging hinzufügen</string>
     <string name="advanced_open_debug_log">Debug-Protokoll öffnen</string>
     <string name="appearance_height_portrait_title">Tastaturhöhe (Hochformat)</string>
     <string name="appearance_height_portrait_desc">Tastaturhöhe im Hochformat anpassen</string>
@@ -392,8 +382,6 @@
     <string name="autocorrect_char_match_threshold_desc">Wie viele Zeichen übereinstimmen müssen (0,5–0,9)</string>
     <string name="autocorrect_min_word_frequency_title">Minimale Worthäufigkeit</string>
     <string name="autocorrect_min_word_frequency_desc">Nur zu Wörtern mit Häufigkeit ≥ diesem Wert korrigieren</string>
-    <string name="autocorrect_beam_title">Beam-Autokorrektur</string>
-    <string name="autocorrect_beam_desc">Unscharfe Korrekturen während der Beam-Search-Dekodierung anwenden</string>
     <string name="autocorrect_final_title">Finale Autokorrektur</string>
     <string name="autocorrect_final_desc">Wörterbuchbasierte Korrekturen auf die endgültige Ausgabe anwenden</string>
     <string name="autocorrect_style_title">Korrekturstil</string>
@@ -407,7 +395,7 @@
     <string name="autocorrect_search_depth_title">Korrektur-Suchtiefe</string>
     <string name="autocorrect_search_depth_desc">Anzahl der zu berücksichtigenden Beam-Kandidaten (1–10)</string>
     <string name="autocorrect_source_balance_title">Vorhersagequellen-Balance</string>
-    <string name="autocorrect_source_balance_desc">Neuronale Konfidenz vs. Wörterbuchhäufigkeit (0 = Wörterbuch, 100 = neuronal)</string>
+    <string name="autocorrect_source_balance_desc">Wischform-Konfidenz vs. Wörterbuchhäufigkeit (0 = Wörterbuch, 100 = Form)</string>
     <string name="autocorrect_common_boost_title">Häufige-Wörter-Bonus</string>
     <string name="autocorrect_common_boost_desc">Bonusmultiplikator für häufige Wörter (0,5–2,0)</string>
     <string name="autocorrect_frequent_boost_title">Häufigkeitsbonus</string>
@@ -475,8 +463,6 @@
     <string name="gesture_noise_filter_desc">Mindestbewegung zum Registrieren (px). Höher filtert Zittern, kann aber Daten verlieren.</string>
     <string name="gesture_high_velocity_title">Hohe-Geschwindigkeit-Schwelle</string>
     <string name="gesture_high_velocity_desc">Geschwindigkeit für schnelle Wischerkennung (px/s). Höher erlaubt schnelleres Wischen.</string>
-    <string name="gesture_finger_occlusion_title">Fingerverdeckungskompensation</string>
-    <string name="gesture_finger_occlusion_desc" formatted="false">Y-Versatz als % der Zeilenhöhe, um die Verdeckung der Tasten durch den Finger auszugleichen. Höher verschiebt den Berührungspunkt nach unten zu den Tastenmittelpunkten.</string>
     <string name="gesture_speed_smoothing_title">Geschwindigkeitsglättung</string>
     <string name="gesture_speed_smoothing_desc">Glättungsfaktor für Schieberbewegung. Höher ist glatter, aber weniger reaktionsschnell.</string>
     <string name="gesture_max_speed_multiplier_title">Maximaler Geschwindigkeitsmultiplikator</string>
@@ -539,7 +525,7 @@
     <string name="multilang_enable_title">Mehrsprachigkeit aktivieren</string>
     <string name="multilang_enable_desc">Eingabe in mehreren Sprachen unterstützen</string>
     <string name="multilang_primary_title">Primärsprache</string>
-    <string name="multilang_primary_desc">Hauptsprache für Vorhersagen (NN funktioniert mit jeder QWERTY-Sprache)</string>
+    <string name="multilang_primary_desc">Hauptsprache für Vorhersagen und Wischerkennung</string>
     <string name="multilang_secondary_title">Sekundärsprache</string>
     <string name="multilang_secondary_weight_title">Gewichtung der Sekundärsprache</string>
     <string name="multilang_secondary_weight_desc">Vorhersagegewichtung für das sekundäre Wörterbuch (0,5–1,5)</string>
@@ -547,21 +533,13 @@
     <string name="multilang_auto_detect_desc">Sprache beim Tippen automatisch erkennen und wechseln</string>
     <string name="multilang_detection_sensitivity_title">Erkennungsempfindlichkeit</string>
     <string name="multilang_detection_sensitivity_desc">Wie schnell Sprachen gewechselt werden (0,4–0,9)</string>
-    <string name="multilang_boost_strength_title">Boost-Stärke</string>
-    <string name="multilang_boost_strength_desc">0 = deaktiviert, 1 = normal, 2+ = aggressiv</string>
-    <string name="multilang_max_boost_title">Maximaler Boost</string>
-    <string name="multilang_max_boost_desc">Obergrenze der Boost-Werte (höher = stärkere Korrektur)</string>
-    <string name="multilang_max_cumulative_boost_title">Maximaler kumulativer Boost</string>
-    <string name="multilang_max_cumulative_boost_desc">Gesamte Boost-Obergrenze über alle Zeichen. Niedriger = konservativer, verhindert, dass lange Wörter dominieren.</string>
-    <string name="multilang_strict_start_title">Striktes Startzeichen</string>
-    <string name="multilang_strict_start_desc">Nur Vorhersagen beibehalten, die mit dem erkannten ersten Zeichen beginnen. Hilft bei kurzen Wischgesten.</string>
     <string name="multilang_alternate_primary_title">Alternative Primärsprache</string>
     <string name="multilang_alternate_secondary_title">Alternative Sekundärsprache</string>
     <string name="multilang_toggle_between">Wechseln zwischen %1$s ↔ %2$s</string>
-    <string name="neural_enable_swipe_title">Wischeingabe aktivieren</string>
-    <string name="neural_enable_swipe_desc">Über die Tasten wischen, um Wörter mit neuronaler Vorhersage einzugeben.</string>
-    <string name="neural_swipe_password_title">Wischen in Passwortfeldern</string>
-    <string name="neural_swipe_password_desc">Wischeingabe auch in Passwortfeldern aktivieren. Vorschläge werden angezeigt, aber einzelne eingegebene Zeichen bleiben verborgen.</string>
+    <string name="swipe_enable_title">Wischeingabe aktivieren</string>
+    <string name="swipe_enable_desc">Über die Tasten wischen, um ganze Wörter einzugeben.</string>
+    <string name="swipe_password_title">Wischen in Passwortfeldern</string>
+    <string name="swipe_password_desc">Wischeingabe auch in Passwortfeldern aktivieren. Vorschläge werden angezeigt, aber einzelne eingegebene Zeichen bleiben verborgen.</string>
     <string name="privacy_swipe_pattern_title">Wischmusterdaten</string>
     <string name="privacy_swipe_pattern_desc">Wischverläufe lokal für Gerätelernen speichern</string>
     <string name="privacy_performance_metrics_title">Leistungsmetriken</string>

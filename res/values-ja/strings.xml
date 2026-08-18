@@ -114,14 +114,8 @@
     <string name="settings_title">⚙️ CleverKeys 設定</string>
     <string name="settings_description">最適な入力体験のためにキーボードを設定します。</string>
 
-    <!-- Neural Prediction Section -->
-    <string name="settings_section_neural">👆 スワイプ入力</string>
-    <string name="settings_neural_beam_width_title">ビーム幅</string>
-    <string name="settings_neural_beam_width_desc">予測候補の数(1〜20)。大きいほど正確になります。</string>
-    <string name="settings_neural_max_length_title">単語の最大文字数</string>
-    <string name="settings_neural_max_length_desc">予測される単語の最大文字数(5〜35)。</string>
-    <string name="settings_neural_confidence_title">信頼度のしきい値</string>
-    <string name="settings_neural_confidence_desc">予測に必要な最小信頼度(0.0〜0.4)。</string>
+    <!-- Swipe Typing Section -->
+    <string name="settings_section_swipe_typing">👆 スワイプ入力</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 外観</string>
@@ -319,10 +313,6 @@
     <string name="advanced_swipe_debug_log_desc">スワイプジェスチャーのリアルタイムパイプライン解析（logcat必須）</string>
     <string name="advanced_detailed_logging_title">詳細ログ</string>
     <string name="advanced_detailed_logging_desc">詳細なトレース情報を含めます</string>
-    <string name="advanced_show_raw_output_title">生の出力を表示</string>
-    <string name="advanced_show_raw_output_desc">ニューラルネットワークの生の出力をデバッグログに記録します（候補には影響しません）</string>
-    <string name="advanced_show_beam_predictions_title">ビーム予測を表示</string>
-    <string name="advanced_show_beam_predictions_desc">デバッグ用にraw:word項目を候補バーに追加します</string>
     <string name="advanced_open_debug_log">デバッグログを開く</string>
     <string name="appearance_height_portrait_title">キーボードの高さ（縦向き）</string>
     <string name="appearance_height_portrait_desc">縦向きモードのキーボード高さを調整します</string>
@@ -372,8 +362,6 @@
     <string name="autocorrect_char_match_threshold_desc">一致が必要な文字数の割合（0.5〜0.9）</string>
     <string name="autocorrect_min_word_frequency_title">最低単語頻度</string>
     <string name="autocorrect_min_word_frequency_desc">この頻度以上の単語にのみ修正します</string>
-    <string name="autocorrect_beam_title">ビーム自動修正</string>
-    <string name="autocorrect_beam_desc">ビームサーチデコード中にファジー修正を適用します</string>
     <string name="autocorrect_final_title">最終自動修正</string>
     <string name="autocorrect_final_desc">最終出力に辞書ベースの修正を適用します</string>
     <string name="autocorrect_style_title">修正スタイル</string>
@@ -387,7 +375,7 @@
     <string name="autocorrect_search_depth_title">修正検索深度</string>
     <string name="autocorrect_search_depth_desc">考慮するビーム候補数（1〜10）</string>
     <string name="autocorrect_source_balance_title">予測ソースバランス</string>
-    <string name="autocorrect_source_balance_desc">ニューラル信頼度と辞書頻度のバランス（0=辞書、100=ニューラル）</string>
+    <string name="autocorrect_source_balance_desc">スワイプ形状の信頼度と辞書頻度のバランス（0=辞書、100=形状）</string>
     <string name="autocorrect_common_boost_title">一般単語ブースト</string>
     <string name="autocorrect_common_boost_desc">一般的な単語のボーナス倍率（0.5〜2.0）</string>
     <string name="autocorrect_frequent_boost_title">頻出単語ブースト</string>
@@ -455,8 +443,6 @@
     <string name="gesture_noise_filter_desc">認識する最小動作量（px）。高いとジッターを除去しますが、データが失われる場合があります。</string>
     <string name="gesture_high_velocity_title">高速スワイプ閾値</string>
     <string name="gesture_high_velocity_desc">高速スワイプ検知の速度（px/秒）。高いほど速いスワイプが可能です。</string>
-    <string name="gesture_finger_occlusion_title">指による隠れの補正</string>
-    <string name="gesture_finger_occlusion_desc" formatted="false">指でキーが隠れる場合を補正するY方向オフセット（行高さの%）。高いほどタッチポイントをキーセンターに近づけます。</string>
     <string name="gesture_speed_smoothing_title">スピードスムージング</string>
     <string name="gesture_speed_smoothing_desc">スライダーの動きのスムージング係数。高いほど滑らかですが応答性が低下します。</string>
     <string name="gesture_max_speed_multiplier_title">最大スピード倍率</string>
@@ -519,7 +505,7 @@
     <string name="multilang_enable_title">多言語を有効にする</string>
     <string name="multilang_enable_desc">複数の言語での入力をサポートします</string>
     <string name="multilang_primary_title">主要言語</string>
-    <string name="multilang_primary_desc">予測のメイン言語（NNはすべてのQWERTY言語に対応）</string>
+    <string name="multilang_primary_desc">予測とスワイプ解析に使う主要言語</string>
     <string name="multilang_secondary_title">副言語</string>
     <string name="multilang_secondary_weight_title">副言語の重み</string>
     <string name="multilang_secondary_weight_desc">副辞書の予測ウェイト（0.5〜1.5）</string>
@@ -527,21 +513,13 @@
     <string name="multilang_auto_detect_desc">入力中に自動的に言語を検出して切り替えます</string>
     <string name="multilang_detection_sensitivity_title">検出感度</string>
     <string name="multilang_detection_sensitivity_desc">言語を切り替える速さ（0.4〜0.9）</string>
-    <string name="multilang_boost_strength_title">ブースト強度</string>
-    <string name="multilang_boost_strength_desc">0=無効、1=通常、2以上=積極的</string>
-    <string name="multilang_max_boost_title">最大ブースト</string>
-    <string name="multilang_max_boost_desc">ブースト値の上限（高いほど修正が強くなる）</string>
-    <string name="multilang_max_cumulative_boost_title">最大累積ブースト</string>
-    <string name="multilang_max_cumulative_boost_desc">全文字にわたるブーストの合計上限。低いほど保守的になり、長い単語が支配するのを防ぎます。</string>
-    <string name="multilang_strict_start_title">厳格な開始文字</string>
-    <string name="multilang_strict_start_desc">検出された最初のキーで始まる予測のみを保持します。短いスワイプに役立ちます。</string>
     <string name="multilang_alternate_primary_title">代替主要言語</string>
     <string name="multilang_alternate_secondary_title">代替副言語</string>
     <string name="multilang_toggle_between">%1$s ↔ %2$s を切り替え</string>
-    <string name="neural_enable_swipe_title">スワイプ入力を有効にする</string>
-    <string name="neural_enable_swipe_desc">キーをスワイプして、ニューラル予測で単語を入力します。</string>
-    <string name="neural_swipe_password_title">パスワード欄でのスワイプ</string>
-    <string name="neural_swipe_password_desc">パスワード欄でもスワイプ入力を有効にします。候補は表示されますが、入力した文字は非表示のままです。</string>
+    <string name="swipe_enable_title">スワイプ入力を有効にする</string>
+    <string name="swipe_enable_desc">キーをスワイプして、単語をまとめて入力します。</string>
+    <string name="swipe_password_title">パスワード欄でのスワイプ</string>
+    <string name="swipe_password_desc">パスワード欄でもスワイプ入力を有効にします。候補は表示されますが、入力した文字は非表示のままです。</string>
     <string name="privacy_swipe_pattern_title">スワイプパターンデータ</string>
     <string name="privacy_swipe_pattern_desc">デバイス上の学習のためにスワイプ軌跡をローカルに保存します</string>
     <string name="privacy_performance_metrics_title">パフォーマンス指標</string>

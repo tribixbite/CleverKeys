@@ -406,11 +406,6 @@ class ConfigDefaultsTest {
     }
 
     @Test
-    fun `finger occlusion offset default is 12_5 percent`() {
-        assertThat(Defaults.FINGER_OCCLUSION_OFFSET).isWithin(0.01f).of(12.5f)
-    }
-
-    @Test
     fun `slider speed smoothing default is 0_6`() {
         assertThat(Defaults.SLIDER_SPEED_SMOOTHING).isWithin(0.01f).of(0.6f)
     }
@@ -421,110 +416,12 @@ class ConfigDefaultsTest {
     }
 
     // =========================================================================
-    // Neural Prediction (wiki: settings/neural-settings.md)
+    // Swipe trajectory preprocessing
     // =========================================================================
-
-    @Test
-    fun `neural beam width default is 6`() {
-        assertThat(Defaults.NEURAL_BEAM_WIDTH).isEqualTo(6)
-    }
-
-    @Test
-    fun `neural max length default is 20`() {
-        // wiki: "Max Word Length - Maximum predicted word length (default: 20)"
-        assertThat(Defaults.NEURAL_MAX_LENGTH).isEqualTo(20)
-    }
-
-    @Test
-    fun `neural confidence threshold default is 0_01`() {
-        // wiki: "Confidence Threshold (0.01-0.5)"
-        assertThat(Defaults.NEURAL_CONFIDENCE_THRESHOLD).isWithin(0.001f).of(0.01f)
-    }
-
-    @Test
-    fun `neural batch beams disabled by default`() {
-        assertThat(Defaults.NEURAL_BATCH_BEAMS).isFalse()
-    }
-
-    @Test
-    fun `neural greedy search disabled by default`() {
-        assertThat(Defaults.NEURAL_GREEDY_SEARCH).isFalse()
-    }
-
-    @Test
-    fun `neural beam alpha default is 1_4`() {
-        // 2026-05-15: increased from 1.0 to 1.4 — favors longer candidate words.
-        assertThat(Defaults.NEURAL_BEAM_ALPHA).isWithin(0.01f).of(1.4f)
-    }
-
-    @Test
-    fun `neural beam prune confidence default is 0_8`() {
-        assertThat(Defaults.NEURAL_BEAM_PRUNE_CONFIDENCE).isWithin(0.01f).of(0.8f)
-    }
-
-    @Test
-    fun `neural beam score gap default is 80`() {
-        assertThat(Defaults.NEURAL_BEAM_SCORE_GAP).isWithin(0.01f).of(80.0f)
-    }
-
-    @Test
-    fun `neural adaptive width step default is 12`() {
-        assertThat(Defaults.NEURAL_ADAPTIVE_WIDTH_STEP).isEqualTo(12)
-    }
-
-    @Test
-    fun `neural score gap step default is 12`() {
-        assertThat(Defaults.NEURAL_SCORE_GAP_STEP).isEqualTo(12)
-    }
-
-    @Test
-    fun `neural temperature default is 1_0`() {
-        assertThat(Defaults.NEURAL_TEMPERATURE).isWithin(0.01f).of(1.0f)
-    }
-
-    @Test
-    fun `neural frequency weight default is 0_57`() {
-        assertThat(Defaults.NEURAL_FREQUENCY_WEIGHT).isWithin(0.01f).of(0.57f)
-    }
 
     @Test
     fun `swipe smoothing window default is 3`() {
         assertThat(Defaults.SWIPE_SMOOTHING_WINDOW).isEqualTo(3)
-    }
-
-    // =========================================================================
-    // Neural Prefix Boost
-    // =========================================================================
-
-    @Test
-    fun `prefix boost multiplier default is 1_0`() {
-        assertThat(Defaults.NEURAL_PREFIX_BOOST_MULTIPLIER).isWithin(0.01f).of(1.0f)
-    }
-
-    @Test
-    fun `prefix boost max default is 5_0`() {
-        assertThat(Defaults.NEURAL_PREFIX_BOOST_MAX).isWithin(0.01f).of(5.0f)
-    }
-
-    @Test
-    fun `max cumulative boost default is 15_0`() {
-        assertThat(Defaults.NEURAL_MAX_CUMULATIVE_BOOST).isWithin(0.01f).of(15.0f)
-    }
-
-    @Test
-    fun `strict start char disabled by default`() {
-        assertThat(Defaults.NEURAL_STRICT_START_CHAR).isFalse()
-    }
-
-    @Test
-    fun `neural resampling mode default is discard`() {
-        assertThat(Defaults.NEURAL_RESAMPLING_MODE).isEqualTo("discard")
-    }
-
-    @Test
-    fun `neural user max seq length default is 0`() {
-        // 0 means use model default
-        assertThat(Defaults.NEURAL_USER_MAX_SEQ_LENGTH).isEqualTo(0)
     }
 
     // =========================================================================
@@ -624,11 +521,6 @@ class ConfigDefaultsTest {
     @Test
     fun `autocorrect max beam candidates default is 3`() {
         assertThat(Defaults.AUTOCORRECT_MAX_BEAM_CANDIDATES).isEqualTo(3)
-    }
-
-    @Test
-    fun `swipe beam autocorrect enabled by default`() {
-        assertThat(Defaults.SWIPE_BEAM_AUTOCORRECT_ENABLED).isTrue()
     }
 
     @Test
@@ -824,16 +716,6 @@ class ConfigDefaultsTest {
         assertThat(Defaults.SWIPE_DEBUG_DETAILED_LOGGING).isFalse()
     }
 
-    @Test
-    fun `debug show raw output disabled by default`() {
-        assertThat(Defaults.SWIPE_DEBUG_SHOW_RAW_OUTPUT).isFalse()
-    }
-
-    @Test
-    fun `debug show raw beam predictions disabled by default`() {
-        assertThat(Defaults.SWIPE_SHOW_RAW_BEAM_PREDICTIONS).isFalse()
-    }
-
     // =========================================================================
     // Privacy (wiki: settings/privacy.md, FAQ.md)
     // =========================================================================
@@ -883,16 +765,6 @@ class ConfigDefaultsTest {
     // =========================================================================
 
     @Test
-    fun `all neural defaults have valid values for backup restore`() {
-        assertThat(Defaults.NEURAL_BEAM_WIDTH).isAtLeast(1)
-        assertThat(Defaults.NEURAL_BEAM_WIDTH).isAtMost(20)
-        assertThat(Defaults.NEURAL_MAX_LENGTH).isAtLeast(5)
-        assertThat(Defaults.NEURAL_MAX_LENGTH).isAtMost(50)
-        assertThat(Defaults.NEURAL_CONFIDENCE_THRESHOLD).isAtLeast(0f)
-        assertThat(Defaults.NEURAL_CONFIDENCE_THRESHOLD).isAtMost(1f)
-    }
-
-    @Test
     fun `keyboard heights are reasonable percentages`() {
         assertThat(Defaults.KEYBOARD_HEIGHT_PORTRAIT).isAtLeast(15)
         assertThat(Defaults.KEYBOARD_HEIGHT_PORTRAIT).isAtMost(70)
@@ -922,11 +794,6 @@ class ConfigDefaultsTest {
     fun `language detection sensitivity in valid range`() {
         assertThat(Defaults.LANGUAGE_DETECTION_SENSITIVITY).isAtLeast(0.1f)
         assertThat(Defaults.LANGUAGE_DETECTION_SENSITIVITY).isAtMost(1.0f)
-    }
-
-    @Test
-    fun `neural temperature is positive`() {
-        assertThat(Defaults.NEURAL_TEMPERATURE).isGreaterThan(0f)
     }
 
     @Test

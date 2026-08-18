@@ -34,15 +34,6 @@ internal fun SettingsActivity.handlePreferenceChanged(sharedPreferences: SharedP
                 swipeEngineMode = prefs.getSafeString(key, Defaults.SWIPE_ENGINE_MODE)
                     .lowercase(java.util.Locale.ROOT)
             }
-            "neural_beam_width" -> {
-                beamWidth = prefs.getInt(key, Defaults.NEURAL_BEAM_WIDTH)
-            }
-            "neural_max_length" -> {
-                maxLength = prefs.getInt(key, Defaults.NEURAL_MAX_LENGTH)
-            }
-            "neural_confidence_threshold" -> {
-                confidenceThreshold = prefs.getFloat(key, Defaults.NEURAL_CONFIDENCE_THRESHOLD)
-            }
             "keyboard_height" -> {
                 keyboardHeight = prefs.getInt(key, Defaults.KEYBOARD_HEIGHT_PORTRAIT)
             }
@@ -183,10 +174,6 @@ internal fun SettingsActivity.handlePreferenceChanged(sharedPreferences: SharedP
             "slider_sensitivity" -> {
                 sliderSensitivity = prefs.getSafeString(key, Defaults.SLIDER_SENSITIVITY).toIntOrNull() ?: 30
             }
-            // Swipe Corrections settings
-            "swipe_beam_autocorrect_enabled" -> {
-                swipeBeamAutocorrectEnabled = prefs.getBoolean(key, Defaults.SWIPE_BEAM_AUTOCORRECT_ENABLED)
-            }
             "swipe_final_autocorrect_enabled" -> {
                 swipeFinalAutocorrectEnabled = prefs.getBoolean(key, Defaults.SWIPE_FINAL_AUTOCORRECT_ENABLED)
             }
@@ -230,9 +217,6 @@ internal fun SettingsActivity.loadCurrentSettings() {
         // removed with the neural engine (2026-08-18): every layout swipes now.
         swipeEngineMode = prefs.getSafeString("swipe_engine_mode", Defaults.SWIPE_ENGINE_MODE)
             .lowercase(java.util.Locale.ROOT)
-        beamWidth = prefs.getSafeInt("neural_beam_width", Defaults.NEURAL_BEAM_WIDTH)
-        maxLength = prefs.getSafeInt("neural_max_length", Defaults.NEURAL_MAX_LENGTH)
-        confidenceThreshold = prefs.getSafeFloat("neural_confidence_threshold", Defaults.NEURAL_CONFIDENCE_THRESHOLD)
 
         // Appearance settings
         keyboardHeight = prefs.getSafeInt("keyboard_height", Defaults.KEYBOARD_HEIGHT_PORTRAIT)
@@ -329,7 +313,6 @@ internal fun SettingsActivity.loadCurrentSettings() {
         swipeMinDwellTime = Config.safeGetInt(prefs, "swipe_min_dwell_time", Defaults.SWIPE_MIN_DWELL_TIME)
         swipeNoiseThreshold = Config.safeGetFloat(prefs, "swipe_noise_threshold", Defaults.SWIPE_NOISE_THRESHOLD)
         swipeHighVelocityThreshold = Config.safeGetFloat(prefs, "swipe_high_velocity_threshold", Defaults.SWIPE_HIGH_VELOCITY_THRESHOLD)
-        fingerOcclusionOffset = Config.safeGetFloat(prefs, "finger_occlusion_offset", Defaults.FINGER_OCCLUSION_OFFSET)
         sliderSpeedSmoothing = Config.safeGetFloat(prefs, "slider_speed_smoothing", Defaults.SLIDER_SPEED_SMOOTHING)
         sliderSpeedMax = Config.safeGetFloat(prefs, "slider_speed_max", Defaults.SLIDER_SPEED_MAX)
 
@@ -361,7 +344,6 @@ internal fun SettingsActivity.loadCurrentSettings() {
         swipeDebugEnabled = prefs.getSafeBoolean("swipe_show_debug_scores", Defaults.SWIPE_SHOW_DEBUG_SCORES)
 
         // Swipe Corrections settings
-        swipeBeamAutocorrectEnabled = prefs.getSafeBoolean("swipe_beam_autocorrect_enabled", Defaults.SWIPE_BEAM_AUTOCORRECT_ENABLED)
         swipeFinalAutocorrectEnabled = prefs.getSafeBoolean("swipe_final_autocorrect_enabled", Defaults.SWIPE_FINAL_AUTOCORRECT_ENABLED)
         swipeCorrectionPreset = prefs.getSafeString("swipe_correction_preset", "balanced")
         swipeFuzzyMatchMode = prefs.getSafeString("swipe_fuzzy_match_mode", Defaults.SWIPE_FUZZY_MATCH_MODE)
@@ -396,11 +378,6 @@ internal fun SettingsActivity.loadCurrentSettings() {
         autocorrectCharMatchThreshold = Config.safeGetFloat(prefs, "autocorrect_char_match_threshold", Defaults.AUTOCORRECT_CHAR_MATCH_THRESHOLD)
         autocorrectMinFrequency = Config.safeGetInt(prefs, "autocorrect_confidence_min_frequency", Defaults.AUTOCORRECT_MIN_FREQUENCY)
 
-        // #136: neural_user_max_seq_length pref is preserved in Config for
-        // backup/restore round-trips, but no longer surfaced in this UI —
-        // values >250 crash the encoder. SwipePredictorOrchestrator clamps
-        // any stored value to MODEL_MAX_SEQUENCE_LENGTH at runtime.
-
         // Multi-language settings
         multiLangEnabled = prefs.getSafeBoolean("pref_enable_multilang", Defaults.ENABLE_MULTILANG)
         primaryLanguage = prefs.getSafeString("pref_primary_language", Defaults.PRIMARY_LANGUAGE)
@@ -408,12 +385,6 @@ internal fun SettingsActivity.loadCurrentSettings() {
         autoDetectLanguage = prefs.getSafeBoolean("pref_auto_detect_language", Defaults.AUTO_DETECT_LANGUAGE)
         languageDetectionSensitivity = Config.safeGetFloat(prefs, "pref_language_detection_sensitivity", Defaults.LANGUAGE_DETECTION_SENSITIVITY)
         secondaryPredictionWeight = Config.safeGetFloat(prefs, "pref_secondary_prediction_weight", Defaults.SECONDARY_PREDICTION_WEIGHT)
-        // Load per-language prefix boost values (falls back to global default if not set)
-        prefixBoostMultiplier = Config.safeGetFloat(prefs, "neural_prefix_boost_multiplier_$primaryLanguage", Defaults.NEURAL_PREFIX_BOOST_MULTIPLIER)
-        prefixBoostMax = Config.safeGetFloat(prefs, "neural_prefix_boost_max_$primaryLanguage", Defaults.NEURAL_PREFIX_BOOST_MAX)
-        // Prefix boost safety settings (global, not per-language)
-        maxCumulativeBoost = Config.safeGetFloat(prefs, "neural_max_cumulative_boost", Defaults.NEURAL_MAX_CUMULATIVE_BOOST)
-        strictStartChar = prefs.getSafeBoolean("neural_strict_start_char", Defaults.NEURAL_STRICT_START_CHAR)
         primaryLanguageAlt = prefs.getSafeString("pref_primary_language_alt", "es")
         secondaryLanguageAlt = prefs.getSafeString("pref_secondary_language_alt", "none")
 
@@ -440,8 +411,6 @@ internal fun SettingsActivity.loadCurrentSettings() {
 
         // Swipe debug advanced settings
         swipeDebugDetailedLogging = prefs.getSafeBoolean("swipe_debug_detailed_logging", Defaults.SWIPE_DEBUG_DETAILED_LOGGING)
-        swipeDebugShowRawOutput = prefs.getSafeBoolean("swipe_debug_show_raw_output", Defaults.SWIPE_DEBUG_SHOW_RAW_OUTPUT)
-        swipeShowRawBeamPredictions = prefs.getSafeBoolean("swipe_show_raw_beam_predictions", Defaults.SWIPE_SHOW_RAW_BEAM_PREDICTIONS)
         suggestionProvenanceMarkers = prefs.getSafeBoolean("suggestion_provenance_markers", Defaults.SUGGESTION_PROVENANCE_MARKERS)
 }
 
@@ -488,11 +457,7 @@ internal fun SettingsActivity.updateConfigFromSettings() {
         config.apply {
             keyboardHeightPercent = keyboardHeight
             swipe_engine_mode = swipeEngineMode
-            neural_beam_width = beamWidth
-            neural_max_length = maxLength
-            neural_confidence_threshold = confidenceThreshold
             // Swipe corrections settings (these update the Config object)
-            swipe_beam_autocorrect_enabled = swipeBeamAutocorrectEnabled
             swipe_final_autocorrect_enabled = swipeFinalAutocorrectEnabled
             swipe_fuzzy_match_mode = swipeFuzzyMatchMode
             autocorrect_max_length_diff = autocorrectMaxLengthDiff

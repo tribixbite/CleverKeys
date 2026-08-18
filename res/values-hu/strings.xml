@@ -108,14 +108,8 @@
     <string name="settings_title">⚙️ CleverKeys beállítások</string>
     <string name="settings_description">Állítsa be a billentyűzetet az optimális gépelési élményhez.</string>
 
-    <!-- Neural Prediction Section -->
-    <string name="settings_section_neural">👆 Húzásos gépelés</string>
-    <string name="settings_neural_beam_width_title">Nyalábszélesség</string>
-    <string name="settings_neural_beam_width_desc">Az előrejelzési jelöltek száma (1–20). Magasabb = pontosabb.</string>
-    <string name="settings_neural_max_length_title">Maximális szóhossz</string>
-    <string name="settings_neural_max_length_desc">Az előrejelzett szavak maximális karakterszáma (5–35).</string>
-    <string name="settings_neural_confidence_title">Megbízhatósági küszöb</string>
-    <string name="settings_neural_confidence_desc">Az előrejelzések minimális megbízhatósága (0,0–0,4).</string>
+    <!-- Swipe Typing Section -->
+    <string name="settings_section_swipe_typing">👆 Húzásos gépelés</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 Megjelenés</string>
@@ -325,10 +319,6 @@
     <string name="advanced_swipe_debug_log_desc">Valós idejű folyamat elemzés csúsztatási gesztusokhoz (logcat szükséges)</string>
     <string name="advanced_detailed_logging_title">Részletes naplózás</string>
     <string name="advanced_detailed_logging_desc">Részletes nyomkövetési információk hozzáadása</string>
-    <string name="advanced_show_raw_output_title">Nyers kimenet megjelenítése</string>
-    <string name="advanced_show_raw_output_desc">Nyers neurális kimenetek naplózása a hibakeresési naplóba (nem befolyásolja a javaslatokat)</string>
-    <string name="advanced_show_beam_predictions_title">Beam előrejelzések megjelenítése</string>
-    <string name="advanced_show_beam_predictions_desc">raw:szó elemek hozzáadása a javaslatsávhoz hibakereséshez</string>
     <string name="advanced_open_debug_log">Hibakeresési napló megnyitása</string>
     <string name="appearance_height_portrait_title">Billentyűzet magassága (Álló)</string>
     <string name="appearance_height_portrait_desc">Billentyűzet magasságának beállítása álló módban</string>
@@ -378,8 +368,6 @@
     <string name="autocorrect_char_match_threshold_desc">Hány karakternek kell egyeznie (0,5–0,9)</string>
     <string name="autocorrect_min_word_frequency_title">Minimális szógyakoriság</string>
     <string name="autocorrect_min_word_frequency_desc">Csak olyan szavakra javítson, amelyek gyakorisága &gt;= ennyi</string>
-    <string name="autocorrect_beam_title">Beam automatikus javítás</string>
-    <string name="autocorrect_beam_desc">Fuzzy javítások alkalmazása beam-keresési dekódolás során</string>
     <string name="autocorrect_final_title">Végső automatikus javítás</string>
     <string name="autocorrect_final_desc">Szótáralapú javítások alkalmazása a végső kimenetre</string>
     <string name="autocorrect_style_title">Javítási stílus</string>
@@ -393,7 +381,7 @@
     <string name="autocorrect_search_depth_title">Javítási keresési mélység</string>
     <string name="autocorrect_search_depth_desc">Figyelembe veendő beam jelöltek száma (1–10)</string>
     <string name="autocorrect_source_balance_title">Előrejelzési forrás egyensúlya</string>
-    <string name="autocorrect_source_balance_desc">Neurális megbízhatóság vs. szótárgyakoriság (0=szótár, 100=neurális)</string>
+    <string name="autocorrect_source_balance_desc">Húzásforma megbízhatósága vs. szótárgyakoriság (0=szótár, 100=forma)</string>
     <string name="autocorrect_common_boost_title">Gyakori szavak erősítése</string>
     <string name="autocorrect_common_boost_desc">Bónusz szorzó a gyakori szavakhoz (0,5–2,0)</string>
     <string name="autocorrect_frequent_boost_title">Sűrű szavak erősítése</string>
@@ -461,8 +449,6 @@
     <string name="gesture_noise_filter_desc">Minimális mozgás a regisztráláshoz (px). A magasabb érték szűri a remegést, de adatot veszíthet.</string>
     <string name="gesture_high_velocity_title">Nagy sebességű küszöb</string>
     <string name="gesture_high_velocity_desc">Sebesség a gyors csúsztatás észleléséhez (px/mp). A magasabb érték gyorsabb csúsztatást enged meg.</string>
-    <string name="gesture_finger_occlusion_title">Ujjtakarás kompenzáció</string>
-    <string name="gesture_finger_occlusion_desc" formatted="false">Y-eltolás a sormagasság %-ában az ujj által takart billentyűk kompenzálásához. A magasabb érték az érintési pontot a billentyűközpontok felé tolja le.</string>
     <string name="gesture_speed_smoothing_title">Sebességsimítás</string>
     <string name="gesture_speed_smoothing_desc">Simítási tényező a csúszka mozgásához. A magasabb érték simább, de kevésbé reszponzív.</string>
     <string name="gesture_max_speed_multiplier_title">Maximális sebességszorzó</string>
@@ -525,7 +511,7 @@
     <string name="multilang_enable_title">Többnyelvűség engedélyezése</string>
     <string name="multilang_enable_desc">Több nyelven való gépelés támogatása</string>
     <string name="multilang_primary_title">Elsődleges nyelv</string>
-    <string name="multilang_primary_desc">Fő nyelv az előrejelzésekhez (az NN bármely QWERTY nyelvvel működik)</string>
+    <string name="multilang_primary_desc">Fő nyelv az előrejelzésekhez és a húzás felismeréséhez</string>
     <string name="multilang_secondary_title">Másodlagos nyelv</string>
     <string name="multilang_secondary_weight_title">Másodlagos nyelv súlya</string>
     <string name="multilang_secondary_weight_desc">Előrejelzési súly a másodlagos szótárhoz (0,5–1,5)</string>
@@ -533,21 +519,13 @@
     <string name="multilang_auto_detect_desc">Automatikus nyelvfelismerés és -váltás gépelés közben</string>
     <string name="multilang_detection_sensitivity_title">Felismerési érzékenység</string>
     <string name="multilang_detection_sensitivity_desc">Milyen gyorsan vált nyelvet (0,4–0,9)</string>
-    <string name="multilang_boost_strength_title">Erősítés intenzitása</string>
-    <string name="multilang_boost_strength_desc">0 = letiltva, 1 = normál, 2+ = agresszív</string>
-    <string name="multilang_max_boost_title">Maximális erősítés</string>
-    <string name="multilang_max_boost_desc">Felső határ az erősítési értékekre (magasabb = erősebb javítás)</string>
-    <string name="multilang_max_cumulative_boost_title">Maximális kumulatív erősítés</string>
-    <string name="multilang_max_cumulative_boost_desc">Az összes karakter összesített erősítési korlátja. Alacsonyabb = óvatosabb, megelőzi a hosszú szavak dominanciáját.</string>
-    <string name="multilang_strict_start_title">Szigorú kezdőkarakter</string>
-    <string name="multilang_strict_start_desc">Csak az észlelt első billentyűvel kezdődő előrejelzések megtartása. Segít a rövid csúsztatásokon.</string>
     <string name="multilang_alternate_primary_title">Alternatív elsődleges</string>
     <string name="multilang_alternate_secondary_title">Alternatív másodlagos</string>
     <string name="multilang_toggle_between">Váltás: %1$s ↔ %2$s</string>
-    <string name="neural_enable_swipe_title">Csúsztatásos gépelés engedélyezése</string>
-    <string name="neural_enable_swipe_desc">Csúsztasson a billentyűk között szavak gépeléshez neurális előrejelzéssel.</string>
-    <string name="neural_swipe_password_title">Csúsztatás jelszómezőkön</string>
-    <string name="neural_swipe_password_desc">Csúsztatásos gépelés engedélyezése jelszómezőkben is. Az előrejelzések megjelennek, de az egyes beírt karakterek rejtve maradnak.</string>
+    <string name="swipe_enable_title">Csúsztatásos gépelés engedélyezése</string>
+    <string name="swipe_enable_desc">Csúsztasson a billentyűk között teljes szavak gépeléséhez.</string>
+    <string name="swipe_password_title">Csúsztatás jelszómezőkön</string>
+    <string name="swipe_password_desc">Csúsztatásos gépelés engedélyezése jelszómezőkben is. Az előrejelzések megjelennek, de az egyes beírt karakterek rejtve maradnak.</string>
     <string name="privacy_swipe_pattern_title">Csúsztatási minta adatok</string>
     <string name="privacy_swipe_pattern_desc">Csúsztatási pályák helyi tárolása az eszközön való tanuláshoz</string>
     <string name="privacy_performance_metrics_title">Teljesítménymutatók</string>

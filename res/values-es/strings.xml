@@ -116,14 +116,8 @@
     <string name="settings_title">⚙️ Ajustes de CleverKeys</string>
     <string name="settings_description">Configura los ajustes del teclado para una experiencia de escritura óptima.</string>
 
-    <!-- Neural Prediction Section -->
-    <string name="settings_section_neural">👆 Escritura deslizante</string>
-    <string name="settings_neural_beam_width_title">Ancho del haz</string>
-    <string name="settings_neural_beam_width_desc">Número de candidatos de predicción (1–20). Mayor = más preciso.</string>
-    <string name="settings_neural_max_length_title">Longitud máxima de palabra</string>
-    <string name="settings_neural_max_length_desc">Número máximo de caracteres en las palabras predichas (5–35).</string>
-    <string name="settings_neural_confidence_title">Umbral de confianza</string>
-    <string name="settings_neural_confidence_desc">Confianza mínima para las predicciones (0,0–0,4).</string>
+    <!-- Swipe Typing Section -->
+    <string name="settings_section_swipe_typing">👆 Escritura deslizante</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 Apariencia</string>
@@ -337,10 +331,6 @@
     <string name="advanced_swipe_debug_log_desc">Análisis de canalización en tiempo real para gestos de deslizamiento (requiere logcat)</string>
     <string name="advanced_detailed_logging_title">Registro detallado</string>
     <string name="advanced_detailed_logging_desc">Incluir información de rastreo detallada</string>
-    <string name="advanced_show_raw_output_title">Mostrar salida sin procesar</string>
-    <string name="advanced_show_raw_output_desc">Registra las salidas neuronales sin procesar en el registro de depuración (no afecta las sugerencias)</string>
-    <string name="advanced_show_beam_predictions_title">Mostrar predicciones Beam</string>
-    <string name="advanced_show_beam_predictions_desc">Añadir elementos raw:palabra a la barra de sugerencias para depuración</string>
     <string name="advanced_open_debug_log">Abrir registro de depuración</string>
     <string name="appearance_height_portrait_title">Altura del teclado (vertical)</string>
     <string name="appearance_height_portrait_desc">Ajusta la altura del teclado en modo vertical</string>
@@ -390,8 +380,6 @@
     <string name="autocorrect_char_match_threshold_desc">Cuántos caracteres deben coincidir (0,5–0,9)</string>
     <string name="autocorrect_min_word_frequency_title">Frecuencia mínima de palabra</string>
     <string name="autocorrect_min_word_frequency_desc">Solo corregir con palabras con frecuencia ≥ este valor</string>
-    <string name="autocorrect_beam_title">Corrección automática Beam</string>
-    <string name="autocorrect_beam_desc">Aplica correcciones aproximadas durante la decodificación por búsqueda en haz</string>
     <string name="autocorrect_final_title">Corrección automática final</string>
     <string name="autocorrect_final_desc">Aplica correcciones basadas en el diccionario a la salida final</string>
     <string name="autocorrect_style_title">Estilo de corrección</string>
@@ -405,7 +393,7 @@
     <string name="autocorrect_search_depth_title">Profundidad de búsqueda de corrección</string>
     <string name="autocorrect_search_depth_desc">Número de candidatos Beam a considerar (1–10)</string>
     <string name="autocorrect_source_balance_title">Equilibrio de fuentes de predicción</string>
-    <string name="autocorrect_source_balance_desc">Confianza neuronal vs frecuencia de diccionario (0 = diccionario, 100 = neuronal)</string>
+    <string name="autocorrect_source_balance_desc">Confianza en el trazo vs frecuencia de diccionario (0 = diccionario, 100 = trazo)</string>
     <string name="autocorrect_common_boost_title">Bonus de palabras comunes</string>
     <string name="autocorrect_common_boost_desc">Multiplicador de bonus para palabras comunes (0,5–2,0)</string>
     <string name="autocorrect_frequent_boost_title">Bonus de palabras frecuentes</string>
@@ -473,8 +461,6 @@
     <string name="gesture_noise_filter_desc">Movimiento mínimo para registrar (px). Mayor filtra el temblor pero puede perder datos.</string>
     <string name="gesture_high_velocity_title">Umbral de alta velocidad</string>
     <string name="gesture_high_velocity_desc">Velocidad para la detección de deslizamiento rápido (px/s). Mayor permite deslizamientos más rápidos.</string>
-    <string name="gesture_finger_occlusion_title">Compensación de oclusión del dedo</string>
-    <string name="gesture_finger_occlusion_desc" formatted="false">Desplazamiento Y como % de la altura de fila para compensar la oclusión de teclas por el dedo. Mayor desplaza el punto de toque hacia los centros de las teclas.</string>
     <string name="gesture_speed_smoothing_title">Suavizado de velocidad</string>
     <string name="gesture_speed_smoothing_desc">Factor de suavizado para el movimiento del deslizador. Mayor es más suave pero menos sensible.</string>
     <string name="gesture_max_speed_multiplier_title">Multiplicador de velocidad máxima</string>
@@ -537,7 +523,7 @@
     <string name="multilang_enable_title">Activar multiidioma</string>
     <string name="multilang_enable_desc">Permite escribir en varios idiomas</string>
     <string name="multilang_primary_title">Idioma principal</string>
-    <string name="multilang_primary_desc">Idioma principal para predicciones (NN funciona con cualquier idioma QWERTY)</string>
+    <string name="multilang_primary_desc">Idioma principal para predicciones y decodificación de deslizamientos</string>
     <string name="multilang_secondary_title">Idioma secundario</string>
     <string name="multilang_secondary_weight_title">Peso del idioma secundario</string>
     <string name="multilang_secondary_weight_desc">Peso de predicción para el diccionario secundario (0,5–1,5)</string>
@@ -545,21 +531,13 @@
     <string name="multilang_auto_detect_desc">Detecta y cambia automáticamente de idioma al escribir</string>
     <string name="multilang_detection_sensitivity_title">Sensibilidad de detección</string>
     <string name="multilang_detection_sensitivity_desc">Con qué rapidez cambiar de idioma (0,4–0,9)</string>
-    <string name="multilang_boost_strength_title">Fuerza de impulso</string>
-    <string name="multilang_boost_strength_desc">0 = desactivado, 1 = normal, 2+ = agresivo</string>
-    <string name="multilang_max_boost_title">Impulso máximo</string>
-    <string name="multilang_max_boost_desc">Límite en los valores de impulso (mayor = corrección más fuerte)</string>
-    <string name="multilang_max_cumulative_boost_title">Impulso acumulado máximo</string>
-    <string name="multilang_max_cumulative_boost_desc">Límite total de impulso en todos los caracteres. Menor = más conservador, evita que las palabras largas dominen.</string>
-    <string name="multilang_strict_start_title">Carácter de inicio estricto</string>
-    <string name="multilang_strict_start_desc">Solo mantiene predicciones que empiecen con la primera tecla detectada. Ayuda con deslizamientos cortos.</string>
     <string name="multilang_alternate_primary_title">Idioma principal alternativo</string>
     <string name="multilang_alternate_secondary_title">Idioma secundario alternativo</string>
     <string name="multilang_toggle_between">Alternar entre %1$s ↔ %2$s</string>
-    <string name="neural_enable_swipe_title">Activar escritura por deslizamiento</string>
-    <string name="neural_enable_swipe_desc">Desliza por las teclas para escribir palabras usando predicción neuronal.</string>
-    <string name="neural_swipe_password_title">Deslizamiento en campos de contraseña</string>
-    <string name="neural_swipe_password_desc">Activa la escritura por deslizamiento incluso en campos de contraseña. Se mostrarán sugerencias pero los caracteres individuales escritos permanecerán ocultos.</string>
+    <string name="swipe_enable_title">Activar escritura por deslizamiento</string>
+    <string name="swipe_enable_desc">Desliza por las teclas para escribir palabras completas.</string>
+    <string name="swipe_password_title">Deslizamiento en campos de contraseña</string>
+    <string name="swipe_password_desc">Activa la escritura por deslizamiento incluso en campos de contraseña. Se mostrarán sugerencias pero los caracteres individuales escritos permanecerán ocultos.</string>
     <string name="privacy_swipe_pattern_title">Datos de patrón de deslizamiento</string>
     <string name="privacy_swipe_pattern_desc">Almacena trayectorias de deslizamiento localmente para el aprendizaje en el dispositivo</string>
     <string name="privacy_performance_metrics_title">Métricas de rendimiento</string>

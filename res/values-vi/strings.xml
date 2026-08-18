@@ -143,14 +143,8 @@
     <string name="settings_title">⚙️ Cài đặt CleverKeys</string>
     <string name="settings_description">Cấu hình bàn phím để có trải nghiệm gõ tối ưu.</string>
 
-    <!-- Neural Prediction Section -->
-    <string name="settings_section_neural">👆 Gõ vuốt</string>
-    <string name="settings_neural_beam_width_title">Độ rộng chùm (beam)</string>
-    <string name="settings_neural_beam_width_desc">Số ứng viên dự đoán (1–20). Càng lớn càng chính xác.</string>
-    <string name="settings_neural_max_length_title">Độ dài từ tối đa</string>
-    <string name="settings_neural_max_length_desc">Số ký tự tối đa trong từ dự đoán (5–35).</string>
-    <string name="settings_neural_confidence_title">Ngưỡng độ tin cậy</string>
-    <string name="settings_neural_confidence_desc">Độ tin cậy tối thiểu cho dự đoán (0.0–0.4).</string>
+    <!-- Swipe Typing Section -->
+    <string name="settings_section_swipe_typing">👆 Gõ vuốt</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 Giao diện</string>
@@ -348,10 +342,6 @@
     <string name="advanced_swipe_debug_log_desc">Phân tích quy trình xử lý vuốt theo thời gian thực (yêu cầu logcat)</string>
     <string name="advanced_detailed_logging_title">Ghi nhật ký chi tiết</string>
     <string name="advanced_detailed_logging_desc">Bao gồm thông tin theo dõi chi tiết</string>
-    <string name="advanced_show_raw_output_title">Hiển thị đầu ra thô</string>
-    <string name="advanced_show_raw_output_desc">Ghi đầu ra thần kinh thô vào nhật ký gỡ lỗi (không ảnh hưởng đến gợi ý)</string>
-    <string name="advanced_show_beam_predictions_title">Hiển thị dự đoán Beam</string>
-    <string name="advanced_show_beam_predictions_desc">Thêm các mục raw:word vào thanh gợi ý để gỡ lỗi</string>
     <string name="advanced_open_debug_log">Mở nhật ký gỡ lỗi</string>
     <string name="appearance_height_portrait_title">Chiều cao bàn phím (Dọc)</string>
     <string name="appearance_height_portrait_desc">Điều chỉnh chiều cao bàn phím ở chế độ dọc</string>
@@ -401,8 +391,6 @@
     <string name="autocorrect_char_match_threshold_desc">Số ký tự phải khớp (0,5–0,9)</string>
     <string name="autocorrect_min_word_frequency_title">Tần suất từ tối thiểu</string>
     <string name="autocorrect_min_word_frequency_desc">Chỉ sửa sang các từ có tần suất &gt;= giá trị này</string>
-    <string name="autocorrect_beam_title">Tự động sửa Beam</string>
-    <string name="autocorrect_beam_desc">Áp dụng sửa mờ trong quá trình giải mã beam search</string>
     <string name="autocorrect_final_title">Tự động sửa cuối</string>
     <string name="autocorrect_final_desc">Áp dụng sửa lỗi dựa trên từ điển cho đầu ra cuối</string>
     <string name="autocorrect_style_title">Kiểu sửa lỗi</string>
@@ -416,7 +404,7 @@
     <string name="autocorrect_search_depth_title">Độ sâu tìm kiếm sửa lỗi</string>
     <string name="autocorrect_search_depth_desc">Số ứng viên beam cần xem xét (1–10)</string>
     <string name="autocorrect_source_balance_title">Cân bằng nguồn dự đoán</string>
-    <string name="autocorrect_source_balance_desc">Độ tin cậy thần kinh so với tần suất từ điển (0=từ điển, 100=thần kinh)</string>
+    <string name="autocorrect_source_balance_desc">Độ tin cậy hình vuốt so với tần suất từ điển (0=từ điển, 100=hình vuốt)</string>
     <string name="autocorrect_common_boost_title">Tăng cường từ phổ biến</string>
     <string name="autocorrect_common_boost_desc">Hệ số thưởng cho các từ phổ biến (0,5–2,0)</string>
     <string name="autocorrect_frequent_boost_title">Tăng cường từ thường dùng</string>
@@ -484,8 +472,6 @@
     <string name="gesture_noise_filter_desc">Chuyển động tối thiểu để đăng ký (px). Cao hơn lọc rung nhưng có thể mất dữ liệu.</string>
     <string name="gesture_high_velocity_title">Ngưỡng vận tốc cao</string>
     <string name="gesture_high_velocity_desc">Vận tốc để phát hiện vuốt nhanh (px/giây). Cao hơn cho phép vuốt nhanh hơn.</string>
-    <string name="gesture_finger_occlusion_title">Bù đắp che khuất ngón tay</string>
-    <string name="gesture_finger_occlusion_desc" formatted="false">Bù đắp Y tính theo % chiều cao hàng để bù cho ngón tay che khuất phím. Cao hơn dịch điểm chạm xuống phía trung tâm phím.</string>
     <string name="gesture_speed_smoothing_title">Làm mượt tốc độ</string>
     <string name="gesture_speed_smoothing_desc">Hệ số làm mượt cho chuyển động thanh trượt. Cao hơn mượt hơn nhưng ít nhạy hơn.</string>
     <string name="gesture_max_speed_multiplier_title">Hệ số tốc độ tối đa</string>
@@ -548,7 +534,7 @@
     <string name="multilang_enable_title">Bật đa ngôn ngữ</string>
     <string name="multilang_enable_desc">Hỗ trợ gõ bằng nhiều ngôn ngữ</string>
     <string name="multilang_primary_title">Ngôn ngữ chính</string>
-    <string name="multilang_primary_desc">Ngôn ngữ chính cho dự đoán (NN hoạt động với bất kỳ ngôn ngữ QWERTY nào)</string>
+    <string name="multilang_primary_desc">Ngôn ngữ chính cho dự đoán và giải mã vuốt</string>
     <string name="multilang_secondary_title">Ngôn ngữ phụ</string>
     <string name="multilang_secondary_weight_title">Trọng số ngôn ngữ phụ</string>
     <string name="multilang_secondary_weight_desc">Trọng số dự đoán cho từ điển phụ (0,5–1,5)</string>
@@ -556,21 +542,13 @@
     <string name="multilang_auto_detect_desc">Tự động phát hiện và chuyển đổi ngôn ngữ khi gõ</string>
     <string name="multilang_detection_sensitivity_title">Độ nhạy phát hiện</string>
     <string name="multilang_detection_sensitivity_desc">Tốc độ chuyển đổi ngôn ngữ (0,4–0,9)</string>
-    <string name="multilang_boost_strength_title">Cường độ tăng cường</string>
-    <string name="multilang_boost_strength_desc">0 = tắt, 1 = bình thường, 2+ = tích cực</string>
-    <string name="multilang_max_boost_title">Tăng cường tối đa</string>
-    <string name="multilang_max_boost_desc">Giới hạn trên cho giá trị tăng cường (cao hơn = sửa lỗi mạnh hơn)</string>
-    <string name="multilang_max_cumulative_boost_title">Tăng cường tích lũy tối đa</string>
-    <string name="multilang_max_cumulative_boost_desc">Giới hạn tổng tăng cường trên tất cả ký tự. Thấp hơn = bảo thủ hơn, ngăn các từ dài thống trị.</string>
-    <string name="multilang_strict_start_title">Ký tự đầu nghiêm ngặt</string>
-    <string name="multilang_strict_start_desc">Chỉ giữ các dự đoán bắt đầu bằng phím đầu tiên được phát hiện. Giúp vuốt ngắn.</string>
     <string name="multilang_alternate_primary_title">Ngôn ngữ chính thay thế</string>
     <string name="multilang_alternate_secondary_title">Ngôn ngữ phụ thay thế</string>
     <string name="multilang_toggle_between">Chuyển đổi giữa %1$s ↔ %2$s</string>
-    <string name="neural_enable_swipe_title">Bật gõ vuốt</string>
-    <string name="neural_enable_swipe_desc">Vuốt qua các phím để gõ từ bằng dự đoán thần kinh.</string>
-    <string name="neural_swipe_password_title">Vuốt trên trường mật khẩu</string>
-    <string name="neural_swipe_password_desc">Bật gõ vuốt ngay cả trong trường mật khẩu. Dự đoán sẽ được hiển thị nhưng các ký tự riêng lẻ vẫn ẩn.</string>
+    <string name="swipe_enable_title">Bật gõ vuốt</string>
+    <string name="swipe_enable_desc">Vuốt qua các phím để gõ trọn từ.</string>
+    <string name="swipe_password_title">Vuốt trên trường mật khẩu</string>
+    <string name="swipe_password_desc">Bật gõ vuốt ngay cả trong trường mật khẩu. Dự đoán sẽ được hiển thị nhưng các ký tự riêng lẻ vẫn ẩn.</string>
     <string name="privacy_swipe_pattern_title">Dữ liệu mẫu vuốt</string>
     <string name="privacy_swipe_pattern_desc">Lưu trữ quỹ đạo vuốt cục bộ để học trên thiết bị</string>
     <string name="privacy_performance_metrics_title">Số liệu hiệu suất</string>

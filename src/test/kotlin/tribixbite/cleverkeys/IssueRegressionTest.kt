@@ -269,11 +269,6 @@ class IssueRegressionTest {
     }
 
     @Test
-    fun `issue 35 — swipe beam autocorrect enabled`() {
-        assertThat(Defaults.SWIPE_BEAM_AUTOCORRECT_ENABLED).isTrue()
-    }
-
-    @Test
     fun `issue 35 — swipe final autocorrect enabled`() {
         assertThat(Defaults.SWIPE_FINAL_AUTOCORRECT_ENABLED).isTrue()
     }
@@ -401,12 +396,6 @@ class IssueRegressionTest {
     // #58 — Finger occlusion offset (config-level check)
     // =========================================================================
 
-    @Test
-    fun `issue 58 — finger occlusion offset in valid range`() {
-        assertThat(Defaults.FINGER_OCCLUSION_OFFSET).isAtLeast(0f)
-        assertThat(Defaults.FINGER_OCCLUSION_OFFSET).isAtMost(50f)
-    }
-
     // =========================================================================
     // #67 — Clipboard history toggle (config-level check)
     // =========================================================================
@@ -460,18 +449,6 @@ class IssueRegressionTest {
             .isEqualTo(Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB_FALLBACK)
         assertThat(Defaults.CLIPBOARD_SIZE_LIMIT_MB.toInt())
             .isEqualTo(Defaults.CLIPBOARD_SIZE_LIMIT_MB_FALLBACK)
-    }
-
-    @Test
-    fun `neural defaults are production-safe`() {
-        // Temperature must be positive for valid softmax
-        assertThat(Defaults.NEURAL_TEMPERATURE).isGreaterThan(0f)
-        // Beam width must be reasonable
-        assertThat(Defaults.NEURAL_BEAM_WIDTH).isAtLeast(1)
-        assertThat(Defaults.NEURAL_BEAM_WIDTH).isAtMost(20)
-        // Confidence threshold in 0-1 range
-        assertThat(Defaults.NEURAL_CONFIDENCE_THRESHOLD).isAtLeast(0f)
-        assertThat(Defaults.NEURAL_CONFIDENCE_THRESHOLD).isAtMost(1f)
     }
 
     // =========================================================================

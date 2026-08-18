@@ -139,14 +139,8 @@
     <string name="settings_title">⚙️ تنظیمات CleverKeys</string>
     <string name="settings_description">تنظیمات صفحه‌کلید خود را برای بهترین تجربه تایپ پیکربندی کنید.</string>
 
-    <!-- Neural Prediction Section -->
-    <string name="settings_section_neural">👆 تایپ کشیدنی</string>
-    <string name="settings_neural_beam_width_title">پهنای پرتو</string>
-    <string name="settings_neural_beam_width_desc">تعداد نامزدهای پیش‌بینی (۱ تا ۲۰). بیشتر = دقیق‌تر.</string>
-    <string name="settings_neural_max_length_title">حداکثر طول واژه</string>
-    <string name="settings_neural_max_length_desc">حداکثر تعداد نویسه در واژه‌های پیش‌بینی‌شده (۵ تا ۳۵).</string>
-    <string name="settings_neural_confidence_title">آستانه اطمینان</string>
-    <string name="settings_neural_confidence_desc">حداقل اطمینان برای پیش‌بینی‌ها (۰٫۰ تا ۰٫۴).</string>
+    <!-- Swipe Typing Section -->
+    <string name="settings_section_swipe_typing">👆 تایپ کشیدنی</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 ظاهر</string>
@@ -355,10 +349,6 @@
     <string name="advanced_swipe_debug_log_desc">تجزیه‌وتحلیل خط لوله بلادرنگ برای اشاره‌های کشیدن (نیاز به logcat دارد)</string>
     <string name="advanced_detailed_logging_title">گزارش‌گیری دقیق</string>
     <string name="advanced_detailed_logging_desc">اطلاعات ردیابی مفصل را در بر بگیرید</string>
-    <string name="advanced_show_raw_output_title">نمایش خروجی خام</string>
-    <string name="advanced_show_raw_output_desc">خروجی‌های خام شبکه عصبی را در گزارش اشکال‌زدایی ثبت کنید (تأثیری بر پیشنهادها ندارد)</string>
-    <string name="advanced_show_beam_predictions_title">نمایش پیش‌بینی‌های پرتو</string>
-    <string name="advanced_show_beam_predictions_desc">آیتم‌های raw:word را برای اشکال‌زدایی به نوار پیشنهاد اضافه کنید</string>
     <string name="advanced_open_debug_log">باز کردن گزارش اشکال‌زدایی</string>
     <string name="appearance_height_portrait_title">ارتفاع صفحه‌کلید (عمودی)</string>
     <string name="appearance_height_portrait_desc">ارتفاع صفحه‌کلید در حالت عمودی را تنظیم کنید</string>
@@ -408,8 +398,6 @@
     <string name="autocorrect_char_match_threshold_desc">چه تعداد نویسه باید تطابق داشته باشد (۰٫۵ تا ۰٫۹)</string>
     <string name="autocorrect_min_word_frequency_title">حداقل بسامد واژه</string>
     <string name="autocorrect_min_word_frequency_desc">فقط به واژه‌هایی با بسامد بزرگ‌تر یا برابر این مقدار تصحیح کنید</string>
-    <string name="autocorrect_beam_title">تصحیح خودکار پرتو</string>
-    <string name="autocorrect_beam_desc">تصحیحات مبهم را در طول رمزگشایی جستجوی پرتو اعمال کنید</string>
     <string name="autocorrect_final_title">تصحیح خودکار نهایی</string>
     <string name="autocorrect_final_desc">تصحیحات مبتنی بر واژه‌نامه را بر خروجی نهایی اعمال کنید</string>
     <string name="autocorrect_style_title">سبک تصحیح</string>
@@ -423,7 +411,7 @@
     <string name="autocorrect_search_depth_title">عمق جستجوی تصحیح</string>
     <string name="autocorrect_search_depth_desc">تعداد نامزدهای پرتو برای بررسی (۱ تا ۱۰)</string>
     <string name="autocorrect_source_balance_title">تعادل منبع پیش‌بینی</string>
-    <string name="autocorrect_source_balance_desc">اطمینان شبکه عصبی در مقابل بسامد واژه‌نامه (۰=واژه‌نامه، ۱۰۰=شبکه عصبی)</string>
+    <string name="autocorrect_source_balance_desc">اطمینان شکل کشیدن در مقابل بسامد واژه‌نامه (۰=واژه‌نامه، ۱۰۰=شکل)</string>
     <string name="autocorrect_common_boost_title">تقویت واژه‌های رایج</string>
     <string name="autocorrect_common_boost_desc">ضریب جایزه برای واژه‌های رایج (۰٫۵ تا ۲٫۰)</string>
     <string name="autocorrect_frequent_boost_title">تقویت واژه‌های پرتکرار</string>
@@ -491,8 +479,6 @@
     <string name="gesture_noise_filter_desc">حداقل حرکت برای ثبت (px). بالاتر نویز را فیلتر می‌کند اما ممکن است داده از دست برود.</string>
     <string name="gesture_high_velocity_title">آستانه سرعت بالا</string>
     <string name="gesture_high_velocity_desc">سرعت برای تشخیص کشیدن سریع (px/ثانیه). بالاتر اجازه می‌دهد سریع‌تر کشیده شود.</string>
-    <string name="gesture_finger_occlusion_title">جبران پوشش انگشت</string>
-    <string name="gesture_finger_occlusion_desc" formatted="false">جابه‌جایی Y به‌عنوان ٪ ارتفاع ردیف برای جبران پوشش انگشت روی کلیدها. بالاتر نقطه لمس را به سمت مرکز کلیدها می‌برد.</string>
     <string name="gesture_speed_smoothing_title">صاف‌سازی سرعت</string>
     <string name="gesture_speed_smoothing_desc">ضریب صاف‌سازی برای حرکت اسلایدر. بالاتر نرم‌تر اما کمتر پاسخگو است.</string>
     <string name="gesture_max_speed_multiplier_title">حداکثر ضریب سرعت</string>
@@ -555,7 +541,7 @@
     <string name="multilang_enable_title">فعال‌سازی چندزبانه</string>
     <string name="multilang_enable_desc">پشتیبانی از تایپ در چند زبان</string>
     <string name="multilang_primary_title">زبان اصلی</string>
-    <string name="multilang_primary_desc">زبان اصلی برای پیش‌بینی‌ها (شبکه عصبی با هر زبان QWERTY کار می‌کند)</string>
+    <string name="multilang_primary_desc">زبان اصلی برای پیش‌بینی‌ها و رمزگشایی کشیدن</string>
     <string name="multilang_secondary_title">زبان ثانویه</string>
     <string name="multilang_secondary_weight_title">وزن زبان ثانویه</string>
     <string name="multilang_secondary_weight_desc">وزن پیش‌بینی برای واژه‌نامه ثانویه (۰٫۵ تا ۱٫۵)</string>
@@ -563,21 +549,13 @@
     <string name="multilang_auto_detect_desc">هنگام تایپ، زبان را به‌طور خودکار تشخیص دهید و تعویض کنید</string>
     <string name="multilang_detection_sensitivity_title">حساسیت تشخیص</string>
     <string name="multilang_detection_sensitivity_desc">چقدر سریع زبان‌ها تعویض می‌شوند (۰٫۴ تا ۰٫۹)</string>
-    <string name="multilang_boost_strength_title">شدت تقویت</string>
-    <string name="multilang_boost_strength_desc">۰ = غیرفعال، ۱ = عادی، ۲+ = تهاجمی</string>
-    <string name="multilang_max_boost_title">حداکثر تقویت</string>
-    <string name="multilang_max_boost_desc">حد روی مقادیر تقویت (بالاتر = تصحیح قوی‌تر)</string>
-    <string name="multilang_max_cumulative_boost_title">حداکثر تقویت تجمعی</string>
-    <string name="multilang_max_cumulative_boost_desc">حد کل تقویت در تمام نویسه‌ها. پایین‌تر = محافظه‌کارانه‌تر، مانع از تسلط واژه‌های بلند.</string>
-    <string name="multilang_strict_start_title">نویسه شروع دقیق</string>
-    <string name="multilang_strict_start_desc">فقط پیش‌بینی‌هایی که با اولین کلید تشخیص‌داده‌شده شروع می‌شوند نگه دارید. به کشیدن‌های کوتاه کمک می‌کند.</string>
     <string name="multilang_alternate_primary_title">زبان اصلی جایگزین</string>
     <string name="multilang_alternate_secondary_title">زبان ثانویه جایگزین</string>
     <string name="multilang_toggle_between">جابه‌جایی بین %1$s ↔ %2$s</string>
-    <string name="neural_enable_swipe_title">فعال‌سازی تایپ کشیدنی</string>
-    <string name="neural_enable_swipe_desc">برای تایپ واژه‌ها با پیش‌بینی عصبی روی کلیدها بکشید.</string>
-    <string name="neural_swipe_password_title">کشیدن در فیلدهای رمز</string>
-    <string name="neural_swipe_password_desc">تایپ کشیدنی را حتی در فیلدهای رمز فعال کنید. پیش‌بینی‌ها نشان داده می‌شوند اما نویسه‌های تایپ‌شده پنهان می‌مانند.</string>
+    <string name="swipe_enable_title">فعال‌سازی تایپ کشیدنی</string>
+    <string name="swipe_enable_desc">برای تایپ واژه‌های کامل روی کلیدها بکشید.</string>
+    <string name="swipe_password_title">کشیدن در فیلدهای رمز</string>
+    <string name="swipe_password_desc">تایپ کشیدنی را حتی در فیلدهای رمز فعال کنید. پیش‌بینی‌ها نشان داده می‌شوند اما نویسه‌های تایپ‌شده پنهان می‌مانند.</string>
     <string name="privacy_swipe_pattern_title">داده‌های الگوی کشیدن</string>
     <string name="privacy_swipe_pattern_desc">مسیرهای کشیدن را برای یادگیری روی دستگاه به‌صورت محلی ذخیره کنید</string>
     <string name="privacy_performance_metrics_title">سنجه‌های کارایی</string>
