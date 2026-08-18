@@ -13,7 +13,10 @@ import kotlin.math.sqrt
 
 /**
  * Improved swipe gesture recognizer with better noise filtering.
- * Uses TrajectoryObjectPool to reduce GC pressure during high-frequency touch events.
+ * Allocates PointF directly. The former TrajectoryObjectPool was deleted with the neural
+ * engine (2026-08-18): nothing ever recycled into it, so after the first ~200 points every
+ * obtain() already fell through to a fresh PointF while the pool kept 200 PointF + 200
+ * TrajectoryPoint + 30 ArrayLists eagerly allocated for the life of the process.
  */
 open class ImprovedSwipeGestureRecognizer {
 
@@ -81,7 +84,7 @@ open class ImprovedSwipeGestureRecognizer {
         _shiftLockedAtStart = shiftLocked
 
         // Use object pool to reduce GC pressure
-        val startPoint = TrajectoryObjectPool.obtainPointF(x, y)
+        val startPoint = PointF(x, y)
         _rawPath.add(startPoint)
         _smoothedPath.add(startPoint)
         
@@ -141,7 +144,7 @@ open class ImprovedSwipeGestureRecognizer {
         _recentVelocity = (distance / timeSinceLastPoint) * 1000f // pixels per second
 
         // Add raw point (using object pool)
-        _rawPath.add(TrajectoryObjectPool.obtainPointF(x, y))
+        _rawPath.add(PointF(x, y))
         _timestamps.add(now)
         _lastPointTime = now
         _totalDistance += distance
@@ -170,7 +173,7 @@ open class ImprovedSwipeGestureRecognizer {
      */
     private fun applySmoothing(x: Float, y: Float): PointF {
         if (_rawPath.size < SMOOTHING_WINDOW) {
-            return TrajectoryObjectPool.obtainPointF(x, y)
+            return PointF(x, y)
         }
 
         // Calculate moving average over last N points
@@ -186,7 +189,7 @@ open class ImprovedSwipeGestureRecognizer {
             count++
         }
 
-        return TrajectoryObjectPool.obtainPointF(avgX / count, avgY / count)
+        return PointF(avgX / count, avgY / count)
     }
     
     /**
@@ -332,7 +335,7 @@ open class ImprovedSwipeGestureRecognizer {
             count++
         }
 
-        return TrajectoryObjectPool.obtainPointF(sumX / count, sumY / count)
+        return PointF(sumX / count, sumY / count)
     }
     
     /**

@@ -96,7 +96,6 @@
     <string name="toast_no_voice_input">Keine Spracheingabe-App installiert</string>
 
     <!-- Swipe-Kalibrierung -->
-    <string name="pref_swipe_calibration_title">Wischeingabe kalibrieren</string>
 
     <!-- Clipboard History View (Material 3) -->
     <string name="clipboard_edit_duplicate">Ein Eintrag mit diesem Inhalt existiert bereits</string>
@@ -146,7 +145,6 @@
     <string name="settings_section_advanced">🔧 Erweitert</string>
     <string name="settings_debug_title">Debug-Informationen</string>
     <string name="settings_debug_desc">Detaillierte Protokollierung und Leistungsmetriken anzeigen</string>
-    <string name="settings_calibration_button">🧪 Wisch-Kalibrierung</string>
 
     <!-- Information & Actions Section -->
     <string name="settings_section_info">📋 Informationen &amp; Aktionen</string>

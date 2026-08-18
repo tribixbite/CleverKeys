@@ -8,7 +8,6 @@
     <string name="pref_layouts_item">Layout %1$d: %2$s</string>
     <string name="pref_layouts_remove_custom">Tanggalin itong layout</string>
     <string name="pref_custom_layout_title">Custom na layout</string>
-    <string name="pref_swipe_calibration_title">I-calibrate ang swipe typing</string>
     <!-- <string name="pref_show_number_row_no_number_row">No number row</string> -->
     <!-- <string name="pref_show_number_row_no_symbols">Number row without symbols</string> -->
     <!-- <string name="pref_show_number_row_symbols">Number row with symbols</string> -->
@@ -141,7 +140,6 @@
     <string name="settings_section_advanced">🔧 Advanced</string>
     <string name="settings_debug_title">Impormasyon ng Debug</string>
     <string name="settings_debug_desc">Ipakita ang detalyadong logging at mga sukatan ng performance</string>
-    <string name="settings_calibration_button">🧪 Swipe Calibration</string>
 
     <!-- Information &amp; Actions Section -->
     <string name="settings_section_info">📋 Impormasyon at mga Aksyon</string>

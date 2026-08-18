@@ -2,7 +2,6 @@ package tribixbite.cleverkeys
 
 import android.content.Context
 import android.util.Log
-import tribixbite.cleverkeys.onnx.SwipePredictorOrchestrator
 
 /**
  * Handles UI updates when SharedPreferences change.
@@ -10,7 +9,6 @@ import tribixbite.cleverkeys.onnx.SwipePredictorOrchestrator
  * This handler consolidates UI update logic triggered by preference changes:
  * - Updates keyboard layout view when layout preferences change
  * - Updates suggestion bar opacity when opacity preference changes
- * - Updates neural engine config when model-related settings change
  * - Reloads primary/secondary language dictionaries when language settings change
  *
  * Note: ConfigurationManager is the primary SharedPreferences listener and
@@ -42,9 +40,6 @@ class PreferenceUIUpdateHandler(
         // Update suggestion bar opacity
         updateSuggestionBarOpacity()
 
-        // Update neural engine config for model-related settings
-        updateNeuralEngineIfNeeded(key)
-
         // Reload language dictionaries if language settings changed
         reloadLanguageDictionaryIfNeeded(key)
     }
@@ -69,33 +64,13 @@ class PreferenceUIUpdateHandler(
     }
 
     /**
-     * Update neural engine config if model-related setting changed.
-     *
-     * @param key The preference key that changed
-     */
-    private fun updateNeuralEngineIfNeeded(key: String?) {
-        if (key == null) return
-
-        val isModelSetting = key in MODEL_RELATED_KEYS
-
-        if (isModelSetting && config != null) {
-            val neuralEngine = predictionCoordinator?.getNeuralEngine()
-            if (neuralEngine != null) {
-                neuralEngine.setConfig(config)
-                Log.d(TAG, "Neural model setting changed: $key - engine config updated")
-            }
-        }
-    }
-
-    /**
      * Reload language dictionaries if language settings changed.
      *
-     * When user changes pref_primary_language or pref_secondary_language in settings,
-     * this triggers a full reload of the vocabulary trie used by beam search.
-     * This ensures the neural prediction uses the correct language dictionary.
-     *
-     * Note: Primary language is currently read-only (NN only supports English),
-     * but we still handle both for future extensibility.
+     * When the user changes pref_primary_language or pref_secondary_language, this reloads
+     * the tap-typing dictionaries and the contraction mappings. The swipe engines need no
+     * hook: the CTC adapter re-derives its merged lexicon from a content hash (so a language
+     * change invalidates it automatically) and the geometric engine rebuilds its template
+     * index per (layout, language).
      *
      * @param key The preference key that changed
      * @since v1.1.86
@@ -104,15 +79,9 @@ class PreferenceUIUpdateHandler(
         if (key == null) return
 
         try {
-            val orchestrator = SwipePredictorOrchestrator.getInstance(context)
-
             when (key) {
                 "pref_primary_language" -> {
-                    // Reload swipe dictionary (OptimizedVocabulary/beam search trie)
-                    orchestrator.reloadPrimaryDictionary()
-                    Log.i(TAG, "Primary language changed - swipe dictionary reloaded")
-
-                    // v1.1.90: Also reload WordPredictor dictionary for touch typing
+                    // v1.1.90: Reload the WordPredictor dictionary for touch typing
                     // Read fresh language value from prefs (config may be stale or shared)
                     val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
                     val newPrimaryLang = prefs.getString("pref_primary_language", "en") ?: "en"
@@ -135,8 +104,7 @@ class PreferenceUIUpdateHandler(
                     }
                 }
                 "pref_secondary_language" -> {
-                    // v1.1.93: Reload secondary dictionary for BOTH swipe and touch typing
-                    orchestrator.reloadSecondaryDictionary()
+                    // v1.1.93: Reload the secondary dictionary for touch typing
                     val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
                     val newSecondaryLang = prefs.getString("pref_secondary_language", "none") ?: "none"
                     predictionCoordinator?.reloadWordPredictorSecondaryDictionary(newSecondaryLang)
@@ -144,7 +112,6 @@ class PreferenceUIUpdateHandler(
                 }
                 "pref_enable_multilang" -> {
                     // Reload secondary dict when multilang toggle changes
-                    orchestrator.reloadSecondaryDictionary()
                     val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
                     val secondaryLang = prefs.getString("pref_secondary_language", "none") ?: "none"
                     predictionCoordinator?.reloadWordPredictorSecondaryDictionary(secondaryLang)
@@ -161,13 +128,6 @@ class PreferenceUIUpdateHandler(
     companion object {
         // Log tag kept <=23 chars so Log.isLoggable does not crash on API <26 (LongLogTag lint).
         private const val TAG = "PrefUIUpdateHandler"
-
-        /**
-         * Preference keys that require neural engine config updates.
-         */
-        private val MODEL_RELATED_KEYS = setOf(
-            "neural_user_max_seq_length"
-        )
 
         /**
          * Create a PreferenceUIUpdateHandler.

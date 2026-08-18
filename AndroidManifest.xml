@@ -81,7 +81,6 @@
          (Intent(this, X::class.java)) from Settings/Launcher; never an external entry
          point. exported=false + no MAIN/DEFAULT filter closes the exported-activity
          attack surface (explicit Intents ignore intent-filters). -->
-    <activity android:name="tribixbite.cleverkeys.SwipeCalibrationActivity" android:label="@string/pref_swipe_calibration_title" android:theme="@style/settingsTheme" android:exported="false" android:directBootAware="true" tools:targetApi="24"/>
 
     <activity android:name="tribixbite.cleverkeys.NeuralSettingsActivity" android:label="Neural Settings" android:theme="@style/settingsTheme" android:exported="false" android:directBootAware="true" tools:targetApi="24"/>
     <activity android:name="tribixbite.cleverkeys.GeometricSettingsActivity" android:label="Geometric Settings" android:theme="@style/settingsTheme" android:exported="false" android:directBootAware="true" tools:targetApi="24"/>

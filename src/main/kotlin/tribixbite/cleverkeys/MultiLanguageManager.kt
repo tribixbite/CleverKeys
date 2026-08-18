@@ -2,60 +2,44 @@ package tribixbite.cleverkeys
 
 import android.content.Context
 import android.util.Log
-import ai.onnxruntime.OrtSession
 
 /**
- * Manages multiple language models and automatic language switching
+ * Tracks the active language and performs automatic language switching from recent words.
  *
- * Supports lazy loading, caching, and fast switching between languages.
- * Target switching latency: <100ms
+ * ## What this used to be (2026-08-18 trim)
+ *
+ * Until the neural swipe engine was removed this class also owned a cache of `LanguageModel`
+ * bundles, each holding a whole `OptimizedVocabulary` (the 98k-entry word map, its ~231k-node
+ * trie and the length buckets) plus two nullable `OrtSession` handles. Both sessions were
+ * hard-coded to null — per-language `swipe_encoder_<lang>.onnx` files never existed — and the
+ * vocabulary was write-only: `getActiveModel()`, `getLoadedLanguages()`, `getMemoryUsageMB()`
+ * and `cleanup()` had no callers anywhere in the app. The cache therefore spent ~29 MB of Java
+ * heap per language purely to hold an object nothing read, which is why it had to be capped at
+ * one entry after the 2026-08-17 startup `OutOfMemoryError`.
+ *
+ * With `OptimizedVocabulary` deleted there is nothing left to cache, so the whole model-cache
+ * layer is gone and the memory cost with it. The two behaviours [WordPredictor] actually uses —
+ * [switchLanguage] and [detectAndSwitch] — are preserved exactly: switching still validates
+ * against the supported-language table and still reports failure for an unsupported code.
+ *
+ * Per-language DICTIONARIES are unaffected; those live in `DictionaryManager` / `WordPredictor`
+ * and were never routed through here.
  */
 class MultiLanguageManager(
-    private val context: Context,
+    @Suppress("unused") private val context: Context,
     private val defaultLanguage: String = "en"
 ) {
     companion object {
         private const val TAG = "MultiLanguageManager"
         private const val SWITCH_LATENCY_TARGET_MS = 100
-
-        /**
-         * How many [LanguageModel]s may stay resident.
-         *
-         * Each one owns a whole [OptimizedVocabulary] — the 98k-entry English word map, its
-         * ~231k-node [VocabularyTrie] and the length buckets, which
-         * `OptimizedVocabulary.loadVocabulary` builds for EVERY language — so a cached model
-         * costs roughly 29 MB of Java heap. The cache used to be unbounded and keyed by
-         * auto-DETECTED language (`detectAndSwitch`, and `auto_detect_language` defaults on),
-         * so a user writing in several languages accumulated 29 MB per language for the rest
-         * of the process's life. On the 256 MB-growth-limit device that produced the
-         * 2026-08-17 startup `OutOfMemoryError`, three detections would have been fatal on
-         * their own.
-         *
-         * Only [activeLanguage] is ever read, so 1 is the honest bound: caching the previous
-         * language would spend ~29 MB to save one ~200 ms reload on a rare event.
-         */
-        private const val MAX_CACHED_MODELS = 1
     }
 
     // Active language
     @Volatile
     private var activeLanguage: String = defaultLanguage
 
-    // Cached models (lazy loading)
-    private val modelCache = mutableMapOf<String, LanguageModel>()
-
     // Language detector
     private val detector = LanguageDetector()
-
-    /**
-     * Language model bundle (encoder, decoder, vocabulary)
-     */
-    data class LanguageModel(
-        val language: String,
-        val encoder: OrtSession?,
-        val decoder: OrtSession?,
-        val vocabulary: OptimizedVocabulary?
-    )
 
     /**
      * Get current active language
@@ -77,87 +61,6 @@ class MultiLanguageManager(
     }
 
     /**
-     * Load language model (lazy)
-     * Returns cached model if already loaded
-     */
-    @Synchronized
-    fun loadLanguageModel(language: String): LanguageModel? {
-        // Check cache first
-        modelCache[language]?.let {
-            Log.d(TAG, "Using cached model: $language")
-            return it
-        }
-
-        try {
-            Log.i(TAG, "Loading language model: $language")
-            val startTime = System.currentTimeMillis()
-
-            // Per-language neural models (swipe_encoder_<lang>.onnx / swipe_decoder_<lang>.onnx)
-            // do NOT exist — only the single builtin swipe_encoder_android/decoder_android pair ships.
-            // The neural swipe path is driven by SwipePredictorOrchestrator, not this manager, so
-            // there is no per-language encoder/decoder to load here. Only the per-language vocabulary
-            // (contraction mappings) is loaded below.
-            val encoder: OrtSession? = null
-            val decoder: OrtSession? = null
-
-            // Load vocabulary with language-specific contractions
-            // Note: Primary/secondary dictionaries are loaded via SwipePredictorOrchestrator
-            // which calls OptimizedVocabulary.loadPrimaryDictionary() for non-English languages
-            val vocabulary = try {
-                val vocab = OptimizedVocabulary(context)
-                // v1.1.87: Pass language code to load correct contraction mappings
-                val success = vocab.loadVocabulary(language)
-                if (success) vocab else null
-            } catch (e: Exception) {
-                Log.w(TAG, "Dictionary not found for $language", e)
-                null
-            }
-
-            // Create model (may have null components if not available)
-            val model = LanguageModel(language, encoder, decoder, vocabulary)
-            modelCache[language] = model
-            trimCache(keep = language)
-            MemoryProbe.mark("multiLanguage.modelCache", settle = true) {
-                "added=$language cached=${modelCache.size} keys=${modelCache.keys}"
-            }
-
-            val loadTime = System.currentTimeMillis() - startTime
-            Log.i(TAG, "Loaded language model: $language (${loadTime}ms)")
-
-            return model
-
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to load language model: $language", e)
-            return null
-        }
-    }
-
-    /**
-     * Evicts cached models until at most [MAX_CACHED_MODELS] remain, never evicting [keep]
-     * (the language that is about to become, or already is, active).
-     *
-     * Eviction order is insertion order — the oldest load goes first — and each evicted model
-     * gets the same session teardown [unloadLanguage] performs. Callers hold the instance
-     * monitor (`@Synchronized`), so iteration cannot race a concurrent load.
-     */
-    private fun trimCache(keep: String) {
-        if (modelCache.size <= MAX_CACHED_MODELS) return
-        val evictable = modelCache.keys.filter { it != keep }
-        val excess = modelCache.size - MAX_CACHED_MODELS
-        for (language in evictable.take(excess)) {
-            modelCache.remove(language)?.let { model ->
-                try {
-                    model.encoder?.close()
-                    model.decoder?.close()
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error evicting language model: $language", e)
-                }
-            }
-            Log.i(TAG, "Evicted cached language model '$language' (cap $MAX_CACHED_MODELS)")
-        }
-    }
-
-    /**
      * Switch to a different language
      * @return true if switch succeeded, false if language unavailable
      */
@@ -174,19 +77,6 @@ class MultiLanguageManager(
         }
 
         val startTime = System.currentTimeMillis()
-
-        // Load new language model (or get from cache)
-        val model = loadLanguageModel(newLanguage)
-        if (model == null) {
-            Log.e(TAG, "Cannot switch to $newLanguage - model loading failed")
-            return false
-        }
-
-        // Check if model has required components
-        if (model.encoder == null && model.decoder == null && model.vocabulary == null) {
-            Log.w(TAG, "Cannot switch to $newLanguage - no model components available (will use default)")
-            // Allow switch anyway (for future when models are added)
-        }
 
         // Atomic switch
         val previousLanguage = activeLanguage
@@ -231,94 +121,5 @@ class MultiLanguageManager(
     fun getLanguageConfidence(recentWords: List<String>): LanguageDetector.DetectionResult? {
         if (recentWords.isEmpty()) return null
         return detector.detectLanguageFromWordsWithConfidence(recentWords)
-    }
-
-    /**
-     * Get the active language model
-     * @return LanguageModel or null if not loaded
-     */
-    fun getActiveModel(): LanguageModel? {
-        return modelCache[activeLanguage]
-    }
-
-    /**
-     * Preload language model for faster switching
-     * Loads asynchronously in background thread
-     */
-    fun preloadLanguage(language: String) {
-        Thread {
-            Log.d(TAG, "Preloading language model: $language")
-            loadLanguageModel(language)
-        }.start()
-    }
-
-    /**
-     * Unload unused language models to free memory
-     * @param keepActive If true, keeps the active language loaded
-     */
-    @Synchronized
-    fun unloadUnusedModels(keepActive: Boolean = true) {
-        val toRemove = mutableListOf<String>()
-        for ((lang, _) in modelCache) {
-            if (!keepActive || lang != activeLanguage) {
-                toRemove.add(lang)
-            }
-        }
-
-        for (lang in toRemove) {
-            unloadLanguage(lang)
-        }
-
-        Log.i(TAG, "Unloaded ${toRemove.size} unused language model(s)")
-    }
-
-    /**
-     * Unload a specific language model
-     */
-    @Synchronized
-    fun unloadLanguage(language: String) {
-        modelCache.remove(language)?.let { model ->
-            try {
-                model.encoder?.close()
-                model.decoder?.close()
-                Log.i(TAG, "Unloaded language model: $language")
-            } catch (e: Exception) {
-                Log.e(TAG, "Error unloading language model: $language", e)
-            }
-        }
-    }
-
-    /**
-     * Get list of currently loaded languages
-     */
-    fun getLoadedLanguages(): Set<String> {
-        return modelCache.keys.toSet()
-    }
-
-    /**
-     * Get memory usage estimate in MB
-     * Assumes ~10MB per model (encoder + decoder)
-     */
-    fun getMemoryUsageMB(): Float {
-        return modelCache.size * 10.0f
-    }
-
-    /**
-     * Cleanup all resources
-     */
-    @Synchronized
-    fun cleanup() {
-        Log.i(TAG, "Cleaning up all language models...")
-        for ((lang, model) in modelCache) {
-            try {
-                model.encoder?.close()
-                model.decoder?.close()
-                Log.d(TAG, "Cleaned up language model: $lang")
-            } catch (e: Exception) {
-                Log.e(TAG, "Error cleaning up language model: $lang", e)
-            }
-        }
-        modelCache.clear()
-        Log.i(TAG, "All language models cleaned up")
     }
 }

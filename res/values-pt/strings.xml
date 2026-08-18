@@ -8,7 +8,6 @@
     <string name="pref_layouts_item">Layout %1$d: %2$s</string>
     <string name="pref_layouts_remove_custom">Remover layout</string>
     <string name="pref_custom_layout_title">Layout personalizado</string>
-    <string name="pref_swipe_calibration_title">Calibrar digitação por deslize</string>
     <!-- <string name="pref_show_number_row_no_number_row">No number row</string> -->
     <!-- <string name="pref_show_number_row_no_symbols">Number row without symbols</string> -->
     <!-- <string name="pref_show_number_row_symbols">Number row with symbols</string> -->
@@ -143,7 +142,6 @@
     <string name="settings_section_advanced">🔧 Avançado</string>
     <string name="settings_debug_title">Informações de depuração</string>
     <string name="settings_debug_desc">Mostrar registros detalhados e métricas de desempenho</string>
-    <string name="settings_calibration_button">🧪 Calibração do deslize</string>
 
     <!-- Information &amp; Actions Section -->
     <string name="settings_section_info">📋 Informações &amp; Ações</string>

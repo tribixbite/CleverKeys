@@ -460,10 +460,6 @@ class CleverKeysService : InputMethodService(),
         _debugLoggingManager = DebugLoggingManager(this, packageName)
         _debugLoggingManager.initializeLogWriter()
 
-        // Connect debug logger to prediction coordinator for neural engine logging (v1.32.461)
-        // This enables key detection logs to appear in SwipeDebugActivity
-        _predictionCoordinator?.setDebugLogger { message -> _debugLoggingManager.sendDebugLog(message) }
-
         // Connect debug logger to input coordinator for prediction handling logging
         // This enables prediction selection/insertion logs to appear in SwipeDebugActivity
         _inputCoordinator.setDebugLogger { message -> _debugLoggingManager.sendDebugLog(message) }
@@ -1067,11 +1063,6 @@ class CleverKeysService : InputMethodService(),
      */
     fun showSuggestionBarMessage(message: String, durationMs: Long = 1500L) {
         _suggestionBar?.showTemporaryMessage(message, durationMs)
-    }
-
-    // CRITICAL: Extract key positions for neural swipe (v1.32.407: Delegated to NeuralLayoutBridge)
-    private fun setNeuralKeyboardLayout() {
-        _neuralLayoutBridge.setNeuralKeyboardLayout()
     }
 
     // Check if default IME, show notification if not (v1.32.377: Delegated to IMEStatusHelper)

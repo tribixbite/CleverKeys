@@ -356,7 +356,7 @@ if (isArm64) {
 
 // Pure JVM test runner — works on ARM64 where standard Test tasks are disabled.
 // Runs JUnitCore directly via JavaExec, no proot or shell script needed.
-// Usage: ./gradlew runPureTests [-PtestClass=BeamSearchEngineTest]
+// Usage: ./gradlew runPureTests [-PtestClass=SwipeEngineRouterTest]
 tasks.register('runPureTests', JavaExec) {
   dependsOn 'compileDebugUnitTestKotlin', 'processDebugUnitTestJavaRes'
   group = 'verification'
@@ -364,29 +364,18 @@ tasks.register('runPureTests', JavaExec) {
 
   def pureTestClasses = [
     'tribixbite.cleverkeys.AccentNormalizerTest',
-    'tribixbite.cleverkeys.VocabularyTrieTest',
     'tribixbite.cleverkeys.DictionaryWordTest',
     'tribixbite.cleverkeys.SwipeResamplerTest',
-    'tribixbite.cleverkeys.VocabularyUtilsTest',
     'tribixbite.cleverkeys.BeamSearchModelsTest',
     'tribixbite.cleverkeys.ConfigDefaultsTest',
     'tribixbite.cleverkeys.DictionaryBinFormatTest',
     'tribixbite.cleverkeys.AutocorrectDefaultsDriftTest',
-    'tribixbite.cleverkeys.ContractionFrequencyTest',
-    'tribixbite.cleverkeys.PipelineBenchmarkTest',
-    'tribixbite.cleverkeys.BeamSearchEngineTest',
-    'tribixbite.cleverkeys.PipelineIntegrationTest',
     'tribixbite.cleverkeys.ShortSwipeIntentTest',
     'tribixbite.cleverkeys.customization.ShortSwipeMappingTest',
     'tribixbite.cleverkeys.GestureTest',
     'tribixbite.cleverkeys.ModmapTest',
     'tribixbite.cleverkeys.ComposeKeyPureTest',
     'tribixbite.cleverkeys.KeyValueParserTest',
-    'tribixbite.cleverkeys.onnx.PrefixBoostTrieTest',
-    'tribixbite.cleverkeys.NeuralPredictionPureTest',
-    'tribixbite.cleverkeys.IntegrationPureTest',
-    'tribixbite.cleverkeys.CoordinateNormalizerTest',
-    'tribixbite.cleverkeys.TrajectoryFeatureCalculatorTest',
     'tribixbite.cleverkeys.IssueRegressionTest',
     'tribixbite.cleverkeys.AutoSpaceLogicTest',
     'tribixbite.cleverkeys.SmartAutoSpaceLogicTest',
@@ -398,7 +387,6 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.ClipboardEditJvmTest',
     'tribixbite.cleverkeys.Issue78SuggestionReplaceTest',
     'tribixbite.cleverkeys.Issue118EmojiOverflowTest',
-    'tribixbite.cleverkeys.Issue136MaxSeqLengthClampTest',
     'tribixbite.cleverkeys.backup.SettingsImportPlanBuilderTest',
     'tribixbite.cleverkeys.backup.SettingsDefaultsDriftTest',
     'tribixbite.cleverkeys.SettingsSearchCoverageTest',
@@ -422,10 +410,8 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.ClipboardSearchRegexTest',
     'tribixbite.cleverkeys.ConfigNullSafetyTest',
     'tribixbite.cleverkeys.CoreImeHygieneDriftTest',
-    'tribixbite.cleverkeys.EngineInitGateTest',
     'tribixbite.cleverkeys.PredictionTaskRunnerTest',
     'tribixbite.cleverkeys.TestRunnerListDriftTest',
-    'tribixbite.cleverkeys.onnx.CloseOnceGuardTest',
     'tribixbite.cleverkeys.onnx.ModelLoaderReadBytesTest',
     // Backup encryption (2026-07-17) — pure crypto substrate
     'tribixbite.cleverkeys.backup.crypto.Pbkdf2Sha256VectorTest',
@@ -603,8 +589,6 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.customization.CustomShortSwipeExecutorTest',
     'tribixbite.cleverkeys.autocorrect.AutoCorrectEndToEndTest',
     // Audit remediation (2026-07-17) — new MockK tests
-    'tribixbite.cleverkeys.NeuralSwipeTypingEngineInitRetryTest',
-    'tribixbite.cleverkeys.PredictionCoordinatorNeuralLifecycleTest',
     'tribixbite.cleverkeys.InputCoordinatorReplayGuardTest',
     'tribixbite.cleverkeys.CleanupHandlerTeardownTest',
     'tribixbite.cleverkeys.AutocapitalisationCallbackDedupeTest',

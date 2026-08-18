@@ -44,8 +44,8 @@ class DebugModePropagator(
             }
         })
 
-        // Propagate debug mode to PredictionCoordinator (gates expensive logging)
-        predictionCoordinator?.setDebugModeActive(enabled)
+        // PredictionCoordinator no longer gates any debug logging of its own: the only
+        // consumer was the neural engine's per-swipe trace dump, deleted 2026-08-18.
     }
 
     companion object {

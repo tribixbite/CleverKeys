@@ -63,20 +63,6 @@ class BasicInstrumentedTest {
     }
 
     @Test
-    fun testVocabularyTrieIntegration() {
-        // Test VocabularyTrie in Android context
-        val trie = VocabularyTrie()
-        trie.insert("hello")
-        trie.insert("help")
-        trie.insert("helicopter")
-
-        assertTrue(trie.hasPrefix("hel"))
-        assertTrue(trie.containsWord("hello"))
-        assertTrue(trie.containsWord("help"))
-        assertFalse(trie.containsWord("hel"))
-    }
-
-    @Test
     fun testDictionaryWordCreation() {
         val word = DictionaryWord("test", 500, WordSource.MAIN, true)
         assertEquals("test", word.word)

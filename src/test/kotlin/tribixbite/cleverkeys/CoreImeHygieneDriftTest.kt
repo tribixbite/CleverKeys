@@ -515,173 +515,65 @@ class CoreImeHygieneDriftTest {
     }
 
     /**
-     * Contraction alias keys are REACHABLE, never PREFERRED — at **both** sites, not just one.
+     * The 2026-08-17 fr/it contraction restore injected 17,931 fr / 21,214 it alias keys
+     * (`dabaissement` for `d'abaissement`) into the prediction paths. Those keys are NOT words
+     * of the language: they must be REACHABLE — so a swipe or a prefix search can surface the
+     * apostrophe form — but must never OUTRANK a real word.
      *
-     * ### The bug this pins
+     * There were three scoring sites. The two in `OptimizedVocabulary` died with the neural
+     * engine on 2026-08-18; this test now pins the two that remain, because they are the ones
+     * a future edit can quietly turn back into a boost:
      *
-     * `loadContractionsFromInputStream` injects every non-paired alias key into `vocabulary`
-     * at the frequency floor, precisely so the 17,931 fr / 21,214 it mappings restored on
-     * 2026-08-17 cannot outrank real vocabulary. But `filterPredictions` reads `vocabulary`
-     * only behind `_englishFallbackEnabled`, which is `(primary == "en") || (secondary == "en")`
-     * — the code-switching rule. So in a French slate with no English secondary that lookup is
-     * SKIPPED, control falls through to the `nonPairedContractions` fallback, and whatever that
-     * fallback assigns is the score the word actually gets.
+     *  - CTC swipe: `CtcContractionKeys.INJECTED_FREQUENCY` must be `CtcLexiconMerge.MIN_FREQ`.
+     *    The beam adds `lambda * ln(freq + 1e-10)`; at MIN_FREQ that term is ~0, so an injected
+     *    key gets no frequency bonus while every real word does. The neural vocabulary used
+     *    `0.88f` / tier 2 here — a top-100 common-word boost — which is exactly the value this
+     *    test exists to keep out.
+     *  - Tap typing: `WordPredictor.CONTRACTION_ALIAS_RANK` must be 254, one above "absent" and
+     *    the bottom of the range real dictionary words occupy. At the old hard-coded rank 50 all
+     *    21k Italian aliases scored ~821k, above nearly every real word.
      *
-     * That fallback used to fabricate `WordInfo(0.88f, tier 2)` — a top-100 common-word boost —
-     * which silently defeated the load-time floor in exactly the configuration the floor was
-     * written for. Fixing one site and not the other is the failure mode; this test pins both.
-     *
-     * The English aliases ("doesnt", "cant") are unaffected: they are reached at the
-     * `vocabulary` lookup whenever English is primary or secondary, which is the only
-     * configuration in which English words may surface at all.
+     * Both must also SKIP a key the index/trie already holds, so a real word that happens to be
+     * an alias key (fr `la` -> `l'a`) keeps its real frequency.
      */
     @Test
     fun contractionAliasKeysEnterAtTheFloorAtEveryScoringSite() {
-        val relative = "tribixbite/cleverkeys/OptimizedVocabulary.kt"
-        val vocab = source(relative)
-
-        // The constants themselves must be a floor, not a boost. Read from source rather than
-        // referenced directly: the companion is private, and widening production visibility to
-        // suit a test is the wrong trade.
-        val declaredFrequency = Regex("const val CONTRACTION_ALIAS_FREQUENCY = ([0-9.]+)f")
-            .find(vocab)?.groupValues?.get(1)?.toFloat()
+        // ── Site 1: the CTC swipe lexicon ────────────────────────────────────────────
+        val ctcRel = "tribixbite/cleverkeys/swipe/ctc/CtcContractionKeys.kt"
+        val ctc = source(ctcRel)
         assertWithMessage(
-            "$relative must declare CONTRACTION_ALIAS_FREQUENCY as a plain float literal so " +
-                "this test can check its magnitude."
-        ).that(declaredFrequency).isNotNull()
-        assertWithMessage(
-            "CONTRACTION_ALIAS_FREQUENCY must be a floor. Anything a real word can reach makes " +
-                "tens of thousands of injected pseudo-words competitive with real vocabulary."
-        ).that(declaredFrequency!!).isLessThan(0.01f)
-        assertWithMessage(
-            "CONTRACTION_ALIAS_TIER must be the ordinary tier — tier 2 is the common-word boost."
-        ).that(vocab).contains("const val CONTRACTION_ALIAS_TIER: Byte = 0")
-
-        // Both regions are stripped of comments before the negative assertions: the comments
-        // deliberately NAME the rejected value ("this used to be 0.88f") so the next reader knows
-        // why the constant is there, and a raw text search cannot tell that from a live boost.
-        fun code(region: String): String = region
-            .lineSequence()
+            "$ctcRel: injected contraction keys must enter at CtcLexiconMerge.MIN_FREQ. Any " +
+                "literal frequency here decouples the floor from the scale the tuned lambda " +
+                "was fitted against."
+        ).that(ctc).contains("const val INJECTED_FREQUENCY: Double = CtcLexiconMerge.MIN_FREQ")
+        // Strip comments before the negative assertion: the KDoc deliberately NAMES the
+        // rejected value so the next reader knows why the constant exists, and a raw text
+        // search cannot tell that from a live boost.
+        val ctcCode = ctc.lineSequence()
             .filterNot { val t = it.trim(); t.startsWith("//") || t.startsWith("*") || t.startsWith("/*") }
             .joinToString("\n")
+        assertWithMessage(
+            "$ctcRel must not reintroduce the neural vocabulary's 0.88f common-word boost."
+        ).that(ctcCode).doesNotContain("0.88")
+        assertWithMessage(
+            "$ctcRel must insert injected keys at INJECTED_FREQUENCY, not at a computed or " +
+                "per-word frequency."
+        ).that(ctc).contains("trie.insert(lowered, INJECTED_FREQUENCY)")
 
-        // Site 1 — the runtime fallback in filterPredictions. This is the ONLY site that scores
-        // the key in a non-English slate, because the `vocabulary` lookup above it is gated.
-        val fallback = code(
-            vocab
-                .substringAfter("if (info == null && nonPairedContractions.containsKey(word)) {")
-                .substringBefore("if (info == null) {")
-        )
+        // ── Site 2: the tap-typing secondary prefix index ────────────────────────────
+        val wpRel = "tribixbite/cleverkeys/WordPredictor.kt"
+        val wp = source(wpRel)
         assertWithMessage(
-            "$relative: the nonPairedContractions fallback in filterPredictions must assign the " +
-                "shared alias constants. It is reached only when English fallback is OFF, so a " +
-                "hard-coded frequency here overrides the load-time floor for every non-English " +
-                "alias key without touching the injection code that appears to set the policy."
-        ).that(fallback).contains("WordInfo(CONTRACTION_ALIAS_FREQUENCY, CONTRACTION_ALIAS_TIER)")
+            "$wpRel must declare CONTRACTION_ALIAS_RANK as the rank FLOOR (254 = one above " +
+                "absent). A lower rank number is a HIGHER score: rank 50 scored ~821k and " +
+                "buried real words under injected pseudo-words."
+        ).that(wp).contains("private const val CONTRACTION_ALIAS_RANK = 254")
         assertWithMessage(
-            "$relative: the nonPairedContractions fallback must not re-fabricate a frequency. " +
-                "0.88f/tier 2 is the top-100 common-word boost this test exists to keep out."
-        ).that(fallback).doesNotContain("0.88f")
-
-        // Site 2 — the load-time injection. The `!containsKey` branch is the productive-elision
-        // case (fr `dabaissement`); the else branch is the attested-alias upgrade and is
-        // deliberately left alone, so scope the assertion to the injection branch only.
-        val injection = code(
-            vocab
-                .substringAfter("if (!vocabulary.containsKey(withoutApostrophe)) {")
-                .substringBefore("} else {")
-        )
+            "$wpRel must add a new alias key at CONTRACTION_ALIAS_RANK, never at a literal rank."
+        ).that(wp).contains("index.addWord(withoutApostrophe, CONTRACTION_ALIAS_RANK)")
         assertWithMessage(
-            "$relative: load-time injection of an alias key the vocabulary does not attest must " +
-                "use the same floor constants as the runtime fallback and as the other two " +
-                "engines (CtcContractionKeys.INJECTED_FREQUENCY, WordPredictor" +
-                ".CONTRACTION_ALIAS_RANK)."
-        ).that(injection).contains("WordInfo(CONTRACTION_ALIAS_FREQUENCY, CONTRACTION_ALIAS_TIER)")
-        assertWithMessage(
-            "$relative: the injection branch must not boost. A key the vocabulary lacks is by " +
-                "construction not a word of the language."
-        ).that(injection).doesNotContain("0.88f")
-    }
-
-    /**
-     * Re-home guard (2026-08-18): the unigram language detector moved off the dying
-     * `onnx.SwipePredictorOrchestrator` onto [PredictionCoordinator].
-     *
-     * This wiring is UNUSUALLY easy to break silently. The feed call site
-     * (`SuggestionHandler.updateContextWithSelectedWord`) is wrapped in a try/catch that
-     * only logs a warning, so a detector that never loads — or a call that lands on a
-     * different object — degrades to "language detection quietly stops" with no crash, no
-     * failing assertion and no user-visible error. Pin both ends of the wire.
-     */
-    @Test
-    fun languageDetectorIsFedFromTheCoordinatorOnEveryCommit() {
-        val handler = source("tribixbite/cleverkeys/SuggestionHandler.kt")
-        val service = source("tribixbite/cleverkeys/CleverKeysService.kt")
-        val coordinator = source("tribixbite/cleverkeys/PredictionCoordinator.kt")
-
-        assertWithMessage(
-            "SuggestionHandler must feed committed words to " +
-                "PredictionCoordinator.trackCommittedWord. Every commit — tap, CTC swipe " +
-                "and geometric swipe — flows through here; it is the ONLY feed."
-        ).that(handler).contains("predictionCoordinator.trackCommittedWord(word)")
-        assertWithMessage(
-            "SuggestionHandler must not reach the deleted neural orchestrator for language " +
-                "detection."
-        ).that(handler).doesNotContain("SwipePredictorOrchestrator.getInstance")
-        assertWithMessage(
-            "CleverKeysService.onStartInputView must clear the detector's history on a new " +
-                "field via the coordinator, so one field's language profile cannot bleed " +
-                "into the next."
-        ).that(service).contains("clearLanguageHistory()")
-        assertWithMessage(
-            "CleverKeysService must not reach the deleted neural orchestrator."
-        ).that(service).doesNotContain("SwipePredictorOrchestrator.getInstance")
-
-        assertWithMessage(
-            "PredictionCoordinator must own the UnigramLanguageDetector."
-        ).that(coordinator).contains("UnigramLanguageDetector(context)")
-        val track = coordinator
-            .substringAfter("fun trackCommittedWord(word: String) {")
-            .substringBefore("}")
-        assertWithMessage(
-            "PredictionCoordinator.trackCommittedWord must actually reach the detector's " +
-                "addWord — an empty body here is the exact silent failure this guards."
-        ).that(track).contains("addWord(word)")
-        assertWithMessage(
-            "The detector must be loaded lazily through languageDetectorOrLoad(), not " +
-                "assumed non-null: it is built on first commit, not at IME startup."
-        ).that(track).contains("languageDetectorOrLoad()")
-    }
-
-    /**
-     * Re-home guard (2026-08-18): `LanguagePreferenceKeys.migrateToLanguageSpecific` used
-     * to be invoked from inside `OptimizedVocabulary`, which the neural-engine removal
-     * deletes. It now runs from [DictionaryManager]'s init.
-     *
-     * ORDER IS LOAD-BEARING. `migrateToLanguageSpecific` writes `custom_words_en` only when
-     * that key does NOT already exist, and `migrateLegacyCustomWords` creates
-     * `custom_words_<systemLang>`. Run them the other way round on an `en` device and every
-     * pre-v1.1.86 user's global custom and disabled words are silently stranded — with the
-     * version flag set, so it never retries.
-     */
-    @Test
-    fun preV1_1_86CustomWordMigrationRunsFromDictionaryManagerAndRunsFirst() {
-        val dm = source("tribixbite/cleverkeys/DictionaryManager.kt")
-
-        val langSpecificIdx = dm.indexOf("LanguagePreferenceKeys.migrateToLanguageSpecific(prefs)")
-        assertWithMessage(
-            "DictionaryManager must invoke LanguagePreferenceKeys.migrateToLanguageSpecific. " +
-                "Its previous (and only other) caller, OptimizedVocabulary, is deleted; " +
-                "without this call pre-v1.1.86 upgraders lose their custom/disabled words."
-        ).that(langSpecificIdx).isAtLeast(0)
-
-        val legacyIdx = dm.indexOf("migrateLegacyCustomWords()")
-        assertWithMessage("DictionaryManager must still run migrateLegacyCustomWords().")
-            .that(legacyIdx).isAtLeast(0)
-        assertWithMessage(
-            "migrateToLanguageSpecific must run BEFORE migrateLegacyCustomWords: the latter " +
-                "creates custom_words_<lang>, and the former skips whenever custom_words_en " +
-                "already exists."
-        ).that(langSpecificIdx).isLessThan(legacyIdx)
+            "$wpRel must SKIP an alias key the index already holds, so a real word that is " +
+                "also an alias key (fr `la` -> `l'a`) keeps its real frequency."
+        ).that(wp).contains("!index.contains(normalized)")
     }
 }

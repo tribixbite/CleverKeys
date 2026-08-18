@@ -25,7 +25,6 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import tribixbite.cleverkeys.onnx.SwipePredictorOrchestrator
 import tribixbite.cleverkeys.langpack.LanguagePackManager
 
 /**
@@ -455,17 +454,17 @@ class DictionaryManagerActivity : AppCompatActivity() {
     }
 
     /**
-     * Reload custom/user/disabled words in both typing and swipe predictors
-     * PERFORMANCE: Only reloads small dynamic sets, not main dictionaries
+     * Reload custom/user/disabled words in the typing predictor.
+     * PERFORMANCE: Only reloads small dynamic sets, not main dictionaries.
+     *
+     * The swipe engines need no signal: the CTC adapter keys its merged lexicon on a content
+     * hash of the custom/disabled word sets, so an edit here invalidates it on the next
+     * decode, and the geometric engine rebuilds its template index per (layout, language).
      */
     private fun reloadPredictions() {
         try {
             // Signal typing predictions to reload on next prediction (lazy reload for performance)
             WordPredictor.signalReloadNeeded()
-
-            // Reload swipe beam search vocabulary immediately (singleton, one-time cost)
-            val swipePredictor = SwipePredictorOrchestrator.getInstance(this)
-            swipePredictor.reloadVocabulary()
 
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                 android.util.Log.d(TAG, "Reloaded predictions after dictionary changes")

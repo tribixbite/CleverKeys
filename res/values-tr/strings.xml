@@ -8,7 +8,6 @@
     <string name="pref_layouts_item">Tuş düzeni %1$d: %2$s</string>
     <string name="pref_layouts_remove_custom">Tuş düzenini kaldır</string>
     <string name="pref_custom_layout_title">Özel tuş düzeni</string>
-    <string name="pref_swipe_calibration_title">Kaydırarak yazmayı kalibre et</string>
     <!-- <string name="pref_show_number_row_no_number_row">No number row</string> -->
     <!-- <string name="pref_show_number_row_no_symbols">Number row without symbols</string> -->
     <!-- <string name="pref_show_number_row_symbols">Number row with symbols</string> -->
@@ -141,7 +140,6 @@
     <string name="settings_section_advanced">🔧 Gelişmiş</string>
     <string name="settings_debug_title">Hata Ayıklama Bilgisi</string>
     <string name="settings_debug_desc">Ayrıntılı günlük kaydı ve performans ölçümlerini göster</string>
-    <string name="settings_calibration_button">🧪 Kaydırma Kalibrasyonu</string>
 
     <!-- Information &amp; Actions Section -->
     <string name="settings_section_info">📋 Bilgi ve İşlemler</string>

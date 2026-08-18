@@ -18,7 +18,9 @@ import java.util.zip.ZipInputStream
  * - dictionary.bin: V2 binary dictionary with accent normalization
  * - unigrams.txt: word frequency list for language detection
  * - contractions.json: optional apostrophe word mappings (e.g., "cest" -> "c'est")
- * - prefix_boost.bin: optional Aho-Corasick trie for prefix boosting (non-English)
+ * - prefix_boost.bin: optional Aho-Corasick trie for prefix boosting. Its only consumer,
+ *   the neural beam search, was removed on 2026-08-18. The file is still ACCEPTED and
+ *   copied on import so existing packs keep installing cleanly; nothing reads it back.
  *
  * Packs are imported via Storage Access Framework (no internet permission needed).
  * Stored in app internal storage: files/langpacks/{code}/
@@ -257,9 +259,15 @@ class LanguagePackManager(private val context: Context) {
     }
 
     /**
-     * Get prefix boost trie file path for a language code.
-     * Returns null if not available.
+     * Path to an installed pack's prefix-boost trie, or null if the pack has none.
+     *
+     * No live consumer since 2026-08-18: the neural beam search that applied these boosts was
+     * removed. Kept (with [PREFIX_BOOST_FILE] still copied on import) so that packs built
+     * against the old format continue to install without error, and so a future re-use of the
+     * data does not require a pack-format change. Marked @Suppress rather than deleted for
+     * exactly that reason.
      */
+    @Suppress("unused")
     fun getPrefixBoostPath(code: String): File? {
         val prefixBoostFile = File(langpacksDir, "$code/$PREFIX_BOOST_FILE")
         return if (prefixBoostFile.exists()) prefixBoostFile else null

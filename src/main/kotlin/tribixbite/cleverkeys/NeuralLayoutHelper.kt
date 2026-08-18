@@ -2,26 +2,26 @@ package tribixbite.cleverkeys
 
 import android.content.Context
 import android.content.res.Configuration
-import android.graphics.PointF
 import android.util.Log
 import android.view.WindowManager
 
 /**
- * Helper class for neural engine layout configuration and CGR prediction display.
+ * Helper class for keyboard dimension calculation and CGR prediction display.
  *
  * This class centralizes logic for:
  * - Calculating dynamic keyboard dimensions based on user preferences
- * - Extracting key positions from keyboard layout for neural engine
- * - Setting up neural engine with real key positions
  * - Managing CGR (Continuous Gesture Recognition) prediction display
  * - Updating suggestion bar with swipe predictions (legacy methods)
  *
  * Responsibilities:
  * - Dynamic keyboard height calculation (orientation/foldable-aware)
- * - Key position extraction via reflection on Keyboard2View
- * - Neural engine configuration with accurate key positions
  * - CGR prediction integration with suggestion bar
  * - Legacy swipe prediction display methods
+ *
+ * The neural-engine half (reflection-based key-position extraction, QWERTY-bounds and
+ * touch-Y-offset configuration) was deleted with that engine on 2026-08-18. CTC and
+ * geometric both read key geometry from `Keyboard2View.geometryParams()` directly and
+ * never needed this class.
  *
  * NOT included (remains in CleverKeysService):
  * - InputMethodService lifecycle methods
@@ -33,8 +33,7 @@ import android.view.WindowManager
  */
 class NeuralLayoutHelper(
     private val _context: Context,
-    private var _config: Config,
-    private val _predictionCoordinator: PredictionCoordinator
+    private var _config: Config
 ) {
     private var _keyboardView: Keyboard2View? = null // Updated when view changes
     private var _suggestionBar: SuggestionBar? = null // Updated when suggestion bar changes
@@ -219,178 +218,6 @@ class NeuralLayoutHelper(
      */
     fun clearSwipePredictions() {
         _suggestionBar?.setSuggestions(emptyList())
-    }
-
-    /**
-     * Extract key positions from keyboard layout and set them on neural engine.
-     * CRITICAL for neural swipe typing - without this, key detection fails completely!
-     */
-    fun setNeuralKeyboardLayout() {
-        if (_predictionCoordinator.getNeuralEngine() == null || _keyboardView == null) {
-            Log.w(TAG, "Cannot set neural layout - engine or view is null")
-            return
-        }
-
-        val keyPositions = extractKeyPositionsFromLayout()
-
-        if (keyPositions != null && keyPositions.isNotEmpty()) {
-            _predictionCoordinator.getNeuralEngine()!!.setRealKeyPositions(keyPositions)
-            Log.d(TAG, "Set ${keyPositions.size} key positions on neural engine")
-
-            // Calculate QWERTY area bounds from key positions
-            // Use q (top row) and m (bottom row) to determine the vertical extent
-            if (keyPositions.containsKey('q') && keyPositions.containsKey('m')) {
-                val qPos = keyPositions['q']!! // Top row center
-                val mPos = keyPositions['m']!! // Bottom row center
-
-                // Estimate row height from the distance between rows
-                // q is in row 0, a is in row 1, z/m are in row 2
-                val aPos = keyPositions['a'] ?: qPos // getOrDefault is API 24; values are non-null
-                val rowHeight = (mPos.y - qPos.y) / 2.0f // Approximate row height
-
-                // QWERTY bounds: from top of first row to bottom of last row
-                // qwertyTop = q.y - rowHeight/2 (top edge of row 0)
-                // qwertyHeight = 3 * rowHeight (all 3 rows)
-                var qwertyTop = qPos.y - rowHeight / 2.0f
-                var qwertyHeight = 3.0f * rowHeight
-
-                // Ensure qwertyTop is non-negative
-                if (qwertyTop < 0) {
-                    qwertyHeight += qwertyTop // Reduce height by the negative amount
-                    qwertyTop = 0f
-                }
-
-                // Set bounds on neural engine
-                _predictionCoordinator.getNeuralEngine()!!.setQwertyAreaBounds(qwertyTop, qwertyHeight)
-                Log.d(
-                    TAG,
-                    String.format(
-                        java.util.Locale.ROOT,
-                        "Set QWERTY bounds: top=%.0f, height=%.0f (q.y=%.0f, m.y=%.0f)",
-                        qwertyTop, qwertyHeight, qPos.y, mPos.y
-                    )
-                )
-
-                // Touch Y-offset for finger occlusion compensation
-                // User-configurable offset (0-50% of row height) to compensate for finger obscuring keys
-                // Default 12.5% is conservative within recommended 10-15% range
-                val offsetPercent = _config.finger_occlusion_offset / 100.0f
-                val touchYOffset = rowHeight * offsetPercent
-                _predictionCoordinator.getNeuralEngine()!!.setTouchYOffset(touchYOffset)
-                Log.d(
-                    TAG,
-                    String.format(
-                        java.util.Locale.ROOT,
-                        "Touch Y-offset: %.0f pixels (%.1f%% of row height %.0f)",
-                        touchYOffset, _config.finger_occlusion_offset, rowHeight
-                    )
-                )
-
-                // Set margins for X coordinate normalization
-                // Touch coordinates include margin offsets which must be accounted for in normalization
-                val marginLeft = _config.margin_left
-                val marginRight = _config.margin_right
-                _predictionCoordinator.getNeuralEngine()!!.setMargins(marginLeft, marginRight)
-                Log.d(
-                    TAG,
-                    String.format(java.util.Locale.ROOT, "Margins: left=%.0f, right=%.0f pixels", marginLeft, marginRight)
-                )
-
-                // Debug output only when debug mode is active
-                if (_debugMode) {
-                    sendDebugLog(String.format(java.util.Locale.ROOT, ">>> Neural engine: %d key positions set\n", keyPositions.size))
-                    sendDebugLog(String.format(java.util.Locale.ROOT, ">>> QWERTY bounds: top=%.0f, height=%.0f\n", qwertyTop, qwertyHeight))
-                    sendDebugLog(String.format(java.util.Locale.ROOT, ">>> Touch Y-offset: %.0f px (finger occlusion compensation)\n", touchYOffset))
-                    val zPos = keyPositions['z'] ?: mPos // getOrDefault is API 24; values are non-null
-                    sendDebugLog(
-                        String.format(
-                            java.util.Locale.ROOT,
-                            ">>> Samples: q=(%.0f,%.0f) a=(%.0f,%.0f) z=(%.0f,%.0f)\n",
-                            qPos.x, qPos.y, aPos.x, aPos.y, zPos.x, zPos.y
-                        )
-                    )
-                }
-            } else {
-                Log.w(TAG, "Cannot calculate QWERTY bounds - missing q or m key positions")
-                // Debug output only when debug mode is active
-                if (_debugMode) {
-                    sendDebugLog(String.format(java.util.Locale.ROOT, ">>> Neural engine: %d key positions set\n", keyPositions.size))
-                }
-            }
-        } else {
-            Log.e(TAG, "Failed to extract key positions from layout")
-        }
-    }
-
-    /**
-     * Extract character key positions from the keyboard layout using reflection.
-     * Returns a map of character -> center point (in pixels), or null on error.
-     *
-     * @return Map of character to center point, or null on error
-     */
-    private fun extractKeyPositionsFromLayout(): Map<Char, PointF>? {
-        if (_keyboardView == null) {
-            Log.w(TAG, "Cannot extract key positions - keyboardView is null")
-            return null
-        }
-
-        return try {
-            // Use reflection to access keyboard data from view
-            val keyboardField = _keyboardView!!.javaClass.getDeclaredField("_keyboard")
-            keyboardField.isAccessible = true
-            val keyboard = keyboardField.get(_keyboardView) as? KeyboardData
-
-            if (keyboard == null) {
-                Log.w(TAG, "Keyboard data is null after reflection")
-                return null
-            }
-
-            // Get view dimensions
-            val keyboardWidth = _keyboardView!!.width.toFloat()
-            val keyboardHeight = _keyboardView!!.height.toFloat()
-
-            if (keyboardWidth == 0f || keyboardHeight == 0f) {
-                Log.w(TAG, "Keyboard dimensions are zero")
-                return null
-            }
-
-            // Calculate scale factors (layout units -> pixels)
-            val scaleX = keyboardWidth / keyboard.keysWidth
-            val scaleY = keyboardHeight / keyboard.keysHeight
-
-            // Extract center positions of all character keys
-            val keyPositions = mutableMapOf<Char, PointF>()
-            var currentY = 0f
-
-            for (row in keyboard.rows) {
-                currentY += row.shift * scaleY
-                val centerY = currentY + (row.height * scaleY / 2.0f)
-                var currentX = 0f
-
-                for (key in row.keys) {
-                    currentX += key.shift * scaleX
-
-                    // Only process character keys
-                    val kv = key.keys?.getOrNull(0)
-                    if (kv != null) {
-                        if (kv.getKind() == KeyValue.Kind.Char) {
-                            val c = kv.getChar()
-                            val centerX = currentX + (key.width * scaleX / 2.0f)
-                            keyPositions[c] = PointF(centerX, centerY)
-                        }
-                    }
-
-                    currentX += key.width * scaleX
-                }
-
-                currentY += row.height * scaleY
-            }
-
-            keyPositions
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to extract key positions", e)
-            null
-        }
     }
 
     companion object {

@@ -13,7 +13,6 @@ import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
 import tribixbite.cleverkeys.ui.settings.SettingsSwitch
-import tribixbite.cleverkeys.ui.settings.openCalibration
 import tribixbite.cleverkeys.ui.settings.openSwipeDebugActivity
 import tribixbite.cleverkeys.ui.settings.saveSetting
 
@@ -121,11 +120,9 @@ internal fun SettingsActivity.AdvancedSection() {
                 // Setting key `neural_user_max_seq_length` is preserved in Config
                 // so backup/restore round-trips still work.
 
-                Button(
-                    onClick = { openCalibration() },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(stringResource(R.string.settings_calibration_button))
-                }
+                // The "Keyboard Calibration" button opened SwipeCalibrationActivity, which was
+                // deleted with the neural engine on 2026-08-18: the screen existed to record and
+                // replay traces through the transformer and showed a fatal dialog without its
+                // models. Keyboard height/margins are configured in Appearance.
             }
 }

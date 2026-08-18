@@ -9,7 +9,6 @@
     <string name="pref_layouts_item">레이아웃 %1$d: %2$s</string>
     <string name="pref_layouts_remove_custom">레이아웃 제거</string>
     <string name="pref_custom_layout_title">사용자 정의 레이아웃</string>
-    <string name="pref_swipe_calibration_title">스와이프 입력 보정</string>
     <!-- <string name="pref_show_number_row_no_number_row">No number row</string> -->
     <!-- <string name="pref_show_number_row_no_symbols">Number row without symbols</string> -->
     <!-- <string name="pref_show_number_row_symbols">Number row with symbols</string> -->
@@ -143,7 +142,6 @@
     <string name="settings_section_advanced">🔧 고급</string>
     <string name="settings_debug_title">디버그 정보</string>
     <string name="settings_debug_desc">상세 로그와 성능 지표를 표시합니다</string>
-    <string name="settings_calibration_button">🧪 스와이프 보정</string>
 
     <!-- Information &amp; Actions Section -->
     <string name="settings_section_info">📋 정보 및 작업</string>

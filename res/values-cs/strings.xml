@@ -8,7 +8,6 @@
     <string name="pref_layouts_item">Rozložení %1$d: %2$s</string>
     <string name="pref_layouts_remove_custom">Odebrat rozložení</string>
     <string name="pref_custom_layout_title">Vlastní rozložení</string>
-    <string name="pref_swipe_calibration_title">Kalibrovat psaní tahem</string>
     <!-- <string name="pref_show_number_row_no_number_row">No number row</string> -->
     <!-- <string name="pref_show_number_row_no_symbols">Number row without symbols</string> -->
     <!-- <string name="pref_show_number_row_symbols">Number row with symbols</string> -->
@@ -143,7 +142,6 @@
     <string name="settings_section_advanced">🔧 Pokročilé</string>
     <string name="settings_debug_title">Ladicí informace</string>
     <string name="settings_debug_desc">Zobrazit podrobné protokoly a metriky výkonu</string>
-    <string name="settings_calibration_button">🧪 Kalibrace tahu</string>
 
     <!-- Information &amp; Actions Section -->
     <string name="settings_section_info">📋 Informace &amp; Akce</string>

@@ -211,7 +211,6 @@ class WordPredictor {
     private var personalizedScorer: PersonalizedScorer? = null // Phase 7.2: Adaptive scoring
     private var languageDetector: LanguageDetector? = LanguageDetector()
     private var multiLanguageManager: MultiLanguageManager? = null // Phase 8.3: Multi-language models
-    private var multiLanguageDictManager: MultiLanguageDictionaryManager? = null // Phase 8.4: Multi-language dictionaries
     private var currentLanguage: String = "en" // Default to English
     private val recentWords: MutableList<String> = mutableListOf() // For language detection
     private var config: Config? = null
@@ -268,17 +267,16 @@ class WordPredictor {
             Log.d(TAG, "PersonalizationEngine and PersonalizedScorer initialized for adaptive predictions")
         }
 
-        // Phase 8.3 & 8.4: Initialize Multi-Language support if enabled
+        // Phase 8.3: Initialize Multi-Language support if enabled.
+        // Phase 8.4's MultiLanguageDictionaryManager was deleted with the neural engine
+        // (2026-08-18): it wrapped an OptimizedVocabulary per language and was constructed
+        // here but never read — per-language tap dictionaries come from DictionaryManager.
         val enableMultiLang = config?.enable_multilang ?: false
         if (enableMultiLang) {
             if (multiLanguageManager == null) {
                 val primaryLang = config?.primary_language ?: "en"
                 multiLanguageManager = MultiLanguageManager(context, primaryLang)
                 Log.d(TAG, "MultiLanguageManager initialized (primary: $primaryLang)")
-            }
-            if (multiLanguageDictManager == null) {
-                multiLanguageDictManager = MultiLanguageDictionaryManager(context)
-                Log.d(TAG, "MultiLanguageDictionaryManager initialized")
             }
         }
 

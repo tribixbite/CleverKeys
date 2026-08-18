@@ -144,8 +144,7 @@ class ManagerInitializer(
         // Initialize neural layout helper (v1.32.362)
         val neuralLayoutHelper = NeuralLayoutHelper(
             context,
-            config,
-            predictionCoordinator
+            config
         )
         neuralLayoutHelper.setKeyboardView(keyboardView)
 

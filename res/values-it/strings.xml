@@ -116,7 +116,6 @@
     <string name="toast_no_voice_input">Nessuna app di digitazione vocale installata</string>
 
     <!-- Calibrazione dello scorrimento -->
-    <string name="pref_swipe_calibration_title">Calibra la digitazione a scorrimento</string>
 
     <!-- Clipboard History View (Material 3) -->
     <string name="clipboard_edit_duplicate">Esiste già una voce con questo contenuto</string>
@@ -166,7 +165,6 @@
     <string name="settings_section_advanced">🔧 Avanzate</string>
     <string name="settings_debug_title">Informazioni di debug</string>
     <string name="settings_debug_desc">Mostra registrazione dettagliata e metriche delle prestazioni</string>
-    <string name="settings_calibration_button">🧪 Calibrazione scorrimento</string>
 
     <!-- Information & Actions Section -->
     <string name="settings_section_info">📋 Informazioni e azioni</string>

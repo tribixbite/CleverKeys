@@ -2,7 +2,6 @@ package tribixbite.cleverkeys
 
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewTreeObserver
 import android.widget.LinearLayout
 
 /**
@@ -74,46 +73,14 @@ class PredictionViewSetup(
     ): SetupResult {
         // Check if word prediction or swipe typing is enabled
         if (config.word_prediction_enabled || config.swipe_typing_enabled) {
-            // CRITICAL FIX: Initialize prediction engines in background thread to avoid 3-second UI freeze
-            // ONNX model loading takes 2.8-4.4s and MUST NOT block the main thread
-            // OPTIMIZATION: Only spawn thread if neural engine not yet ready
-            if (predictionCoordinator?.isSwipeTypingAvailable() == false) {
-                // Capture references for use in callback
-                val coordRef = predictionCoordinator
-                val helperRef = neuralLayoutHelper
-                val viewRef = keyboardView
-                Thread {
-                    coordRef.ensureInitialized()
-                    // FIX v1.1.81: After initialization, set up neural layout directly
-                    // Don't rely on requestLayout() triggering OnGlobalLayoutListener
-                    viewRef.post {
-                        val engine = coordRef.getNeuralEngine()
-                        if (engine != null && viewRef.width > 0 && viewRef.height > 0) {
-                            val kbWidth = viewRef.width.toFloat()
-                            val kbHeight = helperRef?.calculateDynamicKeyboardHeight()
-                                ?: viewRef.height.toFloat()
-                            engine.setKeyboardDimensions(kbWidth, kbHeight)
-                            helperRef?.setNeuralKeyboardLayout()
-                            android.util.Log.d("PredictionViewSetup",
-                                "Neural layout setup complete after async init: ${kbWidth}x${kbHeight}")
-                        }
-                    }
-                }.start()
-            }
-
-            // Set keyboard dimensions for neural engine if available
-            if (config.swipe_typing_enabled && predictionCoordinator != null) {
-                val neuralEngine = predictionCoordinator.getNeuralEngine()
-                if (neuralEngine != null) {
-                    neuralEngine.setKeyboardDimensions(
-                        keyboardView.getWidth().toFloat(),
-                        keyboardView.getHeight().toFloat()
-                    )
-                    keyboardView.setSwipeTypingComponents(
-                        predictionCoordinator.getWordPredictor(),
-                        keyboard2
-                    )
-                }
+            // Re-wire the view's predictor handle whenever a prediction-capable input view is
+            // built. `setSwipeTypingComponents` is null-tolerant and idempotent; the initial
+            // (unconditional) wiring happens in PredictionInitializer.
+            if (predictionCoordinator != null) {
+                keyboardView.setSwipeTypingComponents(
+                    predictionCoordinator.getWordPredictor(),
+                    keyboard2
+                )
             }
 
             // Create suggestion bar if needed
@@ -220,59 +187,6 @@ class PredictionViewSetup(
 
             // Determine which view to use as input view
             val inputView = inputViewContainer ?: keyboardView
-
-            // Set correct keyboard dimensions for CGR after view is laid out
-            // FIX v1.1.81: On first app load, neural engine may still be initializing in background
-            // Keep the layout listener active until BOTH conditions are met:
-            // 1. Keyboard view has valid dimensions (layout complete)
-            // 2. Neural engine is initialized and ready
-
-            // Helper to update layout dimensions and keys - requires both conditions
-            val updateNeuralLayout: () -> Boolean = updateFun@{
-                val engine = predictionCoordinator?.getNeuralEngine()
-                if (engine == null) {
-                    // Engine not ready yet - keep listener active
-                    return@updateFun false
-                }
-                if (keyboardView.width <= 0 || keyboardView.height <= 0) {
-                    // Layout not ready yet - keep listener active
-                    return@updateFun false
-                }
-
-                // Both conditions met - set up neural layout
-                val keyboardWidth = keyboardView.width.toFloat()
-                val keyboardHeight = neuralLayoutHelper?.calculateDynamicKeyboardHeight()
-                    ?: keyboardView.height.toFloat()
-
-                engine.setKeyboardDimensions(keyboardWidth, keyboardHeight)
-
-                // Set real key positions for accurate coordinate mapping
-                neuralLayoutHelper?.setNeuralKeyboardLayout()
-
-                return@updateFun true // Success - can remove listener
-            }
-
-            // Try setting immediately if both conditions are already met
-            // This ensures predictions work for subsequent input views (view reuse)
-            val immediateSuccess = updateNeuralLayout()
-
-            // Add listener to catch layout completion AND/OR engine initialization
-            // Only remove when both conditions are satisfied
-            if (!immediateSuccess) {
-                keyboardView.viewTreeObserver.addOnGlobalLayoutListener(
-                    object : ViewTreeObserver.OnGlobalLayoutListener {
-                        override fun onGlobalLayout() {
-                            // Try to set up neural layout - returns true when successful
-                            if (updateNeuralLayout()) {
-                                // Both conditions met - remove listener
-                                keyboardView.viewTreeObserver
-                                    .removeOnGlobalLayoutListener(this)
-                            }
-                            // If false, listener stays active to retry on next layout pass
-                        }
-                    }
-                )
-            }
 
             // topPane and scrollView are now tracked throughout the method
             return SetupResult(inputView, suggestionBar, inputViewContainer, contentPaneContainer, topPane, scrollView)

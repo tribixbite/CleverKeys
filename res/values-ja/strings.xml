@@ -8,7 +8,6 @@
     <string name="pref_layouts_item">レイアウト %1$d: %2$s</string>
     <string name="pref_layouts_remove_custom">レイアウトを削除</string>
     <string name="pref_custom_layout_title">カスタムレイアウト</string>
-    <string name="pref_swipe_calibration_title">スワイプ入力を調整</string>
     <!-- <string name="pref_show_number_row_no_number_row">No number row</string> -->
     <!-- <string name="pref_show_number_row_no_symbols">Number row without symbols</string> -->
     <!-- <string name="pref_show_number_row_symbols">Number row with symbols</string> -->
@@ -142,7 +141,6 @@
     <string name="settings_section_advanced">🔧 詳細設定</string>
     <string name="settings_debug_title">デバッグ情報</string>
     <string name="settings_debug_desc">詳細なログとパフォーマンス指標を表示します</string>
-    <string name="settings_calibration_button">🧪 スワイプ調整</string>
 
     <!-- Information &amp; Actions Section -->
     <string name="settings_section_info">📋 情報と操作</string>

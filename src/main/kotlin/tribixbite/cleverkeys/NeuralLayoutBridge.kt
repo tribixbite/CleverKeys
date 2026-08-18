@@ -101,15 +101,6 @@ class NeuralLayoutBridge(
         neuralLayoutHelper?.clearSwipePredictions()
     }
 
-    /**
-     * Extract key positions from keyboard layout and set them on neural engine.
-     *
-     * CRITICAL for neural swipe typing - without this, key detection fails completely!
-     * Delegates to NeuralLayoutHelper if available. No-op if helper is null.
-     */
-    fun setNeuralKeyboardLayout() {
-        neuralLayoutHelper?.setNeuralKeyboardLayout()
-    }
 
     companion object {
         /**

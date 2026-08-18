@@ -39,7 +39,6 @@ class TestRunnerListDriftTest {
     private val knownUnrunnable = setOf(
         "tribixbite.cleverkeys.ComposeKeyTest",
         "tribixbite.cleverkeys.IntegrationTest",
-        "tribixbite.cleverkeys.NeuralPredictionTest",
     )
 
     // Matches an array literal element: a single-quoted FQCN in build.gradle.

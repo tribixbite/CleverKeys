@@ -84,7 +84,6 @@
     <string name="toast_no_voice_input">Pas d\'application de saisie vocale</string>
 
     <!-- Calibrage du glissé -->
-    <string name="pref_swipe_calibration_title">Calibrer la saisie par glissé</string>
 
     <!-- Clipboard History View (Material 3) -->
     <string name="clipboard_edit_duplicate">Une entrée avec ce contenu existe déjà</string>
@@ -134,7 +133,6 @@
     <string name="settings_section_advanced">🔧 Avancé</string>
     <string name="settings_debug_title">Informations de débogage</string>
     <string name="settings_debug_desc">Afficher la journalisation détaillée et les métriques de performance</string>
-    <string name="settings_calibration_button">🧪 Calibrage du glissé</string>
 
     <!-- Information & Actions Section -->
     <string name="settings_section_info">📋 Informations &amp; actions</string>

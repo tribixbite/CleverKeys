@@ -16,31 +16,11 @@
 # Keep our specific services (FIXED: was tribixbite.keyboard2)
 -keep class tribixbite.cleverkeys.CleverKeysService { *; }
 
-# Keep all CleverKeys ONNX/neural classes
+# Keep the ONNX session loader (onnx/ModelLoader) — the CTC encoder builds its
+# OrtSession through it. The rest of the onnx package was deleted with the neural
+# engine on 2026-08-18.
 -keep class tribixbite.cleverkeys.onnx.** { *; }
-# CRITICAL: Keep inner classes in onnx package (PredictionPostProcessor.Result,
-# PredictionPostProcessor.Candidate, BeamSearchEngine.BeamState, etc.)
--keep class tribixbite.cleverkeys.onnx.**$** { *; }
 -dontwarn tribixbite.cleverkeys.onnx.**
-
-# Keep all neural prediction related classes
--keep class tribixbite.cleverkeys.SwipeTrajectoryProcessor { *; }
--keep class tribixbite.cleverkeys.SwipeTrajectoryProcessor$** { *; }
--keep class tribixbite.cleverkeys.SwipePredictionCandidate { *; }
--keep class tribixbite.cleverkeys.Vocabulary { *; }
--keep class tribixbite.cleverkeys.CharacterTokenizer { *; }
-
-# CRITICAL: Keep beam search data models - required for prediction pipeline
--keep class tribixbite.cleverkeys.BeamSearchState { *; }
--keep class tribixbite.cleverkeys.IndexValue { *; }
--keep class tribixbite.cleverkeys.BeamSearchCandidate { *; }
-
-# CRITICAL: Keep vocabulary types - prediction results use these
--keep class tribixbite.cleverkeys.WordInfo { *; }
--keep class tribixbite.cleverkeys.CandidateWord { *; }
--keep class tribixbite.cleverkeys.FilteredPrediction { *; }
--keep class tribixbite.cleverkeys.SwipeStats { *; }
--keep class tribixbite.cleverkeys.VocabularyStats { *; }
 
 # CRITICAL: Keep gesture recognizer types
 -keep class tribixbite.cleverkeys.SwipeResult { *; }
@@ -65,26 +45,10 @@
 -keep class tribixbite.cleverkeys.Config { *; }
 -keep class tribixbite.cleverkeys.Config$** { *; }
 
-# Keep neural engine and prediction coordinator
--keep class tribixbite.cleverkeys.NeuralSwipeTypingEngine { *; }
--keep class tribixbite.cleverkeys.NeuralSwipeTypingEngine$** { *; }
--keep class tribixbite.cleverkeys.AsyncPredictionHandler { *; }
--keep class tribixbite.cleverkeys.AsyncPredictionHandler$** { *; }
+# Keep the prediction coordinator and the tap-typing predictor
 -keep class tribixbite.cleverkeys.PredictionCoordinator { *; }
 -keep class tribixbite.cleverkeys.WordPredictor { *; }
 -keep class tribixbite.cleverkeys.WordPredictor$** { *; }
-
-# Keep coordinate normalizer and its data classes
--keep class tribixbite.cleverkeys.CoordinateNormalizer { *; }
--keep class tribixbite.cleverkeys.CoordinateNormalizer$** { *; }
-
-# Keep vocabulary classes
--keep class tribixbite.cleverkeys.NeuralVocabulary { *; }
--keep class tribixbite.cleverkeys.OptimizedVocabulary { *; }
--keep class tribixbite.cleverkeys.VocabularyTrie { *; }
--keep class tribixbite.cleverkeys.VocabularyTrie$** { *; }
--keep class tribixbite.cleverkeys.VocabularyCache { *; }
--keep class tribixbite.cleverkeys.VocabularyUtils { *; }
 
 # Keep contraction manager
 -keep class tribixbite.cleverkeys.ContractionManager { *; }
@@ -95,16 +59,11 @@
 # Keep swipe processing classes
 -keep class tribixbite.cleverkeys.SwipeResampler { *; }
 -keep class tribixbite.cleverkeys.SwipeResampler$** { *; }
--keep class tribixbite.cleverkeys.TrajectoryFeatureCalculator { *; }
--keep class tribixbite.cleverkeys.TrajectoryFeatureCalculator$** { *; }
 -keep class tribixbite.cleverkeys.NeuralLayoutBridge { *; }
 -keep class tribixbite.cleverkeys.NeuralLayoutHelper { *; }
 
 # CRITICAL: Keep KeyboardGrid - used for nearest key detection during swipe
 -keep class tribixbite.cleverkeys.KeyboardGrid { *; }
-
-# CRITICAL: Keep TrajectoryObjectPool - memory pooling for trajectory processing
--keep class tribixbite.cleverkeys.TrajectoryObjectPool { *; }
 
 # Keep ML data classes and store
 -keep class tribixbite.cleverkeys.ml.** { *; }
@@ -146,8 +105,10 @@
 -keep class tribixbite.cleverkeys.KeyboardData { *; }
 -keep class tribixbite.cleverkeys.KeyboardData$Key { *; }
 
-# Keep Keyboard2View fields for reflection access by NeuralLayoutHelper
-# NeuralLayoutHelper.extractKeyPositionsFromLayout() uses reflection to access _keyboard field
+# Keep Keyboard2View wholesale. The reflection consumer that motivated this
+# (NeuralLayoutHelper.extractKeyPositionsFromLayout, reading the private _keyboard field)
+# was deleted with the neural engine on 2026-08-18; the keep is retained because the view
+# is the IME's inflated root and is referenced from XML.
 -keep class tribixbite.cleverkeys.Keyboard2View { *; }
 -keepclassmembers class tribixbite.cleverkeys.Keyboard2View {
     private ** _keyboard;
@@ -193,19 +154,10 @@
 -keep class ai.onnxruntime.** { *; }
 -dontwarn ai.onnxruntime.**
 
-# Keep Gson for tokenizer JSON parsing (CRITICAL for neural predictions)
-# Without these rules, tokenizer_config.json parsing fails silently in release builds
+# Keep Gson (CRITICAL: custom words, langpack manifests, clipboard tags and the
+# settings backup format all round-trip through it; R8 field renaming corrupts them)
 -keep class com.google.gson.** { *; }
 -dontwarn com.google.gson.**
-
-# Keep SwipeTokenizer inner classes used for Gson deserialization
--keep class tribixbite.cleverkeys.SwipeTokenizer { *; }
--keep class tribixbite.cleverkeys.SwipeTokenizer$TokenizerConfig { *; }
--keep class tribixbite.cleverkeys.SwipeTokenizer$Companion { *; }
--keepclassmembers class tribixbite.cleverkeys.SwipeTokenizer$TokenizerConfig {
-    <fields>;
-    <init>(...);
-}
 
 # Keep all native methods (JNI)
 -keepclasseswithmembernames class * {
@@ -253,12 +205,6 @@
 -keep class tribixbite.cleverkeys.EditorInfoHelper { *; }
 -keep class tribixbite.cleverkeys.IMEStatusHelper { *; }
 -keep class tribixbite.cleverkeys.WindowLayoutUtils { *; }
-
-# Keep model metadata and version manager
--keep class tribixbite.cleverkeys.NeuralModelMetadata { *; }
--keep class tribixbite.cleverkeys.NeuralModelMetadata$** { *; }
--keep class tribixbite.cleverkeys.ModelVersionManager { *; }
--keep class tribixbite.cleverkeys.ModelVersionManager$** { *; }
 
 # Keep LauncherActivity inner classes (animation data classes)
 -keep class tribixbite.cleverkeys.LauncherActivity$** { *; }

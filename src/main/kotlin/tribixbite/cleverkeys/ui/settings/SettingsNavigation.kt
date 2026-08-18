@@ -13,7 +13,6 @@ import tribixbite.cleverkeys.GeometricSettingsActivity
 import tribixbite.cleverkeys.NeuralSettingsActivity
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.ShortSwipeCustomizationActivity
-import tribixbite.cleverkeys.SwipeCalibrationActivity
 import tribixbite.cleverkeys.SwipeDebugActivity
 
 internal fun SettingsActivity.openWikiInBrowser() {
@@ -35,10 +34,6 @@ internal fun SettingsActivity.openGeometricSettings() {
 
 internal fun SettingsActivity.openCtcSettings() {
         startActivity(Intent(this, CtcSettingsActivity::class.java))
-}
-
-internal fun SettingsActivity.openCalibration() {
-        startActivity(Intent(this, SwipeCalibrationActivity::class.java))
 }
 
 internal fun SettingsActivity.openSwipeDebugActivity() {

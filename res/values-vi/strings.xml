@@ -8,7 +8,6 @@
     <string name="pref_layouts_item">Bố cục %1$d: %2$s</string>
     <string name="pref_layouts_remove_custom">Xóa bố cục</string>
     <string name="pref_custom_layout_title">Tùy chỉnh bố cục</string>
-    <string name="pref_swipe_calibration_title">Hiệu chỉnh gõ vuốt</string>
     <!-- <string name="pref_show_number_row_no_number_row">No number row</string> -->
     <!-- <string name="pref_show_number_row_no_symbols">Number row without symbols</string> -->
     <!-- <string name="pref_show_number_row_symbols">Number row with symbols</string> -->
@@ -171,7 +170,6 @@
     <string name="settings_section_advanced">🔧 Nâng cao</string>
     <string name="settings_debug_title">Thông tin gỡ lỗi</string>
     <string name="settings_debug_desc">Hiển thị nhật ký chi tiết và số liệu hiệu năng</string>
-    <string name="settings_calibration_button">🧪 Hiệu chỉnh gõ vuốt</string>
 
     <!-- Information &amp; Actions Section -->
     <string name="settings_section_info">📋 Thông tin &amp; Thao tác</string>
