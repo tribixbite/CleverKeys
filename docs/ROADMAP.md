@@ -107,7 +107,7 @@
 
 | Spec | Path | Status |
 |------|------|--------|
-| Neural Prediction | docs/specs/neural-prediction.md | Complete |
+| Swipe Prediction | docs/specs/swipe-prediction.md | Complete |
 | Gesture System | docs/specs/gesture-system.md | Complete |
 | TrackPoint Mode | docs/specs/trackpoint-navigation-mode.md | Complete |
 | Selection-Delete | docs/specs/selection-delete-mode.md | Complete |

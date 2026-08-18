@@ -1,5 +1,5 @@
 #!/bin/bash
-# CleverKeys ONNX Neural Prediction Test Runner
+# CleverKeys swipe prediction test runner
 # Tests prediction pipeline using Android instrumentation tests
 
 set -e

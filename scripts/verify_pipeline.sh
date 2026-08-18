@@ -1,7 +1,7 @@
 #!/bin/bash
-# Verification script for neural prediction pipeline fixes
+# Verification script for swipe prediction pipeline fixes
 
-echo "🔍 CleverKeys Neural Pipeline Verification"
+echo "🔍 CleverKeys Swipe Pipeline Verification"
 echo "==========================================="
 echo ""
 

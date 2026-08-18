@@ -153,8 +153,8 @@ echo "════════════════════════�
 ACTIVITIES=(
     ".LauncherActivity:Launcher Activity"
     ".SettingsActivity:Main Settings (Material 3)"
-    ".NeuralSettingsActivity:Neural Prediction Settings (Material 3)"
-    ".neural.NeuralBrowserActivityM3:Neural Model Browser (Material 3)"
+    ".CtcSettingsActivity:CTC Engine Settings (Material 3)"
+    ".GeometricSettingsActivity:Geometric Engine Settings (Material 3)"
     ".SwipeCalibrationActivity:Swipe Calibration"
 )
 

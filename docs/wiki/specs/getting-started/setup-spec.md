@@ -44,7 +44,7 @@ Normal keyboard operation
 | Storage | File | Contents |
 |---------|------|----------|
 | **Preferences** | `shared_prefs/cleverkeys_prefs.xml` | User settings |
-| **Device Protected** | `shared_prefs/neural_performance_stats.xml` | Stats (encrypted) |
+| **Device Protected** | `shared_prefs/neural_performance_stats.xml` | Swipe selection stats (legacy file name) |
 | **Language Packs** | `files/langpacks/` | Imported dictionaries + unigrams (`LanguagePackManager.kt:29`) |
 
 ## Default Values
@@ -60,9 +60,9 @@ Key defaults from `Config.kt` `object Defaults` (line 18+):
 | `SHORT_GESTURE_MAX_DISTANCE` | 141 (% of key diagonal; short/long boundary) | 120 |
 | `AUTOCORRECT_ENABLED` | true | 176 |
 | `LONGPRESS_TIMEOUT` | 600 | 85 |
-| `NEURAL_BEAM_WIDTH` | 6 | 134 |
-| `NEURAL_MAX_LENGTH` | 20 | 135 |
-| `NEURAL_CONFIDENCE_THRESHOLD` | 0.01f | 136 |
+| `SWIPE_ENGINE_MODE` | "ctc" | 296 |
+| `CTC_BEAM_WIDTH` | 100 | 305 |
+| `ONNX_XNNPACK_THREADS` | 2 | 288 |
 | `ONNX_XNNPACK_THREADS` | 2 | 299 |
 | `HAPTIC_ENABLED` | true | 75 |
 | `HAPTIC_SWIPE_COMPLETE` | true | 84 |

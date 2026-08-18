@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Swipe Typing - CleverKeys User Guide</title>
-    <meta name="description" content="How neural swipe prediction works">
+    <meta name="description" content="How swipe word prediction works">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -68,7 +68,7 @@
             <span class="px-3 py-1 text-sm rounded-full bg-ck-card text-gray-400">P0</span>
         </div>
         <h1 class="text-4xl font-bold gradient-text-wiki mb-2">Swipe Typing</h1>
-        <p class="text-xl text-gray-400">How neural swipe prediction works</p>
+        <p class="text-xl text-gray-400">How swipe word prediction works</p>
     </header>
 
     <!-- Content -->
@@ -84,14 +84,14 @@
 
 <h1 class="text-3xl font-bold mb-6 gradient-text-wiki">Swipe Typing</h1>
 
-<p class="mb-4 text-gray-300 leading-relaxed">Swipe typing lets you type words by drawing a continuous path through letters. CleverKeys uses a neural AI model to predict words from your swipe patterns.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">Swipe typing lets you type words by drawing a continuous path through letters. CleverKeys ships two on-device prediction engines — a CTC model (the default) and a geometric decoder — and the Prediction Engine setting chooses between them.</p>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Quick Summary</h2>
 
 <table class="w-full mb-6 border-collapse"><tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">What</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Description</th></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Purpose</strong></td><td class="px-4 py-2 border-t border-gray-700">Type words faster by swiping</td></tr></p>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Gesture</strong></td><td class="px-4 py-2 border-t border-gray-700">Draw path through letters without lifting finger</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">AI Model</strong></td><td class="px-4 py-2 border-t border-gray-700">ONNX transformer neural network</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Engines</strong></td><td class="px-4 py-2 border-t border-gray-700">CTC (default) and geometric — selectable in Settings</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">How It Works</h2>
 
@@ -137,20 +137,77 @@
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Prediction Bar</h2>
 
-<p class="mb-4 text-gray-300 leading-relaxed">After swiping, predictions appear in a horizontal row ordered by confidence (best match on the left). The first suggestion is auto-inserted and highlighted. Up to 6 alternatives may appear depending on beam width.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">After swiping, predictions appear in a horizontal row ordered by confidence (best match on the left). The first suggestion is auto-inserted and highlighted. Up to 6 alternatives may appear.</p>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Tap any prediction to use it instead.</p>
 
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Choosing a Prediction Engine</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">The <strong class="text-white">Prediction Engine</strong> dropdown (Settings > Swipe Typing) selects which decoder handles your swipes. The right engine is picked automatically per swipe, based on your layout and language:</p>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Mode</td><td class="px-4 py-2 border-t border-gray-700">Latin layout, supported language</td><td class="px-4 py-2 border-t border-gray-700">Latin layout, other language</td><td class="px-4 py-2 border-t border-gray-700">Non-Latin layout (Cyrillic, Greek, ...)</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">CTC</strong> (default)</td><td class="px-4 py-2 border-t border-gray-700">CTC</td><td class="px-4 py-2 border-t border-gray-700">Geometric</td><td class="px-4 py-2 border-t border-gray-700">Geometric</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Geometric</strong></td><td class="px-4 py-2 border-t border-gray-700">Geometric</td><td class="px-4 py-2 border-t border-gray-700">Geometric</td><td class="px-4 py-2 border-t border-gray-700">Geometric</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">CTC</strong> — the CleverKeys-trained decoder. In our benchmark on 2,400 held-out English</li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">  swipes it got the intended word right on the first try about 89% of the time. It covers</p>
+<p class="mb-4 text-gray-300 leading-relaxed">  <strong class="text-white">English, French, German and Spanish</strong> on any Latin layout that has all 26 letters</p>
+<p class="mb-4 text-gray-300 leading-relaxed">  (QWERTY, AZERTY, QWERTZ, Dvorak, Colemak…). Every other language, and every non-Latin</p>
+<p class="mb-4 text-gray-300 leading-relaxed">  layout, automatically uses the geometric engine — choosing CTC never leaves a layout</p>
+<p class="mb-4 text-gray-300 leading-relaxed">  without swipe typing.</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Geometric</strong> — a pure shape-matching decoder on all layouts. Useful for comparison and</li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">  battery-lean decoding.</p>
+
+<p class="mb-4 text-gray-300 leading-relaxed">  Italian, Portuguese and Swedish ship a dictionary but are <strong class="text-white">not</strong> on the CTC list yet: we</p>
+<p class="mb-4 text-gray-300 leading-relaxed">  only enable a language once both the model and the decoder settings have been measured on</p>
+<p class="mb-4 text-gray-300 leading-relaxed">  it, and those three have not been measured. They use the geometric engine.</p>
+
+<p class="mb-4 text-gray-300 leading-relaxed">  Accented words work normally: a swipe traces the unaccented letters (there is no separate</p>
+<p class="mb-4 text-gray-300 leading-relaxed">  "é" key on the path), and the engine inserts the dictionary's accented spelling — swipe</p>
+<p class="mb-4 text-gray-300 leading-relaxed">  <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">c-a-f-e</code> in French and you get "café". Where two words share the same unaccented</p>
+<p class="mb-4 text-gray-300 leading-relaxed">  spelling, the more common one is offered.</p>
+
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!NOTE]</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">Before v1.6.0 there were two further modes, <strong class="text-white">Neural</strong> and <strong class="text-white">Hybrid</strong>, backed by an ONNX</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">transformer. That engine was removed: CTC beat it by a wide margin on the same test set</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">(89% vs 75% first-try) while the transformer only worked on QWERTY and cost about 10 MB of</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">app size. If your device still has "Neural" or "Hybrid" stored, it now behaves as CTC.</blockquote>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Whichever engine decodes a swipe, the results flow through the same suggestion bar, autocorrect, and contraction handling ("dont" is shown as "don't"). If you enable suggestion origin markers, each suggestion is tagged with the engine that actually produced it.</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">CTC Settings</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">With the CTC engine selected, a <strong class="text-white">Full CTC Settings</strong> button appears with one tuning knob:</p>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Default</td><td class="px-4 py-2 border-t border-gray-700">Range</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Beam Width</strong></td><td class="px-4 py-2 border-t border-gray-700">100</td><td class="px-4 py-2 border-t border-gray-700">10–300</td><td class="px-4 py-2 border-t border-gray-700">How many word hypotheses the decoder keeps while tracing your swipe. 100 is the validated default; higher values cost CPU per swipe for marginal accuracy.</td></tr></p>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<p class="mb-4 text-gray-300 leading-relaxed">The CTC scoring constants are calibrated offline and deliberately not user-tunable.</p>
+
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Settings</h2>
 
-<p class="mb-4 text-gray-300 leading-relaxed">Tune swipe typing in Settings > Neural Prediction:</p>
+<p class="mb-4 text-gray-300 leading-relaxed">Tune swipe typing in Settings > Swipe Typing:</p>
 
 <table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Swipe Typing</strong></td><td class="px-4 py-2 border-t border-gray-700">Enable/disable swipe input</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Beam Width</strong></td><td class="px-4 py-2 border-t border-gray-700">More candidates = more accurate but slower (default: 6, max: 20)</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Confidence Threshold</strong></td><td class="px-4 py-2 border-t border-gray-700">Minimum confidence for predictions</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Max Word Length</strong></td><td class="px-4 py-2 border-t border-gray-700">Maximum predicted word length in characters (default: 20)</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Prediction Engine</strong></td><td class="px-4 py-2 border-t border-gray-700">CTC / Geometric (see above)</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Swipe on Password Fields</strong></td><td class="px-4 py-2 border-t border-gray-700">Allow swipe typing in password fields (default: off)</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Backspace Undo Swipe</strong></td><td class="px-4 py-2 border-t border-gray-700">Backspace deletes entire swiped word + auto-space (default: on)</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Undoing a Swipe</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">If the wrong word was predicted after swiping:</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Quick Undo with Backspace</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Press <strong class="text-white">backspace immediately</strong> after swiping (before typing anything else). The entire swiped word and its trailing auto-space are deleted in one press, so you can swipe again.</p>
+
+<p class="mb-4 text-gray-300 leading-relaxed">This behavior is controlled by the <strong class="text-white">Backspace Undo Swipe</strong> toggle in Settings > Word Prediction (enabled by default). When disabled, backspace deletes a single character as normal.</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Choose an Alternative</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Check the prediction bar — alternative words are shown left-to-right by confidence. Tap any alternative to replace the auto-inserted word.</p>
+
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">When Swipe Typing Doesn't Work</h2>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Swipe typing may not activate when:</p>

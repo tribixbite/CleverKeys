@@ -9,7 +9,7 @@ version: v1.2.7
 
 ## Overview
 
-Language packs are downloadable packages containing dictionaries, layouts, autocorrect rules, and neural model vocabularies for specific languages.
+Language packs are downloadable packages containing dictionaries, layouts, autocorrect rules, and swipe vocabularies for specific languages.
 
 ## Key Components
 
@@ -43,7 +43,7 @@ data class PackContents(
     val hasDictionary: Boolean,
     val hasLayout: Boolean,
     val hasAutocorrect: Boolean,
-    val hasVocabulary: Boolean,        // Neural model vocab
+    val hasVocabulary: Boolean,        // Swipe decoder vocab
     val dictionarySize: Int,           // Word count
     val layoutVariants: List<String>   // Layout IDs
 )
@@ -211,7 +211,7 @@ private fun installVocabulary(packDir: File, langCode: String) {
     val vocabFile = File(packDir, "vocabulary.txt")
     if (!vocabFile.exists()) return
 
-    // Load into neural vocabulary manager
+    // Load into the dictionary manager
     val vocab = OptimizedVocabulary.loadFromFile(vocabFile)
     vocabularyManager.registerVocabulary(langCode, vocab)
 }
@@ -295,4 +295,4 @@ fun removePack(packId: String) {
 
 - [Dictionary System](../../../specs/dictionary-and-language-system.md) - Dictionary management
 - [Layout System](../../../specs/layout-system.md) - Layout management
-- [Neural Prediction](../../../specs/neural-prediction.md) - Vocabulary integration
+- [Dictionary and Language System](../../../specs/dictionary-and-language-system.md) - Vocabulary integration

@@ -154,16 +154,15 @@ All in Settings → **Word Prediction**. Most users only ever touch the top thre
 |---------|---------|--------------|
 | **Beam autocorrect** (`swipe_beam_autocorrect_enabled`) | on | Apply correction during swipe beam search |
 | **Final autocorrect** (`swipe_final_autocorrect_enabled`) | on | Apply correction on swipe completion |
-| **Neural frequency weight** (`neural_frequency_weight`) | 0.57 | How much to weight dictionary frequency vs. neural model confidence in swipe predictions. Higher = trust frequency more. |
 
 > [!NOTE]
-> `neural_frequency_weight` lives in the Neural Settings activity (Settings → Neural prediction). It controls the swipe pipeline; autocorrect's tap-typing path uses the absolute frequency directly via `autocorrect_confidence_min_frequency`.
+> Autocorrect's tap-typing path uses the absolute dictionary frequency directly via `autocorrect_confidence_min_frequency`. The swipe engines score candidates with their own per-language constants, which are calibrated offline and not user-tunable.
 
 ## Suggestion Transparency
 
 Every suggestion in the bar knows where it came from. To inspect one:
 
-- **Long-press any suggestion** — a sheet shows its source (neural swipe, CTC swipe,
+- **Long-press any suggestion** — a sheet shows its source (CTC swipe, geometric swipe,
   geometric decoder, dictionary prefix match, contraction, next-word, etc.), its score, and — for
   dictionary predictions — the full score breakdown: prefix match, adaptation, built-in
   vs. learned context boost (and which one won), personalization, and frequency factor.
@@ -202,11 +201,11 @@ A: Yes — the adjacency model is language-independent (it's about which keys yo
 A: `well` is a real English word, so it's on the protected list. CleverKeys won't expand it to `we'll` because that would be wrong in most contexts ("the well ran dry").
 
 ### Q: How does autocorrect interact with swipe typing?
-A: They're separate paths. Swipe typing produces candidates via the neural model + beam search, then optionally applies autocorrect on the top candidate (`swipe_beam_autocorrect_enabled`, `swipe_final_autocorrect_enabled`). Tap typing uses the dictionary scan described above.
+A: They're separate paths. Swipe typing produces candidates with the CTC or geometric decoder, then optionally applies autocorrect on the top candidate (`swipe_final_autocorrect_enabled`). Tap typing uses the dictionary scan described above.
 
 ## Related Features
 
-- [Swipe Typing](swipe-typing.md) - Neural word prediction for gesture input
+- [Swipe Typing](swipe-typing.md) - Word prediction for gesture input
 - [Next-Word Prediction](next-word-prediction.md) - Learned-phrase suggestions after each word
 - [User Dictionary](user-dictionary.md) - Add custom words
 - [Special Characters](special-characters.md) - Symbols and accents

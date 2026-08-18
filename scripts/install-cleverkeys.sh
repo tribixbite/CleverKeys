@@ -61,7 +61,7 @@ echo "════════════════════════�
 echo "1. If installation prompt appeared, tap 'Install'"
 echo "2. Open any app with text input"
 echo "3. Tap keyboard icon in navigation bar"
-echo "4. Select 'CleverKeys Neural Keyboard'"
+echo "4. Select 'CleverKeys Keyboard'"
 echo
 echo "Or manually enable in:"
 echo "Settings → System → Languages & Input → On-screen keyboard"

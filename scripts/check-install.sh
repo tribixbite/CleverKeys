@@ -44,10 +44,10 @@ if pm list packages | grep -q "^package:${PACKAGE_NAME}$"; then
                 echo "  2. Tap on a text field"
                 echo "  3. Verify keyboard appears correctly"
                 echo "  4. Test basic typing and layout switching"
-                echo "  5. Test swipe gestures if neural engine enabled"
+                echo "  5. Test swipe gestures if swipe typing is enabled"
                 echo ""
                 echo "To view logs:"
-                echo "  logcat -s CleverKeys:* Keyboard2:* NeuralSwipe:*"
+                echo "  logcat -s CleverKeys:* Keyboard2:* CtcEngineAdapter:*"
             else
                 echo "⚠️  Keyboard is enabled but NOT active"
                 echo ""

@@ -1,6 +1,6 @@
 # CleverKeys Technical Specifications
 
-Technical documentation for CleverKeys, an Android keyboard with neural swipe typing. These specs are designed for LLM coding agents to understand the codebase architecture and implementation details.
+Technical documentation for CleverKeys, an Android keyboard with on-device swipe typing. These specs are designed for LLM coding agents to understand the codebase architecture and implementation details.
 
 ## Specification Index
 
@@ -13,18 +13,18 @@ Technical documentation for CleverKeys, an Android keyboard with neural swipe ty
 | [Gesture System](./gesture-system.md) | Swipe detection, multi-touch, gesture classification |
 | [Layout System](./layout-system.md) | XML layouts, ExtraKeys, key positioning |
 
-### Neural Prediction
+### Swipe Prediction
 
 | Spec | Description |
 |------|-------------|
-| [Neural Prediction](./neural-prediction.md) | ONNX transformer, beam search, vocabulary |
-| [Neural Multilanguage](./neural-multilanguage-architecture.md) | Multi-language swipe typing architecture |
 | [Cursor-Aware Predictions](./cursor-aware-predictions.md) | Dual pipeline cursor sync, exact_add, contraction prefix guard |
 | [Context Learning & Next-Word](./context-learning-and-next-word.md) | Persistent learned n-gram LM, master privacy gate, opt-in next-word prediction, suggestion provenance, learned-data manager |
 | [Geometric Swipe Engine](./geometric-swipe-engine.md) | Layout-agnostic geometric swipe decoder (`swipe/geometric/`) |
-| [CTC Swipe Engine](./ctc-swipe-engine.md) | CTC trie-beam swipe engine — WIRED opt-in `ctc` mode (2026-08-08), CleverKeys-trained ONNX encoder |
-| [KV-Cache Optimization](./kv-cache-optimization.md) | ONNX inference optimization |
-| [Memory Pool Optimization](./memory-pool-optimization.md) | Memory management for neural inference |
+| [CTC Swipe Engine](./ctc-swipe-engine.md) | CTC trie-beam swipe engine — the DEFAULT `ctc` mode, CleverKeys-trained ONNX encoder |
+
+> The ONNX transformer engine's specs (`neural-prediction`, `neural-multilanguage-architecture`,
+> `kv-cache-optimization`, `nn-inference-optimization`, `memory-pool-optimization`) moved to
+> `docs/history/neural-engine/` when that engine was removed — see ADR-011.
 
 ### Dictionary & Language
 
@@ -86,8 +86,8 @@ Technical documentation for CleverKeys, an Android keyboard with neural swipe ty
 | `Config.kt` | All settings with defaults |
 | `SettingsActivity.kt` | Settings UI (Jetpack Compose) |
 | `KeyValue.kt` | Key definitions (300+ keys) |
-| `SwipeTrajectoryProcessor.kt` | Neural swipe processing |
-| `OptimizedVocabulary.kt` | Dictionary management |
+| `swipe/CtcEngineAdapter.kt` | Swipe decoding (CTC) |
+| `DictionaryManager.kt` | Dictionary management |
 
 ## Architecture Overview
 
@@ -111,12 +111,11 @@ Technical documentation for CleverKeys, an Android keyboard with neural swipe ty
 │  │            (Settings, Preferences)                     │  │
 │  └────────────────────────────────────────────────────────┘  │
 ├─────────────────────────────────────────────────────────────┤
-│                  Neural Prediction Pipeline                  │
+│                    Swipe Prediction Pipeline                 │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐       │
-│  │   Swipe      │  │    ONNX      │  │  Vocabulary  │       │
-│  │  Trajectory  │→ │  Inference   │→ │   Filter     │       │
-│  │  Processor   │  │  (Encoder/   │  │ (Dictionary) │       │
-│  │              │  │   Decoder)   │  │              │       │
+│  │  CtcEngine   │  │  ONNX CTC    │  │  Trie beam   │       │
+│  │  Adapter /   │→ │  encoder     │→ │  over merged │       │
+│  │  Geometric   │  │  (or SHARK2) │  │   lexicon    │       │
 │  └──────────────┘  └──────────────┘  └──────────────┘       │
 └─────────────────────────────────────────────────────────────┘
 ```

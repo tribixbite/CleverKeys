@@ -69,10 +69,10 @@ adb logcat -s "CleverKeys" "System.err" "AndroidRuntime"
 |---------|------|-------|
 | **All settings** | `Config.kt` | Defaults + field definitions |
 | **Settings UI** | `SettingsActivity.kt` | 5000+ lines, searchable settings |
-| **Swipe prediction** | `SwipePredictorOrchestrator.kt` | Neural swipe coordinator |
+| **Swipe prediction** | `SwipePredictorOrchestrator.kt` | Swipe coordinator |
 | **Word prediction** | `WordPredictor.kt` | Touch typing predictions |
 | **Gesture handling** | `Pointers.kt` | Short swipe, trackpoint, selection-delete |
-| **Neural beam search** | `BeamSearchEngine.kt` | ONNX decoder with trie masking |
+| **Swipe beam search** | `swipe/ctc/CtcBeamDecoder.kt` | ONNX decoder with trie masking |
 | **Vocabulary/Trie** | `OptimizedVocabulary.kt` | Dictionary + language management |
 | **Suggestions UI** | `SuggestionHandler.kt` | Prediction display logic |
 

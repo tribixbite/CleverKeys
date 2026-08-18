@@ -62,6 +62,6 @@ echo "════════════════════════�
 echo "  Manual Check Steps:"
 echo "════════════════════════════════════════════════════════"
 echo "1. Open Settings → Languages & Input"
-echo "2. Check if 'CleverKeys Neural Keyboard' is listed"
+echo "2. Check if 'CleverKeys Keyboard' is listed"
 echo "3. If not, run: ./install-cleverkeys.sh"
 echo "════════════════════════════════════════════════════════"

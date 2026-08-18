@@ -1,4 +1,8 @@
 # Settings Feature Parity Analysis
+
+> **HISTORICAL SNAPSHOT (2025-11-18)** — the `neural_*` preferences and the Neural
+> Settings screen described below were removed on 2026-08-18 (ADR-011). This file is
+> a dated record and is deliberately not rewritten.
 **Date**: 2025-11-18
 **Source**: Unexpected Keyboard (Java) vs CleverKeys (Kotlin)
 **Status**: Analysis from 10 screenshot comparisons + code review

@@ -44,7 +44,7 @@
 
 # 🗺️ Project Overview
 
-CleverKeys is a feature-rich open-source keyboard for Android. Neural swipe typing with autocorrect, multi-language hot-swap with per-language dictionaries, unlimited clipboard with pinning/todos/tags/regex search/inline editing, offline GIF packs, 208 customizable short-swipe actions, TrackPoint cursor control, 35+ themes with DIY creator — all running 100% on-device with zero internet permissions.
+CleverKeys is a feature-rich open-source keyboard for Android. On-device swipe typing with autocorrect, multi-language hot-swap with per-language dictionaries, unlimited clipboard with pinning/todos/tags/regex search/inline editing, offline GIF packs, 208 customizable short-swipe actions, TrackPoint cursor control, 35+ themes with DIY creator — all running 100% on-device with zero internet permissions.
 
 </div>
 
@@ -93,9 +93,9 @@ CleverKeys is a feature-rich open-source keyboard for Android. Neural swipe typi
 
 ⁸ Short-swipe actions: 8 directions × 26 keys = 208 one-touch gestures for navigation (arrows, home/end), editing (select all, undo, cut/copy/paste), function keys (F1-F12), and more — no long-press menus needed
 
-⁹ Multi-language swipe typing: CleverKeys uses the same neural network model for all languages — dictionaries provide word candidates, not language-specific models. 7 languages bundled (en, es, fr, pt, it, de, sv), 8 downloadable (nl, ru, el, tr, id, ms, tl, sw). Primary + secondary language support with automatic best-match selection.
+⁹ Multi-language swipe typing: CleverKeys uses one layout-agnostic CTC model for the languages it serves — dictionaries provide word candidates, not language-specific models. 7 languages bundled (en, es, fr, pt, it, de, sv), 8 downloadable (nl, ru, el, tr, id, ms, tl, sw). Primary + secondary language support with automatic best-match selection.
 
-¹⁰ Urik uses a geometric/template path matcher (no ML model, no training code applicable) — German-friendly QWERTZ-native with simultaneous multilingual spell-check. CleverKeys ships a complementary geometric decoder for non-QWERTY layouts and non-Latin scripts (Russian, etc.), selectable via the Prediction Engine setting (Hybrid/Geometric modes) — see [ROADMAP.md](./ROADMAP.md#-neural-network--prediction).
+¹⁰ Urik uses a geometric/template path matcher (no ML model, no training code applicable) — German-friendly QWERTZ-native with simultaneous multilingual spell-check. CleverKeys ships a complementary geometric decoder for the languages and scripts its CTC model does not serve, selectable via the Prediction Engine setting — see [ROADMAP.md](./ROADMAP.md#-swipe-prediction).
 
 ¹¹ Urik short-swipe is limited to Space (cursor movement) and Backspace (delete word) — no general short-swipe action mapping system.
 
@@ -105,7 +105,7 @@ CleverKeys is a feature-rich open-source keyboard for Android. Neural swipe typi
 
 Most keyboard apps do one thing well. CleverKeys does many things well:
 
-- **Swipe + autocorrect + multi-language** — a custom transformer neural network evaluates multiple language dictionaries simultaneously per swipe, with contraction-aware autocorrect
+- **Swipe + autocorrect + multi-language** — an on-device CTC decoder evaluates multiple language dictionaries per swipe, with contraction-aware autocorrect
 - **Clipboard as a productivity tool** — not just history, but pinning, todos with status tracking, tags, inline editing, regex search, and media support (images/videos/PDFs)
 - **Deep customization** — 208 short-swipe actions, Android intent launching, custom text macros, per-key gesture mapping, XML layout authoring
 - **Power user essentials** — TrackPoint cursor, selection-delete, backspace undo, terminal key support, offline GIF packs
@@ -120,7 +120,7 @@ CleverKeys is the **only open-source keyboard with reliable swipe typing in Term
 
 <p align="middle">
     <a href="https://f-droid.org/packages/tribixbite.cleverkeys"><img alt="F-Droid" src="https://img.shields.io/badge/F--Droid-1976D2?style=for-the-badge&logo=f-droid&logoColor=white" height="60"/></a>
-    <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22tribixbite.cleverkeys%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Ftribixbite%2FCleverKeys%22%2C%22author%22%3A%22tribixbite%22%2C%22name%22%3A%22CleverKeys%22%2C%22preferredApkIndex%22%3A0%2C%22additionalSettings%22%3A%22%7B%5C%22includePrereleases%5C%22%3Afalse%2C%5C%22fallbackToOlderReleases%5C%22%3Atrue%2C%5C%22filterReleaseTitlesByRegEx%5C%22%3A%5C%22%5C%22%2C%5C%22filterReleaseNotesByRegEx%5C%22%3A%5C%22%5C%22%2C%5C%22verifyLatestTag%5C%22%3Afalse%2C%5C%22dontSortReleasesList%5C%22%3Afalse%2C%5C%22useLatestAssetDateAsReleaseDate%5C%22%3Afalse%2C%5C%22trackOnly%5C%22%3Afalse%2C%5C%22versionExtractionRegEx%5C%22%3A%5C%22%5C%22%2C%5C%22matchGroupToUse%5C%22%3A%5C%22%5C%22%2C%5C%22versionDetection%5C%22%3Atrue%2C%5C%22releaseDateAsVersion%5C%22%3Afalse%2C%5C%22useVersionCodeAsOSVersion%5C%22%3Afalse%2C%5C%22apkFilterRegEx%5C%22%3A%5C%22%5C%22%2C%5C%22invertAPKFilter%5C%22%3Afalse%2C%5C%22autoApkFilterByArch%5C%22%3Atrue%2C%5C%22appName%5C%22%3A%5C%22CleverKeys%5C%22%2C%5C%22exemptFromBackgroundUpdates%5C%22%3Afalse%2C%5C%22skipUpdateNotifications%5C%22%3Afalse%2C%5C%22about%5C%22%3A%5C%22Neural%20network%20gesture%20keyboard%20for%20Android%5C%22%7D%22%7D"><img alt="Obtainium" src="https://img.shields.io/badge/Obtainium*-0D47A1?style=for-the-badge&logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAAAsTAAALEwEAmpwYAAADHklEQVR4nO2ZzWsTQRjGf9GDiOLRkxcPgiehoHjxIHgQPPlx8SJ40NqD4EXwIPgH+Ad4EAQFPQiiB0FRET0IYgtFba3VNmljk93ZnZ3ZeWeyE9I0aZKd2drsh0+ysMO+z/vOzM7uzgYCBAi0fRUHpgE/cFygJrAMfAOuA4teBxDx9Z/5Qgf4ARwCfgHXgL/9CmLQw/OeFR6Ao8AqcBlY6zeCdoIoB5YB94EIcAX4028gmj2AWsBH4CmwF7gIbOy3ALT6Au8ALIDpwJLXIBptFqAK/AbmgCngKrDR6wAyXb7QB8BTYD9wDtjidQCZLl/oI+AZcAC4DGz2OoBMly/0CfAcOABcALZ5HUCmyxf6BHgJHATOA9u9DuD8s+X5wfcJ8Bo4BJwFdngdwP5ny/MX3ifAW+AwcArY7XUA588tz1+4jwE/gaPACeBwvwFYAbR7fgPtBN4Dh4HjwFGvA5gAbPf5GYo7Ae+AI8DxfgMwAFi+0M/QnQJ4DxwBjvUbgAHA8oW+g64dwAfgGHC83wAMAJYv9CN0JwE+AseBE/0GYACwfKGfoTsD8Ak4AZzoNwADgOUL/QLdKYCvwAngRL8BGAAsX+gX6M4CfAFOAif7DcAAYPlCv0N3DuAbcAI42W8ABgDLF/odunMA34GTwMl+AzAAWL7Qn9CdB/gBnAJO9RuAAcDyhf6C7gLAT+AUcKrfAAwAli/0N3QXAX4Bp4HT/QZgALB8ob+huwjwGzgNnO43AAOA5Qv9A90lgD/AaeB0vwEYACxf6F/oLgP8BU4Dp/sNwABg+UL/QXcZ4B9wGjjTbwAGAMsX+h+6KwD/gTPAmX4DMAAYX+hOAqwAZ4Ez/QZgfKE7BbAKnAXO9BuA8YXuNMA6cBY4028AxhfaU4DrAeeAc14HML7Q/Q9o7E8DngecAc55HcD4QjcBeA44B5z3OoDxhe4k4CLwHDgHnPc6gPGF7mTgJeA5cB644HUA4wvdKcArwAvgPHDB6wDGF7pTgdeAF8AF4KLXAYwvdKcBbwAvgQvARa8DGF/oTgfeAl4BF4BLXgcIEGB79Q8cPxXm8tdVtgAAAABJRU5ErkJggg==&logoColor=white" height="60"/></a>
+    <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22tribixbite.cleverkeys%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Ftribixbite%2FCleverKeys%22%2C%22author%22%3A%22tribixbite%22%2C%22name%22%3A%22CleverKeys%22%2C%22preferredApkIndex%22%3A0%2C%22additionalSettings%22%3A%22%7B%5C%22includePrereleases%5C%22%3Afalse%2C%5C%22fallbackToOlderReleases%5C%22%3Atrue%2C%5C%22filterReleaseTitlesByRegEx%5C%22%3A%5C%22%5C%22%2C%5C%22filterReleaseNotesByRegEx%5C%22%3A%5C%22%5C%22%2C%5C%22verifyLatestTag%5C%22%3Afalse%2C%5C%22dontSortReleasesList%5C%22%3Afalse%2C%5C%22useLatestAssetDateAsReleaseDate%5C%22%3Afalse%2C%5C%22trackOnly%5C%22%3Afalse%2C%5C%22versionExtractionRegEx%5C%22%3A%5C%22%5C%22%2C%5C%22matchGroupToUse%5C%22%3A%5C%22%5C%22%2C%5C%22versionDetection%5C%22%3Atrue%2C%5C%22releaseDateAsVersion%5C%22%3Afalse%2C%5C%22useVersionCodeAsOSVersion%5C%22%3Afalse%2C%5C%22apkFilterRegEx%5C%22%3A%5C%22%5C%22%2C%5C%22invertAPKFilter%5C%22%3Afalse%2C%5C%22autoApkFilterByArch%5C%22%3Atrue%2C%5C%22appName%5C%22%3A%5C%22CleverKeys%5C%22%2C%5C%22exemptFromBackgroundUpdates%5C%22%3Afalse%2C%5C%22skipUpdateNotifications%5C%22%3Afalse%2C%5C%22about%5C%22%3A%5C%22On-device%20gesture%20keyboard%20for%20Android%5C%22%7D%22%7D"><img alt="Obtainium" src="https://img.shields.io/badge/Obtainium*-0D47A1?style=for-the-badge&logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAAAsTAAALEwEAmpwYAAADHklEQVR4nO2ZzWsTQRjGf9GDiOLRkxcPgiehoHjxIHgQPPlx8SJ40NqD4EXwIPgH+Ad4EAQFPQiiB0FRET0IYgtFba3VNmljk93ZnZ3ZeWeyE9I0aZKd2drsh0+ysMO+z/vOzM7uzgYCBAi0fRUHpgE/cFygJrAMfAOuA4teBxDx9Z/5Qgf4ARwCfgHXgL/9CmLQw/OeFR6Ao8AqcBlY6zeCdoIoB5YB94EIcAX4028gmj2AWsBH4CmwF7gIbOy3ALT6Au8ALIDpwJLXIBptFqAK/AbmgCngKrDR6wAyXb7QB8BTYD9wDtjidQCZLl/oI+AZcAC4DGz2OoBMly/0CfAcOABcALZ5HUCmyxf6BHgJHATOA9u9DuD8s+X5wfcJ8Bo4BJwFdngdwP5ny/MX3ifAW+AwcArY7XUA588tz1+4jwE/gaPACeBwvwFYAbR7fgPtBN4Dh4HjwFGvA5gAbPf5GYo7Ae+AI8DxfgMwAFi+0M/QnQJ4DxwBjvUbgAHA8oW+g64dwAfgGHC83wAMAJYv9CN0JwE+AseBE/0GYACwfKGfoTsD8Ak4AZzoNwADgOUL/QLdKYCvwAngRL8BGAAsX+gX6M4CfAFOAif7DcAAYPlCv0N3DuAbcAI42W8ABgDLF/odunMA34GTwMl+AzAAWL7Qn9CdB/gBnAJO9RuAAcDyhf6C7gLAT+AUcKrfAAwAli/0N3QXAX4Bp4HT/QZgALB8ob+huwjwGzgNnO43AAOA5Qv9A90lgD/AaeB0vwEYACxf6F/oLgP8BU4Dp/sNwABg+UL/QXcZ4B9wGjjTbwAGAMsX+h+6KwD/gTPAmX4DMAAYX+hOAqwAZ4Ez/QZgfKE7BbAKnAXO9BuA8YXuNMA6cBY4028AxhfaU4DrAeeAc14HML7Q/Q9o7E8DngecAc55HcD4QjcBeA44B5z3OoDxhe4k4CLwHDgHnPc6gPGF7mTgJeA5cB644HUA4wvdKcArwAvgPHDB6wDGF7pTgdeAF8AF4KLXAYwvdKcBbwAvgQvARa8DGF/oTgfeAl4BF4BLXgcIEGB79Q8cPxXm8tdVtgAAAABJRU5ErkJggg==&logoColor=white" height="60"/></a>
     <a href="https://github.com/tribixbite/CleverKeys/releases/latest"><img alt="GitHub" src="https://img.shields.io/badge/GitHub_APK-238636?style=for-the-badge&logo=github&logoColor=white" height="60"/></a>
 </p>
 
@@ -163,9 +163,9 @@ Build your own themes on-the-fly with full control over:
 
 </div>
 
-### 🧠 Neural Swipe & Autocorrect
+### 🧠 Swipe Typing & Autocorrect
 - **Custom transformer model** (encoder-decoder, 13MB) trained on real swipe data
-- **Four selectable swipe engines** — neural transformer (default), hybrid (neural + geometric), geometric (all layouts, no NN), and an opt-in CTC engine: a 2.9 MB CleverKeys-trained model for English on QWERTY that scores 89.3% top-1 on a 2,400-swipe held-out benchmark (vs 74.6% for the neural engine on the same set)
+- **Two selectable swipe engines** — CTC (default): a 2.9 MB CleverKeys-trained model covering English, French, German and Spanish on any full a–z Latin layout, scoring 89.3% top-1 on a 2,400-swipe held-out English benchmark; and geometric (all layouts, all languages, no ML model), which also serves every language CTC does not
 - **Sub-200ms predictions** with XNNPACK hardware acceleration
 - **Autocorrect with contraction support** — "dont" to "don't", "im" to "I'm"
 - **Full inference control** — beam width, length normalization, pruning, early stopping
@@ -175,7 +175,7 @@ Build your own themes on-the-fly with full control over:
 
 ### 🌍 Multi-Language with Hot-Swap
 - **15 swipe languages** — 7 bundled, 8 downloadable packs
-- **Primary + secondary language** — neural network evaluates both dictionaries per swipe
+- **Primary + secondary language** — both dictionaries are evaluated per swipe
 - **Instant language switch** — toggle between languages without reloading
 - **Per-language custom dictionaries** — add words, adjust frequency weights, disable entries
 - **Smart contractions** — language-aware handling across English, French, and more
@@ -239,18 +239,18 @@ Assign custom actions to any key's 8 swipe directions:
 
 CleverKeys supports swipe typing in **15 languages** with intelligent multi-language features:
 
-> ⚠️ **Current swipe-typing scope** — The neural gesture engine is trained on
-> **English + QWERTY**. It works well for other Latin-script languages that
-> share the QWERTY keyboard (Spanish, French, Portuguese, Italian, German,
-> etc.), but in the default **Neural** engine mode swipe is automatically
-> disabled on keyboards whose row shape diverges from QWERTY (AZERTY, QWERTZ,
-> Dvorak, Colemak, non-Latin scripts — see
-> [#9](https://github.com/tribixbite/CleverKeys/issues/9)). Switching the
-> **Prediction Engine** setting to **Hybrid** or **Geometric** enables swipe
-> on those layouts via the layout-agnostic geometric decoder. The opt-in
-> **CTC** engine currently covers English on QWERTY (other languages fall
-> back to neural, non-QWERTY layouts to geometric). Tap typing + autocorrect
-> works across every supported layout and language regardless of mode.
+> ℹ️ **Current swipe-typing scope** — The default **CTC** engine covers
+> **English, French, German and Spanish** on any Latin layout that has all 26
+> letters (QWERTY, AZERTY, QWERTZ, Dvorak, Colemak, …). Every other language,
+> and every non-Latin layout, is served automatically by the layout-agnostic
+> **geometric** decoder, so swipe typing works everywhere — the
+> **Prediction Engine** setting only chooses whether CTC is used at all. Tap
+> typing + autocorrect works across every supported layout and language
+> regardless of mode.
+>
+> The QWERTY-only ONNX transformer that used to be the default was removed in
+> v1.6.0 (issue [#9](https://github.com/tribixbite/CleverKeys/issues/9) is
+> resolved by that removal: no layout is swipe-disabled any more).
 
 ### Bundled Languages (7)
 Included in the APK — no additional download required. All dictionaries are
@@ -292,7 +292,7 @@ directory.
 **Primary + Secondary Language**
 - Set your primary language for main typing
 - Add a secondary language for automatic detection
-- Neural network evaluates both dictionaries simultaneously
+- Both dictionaries are evaluated simultaneously
 - Best prediction selected automatically per swipe
 
 **Smart Accent & Punctuation Insertion**
@@ -419,16 +419,19 @@ Use the included build script which handles ARM64-specific AAPT2:
 
 </div>
 
-CleverKeys uses a custom transformer neural network model for gesture recognition:
+CleverKeys decodes swipes on-device with a CTC model:
 
 | Component | Details |
 |-----------|---------|
-| Architecture | Encoder-Decoder Transformer |
-| Encoder | Processes swipe trajectories (x, y, velocity, acceleration, nearest keys) |
-| Decoder | Generates word predictions from encoded features |
+| Architecture | Convolutional/recurrent encoder emitting per-frame character distributions |
+| Input | Swipe trajectory (x, y, velocity, acceleration) plus the live key geometry — the model is layout-agnostic |
+| Decoding | Pure-JVM Viterbi trie beam over the merged per-language lexicon |
 | Format | ONNX (cross-platform, optimized inference) |
 | Runtime | ONNX Runtime 1.20.0 with XNNPACK acceleration |
-| Total Size | ~13MB (encoder + decoder) |
+| Total Size | 2.91 MB (encoder only — decoding is on the CPU, in Kotlin) |
+
+A layout-agnostic geometric (SHARK2-style) decoder with no ML model at all serves every
+(layout, language) pair CTC does not.
 
 Training code, model architecture, and datasets: **[CleverKeys-ML](https://github.com/tribixbite/CleverKeys-ML)**
 
@@ -454,7 +457,7 @@ CleverKeys began as a fork of [Unexpected Keyboard](https://github.com/Julow/Une
 
 Our projects have since diverged significantly (~900 commits apart):
 - Complete rewrite from Java to Kotlin with coroutines and Flow
-- Neural network gesture typing (ONNX transformer model)
+- On-device gesture typing (CTC ONNX model + geometric decoder)
 - Full clipboard system (unlimited history, pinning, todos, tags, inline editing, regex search, media)
 - Offline GIF panel with FTS4 search
 - Multi-language simultaneous prediction with per-language dictionary management
@@ -463,7 +466,7 @@ Our projects have since diverged significantly (~900 commits apart):
 
 If you want a lightweight keyboard without gesture typing, we recommend the original Unexpected Keyboard.
 
-### Neural Network Model Research
+### Swipe Model Research
 - **[Neural Swipe Typing](https://github.com/proshian/neural-swipe-typing)** by [@proshian](https://github.com/proshian) — Initial architecture inspiration
 - **[How We Swipe](https://github.com/nicosio2/how-we-swipe)** — Research paper and dataset on swipe behavior
 - **[FUTO Swipe Dataset](https://huggingface.co/datasets/nicosio2/FUTO-swipe-dataset)** — Hugging Face dataset
@@ -493,7 +496,7 @@ If you want a lightweight keyboard without gesture typing, we recommend the orig
 # ⚖️ License
 
 ```
-CleverKeys - Neural Gesture Keyboard for Android
+CleverKeys - Gesture Keyboard for Android
 Copyright (C) 2024-2026 tribixbite
 
 This program is free software: you can redistribute it and/or modify

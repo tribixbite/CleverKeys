@@ -141,7 +141,7 @@ main go/no-go input for bundle-vs-pack.
 - Per-language Greek↔Latin-key map loaded into `SwipeTokenizer`
   (`models/transliteration_el.json`); pre-transliterate layout chars →
   Latin tokens before model input, map predictions back to Greek via the
-  dictionary. **No neural retraining** — the model consumes coordinate
+  dictionary. **No model retraining** — the decoder consumes coordinate
   sequences, not glyphs.
 
 ## Test plan
@@ -185,4 +185,4 @@ main go/no-go input for bundle-vs-pack.
 
 - [Dictionary System](../../../specs/dictionary-and-language-system.md)
 - [Multi-language](./multi-language-spec.md) · [Language packs](./language-packs-spec.md)
-- [Neural Prediction](../typing/neural-prediction-spec.md) (Phase 2 tokenizer)
+- [Swipe Typing](../typing/swipe-typing-spec.md) (Phase 2 tokenizer)

@@ -6,7 +6,7 @@ persists in the demo config):
 
 | Dropdown entry | Model | Lexicon | Decoder |
 |---|---|---|---|
-| Neural (shipped transformer) | `swipe_encoder_android.onnx` + `swipe_decoder_android.onnx` — the pair inside the APK | 98,140-word `en_enhanced.json` | GNMT length-normalised beam + `OptimizedVocabulary` rerank (production parity, audited 2026-07-21) |
+| Transformer (REMOVED from the app in v1.6.0 — ADR-011; the demo keeps it for comparison) | `swipe_encoder_android.onnx` + `swipe_decoder_android.onnx`, served from the demo CDN | 98,140-word `en_enhanced.json` | GNMT length-normalised beam + `OptimizedVocabulary` rerank (production parity, audited 2026-07-21) |
 | CTC (shipped app engine) | `ctc_swipe_encoder.onnx` (2.9 MB) — byte-identical to the APK asset `models/ctc_swipe_encoder.onnx`, sha256 `84718e6e…` | 98k `en_enhanced.json`, a-z-STRIPPED (98,081 words) | FUTO single-stream Viterbi trie beam at the SHIP preset `CtcScoringParams.tunedV2` (γ 0.9, λ 4.0, β 0.25, γₚ 0.25, βₚ 0.9882, width 100) |
 | CTC accurate (ch128) | `demo/models/ch128_s1234.onnx` (2.8 MB) | 146,964-word `ctc_vocab.bin` | FUTO single-stream Viterbi trie beam (demo-tuned preset) |
 | CTC fast (resbn80) | `demo/models/fast_resbn80_s1234.onnx` (1.1 MB) | same | same |
@@ -224,7 +224,7 @@ inside the ONNX encoder; it does not perturb any ranking.
 
 | engine | total | featurize | encoder | beam |
 |---|---|---|---|---|
-| Neural (transformer) | 356.11 ms | 0.01 ms | 356.10 ms † | — |
+| Transformer (removed from the app) | 356.11 ms | 0.01 ms | 356.10 ms † | — |
 | CTC accurate (ch128) | **3.13 ms** | 0.01 ms | 1.52 ms | 1.60 ms |
 | CTC fast (resbn80) | **2.32 ms** | 0.01 ms | 0.76 ms | 1.55 ms |
 

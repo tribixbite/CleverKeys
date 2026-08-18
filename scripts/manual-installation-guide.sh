@@ -35,7 +35,7 @@ Step 4: Enable CleverKeys
    
    You should see:
      • Gboard (or current keyboard)
-     • CleverKeys Neural Keyboard  ← Enable this!
+     • CleverKeys Keyboard  ← Enable this!
    
    Toggle it ON
 
@@ -45,11 +45,11 @@ Step 5: Switch to CleverKeys
      • Open any app (Chrome, Messages, etc.)
      • Tap on a text field
      • Tap keyboard icon in bottom-right
-     • Select "CleverKeys Neural Keyboard"
+     • Select "CleverKeys Keyboard"
    
    Method 2: Set as default
      Settings → System → Languages & Input → On-screen keyboard
-     → Default keyboard → CleverKeys Neural Keyboard
+     → Default keyboard → CleverKeys Keyboard
 
 
 📋 VERIFICATION CHECKLIST

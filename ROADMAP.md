@@ -1,6 +1,6 @@
 # CleverKeys Roadmap
 
-This document outlines the planned development path for CleverKeys, focusing on expanding device support, improving neural prediction capabilities, and enhancing customization.
+This document outlines the planned development path for CleverKeys, focusing on expanding device support, improving swipe prediction capabilities, and enhancing customization.
 
 ## ✅ Recently Completed (v1.2.x)
 
@@ -40,7 +40,7 @@ This document outlines the planned development path for CleverKeys, focusing on 
     - ~~On-the-fly Dictionary Addition~~ → Dictionary Manager with 3-tab UI
     - ~~Custom Dictionary Weighting~~ → Per-language beam search trie with priority
 
-## 🧠 Neural Network & Prediction
+## 🧠 On-device model & Prediction
 
 - [ ] **Vocabulary Expansion (Fine-tuning)**
     - Address gaps in current vocabulary (e.g., words like "popsicle", "narcissist").

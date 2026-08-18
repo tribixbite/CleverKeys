@@ -8,7 +8,7 @@ This file contains recommended configuration for the CleverKeys GitHub repositor
 
 ### Description
 ```
-Privacy-first Android keyboard with neural swipe typing. 100% local processing, ONNX-powered predictions, Material 3 design. Complete Kotlin rewrite of Unexpected-Keyboard with accessibility features.
+Privacy-first Android keyboard with on-device swipe typing. 100% local processing, ONNX-powered predictions, Material 3 design. Complete Kotlin rewrite of Unexpected-Keyboard with accessibility features.
 ```
 
 ### Website
@@ -23,7 +23,7 @@ keyboard
 ime
 input-method
 swipe-typing
-neural-network
+on-device-ml
 onnx
 privacy
 kotlin
@@ -113,8 +113,8 @@ offline
 Background: Material 3 blue gradient
 Content:
   - CleverKeys logo (top-left)
-  - "Privacy-First Neural Keyboard" (headline)
-  - Icons: 🔒 100% Local | 🧠 Neural AI | ⌨️ 20 Languages | ♿ Accessible
+  - "Privacy-First Swipe Keyboard" (headline)
+  - Icons: 🔒 100% Local | 🧠 On-device ML | ⌨️ 20 Languages | ♿ Accessible
 ```
 
 ---
@@ -123,7 +123,7 @@ Content:
 
 ### Short Description (160 chars max)
 ```
-Privacy-first Android keyboard with neural swipe typing, 20 languages, and full accessibility. 100% local - no data collection.
+Privacy-first Android keyboard with on-device swipe typing, 20 languages, and full accessibility. 100% local - no data collection.
 ```
 
 ---
@@ -218,7 +218,7 @@ All community health files are in place:
 - `P3` - Low priority (gray)
 
 **Component:**
-- `neural` - Neural prediction system
+- `swipe` - Swipe prediction system
 - `ui` - User interface
 - `accessibility` - Accessibility features
 - `i18n` - Internationalization

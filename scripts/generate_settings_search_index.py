@@ -53,7 +53,7 @@ SYNONYMS = {
     "sanitize": ["clean", "tracking", "utm", "clearurls"],
     "embed": ["embeds", "share", "fxtwitter", "rxddit"],
     "trail": ["swipe", "gesture"],
-    "beam": ["neural", "prediction"],
+    "beam": ["swipe", "prediction"],
     "incognito": ["private", "secret"],
 }
 

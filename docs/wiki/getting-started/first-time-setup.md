@@ -75,9 +75,9 @@ Adjust how sensitive swipe detection is:
 
 ### Prediction Settings
 
-Configure neural prediction:
+Configure swipe prediction:
 
-- **Location**: Scroll to **Neural Prediction** section in Settings
+- **Location**: Scroll to the **Swipe Typing** section in Settings
 - **Settings**:
   - Swipe Typing: Enable/disable swipe input
   - Beam Width: Number of candidates (default: 6, max: 20)
@@ -103,8 +103,8 @@ Adjust **Keyboard Height** sliders in the Appearance section of Settings.
 ### Predictions are inaccurate
 
 - Set correct primary language in Multi-Language section
-- Type more words to train the neural model
-- Increase **Beam Width** in Neural Prediction section (default: 6)
+- Type more words so personalization can learn your vocabulary
+- Increase **Beam Width** in Swipe Typing > Full CTC Settings (default: 100)
 
 ### Haptics don't work
 

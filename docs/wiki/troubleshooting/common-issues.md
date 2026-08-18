@@ -187,26 +187,26 @@ Some apps override keyboard behavior:
 
 **Solution:**
 
-1. **Disable neural swipe typing**
+1. **Disable swipe typing**
    - Open CleverKeys Settings
-   - Go to **Neural Prediction** section
+   - Go to the **Swipe Typing** section
    - Disable **Swipe Typing**
    - Use tap typing instead
 
 2. **Why this happens**
-   - Neural swipe prediction uses an ONNX machine learning model
+   - Swipe prediction uses an on-device machine learning model
    - Older devices may lack sufficient memory or CPU power
    - The model requires real-time inference during gestures
 
 > [!NOTE]
-> CleverKeys' neural prediction is optimized for modern devices. If your device is from 2017 or earlier, disabling swipe typing provides a stable experience while retaining all other features.
+> CleverKeys' swipe prediction is optimized for modern devices. If your device is from 2017 or earlier, disabling swipe typing — or switching the Prediction Engine to Geometric — provides a stable experience while retaining all other features.
 
 ### Issue: Keyboard is slow or laggy
 
 **Solutions:**
 
 1. **Reduce prediction beam width**
-   - Settings > Neural Prediction > Beam Width
+   - Settings > Swipe Typing > Full CTC Settings > Beam Width
    - Try 3-4 instead of 6+
 
 2. **Disable haptic feedback**

@@ -14,7 +14,7 @@ body:
       label: Feature Category
       description: What type of feature are you requesting?
       options:
-        - Neural Prediction (AI models, accuracy, speed)
+        - Swipe Prediction (models, accuracy, speed)
         - Keyboard Layout (new layouts, customization)
         - Gestures (new swipe patterns, shortcuts)
         - Languages (new language support, localization)
@@ -91,7 +91,7 @@ body:
       label: Implementation Considerations
       description: Please check any factors you think might be relevant to implementing this feature.
       options:
-        - label: This might require neural model changes
+        - label: This might require swipe model changes
         - label: This might need new UI components
         - label: This could impact performance
         - label: This might affect privacy/security
@@ -100,10 +100,10 @@ body:
         - label: I'm willing to help implement this
 
   - type: textarea
-    id: neural-considerations
+    id: swipe-considerations
     attributes:
-      label: Neural/AI Considerations (if applicable)
-      description: If this feature involves neural predictions, please describe how it should work.
+      label: Swipe engine considerations (if applicable)
+      description: If this feature involves swipe predictions, please describe how it should work.
       placeholder: |
         - How should the AI models be modified?
         - What training data would be needed?

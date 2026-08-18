@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CleverKeys - Neural Swipe Prediction Demo</title>
+    <title>CleverKeys - Swipe Prediction Demo</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- ONNX Runtime Web 1.18.0 — vendored under vendor/ort/ (see
          models/PROVENANCE.md). Previously pulled from jsdelivr; serving it
@@ -132,7 +132,7 @@
     <div class="bg-dark-surface/80 backdrop-blur-xl border-b border-white/10">
         <div class="p-4 text-center">
             <h1 class="text-2xl font-bold bg-gradient-to-r from-neon-blue to-neon-purple bg-clip-text text-transparent">
-                CleverKeys - Neural Swipe Demo
+                CleverKeys - Swipe Demo
             </h1>
             <p class="text-gray-400 text-sm mt-1">
                 <span id="modelStatus">Loading models...</span>
@@ -270,7 +270,7 @@
             <select id="engineSelect" onchange="onEngineChange()"
                     class="bg-black/40 border border-white/15 rounded-lg px-3 py-1.5 text-sm text-gray-200
                            focus:outline-none focus:border-neon-blue/60 min-w-[15rem]">
-                <option value="transformer">Neural (shipped transformer)</option>
+                <option value="transformer">Transformer (removed from the app in v1.6.0)</option>
                 <option value="ctc_app">CTC (shipped app engine)</option>
                 <option value="ctc_ch128">CTC accurate (ch128)</option>
                 <option value="ctc_resbn80">CTC fast (resbn80)</option>
@@ -1660,7 +1660,7 @@
         // all four.
         // ============================================================
         const ENGINE_SPECS = [
-            { id: 'transformer', kind: 'transformer', label: 'Neural (shipped transformer)' },
+            { id: 'transformer', kind: 'transformer', label: 'Transformer (removed from the app in v1.6.0)' },
             // `trie` (the en_enhanced STRIP trie) and `scoring`
             // (CTC.CTC_APP_SCORING) are attached in initCtcEngines once the
             // dictionary JSON has loaded.

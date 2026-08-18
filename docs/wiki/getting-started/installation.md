@@ -5,7 +5,7 @@ Getting CleverKeys on your Android device is quick and easy.
 ## Requirements
 
 - **Android 5.0 (Lollipop)** or higher (minSdk 21)
-- Approximately **25 MB** of storage space (includes ONNX neural model)
+- Approximately **35 MB** of storage space (includes the on-device swipe model and dictionaries)
 - No internet connection required - works fully offline
 
 ## Installation Methods

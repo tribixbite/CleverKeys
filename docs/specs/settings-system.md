@@ -24,7 +24,7 @@ SettingsActivity (Material 3 Compose)
     ├── PreferenceScreen
     │   ├── Appearance Section
     │   ├── Input Behavior Section
-    │   ├── Neural Prediction Section
+    │   ├── Swipe Typing Section
     │   ├── Gestures Section
     │   ├── Layout Section
     │   ├── Clipboard Section
@@ -68,10 +68,10 @@ object Defaults {
     const val VIBRATION_ENABLED = true
     const val VIBRATION_STRENGTH = 10
 
-    // Neural Prediction
-    const val NEURAL_BEAM_WIDTH = 6
-    const val NEURAL_MAX_LENGTH = 20
-    const val NEURAL_CONFIDENCE_THRESHOLD = 0.3f
+    // Swipe decoding
+    const val SWIPE_ENGINE_MODE = "ctc"
+    const val CTC_BEAM_WIDTH = 100
+    const val ONNX_XNNPACK_THREADS = 2
     const val SWIPE_ENABLED = true
 
     // Gestures
@@ -95,7 +95,7 @@ object Defaults {
 |----------|----------------|--------------|
 | Appearance | ~15 | theme, keyboard_height, opacity, borders |
 | Input Behavior | ~10 | longpress_timeout, vibration, key_repeat |
-| Neural | ~8 | beam_width, confidence, swipe_enabled |
+| Swipe Typing | ~4 | swipe_engine_mode, ctc_beam_width, swipe_typing_enabled |
 | Gestures | ~12 | short_swipe distances, slider sensitivity |
 | Layout | ~8 | margins, number_row, extra_keys |
 | Clipboard | ~5 | history_enabled, history_size, exclusions |
@@ -124,7 +124,7 @@ class Config private constructor(context: Context) {
         val prefs = context.getSharedPreferences("cleverkeys_prefs", MODE_PRIVATE)
         theme = prefs.getString("theme", Defaults.THEME)!!
         keyboardHeightPortrait = prefs.getInt("keyboard_height_portrait", Defaults.KEYBOARD_HEIGHT_PORTRAIT)
-        neuralBeamWidth = prefs.getInt("neural_beam_width", Defaults.NEURAL_BEAM_WIDTH)
+        ctcBeamWidth = prefs.getInt("ctc_beam_width", Defaults.CTC_BEAM_WIDTH)
         // ... all other settings
     }
 

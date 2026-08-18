@@ -88,7 +88,7 @@
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Quick Summary</h2>
 
 <table class="w-full mb-6 border-collapse"><tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">Issue</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Common Cause</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Solution</th></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Slow typing</strong></td><td class="px-4 py-2 border-t border-gray-700">Neural predictions</td><td class="px-4 py-2 border-t border-gray-700">Reduce beam width</td></tr></p>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Slow typing</strong></td><td class="px-4 py-2 border-t border-gray-700">Swipe decoding</td><td class="px-4 py-2 border-t border-gray-700">Switch the Prediction Engine to Geometric</td></tr></p>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Lag on open</strong></td><td class="px-4 py-2 border-t border-gray-700">Large clipboard</td><td class="px-4 py-2 border-t border-gray-700">Reduce history limit</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Battery drain</strong></td><td class="px-4 py-2 border-t border-gray-700">Haptics, animations</td><td class="px-4 py-2 border-t border-gray-700">Reduce feedback</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
@@ -106,7 +106,7 @@
 <p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Solutions:</strong></p>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Reduce beam width</strong></li>
-</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Neural Prediction section > Beam Width</p>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Swipe Typing > Full CTC Settings > Beam Width</p>
 <p class="mb-4 text-gray-300 leading-relaxed">   - Try 3-4 instead of 6+</p>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">2. <strong class="text-white">Reduce languages</strong></li>
@@ -148,7 +148,7 @@
 
 <p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Explanation:</strong></p>
 
-<p class="mb-4 text-gray-300 leading-relaxed">Neural model loads on first use. This is normal behavior.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">The swipe model loads on first use. This is normal behavior.</p>
 
 <p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Why this happens:</strong></p>
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; The ONNX model is loaded into memory on first swipe</li>
@@ -162,7 +162,7 @@
 <table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Factor</td><td class="px-4 py-2 border-t border-gray-700">Memory Impact</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Language dictionaries</strong></td><td class="px-4 py-2 border-t border-gray-700">5-30 MB each</td></tr></p>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Clipboard history</strong></td><td class="px-4 py-2 border-t border-gray-700">Varies with content</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Neural model</strong></td><td class="px-4 py-2 border-t border-gray-700">~10 MB</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Swipe model</strong></td><td class="px-4 py-2 border-t border-gray-700">~3 MB</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Personal dictionary</strong></td><td class="px-4 py-2 border-t border-gray-700">Usually < 1 MB</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Reduce Memory Usage</h3>
@@ -185,7 +185,7 @@
 
 <table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Feature</td><td class="px-4 py-2 border-t border-gray-700">Battery Impact</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Haptics</strong></td><td class="px-4 py-2 border-t border-gray-700">Medium</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Neural predictions</strong></td><td class="px-4 py-2 border-t border-gray-700">Medium</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Swipe predictions</strong></td><td class="px-4 py-2 border-t border-gray-700">Medium</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Clipboard monitoring</strong></td><td class="px-4 py-2 border-t border-gray-700">Low</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Reduce Battery Usage</h3>
@@ -220,7 +220,7 @@
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Older Devices</h3>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Use lower neural settings (Beam Width 3-4)</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Use the Geometric engine, or a lower CTC Beam Width</li>
 <li class="ml-4 text-gray-300">&#8226; Disable haptics if laggy</li>
 <li class="ml-4 text-gray-300">&#8226; Keep fewer layouts installed</li>
 <li class="ml-4 text-gray-300">&#8226; Reduce clipboard history</li>
@@ -233,7 +233,7 @@
 </ul>
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">High-Performance Devices</h3>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Can use maximum neural settings (Beam Width 10-12)</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Can use a wider CTC Beam Width (150-300)</li>
 <li class="ml-4 text-gray-300">&#8226; Enable all haptics</li>
 <li class="ml-4 text-gray-300">&#8226; Keep many languages</li>
 </ul>
@@ -259,7 +259,7 @@
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Why is swipe typing slower than tap typing?</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed">A: Swipe requires neural processing. This is expected behavior.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">A: Swipe requires running a decoder over the whole gesture. This is expected behavior.</p>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Should I use battery optimization for CleverKeys?</h3>
 
@@ -267,7 +267,7 @@
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Related Topics</h2>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <a href="../settings/neural-settings.html" class="text-green-400 hover:underline">Neural Settings</a> - Prediction configuration</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <a href="../typing/swipe-typing.html" class="text-green-400 hover:underline">Swipe Typing</a> - Prediction configuration</li>
 <li class="ml-4 text-gray-300">&#8226; <a href="../settings/haptics.html" class="text-green-400 hover:underline">Haptics</a> - Vibration settings</li>
 <li class="ml-4 text-gray-300">&#8226; <a href="common-issues.html" class="text-green-400 hover:underline">Common Issues</a> - General troubleshooting</li>
 </ul>

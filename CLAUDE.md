@@ -17,7 +17,11 @@ committed coordination over working-tree edits.
 3.  **CHECK `docs/TABLE_OF_CONTENTS.md`** - Master navigation for project docs.
 4.  **CHECK `docs/specs/`** - Feature specifications for the area you are working on.
 
-**CURRENT STATUS (2026-07-17):**
+**CURRENT STATUS (2026-08-18):**
+- Neural swipe engine REMOVED (ADR-011). Swipe = CTC (default) + geometric. See
+  `docs/plans/2026-08-18-neural-engine-removal.md` and `docs/history/neural-engine/`.
+
+**PREVIOUS STATUS (2026-07-17):**
 - Feature-complete and released (v1.5.x on F-Droid).
 - Latest code-quality audit: `docs/audit/2026-07-17-code-quality-audit.md`.
 - Tier-1/Tier-2 remediation from that audit is in progress (clipboard PII log
@@ -55,7 +59,7 @@ committed coordination over working-tree edits.
 ## 🎯 **PROJECT OVERVIEW**
 
 CleverKeys is a **complete Kotlin rewrite** of `Julow/Unexpected-Keyboard` featuring:
-- **Pure ONNX neural prediction** (NO CGR, NO fallbacks).
+- **On-device swipe prediction** — CTC (ONNX encoder + pure-JVM trie beam) and a geometric decoder; no CGR, no cloud.
 - **Advanced gesture recognition** with sophisticated algorithms.
 - **Modern Kotlin architecture** with significant code reduction.
 - **Reactive programming** with coroutines and Flow streams.
@@ -74,7 +78,8 @@ CleverKeys is a **complete Kotlin rewrite** of `Julow/Unexpected-Keyboard` featu
 *Located in `docs/specs/`*
 - `short-swipe-customization.md`: Per-key gesture customization.
 - `profile_system_restoration.md`: Layout import/export with gestures.
-- `neural-prediction.md`: ONNX AI model architecture.
+- `ctc-swipe-engine.md`: the shipping CTC swipe decoder.
+- `geometric-swipe-engine.md`: the layout-agnostic geometric decoder.
 - `core-keyboard-system.md`: Main keyboard logic.
 - `clipboard-privacy.md`: Clipboard privacy features.
 
@@ -102,7 +107,7 @@ src/main/kotlin/tribixbite/cleverkeys/       # package tribixbite.cleverkeys
 ├── *.kt                            # ~158 files flat at the package root
 │                                   #   (IME service, keyboard views, Config,
 │                                   #    ClipboardDatabase, predictors, etc.)
-├── onnx/                           # ONNX neural prediction (14 files, NO CGR)
+├── onnx/                           # ONNX session loader (ModelLoader.kt — CTC only)
 ├── ui/                             # UI (36 files)
 │   └── settings/                   #   Settings screens
 │       ├── sections/               #     Per-section composables (17 files)
@@ -125,7 +130,7 @@ src/main/kotlin/tribixbite/cleverkeys/       # package tribixbite.cleverkeys
 ```
 
 > Counts derived via `rg --files … -g '*.kt'` on 2026-07-17. The old
-> `tribixbite/keyboard2/` tree with `core/neural/data/config/…` never existed —
+> `tribixbite/keyboard2/` tree with `core/swipe/data/config/…` never existed —
 > the package is `tribixbite.cleverkeys` with a large flat root plus the
 > subpackages above.
 

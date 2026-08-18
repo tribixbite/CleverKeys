@@ -94,12 +94,12 @@
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">How Multi-Language Works</h2>
 
-<p class="mb-4 text-gray-300 leading-relaxed">Instead of switching layouts, CleverKeys can provide predictions from multiple language dictionaries simultaneously. The neural model outputs letter sequences, and the system checks them against dictionaries for both your primary and secondary languages.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">Instead of switching layouts, CleverKeys can provide predictions from multiple language dictionaries simultaneously. The swipe decoder outputs letter sequences, and the system checks them against dictionaries for both your primary and secondary languages.</p>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">The Key Concept</h3>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. You swipe a word on QWERTY layout</li>
-<li class="ml-4 text-gray-300">2. Neural model suggests possible letter sequences</li>
+<li class="ml-4 text-gray-300">2. The swipe decoder suggests possible letter sequences</li>
 <li class="ml-4 text-gray-300">3. System checks both English AND Spanish (for example) dictionaries</li>
 <li class="ml-4 text-gray-300">4. Best matches from both languages appear in suggestions</li>
 <li class="ml-4 text-gray-300">5. Accent normalization maps "espanol" → "español"</li>
@@ -116,9 +116,9 @@
 
 <p class="mb-4 text-gray-300 leading-relaxed">Your primary language is the main dictionary:</p>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Primary Language</strong> determines the neural model's vocabulary base</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Primary Language</strong> determines the swipe decoder's vocabulary base</li>
 <li class="ml-4 text-gray-300">2. English is the default primary language</li>
-<li class="ml-4 text-gray-300">3. The neural model is trained primarily on English</li>
+<li class="ml-4 text-gray-300">3. The CTC decoder is validated on English, French, German and Spanish; other languages use the geometric engine</li>
 </ul>
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 3: Add Secondary Language</h3>
 
@@ -152,13 +152,16 @@
 <p class="mb-4 text-gray-300 leading-relaxed">These come pre-installed:</p>
 
 <table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Language</td><td class="px-4 py-2 border-t border-gray-700">Code</td><td class="px-4 py-2 border-t border-gray-700">Dictionary Size</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">English</td><td class="px-4 py-2 border-t border-gray-700">en</td><td class="px-4 py-2 border-t border-gray-700">50,000 words</td></tr></p>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">English</td><td class="px-4 py-2 border-t border-gray-700">en</td><td class="px-4 py-2 border-t border-gray-700">98,140 words</td></tr></p>
 <tr><td class="px-4 py-2 border-t border-gray-700">Spanish</td><td class="px-4 py-2 border-t border-gray-700">es</td><td class="px-4 py-2 border-t border-gray-700">50,000 words</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700">French</td><td class="px-4 py-2 border-t border-gray-700">fr</td><td class="px-4 py-2 border-t border-gray-700">25,000 words</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700">Portuguese</td><td class="px-4 py-2 border-t border-gray-700">pt</td><td class="px-4 py-2 border-t border-gray-700">25,000 words</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700">German</td><td class="px-4 py-2 border-t border-gray-700">de</td><td class="px-4 py-2 border-t border-gray-700">25,000 words</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700">Italian</td><td class="px-4 py-2 border-t border-gray-700">it</td><td class="px-4 py-2 border-t border-gray-700">25,000 words</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700">Swedish</td><td class="px-4 py-2 border-t border-gray-700">sv</td><td class="px-4 py-2 border-t border-gray-700">40,000 words</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<p class="mb-4 text-gray-300 leading-relaxed">The English dictionary is built by a dedicated pipeline: the top 150,000 wordfreq candidates are classified against multiple spelling oracles (hunspell, aspell, the AOSP mobile-keyboard wordlist, and more), with typo-pattern and foreign-word filtering plus a curated allowlist/blocklist. That's why it's both larger <em>and</em> cleaner than a raw frequency list — common internet slang is in, corpus-noise typos like "teh" are out.</p>
+
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Downloadable Languages</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Via Language Packs:</p>
@@ -168,7 +171,8 @@
 <tr><td class="px-4 py-2 border-t border-gray-700">Indonesian</td><td class="px-4 py-2 border-t border-gray-700">id</td><td class="px-4 py-2 border-t border-gray-700">Available</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700">Malay</td><td class="px-4 py-2 border-t border-gray-700">ms</td><td class="px-4 py-2 border-t border-gray-700">Available</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700">Tagalog</td><td class="px-4 py-2 border-t border-gray-700">tl</td><td class="px-4 py-2 border-t border-gray-700">Available</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700">Swedish</td><td class="px-4 py-2 border-t border-gray-700">sv</td><td class="px-4 py-2 border-t border-gray-700">Via wordfreq script</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700">Greek</td><td class="px-4 py-2 border-t border-gray-700">el</td><td class="px-4 py-2 border-t border-gray-700">Available</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700">Russian</td><td class="px-4 py-2 border-t border-gray-700">ru</td><td class="px-4 py-2 border-t border-gray-700">Available</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <p class="mb-4 text-gray-300 leading-relaxed">See <a href="language-packs.html" class="text-green-400 hover:underline">Language Packs</a> for download instructions.</p>
 
@@ -210,7 +214,7 @@
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: How does accent normalization work?</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed">A: The neural model outputs base letters. The dictionary lookup maps "espanol" to "español" using accent normalization tables.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">A: The swipe decoder outputs base letters. The dictionary lookup maps "espanol" to "español" using accent normalization tables.</p>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: What if I need characters not on QWERTY?</h3>
 

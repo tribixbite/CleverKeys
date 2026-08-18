@@ -63,4 +63,4 @@ This prevents autofill suggestion chips from being clipped or hidden behind padd
 
 ## Related Settings
 
-Password mode is automatic. Swipe typing is disabled in password fields by default but can be enabled via **Settings > Neural Prediction > Swipe on Password Fields**.
+Password mode is automatic. Swipe typing is disabled in password fields by default but can be enabled via **Settings > Swipe Typing > Swipe on Password Fields**.

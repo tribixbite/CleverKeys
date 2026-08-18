@@ -13,7 +13,7 @@ Comprehensive testing strategy for CleverKeys Android keyboard, designed to enab
 | Instrumented | `src/androidTest/kotlin/` | 6 | AndroidJUnit4 | Requires ADB |
 
 ### Existing Test Files
-- `NeuralPredictionTest.kt` - SwipeInput data structure tests
+- `swipe/SwipeEngineRouterTest.kt` - engine routing table
 - `IntegrationTest.kt` - Gesture creation helpers
 - `ComposeKeyTest.kt` - Compose key sequences
 - `OnnxPredictionTest.kt` - ONNX prediction basics
@@ -33,7 +33,7 @@ Decouple Android framework from testable business logic.
 
 :core (Pure Kotlin) [NEW]
 ├── prediction/
-│   ├── NeuralEngine.kt      → Interface
+│   ├── SwipeDecoder.kt      → Interface
 │   ├── BeamSearchEngine.kt  → Pure algorithm
 │   └── VocabularyTrie.kt    → Data structure
 ├── dictionary/
@@ -51,9 +51,9 @@ Decouple Android framework from testable business logic.
 
 ## Abstraction Interfaces
 
-### NeuralEngine Interface
+### SwipeDecoder Interface
 ```kotlin
-interface NeuralEngine {
+interface SwipeDecoder {
     fun predict(features: FloatArray): PredictionResult
     fun isReady(): Boolean
 }
@@ -238,7 +238,7 @@ jobs:
 
 ### Phase 2: Abstractions (Week 2-3)
 - [ ] Create TouchPoint data class
-- [ ] Create NeuralEngine interface
+- [ ] Create SwipeDecoder interface
 - [ ] Create TextCommitter interface
 - [ ] Refactor BeamSearchEngine to use abstractions
 

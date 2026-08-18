@@ -14,7 +14,7 @@ export const CATEGORIES: WikiCategory[] = [
   { slug: 'gestures',        name: 'Gestures',          color: '#c084fc', order: 3,  description: '8-direction swipes, circles, trackpoint mode.' },
   { slug: 'customization',   name: 'Customization',     color: '#fbbf24', order: 4,  description: 'Per-key actions, extra keys, timestamp keys, themes.' },
   { slug: 'layouts',         name: 'Layouts',           color: '#f472b6', order: 5,  description: 'Custom layouts, multi-language, profiles, language packs.' },
-  { slug: 'settings',        name: 'Settings',          color: '#9ca3af', order: 6,  description: 'Appearance, input behavior, haptics, neural, accessibility.' },
+  { slug: 'settings',        name: 'Settings',          color: '#9ca3af', order: 6,  description: 'Appearance, input behavior, haptics, accessibility.' },
   { slug: 'clipboard',       name: 'Clipboard',         color: '#2dd4bf', order: 7,  description: 'History, shortcuts, text selection.' },
   { slug: 'troubleshooting', name: 'Troubleshooting',   color: '#f87171', order: 8,  description: 'Common issues, performance, reset defaults.' },
 ]
@@ -50,7 +50,7 @@ export const PRIORITY: Record<string, string[]> = {
   gestures:          ['short-swipes', 'circle-gestures', 'cursor-navigation', 'selection-delete', 'trackpoint-mode'],
   customization:     ['per-key-actions', 'extra-keys', 'themes', 'timestamp-keys', 'command-palette'],
   layouts:           ['adding-layouts', 'switching-layouts', 'multi-language', 'language-packs', 'custom-layouts', 'profiles'],
-  settings:          ['appearance', 'input-behavior', 'haptics', 'neural-settings', 'accessibility'],
+  settings:          ['appearance', 'input-behavior', 'haptics', 'accessibility'],
   clipboard:         ['clipboard-history', 'text-selection', 'shortcuts'],
   troubleshooting:   ['common-issues', 'performance', 'reset-defaults'],
 }

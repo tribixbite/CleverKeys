@@ -141,9 +141,22 @@
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Tab</strong></td><td class="px-4 py-2 border-t border-gray-700">Insert tab character</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Escape</strong></td><td class="px-4 py-2 border-t border-gray-700">Send escape key</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Undo/Redo</strong></td><td class="px-4 py-2 border-t border-gray-700">Undo or redo action</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Copy/Cut/Paste</strong></td><td class="px-4 py-2 border-t border-gray-700">Clipboard operations</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Copy/Cut/Paste</strong></td><td class="px-4 py-2 border-t border-gray-700">Clipboard operations (terminal-aware — see below)</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Select All</strong></td><td class="px-4 py-2 border-t border-gray-700">Select all text</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Timestamp</strong></td><td class="px-4 py-2 border-t border-gray-700">Insert current date/time using a SimpleDateFormat pattern (see below)</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Timestamp Action</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">The <strong class="text-white">Timestamp</strong> action type inserts the current date and/or time, formatted via a <a href="https://developer.android.com/reference/java/text/SimpleDateFormat" class="text-green-400 hover:underline">SimpleDateFormat</a> pattern. The pattern is the action value; at swipe time the current <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">Date</code> is formatted with the system default locale and the result is committed to the text field.</p>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Pattern</td><td class="px-4 py-2 border-t border-gray-700">Example output</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">yyyy-MM-dd HH:mm</code></td><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">2026-05-22 14:30</code></td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">yyyy-MM-dd</code></td><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">2026-05-22</code></td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">HH:mm</code></td><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">14:30</code></td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">yyyy-MM-dd'T'HH:mm:ssXXX</code></td><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">2026-05-22T14:30:00+00:00</code> (ISO 8601)</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<p class="mb-4 text-gray-300 leading-relaxed">Any valid SimpleDateFormat pattern works. The Command Palette dialog also offers a few preset chips covering the common date/time formats.</p>
+
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Common Customizations</h2>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Adding Frequently Used Symbols</h3>
@@ -173,6 +186,47 @@
 <p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Backspace</strong></td><td class="px-4 py-2 border-t border-gray-700">West</td><td class="px-4 py-2 border-t border-gray-700">Delete Word</td></tr></p>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Space</strong></td><td class="px-4 py-2 border-t border-gray-700">Subkeys</td><td class="px-4 py-2 border-t border-gray-700">Cursor movement</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Pinned Clipboard Actions</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Insert pinned clipboard entries directly via swipe gestures, without opening the clipboard panel. Five positional commands are available:</p>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Command</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">paste_pinned_1</code></td><td class="px-4 py-2 border-t border-gray-700">Insert 1st pinned clipboard entry</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">paste_pinned_2</code></td><td class="px-4 py-2 border-t border-gray-700">Insert 2nd pinned clipboard entry</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">paste_pinned_3</code></td><td class="px-4 py-2 border-t border-gray-700">Insert 3rd pinned clipboard entry</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">paste_pinned_4</code></td><td class="px-4 py-2 border-t border-gray-700">Insert 4th pinned clipboard entry</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">paste_pinned_5</code></td><td class="px-4 py-2 border-t border-gray-700">Insert 5th pinned clipboard entry</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<p class="mb-4 text-gray-300 leading-relaxed">Pinned entries are ordered <strong class="text-white">most-recently-pinned first</strong>. If you request an index that exceeds the number of pinned items (e.g., <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">paste_pinned_3</code> with only 2 pins), a toast notification tells you how many are available instead of inserting anything.</p>
+
+<p class="mb-4 text-gray-300 leading-relaxed">To set up:</p>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Go to <strong class="text-white">Settings > Activities > Per-Key Customization</strong></li>
+<li class="ml-4 text-gray-300">2. Select a key and direction</li>
+<li class="ml-4 text-gray-300">3. Choose <strong class="text-white">Command</strong> as the action type</li>
+<li class="ml-4 text-gray-300">4. Search for "paste_pinned" or browse the <strong class="text-white">Clipboard</strong> category</li>
+<li class="ml-4 text-gray-300">5. Select the desired slot (1-5)</li>
+</ul>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!TIP]</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">Pin your most-used text snippets (email signature, address, code boilerplate) and bind them to swipe directions for instant insertion.</blockquote>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Terminal-Aware Actions</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Some actions adapt their behavior when typing in terminal apps like Termux:</p>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Action</td><td class="px-4 py-2 border-t border-gray-700">Standard Apps</td><td class="px-4 py-2 border-t border-gray-700">Terminal Apps</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Paste</strong></td><td class="px-4 py-2 border-t border-gray-700">Android paste API</td><td class="px-4 py-2 border-t border-gray-700">Ctrl+V key event</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Copy</strong></td><td class="px-4 py-2 border-t border-gray-700">Android copy API</td><td class="px-4 py-2 border-t border-gray-700">Standard</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Cut</strong></td><td class="px-4 py-2 border-t border-gray-700">Android cut API</td><td class="px-4 py-2 border-t border-gray-700">Standard</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<p class="mb-4 text-gray-300 leading-relaxed">This is automatic — the same paste customization works in both regular apps and terminals.</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Custom Text Input</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">When using the <strong class="text-white">Text Input</strong> action type, you can enter up to <strong class="text-white">4096 characters</strong> per action. This is useful for long templates, code snippets, or multi-line text blocks.</p>
+
+<p class="mb-4 text-gray-300 leading-relaxed">The text input field includes a <strong class="text-white">paste button</strong> (icon in the trailing position) for pasting from the system clipboard. This is provided because Compose dialogs do not always receive paste commands from the IME reliably.</p>
+
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Tips and Tricks</h2>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Start small</strong>: Customize a few keys first, learn them, then add more</li>

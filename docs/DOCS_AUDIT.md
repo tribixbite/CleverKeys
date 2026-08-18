@@ -23,8 +23,8 @@ These are internal implementation details, not user-facing:
 |------|---------|
 | `architectural-decisions.md` | ADRs for design choices |
 | `core-keyboard-system.md` | Core keyboard architecture |
-| `neural-prediction.md` | ONNX neural pipeline |
-| `neural-multilanguage-architecture.md` | Multilang beam search |
+| `neural-prediction.md` | ONNX transformer pipeline (archived 2026-08-18 → `docs/history/neural-engine/`) |
+| `neural-multilanguage-architecture.md` | Multilang beam search (archived 2026-08-18 → `docs/history/neural-engine/`) |
 | `kv-cache-optimization.md` | Decoder caching |
 | `memory-pool-optimization.md` | Memory management |
 | `performance-optimization.md` | Latency optimization |

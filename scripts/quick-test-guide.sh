@@ -142,7 +142,7 @@ clear
 
 # Test 3: Swipe Typing
 echo "════════════════════════════════════════════════════════════════════════════"
-echo -e "${CYAN}TEST 3/5: Swipe Typing (Neural Prediction)${NC}"
+echo -e "${CYAN}TEST 3/5: Swipe Typing (CTC Prediction)${NC}"
 echo "════════════════════════════════════════════════════════════════════════════"
 echo ""
 echo "📝 TASK: Swipe your finger to spell 'hello'"

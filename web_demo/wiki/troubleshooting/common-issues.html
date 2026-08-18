@@ -260,26 +260,26 @@
 </ul>
 <p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Solution:</strong></p>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Disable neural swipe typing</strong></li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Disable swipe typing</strong></li>
 </ul><p class="mb-4 text-gray-300 leading-relaxed">   - Open CleverKeys Settings</p>
-<p class="mb-4 text-gray-300 leading-relaxed">   - Go to <strong class="text-white">Neural Prediction</strong> section</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - Go to the <strong class="text-white">Swipe Typing</strong> section</p>
 <p class="mb-4 text-gray-300 leading-relaxed">   - Disable <strong class="text-white">Swipe Typing</strong></p>
 <p class="mb-4 text-gray-300 leading-relaxed">   - Use tap typing instead</p>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">2. <strong class="text-white">Why this happens</strong></li>
-</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Neural swipe prediction uses an ONNX machine learning model</p>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Swipe prediction uses an on-device machine learning model</p>
 <p class="mb-4 text-gray-300 leading-relaxed">   - Older devices may lack sufficient memory or CPU power</p>
 <p class="mb-4 text-gray-300 leading-relaxed">   - The model requires real-time inference during gestures</p>
 
 <blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!NOTE]</blockquote>
-<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">CleverKeys' neural prediction is optimized for modern devices. If your device is from 2017 or earlier, disabling swipe typing provides a stable experience while retaining all other features.</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">CleverKeys' swipe prediction is optimized for modern devices. If your device is from 2017 or earlier, disabling swipe typing — or switching the Prediction Engine to Geometric — provides a stable experience while retaining all other features.</blockquote>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Issue: Keyboard is slow or laggy</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Solutions:</strong></p>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Reduce prediction beam width</strong></li>
-</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Neural Prediction > Beam Width</p>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Swipe Typing > Full CTC Settings > Beam Width</p>
 <p class="mb-4 text-gray-300 leading-relaxed">   - Try 3-4 instead of 6+</p>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">2. <strong class="text-white">Disable haptic feedback</strong></li>

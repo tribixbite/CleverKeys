@@ -1,5 +1,9 @@
 # User Settings vs Defaults (2025-12-10)
 
+> **HISTORICAL SNAPSHOT (2025-12-10)** — the `neural_*` preferences and the Neural
+> Settings screen described below were removed on 2026-08-18 (ADR-011). This file is
+> a dated record and is deliberately not rewritten.
+
 ## Settings Differing from Default
 
 | Setting | Your Value | Default | Impact |

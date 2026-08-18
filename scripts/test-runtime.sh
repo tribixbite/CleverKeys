@@ -1,6 +1,6 @@
 #!/bin/bash
 # Runtime validation script for CleverKeys APK
-# Tests neural prediction, IME integration, and system functionality
+# Tests swipe prediction, IME integration, and system functionality
 
 set -e
 
@@ -73,7 +73,7 @@ if pm list packages | grep -q "$APK_PACKAGE"; then
         echo "2. SET AS DEFAULT:"
         echo "   Tap input field → Select 'CleverKeys' from keyboard picker"
         echo ""
-        echo "3. TEST NEURAL PREDICTION:"
+        echo "3. TEST SWIPE PREDICTION:"
         echo "   - Swipe across keyboard (e.g., 'hello', 'world')"
         echo "   - Check logcat for ONNX initialization:"
         echo "     logcat | grep 'OnnxSwipePredictor'"

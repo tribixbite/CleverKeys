@@ -97,7 +97,7 @@ Exports all keyboard settings to a JSON file:
 
 | Included | Description |
 |----------|-------------|
-| **All Settings** | Appearance, behavior, neural settings |
+| **All Settings** | Appearance, behavior, swipe engine settings |
 | **Theme Selection** | Current theme choice |
 | **Custom Subkeys** | Per-key customizations |
 

@@ -1,6 +1,6 @@
 # Contributing to CleverKeys 🤝
 
-Welcome to CleverKeys! We're excited that you want to contribute to the world's first privacy-first neural keyboard. This guide will help you get started with contributing to our open-source project.
+Welcome to CleverKeys! We're excited that you want to contribute to the world's first privacy-first swipe keyboard. This guide will help you get started with contributing to our open-source project.
 
 ## 🌟 Ways to Contribute
 
@@ -8,7 +8,7 @@ Welcome to CleverKeys! We're excited that you want to contribute to the world's 
 - Found a bug? [Create an issue](https://github.com/tribixbite/CleverKeys/issues/new?template=bug_report.yml)
 - Include detailed steps to reproduce
 - Provide device information and CleverKeys version
-- Add logs from `adb logcat | grep -E "CleverKeys|Neural|ONNX"` if possible
+- Add logs from `adb logcat | grep -E "CleverKeys|Ctc|Onnx"` if possible
 
 ### ✨ **Feature Requests**
 - Have an idea? [Request a feature](https://github.com/tribixbite/CleverKeys/issues/new?template=feature_request.yml)
@@ -17,7 +17,7 @@ Welcome to CleverKeys! We're excited that you want to contribute to the world's 
 - Consider privacy and performance implications
 
 ### 💻 **Code Contributions**
-- **Neural Models**: Improve prediction accuracy and speed
+- **Swipe Models**: Improve prediction accuracy and speed
 - **Performance**: Optimize inference and memory usage
 - **UI/UX**: Enhance keyboard layouts and user experience
 - **Languages**: Add new keyboard layouts and language support
@@ -63,7 +63,7 @@ cd CleverKeys
 1. Go to **Settings → Languages & Input → Virtual Keyboard**
 2. Add **CleverKeys**
 3. Set as default keyboard
-4. Enable neural predictions in CleverKeys settings
+4. Enable swipe predictions in CleverKeys settings
 
 ### Development Workflow
 
@@ -96,10 +96,10 @@ adb install build/outputs/apk/debug/tribixbite.cleverkeys.debug.apk
 - Link any related issues
 - Wait for review and address feedback
 
-## 🧠 Neural Model Contributions
+## 🧠 Swipe Model Contributions
 
 ### Model Training
-- **Training Data**: Use the neural calibration system to collect training data
+- **Training Data**: Use the swipe ML-capture system to collect training data
 - **Model Architecture**: Follow the transformer encoder-decoder pattern
 - **Export Format**: ONNX models for cross-platform compatibility
 - **Size Constraints**: Keep models under 10MB each for mobile performance
@@ -110,7 +110,7 @@ adb install build/outputs/apk/debug/tribixbite.cleverkeys.debug.apk
 - **Accuracy**: Maintain >90% top-3 accuracy on common words
 - **Battery**: Minimal impact on battery life during normal typing
 
-### Neural Code Guidelines
+### Swipe engine code guidelines
 ```kotlin
 // Good: Proper resource management
 suspend fun predict(input: SwipeInput): PredictionResult {
@@ -121,9 +121,9 @@ suspend fun predict(input: SwipeInput): PredictionResult {
 
 // Good: Error handling
 try {
-    val result = neuralEngine.processGesture(swipe)
+    val result = ctcAdapter.processGesture(swipe)
     handlePredictionSuccess(result)
-} catch (e: NeuralEngineException) {
+} catch (e: SwipeDecodeException) {
     handlePredictionFailure(e)
 }
 ```
@@ -160,11 +160,11 @@ try {
 ### Writing Tests
 ```kotlin
 @Test
-fun testNeuralPredictionLatency() = runBlocking {
+fun testSwipeDecodeLatency() = runBlocking {
     val swipe = createTestSwipe("hello")
     val startTime = System.currentTimeMillis()
 
-    val result = neuralEngine.processGesture(swipe)
+    val result = ctcAdapter.processGesture(swipe)
 
     val latency = System.currentTimeMillis() - startTime
     assertTrue("Prediction too slow: ${latency}ms", latency < 200)
@@ -173,7 +173,7 @@ fun testNeuralPredictionLatency() = runBlocking {
 ```
 
 ### Test Coverage Goals
-- **Neural Components**: 95%+ coverage of prediction pipeline
+- **Swipe engine components**: 95%+ coverage of prediction pipeline
 - **UI Components**: 90%+ coverage of user interactions
 - **Error Handling**: 100% coverage of error scenarios
 - **Performance**: All critical paths benchmarked
@@ -184,18 +184,18 @@ fun testNeuralPredictionLatency() = runBlocking {
 ```kotlin
 // Good: Clear naming and documentation
 /**
- * Processes a swipe gesture and returns neural predictions.
+ * Processes a swipe gesture and returns swipe predictions.
  * @param swipeInput Raw swipe trajectory data
  * @return Prediction results with confidence scores
  */
 suspend fun processSwipeGesture(swipeInput: SwipeInput): PredictionResult {
     return withContext(Dispatchers.Default) {
-        neuralPredictor.predict(swipeInput)
+        swipeDecoder.predict(swipeInput)
     }
 }
 
 // Good: Proper coroutine usage
-class NeuralPredictionService {
+class SwipePredictionService {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     fun startPrediction(swipe: SwipeInput) {
@@ -218,11 +218,11 @@ class NeuralPredictionService {
 - **Documentation**: Clear KDoc comments for public APIs
 - **Performance**: Avoid unnecessary allocations in hot paths
 
-### Neural Network Code
+### On-device model Code
 - **Resource Management**: Always clean up ONNX resources
 - **Memory Efficiency**: Reuse tensors when possible
-- **Error Recovery**: Graceful degradation when neural prediction fails
-- **Thread Safety**: Proper synchronization for shared neural resources
+- **Error Recovery**: Graceful degradation when swipe prediction fails
+- **Thread Safety**: Proper synchronization for shared swipe resources
 
 ## 🔒 Privacy Guidelines
 
@@ -276,7 +276,7 @@ fun collectUsageData() {
 ### Project Structure
 ```
 src/main/kotlin/tribixbite/keyboard2/
-├── neural/              # Neural prediction components
+├── swipe/              # Swipe prediction components
 ├── ui/                  # User interface components
 ├── config/              # Configuration management
 ├── gestures/            # Gesture recognition
@@ -285,7 +285,7 @@ src/main/kotlin/tribixbite/keyboard2/
 
 ### Key Components
 - **CleverKeysService**: Main input method service
-- **NeuralPredictionPipeline**: Core neural prediction orchestrator
+- **SwipePredictionPipeline**: Core swipe prediction orchestrator
 - **SwipeGestureRecognizer**: Gesture detection and processing
 - **ConfigurationManager**: Settings and preferences
 - **CleverKeysView**: Main keyboard rendering
@@ -298,7 +298,7 @@ src/main/kotlin/tribixbite/keyboard2/
 
 ## 📊 Performance Guidelines
 
-### Neural Performance
+### Swipe Performance
 - **Latency Targets**: <200ms prediction time on mid-range devices
 - **Memory Targets**: <25MB additional memory usage
 - **Battery Targets**: <2% additional battery drain
@@ -327,9 +327,9 @@ class OptimizedPredictor {
 }
 
 // Good: Lazy initialization
-class NeuralEngine {
+class SwipeEngine {
     private val onnxSession by lazy {
-        OrtSession.sessionFromAssets(context, "neural_model.onnx")
+        OrtSession.sessionFromAssets(context, "swipe_model.onnx")
     }
 }
 ```
@@ -350,7 +350,7 @@ Before submitting a PR, manually test:
 - [ ] Enable CleverKeys as default keyboard
 - [ ] Test basic typing functionality
 - [ ] Test swipe gesture recognition
-- [ ] Test neural prediction accuracy
+- [ ] Test swipe prediction accuracy
 - [ ] Test settings and configuration
 - [ ] Test accessibility features
 - [ ] Verify no crashes or errors
@@ -392,7 +392,7 @@ adb shell dumpsys meminfo tribixbite.cleverkeys
 
 ### Development Support
 - **Architecture Questions**: Create a discussion with "architecture" label
-- **Neural Model Help**: Create a discussion with "neural" label
+- **Swipe Model Help**: Create a discussion with "swipe" label
 - **UI/UX Feedback**: Create a discussion with "design" label
 - **Performance Issues**: Create a discussion with "performance" label
 
@@ -422,6 +422,6 @@ By contributing to CleverKeys, you agree that your contributions will be license
 
 **Thank you for contributing to CleverKeys!** 🎉
 
-Together, we're building the future of privacy-first neural keyboards. Your contributions help make typing faster, smarter, and more private for users around the world.
+Together, we're building the future of privacy-first swipe keyboards. Your contributions help make typing faster, smarter, and more private for users around the world.
 
 🧠 **Think Faster** • ⌨️ **Type Smarter** • 🔒 **Stay Private**

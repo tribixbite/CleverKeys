@@ -71,7 +71,7 @@ Once added, custom words:
 
 When you swipe a pattern matching a custom word:
 
-1. Neural network predicts possible words
+1. The swipe decoder predicts possible words
 2. Custom word case is applied from your dictionary
 3. Word appears with correct capitalization
 
@@ -119,7 +119,7 @@ CleverKeys uses a priority system for capitalization:
 When you swipe "boston" after adding "Boston":
 
 ```
-Neural network output: "boston" (lowercase)
+Swipe decoder output: "boston" (lowercase)
          ↓
 User dictionary check: Found "Boston"
          ↓
@@ -160,7 +160,7 @@ A: Yes! Swipe predictions apply your custom word capitalization.
 ## Related Features
 
 - [Autocorrect](autocorrect.md) - Automatic spelling corrections
-- [Swipe Typing](swipe-typing.md) - Neural word prediction
+- [Swipe Typing](swipe-typing.md) - Word prediction for gesture input
 - [Special Characters](special-characters.md) - Accents and symbols
 
 ## Technical Details

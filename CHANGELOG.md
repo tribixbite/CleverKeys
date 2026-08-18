@@ -26,22 +26,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **CTC swipe engine, now the default**: a new swipe model trained from scratch for
+  CleverKeys. On a held-out 2,400-swipe English benchmark it gets the intended word first
+  try **89.3%** of the time versus **74.6%** for the old transformer engine on the same set
+  (`docs/eval/2026-07-24-test2400-head2head.md`). It serves English, French, German and
+  Spanish on any Latin layout that has all 26 letters. Italian, Portuguese and Swedish are
+  not enabled — they lack the validation data — and use the geometric engine.
 - **Geometric swipe engine**: a layout-agnostic, zero-training shape decoder that matches
   the traced path against word shapes on the actual key grid. Swipe typing is no longer
   limited to QWERTY — Dvorak, Colemak, AZERTY, QWERTZ, JCUKEN, Greek and custom layouts
   work, using whichever dictionary is installed for the language you are typing in.
-  Previously swipe was silently disabled on non-QWERTY layouts (#9). Select it via
-  Hybrid or Geometric in the new engine picker.
-- **CTC swipe engine (opt-in)**: a new swipe model trained from scratch for CleverKeys.
-  On a held-out 2,400-swipe English benchmark it gets the intended word first try
-  **89.3%** of the time versus **74.6%** for the existing neural engine on the same set
-  (`docs/eval/2026-07-24-test2400-head2head.md`). Enabled for English on any full Latin
-  layout, and for French, German and Spanish. Italian, Portuguese and Swedish are not
-  enabled — they lack the validation data — and fall back to the other engines.
-- **Prediction Engine selector** (Settings → 👆 Swipe Typing): Hybrid (neural on QWERTY,
-  geometric elsewhere), Neural, Geometric, or CTC. **The default is unchanged (Neural).**
-  Under CTC, unsupported language/layout combinations fall through to neural or geometric
-  rather than leaving an empty suggestion bar.
+  Previously swipe was silently disabled on non-QWERTY layouts (#9). It also serves every
+  language CTC does not.
+- **Prediction Engine selector** (Settings → 👆 Swipe Typing): CTC (default) or Geometric.
+  Whichever you choose, every layout and language reaches a working decoder — there is no
+  combination left with an empty suggestion bar.
 - **Full Geometric Settings** screen: Max Suggestions, Frequency Weight, Endpoint
   Tolerance. **Full CTC Settings** screen: beam width (10–300, default 100).
 - Both new engines display contractions rather than their internal spelling
@@ -87,15 +86,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   translations — including French "paste as plain text" that read "Copy", Spanish Page
   Up/Down swapped, and a clipboard confirmation in seven locales that asked whether to
   delete the *entire* clipboard rather than one entry.
-- Settings section "🧠 Neural Network Prediction" renamed to "👆 Swipe Typing"; the beam
-  width / max word length / confidence sliders moved out of it (they already live in Full
-  Neural Settings).
-- The non-QWERTY swipe warning now appears only in Neural mode and points at the engine
-  selector instead of telling you to change layout.
+- Settings section "🧠 Neural Network Prediction" renamed to "👆 Swipe Typing".
+- The non-QWERTY swipe warning is gone: no layout is swipe-disabled any more.
 - Ten internal settings screens are no longer exported to other apps.
 - Android cloud backup and device transfer are now a strict allowlist: only theme and
   recent-emoji preferences leave the device. Learned data, clipboard history, the
   dictionary and all settings stay local.
+
+### Removed
+
+- **The neural swipe engine.** The ONNX transformer that decoded swipes since v1.0, its
+  vocabulary stack, its Neural Settings screen, the Swipe Calibration screen and ~26 MB of
+  bundled models and prefix-boost data are gone. CTC replaced it on measured accuracy —
+  89.3% vs 74.6% first-try on the same 2,400-swipe benchmark — while working on every Latin
+  layout instead of QWERTY only, and the geometric engine covers everything CTC does not.
+  **The app is about 26 MB smaller** and uses roughly 30–45 MB less memory when swiping.
+
+  If you had the Prediction Engine set to Neural or Hybrid, it now behaves as CTC.
+
+  What you lose with it: the old engine's fuzzy "rescue" of very sloppy swipes against the
+  main dictionary, and secondary-language blending on the swipe path (tap typing is
+  unaffected). Italian, Portuguese and Swedish swipes on QWERTY move from the transformer to
+  the geometric engine and may be slightly less accurate until CTC is validated for them.
+  The full comparison, including what was given up, is
+  `docs/audit/2026-08-17-neural-vs-ctc-parity.md`.
+- The ~25 `neural_*` preferences, the "Beam Autocorrect" and raw-beam debug toggles, and the
+  Finger Occlusion Compensation slider — every one of them was read only by the removed
+  engine.
 
 ### Fixed
 
@@ -111,6 +128,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   contraction is offered alongside them.
 - Greek QWERTY was declared as a Latin layout, which routed Greek text through the
   QWERTY-trained English model.
+- Backups taken before this release carry ~25 swipe-tuning preferences that no longer
+  exist; they are filtered out of the import preview instead of showing as meaningless
+  rows and being written back into settings.
 - Every swipe leaked an ONNX tensor; the encoder result is now released after decoding.
 - A cold-start swipe could block the UI thread for up to 5 seconds waiting for the model
   to load (an ANR risk). It now replays once the engine is ready.

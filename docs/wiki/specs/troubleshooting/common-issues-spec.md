@@ -289,5 +289,5 @@ enum class ConfigIssue {
 ## Related Specifications
 
 - [Settings System](../../../specs/settings-system.md) - Configuration
-- [Neural Prediction](../../../specs/neural-prediction.md) - Prediction system
+- [CTC Swipe Engine](../../../specs/ctc-swipe-engine.md) - Prediction system
 - [Gesture System](../../../specs/gesture-system.md) - Gesture recognition

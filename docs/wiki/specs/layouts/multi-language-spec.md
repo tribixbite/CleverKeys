@@ -18,7 +18,7 @@ The multi-language system enables typing in multiple languages with automatic de
 | LanguageDetector | `LanguageDetector.kt` | Auto-detection |
 | MultiDictionary | `MultiDictionary.kt` | Per-language dictionaries |
 | LanguageManager | `LanguageManager.kt` | Language configuration |
-| NeuralPredictor | `SwipeTrajectoryProcessor.kt` | Multi-language predictions |
+| Swipe decoder | `swipe/CtcEngineAdapter.kt` | Multi-language predictions |
 | Config | `Config.kt` | Language preferences |
 
 ## Data Model
@@ -137,7 +137,7 @@ fun getPredictions(trajectory: SwipeTrajectory): List<Prediction> {
     // Get predictions for each language
     val allPredictions = enabledLangs.flatMap { lang ->
         val vocab = vocabularies[lang.code] ?: return@flatMap emptyList()
-        neural.predict(trajectory, vocab).map { pred ->
+        decoder.predict(trajectory, vocab).map { pred ->
             pred.copy(language = lang.code)
         }
     }
@@ -254,5 +254,5 @@ class PersonalDictionary {
 ## Related Specifications
 
 - [Language System](../../../specs/dictionary-and-language-system.md) - Full language architecture
-- [Neural Prediction](../../../specs/neural-prediction.md) - ONNX model
+- [CTC Swipe Engine](../../../specs/ctc-swipe-engine.md) - the per-language swipe decoder
 - [Secondary Language](../../../specs/secondary-language-integration.md) - Multi-language integration

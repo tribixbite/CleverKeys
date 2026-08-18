@@ -5,6 +5,8 @@ Compute language-specific prefix boosts for beam search.
 This script analyzes dictionaries to find prefixes that are common in the target
 language but rare in English. These prefixes get under-predicted by the
 English-trained neural network, so we apply additive boosts to the logits.
+(OBSOLETE 2026-08-18: the consumer — the transformer beam search — was removed, ADR-011.
+Kept as the record of how the shipped prefix_boosts/*.bin were produced.)
 
 Output format: Binary Aho-Corasick trie for O(1) zero-allocation lookups.
 

@@ -36,8 +36,8 @@ jobs:
           const labels = [];
 
           // Auto-label based on content
-          if (body.includes('neural') || body.includes('prediction') || body.includes('onnx')) {
-            labels.push('neural');
+          if (body.includes('swipe') || body.includes('prediction') || body.includes('onnx')) {
+            labels.push('swipe');
           }
           if (body.includes('ui') || body.includes('keyboard layout') || body.includes('visual')) {
             labels.push('ui');
@@ -84,9 +84,9 @@ jobs:
           - 🧪 Our automated tests will help validate any fixes
           - 💬 Join [GitHub Discussions](https://github.com/tribixbite/CleverKeys/discussions) for questions
 
-          ## Neural Keyboard Context
+          ## Swipe Keyboard Context
           CleverKeys is an AI-powered keyboard with:
-          - 🧠 On-device neural predictions (no cloud)
+          - 🧠 On-device swipe predictions (no cloud)
           - 🔒 Complete privacy (100% local processing)
           - ⚡ Hardware acceleration for modern Android devices
           - 🧪 Comprehensive automated testing
@@ -138,8 +138,8 @@ jobs:
           }
 
           // Label based on content
-          if (title.includes('neural') || body.includes('neural') || body.includes('onnx')) {
-            labels.push('neural');
+          if (title.includes('swipe') || body.includes('swipe') || body.includes('onnx')) {
+            labels.push('swipe');
           }
           if (title.includes('ui') || body.includes('ui') || body.includes('interface')) {
             labels.push('ui');
@@ -196,11 +196,11 @@ jobs:
               message += "- Update title to follow format: `type(scope): description`\n";
             }
 
-            message += "\n### 🧠 Neural Keyboard Testing\n";
-            message += "For neural/UI changes, please run:\n";
+            message += "\n### 🧠 Swipe Keyboard Testing\n";
+            message += "For swipe/UI changes, please run:\n";
             message += "```bash\n./testing/run-ui-tests.sh\n```\n\n";
             message += "Our automated CI will also validate:\n";
-            message += "- 🧪 Performance benchmarks (<200ms neural latency)\n";
+            message += "- 🧪 Performance benchmarks (<200ms swipe-decode latency)\n";
             message += "- 📸 Visual regression testing\n";
             message += "- ♿ Accessibility compliance\n";
             message += "- 🔧 Memory usage validation\n";
@@ -210,7 +210,7 @@ jobs:
             message += "Our automated tests will validate your changes shortly.\n\n";
             message += "### 🚀 What happens next:\n";
             message += "1. Automated tests run on multiple Android versions\n";
-            message += "2. Performance benchmarks validate neural prediction speed\n";
+            message += "2. Performance benchmarks validate swipe prediction speed\n";
             message += "3. Visual regression tests ensure UI consistency\n";
             message += "4. Code review by maintainers\n";
           }
@@ -235,7 +235,7 @@ jobs:
 
           ## 🚀 Your Impact
           Your contribution helps make CleverKeys:
-          - 🧠 **Smarter**: Better neural predictions for users
+          - 🧠 **Smarter**: Better swipe predictions for users
           - 🔒 **More Private**: Maintaining our privacy-first approach
           - ⚡ **Faster**: Optimized performance for all users
           - ♿ **More Accessible**: Better experience for all users
@@ -250,7 +250,7 @@ jobs:
           - Join [GitHub Discussions](https://github.com/tribixbite/CleverKeys/discussions)
           - Consider contributing again - we'd love your continued help!
 
-          **Building the future of privacy-first neural keyboards, one contribution at a time!** 🧠⌨️🔒`;
+          **Building the future of privacy-first swipe keyboards, one contribution at a time!** 🧠⌨️🔒`;
 
           await github.rest.issues.createComment({
             owner: context.repo.owner,
@@ -362,7 +362,7 @@ jobs:
           - ✅ Automated test suite
           - ✅ Performance benchmarks
           - ✅ Visual regression tests
-          - ✅ Neural prediction validation
+          - ✅ Swipe prediction validation
 
           **This PR will be closed in 7 days if no further activity occurs.**
 
@@ -370,8 +370,8 @@ jobs:
         days-before-close: 7
         stale-issue-label: 'stale'
         stale-pr-label: 'stale'
-        exempt-issue-labels: 'pinned,security,neural'
-        exempt-pr-labels: 'pinned,security,neural'
+        exempt-issue-labels: 'pinned,security,swipe'
+        exempt-pr-labels: 'pinned,security,swipe'
 
   release-celebration:
     runs-on: ubuntu-latest

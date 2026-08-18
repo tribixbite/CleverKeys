@@ -76,7 +76,7 @@
         <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
             <hr class="border-gray-700 my-6">
 <p class="mb-4 text-gray-300 leading-relaxed">title: Autocorrect</p>
-<p class="mb-4 text-gray-300 leading-relaxed">description: Automatic spelling corrections and undo</p>
+<p class="mb-4 text-gray-300 leading-relaxed">description: How CleverKeys decides when and what to autocorrect, plus the keyboard-adjacency model that powers it</p>
 <p class="mb-4 text-gray-300 leading-relaxed">category: Typing</p>
 <p class="mb-4 text-gray-300 leading-relaxed">difficulty: beginner</p>
 <p class="mb-4 text-gray-300 leading-relaxed">related_spec: ../specs/typing/autocorrect-spec.md</p>
@@ -84,102 +84,206 @@
 
 <h1 class="text-3xl font-bold mb-6 gradient-text-wiki">Autocorrect</h1>
 
-<p class="mb-4 text-gray-300 leading-relaxed">CleverKeys automatically corrects common spelling mistakes as you type. You can undo corrections and add words to your personal dictionary.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">CleverKeys autocorrect knows that <strong class="text-white">adjacent keys are more likely typos than distant ones</strong>. When you type <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">tge</code> instead of <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">the</code>, it weights <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">g→h</code> as a much cheaper substitution than <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">g→x</code> because g and h are physically neighbors on QWERTY. This page walks through the full pipeline, the settings you can tune, and how contractions and accents interact with it.</p>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Quick Summary</h2>
 
 <table class="w-full mb-6 border-collapse"><tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">What</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Description</th></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Purpose</strong></td><td class="px-4 py-2 border-t border-gray-700">Fix spelling mistakes automatically</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Access</strong></td><td class="px-4 py-2 border-t border-gray-700">Automatic while typing</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Undo</strong></td><td class="px-4 py-2 border-t border-gray-700">Tap original word in predictions</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Purpose</strong></td><td class="px-4 py-2 border-t border-gray-700">Fix tap-typing mistakes using keyboard physics + dictionary frequency</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Access</strong></td><td class="px-4 py-2 border-t border-gray-700">Automatic while typing; toggle in Settings → Word Prediction</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Undo</strong></td><td class="px-4 py-2 border-t border-gray-700">Tap the original word in the prediction bar</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Layouts</strong></td><td class="px-4 py-2 border-t border-gray-700">Adapts automatically to AZERTY / QWERTZ / Dvorak / custom layouts</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Languages</strong></td><td class="px-4 py-2 border-t border-gray-700">Latin accents (é, ñ, ü, etc.) covered out of the box</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">How Autocorrect Works</h2>
 
-<p class="mb-4 text-gray-300 leading-relaxed">When you finish typing a word (by pressing space):</p>
+<p class="mb-4 text-gray-300 leading-relaxed">When you finish a word (by pressing space or punctuation):</p>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. CleverKeys checks if the word is in the dictionary</li>
-<li class="ml-4 text-gray-300">2. If not found, it searches for similar words</li>
-<li class="ml-4 text-gray-300">3. If a close match exists, it automatically replaces your word</li>
-<li class="ml-4 text-gray-300">4. The original word appears in the prediction bar</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Non-prose context check</strong> — if the token at the cursor looks like a URL, email address, or file path (it contains <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">. / : @ # ? & = %</code> or digits), autocorrect skips it entirely. Domains and pasted-then-edited links never get "corrected".</li>
+<li class="ml-4 text-gray-300">2. <strong class="text-white">Exact alias check</strong> — if the typed word is a known contraction base (<code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">dont</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">im</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">cant</code>), it expands directly (<code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">don't</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">I'm</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">can't</code>).</li>
+<li class="ml-4 text-gray-300">3. <strong class="text-white">Dictionary hit</strong> — if the word is in the dictionary as-is, no correction.</li>
+<li class="ml-4 text-gray-300">4. <strong class="text-white">Elongation collapse</strong> — a doubled letter that collapses to a real word is fixed directly: <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">gamees</code> → <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">games</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">embeer</code> → <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">ember</code>.</li>
+<li class="ml-4 text-gray-300">5. <strong class="text-white">Inflection guard</strong> — regular inflections of dictionary words (<code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">-s</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">-ed</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">-ing</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">-er</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">-est</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">-ly</code>, ...) are treated as valid even if the inflected form isn't stored, so real words don't get "corrected".</li>
+<li class="ml-4 text-gray-300">6. <strong class="text-white">Possessive guard</strong> — possessives of known words (<code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">ember's</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">dogs'</code>) are valid and left alone. A possessive of a <em>typo</em> gets its base corrected while keeping the apostrophe: <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">embeer's</code> → <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">ember's</code>.</li>
+<li class="ml-4 text-gray-300">7. <strong class="text-white">Length / prefix gates</strong> — words shorter than the minimum length, or that violate the prefix rule, are skipped.</li>
+<li class="ml-4 text-gray-300">8. <strong class="text-white">Adjacency-weighted dictionary scan</strong> — every dictionary word within <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">max_length_diff</code> characters is scored by keyboard physics:</li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - <strong class="text-white">Same length:</strong> each position contributes a substitution score from <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">1.0</code> (exact match) down to <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">~0</code> (max-distant keys). Adjacent keys score <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">~0.89</code>. At most 2 substituted positions are allowed, so a single-typo match always beats a barely-similar lookalike.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - <strong class="text-white">Adjacent swap:</strong> transposing two neighboring letters (<code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">teh</code> → <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">the</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">recieve</code> → <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">receive</code>) is recognized as its own typo class and scored nearly as high as a perfect match.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - <strong class="text-white">Different length:</strong> weighted Levenshtein distance where insert/delete cost 1.0 but substitution cost is the normalized key distance.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - Words you've <strong class="text-white">disabled</strong> in Dictionary Manager are never offered as correction targets.</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">9. <strong class="text-white">Rule-based tiebreaker</strong> — a clearly better score wins outright; among close scores, a contraction wins only at equal-or-better score, one adjacent swap beats two independent substitutions, and otherwise the more common word wins.</li>
+<li class="ml-4 text-gray-300">10. <strong class="text-white">Frequency floor</strong> — the winner must be a reasonably common word (see the slider below). Words you added yourself are exempt.</li>
+<li class="ml-4 text-gray-300">11. <strong class="text-white">Alias rerouting</strong> — if the winning candidate is a contraction base (<code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">dont</code> → <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">don't</code>), the apostrophe form is returned.</li>
+<li class="ml-4 text-gray-300">12. <strong class="text-white">Capitalization preservation</strong> — <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">Teh</code> → <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">The</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">TEH</code> → <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">THE</code>.</li>
 </ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">The Key Proximity System</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Each letter has an <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">(x, y)</code> position on the keyboard grid. Substitution cost between two letters is the <strong class="text-white">normalized euclidean distance</strong> between their key centers:</p>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Pair</td><td class="px-4 py-2 border-t border-gray-700">Why</td><td class="px-4 py-2 border-t border-gray-700">Score</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">e ↔ e</code></td><td class="px-4 py-2 border-t border-gray-700">Same key</td><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">1.00</code></td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">g ↔ h</code></td><td class="px-4 py-2 border-t border-gray-700">Adjacent home row</td><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">~0.89</code></td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">t ↔ y</code></td><td class="px-4 py-2 border-t border-gray-700">Adjacent top row</td><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">~0.89</code></td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">q ↔ s</code></td><td class="px-4 py-2 border-t border-gray-700">Diagonal one key away</td><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">~0.80</code></td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">q ↔ p</code></td><td class="px-4 py-2 border-t border-gray-700">Opposite ends of top row</td><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">0.00</code></td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<p class="mb-4 text-gray-300 leading-relaxed">So <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">tge → the</code> (one <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">g↔h</code> substitution, score ~0.96) ranks far above <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">tge → tax</code> (which would require two distant substitutions). The result: closer to your actual fingertip travel, less random-looking corrections.</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Layout-Aware Adjacency</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Adjacency is computed from <strong class="text-white">your actual keyboard layout</strong>, not a hardcoded QWERTY map. When you switch to AZERTY (where <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">a</code> and <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">q</code> swap from QWERTY positions), or use Dvorak, or load a custom layout, the proximity model updates automatically. French AZERTY users get the right adjacency for their <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">q↔a</code> typos; QWERTZ users get <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">y↔z</code> treated as adjacent.</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Accented Letters</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Common Latin diacritics (<code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">é, ñ, ü, ç, ß, å, ø, ý</code> and ~20 others) share the position of their unaccented base. So:</p>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">cafe → café</code> — distance is 0 on the accent position. Correction is free.</li>
+<li class="ml-4 text-gray-300">&#8226; <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">senor → señor</code> — same.</li>
+<li class="ml-4 text-gray-300">&#8226; <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">mude → müde</code> (German) — same.</li>
+</ul>
+<p class="mb-4 text-gray-300 leading-relaxed">If you're on a keyboard layout that has a <strong class="text-white">dedicated accent key</strong>, the real key position overrides this default. The accent fallback only kicks in when the keyboard doesn't have a physical key for the accented form.</p>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">When Autocorrect Stays Out of the Way</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Autocorrect deliberately refuses to touch several categories of input:</p>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">URLs, emails, and file paths.</strong> If the token you're typing contains <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">. / : @ # ? & = % ~ \</code> or digits (<code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">example.com</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">user@host</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">~/notes/todo.txt</code>), autocorrect is suppressed for that token. It resumes on the next normal word.</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Possessives.</strong> <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">ember's</code> is valid English even though the possessive form isn't in the dictionary, so it's never corrected. Typos inside a possessive still get fixed: <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">embeer's</code> → <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">ember's</code>.</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Regular inflections.</strong> <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">-s</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">-es</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">-ed</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">-ing</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">-er</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">-est</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">-ly</code> forms of dictionary words are accepted as-is.</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Disabled words</strong> never get <em>picked as corrections</em> either — disable a word in Dictionary Manager and autocorrect will not steer your typing toward it.</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Your own words.</strong> Custom and user-dictionary words are protected from correction and exempt from the frequency floor.</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Suggestions in URL bars</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Browser URL bars don't report cursor position the way normal text fields do. CleverKeys detects these fields and makes suggestion taps <strong class="text-white">replace the partial token you typed</strong> (typing <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">exa</code> then tapping <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">example</code> yields <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">example</code>, not <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">exa example</code>), without adding the trailing space that would break a URL.</p>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Contractions</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">If you type a contraction base — <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">dont</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">cant</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">im</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">hadnt</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">couldnt</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">youre</code> — it expands to the apostrophe form (<code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">don't</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">can't</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">I'm</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">hadn't</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">couldn't</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">you're</code>). The full list lives in <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">dictionaries/contractions_en.json</code>.</p>
+
+<p class="mb-4 text-gray-300 leading-relaxed">If you <strong class="text-white">mistype</strong> a contraction base — <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">donr</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">hadnr</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">couldnr</code> — the adjacency-weighted scan picks the closest contraction and reroutes to the apostrophe form. So <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">donr → don't</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">hadnr → hadn't</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">couldnr → couldn't</code>. The selection logic prefers structural closeness (a single adjacent-key sub) over dictionary popularity here — <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">hadnr</code> becomes <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">hadn't</code> not <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">hasn't</code> because the d-to-t alignment requires fewer substitutions.</p>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Words that <strong class="text-white">are</strong> valid English even though they look like contraction bases (<code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">well</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">were</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">hell</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">shed</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">shell</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">wed</code>) are protected from this expansion — <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">well</code> stays <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">well</code>, not <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">we'll</code>.</p>
+
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Undoing Autocorrect</h2>
 
 <p class="mb-4 text-gray-300 leading-relaxed">If autocorrect changes a word you didn't want changed:</p>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Method 1: Tap the Original Word</h3>
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Look at the prediction bar immediately after correction</li>
-<li class="ml-4 text-gray-300">2. Your original word appears as a suggestion</li>
-<li class="ml-4 text-gray-300">3. Tap it to restore the original spelling</li>
-<li class="ml-4 text-gray-300">4. The word is automatically added to your dictionary</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Look at the prediction bar immediately after correction.</li>
+<li class="ml-4 text-gray-300">2. Your original word appears as a suggestion.</li>
+<li class="ml-4 text-gray-300">3. Tap it to restore the original spelling.</li>
+<li class="ml-4 text-gray-300">4. The word is automatically added to your dictionary so it won't be corrected again.</li>
 </ul>
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Method 2: Backspace and Retype</h3>
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Press backspace to delete the corrected word</li>
-<li class="ml-4 text-gray-300">2. Retype your intended word</li>
-<li class="ml-4 text-gray-300">3. Add it to your dictionary to prevent future corrections</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Press backspace to delete the corrected word.</li>
+<li class="ml-4 text-gray-300">2. Retype your intended word.</li>
+<li class="ml-4 text-gray-300">3. Add it to your dictionary via the prompt that appears.</li>
 </ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Adding Words to Dictionary</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Adding Words to the Dictionary</h2>
 
-<p class="mb-4 text-gray-300 leading-relaxed">When you type a word not in the dictionary:</p>
+<p class="mb-4 text-gray-300 leading-relaxed">When you type an unknown word and autocorrect doesn't fire:</p>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Type the word and press space</li>
-<li class="ml-4 text-gray-300">2. If not autocorrected, a prompt appears: "Add 'word' to dictionary?"</li>
-<li class="ml-4 text-gray-300">3. Tap the prompt to add it</li>
-<li class="ml-4 text-gray-300">4. The word will be suggested in future and won't be autocorrected</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Type the word and press space.</li>
+<li class="ml-4 text-gray-300">2. A prompt appears in the suggestion bar: "Add 'word' to dictionary?"</li>
+<li class="ml-4 text-gray-300">3. Tap to add. The word will be suggested in future and protected from autocorrect.</li>
 </ul>
 <blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!TIP]</blockquote>
 <blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">Added words appear in your predictions when you start typing them.</blockquote>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Managing Your Dictionary</h2>
 
-<p class="mb-4 text-gray-300 leading-relaxed">Access your personal dictionary:</p>
+<p class="mb-4 text-gray-300 leading-relaxed">Open Settings (gear icon on keyboard), then <strong class="text-white">Activities → Dictionary Manager</strong>:</p>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Open Settings (gear icon on keyboard)</li>
-<li class="ml-4 text-gray-300">2. Go to <strong class="text-white">Activities > Dictionary Manager</strong></li>
-<li class="ml-4 text-gray-300">3. View, edit, or delete custom words</li>
-</ul>
 <table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Tab</td><td class="px-4 py-2 border-t border-gray-700">Contents</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Active</strong></td><td class="px-4 py-2 border-t border-gray-700">Words from main dictionary</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Disabled</strong></td><td class="px-4 py-2 border-t border-gray-700">Words you've turned off</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">User</strong></td><td class="px-4 py-2 border-t border-gray-700">System user dictionary</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Custom</strong></td><td class="px-4 py-2 border-t border-gray-700">Words you've added</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Active</strong></td><td class="px-4 py-2 border-t border-gray-700">Words from the bundled / language-pack dictionary</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Disabled</strong></td><td class="px-4 py-2 border-t border-gray-700">Words you've turned off — never auto-suggested or autocorrected</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">User</strong></td><td class="px-4 py-2 border-t border-gray-700">Words from Android's system user dictionary</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Custom</strong></td><td class="px-4 py-2 border-t border-gray-700">Words you've added yourself</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Autocorrect Settings</h2>
 
-<p class="mb-4 text-gray-300 leading-relaxed">Customize autocorrect behavior in the <strong class="text-white">Word Prediction</strong> section of Settings:</p>
+<p class="mb-4 text-gray-300 leading-relaxed">All in Settings → <strong class="text-white">Word Prediction</strong>. Most users only ever touch the top three.</p>
 
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Autocorrect</strong></td><td class="px-4 py-2 border-t border-gray-700">Enable/disable automatic corrections</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Autocorrect Min Word Length</strong></td><td class="px-4 py-2 border-t border-gray-700">Minimum characters before autocorrect applies</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Beam Autocorrect</strong></td><td class="px-4 py-2 border-t border-gray-700">Autocorrect during swipe typing</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Final Autocorrect</strong></td><td class="px-4 py-2 border-t border-gray-700">Apply correction on word completion</td></tr>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Primary Knobs</h3>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Default</td><td class="px-4 py-2 border-t border-gray-700">What it does</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Autocorrect</strong> (<code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">autocorrect_enabled</code>)</td><td class="px-4 py-2 border-t border-gray-700">on</td><td class="px-4 py-2 border-t border-gray-700">Master toggle</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Min word length</strong> (<code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">autocorrect_min_word_length</code>)</td><td class="px-4 py-2 border-t border-gray-700">2</td><td class="px-4 py-2 border-t border-gray-700">Skip autocorrect on very short words</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Required prefix length</strong> (<code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">autocorrect_prefix_length</code>)</td><td class="px-4 py-2 border-t border-gray-700">0</td><td class="px-4 py-2 border-t border-gray-700">Candidate must share this many starting chars with your typed word. <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">0</code> = no prefix required (lets first-character typos like <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">wuestion → question</code> correct). <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">2</code> is the legacy stricter mode.</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Advanced Tuning</h3>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Default</td><td class="px-4 py-2 border-t border-gray-700">What it does</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Score threshold</strong> (<code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">autocorrect_char_match_threshold</code>)</td><td class="px-4 py-2 border-t border-gray-700">0.65</td><td class="px-4 py-2 border-t border-gray-700">Minimum match score (0.0–1.0) a candidate must reach. Higher = more conservative.</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Max length difference</strong> (<code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">autocorrect_max_length_diff</code>)</td><td class="px-4 py-2 border-t border-gray-700">2</td><td class="px-4 py-2 border-t border-gray-700">Allow candidates whose length differs by up to this many characters. Handles insertion/deletion typos like <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">questin → question</code>.</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Min frequency floor</strong> (<code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">autocorrect_confidence_min_frequency</code>)</td><td class="px-4 py-2 border-t border-gray-700">100</td><td class="px-4 py-2 border-t border-gray-700">How common the winning candidate must be before it replaces your word. The slider (100–2000) maps onto the loaded dictionary's own frequency scale: 100 = no floor (any dictionary word can win), 2000 = only fairly common words win. Words you added yourself are always exempt.</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Swipe Typing</h3>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Default</td><td class="px-4 py-2 border-t border-gray-700">What it does</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Beam autocorrect</strong> (<code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">swipe_beam_autocorrect_enabled</code>)</td><td class="px-4 py-2 border-t border-gray-700">on</td><td class="px-4 py-2 border-t border-gray-700">Apply correction during swipe beam search</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Final autocorrect</strong> (<code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">swipe_final_autocorrect_enabled</code>)</td><td class="px-4 py-2 border-t border-gray-700">on</td><td class="px-4 py-2 border-t border-gray-700">Apply correction on swipe completion</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!NOTE]</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">Autocorrect's tap-typing path uses the absolute dictionary frequency directly via <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">autocorrect_confidence_min_frequency</code>. The swipe engines score candidates with their own per-language constants, which are calibrated offline and not user-tunable.</blockquote>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Suggestion Transparency</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Every suggestion in the bar knows where it came from. To inspect one:</p>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Long-press any suggestion</strong> — a sheet shows its source (CTC swipe, geometric swipe,</li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">  geometric decoder, dictionary prefix match, contraction, next-word, etc.), its score, and — for</p>
+<p class="mb-4 text-gray-300 leading-relaxed">  dictionary predictions — the full score breakdown: prefix match, adaptation, built-in</p>
+<p class="mb-4 text-gray-300 leading-relaxed">  vs. learned context boost (and which one won), personalization, and frequency factor.</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Suggestion Origin Markers</strong> (Settings > Advanced, off by default) — adds a small</li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">  colored dot to each suggestion indicating which engine produced it.</p>
+
+<p class="mb-4 text-gray-300 leading-relaxed">This makes it possible to answer "why is the keyboard suggesting THAT?" — for example, a</p>
+<p class="mb-4 text-gray-300 leading-relaxed">learned next-word candidate will show the statistics behind it, like</p>
+<p class="mb-4 text-gray-300 leading-relaxed"><em>After "want to": seen 14×, 63%</em>.</p>
+
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Tips and Tricks</h2>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Proper nouns</strong>: Add names and places to prevent miscorrection</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Technical terms</strong>: Add jargon and abbreviations to your dictionary</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Disable a word</strong>: Add it to the Disabled list in Dictionary Manager to prevent autocorrect</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Language-specific</strong>: Each language has its own dictionary</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Proper nouns:</strong> Add names and places to prevent miscorrection. They'll then short-circuit the dictionary scan and never get autocorrected.</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Technical jargon:</strong> Same as proper nouns — add to dictionary.</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Disabled list:</strong> Move a word to the Disabled tab in Dictionary Manager to prevent autocorrect from EVER picking it as a candidate.</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Language-specific behavior:</strong> Each language has its own dictionary AND its own contractions file. The adjacency model uses your current keyboard layout, regardless of language.</li>
 </ul>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Common Questions</h2>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Why was my word corrected to something wrong?</h3>
-<p class="mb-4 text-gray-300 leading-relaxed">A: The similar word had higher frequency. Add your word to dictionary to prevent this.</p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Why did <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">tge</code> correct to <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">the</code> but <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">tgw</code> didn't correct to anything?</h3>
+<p class="mb-4 text-gray-300 leading-relaxed">A: <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">g↔h</code> is one adjacent-key substitution (score ~0.96) for <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">tge → the</code>. <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">tgw</code> would need a substitution for <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">g↔h</code> AND a substitution for <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">w↔e</code>, dropping the score below the threshold.</p>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Can I turn off autocorrect completely?</h3>
-<p class="mb-4 text-gray-300 leading-relaxed">A: Yes, in Settings > Word Prediction section > Autocorrect toggle.</p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: How does <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">teh</code> become <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">the</code> when t-e-h are all "wrong" positions?</h3>
+<p class="mb-4 text-gray-300 leading-relaxed">A: Swapping two adjacent letters (a transposition) is one of the most common typo classes, so it gets a dedicated fast path: <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">teh → the</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">thsi → this</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">recieve → receive</code>. A transposition scores just below a perfect match and beats any candidate needing two independent substitutions.</p>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Does autocorrect work with swipe typing?</h3>
-<p class="mb-4 text-gray-300 leading-relaxed">A: Swipe typing uses neural predictions. Use the Beam Autocorrect and Final Autocorrect settings to control this behavior.</p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Why won't autocorrect fix typos in my URL / email / file path?</h3>
+<p class="mb-4 text-gray-300 leading-relaxed">A: By design. Tokens containing <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">. / : @ # ? & = %</code> or digits are treated as non-prose and skipped — "correcting" a domain or path usually breaks it. Finish the token and autocorrect resumes on the next word.</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: My word is technical jargon and keeps getting corrected. What do I do?</h3>
+<p class="mb-4 text-gray-300 leading-relaxed">A: Add it to your dictionary via the "Add to dictionary?" prompt, or via Settings → Dictionary Manager → Custom tab. Once added, autocorrect skips it.</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Does autocorrect work for languages other than English?</h3>
+<p class="mb-4 text-gray-300 leading-relaxed">A: Yes — the adjacency model is language-independent (it's about which keys you tapped). Each language has its own word dictionary and contractions file.</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Why does <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">well</code> stay as <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">well</code> instead of becoming <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">we'll</code>?</h3>
+<p class="mb-4 text-gray-300 leading-relaxed">A: <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">well</code> is a real English word, so it's on the protected list. CleverKeys won't expand it to <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">we'll</code> because that would be wrong in most contexts ("the well ran dry").</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: How does autocorrect interact with swipe typing?</h3>
+<p class="mb-4 text-gray-300 leading-relaxed">A: They're separate paths. Swipe typing produces candidates with the CTC or geometric decoder, then optionally applies autocorrect on the top candidate (<code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">swipe_final_autocorrect_enabled</code>). Tap typing uses the dictionary scan described above.</p>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Related Features</h2>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <a href="swipe-typing.html" class="text-green-400 hover:underline">Swipe Typing</a> - Neural word prediction</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <a href="swipe-typing.html" class="text-green-400 hover:underline">Swipe Typing</a> - Word prediction for gesture input</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="next-word-prediction.html" class="text-green-400 hover:underline">Next-Word Prediction</a> - Learned-phrase suggestions after each word</li>
 <li class="ml-4 text-gray-300">&#8226; <a href="user-dictionary.html" class="text-green-400 hover:underline">User Dictionary</a> - Add custom words</li>
 <li class="ml-4 text-gray-300">&#8226; <a href="special-characters.html" class="text-green-400 hover:underline">Special Characters</a> - Symbols and accents</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="smart-punctuation.html" class="text-green-400 hover:underline">Smart Punctuation</a> - Punctuation attachment and smart auto-space around punctuation</li>
 </ul>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Technical Details</h2>
 
-<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../specs/typing/autocorrect-spec.html" class="text-green-400 hover:underline">Autocorrect Technical Specification</a>.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../specs/typing/autocorrect-spec.html" class="text-green-400 hover:underline">Autocorrect Technical Specification</a> for the pipeline internals, weight calibration, and the four-tier selection logic.</p>
 
         </div>
         

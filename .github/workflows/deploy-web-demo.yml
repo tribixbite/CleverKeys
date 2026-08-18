@@ -72,7 +72,7 @@ jobs:
           # /specs/ — Astro now renders specs from docs/wiki/specs/**/*.md
           # via the `specs` content collection. Static HTML files in
           # web_demo/specs/ remain as LEGACY fallbacks for URLs not yet
-          # migrated to markdown (gesture-system.html, neural-prediction.html,
+          # migrated to markdown (gesture-system.html, swipe-typing.html,
           # etc.). `cp -n` (no-clobber) ensures Astro-generated files like
           # /specs/index.html and /specs/typing/autocorrect-spec/index.html
           # take precedence over their legacy counterparts.

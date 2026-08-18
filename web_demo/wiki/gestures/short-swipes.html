@@ -184,6 +184,17 @@
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Max Distance</strong></td><td class="px-4 py-2 border-t border-gray-700">Gesture Tuning</td><td class="px-4 py-2 border-t border-gray-700">Maximum swipe length</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Enable Short Swipes</strong></td><td class="px-4 py-2 border-t border-gray-700">Gesture Tuning</td><td class="px-4 py-2 border-t border-gray-700">Toggle feature on/off</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Terminal App Support</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">When using CleverKeys in terminal emulators (Termux, ConnectBot, etc.), certain short swipe actions adapt automatically:</p>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Action</td><td class="px-4 py-2 border-t border-gray-700">Standard Apps</td><td class="px-4 py-2 border-t border-gray-700">Terminal Apps</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Paste</strong></td><td class="px-4 py-2 border-t border-gray-700">Android paste API</td><td class="px-4 py-2 border-t border-gray-700">Ctrl+V key event</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Copy</strong></td><td class="px-4 py-2 border-t border-gray-700">Android copy API</td><td class="px-4 py-2 border-t border-gray-700">Same</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Cut</strong></td><td class="px-4 py-2 border-t border-gray-700">Android cut API</td><td class="px-4 py-2 border-t border-gray-700">Same</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<p class="mb-4 text-gray-300 leading-relaxed">Terminal apps don't implement the Android context menu protocol, so paste commands are sent as Ctrl+V key events instead. This happens automatically — no configuration needed.</p>
+
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Related Features</h2>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <a href="cursor-navigation.html" class="text-green-400 hover:underline">Cursor Navigation</a> - Move cursor with gestures</li>

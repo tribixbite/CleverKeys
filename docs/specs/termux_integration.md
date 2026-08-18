@@ -10,7 +10,7 @@ CleverKeys provides gesture typing and cursor control within terminal emulators 
 |------|----------------|---------|
 | `src/main/kotlin/tribixbite/cleverkeys/InputCoordinator.kt` | `InputCoordinator` | Context detection, text commitment, deletion strategy |
 | `src/main/kotlin/tribixbite/cleverkeys/KeyEventHandler.kt` | `moveCursorFallback()` | Raw key event simulation for cursor movement |
-| `src/main/kotlin/tribixbite/cleverkeys/NeuralSwipeTypingEngine.kt` | Swipe recognition | ONNX-based recognition (Play Services independent) |
+| `src/main/kotlin/tribixbite/cleverkeys/swipe/CtcEngineAdapter.kt` | Swipe recognition | ONNX-based recognition (Play Services independent) |
 | `src/main/kotlin/tribixbite/cleverkeys/Config.kt` | `termux_mode_enabled` | Feature toggle |
 
 ## Architecture

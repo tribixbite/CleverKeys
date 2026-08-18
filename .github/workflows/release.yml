@@ -263,7 +263,7 @@ jobs:
               echo "" >> CHANGELOG.md
               git log $LAST_TAG..HEAD --pretty=format:"- %s" >> CHANGELOG.md
             else
-              echo "- Initial release with neural swipe typing" >> CHANGELOG.md
+              echo "- Initial release with on-device swipe typing" >> CHANGELOG.md
             fi
           fi
         fi
@@ -359,4 +359,4 @@ jobs:
     - name: Release notification
       run: |
         echo "CleverKeys ${{ github.ref_name }} has been successfully released!"
-        echo "Users can now download the latest APK with neural swipe typing."
+        echo "Users can now download the latest APK with on-device swipe typing."

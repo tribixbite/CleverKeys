@@ -31,7 +31,7 @@ userWordOriginalCase["boston"] = "Boston"
          ↓
 [Later, when predicting...]
          ↓
-Neural/tap prediction: "boston"
+Swipe/tap prediction: "boston"
          ↓
 applyUserWordCase("boston") → "Boston"
          ↓
@@ -140,7 +140,7 @@ When determining final word capitalization:
 1. **User dictionary case** - Checked first via `applyUserWordCase()`
 2. **Shift/CapsLock state** - Applied via `applyShiftTransformation()`
 3. **I-words** - Applied via `capitalizeIWord()`
-4. **Default** - Word as-is from neural network (lowercase)
+4. **Default** - Word as-is from the decoder (lowercase)
 
 ## Configuration
 
@@ -199,8 +199,8 @@ userWordOriginalCase.clear()  // Reset before reloading
 ## Related Specifications
 
 - [Autocorrect Spec](autocorrect-spec.md) - Spelling corrections
-- [Swipe Typing Spec](swipe-typing-spec.md) - Neural prediction
-- [Neural Prediction Spec](../../../specs/neural-prediction.md) - ONNX model
+- [Swipe Typing Spec](swipe-typing-spec.md) - Swipe prediction
+- [CTC Swipe Engine](../../../specs/ctc-swipe-engine.md) - the decoder that consumes the merged lexicon
 
 ## Version History
 

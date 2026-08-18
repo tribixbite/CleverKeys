@@ -13,7 +13,7 @@ Optimize CleverKeys for better speed, responsiveness, and battery efficiency.
 
 | Issue | Common Cause | Solution |
 |-------|--------------|----------|
-| **Slow typing** | Neural predictions | Reduce beam width |
+| **Slow typing** | Swipe decoding | Switch the Prediction Engine to Geometric |
 | **Lag on open** | Large clipboard | Reduce history limit |
 | **Battery drain** | Haptics, animations | Reduce feedback |
 
@@ -32,7 +32,7 @@ Optimize CleverKeys for better speed, responsiveness, and battery efficiency.
 **Solutions:**
 
 1. **Reduce beam width**
-   - Settings > Neural Prediction section > Beam Width
+   - Settings > Swipe Typing > Full CTC Settings > Beam Width
    - Try 3-4 instead of 6+
 
 2. **Reduce languages**
@@ -74,7 +74,7 @@ Optimize CleverKeys for better speed, responsiveness, and battery efficiency.
 
 **Explanation:**
 
-Neural model loads on first use. This is normal behavior.
+The swipe model loads on first use. This is normal behavior.
 
 **Why this happens:**
 - The ONNX model is loaded into memory on first swipe
@@ -89,7 +89,7 @@ Neural model loads on first use. This is normal behavior.
 |--------|---------------|
 | **Language dictionaries** | 5-30 MB each |
 | **Clipboard history** | Varies with content |
-| **Neural model** | ~10 MB |
+| **Swipe model** | ~3 MB |
 | **Personal dictionary** | Usually < 1 MB |
 
 ### Reduce Memory Usage
@@ -113,7 +113,7 @@ Neural model loads on first use. This is normal behavior.
 | Feature | Battery Impact |
 |---------|----------------|
 | **Haptics** | Medium |
-| **Neural predictions** | Medium |
+| **Swipe predictions** | Medium |
 | **Clipboard monitoring** | Low |
 
 ### Reduce Battery Usage
@@ -150,7 +150,7 @@ For maximum speed on older devices:
 
 ### Older Devices
 
-- Use lower neural settings (Beam Width 3-4)
+- Use the Geometric engine, or a lower CTC Beam Width
 - Disable haptics if laggy
 - Keep fewer layouts installed
 - Reduce clipboard history
@@ -163,7 +163,7 @@ For maximum speed on older devices:
 
 ### High-Performance Devices
 
-- Can use maximum neural settings (Beam Width 10-12)
+- Can use a wider CTC Beam Width (150-300)
 - Enable all haptics
 - Keep many languages
 
@@ -189,7 +189,7 @@ A: Minimally. Render time is slightly higher for larger keyboards.
 
 ### Q: Why is swipe typing slower than tap typing?
 
-A: Swipe requires neural processing. This is expected behavior.
+A: Swipe requires running a decoder over the whole gesture. This is expected behavior.
 
 ### Q: Should I use battery optimization for CleverKeys?
 
@@ -197,6 +197,6 @@ A: No. Battery optimization may cause keyboard to be killed, making it slow to a
 
 ## Related Topics
 
-- [Neural Settings](../settings/neural-settings.md) - Prediction configuration
+- [Swipe Typing](../typing/swipe-typing.md) - Prediction configuration
 - [Haptics](../settings/haptics.md) - Vibration settings
 - [Common Issues](common-issues.md) - General troubleshooting

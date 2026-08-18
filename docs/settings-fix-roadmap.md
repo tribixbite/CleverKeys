@@ -1,5 +1,9 @@
 # SettingsActivity Decomposition — Implementation Plan
 
+> **HISTORICAL SNAPSHOT (2026-07-04)** — the `neural_*` preferences and the Neural
+> Settings screen described below were removed on 2026-08-18 (ADR-011). This file is
+> a dated record and is deliberately not rewritten.
+
 
 > **STATUS 2026-07-04: Tasks 0–7 COMPLETE** on branch `refactor/settings-decomposition`. SettingsActivity.kt 6,806→815 lines; 34 files; full ew-cli suite 1309/1309 green. Task 8 (state hoisting) deferred per §4 recommendation.
 

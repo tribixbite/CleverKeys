@@ -88,11 +88,79 @@
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Quick Summary</h2>
 
 <table class="w-full mb-6 border-collapse"><tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">What</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">How</th></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Settings</strong></td><td class="px-4 py-2 border-t border-gray-700">Settings > Activities > Backup & Restore > Export/Import Config</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Dictionary</strong></td><td class="px-4 py-2 border-t border-gray-700">Settings > Activities > Backup & Restore > Export/Import Dictionary</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Clipboard</strong></td><td class="px-4 py-2 border-t border-gray-700">Settings > Activities > Backup & Restore > Export/Import Clipboard</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Format</strong></td><td class="px-4 py-2 border-t border-gray-700">JSON files</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Settings</strong></td><td class="px-4 py-2 border-t border-gray-700">Settings > 💾 Backup & Restore > Export/Import Config</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Dictionary</strong></td><td class="px-4 py-2 border-t border-gray-700">Settings > 💾 Backup & Restore > Export/Import Dict</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Clipboard</strong></td><td class="px-4 py-2 border-t border-gray-700">Settings > 💾 Backup & Restore > Export/Import Clip / Export/Import ZIP</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Format</strong></td><td class="px-4 py-2 border-t border-gray-700">JSON (text-only) or ZIP (full backup with media)</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!NOTE]</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">As of v1.4 the Backup & Restore surface lives inline in the main Settings</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">page under the "💾 Backup & Restore" collapsible section. The previously</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">separate Activity is now headless-only — it handles the Termux</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">Intent-action automation surface (see "Programmatic Import/Export"</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">below) and redirects to the inline section if opened directly.</blockquote>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Full Backup (one-click ZIP)</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">The <strong class="text-white">Full Backup</strong> workflow bundles every backup section — config, dictionaries, and clipboard (including media files) — into a single dated ZIP. Useful for device migration and as a fast pre-upgrade safety net.</p>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Filename convention</strong>: <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">cleverkeys_full_backup_yyyy-MM-dd.zip</code></li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Where to find</strong>: Settings > <strong class="text-white">💾 Backup & Restore</strong> > <strong class="text-white">Export Full Backup</strong> / <strong class="text-white">Import Full Backup</strong> buttons.</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">ZIP Layout</h3>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto mb-4"><code class="language-text">cleverkeys_full_backup_2026-05-22.zip
+<p class="mb-4 text-gray-300 leading-relaxed">├── manifest.json          ← top-level metadata (read first by importer)</p>
+<p class="mb-4 text-gray-300 leading-relaxed">├── config.json            ← same payload as "Export Config"</p>
+<p class="mb-4 text-gray-300 leading-relaxed">├── dictionaries.json      ← same payload as "Export Dict"</p>
+<p class="mb-4 text-gray-300 leading-relaxed">├── clipboard_history.json ← all text entries + media references</p>
+<p class="mb-4 text-gray-300 leading-relaxed">└── clipboard_media/...    ← raw media blobs referenced from clipboard JSON</code></pre></p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Manifest format</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">manifest.json</code> carries forward-compat metadata so importers can sanity-check the file before reading anything else:</p>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Field</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">format</code></td><td class="px-4 py-2 border-t border-gray-700">Always <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">"cleverkeys_full_backup"</code> — importers refuse anything else</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">format_version</code></td><td class="px-4 py-2 border-t border-gray-700">Schema version (currently <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">1</code>); importer refuses any value <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">></code> this</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">app_version</code> / <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">app_version_code</code></td><td class="px-4 py-2 border-t border-gray-700">App version that produced the backup</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">export_date</code></td><td class="px-4 py-2 border-t border-gray-700">ISO timestamp of export</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">entries[]</code></td><td class="px-4 py-2 border-t border-gray-700">Inventory of section files present (manifest, config, dictionaries, clipboard)</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Forward-compat behavior</h3>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Older ZIPs (with a lower <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">format_version</code>) <strong class="text-white">are accepted</strong> — missing sections are tolerated.</li>
+<li class="ml-4 text-gray-300">&#8226; Newer ZIPs (with a higher <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">format_version</code>) <strong class="text-white">are refused</strong> with a clear error message — update the app first.</li>
+<li class="ml-4 text-gray-300">&#8226; ZIPs whose <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">format</code> is not <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">cleverkeys_full_backup</code> are rejected up-front so the importer doesn't mishandle an unrelated ZIP file.</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Round-trip notes</h3>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Importing the same Full Backup ZIP twice is a no-op: clipboard entries are deduplicated by content hash, dictionary words merge non-destructively, and config import goes through the same preview pipeline as single-file imports.</li>
+<li class="ml-4 text-gray-300">&#8226; Media files are streamed directly to disk on both export and import — never buffered in memory, so very large clipboards stay OOM-safe.</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Import Preview (v1.4+)</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">When importing settings or dictionary backups, the app shows a preview</p>
+<p class="mb-4 text-gray-300 leading-relaxed">dialog before applying any changes:</p>
+
+<p class="mb-4 text-gray-300 leading-relaxed">  - <strong class="text-white">Per-row deselect</strong> — uncheck individual settings or dictionary</p>
+<p class="mb-4 text-gray-300 leading-relaxed">    entries you don't want to apply. The remaining rows are written;</p>
+<p class="mb-4 text-gray-300 leading-relaxed">    deselected rows are left untouched.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">  - <strong class="text-white">Default-aware diff</strong> — rows whose imported value equals the</p>
+<p class="mb-4 text-gray-300 leading-relaxed">    compile-time default (i.e. what you'd experience on a fresh</p>
+<p class="mb-4 text-gray-300 leading-relaxed">    install) are suppressed from the preview. You only see what's</p>
+<p class="mb-4 text-gray-300 leading-relaxed">    actually about to change.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">  - <strong class="text-white">Layouts deep-diff</strong> — for the <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">layouts</code> row, the preview shows</p>
+<p class="mb-4 text-gray-300 leading-relaxed">    layout names being added/removed and key-count changes per</p>
+<p class="mb-4 text-gray-300 leading-relaxed">    shared-name layout (e.g. <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">+ azerty  − dvorak  (1 unchanged)</code> or</p>
+<p class="mb-4 text-gray-300 leading-relaxed">    <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">~ qwerty: 50→52 keys</code>).</p>
+<p class="mb-4 text-gray-300 leading-relaxed">  - <strong class="text-white">Short-swipe diff</strong> — short-swipe customizations show a per-mapping</p>
+<p class="mb-4 text-gray-300 leading-relaxed">    diff above the Skip/Merge/Replace radio so you can see exactly</p>
+<p class="mb-4 text-gray-300 leading-relaxed">    which <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">key+direction</code> mappings will change.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">  - <strong class="text-white">Invalid/skipped section</strong> — keys that can't be imported</p>
+<p class="mb-4 text-gray-300 leading-relaxed">    (deprecated, internal, dictionary words routed elsewhere,</p>
+<p class="mb-4 text-gray-300 leading-relaxed">    type-mismatched) are listed with a clear reason.</p>
+
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Available Exports</h2>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Configuration Export</h3>
@@ -100,13 +168,13 @@
 <p class="mb-4 text-gray-300 leading-relaxed">Exports all keyboard settings to a JSON file:</p>
 
 <table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Included</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">All Settings</strong></td><td class="px-4 py-2 border-t border-gray-700">Appearance, behavior, neural settings</td></tr></p>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">All Settings</strong></td><td class="px-4 py-2 border-t border-gray-700">Appearance, behavior, swipe engine settings</td></tr></p>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Theme Selection</strong></td><td class="px-4 py-2 border-t border-gray-700">Current theme choice</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Custom Subkeys</strong></td><td class="px-4 py-2 border-t border-gray-700">Per-key customizations</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">How to export:</strong></p>
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Open <strong class="text-white">Settings</strong></li>
-<li class="ml-4 text-gray-300">2. Tap <strong class="text-white">Backup & Restore</strong> in the Activities section</li>
+<li class="ml-4 text-gray-300">2. Scroll to / expand the <strong class="text-white">💾 Backup & Restore</strong> section</li>
 <li class="ml-4 text-gray-300">3. Tap <strong class="text-white">Export Config</strong></li>
 <li class="ml-4 text-gray-300">4. Choose save location</li>
 </ul>
@@ -120,34 +188,56 @@
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Clipboard Export</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed">Exports clipboard history:</p>
+<p class="mb-4 text-gray-300 leading-relaxed">Exports clipboard history in two formats:</p>
+
+<p class="mb-4 text-gray-300 leading-relaxed">#### JSON Export (text-only, lightweight)</p>
 
 <table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Included</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">History</strong></td><td class="px-4 py-2 border-t border-gray-700">Recent clipboard items</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Pinned</strong></td><td class="px-4 py-2 border-t border-gray-700">Pinned items</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Todos</strong></td><td class="px-4 py-2 border-t border-gray-700">Todo items</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">History</strong></td><td class="px-4 py-2 border-t border-gray-700">Recent text clipboard items</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Pinned</strong></td><td class="px-4 py-2 border-t border-gray-700">Pinned text items</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Todos</strong></td><td class="px-4 py-2 border-t border-gray-700">Todo text items</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Media metadata</strong></td><td class="px-4 py-2 border-t border-gray-700">MIME types noted but media files not included</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<p class="mb-4 text-gray-300 leading-relaxed">#### ZIP Export (full backup with media)</p>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Included</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">All text entries</strong></td><td class="px-4 py-2 border-t border-gray-700">History, pinned, todos</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Media files</strong></td><td class="px-4 py-2 border-t border-gray-700">Images, videos, PDFs, other files</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Thumbnails</strong></td><td class="px-4 py-2 border-t border-gray-700">Regenerated on import (not in export)</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!TIP]</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">Use JSON export for quick, lightweight backups of text entries. Use ZIP export when you want to preserve images and other media.</blockquote>
+
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Importing</h2>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Import Config</h3>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Open <strong class="text-white">Settings > Activities > Backup & Restore</strong></li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Open <strong class="text-white">Settings</strong>, scroll to <strong class="text-white">💾 Backup & Restore</strong></li>
 <li class="ml-4 text-gray-300">2. Tap <strong class="text-white">Import Config</strong></li>
 <li class="ml-4 text-gray-300">3. Browse to your backup JSON file</li>
-<li class="ml-4 text-gray-300">4. Settings will be applied immediately</li>
-</ul>
+<li class="ml-4 text-gray-300">4. <strong class="text-white">Import preview</strong> opens — review the changes, deselect any rows</li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   you don't want, choose a Short-swipe import mode (Skip / Merge /</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   Replace), tap <strong class="text-white">Apply (N)</strong> to commit. Settings apply immediately.</p>
+
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Import Dictionary</h3>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Tap <strong class="text-white">Import Dictionary</strong></li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Tap <strong class="text-white">Import Dict</strong></li>
 <li class="ml-4 text-gray-300">2. Select dictionary JSON file</li>
-<li class="ml-4 text-gray-300">3. Words are merged with existing dictionary</li>
-</ul>
+<li class="ml-4 text-gray-300">3. <strong class="text-white">Dictionary import preview</strong> opens with per-language buckets — you</li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   can deselect individual words. Existing words are preserved (merge);</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   imported words that already exist are silently skipped.</p>
+
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Import Clipboard</h3>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Tap <strong class="text-white">Import Clipboard</strong></li>
-<li class="ml-4 text-gray-300">2. Select clipboard JSON file</li>
-<li class="ml-4 text-gray-300">3. Items are added to history</li>
-</ul>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Tap <strong class="text-white">Import Clip</strong> (JSON, text-only) or <strong class="text-white">Import ZIP</strong> (full backup</li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   with media)</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">2. Select the backup file</li>
+<li class="ml-4 text-gray-300">3. Items are appended to history (non-destructive — duplicates skipped)</li>
+<li class="ml-4 text-gray-300">4. For ZIP imports: media files are extracted and thumbnails regenerated</li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   lazily on first view</p>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Import supports v2, v3, and v4 export formats — older backups work on newer versions.</p>
+
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Transfer to New Device</h2>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Export</strong> config, dictionary, and clipboard on old device</li>
@@ -164,20 +254,190 @@
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <p class="mb-4 text-gray-300 leading-relaxed">Access via <strong class="text-white">Settings > Privacy & Data section > Export JSON/NDJSON</strong>.</p>
 
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Backup Encryption</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">CleverKeys backups can be <strong class="text-white">encrypted</strong> so that a leaked or intercepted backup file</p>
+<p class="mb-4 text-gray-300 leading-relaxed">cannot be read, and a forged backup cannot be injected via automation.</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">One-time setup: set a Backup Password</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Go to <strong class="text-white">Settings → 💾 Backup & Restore → Backup Password</strong> and tap <strong class="text-white">Set Password</strong></p>
+<p class="mb-4 text-gray-300 leading-relaxed">(enter + confirm, minimum 8 characters; 12+ recommended). Once set:</p>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">All exports are encrypted</strong> into a <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">CKENC1</code> container (AES-256-GCM, key derived</li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">  from your password via PBKDF2-HMAC-SHA256 @ 600,000 iterations).</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Encrypted files get a <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">.ckenc</code> suffix appended to their normal name</li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">  (<code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">cleverkeys_settings_2026-07-17.json.ckenc</code>, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">..._clipboard.zip.ckenc</code>). Detection</p>
+<p class="mb-4 text-gray-300 leading-relaxed">  never trusts the extension — the file's magic bytes decide.</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Restoring on another device</strong> works by entering the <em>same</em> password there.</li>
+</ul>
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">A Backup Password is REQUIRED for automation.</strong> The <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">am start</code> export/import commands</p>
+<p class="mb-4 text-gray-300 leading-relaxed">below fail closed with <em>"Set a backup password in Settings → Backup & Restore first"</em></p>
+<p class="mb-4 text-gray-300 leading-relaxed">until you set one. This is what closes the exfiltration/injection vector on the exported</p>
+<p class="mb-4 text-gray-300 leading-relaxed"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">BackupRestoreActivity</code> — a zero-permission app that fires the intents gets only</p>
+<p class="mb-4 text-gray-300 leading-relaxed">ciphertext (or nothing), and cannot forge an importable payload.</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">The <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">am start</code> commands are UNCHANGED</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Setting a password does <strong class="text-white">not</strong> change any automation command — no secret ever goes on</p>
+<p class="mb-4 text-gray-300 leading-relaxed">the command line. The app holds the password in its private storage and uses it</p>
+<p class="mb-4 text-gray-300 leading-relaxed">automatically. Your existing scripts keep working after the one-time setup.</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">New failure messages</h3>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Message</td><td class="px-4 py-2 border-t border-gray-700">Meaning</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">Set a backup password in Settings → Backup & Restore first</code></td><td class="px-4 py-2 border-t border-gray-700">Headless export/import with no password set — nothing was written or applied.</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">Wrong backup password, or the file is corrupted/tampered.</code></td><td class="px-4 py-2 border-t border-gray-700">The stored/entered password did not decrypt the file, OR the file was modified. AES-GCM cannot tell these apart. No partial import occurs.</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">Import failed: plaintext backups are not accepted via automation — use the app's Import button</code></td><td class="px-4 py-2 border-t border-gray-700">A legacy (unencrypted) backup was passed to a headless <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">IMPORT_<em></code>. Import it via the in-app <strong class="text-white">Import</strong> button instead, then re-export encrypted.</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Interactive plaintext opt-out</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">The in-app export buttons let you deliberately <strong class="text-white">Export unencrypted…</strong> (a confirm</p>
+<p class="mb-4 text-gray-300 leading-relaxed">dialog under the Backup & Restore section arms the next export as plaintext). This is</p>
+<p class="mb-4 text-gray-300 leading-relaxed">for users who post-process the JSON in on-device scripts. It only affects the manual</p>
+<p class="mb-4 text-gray-300 leading-relaxed">SAF flow — the automation (headless) path is </em>always<em> encrypted and never has an</p>
+<p class="mb-4 text-gray-300 leading-relaxed">off switch.</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Foreign-restore escape hatch (<code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">--es passphrase</code>, default OFF)</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">To restore a backup made on <strong class="text-white">another device</strong> (different password) via automation,</p>
+<p class="mb-4 text-gray-300 leading-relaxed">enable <strong class="text-white">Settings → Backup & Restore → "Allow password via automation intent"</strong> and pass</p>
+<p class="mb-4 text-gray-300 leading-relaxed">the password as an extra on <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">IMPORT_</em></code> <strong class="text-white">only</strong>:</p>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto mb-4"><code class="language-bash"># Only works when the toggle is ON. NEVER accepted for EXPORT_<em>.
+<p class="mb-4 text-gray-300 leading-relaxed">am start -a tribixbite.cleverkeys.action.IMPORT_SETTINGS \</p>
+<p class="mb-4 text-gray-300 leading-relaxed">  -n tribixbite.cleverkeys/.BackupRestoreActivity \</p>
+<p class="mb-4 text-gray-300 leading-relaxed">  --es json_base64 "$(base64 -w0 &lt; backup.ckenc)" \</p>
+<p class="mb-4 text-gray-300 leading-relaxed">  --es passphrase 'the-other-devices-password'</code></pre></p>
+
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">⚠️ <strong class="text-white">Shell-history warning.</strong> A password on the command line leaks into your shell</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">history, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">ps</code> snapshots, and any logging of the <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">am</code> invocation. Protect it:</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">- Prefix the command with a <strong class="text-white">leading space</strong> (works when <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">HISTCONTROL=ignorespace</code>),</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">- and/or add <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">am</code> to <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">HISTIGNORE</code>: <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">export HISTIGNORE='</em>passphrase*'</code>.</blockquote>
+<p class="mb-4 text-gray-300 leading-relaxed">></p>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">Exports <strong class="text-white">never</strong> accept <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">--es passphrase</code> — supplying your own password to an export</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">would reopen the exfiltration vector, so it is refused by design.</blockquote>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Decrypting a <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">.ckenc</code> file off-app</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Use the reference decryptor <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">scripts/ckenc-decrypt.py</code> (needs <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">pip install cryptography</code>):</p>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto mb-4"><code class="language-bash">python3 scripts/ckenc-decrypt.py cleverkeys_settings.json.ckenc -o settings.json
+<h1 class="text-3xl font-bold mb-6 gradient-text-wiki">prompts for the backup password; -p PASS to pass it non-interactively (history caveat!)</code></pre></h1>
+
+<p class="mb-4 text-gray-300 leading-relaxed">It parses the <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">CKENC1</code> header, runs PBKDF2-HMAC-SHA256 with the header's salt/iterations,</p>
+<p class="mb-4 text-gray-300 leading-relaxed">and AES-256-GCM-decrypts using the 51-byte header as AAD — matching the on-disk format</p>
+<p class="mb-4 text-gray-300 leading-relaxed">exactly.</p>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Programmatic Import/Export (Termux / Automation)</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">All backup operations can be triggered via Android intents for scripting and automation.</p>
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Automation requires a Backup Password</strong> (see <a href="#backup-encryption" class="text-green-400 hover:underline">Backup Encryption</a>).</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Intent Actions</h3>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Action</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">tribixbite.cleverkeys.action.EXPORT_SETTINGS</code></td><td class="px-4 py-2 border-t border-gray-700">Export settings JSON</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">tribixbite.cleverkeys.action.IMPORT_SETTINGS</code></td><td class="px-4 py-2 border-t border-gray-700">Import settings JSON</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">tribixbite.cleverkeys.action.EXPORT_DICTIONARIES</code></td><td class="px-4 py-2 border-t border-gray-700">Export dictionary JSON</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">tribixbite.cleverkeys.action.IMPORT_DICTIONARIES</code></td><td class="px-4 py-2 border-t border-gray-700">Import dictionary JSON</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">tribixbite.cleverkeys.action.EXPORT_CLIPBOARD</code></td><td class="px-4 py-2 border-t border-gray-700">Export clipboard JSON</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">tribixbite.cleverkeys.action.IMPORT_CLIPBOARD</code></td><td class="px-4 py-2 border-t border-gray-700">Import clipboard JSON</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Basic Examples</h3>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto mb-4"><code class="language-bash"># Export settings to Downloads/CleverKeys/
+<p class="mb-4 text-gray-300 leading-relaxed">am start -a tribixbite.cleverkeys.action.EXPORT_SETTINGS \</p>
+<p class="mb-4 text-gray-300 leading-relaxed">  -n tribixbite.cleverkeys/.BackupRestoreActivity</p>
+
+<h1 class="text-3xl font-bold mb-6 gradient-text-wiki">Import dictionary via base64 (bypasses scoped storage)</h1>
+<p class="mb-4 text-gray-300 leading-relaxed">am start -a tribixbite.cleverkeys.action.IMPORT_DICTIONARIES \</p>
+<p class="mb-4 text-gray-300 leading-relaxed">  -n tribixbite.cleverkeys/.BackupRestoreActivity \</p>
+<p class="mb-4 text-gray-300 leading-relaxed">  --es json_base64 "$(base64 -w0 &lt; dictionaries.json)"</code></pre></p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">The <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">json_base64</code> Extra</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">On Android 10+, files modified or created by external apps (cp, vim, Termux) become</p>
+<p class="mb-4 text-gray-300 leading-relaxed">inaccessible to CleverKeys due to scoped storage restrictions. The <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">json_base64</code> intent</p>
+<p class="mb-4 text-gray-300 leading-relaxed">extra bypasses this by passing file content inline as base64:</p>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto mb-4"><code class="language-bash">am start -a tribixbite.cleverkeys.action.IMPORT_SETTINGS \
+<p class="mb-4 text-gray-300 leading-relaxed">  -n tribixbite.cleverkeys/.BackupRestoreActivity \</p>
+<p class="mb-4 text-gray-300 leading-relaxed">  --es json_base64 "$(base64 -w0 &lt; backup.json)"</code></pre></p>
+
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Size limits</strong>:</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Direct <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">am</code> (Termux)</strong>: ~96KB raw JSON (128KB base64 MAX_ARG_STRLEN)</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Via <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">adb shell</code></strong>: ~48KB raw JSON (64KB adb protocol buffer)</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">UI file picker</strong>: No size limit</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Importing Large Files (Chunked)</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Clipboard backups can exceed the <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">am start</code> argument limit. This script splits a JSON</p>
+<p class="mb-4 text-gray-300 leading-relaxed">backup into chunks and imports each one. Requires <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">jq</code> and <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">python3</code>.</p>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto mb-4"><code class="language-bash"># Chunked clipboard import — handles files of any size
+<h1 class="text-3xl font-bold mb-6 gradient-text-wiki">Usage: python3 ck_import.py clip.json</h1>
+<p class="mb-4 text-gray-300 leading-relaxed">python3 -c "</p>
+<p class="mb-4 text-gray-300 leading-relaxed">import json,base64,subprocess,sys,time</p>
+<p class="mb-4 text-gray-300 leading-relaxed">F=sys.argv[1]; MAX=125000  # base64 bytes; under 128KB MAX_ARG_STRLEN</p>
+<p class="mb-4 text-gray-300 leading-relaxed">d=json.load(open(F)); e=d['active_entries']</p>
+<p class="mb-4 text-gray-300 leading-relaxed">m={k:v for k,v in d.items() if k not in('active_entries','pinned_entries','todo_entries','total_active','total_pinned','total_todo')}</p>
+<p class="mb-4 text-gray-300 leading-relaxed">p=d.get('pinned_entries',[]); t=d.get('todo_entries',[])</p>
+<p class="mb-4 text-gray-300 leading-relaxed">chunks=[]; cur=[]; first=True</p>
+<p class="mb-4 text-gray-300 leading-relaxed">for x in e:</p>
+<p class="mb-4 text-gray-300 leading-relaxed">    tr=cur+[x]; td=dict(m,active_entries=tr)</p>
+<p class="mb-4 text-gray-300 leading-relaxed">    if first: td['pinned_entries']=p; td['todo_entries']=t</p>
+<p class="mb-4 text-gray-300 leading-relaxed">    bl=len(base64.b64encode(json.dumps(td,separators=(',',':')).encode()))</p>
+<p class="mb-4 text-gray-300 leading-relaxed">    if bl&gt;MAX and cur:</p>
+<p class="mb-4 text-gray-300 leading-relaxed">        chunks.append((cur,first)); first=False; cur=[x]</p>
+<p class="mb-4 text-gray-300 leading-relaxed">    elif bl&gt;MAX and not cur:</p>
+<p class="mb-4 text-gray-300 leading-relaxed">        chunks.append(([x],first)); first=False; cur=[]</p>
+<p class="mb-4 text-gray-300 leading-relaxed">    else: cur=tr</p>
+<p class="mb-4 text-gray-300 leading-relaxed">if cur: chunks.append((cur,first))</p>
+<p class="mb-4 text-gray-300 leading-relaxed">A='tribixbite.cleverkeys.action.IMPORT_CLIPBOARD'</p>
+<p class="mb-4 text-gray-300 leading-relaxed">C='tribixbite.cleverkeys/.BackupRestoreActivity'</p>
+<p class="mb-4 text-gray-300 leading-relaxed">print(f'{sum(len(c) for c,_ in chunks)} entries -&gt; {len(chunks)} chunks')</p>
+<p class="mb-4 text-gray-300 leading-relaxed">for i,(ce,hp) in enumerate(chunks):</p>
+<p class="mb-4 text-gray-300 leading-relaxed">    cd=dict(m,active_entries=ce)</p>
+<p class="mb-4 text-gray-300 leading-relaxed">    if hp: cd['pinned_entries']=p; cd['todo_entries']=t</p>
+<p class="mb-4 text-gray-300 leading-relaxed">    b64=base64.b64encode(json.dumps(cd,separators=(',',':')).encode()).decode()</p>
+<p class="mb-4 text-gray-300 leading-relaxed">    r=subprocess.run(['am','start','-W','-a',A,'-n',C,'--es','json_base64',b64],capture_output=True,text=True)</p>
+<p class="mb-4 text-gray-300 leading-relaxed">    print(f'  [{i+1}/{len(chunks)}] {len(ce)} entries: {\"ok\" if r.returncode==0 else \"FAIL\"}')</p>
+<p class="mb-4 text-gray-300 leading-relaxed">    time.sleep(1)</p>
+<p class="mb-4 text-gray-300 leading-relaxed">" "$1"</code></pre></p>
+
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300"><strong class="text-white">Note</strong>: Entries with content >96KB (rare — e.g., pasted logs) exceed MAX_ARG_STRLEN</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">even as a single-entry chunk. For those, use the UI Import button.</blockquote>
+<p class="mb-4 text-gray-300 leading-relaxed">></p>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">Entries are deduplicated by content hash — re-importing is safe (duplicates are skipped).</blockquote>
+
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Troubleshooting</h2>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Import Fails</h3>
 
 <table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Issue</td><td class="px-4 py-2 border-t border-gray-700">Solution</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">File corrupt</strong></td><td class="px-4 py-2 border-t border-gray-700">Re-export from source device</td></tr></p>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">"Cannot read file"</strong></td><td class="px-4 py-2 border-t border-gray-700">Scoped storage issue — use UI Import button or <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">json_base64</code> extra</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">File corrupt</strong></td><td class="px-4 py-2 border-t border-gray-700">Re-export from source device</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Wrong format</strong></td><td class="px-4 py-2 border-t border-gray-700">Ensure file is CleverKeys JSON export</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Permission denied</strong></td><td class="px-4 py-2 border-t border-gray-700">Grant storage permission to CleverKeys</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">"not a JSON object"</strong></td><td class="px-4 py-2 border-t border-gray-700">File is empty or unreadable — likely scoped storage; see above</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">"Set a backup password … first"</strong></td><td class="px-4 py-2 border-t border-gray-700">Automation requires a password — set one in Settings → Backup & Restore</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">"Wrong backup password, or the file is corrupted/tampered."</strong></td><td class="px-4 py-2 border-t border-gray-700">Password mismatch or the file was modified. Re-enter the correct password, or re-export from the source device.</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">"plaintext backups are not accepted via automation"</strong></td><td class="px-4 py-2 border-t border-gray-700">A legacy unencrypted backup hit a headless import — use the in-app Import button, then re-export encrypted</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Settings Not Applied</h3>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Close and reopen the keyboard</li>
 <li class="ml-4 text-gray-300">2. If needed, disable and re-enable CleverKeys in system settings</li>
 </ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Clipboard History Disappearing</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Entries expire based on the <strong class="text-white">History Duration</strong> setting in Clipboard Settings:</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Default: <strong class="text-white">Never expire</strong> (duration = -1)</li>
+<li class="ml-4 text-gray-300">&#8226; Can be set to 1 hour, 1 day, 7 days, or custom</li>
+<li class="ml-4 text-gray-300">&#8226; Pinned items and TODO items never expire regardless of this setting</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Note</strong>: Changing this setting only affects new entries. To refresh expiry on</li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">  existing entries, re-import your clipboard backup (import assigns fresh timestamps)</p>
+
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">File Locations</h2>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Exported files are saved to the location you choose via Android's file picker (typically Downloads folder).</p>
@@ -185,7 +445,8 @@
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Related Topics</h2>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <a href="../settings/privacy.html" class="text-green-400 hover:underline">Privacy</a> - Data collection settings</li>
-<li class="ml-4 text-gray-300">&#8226; <a href="../customization/custom-layouts.html" class="text-green-400 hover:underline">Per-Key Customization</a> - Subkey settings</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="../customization/per-key-actions.html" class="text-green-400 hover:underline">Per-Key Customization</a> - Subkey settings</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="../layouts/custom-layouts.html" class="text-green-400 hover:underline">Custom Layouts</a> - Build your own keyboard layout</li>
 </ul>
         </div>
         

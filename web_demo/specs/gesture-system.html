@@ -72,9 +72,13 @@
         <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
             <h1 class="text-3xl font-bold mb-6 gradient-text">Gesture Recognition System</h1>
 
+<p class="mb-4 text-gray-300">> <strong>Note:</strong> As of v1.4.0, the canonical version of this specification lives at</p>
+<p class="mb-4 text-gray-300">> <a href="../wiki/specs/gestures/gesture-system-overview-spec.md" class="text-ck-purple hover:underline"><code class="bg-ck-dark px-1 rounded">docs/wiki/specs/gestures/gesture-system-overview-spec.md</code></a> and renders at <https://cleverkeys.app/specs/gestures/gesture-system-overview-spec/>.</p>
+<p class="mb-4 text-gray-300">> This file is preserved for cross-references but may not be kept in sync.</p>
+
 <h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Overview</h2>
 
-<p class="mb-4 text-gray-300">CleverKeys implements a multi-layered gesture recognition system that handles four gesture types: short swipes (directional swipes within a key for sublabels), long swipes (gestures across keys for neural word prediction), circle/rotation gestures (for double letters), and slider gestures (continuous value adjustment). The <code class="bg-ck-dark px-1 rounded">hasLeftStartingKey</code> flag is the central decision point that routes touches to the appropriate handler.</p>
+<p class="mb-4 text-gray-300">CleverKeys implements a multi-layered gesture recognition system that handles four gesture types: short swipes (directional swipes within a key for sublabels), long swipes (gestures across keys for word prediction), circle/rotation gestures (for double letters), and slider gestures (continuous value adjustment). The <code class="bg-ck-dark px-1 rounded">hasLeftStartingKey</code> flag is the central decision point that routes touches to the appropriate handler.</p>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Key Files</h2>
 
@@ -101,7 +105,7 @@
           SWIPE           TAP
                │             │
                ▼             ▼
-        Neural Predictor  Short Gesture
+        Swipe Decoder     Short Gesture
         (onSwipeEnd)      Handler</code></pre>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Data Flow</h2>
@@ -129,7 +133,9 @@ if (ptr.key != null &amp;&amp; !ptr.hasLeftStartingKey) {
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Configuration</h2>
 
-<table class="w-full mb-4 border-collapse"><thead class="border-b border-gray-700"><tr><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Key</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Type</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Default</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Description</th></tr></thead><tbody><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">short_gesture_min_distance</code></td><td class="px-4 py-2 text-gray-300">Int</td><td class="px-4 py-2 text-gray-300">15</td><td class="px-4 py-2 text-gray-300">Min pixels for short swipe detection</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">short_gesture_max_distance</code></td><td class="px-4 py-2 text-gray-300">Int</td><td class="px-4 py-2 text-gray-300">50</td><td class="px-4 py-2 text-gray-300">Max % of key hypotenuse for short swipe (above = long swipe)</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">tap_duration_threshold</code></td><td class="px-4 py-2 text-gray-300">Long</td><td class="px-4 py-2 text-gray-300">200</td><td class="px-4 py-2 text-gray-300">Max ms for tap vs swipe distinction</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">swipe_speed_threshold</code></td><td class="px-4 py-2 text-gray-300">Float</td><td class="px-4 py-2 text-gray-300">0.4</td><td class="px-4 py-2 text-gray-300">Min speed for swipe typing activation</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">circle_gesture_enabled</code></td><td class="px-4 py-2 text-gray-300">Boolean</td><td class="px-4 py-2 text-gray-300">true</td><td class="px-4 py-2 text-gray-300">Enable circle gestures for double letters</td></tr></tbody></table>
+<table class="w-full mb-4 border-collapse"><thead class="border-b border-gray-700"><tr><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Key</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Type</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Default</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Description</th></tr></thead><tbody><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">short_gesture_min_distance</code></td><td class="px-4 py-2 text-gray-300">Int</td><td class="px-4 py-2 text-gray-300">28</td><td class="px-4 py-2 text-gray-300">Min displacement to trigger a short swipe, as % of key diagonal</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">short_gesture_max_distance</code></td><td class="px-4 py-2 text-gray-300">Int</td><td class="px-4 py-2 text-gray-300">141</td><td class="px-4 py-2 text-gray-300">Single short/long boundary: max displacement (% of key diagonal) still treated as a short swipe; above = long (word) swipe. Honored by both the mid-move latch and the touch-up classifier. ("200 = disabled" was never implemented; retired — disable via the Enable Short Gestures toggle.)</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">tap_duration_threshold</code></td><td class="px-4 py-2 text-gray-300">Long</td><td class="px-4 py-2 text-gray-300">150</td><td class="px-4 py-2 text-gray-300">Max ms a gesture that left the key may last and still be a tap (touch-up path)</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">circle_sensitivity</code></td><td class="px-4 py-2 text-gray-300">Int</td><td class="px-4 py-2 text-gray-300">(Defaults.CIRCLE_SENSITIVITY)</td><td class="px-4 py-2 text-gray-300">Sensitivity for loop/circle gestures (no <code class="bg-ck-dark px-1 rounded">circle_gesture_enabled</code> boolean exists — older drafts listed one that never did)</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">swipe_dist</code> (→ <code class="bg-ck-dark px-1 rounded">swipe_dist_px</code>)</td><td class="px-4 py-2 text-gray-300">String/Int</td><td class="px-4 py-2 text-gray-300">23</td><td class="px-4 py-2 text-gray-300">Device-scaled distance: slider/event subkey activation gate + wide-key cap on the short-swipe minimum</td></tr></tbody></table>
+<p class="mb-4 text-gray-300">> No <code class="bg-ck-dark px-1 rounded">swipe_speed_threshold</code> / minimum-speed gate exists (it was never in code). Word activation goes through two paths, both gated on <code class="bg-ck-dark px-1 rounded">short_gesture_max_distance</code> — see the canonical <a href="../wiki/specs/gestures/gesture-system-overview-spec.md" class="text-ck-purple hover:underline">Gesture System Overview</a> "Swipe Typing Activation" section.</p>
+
 <h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Public API</h2>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">GestureClassifier</h3>
@@ -256,7 +262,7 @@ override fun getKeyHypotenuse(key: KeyboardData.Key): Float {
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Swipe Typing Activation</h3>
 
-<p class="mb-4 text-gray-300">Long swipes trigger neural prediction when finger leaves starting key:</p>
+<p class="mb-4 text-gray-300">Long swipes trigger word prediction when finger leaves starting key:</p>
 
 <pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">private fun onTouchUp(ptr: Pointer) {
     val gestureType = gestureClassifier.classify(GestureData(
@@ -269,7 +275,7 @@ override fun getKeyHypotenuse(key: KeyboardData.Key): Float {
     when (gestureType) {
         GestureType.SWIPE -&gt; {
             if (ptr.hasLeftStartingKey) {
-                // Long swipe - neural prediction
+                // Long swipe - word prediction
                 onSwipeEnd(ptr.swipePath)
             } else {
                 // Short swipe - sublabel action
@@ -293,7 +299,7 @@ override fun getKeyHypotenuse(key: KeyboardData.Key): Float {
     var currentY: Float,               // Current Y
     var downTime: Long,                // Touch start time
     var hasLeftStartingKey: Boolean,   // The gatekeeper flag
-    var swipePath: MutableList&lt;Point&gt;, // Path for neural prediction
+    var swipePath: MutableList&lt;Point&gt;, // Path for word prediction
     var flags: Int                     // State flags (trackpoint, selection-delete, etc.)
 )</code></pre>
 

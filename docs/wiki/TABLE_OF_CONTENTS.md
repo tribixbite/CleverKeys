@@ -29,7 +29,7 @@ Welcome to the CleverKeys documentation. This guide covers everything you need t
 ### 2. Typing and Input (P0)
 | Page | Description |
 |------|-------------|
-| [Swipe Typing](./typing/swipe-typing.md) | Swipe prediction engines (neural, CTC, geometric) and how to use them |
+| [Swipe Typing](./typing/swipe-typing.md) | Swipe prediction engines (CTC, geometric) and how to use them |
 | [Autocorrect & Predictions](./typing/autocorrect.md) | Smart text correction settings |
 | [Next-Word Prediction](./typing/next-word-prediction.md) | Learned-phrase suggestions before you type a letter (opt-in) |
 | [Smart Punctuation](./typing/smart-punctuation.md) | Automatic punctuation attachment and smart auto-space (v1.5.0) |
@@ -70,7 +70,6 @@ Welcome to the CleverKeys documentation. This guide covers everything you need t
 | [Appearance](./settings/appearance.md) | Height, opacity, key borders |
 | [Input Behavior](./settings/input-behavior.md) | Autocorrect, autocaps, double-space |
 | [Haptics & Sound](./settings/haptics.md) | Vibration and key press sounds |
-| [Neural Settings](./settings/neural-settings.md) | Prediction engine selection, beam width, CTC settings |
 | [Privacy](./settings/privacy.md) | Data collection and clipboard settings |
 | [Accessibility](./settings/accessibility.md) | Switch Access, TalkBack, large keys |
 
@@ -98,7 +97,7 @@ Each user guide has a paired technical specification for developers:
 
 | User Guide | Tech Spec |
 |------------|-----------|
-| [Swipe Typing](./typing/swipe-typing.md) | [Neural Prediction Spec](../specs/neural-prediction.md) |
+| [Swipe Typing](./typing/swipe-typing.md) | [CTC Swipe Engine](../specs/ctc-swipe-engine.md) |
 | [Smart Punctuation](./typing/smart-punctuation.md) | [Smart Punctuation Spec](./specs/typing/smart-punctuation-spec.md) |
 | [User Dictionary](./typing/user-dictionary.md) | [User Dictionary Spec](./specs/typing/user-dictionary-spec.md) |
 | [Short Swipes](./gestures/short-swipes.md) | [Gesture System Spec](../specs/gesture-system.md) |
@@ -129,4 +128,4 @@ Each user guide has a paired technical specification for developers:
 
 ---
 
-*This documentation is for CleverKeys, a fork of Unexpected-Keyboard with neural swipe typing.*
+*This documentation is for CleverKeys, a fork of Unexpected-Keyboard with on-device swipe typing.*

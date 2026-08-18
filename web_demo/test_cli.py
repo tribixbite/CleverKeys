@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-CLI test for CleverKeys neural swipe prediction
+CLI test for the (removed) CleverKeys transformer swipe prediction — archival
 Tests model loading and basic inference without browser
 """
 

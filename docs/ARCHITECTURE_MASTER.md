@@ -1,7 +1,7 @@
 # CleverKeys Master Architecture Document
 
 **Version**: 1.3.0
-**Last Updated**: 2026-08-15 (added §5.3: CTC swipe engine — opt-in `ctc` mode, tunedV2 preset, routing/lexicon/provenance)
+**Last Updated**: 2026-08-18 (neural engine removed — ADR-011; §1 and the former §5.1/5.2 retired, CTC promoted to §5.1 and to the default mode)
 **Status**: Complete (Triple-Checked)
 
 This document contains all parameters, weights, coefficients, thresholds, and configuration values used in CleverKeys.
@@ -10,7 +10,7 @@ This document contains all parameters, weights, coefficients, thresholds, and co
 
 ## Table of Contents
 
-1. [Neural Prediction Parameters](#1-neural-prediction-parameters)
+1. [Swipe Prediction Parameters](#1-swipe-prediction-parameters)
 2. [Swipe Detection Parameters](#2-swipe-detection-parameters)
 3. [Gesture Recognition Parameters](#3-gesture-recognition-parameters)
 4. [ONNX Model Configuration](#4-onnx-model-configuration)
@@ -22,45 +22,23 @@ This document contains all parameters, weights, coefficients, thresholds, and co
 
 ---
 
-## 1. Neural Prediction Parameters
+## 1. Swipe Prediction Parameters
 
-### 1.1 Core Neural Settings (Config.kt)
-
-| Parameter | Type | Default | Range | Description |
-|-----------|------|---------|-------|-------------|
-| `neural_prediction_enabled` | Boolean | true | - | Enable ONNX neural prediction |
-| `neural_beam_width` | Int | 3 | 1-16 | Number of beams in beam search |
-| `neural_max_length` | Int | 15 | 10-35 | Maximum word length |
-| `neural_confidence_threshold` | Float | 0.01 | 0.0-1.0 | Minimum confidence to accept prediction |
-| `neural_batch_beams` | Boolean | false | - | Batch beam inference (50-70% speedup) |
-| `neural_greedy_search` | Boolean | false | - | Use greedy instead of beam search |
-
-### 1.2 Beam Search Tuning (Config.kt)
-
-| Parameter | Type | Default | Range | Description |
-|-----------|------|---------|-------|-------------|
-| `neural_beam_alpha` | Float | 1.0 | 0.0-2.0 | Length normalization alpha |
-| `neural_beam_prune_confidence` | Float | 0.03 | 0.0-0.5 | Minimum beam confidence to continue |
-| `neural_beam_score_gap` | Float | 20.0 | 0.0-20.0 | Max score gap for early stopping |
-
-### 1.3 Neural Model Versioning (Config.kt)
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `neural_model_version` | String | "v2" | Model version identifier |
-| `neural_use_quantized` | Boolean | true | Use INT8 quantized models |
-| `neural_user_max_seq_length` | Int | 0 (auto) | Trajectory sequence length (0 = auto) |
-| `neural_resampling_mode` | String | "discard" | Trajectory resampling: linear, spline, discard |
-| `neural_custom_encoder_path` | String | null | Custom encoder model path |
-| `neural_custom_decoder_path` | String | null | Custom decoder model path |
+> **Removed 2026-08-18 (ADR-011)**: §1.1–1.3 documented the ONNX transformer's
+> `neural_*` preferences — beam width, max length, confidence threshold, batch/greedy
+> toggles, beam alpha/prune/score-gap, model versioning and resampling. That engine and all
+> ~25 of those preferences are gone; the keys are in
+> `backup/SettingsValidation.DEPRECATED_KEYS` so old backups import cleanly, and nothing
+> reads them. The archived reference is `docs/history/neural-engine/`.
+>
+> The surviving swipe parameters are the CTC engine's (§5.1) and the geometric engine's
+> (`GeometricEngineConfig.kt`, documented in `docs/specs/geometric-swipe-engine.md`).
 
 ### 1.4 Debug Settings (Config.kt)
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `swipe_debug_detailed_logging` | Boolean | false | Enable detailed swipe logging |
-| `swipe_debug_show_raw_output` | Boolean | true | Show raw neural output |
-| `swipe_show_raw_beam_predictions` | Boolean | false | Show raw beam predictions |
 | `swipe_show_debug_scores` | Boolean | false | Show debug scores in UI |
 | `termux_mode_enabled` | Boolean | false | Enable Termux compatibility mode |
 
@@ -114,7 +92,7 @@ space = 30, apostrophe = 31, hyphen = 32
 
 | Parameter | Type | Default | Range | Description |
 |-----------|------|---------|-------|-------------|
-| `swipe_confidence_weight` | Float | 0.8 | 0.0-1.0 | Neural confidence weight |
+| `swipe_confidence_weight` | Float | 0.8 | 0.0-1.0 | Decoder confidence weight (orphaned — see the TODO in `Config.refresh`) |
 | `swipe_frequency_weight` | Float | 0.2 | 0.0-1.0 | Dictionary frequency weight |
 | `swipe_common_words_boost` | Float | 1.0 | 0.5-2.0 | Boost for common words |
 | `swipe_top5000_boost` | Float | 1.0 | 0.5-2.0 | Boost for top 5000 words |
@@ -207,80 +185,48 @@ space = 30, apostrophe = 31, hyphen = 32
 
 | Model | File | Size | Description |
 |-------|------|------|-------------|
-| Encoder | `swipe_encoder_android.onnx` | ~4MB | Trajectory encoder (quantized INT8) |
-| Decoder | `swipe_decoder_android.onnx` | ~4MB | Character decoder (quantized INT8) |
+| CTC encoder | `models/ctc_swipe_encoder.onnx` | 2.91 MB | Per-frame character emissions from a swipe trajectory |
 
-### 4.2 Encoder Input Tensors (SwipePredictorOrchestrator.kt)
+Loaded through `onnx/ModelLoader.kt` (XNNPACK-first, NNAPI/QNN providers probed), thread
+count from `onnx_xnnpack_threads`.
 
-| Tensor | Shape | Type | Description |
-|--------|-------|------|-------------|
-| `trajectory_features` | [1, 150, 6] | Float32 | (x, y, vx, vy, ax, ay) normalized |
-| `nearest_keys` | [1, 150] | Int64 | Character indices (a=4, ..., z=29) |
-| `src_mask` | [1, 150] | Float32 | Attention mask (0=valid, 1=pad) |
+> **Removed 2026-08-18 (ADR-011)**: the transformer's `swipe_encoder_android.onnx` (5.3 MB)
+> and `swipe_decoder_android.onnx` (5.0 MB), their tokenizer/model configs and the 11
+> `prefix_boosts/*.bin` tries are deleted. Their tensor signatures and feature layout are
+> archived in `docs/history/neural-engine/ONNX_DECODE_PIPELINE.md`.
 
-### 4.3 Feature Extraction (6 features)
+### 4.2 CTC Encoder I/O
 
-| Feature | Index | Formula | Range |
-|---------|-------|---------|-------|
-| x | 0 | x / keyboard_width | [0, 1] |
-| y | 1 | y / keyboard_height | [0, 1] |
-| vx | 2 | (x[i] - x[i-1]) / dt | normalized |
-| vy | 3 | (y[i] - y[i-1]) / dt | normalized |
-| ax | 4 | (vx[i] - vx[i-1]) / dt | normalized |
-| ay | 5 | (vy[i] - vy[i-1]) / dt | normalized |
+The CTC encoder is LAYOUT-AGNOSTIC: key geometry is a model input, not a training-time
+assumption. Exact tensor names, shapes and the featurizer contract are in
+`docs/specs/ctc-swipe-engine.md` (kept there so this document cannot drift from the spec).
 
-### 4.4 Decoder Output
-
-| Tensor | Shape | Type | Description |
-|--------|-------|------|-------------|
-| `logits` | [batch, seq_len, 35] | Float32 | Token probabilities |
+The geometric engine uses no ONNX model at all.
 
 ---
 
 ## 5. Beam Search Parameters
 
-> **Scope note (2026-07-20, updated 2026-08-08)**: §5.1-5.2 belong to the
-> NEURAL pipeline only (autoregressive ONNX decoder). The geometric swipe
-> engine (`swipe/geometric/`, spec: `docs/specs/geometric-swipe-engine.md`)
-> does NOT use beam search — it is a SHARK2-style whole-word template matcher
-> (prune → score → top-K). Its full tunable surface lives in
-> `GeometricEngineConfig.kt` and is documented in the spec's Config Surface +
-> As-Built Notes sections; values are not duplicated here to avoid drift. The
-> CTC engine (§5.3) uses its OWN trie beam with separate parameters.
+> **Scope note (2026-07-20, updated 2026-08-18)**: the autoregressive ONNX decoder's beam
+> parameters (former §5.1) and its greedy-search constants (former §5.2) were deleted with
+> that engine on 2026-08-18 — see ADR-011 and `docs/history/neural-engine/`. Two engines
+> remain and neither shares those parameters. The geometric engine
+> (`swipe/geometric/`, spec: `docs/specs/geometric-swipe-engine.md`) does NOT use beam
+> search at all — it is a SHARK2-style whole-word template matcher (prune → score → top-K),
+> and its full tunable surface lives in `GeometricEngineConfig.kt`, documented in the spec's
+> Config Surface + As-Built Notes sections (values are not duplicated here to avoid drift).
+> The CTC engine (§5.1 below) uses its OWN trie beam with its own parameters.
 
-### 5.1 Constants (BeamSearchEngine.kt)
+### 5.1 CTC Swipe Engine (`swipe/ctc/` + `CtcEngineAdapter.kt`, DEFAULT `ctc` mode)
 
-| Constant | Value | Description |
-|----------|-------|-------------|
-| `BEAM_WIDTH` | 8 | Default beam width |
-| `MAX_LENGTH` | 20 | Maximum output length |
-| `DECODER_SEQ_LEN` | 20 | Must match model export |
-| `LOG_PROB_THRESHOLD` | -13.8 | Approx ln(1e-6) |
-| `PRUNE_STEP_THRESHOLD` | 2 | Steps before pruning starts |
-| `ADAPTIVE_WIDTH_STEP` | 5 | Steps before width adaptation |
-| `SCORE_GAP_STEP` | 3 | Steps before score gap check |
-| `DIVERSITY_LAMBDA` | 0.5 | Penalty weight for similar beams |
-| `LENGTH_PENALTY_ALPHA` | 1.2 | Length normalization factor |
-| `ADAPTIVE_WIDTH_CONFIDENCE` | 0.8 | Pruning confidence threshold |
-| `SCORE_GAP_THRESHOLD` | 5.0 | Early stopping score gap |
-
-### 5.2 Greedy Search (GreedySearchEngine.kt)
-
-| Constant | Value | Description |
-|----------|-------|-------------|
-| `PAD_IDX` | 0 | Padding token index |
-| `SOS_IDX` | 2 | Start token index |
-| `EOS_IDX` | 3 | End token index |
-
-### 5.3 CTC Swipe Engine (`swipe/ctc/` + `CtcEngineAdapter.kt`, opt-in `ctc` mode, 2026-08-08)
-
-The fourth swipe engine (spec: `docs/specs/ctc-swipe-engine.md`): a non-autoregressive
+The default swipe engine (spec: `docs/specs/ctc-swipe-engine.md`): a non-autoregressive
 CTC trie-beam decoder over a 2.91 MB CleverKeys-trained ONNX emission encoder
-(`models/ctc_swipe_encoder.onnx`, `OnnxCtcEmissionModel`). Opt-in via
-`swipe_engine_mode = "ctc"`; routing is CTC on QWERTY for English, neural for other
-languages on QWERTY, geometric on non-QWERTY layouts (`SwipeEngineRouter.Mode.CTC` +
-`InputCoordinator.performCtcSwipeTyping`'s language fallthrough) — never less coverage
-than `hybrid`. Test-validated at 89.31/93.79/94.50 top-1/3/5 on the FUTO test-2400 split
+(`models/ctc_swipe_encoder.onnx`, `OnnxCtcEmissionModel`). Selected by
+`swipe_engine_mode = "ctc"` (the DEFAULT since 2026-08-18); routing is CTC on any
+a-z-complete Latin layout for a served language (en/fr/de/es), geometric for every other
+language and every non-Latin layout (`SwipeEngineRouter.Mode.CTC` +
+`InputCoordinator.performCtcSwipeTyping`'s language fallthrough) — the router is total, so
+no layout is left without an engine. Test-validated at 89.31/93.79/94.50 top-1/3/5 on the FUTO test-2400 split
 (see `docs/eval/2026-07-24-test2400-head2head.md` addendum).
 
 Ship preset `CtcScoringParams.tunedV2` (scoring constants deliberately not user-exposed):
@@ -450,64 +396,37 @@ Persistent, language-keyed, process-singleton learned n-gram stores. Full spec:
                                   │
                                   ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                    FEATURE EXTRACTION                            │
-│  ┌───────────────────────────────────────────────────────────┐  │
-│  │ SwipeTrajectoryProcessor                                   │  │
-│  │  ├── smoothTrajectory(windowSize=3)                       │  │
-│  │  ├── normalizeCoordinates(x/width, y/height)              │  │
-│  │  ├── calculateVelocities(Δpos/Δtime)                      │  │
-│  │  ├── calculateAccelerations(Δvel/Δtime)                   │  │
-│  │  ├── detectNearestKeys(QWERTY grid)                       │  │
-│  │  └── padOrTruncate(target=150)                            │  │
-│  └───────────────────────────────────────────────────────────┘  │
-│                                                                   │
-│  Output: [1, 150, 6] trajectory + [1, 150] keys + [1, 150] mask │
+│                    ENGINE ROUTING                                │
+│  SwipeEngineRouter.route(layout, swipe_engine_mode)             │
+│    ├── Latin script + ctc mode  ─────────▶ CTC                  │
+│    └── otherwise                ─────────▶ GEOMETRIC            │
+│  InputCoordinator.performCtcSwipeTyping then falls through to   │
+│  GEOMETRIC for any language CtcLanguageSupport does not serve,  │
+│  and for a Latin layout missing an a–z key.                     │
 └─────────────────────────────────────────────────────────────────┘
-                                  │
-                                  ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                     ONNX ENCODER                                 │
-│  ┌───────────────────────────────────────────────────────────┐  │
-│  │ swipe_encoder_android.onnx (4MB INT8 quantized)           │  │
-│  │  ├── 6 Transformer encoder layers                         │  │
-│  │  ├── 8-head self-attention                                │  │
-│  │  └── Output: memory [1, 150, 256]                         │  │
-│  └───────────────────────────────────────────────────────────┘  │
-│  Latency: < 30ms on mid-range devices                           │
-└─────────────────────────────────────────────────────────────────┘
-                                  │
-                                  ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    BEAM SEARCH DECODER                           │
-│  ┌───────────────────────────────────────────────────────────┐  │
-│  │ BeamSearchEngine (width=8, max_length=20)                 │  │
-│  │  ├── Initialize: beams = [SOS]                            │  │
-│  │  ├── Loop: batched decoder inference                      │  │
-│  │  │   ├── logits = decoder(memory, tokens)                │  │
-│  │  │   ├── log_softmax(logits)                             │  │
-│  │  │   ├── topK(beam_width)                                │  │
-│  │  │   ├── score += log_prob                               │  │
-│  │  │   └── finished if EOS or max_length                   │  │
-│  │  └── Return: top N candidates sorted by score            │  │
-│  └───────────────────────────────────────────────────────────┘  │
-│  Latency: < 50ms (batched), < 200ms (sequential)                │
-└─────────────────────────────────────────────────────────────────┘
-                                  │
-                                  ▼
+                    │                            │
+                    ▼                            ▼
+┌───────────────────────────────┐  ┌──────────────────────────────┐
+│         CTC ENGINE            │  │      GEOMETRIC ENGINE        │
+│  CtcFeaturizer                │  │  Template index per          │
+│   └─ trajectory + live key    │  │  (layout, language)          │
+│      geometry (layout-agnostic)│  │  SHARK2-style shape match:  │
+│  ctc_swipe_encoder.onnx       │  │   prune → score → top-K      │
+│   └─ per-frame emissions      │  │                              │
+│  CtcBeamDecoder               │  │  GeometricEngineConfig.kt    │
+│   └─ Viterbi trie beam over   │  │  (28 knobs, 3 user-exposed)  │
+│      the merged lexicon       │  │                              │
+│      (ctc_beam_width, tunedV2)│  │                              │
+└───────────────────────────────┘  └──────────────────────────────┘
+                    │                            │
+                    └────────────┬───────────────┘
+                                 ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                    POST-PROCESSING                               │
-│  ┌───────────────────────────────────────────────────────────┐  │
-│  │ SwipeTokenizer.decode()                                   │  │
-│  │  └── tokens [2,8,5,12,12,15,3] → "hello"                 │  │
-│  └───────────────────────────────────────────────────────────┘  │
-│  ┌───────────────────────────────────────────────────────────┐  │
-│  │ VocabularyFilter (optional)                               │  │
-│  │  └── Filter out-of-vocabulary predictions                │  │
-│  └───────────────────────────────────────────────────────────┘  │
-│  ┌───────────────────────────────────────────────────────────┐  │
-│  │ ScoreConversion                                           │  │
-│  │  └── log_prob → confidence (0-1000 scale)                │  │
-│  └───────────────────────────────────────────────────────────┘  │
+│  ContractionOverlay  ("dont" → "don't", accented forms)          │
+│  SuggestionHandler.handleSwipePredictionResults                  │
+│   └─ password guard, possessive augmentation, shift/caps,        │
+│      the single commit engine                                    │
 └─────────────────────────────────────────────────────────────────┘
                                   │
                                   ▼
@@ -515,8 +434,7 @@ Persistent, language-keyed, process-singleton learned n-gram stores. Full spec:
 │                       OUTPUT                                     │
 │  PredictionResult(                                               │
 │    words = ["hello", "hallo", "help"],                          │
-│    scores = [950, 820, 780],                                    │
-│    confidences = [0.95, 0.82, 0.78]                             │
+│    scores = [950, 820, 780]   // engine-relative, never mixed    │
 │  )                                                               │
 └─────────────────────────────────────────────────────────────────┘
                                   │
@@ -531,7 +449,8 @@ Persistent, language-keyed, process-singleton learned n-gram stores. Full spec:
 | File | Description |
 |------|-------------|
 | `src/main/kotlin/tribixbite/cleverkeys/Config.kt` | Main configuration class |
-| `src/main/kotlin/tribixbite/cleverkeys/onnx/BeamSearchEngine.kt` | Beam search constants |
+| `src/main/kotlin/tribixbite/cleverkeys/swipe/ctc/CtcBeamDecoder.kt` | CTC trie-beam decoder |
+| `src/main/kotlin/tribixbite/cleverkeys/swipe/geometric/GeometricEngineConfig.kt` | Geometric engine constants |
 | `src/main/kotlin/tribixbite/cleverkeys/onnx/TensorFactory.kt` | Tensor creation |
 | `src/main/kotlin/tribixbite/cleverkeys/ContinuousGestureRecognizer.kt` | CGR parameters |
 | `src/main/kotlin/tribixbite/cleverkeys/LoopGestureDetector.kt` | Loop detection |
@@ -544,10 +463,10 @@ Persistent, language-keyed, process-singleton learned n-gram stores. Full spec:
 
 All settings are stored in SharedPreferences with these keys:
 
-### Neural/Swipe Keys
-- `neural_prediction_enabled`, `neural_beam_width`, `neural_max_length`
+### Swipe Keys
+- `swipe_typing_enabled`, `onnx_xnnpack_threads`
 - `swipe_typing_enabled`, `swipe_min_distance`, `swipe_trail_enabled`
-- `swipe_engine_mode` (neural/hybrid/geometric/ctc), `ctc_beam_width`
+- `swipe_engine_mode` (ctc/geometric), `ctc_beam_width`
 
 ### Auto-correction Keys
 - `autocorrect_enabled`, `autocorrect_min_word_length`

@@ -3,15 +3,15 @@
 ## Feature Overview
 **Feature Name**: Geometric Swipe Engine (`swipe.geometric`) — dictionary-driven, zero-training swipe decoder for arbitrary layouts and scripts
 **Priority**: P1
-**Status**: Implemented AND WIRED (WP9 R-1 steps 7-9 landed 2026-07-21: `swipe/SwipeEngineRouter` + `swipe/GeometricEngineAdapter` + `swipe_engine_mode` pref (neural|hybrid|geometric, default neural; Settings → Swipe Typing → Prediction Engine); see `docs/audit/remediation/3-core-ime.md` § "Steps 7-9 — LANDED") — all 6 phases committed and green; as-built deltas in § As-Built Notes (2026-07-20)
+**Status**: Implemented AND WIRED (WP9 R-1 steps 7-9 landed 2026-07-21: `swipe/SwipeEngineRouter` + `swipe/GeometricEngineAdapter` + `swipe_engine_mode` pref (ctc|geometric, default ctc since 2026-08-18 — ADR-011; Settings → Swipe Typing → Prediction Engine); see `docs/audit/remediation/3-core-ime.md` § "Steps 7-9 — LANDED") — all 6 phases committed and green; as-built deltas in § As-Built Notes (2026-07-20)
 **Target Version**: v1.6.x (engine + pure-JVM tests only; router/wiring deferred to WP9)
 
 ### Summary
-A pure-JVM SHARK2-style template matcher that decodes swipe traces against per-layout key centroids and a per-language dictionary, producing `PredictionResult(words, scores 0–1000)` — the same output type the neural pipeline ultimately emits — for any layout geometry (Cyrillic ЙЦУКЕН, AZERTY, Dvorak, Arabic, user-authored XML) with zero training data.
+A pure-JVM SHARK2-style template matcher that decodes swipe traces against per-layout key centroids and a per-language dictionary, producing `PredictionResult(words, scores 0–1000)` — the same output type every swipe engine emits — for any layout geometry (Cyrillic ЙЦУКЕН, AZERTY, Dvorak, Arabic, user-authored XML) with zero training data.
 
 ### Motivation
 - The v1 transformer is trained on English+QWERTY only; swipe is gated by an allowlist `script == "latin" && name.contains("QWERTY")` (`Config.isSwipeTypingSupportedForLayout`, `Config.kt:1146-1163`; KDoc: "#9: When algorithmic swipe is implemented, this can expand"; live gate at `InputCoordinator.kt:1124-1126`). Users of ЙЦУКЕН, AZERTY, QWERTZ, Dvorak, Colemak, Arabic, and all custom XML layouts get no swipe at all (`README.md:234-247`).
-- **Correction (verified)**: Greek QWERTY does *not* currently lose swipe — `srcs/layouts/grek_qwerty.xml:2` declares `script="latin"` with name `"QWERTY (Greek)"`, so the allowlist returns TRUE and the QWERTY-trained neural model runs on Greek text today. That is a mis-gating bug (the `Config.kt:1155-1156` comment says "exclude Greek/Georgian QWERTY" but the layout's own metadata defeats it) — **file it as a separate issue**; it is evidence that layout `script` attributes are untrustworthy metadata (see Script Abstraction), not a premise of this spec.
+- **Correction (verified)**: Greek QWERTY does *not* currently lose swipe — `srcs/layouts/grek_qwerty.xml:2` declares `script="latin"` with name `"QWERTY (Greek)"`, so the allowlist returned TRUE and the QWERTY-trained transformer ran on Greek text (moot since 2026-08-18: that engine and the allowlist are both gone). That is a mis-gating bug (the `Config.kt:1155-1156` comment says "exclude Greek/Georgian QWERTY" but the layout's own metadata defeats it) — **file it as a separate issue**; it is evidence that layout `script` attributes are untrustworthy metadata (see Script Abstraction), not a premise of this spec.
 - `ROADMAP.md:51-60` mandates the dual-path plan: keep the transformer for QWERTY+Latin; add a geometric/template matcher (Urik/AnySoftKeyboard family) for everything else; first target Russian ЙЦУКЕН, then AZERTY/QWERTZ/Dvorak/Colemak/Neo2; ship behind a feature flag with per-layout auto-routing.
 - Neural per-layout retraining cannot cover **user-authored arbitrary XML layouts** (arbitrary key widths/shifts/row counts/row scale, `KeyboardData.kt:228-241,269`) — only a geometric engine generalizes there. (Swipe corpora for Russian now exist — FUTO ~1.04M swipes, Yandex Cup 2023 — so issue #6's "no datasets" is stale; those corpora become free *evaluation* data, never training data.)
 - **WP9 pipeline unification is DEFERRED** (`docs/audit/2026-07-18-grade-a-roadmap.md:89-91`). This work package builds the engine and its test suite only. Zero modifications to `SuggestionHandler`, `InputCoordinator` (gate at `:1124-1126`), `onnx/SwipePredictorOrchestrator`, `CleverKeysService`, or `Config.isSwipeTypingSupportedForLayout`.
@@ -139,7 +139,7 @@ r(w) = ordinal frequency rank of w in the dictionary (0 = most frequent)
 - **Endpoint anchors**: quadratic soft penalty for start/end beyond `startNeighborRadius`/`endNeighborRadius` of the first/last template key (ASK precedent: end slack > start slack — users overshoot ends).
 - **Corner-anchor bonus** (normalized and capped — an unbounded per-corner bonus is a length/complexity bias): `cornerBonus = cornerAnchorBonus · matchedCorners / max(1, templateCornerCount)`, total ≤ `cornerAnchorBonus` (0.25). Included in the Phase-6 ablation.
 
-**7. Rank & emit**: partial-select top `maxResults=10` by S(w); dedupe lowercase-keep-best; map scores via **fixed-temperature softmax** `score_i = round(1000 · softmax(S_i / softmaxTemperature))` (T=1.0) — *not* min-max, so a garbage decode where all candidates tie yields flat mid scores rather than a fake 1000. `SwipeDecodingEngine` KDoc must still state loudly: **scores are engine-relative and not calibrated against neural-score thresholds** — a WP9 router must not compare them across engines. Canonical dictionary form (with accents) is returned — "café", "ещё" — the accent-recovery model of CKDT canonical forms (`BinaryDictionaryLoader.kt:60-71`).
+**7. Rank & emit**: partial-select top `maxResults=10` by S(w); dedupe lowercase-keep-best; map scores via **fixed-temperature softmax** `score_i = round(1000 · softmax(S_i / softmaxTemperature))` (T=1.0) — *not* min-max, so a garbage decode where all candidates tie yields flat mid scores rather than a fake 1000. `SwipeDecodingEngine` KDoc must still state loudly: **scores are engine-relative and not calibrated against the CTC decoder's log-probabilities** — a WP9 router must not compare them across engines. Canonical dictionary form (with accents) is returned — "café", "ещё" — the accent-recovery model of CKDT canonical forms (`BinaryDictionaryLoader.kt:60-71`).
 
 ### Geometry & Script Abstraction
 
@@ -247,11 +247,11 @@ data class GeometricSwipeRequest(
 )
 
 /**
- * Router seam. Mirrors the FINAL candidate shape of the neural path
+ * Router seam. Mirrors the FINAL candidate shape of the ONNX path
  * (onnx/SwipePredictorOrchestrator.predict at :297 returns the richer
  * PredictionPostProcessor.Result; this engine emits the reduced PredictionResult).
  * SCORES ARE ENGINE-RELATIVE (softmax posterior × 1000) — NOT comparable to
- * neural-score thresholds. Thread-safety: all methods are safe to call from any
+ * the CTC decoder's scores. Thread-safety: all methods are safe to call from any
  * thread; cache mutation is internally synchronized; decode() snapshots the index
  * and scores lock-free (Tier-B memo access is a synchronized LRU).
  */
@@ -396,7 +396,7 @@ Each phase compiles, registers every new test class in `pureTestClasses` (`build
 - [ ] `GeoBenchmarkTest` (PipelineBenchmarkTest style: warmup, sorted latencies, printed stats + **memo hit rate**): asserts NFR-1 verbatim (median ≤ 30 ms, p95 ≤ 60 ms, all-cold median ≤ 45 ms @ 98k) — absolute-latency asserts guarded by `Assume.assumeTrue(System.getenv("CI") == null)` (shared ubuntu runners flake; structural/relative asserts always run). Memory: `estimatedBytes()` ≤ 2.5 MB/index structural; Runtime-delta smoke < 32 MB.
 - [ ] N=32 vs 64 and dtwBand=0 vs small-band decided empirically; defaults stay unless the harness shows a win.
 
-### Phase 7 (optional, separately gated) — Neural characterization golden file
+### Phase 7 (CANCELLED 2026-08-18 — the neural engine was removed, ADR-011) — Neural characterization golden file
 - [ ] One-time generation of `src/test/resources/golden/neural_qwerty_en.json` (~300 CLEAN traces × neural top-K) via **proot-distro Ubuntu JVM** (glibc — ORT JVM natives load there; `scripts/run-pure-tests.sh` already requires proot-distro), against the current model signatures (encoder: `actual_length` int32 scalar; decoder: int32 `target_tokens`/`actual_src_length`, pre-log-softmaxed `log_probs`; tokens a=4…z=29). Fallbacks: web_demo via headless-Chromium CDP; ew-cli one-off (Pixel7/API34, debug APK, `--use-orchestrator --timeout 25m`).
 - [ ] `GeoNeuralCharacterizationTest`: regenerate traces from (word, seed), assert geometric top-3 ⊇ neural top-1 ≥ 80% (ratchet to 85%), `Assume.assumeTrue(goldenFile.exists())`; KDoc: consistency oracle, not ground truth.
 - **Rejected**: in-process ONNX under on-device `runPureTests` — ORT JVM jar ships glibc natives, Termux JVM is bionic (`OnnxPredictionTest.kt.local` is `@Ignore`d for exactly this).

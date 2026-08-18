@@ -33,7 +33,7 @@ SettingsActivity (Material 3 Compose)
     ├── PreferenceScreen (collapsible sections)
     │   ├── Appearance Section
     │   ├── Input Behavior Section
-    │   ├── Neural Prediction Section
+    │   ├── Swipe Typing Section
     │   ├── Gestures Section
     │   ├── Layout Section
     │   ├── Clipboard Section
@@ -76,10 +76,10 @@ object Defaults {
     const val VIBRATE_CUSTOM = false           // :72
     const val VIBRATE_DURATION = 20            // :73
 
-    // Neural Prediction
-    const val NEURAL_BEAM_WIDTH = 6            // :134
-    const val NEURAL_MAX_LENGTH = 20           // :135
-    const val NEURAL_CONFIDENCE_THRESHOLD = 0.01f  // :136
+    // Swipe decoding
+    const val SWIPE_ENGINE_MODE = "ctc"
+    const val CTC_BEAM_WIDTH = 100
+    const val ONNX_XNNPACK_THREADS = 2
     const val SWIPE_TYPING_ENABLED = true      // :164
 
     // Gestures (units: % of key diagonal)
@@ -96,7 +96,7 @@ object Defaults {
 }
 ```
 
-For exact current values per area, see the per-area specs ([Appearance](appearance-spec.md), [Input Behavior](input-behavior-spec.md), [Haptics](haptics-spec.md), [Neural Settings](neural-settings-spec.md)).
+For exact current values per area, see the per-area specs ([Appearance](appearance-spec.md), [Input Behavior](input-behavior-spec.md), [Haptics](haptics-spec.md)).
 
 ### Settings Categories
 
@@ -104,7 +104,7 @@ For exact current values per area, see the per-area specs ([Appearance](appearan
 |----------|----------------|--------------|
 | Appearance | ~15 | theme, keyboard_height, opacity, borders |
 | Input Behavior | ~10 | longpress_timeout, vibration, key_repeat |
-| Neural | ~8 | beam_width, confidence, swipe_enabled |
+| Swipe Typing | ~4 | swipe_engine_mode, ctc_beam_width, swipe_typing_enabled |
 | Gestures | ~12 | short_swipe distances, slider sensitivity |
 | Layout | ~8 | margins, number_row, extra_keys |
 | Clipboard | ~5 | history_enabled, history_size, exclusions |
@@ -281,7 +281,7 @@ fun applyTheme(themeName: String) {
 
 ### Settings Change Listener
 
-`Config` reacts to preference changes through `ConfigurationManager`, which implements `SharedPreferences.OnSharedPreferenceChangeListener` and notifies registered `ConfigChangeListener` instances. Components that depend on a specific subset of preferences (theme, keyboard height, neural parameters, etc.) implement the listener interface rather than each reading SharedPreferences directly.
+`Config` reacts to preference changes through `ConfigurationManager`, which implements `SharedPreferences.OnSharedPreferenceChangeListener` and notifies registered `ConfigChangeListener` instances. Components that depend on a specific subset of preferences (theme, keyboard height, swipe-engine parameters, etc.) implement the listener interface rather than each reading SharedPreferences directly.
 
 ### Collapsible Sections Pattern
 
@@ -323,6 +323,6 @@ This architectural spec covers the shared scaffolding. For exact values, ranges,
 - [Appearance Settings](appearance-spec.md) — theme, keyboard height, opacity, borders, label brightness
 - [Input Behavior Settings](input-behavior-spec.md) — long-press timeout, key repeat, swipe geometry
 - [Haptics Settings](haptics-spec.md) — master haptic toggle and per-event vibration
-- [Neural Settings](neural-settings-spec.md) — beam width, confidence threshold, prefix boost
+- [CTC Swipe Engine](../../../specs/ctc-swipe-engine.md) — beam width and the ONNX-threads knob
 
 For backup/restore and the import-preview pipeline (which exercises `SETTINGS_DEFAULTS`, `PrefValue`, and the diff engine), see the backup/restore specs.

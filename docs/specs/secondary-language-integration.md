@@ -20,7 +20,7 @@ Multi-language typing system that allows users to type in two languages simultan
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                   Neural Swipe Predictor                     │
+│                     Swipe Decoder                            │
 │  Outputs 26-letter words: "espanol", "cafe"                 │
 └─────────────────────────────────────────────────────────────┘
                             │

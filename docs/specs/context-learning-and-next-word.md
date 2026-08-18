@@ -66,7 +66,7 @@ suppresses next-word display (`fieldAllowsPersonalizedLearning` parameter throug
 The master gate covers AUTOMATIC recording of typing behavior. Data the user explicitly
 creates is governed by its own controls:
 - `SwipeCalibrationActivity` traces — own consent flow, recorded only during a session the user starts.
-- `NeuralPerformanceStats` — behind the separate performance-stats preference (no text content).
+- `SwipePerformanceStats` — behind the separate performance-stats preference (no text content).
 - Backup restore — importing a backup repopulates learned stores even with the master off
   (restoring one's own exported data is an explicit act).
 
@@ -231,9 +231,9 @@ learned above the floor; word prediction disabled.
 **Files**: `SuggestionProvenance.kt` (pure JVM), `SuggestionBar.kt` (display),
 `WordPredictor.kt` (breakdown production)
 
-- **`SuggestionOrigin`** enum tags every bar entry at creation: `NEURAL_BEAM`, `GEOMETRIC`,
+- **`SuggestionOrigin`** enum tags every bar entry at creation: `GEOMETRIC`, `CTC`,
   `DICTIONARY_PREFIX`, `CONTRACTION`, `POSSESSIVE`, `EXACT_ADD`, `NEXT_WORD`, `AUTOCORRECT`.
-  (Hybrid engine mode is tagged `NEURAL_BEAM` — documented approximation.)
+  (`NEURAL_BEAM` was deleted with the transformer engine on 2026-08-18 — ADR-011.)
 - **`UnifiedScore.combine(...)`** is now THE single implementation of the unified score
   formula — `WordPredictor.calculateUnifiedScore` resolves raw signals and delegates here,
   so the hot-path score and the displayed breakdown can never drift. Formula:
@@ -243,7 +243,7 @@ learned above the floor; word prediction disabled.
 - **`ScoreBreakdown`** carries every component + `ContextWinner` (STATIC/LEARNED/NONE — which
   context model actually supplied the applied signal).
 - **`SuggestionMeta(origin, breakdown?, note?)`** rides alongside the bar's parallel
-  words/scores lists; breakdown is non-null only for the dictionary-prefix path (neural
+  words/scores lists; breakdown is non-null only for the dictionary-prefix path (decoder
   confidence / learned-LM probability / injections are scored elsewhere).
 - **Long-press** any suggestion → provenance popup (`ProvenanceFormatter.format`): origin
   label, bar score, origin-specific note, full score-component list, and
@@ -324,7 +324,7 @@ Existing related prefs (unchanged keys, now composed with the master gate):
 - Trigrams not individually browsable in the Learned-Data manager (bulk clear only).
 - Backup restore repopulates learned stores even with the master gate off (documented
   out-of-scope, L7).
-- Hybrid swipe mode provenance-tagged as `NEURAL_BEAM` (per-layout routing not surfaced).
+- ~~Hybrid swipe mode provenance-tagged as `NEURAL_BEAM`~~ — resolved 2026-08-18: both are deleted.
 
 ## Related Documentation
 

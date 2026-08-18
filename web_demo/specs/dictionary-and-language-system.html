@@ -74,7 +74,7 @@
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Overview</h2>
 
-<p class="mb-4 text-gray-300">The dictionary system manages word lookup, frequency ranking, and multi-language support through a tiered architecture. It combines static dictionaries, user-defined words, and neural prediction models into a "Language Pack" system with automatic language detection for bilingual typing.</p>
+<p class="mb-4 text-gray-300">The dictionary system manages word lookup, frequency ranking, and multi-language support through a tiered architecture. It combines static dictionaries, user-defined words, and the swipe decoders' lexicons into a "Language Pack" system with automatic language detection for bilingual typing.</p>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Key Files</h2>
 
@@ -88,8 +88,7 @@
 <pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">Language Pack ({lang})
 ├── dictionaries/{lang}_enhanced.bin    # Trie-based vocabulary
 ├── dictionaries/{lang}_unigrams.bin    # Top 1000 words for detection
-├── models/swipe_encoder_{lang}.onnx    # Neural encoder
-├── models/swipe_decoder_{lang}.onnx    # Neural decoder
+├── models/ctc_swipe_encoder.onnx       # CTC emission encoder (one model, all languages)
 ├── layouts/{lang}_*.xml                # Keyboard layouts
 └── metadata.json                       # Version, license info</code></pre>
 
@@ -124,13 +123,13 @@
 <p class="mb-4 text-gray-300"><strong>Resolution Logic:</strong></p>
 <ul class="mb-4 space-y-1"><li class="ml-4">1. Gather candidates from Layers 1, 2, 3</li>
 <li class="ml-4">2. Filter out words in Layer 4 (disabled)</li>
-<li class="ml-4">3. Score by frequency, source priority (Custom > User > Main), neural confidence</li>
+<li class="ml-4">3. Score by frequency, source priority (Custom > User > Main), decoder confidence</li>
 </ul>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Implementation Details</h2>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Accent Handling</h3>
 
-<p class="mb-4 text-gray-300">The neural model uses a 26-letter vocabulary (a-z only). Accented words are handled through normalization:</p>
+<p class="mb-4 text-gray-300">The swipe decoders emit a 26-letter alphabet (a-z only). Accented words are handled through normalization:</p>
 
 <pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// Accent mapping: normalized → canonical forms
 data class AccentMapping(
@@ -259,7 +258,29 @@ data class LanguageState(
 <table class="w-full mb-4 border-collapse"><thead class="border-b border-gray-700"><tr><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Class</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Purpose</th></tr></thead><tbody><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">DictionaryManager</code></td><td class="px-4 py-2 text-gray-300">Singleton holding active WordPredictor instances, handles language lifecycle</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">MultiLanguageManager</code></td><td class="px-4 py-2 text-gray-300">Manages ONNX sessions, handles auto-detection logic</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">SuggestionRanker</code></td><td class="px-4 py-2 text-gray-300">Merges candidates from multiple dictionaries with unified scoring</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">UnigramLanguageDetector</code></td><td class="px-4 py-2 text-gray-300">Word-based language detection using frequency lists</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">AccentNormalizer</code></td><td class="px-4 py-2 text-gray-300">Unicode normalization (NFD) + accent stripping</td></tr></tbody></table>
 <h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Performance Considerations</h3>
 
-<table class="w-full mb-4 border-collapse"><thead class="border-b border-gray-700"><tr><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Aspect</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Strategy</th></tr></thead><tbody><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Trie lookups</td><td class="px-4 py-2 text-gray-300">O(L) where L = key length, <5ms</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Memory mapping</td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">MappedByteBuffer</code> for large dictionaries</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Async loading</td><td class="px-4 py-2 text-gray-300">Language switching on <code class="bg-ck-dark px-1 rounded">Dispatchers.IO</code></td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Lazy init</td><td class="px-4 py-2 text-gray-300">Secondary dictionary loaded only when enabled</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Memory cleanup</td><td class="px-4 py-2 text-gray-300">Inactive ONNX sessions unloaded after 60s</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Unigram cache</td><td class="px-4 py-2 text-gray-300">~100KB per language kept in memory</td></tr></tbody></table>
+<table class="w-full mb-4 border-collapse"><thead class="border-b border-gray-700"><tr><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Aspect</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Strategy</th></tr></thead><tbody><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Trie lookups</td><td class="px-4 py-2 text-gray-300">O(L) where L = key length, <5ms</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Memory mapping</td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">MappedByteBuffer</code> for large dictionaries</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Async loading</td><td class="px-4 py-2 text-gray-300">Language switching on <code class="bg-ck-dark px-1 rounded">Dispatchers.IO</code></td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Lazy init</td><td class="px-4 py-2 text-gray-300">Secondary dictionary loaded only when enabled</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Memory cleanup</td><td class="px-4 py-2 text-gray-300">Inactive ONNX sessions unloaded after 60s</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Unigram cache</td><td class="px-4 py-2 text-gray-300">~100KB per language kept in memory</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Predictor eviction</td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">DictionaryManager.setLanguage()</code> evicts stale predictors (~5-10MB each)</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Predictor keep set</td><td class="px-4 py-2 text-gray-300">Retains up to 4 configured languages (primary, secondary, alternates)</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Coil image cache</td><td class="px-4 py-2 text-gray-300">Capped at 32MB in GifGridView (default was ~250MB)</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">ONNX shutdown</td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">PredictionCoordinator.shutdown()</code> explicitly closes native OrtSessions</td></tr></tbody></table>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Predictor Lifecycle & Memory</h3>
+
+<p class="mb-4 text-gray-300"><code class="bg-ck-dark px-1 rounded">DictionaryManager.predictors</code> caches a <code class="bg-ck-dark px-1 rounded">WordPredictor</code> per language code (~5-10MB each:</p>
+<p class="mb-4 text-gray-300">dictionary map, prefix index, ContextModel, PersonalizationEngine, ContentObserver).</p>
+
+<p class="mb-4 text-gray-300"><strong>Eviction policy:</strong> On <code class="bg-ck-dark px-1 rounded">setLanguage()</code>, predictors not in the configured language set are</p>
+<p class="mb-4 text-gray-300">evicted and their observers stopped. The configured set is read from preferences:</p>
+<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <code class="bg-ck-dark px-1 rounded">pref_primary_language</code> (default: "en")</li>
+<li class="ml-4">&#8226; <code class="bg-ck-dark px-1 rounded">pref_secondary_language</code> (default: "none")</li>
+<li class="ml-4">&#8226; <code class="bg-ck-dark px-1 rounded">pref_primary_language_alt</code> (default: "es")</li>
+<li class="ml-4">&#8226; <code class="bg-ck-dark px-1 rounded">pref_secondary_language_alt</code> (default: "none")</li>
+</ul>
+<p class="mb-4 text-gray-300">Up to 4 languages are retained simultaneously. Languages outside this set are evicted to</p>
+<p class="mb-4 text-gray-300">free memory. See <code class="bg-ck-dark px-1 rounded">DictionaryManager.getConfiguredLanguages()</code>.</p>
+
+<p class="mb-4 text-gray-300"><strong>Orphaned observer guard:</strong> <code class="bg-ck-dark px-1 rounded">loadDictionaryAsync</code> callbacks check <code class="bg-ck-dark px-1 rounded">predictors[code] === this</code></p>
+<p class="mb-4 text-gray-300">before starting a ContentObserver, preventing leaked observers on evicted instances.</p>
+
+<p class="mb-4 text-gray-300">> <strong>Future expansion:</strong> To support more simultaneous languages, add their pref keys to</p>
+<p class="mb-4 text-gray-300">> <code class="bg-ck-dark px-1 rounded">getConfiguredLanguages()</code> in <code class="bg-ck-dark px-1 rounded">DictionaryManager.kt</code>. The eviction logic automatically</p>
+<p class="mb-4 text-gray-300">> adapts — it only evicts what's NOT in the returned set.</p>
+
         </div>
     </main>
 

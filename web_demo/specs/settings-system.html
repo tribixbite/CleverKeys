@@ -72,6 +72,10 @@
         <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
             <h1 class="text-3xl font-bold mb-6 gradient-text">Settings System</h1>
 
+<p class="mb-4 text-gray-300">> <strong>Note:</strong> As of v1.4.0, the canonical version of this specification lives at</p>
+<p class="mb-4 text-gray-300">> <a href="../wiki/specs/settings/settings-system-architecture-spec.md" class="text-ck-purple hover:underline"><code class="bg-ck-dark px-1 rounded">docs/wiki/specs/settings/settings-system-architecture-spec.md</code></a> and renders at <https://cleverkeys.app/specs/settings/settings-system-architecture-spec/>.</p>
+<p class="mb-4 text-gray-300">> This file is preserved for cross-references but may not be kept in sync.</p>
+
 <h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Overview</h2>
 
 <p class="mb-4 text-gray-300">The settings system manages user preferences through SharedPreferences, provides a Material 3 Compose UI for configuration, and applies settings at runtime via the Config singleton. All default values are centralized in the <code class="bg-ck-dark px-1 rounded">Defaults</code> object within Config.kt to prevent mismatches between UI display and actual behavior.</p>
@@ -85,7 +89,7 @@
     ├── PreferenceScreen
     │   ├── Appearance Section
     │   ├── Input Behavior Section
-    │   ├── Neural Prediction Section
+    │   ├── Swipe Typing Section
     │   ├── Gestures Section
     │   ├── Layout Section
     │   ├── Clipboard Section
@@ -127,10 +131,10 @@ object Defaults {
     const val VIBRATION_ENABLED = true
     const val VIBRATION_STRENGTH = 10
 
-    // Neural Prediction
-    const val NEURAL_BEAM_WIDTH = 6
-    const val NEURAL_MAX_LENGTH = 20
-    const val NEURAL_CONFIDENCE_THRESHOLD = 0.3f
+    // Swipe decoding
+    const val SWIPE_ENGINE_MODE = "ctc"
+    const val CTC_BEAM_WIDTH = 100
+    const val ONNX_XNNPACK_THREADS = 2
     const val SWIPE_ENABLED = true
 
     // Gestures
@@ -149,7 +153,7 @@ object Defaults {
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Settings Categories</h3>
 
-<table class="w-full mb-4 border-collapse"><thead class="border-b border-gray-700"><tr><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Category</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Settings Count</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Key Settings</th></tr></thead><tbody><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Appearance</td><td class="px-4 py-2 text-gray-300">~15</td><td class="px-4 py-2 text-gray-300">theme, keyboard_height, opacity, borders</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Input Behavior</td><td class="px-4 py-2 text-gray-300">~10</td><td class="px-4 py-2 text-gray-300">longpress_timeout, vibration, key_repeat</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Neural</td><td class="px-4 py-2 text-gray-300">~8</td><td class="px-4 py-2 text-gray-300">beam_width, confidence, swipe_enabled</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Gestures</td><td class="px-4 py-2 text-gray-300">~12</td><td class="px-4 py-2 text-gray-300">short_swipe distances, slider sensitivity</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Layout</td><td class="px-4 py-2 text-gray-300">~8</td><td class="px-4 py-2 text-gray-300">margins, number_row, extra_keys</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Clipboard</td><td class="px-4 py-2 text-gray-300">~5</td><td class="px-4 py-2 text-gray-300">history_enabled, history_size, exclusions</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Accessibility</td><td class="px-4 py-2 text-gray-300">~6</td><td class="px-4 py-2 text-gray-300">sticky_keys, voice_guidance</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Debug</td><td class="px-4 py-2 text-gray-300">~4</td><td class="px-4 py-2 text-gray-300">debug_mode, logging</td></tr></tbody></table>
+<table class="w-full mb-4 border-collapse"><thead class="border-b border-gray-700"><tr><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Category</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Settings Count</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Key Settings</th></tr></thead><tbody><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Appearance</td><td class="px-4 py-2 text-gray-300">~15</td><td class="px-4 py-2 text-gray-300">theme, keyboard_height, opacity, borders</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Input Behavior</td><td class="px-4 py-2 text-gray-300">~10</td><td class="px-4 py-2 text-gray-300">longpress_timeout, vibration, key_repeat</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Swipe Typing</td><td class="px-4 py-2 text-gray-300">~4</td><td class="px-4 py-2 text-gray-300">swipe_engine_mode, ctc_beam_width, swipe_typing_enabled</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Gestures</td><td class="px-4 py-2 text-gray-300">~12</td><td class="px-4 py-2 text-gray-300">short_swipe distances, slider sensitivity</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Layout</td><td class="px-4 py-2 text-gray-300">~8</td><td class="px-4 py-2 text-gray-300">margins, number_row, extra_keys</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Clipboard</td><td class="px-4 py-2 text-gray-300">~5</td><td class="px-4 py-2 text-gray-300">history_enabled, history_size, exclusions</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Accessibility</td><td class="px-4 py-2 text-gray-300">~6</td><td class="px-4 py-2 text-gray-300">sticky_keys, voice_guidance</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Debug</td><td class="px-4 py-2 text-gray-300">~4</td><td class="px-4 py-2 text-gray-300">debug_mode, logging</td></tr></tbody></table>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Public API</h2>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Config Singleton</h3>
@@ -171,7 +175,7 @@ object Defaults {
         val prefs = context.getSharedPreferences("cleverkeys_prefs", MODE_PRIVATE)
         theme = prefs.getString("theme", Defaults.THEME)!!
         keyboardHeightPortrait = prefs.getInt("keyboard_height_portrait", Defaults.KEYBOARD_HEIGHT_PORTRAIT)
-        neuralBeamWidth = prefs.getInt("neural_beam_width", Defaults.NEURAL_BEAM_WIDTH)
+        ctcBeamWidth = prefs.getInt("ctc_beam_width", Defaults.CTC_BEAM_WIDTH)
         // ... all other settings
     }
 

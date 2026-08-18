@@ -1,5 +1,9 @@
 # Questions for Review
 
+> **HISTORICAL SNAPSHOT (2025-12-04)** — the `neural_*` preferences and the Neural
+> Settings screen described below were removed on 2026-08-18 (ADR-011). This file is
+> a dated record and is deliberately not rewritten.
+
 This file contains items flagged for user review during the spec audit and code review process.
 
 ## Last Updated

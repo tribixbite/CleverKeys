@@ -1,3 +1,13 @@
+> **ARCHIVED 2026-08-18 — describes the REMOVED neural swipe engine.**
+>
+> The ONNX transformer swipe decoder, its vocabulary stack, its settings screen and its
+> ~10 MB of bundled models were deleted on 2026-08-18. CTC (`swipe/ctc/`) replaced it —
+> 89.31 vs 74.62 top-1 on test-2400, measured in `docs/audit/2026-08-17-neural-vs-ctc-parity.md`
+> — with the geometric engine (`swipe/geometric/`) covering every (layout, language) pair
+> CTC does not serve. Nothing below describes code that still exists. Kept as the record of
+> what was built and what the removal gave up; see
+> `docs/plans/2026-08-18-neural-engine-removal.md` and ADR-011.
+
 # ONNX Swipe-to-Text Decode Pipeline
 
 **Technical Reference Documentation**

@@ -1,8 +1,8 @@
 cff-version: 1.2.0
 message: "If you use CleverKeys in your research, please cite it as below."
 type: software
-title: "CleverKeys: Privacy-First Neural Android Keyboard"
-abstract: "CleverKeys is a privacy-first Android input method editor (IME) featuring neural swipe typing powered by ONNX models. A complete Kotlin rewrite of Unexpected-Keyboard with 100% local processing, multi-language support, and comprehensive accessibility features. The project demonstrates on-device machine learning for text prediction without compromising user privacy."
+title: "CleverKeys: Privacy-First On-Device Android Keyboard"
+abstract: "CleverKeys is a privacy-first Android input method editor (IME) featuring on-device swipe typing powered by ONNX models. A complete Kotlin rewrite of Unexpected-Keyboard with 100% local processing, multi-language support, and comprehensive accessibility features. The project demonstrates on-device machine learning for text prediction without compromising user privacy."
 authors:
   - family-names: "CleverKeys Development Team"
     email: "support@cleverkeys.org"
@@ -15,7 +15,7 @@ keywords:
   - Android
   - keyboard
   - IME
-  - neural network
+  - on-device model
   - ONNX
   - privacy
   - swipe typing
@@ -38,4 +38,4 @@ references:
       - name: "Microsoft"
     url: "https://onnxruntime.ai/"
     license: Apache-2.0
-    notes: "Neural network inference engine powering CleverKeys predictions"
+    notes: "On-device model inference engine powering CleverKeys predictions"

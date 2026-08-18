@@ -9,7 +9,7 @@ version: v1.4.0
 
 ## Overview
 
-CleverKeys implements a multi-layered gesture recognition system that handles four gesture types: short swipes (directional swipes within a key for sublabels), long swipes (gestures across keys for neural word prediction), circle/rotation gestures (for double letters), and slider gestures (continuous value adjustment). The `hasLeftStartingKey` flag is the central decision point that routes touches to the appropriate handler.
+CleverKeys implements a multi-layered gesture recognition system that handles four gesture types: short swipes (directional swipes within a key for sublabels), long swipes (gestures across keys for word prediction), circle/rotation gestures (for double letters), and slider gestures (continuous value adjustment). The `hasLeftStartingKey` flag is the central decision point that routes touches to the appropriate handler.
 
 This spec is the system-level overview. Per-gesture behavior is documented in the linked specifications under "Related Specifications".
 
@@ -48,7 +48,7 @@ Touch Events (Keyboard2View.onTouchEvent)
           SWIPE           TAP
                │             │
                ▼             ▼
-        Neural Predictor  Short Gesture
+        Swipe Decoder     Short Gesture
         (onSwipeEnd)      Handler
 ```
 
@@ -84,7 +84,7 @@ See `Pointers.kt:734-744` for the live implementation.
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `short_gesture_min_distance` | Int | 28 | Min displacement to trigger a short swipe, as % of key diagonal |
-| `short_gesture_max_distance` | Int | 141 | **The single short/long boundary.** Max displacement-from-touch-down (% of key diagonal) a gesture may travel and still be a short swipe; beyond it the gesture is a long (neural word) swipe. Honored by **both** activation paths (see "Swipe Typing Activation"). The old "200 = disabled" label was never implemented in logic and has been retired — use the Enable Short Gestures toggle to disable short swipes. |
+| `short_gesture_max_distance` | Int | 141 | **The single short/long boundary.** Max displacement-from-touch-down (% of key diagonal) a gesture may travel and still be a short swipe; beyond it the gesture is a long (word) swipe. Honored by **both** activation paths (see "Swipe Typing Activation"). The old "200 = disabled" label was never implemented in logic and has been retired — use the Enable Short Gestures toggle to disable short swipes. |
 | `tap_duration_threshold` | Long | 150 | Max ms a gesture that already left the key may last and still be classified as a tap (touch-up path only) |
 | `circle_sensitivity` | Int | (see Defaults.CIRCLE_SENSITIVITY) | Sensitivity for loop/circle gestures (there is **no** `circle_gesture_enabled` boolean — older drafts listed one that never existed) |
 | `swipe_dist` (→ `swipe_dist_px`) | String/Int | 23 | Device-scaled distance with two live roles: mid-move slider/event subkey activation gate, and the absolute cap on the short-swipe minimum for wide keys |
@@ -235,7 +235,7 @@ class Gesture {
 
 ### Swipe Typing Activation — two paths, one boundary
 
-A letter-key gesture can be promoted to a neural word swipe through **two** code paths. Both are gated on the same single displacement boundary (`hasLeftStartingKey`, i.e. `short_gesture_max_distance`), so they agree on where short ends and long begins.
+A letter-key gesture can be promoted to a word swipe through **two** code paths. Both are gated on the same single displacement boundary (`hasLeftStartingKey`, i.e. `short_gesture_max_distance`), so they agree on where short ends and long begins.
 
 **Path A — mid-move latch** (`Pointers.kt:816-828`). While the finger moves, points feed `ImprovedSwipeGestureRecognizer`. When the recognizer reports `isSwipeTyping()` (>= 2 distinct letter keys **and** `swipe_min_distance` of accumulated path) **and** the finger has crossed the boundary (`ptr.hasLeftStartingKey`), the pointer latches `FLAG_P_SWIPE_TYPING`. Touch-up then completes the word via `onSwipeEnd` (`Pointers.kt:163-168`).
 
@@ -249,7 +249,7 @@ if (_swipeRecognizer.isSwipeTyping() && ptr.hasLeftStartingKey) {
 
 The `&& ptr.hasLeftStartingKey` conjunct is the fix for the **overshoot bug**: `isSwipeTyping()` alone can be satisfied at ~half a key-width when a short directional swipe overshoots into an adjacent letter, which previously committed a word mid-gesture and bypassed the short/long boundary. Gating on the boundary keeps sub-threshold overshoots out of Path A so they reach the touch-up short-gesture decision.
 
-**Path B — touch-up classifier** (`Pointers.kt:289-343`), reached only when Path A did **not** latch. `GestureClassifier.classify()` (which also requires `hasLeftStartingKey`) decides TAP vs SWIPE; SWIPE on a char key calls `onSwipeEnd`, TAP falls to the short-gesture handler. In the short-gesture handler, a sub-boundary gesture that resolves to **no exact-direction subkey** but is a word candidate falls back to a neural word swipe — word candidates do not accept ±1-fuzzed corner matches (see [Short Swipes → No-Subkey Fallback](short-swipes-spec.md#no-subkey-fallback-to-word-swipe)).
+**Path B — touch-up classifier** (`Pointers.kt:289-343`), reached only when Path A did **not** latch. `GestureClassifier.classify()` (which also requires `hasLeftStartingKey`) decides TAP vs SWIPE; SWIPE on a char key calls `onSwipeEnd`, TAP falls to the short-gesture handler. In the short-gesture handler, a sub-boundary gesture that resolves to **no exact-direction subkey** but is a word candidate falls back to a word swipe — word candidates do not accept ±1-fuzzed corner matches (see [Short Swipes → No-Subkey Fallback](short-swipes-spec.md#no-subkey-fallback-to-word-swipe)).
 
 Because both paths require `hasLeftStartingKey`, `short_gesture_max_distance` is the one knob that moves the short/long boundary for the whole system. (The no-subkey fallback is the deliberate sub-boundary exception — an intent signal, not a second threshold.)
 
@@ -268,7 +268,7 @@ data class Pointer(
     var currentY: Float,               // Current Y
     var downTime: Long,                // Touch start time
     var hasLeftStartingKey: Boolean,   // The gatekeeper flag
-    var swipePath: MutableList<Point>, // Path for neural prediction
+    var swipePath: MutableList<Point>, // Path for word prediction
     var flags: Int                     // State flags (trackpoint, selection-delete, etc.)
 )
 ```
@@ -280,5 +280,5 @@ data class Pointer(
 - [Cursor Navigation](cursor-navigation-spec.md) - Spacebar swipe cursor movement
 - [Selection / Delete](selection-delete-spec.md) - Backspace swipe word-delete and selection
 - [Trackpoint Mode](trackpoint-mode-spec.md) - Continuous cursor control
-- [Neural Prediction](../typing/neural-prediction-spec.md) - The long-swipe consumer
+- [Swipe Typing](../typing/swipe-typing-spec.md) - The long-swipe consumer
 - [Swipe Typing](../typing/swipe-typing-spec.md) - User-facing swipe typing feature

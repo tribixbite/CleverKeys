@@ -101,6 +101,56 @@
 <li class="ml-4 text-gray-300">&#8226; <strong class="text-white">No analytics</strong>: No usage tracking or telemetry</li>
 <li class="ml-4 text-gray-300">&#8226; <strong class="text-white">You control data</strong>: Export or delete anytime</li>
 </ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">On-Device Learning (Master Switch)</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Found at the top of the <strong class="text-white">Privacy & Data</strong> section:</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Learn From My Typing</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">One switch controls ALL automatic learning from your typing behavior. <strong class="text-white">Default: On.</strong></p>
+
+<p class="mb-4 text-gray-300 leading-relaxed">When ON, CleverKeys builds private, on-device models from what you type:</p>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">What is learned</td><td class="px-4 py-2 border-t border-gray-700">Used for</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Phrase patterns</strong> (word pairs and triples)</td><td class="px-4 py-2 border-t border-gray-700">Context-aware suggestion boosting, next-word prediction</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Word usage</strong> (personal vocabulary)</td><td class="px-4 py-2 border-t border-gray-700">Personalized suggestion ranking</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Suggestion selections</strong></td><td class="px-4 py-2 border-t border-gray-700">Adapting which suggestions rank higher</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Swipe traces</strong> (only if Swipe Data Collection is also on)</td><td class="px-4 py-2 border-t border-gray-700">Potential future model tuning</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<p class="mb-4 text-gray-300 leading-relaxed">When OFF:</p>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Nothing new is recorded</strong> — every learning path is stopped at the write layer.</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Already-learned data goes inert</strong> — it is neither updated nor used for suggestions</li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">  (next-word prediction and learned-context boosting turn off entirely).</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Turning the switch off offers a one-tap <strong class="text-white">"Also forget learned data?"</strong> dialog that</li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">  deletes everything already learned (phrase patterns, word usage, and selection</p>
+<p class="mb-4 text-gray-300 leading-relaxed">  history). Choose "Keep it" to retain the data in case you re-enable learning later.</p>
+
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!NOTE]</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">The switch covers <em>automatic</em> recording of typing behavior. Data you explicitly create</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">is governed separately: swipe-calibration sessions you start yourself, prediction</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">performance statistics (a separate toggle, no text content), and learned data you</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">restore from your own backup.</blockquote>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Private/incognito fields</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Apps can mark a text field as "no personalized learning" (for example, a browser's</p>
+<p class="mb-4 text-gray-300 leading-relaxed">private tab). CleverKeys honors this automatically: nothing typed in such a field is</p>
+<p class="mb-4 text-gray-300 leading-relaxed">learned, and no personalized next-word suggestions appear there — regardless of your</p>
+<p class="mb-4 text-gray-300 leading-relaxed">settings.</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Reviewing and deleting learned data</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Settings > Input Behavior > <strong class="text-white">Learning & Data</strong> shows what has been learned (per-language</p>
+<p class="mb-4 text-gray-300 leading-relaxed">phrase counts, word usage) and lets you:</p>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Browse phrases</strong> — see every learned word pair with its count, delete individually</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Browse words</strong> — see your learned vocabulary with usage counts, delete individually</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Forget phrases / Forget words</strong> — bulk delete with confirmation</li>
+</ul>
+<p class="mb-4 text-gray-300 leading-relaxed">Learned phrases and words are included in dictionary exports (Backup & Restore), so your</p>
+<p class="mb-4 text-gray-300 leading-relaxed">learning survives reinstalls if you back up.</p>
+
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Clipboard Privacy</h2>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Clipboard Settings</h3>
@@ -111,7 +161,10 @@
 <p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Clipboard History</strong></td><td class="px-4 py-2 border-t border-gray-700">Enable/disable clipboard history</td></tr></p>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Clipboard History Limit</strong></td><td class="px-4 py-2 border-t border-gray-700">Maximum items to keep (default: 50)</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Clipboard Size Limit</strong></td><td class="px-4 py-2 border-t border-gray-700">Total size limit in MB</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Clipboard Max Item Size</strong></td><td class="px-4 py-2 border-t border-gray-700">Maximum size per item in KB</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Clipboard Max Item Size</strong></td><td class="px-4 py-2 border-t border-gray-700">Maximum size per text item in KB (64-1024)</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Media Clipboard</strong></td><td class="px-4 py-2 border-t border-gray-700">Enable/disable media capture (images, videos, PDFs)</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Text-Only Mode</strong></td><td class="px-4 py-2 border-t border-gray-700">Hide all media entries from clipboard panel</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Max Media Size</strong></td><td class="px-4 py-2 border-t border-gray-700">Maximum file size for media entries (1-50 MB)</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Exclude Password Managers</strong></td><td class="px-4 py-2 border-t border-gray-700">Don't save clips from 1Password, Bitwarden, etc.</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Respect Sensitive Flag</strong></td><td class="px-4 py-2 border-t border-gray-700">Honor Android 13+ IS_SENSITIVE flag</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
@@ -144,15 +197,20 @@
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Dictionary</strong></td><td class="px-4 py-2 border-t border-gray-700">App data</td><td class="px-4 py-2 border-t border-gray-700">Personal words</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Profiles</strong></td><td class="px-4 py-2 border-t border-gray-700">App data</td><td class="px-4 py-2 border-t border-gray-700">Saved configurations</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Clipboard</strong></td><td class="px-4 py-2 border-t border-gray-700">App data</td><td class="px-4 py-2 border-t border-gray-700">Recent clips (up to limit)</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Clipboard Media</strong></td><td class="px-4 py-2 border-t border-gray-700">App data</td><td class="px-4 py-2 border-t border-gray-700">Copied images, videos, PDFs</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Storage Location</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">All data is stored locally on your device:</p>
 
 <pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto mb-4"><code class="language-text">/data/data/tribixbite.cleverkeys/
-<p class="mb-4 text-gray-300 leading-relaxed">├── shared_prefs/     # Settings</p>
-<p class="mb-4 text-gray-300 leading-relaxed">├── files/            # Dictionary, profiles</p>
-<p class="mb-4 text-gray-300 leading-relaxed">└── databases/        # Clipboard history</code></pre></p>
+<p class="mb-4 text-gray-300 leading-relaxed">├── shared_prefs/         # Settings</p>
+<p class="mb-4 text-gray-300 leading-relaxed">├── files/                # Dictionary, profiles</p>
+<p class="mb-4 text-gray-300 leading-relaxed">│   └── clipboard_media/  # Copied images, videos, PDFs (excluded from backup)</p>
+<p class="mb-4 text-gray-300 leading-relaxed">└── databases/            # Clipboard history (text + media metadata)</code></pre></p>
+
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!NOTE]</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">Clipboard media files are excluded from Android Auto Backup to protect privacy and prevent consuming Google Drive quota.</blockquote>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Secure Input</h2>
 
@@ -184,8 +242,13 @@
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Privacy Settings Reference</h2>
 
 <table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Section</td><td class="px-4 py-2 border-t border-gray-700">Default</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Clipboard History</strong></td><td class="px-4 py-2 border-t border-gray-700">Clipboard</td><td class="px-4 py-2 border-t border-gray-700">On</td></tr></p>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Learn From My Typing</strong></td><td class="px-4 py-2 border-t border-gray-700">Privacy & Data</td><td class="px-4 py-2 border-t border-gray-700">On</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Clipboard History</strong></td><td class="px-4 py-2 border-t border-gray-700">Clipboard</td><td class="px-4 py-2 border-t border-gray-700">On</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">History Limit</strong></td><td class="px-4 py-2 border-t border-gray-700">Clipboard</td><td class="px-4 py-2 border-t border-gray-700">50 items</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">History Duration</strong></td><td class="px-4 py-2 border-t border-gray-700">Clipboard</td><td class="px-4 py-2 border-t border-gray-700">Never expire</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Media Clipboard</strong></td><td class="px-4 py-2 border-t border-gray-700">Clipboard</td><td class="px-4 py-2 border-t border-gray-700">On</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Text-Only Mode</strong></td><td class="px-4 py-2 border-t border-gray-700">Clipboard</td><td class="px-4 py-2 border-t border-gray-700">Off</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Max Media Size</strong></td><td class="px-4 py-2 border-t border-gray-700">Clipboard</td><td class="px-4 py-2 border-t border-gray-700">10 MB</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Exclude Password Managers</strong></td><td class="px-4 py-2 border-t border-gray-700">Clipboard</td><td class="px-4 py-2 border-t border-gray-700">On</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Respect Sensitive Flag</strong></td><td class="px-4 py-2 border-t border-gray-700">Clipboard</td><td class="px-4 py-2 border-t border-gray-700">On</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Incognito Mode</strong></td><td class="px-4 py-2 border-t border-gray-700">Privacy</td><td class="px-4 py-2 border-t border-gray-700">Off</td></tr>
@@ -220,18 +283,26 @@
 
 <p class="mb-4 text-gray-300 leading-relaxed">A: Enable Incognito Mode for reduced data retention (predictions will be less personalized).</p>
 
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: How do I stop the keyboard from learning my typing?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Turn off Privacy & Data > Learn From My Typing. Nothing new will be recorded, and</p>
+<p class="mb-4 text-gray-300 leading-relaxed">already-learned data stops being used. You will also be offered a one-tap delete of</p>
+<p class="mb-4 text-gray-300 leading-relaxed">everything already learned.</p>
+
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Related Features</h2>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <a href="../clipboard/clipboard-history.html" class="text-green-400 hover:underline">Clipboard History</a> - Manage clipboard</li>
 <li class="ml-4 text-gray-300">&#8226; <a href="../troubleshooting/backup-restore.html" class="text-green-400 hover:underline">Backup & Restore</a> - Data management</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="../typing/next-word-prediction.html" class="text-green-400 hover:underline">Next-Word Prediction</a> - Uses learned phrases (opt-in)</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="./input-behavior.html" class="text-green-400 hover:underline">Input Behavior Settings</a> - Learning & Data manager</li>
 </ul>
         </div>
         
         <!-- Prev/Next Navigation -->
         <div class="max-w-4xl mt-8 flex justify-between">
-            <a href="settings/neural-settings.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+            <a href="settings/haptics.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
                 <span>&larr;</span>
-                <span class="text-sm text-gray-400">Neural Settings</span>
+                <span class="text-sm text-gray-400">Haptics & Sound</span>
             </a>
             <a href="settings/accessibility.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
                 <span class="text-sm text-gray-400">Accessibility</span>

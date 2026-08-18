@@ -82,10 +82,9 @@
     "tags": [
       "swipe",
       "glide",
-      "neural",
       "predictions"
     ],
-    "excerpt": "Swipe Typing\n\nSwipe typing lets you type words by drawing a continuous path through letters. CleverKeys uses a neural AI model to predict words from your swipe patterns.\n\n Quick Summary\n\n What  Descr"
+    "excerpt": "Swipe Typing\n\nSwipe typing lets you type words by drawing a continuous path through letters. CleverKeys uses on-device models to predict words from your swipe patterns.\n\n Quick Summary\n\n What  Descr"
   },
   {
     "file": "typing/autocorrect.html",
@@ -394,19 +393,6 @@
     "excerpt": "Haptics Settings\n\nConfigure vibration feedback for key presses, gestures, and special events.\n\n Quick Summary\n\n What  Description \n-------------------\n Purpose  Control vibration feedback \n Access  S"
   },
   {
-    "file": "settings/neural-settings.html",
-    "title": "Neural Settings",
-    "description": "Tune prediction accuracy and performance",
-    "category": "Settings",
-    "tags": [
-      "neural",
-      "prediction",
-      "beam width",
-      "performance"
-    ],
-    "excerpt": "Neural Prediction Settings\n\nFine-tune the neural network-based swipe typing predictions for accuracy and performance.\n\n Quick Summary\n\n What  Description \n-------------------\n Purpose  Optimize neura"
-  },
-  {
     "file": "settings/privacy.html",
     "title": "Privacy Settings",
     "description": "Control data collection and storage",
@@ -533,6 +519,6 @@
       "lag",
       "optimization"
     ],
-    "excerpt": "Performance\n\nOptimize CleverKeys for better speed, responsiveness, and battery efficiency.\n\n Quick Summary\n\n Issue  Common Cause  Solution \n-------------------------------\n Slow typing  Neural predic"
+    "excerpt": "Performance\n\nOptimize CleverKeys for better speed, responsiveness, and battery efficiency.\n\n Quick Summary\n\n Issue  Common Cause  Solution \n-------------------------------\n Slow typing  Swipe decodin"
   }
 ]

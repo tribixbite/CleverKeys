@@ -11,7 +11,6 @@ Complete mapping of settings to search terms, wiki guides, and implementation fi
 | Theme Manager | color, dark mode, light, appearance | [themes.md](wiki/customization/themes.md) | `ThemeSettingsActivity.kt`, `Theme.kt` |
 | Dictionary Manager | words, custom, disabled, vocabulary | [clipboard-history.md](wiki/clipboard/clipboard-history.md) | `DictionaryManagerActivity.kt` |
 | Layout Manager | keyboard layout, qwerty, azerty | [adding-layouts.md](wiki/layouts/adding-layouts.md) | `LayoutManagerActivity.kt` |
-| Keyboard Calibration | height, size, foldable | [first-time-setup.md](wiki/getting-started/first-time-setup.md) | `SwipeCalibrationActivity.kt` |
 | Per-Key Customization | short swipe, gesture, actions, commands | [per-key-actions.md](wiki/customization/per-key-actions.md) | `ShortSwipeCustomizationActivity.kt` |
 | Short Swipe Calibration | calibrate, practice, tutorial, test | [short-swipes.md](wiki/gestures/short-swipes.md) | `ShortSwipeCalibrationActivity.kt` |
 | Extra Keys | toolbar, arrows, numbers | [extra-keys.md](wiki/customization/extra-keys.md) | `ExtraKeysConfigActivity.kt` |
@@ -20,17 +19,19 @@ Complete mapping of settings to search terms, wiki guides, and implementation fi
 
 ---
 
-## Neural Prediction
+## Swipe Typing
 
 | Setting | Search Keywords | Wiki | Files |
 |---------|-----------------|------|-------|
-| Neural Settings | neural, ai, prediction, model, onnx | [neural-settings.md](wiki/settings/neural-settings.md) | `NeuralSettingsActivity.kt` |
-| Swipe Typing | gesture, neural, glide, swipe | [swipe-typing.md](wiki/typing/swipe-typing.md) | `SwipePredictorOrchestrator.kt` |
-| Prediction Engine | engine, neural, hybrid, geometric, ctc | [swipe-typing.md](wiki/typing/swipe-typing.md) | `ui/settings/sections/NeuralPredictionSection.kt` (`swipe_engine_mode`: neural/hybrid/geometric/ctc, default neural), `swipe/SwipeEngineRouter.kt` |
+| Swipe Typing | gesture, glide, swipe | [swipe-typing.md](wiki/typing/swipe-typing.md) | `ui/settings/sections/SwipeTypingSection.kt`, `InputCoordinator.kt` |
+| Prediction Engine | engine, geometric, ctc | [swipe-typing.md](wiki/typing/swipe-typing.md) | `ui/settings/sections/SwipeTypingSection.kt` (`swipe_engine_mode`: ctc/geometric, default ctc), `swipe/SwipeEngineRouter.kt` |
 | Swipe on Password Fields | password, swipe, security | [privacy.md](wiki/settings/privacy.md) | `Config.kt`, `SuggestionHandler.kt` |
-| Beam Width | accuracy, prediction, candidates | [neural-settings.md](wiki/settings/neural-settings.md) | `BeamSearchEngine.kt` |
-| Confidence Threshold | accuracy, filter, confidence | [neural-settings.md](wiki/settings/neural-settings.md) | `BeamSearchEngine.kt` |
-| Max Sequence Length | sequence, length, resampling | [neural-settings.md](wiki/settings/neural-settings.md) | `SwipeTrajectoryProcessor.kt` |
+| Beam Width (CTC) | accuracy, prediction, candidates, beam | [swipe-typing.md](wiki/typing/swipe-typing.md) | `CtcSettingsActivity.kt` (`ctc_beam_width`) |
+| ONNX Threads | threads, cpu, xnnpack, onnx | [swipe-typing.md](wiki/typing/swipe-typing.md) | `CtcSettingsActivity.kt` (`onnx_xnnpack_threads`) |
+
+> The ONNX transformer ("Neural") engine, its Neural Settings screen and its ~25 tuning
+> preferences were removed on 2026-08-18 (ADR-011). The Keyboard Calibration activity went
+> with it. Stored `swipe_engine_mode` values of `neural`/`hybrid` now resolve to `ctc`.
 
 ---
 
@@ -144,7 +145,7 @@ Complete mapping of settings to search terms, wiki guides, and implementation fi
 | Learn From My Typing (master gate) | learning, privacy, on-device, forget | [privacy.md](wiki/settings/privacy.md) | `LearningGate.kt`, `PrivacySection.kt` |
 | Incognito Mode | private, secret, hide | [privacy.md](wiki/settings/privacy.md) | `Config.kt` |
 | Swipe Data Collection | data, collection | [privacy.md](wiki/settings/privacy.md) | `PrivacyManager.kt` |
-| Performance Metrics | performance, analytics | [privacy.md](wiki/settings/privacy.md) | `NeuralPerformanceStats.kt` |
+| Performance Metrics | performance, analytics | [privacy.md](wiki/settings/privacy.md) | `SwipePerformanceStats.kt` |
 
 ---
 
@@ -165,7 +166,6 @@ Settings without dedicated wiki pages (use general pages):
 
 | Setting | Suggested Wiki |
 |---------|----------------|
-| Beam Autocorrect | neural-settings.md or autocorrect.md |
 | Final Autocorrect | autocorrect.md |
 | Suggestion Bar Opacity | appearance.md |
 | Vertical Key Spacing | appearance.md |
@@ -180,8 +180,8 @@ Settings without dedicated wiki pages (use general pages):
 For backup/restore and preference access:
 
 ```kotlin
-// Neural
-"swipe_typing", "beam_width", "confidence_threshold", "max_seq_length"
+// Swipe
+"swipe_typing_enabled", "swipe_engine_mode", "ctc_beam_width", "onnx_xnnpack_threads"
 
 // Prediction
 "word_prediction", "autocorrect", "autocapitalize_i_words"

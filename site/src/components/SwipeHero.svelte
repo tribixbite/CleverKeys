@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte'
 
   type Props = { words?: string[] }
-  const { words = ['hello', 'swype', 'keyboard', 'neural', 'typing', 'private'] }: Props = $props()
+  const { words = ['hello', 'swype', 'keyboard', 'gesture', 'typing', 'private'] }: Props = $props()
 
   // Phone mockup constants (matches viewBox 360x520)
   const KEY_W = 34
@@ -192,7 +192,7 @@
       </svg>
     </div>
 
-    <!-- Floating chip: neural prediction -->
+    <!-- Floating chip: swipe prediction -->
     <div class="pointer-events-none absolute -right-3 top-20 hidden rounded-xl border border-white/10 bg-[color:var(--color-ink-700)]/95 px-3 py-2 text-xs shadow-lg backdrop-blur-sm sm:block float-slow">
       <div class="flex items-center gap-2">
         <span class="relative inline-flex h-2 w-2">

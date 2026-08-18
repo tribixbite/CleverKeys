@@ -2,7 +2,7 @@
 
 ## Overview
 
-System for synchronizing neural prediction context with cursor position. When user moves cursor mid-word, the prediction system rebuilds state from InputConnection to enable accurate predictions and proper deletion of both prefix and suffix when selecting a suggestion.
+System for synchronizing prediction context with cursor position. When user moves cursor mid-word, the prediction system rebuilds state from InputConnection to enable accurate predictions and proper deletion of both prefix and suffix when selecting a suggestion.
 
 ## Key Files
 
@@ -30,8 +30,8 @@ System for synchronizing neural prediction context with cursor position. When us
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                     Neural Predictions                       │
-│  Uses normalized prefix for neural model lookup             │
+│                     Swipe Predictions                        │
+│  Uses the normalized prefix for lexicon lookup              │
 └─────────────────────────────────────────────────────────────┘
                             │
                             ▼

@@ -1,5 +1,43 @@
 # CleverKeys TODO
 
+## ✅ DONE — neural swipe engine REMOVED (2026-08-18, ADR-011)
+
+Executed `docs/plans/2026-08-18-neural-engine-removal.md` in 6 commits (routing flip →
+re-home survivors → engine+asset deletion → settings/prefs → renames → docs). The ONNX
+transformer, its vocabulary stack, its settings screen, `SwipeCalibrationActivity` and
+~26 MB of bundled models/prefix-boosts are gone. `swipe_engine_mode` is now `{ctc,
+geometric}`, default `ctc`; `neural`/`hybrid` resolve to `ctc`.
+
+Release APK arm64-v8a: 59,565,467 → ~33.2 MB. Gates at each step: compileDebugKotlin,
+compileDebugAndroidTestKotlin, runPureTests (1998 → 1661 as neural tests were deleted),
+runMockTests (299 → 286), lintDebug 0 errors, assembleRelease.
+
+Resolved from the list below: the P0 `SWIPE_ENGINE_MODE` flip; the `hybrid` provenance tag
+(`NEURAL_BEAM` deleted, `PredictionSource.NEURAL_SWIPE` → `SWIPE`); the French-neural-trie
+P3 (the trie is gone); issue #9 (no layout is swipe-disabled any more).
+
+**Still open and now unblocked / re-scoped:**
+- [ ] **P1 — port the main-dictionary fuzzy rescue to CTC.** This was the "hard blocker on
+      deleting neural"; the engine went first, deliberately and on the record (plan §F). The
+      algorithm is model-independent and belongs as a post-beam rescue inside
+      `CtcEngineAdapter`, which holds the merged lexicon and the raw beam. Until it lands, a
+      very sloppy swipe can return nothing where the transformer would have rescued it.
+- [ ] **P1 — secondary-language blending on the swipe path** is still absent (unchanged by
+      the removal; it was already absent in ctc mode). Option: dual-trie CTC decode.
+- [ ] **P2 — measure it/pt/sv on geometric.** They moved neural → geometric on QWERTY; the
+      per-language delta is UNMEASURED. English proxy on the same corpus: 74.62 neural vs
+      67.50 geometric, so expect a few points down until CTC serves them.
+- [ ] **P2 — six orphaned prefs the removal plan did not list**: `swipe_prediction_source`,
+      `swipe_common_words_boost`, `swipe_top5000_boost`, `swipe_rare_words_penalty`,
+      `swipe_fuzzy_match_mode`, `autocorrect_max_beam_candidates`. Their only consumer was
+      `OptimizedVocabulary`; four still render as live sliders in Auto-Correction that now do
+      nothing. Left in place with a TODO at the read site (`Config.refresh`) because
+      deprecating them removes user-visible settings — a maintainer call, not a cleanup.
+- [ ] **P2 — instrumented + manual verification of the removal** (see §7 of the plan): the
+      backspace-undo and oracle-pin guards only run instrumented, and the Italian-on-QWERTY
+      geometric fallthrough has not been exercised on a device.
+
+
 ## ✅ DONE — WP9 geo-wiring audit remediation (2026-08-11, `fb86a641`)
 
 Closed the open findings of the steps 6-9 implementation audit
@@ -160,7 +198,7 @@ audit-M1 fallthrough for languages CTC does not serve. Gates: lint 0 errors, run
 
 Outstanding, in priority order:
 
-- [ ] **P0 — flip `Defaults.SWIPE_ENGINE_MODE` to `ctc`** (`Config.kt:320`, still `"neural"`).
+- [x] **P0 — flip `Defaults.SWIPE_ENGINE_MODE` to `ctc`** — DONE 2026-08-18 with the engine removal.
       Out of the box a non-QWERTY layout gets **no swipe at all**. Largest coverage win
       available and it needs no new code. No migration concern: the pref shipped with the geo
       work (`96cb37e3`), which is not an ancestor of v1.5.0, so no stored values exist.
@@ -173,7 +211,8 @@ Outstanding, in priority order:
       presses) but the consequence shipped. Needs a projection that maps ß to its own slot.
 - [ ] **P1 — CTC has no main-dictionary fuzzy rescue** (neural: `OptimizedVocabulary:611-746`).
       A bad swipe yields whatever the trie beam found, possibly nothing. This is the single
-      largest behavioural gap and a hard blocker on deleting neural.
+      largest behavioural gap. NOTE: the engine was removed on 2026-08-18 anyway (ADR-011);
+      this is now a straight port, tracked at the top of this file.
 - [ ] **P1 — secondary-language blending is absent in `ctc` mode**, silently. CTC decodes one
       trie, so a fr-primary/en-secondary user gets no English from swipe — the code-switching
       rule failing in the permissive direction, against stated intent.
@@ -226,7 +265,7 @@ Outstanding, in priority order:
       alt-layout bars may have been decoded at 27–29 slots while the app always builds 26 —
       only dvorak has a published app-geometry counterpart; do not quote until re-checked.
 - [ ] **P3 — measure CTC on LOCAL combined**, the real-user corpus and the one dataset where
-      geo beat neural (55.2 vs 53.7). CTC has never been run on it, and no accuracy number
+      geo beat the transformer (55.2 vs 53.7). CTC has never been run on it, and no accuracy number
       exists for the shipped *Kotlin* engine at all (all figures are from the Python harness,
       tied in only by golden-fixture parity).
 - [ ] **P3 — `MemoryProbe` settle passes** cost ~2.4 s of IME cold start in `LOCAL_BUILD=true`
@@ -236,8 +275,8 @@ Outstanding, in priority order:
 - [ ] **P3 — `DictionaryManager` holds up to 4 fully-loaded `WordPredictor`s (~40 MB) behind
       no prediction API**, and `en` is loaded twice. `LearningWiringDriftTest` (M2) encodes the
       intent that they exist, so removing them is a product decision, not a cleanup.
-- [ ] **P3 — the French neural trie is being built from English words** (`OptimizedVocabulary`
-      logs `🚨 TRIE BUILT WITH ENGLISH: New fr trie contains: [the, brother, open, …]`).
+- [x] **P3 — the French neural trie is being built from English words** — moot 2026-08-18:
+      `OptimizedVocabulary` and its trie are deleted.
 - [ ] Non-English **tap** contraction bug still open (pre-existing, not swipe-related).
 
 ### A. Context-LM — small follow-ups (shipped features, verify/finish)
@@ -249,7 +288,8 @@ Outstanding, in priority order:
       and incognito-field write-suppression + next-word on a real bar. Privacy gate validated on
       real prefs. Re-run: `--test-targets "class tribixbite.cleverkeys.ContextLearningInstrumentedTest"`.
 - [ ] Trigram **individual** browse/delete in `LearningDataSection` (bulk-clear only today).
-- [ ] `hybrid` swipe mode is provenance-tagged `NEURAL_BEAM` (minor; give it its own origin).
+- [x] `hybrid` swipe mode is provenance-tagged `NEURAL_BEAM` — moot 2026-08-18: both the mode
+      and the origin are deleted.
 - [ ] (by-design, documented) backup *restore* repopulates learned stores even with master OFF (L7).
 
 ### B. FUTO / CTC swipe engine — TRAINED + WIRED (en/fr/de/es); campaign REOPENED as Phase N
@@ -373,11 +413,10 @@ Outstanding, in priority order:
       engines, not one). Also fixed: the learning stores crashed on Android 5.0–6.0 —
       minSdk is 21 but the code used Java-8 `Map` default methods.
 - [ ] Manual QA per plan §4.5 before any v1.6.0 tag (first-swipe warmup, long-word feel,
-      non-QWERTY hedge, non-en fallback-to-neural, don't/I'm contraction display, provenance
+      non-Latin hedge, non-served-language fallback-to-geometric, don't/I'm contraction display, provenance
       label, thermals). Tag only on explicit user go.
-- [ ] **Neural+geo rank fusion** — still a valid parallel option but LOWER priority now (CTC beats
-      both engines' union on most strata). Re-evaluate vs a CTC+neural cascade (decision doc §3)
-      after CTC field feedback.
+- [ ] ~~**Neural+geo rank fusion**~~ — dead 2026-08-18: the neural engine is gone. A CTC+geo
+      rank fusion is still theoretically available and would need its own oracle round.
 - [ ] Future, recorded and NOT scheduled — all documented in `docs/specs/ctc-swipe-engine.md`:
       **"max accuracy" pair mode** (`v2pair-s1234`: a 2nd ONNX member + per-frame probability
       averaging before the beam, 4.39 MB total = **+1.5 MB per ABI**, two sessions, 1.79 ms vs

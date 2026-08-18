@@ -175,7 +175,7 @@ jobs:
         done
 
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "- **Neural Models**: Included (ONNX Runtime + transformer)" >> $GITHUB_STEP_SUMMARY
+        echo "- **Swipe Model**: Included (ONNX Runtime + CTC encoder)" >> $GITHUB_STEP_SUMMARY
         echo "- **Package**: tribixbite.cleverkeys" >> $GITHUB_STEP_SUMMARY
 
         if [ $FAIL -eq 1 ]; then

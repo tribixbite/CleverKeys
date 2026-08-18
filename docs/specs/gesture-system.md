@@ -6,7 +6,7 @@
 
 ## Overview
 
-CleverKeys implements a multi-layered gesture recognition system that handles four gesture types: short swipes (directional swipes within a key for sublabels), long swipes (gestures across keys for neural word prediction), circle/rotation gestures (for double letters), and slider gestures (continuous value adjustment). The `hasLeftStartingKey` flag is the central decision point that routes touches to the appropriate handler.
+CleverKeys implements a multi-layered gesture recognition system that handles four gesture types: short swipes (directional swipes within a key for sublabels), long swipes (gestures across keys for word prediction), circle/rotation gestures (for double letters), and slider gestures (continuous value adjustment). The `hasLeftStartingKey` flag is the central decision point that routes touches to the appropriate handler.
 
 ## Key Files
 
@@ -41,7 +41,7 @@ Touch Events (Keyboard2View.onTouchEvent)
           SWIPE           TAP
                │             │
                ▼             ▼
-        Neural Predictor  Short Gesture
+        Swipe Decoder     Short Gesture
         (onSwipeEnd)      Handler
 ```
 
@@ -75,7 +75,7 @@ if (ptr.key != null && !ptr.hasLeftStartingKey) {
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `short_gesture_min_distance` | Int | 28 | Min displacement to trigger a short swipe, as % of key diagonal |
-| `short_gesture_max_distance` | Int | 141 | Single short/long boundary: max displacement (% of key diagonal) still treated as a short swipe; above = long (neural word) swipe. Honored by both the mid-move latch and the touch-up classifier. ("200 = disabled" was never implemented; retired — disable via the Enable Short Gestures toggle.) |
+| `short_gesture_max_distance` | Int | 141 | Single short/long boundary: max displacement (% of key diagonal) still treated as a short swipe; above = long (word) swipe. Honored by both the mid-move latch and the touch-up classifier. ("200 = disabled" was never implemented; retired — disable via the Enable Short Gestures toggle.) |
 | `tap_duration_threshold` | Long | 150 | Max ms a gesture that left the key may last and still be a tap (touch-up path) |
 | `circle_sensitivity` | Int | (Defaults.CIRCLE_SENSITIVITY) | Sensitivity for loop/circle gestures (no `circle_gesture_enabled` boolean exists — older drafts listed one that never did) |
 | `swipe_dist` (→ `swipe_dist_px`) | String/Int | 23 | Device-scaled distance: slider/event subkey activation gate + wide-key cap on the short-swipe minimum |
@@ -224,7 +224,7 @@ class Gesture {
 
 ### Swipe Typing Activation
 
-Long swipes trigger neural prediction when finger leaves starting key:
+Long swipes trigger word prediction when finger leaves starting key:
 
 ```kotlin
 private fun onTouchUp(ptr: Pointer) {
@@ -238,7 +238,7 @@ private fun onTouchUp(ptr: Pointer) {
     when (gestureType) {
         GestureType.SWIPE -> {
             if (ptr.hasLeftStartingKey) {
-                // Long swipe - neural prediction
+                // Long swipe - word prediction
                 onSwipeEnd(ptr.swipePath)
             } else {
                 // Short swipe - sublabel action
@@ -264,7 +264,7 @@ data class Pointer(
     var currentY: Float,               // Current Y
     var downTime: Long,                // Touch start time
     var hasLeftStartingKey: Boolean,   // The gatekeeper flag
-    var swipePath: MutableList<Point>, // Path for neural prediction
+    var swipePath: MutableList<Point>, // Path for word prediction
     var flags: Int                     // State flags (trackpoint, selection-delete, etc.)
 )
 ```

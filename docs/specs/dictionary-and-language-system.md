@@ -2,7 +2,7 @@
 
 ## Overview
 
-The dictionary system manages word lookup, frequency ranking, and multi-language support through a tiered architecture. It combines static dictionaries, user-defined words, and neural prediction models into a "Language Pack" system with automatic language detection for bilingual typing.
+The dictionary system manages word lookup, frequency ranking, and multi-language support through a tiered architecture. It combines static dictionaries, user-defined words, and the swipe decoders' lexicons into a "Language Pack" system with automatic language detection for bilingual typing.
 
 ## Key Files
 
@@ -23,8 +23,7 @@ Each language pack is a self-contained unit:
 Language Pack ({lang})
 ├── dictionaries/{lang}_enhanced.bin    # Trie-based vocabulary
 ├── dictionaries/{lang}_unigrams.bin    # Top 1000 words for detection
-├── models/swipe_encoder_{lang}.onnx    # Neural encoder
-├── models/swipe_decoder_{lang}.onnx    # Neural decoder
+├── models/ctc_swipe_encoder.onnx       # CTC emission encoder (one model, all languages)
 ├── layouts/{lang}_*.xml                # Keyboard layouts
 └── metadata.json                       # Version, license info
 ```
@@ -62,13 +61,13 @@ Language Pack ({lang})
 **Resolution Logic:**
 1. Gather candidates from Layers 1, 2, 3
 2. Filter out words in Layer 4 (disabled)
-3. Score by frequency, source priority (Custom > User > Main), neural confidence
+3. Score by frequency, source priority (Custom > User > Main), decoder confidence
 
 ## Implementation Details
 
 ### Accent Handling
 
-The neural model uses a 26-letter vocabulary (a-z only). Accented words are handled through normalization:
+The swipe decoders emit a 26-letter alphabet (a-z only). Accented words are handled through normalization:
 
 ```kotlin
 // Accent mapping: normalized → canonical forms

@@ -477,10 +477,10 @@ All `Config` fields below are read in `autoCorrect`. Defaults at v1.5.0 (`Config
 The freq-preservation fix at line 1024 is safe for beam search because beam search consumes frequency through `OptimizedVocabulary.WordInfo`, which:
 
 1. Normalizes raw frequency to `[0, 1]`.
-2. Multiplies by `Config.neural_frequency_weight` (user-tunable in Neural Settings, default `0.57`).
+2. Multiplied by a frequency weight (a `neural_frequency_weight` knob, removed with the transformer engine on 2026-08-18).
 3. Combines with NN confidence via `VocabularyUtils.calculateCombinedScore`.
 
-Higher input freq → slightly higher final beam score, no breakage. The user's `neural_frequency_weight` knob still drives the relative importance of dict frequency vs. neural confidence.
+Higher input freq → slightly higher final beam score, no breakage. The CTC engine now applies a per-language λ over `ln(freq)` instead, calibrated offline.
 
 ## Undo Mechanism
 
@@ -526,6 +526,6 @@ Adding to the user dictionary on undo ensures the same correction won't fire aga
 
 ## Related Specifications
 
-- [Swipe Typing Specification](swipe-typing-spec.md) — neural beam search consumes the same dict + freq
+- [Swipe Typing Specification](swipe-typing-spec.md) — the swipe decoders consume the same dict + freq
 - [Dictionary System](../../../specs/dictionary-and-language-system.md) — word storage, binary format, language packs
 - [User Dictionary](../../specs/typing/user-dictionary-spec.md) — custom-word and disabled-word lists

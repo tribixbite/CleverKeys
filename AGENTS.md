@@ -3,7 +3,7 @@
 This document serves as a high-level guide for AI agents and developers working on the CleverKeys project. It synthesizes the project's infrastructure, build system, and key architectural patterns.
 
 ## 1. Project Overview
-**CleverKeys** is a privacy-focused, lightweight Android virtual keyboard featuring a neural network-based swipe prediction engine (ONNX). It prioritizes local processing (no network permissions), minimal dependencies, and high performance. It was originally designed for Termux users but has evolved into a general-purpose keyboard.
+**CleverKeys** is a privacy-focused, lightweight Android virtual keyboard featuring a on-device model-based swipe prediction engine (ONNX). It prioritizes local processing (no network permissions), minimal dependencies, and high performance. It was originally designed for Termux users but has evolved into a general-purpose keyboard.
 
 ## 2. Build Infrastructure
 
@@ -39,7 +39,7 @@ The project is optimized for building directly on an Android device via Termux.
 -   **Transparency:** A custom theme `CleverKeysIMETheme` (in `styles.xml`) enforces transparency (`windowIsTranslucent`, `windowBackground=@null`) to ensure the system background doesn't bleed through.
 -   **Layout Loading:** `LayoutManager` loads keyboard layouts from raw resources. Layouts must be present in `src/main/layouts/` and are copied to the build directory during compilation.
 
-### Neural Prediction
+### Swipe Prediction
 -   **ONNX Runtime:** Swipe prediction is handled by `com.microsoft.onnxruntime:onnxruntime-android`.
 -   **Models:** Models (encoder/decoder) are loaded from assets or external storage.
 -   **Privacy:** All inference happens strictly on-device.
@@ -52,7 +52,7 @@ The project is optimized for building directly on an Android device via Termux.
 
 ## 5. Documentation Map
 -   `docs/ARCHITECTURE_MASTER.md`: High-level system design.
--   `docs/ONNX_DECODE_PIPELINE.md`: Deep dive into the neural swipe engine.
+-   `docs/ONNX_DECODE_PIPELINE.md`: Deep dive into the swipe engine.
 -   `docs/VERSIONING.md`: Explanation of the versioning scheme.
 -   `memory/`: Context files for AI agents.
 

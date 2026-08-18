@@ -83,12 +83,12 @@
 
 <h1 class="text-3xl font-bold mb-6 gradient-text-wiki">Clipboard History</h1>
 
-<p class="mb-4 text-gray-300 leading-relaxed">CleverKeys maintains a history of text you've copied, making it easy to paste items from earlier.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">CleverKeys maintains a history of everything you've copied — text, images, videos, PDFs, and more — making it easy to paste items from earlier.</p>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Quick Summary</h2>
 
 <table class="w-full mb-6 border-collapse"><tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">What</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Description</th></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Purpose</strong></td><td class="px-4 py-2 border-t border-gray-700">Access previous clipboard items</td></tr></p>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Purpose</strong></td><td class="px-4 py-2 border-t border-gray-700">Access previous clipboard items (text + media)</td></tr></p>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Access</strong></td><td class="px-4 py-2 border-t border-gray-700">Swipe SW from Ctrl key, or add Clipboard to Extra Keys</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Capacity</strong></td><td class="px-4 py-2 border-t border-gray-700">Configurable (default 50 items)</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
@@ -130,6 +130,17 @@
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Open clipboard history</li>
 <li class="ml-4 text-gray-300">2. Tap the <strong class="text-white">🗑 delete button</strong> on the item</li>
 </ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Long-Press to Copy</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Copy an item to the system clipboard without pasting it into the current field:</p>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Open clipboard history</li>
+<li class="ml-4 text-gray-300">2. <strong class="text-white">Long-press</strong> any item's text</li>
+<li class="ml-4 text-gray-300">3. A "Copied to clipboard" toast confirms the action</li>
+<li class="ml-4 text-gray-300">4. The text is now on the system clipboard — paste it in any app</li>
+</ul>
+<p class="mb-4 text-gray-300 leading-relaxed">This is useful when you want to store text for use in another app without inserting it into the current text field.</p>
+
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Pin Items</h2>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Keep important items from being removed:</p>
@@ -151,6 +162,16 @@
 <li class="ml-4 text-gray-300">&#8226; Don't auto-expire</li>
 <li class="ml-4 text-gray-300">&#8226; Don't count toward history limit</li>
 </ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Pinned Entry Shortcuts</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">You can bind pinned clipboard entries to swipe gestures using the <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">paste_pinned_1</code> through <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">paste_pinned_5</code> commands. This lets you insert frequently used pinned text with a single swipe, without opening the clipboard panel.</p>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Entries are numbered by position (most-recently-pinned first):</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">paste_pinned_1</code> inserts your most recently pinned entry</li>
+<li class="ml-4 text-gray-300">&#8226; <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">paste_pinned_2</code> inserts the second, and so on up to <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">paste_pinned_5</code></li>
+</ul>
+<p class="mb-4 text-gray-300 leading-relaxed">To set this up, go to <strong class="text-white">Settings > Activities > Per-Key Customization</strong>, choose a key and direction, select <strong class="text-white">Command</strong>, and search for "paste_pinned". See <a href="../customization/per-key-actions.md#pinned-clipboard-actions" class="text-green-400 hover:underline">Per-Key Actions</a> for full details.</p>
+
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Todo Items</h2>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Mark clipboard items as to-do reminders:</p>
@@ -172,6 +193,45 @@
 <li class="ml-4 text-gray-300">&#8226; Can also be pinned (both flags independent)</li>
 <li class="ml-4 text-gray-300">&#8226; Useful for quick reference or follow-up</li>
 </ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Media Clipboard</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">CleverKeys automatically captures images, videos, PDFs, and other files you copy to the clipboard.</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Supported Media Types</h3>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Type</td><td class="px-4 py-2 border-t border-gray-700">Examples</td><td class="px-4 py-2 border-t border-gray-700">Thumbnail</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Images</strong></td><td class="px-4 py-2 border-t border-gray-700">JPEG, PNG, WebP, GIF</td><td class="px-4 py-2 border-t border-gray-700">Photo preview</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Animated</strong></td><td class="px-4 py-2 border-t border-gray-700">Animated GIF, animated WebP</td><td class="px-4 py-2 border-t border-gray-700">First frame + play badge</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Videos</strong></td><td class="px-4 py-2 border-t border-gray-700">MP4, QuickTime</td><td class="px-4 py-2 border-t border-gray-700">Video frame preview</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">PDFs</strong></td><td class="px-4 py-2 border-t border-gray-700">PDF documents</td><td class="px-4 py-2 border-t border-gray-700">First page preview</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Other files</strong></td><td class="px-4 py-2 border-t border-gray-700">ZIP, documents</td><td class="px-4 py-2 border-t border-gray-700">MIME-type icon</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">How Media Clipboard Works</h3>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Copy</strong> an image/video/file in any app (Gallery, Chrome, Files, etc.)</li>
+<li class="ml-4 text-gray-300">2. CleverKeys captures it automatically in the background</li>
+<li class="ml-4 text-gray-300">3. A <strong class="text-white">thumbnail</strong> appears in clipboard history</li>
+<li class="ml-4 text-gray-300">4. <strong class="text-white">Tap</strong> the media entry to paste it into the current app (via <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">commitContent</code>)</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Media Paste</h3>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Media is pasted via Android's <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">commitContent</code> API — the receiving app must support it</li>
+<li class="ml-4 text-gray-300">&#8226; Most messaging apps (Signal, Telegram, WhatsApp) and text editors support image paste</li>
+<li class="ml-4 text-gray-300">&#8226; If the app doesn't support media paste, a "Cannot paste media here" message appears</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Long-press</strong> a media entry to copy the media URI to the system clipboard</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Media Settings</h3>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Description</td><td class="px-4 py-2 border-t border-gray-700">Default</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Media Clipboard</strong></td><td class="px-4 py-2 border-t border-gray-700">Enable/disable media capture</td><td class="px-4 py-2 border-t border-gray-700">On</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Text-Only Mode</strong></td><td class="px-4 py-2 border-t border-gray-700">Hide all media, show only text entries</td><td class="px-4 py-2 border-t border-gray-700">Off</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Max Media Size</strong></td><td class="px-4 py-2 border-t border-gray-700">Maximum file size for media entries (1-50 MB)</td><td class="px-4 py-2 border-t border-gray-700">10 MB</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<p class="mb-4 text-gray-300 leading-relaxed">To access: <strong class="text-white">Settings > Clipboard section</strong> (expand it) or <strong class="text-white">Settings > Activities > Clipboard Settings</strong>.</p>
+
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!TIP]</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">If you only want text in your clipboard and find media entries distracting, enable <strong class="text-white">Text-Only Mode</strong>. Media will still be captured (unless you also disable Media Clipboard) but won't appear in the panel.</blockquote>
+
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Tab System</h2>
 
 <p class="mb-4 text-gray-300 leading-relaxed">The clipboard pane organizes items into three tabs:</p>
@@ -194,6 +254,7 @@
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Todo button</strong></td><td class="px-4 py-2 border-t border-gray-700">Adds to todos</td><td class="px-4 py-2 border-t border-gray-700">Adds to todos</td><td class="px-4 py-2 border-t border-gray-700">Removes from todos</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Delete</strong></td><td class="px-4 py-2 border-t border-gray-700">Deletes item</td><td class="px-4 py-2 border-t border-gray-700">Deletes item</td><td class="px-4 py-2 border-t border-gray-700">Deletes item</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Paste</strong></td><td class="px-4 py-2 border-t border-gray-700">Pastes to editor</td><td class="px-4 py-2 border-t border-gray-700">Pastes to editor</td><td class="px-4 py-2 border-t border-gray-700">Pastes to editor</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Long-press</strong></td><td class="px-4 py-2 border-t border-gray-700">Copies to system clipboard</td><td class="px-4 py-2 border-t border-gray-700">Copies to system clipboard</td><td class="px-4 py-2 border-t border-gray-700">Copies to system clipboard</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Pagination</h2>
 
@@ -212,11 +273,12 @@
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">History Panel Layout</h2>
 
 <pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto mb-4"><code class="language-text">┌─────────────────────────────────────┐
-<p class="mb-4 text-gray-300 leading-relaxed">│ 📋 📌 ✓  [Search...]  📅  [▼]       │ ← Tabs + Search + Close</p>
+<p class="mb-4 text-gray-300 leading-relaxed">│ 📋 📌 ✓  [Search...]  🔽  [▼]      │ ← Tabs + Search + Filter + Close</p>
 <p class="mb-4 text-gray-300 leading-relaxed">├─────────────────────────────────────┤</p>
-<p class="mb-4 text-gray-300 leading-relaxed">│ Recently copied text here... [📌✓🗑]│ ← History items</p>
-<p class="mb-4 text-gray-300 leading-relaxed">│ Another clipboard item...    [📌✓🗑]│</p>
-<p class="mb-4 text-gray-300 leading-relaxed">│ More text from earlier...    [📌✓🗑]│</p>
+<p class="mb-4 text-gray-300 leading-relaxed">│ Recently copied text here... [📌✓🗑]│ ← Text entry</p>
+<p class="mb-4 text-gray-300 leading-relaxed">│ [thumb] photo.jpg · 2h ago   [📌✓🗑]│ ← Image entry with thumbnail</p>
+<p class="mb-4 text-gray-300 leading-relaxed">│ [▶vid] clip.mp4 · Yesterday  [📌✓🗑]│ ← Video entry with play badge</p>
+<p class="mb-4 text-gray-300 leading-relaxed">│ Another clipboard item...    [📌✓🗑]│ ← Text entry</p>
 <p class="mb-4 text-gray-300 leading-relaxed">├─────────────────────────────────────┤</p>
 <p class="mb-4 text-gray-300 leading-relaxed">│ [◀]         1 / 3              [▶]  │ ← Pagination (if &gt;100 items)</p>
 <p class="mb-4 text-gray-300 leading-relaxed">└─────────────────────────────────────┘</code></pre></p>
@@ -256,7 +318,15 @@
 <table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Location</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Enable History</strong></td><td class="px-4 py-2 border-t border-gray-700">Clipboard section</td><td class="px-4 py-2 border-t border-gray-700">Turn history on/off</td></tr></p>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">History Size</strong></td><td class="px-4 py-2 border-t border-gray-700">Clipboard section</td><td class="px-4 py-2 border-t border-gray-700">Maximum items to keep</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">History Duration</strong></td><td class="px-4 py-2 border-t border-gray-700">Clipboard section</td><td class="px-4 py-2 border-t border-gray-700">Auto-expiry (default: never)</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Max Item Size</strong></td><td class="px-4 py-2 border-t border-gray-700">Clipboard section</td><td class="px-4 py-2 border-t border-gray-700">Per-item text size limit (64-1024 KB)</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Media Clipboard</strong></td><td class="px-4 py-2 border-t border-gray-700">Clipboard section</td><td class="px-4 py-2 border-t border-gray-700">Enable/disable media capture</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Text-Only Mode</strong></td><td class="px-4 py-2 border-t border-gray-700">Clipboard section</td><td class="px-4 py-2 border-t border-gray-700">Hide media, show only text</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Max Media Size</strong></td><td class="px-4 py-2 border-t border-gray-700">Clipboard section</td><td class="px-4 py-2 border-t border-gray-700">Maximum media file size (1-50 MB)</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Pinned Tab</strong></td><td class="px-4 py-2 border-t border-gray-700">Clipboard section</td><td class="px-4 py-2 border-t border-gray-700">Show/hide the Pinned tab</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Todo Tab</strong></td><td class="px-4 py-2 border-t border-gray-700">Clipboard section</td><td class="px-4 py-2 border-t border-gray-700">Show/hide the Todos tab</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Exclude Password Managers</strong></td><td class="px-4 py-2 border-t border-gray-700">Clipboard section</td><td class="px-4 py-2 border-t border-gray-700">Don't save from password apps</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Respect Sensitive Flag</strong></td><td class="px-4 py-2 border-t border-gray-700">Clipboard section</td><td class="px-4 py-2 border-t border-gray-700">Honor Android 13+ IS_SENSITIVE</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Clear History</h2>
 
@@ -279,6 +349,14 @@
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Can I recover deleted items?</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">A: No, deleted items cannot be recovered. Pin important items.</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Why don't I see images in my clipboard?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Check that <strong class="text-white">Media Clipboard</strong> is enabled and <strong class="text-white">Text-Only Mode</strong> is off in <strong class="text-white">Settings > Clipboard section</strong>. The source app must also provide a content URI when copying (most apps do).</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Can I paste an image from clipboard into a messaging app?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Yes — tap the image entry in clipboard history. It uses Android's <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">commitContent</code> API. The receiving app must support media input (most modern messaging apps do).</p>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Related Features</h2>
 

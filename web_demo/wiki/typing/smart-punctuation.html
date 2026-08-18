@@ -76,7 +76,7 @@
         <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
             <hr class="border-gray-700 my-6">
 <p class="mb-4 text-gray-300 leading-relaxed">title: Smart Punctuation</p>
-<p class="mb-4 text-gray-300 leading-relaxed">description: Automatic punctuation attachment and spacing behavior</p>
+<p class="mb-4 text-gray-300 leading-relaxed">description: Automatic punctuation attachment and smart auto-space around punctuation</p>
 <p class="mb-4 text-gray-300 leading-relaxed">category: Typing</p>
 <p class="mb-4 text-gray-300 leading-relaxed">difficulty: beginner</p>
 <p class="mb-4 text-gray-300 leading-relaxed">related_spec: ../specs/typing/smart-punctuation-spec.md</p>
@@ -84,18 +84,18 @@
 
 <h1 class="text-3xl font-bold mb-6 gradient-text-wiki">Smart Punctuation</h1>
 
-<p class="mb-4 text-gray-300 leading-relaxed">Smart punctuation automatically attaches punctuation marks to the end of words, removing unnecessary spaces. This creates cleaner text without manual editing.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">Smart punctuation automatically attaches punctuation marks to the end of words, removing unnecessary spaces. Since v1.5.0, the same system also skips the leading auto-space when you swipe a word right after an opening bracket or quote. Together these create clean text without manual editing.</p>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Quick Summary</h2>
 
 <table class="w-full mb-6 border-collapse"><tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">What</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Description</th></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Purpose</strong></td><td class="px-4 py-2 border-t border-gray-700">Attach punctuation to words automatically</td></tr></p>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Purpose</strong></td><td class="px-4 py-2 border-t border-gray-700">Attach punctuation to words and place auto-spaces intelligently</td></tr></p>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Access</strong></td><td class="px-4 py-2 border-t border-gray-700">Settings > Input Behavior > Smart Punctuation</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Works with</strong></td><td class="px-4 py-2 border-t border-gray-700">Swipe typing and suggestion taps</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">How It Works</h2>
 
-<p class="mb-4 text-gray-300 leading-relaxed">When you type punctuation after a word, smart punctuation checks whether the preceding space was <strong class="text-white">auto-inserted</strong> (by swipe or suggestion) or <strong class="text-white">manually typed</strong>.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">When you swipe a word or tap a suggestion, CleverKeys automatically adds a trailing space so you can keep swiping. When you then type punctuation, smart punctuation checks whether the preceding space was <strong class="text-white">auto-inserted</strong> (by swipe or suggestion) or <strong class="text-white">manually typed</strong> — and only removes the automatic one.</p>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Auto-Inserted Spaces</h3>
 
@@ -111,9 +111,32 @@
 
 <p class="mb-4 text-gray-300 leading-relaxed">This respects your intent when you deliberately add a space before punctuation.</p>
 
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!NOTE]</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">Since v1.5.0, CleverKeys double-checks before removing anything: the character before your cursor must actually be the automatic space, and your cursor must still be exactly where the swipe or suggestion left it. Moving the cursor, pressing backspace, or switching to another text field cancels the pending removal — a space you placed yourself is never eaten.</blockquote>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">No Space After Opening Punctuation (v1.5.0)</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">The reverse direction also works: when you swipe a word (or tap a suggestion) right after an <strong class="text-white">opening</strong> bracket or quote, no leading space is inserted:</p>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto mb-4"><code class="language-text">Type "(" → swipe "word" → Result: "(word"     — not "( word"
+<p class="mb-4 text-gray-300 leading-relaxed">Type '"' → swipe "hello" → Result: '"hello'   — not '" hello'</code></pre></p>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Opening punctuation that suppresses the leading space:</p>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Characters</td><td class="px-4 py-2 border-t border-gray-700">Name</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">(</code> <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">[</code> <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">{</code></td><td class="px-4 py-2 border-t border-gray-700">Opening brackets</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">“</code> <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">‘</code></td><td class="px-4 py-2 border-t border-gray-700">Curly opening quotes</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">¿</code> <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">¡</code></td><td class="px-4 py-2 border-t border-gray-700">Inverted question/exclamation (Spanish)</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">"</code> <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">'</code></td><td class="px-4 py-2 border-t border-gray-700">Straight quotes — only when they are actually opening</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<p class="mb-4 text-gray-300 leading-relaxed">Straight quotes are ambiguous, so CleverKeys looks at the character <em>before</em> the quote:</p>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; At the start of the field, after a space, or after another opener → it's an <strong class="text-white">opening</strong> quote, so the space is skipped: <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">He said "</code> + swipe → <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">He said "word</code></li>
+<li class="ml-4 text-gray-300">&#8226; After a letter or digit → it's a <strong class="text-white">possessive or closing</strong> quote, so the space is kept: <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">kids'</code> + swipe → <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">kids' toys</code></li>
+</ul>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Punctuation Characters</h2>
 
-<p class="mb-4 text-gray-300 leading-relaxed">Smart punctuation affects these characters:</p>
+<p class="mb-4 text-gray-300 leading-relaxed">Smart punctuation attaches these characters to the previous word:</p>
 
 <table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Character</td><td class="px-4 py-2 border-t border-gray-700">Name</td><td class="px-4 py-2 border-t border-gray-700">Behavior</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">.</code></td><td class="px-4 py-2 border-t border-gray-700">Period</td><td class="px-4 py-2 border-t border-gray-700">Attaches to word</td></tr></p>
@@ -125,15 +148,25 @@
 <tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">)</code></td><td class="px-4 py-2 border-t border-gray-700">Close parenthesis</td><td class="px-4 py-2 border-t border-gray-700">Attaches to word</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">]</code></td><td class="px-4 py-2 border-t border-gray-700">Close bracket</td><td class="px-4 py-2 border-t border-gray-700">Attaches to word</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">}</code></td><td class="px-4 py-2 border-t border-gray-700">Close brace</td><td class="px-4 py-2 border-t border-gray-700">Attaches to word</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">”</code> <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">’</code></td><td class="px-4 py-2 border-t border-gray-700">Curly closing quotes</td><td class="px-4 py-2 border-t border-gray-700">Attach to word (v1.5.0)</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">…</code></td><td class="px-4 py-2 border-t border-gray-700">Ellipsis</td><td class="px-4 py-2 border-t border-gray-700">Attaches to word (v1.5.0)</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">'</code></td><td class="px-4 py-2 border-t border-gray-700">Apostrophe</td><td class="px-4 py-2 border-t border-gray-700">Attaches to word after an auto-space (v1.5.0)</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Quote Handling</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Quotes have special handling:</p>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Closing quotes</strong> (<code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">"</code> after odd count): Attach to word</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Opening quotes</strong> (<code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">"</code> after even count): Keep space before</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Apostrophes</strong> (<code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">'</code> after letter): Never removed (contractions)</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Straight double quote</strong> (<code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">"</code>): counted for balance — after an odd number of prior <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">"</code> it's closing (attaches), after an even number it's opening (keeps the space)</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Apostrophes</strong> (<code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">'</code>): mid-word apostrophes in contractions (don't, it's) are never touched — there is no space to remove. An apostrophe typed right after an auto-space is treated as a possessive or closing quote and attaches: swipe "kids" → type <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">'</code> → <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">kids'</code></li>
 </ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Punctuation Chaining</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Sentence-ending punctuation (<code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">.</code> <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">!</code> <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">?</code>) re-adds a space after attaching, and that space is itself marked automatic — so you can chain punctuation:</p>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto mb-4"><code class="language-text">Swipe "word" → type "." → "word. " → type ")" → "word.)"</code></pre>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Each closer removes exactly one automatic space; a manually typed space in between stops the chain.</p>
+
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Examples</h2>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Swipe Typing Flow</h3>
@@ -142,6 +175,8 @@
 <p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Swipe "The" → swipe "quick" → type "."</td><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">The quick. </code></td><td class="px-4 py-2 border-t border-gray-700">Period attaches + space added for autocap</td></tr></p>
 <tr><td class="px-4 py-2 border-t border-gray-700">Swipe "Hello" → type "," → swipe "world"</td><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">Hello, world</code></td><td class="px-4 py-2 border-t border-gray-700">Comma attaches to "Hello"</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700">Swipe "Hello" → type "." → swipe "world"</td><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">Hello. World</code></td><td class="px-4 py-2 border-t border-gray-700">Period adds space, next word capitalized</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700">Type "(" → swipe "example"</td><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">(example</code></td><td class="px-4 py-2 border-t border-gray-700">No leading space after opener</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700">Swipe "kids" → type "'"</td><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">kids'</code></td><td class="px-4 py-2 border-t border-gray-700">Apostrophe attaches for possessive</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Touch Typing Flow</h3>
 
@@ -154,12 +189,17 @@
 <table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Action</td><td class="px-4 py-2 border-t border-gray-700">Result</td><td class="px-4 py-2 border-t border-gray-700">Explanation</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Swipe "hello" → manual space → type "!"</td><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">hello !</code></td><td class="px-4 py-2 border-t border-gray-700">Manual space overrides auto behavior</td></tr></p>
 <tr><td class="px-4 py-2 border-t border-gray-700">Type "hello" → tap suggestion "world" → type "."</td><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">hello world.</code></td><td class="px-4 py-2 border-t border-gray-700">Suggestion's auto-space is removed</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700">Swipe "hello" → move cursor away and back → type "."</td><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">hello .</code></td><td class="px-4 py-2 border-t border-gray-700">Cursor movement cancels the pending removal</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Configuration</h2>
 
 <table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Location</td><td class="px-4 py-2 border-t border-gray-700">Default</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Smart Punctuation</strong></td><td class="px-4 py-2 border-t border-gray-700">Settings > Input Behavior</td><td class="px-4 py-2 border-t border-gray-700">On</td><td class="px-4 py-2 border-t border-gray-700">Enable/disable punctuation attachment</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Auto-space before suggestion</strong></td><td class="px-4 py-2 border-t border-gray-700">Settings > Input Behavior</td><td class="px-4 py-2 border-t border-gray-700">On</td><td class="px-4 py-2 border-t border-gray-700">Leading space before tapped suggestions (openers suppress it)</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Auto-space after suggestion</strong></td><td class="px-4 py-2 border-t border-gray-700">Settings > Input Behavior</td><td class="px-4 py-2 border-t border-gray-700">On</td><td class="px-4 py-2 border-t border-gray-700">Trailing space after swipe/suggestion commits</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<p class="mb-4 text-gray-300 leading-relaxed">There is no separate toggle for the v1.5.0 smart auto-space behavior — it refines the existing auto-space and smart punctuation features and follows their settings.</p>
+
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Double-Space to Period</h2>
 
 <p class="mb-4 text-gray-300 leading-relaxed">A related feature: pressing space twice quickly converts to period + space:</p>
@@ -186,6 +226,14 @@
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Common Questions</h2>
 
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Why did the space disappear when I typed a period after swiping?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: That space was added automatically by the swipe, and smart punctuation removes it so the period attaches to the word (<code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">word.</code> instead of <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">word .</code>). Spaces you type yourself are never removed — press spacebar manually before the punctuation if you want to keep it.</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Why is there no space before my swiped word after a quote?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: You swiped right after opening punctuation like <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">(</code> or <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">"</code>, so the leading auto-space is skipped to produce <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">("word</code> instead of <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">( "word</code>. After a possessive apostrophe (<code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">kids'</code>) the space is kept.</p>
+
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Why does my colon sometimes have a space before it?</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">A: If you manually pressed spacebar before the colon, CleverKeys respects your intent and keeps the space. This is useful for formatting like <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">Note : important</code>.</p>
@@ -196,13 +244,14 @@
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Does this work in all apps?</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed">A: Yes, smart punctuation works in any text field. However, some apps may have their own auto-formatting that could interact with it.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">A: Yes, smart punctuation works in any text field. In editors that don't report cursor positions, CleverKeys falls back to the pre-v1.5.0 check (automatic-space flag + a real space before the cursor), so the feature keeps working there too.</p>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Related Features</h2>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <a href="autocorrect.html" class="text-green-400 hover:underline">Autocorrect</a> - Automatic spelling corrections</li>
 <li class="ml-4 text-gray-300">&#8226; <a href="swipe-typing.html" class="text-green-400 hover:underline">Swipe Typing</a> - Gesture-based word input</li>
 <li class="ml-4 text-gray-300">&#8226; <a href="special-characters.html" class="text-green-400 hover:underline">Special Characters</a> - Symbols and accents</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="../settings/input-behavior.html" class="text-green-400 hover:underline">Input Behavior Settings</a> - Auto-space and punctuation settings</li>
 </ul>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Technical Details</h2>
 

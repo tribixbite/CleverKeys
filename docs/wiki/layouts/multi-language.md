@@ -19,12 +19,12 @@ Type in multiple languages with smart language detection and combined prediction
 
 ## How Multi-Language Works
 
-Instead of switching layouts, CleverKeys can provide predictions from multiple language dictionaries simultaneously. The neural model outputs letter sequences, and the system checks them against dictionaries for both your primary and secondary languages.
+Instead of switching layouts, CleverKeys can provide predictions from multiple language dictionaries simultaneously. The swipe decoder outputs letter sequences, and the system checks them against dictionaries for both your primary and secondary languages.
 
 ### The Key Concept
 
 1. You swipe a word on QWERTY layout
-2. Neural model suggests possible letter sequences
+2. The swipe decoder suggests possible letter sequences
 3. System checks both English AND Spanish (for example) dictionaries
 4. Best matches from both languages appear in suggestions
 5. Accent normalization maps "espanol" → "español"
@@ -41,9 +41,9 @@ Instead of switching layouts, CleverKeys can provide predictions from multiple l
 
 Your primary language is the main dictionary:
 
-1. **Primary Language** determines the neural model's vocabulary base
+1. **Primary Language** determines the swipe decoder's vocabulary base
 2. English is the default primary language
-3. The neural model is trained primarily on English
+3. The CTC decoder is validated on English, French, German and Spanish; other languages use the geometric engine
 
 ### Step 3: Add Secondary Language
 
@@ -144,7 +144,7 @@ A: No! Multi-Language mode provides predictions from both languages on your curr
 
 ### Q: How does accent normalization work?
 
-A: The neural model outputs base letters. The dictionary lookup maps "espanol" to "español" using accent normalization tables.
+A: The swipe decoder outputs base letters. The dictionary lookup maps "espanol" to "español" using accent normalization tables.
 
 ### Q: What if I need characters not on QWERTY?
 

@@ -10,7 +10,7 @@ Performance optimization system covering rendering, prediction latency, memory m
 |------|----------------|---------|
 | `src/main/kotlin/tribixbite/cleverkeys/CleverKeysService.kt` | `onCreate()`, `onDestroy()` | Lifecycle and cleanup |
 | `src/main/kotlin/tribixbite/cleverkeys/Keyboard2View.kt` | `onDraw()` | Rendering |
-| `src/main/kotlin/tribixbite/cleverkeys/OnnxSwipePredictorImpl.kt` | Neural inference | ONNX performance |
+| `src/main/kotlin/tribixbite/cleverkeys/swipe/CtcEngineAdapter.kt` | Swipe decoding | ONNX performance |
 | `AndroidManifest.xml` | `hardwareAccelerated` | GPU rendering |
 
 ## Performance Budget
@@ -75,8 +75,8 @@ override fun onDestroy() {
     // Clear view references
     inputView = null
 
-    // Release neural resources
-    neuralEngine?.release()
+    // Release decoder resources
+    ctcAdapter?.release()
 
     super.onDestroy()
 }

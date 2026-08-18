@@ -5,14 +5,54 @@
   "output_directory": "./wiki",
   "primary_color": "#10b981",
   "categories": [
-    { "name": "Getting Started", "slug": "getting-started", "color": "#10b981", "icon": "rocket" },
-    { "name": "Typing", "slug": "typing", "color": "#3b82f6", "icon": "keyboard" },
-    { "name": "Gestures", "slug": "gestures", "color": "#8b5cf6", "icon": "hand" },
-    { "name": "Customization", "slug": "customization", "color": "#f59e0b", "icon": "palette" },
-    { "name": "Layouts", "slug": "layouts", "color": "#ec4899", "icon": "grid" },
-    { "name": "Settings", "slug": "settings", "color": "#6b7280", "icon": "cog" },
-    { "name": "Clipboard", "slug": "clipboard", "color": "#14b8a6", "icon": "clipboard" },
-    { "name": "Troubleshooting", "slug": "troubleshooting", "color": "#ef4444", "icon": "wrench" }
+    {
+      "name": "Getting Started",
+      "slug": "getting-started",
+      "color": "#10b981",
+      "icon": "rocket"
+    },
+    {
+      "name": "Typing",
+      "slug": "typing",
+      "color": "#3b82f6",
+      "icon": "keyboard"
+    },
+    {
+      "name": "Gestures",
+      "slug": "gestures",
+      "color": "#8b5cf6",
+      "icon": "hand"
+    },
+    {
+      "name": "Customization",
+      "slug": "customization",
+      "color": "#f59e0b",
+      "icon": "palette"
+    },
+    {
+      "name": "Layouts",
+      "slug": "layouts",
+      "color": "#ec4899",
+      "icon": "grid"
+    },
+    {
+      "name": "Settings",
+      "slug": "settings",
+      "color": "#6b7280",
+      "icon": "cog"
+    },
+    {
+      "name": "Clipboard",
+      "slug": "clipboard",
+      "color": "#14b8a6",
+      "icon": "clipboard"
+    },
+    {
+      "name": "Troubleshooting",
+      "slug": "troubleshooting",
+      "color": "#ef4444",
+      "icon": "wrench"
+    }
   ],
   "pages": [
     {
@@ -60,7 +100,7 @@
     {
       "file": "typing/swipe-typing.md",
       "title": "Swipe Typing",
-      "description": "How neural swipe prediction works",
+      "description": "How swipe word prediction works",
       "category": "Typing",
       "priority": "P0"
     },
@@ -229,13 +269,6 @@
       "file": "settings/haptics.md",
       "title": "Haptics & Sound",
       "description": "Vibration and key press sounds",
-      "category": "Settings",
-      "priority": "P1"
-    },
-    {
-      "file": "settings/neural-settings.md",
-      "title": "Neural Settings",
-      "description": "Beam width, prediction profiles",
       "category": "Settings",
       "priority": "P1"
     },

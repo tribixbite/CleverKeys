@@ -102,5 +102,5 @@ where the note renders the learned statistics, e.g. `After "want to": seen 14×,
 ## Related Specifications
 
 - [Input Behavior Spec](../settings/input-behavior-spec.md) - Word-prediction section settings
-- [Neural Prediction Spec](./neural-prediction-spec.md) - The swipe pipeline the appended candidates compose with
+- [Swipe Typing Spec](./swipe-typing-spec.md) - The swipe pipeline the appended candidates compose with
 - [Autocorrect Spec](./autocorrect-spec.md) - Commit/undo interactions

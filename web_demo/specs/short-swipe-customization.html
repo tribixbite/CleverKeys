@@ -72,13 +72,18 @@
         <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
             <h1 class="text-3xl font-bold mb-6 gradient-text">Short Swipe Customization</h1>
 
+<p class="mb-4 text-gray-300">> <strong>Note:</strong> As of v1.4.0, the canonical version of this specification lives at</p>
+<p class="mb-4 text-gray-300">> <a href="../wiki/specs/customization/per-key-actions-spec.md" class="text-ck-purple hover:underline"><code class="bg-ck-dark px-1 rounded">docs/wiki/specs/customization/per-key-actions-spec.md</code></a></p>
+<p class="mb-4 text-gray-300">> and renders at <https://cleverkeys.app/specs/customization/per-key-actions-spec/>.</p>
+<p class="mb-4 text-gray-300">> This file is preserved for cross-references but may not be kept in sync.</p>
+
 <h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Overview</h2>
 
-<p class="mb-4 text-gray-300">Short Swipe Customization allows users to fully customize the 8-direction swipe gestures for every key on the keyboard. Each key has 8 subkey positions (N, NE, E, SE, S, SW, W, NW) that can be customized with text input, commands, or key events through a dedicated settings UI.</p>
+<p class="mb-4 text-gray-300">Short Swipe Customization allows users to fully customize the 8-direction swipe gestures for every key on the keyboard. Each key has 8 subkey positions (N, NE, E, SE, S, SW, W, NW) that can be customized with text input, commands, key events, or Android Intents through a dedicated settings UI.</p>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Key Files</h2>
 
-<table class="w-full mb-4 border-collapse"><thead class="border-b border-gray-700"><tr><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">File</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Class/Function</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Purpose</th></tr></thead><tbody><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/customization/SwipeDirection.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">SwipeDirection</code></td><td class="px-4 py-2 text-gray-300">Enum for 8 directions</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/customization/ActionType.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">ActionType</code></td><td class="px-4 py-2 text-gray-300">Enum for action types</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/customization/ShortSwipeMapping.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">ShortSwipeMapping</code></td><td class="px-4 py-2 text-gray-300">Data model for custom mapping</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/customization/ShortSwipeCustomizationManager.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">ShortSwipeCustomizationManager</code></td><td class="px-4 py-2 text-gray-300">JSON persistence, CRUD operations</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/customization/CustomShortSwipeExecutor.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">CustomShortSwipeExecutor</code></td><td class="px-4 py-2 text-gray-300">Executes commands via InputConnection</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/customization/CommandRegistry.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">CommandRegistry</code></td><td class="px-4 py-2 text-gray-300">200+ searchable commands</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/Pointers.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">handleShortGesture()</code></td><td class="px-4 py-2 text-gray-300">Checks custom mappings first</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/KeyEventHandler.kt</code></td><td class="px-4 py-2 text-gray-300">Integration</td><td class="px-4 py-2 text-gray-300">Executes custom commands</td></tr></tbody></table>
+<table class="w-full mb-4 border-collapse"><thead class="border-b border-gray-700"><tr><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">File</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Class/Function</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Purpose</th></tr></thead><tbody><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/customization/SwipeDirection.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">SwipeDirection</code></td><td class="px-4 py-2 text-gray-300">Enum for 8 directions</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/customization/ActionType.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">ActionType</code></td><td class="px-4 py-2 text-gray-300">Enum for action types</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/customization/ShortSwipeMapping.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">ShortSwipeMapping</code></td><td class="px-4 py-2 text-gray-300">Data model for custom mapping</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/customization/ShortSwipeCustomizationManager.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">ShortSwipeCustomizationManager</code></td><td class="px-4 py-2 text-gray-300">JSON persistence, CRUD operations</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/customization/CustomShortSwipeExecutor.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">CustomShortSwipeExecutor</code></td><td class="px-4 py-2 text-gray-300">Executes commands via InputConnection</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/customization/IntentDefinition.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">IntentDefinition</code>, <code class="bg-ck-dark px-1 rounded">IntentTargetType</code></td><td class="px-4 py-2 text-gray-300">Intent data model, presets, Gson-safe parsing</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/customization/IntentEditorDialog.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">IntentEditorDialog</code></td><td class="px-4 py-2 text-gray-300">UI for configuring intents (presets, manual fields, extras)</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/customization/CommandRegistry.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">CommandRegistry</code></td><td class="px-4 py-2 text-gray-300">200+ searchable commands</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/customization/XmlAttributeMapper.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">XmlAttributeMapper</code></td><td class="px-4 py-2 text-gray-300">XML round-trip for all action types incl. INTENT</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/KeyValueParser.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">parseIntentKeydef()</code></td><td class="px-4 py-2 text-gray-300">Parses <code class="bg-ck-dark px-1 rounded">intent:'json'</code> from layout XML</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/Pointers.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">handleShortGesture()</code></td><td class="px-4 py-2 text-gray-300">Checks custom mappings first</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/KeyEventHandler.kt</code></td><td class="px-4 py-2 text-gray-300">Integration</td><td class="px-4 py-2 text-gray-300">Executes custom commands</td></tr></tbody></table>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Architecture</h2>
 
 <pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">Settings UI
@@ -102,8 +107,16 @@
        |
        v (if custom found)
 +----------------------------------+
-| CustomShortSwipeExecutor         | -- Execute TEXT/COMMAND/KEY_EVENT
+| CustomShortSwipeExecutor         | -- Execute TEXT/COMMAND/KEY_EVENT/INTENT
 | .execute()                       |
++----------------------------------+
+       |
+       v (if INTENT)
++----------------------------------+
+| IntentDefinition.parseFromGson() | -- Null-safe JSON deserialization
+| validateIntent()                 | -- URI scheme, package existence
+| context.startActivity/Service/   | -- Dispatch by IntentTargetType
+|   sendBroadcast                  |
 +----------------------------------+</code></pre>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Data Model</h2>
@@ -123,10 +136,11 @@
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">ActionType</h3>
 
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">enum class ActionType {
-    TEXT,      // Insert text string (up to 100 chars)
-    COMMAND,   // Execute editing command from CommandRegistry
-    KEY_EVENT  // Send Android KeyEvent
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">enum class ActionType(val displayName: String, val description: String) {
+    TEXT("Text Input", "Insert text directly"),
+    COMMAND("Command", "Execute keyboard command (copy, paste, cursor, etc.)"),
+    KEY_EVENT("Key Event", "Send raw key event (advanced)"),
+    INTENT("Send Intent", "Send Android Intent (advanced)")
 }</code></pre>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">ShortSwipeMapping</h3>
@@ -135,8 +149,8 @@
     val keyCode: String,           // Key identifier (e.g., "a", "e", "shift")
     val direction: SwipeDirection, // One of 8 directions
     val displayText: String,       // Max 4 chars for visual display
-    val actionType: ActionType,    // TEXT, COMMAND, or KEY_EVENT
-    val actionValue: String,       // Text content or command name
+    val actionType: ActionType,    // TEXT, COMMAND, KEY_EVENT, or INTENT
+    val actionValue: String,       // Text content, command name, keycode, or JSON IntentDefinition
     val useKeyFont: Boolean = false // Use special_font.ttf for icons
 )</code></pre>
 
@@ -153,6 +167,14 @@
     },
     "e": {
       "NW": { "displayText": "", "actionType": "COMMAND", "actionValue": "home", "useKeyFont": true }
+    },
+    "t": {
+      "N": {
+        "displayText": "term",
+        "actionType": "INTENT",
+        "actionValue": "{\"name\":\"Termux Command\",\"targetType\":\"SERVICE\",\"action\":\"com.termux.RUN_COMMAND\",\"packageName\":\"com.termux\",\"className\":\"com.termux.app.RunCommandService\",\"extras\":{\"com.termux.RUN_COMMAND_PATH\":\"/data/data/com.termux/files/usr/bin/echo\",\"com.termux.RUN_COMMAND_ARGUMENTS\":\"Hello\",\"com.termux.RUN_COMMAND_BACKGROUND\":\"true\"}}",
+        "useKeyFont": false
+      }
     }
   }
 }</code></pre>
@@ -163,7 +185,7 @@
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Core Categories</h3>
 
-<table class="w-full mb-4 border-collapse"><thead class="border-b border-gray-700"><tr><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Category</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Example Commands</th></tr></thead><tbody><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">CLIPBOARD</code></td><td class="px-4 py-2 text-gray-300">copy, paste, cut, paste_plain</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">EDITING</code></td><td class="px-4 py-2 text-gray-300">undo, redo, select_all</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">CURSOR</code></td><td class="px-4 py-2 text-gray-300">cursor_left, cursor_right, home, end</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">NAVIGATION</code></td><td class="px-4 py-2 text-gray-300">page_up, page_down, doc_home, doc_end</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">SELECTION</code></td><td class="px-4 py-2 text-gray-300">select_all, selection_mode</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">DELETE</code></td><td class="px-4 py-2 text-gray-300">delete_word, forward_delete_word</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">MODIFIERS</code></td><td class="px-4 py-2 text-gray-300">shift, ctrl, alt, meta, fn</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">FUNCTION_KEYS</code></td><td class="px-4 py-2 text-gray-300">f1-f12</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">SPECIAL_KEYS</code></td><td class="px-4 py-2 text-gray-300">escape, tab, insert, print_screen</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">EVENTS</code></td><td class="px-4 py-2 text-gray-300">config, change_method, action, caps_lock</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">MEDIA</code></td><td class="px-4 py-2 text-gray-300">media_play_pause, volume_up, volume_down</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">SYSTEM</code></td><td class="px-4 py-2 text-gray-300">search, calculator, calendar, brightness_up</td></tr></tbody></table>
+<table class="w-full mb-4 border-collapse"><thead class="border-b border-gray-700"><tr><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Category</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Example Commands</th></tr></thead><tbody><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">CLIPBOARD</code></td><td class="px-4 py-2 text-gray-300">copy, paste, cut, paste_plain, paste_pinned_1..5</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">EDITING</code></td><td class="px-4 py-2 text-gray-300">undo, redo, select_all</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">CURSOR</code></td><td class="px-4 py-2 text-gray-300">cursor_left, cursor_right, home, end</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">NAVIGATION</code></td><td class="px-4 py-2 text-gray-300">page_up, page_down, doc_home, doc_end</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">SELECTION</code></td><td class="px-4 py-2 text-gray-300">select_all, selection_mode</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">DELETE</code></td><td class="px-4 py-2 text-gray-300">delete_word, forward_delete_word</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">MODIFIERS</code></td><td class="px-4 py-2 text-gray-300">shift, ctrl, alt, meta, fn</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">FUNCTION_KEYS</code></td><td class="px-4 py-2 text-gray-300">f1-f12</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">SPECIAL_KEYS</code></td><td class="px-4 py-2 text-gray-300">escape, tab, insert, print_screen</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">EVENTS</code></td><td class="px-4 py-2 text-gray-300">config, change_method, action, caps_lock</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">MEDIA</code></td><td class="px-4 py-2 text-gray-300">media_play_pause, volume_up, volume_down</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">SYSTEM</code></td><td class="px-4 py-2 text-gray-300">search, calculator, calendar, brightness_up</td></tr></tbody></table>
 <h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Diacritics Categories</h3>
 
 <table class="w-full mb-4 border-collapse"><thead class="border-b border-gray-700"><tr><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Category</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Example Commands</th></tr></thead><tbody><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">DIACRITICS</code></td><td class="px-4 py-2 text-gray-300">combining_grave, combining_acute</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">DIACRITICS_SLAVONIC</code></td><td class="px-4 py-2 text-gray-300">combining_titlo, combining_palatalization</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">DIACRITICS_ARABIC</code></td><td class="px-4 py-2 text-gray-300">arabic_fatha, arabic_kasra, arabic_sukun</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">HEBREW</code></td><td class="px-4 py-2 text-gray-300">hebrew_dagesh, hebrew_qamats, hebrew_tsere</td></tr></tbody></table>
@@ -200,21 +222,102 @@
     private val inputConnection: InputConnection,
     private val keyEventHandler: KeyEventHandler
 ) {
-    fun execute(mapping: ShortSwipeMapping): Boolean {
+    fun execute(mapping: ShortSwipeMapping, inputConnection: InputConnection?, editorInfo: EditorInfo?): Boolean {
         return when (mapping.actionType) {
-            ActionType.TEXT -&gt; {
-                inputConnection.commitText(mapping.actionValue, 1)
-                true
-            }
-            ActionType.COMMAND -&gt; {
-                executeCommand(mapping.actionValue)
-            }
-            ActionType.KEY_EVENT -&gt; {
-                sendKeyEvent(mapping.actionValue.toIntOrNull())
-            }
+            ActionType.TEXT -&gt; executeTextInput(mapping.actionValue, inputConnection)
+            ActionType.COMMAND -&gt; executeCommandByName(mapping.actionValue, inputConnection, editorInfo)
+            ActionType.KEY_EVENT -&gt; executeKeyEvent(mapping.getKeyEventCode(), inputConnection)
+            ActionType.INTENT -&gt; executeIntent(mapping.actionValue)
         }
     }
 }</code></pre>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Terminal-Aware Paste</h3>
+
+<p class="mb-4 text-gray-300">Both the <code class="bg-ck-dark px-1 rounded">AvailableCommand.PASTE</code> and <code class="bg-ck-dark px-1 rounded">CommandRegistry</code> "paste" paths use <code class="bg-ck-dark px-1 rounded">handlePaste()</code> which detects terminal apps and sends Ctrl+V instead of <code class="bg-ck-dark px-1 rounded">performContextMenuAction(android.R.id.paste)</code>:</p>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// CustomShortSwipeExecutor.kt
+private fun handlePaste(inputConnection: InputConnection, editorInfo: EditorInfo?): Boolean {
+    return if (TerminalUtils.isTerminalApp(editorInfo)) {
+        sendKeyEventWithModifier(inputConnection, KeyEvent.KEYCODE_V,
+            KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON)
+    } else {
+        inputConnection.performContextMenuAction(android.R.id.paste)
+    }
+}</code></pre>
+
+<p class="mb-4 text-gray-300">This mirrors the same logic in <code class="bg-ck-dark px-1 rounded">KeyEventHandler.handlePaste()</code> for the regular paste key. Without this, paste via custom short swipe does nothing in Termux because terminal apps don't implement the Android context menu protocol.</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Pinned Clipboard Commands (paste_pinned_N)</h3>
+
+<p class="mb-4 text-gray-300">Five commands (<code class="bg-ck-dark px-1 rounded">paste_pinned_1</code> through <code class="bg-ck-dark px-1 rounded">paste_pinned_5</code>) allow direct insertion of pinned clipboard entries by position, without opening the clipboard panel.</p>
+
+<p class="mb-4 text-gray-300"><strong>CommandRegistry registration:</strong></p>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// Category.CLIPBOARD entries in CommandRegistry
+Command("paste_pinned_1", "Paste Pin #1", "Insert 1st pinned clipboard entry", Category.CLIPBOARD,
+    keywords = listOf("pin", "pinned", "clipboard", "paste", "1", "first")),
+// ... through paste_pinned_5</code></pre>
+
+<p class="mb-4 text-gray-300"><strong>Execution in CustomShortSwipeExecutor:</strong></p>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">private fun executePastePinned(commandName: String, inputConnection: InputConnection): Boolean {
+    val index = commandName.removePrefix("paste_pinned_").toIntOrNull()
+    if (index == null || index &lt; 1) return false
+
+    val db = ClipboardDatabase.getInstance(context)
+    val pinnedEntries = db.getPinnedEntries()
+
+    if (index &gt; pinnedEntries.size) {
+        showToast("Pinned entry #$index not found (${pinnedEntries.size} pinned)")
+        return false
+    }
+
+    val entry = pinnedEntries[index - 1]
+    inputConnection.commitText(entry.content, 1)
+    return true
+}</code></pre>
+
+<p class="mb-4 text-gray-300">Key implementation details:</p>
+<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; Uses <code class="bg-ck-dark px-1 rounded">ClipboardDatabase.getInstance(context)</code> singleton to access the clipboard database</li>
+<li class="ml-4">&#8226; <code class="bg-ck-dark px-1 rounded">getPinnedEntries()</code> returns entries ordered by timestamp DESC (most recently pinned first)</li>
+<li class="ml-4">&#8226; Index is 1-based in the command name, converted to 0-based for list access</li>
+<li class="ml-4">&#8226; Graceful failure: shows a toast with the actual pinned count if the index exceeds available entries</li>
+<li class="ml-4">&#8226; All exceptions caught and surfaced as a toast ("Failed to read pinned entry"), never crashes</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Text Limit (MAX_ACTION_LENGTH)</h3>
+
+<p class="mb-4 text-gray-300">The <code class="bg-ck-dark px-1 rounded">actionValue</code> field on <code class="bg-ck-dark px-1 rounded">ShortSwipeMapping</code> is capped at <code class="bg-ck-dark px-1 rounded">MAX_ACTION_LENGTH</code> (4096 characters). This limit applies to all action types — TEXT input content, COMMAND names, KEY_EVENT codes, and serialized INTENT JSON.</p>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">companion object {
+    const val MAX_ACTION_LENGTH = 4096
+}</code></pre>
+
+<p class="mb-4 text-gray-300">The previous limit was 100 characters, which was insufficient for long text snippets, multi-line templates, and serialized intent JSON payloads.</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Paste Button in Custom Text Input</h3>
+
+<p class="mb-4 text-gray-300">The <code class="bg-ck-dark px-1 rounded">CommandPaletteDialog</code> text input field includes a trailing paste <code class="bg-ck-dark px-1 rounded">IconButton</code>. This exists because Jetpack Compose <code class="bg-ck-dark px-1 rounded">Dialog</code> does not reliably receive <code class="bg-ck-dark px-1 rounded">performContextMenuAction(android.R.id.paste)</code> from the IME — the paste action is silently dropped.</p>
+
+<p class="mb-4 text-gray-300">The workaround reads directly from <code class="bg-ck-dark px-1 rounded">ClipboardManager</code>:</p>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">trailingIcon = {
+    IconButton(onClick = {
+        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+        val clip = clipboard?.primaryClip
+        if (clip != null &amp;&amp; clip.itemCount &gt; 0) {
+            val pasteText = clip.getItemAt(0).coerceToText(context).toString()
+            if (pasteText.isNotEmpty()) {
+                val combined = text + pasteText
+                onTextChange(combined.take(ShortSwipeMapping.MAX_ACTION_LENGTH))
+            }
+        }
+    }) {
+        Icon(imageVector = Icons.Filled.Create, contentDescription = "Paste from clipboard")
+    }
+}</code></pre>
+
+<p class="mb-4 text-gray-300">The pasted content is appended to existing text and truncated to <code class="bg-ck-dark px-1 rounded">MAX_ACTION_LENGTH</code>.</p>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">CommandRegistry</h3>
 
@@ -235,6 +338,96 @@
         val description: String
     )
 }</code></pre>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Intent Action Type</h2>
+
+<p class="mb-4 text-gray-300">The INTENT action type allows users to fire Android Intents directly from a swipe gesture. This enables launching apps, starting services, sending broadcasts, and integrating with automation tools like Termux.</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">IntentDefinition</h3>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">data class IntentDefinition(
+    val name: String = "",                        // Human-readable label
+    val targetType: IntentTargetType = ACTIVITY,  // ACTIVITY, SERVICE, or BROADCAST
+    val action: String? = null,                   // e.g., "android.intent.action.VIEW"
+    val data: String? = null,                     // URI, e.g., "https://google.com"
+    val type: String? = null,                     // MIME type, e.g., "text/plain"
+    val packageName: String? = null,              // Target package
+    val className: String? = null,                // Target component class
+    val extras: Map&lt;String, String&gt;? = null       // Key-value extras (String values only)
+)
+
+enum class IntentTargetType {
+    ACTIVITY,   // Start an activity (most common)
+    SERVICE,    // Start a foreground/background service
+    BROADCAST   // Send a broadcast intent
+}</code></pre>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Gson-Safe Parsing</h3>
+
+<p class="mb-4 text-gray-300">Gson uses <code class="bg-ck-dark px-1 rounded">sun.misc.Unsafe</code> to instantiate Kotlin data classes, bypassing the constructor. This means non-nullable fields with Kotlin defaults (<code class="bg-ck-dark px-1 rounded">name: String = ""</code>) become <code class="bg-ck-dark px-1 rounded">null</code> when the JSON key is absent. <code class="bg-ck-dark px-1 rounded">IntentDefinition.parseFromGson()</code> re-applies Kotlin defaults after deserialization:</p>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">companion object {
+    fun parseFromGson(json: String): IntentDefinition? {
+        val raw = Gson().fromJson(json, IntentDefinition::class.java) ?: return null
+        return IntentDefinition(
+            name = raw.name ?: "",
+            targetType = raw.targetType ?: IntentTargetType.ACTIVITY,
+            // nullable fields pass through unchanged
+            action = raw.action, data = raw.data, type = raw.type,
+            packageName = raw.packageName, className = raw.className,
+            extras = raw.extras
+        )
+    }
+}</code></pre>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Intent Validation</h3>
+
+<p class="mb-4 text-gray-300">Before execution, <code class="bg-ck-dark px-1 rounded">CustomShortSwipeExecutor.validateIntent()</code> checks:</p>
+
+<table class="w-full mb-4 border-collapse"><thead class="border-b border-gray-700"><tr><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Check</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Rule</th></tr></thead><tbody><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Action or package</td><td class="px-4 py-2 text-gray-300">Must have at least one of <code class="bg-ck-dark px-1 rounded">action</code> or <code class="bg-ck-dark px-1 rounded">packageName</code></td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Package installed</td><td class="px-4 py-2 text-gray-300">If <code class="bg-ck-dark px-1 rounded">packageName</code> set, verify via <code class="bg-ck-dark px-1 rounded">PackageManager.getPackageInfo()</code></td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">URI scheme</td><td class="px-4 py-2 text-gray-300">If <code class="bg-ck-dark px-1 rounded">data</code> set, <code class="bg-ck-dark px-1 rounded">Uri.parse()</code> result must have a non-blank scheme</td></tr></tbody></table>
+<p class="mb-4 text-gray-300">Note: <code class="bg-ck-dark px-1 rounded">Uri.parse()</code> on Android never throws; it silently produces an opaque URI. The scheme check catches malformed URIs like <code class="bg-ck-dark px-1 rounded">"not a uri"</code>.</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Intent Execution Flow</h3>
+
+<p class="mb-4 text-gray-300">When both <code class="bg-ck-dark px-1 rounded">data</code> and <code class="bg-ck-dark px-1 rounded">type</code> are set, <code class="bg-ck-dark px-1 rounded">Intent.setDataAndType()</code> must be used. Calling <code class="bg-ck-dark px-1 rounded">Intent.setData()</code> clears the type and vice versa — this is an Android API pitfall that was caught in code review.</p>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">when {
+    hasData &amp;&amp; hasType -&gt; intent.setDataAndType(Uri.parse(data), type)
+    hasData -&gt; intent.data = Uri.parse(data)
+    hasType -&gt; intent.type = type
+}</code></pre>
+
+<p class="mb-4 text-gray-300">Dispatch by target type:</p>
+<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <strong>ACTIVITY</strong>: <code class="bg-ck-dark px-1 rounded">context.startActivity(intent)</code> with <code class="bg-ck-dark px-1 rounded">FLAG_ACTIVITY_NEW_TASK</code>. Pre-checks <code class="bg-ck-dark px-1 rounded">resolveActivity()</code> unless an explicit component is set.</li>
+<li class="ml-4">&#8226; <strong>SERVICE</strong>: <code class="bg-ck-dark px-1 rounded">context.startService(intent)</code>.</li>
+<li class="ml-4">&#8226; <strong>BROADCAST</strong>: <code class="bg-ck-dark px-1 rounded">context.sendBroadcast(intent)</code>.</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Intent Presets (11 built-in)</h3>
+
+<table class="w-full mb-4 border-collapse"><thead class="border-b border-gray-700"><tr><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Preset</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Target</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Action</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Use Case</th></tr></thead><tbody><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Open Browser</td><td class="px-4 py-2 text-gray-300">ACTIVITY</td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">VIEW</code></td><td class="px-4 py-2 text-gray-300">Open URL in browser</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Share Text</td><td class="px-4 py-2 text-gray-300">ACTIVITY</td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">SEND</code></td><td class="px-4 py-2 text-gray-300">Share text via share sheet</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Dial Phone</td><td class="px-4 py-2 text-gray-300">ACTIVITY</td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">DIAL</code></td><td class="px-4 py-2 text-gray-300">Open phone dialer</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Send Email</td><td class="px-4 py-2 text-gray-300">ACTIVITY</td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">SENDTO</code></td><td class="px-4 py-2 text-gray-300">Open email composer</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Open Settings</td><td class="px-4 py-2 text-gray-300">ACTIVITY</td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">SETTINGS</code></td><td class="px-4 py-2 text-gray-300">System settings</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Wi-Fi Settings</td><td class="px-4 py-2 text-gray-300">ACTIVITY</td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">WIFI_SETTINGS</code></td><td class="px-4 py-2 text-gray-300">Wi-Fi settings page</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Bluetooth Settings</td><td class="px-4 py-2 text-gray-300">ACTIVITY</td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">BLUETOOTH_SETTINGS</code></td><td class="px-4 py-2 text-gray-300">Bluetooth settings page</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Open Camera</td><td class="px-4 py-2 text-gray-300">ACTIVITY</td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">IMAGE_CAPTURE</code></td><td class="px-4 py-2 text-gray-300">Launch camera</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Open Maps</td><td class="px-4 py-2 text-gray-300">ACTIVITY</td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">VIEW</code> (geo:)</td><td class="px-4 py-2 text-gray-300">Open maps with query</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Web Search</td><td class="px-4 py-2 text-gray-300">ACTIVITY</td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">WEB_SEARCH</code></td><td class="px-4 py-2 text-gray-300">Web search</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Termux Command</td><td class="px-4 py-2 text-gray-300">SERVICE</td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">RUN_COMMAND</code></td><td class="px-4 py-2 text-gray-300">Execute Termux CLI command</td></tr></tbody></table>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">XML Round-Trip (Layout Import/Export)</h3>
+
+<p class="mb-4 text-gray-300">Intent mappings stored in layout XML use the <code class="bg-ck-dark px-1 rounded">__intent__:</code> prefix:</p>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">intent:'{"name":"Open Browser","action":"android.intent.action.VIEW","data":"https://google.com"}'</code></pre>
+
+<p class="mb-4 text-gray-300"><code class="bg-ck-dark px-1 rounded">KeyValueParser.parseIntentKeydef()</code> reads this format and produces a KeyValue string with the <code class="bg-ck-dark px-1 rounded">IntentDefinition.INTENT_PREFIX</code> (<code class="bg-ck-dark px-1 rounded">__intent__:</code>) prepended. Profile import/export strips this prefix for round-trip compatibility.</p>
+
+<p class="mb-4 text-gray-300"><code class="bg-ck-dark px-1 rounded">XmlAttributeMapper</code> handles serialization of all action types to/from XML attributes, including proper single-quote escaping for TEXT values.</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">ShortSwipeMapping Factory & Accessor</h3>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// Factory method
+ShortSwipeMapping.intent(keyCode, direction, displayText, intentJson, useKeyFont)
+
+// Accessor — uses parseFromGson for null safety
+fun getIntentDefinition(): IntentDefinition? {
+    return if (actionType == ActionType.INTENT) {
+        IntentDefinition.parseFromGson(actionValue)
+    } else null
+}</code></pre>
+
+<p class="mb-4 text-gray-300">The <code class="bg-ck-dark px-1 rounded">actionValue</code> for INTENT mappings is a JSON string capped at <code class="bg-ck-dark px-1 rounded">MAX_ACTION_LENGTH</code> (4096 chars).</p>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Implementation Details</h2>
 

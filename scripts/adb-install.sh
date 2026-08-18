@@ -75,7 +75,7 @@ if adb install -r "$APK_FULL_PATH"; then
     echo "   3. Test basic typing and swipe gestures"
     echo ""
     echo "🔍 Monitor logs:"
-    echo "   adb logcat -s CleverKeys:* Keyboard2:* NeuralSwipe:* AndroidRuntime:E"
+    echo "   adb logcat -s CleverKeys:* Keyboard2:* CtcEngineAdapter:* AndroidRuntime:E"
 else
     echo ""
     echo "❌ Installation failed"

@@ -45,7 +45,7 @@ body:
       label: Bug Category
       description: What type of issue are you experiencing?
       options:
-        - Neural Prediction (ONNX models, swipe typing)
+        - Swipe Prediction (ONNX/geometric decoders)
         - Keyboard Layout (key positioning, custom layouts)
         - Performance (lag, memory, battery)
         - Settings (configuration, preferences)
@@ -82,12 +82,12 @@ body:
       required: true
 
   - type: textarea
-    id: neural-config
+    id: swipe-config
     attributes:
-      label: Neural Configuration (if applicable)
-      description: If this is a neural prediction issue, please provide your current settings.
+      label: Swipe Configuration (if applicable)
+      description: If this is a swipe prediction issue, please provide your current settings.
       placeholder: |
-        - Neural Predictions: Enabled/Disabled
+        - Swipe Predictions: Enabled/Disabled
         - Beam Width: X
         - Max Length: X
         - Confidence Threshold: X
@@ -98,7 +98,7 @@ body:
     id: logs
     attributes:
       label: Logs
-      description: If possible, please provide relevant logs from `adb logcat | grep -E "CleverKeys|Neural|ONNX"`
+      description: If possible, please provide relevant logs from `adb logcat | grep -E "CleverKeys|Ctc|Onnx"`
       render: shell
 
   - type: checkboxes
@@ -109,7 +109,7 @@ body:
       options:
         - label: I have restarted the CleverKeys app
         - label: I have tried disabling and re-enabling the keyboard
-        - label: I have checked if this happens with neural predictions disabled
+        - label: I have checked if this happens with swipe predictions disabled
         - label: I have tried clearing the app cache/data (if safe to do so)
 
   - type: textarea

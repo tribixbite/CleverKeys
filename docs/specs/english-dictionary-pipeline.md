@@ -55,7 +55,7 @@ Per-language:                         │      1. Try contractions.bin (fastest)
 User swipes "cant"
     │
     ▼
-Neural Network → ["cant", "can", "cat", ...]
+Swipe decoder → ["cant", "can", "cat", ...]
     │
     ▼
 InputCoordinator.handlePredictionResults() (line 255-259)

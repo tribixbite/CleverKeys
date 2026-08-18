@@ -104,15 +104,21 @@
 <p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">On</strong></td><td class="px-4 py-2 border-t border-gray-700">Haptics enabled for selected events</td></tr></p>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Off</strong></td><td class="px-4 py-2 border-t border-gray-700">All haptics disabled</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Vibration Duration</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">System Haptics vs Custom Duration</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed">Control vibration intensity via duration:</p>
+<p class="mb-4 text-gray-300 leading-relaxed">By default, key presses use Android's <strong class="text-white">system haptic feedback</strong> — the same low-latency, OEM-tuned effect the stock keyboard uses. This feels snappier than a manual vibration because the effect is pre-loaded by the hardware.</p>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Moving the <strong class="text-white">Vibration Duration</strong> slider switches key-press feedback to a <strong class="text-white">custom vibration</strong> of that length. That gives you control over the feel, at the cost of the system effect's lower latency.</p>
 
 <table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Duration</td><td class="px-4 py-2 border-t border-gray-700">Feel</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Short</strong></td><td class="px-4 py-2 border-t border-gray-700">Subtle, brief feedback</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Medium</strong></td><td class="px-4 py-2 border-t border-gray-700">Noticeable tactile response</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Long</strong></td><td class="px-4 py-2 border-t border-gray-700">Pronounced, strong vibration</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Default (untouched)</strong></td><td class="px-4 py-2 border-t border-gray-700">System haptic — fast, subtle, OEM-tuned</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Short custom</strong></td><td class="px-4 py-2 border-t border-gray-700">Subtle, brief feedback</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Medium custom</strong></td><td class="px-4 py-2 border-t border-gray-700">Noticeable tactile response</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Long custom</strong></td><td class="px-4 py-2 border-t border-gray-700">Pronounced, strong vibration</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!NOTE]</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">A bug in older versions could silently switch installs to custom-duration mode. Current versions run a one-time cleanup: if you never changed the duration slider, you're returned to the low-latency system haptic automatically. Users who did set a custom duration keep it.</blockquote>
+
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Per-Event Haptics</h2>
 
 <p class="mb-4 text-gray-300 leading-relaxed">CleverKeys supports 5 specific haptic events:</p>
@@ -122,10 +128,10 @@
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Suggestion Tap</strong></td><td class="px-4 py-2 border-t border-gray-700">On</td><td class="px-4 py-2 border-t border-gray-700">Vibrate when tapping a suggestion</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">TrackPoint Activate</strong></td><td class="px-4 py-2 border-t border-gray-700">On</td><td class="px-4 py-2 border-t border-gray-700">Vibrate when entering navigation mode</td></tr>
 <tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Long Press</strong></td><td class="px-4 py-2 border-t border-gray-700">On</td><td class="px-4 py-2 border-t border-gray-700">Vibrate when long-press detected</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Swipe Complete</strong></td><td class="px-4 py-2 border-t border-gray-700">Off</td><td class="px-4 py-2 border-t border-gray-700">Vibrate when swipe word completes</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Swipe Complete</strong></td><td class="px-4 py-2 border-t border-gray-700">On</td><td class="px-4 py-2 border-t border-gray-700">Vibrate when swipe word completes</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!NOTE]</blockquote>
-<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">Swipe Complete is disabled by default as it can be distracting during rapid typing.</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">Swipe Complete confirms that a swiped word was recognized — helpful while learning the gesture. Turn it off here if it feels distracting during rapid typing.</blockquote>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Configuring Haptics</h2>
 
@@ -200,9 +206,9 @@
 
 <p class="mb-4 text-gray-300 leading-relaxed">A: No, haptic settings apply to event types (all key presses, all predictions, etc.), not individual keys.</p>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Why is Swipe Complete off by default?</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Why does my keyboard vibrate after every swiped word?</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed">A: It vibrates after every swipe word, which many users find distracting during continuous typing. Enable it if you want confirmation that swipes are recognized.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">A: That's the Swipe Complete haptic — it confirms the word was recognized, which is especially useful while learning swipe typing. If you find it distracting, turn off <strong class="text-white">Swipe Complete</strong> in the Accessibility section.</p>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Related Features</h2>
 
@@ -218,8 +224,8 @@
                 <span>&larr;</span>
                 <span class="text-sm text-gray-400">Input Behavior</span>
             </a>
-            <a href="settings/neural-settings.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
-                <span class="text-sm text-gray-400">Neural Settings</span>
+            <a href="settings/privacy.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+                <span class="text-sm text-gray-400">Privacy</span>
                 <span>&rarr;</span>
             </a>
         </div>

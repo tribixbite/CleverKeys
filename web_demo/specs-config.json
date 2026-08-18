@@ -32,15 +32,6 @@
       "version": "v1.2.0"
     },
     {
-      "file": "neural-prediction.md",
-      "title": "Neural Prediction",
-      "description": "ONNX transformer-based swipe typing engine",
-      "category": "Core",
-      "icon": "brain",
-      "reviewed": true,
-      "version": "v1.0.0"
-    },
-    {
       "file": "gesture-system.md",
       "title": "Gesture System",
       "description": "Swipe detection, multi-touch, and gesture trails",
@@ -105,11 +96,29 @@
     }
   ],
   "categories": [
-    { "name": "Core", "color": "#9b59b6" },
-    { "name": "Gestures", "color": "#3498db" },
-    { "name": "Navigation", "color": "#2ecc71" },
-    { "name": "Customization", "color": "#e74c3c" },
-    { "name": "Settings", "color": "#f39c12" },
-    { "name": "Languages", "color": "#1abc9c" }
+    {
+      "name": "Core",
+      "color": "#9b59b6"
+    },
+    {
+      "name": "Gestures",
+      "color": "#3498db"
+    },
+    {
+      "name": "Navigation",
+      "color": "#2ecc71"
+    },
+    {
+      "name": "Customization",
+      "color": "#e74c3c"
+    },
+    {
+      "name": "Settings",
+      "color": "#f39c12"
+    },
+    {
+      "name": "Languages",
+      "color": "#1abc9c"
+    }
   ]
 }

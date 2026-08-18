@@ -25,7 +25,7 @@ Location: `~/storage/shared/Download/cc/`
 | `Screenshot_20251205_063216_CleverKeys (Debug).jpg` | Themes gallery | Settings |
 | `Screenshot_20251205_063225_CleverKeys (Debug).jpg` | Theme selection | Settings |
 | `Screenshot_20251205_080932_CleverKeys (Debug).jpg` | Main settings top | Settings |
-| `Screenshot_20251205_080940_CleverKeys (Debug).jpg` | **Neural Network Prediction** + Appearance | Settings |
+| `Screenshot_20251205_080940_CleverKeys (Debug).jpg` | **On-device model Prediction** + Appearance | Settings |
 | `Screenshot_20251205_080946_CleverKeys (Debug).jpg` | Theme Manager section | Settings |
 | `Screenshot_20251205_080952_CleverKeys (Debug).jpg` | Input Behavior + Keyboard Layouts | Settings |
 | `Screenshot_20251205_080956_CleverKeys (Debug).jpg` | More settings options | Settings |
@@ -49,7 +49,7 @@ Location: `~/storage/shared/Download/cc/`
 1. **`Screenshot_20251205_033015_Samsung Notes.jpg`** - Stunning cyan/magenta neon keyboard
 2. **`Screenshot_20251205_004212_Samsung Notes.jpg`** - Shows swipe trail in action
 3. **`Screenshot_20251205_063059_CleverKeys (Debug).jpg`** - Theme Creator UI
-4. **`Screenshot_20251205_080940_CleverKeys (Debug).jpg`** - Neural Network Prediction setting
+4. **`Screenshot_20251205_080940_CleverKeys (Debug).jpg`** - On-device model Prediction setting
 
 ## Notes
 

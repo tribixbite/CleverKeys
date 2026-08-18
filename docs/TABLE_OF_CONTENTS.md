@@ -36,10 +36,12 @@
 | `memory/todo.md` | **Active Task List** | ✅ Active |
 | `docs/history/` | Historical logs and archives | 📚 Reference |
 
-#### Model & Neural Pipeline
+#### Model & Swipe Pipeline
 | File | Purpose | Status |
 |------|---------|--------|
-| `docs/specs/neural-prediction.md` | ONNX pipeline spec | ✅ Active |
+| `docs/specs/ctc-swipe-engine.md` | CTC swipe engine spec | ✅ Active |
+| `docs/specs/geometric-swipe-engine.md` | Geometric swipe engine spec | ✅ Active |
+| `docs/history/neural-engine/` | The removed ONNX transformer engine (ADR-011) | 📚 Archived |
 | `CLI_TEST_README.md` | CLI testing guide | ✅ Active |
 
 #### Testing
@@ -57,7 +59,7 @@
 | `SPEC_TEMPLATE.md` | Template for new specs | ✅ Active |
 | `core-keyboard-system.md` | Core keyboard operations | ✅ Implemented |
 | `gesture-system.md` | Gesture recognition | ✅ Implemented |
-| `neural-prediction.md` | ONNX prediction pipeline | ✅ Implemented |
+| `ctc-swipe-engine.md` | CTC swipe engine | ✅ Implemented |
 | `layout-system.md` | Layout & extra keys | ✅ Implemented |
 | `settings-system.md` | Settings & preferences | ✅ Implemented |
 | `ui-material3-modernization.md` | Material 3 UI | ✅ Implemented |
@@ -72,11 +74,11 @@
 | `architectural-decisions.md` | Architectural Decision Records | ✅ Active |
 
 ### `/docs/eval/` Decoder Evaluations (2026-07/08)
-*Neural / geometric / FUTO-reference head-to-head evidence base*
+*CTC / geometric / FUTO-reference head-to-head evidence base*
 
 | File | Purpose | Status |
 |------|---------|--------|
-| `2026-07-24-test2400-head2head.md` | Same-split 2,400-row head-to-head (neural/geo/FUTO floor+ceiling) + fusion go/no-go; held-out VAL (9,918) corroboration; **2026-08-08 addendum: shipped CTC engine (89.31 t1) now tops the table** | ✅ Complete |
+| `2026-07-24-test2400-head2head.md` | Same-split 2,400-row head-to-head (transformer/geo/FUTO floor+ceiling) + fusion go/no-go; held-out VAL (9,918) corroboration; **2026-08-08 addendum: shipped CTC engine (89.31 t1) now tops the table** | ✅ Complete |
 | `2026-07-23-futo100k-head2head.md` | FUTO 100k corpus head-to-head | ✅ Complete |
 | `2026-08-06-offline-decoder-speedup.md` | Offline ONNX decode speedup investigation — verdict: adopt neither (XNNPACK 0.80× slower; decoder already int8-dynamic-quantized) | ✅ Complete |
 | `2026-07-24-harness-conversion-audit.md` | Eval harness conversion fixes | ✅ Complete |
@@ -101,7 +103,7 @@
 | File | Purpose | Status |
 |------|---------|--------|
 | `session_log_dec_2025.md` | December 2025 Work Log | ✅ Archived |
-| `ONNX_DECODE_PIPELINE.md` | ONNX pipeline docs | ✅ Active |
+| `neural-engine/` | The removed ONNX transformer engine: specs, decode pipeline, settings docs (ADR-011) | 📚 Archived |
 | `PRODUCTION_READY_NOV_16_2025.md` | Production readiness report | 📚 Reference |
 
 ## 🔄 Consolidation Status

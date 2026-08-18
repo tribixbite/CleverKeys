@@ -258,7 +258,7 @@ function generateIndexPage(config) {
 
     <!-- Footer -->
     <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-gray-800">
-        <p>CleverKeys - Open Source Neural Keyboard</p>
+        <p>CleverKeys - Open Source Gesture Keyboard</p>
     </footer>
 </body>
 </html>`;
