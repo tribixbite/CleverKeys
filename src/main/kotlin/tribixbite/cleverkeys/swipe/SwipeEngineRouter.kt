@@ -21,7 +21,7 @@ import tribixbite.cleverkeys.KeyboardData
  *
  * LAYOUT dimension (gate widened 2026-08-15): the CTC encoder is layout-agnostic — key
  * geometry is a model input (`layout_keys`) — and the ship model was validated on alt-layouts
- * during training: dvorak 89.87 / dvorak-app-geometry 88.98 top-1 (3 seeds, en lexicon — the
+ * during training: dvorak 91.82 / dvorak-app-geometry 91.10 top-1 (3 seeds, en lexicon — the
  * SAME `en_enhanced` trie + tunedV2 λ the app ships). So Latin non-QWERTY layouts (Dvorak,
  * Colemak, AZERTY, …) route CTC. A Latin layout the adapter cannot serve (missing an a–z
  * letter → no `CtcLayout`) falls through to geometric at dispatch time via
@@ -106,7 +106,7 @@ object SwipeEngineRouter {
     fun route(layoutName: String?, script: String?, mode: Mode): Engine {
         if (mode == Mode.GEOMETRIC) return Engine.GEOMETRIC
         // Gate widening 2026-08-15: the CTC encoder is layout-agnostic (key geometry is a
-        // model input) and was validated on alt-layouts (dvorak 89.87 top-1 — see the class
+        // model input) and was validated on alt-layouts (dvorak 91.82 top-1 — see the class
         // KDoc), so ANY known-Latin layout routes CTC. The dispatch-time
         // CtcEngineAdapter.supportsLayout check guards letter-incomplete Latin layouts back
         // to geometric. Non-Latin/unknown scripts can never build an a–z CtcLayout →

@@ -576,4 +576,62 @@ class CoreImeHygieneDriftTest {
                 "also an alias key (fr `la` -> `l'a`) keeps its real frequency."
         ).that(wp).contains("!index.contains(normalized)")
     }
+
+    /**
+     * Accuracy figures quoted in source must belong to the model we actually ship.
+     *
+     * ### The bug this pins
+     *
+     * `sw2345` is a superseded Phase-J model that was **never decoded on test**
+     * (CleverKeys-ML `MODELS_TABLE.md:139`). Its alt-layout numbers — dvorak 89.87 /
+     * dvorak-app 88.98, azerty 83.81, qwertz 83.01, german 80.64, spanish 88.45 — were quoted
+     * throughout this codebase as though they described the shipped
+     * `phaseM_kd_fresh_w1_s1234_fp16w`, whose real figures are HIGHER: dvorak 91.82 / 91.10,
+     * azerty 84.53, qwertz 83.97, german 81.30, spanish 89.53 (`MODELS_TABLE.md:113`).
+     *
+     * They were corrected on 2026-08-18 — and then a KDoc rewrite during the neural-engine
+     * removal silently reintroduced two of them, leaving `SwipeEngineRouter` quoting 91.82 in
+     * one paragraph and 89.87 in two others. Nothing caught it, because a stale comment
+     * compiles and passes every other gate. Hence this test.
+     *
+     * A negative assertion is the right shape here: the numbers are load-bearing only as
+     * evidence, so what matters is that the WRONG set cannot reappear anywhere, not that any
+     * particular file quotes the right one.
+     */
+    @Test
+    fun sourceQuotesTheShippedModelsAccuracyNotItsSupersededPredecessors() {
+        // sw2345's figures. Each is distinctive enough that a match is a real citation, not a
+        // coincidental number — they are all 4-significant-figure percentages.
+        val supersededFigures = listOf("89.87", "88.98", "83.81", "83.01", "80.64", "88.45")
+
+        // A KDoc that RECORDS the correction has to restate the wrong numbers to be useful, so
+        // allow a figure when `sw2345`/`superseded` appears within two lines of it — prose wraps,
+        // and requiring the marker on the same line would force awkward line breaks. Two lines is
+        // tight enough that it cannot accidentally licence an unrelated citation elsewhere.
+        val markerWindow = 2
+        fun isDeliberatelyHistorical(lines: List<String>, idx: Int): Boolean =
+            (maxOf(0, idx - markerWindow)..minOf(lines.lastIndex, idx + markerWindow)).any {
+                lines[it].contains("sw2345") || lines[it].contains("superseded")
+            }
+
+        val offenders = mutableListOf<String>()
+        mainKotlin.walkTopDown()
+            .filter { it.isFile && it.extension == "kt" }
+            .forEach { file ->
+                val lines = file.readLines()
+                lines.forEachIndexed { idx, line ->
+                    if (isDeliberatelyHistorical(lines, idx)) return@forEachIndexed
+                    supersededFigures.firstOrNull { line.contains(it) }?.let { figure ->
+                        offenders += "${file.relativeTo(mainKotlin).path}:${idx + 1} quotes $figure"
+                    }
+                }
+            }
+
+        assertWithMessage(
+            "These are `sw2345`'s numbers, not the shipped model's. Use dvorak 91.82 / " +
+                "dvorak-app 91.10, azerty 84.53, qwertz 83.97, german 81.30, spanish 89.53 " +
+                "(CleverKeys-ML MODELS_TABLE.md:113). If you are deliberately citing the " +
+                "superseded model, name `sw2345` on the same line."
+        ).that(offenders).isEmpty()
+    }
 }

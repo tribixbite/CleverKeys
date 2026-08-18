@@ -83,7 +83,6 @@ open class ImprovedSwipeGestureRecognizer {
         _shiftActiveAtStart = shiftActive
         _shiftLockedAtStart = shiftLocked
 
-        // Use object pool to reduce GC pressure
         val startPoint = PointF(x, y)
         _rawPath.add(startPoint)
         _smoothedPath.add(startPoint)
