@@ -36,6 +36,37 @@ class PredictionInitializer(
      * first swipe works immediately. Singleton persists, so subsequent loads are instant.
      */
     fun initializeIfEnabled() {
+        // Wire the view's service handle FIRST and UNCONDITIONALLY — outside every config
+        // check, before any model loading, and with no engine-readiness gate.
+        //
+        // Despite the name, `setSwipeTypingComponents` is what gives `Keyboard2View` its
+        // `_keyboard2` reference, and that handle is load-bearing far beyond word swipes:
+        // custom short swipes (`onCustomShortSwipe` returns early with "no service reference"
+        // without it), suggestion-bar messages, the selection menu, and the primary/secondary
+        // language toggles all go through it. **No subkey behaviour may depend on prediction
+        // or swipe-typing settings** — a user with both switched off still gets their custom
+        // subkey gestures, which is the whole point of the Short Swipe Customization feature.
+        //
+        // Three wrong gates lived here, each narrower than the last was assumed to be:
+        //  1. `isSwipeTypingAvailable()`, which is literally `neuralEngine != null` — the wrong
+        //     dependency twice over, since this call passes the word predictor and the service
+        //     handle and touches the neural engine not at all. It only ever worked because
+        //     something always built the neural engine eagerly.
+        //  2. `swipe_typing_enabled`, which still stranded users who keep swipe typing off.
+        //  3. the enclosing `word_prediction_enabled || swipe_typing_enabled`, which stranded
+        //     users who have BOTH off.
+        // When the neural build became conditional on routing (`shouldPreloadNeuralEngine`),
+        // gate 1 went permanently false in CTC mode, the call stopped happening, and
+        // `_keyboard2` stayed null — killing word swipes and user-created subkey short swipes
+        // together, while layout-defined subkeys kept working because they never take this path.
+        //
+        // Null-tolerant by signature, so passing a not-yet-built predictor is safe: the
+        // predictor is re-read per gesture, the service handle is not.
+        keyboardView.setSwipeTypingComponents(
+            predictionCoordinator?.getWordPredictor(),
+            keyboard2
+        )
+
         if (config?.word_prediction_enabled == true || config?.swipe_typing_enabled == true) {
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                 android.util.Log.d("PredictionInitializer", "Starting model initialization (synchronous)...")
@@ -49,19 +80,12 @@ class PredictionInitializer(
             val loadTime = System.currentTimeMillis() - startTime
             android.util.Log.i("PredictionInitializer", "✅ Models loaded in ${loadTime}ms (ready for swipes)")
 
-            // Set swipe typing components on keyboard view if swipe is enabled
-            if (config?.swipe_typing_enabled == true && predictionCoordinator?.isSwipeTypingAvailable() == true) {
-                if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                    android.util.Log.d(
-                        "CleverKeysService",
-                        "Neural engine initialized - dimensions and key positions will be set after layout"
-                    )
-                }
-                keyboardView.setSwipeTypingComponents(
-                    predictionCoordinator.getWordPredictor(),
-                    keyboard2
-                )
-            }
+            // Re-push the predictor now that it exists; the handle above was wired before the
+            // synchronous load, so on a cold start the first call passed null for it.
+            keyboardView.setSwipeTypingComponents(
+                predictionCoordinator?.getWordPredictor(),
+                keyboard2
+            )
         }
     }
 
