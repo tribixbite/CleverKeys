@@ -234,8 +234,11 @@ Further facts that bound the claim:
   (`PHASE_I_DATA.md:322, 350, 358-363`). λ 2.0 lifts the shippable model to **≈77.4**
   (`PHASE_J.md:766-789`). The real corpus (Yandex Cup 2023, 6 M rows) is **eval-only by licence**
   (`PHASE_I_DATA.md:196-199`).
-* **All Cyrillic numbers are val-only, permanently** — no Cyrillic model was ever decoded on
-  test-2400 and the seal is spent (`CtcScoringParams.kt:193-196`, `PHASE_M.md:479-498`).
+* **All Cyrillic numbers are val-only, permanently** — and the reason is stronger than "the seal
+  is spent" (corrected 2026-08-18): `ctc/test2400_seal.json` holds only **two** sealed splits,
+  `test-2400` and `futo-test-49970`, and **both are English**. No sealed Cyrillic split has ever
+  existed, so no Cyrillic model could have been test-decoded regardless of ledger state
+  (`CtcScoringParams.kt:193-196`, `PHASE_M.md:479-498`, `MODELS_TABLE.md:798-800`).
 
 **Implication for the app**: script coverage means **per-script models plus a model-selection
 layer**, plus a per-script footing/λ decision, plus a per-script lexicon and projection policy.
@@ -257,16 +260,28 @@ everything" claim rests on — and geometric's (synthetic) ru/JCUKEN TYPICAL top
 (`docs/specs/geometric-swipe-engine.md:599-605`). The two are not measured on comparable data, but
 there is certainly no evidence that CTC would beat geometric on Cyrillic.
 
-### 2.1.3 An open footing question worth resolving before quoting the alt-layout bars
+### 2.1.3 ~~An open footing question~~ — RESOLVED 2026-08-18, and it found a different error
 
-The ML repo's committed layout geometries carry **27 letter slots for azerty / dvorak / spanish and
-29 for german**, while `CtcEngineAdapter.buildMappedLayout` always builds **exactly 26 (a–z)**
-(`CtcEngineAdapter.kt:249-301`). The router KDoc quotes both a campaign dvorak number (89.87) and a
-separate "dvorak-app-geometry" number (88.98) — implying the distinction is known and was measured
-for dvorak — but azerty 83.81 / qwertz 83.01 / german 80.64 / spanish 88.45 are quoted with **no
-app-geometry counterpart** (`SwipeEngineRouter.kt:22-25, 82-88`). **Verify which slot configuration
-those four bars were decoded at before using them to justify anything.** If they used 27/29 slots,
-the app is running a configuration those numbers were not measured in.
+**The slot-mismatch suspicion is REFUTED.** This section originally warned that the ML repo's
+layout geometries carry 27 letter slots for azerty/dvorak/spanish and 29 for german while
+`CtcEngineAdapter.buildMappedLayout` always builds exactly 26, and asked which configuration the
+four bars were decoded at. Answer: **the `az26` arm — 26 slots, matching the app exactly.**
+`ctc/ALT_LAYOUT_EVAL.md:189-200` defines both arms and states `az26` "matches the training regime
+exactly: 26 active slots"; the `full` arm was measured and buys nothing (dvorak +0.05, azerty
++0.10, german 0.00, spanish −0.23, `:303-311`), concluding "the `az26` arm is used for every
+headline number." The `MODELS_TABLE.md` audit makes this binding registry-wide (`:831`, `:132`,
+`:397`, `:422`, `:475`, `:539`). Our own λ sweep already runs `az26`
+(`scripts/ctc_lang_lambda_sweep.py:46-47`).
+
+**But checking it surfaced a real error: the numbers named the wrong model.** azerty 83.81 /
+qwertz 83.01 / german 80.64 / spanish 88.45 and dvorak 89.87 / 88.98 are **`sw2345`**'s
+(`MODELS_TABLE.md:139`) — a superseded Phase-J model that was *never decoded on test* — not the
+shipped `phaseM_kd_fresh_w1_s1234_fp16w`'s (`:113`), which are **azerty 84.53 / qwertz 83.97 /
+german 81.30 / spanish 89.53** (euro-mean 84.83) and **dvorak 91.82 / dvorak-app 91.10**. The
+error was conservative — every corrected value is higher — but the citation was wrong. Corrected
+at `CtcLanguageSupport.kt`, `SwipeEngineRouter.kt` and `docs/specs/ctc-swipe-engine.md`.
+The campaign **bars** these clear are a third set again: azerty 83.60 / qwertz 82.50 / german
+79.64 / spanish 88.28 (`MODELS_TABLE.md:132-136`).
 
 ### 2.1.2 Practical reading
 

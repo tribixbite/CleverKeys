@@ -184,10 +184,17 @@ Outstanding, in priority order:
 - [ ] **P2 — Russian is the one non-Latin script with a trained, swept, benchmarked CTC model
       — treat it separately from "non-Latin is blocked on data".** Two ru models exist and were
       λ-swept symmetrically (tune rows 0:4708, confirm on the untouched 4708:9416,
-      `eval_cyrillic.py`, ML `PHASE_J.md` §6.9): λ 2.0 gives **76.91/77.92** and **77.83/78.23**
-      in-dict top-1, worth ~+1.2 over the published λ 1.1. `CtcScoringParams.tunedRuCkdt` carries
-      the result and is deliberately unwired. Marginal cost is small — the ru model is the
-      standard resbn80 graph at 1,142,727 B (~0.55 MiB fp16w), ~1.5 GPU-h for 3 seeds.
+      `eval_cyrillic.py`, ML `PHASE_J.md` §6.9): λ 2.0 gives **76.91 tune / 77.92 confirm** for
+      the **shippable** model `phaseIB-ru-synth`, worth ~+1.2 over the published λ 1.1 — so
+      **≈ 77.4 is the honest ru figure**, not 76.21. (The second pair, 77.83/78.23, belongs to
+      `phaseJ-joint`, the **rejected** joint en+ru model — do not read it as a shippable ru
+      number. Its own headline was also retracted: a running 2,000-row 77.40 was wrong, the
+      completed 9,416-row decode is 76.56, `MODELS_TABLE.md:503`.)
+      `CtcScoringParams.tunedRuCkdt` carries the λ result and is deliberately unwired.
+      Marginal cost is small — the ru model is the standard resbn80 graph at 1,142,727 B
+      (~0.55 MiB fp16w), ~1.5 GPU-h for 3 seeds. NOTE the shippable model is trained on
+      **100% synthetic** data (English motor residuals on ru polylines); the real-data twin
+      `phaseIB-ru-real` scores 89.64 but is **corpus-licensed out of anything shippable**.
       What is actually missing: (a) a `"ru" to CKDT_BIN` row in `CtcLanguageSupport.SUPPORTED`
       — without it `presetFor("ru")` returns the ENGLISH λ 4.0, the wrong scale; (b) the a–z
       `ALPHABET` hardcode and `MAX_CHILDREN = 26` (Cyrillic needs 33); (c) a bundled ru
@@ -206,8 +213,11 @@ Outstanding, in priority order:
       i.e. roughly at parity with CTC's 77.4. That is a one-point calibration across different
       corpora, not a validated mapping — it is enough to say the comparison is OPEN, not enough
       to decide it. Resolving it needs both engines on one ru dataset. Note also that all
-      Cyrillic numbers are **val-tier permanently** (no Cyrillic model was decoded on test-2400;
-      the seal is spent), so ru can never reach en/fr/de/es's evidence tier.
+      Cyrillic numbers are **val-tier permanently**, and the reason is stronger than "the seal
+      is spent": `ctc/test2400_seal.json` holds only **two** sealed splits, `test-2400` and
+      `futo-test-49970`, and **both are English**. No sealed Cyrillic split has ever existed,
+      so no Cyrillic model could have been test-decoded regardless of ledger state. ru can
+      never reach en/fr/de/es's evidence tier without a new seal being created first.
 - [ ] **P2 — geo fallback CANNOT yet be removed under `ctc`.** 4 of 15 routing cells survive;
       dead would be it/pt/sv, all langpacks, 36 of 83 bundled layouts, and two bundled Latin
       layouts whose letters sit on corners (`latn_qwerty_az`, `latn_qwerty_tly`).
@@ -242,9 +252,39 @@ Outstanding, in priority order:
 - [ ] `hybrid` swipe mode is provenance-tagged `NEURAL_BEAM` (minor; give it its own origin).
 - [ ] (by-design, documented) backup *restore* repopulates learned stores even with master OFF (L7).
 
-### B. FUTO / CTC swipe engine — TRAINED + WIRED (en/fr/de/es), campaign CLOSED (3b9dd666..HEAD)
-- [x] **CTC model trained** (user's GPU, CleverKeys-ML repo, Phases A→M — the campaign is
-      now CLOSED, ledger empty, no further training): ship model
+### B. FUTO / CTC swipe engine — TRAINED + WIRED (en/fr/de/es); campaign REOPENED as Phase N
+
+> **Status corrected 2026-08-18.** This section previously said "campaign CLOSED, ledger
+> empty, no further training". That was true of Phases A→M but **Phase N opened 2026-08-15**
+> (ML HEAD `da96bb3`) with the goal of winning FUTO's domain on FUTO's *official* test split.
+> State: **N2d ch256 decoding now** (gate 98.1 PASS, committed before decode); N2a/N2b
+> (source reweighting), N2e (minmargin preset) and N2e-b (pair emissions) all **refuted**;
+> N2c never launched. Milestone budget: 3 reads of the sealed `futo-test-49970`, **1 spent
+> (M0), 2 remain**.
+>
+> **Nothing we ship changes.** Phase N §15.3 pins the app preset and artifact as untouched by
+> construction — its presets are fitted against FUTO's 146,964-word AOSP-scale trie
+> (`ln f` spread 5.40), ours against the app trie's compressed byte scores (spread 0.64).
+> Adopting a Phase-N preset in the app would be a **scale-mismatch regression**, which is also
+> why its λ is 1.75 and ours is 4.0. The "adopted preset" headline
+> 91.25/95.02/95.57/95.86/88.55 is a **different corpus, trie, preset and scoring convention**
+> than our 89.306/… — Phase N itself forbids printing them side by side.
+> The phase-n a–z normalization erratum was **sweep-tooling-only**: it depressed some
+> Phase-N-internal levels (caught before any test read) but never mis-selected a preset, and
+> touches neither our golden fixture, our preset selection, nor the per-language λ result.
+>
+> **Available to adopt (maintainer's call):** the M0 verdict is a strictly stronger,
+> separately-footed claim than the "qualified equal-footing win" below — on FUTO's own
+> official test (49,208 session-disjoint rows) at symmetric dev-tuned footing, our 2.91 MB
+> model beats FUTO's engine on t1/t3/t5/≤3 **every seed**, McNemar **p < 1e-17**; 4+ is a
+> statistical tie (−0.010). It also retires the §8.4 "FUTO +0.38 on its own half" limitation
+> we currently carry, now measured at 40× power as a tie. Registered limits that must travel
+> with it: **B1 is NOT met** (4 of 5, not 5 of 5); the split is unfiltered FUTO data and may
+> not be quoted beside any test-2400 number; FUTO's bar is its dev-tuned preset, harder than
+> its published one; the preset was fitted on s1234 and applied unchanged to the other seeds.
+
+- [x] **CTC model trained** (user's GPU, CleverKeys-ML repo, Phases A→M — that campaign is
+      closed; see the Phase N note above): ship model
       **`phaseM_kd_fresh_w1_s1234_fp16w`** (3,052,318 B / 2.91 MB, sha256 `84718e6e…`), the
       Phase-M distilled single model (a ch192 student distilled from the coupled pair).
       **TEST-VALIDATED on BOTH footings, every seed** — the fourth and FINAL unsealing of

@@ -14,8 +14,21 @@ import java.util.Locale
  * when BOTH of these exist for it:
  *
  *  1. **Model-level validation**: an alt-layout accuracy bar from the training campaign
- *     (CleverKeys-ML `ctc/`): azerty 83.81, qwertz 83.01, german 80.64, spanish 88.45
- *     top-1 — i.e. fr / de / es, plus en on the QWERTY family.
+ *     (CleverKeys-ML `ctc/MODELS_TABLE.md:113`). For the model we actually ship
+ *     (`phaseM_kd_fresh_w1_s1234_fp16w`): azerty **84.53**, qwertz **83.97**, german
+ *     **81.30**, spanish **89.53** top-1 (euro-mean 84.83) — i.e. fr / de / es, plus en
+ *     on the QWERTY family. These CLEAR the campaign bars, which are a separate set of
+ *     numbers: azerty 83.60 / qwertz 82.50 / german 79.64 / spanish 88.28
+ *     (`MODELS_TABLE.md:132-136`).
+ *
+ *     Measured on the **`az26` arm** — only the 26 a–z keys are given to the model, mask
+ *     26 — which is exactly what `CtcEngineAdapter.buildMappedLayout` builds. The `full`
+ *     arm (27 slots for dvorak/azerty/spanish, 29 for german) was measured and buys
+ *     nothing: +0.05 / +0.10 / 0.00 / −0.23 (`ctc/ALT_LAYOUT_EVAL.md:303-311`).
+ *
+ *     Until 2026-08-18 this KDoc quoted 83.81 / 83.01 / 80.64 / 88.45. Those belong to
+ *     `sw2345` (`MODELS_TABLE.md:139`), a superseded Phase-J model that was **never
+ *     decoded on test** — the citation named the wrong model, and understated ours.
  *  2. **A decoder preset validated on THIS language's lexicon scale**: the λ sweep in
  *     `docs/eval/2026-08-15-ctc-per-language-lambda.md`.
  *

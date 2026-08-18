@@ -79,9 +79,10 @@ object SwipeEngineRouter {
          * G5: CTC on ANY Latin-script layout when the active language is one CTC
          * serves (en/fr/de/es — `swipe/ctc/CtcLanguageSupport`; gate widened
          * 2026-08-15 for layouts — the encoder is layout-agnostic and was validated
-         * on alt-layouts: dvorak 89.87 / dvorak-app-geometry 88.98 top-1, 3 seeds,
-         * the shipped en lexicon+λ; azerty 83.81 / qwertz 83.01 / german 80.64 /
-         * spanish 88.45 for the 2026-08-16 language additions), geometric on
+         * on alt-layouts: dvorak 91.82 / dvorak-app-geometry 91.10 top-1, 3 seeds,
+         * the shipped en lexicon+λ; azerty 84.53 / qwertz 83.97 / german 81.30 /
+         * spanish 89.53 for the 2026-08-16 language additions — all on the `az26`
+         * arm, i.e. 26 slots, exactly what this app builds), geometric on
          * non-Latin layouts — and NEURAL for any other language on QWERTY (audit M1:
          * the language fallthrough lives in `InputCoordinator.performCtcSwipeTyping`
          * because language is runtime state this layout-only router doesn't see; an

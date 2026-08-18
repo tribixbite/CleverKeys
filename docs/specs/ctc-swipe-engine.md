@@ -230,11 +230,29 @@ language is enabled only with BOTH kinds of evidence:
 
 | Language | Model evidence (alt-layout top-1, CleverKeys-ML `ctc/`) | λ evidence | Lexicon source | λ |
 |---|---|---|---|---|
-| `en` | test-2400 89.31 (QWERTY family) | fitted + test-validated | `dictionaries/en_enhanced.json` (134–255 byte scores) | **4.0** |
-| `fr` | azerty 83.81 | sweep tune-half winner, confirm 86.25 | `dictionaries/fr_enhanced.bin` (CKDT, `255 − rank`) | **2.0** |
-| `de` | qwertz 83.01 / german 80.64 | sweep tune-half winner, confirm 87.85 / 81.57 | `dictionaries/de_enhanced.bin` | **2.0** |
-| `es` | spanish 88.45 | sweep tune-half winner, confirm 89.33 | `dictionaries/es_enhanced.bin` | **2.0** |
+| `en` | test-2400 89.31 (QWERTY family); dvorak 91.82 / dvorak-app 91.10 | fitted + test-validated | `dictionaries/en_enhanced.json` (134–255 byte scores) | **4.0** |
+| `fr` | azerty **84.53** | sweep tune-half winner, confirm 86.25 | `dictionaries/fr_enhanced.bin` (CKDT, `255 − rank`) | **2.0** |
+| `de` | qwertz **83.97** / german **81.30** | sweep tune-half winner, confirm 87.85 / **81.66** | `dictionaries/de_enhanced.bin` | **2.0** |
+| `es` | spanish **89.53** | sweep tune-half winner, confirm 89.33 | `dictionaries/es_enhanced.bin` | **2.0** |
 | `it`, `pt`, `sv` | **none** | **none** | (bundled `.bin` exists, unused by CTC) | — |
+
+> **Two corrections landed 2026-08-18, both from the CleverKeys-ML `MODELS_TABLE.md` audit.**
+> (1) The alt-layout column previously read azerty 83.81 / qwertz 83.01 / german 80.64 /
+> spanish 88.45 and dvorak 89.87 / 88.98. Those are **`sw2345`**'s numbers
+> (`MODELS_TABLE.md:139`) — a superseded Phase-J model that was *never decoded on test* — not
+> the shipped `phaseM_kd_fresh_w1_s1234_fp16w`'s (`MODELS_TABLE.md:113`). The error was
+> conservative: every corrected value is higher. The campaign **bars** these clear are a
+> third set again — azerty 83.60 / qwertz 82.50 / german 79.64 / spanish 88.28.
+> (2) German confirm-half read 81.57, which is the **λ 3.0** cell of
+> `docs/eval/2026-08-15-ctc-per-language-lambda.md:43`; the shipped λ 2.0 value is **81.66**.
+> Note that λ 3.0 beats λ 2.0 on the *confirm* half for de-qwertz and es-spanish. λ 2.0 is
+> still correct: selection is made on the **tune** half (the ✔ marks) and confirm is reported,
+> never selected on.
+>
+> All alt-layout numbers are the **`az26`** arm — 26 slots, exactly what
+> `CtcEngineAdapter.buildMappedLayout` builds. The `full` arm (27 slots for dvorak/azerty/
+> spanish, 29 for german) was measured and buys nothing: +0.05 / +0.10 / 0.00 / −0.23
+> (`ctc/ALT_LAYOUT_EVAL.md:303-311`). The suspected app-vs-campaign slot mismatch does not exist.
 
 λ is selected by the lexicon's frequency SCALE, not by the language: `en_enhanced.json`'s
 compressed 134–255 byte scores give `ln f ∈ [4.9, 5.54]`, while a CKDT `.bin` read at
