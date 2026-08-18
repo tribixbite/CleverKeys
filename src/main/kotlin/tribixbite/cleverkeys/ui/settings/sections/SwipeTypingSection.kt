@@ -18,11 +18,11 @@ import tribixbite.cleverkeys.ui.settings.openGeometricSettings
 import tribixbite.cleverkeys.ui.settings.saveSetting
 
 @Composable
-internal fun SettingsActivity.NeuralPredictionSection() {
+internal fun SettingsActivity.SwipeTypingSection() {
             CollapsibleSettingsSection(
                 title = stringResource(R.string.settings_section_swipe_typing),
-                expanded = neuralSectionExpanded,
-                onExpandChange = { neuralSectionExpanded = it }
+                expanded = swipeTypingSectionExpanded,
+                onExpandChange = { swipeTypingSectionExpanded = it }
             ) {
                 // Master switch for swipe typing
                 SettingsSwitch(

@@ -19,9 +19,13 @@ enum class PredictionSource {
     USER_TYPED_TAP,
 
     /**
-     * Auto-inserted from neural swipe typing prediction
+     * Auto-inserted from a swipe-typing prediction.
+     *
+     * Engine-agnostic: CTC and geometric commits both use this marker. It was called
+     * NEURAL_SWIPE until 2026-08-18 purely because the transformer was the only swipe
+     * engine when the enum was written; it never meant "decoded by the transformer".
      */
-    NEURAL_SWIPE,
+    SWIPE,
 
     /**
      * User manually selected a prediction from suggestion bar

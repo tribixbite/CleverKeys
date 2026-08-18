@@ -144,8 +144,8 @@ class SettingsSearchTest {
     @Test
     fun searchAndTapResult_gatedSetting_doesNotCrash() {
         // Prediction Engine is gated by Enable Swipe Typing — tests the gated
-        // scrollToSetting path. (Was "Beam Width" until WP9 v1.1 moved the neural
-        // sliders out of the main section into the Full Neural Settings screen.)
+        // scrollToSetting path. (Was "Beam Width" until WP9 v1.1 moved the beam
+        // sliders out of the main section; those sliders no longer exist at all.)
         searchFor("prediction engine")
 
         val result = device.wait(

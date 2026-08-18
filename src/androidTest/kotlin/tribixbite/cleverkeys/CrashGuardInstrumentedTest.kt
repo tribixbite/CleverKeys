@@ -73,7 +73,7 @@ class CrashGuardInstrumentedTest {
             .setPredictionCoordinator(null)
             .setInputCoordinator(null)
             .setSuggestionHandler(null)
-            .setNeuralLayoutHelper(null)
+            .setKeyboardDimensionsHelper(null)
             .setLayoutManager(null)
             .setKeyboardView(null)
             .setSubtypeManager(null)

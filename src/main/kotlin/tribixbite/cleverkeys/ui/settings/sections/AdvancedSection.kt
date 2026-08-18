@@ -24,7 +24,7 @@ internal fun SettingsActivity.AdvancedSection() {
                 expanded = advancedSectionExpanded,
                 onExpandChange = { advancedSectionExpanded = it }
             ) {
-                // Terminal Mode - moved from Neural section (layout setting, not prediction)
+                // Terminal Mode - moved from the Swipe Typing section (layout setting, not prediction)
                 SettingsSwitch(
                     title = stringResource(R.string.advanced_terminal_mode_title),
                     description = stringResource(R.string.advanced_terminal_mode_desc),

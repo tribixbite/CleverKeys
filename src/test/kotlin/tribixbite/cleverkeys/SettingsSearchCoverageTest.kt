@@ -157,7 +157,7 @@ class SettingsSearchCoverageTest {
         // sections and are intentionally excluded — they are nested inside a section body.)
         val topLevel = setOf(
             "activitiesSectionExpanded", "multiLangSectionExpanded", "privacySectionExpanded",
-            "neuralSectionExpanded", "appearanceSectionExpanded", "swipeTrailSectionExpanded",
+            "swipeTypingSectionExpanded", "appearanceSectionExpanded", "swipeTrailSectionExpanded",
             "inputSectionExpanded", "swipeCorrectionsSectionExpanded", "gestureTuningSectionExpanded",
             "accessibilitySectionExpanded", "clipboardSectionExpanded", "gifSectionExpanded",
             "backupRestoreSectionExpanded", "advancedSectionExpanded", "infoSectionExpanded",

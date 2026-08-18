@@ -21,7 +21,7 @@ import android.content.Context
  * - PredictionCoordinator: Prediction engine coordination
  * - InputCoordinator: Input handling coordination
  * - SuggestionHandler: Suggestion display and selection
- * - NeuralLayoutHelper: Neural network and layout utilities
+ * - KeyboardDimensionsHelper: keyboard dimension and layout utilities
  * - MLDataCollector: ML training data collection
  *
  * NOT included (remain in CleverKeysService):
@@ -48,10 +48,10 @@ class ManagerInitializer(
      * Managers with cross-dependencies:
      * - InputCoordinator requires: contextTracker, predictionCoordinator, contractionManager, keyboardView, keyEventHandler
      * - SuggestionHandler requires: contextTracker, predictionCoordinator, contractionManager, keyEventHandler
-     * - NeuralLayoutHelper requires: predictionCoordinator, keyboardView
+     * - KeyboardDimensionsHelper requires: predictionCoordinator, keyboardView
      *
      * Note: SuggestionBar reference will be set later via setSuggestionBar() on
-     * InputCoordinator, SuggestionHandler, and NeuralLayoutHelper.
+     * InputCoordinator, SuggestionHandler, and KeyboardDimensionsHelper.
      */
     data class InitializationResult(
         val contractionManager: ContractionManager,
@@ -60,7 +60,7 @@ class ManagerInitializer(
         val predictionCoordinator: PredictionCoordinator,
         val inputCoordinator: InputCoordinator,
         val suggestionHandler: SuggestionHandler,
-        val neuralLayoutHelper: NeuralLayoutHelper,
+        val keyboardDimensionsHelper: KeyboardDimensionsHelper,
         val mlDataCollector: MLDataCollector
     )
 
@@ -74,7 +74,7 @@ class ManagerInitializer(
      * 4. PredictionCoordinator - requires context, config
      * 5. InputCoordinator - requires contextTracker, predictionCoordinator, contractionManager
      * 6. SuggestionHandler - requires contextTracker, predictionCoordinator, contractionManager
-     * 7. NeuralLayoutHelper - requires predictionCoordinator, keyboardView
+     * 7. KeyboardDimensionsHelper - requires predictionCoordinator, keyboardView
      * 8. MLDataCollector - requires context
      *
      * @return InitializationResult containing all initialized managers
@@ -108,7 +108,7 @@ class ManagerInitializer(
 
         // Initialize prediction coordinator (v1.32.346)
         val predictionCoordinator = PredictionCoordinator(context, config)
-        // v1.1.90: CRITICAL - Must call initialize() to load dictionary and neural engine
+        // v1.1.90: CRITICAL - Must call initialize() to load the dictionary
         predictionCoordinator.initialize()
         MemoryProbe.mark("init.predictionCoordinator", settle = true)
 
@@ -141,12 +141,12 @@ class ManagerInitializer(
         inputCoordinator.setSwipeResultDelegate(suggestionHandler)
         inputCoordinator.setCursorSyncDelegate(suggestionHandler)
 
-        // Initialize neural layout helper (v1.32.362)
-        val neuralLayoutHelper = NeuralLayoutHelper(
+        // Initialize keyboard-dimensions helper (v1.32.362)
+        val keyboardDimensionsHelper = KeyboardDimensionsHelper(
             context,
             config
         )
-        neuralLayoutHelper.setKeyboardView(keyboardView)
+        keyboardDimensionsHelper.setKeyboardView(keyboardView)
 
         // Initialize ML data collector (v1.32.370)
         val mlDataCollector = MLDataCollector(context)
@@ -159,7 +159,7 @@ class ManagerInitializer(
             predictionCoordinator,
             inputCoordinator,
             suggestionHandler,
-            neuralLayoutHelper,
+            keyboardDimensionsHelper,
             mlDataCollector
         )
     }

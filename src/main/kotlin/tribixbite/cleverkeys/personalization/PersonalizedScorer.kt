@@ -6,7 +6,7 @@ import android.util.Log
  * Personalized scorer for adjusting prediction scores based on user behavior.
  *
  * Applies personalization boosts to word predictions, combining:
- * - Base prediction score (from neural model / dictionary)
+ * - Base prediction score (from the swipe decoder / dictionary)
  * - Personalization boost (from user vocabulary)
  * - Optional context boost (from N-gram model)
  *

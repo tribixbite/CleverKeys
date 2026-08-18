@@ -27,7 +27,7 @@ import tribixbite.cleverkeys.PredictionResult
  * `(layout, dictionary)` produce identical output (NFR-4).
  *
  * **Scores are engine-relative** (fixed-temperature softmax posterior × 1000) — never
- * comparable to neural-score thresholds; a WP9 router must not cross-compare them.
+ * comparable to the CTC decoder's log-probabilities; the router must not cross-compare them.
  *
  * Purity (NFR-3): `kotlin.*` + the pure [PredictionResult] only.
  */

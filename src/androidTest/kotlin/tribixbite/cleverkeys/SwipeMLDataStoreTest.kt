@@ -426,7 +426,7 @@ class SwipeMLDataStoreTest {
         assertNotNull(json.getJSONArray("trace_points"))
         assertNotNull(json.getJSONArray("registered_keys"))
         // Provenance (WP9 audit n-2): exports MUST carry the layout + decoder engine so a
-        // non-QWERTY/geometric trace can be filtered out of a neural training corpus.
+        // non-QWERTY/geometric trace can be filtered out of a QWERTY training corpus.
         val metadata = json.getJSONObject("metadata")
         assertEquals("latn_qwerty_us", metadata.getString("layout_name"))
         assertEquals(SwipeMLData.ENGINE_NEURAL, metadata.getString("engine"))

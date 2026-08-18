@@ -124,7 +124,7 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     "swipe_trail_width" to PrefValue.FloatV(Defaults.SWIPE_TRAIL_WIDTH),
     "swipe_trail_glow_radius" to PrefValue.FloatV(Defaults.SWIPE_TRAIL_GLOW_RADIUS),
 
-    // ── Neural prediction ────────────────────────────────────────────
+    // ── Swipe decoding ───────────────────────────────────────────────
     "swipe_smoothing_window" to PrefValue.IntV(Defaults.SWIPE_SMOOTHING_WINDOW),
     "onnx_xnnpack_threads" to PrefValue.IntV(Defaults.ONNX_XNNPACK_THREADS),
 
@@ -237,16 +237,14 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     "termux_mode_enabled" to PrefValue.Bool(Defaults.TERMUX_MODE_ENABLED),
     // NOTE: unified_swipe_pipeline (WP9 step-4 QA escape hatch) was removed in step 6 —
     // now in SettingsValidation.DEPRECATED_KEYS (no reader).
-    // WP9 R-1 step 7 (v1.1): swipe engine mode selector ("neural" | "hybrid" | "geometric").
+    // WP9 R-1 step 7 (v1.2): swipe engine mode selector ("ctc" | "geometric").
     // Supersedes the short-lived (never-released) geometric_swipe_engine Boolean.
     "swipe_engine_mode" to PrefValue.Str(Defaults.SWIPE_ENGINE_MODE),
     // Full Geometric Settings (GeometricSettingsActivity) — user-tunable geo engine knobs.
     "geo_max_results" to PrefValue.IntV(Defaults.GEO_MAX_RESULTS),
     "geo_frequency_weight" to PrefValue.FloatV(Defaults.GEO_FREQUENCY_WEIGHT),
     "geo_endpoint_inset_kw" to PrefValue.FloatV(Defaults.GEO_ENDPOINT_INSET_KW),
-    // Full CTC Settings (CtcSettingsActivity) — G5 ctc engine knob. The "ctc"
-    // engine-mode VALUE needs no migration: fromPref falls back to NEURAL on
-    // versions that predate it.
+    // Full CTC Settings (CtcSettingsActivity) — G5 ctc engine knob.
     "ctc_beam_width" to PrefValue.IntV(Defaults.CTC_BEAM_WIDTH),
     "swipe_debug_detailed_logging" to PrefValue.Bool(Defaults.SWIPE_DEBUG_DETAILED_LOGGING),
     "swipe_show_debug_scores" to PrefValue.Bool(Defaults.SWIPE_SHOW_DEBUG_SCORES),

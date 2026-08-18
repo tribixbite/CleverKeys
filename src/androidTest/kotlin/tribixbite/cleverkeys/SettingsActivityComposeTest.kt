@@ -21,7 +21,7 @@ import org.junit.runner.RunWith
  *  - Activity launches without crash (smoke)
  *  - Search flow (#96 — query persists across rotation; covered by IssueRegressionTest pure)
  *  - Section header expansion (collapsed-by-default sections)
- *  - Static actions: Manage Layouts, Configure Extra Keys, Full Neural Settings
+ *  - Static actions: Manage Layouts, Configure Extra Keys, Full CTC Settings
  *  - VersionInfoCard long-press copy (#94 — also in Issue94VersionCopyComposeTest)
  *  - Test keyboard area present
  *  - Clear-search button reachable
@@ -68,8 +68,8 @@ class SettingsActivityComposeTest {
     }
 
     @Test
-    fun neuralSection_headingIsPresent() {
-        composeTestRule.onNodeWithText("Neural Network Prediction", substring = true)
+    fun swipeTypingSection_headingIsPresent() {
+        composeTestRule.onNodeWithText("Swipe Typing", substring = true)
             .performScrollTo()
             .assertIsDisplayed()
     }
@@ -119,13 +119,13 @@ class SettingsActivityComposeTest {
     }
 
     @Test
-    fun fullNeuralSettings_buttonReachable() {
-        // Expand neural section first since it's collapsed by default.
-        composeTestRule.onNodeWithText("Neural Network Prediction", substring = true)
+    fun fullCtcSettings_buttonReachable() {
+        // Expand the swipe-typing section first since it's collapsed by default.
+        composeTestRule.onNodeWithText("Swipe Typing", substring = true)
             .performScrollTo()
             .performClick()
         composeTestRule.waitForIdle()
-        composeTestRule.onNodeWithText("Full Neural Settings", substring = true)
+        composeTestRule.onNodeWithText("Full CTC Settings", substring = true)
             .performScrollTo()
             .assertIsDisplayed()
     }

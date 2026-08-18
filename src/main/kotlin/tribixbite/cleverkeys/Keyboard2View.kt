@@ -57,7 +57,7 @@ import java.util.ArrayList
  * When swipe typing is enabled, the view:
  * - Captures touch trajectory as [List]<[PointF]> coordinates
  * - Visualizes swipe trail in real-time during gesture
- * - Sends completed gesture to [WordPredictor] for neural network prediction
+ * - Sends completed gesture to the swipe pipeline for decoding
  * - Clears trail and resets state after prediction
  *
  * ## Performance Optimizations

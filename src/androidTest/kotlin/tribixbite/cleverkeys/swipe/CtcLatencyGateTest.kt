@@ -33,7 +33,7 @@ import tribixbite.cleverkeys.swipe.ctc.CtcSwipeDecoder
  *    adapter's production preset and slate size for the largest bundled lexicon
  *    (en 98k words; fr/de are 40k and es 50k, so en is the worst case).
  *
- * Budget: G3's bar is "≤ our current neural ~100–300 ms". Expected actuals are
+ * Budget: G3's bar was "≤ the then-current transformer's ~100–300 ms". Expected actuals are
  * ~1 ms encoder + a trie beam in the tens of ms on an emulator core, so
  * median < 150 ms / p90 < 250 ms has wide margin yet still catches a pathological
  * regression (accidental beam-300 default, trie rebuild per swipe, softmax in the
@@ -50,7 +50,7 @@ class CtcLatencyGateTest {
         const val WARMUPS = 5
         const val ITERATIONS = 30
 
-        /** The gate (plan §3): production decode must sit well inside the neural budget. */
+        /** The gate (plan §3): production decode must sit well inside that budget. */
         const val MEDIAN_BUDGET_MS = 150.0
         const val P90_BUDGET_MS = 250.0
 

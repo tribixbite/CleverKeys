@@ -320,7 +320,7 @@ class InputCoordinator(
                 // After autocorrect/swipe, cursor moves to after space (prefix empty), but we want
                 // to keep showing suggestions for undo/correction/add-to-dictionary
                 val hasAutocorrectUndo = contextTracker.getLastAutocorrectOriginalWord() != null
-                val hasSwipeCorrections = contextTracker.getLastCommitSource() == PredictionSource.NEURAL_SWIPE
+                val hasSwipeCorrections = contextTracker.getLastCommitSource() == PredictionSource.SWIPE
 
                 if (!hasAutocorrectUndo && !hasSwipeCorrections) {
                     // Next-word call-site 4 (audit §4.4): cursor parked with no
@@ -396,7 +396,7 @@ class InputCoordinator(
      * @param shiftLocked True if shift was LOCKED (caps lock) when the swipe started.
      * @param origin the [SuggestionOrigin] of the engine that ACTUALLY decoded this swipe
      *   (audit M2 — each dispatch path passes its own engine, so a geometric decode under
-     *   ctc/hybrid mode is tagged GEOMETRIC, and M1's non-en neural fallback NEURAL_BEAM).
+     *   ctc mode's non-served-language fallthrough is tagged GEOMETRIC).
      *   Null falls back to the old mode-derived approximation
      *   ([SuggestionOrigin.forSwipeEngineMode]) for callers predating the threading.
      */
@@ -524,8 +524,8 @@ class InputCoordinator(
      * [engine] tags the capture with the decoder that produced its suggestions
      * ([SwipeMLData.ENGINE_NEURAL] / [SwipeMLData.ENGINE_GEOMETRIC]) and the layout name is
      * read from the live keyboard. Audit n-2 (2026-08-11): without those two fields a
-     * ЙЦУКЕН/Dvorak geometric trace is indistinguishable from a QWERTY neural one in an ML
-     * export, so a future neural-training corpus built from exports would silently mix
+     * ЙЦУКЕН/Dvorak geometric trace is indistinguishable from a QWERTY CTC one in an ML
+     * export, so a future model-training corpus built from exports would silently mix
      * incompatible key geometries.
      */
     private fun beginSwipeCapture(
@@ -576,7 +576,7 @@ class InputCoordinator(
 
     /**
      * Decodes a non-QWERTY swipe with the geometric engine (off the main thread) and feeds
-     * the result into the SAME pipeline as neural results — [handlePredictionResults] →
+     * the result into the SAME pipeline as CTC results — [handlePredictionResults] →
      * [SuggestionHandler.handleSwipePredictionResults] — so the geometric path inherits the
      * password guard, possessive augmentation, shift/caps transform, and THE commit engine.
      * An empty decode (no dictionary for the language, dead layout, degenerate trace) flows
@@ -599,9 +599,9 @@ class InputCoordinator(
         val frameH = keyboardView.height.toFloat()
         if (frameW <= 0f || frameH <= 0f) return
 
-        // Same swipe-state + ML-trace capture as the neural path (D5 collection works
+        // Same swipe-state + ML-trace capture as the CTC path (D5 collection works
         // identically for geometric selections), tagged with the geometric engine + layout
-        // so ML exports stay separable from QWERTY/neural traces (audit n-2).
+        // so ML exports stay separable from QWERTY/CTC traces (audit n-2).
         beginSwipeCapture(swipedKeys, swipePath, timestamps, resources, SwipeMLData.ENGINE_GEOMETRIC)
 
         val language = predictionCoordinator.getDictionaryManager()?.getCurrentLanguage()
@@ -612,7 +612,7 @@ class InputCoordinator(
             // The decode callback replays the InputConnection/EditorInfo captured at swipe
             // time. A decode can land after the field changed (cold Tier-A build takes
             // 150-400 ms, and a same-field restart or an app switch replaces both handles),
-            // so apply the SAME staleness guard the neural cold-start replay uses — otherwise
+            // so apply the SAME staleness guard the CTC decode callback uses — otherwise
             // this word would be committed into an unrelated field (audit M-2).
             if (isReplayInputStillCurrent(ic, editorInfo)) {
                 handlePredictionResults(
@@ -637,7 +637,7 @@ class InputCoordinator(
 
     /**
      * Decodes a swipe with the CTC engine (off the main thread) and feeds the result
-     * into the SAME pipeline as neural/geometric results — [handlePredictionResults]
+     * into the SAME pipeline as geometric results — [handlePredictionResults]
      * → [SuggestionHandler.handleSwipePredictionResults] — inheriting the password
      * guard, possessive augmentation, shift/caps transform, and THE commit engine.
      * An empty decode (no model, degenerate trace) flows through as an empty
@@ -695,7 +695,7 @@ class InputCoordinator(
             return
         }
 
-        // Same swipe-state + ML-trace capture as the neural/geometric paths, tagged with
+        // Same swipe-state + ML-trace capture as the geometric path, tagged with
         // the CTC engine + layout so ML exports stay separable per decoder (audit n-2).
         beginSwipeCapture(swipedKeys, swipePath, timestamps, resources, SwipeMLData.ENGINE_CTC)
 

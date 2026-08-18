@@ -73,10 +73,10 @@ object TestConfigHelper {
             putInt("swipe_min_distance", 20)
             putFloat("swipe_trail_width", 8f)
 
-            // Neural settings
-            putInt("neural_beam_width", 5)
-            putInt("neural_max_length", 15)
-            putFloat("neural_confidence_threshold", 0.3f)
+            // Swipe engine settings
+            putString("swipe_engine_mode", "ctc")
+            putInt("ctc_beam_width", 100)
+            putInt("onnx_xnnpack_threads", 2)
 
             // Tap settings
             putInt("tap_duration_threshold", 200)

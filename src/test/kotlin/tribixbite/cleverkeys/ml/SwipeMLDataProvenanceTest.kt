@@ -9,8 +9,8 @@ import org.junit.Test
  * [SwipeMLData.layoutName] + [SwipeMLData.engine].
  *
  * Why they exist: since the geometric engine shipped, a swipe can be drawn on a non-QWERTY
- * layout (Dvorak, ЙЦУКЕН, AZERTY) and decoded by SHARK2 instead of the QWERTY-trained neural
- * model. Untagged, those traces are indistinguishable from QWERTY/neural ones in an export and
+ * layout (Dvorak, ЙЦУКЕН, AZERTY) and decoded by SHARK2 instead of a QWERTY-trained
+ * model. Untagged, those traces are indistinguishable from QWERTY ones in an export and
  * would silently contaminate any training corpus built from it.
  *
  * [SwipeMLData] is pure (org.json + java.util only), so this runs in `runPureTests`.
@@ -101,7 +101,11 @@ class SwipeMLDataProvenanceTest {
         assertThat(defaulted.engine).isEqualTo(SwipeMLData.UNKNOWN)
     }
 
-    /** The two engine tags are distinct and stable — exports filter on these strings. */
+    /**
+     * The engine tags are distinct and stable — exports filter on these strings.
+     * ENGINE_NEURAL is retained after the 2026-08-18 engine removal because rows written by
+     * earlier versions still carry it; nothing writes it any more.
+     */
     @Test
     fun engineTagsAreStableAndDistinct() {
         assertThat(SwipeMLData.ENGINE_NEURAL).isEqualTo("neural")
@@ -109,9 +113,9 @@ class SwipeMLDataProvenanceTest {
         assertThat(SwipeMLData.ENGINE_CTC).isEqualTo("ctc")
         assertThat(SwipeMLData.UNKNOWN).isEqualTo("unknown")
 
-        val neural = SwipeMLData("hi", "user_selection", 1080, 1920, 480, "latn_qwerty_us", SwipeMLData.ENGINE_NEURAL)
+        val ctc = SwipeMLData("hi", "user_selection", 1080, 1920, 480, "latn_qwerty_us", SwipeMLData.ENGINE_CTC)
         val geo = SwipeMLData("hi", "user_selection", 1080, 1920, 480, "latn_dvorak", SwipeMLData.ENGINE_GEOMETRIC)
-        assertThat(neural.engine).isNotEqualTo(geo.engine)
-        assertThat(neural.layoutName).isNotEqualTo(geo.layoutName)
+        assertThat(ctc.engine).isNotEqualTo(geo.engine)
+        assertThat(ctc.layoutName).isNotEqualTo(geo.layoutName)
     }
 }

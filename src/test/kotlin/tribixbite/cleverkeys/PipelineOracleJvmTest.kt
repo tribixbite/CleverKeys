@@ -188,7 +188,7 @@ class PipelineOracleJvmTest {
     // n-1 (WP9 audit 2026-08-11) — the ENGLISH-ONLY possessive gate, both sides.
     // Unlike the array-behavior mirrors above, these call the PRODUCTION helper
     // (SuggestionHandler.shouldAugmentPossessives) so the gate itself is pinned,
-    // not a copy of it. The gate covers the NEURAL path too — that is deliberate:
+    // not a copy of it. The gate covers the swipe path too — that is deliberate:
     // "maison's" / "дом's" were wrong on QWERTY-fr/es as well.
     // =========================================================================
 

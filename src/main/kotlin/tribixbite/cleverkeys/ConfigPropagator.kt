@@ -20,7 +20,7 @@ import android.util.Log
  * - PredictionCoordinator: Prediction engine settings
  * - InputCoordinator: Input handling settings
  * - SuggestionHandler: Suggestion display settings
- * - NeuralLayoutHelper: Neural network settings
+ * - KeyboardDimensionsHelper: keyboard dimension settings
  * - LayoutManager: Keyboard layout settings
  *
  * NOT included (remains in CleverKeysService):
@@ -38,7 +38,7 @@ class ConfigPropagator(
     private val predictionCoordinator: PredictionCoordinator?,
     private val inputCoordinator: InputCoordinator?,
     private val suggestionHandler: SuggestionHandler?,
-    private val neuralLayoutHelper: NeuralLayoutHelper?,
+    private val keyboardDimensionsHelper: KeyboardDimensionsHelper?,
     private val layoutManager: LayoutManager?,
     private val keyboardView: Keyboard2View?,
     private val subtypeManager: SubtypeManager?
@@ -74,8 +74,8 @@ class ConfigPropagator(
             // Update suggestion handler config
             suggestionHandler?.setConfig(config)
 
-            // Update neural layout helper config
-            neuralLayoutHelper?.setConfig(config)
+            // Update keyboard-dimensions helper config
+            keyboardDimensionsHelper?.setConfig(config)
 
             // Update layout manager config
             layoutManager?.setConfig(config)
@@ -110,7 +110,7 @@ class ConfigPropagator(
         private var predictionCoordinator: PredictionCoordinator? = null
         private var inputCoordinator: InputCoordinator? = null
         private var suggestionHandler: SuggestionHandler? = null
-        private var neuralLayoutHelper: NeuralLayoutHelper? = null
+        private var keyboardDimensionsHelper: KeyboardDimensionsHelper? = null
         private var layoutManager: LayoutManager? = null
         private var keyboardView: Keyboard2View? = null
         private var subtypeManager: SubtypeManager? = null
@@ -135,8 +135,8 @@ class ConfigPropagator(
             return this
         }
 
-        fun setNeuralLayoutHelper(helper: NeuralLayoutHelper?): Builder {
-            this.neuralLayoutHelper = helper
+        fun setKeyboardDimensionsHelper(helper: KeyboardDimensionsHelper?): Builder {
+            this.keyboardDimensionsHelper = helper
             return this
         }
 
@@ -161,7 +161,7 @@ class ConfigPropagator(
                 predictionCoordinator,
                 inputCoordinator,
                 suggestionHandler,
-                neuralLayoutHelper,
+                keyboardDimensionsHelper,
                 layoutManager,
                 keyboardView,
                 subtypeManager

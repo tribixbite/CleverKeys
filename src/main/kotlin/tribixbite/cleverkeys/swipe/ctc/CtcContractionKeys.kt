@@ -18,9 +18,9 @@ import java.util.Locale
  * Injecting the alias keys as their own trie paths makes the whole mapping table reachable:
  * the beam can now spell `dabaissement`, and the overlay turns it into `d'abaissement`.
  *
- * ## Frequency: why the floor, and why not the neural engine's boost
+ * ## Frequency: why the floor, and why not the deleted vocabulary's boost
  *
- * The neural vocabulary injects contraction keys at `WordInfo(0.88f, tier 2)` — a
+ * The deleted `OptimizedVocabulary` injected contraction keys at `WordInfo(0.88f, tier 2)` — a
  * COMMON-WORD boost. Doing that here would be actively harmful: the CTC beam adds
  * `lambda * ln(freq + 1e-10)` to every candidate, with the lexicon on the AOSP-like
  * 1..255 scale and λ = 2.0 (CKDT) / 4.0 (en JSON). A boosted pseudo-word would then

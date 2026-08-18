@@ -114,7 +114,7 @@ class BackupRestoreEncryptionEndToEndTest {
     @Test
     fun importRoundTrip_restoresSettingsUnderSamePassphrase() {
         val prefs = context.getSharedPreferences("enc_e2e_rt", Context.MODE_PRIVATE)
-        prefs.edit().clear().putInt("neural_beam_width", 12).commit()
+        prefs.edit().clear().putInt("ctc_beam_width", 120).commit()
 
         val mgr = newManager()
         mgr.encryptionPolicy = BackupRestoreManager.EncryptionPolicy.HEADLESS_MANDATORY
@@ -128,8 +128,8 @@ class BackupRestoreEncryptionEndToEndTest {
         val plan = mgr.buildSettingsImportPlan(Uri.fromFile(out), target)
         assertNotNull(plan)
         // The plan proposes the exported beam width against the empty target.
-        val proposed = plan.changes.any { it.key == "neural_beam_width" }
-        assertTrue("round-tripped plan should propose neural_beam_width", proposed)
+        val proposed = plan.changes.any { it.key == "ctc_beam_width" }
+        assertTrue("round-tripped plan should propose ctc_beam_width", proposed)
     }
 
     @Test

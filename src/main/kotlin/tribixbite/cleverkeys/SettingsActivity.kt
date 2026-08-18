@@ -245,7 +245,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     }
 
     // Settings state for reactive UI
-    internal var swipeEngineMode by mutableStateOf("neural")
+    internal var swipeEngineMode by mutableStateOf(Defaults.SWIPE_ENGINE_MODE)
     internal var keyboardHeight by mutableIntStateOf(28)
     internal var keyboardHeightLandscape by mutableIntStateOf(50)
     internal var vibrationEnabled by mutableStateOf(false)
@@ -465,9 +465,9 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var privacySectionExpanded: Boolean
         get() = settingsViewModel.privacySectionExpanded
         set(value) { settingsViewModel.privacySectionExpanded = value }
-    internal var neuralSectionExpanded: Boolean  // Collapsed by default, Activities is primary
-        get() = settingsViewModel.neuralSectionExpanded
-        set(value) { settingsViewModel.neuralSectionExpanded = value }
+    internal var swipeTypingSectionExpanded: Boolean  // Collapsed by default, Activities is primary
+        get() = settingsViewModel.swipeTypingSectionExpanded
+        set(value) { settingsViewModel.swipeTypingSectionExpanded = value }
     internal var appearanceSectionExpanded: Boolean  // No longer default expanded since Theme is in Activities
         get() = settingsViewModel.appearanceSectionExpanded
         set(value) { settingsViewModel.appearanceSectionExpanded = value }
@@ -561,12 +561,12 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             SearchableSetting("Extra Keys", listOf("toolbar", "arrows", "numbers"), "Activities", ExtraKeysConfigActivity::class.java),
             SearchableSetting("Backup & Restore", listOf("backup", "export", "import", "restore", "zip", "preview", "deselect"), "Backup & Restore", expandSection = { backupRestoreSectionExpanded = true }, settingId = "backup_restore"),
             SearchableSetting("What's New", listOf("changelog", "release", "update", "features", "version"), "Activities", settingId = "whats_new"),
-            SearchableSetting("Geometric Settings", listOf("geometric", "shape", "shark", "swipe engine", "tolerance"), "Neural Prediction", GeometricSettingsActivity::class.java),
+            SearchableSetting("Geometric Settings", listOf("geometric", "shape", "shark", "swipe engine", "tolerance"), "Swipe Typing", GeometricSettingsActivity::class.java),
             // L4: ungated, matching the "Geometric Settings" twin — a search-driven visit
             // to a tuning screen is harmless with swipe typing off, and the asymmetric
             // gate made "ctc" unfindable exactly when the user is setting swipe up.
-            SearchableSetting("CTC Settings", listOf("ctc", "futo", "swipe engine", "beam", "trie"), "Neural Prediction", CtcSettingsActivity::class.java),
-            SearchableSetting("ONNX Threads", listOf("threads", "cpu", "xnnpack", "performance", "onnx"), "Neural Prediction", CtcSettingsActivity::class.java, gatedBy = "swipe_typing", settingId = "onnx_threads"),
+            SearchableSetting("CTC Settings", listOf("ctc", "futo", "swipe engine", "beam", "trie"), "Swipe Typing", CtcSettingsActivity::class.java),
+            SearchableSetting("ONNX Threads", listOf("threads", "cpu", "xnnpack", "performance", "onnx"), "Swipe Typing", CtcSettingsActivity::class.java, gatedBy = "swipe_typing", settingId = "onnx_threads"),
             SearchableSetting("GIF Import Pack", listOf("gif", "import", "pack", "zip", "download"), "GIF Panel", expandSection = { gifSectionExpanded = true }, gatedBy = "gif_enabled", settingId = "gif_import"),
             SearchableSetting("Help & FAQ", listOf("help", "faq", "documentation", "wiki", "questions"), "Help & FAQ", expandSection = { helpSectionExpanded = true }, settingId = "help_faq"),
             SearchableSetting("Type Numbers & Symbols", listOf("numbers", "symbols", "subkey", "short swipe"), "Help & FAQ", expandSection = { helpSectionExpanded = true }, settingId = "faq_numbers"),

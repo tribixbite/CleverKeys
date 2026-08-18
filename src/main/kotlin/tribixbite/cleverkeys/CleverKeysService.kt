@@ -31,7 +31,7 @@ import tribixbite.cleverkeys.ml.SwipeMLData
  * - **View Lifecycle**: Creates and manages keyboard views, content panes (emoji/clipboard), and input views
  * - **Layout Management**: Delegates to [LayoutManager] for keyboard layout loading and switching
  * - **Input Processing**: Coordinates with [KeyEventHandler] for key events and text input
- * - **Prediction System**: Manages neural network-based swipe typing via [PredictionCoordinator]
+ * - **Prediction System**: Manages swipe typing and tap prediction via [PredictionCoordinator]
  * - **Configuration**: Maintains keyboard settings through [ConfigurationManager]
  * - **Clipboard**: Handles clipboard history via [ClipboardManager]
  * - **Suggestions**: Displays word predictions through [SuggestionBar] and [SuggestionHandler]
@@ -103,8 +103,8 @@ class CleverKeysService : InputMethodService(),
     // Suggestion handling (v1.32.361: extracted to SuggestionHandler)
     private lateinit var _suggestionHandler: SuggestionHandler
 
-    // Neural layout helper (v1.32.362: extracted to NeuralLayoutHelper)
-    private lateinit var _neuralLayoutHelper: NeuralLayoutHelper
+    // Keyboard dimensions helper (v1.32.362: extracted from this class)
+    private lateinit var _keyboardDimensionsHelper: KeyboardDimensionsHelper
 
     // Subtype management (v1.32.365: extracted to SubtypeManager)
     private var _subtypeManager: SubtypeManager? = null
@@ -130,8 +130,6 @@ class CleverKeysService : InputMethodService(),
     // Suggestion/prediction bridge (v1.32.406: extracted to SuggestionBridge)
     private lateinit var _suggestionBridge: SuggestionBridge
 
-    // Neural layout bridge (v1.32.407: extracted to NeuralLayoutBridge)
-    private lateinit var _neuralLayoutBridge: NeuralLayoutBridge
 
     // Layout bridge (v1.32.408: extracted to LayoutBridge)
     private lateinit var _layoutBridge: LayoutBridge
@@ -433,7 +431,7 @@ class CleverKeysService : InputMethodService(),
         _predictionCoordinator = managers.predictionCoordinator
         _inputCoordinator = managers.inputCoordinator
         _suggestionHandler = managers.suggestionHandler
-        _neuralLayoutHelper = managers.neuralLayoutHelper
+        _keyboardDimensionsHelper = managers.keyboardDimensionsHelper
         _mlDataCollector = managers.mlDataCollector
 
         // Initialize suggestion bridge (v1.32.406: extracted to SuggestionBridge)
@@ -448,8 +446,6 @@ class CleverKeysService : InputMethodService(),
             _keyboardView
         )
 
-        // Initialize neural layout bridge (v1.32.407: extracted to NeuralLayoutBridge)
-        _neuralLayoutBridge = NeuralLayoutBridge.create(_neuralLayoutHelper, _keyboardView)
 
         // Initialize prediction components if enabled (v1.32.405: extracted to PredictionInitializer)
         val predCoord = _predictionCoordinator  // Capture for smart cast
@@ -473,7 +469,7 @@ class CleverKeysService : InputMethodService(),
         // Creates and registers DebugModePropagator, builds ConfigPropagator with all managers
         val propagators = PropagatorInitializer.create(
             _suggestionHandler,
-            _neuralLayoutHelper,
+            _keyboardDimensionsHelper,
             _debugLoggerImpl,
             _debugLoggingManager,
             _clipboardManager,
@@ -708,7 +704,7 @@ class CleverKeysService : InputMethodService(),
         _keyeventhandler.started(info)
 
         // Setup prediction views (v1.32.400: extracted prediction/swipe setup logic)
-        // Handles initialization, suggestion bar creation, neural engine dimensions, and cleanup
+        // Handles initialization, suggestion bar creation, keyboard dimensions, and cleanup
         val config = _config  // Capture for null safety
         val predCoordinator = _predictionCoordinator  // Capture for null safety
         config?.let { cfg ->
@@ -719,7 +715,7 @@ class CleverKeysService : InputMethodService(),
                 predCoordinator,
                 _inputCoordinator,
                 _suggestionHandler,
-                _neuralLayoutHelper,
+                _keyboardDimensionsHelper,
                 _receiver,
                 _emojiPane
             ).setupPredictionViews(_suggestionBar, _inputViewContainer, _contentPaneContainer, _topPane, _scrollView)
@@ -757,7 +753,7 @@ class CleverKeysService : InputMethodService(),
             _suggestionBar?.setInputConnectionProvider { currentInputConnection }
         }
 
-        // Neural key positions are now set by PredictionViewSetup's GlobalLayoutListener
+        // Key positions are read per swipe from Keyboard2View.geometryParams()
         // The manual post() call here was causing redundant "key positions set" logs and layout updates
 
         _config?.let { Logs.debug_startup_input_view(info, it) }
@@ -993,14 +989,13 @@ class CleverKeysService : InputMethodService(),
         _receiver?.handle_event_key(event)
     }
 
-    // Neural Layout Methods (v1.32.407: Delegated to NeuralLayoutBridge)
-    private fun calculateDynamicKeyboardHeight(): Float {
-        return _neuralLayoutBridge.calculateDynamicKeyboardHeight()
-    }
+    // Keyboard dimension helpers (the NeuralLayoutBridge indirection was deleted with the
+    // neural engine on 2026-08-18 — KeyboardDimensionsHelper is called directly).
+    private fun calculateDynamicKeyboardHeight(): Float =
+        _keyboardDimensionsHelper.calculateDynamicKeyboardHeight()
 
-    private fun getUserKeyboardHeightPercent(): Int {
-        return _neuralLayoutBridge.getUserKeyboardHeightPercent()
-    }
+    private fun getUserKeyboardHeightPercent(): Int =
+        _keyboardDimensionsHelper.getUserKeyboardHeightPercent()
 
     // Called by Keyboard2View when swipe typing completes.
     // wasShiftActive (v1.32.926): shift state for capitalize-first-letter;
@@ -1032,26 +1027,18 @@ class CleverKeysService : InputMethodService(),
         return View.inflate(ContextThemeWrapper(this, themeId), layout, null)
     }
 
-    // CGR Prediction Methods (v1.32.407: Delegated to NeuralLayoutBridge)
-    fun updateCGRPredictions() {
-        _neuralLayoutBridge.updateCGRPredictions()
-    }
+    // CGR prediction display (called from Keyboard2View's CGR store/clear path).
+    fun updateCGRPredictions() = _keyboardDimensionsHelper.updateCGRPredictions()
 
-    fun checkCGRPredictions() {
-        _neuralLayoutBridge.checkCGRPredictions()
-    }
+    fun checkCGRPredictions() = _keyboardDimensionsHelper.checkCGRPredictions()
 
-    fun updateSwipePredictions(predictions: List<String>) {
-        _neuralLayoutBridge.updateSwipePredictions(predictions)
-    }
+    fun updateSwipePredictions(predictions: List<String>) =
+        _keyboardDimensionsHelper.updateSwipePredictions(predictions)
 
-    fun completeSwipePredictions(finalPredictions: List<String>) {
-        _neuralLayoutBridge.completeSwipePredictions(finalPredictions)
-    }
+    fun completeSwipePredictions(finalPredictions: List<String>) =
+        _keyboardDimensionsHelper.completeSwipePredictions(finalPredictions)
 
-    fun clearSwipePredictions() {
-        _neuralLayoutBridge.clearSwipePredictions()
-    }
+    fun clearSwipePredictions() = _keyboardDimensionsHelper.clearSwipePredictions()
 
     /**
      * Show a temporary message in the suggestion bar.

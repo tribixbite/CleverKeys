@@ -18,7 +18,7 @@ package tribixbite.cleverkeys
  */
 class PropagatorInitializer(
     private val suggestionHandler: SuggestionHandler?,
-    private val neuralLayoutHelper: NeuralLayoutHelper?,
+    private val keyboardDimensionsHelper: KeyboardDimensionsHelper?,
     private val debugLoggerImpl: SuggestionHandler.DebugLogger,
     private val debugLoggingManager: DebugLoggingManager,
     private val clipboardManager: ClipboardManager?,
@@ -50,7 +50,7 @@ class PropagatorInitializer(
         // Create debug mode propagator
         val debugModePropagator = DebugModePropagator.create(
             suggestionHandler,
-            neuralLayoutHelper,
+            keyboardDimensionsHelper,
             predictionCoordinator,
             debugLoggerImpl,
             debugLoggingManager
@@ -65,7 +65,7 @@ class PropagatorInitializer(
             .setPredictionCoordinator(predictionCoordinator)
             .setInputCoordinator(inputCoordinator)
             .setSuggestionHandler(suggestionHandler)
-            .setNeuralLayoutHelper(neuralLayoutHelper)
+            .setKeyboardDimensionsHelper(keyboardDimensionsHelper)
             .setLayoutManager(layoutManager)
             .setKeyboardView(keyboardView)
             .setSubtypeManager(subtypeManager)
@@ -79,7 +79,7 @@ class PropagatorInitializer(
          * Create a PropagatorInitializer.
          *
          * @param suggestionHandler The SuggestionHandler (nullable)
-         * @param neuralLayoutHelper The NeuralLayoutHelper (nullable)
+         * @param keyboardDimensionsHelper The KeyboardDimensionsHelper (nullable)
          * @param debugLoggerImpl The debug logger implementation
          * @param debugLoggingManager The debug logging manager
          * @param clipboardManager The ClipboardManager (nullable)
@@ -93,7 +93,7 @@ class PropagatorInitializer(
         @JvmStatic
         fun create(
             suggestionHandler: SuggestionHandler?,
-            neuralLayoutHelper: NeuralLayoutHelper?,
+            keyboardDimensionsHelper: KeyboardDimensionsHelper?,
             debugLoggerImpl: SuggestionHandler.DebugLogger,
             debugLoggingManager: DebugLoggingManager,
             clipboardManager: ClipboardManager?,
@@ -105,7 +105,7 @@ class PropagatorInitializer(
         ): PropagatorInitializer {
             return PropagatorInitializer(
                 suggestionHandler,
-                neuralLayoutHelper,
+                keyboardDimensionsHelper,
                 debugLoggerImpl,
                 debugLoggingManager,
                 clipboardManager,

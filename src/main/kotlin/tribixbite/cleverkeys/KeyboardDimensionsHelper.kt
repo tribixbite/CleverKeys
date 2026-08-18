@@ -29,9 +29,11 @@ import android.view.WindowManager
  * - Configuration management
  *
  * This class is extracted from CleverKeysService.java for better separation of concerns
- * and testability (v1.32.362).
+ * and testability (v1.32.362). Renamed from `NeuralLayoutHelper` on 2026-08-18 when its
+ * neural half was deleted; the `NeuralLayoutBridge` that used to sit between it and
+ * CleverKeysService went at the same time (pure delegation, no logic).
  */
-class NeuralLayoutHelper(
+class KeyboardDimensionsHelper(
     private val _context: Context,
     private var _config: Config
 ) {
@@ -221,6 +223,6 @@ class NeuralLayoutHelper(
     }
 
     companion object {
-        private const val TAG = "NeuralLayoutHelper"
+        private const val TAG = "KbdDimensionsHelper"
     }
 }

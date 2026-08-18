@@ -23,9 +23,6 @@ import kotlin.math.max
 
 /** Which pipeline stage produced a suggestion (audit §2.3 data model). */
 enum class SuggestionOrigin {
-    /** Neural ONNX beam-search swipe output. */
-    NEURAL_BEAM,
-
     /** Geometric swipe-decoder output. */
     GEOMETRIC,
 
@@ -110,7 +107,7 @@ data class ScoreBreakdown(
  * @property origin which stage produced the suggestion
  * @property breakdown per-signal scores when the origin flows through the
  *   unified scorer (dictionary-prefix path); null for origins scored elsewhere
- *   (neural beam confidence, learned-LM probability, injections)
+ *   (decoder scores, learned-LM probability, injections)
  * @property note origin-specific human-readable detail (e.g. the learned
  *   next-word statistics: "after 'want': seen 14×, 63%")
  */
@@ -212,7 +209,6 @@ object ProvenanceFormatter {
 
     /** Short human label for an origin. */
     fun originLabel(origin: SuggestionOrigin): String = when (origin) {
-        SuggestionOrigin.NEURAL_BEAM -> "Neural swipe (beam search)"
         SuggestionOrigin.GEOMETRIC -> "Geometric swipe decoder"
         SuggestionOrigin.CTC -> "CTC swipe (trie beam)"
         SuggestionOrigin.DICTIONARY_PREFIX -> "Dictionary prefix match"

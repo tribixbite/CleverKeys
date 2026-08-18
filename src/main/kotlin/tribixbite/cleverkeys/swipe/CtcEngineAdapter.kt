@@ -552,7 +552,7 @@ class CtcEngineAdapter(private val context: Context) {
      * rationale live in [SwipeContractionPolicy]): English keeps the bundled base set, every
      * other language gets ONLY its own file. Code-switching is a bug — English morphology
      * must not bleed into a sentence the user is typing in another language, which is the
-     * same call the NEURAL engine made in v1.1.88 (`OptimizedVocabulary` clears the English
+     * same call `OptimizedVocabulary` made in v1.1.88 (clears the English
      * contractions before loading the target language's) and the same call the shared
      * pipeline already makes for possessives (`SuggestionHandler.shouldAugmentPossessives`).
      *
@@ -756,7 +756,7 @@ class CtcEngineAdapter(private val context: Context) {
      * The ORT session is intentionally NOT closed here: shutdown interrupts a
      * possibly-running `session.run`, and closing a session mid-run is UB in ORT.
      * The ~3 MB native session is reclaimed at process death — the same teardown
-     * posture as the neural orchestrator's sessions.
+     * posture the ONNX sessions have always had.
      */
     fun shutdown() {
         tasks.shutdown()

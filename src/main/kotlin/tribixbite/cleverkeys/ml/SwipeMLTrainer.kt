@@ -17,7 +17,7 @@ import kotlin.math.sqrt
  * 2. Automatically when enough new data is collected
  * 3. During app idle time
  *
- * The actual neural network training would be implemented using:
+ * The actual model training would be implemented using:
  * - TensorFlow Lite for on-device training
  * - Or exporting data for server-side training with model updates
  */

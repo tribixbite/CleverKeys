@@ -129,7 +129,7 @@ class CoreImeHygieneDriftTest {
     /**
      * WP9 audit M-2 (b): the geometric decode callback replays the InputConnection/EditorInfo
      * captured at swipe time, so it must re-check that the field is still current before
-     * committing — the same guard the neural cold-start replay uses.
+     * committing — the same guard the geometric decode callback uses.
      */
     @Test
     fun geometricDecodeCallbackGuardsAgainstStaleInputField() {
@@ -455,7 +455,7 @@ class CoreImeHygieneDriftTest {
      * `contraction_pairings.json`) for EVERY language before the active language's file,
      * which injected English morphology into non-English slates — a `fr` decode of the real
      * French word `franco` also offered `franco's` (`CtcMultiLanguageInstrumentedTest`).
-     * Code-switching is a bug, not a feature: the neural engine drew this line in v1.1.88
+     * Code-switching is a bug, not a feature: the deleted vocabulary drew this line in v1.1.88
      * (`OptimizedVocabulary` clears the English contractions before loading the target
      * language's) and the shared pipeline already draws it for possessives
      * (`SuggestionHandler.shouldAugmentPossessives`).

@@ -33,7 +33,7 @@ internal fun SettingsActivity.collapseAllSections() {
     activitiesSectionExpanded = false
     multiLangSectionExpanded = false
     privacySectionExpanded = false
-    neuralSectionExpanded = false
+    swipeTypingSectionExpanded = false
     appearanceSectionExpanded = false
     swipeTrailSectionExpanded = false
     inputSectionExpanded = false
@@ -75,7 +75,7 @@ internal fun SettingsActivity.settingSlug(title: String): String =
 
 /** Display name shown as "in <section>" for an auto-derived (generated) search result. */
 internal fun SettingsActivity.sectionDisplayName(sectionKey: String): String = when (sectionKey) {
-    "neural" -> "Swipe Typing"
+    "swipeTyping" -> "Swipe Typing"
     "appearance" -> "Appearance"
     "swipeTrail" -> "Swipe Trail"
     "input" -> "Word Prediction"
@@ -98,7 +98,7 @@ internal fun SettingsActivity.sectionDisplayName(sectionKey: String): String = w
 /** Expand action for an auto-derived search result's enclosing section. */
 internal fun SettingsActivity.expanderFor(sectionKey: String): () -> Unit = {
     when (sectionKey) {
-        "neural" -> neuralSectionExpanded = true
+        "swipeTyping" -> swipeTypingSectionExpanded = true
         "appearance" -> appearanceSectionExpanded = true
         "swipeTrail" -> swipeTrailSectionExpanded = true
         "input" -> inputSectionExpanded = true
@@ -138,7 +138,7 @@ internal fun SettingsActivity.executeSearchAction(setting: SearchableSetting) {
         collapseAllSections()
         val targetId = setting.gatedBy
         when (targetId) {
-            "swipe_typing" -> neuralSectionExpanded = true
+            "swipe_typing" -> swipeTypingSectionExpanded = true
             "short_gestures" -> gestureTuningSectionExpanded = true
             "multilang" -> multiLangSectionExpanded = true
             "gif_enabled" -> gifSectionExpanded = true

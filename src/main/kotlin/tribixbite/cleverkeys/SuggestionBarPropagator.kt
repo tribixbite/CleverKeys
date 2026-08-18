@@ -11,7 +11,7 @@ import android.widget.HorizontalScrollView
  * to managers that need them:
  * - InputCoordinator: Needs SuggestionBar for prediction display
  * - SuggestionHandler: Needs SuggestionBar for suggestion management
- * - NeuralLayoutHelper: Needs SuggestionBar for neural predictions
+ * - KeyboardDimensionsHelper: Needs SuggestionBar for the CGR display path
  * - KeyboardReceiver: Needs emoji/clipboard pane references
  *
  * @since v1.32.394
@@ -19,7 +19,7 @@ import android.widget.HorizontalScrollView
 class SuggestionBarPropagator(
     private val inputCoordinator: InputCoordinator?,
     private val suggestionHandler: SuggestionHandler?,
-    private val neuralLayoutHelper: NeuralLayoutHelper?,
+    private val keyboardDimensionsHelper: KeyboardDimensionsHelper?,
     private val receiver: KeyboardReceiver?
 ) {
     /**
@@ -28,7 +28,7 @@ class SuggestionBarPropagator(
     fun propagateSuggestionBar(suggestionBar: SuggestionBar) {
         inputCoordinator?.setSuggestionBar(suggestionBar)
         suggestionHandler?.setSuggestionBar(suggestionBar)
-        neuralLayoutHelper?.setSuggestionBar(suggestionBar)
+        keyboardDimensionsHelper?.setSuggestionBar(suggestionBar)
     }
 
     /**
@@ -87,13 +87,13 @@ class SuggestionBarPropagator(
         fun create(
             inputCoordinator: InputCoordinator?,
             suggestionHandler: SuggestionHandler?,
-            neuralLayoutHelper: NeuralLayoutHelper?,
+            keyboardDimensionsHelper: KeyboardDimensionsHelper?,
             receiver: KeyboardReceiver?
         ): SuggestionBarPropagator {
             return SuggestionBarPropagator(
                 inputCoordinator,
                 suggestionHandler,
-                neuralLayoutHelper,
+                keyboardDimensionsHelper,
                 receiver
             )
         }

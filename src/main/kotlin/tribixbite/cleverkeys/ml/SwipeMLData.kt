@@ -9,13 +9,13 @@ import kotlin.math.sqrt
 
 /**
  * ML data model for swipe typing training data.
- * Captures normalized swipe traces with metadata for neural network training.
+ * Captures normalized swipe traces with metadata for offline model training.
  *
  * Provenance (WP9 audit n-2, 2026-08-11): every trace also carries the KEYBOARD LAYOUT it was
  * drawn on and the DECODER ENGINE that produced its suggestions. Since the geometric engine
  * shipped, swipes can originate on non-QWERTY layouts (Dvorak, ЙЦУКЕН, AZERTY…) whose key
- * geometry is incompatible with the QWERTY-trained neural model — untagged, those traces would
- * be indistinguishable from QWERTY/neural ones in an export and would silently poison any
+ * geometry is incompatible with a QWERTY-trained model — untagged, those traces would
+ * be indistinguishable from QWERTY ones in an export and would silently poison any
  * corpus built from it. Rows written before tagging (and any import of an older export) read
  * back as [UNKNOWN] rather than failing to load.
  */
@@ -26,7 +26,8 @@ class SwipeMLData {
         /** Provenance value for traces recorded before layout/engine tagging existed. */
         const val UNKNOWN = "unknown"
 
-        /** [engine] value for the ONNX neural decoder (QWERTY-only routing). */
+        /** [engine] value for the removed ONNX transformer decoder (QWERTY-only routing).
+         *  Retained for legacy DB rows and exports — see the class KDoc. */
         const val ENGINE_NEURAL = "neural"
 
         /** [engine] value for the geometric SHARK2 decoder (any layout). */
@@ -181,7 +182,7 @@ class SwipeMLData {
             put("collection_source", collectionSource)
             // Provenance (audit n-2): which layout the trace was drawn on and which decoder
             // produced its suggestions. Consumers of an export MUST filter on these before
-            // training — a geometric/non-QWERTY trace is not QWERTY-neural training data.
+            // training — a geometric/non-QWERTY trace is not QWERTY-transformer training data.
             put("layout_name", layoutName)
             put("engine", engine)
         }

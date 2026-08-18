@@ -46,7 +46,7 @@ import java.io.File
  *     fire; it is dead weight in the APK and it hides the real coverage behind a big entry
  *     count. Reachability has TWO routes and both count (see `isReachable`): the bundled
  *     lexicon can emit the key, or the swipe engines INJECT it as its own decodable surface
- *     (`CtcContractionKeys.inject`, and the neural vocabulary's equivalent). Judging by the
+ *     (`CtcContractionKeys.inject`, and the deleted vocabulary's equivalent). Judging by the
  *     first route alone is what wrongly deleted 27,256 fr + 22,355 it productive elisions on
  *     2026-08-17; they are restored, and what stays trimmed is only the keys no a–z decoder
  *     can spell at all (accents, hyphens).
@@ -135,7 +135,7 @@ class BundledContractionDataTest {
          *    BEFORE the contraction overlay, so what the overlay sees is
          *    `display[surface] ?: surface` — never the bare surface of an accented word
          *    (swiping `dira` in Italian presents `dirà`, so a `dira` mapping is dead).
-         *  - **geometric / neural / typing**: these carry the canonical dictionary word
+         *  - **geometric / ctc / typing**: these carry the canonical dictionary word
          *    itself, including forms that lost their a–z surface to a collision (en `dêtre`
          *    loses `detre` to the equally-ranked `detre`, but is still a word one can type).
          */
@@ -196,7 +196,7 @@ class BundledContractionDataTest {
      *  2. the swipe engines INJECT it as its own decodable surface — `CtcEngineAdapter`
      *     inserts every alias key into the lexicon trie via [CtcContractionKeys.inject], and
      *     `OptimizedVocabulary.loadContractionsFromInputStream` does the equivalent for the
-     *     neural vocabulary. Injection is limited to keys spelled from the a–z alphabet,
+     *     deleted vocabulary. Injection is limited to keys spelled from the a–z alphabet,
      *     which is exactly [CtcContractionKeys.isInjectable].
      *
      * Route 2 is why the 2026-08-17 restore is correct: a productive elision such as fr

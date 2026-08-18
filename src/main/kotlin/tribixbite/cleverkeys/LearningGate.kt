@@ -30,7 +30,7 @@ package tribixbite.cleverkeys
  * behavior. Data the user EXPLICITLY creates is governed by its own controls:
  * - `SwipeCalibrationActivity` traces — recorded only during a calibration
  *   session the user starts, behind its own consent flow.
- * - `NeuralPerformanceStats` — prediction latency/accuracy aggregates behind
+ * - `SwipePerformanceStats` — prediction latency/accuracy aggregates behind
  *   the separate performance-stats preference (no text content).
  * - Backup restore — importing a backup repopulates learned stores even with
  *   the master off; restoring one's own exported data is an explicit act.

@@ -48,17 +48,17 @@ class PredictionInitializer(
         // subkey gestures, which is the whole point of the Short Swipe Customization feature.
         //
         // Three wrong gates lived here, each narrower than the last was assumed to be:
-        //  1. `isSwipeTypingAvailable()`, which is literally `neuralEngine != null` — the wrong
-        //     dependency twice over, since this call passes the word predictor and the service
-        //     handle and touches the neural engine not at all. It only ever worked because
-        //     something always built the neural engine eagerly.
+        //  1. `isSwipeTypingAvailable()`, then literally "the transformer engine is built" —
+        //     the wrong dependency twice over, since this call passes the word predictor and
+        //     the service handle and touched that engine not at all. It only ever worked
+        //     because something always built the engine eagerly.
         //  2. `swipe_typing_enabled`, which still stranded users who keep swipe typing off.
         //  3. the enclosing `word_prediction_enabled || swipe_typing_enabled`, which stranded
         //     users who have BOTH off.
-        // When the neural build became conditional on routing (`shouldPreloadNeuralEngine`),
-        // gate 1 went permanently false in CTC mode, the call stopped happening, and
-        // `_keyboard2` stayed null — killing word swipes and user-created subkey short swipes
-        // together, while layout-defined subkeys kept working because they never take this path.
+        // When that build became conditional on routing, gate 1 went permanently false in CTC
+        // mode, the call stopped happening, and `_keyboard2` stayed null — killing word swipes
+        // and user-created subkey short swipes together, while layout-defined subkeys kept
+        // working because they never take this path. The gate is gone; keep it gone.
         //
         // Null-tolerant by signature, so passing a not-yet-built predictor is safe: the
         // predictor is re-read per gesture, the service handle is not.

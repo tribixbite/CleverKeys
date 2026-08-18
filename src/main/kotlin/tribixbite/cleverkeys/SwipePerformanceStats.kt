@@ -6,14 +6,18 @@ import android.os.Build
 import kotlin.math.roundToInt
 
 /**
- * Tracks and persists performance statistics for neural swipe prediction.
+ * Tracks and persists selection statistics for swipe prediction.
  *
  * Metrics tracked:
- * - Total predictions made
- * - Average inference time
  * - Top-1 accuracy (user selected first suggestion)
  * - Top-3 accuracy (user selected any of top 3)
- * - Model load time
+ * - Total selections
+ *
+ * The inference-time and model-load-time WRITERS died with the neural engine
+ * (2026-08-18) — nothing measures a per-swipe inference cost any more. The stored
+ * fields, their getters and the JSON export keys are retained so an existing
+ * install's history and the export schema both stay readable; they simply stop
+ * advancing. The human-readable summary no longer displays them.
  *
  * Statistics are persisted in SharedPreferences and can be reset.
  *
@@ -24,20 +28,25 @@ import kotlin.math.roundToInt
  * @since v1.32.896
  * @since v1.32.902 - Phase 6.5: Privacy considerations integrated
  */
-class NeuralPerformanceStats(context: Context) {
+class SwipePerformanceStats(context: Context) {
 
     // Use Device Encrypted storage for Direct Boot compatibility
     // Performance stats are non-sensitive aggregate metrics
     private val prefs: SharedPreferences = if (Build.VERSION.SDK_INT >= 24) {
         context.createDeviceProtectedStorageContext()
-            .getSharedPreferences("neural_performance_stats", Context.MODE_PRIVATE)
+            // Pref FILE name kept as-is (renamed class, same storage): changing it would
+            // orphan every existing install's accumulated selection history.
+            .getSharedPreferences(STATS_PREFS_FILE, Context.MODE_PRIVATE)
     } else {
-        context.getSharedPreferences("neural_performance_stats", Context.MODE_PRIVATE)
+        context.getSharedPreferences(STATS_PREFS_FILE, Context.MODE_PRIVATE)
     }
 
     private val privacyManager = PrivacyManager.getInstance(context)
 
     companion object {
+        /** Legacy pref-file name — see the constructor comment; do NOT rename. */
+        private const val STATS_PREFS_FILE = "neural_performance_stats"
+
         private const val KEY_TOTAL_PREDICTIONS = "total_predictions"
         private const val KEY_TOTAL_INFERENCE_TIME = "total_inference_time_ms"
         private const val KEY_TOP1_SELECTIONS = "top1_selections"
@@ -47,36 +56,13 @@ class NeuralPerformanceStats(context: Context) {
         private const val KEY_FIRST_STAT_TIME = "first_stat_timestamp"
 
         @Volatile
-        private var instance: NeuralPerformanceStats? = null
+        private var instance: SwipePerformanceStats? = null
 
-        fun getInstance(context: Context): NeuralPerformanceStats {
+        fun getInstance(context: Context): SwipePerformanceStats {
             return instance ?: synchronized(this) {
-                instance ?: NeuralPerformanceStats(context.applicationContext).also {
+                instance ?: SwipePerformanceStats(context.applicationContext).also {
                     instance = it
                 }
-            }
-        }
-    }
-
-    /**
-     * Record a prediction inference.
-     * Privacy: Checks canCollectPerformanceData() before recording.
-     * @param inferenceTimeMs Time taken for neural network inference
-     */
-    fun recordPrediction(inferenceTimeMs: Long) {
-        // Privacy check
-        if (!privacyManager.canCollectPerformanceData()) {
-            return
-        }
-
-        synchronized(this) {
-            prefs.edit().apply {
-                putLong(KEY_TOTAL_PREDICTIONS, getTotalPredictions() + 1)
-                putLong(KEY_TOTAL_INFERENCE_TIME, getTotalInferenceTime() + inferenceTimeMs)
-                if (!prefs.contains(KEY_FIRST_STAT_TIME)) {
-                    putLong(KEY_FIRST_STAT_TIME, System.currentTimeMillis())
-                }
-                apply()
             }
         }
     }
@@ -103,15 +89,6 @@ class NeuralPerformanceStats(context: Context) {
                 }
                 apply()
             }
-        }
-    }
-
-    /**
-     * Record model load time (one-time event).
-     */
-    fun recordModelLoadTime(loadTimeMs: Long) {
-        synchronized(this) {
-            prefs.edit().putLong(KEY_MODEL_LOAD_TIME, loadTimeMs).apply()
         }
     }
 
@@ -207,16 +184,11 @@ class NeuralPerformanceStats(context: Context) {
         }
 
         return buildString {
-            appendLine("📊 Neural Prediction Statistics")
+            appendLine("📊 Swipe Prediction Statistics")
             appendLine()
             appendLine("Usage:")
-            appendLine("  Total predictions: ${getTotalPredictions()}")
             appendLine("  Total selections: ${getTotalSelections()}")
             appendLine("  Days tracked: ${getDaysSinceStart()}")
-            appendLine()
-            appendLine("Performance:")
-            appendLine("  Avg inference: ${getAverageInferenceTime()}ms")
-            appendLine("  Model load time: ${getModelLoadTime()}ms")
             appendLine()
             appendLine("Accuracy:")
             appendLine("  Top-1: ${getTop1Accuracy()}%")

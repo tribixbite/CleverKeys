@@ -161,10 +161,10 @@ class GeometricEngineAdapter(private val context: Context) {
     @Volatile
     private var dictionaryMemo: DictMemo? = null
 
-    // ── Contraction display overlay (parity with the neural vocab layer) ────────────
+    // ── Contraction display overlay (parity with the deleted vocabulary layer) ──────
     // Every dictionary stores contractions as apostrophe-free ALIASES ("theyd", "cest")
     // because the display forms are untypeable — apostrophe is not a swipe key
-    // (LayoutProjection tier-5 skips them). The overlay mirrors neural's emission logic
+    // (LayoutProjection tier-5 skips them). The overlay mirrors the old emission logic
     // (paired-first, real-word-guarded replace-vs-variant); the pure decision matrix
     // lives in [ContractionOverlay] and is unit-tested in runPureTests.
     private var contractionManager: ContractionManager? = null
@@ -178,7 +178,7 @@ class GeometricEngineAdapter(private val context: Context) {
      * rationale live in [SwipeContractionPolicy]): English keeps the bundled base set, every
      * other language gets ONLY its own file. Code-switching is a bug — English morphology
      * must not bleed into a sentence the user is typing in another language, which is the
-     * same call the NEURAL engine made in v1.1.88 (`OptimizedVocabulary` clears the English
+     * same call `OptimizedVocabulary` made in v1.1.88 (clears the English
      * contractions before loading the target language's) and the same call the shared
      * pipeline already makes for possessives (`SuggestionHandler.shouldAugmentPossessives`).
      *

@@ -24,7 +24,7 @@ import tribixbite.cleverkeys.PredictionResult
  * fake 1000. The softmax is computed over the SELECTED top-K (after dedupe) so the
  * emitted integers sum to ~1000 and are a proper posterior. **Scores are
  * engine-relative** (documented on [SwipeDecodingEngine]) — never comparable to
- * neural-score thresholds.
+ * the CTC decoder's log-probabilities.
  *
  * Purity (NFR-3): `kotlin.*` only + the pure [PredictionResult].
  */

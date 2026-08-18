@@ -120,7 +120,7 @@ class ContractionManager(private val context: Context) {
      *    `franco's`, whose base `francos` is absent from the French lexicon
      *    (`CtcMultiLanguageInstrumentedTest`, 2026-08-16).
      *
-     * This mirrors the NEURAL engine's v1.1.88 fix (`OptimizedVocabulary`: clear the English
+     * This mirrors the v1.1.88 vocabulary fix (`OptimizedVocabulary`, since deleted: clear the English
      * contractions before loading the target language's) — the geo/CTC adapters were the
      * last engines still contaminating non-English slates.
      *
@@ -481,7 +481,7 @@ class ContractionManager(private val context: Context) {
      * Format: {"dont": "don't", "cant": "can't", ...}
      *
      * These are apostrophe-free forms that are NOT valid English words.
-     * The neural network predicts "dont", we replace with "don't".
+     * The decoder predicts "dont", we replace with "don't".
      */
     private fun loadNonPairedContractions() {
         val inputStream = assetManager.open("dictionaries/contractions_non_paired.json")

@@ -6,7 +6,7 @@ import android.util.Log
  * Prefix index for fast dictionary lookup with accent normalization support.
  *
  * This index is built on **normalized** (accent-stripped) words, allowing the
- * neural swipe model's 26-letter output to match accented dictionary entries.
+ * a–z-only swipe decoder output to match accented dictionary entries.
  *
  * ## How It Works
  * 1. User swipes "café" → NN outputs "cafe" (26-letter vocab)

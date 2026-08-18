@@ -14,7 +14,7 @@ import androidx.compose.ui.platform.LocalContext
  * Canonical app-wide theme wrapper for CleverKeys' Compose surfaces.
  *
  * This is the single source of truth for theming every `setContent { … }` screen
- * (Settings, Theme picker, Short-swipe customization, Extra keys, Neural, Clipboard,
+ * (Settings, Theme picker, Short-swipe customization, Extra keys, CTC, Clipboard,
  * Layout manager, etc.). It replaces the per-activity inline
  * `MaterialTheme(colorScheme = if (isSystemInDarkTheme()) darkColorScheme() else lightColorScheme())`
  * re-rolls that silently drifted from the branded scheme.

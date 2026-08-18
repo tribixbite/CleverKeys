@@ -10,7 +10,7 @@ import android.widget.LinearLayout
  * This class encapsulates the complex logic for:
  * - Initializing prediction engines (lazy initialization)
  * - Setting up suggestion bar and view hierarchy
- * - Configuring neural engine dimensions
+ * - Configuring keyboard dimensions for the swipe pipeline
  * - Setting up GlobalLayoutListener for accurate coordinate mapping
  * - Cleaning up when predictions are disabled
  *
@@ -29,7 +29,7 @@ class PredictionViewSetup(
     private val predictionCoordinator: PredictionCoordinator?,
     private val inputCoordinator: InputCoordinator?,
     private val suggestionHandler: SuggestionHandler?,
-    private val neuralLayoutHelper: NeuralLayoutHelper?,
+    private val keyboardDimensionsHelper: KeyboardDimensionsHelper?,
     private val receiver: KeyboardReceiver?,
     private val emojiPane: ViewGroup?
 ) {
@@ -126,7 +126,7 @@ class PredictionViewSetup(
                 val suggestionBarPropagator = SuggestionBarPropagator.create(
                     inputCoordinator,
                     suggestionHandler,
-                    neuralLayoutHelper,
+                    keyboardDimensionsHelper,
                     receiver
                 )
                 suggestionBarPropagator.propagateAll(
@@ -171,7 +171,7 @@ class PredictionViewSetup(
                 val suggestionBarPropagator = SuggestionBarPropagator.create(
                     inputCoordinator,
                     suggestionHandler,
-                    neuralLayoutHelper,
+                    keyboardDimensionsHelper,
                     receiver
                 )
                 suggestionBarPropagator.propagateAll(
@@ -206,7 +206,7 @@ class PredictionViewSetup(
          * @param predictionCoordinator The prediction coordinator
          * @param inputCoordinator The input coordinator (nullable)
          * @param suggestionHandler The suggestion handler (nullable)
-         * @param neuralLayoutHelper The neural layout helper (nullable)
+         * @param keyboardDimensionsHelper The keyboard-dimensions helper (nullable)
          * @param receiver The keyboard receiver (nullable)
          * @param emojiPane The emoji pane (nullable)
          * @return A new PredictionViewSetup instance
@@ -219,7 +219,7 @@ class PredictionViewSetup(
             predictionCoordinator: PredictionCoordinator?,
             inputCoordinator: InputCoordinator?,
             suggestionHandler: SuggestionHandler?,
-            neuralLayoutHelper: NeuralLayoutHelper?,
+            keyboardDimensionsHelper: KeyboardDimensionsHelper?,
             receiver: KeyboardReceiver?,
             emojiPane: ViewGroup?
         ): PredictionViewSetup {
@@ -230,7 +230,7 @@ class PredictionViewSetup(
                 predictionCoordinator,
                 inputCoordinator,
                 suggestionHandler,
-                neuralLayoutHelper,
+                keyboardDimensionsHelper,
                 receiver,
                 emojiPane
             )

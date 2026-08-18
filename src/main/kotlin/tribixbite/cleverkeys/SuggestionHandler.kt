@@ -16,7 +16,7 @@ import tribixbite.cleverkeys.autocorrect.AutocorrectContextGuard
  *
  * This class centralizes all logic related to:
  * - Suggestion bar updates and auto-insertion
- * - Prediction results from neural/typing engines
+ * - Prediction results from the swipe/typing engines
  * - Autocorrect for typing and swipe predictions
  * - Context tracking updates
  * - Text replacement and deletion (Termux-aware)
@@ -106,7 +106,7 @@ class SuggestionHandler(
          * Before the geometric engine, swipe was QWERTY-only and de-facto English-dominant, so
          * the augmentation ran unconditionally; on non-QWERTY layouts it fabricates junk like
          * "дом's" / "maison's". The gate (`b2d7b908`) therefore also removed possessives from
-         * the NEURAL path for fr/es-on-QWERTY users — deliberate: those forms were wrong there
+         * the swipe path for fr/es-on-QWERTY users — deliberate: those forms were wrong there
          * too (audit n-1).
          *
          * A null language (no DictionaryManager yet — early startup, unit contexts) is treated
@@ -508,7 +508,7 @@ class SuggestionHandler(
         // path). Kept aligned with scores; possessives appended at the end so the top prediction is
         // unchanged and the auto-insert target below is still the highest-scoring word.
         // ENGLISH ONLY (2026-07-23): see [shouldAugmentPossessives] for the rule and why the
-        // gate deliberately covers the neural path too (audit n-1).
+        // gate deliberately covers the swipe path too (audit n-1).
         val barWords = transformedPredictions.toMutableList()
         val barScores = (scores ?: emptyList()).toMutableList()
         val activeLanguage = predictionCoordinator.getDictionaryManager()?.getCurrentLanguage()
@@ -593,7 +593,7 @@ class SuggestionHandler(
                 contextTracker.setLastAutoInsertedWord(
                     committedWord ?: topPrediction.removePrefix("raw:")
                 )
-                contextTracker.setLastCommitSource(PredictionSource.NEURAL_SWIPE)
+                contextTracker.setLastCommitSource(PredictionSource.SWIPE)
 
                 // Re-display the augmented+transformed correction list (D1: possessives persist in
                 // the final swipe bar).
@@ -771,7 +771,7 @@ class SuggestionHandler(
 
         var processedWord = word
 
-        // Check if this is a raw prediction (user explicitly selected neural network output)
+        // Check if this is a raw prediction (user explicitly selected raw decoder output)
         // Raw predictions should skip autocorrect
         val isRawPrediction = processedWord.startsWith("raw:")
 
@@ -794,8 +794,8 @@ class SuggestionHandler(
         // Skip autocorrect for:
         // 1. Known contractions (prevent fuzzy matching)
         // 2. Contraction keys (apostrophe-free forms — same protection)
-        // 3. Raw predictions (user explicitly selected this neural output)
-        // 4. Manual selections (user explicitly tapped a neural prediction - issue #63 fix)
+        // 3. Raw predictions (user explicitly selected this decoder output)
+        // 4. Manual selections (user explicitly tapped a swipe prediction - issue #63 fix)
         if (isKnownContraction || isContractionKey || isRawPrediction || isManualSelection) {
             if (isKnownContraction) {
                 vlog { "KNOWN CONTRACTION: \"$processedWord\" - skipping autocorrect" }
@@ -871,7 +871,7 @@ class SuggestionHandler(
                 // auto-inserted word — clearing the tracking here prevents the
                 // REPLACE branch below from deleting the swiped word.
                 if (wasNextWordSelection &&
-                    contextTracker.getLastCommitSource() == PredictionSource.NEURAL_SWIPE
+                    contextTracker.getLastCommitSource() == PredictionSource.SWIPE
                 ) {
                     contextTracker.clearLastAutoInsertedWord()
                     contextTracker.setLastCommitSource(PredictionSource.UNKNOWN)
@@ -894,11 +894,11 @@ class SuggestionHandler(
                 // The ONLY time we should delete is when replacing an auto-inserted prediction
                 // (handled below via _lastAutoInsertedWord tracking)
 
-                // CRITICAL: If we just auto-inserted a word from neural swipe, delete it for replacement
+                // CRITICAL: If we just auto-inserted a word from a swipe, delete it for replacement
                 // This allows user to tap a different prediction instead of appending
-                // Only delete if the last commit was from neural swipe (not from other sources)
+                // Only delete if the last commit was from a swipe (not from other sources)
                 if (!contextTracker.getLastAutoInsertedWord().isNullOrEmpty() &&
-                    contextTracker.getLastCommitSource() == PredictionSource.NEURAL_SWIPE
+                    contextTracker.getLastCommitSource() == PredictionSource.SWIPE
                 ) {
                     vlog { "REPLACE: Deleting auto-inserted word: '${contextTracker.getLastAutoInsertedWord()}'" }
 
@@ -1145,8 +1145,8 @@ class SuggestionHandler(
                 }
 
                 // Track that this commit was from candidate selection (manual tap)
-                // Note: Auto-insertions set this separately to NEURAL_SWIPE
-                if (contextTracker.getLastCommitSource() != PredictionSource.NEURAL_SWIPE) {
+                // Note: Auto-insertions set this separately to SWIPE
+                if (contextTracker.getLastCommitSource() != PredictionSource.SWIPE) {
                     contextTracker.setLastCommitSource(
                         if (wasNextWordSelection) PredictionSource.NEXT_WORD
                         else PredictionSource.CANDIDATE_SELECTION
@@ -1525,7 +1525,7 @@ class SuggestionHandler(
 
         // Track word for multi-language detection. Re-homed onto PredictionCoordinator
         // 2026-08-18 (was SwipePredictorOrchestrator, which is being deleted with the
-        // neural engine): the detector is fed by EVERY commit, not just neural swipes.
+        // engine): the detector is fed by EVERY commit, not just swipes.
         try {
             predictionCoordinator.trackCommittedWord(word)
         } catch (e: Exception) {

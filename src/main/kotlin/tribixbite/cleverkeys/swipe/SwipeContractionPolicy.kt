@@ -28,7 +28,7 @@ import tribixbite.cleverkeys.swipe.ctc.CtcLanguageSupport
  * also offering the English possessive `franco's`, whose base `francos` is (correctly)
  * absent from the 37,949-word French trie.
  *
- * The NEURAL engine already fixed exactly this in v1.1.88 (`OptimizedVocabulary`: clear the
+ * The deleted vocabulary layer already fixed exactly this in v1.1.88 (`OptimizedVocabulary`: clear the
  * English contractions, then load the target language's), and possessive augmentation is
  * already English-gated in the shared pipeline
  * (`SuggestionHandler.shouldAugmentPossessives` — on non-English "it fabricates junk like

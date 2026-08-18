@@ -46,7 +46,7 @@ import java.nio.FloatBuffer
  *     ship candidate: featurize → NN → [CtcEmissions.sliceFromHead] → [CtcBeamDecoder]
  *     at beam width 100 over the real bundled 98k-word `dictionaries/en_enhanced.json`
  *     trie, at the tunedV2/E1 preset (γ 1.05, λ 1.1, β 0.2, α 0.0, γp 0.3734, βp 0.9882).
- *     G3's question is whether NN+beam fits the neural engine's 100–300 ms budget.
+ *     G3's question was whether NN+beam fits the then-current 100–300 ms budget.
  *
  * ## Laptop reference (`PHASE_F.md`, CPU EP, `intra_op = inter_op = 1`, batch 1, idle)
  * | model | laptop mean |

@@ -42,14 +42,14 @@ class WarmUpResult(
 /**
  * The router seam for the geometric swipe decoder.
  *
- * Mirrors the FINAL candidate shape of the neural path: the neural orchestrator
+ * Mirrors the FINAL candidate shape of the ONNX path: the deleted orchestrator
  * `onnx/SwipePredictorOrchestrator.predict` returns the richer
  * `PredictionPostProcessor.Result`; this engine emits the reduced
  * [PredictionResult], which is what that Result reduces to for the suggestion bar.
  * A future WP9 router adapts between the two.
  *
  * **SCORES ARE ENGINE-RELATIVE** (fixed-temperature softmax posterior × 1000) —
- * they are NOT calibrated against neural-score thresholds and MUST NOT be compared
+ * they are NOT calibrated against the CTC decoder's scores and MUST NOT be compared
  * across engines by any router.
  *
  * **Thread-safety**: all methods are safe to call from any thread. Cache mutation

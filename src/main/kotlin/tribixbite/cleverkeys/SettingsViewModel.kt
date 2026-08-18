@@ -47,7 +47,7 @@ class SettingsViewModel : ViewModel() {
     var multiLangSectionExpanded by mutableStateOf(false)
     var privacySectionExpanded by mutableStateOf(false)
     /** Collapsed by default — Activities is primary entry point. */
-    var neuralSectionExpanded by mutableStateOf(false)
+    var swipeTypingSectionExpanded by mutableStateOf(false)
     /** No longer default-expanded since Theme moved to Activities. */
     var appearanceSectionExpanded by mutableStateOf(false)
     var swipeTrailSectionExpanded by mutableStateOf(false)

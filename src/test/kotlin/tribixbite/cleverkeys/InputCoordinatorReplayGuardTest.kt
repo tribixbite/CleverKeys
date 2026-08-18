@@ -9,7 +9,7 @@ import org.junit.Test
 /**
  * MockK JVM tests for the cold-start swipe replay guard (F4).
  *
- * When the neural engine is not yet ready on the first swipe, the commit is deferred until init
+ * When a decoder is not yet ready on the first swipe, the commit is deferred until init
  * settles (possibly seconds later). By then the focused input field may have changed; committing
  * this swipe's word into the new/closed field would corrupt unrelated text. The guard compares
  * the captured [InputConnection]/[EditorInfo] against the live ones by reference identity — a

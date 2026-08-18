@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit
  * Pins the NEW behavior steps 7-8 introduce: a non-QWERTY layout (Dvorak here — non-QWERTY
  * by routing, English dictionary bundled so no langpack import is needed) yields swipe
  * suggestions through the REAL adapter + engine + bundled `en_enhanced.bin`, and those
- * results ride the SAME SuggestionHandler seam as neural results — so the parity pins
+ * results ride the SAME SuggestionHandler seam as CTC results — so the parity pins
  * (password guard, shift transform, commit engine) are asserted against real geo output.
  *
  * Routing itself is pinned by SwipeEngineRouterTest (pure JVM); this class re-pins it once
@@ -270,7 +270,7 @@ class GeometricSwipeOracleTest {
     }
 
     /** Parity pin: real geo results ride the unified SH seam — top word commits with
-     *  trailing space, NEURAL_SWIPE tracking, bar re-displayed (same as neural). */
+     *  trailing space, SWIPE tracking, bar re-displayed (same as CTC). */
     @Test
     fun oracle_geo_resultsThroughSeam_commitAndBar() {
         val kd = loadLayout("latn_dvorak")
@@ -291,12 +291,12 @@ class GeometricSwipeOracleTest {
             val top = h.suggestionBar.getCurrentSuggestions().firstOrNull() ?: result.words.first()
             assertEquals("$top ", h.inputConnection.bufferText())
             // DELIBERATE MISLABEL PIN (audit m-1): geometric commits are tracked as
-            // NEURAL_SWIPE because the commit-source enum has no geometric member yet. This
+            // SWIPE because the commit-source enum is engine-agnostic. This
             // asserts TODAY's behavior, not the desired one — the provenance refactor
             // (SuggestionOrigin.GEOMETRIC already exists for BAR provenance) is tracked in
             // docs/audit/remediation/3-core-ime.md m-1. Update this pin WITH that refactor,
             // never on its own.
-            assertEquals(PredictionSource.NEURAL_SWIPE, h.contextTracker.getLastCommitSource())
+            assertEquals(PredictionSource.SWIPE, h.contextTracker.getLastCommitSource())
             assertTrue(h.suggestionBar.getCurrentSuggestions().isNotEmpty())
         } finally {
             adapter.shutdown()
@@ -363,7 +363,7 @@ class GeometricSwipeOracleTest {
     /**
      * Parity pin (contraction display mapping — the addendum's step-9 pin, added after a
      * field report): swiping the alias key-path "theyd" must surface the display form
-     * "they'd" in the results, exactly as the neural vocab maps at emission
+     * "they'd" in the results, exactly as ContractionOverlay maps at emission
      * (OptimizedVocabulary `displayWord = nonPairedContractions[word]`). The canonical
      * "they'd" is untypeable in projection (apostrophe is not a key), so the dictionary's
      * alias entry decodes and the adapter maps it.
@@ -391,7 +391,7 @@ class GeometricSwipeOracleTest {
     /**
      * Parity pin (paired contractions, 2026-07-23 overlay): swiping the paired base "its"
      * must surface BOTH "its" (kept — it is a real word) and the injected variant "it's",
-     * mirroring the neural vocab's contraction-variant emission. Also asserts the base is
+     * mirroring ContractionOverlay's contraction-variant emission. Also asserts the base is
      * NOT replaced (the binary contraction store's paired-into-non-paired pollution must
      * not leak through — paired-first rule).
      */

@@ -6,7 +6,7 @@ import android.util.Log
  * Unified scoring and ranking for multi-dictionary suggestions.
  *
  * Merges candidates from primary and secondary language dictionaries,
- * applying neural confidence, frequency ranks, and language context
+ * applying decoder confidence, frequency ranks, and language context
  * to produce a single ranked suggestion list.
  *
  * ## Scoring Formula
@@ -58,7 +58,7 @@ class SuggestionRanker(
         val normalized: String,        // Lookup key (accent-stripped)
         val frequencyRank: Int,        // 0-255, lower = more common
         val source: WordSource,        // Where this word came from
-        val nnConfidence: Float = 0f,  // Neural network confidence (0-1)
+        val nnConfidence: Float = 0f,  // Swipe-decoder confidence (0-1)
         val languageCode: String = "en" // Language this word belongs to
     ) {
         /**

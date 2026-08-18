@@ -830,7 +830,7 @@ class WordPredictor {
         // v1.2.5 FIX: First try loading from installed language packs
         // This fixes autocorrect for languages only available via language pack (e.g., Dutch)
         // Without this, WordPredictor's dictionary would be empty and autocorrect would
-        // incorrectly "correct" valid neural predictions (issue #63)
+        // incorrectly "correct" valid swipe predictions (issue #63)
         try {
             val packManager = LanguagePackManager.getInstance(context)
             val dictFile = packManager.getDictionaryPath(language)
@@ -1289,7 +1289,7 @@ class WordPredictor {
                     // existing bare-form freq if present → 5000 anchor. This
                     // preserves both the binary-loaded ranking signal and the
                     // beam-search ranking (OptimizedVocabulary normalizes to 0-1
-                    // and multiplies by `Config.neural_frequency_weight`, so
+                    // and multiplied it by a frequency weight, so
                     // higher input freq → slightly better ranking).
                     aliases[withoutApostrophe] = withApostrophe
                     currentDict[withoutApostrophe] = currentDict[withApostrophe]

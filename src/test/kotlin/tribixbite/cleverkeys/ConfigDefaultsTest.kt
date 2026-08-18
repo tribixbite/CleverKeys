@@ -682,7 +682,7 @@ class ConfigDefaultsTest {
     }
 
     // =========================================================================
-    // ONNX Runtime (wiki: settings/neural-settings.md)
+    // ONNX Runtime (used by the CTC encoder session)
     // =========================================================================
 
     @Test

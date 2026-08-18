@@ -50,7 +50,7 @@ import java.util.concurrent.TimeUnit
  * PredictionCoordinator. Each test builds its OWN harness (no cross-test state) so it is
  * orchestrator-safe.
  *
- * Swipe determinism: the neural engine is NEVER run. The post-prediction transform chain
+ * Swipe determinism: no decoder is ever run. The post-prediction transform chain
  * is characterized by calling InputCoordinator.handlePredictionResults / onSuggestionSelected
  * directly with SYNTHETIC prediction lists — the exact seam AsyncPredictionHandler invokes
  * (InputCoordinator.kt:1238-1243). WP9 step 3 (2026-07-20): shift-at-swipe-start state is now
@@ -140,7 +140,7 @@ class PipelineCharacterizationTest {
                     }
                     sharedPredictionCoordinator = PredictionCoordinator(context, sharedConfig!!)
                     // Inject the shared WordPredictor so the coordinator's getWordPredictor() works
-                    // without booting the neural stack (reflection seam — same as
+                    // without booting a decoder (reflection seam — same as
                     // ContractionFlickerIntegrationTest).
                     PredictionCoordinator::class.java.getDeclaredField("wordPredictor").apply {
                         isAccessible = true
@@ -274,7 +274,7 @@ class PipelineCharacterizationTest {
      * (InputCoordinator.kt:1236-1249), on the main thread. Sets wasLastInputSwipe=true first —
      * the precondition performSwipeTyping establishes (InputCoordinator.kt:1183) before the
      * async callback fires, which the trailing-space + Termux + ML branches read. We bypass
-     * performSwipeTyping (it runs the neural engine); this reproduces its tracker precondition.
+     * the swipe dispatch (which runs a decoder); this reproduces its tracker precondition.
      *
      * WP9 step 3 (2026-07-20): shift-at-swipe-start state is now CARRIED by the request — the
      * production callback threads the captured wasShiftActive/wasShiftLocked into
@@ -325,17 +325,17 @@ class PipelineCharacterizationTest {
     // SWIPE AUTO-INSERT (InputCoordinator path)
     // =========================================================================
 
-    /** Scenario 1: plain swipe → top prediction committed with trailing space, NEURAL_SWIPE. */
+    /** Scenario 1: plain swipe → top prediction committed with trailing space, SWIPE. */
     @Test
-    fun oracle_swipe_plainSwipe_commitsTopWithTrailingSpaceAndNeuralSource() {
+    fun oracle_swipe_plainSwipe_commitsTopWithTrailingSpaceAndSwipeSource() {
         val h = harness(initialText = "")
         swipeResults(h, listOf("hello", "help", "held"), listOf(300, 200, 100), textEditor())
         drainMainThread()
 
         // INVARIANT: top prediction committed with a trailing space into the empty buffer.
         assertEquals("hello ", bufferOf(h))
-        // INVARIANT: swipe commit source is NEURAL_SWIPE, and the word is tracked for replacement.
-        assertEquals(PredictionSource.NEURAL_SWIPE, h.contextTracker.getLastCommitSource())
+        // INVARIANT: swipe commit source is SWIPE, and the word is tracked for replacement.
+        assertEquals(PredictionSource.SWIPE, h.contextTracker.getLastCommitSource())
         assertEquals("hello", h.contextTracker.getLastAutoInsertedWord())
         // INVARIANT: full prediction list is (re)displayed for correction.
         assertTrue(h.suggestionBar.getCurrentSuggestions().contains("hello"))
@@ -398,7 +398,7 @@ class PipelineCharacterizationTest {
         assertEquals("hello ", bufferOf(h))
 
         // A second, distinct prediction result auto-inserts and (because the last commit was
-        // NEURAL_SWIPE) the handler is called after clearLastAutoInsertedWord() in
+        // SWIPE) the handler is called after clearLastAutoInsertedWord() in
         // handlePredictionResults — so consecutive swipes APPEND, they don't replace.
         swipeResults(h, listOf("world"), listOf(300), textEditor())
         drainMainThread()
@@ -416,7 +416,7 @@ class PipelineCharacterizationTest {
         drainMainThread()
         assertEquals("hello ", bufferOf(h))
 
-        // Now tap the alternate "help": lastAutoInserted="hello", source=NEURAL_SWIPE,
+        // Now tap the alternate "help": lastAutoInserted="hello", source=SWIPE,
         // so onSuggestionSelected deletes "hello " (word+space) then commits "help ".
         // ORACLE-FLIP(step 6) LANDED 2026-07-21: routed through SuggestionHandler — the engine
         // production taps ALWAYS used (SuggestionBridge → SH, isManualSelection=true). The old
@@ -441,7 +441,7 @@ class PipelineCharacterizationTest {
      * SuggestionHandler.handleSwipePredictionResults, which returns early (clearing the bar) when the
      * field is a password field and the user has not opted into swipe-on-password. Nothing is
      * committed and the bar carries no prediction. (Previously — legacy IC path — the swipe still
-     * committed "hunter2 " with a NEURAL_SWIPE source; that legacy behavior is now pinned by
+     * committed "hunter2 " with a SWIPE source; that legacy behavior is now pinned by
      * oracle_swipe_passwordField_legacyPathStillCommits with the flag off.)
      */
     @Test
@@ -505,7 +505,7 @@ class PipelineCharacterizationTest {
         assertEquals("ls ", bufferOf(h))
     }
 
-    /** Scenario 11: contraction swipe — prediction "dont" committed exactly as the neural
+    /** Scenario 11: contraction swipe — prediction "dont" committed exactly as the decoder
      * engine gave it (IC does not transform swipe auto-insert predictions to "don't"). */
     @Test
     fun oracle_swipe_contractionPrediction_committedAsGiven() {
@@ -1028,8 +1028,8 @@ class PipelineCharacterizationTest {
      * D5 (capture now routes through MLDataCollector inside SH.handleSwipePredictionResults):
      * it is still gated on config.swipe_debug_detailed_logging AND
      * PrivacyManager.canCollectSwipeData() AND a non-null currentSwipeData populated by
-     * performSwipeTyping (which we bypass to stay off the neural engine). Verifying the store
-     * write would require driving handleSwipeTyping end-to-end (neural engine) or a
+     * the swipe dispatch (which we bypass to stay off the decoders). Verifying the store
+     * write would require driving handleSwipeTyping end-to-end (a real decoder) or a
      * PrivacyManager/SwipeMLDataStore test double — out of scope for a post-prediction-seam
      * oracle. The word-REPLACEMENT + CANDIDATE_SELECTION half of scenario 10 IS covered by
      * oracle_swipe_tapAlternateAfterAutoInsert_replacesAutoInsertedWord.

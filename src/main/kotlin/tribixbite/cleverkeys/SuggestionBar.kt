@@ -171,8 +171,8 @@ class SuggestionBar : LinearLayout {
             // Set click listener
             setOnClickListener {
                 if (index < currentSuggestions.size) {
-                    // Record selection statistics for neural predictions
-                    NeuralPerformanceStats.getInstance(context).recordSelection(index)
+                    // Record selection statistics for swipe predictions
+                    SwipePerformanceStats.getInstance(context).recordSelection(index)
 
                     listener?.onSuggestionSelected(currentSuggestions[index])
                 }
@@ -403,7 +403,6 @@ class SuggestionBar : LinearLayout {
 
     /** Fixed marker palette per origin (readable on light and dark key themes). */
     private fun originMarkerColor(origin: SuggestionOrigin): Int = when (origin) {
-        SuggestionOrigin.NEURAL_BEAM -> 0xFFB39DDB.toInt()       // purple
         SuggestionOrigin.GEOMETRIC -> 0xFF80CBC4.toInt()         // teal
         SuggestionOrigin.CTC -> 0xFF9FA8DA.toInt()               // indigo
         SuggestionOrigin.DICTIONARY_PREFIX -> 0xFF90CAF9.toInt() // blue

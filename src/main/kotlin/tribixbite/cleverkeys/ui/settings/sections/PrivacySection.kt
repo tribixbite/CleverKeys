@@ -23,7 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import tribixbite.cleverkeys.Config
-import tribixbite.cleverkeys.NeuralPerformanceStats
+import tribixbite.cleverkeys.SwipePerformanceStats
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.UserAdaptationManager
@@ -231,7 +231,7 @@ internal fun SettingsActivity.PrivacySection() {
 
                 val perfStats = remember {
                     try {
-                        NeuralPerformanceStats.getInstance(this@PrivacySection)
+                        SwipePerformanceStats.getInstance(this@PrivacySection)
                     } catch (e: Exception) {
                         null
                     }

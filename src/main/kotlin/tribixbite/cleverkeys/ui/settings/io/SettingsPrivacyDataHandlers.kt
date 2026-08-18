@@ -4,7 +4,7 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
-import tribixbite.cleverkeys.NeuralPerformanceStats
+import tribixbite.cleverkeys.SwipePerformanceStats
 import tribixbite.cleverkeys.SettingsActivity
 
 /**
@@ -52,7 +52,7 @@ internal fun SettingsActivity.loadCollectedDataPage() {
  */
 internal fun SettingsActivity.viewPerfStats() {
     try {
-        val stats = NeuralPerformanceStats.getInstance(this)
+        val stats = SwipePerformanceStats.getInstance(this)
         perfStatsSummary = stats.formatSummary()
         showPerfStatsViewer = true
     } catch (e: Exception) {
@@ -104,7 +104,7 @@ internal fun SettingsActivity.performPerfStatsExport(uri: Uri) {
     lifecycleScope.launch {
         try {
             contentResolver.openOutputStream(uri)?.use { outputStream ->
-                val stats = NeuralPerformanceStats.getInstance(_self)
+                val stats = SwipePerformanceStats.getInstance(_self)
                 val json = org.json.JSONObject().apply {
                     put("export_timestamp", System.currentTimeMillis())
                     put("total_predictions", stats.getTotalPredictions())

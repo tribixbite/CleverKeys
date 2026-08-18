@@ -343,7 +343,7 @@ class Pointers(
 
             val gestureType = _gestureClassifier.classify(gestureData)
 
-            // Only swipe-typing-eligible gestures may route to the neural predictor:
+            // Only swipe-typing-eligible gestures may route to the swipe decoder:
             // - non-Char keys (like Backspace): a long gesture must still be treated as a
             //   TAP/Short Gesture to allow directional actions (e.g. Delete Word)
             // - swipe typing disabled: SWIPE must degrade to TAP so the gesture commits the
@@ -364,8 +364,8 @@ class Pointers(
             }
 
             if (effectiveGestureType == GestureClassifier.GestureType.SWIPE) {
-                // This is a swipe gesture - send to neural predictor
-                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Sending to neural predictor")
+                // This is a swipe gesture - send to the swipe decoder
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Sending to swipe decoder")
                 _handler.onSwipeEnd(_swipeRecognizer)
                 clearLatched() // Clear shift after swipe word completes
                 _swipeRecognizer.reset()
@@ -414,8 +414,8 @@ class Pointers(
 
                     // v1.2.3 FIX: Restore max distance check that was removed in 7c2131f7
                     // The hasLeftStartingKey flag alone creates a gap where medium swipes (e.g., 140px)
-                    // that don't exceed max_distance still trigger short gestures instead of neural swipe.
-                    // By checking max explicitly here, swipes exceeding max fall through to neural prediction.
+                    // that don't exceed max_distance still trigger short gestures instead of a word swipe.
+                    // By checking max explicitly here, swipes exceeding max fall through to word prediction.
                     val maxDistance = _config.short_gesture_max_distance.toPx(keyHypotenuse)
 
                     vlog {
@@ -545,7 +545,7 @@ class Pointers(
                         } else {
                             // No subkey accepted for the swipe direction (none assigned, or only a
                             // +/-1-fuzzed corner match which word candidates reject above). Fall
-                            // back to a neural word swipe instead of dropping to a first-letter
+                            // back to a word swipe instead of dropping to a first-letter
                             // tap. This rescues compact words (e.g. "we", tilted "we", "the"-shaped
                             // gestures) swiped where no exact-direction sublabel exists. It cannot
                             // reintroduce the overshoot bug: an overshoot toward an exactly-aimed

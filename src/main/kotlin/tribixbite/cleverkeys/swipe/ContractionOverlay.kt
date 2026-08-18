@@ -7,7 +7,7 @@ import java.util.Locale
  *
  * Every swipe dictionary stores contractions as apostrophe-free ALIASES ("theyd", "cest",
  * "dont") because the apostrophe is not a swipe key — the display forms ("they'd", "c'est",
- * "don't") exist only as runtime mappings. This overlay mirrors the neural vocab layer's
+ * "don't") exist only as runtime mappings. This overlay mirrors the (deleted) vocabulary layer's
  * emission logic (OptimizedVocabulary ~:793-850) exactly:
  *
  *  1. PAIRED base (the alias IS a real word with a contraction sibling — "well"/"we'll",
@@ -15,14 +15,14 @@ import java.util.Locale
  *     it. Checked FIRST because the binary contraction store misclassifies paired entries
  *     into the non-paired map (OptimizedVocabulary:463 carries the same guard).
  *  2. NON-PAIRED mapping with a REAL-WORD guard: replace the alias with the display form
- *     ONLY when the alias is not a common real word of the ACTIVE language. Neural guards
+ *     ONLY when the alias is not a common real word of the ACTIVE language. The old guards
  *     with `frequency > 0.65`; here the equivalent is the dictionary ORDINAL (rank) —
  *     measured separation (2026-07-23 audit): junk aliases rank ≥ 1817 (en) / 1594 (fr) /
  *     1506 (it), real-word collisions rank ≤ 285 (fr la/les/dans/ma/dont…), ≤ 16 (de "im" —
  *     the 16th most common German word, which an unguarded en alias map would rewrite to
  *     "I'm"), ≤ 104 (fr "dont"). [realWordOrdinalMax] = 1200 sits in the gap with margin
  *     on both sides. A real-word alias keeps its place and gains the contraction as an
- *     injected variant (neural's "quest" + "qu'est" behavior).
+ *     injected variant (the old vocabulary's "quest" + "qu'est" behavior).
  *  3. Case-insensitive dedupe keeps the first (highest-scored) occurrence.
  *
  * Variant placement: injected variants are APPENDED after all engine candidates (in base

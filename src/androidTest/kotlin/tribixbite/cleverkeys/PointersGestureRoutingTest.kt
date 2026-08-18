@@ -14,7 +14,7 @@ import tribixbite.cleverkeys.customization.SwipeDirection
 
 /**
  * Instrumented routing tests for [Pointers] — the short-swipe (subkey) vs
- * long-swipe (neural word) decision. Drives onTouchDown/Move/Up through a fake
+ * long-swipe (word) decision. Drives onTouchDown/Move/Up through a fake
  * [Pointers.IPointerEventHandler] with a controlled 3-key test layout and asserts
  * which output path fired (subkey output via onPointerUp vs word via onSwipeEnd).
  *

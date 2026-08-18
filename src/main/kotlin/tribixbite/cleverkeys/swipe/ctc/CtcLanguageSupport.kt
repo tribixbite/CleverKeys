@@ -33,7 +33,7 @@ import java.util.Locale
  *     `docs/eval/2026-08-15-ctc-per-language-lambda.md`.
  *
  * `it`, `pt` and `sv` ship a bundled dictionary but have NEITHER (see
- * [NEEDS_VALIDATION]); they stay on the pre-existing fallback (neural on QWERTY-Latin,
+ * [NEEDS_VALIDATION]); they stay on the pre-existing fallback (geometric everywhere,
  * geometric elsewhere) until a validation round exists. Enabling one later is a row in
  * [SUPPORTED] plus its evidence — not a refactor.
  */
@@ -79,7 +79,7 @@ object CtcLanguageSupport {
      * en 47,364 / fr 3,124). So these languages cannot be swept or model-validated until a
      * corpus is acquired — do not re-attempt a sweep expecting to find data.
      *
-     * They are NOT broken meanwhile: they keep the pre-existing neural (QWERTY) /
+     * They are NOT broken meanwhile: they keep the pre-existing
      * geometric (elsewhere) coverage. Enabling one later needs (a) a swipe corpus in that
      * language, then (b) a [SUPPORTED] row plus its evidence.
      */

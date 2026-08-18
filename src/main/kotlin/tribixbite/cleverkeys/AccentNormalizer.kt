@@ -5,7 +5,7 @@ import java.text.Normalizer
 /**
  * Utility for normalizing accented characters for dictionary lookup.
  *
- * The neural swipe model has a 26-letter vocabulary (a-z only). It cannot
+ * The swipe decoders emit a 26-letter alphabet (a-z only). They cannot
  * distinguish between "café" and "cafe" - both produce identical swipe
  * trajectories. This normalizer strips diacritical marks to enable matching
  * NN output to canonical (accented) dictionary forms.

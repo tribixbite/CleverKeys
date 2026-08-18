@@ -129,9 +129,9 @@ object Defaults {
     const val SWIPE_TRAIL_WIDTH = 8.0f
     const val SWIPE_TRAIL_GLOW_RADIUS = 6.0f
 
-    // Neural prediction - Core parameters
+    // Swipe decoding - core parameters
 
-    // Neural prediction - Beam search tuning
+    // Swipe decoding - beam tuning
     // NOTE: These MUST match the working defaults in BeamSearchEngine.kt
     // 2026-05-15: increased from 1.0 to 1.4 — favors longer candidate words
     // slightly. Empirically catches more complete swiped words than the
@@ -578,9 +578,9 @@ class Config private constructor(
     @JvmField var swipe_trail_width = 8.0f // Trail stroke width in dp
     @JvmField var swipe_trail_glow_radius = 6.0f // Glow effect radius in dp (smaller = crisper)
 
-    // Neural swipe prediction configuration
+    // Swipe prediction configuration
     @JvmField var swipe_debug_detailed_logging = false
-    // WP9 R-1 step 7 (v1.1): swipe engine mode — "neural" | "hybrid" | "geometric".
+    // WP9 R-1 step 7 (v1.2): swipe engine mode — "ctc" | "geometric".
     // G5 adds "ctc".
     @JvmField var swipe_engine_mode = Defaults.SWIPE_ENGINE_MODE
     // Full Geometric Settings knobs (read by GeometricEngineAdapter per decode).
@@ -598,7 +598,7 @@ class Config private constructor(
     // Beam search tuning
     @JvmField var swipe_smoothing_window = 0
 
-    // Neural model resampling
+    // Swipe trajectory resampling
     // NOTE: Custom encoder/decoder paths removed - feature not implemented
 
     // Language-specific prefix boost (for non-English primary languages)

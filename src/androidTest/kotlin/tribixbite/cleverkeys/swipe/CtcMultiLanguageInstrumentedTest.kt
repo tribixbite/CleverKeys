@@ -522,7 +522,7 @@ class CtcMultiLanguageInstrumentedTest {
         assertEquals(CtcScoringParams.LAMBDA_CKDT_SCALE, CtcScoringParams.presetFor("es_MX").lambda, 0.0)
         assertEquals(CtcScoringParams.LAMBDA_CKDT_SCALE, CtcScoringParams.presetFor("de-AT").lambda, 0.0)
 
-        // Bundled-but-unvalidated languages stay OFF (they keep neural/geometric coverage).
+        // Bundled-but-unvalidated languages stay OFF (they keep geometric coverage).
         for (language in CtcLanguageSupport.NEEDS_VALIDATION) {
             assertFalse(
                 "$language ships a dictionary but has no model bar and no λ sweep — " +

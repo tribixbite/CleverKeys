@@ -55,7 +55,7 @@ class BackupRestoreManagerEncryptionTest {
           "metadata": { "app_version": "1.5.0", "screen_width": 1080, "screen_height": 2400, "screen_density": 3.0 },
           "preferences": {
             "swipe_typing_enabled": true,
-            "neural_beam_width": 8,
+            "ctc_beam_width": 120,
             "theme": "dark_material"
           }
         }

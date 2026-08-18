@@ -88,7 +88,7 @@ class BackspaceUndoInstrumentedTest {
         //    - setLastAutoInsertedWord("hello")
         contextTracker.setWasLastInputSwipe(false)  // Bug: cleared before backspace handler checks
         contextTracker.setLastAutoInsertedWord("hello")
-        contextTracker.setLastCommitSource(PredictionSource.NEURAL_SWIPE)
+        contextTracker.setLastCommitSource(PredictionSource.SWIPE)
 
         // 3. At this point, wasLastInputSwipe is false but we SHOULD still undo.
         //    The fix uses lastAutoInsertedWord + null lastAutocorrectOriginalWord
@@ -246,7 +246,7 @@ class BackspaceUndoInstrumentedTest {
     fun autocorrectTracking_swipeDoesNotSetOriginalWord() {
         // Simulate: user swipes "hello" — no autocorrect original word
         contextTracker.setWasLastInputSwipe(true)
-        contextTracker.commitWord("hello", PredictionSource.NEURAL_SWIPE, true)
+        contextTracker.commitWord("hello", PredictionSource.SWIPE, true)
 
         assertEquals("hello", contextTracker.getLastAutoInsertedWord())
         assertNull("Swipe should NOT set autocorrect original word",

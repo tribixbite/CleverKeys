@@ -30,11 +30,11 @@ import java.io.IOException
  * - Initialize log writer for file-based logging
  * - Register/unregister broadcast receiver for debug mode control
  * - Send debug messages to SwipeDebugActivity
- * - Propagate debug mode changes to components (SuggestionHandler, NeuralLayoutHelper)
+ * - Propagate debug mode changes to components (SuggestionHandler, KeyboardDimensionsHelper)
  *
  * NOT included (remains in CleverKeysService):
  * - Lifecycle management (onCreate/onDestroy calls)
- * - Component reference management (SuggestionHandler, NeuralLayoutHelper)
+ * - Component reference management (SuggestionHandler, KeyboardDimensionsHelper)
  * - Actual component initialization
  *
  * This utility is extracted from CleverKeysService.java for better code organization
