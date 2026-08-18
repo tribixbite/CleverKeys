@@ -270,4 +270,74 @@ class CtcModuleTest {
         assertThat(result.map { it.word }).contains("the")
         assertThat(result.first().word).isEqualTo("the")
     }
+
+    // ── Node child-array growth beyond 26 (the saturation bug) ────────────────────
+
+    /**
+     * A node must accept one child per alphabet character for an alphabet WIDER than 26.
+     *
+     * ### The bug this pins
+     *
+     * `CtcTrieNode.addChild` grew its parallel arrays with
+     * `minOf(chars.size * 2, MAX_CHILDREN)` where `MAX_CHILDREN = 26`. The sequence is
+     * 2→4→8→16→26, and once capacity reaches 26 the clamp returns 26 forever: `copyOf(26)`
+     * hands back a same-size array and the next write throws `ArrayIndexOutOfBoundsException`.
+     *
+     * It was unreachable while every trie used the 26-char a–z alphabet, which is why it
+     * survived review — but Cyrillic has 33 letters and is on the roadmap, so this would have
+     * become a hard crash on the first Russian trie build rather than a caught regression.
+     *
+     * 33 is deliberate: it is exactly Cyrillic's alphabet size, and it is the first power-of-two
+     * boundary crossing (32→64) past the old clamp.
+     */
+    @Test
+    fun trieNodeAcceptsMoreThan26ChildrenForAWiderAlphabet() {
+        // 33 distinct characters, Cyrillic's count, none of them a–z.
+        val cyrillicSized = CharArray(33) { (0x0430 + it).toChar() }
+        val trie = CtcLexiconTrie(cyrillicSized)
+
+        // One two-character word per alphabet character gives the ROOT 33 distinct children —
+        // the root is the node that exceeds the old cap first.
+        for (ch in cyrillicSized) {
+            trie.insert("$ch${cyrillicSized[0]}", 1.0)
+        }
+
+        assertWithMessage(
+            "the root must hold one child per alphabet character; a cap at 26 throws on the 27th"
+        ).that(trie.root.childCount).isEqualTo(33)
+
+        // Every inserted word must still be retrievable — a bad grow/copy would silently drop
+        // or duplicate entries rather than throw.
+        for (ch in cyrillicSized) {
+            assertWithMessage("word for '$ch' survived the array growth")
+                .that(trie.contains("$ch${cyrillicSized[0]}")).isTrue()
+        }
+
+        // Insertion order is load-bearing for golden-trace parity with the Python port.
+        val childChars = (0 until trie.root.childCount).map { trie.root.childAt(it).incomingChar }
+        assertWithMessage("children stay in insertion order after growth")
+            .that(childChars).isEqualTo(cyrillicSized.toList())
+    }
+
+    /**
+     * An alphabet wider than the emission head is a wiring error and must fail at construction,
+     * not produce a trie whose deeper columns the decoder can never address.
+     */
+    @Test
+    fun trieRejectsAnAlphabetWiderThanTheEmissionHead() {
+        val tooWide = CharArray(CtcFeaturizer.MAX_KEYS + 1) { (0x0400 + it).toChar() }
+        val thrown = runCatching { CtcLexiconTrie(tooWide) }.exceptionOrNull()
+        assertWithMessage("an over-wide alphabet must be rejected at construction")
+            .that(thrown).isInstanceOf(IllegalArgumentException::class.java)
+
+        // Duplicates would make the char→column map non-injective and silently mis-decode.
+        val duplicated = charArrayOf('a', 'b', 'a')
+        assertWithMessage("a duplicated alphabet character must be rejected")
+            .that(runCatching { CtcLexiconTrie(duplicated) }.exceptionOrNull())
+            .isInstanceOf(IllegalArgumentException::class.java)
+
+        assertWithMessage("an empty alphabet must be rejected")
+            .that(runCatching { CtcLexiconTrie(CharArray(0)) }.exceptionOrNull())
+            .isInstanceOf(IllegalArgumentException::class.java)
+    }
 }

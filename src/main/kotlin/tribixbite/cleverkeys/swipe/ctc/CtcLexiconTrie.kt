@@ -84,7 +84,19 @@ class CtcTrieNode internal constructor(
             childChars = chars
             childNodes = nodes
         } else if (childCount == chars.size) {
-            val grown = minOf(chars.size * 2, MAX_CHILDREN)
+            // Plain doubling, deliberately UNCLAMPED. This used to be
+            // `minOf(chars.size * 2, MAX_CHILDREN)`, which saturates: the growth sequence is
+            // 2→4→8→16→26, and once `chars.size == 26` the clamp returns 26 again, so
+            // `copyOf` yields a same-size array and `chars[26]` below throws
+            // ArrayIndexOutOfBounds on the 27th distinct child.
+            //
+            // That is unreachable today — every in-app trie is built against the 26-char
+            // `CtcEngineAdapter.ALPHABET` and `insert` rejects out-of-alphabet characters — but
+            // it is a certain crash the day a wider alphabet ships, and Cyrillic (33 letters) is
+            // on the roadmap. The clamp bought ~36 wasted bytes on the few nodes with >16
+            // children; correctness is worth more. The constructor now also range-checks the
+            // alphabet, so an oversized one fails loudly at construction rather than mid-insert.
+            val grown = chars.size * 2
             chars = chars.copyOf(grown)
             nodes = nodes.copyOf(grown)
             childChars = chars
@@ -111,8 +123,10 @@ class CtcTrieNode internal constructor(
     private companion object {
         const val INITIAL_CHILD_CAPACITY = 2
 
-        /** Hard bound: a node can have at most one child per alphabet character. */
-        const val MAX_CHILDREN = 26
+        // A `MAX_CHILDREN = 26` constant used to clamp the growth above. It is deliberately
+        // gone rather than merely unused: the real bound is the alphabet size, which is
+        // enforced once at `CtcLexiconTrie`'s constructor against the emission-head width, so
+        // a per-node cap could only ever disagree with it. See `addChild`.
     }
 
     /**
@@ -172,6 +186,23 @@ class CtcTrieNode internal constructor(
  * @property alphabet emission-column ordering of the active keys (a..z for en_qwerty).
  */
 class CtcLexiconTrie(val alphabet: CharArray) {
+
+    init {
+        // The emission head is `[1, T, MAX_EMISSION_COLUMNS]` — one column per key slot plus
+        // CTC blank — so an alphabet larger than the model can emit is a wiring error, not a
+        // degraded mode. Fail here, at construction, rather than producing a trie whose deeper
+        // columns the decoder can never reach. Cyrillic (33) and Arabic (28) both fit; the
+        // check exists so a future script that does NOT fit says so immediately.
+        require(alphabet.isNotEmpty()) { "alphabet must not be empty" }
+        require(alphabet.size <= CtcFeaturizer.MAX_KEYS) {
+            "alphabet has ${alphabet.size} characters, but the emission head has " +
+                "${CtcFeaturizer.MAX_KEYS} non-blank columns — a wider alphabet needs a " +
+                "re-exported model"
+        }
+        require(alphabet.toSet().size == alphabet.size) {
+            "alphabet has duplicate characters; emission columns must be one-to-one"
+        }
+    }
 
     private val charToIndex: Map<Char, Int> =
         HashMap<Char, Int>(alphabet.size * 2).apply {

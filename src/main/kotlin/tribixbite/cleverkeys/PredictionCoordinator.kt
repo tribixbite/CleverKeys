@@ -527,7 +527,23 @@ class PredictionCoordinator(
         // engine's backoff makes initializeNeuralEngine() a cheap no-op inside the window; the
         // explicit isReadyToRetryInit() guard avoids even that roundtrip and, crucially, keeps a
         // full model-load from being re-driven synchronously on the main thread per swipe.
-        if (config.swipe_typing_enabled && neuralEngine == null && !isShutdown) {
+        // The routing gate must be applied HERE too, not only at the startup preload. This is
+        // reached from `PredictionViewSetup` on every keyboard show, whose trigger condition is
+        // `isSwipeTypingAvailable() == false` — i.e. `neuralEngine == null`, which is exactly
+        // the state deferral produces. Without the gate, deferring the eager build at startup
+        // only moved it a few seconds later: the first `onStartInputView` rebuilt the whole
+        // ~30-45 MB neural stack in GEOMETRIC and CTC-served modes, where it can never be used.
+        // The saving then degenerates to "off the onCreate allocation peak" — which is real,
+        // and is plausibly what stopped the OOM, but is not the steady-state headroom claimed.
+        //
+        // Safe for the demand path: every mode that can reach `InputCoordinator
+        // .performSwipeTyping` (the other caller) has `shouldPreloadNeuralEngine()` true —
+        // NEURAL and HYBRID unconditionally, CTC when the language is one CTC does not serve,
+        // which is precisely the audit-M1 fallthrough that routes swipes to neural. The modes
+        // where it is false cannot route a swipe here at all.
+        if (config.swipe_typing_enabled && neuralEngine == null && !isShutdown &&
+            shouldPreloadNeuralEngine()
+        ) {
             val eligible = pendingEngine?.isReadyToRetryInit() ?: true
             if (eligible) {
                 initializeNeuralEngine()

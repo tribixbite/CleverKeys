@@ -61,6 +61,40 @@ object MemoryProbe {
     @JvmStatic
     val enabled: Boolean = BuildConfig.ENABLE_VERBOSE_LOGGING
 
+    /**
+     * Whether `settle = true` marks actually settle. **Opt-in, off by default.**
+     *
+     * There are 20 settled call sites, and roughly 11 of them are reachable on the MAIN thread
+     * during a verbose cold start. Each costs [SETTLE_PASSES] × ([SETTLE_PAUSE_MS] + a real GC
+     * pause on a 100 MB+ heap), so leaving them armed adds seconds to every keyboard launch on
+     * exactly the `LOCAL_BUILD=true` builds a developer uses all day. IME service creation is
+     * not under the 5 s input-dispatch ANR — the practical budget is the 20 s service timeout,
+     * and no ANR was ever observed — but it is a real daily tax for a measurement that only
+     * needs taking occasionally.
+     *
+     * With this off, a `settle = true` mark still logs; its delta simply reports ALLOCATED
+     * rather than RETAINED bytes, and the line is prefixed `~` instead of `=` so a reader can
+     * never mistake one for the other. Turn it on for a retention pass with:
+     *
+     * ```
+     * adb shell setprop debug.cleverkeys.memprobe.settle true
+     * ```
+     *
+     * Read once at class-init, so it takes effect on the next process start, not mid-session.
+     */
+    @JvmStatic
+    val settleEnabled: Boolean = enabled && runCatching {
+        // Not `android.os.SystemProperties` — that is a hidden API. This is the public,
+        // API-1-safe route and it is only ever consulted in a verbose build.
+        Class.forName("android.os.SystemProperties")
+            .getMethod("get", String::class.java, String::class.java)
+            .invoke(null, "debug.cleverkeys.memprobe.settle", "false") == "true"
+        // `getOrElse`, not `getOrDefault`: this is `kotlin.Result`, not a `Map`, so the API-24
+        // hazard does not apply — but `MinSdkApiUsageDriftTest` scans source text and cannot
+        // tell the two receivers apart. Keeping the scanner blunt is correct (it guards a class
+        // of bug that has shipped here before), so the call site yields instead.
+    }.getOrElse { false }
+
     /** Used Java heap in bytes, without forcing a collection. */
     @JvmStatic
     fun usedBytes(): Long {
@@ -111,14 +145,16 @@ object MemoryProbe {
     @JvmOverloads
     fun mark(phase: String, settle: Boolean = false, detail: () -> String = NO_DETAIL) {
         if (!enabled) return
-        val used = if (settle) settledUsedBytes() else usedBytes()
+        // `settle` is a REQUEST; [settleEnabled] decides. See its KDoc for why it is opt-in.
+        val settled = settle && settleEnabled
+        val used = if (settled) settledUsedBytes() else usedBytes()
         val previous = previousUsedBytes
         previousUsedBytes = used
         val delta = if (previous < 0L) 0L else used - previous
         val extra = detail()
         Log.i(
             TAG,
-            "${if (settle) "=" else "~"} $phase " +
+            "${if (settled) "=" else "~"} $phase " +
                 "used=${mb(used)}MB delta=${signedMb(delta)}MB " +
                 "limit=${mb(limitBytes())}MB thread=${Thread.currentThread().name}" +
                 if (extra.isEmpty()) "" else " | $extra"
