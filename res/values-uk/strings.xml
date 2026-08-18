@@ -593,7 +593,7 @@
     <string name="extra_keys_enabled_count">%1$d із %2$d додаткових клавіш увімкнено</string>
     <!-- Context-LM / next-word / swipe-engine settings -->
     <string name="swipe_engine_mode_title">Рушій передбачень</string>
-    <string name="swipe_engine_mode_desc">Гібридний: нейромережевий на QWERTY, геометричний на інших розкладках. Нейромережевий: лише розкладки QWERTY. Геометричний: усі розкладки. CTC: променевий пошук CTC на латинських розкладках для англійської, французької, німецької та іспанської; для інших мов — нейромережевий на QWERTY і геометричний в решті випадків.</string>
+    <string name="swipe_engine_mode_desc">CTC: променевий пошук CTC на латинських розкладках для англійської, французької, німецької та іспанської; для інших мов і нелатинських розкладок — геометричний. Геометричний: усі розкладки.</string>
     <string name="advanced_provenance_markers_title">Позначки джерела підказок</string>
     <string name="advanced_provenance_markers_desc">Показувати біля кожної підказки кольорову точку, яка вказує рушій, що її створив (довге натискання на підказку — усі подробиці)</string>
     <string name="input_next_word_title">Передбачення наступного слова</string>

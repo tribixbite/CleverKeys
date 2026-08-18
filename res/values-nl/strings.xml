@@ -582,7 +582,7 @@
     <string name="extra_keys_enabled_count">%1$d van %2$d extra toetsen ingeschakeld</string>
     <!-- Context-LM / next-word / swipe-engine settings -->
     <string name="swipe_engine_mode_title">Voorspellingsengine</string>
-    <string name="swipe_engine_mode_desc">Hybride: neuraal op QWERTY, geometrisch op andere indelingen. Neuraal: alleen QWERTY-indelingen. Geometrisch: alle indelingen. CTC: CTC-beam op Latijnse indelingen voor Engels, Frans, Duits en Spaans; neuraal voor andere talen op QWERTY, elders geometrisch.</string>
+    <string name="swipe_engine_mode_desc">CTC: CTC-beam op Latijnse indelingen voor Engels, Frans, Duits en Spaans; geometrisch voor andere talen en niet-Latijnse indelingen. Geometrisch: alle indelingen.</string>
     <string name="advanced_provenance_markers_title">Herkomstmarkeringen voor suggesties</string>
     <string name="advanced_provenance_markers_desc">Toont bij elke suggestie een gekleurde stip die aangeeft welke engine haar heeft gemaakt (houd een suggestie ingedrukt voor alle details)</string>
     <string name="input_next_word_title">Voorspelling van volgend woord</string>

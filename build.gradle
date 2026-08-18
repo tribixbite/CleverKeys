@@ -392,7 +392,6 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.SmartAutoSpaceLogicTest',
     'tribixbite.cleverkeys.gif.GifTest',
     'tribixbite.cleverkeys.gif.GifCategoryTest',
-    'tribixbite.cleverkeys.SwipeLayoutSupportTest',
     'tribixbite.cleverkeys.BackspaceUndoTest',
     'tribixbite.cleverkeys.ClipboardPaginationTest',
     'tribixbite.cleverkeys.ClipboardFixesJvmTest',

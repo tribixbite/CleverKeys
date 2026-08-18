@@ -582,7 +582,7 @@
     <string name="extra_keys_enabled_count">%1$d / %2$d개의 추가 키 활성화됨</string>
     <!-- Context-LM / next-word / swipe-engine settings -->
     <string name="swipe_engine_mode_title">예측 엔진</string>
-    <string name="swipe_engine_mode_desc">하이브리드: QWERTY에서는 신경망, 다른 레이아웃에서는 기하 방식. 신경망: QWERTY 레이아웃 전용. 기하: 모든 레이아웃. CTC: 영어, 프랑스어, 독일어, 스페인어의 라틴 레이아웃에서 CTC 빔 탐색을 사용하고, 다른 언어는 QWERTY에서 신경망, 그 외에는 기하 방식을 사용합니다.</string>
+    <string name="swipe_engine_mode_desc">CTC: 영어, 프랑스어, 독일어, 스페인어의 라틴 레이아웃에서 CTC 빔 탐색을 사용하고, 다른 언어와 라틴 계열이 아닌 레이아웃에서는 기하 방식을 사용합니다. 기하: 모든 레이아웃.</string>
     <string name="advanced_provenance_markers_title">추천 출처 표시</string>
     <string name="advanced_provenance_markers_desc">각 추천 단어에 이를 생성한 엔진을 나타내는 색상 점을 표시합니다(추천을 길게 누르면 전체 정보가 표시됩니다)</string>
     <string name="input_next_word_title">다음 단어 예측</string>

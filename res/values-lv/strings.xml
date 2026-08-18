@@ -593,7 +593,7 @@
     <string name="extra_keys_enabled_count">%1$d no %2$d papildu taustiņiem iespējoti</string>
     <!-- Context-LM / next-word / swipe-engine settings -->
     <string name="swipe_engine_mode_title">Prognozēšanas dzinis</string>
-    <string name="swipe_engine_mode_desc">Hibrīds: neironu tīkls QWERTY izkārtojumos, ģeometriskais pārējos. Neironu tīkls: tikai QWERTY izkārtojumi. Ģeometriskais: visi izkārtojumi. CTC: CTC staru meklēšana latīņu izkārtojumos angļu, franču, vācu un spāņu valodā; citām valodām neironu tīkls QWERTY izkārtojumos un ģeometriskais pārējos.</string>
+    <string name="swipe_engine_mode_desc">CTC: CTC staru meklēšana latīņu izkārtojumos angļu, franču, vācu un spāņu valodā; citām valodām un nelatīņu izkārtojumiem ģeometriskais. Ģeometriskais: visi izkārtojumi.</string>
     <string name="advanced_provenance_markers_title">Ieteikumu izcelsmes atzīmes</string>
     <string name="advanced_provenance_markers_desc">Rāda pie katra ieteikuma krāsainu punktu, kas norāda, kurš dzinis to izveidoja (ilgi nospiediet ieteikumu, lai redzētu visas detaļas)</string>
     <string name="input_next_word_title">Nākamā vārda prognoze</string>

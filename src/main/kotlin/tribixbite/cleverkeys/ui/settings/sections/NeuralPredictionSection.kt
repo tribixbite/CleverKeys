@@ -2,11 +2,7 @@ package tribixbite.cleverkeys.ui.settings.sections
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -42,57 +38,29 @@ internal fun SettingsActivity.NeuralPredictionSection() {
                 )
 
                 if (swipeTypingEnabled) {
-                    // WP9 R-1 step 7 (v1.1): engine mode selector. Hybrid = neural on QWERTY +
-                    // geometric elsewhere; Neural = QWERTY-only swipe (pre-geo behavior);
-                    // Geometric = SHARK2 on all layouts; CTC (G5) = CTC trie-beam on Latin
-                    // layouts for the validated languages (en/fr/de/es —
-                    // swipe.ctc.CtcLanguageSupport), with the audit-M1 fallthrough for any
-                    // other language: neural on QWERTY, geometric elsewhere.
+                    // WP9 R-1 step 7 (v1.2): engine mode selector. CTC (default) = CTC
+                    // trie-beam on Latin layouts for the validated languages (en/fr/de/es —
+                    // swipe.ctc.CtcLanguageSupport), geometric for every other language and
+                    // for non-Latin layouts; Geometric = SHARK2 on all layouts. The
+                    // Neural/Hybrid modes were removed with the neural engine (2026-08-18);
+                    // a stored "neural"/"hybrid" resolves to CTC in the router and this
+                    // selector shows CTC for it.
                     SettingsDropdown(
                         title = stringResource(R.string.swipe_engine_mode_title),
                         description = stringResource(R.string.swipe_engine_mode_desc),
-                        options = listOf("Hybrid", "Neural", "Geometric", "CTC"),
+                        options = listOf("CTC", "Geometric"),
                         selectedIndex = when (swipeEngineMode) {
-                            "hybrid" -> 0
-                            "geometric" -> 2
-                            "ctc" -> 3
-                            else -> 1 // "neural" (default)
+                            "geometric" -> 1
+                            else -> 0 // "ctc" (default) + any legacy value
                         },
                         onSelectionChange = { index ->
                             swipeEngineMode = when (index) {
-                                0 -> "hybrid"
-                                2 -> "geometric"
-                                3 -> "ctc"
-                                else -> "neural"
+                                1 -> "geometric"
+                                else -> "ctc"
                             }
                             saveSetting("swipe_engine_mode", swipeEngineMode)
                         }
                     )
-                }
-
-                // #9: Warning when the layout has no swipe engine — only in Neural mode
-                // (Hybrid/Geometric cover non-QWERTY layouts via the geometric engine).
-                if (swipeTypingEnabled && !currentLayoutSupportsSwipe && swipeEngineMode == "neural") {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.errorContainer
-                        )
-                    ) {
-                        Text(
-                            text = "The neural engine requires a QWERTY layout. " +
-                                "Your current layout ($currentLayoutName) uses different key positions — " +
-                                "swipe typing is temporarily disabled on it.\n\n" +
-                                "Switch the Prediction Engine to Hybrid or Geometric to enable " +
-                                "swipe typing on this layout, or switch to a QWERTY layout.",
-                            modifier = Modifier.padding(12.dp),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onErrorContainer
-                        )
-                    }
                 }
 
                 if (swipeTypingEnabled) {
@@ -119,23 +87,20 @@ internal fun SettingsActivity.NeuralPredictionSection() {
                         Text("Full Neural Settings")
                     }
 
-                    // Geometric engine tuning — only meaningful when a mode that uses it
-                    // is on (hybrid/geometric always; ctc uses it for non-QWERTY layouts).
-                    if (swipeEngineMode == "hybrid" || swipeEngineMode == "geometric" ||
-                        swipeEngineMode == "ctc"
+                    // Geometric engine tuning — always reachable: geometric mode uses it
+                    // everywhere, and ctc mode uses it for every language/layout CTC does
+                    // not serve.
+                    Button(
+                        onClick = { openGeometricSettings() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp)
                     ) {
-                        Button(
-                            onClick = { openGeometricSettings() },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 8.dp)
-                        ) {
-                            Text("Full Geometric Settings")
-                        }
+                        Text("Full Geometric Settings")
                     }
 
                     // CTC engine tuning (G5) — only under the ctc mode.
-                    if (swipeEngineMode == "ctc") {
+                    if (swipeEngineMode != "geometric") {
                         Button(
                             onClick = { openCtcSettings() },
                             modifier = Modifier

@@ -593,7 +593,7 @@
     <string name="extra_keys_enabled_count">%1$d dari %2$d tombol tambahan diaktifkan</string>
     <!-- Context-LM / next-word / swipe-engine settings -->
     <string name="swipe_engine_mode_title">Mesin prediksi</string>
-    <string name="swipe_engine_mode_desc">Hibrida: neural pada QWERTY, geometris pada tata letak lain. Neural: hanya tata letak QWERTY. Geometris: semua tata letak. CTC: pencarian berkas CTC pada tata letak Latin untuk bahasa Inggris, Prancis, Jerman, dan Spanyol; neural untuk bahasa lain pada QWERTY dan geometris di selainnya.</string>
+    <string name="swipe_engine_mode_desc">CTC: pencarian berkas CTC pada tata letak Latin untuk bahasa Inggris, Prancis, Jerman, dan Spanyol; geometris untuk bahasa lain dan tata letak non-Latin. Geometris: semua tata letak.</string>
     <string name="advanced_provenance_markers_title">Penanda asal saran</string>
     <string name="advanced_provenance_markers_desc">Menampilkan titik berwarna pada setiap saran yang menunjukkan mesin pembuatnya (tekan lama sebuah saran untuk detail lengkap)</string>
     <string name="input_next_word_title">Prediksi kata berikutnya</string>

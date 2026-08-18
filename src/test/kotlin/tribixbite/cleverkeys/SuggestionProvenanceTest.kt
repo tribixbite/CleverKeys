@@ -112,18 +112,20 @@ class SuggestionProvenanceTest {
     fun `swipe engine mode maps to the right origin`() {
         assertEquals(SuggestionOrigin.GEOMETRIC, SuggestionOrigin.forSwipeEngineMode("geometric"))
         assertEquals(SuggestionOrigin.CTC, SuggestionOrigin.forSwipeEngineMode("ctc"))
-        assertEquals(SuggestionOrigin.NEURAL_BEAM, SuggestionOrigin.forSwipeEngineMode("neural"))
-        assertEquals(SuggestionOrigin.NEURAL_BEAM, SuggestionOrigin.forSwipeEngineMode("hybrid"))
-        assertEquals(SuggestionOrigin.NEURAL_BEAM, SuggestionOrigin.forSwipeEngineMode(null))
+        // The removed neural/hybrid modes (and any other junk a backup import can supply)
+        // resolve to the ctc default in SwipeEngineRouter.Mode.fromPref, so the mode-derived
+        // origin fallback must agree with that resolution rather than name a dead engine.
+        assertEquals(SuggestionOrigin.CTC, SuggestionOrigin.forSwipeEngineMode("neural"))
+        assertEquals(SuggestionOrigin.CTC, SuggestionOrigin.forSwipeEngineMode("hybrid"))
+        assertEquals(SuggestionOrigin.CTC, SuggestionOrigin.forSwipeEngineMode(null))
     }
 
     /**
      * Audit M2: the marker/long-press sheet must report the engine that ACTUALLY
      * decoded, not the configured mode. [SuggestionOrigin.forRoutedEngine] is the
      * routed-engine derivation InputCoordinator threads through
-     * `handleSwipePredictionResults` — a geometric decode under ctc/hybrid mode tags
-     * GEOMETRIC, and M1's non-English ctc fallthrough dispatches through the neural
-     * flow whose callback tags NEURAL_BEAM (= forRoutedEngine(NEURAL)).
+     * `handleSwipePredictionResults` — a geometric decode under ctc mode (M1's
+     * unsupported-language fallthrough, or a non-Latin layout) tags GEOMETRIC.
      */
     @Test
     fun `routed engine maps to the origin of the engine that actually decoded`() {
@@ -135,15 +137,11 @@ class SuggestionProvenanceTest {
             SuggestionOrigin.CTC,
             SuggestionOrigin.forRoutedEngine(SwipeEngineRouter.Engine.CTC)
         )
-        // M1 neural-fallback case: a non-en swipe under ctc mode decodes neurally.
+        // The mapping must stay total: every routable engine has a bar-reachable origin.
         assertEquals(
-            SuggestionOrigin.NEURAL_BEAM,
-            SuggestionOrigin.forRoutedEngine(SwipeEngineRouter.Engine.NEURAL)
-        )
-        // NONE never produces suggestions; the total mapping falls back to NEURAL_BEAM.
-        assertEquals(
-            SuggestionOrigin.NEURAL_BEAM,
-            SuggestionOrigin.forRoutedEngine(SwipeEngineRouter.Engine.NONE)
+            SwipeEngineRouter.Engine.values().size,
+            SwipeEngineRouter.Engine.values().map { SuggestionOrigin.forRoutedEngine(it) }
+                .toSet().size
         )
     }
 
@@ -162,9 +160,10 @@ class SuggestionProvenanceTest {
             SuggestionOrigin.forSwipeEngineMode("geometric"),
             SuggestionOrigin.forRoutedEngine(SwipeEngineRouter.Engine.GEOMETRIC)
         )
+        // A legacy stored mode resolves to ctc at both seams.
         assertEquals(
             SuggestionOrigin.forSwipeEngineMode("hybrid"),
-            SuggestionOrigin.forRoutedEngine(SwipeEngineRouter.Engine.NEURAL)
+            SuggestionOrigin.forRoutedEngine(SwipeEngineRouter.Engine.CTC)
         )
     }
 

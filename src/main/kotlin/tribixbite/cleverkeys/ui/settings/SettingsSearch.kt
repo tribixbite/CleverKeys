@@ -121,7 +121,7 @@ internal fun SettingsActivity.expanderFor(sectionKey: String): () -> Unit = {
 /** Check if a gating toggle is enabled */
 internal fun SettingsActivity.isGateEnabled(gateId: String): Boolean {
     return when (gateId) {
-        "swipe_typing" -> swipeTypingEnabled && currentLayoutSupportsSwipe
+        "swipe_typing" -> swipeTypingEnabled
         "short_gestures" -> shortGesturesEnabled
         "multilang" -> multiLangEnabled
         "gif_enabled" -> gifEnabled

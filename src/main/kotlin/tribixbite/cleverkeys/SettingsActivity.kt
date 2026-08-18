@@ -303,8 +303,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     // Phase 1: Expose existing Config.kt settings
     internal var swipeTypingEnabled by mutableStateOf(true)  // Master switch for swipe typing (default ON for CleverKeys)
     internal var swipeOnPasswordFields by mutableStateOf(false)  // #39: Allow swipe on password fields
-    internal var currentLayoutSupportsSwipe by mutableStateOf(true)  // #9: False for non-QWERTY layouts
-    internal var currentLayoutName by mutableStateOf("")  // #9: Display name of active layout
     internal var wordPredictionEnabled by mutableStateOf(true)  // Match Config.kt default
     internal var autoSpaceAfterSuggestion by mutableStateOf(true)  // #82: Add trailing space after selecting suggestion
     internal var autoSpaceBeforeSuggestion by mutableStateOf(true)  // Add leading space before tapped suggestion

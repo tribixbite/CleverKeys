@@ -190,16 +190,16 @@ class CoreImeHygieneDriftTest {
     }
 
     /**
-     * Audit M1 (layout-aware since the 2026-08-15 gate widening; language-table since the
-     * fr/de/es enablement): ctc mode must never degrade below what the layout gets today.
-     * performCtcSwipeTyping reads the active language BEFORE dispatch and, when CTC does
-     * not support it, falls through PER LAYOUT: neural ([dispatchNeuralSwipeTyping] — the
-     * SAME flow Engine.NEURAL takes) only on a QWERTY-supported layout; geometric
-     * ([performGeometricSwipeTyping]) on a widened non-QWERTY Latin layout, where the
-     * QWERTY-trained transformer would decode garbage.
+     * Audit M1 (language-table since the fr/de/es enablement; unconditional since the neural
+     * engine was removed on 2026-08-18): ctc mode must never leave a swipe undispatched.
+     * performCtcSwipeTyping reads the active language BEFORE dispatch and, when CTC does not
+     * support it, falls through to the geometric engine — which decodes ANY layout in ANY
+     * language. This is the cell the maintainer's own device (Italian on QWERTY) lands in:
+     * an early `return` here, or a fallthrough guarded by a layout predicate that no longer
+     * exists, silently kills swipe typing for every non-en/fr/de/es user.
      */
     @Test
-    fun ctcModeFallsThroughToNeuralForUnsupportedLanguage() {
+    fun ctcModeFallsThroughToGeometricForUnsupportedLanguage() {
         val coordinator = source("tribixbite/cleverkeys/InputCoordinator.kt")
         val ctcPath = coordinator
             .substringAfter("private fun performCtcSwipeTyping(")
@@ -212,32 +212,24 @@ class CoreImeHygieneDriftTest {
                 "— a hard-coded language literal here would silently diverge from " +
                 "CtcLanguageSupport.SUPPORTED."
         ).that(gateIdx).isAtLeast(0)
-        val layoutGateIdx = ctcPath.indexOf("isSwipeTypingSupportedForLayout")
+        val fallthroughIdx = ctcPath.indexOf("performGeometricSwipeTyping(")
         assertWithMessage(
-            "The non-English fallback must be LAYOUT-AWARE (gate widening 2026-08-15): " +
-                "it must consult Config.isSwipeTypingSupportedForLayout so neural is only " +
-                "dispatched where the transformer was trained (QWERTY-Latin)."
-        ).that(layoutGateIdx).isAtLeast(0)
-        val fallthroughIdx = ctcPath.indexOf("dispatchNeuralSwipeTyping(")
-        assertWithMessage(
-            "performCtcSwipeTyping must fall through to dispatchNeuralSwipeTyping — the " +
-                "same flow the NEURAL routing branch takes — for an unsupported language " +
-                "on QWERTY."
+            "performCtcSwipeTyping must fall through to performGeometricSwipeTyping for an " +
+                "unsupported language. Geometric serves every layout and every language; " +
+                "returning instead would remove swipe typing outright for those users."
         ).that(fallthroughIdx).isAtLeast(0)
         assertWithMessage(
-            "The neural fallthrough must sit right after the language gate, BEFORE any " +
+            "The geometric fallthrough must sit right after the language gate, BEFORE any " +
                 "CTC dispatch (the language read precedes engine dispatch)."
         ).that(fallthroughIdx).isGreaterThan(gateIdx)
-        val geoFallbackIdx = ctcPath.indexOf("performGeometricSwipeTyping(")
         assertWithMessage(
-            "An unsupported language on a NON-QWERTY (widened Latin) layout must fall " +
-                "through to performGeometricSwipeTyping — NEVER neural (the transformer " +
-                "cannot decode non-QWERTY geometry)."
-        ).that(geoFallbackIdx).isAtLeast(0)
-        assertWithMessage(
-            "The language gate must run before the CTC ML-trace capture, so a neural " +
-                "fallthrough swipe is captured as ENGINE_NEURAL by performSwipeTyping."
+            "The language gate must run before the CTC ML-trace capture, so a fallthrough " +
+                "swipe is captured by the geometric path with its own engine tag."
         ).that(ctcPath.indexOf("beginSwipeCapture")).isGreaterThan(fallthroughIdx)
+        assertWithMessage(
+            "The neural engine was removed on 2026-08-18. No dispatch in performCtcSwipeTyping " +
+                "may reference it — a resurrected neural fallthrough would call a dead engine."
+        ).that(ctcPath).doesNotContain("dispatchNeuralSwipeTyping")
     }
 
     /**

@@ -225,14 +225,9 @@ internal fun SettingsActivity.loadCurrentSettings() {
         swipeTypingEnabled = prefs.getSafeBoolean("swipe_typing_enabled", Defaults.SWIPE_TYPING_ENABLED)
         swipeOnPasswordFields = prefs.getSafeBoolean("swipe_on_password_fields", Defaults.SWIPE_ON_PASSWORD_FIELDS)
 
-        // #9: Check if current layout supports neural swipe typing
-        val currentLayout = config.layouts.getOrNull(config.get_current_layout())
-        currentLayoutSupportsSwipe = Config.isSwipeTypingSupportedForLayout(currentLayout)
-        // null layout = SystemLayout → resolves to latn_qwerty_us at runtime
-        currentLayoutName = currentLayout?.name ?: "System"
-
-        // Neural prediction settings (swipe_engine_mode case-canonicalized — L1, see
-        // handlePreferenceChanged)
+        // Swipe engine settings (swipe_engine_mode case-canonicalized — L1, see
+        // handlePreferenceChanged). The #9 "does this layout support swipe" state was
+        // removed with the neural engine (2026-08-18): every layout swipes now.
         swipeEngineMode = prefs.getSafeString("swipe_engine_mode", Defaults.SWIPE_ENGINE_MODE)
             .lowercase(java.util.Locale.ROOT)
         beamWidth = prefs.getSafeInt("neural_beam_width", Defaults.NEURAL_BEAM_WIDTH)

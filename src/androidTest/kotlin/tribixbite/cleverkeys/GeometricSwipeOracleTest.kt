@@ -181,7 +181,7 @@ class GeometricSwipeOracleTest {
     private fun harness(): Harness {
         val config = Config.globalConfig()
         config.swipe_typing_enabled = true
-        config.swipe_engine_mode = "hybrid"
+        config.swipe_engine_mode = "geometric"
         config.swipe_final_autocorrect_enabled = false
         config.swipe_on_password_fields = false
         config.auto_space_after_suggestion = true
@@ -235,19 +235,18 @@ class GeometricSwipeOracleTest {
 
     // ═════════════════════════════════ tests ═════════════════════════════════
 
-    /** Router re-pin against REAL KeyboardData across all three modes. */
+    /** Router re-pin against REAL KeyboardData across both surviving modes. */
     @Test
     fun oracle_geo_router_realLayouts() {
         val dvorak = loadLayout("latn_dvorak")
         val qwerty = loadLayout("latn_qwerty_us")
-        val hybrid = SwipeEngineRouter.Mode.HYBRID
-        val neural = SwipeEngineRouter.Mode.NEURAL
+        val ctc = SwipeEngineRouter.Mode.CTC
         val geometric = SwipeEngineRouter.Mode.GEOMETRIC
-        assertEquals(SwipeEngineRouter.Engine.GEOMETRIC, SwipeEngineRouter.route(dvorak, hybrid))
-        assertEquals(SwipeEngineRouter.Engine.NONE, SwipeEngineRouter.route(dvorak, neural))
+        // Both are Latin-script, so ctc mode routes both to CTC (the encoder takes key
+        // geometry as an input); geometric mode routes both to the geometric engine.
+        assertEquals(SwipeEngineRouter.Engine.CTC, SwipeEngineRouter.route(dvorak, ctc))
+        assertEquals(SwipeEngineRouter.Engine.CTC, SwipeEngineRouter.route(qwerty, ctc))
         assertEquals(SwipeEngineRouter.Engine.GEOMETRIC, SwipeEngineRouter.route(dvorak, geometric))
-        assertEquals(SwipeEngineRouter.Engine.NEURAL, SwipeEngineRouter.route(qwerty, hybrid))
-        assertEquals(SwipeEngineRouter.Engine.NEURAL, SwipeEngineRouter.route(qwerty, neural))
         assertEquals(SwipeEngineRouter.Engine.GEOMETRIC, SwipeEngineRouter.route(qwerty, geometric))
     }
 

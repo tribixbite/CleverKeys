@@ -53,9 +53,10 @@ enum class SuggestionOrigin {
     companion object {
         /**
          * LEGACY FALLBACK: origin tag for the swipe path derived from the configured
-         * engine mode ("neural" | "hybrid" | "geometric" | "ctc"). Hybrid and ctc
-         * route per-layout/-language at swipe time, so this is only an approximation
-         * (a non-QWERTY swipe under ctc mode is actually geometric but tagged CTC).
+         * engine mode ("geometric" | "ctc", plus any legacy/imported string, which
+         * `SwipeEngineRouter.Mode.fromPref` resolves to ctc). Ctc mode routes
+         * per-layout/-language at swipe time, so this is only an approximation (a
+         * non-Latin swipe under ctc mode is actually geometric but tagged CTC).
          * Audit M2: production threads the ROUTED engine's origin
          * ([forRoutedEngine]) from InputCoordinator through
          * `handleSwipePredictionResults`; this derivation remains only as the null
@@ -64,21 +65,17 @@ enum class SuggestionOrigin {
         fun forSwipeEngineMode(mode: String?): SuggestionOrigin =
             when (mode) {
                 "geometric" -> GEOMETRIC
-                "ctc" -> CTC
-                else -> NEURAL_BEAM
+                else -> CTC
             }
 
         /**
          * Origin tag for the engine that ACTUALLY decoded a swipe (audit M2) —
          * the [SwipeEngineRouter.Engine] the router selected at dispatch time.
-         * [SwipeEngineRouter.Engine.NONE] never produces suggestions; mapping it
-         * to NEURAL_BEAM keeps this total without inventing a bar-reachable tag.
          */
         fun forRoutedEngine(engine: SwipeEngineRouter.Engine): SuggestionOrigin =
             when (engine) {
                 SwipeEngineRouter.Engine.GEOMETRIC -> GEOMETRIC
                 SwipeEngineRouter.Engine.CTC -> CTC
-                SwipeEngineRouter.Engine.NEURAL, SwipeEngineRouter.Engine.NONE -> NEURAL_BEAM
             }
     }
 }

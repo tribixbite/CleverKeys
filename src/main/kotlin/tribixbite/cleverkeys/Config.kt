@@ -313,11 +313,13 @@ object Defaults {
     const val TERMUX_MODE_ENABLED = true
     // WP9 R-1 step 6: UNIFIED_SWIPE_PIPELINE (the step-4 QA escape hatch) was removed — the
     // SuggestionHandler pipeline is the only one; the pref key is in DEPRECATED_KEYS.
-    // WP9 R-1 step 7 (v1.1): swipe prediction engine mode — "neural" (QWERTY-only swipe,
-    // the long-standing default), "hybrid" (neural on QWERTY + geometric elsewhere),
-    // "geometric" (SHARK2 on all layouts), or "ctc" (G5: CTC trie-beam on QWERTY +
-    // geometric elsewhere). Settings → Swipe Typing → Prediction Engine.
-    const val SWIPE_ENGINE_MODE = "neural"
+    // WP9 R-1 step 7 (v1.2): swipe prediction engine mode — "ctc" (default: CTC trie-beam
+    // on Latin layouts for the validated languages, geometric everywhere else) or
+    // "geometric" (SHARK2 on all layouts). The "neural"/"hybrid" modes were removed with
+    // the neural engine on 2026-08-18; `SwipeEngineRouter.Mode.fromPref` maps those (and
+    // any other legacy/imported string) onto the default. Settings → Swipe Typing →
+    // Prediction Engine.
+    const val SWIPE_ENGINE_MODE = "ctc"
     // Full Geometric Settings — the three user-tunable geo knobs (defaults MUST equal
     // GeometricEngineConfig's; the rest of the engine's 28 knobs stay code-only because
     // they are calibrated against the spec's measured accuracy floors).
@@ -1228,33 +1230,11 @@ class Config private constructor(
         private const val CONFIG_VERSION = 3
         private const val MARGIN_PREFS_VERSION = 1  // For dp→percentage migration
 
-        /**
-         * Check if the given layout supports neural swipe typing.
-         * The ONNX model is trained on QWERTY US key positions only —
-         * non-QWERTY layouts (Dvorak, Colemak, AZERTY, QWERTZ, etc.)
-         * produce wrong predictions because the decoder weights assume
-         * QWERTY topology. Non-Latin scripts are also unsupported.
-         *
-         * Uses an allowlist: new layouts default to swipe-disabled.
-         * #9: When algorithmic swipe is implemented, this can expand.
-         */
-        @JvmStatic
-        fun isSwipeTypingSupportedForLayout(layout: KeyboardData?): Boolean {
-            // null layout = SystemLayout (unresolved until runtime by LayoutManager).
-            // SystemLayout defaults to latn_qwerty_us, which is QWERTY.
-            if (layout == null) return true
-            return isSwipeTypingSupportedForLayout(layout.name, layout.script)
-        }
-
-        /** String-based overload for direct testing without KeyboardData construction. */
-        @JvmStatic
-        fun isSwipeTypingSupportedForLayout(name: String?, script: String?): Boolean {
-            if (name == null || script == null) return false
-            // Must be Latin script (exclude Greek/Georgian QWERTY) AND
-            // must be a QWERTY variant (exclude Dvorak, Colemak, AZERTY, QWERTZ, etc.)
-            return script.equals("latin", ignoreCase = true) &&
-                   name.contains("QWERTY", ignoreCase = true)
-        }
+        // `isSwipeTypingSupportedForLayout` (the #9 "QWERTY-Latin only" allowlist) was
+        // removed on 2026-08-18 with the neural engine. It existed solely because the
+        // transformer was trained on QWERTY-US key positions; CTC takes key geometry as a
+        // model input and geometric decodes any layout, so every layout now swipes and the
+        // predicate has no meaning. Routing lives in `swipe.SwipeEngineRouter`.
 
         @Volatile
         private var _globalConfig: Config? = null

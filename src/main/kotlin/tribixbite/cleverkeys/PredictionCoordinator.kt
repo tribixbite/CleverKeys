@@ -220,27 +220,13 @@ class PredictionCoordinator(
      * waste — and it was a measured contributor to the startup `OutOfMemoryError` this gate
      * was added for (9 fatal crashes, 2026-08-12..17, on a 256 MB-growth-limit device).
      *
-     * The engine is NOT removed and NOT made unavailable: [runWhenNeuralEngineReady] already
-     * builds it lazily on a background thread and is the ONLY way the swipe path reaches it
-     * (`InputCoordinator.dispatchNeuralSwipeTyping`), so every routing decision below still
-     * ends up at a working neural engine. This gate only decides who pays for it at startup.
-     *
-     *  - [SwipeEngineRouter.Mode.NEURAL] / [SwipeEngineRouter.Mode.HYBRID]: neural serves
-     *    QWERTY-Latin, the common case — preload, exactly as before.
-     *  - [SwipeEngineRouter.Mode.GEOMETRIC]: every layout routes geometric; neural is
-     *    unreachable — never preload.
-     *  - [SwipeEngineRouter.Mode.CTC]: neural is the audit-M1 fallthrough for a language CTC
-     *    does not serve (`InputCoordinator.performCtcSwipeTyping`). Preload only when the
-     *    active language IS that fallthrough case; when CTC serves the language, the neural
-     *    engine is warmed on demand by `InputCoordinator.prewarmGeometricEngine` if the
-     *    language later changes to an unsupported one.
+     * As of 2026-08-18 no [SwipeEngineRouter.Mode] routes a swipe to the neural engine — the
+     * `neural`/`hybrid` modes are gone and the CTC audit-M1 fallthrough now dispatches to the
+     * geometric engine — so this is unconditionally false and the whole neural stack is dead
+     * weight pending its deletion (step 3 of docs/plans/2026-08-18-neural-engine-removal.md).
+     * Kept as a named gate for exactly one commit so the routing flip is reviewable on its own.
      */
-    private fun shouldPreloadNeuralEngine(): Boolean =
-        when (SwipeEngineRouter.Mode.fromPref(config.swipe_engine_mode)) {
-            SwipeEngineRouter.Mode.NEURAL, SwipeEngineRouter.Mode.HYBRID -> true
-            SwipeEngineRouter.Mode.GEOMETRIC -> false
-            SwipeEngineRouter.Mode.CTC -> !CtcEngineAdapter.supportsLanguage(config.primary_language)
-        }
+    private fun shouldPreloadNeuralEngine(): Boolean = false
 
     /**
      * Builds the neural engine in the background if it is not already up, without blocking
