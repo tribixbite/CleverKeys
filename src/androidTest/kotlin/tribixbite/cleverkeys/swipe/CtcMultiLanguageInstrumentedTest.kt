@@ -17,6 +17,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import tribixbite.cleverkeys.ContractionManager
 import tribixbite.cleverkeys.KeyValue
 import tribixbite.cleverkeys.KeyboardData
 import tribixbite.cleverkeys.PredictionResult
@@ -24,6 +25,7 @@ import tribixbite.cleverkeys.TestConfigHelper
 import tribixbite.cleverkeys.a11y.KeyboardGeometry
 import tribixbite.cleverkeys.swipe.ctc.CtcAzProjection
 import tribixbite.cleverkeys.swipe.ctc.CtcCkdtLexicon
+import tribixbite.cleverkeys.swipe.ctc.CtcContractionKeys
 import tribixbite.cleverkeys.swipe.ctc.CtcLanguageSupport
 import tribixbite.cleverkeys.swipe.ctc.CtcLexiconMerge
 import tribixbite.cleverkeys.swipe.ctc.CtcLexiconTrie
@@ -409,11 +411,38 @@ class CtcMultiLanguageInstrumentedTest {
 
                 val trie = adapter.trieFor(language)
                 assertNotNull("$language: the adapter built no trie from the bundled asset", trie)
+
+                // The adapter's trie is the projection PLUS the contraction alias keys that
+                // `CtcContractionKeys.inject` adds, so it is legitimately larger than the
+                // projection — for `fr` by ~17.9k since the 2026-08-17 restore. Comparing
+                // against `expected.words` alone made this test fail the moment injection
+                // shipped (it did: this assertion was red from `8230333b` until 2026-08-18,
+                // unnoticed because only the pure suite was re-run).
+                //
+                // The delta is COMPUTED here rather than frozen as a second magic number:
+                // injecting the same keys into an independent projection trie must reproduce
+                // the adapter's word count exactly. That keeps the original intent — a
+                // mismatch still means user custom/disabled words leaked in or the two paths
+                // diverged — while surviving any future change to the contraction assets.
+                // Alphabet taken from the adapter's own trie rather than re-declared here:
+                // the two must agree by construction, not by a constant kept in sync by hand.
+                val independent = CtcLexiconTrie.loadFromFrequencyMap(
+                    trie!!.alphabet, projected.freqs
+                )
+                val aliasKeys = ContractionManager(context)
+                    .apply { loadSwipeDisplayMappings(language) }
+                    .getAliasKeys()
+                val injected = CtcContractionKeys.inject(independent, aliasKeys)
                 assertEquals(
                     "$language: the adapter's shipping merge path must build the same " +
-                        "vocabulary as the projection above (a mismatch means user " +
-                        "custom/disabled words leaked in, or the two paths diverged)",
-                    expected.words, trie!!.wordCount
+                        "vocabulary as the projection + contraction injection (a mismatch " +
+                        "means user custom/disabled words leaked in, or the two paths diverged)",
+                    expected.words + injected, trie.wordCount
+                )
+                assertTrue(
+                    "$language: injection must only ADD keys the lexicon lacks, never remove " +
+                        "or replace one (injected=$injected)",
+                    injected >= 0 && trie.wordCount >= expected.words
                 )
 
                 val target = TARGETS.getValue(language)
@@ -564,9 +593,16 @@ class CtcMultiLanguageInstrumentedTest {
             val frTrie = adapter.trieFor("fr")
             assertNotNull("fr: the adapter built no trie", frTrie)
             assertNotSame("switching en→fr must rebuild the trie", enTrie, frTrie!!)
-            assertEquals(
-                "fr trie must hold the French vocabulary",
-                SHAPES.getValue("fr").words, frTrie.wordCount
+            // A LOWER BOUND, not the exact count: the adapter's trie is the projection plus
+            // whatever `CtcContractionKeys.inject` adds, and pinning the exact number here
+            // duplicated `bundledCkdtAssets_...`'s job while being the assertion that broke
+            // when the fr contraction restore landed. What THIS test is about is that the
+            // en→fr switch rebuilt against French data at all — `assertNotSame` above and
+            // the EN_ONLY_PROBES below carry that; the size only needs to be plausible.
+            assertTrue(
+                "fr trie must hold the French vocabulary (projection is " +
+                    "${SHAPES.getValue("fr").words} words; got ${frTrie.wordCount})",
+                frTrie.wordCount >= SHAPES.getValue("fr").words
             )
             for (probe in EN_ONLY_PROBES) {
                 assertTrue("en trie must contain the probe '$probe'", enTrie.contains(probe))
