@@ -54,7 +54,8 @@ import kotlin.math.roundToInt
  *  3. Dictionary → [CtcLexiconTrie], PER LANGUAGE ([CtcLanguageSupport]): en reads the
  *     bundled `dictionaries/en_enhanced.json` ({word: freq} on the AOSP-like 134..255
  *     scale the tuned λ=4.0 expects — spec NFR-4), a–z-STRIPPED (`don't`→`dont`);
- *     fr/de/es read the bundled CKDT `dictionaries/<lang>_enhanced.bin` via the
+ *     every other served language (fr/de/es and the provisional it/pt/sv) reads the
+ *     bundled CKDT `dictionaries/<lang>_enhanced.bin` via the
  *     geometric engine's [CkdtDictionaryReader] at `freq = max(1, 255 − rank)`
  *     ([CtcCkdtLexicon]) and project it onto a–z ([CtcAzProjection]), keeping the
  *     canonical accented form for display. Both merge the language's user custom words
@@ -100,12 +101,13 @@ class CtcEngineAdapter(private val context: Context) {
 
         /**
          * True when the CTC engine serves [language] — the table lives in
-         * [CtcLanguageSupport] (en + the 2026-08-15 validated additions fr/de/es).
+         * [CtcLanguageSupport]: en, the 2026-08-15 validated additions fr/de/es, and the
+         * 2026-08-18 provisional it/pt/sv. Seven in all; never hard-code the list here.
          *
          * [decodeAsync]/[warmUpAsync] gate on this as defense-in-depth; the PRIMARY gate
          * is upstream — `InputCoordinator.performCtcSwipeTyping` reads the active language
-         * BEFORE dispatch and falls through per layout for an unsupported one (audit M1:
-         * ctc mode must never offer less coverage than hybrid).
+         * BEFORE dispatch and falls through to the geometric engine for an unserved one
+         * (audit M1: ctc mode must never offer less coverage than geometric).
          */
         fun supportsLanguage(language: String?): Boolean = CtcLanguageSupport.isSupported(language)
 
@@ -384,7 +386,7 @@ class CtcEngineAdapter(private val context: Context) {
      *    en LANGPACK's CKDT `dictionary.bin` stores the INVERTED 255−rank scale that λ was
      *    NOT fitted for, so the langpack swap stays unsupported here (plan §7.1). Known
      *    limitation: the CTC en vocabulary can diverge from the source other engines see.
-     *  - **fr/de/es → `dictionaries/<lang>_enhanced.bin`** (CKDT v2, the SAME asset the
+     *  - **fr/de/es/it/pt/sv → `dictionaries/<lang>_enhanced.bin`** (CKDT v2, the SAME asset the
      *    geometric engine reads, parsed by the SAME [CkdtDictionaryReader]) at
      *    `freq = max(1, 255 − rank)` and projected onto a–z with the canonical accented
      *    form kept for display. λ = 2.0 for that scale — see
