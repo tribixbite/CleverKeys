@@ -24,9 +24,13 @@ P3 (the trie is gone); issue #9 (no layout is swipe-disabled any more).
       very sloppy swipe can return nothing where the transformer would have rescued it.
 - [ ] **P1 — secondary-language blending on the swipe path** is still absent (unchanged by
       the removal; it was already absent in ctc mode). Option: dual-trie CTC decode.
-- [ ] **P2 — measure it/pt/sv on geometric.** They moved neural → geometric on QWERTY; the
-      per-language delta is UNMEASURED. English proxy on the same corpus: 74.62 neural vs
-      67.50 geometric, so expect a few points down until CTC serves them.
+- [x] ~~**P2 — measure it/pt/sv on geometric.** They moved neural → geometric on QWERTY; the
+      per-language delta is UNMEASURED.~~ **Moot since `9a6ffdd2` (2026-08-18):** it/pt/sv
+      are in `CtcLanguageSupport.SUPPORTED` (as `PROVISIONAL`) and are served by CTC, not
+      geometric, so there is no geometric-on-it/pt/sv configuration left to measure. The
+      per-language delta remains UNMEASURED for a different and permanent reason: no swipe
+      corpus exists for those three. English proxy on the same corpus was 74.62 neural vs
+      67.50 geometric vs 89.31 CTC.
 - [ ] **P2 — six orphaned prefs the removal plan did not list**: `swipe_prediction_source`,
       `swipe_common_words_boost`, `swipe_top5000_boost`, `swipe_rare_words_penalty`,
       `swipe_fuzzy_match_mode`, `autocorrect_max_beam_candidates`. Their only consumer was
@@ -175,8 +179,10 @@ Follow-ups (not blocking):
       "not for production" warning). Works on Pages, but it is the demo's last CDN dependency.
 - [ ] Replay real human traces (not synthetic splines) through the demo so the transformer
       column is a fair comparison; the synthetic fixture only validates plumbing + parity.
-- [ ] The CTC engines are demo-only — wiring `ctc` into `swipe_engine_mode` on-device is still
-      item B below.
+- [x] ~~The CTC engines are demo-only — wiring `ctc` into `swipe_engine_mode` on-device is
+      still item B below.~~ **Done 2026-08-08** (`3b9dd666..d99dd41f`): `ctc` is wired
+      on-device, and since 2026-08-18 it is the DEFAULT `swipe_engine_mode`. The web demo is
+      no longer the only place a CTC engine runs.
 
 ## 🔴 ACTIVE HANDOFF → `memory/HANDOFF-2026-08-19.md`
 
@@ -185,9 +191,16 @@ detail is in `docs/specs/ctc-architecture-and-multiscript-guide.md`.
 
 Everything below this line is HISTORY and contains claims that are now false — kept for the
 record of how decisions were reached, not as instructions. Known-stale in particular:
-the "CTC engines are demo-only" line (false since 2026-08-08), anything describing it/pt/sv as
-unserved (false since `9a6ffdd2` — all seven bundled dictionary languages run on CTC), and any
-routing description mentioning the neural engine (deleted 2026-08-18, `a7d03bc8`..`83220634`).
+anything describing it/pt/sv as unserved (false since `9a6ffdd2` — all seven bundled
+dictionary languages run on CTC, the last three as `PROVISIONAL`), and any routing
+description mentioning the neural engine (deleted 2026-08-18, `a7d03bc8`..`83220634`).
+
+**Corrections applied 2026-08-19** rather than left for the reader to catch, because each was
+a plain factual error rather than a dated decision: the "CTC engines are demo-only"
+follow-up, the "measure it/pt/sv on geometric" task, the geo-removal item's layout census
+and its it/pt/sv claim, and the "doc corrections" item that was already done on both halves.
+Each is struck through in place with the correction beside it — the original wording is still
+readable, which is the point of a history file.
 
 ---
 
@@ -270,13 +283,25 @@ Outstanding, in priority order:
       `futo-test-49970`, and **both are English**. No sealed Cyrillic split has ever existed,
       so no Cyrillic model could have been test-decoded regardless of ledger state. ru can
       never reach en/fr/de/es's evidence tier without a new seal being created first.
-- [ ] **P2 — geo fallback CANNOT yet be removed under `ctc`.** 4 of 15 routing cells survive;
-      dead would be it/pt/sv, all langpacks, 36 of 83 bundled layouts, and two bundled Latin
-      layouts whose letters sit on corners (`latn_qwerty_az`, `latn_qwerty_tly`).
-- [ ] **P2 — doc corrections.** `docs/specs/ctc-swipe-engine.md:235` quotes German confirm
+- [ ] **P2 — geo fallback CANNOT yet be removed under `ctc`.** **Corrected 2026-08-19:**
+      it/pt/sv are no longer part of what geometric serves (they moved to CTC at `9a6ffdd2`),
+      and the layout count was wrong. The measured census of `src/main/layouts/` (86 XML —
+      the tree `copyLayoutDefinitions` ships; `srcs/layouts/` is read by no build task) is
+      46 CTC-eligible / 40 geometric: 35 declared non-Latin across 15 scripts, 3
+      Latin-declared but a–z-incomplete (`latn_qwerty_az`, `latn_qwerty_tly`, and the
+      mis-declared `grek_qwerty`), 2 with no script attribute (`numeric`, `pin` — not letter
+      layouts). What still dies with geometric: every langpack language outside the seven,
+      those 40 layouts, and the two corner-letter Latin layouts. See
+      `docs/specs/ctc-architecture-and-multiscript-guide.md` §2.1 and §3.
+- [x] ~~**P2 — doc corrections.** `docs/specs/ctc-swipe-engine.md:235` quotes German confirm
       81.57, which is the λ 3.0 row (shipped λ 2.0 = 81.66). The azerty/qwertz/german/spanish
       alt-layout bars may have been decoded at 27–29 slots while the app always builds 26 —
-      only dvorak has a published app-geometry counterpart; do not quote until re-checked.
+      only dvorak has a published app-geometry counterpart; do not quote until re-checked.~~
+      **Both halves done 2026-08-18.** German confirm reads 81.66. The slot question was
+      re-checked and the suspected mismatch does not exist: all quoted alt-layout numbers are
+      the `az26` arm (26 slots, exactly what `buildMappedLayout` builds), and the `full` arm
+      (27 slots for dvorak/azerty/spanish, 29 for german) was measured and buys nothing —
+      +0.05 / +0.10 / 0.00 / −0.23 (`ctc/ALT_LAYOUT_EVAL.md:303-311`).
 - [ ] **P3 — measure CTC on LOCAL combined**, the real-user corpus and the one dataset where
       geo beat the transformer (55.2 vs 53.7). CTC has never been run on it, and no accuracy number
       exists for the shipped *Kotlin* engine at all (all figures are from the Python harness,
@@ -402,9 +427,14 @@ Outstanding, in priority order:
       `CtcCkdtLexicon` and projected onto the a–z decode alphabet by `CtcAzProjection` with
       the accented form retained for display (`cafe`→`café`, `nino`→`niño`). The English
       layout gate widened from QWERTY to any Latin layout, so Dvorak/Colemak get CTC.
-      it/pt/sv are held back on DATA, not effort: HuggingFace `futo-org/swipe.futo.org`
+      it/pt/sv were held back that day on DATA, not effort: HuggingFace
+      `futo-org/swipe.futo.org`
       config `swipe-5` has **zero rows** for those languages, so they cannot be swept or
-      model-validated — do not re-attempt expecting to find a corpus. λ evidence:
+      model-validated — do not re-attempt expecting to find a corpus. **They were enabled
+      anyway on 2026-08-18 (`9a6ffdd2`) as `CtcLanguageSupport.PROVISIONAL`**, on the
+      scale-transferred λ and against a geometric fallback that has no bar either; the
+      zero-corpus fact above is unchanged and is why their tier can never rise without new
+      data. λ evidence:
       `docs/eval/2026-08-15-ctc-per-language-lambda.md`.
 - [x] **SWIPE contractions scoped to the ACTIVE decode language (2026-08-16)** — swipe path
       ONLY, see the tap caveat below. English contractions no longer leak into non-English
