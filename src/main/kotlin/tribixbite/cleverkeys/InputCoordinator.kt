@@ -109,6 +109,28 @@ class PredictionTaskRunner(
         cancelBackground()
         executor.shutdownNow()
     }
+
+    /**
+     * Blocks until the worker thread has actually finished, or [timeoutMs] elapses.
+     *
+     * Exists so an owner holding a NATIVE resource can release it safely. [shutdown] only
+     * *requests* termination — `shutdownNow` interrupts the worker, but a task already inside a
+     * native call (an ORT `session.run`) keeps running until that call returns. Closing the
+     * session at that moment is undefined behaviour in ONNX Runtime, so the only safe release
+     * point is after the thread is confirmed dead.
+     *
+     * @return true if the executor terminated within the timeout — i.e. it is now safe to free
+     *   anything the worker was using. False means a task is still running and the caller must
+     *   NOT release native state; leaking it until process death is the correct trade.
+     */
+    fun awaitTermination(timeoutMs: Long): Boolean = try {
+        executor.awaitTermination(timeoutMs, java.util.concurrent.TimeUnit.MILLISECONDS)
+    } catch (e: InterruptedException) {
+        // Restore the flag and report "not terminated" — the caller's contract is to skip the
+        // release, which is the safe direction.
+        Thread.currentThread().interrupt()
+        false
+    }
 }
 
 /**

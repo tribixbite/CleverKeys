@@ -129,6 +129,14 @@ class CtcEngineAdapter(private val context: Context) {
          * ctc for the IME's whole lifetime) before latching off for the session.
          */
         private const val MAX_MODEL_LOAD_ATTEMPTS = 3
+
+        /**
+         * How long [shutdown] waits for the decode thread before giving up and leaking the ORT
+         * session. Runs on the MAIN thread during IME teardown, so it must stay well inside any
+         * ANR budget; a decode still running after this is already anomalous, and leaking beats
+         * closing a session out from under a live native call.
+         */
+        private const val SHUTDOWN_AWAIT_MS = 250L
     }
 
     private val tasks = PredictionTaskRunner()
@@ -795,13 +803,31 @@ class CtcEngineAdapter(private val context: Context) {
     }
 
     /**
-     * Cancels in-flight work and shuts the background thread down (IME teardown).
-     * The ORT session is intentionally NOT closed here: shutdown interrupts a
-     * possibly-running `session.run`, and closing a session mid-run is UB in ORT.
-     * The ~3 MB native session is reclaimed at process death — the same teardown
-     * posture the ONNX sessions have always had.
+     * Cancels in-flight work, shuts the background thread down, and releases the ORT session
+     * **only once that thread is confirmed dead** (IME teardown).
+     *
+     * The ordering is the whole point. `shutdownNow` interrupts the worker, but a task already
+     * inside a native `session.run` keeps running until that call returns, and closing a session
+     * mid-run is undefined behaviour in ORT. So the close is gated on
+     * [PredictionTaskRunner.awaitTermination]: if the thread has not finished within
+     * [SHUTDOWN_AWAIT_MS] the session is deliberately LEAKED to process death, because a leak is
+     * strictly better than a native crash in a keyboard.
+     *
+     * Previously this method skipped the close entirely for that reason, which was safe but cost
+     * ~3 MB of native memory per adapter lifecycle — and an adapter is rebuilt on IME teardown,
+     * not just at process death. Waiting is the missing piece, not the close itself.
+     *
+     * The timeout is short: this runs on the main thread during teardown, and a decode that has
+     * not returned in [SHUTDOWN_AWAIT_MS] is already anomalous.
      */
     fun shutdown() {
         tasks.shutdown()
+        if (tasks.awaitTermination(SHUTDOWN_AWAIT_MS)) {
+            emissionModel?.close()
+            emissionModel = null
+        } else if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+            Log.w(TAG, "decode thread still running after ${SHUTDOWN_AWAIT_MS}ms — " +
+                "leaking the ORT session rather than closing it under a live session.run")
+        }
     }
 }
