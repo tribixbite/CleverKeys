@@ -88,19 +88,18 @@ class PreferenceUIUpdateHandler(
                     predictionCoordinator?.reloadWordPredictorDictionary(newPrimaryLang)
                     Log.i(TAG, "Primary language changed to '$newPrimaryLang' - touch typing dictionary reload triggered")
 
-                    // v1.2.0: Reload contractions for the new language
-                    // Fixes: contractions not working after toggling language and back to English
-                    // Must match ManagerInitializer logic: loadMappings + language + always English
+                    // v1.2.0: Reload contractions for the new language.
+                    // Must match ManagerInitializer — both go through loadTypingMappings, which
+                    // owns the precedence rule (primary, then secondary, then the English base
+                    // ONLY if English is one of the two). Before 2026-08-19 both call sites
+                    // hand-rolled "base + language + always English", which is how a German user
+                    // ended up with "I'm" for `im`; duplicating that order in two places is
+                    // exactly why it had to be fixed twice.
                     contractionManager?.let { cm ->
-                        // Reload base contractions (from contractions.bin)
-                        cm.loadMappings()
-                        // Load language-specific contractions
-                        if (newPrimaryLang != "en") {
-                            cm.loadLanguageContractions(newPrimaryLang)
-                        }
-                        // Always load English contractions (contractions_en.json has additional entries)
-                        cm.loadLanguageContractions("en")
-                        Log.i(TAG, "Contractions reloaded for language '$newPrimaryLang' (+ English fallback)")
+                        val secondary = prefs.getString("pref_secondary_language", "none")
+                            ?.takeIf { prefs.getBoolean("pref_enable_multilang", false) }
+                        cm.loadTypingMappings(newPrimaryLang, secondary)
+                        Log.i(TAG, "Contractions reloaded for primary '$newPrimaryLang'")
                     }
                 }
                 "pref_secondary_language" -> {
@@ -108,6 +107,18 @@ class PreferenceUIUpdateHandler(
                     val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
                     val newSecondaryLang = prefs.getString("pref_secondary_language", "none") ?: "none"
                     predictionCoordinator?.reloadWordPredictorSecondaryDictionary(newSecondaryLang)
+                    // The secondary language now participates in contraction scoping too
+                    // (2026-08-19): selecting English as secondary is what RE-ADMITS English
+                    // morphology, and selecting French as secondary is what makes `m'appelle`
+                    // work. Neither takes effect until the manager reloads, so this must fire
+                    // here as well as on a primary change.
+                    contractionManager?.let { cm ->
+                        val primary = prefs.getString("pref_primary_language", "en") ?: "en"
+                        cm.loadTypingMappings(
+                            primary,
+                            newSecondaryLang.takeIf { prefs.getBoolean("pref_enable_multilang", false) }
+                        )
+                    }
                     Log.i(TAG, "Secondary language changed to '$newSecondaryLang' - dictionaries reloaded")
                 }
                 "pref_enable_multilang" -> {
@@ -115,6 +126,17 @@ class PreferenceUIUpdateHandler(
                     val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
                     val secondaryLang = prefs.getString("pref_secondary_language", "none") ?: "none"
                     predictionCoordinator?.reloadWordPredictorSecondaryDictionary(secondaryLang)
+                    // Toggling multilang OFF must also retract the secondary language's
+                    // contractions — otherwise a user who disables it keeps seeing the second
+                    // language's apostrophe forms, which is the same class of leak the language
+                    // scoping fixed.
+                    contractionManager?.let { cm ->
+                        val primary = prefs.getString("pref_primary_language", "en") ?: "en"
+                        cm.loadTypingMappings(
+                            primary,
+                            secondaryLang.takeIf { prefs.getBoolean("pref_enable_multilang", false) }
+                        )
+                    }
                     Log.i(TAG, "Multilang toggle changed - secondary dictionaries reloaded")
                 }
             }

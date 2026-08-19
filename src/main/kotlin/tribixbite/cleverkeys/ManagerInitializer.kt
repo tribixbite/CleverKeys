@@ -83,18 +83,20 @@ class ManagerInitializer(
         MemoryProbe.reset()
         MemoryProbe.mark("init.enter", settle = true)
 
-        // Load contraction mappings for apostrophe insertion (v1.32.341)
+        // Contraction mappings for apostrophe insertion, scoped to the languages the user
+        // actually selected (v1.32.341; language-scoped 2026-08-19).
+        //
+        // This used to load the English base, then the primary language, then English AGAIN
+        // unconditionally — so a German user got "I'm" when typing `im` (rank 16) and a French
+        // user got "don't" for `dont` (rank 104), because the base loaded first and both
+        // loaders are earlier-wins. loadTypingMappings encodes the precedence: primary,
+        // then secondary, then the English base ONLY if English is one of the two.
         val contractionManager = ContractionManager(context)
-        contractionManager.loadMappings()
-
-        // v1.1.87: Load language-specific contractions for the primary language
-        // This enables French "cest" -> "c'est", Italian "luomo" -> "l'uomo", etc.
-        val primaryLang = config.primary_language
-        if (primaryLang != "en") {
-            contractionManager.loadLanguageContractions(primaryLang)
-        }
-        // Always load English as fallback (already loaded in loadMappings, but language-specific file may have more)
-        contractionManager.loadLanguageContractions("en")
+        val prefsForLang = DirectBootAwarePreferences.get_shared_preferences(context)
+        val secondaryLang = prefsForLang
+            .getString("pref_secondary_language", "none")
+            ?.takeIf { prefsForLang.getBoolean("pref_enable_multilang", false) }
+        contractionManager.loadTypingMappings(config.primary_language, secondaryLang)
         MemoryProbe.mark("init.contractionManager", settle = true) {
             "known=${contractionManager.getTotalKnownCount()}"
         }

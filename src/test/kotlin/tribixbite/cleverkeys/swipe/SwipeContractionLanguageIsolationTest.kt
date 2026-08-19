@@ -603,4 +603,97 @@ class SwipeContractionLanguageIsolationTest {
                 .isGreaterThan(0)
         }
     }
+
+    // ── TYPING pipeline scoping (2026-08-19) ──────────────────────────────────────
+
+    /**
+     * The typing pipeline must not put English morphology in a non-English slate either.
+     *
+     * ### The bug this pins
+     *
+     * `ManagerInitializer` and `PreferenceUIUpdateHandler` both hand-rolled the same load
+     * order: English base, then the primary language, then `loadLanguageContractions("en")`
+     * AGAIN, unconditionally. Both loaders are earlier-wins, so the English base — loaded
+     * first — owned every colliding key for every user of every language.
+     *
+     * Measured casualty, from the real shipped assets: `contractions_en.json` maps
+     * `im -> i'm`, and `contractions_de.json` has no `im` entry of its own. So a German user
+     * typing **im** (an ordinary German preposition-article contraction, corpus rank 16) was
+     * offered **I'm**. French `dont` (rank 104) -> `don't` is the same shape.
+     *
+     * The swipe path was fixed on 2026-08-16; its KDoc explicitly deferred the typing side as
+     * "a separate decision with a separate blast radius". This asserts that decision, over the
+     * REAL assets, under both the old order and the shipped one — so the leak and its absence
+     * are both demonstrated rather than asserted.
+     */
+    @Test
+    fun typingScopingKeepsEnglishOutOfANonEnglishSlate() {
+        val germanOwn = languageFiles["de"].orEmpty()
+        assertWithMessage(
+            "precondition: contractions_de.json must NOT define `im` — the whole point is that " +
+                "German has no mapping of its own here, so whatever English supplies wins"
+        ).that(germanOwn).doesNotContainKey("im")
+        assertWithMessage("precondition: English must map `im`, or this test proves nothing")
+            .that(englishNonPaired).containsKey("im")
+
+        // OLD order: English base first, then the language, then English again.
+        val oldOrder = LinkedHashMap<String, String>()
+        englishNonPaired.forEach { (k, v) -> oldOrder.putIfAbsent(k, v) }
+        germanOwn.forEach { (k, v) -> oldOrder.putIfAbsent(k, v) }
+        assertWithMessage(
+            "the OLD load order leaks English into a German slate — this is the bug, and it " +
+                "must stay demonstrated so the fix cannot be quietly reverted"
+        ).that(oldOrder["im"]).isEqualTo(englishNonPaired["im"])
+
+        // SHIPPED order for a German-primary user with no English secondary: the English base
+        // is never loaded at all, so `im` has no mapping and the typed word stands.
+        val scoped = LinkedHashMap<String, String>()
+        germanOwn.forEach { (k, v) -> scoped.putIfAbsent(k, v) }
+        assertWithMessage(
+            "a German-primary user with no English secondary must not be offered `I'm` for `im`"
+        ).that(scoped).doesNotContainKey("im")
+        assertWithMessage("German keeps its OWN clitics — scoping must not empty the language")
+            .that(scoped).containsKey("gehts")
+    }
+
+    /**
+     * Precedence: the PRIMARY language owns a colliding key, even when English is the
+     * secondary language and its base is therefore loaded.
+     *
+     * This is why `loadTypingMappings` loads primary -> secondary -> English base rather than
+     * reusing the swipe path's simpler two-branch rule. Selecting English as a SECONDARY
+     * language re-admits English morphology (the user asked for it), but it must be ADDITIVE:
+     * it cannot take a key the primary language already defines. With the old base-first order
+     * it always did.
+     */
+    @Test
+    fun englishAsSecondaryIsAdditiveNotDominant() {
+        val french = languageFiles["fr"].orEmpty()
+        val collisions = french.keys.intersect(englishNonPaired.keys)
+        assumeTrueThat(collisions.isNotEmpty())
+
+        // primary(fr) -> secondary(en base): earlier-wins means French keeps its own keys.
+        val scoped = LinkedHashMap<String, String>()
+        french.forEach { (k, v) -> scoped.putIfAbsent(k, v) }
+        englishNonPaired.forEach { (k, v) -> scoped.putIfAbsent(k, v) }
+
+        for (key in collisions) {
+            assertWithMessage(
+                "French is PRIMARY, so `$key` must keep the French reading even though the " +
+                    "English base is loaded for the English secondary"
+            ).that(scoped[key]).isEqualTo(french[key])
+        }
+        // ...and English still contributes the keys French does not define.
+        val englishOnly = englishNonPaired.keys - french.keys
+        assumeTrueThat(englishOnly.isNotEmpty())
+        val sample = englishOnly.first()
+        assertWithMessage("selecting English as secondary must still ADD its own mappings")
+            .that(scoped[sample]).isEqualTo(englishNonPaired[sample])
+    }
+
+    /** Tiny helper so a precondition that is data-dependent reads as intent, not an assert. */
+    private fun assumeTrueThat(condition: Boolean) {
+        assertWithMessage("shipped assets no longer satisfy this test's precondition")
+            .that(condition).isTrue()
+    }
 }

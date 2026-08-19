@@ -53,13 +53,25 @@ class ContractionManager(private val context: Context) {
      * Must be called before using isKnownContraction() or getNonPairedMapping().
      */
     fun loadMappings() {
-        try {
-            // v1.2.1: Clear existing mappings before loading to prevent stale data on reload
-            // Without this, language toggle could leave old contractions mixed with new
-            nonPairedContractions.clear()
-            pairedContractions.clear()
-            knownContractions.clear()
+        // v1.2.1: Clear existing mappings before loading to prevent stale data on reload
+        // Without this, language toggle could leave old contractions mixed with new
+        nonPairedContractions.clear()
+        pairedContractions.clear()
+        knownContractions.clear()
+        loadEnglishBase()
+    }
 
+    /**
+     * The bundled English base set, loaded ADDITIVELY (no clear).
+     *
+     * Split out of [loadMappings] so a caller can choose the load ORDER. It matters:
+     * [loadLanguageContractions] and this are both earlier-wins, so whichever runs first owns
+     * every colliding key. A German-primary / English-secondary user must get German `im`, not
+     * English `I'm` — which is only achievable if the primary language can be loaded BEFORE the
+     * English base. See [loadTypingMappings].
+     */
+    private fun loadEnglishBase() {
+        try {
             // Try binary format first (fastest)
             if (loadBinaryContractions()) {
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
@@ -133,6 +145,76 @@ class ContractionManager(private val context: Context) {
      *
      * @param langCode active decode language (ISO 639-1, optionally region-suffixed).
      */
+    /**
+     * Load contraction mappings for the TYPING pipeline, scoped to the languages the user has
+     * actually selected.
+     *
+     * ## The bug this fixes
+     *
+     * `ManagerInitializer` used to call `loadMappings()` (English base), then the primary
+     * language, then `loadLanguageContractions("en")` AGAIN — unconditionally. So every user of
+     * every language carried the full English set, and because the base loaded first and both
+     * loaders are earlier-wins, English owned every colliding key. Two high-frequency
+     * casualties were measured: German `im` (rank 16) offered "I'm", and French `dont`
+     * (rank 104) offered "don't". Both are ordinary words in their own language.
+     *
+     * The swipe path fixed this on 2026-08-16 ([loadSwipeDisplayMappings]) and its KDoc noted
+     * that the typing pipeline was "a separate decision with a separate blast radius". This is
+     * that decision.
+     *
+     * ## The policy
+     *
+     * English morphology appears only when the user has actually chosen English — as PRIMARY or
+     * as SECONDARY. Same rule the swipe path applies, and the same one `_englishFallbackEnabled`
+     * encoded in the deleted vocabulary: code-switching is a bug, not a feature.
+     *
+     * ## Why the order is primary -> secondary -> English base
+     *
+     * Both loaders are earlier-wins, so load order IS precedence. The primary language must
+     * claim its own words before the secondary language or the English base can; otherwise a
+     * German-primary / English-secondary user is back to "I'm" for `im`. Loading the English
+     * base LAST is what makes "English as secondary" additive rather than dominant.
+     *
+     * Also closes a second gap: the secondary language's own contractions were never loaded at
+     * all, so `m'appelle` failed for a user with French as their SECONDARY language.
+     *
+     * @param primaryLang the user's primary language (ISO 639-1, optionally region-suffixed).
+     * @param secondaryLang the secondary language, or null/blank/"none" when unset.
+     */
+    fun loadTypingMappings(primaryLang: String, secondaryLang: String?) {
+        val secondary = secondaryLang
+            ?.takeIf { it.isNotBlank() && !it.equals("none", ignoreCase = true) }
+            ?.takeIf { !it.equals(primaryLang, ignoreCase = true) }
+
+        val wantsEnglish = SwipeContractionPolicy.usesEnglishBase(primaryLang) ||
+            (secondary != null && SwipeContractionPolicy.usesEnglishBase(secondary))
+
+        val dropped = nonPairedContractions.size + pairedContractions.size
+        nonPairedContractions.clear()
+        pairedContractions.clear()
+        knownContractions.clear()
+
+        // Precedence order — see the KDoc. Primary first, always.
+        if (!SwipeContractionPolicy.usesEnglishBase(primaryLang)) {
+            loadLanguageContractions(primaryLang)
+        }
+        if (secondary != null && !SwipeContractionPolicy.usesEnglishBase(secondary)) {
+            loadLanguageContractions(secondary)
+        }
+        if (wantsEnglish) {
+            loadEnglishBase()
+            loadLanguageContractions(SwipeContractionPolicy.ENGLISH)
+        }
+
+        Log.d(
+            TAG,
+            "Typing contractions primary='" + primaryLang + "' secondary='" +
+                (secondary ?: "none") + "' english=" + wantsEnglish + ": dropped " + dropped +
+                ", loaded " + nonPairedContractions.size + " non-paired + " +
+                pairedContractions.size + " paired"
+        )
+    }
+
     fun loadSwipeDisplayMappings(langCode: String) {
         if (SwipeContractionPolicy.usesEnglishBase(langCode)) {
             loadMappings()

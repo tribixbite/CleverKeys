@@ -578,6 +578,46 @@ class CoreImeHygieneDriftTest {
     }
 
     /**
+     * Both typing-side contraction load sites must go through the ONE policy method.
+     *
+     * ### The bug this pins
+     *
+     * `ManagerInitializer` and `PreferenceUIUpdateHandler` each hand-rolled the same sequence —
+     * English base, then the primary language, then `loadLanguageContractions("en")` again,
+     * unconditionally. Both loaders are earlier-wins, so English owned every colliding key:
+     * a German user typing `im` was offered "I'm", a French user typing `dont` got "don't".
+     *
+     * Duplicating a policy across two call sites is what made it a two-place fix, and what
+     * would make a partial revert silently reintroduce the leak in one language-change path
+     * while the other stayed correct. `SwipeContractionLanguageIsolationTest` proves the POLICY
+     * is right over the real assets; this proves the CODE uses it.
+     */
+    @Test
+    fun typingContractionLoadSitesUseTheSharedLanguageScopedPolicy() {
+        for (relative in listOf(
+            "tribixbite/cleverkeys/ManagerInitializer.kt",
+            "tribixbite/cleverkeys/PreferenceUIUpdateHandler.kt",
+        )) {
+            val src = source(relative)
+            assertWithMessage(
+                "$relative must load typing contractions via ContractionManager" +
+                    ".loadTypingMappings(primary, secondary) — it owns the precedence rule " +
+                    "(primary, then secondary, then the English base ONLY if English is one " +
+                    "of the two)."
+            ).that(src).contains("loadTypingMappings(")
+            assertWithMessage(
+                "$relative must NOT call loadMappings() directly: it loads the English base " +
+                    "FIRST, and earlier-wins means English then owns every colliding key for " +
+                    "every language. That is the exact defect."
+            ).that(src).doesNotContain("loadMappings()")
+            assertWithMessage(
+                "$relative must NOT hard-code an unconditional English load — English is " +
+                    "admitted only when the user selected it as primary or secondary."
+            ).that(src).doesNotContain("loadLanguageContractions(\"en\")")
+        }
+    }
+
+    /**
      * A dead ONNX session must route the swipe to geometric, not produce an empty bar.
      *
      * ### The bug this pins
