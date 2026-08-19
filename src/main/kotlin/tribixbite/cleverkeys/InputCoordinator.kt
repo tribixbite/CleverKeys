@@ -688,14 +688,11 @@ class InputCoordinator(
         val frameH = keyboardView.height.toFloat()
         if (frameW <= 0f || frameH <= 0f) return
 
-        // The router gates on layout METADATA (Latin script); this layout may still lack an
-        // a–z key, which yields no CtcLayout and would leave the bar empty. Geometric can
-        // decode it, so hand the swipe over rather than degrade coverage. Memoized — the
-        // decode below reuses this same geometry build.
         // Two reasons to hand this swipe to geometric, checked together because they have the
         // same remedy:
-        //  1. the layout lacks an a–z key, so no CtcLayout can be built (memoized — the decode
-        //     below reuses this same geometry build);
+        //  1. the router gates on layout METADATA (Latin script), but this layout may still
+        //     lack an a–z key, so no CtcLayout can be built and the bar would be left empty.
+        //     Geometric decodes it fine. Memoized — the decode below reuses this geometry build;
         //  2. the ONNX session failed to load MAX_MODEL_LOAD_ATTEMPTS times and latched. Without
         //     this second check the decode returns an EMPTY slate, which the shared pipeline
         //     cannot distinguish from "no candidates" — the bar clears and swipe silently stops

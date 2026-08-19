@@ -1,15 +1,21 @@
 package tribixbite.cleverkeys.ui.settings.sections
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
+import tribixbite.cleverkeys.swipe.ctc.CtcLanguageSupport
 import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
 import tribixbite.cleverkeys.ui.settings.SettingsDropdown
 import tribixbite.cleverkeys.ui.settings.SettingsSwitch
@@ -61,6 +67,43 @@ internal fun SettingsActivity.SwipeTypingSection() {
                             saveSetting("swipe_engine_mode", swipeEngineMode)
                         }
                     )
+
+                    // MEDIUM-7: tell the user when the engine they picked is not the one that
+                    // will run. CTC serves only the languages in CtcLanguageSupport.SUPPORTED;
+                    // everything else falls through to geometric silently. Without this card the
+                    // dropdown says "CTC" while geometric does the work, and the only way to
+                    // find out is to notice the accuracy difference.
+                    //
+                    // This existed once and was lost with NeuralPredictionSection in the engine
+                    // removal, so it is stated positively — name the engine that WILL run rather
+                    // than only what will not.
+                    if (swipeEngineMode != "geometric" &&
+                        !CtcLanguageSupport.isSupported(primaryLanguage)
+                    ) {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Text(
+                                    text = stringResource(R.string.swipe_engine_fallback_title),
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Text(
+                                    text = stringResource(
+                                        R.string.swipe_engine_fallback_desc,
+                                        primaryLanguage.uppercase(),
+                                        CtcLanguageSupport.SUPPORTED.keys.joinToString(", ") {
+                                            it.uppercase()
+                                        }
+                                    ),
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
                 }
 
                 if (swipeTypingEnabled) {

@@ -119,6 +119,18 @@
     <string name="settings_section_swipe_typing">👆 Swipe Typing</string>
     <string name="swipe_engine_mode_title">Prediction Engine</string>
     <string name="swipe_engine_mode_desc">CTC: CTC beam search on Latin layouts for English, French, German, Spanish, Italian, Portuguese and Swedish; geometric for other languages and non-Latin layouts. Geometric: all layouts.</string>
+    <!-- Shown when the selected engine cannot serve the user's primary language, so a
+         different one will actually run. %1$s is the language code, %2$s the served list.
+
+         tools:ignore="MissingTranslation" is deliberate and TEMPORARY. These two strings were
+         added 2026-08-19 and have no translations yet; the runtime behaviour either way is the
+         English fallback, so the only thing the suppression changes is whether lint blocks the
+         build. Copying the English text into all 21 locale files would make them LOOK translated
+         and hide the debt from whoever reviews res/values-*/ next, which is the worse outcome.
+         Owed: real translations, tracked in memory/HANDOFF-2026-08-19.md. Remove this attribute
+         when they land. -->
+    <string name="swipe_engine_fallback_title" tools:ignore="MissingTranslation">Geometric engine will be used</string>
+    <string name="swipe_engine_fallback_desc" tools:ignore="MissingTranslation">CTC does not have a dictionary for %1$s, so swipes will be decoded by the geometric engine instead. CTC currently serves: %2$s.</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 Appearance</string>

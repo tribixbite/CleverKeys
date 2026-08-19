@@ -64,7 +64,7 @@ CleverKeys is a feature-rich open-source keyboard for Android. On-device swipe t
 | **Gesture Engine Open Source** | ✅ | ❌¹ | ✅² | ✅ | ✅ | ✅ |
 | **ML Training Code Public** | ✅ | N/A | ✅⁶ | N/A³ | N/A³ | N/A¹⁰ |
 | **Model Size** | 2.9MB | Proprietary | 62MB | N/A | N/A | N/A |
-| **APK Size** | ~52MB | ~45MB | ~200MB | ~15MB | ~25MB | ~40MB |
+| **APK Size** | ~32MB | ~45MB | ~200MB | ~15MB | ~25MB | ~40MB |
 | **Clipboard History** | ✅ Unlimited | ⚠️ 10min default⁷ | ✅ 25 items | ✅ 20-100 items | ❌ 15s hint only | ✅ Encrypted |
 | **Short-Swipe Actions**⁸ | ✅ 208 gestures | ⚠️ Limited | ❌ | ⚠️ Limited | ⚠️ Limited | ⚠️ Space/Del only¹¹ |
 | **Per-Key Customization** | ✅ 204+ commands | ❌ | ❌ | ❌ | ❌ | ✅ |
