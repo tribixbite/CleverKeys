@@ -169,18 +169,13 @@ internal fun SettingsActivity.AutoCorrectionSection() {
                         displayValue = "$autocorrectPrefixLength letters"
                     )
 
-                    SettingsSlider(
-                        title = stringResource(R.string.autocorrect_search_depth_title),
-                        description = stringResource(R.string.autocorrect_search_depth_desc),
-                        value = autocorrectMaxBeamCandidates.toFloat(),
-                        valueRange = 1f..10f,
-                        steps = 9,
-                        onValueChange = {
-                            autocorrectMaxBeamCandidates = it.toInt()
-                            saveSetting("autocorrect_max_beam_candidates", autocorrectMaxBeamCandidates)
-                        },
-                        displayValue = "$autocorrectMaxBeamCandidates"
-                    )
+                    // "Correction Search Depth" (autocorrect_max_beam_candidates) lived here.
+                    // It bounded the fuzzy RESCUE of out-of-vocabulary beam strings in
+                    // OptimizedVocabulary — a stage that cannot exist for a lexicon-trie-
+                    // constrained decoder, since CTC and geometric can only ever emit words the
+                    // trie contains. Deleted with the engine; the pref went to DEPRECATED_KEYS
+                    // in ed2ead3a, but this control was MISSED in that pass and kept writing a
+                    // key already marked dead. Found by the 2026-08-19 settings audit.
                 }
 
                 // The "Word Scoring" group lived here: prediction-source balance, common-words

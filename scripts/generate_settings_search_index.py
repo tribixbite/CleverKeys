@@ -71,7 +71,13 @@ TITLE_RE = re.compile(
 )
 SECTION_RE = re.compile(r"CollapsibleSettingsSection\s*\(")
 EXPANDED_RE = re.compile(r"expanded\s*=\s*(\w+)")
-STRING_RE = re.compile(r'<string name="([^"]+)">(.*?)</string>', re.DOTALL)
+# `[^>]*` after the name so a string carrying ANY further attribute is still seen. The
+# original pattern required name= to be the last attribute, so
+# `<string name="x" tools:ignore="MissingTranslation">` was silently skipped — the title
+# then looked "missing" to SettingsSearchCoverageTest even though the control existed and
+# the string was defined. Silent invisibility, not an error, which is why it is worth the
+# wider pattern. `translatable="false"` strings hit the same trap.
+STRING_RE = re.compile(r'<string name="([^"]+)"[^>]*>(.*?)</string>', re.DOTALL)
 
 
 def load_strings(path):

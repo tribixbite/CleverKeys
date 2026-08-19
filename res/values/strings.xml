@@ -129,6 +129,8 @@
          and hide the debt from whoever reviews res/values-*/ next, which is the worse outcome.
          Owed: real translations, tracked in memory/HANDOFF-2026-08-19.md. Remove this attribute
          when they land. -->
+    <string name="gesture_touch_smoothing_title" tools:ignore="MissingTranslation">Touch Smoothing</string>
+    <string name="gesture_touch_smoothing_desc" tools:ignore="MissingTranslation">Points used for moving-average smoothing of the swipe path. 1 = raw input, 3 = recommended. Applies to both swipe engines.</string>
     <string name="swipe_engine_fallback_title" tools:ignore="MissingTranslation">Geometric engine will be used</string>
     <string name="swipe_engine_fallback_desc" tools:ignore="MissingTranslation">CTC does not have a dictionary for %1$s, so swipes will be decoded by the geometric engine instead. CTC currently serves: %2$s.</string>
 

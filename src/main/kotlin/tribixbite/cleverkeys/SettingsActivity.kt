@@ -246,6 +246,14 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     // Settings state for reactive UI
     internal var swipeEngineMode by mutableStateOf(Defaults.SWIPE_ENGINE_MODE)
+    /**
+     * Moving-average window applied to the raw touch path before ANY decoder sees it
+     * (`ImprovedSwipeGestureRecognizer`). Its only slider used to live in the deleted
+     * NeuralSettingsActivity, so from 018d94f7 until 2026-08-19 the pref stayed live and
+     * user-visible control of it vanished — restored into Gesture Tuning, where it belongs:
+     * it is an input-path setting, never a decoder one.
+     */
+    internal var swipeSmoothingWindow by mutableStateOf(Defaults.SWIPE_SMOOTHING_WINDOW)
     internal var keyboardHeight by mutableIntStateOf(28)
     internal var keyboardHeightLandscape by mutableIntStateOf(50)
     internal var vibrationEnabled by mutableStateOf(false)

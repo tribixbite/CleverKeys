@@ -299,6 +299,24 @@ internal fun SettingsActivity.GestureTuningSection() {
                     displayValue = "%.1fx".format(sliderSpeedMax)
                 )
 
+                // Touch smoothing. Belongs HERE, not in an engine screen: the moving average is
+                // applied by ImprovedSwipeGestureRecognizer to the raw path, and the smoothed
+                // path is what BOTH engines decode. Its only slider used to live in the deleted
+                // NeuralSettingsActivity, so from 018d94f7 until 2026-08-19 the pref kept
+                // working on every swipe while being reachable only through a backup import.
+                SettingsSlider(
+                    title = stringResource(R.string.gesture_touch_smoothing_title),
+                    description = stringResource(R.string.gesture_touch_smoothing_desc),
+                    value = swipeSmoothingWindow.toFloat(),
+                    valueRange = 1f..7f,
+                    steps = 5,
+                    onValueChange = {
+                        swipeSmoothingWindow = it.toInt()
+                        saveSetting("swipe_smoothing_window", swipeSmoothingWindow)
+                    },
+                    displayValue = "$swipeSmoothingWindow"
+                )
+
                 Text(
                     text = "If gestures feel laggy, reduce dwell time and noise threshold. If taps register as swipes, increase tap duration.",
                     fontSize = 11.sp,

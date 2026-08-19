@@ -217,6 +217,8 @@ internal fun SettingsActivity.loadCurrentSettings() {
         // removed with the neural engine (2026-08-18): every layout swipes now.
         swipeEngineMode = prefs.getSafeString("swipe_engine_mode", Defaults.SWIPE_ENGINE_MODE)
             .lowercase(java.util.Locale.ROOT)
+        swipeSmoothingWindow =
+            Config.safeGetInt(prefs, "swipe_smoothing_window", Defaults.SWIPE_SMOOTHING_WINDOW)
 
         // Appearance settings
         keyboardHeight = prefs.getSafeInt("keyboard_height", Defaults.KEYBOARD_HEIGHT_PORTRAIT)
