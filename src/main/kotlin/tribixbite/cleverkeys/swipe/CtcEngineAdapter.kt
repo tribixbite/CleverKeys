@@ -456,11 +456,18 @@ class CtcEngineAdapter(private val context: Context) {
                 Log.w(TAG, "Malformed custom-words JSON for '$lang' — ignoring", e)
             }
         }
-        MemoryProbe.mark("ctc.baseParse", settle = true) { "lang=$lang entries=${basePairs.size}" }
+        // These three marks are deliberately UNSETTLED, unlike the startup ones. They run on
+        // the CTC decode thread, and a settled mark costs 2 forced GCs plus 2x120 ms — roughly
+        // 720 ms across the three, landing squarely inside the first decode. That inflates
+        // every instrumented latency measurement taken from a LOCAL_BUILD build, which is the
+        // only kind of build the probe reports from at all. Allocation deltas are the right
+        // question on this path anyway: what matters here is how much the trie build churns,
+        // not what it retains after collection.
+        MemoryProbe.mark("ctc.baseParse") { "lang=$lang entries=${basePairs.size}" }
 
         val merged = CtcLexiconMerge.merge(basePairs, customPairs, disabled)
         val ordinals = CtcLexiconMerge.ordinals(merged)
-        MemoryProbe.mark("ctc.mergeAndOrdinals", settle = true) { "merged=${merged.size}" }
+        MemoryProbe.mark("ctc.mergeAndOrdinals") { "merged=${merged.size}" }
 
         val trie: CtcLexiconTrie
         val display: Map<String, String>
@@ -498,7 +505,7 @@ class CtcEngineAdapter(private val context: Context) {
         // see [CtcContractionKeys].
         val injected = CtcContractionKeys.inject(trie, contractionsFor(lang).getAliasKeys())
 
-        MemoryProbe.mark("ctc.trie", settle = true) {
+        MemoryProbe.mark("ctc.trie") {
             "lang=$lang words=${trie.wordCount} nodes=${trie.nodeCount} " +
                 "injectedAliases=$injected display=${display.size}"
         }

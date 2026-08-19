@@ -241,6 +241,14 @@ object SettingsValidation {
     private fun validateInt(key: String, value: Int): String? {
         if (isFloatPreference(key)) return "expected Float, got Int"
         val ok = when (key) {
+            // CTC beam width. Bounds mirror CtcEngineAdapter's own coerceIn(10, 300) at read
+            // time, so a hostile or hand-edited backup cannot smuggle a value the engine will
+            // silently clamp anyway — the import preview should reject it visibly instead. This
+            // key previously fell through to `else -> true` while the DELETED engine's
+            // neural_beam_width was still the one named in this file: validation was pointed at
+            // the engine that no longer exists and not at the one that ships.
+            "ctc_beam_width" -> value in 10..300
+
             // Opacity values (0-100)
             "label_brightness", "keyboard_opacity", "key_opacity",
             "key_activated_opacity", "suggestion_bar_opacity" -> value in 0..100
@@ -364,6 +372,13 @@ object SettingsValidation {
 
             // Swipe distance (string representation)
             "swipe_dist" -> value.matches(Regex("[0-9]+(\\.[0-9]+)?"))
+
+            // Swipe engine mode. Deliberately NOT strict: SwipeEngineRouter.fromPref maps any
+            // unrecognised value (including the removed "neural"/"hybrid") onto the ctc default
+            // rather than crashing, so rejecting an old value here would block importing an
+            // otherwise-valid v1.5.x backup. Assert only that it is non-empty — an empty string
+            // is a corrupt write rather than a legacy value.
+            "swipe_engine_mode" -> value.isNotEmpty()
 
             // Unknown string preference - allow it (version-tolerant)
             else -> true
