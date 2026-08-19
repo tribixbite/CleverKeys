@@ -178,6 +178,19 @@ Follow-ups (not blocking):
 - [ ] The CTC engines are demo-only — wiring `ctc` into `swipe_engine_mode` on-device is still
       item B below.
 
+## 🔴 ACTIVE HANDOFF → `memory/HANDOFF-2026-08-19.md`
+
+**The live task list moved (2026-08-19).** Read `memory/HANDOFF-2026-08-19.md` first; reference
+detail is in `docs/specs/ctc-architecture-and-multiscript-guide.md`.
+
+Everything below this line is HISTORY and contains claims that are now false — kept for the
+record of how decisions were reached, not as instructions. Known-stale in particular:
+the "CTC engines are demo-only" line (false since 2026-08-08), anything describing it/pt/sv as
+unserved (false since `9a6ffdd2` — all seven bundled dictionary languages run on CTC), and any
+routing description mentioning the neural engine (deleted 2026-08-18, `a7d03bc8`..`83220634`).
+
+---
+
 ## 🔴 HANDOFF — OUTSTANDING TASKS (read first; as of 2026-08-07, HEAD af9634f9)
 
 **Session context:** completed the context-LM/privacy/next-word wave + a full FUTO-decoder

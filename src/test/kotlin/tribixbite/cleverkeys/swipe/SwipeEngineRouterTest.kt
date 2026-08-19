@@ -17,7 +17,7 @@ class SwipeEngineRouterTest {
 
     // ── ctc mode: any Latin layout is CTC-eligible ─────────────────────────────────
     // Gate widened 2026-08-15: the CTC encoder is layout-agnostic (key geometry is a
-    // model input), validated on dvorak 89.87 / dvorak-app-geometry 88.98 top-1, so
+    // model input), validated on dvorak 91.82 / dvorak-app-geometry 91.10 top-1, so
     // Latin non-QWERTY layouts route CTC. Non-Latin/unknown scripts stay geometric (the
     // adapter can't build an a–z CtcLayout from them).
 

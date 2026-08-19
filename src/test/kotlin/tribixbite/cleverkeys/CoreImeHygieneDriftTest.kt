@@ -591,7 +591,7 @@ class CoreImeHygieneDriftTest {
      *
      * They were corrected on 2026-08-18 — and then a KDoc rewrite during the neural-engine
      * removal silently reintroduced two of them, leaving `SwipeEngineRouter` quoting 91.82 in
-     * one paragraph and 89.87 in two others. Nothing caught it, because a stale comment
+     * one paragraph and the superseded 89.87 in two others. Nothing caught it, because a stale
      * compiles and passes every other gate. Hence this test.
      *
      * A negative assertion is the right shape here: the numbers are load-bearing only as
@@ -614,15 +614,22 @@ class CoreImeHygieneDriftTest {
                 lines[it].contains("sw2345") || lines[it].contains("superseded")
             }
 
+        // Scan the TEST sources too, not just `src/main`. The first version of this guard
+        // looked only at `mainKotlin` and therefore could not see the copy sitting in
+        // `SwipeEngineRouterTest` — a comment that had carried the wrong numbers the whole
+        // time. A guard that cannot see half the places the mistake occurs is a false
+        // reassurance, which is worse than no guard.
+        val roots = listOf(mainKotlin, File("src/test/kotlin"), File("src/androidTest/kotlin"))
         val offenders = mutableListOf<String>()
-        mainKotlin.walkTopDown()
-            .filter { it.isFile && it.extension == "kt" }
+        roots.filter { it.isDirectory }.flatMap { root ->
+            root.walkTopDown().filter { it.isFile && it.extension == "kt" }.toList()
+        }
             .forEach { file ->
                 val lines = file.readLines()
                 lines.forEachIndexed { idx, line ->
                     if (isDeliberatelyHistorical(lines, idx)) return@forEachIndexed
                     supersededFigures.firstOrNull { line.contains(it) }?.let { figure ->
-                        offenders += "${file.relativeTo(mainKotlin).path}:${idx + 1} quotes $figure"
+                        offenders += "${file.path}:${idx + 1} quotes $figure"
                     }
                 }
             }
