@@ -3,16 +3,15 @@ package tribixbite.cleverkeys.swipe.ctc
 /**
  * Source of per-frame CTC log-emissions for a featurized swipe path.
  *
- * ## This is the retrain-fork boundary
- * FUTO's emissions come from a non-autoregressive CTC encoder (`honorable_sturgeon`),
- * optionally sharpened by a per-layout refinement head (`magic_macaw`) — a DIFFERENT
- * model family from CleverKeys' shipped autoregressive transformer. No such model exists
- * in this repo, and producing one is a hard fork (CTC retrain + ONNX/ExecuTorch export;
- * see `docs/specs/ctc-swipe-engine.md`, Phase B). Consequently there is intentionally NO
- * production implementation of this interface here: the featurizer, trie, and beam are all
- * complete and tested, but the module cannot decode a real swipe end-to-end until a CTC
- * model lands. Tests supply emissions directly (golden matrices frozen from the Python
- * port), which is exactly how the decode path is validated today.
+ * ## The production implementation
+ * `swipe/OnnxCtcEmissionModel` implements this over the CleverKeys-trained encoder that
+ * ships in the APK (`models/ctc_swipe_encoder.onnx`, 2.91 MB fp16-weight), and it is what
+ * the DEFAULT `ctc` swipe mode decodes with — this seam is LIVE, not a placeholder.
+ *
+ * It stays an interface for two reasons: the ONNX session is an Android/ORT concern that
+ * must not leak into this pure-JVM package, and keeping emissions injectable is what lets
+ * the golden tests validate the whole featurize→beam chain against matrices frozen from
+ * the Python port, with no model and no device.
  *
  * An implementation receives the encoder's `[2, 64]` path tensor plus the layout tensors
  * ([CtcFeaturizer.buildPaddedLayout]) and must return emissions already sliced to the
@@ -29,16 +28,16 @@ interface CtcEmissionModel {
 }
 
 /**
- * End-to-end FUTO-style CTC swipe decoder facade: featurize raw touch → run the
+ * End-to-end CTC swipe decoder facade: featurize raw touch → run the
  * [CtcEmissionModel] → beam-search the lexicon.
  *
- * This wires the three DONE pieces (featurizer, emission model seam, trie beam) into the
- * one call shape a future engine-selector `ctc` mode would invoke. It is deliberately
- * dead code today: without a [CtcEmissionModel] implementation (the retrain fork) it
- * cannot be constructed against a real model, so nothing in the IME references it. See
- * `docs/specs/ctc-swipe-engine.md` for how this slots behind `swipe_engine_mode`.
+ * **This runs on every CTC swipe.** `swipe/CtcEngineAdapter` builds the layout, the
+ * per-language trie and the preset on the Android side, memoizes an instance of this class
+ * per (layout, trie, beam width), and calls [decode] from its decode thread — so this is
+ * the pure-JVM core of the default swipe engine, not a prototype. See
+ * `docs/specs/ctc-swipe-engine.md` for how it slots behind `swipe_engine_mode`.
  *
- * @property model the CTC emission source (the missing piece — see [CtcEmissionModel]).
+ * @property model the CTC emission source — `OnnxCtcEmissionModel` in production.
  * @property layout the on-screen layout geometry (alphabet + key centers).
  * @property trie the lexicon surface to decode against.
  * @property params scoring/beam parameters (a `scoring.json` preset).

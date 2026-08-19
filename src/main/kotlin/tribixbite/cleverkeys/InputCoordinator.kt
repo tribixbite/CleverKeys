@@ -521,9 +521,12 @@ class InputCoordinator(
      * records the gesture tracker's key sequence (ML data only — each engine recalculates keys
      * from the raw path independently).
      *
-     * [engine] tags the capture with the decoder that produced its suggestions
-     * ([SwipeMLData.ENGINE_NEURAL] / [SwipeMLData.ENGINE_GEOMETRIC]) and the layout name is
-     * read from the live keyboard. Audit n-2 (2026-08-11): without those two fields a
+     * [engine] tags the capture with the decoder that produced its suggestions — the only
+     * two values written today are [SwipeMLData.ENGINE_CTC] and
+     * [SwipeMLData.ENGINE_GEOMETRIC], one per call site, since those are the only two
+     * engines that survive ([SwipeMLData.ENGINE_NEURAL] is retained for READING exports
+     * captured before the neural engine's removal on 2026-08-18). The layout name is read
+     * from the live keyboard. Audit n-2 (2026-08-11): without those two fields a
      * ЙЦУКЕН/Dvorak geometric trace is indistinguishable from a QWERTY CTC one in an ML
      * export, so a future model-training corpus built from exports would silently mix
      * incompatible key geometries.

@@ -8,14 +8,19 @@ package tribixbite.cleverkeys.swipe.ctc
  * active alphabet plus blank for one output frame (FUTO's encoder emits ~T/2 frames for
  * a T=64 input path — see the integration study §1a).
  *
- * ## Provenance boundary (why this is an INPUT, not something we compute)
- * The model that *produces* these emissions — FUTO's non-autoregressive CTC
- * `honorable_sturgeon` encoder, optionally sharpened by the `magic_macaw` refinement
- * head — is a different model family from CleverKeys' shipped autoregressive transformer
- * and is OUT OF SCOPE for this module (it requires a CTC retrain/re-export; see
- * `docs/specs/ctc-swipe-engine.md`, "Blocked on retrain"). This module decodes a *given*
- * emission matrix, so the whole decode path is testable today against golden emissions
- * frozen from the Python port without any model at all.
+ * ## Where these come from (why this is an INPUT, not something we compute)
+ * In production the emissions are produced by the CleverKeys-trained CTC encoder that
+ * ships in the APK — `models/ctc_swipe_encoder.onnx`, run through ORT by
+ * `swipe/OnnxCtcEmissionModel` — which is the DEFAULT swipe engine (`swipe_engine_mode`
+ * = `"ctc"` since 2026-08-18). That graph's head is **64 geometry-conditioned key slots
+ * plus one blank**, never letters: emission column `c` means "the key the caller placed in
+ * slot `c` of `layout_keys`". [sliceFromHead] narrows that fixed 65-wide head to this
+ * type's `[frames][alphabetSize + 1]` contract view, relocating blank from column
+ * `maxKeys` to column `numLetters`.
+ *
+ * Keeping the matrix an INPUT is what makes the whole decode path testable with no model
+ * at all: the golden tests feed matrices frozen from the Python port. See
+ * `docs/specs/ctc-architecture-and-multiscript-guide.md` §1 for the graph contract.
  *
  * @property values row-major log-emissions, length `frames * numClasses`.
  * @property frames number of output time frames (T').
