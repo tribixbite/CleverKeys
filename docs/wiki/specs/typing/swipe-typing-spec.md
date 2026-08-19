@@ -38,7 +38,7 @@ Touch Events (Pointers.kt)
     ↓
 InputCoordinator.handleSwipeTyping
     ↓ SwipeEngineRouter.route(layout, mode)
-    ├─ CTC       → CtcEngineAdapter (en/fr/de/es; other languages fall through to geometric)
+    ├─ CTC       → CtcEngineAdapter (en/fr/de/es/it/pt/sv; other languages fall through to geometric)
     └─ GEOMETRIC → GeometricEngineAdapter
     ↓ (top-k candidates, engine-relative scores)
 SuggestionHandler.handleSwipePredictionResults → UI
@@ -58,7 +58,12 @@ dispatch and falls through to the geometric engine for anything CTC does not ser
 | `ctc` (default) | CTC | GEOMETRIC | GEOMETRIC |
 | `geometric` | GEOMETRIC | GEOMETRIC | GEOMETRIC |
 
-Served languages are `swipe/ctc/CtcLanguageSupport.SUPPORTED` (en, fr, de, es). A Latin layout
+Served languages are `swipe/ctc/CtcLanguageSupport.SUPPORTED` — **seven**: en, fr, de, es plus
+it, pt, sv. The last three are in `CtcLanguageSupport.PROVISIONAL`: they were enabled on
+2026-08-18 on scale-transferred evidence (they read the same CKDT `.bin` frequency scale the
+λ sweep fitted, and the encoder never sees a language) and have **no per-language accuracy
+bar**, because no swipe corpus exists for them. Their numbers are val-tier at best and must
+never be quoted beside the test-validated four. A Latin layout
 missing an a–z letter cannot build a `CtcLayout` and also falls through to geometric, checked
 at dispatch time by `CtcEngineAdapter.supportsLayout`.
 

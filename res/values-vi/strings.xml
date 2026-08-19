@@ -586,7 +586,7 @@
     <string name="extra_keys_enabled_count">%1$d trong số %2$d phím bổ sung được bật</string>
     <!-- Context-LM / next-word / swipe-engine settings -->
     <string name="swipe_engine_mode_title">Công cụ dự đoán</string>
-    <string name="swipe_engine_mode_desc">CTC: tìm kiếm chùm CTC trên các bố cục Latinh cho tiếng Anh, tiếng Pháp, tiếng Đức và tiếng Tây Ban Nha; hình học cho các ngôn ngữ khác và các bố cục không phải Latinh. Hình học: mọi bố cục.</string>
+    <string name="swipe_engine_mode_desc">CTC: tìm kiếm chùm CTC trên các bố cục Latinh cho tiếng Anh, tiếng Pháp, tiếng Đức, tiếng Tây Ban Nha, tiếng Ý, tiếng Bồ Đào Nha và tiếng Thụy Điển; hình học cho các ngôn ngữ khác và các bố cục không phải Latinh. Hình học: mọi bố cục.</string>
     <string name="advanced_provenance_markers_title">Dấu nguồn gốc gợi ý</string>
     <string name="advanced_provenance_markers_desc">Hiển thị trên mỗi gợi ý một chấm màu cho biết công cụ nào đã tạo ra nó (nhấn giữ một gợi ý để xem đầy đủ chi tiết)</string>
     <string name="input_next_word_title">Dự đoán từ tiếp theo</string>

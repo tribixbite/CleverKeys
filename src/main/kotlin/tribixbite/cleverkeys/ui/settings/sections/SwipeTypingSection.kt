@@ -38,8 +38,9 @@ internal fun SettingsActivity.SwipeTypingSection() {
 
                 if (swipeTypingEnabled) {
                     // WP9 R-1 step 7 (v1.2): engine mode selector. CTC (default) = CTC
-                    // trie-beam on Latin layouts for the validated languages (en/fr/de/es —
-                    // swipe.ctc.CtcLanguageSupport), geometric for every other language and
+                    // trie-beam on Latin layouts for the seven served languages — en/fr/de/es
+                    // plus the provisional it/pt/sv, swipe.ctc.CtcLanguageSupport is the
+                    // table — geometric for every other language and
                     // for non-Latin layouts; Geometric = SHARK2 on all layouts. The
                     // Neural/Hybrid modes were removed with the neural engine (2026-08-18);
                     // a stored "neural"/"hybrid" resolves to CTC in the router and this

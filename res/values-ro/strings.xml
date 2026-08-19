@@ -581,7 +581,7 @@
     <!-- END auto-generated translations (wp8b) -->
     <!-- Context-LM / next-word / swipe-engine settings -->
     <string name="swipe_engine_mode_title">Motor de predicție</string>
-    <string name="swipe_engine_mode_desc">CTC: căutare în fascicul CTC pe aranjamente latine pentru engleză, franceză, germană și spaniolă; geometric pentru alte limbi și pentru aranjamente nelatine. Geometric: toate aranjamentele.</string>
+    <string name="swipe_engine_mode_desc">CTC: căutare în fascicul CTC pe aranjamente latine pentru engleză, franceză, germană, spaniolă, italiană, portugheză și suedeză; geometric pentru alte limbi și pentru aranjamente nelatine. Geometric: toate aranjamentele.</string>
     <string name="advanced_provenance_markers_title">Marcaje de origine a sugestiilor</string>
     <string name="advanced_provenance_markers_desc">Afișează pe fiecare sugestie un punct colorat care indică motorul care a generat-o (apăsare lungă pe o sugestie pentru toate detaliile)</string>
     <string name="input_next_word_title">Predicția cuvântului următor</string>

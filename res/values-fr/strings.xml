@@ -564,7 +564,7 @@
     <!-- END wp8b_new_strings block -->
     <!-- Context-LM / next-word / swipe-engine settings -->
     <string name="swipe_engine_mode_title">Moteur de prédiction</string>
-    <string name="swipe_engine_mode_desc">CTC : faisceau CTC sur les dispositions latines en anglais, français, allemand et espagnol ; géométrique pour les autres langues et les dispositions non latines. Géométrique : toutes les dispositions.</string>
+    <string name="swipe_engine_mode_desc">CTC : faisceau CTC sur les dispositions latines en anglais, français, allemand, espagnol, italien, portugais et suédois ; géométrique pour les autres langues et les dispositions non latines. Géométrique : toutes les dispositions.</string>
     <string name="advanced_provenance_markers_title">Marqueurs d\'origine des suggestions</string>
     <string name="advanced_provenance_markers_desc">Afficher sur chaque suggestion un point coloré indiquant le moteur qui l\'a produite (appui long sur une suggestion pour tous les détails)</string>
     <string name="input_next_word_title">Prédiction du mot suivant</string>

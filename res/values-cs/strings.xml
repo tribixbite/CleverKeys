@@ -558,7 +558,7 @@
     <string name="extra_keys_enabled_count">%1$d z %2$d extra kláves povoleno</string>
     <!-- Context-LM / next-word / swipe-engine settings -->
     <string name="swipe_engine_mode_title">Modul předpovědí</string>
-    <string name="swipe_engine_mode_desc">CTC: paprskové hledání CTC na latinských rozloženích pro angličtinu, francouzštinu, němčinu a španělštinu; pro ostatní jazyky a nelatinská rozložení geometrický. Geometrický: všechna rozložení.</string>
+    <string name="swipe_engine_mode_desc">CTC: paprskové hledání CTC na latinských rozloženích pro angličtinu, francouzštinu, němčinu, španělštinu, italštinu, portugalštinu a švédštinu; pro ostatní jazyky a nelatinská rozložení geometrický. Geometrický: všechna rozložení.</string>
     <string name="advanced_provenance_markers_title">Značky původu návrhů</string>
     <string name="advanced_provenance_markers_desc">U každého návrhu zobrazí barevnou tečku označující modul, který jej vytvořil (úplné podrobnosti zobrazíte dlouhým stiskem návrhu)</string>
     <string name="input_next_word_title">Předpověď dalšího slova</string>

@@ -593,7 +593,7 @@
     <string name="extra_keys_enabled_count">%1$d از %2$d کلید اضافی فعال</string>
     <!-- Context-LM / next-word / swipe-engine settings -->
     <string name="swipe_engine_mode_title">موتور پیش‌بینی</string>
-    <string name="swipe_engine_mode_desc">CTC: جست‌وجوی پرتویی CTC روی چیدمان‌های لاتین برای انگلیسی، فرانسوی، آلمانی و اسپانیایی؛ برای زبان‌های دیگر و چیدمان‌های غیرلاتین هندسی. هندسی: همهٔ چیدمان‌ها.</string>
+    <string name="swipe_engine_mode_desc">CTC: جست‌وجوی پرتویی CTC روی چیدمان‌های لاتین برای انگلیسی، فرانسوی، آلمانی، اسپانیایی، ایتالیایی، پرتغالی و سوئدی؛ برای زبان‌های دیگر و چیدمان‌های غیرلاتین هندسی. هندسی: همهٔ چیدمان‌ها.</string>
     <string name="advanced_provenance_markers_title">نشانگرهای منشأ پیشنهاد</string>
     <string name="advanced_provenance_markers_desc">روی هر پیشنهاد یک نقطهٔ رنگی نشان می‌دهد که مشخص می‌کند کدام موتور آن را ساخته است (برای جزئیات کامل، پیشنهاد را لمس طولانی کنید)</string>
     <string name="input_next_word_title">پیش‌بینی واژهٔ بعدی</string>

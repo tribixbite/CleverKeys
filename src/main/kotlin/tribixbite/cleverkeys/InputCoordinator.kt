@@ -647,8 +647,9 @@ class InputCoordinator(
      * prediction list → the pipeline clears the bar.
      *
      * Audit M1 — the CTC model is layout-agnostic but the lexicon + λ preset are
-     * per-language and only en/fr/de/es are validated
-     * ([tribixbite.cleverkeys.swipe.ctc.CtcLanguageSupport]), so the active language is
+     * per-language and only the seven in
+     * [tribixbite.cleverkeys.swipe.ctc.CtcLanguageSupport] are served (en/fr/de/es, plus
+     * it/pt/sv on the provisional tier), so the active language is
      * read BEFORE dispatch: an unsupported-language swipe falls through to
      * [performGeometricSwipeTyping]. Net ctc-mode semantics: CTC(supported language,
      * a–z-complete Latin layout) / geometric(everything else) — every cell keeps swipe.
@@ -667,12 +668,13 @@ class InputCoordinator(
         val language = predictionCoordinator.getDictionaryManager()?.getCurrentLanguage()
             ?: config.primary_language
         if (!CtcEngineAdapter.supportsLanguage(language)) {
-            // M1: CTC serves only the validated languages (en/fr/de/es —
-            // CtcLanguageSupport), so any other language falls through to the geometric
-            // engine, which decodes ANY layout in ANY language. Before 2026-08-18 the
-            // QWERTY-Latin family fell through to the neural transformer instead; with
-            // that engine removed this is unconditional. This is the cell an
-            // Italian-on-QWERTY user lands in — it must never return without dispatching.
+            // M1: CTC serves only the languages in CtcLanguageSupport (en/fr/de/es, plus
+            // the provisional it/pt/sv since 2026-08-18), so any other language falls
+            // through to the geometric engine, which decodes ANY layout in ANY language.
+            // Before 2026-08-18 the QWERTY-Latin family fell through to the neural
+            // transformer instead; with that engine removed this is unconditional. This
+            // is the cell a Dutch- or Russian-on-QWERTY user lands in — it must never
+            // return without dispatching.
             performGeometricSwipeTyping(
                 swipedKeys, swipePath, timestamps, ic, editorInfo, resources,
                 wasShiftActive, wasShiftLocked

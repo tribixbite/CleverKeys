@@ -223,18 +223,22 @@ The default swipe engine (spec: `docs/specs/ctc-swipe-engine.md`): a non-autoreg
 CTC trie-beam decoder over a 2.91 MB CleverKeys-trained ONNX emission encoder
 (`models/ctc_swipe_encoder.onnx`, `OnnxCtcEmissionModel`). Selected by
 `swipe_engine_mode = "ctc"` (the DEFAULT since 2026-08-18); routing is CTC on any
-a-z-complete Latin layout for a served language (en/fr/de/es), geometric for every other
+a-z-complete Latin layout for a served language (`CtcLanguageSupport.SUPPORTED` — seven:
+en/fr/de/es, plus it/pt/sv which are `PROVISIONAL`, enabled 2026-08-18 on scale-transferred
+evidence with **no per-language accuracy bar**), geometric for every other
 language and every non-Latin layout (`SwipeEngineRouter.Mode.CTC` +
 `InputCoordinator.performCtcSwipeTyping`'s language fallthrough) — the router is total, so
-no layout is left without an engine. Test-validated at 89.31/93.79/94.50 top-1/3/5 on the FUTO test-2400 split
-(see `docs/eval/2026-07-24-test2400-head2head.md` addendum).
+no layout is left without an engine. Test-validated at 89.31/93.79/94.50 top-1/3/5 on the
+**English** FUTO test-2400 split
+(see `docs/eval/2026-07-24-test2400-head2head.md` addendum). That is an English number; the
+provisional languages have none.
 
 Ship preset `CtcScoringParams.tunedV2` (scoring constants deliberately not user-exposed):
 
 | Parameter | Value | Description |
 |-----------|-------|-------------|
 | `gamma` | 0.9 | Final length-normalization exponent |
-| `lambda` | 4.0 | Log-frequency weight (AOSP 1..255 log scale) |
+| `lambda` | **per lexicon scale** | Log-frequency weight. **4.0** for the `en_enhanced.json` scale (compressed 134–255 byte scores) and **2.0** for the CKDT `.bin` scale (`freq = 255 − rank`, ~8× the log spread), selected by `CtcScoringParams.presetFor(language)` off `CtcLanguageSupport.SUPPORTED` — i.e. 4.0 for en, 2.0 for fr/de/es/it/pt/sv. λ is calibrated against the lexicon's frequency SCALE, not the language |
 | `beta` | 0.25 | Final length bonus |
 | `alpha` | 0.0 | (unused in ship preset) |
 | `gammaPrune` | 0.25 | Length-aware prune exponent |
@@ -242,8 +246,13 @@ Ship preset `CtcScoringParams.tunedV2` (scoring constants deliberately not user-
 | `beamWidth` | 100 | Default; user-tunable via `ctc_beam_width` (10–300, `CtcSettingsActivity`) |
 | `topK` | 8 | Adapter slate size handed to the suggestion pipeline |
 
-Lexicon: bundled `dictionaries/en_enhanced.json` a-z-stripped + user custom words −
-disabled words (`CtcLexiconMerge`), rebuilt on content-hash change. Contraction aliases
+Lexicon, per language (`CtcLanguageSupport.assetFor`): **en** reads bundled
+`dictionaries/en_enhanced.json` a-z-stripped; **fr/de/es/it/pt/sv** read the bundled CKDT
+`dictionaries/<lang>_enhanced.bin` — the same asset the geometric engine uses — at
+`freq = max(1, 255 − rank)` (`CtcCkdtLexicon`), then projected onto a–z with the canonical
+accented form kept for display (`CtcAzProjection`). Either source is then merged with the
+active language's user custom words − disabled words (`CtcLexiconMerge`), rebuilt on
+content-hash change. Contraction aliases
 are overlaid to display forms in the adapter (`ContractionOverlay`). Suggestion
 provenance tags `SuggestionOrigin.CTC` for CTC-decoded swipes
 (`SuggestionProvenance.forRoutedEngine`).

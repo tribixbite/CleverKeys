@@ -118,7 +118,7 @@
     <!-- Swipe Typing Section -->
     <string name="settings_section_swipe_typing">👆 Swipe Typing</string>
     <string name="swipe_engine_mode_title">Prediction Engine</string>
-    <string name="swipe_engine_mode_desc">CTC: CTC beam search on Latin layouts for English, French, German and Spanish; geometric for other languages and non-Latin layouts. Geometric: all layouts.</string>
+    <string name="swipe_engine_mode_desc">CTC: CTC beam search on Latin layouts for English, French, German, Spanish, Italian, Portuguese and Swedish; geometric for other languages and non-Latin layouts. Geometric: all layouts.</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 Appearance</string>

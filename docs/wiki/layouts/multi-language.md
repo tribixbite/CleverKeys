@@ -43,7 +43,7 @@ Your primary language is the main dictionary:
 
 1. **Primary Language** determines the swipe decoder's vocabulary base
 2. English is the default primary language
-3. The CTC decoder is validated on English, French, German and Spanish; other languages use the geometric engine
+3. The CTC decoder serves English, French, German, Spanish, Italian, Portuguese and Swedish — the first four measured on their own accuracy bar, the last three enabled on the shared lexicon-scale evidence; other languages use the geometric engine
 
 ### Step 3: Add Secondary Language
 

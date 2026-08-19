@@ -578,7 +578,7 @@
     <!-- END wp8b_new_strings block -->
     <!-- Context-LM / next-word / swipe-engine settings -->
     <string name="swipe_engine_mode_title">Vorhersage-Engine</string>
-    <string name="swipe_engine_mode_desc">CTC: CTC-Beam auf lateinischen Layouts für Englisch, Französisch, Deutsch und Spanisch; für andere Sprachen und nichtlateinische Layouts geometrisch. Geometrisch: alle Layouts.</string>
+    <string name="swipe_engine_mode_desc">CTC: CTC-Beam auf lateinischen Layouts für Englisch, Französisch, Deutsch, Spanisch, Italienisch, Portugiesisch und Schwedisch; für andere Sprachen und nichtlateinische Layouts geometrisch. Geometrisch: alle Layouts.</string>
     <string name="advanced_provenance_markers_title">Herkunftsmarkierungen für Vorschläge</string>
     <string name="advanced_provenance_markers_desc">Einen farbigen Punkt an jedem Vorschlag anzeigen, der die erzeugende Engine angibt (für alle Details lange auf einen Vorschlag drücken)</string>
     <string name="input_next_word_title">Nächstes-Wort-Vorhersage</string>

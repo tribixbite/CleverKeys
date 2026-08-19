@@ -77,16 +77,23 @@ The **Prediction Engine** dropdown (Settings > Swipe Typing) selects which decod
 
 - **CTC** — the CleverKeys-trained decoder. In our benchmark on 2,400 held-out English
   swipes it got the intended word right on the first try about 89% of the time. It covers
-  **English, French, German and Spanish** on any Latin layout that has all 26 letters
+  **English, French, German, Spanish, Italian, Portuguese and Swedish** on any Latin layout
+  that has all 26 letters
   (QWERTY, AZERTY, QWERTZ, Dvorak, Colemak…). Every other language, and every non-Latin
   layout, automatically uses the geometric engine — choosing CTC never leaves a layout
   without swipe typing.
 - **Geometric** — a pure shape-matching decoder on all layouts. Useful for comparison and
   battery-lean decoding.
 
-  Italian, Portuguese and Swedish ship a dictionary but are **not** on the CTC list yet: we
-  only enable a language once both the model and the decoder settings have been measured on
-  it, and those three have not been measured. They use the geometric engine.
+  Italian, Portuguese and Swedish were added to the CTC list on 2026-08-18 and are marked
+  **provisional**. We have never been able to measure CTC's accuracy on them — no public
+  swipe corpus exists for those three — so what carries them is the decoder setting they
+  share with French, German and Spanish (it is calibrated against the dictionary's
+  frequency scale, not the language) plus the fact that the model reads key positions and
+  never sees a language at all. The alternative was the geometric engine, which has no
+  measurement on those languages either and lost by 15–22 points everywhere both were
+  measured. Treat any accuracy figure you see for English/French/German/Spanish as *not*
+  applying to these three.
 
   Accented words work normally: a swipe traces the unaccented letters (there is no separate
   "é" key on the path), and the engine inserts the dictionary's accented spelling — swipe

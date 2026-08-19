@@ -29,8 +29,10 @@ import tribixbite.cleverkeys.KeyboardData
  * key inventories.
  *
  * LANGUAGE dimension (audit M1): the CTC model is language-agnostic but the LEXICON and the λ
- * preset are per-language, so only validated languages are served —
- * `swipe/ctc/CtcLanguageSupport.SUPPORTED` = en, fr, de, es (2026-08-16). Language is runtime
+ * preset are per-language, so only served languages reach it —
+ * `swipe/ctc/CtcLanguageSupport.SUPPORTED` = en, fr, de, es (2026-08-16) plus it, pt, sv
+ * (2026-08-18, `CtcLanguageSupport.PROVISIONAL` — enabled on scale-transferred evidence, with
+ * no per-language accuracy bar; read that KDoc before quoting a number for them). Language is runtime
  * state the layout-only router deliberately doesn't see —
  * `InputCoordinator.performCtcSwipeTyping` reads the active language BEFORE dispatch and falls
  * through to the geometric engine for every other language. Net ctc semantics:
@@ -64,11 +66,13 @@ object SwipeEngineRouter {
 
         /**
          * CTC on ANY Latin-script layout when the active language is one CTC serves
-         * (en/fr/de/es — `swipe/ctc/CtcLanguageSupport`; the encoder is layout-agnostic
+         * (en/fr/de/es plus the provisional it/pt/sv — `swipe/ctc/CtcLanguageSupport`;
+         * the encoder is layout-agnostic
          * and was validated on alt-layouts: dvorak 91.82 / dvorak-app-geometry 91.10
          * top-1, 3 seeds, the shipped en lexicon+λ; azerty 84.53 / qwertz 83.97 /
          * german 81.30 / spanish 89.53 for the 2026-08-16 language additions — all on
-         * the `az26` arm, i.e. 26 slots, exactly what this app builds), geometric on
+         * the `az26` arm, i.e. 26 slots, exactly what this app builds. it/pt/sv have NO
+         * such bar and none of these numbers may be read as theirs), geometric on
          * non-Latin layouts and for every language CTC does not serve (audit M1: the
          * language fallthrough lives in `InputCoordinator.performCtcSwipeTyping` because
          * language is runtime state this layout-only router doesn't see).

@@ -63,7 +63,7 @@ CleverKeys is a feature-rich open-source keyboard for Android. On-device swipe t
 | **Multi-Language Swipe**⁹ | ✅ 15 languages | ⚠️ Single | ⚠️ English only | ❌ | ❌ | ✅ Simultaneous |
 | **Gesture Engine Open Source** | ✅ | ❌¹ | ✅² | ✅ | ✅ | ✅ |
 | **ML Training Code Public** | ✅ | N/A | ✅⁶ | N/A³ | N/A³ | N/A¹⁰ |
-| **Model Size** | 13MB | Proprietary | 62MB | N/A | N/A | N/A |
+| **Model Size** | 2.9MB | Proprietary | 62MB | N/A | N/A | N/A |
 | **APK Size** | ~52MB | ~45MB | ~200MB | ~15MB | ~25MB | ~40MB |
 | **Clipboard History** | ✅ Unlimited | ⚠️ 10min default⁷ | ✅ 25 items | ✅ 20-100 items | ❌ 15s hint only | ✅ Encrypted |
 | **Short-Swipe Actions**⁸ | ✅ 208 gestures | ⚠️ Limited | ❌ | ⚠️ Limited | ⚠️ Limited | ⚠️ Space/Del only¹¹ |
@@ -164,8 +164,8 @@ Build your own themes on-the-fly with full control over:
 </div>
 
 ### 🧠 Swipe Typing & Autocorrect
-- **Custom transformer model** (encoder-decoder, 13MB) trained on real swipe data
-- **Two selectable swipe engines** — CTC (default): a 2.9 MB CleverKeys-trained model covering English, French, German and Spanish on any full a–z Latin layout, scoring 89.3% top-1 on a 2,400-swipe held-out English benchmark; and geometric (all layouts, all languages, no ML model), which also serves every language CTC does not
+- **CleverKeys-trained CTC model** (2.9MB) trained from scratch on MIT-licensed real swipe data
+- **Two selectable swipe engines** — CTC (default): a 2.9 MB CleverKeys-trained model covering English, French, German, Spanish, Italian, Portuguese and Swedish on any full a–z Latin layout, scoring 89.3% top-1 on a 2,400-swipe held-out English benchmark; and geometric (all layouts, all languages, no ML model), which also serves every language CTC does not
 - **Sub-200ms predictions** with XNNPACK hardware acceleration
 - **Autocorrect with contraction support** — "dont" to "don't", "im" to "I'm"
 - **Full inference control** — beam width, length normalization, pruning, early stopping
@@ -240,7 +240,8 @@ Assign custom actions to any key's 8 swipe directions:
 CleverKeys supports swipe typing in **15 languages** with intelligent multi-language features:
 
 > ℹ️ **Current swipe-typing scope** — The default **CTC** engine covers
-> **English, French, German and Spanish** on any Latin layout that has all 26
+> **English, French, German, Spanish, Italian, Portuguese and Swedish** on any
+> Latin layout that has all 26
 > letters (QWERTY, AZERTY, QWERTZ, Dvorak, Colemak, …). Every other language,
 > and every non-Latin layout, is served automatically by the layout-agnostic
 > **geometric** decoder, so swipe typing works everywhere — the
