@@ -153,16 +153,10 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     "autocorrect_min_word_length" to PrefValue.IntV(Defaults.AUTOCORRECT_MIN_WORD_LENGTH),
     "autocorrect_char_match_threshold" to PrefValue.FloatV(Defaults.AUTOCORRECT_CHAR_MATCH_THRESHOLD),
     "autocorrect_confidence_min_frequency" to PrefValue.IntV(Defaults.AUTOCORRECT_MIN_FREQUENCY),
-    "swipe_top5000_boost" to PrefValue.FloatV(Defaults.SWIPE_TOP5000_BOOST),
     "autocorrect_max_length_diff" to PrefValue.IntV(Defaults.AUTOCORRECT_MAX_LENGTH_DIFF),
     "autocorrect_prefix_length" to PrefValue.IntV(Defaults.AUTOCORRECT_PREFIX_LENGTH),
-    "autocorrect_max_beam_candidates" to PrefValue.IntV(Defaults.AUTOCORRECT_MAX_BEAM_CANDIDATES),
     "swipe_final_autocorrect_enabled" to PrefValue.Bool(Defaults.SWIPE_FINAL_AUTOCORRECT_ENABLED),
     "autocapitalize_i_words" to PrefValue.Bool(Defaults.AUTOCAPITALIZE_I_WORDS),
-    "swipe_fuzzy_match_mode" to PrefValue.Str(Defaults.SWIPE_FUZZY_MATCH_MODE),
-    "swipe_prediction_source" to PrefValue.IntV(Defaults.SWIPE_PREDICTION_SOURCE),
-    "swipe_common_words_boost" to PrefValue.FloatV(Defaults.SWIPE_COMMON_WORDS_BOOST),
-    "swipe_rare_words_penalty" to PrefValue.FloatV(Defaults.SWIPE_RARE_WORDS_PENALTY),
 
     // ── Multi-language ──────────────────────────────────────────────
     "pref_enable_multilang" to PrefValue.Bool(Defaults.ENABLE_MULTILANG),

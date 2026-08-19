@@ -139,16 +139,9 @@ internal fun SettingsActivity.AutoCorrectionSection() {
                         }
                     )
 
-                    SettingsDropdown(
-                        title = stringResource(R.string.autocorrect_fuzzy_algorithm_title),
-                        description = stringResource(R.string.autocorrect_fuzzy_algorithm_desc),
-                        options = listOf("Edit Distance (Recommended)", "Positional Matching (Legacy)"),
-                        selectedIndex = if (swipeFuzzyMatchMode == "edit_distance") 0 else 1,
-                        onSelectionChange = { index ->
-                            swipeFuzzyMatchMode = if (index == 0) "edit_distance" else "positional"
-                            saveSetting("swipe_fuzzy_match_mode", swipeFuzzyMatchMode)
-                        }
-                    )
+                    // The fuzzy-algorithm dropdown (edit-distance vs positional) lived here.
+                    // Its only consumer was OptimizedVocabulary's fuzzy rescue, deleted with the
+                    // neural engine; neither surviving engine has a fuzzy matcher to configure.
 
                     SettingsSlider(
                         title = stringResource(R.string.autocorrect_typo_forgiveness_title),
@@ -190,67 +183,13 @@ internal fun SettingsActivity.AutoCorrectionSection() {
                     )
                 }
 
-                // Word Scoring (always visible - affects predictions regardless of autocorrect)
-                Text(
-                    text = "Word Scoring",
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
-                )
-
-                // Prediction source balance
-                SettingsSlider(
-                    title = stringResource(R.string.autocorrect_source_balance_title),
-                    description = stringResource(R.string.autocorrect_source_balance_desc),
-                    value = swipePredictionSource.toFloat(),
-                    valueRange = 0f..100f,
-                    steps = 20,
-                    onValueChange = {
-                        swipePredictionSource = it.toInt()
-                        saveSetting("swipe_prediction_source", swipePredictionSource)
-                    },
-                    displayValue = "$swipePredictionSource%"
-                )
-
-                // Common words boost
-                SettingsSlider(
-                    title = stringResource(R.string.autocorrect_common_boost_title),
-                    description = stringResource(R.string.autocorrect_common_boost_desc),
-                    value = swipeCommonWordsBoost,
-                    valueRange = 0.5f..2.0f,
-                    steps = 15,
-                    onValueChange = {
-                        swipeCommonWordsBoost = it
-                        saveSetting("swipe_common_words_boost", swipeCommonWordsBoost)
-                    },
-                    displayValue = "%.2fx".format(swipeCommonWordsBoost)
-                )
-
-                // Top 5000 boost
-                SettingsSlider(
-                    title = stringResource(R.string.autocorrect_frequent_boost_title),
-                    description = stringResource(R.string.autocorrect_frequent_boost_desc),
-                    value = swipeTop5000Boost,
-                    valueRange = 0.5f..2.0f,
-                    steps = 15,
-                    onValueChange = {
-                        swipeTop5000Boost = it
-                        saveSetting("swipe_top5000_boost", swipeTop5000Boost)
-                    },
-                    displayValue = "%.2fx".format(swipeTop5000Boost)
-                )
-
-                // Rare words penalty
-                SettingsSlider(
-                    title = stringResource(R.string.autocorrect_rare_penalty_title),
-                    description = stringResource(R.string.autocorrect_rare_penalty_desc),
-                    value = swipeRareWordsPenalty,
-                    valueRange = 0.25f..1.0f,
-                    steps = 15,
-                    onValueChange = {
-                        swipeRareWordsPenalty = it
-                        saveSetting("swipe_rare_words_penalty", swipeRareWordsPenalty)
-                    },
-                    displayValue = "%.2fx".format(swipeRareWordsPenalty)
-                )
+                // The "Word Scoring" group lived here: prediction-source balance, common-words
+                // boost, top-5000 boost and rare-words penalty. All four were consumed ONLY by
+                // OptimizedVocabulary, which was deleted with the neural engine on 2026-08-18.
+                // They kept rendering and kept persisting to SharedPreferences while driving
+                // nothing at all — a control that visibly responds but changes no behaviour is
+                // worse than an absent one, because it costs the user time to discover that.
+                // The prefs are deprecated in SettingsValidation so old backups do not
+                // resurrect them. CTC exposes ctc_beam_width; geometric has its own knobs.
             }
 }

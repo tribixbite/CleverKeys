@@ -113,6 +113,20 @@ object SettingsValidation {
         "neural_resampling_mode",
         "neural_user_max_seq_length",
         "neural_preset",
+        // ── Word-scoring knobs orphaned by the same removal (2026-08-19) ──────────────
+        // These do not carry the `neural_` prefix, so the removal sweep missed them: their
+        // only consumer was `OptimizedVocabulary`'s ranking and fuzzy-rescue code, which went
+        // with the engine. They kept rendering as live sliders in Auto-Correction and kept
+        // persisting, while driving nothing. The controls are gone; the keys are deprecated
+        // here so an old backup cannot resurrect them as import-preview noise.
+        // NOTE the autocorrect_* sliders are NOT in this list and must not be added — those
+        // are tap-path (WordPredictor), unaffected by the engine removal, and still live.
+        "swipe_prediction_source",
+        "swipe_common_words_boost",
+        "swipe_top5000_boost",
+        "swipe_rare_words_penalty",
+        "swipe_fuzzy_match_mode",
+        "autocorrect_max_beam_candidates",
         // Read only by the deleted engine's key-position setup (touch-Y compensation for the
         // QWERTY-trained transformer). CTC and geometric take key geometry as an input.
         "finger_occlusion_offset",
