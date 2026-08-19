@@ -110,7 +110,22 @@ class UserVocabularyPersistenceTest {
         assertTrue(vocab.removeWord("deleteme"))
         assertFalse(vocab.removeWord("deleteme")) // already gone
         assertFalse(vocab.removeWord("neverexisted"))
-        assertTrue(vocab.isDirty())
+
+        // NOT `assertTrue(vocab.isDirty())`. That was racy and it was the source of an
+        // intermittent failure that only appeared under combined-run load: removeWord calls
+        // persister.requestFlush(), which is `scheduler.execute { flush() }` — an ASYNCHRONOUS
+        // flush that clears the dirty flag. The assertion was therefore racing the scheduler
+        // thread, and lost whenever the machine was busy enough to schedule it first.
+        //
+        // The production behaviour is correct and deliberate (audit L4: a user-initiated delete
+        // flushes promptly so process death inside the debounce window cannot resurrect the
+        // word), so the test was wrong, not the code. Assert THAT contract instead — the delete
+        // reaches storage on its own, with no explicit flush — which is both deterministic and
+        // a stronger statement than "a transient flag was briefly set".
+        waitUntil {
+            storage.keys().none { key -> storage.getString(key)?.contains("deleteme") == true }
+        }
+
         vocab.flush()
 
         val revived = newVocab(storage)
