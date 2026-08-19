@@ -687,7 +687,20 @@ class InputCoordinator(
         // a–z key, which yields no CtcLayout and would leave the bar empty. Geometric can
         // decode it, so hand the swipe over rather than degrade coverage. Memoized — the
         // decode below reuses this same geometry build.
-        if (!ctcAdapterOrCreate().supportsLayout(keyboard, params, frameW, frameH)) {
+        // Two reasons to hand this swipe to geometric, checked together because they have the
+        // same remedy:
+        //  1. the layout lacks an a–z key, so no CtcLayout can be built (memoized — the decode
+        //     below reuses this same geometry build);
+        //  2. the ONNX session failed to load MAX_MODEL_LOAD_ATTEMPTS times and latched. Without
+        //     this second check the decode returns an EMPTY slate, which the shared pipeline
+        //     cannot distinguish from "no candidates" — the bar clears and swipe silently stops
+        //     working, with nothing logged at the point of failure and nothing for the user to
+        //     act on. That was the app's only remaining path to no engine at all once `ctc`
+        //     became the default and neural was deleted.
+        val ctcAdapter = ctcAdapterOrCreate()
+        if (ctcAdapter.isModelPermanentlyUnavailable() ||
+            !ctcAdapter.supportsLayout(keyboard, params, frameW, frameH)
+        ) {
             performGeometricSwipeTyping(
                 swipedKeys, swipePath, timestamps, ic, editorInfo, resources,
                 wasShiftActive, wasShiftLocked
@@ -751,7 +764,11 @@ class InputCoordinator(
                 // fallthrough case.
                 SwipeEngineRouter.Engine.CTC -> {
                     val ctc = ctcAdapterOrCreate()
-                    val ctcServes = CtcEngineAdapter.supportsLanguage(language) &&
+                    // Same three conditions the dispatcher applies, so prewarm never warms an
+                    // engine the next swipe will not use: a dead session means geometric serves
+                    // it, and warming CTC would leave geometric cold for the swipe that follows.
+                    val ctcServes = !ctc.isModelPermanentlyUnavailable() &&
+                        CtcEngineAdapter.supportsLanguage(language) &&
                         ctc.supportsLayout(keyboard, params, frameW, frameH)
                     when {
                         ctcServes -> ctc.warmUpAsync(keyboard, params, frameW, frameH, language)

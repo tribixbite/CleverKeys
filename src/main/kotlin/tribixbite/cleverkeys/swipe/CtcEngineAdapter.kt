@@ -145,6 +145,34 @@ class CtcEngineAdapter(private val context: Context) {
     /** Failed load attempts so far (audit L5: bounded retry, then latch). */
     private var modelLoadAttempts = 0
 
+    /**
+     * True once the ONNX session has permanently failed to load for this adapter
+     * ([MAX_MODEL_LOAD_ATTEMPTS] exhausted).
+     *
+     * Written on the decode thread by [modelOrNull], read on the MAIN thread by the dispatcher —
+     * hence `@Volatile`.
+     *
+     * **The dispatcher MUST consult this before routing a swipe here.** Without a session the
+     * decode can only produce an empty slate, and an empty slate is indistinguishable from "no
+     * candidates" by the time it reaches the shared pipeline: the bar simply clears and swipe
+     * appears to stop working, with no error surfaced and nothing for the user to act on.
+     *
+     * This became the app's only path to *no engine at all* on 2026-08-18. Before then the
+     * default was `neural`, so a CTC load failure hit only opt-in users and a second ML engine
+     * existed to land on. Now `ctc` is the default (`Config.SWIPE_ENGINE_MODE`), `Mode.fromPref`
+     * funnels every unrecognised value here, and neural is deleted — while the language, layout
+     * and router gates all hand off to geometric. Falling through to geometric on a dead session
+     * keeps the same coverage promise those three gates already make.
+     */
+    @Volatile
+    private var modelPermanentlyUnavailable = false
+
+    /**
+     * See [modelPermanentlyUnavailable]. Safe to call from the main thread; cheap enough for the
+     * dispatch path (a volatile read).
+     */
+    fun isModelPermanentlyUnavailable(): Boolean = modelPermanentlyUnavailable
+
     private fun modelOrNull(): OnnxCtcEmissionModel? {
         emissionModel?.let { return it }
         // L5: bounded retry — each failed attempt is logged; after the budget is
@@ -166,10 +194,16 @@ class CtcEngineAdapter(private val context: Context) {
         } catch (e: Exception) {
             modelLoadAttempts++
             val latched = modelLoadAttempts >= MAX_MODEL_LOAD_ATTEMPTS
+            if (latched) modelPermanentlyUnavailable = true
             Log.e(
                 TAG,
                 "CTC encoder load failed (attempt $modelLoadAttempts/$MAX_MODEL_LOAD_ATTEMPTS)" +
-                    if (latched) " — ctc mode disabled this session" else " — will retry",
+                    // The previous wording claimed the mode had been switched off. Nothing did
+                    // that — the decode simply returned an empty slate and the bar cleared, so
+                    // readers went looking for a mode change that never happened. Say what the
+                    // code now actually does.
+                    if (latched) " — falling through to the geometric engine for this session"
+                    else " — will retry",
                 e
             )
             null

@@ -578,6 +578,64 @@ class CoreImeHygieneDriftTest {
     }
 
     /**
+     * A dead ONNX session must route the swipe to geometric, not produce an empty bar.
+     *
+     * ### The bug this pins
+     *
+     * `CtcEngineAdapter.modelOrNull()` retries the load `MAX_MODEL_LOAD_ATTEMPTS` times then
+     * latches. Before 2026-08-19 nothing consulted that latch: the decode returned
+     * `PredictionResult(emptyList(), emptyList())`, which the shared pipeline renders exactly
+     * like "no candidates". Swipe silently stopped working — no exception, no message, and no
+     * way for the user to tell it apart from a bad gesture.
+     *
+     * It was survivable while `neural` was the default and a second ML engine existed. It stopped
+     * being survivable on 2026-08-18: `ctc` became the default, `Mode.fromPref` funnels every
+     * unrecognised value to it, and neural was deleted. The language, layout and router gates all
+     * hand off to geometric, so this was the **only remaining path to no engine at all**.
+     *
+     * Pinned by source-scan because the failure needs a corrupt ONNX asset to reproduce, which no
+     * unit test can stage — and an instrumented test that shipped a deliberately broken model
+     * would be a packaging hazard of its own.
+     */
+    @Test
+    fun aDeadCtcSessionFallsThroughToGeometricRatherThanClearingTheBar() {
+        val adapter = source("tribixbite/cleverkeys/swipe/CtcEngineAdapter.kt")
+        assertWithMessage(
+            "CtcEngineAdapter must expose the latch. Without an accessor the dispatcher cannot " +
+                "tell a dead session from a working one, and an empty decode is indistinguishable " +
+                "from 'no candidates' downstream."
+        ).that(adapter).contains("fun isModelPermanentlyUnavailable()")
+        assertWithMessage(
+            "the latch must be @Volatile — it is written on the decode thread and read on the " +
+                "main thread by the dispatcher"
+        ).that(adapter).contains("@Volatile")
+        assertWithMessage(
+            "exhausting the retry budget must SET the latch, not merely log it"
+        ).that(adapter).contains("if (latched) modelPermanentlyUnavailable = true")
+        assertWithMessage(
+            "the log line must not claim 'ctc mode disabled this session' — nothing disables the " +
+                "mode, and that wording sent readers looking for a mode change that never happens"
+        ).that(adapter).doesNotContain("ctc mode disabled this session")
+
+        val coordinator = source("tribixbite/cleverkeys/InputCoordinator.kt")
+        val dispatch = coordinator
+            .substringAfter("private fun performCtcSwipeTyping(")
+            .substringBefore("fun prewarmGeometricEngine(")
+        assertWithMessage(
+            "the CTC dispatch guard must consult the latch BEFORE decoding, alongside the " +
+                "existing supportsLayout check — both have the same remedy (hand to geometric)"
+        ).that(dispatch).contains("isModelPermanentlyUnavailable()")
+
+        val prewarm = coordinator
+            .substringAfter("fun prewarmGeometricEngine(")
+            .substringBefore("private fun performSwipeTyping(")
+        assertWithMessage(
+            "prewarm must apply the same condition, or it warms CTC while the next swipe goes " +
+                "to a cold geometric engine"
+        ).that(prewarm).contains("isModelPermanentlyUnavailable()")
+    }
+
+    /**
      * Accuracy figures quoted in source must belong to the model we actually ship.
      *
      * ### The bug this pins
