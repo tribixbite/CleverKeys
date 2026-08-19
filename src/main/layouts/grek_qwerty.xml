@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<keyboard name="QWERTY (Greek)" script="latin">
+<keyboard name="QWERTY (Greek)" script="greek">
   <row>
     <key key0=";" key2="1" key4="loc esc"/>
     <key key0="ς" key1="~" key2="2" key3="\@"/>

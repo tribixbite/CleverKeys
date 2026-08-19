@@ -439,6 +439,10 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.swipe.geometric.LayoutGeometryTest',
     // WP9 R-1 step 9: layout-routed engine selection (steps 7-8 wiring)
     'tribixbite.cleverkeys.swipe.SwipeEngineRouterTest',
+    // script="latin" is gate 1 of 3 in swipe routing and is a hand-written XML attribute.
+    // grek_qwerty.xml shipped declaring latin; the fix landed in srcs/layouts/, which no build
+    // task reads (PHASE_O §3.3 makes this a prerequisite for multi-script work).
+    'tribixbite.cleverkeys.swipe.LayoutScriptDeclarationTest',
     'tribixbite.cleverkeys.swipe.ContractionOverlayTest',
     // Contraction language isolation (2026-08-16): English morphology must not leak into
     // a non-English swipe slate (the fr "franco" → "franco's" regression). Runs the real
@@ -489,6 +493,9 @@ tasks.register('runPureTests', JavaExec) {
     // Contraction-alias injection into the lexicon trie: what makes the mapping table
     // reachable by the beam at all, and the floor frequency that keeps it safe (2026-08-17).
     'tribixbite.cleverkeys.swipe.ctc.CtcContractionKeysTest',
+    // Greek final-sigma repair — PHASE_O §3.3 prerequisite. sigma/final-sigma are distinct KEYS
+    // in different rows, so an unrepaired word-final sigma is undecodable for 25.7% of the pack.
+    'tribixbite.cleverkeys.swipe.ctc.CtcGreekOrthographyTest',
     // Per-language CTC enablement (fr/de/es, 2026-08-16): the λ-by-lexicon-scale preset
     // table (docs/eval/2026-08-15-ctc-per-language-lambda.md) + the CKDT→a-z projection
     // and accent-display map, verified against the REAL bundled dictionaries.
