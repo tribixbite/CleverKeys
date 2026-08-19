@@ -127,9 +127,6 @@ object SettingsValidation {
         "swipe_rare_words_penalty",
         "swipe_fuzzy_match_mode",
         "autocorrect_max_beam_candidates",
-        // Read only by the deleted engine's key-position setup (touch-Y compensation for the
-        // QWERTY-trained transformer). CTC and geometric take key geometry as an input.
-        "finger_occlusion_offset",
         // Beam-search-only autocorrect and the two raw-beam debug toggles: all three named
         // stages of the deleted decoder.
         "swipe_beam_autocorrect_enabled",
@@ -248,6 +245,9 @@ object SettingsValidation {
             // neural_beam_width was still the one named in this file: validation was pointed at
             // the engine that no longer exists and not at the one that ships.
             "ctc_beam_width" -> value in 10..300
+
+            // Finger-occlusion offset: SIGNED percent of one key row, 0 = off.
+            "finger_occlusion_offset" -> value in -25..25
 
             // Opacity values (0-100)
             "label_brightness", "keyboard_opacity", "key_opacity",

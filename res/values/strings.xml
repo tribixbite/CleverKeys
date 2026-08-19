@@ -129,6 +129,8 @@
          and hide the debt from whoever reviews res/values-*/ next, which is the worse outcome.
          Owed: real translations, tracked in memory/HANDOFF-2026-08-19.md. Remove this attribute
          when they land. -->
+    <string name="gesture_finger_occlusion_title" tools:ignore="MissingTranslation">Touch Offset Correction</string>
+    <string name="gesture_finger_occlusion_desc" tools:ignore="MissingTranslation">Shifts where swipes are read relative to your fingertip, as a percent of one key row. Positive if your swipes land above the keys you aim for, negative if below. Off by default.</string>
     <string name="gesture_touch_smoothing_title" tools:ignore="MissingTranslation">Touch Smoothing</string>
     <string name="gesture_touch_smoothing_desc" tools:ignore="MissingTranslation">Points used for moving-average smoothing of the swipe path. 1 = raw input, 3 = recommended. Applies to both swipe engines.</string>
     <string name="swipe_engine_fallback_title" tools:ignore="MissingTranslation">Geometric engine will be used</string>

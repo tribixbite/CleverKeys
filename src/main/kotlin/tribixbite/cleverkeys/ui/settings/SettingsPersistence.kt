@@ -219,6 +219,8 @@ internal fun SettingsActivity.loadCurrentSettings() {
             .lowercase(java.util.Locale.ROOT)
         swipeSmoothingWindow =
             Config.safeGetInt(prefs, "swipe_smoothing_window", Defaults.SWIPE_SMOOTHING_WINDOW)
+        fingerOcclusionOffset =
+            Config.safeGetInt(prefs, "finger_occlusion_offset", Defaults.FINGER_OCCLUSION_OFFSET)
 
         // Appearance settings
         keyboardHeight = prefs.getSafeInt("keyboard_height", Defaults.KEYBOARD_HEIGHT_PORTRAIT)
@@ -461,12 +463,11 @@ internal fun SettingsActivity.updateConfigFromSettings() {
             swipe_engine_mode = swipeEngineMode
             // Swipe corrections settings (these update the Config object)
             swipe_final_autocorrect_enabled = swipeFinalAutocorrectEnabled
-            swipe_fuzzy_match_mode = swipeFuzzyMatchMode
             autocorrect_max_length_diff = autocorrectMaxLengthDiff
             autocorrect_prefix_length = autocorrectPrefixLength
-            autocorrect_max_beam_candidates = autocorrectMaxBeamCandidates
-            swipe_common_words_boost = swipeCommonWordsBoost
-            swipe_top5000_boost = swipeTop5000Boost
-            swipe_rare_words_penalty = swipeRareWordsPenalty
+            // swipe_fuzzy_match_mode, autocorrect_max_beam_candidates and the three word-scoring
+            // multipliers were pushed here too. Their Config fields are gone: every consumer
+            // died with OptimizedVocabulary, so the fields were being written on every settings
+            // change and read by nothing.
         }
 }

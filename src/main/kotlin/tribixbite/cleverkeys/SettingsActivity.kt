@@ -254,6 +254,9 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
      * it is an input-path setting, never a decoder one.
      */
     internal var swipeSmoothingWindow by mutableStateOf(Defaults.SWIPE_SMOOTHING_WINDOW)
+
+    /** Signed percent of one key row; see Defaults.FINGER_OCCLUSION_OFFSET. */
+    internal var fingerOcclusionOffset by mutableStateOf(Defaults.FINGER_OCCLUSION_OFFSET)
     internal var keyboardHeight by mutableIntStateOf(28)
     internal var keyboardHeightLandscape by mutableIntStateOf(50)
     internal var vibrationEnabled by mutableStateOf(false)

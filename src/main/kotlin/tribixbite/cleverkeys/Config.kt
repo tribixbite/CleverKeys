@@ -136,6 +136,17 @@ object Defaults {
     // 2026-05-15: increased from 1.0 to 1.4 — favors longer candidate words
     // slightly. Empirically catches more complete swiped words than the
     // pure-linear normalization on average input.
+    /**
+     * Signed percent of ONE KEY ROW to shift raw touch Y before decoding. 0 = disabled.
+     *
+     * Zero deliberately. The pre-2026-08-18 neural engine defaulted this to 12.5% ("users touch
+     * ~74 px above key centre"), but no measurement of that figure exists anywhere in this
+     * repo's history, and CTC's 89.31 top-1 was measured on UNCORRECTED traces — so a nonzero
+     * default would move input off the distribution the shipped model learned. Raise it only
+     * behind a device-trace A/B.
+     */
+    const val FINGER_OCCLUSION_OFFSET = 0
+
     const val SWIPE_SMOOTHING_WINDOW = 3        // Points for moving average smoothing (1 = disabled, 3 = optimal)
 
     // Language-specific prefix boost (for non-English primary languages)
@@ -531,18 +542,11 @@ class Config private constructor(
     // Fuzzy matching configuration
     @JvmField var autocorrect_max_length_diff = 0
     @JvmField var autocorrect_prefix_length = 0
-    @JvmField var autocorrect_max_beam_candidates = 0
 
     // Swipe scoring weights
-    @JvmField var swipe_confidence_weight = 0f
-    @JvmField var swipe_frequency_weight = 0f
-    @JvmField var swipe_common_words_boost = 0f
-    @JvmField var swipe_top5000_boost = 0f
-    @JvmField var swipe_rare_words_penalty = 0f
 
     // Swipe autocorrect configuration
     @JvmField var swipe_final_autocorrect_enabled = false
-    @JvmField var swipe_fuzzy_match_mode: String? = null
 
     // Short gesture configuration
     @JvmField var short_gestures_enabled = false
@@ -597,6 +601,9 @@ class Config private constructor(
 
     // Beam search tuning
     @JvmField var swipe_smoothing_window = 0
+
+    /** Signed percent of one key row to shift raw touch Y by. 0 = off. See refresh(). */
+    @JvmField var finger_occlusion_offset = 0
 
     // Swipe trajectory resampling
     // NOTE: Custom encoder/decoder paths removed - feature not implemented
@@ -807,27 +814,22 @@ class Config private constructor(
 
         autocorrect_max_length_diff = safeGetInt(_prefs, "autocorrect_max_length_diff", Defaults.AUTOCORRECT_MAX_LENGTH_DIFF)
         autocorrect_prefix_length = safeGetInt(_prefs, "autocorrect_prefix_length", Defaults.AUTOCORRECT_PREFIX_LENGTH)
-        autocorrect_max_beam_candidates = safeGetInt(_prefs, "autocorrect_max_beam_candidates", Defaults.AUTOCORRECT_MAX_BEAM_CANDIDATES)
 
         swipe_final_autocorrect_enabled = _prefs.getBoolean("swipe_final_autocorrect_enabled", Defaults.SWIPE_FINAL_AUTOCORRECT_ENABLED)
-        swipe_fuzzy_match_mode = safeGetString(_prefs, "swipe_fuzzy_match_mode", Defaults.SWIPE_FUZZY_MATCH_MODE)
 
-        // TODO(neural-removal follow-up): swipe_prediction_source, swipe_common_words_boost,
-        // swipe_top5000_boost, swipe_rare_words_penalty, swipe_fuzzy_match_mode and
-        // autocorrect_max_beam_candidates lost their ONLY consumer when OptimizedVocabulary
-        // and the beam search were deleted (2026-08-18) — verified by grep: nothing outside
-        // Config/settings-plumbing reads the derived fields any more. They are still read,
-        // still exported and still surfaced as sliders in the Auto-Correction section, where
-        // they now do nothing. The 2026-08-18 removal plan's pref inventory did not list
-        // them, so deprecating them (and removing their controls) is left as an explicit
-        // maintainer decision rather than folded into that plan silently.
-        val predictionSource = safeGetInt(_prefs, "swipe_prediction_source", Defaults.SWIPE_PREDICTION_SOURCE)
-        swipe_confidence_weight = predictionSource / 100.0f
-        swipe_frequency_weight = 1.0f - swipe_confidence_weight
-
-        swipe_common_words_boost = safeGetFloat(_prefs, "swipe_common_words_boost", Defaults.SWIPE_COMMON_WORDS_BOOST)
-        swipe_top5000_boost = safeGetFloat(_prefs, "swipe_top5000_boost", Defaults.SWIPE_TOP5000_BOOST)
-        swipe_rare_words_penalty = safeGetFloat(_prefs, "swipe_rare_words_penalty", Defaults.SWIPE_RARE_WORDS_PENALTY)
+        // finger_occlusion_offset: percent of ONE KEY ROW to shift raw touch Y before the
+        // decoders normalise it. Restored 2026-08-19 after the neural removal deprecated it as
+        // engine-specific — it is not: the fingertip obscures the target, so touches land above
+        // the intended key, and that is a property of the finger and the screen. Both engines
+        // consume the same coordinates.
+        //
+        // Default 0, NOT the neural engine's 12.5%. That figure was never measured anywhere in
+        // this repo's history, and CTC's 89.31 top-1 was achieved on UNCORRECTED human traces —
+        // so a nonzero default would shift input away from the distribution the model was
+        // trained on. Signed, because the correction runs both ways: users who overshoot need
+        // the opposite sign to users who undershoot.
+        finger_occlusion_offset = safeGetInt(_prefs, "finger_occlusion_offset", Defaults.FINGER_OCCLUSION_OFFSET)
+            .coerceIn(-25, 25)
 
         short_gestures_enabled = _prefs.getBoolean("short_gestures_enabled", Defaults.SHORT_GESTURES_ENABLED)
         short_gesture_min_distance = PercentOfKey(safeGetInt(_prefs, "short_gesture_min_distance", Defaults.SHORT_GESTURE_MIN_DISTANCE))

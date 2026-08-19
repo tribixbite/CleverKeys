@@ -721,8 +721,22 @@ class CtcEngineAdapter(private val context: Context) {
                 val result = if (mapped == null || lexicon == null || model == null) {
                     PredictionResult(emptyList(), emptyList())
                 } else {
+                    // Finger-occlusion compensation, applied to RAW Y before the letter-box
+                    // affine — the fingertip hides the target, so touches land above the key the
+                    // user aimed at. Expressed as a signed percent of ONE KEY ROW so it means
+                    // the same thing at any keyboard height; the letter box spans three letter
+                    // rows, hence the /3. Signed because the correction runs both ways.
+                    //
+                    // Default 0: see Defaults.FINGER_OCCLUSION_OFFSET for why the neural
+                    // engine's 12.5% is NOT carried over. At 0 this costs one float multiply.
+                    val occlusionPct = Config.globalConfig().finger_occlusion_offset
+                    val rowHeightPx = (1f / mapped.invH) / 3f
+                    val yShift = rowHeightPx * (occlusionPct / 100f)
+
                     val px = DoubleArray(n) { ((rawX[it] - mapped.originX) * mapped.invW).toDouble() }
-                    val py = DoubleArray(n) { ((rawY[it] - mapped.originY) * mapped.invH).toDouble() }
+                    val py = DoubleArray(n) {
+                        ((rawY[it] + yShift - mapped.originY) * mapped.invH).toDouble()
+                    }
                     val pt = DoubleArray(n) { rawT[it].toDouble() }
                     val beamWidth = Config.globalConfig().ctc_beam_width.coerceIn(10, 300)
                     val candidates = decoderFor(mapped, lexicon.trie, beamWidth, lexicon.language)

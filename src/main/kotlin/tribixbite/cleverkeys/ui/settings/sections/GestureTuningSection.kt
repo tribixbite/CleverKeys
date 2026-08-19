@@ -317,6 +317,24 @@ internal fun SettingsActivity.GestureTuningSection() {
                     displayValue = "$swipeSmoothingWindow"
                 )
 
+                // Finger-occlusion compensation. Signed: positive shifts the read-back point
+                // DOWN (for users whose touches land above the key they aimed at, the common
+                // case), negative shifts it up. Default 0 — the pre-2026-08-18 engine defaulted
+                // to +12.5% but that figure was never measured, and the shipped CTC model was
+                // trained on uncorrected traces.
+                SettingsSlider(
+                    title = stringResource(R.string.gesture_finger_occlusion_title),
+                    description = stringResource(R.string.gesture_finger_occlusion_desc),
+                    value = fingerOcclusionOffset.toFloat(),
+                    valueRange = -25f..25f,
+                    steps = 49,
+                    onValueChange = {
+                        fingerOcclusionOffset = it.toInt()
+                        saveSetting("finger_occlusion_offset", fingerOcclusionOffset)
+                    },
+                    displayValue = if (fingerOcclusionOffset == 0) "Off" else "$fingerOcclusionOffset%"
+                )
+
                 Text(
                     text = "If gestures feel laggy, reduce dwell time and noise threshold. If taps register as swipes, increase tap duration.",
                     fontSize = 11.sp,

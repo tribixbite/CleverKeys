@@ -126,6 +126,7 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
 
     // ── Swipe decoding ───────────────────────────────────────────────
     "swipe_smoothing_window" to PrefValue.IntV(Defaults.SWIPE_SMOOTHING_WINDOW),
+    "finger_occlusion_offset" to PrefValue.IntV(Defaults.FINGER_OCCLUSION_OFFSET),
     "onnx_xnnpack_threads" to PrefValue.IntV(Defaults.ONNX_XNNPACK_THREADS),
 
     // ── Word prediction ──────────────────────────────────────────────

@@ -424,13 +424,21 @@ class SettingsImportPlanBuilderTest {
         // The per-language forms need PREFIX matching — DEPRECATED_KEYS is exact-match — so
         // they are the case most likely to regress; pin both forms plus a live control key
         // that must still come through.
+        //
+        // `finger_occlusion_offset` is deliberately in this payload as a SECOND live control.
+        // It was deprecated by the 2026-08-18 sweep on the assumption that it was
+        // engine-specific, and un-deprecated on 2026-08-19 once the audit established it shifts
+        // RAW touch Y before any decoder — a property of the finger and the screen. It must now
+        // come THROUGH the filter, so a v1.5.x user's calibrated value survives the upgrade
+        // instead of being silently dropped. This assertion is what would catch it being
+        // re-deprecated by name-matching in some future sweep.
         val json = """{"preferences":{
             "neural_temperature": 1.5,
             "neural_beam_width": 12,
             "neural_prefix_boost_multiplier_es": 2.5,
             "neural_prefix_boost_max_de": 7.0,
             "swipe_beam_autocorrect_enabled": false,
-            "finger_occlusion_offset": 30.0,
+            "finger_occlusion_offset": 12,
             "keyboard_opacity": 55
         }}""".trimIndent()
         val plan = SettingsImportPlanBuilder.fromJson(
@@ -439,7 +447,8 @@ class SettingsImportPlanBuilderTest {
             screen = screen,
             defaultSnapshot = SETTINGS_DEFAULTS,
         )
-        assertThat(plan.changes.map { it.key }).containsExactly("keyboard_opacity")
+        assertThat(plan.changes.map { it.key })
+            .containsExactly("keyboard_opacity", "finger_occlusion_offset")
     }
 
     @Test
@@ -452,6 +461,10 @@ class SettingsImportPlanBuilderTest {
         assertThat(SettingsValidation.isDeprecatedPreference("keyboard_opacity")).isFalse()
         assertThat(SettingsValidation.isDeprecatedPreference("swipe_engine_mode")).isFalse()
         assertThat(SettingsValidation.isDeprecatedPreference("ctc_beam_width")).isFalse()
+        // Un-deprecated 2026-08-19: it shifts RAW touch Y before any decoder runs, so it is an
+        // input-path setting, not an engine one. Pinned by name because the 2026-08-18 sweep
+        // classified it by filename (it lived in NeuralLayoutHelper) rather than by what it did.
+        assertThat(SettingsValidation.isDeprecatedPreference("finger_occlusion_offset")).isFalse()
     }
 
     @Test
