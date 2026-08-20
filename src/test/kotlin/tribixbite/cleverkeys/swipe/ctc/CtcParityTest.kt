@@ -6,6 +6,8 @@ import java.io.File
 import java.security.MessageDigest
 import org.json.JSONObject
 import org.junit.Test
+import tribixbite.cleverkeys.Defaults
+import tribixbite.cleverkeys.swipe.CtcEngineAdapter
 
 /**
  * Golden-trace parity tests for the pure-JVM FUTO-style CTC swipe module.
@@ -35,8 +37,15 @@ class CtcParityTest {
         /** The instrumented copy the on-device parity gate reads from test assets. */
         const val GOLDEN_ASSET_PATH = "src/androidTest/assets/ctc/ctc_golden.json"
 
-        /** The shipped emission encoder the fixture was generated from. */
-        const val MODEL_ASSET_PATH = "src/main/assets/models/ctc_swipe_encoder.onnx"
+        /**
+         * The shipped emission encoder the fixture was generated from.
+         *
+         * DERIVED from `CtcEngineAdapter.MODEL_ASSET` rather than hardcoded: the whole point of
+         * this test is that the fixture, the model and the preset move together, so a fixture
+         * check that reads a DIFFERENT path than the app loads can pass while the app ships a
+         * different model. Renaming the asset must break this test, not slip past it.
+         */
+        val MODEL_ASSET_PATH = "src/main/assets/" + CtcEngineAdapter.MODEL_ASSET
 
         /** Score parity: word order is exact; scores tolerate libm pow/log drift. */
         const val SCORE_TOL = 1e-4
@@ -157,6 +166,19 @@ class CtcParityTest {
             .isEqualTo(ship.gammaPrune)
         assertWithMessage("fixture betaPrune vs tunedV2").that(preset.getDouble(4))
             .isEqualTo(ship.betaPrune)
+
+        // 1b. beamWidth is NOT one of the five scoring terms, and until 2026-08-20 nothing
+        //     pinned it — so the fixture could be generated at a different width from the one
+        //     the app decodes at and this test would still pass. That gap matters because
+        //     width changes which candidates survive pruning, i.e. exactly what parity is
+        //     supposed to be checking. The fixture is deliberately narrow (cheap to generate
+        //     over a 7-word lexicon); what must hold is that the SHIP width is the validated
+        //     one, since every campaign accuracy number was decoded at it.
+        assertWithMessage(
+            "the ship preset's beamWidth must equal Defaults.CTC_BEAM_WIDTH — that is the " +
+                "width every published accuracy number was decoded at, and the settings " +
+                "default must not drift away from it"
+        ).that(ship.beamWidth).isEqualTo(Defaults.CTC_BEAM_WIDTH)
 
         // 2. Every beam case decodes at that same preset (a case generated at another
         //    preset would silently weaken the parity assertion above it).

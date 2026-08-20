@@ -47,7 +47,9 @@ jobs:
       id: build
       run: |
         chmod +x gradlew
-        ./gradlew assembleDebug --stacktrace
+        # assembleDebugAndroidTest too: without the test APK the emulator job can only smoke
+        # test, which is how two instrumented failures sat red for a day and a half.
+        ./gradlew assembleDebug assembleDebugAndroidTest --stacktrace
         # Find the x86_64 APK for emulator testing
         X86_APK=$(find build/outputs/apk/debug -name "*x86_64*.apk" | head -1)
         if [ -z "$X86_APK" ]; then
@@ -64,6 +66,14 @@ jobs:
         path: build/outputs/apk/debug/*x86_64*.apk
         retention-days: 1
         if-no-files-found: warn
+
+    - name: Upload androidTest APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: apks-androidtest
+        path: build/outputs/apk/androidTest/debug/*.apk
+        retention-days: 1
+        if-no-files-found: error
 
     - name: Upload universal APK as fallback
       uses: actions/upload-artifact@v4
@@ -112,12 +122,21 @@ jobs:
         name: apks
         path: ./apk/
 
+    - name: Download androidTest APK
+      uses: actions/download-artifact@v4
+      with:
+        name: apks-androidtest
+        path: ./apk-test/
+
     - name: Verify APK download
       run: |
         echo "Downloaded APK files:"
-        ls -la ./apk/
+        ls -la ./apk/ ./apk-test/
         APK_FILE=$(find ./apk -name "*.apk" | head -1)
         echo "APK_FILE=$APK_FILE" >> $GITHUB_ENV
+        TEST_APK_FILE=$(find ./apk-test -name "*.apk" | head -1)
+        [ -n "$TEST_APK_FILE" ] || { echo "::error::androidTest APK missing"; exit 1; }
+        echo "TEST_APK_FILE=$TEST_APK_FILE" >> $GITHUB_ENV
 
     - name: Enable KVM
       run: |
@@ -182,6 +201,55 @@ jobs:
           # Capture screenshot (best-effort — not a gate).
           adb exec-out screencap -p > settings-screenshot.png || true
           echo "Smoke test completed"
+
+          # ── The actual instrumented gate ──────────────────────────────────────────
+          # Until 2026-08-20 this job installed the APK and grepped dumpsys, and nothing in
+          # CI ever ran an instrumented test. Two of them sat red for a day and a half as a
+          # result — CtcMultiLanguageInstrumentedTest's frozen lexicon pins had been broken
+          # by the contraction restore and only surfaced when a human ran ew-cli by hand.
+          #
+          # A CURATED set, not the whole suite: the full 1395-test run takes ~30 min on
+          # emulator.wtf and would be slower and flakier here, and a gate that times out
+          # teaches people to ignore it. These are the classes that pin invariants no pure
+          # test can reach — real assets parsed on-device, real ONNX session, real geometry.
+          # Full-suite runs stay a deliberate ew-cli action.
+          echo "Installing androidTest APK: ${{ env.TEST_APK_FILE }}"
+          adb install -r "${{ env.TEST_APK_FILE }}"
+
+          RUNNER="$PKG/androidx.test.runner.AndroidJUnitRunner"
+          CLASSES="tribixbite.cleverkeys.swipe.CtcMultiLanguageInstrumentedTest,tribixbite.cleverkeys.GeometricSwipeOracleTest,tribixbite.cleverkeys.CrashGuardInstrumentedTest"
+
+          echo "Running instrumented classes: $CLASSES"
+          set +e
+          # No -r: the raw stream emits INSTRUMENTATION_STATUS records, while the
+          # human-readable form ends in "OK (N tests)" / "FAILURES!!!" — which is what the
+          # verdict check below reads. Mismatching those is how a gate ends up always
+          # erroring, or worse, always passing.
+          adb shell am instrument -w \
+            -e class "$CLASSES" \
+            -e disableAnalytics true \
+            "$RUNNER" 2>&1 | tee instrumentation.log
+          set -e
+
+          # `am instrument` exits 0 even when tests fail — the verdict is only in the stream.
+          # A missing OK line is failure too: a runner that never started must not pass by
+          # producing no bad news. That half is what catches an install or ABI problem.
+          if grep -qE "FAILURES!!!|Process crashed|INSTRUMENTATION_ABORTED" instrumentation.log; then
+            echo "::error::Instrumented tests FAILED — see the instrumentation-log artifact"
+            exit 1
+          fi
+          grep -qE "^OK \\([0-9]+ test" instrumentation.log \
+            || { echo "::error::No OK line — the runner did not complete"; exit 1; }
+          grep -E "^OK \\([0-9]+ test" instrumentation.log
+
+    - name: Upload instrumentation log
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: instrumentation-log-api${{ matrix.api-level }}
+        path: instrumentation.log
+        retention-days: 7
+        if-no-files-found: warn
 
     - name: Upload settings screenshot
       if: always()
