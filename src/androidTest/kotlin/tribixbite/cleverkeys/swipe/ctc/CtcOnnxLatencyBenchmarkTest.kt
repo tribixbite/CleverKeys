@@ -42,10 +42,16 @@ import java.nio.FloatBuffer
  *      - **cpu1** — `ALL_OPT` with `intra_op = inter_op = 1`, no XNNPACK: the protocol
  *        `CleverKeys-ML/ctc/bench_latency.py` used for the laptop table, so this column is
  *        directly comparable to it.
- *  2. [fullDecodePath_ch128_beam100_tunedV2] — the end-to-end post-gesture cost for the
- *     ship candidate: featurize → NN → [CtcEmissions.sliceFromHead] → [CtcBeamDecoder]
+ *  2. [fullDecodePath_ch128_beam100_e1] — the end-to-end post-gesture cost for the
+ *     then-leading CANDIDATE, `ch128_s1234`. NOTE it is not, and never became, the ship
+ *     model: that is `phaseM_kd_fresh_w1_s1234_fp16w` (a ch192 distilled student). Nothing
+ *     here was measured on the shipped encoder.
+ *     featurize → NN → [CtcEmissions.sliceFromHead] → [CtcBeamDecoder]
  *     at beam width 100 over the real bundled 98k-word `dictionaries/en_enhanced.json`
- *     trie, at the tunedV2/E1 preset (γ 1.05, λ 1.1, β 0.2, α 0.0, γp 0.3734, βp 0.9882).
+ *     trie, at the **E1** preset (γ 1.05, λ 1.1, β 0.2, α 0.0, γp 0.3734, βp 0.9882). These
+ *     are E1's constants, NOT tunedV2's (0.9 / 4.0 / 0.25 / 0.25 / 0.9882) — the old name
+ *     said tunedV2 and the numbers said E1, which is how a latency figure gets quoted
+ *     against the wrong operating point.
  *     G3's question was whether NN+beam fits the then-current 100–300 ms budget.
  *
  * ## Laptop reference (`PHASE_F.md`, CPU EP, `intra_op = inter_op = 1`, batch 1, idle)
@@ -170,10 +176,37 @@ class CtcOnnxLatencyBenchmarkTest {
         )
     }
 
-    /** Reads a model from the **test** APK's assets (they are not in the app APK). */
-    private fun readModelBytes(name: String): ByteArray =
+    /**
+     * Reads a model from the **test** APK's assets.
+     *
+     * The four bench models are NOT committed — they were 11.0 MB of byte-identical copies of
+     * the ONNX files in `CleverKeys-ML/ctc/artifacts`, carried in the androidTest APK CI builds
+     * and uploads on every run. Deleting the duplicates costs nothing recoverable and removes
+     * that weight; this is a benchmark, not a gate, so it is opt-in.
+     *
+     * To run it, copy the four models back first:
+     *
+     *     cp ~/git/swype/CleverKeys-ML/ctc/artifacts/ch128_s1234.onnx \
+     *        ~/git/swype/CleverKeys-ML/ctc/artifacts/ch192_s1234.onnx \
+     *        ~/git/swype/CleverKeys-ML/ctc/artifacts/fast_resbn80_s1234.onnx \
+     *        ~/git/swype/CleverKeys-ML/ctc/artifacts/fast_resbn72_s1234.onnx \
+     *        src/androidTest/assets/ctc_bench/
+     *
+     * Fails loudly rather than skipping: a benchmark that silently no-ops reads as coverage it
+     * does not provide, which is the same trap the oracle tests' `assumeTrue` removal fixed.
+     */
+    private fun readModelBytes(name: String): ByteArray = try {
         InstrumentationRegistry.getInstrumentation().context.assets
             .open("ctc_bench/$name.onnx").use { it.readBytes() }
+    } catch (e: java.io.FileNotFoundException) {
+        throw AssertionError(
+            "ctc_bench/$name.onnx is not in the test APK. These arch-comparison models are " +
+                "deliberately not committed — copy them from " +
+                "CleverKeys-ML/ctc/artifacts/ into src/androidTest/assets/ctc_bench/ and " +
+                "rebuild the androidTest APK. See this method's KDoc.",
+            e
+        )
+    }
 
     /**
      * Build session options for [config].
@@ -348,12 +381,12 @@ class CtcOnnxLatencyBenchmarkTest {
     }
 
     @Test
-    fun fullDecodePath_ch128_beam100_tunedV2() {
+    fun fullDecodePath_ch128_beam100_e1() {
         val env = OrtEnvironment.getEnvironment()
         val model = "ch128_s1234"
 
-        // tunedV2 / E1 preset (integration plan D2). Constructed inline because
-        // CtcScoringParams.tunedV2 lands with the engine wiring, not with this measurement.
+        // E1 preset (integration plan D2), constructed inline. Deliberately NOT
+        // CtcScoringParams.tunedV2 — these constants are E1's, and the two differ.
         val params = CtcScoringParams(
             gamma = 1.05, lambda = 1.1, beta = 0.2, alpha = 0.0,
             gammaPrune = 0.3734, betaPrune = 0.9882,

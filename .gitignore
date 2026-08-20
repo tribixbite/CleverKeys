@@ -203,3 +203,4 @@ archive/
 /swipe.html
 model/export_log.txt
 assets/models/*_character_quant.onnx
+src/androidTest/assets/ctc_bench/*.onnx
