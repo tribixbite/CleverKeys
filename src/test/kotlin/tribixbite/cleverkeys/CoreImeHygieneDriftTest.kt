@@ -555,10 +555,27 @@ class CoreImeHygieneDriftTest {
         assertWithMessage(
             "$ctcRel must not reintroduce the neural vocabulary's 0.88f common-word boost."
         ).that(ctcCode).doesNotContain("0.88")
+        // Injection moved from the constant INJECTED_FREQUENCY to a PER-LEXICON derived floor
+        // on 2026-08-20, because the constant over-guarded: it left ~8.5 nats of frequency gap
+        // which the beam's len^0.9 normalisation turns into ~75 nats of required emission
+        // evidence, against the 7-10 the model produces. 49% of the fr alias table was
+        // unreachable. What must NOT come back is a PER-WORD frequency — that is the boost this
+        // guard was always really about.
         assertWithMessage(
-            "$ctcRel must insert injected keys at INJECTED_FREQUENCY, not at a computed or " +
-                "per-word frequency."
-        ).that(ctc).contains("trie.insert(lowered, INJECTED_FREQUENCY)")
+            "$ctcRel must insert every key at the SAME frequency — one value for the whole " +
+                "lexicon, never computed per word. A per-word frequency is the boost that made " +
+                "17,931 French pseudo-words outrank real vocabulary."
+        ).that(ctc).contains("trie.insert(lowered, frequency)")
+        assertWithMessage(
+            "$ctcRel must derive that value from the lexicon's rarest REAL word, so the " +
+                "'never preferred' invariant holds by construction in every lexicon — including " +
+                "German, whose rarest word is 12 and where any shared constant above 11 would " +
+                "put pseudo-words above real words."
+        ).that(ctc).contains("fun derivedFloor(")
+        assertWithMessage(
+            "$ctcRel's derived floor must be strictly below the rarest real word, and never " +
+                "below the scale's own bottom."
+        ).that(ctc).contains("maxOf(INJECTED_FREQUENCY, minReal - 1.0)")
 
         // ── Site 2: the tap-typing secondary prefix index ────────────────────────────
         val wpRel = "tribixbite/cleverkeys/WordPredictor.kt"

@@ -47,10 +47,55 @@ import java.util.Locale
 object CtcContractionKeys {
 
     /**
-     * Frequency given to an injected key: the bottom of the AOSP-like scale the tuned λ
-     * expects. See the class KDoc for why this is a floor and not a boost.
+     * Absolute lower bound for an injected key — the bottom of the AOSP-like scale the tuned λ
+     * expects. Used only when a lexicon has no headroom above it (see [derivedFloor]).
      */
     const val INJECTED_FREQUENCY: Double = CtcLexiconMerge.MIN_FREQ
+
+    /**
+     * The frequency to inject at for a given lexicon: **one below its rarest real word.**
+     *
+     * ## Why not simply [INJECTED_FREQUENCY]
+     *
+     * Injecting at 1.0 does preserve "reachable, never preferred" — but by an enormous margin,
+     * and measurement showed the margin is so wide the keys become unreachable in practice
+     * rather than merely un-preferred.
+     *
+     * The final beam score is `ctc/len^0.9 + β·len + λ·ln(freq)` ([CtcBeamDecoder]). The
+     * emission evidence is DIVIDED by `len^0.9` while the frequency bonus is not, so a
+     * competitor's frequency advantage is worth `len^0.9` times more raw evidence than it looks.
+     * For an 11-letter French word that multiplier is ~8.6. With injection at 1.0 the gap to the
+     * rarest real French word (freq 69, bonus 8.47 nats at λ=2.0) demands roughly **75 nats** of
+     * raw emission evidence to overcome — against the **7–10 nats** the shipped model actually
+     * produces at a trace start, measured from the golden fixture. Not marginal: an order of
+     * magnitude.
+     *
+     * The consequence was measured on the real fr lexicon: of 17,947 REPLACE keys, 82 are
+     * lexicon-native and 8,762 — **49%** — have a drop-first-letter competitor that wins
+     * unconditionally. That includes the productive core (`d'abord`, `l'ont`, `n'ont`,
+     * `d'entre`, `m'avait`), so half the 2026-08-17 restore was inert through the beam.
+     *
+     * ## Why DERIVED and never a raised constant
+     *
+     * Because the rarest real word differs per lexicon, and one constant cannot serve them all:
+     * measured floors are fr 69, es 62, it 73, pt 70, sv 70, **de 12**, en-JSON 134. Any constant
+     * above 11 breaks the invariant for German — pseudo-words would outrank real German words,
+     * which is precisely the `lune` regression that made this a floor in the first place. Any
+     * constant at or below 11 leaves French's gap at 4+ nats and changes nothing.
+     *
+     * Deriving preserves the invariant BY CONSTRUCTION, in every lexicon, including ones not yet
+     * added: every real word still strictly outranks every pseudo-word on frequency.
+     *
+     * @param realFrequencies the merged lexicon's frequencies BEFORE injection.
+     */
+    fun derivedFloor(realFrequencies: Iterable<Double>): Double {
+        val minReal = realFrequencies.minOrNull() ?: return INJECTED_FREQUENCY
+        // Strictly below the rarest real word, but never below the scale's own bottom. If a
+        // lexicon's rarest word already sits at the bottom there is no headroom and injection
+        // falls back to equality — `CtcContractionKeysTest` asserts the invariant so that case
+        // is visible rather than silent.
+        return maxOf(INJECTED_FREQUENCY, minReal - 1.0)
+    }
 
     /**
      * True when [key] can be spelled from [alphabet] and is therefore injectable as its
@@ -76,13 +121,17 @@ object CtcContractionKeys {
      *   `ContractionManager.getAliasKeys()`).
      * @return the number of keys actually inserted (skipped ones are not counted).
      */
-    fun inject(trie: CtcLexiconTrie, keys: Iterable<String>): Int {
+    fun inject(
+        trie: CtcLexiconTrie,
+        keys: Iterable<String>,
+        frequency: Double = INJECTED_FREQUENCY,
+    ): Int {
         var inserted = 0
         for (key in keys) {
             if (!isInjectable(key, trie.alphabet)) continue
             val lowered = key.lowercase(Locale.ROOT)
             if (trie.contains(lowered)) continue
-            trie.insert(lowered, INJECTED_FREQUENCY)
+            trie.insert(lowered, frequency)
             inserted++
         }
         return inserted

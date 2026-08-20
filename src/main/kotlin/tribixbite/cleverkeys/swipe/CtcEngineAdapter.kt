@@ -481,6 +481,10 @@ class CtcEngineAdapter(private val context: Context) {
 
         val trie: CtcLexiconTrie
         val display: Map<String, String>
+        // The REAL word frequencies actually loaded into the trie — captured per branch because
+        // the two sources differ (raw merged map vs the a-z projection). Used to derive the
+        // contraction-injection floor from this lexicon's rarest real word.
+        val lexiconFrequencies: Collection<Double>
         when (source) {
             CtcLanguageSupport.LexiconSource.EN_JSON -> {
                 // STRIP loader: same non-alphabet policy as the offline tuning trie
@@ -489,6 +493,7 @@ class CtcEngineAdapter(private val context: Context) {
                 // en contractions are restored by the ContractionOverlay instead.
                 trie = CtcLexiconTrie.loadStrippingNonAlphabet(ALPHABET, merged)
                 display = emptyMap()
+                lexiconFrequencies = merged.values
             }
             CtcLanguageSupport.LexiconSource.CKDT_BIN -> {
                 // NFD → drop combining marks → a–z, with the canonical accented form kept
@@ -497,6 +502,7 @@ class CtcEngineAdapter(private val context: Context) {
                 val projected = CtcAzProjection.projectLexicon(merged)
                 trie = CtcLexiconTrie.loadFromFrequencyMap(ALPHABET, projected.freqs)
                 display = projected.display
+                lexiconFrequencies = projected.freqs.values
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                     Log.d(TAG, "CTC '$lang' projection: ${projected.records} records, " +
                         "${projected.untypeable} untypeable, ${projected.collisions} " +
@@ -513,7 +519,19 @@ class CtcEngineAdapter(private val context: Context) {
         // "d'abaissement") is not a dictionary word, so without this the mapping is inert.
         // Injected at a floor frequency so a pseudo-word never outranks real vocabulary —
         // see [CtcContractionKeys].
-        val injected = CtcContractionKeys.inject(trie, contractionsFor(lang).getAliasKeys())
+        // Injected one below the lexicon's RAREST REAL WORD, not at the scale's bottom. The
+        // invariant is unchanged — every real word still strictly outranks every pseudo-word on
+        // frequency — but injecting at 1.0 over-guarded it by an order of magnitude: the beam
+        // score divides emission evidence by len^0.9 while the frequency bonus enters undivided,
+        // so the ~8.5-nat gap to fr's rarest word demanded ~75 nats of raw evidence against the
+        // 7-10 the shipped model actually produces. 49% of the fr alias table was unreachable as
+        // a result. Derived per-lexicon because a constant cannot serve them all: the rarest real
+        // word is 69 in fr but 12 in de, so any constant above 11 would break the invariant for
+        // German. See [CtcContractionKeys.derivedFloor].
+        val injectionFloor = CtcContractionKeys.derivedFloor(lexiconFrequencies)
+        val injected = CtcContractionKeys.inject(
+            trie, contractionsFor(lang).getAliasKeys(), injectionFloor
+        )
 
         MemoryProbe.mark("ctc.trie") {
             "lang=$lang words=${trie.wordCount} nodes=${trie.nodeCount} " +

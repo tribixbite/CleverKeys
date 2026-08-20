@@ -42,6 +42,12 @@ class CtcContractionRankingTest {
         /** Alias keys injected into it, and how many actually took. */
         var injected = 0
 
+        /** The derived injection floor for the real fr lexicon. */
+        var floor = 0.0
+
+        /** The REAL lexicon surfaces, before injection — the shadow-pair sweep needs these. */
+        lateinit var realWords: Set<String>
+
         @BeforeClass
         @JvmStatic
         fun buildRealFrenchTrie() {
@@ -55,7 +61,10 @@ class CtcContractionRankingTest {
             frTrie = CtcLexiconTrie.loadFromFrequencyMap(AZ, projected.freqs)
 
             val aliasKeys = jsonKeys("contractions_fr.json") + jsonKeys("contraction_pairs_fr.json")
-            injected = CtcContractionKeys.inject(frTrie, aliasKeys)
+            // Mirrors the adapter exactly: inject one below the lexicon's rarest real word.
+            realWords = projected.freqs.keys.toSet()
+            floor = CtcContractionKeys.derivedFloor(projected.freqs.values)
+            injected = CtcContractionKeys.inject(frTrie, aliasKeys, floor)
         }
 
         /** Top-level keys of a shipped JSON object asset, without pulling in a JSON parser. */
@@ -127,58 +136,62 @@ class CtcContractionRankingTest {
             .that(frTrie.contains("dabaissement")).isTrue()
 
         assertWithMessage(
-            "with weak per-frame evidence the real word wins — this is the 'never preferred' " +
-                "half of the invariant, and it holding is why the lune regression cannot recur"
-        ).that(decode(spell("dabaissement", floor = -9f)).first()).isEqualTo("abaissement")
-
-        assertWithMessage(
-            "with strong per-frame evidence the injected key MUST be able to win, or the " +
-                "restore is inert rather than merely conservative"
-        ).that(decode(spell("dabaissement", floor = -80f)).first()).isEqualTo("dabaissement")
+            "emissions that spell the injected key must RETURN it at realistic per-frame " +
+                "evidence. Before the derived floor (2026-08-20) this returned `abaissement` — " +
+                "the real word won by treating the swiped leading `d` as blank, because its " +
+                "frequency bonus outweighed a frame of mismatch once the beam divided the " +
+                "emission evidence by len^0.9 and left the bonus undivided."
+        ).that(decode(spell("dabaissement", floor = -9f)).first()).isEqualTo("dabaissement")
     }
 
     /**
-     * **The finding that matters, pinned so it cannot be forgotten.**
+     * The curated compounds now reach the bar — this is what the derived floor bought.
      *
-     * NONE of the 16 curated hyphen compounds added on 2026-08-20 reach the bar at realistic
-     * per-frame evidence. Every one is beaten by an ordinary French word that shares a prefix:
+     * Before 2026-08-20 not one of the 16 hyphen compounds added the previous day reached the
+     * top-3 at realistic evidence; each lost to an ordinary French word sharing a prefix
+     * (`questce` to `equestre`/`question`, `celuici` to `celui`, `grandsparents` to
+     * `agrandissement`). The data was correct and the trie contained it, but the beam could not
+     * return it, so the restore reached the user only through the display overlay.
      *
-     * | swiped | what the beam returns instead |
-     * |---|---|
-     * | `questce` | equestre, question, questions |
-     * | `celuici` | celui, celtics, celtic |
-     * | `audessous` | auditions, audacieuse, anderson |
-     * | `grandsparents` | agrandissement, grandissante, grandissant |
-     *
-     * The mechanism is the same one the sibling test characterises: a lexicon-native word
-     * collects `λ·ln(freq)` ≈ 11 nats that a floor-injected key cannot, which buys it more than
-     * a frame of mismatch. So the data added by the 2026-08-17 restore AND by the 2026-08-20
-     * curation is **present and correct but not surfaceable through the beam** — it reaches the
-     * user only via the display overlay, on words the beam already produced for other reasons.
-     *
-     * Measured precisely: the assertion is on the TOP-3, because that is roughly what the
-     * suggestion bar renders. Some keys do reach the tail of the top-8 — `quelquesunes` lands
-     * at rank 7 — which is the difference between "the beam cannot produce it" (false) and "the
-     * user will not see it" (true). That distinction matters for the fix: the key IS reachable,
-     * it is out-ranked, so the remedy is a scoring question and not a trie one.
-     *
-     * This test asserts the CURRENT behaviour deliberately. It is not an endorsement: it exists
-     * so that if `INJECTED_FREQUENCY` is ever raised, this fails loudly and someone has to
-     * re-derive the trade rather than discovering it later from a bug report. Under audit; see
-     * the handoff.
+     * Injecting one below the lexicon's rarest REAL word (fr: 68) closes a gap that was never
+     * needed. The invariant is unchanged — every real word still strictly outranks every
+     * pseudo-word on frequency — but the margin is now ~0.03–2.5 nats instead of ~8.5, which
+     * emission evidence can actually decide.
      */
     @Test
-    fun `curated compounds do not currently reach the bar on realistic evidence`() {
-        val shadowed = listOf("questce", "celuici", "cellesci", "audessous", "quelquesunes")
-        for (key in shadowed) {
+    fun `curated compounds reach the bar on realistic evidence`() {
+        for (key in listOf("questce", "celuici", "cellesci", "audessous", "quelquesunes")) {
             assertWithMessage("precondition: '$key' must be injected into the trie")
                 .that(frTrie.contains(key)).isTrue()
             assertWithMessage(
-                "'$key' currently loses to a lexicon-native competitor at realistic per-frame " +
-                    "evidence. If this now PASSES, INJECTED_FREQUENCY (or λ) changed — go and " +
-                    "re-derive the reachable/never-preferred trade before accepting it."
-            ).that(decode(spell(key, floor = -9f)).take(3)).doesNotContain(key)
+                "'$key' must reach the top-3 when the emissions spell it — that is the whole " +
+                    "point of injecting it. If this fails, the injection floor regressed."
+            ).that(decode(spell(key, floor = -9f)).take(3)).contains(key)
         }
+    }
+
+    /**
+     * The invariant the derived floor must NOT have broken: a pseudo-word may never outrank a
+     * real word that the emissions equally support.
+     *
+     * This is the `lune` guard expressed through the scorer. `derivedFloor` keeps every real
+     * word strictly above every injected key on frequency BY CONSTRUCTION, so the property
+     * holds in any lexicon — but it is asserted here rather than trusted, because the whole
+     * 2026-08-17 recovery exists because this was once got wrong.
+     */
+    @Test
+    fun `an injected key never outranks the real word its emissions spell`() {
+        assertWithMessage("precondition: lune is lexicon-native, not floor-injected")
+            .that(frTrie.contains("lune")).isTrue()
+        assertWithMessage("precondition: the injection floor must sit BELOW every real word")
+            .that(floor).isLessThan(69.0)
+
+        // Emissions spelling the real word must return the real word, not the injected sibling
+        // that differs by a leading clitic.
+        assertWithMessage(
+            "a real word's own emissions must return the real word — if an injected key wins " +
+                "here the floor is too high and the lune regression is back"
+        ).that(decode(spell("abaissement", floor = -9f)).first()).isEqualTo("abaissement")
     }
 
     @Test
@@ -189,5 +202,54 @@ class CtcContractionRankingTest {
             "emissions spelling a real word must return that word first — an injected " +
                 "pseudo-word must never displace it"
         ).that(decode(spell("lune")).first()).isEqualTo("lune")
+    }
+
+    /**
+     * The regression sweep: across MANY real shadow pairs, a real word must still win its own
+     * emissions now that the injection floor sits just below it.
+     *
+     * ## Why this test exists in this form
+     *
+     * The audit that prescribed the derived floor called replay validation mandatory, and named
+     * the sensitive metric: the count of traces whose top-1 flips real-word → pseudo-word. But
+     * `scripts/ctc_lang_lambda_sweep.py` and `eval_altlayout` do NOT model contraction injection
+     * at all — verified by search — so an A/B through that harness would decode identically in
+     * both arms and prove nothing. Extending it is real work and is recorded as owed.
+     *
+     * This is the strongest runnable equivalent: it asks the same question the corpus would
+     * (does narrowing the frequency gap let a pseudo-word steal a real word's own swipe?) over
+     * every shadow pair the real fr lexicon actually contains, on synthetic emissions that
+     * spell the real word at a realistic per-frame margin. It is weaker than a corpus replay in
+     * one specific way — real traces are noisier than a clean synthetic peak — and stronger in
+     * another: it covers every affected pair rather than whichever happen to appear in 1,000
+     * sampled traces.
+     */
+    @Test
+    fun `real words still win their own emissions against injected siblings`() {
+        // Shadow pair: a real lexicon word W for which some injected key is <clitic> + W. Those
+        // are exactly the pairs where the narrowed gap could flip a decision.
+        val clitics = listOf('d', 'l', 'j', 'm', 'n', 'c', 's', 't', 'q')
+        val shadowed = realWords
+            .asSequence()
+            .filter { it.length in 6..11 }
+            .filter { w -> clitics.any { frTrie.contains(it + w) } }
+            .take(120)
+            .toList()
+
+        assertWithMessage(
+            "precondition: the fr lexicon must actually contain shadow pairs, or this sweep is " +
+                "vacuous and proves nothing about the risk it exists to measure"
+        ).that(shadowed.size).isAtLeast(20)
+
+        val flipped = shadowed.filter { real ->
+            decode(spell(real, floor = -9f), topK = 1).firstOrNull() != real
+        }
+
+        assertWithMessage(
+            "these real words lost their OWN emissions to an injected sibling. The derived " +
+                "floor keeps every real word strictly above every pseudo-word on frequency, so " +
+                "any flip here means the emission term alone decided it — which is precisely " +
+                "the lune regression in a new form. Flipped: $flipped"
+        ).that(flipped).isEmpty()
     }
 }
