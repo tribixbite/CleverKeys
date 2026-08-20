@@ -47,10 +47,17 @@ corpus in the repo is context-free isolated words, so step 5 of that plan is "bu
 
 ### 3. Smaller, ride-along
 
-- **Possible**: the four `ctc_bench` models may never have been packaged into the androidTest
-  APK — removing 11 MB of them shrank it by 258 bytes. If someone restores them per
-  `src/androidTest/assets/ctc_bench/README.md` and `CtcOnnxLatencyBenchmarkTest` still cannot
-  find them, that is the thread to pull; the benchmark may not have run since it was written.
+- ~~the four `ctc_bench` models may never have been packaged into the androidTest APK~~ —
+  **disproven 2026-08-20, by experiment.** androidTest assets ARE packaged: the existing
+  `assets/ctc_bench/README.md` is present in `CleverKeys-debug-androidTest.apk` at its full
+  1,182 bytes, as are `assets/ctc/ctc_golden.json` and `assets/dictionaries/en_enhanced.json`.
+  Confirmed positively by dropping a 1 MB probe `ch128_s1234.onnx` into the directory and
+  rebuilding: it appears in the APK at `compressed == uncompressed == 1000000`, because
+  `build.gradle:136` sets `noCompress 'onnx'`. So 11 MB of models adds ~11 MB, and the
+  258-byte delta can only have come from a build where they were already absent (they are
+  gitignored and were never committed, so any fresh checkout or CI build lacks them).
+  Nothing to fix. `CtcOnnxLatencyBenchmarkTest` already fails with restore instructions rather
+  than skipping, so the benchmark cannot silently no-op — restore per the README to run it.
 - ~~`CoroutineScopeLifecycleTest` flakes in combined runs~~ — **disproven 2026-08-20.** It passed
   4/4: three isolated runs under 8x CPU oversubscription, and a full 1,660-test combined run. Its
   only output is the deliberate "boom" stack trace, which is almost certainly why it was blamed —
