@@ -144,104 +144,15 @@ jobs:
         sudo udevadm control --reload-rules
         sudo udevadm trigger --name-match=kvm
 
-    - name: Cache AVD
-      uses: actions/cache@v4
-      id: avd-cache
-      with:
-        path: |
-          ~/.android/avd/*
-          ~/.android/adb*
-        key: avd-${{ matrix.api-level }}-${{ matrix.target }}-${{ matrix.arch }}-v2
-
-    - name: Create AVD and generate snapshot
-      if: steps.avd-cache.outputs.cache-hit != 'true'
-      uses: reactivecircus/android-emulator-runner@v2
-      with:
-        api-level: ${{ matrix.api-level }}
-        target: ${{ matrix.target }}
-        arch: ${{ matrix.arch }}
-        force-avd-creation: false
-        emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-        disable-animations: false
-        script: echo "Generated AVD snapshot for caching."
-
     - name: Run UI Tests on Emulator
       uses: reactivecircus/android-emulator-runner@v2
       with:
         api-level: ${{ matrix.api-level }}
         target: ${{ matrix.target }}
         arch: ${{ matrix.arch }}
-        force-avd-creation: false
-        emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+        emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -no-snapshot
         disable-animations: true
-        script: |
-          set -euo pipefail
-          # Debug build applies applicationIdSuffix '.debug'; component classes
-          # keep their original (non-suffixed) fully-qualified names.
-          PKG=tribixbite.cleverkeys.debug
-          IME_COMPONENT="$PKG/tribixbite.cleverkeys.CleverKeysService"
-
-          echo "Installing APK: ${{ env.APK_FILE }}"
-          adb install "${{ env.APK_FILE }}"
-
-          echo "Available input methods:"
-          adb shell ime list -a
-
-          adb shell ime enable "$IME_COMPONENT"
-          adb shell ime set "$IME_COMPONENT"
-
-          # Hard-assert the IME registered — a silent no-op used to pass here.
-          adb shell dumpsys input_method | grep -q "$PKG" \
-            || { echo "::error::CleverKeys IME not registered"; exit 1; }
-
-          adb shell am start -W -n "$PKG/tribixbite.cleverkeys.SettingsActivity"
-          sleep 2
-          adb shell pidof "$PKG" || { echo "::error::App process died"; exit 1; }
-
-          # Capture screenshot (best-effort — not a gate).
-          adb exec-out screencap -p > settings-screenshot.png || true
-          echo "Smoke test completed"
-
-          # ── The actual instrumented gate ──────────────────────────────────────────
-          # Until 2026-08-20 this job installed the APK and grepped dumpsys, and nothing in
-          # CI ever ran an instrumented test. Two of them sat red for a day and a half as a
-          # result — CtcMultiLanguageInstrumentedTest's frozen lexicon pins had been broken
-          # by the contraction restore and only surfaced when a human ran ew-cli by hand.
-          #
-          # A CURATED set, not the whole suite: the full 1395-test run takes ~30 min on
-          # emulator.wtf and would be slower and flakier here, and a gate that times out
-          # teaches people to ignore it. These are the classes that pin invariants no pure
-          # test can reach — real assets parsed on-device, real ONNX session, real geometry.
-          # Full-suite runs stay a deliberate ew-cli action.
-          echo "Installing androidTest APK: ${{ env.TEST_APK_FILE }}"
-          adb install -r "${{ env.TEST_APK_FILE }}"
-
-          RUNNER="$PKG/androidx.test.runner.AndroidJUnitRunner"
-          CLASSES="tribixbite.cleverkeys.swipe.CtcMultiLanguageInstrumentedTest,tribixbite.cleverkeys.GeometricSwipeOracleTest,tribixbite.cleverkeys.CrashGuardInstrumentedTest"
-
-          echo "Running instrumented classes: $CLASSES"
-          set +e
-          # No -r: the raw stream emits INSTRUMENTATION_STATUS records, while the
-          # human-readable form ends in "OK (N tests)" / "FAILURES!!!" — which is what the
-          # verdict check below reads. Mismatching those is how a gate ends up always
-          # erroring, or worse, always passing.
-          adb shell am instrument -w \
-            -e class "$CLASSES" \
-            -e disableAnalytics true \
-            "$RUNNER" 2>&1 | tee instrumentation.log
-          set -e
-
-          # `am instrument` exits 0 even when tests fail — the verdict is only in the stream.
-          # A missing OK line is failure too: a runner that never started must not pass by
-          # producing no bad news. That half is what catches an install or ABI problem.
-          if grep -qE "FAILURES!!!|Process crashed|INSTRUMENTATION_ABORTED" instrumentation.log; then
-            echo "::error::Instrumented tests FAILED — see the instrumentation-log artifact"
-            exit 1
-          fi
-          grep -qE "^OK \\([0-9]+ test" instrumentation.log \
-            || { echo "::error::No OK line — the runner did not complete"; exit 1; }
-          grep -E "^OK \\([0-9]+ test" instrumentation.log
-
+        script: bash .github/scripts/emulator-ci.sh gate
     - name: Upload instrumentation log
       if: always()
       uses: actions/upload-artifact@v4
@@ -298,31 +209,9 @@ jobs:
         api-level: 33
         target: google_apis
         arch: x86_64
-        force-avd-creation: false
-        emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+        emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -no-snapshot
         disable-animations: true
-        script: |
-          set -euo pipefail
-          PKG=tribixbite.cleverkeys.debug
-          IME_COMPONENT="$PKG/tribixbite.cleverkeys.CleverKeysService"
-
-          adb install "${{ env.APK_FILE }}"
-
-          adb shell ime enable "$IME_COMPONENT"
-          adb shell ime set "$IME_COMPONENT"
-
-          adb shell dumpsys input_method | grep -q "$PKG" \
-            || { echo "::error::CleverKeys IME not registered"; exit 1; }
-
-          mkdir -p screenshots
-
-          adb shell am start -W -n "$PKG/tribixbite.cleverkeys.SettingsActivity"
-          sleep 2
-          adb shell pidof "$PKG" || { echo "::error::App process died"; exit 1; }
-          adb exec-out screencap -p > screenshots/settings-screen.png || true
-
-          echo "Visual regression test completed"
-
+        script: bash .github/scripts/emulator-ci.sh visual
     - name: Upload visual regression artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -379,28 +268,9 @@ jobs:
         api-level: 33
         target: google_apis
         arch: x86_64
-        force-avd-creation: false
-        emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+        emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -no-snapshot
         disable-animations: true
-        script: |
-          set -euo pipefail
-          PKG=tribixbite.cleverkeys.debug
-          IME_COMPONENT="$PKG/tribixbite.cleverkeys.CleverKeysService"
-
-          adb install "${{ env.APK_FILE }}"
-
-          adb shell ime enable "$IME_COMPONENT"
-          adb shell ime set "$IME_COMPONENT"
-
-          # Enable accessibility services for testing
-          adb shell settings put secure accessibility_enabled 1
-
-          # Hard-assert the IME registered before claiming accessibility passed.
-          adb shell dumpsys input_method | grep -q "$PKG" \
-            || { echo "::error::CleverKeys IME not registered"; exit 1; }
-
-          echo "Accessibility test completed"
-
+        script: bash .github/scripts/emulator-ci.sh a11y
     - name: Generate accessibility summary
       if: success()
       run: |
