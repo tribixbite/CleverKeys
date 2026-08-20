@@ -129,6 +129,8 @@
          and hide the debt from whoever reviews res/values-*/ next, which is the worse outcome.
          Owed: real translations, tracked in memory/HANDOFF-2026-08-19.md. Remove this attribute
          when they land. -->
+    <string name="dict_word_too_long_for_swipe_title" tools:ignore="MissingTranslation">Added — but too long to swipe</string>
+    <string name="dict_word_too_long_for_swipe_msg" tools:ignore="MissingTranslation">"%1$s" has been added and will work for tap typing. It is too long for the CTC swipe engine, which can decode at most %3$d steps and needs %2$d for this word (doubled letters cost an extra step each). Swiping will not offer it.</string>
     <string name="gesture_finger_occlusion_title" tools:ignore="MissingTranslation">Touch Offset Correction</string>
     <string name="gesture_finger_occlusion_desc" tools:ignore="MissingTranslation">Shifts where swipes are read relative to your fingertip, as a percent of one key row. Positive if your swipes land above the keys you aim for, negative if below. Off by default.</string>
     <string name="gesture_touch_smoothing_title" tools:ignore="MissingTranslation">Touch Smoothing</string>

@@ -1,5 +1,7 @@
 package tribixbite.cleverkeys
 
+import tribixbite.cleverkeys.swipe.ctc.CtcDecodableLength
+
 import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.os.Bundle
@@ -336,6 +338,27 @@ class WordListFragment : Fragment() {
                             loadWords()
                             // Notify parent activity to refresh predictions
                             (activity as? DictionaryManagerActivity)?.refreshAllTabs()
+
+                            // The word IS added — tap typing and the geometric engine handle any
+                            // length. But the CTC encoder emits a fixed 32 frames, and a CTC path
+                            // needs one frame per letter plus a blank between doubled letters, so
+                            // past that budget NO alignment exists and the beam can never produce
+                            // it. Without this the word would simply never appear on a swipe, with
+                            // nothing to distinguish that from a bad gesture.
+                            if (!CtcDecodableLength.isDecodable(word)) {
+                                AlertDialog.Builder(requireContext())
+                                    .setTitle(R.string.dict_word_too_long_for_swipe_title)
+                                    .setMessage(
+                                        getString(
+                                            R.string.dict_word_too_long_for_swipe_msg,
+                                            word,
+                                            CtcDecodableLength.framesRequired(word),
+                                            CtcDecodableLength.EMISSION_FRAMES
+                                        )
+                                    )
+                                    .setPositiveButton(android.R.string.ok, null)
+                                    .show()
+                            }
                         } catch (e: Exception) {
                             AlertDialog.Builder(requireContext())
                                 .setTitle("Error")
