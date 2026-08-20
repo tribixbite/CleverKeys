@@ -268,19 +268,19 @@ class BundledContractionDataTest {
         // `dabaissement` → `d'abaissement` — not a dictionary word, and exactly what French
         // users type — IS reachable. The restore keeps every a–z key and drops only the keys
         // no a–z decoder can ever spell (accents, hyphens: `cest-à-dire`, `ceût`).
-        // 17_931 extracted + 44 hand-curated hyphen compounds
+        // 17_931 extracted + 45 hand-curated hyphen compounds
         // (docs/proposals/2026-08-20-hyphen-compound-contractions.md): Phase A's 16 accent-free
-        // values, minus `rendezvous` (held back — see the CURATED_CONTRACTIONS comment and the
-        // landmine pin), plus Phase B's 28 accent-carrying values, which required folding
-        // accents in the projection invariant above.
-        assertThat(files.getValue("fr")).hasSize(17_975)
+        // values, Phase B's 28 accent-carrying values (which required folding accents in the
+        // projection invariant above), and `rendezvous`, which landed last because it needed the
+        // cross-language collision guard rather than a data change.
+        assertThat(files.getValue("fr")).hasSize(17_976)
         assertThat(pairFiles.getValue("fr")).hasSize(183)
         val fr = coverageOf("fr")
         assertWithMessage("dead French mappings: ${deadKeysOf("fr")}").that(fr.dead).isEqualTo(0)
         // 17_975 replace + 183 pairs. The pairs file is deliberately untouched by BOTH
         // curated phases — every curated verdict is REPLACE, verified by regenerating: the
         // 2026-08-20 Phase B run was +28/-0 on the replace file and left pairs at 183.
-        assertThat(fr.entries).isEqualTo(18_158)
+        assertThat(fr.entries).isEqualTo(18_159)
 
         assertThat(files.getValue("it")).hasSize(21_214)
         assertThat(pairFiles.getValue("it")).hasSize(148)
@@ -471,6 +471,8 @@ class BundledContractionDataTest {
             "grandmere" to "grand-mère",
             "beaufrere" to "beau-frère",
             "visavis" to "vis-à-vis",
+            // Landed only once the cross-language guard existed — see the landmine test's KDoc.
+            "rendezvous" to "rendez-vous",
         )
         for ((key, value) in curated) {
             assertWithMessage("curated fr key '$key' is missing from contractions_fr.json")
@@ -488,16 +490,25 @@ class BundledContractionDataTest {
      * a user swiping `minuit` would get `mi-nuit`. Enumerated in the proposal's §2 table; the
      * bulk extraction was rejected precisely because it produced 73 of these.
      *
-     * `rendezvous` is here for a different reason: it is legitimate French, but it is also an
-     * English lexicon word (@18993) and a German one, and the tap transform at
-     * `SuggestionHandler:1918` is unguarded — so an fr+en user typing English "rendezvous"
-     * would have it rewritten. Delete that line ONLY together with adding the guard.
+     * `rendezvous` USED to be on this list, for a different reason: it is legitimate French, but
+     * it is also an English lexicon word (@18993) and a German one, and the tap path merged every
+     * active language's REPLACE keys into one map — so an fr+en user typing English "rendezvous"
+     * had it rewritten. It is no longer held out, because that guard now exists:
+     * `ContractionCollisionDemotion` moves any REPLACE key that is a real word of another ACTIVE
+     * language into the PAIRED bucket. Its coverage is pinned in `ContractionCollisionDataTest`,
+     * which asserts the `rendezvous` entry names exactly `de` and `en`.
+     *
+     * The distinction matters and is why the two lists are not merged: the keys below are wrong
+     * in EVERY configuration (`minuit` must never become `mi-nuit` for anyone), whereas
+     * `rendezvous` is right for a French-only user and wrong only alongside English. A key that
+     * is conditionally wrong belongs in the collision sidecar; a key that is unconditionally
+     * wrong belongs here.
      */
     @Test
     fun `the French landmine keys are absent from both files`() {
         val landmines = listOf(
             "weekend", "email", "haha", "minuit", "parla", "nonne", "amies",
-            "entretemps", "estelle", "aton", "dodo", "tata", "rendezvous",
+            "entretemps", "estelle", "aton", "dodo", "tata",
         )
         val replace = files.getValue("fr")
         val pairs = pairFiles.getValue("fr")
@@ -792,7 +803,12 @@ class BundledContractionDataTest {
             "haha", "dodo", "tata",
             "amies",       // <- ami-e-s, écriture-inclusive debris
             "weekend", "email", "entretemps", // classifier misfires (hunspell rejects them)
-            "rendezvous",  // held back: en@18993 + de word, unguarded tap transform
+            // `rendezvous` was on this list until 2026-08-20 and has been REMOVED deliberately.
+            // It never belonged with these: they are wrong for every user, whereas `rendezvous`
+            // is correct French and wrong only when English is also active. That conditional
+            // case now has its own mechanism — `ContractionCollisionDemotion` — so keeping it
+            // here would suppress a correct mapping for French-only users. Its cross-language
+            // protection is pinned by `ContractionCollisionDataTest`.
         )) {
             assertWithMessage(
                 "'$landmine' must NOT be a REPLACE key — it is either a real word of the " +

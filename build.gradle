@@ -542,6 +542,11 @@ tasks.register('runPureTests', JavaExec) {
     // (newKeySet/computeIfAbsent/merge/getOrDefault/putIfAbsent-on-HashMap), which
     // are NoSuchMethodError crashes on Android 5.0–6.0. Backs up lint's NewApi.
     'tribixbite.cleverkeys.MinSdkApiUsageDriftTest',
+    // Cross-language contraction collision guard (2026-08-20): a REPLACE key of one active
+    // language that is a real word of the OTHER active language must be demoted to PAIRED,
+    // or the real word is destroyed in its own slot (fr+en `dont`, de+en `im`/`hats`).
+    'tribixbite.cleverkeys.ContractionCollisionDemotionTest',
+    'tribixbite.cleverkeys.swipe.ContractionCollisionDataTest',
     // SwipePrunerTest excluded: requires android.util.Log (MockK + Robolectric)
   ]
 

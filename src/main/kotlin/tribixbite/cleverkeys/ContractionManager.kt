@@ -206,13 +206,68 @@ class ContractionManager(private val context: Context) {
             loadLanguageContractions(SwipeContractionPolicy.ENGLISH)
         }
 
+        // Demote REPLACE keys that are real words of the OTHER active language. This is the
+        // cross-language half of the 2026-07-23 paired-base reclassification above: without it
+        // an fr+en user typing French `dont` got `don't`, and a de+en user typing German `im`
+        // got `I'm`. See [ContractionCollisionDemotion] for the full rationale.
+        //
+        // Only meaningful when a SECOND language is active — a monolingual user's intersection
+        // is always empty — but it is run unconditionally rather than gated on `secondary`,
+        // because `wantsEnglish` can add English alongside a non-English primary even when no
+        // explicit secondary is set. Gating on `secondary != null` would silently miss exactly
+        // the fr-primary/English-base case that motivated this.
+        val activeLanguages = buildSet {
+            add(SwipeContractionPolicy.baseSubtag(primaryLang))
+            secondary?.let { add(SwipeContractionPolicy.baseSubtag(it)) }
+            if (wantsEnglish) add(SwipeContractionPolicy.ENGLISH)
+        }
+        val demoted = ContractionCollisionDemotion.demote(
+            nonPaired = nonPairedContractions,
+            paired = pairedContractions,
+            collisionsByKey = loadCollisionTables(activeLanguages),
+            activeLanguages = activeLanguages,
+        )
+
         Log.d(
             TAG,
             "Typing contractions primary='" + primaryLang + "' secondary='" +
                 (secondary ?: "none") + "' english=" + wantsEnglish + ": dropped " + dropped +
                 ", loaded " + nonPairedContractions.size + " non-paired + " +
-                pairedContractions.size + " paired"
+                pairedContractions.size + " paired, demoted " + demoted + " cross-language"
         )
+    }
+
+    /**
+     * Merged `key -> colliding languages` tables for every ACTIVE language.
+     *
+     * Only the active languages' sidecars are read: a key can only be demoted if it came from a
+     * mapping file that was actually loaded, and those are exactly the active languages' files.
+     *
+     * A missing sidecar is normal and not an error — es/pt/sv ship no REPLACE mappings at all, so
+     * they have nothing to collide, and an imported language pack has no sidecar by construction
+     * (documented residual: an uncurated pack can still destroy the other language's words on the
+     * typing path; the swipe path keeps the overlay's rank guard).
+     */
+    private fun loadCollisionTables(activeLanguages: Set<String>): Map<String, Set<String>> {
+        val merged = HashMap<String, MutableSet<String>>()
+        for (lang in activeLanguages) {
+            val filename = ContractionCollisionDemotion.assetName(lang)
+            try {
+                val jsonObj = JSONObject(readStream(assetManager.open(filename)))
+                val keys = jsonObj.keys()
+                while (keys.hasNext()) {
+                    val key = keys.next()
+                    val languages = jsonObj.getJSONArray(key)
+                    val bucket = merged.getOrPut(key.lowercase()) { mutableSetOf() }
+                    for (i in 0 until languages.length()) bucket.add(languages.getString(i))
+                }
+            } catch (e: java.io.FileNotFoundException) {
+                // No REPLACE mappings for this language, so nothing can collide.
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to load collision table for $lang: ${e.message}")
+            }
+        }
+        return merged
     }
 
     fun loadSwipeDisplayMappings(langCode: String) {

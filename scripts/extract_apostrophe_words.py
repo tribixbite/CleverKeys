@@ -188,10 +188,13 @@ CURATED_CONTRACTIONS = {
     # negative assertions that the landmine keys are absent. Read that test before adding a
     # row here: an accented value can no longer be caught by the projection invariant alone.
     #
-    # `rendezvous -> rendez-vous` was in the audited Phase A and is deliberately OMITTED: it is
-    # an English lexicon word (@18993) and a German one, and the tap transform at
-    # SuggestionHandler:1918 is still unguarded, so an fr+en user typing English "rendezvous"
-    # would have it rewritten to the French hyphenation. Add it only after that guard lands.
+    # `rendezvous -> rendez-vous` was held out of Phase A because it is an English lexicon word
+    # (@18993) and a German one, and the tap path merged every active language's REPLACE keys
+    # into one map, so an fr+en user typing English "rendezvous" had it rewritten. That guard now
+    # exists: `ContractionCollisionDemotion` moves any REPLACE key that is a real word of another
+    # ACTIVE language into the PAIRED bucket, so an fr+en user gets both spellings and an
+    # fr-only user still gets the REPLACE. Regenerate the collision sidecars after changing this
+    # table: `python3 scripts/build_contraction_collisions.py`.
     "fr": {
         "questce": "qu'est-ce",
         "estce": "est-ce",
@@ -238,6 +241,7 @@ CURATED_CONTRACTIONS = {
         "beaupere": "beau-père",
         "beaufrere": "beau-frère",
         "visavis": "vis-à-vis",
+        "rendezvous": "rendez-vous",
         # `belle-sœur` is excluded: `œ` is not a-z projectable, so the key could never be
         # injected and the mapping would be permanently dead.
     },
