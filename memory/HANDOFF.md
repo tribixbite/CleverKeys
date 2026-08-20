@@ -20,14 +20,7 @@ Last full instrumented run 1395 tests / 0 failures.
 
 ## Open work, in priority order
 
-### 1. MEDIUM-4 — 11 MB of superseded ONNX in `androidTest`
-
-`androidTest/assets/ctc_bench/` ships four arch-comparison models, one labelled "the ship
-candidate" which it is not. Delete, or add a README saying they are superseded; rename
-`fullDecodePath_ch128_beam100_tunedV2` (its constants are E1, not tunedV2) and fix
-`CtcBenchFixture.kt:9`'s rival fixture citation.
-
-### 2. Contraction follow-ups, all deferred deliberately
+### 1. Contraction follow-ups, all deferred deliberately
 
 - **Phase B hyphen compounds** (28 accented values: `peut-être`, `c'est-à-dire`, the `-même`
   pronouns). Blocked on a test change: `BundledContractionDataTest`'s "value differs by
@@ -44,7 +37,7 @@ candidate" which it is not. Delete, or add a README saying they are superseded; 
 - **German injection stays mostly inert** even after `98307dc2`: de's rarest real word is freq 12,
   so the derived floor is 11 and the headroom is small. Scale-specific, not a bug.
 
-### 3. Context-LM rescoring of the CTC slate — design done, build not started
+### 2. Context-LM rescoring of the CTC slate — design done, build not started
 
 `scripts/ctc_injection_ab.py` is now the worked example of extending a replay harness with a new
 dimension — reuse its shape rather than starting over. Note especially its metric lesson: score
@@ -58,9 +51,13 @@ combination, privacy-gated on `LearningGate`, default-OFF, rank-1 displacement b
 **Do not enable by default without evidence, and the evidence does not exist yet** — every replay
 corpus in the repo is context-free isolated words, so step 5 of that plan is "build the harness".
 
-### 4. Smaller, ride-along
+### 3. Smaller, ride-along
 
 - `SwipeResampler.kt` is consumer-less dead code.
+- **Possible**: the four `ctc_bench` models may never have been packaged into the androidTest
+  APK — removing 11 MB of them shrank it by 258 bytes. If someone restores them per
+  `src/androidTest/assets/ctc_bench/README.md` and `CtcOnnxLatencyBenchmarkTest` still cannot
+  find them, that is the thread to pull; the benchmark may not have run since it was written.
 - Orphaned strings `autocorrect_fuzzy_algorithm_*`, `autocorrect_source_balance_*`.
 - `CoroutineScopeLifecycleTest` flakes in combined runs; no mechanism identified (unlike
   `UserVocabularyPersistenceTest`, fixed in `34606b87`). Its noisy output is a test deliberately
