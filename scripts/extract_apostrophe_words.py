@@ -168,6 +168,42 @@ DICPATH = os.pathsep.join([
 #
 # Guarded by src/test/kotlin/tribixbite/cleverkeys/swipe/BundledContractionDataTest.kt.
 CURATED_CONTRACTIONS = {
+    # French hyphenated compounds (2026-08-20, docs/proposals/2026-08-20-hyphen-compound-
+    # contractions.md Phase A). Hand-curated for the same reason the German clitics are: a
+    # BULK hyphen extraction produces 16,687 keys of which 73 are native French words with no
+    # rank protection (minuit<-mi-nuit, parla<-par-la, nonne<-non-ne), and the recovery
+    # classifier itself misfires on anglicisms and 1990-reform spellings (weekend, email,
+    # entretemps would classify REPLACE and be destroyed in-slot). That is the `lune` damage a
+    # third time, so the extraction is deliberately NOT widened.
+    #
+    # Every entry below was derived, not assumed: hunspell fr_FR rejects the key, ASK
+    # frequency of the key is 0, the key is absent from the fr lexicon surfaces, and it fits
+    # the 32-frame CTC budget (max 13). Values are accent-free so the existing
+    # BundledContractionDataTest "differs by apostrophes/hyphens only" pin still holds with no
+    # relaxation — that strictness is load-bearing (it is what refuses nonne->non-ne).
+    #
+    # `rendezvous -> rendez-vous` was in the audited Phase A and is deliberately OMITTED: it is
+    # an English lexicon word (@18993) and a German one, and the tap transform at
+    # SuggestionHandler:1918 is still unguarded, so an fr+en user typing English "rendezvous"
+    # would have it rewritten to the French hyphenation. Add it only after that guard lands.
+    "fr": {
+        "questce": "qu'est-ce",
+        "estce": "est-ce",
+        "nestce": "n'est-ce",
+        "celuici": "celui-ci",
+        "celleci": "celle-ci",
+        "ceuxci": "ceux-ci",
+        "cellesci": "celles-ci",
+        "audessus": "au-dessus",
+        "audessous": "au-dessous",
+        "cidessus": "ci-dessus",
+        "cidessous": "ci-dessous",
+        "quelquesuns": "quelques-uns",
+        "quelquesunes": "quelques-unes",
+        "grandsparents": "grands-parents",
+        "avanthier": "avant-hier",
+        "demiheure": "demi-heure",
+    },
     "de": {
         "fands": "fand's",
         "gabs": "gab's",

@@ -5,6 +5,7 @@ import com.google.common.truth.Truth.assertWithMessage
 import com.google.gson.JsonParser
 import org.junit.BeforeClass
 import org.junit.Test
+import tribixbite.cleverkeys.swipe.ctc.CtcDecodableLength
 import tribixbite.cleverkeys.swipe.ctc.CtcAzProjection
 import tribixbite.cleverkeys.swipe.ctc.CtcCkdtLexicon
 import tribixbite.cleverkeys.swipe.ctc.CtcContractionKeys
@@ -252,11 +253,16 @@ class BundledContractionDataTest {
         // `dabaissement` → `d'abaissement` — not a dictionary word, and exactly what French
         // users type — IS reachable. The restore keeps every a–z key and drops only the keys
         // no a–z decoder can ever spell (accents, hyphens: `cest-à-dire`, `ceût`).
-        assertThat(files.getValue("fr")).hasSize(17_931)
+        // 17_931 + the 16 hand-curated hyphen compounds added 2026-08-20
+        // (docs/proposals/2026-08-20-hyphen-compound-contractions.md Phase A, minus
+        // `rendezvous` — see the CURATED_CONTRACTIONS comment for why that one is held back).
+        assertThat(files.getValue("fr")).hasSize(17_947)
         assertThat(pairFiles.getValue("fr")).hasSize(183)
         val fr = coverageOf("fr")
         assertWithMessage("dead French mappings: ${deadKeysOf("fr")}").that(fr.dead).isEqualTo(0)
-        assertThat(fr.entries).isEqualTo(18_114)
+        // 17_947 replace + 183 pairs. Both halves move only by the 16 curated additions;
+        // the pairs file is deliberately untouched (2026-08-20).
+        assertThat(fr.entries).isEqualTo(18_130)
 
         assertThat(files.getValue("it")).hasSize(21_214)
         assertThat(pairFiles.getValue("it")).hasSize(148)
@@ -587,5 +593,85 @@ class BundledContractionDataTest {
         assertThat(en["dont"]).isEqualTo("don't")
         assertThat(en["cant"]).isEqualTo("can't")
         assertThat(File("$DICT_DIR/contraction_pairs_en.json").isFile).isFalse()
+    }
+
+    /**
+     * The 16 hand-curated French hyphen compounds, pinned by exact content.
+     *
+     * ### Why these are curated rather than extracted
+     *
+     * A bulk hyphen extraction yields 16,687 keys, and 73 of them are native French words with
+     * no rank protection — `minuit` from `mi-nuit`, `parla` (passé simple) from `par-là`,
+     * `nonne` (nun) from `non-né`. `ContractionOverlay` rule 2b REPLACES a key ranked past
+     * `REAL_WORD_ORDINAL_MAX`, so each of those would destroy a real word in-slot. That is
+     * exactly the `lune → l'une` damage that had to be recovered from in `8230333b`.
+     *
+     * Worse, the recovery's own classifier misfires here: hunspell fr_FR rejects anglicisms and
+     * 1990-reform spellings, so `weekend`, `email` and `entretemps` would each be classified
+     * REPLACE. Six candidate keys are also English top-3000 words feeding the still-unguarded
+     * tap transform at `SuggestionHandler:1918`. So the generator is deliberately NOT widened
+     * to hyphens; this list is.
+     *
+     * ### What this test buys
+     *
+     * A size pin alone would let the set drift — a future edit could swap an entry, or a
+     * widened extraction could add 16 different keys and still satisfy the count. Every key
+     * here was individually derived (hunspell rejects it, ASK frequency 0, absent from the fr
+     * lexicon surfaces, fits the 32-frame CTC budget), so the safe invariant is exact content.
+     *
+     * The negative cases are the point: the landmines must stay OUT.
+     */
+    @Test
+    fun `curated french hyphen compounds are exactly the audited set`() {
+        val fr = files.getValue("fr")
+        val curated = mapOf(
+            "questce" to "qu'est-ce",
+            "estce" to "est-ce",
+            "nestce" to "n'est-ce",
+            "celuici" to "celui-ci",
+            "celleci" to "celle-ci",
+            "ceuxci" to "ceux-ci",
+            "cellesci" to "celles-ci",
+            "audessus" to "au-dessus",
+            "audessous" to "au-dessous",
+            "cidessus" to "ci-dessus",
+            "cidessous" to "ci-dessous",
+            "quelquesuns" to "quelques-uns",
+            "quelquesunes" to "quelques-unes",
+            "grandsparents" to "grands-parents",
+            "avanthier" to "avant-hier",
+            "demiheure" to "demi-heure",
+        )
+        for ((key, value) in curated) {
+            assertWithMessage("curated hyphen compound '$key' must ship with its exact value")
+                .that(fr[key]).isEqualTo(value)
+            assertWithMessage("'$key' must be a-z so some engine can actually emit it")
+                .that(key.all { it in 'a'..'z' }).isTrue()
+            assertWithMessage(
+                "'$key' must fit the CTC frame budget — a longer key is inert, occupying trie " +
+                    "nodes for a word the beam can never produce"
+            ).that(CtcDecodableLength.isDecodable(key)).isTrue()
+            assertWithMessage(
+                "'$key' -> '$value': a value containing a SPACE cannot be committed (the commit " +
+                    "machinery is single-token) and fails the projection invariant"
+            ).that(value).doesNotContain(" ")
+        }
+
+        // The landmines a widened extraction would have introduced. Each is a REAL French word
+        // that rule 2b would have replaced in-slot, or a classifier misfire.
+        for (landmine in listOf(
+            "minuit",      // <- mi-nuit; midnight
+            "parla",       // <- par-la; passé simple of parler
+            "nonne",       // <- non-ne; nun
+            "haha", "dodo", "tata",
+            "amies",       // <- ami-e-s, écriture-inclusive debris
+            "weekend", "email", "entretemps", // classifier misfires (hunspell rejects them)
+            "rendezvous",  // held back: en@18993 + de word, unguarded tap transform
+        )) {
+            assertWithMessage(
+                "'$landmine' must NOT be a REPLACE key — it is either a real word of the " +
+                    "language or a known classifier misfire. See the KDoc."
+            ).that(fr).doesNotContainKey(landmine)
+        }
     }
 }
