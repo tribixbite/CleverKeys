@@ -53,9 +53,13 @@ import java.io.File
  *     can spell at all (accents, hyphens).
  *  2. **the two files are disjoint, and the REPLACE file holds no common word** — the
  *     classification is explicit, so nothing is left for the runtime rank guard to catch.
- *  3. **every value differs from its key by apostrophes/hyphens ONLY** — no accent change, no
- *     other letters. A value that changes anything else is either a typo or a word from
- *     another language, and would put a word on the suggestion bar that no engine decoded.
+ *  3. **every value differs from its key by apostrophes, hyphens and ACCENTS only** — never by
+ *     a letter. A value that changes a letter is either a typo or a word from another
+ *     language, and would put a word on the suggestion bar that no engine decoded. Accents
+ *     were folded in on 2026-08-20 so the Phase B hyphen compounds (`peutetre` → `peut-être`)
+ *     could ship; because that fold gives up the check that refused `nonne` → `non-né`, it is
+ *     backed by an exact-value pin over the curated table and an explicit absent-landmines
+ *     pin. All three move together.
  *  4. **the empty files are empty for a LINGUISTIC reason** — es/pt/sv have no apostrophe
  *     contractions worth displaying, and the tests assert the positive evidence for that
  *     (the relevant words are in the lexicon spelled WITHOUT apostrophes).
@@ -205,6 +209,17 @@ class BundledContractionDataTest {
      * is precisely what a French user swipes. Judging reachability by route 1 alone declared
      * 27,256 fr + 22,355 it mappings dead and deleted them.
      */
+    /**
+     * NFD-decompose and drop combining marks, so `être` and `etre` compare equal.
+     *
+     * Deliberately NOT `CtcAzProjection.project`: that also lowercases, strips joiners and
+     * REJECTS anything outside a–z by returning null, which would silently pass a value the
+     * beam can never spell instead of failing on it. This folds accents and nothing else.
+     */
+    private fun foldAccents(s: String): String =
+        java.text.Normalizer.normalize(s, java.text.Normalizer.Form.NFD)
+            .filterNot { Character.getType(it) == Character.NON_SPACING_MARK.toInt() }
+
     private fun isReachable(language: String, key: String): Boolean =
         key in emitted.getValue(language) || CtcContractionKeys.isInjectable(key, AZ_ALPHABET)
 
@@ -253,16 +268,19 @@ class BundledContractionDataTest {
         // `dabaissement` → `d'abaissement` — not a dictionary word, and exactly what French
         // users type — IS reachable. The restore keeps every a–z key and drops only the keys
         // no a–z decoder can ever spell (accents, hyphens: `cest-à-dire`, `ceût`).
-        // 17_931 + the 16 hand-curated hyphen compounds added 2026-08-20
-        // (docs/proposals/2026-08-20-hyphen-compound-contractions.md Phase A, minus
-        // `rendezvous` — see the CURATED_CONTRACTIONS comment for why that one is held back).
-        assertThat(files.getValue("fr")).hasSize(17_947)
+        // 17_931 extracted + 44 hand-curated hyphen compounds
+        // (docs/proposals/2026-08-20-hyphen-compound-contractions.md): Phase A's 16 accent-free
+        // values, minus `rendezvous` (held back — see the CURATED_CONTRACTIONS comment and the
+        // landmine pin), plus Phase B's 28 accent-carrying values, which required folding
+        // accents in the projection invariant above.
+        assertThat(files.getValue("fr")).hasSize(17_975)
         assertThat(pairFiles.getValue("fr")).hasSize(183)
         val fr = coverageOf("fr")
         assertWithMessage("dead French mappings: ${deadKeysOf("fr")}").that(fr.dead).isEqualTo(0)
-        // 17_947 replace + 183 pairs. Both halves move only by the 16 curated additions;
-        // the pairs file is deliberately untouched (2026-08-20).
-        assertThat(fr.entries).isEqualTo(18_130)
+        // 17_975 replace + 183 pairs. The pairs file is deliberately untouched by BOTH
+        // curated phases — every curated verdict is REPLACE, verified by regenerating: the
+        // 2026-08-20 Phase B run was +28/-0 on the replace file and left pairs at 183.
+        assertThat(fr.entries).isEqualTo(18_158)
 
         assertThat(files.getValue("it")).hasSize(21_214)
         assertThat(pairFiles.getValue("it")).hasSize(148)
@@ -354,19 +372,31 @@ class BundledContractionDataTest {
 
     @Test
     fun `every contraction value differs from its key by apostrophes and hyphens only`() {
-        // Stricter than SwipeContractionLanguageIsolationTest's a–z projection check, which
-        // also folds accents away: here the display form may ADD an apostrophe or hyphen and
-        // nothing else. That catches a typo ("gibts" → "gibsts"), a wrong-language value
-        // ("gehts" → "va bene") and an accent the beam's canonical form does not carry.
-        // English is excluded on purpose: its possessive pairings deliberately add a letter
-        // ("africa" → "africa's").
+        // The display form may ADD joiners and RESTORE accents; it may never change a LETTER.
+        // That still catches a typo ("gibts" → "gibsts") and a wrong-language value ("gehts"
+        // → "va bene"). English is excluded on purpose: its possessive pairings deliberately
+        // add a letter ("africa" → "africa's").
+        //
+        // Accent folding was added 2026-08-20 for Phase B of the hyphen compounds — the keys
+        // are a–z surfaces the beam decodes, so an accented value like `peutetre` →
+        // `peut-être` is correct and was failing a pin that predated any accented value.
+        //
+        // BUT the strictness this gives up was load-bearing: unfolded, this pin is what would
+        // have refused `nonne` → `non-né` (`nonne` is a real French word for a nun, ordinal
+        // 4104-ish, and REPLACE would destroy it in-slot — the `lune` damage shape a third
+        // time). Folded, `non-né` and `nonne` compare equal and this test can no longer see
+        // it. The compensation is two-fold and lives below: `the curated French hyphen
+        // compounds are pinned to their exact values` pins the whole curated table
+        // content-exactly, and `the French landmine keys are absent from both files` names
+        // every §2 landmine explicitly. Neither is optional — do not delete one thinking the
+        // other covers it, and do not widen the curated table without extending both.
         val joiners = charArrayOf('\'', '’', '-')
         for (language in files.keys) {
             val mappings = files.getValue(language).map { (k, v) -> k to v } +
                 pairFiles.getValue(language).flatMap { (k, vs) -> vs.map { k to it } }
             for ((key, value) in mappings) {
-                val bareValue = value.filterNot { it in joiners }
-                val bareKey = key.filterNot { it in joiners }
+                val bareValue = foldAccents(value.filterNot { it in joiners })
+                val bareKey = foldAccents(key.filterNot { it in joiners })
                 assertWithMessage(
                     "$language: '$key' → '$value' strips to '$bareValue' but the key strips to " +
                         "'$bareKey' — the overlay would show a word the beam never decoded"
@@ -382,6 +412,102 @@ class BundledContractionDataTest {
         }
         for (language in listOf("fr", "it")) {
             assertThat(pairFiles.getValue(language)).isNotEmpty()
+        }
+    }
+
+    /**
+     * The relaxation above folds ACCENTS. It must not have started tolerating LETTER changes.
+     *
+     * Without this, "we fold accents now" could be widened to "we fold" by a later edit and
+     * nothing would notice: every case the pin exists to catch — a typo, a wrong-language
+     * value, a value that is a different word — is a letter change.
+     */
+    @Test
+    fun `the accent fold still rejects a letter change`() {
+        val joiners = charArrayOf('\'', '’', '-')
+        fun bare(s: String) = foldAccents(s.filterNot { it in joiners })
+
+        // Accents ARE folded — this is the Phase B case the relaxation exists for.
+        assertWithMessage("`peutetre` → `peut-être` must pass: accents may be restored")
+            .that(bare("peut-être")).isEqualTo(bare("peutetre"))
+        // Letters are NOT.
+        assertWithMessage("a typo must still fail: `gibts` → `gibsts` adds a letter")
+            .that(bare("gibsts")).isNotEqualTo(bare("gibts"))
+        assertWithMessage("a wrong-language value must still fail")
+            .that(bare("va bene")).isNotEqualTo(bare("gehts"))
+        assertWithMessage("a different word must still fail: `parla` is not `par-le`")
+            .that(bare("par-le")).isNotEqualTo(bare("parla"))
+    }
+
+    /**
+     * COMPENSATION 1 for the accent fold: the curated French hyphen table, content-exactly.
+     *
+     * The projection invariant can no longer distinguish `nonne` → `non-né` from a legitimate
+     * accent restoration, so the curated set is pinned by value instead. A wrong value here
+     * fails loudly rather than passing a fold.
+     *
+     * These are a SAMPLE of the 44 curated entries chosen for what each one guards, not an
+     * exhaustive list — the exhaustive guard is that all 44 are generated from one table in
+     * `scripts/extract_apostrophe_words.py` and the size ratchet below counts them.
+     */
+    @Test
+    fun `the curated French hyphen compounds are pinned to their exact values`() {
+        val fr = files.getValue("fr")
+        val curated = mapOf(
+            // Phase A — accent-free, the highest-value entries in the whole task.
+            "questce" to "qu'est-ce",
+            "estce" to "est-ce",
+            "celuici" to "celui-ci",
+            "audessus" to "au-dessus",
+            "quelquesunes" to "quelques-unes",
+            "grandsparents" to "grands-parents",
+            // Phase B — accent-carrying, i.e. the entries that could ONLY land with the fold.
+            "peutetre" to "peut-être",
+            "cestadire" to "c'est-à-dire",
+            "labas" to "là-bas",
+            "apresmidi" to "après-midi",
+            "luimeme" to "lui-même",
+            "ellesmemes" to "elles-mêmes",
+            "grandmere" to "grand-mère",
+            "beaufrere" to "beau-frère",
+            "visavis" to "vis-à-vis",
+        )
+        for ((key, value) in curated) {
+            assertWithMessage("curated fr key '$key' is missing from contractions_fr.json")
+                .that(fr).containsKey(key)
+            assertWithMessage("curated fr key '$key' must map to exactly '$value'")
+                .that(fr[key]).isEqualTo(value)
+        }
+    }
+
+    /**
+     * COMPENSATION 2 for the accent fold: the landmine keys must be ABSENT.
+     *
+     * Every name here is a real French (or borrowed) word that a bulk hyphen extraction would
+     * have mapped to a hyphenated homograph, and REPLACE mode would then destroy it in-slot —
+     * a user swiping `minuit` would get `mi-nuit`. Enumerated in the proposal's §2 table; the
+     * bulk extraction was rejected precisely because it produced 73 of these.
+     *
+     * `rendezvous` is here for a different reason: it is legitimate French, but it is also an
+     * English lexicon word (@18993) and a German one, and the tap transform at
+     * `SuggestionHandler:1918` is unguarded — so an fr+en user typing English "rendezvous"
+     * would have it rewritten. Delete that line ONLY together with adding the guard.
+     */
+    @Test
+    fun `the French landmine keys are absent from both files`() {
+        val landmines = listOf(
+            "weekend", "email", "haha", "minuit", "parla", "nonne", "amies",
+            "entretemps", "estelle", "aton", "dodo", "tata", "rendezvous",
+        )
+        val replace = files.getValue("fr")
+        val pairs = pairFiles.getValue("fr")
+        for (key in landmines) {
+            assertWithMessage(
+                "'$key' is a real word — a REPLACE mapping would destroy it in-slot for any " +
+                    "user who swiped it. See the proposal §2 landmine table."
+            ).that(replace).doesNotContainKey(key)
+            assertWithMessage("'$key' must not appear in the pairs file either")
+                .that(pairs).doesNotContainKey(key)
         }
     }
 

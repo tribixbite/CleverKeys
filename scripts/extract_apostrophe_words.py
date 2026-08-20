@@ -178,9 +178,15 @@ CURATED_CONTRACTIONS = {
     #
     # Every entry below was derived, not assumed: hunspell fr_FR rejects the key, ASK
     # frequency of the key is 0, the key is absent from the fr lexicon surfaces, and it fits
-    # the 32-frame CTC budget (max 13). Values are accent-free so the existing
-    # BundledContractionDataTest "differs by apostrophes/hyphens only" pin still holds with no
-    # relaxation — that strictness is load-bearing (it is what refuses nonne->non-ne).
+    # the 32-frame CTC budget (max 13).
+    #
+    # Phase A's values are accent-free, which is why it shipped without touching any test.
+    # Phase B's carry accents (peut-etre -> peut-être), so they could only land alongside a
+    # deliberate relaxation of BundledContractionDataTest's "differs by apostrophes/hyphens
+    # only" pin to fold accents on both sides. That pin's strictness WAS the thing refusing
+    # nonne->non-né, so the compensation is an exact-content pin over this table plus explicit
+    # negative assertions that the landmine keys are absent. Read that test before adding a
+    # row here: an accented value can no longer be caught by the projection invariant alone.
     #
     # `rendezvous -> rendez-vous` was in the audited Phase A and is deliberately OMITTED: it is
     # an English lexicon word (@18993) and a German one, and the tap transform at
@@ -203,6 +209,37 @@ CURATED_CONTRACTIONS = {
         "grandsparents": "grands-parents",
         "avanthier": "avant-hier",
         "demiheure": "demi-heure",
+        # ── Phase B: accent-carrying values (28) ──────────────────────────────────────
+        "peutetre": "peut-être",
+        "cestadire": "c'est-à-dire",
+        "audela": "au-delà",
+        "labas": "là-bas",
+        "lahaut": "là-haut",
+        "ladedans": "là-dedans",
+        "ladessus": "là-dessus",
+        "apresmidi": "après-midi",
+        "celuila": "celui-là",
+        "cellela": "celle-là",
+        "ceuxla": "ceux-là",
+        "cellesla": "celles-là",
+        "moimeme": "moi-même",
+        "toimeme": "toi-même",
+        "luimeme": "lui-même",
+        "ellememe": "elle-même",
+        "soimeme": "soi-même",
+        "nousmemes": "nous-mêmes",
+        "vousmeme": "vous-même",
+        "vousmemes": "vous-mêmes",
+        "euxmemes": "eux-mêmes",
+        "ellesmemes": "elles-mêmes",
+        "grandmere": "grand-mère",
+        "grandpere": "grand-père",
+        "bellemere": "belle-mère",
+        "beaupere": "beau-père",
+        "beaufrere": "beau-frère",
+        "visavis": "vis-à-vis",
+        # `belle-sœur` is excluded: `œ` is not a-z projectable, so the key could never be
+        # injected and the mapping would be permanently dead.
     },
     "de": {
         "fands": "fand's",
