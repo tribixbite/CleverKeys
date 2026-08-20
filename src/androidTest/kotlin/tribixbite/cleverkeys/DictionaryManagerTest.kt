@@ -158,4 +158,48 @@ class DictionaryManagerTest {
         // Should handle gracefully without crashing
         manager.removeUserWord("nonexistentword12345")
     }
+
+    // =========================================================================
+    // Precondition for SuggestionHandler.replaceModeContractionFor (2026-08-20)
+    // =========================================================================
+
+    /**
+     * `replaceModeContractionFor` refuses to REPLACE a word the user added by hand, and it
+     * decides that by calling [DictionaryManager.isUserWord] on the word plus its lowercase and
+     * capitalised forms. This pins the behaviour that decision depends on.
+     *
+     * It matters because the shipped French REPLACE table holds ~18k `d'X` aliases — `dangle`,
+     * `dalliance` and so on — that are ordinary strings someone may add as a name or a term of
+     * art. If `isUserWord` ever stopped matching the stored form, the guard would silently
+     * become a no-op and the contraction file would start rewriting user-owned words again.
+     *
+     * `dangle` is used deliberately: it is a real `contractions_fr.json` key (`d'angle`), so
+     * this is the actual collision shape rather than a synthetic one. It is also inert — no
+     * other test types near it — per the orchestrator state-leak rules in the ew-cli skill.
+     */
+    @Test
+    fun isUserWordMatchesTheFormsTheContractionGuardChecks() {
+        val stored = "Dangle"
+        try {
+            manager.addUserWord(stored)
+
+            assertTrue(
+                "exact form must match — this is the common case, since custom words and the " +
+                    "predictions that surface them come from the same prefs entry",
+                manager.isUserWord(stored)
+            )
+            assertTrue(
+                "the capitalised form is one of the three the guard probes",
+                manager.isUserWord(stored.lowercase().replaceFirstChar { it.uppercaseChar() })
+            )
+            assertFalse(
+                "a word that was never added must NOT report as user-owned, or the guard " +
+                    "would suppress every contraction rather than just the user's own",
+                manager.isUserWord("notaddedbyanyone98765")
+            )
+        } finally {
+            manager.removeUserWord(stored)
+        }
+        assertFalse("cleanup must leave no residue for later tests", manager.isUserWord(stored))
+    }
 }

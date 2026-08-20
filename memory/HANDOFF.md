@@ -13,7 +13,7 @@ what was done; this file is only what is left. Anything below is open.
 Swipe is **CTC (default) + geometric**; the neural engine was deleted 2026-08-18
 (`a7d03bc8`..`83220634`), −26.4 MB APK. `CtcLanguageSupport.SUPPORTED` is **seven** languages:
 en/fr/de/es test-validated, it/pt/sv `PROVISIONAL` (scale-transferred, no per-language bar).
-Gates: `runPureTests` **1678**, `lintDebug` 0 errors, both compiles, `assembleRelease` clean.
+Gates: `runPureTests` **1679**, `lintDebug` 0 errors, both compiles, `assembleRelease` clean.
 Last full instrumented run 1395 tests / 0 failures.
 
 ---
@@ -33,11 +33,19 @@ Last full instrumented run 1395 tests / 0 failures.
   emulator.wtf (Pixel7/API34, orchestrated): `ContractionManagerTest` 35 tests / 0 failed / 0
   skipped, including 7 new `loadTypingMappings` cases proving the demotion is actually wired and
   that a monolingual English user still gets `dont` -> `don't`.
-  **Residuals, both untested:** an imported language pack has no sidecar, so an uncurated pack can
-  still destroy the other language's words on the typing path (the swipe path keeps the overlay's
-  rank guard); and a user's own custom words are invisible at generation time — hardening would be
-  to skip the transform when `DictionaryManager.isUserWord(word)`, which is reachable at that call
-  site. Neither is verified on a device yet.
+  **User custom words: FIXED too.** No shipped table can know what someone added by hand, and the
+  fr REPLACE table holds ~18k `d'X` aliases (`dangle`, `dalliance`) that are ordinary strings
+  someone may add as a name. `SuggestionHandler.replaceModeContractionFor` now refuses to REPLACE
+  a word in the personal dictionary, and both call sites route through it —
+  `CoreImeHygieneDriftTest` pins that no third direct call site appears (validated by injecting a
+  violation and confirming it fails). Known limit, recorded in the KDoc: the check probes the
+  word plus its lowercase and capitalised forms, not a full case-insensitive match; making it
+  total means giving `userWords` case-insensitive membership, which changes dedup semantics for a
+  persisted user-owned set and deserves its own change.
+
+  **Residual, still open:** an imported language pack ships no collision sidecar, so an uncurated
+  pack can still destroy the other active language's words on the typing path. The swipe path is
+  unaffected (one language per adapter) and keeps the overlay's rank guard.
 - **Verb inversions** (`est-elle`, `a-t-on`) deferred with named landmines: `estelle` is a native
   word @16343, `aton` is ASK-attested, `entretemps` is a classifier misfire needing
   `FORCED_APPEND`.

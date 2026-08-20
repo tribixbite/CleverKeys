@@ -296,9 +296,16 @@ class BackspaceUndoTest {
     fun `SuggestionHandler pipeline has contraction and exact_add support`() {
         // The single pipeline (typing + cursor-sync since step 5) must carry paired/non-paired
         // contraction injection and the exact_add wire (via the shared typed model).
+        //
+        // The non-paired lookup is asserted through `replaceModeContractionFor` rather than
+        // `getNonPairedMapping` directly: since 2026-08-20 every REPLACE lookup in this file
+        // routes through that helper so it cannot skip the user-dictionary guard, and
+        // `CoreImeHygieneDriftTest` pins that no direct call site reappears. The behaviour this
+        // test protects is unchanged — the pipeline still injects the REPLACE form for the exact
+        // typed partial — so only the name it travels under has moved.
         val source = readSource("SuggestionHandler.kt")
         assertThat(source).contains("getPairedContractions(partial)")
-        assertThat(source).contains("getNonPairedMapping(partial)")
+        assertThat(source).contains("replaceModeContractionFor(partial)")
         assertThat(source).contains("Suggestion.ExactAdd(")
         assertThat(source).contains("show_exact_typed_word")
     }

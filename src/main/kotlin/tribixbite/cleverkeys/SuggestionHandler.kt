@@ -126,6 +126,49 @@ class SuggestionHandler(
      * @param word Word to potentially capitalize
      * @return Capitalized word if it's an I-word, otherwise unchanged
      */
+    /**
+     * The REPLACE-mode contraction for [word], or null when it must be left alone.
+     *
+     * REPLACE mode substitutes the display form and takes the word's slot, which is only safe
+     * when the key has no reading of its own. Two things can make that false, and both are
+     * checked here rather than at the call sites, because there are two call sites (the exact-
+     * partial injection and the transform over every prediction) and a guard applied to only one
+     * of them is a guard that does not hold:
+     *
+     *  1. **Another active LANGUAGE reads it.** Handled upstream and at load time by
+     *     [ContractionCollisionDemotion], which moves such keys into the paired bucket so
+     *     `getNonPairedMapping` no longer returns them at all. Nothing to do here.
+     *  2. **The USER reads it.** A word in the personal dictionary was added by an explicit act
+     *     — the strongest available signal that this exact string is wanted — and no shipped
+     *     table can know it. `dangle`, `dalliance` and ~18k other French `d'X` aliases are
+     *     ordinary strings someone may have added as a name or a term of art, and rewriting one
+     *     to `d'angle` because a contraction file claims the bare form is meaningless is the
+     *     same in-slot destruction the cross-language fix addresses, one scope further in.
+     *
+     * The lookups are `Set` membership tests on an already-resident set, so they cost nothing on
+     * the hot path. A null [DictionaryManager] (prediction not yet initialised) falls through to
+     * the unguarded behaviour, which is correct: with no personal dictionary loaded there are no
+     * user words to protect.
+     *
+     * **Case, and the limit of this guard.** [DictionaryManager.isUserWord] is an exact-match
+     * `Set` test and [DictionaryManager.addUserWord] stores the word exactly as the user typed
+     * it, whereas `getNonPairedMapping` lowercases. In practice the two agree, because custom
+     * words and the predictions that surface them come from the same `CustomDictionarySource`
+     * prefs entry — so a word stored as "Dangle" is predicted as "Dangle". The three forms below
+     * cover the realistic disagreements anyway. This is NOT a full case-insensitive match: a word
+     * stored in some other casing ("DAngle") and predicted lowercased would still slip through.
+     * Making it total means giving `userWords` case-insensitive membership, which changes
+     * add/remove/dedup semantics for a persisted user-owned set and deserves its own change.
+     */
+    private fun replaceModeContractionFor(word: String): String? {
+        val mapping = contractionManager.getNonPairedMapping(word) ?: return null
+        val dictionaries = predictionCoordinator.getDictionaryManager() ?: return mapping
+        val userOwned = dictionaries.isUserWord(word) ||
+            dictionaries.isUserWord(word.lowercase()) ||
+            dictionaries.isUserWord(word.replaceFirstChar { it.uppercaseChar() })
+        return if (userOwned) null else mapping
+    }
+
     private fun capitalizeIWord(word: String): String {
         // v1.2.8: Use globalConfig to ensure setting is always current
         if (!Config.globalConfig().autocapitalize_i_words) return word
@@ -1890,7 +1933,7 @@ class SuggestionHandler(
                 val contractionScores = mutableListOf<Int>()
 
                 // Check if the exact partial is a non-paired contraction key (e.g., dont → don't)
-                val contractionMapping = contractionManager.getNonPairedMapping(partial)
+                val contractionMapping = replaceModeContractionFor(partial)
                 if (contractionMapping != null) {
                     // Add contraction as first suggestion with high score
                     // Issue #72: Also capitalize I-contractions (im → I'm, ill → I'll)
@@ -1915,7 +1958,7 @@ class SuggestionHandler(
                 // e.g., if predictor suggests "cant", transform to "can't"
                 // Issue #72: Also capitalize I-words (i → I, i'm → I'm)
                 val transformedPredictions = prediction.words.map { word ->
-                    val contracted = contractionManager.getNonPairedMapping(word) ?: word
+                    val contracted = replaceModeContractionFor(word) ?: word
                     capitalizeIWord(contracted)
                 }
 

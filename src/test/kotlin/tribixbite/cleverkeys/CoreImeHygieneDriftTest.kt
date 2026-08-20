@@ -756,4 +756,51 @@ class CoreImeHygieneDriftTest {
                 "superseded model, name `sw2345` on the same line."
         ).that(offenders).isEmpty()
     }
+
+    /**
+     * Every REPLACE-mode contraction lookup in the typing path must go through
+     * `replaceModeContractionFor`, which is where the user-dictionary guard lives.
+     *
+     * REPLACE mode substitutes the display form and takes the word's slot, so it is only safe
+     * when nothing else reads that key. Two things can make it unsafe: another active LANGUAGE
+     * (handled at load time by `ContractionCollisionDemotion`, so the map no longer holds those
+     * keys at all) and the USER's own dictionary (handled only by that helper, because no
+     * shipped table can know what someone added by hand).
+     *
+     * This is a source pin rather than a behavioural test because the realistic regression is
+     * not the helper breaking — it is a THIRD call site appearing that calls the manager
+     * directly and silently skips the guard. There were exactly two such sites when the guard
+     * landed (the exact-partial injection and the transform over every prediction), and a guard
+     * applied to only some call sites is a guard that does not hold.
+     */
+    @Test
+    fun replaceModeContractionLookupsGoThroughTheUserWordGuard() {
+        val handler = source("tribixbite/cleverkeys/SuggestionHandler.kt")
+
+        val guard = "private fun replaceModeContractionFor("
+        assertWithMessage(
+            "the guard helper is gone from SuggestionHandler — if it was renamed, update this " +
+                "test; if it was removed, a user's own custom word can be rewritten by a " +
+                "contraction file again"
+        ).that(handler).contains(guard)
+
+        // Direct calls are legal ONLY inside the helper itself. Strip its body, then any
+        // remaining direct call is an unguarded site.
+        val helperBody = handler.substringAfter(guard).substringBefore("\n    private fun capitalizeIWord(")
+        val outsideHelper = handler.replace(helperBody, "")
+        val direct = Regex("""contractionManager\.getNonPairedMapping\(""")
+            .findAll(outsideHelper).count()
+
+        assertWithMessage(
+            "found $direct direct `contractionManager.getNonPairedMapping(` call(s) in " +
+                "SuggestionHandler outside `replaceModeContractionFor`. Route them through the " +
+                "helper — a REPLACE substitution applied without the user-dictionary check " +
+                "destroys a word the user explicitly added, in its own slot."
+        ).that(direct).isEqualTo(0)
+
+        assertWithMessage(
+            "the helper must actually consult the user dictionary — without this it is a " +
+                "pass-through and the pin above would be enforcing nothing"
+        ).that(helperBody).contains("isUserWord(")
+    }
 }
