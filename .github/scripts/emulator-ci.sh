@@ -40,8 +40,22 @@ IME_COMPONENT="$PKG/tribixbite.cleverkeys.CleverKeysService"
 echo "Installing APK: ${APK_FILE:?APK_FILE not set}"
 adb install "$APK_FILE"
 
+# PackageManager indexes a newly installed IME asynchronously, so `ime enable` immediately
+# after `adb install` races it and fails with:
+#     Unknown input method <component> cannot be enabled for user #0
+# ...which is what this job did on its first real run. Wait for the component to appear in
+# the IME list rather than sleeping a guessed interval.
+echo "Waiting for the IME to be indexed..."
+for _ in $(seq 1 30); do
+  if adb shell ime list -a -s 2>/dev/null | grep -q "^$IME_COMPONENT$"; then
+    echo "IME indexed."
+    break
+  fi
+  sleep 1
+done
+
 echo "Available input methods:"
-adb shell ime list -a
+adb shell ime list -a -s
 
 adb shell ime enable "$IME_COMPONENT"
 adb shell ime set "$IME_COMPONENT"
