@@ -13,7 +13,7 @@ what was done; this file is only what is left. Anything below is open.
 Swipe is **CTC (default) + geometric**; the neural engine was deleted 2026-08-18
 (`a7d03bc8`..`83220634`), −26.4 MB APK. `CtcLanguageSupport.SUPPORTED` is **seven** languages:
 en/fr/de/es test-validated, it/pt/sv `PROVISIONAL` (scale-transferred, no per-language bar).
-Gates: `runPureTests` **1686**, `lintDebug` 0 errors, both compiles, `assembleRelease` clean.
+Gates: `runPureTests` **1660**, `lintDebug` 0 errors, both compiles, `assembleRelease` clean.
 Last full instrumented run 1395 tests / 0 failures.
 
 ---
@@ -53,15 +53,27 @@ corpus in the repo is context-free isolated words, so step 5 of that plan is "bu
 
 ### 3. Smaller, ride-along
 
-- `SwipeResampler.kt` is consumer-less dead code.
 - **Possible**: the four `ctc_bench` models may never have been packaged into the androidTest
   APK — removing 11 MB of them shrank it by 258 bytes. If someone restores them per
   `src/androidTest/assets/ctc_bench/README.md` and `CtcOnnxLatencyBenchmarkTest` still cannot
   find them, that is the thread to pull; the benchmark may not have run since it was written.
-- Orphaned strings `autocorrect_fuzzy_algorithm_*`, `autocorrect_source_balance_*`.
-- `CoroutineScopeLifecycleTest` flakes in combined runs; no mechanism identified (unlike
-  `UserVocabularyPersistenceTest`, fixed in `34606b87`). Its noisy output is a test deliberately
-  throwing "boom" — do not mistake that for the failure.
+- ~~`CoroutineScopeLifecycleTest` flakes in combined runs~~ — **disproven 2026-08-20.** It passed
+  4/4: three isolated runs under 8x CPU oversubscription, and a full 1,660-test combined run. Its
+  only output is the deliberate "boom" stack trace, which is almost certainly why it was blamed —
+  it is the loudest thing in a red suite log, and the old entry warned about exactly that trap
+  while itself falling into it. Nothing to fix; **read the `N) <test>(<class>)` failure header,
+  never the noisiest stack trace.**
+
+  The real combined-run flake was `GeoBenchmarkTest`'s NFR-1 wall-clock budget, and it was a
+  MEASUREMENT fault, not an engine one: quiet device, same commit, isolated p95 40.61/56.58 ms
+  versus combined-suite 64.72 ms against a 60 ms budget. ~1,600 prior test classes park lexicons
+  and CKDT tries in `companion object` fields that stay reachable for the JVM's lifetime, so GC
+  pauses land in the measured tail. Forcing a collection before each pass gives combined-suite
+  p95 59.36 / cold median 24.05 and a green suite. Margin is ~1%, so a best-of-two-on-miss retry
+  backs it up. If it still flakes: move the assert to an on-device instrumented benchmark beside
+  `CtcOnnxLatencyBenchmarkTest` — do NOT raise the budget. Dead end already tried: skipping on
+  system load is impossible here, `getSystemLoadAverage()` reads /proc/loadavg which SELinux
+  denies on Android.
 - Translations owed: `swipe_engine_fallback_*`, `gesture_touch_smoothing_*`,
   `gesture_finger_occlusion_*`, `dict_word_too_long_for_swipe_*` ship English-only behind
   `tools:ignore="MissingTranslation"`. The 21 `swipe_engine_mode_desc` translations were

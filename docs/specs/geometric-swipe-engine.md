@@ -87,7 +87,7 @@ d_kw(a, b) = sqrt( (Δu)² + (Δv / aspect)² ) / kw        where aspect = keyAr
 `nearestKeys(u, v, k)` takes normalized coordinates and ranks by `d_kw`. Every threshold below is in kw units unless marked "normalized-shape units".
 
 **1. Preprocess** (per swipe, O(P + N)) → `ProcessedGesture`:
-- Normalize to [0,1]²; arc-length uniform resample to N=32 (algorithm family of the existing pure `SwipeResampler.kt` — port, don't import).
+- Normalize to [0,1]²; arc-length uniform resample to N=32. This was written as "port, don't import" from the then-existing pure `SwipeResampler.kt`, whose modes truncate/merge by INDEX — the wrong operation for shape matching. That file was deleted in `c0b9b252` (production-dead after the neural engine went), so the port is now simply this engine's own implementation; the distinction is preserved in `GesturePreprocessor`/`TemplateGenerator` comments.
 - Corners: interior resampled points with turn angle ≥ `cornerAngleThresholdDeg` (55°). **Corners are a soft scoring feature only — never a hard filter** (smooth real-world turns and collinear words like "ash"/"ask" produce zero detectable corners).
 - Path length (kw units), bbox, k-nearest start/end key ids.
 - Gating (duration/length minimums) is the **caller's** job; the engine decodes what it is given.
@@ -424,7 +424,7 @@ Non-QWERTY layouts: same floors − 3 pts initially (ЙЦУКЕН: 31 center let
 - Suite runtime: default geo additions < 90 s inside `runPureTests` (≈ 900 harness decodes by construction); full census behind `-PgeoFull`.
 
 ## Dependencies
-- **Internal**: reuses `tribixbite.cleverkeys.PredictionResult` (pure) verbatim; algorithm patterns ported (not imported) from `SwipeResampler.kt`, `ProbabilisticKeyDetector` (Gaussian σ=0.5·keySize precedent), `BinaryDictionaryLoader.kt:55-90` (CKDT format doc); `a11y/KeyboardGeometry` for the Phase-1 cross-check and the future adapter. Nothing from `OptimizedVocabulary`/`DictionaryManager`/`KeyboardData` in core.
+- **Internal**: reuses `tribixbite.cleverkeys.PredictionResult` (pure) verbatim; algorithm patterns ported (not imported) from `SwipeResampler.kt` (deleted in `c0b9b252`; see § above), `ProbabilisticKeyDetector` (Gaussian σ=0.5·keySize precedent), `BinaryDictionaryLoader.kt:55-90` (CKDT format doc); `a11y/KeyboardGeometry` for the Phase-1 cross-check and the future adapter. Nothing from `OptimizedVocabulary`/`DictionaryManager`/`KeyboardData` in core.
 - **External**: none new. `kotlin.*`, `java.util.*` (incl. `java.util.zip`), `javax.xml.parsers` (test-only).
 - **Breaking changes**: none — no live code path touched.
 
