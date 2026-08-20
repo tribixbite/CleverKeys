@@ -499,6 +499,9 @@ tasks.register('runPureTests', JavaExec) {
     // The 32-frame emission budget and the duplicate-letter blank rule — a word past it can sit
     // in the lexicon and be silently unswipeable, which is invisible without this pin.
     'tribixbite.cleverkeys.swipe.ctc.CtcDecodableLengthTest',
+    // F6: contraction ranking through the REAL beam on the REAL fr assets — proves a
+    // floor-injected alias key can actually SURFACE, and that it never displaces a real word.
+    'tribixbite.cleverkeys.swipe.ctc.CtcContractionRankingTest',
     // Per-language CTC enablement (fr/de/es, 2026-08-16): the λ-by-lexicon-scale preset
     // table (docs/eval/2026-08-15-ctc-per-language-lambda.md) + the CKDT→a-z projection
     // and accent-display map, verified against the REAL bundled dictionaries.
