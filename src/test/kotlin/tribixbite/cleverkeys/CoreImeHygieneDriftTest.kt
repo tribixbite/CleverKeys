@@ -803,4 +803,58 @@ class CoreImeHygieneDriftTest {
                 "pass-through and the pin above would be enforcing nothing"
         ).that(helperBody).contains("isUserWord(")
     }
+
+    /**
+     * Every language selector must re-scan for cross-language contraction collisions.
+     *
+     * Imported language packs cannot have a shipped collision sidecar — their contraction file
+     * and dictionary arrive on the device long after the build — so the scan at language-selection
+     * time is the ONLY thing that protects a pack user's other language. A selector that saves a
+     * language without re-scanning leaves a stale cache, and
+     * `ContractionCollisionScanner.cachedFor` then correctly refuses to apply it (it is scoped to
+     * the language set it was computed for), so the failure mode is silent loss of protection
+     * rather than a crash. That is exactly the kind of regression a source pin is for.
+     *
+     * The two ALTERNATES count as much as the main pair: a quick-toggle key swaps the active
+     * language at runtime with no trip through Settings, so a combination only ever reached by
+     * toggling would otherwise never be scanned at all.
+     */
+    @Test
+    fun everyLanguageSelectorRescansForContractionCollisions() {
+        val section = File(
+            "src/main/kotlin/tribixbite/cleverkeys/ui/settings/sections/MultiLanguageSection.kt"
+        )
+        assertWithMessage("expected ${section.path} (run from project root)")
+            .that(section.isFile).isTrue()
+        val source = section.readText()
+
+        val selectors = listOf(
+            "pref_primary_language",
+            "pref_secondary_language",
+            "pref_primary_language_alt",
+            "pref_secondary_language_alt",
+        )
+        for (pref in selectors) {
+            // `saveSetting("<pref>", …)` must be followed by the rescan before the lambda closes.
+            val save = Regex("""saveSetting\("$pref",[^)]*\)""").find(source)
+            assertWithMessage(
+                "no `saveSetting(\"$pref\", …)` in MultiLanguageSection — if the selector moved, " +
+                    "move this pin with it rather than deleting it"
+            ).that(save).isNotNull()
+
+            val after = source.substring(save!!.range.last + 1).substringBefore("\n                    }")
+            assertWithMessage(
+                "the '$pref' selector saves the language but does not call " +
+                    "rescanContractionCollisions(). An imported pack's contractions would then " +
+                    "keep rewriting real words of the other active language, because the cached " +
+                    "scan is scoped to the OLD language set and will be ignored."
+            ).that(after).contains("rescanContractionCollisions()")
+        }
+
+        val rescans = Regex("""rescanContractionCollisions\(\)""").findAll(source).count()
+        assertWithMessage(
+            "expected exactly ${selectors.size} rescan calls, one per language selector, but " +
+                "found $rescans. A new selector needs one too; a removed one should drop its call."
+        ).that(rescans).isEqualTo(selectors.size)
+    }
 }

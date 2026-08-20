@@ -350,6 +350,43 @@ class ContractionManagerTest {
     // =========================================================================
 
     /**
+     * The 2026-07-23 paired-base reclassification must SURVIVE the typing load order.
+     *
+     * `loadEnglishBase` loads the base, loads the pairings, then removes every pairing base from
+     * the non-paired map — that is what stopped typing "well" producing "we'll" and destroying
+     * the word. But `loadTypingMappings` then calls `loadLanguageContractions("en")`, and
+     * `contractions_en.json` contains 14 of those same bases (`well`, `shell`, `hell`, `were`,
+     * `girls`, `states`, …). `loadContractionsFromStream` skips a key only when it is already in
+     * the NON-PAIRED map — and reclassification had just removed it from there — so the second
+     * load re-adds it as REPLACE and undoes the fix.
+     *
+     * Found by `ContractionCollisionScannerTest`, which reported `shell`/`girls`/`hell`/`states`
+     * as collisions the shipped sidecars did not cover: the sidecar generator models English as
+     * base-minus-pairings, which is what the runtime SHOULD hold, while the runtime scanner reads
+     * what it ACTUALLY holds. The two disagreeing was the symptom.
+     */
+    @Test
+    fun loadTypingMappingsKeepsPairedBasesOutOfTheReplaceMap() {
+        manager.loadTypingMappings("en", null)
+
+        for (base in listOf("well", "shell", "hell", "were", "girls", "states")) {
+            assertNull(
+                "'$base' is an ordinary English word — a REPLACE mapping substitutes the " +
+                    "contraction and destroys it in its own slot, which is exactly what the " +
+                    "2026-07-23 reclassification fixed for the swipe path",
+                manager.getNonPairedMapping(base)
+            )
+            assertNotNull(
+                "'$base' must still offer its contraction as a PAIRED variant",
+                manager.getPairedContractions(base)
+            )
+        }
+        // The aliases that genuinely have no reading of their own are unaffected.
+        assertEquals("don't", manager.getNonPairedMapping("dont"))
+        assertEquals("can't", manager.getNonPairedMapping("cant"))
+    }
+
+    /**
      * The highest-frequency casualty: `dont` is an English REPLACE key AND one of the
      * commonest words in French (the relative pronoun). An fr+en user typing it got `don't`.
      */

@@ -441,6 +441,15 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         get() = settingsViewModel.languagePackImportStatus
         set(value) { settingsViewModel.languagePackImportStatus = value }
 
+    // Cross-language contraction collision warning (2026-08-20). Populated by
+    // `rescanContractionCollisions()` after any language selector changes, and shown only when an
+    // IMPORTED pack contributed a collision — the bundled ones are already handled by the shipped
+    // sidecars, so reporting them would be noise.
+    internal var showCollisionWarningDialog by mutableStateOf(false)
+    internal var collisionWarningKeyCount by mutableIntStateOf(0)
+    internal var collisionWarningLanguages by mutableStateOf("")
+    internal var collisionWarningExamples by mutableStateOf(listOf<Pair<String, String>>())
+
     // Privacy settings - all OFF by default (CleverKeys is fully offline)
     // MASTER on-device learning gate (Task A 2026-08-06): opt-out for ALL
     // typing-behavior learning (context LM, personalization, adaptation, swipe-ML)

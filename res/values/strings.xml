@@ -714,4 +714,14 @@
     <string name="short_swipe_customize_key">Customize \"%1$s\" Key</string>
     <!-- %1$d = number of enabled extra keys, %2$d = total extra keys -->
     <string name="extra_keys_enabled_count" tools:ignore="PluralsCandidate">%1$d of %2$d extra keys enabled</string>
+    <!-- Cross-language contraction collision warning (2026-08-20). Shown after a language
+         selection when an IMPORTED pack holds a REPLACE-mode contraction key that is also a real
+         word of another active language. Bundled languages are covered by shipped sidecars and
+         are deliberately NOT reported here.
+
+         tools:ignore="MissingTranslation" is deliberate and TEMPORARY, matching the convention
+         above. Owed: real translations, tracked in memory/HANDOFF.md. Remove when they land. -->
+    <string name="collision_warning_title" tools:ignore="MissingTranslation">Contraction conflicts found</string>
+    <string name="collision_warning_body" tools:ignore="MissingTranslation">%1$d shortcut(s) from an imported language pack would have rewritten real words in your other active language (%2$s). They have been turned into optional suggestions instead, so both spellings stay available.</string>
+    <string name="collision_warning_examples" tools:ignore="MissingTranslation">Affected shortcuts:</string>
 </resources>

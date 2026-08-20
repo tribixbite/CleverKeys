@@ -34,6 +34,7 @@ import tribixbite.cleverkeys.ui.settings.SettingsSwitch
 import tribixbite.cleverkeys.ui.settings.io.deleteLanguagePack
 import tribixbite.cleverkeys.ui.settings.io.getLanguageDisplayName
 import tribixbite.cleverkeys.ui.settings.io.importLanguagePack
+import tribixbite.cleverkeys.ui.settings.io.rescanContractionCollisions
 import tribixbite.cleverkeys.ui.settings.saveSetting
 
 @Composable
@@ -71,6 +72,7 @@ internal fun SettingsActivity.MultiLanguageSection() {
                         onSelectionChange = { index ->
                             primaryLanguage = primaryOptions.getOrElse(index) { "en" }
                             saveSetting("pref_primary_language", primaryLanguage)
+                        rescanContractionCollisions()
                             // Reload per-language prefix boost settings
                         }
                     )
@@ -91,6 +93,7 @@ internal fun SettingsActivity.MultiLanguageSection() {
                         onSelectionChange = { index ->
                             secondaryLanguage = secondaryOptions.getOrElse(index) { "none" }
                             saveSetting("pref_secondary_language", secondaryLanguage)
+                        rescanContractionCollisions()
                             // Dictionary reload triggered via PreferenceUIUpdateHandler.reloadLanguageDictionaryIfNeeded()
                         }
                     )
@@ -183,6 +186,7 @@ internal fun SettingsActivity.MultiLanguageSection() {
                             onSelectionChange = { index ->
                                 primaryLanguageAlt = altPrimaryOptions.getOrElse(index) { "es" }
                                 saveSetting("pref_primary_language_alt", primaryLanguageAlt)
+                                rescanContractionCollisions()
                             }
                         )
                     }
@@ -202,6 +206,7 @@ internal fun SettingsActivity.MultiLanguageSection() {
                         onSelectionChange = { index ->
                             secondaryLanguageAlt = altSecondaryOptions.getOrElse(index) { "none" }
                             saveSetting("pref_secondary_language_alt", secondaryLanguageAlt)
+                            rescanContractionCollisions()
                         }
                     )
 
@@ -274,6 +279,55 @@ internal fun SettingsActivity.MultiLanguageSection() {
                         )
                     }
                 }
+            }
+
+            // Cross-language contraction collision warning (2026-08-20).
+            //
+            // Shown ONLY when an imported pack contributed a collision. Bundled-language
+            // collisions are handled by the shipped sidecars and were handled before the user
+            // touched anything, so announcing those too would be noise — and a dialog that
+            // usually says nothing actionable is a dialog people learn to dismiss unread.
+            //
+            // The framing is deliberately "this was prevented", not "this is broken": by the
+            // time the dialog appears the demotion is already cached and will apply on the next
+            // language load. The user is being told what their pack does, not asked to fix it.
+            if (showCollisionWarningDialog) {
+                AlertDialog(
+                    onDismissRequest = { showCollisionWarningDialog = false },
+                    title = { Text(stringResource(R.string.collision_warning_title)) },
+                    text = {
+                        Column {
+                            Text(
+                                text = stringResource(
+                                    R.string.collision_warning_body,
+                                    collisionWarningKeyCount,
+                                    collisionWarningLanguages,
+                                ),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            if (collisionWarningExamples.isNotEmpty()) {
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Text(
+                                    text = stringResource(R.string.collision_warning_examples),
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 12.sp
+                                )
+                                collisionWarningExamples.forEach { (key, display) ->
+                                    Text(
+                                        text = "  $key → $display",
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(onClick = { showCollisionWarningDialog = false }) {
+                            Text(stringResource(android.R.string.ok))
+                        }
+                    }
+                )
             }
 
             // Language Pack Management Dialog

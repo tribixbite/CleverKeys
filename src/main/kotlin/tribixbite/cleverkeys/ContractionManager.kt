@@ -250,6 +250,16 @@ class ContractionManager(private val context: Context) {
      */
     private fun loadCollisionTables(activeLanguages: Set<String>): Map<String, Set<String>> {
         val merged = HashMap<String, MutableSet<String>>()
+
+        // Collisions contributed by IMPORTED packs, which cannot have a shipped sidecar — their
+        // contraction file and dictionary arrive long after the build. These are computed when
+        // the user picks languages in Settings ([ContractionCollisionScanner]) and cached, and
+        // the cache is scoped to the language set it was computed for, so a stale one is ignored
+        // rather than applied to the wrong combination.
+        for ((key, languages) in ContractionCollisionScanner.cachedFor(context, activeLanguages)) {
+            merged.getOrPut(key.lowercase()) { mutableSetOf() }.addAll(languages)
+        }
+
         for (lang in activeLanguages) {
             val filename = ContractionCollisionDemotion.assetName(lang)
             try {
@@ -415,9 +425,24 @@ class ContractionManager(private val context: Context) {
             val withoutApostrophe = keys.next()
             val withApostrophe = jsonObj.getString(withoutApostrophe)
 
-            // Don't overwrite existing mappings (first language loaded takes precedence)
-            if (!nonPairedContractions.containsKey(withoutApostrophe.lowercase())) {
-                nonPairedContractions[withoutApostrophe.lowercase()] = withApostrophe.lowercase()
+            val key = withoutApostrophe.lowercase()
+            // Don't overwrite existing mappings (first language loaded takes precedence).
+            //
+            // The pairedContractions check is NOT redundant with the nonPaired one, and omitting
+            // it silently undid the 2026-07-23 reclassification on the typing path. That fix
+            // moves pairing bases (`well`, `shell`, `hell`, `were`, `girls`, `states`, … 14 keys)
+            // OUT of the non-paired map, because they are ordinary English words that REPLACE
+            // mode would destroy in their own slot. `loadTypingMappings` then calls
+            // `loadLanguageContractions("en")`, and `contractions_en.json` repeats all 14 — so
+            // testing only "is it already non-paired?" found them absent (reclassification had
+            // just removed them) and put them straight back. Device-confirmed before the fix:
+            // `loadTypingMappings("en", null)` then `getNonPairedMapping("well")` returned
+            // "we'll".
+            //
+            // The paired map is the authority on "this key is a real word of some language", so a
+            // later REPLACE-mode file may never override it, whichever language supplied it.
+            if (!nonPairedContractions.containsKey(key) && !pairedContractions.containsKey(key)) {
+                nonPairedContractions[key] = withApostrophe.lowercase()
                 knownContractions.add(withApostrophe.lowercase())
                 count++
             }
