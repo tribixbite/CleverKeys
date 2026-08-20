@@ -13,7 +13,7 @@ what was done; this file is only what is left. Anything below is open.
 Swipe is **CTC (default) + geometric**; the neural engine was deleted 2026-08-18
 (`a7d03bc8`..`83220634`), −26.4 MB APK. `CtcLanguageSupport.SUPPORTED` is **seven** languages:
 en/fr/de/es test-validated, it/pt/sv `PROVISIONAL` (scale-transferred, no per-language bar).
-Gates: `runPureTests` **1679**, `lintDebug` 0 errors, both compiles, `assembleRelease` clean.
+Gates: `runPureTests` **1680**, `lintDebug` 0 errors, both compiles, `assembleRelease` clean.
 Last full instrumented run 1395 tests / 0 failures.
 
 ---
@@ -43,9 +43,22 @@ Last full instrumented run 1395 tests / 0 failures.
   total means giving `userWords` case-insensitive membership, which changes dedup semantics for a
   persisted user-owned set and deserves its own change.
 
-  **Residual, still open:** an imported language pack ships no collision sidecar, so an uncurated
-  pack can still destroy the other active language's words on the typing path. The swipe path is
-  unaffected (one language per adapter) and keeps the overlay's rank guard.
+  **Imported packs: CLOSED.** A pack cannot have a shipped sidecar, so
+  `ContractionCollisionScanner` computes collisions when the user picks languages — all four
+  selectors, alternates included, since a quick-toggle key swaps languages with no trip through
+  Settings. The result is cached scoped to the language set it was computed for, so a stale cache
+  is ignored rather than misapplied, and a warning dialog fires only when an imported pack
+  contributed a collision.
+
+  **Found while building it, now fixed:** `loadContractionsFromStream` skipped a key only when it
+  was already NON-PAIRED, so after `loadEnglishBase` reclassified the 14 pairing bases out of that
+  map, `contractions_en.json` put them straight back as REPLACE. Device-confirmed:
+  `loadTypingMappings("en", null)` then `getNonPairedMapping("well")` returned `we'll` — the
+  2026-07-23 fix was undone on the typing path for `well`, `shell`, `hell`, `were`, `girls`,
+  `states` and 8 more. The paired map is now authoritative.
+
+  **Owed:** translations for `collision_warning_title/body/examples`, currently English-only
+  behind `tools:ignore="MissingTranslation"`.
 - **Verb inversions** (`est-elle`, `a-t-on`) deferred with named landmines: `estelle` is a native
   word @16343, `aton` is ASK-attested, `entretemps` is a classifier misfire needing
   `FORCED_APPEND`.
