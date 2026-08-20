@@ -20,27 +20,14 @@ Last full instrumented run 1395 tests / 0 failures.
 
 ## Open work, in priority order
 
-### 1. Extend the replay harness to model contraction injection
-
-`scripts/ctc_lang_lambda_sweep.py` / `eval_altlayout` do **not** inject contraction keys, so the
-corpus A/B the injection-floor audit called mandatory cannot be run — both arms decode
-identically. `98307dc2` shipped on a synthetic shadow-pair sweep instead (120 pairs, zero flips,
-mutation-verified). That is the strongest runnable evidence but it is not a replay: synthetic
-peaks are cleaner than real traces.
-
-Owed: teach the harness to load `contractions_<lang>.json` + `contraction_pairs_<lang>.json` and
-inject at a parameterised frequency, then A/B injection at 1 vs `minReal−1` on fr/de/es. The
-sensitive metric is the count of traces whose top-1 flips real→pseudo, not aggregate top-1
-(±1 pt noise floor at N≈1000).
-
-### 2. MEDIUM-4 — 11 MB of superseded ONNX in `androidTest`
+### 1. MEDIUM-4 — 11 MB of superseded ONNX in `androidTest`
 
 `androidTest/assets/ctc_bench/` ships four arch-comparison models, one labelled "the ship
 candidate" which it is not. Delete, or add a README saying they are superseded; rename
 `fullDecodePath_ch128_beam100_tunedV2` (its constants are E1, not tunedV2) and fix
 `CtcBenchFixture.kt:9`'s rival fixture citation.
 
-### 3. Contraction follow-ups, all deferred deliberately
+### 2. Contraction follow-ups, all deferred deliberately
 
 - **Phase B hyphen compounds** (28 accented values: `peut-être`, `c'est-à-dire`, the `-même`
   pronouns). Blocked on a test change: `BundledContractionDataTest`'s "value differs by
@@ -57,7 +44,12 @@ candidate" which it is not. Delete, or add a README saying they are superseded; 
 - **German injection stays mostly inert** even after `98307dc2`: de's rarest real word is freq 12,
   so the derived floor is 11 and the headroom is small. Scale-specific, not a bug.
 
-### 4. Context-LM rescoring of the CTC slate — design done, build not started
+### 3. Context-LM rescoring of the CTC slate — design done, build not started
+
+`scripts/ctc_injection_ab.py` is now the worked example of extending a replay harness with a new
+dimension — reuse its shape rather than starting over. Note especially its metric lesson: score
+by CORRECTNESS against the target, never by the shape of the change. Its first version called a
+fix a regression because the right answer happened to be an injected key.
 
 `docs/specs/ctc-context-rescoring-and-tunables.md` has the full plan: hook at
 `SuggestionHandler.handleSwipePredictionResults` (both engines benefit), log-linear within-slate
@@ -66,7 +58,7 @@ combination, privacy-gated on `LearningGate`, default-OFF, rank-1 displacement b
 **Do not enable by default without evidence, and the evidence does not exist yet** — every replay
 corpus in the repo is context-free isolated words, so step 5 of that plan is "build the harness".
 
-### 5. Smaller, ride-along
+### 4. Smaller, ride-along
 
 - `SwipeResampler.kt` is consumer-less dead code.
 - Orphaned strings `autocorrect_fuzzy_algorithm_*`, `autocorrect_source_balance_*`.
