@@ -184,9 +184,9 @@ Follow-ups (not blocking):
       on-device, and since 2026-08-18 it is the DEFAULT `swipe_engine_mode`. The web demo is
       no longer the only place a CTC engine runs.
 
-## 🔴 ACTIVE HANDOFF → `memory/HANDOFF-2026-08-19.md`
+## 🔴 ACTIVE HANDOFF → `memory/HANDOFF.md`
 
-**The live task list moved (2026-08-19).** Read `memory/HANDOFF-2026-08-19.md` first; reference
+**The live task list moved (2026-08-19).** Read `memory/HANDOFF.md` first; reference
 detail is in `docs/specs/ctc-architecture-and-multiscript-guide.md`.
 
 Everything below this line is HISTORY and contains claims that are now false — kept for the
