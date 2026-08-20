@@ -13,7 +13,7 @@ what was done; this file is only what is left. Anything below is open.
 Swipe is **CTC (default) + geometric**; the neural engine was deleted 2026-08-18
 (`a7d03bc8`..`83220634`), −26.4 MB APK. `CtcLanguageSupport.SUPPORTED` is **seven** languages:
 en/fr/de/es test-validated, it/pt/sv `PROVISIONAL` (scale-transferred, no per-language bar).
-Gates: `runPureTests` **1663**, `lintDebug` 0 errors, both compiles, `assembleRelease` clean.
+Gates: `runPureTests` **1678**, `lintDebug` 0 errors, both compiles, `assembleRelease` clean.
 Last full instrumented run 1395 tests / 0 failures.
 
 ---
@@ -22,9 +22,19 @@ Last full instrumented run 1395 tests / 0 failures.
 
 ### 1. Contraction follow-ups, all deferred deliberately
 
-- **`rendezvous → rendez-vous`** held back: an English lexicon word (@18993) and a German one,
-  and the tap transform at `SuggestionHandler:1918` is unguarded, so an fr+en user typing English
-  "rendezvous" would have it rewritten. Add once that guard lands.
+- **Cross-language contraction destruction is FIXED, with residuals.** The tap path merged every
+  active language's REPLACE keys into one map with no provenance, so a key with no reading in one
+  language was applied to a real word of the other. Measured casualties, all live before
+  2026-08-20: fr+en typing French `dont` got `don't`; de+en typing German `im` got `I'm`; de+en
+  typing English `hats` got `hat's`. `im` was destroyed in EVERY non-English bundled language.
+  Fix: `ContractionCollisionDemotion` + shipped `contraction_collisions_<lang>.json` sidecars,
+  demoting a colliding key to PAIRED so both spellings stay reachable. `rendezvous` ships as a
+  result. Worst pair is fr+en at 158 demotions of ~18k keys (<1%).
+  **Residuals, both untested:** an imported language pack has no sidecar, so an uncurated pack can
+  still destroy the other language's words on the typing path (the swipe path keeps the overlay's
+  rank guard); and a user's own custom words are invisible at generation time — hardening would be
+  to skip the transform when `DictionaryManager.isUserWord(word)`, which is reachable at that call
+  site. Neither is verified on a device yet.
 - **Verb inversions** (`est-elle`, `a-t-on`) deferred with named landmines: `estelle` is a native
   word @16343, `aton` is ASK-attested, `entretemps` is a classifier misfire needing
   `FORCED_APPEND`.
@@ -59,29 +69,27 @@ corpus in the repo is context-free isolated words, so step 5 of that plan is "bu
   Nothing to fix. `CtcOnnxLatencyBenchmarkTest` already fails with restore instructions rather
   than skipping, so the benchmark cannot silently no-op — restore per the README to run it.
 - ~~`CoroutineScopeLifecycleTest` flakes in combined runs~~ — **disproven 2026-08-20.** It passed
-  4/4: three isolated runs under 8x CPU oversubscription, and a full 1,660-test combined run. Its
-  only output is the deliberate "boom" stack trace, which is almost certainly why it was blamed —
-  it is the loudest thing in a red suite log, and the old entry warned about exactly that trap
-  while itself falling into it. Nothing to fix; **read the `N) <test>(<class>)` failure header,
-  never the noisiest stack trace.**
+  4/4, including a full combined run and three isolated runs under heavy CPU oversubscription.
+  Its only output is the deliberate "boom" stack trace, which is almost certainly why it was
+  blamed — it is the loudest thing in a red suite log. Nothing to fix; **read the
+  `N) <test>(<class>)` failure header, never the noisiest stack trace.**
 
-  The real combined-run flake was `GeoBenchmarkTest`'s NFR-1 wall-clock p95, and it was a
-  MEASUREMENT fault, not an engine one. Same commit, same device, eight runs: warm p95 came out
-  40.61 / 56.58 / 59.36 / 63.13 / 64.72 / 68.40 / 70.09 / 86.40 ms against a 60 ms budget — 2.1x
-  spread, no code change. The warm MEDIAN over those same runs stayed in 17.96-28.55 (budget 30)
-  and the cold median in 24.05-30.68 (budget 45). p95 is the 114th of 120 sorted samples, so one
-  GC pause moves it; the medians are robust. Controlled pair, daemons stopped and zero stray JVMs
-  on the box: isolated p95 40.61 ms, the same class inside the full suite 70.09 ms — the suite is
-  the variable, not ambient load. Two fixes landed: a forced collection before each measured
-  pass (~1,600 prior test classes park lexicons and tries in `companion object` fields that stay
-  reachable for the JVM's lifetime, so GC pauses were landing in the measured window), and a
-  best-of-two retry on a median miss. **The p95 assert was then dropped to measured-and-printed.**
+  ~~The real flake is `GeoBenchmarkTest`'s NFR-1 wall-clock p95~~ — **also wrong, and the
+  correction is the useful part.** That investigation measured warm p95 at 40.61 / 56.58 / 59.36 /
+  63.13 / 64.72 / 68.40 / 70.09 / 86.40 ms against a 60 ms budget, concluded the pure suite could
+  not measure a tail statistic, and landed a heap-settle, a best-of-two retry, and a demotion of
+  the p95 assert to measured-and-printed. **All of it has been reverted.** The premise was an
+  artefact: that session leaked 23 `while :; do :; done` CPU burners from its own load tests, so
+  the 4-core device ran at load average 36+ for every measurement. Its "clean box" check grepped
+  for `java` processes and could not see them by construction.
 
-  **OWED, and this is the real fix**: NFR-1's p95 needs an on-device instrumented benchmark
-  measuring ART, beside `CtcOnnxLatencyBenchmarkTest`. The 60 ms budget still stands — the pure
-  suite is simply the wrong venue to enforce it. Do NOT close this by raising the number.
-  Dead end already tried: skipping on system load is impossible here, `getSystemLoadAverage()`
-  reads /proc/loadavg, which SELinux denies on Android, so it returns -1.
+  Re-measured with the burners killed: isolated warm p95 **8.46 / 10.26 / 8.52 ms**, inside the
+  full 1,678-test suite **9.51 ms**, medians 2.7–3.2 ms against 30. No suite inflation, ~6x
+  headroom. `GeoBenchmarkTest` is healthy and the NFR-1 asserts stand as written.
+
+  Carry forward: verify a quiet machine by LOAD, via `uptime` — it reads `sysinfo()` and works on
+  Android even though `/proc/loadavg` is SELinux-denied (which is separately why the JVM's
+  `getSystemLoadAverage()` returns -1 here). Grepping for one process name is not a quiet check.
 - Translations owed: `swipe_engine_fallback_*`, `gesture_touch_smoothing_*`,
   `gesture_finger_occlusion_*`, `dict_word_too_long_for_swipe_*` ship English-only behind
   `tools:ignore="MissingTranslation"`. The 21 `swipe_engine_mode_desc` translations were
