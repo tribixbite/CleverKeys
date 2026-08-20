@@ -72,23 +72,6 @@ class BasicInstrumentedTest {
     }
 
     @Test
-    fun testSwipeResamplerIntegration() {
-        // Create test trajectory
-        val trajectory = Array(20) { i ->
-            FloatArray(2) { i.toFloat() }
-        }
-
-        val resampled = SwipeResampler.resample(
-            trajectory,
-            10,
-            SwipeResampler.ResamplingMode.MERGE
-        )
-
-        assertNotNull(resampled)
-        assertEquals(10, resampled!!.size)
-    }
-
-    @Test
     fun testBeamSearchModelsIntegration() {
         val state = BeamSearchState(startToken = 1, startScore = 0.5f)
         assertEquals(1, state.tokens.size)

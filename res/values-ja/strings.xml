@@ -366,16 +366,12 @@
     <string name="autocorrect_final_desc">最終出力に辞書ベースの修正を適用します</string>
     <string name="autocorrect_style_title">修正スタイル</string>
     <string name="autocorrect_style_desc">修正の積極性プリセット</string>
-    <string name="autocorrect_fuzzy_algorithm_title">ファジーマッチアルゴリズム</string>
-    <string name="autocorrect_fuzzy_algorithm_desc">スワイプパターンと単語を照合する方法</string>
     <string name="autocorrect_typo_forgiveness_title">誤字許容範囲</string>
     <string name="autocorrect_typo_forgiveness_desc">許容する最大文字差（0〜5）</string>
     <string name="autocorrect_starting_letter_title">先頭文字の精度</string>
     <string name="autocorrect_starting_letter_desc">必要な一致プレフィックス長（0〜4）</string>
     <string name="autocorrect_search_depth_title">修正検索深度</string>
     <string name="autocorrect_search_depth_desc">考慮するビーム候補数（1〜10）</string>
-    <string name="autocorrect_source_balance_title">予測ソースバランス</string>
-    <string name="autocorrect_source_balance_desc">スワイプ形状の信頼度と辞書頻度のバランス（0=辞書、100=形状）</string>
     <string name="autocorrect_common_boost_title">一般単語ブースト</string>
     <string name="autocorrect_common_boost_desc">一般的な単語のボーナス倍率（0.5〜2.0）</string>
     <string name="autocorrect_frequent_boost_title">頻出単語ブースト</string>

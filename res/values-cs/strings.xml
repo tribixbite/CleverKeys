@@ -367,16 +367,12 @@
     <string name="autocorrect_final_desc">Použít opravy ze slovníku na konečný výstup</string>
     <string name="autocorrect_style_title">Styl oprav</string>
     <string name="autocorrect_style_desc">Celkový preset agresivity oprav</string>
-    <string name="autocorrect_fuzzy_algorithm_title">Algoritmus přibližné shody</string>
-    <string name="autocorrect_fuzzy_algorithm_desc">Metoda pro přiřazování tahových vzorů ke slovům</string>
     <string name="autocorrect_typo_forgiveness_title">Tolerance překlepů</string>
     <string name="autocorrect_typo_forgiveness_desc">Maximální povolený rozdíl znaků (0–5)</string>
     <string name="autocorrect_starting_letter_title">Přesnost počátečního písmene</string>
     <string name="autocorrect_starting_letter_desc">Požadovaná délka shodného prefixu (0–4)</string>
     <string name="autocorrect_search_depth_title">Hloubka hledání oprav</string>
     <string name="autocorrect_search_depth_desc">Počet kandidátů beam search k posouzení (1–10)</string>
-    <string name="autocorrect_source_balance_title">Vyvážení zdrojů předpovědí</string>
-    <string name="autocorrect_source_balance_desc">Spolehlivost tvaru tahu vs. frekvence slovníku (0=slovník, 100=tvar)</string>
     <string name="autocorrect_common_boost_title">Posílení běžných slov</string>
     <string name="autocorrect_common_boost_desc">Bonusový násobitel pro běžná slova (0,5–2,0)</string>
     <string name="autocorrect_frequent_boost_title">Posílení častých slov</string>

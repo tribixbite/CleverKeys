@@ -367,16 +367,12 @@
     <string name="autocorrect_final_desc">Woordenboekgebaseerde correcties toepassen op de uiteindelijke uitvoer</string>
     <string name="autocorrect_style_title">Correctiestijl</string>
     <string name="autocorrect_style_desc">Algemene voorinstelling voor correctie-agressiviteit</string>
-    <string name="autocorrect_fuzzy_algorithm_title">Vaag overeenkomstalgoritme</string>
-    <string name="autocorrect_fuzzy_algorithm_desc">Methode voor het matchen van veegpatronen aan woorden</string>
     <string name="autocorrect_typo_forgiveness_title">Typvergevingsgezindheid</string>
     <string name="autocorrect_typo_forgiveness_desc">Maximaal toegestaan tekenverschil (0–5)</string>
     <string name="autocorrect_starting_letter_title">Nauwkeurigheid beginletter</string>
     <string name="autocorrect_starting_letter_desc">Vereiste overeenkomende prefixlengte (0–4)</string>
     <string name="autocorrect_search_depth_title">Zoekdiepte correctie</string>
     <string name="autocorrect_search_depth_desc">Aantal bundelkandidaten om te overwegen (1–10)</string>
-    <string name="autocorrect_source_balance_title">Saldo voorspellingsbronnen</string>
-    <string name="autocorrect_source_balance_desc">Betrouwbaarheid van de veegvorm vs. woordenboekfrequentie (0=woordenboek, 100=vorm)</string>
     <string name="autocorrect_common_boost_title">Boost veelgebruikte woorden</string>
     <string name="autocorrect_common_boost_desc">Bonusvermenigvuldiger voor veelgebruikte woorden (0,5–2,0)</string>
     <string name="autocorrect_frequent_boost_title">Boost frequente woorden</string>

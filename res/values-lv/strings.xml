@@ -378,16 +378,12 @@
     <string name="autocorrect_final_desc">Lietot vārdnīcas labojumus galīgajam rezultātam</string>
     <string name="autocorrect_style_title">Labošanas stils</string>
     <string name="autocorrect_style_desc">Vispārīgs labošanas agresivitātes priekšiestatījums</string>
-    <string name="autocorrect_fuzzy_algorithm_title">Neskaidras atbilstības algoritms</string>
-    <string name="autocorrect_fuzzy_algorithm_desc">Metode vilkuma modeļu saskaņošanai ar vārdiem</string>
     <string name="autocorrect_typo_forgiveness_title">Drukas kļūdu piedošana</string>
     <string name="autocorrect_typo_forgiveness_desc">Maksimālā atļautā rakstzīmju starpība (0–5)</string>
     <string name="autocorrect_starting_letter_title">Sākuma burta precizitāte</string>
     <string name="autocorrect_starting_letter_desc">Nepieciešamais atbilstošā prefiksa garums (0–4)</string>
     <string name="autocorrect_search_depth_title">Labošanas meklēšanas dziļums</string>
     <string name="autocorrect_search_depth_desc">Apskatāmo stara kandidātu skaits (1–10)</string>
-    <string name="autocorrect_source_balance_title">Prognozes avotu līdzsvars</string>
-    <string name="autocorrect_source_balance_desc">Vilkuma formas pārliecība pret vārdnīcas biežumu (0=vārdnīca, 100=forma)</string>
     <string name="autocorrect_common_boost_title">Izplatītu vārdu pastiprinājums</string>
     <string name="autocorrect_common_boost_desc">Bonusa reizinātājs izplatītiem vārdiem (0.5–2.0)</string>
     <string name="autocorrect_frequent_boost_title">Biežu vārdu pastiprinājums</string>

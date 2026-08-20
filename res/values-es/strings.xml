@@ -384,16 +384,12 @@
     <string name="autocorrect_final_desc">Aplica correcciones basadas en el diccionario a la salida final</string>
     <string name="autocorrect_style_title">Estilo de corrección</string>
     <string name="autocorrect_style_desc">Ajuste preestablecido general de agresividad de corrección</string>
-    <string name="autocorrect_fuzzy_algorithm_title">Algoritmo de coincidencia aproximada</string>
-    <string name="autocorrect_fuzzy_algorithm_desc">Método para hacer coincidir patrones de deslizamiento con palabras</string>
     <string name="autocorrect_typo_forgiveness_title">Tolerancia a errores tipográficos</string>
     <string name="autocorrect_typo_forgiveness_desc">Diferencia máxima de caracteres permitida (0–5)</string>
     <string name="autocorrect_starting_letter_title">Precisión de letra inicial</string>
     <string name="autocorrect_starting_letter_desc">Longitud de prefijo coincidente requerida (0–4)</string>
     <string name="autocorrect_search_depth_title">Profundidad de búsqueda de corrección</string>
     <string name="autocorrect_search_depth_desc">Número de candidatos Beam a considerar (1–10)</string>
-    <string name="autocorrect_source_balance_title">Equilibrio de fuentes de predicción</string>
-    <string name="autocorrect_source_balance_desc">Confianza en el trazo vs frecuencia de diccionario (0 = diccionario, 100 = trazo)</string>
     <string name="autocorrect_common_boost_title">Bonus de palabras comunes</string>
     <string name="autocorrect_common_boost_desc">Multiplicador de bonus para palabras comunes (0,5–2,0)</string>
     <string name="autocorrect_frequent_boost_title">Bonus de palabras frecuentes</string>

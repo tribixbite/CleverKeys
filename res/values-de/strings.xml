@@ -386,16 +386,12 @@
     <string name="autocorrect_final_desc">Wörterbuchbasierte Korrekturen auf die endgültige Ausgabe anwenden</string>
     <string name="autocorrect_style_title">Korrekturstil</string>
     <string name="autocorrect_style_desc">Allgemeine Voreinstellung für die Korrekturaggressivität</string>
-    <string name="autocorrect_fuzzy_algorithm_title">Unscharfer Abgleichalgorithmus</string>
-    <string name="autocorrect_fuzzy_algorithm_desc">Methode zum Abgleich von Wischmustern mit Wörtern</string>
     <string name="autocorrect_typo_forgiveness_title">Tippfehlertoleranz</string>
     <string name="autocorrect_typo_forgiveness_desc">Maximal erlaubter Zeichenunterschied (0–5)</string>
     <string name="autocorrect_starting_letter_title">Genauigkeit des Anfangsbuchstabens</string>
     <string name="autocorrect_starting_letter_desc">Erforderliche übereinstimmende Präfixlänge (0–4)</string>
     <string name="autocorrect_search_depth_title">Korrektur-Suchtiefe</string>
     <string name="autocorrect_search_depth_desc">Anzahl der zu berücksichtigenden Beam-Kandidaten (1–10)</string>
-    <string name="autocorrect_source_balance_title">Vorhersagequellen-Balance</string>
-    <string name="autocorrect_source_balance_desc">Wischform-Konfidenz vs. Wörterbuchhäufigkeit (0 = Wörterbuch, 100 = Form)</string>
     <string name="autocorrect_common_boost_title">Häufige-Wörter-Bonus</string>
     <string name="autocorrect_common_boost_desc">Bonusmultiplikator für häufige Wörter (0,5–2,0)</string>
     <string name="autocorrect_frequent_boost_title">Häufigkeitsbonus</string>

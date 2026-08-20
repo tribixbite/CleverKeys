@@ -405,16 +405,12 @@
     <string name="autocorrect_final_desc">Applica correzioni basate sul dizionario all\'output finale</string>
     <string name="autocorrect_style_title">Stile di correzione</string>
     <string name="autocorrect_style_desc">Preset generale di aggressività della correzione</string>
-    <string name="autocorrect_fuzzy_algorithm_title">Algoritmo fuzzy</string>
-    <string name="autocorrect_fuzzy_algorithm_desc">Metodo per abbinare i pattern di scorrimento alle parole</string>
     <string name="autocorrect_typo_forgiveness_title">Tolleranza errori</string>
     <string name="autocorrect_typo_forgiveness_desc">Differenza massima di caratteri consentita (0–5)</string>
     <string name="autocorrect_starting_letter_title">Accuratezza lettera iniziale</string>
     <string name="autocorrect_starting_letter_desc">Lunghezza del prefisso corrispondente richiesta (0–4)</string>
     <string name="autocorrect_search_depth_title">Profondità ricerca correzione</string>
     <string name="autocorrect_search_depth_desc">Numero di candidati beam da considerare (1–10)</string>
-    <string name="autocorrect_source_balance_title">Bilanciamento sorgenti predizione</string>
-    <string name="autocorrect_source_balance_desc">Confidenza della forma del tratto vs frequenza dizionario (0=dizionario, 100=forma)</string>
     <string name="autocorrect_common_boost_title">Boost parole comuni</string>
     <string name="autocorrect_common_boost_desc">Moltiplicatore bonus per parole comuni (0,5–2,0)</string>
     <string name="autocorrect_frequent_boost_title">Boost parole frequenti</string>

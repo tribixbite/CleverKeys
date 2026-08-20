@@ -377,16 +377,12 @@
     <string name="autocorrect_final_desc">Stosuj korekty słownikowe do ostatecznego wyniku</string>
     <string name="autocorrect_style_title">Styl korekty</string>
     <string name="autocorrect_style_desc">Ogólne ustawienie agresywności korekty</string>
-    <string name="autocorrect_fuzzy_algorithm_title">Algorytm rozmytego dopasowania</string>
-    <string name="autocorrect_fuzzy_algorithm_desc">Metoda dopasowywania wzorców gestów do słów</string>
     <string name="autocorrect_typo_forgiveness_title">Tolerancja literówek</string>
     <string name="autocorrect_typo_forgiveness_desc">Maksymalna dozwolona różnica znaków (0–5)</string>
     <string name="autocorrect_starting_letter_title">Dokładność pierwszej litery</string>
     <string name="autocorrect_starting_letter_desc">Wymagana długość pasującego prefiksu (0–4)</string>
     <string name="autocorrect_search_depth_title">Głębokość wyszukiwania korekty</string>
     <string name="autocorrect_search_depth_desc">Liczba kandydatów beam search do rozważenia (1–10)</string>
-    <string name="autocorrect_source_balance_title">Balans źródeł przewidywań</string>
-    <string name="autocorrect_source_balance_desc">Pewność kształtu gestu vs. częstotliwość słownikowa (0=słownik, 100=kształt)</string>
     <string name="autocorrect_common_boost_title">Wzmocnienie popularnych słów</string>
     <string name="autocorrect_common_boost_desc">Mnożnik bonusowy dla popularnych słów (0,5–2,0)</string>
     <string name="autocorrect_frequent_boost_title">Wzmocnienie częstych słów</string>

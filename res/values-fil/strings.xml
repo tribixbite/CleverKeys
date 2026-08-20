@@ -376,16 +376,12 @@
     <string name="autocorrect_final_desc">Mag-apply ng mga pagwawasto batay sa diksyunaryo sa final na output</string>
     <string name="autocorrect_style_title">Estilo ng Pagwawasto</string>
     <string name="autocorrect_style_desc">Overall na preset ng aggressiveness ng pagwawasto</string>
-    <string name="autocorrect_fuzzy_algorithm_title">Fuzzy Match Algorithm</string>
-    <string name="autocorrect_fuzzy_algorithm_desc">Paraan ng pagtatugma ng mga swipe pattern sa mga salita</string>
     <string name="autocorrect_typo_forgiveness_title">Typo Forgiveness</string>
     <string name="autocorrect_typo_forgiveness_desc">Maximum na pinapayagang pagkakaiba ng karakter (0–5)</string>
     <string name="autocorrect_starting_letter_title">Kawastuhan ng Unang Titik</string>
     <string name="autocorrect_starting_letter_desc">Kinakailangang haba ng prefix na tumutugma (0–4)</string>
     <string name="autocorrect_search_depth_title">Lalim ng Paghahanap ng Pagwawasto</string>
     <string name="autocorrect_search_depth_desc">Bilang ng mga beam candidate na isasaalang-alang (1–10)</string>
-    <string name="autocorrect_source_balance_title">Balanse ng Pinagmulan ng Prediction</string>
-    <string name="autocorrect_source_balance_desc">Kumpiyansa sa hugis ng swipe vs dalas ng diksyunaryo (0=diksyunaryo, 100=hugis)</string>
     <string name="autocorrect_common_boost_title">Boost ng Mga Karaniwang Salita</string>
     <string name="autocorrect_common_boost_desc">Bonus multiplier para sa mga karaniwang salita (0.5–2.0)</string>
     <string name="autocorrect_frequent_boost_title">Boost ng Mga Madalas na Salita</string>

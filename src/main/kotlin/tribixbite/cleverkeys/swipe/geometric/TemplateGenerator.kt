@@ -165,13 +165,13 @@ class TemplateGenerator(
         return out
     }
 
-    // ── arc-length resampling (ported from SwipeResampler's family, not imported) ─
+    // ── arc-length resampling (own implementation; see below for why) ──────────────
 
     /**
      * Arc-length UNIFORM resample of an interleaved (u,v) polyline to exactly [target]
      * points: the first and last input points are preserved, and the interior points
      * are placed at equal fractions of total path length. This is the "port, don't
-     * import" of `SwipeResampler` — its modes truncate/merge by index, whereas the
+     * import" of the neural engine's index-based resampler — its modes truncated/merged by index, whereas the
      * geometric template must be arc-length uniform so d_shape/d_loc compare like
      * against like.
      *

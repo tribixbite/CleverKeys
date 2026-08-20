@@ -378,16 +378,12 @@
     <string name="autocorrect_final_desc">Застосовувати словникові виправлення до фінального результату</string>
     <string name="autocorrect_style_title">Стиль виправлення</string>
     <string name="autocorrect_style_desc">Загальний пресет агресивності виправлення</string>
-    <string name="autocorrect_fuzzy_algorithm_title">Алгоритм нечіткого збігу</string>
-    <string name="autocorrect_fuzzy_algorithm_desc">Метод зіставлення паттернів свайпу зі словами</string>
     <string name="autocorrect_typo_forgiveness_title">Допуск помилок</string>
     <string name="autocorrect_typo_forgiveness_desc">Максимальна різниця символів (0–5)</string>
     <string name="autocorrect_starting_letter_title">Точність початкової літери</string>
     <string name="autocorrect_starting_letter_desc">Потрібна довжина збігного префікса (0–4)</string>
     <string name="autocorrect_search_depth_title">Глибина пошуку виправлень</string>
     <string name="autocorrect_search_depth_desc">Кількість beam-кандидатів для аналізу (1–10)</string>
-    <string name="autocorrect_source_balance_title">Баланс джерел передбачення</string>
-    <string name="autocorrect_source_balance_desc">Форма жесту проти словникової частоти (0 = словник, 100 = форма)</string>
     <string name="autocorrect_common_boost_title">Підсилення частих слів</string>
     <string name="autocorrect_common_boost_desc">Бонусний множник для поширених слів (0.5–2.0)</string>
     <string name="autocorrect_frequent_boost_title">Підсилення популярних слів</string>

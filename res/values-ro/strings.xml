@@ -389,16 +389,12 @@
     <string name="autocorrect_final_desc">Aplică corecții bazate pe dicționar la rezultatul final</string>
     <string name="autocorrect_style_title">Stil de corectare</string>
     <string name="autocorrect_style_desc">Presetare generală de agresivitate a corecției</string>
-    <string name="autocorrect_fuzzy_algorithm_title">Algoritm potrivire fuzzy</string>
-    <string name="autocorrect_fuzzy_algorithm_desc">Metodă pentru potrivirea tiparelor de glisare cu cuvintele</string>
     <string name="autocorrect_typo_forgiveness_title">Toleranță erori de scriere</string>
     <string name="autocorrect_typo_forgiveness_desc">Diferența maximă de caractere permisă (0–5)</string>
     <string name="autocorrect_starting_letter_title">Acuratețe literă inițială</string>
     <string name="autocorrect_starting_letter_desc">Lungimea prefixului potrivit necesar (0–4)</string>
     <string name="autocorrect_search_depth_title">Adâncime căutare corectare</string>
     <string name="autocorrect_search_depth_desc">Numărul de candidați ai fasciculului de luat în considerare (1–10)</string>
-    <string name="autocorrect_source_balance_title">Echilibru surse predicție</string>
-    <string name="autocorrect_source_balance_desc">Încredere în traseu vs frecvență dicționar (0=dicționar, 100=traseu)</string>
     <string name="autocorrect_common_boost_title">Amplificare cuvinte comune</string>
     <string name="autocorrect_common_boost_desc">Multiplicator bonus pentru cuvinte comune (0,5–2,0)</string>
     <string name="autocorrect_frequent_boost_title">Amplificare cuvinte frecvente</string>

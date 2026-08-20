@@ -367,16 +367,12 @@
     <string name="autocorrect_final_desc">Применять словарные исправления к финальному результату</string>
     <string name="autocorrect_style_title">Стиль коррекции</string>
     <string name="autocorrect_style_desc">Общий пресет агрессивности коррекции</string>
-    <string name="autocorrect_fuzzy_algorithm_title">Алгоритм нечёткого совпадения</string>
-    <string name="autocorrect_fuzzy_algorithm_desc">Метод сопоставления паттернов свайпа со словами</string>
     <string name="autocorrect_typo_forgiveness_title">Допуск опечаток</string>
     <string name="autocorrect_typo_forgiveness_desc">Максимальная разница символов (0–5)</string>
     <string name="autocorrect_starting_letter_title">Точность начальной буквы</string>
     <string name="autocorrect_starting_letter_desc">Требуемая длина совпадающего префикса (0–4)</string>
     <string name="autocorrect_search_depth_title">Глубина поиска коррекции</string>
     <string name="autocorrect_search_depth_desc">Количество beam-кандидатов для анализа (1–10)</string>
-    <string name="autocorrect_source_balance_title">Баланс источников предсказания</string>
-    <string name="autocorrect_source_balance_desc">Форма жеста vs словарная частота (0 = словарь, 100 = форма)</string>
     <string name="autocorrect_common_boost_title">Усиление частых слов</string>
     <string name="autocorrect_common_boost_desc">Бонусный множитель для распространённых слов (0.5–2.0)</string>
     <string name="autocorrect_frequent_boost_title">Усиление популярных слов</string>

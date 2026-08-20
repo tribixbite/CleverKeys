@@ -372,16 +372,12 @@
     <string name="autocorrect_final_desc">Appliquer des corrections basées sur le dictionnaire à la sortie finale</string>
     <string name="autocorrect_style_title">Style de correction</string>
     <string name="autocorrect_style_desc">Préréglage général d\'agressivité de correction</string>
-    <string name="autocorrect_fuzzy_algorithm_title">Algorithme de correspondance approximative</string>
-    <string name="autocorrect_fuzzy_algorithm_desc">Méthode pour faire correspondre les schémas de glissé aux mots</string>
     <string name="autocorrect_typo_forgiveness_title">Tolérance aux fautes de frappe</string>
     <string name="autocorrect_typo_forgiveness_desc">Différence de caractères maximale autorisée (0–5)</string>
     <string name="autocorrect_starting_letter_title">Précision de la lettre de départ</string>
     <string name="autocorrect_starting_letter_desc">Longueur de préfixe correspondant requise (0–4)</string>
     <string name="autocorrect_search_depth_title">Profondeur de recherche de correction</string>
     <string name="autocorrect_search_depth_desc">Nombre de candidats Beam à considérer (1–10)</string>
-    <string name="autocorrect_source_balance_title">Équilibre des sources de prédiction</string>
-    <string name="autocorrect_source_balance_desc">Confiance dans le tracé vs fréquence du dictionnaire (0 = dictionnaire, 100 = tracé)</string>
     <string name="autocorrect_common_boost_title">Bonus mots courants</string>
     <string name="autocorrect_common_boost_desc">Multiplicateur de bonus pour les mots courants (0,5–2,0)</string>
     <string name="autocorrect_frequent_boost_title">Bonus mots fréquents</string>

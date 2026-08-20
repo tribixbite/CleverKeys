@@ -365,7 +365,6 @@ tasks.register('runPureTests', JavaExec) {
   def pureTestClasses = [
     'tribixbite.cleverkeys.AccentNormalizerTest',
     'tribixbite.cleverkeys.DictionaryWordTest',
-    'tribixbite.cleverkeys.SwipeResamplerTest',
     'tribixbite.cleverkeys.BeamSearchModelsTest',
     'tribixbite.cleverkeys.ConfigDefaultsTest',
     'tribixbite.cleverkeys.DictionaryBinFormatTest',

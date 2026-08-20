@@ -11,7 +11,7 @@ import kotlin.math.sqrt
  *  1. **Normalize** each raw key-area-local pixel to `u = x / keyAreaWidthPx`,
  *     `v = y / keyAreaHeightPx` ∈ [0,1]² (the Coordinate contract).
  *  2. **Arc-length uniform resample** to N points (the algorithm family of the pure
- *     `SwipeResampler` — PORTED, not imported: `SwipeResampler` truncates/merges by
+ *     resampling is ARC-LENGTH based. The neural engine's index-based resampler truncated/merged by
  *     index, but the geometric decoder needs equidistant arc-length points so that
  *     the proportional shape/location matching compares like against like).
  *  3. **Corners** — interior resampled points whose turn angle ≥ `cornerAngleThresholdDeg`.
@@ -183,7 +183,7 @@ class GesturePreprocessor(private val config: GeometricEngineConfig) {
         return ux to uy
     }
 
-    // ── arc-length resampling (ported from SwipeResampler's family, not imported) ─
+    // ── arc-length resampling (own implementation; see the class KDoc for why) ─────
 
     /**
      * Arc-length UNIFORM resample of an interleaved (u,v) polyline to exactly [target]

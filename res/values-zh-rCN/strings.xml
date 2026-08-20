@@ -365,16 +365,12 @@
     <string name="autocorrect_final_desc">对最终输出应用基于词典的纠错。</string>
     <string name="autocorrect_style_title">纠错风格</string>
     <string name="autocorrect_style_desc">整体纠错积极性预设。</string>
-    <string name="autocorrect_fuzzy_algorithm_title">模糊匹配算法</string>
-    <string name="autocorrect_fuzzy_algorithm_desc">将滑动模式与单词匹配的方法。</string>
     <string name="autocorrect_typo_forgiveness_title">错别字容忍度</string>
     <string name="autocorrect_typo_forgiveness_desc">允许的最大字符差异（0~5）。</string>
     <string name="autocorrect_starting_letter_title">首字母精度</string>
     <string name="autocorrect_starting_letter_desc">所需的匹配前缀长度（0~4）。</string>
     <string name="autocorrect_search_depth_title">纠错搜索深度</string>
     <string name="autocorrect_search_depth_desc">考虑的束候选数量（1~10）。</string>
-    <string name="autocorrect_source_balance_title">预测来源权重</string>
-    <string name="autocorrect_source_balance_desc">滑动轨迹置信度与词典频率的权重（0=词典，100=轨迹）。</string>
     <string name="autocorrect_common_boost_title">常用词提升</string>
     <string name="autocorrect_common_boost_desc">常用词的奖励倍率（0.5~2.0）。</string>
     <string name="autocorrect_frequent_boost_title">高频词提升</string>

@@ -372,16 +372,12 @@
     <string name="autocorrect_final_desc">Szótáralapú javítások alkalmazása a végső kimenetre</string>
     <string name="autocorrect_style_title">Javítási stílus</string>
     <string name="autocorrect_style_desc">Az általános javítási agresszivitás előbeállítása</string>
-    <string name="autocorrect_fuzzy_algorithm_title">Fuzzy egyezési algoritmus</string>
-    <string name="autocorrect_fuzzy_algorithm_desc">Módszer a csúsztatási minták szavakhoz illesztéséhez</string>
     <string name="autocorrect_typo_forgiveness_title">Elgépelési tolerancia</string>
     <string name="autocorrect_typo_forgiveness_desc">Maximálisan megengedett karaktereltérés (0–5)</string>
     <string name="autocorrect_starting_letter_title">Kezdőbetű pontossága</string>
     <string name="autocorrect_starting_letter_desc">Szükséges egyező előtaghossz (0–4)</string>
     <string name="autocorrect_search_depth_title">Javítási keresési mélység</string>
     <string name="autocorrect_search_depth_desc">Figyelembe veendő beam jelöltek száma (1–10)</string>
-    <string name="autocorrect_source_balance_title">Előrejelzési forrás egyensúlya</string>
-    <string name="autocorrect_source_balance_desc">Húzásforma megbízhatósága vs. szótárgyakoriság (0=szótár, 100=forma)</string>
     <string name="autocorrect_common_boost_title">Gyakori szavak erősítése</string>
     <string name="autocorrect_common_boost_desc">Bónusz szorzó a gyakori szavakhoz (0,5–2,0)</string>
     <string name="autocorrect_frequent_boost_title">Sűrű szavak erősítése</string>
