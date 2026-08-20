@@ -332,4 +332,156 @@ class ContractionManagerTest {
         assertEquals("don't", manager.getNonPairedMapping("dont"))
         assertTrue(manager.getTotalKnownCount() > 0)
     }
+
+    // =========================================================================
+    // TYPING path: cross-language collision demotion (2026-08-20)
+    //
+    // `loadTypingMappings` merges MULTIPLE languages into one map, which is the
+    // difference from `loadSwipeDisplayMappings` above (one language per manager).
+    // That merge had no provenance, so a REPLACE key of one active language was
+    // applied to a real word of the other and destroyed it in its own slot.
+    //
+    // These run instrumented rather than pure because they are the only tests that
+    // exercise the real wiring: real assets through a real AssetManager, the real
+    // load-order policy, and the real demotion call inside `loadTypingMappings`.
+    // `ContractionCollisionDemotionTest` pins the rule and
+    // `ContractionCollisionDataTest` pins the sidecars, but both would still pass if
+    // someone deleted the call — only these catch that.
+    // =========================================================================
+
+    /**
+     * The highest-frequency casualty: `dont` is an English REPLACE key AND one of the
+     * commonest words in French (the relative pronoun). An fr+en user typing it got `don't`.
+     */
+    @Test
+    fun loadTypingMappingsDoesNotLetEnglishDestroyACommonFrenchWord() {
+        manager.loadTypingMappings("fr", "en")
+
+        assertNull(
+            "'dont' is a common French word — while it is a REPLACE key the tap path " +
+                "substitutes \"don't\" and the French word is destroyed in its own slot",
+            manager.getNonPairedMapping("dont")
+        )
+        assertTrue(
+            "the English elision must remain reachable as an APPEND variant, not vanish",
+            manager.getPairedContractions("dont")?.contains("don't") == true
+        )
+        // An English key with no French reading is untouched: the guard must be surgical.
+        assertEquals("can't", manager.getNonPairedMapping("cant"))
+    }
+
+    /** Same defect in German, where `im` (in dem) is far commoner still. */
+    @Test
+    fun loadTypingMappingsDoesNotLetEnglishDestroyACommonGermanWord() {
+        manager.loadTypingMappings("de", "en")
+
+        assertNull(
+            "'im' is German for 'in dem' — it must not be rewritten to \"I'm\"",
+            manager.getNonPairedMapping("im")
+        )
+        assertTrue(manager.getPairedContractions("im")?.contains("i'm") == true)
+    }
+
+    /**
+     * The bug is BIDIRECTIONAL, and this is the half that is easy to forget: German's curated
+     * clitic table maps `hats` -> `hat's`, and `hats` is an ordinary English word.
+     */
+    @Test
+    fun loadTypingMappingsDoesNotLetGermanDestroyAnEnglishWord() {
+        manager.loadTypingMappings("de", "en")
+
+        assertNull(
+            "'hats' is an English word; de's curated clitic table must not rewrite it",
+            manager.getNonPairedMapping("hats")
+        )
+        assertTrue(manager.getPairedContractions("hats")?.contains("hat's") == true)
+    }
+
+    /**
+     * The other side of the contract, and the reason the sidecar stores WHICH languages
+     * collide rather than a boolean: a demotion must only fire for a language the user has
+     * actually enabled. An English-only user's `dont` -> `don't` is correct and must survive.
+     */
+    @Test
+    fun loadTypingMappingsLeavesAMonolingualUserUntouched() {
+        manager.loadTypingMappings("en", null)
+
+        assertEquals(
+            "for an English-only user 'dont' has no competing reading — demoting it here " +
+                "would remove a correct mapping to fix a problem they do not have",
+            "don't", manager.getNonPairedMapping("dont")
+        )
+        assertEquals("can't", manager.getNonPairedMapping("cant"))
+    }
+
+    /**
+     * `rendezvous` is the entry this whole mechanism was built for. It is legitimate French,
+     * and also an English lexicon word and a German one, so it was held out of the shipped
+     * data entirely until the demotion existed. Both halves of its contract are asserted here
+     * because either one alone is satisfiable by a broken implementation.
+     */
+    @Test
+    fun loadTypingMappingsKeepsRendezvousForFrenchOnlyButDemotesItAlongsideEnglish() {
+        manager.loadTypingMappings("fr", null)
+        assertEquals(
+            "an fr-only user must get the French hyphenation — nothing of theirs collides",
+            "rendez-vous", manager.getNonPairedMapping("rendezvous")
+        )
+
+        manager.loadTypingMappings("fr", "en")
+        assertNull(
+            "with English active, 'rendezvous' is a word the user may be typing in English",
+            manager.getNonPairedMapping("rendezvous")
+        )
+        assertTrue(
+            "and the French hyphenation stays offered alongside it",
+            manager.getPairedContractions("rendezvous")?.contains("rendez-vous") == true
+        )
+    }
+
+    /**
+     * The demotion must not be a bulk cull. If it removed a large fraction of the REPLACE
+     * table, the fix would itself be the regression — users would stop getting elisions they
+     * rely on. Measured worst case is fr+en at ~158 of ~18k keys.
+     */
+    @Test
+    fun loadTypingMappingsDemotesOnlyASmallFractionOfTheTable() {
+        manager.loadTypingMappings("fr", "en")
+        val afterBoth = manager.getNonPairedCount()
+
+        manager.loadTypingMappings("fr", null)
+        val frOnly = manager.getNonPairedCount()
+
+        assertTrue("fr-only must load the bulk of the French table", frOnly > 17_000)
+        // fr+en loads MORE files than fr-only (the English base too), so the counts are not
+        // directly comparable — assert the shortfall is small rather than comparing equality.
+        assertTrue(
+            "fr+en kept $afterBoth of a table whose French half alone is $frOnly — a " +
+                "shortfall this large would mean the collision data is over-broad",
+            afterBoth > frOnly - 500
+        )
+    }
+
+    /**
+     * The wiring itself. If `loadTypingMappings` stopped calling the demotion, every pure test
+     * would still pass and the casualties above would silently return — so this asserts the
+     * observable difference between "the collision data exists" and "it is applied".
+     */
+    @Test
+    fun loadTypingMappingsActuallyAppliesTheDemotionRatherThanJustShippingTheData() {
+        manager.loadTypingMappings("fr", "en")
+        val demotedKeys = listOf("dont", "im", "ive", "rendezvous")
+
+        for (key in demotedKeys) {
+            assertNull(
+                "'$key' is still a REPLACE key for an fr+en user — the demotion is not wired " +
+                    "into loadTypingMappings, or the fr/en sidecars were not read",
+                manager.getNonPairedMapping(key)
+            )
+            assertNotNull(
+                "'$key' lost its elision entirely — demotion must MOVE it to PAIRED, not drop it",
+                manager.getPairedContractions(key)
+            )
+        }
+    }
 }

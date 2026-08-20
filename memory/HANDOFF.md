@@ -29,7 +29,10 @@ Last full instrumented run 1395 tests / 0 failures.
   typing English `hats` got `hat's`. `im` was destroyed in EVERY non-English bundled language.
   Fix: `ContractionCollisionDemotion` + shipped `contraction_collisions_<lang>.json` sidecars,
   demoting a colliding key to PAIRED so both spellings stay reachable. `rendezvous` ships as a
-  result. Worst pair is fr+en at 158 demotions of ~18k keys (<1%).
+  result. Worst pair is fr+en at 158 demotions of ~18k keys (<1%). **Device-verified** on
+  emulator.wtf (Pixel7/API34, orchestrated): `ContractionManagerTest` 35 tests / 0 failed / 0
+  skipped, including 7 new `loadTypingMappings` cases proving the demotion is actually wired and
+  that a monolingual English user still gets `dont` -> `don't`.
   **Residuals, both untested:** an imported language pack has no sidecar, so an uncurated pack can
   still destroy the other language's words on the typing path (the swipe path keeps the overlay's
   rank guard); and a user's own custom words are invisible at generation time — hardening would be
