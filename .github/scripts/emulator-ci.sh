@@ -103,7 +103,21 @@ case "$MODE" in
     echo "Installing androidTest APK: ${TEST_APK_FILE:?TEST_APK_FILE not set}"
     adb install -r "$TEST_APK_FILE"
 
-    RUNNER="$PKG/androidx.test.runner.AndroidJUnitRunner"
+    # DISCOVER the instrumentation rather than assume it. It lives in the TEST package
+    # (`<applicationId>.test`), not the app package — `$PKG/androidx.test.runner...` gives
+    # `INSTRUMENTATION_FAILED`, which is how the first real run of this gate died. Deriving it
+    # from `pm list instrumentation` means an applicationId or runner change cannot silently
+    # break it, and the "No OK line" check already proved it catches the failure loudly.
+    RUNNER=$(adb shell pm list instrumentation \
+      | tr -d '\r' \
+      | sed -n "s#^instrumentation:\([^ ]*\) (target=$PKG)\$#\1#p" \
+      | head -1)
+    [ -n "$RUNNER" ] || {
+      echo "::error::no instrumentation registered for $PKG — the androidTest APK did not install"
+      adb shell pm list instrumentation
+      exit 1
+    }
+    echo "Instrumentation: $RUNNER"
     CLASSES="tribixbite.cleverkeys.swipe.CtcMultiLanguageInstrumentedTest,tribixbite.cleverkeys.GeometricSwipeOracleTest,tribixbite.cleverkeys.CrashGuardInstrumentedTest"
 
     echo "Running instrumented classes: $CLASSES"
