@@ -13,7 +13,7 @@ what was done; this file is only what is left. Anything below is open.
 Swipe is **CTC (default) + geometric**; the neural engine was deleted 2026-08-18
 (`a7d03bc8`..`83220634`), −26.4 MB APK. `CtcLanguageSupport.SUPPORTED` is **seven** languages:
 en/fr/de/es test-validated, it/pt/sv `PROVISIONAL` (scale-transferred, no per-language bar).
-Gates: `runPureTests` **1680**, `lintDebug` 0 errors, both compiles, `assembleRelease` clean.
+Gates: `runPureTests` **1696**, `lintDebug` 0 errors, both compiles, `assembleRelease` clean.
 Last full instrumented run 1395 tests / 0 failures; targeted contraction runs 127/0 on
 Pixel7 API 34.
 
@@ -59,7 +59,19 @@ story. Two habits came out of it and are worth keeping:
   word @16343, `aton` is ASK-attested, `entretemps` is a classifier misfire needing
   `FORCED_APPEND`.
 
-### 2. Context-LM rescoring of the CTC slate — design done, build not started
+### 2. Context-LM rescoring of the CTC slate — steps 1 and 3 done, feature inert
+
+**Landed**: `SwipeContextRescorer` (log-linear math, identity-at-empty-stores, rank-1
+displacement guard, 16 pure tests) and the full `swipe_context_rescoring` pref plumbing, default
+OFF. Nothing calls the rescorer yet.
+
+**Next, in order**: step 2 (gated boost accessor on `WordPredictor` returning per-word
+`ContextContinuation?`, M2 fail-closed gating inside, non-loading fast path), then step 4 (wire
+the seam at `handleSwipePredictionResults` behind the privacy gates, engine-slate-only, with
+provenance meta), then step 5 (the offline replay harness).
+
+**The default may not flip without step 5's evidence** — §7.3 bar is net top-1 gain with
+promotion errors well under errors fixed. That is a release decision, not a code change.
 
 `scripts/ctc_injection_ab.py` is now the worked example of extending a replay harness with a new
 dimension — reuse its shape rather than starting over. Note especially its metric lesson: score
@@ -78,7 +90,14 @@ corpus in the repo is context-free isolated words, so step 5 of that plan is "bu
 - `contraction_pairings_cleaned.json` (32 entries, 5,177 bytes) has ZERO code references —
   verified 2026-08-21 across `src/`, `scripts/`, `tools/`. Candidate for deletion with the next
   data change; needs a gate run, not a decision.
-- Translations owed: `swipe_engine_fallback_*`, `gesture_touch_smoothing_*`,
+- **Doc claims found but deliberately not fixed** during the 2026-08-21 deleted-class sweep,
+  each needing verification against live code rather than a mechanical edit: invented API
+  signatures in `core-keyboard-system.md` (`CleverKeysService.switchLayout`,
+  `KeyEventHandler.handleKeyDown`); a self-contradicting test inventory in `testing-strategy.md`
+  ("5 Robolectric / 6 instrumented" vs its own later 987/176/887); a `SwipeDetector` box and a
+  `DATABASE_VERSION = 1` claim in `ARCHITECTURE_MASTER.md` §9/§7.2 (clipboard schema is V4); and
+  an unverified file tree + "~3000 lines" in `settings-system.md`.
+- Translations owed: `swipe_context_rescoring_*`, `collision_warning_*`, `swipe_engine_fallback_*`, `gesture_touch_smoothing_*`,
   `gesture_finger_occlusion_*`, `dict_word_too_long_for_swipe_*` ship English-only behind
   `tools:ignore="MissingTranslation"`. The 21 `swipe_engine_mode_desc` translations were
   machine-extended and want a native reviewer.
