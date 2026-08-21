@@ -13,7 +13,7 @@ what was done; this file is only what is left. Anything below is open.
 Swipe is **CTC (default) + geometric**; the neural engine was deleted 2026-08-18
 (`a7d03bc8`..`83220634`), −26.4 MB APK. `CtcLanguageSupport.SUPPORTED` is **seven** languages:
 en/fr/de/es test-validated, it/pt/sv `PROVISIONAL` (scale-transferred, no per-language bar).
-Gates: `runPureTests` **1696**, `lintDebug` 0 errors, both compiles, `assembleRelease` clean.
+Gates: `runPureTests` **1716**, `lintDebug` 0 errors, both compiles, `assembleRelease` clean.
 Last full instrumented run 1395 tests / 0 failures; targeted contraction runs 127/0 on
 Pixel7 API 34.
 
@@ -59,31 +59,31 @@ story. Two habits came out of it and are worth keeping:
   word @16343, `aton` is ASK-attested, `entretemps` is a classifier misfire needing
   `FORCED_APPEND`.
 
-### 2. Context-LM rescoring of the CTC slate — steps 1 and 3 done, feature inert
+### 2. Context-LM rescoring of the CTC slate — steps 1-4 done, feature reachable but OFF
 
-**Landed**: `SwipeContextRescorer` (log-linear math, identity-at-empty-stores, rank-1
-displacement guard, 16 pure tests) and the full `swipe_context_rescoring` pref plumbing, default
-OFF. Nothing calls the rescorer yet.
+**Landed**: `SwipeContextRescorer` (log-linear math, identity-at-empty-stores, rank-1 score-ratio
+guard AND the strict `NextWordPredictor` evidence floors); the non-loading store peeks +
+`ContextModel.getContextEvidence`/`boostFor`; the M2-gated `WordPredictor.getSwipeContextEvidence`;
+the `swipe_context_rescoring` pref (default OFF) with its settings toggle; and the seam at
+`SuggestionHandler.handleSwipePredictionResults` behind all four §3 gates, with provenance on a
+context-promoted rank 1.
 
-**Next, in order**: step 2 (gated boost accessor on `WordPredictor` returning per-word
-`ContextContinuation?`, M2 fail-closed gating inside, non-loading fast path), then step 4 (wire
-the seam at `handleSwipePredictionResults` behind the privacy gates, engine-slate-only, with
-provenance meta), then step 5 (the offline replay harness).
+Verified with the pref OFF on-device: 90 instrumented tests unchanged, incl. the full 62-test
+`TypingSimulationTest`.
 
-**The default may not flip without step 5's evidence** — §7.3 bar is net top-1 gain with
-promotion errors well under errors fixed. That is a release decision, not a code change.
+**ONLY step 5 remains, and it is the blocker for everything else**: the offline context replay
+harness (§7.1) — replay a sentence corpus through `ContextModel.recordCommit`, draw matching FUTO
+traces, decode through the shipping adapter, apply the rescorer, and report Δtop-1 AND the
+promotion-error rate separately. `scripts/ctc_injection_ab.py` is the worked example to extend;
+reuse its metric lesson — score by CORRECTNESS against the target, never by the shape of the
+change.
 
-`scripts/ctc_injection_ab.py` is now the worked example of extending a replay harness with a new
-dimension — reuse its shape rather than starting over. Note especially its metric lesson: score
-by CORRECTNESS against the target, never by the shape of the change. Its first version called a
-fix a regression because the right answer happened to be an injected key.
+**No context corpus exists in this repo.** Every replay corpus is context-free isolated words
+(FUTO rows are `{word, trace}`; the local replay emits `{word, w, h, pts}`; `ctc_golden.json` is
+decoder parity). Sourcing one is step 5's first task, not an afterthought.
 
-`docs/specs/ctc-context-rescoring-and-tunables.md` has the full plan: hook at
-`SuggestionHandler.handleSwipePredictionResults` (both engines benefit), log-linear within-slate
-combination, privacy-gated on `LearningGate`, default-OFF, rank-1 displacement bounded.
-
-**Do not enable by default without evidence, and the evidence does not exist yet** — every replay
-corpus in the repo is context-free isolated words, so step 5 of that plan is "build the harness".
+**The default may not flip without that evidence** — §7.3's bar is a net top-1 gain with promotion
+errors well under errors fixed. That is a release decision, not a code change.
 
 ### 3. Smaller, ride-along
 
