@@ -546,6 +546,10 @@ tasks.register('runPureTests', JavaExec) {
     // language that is a real word of the OTHER active language must be demoted to PAIRED,
     // or the real word is destroyed in its own slot (fr+en `dont`, de+en `im`/`hats`).
     'tribixbite.cleverkeys.ContractionCollisionDemotionTest',
+    // Context rescoring step 1 (docs/specs/ctc-context-rescoring-and-tunables.md): the
+    // log-linear math, the identity property at empty stores, and the rank-1 guard that
+    // protects auto-commit. Default-OFF feature, not yet wired — these ARE the evidence.
+    'tribixbite.cleverkeys.swipe.SwipeContextRescorerTest',
     'tribixbite.cleverkeys.swipe.ContractionCollisionDataTest',
     // SwipePrunerTest excluded: requires android.util.Log (MockK + Robolectric)
   ]
