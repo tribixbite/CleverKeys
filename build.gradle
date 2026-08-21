@@ -553,6 +553,10 @@ tasks.register('runPureTests', JavaExec) {
     // Step 2: the evidence lookup and its NON-LOADING store peeks — the main-thread swipe
     // path must never trigger a persisted-blob load (the first-swipe jank hazard).
     'tribixbite.cleverkeys.contextaware.ContextEvidenceLookupTest',
+    // Step 5 measurement core: the PAIRED fixed/broken classification that gates the
+    // default flip. Corpus-independent — pinned before the corpus is chosen because the
+    // last hand-written A/B metric in this repo classified by change SHAPE and got it wrong.
+    'tribixbite.cleverkeys.swipe.RescoringMetricsTest',
     'tribixbite.cleverkeys.swipe.ContractionCollisionDataTest',
     // SwipePrunerTest excluded: requires android.util.Log (MockK + Robolectric)
   ]
