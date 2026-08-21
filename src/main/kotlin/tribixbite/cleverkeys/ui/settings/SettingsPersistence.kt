@@ -221,6 +221,8 @@ internal fun SettingsActivity.loadCurrentSettings() {
             Config.safeGetInt(prefs, "swipe_smoothing_window", Defaults.SWIPE_SMOOTHING_WINDOW)
         fingerOcclusionOffset =
             Config.safeGetInt(prefs, "finger_occlusion_offset", Defaults.FINGER_OCCLUSION_OFFSET)
+        swipeContextRescoring =
+            prefs.getBoolean("swipe_context_rescoring", Defaults.SWIPE_CONTEXT_RESCORING)
 
         // Appearance settings
         keyboardHeight = prefs.getSafeInt("keyboard_height", Defaults.KEYBOARD_HEIGHT_PORTRAIT)
@@ -461,6 +463,7 @@ internal fun SettingsActivity.updateConfigFromSettings() {
         config.apply {
             keyboardHeightPercent = keyboardHeight
             swipe_engine_mode = swipeEngineMode
+            swipe_context_rescoring = swipeContextRescoring
             // Swipe corrections settings (these update the Config object)
             swipe_final_autocorrect_enabled = swipeFinalAutocorrectEnabled
             autocorrect_max_length_diff = autocorrectMaxLengthDiff

@@ -319,6 +319,19 @@ object Defaults {
     // CleverKeys-ML campaign-2 validation number was decoded at; wider buys little
     // (the beam is Viterbi-max over a 26-ary trie) and costs linear CPU per swipe.
     const val CTC_BEAM_WIDTH = 100
+
+    /**
+     * Rescore the swipe slate with the learned bigram/trigram context signal.
+     *
+     * **Default OFF, and it must stay OFF until the offline replay harness produces evidence**
+     * (docs/specs/ctc-context-rescoring-and-tunables.md §7.3: net top-1 gain with promotion
+     * errors well under errors fixed). Flipping this default is an evidence-gated release
+     * decision, not a code change.
+     *
+     * Turning it on is inert for a user who has learned nothing: every context boost is then
+     * 1.0, and `SwipeContextRescorer` reproduces the engine's own ranking exactly.
+     */
+    const val SWIPE_CONTEXT_RESCORING = false
     const val AUTO_SPACE_AFTER_SUGGESTION = true  // Add trailing space after selecting suggestion
     const val AUTO_SPACE_BEFORE_SUGGESTION = true  // Add leading space before tapped suggestion
     const val BACKSPACE_UNDO_SWIPE = true  // Backspace after swipe deletes entire swiped word
@@ -593,6 +606,7 @@ class Config private constructor(
     @JvmField var geo_endpoint_inset_kw = Defaults.GEO_ENDPOINT_INSET_KW
     // CTC engine knob (read by CtcEngineAdapter per decode).
     @JvmField var ctc_beam_width = Defaults.CTC_BEAM_WIDTH
+    @JvmField var swipe_context_rescoring = Defaults.SWIPE_CONTEXT_RESCORING
     @JvmField var termux_mode_enabled = false
     @JvmField var auto_space_after_suggestion = true  // Add trailing space after selecting suggestion
     @JvmField var auto_space_before_suggestion = true  // Add leading space before tapped suggestion
@@ -876,6 +890,9 @@ class Config private constructor(
         geo_endpoint_inset_kw = safeGetFloat(_prefs, "geo_endpoint_inset_kw", Defaults.GEO_ENDPOINT_INSET_KW)
         ctc_beam_width = safeGetInt(_prefs, "ctc_beam_width", Defaults.CTC_BEAM_WIDTH)
             .coerceIn(10, 300)  // clamp mirrors onnx_xnnpack_threads' defensive pattern
+        swipe_context_rescoring = _prefs.getBoolean(
+            "swipe_context_rescoring", Defaults.SWIPE_CONTEXT_RESCORING
+        )
 
         swipe_smoothing_window = safeGetInt(_prefs, "swipe_smoothing_window", Defaults.SWIPE_SMOOTHING_WINDOW)
 

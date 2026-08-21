@@ -130,6 +130,30 @@ internal fun SettingsActivity.SwipeTypingSection() {
                         Text("Full Geometric Settings")
                     }
 
+                    // Context rescoring (docs/specs/ctc-context-rescoring-and-tunables.md).
+                    //
+                    // Default OFF and it must stay OFF until the offline replay harness produces
+                    // evidence — flipping the default is an evidence-gated release decision, not
+                    // a code change. Shown for BOTH engines on purpose: the rescorer runs on the
+                    // engine slate at `handleSwipePredictionResults`, which both CTC and geometric
+                    // pass through, so gating the toggle on engine mode would hide a setting that
+                    // does apply.
+                    //
+                    // The copy names LEARNED DATA explicitly. That is what makes this a
+                    // privacy-relevant choice rather than a neutral accuracy toggle, and it is
+                    // also honest about why it may appear to do nothing: with nothing learned,
+                    // every boost is 1.0 and the ranking is identical by construction.
+                    SettingsSwitch(
+                        title = stringResource(R.string.swipe_context_rescoring_title),
+                        description = stringResource(R.string.swipe_context_rescoring_desc),
+                        checked = swipeContextRescoring,
+                        onCheckedChange = {
+                            swipeContextRescoring = it
+                            saveSetting("swipe_context_rescoring", it)
+                        },
+                        highlightId = "swipe_context_rescoring"
+                    )
+
                     // CTC engine tuning (G5) — only under the ctc mode.
                     if (swipeEngineMode != "geometric") {
                         Button(

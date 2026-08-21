@@ -724,4 +724,12 @@
     <string name="collision_warning_title" tools:ignore="MissingTranslation">Contraction conflicts found</string>
     <string name="collision_warning_body" tools:ignore="MissingTranslation">%1$d shortcut(s) from an imported language pack would have rewritten real words in your other active language (%2$s). They have been turned into optional suggestions instead, so both spellings stay available.</string>
     <string name="collision_warning_examples" tools:ignore="MissingTranslation">Affected shortcuts:</string>
+    <!-- Context rescoring of the swipe slate (docs/specs/ctc-context-rescoring-and-tunables.md).
+         Default OFF; the copy must say it uses LEARNED data, because that is what makes it a
+         privacy-relevant choice rather than a neutral accuracy toggle.
+
+         tools:ignore="MissingTranslation" is deliberate and TEMPORARY, matching the convention
+         above. Owed: real translations, tracked in memory/HANDOFF.md. -->
+    <string name="swipe_context_rescoring_title" tools:ignore="MissingTranslation">Use context to rank swipes</string>
+    <string name="swipe_context_rescoring_desc" tools:ignore="MissingTranslation">Reorders swipe suggestions using the word pairs you have already typed on this device. Only breaks near-ties — a clearly decoded swipe is never overridden. Does nothing until the keyboard has learned from your typing, which requires on-device learning to be enabled.</string>
 </resources>
