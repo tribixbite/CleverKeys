@@ -21,6 +21,15 @@ Comprehensive testing strategy for CleverKeys Android keyboard, designed to enab
 
 ## Architecture: Humble Object Pattern
 
+> **Status note (2026-08-21)**: everything from here through "Implementation Phases" is the
+> original 2026-01-18 proposal, kept for rationale. The `:core` Gradle module was never
+> created, and the neural-era classes the proposal names — `BeamSearchEngine`,
+> `VocabularyTrie`, `PrefixBoostTrie` — were **deleted 2026-08-18 with the neural engine**
+> (ADR-011). The pure-JVM goal was reached by a different route: the CTC decoder core
+> (`swipe/ctc/` — `CtcBeamDecoder`, `CtcLexiconTrie`, `CtcCkdtLexicon`, all pure JVM) and
+> the geometric engine (`swipe/geometric/`, pure JVM with a purity drift test), both run
+> in-package via `runPureTests`. Current reality is the "Current Test Suite" section below.
+
 ### Goal
 Decouple Android framework from testable business logic.
 
@@ -99,8 +108,8 @@ testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3"
 ### P0: Critical (Must Have)
 | Component | Tests | Android Deps |
 |-----------|-------|--------------|
-| VocabularyTrie | Insert, lookup, prefix search | None |
-| BeamSearchEngine | Decoding, pruning, scoring | None |
+| VocabularyTrie *(deleted 2026-08-18; now `CtcLexiconTrie`)* | Insert, lookup, prefix search | None |
+| BeamSearchEngine *(deleted 2026-08-18; now `CtcBeamDecoder`)* | Decoding, pruning, scoring | None |
 | DictionaryLoader | V2 binary parsing | None |
 | ContractionHandler | Mapping, reverse lookup | None |
 | AutoCorrector | Edit distance, threshold | None |
@@ -119,7 +128,7 @@ testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3"
 | KeyboardState | Layer switching, modifiers | None |
 | LayoutParser | XML parsing | Resources abstraction |
 | LanguageDetector | Unigram scoring | None |
-| PrefixBoostTrie | Aho-Corasick traversal | None |
+| PrefixBoostTrie *(deleted 2026-08-18 with the neural engine; no replacement — the CTC/geometric engines use no prefix-boost tries)* | Aho-Corasick traversal | None |
 
 ### P3: Low Priority (Keep Instrumented)
 | Component | Tests | Reason |
@@ -134,18 +143,9 @@ testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3"
 Tests that can run today with minimal changes:
 
 ```kotlin
-// VocabularyTrieTest.kt
-@Test
-fun `trie prefix search returns all matches`() {
-    val trie = VocabularyTrie()
-    trie.insert("hello", 1000)
-    trie.insert("help", 900)
-    trie.insert("helicopter", 500)
-
-    val matches = trie.prefixSearch("hel")
-
-    assertThat(matches).containsExactly("hello", "help", "helicopter")
-}
+// (Historical example — VocabularyTrie and its VocabularyTrieTest were deleted 2026-08-18
+// with the neural engine. The equivalent live coverage is the pure swipe/ctc suite:
+// CtcModuleTest exercises CtcLexiconTrie build + lookup, CtcParityTest pins decode.)
 
 // ContractionTest.kt
 @Test
@@ -240,7 +240,7 @@ jobs:
 - [ ] Create TouchPoint data class
 - [ ] Create SwipeDecoder interface
 - [ ] Create TextCommitter interface
-- [ ] Refactor BeamSearchEngine to use abstractions
+- [x] ~~Refactor BeamSearchEngine to use abstractions~~ (obsolete — `BeamSearchEngine` was deleted 2026-08-18 with the neural engine; its successor `CtcBeamDecoder` was born pure JVM in `swipe/ctc/`)
 
 ### Phase 3: Core Module (Week 4+)
 - [ ] Create `:core` Gradle module
@@ -364,11 +364,11 @@ The pipeline approach gives us 95% of the coverage at 5% of the complexity. The 
 |-------|-------|------|---------|
 | `ContractionFlickerTest` | 20 | Instrumented | Paired contraction pipeline, prefix guard validation, flag mechanism |
 | `ContractionFlickerIntegrationTest` | 7 | Instrumented | Real SuggestionHandler + SuggestionBar + WordPredictor wired together |
-| `SwipeLayoutSupportTest` | 66 | JVM | Swipe layout configuration validation |
+| ~~`SwipeLayoutSupportTest`~~ | — | JVM | Deleted 2026-08-18 (`a7d03bc8` — it validated the neural allowlist, which is gone). Layout routing is now covered by `swipe/SwipeEngineRouterTest` (routing table) + `swipe/LayoutScriptDeclarationTest` (layout `script` declarations) |
 | `BackspaceUndoTest` | 32 | JVM | Pipeline symmetry source scanning, backspace undo state |
 | `TypingSimulationTest` | 62 | Instrumented | End-to-end typing with real dictionary + contractions |
 | `DictionaryDataSourceTest` | 19 | Instrumented | Dictionary cache coherence, toggle word behavior |
-| `VocabularyRankingTest` | 12 | Instrumented | Contraction scoring, trie lookup |
+| ~~`VocabularyRankingTest`~~ | — | Instrumented | Deleted 2026-08-18 with the neural engine (`64f401d2` — it scored through `OptimizedVocabulary`). Contraction ranking/trie coverage now lives in the pure `swipe/ctc/` suite: `CtcContractionRankingTest` (real beam decoder over real shipped assets), `CtcContractionKeysTest`, `CtcModuleTest` |
 | `SuggestionBarAutofillTest` | 15 | Instrumented | Autofill padding, password mode |
 
 ### Dual Pipeline Test Coverage

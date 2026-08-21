@@ -8,10 +8,11 @@ Per-language storage for custom and disabled words. Each language has its own wo
 
 | File | Class/Function | Purpose |
 |------|----------------|---------|
-| `src/main/kotlin/tribixbite/cleverkeys/OptimizedVocabulary.kt` | `loadDisabledWords()`, `loadCustomWords()` | Language-aware loading |
+| `src/main/kotlin/tribixbite/cleverkeys/WordPredictor.kt` | `loadDisabledWords()`, custom-word loading | Language-aware loading for tap prediction (`OptimizedVocabulary`, the neural-era consumer, was deleted 2026-08-18 — ADR-011) |
+| `src/main/kotlin/tribixbite/cleverkeys/swipe/CtcEngineAdapter.kt` / `swipe/GeometricEngineAdapter.kt` | Lexicon merge (`CtcLexiconMerge`) | Swipe engines read the same per-language keys: custom words − disabled words |
 | `src/main/kotlin/tribixbite/cleverkeys/LanguagePreferenceKeys.kt` | `customWordsKey()`, `disabledWordsKey()` | Key generation |
 | `src/main/kotlin/tribixbite/cleverkeys/DisabledDictionarySource.kt` | Constructor parameter | Language code support |
-| `src/main/kotlin/tribixbite/cleverkeys/ui/DictionaryManagerActivity.kt` | Tab generation | Multi-language UI |
+| `src/main/kotlin/tribixbite/cleverkeys/DictionaryManagerActivity.kt` | Tab generation | Multi-language UI |
 
 ## Storage Format
 
@@ -55,22 +56,26 @@ object LanguagePreferenceKeys {
 }
 ```
 
-### OptimizedVocabulary Integration
+### Consumer Integration
+
+`OptimizedVocabulary` (the original consumer of these keys) was deleted with the neural
+engine on 2026-08-18 (ADR-011). The per-language keys are now read in two places:
 
 ```kotlin
-// Uses _primaryLanguageCode field from preferences
-fun loadDisabledWords() {
-    val key = LanguagePreferenceKeys.disabledWordsKey(_primaryLanguageCode)
-    val words = prefs.getStringSet(key, emptySet())
-    // Load into disabled set
+// WordPredictor.kt (tap prediction) — language-specific keys since v1.1.92:
+private fun loadDisabledWords() {
+    val disabledWordsKey = LanguagePreferenceKeys.disabledWordsKey(currentLanguage)
+    val disabledSet = prefs.getStringSet(disabledWordsKey, emptySet()) ?: emptySet()
+    // ...
 }
-
-fun loadCustomWords() {
-    val key = LanguagePreferenceKeys.customWordsKey(_primaryLanguageCode)
-    val json = prefs.getString(key, "{}")
-    // Parse and load
-}
+// custom words: prefs.getString(LanguagePreferenceKeys.customWordsKey(language), "{}")
 ```
+
+The swipe engines consume the same keys through their lexicon merges: `CtcEngineAdapter`
+builds `(bundled lexicon + custom words) − disabled words` per active language via
+`swipe/ctc/CtcLexiconMerge.kt`; `GeometricEngineAdapter.mergeUserWords` prepends custom
+words (custom overrides disabled, matching `WordPredictor` semantics) and filters disabled
+words. Both rebuild on a content-hash change of (custom-words JSON, disabled set).
 
 ### DisabledDictionarySource
 

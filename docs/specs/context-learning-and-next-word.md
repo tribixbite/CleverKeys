@@ -65,7 +65,7 @@ suppresses next-word display (`fieldAllowsPersonalizedLearning` parameter throug
 ### Deliberate out-of-scope (review L7)
 The master gate covers AUTOMATIC recording of typing behavior. Data the user explicitly
 creates is governed by its own controls:
-- `SwipeCalibrationActivity` traces — own consent flow, recorded only during a session the user starts.
+- ~~`SwipeCalibrationActivity` traces~~ — that activity was deleted with the neural engine (2026-08-18, ADR-011). Swipe ML trace collection (`privacy_collect_swipe` → `ml/SwipeMLDataStore`) is no longer an exception: since Task A (2026-08-06) it is ANDed with the master gate at the write layer (`LearningGate.canCollectSwipeMl`, enforced in `PrivacyManager.canCollectSwipeData`).
 - `SwipePerformanceStats` — behind the separate performance-stats preference (no text content).
 - Backup restore — importing a backup repopulates learned stores even with the master off
   (restoring one's own exported data is an explicit act).

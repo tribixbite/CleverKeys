@@ -79,9 +79,9 @@ Technical documentation for CleverKeys, an Android keyboard with on-device swipe
 |------|---------|
 | `CleverKeysService.kt` | Main InputMethodService |
 | `Keyboard2View.kt` | Custom view rendering |
-| `Keyboard2.kt` | Key layout and state management |
-| `KeyEventHandler.kt` | Key press processing |
-| `InputConnectionManager.kt` | Text editing interface |
+| `KeyboardData.kt` | Key layout model (there is no `Keyboard2.kt`) |
+| `KeyEventHandler.kt` | Key press processing + text editing (direct `InputConnection` calls; no `InputConnectionManager` exists — see core-keyboard-system.md) |
+| `KeyboardReceiver.kt` | `IReceiver` impl: `InputConnection` access, event routing |
 | `Pointers.kt` | Touch handling and gestures |
 | `Config.kt` | All settings with defaults |
 | `SettingsActivity.kt` | Settings UI (Jetpack Compose) |
@@ -97,13 +97,15 @@ Technical documentation for CleverKeys, an Android keyboard with on-device swipe
 │                  (InputMethodService)                       │
 ├─────────────────────────────────────────────────────────────┤
 │  ┌────────────────┐  ┌────────────────┐  ┌──────────────┐  │
-│  │ Keyboard2View  │  │ KeyEventHandler│  │ InputConnection│ │
-│  │ (Rendering)    │  │ (Processing)   │  │ Manager       │ │
+│  │ Keyboard2View  │  │ KeyEventHandler│  │ Keyboard     │  │
+│  │ (Rendering)    │  │ (Processing +  │  │ Receiver     │  │
+│  │                │  │  text commit)  │  │ (IReceiver:  │  │
+│  │                │  │                │  │  InputConn.) │  │
 │  └───────┬────────┘  └───────┬────────┘  └──────┬───────┘  │
 │          │                   │                   │          │
 │  ┌───────▼────────┐  ┌───────▼────────┐         │          │
-│  │   Keyboard2    │  │   Pointers     │         │          │
-│  │ (Layout/State) │  │ (Touch/Gesture)│         │          │
+│  │  KeyboardData  │  │   Pointers     │         │          │
+│  │ (Layout model) │  │ (Touch/Gesture)│         │          │
 │  └───────┬────────┘  └───────┬────────┘         │          │
 │          │                   │                   │          │
 │  ┌───────▼───────────────────▼───────────────────▼───────┐  │

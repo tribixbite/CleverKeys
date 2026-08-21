@@ -89,8 +89,7 @@ override fun onDestroy() {
 | Object pooling | Reuse Paint, Path, Rect in hot paths |
 | Bitmap caching | Cache key background bitmaps |
 | WeakReference | Large objects not critical to hold |
-| LRU cache | Prediction results |
-| Tensor pooling | Pre-allocated buffers for ONNX |
+| LRU cache | Prediction results; geometric template indices (`swipe/geometric/TemplateCache.kt`) |
 
 ### Rendering Optimization
 
@@ -101,17 +100,14 @@ override fun onDestroy() {
 
 ### ONNX Inference Optimization
 
-```kotlin
-// OptimizedTensorPool prevents allocation during inference
-class OptimizedTensorPool {
-    private val featureBuffer = FloatArray(150 * 6)
-    private val keyBuffer = LongArray(150)
-
-    fun getFeatureTensor(): OnnxTensor {
-        return OnnxTensor.createTensor(env, featureBuffer, shape)
-    }
-}
-```
+`OptimizedTensorPool` (pre-allocated tensor buffers for the transformer) was deleted with
+the neural engine on 2026-08-18 (ADR-011). The CTC path does not pool tensors: the single
+encoder call per swipe wraps freshly-built feature arrays
+(`OnnxTensor.createTensor(env, FloatBuffer.wrap(features), ...)` in
+`swipe/OnnxCtcEmissionModel.kt`), and the whole decode runs off-main on
+`PredictionTaskRunner`'s single decode thread, so per-swipe allocation is not on a hot
+render path. Session-level tuning (XNNPACK-first providers, `onnx_xnnpack_threads`) lives
+in `onnx/ModelLoader.kt`.
 
 ### Metrics to Track
 

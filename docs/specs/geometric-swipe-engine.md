@@ -14,13 +14,13 @@ A pure-JVM SHARK2-style template matcher that decodes swipe traces against per-l
 - **Correction (verified)**: Greek QWERTY does *not* currently lose swipe — `srcs/layouts/grek_qwerty.xml:2` declares `script="latin"` with name `"QWERTY (Greek)"`, so the allowlist returned TRUE and the QWERTY-trained transformer ran on Greek text (moot since 2026-08-18: that engine and the allowlist are both gone). That is a mis-gating bug (the `Config.kt:1155-1156` comment says "exclude Greek/Georgian QWERTY" but the layout's own metadata defeats it) — **file it as a separate issue**; it is evidence that layout `script` attributes are untrustworthy metadata (see Script Abstraction), not a premise of this spec.
 - `ROADMAP.md:51-60` mandates the dual-path plan: keep the transformer for QWERTY+Latin; add a geometric/template matcher (Urik/AnySoftKeyboard family) for everything else; first target Russian ЙЦУКЕН, then AZERTY/QWERTZ/Dvorak/Colemak/Neo2; ship behind a feature flag with per-layout auto-routing.
 - Neural per-layout retraining cannot cover **user-authored arbitrary XML layouts** (arbitrary key widths/shifts/row counts/row scale, `KeyboardData.kt:228-241,269`) — only a geometric engine generalizes there. (Swipe corpora for Russian now exist — FUTO ~1.04M swipes, Yandex Cup 2023 — so issue #6's "no datasets" is stale; those corpora become free *evaluation* data, never training data.)
-- **WP9 pipeline unification is DEFERRED** (`docs/audit/2026-07-18-grade-a-roadmap.md:89-91`). This work package builds the engine and its test suite only. Zero modifications to `SuggestionHandler`, `InputCoordinator` (gate at `:1124-1126`), `onnx/SwipePredictorOrchestrator`, `CleverKeysService`, or `Config.isSwipeTypingSupportedForLayout`.
+- **WP9 pipeline unification is DEFERRED** (`docs/audit/2026-07-18-grade-a-roadmap.md:89-91`). This work package builds the engine and its test suite only. Zero modifications to `SuggestionHandler`, `InputCoordinator` (gate at `:1124-1126`), `onnx/SwipePredictorOrchestrator`, `CleverKeysService`, or `Config.isSwipeTypingSupportedForLayout`. *(Overtaken by events: WP9 wiring later landed — see Status line — and `SwipePredictorOrchestrator` plus the `isSwipeTypingSupportedForLayout` allowlist were deleted with the neural engine on 2026-08-18, ADR-011. The live router is `swipe/SwipeEngineRouter`.)*
 - Dictionary-scale note: the shipped default English dictionary is **98,140 words** (`memory/todo.md:171-174`, verified: `en_enhanced.json` has 98,140 entries; `README.md`'s "52,000" table row is stale). **98,140 is the primary sizing case for every English budget in this spec.**
 
 ## Requirements
 
 ### Functional Requirements
-1. **FR-1**: Decode a raw touch trace (`(x, y, t)` triples, key-area-local px) against an arbitrary layout geometry + dictionary into ranked word candidates; output type is the existing pure `tribixbite.cleverkeys.PredictionResult` (`PredictionResult.kt:7-10`: `words: List<String>`, `scores: List<Int>` 0–1000, sorted desc, deduped lowercase-keeping-best per `onnx/PredictionPostProcessor.kt:119-137` semantics).
+1. **FR-1**: Decode a raw touch trace (`(x, y, t)` triples, key-area-local px) against an arbitrary layout geometry + dictionary into ranked word candidates; output type is the existing pure `tribixbite.cleverkeys.PredictionResult` (`PredictionResult.kt:7-10`: `words: List<String>`, `scores: List<Int>` 0–1000, sorted desc, deduped lowercase-keeping-best — semantics inherited at design time from the neural `onnx/PredictionPostProcessor.kt:119-137`, deleted 2026-08-18 (ADR-011); as-built they live in `CandidateRanker` step 2, "dedupe by lowercase, keeping the best-scoring").
 2. **FR-2**: Layout input is a pure geometry model derived from any `KeyboardData`-shaped layout (arbitrary rows, per-key `width`/`shift`, per-row `height`/`shift`/`scale` renormalization), with no assumption of 3 rows / 10 columns / Latin script anywhere.
 3. **FR-3**: Script support v1: Latin (incl. accents), Cyrillic (incl. ё/ъ corner aliasing, loc-resolved Ukrainian ї/є/і/ґ), Greek (tonos stripping, final sigma), Arabic (harakat stripping, hamza-form aliasing per actual key placement, لا handling), Hebrew (final forms, niqqud stripping). Deferred: Devanagari/abugidas, Hangul, CJK (see NON-Goals).
 4. **FR-4**: Words containing codepoints untypeable on the active layout are silently skipped (no template) — automatic per-layout vocabulary filtering — **with a coverage guard**: `warmUp` reports the typeable fraction; below `deadLayoutCoverageThreshold` (0.20) the index is flagged `DEAD_LAYOUT` so future routing and tests can detect silently-dead layouts.
@@ -60,13 +60,13 @@ A pure-JVM SHARK2-style template matcher that decodes swipe traces against per-l
 
 Algorithm family: **SHARK2** (Kristensson & Zhai, UIST 2004) with FlorisBoard's production machinery as starting points, AnySoftKeyboard's SoA precompute/bucket patterns, and Urik's minimal layout interface. Independent benchmark expectation (FUTO, arXiv 2606.25247): a well-built SHARK2 reaches ~80% top-1 QWERTY / ~59% top-1 ЙЦУКЕН on *real* swipes — the bar is "usable suggestions on layouts that today have zero swipe," not "beat the transformer."
 
-**Router seam note**: the neural orchestrator's signature is `fun predict(input: SwipeInput): PredictionPostProcessor.Result` (`onnx/SwipePredictorOrchestrator.kt:297` — note the file lives in `onnx/`, and its return type is the richer `Result`, not `PredictionResult`). This engine mirrors the *final candidate shape* (`PredictionResult`), which is what `PredictionPostProcessor.Result` reduces to for the suggestion bar; the WP9 router adapts between them.
+**Router seam note** *(historical — both cited classes were deleted with the neural engine on 2026-08-18, ADR-011)*: at design time the neural orchestrator's signature was `fun predict(input: SwipeInput): PredictionPostProcessor.Result` (`onnx/SwipePredictorOrchestrator.kt:297` — the richer `Result`, not `PredictionResult`), and this engine mirrored the *final candidate shape* (`PredictionResult`) that `Result` reduced to for the suggestion bar. As-built the question is moot: both surviving adapters (`swipe/CtcEngineAdapter`, `swipe/GeometricEngineAdapter`) deliver plain `PredictionResult` through `SwipeEngineRouter`, so no shape adaptation exists in the live router.
 
 **Conflict resolutions (from the research round, updated post-critique):**
 
 | Conflict | Resolution |
 |---|---|
-| Package name | **`tribixbite.cleverkeys.swipe.geometric`** — parent `swipe/` reserved as the future router seam. Single-class run: `./gradlew runPureTests -PtestClass=swipe.geometric.GeoDecoderCoreTest` (dotted subpackages proven by `onnx.PrefixBoostTrieTest`, `src/test/kotlin/.../onnx/PrefixBoostTrieTest.kt:1`). |
+| Package name | **`tribixbite.cleverkeys.swipe.geometric`** — parent `swipe/` reserved as the future router seam. Single-class run: `./gradlew runPureTests -PtestClass=swipe.geometric.GeoDecoderCoreTest` (dotted subpackages were proven at design time by `onnx.PrefixBoostTrieTest` — since deleted with the neural engine, 2026-08-18; the surviving proof is `onnx.ModelLoaderReadBytesTest` and the whole `swipe.geometric.*`/`swipe.ctc.*` suites). |
 | Resample N: 200 vs 32 | **Default N=32, configurable.** 128 B/word templates, ~µs-scale per-candidate cost. Phase 6 validates 32 vs 64; thresholds pinned at N=32. |
 | Distance metric: banded DTW vs proportional matching | **Default = proportional (index-aligned) matching** (`dtwBand=0`) — SHARK2 tested and rejected elasticity (wrong templates snap on; O(N²)). DTW retained as experimental config path; no threshold depends on it. |
 | Score blend | **Log-domain SHARK2 Bayes** — the Gaussian product is additive in log space; unifies multiplicative and additive proposals, numerically stable, FUTO-upgrade-compatible. Urik's 60-constant ensemble rejected; 2 sanity penalties + 1 bonus adopted (bounded, see below). |
@@ -247,9 +247,10 @@ data class GeometricSwipeRequest(
 )
 
 /**
- * Router seam. Mirrors the FINAL candidate shape of the ONNX path
- * (onnx/SwipePredictorOrchestrator.predict at :297 returns the richer
- * PredictionPostProcessor.Result; this engine emits the reduced PredictionResult).
+ * Router seam. Emits the final candidate shape (PredictionResult) directly.
+ * (Design-time framing: it "mirrored the reduced form of the neural
+ * orchestrator's PredictionPostProcessor.Result" — both of those classes were
+ * deleted 2026-08-18, ADR-011.)
  * SCORES ARE ENGINE-RELATIVE (softmax posterior × 1000) — NOT comparable to
  * the CTC decoder's scores. Thread-safety: all methods are safe to call from any
  * thread; cache mutation is internally synchronized; decode() snapshots the index
@@ -267,7 +268,7 @@ class GeometricSwipeEngine(
 ) : SwipeDecodingEngine
 ```
 
-Threading contract: `decode()` is synchronous; the future adapter wraps it in `withContext(Dispatchers.Default)` (mirroring `AsyncPredictionHandler`'s off-main pattern). `warmUp` is background-only by convention but safe concurrently with `decode` (internal synchronization; a decode racing a warmUp for the same key either sees the old index or blocks briefly on the synchronous-fallback path). Core never spawns threads and never reads prefs. A pure-JVM stress test (4 threads interleaving decode/warmUp/evict) asserts no exceptions and that a single-threaded rerun is bit-identical (NFR-4).
+Threading contract: `decode()` is synchronous; the adapter runs it off-main (as-built: `GeometricEngineAdapter` submits to `PredictionTaskRunner`'s single decode thread and delivers on main — the spec's original reference point, the neural `AsyncPredictionHandler`, was deleted 2026-08-18 with that engine). `warmUp` is background-only by convention but safe concurrently with `decode` (internal synchronization; a decode racing a warmUp for the same key either sees the old index or blocks briefly on the synchronous-fallback path). Core never spawns threads and never reads prefs. A pure-JVM stress test (4 threads interleaving decode/warmUp/evict) asserts no exceptions and that a single-threaded rerun is bit-identical (NFR-4).
 
 ### Module / File Skeleton
 
@@ -291,7 +292,7 @@ Threading contract: `decode()` is synchronous; the future adapter wraps it in `w
 
 **Not in this package, named for later (WP9)**: `tribixbite.cleverkeys.swipe.GeometricEngineAdapter` — `SwipeInput`/`PointF` → `TracePoint`; `KeyboardData` + `a11y/KeyboardGeometry.computeKeyRects` (`KeyboardGeometry.kt:171` — proven rect math for arbitrary widths/shifts) → `LayoutGeometry` (**fingerprint memoized per immutable `KeyboardData` instance — an adapter concern, not a core one**); `DictionaryManager` words → `GeometricDictionary` **including bumping `version` on custom-word/disabled-word mutations** (ContentObserver already exists); and `SwipeEngineRouter`. Reserved pref key: superseded as-built by `swipe_engine_mode` (see Status line). As-built 2026-07-23: three engine knobs are user-tunable via `GeometricSettingsActivity` ("Full Geometric Settings", reachable when the engine mode uses geo) — `geo_max_results` (→ `maxResults`), `geo_frequency_weight` (→ `frequencyWeight`), `geo_endpoint_inset_kw` (→ `endpointInsetKw`); the adapter rebuilds its engine (fresh TemplateCache) on the next decode after any of them changes, and `GeometricSettingsActivity` posts a debounced `CleverKeysService.requestGeometricRewarm()` so that rebuild happens in the BACKGROUND task slot instead of inside the first post-change swipe (WP9 audit m-3, 2026-08-11 — the re-warm was previously claimed but purely lazy). Knobs are clamped to the SAME ranges the sliders expose (`GeoKnobRanges`, single source of truth for UI + adapter — audit m-2). All other knobs remain code-only (calibrated). All three keys classified in `SETTINGS_DEFAULTS`.
 
-**Purity enforcement**: a drift test scans `swipe/geometric/` sources (comment-stripped) for the token regex `\bandroidx?\.` **anywhere**, not just import lines — the codebase's own leak pattern is a fully-qualified `android.util.Log.w(...)` with no import (`Keyboard2View.kt:1124`); `VocabularyTrie.kt:3`'s `import android.util.Log` squeak-by must not be copied.
+**Purity enforcement**: a drift test scans `swipe/geometric/` sources (comment-stripped) for the token regex `\bandroidx?\.` **anywhere**, not just import lines — the codebase's own leak pattern is a fully-qualified `android.util.Log.w(...)` with no import (`Keyboard2View.kt:1124`); the then-extant `VocabularyTrie.kt:3` (`import android.util.Log` in an otherwise-pure class; deleted 2026-08-18 with the neural engine) was the squeak-by not to copy.
 
 ### Template Cache Design (honest memory math @ 98,140 words)
 
@@ -351,7 +352,7 @@ data class GeometricEngineConfig(
     val indexCacheCapacity: Int = 3,
 )
 ```
-Plain data class — core never reads SharedPreferences. Future calibration flows through a config instance (grade-a-roadmap `SwipeCalibrationActivity` precedent).
+Plain data class — core never reads SharedPreferences. Calibration flows through a config instance (the grade-a-roadmap's `SwipeCalibrationActivity` precedent is gone — that activity was deleted with the neural engine, 2026-08-18/ADR-011; as-built the three user-tunable knobs flow prefs → `GeometricSettingsActivity` → adapter-rebuilt `GeometricEngineConfig`, see § Module/File Skeleton).
 
 ### Dictionary sources & loaders (per accuracy language — exact files, verified)
 
@@ -393,7 +394,7 @@ Each phase compiles, registers every new test class in `pureTestClasses` (`build
 - [ ] Tune σ/λ against the harness; **ratchet `GeoAccuracyThresholds` to the final table** (Testing Strategy) and remove the PROVISIONAL marker. Ablations asserted: frequency prior (with-prior top-1 > without, measured on the ordinal-rank prior which actually has dynamic range), corner-anchor bonus, short-word shape fade.
 - [ ] `GeoConfusablesTest` (confusion-matrix discovery + golden must-resolve pairs; ذ/د pre-seeded as accepted-collision), `GeoDoubleLetterTest` (incl. `её`/`ее`), `GeoShortWordTest` (CLEAN-tier assertion proving the shape-fade mitigation, not just lowered floors), path-collision census + one 98k full-sweep run behind `-PgeoFull`.
 - [ ] **build.gradle edit (required — Gradle `-P` properties do not reach the forked JavaExec JVM)**: forward the flag on `runPureTests`: `systemProperty 'geoFull', (project.findProperty('geoFull') ?: 'false')`; tests read `System.getProperty("geoFull")`. (`-PtestClass` only works because build.gradle itself consumes it at `:467-472`.)
-- [ ] `GeoBenchmarkTest` (PipelineBenchmarkTest style: warmup, sorted latencies, printed stats + **memo hit rate**): asserts NFR-1 verbatim (median ≤ 30 ms, p95 ≤ 60 ms, all-cold median ≤ 45 ms @ 98k) — absolute-latency asserts guarded by `Assume.assumeTrue(System.getenv("CI") == null)` (shared ubuntu runners flake; structural/relative asserts always run). Memory: `estimatedBytes()` ≤ 2.5 MB/index structural; Runtime-delta smoke < 32 MB.
+- [ ] `GeoBenchmarkTest` (warmup, sorted latencies, printed stats + **memo hit rate** — the style of the neural `PipelineBenchmarkTest`, deleted 2026-08-18 with that engine): asserts NFR-1 verbatim (median ≤ 30 ms, p95 ≤ 60 ms, all-cold median ≤ 45 ms @ 98k) — absolute-latency asserts guarded by `Assume.assumeTrue(System.getenv("CI") == null)` (shared ubuntu runners flake; structural/relative asserts always run). Memory: `estimatedBytes()` ≤ 2.5 MB/index structural; Runtime-delta smoke < 32 MB.
 - [ ] N=32 vs 64 and dtwBand=0 vs small-band decided empirically; defaults stay unless the harness shows a win.
 
 ### Phase 7 (CANCELLED 2026-08-18 — the neural engine was removed, ADR-011) — Neural characterization golden file
@@ -404,7 +405,7 @@ Each phase compiles, registers every new test class in `pureTestClasses` (`build
 ## Testing Strategy
 
 ### Unit Tests
-Per phases above. Every class appended to `pureTestClasses` as a `// Geometric swipe engine — pure JVM` block. Shared helpers (`GeoTestFixtures.kt`, `GoldenFile.kt`, `CkdtDictionaryReader` support) carry no `Test` suffix so the drift scanner skips them. **`android.graphics.PointF` is a stubbed landmine on JVM (all coords (0,0) — documented `NeuralPredictionPureTest.kt:9-11`) — it never appears in engine or tests.** CI: identical classes run on ubuntu-x64 via the standard test task for free (Test tasks are only disabled on ARM64); absolute-latency asserts are CI-skipped as above.
+Per phases above. Every class appended to `pureTestClasses` as a `// Geometric swipe engine — pure JVM` block. Shared helpers (`GeoTestFixtures.kt`, `GoldenFile.kt`, `CkdtDictionaryReader` support) carry no `Test` suffix so the drift scanner skips them. **`android.graphics.PointF` is a stubbed landmine on JVM (all coords (0,0) — originally documented in `NeuralPredictionPureTest.kt:9-11`, deleted 2026-08-18 with the neural engine; the fact still holds) — it never appears in engine or tests.** CI: identical classes run on ubuntu-x64 via the standard test task for free (Test tasks are only disabled on ARM64); absolute-latency asserts are CI-skipped as above.
 
 ### Accuracy Thresholds (FINAL table — asserted in Phase 6; Phase 5 uses provisional floors)
 Measure the **ambiguity ceiling** first (ideal-trace decode over the sample against the full dictionary; ceiling = fraction not frequency-outranked by a colliding template), then assert:
@@ -424,7 +425,7 @@ Non-QWERTY layouts: same floors − 3 pts initially (ЙЦУКЕН: 31 center let
 - Suite runtime: default geo additions < 90 s inside `runPureTests` (≈ 900 harness decodes by construction); full census behind `-PgeoFull`.
 
 ## Dependencies
-- **Internal**: reuses `tribixbite.cleverkeys.PredictionResult` (pure) verbatim; algorithm patterns ported (not imported) from `SwipeResampler.kt` (deleted in `c0b9b252`; see § above), `ProbabilisticKeyDetector` (Gaussian σ=0.5·keySize precedent), `BinaryDictionaryLoader.kt:55-90` (CKDT format doc); `a11y/KeyboardGeometry` for the Phase-1 cross-check and the future adapter. Nothing from `OptimizedVocabulary`/`DictionaryManager`/`KeyboardData` in core.
+- **Internal**: reuses `tribixbite.cleverkeys.PredictionResult` (pure) verbatim; algorithm patterns ported (not imported) from `SwipeResampler.kt` (deleted in `c0b9b252`; see § above), `ProbabilisticKeyDetector` (Gaussian σ=0.5·keySize precedent), `BinaryDictionaryLoader.kt:55-90` (CKDT format doc); `a11y/KeyboardGeometry` for the Phase-1 cross-check and the future adapter. Nothing from `OptimizedVocabulary` (since deleted with the neural engine, 2026-08-18)/`DictionaryManager`/`KeyboardData` in core.
 - **External**: none new. `kotlin.*`, `java.util.*` (incl. `java.util.zip`), `javax.xml.parsers` (test-only).
 - **Breaking changes**: none — no live code path touched.
 
@@ -440,7 +441,7 @@ Non-QWERTY layouts: same floors − 3 pts initially (ЙЦУКЕН: 31 center let
 - Perf/memory budgets (NFR-1/NFR-2) green at 98,140 words; `runPureTests` wall-time growth < 90 s.
 
 ## NON-Goals (explicit)
-1. **No wiring into the live pipeline** — `SuggestionHandler`, `InputCoordinator.kt:1124-1126` gate, `onnx/SwipePredictorOrchestrator`, `Config.isSwipeTypingSupportedForLayout`, `CleverKeysService` untouched. Router + `geometric_swipe_engine` flag + adapter (incl. dictionary-version propagation) are WP9 scope.
+1. **No wiring into the live pipeline** — `SuggestionHandler`, `InputCoordinator.kt:1124-1126` gate, `onnx/SwipePredictorOrchestrator`, `Config.isSwipeTypingSupportedForLayout`, `CleverKeysService` untouched. Router + `geometric_swipe_engine` flag + adapter (incl. dictionary-version propagation) are WP9 scope. *(Since overtaken: the WP9 router landed 2026-07-21, and the orchestrator + allowlist were deleted with the neural engine on 2026-08-18 — ADR-011.)*
 2. **No Android adapter in this package** (named/designed only).
 3. **Deferred scripts**: Devanagari + abugidas (shift-plane graphemes, virama zigzag; needs a collapsed-alphabet mode), Hangul (jamo de/recomposition — bounded follow-up), CJK; lam-alef shaping-aware matching.
 4. **No training, no per-layout data**: FUTO/Yandex corpora as *evaluation* replays only.
@@ -499,7 +500,7 @@ Non-QWERTY layouts: same floors − 3 pts initially (ЙЦУКЕН: 31 center let
 | m29 | Purity regex misses fully-qualified android.* | Token scan `\bandroidx?\.` on comment-stripped sources. |
 | m30 | Phase-3 pruner input type undefined | `ProcessedGesture` defined in Phase 1 as the contract; Phase 3 constructs it directly. |
 | m31 | Fixture letter/loc/escape rules unspecified | Letter rule + loc-inclusion + escape stripping pinned in Phase 1. |
-| — | Draft citation fixes found during verification | Orchestrator is `onnx/SwipePredictorOrchestrator.kt:297` returning `PredictionPostProcessor.Result` (noted at router seam); README swipe warning at 234-247; JCUKEN letter rows 11/11/9 confirmed (31 center letters); dedupe semantics path corrected to `onnx/PredictionPostProcessor.kt:119-137`. |
+| — | Draft citation fixes found during verification | Orchestrator is `onnx/SwipePredictorOrchestrator.kt:297` returning `PredictionPostProcessor.Result` (noted at router seam); README swipe warning at 234-247; JCUKEN letter rows 11/11/9 confirmed (31 center letters); dedupe semantics path corrected to `onnx/PredictionPostProcessor.kt:119-137`. *(The two `onnx/` citations describe the neural pipeline as then-built; both files were deleted 2026-08-18 — ADR-011.)* |
 
 ---
 **Created**: 2026-07-20 (revised same day post-critique) · **Owner**: swipe.geometric work package · **Sources**: 5 research reports + 3-lens adversarial critique; primary refs `ROADMAP.md:51-60`, `README.md:234-247,395-408`, `docs/audit/2026-07-18-grade-a-roadmap.md:89-91`, `Config.kt:1146-1163`, `memory/todo.md:171-174`, SHARK2 (UIST 2004), FlorisBoard `StatisticalGlideTypingClassifier`, AnySoftKeyboard `GestureTypingDetector`, Urik, FUTO (arXiv 2606.25247). All disputed repo facts re-verified against the working tree on 2026-07-20.
@@ -851,7 +852,7 @@ By length stratum (top-1/3/5): RAW 2-3 `63.7/72.0/74.5` (n=1291), 4-6 `54.5/63.8
 4-6 `61.8/68.4/69.3`, 7+ `47.2/50.6/50.7`; PRODUCTION 2-3 `63.7/69.9/73.0`,
 4-6 `57.5/66.4/70.1`, 7+ `45.4/57.0/60.4`.
 
-**What `--production` replicates (transcribed from the Kotlin, with citations)**:
+**What `--production` replicates (transcribed from the Kotlin, with citations)** — *record of the eval-time (2026-07) neural pipeline: every class/file cited in this block (`BeamSearchEngine`, `SwipePredictorOrchestrator`, `OptimizedVocabulary`, `PrefixBoostTrie`, the neural `Config` constants) was deleted with that engine on 2026-08-18 (ADR-011; archived reference: `docs/history/neural-engine/`). The measurements stand as the historical baseline the geometric engine was compared against; the citations are NOT resolvable in the current tree*:
 trie-CONSTRAINED beam search — logits masked against the 98,140-word vocabulary trie,
 EOS allowed only at complete words (`applyTrieMasking`, `onnx/BeamSearchEngine.kt:367-415`);
 beam width **6** (`Config.kt:134`); length-normalized scoring

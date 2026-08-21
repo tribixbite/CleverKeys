@@ -11,7 +11,7 @@ Multi-language typing system that allows users to type in two languages simultan
 | `src/main/kotlin/tribixbite/cleverkeys/AccentNormalizer.kt` | `AccentNormalizer` | Strips diacritical marks |
 | `src/main/kotlin/tribixbite/cleverkeys/NormalizedPrefixIndex.kt` | `NormalizedPrefixIndex` | Accent-aware prefix lookup |
 | `src/main/kotlin/tribixbite/cleverkeys/BinaryDictionaryLoader.kt` | V1/V2 loading | Dictionary loading |
-| `src/main/kotlin/tribixbite/cleverkeys/OptimizedVocabulary.kt` | Dual dictionaries | Primary + secondary management |
+| `src/main/kotlin/tribixbite/cleverkeys/WordPredictor.kt` | `loadSecondaryDictionary()`, `secondaryIndex` | Primary + secondary dictionary management for tap typing (`OptimizedVocabulary`, the neural-era owner of this role, was deleted 2026-08-18 — ADR-011) |
 | `src/main/kotlin/tribixbite/cleverkeys/SuggestionRanker.kt` | Merging | Combines results with scoring |
 | `src/main/kotlin/tribixbite/cleverkeys/UnigramLanguageDetector.kt` | Detection | Word-based language detection |
 | `src/main/kotlin/tribixbite/cleverkeys/langpack/LanguagePackManager.kt` | Pack import | Language pack storage |

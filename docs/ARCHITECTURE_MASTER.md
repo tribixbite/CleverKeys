@@ -42,16 +42,15 @@ This document contains all parameters, weights, coefficients, thresholds, and co
 | `swipe_show_debug_scores` | Boolean | false | Show debug scores in UI |
 | `termux_mode_enabled` | Boolean | false | Enable Termux compatibility mode |
 
-### 1.5 Token Mapping (BeamSearchEngine.kt)
+### 1.5 Token Mapping
 
-```
-PAD_IDX = 0   # Padding token
-UNK_IDX = 1   # Unknown token
-SOS_IDX = 2   # Start of sequence
-EOS_IDX = 3   # End of sequence
-a = 4, b = 5, c = 6, ..., z = 29
-space = 30, apostrophe = 31, hyphen = 32
-```
+> **Removed 2026-08-18 (ADR-011)**: the fixed token table above lived in the transformer's
+> `BeamSearchEngine.kt` (PAD/UNK/SOS/EOS = 0–3, a–z = 4–29, space/apostrophe/hyphen =
+> 30–32), deleted with that engine. The CTC engine has **no static token table**: emission
+> class column `c` means "the `c`-th key of the layout the caller passed in", plus one
+> trailing blank column (`swipe/ctc/CtcEmissions.kt`, `CtcLayout.kt` — key geometry is a
+> model INPUT). For every layout the shipped adapter builds, the column order is
+> alphabetical a–z (`CtcEngineAdapter.ALPHABET`).
 
 ### 1.6 Word Prediction Settings (Config.kt)
 
@@ -139,17 +138,14 @@ space = 30, apostrophe = 31, hyphen = 32
 
 ## 3. Gesture Recognition Parameters
 
-### 3.1 CGR Constants (ContinuousGestureRecognizer.kt)
+### 3.1 CGR Constants
 
-| Constant | Default | Keyboard-Optimal | Description |
-|----------|---------|------------------|-------------|
-| `DEFAULT_E_SIGMA` | 200.0 | 120.0 | Error sigma for Gaussian |
-| `DEFAULT_BETA` | 400.0 | 400.0 | Beta parameter (variance ratio) |
-| `DEFAULT_LAMBDA` | 0.4 | 0.65 | Lambda interpolation weight (Euclidean vs angular) |
-| `DEFAULT_KAPPA` | 1.0 | 2.5 | Kappa parameter (end-point bias) |
-| `LENGTH_FILTER` | - | 0.70 | User-configurable length similarity threshold |
-| `MAX_RESAMPLING_PTS` | 3500 | 5000 | Max points for resampling |
-| `SAMPLE_POINT_DISTANCE` | 10 | 10 | Pixels between sample points |
+> **Removed 2026-06-10** (`25f6bcd1`, "delete dead recognizers"): `ContinuousGestureRecognizer.kt`
+> and its σ/β/λ/κ constants were dead code and were deleted along with
+> `SwipeGestureRecognizer` and `LoopGestureDetector`. No CGR exists anywhere in the app.
+> Live gesture classification is `GestureClassifier` (tap vs swipe decision) +
+> `EnhancedSwipeGestureRecognizer` (swipe-path capture), both driven from `Pointers.kt`;
+> swipe *decoding* is the CTC/geometric engines (§5.1 and `GeometricEngineConfig.kt`).
 
 ### 3.2 Gesture Timing (Config.kt)
 
@@ -160,16 +156,13 @@ space = 30, apostrophe = 31, hyphen = 32
 | `longPressTimeout` | Long | 600 | 200-1500 | Long press activation (ms) |
 | `longPressInterval` | Long | 25 | 10-100 | Key repeat interval (ms) |
 
-### 3.3 Loop Gesture Detection (LoopGestureDetector.kt)
+### 3.3 Loop Gesture Detection
 
-| Constant | Value | Description |
-|----------|-------|-------------|
-| `MIN_LOOP_ANGLE` | 270.0° | Minimum angle for loop |
-| `MAX_LOOP_ANGLE` | 450.0° | Maximum angle for loop |
-| `MIN_LOOP_RADIUS` | 15.0px | Minimum loop radius |
-| `MAX_LOOP_RADIUS_FACTOR` | 1.5 | Max radius multiplier |
-| `MIN_LOOP_POINTS` | 8 | Minimum points for loop |
-| `CLOSURE_THRESHOLD` | 30.0px | Distance for loop closure |
+> **Removed 2026-06-10** (`25f6bcd1`): `LoopGestureDetector.kt` was dead code, deleted with
+> the other dead recognizers. Repeated-letter handling in swipe decoding is now the
+> geometric engine's duplicate-collapse + loop-variant templates
+> (`swipe/geometric/TemplateGenerator.kt`); the CTC beam needs no loop detection (its
+> decoder allows repeated characters without an intervening blank — `CtcBeamDecoder.kt`).
 
 ### 3.4 Rotation Detection (Gesture.kt)
 
@@ -357,12 +350,15 @@ Persistent, language-keyed, process-singleton learned n-gram stores. Full spec:
 
 ## 8. Performance Tuning
 
-### 8.1 Async Handling (AsyncPredictionHandler.kt)
+### 8.1 Async Handling (PredictionTaskRunner, `InputCoordinator.kt:47`)
 
-| Constant | Value | Description |
-|----------|-------|-------------|
-| `MSG_PREDICT` | 1 | Prediction message ID |
-| `MSG_CANCEL_PENDING` | 2 | Cancel message ID |
+> `AsyncPredictionHandler` (a Handler/message-based queue, `MSG_PREDICT`/`MSG_CANCEL_PENDING`)
+> was deleted with the neural engine on 2026-08-18 (ADR-011). Off-main decode now runs on
+> `PredictionTaskRunner` (defined in `InputCoordinator.kt`): a single decode thread with a
+> FOREGROUND slot (`cancelAndSubmit` — a new swipe cancels the previous decode) and a
+> BACKGROUND slot (prewarm work that never cancels a running decode). Both engine adapters
+> (`swipe/CtcEngineAdapter.kt`, `swipe/GeometricEngineAdapter.kt`) own one instance each;
+> behavior pinned by `PredictionTaskRunnerTest`.
 
 ### 8.2 Dictionary Manager (DictionaryManagerActivity.kt)
 
@@ -370,11 +366,15 @@ Persistent, language-keyed, process-singleton learned n-gram stores. Full spec:
 |----------|-------|-------------|
 | `SEARCH_DEBOUNCE_MS` | 300 | Search debounce delay |
 
-### 8.3 Model Version Manager (ModelVersionManager.kt)
+### 8.3 Model Load Failure Latch (`swipe/CtcEngineAdapter.kt`)
+
+> `ModelVersionManager` (multi-version model fallback, `MAX_CONSECUTIVE_FAILURES = 3`) was
+> deleted with the neural engine on 2026-08-18 (ADR-011). There is now ONE bundled model
+> and no version fallback; the surviving failure handling is the adapter's load latch:
 
 | Constant | Value | Description |
 |----------|-------|-------------|
-| `MAX_CONSECUTIVE_FAILURES` | 3 | Max failures before fallback |
+| `MAX_MODEL_LOAD_ATTEMPTS` | 3 | ONNX session load attempts before the adapter latches `isModelPermanentlyUnavailable()`; `InputCoordinator.performCtcSwipeTyping` then routes the swipe to the geometric engine |
 
 ### 8.4 Swipe Gesture Recognizer (ImprovedSwipeGestureRecognizer.kt)
 
@@ -460,11 +460,10 @@ Persistent, language-keyed, process-singleton learned n-gram stores. Full spec:
 | `src/main/kotlin/tribixbite/cleverkeys/Config.kt` | Main configuration class |
 | `src/main/kotlin/tribixbite/cleverkeys/swipe/ctc/CtcBeamDecoder.kt` | CTC trie-beam decoder |
 | `src/main/kotlin/tribixbite/cleverkeys/swipe/geometric/GeometricEngineConfig.kt` | Geometric engine constants |
-| `src/main/kotlin/tribixbite/cleverkeys/onnx/TensorFactory.kt` | Tensor creation |
-| `src/main/kotlin/tribixbite/cleverkeys/ContinuousGestureRecognizer.kt` | CGR parameters |
-| `src/main/kotlin/tribixbite/cleverkeys/LoopGestureDetector.kt` | Loop detection |
+| `src/main/kotlin/tribixbite/cleverkeys/swipe/OnnxCtcEmissionModel.kt` | ONNX tensor creation for the CTC encoder (`TensorFactory`, `ContinuousGestureRecognizer` and `LoopGestureDetector` are deleted — §3.1/§3.3/§1.5 notes) |
+| `src/main/kotlin/tribixbite/cleverkeys/GestureClassifier.kt` | Tap-vs-swipe classification |
 | `src/main/kotlin/tribixbite/cleverkeys/BigramModel.kt` | Language model |
-| `res/xml/settings.xml` | Settings UI definitions |
+| `src/main/kotlin/tribixbite/cleverkeys/SettingsActivity.kt` + `ui/settings/sections/` | Settings UI (Compose — there is no `res/xml/settings.xml`) |
 
 ---
 

@@ -8,8 +8,8 @@ The dictionary system manages word lookup, frequency ranking, and multi-language
 
 | File | Class/Function | Purpose |
 |------|----------------|---------|
-| `src/main/kotlin/tribixbite/cleverkeys/OptimizedVocabularyImpl.kt` | `OptimizedVocabulary` | Dictionary lookup and filtering |
-| `src/main/kotlin/tribixbite/cleverkeys/data/LanguageDetector.kt` | `LanguageDetector` | Word-based language detection |
+| `src/main/kotlin/tribixbite/cleverkeys/DictionaryManager.kt` | `DictionaryManager` | Per-language dictionary loading/coordination (`OptimizedVocabulary`/`OptimizedVocabularyImpl` were deleted with the neural engine, 2026-08-18 — ADR-011; the swipe engines' lexicons are now `swipe/ctc/CtcLexiconTrie`+`CtcCkdtLexicon`+`CtcLexiconMerge` and `GeometricEngineAdapter`'s merge) |
+| `src/main/kotlin/tribixbite/cleverkeys/LanguageDetector.kt` | `LanguageDetector` | Word-based language detection |
 | `src/main/kotlin/tribixbite/cleverkeys/WordPredictor.kt` | `WordPredictor` | Unified prediction pipeline |
 | `assets/dictionaries/{lang}_enhanced.bin` | Binary dictionaries | Trie-based word storage |
 

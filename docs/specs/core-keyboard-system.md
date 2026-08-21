@@ -10,9 +10,9 @@ The core keyboard system is the foundation of CleverKeys, handling fundamental o
 |------|----------------|---------|
 | `src/main/kotlin/tribixbite/cleverkeys/CleverKeysService.kt` | `CleverKeysService` | Main IME service, lifecycle management, layout switching |
 | `src/main/kotlin/tribixbite/cleverkeys/Keyboard2View.kt` | `Keyboard2View` | Custom view rendering, touch event dispatch |
-| `src/main/kotlin/tribixbite/cleverkeys/Keyboard2.kt` | `Keyboard2` | Key layout logic, state management, key positioning |
-| `src/main/kotlin/tribixbite/cleverkeys/KeyEventHandler.kt` | `KeyEventHandler` | Key press processing, modifier tracking, compose sequences |
-| `src/main/kotlin/tribixbite/cleverkeys/InputConnectionManager.kt` | `InputConnectionManager` | Text editing, cursor control, clipboard operations |
+| `src/main/kotlin/tribixbite/cleverkeys/KeyboardData.kt` | `KeyboardData` | Key layout model, key positioning (there is no `Keyboard2.kt`) |
+| `src/main/kotlin/tribixbite/cleverkeys/KeyEventHandler.kt` | `KeyEventHandler` | Key press processing, modifier tracking, text editing via `InputConnection` |
+| `src/main/kotlin/tribixbite/cleverkeys/KeyboardReceiver.kt` | `KeyboardReceiver` | Implements `KeyEventHandler.IReceiver`; hands out `CleverKeysService.currentInputConnection` |
 | `src/main/kotlin/tribixbite/cleverkeys/Pointers.kt` | `Pointers` | Multi-touch handling, gesture recognition |
 | `src/main/kotlin/tribixbite/cleverkeys/Config.kt` | `Config` | Keyboard configuration, user preferences |
 
@@ -22,20 +22,28 @@ The core keyboard system is the foundation of CleverKeys, handling fundamental o
 CleverKeysService (InputMethodService)
     ├── Keyboard2View (Custom View)
     │   ├── Config (keyboard configuration)
-    │   ├── Keyboard2 (key layout logic)
+    │   ├── KeyboardData (key layout model)
     │   └── Pointers (touch handling)
-    ├── KeyEventHandler (key press processing)
-    ├── InputConnectionManager (text insertion)
+    ├── KeyEventHandler (key press processing + text insertion)
+    ├── KeyboardReceiver (IReceiver: InputConnection access, event routing)
     └── ConfigurationManager (runtime config)
 ```
+
+> **Note (2026-08-21)**: there is no `InputConnectionManager` class — a dead file of that
+> name was pruned on 2026-07-17 (`21616bbb`). Nothing wraps `InputConnection`: consumers
+> obtain the framework object directly. `KeyEventHandler` gets it via its `IReceiver`
+> interface (`KeyEventHandler.kt:970` — implemented by `KeyboardReceiver`, which returns
+> `CleverKeysService.currentInputConnection`); `SuggestionHandler` (the single commit
+> engine) and `InputCoordinator` (cursor sync + swipe decode replay) receive the
+> `InputConnection`/`EditorInfo` pair captured at event time.
 
 ### Component Responsibilities
 
 - **CleverKeysService**: Extends `InputMethodService`, manages IME lifecycle, handles `onCreateInputView()`, coordinates layout switching between main/numeric/emoji keyboards
 - **Keyboard2View**: Custom `View` subclass that renders keys, handles `onTouchEvent()`, delegates to `Pointers` for multi-touch
-- **Keyboard2**: Manages which keys are displayed, their positions, and state (pressed, locked, shifted)
-- **KeyEventHandler**: Processes key activations, tracks modifier state (Shift, Ctrl, Alt), handles compose key sequences
-- **InputConnectionManager**: Wraps `InputConnection`, provides text insertion/deletion, cursor movement, selection handling
+- **KeyboardData**: Immutable layout model — which keys exist, their positions/widths/rows
+- **KeyEventHandler**: Processes key activations, tracks modifier state (Shift, Ctrl, Alt), handles compose key sequences, and performs text insertion/deletion directly on the `InputConnection` from its `IReceiver`
+- **KeyboardReceiver**: Implements `KeyEventHandler.IReceiver`; routes events and exposes `getCurrentInputConnection()`
 
 ## Dual Prediction Pipeline
 
@@ -72,8 +80,9 @@ CleverKeys has two independent prediction pipelines that both target the same Su
 ```
 Touch Event → Keyboard2View.onTouchEvent()
     → Pointers.onTouchEvent() (gesture classification)
-    → KeyEventHandler.handleKeyDown/Up()
-    → InputConnectionManager.commitText() / sendKeyEvent()
+    → KeyEventHandler (key activation)
+    → recv.getCurrentInputConnection().commitText() / sendKeyEvent()
+      (recv = KeyboardReceiver → CleverKeysService.currentInputConnection)
     → Target App receives text
 ```
 
@@ -133,21 +142,27 @@ fun isModifierActive(modifier: Int): Boolean
 fun getModifierState(): Int
 ```
 
-### InputConnectionManager
+### Text Editing (no wrapper class)
+
+Text editing calls go straight to the framework `InputConnection` — there is no
+`InputConnectionManager` wrapper (see the note under Architecture). The access seam is:
 
 ```kotlin
-// Commit text at cursor
-fun commitText(text: CharSequence)
+// KeyEventHandler.kt:970 — the interface KeyEventHandler edits text through
+interface IReceiver {
+    fun getCurrentInputConnection(): InputConnection?
+    // ... event routing callbacks
+}
 
-// Delete characters before cursor
-fun deleteSurroundingText(beforeLength: Int, afterLength: Int)
-
-// Move cursor
-fun moveCursor(offset: Int)
-
-// Get text around cursor
-fun getTextAroundCursor(before: Int, after: Int): CharSequence?
+// Typical call sites inside KeyEventHandler:
+val conn = recv.getCurrentInputConnection() ?: return
+conn.commitText(textToCommit, 1)
+conn.deleteSurroundingText(charsToDelete, 0)
 ```
+
+Suggestion commits flow through `SuggestionHandler` (the single commit engine), and
+swipe-decode results replay the `InputConnection`/`EditorInfo` captured at swipe time
+(`InputCoordinator`, staleness-guarded).
 
 ## Implementation Details
 
@@ -183,24 +198,30 @@ fun handleModifier(key: KeyValue, pressed: Boolean) {
 }
 ```
 
-### Keyboard Shortcuts
+### Editing Keys (copy/paste/cut/select-all)
 
-Ctrl+key shortcuts are processed in `KeyEventHandler`:
+Editing operations are dedicated `KeyValue.Editing` keys, handled in
+`KeyEventHandler.handleEditingKey` by sending context-menu actions directly on the
+`InputConnection` (no wrapper class):
 
 ```kotlin
-fun handleKeyDown(key: KeyValue, modifiers: Int): Boolean {
-    if (modifiers and META_CTRL != 0) {
-        when (key.char) {
-            'a' -> return inputManager.selectAll()
-            'c' -> return inputManager.copy()
-            'v' -> return inputManager.paste()
-            'x' -> return inputManager.cut()
-            'z' -> return inputManager.undo()
-        }
-    }
-    // ... normal key handling
+// KeyEventHandler.kt (abridged from handleEditingKey / sendContextMenuAction)
+when (ev) {
+    KeyValue.Editing.COPY -> if (isSelectionNotEmpty()) sendContextMenuAction(android.R.id.copy)
+    KeyValue.Editing.PASTE -> handlePaste()   // #113: terminal-aware fallback
+    KeyValue.Editing.CUT -> if (isSelectionNotEmpty()) sendContextMenuAction(android.R.id.cut)
+    KeyValue.Editing.SELECT_ALL -> sendContextMenuAction(android.R.id.selectAll)
+    KeyValue.Editing.UNDO -> sendContextMenuAction(android.R.id.undo)
+    // ...
+}
+private fun sendContextMenuAction(id: Int) {
+    val conn = recv.getCurrentInputConnection() ?: return
+    conn.performContextMenuAction(id)
 }
 ```
+
+In clipboard inline-edit mode the same keys are rerouted to the clipboard edit field via
+`IReceiver` (`pasteToClipboardEdit()`, `selectAllClipboardEdit()`, ...).
 
 ### Hardware Acceleration
 

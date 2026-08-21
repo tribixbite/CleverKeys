@@ -15,7 +15,7 @@ The settings system manages user preferences through SharedPreferences, provides
 | `src/main/kotlin/tribixbite/cleverkeys/Config.kt` | `Config`, `Defaults` | Global configuration singleton, centralized defaults |
 | `src/main/kotlin/tribixbite/cleverkeys/SettingsActivity.kt` | `SettingsActivity` | Material 3 Compose settings UI (~3000 lines) |
 | `src/main/kotlin/tribixbite/cleverkeys/ConfigurationManager.kt` | `ConfigurationManager` | Runtime configuration application |
-| `src/main/kotlin/tribixbite/cleverkeys/theme/KeyboardTheme.kt` | `KeyboardTheme` | Theme data and application |
+| `src/main/kotlin/tribixbite/cleverkeys/Theme.kt` + `theme/ThemeProvider.kt` | `Theme`, `ThemeProvider` | Keyboard-view theme data and loading (`theme/KeyboardTheme.kt` is only a retained composable alias for `CleverKeysTheme`, the Compose settings-UI wrapper — not a theme store) |
 
 ## Architecture
 
@@ -238,16 +238,25 @@ val appDir = context.getExternalFilesDir(null)  // No permission needed
 
 ### Theme Application
 
-```kotlin
-// ConfigurationManager.kt
-fun applyTheme(themeName: String) {
-    val theme = KeyboardTheme.loadTheme(context, themeName)
-    KeyboardTheme.current = theme
+There is no `KeyboardTheme.loadTheme`/`KeyboardTheme.current` API. The real flow
+(verified 2026-08-21):
 
-    // Notify keyboard view to redraw
-    CleverKeysService.getInstance()?.requestKeyboardRedraw()
+```kotlin
+// ConfigurationManager.kt — refresh() compares theme before/after the Config reload and
+// fires the dedicated theme callback (theme changes require view recreation):
+val themeChanged = prevTheme != config.theme || prevThemeName != config.themeName
+if (themeChanged) listener.onThemeChanged(prevTheme, config.theme)
+
+// Keyboard2View — loads the theme on (re)creation:
+_theme = if (_config.isRuntimeTheme()) {
+    ThemeProvider.getInstance(context).getTheme(_config.themeName)  // custom/decorative
+} else {
+    Theme(getContext(), attrs)  // XML style-based themes
 }
 ```
+
+The Compose settings UI is themed separately via `theme/CleverKeysTheme.kt`
+(`theme/KeyboardTheme.kt` is a legacy composable alias for it).
 
 ### Settings Change Listener
 
