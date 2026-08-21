@@ -49,7 +49,7 @@ The `<keyboard>`...`</keyboard>` pair follows the declaration tag and encloses t
 
 * `embedded_number_row`: Whether the layout has an embedded number row, and thus the "Show number row" setting shouldn't add another one. It accepts `true` or `false`, and defaults to `false`.
 
-* `locale_extra_keys`: Whether Unexpected should add language-dependent extra keys from [method.xml](../res/xml/method.xml) to this layout. It accepts `true` or `false`, and defaults to `true`. To disable these automatic additions, specify `locale_extra_keys="false"`.
+* `locale_extra_keys`: Whether Unexpected should add language-dependent extra keys from [method.xml](../../../res/xml/method.xml) to this layout. It accepts `true` or `false`, and defaults to `true`. To disable these automatic additions, specify `locale_extra_keys="false"`.
 
 ## Row
 The `<row>`...`</row>` pair encloses one row on the keyboard. It has the following optional property:
@@ -112,12 +112,12 @@ Normally, a key's width is 1.0 unit. Unexpected Keyboard occupies the full width
 * `indication`: An optional extra legend to show under the main label. For example, `<key c="2" indication="ABC" />` displays ABC at the bottom of the 2 key, as on a pinpad or some telephones. If the key also defines a downward swipe with `s` or `key8`, the legends overlap.
 
 ### Possible key values
-Built-in strings that assign a special function to a key are described in [this page](Possible-key-values.md). For example, `se="copy"` means a southeasterly swipe produces the Copy key. If a key value does not match any of the built-in strings, it outputs that text _verbatim_. For example, `c="a"` simply outputs the letter a.
+Built-in strings that assign a special function to a key are described in upstream's [Possible-key-values](https://github.com/Julow/Unexpected-Keyboard/wiki/Possible-key-values) wiki page, which was never vendored here — the authoritative local reference is the [`KeyValue.java`](KeyValue.java) source alongside this file. For example, `se="copy"` means a southeasterly swipe produces the Copy key. If a key value does not match any of the built-in strings, it outputs that text _verbatim_. For example, `c="a"` simply outputs the letter a.
 
 In a layout, a key value can also start with the `loc` prefix. These are place-holders; the tap or swipe does nothing unless enabled through the "Add keys to keyboard" option in the Settings menu, or implicitly enabled by the language the device is set to use. For example, `ne="loc accent_aigu"` says that a northeast swipe produces the acute accent combinatorial key—if enabled.
 
 ## Modmap
-The `<modmap>`...`</modmap>` pair encloses custom mappings for modifier keys. The modmap is placed inside the `<keyboard>`...`</keyboard>` pair, but outside any row. A layout can have at most one modmap. It can contain any number of mappings. Each mapping has an `a` property and a `b` property and maps the `a` key to the `b` key. Valid values are listed in [Possible key values](Possible-key-values.md).
+The `<modmap>`...`</modmap>` pair encloses custom mappings for modifier keys. The modmap is placed inside the `<keyboard>`...`</keyboard>` pair, but outside any row. A layout can have at most one modmap. It can contain any number of mappings. Each mapping has an `a` property and a `b` property and maps the `a` key to the `b` key. Valid values are listed in [Possible key values](https://github.com/Julow/Unexpected-Keyboard/wiki/Possible-key-values).
 
 The following mappings are supported:
 
