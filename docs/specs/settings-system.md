@@ -125,44 +125,38 @@ object Defaults {
 
 ### Config Singleton
 
+> **Rewritten from live code 2026-08-21.** The illustrative block previously here was invented and
+> wrong in every signature: `Config` does not take a `Context`, there is no `initialize(context)`,
+> `globalConfig()` does not throw `IllegalStateException`, `saveSetting` is not a `Config` method,
+> and `keyboard_height_portrait` is not a pref key. Code written against it would not have
+> compiled — but the pref-key errors would have compiled and silently read defaults forever.
+
 ```kotlin
-class Config private constructor(context: Context) {
-    companion object {
-        private var instance: Config? = null
+// Config.kt — constructed from prefs/resources, NOT from a Context.
+fun initGlobalConfig(
+    prefs: SharedPreferences,
+    res: Resources,
+    handler: IKeyEventHandler?,
+    foldableUnfolded: Boolean?,
+)                                   // runs pref migrations, then builds and installs the instance
 
-        fun globalConfig(): Config = instance
-            ?: throw IllegalStateException("Config not initialized")
-
-        fun initialize(context: Context) {
-            instance = Config(context)
-        }
-    }
-
-    // Refresh from SharedPreferences
-    fun refresh() {
-        val prefs = context.getSharedPreferences("cleverkeys_prefs", MODE_PRIVATE)
-        theme = prefs.getString("theme", Defaults.THEME)!!
-        keyboardHeightPortrait = prefs.getInt("keyboard_height_portrait", Defaults.KEYBOARD_HEIGHT_PORTRAIT)
-        ctcBeamWidth = prefs.getInt("ctc_beam_width", Defaults.CTC_BEAM_WIDTH)
-        // ... all other settings
-    }
-
-    // Save individual setting
-    fun saveSetting(key: String, value: Any) {
-        val prefs = context.getSharedPreferences("cleverkeys_prefs", MODE_PRIVATE)
-        prefs.edit().apply {
-            when (value) {
-                is String -> putString(key, value)
-                is Int -> putInt(key, value)
-                is Boolean -> putBoolean(key, value)
-                is Float -> putFloat(key, value)
-            }
-            apply()
-        }
-        refresh()
-    }
-}
+fun globalConfig(): Config          // NPEs if uninitialised — deliberate, not IllegalStateException
+fun globalConfigOrNull(): Config?   // the null-safe accessor
 ```
+
+Preferences are obtained through `DirectBootAwarePreferences`, not a hardcoded
+`getSharedPreferences("cleverkeys_prefs", …)`, so they are readable before first unlock.
+
+Saving is **not** a `Config` method. The settings UI uses an extension:
+
+```kotlin
+// ui/settings/SettingsPersistence.kt:423
+internal fun SettingsActivity.saveSetting(key: String, value: Any)
+```
+
+It is asynchronous (`lifecycleScope.launch`) and type-dispatches on the value. A `Config` field is
+refreshed from prefs by the loader in the same file, not written back per-key from `Config`.
+
 
 ### SettingsActivity
 

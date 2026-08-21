@@ -111,13 +111,18 @@ delegators to `LayoutBridge` (see Public API below) used by subtype/config plumb
 
 ## Configuration
 
+> Verified against `Config.kt` on 2026-08-21. Three keys previously listed here —
+> `keyboard_height_percent`, `key_vibration_enabled`, `swipe_enabled` — do not exist under those
+> names; the real keys are below. Copying the old names into code would have silently read the
+> default forever, since `getBoolean`/`getInt` on an absent key cannot fail.
+
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `keyboard_height_percent` | Float | 0.30 | Keyboard height as fraction of screen |
+| `keyboard_height` | Int (percent) | 27 portrait / 40 landscape | Keyboard height. `keyboard_height_unfolded` is used instead when the device is a folded-open foldable (`Config.kt:673`) |
 | `hardware_acceleration` | Boolean | true | Enable GPU rendering (AndroidManifest) |
-| `longpress_timeout` | Int | 600 | Milliseconds before long-press triggers |
-| `key_vibration_enabled` | Boolean | true | Haptic feedback on key press |
-| `swipe_enabled` | Boolean | true | Enable swipe typing |
+| `longpress_timeout` | Int (ms) | 600 | Milliseconds before long-press triggers |
+| `vibration_enabled` | Boolean | true | Master haptic toggle; read into `Config.haptic_enabled` (`Config.kt:698`) |
+| `swipe_typing_enabled` | Boolean | true | Enable swipe typing |
 
 ## Public API
 

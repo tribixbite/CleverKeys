@@ -861,8 +861,9 @@ setup — `onnx_xnnpack_threads` pref already exists), feeding:
 ## 9. Golden traces for the Kotlin parity test — `make_golden.py`
 
 The committed `CtcParityTest` validates the Kotlin beam/featurizer against fixtures
-frozen from the Python harness (`src/test/resources/ctc/ctc_golden.json`, generator
-`scratchpad/gen_ctc_golden.py`). Once a real model exists, extend the same pattern with
+frozen from the Python harness (`src/test/resources/ctc/ctc_golden.json`; the generator lived in
+a session-ephemeral `scratchpad/` and is GONE — the fixture itself is committed, and
+`CtcParityTest` is the authority on its JSON shape). Once a real model exists, extend the same pattern with
 **model-backed** golden cases so (a) the committed beam provably reproduces the
 harness decode of *real* emissions and (b) the future Kotlin `CtcEmissionModel` ONNX
 implementation can be asserted against frozen `features → emissions` pairs.
