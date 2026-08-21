@@ -36,7 +36,7 @@ en_wordfreq_words.txt┘                              en_enhanced.bin (V2 binary
 Source                        Binary Build                     Runtime
 ──────                        ────────────                     ───────
 contractions_non_paired.json ─┐
-  (119 entries: dont→don't)   │
+  (120 entries: dont→don't)   │
                               ├──→ generate_binary_contractions.py ──→ contractions.bin
 contraction_pairings.json ────┘       │
   (10,637 lines: possessives          │
@@ -108,11 +108,22 @@ Suggestion bar: ["can't", "can", "cat"]
 
 | File | Entries | Description |
 |------|---------|-------------|
-| `contractions_non_paired.json` | 119 | `dont→don't` style mappings (base) |
-| `contractions_en.json` | 119 | **Identical** to `contractions_non_paired.json` |
-| `contraction_pairings.json` | ~2,100 | Base word → possessive/contraction variants |
-| `contraction_pairings_cleaned.json` | ~60 | Real contractions only (no possessives) |
+| `contractions_non_paired.json` | 120 | `dont→don't` style mappings (the English base) |
+| `contractions_en.json` | 119 | A SUBSET of the base, not a duplicate: the base additionally holds `high-falutin`. Loaded AFTER the base, so it only ever adds keys the base lacks — and it must never re-add a pairing base (see below) |
+| `contraction_pairings.json` | 1,744 | Base word → possessive/contraction variants |
 | `contractions.bin` | ~2,219 | Binary format of non-paired + paired |
+
+> `contraction_pairings_cleaned.json` (32 entries) was listed here until 2026-08-21 and has been
+> DELETED. It had zero code references — verified across `src/`, `scripts/` and `tools/`, including
+> the one dynamic route (`detectAvailableV2Dictionaries` enumerates `assets/dictionaries/` but
+> filters on `endsWith("_enhanced.bin")`).
+>
+> **Effective English REPLACE set = `(contractions_non_paired ∪ contractions_en) − contraction_pairings` = 106 keys.**
+> `loadEnglishBase` reclassifies pairing bases OUT of the non-paired map (so `well` stays "well"
+> rather than becoming `we'll`), and `contractions_en.json` repeats 14 of those bases — so the
+> loader must refuse to re-add a key that is already PAIRED. Anything modelling English
+> (the sidecar generator, the runtime scanner, a data test) must subtract the pairings.
+> See `.claude/skills/contraction-system.md` §3.
 
 ### Runtime Kotlin Classes
 
@@ -120,10 +131,9 @@ Suggestion bar: ["can't", "can", "cat"]
 |-------|------|---------|
 | `ContractionManager` | `ContractionManager.kt` | Loads and queries contraction mappings |
 | `BinaryContractionLoader` | `BinaryContractionLoader.kt` | Fast binary contraction parser |
-| `OptimizedVocabulary` | `OptimizedVocabulary.kt` | Dictionary loading (`{lang}_enhanced.bin`) |
 | `BinaryDictionaryLoader` | `BinaryDictionaryLoader.kt` | V2 binary dictionary parser |
-| `InputCoordinator` | `InputCoordinator.kt:255-259` | Applies contraction transform to predictions |
-| `SuggestionHandler` | `SuggestionHandler.kt:1100-1114` | Contraction score boost + transform |
+| ~~`InputCoordinator`~~ | — | **No longer applies contractions.** WP9 R-1 collapsed the two prediction pipelines that caused the contraction-flicker bugs into one; it now delegates its cursor-sync phase to `SuggestionHandler`. `BackspaceUndoTest` pins that it never regrows a parallel implementation |
+| `SuggestionHandler` | `SuggestionHandler.kt` | The single pipeline: contraction score boost, REPLACE transform (via `replaceModeContractionFor`, which also guards user-dictionary words), paired injection |
 
 ## Dictionary History
 
@@ -192,7 +202,7 @@ From spot-check of the 52,042 shipped words:
 
 ### Vestigial Files
 - ~~`src/main/assets/dictionaries/en_enhanced.txt`~~ — **DELETED 2026-07-03.** Was a V1 word list (49,297 words); never loaded at runtime.
-- `src/main/assets/dictionaries/en_enhanced.json` — JSON export of dictionary. Used only by `OptimizedVocabulary.loadFromJSON()` as fallback if binary loading fails.
+- `src/main/assets/dictionaries/en_enhanced.json` — JSON export of the dictionary (`{word: freq}` on the AOSP-like 134..255 byte scale). NOT a fallback: its stated consumer `OptimizedVocabulary.loadFromJSON()` was deleted with the neural engine (2026-08-18). It is now the PRIMARY English lexicon source for the CTC engine — `CtcEngineAdapter` reads it for en while every other language uses `<lang>_enhanced.bin` (CKDT). That asymmetry is deliberate and load-bearing: en's λ is fitted to this file's byte scale, so "unifying" the two formats would silently change English decode ranking. See `CtcEngineAdapter.kt:390`.
 
 ## Build Commands
 
