@@ -3,7 +3,7 @@
 ## Feature Overview
 **Feature Name**: Clipboard System (History + Pinned + Todos + Media)
 **Priority**: P0
-**Status**: Complete (v4)
+**Status**: Complete (v5 — `DATABASE_VERSION = 5`, verified `ClipboardDatabase.kt:1828` on 2026-08-21)
 **Target Version**: v1.3.0
 
 ### Summary
@@ -77,7 +77,7 @@ Additionally, support non-text clipboard content (images, videos, GIFs, PDFs) an
 │     • generateThumbnail (BitmapFactory/MMR/PdfRenderer)    │
 │     • cleanupOrphans, deleteMedia                          │
 ├────────────────────────────────────────────────────────────┤
-│                 ClipboardDatabase (V4)                     │
+│                 ClipboardDatabase (V5)                     │
 │  ┌────────────────┐  ┌────────────────┐  ┌──────────────┐  │
 │  │ clipboard_     │  │ pinned_entries │  │ todo_entries │  │
 │  │ history (FTS4) │  │ + tags TEXT    │  │ + tags TEXT  │  │
@@ -93,7 +93,7 @@ Additionally, support non-text clipboard content (images, videos, GIFs, PDFs) an
 1. **`ClipboardManager.kt`**: Pane-level state (search mode, tag mode, current tab), tab switching, tab icon pulse animation, filter dialog orchestration.
 2. **`ClipboardHistoryView.kt`**: Entry list (`BaseAdapter`), inline edit mode, expand/collapse state (keyed by timestamp), pagination, per-entry actions.
 3. **`ClipboardHistoryService.kt`**: Singleton data layer. Handles `OnPrimaryClipChangedListener`, dispatches URI reads to IO, exposes CRUD with Boolean dedup return values.
-4. **`ClipboardDatabase.kt`**: SQLite with FTS4 for history. V4 schema adds `mime_type`, `thumbnail_blob`, `media_path` to all three tables. Tags stored as JSON array in `tags` TEXT column.
+4. **`ClipboardDatabase.kt`**: SQLite with FTS4 for history (FTS4, NOT FTS5 — FTS5 is unavailable on Android). V4 added `mime_type`, `thumbnail_blob`, `media_path` to all three tables; tags are a JSON array in the `tags` TEXT column. **V5 (#156, private copy)** adds `is_private` (INTEGER NOT NULL DEFAULT 0) and `source_package` (TEXT) to all three tables via `ALTER TABLE ADD COLUMN` — non-destructive and O(1), existing rows default to not-private with no provenance. `is_private` is STICKY: once any copy marks a row private it stays private, and the dedupe merge ORs it while taking the most-recent non-null `source_package` (`migrateV4toV5`, `ClipboardDatabase.kt:244-258,287`).
 5. **`ClipboardMediaManager.kt`**: File I/O for media. MIME-aware thumbnail generation. Partitioned storage (`{id/1000}`). Orphan cleanup.
 6. **`ClipboardTagDialog.kt`** (`ClipboardTagPanel` object): Inline programmatic tag panel — chips, suggestions, new-tag EditText. FlowLayout inner class for chip wrapping.
 7. **`ClipboardEntry.kt`** / **`TodoEntry.kt`**: Data classes with mime/thumbnail/media fields plus derived `isMedia`/`isImage`/`isVideo`/`isPdf` helpers.

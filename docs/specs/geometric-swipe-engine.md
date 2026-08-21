@@ -10,6 +10,15 @@
 A pure-JVM SHARK2-style template matcher that decodes swipe traces against per-layout key centroids and a per-language dictionary, producing `PredictionResult(words, scores 0–1000)` — the same output type every swipe engine emits — for any layout geometry (Cyrillic ЙЦУКЕН, AZERTY, Dvorak, Arabic, user-authored XML) with zero training data.
 
 ### Motivation
+
+> **Historical (2026-08-21)**: this section states the problem as it stood when the geometric
+> engine was proposed, and two of its premises no longer hold. The v1 transformer was DELETED
+> on 2026-08-18 (ADR-011), and `Config.isSwipeTypingSupportedForLayout` — the allowlist gate
+> cited below — went with it. Routing is now `swipe/SwipeEngineRouter.route(layout, mode)`:
+> CTC for a–z-complete Latin layouts in the seven served languages, geometric everywhere else.
+> Every layout swipes; there is no allowlist. Kept because the motivation explains WHY this
+> engine exists.
+
 - The v1 transformer is trained on English+QWERTY only; swipe is gated by an allowlist `script == "latin" && name.contains("QWERTY")` (`Config.isSwipeTypingSupportedForLayout`, `Config.kt:1146-1163`; KDoc: "#9: When algorithmic swipe is implemented, this can expand"; live gate at `InputCoordinator.kt:1124-1126`). Users of ЙЦУКЕН, AZERTY, QWERTZ, Dvorak, Colemak, Arabic, and all custom XML layouts get no swipe at all (`README.md:234-247`).
 - **Correction (verified)**: Greek QWERTY does *not* currently lose swipe — `srcs/layouts/grek_qwerty.xml:2` declares `script="latin"` with name `"QWERTY (Greek)"`, so the allowlist returned TRUE and the QWERTY-trained transformer ran on Greek text (moot since 2026-08-18: that engine and the allowlist are both gone). That is a mis-gating bug (the `Config.kt:1155-1156` comment says "exclude Greek/Georgian QWERTY" but the layout's own metadata defeats it) — **file it as a separate issue**; it is evidence that layout `script` attributes are untrustworthy metadata (see Script Abstraction), not a premise of this spec.
 - `ROADMAP.md:51-60` mandates the dual-path plan: keep the transformer for QWERTY+Latin; add a geometric/template matcher (Urik/AnySoftKeyboard family) for everything else; first target Russian ЙЦУКЕН, then AZERTY/QWERTZ/Dvorak/Colemak/Neo2; ship behind a feature flag with per-layout auto-routing.
@@ -441,6 +450,15 @@ Non-QWERTY layouts: same floors − 3 pts initially (ЙЦУКЕН: 31 center let
 - Perf/memory budgets (NFR-1/NFR-2) green at 98,140 words; `runPureTests` wall-time growth < 90 s.
 
 ## NON-Goals (explicit)
+
+> **Superseded (2026-08-21)**: #1 below is no longer true — the engine IS wired into the live
+> pipeline (WP9 R-1 steps 7-9, reflected in this spec's own Status line). `InputCoordinator`
+> delegates to `SuggestionHandler.handleSwipePredictionResults` (`InputCoordinator.kt:446`),
+> which both engines pass through; the `InputCoordinator.kt:1124-1126` gate cited below no
+> longer exists (that file is now 807 lines) and neither does
+> `Config.isSwipeTypingSupportedForLayout` or `onnx/SwipePredictorOrchestrator`. The list is
+> kept because it records what was deliberately deferred at design time.
+
 1. **No wiring into the live pipeline** — `SuggestionHandler`, `InputCoordinator.kt:1124-1126` gate, `onnx/SwipePredictorOrchestrator`, `Config.isSwipeTypingSupportedForLayout`, `CleverKeysService` untouched. Router + `geometric_swipe_engine` flag + adapter (incl. dictionary-version propagation) are WP9 scope. *(Since overtaken: the WP9 router landed 2026-07-21, and the orchestrator + allowlist were deleted with the neural engine on 2026-08-18 — ADR-011.)*
 2. **No Android adapter in this package** (named/designed only).
 3. **Deferred scripts**: Devanagari + abugidas (shift-plane graphemes, virama zigzag; needs a collapsed-alphabet mode), Hangul (jamo de/recomposition — bounded follow-up), CJK; lam-alef shaping-aware matching.
