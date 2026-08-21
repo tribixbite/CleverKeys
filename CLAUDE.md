@@ -47,6 +47,7 @@ committed coordination over working-tree edits.
 | "key routing", "edit mode", "search mode" in IME | `.claude/skills/ime-key-routing.md` |
 | "ew-cli", "instrumented test", "emulator.wtf" | `.claude/skills/ew-cli-testing.md` |
 | "dictionary", "VocabularyTrie", "predictor" | `.claude/skills/dictionary-pipeline.md` |
+| "contraction", "apostrophe", "elision", "collision", `don't`/`c'est` display | `.claude/skills/contraction-system.md` |
 | "settings", "SharedPreferences" | `.claude/skills/settings-preferences.md` |
 | "wiki", "Astro", "site docs" | `.claude/skills/wiki-documentation.md` |
 | "emoji panel" | `.claude/skills/emoji-panel.md` |

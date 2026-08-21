@@ -1,4 +1,4 @@
-# HANDOFF — updated 2026-08-20
+# HANDOFF — updated 2026-08-21
 
 Read this first, then `docs/specs/ctc-architecture-and-multiscript-guide.md` (architecture,
 routing rule, multi-script recipe, full audit table). This file is the **task list**; the guide is
@@ -8,13 +8,40 @@ priority.
 **Completed work is DELETED from this file, not struck through.** Git history is the record of
 what was done; this file is only what is left. Anything below is open.
 
-## State at `98307dc2`
+## State at `d5e82e77`
 
 Swipe is **CTC (default) + geometric**; the neural engine was deleted 2026-08-18
 (`a7d03bc8`..`83220634`), −26.4 MB APK. `CtcLanguageSupport.SUPPORTED` is **seven** languages:
 en/fr/de/es test-validated, it/pt/sv `PROVISIONAL` (scale-transferred, no per-language bar).
 Gates: `runPureTests` **1680**, `lintDebug` 0 errors, both compiles, `assembleRelease` clean.
-Last full instrumented run 1395 tests / 0 failures.
+Last full instrumented run 1395 tests / 0 failures; targeted contraction runs 127/0 on
+Pixel7 API 34.
+
+**Contractions**: the whole system is now documented as-built in
+`.claude/skills/contraction-system.md` — data model, the four guards, the regressions each one
+prevents, regeneration commands, and the invariant→test table. Read it before touching anything
+named `contraction*`. The 2026-08-20/21 cross-language, user-word and paired-base fixes live
+there and in git history, not in this file.
+
+---
+
+## Before you trust an entry below
+
+Three claims inherited by the 2026-08-20 session were investigated and **all three were false**
+(`SwipeResampler` "consumer-less", `CoroutineScopeLifecycleTest` "flakes in combined runs",
+`ctc_bench` "never packaged"). Inherited claims decay; the cheap experiment beats the plausible
+story. Two habits came out of it and are worth keeping:
+
+- **Read the `N) <test>(<class>)` failure header, never the noisiest stack trace.**
+  `CoroutineScopeLifecycleTest` throws "boom" ON PURPOSE to prove `SupervisorJob` isolation, which
+  made it the loudest thing in every red log and got it blamed for a year of flakes it never
+  caused. Note the header does not always start a line — stdout and stderr interleave, so anchor
+  the search with `[0-9]+\)` rather than `^[0-9]+\)`.
+- **Verify a quiet machine by LOAD, not by grepping for one process name.** `uptime` reads
+  `sysinfo()` and works on Android even though `/proc/loadavg` is SELinux-denied (which is
+  separately why the JVM's `getSystemLoadAverage()` returns -1 here). A "clean box" check that
+  grepped for `java` missed 23 leaked `bash` CPU burners and produced eight bogus benchmark
+  numbers plus two commits that had to be reverted.
 
 ---
 
@@ -22,48 +49,15 @@ Last full instrumented run 1395 tests / 0 failures.
 
 ### 1. Contraction follow-ups, all deferred deliberately
 
-- **Cross-language contraction destruction is FIXED, with residuals.** The tap path merged every
-  active language's REPLACE keys into one map with no provenance, so a key with no reading in one
-  language was applied to a real word of the other. Measured casualties, all live before
-  2026-08-20: fr+en typing French `dont` got `don't`; de+en typing German `im` got `I'm`; de+en
-  typing English `hats` got `hat's`. `im` was destroyed in EVERY non-English bundled language.
-  Fix: `ContractionCollisionDemotion` + shipped `contraction_collisions_<lang>.json` sidecars,
-  demoting a colliding key to PAIRED so both spellings stay reachable. `rendezvous` ships as a
-  result. Worst pair is fr+en at 158 demotions of ~18k keys (<1%). **Device-verified** on
-  emulator.wtf (Pixel7/API34, orchestrated): `ContractionManagerTest` 35 tests / 0 failed / 0
-  skipped, including 7 new `loadTypingMappings` cases proving the demotion is actually wired and
-  that a monolingual English user still gets `dont` -> `don't`.
-  **User custom words: FIXED too.** No shipped table can know what someone added by hand, and the
-  fr REPLACE table holds ~18k `d'X` aliases (`dangle`, `dalliance`) that are ordinary strings
-  someone may add as a name. `SuggestionHandler.replaceModeContractionFor` now refuses to REPLACE
-  a word in the personal dictionary, and both call sites route through it —
-  `CoreImeHygieneDriftTest` pins that no third direct call site appears (validated by injecting a
-  violation and confirming it fails). Known limit, recorded in the KDoc: the check probes the
-  word plus its lowercase and capitalised forms, not a full case-insensitive match; making it
-  total means giving `userWords` case-insensitive membership, which changes dedup semantics for a
-  persisted user-owned set and deserves its own change.
-
-  **Imported packs: CLOSED.** A pack cannot have a shipped sidecar, so
-  `ContractionCollisionScanner` computes collisions when the user picks languages — all four
-  selectors, alternates included, since a quick-toggle key swaps languages with no trip through
-  Settings. The result is cached scoped to the language set it was computed for, so a stale cache
-  is ignored rather than misapplied, and a warning dialog fires only when an imported pack
-  contributed a collision.
-
-  **Found while building it, now fixed:** `loadContractionsFromStream` skipped a key only when it
-  was already NON-PAIRED, so after `loadEnglishBase` reclassified the 14 pairing bases out of that
-  map, `contractions_en.json` put them straight back as REPLACE. Device-confirmed:
-  `loadTypingMappings("en", null)` then `getNonPairedMapping("well")` returned `we'll` — the
-  2026-07-23 fix was undone on the typing path for `well`, `shell`, `hell`, `were`, `girls`,
-  `states` and 8 more. The paired map is now authoritative.
-
-  **Owed:** translations for `collision_warning_title/body/examples`, currently English-only
-  behind `tools:ignore="MissingTranslation"`.
+- **Owed translations** for `collision_warning_title/body/examples` — English-only behind
+  `tools:ignore="MissingTranslation"`.
+- **User-word guard is case-partial by design.** `replaceModeContractionFor` probes the word plus
+  its lowercase and capitalised forms, not a full case-insensitive match. Making it total means
+  giving `userWords` case-insensitive membership, which changes add/remove/dedup semantics for a
+  persisted user-owned set — its own change, not a side effect.
 - **Verb inversions** (`est-elle`, `a-t-on`) deferred with named landmines: `estelle` is a native
   word @16343, `aton` is ASK-attested, `entretemps` is a classifier misfire needing
   `FORCED_APPEND`.
-- **German injection stays mostly inert** even after `98307dc2`: de's rarest real word is freq 12,
-  so the derived floor is 11 and the headroom is small. Scale-specific, not a bug.
 
 ### 2. Context-LM rescoring of the CTC slate — design done, build not started
 
@@ -81,39 +75,9 @@ corpus in the repo is context-free isolated words, so step 5 of that plan is "bu
 
 ### 3. Smaller, ride-along
 
-- ~~the four `ctc_bench` models may never have been packaged into the androidTest APK~~ —
-  **disproven 2026-08-20, by experiment.** androidTest assets ARE packaged: the existing
-  `assets/ctc_bench/README.md` is present in `CleverKeys-debug-androidTest.apk` at its full
-  1,182 bytes, as are `assets/ctc/ctc_golden.json` and `assets/dictionaries/en_enhanced.json`.
-  Confirmed positively by dropping a 1 MB probe `ch128_s1234.onnx` into the directory and
-  rebuilding: it appears in the APK at `compressed == uncompressed == 1000000`, because
-  `build.gradle:136` sets `noCompress 'onnx'`. So 11 MB of models adds ~11 MB, and the
-  258-byte delta can only have come from a build where they were already absent (they are
-  gitignored and were never committed, so any fresh checkout or CI build lacks them).
-  Nothing to fix. `CtcOnnxLatencyBenchmarkTest` already fails with restore instructions rather
-  than skipping, so the benchmark cannot silently no-op — restore per the README to run it.
-- ~~`CoroutineScopeLifecycleTest` flakes in combined runs~~ — **disproven 2026-08-20.** It passed
-  4/4, including a full combined run and three isolated runs under heavy CPU oversubscription.
-  Its only output is the deliberate "boom" stack trace, which is almost certainly why it was
-  blamed — it is the loudest thing in a red suite log. Nothing to fix; **read the
-  `N) <test>(<class>)` failure header, never the noisiest stack trace.**
-
-  ~~The real flake is `GeoBenchmarkTest`'s NFR-1 wall-clock p95~~ — **also wrong, and the
-  correction is the useful part.** That investigation measured warm p95 at 40.61 / 56.58 / 59.36 /
-  63.13 / 64.72 / 68.40 / 70.09 / 86.40 ms against a 60 ms budget, concluded the pure suite could
-  not measure a tail statistic, and landed a heap-settle, a best-of-two retry, and a demotion of
-  the p95 assert to measured-and-printed. **All of it has been reverted.** The premise was an
-  artefact: that session leaked 23 `while :; do :; done` CPU burners from its own load tests, so
-  the 4-core device ran at load average 36+ for every measurement. Its "clean box" check grepped
-  for `java` processes and could not see them by construction.
-
-  Re-measured with the burners killed: isolated warm p95 **8.46 / 10.26 / 8.52 ms**, inside the
-  full 1,678-test suite **9.51 ms**, medians 2.7–3.2 ms against 30. No suite inflation, ~6x
-  headroom. `GeoBenchmarkTest` is healthy and the NFR-1 asserts stand as written.
-
-  Carry forward: verify a quiet machine by LOAD, via `uptime` — it reads `sysinfo()` and works on
-  Android even though `/proc/loadavg` is SELinux-denied (which is separately why the JVM's
-  `getSystemLoadAverage()` returns -1 here). Grepping for one process name is not a quiet check.
+- `contraction_pairings_cleaned.json` (32 entries, 5,177 bytes) has ZERO code references —
+  verified 2026-08-21 across `src/`, `scripts/`, `tools/`. Candidate for deletion with the next
+  data change; needs a gate run, not a decision.
 - Translations owed: `swipe_engine_fallback_*`, `gesture_touch_smoothing_*`,
   `gesture_finger_occlusion_*`, `dict_word_too_long_for_swipe_*` ship English-only behind
   `tools:ignore="MissingTranslation"`. The 21 `swipe_engine_mode_desc` translations were
@@ -213,6 +177,11 @@ strong — but "Colemak ≥ geometric" is an inference, not a measurement. Say i
 
 ## Verification owed
 
+- **The collision-warning dialog has never been SEEN.** Its logic is instrumented-tested, but the
+  dialog only appears when an imported language pack contributes a collision, and no pack is
+  installed on the emulator — so the pack-collision path cannot be reached on emulator.wtf at all.
+  Needs a device with a pack imported (nl is the bundled-adjacent one) alongside a bundled
+  language, then a language re-selection to trigger the scan.
 - **Manual, on the maintainer's device**: Italian swipe (moved neural→geometric→CTC in one day);
   first-swipe warm-up now that neural preload is gone; a pre-v1.6.0 backup import (no `neural_*`
   rows written); a pre-v1.1.86 upgrade (`migrateToLanguageSpecific` moved into
