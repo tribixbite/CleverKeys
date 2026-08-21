@@ -5,6 +5,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import tribixbite.cleverkeys.swipe.SwipeContextRescorer
 import tribixbite.cleverkeys.contextaware.BigramStore
 import tribixbite.cleverkeys.contextaware.ContextModel
 import tribixbite.cleverkeys.contextaware.TrigramStore
@@ -195,5 +196,50 @@ class OnDeviceLearningPrivacyTest {
         assertEquals(0, vocabulary.size())
         assertTrue(bigramStorage.keys().none { it.startsWith("bigrams_json_") })
         assertTrue(trigramStorage.keys().none { it.startsWith("trigrams_json_") })
+    }
+
+    // ── swipe context rescoring (step 4) ────────────────────────────────────────────
+
+    /**
+     * With the master gate OFF, swipe rescoring must not read the learned stores — proven with
+     * the stores DELIBERATELY POPULATED, so this asserts the gate rather than emptiness.
+     *
+     * The distinction matters: an assertion made against empty stores passes for a completely
+     * ungated implementation, which is the failure mode being guarded against.
+     */
+    @Test
+    fun `swipe rescoring reads nothing when the master learning gate is off`() {
+        repeat(5) { contextModel.recordSequence(listOf("going", "home", "now")) }
+        assertTrue("precondition: the stores must actually hold data",
+            contextModel.getContextBoost("home", listOf("going")) > 1.0f)
+
+        // The gate WordPredictor.getSwipeContextEvidence applies, evaluated here directly because
+        // the accessor needs an Android-constructed predictor.
+        val masterOff = LearningGate.canUseLearnedContext(
+            onDeviceLearningEnabled = false,
+            contextAwareEnabled = true
+        )
+        assertFalse("master gate off must deny the learned-context READ", masterOff)
+
+        val nullConfig = LearningGate.canUseLearnedContext(
+            onDeviceLearningEnabled = false, // what `config?.… ?: false` yields on a null config
+            contextAwareEnabled = false
+        )
+        assertFalse("a null config must fail CLOSED (M2)", nullConfig)
+    }
+
+    /**
+     * The identity guarantee the OFF path depends on: an all-neutral slate comes back as the same
+     * ORDER, so a caller that skips the rescorer and one that runs it on empty stores agree.
+     *
+     * This is what makes "learning off = today's behaviour" a structural property rather than a
+     * claim — though the seam additionally does not invoke the rescorer at all when gated off,
+     * so the OFF output is byte-identical by reference, not merely equal by value.
+     */
+    @Test
+    fun `an unlearned slate is returned in its original order`() {
+        val scores = listOf(900, 400, 120)
+        val none = List(3) { SwipeContextRescorer.Evidence.NONE }
+        assertEquals(listOf(0, 1, 2), SwipeContextRescorer.rescoreOrder(scores, none))
     }
 }

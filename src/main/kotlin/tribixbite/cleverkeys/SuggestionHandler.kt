@@ -10,6 +10,7 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
 import tribixbite.cleverkeys.ml.SwipeMLData
 import tribixbite.cleverkeys.autocorrect.AutocorrectContextGuard
+import tribixbite.cleverkeys.swipe.SwipeContextRescorer
 
 /**
  * Handles suggestion selection, prediction display, and text completion logic.
@@ -160,6 +161,61 @@ class SuggestionHandler(
      * Making it total means giving `userWords` case-insensitive membership, which changes
      * add/remove/dedup semantics for a persisted user-owned set and deserves its own change.
      */
+    /**
+     * Reorder the engine slate by learned context, or return it UNTOUCHED.
+     *
+     * Step 4 of `docs/specs/ctc-context-rescoring-and-tunables.md`. The §3 gates are evaluated
+     * here, at the call site, exactly as the other learned-data read paths do:
+     *
+     *  1. **Feature pref** `swipe_context_rescoring` — default false.
+     *  2. **M5 incognito field** — an `IME_FLAG_NO_PERSONALIZED_LEARNING` field must not have its
+     *     ranking personalised either. Same contract as next-word.
+     *  3. **The master + feature learning gate**, fail-closed on a null config (M2) — applied
+     *     inside [WordPredictor.getSwipeContextEvidence], the class that owns the config.
+     *  4. **Password fields** are covered structurally: `handleSwipePredictionResults` has
+     *     already returned for them by the time this runs.
+     *
+     * **A failing gate means the rescorer is NOT CALLED** — not "called with weight zero". The
+     * original list references flow onward, which is what makes the learning-OFF output
+     * byte-identical to today's rather than merely equal by arithmetic.
+     *
+     * @return the (possibly reordered) words, their scores, and the index the promoted candidate
+     *   came from when context moved rank 1 — null when rank 1 is unchanged.
+     */
+    private fun rescoreWithContext(
+        words: List<String>,
+        scores: List<Int>?,
+    ): Triple<List<String>, List<Int>, Int?> {
+        val originalScores = scores ?: emptyList()
+        val unchanged = Triple(words, originalScores, null)
+
+        if (!config.swipe_context_rescoring) return unchanged
+        if (!fieldAllowsPersonalizedLearning) return unchanged // M5
+        // Parallel lists are the precondition for reordering by permutation; a mismatch means
+        // some upstream path built them independently, and silently reordering one would
+        // misalign words from their scores.
+        if (words.size < 2 || originalScores.size != words.size) return unchanged
+
+        val predictor = predictionCoordinator.getWordPredictor() ?: return unchanged
+        val contextWords = contextTracker.getContextWords().toList()
+        // null = do not rescore (gate failed, or the stores are cold and a lookup would block the
+        // main thread). A list containing `Evidence.NONE` entries means rescore — those candidates
+        // simply had nothing learned. See the accessor's KDoc for why the two are distinct.
+        val evidence = predictor.getSwipeContextEvidence(words, contextWords) ?: return unchanged
+
+        val order = SwipeContextRescorer.rescoreOrder(originalScores, evidence)
+        // The rescorer returns the identity permutation whenever nothing was learned, so this
+        // check keeps the untouched-references guarantee without depending on that being true.
+        if (order == words.indices.toList()) return unchanged
+
+        vlog { "SWIPE context rescoring reordered the slate: $order" }
+        return Triple(
+            order.map { words[it] },
+            order.map { originalScores[it] },
+            order.first().takeIf { it != 0 },
+        )
+    }
+
     private fun replaceModeContractionFor(word: String): String? {
         val mapping = contractionManager.getNonPairedMapping(word) ?: return null
         val dictionaries = predictionCoordinator.getDictionaryManager() ?: return mapping
@@ -547,13 +603,22 @@ class SuggestionHandler(
             applyShiftTransformation(it, shiftActive, shiftLocked)
         }
 
+        // Step 4: context rescoring of the ENGINE slate, before the augment.
+        //
+        // Deliberately here and not later: possessives are appended by the augment below and are
+        // not engine candidates, so rescoring after it would let a learned bigram reorder a form
+        // the decoder never produced. Everything downstream — the bar, the auto-insert target,
+        // the provenance metas — reads the order this returns.
+        val (rescoredPredictions, rescoredScores, promotedIndex) =
+            rescoreWithContext(transformedPredictions, scores)
+
         // D1: augment the bar list with possessive forms (transient-style augment reused from the tap
         // path). Kept aligned with scores; possessives appended at the end so the top prediction is
         // unchanged and the auto-insert target below is still the highest-scoring word.
         // ENGLISH ONLY (2026-07-23): see [shouldAugmentPossessives] for the rule and why the
         // gate deliberately covers the swipe path too (audit n-1).
-        val barWords = transformedPredictions.toMutableList()
-        val barScores = (scores ?: emptyList()).toMutableList()
+        val barWords = rescoredPredictions.toMutableList()
+        val barScores = rescoredScores.toMutableList()
         val activeLanguage = predictionCoordinator.getDictionaryManager()?.getCurrentLanguage()
         val engineWordCount = barWords.size
         if (shouldAugmentPossessives(activeLanguage)) {
@@ -567,6 +632,12 @@ class SuggestionHandler(
         val swipeOrigin = origin ?: SuggestionOrigin.forSwipeEngineMode(config.swipe_engine_mode)
         val barMetas = MutableList(barWords.size) { i ->
             SuggestionMeta(if (i < engineWordCount) swipeOrigin else SuggestionOrigin.POSSESSIVE)
+        }
+        // §6.5: a context-promoted rank 1 carries a note, so a misbehaving promotion is
+        // diagnosable from the long-press sheet instead of being invisible. The engine ORIGIN is
+        // deliberately kept — the word still came from the decoder; context only moved it.
+        if (promotedIndex != null && barMetas.isNotEmpty()) {
+            barMetas[0] = barMetas[0].copy(note = "promoted by learned context")
         }
 
         suggestionBar?.let { bar ->

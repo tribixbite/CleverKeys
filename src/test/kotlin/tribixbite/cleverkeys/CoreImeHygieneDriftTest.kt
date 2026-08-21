@@ -805,6 +805,41 @@ class CoreImeHygieneDriftTest {
     }
 
     /**
+     * The swipe context-rescoring seam must keep ALL of its §3 gates.
+     *
+     * These are the gates that make the feature safe to exist while default-OFF, and each is one
+     * deletable line. The privacy contract is specifically that a gated-off user gets today's
+     * ordering because the rescorer is NOT INVOKED — so a gate silently dropping would not fail
+     * any behavioural test that only checks the ON path.
+     */
+    @Test
+    fun swipeContextRescoringKeepsItsPrivacyGates() {
+        val handler = source("tribixbite/cleverkeys/SuggestionHandler.kt")
+        val body = handler.substringAfter("private fun rescoreWithContext(")
+            .substringBefore("\n    private fun ")
+
+        assertWithMessage("the rescoring helper is gone from SuggestionHandler")
+            .that(handler).contains("private fun rescoreWithContext(")
+        assertWithMessage(
+            "the feature pref gate is missing — the feature would be live for every user " +
+                "regardless of the setting, and its default is OFF precisely because the " +
+                "accuracy evidence does not exist yet"
+        ).that(body).contains("config.swipe_context_rescoring")
+        assertWithMessage(
+            "the M5 incognito-field gate is missing — an IME_FLAG_NO_PERSONALIZED_LEARNING " +
+                "field must not have its ranking personalised either, same contract as next-word"
+        ).that(body).contains("fieldAllowsPersonalizedLearning")
+        assertWithMessage(
+            "the seam must route through the gated accessor, which is where the M2 fail-closed " +
+                "master-gate check lives; calling the stores directly would bypass it"
+        ).that(body).contains("getSwipeContextEvidence")
+        assertWithMessage(
+            "a failing gate must return the ORIGINAL list references, not a rescored-with-zero " +
+                "copy — that is what makes the learning-OFF output byte-identical"
+        ).that(body).contains("return unchanged")
+    }
+
+    /**
      * Every language selector must re-scan for cross-language contraction collisions.
      *
      * Imported language packs cannot have a shipped collision sidecar — their contraction file

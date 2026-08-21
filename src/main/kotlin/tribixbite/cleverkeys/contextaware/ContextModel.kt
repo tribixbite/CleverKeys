@@ -280,6 +280,16 @@ class ContextModel internal constructor(
     }
 
     /**
+     * The boost [getContextBoost] would return for an already-looked-up [continuation].
+     *
+     * Exists so callers that need the raw counts AND the multiplier do not re-derive `(1 + p)^2`
+     * themselves. The formula, its exponent and its clamp live in exactly one place; a second
+     * copy would drift the moment any of the three changed.
+     */
+    fun boostFor(continuation: ContextContinuation): Float =
+        calculateBoost(continuation.probability)
+
+    /**
      * True when BOTH stores already hold this model's language in RAM.
      *
      * The caller's fast path: if this is false, skip rescoring entirely rather than have

@@ -8,6 +8,7 @@ import android.util.Log
 import tribixbite.cleverkeys.autocorrect.FrequencyFloor
 import tribixbite.cleverkeys.autocorrect.KeyAdjacency
 import tribixbite.cleverkeys.autocorrect.Morphology
+import tribixbite.cleverkeys.swipe.SwipeContextRescorer
 import tribixbite.cleverkeys.contextaware.ContextModel
 import tribixbite.cleverkeys.langpack.LanguagePackManager
 import tribixbite.cleverkeys.personalization.PersonalizationEngine
@@ -775,9 +776,9 @@ class WordPredictor {
      *
      * - **null** = do not rescore at all. The caller must pass its slate through untouched, by
      *   reference. Returned when the gate fails or the stores are not resident.
-     * - **a list with null entries** = rescore; these particular candidates simply had no
-     *   confident learned continuation. That is the ordinary case and yields the identity
-     *   ordering anyway, since every boost is then neutral.
+     * - **a list containing [SwipeContextRescorer.Evidence.NONE]** = rescore; these particular
+     *   candidates simply had no confident learned continuation. That is the ordinary case, and
+     *   an all-NONE list yields the identity ordering anyway, since every boost is then neutral.
      *
      * Collapsing the two would make "learning is off" indistinguishable from "learning is on but
      * knows nothing" — and the privacy contract is that the OFF output is byte-identical to
@@ -796,7 +797,7 @@ class WordPredictor {
     fun getSwipeContextEvidence(
         words: List<String>,
         contextWords: List<String>,
-    ): List<tribixbite.cleverkeys.contextaware.ContextContinuation?>? {
+    ): List<SwipeContextRescorer.Evidence>? {
         if (words.isEmpty() || contextWords.isEmpty()) return null
 
         // Null config fails CLOSED (M2) — same gate as getNextWordCandidates and
@@ -810,7 +811,17 @@ class WordPredictor {
         val model = contextModel ?: return null
         if (!model.isLoadedInMemory()) return null
 
-        return words.map { model.getContextEvidence(it.lowercase(), contextWords) }
+        return words.map { word ->
+            val continuation = model.getContextEvidence(word.lowercase(), contextWords)
+                ?: return@map SwipeContextRescorer.Evidence.NONE
+            SwipeContextRescorer.Evidence(
+                // The REAL boost function, not a local copy of `(1 + p)^2`: the formula, its
+                // exponent and its clamp must have exactly one definition.
+                boost = model.boostFor(continuation).toDouble(),
+                frequency = continuation.frequency,
+                probability = continuation.probability,
+            )
+        }
     }
 
     fun getNextWordCandidates(
