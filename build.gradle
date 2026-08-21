@@ -550,6 +550,9 @@ tasks.register('runPureTests', JavaExec) {
     // log-linear math, the identity property at empty stores, and the rank-1 guard that
     // protects auto-commit. Default-OFF feature, not yet wired — these ARE the evidence.
     'tribixbite.cleverkeys.swipe.SwipeContextRescorerTest',
+    // Step 2: the evidence lookup and its NON-LOADING store peeks — the main-thread swipe
+    // path must never trigger a persisted-blob load (the first-swipe jank hazard).
+    'tribixbite.cleverkeys.contextaware.ContextEvidenceLookupTest',
     'tribixbite.cleverkeys.swipe.ContractionCollisionDataTest',
     // SwipePrunerTest excluded: requires android.util.Log (MockK + Robolectric)
   ]

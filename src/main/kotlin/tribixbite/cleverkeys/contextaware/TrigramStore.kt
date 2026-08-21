@@ -236,6 +236,40 @@ class TrigramStore internal constructor(
     }
 
     /**
+     * Is this language's table already resident in RAM? A peek that must NOT load — see
+     * [BigramStore.isLanguageLoaded] for why the swipe rescoring path needs it.
+     */
+    fun isLanguageLoaded(language: String): Boolean =
+        // BigramStore.normalizeLanguage, NOT TrigramEntry.normalizeWord — `forLanguage` keys the
+        // map with the former, and the two differ (normalizeLanguage maps "" to "en"). Using the
+        // word normalizer here would report a loaded language as cold and silently disable
+        // rescoring for it forever.
+        languages.containsKey(BigramStore.normalizeLanguage(language))
+
+    /**
+     * The confident trigram entry for `w1 w2 -> w3`, or null.
+     *
+     * Same floor as [getConfidentProbability], but returns the ENTRY so a caller can also read
+     * `frequency` — which the swipe rescorer needs for the stricter rank-1 promotion floors.
+     * Non-loading: returns null rather than building the table.
+     */
+    fun getConfidentEntry(
+        language: String,
+        word1: String,
+        word2: String,
+        word3: String,
+    ): TrigramEntry? {
+        if (!isLanguageLoaded(language)) return null
+        val key = prefixKey(TrigramEntry.normalizeWord(word1), TrigramEntry.normalizeWord(word2))
+        val w3 = TrigramEntry.normalizeWord(word3)
+        val entries = forLanguage(language).trigramMap[key] ?: return null
+        synchronized(this) {
+            val entry = entries.find { it.word3 == w3 } ?: return null
+            return if (entry.frequency >= minFrequency) entry else null
+        }
+    }
+
+    /**
      * Inverse of [recordTrigram] (autocorrect-undo rollback, 2026-08-06): decrement
      * ONE observation of `(word1 word2 → word3)`. Removes the entry at frequency 0
      * and renormalizes surviving siblings against the reduced prefix total —

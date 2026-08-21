@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys.swipe
 
+import tribixbite.cleverkeys.NextWordPredictor
 import kotlin.math.ln
 
 /**
@@ -47,16 +48,20 @@ import kotlin.math.ln
  *
  * ## What bounds the damage
  *
- * 1. **Rank-1 displacement guard** — a candidate may take rank 1 only if
+ * 1. **Rank-1 score-ratio guard** — a candidate may take rank 1 only if
  *    `score_i >= R_MIN * score_top`, i.e. the engine itself put it within a factor of two
  *    (≤ 0.69 nats behind). A confidently decoded swipe (top-1 900, runner-up 40) is
  *    arithmetically un-overturnable regardless of boost.
- * 2. **The boost ceiling** — `WEIGHT * ln(MAX_BOOST)` ≈ 0.80 nats at `WEIGHT = 0.5`. Context can
+ * 2. **Rank-1 strict evidence floors** — and it must ALSO clear the stricter
+ *    `NextWordPredictor` floors (see [promotableToRankOne]). Both must hold; either one failing
+ *    restores the engine's top-1.
+ * 3. **The boost ceiling** — `WEIGHT * ln(MAX_BOOST)` ≈ 0.80 nats at `WEIGHT = 0.5`. Context can
  *    never outvote strong emission evidence, only break near-ties.
- * 3. **Below rank 1 reordering is cheap** — ranks 2..K are bar alternates the user may tap, so a
+ * 4. **Below rank 1 reordering is cheap** — ranks 2..K are bar alternates the user may tap, so a
  *    suboptimal ordering there costs nothing today's ordering doesn't already. No extra cap.
  *
- * The guard deliberately protects only rank 1, because rank 1 is what auto-inserts.
+ * Guards 1 and 2 deliberately protect ONLY rank 1, because rank 1 is what auto-inserts. A
+ * rescoring blocked at rank 1 still reorders the alternates beneath it.
  */
 object SwipeContextRescorer {
 
@@ -98,6 +103,53 @@ object SwipeContextRescorer {
     fun storeKey(word: String): String = word.lowercase()
 
     /**
+     * The learned evidence for one slate candidate.
+     *
+     * Deliberately a boost PLUS the raw counts, not a boost alone. Moves below rank 1 need only
+     * the boost, but a promotion INTO rank 1 must additionally clear the strict next-word floors
+     * (see [promotableToRankOne]) — and those are expressed in frequency and probability, which a
+     * single collapsed multiplier cannot reconstruct.
+     *
+     * Mirrors `contextaware.ContextContinuation`. It is restated here rather than imported so this
+     * file stays free of the context package and remains a pure, dependency-light unit; the caller
+     * does the one-line adaptation.
+     *
+     * @param boost `ContextModel.getContextBoost` — `(1 + p)^2` clamped to `[1.0, 5.0]`.
+     * @param frequency observation count of this continuation in its store.
+     * @param probability conditional probability within its store.
+     */
+    data class Evidence(
+        val boost: Double,
+        val frequency: Int,
+        val probability: Float,
+    ) {
+        companion object {
+            /** No confident learned continuation — contributes exactly zero to the sort. */
+            val NONE = Evidence(NO_BOOST, 0, 0f)
+        }
+    }
+
+    /**
+     * May this candidate's learned evidence promote it into rank 1?
+     *
+     * Rank 1 auto-inserts, so a context-driven promotion into it is a silent **commit**. The
+     * design's rule: general in-slate reordering rides on the stores' own floors (frequency ≥ 2,
+     * `MIN_BIGRAM_PROB`/`MIN_TRIGRAM_PROB`, all applied inside `getContextBoost`), but a rank-1
+     * promotion must additionally clear the STRICTER floors that `NextWordPredictor` uses to
+     * generate suggestions from nothing.
+     *
+     * The asymmetry is deliberate and worth stating: a next-word suggestion at this confidence
+     * still requires the user to TAP it. Here nothing is tapped — the word is written. The bar for
+     * writing silently must be at least as high as the bar for offering.
+     *
+     * The two constants are referenced from [NextWordPredictor], never re-declared, so the two
+     * paths cannot drift apart.
+     */
+    fun promotableToRankOne(evidence: Evidence): Boolean =
+        evidence.frequency >= NextWordPredictor.MIN_LEARNED_FREQUENCY &&
+            evidence.probability >= NextWordPredictor.MIN_LEARNED_PROBABILITY
+
+    /**
      * Reorder a slate by context, returning the new order as ORIGINAL indices.
      *
      * Indices rather than reordered words because the caller holds parallel lists — words,
@@ -106,21 +158,21 @@ object SwipeContextRescorer {
      *
      * @param scores engine scores in ENGINE RANK ORDER (descending); `scores[0]` is the top-1
      *   whose displacement the guard protects.
-     * @param boosts per-candidate context boost, parallel to [scores]. `1.0` means no confident
-     *   learned continuation. Values are clamped to `[NO_BOOST, MAX_BOOST]`.
+     * @param evidence per-candidate learned evidence, parallel to [scores]. Use [Evidence.NONE]
+     *   where the stores had nothing confident.
      * @return a permutation of `scores.indices`.
      */
-    fun rescoreOrder(scores: List<Int>, boosts: List<Double>): List<Int> {
-        require(scores.size == boosts.size) {
-            "scores/boosts must be parallel: ${scores.size} vs ${boosts.size}"
+    fun rescoreOrder(scores: List<Int>, evidence: List<Evidence>): List<Int> {
+        require(scores.size == evidence.size) {
+            "scores/evidence must be parallel: ${scores.size} vs ${evidence.size}"
         }
         if (scores.size < 2) return scores.indices.toList()
 
         // Nothing learned for any candidate: the answer is the input, exactly.
-        if (boosts.none { it > NO_BOOST }) return scores.indices.toList()
+        if (evidence.none { it.boost > NO_BOOST }) return scores.indices.toList()
 
         val adjusted = DoubleArray(scores.size) { i ->
-            val boost = boosts[i].coerceIn(NO_BOOST, MAX_BOOST)
+            val boost = evidence[i].boost.coerceIn(NO_BOOST, MAX_BOOST)
             ln(maxOf(scores[i], 1).toDouble()) + WEIGHT * ln(boost)
         }
 
@@ -130,18 +182,23 @@ object SwipeContextRescorer {
             compareByDescending<Int> { adjusted[it] }.thenBy { it }
         )
 
-        return applyRankOneGuard(order, scores)
+        return applyRankOneGuard(order, scores, evidence)
     }
 
     /**
-     * Enforce the rank-1 displacement guard on a computed [order].
+     * Enforce BOTH rank-1 protections on a computed [order].
      *
-     * If the newly promoted leader was not within `R_MIN` of the engine's own top-1, the engine's
-     * top-1 is restored to rank 1 and everything else keeps its rescored order. Note this does
-     * NOT discard the rescoring — ranks 2..K stay reordered, because those are alternates the
-     * user chooses explicitly and reordering them is cheap.
+     * A candidate may lead only if it clears the score-ratio guard (the engine itself put it
+     * within a factor of two) AND the strict evidence floors ([promotableToRankOne]). Failing
+     * either restores the engine's top-1 to rank 1 while everything else keeps its rescored
+     * order — the rescoring is NOT discarded, because ranks 2..K are alternates the user chooses
+     * explicitly and reordering them is cheap.
      */
-    private fun applyRankOneGuard(order: List<Int>, scores: List<Int>): List<Int> {
+    private fun applyRankOneGuard(
+        order: List<Int>,
+        scores: List<Int>,
+        evidence: List<Evidence>,
+    ): List<Int> {
         val engineTop = 0
         val promoted = order.first()
         if (promoted == engineTop) return order
@@ -153,7 +210,8 @@ object SwipeContextRescorer {
         //
         // This is defensive rather than reachable: the scores are a softmax over the slate scaled
         // by 1000, so the maximum is at least 1000/K and cannot round to zero for any real K.
-        if (topScore > 0 && scores[promoted] >= R_MIN * topScore) return order
+        val withinRatio = topScore > 0 && scores[promoted] >= R_MIN * topScore
+        if (withinRatio && promotableToRankOne(evidence[promoted])) return order
 
         return listOf(engineTop) + order.filter { it != engineTop }
     }

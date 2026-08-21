@@ -764,6 +764,55 @@ class WordPredictor {
      * for the given committed-word context, ranked by conditional probability.
      * Empty when the context LM is disabled or has no data for the context.
      */
+    /**
+     * Learned evidence for each word of a swipe slate, or **null** when rescoring must not run.
+     *
+     * Step 2 of `docs/specs/ctc-context-rescoring-and-tunables.md`. Mirrors
+     * [getNextWordCandidates]: the M2 fail-closed gating lives HERE, in the class that owns the
+     * config reference, so no caller can reach the learned stores without passing it.
+     *
+     * ## null vs a list of nulls — the distinction is load-bearing
+     *
+     * - **null** = do not rescore at all. The caller must pass its slate through untouched, by
+     *   reference. Returned when the gate fails or the stores are not resident.
+     * - **a list with null entries** = rescore; these particular candidates simply had no
+     *   confident learned continuation. That is the ordinary case and yields the identity
+     *   ordering anyway, since every boost is then neutral.
+     *
+     * Collapsing the two would make "learning is off" indistinguishable from "learning is on but
+     * knows nothing" — and the privacy contract is that the OFF output is byte-identical to
+     * today's, produced by not running rather than by running to a no-op.
+     *
+     * ## Why the store-residency check is not merely an optimisation
+     *
+     * The first access to a language's n-gram tables builds them from persisted storage. This
+     * runs on the MAIN THREAD during a swipe, where that load is the documented cause of
+     * first-swipe jank, so a cold store means SKIP — never block. The next-word append path warms
+     * the stores on the executor moments later, so the cost is at most one unrescored swipe.
+     *
+     * @param words the slate, already in display form (`"don't"`, `"café"`).
+     * @param contextWords preceding words, oldest first, as the stores key them.
+     */
+    fun getSwipeContextEvidence(
+        words: List<String>,
+        contextWords: List<String>,
+    ): List<tribixbite.cleverkeys.contextaware.ContextContinuation?>? {
+        if (words.isEmpty() || contextWords.isEmpty()) return null
+
+        // Null config fails CLOSED (M2) — same gate as getNextWordCandidates and
+        // calculateUnifiedScore's boost read.
+        val canUse = LearningGate.canUseLearnedContext(
+            config?.on_device_learning_enabled ?: false,
+            config?.context_aware_predictions_enabled ?: false
+        )
+        if (!canUse) return null
+
+        val model = contextModel ?: return null
+        if (!model.isLoadedInMemory()) return null
+
+        return words.map { model.getContextEvidence(it.lowercase(), contextWords) }
+    }
+
     fun getNextWordCandidates(
         contextWords: List<String>,
         maxResults: Int = 10

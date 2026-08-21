@@ -3,6 +3,7 @@ package tribixbite.cleverkeys.swipe
 import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
 import org.junit.Test
+import tribixbite.cleverkeys.NextWordPredictor
 import kotlin.math.ln
 
 /**
@@ -18,7 +19,17 @@ import kotlin.math.ln
  */
 class SwipeContextRescorerTest {
 
-    private fun boosts(vararg v: Double) = v.toList()
+    /**
+     * Evidence carrying [boost] with counts that comfortably CLEAR the strict rank-1 floors, so
+     * a test using this helper isolates the score-ratio guard. Tests of the floors themselves
+     * build [SwipeContextRescorer.Evidence] explicitly.
+     */
+    private fun boosts(vararg v: Double) =
+        v.map { SwipeContextRescorer.Evidence(it, frequency = 10, probability = 0.5f) }
+
+    private fun ev(boost: Double, frequency: Int, probability: Float) =
+        SwipeContextRescorer.Evidence(boost, frequency, probability)
+
     private fun scores(vararg v: Int) = v.toList()
 
     // ── identity ─────────────────────────────────────────────────────────────────────
@@ -152,13 +163,91 @@ class SwipeContextRescorerTest {
     fun `out-of-range boosts are clamped instead of trusted`() {
         // A provider bug must not be able to demote a candidate (boost < 1) or exceed the
         // ceiling the §6 bounds are derived from.
-        val demoted = SwipeContextRescorer.rescoreOrder(scores(500, 490), boosts(0.01, 1.0))
-        assertWithMessage("a sub-1.0 boost is clamped to neutral, so it cannot demote index 0")
+        // Chosen so clamping DECIDES the outcome: unclamped, 0.5*ln(0.01) = -2.30 nats would
+        // sink index 0 below index 1 (3.91 vs 5.75) and flip the order. Clamped, index 0 keeps
+        // ln(500) = 6.22 and leads. Scores are 500/300 so the ratio guard does not mask the test.
+        val demoted = SwipeContextRescorer.rescoreOrder(scores(500, 300), boosts(0.01, 1.1))
+        assertWithMessage("a sub-1.0 boost is clamped to neutral, so it cannot DEMOTE a candidate")
             .that(demoted).containsExactly(0, 1).inOrder()
 
         val huge = SwipeContextRescorer.rescoreOrder(scores(900, 449), boosts(1.0, 1e9))
         assertWithMessage("an absurd boost is clamped, so the rank-1 guard still refuses")
             .that(huge.first()).isEqualTo(0)
+    }
+
+    // ── rank-1 strict evidence floors (§4) ───────────────────────────────────────────
+
+    /**
+     * The SECOND rank-1 protection, independent of the score ratio.
+     *
+     * §4: general in-slate reordering rides on the stores' own floors, but a promotion INTO
+     * rank 1 must additionally clear the stricter `NextWordPredictor` floors. The reason is
+     * the asymmetry between offering and writing: a next-word suggestion at this confidence
+     * still needs a user TAP, whereas a rank-1 promotion is written with nothing tapped.
+     */
+    @Test
+    fun `a promotion needs the strict floors even when the score ratio allows it`() {
+        // 450 == 0.5 * 900, so the ratio guard permits this — the floors must be what stops it.
+        val thin = ev(boost = 5.0, frequency = 1, probability = 0.5f) // freq below MIN(2)
+        val order = SwipeContextRescorer.rescoreOrder(
+            scores(900, 450), listOf(SwipeContextRescorer.Evidence.NONE, thin)
+        )
+        assertWithMessage(
+            "seen once is not enough to silently WRITE a word — the same evidence would be " +
+                "allowed to offer a next-word suggestion, which the user must still tap"
+        ).that(order.first()).isEqualTo(0)
+    }
+
+    @Test
+    fun `a promotion needs the probability floor too, not just frequency`() {
+        val unlikely = ev(boost = 5.0, frequency = 50, probability = 0.04f) // below MIN(0.05)
+        val order = SwipeContextRescorer.rescoreOrder(
+            scores(900, 450), listOf(SwipeContextRescorer.Evidence.NONE, unlikely)
+        )
+        assertWithMessage("a frequent but low-probability continuation must not take rank 1")
+            .that(order.first()).isEqualTo(0)
+    }
+
+    @Test
+    fun `a promotion succeeds when BOTH floors are exactly met`() {
+        val atFloor = ev(
+            boost = 5.0,
+            frequency = NextWordPredictor.MIN_LEARNED_FREQUENCY,
+            probability = NextWordPredictor.MIN_LEARNED_PROBABILITY,
+        )
+        val order = SwipeContextRescorer.rescoreOrder(
+            scores(900, 450), listOf(SwipeContextRescorer.Evidence.NONE, atFloor)
+        )
+        assertWithMessage("both floors are `>=`, so the exact boundary must promote")
+            .that(order).containsExactly(1, 0).inOrder()
+    }
+
+    @Test
+    fun `evidence too thin for rank 1 can still reorder the alternates`() {
+        // The floors gate PROMOTION, not the whole rescoring — same principle as the ratio guard.
+        val thin = ev(boost = 5.0, frequency = 1, probability = 0.01f)
+        val order = SwipeContextRescorer.rescoreOrder(
+            scores(900, 100, 90),
+            listOf(SwipeContextRescorer.Evidence.NONE, SwipeContextRescorer.Evidence.NONE, thin),
+        )
+        assertThat(order).containsExactly(0, 2, 1).inOrder()
+    }
+
+    @Test
+    fun `promotableToRankOne reads the floors from NextWordPredictor rather than redeclaring them`() {
+        // If these ever diverge, the "offering vs writing" argument silently inverts — the swipe
+        // path could commit a word the next-word path would not even suggest.
+        assertThat(SwipeContextRescorer.promotableToRankOne(
+            ev(2.0, NextWordPredictor.MIN_LEARNED_FREQUENCY, NextWordPredictor.MIN_LEARNED_PROBABILITY)
+        )).isTrue()
+        assertThat(SwipeContextRescorer.promotableToRankOne(
+            ev(2.0, NextWordPredictor.MIN_LEARNED_FREQUENCY - 1, 1.0f)
+        )).isFalse()
+        assertThat(SwipeContextRescorer.promotableToRankOne(
+            ev(2.0, 999, NextWordPredictor.MIN_LEARNED_PROBABILITY - 0.001f)
+        )).isFalse()
+        assertThat(SwipeContextRescorer.promotableToRankOne(SwipeContextRescorer.Evidence.NONE))
+            .isFalse()
     }
 
     // ── store keys (§6.4) ────────────────────────────────────────────────────────────

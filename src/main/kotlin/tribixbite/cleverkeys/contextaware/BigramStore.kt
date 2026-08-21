@@ -310,6 +310,40 @@ class BigramStore internal constructor(
         }
     }
 
+    /**
+     * Is this language's table already resident in RAM?
+     *
+     * A peek that must NOT load. Every other accessor routes through [forLanguage], which builds
+     * the table from persisted storage on a miss — fine on the executor, but the swipe rescoring
+     * path runs on the MAIN THREAD, where that blob load is the documented cause of first-swipe
+     * jank. Callers on that path use this to skip rather than block; the next-word append path,
+     * running on the executor moments later, performs the warm load as it always has.
+     */
+    fun isLanguageLoaded(language: String): Boolean =
+        languages.containsKey(normalizeLanguage(language))
+
+    /**
+     * The confident bigram entry for `word1 -> word2`, or null.
+     *
+     * Same floor as [getConfidentProbability] — this returns the ENTRY so a caller can also see
+     * `frequency`, which the probability alone cannot reconstruct and which the swipe rescorer
+     * needs to apply the stricter rank-1 promotion floors.
+     *
+     * Non-loading: returns null rather than building the table.
+     */
+    fun getConfidentEntry(language: String, word1: String, word2: String): BigramEntry? {
+        if (!isLanguageLoaded(language)) return null
+        val w1 = BigramEntry.normalizeWord(word1)
+        val w2 = BigramEntry.normalizeWord(word2)
+        // `minFrequency`, not DEFAULT_MIN_FREQUENCY: the field is configurable, and reading the
+        // constant here would silently diverge from getConfidentProbability the moment it is set.
+        val entries = forLanguage(language).bigramMap[w1] ?: return null
+        synchronized(this) {
+            val entry = entries.find { it.word2 == w2 } ?: return null
+            return if (entry.frequency >= minFrequency) entry else null
+        }
+    }
+
     /** Get all bigrams for a specific previous word in a language. */
     fun getAllBigrams(language: String, word1: String): List<BigramEntry> {
         val normalized = BigramEntry.normalizeWord(word1)

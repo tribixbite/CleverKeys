@@ -230,6 +230,66 @@ class ContextModel internal constructor(
     }
 
     /**
+     * The learned evidence for [candidateWord], or null when there is none the stores are
+     * confident about — the swipe-rescoring counterpart to [getContextBoost].
+     *
+     * Returns the full [ContextContinuation] rather than just a boost because a rank-1 promotion
+     * must clear the stricter `NextWordPredictor` floors, which are expressed in frequency AND
+     * probability. A collapsed multiplier cannot reconstruct either.
+     *
+     * **Policy is identical to [getContextBoost] by construction** — trigram preferred when two
+     * words of context exist, bigram backoff otherwise, both gated on the stores' own confidence
+     * floors. The two must not drift: if this one used a different backoff, the boost that decides
+     * the SORT and the counts that decide the PROMOTION would describe different n-grams.
+     *
+     * **Non-loading.** Every ordinary store accessor builds a language's table from persisted
+     * storage on a miss. This path runs on the main thread during a swipe, where that blob load
+     * is the documented cause of first-swipe jank, so both store lookups are the non-loading
+     * variants and this returns null rather than blocking. A swipe taken before the store warms
+     * is simply not rescored; the next-word append path warms it on the executor moments later.
+     */
+    fun getContextEvidence(
+        candidateWord: String,
+        previousWords: List<String>,
+    ): ContextContinuation? {
+        if (previousWords.isEmpty() || candidateWord.isEmpty()) return null
+
+        if (trigramStore != null && previousWords.size >= TRIGRAM_WINDOW) {
+            val w1 = previousWords[previousWords.size - 2]
+            val w2 = previousWords.last()
+            val entry = trigramStore.getConfidentEntry(language, w1, w2, candidateWord)
+            if (entry != null && entry.probability >= MIN_TRIGRAM_PROB) {
+                return ContextContinuation(
+                    word = candidateWord,
+                    frequency = entry.frequency,
+                    probability = entry.probability,
+                    fromTrigram = true,
+                )
+            }
+        }
+
+        val entry = bigramStore.getConfidentEntry(language, previousWords.last(), candidateWord)
+            ?: return null
+        if (entry.probability < MIN_BIGRAM_PROB) return null
+        return ContextContinuation(
+            word = candidateWord,
+            frequency = entry.frequency,
+            probability = entry.probability,
+            fromTrigram = false,
+        )
+    }
+
+    /**
+     * True when BOTH stores already hold this model's language in RAM.
+     *
+     * The caller's fast path: if this is false, skip rescoring entirely rather than have
+     * [getContextEvidence] return null for every candidate one lookup at a time.
+     */
+    fun isLoadedInMemory(): Boolean =
+        bigramStore.isLanguageLoaded(language) &&
+            (trigramStore?.isLanguageLoaded(language) ?: true)
+
+    /**
      * Get top N predictions given context words.
      *
      * Returns candidate words ranked by context probability from the active
