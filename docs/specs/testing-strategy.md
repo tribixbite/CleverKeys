@@ -4,19 +4,26 @@
 
 Comprehensive testing strategy for CleverKeys Android keyboard, designed to enable testing without ADB/emulator dependencies.
 
-## Current State
+## Current State (2026-08-21)
 
-### Existing Tests
-| Type | Location | Count | Framework | Works on ARM64 |
-|------|----------|-------|-----------|----------------|
-| Unit | `src/test/kotlin/` | 5 | Robolectric | No (x86_64 only) |
-| Instrumented | `src/androidTest/kotlin/` | 6 | AndroidJUnit4 | Requires ADB |
+**One authoritative number**: `./gradlew runPureTests` ran **1696 pure JVM tests** green on
+2026-08-21. The last full instrumented sweep (ew-cli, on-device) was **1395 tests / 0
+failures** on 2026-08-18. The per-type breakdown and runner details live in the
+"Current Test Suite" section below (whose table is a dated 2026-03-15 snapshot — counts
+have grown since; the pure count above supersedes it).
 
-### Existing Test Files
+> A "5 Robolectric unit / 6 instrumented" table stood here from the original 2026-01-18
+> draft until 2026-08-21; it described the pre-`runPureTests` era and contradicted the
+> doc's own later inventory. Removed rather than updated — the handful of original files
+> are listed below for orientation only.
+
+### Original (2026-01) Test Files — still present
 - `swipe/SwipeEngineRouterTest.kt` - engine routing table
-- `IntegrationTest.kt` - Gesture creation helpers
+- `IntegrationTest.kt` - Robolectric integration tests (SwipeInput structure,
+  gesture/circular-gesture creation; skipped on ARM64 — Robolectric needs x86_64)
 - `ComposeKeyTest.kt` - Compose key sequences
-- `OnnxPredictionTest.kt` - ONNX prediction basics
+- `OnnxPredictionTest.kt.local` - ONNX prediction basics (renamed `.kt.local` to exclude
+  it from CI compilation — commit `afbd2bed`; not part of any suite)
 - `MockClasses.kt` - Mock implementations
 
 ## Architecture: Humble Object Pattern

@@ -129,6 +129,13 @@ and routes the genuinely ambiguous tail to human curation with evidence attached
 ```
 
 ### Component Breakdown
+
+> **⚠️ None of the three scripts below was ever written** (verified 2026-08-21: zero git
+> history for `build_rescue_resources.py`, `triage_drops.py`, `enrich_wiktionary.py`).
+> They are design artifacts of this SUPERSEDED spec — do not go looking for them in
+> `scripts/`. The rescue oracles that survived were folded directly into
+> `scripts/build_wordlist.py` (see Status at the top).
+
 1. **Resource bundle builder** (`scripts/build_rescue_resources.py`, run once / on refresh):
    fetches and snapshots the offline oracle assets into `scripts/data/` with a
    `PROVENANCE.md` recording source URL, license, fetch date, and row count per asset.
@@ -207,7 +214,11 @@ and to annotate REVIEW lines — never as a sole gate (proven non-discriminating
 The KEEP list feeds back into `build_dictionary.py`'s candidate set; the review file, once
 curated, is concatenated into the KEEP stream on the next build.
 
-## Implementation Plan
+## Implementation Plan (never executed)
+
+> The unchecked deliverables below were never built — this plan was abandoned when the
+> spec was superseded by the one-pass classifier in `scripts/build_wordlist.py`
+> (2026-07-02). Kept as a record of the proposed shape only.
 
 ### Phase 1: Resource bundle
 **Deliverables**:

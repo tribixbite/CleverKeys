@@ -649,8 +649,9 @@ src/main/kotlin/tribixbite/cleverkeys/swipe/
 └── SwipeEngineRouter.kt     # Mode.CTC / Engine.CTC routing
 ```
 Tests: see the As-Built test inventory. Golden fixture
-`src/test/resources/ctc/ctc_golden.json` (regen: `scratchpad/gen_ctc_golden.py`, imports
-the real port).
+`src/test/resources/ctc/ctc_golden.json` (140 KB, tracked in git — regeneration caveat in
+the Testing Strategy section below: the original generator was a throwaway scratchpad
+script that no longer exists).
 
 ### Algorithm (port of `beam_search.cpp` / `futo_viterbi_beam`, study §3)
 Per output frame, each hypothesis `(score, trieNode, blankEnded)` expands into three CTC
@@ -865,7 +866,21 @@ preview decode, and user-dictionary alpha-boost with a cap (plan §7.3).
 
 ### Golden-trace parity (`CtcParityTest`) — the core validation
 `src/test/resources/ctc/ctc_golden.json` is frozen from the SAME Python port this module
-ports (`scripts/futo_decoder_{eval,ceiling}.py`) via `scratchpad/gen_ctc_golden.py`. Cases:
+ports (`scripts/futo_decoder_{eval,ceiling}.py`).
+
+> **Regeneration caveat (2026-08-21)**: the fixture was emitted by
+> `scratchpad/gen_ctc_golden.py`, a throwaway driver in a session-ephemeral scratchpad —
+> that path can never resolve and the script is gone (CtcParityTest.kt:26,57 and
+> `docs/guides/train-ctc-swipe-model.md` still cite it; treat those citations as
+> historical provenance, not a runnable command). The fixture itself is committed, so
+> regeneration is only needed if the golden CASES change. To regenerate: write a new
+> driver that imports the still-present ports `scripts/futo_decoder_eval.py` /
+> `scripts/futo_decoder_ceiling.py`, runs the case list below through their featurizer and
+> beam, and dumps the same JSON schema the test parses (`CtcParityTest.kt` is the schema
+> authority). <!-- The exact original case-construction inputs (random seeds for the
+> pruning-stress fields) were not recovered; a new driver would freeze NEW cases. -->
+
+Cases:
 - **Featurizer** (6 cases, exercising every resampler branch incl. single-point,
   zero-duration, non-uniform timestamps, long two-point): asserts the `[2,64]` tensor is
   **bit-identical** float32 to the port.

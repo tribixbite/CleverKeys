@@ -333,12 +333,16 @@ Persistent, language-keyed, process-singleton learned n-gram stores. Full spec:
 | `keyboardOpacity` | Int | 100% → 255 | Keyboard opacity (0-255) |
 | `keyOpacity` | Int | 100% → 255 | Key opacity (0-255) |
 
-### 7.2 Clipboard (ClipboardDatabase.kt)
+### 7.2 Clipboard (ClipboardDatabase.kt / ClipboardHistoryService.kt)
 
 | Constant | Value | Description |
 |----------|-------|-------------|
-| `HISTORY_TTL_MS` | 7 days | History retention time |
-| `DATABASE_VERSION` | 1 | SQLite schema version |
+| `DATABASE_VERSION` | 5 | SQLite schema version (`ClipboardDatabase.kt:1828` — v5 added `is_private`/`source_package` for #156 Private copy) |
+
+> There is no `HISTORY_TTL_MS` constant (verified 2026-08-21 — a "7 days" constant was
+> listed here in error). Retention is user-configured: `clipboard_history_duration`
+> (minutes; **-1 = never expire, the default**) is converted at read time by
+> `ClipboardHistoryService.getHistoryTtlMs()` (returns `Long.MAX_VALUE` for -1).
 
 ### 7.3 Wide Screen Detection (Config.kt)
 
@@ -391,16 +395,21 @@ Persistent, language-keyed, process-singleton learned n-gram stores. Full spec:
                                   │
                                   ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                       TOUCH EVENTS                               │
-│  ┌─────────────┐    ┌──────────────┐    ┌─────────────────┐    │
-│  │ ACTION_DOWN │───▶│ SwipeDetector │───▶│ StartGesture    │    │
-│  └─────────────┘    └──────────────┘    └─────────────────┘    │
-│  ┌─────────────┐    ┌──────────────┐    ┌─────────────────┐    │
-│  │ ACTION_MOVE │───▶│ CollectPoints │───▶│ TouchedKeys     │    │
-│  └─────────────┘    └──────────────┘    └─────────────────┘    │
-│  ┌─────────────┐    ┌──────────────┐    ┌─────────────────┐    │
-│  │ ACTION_UP   │───▶│ FinalizeSwipe │───▶│ TriggerPredict  │    │
-│  └─────────────┘    └──────────────┘    └─────────────────┘    │
+│         TOUCH EVENTS (Keyboard2View.onTouch → Pointers)          │
+│  There is no `SwipeDetector` class (verified 2026-08-21).        │
+│  ┌─────────────┐   ┌───────────────────────┐   ┌────────────┐  │
+│  │ ACTION_DOWN │──▶│ Pointers.onTouchDown  │──▶│ start path │  │
+│  └─────────────┘   │  (+ EnhancedSwipe-    │   │ capture    │  │
+│                    │   GestureRecognizer)  │   └────────────┘  │
+│  ┌─────────────┐   ┌───────────────────────┐   ┌────────────┐  │
+│  │ ACTION_MOVE │──▶│ Pointers.onTouchMove  │──▶│ collect    │  │
+│  └─────────────┘   │  path points          │   │ TouchedKeys│  │
+│                    └───────────────────────┘   └────────────┘  │
+│  ┌─────────────┐   ┌───────────────────────┐   ┌────────────┐  │
+│  │ ACTION_UP   │──▶│ Pointers.onTouchUp →  │──▶│ swipe →    │  │
+│  └─────────────┘   │ GestureClassifier     │   │ decode;    │  │
+│                    │ (TAP vs SWIPE)        │   │ tap → key  │  │
+│                    └───────────────────────┘   └────────────┘  │
 └─────────────────────────────────────────────────────────────────┘
                                   │
                                   ▼

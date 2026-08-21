@@ -39,7 +39,7 @@ CleverKeysService (InputMethodService)
 
 ### Component Responsibilities
 
-- **CleverKeysService**: Extends `InputMethodService`, manages IME lifecycle, handles `onCreateInputView()`, coordinates layout switching between main/numeric/emoji keyboards
+- **CleverKeysService**: Extends `InputMethodService`, manages IME lifecycle, handles `onCreateInputView()`, exposes the `LayoutBridge` layout surface (actual switching is dispatched by `KeyboardReceiver.handle_event_key` — emoji/clipboard/GIF are content panes, not layouts)
 - **Keyboard2View**: Custom `View` subclass that renders keys, handles `onTouchEvent()`, delegates to `Pointers` for multi-touch
 - **KeyboardData**: Immutable layout model — which keys exist, their positions/widths/rows
 - **KeyEventHandler**: Processes key activations, tracks modifier state (Shift, Ctrl, Alt), handles compose key sequences, and performs text insertion/deletion directly on the `InputConnection` from its `IReceiver`
@@ -88,12 +88,26 @@ Touch Event → Keyboard2View.onTouchEvent()
 
 ### Layout Switching Flow
 
+Layout switching is EVENT-driven, not method-per-layout (verified 2026-08-21 — there is no
+`switchLayout`/`switchToNumeric`/`Keyboard2` anywhere). A layout key carries a
+`KeyValue.Kind.Event` value which `KeyEventHandler.key_up` routes to the receiver:
+
 ```
-User triggers layout switch (key or API)
-    → CleverKeysService.switchLayout(layoutId)
-    → Keyboard2.loadLayout(layoutId)
-    → Keyboard2View.invalidate() (re-render)
+User releases a layout key (e.g. SWITCH_NUMERIC, SWITCH_FORWARD)
+    → KeyEventHandler.key_up() — Kind.Event → recv.handle_event_key(ev)
+    → KeyboardReceiver.handle_event_key(ev) dispatches:
+        SWITCH_TEXT      → keyboardView.setKeyboard(layoutManager.clearSpecialLayout())
+        SWITCH_NUMERIC   → keyboardView.setKeyboard(layoutManager.loadNumpad(R.raw.numeric))
+        SWITCH_GREEKMATH → keyboardView.setKeyboard(layoutManager.loadNumpad(R.xml.greekmath))
+        SWITCH_FORWARD / SWITCH_BACKWARD
+                         → keyboardView.setKeyboard(layoutManager.incrTextLayout(±1))
+        SWITCH_EMOJI / SWITCH_CLIPBOARD / SWITCH_GIF
+                         → open a CONTENT PANE above the keyboard (not a layout change)
+    → Keyboard2View.setKeyboard() re-renders
 ```
+
+`LayoutManager` owns the layout list/state; `CleverKeysService` also exposes thin
+delegators to `LayoutBridge` (see Public API below) used by subtype/config plumbing.
 
 ## Configuration
 
@@ -107,40 +121,46 @@ User triggers layout switch (key or API)
 
 ## Public API
 
-### CleverKeysService
+> Transcribed from live code 2026-08-21. Earlier revisions of this section listed
+> `switchLayout(layoutId: String)`, `switchToNumeric()`, `switchToEmoji()`,
+> `switchToMain()`, `getCurrentLayoutId()`, `handleKeyDown(key, modifiers): Boolean`,
+> `handleKeyUp(key): Boolean`, `isModifierActive(...)` and `getModifierState()` —
+> **none of those methods exist**. Numeric/emoji/main switching is event-driven via
+> `KeyboardReceiver.handle_event_key` (see Layout Switching Flow above).
+
+### CleverKeysService (layout surface — all delegate to `LayoutBridge`)
 
 ```kotlin
-// Switch to a specific layout
-fun switchLayout(layoutId: String)
-
-// Get current layout ID
-fun getCurrentLayoutId(): String
-
-// Switch to numeric layout
-fun switchToNumeric()
-
-// Switch to emoji layout
-fun switchToEmoji()
-
-// Return to main layout
-fun switchToMain()
+// CleverKeysService.kt (verified signatures)
+fun current_layout(): KeyboardData             // layout currently visible
+fun current_layout_unmodified(): KeyboardData  // before per-editor modification
+fun setTextLayout(l: Int)                      // select text layout by index
+fun incrTextLayout(delta: Int)                 // cycle to next/previous text layout
+fun setSpecialLayout(l: KeyboardData)          // e.g. numeric/pinentry replacement
+fun loadLayout(layout_id: Int): KeyboardData?  // load a layout from resources
+fun loadNumpad(layout_id: Int): KeyboardData?  // load a numpad-bearing layout
+fun loadPinentry(layout_id: Int): KeyboardData?
 ```
 
 ### KeyEventHandler
 
 ```kotlin
-// Process a key activation
-fun handleKeyDown(key: KeyValue, modifiers: Int): Boolean
+// Implements Config.IKeyEventHandler (Config.kt:1112); driven by Pointers.
+override fun key_down(key: KeyValue?, isSwipe: Boolean)                        // KeyEventHandler.kt:65
+override fun key_up(key: KeyValue?, mods: Pointers.Modifiers, isKeyRepeat: Boolean)  // :89
+override fun mods_changed(mods: Pointers.Modifiers)                            // :144
 
-// Release a key
-fun handleKeyUp(key: KeyValue): Boolean
+// Lifecycle hooks called by the service
+fun started(info: EditorInfo)                                  // editing began
+fun selection_updated(oldSelStart: Int, newSelStart: Int)      // cursor moved
 
-// Check if modifier is active
-fun isModifierActive(modifier: Int): Boolean
-
-// Get current modifier state
-fun getModifierState(): Int
+// Raw key-event emission
+fun send_key_down_up(keyCode: Int)                 // applies current system metaState
+fun send_key_down_up(keyCode: Int, metaState: Int) // explicit meta state
 ```
+
+Nothing here returns `Boolean` — key handling has no consumed/not-consumed contract;
+`key_down`/`key_up` are fire-and-forget from `Pointers`.
 
 ### Text Editing (no wrapper class)
 
@@ -166,37 +186,42 @@ swipe-decode results replay the `InputConnection`/`EditorInfo` captured at swipe
 
 ## Implementation Details
 
-### View Initialization Safety
+### View Initialization
 
-`Keyboard2View` uses lazy initialization for `Config` to safely handle creation in different contexts (service, preview, standalone):
+`Keyboard2View` reads the global config eagerly in its `init` block — there is no lazy
+wrapper and no `Config.defaultConfig()` fallback (no such factory exists; verified
+2026-08-21). `Config.globalConfig()` throws if the config was never initialized, so the
+view requires `Config.initGlobalConfig(...)` to have run first (the service does this in
+`onCreate`):
 
 ```kotlin
-private val config: Config by lazy {
-    Config.globalConfig() ?: Config.defaultConfig()
+// Keyboard2View.kt init block (abridged)
+_config = Config.globalConfig()
+_theme = if (_config.isRuntimeTheme()) {
+    ThemeProvider.getInstance(context).getTheme(_config.themeName)
+} else {
+    Theme(getContext(), attrs)
 }
 ```
 
 ### Modifier Key Handling
 
-Modifier state is tracked as a bitmask in `KeyEventHandler`:
+There is no custom `META_SHIFT`/`modifierState` bitmask (an earlier revision of this doc
+invented one). `KeyEventHandler` tracks two pieces of state (verified 2026-08-21):
 
 ```kotlin
-const val META_SHIFT = 0x01
-const val META_CTRL = 0x02
-const val META_ALT = 0x04
-
-private var modifierState: Int = 0
-
-fun handleModifier(key: KeyValue, pressed: Boolean) {
-    val mask = when (key.kind) {
-        KeyValue.Kind.Shift -> META_SHIFT
-        KeyValue.Kind.Ctrl -> META_CTRL
-        KeyValue.Kind.Alt -> META_ALT
-        else -> return
-    }
-    modifierState = if (pressed) modifierState or mask else modifierState and mask.inv()
-}
+// KeyEventHandler.kt:31,36
+private var mods: Pointers.Modifiers = Pointers.Modifiers.EMPTY  // logical modifier set
+private var metaState = 0   // Android KeyEvent.META_* flags, kept consistent with mods
 ```
+
+`updateMetaState(newMods)` diffs the old and new modifier sets and, for each changed
+CTRL/ALT/SHIFT/META modifier, sends a synthetic `KEYCODE_{CTRL,ALT,SHIFT,META}_LEFT`
+down/up event while or-ing/clearing the matching `KeyEvent.META_*_LEFT_ON | META_*_ON`
+flags in `metaState` (`sendMetaKeyForModifier` / `sendMetaKey`, KeyEventHandler.kt:226-279).
+`key_up` brackets each key action with `updateMetaState(mods)` before and
+`updateMetaState(oldMods)` after, so system modifiers are held only for the duration of the
+key event they modify. `mods_changed` applies modifier changes with no key attached.
 
 ### Editing Keys (copy/paste/cut/select-all)
 
