@@ -71,6 +71,15 @@ context-promoted rank 1.
 Verified with the pref OFF on-device: 90 instrumented tests unchanged, incl. the full 62-test
 `TypingSimulationTest`.
 
+**The step-5 plan is written up**: `docs/plans/2026-08-22-context-rescoring-step5-harness.md`
+— stages, the corpus research with verified licences, the Discord position, and the honest
+limits to state in the results. Read it before starting.
+
+**Measured 2026-08-21**: the maintainer's device export holds 6,589 en pairs, but **only 642
+(9.7%) clear the store's `minFrequency=2` floor** — 90% are hapax and contribute zero boost.
+The usable context model is ~642 pairs, so one user's data gives a THIN signal. Any plan that
+assumed 6.5k pairs of evidence is wrong by 10x.
+
 **ONLY step 5 remains, and it is the blocker for everything else**: the offline context replay
 harness (§7.1) — replay a sentence corpus through `ContextModel.recordCommit`, draw matching FUTO
 traces, decode through the shipping adapter, apply the rescorer, and report Δtop-1 AND the
