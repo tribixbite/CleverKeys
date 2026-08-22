@@ -560,6 +560,9 @@ tasks.register('runPureTests', JavaExec) {
     // Step 5 stage A: loading real learned bigrams out of an app dictionary export, and
     // reporting the USABLE fraction — 90% of a real export is hapax and contributes nothing.
     'tribixbite.cleverkeys.swipe.LearnedBigramCorpusTest',
+    // Stages B-D: the actual A/B replay. Skips unless the local corpora exist (never
+    // committed). Geometric engine only — ONNX cannot load in pure JVM on Termux.
+    'tribixbite.cleverkeys.swipe.ContextRescoringReplayTest',
     'tribixbite.cleverkeys.swipe.ContractionCollisionDataTest',
     // SwipePrunerTest excluded: requires android.util.Log (MockK + Robolectric)
   ]

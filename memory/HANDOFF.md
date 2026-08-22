@@ -13,7 +13,7 @@ what was done; this file is only what is left. Anything below is open.
 Swipe is **CTC (default) + geometric**; the neural engine was deleted 2026-08-18
 (`a7d03bc8`..`83220634`), −26.4 MB APK. `CtcLanguageSupport.SUPPORTED` is **seven** languages:
 en/fr/de/es test-validated, it/pt/sv `PROVISIONAL` (scale-transferred, no per-language bar).
-Gates: `runPureTests` **1716**, `lintDebug` 0 errors, both compiles, `assembleRelease` clean.
+Gates: `runPureTests` **1742**, `lintDebug` 0 errors, both compiles, `assembleRelease` clean.
 Last full instrumented run 1395 tests / 0 failures; targeted contraction runs 127/0 on
 Pixel7 API 34.
 
@@ -80,7 +80,15 @@ limits to state in the results. Read it before starting.
 The usable context model is ~642 pairs, so one user's data gives a THIN signal. Any plan that
 assumed 6.5k pairs of evidence is wrong by 10x.
 
-**ONLY step 5 remains, and it is the blocker for everything else**: the offline context replay
+**Step 5 is BUILT and has produced first numbers** — see
+`docs/eval/2026-08-22-context-rescoring-first-replay.md`. Benefit is real (29 fixes, 0
+regressions, ~19% fix rate within the slice where the feature is active); safety is NOT
+established (0 breaks on only ~43 evidence-exposed adversarial traces). **The feature is
+inert on ~97% of swipes** — that number reframes the ship decision more than Δtop-1 does.
+Owed before any default flip: a CTC arm (instrumented — ONNX cannot load in pure JVM here),
+a larger adversarial sample selected FOR evidence exposure, and a WEIGHT tune/confirm split.
+
+**Was: ONLY step 5 remains, and it is the blocker for everything else**: the offline context replay
 harness (§7.1) — replay a sentence corpus through `ContextModel.recordCommit`, draw matching FUTO
 traces, decode through the shipping adapter, apply the rescorer, and report Δtop-1 AND the
 promotion-error rate separately. `scripts/ctc_injection_ab.py` is the worked example to extend;
