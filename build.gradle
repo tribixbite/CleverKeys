@@ -557,6 +557,9 @@ tasks.register('runPureTests', JavaExec) {
     // default flip. Corpus-independent — pinned before the corpus is chosen because the
     // last hand-written A/B metric in this repo classified by change SHAPE and got it wrong.
     'tribixbite.cleverkeys.swipe.RescoringMetricsTest',
+    // Step 5 stage A: loading real learned bigrams out of an app dictionary export, and
+    // reporting the USABLE fraction — 90% of a real export is hapax and contributes nothing.
+    'tribixbite.cleverkeys.swipe.LearnedBigramCorpusTest',
     'tribixbite.cleverkeys.swipe.ContractionCollisionDataTest',
     // SwipePrunerTest excluded: requires android.util.Log (MockK + Robolectric)
   ]
