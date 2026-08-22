@@ -837,6 +837,23 @@ class CoreImeHygieneDriftTest {
             "a failing gate must return the ORIGINAL list references, not a rescored-with-zero " +
                 "copy — that is what makes the learning-OFF output byte-identical"
         ).that(body).contains("return unchanged")
+
+        // The accessor's OWN M2 gate. The seam's gates precede it today, so deleting this one is
+        // currently safe by accident — but `getSwipeContextEvidence` is documented as the place
+        // the fail-closed master check lives, and it is the only thing protecting a FUTURE caller
+        // that does not go through `rescoreWithContext`. An audit found that deleting it left
+        // every test passing.
+        val predictor = source("tribixbite/cleverkeys/WordPredictor.kt")
+        val accessor = predictor.substringAfter("fun getSwipeContextEvidence(")
+            .substringBefore("\n    fun ")
+        assertWithMessage(
+            "getSwipeContextEvidence must apply LearningGate.canUseLearnedContext itself — it is " +
+                "the documented owner of the M2 fail-closed check, and the only gate a future " +
+                "caller bypassing the seam would still hit"
+        ).that(accessor).contains("canUseLearnedContext")
+        assertWithMessage(
+            "the master gate must fail CLOSED on a null config (M2): `?: false`, never `?: true`"
+        ).that(accessor).contains("?: false")
     }
 
     /**

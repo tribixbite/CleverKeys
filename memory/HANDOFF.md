@@ -80,7 +80,14 @@ limits to state in the results. Read it before starting.
 The usable context model is ~642 pairs, so one user's data gives a THIN signal. Any plan that
 assumed 6.5k pairs of evidence is wrong by 10x.
 
-**Step 5 is BUILT and has produced first numbers** — see
+**Step 5 is BUILT; its numbers were WRONG TWICE before an audit corrected them** —
+`docs/eval/2026-08-22-context-rescoring-first-replay.md` §5 records the retractions.
+Current: 51 fixes / 0 breaks in 243 exposed favourable cases (~21% when it fires).
+**The activation rate is NOT measured** — `BigramStore` caps a language at 10,000 bigrams
+and the corpus is 175k rows, so the harness's survival rate is an artefact, not a device
+property. Safety still underpowered (15 adversarial exposures).
+
+**Was: Step 5 is BUILT and has produced first numbers** — see
 `docs/eval/2026-08-22-context-rescoring-first-replay.md`. Benefit is real (29 fixes, 0
 regressions, ~19% fix rate within the slice where the feature is active); safety is NOT
 established (0 breaks on only ~43 evidence-exposed adversarial traces). **The feature is

@@ -168,12 +168,36 @@ class ContextRescoringReplayTest {
         val favourable = RescoringMetrics.Tally()
         val adversarial = RescoringMetrics.Tally()
         var decoded = 0
-        var withEvidence = 0
+        var favourableEvidence = 0
+        var adversarialEvidence = 0
         var decodeError: String? = null
         val allWords = traces.keys.toList()
         val rng = java.util.Random(SEED)
+        val seenCases = HashSet<String>()
 
-        for (pair in pairable.take(MAX_PAIRS)) {
+        // H1 (audit): `build_ubuntu_bigrams.py` writes rows sorted by DESCENDING frequency, so
+        // `take(MAX_PAIRS)` sampled only the extreme head — the pairs with the largest counts and
+        // highest probabilities, which pass the promotion floors almost by definition. That
+        // flatters the feature and generalises to nobody. Shuffle with a fixed seed instead, so
+        // the sample spans the distribution AND a rerun reproduces it.
+        // The store caps a language at 10,000 bigrams and prunes by probability, so seeding a
+        // larger corpus DISCARDS most of it. Sampling from the corpus therefore measures mostly
+        // pairs the store no longer holds — which is what drove exposure to 11 of 6,252 on the
+        // previous run. Sample from what SURVIVED instead, and report both numbers so the
+        // capacity constraint stays visible.
+        val known = pairable.filter {
+            loaded.model.getContextEvidence(it.word2, listOf(it.word1)) != null
+        }
+        println("[replay] of ${pairable.size} pairable, ${known.size} survived the store's " +
+            "${loaded.stored}-entry cap and are actually queryable")
+        Assume.assumeTrue("nothing survived seeding — nothing to measure", known.isNotEmpty())
+
+        val sampled = known.toMutableList().also { java.util.Collections.shuffle(it, rng) }
+            .take(MAX_PAIRS)
+        println("[replay] sampled ${sampled.size} at random from those (seed=$SEED; " +
+            "NOT the frequency-sorted head)")
+
+        for (pair in sampled) {
             // Arm 1: the learned continuation itself.
             //
             // Arm 2: words CONFUSABLE with the continuation — not random ones. Rescoring can only
@@ -188,6 +212,18 @@ class ContextRescoringReplayTest {
                 decoys.flatMap { d -> traces.getValue(d).map { it to adversarial } }
 
             for ((row, tally) in cases) {
+                // H3 (audit), and the fix needs care. Head pairs share `word2` heavily, so the
+                // same physical trace was decoded once per pair ending in that word. But those
+                // are NOT duplicates: "committed w1 then swiped X" and "committed w1' then swiped
+                // X" are different experiments — the context is the independent variable, and
+                // deduping by trace alone would throw away the whole point.
+                //
+                // So the unit is (context, trace, arm). What the audit actually caught was a
+                // LABELLING error: the eval doc called this denominator "swipes", which it is
+                // not. It is context-trace cases, and the report says so.
+                val armTag = if (tally === favourable) 'F' else 'A'
+                val caseKey = "$armTag|${pair.word1}|${row.word}|${row.pts.size}|${row.pts.firstOrNull()?.x}"
+                if (!seenCases.add(caseKey)) continue
                 val result = try {
                     engine.decode(
                         tribixbite.cleverkeys.swipe.geometric.GeometricSwipeRequest(
@@ -217,7 +253,12 @@ class ContextRescoringReplayTest {
                         loaded.model.boostFor(cont).toDouble(), cont.frequency, cont.probability
                     )
                 }
-                if (evidence.any { it.boost > SwipeContextRescorer.NO_BOOST }) withEvidence++
+                if (evidence.any { it.boost > SwipeContextRescorer.NO_BOOST }) {
+                    // H4 (audit): counted PER ARM. A single global counter forced the safety
+                    // denominator to be inferred by subtracting across two different runs, which
+                    // is exactly the number the "underpowered" verdict rests on.
+                    if (tally === favourable) favourableEvidence++ else adversarialEvidence++
+                }
 
                 val order = SwipeContextRescorer.rescoreOrder(scores, evidence)
                 tally.record(
@@ -242,7 +283,11 @@ class ContextRescoringReplayTest {
         println("═══════════════════════════════════════════════════════════════")
         println("  CONTEXT RESCORING REPLAY — geometric engine, en")
         println("  corpus     : ${corpusFile.name} (${loaded.usable} usable of ${loaded.total})")
-        println("  decoded    : $decoded traces, $withEvidence had context evidence")
+        println("  decoded    : $decoded distinct (context, trace, arm) cases — NOT 'swipes';")
+        println("               one trace appears under several contexts, which are separate")
+        println("               experiments because context is the independent variable")
+        println("  exposure   : favourable=$favourableEvidence adversarial=$adversarialEvidence " +
+            "had context evidence — the ONLY cases where rescoring could act")
         println("  favourable : $favourable")
         println("     (context points AT the target — the only arm that can produce a FIX)")
         println("  adversarial: $adversarial")

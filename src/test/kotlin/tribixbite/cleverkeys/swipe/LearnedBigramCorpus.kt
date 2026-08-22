@@ -59,12 +59,23 @@ object LearnedBigramCorpus {
         val usable: Int,
         /** Those additionally clearing the stricter rank-1 promotion floors. */
         val promotable: Int,
+        /**
+         * How many bigrams the store ACTUALLY HOLDS after seeding.
+         *
+         * `BigramStore` caps a language at `MAX_TOTAL_BIGRAMS` (10,000) and prunes by keeping the
+         * highest-probability entries. Seeding a corpus larger than that silently discards most of
+         * it, so a harness that samples from the CORPUS rather than from what SURVIVED measures
+         * mostly pairs the store no longer knows. Reported so that can never go unnoticed again.
+         */
+        val stored: Int,
     ) {
         val usableFraction: Double get() = if (total == 0) 0.0 else usable.toDouble() / total
 
         override fun toString(): String =
-            "lang=$language total=$total usable=$usable (%.1f%%) promotable=$promotable"
-                .format(usableFraction * 100)
+            ("lang=%s total=%d usable=%d (%.1f%%) promotable=%d STORED=%d" +
+                if (stored < usable) "  <-- store cap discarded %d".format(usable - stored) else "")
+                .format(language, total, usable, usableFraction * 100, promotable, stored,
+                    maxOf(0, usable - stored))
     }
 
     /**
@@ -127,6 +138,7 @@ object LearnedBigramCorpus {
             promotable = pairs.count {
                 it.usable && it.probability >= tribixbite.cleverkeys.NextWordPredictor.MIN_LEARNED_PROBABILITY
             },
+            stored = bigramStore.getTotalBigramCount(language),
         )
     }
 

@@ -51,9 +51,9 @@ import sys
 import tarfile
 from pathlib import Path
 
-#: Mirrors BigramStore.DEFAULT_MIN_FREQUENCY. A bigram seen once must not hand a candidate
-#: near-max confidence on a single observation, so it is dropped here too rather than shipped
-#: as inert weight the loader would only discard later.
+#: Mirrors BigramStore.DEFAULT_MIN_FREQUENCY — reported, NOT used to filter emission. Hapax rows
+#: are emitted on purpose: the store ignores them for scoring but counts them in p(w2|w1), and
+#: withholding them would inflate every probability the harness measures (audit H2).
 MIN_FREQUENCY = 2
 
 #: Mirrors BigramStore.MAX_BIGRAMS_PER_WORD — the store keeps only the top continuations per
@@ -138,16 +138,26 @@ def to_export_shape(pairs: collections.Counter, language: str) -> dict:
     `BigramStore` computes on device. It is emitted for parity, but note the loader re-derives it
     by replaying `recordBigram`, so a mismatch here cannot silently corrupt the seeded store.
     """
+    # H2 (audit): dropping hapax BEFORE emitting inflates every probability the seeded store
+    # recomputes. `BigramStore` derives p(w2|w1) from its own observed totals, so if the corpus
+    # withholds the ~90% tail mass a real device carries, the denominator shrinks and every boost
+    # comes out larger than any state the app can reach — flattering both fix counts and rank-1
+    # promotions, and contradicting the loader's promise to replay through the real learn path.
+    #
+    # So the tail is EMITTED, not dropped. The store's own floor discards it for scoring while
+    # still counting it in the denominator, which is exactly the device's behaviour.
     by_first: dict[str, list[tuple[str, int]]] = collections.defaultdict(list)
     for (w1, w2), count in pairs.items():
-        if count >= MIN_FREQUENCY:
-            by_first[w1].append((w2, count))
+        by_first[w1].append((w2, count))
 
     rows = []
     for w1, continuations in by_first.items():
         continuations.sort(key=lambda kv: (-kv[1], kv[0]))
+        # Probability over ALL observations of w1, including the hapax tail — matching what
+        # BigramStore computes on device. The top-N cut applies to what is EMITTED, not to the
+        # denominator.
+        total = sum(c for _, c in continuations)
         top = continuations[:MAX_PER_WORD]
-        total = sum(c for _, c in top)
         for w2, count in top:
             rows.append({
                 "word1": w1,
@@ -177,7 +187,9 @@ def main() -> int:
     rows = payload["learned_bigrams_by_language"][args.language]
     args.out.write_text(json.dumps(payload), encoding="utf-8")
 
-    print(f"wrote {len(rows)} bigrams (frequency >= {MIN_FREQUENCY}) to {args.out}")
+    usable = sum(1 for r in rows if r["frequency"] >= MIN_FREQUENCY)
+    print(f"wrote {len(rows)} bigrams ({usable} above the store floor, "
+          f"{len(rows) - usable} tail rows kept so denominators match a device) to {args.out}")
     print("top 10:")
     for r in rows[:10]:
         print(f"   {r['word1']:>10} -> {r['word2']:<12} freq={r['frequency']:<6} "

@@ -3,85 +3,108 @@
 **Date**: 2026-08-22 · **Harness**: `ContextRescoringReplayTest` (`-PgeoFull=true`)
 **Engine**: geometric · **Language**: en · **Corpus**: Ubuntu Dialogue derived bigrams
 
-**Verdict: encouraging on benefit, UNDERPOWERED on safety. Not sufficient to flip the default.**
+> **This document was rewritten after an audit. Two earlier sets of numbers published here were
+> WRONG and are retracted — see §5.** Do not cite "29 fixed / 19% fix rate / inert on 97%" from any
+> earlier revision.
+
+**Verdict: benefit looks real WHERE THE FEATURE FIRES. The activation rate is NOT measured, and
+safety remains underpowered. Not sufficient to flip the default.**
 
 ---
 
-## Numbers
+## 1. Numbers
 
 ```
-corpus     : ubuntu_bigrams.json — 56,923 usable pairs, 31,941 promotable
-trace pool : 4,907 distinct words (combined_english_swipes, 8,607 traces)
-pairable   : 27,970 of 56,923 usable bigrams have a trace for their second word
-sampled    : 1,500 pairs x 2 traces + 2 confusable decoys each
+corpus     : 175,092 rows; 56,923 above the store's frequency floor; 22,586 promotable
+             STORED=10,000  <-- the store cap discarded 46,923 usable rows
+pairable   : 27,970 bigrams have a trace for their second word
+queryable  :    225 of those survived seeding and can actually be looked up
+sampled    :    225 at random (seed 20260822), NOT the frequency-sorted head
 
-decoded    : 6,353 traces — but only 193 (3.0%) had ANY context evidence
+decoded    : 918 distinct (context, trace, arm) cases   [NOT "swipes" — see §3]
+exposure   : favourable=243  adversarial=15   <- the only cases where rescoring could act
 
-favourable : n=2,613  fixed=29  broken=0  wash=0  unchanged=2,584   Δtop1=+0.0111
-adversarial: n=3,740  fixed=0   broken=0  wash=0  unchanged=3,740   Δtop1=+0.0000
-COMBINED   : n=6,353  fixed=29  broken=0  wash=0  unchanged=6,324   Δtop1=+0.0046
+favourable : n=340  fixed=51  broken=0  wash=0   Δtop1=+0.1500
+adversarial: n=578  fixed=0   broken=0  wash=13  Δtop1=+0.0000
+COMBINED   : n=918  fixed=51  broken=0  wash=13  Δtop1=+0.0556  errRatio=0.000
 ```
 
-## What these mean
+## 2. What these mean
 
-**The feature is inert on ~97% of swipes.** Only 193 of 6,353 traces had a single slate candidate
-with a confident learned continuation. This is the most important number here and it reframes
-everything else: both the upside and the risk are confined to a thin slice, so a Δtop-1 averaged
-over all traces understates the within-slice effect by roughly 3x. **Always state which
-denominator a figure uses.** Within the favourable slice the fix rate is 29/150 ≈ **19%**.
+**Given that it fires, the effect is substantial: 51 fixes in 243 exposed favourable cases ≈ 21%,
+with zero regressions.** That is the headline and it is genuinely encouraging.
 
-**Benefit is real but small in absolute terms.** 29 decodes that were wrong became right, zero
-regressions among them.
+**The activation rate is NOT measured and must not be inferred from this run.** Only 225 of 27,970
+pairable bigrams were queryable, but that ratio is a HARNESS ARTEFACT, not a device property: the
+corpus has 175,092 rows and `BigramStore` caps a language at `MAX_TOTAL_BIGRAMS = 10,000`, pruning
+by probability. Seeding 17.5x the capacity discards most of it. On a real device the 10,000 stored
+bigrams are the user's OWN most-probable pairs — exactly the ones they type — so their hit rate
+would be far higher. **Nothing here measures that number, and it is the one that converts "21% when
+it fires" into a real-world expectation.**
 
-**Safety is not established.** Zero breakages sounds decisive and is not:
+**Safety is still underpowered.** The adversarial arm exposed only 15 cases. Zero breakages across
+15 exposures cannot bound a <20% breakage rate. The 13 `wash` outcomes do show the rescorer acting
+adversarially — changing top-1 where both answers were wrong — so the arm is not inert; it is just
+small.
 
-- The adversarial arm carried only ~43 traces with any context evidence (193 total minus the
-  favourable arm's 150). **0 breaks out of ~43 exposed cases cannot bound a <20% breakage rate.**
-- Three successive versions of the adversarial arm each produced "0 broken" for a *different*
-  reason, and only the third tested anything (see below).
+**The store cap is a real product fact worth carrying elsewhere.** A user's context model holds at
+most 10,000 bigrams per language and keeps the highest-probability ones. The feature can only ever
+fire on that set.
 
-## Why "0 broken" took three attempts to mean anything
+## 3. Units — read this before quoting any figure
 
-| Run | Adversarial sampling | broken | Why zero |
+`n` counts **(context, trace, arm) cases**, not swipes. The same physical trace appears under
+several different preceding words, and those are separate experiments because the context is the
+independent variable. A denominator described as "swipes" would be wrong, and an earlier revision
+of this document made exactly that error.
+
+## 4. Limitations that must travel with these numbers
+
+1. **Geometric engine only.** A CTC arm is owed before any default flip: CTC is the DEFAULT engine,
+   its slate is a softmax scaled 0..1000, and the rank-1 guard is a ratio of exactly those scores.
+   This is now possible in pure JVM — `extractOrtNative` supplies the bionic ONNX natives — and is
+   the single highest-value next measurement.
+2. **The favourable/adversarial ratio is a sampling choice**, not a measured fact about real typing.
+3. **Bigrams only.** Trigrams are excluded from the export and not derived from the corpus, so the
+   sharper trigram branch was never exercised. Measured gain is a floor.
+4. **Corpus register.** Ubuntu Dialogue is typed IRC chat — real typos and shorthand, tech-support
+   topic. Its top bigrams match the maintainer's own device data (`in→the`, `i→don't`, `want→to`),
+   which is why it is usable at the head of the distribution.
+5. **`WEIGHT` untuned** — the design's starting 0.5, no tune/confirm split.
+6. **One corpus, one language, one engine.**
+
+## 5. Retractions — what was published here and why it was wrong
+
+An adversarial audit found four biases, all of which flattered the feature. Each was fixed and the
+numbers changed materially. Recorded because the same mistakes are easy to repeat.
+
+| # | Error | Effect | Fix |
 |---|---|---|---|
-| 1 | none | 0 | **The sampling never generated the case.** Pairing `(w1, w2)` and swiping `w2` means context always points AT the target, so only fixes are possible. |
-| 2 | random decoy words | 0 | **Rescoring reorders, it cannot insert.** A breakage needs the learned continuation to already be in the slate; a slate for "hello" holds words near "hello", so a continuation of an unrelated word is not there to promote. ~0 of 2,012 decoys had evidence. |
-| 3 | words confusable with `w2` (same initial, length ±1) | 0 | The first version that reaches the damage surface — evidence exposure rose 150 → 193. Still zero, on a small sample. |
+| H1 | `take(1500)` applied to a **frequency-sorted** corpus file — a size cap that was silently a *selection* of the strongest pairs. A `Random(SEED)` sat unused three lines away, with a KDoc claiming it made runs reproducible. | measured only the extreme head | shuffle with the seed, actually use it |
+| H2 | Hapax rows dropped **before** seeding, shrinking the denominator `BigramStore` divides by. Verified against `word1Frequencies`: the device counts every observation. | probabilities roughly doubled (`i→don't` 0.084 vs 0.046 true) | emit the tail; the store's floor ignores it for scoring but counts it in p(w2\|w1) |
+| H3 | Denominator labelled "swipes" when it was context-trace cases | wrong unit | label correctly (see §3) |
+| H4 | One global `withEvidence` counter | safety denominator had to be inferred across two runs | per-arm counters |
 
-Run 2's finding is worth keeping independently of the result: **the damage surface is
-intrinsically narrow**, because context can only reorder candidates the decoder already found
-plausible for that exact trace. That is a structural property of where the rescorer sits, not an
-artefact of this harness.
+**Two further errors were mine, made while fixing those**, and are worth recording separately:
 
-## Limitations that must travel with these numbers
+- **Over-correcting H3**: I first deduped by *trace*, which deleted the context dimension — the
+  independent variable. Distinct contexts on the same trace are distinct experiments.
+- **Missing the store cap entirely** until the corrected numbers became implausible (2 activations
+  in 725 cases). A real effect does not vanish that completely; the implausibility was the signal
+  that the instrument, not the feature, was broken.
 
-1. **Geometric engine only.** The CTC encoder is ONNX and the desktop ONNX runtime cannot load on
-   this device (`libonnxruntime.so` needs glibc's `libdl.so.2`; Termux is bionic — probed
-   2026-08-22). CTC is the DEFAULT engine and its slate is a softmax scaled to 0..1000, while the
-   rank-1 guard is a ratio of exactly those scores. **A CTC arm is owed before any default flip**
-   and must be an instrumented run.
-2. **The favourable/adversarial ratio is a sampling choice, not a measured fact.** Converting
-   these counts into a real-world expectation requires knowing how often a user's next word IS
-   their learned continuation. Nothing in this repo measures that.
-3. **Bigrams only.** Trigrams are excluded from the app's export and were not derived from the
-   corpus, so the sharper trigram branch was never exercised. Measured gain is a floor.
-4. **Corpus register.** Ubuntu Dialogue is typed IRC chat — real typos and shorthand, but
-   tech-support topic. 20.7% of utterances carry a tech term (filtered out); the surviving
-   high-frequency bigrams match the maintainer's own device data on `in→the`, `i→don't`,
-   `want→to`, `you→can`, which is why it is usable as a proxy at the head of the distribution.
-5. **`WEIGHT` was not tuned.** Everything above uses the design's starting 0.5 with no
-   tune/confirm split.
+Sequence of published headline numbers: **29 fixes (head-biased) → 2 fixes (over-deduped and
+mostly evicted) → 51 fixes (this document)**. The first two are retracted.
 
-## What would make this decisive
+## 6. What would make this decisive
 
-- A CTC arm, instrumented (ew-cli), same two-arm design.
-- A larger adversarial sample specifically selected for *evidence exposure* — decode first, keep
-  only traces whose slate contains a learned continuation, then measure. That inverts the current
-  order and would spend every decode on the damage surface.
-- The device-export arm as a second corpus, for register comparison (642 usable pairs).
-- A tune/confirm split on `WEIGHT` once the above shows a stable signal.
+- **A CTC arm** — now unblocked, highest value.
+- **A device-corpus arm** (the maintainer's 642 usable pairs) — small enough to fit under the 10k
+  cap with no eviction, so its survival rate would be ~100% and its activation rate meaningful.
+- **A larger adversarial sample selected for exposure** — 15 exposed cases is not a safety result.
+- **A `WEIGHT` tune/confirm split** once the signal is stable.
 
-## Reproduce
+## 7. Reproduce
 
 ```sh
 python3 scripts/build_ubuntu_bigrams.py \
@@ -90,5 +113,5 @@ python3 scripts/build_ubuntu_bigrams.py \
 sh gradlew runPureTests -PtestClass=swipe.ContextRescoringReplayTest -PgeoFull=true
 ```
 
-Neither corpus is committed: one is a person's typing record, the other is a 552 MB third-party
-corpus with no stated licence.
+Neither corpus is committed: one is a person's typing record, the other a 552 MB third-party corpus
+with no stated licence.
