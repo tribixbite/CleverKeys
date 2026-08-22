@@ -355,10 +355,26 @@ if (isArm64) {
 }
 
 // Pure JVM test runner — works on ARM64 where standard Test tasks are disabled.
+// Extract the BIONIC arm64 ONNX natives from the onnxruntime-android AAR so pure-JVM tests
+// can run the real encoder. See the systemProperty note in runPureTests for why the JAR's own
+// glibc-linked .so cannot be used on Termux.
+tasks.register('extractOrtNative', Copy) {
+  group = 'verification'
+  description = 'Unpack bionic arm64-v8a libonnxruntime*.so for pure-JVM ONNX tests'
+  def aar = configurations.debugRuntimeClasspath.find { it.name.startsWith('onnxruntime-android') }
+  onlyIf { aar != null }
+  if (aar != null) {
+    from(zipTree(aar)) { include 'jni/arm64-v8a/*.so' }
+    eachFile { it.path = it.name }
+    includeEmptyDirs = false
+    into "${buildDir}/ort-native/arm64-v8a"
+  }
+}
+
 // Runs JUnitCore directly via JavaExec, no proot or shell script needed.
 // Usage: ./gradlew runPureTests [-PtestClass=SwipeEngineRouterTest]
 tasks.register('runPureTests', JavaExec) {
-  dependsOn 'compileDebugUnitTestKotlin', 'processDebugUnitTestJavaRes'
+  dependsOn 'compileDebugUnitTestKotlin', 'processDebugUnitTestJavaRes', 'extractOrtNative'
   group = 'verification'
   description = 'Run pure JVM tests via JUnitCore (works on ARM64)'
 
@@ -585,6 +601,17 @@ tasks.register('runPureTests', JavaExec) {
   // tests read System.getProperty("geoFull") — this line bridges `-PgeoFull=true`
   // into that system property (default "false"). See spec Phase-6 item m27.
   systemProperty 'geoFull', (project.findProperty('geoFull') ?: 'false')
+  // ONNX in PURE JVM tests on Termux.
+  //
+  // The `onnxruntime` JAR bundles a GLIBC-linked libonnxruntime.so, which cannot load in a
+  // bionic JVM — it fails with `dlopen failed: library "libdl.so.2" not found`. That is a
+  // property of the bundled .so, NOT of ONNX: the `onnxruntime-android` AAR this project already
+  // depends on ships BIONIC arm64-v8a natives. ORT Java reads `onnxruntime.native.path`, so
+  // pointing it at those makes the real encoder run in `runPureTests`.
+  //
+  // Auto-resolved from the AAR in the Gradle cache; override with -PortNative=<dir> if needed.
+  def ortNativeDir = project.findProperty('ortNative') ?: "${buildDir}/ort-native/arm64-v8a"
+  systemProperty 'onnxruntime.native.path', ortNativeDir
 
   // Allow single test via -PtestClass=ClassName
   if (project.hasProperty('testClass')) {
