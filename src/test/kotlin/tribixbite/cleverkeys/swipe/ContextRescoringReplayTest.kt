@@ -96,8 +96,15 @@ class ContextRescoringReplayTest {
                 val o = runCatching { org.json.JSONObject(line) }.getOrNull() ?: continue
                 val word = o.optString("word").lowercase()
                 if (word.isEmpty()) continue
-                val bucket = byWord.getOrPut(word) { ArrayList() }
-                if (bucket.size >= limitPerWord) continue
+                // AUDIT D2: read WITHOUT creating. `getOrPut` here installed an empty bucket for
+                // every distinct word in the file BEFORE the filters below could reject its rows,
+                // so `traces.keys` held 4,907 words when only 2,197 have a usable trace. Three
+                // consequences, all silent: the printed pool size was 2.2x reality; `pairable`
+                // counted bigrams whose word2 has NO trace; and `neighboursOf` drew decoys from
+                // those phantom keys, which then contributed nothing through `flatMap` — so the
+                // adversarial arm ran below its requested decoy count.
+                val existing = byWord[word]
+                if (existing != null && existing.size >= limitPerWord) continue
                 val w = o.optDouble("w").toFloat()
                 val h = o.optDouble("h").toFloat()
                 val ptsArr = o.optJSONArray("pts") ?: continue
@@ -120,8 +127,9 @@ class ContextRescoringReplayTest {
                 // Reject the ~47% of rows whose third column is not a timestamp — they decode
                 // to confident nonsense and would silently pad the denominator. This filter was
                 // ABSENT from the runs published before 2026-08-23.
+                // Create the bucket ONLY once a row has actually survived every filter.
                 if (TraceCorpusQuality.hasUsableTimestamps(nt)) {
-                    bucket.add(Row(word, w, h, pts, nx, ny, nt))
+                    byWord.getOrPut(word) { ArrayList() }.add(Row(word, w, h, pts, nx, ny, nt))
                 }
             }
         }
@@ -136,6 +144,13 @@ class ContextRescoringReplayTest {
         /** Cases where SOME candidate had context evidence — the only ones rescoring can act on. */
         var favourableExposed = 0
         var adversarialExposed = 0
+
+        /**
+         * Exposed "adversarial" cases whose evidence actually points AT their own target (audit
+         * S1) — the decoy is itself a learned continuation of the context word. These cannot
+         * break, so they are excluded from the honest break-rate denominator.
+         */
+        var adversarialEvidenceOnTarget = 0
 
         /** Cases this engine returned a usable (>= 2 candidate) slate for. */
         var decoded = 0
@@ -217,6 +232,21 @@ class ContextRescoringReplayTest {
         val favourableTraces = HashSet<String>()
         val adversarialTraces = HashSet<String>()
 
+        /**
+         * The (WEIGHT, R_MIN) grid, tallied separately on a TUNE and a CONFIRM half.
+         *
+         * Spec §7.1 asks for exactly this — "tune `W`/`R_MIN` on a tune half, confirm on held-out
+         * half" — and it was the one part of step 5 never delivered. The grid is evaluated on the
+         * decode that already happened, so N points cost no extra decoding; only the pure
+         * log-linear sort re-runs.
+         *
+         * The split is by TRACE, not by case: every case of one trace lands in the same half, or
+         * the same physical swipe would appear in both and the "held-out" half would not be held
+         * out at all.
+         */
+        val sweepTune = HashMap<String, RescoringMetrics.Tally>()
+        val sweepConfirm = HashMap<String, RescoringMetrics.Tally>()
+
         var firstError: String? = null
 
         val combined: RescoringMetrics.Tally
@@ -261,10 +291,20 @@ class ContextRescoringReplayTest {
                 "are set. The CTC arm is the primary measurement; refusing to report without it.",
             CtcReplayEngine.ortAvailable(),
         )
-        val corpusFile = sequenceOf(
-            File(corporaDir, "ubuntu_bigrams.json"),
-            File(corporaDir, "device_bigrams.json"),
-        ).firstOrNull { it.exists() }
+        // `-PreplayCorpus=device` selects the maintainer's own export. That arm matters because it
+        // is the only one whose ACTIVATION RATE is meaningful: 6,589 pairs sits under
+        // BigramStore's 10,000 cap and no word1 exceeds the 20-continuation per-word cap, so
+        // NOTHING is evicted (verified 2026-08-23) — unlike the 175,092-row Ubuntu corpus, of
+        // which the store discards 46,923 usable rows and whose 225/27,970 survival rate is a
+        // harness artefact. It also seeds in seconds (7,815 recordBigram calls vs 1,285,947).
+        val preferred = if (corpusPreference == "device") {
+            listOf("device_bigrams.json", "ubuntu_bigrams.json")
+        } else {
+            listOf("ubuntu_bigrams.json", "device_bigrams.json")
+        }
+        val corpusFile = preferred.asSequence()
+            .map { File(corporaDir, it) }
+            .firstOrNull { it.exists() }
         Assume.assumeTrue(
             "no bigram corpus in ${corporaDir.path} — derive one with " +
                 "scripts/build_ubuntu_bigrams.py (skipping)",
@@ -319,8 +359,22 @@ class ContextRescoringReplayTest {
         // The GEOMETRIC layout must be built for the CORPUS canvas aspect — `loadShipped` takes
         // one, and the default would put the key grid at a different shape than the traces were
         // drawn on. The CTC layout is the committed golden fixture and takes normalized points.
-        val sampleRow = traces.values.first().first()
-        val aspect = sampleRow.w / sampleRow.h
+        // AUDIT D2(d): `traces.values.first().first()` threw if the arbitrary first HashMap bucket
+        // was empty — which the pre-fix loader could produce. It worked by luck. Take the first
+        // row that exists, and fail with a real message if none does.
+        val sampleRow = traces.values.firstOrNull { it.isNotEmpty() }?.first()
+        Assume.assumeTrue("no usable traces survived the timestamp filter", sampleRow != null)
+        val aspect = sampleRow!!.w / sampleRow.h
+
+        // The geometric arm builds ONE layout for ONE aspect and decodes every trace against it.
+        // That is only valid if the corpus really has a single canvas. Measured 2026-08-23: all
+        // 8,607 rows are 360x215. Asserted rather than assumed, because a corpus that later mixes
+        // canvases would silently decode most traces against the wrong key geometry.
+        val canvases = traces.values.flatten().map { it.w to it.h }.toSet()
+        assertWithMessage(
+            "the geometric arm builds one layout from the first row's aspect, so a multi-canvas " +
+                "corpus would decode most traces against the wrong key grid. Found: $canvases"
+        ).that(canvases).hasSize(1)
         val layout = GeoLayoutFixtures.loadShipped("latn_qwerty_us", aspect = aspect)
         val dict = GeoTestFixtures.englishCkdt()
         val geo = GeometricSwipeEngine(GeometricEngineConfig()).also { it.warmUp(layout, dict) }
@@ -331,6 +385,7 @@ class ContextRescoringReplayTest {
         var cases = 0
         val allWords = traces.keys.toList().sorted()
         val seenCases = HashSet<String>()
+        val adversarialUses = HashMap<String, Int>()
         val started = System.nanoTime()
 
         CtcReplayEngine.build("en").use { ctc ->
@@ -370,6 +425,25 @@ class ContextRescoringReplayTest {
                     val caseKey =
                         "$armTag|${pair.word1}|${row.word}|${row.pts.size}|${row.pts.firstOrNull()?.x}"
                     if (!seenCases.add(caseKey)) continue
+
+                    // AUDIT S3 + power. `neighboursOf` is seeded PER WORD, so every pair sharing a
+                    // word2 draws the IDENTICAL decoy list — cross-pair decoy diversity is
+                    // impossible by construction. With `to` the continuation of 2,086 corpus
+                    // pairs, its neighbour `tit` was re-tested under 24 contexts and produced all
+                    // 24 breakages of the 2026-08-23 run. That multiplicity is real (a hub
+                    // continuation genuinely endangers the same word after many predecessors) but
+                    // it buys NO new independent evidence, and the breakage count read as 24
+                    // findings when it was one.
+                    //
+                    // This cap converts multiplicity into distinct traces at the same decode cost.
+                    // Default 0 = unlimited, so the published 2026-08-23 baseline stays exactly
+                    // reproducible; set -PreplayMaxCtx=N for a power-oriented run.
+                    if (!favourableArm && maxContextsPerTrace > 0) {
+                        val traceId = "${row.word}|${row.pts.size}|${row.pts.firstOrNull()?.x}"
+                        val used = adversarialUses.getOrDefault(traceId, 0)
+                        if (used >= maxContextsPerTrace) continue
+                        adversarialUses[traceId] = used + 1
+                    }
                     cases++
 
                     // The SAME case through both decoders, so the arms differ only in the engine.
@@ -409,7 +483,10 @@ class ContextRescoringReplayTest {
         println("  CONTEXT RESCORING REPLAY — en")
         println("  corpus     : ${corpusFile.name} (${loaded.usable} usable of ${loaded.total})")
         println("  sampling   : pairs=${sampled.size} decoys=$decoysPerPair " +
-            "tracesPerWord=$tracesPerWord seed=$SEED")
+            "tracesPerWord=$tracesPerWord maxCtxPerAdvTrace=" +
+            (if (maxContextsPerTrace > 0) "$maxContextsPerTrace" else "unlimited") +
+            " seed=$SEED")
+        println("  ONNX EP    : ${CtcReplayEngine.executionProvider}")
         println("  cases      : $cases distinct (context, trace, arm) — NOT 'swipes';")
         println("               one trace appears under several contexts, which are separate")
         println("               experiments because context is the independent variable")
@@ -494,6 +571,22 @@ class ContextRescoringReplayTest {
         // "underpowered" verdict would rest on.
         if (exposed) {
             if (favourableArm) results.favourableExposed++ else results.adversarialExposed++
+            // AUDIT S1: the arm label records the SAMPLING INTENT, not where the evidence points.
+            // A decoy word can itself be a stored continuation of w1 (the store holds up to 20 per
+            // word), and then the "adversarial" case has evidence pointing AT its own target — it
+            // cannot break, yet it inflated the break-rate DENOMINATOR. Split it out so the safety
+            // rate is quoted over cases that could actually produce a breakage.
+            //
+            // Note this error ran AGAINST the feature's favour: correcting it RAISES the measured
+            // break rate. It is fixed anyway — a denominator that happens to err in the safe
+            // direction is still the wrong denominator.
+            if (!favourableArm &&
+                loaded.model.getContextEvidence(
+                    SwipeContextRescorer.storeKey(row.word), listOf(contextWord)
+                ) != null
+            ) {
+                results.adversarialEvidenceOnTarget++
+            }
             // Only a NON-top candidate can displace rank 1, so the decomposition looks at 1..K.
             val contenders = (1 until words.size).filter {
                 evidence[it].boost > SwipeContextRescorer.NO_BOOST
@@ -540,6 +633,23 @@ class ContextRescoringReplayTest {
             RescoringMetrics.Outcome.FIXED -> results.fixedExamples
             else -> null
         }
+        // The (WEIGHT, R_MIN) sweep, on the decode that already happened. Split by TRACE so a
+        // physical swipe never appears in both halves.
+        val tuneHalf = ((traceId.hashCode() % 2) + 2) % 2 == 0
+        val sweep = if (tuneHalf) results.sweepTune else results.sweepConfirm
+        for (w in SWEEP_WEIGHTS) {
+            for (r in SWEEP_RMINS) {
+                val swept = SwipeContextRescorer.rescoreOrder(scores, evidence, w, r)
+                sweep.getOrPut(sweepKey(w, r)) { RescoringMetrics.Tally() }.record(
+                    RescoringMetrics.classify(
+                        target = row.word,
+                        engineTop1 = engineTop1,
+                        rescoredTop1 = words.getOrNull(swept.first()),
+                    )
+                )
+            }
+        }
+
         if (sink != null) {
             if (sink.size < MAX_EXAMPLES) {
                 sink.add("'$contextWord' + swipe('${row.word}'): $engineTop1 -> $rescoredTop1")
@@ -567,6 +677,10 @@ class ContextRescoringReplayTest {
             "/${r.adversarialTraces.size}")
         println("        (a case count is inflated by context-multiplicity in BOTH numerator and")
         println("         denominator; the distinct-trace count is the independent evidence)")
+        val canBreak = r.adversarialExposed - r.adversarialEvidenceOnTarget
+        println("        of the ${r.adversarialExposed} adversarial-exposed, " +
+            "${r.adversarialEvidenceOnTarget} have evidence ON their own target")
+        println("         (favourable-in-fact, cannot break) -> honest break denominator = $canBreak")
         println("     baseline : engine top-1 already correct on " +
             "${r.favourableBaselineCorrect}/${r.favourable.total} favourable, " +
             "${r.adversarialBaselineCorrect}/${r.adversarial.total} adversarial")
@@ -588,6 +702,11 @@ class ContextRescoringReplayTest {
             " = %.2f%%".format(fixRate))
         println("        breaks : ${r.adversarial.broken}/${r.adversarialExposed} exposed adversarial" +
             " = %.2f%%".format(breakRate))
+        if (canBreak > 0 && r.adversarialEvidenceOnTarget > 0) {
+            println("        breaks : ${r.adversarial.broken}/$canBreak excluding " +
+                "evidence-on-target = %.2f%% (audit S1 — the honest one)"
+                    .format(100.0 * r.adversarial.broken / canBreak))
+        }
         if (fixRate > 0.0) {
             // Break-even: breaks < SHIP_BAR * fixes, solved for the real-world exposure ratio.
             println("        => to clear the ship bar, real typing must present at least " +
@@ -634,7 +753,49 @@ class ContextRescoringReplayTest {
             println("     example BREAKS : ${r.brokenExamples.joinToString("; ")}")
         }
         if (r.firstError != null) println("     FIRST ERROR: ${r.firstError}")
+        reportSweep(r)
     }
+
+    /**
+     * The spec §7.1 tune/confirm split over the (WEIGHT, R_MIN) grid.
+     *
+     * Protocol, and the order matters: the operating point is SELECTED on the tune half only, then
+     * reported on the held-out confirm half. Reading the confirm column to choose the point would
+     * make it a second tune half and the "confirmation" meaningless.
+     */
+    private fun reportSweep(r: EngineResults) {
+        if (r.sweepTune.isEmpty()) return
+        println("     ── (WEIGHT, R_MIN) sweep — spec 7.1 tune/confirm, split by TRACE ──")
+        println("        TUNE half (selection happens here):")
+        val rows = ArrayList<Triple<String, RescoringMetrics.Tally, RescoringMetrics.Tally>>()
+        for (w in SWEEP_WEIGHTS) for (rm in SWEEP_RMINS) {
+            val k = sweepKey(w, rm)
+            val tune = r.sweepTune[k] ?: RescoringMetrics.Tally()
+            val conf = r.sweepConfirm[k] ?: RescoringMetrics.Tally()
+            rows.add(Triple(k, tune, conf))
+            println("          %-16s fixed=%-3d broken=%-3d errRatio=%s"
+                .format(k, tune.fixed, tune.broken, ratioText(tune)))
+        }
+        // Selection rule, stated so it cannot be quietly changed: among points that CLEAR the ship
+        // bar on tune, take the most fixes; ties to the lower WEIGHT (less aggressive). If none
+        // clears the bar, say so plainly rather than promoting the least-bad point as a winner.
+        val clearing = rows.filter { it.second.meetsShipBar() }
+        if (clearing.isEmpty()) {
+            println("        SELECTED: none — NO grid point clears the ship bar on the tune half.")
+            println("          There is nothing to confirm. The parameter has no setting, within")
+            println("          this grid, that makes the feature shippable on this engine/corpus.")
+            return
+        }
+        val best = clearing.maxByOrNull { it.second.fixed }!!
+        println("        SELECTED on tune: ${best.first} (fixed=${best.second.fixed} " +
+            "broken=${best.second.broken} errRatio=${ratioText(best.second)})")
+        println("        CONFIRM (held out, NOT used for selection): fixed=${best.third.fixed} " +
+            "broken=${best.third.broken} errRatio=${ratioText(best.third)} " +
+            "meetsBar=${best.third.meetsShipBar()}")
+    }
+
+    private fun ratioText(t: RescoringMetrics.Tally): String =
+        if (t.broken == 0) "0.000" else if (t.fixed == 0) "INF" else "%.3f".format(t.promotionErrorRatio)
 
     /**
      * Words likely to decode to a slate CONTAINING [word] — the traces genuinely at risk from a
@@ -673,6 +834,13 @@ class ContextRescoringReplayTest {
     private val decoysPerPair: Int get() = intProperty("replayDecoys", DECOYS_PER_PAIR)
     private val tracesPerWord: Int get() = intProperty("replayTraces", TRACES_PER_WORD)
 
+    /** 0 = unlimited (the published baseline). N caps adversarial contexts per distinct trace. */
+    private val maxContextsPerTrace: Int
+        get() = System.getProperty("replayMaxCtx")?.toIntOrNull()?.coerceAtLeast(0) ?: 0
+
+    /** `device` selects the device export; anything else prefers the Ubuntu corpus. */
+    private val corpusPreference: String get() = System.getProperty("replayCorpus") ?: "ubuntu"
+
     private fun intProperty(name: String, fallback: Int): Int =
         System.getProperty(name)?.toIntOrNull()?.takeIf { it > 0 } ?: fallback
 
@@ -694,5 +862,17 @@ class ContextRescoringReplayTest {
 
         /** Concrete outcomes kept per engine per class, so the report can be spot-checked. */
         const val MAX_EXAMPLES = 8
+
+        /**
+         * The parameter grid for the spec §7.1 tune/confirm split.
+         *
+         * `WEIGHT` spans half and double the design's 0.5. `R_MIN` only ever tightens from the
+         * shipped 0.5: loosening it would admit promotions the auto-commit guard exists to refuse,
+         * and no measurement on this corpus could justify that.
+         */
+        val SWEEP_WEIGHTS = doubleArrayOf(0.25, 0.5, 1.0)
+        val SWEEP_RMINS = doubleArrayOf(0.5, 0.6, 0.7, 0.8, 0.9)
+
+        fun sweepKey(weight: Double, rMin: Double): String = "W=%.2f R=%.2f".format(weight, rMin)
     }
 }

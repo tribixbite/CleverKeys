@@ -156,13 +156,27 @@ object SwipeContextRescorer {
      * scores, and `SuggestionMeta` provenance — and returning a permutation is the only shape
      * that cannot silently misalign them.
      *
+     * [weight] and [rMin] default to the shipped constants, so **every production call site is
+     * unchanged**. They are parameters only so the step-5 offline harness can sweep a grid on one
+     * decode instead of re-decoding per point — the spec's own plan for fitting them
+     * (`ctc-context-rescoring-and-tunables.md` §7.1: "tune `W`/`R_MIN` on a tune half, confirm on
+     * held-out half"). Callers in the app must NOT pass them; if a tuned value is ever adopted it
+     * belongs in the constants, where the guard's behaviour stays inspectable in one place.
+     *
      * @param scores engine scores in ENGINE RANK ORDER (descending); `scores[0]` is the top-1
      *   whose displacement the guard protects.
      * @param evidence per-candidate learned evidence, parallel to [scores]. Use [Evidence.NONE]
      *   where the stores had nothing confident.
+     * @param weight nats per nat of boost; defaults to [WEIGHT].
+     * @param rMin rank-1 score-ratio floor; defaults to [R_MIN].
      * @return a permutation of `scores.indices`.
      */
-    fun rescoreOrder(scores: List<Int>, evidence: List<Evidence>): List<Int> {
+    fun rescoreOrder(
+        scores: List<Int>,
+        evidence: List<Evidence>,
+        weight: Double = WEIGHT,
+        rMin: Double = R_MIN,
+    ): List<Int> {
         require(scores.size == evidence.size) {
             "scores/evidence must be parallel: ${scores.size} vs ${evidence.size}"
         }
@@ -173,7 +187,7 @@ object SwipeContextRescorer {
 
         val adjusted = DoubleArray(scores.size) { i ->
             val boost = evidence[i].boost.coerceIn(NO_BOOST, MAX_BOOST)
-            ln(maxOf(scores[i], 1).toDouble()) + WEIGHT * ln(boost)
+            ln(maxOf(scores[i], 1).toDouble()) + weight * ln(boost)
         }
 
         // Descending by adjusted score; ties broken by input index so the sort is stable and the
@@ -182,7 +196,7 @@ object SwipeContextRescorer {
             compareByDescending<Int> { adjusted[it] }.thenBy { it }
         )
 
-        return applyRankOneGuard(order, scores, evidence)
+        return applyRankOneGuard(order, scores, evidence, rMin)
     }
 
     /**
@@ -198,6 +212,7 @@ object SwipeContextRescorer {
         order: List<Int>,
         scores: List<Int>,
         evidence: List<Evidence>,
+        rMin: Double = R_MIN,
     ): List<Int> {
         val engineTop = 0
         val promoted = order.first()
@@ -210,7 +225,7 @@ object SwipeContextRescorer {
         //
         // This is defensive rather than reachable: the scores are a softmax over the slate scaled
         // by 1000, so the maximum is at least 1000/K and cannot round to zero for any real K.
-        val withinRatio = topScore > 0 && scores[promoted] >= R_MIN * topScore
+        val withinRatio = topScore > 0 && scores[promoted] >= rMin * topScore
         if (withinRatio && promotableToRankOne(evidence[promoted])) return order
 
         return listOf(engineTop) + order.filter { it != engineTop }
