@@ -21,16 +21,18 @@ import tribixbite.cleverkeys.PredictionTaskRunner
 import tribixbite.cleverkeys.a11y.KeyboardGeometry
 import tribixbite.cleverkeys.onnx.ModelLoader
 import tribixbite.cleverkeys.swipe.ctc.CtcAzProjection
+import tribixbite.cleverkeys.swipe.ctc.CtcBeamDecoder
 import tribixbite.cleverkeys.swipe.ctc.CtcCandidate
 import tribixbite.cleverkeys.swipe.ctc.CtcCkdtLexicon
 import tribixbite.cleverkeys.swipe.ctc.CtcContractionKeys
 import tribixbite.cleverkeys.swipe.ctc.CtcFeaturizer
+import tribixbite.cleverkeys.swipe.ctc.CtcFuzzyRescue
 import tribixbite.cleverkeys.swipe.ctc.CtcLanguageSupport
 import tribixbite.cleverkeys.swipe.ctc.CtcLayout
 import tribixbite.cleverkeys.swipe.ctc.CtcLexiconMerge
 import tribixbite.cleverkeys.swipe.ctc.CtcLexiconTrie
+import tribixbite.cleverkeys.swipe.ctc.CtcRankMerger
 import tribixbite.cleverkeys.swipe.ctc.CtcScoringParams
-import tribixbite.cleverkeys.swipe.ctc.CtcSwipeDecoder
 import tribixbite.cleverkeys.swipe.geometric.CkdtDictionaryReader
 import java.lang.ref.WeakReference
 import java.security.MessageDigest
@@ -367,11 +369,15 @@ class CtcEngineAdapter(private val context: Context) {
         val trie: CtcLexiconTrie,
         val ordinals: HashMap<String, Int>,
         val display: Map<String, String>,
+        val fuzzyRescue: CtcFuzzyRescue,
         val version: Long,
     )
 
-    @Volatile
-    private var trieMemo: TrieMemo? = null
+    /** Keep only the active primary/secondary tries; wider caching would retain ~19 MB each. */
+    private val trieMemos = object : LinkedHashMap<String, TrieMemo>(2, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, TrieMemo>?): Boolean =
+            size > 2
+    }
 
     /**
      * The merged lexicon trie for [language] — see [lexiconFor]. `internal` so the
@@ -419,7 +425,7 @@ class CtcEngineAdapter(private val context: Context) {
         val disabled = prefs.getStringSet(LanguagePreferenceKeys.disabledWordsKey(lang), emptySet())
             ?: emptySet()
         val version = contentVersion("asset:$asset", customJson, disabled)
-        trieMemo?.let { if (it.language == lang && it.version == version) return it }
+        trieMemos[lang]?.let { if (it.language == lang && it.version == version) return it }
 
         val start = System.currentTimeMillis()
 
@@ -449,7 +455,7 @@ class CtcEngineAdapter(private val context: Context) {
             }
         } catch (e: Exception) {
             Log.e(TAG, "No CTC lexicon source ($asset)", e)
-            trieMemo = null
+            trieMemos.remove(lang)
             return null
         }
 
@@ -485,6 +491,7 @@ class CtcEngineAdapter(private val context: Context) {
         // the two sources differ (raw merged map vs the a-z projection). Used to derive the
         // contraction-injection floor from this lexicon's rarest real word.
         val lexiconFrequencies: Collection<Double>
+        val rescueFrequencies: Map<String, Double>
         when (source) {
             CtcLanguageSupport.LexiconSource.EN_JSON -> {
                 // STRIP loader: same non-alphabet policy as the offline tuning trie
@@ -494,15 +501,16 @@ class CtcEngineAdapter(private val context: Context) {
                 trie = CtcLexiconTrie.loadStrippingNonAlphabet(ALPHABET, merged)
                 display = emptyMap()
                 lexiconFrequencies = merged.values
+                rescueFrequencies = merged
             }
             CtcLanguageSupport.LexiconSource.CKDT_BIN -> {
-                // NFD → drop combining marks → a–z, with the canonical accented form kept
-                // for display. Words with no a–z spelling (ß, œ, æ, ø) are DROPPED, not
-                // mangled — the projection the λ sweep's lexicons were built with.
+                // NFD → drop combining marks → a–z, with explicit expansions for common
+                // fixed-head letters (ß→ss, œ→oe, æ→ae, ø→o) and canonical display preserved.
                 val projected = CtcAzProjection.projectLexicon(merged)
                 trie = CtcLexiconTrie.loadFromFrequencyMap(ALPHABET, projected.freqs)
                 display = projected.display
                 lexiconFrequencies = projected.freqs.values
+                rescueFrequencies = projected.freqs
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                     Log.d(TAG, "CTC '$lang' projection: ${projected.records} records, " +
                         "${projected.untypeable} untypeable, ${projected.collisions} " +
@@ -537,8 +545,12 @@ class CtcEngineAdapter(private val context: Context) {
             "lang=$lang words=${trie.wordCount} nodes=${trie.nodeCount} " +
                 "injectedAliases=$injected display=${display.size}"
         }
-        val built = TrieMemo(lang, trie, ordinals, display, version)
-        trieMemo = built
+        val built = TrieMemo(
+            lang, trie, ordinals, display,
+            CtcFuzzyRescue.fromFrequencies(rescueFrequencies),
+            version,
+        )
+        trieMemos[lang] = built
         return built
     }
 
@@ -554,42 +566,6 @@ class CtcEngineAdapter(private val context: Context) {
         var v = 0L
         for (i in 0 until 8) v = (v shl 8) or (d[i].toLong() and 0xFF)
         return v
-    }
-
-    // ── Decoder memo (per layout + trie + beam width + language) ────────────────
-
-    /**
-     * Decoder identity. [language] is a KEY FIELD, not decoration: the scoring preset is
-     * per-language ([CtcScoringParams.presetFor] — λ 4.0 on the en JSON scale, λ 2.0 on
-     * the CKDT scale), so a language switch must rebuild the decoder even in the
-     * (impossible-in-practice) case where layout, trie and beam width all compare equal.
-     */
-    private data class DecoderKey(
-        val mapped: MappedLayout,
-        val trie: CtcLexiconTrie,
-        val beamWidth: Int,
-        val language: String,
-    )
-
-    private var decoderMemo: CtcSwipeDecoder? = null
-    private var decoderKey: DecoderKey? = null
-
-    private fun decoderFor(
-        mapped: MappedLayout,
-        trie: CtcLexiconTrie,
-        beamWidth: Int,
-        language: String,
-    ): CtcSwipeDecoder {
-        val key = DecoderKey(mapped, trie, beamWidth, language)
-        decoderMemo?.let { if (decoderKey == key) return it }
-        val model = modelOrNull() ?: throw IllegalStateException("CTC model unavailable")
-        val built = CtcSwipeDecoder(
-            model, mapped.layout, trie,
-            CtcScoringParams.presetFor(language, beamWidth = beamWidth, topK = TOP_K)
-        )
-        decoderMemo = built
-        decoderKey = key
-        return built
     }
 
     // ── Display overlays (audit H1 — parity with GeometricEngineAdapter) ─────────────
@@ -610,8 +586,11 @@ class CtcEngineAdapter(private val context: Context) {
     //
     // Accents first: contraction keys are a-z aliases, so an accented display form never
     // matches one, while an un-accented alias is unaffected by step 1.
-    private var contractionManager: ContractionManager? = null
-    private var contractionLanguage: String? = null
+    private val contractionManagers = object : LinkedHashMap<String, ContractionManager>(2, 0.75f, true) {
+        override fun removeEldestEntry(
+            eldest: MutableMap.MutableEntry<String, ContractionManager>?
+        ): Boolean = size > 2
+    }
 
     /**
      * Lazily builds/reloads the contraction mapping for [language] (decode thread only).
@@ -635,12 +614,10 @@ class CtcEngineAdapter(private val context: Context) {
      * KEPT with the contraction merely appended, never substituted.
      */
     private fun contractionsFor(language: String): ContractionManager {
-        val existing = contractionManager
-        if (existing != null && contractionLanguage == language) return existing
-        val cm = existing ?: ContractionManager(context)
+        contractionManagers[language]?.let { return it }
+        val cm = ContractionManager(context)
         cm.loadSwipeDisplayMappings(language)
-        contractionManager = cm
-        contractionLanguage = language
+        contractionManagers[language] = cm
         return cm
     }
 
@@ -684,6 +661,46 @@ class CtcEngineAdapter(private val context: Context) {
             lexicon.ordinals,
         )
 
+    /**
+     * Adds at most two bounded dictionary matches for the unconstrained greedy surface. A rescue
+     * never displaces a non-empty beam rank one: it is inserted between ranks one and two, with
+     * an interpolated score. Empty beam slates may be populated directly.
+     */
+    private fun applyFuzzyRescue(
+        result: PredictionResult,
+        greedy: String,
+        lexicon: TrieMemo,
+    ): PredictionResult {
+        val rescued = lexicon.fuzzyRescue.find(greedy, result.words.toHashSet())
+        if (rescued.isEmpty()) return result
+
+        if (result.words.isEmpty()) {
+            return PredictionResult(
+                rescued,
+                rescued.indices.map { 1000 / (it + 1) },
+            )
+        }
+
+        val topScore = result.scores.firstOrNull() ?: 1000
+        val secondScore = result.scores.getOrNull(1) ?: 0
+        val firstRescueScore = maxOf(secondScore + 1, topScore / 2).coerceAtMost(topScore - 1)
+        val words = ArrayList<String>(TOP_K)
+        val scores = ArrayList<Int>(TOP_K)
+        words.add(result.words[0]); scores.add(topScore)
+        for ((index, word) in rescued.withIndex()) {
+            if (word in words) continue
+            words.add(word)
+            scores.add((firstRescueScore - index).coerceAtLeast(secondScore + 1))
+        }
+        for (i in 1 until result.words.size) {
+            if (result.words[i] in words) continue
+            words.add(result.words[i])
+            scores.add(result.scores.getOrElse(i) { 0 })
+            if (words.size == TOP_K) break
+        }
+        return PredictionResult(words, scores)
+    }
+
     // ── Public surface (mirrors GeometricEngineAdapter) ─────────────────────────
 
     /**
@@ -708,6 +725,7 @@ class CtcEngineAdapter(private val context: Context) {
         swipePath: List<PointF>,
         timestamps: List<Long>,
         language: String,
+        secondaryLanguage: String? = null,
         onResult: (PredictionResult) -> Unit,
     ) {
         if (frameWidthPx <= 0f || frameHeightPx <= 0f || swipePath.isEmpty() ||
@@ -734,9 +752,14 @@ class CtcEngineAdapter(private val context: Context) {
         tasks.cancelAndSubmit {
             try {
                 val mapped = layoutFor(keyboard, params, frameWidthPx, frameHeightPx)
-                val lexicon = if (mapped != null) lexiconFor(language) else null
-                val model = if (lexicon != null) modelOrNull() else null
-                val result = if (mapped == null || lexicon == null || model == null) {
+                val primaryLexicon = if (mapped != null) lexiconFor(language) else null
+                val secondary = secondaryLanguage
+                    ?.takeIf { it != "none" && it != language && supportsLanguage(it) }
+                val secondaryLexicon = if (mapped != null && secondary != null) {
+                    lexiconFor(secondary)
+                } else null
+                val model = if (primaryLexicon != null) modelOrNull() else null
+                val result = if (mapped == null || primaryLexicon == null || model == null) {
                     PredictionResult(emptyList(), emptyList())
                 } else {
                     // Finger-occlusion compensation, applied to RAW Y before the letter-box
@@ -757,11 +780,40 @@ class CtcEngineAdapter(private val context: Context) {
                     }
                     val pt = DoubleArray(n) { rawT[it].toDouble() }
                     val beamWidth = Config.globalConfig().ctc_beam_width.coerceIn(10, 300)
-                    val candidates = decoderFor(mapped, lexicon.trie, beamWidth, lexicon.language)
-                        .decode(px, py, pt)
-                    // Accents then contraction aliases ("cafe" → "café", "dont" → "don't")
-                    // before the shared pipeline — see the overlay section above.
-                    applyDisplay(toPredictionResult(candidates), lexicon)
+                    // Run the encoder ONCE, then decode each active language against its own
+                    // trie/preset. Raw final scores use different frequency scales and are never
+                    // compared; CtcRankMerger combines the displayed slates by rank.
+                    val features = CtcFeaturizer.featurize(px, py, pt)
+                    val emissions = model.emit(features, mapped.padded)
+                    val greedy = CtcBeamDecoder.greedy(emissions, mapped.layout.alphabet)
+                    fun decodeLexicon(lexicon: TrieMemo): PredictionResult {
+                        val candidates = CtcBeamDecoder.decode(
+                            emissions,
+                            lexicon.trie,
+                            CtcScoringParams.presetFor(
+                                lexicon.language, beamWidth = beamWidth, topK = TOP_K
+                            ),
+                        )
+                        return applyDisplay(
+                            applyFuzzyRescue(toPredictionResult(candidates), greedy, lexicon),
+                            lexicon,
+                        )
+                    }
+
+                    val primaryResult = decodeLexicon(primaryLexicon)
+                    val secondaryResult = secondaryLexicon?.let(::decodeLexicon)
+                    if (secondaryResult == null) {
+                        primaryResult
+                    } else {
+                        val merged = CtcRankMerger.merge(
+                            primaryLexicon.language,
+                            primaryResult.words,
+                            secondaryLexicon.language,
+                            secondaryResult.words,
+                            TOP_K,
+                        )
+                        PredictionResult(merged.map { it.word }, merged.map { it.score })
+                    }
                 }
                 postIfNewest(generation, result, onResult)
             } catch (e: InterruptedException) {
@@ -813,6 +865,7 @@ class CtcEngineAdapter(private val context: Context) {
         frameWidthPx: Float,
         frameHeightPx: Float,
         language: String,
+        secondaryLanguage: String? = null,
     ) {
         if (frameWidthPx <= 0f || frameHeightPx <= 0f) return
         if (!supportsLanguage(language)) return
@@ -821,6 +874,9 @@ class CtcEngineAdapter(private val context: Context) {
                 val mapped = layoutFor(keyboard, params, frameWidthPx, frameHeightPx)
                     ?: return@submitBackground
                 val trie = trieFor(language) ?: return@submitBackground
+                secondaryLanguage
+                    ?.takeIf { it != "none" && it != language && supportsLanguage(it) }
+                    ?.let { trieFor(it) }
                 modelOrNull() ?: return@submitBackground
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                     Log.d(TAG, "warmUp: model+trie(${trie.wordCount})+layout ready " +

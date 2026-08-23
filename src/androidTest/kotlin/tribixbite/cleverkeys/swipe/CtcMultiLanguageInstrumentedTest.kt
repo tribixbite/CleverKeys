@@ -35,8 +35,8 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 /**
- * On-device coverage for the non-English CTC swipe path (fr / de / es), enabled by
- * `feat(ctc): enable French, German and Spanish` — everything that commit shipped was
+ * On-device coverage for the multilingual CTC swipe path. French, German and Spanish have
+ * frozen evaluated shapes; Italian, Portuguese and Swedish have provisional packaging checks.
  * validated OFFLINE (repo-root `File` reads in `runPureTests`, plus the λ sweep), so this
  * class closes the four gaps only a real device can close:
  *
@@ -54,10 +54,9 @@ import java.util.concurrent.TimeUnit
  *     through the projection map alone.
  *  3. **The per-language preset the adapter selects.** λ = 4.0 for the en JSON scale,
  *     λ = 2.0 for the CKDT scale ([CtcScoringParams.presetFor]).
- *  4. **The stale-memo hazard.** The trie/decoder memos are single-slot and keyed by
- *     language; a switch must REBUILD rather than silently decode the new language against
- *     the old language's trie and λ. Until now that was pinned only by a source-scan drift
- *     test — this exercises a real instantiated adapter.
+ *  4. **The cache and dual-language hazards.** The bounded LRU caches are keyed by language,
+ *     and a dual-language swipe must run one encoder pass before rank-merging two independent
+ *     lexicon decodes. These tests exercise a real instantiated adapter.
  *
  * ### Why `latn_qwerty_us` and not azerty/qwertz
  * The shipped encoder is layout-agnostic (it consumes key CENTERS, and the router's gate
@@ -112,7 +111,7 @@ class CtcMultiLanguageInstrumentedTest {
          * these — which is the point.
          */
         val SHAPES = mapOf(
-            "fr" to LexiconShape(records = 40_000, untypeable = 31, words = 37_949, collisions = 2_020),
+            "fr" to LexiconShape(records = 40_000, untypeable = 0, words = 37_958, collisions = 2_042),
             "de" to LexiconShape(records = 40_000, untypeable = 0, words = 39_594, collisions = 406),
             "es" to LexiconShape(records = 50_000, untypeable = 0, words = 47_955, collisions = 2_045),
         )
@@ -253,12 +252,22 @@ class CtcMultiLanguageInstrumentedTest {
         params: KeyboardGeometry.Params,
         word: String,
         language: String,
+        secondaryLanguage: String? = null,
     ): PredictionResult {
         val (path, times) = traceFor(kd, params, word)
         var result: PredictionResult? = null
         val latch = CountDownLatch(1)
         onMain {
-            adapter.decodeAsync(kd, params, FRAME_W, FRAME_H, path, times, language) {
+            adapter.decodeAsync(
+                keyboard = kd,
+                params = params,
+                frameWidthPx = FRAME_W,
+                frameHeightPx = FRAME_H,
+                swipePath = path,
+                timestamps = times,
+                language = language,
+                secondaryLanguage = secondaryLanguage,
+            ) {
                 result = it
                 latch.countDown()
             }
@@ -397,7 +406,7 @@ class CtcMultiLanguageInstrumentedTest {
                     expected.records, projected.records
                 )
                 assertEquals(
-                    "$language: words with no a–z spelling (ß/œ/æ/ø are DROPPED, not mangled)",
+                    "$language: words with no supported a–z spelling after deterministic expansion",
                     expected.untypeable, projected.untypeable
                 )
                 assertEquals(
@@ -630,19 +639,18 @@ class CtcMultiLanguageInstrumentedTest {
     }
 
     /**
-     * GAP 4 — the stale-memo hazard. `CtcEngineAdapter` keeps ONE trie memo and ONE decoder
-     * memo, both keyed by language; a switch must rebuild both. Reusing the previous
-     * language's trie would decode French against English words (and at English's λ), and
-     * nothing downstream would notice.
+     * GAP 4 — the stale-cache hazard. `CtcEngineAdapter` keeps bounded LRU trie/decoder caches
+     * keyed by language. Reusing another language's entry would decode French against English
+     * words (and at English's λ), and nothing downstream would notice.
      *
-     * Asserted three ways: memo identity (same language reuses, a switch does not), memo
-     * CONTENT (en-only probe words are absent from the fr trie and come back on the way
-     * back to en), and behaviour (the same trace decoded under en then fr yields an ASCII
+     * Asserted three ways: cache identity (same language reuses and two active languages fit
+     * without eviction), CONTENT (en-only probe words are absent from the fr trie), and
+     * behaviour (the same trace decoded under en then fr yields an ASCII
      * English slate and then the accented French word — impossible if the decoder still
      * held the en trie).
      */
     @Test
-    fun languageSwitch_rebuildsTheLexiconAndDecoder_neverReusingThePreviousLanguage() {
+    fun languageSwitch_usesLanguageKeyedBoundedCaches_neverCrossContaminatingLexicons() {
         val kd = loadLayout(LAYOUT)
         val params = paramsFor(kd)
         val adapter = CtcEngineAdapter(context)
@@ -660,7 +668,7 @@ class CtcMultiLanguageInstrumentedTest {
 
             val frTrie = adapter.trieFor("fr")
             assertNotNull("fr: the adapter built no trie", frTrie)
-            assertNotSame("switching en→fr must rebuild the trie", enTrie, frTrie!!)
+            assertNotSame("en and fr must have independent trie instances", enTrie, frTrie!!)
             // A LOWER BOUND, not the exact count: the adapter's trie is the projection plus
             // whatever `CtcContractionKeys.inject` adds, and pinning the exact number here
             // duplicated `bundledCkdtAssets_...`'s job while being the assertion that broke
@@ -683,7 +691,10 @@ class CtcMultiLanguageInstrumentedTest {
 
             val enTrieAgain = adapter.trieFor("en")
             assertNotNull("en: no trie after switching back", enTrieAgain)
-            assertNotSame("switching fr→en must rebuild the trie", frTrie, enTrieAgain!!)
+            assertSame(
+                "the two-entry cache must retain English while French is active",
+                enTrie, enTrieAgain!!,
+            )
             assertTrue(
                 "en trie after the round trip looks wrong (${enTrieAgain.wordCount} words)",
                 enTrieAgain.wordCount > EN_TRIE_MIN_WORDS
@@ -718,6 +729,44 @@ class CtcMultiLanguageInstrumentedTest {
             // The contraction manager is memoized by language on the SAME adapter instance,
             // so this fr decode also proves the en→fr switch dropped the English base.
             assertNoForeignContractions("fr", frSlate)
+        } finally {
+            adapter.shutdown()
+        }
+    }
+
+    /**
+     * A French-primary swipe can surface an English-only word from the configured secondary
+     * language. This proves the shipping adapter decodes both tries and rank-merges the slates;
+     * a primary-only decode is the control that keeps the assertion from passing by fixture luck.
+     */
+    @Test
+    fun secondaryLanguageDecode_surfacesAnEnglishOnlyWordWithoutReplacingPrimaryRankOne() {
+        val kd = loadLayout(LAYOUT)
+        val params = paramsFor(kd)
+        val adapter = CtcEngineAdapter(context)
+        val probe = "wednesday"
+        try {
+            assertFalse("fixture: '$probe' must be absent from French", adapter.trieFor("fr")!!.contains(probe))
+            assertTrue("fixture: '$probe' must be present in English", adapter.trieFor("en")!!.contains(probe))
+
+            val primaryOnly = decodeBlocking(adapter, kd, params, probe, "fr")
+            assertFalse(
+                "French-only control unexpectedly surfaced '$probe': ${primaryOnly.words}",
+                primaryOnly.words.contains(probe),
+            )
+
+            val dual = decodeBlocking(adapter, kd, params, probe, "fr", secondaryLanguage = "en")
+            Log.i(TAG, "fr+en '$probe' → ${dual.words}")
+            assertTrue(
+                "French-primary + English-secondary must surface '$probe'. Got: ${dual.words}",
+                dual.words.contains(probe),
+            )
+            if (primaryOnly.words.isNotEmpty()) {
+                assertEquals(
+                    "secondary decoding must not replace the primary language's rank one",
+                    primaryOnly.words.first(), dual.words.first(),
+                )
+            }
         } finally {
             adapter.shutdown()
         }

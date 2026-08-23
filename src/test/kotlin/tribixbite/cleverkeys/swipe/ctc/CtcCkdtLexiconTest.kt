@@ -78,14 +78,11 @@ class CtcCkdtLexiconTest {
     }
 
     @Test
-    fun `letters with no a-z decomposition are untypeable, not mangled`() {
-        // ß / œ / æ / ø survive NFD as non-a–z characters. Mangling them (ß→ss) would
-        // invent a surface the model never emits for that word; dropping the word is
-        // the validated policy (the λ sweep measured de at exactly this policy).
-        assertThat(CtcAzProjection.project("straße")).isNull()
-        assertThat(CtcAzProjection.project("œuvre")).isNull()
-        assertThat(CtcAzProjection.project("brød")).isNull()
-        assertThat(CtcAzProjection.project("ærlig")).isNull()
+    fun `special Latin graphemes use reachable a-z keyboard fallbacks`() {
+        assertThat(CtcAzProjection.project("straße")).isEqualTo("strasse")
+        assertThat(CtcAzProjection.project("œuvre")).isEqualTo("oeuvre")
+        assertThat(CtcAzProjection.project("brød")).isEqualTo("brod")
+        assertThat(CtcAzProjection.project("ærlig")).isEqualTo("aerlig")
         // …whereas a ring-above DOES decompose (NFD å → a + U+030A), so it folds.
         assertThat(CtcAzProjection.project("måne")).isEqualTo("mane")
     }
@@ -126,9 +123,9 @@ class CtcCkdtLexiconTest {
     fun `french projection counts match the sweep harness`() {
         val p = projected.getValue("fr")
         assertThat(p.records).isEqualTo(40_000)
-        assertThat(p.untypeable).isEqualTo(31)
-        assertThat(p.freqs.size).isEqualTo(37_949)
-        assertThat(p.collisions).isEqualTo(2_020)
+        assertThat(p.untypeable).isEqualTo(0)
+        assertThat(p.freqs.size).isEqualTo(37_958)
+        assertThat(p.collisions).isEqualTo(2_042)
     }
 
     @Test
@@ -186,6 +183,22 @@ class CtcCkdtLexiconTest {
             // Unaccented words are absent — the adapter falls back to the surface.
             assertThat(p.display).doesNotContainKey("de")
         }
+    }
+
+    @Test
+    fun `special grapheme projection preserves canonical display deterministically`() {
+        val p = CtcAzProjection.projectLexicon(linkedMapOf(
+            "straße" to 220.0,
+            "strasse" to 100.0,
+            "œuvre" to 210.0,
+            "ærø" to 190.0,
+        ))
+
+        assertThat(p.freqs).containsEntry("strasse", 220.0)
+        assertThat(p.display["strasse"]).isEqualTo("straße")
+        assertThat(p.display["oeuvre"]).isEqualTo("œuvre")
+        assertThat(p.display["aero"]).isEqualTo("ærø")
+        assertThat(p.collisions).isEqualTo(1)
     }
 
     @Test

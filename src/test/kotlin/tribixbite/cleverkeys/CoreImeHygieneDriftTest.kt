@@ -374,24 +374,13 @@ class CoreImeHygieneDriftTest {
                 "table (adding a language is a table entry, not an adapter edit)."
         ).that(trieMemoCheck).contains("CtcLanguageSupport.assetFor(")
 
-        val decoderKeyBlock = adapter
-            .substringAfter("private data class DecoderKey(")
-            .substringBefore(")")
+        val decoderBody = adapter.substringAfter("fun decodeLexicon(")
+            .substringBefore("val primaryResult")
         assertWithMessage(
-            "The decoder memo key must include the language so the per-language preset " +
-                "(λ) cannot be carried across a language switch."
-        ).that(decoderKeyBlock).contains("val language: String")
-
-        val decoderBody = adapter
-            .substringAfter("private fun decoderFor(")
-            .substringBefore("// ── Display overlays")
-        assertWithMessage(
-            "decoderFor must actually put the language into the memo key."
-        ).that(decoderBody).contains("DecoderKey(mapped, trie, beamWidth, language)")
-        assertWithMessage(
-            "The decoder must be built with the per-language preset (CtcScoringParams." +
-                "presetFor), never the fixed en tunedV2 constants."
-        ).that(decoderBody).contains("CtcScoringParams.presetFor(language")
+            "Each language decode must select its preset from that lexicon's language."
+        ).that(decoderBody).contains("CtcScoringParams.presetFor(")
+        assertWithMessage("Preset selection must use the active lexicon language.")
+            .that(decoderBody).contains("lexicon.language")
         assertWithMessage(
             "The decoder must NOT hard-code tunedV2 (that is the en-scale λ)."
         ).that(decoderBody).doesNotContain("CtcScoringParams.tunedV2(")

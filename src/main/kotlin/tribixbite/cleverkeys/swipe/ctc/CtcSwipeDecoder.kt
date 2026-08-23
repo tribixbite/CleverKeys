@@ -48,6 +48,11 @@ class CtcSwipeDecoder(
     private val trie: CtcLexiconTrie,
     private val params: CtcScoringParams,
 ) {
+    data class DecodeResult(
+        val candidates: List<CtcCandidate>,
+        val greedy: String,
+    )
+
     private val paddedLayout: CtcFeaturizer.PaddedLayout = CtcFeaturizer.buildPaddedLayout(layout)
 
     init {
@@ -64,8 +69,16 @@ class CtcSwipeDecoder(
      * @param pt timestamps (ms) per raw sample.
      */
     fun decode(px: DoubleArray, py: DoubleArray, pt: DoubleArray): List<CtcCandidate> {
+        return decodeDetailed(px, py, pt).candidates
+    }
+
+    /** Decode while also exposing the unconstrained greedy surface used by bounded rescue. */
+    fun decodeDetailed(px: DoubleArray, py: DoubleArray, pt: DoubleArray): DecodeResult {
         val features = CtcFeaturizer.featurize(px, py, pt)
         val emissions = model.emit(features, paddedLayout)
-        return CtcBeamDecoder.decode(emissions, trie, params)
+        return DecodeResult(
+            candidates = CtcBeamDecoder.decode(emissions, trie, params),
+            greedy = CtcBeamDecoder.greedy(emissions, layout.alphabet),
+        )
     }
 }

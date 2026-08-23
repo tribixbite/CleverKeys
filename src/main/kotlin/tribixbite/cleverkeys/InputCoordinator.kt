@@ -689,6 +689,11 @@ class InputCoordinator(
     ) {
         val language = predictionCoordinator.getDictionaryManager()?.getCurrentLanguage()
             ?: config.primary_language
+        val secondaryLanguage = if (config.enable_multilang) {
+            DirectBootAwarePreferences.get_shared_preferences(context)
+                .getString("pref_secondary_language", "none")
+                ?.takeIf { it != "none" && it != language && CtcEngineAdapter.supportsLanguage(it) }
+        } else null
         if (!CtcEngineAdapter.supportsLanguage(language)) {
             // M1: CTC serves only the languages in CtcLanguageSupport (en/fr/de/es, plus
             // the provisional it/pt/sv since 2026-08-18), so any other language falls
@@ -737,7 +742,7 @@ class InputCoordinator(
         beginSwipeCapture(swipedKeys, swipePath, timestamps, resources, SwipeMLData.ENGINE_CTC)
 
         ctcAdapterOrCreate().decodeAsync(
-            keyboard, params, frameW, frameH, swipePath, timestamps, language
+            keyboard, params, frameW, frameH, swipePath, timestamps, language, secondaryLanguage
         ) { result ->
             // The decode callback replays the InputConnection/EditorInfo captured at swipe
             // time. A decode can land after the field changed (cold path builds the ONNX
@@ -795,7 +800,15 @@ class InputCoordinator(
                         CtcEngineAdapter.supportsLanguage(language) &&
                         ctc.supportsLayout(keyboard, params, frameW, frameH)
                     when {
-                        ctcServes -> ctc.warmUpAsync(keyboard, params, frameW, frameH, language)
+                        ctcServes -> {
+                            val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
+                            val secondary = if (config.enable_multilang) {
+                                prefs.getString("pref_secondary_language", "none")
+                            } else null
+                            ctc.warmUpAsync(
+                                keyboard, params, frameW, frameH, language, secondary
+                            )
+                        }
                         // Keep this call on ONE line: CoreImeHygieneDriftTest source-scans
                         // for the literal `geometricAdapterOrCreate().warmUpAsync`.
                         else -> geometricAdapterOrCreate().warmUpAsync(keyboard, params, frameW, frameH, language)

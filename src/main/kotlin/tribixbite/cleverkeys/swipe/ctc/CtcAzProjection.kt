@@ -17,17 +17,12 @@ import java.util.Locale
  *
  * ## Projection policy (`project`)
  *
- * NFD → drop combining marks (Mn) → drop `'`, `’`, `-` → require every remaining
- * character to be a–z, else the word is UNTYPEABLE and is dropped. This is a 1:1 port of
- * the `project_az` policy the λ sweep's lexicons were built with
- * (`docs/eval/2026-08-15-ctc-per-language-lambda.md`; CleverKeys-ML
- * `ctc/eval_altlayout.py`), so the shipped λ is calibrated against exactly this vocabulary.
- *
- * Deliberately NOT [tribixbite.cleverkeys.AccentNormalizer]: that one expands `ß`→`ss`,
- * `æ`→`ae`, `ø`→`o`. Expanding invents a surface the model never emits for that word (a
- * German `ß` key is a distinct key, not two `s` presses), so the validated policy DROPS
- * those words instead of mangling them. Both behaviours are defensible; only this one is
- * the one λ was measured on.
+ * NFD → drop combining marks (Mn) → drop `'`, `’`, `-` → expand the four common Latin
+ * graphemes the a–z emission head cannot represent (`ß→ss`, `œ→oe`, `æ→ae`, `ø→o`) →
+ * require a–z. The canonical dictionary form is retained in [Projected.display]. These are
+ * standard keyboard fallback spellings, so users can trace the available a–z keys and still
+ * receive the correct canonical word. This deliberately changes the older sweep vocabulary;
+ * language evaluation must therefore be refreshed before quoting the old exact percentages.
  */
 object CtcAzProjection {
 
@@ -37,10 +32,18 @@ object CtcAzProjection {
     /** Non-alphabet joiners removed rather than rejected (the STRIP convention). */
     private val JOINERS = charArrayOf('\'', '’', '-')
 
+    /** Multi-character/special-letter fallbacks for the fixed a–z model head. */
+    private val EXPANSIONS = mapOf(
+        'ß' to "ss",
+        'œ' to "oe",
+        'æ' to "ae",
+        'ø' to "o",
+    )
+
     /**
      * The a–z surface of [word], or null when it has no a–z spelling (empty after
-     * stripping, or containing a character with no combining-mark decomposition such as
-     * `ß`, `œ`, `æ`, `ø`, or any digit/symbol).
+     * stripping, or containing a character without an a-z decomposition/expansion, such as a
+     * digit or symbol). Common Latin letters `ß`, `œ`, `æ`, and `ø` use explicit expansions.
      */
     fun project(word: String): String? {
         if (word.isEmpty()) return null
@@ -48,6 +51,11 @@ object CtcAzProjection {
         val sb = StringBuilder(decomposed.length)
         for (ch in COMBINING.replace(decomposed, "")) {
             if (ch in JOINERS) continue
+            val expansion = EXPANSIONS[ch]
+            if (expansion != null) {
+                sb.append(expansion)
+                continue
+            }
             if (ch !in 'a'..'z') return null
             sb.append(ch)
         }

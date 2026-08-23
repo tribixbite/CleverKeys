@@ -351,10 +351,11 @@ The beam emits a–z surfaces and `CtcLexiconTrie` reconstructs a word from the 
 path, so a CKDT lexicon has to be projected before it can be a trie, and the canonical
 form has to survive somewhere. `CtcAzProjection`:
 
-- **Projection** (`project`): NFD → drop combining marks → drop `'`/`’`/`-` → require a–z,
-  else the word is UNTYPEABLE and is DROPPED (not mangled: `ß`, `œ`, `æ`, `ø` have no a–z
-  decomposition). This is a 1:1 port of the `project_az` policy the λ sweep's lexicons were
-  built with, so the shipped λ matches the shipped vocabulary exactly.
+- **Projection** (`project`): NFD → drop combining marks → drop `'`/`’`/`-` → expand common
+  fixed-head Latin letters (`ß→ss`, `œ→oe`, `æ→ae`, `ø→o`) → require a–z; otherwise
+  the word is UNTYPEABLE and is DROPPED. The canonical form is retained for display. This
+  expansion changed the evaluated vocabulary in the 1.6 remediation and requires a refreshed
+  language evaluation before release; the earlier λ sweep used the pre-expansion vocabulary.
 - **Display map**: stripped surface → canonical form, stored ONLY where they differ.
   `CtcEngineAdapter.applyCanonicalDisplay` rewrites the slate through it before the shared
   pipeline (`display[word] ?: word`), the same overlay shape as the contraction mapping and
@@ -521,7 +522,7 @@ counts are `@Test` counts at 2026-08-19 and move with the suites:
 | `swipe/ctc/CtcContractionDisplayTest` | 7 | Alias→apostrophe display over the real merged-lexicon ordinals (H1) |
 | `swipe/ctc/CtcContractionKeysTest` | 7 | Alias-key injection: injectability over the trie alphabet, the MIN_FREQ floor, native-key skip |
 | `swipe/ctc/CtcLanguagePresetTest` | 19 | `presetFor` λ-by-lexicon-scale (en 4.0 / the CKDT six 2.0 / unknown→en), language-invariance of every other constant, the `CtcLanguageSupport` table (the seven-language supported set, the `PROVISIONAL` three, the empty `NEEDS_VALIDATION`, asset paths, normalization). Plus `tunedRuCkdt`'s E1 constants and the pinned fact that it is on a DIFFERENT footing than the shipping axis (see "Recorded, not wired" below) |
-| `swipe/ctc/CtcCkdtLexiconTest` | 18 | The a–z projection policy (folding, untypeable ß/œ/ø, joiners) + the REAL bundled fr/de/es dictionaries: record/untypeable/word/collision counts, the `255 − rank` scale, the canonical display map (`cafe`→`café`, `uber`→`über`, `nino`→`niño`), highest-frequency-wins collisions, and trie totality |
+| `swipe/ctc/CtcCkdtLexiconTest` | 19 | The a–z projection policy (folding, fixed-head expansions, joiners) + the REAL bundled fr/de/es dictionaries: record/untypeable/word/collision counts, the `255 − rank` scale, canonical display, deterministic collisions, and trie totality |
 | `swipe/ContractionOverlayTest` | 12 | The shared pure overlay decision matrix (geometric + ctc twin duty) |
 | `swipe/SwipeEngineRouterTest` | 10 | Routing table incl. `Mode.CTC` rows + `fromPref` canonicalization |
 | `SuggestionProvenanceTest` | 12 | `forRoutedEngine` totality + origin labels (M2) |

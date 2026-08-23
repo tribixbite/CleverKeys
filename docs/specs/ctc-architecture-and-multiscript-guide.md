@@ -461,7 +461,7 @@ hunks need re-anchoring only.
 @@
      /** Failed load attempts so far (audit L5: bounded retry, then latch). */
      private var modelLoadAttempts = 0
- 
+
 +    /**
 +     * True once the ONNX session has permanently failed to load for this adapter
 +     * ([MAX_MODEL_LOAD_ATTEMPTS] exhausted). Read from the MAIN thread by the dispatcher,
