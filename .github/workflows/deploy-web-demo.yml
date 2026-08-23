@@ -44,6 +44,35 @@ jobs:
       - name: Install site dependencies
         run: bun install --frozen-lockfile
 
+      - name: Install and run web-demo parity gates
+        working-directory: web_demo/tests
+        run: |
+          bun install --frozen-lockfile
+          bun run ctc-app-parity
+          bun run ctc-app-smoke
+
+      - name: Verify demo model matches the Android asset
+        working-directory: .
+        run: cmp web_demo/ctc_swipe_encoder.onnx src/main/assets/models/ctc_swipe_encoder.onnx
+
+      - name: Setup Chrome for browser smoke
+        id: setup-chrome
+        uses: browser-actions/setup-chrome@v1
+
+      - name: Run bounded browser harness
+        working-directory: .
+        run: |
+          python3 web_demo/serve.py --port 8765 > web_demo/tests/server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:8765/demo/ >/dev/null && break
+            sleep 1
+          done
+          node web_demo/tests/run_browser_tests.mjs \
+            --chrome "${{ steps.setup-chrome.outputs.chrome-path }}" \
+            --repeats 1 --out web_demo/tests/ci-results
+
       - name: Build Astro site
         run: bun run build
         env:
@@ -56,8 +85,8 @@ jobs:
 
           # /demo/ — ONNX-powered swipe demo. The HTML lives at
           # web_demo/demo/index.html and hits the same encoder/decoder
-          # pair (swipe_encoder_android.onnx / swipe_decoder_android.onnx)
-          # that the Android build ships inside the APK.
+          # (`ctc_swipe_encoder.onnx` plus the CTC beam in ctc-engine.js) used by the
+          # Android app. The parity/hash gates above prevent this claim from drifting.
           if [ -d "web_demo/demo" ]; then
             mkdir -p site/dist/demo
             cp -r web_demo/demo/. site/dist/demo/

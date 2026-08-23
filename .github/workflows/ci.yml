@@ -92,7 +92,6 @@ jobs:
     # Lint runs (as a hard gate) in the "Build and Test" job; not duplicated here.
     - name: Dependency analysis
       run: ./gradlew dependencies --stacktrace
-      continue-on-error: true
 
   security:
     name: Security Scan

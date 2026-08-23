@@ -1,15 +1,14 @@
-v1.6.0 - New Swipe Engines & Privacy Controls
+v1.6.0 - Swipe & Privacy
 
 NEW:
-• Geometric engine: swipe on any layout
-• CTC engine (opt-in), en/fr/de/es: 89.3% vs 74.6%
-  first-try on a 2,400-swipe test
-• "Learn From My Typing" master switch + data manager
-• Next-word prediction (opt-in)
-• Private copy skips the OS clipboard
-• Encrypted backups, TalkBack support
+• CTC is the default: en/fr/de/es validated; it/pt/sv provisional.
+  Other languages/layouts use geometric fallback.
+• English top-1: 89.3% vs 74.6% on 2,400 swipes
+• Learn From My Typing + next-word prediction
+• Private copy bypasses OS clipboard
+• Encrypted backups and TalkBack support
 
 FIXES:
-• Selection history saved with learning off
-• Learned phrases leaked across apps
-• Bigger non-English dictionaries; leak/crash fixes
+• Bounded, rollback-safe backup restore
+• Dual-language CTC, fuzzy rescue, ß/œ/æ/ø support
+• Learning isolation, selection history, leaks/crashes

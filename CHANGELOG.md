@@ -30,8 +30,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   CleverKeys. On a held-out 2,400-swipe English benchmark it gets the intended word first
   try **89.3%** of the time versus **74.6%** for the old transformer engine on the same set
   (`docs/eval/2026-07-24-test2400-head2head.md`). It serves English, French, German and
-  Spanish on any Latin layout that has all 26 letters. Italian, Portuguese and Swedish are
-  not enabled — they lack the validation data — and use the geometric engine.
+  Spanish as validated languages on any Latin layout that has all 26 letters. Italian,
+  Portuguese and Swedish are enabled provisionally while language-specific benchmarks are
+  gathered. Other languages and layouts use the geometric engine.
 - **Geometric swipe engine**: a layout-agnostic, zero-training shape decoder that matches
   the traced path against word shapes on the actual key grid. Swipe typing is no longer
   limited to QWERTY — Dvorak, Colemak, AZERTY, QWERTZ, JCUKEN, Greek and custom layouts

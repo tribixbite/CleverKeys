@@ -75,7 +75,7 @@ dependencies {
 // =============================================================================
 // UPDATE ONLY THESE THREE VALUES FOR A NEW RELEASE:
 ext.VERSION_MAJOR = 1
-ext.VERSION_MINOR = 5
+ext.VERSION_MINOR = 6
 ext.VERSION_PATCH = 0
 // =============================================================================
 // DERIVED VALUES (auto-calculated, do not edit):
@@ -425,6 +425,9 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.ClipboardSearchRegexTest',
     'tribixbite.cleverkeys.ConfigNullSafetyTest',
     'tribixbite.cleverkeys.CoreImeHygieneDriftTest',
+    'tribixbite.cleverkeys.ReleaseMetadataDriftTest',
+    'tribixbite.cleverkeys.SourceTextHygieneTest',
+    'tribixbite.cleverkeys.TranslationCoverageDriftTest',
     'tribixbite.cleverkeys.PredictionTaskRunnerTest',
     'tribixbite.cleverkeys.TestRunnerListDriftTest',
     'tribixbite.cleverkeys.onnx.ModelLoaderReadBytesTest',
@@ -508,6 +511,8 @@ tasks.register('runPureTests', JavaExec) {
     // Contraction-alias injection into the lexicon trie: what makes the mapping table
     // reachable by the beam at all, and the floor frequency that keeps it safe (2026-08-17).
     'tribixbite.cleverkeys.swipe.ctc.CtcContractionKeysTest',
+    'tribixbite.cleverkeys.swipe.ctc.CtcFuzzyRescueTest',
+    'tribixbite.cleverkeys.swipe.ctc.CtcRankMergerTest',
     // Greek final-sigma repair — PHASE_O §3.3 prerequisite. sigma/final-sigma are distinct KEYS
     // in different rows, so an unrepaired word-final sigma is undecodable for 25.7% of the pack.
     'tribixbite.cleverkeys.swipe.ctc.CtcGreekOrthographyTest',
@@ -606,7 +611,7 @@ tasks.register('runPureTests', JavaExec) {
   // when supplied, so the defaults stay in the Kotlin where they are documented. Lets a
   // measurement run be scaled (`-PreplayPairs=800 -PreplayDecoys=6`) without editing the test,
   // and the replay prints whichever values it ran with.
-  ['replayPairs', 'replayDecoys', 'replayTraces'].each { knob ->
+  ['replayPairs', 'replayDecoys', 'replayTraces', 'replayMaxCtx', 'replayCorpus'].each { knob ->
     if (project.hasProperty(knob)) systemProperty knob, project.property(knob)
   }
   // ONNX in PURE JVM tests on Termux.
@@ -639,6 +644,7 @@ tasks.register('runMockTests', JavaExec) {
   dependsOn 'compileDebugUnitTestKotlin'
   group = 'verification'
   description = 'Run MockK-based tests with android.jar stubs (works on ARM64)'
+  jvmArgs '-XX:+EnableDynamicAgentLoading'
 
   def mockTestClasses = [
     'tribixbite.cleverkeys.SwipePrunerTest',
@@ -677,12 +683,18 @@ tasks.register('runMockTests', JavaExec) {
   // Resolve SDK location: ANDROID_HOME (CI), ANDROID_SDK_ROOT, or ~/android-sdk (Termux)
   def sdkDir = System.getenv('ANDROID_HOME') ?: System.getenv('ANDROID_SDK_ROOT') ?: "${System.getProperty('user.home')}/android-sdk"
   def androidJar = file("${sdkDir}/platforms/android-34/android.jar")
+  def androidDependencyClasses = configurations.debugRuntimeClasspath.incoming.artifactView {
+    attributes.attribute(
+      org.gradle.api.attributes.Attribute.of('artifactType', String),
+      'android-classes-jar'
+    )
+  }.files
   classpath = files(
     "${buildDir}/intermediates/javac/debugUnitTest/classes",
     "${buildDir}/tmp/kotlin-classes/debugUnitTest",
     "${buildDir}/intermediates/javac/debug/classes",
     "${buildDir}/tmp/kotlin-classes/debug",
-  ) + configurations.debugUnitTestRuntimeClasspath + configurations.debugRuntimeClasspath + files(androidJar)
+  ) + configurations.debugUnitTestRuntimeClasspath + androidDependencyClasses + files(androidJar)
 
   if (project.hasProperty('testClass')) {
     def cls = project.property('testClass')

@@ -3,6 +3,7 @@ package tribixbite.cleverkeys
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
@@ -31,8 +32,13 @@ import org.junit.Test
 class CoroutineScopeLifecycleTest {
 
     /** Mirror of the field + method Pointers introduced, so the test tracks production 1:1. */
-    private class ScopeOwner {
-        val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private class ScopeOwner(exceptionHandler: CoroutineExceptionHandler? = null) {
+        val scope = CoroutineScope(
+            SupervisorJob() + Dispatchers.IO +
+                (exceptionHandler ?: CoroutineExceptionHandler { _, throwable ->
+                    throw AssertionError("unexpected coroutine failure", throwable)
+                })
+        )
         fun close() { scope.cancel() }
     }
 
@@ -79,7 +85,10 @@ class CoroutineScopeLifecycleTest {
 
     @Test
     fun `SupervisorJob isolates a failing child so the scope survives sibling failure`() = runBlocking {
-        val owner = ScopeOwner()
+        val captured = CompletableDeferred<Throwable>()
+        val owner = ScopeOwner(CoroutineExceptionHandler { _, throwable ->
+            captured.complete(throwable)
+        })
         val failed = CompletableDeferred<Unit>()
         // A failing child under a SupervisorJob must NOT cancel the parent scope.
         owner.scope.launch {
@@ -90,6 +99,7 @@ class CoroutineScopeLifecycleTest {
             }
         }
         withTimeout(2_000) { failed.await() }
+        assertThat(withTimeout(2_000) { captured.await() }).isInstanceOf(IllegalStateException::class.java)
         // Give the failure a beat to (not) propagate, then assert the scope is still usable.
         assertThat(owner.scope.isActive).isTrue()
 

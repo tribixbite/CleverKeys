@@ -171,8 +171,8 @@ jobs:
         retention-days: 7
         if-no-files-found: ignore
 
-  visual-regression:
-    name: Visual Regression Tests
+  screenshot-capture:
+    name: Screenshot Capture
     runs-on: ubuntu-latest
     needs: build
 
@@ -203,7 +203,7 @@ jobs:
         sudo udevadm control --reload-rules
         sudo udevadm trigger --name-match=kvm
 
-    - name: Run Visual Regression Tests
+    - name: Capture Settings Screenshot
       uses: reactivecircus/android-emulator-runner@v2
       with:
         api-level: 33
@@ -211,18 +211,18 @@ jobs:
         arch: x86_64
         emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -no-snapshot
         disable-animations: true
-        script: bash .github/scripts/emulator-ci.sh visual
-    - name: Upload visual regression artifacts
+        script: bash .github/scripts/emulator-ci.sh capture
+    - name: Upload screenshot artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: visual-regression-screenshots
+        name: settings-screenshot-capture
         path: screenshots/
         retention-days: 30
         if-no-files-found: ignore
 
     - name: Generate summary
       run: |
-        echo "## Visual Regression Test Results" >> $GITHUB_STEP_SUMMARY
+        echo "## Screenshot Capture Results" >> $GITHUB_STEP_SUMMARY
         if [ -d screenshots ] && [ "$(ls -A screenshots)" ]; then
           echo "- Keyboard Layout: Captured" >> $GITHUB_STEP_SUMMARY
           echo "- Shift State: Captured" >> $GITHUB_STEP_SUMMARY
@@ -251,10 +251,19 @@ jobs:
         name: apks
         path: ./apk/
 
+    - name: Download androidTest APK
+      uses: actions/download-artifact@v4
+      with:
+        name: apks-androidtest
+        path: ./apk-test/
+
     - name: Verify APK download
       run: |
         APK_FILE=$(find ./apk -name "*.apk" | head -1)
         echo "APK_FILE=$APK_FILE" >> $GITHUB_ENV
+        TEST_APK_FILE=$(find ./apk-test -name "*.apk" | head -1)
+        [ -n "$TEST_APK_FILE" ] || { echo "::error::androidTest APK missing"; exit 1; }
+        echo "TEST_APK_FILE=$TEST_APK_FILE" >> $GITHUB_ENV
 
     - name: Enable KVM
       run: |
@@ -277,11 +286,19 @@ jobs:
         echo "## Accessibility Test Results" >> $GITHUB_STEP_SUMMARY
         echo "- Keyboard installed and enabled" >> $GITHUB_STEP_SUMMARY
         echo "- IME registration verified via dumpsys" >> $GITHUB_STEP_SUMMARY
+        echo "- Keyboard accessibility instrumented test passed" >> $GITHUB_STEP_SUMMARY
+    - name: Upload accessibility instrumentation log
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: accessibility-instrumentation-log
+        path: instrumentation.log
+        if-no-files-found: warn
 
   test-summary:
     name: Test Summary
     runs-on: ubuntu-latest
-    needs: [ui-tests, visual-regression, accessibility-testing]
+    needs: [ui-tests, screenshot-capture, accessibility-testing]
     if: always()
 
     steps:
@@ -291,10 +308,10 @@ jobs:
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "## Test Results Overview" >> $GITHUB_STEP_SUMMARY
         echo "- **UI Tests**: ${{ needs.ui-tests.result }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Visual Regression**: ${{ needs.visual-regression.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Screenshot Capture**: ${{ needs.screenshot-capture.result }}" >> $GITHUB_STEP_SUMMARY
         echo "- **Accessibility Tests**: ${{ needs.accessibility-testing.result }}" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "## Key Metrics Tested" >> $GITHUB_STEP_SUMMARY
         echo "- UI responsiveness across Android versions (API 21, 29, 34)" >> $GITHUB_STEP_SUMMARY
-        echo "- Visual consistency of keyboard layouts" >> $GITHUB_STEP_SUMMARY
-        echo "- Accessibility compliance" >> $GITHUB_STEP_SUMMARY
+        echo "- Settings screen capture artifact (no baseline comparison)" >> $GITHUB_STEP_SUMMARY
+        echo "- Keyboard virtual nodes, actions, hover-off path, and touch-path smoke" >> $GITHUB_STEP_SUMMARY

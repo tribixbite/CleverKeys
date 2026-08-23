@@ -121,7 +121,7 @@ async function main() {
         }
         if (pageErrors.length) console.log(`\npage errors: ${pageErrors.length}`);
         console.log(`\nwrote ${resultsPath}`);
-        return report.engines.every((e) => report.words[e].top1 > 0) ? 0 : 1;
+        return report.engines.every((e) => report.words[e].top1 > 0) && pageErrors.length === 0 ? 0 : 1;
     } finally {
         await browser.close();
     }

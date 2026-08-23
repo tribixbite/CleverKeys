@@ -14,6 +14,16 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 
+# Release prep rewrites version/metadata files. Refuse to mix those mutations with unrelated
+# tracked or untracked work (especially root-level session exports).
+if [ -n "$(git -C "$PROJECT_DIR" status --porcelain --untracked-files=all)" ]; then
+    echo "Error: release preparation requires a clean worktree (including untracked files)."
+    git -C "$PROJECT_DIR" status --short
+    exit 1
+fi
+PREVIOUS_RELEASE=$(git -C "$PROJECT_DIR" describe --tags --abbrev=0)
+git -C "$PROJECT_DIR" diff --check "$PREVIOUS_RELEASE"..HEAD
+
 # Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'

@@ -30,7 +30,7 @@
 # each child, along with ANDROID_SERIAL, so bare `adb` targets the right device.
 set -euo pipefail
 
-MODE="${1:?usage: emulator-ci.sh gate|visual|a11y}"
+MODE="${1:?usage: emulator-ci.sh gate|capture|a11y}"
 
 # The debug build applies applicationIdSuffix '.debug'; component classes keep their
 # original (non-suffixed) fully-qualified names.
@@ -71,19 +71,40 @@ assert_alive() {
   adb shell pidof "$PKG" || { echo "::error::App process died"; exit 1; }
 }
 
+run_instrumentation() {
+  local classes="$1"
+  echo "Installing androidTest APK: ${TEST_APK_FILE:?TEST_APK_FILE not set}"
+  adb install -r "$TEST_APK_FILE"
+  local runner
+  runner=$(adb shell pm list instrumentation | tr -d '\r' \
+    | sed -n "s#^instrumentation:\([^ ]*\) (target=$PKG)\$#\1#p" | head -1)
+  [ -n "$runner" ] || { echo "::error::no instrumentation registered for $PKG"; exit 1; }
+  set +e
+  adb shell am instrument -w -e class "$classes" -e disableAnalytics true "$runner" 2>&1 \
+    | tee instrumentation.log
+  set -e
+  if grep -qE "FAILURES!!!|Process crashed|INSTRUMENTATION_ABORTED" instrumentation.log; then
+    echo "::error::Instrumented tests failed"
+    exit 1
+  fi
+  grep -qE "^OK \([0-9]+ test" instrumentation.log \
+    || { echo "::error::No OK line — the runner did not complete"; exit 1; }
+}
+
 case "$MODE" in
   a11y)
     adb shell settings put secure accessibility_enabled 1
-    echo "Accessibility test completed"
+    run_instrumentation "tribixbite.cleverkeys.a11y.KeyboardAccessibilityInstrumentedTest"
+    echo "Accessibility node, action, hover-off, and touch-path assertions passed"
     ;;
 
-  visual)
+  capture)
     mkdir -p screenshots
     adb shell am start -W -n "$PKG/tribixbite.cleverkeys.SettingsActivity"
     sleep 2
     assert_alive
     adb exec-out screencap -p > screenshots/settings-screen.png || true
-    echo "Visual regression test completed"
+    echo "Screenshot capture completed (artifact only; no baseline comparison claimed)"
     ;;
 
   gate)
@@ -97,52 +118,15 @@ case "$MODE" in
     # ── The instrumented gate ────────────────────────────────────────────────────────
     # A CURATED set, not the whole suite: the full 1,395-test run takes ~30 min on
     # emulator.wtf and would be slower and flakier here, and a gate that times out teaches
-    # people to ignore it. These three pin invariants no pure test can reach — real assets
+    # people to ignore it. These five pin invariants no pure test can reach — real assets
     # parsed on-device, a real ONNX session, real keyboard geometry. Full-suite runs stay a
     # deliberate ew-cli action.
-    echo "Installing androidTest APK: ${TEST_APK_FILE:?TEST_APK_FILE not set}"
-    adb install -r "$TEST_APK_FILE"
-
-    # DISCOVER the instrumentation rather than assume it. It lives in the TEST package
-    # (`<applicationId>.test`), not the app package — `$PKG/androidx.test.runner...` gives
-    # `INSTRUMENTATION_FAILED`, which is how the first real run of this gate died. Deriving it
-    # from `pm list instrumentation` means an applicationId or runner change cannot silently
-    # break it, and the "No OK line" check already proved it catches the failure loudly.
-    RUNNER=$(adb shell pm list instrumentation \
-      | tr -d '\r' \
-      | sed -n "s#^instrumentation:\([^ ]*\) (target=$PKG)\$#\1#p" \
-      | head -1)
-    [ -n "$RUNNER" ] || {
-      echo "::error::no instrumentation registered for $PKG — the androidTest APK did not install"
-      adb shell pm list instrumentation
-      exit 1
-    }
-    echo "Instrumentation: $RUNNER"
-    CLASSES="tribixbite.cleverkeys.swipe.CtcMultiLanguageInstrumentedTest,tribixbite.cleverkeys.GeometricSwipeOracleTest,tribixbite.cleverkeys.CrashGuardInstrumentedTest"
-
-    echo "Running instrumented classes: $CLASSES"
-    # No -r: the raw stream emits INSTRUMENTATION_STATUS records, while the human-readable
-    # form ends in "OK (N tests)" / "FAILURES!!!" — which is what the verdict below reads.
-    # Mismatching those is how a gate ends up always erroring, or worse, always passing.
-    set +e
-    adb shell am instrument -w -e class "$CLASSES" -e disableAnalytics true "$RUNNER" 2>&1 \
-      | tee instrumentation.log
-    set -e
-
-    # `am instrument` exits 0 even when tests fail — the verdict is only in the stream.
-    if grep -qE "FAILURES!!!|Process crashed|INSTRUMENTATION_ABORTED" instrumentation.log; then
-      echo "::error::Instrumented tests FAILED — see the instrumentation-log artifact"
-      exit 1
-    fi
-    # A missing OK line is also failure: a runner that never started must not pass by
-    # producing no bad news. That half is what catches an install or ABI problem.
-    grep -qE "^OK \([0-9]+ test" instrumentation.log \
-      || { echo "::error::No OK line — the runner did not complete"; exit 1; }
-    grep -E "^OK \([0-9]+ test" instrumentation.log
+    CLASSES="tribixbite.cleverkeys.swipe.CtcMultiLanguageInstrumentedTest,tribixbite.cleverkeys.GeometricSwipeOracleTest,tribixbite.cleverkeys.CrashGuardInstrumentedTest,tribixbite.cleverkeys.a11y.KeyboardAccessibilityInstrumentedTest,tribixbite.cleverkeys.backup.crypto.BackupPassphraseStoreInstrumentedTest"
+    run_instrumentation "$CLASSES"
     ;;
 
   *)
-    echo "::error::unknown mode '$MODE' (expected gate|visual|a11y)"
+    echo "::error::unknown mode '$MODE' (expected gate|capture|a11y)"
     exit 1
     ;;
 esac
