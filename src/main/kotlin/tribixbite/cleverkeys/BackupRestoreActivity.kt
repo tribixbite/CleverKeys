@@ -208,7 +208,13 @@ class BackupRestoreActivity : ComponentActivity() {
     /** Toast the actual output path so headless callers see a real file location. */
     private fun headlessToast(label: String) {
         val path = backupRestoreManager.lastOutputPath
-        val msg = if (path != null) "$label: $path" else label
+        val result = if (path != null) "$label: $path" else label
+        val protection = when (passphraseStore.protectionState()) {
+            BackupPassphraseStore.ProtectionState.ANDROID_KEYSTORE -> "Android Keystore"
+            BackupPassphraseStore.ProtectionState.LEGACY_APP_PRIVATE -> "legacy app-private"
+            BackupPassphraseStore.ProtectionState.NOT_SET -> "not set"
+        }
+        val msg = "$result\nPassword protection: $protection"
         Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
     }
 

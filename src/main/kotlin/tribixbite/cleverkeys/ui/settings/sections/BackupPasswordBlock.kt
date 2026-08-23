@@ -47,6 +47,7 @@ internal fun SettingsActivity.BackupPasswordBlock() {
     // `remember` on a mutableState so status re-reads after a Set/Remove without a
     // full recomposition trigger from elsewhere. hasPassphrase is cheap (prefs read).
     var hasPassphrase by remember { mutableStateOf(backupPassphraseStore.hasPassphrase()) }
+    var protectionState by remember { mutableStateOf(backupPassphraseStore.protectionState()) }
     var showSetDialog by remember { mutableStateOf(false) }
     var showRemoveDialog by remember { mutableStateOf(false) }
     var isChange by remember { mutableStateOf(false) }
@@ -62,7 +63,14 @@ internal fun SettingsActivity.BackupPasswordBlock() {
 
     if (hasPassphrase) {
         Text(
-            text = "Set ✓ — exports are encrypted 🔒",
+            text = when (protectionState) {
+                tribixbite.cleverkeys.backup.crypto.BackupPassphraseStore.ProtectionState.ANDROID_KEYSTORE ->
+                    "Set — protected by Android Keystore; exports are encrypted"
+                tribixbite.cleverkeys.backup.crypto.BackupPassphraseStore.ProtectionState.LEGACY_APP_PRIVATE ->
+                    "Set — legacy app-private protection (Android 5); exports are encrypted"
+                tribixbite.cleverkeys.backup.crypto.BackupPassphraseStore.ProtectionState.NOT_SET ->
+                    "Not set"
+            },
             fontSize = 12.sp,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(bottom = 4.dp),
@@ -129,10 +137,17 @@ internal fun SettingsActivity.BackupPasswordBlock() {
             isChange = hasPassphrase,
             onDismiss = { showSetDialog = false },
             onConfirm = { newPass ->
-                backupPassphraseStore.setPassphrase(newPass)
-                java.util.Arrays.fill(newPass, ' ')
-                hasPassphrase = true
-                showSetDialog = false
+                try {
+                    backupPassphraseStore.setPassphrase(newPass)
+                    hasPassphrase = true
+                    protectionState = backupPassphraseStore.protectionState()
+                    showSetDialog = false
+                    null
+                } catch (e: tribixbite.cleverkeys.backup.crypto.BackupPassphraseStore.StorageUnavailableException) {
+                    e.message ?: "Android Keystore could not protect the password."
+                } finally {
+                    java.util.Arrays.fill(newPass, ' ')
+                }
             },
             verifyCurrent = { candidate ->
                 val stored = backupPassphraseStore.getPassphrase()
@@ -153,6 +168,7 @@ internal fun SettingsActivity.BackupPasswordBlock() {
                 if (ok) {
                     backupPassphraseStore.clear()
                     hasPassphrase = false
+                    protectionState = backupPassphraseStore.protectionState()
                     showRemoveDialog = false
                 }
                 ok
@@ -170,7 +186,7 @@ internal fun SettingsActivity.BackupPasswordBlock() {
 private fun BackupPasswordSetDialog(
     isChange: Boolean,
     onDismiss: () -> Unit,
-    onConfirm: (CharArray) -> Unit,
+    onConfirm: (CharArray) -> String?,
     verifyCurrent: (CharArray) -> Boolean,
 ) {
     var current by remember { mutableStateOf("") }
@@ -243,7 +259,7 @@ private fun BackupPasswordSetDialog(
                         error = "Password must be at least $MIN_LEN characters."
                     pass != confirm ->
                         error = "Passwords do not match."
-                    else -> onConfirm(pass.toCharArray())
+                    else -> onConfirm(pass.toCharArray())?.let { error = it }
                 }
             }) { Text("Save") }
         },

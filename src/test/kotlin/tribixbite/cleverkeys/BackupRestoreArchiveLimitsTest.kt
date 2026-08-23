@@ -54,9 +54,13 @@ class BackupRestoreArchiveLimitsTest {
     private lateinit var clipboardDb: ClipboardDatabase
     private lateinit var shortSwipeImporter: ShortSwipeImporter
     private lateinit var shortSwipeManager: ShortSwipeCustomizationManager
+    private val testRoot = File("build/test-work/backup-archive-limits")
 
     @Before
     fun setUp() {
+        testRoot.deleteRecursively()
+        File(testRoot, "files").mkdirs()
+        File(testRoot, "cache").mkdirs()
         mockkStatic(Log::class)
         every { Log.d(any(), any<String>()) } returns 0
         every { Log.e(any(), any<String>()) } returns 0
@@ -80,7 +84,8 @@ class BackupRestoreArchiveLimitsTest {
         every { context.packageManager } returns packageManager
         every { context.resources } returns resources
         every { context.contentResolver } returns contentResolver
-        every { context.filesDir } returns File(System.getProperty("java.io.tmpdir"), "ck-test-files-limits")
+        every { context.filesDir } returns File(testRoot, "files")
+        every { context.cacheDir } returns File(testRoot, "cache")
 
         val pkgInfo = mockk<PackageInfo>(relaxed = true).also {
             it.versionName = "1.4.0-test"
@@ -119,7 +124,7 @@ class BackupRestoreArchiveLimitsTest {
         // No real media operations — getMediaFile writes under the (fake) tmp filesDir.
         mockkConstructor(ClipboardMediaManager::class)
         every { anyConstructed<ClipboardMediaManager>().getMediaFile(any()) } answers {
-            File(System.getProperty("java.io.tmpdir"), "ck-test-files-limits/${firstArg<String>()}")
+            File(testRoot, "files/${firstArg<String>()}")
         }
         every { anyConstructed<ClipboardMediaManager>().generateThumbnail(any(), any()) } returns null
         every { anyConstructed<ClipboardMediaManager>().cleanupOrphans(any()) } returns Unit
@@ -128,12 +133,15 @@ class BackupRestoreArchiveLimitsTest {
     @After
     fun tearDown() {
         unmockkAll()
+        testRoot.deleteRecursively()
     }
 
     // ── helpers ────────────────────────────────────────────────────────────────
 
-    private fun newManager(): BackupRestoreManager =
-        BackupRestoreManager(context, shortSwipeImporter)
+    private fun newManager(
+        limits: BackupRestoreManager.ImportLimits = BackupRestoreManager.ImportLimits(),
+    ): BackupRestoreManager =
+        BackupRestoreManager(context, shortSwipeImporter, importLimits = limits)
 
     private fun fakeUriForInput(bytes: ByteArray): Uri {
         val uri = mockk<Uri>(relaxed = true)
@@ -227,7 +235,7 @@ class BackupRestoreArchiveLimitsTest {
             addProperty("app_version", "1.4.0-test")
         }
         entries.add(BackupRestoreManager.ENTRY_MANIFEST to manifest.toString().toByteArray(Charsets.UTF_8))
-        // Unknown entries are cheap (logged + skipped) — enough to cross the cap.
+        // Unknown entries are bounded/drained — enough tiny entries to cross the count cap.
         for (i in 0 until BackupRestoreManager.MAX_IMPORT_ENTRIES) {
             entries.add("misc/$i.bin" to ByteArray(1) { i.toByte() })
         }
@@ -306,9 +314,121 @@ class BackupRestoreArchiveLimitsTest {
     }
 
     @Test
+    fun importFullBackup_oversizedMediaNeverTouchesLiveMedia() {
+        val path = "clipboard_media/oversized.bin"
+        val zipBytes = buildManifestZipWithBomb(path, 256 * 1024L)
+        val limits = BackupRestoreManager.ImportLimits(
+            mediaEntryBytes = 128 * 1024L,
+            importTotalBytes = 1024 * 1024L,
+        )
+
+        val result = newManager(limits).importFullBackup(fakeUriForInput(zipBytes), prefs)
+
+        assertFalse(result.success)
+        assertTrue(result.errorMessage.orEmpty().contains("byte limit"))
+        assertFalse(File(testRoot, "files/$path").exists())
+        verify(exactly = 0) { clipboardDb.importFromJSON(any()) }
+    }
+
+    @Test
+    fun importFullBackup_aggregateLimitRollsBackAllStagedMedia() {
+        val manifest = JsonObject().apply {
+            addProperty("format", "cleverkeys_full_backup")
+            addProperty("format_version", BackupRestoreManager.FULL_BACKUP_FORMAT_VERSION)
+        }
+        val zipBytes = buildZip(listOf(
+            BackupRestoreManager.ENTRY_MANIFEST to manifest.toString().toByteArray(),
+            "clipboard_media/one.bin" to ByteArray(80 * 1024),
+            "clipboard_media/two.bin" to ByteArray(80 * 1024),
+        ))
+        val limits = BackupRestoreManager.ImportLimits(
+            mediaEntryBytes = 128 * 1024L,
+            importTotalBytes = 140 * 1024L,
+        )
+
+        val result = newManager(limits).importFullBackup(fakeUriForInput(zipBytes), prefs)
+
+        assertFalse(result.success)
+        assertTrue(result.errorMessage.orEmpty().contains("aggregate limit"))
+        assertFalse(File(testRoot, "files/clipboard_media/one.bin").exists())
+        assertFalse(File(testRoot, "files/clipboard_media/two.bin").exists())
+    }
+
+    @Test
+    fun importFullBackup_unknownEntriesCannotBypassAggregateLimit() {
+        val manifest = JsonObject().apply {
+            addProperty("format", "cleverkeys_full_backup")
+            addProperty("format_version", BackupRestoreManager.FULL_BACKUP_FORMAT_VERSION)
+        }
+        val zipBytes = buildZip(listOf(
+            BackupRestoreManager.ENTRY_MANIFEST to manifest.toString().toByteArray(),
+            "metadata/vendor-one.bin" to ByteArray(80 * 1024),
+            "metadata/vendor-two.bin" to ByteArray(80 * 1024),
+        ))
+        val limits = BackupRestoreManager.ImportLimits(
+            mediaEntryBytes = 128 * 1024L,
+            importTotalBytes = 140 * 1024L,
+        )
+
+        val result = newManager(limits).importFullBackup(fakeUriForInput(zipBytes), prefs)
+
+        assertFalse(result.success)
+        assertTrue(result.errorMessage.orEmpty().contains("aggregate limit"))
+        verify(exactly = 0) { clipboardDb.importFromJSON(any()) }
+    }
+
+    @Test
+    fun importFullBackup_missingManifestPreservesExistingMedia() {
+        val path = "clipboard_media/existing.bin"
+        val live = File(testRoot, "files/$path").apply {
+            parentFile!!.mkdirs()
+            writeText("original")
+        }
+        val zipBytes = buildZip(listOf(path to "replacement".toByteArray()))
+
+        val result = newManager().importFullBackup(fakeUriForInput(zipBytes), prefs)
+
+        assertFalse(result.success)
+        assertTrue(result.errorMessage.orEmpty().contains("missing manifest"))
+        assertEquals("original", live.readText())
+    }
+
+    @Test
+    fun importClipboardHistoryZip_partialMediaCommitRestoresExistingFile() {
+        val firstPath = "clipboard_media/first.bin"
+        val secondPath = "clipboard_media/blocker/second.bin"
+        val firstLive = File(testRoot, "files/$firstPath").apply {
+            parentFile!!.mkdirs()
+            writeText("original")
+        }
+        // A regular file where the second target needs a directory forces commit failure after
+        // the first replacement, exercising the rollback journal.
+        File(testRoot, "files/clipboard_media/blocker").writeText("not-a-directory")
+        val clipboardJson = JSONObject().apply {
+            put("total_active", 0); put("total_pinned", 0); put("total_todo", 0)
+        }
+        val zipBytes = buildZip(listOf(
+            "clipboard_data.json" to clipboardJson.toString().toByteArray(),
+            firstPath to "replacement".toByteArray(),
+            secondPath to "second".toByteArray(),
+        ))
+
+        try {
+            newManager().importClipboardHistoryZip(fakeUriForInput(zipBytes))
+            fail("Expected the invalid second target to fail media commit")
+        } catch (_: Exception) {
+            assertEquals("original", firstLive.readText())
+            verify(exactly = 0) { clipboardDb.importFromJSON(any()) }
+        }
+    }
+
+    @Test
     fun archiveLimitConstants_areStable() {
         // Deliberate ack: bumping these changes the DoS ceiling for every importer.
         assertEquals(32 * 1024 * 1024, BackupRestoreManager.MAX_JSON_ENTRY_BYTES)
+        assertEquals(64L * 1024 * 1024, BackupRestoreManager.MAX_MEDIA_ENTRY_BYTES)
+        assertEquals(512L * 1024 * 1024, BackupRestoreManager.MAX_IMPORT_TOTAL_BYTES)
+        assertEquals(512L * 1024 * 1024, BackupRestoreManager.MAX_ARCHIVE_CONTAINER_BYTES)
         assertEquals(10_000, BackupRestoreManager.MAX_IMPORT_ENTRIES)
     }
 }

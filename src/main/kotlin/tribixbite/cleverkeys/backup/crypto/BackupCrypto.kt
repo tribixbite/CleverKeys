@@ -1,6 +1,7 @@
 package tribixbite.cleverkeys.backup.crypto
 
 import java.io.InputStream
+import java.io.IOException
 import java.io.OutputStream
 import java.security.SecureRandom
 import java.util.Arrays
@@ -259,7 +260,13 @@ object BackupCrypto {
         container: InputStream,
         output: OutputStream,
         passphrase: CharArray,
+        maxContainerBytes: Long = Long.MAX_VALUE,
+        maxPlaintextBytes: Long = Long.MAX_VALUE,
     ): EncryptedBackupFormat.Header {
+        require(maxContainerBytes >= EncryptedBackupFormat.HEADER_LEN) {
+            "maxContainerBytes must fit the encrypted header"
+        }
+        require(maxPlaintextBytes >= 0L) { "maxPlaintextBytes must be non-negative" }
         // Read exactly the header bytes, then parse (enforces the iteration cap
         // before any KDF work).
         val headerBytes = readExactly(container, EncryptedBackupFormat.HEADER_LEN)
@@ -283,17 +290,35 @@ object BackupCrypto {
             cipher.updateAAD(headerBytes)
 
             val buffer = ByteArray(STREAM_CHUNK)
+            var containerBytes = EncryptedBackupFormat.HEADER_LEN.toLong()
+            var plaintextBytes = 0L
+
+            fun writePlaintext(chunk: ByteArray?) {
+                if (chunk == null || chunk.isEmpty()) return
+                plaintextBytes += chunk.size
+                if (plaintextBytes > maxPlaintextBytes) {
+                    throw IOException(
+                        "Decrypted backup exceeds $maxPlaintextBytes byte limit"
+                    )
+                }
+                output.write(chunk)
+            }
+
             while (true) {
                 val read = container.read(buffer)
                 if (read < 0) break
                 if (read > 0) {
-                    val chunk = cipher.update(buffer, 0, read)
-                    if (chunk != null && chunk.isNotEmpty()) output.write(chunk)
+                    containerBytes += read
+                    if (containerBytes > maxContainerBytes) {
+                        throw IOException(
+                            "Encrypted backup exceeds $maxContainerBytes byte limit"
+                        )
+                    }
+                    writePlaintext(cipher.update(buffer, 0, read))
                 }
             }
             // Verifies the tag; throws AEADBadTagException on wrong key / tamper.
-            val finalChunk = cipher.doFinal()
-            if (finalChunk != null && finalChunk.isNotEmpty()) output.write(finalChunk)
+            writePlaintext(cipher.doFinal())
             output.flush()
             return header
         } finally {

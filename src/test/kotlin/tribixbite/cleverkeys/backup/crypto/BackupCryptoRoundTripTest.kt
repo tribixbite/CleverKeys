@@ -6,6 +6,8 @@ import java.security.SecureRandom
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Test
 
 /**
@@ -132,5 +134,36 @@ class BackupCryptoRoundTripTest {
 
         // And the buffered decrypt agrees with the streaming one.
         assertArrayEquals(payload, BackupCrypto.decrypt(container, passphrase.copyOf()).bytes)
+    }
+
+    @Test
+    fun streamingDecryptRejectsContainerAndPlaintextOverConfiguredCaps() {
+        val payload = ByteArray(256 * 1024) { (it and 0xff).toByte() }
+        val encryptedOut = ByteArrayOutputStream()
+        BackupCrypto.encryptStream(
+            ByteArrayInputStream(payload), encryptedOut, passphrase.copyOf(),
+            EncryptedBackupFormat.FULL_BACKUP_ZIP, 42L, rng, lowIters,
+        )
+        val container = encryptedOut.toByteArray()
+
+        try {
+            BackupCrypto.decryptToStream(
+                ByteArrayInputStream(container), ByteArrayOutputStream(), passphrase.copyOf(),
+                maxPlaintextBytes = payload.size.toLong() - 1,
+            )
+            fail("Expected plaintext ceiling to reject the decrypted stream")
+        } catch (e: java.io.IOException) {
+            assertTrue(e.message.orEmpty().contains("Decrypted backup exceeds"))
+        }
+
+        try {
+            BackupCrypto.decryptToStream(
+                ByteArrayInputStream(container), ByteArrayOutputStream(), passphrase.copyOf(),
+                maxContainerBytes = container.size.toLong() - 1,
+            )
+            fail("Expected container ceiling to reject the encrypted stream")
+        } catch (e: java.io.IOException) {
+            assertTrue(e.message.orEmpty().contains("Encrypted backup exceeds"))
+        }
     }
 }

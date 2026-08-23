@@ -85,7 +85,18 @@ class BackupPassphraseStoreTest {
         unmockkAll()
     }
 
-    private fun newStore() = BackupPassphraseStore(context)
+    private fun newStore() = BackupPassphraseStore(context, sdkInt = 22)
+
+    @Test
+    fun modernKeystoreFailureDoesNotPersistFallback() {
+        val store = BackupPassphraseStore(context, sdkInt = 34)
+        org.junit.Assert.assertThrows(BackupPassphraseStore.StorageUnavailableException::class.java) {
+            store.setPassphrase("must-not-persist".toCharArray())
+        }
+        assertThat(backing).doesNotContainKey(BackupPassphraseStore.PREF_CIPHERTEXT)
+        assertThat(store.protectionState())
+            .isEqualTo(BackupPassphraseStore.ProtectionState.NOT_SET)
+    }
 
     @Test
     fun setThenGet_roundTripsPassphrase() {
@@ -94,6 +105,8 @@ class BackupPassphraseStoreTest {
 
         store.setPassphrase("correct horse battery".toCharArray())
         assertThat(store.hasPassphrase()).isTrue()
+        assertThat(store.protectionState())
+            .isEqualTo(BackupPassphraseStore.ProtectionState.LEGACY_APP_PRIVATE)
 
         val recovered = store.getPassphrase()
         assertThat(recovered).isNotNull()
@@ -135,6 +148,8 @@ class BackupPassphraseStoreTest {
 
         store.clear()
         assertThat(store.hasPassphrase()).isFalse()
+        assertThat(store.protectionState())
+            .isEqualTo(BackupPassphraseStore.ProtectionState.NOT_SET)
         assertThat(store.getPassphrase()).isNull()
         assertThat(backing).doesNotContainKey(BackupPassphraseStore.PREF_CIPHERTEXT)
     }

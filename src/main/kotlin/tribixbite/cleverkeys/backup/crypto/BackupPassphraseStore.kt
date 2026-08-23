@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys.backup.crypto
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Build
@@ -23,10 +24,10 @@ import javax.crypto.spec.GCMParameterSpec
  * read another app's private prefs. The Keystore wrap is defense-in-depth: it
  * keeps the passphrase off disk in cleartext even if the prefs file is exfiltrated
  * by a root/backup-extraction attacker who cannot use the (non-exportable)
- * Keystore key. When the Keystore is unavailable (API 21/22 — Keystore AES-GCM
- * requires API 23; or StrongBox / provider errors on quirky devices) it falls
- * back to storing the passphrase base64-encoded in the same app-private prefs and
- * logs a warning; that is strictly better than today's *plaintext exports*.
+ * Keystore key. API 21/22 cannot wrap with AES-GCM and therefore use an explicit,
+ * user-visible app-private fallback. API 23+ fails closed on any Keystore/provider
+ * error: modern devices must never silently downgrade a stored secret to reversible
+ * base64.
  *
  * The wrapping key uses `setUserAuthenticationRequired(false)` because the store
  * must be usable headlessly (Termux `am start` automation) and after reboot without
@@ -35,7 +36,19 @@ import javax.crypto.spec.GCMParameterSpec
  * This is the ONLY file in the `crypto` package that touches Android APIs; keep it
  * thin so the format + cipher + KDF layers stay pure-JVM and `runPureTests`-able.
  */
-open class BackupPassphraseStore(private val context: Context) {
+open class BackupPassphraseStore(
+    private val context: Context,
+    private val sdkInt: Int = Build.VERSION.SDK_INT,
+) {
+
+    enum class ProtectionState {
+        NOT_SET,
+        ANDROID_KEYSTORE,
+        LEGACY_APP_PRIVATE,
+    }
+
+    class StorageUnavailableException(message: String, cause: Throwable? = null) :
+        IllegalStateException(message, cause)
 
     companion object {
         private const val TAG = "BackupPassphraseStore"
@@ -79,6 +92,16 @@ open class BackupPassphraseStore(private val context: Context) {
     open fun hasPassphrase(): Boolean =
         prefs.contains(PREF_CIPHERTEXT)
 
+    /** Current at-rest protection, suitable for Settings and headless diagnostics. */
+    open fun protectionState(): ProtectionState {
+        if (!hasPassphrase()) return ProtectionState.NOT_SET
+        return if (prefs.getString(PREF_WRAPPED, "false") == "true") {
+            ProtectionState.ANDROID_KEYSTORE
+        } else {
+            ProtectionState.LEGACY_APP_PRIVATE
+        }
+    }
+
     /**
      * Return the stored passphrase as a fresh [CharArray], or `null` if none is set
      * or the stored value cannot be unwrapped (corrupt prefs / Keystore key lost after
@@ -114,30 +137,42 @@ open class BackupPassphraseStore(private val context: Context) {
      * Persist [passphrase], overwriting any previous value. The caller's array is
      * copied (not retained); this method does not zero the caller's array.
      */
+    @SuppressLint("NewApi") // sdkInt mirrors Build.VERSION.SDK_INT in production; injectable for JVM tests.
     open fun setPassphrase(passphrase: CharArray) {
         val plaintextBytes = charsToBytes(passphrase)
         try {
             val editor = prefs.edit()
-            val wrapped = tryWrapWithKeystore(plaintextBytes)
-            if (wrapped != null) {
+            if (sdkInt >= Build.VERSION_CODES.M) {
+                val wrapped = try {
+                    wrapWithKeystore(plaintextBytes)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Keystore wrap failed; refusing insecure persistence", e)
+                    throw StorageUnavailableException(
+                        "Android Keystore could not protect the backup password. " +
+                            "The password was not saved.",
+                        e,
+                    )
+                }
                 editor
                     .putString(PREF_CIPHERTEXT, Base64.encodeToString(wrapped.ciphertext, Base64.NO_WRAP))
                     .putString(PREF_IV, Base64.encodeToString(wrapped.iv, Base64.NO_WRAP))
                     .putString(PREF_WRAPPED, "true")
             } else {
-                // Fallback: OS sandbox is still the real boundary. Log so the
-                // one-time degradation is visible in bug reports.
+                // API 21/22 cannot create the required Keystore AES-GCM key. This explicit
+                // legacy state is exposed by protectionState(); modern failures never enter it.
                 Log.w(
                     TAG,
-                    "Android Keystore unavailable — storing backup passphrase base64-obfuscated " +
-                        "in app-private prefs (OS sandbox remains the boundary).",
+                    "API $sdkInt lacks Keystore AES-GCM; storing the backup " +
+                        "password in app-private storage with legacy protection.",
                 )
                 editor
                     .putString(PREF_CIPHERTEXT, Base64.encodeToString(plaintextBytes, Base64.NO_WRAP))
                     .remove(PREF_IV)
                     .putString(PREF_WRAPPED, "false")
             }
-            editor.apply()
+            if (!editor.commit()) {
+                throw StorageUnavailableException("Backup password storage failed")
+            }
         } finally {
             Arrays.fill(plaintextBytes, 0.toByte())
         }
@@ -163,23 +198,17 @@ open class BackupPassphraseStore(private val context: Context) {
     private data class Wrapped(val ciphertext: ByteArray, val iv: ByteArray)
 
     /**
-     * Wrap [plaintext] with the Keystore AES-GCM key, returning `null` if the
-     * Keystore path is unavailable (API < 23 or any provider error) so the caller
-     * falls back to base64.
+     * Wrap [plaintext] with the Keystore AES-GCM key. The caller gates API 23 and
+     * converts any provider error into a fail-closed [StorageUnavailableException].
      */
-    private fun tryWrapWithKeystore(plaintext: ByteArray): Wrapped? {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return null
-        return try {
-            val key = getOrCreateWrapKey()
-            val cipher = Cipher.getInstance(AES_GCM_TRANSFORM)
-            cipher.init(Cipher.ENCRYPT_MODE, key)
-            val iv = cipher.iv // Keystore generates a fresh random IV per init
-            val ciphertext = cipher.doFinal(plaintext)
-            Wrapped(ciphertext, iv)
-        } catch (e: Exception) {
-            Log.w(TAG, "Keystore wrap failed, falling back to base64: ${e.message}")
-            null
-        }
+    @RequiresApi(Build.VERSION_CODES.M)
+    private fun wrapWithKeystore(plaintext: ByteArray): Wrapped {
+        val key = getOrCreateWrapKey()
+        val cipher = Cipher.getInstance(AES_GCM_TRANSFORM)
+        cipher.init(Cipher.ENCRYPT_MODE, key)
+        val iv = cipher.iv // Keystore generates a fresh random IV per init
+        val ciphertext = cipher.doFinal(plaintext)
+        return Wrapped(ciphertext, iv)
     }
 
     private fun unwrapWithKeystore(ciphertext: ByteArray, iv: ByteArray): ByteArray {
@@ -231,7 +260,7 @@ open class BackupPassphraseStore(private val context: Context) {
         val charBuffer = Charsets.UTF_8.decode(java.nio.ByteBuffer.wrap(bytes))
         val chars = CharArray(charBuffer.remaining())
         charBuffer.get(chars)
-        if (charBuffer.hasArray()) Arrays.fill(charBuffer.array(), ' ')
+        if (charBuffer.hasArray()) Arrays.fill(charBuffer.array(), '\u0000')
         return chars
     }
 }
