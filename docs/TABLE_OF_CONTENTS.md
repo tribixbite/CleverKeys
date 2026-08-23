@@ -98,6 +98,9 @@
 | `2026-08-06-futo-engine-integration-decision.md` | FUTO engine adoption decision — .pte→ONNX infeasible; ExecuTorch-in-app costly; **recommended: retrain own CTC model → ONNX** (license-clean) | ✅ Decided |
 | `2026-08-06-futo-decoder-integration-study.md` | Algorithm ground truth for the CTC decode port | ✅ Complete |
 | `2026-08-06-context-lm-review-findings.md` | Independent review of context-LM/privacy wave (H1-H3, M1-M7, L1-L10 — all resolved) | ✅ Resolved |
+| `2026-08-23-v1.5-delta-audit.md` | Complete post-v1.5 P0–P3 change audit | ✅ Complete |
+| `2026-08-23-v1.5-delta-evidence.md` | Commands, inventories, and evidence supporting the post-v1.5 audit | ✅ Complete |
+| `2026-08-23-v1.5-delta-remediation.md` | Finding-by-finding fixes, validation, and remaining release evidence | 🚧 Release evidence pending |
 
 ### `/docs/history/` History
 | File | Purpose | Status |

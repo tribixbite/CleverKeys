@@ -1,130 +1,27 @@
-# CleverKeys Roadmap
+# CleverKeys roadmap
 
-## Current Version
+Updated: 2026-08-23
 
-**v1.2.11** (2026-01-18) - Production Ready
+## Current release line
 
----
+Version 1.6.0 is the active release candidate. CTC is the default swipe engine for
+English, French, German, Spanish, Italian, Portuguese, and Swedish; the last three are
+provisional pending language-specific corpora. The geometric engine covers other languages
+and layouts.
 
-## Version History
+The current release-verification queue is [`memory/todo.md`](../memory/todo.md). The detailed
+post-1.5 release audit is [`docs/audit/2026-08-23-v1.5-delta-audit.md`](audit/2026-08-23-v1.5-delta-audit.md).
 
-### v1.2.x Series (2026-01)
-| Version | Date | Highlights |
-|---------|------|------------|
-| v1.2.11 | 2026-01-18 | Settings search expansion (80% coverage), I-word capitalization |
-| v1.2.10 | 2026-01-17 | Clipboard TransactionTooLargeException fix, proper noun case |
-| v1.2.9 | 2026-01-16 | Emoji search, password manager exclusion, timestamp keys |
-| v1.2.8 | 2026-01-15 | TrackPoint mode, granular haptics, cursor-aware predictions |
-| v1.2.7 | 2026-01-14 | Selection-delete mode bidirectional, vertical threshold tuning |
+## Next work
 
-### v1.2.0-1.2.6 (2025-12 - 2026-01)
-- Language toggle commands (primary/secondary quick switch)
-- Text menu command, contractions after language toggle fix
-- Profile system restoration with layout import/export
-- Short swipe customization per-key
+- Validate provisional CTC languages and the expanded special-letter projection with real traces.
+- Collect enough independent default-CTC exposure for a context-rescoring decision.
+- Continue accessibility and backup restore coverage on supported Android API levels.
+- Full-keyboard trackpad mode: resolve exit-gesture and cursor-placement UX first.
+- Greek language support: resolve word-list licensing and distribution before bundling.
 
-### v1.1.x Series (2025-12)
-| Version | Date | Highlights |
-|---------|------|------------|
-| v1.1.99 | 2025-12-23 | Text processing actions fix (ACTION_PROCESS_TEXT) |
-| v1.1.97 | 2025-12-21 | Custom short swipe commands, icon preview fix |
-| v1.1.94-96 | 2025-12-20 | Secondary language touch/swipe, OOM fix for large lang packs |
-| v1.1.90-93 | 2025-12-19 | Touch typing locale filter, V2 dictionary format |
-| v1.1.85-89 | 2025-12-18 | Multilanguage full support, language-specific beam tries |
+## Historical roadmap
 
-### v1.0.x Series (2025-12)
-| Version | Date | Highlights |
-|---------|------|------------|
-| v1.0.6 | 2025-12-14 | F-Droid metadata fixes |
-| v1.0.5 | 2025-12-13 | Proguard/R8 fixes for ONNX |
-| v1.0.3-4 | 2025-12-13 | App name fix, version mismatch fix |
-| v1.0.0 | 2025-12-11 | First F-Droid release |
-
----
-
-## F-Droid Status
-
-- **MR #30449**: Merged (2025-12-21)
-- **Auto-update**: Enabled via tag detection
-- **Current F-Droid version**: v1.2.x
-
----
-
-## Outstanding Work
-
-### High Priority
-- [ ] English words in French-only mode investigation (diagnostic logging in place)
-- [ ] Long word prediction testing (length normalization fix applied)
-
-### Medium Priority
-- [ ] Multi-language Phase 8.2: Language-specific dictionaries
-- [ ] Error Reports toggle implementation
-- [ ] Secondary dictionary loading from service
-
-### Low Priority
-- [ ] Settings UI polish (swipe sensitivity presets)
-- [ ] Web demo P2 (lazy loading, PWA)
-- [ ] Legacy code migration (deprecated Activities, preferences)
-
-### Planned (design docs written, awaiting implementation)
-- [ ] **Full-Keyboard Trackpad Mode** (#143) — converts entire keyboard panel
-  into a virtual trackpad on command. Design spec:
-  [`docs/wiki/specs/gestures/full-trackpad-mode-spec.md`](wiki/specs/gestures/full-trackpad-mode-spec.md)
-  · live: <https://cleverkeys.app/specs/gestures/full-trackpad-mode-spec/>
-  · ~250 LOC + tests. Needs UX decisions on exit gesture (quick-tap vs
-  two-finger tap vs visible ✕) and tap-to-place-cursor semantics before
-  implementation.
-- [ ] **Greek language support** (#68) — word suggestions + dictionary
-  (Phase 1, ~6–12 hrs), swipe via transliteration (Phase 2, ~1–2 days).
-  Design spec:
-  [`docs/wiki/specs/layouts/greek-language-support-spec.md`](wiki/specs/layouts/greek-language-support-spec.md)
-  · live: <https://cleverkeys.app/specs/layouts/greek-language-support-spec/>
-  · Layout `grek_qwerty.xml` + build pipeline already exist. **Blocked on
-  a wordlist licensing + distribution (bundle vs language-pack) decision.**
-
----
-
-## Proposed Next Steps
-
-### v1.2.12 (Next Release)
-1. Verify and close French-only mode investigation
-2. Complete long word prediction testing
-3. Settings search coverage to 100%
-
-### v1.3.0 (Feature Release)
-1. Language-specific dictionaries (Phase 8.2)
-2. Swipe sensitivity presets (Low/Medium/High)
-3. Error reporting implementation
-
-### v1.4.0 (Web Demo)
-1. Model lazy loading
-2. PWA/Service Worker for offline
-3. Web demo feature parity check
-
----
-
-## Architecture Documentation
-
-| Spec | Path | Status |
-|------|------|--------|
-| Swipe Prediction | docs/specs/swipe-prediction.md | Complete |
-| Gesture System | docs/specs/gesture-system.md | Complete |
-| TrackPoint Mode | docs/specs/trackpoint-navigation-mode.md | Complete |
-| Selection-Delete | docs/specs/selection-delete-mode.md | Complete |
-| Short Swipe | docs/specs/short-swipe-customization.md | Complete |
-| Dictionary System | docs/specs/dictionary-and-language-system.md | Complete |
-| Settings System | docs/specs/settings-system.md | Complete |
-| Profile System | docs/specs/profile_system_restoration.md | Complete |
-
----
-
-## Metrics
-
-- **Settings Coverage**: ~80% (99 of ~125 searchable)
-- **Wiki Pages**: 36 user guides + 4 tech specs
-- **Spec Documents**: 20+
-- **Code TODOs**: 6 active
-
----
-
-*Last updated: 2026-01-18*
+The former v1.2 roadmap described work completed or superseded before v1.5. Git history remains
+the authoritative archive; completed design records live under `docs/history/`, `docs/plans/`,
+and `docs/specs/`.

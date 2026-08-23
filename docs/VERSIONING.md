@@ -57,17 +57,17 @@ Untagged commits produce development builds:
 
 ### 2. Creating a Release
 
-**IMPORTANT**: F-Droid's auto-update parser cannot evaluate expressions. The `versionCode` and `versionName` in `build.gradle` must be **simple literals**.
+`build.gradle` is the single source of truth. Edit only `ext.VERSION_MAJOR`,
+`ext.VERSION_MINOR`, and `ext.VERSION_PATCH`; `versionName`, the base code, and split-ABI codes
+are derived from them. The repository metadata is configured to read this scheme.
 
 ```bash
 # 1. Ensure you're on main with all changes committed
 git checkout main
 git pull origin main
 
-# 2. Update build.gradle with new version (REQUIRED for F-Droid auto-update)
-#    Edit these lines in defaultConfig:
-#      versionCode 10100   # MAJOR * 10000 + MINOR * 100 + PATCH
-#      versionName "1.1.0"
+# 2. Update the three ext.VERSION_* values at the top of build.gradle.
+#    Do not add literal versionCode/versionName values in defaultConfig.
 
 # 3. Commit the version update
 git add build.gradle
@@ -88,7 +88,7 @@ When a `v*` tag is pushed:
 1. **GitHub Actions** (`release.yml`):
    - Builds signed APKs for all architectures
    - Creates GitHub Release with APKs attached
-   - Generates changelog from commits
+   - Uses the per-version fastlane changelog as the release-note source of truth
 
 2. **F-Droid** (automatic):
    - Detects new tag via `UpdateCheckMode: Tags`

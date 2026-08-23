@@ -98,22 +98,16 @@ adb logcat -s "CleverKeys" "System.err" "AndroidRuntime"
 
 ### Version
 ```groovy
-// build.gradle lines 51-53
+// Top of build.gradle; derived versionName/versionCode are not edited directly.
 ext.VERSION_MAJOR = 1
-ext.VERSION_MINOR = 2
-ext.VERSION_PATCH = 11
+ext.VERSION_MINOR = 6
+ext.VERSION_PATCH = 0
 ```
 
-### ADB Testing
+### Device testing
 ```bash
-# Screenshot
-adb shell screencap -p /sdcard/screenshot.png
-
-# Install APK
-adb install -r build/outputs/apk/release/CleverKeys-*.apk
-
-# Logcat filter
-adb logcat -s "CleverKeys" | grep -E "error|Exception"
+# Termux cannot run local ADB against the same device. Use the pinned ew-cli
+# workflow or GitHub emulator workflow in .claude/skills/ew-cli-testing.md.
 ```
 
 ---
@@ -172,7 +166,7 @@ ext.VERSION_MINOR = Y
 ext.VERSION_PATCH = Z
 
 # 2. Create changelog (for each ABI versionCode)
-# versionCode = MAJOR * 100000 + MINOR * 1000 + PATCH * 10 + ABI
+# split versionCode = (MAJOR * 10000 + MINOR * 100 + PATCH) * 10 + ABI
 echo "- Feature 1
 - Bug fix 2" > fastlane/metadata/android/en-US/changelogs/VERSIONCODE.txt
 
