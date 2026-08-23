@@ -399,14 +399,6 @@
     <string name="autocorrect_typo_forgiveness_desc">Cho phép chênh lệch ký tự tối đa (0–5)</string>
     <string name="autocorrect_starting_letter_title">Độ chính xác chữ cái đầu</string>
     <string name="autocorrect_starting_letter_desc">Độ dài tiền tố khớp bắt buộc (0–4)</string>
-    <string name="autocorrect_search_depth_title">Độ sâu tìm kiếm sửa lỗi</string>
-    <string name="autocorrect_search_depth_desc">Số ứng viên beam cần xem xét (1–10)</string>
-    <string name="autocorrect_common_boost_title">Tăng cường từ phổ biến</string>
-    <string name="autocorrect_common_boost_desc">Hệ số thưởng cho các từ phổ biến (0,5–2,0)</string>
-    <string name="autocorrect_frequent_boost_title">Tăng cường từ thường dùng</string>
-    <string name="autocorrect_frequent_boost_desc">Thưởng cho 5000 từ hàng đầu (0,5–2,0)</string>
-    <string name="autocorrect_rare_penalty_title">Phạt từ hiếm</string>
-    <string name="autocorrect_rare_penalty_desc">Hệ số cho các từ ít phổ biến (0,25–1,0)</string>
     <string name="clipboard_history_title">Lịch sử bảng tạm</string>
     <string name="clipboard_history_desc">Ghi nhớ văn bản đã sao chép để dán nhanh</string>
     <string name="clipboard_limit_type_title">Loại giới hạn</string>
@@ -595,4 +587,18 @@
     <string name="input_personalization_max_words_desc">Giới hạn của vốn từ đã học; những từ ít giá trị nhất bị loại bỏ trước (mặc định 5000)</string>
     <string name="privacy_on_device_learning_title">Học từ cách tôi gõ</string>
     <string name="privacy_on_device_learning_desc">Xây dựng ngay trên thiết bị các mô hình riêng tư về cụm từ và cách dùng từ dựa trên những gì bạn gõ. Tắt để dừng mọi ghi nhận tự động về hành vi gõ phím — khi tắt, không có gì mới được lưu. Dữ liệu bạn tạo ra một cách rõ ràng thì tách biệt: các phiên hiệu chỉnh vuốt bạn chạy, thống kê hiệu năng dự đoán và dữ liệu đã học được khôi phục từ bản sao lưu.</string>
+    <!-- v1.6 swipe diagnostics and controls -->
+    <string name="dict_word_too_long_for_swipe_title">Đã thêm nhưng quá dài để vuốt</string>
+    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="other">“%1$s” đã được thêm cho kiểu gõ chạm, nhưng CTC cần %2$d bước và chỉ giải mã được %3$d bước.</item></plurals>
+    <string name="gesture_finger_occlusion_title">Hiệu chỉnh độ lệch chạm</string>
+    <string name="gesture_finger_occlusion_desc">Dịch vị trí đọc nét vuốt so với đầu ngón tay. Dùng số dương nếu nét nằm trên phím và số âm nếu nằm dưới. Mặc định tắt.</string>
+    <string name="gesture_touch_smoothing_title">Làm mượt cảm ứng</string>
+    <string name="gesture_touch_smoothing_desc">Số điểm dùng cho trung bình trượt của đường vuốt. 1 = dữ liệu thô, 3 = khuyến nghị. Áp dụng cho cả hai bộ máy.</string>
+    <string name="swipe_engine_fallback_title">Sẽ dùng bộ máy hình học</string>
+    <string name="swipe_engine_fallback_desc">CTC không có từ điển cho %1$s, nên bộ máy hình học sẽ giải mã nét vuốt. CTC hỗ trợ: %2$s.</string>
+    <string name="collision_warning_title">Phát hiện xung đột dạng rút gọn</string>
+    <plurals name="collision_warning_body"><item quantity="other">%1$d phím tắt từ gói nhập sẽ ghi đè các từ thật trong ngôn ngữ hoạt động khác (%2$s). Giờ đây chúng là gợi ý tùy chọn.</item></plurals>
+    <string name="collision_warning_examples">Phím tắt bị ảnh hưởng:</string>
+    <string name="swipe_context_rescoring_title">Dùng ngữ cảnh để xếp hạng nét vuốt</string>
+    <string name="swipe_context_rescoring_desc">Sắp xếp lại gợi ý bằng các cặp từ đã gõ trên thiết bị này. Chỉ thay đổi kết quả sát nhau và không thay thế nét vuốt rõ ràng. Cần bật học trên thiết bị.</string>
 </resources>

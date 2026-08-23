@@ -371,14 +371,6 @@
     <string name="autocorrect_typo_forgiveness_desc">Maximaal toegestaan tekenverschil (0–5)</string>
     <string name="autocorrect_starting_letter_title">Nauwkeurigheid beginletter</string>
     <string name="autocorrect_starting_letter_desc">Vereiste overeenkomende prefixlengte (0–4)</string>
-    <string name="autocorrect_search_depth_title">Zoekdiepte correctie</string>
-    <string name="autocorrect_search_depth_desc">Aantal bundelkandidaten om te overwegen (1–10)</string>
-    <string name="autocorrect_common_boost_title">Boost veelgebruikte woorden</string>
-    <string name="autocorrect_common_boost_desc">Bonusvermenigvuldiger voor veelgebruikte woorden (0,5–2,0)</string>
-    <string name="autocorrect_frequent_boost_title">Boost frequente woorden</string>
-    <string name="autocorrect_frequent_boost_desc">Bonus voor de top 5000 woorden (0,5–2,0)</string>
-    <string name="autocorrect_rare_penalty_title">Straf zeldzame woorden</string>
-    <string name="autocorrect_rare_penalty_desc">Vermenigvuldiger voor ongebruikelijke woorden (0,25–1,0)</string>
     <string name="clipboard_history_title">Klembordgeschiedenis</string>
     <string name="clipboard_history_desc">Gekopieerde tekst onthouden voor snel plakken</string>
     <string name="clipboard_limit_type_title">Soort limiet</string>
@@ -567,4 +559,18 @@
     <string name="input_personalization_max_words_desc">Limiet voor de geleerde woordenschat; de minst waardevolle woorden worden als eerste verwijderd (standaard 5000)</string>
     <string name="privacy_on_device_learning_title">Leren van mijn typen</string>
     <string name="privacy_on_device_learning_desc">Bouwt op het apparaat privémodellen van uitdrukkingen en woordgebruik op basis van wat er wordt getypt. Uitschakelen stopt elke automatische registratie van typgedrag — zolang het uit staat wordt er niets nieuws opgeslagen. Gegevens die je zelf uitdrukkelijk maakt staan hier los van: de veegkalibratiesessies die je uitvoert, statistieken over de voorspellingsprestaties en geleerde gegevens die uit een back-up zijn hersteld.</string>
+    <!-- v1.6 swipe diagnostics and controls -->
+    <string name="dict_word_too_long_for_swipe_title">Toegevoegd, maar te lang om te swipen</string>
+    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">"%1$s" is toegevoegd voor tiktypen, maar CTC heeft %2$d stappen nodig en kan slechts %3$d stap decoderen.</item><item quantity="other">"%1$s" is toegevoegd voor tiktypen, maar CTC heeft %2$d stappen nodig en kan slechts %3$d stappen decoderen.</item></plurals>
+    <string name="gesture_finger_occlusion_title">Correctie aanraakoffset</string>
+    <string name="gesture_finger_occlusion_desc">Verschuift waar swipes worden gelezen ten opzichte van de vingertop. Positief bij te hoge en negatief bij te lage sporen. Standaard uit.</string>
+    <string name="gesture_touch_smoothing_title">Aanraking vloeiender maken</string>
+    <string name="gesture_touch_smoothing_desc">Punten voor het voortschrijdend gemiddelde van het swipepad. 1 = onbewerkt, 3 = aanbevolen. Geldt voor beide engines.</string>
+    <string name="swipe_engine_fallback_title">Geometrische engine wordt gebruikt</string>
+    <string name="swipe_engine_fallback_desc">CTC heeft geen woordenboek voor %1$s. Swipes worden daarom geometrisch gedecodeerd. CTC ondersteunt: %2$s.</string>
+    <string name="collision_warning_title">Conflicten met samentrekkingen gevonden</string>
+    <plurals name="collision_warning_body"><item quantity="one">%1$d snelkoppeling uit een geïmporteerd taalpakket zou een echt woord in de andere actieve taal (%2$s) vervangen. Het is nu een optionele suggestie.</item><item quantity="other">%1$d snelkoppelingen uit een geïmporteerd taalpakket zouden echte woorden in de andere actieve taal (%2$s) vervangen. Ze zijn nu optionele suggesties.</item></plurals>
+    <string name="collision_warning_examples">Betrokken snelkoppelingen:</string>
+    <string name="swipe_context_rescoring_title">Context gebruiken voor rangschikking</string>
+    <string name="swipe_context_rescoring_desc">Rangschikt swipevoorstellen opnieuw met woordparen die al op dit apparaat zijn getypt. Alleen bijna gelijke resultaten veranderen; een duidelijke swipe blijft staan. Vereist lokaal leren.</string>
 </resources>

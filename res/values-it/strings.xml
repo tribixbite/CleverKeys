@@ -409,14 +409,6 @@
     <string name="autocorrect_typo_forgiveness_desc">Differenza massima di caratteri consentita (0–5)</string>
     <string name="autocorrect_starting_letter_title">Accuratezza lettera iniziale</string>
     <string name="autocorrect_starting_letter_desc">Lunghezza del prefisso corrispondente richiesta (0–4)</string>
-    <string name="autocorrect_search_depth_title">Profondità ricerca correzione</string>
-    <string name="autocorrect_search_depth_desc">Numero di candidati beam da considerare (1–10)</string>
-    <string name="autocorrect_common_boost_title">Boost parole comuni</string>
-    <string name="autocorrect_common_boost_desc">Moltiplicatore bonus per parole comuni (0,5–2,0)</string>
-    <string name="autocorrect_frequent_boost_title">Boost parole frequenti</string>
-    <string name="autocorrect_frequent_boost_desc">Bonus per le prime 5000 parole (0,5–2,0)</string>
-    <string name="autocorrect_rare_penalty_title">Penalità parole rare</string>
-    <string name="autocorrect_rare_penalty_desc">Moltiplicatore per parole poco comuni (0,25–1,0)</string>
     <string name="clipboard_history_title">Cronologia appunti</string>
     <string name="clipboard_history_desc">Memorizza il testo copiato per incollarlo rapidamente</string>
     <string name="clipboard_limit_type_title">Tipo di limite</string>
@@ -606,4 +598,18 @@
     <string name="input_personalization_max_words_desc">Limite del vocabolario appreso; le parole meno utili vengono rimosse per prime (predefinito 5000)</string>
     <string name="privacy_on_device_learning_title">Impara dalla mia digitazione</string>
     <string name="privacy_on_device_learning_desc">Crea sul dispositivo modelli privati di frasi e di utilizzo delle parole a partire da ciò che digiti. Disattiva per interrompere ogni registrazione automatica del comportamento di digitazione: mentre è disattivato non viene memorizzato nulla di nuovo. I dati che crei esplicitamente restano separati: le sessioni di calibrazione dello scorrimento che avvii, le statistiche sulle prestazioni delle previsioni e i dati appresi ripristinati da un backup.</string>
+    <!-- v1.6 swipe diagnostics and controls -->
+    <string name="dict_word_too_long_for_swipe_title">Aggiunta, ma troppo lunga per lo scorrimento</string>
+    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">"%1$s" è stata aggiunta per la digitazione, ma CTC richiede %2$d passaggi e può decodificarne solo %3$d.</item><item quantity="many">"%1$s" è stata aggiunta per la digitazione, ma CTC richiede %2$d passaggi e può decodificarne solo %3$d.</item><item quantity="other">"%1$s" è stata aggiunta per la digitazione, ma CTC richiede %2$d passaggi e può decodificarne solo %3$d.</item></plurals>
+    <string name="gesture_finger_occlusion_title">Correzione offset tocco</string>
+    <string name="gesture_finger_occlusion_desc">Sposta la lettura del gesto rispetto al polpastrello. Positivo se i gesti risultano sopra i tasti, negativo se sotto. Disattivato per impostazione predefinita.</string>
+    <string name="gesture_touch_smoothing_title">Smussamento del tocco</string>
+    <string name="gesture_touch_smoothing_desc">Punti usati per la media mobile del percorso. 1 = input grezzo, 3 = consigliato. Vale per entrambi i motori.</string>
+    <string name="swipe_engine_fallback_title">Verrà usato il motore geometrico</string>
+    <string name="swipe_engine_fallback_desc">CTC non dispone di un dizionario per %1$s; i gesti saranno quindi decodificati dal motore geometrico. CTC supporta: %2$s.</string>
+    <string name="collision_warning_title">Trovati conflitti nelle contrazioni</string>
+    <plurals name="collision_warning_body"><item quantity="one">%1$d scorciatoia di un pacchetto importato avrebbe sostituito una parola reale nell’altra lingua attiva (%2$s). Ora è un suggerimento facoltativo.</item><item quantity="many">%1$d scorciatoie di un pacchetto importato avrebbero sostituito parole reali nell’altra lingua attiva (%2$s). Ora sono suggerimenti facoltativi.</item><item quantity="other">%1$d scorciatoie di un pacchetto importato avrebbero sostituito parole reali nell’altra lingua attiva (%2$s). Ora sono suggerimenti facoltativi.</item></plurals>
+    <string name="collision_warning_examples">Scorciatoie interessate:</string>
+    <string name="swipe_context_rescoring_title">Usa il contesto per ordinare</string>
+    <string name="swipe_context_rescoring_desc">Riordina i suggerimenti usando coppie di parole già digitate sul dispositivo. Interviene solo sui risultati vicini e non sostituisce un gesto chiaro. Richiede l’apprendimento locale.</string>
 </resources>

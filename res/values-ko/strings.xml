@@ -371,14 +371,6 @@
     <string name="autocorrect_typo_forgiveness_desc">허용하는 최대 문자 차이（0~5）</string>
     <string name="autocorrect_starting_letter_title">시작 문자 정확도</string>
     <string name="autocorrect_starting_letter_desc">필요한 일치 접두사 길이（0~4）</string>
-    <string name="autocorrect_search_depth_title">수정 검색 깊이</string>
-    <string name="autocorrect_search_depth_desc">고려할 빔 후보 수（1~10）</string>
-    <string name="autocorrect_common_boost_title">일반 단어 부스트</string>
-    <string name="autocorrect_common_boost_desc">일반 단어의 보너스 배율（0.5~2.0）</string>
-    <string name="autocorrect_frequent_boost_title">빈출 단어 부스트</string>
-    <string name="autocorrect_frequent_boost_desc">상위 5000 단어에 대한 보너스（0.5~2.0）</string>
-    <string name="autocorrect_rare_penalty_title">희귀 단어 페널티</string>
-    <string name="autocorrect_rare_penalty_desc">드문 단어에 대한 배율（0.25~1.0）</string>
     <string name="clipboard_history_title">클립보드 기록</string>
     <string name="clipboard_history_desc">복사한 텍스트를 기억하여 빠르게 붙여넣기할 수 있습니다</string>
     <string name="clipboard_limit_type_title">제한 유형</string>
@@ -567,4 +559,18 @@
     <string name="input_personalization_max_words_desc">학습된 어휘의 상한입니다. 가치가 가장 낮은 단어부터 삭제됩니다(기본값 5000)</string>
     <string name="privacy_on_device_learning_title">내 입력에서 학습</string>
     <string name="privacy_on_device_learning_desc">입력한 내용을 바탕으로 표현과 단어 사용에 대한 비공개 모델을 기기 내에서 만듭니다. 끄면 입력 습관의 자동 기록이 모두 중지되며, 꺼져 있는 동안에는 새로운 데이터가 저장되지 않습니다. 직접 만든 데이터는 별개입니다: 사용자가 실행한 스와이프 보정 세션, 예측 성능 통계, 백업에서 복원한 학습 데이터.</string>
+    <!-- v1.6 swipe diagnostics and controls -->
+    <string name="dict_word_too_long_for_swipe_title">추가되었지만 스와이프하기에 너무 깁니다</string>
+    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="other">“%1$s”이(가) 탭 입력용으로 추가되었지만 CTC에는 %2$d단계가 필요하며 최대 %3$d단계만 디코딩할 수 있습니다.</item></plurals>
+    <string name="gesture_finger_occlusion_title">터치 위치 보정</string>
+    <string name="gesture_finger_occlusion_desc">손끝을 기준으로 스와이프를 읽는 위치를 이동합니다. 궤적이 키보다 위면 양수, 아래면 음수를 사용합니다. 기본값은 꺼짐입니다.</string>
+    <string name="gesture_touch_smoothing_title">터치 부드럽게 하기</string>
+    <string name="gesture_touch_smoothing_desc">경로 이동 평균에 사용할 점 수입니다. 1 = 원본, 3 = 권장. 두 엔진 모두에 적용됩니다.</string>
+    <string name="swipe_engine_fallback_title">기하학 엔진을 사용합니다</string>
+    <string name="swipe_engine_fallback_desc">CTC에 %1$s 사전이 없으므로 기하학 엔진이 스와이프를 디코딩합니다. CTC 지원 언어: %2$s.</string>
+    <string name="collision_warning_title">축약형 충돌 발견</string>
+    <plurals name="collision_warning_body"><item quantity="other">가져온 언어 팩의 바로가기 %1$d개가 다른 활성 언어(%2$s)의 실제 단어를 바꿀 수 있었습니다. 이제 선택적 제안으로 표시됩니다.</item></plurals>
+    <string name="collision_warning_examples">영향받는 바로가기:</string>
+    <string name="swipe_context_rescoring_title">문맥으로 스와이프 순위 지정</string>
+    <string name="swipe_context_rescoring_desc">이 기기에서 입력한 단어 쌍으로 제안 순서를 바꿉니다. 비슷한 결과만 조정하며 명확한 스와이프는 바꾸지 않습니다. 기기 내 학습이 필요합니다.</string>
 </resources>

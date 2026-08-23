@@ -381,14 +381,6 @@
     <string name="autocorrect_typo_forgiveness_desc">Maksymalna dozwolona różnica znaków (0–5)</string>
     <string name="autocorrect_starting_letter_title">Dokładność pierwszej litery</string>
     <string name="autocorrect_starting_letter_desc">Wymagana długość pasującego prefiksu (0–4)</string>
-    <string name="autocorrect_search_depth_title">Głębokość wyszukiwania korekty</string>
-    <string name="autocorrect_search_depth_desc">Liczba kandydatów beam search do rozważenia (1–10)</string>
-    <string name="autocorrect_common_boost_title">Wzmocnienie popularnych słów</string>
-    <string name="autocorrect_common_boost_desc">Mnożnik bonusowy dla popularnych słów (0,5–2,0)</string>
-    <string name="autocorrect_frequent_boost_title">Wzmocnienie częstych słów</string>
-    <string name="autocorrect_frequent_boost_desc">Bonus dla 5000 najczęstszych słów (0,5–2,0)</string>
-    <string name="autocorrect_rare_penalty_title">Kara za rzadkie słowa</string>
-    <string name="autocorrect_rare_penalty_desc">Mnożnik dla rzadkich słów (0,25–1,0)</string>
     <string name="clipboard_history_title">Historia schowka</string>
     <string name="clipboard_history_desc">Zapamiętuj skopiowany tekst do szybkiego wklejania</string>
     <string name="clipboard_limit_type_title">Typ limitu</string>
@@ -577,4 +569,18 @@
     <string name="input_personalization_max_words_desc">Limit wyuczonego słownika; najmniej wartościowe słowa są usuwane jako pierwsze (domyślnie 5000)</string>
     <string name="privacy_on_device_learning_title">Ucz się z mojego pisania</string>
     <string name="privacy_on_device_learning_desc">Buduje bezpośrednio na urządzeniu prywatne modele zwrotów i użycia słów na podstawie wpisywanego tekstu. Wyłączenie zatrzymuje całe automatyczne rejestrowanie zachowań podczas pisania — gdy opcja jest wyłączona, nic nowego nie jest zapisywane. Dane tworzone celowo są osobne: uruchamiane przez Ciebie sesje kalibracji przesuwania, statystyki skuteczności przewidywań oraz dane wyuczone przywrócone z kopii zapasowej.</string>
+    <!-- v1.6 swipe diagnostics and controls -->
+    <string name="dict_word_too_long_for_swipe_title">Dodano, ale słowo jest za długie do gestu</string>
+    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">„%1$s” dodano do pisania dotykiem, ale CTC wymaga %2$d kroków i może zdekodować tylko %3$d krok.</item><item quantity="few">„%1$s” dodano do pisania dotykiem, ale CTC wymaga %2$d kroków i może zdekodować tylko %3$d kroki.</item><item quantity="many">„%1$s” dodano do pisania dotykiem, ale CTC wymaga %2$d kroków i może zdekodować tylko %3$d kroków.</item><item quantity="other">„%1$s” dodano do pisania dotykiem, ale CTC wymaga %2$d kroków i może zdekodować tylko %3$d kroków.</item></plurals>
+    <string name="gesture_finger_occlusion_title">Korekta przesunięcia dotyku</string>
+    <string name="gesture_finger_occlusion_desc">Przesuwa odczyt gestu względem opuszka palca. Wartość dodatnia dla śladów nad klawiszami, ujemna dla śladów pod nimi. Domyślnie wyłączone.</string>
+    <string name="gesture_touch_smoothing_title">Wygładzanie dotyku</string>
+    <string name="gesture_touch_smoothing_desc">Liczba punktów średniej kroczącej ścieżki. 1 = surowe dane, 3 = zalecane. Dotyczy obu silników.</string>
+    <string name="swipe_engine_fallback_title">Zostanie użyty silnik geometryczny</string>
+    <string name="swipe_engine_fallback_desc">CTC nie ma słownika dla %1$s, więc gesty zdekoduje silnik geometryczny. CTC obsługuje: %2$s.</string>
+    <string name="collision_warning_title">Wykryto konflikty skrótów</string>
+    <plurals name="collision_warning_body"><item quantity="one">%1$d skrót z importowanego pakietu zastąpiłby prawdziwe słowo w innym aktywnym języku (%2$s). Jest teraz opcjonalną sugestią.</item><item quantity="few">%1$d skróty z importowanego pakietu zastąpiłyby prawdziwe słowa w innym aktywnym języku (%2$s). Są teraz opcjonalnymi sugestiami.</item><item quantity="many">%1$d skrótów z importowanego pakietu zastąpiłoby prawdziwe słowa w innym aktywnym języku (%2$s). Są teraz opcjonalnymi sugestiami.</item><item quantity="other">%1$d skrótów z importowanego pakietu zastąpiłoby prawdziwe słowa w innym aktywnym języku (%2$s). Są teraz opcjonalnymi sugestiami.</item></plurals>
+    <string name="collision_warning_examples">Skróty, których dotyczy problem:</string>
+    <string name="swipe_context_rescoring_title">Używaj kontekstu do kolejności gestów</string>
+    <string name="swipe_context_rescoring_desc">Zmienia kolejność sugestii według par słów wpisanych na tym urządzeniu. Rozstrzyga tylko bliskie wyniki i nie zastępuje wyraźnego gestu. Wymaga lokalnego uczenia.</string>
 </resources>

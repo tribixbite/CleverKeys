@@ -349,8 +349,9 @@ class WordListFragment : Fragment() {
                                 AlertDialog.Builder(requireContext())
                                     .setTitle(R.string.dict_word_too_long_for_swipe_title)
                                     .setMessage(
-                                        getString(
-                                            R.string.dict_word_too_long_for_swipe_msg,
+                                        resources.getQuantityString(
+                                            R.plurals.dict_word_too_long_for_swipe_msg,
+                                            CtcDecodableLength.EMISSION_FRAMES,
                                             word,
                                             CtcDecodableLength.framesRequired(word),
                                             CtcDecodableLength.EMISSION_FRAMES

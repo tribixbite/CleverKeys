@@ -376,14 +376,6 @@
     <string name="autocorrect_typo_forgiveness_desc">Maximálisan megengedett karaktereltérés (0–5)</string>
     <string name="autocorrect_starting_letter_title">Kezdőbetű pontossága</string>
     <string name="autocorrect_starting_letter_desc">Szükséges egyező előtaghossz (0–4)</string>
-    <string name="autocorrect_search_depth_title">Javítási keresési mélység</string>
-    <string name="autocorrect_search_depth_desc">Figyelembe veendő beam jelöltek száma (1–10)</string>
-    <string name="autocorrect_common_boost_title">Gyakori szavak erősítése</string>
-    <string name="autocorrect_common_boost_desc">Bónusz szorzó a gyakori szavakhoz (0,5–2,0)</string>
-    <string name="autocorrect_frequent_boost_title">Sűrű szavak erősítése</string>
-    <string name="autocorrect_frequent_boost_desc">Bónusz az első 5000 szóhoz (0,5–2,0)</string>
-    <string name="autocorrect_rare_penalty_title">Ritka szavak büntetése</string>
-    <string name="autocorrect_rare_penalty_desc">Szorzó a nem köznapi szavakhoz (0,25–1,0)</string>
     <string name="clipboard_history_title">Vágólaptörténet</string>
     <string name="clipboard_history_desc">Másolt szöveg megjegyzése gyors beillesztéshez</string>
     <string name="clipboard_limit_type_title">Korlát típusa</string>
@@ -572,4 +564,18 @@
     <string name="input_personalization_max_words_desc">A megtanult szókincs felső korlátja; a legkevésbé értékes szavak törlődnek először (alapértelmezés 5000)</string>
     <string name="privacy_on_device_learning_title">Tanulás a gépelésemből</string>
     <string name="privacy_on_device_learning_desc">Privát kifejezés- és szóhasználati modellek építése az eszközön a begépelt szövegből. Kikapcsolva minden automatikus gépelési rögzítés leáll — amíg ki van kapcsolva, semmi új nem tárolódik. A kifejezetten Ön által létrehozott adatok külön kezelendők: az elindított csúsztatás-kalibrálási munkamenetek, az előrejelzési teljesítmény statisztikái és a biztonsági mentésből visszaállított tanult adatok.</string>
+    <!-- v1.6 swipe diagnostics and controls -->
+    <string name="dict_word_too_long_for_swipe_title">Hozzáadva, de csúsztatáshoz túl hosszú</string>
+    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">A(z) „%1$s” hozzáadva a koppintásos gépeléshez, de a CTC %2$d lépést igényel, és csak %3$d lépést tud dekódolni.</item><item quantity="other">A(z) „%1$s” hozzáadva a koppintásos gépeléshez, de a CTC %2$d lépést igényel, és csak %3$d lépést tud dekódolni.</item></plurals>
+    <string name="gesture_finger_occlusion_title">Érintési eltolás javítása</string>
+    <string name="gesture_finger_occlusion_desc">A csúsztatás érzékelését az ujjbegyhez képest tolja el. Pozitív, ha a nyomvonal túl magas, negatív, ha túl alacsony. Alapból kikapcsolva.</string>
+    <string name="gesture_touch_smoothing_title">Érintés simítása</string>
+    <string name="gesture_touch_smoothing_desc">A mozgóátlaghoz használt pontok száma. 1 = nyers, 3 = ajánlott. Mindkét motorra érvényes.</string>
+    <string name="swipe_engine_fallback_title">A geometriai motor lesz használva</string>
+    <string name="swipe_engine_fallback_desc">A CTC nem rendelkezik %1$s szótárral, ezért a geometriai motor dekódolja a csúsztatást. A CTC nyelvei: %2$s.</string>
+    <string name="collision_warning_title">Kontrakciós ütközések találhatók</string>
+    <plurals name="collision_warning_body"><item quantity="one">%1$d importált gyorsparancs valódi szót írt volna felül a másik aktív nyelvben (%2$s). Mostantól választható javaslat.</item><item quantity="other">%1$d importált gyorsparancs valódi szavakat írt volna felül a másik aktív nyelvben (%2$s). Mostantól választható javaslatok.</item></plurals>
+    <string name="collision_warning_examples">Érintett gyorsparancsok:</string>
+    <string name="swipe_context_rescoring_title">Környezet használata a rangsoroláshoz</string>
+    <string name="swipe_context_rescoring_desc">A készüléken korábban beírt szópárok alapján rendezi át a javaslatokat. Csak közeli eredményeket módosít, egyértelmű csúsztatást nem. Helyi tanulást igényel.</string>
 </resources>

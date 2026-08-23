@@ -379,14 +379,6 @@
     <string name="autocorrect_typo_forgiveness_desc">İzin verilen maksimum karakter farkı (0–5)</string>
     <string name="autocorrect_starting_letter_title">Başlangıç Harfi Doğruluğu</string>
     <string name="autocorrect_starting_letter_desc">Gerekli eşleşen önek uzunluğu (0–4)</string>
-    <string name="autocorrect_search_depth_title">Düzeltme Arama Derinliği</string>
-    <string name="autocorrect_search_depth_desc">Değerlendirilecek beam adayı sayısı (1–10)</string>
-    <string name="autocorrect_common_boost_title">Yaygın Sözcük Artırımı</string>
-    <string name="autocorrect_common_boost_desc">Yaygın sözcükler için bonus çarpanı (0,5–2,0)</string>
-    <string name="autocorrect_frequent_boost_title">Sık Sözcük Artırımı</string>
-    <string name="autocorrect_frequent_boost_desc">İlk 5000 sözcük için bonus (0,5–2,0)</string>
-    <string name="autocorrect_rare_penalty_title">Nadir Sözcük Cezası</string>
-    <string name="autocorrect_rare_penalty_desc">Yaygın olmayan sözcükler için çarpan (0,25–1,0)</string>
     <string name="clipboard_history_title">Pano Geçmişi</string>
     <string name="clipboard_history_desc">Hızlı yapıştırma için kopyalanan metni hatırla</string>
     <string name="clipboard_limit_type_title">Sınır Türü</string>
@@ -575,4 +567,18 @@
     <string name="input_personalization_max_words_desc">Öğrenilen kelime dağarcığının üst sınırı; en az değerli kelimeler önce silinir (varsayılan 5000)</string>
     <string name="privacy_on_device_learning_title">Yazdıklarımdan öğren</string>
     <string name="privacy_on_device_learning_desc">Yazdıklarınızdan cihazda özel ifade ve kelime kullanım modelleri oluşturur. Kapatmak, yazma davranışının tüm otomatik kaydını durdurur — kapalıyken yeni hiçbir şey saklanmaz. Açıkça oluşturduğunuz veriler ayrıdır: başlattığınız kaydırma kalibrasyon oturumları, tahmin performansı istatistikleri ve bir yedekten geri yüklenen öğrenilmiş veriler.</string>
+    <!-- v1.6 swipe diagnostics and controls -->
+    <string name="dict_word_too_long_for_swipe_title">Eklendi, ancak kaydırma için çok uzun</string>
+    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">“%1$s” dokunarak yazma için eklendi, ancak CTC %2$d adım gerektiriyor ve yalnızca %3$d adımı çözebiliyor.</item><item quantity="other">“%1$s” dokunarak yazma için eklendi, ancak CTC %2$d adım gerektiriyor ve yalnızca %3$d adımı çözebiliyor.</item></plurals>
+    <string name="gesture_finger_occlusion_title">Dokunma kayması düzeltmesi</string>
+    <string name="gesture_finger_occlusion_desc">Kaydırmanın parmak ucuna göre okunduğu yeri değiştirir. İzler tuşların üstündeyse pozitif, altındaysa negatif kullanın. Varsayılan olarak kapalıdır.</string>
+    <string name="gesture_touch_smoothing_title">Dokunma yumuşatma</string>
+    <string name="gesture_touch_smoothing_desc">Yolun hareketli ortalaması için kullanılan nokta sayısı. 1 = ham, 3 = önerilen. Her iki motor için geçerlidir.</string>
+    <string name="swipe_engine_fallback_title">Geometrik motor kullanılacak</string>
+    <string name="swipe_engine_fallback_desc">CTC, %1$s için sözlük içermediğinden kaydırmalar geometrik motorla çözülecek. CTC dilleri: %2$s.</string>
+    <string name="collision_warning_title">Kısaltma çakışmaları bulundu</string>
+    <plurals name="collision_warning_body"><item quantity="one">İçe aktarılan paketteki %1$d kısayol, diğer etkin dildeki (%2$s) gerçek bir sözcüğü değiştirecekti. Artık isteğe bağlı öneridir.</item><item quantity="other">İçe aktarılan paketteki %1$d kısayol, diğer etkin dildeki (%2$s) gerçek sözcükleri değiştirecekti. Artık isteğe bağlı önerilerdir.</item></plurals>
+    <string name="collision_warning_examples">Etkilenen kısayollar:</string>
+    <string name="swipe_context_rescoring_title">Kaydırmaları sıralamak için bağlamı kullan</string>
+    <string name="swipe_context_rescoring_desc">Bu cihazda yazılan sözcük çiftlerine göre önerileri yeniden sıralar. Yalnızca yakın sonuçları değiştirir; açık bir kaydırmayı geçersiz kılmaz. Yerel öğrenme gerekir.</string>
 </resources>

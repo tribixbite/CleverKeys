@@ -393,14 +393,6 @@
     <string name="autocorrect_typo_forgiveness_desc">Diferența maximă de caractere permisă (0–5)</string>
     <string name="autocorrect_starting_letter_title">Acuratețe literă inițială</string>
     <string name="autocorrect_starting_letter_desc">Lungimea prefixului potrivit necesar (0–4)</string>
-    <string name="autocorrect_search_depth_title">Adâncime căutare corectare</string>
-    <string name="autocorrect_search_depth_desc">Numărul de candidați ai fasciculului de luat în considerare (1–10)</string>
-    <string name="autocorrect_common_boost_title">Amplificare cuvinte comune</string>
-    <string name="autocorrect_common_boost_desc">Multiplicator bonus pentru cuvinte comune (0,5–2,0)</string>
-    <string name="autocorrect_frequent_boost_title">Amplificare cuvinte frecvente</string>
-    <string name="autocorrect_frequent_boost_desc">Bonus pentru primele 5000 cuvinte (0,5–2,0)</string>
-    <string name="autocorrect_rare_penalty_title">Penalizare cuvinte rare</string>
-    <string name="autocorrect_rare_penalty_desc">Multiplicator pentru cuvinte neobișnuite (0,25–1,0)</string>
     <string name="clipboard_history_title">Istoric clipboard</string>
     <string name="clipboard_history_desc">Reține textul copiat pentru lipire rapidă</string>
     <string name="clipboard_limit_type_title">Tip limită</string>
@@ -590,4 +582,18 @@
     <string name="input_personalization_max_words_desc">Limita vocabularului învățat; cuvintele cel mai puțin valoroase sunt eliminate primele (implicit 5000)</string>
     <string name="privacy_on_device_learning_title">Învață din felul în care scriu</string>
     <string name="privacy_on_device_learning_desc">Construiește pe dispozitiv modele private de expresii și de utilizare a cuvintelor pornind de la ceea ce tastați. Dezactivarea oprește orice înregistrare automată a comportamentului de tastare — cât timp este dezactivată, nu se stochează nimic nou. Datele create explicit de dumneavoastră sunt separate: sesiunile de calibrare a glisării pe care le porniți, statisticile de performanță a predicțiilor și datele învățate restaurate dintr-o copie de rezervă.</string>
+    <!-- v1.6 swipe diagnostics and controls -->
+    <string name="dict_word_too_long_for_swipe_title">Adăugat, dar prea lung pentru glisare</string>
+    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">„%1$s” a fost adăugat pentru tastare, dar CTC necesită %2$d pași și poate decoda doar %3$d pas.</item><item quantity="few">„%1$s” a fost adăugat pentru tastare, dar CTC necesită %2$d pași și poate decoda doar %3$d pași.</item><item quantity="other">„%1$s” a fost adăugat pentru tastare, dar CTC necesită %2$d pași și poate decoda doar %3$d pași.</item></plurals>
+    <string name="gesture_finger_occlusion_title">Corectarea decalajului tactil</string>
+    <string name="gesture_finger_occlusion_desc">Deplasează citirea glisării față de vârful degetului. Pozitiv dacă traseele sunt deasupra tastelor, negativ dacă sunt dedesubt. Dezactivat implicit.</string>
+    <string name="gesture_touch_smoothing_title">Netezirea atingerii</string>
+    <string name="gesture_touch_smoothing_desc">Puncte folosite pentru media mobilă a traseului. 1 = intrare brută, 3 = recomandat. Se aplică ambelor motoare.</string>
+    <string name="swipe_engine_fallback_title">Va fi folosit motorul geometric</string>
+    <string name="swipe_engine_fallback_desc">CTC nu are dicționar pentru %1$s, deci glisările vor fi decodate geometric. CTC acceptă: %2$s.</string>
+    <string name="collision_warning_title">S-au găsit conflicte de contracții</string>
+    <plurals name="collision_warning_body"><item quantity="one">%1$d scurtătură dintr-un pachet importat ar fi înlocuit un cuvânt real din cealaltă limbă activă (%2$s). Acum este o sugestie opțională.</item><item quantity="few">%1$d scurtături dintr-un pachet importat ar fi înlocuit cuvinte reale din cealaltă limbă activă (%2$s). Acum sunt sugestii opționale.</item><item quantity="other">%1$d scurtături dintr-un pachet importat ar fi înlocuit cuvinte reale din cealaltă limbă activă (%2$s). Acum sunt sugestii opționale.</item></plurals>
+    <string name="collision_warning_examples">Scurtături afectate:</string>
+    <string name="swipe_context_rescoring_title">Folosește contextul pentru ordonare</string>
+    <string name="swipe_context_rescoring_desc">Reordonează sugestiile folosind perechi de cuvinte tastate pe acest dispozitiv. Modifică doar rezultatele apropiate și nu înlocuiește o glisare clară. Necesită învățare locală.</string>
 </resources>

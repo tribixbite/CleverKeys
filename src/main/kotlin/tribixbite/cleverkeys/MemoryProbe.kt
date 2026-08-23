@@ -1,6 +1,8 @@
 package tribixbite.cleverkeys
 
+import android.annotation.SuppressLint
 import android.util.Log
+import java.util.Locale
 
 /**
  * Java-heap probe used to ATTRIBUTE the IME's startup memory to individual
@@ -83,7 +85,11 @@ object MemoryProbe {
      * Read once at class-init, so it takes effect on the next process start, not mid-session.
      */
     @JvmStatic
-    val settleEnabled: Boolean = enabled && runCatching {
+    val settleEnabled: Boolean = enabled && readSettleProperty()
+
+    /** Optional debug-only hidden-API probe; failure is deliberately a tested false fallback. */
+    @SuppressLint("PrivateApi")
+    internal fun readSettleProperty(): Boolean = runCatching {
         // Not `android.os.SystemProperties` — that is a hidden API. This is the public,
         // API-1-safe route and it is only ever consulted in a verbose build.
         Class.forName("android.os.SystemProperties")
@@ -207,8 +213,9 @@ object MemoryProbe {
         previousUsedBytes = -1L
     }
 
-    private fun mb(bytes: Long): String = String.format("%.1f", bytes / BYTES_PER_MB)
+    private fun mb(bytes: Long): String = String.format(Locale.ROOT, "%.1f", bytes / BYTES_PER_MB)
 
     private fun signedMb(bytes: Long): String =
-        (if (bytes >= 0) "+" else "") + String.format("%.1f", bytes / BYTES_PER_MB)
+        (if (bytes >= 0) "+" else "") +
+            String.format(Locale.ROOT, "%.1f", bytes / BYTES_PER_MB)
 }

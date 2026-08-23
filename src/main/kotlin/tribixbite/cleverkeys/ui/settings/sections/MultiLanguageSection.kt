@@ -21,6 +21,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -298,8 +299,9 @@ internal fun SettingsActivity.MultiLanguageSection() {
                     text = {
                         Column {
                             Text(
-                                text = stringResource(
-                                    R.string.collision_warning_body,
+                                text = pluralStringResource(
+                                    R.plurals.collision_warning_body,
+                                    collisionWarningKeyCount,
                                     collisionWarningKeyCount,
                                     collisionWarningLanguages,
                                 ),

@@ -382,14 +382,6 @@
     <string name="autocorrect_typo_forgiveness_desc">Максимальна різниця символів (0–5)</string>
     <string name="autocorrect_starting_letter_title">Точність початкової літери</string>
     <string name="autocorrect_starting_letter_desc">Потрібна довжина збігного префікса (0–4)</string>
-    <string name="autocorrect_search_depth_title">Глибина пошуку виправлень</string>
-    <string name="autocorrect_search_depth_desc">Кількість beam-кандидатів для аналізу (1–10)</string>
-    <string name="autocorrect_common_boost_title">Підсилення частих слів</string>
-    <string name="autocorrect_common_boost_desc">Бонусний множник для поширених слів (0.5–2.0)</string>
-    <string name="autocorrect_frequent_boost_title">Підсилення популярних слів</string>
-    <string name="autocorrect_frequent_boost_desc">Бонус для топ-5000 слів (0.5–2.0)</string>
-    <string name="autocorrect_rare_penalty_title">Штраф рідкісних слів</string>
-    <string name="autocorrect_rare_penalty_desc">Множник для рідкісних слів (0.25–1.0)</string>
     <string name="clipboard_history_title">Історія буфера обміну</string>
     <string name="clipboard_history_desc">Запам\'ятовувати скопійований текст для швидкого вставляння</string>
     <string name="clipboard_limit_type_title">Тип обмеження</string>
@@ -578,4 +570,18 @@
     <string name="input_personalization_max_words_desc">Обмеження вивченого словника; найменш цінні слова вилучаються першими (типово 5000)</string>
     <string name="privacy_on_device_learning_title">Навчатися з мого набору</string>
     <string name="privacy_on_device_learning_desc">Будувати безпосередньо на пристрої приватні моделі сполучень і слововживання на основі набраного тексту. Вимкнення зупиняє весь автоматичний запис поведінки під час набору — доки опція вимкнена, нічого нового не зберігається. Дані, які ви створюєте явно, зберігаються окремо: запущені вами сеанси калібрування свайпу, статистика якості передбачень і вивчені дані, відновлені з резервної копії.</string>
+    <!-- v1.6 swipe diagnostics and controls -->
+    <string name="dict_word_too_long_for_swipe_title">Додано, але слово задовге для свайпу</string>
+    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">«%1$s» додано для звичайного введення, але CTC потребує %2$d кроків і може декодувати лише %3$d крок.</item><item quantity="few">«%1$s» додано для звичайного введення, але CTC потребує %2$d кроків і може декодувати лише %3$d кроки.</item><item quantity="many">«%1$s» додано для звичайного введення, але CTC потребує %2$d кроків і може декодувати лише %3$d кроків.</item><item quantity="other">«%1$s» додано для звичайного введення, але CTC потребує %2$d кроків і може декодувати лише %3$d кроків.</item></plurals>
+    <string name="gesture_finger_occlusion_title">Корекція зміщення дотику</string>
+    <string name="gesture_finger_occlusion_desc">Зміщує зчитування свайпу відносно кінчика пальця. Додатне значення для слідів над клавішами, від’ємне — для слідів під ними. Типово вимкнено.</string>
+    <string name="gesture_touch_smoothing_title">Згладжування дотику</string>
+    <string name="gesture_touch_smoothing_desc">Кількість точок ковзного середнього траєкторії. 1 = без обробки, 3 = рекомендовано. Для обох рушіїв.</string>
+    <string name="swipe_engine_fallback_title">Буде використано геометричний рушій</string>
+    <string name="swipe_engine_fallback_desc">CTC не має словника для %1$s, тому свайпи декодуватиме геометричний рушій. CTC підтримує: %2$s.</string>
+    <string name="collision_warning_title">Знайдено конфлікти скорочень</string>
+    <plurals name="collision_warning_body"><item quantity="one">%1$d скорочення з імпортованого пакета замінило б справжнє слово іншої активної мови (%2$s). Тепер це необов’язкова пропозиція.</item><item quantity="few">%1$d скорочення з імпортованого пакета замінили б справжні слова іншої активної мови (%2$s). Тепер це необов’язкові пропозиції.</item><item quantity="many">%1$d скорочень з імпортованого пакета замінили б справжні слова іншої активної мови (%2$s). Тепер це необов’язкові пропозиції.</item><item quantity="other">%1$d скорочень з імпортованого пакета замінили б справжні слова іншої активної мови (%2$s). Тепер це необов’язкові пропозиції.</item></plurals>
+    <string name="collision_warning_examples">Зачеплені скорочення:</string>
+    <string name="swipe_context_rescoring_title">Ураховувати контекст для ранжування</string>
+    <string name="swipe_context_rescoring_desc">Змінює порядок пропозицій за парами слів, введеними на цьому пристрої. Розв’язує лише близькі результати й не замінює чіткий свайп. Потребує локального навчання.</string>
 </resources>

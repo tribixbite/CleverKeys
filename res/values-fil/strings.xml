@@ -380,14 +380,6 @@
     <string name="autocorrect_typo_forgiveness_desc">Maximum na pinapayagang pagkakaiba ng karakter (0–5)</string>
     <string name="autocorrect_starting_letter_title">Kawastuhan ng Unang Titik</string>
     <string name="autocorrect_starting_letter_desc">Kinakailangang haba ng prefix na tumutugma (0–4)</string>
-    <string name="autocorrect_search_depth_title">Lalim ng Paghahanap ng Pagwawasto</string>
-    <string name="autocorrect_search_depth_desc">Bilang ng mga beam candidate na isasaalang-alang (1–10)</string>
-    <string name="autocorrect_common_boost_title">Boost ng Mga Karaniwang Salita</string>
-    <string name="autocorrect_common_boost_desc">Bonus multiplier para sa mga karaniwang salita (0.5–2.0)</string>
-    <string name="autocorrect_frequent_boost_title">Boost ng Mga Madalas na Salita</string>
-    <string name="autocorrect_frequent_boost_desc">Bonus para sa top 5000 na salita (0.5–2.0)</string>
-    <string name="autocorrect_rare_penalty_title">Parusa sa Mga Bihirang Salita</string>
-    <string name="autocorrect_rare_penalty_desc">Multiplier para sa mga hindi karaniwang salita (0.25–1.0)</string>
     <string name="clipboard_history_title">History ng Clipboard</string>
     <string name="clipboard_history_desc">Tandaan ang na-copy na teksto para sa mabilis na pag-paste</string>
     <string name="clipboard_limit_type_title">Uri ng Limitasyon</string>
@@ -576,4 +568,18 @@
     <string name="input_personalization_max_words_desc">Hangganan ng natutunang bokabularyo; ang mga salitang pinakamababa ang halaga ang unang tinatanggal (default na 5000)</string>
     <string name="privacy_on_device_learning_title">Matuto mula sa aking pag-type</string>
     <string name="privacy_on_device_learning_desc">Bumubuo sa mismong device ng pribadong modelo ng mga parirala at paggamit ng salita mula sa tino-type mo. I-off para itigil ang lahat ng awtomatikong pagtatala ng gawi sa pag-type — habang naka-off, walang bagong iniimbak. Hiwalay ang datos na sadya mong ginagawa: ang mga session ng swipe calibration na pinapatakbo mo, ang istatistika ng performance ng hula, at ang natutunang datos na ibinalik mula sa backup.</string>
+    <!-- v1.6 swipe diagnostics and controls -->
+    <string name="dict_word_too_long_for_swipe_title">Naidagdag, ngunit masyadong mahaba para i-swipe</string>
+    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">Naidagdag ang “%1$s” para sa pag-tap, ngunit kailangan ng CTC ng %2$d hakbang at %3$d hakbang lang ang kaya nito.</item><item quantity="other">Naidagdag ang “%1$s” para sa pag-tap, ngunit kailangan ng CTC ng %2$d hakbang at %3$d hakbang lang ang kaya nito.</item></plurals>
+    <string name="gesture_finger_occlusion_title">Pagwawasto ng touch offset</string>
+    <string name="gesture_finger_occlusion_desc">Inililipat kung saan binabasa ang swipe kaugnay ng dulo ng daliri. Positibo kung nasa itaas ng mga key ang guhit, negatibo kung nasa ibaba. Naka-off bilang default.</string>
+    <string name="gesture_touch_smoothing_title">Pagpapakinis ng touch</string>
+    <string name="gesture_touch_smoothing_desc">Mga puntong ginagamit sa moving average ng landas. 1 = raw, 3 = inirerekomenda. Para sa parehong engine.</string>
+    <string name="swipe_engine_fallback_title">Gagamitin ang geometric engine</string>
+    <string name="swipe_engine_fallback_desc">Walang diksyunaryo ang CTC para sa %1$s, kaya geometric engine ang magde-decode. Sinusuportahan ng CTC: %2$s.</string>
+    <string name="collision_warning_title">May nakitang salungatan sa contraction</string>
+    <plurals name="collision_warning_body"><item quantity="one">Papalitan sana ng %1$d shortcut mula sa imported pack ang totoong salita sa ibang aktibong wika (%2$s). Opsyonal na mungkahi na ito ngayon.</item><item quantity="other">Papalitan sana ng %1$d shortcut mula sa imported pack ang mga totoong salita sa ibang aktibong wika (%2$s). Opsyonal na mungkahi na ang mga ito ngayon.</item></plurals>
+    <string name="collision_warning_examples">Mga apektadong shortcut:</string>
+    <string name="swipe_context_rescoring_title">Gamitin ang konteksto sa pag-rank</string>
+    <string name="swipe_context_rescoring_desc">Inaayos ang mga mungkahi gamit ang mga pares ng salitang na-type sa device na ito. Malalapit na resulta lang ang binabago at hindi pinapalitan ang malinaw na swipe. Kailangan ang on-device learning.</string>
 </resources>

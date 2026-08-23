@@ -253,11 +253,11 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
      * user-visible control of it vanished — restored into Gesture Tuning, where it belongs:
      * it is an input-path setting, never a decoder one.
      */
-    internal var swipeSmoothingWindow by mutableStateOf(Defaults.SWIPE_SMOOTHING_WINDOW)
+    internal var swipeSmoothingWindow by mutableIntStateOf(Defaults.SWIPE_SMOOTHING_WINDOW)
     internal var swipeContextRescoring by mutableStateOf(Defaults.SWIPE_CONTEXT_RESCORING)
 
     /** Signed percent of one key row; see Defaults.FINGER_OCCLUSION_OFFSET. */
-    internal var fingerOcclusionOffset by mutableStateOf(Defaults.FINGER_OCCLUSION_OFFSET)
+    internal var fingerOcclusionOffset by mutableIntStateOf(Defaults.FINGER_OCCLUSION_OFFSET)
     internal var keyboardHeight by mutableIntStateOf(28)
     internal var keyboardHeightLandscape by mutableIntStateOf(50)
     internal var vibrationEnabled by mutableStateOf(false)

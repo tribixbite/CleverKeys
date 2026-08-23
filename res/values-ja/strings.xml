@@ -370,14 +370,6 @@
     <string name="autocorrect_typo_forgiveness_desc">許容する最大文字差（0〜5）</string>
     <string name="autocorrect_starting_letter_title">先頭文字の精度</string>
     <string name="autocorrect_starting_letter_desc">必要な一致プレフィックス長（0〜4）</string>
-    <string name="autocorrect_search_depth_title">修正検索深度</string>
-    <string name="autocorrect_search_depth_desc">考慮するビーム候補数（1〜10）</string>
-    <string name="autocorrect_common_boost_title">一般単語ブースト</string>
-    <string name="autocorrect_common_boost_desc">一般的な単語のボーナス倍率（0.5〜2.0）</string>
-    <string name="autocorrect_frequent_boost_title">頻出単語ブースト</string>
-    <string name="autocorrect_frequent_boost_desc">上位5000単語へのボーナス（0.5〜2.0）</string>
-    <string name="autocorrect_rare_penalty_title">希少単語ペナルティ</string>
-    <string name="autocorrect_rare_penalty_desc">低頻度単語の倍率（0.25〜1.0）</string>
     <string name="clipboard_history_title">クリップボード履歴</string>
     <string name="clipboard_history_desc">コピーしたテキストを記憶して素早く貼り付けできます</string>
     <string name="clipboard_limit_type_title">制限タイプ</string>
@@ -566,4 +558,18 @@
     <string name="input_personalization_max_words_desc">学習した語彙の上限。価値の低い単語から先に削除されます（既定値 5000）</string>
     <string name="privacy_on_device_learning_title">入力内容から学習する</string>
     <string name="privacy_on_device_learning_desc">入力した内容から、フレーズと単語使用のプライベートなモデルを端末内で構築します。オフにすると入力動作の自動記録がすべて停止し、オフの間は新しいデータは保存されません。明示的に作成したデータは別扱いです: 自分で実行したスワイプ較正セッション、予測性能の統計、バックアップから復元した学習データ。</string>
+    <!-- v1.6 swipe diagnostics and controls -->
+    <string name="dict_word_too_long_for_swipe_title">追加済みですが、スワイプには長すぎます</string>
+    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="other">「%1$s」はタップ入力用に追加されましたが、CTC には %2$d ステップ必要で、上限は %3$d ステップです。</item></plurals>
+    <string name="gesture_finger_occlusion_title">タッチ位置の補正</string>
+    <string name="gesture_finger_occlusion_desc">指先に対するスワイプの読み取り位置をずらします。軌跡がキーより上なら正、下なら負にします。初期設定はオフです。</string>
+    <string name="gesture_touch_smoothing_title">タッチの平滑化</string>
+    <string name="gesture_touch_smoothing_desc">軌跡の移動平均に使う点数です。1 = 生データ、3 = 推奨。両方のエンジンに適用されます。</string>
+    <string name="swipe_engine_fallback_title">幾何エンジンを使用します</string>
+    <string name="swipe_engine_fallback_desc">CTC には %1$s の辞書がないため、幾何エンジンでスワイプを解析します。CTC の対応言語: %2$s。</string>
+    <string name="collision_warning_title">短縮形の競合が見つかりました</string>
+    <plurals name="collision_warning_body"><item quantity="other">インポートした言語パックの %1$d 件のショートカットが、別の有効な言語 (%2$s) の実在語を書き換える可能性がありました。現在は任意候補です。</item></plurals>
+    <string name="collision_warning_examples">影響するショートカット:</string>
+    <string name="swipe_context_rescoring_title">文脈でスワイプ候補を並べ替える</string>
+    <string name="swipe_context_rescoring_desc">この端末で入力済みの単語ペアを使って候補を並べ替えます。僅差だけを調整し、明確なスワイプは変更しません。端末内学習が必要です。</string>
 </resources>

@@ -388,14 +388,6 @@
     <string name="autocorrect_typo_forgiveness_desc">Diferencia máxima de caracteres permitida (0–5)</string>
     <string name="autocorrect_starting_letter_title">Precisión de letra inicial</string>
     <string name="autocorrect_starting_letter_desc">Longitud de prefijo coincidente requerida (0–4)</string>
-    <string name="autocorrect_search_depth_title">Profundidad de búsqueda de corrección</string>
-    <string name="autocorrect_search_depth_desc">Número de candidatos Beam a considerar (1–10)</string>
-    <string name="autocorrect_common_boost_title">Bonus de palabras comunes</string>
-    <string name="autocorrect_common_boost_desc">Multiplicador de bonus para palabras comunes (0,5–2,0)</string>
-    <string name="autocorrect_frequent_boost_title">Bonus de palabras frecuentes</string>
-    <string name="autocorrect_frequent_boost_desc">Bonus para las 5000 palabras más frecuentes (0,5–2,0)</string>
-    <string name="autocorrect_rare_penalty_title">Penalización de palabras raras</string>
-    <string name="autocorrect_rare_penalty_desc">Multiplicador para palabras poco comunes (0,25–1,0)</string>
     <string name="clipboard_history_title">Historial del portapapeles</string>
     <string name="clipboard_history_desc">Recuerda el texto copiado para pegar rápidamente</string>
     <string name="clipboard_limit_type_title">Tipo de límite</string>
@@ -585,4 +577,18 @@
     <string name="input_personalization_max_words_desc">Límite del vocabulario aprendido; las palabras menos valiosas se eliminan primero (5000 por defecto)</string>
     <string name="privacy_on_device_learning_title">Aprender de mi escritura</string>
     <string name="privacy_on_device_learning_desc">Crea en el dispositivo modelos privados de frases y de uso de palabras a partir de lo que escribes. Desactívalo para detener todo registro automático del comportamiento de escritura: mientras está desactivado no se almacena nada nuevo. Los datos que creas expresamente son aparte: las sesiones de calibración de deslizamiento que inicias, las estadísticas de rendimiento de las predicciones y los datos aprendidos restaurados desde una copia de seguridad.</string>
+    <!-- v1.6 swipe diagnostics and controls -->
+    <string name="dict_word_too_long_for_swipe_title">Añadida, pero demasiado larga para deslizar</string>
+    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">"%1$s" se añadió para escribir por toque, pero CTC necesita %2$d pasos y solo admite %3$d paso.</item><item quantity="many">"%1$s" se añadió para escribir por toque, pero CTC necesita %2$d pasos y solo admite %3$d pasos.</item><item quantity="other">"%1$s" se añadió para escribir por toque, pero CTC necesita %2$d pasos y solo admite %3$d pasos.</item></plurals>
+    <string name="gesture_finger_occlusion_title">Corrección del desplazamiento táctil</string>
+    <string name="gesture_finger_occlusion_desc">Desplaza la lectura del gesto respecto a la yema del dedo. Usa un valor positivo si el trazo queda por encima de las teclas y negativo si queda por debajo. Desactivado de forma predeterminada.</string>
+    <string name="gesture_touch_smoothing_title">Suavizado táctil</string>
+    <string name="gesture_touch_smoothing_desc">Puntos usados para suavizar el trazo con una media móvil. 1 = entrada directa, 3 = recomendado. Se aplica a ambos motores.</string>
+    <string name="swipe_engine_fallback_title">Se usará el motor geométrico</string>
+    <string name="swipe_engine_fallback_desc">CTC no tiene diccionario para %1$s, por lo que el gesto se decodificará con el motor geométrico. CTC admite: %2$s.</string>
+    <string name="collision_warning_title">Se encontraron conflictos de contracciones</string>
+    <plurals name="collision_warning_body"><item quantity="one">%1$d atajo de un paquete importado habría sustituido una palabra real del otro idioma activo (%2$s). Ahora es una sugerencia opcional.</item><item quantity="many">%1$d atajos de un paquete importado habrían sustituido palabras reales del otro idioma activo (%2$s). Ahora son sugerencias opcionales.</item><item quantity="other">%1$d atajos de un paquete importado habrían sustituido palabras reales del otro idioma activo (%2$s). Ahora son sugerencias opcionales.</item></plurals>
+    <string name="collision_warning_examples">Atajos afectados:</string>
+    <string name="swipe_context_rescoring_title">Usar contexto para ordenar gestos</string>
+    <string name="swipe_context_rescoring_desc">Reordena las sugerencias con pares de palabras ya escritos en este dispositivo. Solo resuelve resultados muy próximos y no reemplaza un gesto claro. Requiere el aprendizaje en el dispositivo.</string>
 </resources>

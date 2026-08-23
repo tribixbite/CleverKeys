@@ -129,14 +129,17 @@
          and hide the debt from whoever reviews res/values-*/ next, which is the worse outcome.
          Owed: real translations, tracked in memory/HANDOFF-2026-08-19.md. Remove this attribute
          when they land. -->
-    <string name="dict_word_too_long_for_swipe_title" tools:ignore="MissingTranslation">Added — but too long to swipe</string>
-    <string name="dict_word_too_long_for_swipe_msg" tools:ignore="MissingTranslation">"%1$s" has been added and will work for tap typing. It is too long for the CTC swipe engine, which can decode at most %3$d steps and needs %2$d for this word (doubled letters cost an extra step each). Swiping will not offer it.</string>
-    <string name="gesture_finger_occlusion_title" tools:ignore="MissingTranslation">Touch Offset Correction</string>
-    <string name="gesture_finger_occlusion_desc" tools:ignore="MissingTranslation">Shifts where swipes are read relative to your fingertip, as a percent of one key row. Positive if your swipes land above the keys you aim for, negative if below. Off by default.</string>
-    <string name="gesture_touch_smoothing_title" tools:ignore="MissingTranslation">Touch Smoothing</string>
-    <string name="gesture_touch_smoothing_desc" tools:ignore="MissingTranslation">Points used for moving-average smoothing of the swipe path. 1 = raw input, 3 = recommended. Applies to both swipe engines.</string>
-    <string name="swipe_engine_fallback_title" tools:ignore="MissingTranslation">Geometric engine will be used</string>
-    <string name="swipe_engine_fallback_desc" tools:ignore="MissingTranslation">CTC does not have a dictionary for %1$s, so swipes will be decoded by the geometric engine instead. CTC currently serves: %2$s.</string>
+    <string name="dict_word_too_long_for_swipe_title">Added — but too long to swipe</string>
+    <plurals name="dict_word_too_long_for_swipe_msg">
+        <item quantity="one">"%1$s" has been added for tap typing, but CTC needs %2$d steps and can decode only %3$d step. Swiping will not offer it.</item>
+        <item quantity="other">"%1$s" has been added for tap typing, but CTC needs %2$d steps and can decode only %3$d steps. Swiping will not offer it.</item>
+    </plurals>
+    <string name="gesture_finger_occlusion_title">Touch Offset Correction</string>
+    <string name="gesture_finger_occlusion_desc">Shifts where swipes are read relative to your fingertip, as a percent of one key row. Positive if your swipes land above the keys you aim for, negative if below. Off by default.</string>
+    <string name="gesture_touch_smoothing_title">Touch Smoothing</string>
+    <string name="gesture_touch_smoothing_desc">Points used for moving-average smoothing of the swipe path. 1 = raw input, 3 = recommended. Applies to both swipe engines.</string>
+    <string name="swipe_engine_fallback_title">Geometric engine will be used</string>
+    <string name="swipe_engine_fallback_desc">CTC does not have a dictionary for %1$s, so swipes will be decoded by the geometric engine instead. CTC currently serves: %2$s.</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 Appearance</string>
@@ -488,14 +491,6 @@
     <string name="autocorrect_typo_forgiveness_desc">Max character difference allowed (0–5)</string>
     <string name="autocorrect_starting_letter_title">Starting Letter Accuracy</string>
     <string name="autocorrect_starting_letter_desc">Required matching prefix length (0–4)</string>
-    <string name="autocorrect_search_depth_title">Correction Search Depth</string>
-    <string name="autocorrect_search_depth_desc">Number of beam candidates to consider (1–10)</string>
-    <string name="autocorrect_common_boost_title">Common Words Boost</string>
-    <string name="autocorrect_common_boost_desc">Bonus multiplier for common words (0.5–2.0)</string>
-    <string name="autocorrect_frequent_boost_title">Frequent Words Boost</string>
-    <string name="autocorrect_frequent_boost_desc">Bonus for top 5000 words (0.5–2.0)</string>
-    <string name="autocorrect_rare_penalty_title">Rare Words Penalty</string>
-    <string name="autocorrect_rare_penalty_desc">Multiplier for uncommon words (0.25–1.0)</string>
 
     <!-- ClipboardSection -->
     <string name="clipboard_history_title">Clipboard History</string>
@@ -721,15 +716,18 @@
 
          tools:ignore="MissingTranslation" is deliberate and TEMPORARY, matching the convention
          above. Owed: real translations, tracked in memory/HANDOFF.md. Remove when they land. -->
-    <string name="collision_warning_title" tools:ignore="MissingTranslation">Contraction conflicts found</string>
-    <string name="collision_warning_body" tools:ignore="MissingTranslation">%1$d shortcut(s) from an imported language pack would have rewritten real words in your other active language (%2$s). They have been turned into optional suggestions instead, so both spellings stay available.</string>
-    <string name="collision_warning_examples" tools:ignore="MissingTranslation">Affected shortcuts:</string>
+    <string name="collision_warning_title">Contraction conflicts found</string>
+    <plurals name="collision_warning_body">
+        <item quantity="one">%1$d shortcut from an imported language pack would have rewritten a real word in your other active language (%2$s). It is now an optional suggestion, so both spellings remain available.</item>
+        <item quantity="other">%1$d shortcuts from an imported language pack would have rewritten real words in your other active language (%2$s). They are now optional suggestions, so both spellings remain available.</item>
+    </plurals>
+    <string name="collision_warning_examples">Affected shortcuts:</string>
     <!-- Context rescoring of the swipe slate (docs/specs/ctc-context-rescoring-and-tunables.md).
          Default OFF; the copy must say it uses LEARNED data, because that is what makes it a
          privacy-relevant choice rather than a neutral accuracy toggle.
 
          tools:ignore="MissingTranslation" is deliberate and TEMPORARY, matching the convention
          above. Owed: real translations, tracked in memory/HANDOFF.md. -->
-    <string name="swipe_context_rescoring_title" tools:ignore="MissingTranslation">Use context to rank swipes</string>
-    <string name="swipe_context_rescoring_desc" tools:ignore="MissingTranslation">Reorders swipe suggestions using the word pairs you have already typed on this device. Only breaks near-ties — a clearly decoded swipe is never overridden. Does nothing until the keyboard has learned from your typing, which requires on-device learning to be enabled.</string>
+    <string name="swipe_context_rescoring_title">Use context to rank swipes</string>
+    <string name="swipe_context_rescoring_desc">Reorders swipe suggestions using the word pairs you have already typed on this device. Only breaks near-ties — a clearly decoded swipe is never overridden. Does nothing until the keyboard has learned from your typing, which requires on-device learning to be enabled.</string>
 </resources>

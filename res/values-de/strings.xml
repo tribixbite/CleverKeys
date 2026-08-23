@@ -390,14 +390,6 @@
     <string name="autocorrect_typo_forgiveness_desc">Maximal erlaubter Zeichenunterschied (0–5)</string>
     <string name="autocorrect_starting_letter_title">Genauigkeit des Anfangsbuchstabens</string>
     <string name="autocorrect_starting_letter_desc">Erforderliche übereinstimmende Präfixlänge (0–4)</string>
-    <string name="autocorrect_search_depth_title">Korrektur-Suchtiefe</string>
-    <string name="autocorrect_search_depth_desc">Anzahl der zu berücksichtigenden Beam-Kandidaten (1–10)</string>
-    <string name="autocorrect_common_boost_title">Häufige-Wörter-Bonus</string>
-    <string name="autocorrect_common_boost_desc">Bonusmultiplikator für häufige Wörter (0,5–2,0)</string>
-    <string name="autocorrect_frequent_boost_title">Häufigkeitsbonus</string>
-    <string name="autocorrect_frequent_boost_desc">Bonus für die 5000 häufigsten Wörter (0,5–2,0)</string>
-    <string name="autocorrect_rare_penalty_title">Malus für seltene Wörter</string>
-    <string name="autocorrect_rare_penalty_desc">Multiplikator für ungebräuchliche Wörter (0,25–1,0)</string>
     <string name="clipboard_history_title">Zwischenablageverlauf</string>
     <string name="clipboard_history_desc">Kopierten Text für schnelles Einfügen speichern</string>
     <string name="clipboard_limit_type_title">Limitierungstyp</string>
@@ -587,4 +579,18 @@
     <string name="input_personalization_max_words_desc">Obergrenze für den gelernten Wortschatz; die am wenigsten wertvollen Wörter werden zuerst entfernt (Standard 5000)</string>
     <string name="privacy_on_device_learning_title">Aus meinen Eingaben lernen</string>
     <string name="privacy_on_device_learning_desc">Private Modelle für Wendungen und Wortnutzung direkt auf dem Gerät aus den eigenen Eingaben aufbauen. Ausschalten stoppt jede automatische Aufzeichnung des Tippverhaltens — im ausgeschalteten Zustand wird nichts Neues gespeichert. Ausdrücklich selbst erzeugte Daten sind davon getrennt: selbst gestartete Wisch-Kalibrierungen, Statistiken zur Vorhersageleistung und aus einer Sicherung wiederhergestellte Lerndaten.</string>
+    <!-- v1.6 swipe diagnostics and controls -->
+    <string name="dict_word_too_long_for_swipe_title">Hinzugefügt — aber zu lang zum Wischen</string>
+    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">"%1$s" wurde für Tippeingaben hinzugefügt, aber CTC benötigt %2$d Schritte und kann nur %3$d Schritt dekodieren.</item><item quantity="other">"%1$s" wurde für Tippeingaben hinzugefügt, aber CTC benötigt %2$d Schritte und kann nur %3$d Schritte dekodieren.</item></plurals>
+    <string name="gesture_finger_occlusion_title">Berührungsversatz korrigieren</string>
+    <string name="gesture_finger_occlusion_desc">Verschiebt die erfasste Wischposition relativ zur Fingerspitze. Positiv bei zu hohen, negativ bei zu niedrigen Spuren. Standardmäßig aus.</string>
+    <string name="gesture_touch_smoothing_title">Berührungen glätten</string>
+    <string name="gesture_touch_smoothing_desc">Punkte für den gleitenden Mittelwert der Wischspur. 1 = roh, 3 = empfohlen. Gilt für beide Wisch-Engines.</string>
+    <string name="swipe_engine_fallback_title">Geometrische Engine wird verwendet</string>
+    <string name="swipe_engine_fallback_desc">CTC hat kein Wörterbuch für %1$s. Wischgesten werden daher geometrisch dekodiert. CTC unterstützt derzeit: %2$s.</string>
+    <string name="collision_warning_title">Konflikte bei Kurzformen gefunden</string>
+    <plurals name="collision_warning_body"><item quantity="one">%1$d Kurzform aus einem importierten Sprachpaket hätte ein echtes Wort in der anderen aktiven Sprache (%2$s) ersetzt. Sie ist nun ein optionaler Vorschlag.</item><item quantity="other">%1$d Kurzformen aus einem importierten Sprachpaket hätten echte Wörter in der anderen aktiven Sprache (%2$s) ersetzt. Sie sind nun optionale Vorschläge.</item></plurals>
+    <string name="collision_warning_examples">Betroffene Kurzformen:</string>
+    <string name="swipe_context_rescoring_title">Kontext zum Sortieren verwenden</string>
+    <string name="swipe_context_rescoring_desc">Sortiert Wischvorschläge anhand bereits auf diesem Gerät getippter Wortpaare neu. Nur knappe Ergebnisse ändern sich; eindeutige Treffer bleiben erhalten. Erfordert aktiviertes Lernen auf dem Gerät.</string>
 </resources>
