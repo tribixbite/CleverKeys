@@ -94,7 +94,12 @@ class ContextRescoringReplayTest {
                         p.optLong(2),
                     ))
                 }
-                if (pts.size >= 3) bucket.add(Row(word, w, h, pts))
+                // Reject the ~47% of rows whose third column is not a timestamp — they decode
+                // to confident nonsense and would silently pad the denominator. This filter was
+                // ABSENT from the runs published before 2026-08-23.
+                if (pts.size >= 3 &&
+                    TraceCorpusQuality.hasUsableTimestamps(DoubleArray(pts.size) { pts[it].tMillis.toDouble() })
+                ) bucket.add(Row(word, w, h, pts))
             }
         }
         return byWord

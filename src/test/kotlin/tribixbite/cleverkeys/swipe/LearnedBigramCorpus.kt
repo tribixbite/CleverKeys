@@ -155,3 +155,30 @@ object LearnedBigramCorpus {
      */
     const val TRIGRAMS_ABSENT_FROM_EXPORT = true
 }
+
+/**
+ * The local English trace corpus is HETEROGENEOUS, and half of it is unusable as raw traces.
+ *
+ * Measured 2026-08-23 over `combined_english_swipes.jsonl.gz` (8,607 rows):
+ *
+ *  - 4,543 rows are raw traces — variable length (50-380 points), third column a millisecond
+ *    timestamp, monotonically non-decreasing.
+ *  - 4,064 rows are exactly 128 points with a third column in ~0..40 that is **not monotonic**
+ *    and therefore not a timestamp. They look pre-resampled by some other pipeline.
+ *
+ * Feeding the second kind to a decoder produces garbage: the CTC smoke test decoded `boolean` as
+ * "gh" and `ensure` as "we" — short nonsense with a confident-looking score. They do not fail
+ * loudly; they land in `unchanged` and quietly inflate a replay's denominator.
+ *
+ * Any replay reading this corpus must filter on [hasUsableTimestamps].
+ */
+object TraceCorpusQuality {
+
+    /** True when the third column is a plausible monotonic timestamp series. */
+    fun hasUsableTimestamps(t: DoubleArray): Boolean {
+        if (t.size < 3) return false
+        for (i in 1 until t.size) if (t[i] < t[i - 1]) return false
+        // A monotonic run that never advances is equally unusable.
+        return t.last() > t.first()
+    }
+}
