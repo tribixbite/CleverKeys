@@ -602,6 +602,13 @@ tasks.register('runPureTests', JavaExec) {
   // tests read System.getProperty("geoFull") — this line bridges `-PgeoFull=true`
   // into that system property (default "false"). See spec Phase-6 item m27.
   systemProperty 'geoFull', (project.findProperty('geoFull') ?: 'false')
+  // Sampling knobs for ContextRescoringReplayTest, same -P-to-system-property bridge. Only set
+  // when supplied, so the defaults stay in the Kotlin where they are documented. Lets a
+  // measurement run be scaled (`-PreplayPairs=800 -PreplayDecoys=6`) without editing the test,
+  // and the replay prints whichever values it ran with.
+  ['replayPairs', 'replayDecoys', 'replayTraces'].each { knob ->
+    if (project.hasProperty(knob)) systemProperty knob, project.property(knob)
+  }
   // ONNX in PURE JVM tests on Termux.
   //
   // The `onnxruntime` JAR bundles a GLIBC-linked libonnxruntime.so, which cannot load in a

@@ -80,20 +80,57 @@ limits to state in the results. Read it before starting.
 The usable context model is ~642 pairs, so one user's data gives a THIN signal. Any plan that
 assumed 6.5k pairs of evidence is wrong by 10x.
 
-**Step 5 is BUILT; its numbers were WRONG TWICE before an audit corrected them** —
-`docs/eval/2026-08-22-context-rescoring-first-replay.md` §5 records the retractions.
-Current: 51 fixes / 0 breaks in 243 exposed favourable cases (~21% when it fires).
-**The activation rate is NOT measured** — `BigramStore` caps a language at 10,000 bigrams
-and the corpus is 175k rows, so the harness's survival rate is an artefact, not a device
-property. Safety still underpowered (15 adversarial exposures).
+**Step 5 is BUILT and the CTC arm has now RUN (2026-08-23) — the answer is NO.** Full writeup:
+`docs/eval/2026-08-22-context-rescoring-first-replay.md` (rewritten; §7 is the retraction ledger).
 
-**Was: Step 5 is BUILT and has produced first numbers** — see
-`docs/eval/2026-08-22-context-rescoring-first-replay.md`. Benefit is real (29 fixes, 0
-regressions, ~19% fix rate within the slice where the feature is active); safety is NOT
-established (0 breaks on only ~43 evidence-exposed adversarial traces). **The feature is
-inert on ~97% of swipes** — that number reframes the ship decision more than Δtop-1 does.
-Owed before any default flip: a CTC arm (instrumented — ONNX cannot load in pure JVM here),
-a larger adversarial sample selected FOR evidence exposure, and a WEIGHT tune/confirm split.
+**On CTC — the engine that actually ships — rescoring fixed 3 decodes and BROKE 24.**
+Promotion-error ratio 8.0 against a ship bar of <0.20; net Δtop-1 negative. The geometric arm over
+the identical 1,726-case sample fixed 35 and broke 1 (ratio 0.029) and would pass. **The two
+engines give opposite verdicts and only the non-shipping one had ever been measured.**
+
+**Do NOT quote the 8.0 alone.** All 24 CTC breaks are ONE trace — `tit`, promoted to `to` under 24
+different contexts. Per distinct trace the CTC ratio is 3 fixes : 1 broken trace = **0.33**. Still
+fails the 0.20 bar, so **the verdict holds under both counting units** (geometric passes under both:
+0.029 / 0.063) — but the margin is not 8x. The failure MODE is the transferable finding: an
+ultra-common learned continuation gets promoted onto any shape-confusable trace whose top-1 is
+within the guard's factor of two, so the user hits the same word wrong every time.
+
+**Neither adversarial arm can bound a breakage rate** — 32 distinct exposed traces on CTC, 7 on
+geometric, one break each. That is the binding statistical limit and it is tighter than the case
+counts (158 and 9) suggest.
+
+Why: CTC is already correct on **220/229** favourable cases, so its fix headroom is **9 cases** and
+its benefit ceiling 3.9% — while it broke **2.0%** of the 1,200 adversarial cases it had gotten
+right. Geometric's headroom is 78 with a 0.13% damage rate. The dominant driver is exposure: a
+learned continuation sits in CTC's slate on **10.6%** of adversarial traces vs geometric's **0.60%**
+(~18x), because the CTC beam's frequency prior surfaces common words and learned continuations are
+common words. CTC's slates are *more* peaked (runner-up/top-1 median 0.254 vs 0.717), so the ratio
+guard blocks more — and it is still swamped.
+
+Also found: the strict `NextWordPredictor` floors never bound once in 1,726 cases
+(`cleared ratio, failed floors` = 0 on both engines). **Rank-1 protection today is the ratio guard
+alone**; the floors are vacuous on a corpus whose stored 10k are its highest-probability pairs.
+
+**ALL earlier numbers here are retracted** — 29 → 2 → 51 → all wrong. Two new defects on top of the
+four the audit found: **H5** ~47% of the local trace corpus is not raw traces (128-point rows with a
+non-monotonic third column) and decoded to confident nonsense in *every* run published before
+2026-08-23, geometric included; **H6** decoy selection took a corpus-order head, H1's mistake one
+level down. Both fixed (`TraceCorpusQuality`, seeded decoy shuffle).
+
+**Next, and it is now the ONLY question that matters**: on-device shadow mode (spec §7.2). The
+verdict hinges on the real favourable:adversarial exposure ratio, which no offline harness can
+supply. Second: a `WEIGHT`/`R_MIN` tune-and-confirm split on CTC specifically — a higher `R_MIN`
+should cut breaks faster than fixes. The pref stays **default-OFF**.
+
+**Was: Step 5 is BUILT; its numbers were WRONG TWICE before an audit corrected them** —
+current then: 51 fixes / 0 breaks in 243 exposed favourable cases (~21% when it fires), safety
+underpowered (15 adversarial exposures). Superseded: that run was geometric-only AND contaminated
+by H5.
+
+**Was: Step 5 is BUILT and has produced first numbers** — benefit real (29 fixes, 0 regressions,
+~19% fix rate); safety not established. **The feature is inert on ~97% of swipes.** Owed: a CTC arm
+(believed to need an instrumented run — WRONG, `extractOrtNative` unblocked pure JVM), a larger
+adversarial sample, a WEIGHT tune/confirm split.
 
 **Was: ONLY step 5 remains, and it is the blocker for everything else**: the offline context replay
 harness (§7.1) — replay a sentence corpus through `ContextModel.recordCommit`, draw matching FUTO

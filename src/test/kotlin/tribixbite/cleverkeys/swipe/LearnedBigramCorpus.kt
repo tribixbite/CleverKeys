@@ -171,6 +171,24 @@ object LearnedBigramCorpus {
  * loudly; they land in `unchanged` and quietly inflate a replay's denominator.
  *
  * Any replay reading this corpus must filter on [hasUsableTimestamps].
+ *
+ * ## The filter is a heuristic, and 14 rows beat it (re-measured 2026-08-23)
+ *
+ * The counts above are the two POPULATIONS, split by length. What [hasUsableTimestamps] actually
+ * does is slightly different, and the two numbers must not be conflated:
+ *
+ * | | rows |
+ * |---|---|
+ * | exactly 128 points | 4,064 |
+ * | ...of those, third column happens to be monotonic and advancing → **passes** | **14** |
+ * | any other length | 4,543 |
+ * | **filter rejects** | **4,050** (47.1%) |
+ * | **filter passes** | **4,557** |
+ *
+ * So ~14 pre-resampled rows (0.16% of the corpus) survive into any replay. That is small enough to
+ * ignore for accuracy work and is recorded only so the residual is known rather than discovered
+ * later as a fifth surprise. Tightening it would mean rejecting on length-128 directly, which
+ * would be wrong in general — 128 is a legitimate length for a real trace.
  */
 object TraceCorpusQuality {
 
