@@ -1253,7 +1253,7 @@ class Keyboard2View @JvmOverloads constructor(
     private fun computeAccessibilityKeyRects(): List<KeyboardGeometry.KeyRect> {
         val keyboard = _keyboard ?: return emptyList()
         val params = geometryParams() ?: return emptyList()
-        return KeyboardGeometry.computeKeyRects(keyboard, params)
+        return KeyboardGeometry.computeAccessibilityKeyRects(keyboard, params, width.toFloat())
     }
 
     /**

@@ -209,6 +209,54 @@ object KeyboardGeometry {
         return rects
     }
 
+    /**
+     * Finite, non-overlapping TalkBack ownership cells matching [keyAt]'s slop rules.
+     * Physical key rectangles remain available through [computeKeyRects] for swipe-model centers.
+     */
+    fun computeAccessibilityKeyRects(
+        keyboard: KeyboardData,
+        params: Params,
+        hostWidth: Float,
+    ): List<KeyRect> = computeAccessibilityKeyRects(keyboard.rows, params, hostWidth)
+
+    internal fun computeAccessibilityKeyRects(
+        rows: List<KeyboardData.Row>,
+        params: Params,
+        hostWidth: Float,
+    ): List<KeyRect> {
+        require(hostWidth >= 0f) { "hostWidth must be non-negative" }
+        val rects = ArrayList<KeyRect>()
+        var y = params.marginTop
+        var virtualId = 0
+        for (row in rows) {
+            val yBottom = y + (row.shift + row.height) * params.rowHeight
+            var x = params.marginLeft
+            val extendLeftToEdge = rowContainsAAndL(row)
+            for ((index, key) in row.keys.withIndex()) {
+                val physicalLeft = x + key.shift * params.keyWidth
+                val physicalRight = physicalLeft + key.width * params.keyWidth
+                val kv = key.keys[0]
+                if (kv != null) {
+                    val left = if (extendLeftToEdge && isCharacterKey(key, 'a')) 0f else x
+                    val right = if (index == row.keys.lastIndex) hostWidth else physicalRight
+                    val boundedLeft = left.coerceIn(0f, hostWidth)
+                    val boundedRight = right.coerceIn(0f, hostWidth)
+                    if (boundedRight > boundedLeft && yBottom > y) {
+                        rects.add(
+                            KeyRect(
+                                virtualId++, key, kv,
+                                KeyBounds(boundedLeft, y, boundedRight, yBottom),
+                            )
+                        )
+                    }
+                }
+                x = physicalRight
+            }
+            y = yBottom
+        }
+        return rects
+    }
+
     // ── helpers (verbatim from Keyboard2View) ────────────────────────────────
 
     /** Check if this row contains both 'a' and 'l' keys (the middle QWERTY row). */

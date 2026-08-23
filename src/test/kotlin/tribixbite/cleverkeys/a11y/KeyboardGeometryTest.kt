@@ -163,6 +163,56 @@ class KeyboardGeometryTest {
     }
 
     @Test
+    fun accessibilityRectsOwnTheSameFiniteSlopAsKeyAt() {
+        val p = params(keyWidth = 100f, marginLeft = 50f)
+        val gapRows = listOf(row(charKey('a'), charKey('b', shift = 0.5f), charKey('l')))
+        val rects = KeyboardGeometry.computeAccessibilityKeyRects(gapRows, p, hostWidth = 500f)
+
+        assertThat(rects.map { it.kv.getChar() }).containsExactly('a', 'b', 'l').inOrder()
+        assertThat(rects[0].bounds.left).isEqualTo(0f) // a/l row owns the left edge
+        assertThat(rects[1].bounds.left).isEqualTo(150f) // shifted gap belongs to b
+        assertThat(rects.last().bounds.right).isEqualTo(500f) // finite right slop
+        for (r in rects) {
+            val x = (r.bounds.left + r.bounds.right) / 2f
+            val y = (r.bounds.top + r.bounds.bottom) / 2f
+            assertThat(KeyboardGeometry.keyAt(gapRows, p, x, y)).isSameInstanceAs(r.key)
+        }
+    }
+
+    @Test
+    fun accessibilityRectsDoNotExposePlaceholderCells() {
+        val p = params()
+        val placeholderRows = listOf(row(charKey('q'), placeholder(), charKey('w')))
+        val rects = KeyboardGeometry.computeAccessibilityKeyRects(placeholderRows, p, 500f)
+        assertThat(rects.map { it.kv.getChar() }).containsExactly('q', 'w').inOrder()
+        assertThat(rects[0].bounds.right).isEqualTo(150f)
+        assertThat(rects[1].bounds.left).isEqualTo(250f)
+    }
+
+    @Test
+    fun accessibilityOwnershipIncludesRowShiftAndPreservesRtlLayoutOrder() {
+        val p = params(keyWidth = 100f, marginLeft = 0f)
+        // KeyboardData already stores keys in visual order. A Hebrew/RTL row therefore needs
+        // no coordinate mirroring here; the ownership walk must preserve that supplied order.
+        val rtlRows = listOf(
+            row(charKey('ת'), charKey('ש'), shift = 0.25f),
+            row(charKey('ר'), charKey('ק')),
+        )
+        val rects = KeyboardGeometry.computeAccessibilityKeyRects(rtlRows, p, hostWidth = 300f)
+
+        assertThat(rects.map { it.kv.getChar() }).containsExactly('ת', 'ש', 'ר', 'ק').inOrder()
+        assertThat(rects[0].bounds.top).isEqualTo(p.marginTop)
+        assertThat(rects[0].bounds.bottom).isEqualTo(p.marginTop + 1.25f * p.rowHeight)
+        assertThat(rects[2].bounds.top).isEqualTo(rects[0].bounds.bottom)
+
+        // The vertical shift area is owned by the shifted row in normal hit testing and must
+        // not become a TalkBack dead strip.
+        val shiftBandY = p.marginTop + 0.1f * p.rowHeight
+        assertThat(KeyboardGeometry.keyAt(rtlRows, p, 50f, shiftBandY))
+            .isSameInstanceAs(rects[0].key)
+    }
+
+    @Test
     fun aboveKeyboardReturnsNull() {
         val p = params()
         // y above marginTop → no row.
