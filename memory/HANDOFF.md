@@ -106,6 +106,15 @@ the old "peakedness protects CTC" explanation outright. **Knife-edge worth decid
 (promotable) but top-1=913 gives `456>=456.5` (blocked) — promotion eligibility turns on the PARITY
 of the top score. Flagged to whoever owns `applyFuzzyRescue`.
 
+> **Resolved 2026-08-25 (`c83d6ff2`), by the flag's owner.** Rescued words now APPEND BELOW the
+> real beam (spare TOP_K slots only, scores strictly under `(top−1)/2` via pure
+> `CtcFuzzyRescue.mergeIntoBeam`, shared by `CtcReplayEngine`). No rescued word can reach the
+> `R_MIN=0.5` ratio, and the knife-edge is gone. Consequence for the replay: the ratio-median
+> shift 0.254→0.500 attributed to `20d620f4` should largely revert — **re-baseline the sweep
+> before quoting its numbers.** Also relevant: `436911d9` threads a per-word `languages` list
+> through `rescoreWithContext` (same `order` permutation, new `RescoredSlate` return); the
+> `CoreImeHygieneDriftTest` pin still holds.
+
 **Two earlier conclusions of mine are RETRACTED**, both from generalising one corpus:
 - "the strict `NextWordPredictor` floors never bind" — FALSE. They bind on device data (4 CTC,
   7 geometric). Vacuous only when the store holds 10k near-maximal-probability pairs. Keep them.

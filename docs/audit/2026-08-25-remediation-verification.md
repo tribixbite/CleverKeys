@@ -34,6 +34,31 @@ findings CK-150-019…036 below.
 | CK-150-017 whitespace | Resolved | **Resolved** — `git diff --check v1.5.0..HEAD` clean; enforced at `release.yml:31` |
 | CK-150-018 test noise | Resolved | **Resolved and runtime-verified** — capturing handler in `CoroutineScopeLifecycleTest.kt:87-103`; `-XX:+EnableDynamicAgentLoading` at `build.gradle:647`; AAR→classes-jar `artifactView` at `build.gradle:686-697`. Fresh gate run at HEAD is quiet |
 
+## 1b. Implementation ledger (2026-08-25, same day — orchestrated remediation)
+
+The open findings above were implemented by five delegated implementation passes plus one lead
+hotfix, commits `0bcce870..ff5c124b` on `main`. Dispositions:
+
+| Commit | Findings | Notes / residuals |
+|---|---|---|
+| `1780a353` | **CK-150-019 (P1), -020, -021, -022, -034** | `importFromJSON` swallow removed (throw contract in KDoc); directory members skipped + deduped; reverse per-entry `runCatching` rollback; prefs snapshot/restore via `restorePrefsSnapshot`; 12 new tests (`BackupRestoreDbFailureTest` + 6 in the limits test + 1 instrumented). Residuals: `FullBackupImportResult.mediaFilesRestored` still reports the pre-rollback count on failure; learned bigrams/vocabulary live outside prefs and are not reversed (`TODO(CK-150-020)` in code); `reconcilePrivateCopyToolbarFromPrefs`' component-enable side effect is not re-reconciled on rollback (self-heals on next settings load). |
+| `c83d6ff2` | **CK-150-025** | **Ruling superseded §4.3's original prescription** (see the note there). Rescued words now append *below* the real beam into spare TOP_K slots via pure `CtcFuzzyRescue.mergeIntoBeam`, scores strictly under `(top−1)/2` — the parity knife-edge flagged in `memory/HANDOFF.md` is closed and no rescued word can clear `SwipeContextRescorer`'s ratio guard. Replay engine shares the same function. Residual: the `-PgeoFull` context-replay sweep needs re-baselining (analytic expectation: runner-up/top-1 median falls back toward 0.254). |
+| `0bcce870` | **CK-150-023, -028, -035 (partial)** | Gate regex rejects `OK (0 tests)`; `CtcEmissionModelParityTest` in the curated list (fixture verified to ship in the androidTest APK); `CuratedInstrumentationListTest` pins the 6-class list; ci.yml Trivy blocking (`exit-code: '1'` was required — the action never fails otherwise); tag↔version check moved into the `test` job; diff range derived via `git describe --match 'v*' HEAD^`; `gradle.lockfile` (331 coords). |
+| `8e2dd63d` | lockfile hotfix | `0bcce870`'s lockfile broke every androidTest task: `kotlin-stdlib-common:2.0.0` resolves into `debugAndroidTestRuntimeClasspath` **only when lock constraints are active**, so no `--write-locks` run persists it. Fixed by hand-adding the config to the lock line. **Caveat for future regenerations:** after `--write-locks`, re-check that this line still carries `debugAndroidTestRuntimeClasspath`. |
+| `4330cc80` | **CK-150-030, -033(b)** | 5 new `backup_protection_*`/`backup_passphrase_storage_unavailable` strings translated in all 21 locales; shared `protectionStateLabelRes` mapping; stale strings.xml comments rewritten. **New backlog finding:** ~12 `headlessToast` labels (`BackupRestoreActivity.kt:290-408`) and the rest of `BackupPasswordBlock`'s dialog copy are still hardcoded English. |
+| `436911d9` | **CK-150-024, -026 (tests written)** | `PredictionResult.languages` (defaulted third field); dual-language merge populates it; `SuggestionHandler` gates possessives per word, threading the label list through `rescoreWithContext`'s permutation with drop-on-mismatch fallback. Dual-language latency + LRU tests added to `CtcLatencyGateTest` — **written, not yet executed on a device**. Residual: no pure test pins the adapter→coordinator→handler threading (compilation only). |
+| `ff5c124b` | **CK-150-032**, LOW-2, LOW-8, A0/LOW-9, -035 (rest) | All-four-file note parity; changelog paths derived from `build.gradle` versions (base·10+abiCode); real-XML parse + element-type + ≥12/21 translated-difference assertions; phantom `weight` comment and `"futo"` keyword removed; `release.yml:387` `--match 'v*'`; negative `supportsLayout` gate pinned in `CtcMultiLanguageInstrumentedTest` (instrumented route — `KeyboardData` needs `Xml.newPullParser` and the adapter constructor needs Android runtime). |
+
+**Final gate sweep at `ff5c124b` (2026-08-25):** one Gradle invocation of
+`runPureTests runMockTests lintDebug compileDebugAndroidTestKotlin` — pure **OK (1,774)**, mock
+**OK (303)**, lint clean, androidTest compiles, output quiet, exit 0.
+
+**Still open after this wave:** CK-150-027 (a11y dense parity sweep + trailing-placeholder
+decision), CK-150-029 (touch-exploration-ON smoke assertion), CK-150-031 (EN rescue index drops
+accented entries), CK-150-036 (German `ß` vocabulary decision), the new i18n backlog above, and
+the release *measurements*: curated API-34 gate on the candidate SHA, French held-out eval,
+device execution of the dual-language latency tests, and the first real PR-path Trivy run.
+
 ## 2. Corrections to the audit record (modify)
 
 ### 2a. CK-150-007 — the German `ß` claim was wrong; the fix mostly measured French
@@ -250,6 +275,13 @@ no new files, no staging residue.
    still restored).
 
 ### 4.3 CK-150-025 — fix the rescue score clamp; add the missing rank-1 tests (P2)
+
+> **Superseded by ruling, implemented in `c83d6ff2`.** The interleave-at-rank-2 fix below was
+> replaced after `memory/HANDOFF.md`'s replay measurement showed the insertion itself reshaped
+> the slate's confidence signal (ratio median 0.254→0.500) with a parity knife-edge. The landed
+> semantics: rescued words **append below** all real beam words, only into spare TOP_K slots,
+> scores strictly descending from `min(lastReal−1, (top−1)/2)` — never interleaved, never
+> promotable. Kept below unedited as the record of the original prescription.
 
 **File:** `src/main/kotlin/tribixbite/cleverkeys/swipe/CtcEngineAdapter.kt`, function
 `applyFuzzyRescue` (`:669`).

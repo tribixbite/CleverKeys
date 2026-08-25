@@ -7,21 +7,24 @@ Remediation verification + residual plan (CK-150-019…036):
 
 ## Release 1.6 verification
 
-- [ ] **CK-150-019 (P1, new blocker):** `ClipboardDatabase.importFromJSON` swallows exceptions →
-  failed imports report success and media rollback is dead code. Fix per plan §4.1 (+ §4.2
-  directory-entry/rollback hardening).
-- [ ] **CK-150-025:** fuzzy-rescue score-clamp inversion (`CtcEngineAdapter.applyFuzzyRescue`) can
-  rank a rescued word above a confident decode; extract merge + add rank-1 tests (plan §4.3).
-- [x] Run `runPureTests`, `runMockTests` — green at `6b3b8bb9` (1,757 + 292, quiet output,
-  2026-08-25). Re-run with `lintDebug` + Android-test compilation at the candidate SHA.
-- [ ] Fix `emulator-ci.sh` `OK (0 tests)` false-green + pin curated class list (plan §4.5), THEN
-  run the curated API-34 emulator gate in GitHub Actions or ew-cli 1.3.4 on the exact candidate SHA.
+Implementation wave landed 2026-08-25 (`0bcce870..ff5c124b`): CK-150-019/020/021/022/023/024/
+025/028/030/032/034/035 + LOW-2/8/9 fixed — ledger in
+`docs/audit/2026-08-25-remediation-verification.md` §1b. Remaining:
+
+- [ ] Run the curated API-34 emulator gate (GitHub Actions or ew-cli 1.3.4) on the exact
+  candidate SHA — now 6 classes incl. `CtcEmissionModelParityTest` and the new negative
+  routing + dual-language latency tests (written, never executed on device).
 - [ ] **French-only** held-out evaluation for the `ß/œ/æ/ø` projection change (German is a no-op —
-  `de_enhanced.bin` has no `ß` words; see plan §2a/CK-150-036); record under `docs/eval/`.
-- [ ] Gather independent on-device CTC shadow traces before considering context rescoring; keep it
-  default-off until it shows positive benefit on confirmation data.
-- [ ] P2 queue before/immediately after tag: possessive leak on secondary language (§4.4), Trivy
-  gates + Gradle lockfile (§4.6), settings/dict rollback (§4.7), dual-language latency (§4.9).
+  `de_enhanced.bin` has no `ß` words; CK-150-036 is the product decision); record under `docs/eval/`.
+- [ ] Re-baseline the `-PgeoFull` context-rescoring replay after `c83d6ff2` (rescue no longer
+  reshapes the slate; expect the ratio median back toward 0.254). Coordinate with the rescoring
+  session; keep the pref default-off.
+- [ ] First real PR-path Trivy run (now blocking, `exit-code: '1'`) — watch the next PR.
+- [ ] P2/P3 leftovers: CK-150-027 (a11y dense parity sweep), CK-150-029 (touch-exploration-ON
+  smoke), CK-150-031 (EN rescue accented entries), headless-toast/dialog i18n backlog
+  (verification §1b), pure pin of the languages threading (adapter→coordinator→handler).
+- [ ] Lockfile caveat: after any `--write-locks` regeneration, re-check
+  `kotlin-stdlib-common:2.0.0` still lists `debugAndroidTestRuntimeClasspath` (`8e2dd63d`).
 
 ## Post-1.6
 

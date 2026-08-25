@@ -18,15 +18,15 @@ do not start Milestone A on the release branch. The open CK-150 items in
 | ML checklist item | Status 2026-08-20 | Status now | Evidence / where it went |
 |---|---|---|---|
 | 1.1 banner the execution brief (MEDIUM-3) | open | **CLOSED 2026-08-25** | banner added atop `docs/audit/remediation-plans/ctc-integration-execution-brief.md` |
-| 1.2 emission check runs nowhere automatic (HIGH-4 residue) | open, 3-class gate | **still open, 5-class gate** | `emulator-ci.sh:124` now also runs a11y + Keystore classes but still not `tribixbite.cleverkeys.swipe.CtcEmissionModelParityTest`; fold the one-line addition into the CK-150-028 curated-list work (verification plan §4.5) so the list-pin test lands with it |
+| 1.2 emission check runs nowhere automatic (HIGH-4 residue) | open, 3-class gate | **CLOSED 2026-08-25** (`0bcce870`) | `CtcEmissionModelParityTest` appended to the gate (6 classes), fixture verified to ship in the androidTest APK, list pinned by `CuratedInstrumentationListTest`, `OK (0 tests)` regex hole closed |
 | 1.3 two unmarked `sw2345` citations (HIGH-2 residue) | open | **CLOSED 2026-08-25** | finding 13 struck in `docs/audit/2026-08-17-neural-vs-ctc-parity.md`; superseded-figure notes added at `docs/eval/2026-08-15-ctc-per-language-lambda.md` (both sites) |
 | 1.4 app CTC references a generation behind (NEW-6) | open | **CLOSED 2026-08-25** | `memory/HANDOFF.md` (both paragraphs) and `docs/specs/ctc-swipe-engine.md:786` updated to `ru_synth_v3_ch80_fp16w` / sha `8fffa75c…` / 85.07; guide mirror refreshed |
 | 1.5 11 MB superseded ONNX in androidTest (MEDIUM-4) | open | **already closed pre-verification** | `src/androidTest/assets/ctc_bench/` holds only a README (2026-08-20) explaining the deletion and the "ship candidate" history; restoration steps included |
 | 1.6 LOW-6 dev absolute path in fixtures | open | **closed** | `rg kd_fp16w src/` → no matches |
 | 1.6 spec stale cite `Config.kt:300` | open | **CLOSED 2026-08-25** | `ctc-swipe-engine.md` header now cites `:311` |
-| 1.6 LOW-9 negative gate-3 test | open | **still open** | no `supportsLayout(...) == false` assertion for a Cyrillic/Greek `KeyboardData` anywhere in `src/test` or `src/androidTest`; becomes **load-bearing** in Milestone A (see A4) — do it as A0 |
-| 1.6 LOW-2 phantom `weight` in formula comment | open | still open | `CtcScoringParams.kt:13` — `final_score = ctc/max(len,1)^gamma + weight * beta * len + …`; there is no `weight` property; delete the word |
-| 1.6 LOW-8 `"futo"` search keyword | open | still open | `SettingsActivity.kt:589` `SearchableSetting("CTC Settings", listOf("ctc", "futo", …))`; remove `"futo"` |
+| 1.6 LOW-9 negative gate-3 test | open | **CLOSED 2026-08-25** (`ff5c124b`) | `nonLatinLayoutsAreRejectedByTheAlphabetGate` in `CtcMultiLanguageInstrumentedTest` (instrumented route — `KeyboardData` parsing and the adapter constructor need Android runtime), with a `latn_qwerty_us` positive control; A0 is done, A4 must flip it deliberately |
+| 1.6 LOW-2 phantom `weight` in formula comment | open | **CLOSED 2026-08-25** (`ff5c124b`) | comment now reads `+ beta * len` |
+| 1.6 LOW-8 `"futo"` search keyword | open | **CLOSED 2026-08-25** (`ff5c124b`) | keyword removed |
 
 Guide mirror (checklist §3): **CLOSED 2026-08-25** — copied verbatim from
 `CleverKeys-ML/ctc/ctc-architecture-and-multiscript-guide.md`, mirror-warning block replaced with
