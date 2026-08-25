@@ -616,11 +616,14 @@ Stated plainly, with evidence:
     for Cyrillic, synthetic training costs **−13.4 pt top-1** versus the (unshippable) real-trained
     arm (`PHASE_I_DATA.md:322, 350`).
 
-13. **The alt-layout bars may have been measured at a different slot count than the app uses.**
-    The ML layout JSONs carry 27 letter slots for azerty/dvorak/spanish and 29 for german; the app
-    always builds 26 (`CtcEngineAdapter.kt:249-301`). Only dvorak has a published
-    "app-geometry" counterpart (88.98 vs 89.87). Resolve before quoting azerty 83.81 / qwertz 83.01
-    / german 80.64 / spanish 88.45 as app-relevant.
+13. ~~**The alt-layout bars may have been measured at a different slot count than the app
+    uses.**~~ **RESOLVED — struck 2026-08-25** (this document's own §2.1.3 already refuted the
+    concern, and the quoted figures are additionally superseded). The `sw2345` numbers cited
+    here (azerty 83.81 / qwertz 83.01 / german 80.64 / spanish 88.45, dvorak-app 88.98) are a
+    model generation behind; the ship model reads dvorak 91.82 / dvorak-app 91.10 /
+    azerty 84.53 / qwertz 83.97 / german 81.30 / spanish 89.53
+    (`CleverKeys-ML/ctc/MODELS_TABLE.md:113`). Do not quote the older figures except to mark
+    them superseded.
 
 14. **The German shipped-λ number quoted in the spec is the wrong row.**
     `docs/specs/ctc-swipe-engine.md:235` quotes "confirm 87.85 / 81.57" for German, but 81.57 is the

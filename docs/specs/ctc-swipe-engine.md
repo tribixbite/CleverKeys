@@ -1,7 +1,7 @@
 # Feature Specification: CTC Swipe Engine (`ctc` mode — the DEFAULT swipe engine)
 
 **Status (2026-08-19):** the **DEFAULT** swipe engine. `Defaults.SWIPE_ENGINE_MODE = "ctc"`
-(`Config.kt:300`) since 2026-08-18, when the neural engine was deleted; the only other mode
+(`Config.kt:311`) since 2026-08-18, when the neural engine was deleted; the only other mode
 is `geometric`. The CleverKeys-trained CTC encoder ships as `models/ctc_swipe_encoder.onnx`
 (CleverKeys-ML `phaseM_kd_fresh_w1_s1234_fp16w`, 2.91 MB — TEST-VALIDATED on the shipping
 configuration: en_enhanced STRIP trie at preset 0.9/4.0/0.25/0.25/0.9882 → test-2400
@@ -373,7 +373,7 @@ form has to survive somewhere. `CtcAzProjection`:
 
 | Language | records | untypeable | trie words | accent-strip collisions |
 |---|---:|---:|---:|---:|
-| `fr` | 40,000 | 31 | 37,949 | 2,020 |
+| `fr` | 40,000 | 0 | 37,958 | 2,042 |
 | `de` | 40,000 | 0 | 39,594 | 406 |
 | `es` | 50,000 | 0 | 47,955 | 2,045 |
 
@@ -782,10 +782,13 @@ and the seal is spent. The λ also needs re-confirming with user-dictionary entr
 (λ multiplies the frequency term, so a larger λ amplifies top-of-scale injected
 competitors) before any ru ship.
 
-A Russian encoder now EXISTS (`CleverKeys-ML/ctc/artifacts/ru_synth_ch80_fp16w.onnx`,
-589,406 B, trained on license-clean synthesis, in-dict top-1 **77.41** on eval-only Yandex
-rows) but is **not wired**: the adapter has exactly one `MODEL_ASSET`, one a–z `ALPHABET`,
-and `presetFor` can never return `tunedRuCkdt`. Its evidence tier is **val-only,
+A Russian encoder now EXISTS — the current generation-4 ship bytes are
+`CleverKeys-ML/ctc/artifacts/ru_synth_v3_ch80_fp16w.onnx` (589,406 B, sha `8fffa75c…`,
+learned-generator synthesis, in-dict top-1 **85.07** on eval-only Yandex rows; the earlier
+`ru_synth_ch80_fp16w.onnx` at 77.41 is two generations superseded) — but it is **not
+wired**: the adapter has exactly one `MODEL_ASSET`, one a–z `ALPHABET`, and `presetFor`
+can never return `tunedRuCkdt`. Wiring plan:
+`docs/plans/2026-08-25-ctc-multiscript-wiring-plan.md`. Its evidence tier is **val-only,
 permanently, single-seed, Yandex-eval-only** and it may never be described as
 "test-validated". The full picture — and the four rules that must hold before any non-Latin
 script is routed to CTC — is the architecture guide §3–§4 and §7.

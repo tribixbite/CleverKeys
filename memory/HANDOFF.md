@@ -186,16 +186,22 @@ Layout census (`src/main/layouts/`, 86 XML — the tree `copyLayoutDefinitions` 
 Latin-trained encoder does not zero-shot another script, because motor statistics and the learned
 character-transition prior are trained even though geometry is an input — but they are cheap and
 proven: ~94k steps of `resbn:80`, under an hour on one GPU, from a word list and layout geometry
-alone. `phaseIB-ru-synth` saw zero real Cyrillic rows and decodes real Russian at 77.41 in-dict
-top-1.
+alone. `phaseIB-ru-synth` saw zero real Cyrillic rows and decoded real Russian at 77.41 in-dict
+top-1; the generation-4 successor (`ru_synth_v3_ch80`, learned-generator synthesis, Phase Q)
+reads **85.07** on the same eval-only probe.
 
 Equally, "the ALPHABET is hardcoded a–z" is true of two constants in one adapter file and false
 of everything else: the model has no alphabet (64 geometry-conditioned slots plus blank,
 `keyEmbed` a function of `(cx, cy)` never of slot index), and `CtcLayout`, `CtcLexiconTrie`
 (bounded by `MAX_KEYS`=64) and `CtcEmissions.sliceFromHead` are already script-generic.
 
-**Russian is delivered**: `CleverKeys-ML/ctc/artifacts/ru_synth_ch80_fp16w.onnx`, 589,406 B, sha
-`84ac284d…`, plus its golden fixture.
+**Russian is delivered** (updated 2026-08-25 — the 2026-08-18 paragraph named the generation-2
+bytes, since twice superseded): the current ship bytes are
+`CleverKeys-ML/ctc/artifacts/ru_synth_v3_ch80_fp16w.onnx`, 589,406 B, sha `8fffa75c…`, at
+**85.07** in-dict top-1, plus its golden fixture `ru_synth_v3_ch80_fp16w_golden.json`. All six
+scripts (ru/el/uk/bg/mk/he) now have uniform `_v3_` generation-4 artifacts; hashes in
+`CleverKeys-ML/ctc/APP_WIRING_CHECKLIST.md` §2.2 and the app plan
+`docs/plans/2026-08-25-ctc-multiscript-wiring-plan.md`.
 
 ### The multi-script wiring plan — `CleverKeys-ML/ctc/PHASE_O.md` §3
 

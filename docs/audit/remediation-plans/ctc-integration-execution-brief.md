@@ -1,5 +1,15 @@
 # CTC integration — execution brief (planning review of APP_INTEGRATION_PLAN.md)
 
+> **HISTORICAL — superseded 2026-08-18; banner added 2026-08-25 (checklist item MEDIUM-3).**
+> Statements below that "Default engine stays `neural`" (§2 D7, §6) and that "Q1 model choice
+> is SUPERSEDED-PENDING — a new model is training" (§7 sign-off) were true on 2026-08-11 and
+> are now false: **no model swap is pending** (Phase N is terminal; Phase P shipped nothing
+> into the APK), **`ctc` is the default engine**, and **the neural engine is deleted**
+> (ADR-011, 2026-08-18). Current truth lives in `docs/specs/ctc-swipe-engine.md` and
+> `docs/specs/ctc-architecture-and-multiscript-guide.md`; multi-script wiring work is planned
+> in `docs/plans/2026-08-25-ctc-multiscript-wiring-plan.md`. Read the rest as a record of the
+> 2026-08-11 planning review, not as instructions.
+
 **Reviewed:** 2026-08-11, app HEAD `7ec6c11e`. **Subject:** `~/git/swype/CleverKeys-ML/ctc/APP_INTEGRATION_PLAN.md`
 (1,821 lines, written 2026-08-08 vs app `79ddfb0f`). Verdict: **app-side diffs apply near-verbatim
 (~95%, line offsets only); the ML-side inputs (model, preset, fixture) are TWO generations stale** —

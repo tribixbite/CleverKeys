@@ -98,7 +98,9 @@ Italian/Portuguese/Swedish swipe data, not by re-running this harness.
 Note the λ recommendation would *mechanically* extend to them (identical CKDT scale), and
 the encoder is language-agnostic (it emits per-key probabilities from geometry; the lexicon
 does the language work). But the measured spread across the languages we DID validate is
-wide — german 80.64 vs spanish 88.45 top-1 — so lexicon properties clearly matter, and
+wide — german 80.64 vs spanish 88.45 top-1 (**superseded `sw2345` figures, kept for the
+spread argument only; the ship model reads german 81.30 / spanish 89.53,
+`CleverKeys-ML/ctc/MODELS_TABLE.md:113` — 2026-08-25**) — so lexicon properties clearly matter, and
 enabling an unmeasured language on the scale argument alone would be a guess. They keep the
 working neural/geometric fallback instead.
 
@@ -109,7 +111,8 @@ working neural/geometric fallback instead.
   shape as the contraction overlay) and per-language on-device validation. λ is the
   *prerequisite*, not the whole feature.
 - **Absolute numbers are not cross-comparable with the training campaign's alt-layout bars.**
-  The control's 92.72 sits above the campaign's 88.98 dvorak-app figure because the filtering
+  The control's 92.72 sits above the campaign's 88.98 dvorak-app figure (a superseded
+  `sw2345` number; the ship model's dvorak-app is 91.10 — 2026-08-25) because the filtering
   differs (in-dict only, single-finger, this corpus slice). The control's job was to confirm
   the λ *direction* on the English scale, which it did.
 - **Corpus halves are heterogeneous.** de-qwertz's two halves differ by ~5 pt at matched λ

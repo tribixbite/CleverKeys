@@ -23,6 +23,12 @@ Remediation verification + residual plan (CK-150-019…036):
 - [ ] P2 queue before/immediately after tag: possessive leak on secondary language (§4.4), Trivy
   gates + Gradle lockfile (§4.6), settings/dict rollback (§4.7), dual-language latency (§4.9).
 
+## Post-1.6
+
+- [ ] CTC multi-script wiring (ru/el/uk/bg/mk/he), staged wiring-before-model:
+  [`docs/plans/2026-08-25-ctc-multiscript-wiring-plan.md`](../docs/plans/2026-08-25-ctc-multiscript-wiring-plan.md)
+  (ML checklist §1 doc items closed 2026-08-25; 1.2 CI class + LOW-2/LOW-8/LOW-9 remain).
+
 ## Release authority
 
 Do not commit, tag, push, publish, or open external issues without explicit user authorization.
