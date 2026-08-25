@@ -10,7 +10,7 @@ package tribixbite.cleverkeys.swipe.ctc
  *
  * ```
  * prune_score = score / max(depth,1)^gammaPrune + betaPrune * depth      (per frame)
- * final_score = ctc / max(len,1)^gamma + weight * beta * len + lambda*logFreq  (per word)
+ * final_score = ctc / max(len,1)^gamma + beta * len + lambda*logFreq  (per word)
  * ```
  *
  * The tiny [lambda] (0.006–0.022) is deliberate: it multiplies an AOSP-scale

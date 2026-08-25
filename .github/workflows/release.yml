@@ -382,7 +382,9 @@ jobs:
           else
             # Final fallback: generate from commits
             echo "⚠️ No changelog found, generating from commits"
-            LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+            # --match 'v*' for the same reason as :65 — this repo carries `dev-*` tags
+            # that would otherwise hijack the "previous release" lookup.
+            LAST_TAG=$(git describe --tags --abbrev=0 --match 'v*' HEAD^ 2>/dev/null || echo "")
             if [ -n "$LAST_TAG" ]; then
               echo "Changes since $LAST_TAG:" >> CHANGELOG.md
               echo "" >> CHANGELOG.md

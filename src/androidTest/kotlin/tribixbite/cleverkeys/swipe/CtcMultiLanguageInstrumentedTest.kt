@@ -105,6 +105,14 @@ class CtcMultiLanguageInstrumentedTest {
         val CKDT_LANGUAGES = listOf("fr", "de", "es")
 
         /**
+         * Bundled NON-Latin layouts — the a–z alphabet gate must reject both today
+         * (LOW-9 / plan step A0). Cyrillic and Greek are the two scripts Milestone A
+         * widens first, so these are precisely the layouts whose verdict must flip
+         * deliberately rather than drift.
+         */
+        val NON_LATIN_LAYOUTS = listOf("cyrl_jcuken_ru", "grek_qwerty")
+
+        /**
          * Projection shapes measured on the shipped dictionaries (the same numbers the λ
          * sweep harness reported and `CtcCkdtLexiconTest` pins off the filesystem). A
          * dictionary regeneration, a packaging change or a projection-policy edit moves
@@ -514,6 +522,66 @@ class CtcMultiLanguageInstrumentedTest {
                         "straight-line '${target.surface}' trace (it is the top-1 beam result " +
                         "offline at the shipped preset). Got: ${result.words}",
                     result.words.contains(target.canonical)
+                )
+            }
+        } finally {
+            adapter.shutdown()
+        }
+    }
+
+    /**
+     * LOW-9 / `docs/plans/2026-08-25-ctc-multiscript-wiring-plan.md` step A0 — the NEGATIVE
+     * half of the layout gate: `supportsLayout` must return **false** for the bundled
+     * Cyrillic and Greek layouts as the code stands today.
+     *
+     * ## Why this pin matters
+     * Gate 3 (`CtcEngineAdapter.buildMappedLayout`'s "all 26 a–z centre keys present" rule)
+     * is what actually keeps a non-Latin board off the CTC engine — the router's script gate
+     * in front of it is metadata-only, and `grek_qwerty.xml` shipped for months declaring
+     * `script="latin"` with nobody noticing precisely because this gate caught it
+     * (see `LayoutScriptDeclarationTest`). Milestone A4 of the multi-script plan replaces the
+     * hardcoded a–z `ALPHABET` with a per-script one, at which point these two verdicts
+     * flip. Pinning them now makes that flip a deliberate, visible edit to this test rather
+     * than a silent widening nobody reviews.
+     *
+     * ## Why instrumented and not pure (the CK-150-032 feasibility ruling)
+     * Both halves of the call are Android-bound and neither is reachable from `runPureTests`:
+     *  - `KeyboardData` only parses layout XML through `Xml.newPullParser()`
+     *    (`KeyboardData.load` / `load_string`); `parse_keyboard` is private, so there is no
+     *    JDK-parser entry point. The pure geometric tests sidestep this deliberately —
+     *    `GeoLayoutFixtures` re-implements the parse with `javax.xml.parsers` into its own
+     *    `LayoutGeometry`, which is NOT a `KeyboardData` and cannot be handed to
+     *    `supportsLayout`.
+     *  - `CtcEngineAdapter`'s constructor needs a `Context` and eagerly builds a
+     *    `Handler(Looper.getMainLooper())` and an `OrtEnvironment`. `runPureTests` runs
+     *    JUnitCore on a plain JVM **without android.jar on the classpath** (that is what the
+     *    separate `runMockTests` task exists for), and the ORT JVM natives are not built for
+     *    this host anyway.
+     * Faking either half would test the fake, not the gate, so the assertion lives here.
+     *
+     * The Latin positive control is asserted in the same method on purpose: without it a
+     * `supportsLayout` that returned false unconditionally would pass this test.
+     */
+    @Test
+    fun nonLatinLayoutsAreRejectedByTheAlphabetGate() {
+        val adapter = CtcEngineAdapter(context)
+        try {
+            val latin = loadLayout(LAYOUT)
+            assertTrue(
+                "positive control: CTC must still accept $LAYOUT — without this a gate that " +
+                    "rejects everything would satisfy the negative assertions below",
+                adapter.supportsLayout(latin, paramsFor(latin), FRAME_W, FRAME_H)
+            )
+            for (layoutName in NON_LATIN_LAYOUTS) {
+                val kd = loadLayout(layoutName)
+                val params = paramsFor(kd)
+                assertFalse(
+                    "$layoutName must NOT be CTC-eligible today: the shipped encoder emits " +
+                        "a–z only, and buildMappedLayout has no 26-letter mapping for it, so " +
+                        "the caller has to fall through to the geometric engine. If this " +
+                        "started passing, the multi-script router (plan §A4) landed — update " +
+                        "this test deliberately, do not delete it.",
+                    adapter.supportsLayout(kd, params, FRAME_W, FRAME_H)
                 )
             }
         } finally {
