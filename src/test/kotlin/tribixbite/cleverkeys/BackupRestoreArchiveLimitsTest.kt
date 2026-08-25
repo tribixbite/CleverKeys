@@ -17,6 +17,8 @@ import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import tribixbite.cleverkeys.backup.ShortSwipeImporter
+import tribixbite.cleverkeys.backup.crypto.BackupCrypto
+import tribixbite.cleverkeys.backup.crypto.EncryptedBackupFormat
 import tribixbite.cleverkeys.customization.ShortSwipeCustomizationManager
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -152,18 +154,69 @@ class BackupRestoreArchiveLimitsTest {
         return uri
     }
 
-    /** Build a ZIP from in-memory entries (materialized payloads). */
-    private fun buildZip(entries: List<Pair<String, ByteArray>>): ByteArray {
+    /**
+     * Build a ZIP from in-memory entries (materialized payloads). A `null` payload writes a
+     * DIRECTORY member — `ZipEntry` treats any name ending in `/` as a directory.
+     */
+    private fun buildZip(entries: List<Pair<String, ByteArray?>>): ByteArray {
         val baos = ByteArrayOutputStream()
         ZipOutputStream(baos).use { zip ->
             for ((name, payload) in entries) {
                 zip.putNextEntry(ZipEntry(name))
-                zip.write(payload)
+                if (payload != null) zip.write(payload)
                 zip.closeEntry()
             }
         }
         return baos.toByteArray()
     }
+
+    /** A ZIP directory member, e.g. `dirEntry("clipboard_media/sub/")`. */
+    private fun dirEntry(name: String): Pair<String, ByteArray?> = name to null
+
+    /**
+     * Bytes of [zipBytes] up to the start of the central directory — i.e. the local-header
+     * region, which is everything [java.util.zip.ZipInputStream] ever reads.
+     *
+     * The offset is taken from the End Of Central Directory record (the last 22 bytes; the
+     * archives built here never carry a comment) rather than by scanning for the `PK\x01\x02`
+     * signature, which could appear inside compressed data.
+     */
+    private fun localEntryRegion(zipBytes: ByteArray): ByteArray {
+        val eocd = zipBytes.size - 22
+        require(eocd >= 0 && readLe32(zipBytes, eocd) == 0x06054b50L) {
+            "expected a comment-less EOCD at the end of the test archive"
+        }
+        return zipBytes.copyOf(readLe32(zipBytes, eocd + 16).toInt())
+    }
+
+    private fun readLe32(bytes: ByteArray, offset: Int): Long =
+        (bytes[offset].toLong() and 0xFF) or
+            ((bytes[offset + 1].toLong() and 0xFF) shl 8) or
+            ((bytes[offset + 2].toLong() and 0xFF) shl 16) or
+            ((bytes[offset + 3].toLong() and 0xFF) shl 24)
+
+    /**
+     * Assemble an archive that repeats a member name. `ZipOutputStream` refuses to write two
+     * members with the same name, so the local-entry regions of two archives are concatenated;
+     * `ZipInputStream` walks local headers sequentially and stops at EOF, so the importer sees
+     * exactly the duplicated members.
+     */
+    private fun buildZipWithDuplicates(
+        first: List<Pair<String, ByteArray?>>,
+        second: List<Pair<String, ByteArray?>>,
+    ): ByteArray = localEntryRegion(buildZip(first)) + localEntryRegion(buildZip(second))
+
+    private fun fullBackupManifestBytes(): ByteArray =
+        JsonObject().apply {
+            addProperty("format", "cleverkeys_full_backup")
+            addProperty("format_version", BackupRestoreManager.FULL_BACKUP_FORMAT_VERSION)
+            addProperty("app_version", "1.4.0-test")
+        }.toString().toByteArray(Charsets.UTF_8)
+
+    private fun emptyClipboardJsonBytes(): ByteArray =
+        JSONObject().apply {
+            put("total_active", 0); put("total_pinned", 0); put("total_todo", 0)
+        }.toString().toByteArray(Charsets.UTF_8)
 
     /**
      * Build a valid full-backup manifest ZIP whose named [bombEntry] decompresses to
@@ -420,6 +473,159 @@ class BackupRestoreArchiveLimitsTest {
             assertEquals("original", firstLive.readText())
             verify(exactly = 0) { clipboardDb.importFromJSON(any()) }
         }
+    }
+
+    // ── CK-150-021: ZIP directory members are not media files ─────────────────
+
+    @Test
+    fun importClipboardHistoryZip_mediaDirectoryEntryIsSkipped_andLiveDirectorySurvives() {
+        // The exact CK-150-021 shape: the archive carries an explicit directory member for a
+        // path that already exists as a live DIRECTORY. Staging it produced an empty file whose
+        // commit tried to copy over that directory — FileAlreadyExistsException for a non-empty
+        // one (import fails), or silent replacement of an empty one.
+        val keep = File(testRoot, "files/clipboard_media/sub/keep.bin").apply {
+            parentFile!!.mkdirs()
+            writeText("keep")
+        }
+        val zipBytes = buildZip(listOf(
+            "clipboard_data.json" to emptyClipboardJsonBytes(),
+            dirEntry("clipboard_media/sub/"),
+            "clipboard_media/sub/new.bin" to "new".toByteArray(),
+        ))
+
+        val result = newManager().importClipboardHistoryZip(fakeUriForInput(zipBytes))
+
+        assertEquals("only the real media file is staged", 1, result.mediaFilesRestored)
+        assertTrue(
+            "live media directory must survive the import",
+            File(testRoot, "files/clipboard_media/sub").isDirectory
+        )
+        assertEquals("pre-existing sibling untouched", "keep", keep.readText())
+        assertEquals("new", File(testRoot, "files/clipboard_media/sub/new.bin").readText())
+    }
+
+    @Test
+    fun importFullBackup_mediaDirectoryEntryIsSkipped() {
+        val zipBytes = buildZip(listOf(
+            BackupRestoreManager.ENTRY_MANIFEST to fullBackupManifestBytes(),
+            dirEntry("clipboard_media/nested/"),
+            "clipboard_media/nested/one.bin" to "payload".toByteArray(),
+        ))
+
+        val result = newManager().importFullBackup(fakeUriForInput(zipBytes), prefs)
+
+        assertTrue("import should succeed: err=${result.errorMessage}", result.success)
+        assertEquals("directory member must not count as media", 1, result.mediaFilesRestored)
+        assertTrue(File(testRoot, "files/clipboard_media/nested").isDirectory)
+        assertEquals("payload", File(testRoot, "files/clipboard_media/nested/one.bin").readText())
+    }
+
+    // ── CK-150-021/034: the duplicate-name guard covers every member type ─────
+
+    @Test
+    fun importFullBackup_duplicateFileEntryIsRejected() {
+        val zipBytes = buildZipWithDuplicates(
+            listOf(
+                BackupRestoreManager.ENTRY_MANIFEST to fullBackupManifestBytes(),
+                "clipboard_media/dupe.bin" to "first".toByteArray(),
+            ),
+            listOf("clipboard_media/dupe.bin" to "second".toByteArray()),
+        )
+
+        val result = newManager().importFullBackup(fakeUriForInput(zipBytes), prefs)
+
+        assertFalse("duplicate member must fail the import", result.success)
+        assertTrue(
+            "error should name the duplicate: ${result.errorMessage}",
+            result.errorMessage.orEmpty().contains("duplicate entry")
+        )
+        assertFalse(File(testRoot, "files/clipboard_media/dupe.bin").exists())
+    }
+
+    @Test
+    fun importFullBackup_duplicateDirectoryEntryIsRejected() {
+        // Directory members used to be exempt from the `seenEntries` guard, so an archive could
+        // repeat one without bound.
+        val zipBytes = buildZipWithDuplicates(
+            listOf(
+                BackupRestoreManager.ENTRY_MANIFEST to fullBackupManifestBytes(),
+                dirEntry("clipboard_media/sub/"),
+            ),
+            listOf(dirEntry("clipboard_media/sub/")),
+        )
+
+        val result = newManager().importFullBackup(fakeUriForInput(zipBytes), prefs)
+
+        assertFalse("duplicate directory member must fail the import", result.success)
+        assertTrue(
+            "error should name the duplicate: ${result.errorMessage}",
+            result.errorMessage.orEmpty().contains("duplicate entry")
+        )
+        verify(exactly = 0) { clipboardDb.importFromJSON(any()) }
+    }
+
+    // ── CK-150-034: the encrypted-container ceiling, through the manager ──────
+
+    @Test
+    fun importFullBackup_encryptedContainerOverCeiling_failsWithoutParsing() {
+        // `archiveContainerBytes` bounds BOTH the container and the authenticated plaintext, but
+        // only the container ceiling is reachable through an importer: the container is always
+        // header+tag LARGER than its plaintext, so it trips first for any shared limit.
+        val plaintextZip = buildZip(listOf(
+            BackupRestoreManager.ENTRY_MANIFEST to fullBackupManifestBytes(),
+            BackupRestoreManager.ENTRY_CLIPBOARD_JSON to emptyClipboardJsonBytes(),
+        ))
+        val container = BackupCrypto.encrypt(
+            plaintextZip,
+            "container-limit-pw".toCharArray(),
+            EncryptedBackupFormat.FULL_BACKUP_ZIP,
+            nowMillis = 1_700_000_000_000L,
+            iterations = 2000, // iteration count is irrelevant to the ceiling; keep the KDF cheap
+        )
+        val ceiling = EncryptedBackupFormat.HEADER_LEN.toLong() + 16L
+        assertTrue("test container must exceed the ceiling", container.size > ceiling)
+
+        val mgr = newManager(BackupRestoreManager.ImportLimits(archiveContainerBytes = ceiling))
+        mgr.setImportPassphraseOverride("container-limit-pw".toCharArray())
+
+        val result = mgr.importFullBackup(fakeUriForInput(container), prefs)
+
+        assertFalse("oversized encrypted container must fail import", result.success)
+        assertTrue(
+            "error should reference the container ceiling: ${result.errorMessage}",
+            result.errorMessage.orEmpty().contains("$ceiling byte limit")
+        )
+        verify(exactly = 0) { clipboardDb.importFromJSON(any()) }
+        val leftovers = File(testRoot, "cache").listFiles().orEmpty()
+            .filter { it.name.startsWith("ck_decrypt_") || it.name.startsWith("ck_import_") }
+        assertTrue("no decrypt/staging residue: $leftovers", leftovers.isEmpty())
+    }
+
+    @Test
+    fun importFullBackup_encryptedContainerWithinCeiling_stillImports() {
+        // Control for the ceiling test: the same encrypted archive imports cleanly when the
+        // limit admits it, so the failure above is the ceiling and not the encrypted path.
+        val plaintextZip = buildZip(listOf(
+            BackupRestoreManager.ENTRY_MANIFEST to fullBackupManifestBytes(),
+            BackupRestoreManager.ENTRY_CLIPBOARD_JSON to emptyClipboardJsonBytes(),
+        ))
+        val container = BackupCrypto.encrypt(
+            plaintextZip,
+            "container-limit-pw".toCharArray(),
+            EncryptedBackupFormat.FULL_BACKUP_ZIP,
+            nowMillis = 1_700_000_000_000L,
+            iterations = 2000,
+        )
+
+        val mgr = newManager(
+            BackupRestoreManager.ImportLimits(archiveContainerBytes = container.size.toLong())
+        )
+        mgr.setImportPassphraseOverride("container-limit-pw".toCharArray())
+
+        val result = mgr.importFullBackup(fakeUriForInput(container), prefs)
+
+        assertTrue("encrypted import should succeed: err=${result.errorMessage}", result.success)
+        assertEquals("1.4.0-test", result.sourceAppVersion)
     }
 
     @Test

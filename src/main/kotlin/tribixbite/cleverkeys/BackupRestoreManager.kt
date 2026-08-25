@@ -1437,7 +1437,10 @@ open class BackupRestoreManager(
                                 "Backup ZIP has more than $MAX_IMPORT_ENTRIES entries — refusing to import."
                             )
                         }
-                        if (!entry.isDirectory && !seenEntries.add(entry.name)) {
+                        // CK-150-021: every named member participates in the duplicate guard,
+                        // directory entries included — exempting them let an archive repeat a
+                        // name unbounded.
+                        if (!seenEntries.add(entry.name)) {
                             throw java.io.IOException(
                                 "Backup ZIP contains duplicate entry '${entry.name}'"
                             )
@@ -1449,14 +1452,22 @@ open class BackupRestoreManager(
                                 jsonData = org.json.JSONObject(String(jsonBytes, Charsets.UTF_8))
                             }
                             entry.name.startsWith("clipboard_media/") -> {
-                                // Unsafe paths abort the archive rather than silently producing
-                                // a partially-restored backup whose JSON references missing media.
-                                stagedMedia.add(
-                                    stageMediaEntry(
-                                        zipIn, entry.name, mediaManager, stage,
-                                        stagedMedia.size, budget,
+                                // CK-150-021: a directory member ("clipboard_media/x/") carries no
+                                // payload. Staging one produced an empty file that the commit then
+                                // copied OVER the live directory of the same name. Skip it — the
+                                // real media entries below it create their own parent directories.
+                                if (entry.isDirectory) {
+                                    Log.d(TAG, "Skipping media directory entry: ${entry.name}")
+                                } else {
+                                    // Unsafe paths abort the archive rather than silently producing
+                                    // a partially-restored backup whose JSON references missing media.
+                                    stagedMedia.add(
+                                        stageMediaEntry(
+                                            zipIn, entry.name, mediaManager, stage,
+                                            stagedMedia.size, budget,
+                                        )
                                     )
-                                )
+                                }
                             }
                             else -> drainBoundedEntry(zipIn, entry.name, budget)
                         }
@@ -1565,7 +1576,16 @@ open class BackupRestoreManager(
             val jsonContent = readJsonFromUri(uri, setOf(EncryptedBackupFormat.CLIPBOARD_JSON))
             val importData = org.json.JSONObject(jsonContent)
             val clipboardDb = ClipboardDatabase.getInstance(context)
-            val importResult = clipboardDb.importFromJSON(importData)
+            // CK-150-019: importFromJSON now propagates DB failures instead of returning
+            // partial counts. There is no media commit on this path, so the only work is to
+            // attribute the failure before it converts into this function's failure shape
+            // (the wrapped rethrow in the catch below).
+            val importResult = try {
+                clipboardDb.importFromJSON(importData)
+            } catch (e: Exception) {
+                Log.e(TAG, "Clipboard JSON import failed while writing the database", e)
+                throw e
+            }
 
             // importResult = [activeAdded, pinnedAdded, todoAdded, duplicatesSkipped]
             val result = ClipboardImportResult()
@@ -1884,7 +1904,8 @@ open class BackupRestoreManager(
                                 "Backup ZIP has more than $MAX_IMPORT_ENTRIES entries — refusing to import."
                             )
                         }
-                        if (!entry.isDirectory && !seenEntries.add(entry.name)) {
+                        // CK-150-021: directory members are subject to the duplicate guard too.
+                        if (!seenEntries.add(entry.name)) {
                             throw java.io.IOException(
                                 "Backup ZIP contains duplicate entry '${entry.name}'"
                             )
@@ -1922,12 +1943,18 @@ open class BackupRestoreManager(
                                 clipboardJsonData = org.json.JSONObject(String(bytes, Charsets.UTF_8))
                             }
                             entry.name.startsWith("clipboard_media/") -> {
-                                stagedMedia.add(
-                                    stageMediaEntry(
-                                        zipIn, entry.name, mediaManager, stage,
-                                        stagedMedia.size, budget,
+                                // CK-150-021: skip payload-less directory members (see the
+                                // clipboard-ZIP importer for the failure they caused).
+                                if (entry.isDirectory) {
+                                    Log.d(TAG, "Skipping media directory entry: ${entry.name}")
+                                } else {
+                                    stagedMedia.add(
+                                        stageMediaEntry(
+                                            zipIn, entry.name, mediaManager, stage,
+                                            stagedMedia.size, budget,
+                                        )
                                     )
-                                )
+                                }
                             }
                             else -> {
                                 Log.w(TAG, "Unknown entry in full backup, skipping: ${entry.name}")
@@ -1950,59 +1977,84 @@ open class BackupRestoreManager(
             mediaCommit = commitStagedMedia(stagedMedia, mediaManager, stage)
             mediaFilesRestored = stagedMedia.size
 
-            // Apply config.json — funnel through SettingsImportPlanBuilder + Applier
-            // so screen-mismatch + drift handling stay consistent with single-file import.
-            configJsonBytes?.let { bytes ->
-                val configString = String(bytes, Charsets.UTF_8)
-                val snapshot: Map<String, Any?> = prefs.all.toMap()
-                val dm = context.resources.displayMetrics
-                val screen = ScreenMetrics(dm.widthPixels, dm.heightPixels, dm.density)
-                val plan = SettingsImportPlanBuilder.fromJson(
-                    configString,
-                    currentSnapshot = snapshot,
-                    screen = screen,
-                    defaultSnapshot = SETTINGS_DEFAULTS,
-                    currentShortSwipeRawJson = null,
-                )
-                val result = runBlocking {
-                    SettingsImportApplier.apply(
-                        plan, emptySet(), ShortSwipeImportMode.REPLACE, prefs, shortSwipeImporter
+            // CK-150-020: the section appliers below write SharedPreferences, which — unlike the
+            // media commit (reversible via `mediaCommit`) and the clipboard import (one SQLite
+            // transaction) — has no rollback of its own. Snapshot prefs BEFORE the first applier
+            // runs; if any section fails, restore the snapshot so a half-applied settings /
+            // dictionary state cannot survive a failed import. Nothing writes prefs between here
+            // and the config apply, so this snapshot is also the plan builder's `currentSnapshot`.
+            val prefsSnapshot: Map<String, Any?> = prefs.all.toMap()
+            try {
+                // Apply config.json — funnel through SettingsImportPlanBuilder + Applier
+                // so screen-mismatch + drift handling stay consistent with single-file import.
+                configJsonBytes?.let { bytes ->
+                    val configString = String(bytes, Charsets.UTF_8)
+                    val dm = context.resources.displayMetrics
+                    val screen = ScreenMetrics(dm.widthPixels, dm.heightPixels, dm.density)
+                    val plan = SettingsImportPlanBuilder.fromJson(
+                        configString,
+                        currentSnapshot = prefsSnapshot,
+                        screen = screen,
+                        defaultSnapshot = SETTINGS_DEFAULTS,
+                        currentShortSwipeRawJson = null,
                     )
+                    val result = runBlocking {
+                        SettingsImportApplier.apply(
+                            plan, emptySet(), ShortSwipeImportMode.REPLACE, prefs, shortSwipeImporter
+                        )
+                    }
+                    configKeysApplied = result.importedCount
+                    configImported = true
+                    // #156 F5: full-backup restore also writes clipboard_private_copy_toolbar_enabled;
+                    // reconcile the component from the imported value (covers the headless path — the
+                    // UI path's loadCurrentSettings() re-run is a harmless idempotent no-op).
+                    reconcilePrivateCopyToolbarFromPrefs(prefs)
                 }
-                configKeysApplied = result.importedCount
-                configImported = true
-                // #156 F5: full-backup restore also writes clipboard_private_copy_toolbar_enabled;
-                // reconcile the component from the imported value (covers the headless path — the
-                // UI path's loadCurrentSettings() re-run is a harmless idempotent no-op).
-                reconcilePrivateCopyToolbarFromPrefs(prefs)
+
+                // Apply dictionaries.json — funnel through DictImportPlanBuilder + Applier.
+                dictionariesJsonBytes?.let { bytes ->
+                    val dictString = String(bytes, Charsets.UTF_8)
+                    val currentCustom = readCurrentCustomWordsByLang(prefs)
+                    val currentDisabled = readCurrentDisabledWordsByLang(prefs)
+                    val plan = DictImportPlanBuilder.fromJson(dictString, currentCustom, currentDisabled)
+                    val (custom, disabled) = DictImportApplier.apply(
+                        plan, emptySet(), emptySet(), prefs
+                    )
+                    customWordsImported = custom
+                    disabledWordsImported = disabled
+
+                    // Learned data (context-LM bigrams + user vocabulary) rides the
+                    // dictionaries payload since 2026-08-06 (backup blind-spot fix).
+                    // TODO(CK-150-020): learned bigrams/vocabulary land outside `prefs`, so the
+                    // snapshot restore below cannot undo them; they need their own reversal.
+                    importLearnedDataFromJson(dictString)
+                }
+
+                // Apply clipboard_history.json. CK-150-019: importFromJSON now throws on a DB
+                // failure, which lands in the catch below (prefs restored) and then in the outer
+                // catch (media rolled back, success = false).
+                clipboardJsonData?.let { json ->
+                    val importResult = clipboardDb.importFromJSON(json)
+                    clipboardEntriesImported = importResult[0] + importResult[1] + importResult[2]
+                    clipboardEntriesSkipped = importResult[3]
+                }
+            } catch (e: Exception) {
+                // Undo the prefs half of a partially-applied import. The rethrow reaches the
+                // outer catch, which rolls the media commit back and reports success = false.
+                // A restore failure must never replace the original cause — log it and continue.
+                runCatching { restorePrefsSnapshot(prefs, prefsSnapshot) }
+                    .onFailure { Log.e(TAG, "Settings rollback failed after a failed import", it) }
+                configImported = false
+                configKeysApplied = 0
+                customWordsImported = 0
+                disabledWordsImported = 0
+                clipboardEntriesImported = 0
+                clipboardEntriesSkipped = 0
+                throw e
             }
 
-            // Apply dictionaries.json — funnel through DictImportPlanBuilder + Applier.
-            dictionariesJsonBytes?.let { bytes ->
-                val dictString = String(bytes, Charsets.UTF_8)
-                val currentCustom = readCurrentCustomWordsByLang(prefs)
-                val currentDisabled = readCurrentDisabledWordsByLang(prefs)
-                val plan = DictImportPlanBuilder.fromJson(dictString, currentCustom, currentDisabled)
-                val (custom, disabled) = DictImportApplier.apply(
-                    plan, emptySet(), emptySet(), prefs
-                )
-                customWordsImported = custom
-                disabledWordsImported = disabled
-
-                // Learned data (context-LM bigrams + user vocabulary) rides the
-                // dictionaries payload since 2026-08-06 (backup blind-spot fix).
-                importLearnedDataFromJson(dictString)
-            }
-
-            // Apply clipboard_history.json + regenerate thumbnails for any media
-            // we just extracted to disk. Mirrors importClipboardHistoryZip's
-            // post-import housekeeping.
-            clipboardJsonData?.let { json ->
-                val importResult = clipboardDb.importFromJSON(json)
-                clipboardEntriesImported = importResult[0] + importResult[1] + importResult[2]
-                clipboardEntriesSkipped = importResult[3]
-            }
-
+            // Regenerate thumbnails for any media we just extracted to disk. Mirrors
+            // importClipboardHistoryZip's post-import housekeeping.
             if (mediaFilesRestored > 0) {
                 val referencedPaths = clipboardDb.getAllReferencedMediaPaths()
                 try {
@@ -2076,6 +2128,48 @@ open class BackupRestoreManager(
         } finally {
             stagingDir?.deleteRecursively()
             decryptTemp?.delete()
+        }
+    }
+
+    /**
+     * Restore [prefs] to exactly [snapshot] — the CK-150-020 rollback for the full-backup
+     * section appliers, which write preferences with no undo of their own.
+     *
+     * `clear()` drops every key the failed sections added, then each snapshot value is
+     * rewritten through the typed `put*` that matches its runtime class (SharedPreferences
+     * has no untyped put). Android's `getAll()` contract limits values to
+     * Boolean/Int/Long/Float/String/Set&lt;String&gt;; anything else is a corrupted prefs file
+     * and is logged rather than dropped silently.
+     *
+     * Single editor, single [SharedPreferences.Editor.commit] — the restore is as atomic as
+     * the applier it undoes, and `commit` (not `apply`) so the caller's failure result is not
+     * reported before the rollback has actually hit disk. The restore assumes the import owns
+     * prefs for its duration: a concurrent writer's change made mid-import would be reverted.
+     */
+    private fun restorePrefsSnapshot(prefs: SharedPreferences, snapshot: Map<String, Any?>) {
+        val editor = prefs.edit()
+        editor.clear()
+        for ((key, value) in snapshot) {
+            when (value) {
+                is Boolean -> editor.putBoolean(key, value)
+                is Int -> editor.putInt(key, value)
+                is Long -> editor.putLong(key, value)
+                is Float -> editor.putFloat(key, value)
+                is String -> editor.putString(key, value)
+                is Set<*> -> {
+                    // getAll() only ever yields Set<String> for set-valued preferences.
+                    @Suppress("UNCHECKED_CAST")
+                    editor.putStringSet(key, value as Set<String>)
+                }
+                null -> Unit // Absent key — `clear()` already leaves it unset.
+                else -> Log.e(
+                    TAG,
+                    "Cannot restore preference '$key': unsupported type ${value.javaClass.name}"
+                )
+            }
+        }
+        if (!editor.commit()) {
+            Log.e(TAG, "Settings rollback commit() returned false — prefs may be partially restored")
         }
     }
 
@@ -2183,15 +2277,31 @@ open class BackupRestoreManager(
         private val stagingDir: File,
         private val committed: List<CommittedMedia>,
     ) {
+        /**
+         * Undo every committed replacement, newest first (reverse commit order), so a target
+         * written more than once ends on its original content.
+         *
+         * CK-150-022: each entry is isolated. A single unrestorable file (permissions, a
+         * vanished backup copy, an unlink failure) must not skip the remaining entries, and
+         * must not throw out of a `catch` block — every caller invokes `rollback()` while
+         * already handling another failure, and an escaping exception there would bypass the
+         * structured `success = false` result.
+         */
         fun rollback() {
             for (entry in committed.asReversed()) {
-                if (entry.existed && entry.backup != null && entry.backup.isFile) {
-                    entry.backup.copyTo(entry.target, overwrite = true)
-                } else {
-                    entry.target.delete()
+                runCatching {
+                    if (entry.existed && entry.backup != null && entry.backup.isFile) {
+                        entry.backup.copyTo(entry.target, overwrite = true)
+                    } else {
+                        entry.target.delete()
+                    }
+                }.onFailure {
+                    Log.e(TAG, "Media rollback failed for '${entry.target.absolutePath}'", it)
                 }
             }
-            stagingDir.deleteRecursively()
+            runCatching { stagingDir.deleteRecursively() }.onFailure {
+                Log.e(TAG, "Failed to remove import staging dir '${stagingDir.absolutePath}'", it)
+            }
         }
 
         fun finish() {
@@ -2285,8 +2395,11 @@ open class BackupRestoreManager(
                         throw java.io.IOException("Cannot create media directory for '${media.entryName}'")
                     }
                 }
-                val existed = target.isFile
-                val backup = if (existed) {
+                // CK-150-021: `exists()`, not `isFile()` — anything already occupying the target
+                // path (including a directory) is pre-existing state, and journaling it as new
+                // would make rollback DELETE it instead of restoring it.
+                val existed = target.exists()
+                val backup = if (target.isFile) {
                     if (!backupsDir.mkdirs() && !backupsDir.isDirectory) {
                         throw java.io.IOException("Cannot create media rollback directory")
                     }

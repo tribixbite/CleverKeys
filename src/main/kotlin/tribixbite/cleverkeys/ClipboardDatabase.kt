@@ -1564,48 +1564,52 @@ class ClipboardDatabase private constructor(context: Context) :
      * Import clipboard entries from a JSON export. Handles both v2 and v3 formats.
      * Wrapped in a single transaction for atomicity and performance.
      *
+     * **Throws on failure (CK-150-019).** The transaction rolls back (no
+     * `setTransactionSuccessful` on the failing path) and the exception propagates to the
+     * caller. It must NOT be swallowed here: [BackupRestoreManager] commits staged media
+     * files *before* calling this, and only an escaping exception reaches the media
+     * rollback + `success = false` result. Returning partial counts after a rolled-back
+     * transaction told the user a failed import had succeeded and orphaned the media commit.
+     *
      * @return IntArray of [activeAdded, pinnedAdded, todoAdded, duplicatesSkipped]
+     * @throws Exception any SQLite/JSON failure; the DB transaction is already rolled back.
      */
     fun importFromJSON(importData: JSONObject): IntArray {
         var activeAdded = 0; var pinnedAdded = 0; var todoAdded = 0; var duplicatesSkipped = 0
+        val db = writableDatabase
+        db.beginTransaction()
         try {
-            val db = writableDatabase
-            db.beginTransaction()
-            try {
-                val exportVersion = importData.optInt("export_version", 1)
-                val freshExpiry = ClipboardHistoryService.getHistoryTtlMs().let { ttl ->
-                    if (ttl == Long.MAX_VALUE) Long.MAX_VALUE else System.currentTimeMillis() + ttl
-                }
-
-                // Import active/history entries (same format in v2 and v3)
-                if (importData.has("active_entries")) {
-                    val result = importHistoryEntries(db, importData.getJSONArray("active_entries"), freshExpiry)
-                    activeAdded = result.first
-                    duplicatesSkipped += result.second
-                }
-
-                // Import pinned entries
-                if (importData.has("pinned_entries")) {
-                    val result = importPinnedEntries(db, importData.getJSONArray("pinned_entries"), exportVersion, freshExpiry)
-                    pinnedAdded = result.first
-                    duplicatesSkipped += result.second
-                }
-
-                // Import todo entries
-                if (importData.has("todo_entries")) {
-                    val result = importTodoEntries(db, importData.getJSONArray("todo_entries"), exportVersion, freshExpiry)
-                    todoAdded = result.first
-                    duplicatesSkipped += result.second
-                }
-
-                db.setTransactionSuccessful()
-            } finally {
-                db.endTransaction()
+            val exportVersion = importData.optInt("export_version", 1)
+            val freshExpiry = ClipboardHistoryService.getHistoryTtlMs().let { ttl ->
+                if (ttl == Long.MAX_VALUE) Long.MAX_VALUE else System.currentTimeMillis() + ttl
             }
-            Log.d(TAG, "Import complete: $activeAdded active, $pinnedAdded pinned, $todoAdded todo, $duplicatesSkipped dupes skipped")
-        } catch (e: Exception) {
-            Log.e(TAG, "Error importing clipboard data: ${e.message}")
+
+            // Import active/history entries (same format in v2 and v3)
+            if (importData.has("active_entries")) {
+                val result = importHistoryEntries(db, importData.getJSONArray("active_entries"), freshExpiry)
+                activeAdded = result.first
+                duplicatesSkipped += result.second
+            }
+
+            // Import pinned entries
+            if (importData.has("pinned_entries")) {
+                val result = importPinnedEntries(db, importData.getJSONArray("pinned_entries"), exportVersion, freshExpiry)
+                pinnedAdded = result.first
+                duplicatesSkipped += result.second
+            }
+
+            // Import todo entries
+            if (importData.has("todo_entries")) {
+                val result = importTodoEntries(db, importData.getJSONArray("todo_entries"), exportVersion, freshExpiry)
+                todoAdded = result.first
+                duplicatesSkipped += result.second
+            }
+
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
         }
+        Log.d(TAG, "Import complete: $activeAdded active, $pinnedAdded pinned, $todoAdded todo, $duplicatesSkipped dupes skipped")
         return intArrayOf(activeAdded, pinnedAdded, todoAdded, duplicatesSkipped)
     }
 

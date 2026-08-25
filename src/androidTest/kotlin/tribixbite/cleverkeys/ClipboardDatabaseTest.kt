@@ -972,6 +972,42 @@ class ClipboardDatabaseTest {
     }
 
     @Test
+    fun testImportFailurePropagatesAndRollsBack() {
+        // CK-150-019: a failure inside the import transaction must PROPAGATE. It used to be
+        // swallowed and reported as partial counts, so BackupRestoreManager's media rollback
+        // and its `success = false` result were unreachable — a failed import told the user it
+        // had worked and left the committed media files behind.
+        db.addClipboardEntry("Pre-existing", futureExpiry)
+
+        val badImport = JSONObject().apply {
+            put("export_version", 2)
+            put("active_entries", JSONArray().apply {
+                put(JSONObject().apply {
+                    put("content", "Row before the failure")
+                    put("timestamp", System.currentTimeMillis())
+                })
+                // No "content" key — getString() throws mid-transaction.
+                put(JSONObject().apply {
+                    put("timestamp", System.currentTimeMillis())
+                })
+            })
+        }
+
+        try {
+            db.importFromJSON(badImport)
+            fail("A failed import must throw, not return partial counts")
+        } catch (_: Exception) {
+            // expected
+        }
+
+        assertEquals("Transaction must roll back entirely", 1, db.getTotalEntryCount())
+        assertFalse(
+            "No row from the failed import may survive",
+            db.getActiveClipboardEntries().any { it.content == "Row before the failure" }
+        )
+    }
+
+    @Test
     fun testImportWithInvalidJsonReturnsZeros() {
         // Completely invalid JSON structure — should not crash
         val badJson = JSONObject().apply {

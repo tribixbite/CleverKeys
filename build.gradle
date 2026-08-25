@@ -690,6 +690,8 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.AutocapitalisationCallbackDedupeTest',
     'tribixbite.cleverkeys.ClipboardMediaManagerZipSlipTest',
     'tribixbite.cleverkeys.BackupRestoreArchiveLimitsTest',
+    // Audit remediation (2026-08-25) — CK-150-019/020/022 import rollback
+    'tribixbite.cleverkeys.BackupRestoreDbFailureTest',
     // Backup encryption (2026-07-17) — Android-touching tests (need android.jar)
     'tribixbite.cleverkeys.backup.crypto.BackupPassphraseStoreTest',
     'tribixbite.cleverkeys.BackupRestoreManagerEncryptionTest',
