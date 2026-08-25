@@ -80,47 +80,50 @@ limits to state in the results. Read it before starting.
 The usable context model is ~642 pairs, so one user's data gives a THIN signal. Any plan that
 assumed 6.5k pairs of evidence is wrong by 10x.
 
-**Step 5 is BUILT and the CTC arm has now RUN (2026-08-23) — the answer is NO.** Full writeup:
-`docs/eval/2026-08-22-context-rescoring-first-replay.md` (rewritten; §7 is the retraction ledger).
+**Step 5 is BUILT, the CTC arm has RUN on TWO corpora (2026-08-24, pinned to `6b3b8bb9`) — the
+answer is NO.** Full writeup: `docs/eval/2026-08-22-context-rescoring-first-replay.md` (§8 is the
+retraction ledger, now 12 entries).
 
-**On CTC — the engine that actually ships — rescoring fixed 3 decodes and BROKE 24.**
-Promotion-error ratio 8.0 against a ship bar of <0.20; net Δtop-1 negative. The geometric arm over
-the identical 1,726-case sample fixed 35 and broke 1 (ratio 0.029) and would pass. **The two
-engines give opposite verdicts and only the non-shipping one had ever been measured.**
+**CTC — the shipping default — fails the bar on BOTH corpora, and NO grid point rescues it:**
 
-**Do NOT quote the 8.0 alone.** All 24 CTC breaks are ONE trace — `tit`, promoted to `to` under 24
-different contexts. Per distinct trace the CTC ratio is 3 fixes : 1 broken trace = **0.33**. Still
-fails the 0.20 bar, so **the verdict holds under both counting units** (geometric passes under both:
-0.029 / 0.063) — but the margin is not 8x. The failure MODE is the transferable finding: an
-ultra-common learned continuation gets promoted onto any shape-confusable trace whose top-1 is
-within the guard's factor of two, so the user hits the same word wrong every time.
+| CTC @ `6b3b8bb9` | device export (no eviction) | Ubuntu |
+|---|---|---|
+| fixed / broken | **0 / 9** | **4 / 4** |
+| errRatio (bar <0.20) | INFINITE | 1.000 |
+| Δtop-1 (bar >0) | -0.0024 | +0.0000 |
+| (WEIGHT,R_MIN) sweep | no point clears bar | no point clears bar |
 
-**Neither adversarial arm can bound a breakage rate** — 32 distinct exposed traces on CTC, 7 on
-geometric, one break each. That is the binding statistical limit and it is tighter than the case
-counts (158 and 9) suggest.
+Geometric passes on both AND its tuned point survives the held-out half (35/0 Ubuntu, 22/0 device,
+`meetsBar=true` on confirm). Strongest fact: on the device corpus — the only one whose activation
+rate is real (6,589 pairs, zero eviction, 262/262 queryable) — rescoring fixed **nothing** (0 of 481)
+and broke 9. CTC was already correct on 469/481, so its whole headroom is 12 cases.
 
-Why: CTC is already correct on **220/229** favourable cases, so its fix headroom is **9 cases** and
-its benefit ceiling 3.9% — while it broke **2.0%** of the 1,200 adversarial cases it had gotten
-right. Geometric's headroom is 78 with a 0.13% damage rate. The dominant driver is exposure: a
-learned continuation sits in CTC's slate on **10.6%** of adversarial traces vs geometric's **0.60%**
-(~18x), because the CTC beam's frequency prior surfaces common words and learned continuations are
-common words. CTC's slates are *more* peaked (runner-up/top-1 median 0.254 vs 0.717), so the ratio
-guard blocks more — and it is still swamped.
+**PIN THE COMMIT.** `20d620f4` added `CtcFuzzyRescue` AFTER the previous numbers were measured. It
+inserts a dictionary match at rank 2 scored `max(second+1, topScore/2)`, moving the median
+runner-up/top-1 ratio **0.254 -> 0.500** and slates-within-factor-of-two **24% -> 54%**. That killed
+the old "peakedness protects CTC" explanation outright. **Knife-edge worth deciding deliberately**:
+`topScore/2` is integer division against a float compare, so top-1=884 gives `442>=442.0`
+(promotable) but top-1=913 gives `456>=456.5` (blocked) — promotion eligibility turns on the PARITY
+of the top score. Flagged to whoever owns `applyFuzzyRescue`.
 
-Also found: the strict `NextWordPredictor` floors never bound once in 1,726 cases
-(`cleared ratio, failed floors` = 0 on both engines). **Rank-1 protection today is the ratio guard
-alone**; the floors are vacuous on a corpus whose stored 10k are its highest-probability pairs.
+**Two earlier conclusions of mine are RETRACTED**, both from generalising one corpus:
+- "the strict `NextWordPredictor` floors never bind" — FALSE. They bind on device data (4 CTC,
+  7 geometric). Vacuous only when the store holds 10k near-maximal-probability pairs. Keep them.
+- "all 24 breaks are one trace (`tit`)" — that pile-up was an artefact of defect H9 (below). With it
+  fixed: 4 breaks / 4 distinct traces (Ubuntu), 9 / 3 (device). No concentration.
 
-**ALL earlier numbers here are retracted** — 29 → 2 → 51 → all wrong. Two new defects on top of the
-four the audit found: **H5** ~47% of the local trace corpus is not raw traces (128-point rows with a
-non-monotonic third column) and decoded to confident nonsense in *every* run published before
-2026-08-23, geometric included; **H6** decoy selection took a corpus-order head, H1's mistake one
-level down. Both fixed (`TraceCorpusQuality`, seeded decoy shuffle).
+**Four more harness defects found since (an adversarial audit + a self-check), all fixed**: **H9**
+`loadTraces` created word buckets BEFORE filtering, so the pool printed 4,907 when only **2,197**
+words have a usable trace, `pairable` counted zero-trace bigrams, and decoys drawn from phantom keys
+silently shrank the adversarial arm; **H10** the harness built its English trie with
+`CtcAzProjection` (accent-folding) while shipping uses `loadStrippingNonAlphabet` — plus truncated
+scores and a different ONNX EP (now XNNPACK-first, mirroring `ModelLoader`); **H11** the decoder
+changed under the measurement; **H12** the floors over-generalisation above.
 
-**Next, and it is now the ONLY question that matters**: on-device shadow mode (spec §7.2). The
-verdict hinges on the real favourable:adversarial exposure ratio, which no offline harness can
-supply. Second: a `WEIGHT`/`R_MIN` tune-and-confirm split on CTC specifically — a higher `R_MIN`
-should cut breaks faster than fixes. The pref stays **default-OFF**.
+**Next, in order**: (1) on-device shadow mode (spec §7.2) — still the ONLY way to get the real
+favourable:adversarial exposure ratio the verdict hinges on; (2) decide `applyFuzzyRescue` vs
+`R_MIN` deliberately; (3) `-PreplayMaxCtx=N` power run (built, never run); (4) a second language.
+The pref stays **default-OFF**.
 
 **Was: Step 5 is BUILT; its numbers were WRONG TWICE before an audit corrected them** —
 current then: 51 fixes / 0 breaks in 243 exposed favourable cases (~21% when it fires), safety
