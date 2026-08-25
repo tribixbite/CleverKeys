@@ -662,9 +662,12 @@ class CtcEngineAdapter(private val context: Context) {
         )
 
     /**
-     * Adds at most two bounded dictionary matches for the unconstrained greedy surface. A rescue
-     * never displaces a non-empty beam rank one: it is inserted between ranks one and two, with
-     * an interpolated score. Empty beam slates may be populated directly.
+     * Adds at most two bounded dictionary matches for the unconstrained greedy surface.
+     *
+     * The merge itself lives in [CtcFuzzyRescue.mergeIntoBeam] — pure, unit-tested and shared with
+     * the pure-JVM replay engine. Rescued words are APPENDED BELOW the real beam into spare
+     * [TOP_K] slots; they never displace or outrank a real beam word (CK-150-025). Empty beam
+     * slates are still populated directly.
      */
     private fun applyFuzzyRescue(
         result: PredictionResult,
@@ -673,31 +676,8 @@ class CtcEngineAdapter(private val context: Context) {
     ): PredictionResult {
         val rescued = lexicon.fuzzyRescue.find(greedy, result.words.toHashSet())
         if (rescued.isEmpty()) return result
-
-        if (result.words.isEmpty()) {
-            return PredictionResult(
-                rescued,
-                rescued.indices.map { 1000 / (it + 1) },
-            )
-        }
-
-        val topScore = result.scores.firstOrNull() ?: 1000
-        val secondScore = result.scores.getOrNull(1) ?: 0
-        val firstRescueScore = maxOf(secondScore + 1, topScore / 2).coerceAtMost(topScore - 1)
-        val words = ArrayList<String>(TOP_K)
-        val scores = ArrayList<Int>(TOP_K)
-        words.add(result.words[0]); scores.add(topScore)
-        for ((index, word) in rescued.withIndex()) {
-            if (word in words) continue
-            words.add(word)
-            scores.add((firstRescueScore - index).coerceAtLeast(secondScore + 1))
-        }
-        for (i in 1 until result.words.size) {
-            if (result.words[i] in words) continue
-            words.add(result.words[i])
-            scores.add(result.scores.getOrElse(i) { 0 })
-            if (words.size == TOP_K) break
-        }
+        val (words, scores) =
+            CtcFuzzyRescue.mergeIntoBeam(result.words, result.scores, rescued, TOP_K)
         return PredictionResult(words, scores)
     }
 

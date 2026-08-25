@@ -41,7 +41,9 @@ import java.io.File
  *     slate ORDER and `ContractionOverlay` appends variants at the end without reordering engine
  *     candidates, so this cannot change order — only membership. Its cost is MEASURED by the
  *     replay's `apostropheMissed` counter (0 on the 2026-08-23 run).
- * Alias-key injection and bounded fuzzy rescue are mirrored here. Secondary-language rank merging
+ * Alias-key injection is mirrored here; the bounded fuzzy rescue is not a mirror at all — this
+ * calls the shipped [CtcFuzzyRescue.find] and [CtcFuzzyRescue.Companion.mergeIntoBeam] directly,
+ * so the merge cannot drift from the adapter's. Secondary-language rank merging
  * is intentionally outside this English-only context corpus. Beam width (100), topK (8), the
  * softmax→0..1000 scale and its rounding, model asset, layout frame and provider setup are mirrored.
  *
@@ -74,44 +76,27 @@ class CtcReplayEngine private constructor(
         val rescued = fuzzyRescue.find(decoded.greedy, beamWords.toHashSet())
         // Shipping can recover a bounded dictionary match even when the constrained beam
         // produced no candidates. Keep that behaviour in replay instead of returning early.
+        // The merge is the SHIPPED one (CtcFuzzyRescue.mergeIntoBeam) — there is no hand-copy
+        // here to drift out of sync, and the empty-beam fill is that function's own branch.
         if (candidates.isEmpty()) {
-            return Slate(
-                words = rescued.take(8),
-                scores = rescued.indices.map { 1000 / (it + 1) },
-            )
+            val (words, scores) =
+                CtcFuzzyRescue.mergeIntoBeam(emptyList(), emptyList(), rescued, TOP_K)
+            return Slate(words = words, scores = scores)
         }
         // Mirrors CtcEngineAdapter: a softmax over final beam scores, scaled to 0..1000 and
         // rounded. The rank-1 guard is a RATIO of these, so reproducing the scale matters — a
         // linear rescale of raw beam scores would change which promotions the guard permits.
+        //
+        // AUDIT D3: `.roundToInt().coerceIn(0, 1000)`, matching CtcEngineAdapter exactly.
+        // Truncating with `.toInt()` instead shifts scores down by up to 1, and the rank-1
+        // guard is an integer comparison `scores[i] >= R_MIN * scores[0]` — so a ±1 drift can
+        // flip a knife-edge promotion. Reproducing the scale is the whole point of this class.
         val max = candidates.maxOf { it.finalScore }
         val exps = candidates.map { Math.exp(it.finalScore - max) }
         val sum = exps.sum()
-        val words = buildList {
-            add(beamWords.first())
-            addAll(rescued)
-            addAll(beamWords.drop(1).filterNot { it in this })
-        }.take(8)
         val beamScores = exps.map { Math.round((it / sum) * 1000.0).toInt().coerceIn(0, 1000) }
-        val scores = if (rescued.isEmpty()) {
-            beamScores
-        } else {
-            val second = beamScores.getOrElse(1) { 0 }
-            val firstRescue = maxOf(second + 1, beamScores.first() / 2)
-                .coerceAtMost(beamScores.first() - 1)
-            buildList {
-                add(beamScores.first())
-                rescued.indices.forEach { add((firstRescue - it).coerceAtLeast(second + 1)) }
-                addAll(beamScores.drop(1))
-            }.take(words.size)
-        }
-        return Slate(
-            words = words,
-            // AUDIT D3: `.roundToInt().coerceIn(0, 1000)`, matching CtcEngineAdapter exactly.
-            // Truncating with `.toInt()` instead shifts scores down by up to 1, and the rank-1
-            // guard is an integer comparison `scores[i] >= R_MIN * scores[0]` — so a ±1 drift can
-            // flip a knife-edge promotion. Reproducing the scale is the whole point of this class.
-            scores = scores,
-        )
+        val (words, scores) = CtcFuzzyRescue.mergeIntoBeam(beamWords, beamScores, rescued, TOP_K)
+        return Slate(words = words, scores = scores)
     }
 
     override fun close() {
@@ -128,6 +113,9 @@ class CtcReplayEngine private constructor(
 
         /** Mirrors `ModelLoader`'s default `xnnpackThreads = 2`. */
         const val XNNPACK_THREADS = 2
+
+        /** Mirrors `CtcEngineAdapter.TOP_K` — the decoded slate size and the rescue merge budget. */
+        const val TOP_K = 8
 
         /** True when the bionic ONNX natives are reachable — call before building. */
         fun ortAvailable(): Boolean = runCatching { OrtEnvironment.getEnvironment() }.isSuccess
@@ -215,7 +203,7 @@ class CtcReplayEngine private constructor(
                 CtcContractionKeys.derivedFloor(canonical.values),
             )
 
-            val params = CtcScoringParams.presetFor(language, topK = 8)
+            val params = CtcScoringParams.presetFor(language, topK = TOP_K)
             return CtcReplayEngine(
                 CtcSwipeDecoder(OnnxCtcEmissionModel(env, session), layout, trie, params),
                 CtcFuzzyRescue.fromFrequencies(canonical),
