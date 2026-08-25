@@ -406,6 +406,11 @@
     <string name="autocorrect_typo_forgiveness_desc">حداکثر تفاوت نویسه مجاز (۰ تا ۵)</string>
     <string name="autocorrect_starting_letter_title">دقت حرف ابتدایی</string>
     <string name="autocorrect_starting_letter_desc">طول پیشوند تطابق موردنیاز (۰ تا ۴)</string>
+    <string name="backup_protection_state_keystore">تنظیم‌شده — با Android Keystore محافظت می‌شود؛ فایل‌های خروجی رمزگذاری می‌شوند</string>
+    <string name="backup_protection_state_legacy">تنظیم‌شده — محافظت قدیمی در حافظهٔ خصوصی برنامه (اندروید ۵)؛ فایل‌های خروجی رمزگذاری می‌شوند</string>
+    <string name="backup_protection_state_not_set">تنظیم نشده</string>
+    <string name="backup_protection_status">محافظت با گذرواژه: %1$s</string>
+    <string name="backup_passphrase_storage_unavailable">ذخیرهٔ ایمن گذرواژهٔ پشتیبان ممکن نشد، بنابراین گذرواژه ذخیره نشد. %1$s</string>
     <string name="clipboard_history_title">تاریخچه بریده‌دان</string>
     <string name="clipboard_history_desc">متن کپی‌شده را برای چسباندن سریع به خاطر بسپارید</string>
     <string name="clipboard_limit_type_title">نوع محدودیت</string>

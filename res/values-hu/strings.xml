@@ -376,6 +376,11 @@
     <string name="autocorrect_typo_forgiveness_desc">Maximálisan megengedett karaktereltérés (0–5)</string>
     <string name="autocorrect_starting_letter_title">Kezdőbetű pontossága</string>
     <string name="autocorrect_starting_letter_desc">Szükséges egyező előtaghossz (0–4)</string>
+    <string name="backup_protection_state_keystore">Beállítva — az Android Keystore védi; az exportok titkosítottak</string>
+    <string name="backup_protection_state_legacy">Beállítva — régi, alkalmazásprivát védelem (Android 5); az exportok titkosítottak</string>
+    <string name="backup_protection_state_not_set">Nincs beállítva</string>
+    <string name="backup_protection_status">Jelszavas védelem: %1$s</string>
+    <string name="backup_passphrase_storage_unavailable">A biztonsági mentés jelszavát nem sikerült biztonságosan tárolni, ezért nem lett elmentve. %1$s</string>
     <string name="clipboard_history_title">Vágólaptörténet</string>
     <string name="clipboard_history_desc">Másolt szöveg megjegyzése gyors beillesztéshez</string>
     <string name="clipboard_limit_type_title">Korlát típusa</string>

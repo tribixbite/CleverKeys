@@ -399,6 +399,11 @@
     <string name="autocorrect_typo_forgiveness_desc">Cho phép chênh lệch ký tự tối đa (0–5)</string>
     <string name="autocorrect_starting_letter_title">Độ chính xác chữ cái đầu</string>
     <string name="autocorrect_starting_letter_desc">Độ dài tiền tố khớp bắt buộc (0–4)</string>
+    <string name="backup_protection_state_keystore">Đã đặt — được Android Keystore bảo vệ; các bản xuất được mã hóa</string>
+    <string name="backup_protection_state_legacy">Đã đặt — bảo vệ kiểu cũ trong bộ nhớ riêng của ứng dụng (Android 5); các bản xuất được mã hóa</string>
+    <string name="backup_protection_state_not_set">Chưa đặt</string>
+    <string name="backup_protection_status">Bảo vệ bằng mật khẩu: %1$s</string>
+    <string name="backup_passphrase_storage_unavailable">Không thể lưu mật khẩu sao lưu một cách an toàn nên mật khẩu chưa được lưu. %1$s</string>
     <string name="clipboard_history_title">Lịch sử bảng tạm</string>
     <string name="clipboard_history_desc">Ghi nhớ văn bản đã sao chép để dán nhanh</string>
     <string name="clipboard_limit_type_title">Loại giới hạn</string>

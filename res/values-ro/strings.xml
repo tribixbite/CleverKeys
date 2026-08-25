@@ -393,6 +393,11 @@
     <string name="autocorrect_typo_forgiveness_desc">Diferența maximă de caractere permisă (0–5)</string>
     <string name="autocorrect_starting_letter_title">Acuratețe literă inițială</string>
     <string name="autocorrect_starting_letter_desc">Lungimea prefixului potrivit necesar (0–4)</string>
+    <string name="backup_protection_state_keystore">Setată — protejată de Android Keystore; exporturile sunt criptate</string>
+    <string name="backup_protection_state_legacy">Setată — protecție veche în spațiul privat al aplicației (Android 5); exporturile sunt criptate</string>
+    <string name="backup_protection_state_not_set">Nesetată</string>
+    <string name="backup_protection_status">Protecție prin parolă: %1$s</string>
+    <string name="backup_passphrase_storage_unavailable">Parola pentru backup nu a putut fi stocată în siguranță, așa că nu a fost salvată. %1$s</string>
     <string name="clipboard_history_title">Istoric clipboard</string>
     <string name="clipboard_history_desc">Reține textul copiat pentru lipire rapidă</string>
     <string name="clipboard_limit_type_title">Tip limită</string>

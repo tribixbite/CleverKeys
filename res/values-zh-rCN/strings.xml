@@ -369,6 +369,11 @@
     <string name="autocorrect_typo_forgiveness_desc">允许的最大字符差异（0~5）。</string>
     <string name="autocorrect_starting_letter_title">首字母精度</string>
     <string name="autocorrect_starting_letter_desc">所需的匹配前缀长度（0~4）。</string>
+    <string name="backup_protection_state_keystore">已设置——由 Android Keystore 保护，导出内容已加密</string>
+    <string name="backup_protection_state_legacy">已设置——由旧版应用私有存储保护（Android 5），导出内容已加密</string>
+    <string name="backup_protection_state_not_set">未设置</string>
+    <string name="backup_protection_status">密码保护：%1$s</string>
+    <string name="backup_passphrase_storage_unavailable">无法安全存储备份密码，因此密码未保存。%1$s</string>
     <string name="clipboard_history_title">剪贴板历史</string>
     <string name="clipboard_history_desc">记住复制的文本以便快速粘贴。</string>
     <string name="clipboard_limit_type_title">限制类型</string>

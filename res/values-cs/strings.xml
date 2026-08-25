@@ -371,6 +371,11 @@
     <string name="autocorrect_typo_forgiveness_desc">Maximální povolený rozdíl znaků (0–5)</string>
     <string name="autocorrect_starting_letter_title">Přesnost počátečního písmene</string>
     <string name="autocorrect_starting_letter_desc">Požadovaná délka shodného prefixu (0–4)</string>
+    <string name="backup_protection_state_keystore">Nastaveno — chráněno pomocí Android Keystore; exporty jsou šifrované</string>
+    <string name="backup_protection_state_legacy">Nastaveno — starší ochrana v soukromém úložišti aplikace (Android 5); exporty jsou šifrované</string>
+    <string name="backup_protection_state_not_set">Nenastaveno</string>
+    <string name="backup_protection_status">Ochrana heslem: %1$s</string>
+    <string name="backup_passphrase_storage_unavailable">Heslo zálohy se nepodařilo bezpečně uložit, proto uloženo nebylo. %1$s</string>
     <string name="clipboard_history_title">Historie schránky</string>
     <string name="clipboard_history_desc">Zapamatovat zkopírovaný text pro rychlé vložení</string>
     <string name="clipboard_limit_type_title">Typ limitu</string>

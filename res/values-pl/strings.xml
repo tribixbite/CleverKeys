@@ -381,6 +381,11 @@
     <string name="autocorrect_typo_forgiveness_desc">Maksymalna dozwolona różnica znaków (0–5)</string>
     <string name="autocorrect_starting_letter_title">Dokładność pierwszej litery</string>
     <string name="autocorrect_starting_letter_desc">Wymagana długość pasującego prefiksu (0–4)</string>
+    <string name="backup_protection_state_keystore">Ustawione — chronione przez Android Keystore; eksporty są szyfrowane</string>
+    <string name="backup_protection_state_legacy">Ustawione — starsza ochrona w pamięci prywatnej aplikacji (Android 5); eksporty są szyfrowane</string>
+    <string name="backup_protection_state_not_set">Nieustawione</string>
+    <string name="backup_protection_status">Ochrona hasłem: %1$s</string>
+    <string name="backup_passphrase_storage_unavailable">Nie udało się bezpiecznie zapisać hasła kopii zapasowej, więc nie zostało ono zapisane. %1$s</string>
     <string name="clipboard_history_title">Historia schowka</string>
     <string name="clipboard_history_desc">Zapamiętuj skopiowany tekst do szybkiego wklejania</string>
     <string name="clipboard_limit_type_title">Typ limitu</string>

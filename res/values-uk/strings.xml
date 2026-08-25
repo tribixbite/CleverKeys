@@ -382,6 +382,11 @@
     <string name="autocorrect_typo_forgiveness_desc">Максимальна різниця символів (0–5)</string>
     <string name="autocorrect_starting_letter_title">Точність початкової літери</string>
     <string name="autocorrect_starting_letter_desc">Потрібна довжина збігного префікса (0–4)</string>
+    <string name="backup_protection_state_keystore">Задано — захищено Android Keystore; експорти шифруються</string>
+    <string name="backup_protection_state_legacy">Задано — застарілий захист у приватному сховищі застосунку (Android 5); експорти шифруються</string>
+    <string name="backup_protection_state_not_set">Не задано</string>
+    <string name="backup_protection_status">Захист паролем: %1$s</string>
+    <string name="backup_passphrase_storage_unavailable">Не вдалося безпечно зберегти пароль резервної копії, тому його не збережено. %1$s</string>
     <string name="clipboard_history_title">Історія буфера обміну</string>
     <string name="clipboard_history_desc">Запам\'ятовувати скопійований текст для швидкого вставляння</string>
     <string name="clipboard_limit_type_title">Тип обмеження</string>

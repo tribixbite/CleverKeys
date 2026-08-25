@@ -382,6 +382,11 @@
     <string name="autocorrect_typo_forgiveness_desc">Perbedaan karakter maksimum yang diizinkan (0–5)</string>
     <string name="autocorrect_starting_letter_title">Akurasi Huruf Awal</string>
     <string name="autocorrect_starting_letter_desc">Panjang awalan yang diperlukan (0–4)</string>
+    <string name="backup_protection_state_keystore">Tersetel — dilindungi Android Keystore; ekspor dienkripsi</string>
+    <string name="backup_protection_state_legacy">Tersetel — perlindungan lama khusus aplikasi (Android 5); ekspor dienkripsi</string>
+    <string name="backup_protection_state_not_set">Belum disetel</string>
+    <string name="backup_protection_status">Perlindungan kata sandi: %1$s</string>
+    <string name="backup_passphrase_storage_unavailable">Kata sandi cadangan tidak dapat disimpan dengan aman, sehingga tidak tersimpan. %1$s</string>
     <string name="clipboard_history_title">Riwayat Clipboard</string>
     <string name="clipboard_history_desc">Ingat teks yang disalin untuk penempelan cepat</string>
     <string name="clipboard_limit_type_title">Jenis Batas</string>

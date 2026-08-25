@@ -371,6 +371,11 @@
     <string name="autocorrect_typo_forgiveness_desc">Maximaal toegestaan tekenverschil (0–5)</string>
     <string name="autocorrect_starting_letter_title">Nauwkeurigheid beginletter</string>
     <string name="autocorrect_starting_letter_desc">Vereiste overeenkomende prefixlengte (0–4)</string>
+    <string name="backup_protection_state_keystore">Ingesteld — beschermd door Android Keystore; exports zijn versleuteld</string>
+    <string name="backup_protection_state_legacy">Ingesteld — verouderde app-privébeveiliging (Android 5); exports zijn versleuteld</string>
+    <string name="backup_protection_state_not_set">Niet ingesteld</string>
+    <string name="backup_protection_status">Wachtwoordbeveiliging: %1$s</string>
+    <string name="backup_passphrase_storage_unavailable">Het back-upwachtwoord kon niet veilig worden opgeslagen en is daarom niet bewaard. %1$s</string>
     <string name="clipboard_history_title">Klembordgeschiedenis</string>
     <string name="clipboard_history_desc">Gekopieerde tekst onthouden voor snel plakken</string>
     <string name="clipboard_limit_type_title">Soort limiet</string>

@@ -55,6 +55,22 @@ class BackupRestoreActivity : ComponentActivity() {
         const val ACTION_IMPORT_CLIPBOARD = "tribixbite.cleverkeys.action.IMPORT_CLIPBOARD"
 
         /**
+         * Single source of truth for the localized passphrase protection-state label
+         * (CK-150-030). Shared by the headless toast below and the Compose
+         * `BackupPasswordBlock` so the two surfaces can never drift apart.
+         */
+        @androidx.annotation.StringRes
+        fun protectionStateLabelRes(state: BackupPassphraseStore.ProtectionState): Int =
+            when (state) {
+                BackupPassphraseStore.ProtectionState.ANDROID_KEYSTORE ->
+                    R.string.backup_protection_state_keystore
+                BackupPassphraseStore.ProtectionState.LEGACY_APP_PRIVATE ->
+                    R.string.backup_protection_state_legacy
+                BackupPassphraseStore.ProtectionState.NOT_SET ->
+                    R.string.backup_protection_state_not_set
+            }
+
+        /**
          * Test-only override hook. When non-null, the activity uses this
          * Manager instead of constructing its own. Instrumented tests set
          * it in @Before, clear it in @After. NOT thread-safe by design —
@@ -209,12 +225,8 @@ class BackupRestoreActivity : ComponentActivity() {
     private fun headlessToast(label: String) {
         val path = backupRestoreManager.lastOutputPath
         val result = if (path != null) "$label: $path" else label
-        val protection = when (passphraseStore.protectionState()) {
-            BackupPassphraseStore.ProtectionState.ANDROID_KEYSTORE -> "Android Keystore"
-            BackupPassphraseStore.ProtectionState.LEGACY_APP_PRIVATE -> "legacy app-private"
-            BackupPassphraseStore.ProtectionState.NOT_SET -> "not set"
-        }
-        val msg = "$result\nPassword protection: $protection"
+        val protection = getString(protectionStateLabelRes(passphraseStore.protectionState()))
+        val msg = "$result\n" + getString(R.string.backup_protection_status, protection)
         Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
     }
 

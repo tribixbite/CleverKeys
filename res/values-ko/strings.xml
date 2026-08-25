@@ -371,6 +371,11 @@
     <string name="autocorrect_typo_forgiveness_desc">허용하는 최대 문자 차이（0~5）</string>
     <string name="autocorrect_starting_letter_title">시작 문자 정확도</string>
     <string name="autocorrect_starting_letter_desc">필요한 일치 접두사 길이（0~4）</string>
+    <string name="backup_protection_state_keystore">설정됨. Android Keystore로 보호되며 내보내기가 암호화됩니다</string>
+    <string name="backup_protection_state_legacy">설정됨. 이전 방식의 앱 전용 저장소로 보호되며(Android 5) 내보내기가 암호화됩니다</string>
+    <string name="backup_protection_state_not_set">설정되지 않음</string>
+    <string name="backup_protection_status">비밀번호 보호: %1$s</string>
+    <string name="backup_passphrase_storage_unavailable">백업 비밀번호를 안전하게 저장할 수 없어 저장되지 않았습니다. %1$s</string>
     <string name="clipboard_history_title">클립보드 기록</string>
     <string name="clipboard_history_desc">복사한 텍스트를 기억하여 빠르게 붙여넣기할 수 있습니다</string>
     <string name="clipboard_limit_type_title">제한 유형</string>

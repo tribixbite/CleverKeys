@@ -409,6 +409,11 @@
     <string name="autocorrect_typo_forgiveness_desc">Differenza massima di caratteri consentita (0–5)</string>
     <string name="autocorrect_starting_letter_title">Accuratezza lettera iniziale</string>
     <string name="autocorrect_starting_letter_desc">Lunghezza del prefisso corrispondente richiesta (0–4)</string>
+    <string name="backup_protection_state_keystore">Impostata — protetta da Android Keystore; le esportazioni sono cifrate</string>
+    <string name="backup_protection_state_legacy">Impostata — protezione legacy nello spazio privato dell\'app (Android 5); le esportazioni sono cifrate</string>
+    <string name="backup_protection_state_not_set">Non impostata</string>
+    <string name="backup_protection_status">Protezione con password: %1$s</string>
+    <string name="backup_passphrase_storage_unavailable">Non è stato possibile memorizzare in sicurezza la password di backup, quindi non è stata salvata. %1$s</string>
     <string name="clipboard_history_title">Cronologia appunti</string>
     <string name="clipboard_history_desc">Memorizza il testo copiato per incollarlo rapidamente</string>
     <string name="clipboard_limit_type_title">Tipo di limite</string>

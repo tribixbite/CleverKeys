@@ -12,6 +12,10 @@ class TranslationCoverageDriftTest {
         "gesture_touch_smoothing_title", "gesture_touch_smoothing_desc",
         "swipe_context_rescoring_title", "swipe_context_rescoring_desc",
         "swipe_engine_fallback_title", "swipe_engine_fallback_desc",
+        // CK-150-030: backup passphrase protection-state surface (settings block + headless toast).
+        "backup_protection_state_keystore", "backup_protection_state_legacy",
+        "backup_protection_state_not_set", "backup_protection_status",
+        "backup_passphrase_storage_unavailable",
     )
 
     @Test fun newSwipeCopyExistsInEverySupportedLocale() {

@@ -379,6 +379,11 @@
     <string name="autocorrect_typo_forgiveness_desc">İzin verilen maksimum karakter farkı (0–5)</string>
     <string name="autocorrect_starting_letter_title">Başlangıç Harfi Doğruluğu</string>
     <string name="autocorrect_starting_letter_desc">Gerekli eşleşen önek uzunluğu (0–4)</string>
+    <string name="backup_protection_state_keystore">Ayarlandı — Android Keystore ile korunuyor; dışa aktarmalar şifreleniyor</string>
+    <string name="backup_protection_state_legacy">Ayarlandı — eski uygulamaya özel koruma (Android 5); dışa aktarmalar şifreleniyor</string>
+    <string name="backup_protection_state_not_set">Ayarlanmadı</string>
+    <string name="backup_protection_status">Parola koruması: %1$s</string>
+    <string name="backup_passphrase_storage_unavailable">Yedek parolası güvenli biçimde saklanamadı, bu yüzden kaydedilmedi. %1$s</string>
     <string name="clipboard_history_title">Pano Geçmişi</string>
     <string name="clipboard_history_desc">Hızlı yapıştırma için kopyalanan metni hatırla</string>
     <string name="clipboard_limit_type_title">Sınır Türü</string>

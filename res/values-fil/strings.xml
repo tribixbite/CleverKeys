@@ -380,6 +380,11 @@
     <string name="autocorrect_typo_forgiveness_desc">Maximum na pinapayagang pagkakaiba ng karakter (0–5)</string>
     <string name="autocorrect_starting_letter_title">Kawastuhan ng Unang Titik</string>
     <string name="autocorrect_starting_letter_desc">Kinakailangang haba ng prefix na tumutugma (0–4)</string>
+    <string name="backup_protection_state_keystore">Nakatakda — protektado ng Android Keystore; naka-encrypt ang mga export</string>
+    <string name="backup_protection_state_legacy">Nakatakda — lumang app-private na proteksyon (Android 5); naka-encrypt ang mga export</string>
+    <string name="backup_protection_state_not_set">Hindi nakatakda</string>
+    <string name="backup_protection_status">Proteksyon ng password: %1$s</string>
+    <string name="backup_passphrase_storage_unavailable">Hindi ligtas na naimbak ang password ng backup, kaya hindi ito na-save. %1$s</string>
     <string name="clipboard_history_title">History ng Clipboard</string>
     <string name="clipboard_history_desc">Tandaan ang na-copy na teksto para sa mabilis na pag-paste</string>
     <string name="clipboard_limit_type_title">Uri ng Limitasyon</string>

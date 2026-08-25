@@ -370,6 +370,11 @@
     <string name="autocorrect_typo_forgiveness_desc">許容する最大文字差（0〜5）</string>
     <string name="autocorrect_starting_letter_title">先頭文字の精度</string>
     <string name="autocorrect_starting_letter_desc">必要な一致プレフィックス長（0〜4）</string>
+    <string name="backup_protection_state_keystore">設定済み。Android Keystore で保護され、エクスポートは暗号化されます</string>
+    <string name="backup_protection_state_legacy">設定済み。旧方式のアプリ専用領域で保護され（Android 5）、エクスポートは暗号化されます</string>
+    <string name="backup_protection_state_not_set">未設定</string>
+    <string name="backup_protection_status">パスワード保護: %1$s</string>
+    <string name="backup_passphrase_storage_unavailable">バックアップ パスワードを安全に保存できなかったため、保存されませんでした。%1$s</string>
     <string name="clipboard_history_title">クリップボード履歴</string>
     <string name="clipboard_history_desc">コピーしたテキストを記憶して素早く貼り付けできます</string>
     <string name="clipboard_limit_type_title">制限タイプ</string>

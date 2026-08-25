@@ -388,6 +388,11 @@
     <string name="autocorrect_typo_forgiveness_desc">Diferencia máxima de caracteres permitida (0–5)</string>
     <string name="autocorrect_starting_letter_title">Precisión de letra inicial</string>
     <string name="autocorrect_starting_letter_desc">Longitud de prefijo coincidente requerida (0–4)</string>
+    <string name="backup_protection_state_keystore">Establecida — protegida por Android Keystore; las exportaciones se cifran</string>
+    <string name="backup_protection_state_legacy">Establecida — protección heredada en el almacenamiento privado de la app (Android 5); las exportaciones se cifran</string>
+    <string name="backup_protection_state_not_set">Sin establecer</string>
+    <string name="backup_protection_status">Protección con contraseña: %1$s</string>
+    <string name="backup_passphrase_storage_unavailable">No se pudo guardar de forma segura la contraseña de la copia de seguridad, así que no se guardó. %1$s</string>
     <string name="clipboard_history_title">Historial del portapapeles</string>
     <string name="clipboard_history_desc">Recuerda el texto copiado para pegar rápidamente</string>
     <string name="clipboard_limit_type_title">Tipo de límite</string>

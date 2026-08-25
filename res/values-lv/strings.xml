@@ -382,6 +382,11 @@
     <string name="autocorrect_typo_forgiveness_desc">Maksimālā atļautā rakstzīmju starpība (0–5)</string>
     <string name="autocorrect_starting_letter_title">Sākuma burta precizitāte</string>
     <string name="autocorrect_starting_letter_desc">Nepieciešamais atbilstošā prefiksa garums (0–4)</string>
+    <string name="backup_protection_state_keystore">Iestatīta — aizsargā Android Keystore; eksporti tiek šifrēti</string>
+    <string name="backup_protection_state_legacy">Iestatīta — mantotā lietotnes privātā aizsardzība (Android 5); eksporti tiek šifrēti</string>
+    <string name="backup_protection_state_not_set">Nav iestatīta</string>
+    <string name="backup_protection_status">Paroles aizsardzība: %1$s</string>
+    <string name="backup_passphrase_storage_unavailable">Dublējuma paroli neizdevās droši saglabāt, tāpēc tā netika saglabāta. %1$s</string>
     <string name="clipboard_history_title">Starpliktuves vēsture</string>
     <string name="clipboard_history_desc">Atcerēties kopēto tekstu ātrai ielīmēšanai</string>
     <string name="clipboard_limit_type_title">Ierobežojuma veids</string>

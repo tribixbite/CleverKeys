@@ -26,9 +26,11 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import tribixbite.cleverkeys.BackupRestoreActivity
+import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.ui.settings.saveSetting
 
@@ -63,14 +65,7 @@ internal fun SettingsActivity.BackupPasswordBlock() {
 
     if (hasPassphrase) {
         Text(
-            text = when (protectionState) {
-                tribixbite.cleverkeys.backup.crypto.BackupPassphraseStore.ProtectionState.ANDROID_KEYSTORE ->
-                    "Set — protected by Android Keystore; exports are encrypted"
-                tribixbite.cleverkeys.backup.crypto.BackupPassphraseStore.ProtectionState.LEGACY_APP_PRIVATE ->
-                    "Set — legacy app-private protection (Android 5); exports are encrypted"
-                tribixbite.cleverkeys.backup.crypto.BackupPassphraseStore.ProtectionState.NOT_SET ->
-                    "Not set"
-            },
+            text = stringResource(BackupRestoreActivity.protectionStateLabelRes(protectionState)),
             fontSize = 12.sp,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(bottom = 4.dp),
@@ -144,7 +139,14 @@ internal fun SettingsActivity.BackupPasswordBlock() {
                     showSetDialog = false
                     null
                 } catch (e: tribixbite.cleverkeys.backup.crypto.BackupPassphraseStore.StorageUnavailableException) {
-                    e.message ?: "Android Keystore could not protect the password."
+                    // The store's own message is a diagnostic detail (not localized); it is kept
+                    // as the formatted arg because this dialog has always surfaced it, and it is
+                    // the only signal distinguishing a Keystore wrap failure from a commit
+                    // failure. The sentence around it is localized (CK-150-030).
+                    getString(
+                        R.string.backup_passphrase_storage_unavailable,
+                        e.message.orEmpty(),
+                    ).trim()
                 } finally {
                     java.util.Arrays.fill(newPass, ' ')
                 }
