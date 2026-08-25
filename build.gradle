@@ -4,6 +4,23 @@ plugins {
   id 'org.jetbrains.kotlin.plugin.compose' version '2.0.0'
 }
 
+// Gradle dependency locking (CK-150-023).
+//
+// Every coordinate below is a fixed version, but the *resolved* graph is not: transitive
+// versions move under conflict resolution, and the Compose BOM re-pins a dozen artifacts on
+// every AGP/Kotlin bump. Without a lockfile the release `security-gate` Trivy `fs` scan sees
+// no Java manifest at all — it scans a repo whose only lockfiles belong to the docs site and
+// the web-demo test harness, so the shipped APK's dependency tree is invisible to it.
+// `gradle.lockfile` is a first-class Trivy input, so committing it is what makes that gate
+// non-vacuous; it also makes an unexpected transitive bump a reviewable diff.
+//
+// Regenerate after ANY dependency change (else resolution fails with "Did not resolve … which
+// is part of the lock state"):
+//   ./gradlew dependencies --write-locks       # add -Pandroid.aapt2FromMavenOverride=… on Termux
+dependencyLocking {
+  lockAllConfigurations()
+}
+
 dependencies {
   implementation "androidx.window:window-java:1.3.0"
   implementation "androidx.core:core:1.13.1"
@@ -427,6 +444,9 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.CoreImeHygieneDriftTest',
     'tribixbite.cleverkeys.ReleaseMetadataDriftTest',
     'tribixbite.cleverkeys.SourceTextHygieneTest',
+    // Pins the curated instrumented gate in .github/scripts/emulator-ci.sh (CK-150-028):
+    // a renamed/deleted curated class used to false-green the release device gate.
+    'tribixbite.cleverkeys.CuratedInstrumentationListTest',
     'tribixbite.cleverkeys.TranslationCoverageDriftTest',
     'tribixbite.cleverkeys.PredictionTaskRunnerTest',
     'tribixbite.cleverkeys.TestRunnerListDriftTest',

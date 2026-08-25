@@ -105,13 +105,26 @@ jobs:
       # SHA-pinned (= v0.36.0). Aqua deletes old version tags (0.28.0 was removed, which
       # failed this job at "Set up job"); a commit SHA can't be retagged away. To bump,
       # resolve a newer release tag to its commit SHA.
+      #
+      # BLOCKING (CK-150-023): this step used to carry `continue-on-error: true`, so the PR
+      # path reported vulnerabilities and shipped anyway. The bar is now IDENTICAL to the
+      # release `security-gate` in release.yml — same severity, same unfixed policy, same
+      # exit-code — so nothing can pass here and fail at tag time (or vice versa). Keep the
+      # two steps in sync when either changes.
+      #
+      # Accepted: unfixed upstream CVEs do not block the PR path; fixed HIGH/CRITICAL do.
+      # Revisit alongside the release gate's identical note.
       uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
       with:
         scan-type: 'fs'
         scan-ref: '.'
         format: 'sarif'
         output: 'trivy-results.sarif'
-      continue-on-error: true
+        severity: 'HIGH,CRITICAL'
+        ignore-unfixed: true
+        # Without this the action always exits 0 and removing continue-on-error alone
+        # would leave the step decorative.
+        exit-code: '1'
 
     - name: Upload security results
       uses: github/codeql-action/upload-sarif@v3

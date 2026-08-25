@@ -87,8 +87,11 @@ run_instrumentation() {
     echo "::error::Instrumented tests failed"
     exit 1
   fi
-  grep -qE "^OK \([0-9]+ test" instrumentation.log \
-    || { echo "::error::No OK line — the runner did not complete"; exit 1; }
+  # `[1-9][0-9]*`, not `[0-9]+`: `OK (0 tests)` is what the runner prints when the `-e class`
+  # filter matches NOTHING (renamed/moved/emptied class), and the old regex accepted it — a
+  # false-green release gate (CK-150-028). A real run always reports at least one test.
+  grep -qE "^OK \([1-9][0-9]* tests?\)" instrumentation.log \
+    || { echo "::error::No OK line with a non-zero test count — the runner ran nothing or did not complete"; exit 1; }
 }
 
 case "$MODE" in
@@ -118,10 +121,15 @@ case "$MODE" in
     # ── The instrumented gate ────────────────────────────────────────────────────────
     # A CURATED set, not the whole suite: the full 1,395-test run takes ~30 min on
     # emulator.wtf and would be slower and flakier here, and a gate that times out teaches
-    # people to ignore it. These five pin invariants no pure test can reach — real assets
+    # people to ignore it. These six pin invariants no pure test can reach — real assets
     # parsed on-device, a real ONNX session, real keyboard geometry. Full-suite runs stay a
     # deliberate ew-cli action.
-    CLASSES="tribixbite.cleverkeys.swipe.CtcMultiLanguageInstrumentedTest,tribixbite.cleverkeys.GeometricSwipeOracleTest,tribixbite.cleverkeys.CrashGuardInstrumentedTest,tribixbite.cleverkeys.a11y.KeyboardAccessibilityInstrumentedTest,tribixbite.cleverkeys.backup.crypto.BackupPassphraseStoreInstrumentedTest"
+    #
+    # This list is PINNED by the pure test `CuratedInstrumentationListTest`: it parses the
+    # assignment below and fails if the set drifts from its checked-in expectation or names a
+    # class that no longer exists with a @Test. Changing the gate is therefore a deliberate
+    # two-file edit (CK-150-028). Keep the value a single-line double-quoted literal.
+    CLASSES="tribixbite.cleverkeys.swipe.CtcMultiLanguageInstrumentedTest,tribixbite.cleverkeys.GeometricSwipeOracleTest,tribixbite.cleverkeys.CrashGuardInstrumentedTest,tribixbite.cleverkeys.a11y.KeyboardAccessibilityInstrumentedTest,tribixbite.cleverkeys.backup.crypto.BackupPassphraseStoreInstrumentedTest,tribixbite.cleverkeys.swipe.CtcEmissionModelParityTest"
     run_instrumentation "$CLASSES"
     ;;
 

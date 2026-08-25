@@ -25,10 +25,50 @@ jobs:
         git merge-base --is-ancestor "$GITHUB_SHA" origin/main \
           || { echo "::error::tag commit is not reachable from main"; exit 1; }
 
+    # CK-150-035: this used to run in the final `release` job, after ~1h of gates. A tag that
+    # does not match build.gradle is knowable in seconds, so it is checked here — first thing
+    # after the checkout, before any toolchain setup.
+    - name: Verify tag matches build.gradle version
+      run: |
+        TAG_VERSION=${GITHUB_REF_NAME#v}
+
+        # Extract VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH from build.gradle
+        GRADLE_MAJOR=$(grep "VERSION_MAJOR" build.gradle | head -1 | sed 's/.*= *//' | tr -d ' ')
+        GRADLE_MINOR=$(grep "VERSION_MINOR" build.gradle | head -1 | sed 's/.*= *//' | tr -d ' ')
+        GRADLE_PATCH=$(grep "VERSION_PATCH" build.gradle | head -1 | sed 's/.*= *//' | tr -d ' ')
+        GRADLE_VERSION="${GRADLE_MAJOR}.${GRADLE_MINOR}.${GRADLE_PATCH}"
+
+        echo "🏷️  Git Tag Version: $TAG_VERSION"
+        echo "📦 Gradle Version:  $GRADLE_VERSION"
+
+        if [ "$TAG_VERSION" != "$GRADLE_VERSION" ]; then
+          echo "::error::VERSION MISMATCH! Git tag ($TAG_VERSION) does not match build.gradle ($GRADLE_VERSION)"
+          echo "Please update VERSION_MAJOR/MINOR/PATCH in build.gradle to match the tag."
+          exit 1
+        fi
+
+        echo "✅ Version match confirmed!"
+
     - name: Source hygiene preflight
       run: |
         test -z "$(git status --porcelain --untracked-files=all)"
-        git diff --check v1.5.0..HEAD
+        # CK-150-035: the range used to be hardcoded `v1.5.0..HEAD`, which silently widens
+        # every release (at v1.7 it would re-check two releases' worth of commits). Derive
+        # the previous tag instead, via `git describe --tags --abbrev=0` (the idiom the
+        # changelog fallback uses below), with two necessary tightenings:
+        #   - `HEAD^`, because HEAD *is* the release tag: describing from HEAD returns the
+        #     tag being released, making the range empty and the check vacuous;
+        #   - `--match 'v*'`, because the repo also carries non-release `dev-*` tags that
+        #     would otherwise win and produce a meaningless range.
+        # `fetch-depth: 0` above is what makes the tags available here; if it ever regresses
+        # this fails loudly instead of degrading into a no-op.
+        PREV_TAG=$(git describe --tags --abbrev=0 --match 'v*' HEAD^ 2>/dev/null || echo "")
+        if [ -z "$PREV_TAG" ]; then
+          echo "::error::no previous v* tag reachable from HEAD^ — cannot derive the whitespace-check range (is the checkout missing tags?)"
+          exit 1
+        fi
+        echo "Whitespace check over $PREV_TAG..HEAD"
+        git diff --check "$PREV_TAG..HEAD"
 
     - name: Setup Java 17
       uses: actions/setup-java@v4
@@ -124,6 +164,8 @@ jobs:
         scan-ref: .
         format: table
         severity: HIGH,CRITICAL
+        # Accepted: unfixed upstream CVEs do not block release; fixed HIGH/CRITICAL do.
+        # Revisit each release.
         ignore-unfixed: true
         exit-code: '1'
 
@@ -204,26 +246,23 @@ jobs:
         echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_ENV
         echo "📦 Version: $VERSION (code: $VERSION_CODE)"
 
-    - name: Verify tag matches build.gradle version
+    # The authoritative tag↔build.gradle check now runs in the `test` gate job (CK-150-035),
+    # so a mismatch fails in seconds instead of after ~1h of gates. This is a cheap re-assert
+    # against the VERSION this job actually builds with, in case the two jobs ever check out
+    # different trees.
+    - name: Re-assert tag matches build.gradle version
       run: |
-        TAG_VERSION=${GITHUB_REF_NAME#v}
-
-        # Extract VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH from build.gradle
         GRADLE_MAJOR=$(grep "VERSION_MAJOR" build.gradle | head -1 | sed 's/.*= *//' | tr -d ' ')
         GRADLE_MINOR=$(grep "VERSION_MINOR" build.gradle | head -1 | sed 's/.*= *//' | tr -d ' ')
         GRADLE_PATCH=$(grep "VERSION_PATCH" build.gradle | head -1 | sed 's/.*= *//' | tr -d ' ')
         GRADLE_VERSION="${GRADLE_MAJOR}.${GRADLE_MINOR}.${GRADLE_PATCH}"
 
-        echo "🏷️  Git Tag Version: $TAG_VERSION"
-        echo "📦 Gradle Version:  $GRADLE_VERSION"
-
-        if [ "$TAG_VERSION" != "$GRADLE_VERSION" ]; then
-          echo "::error::VERSION MISMATCH! Git tag ($TAG_VERSION) does not match build.gradle ($GRADLE_VERSION)"
-          echo "Please update VERSION_MAJOR/MINOR/PATCH in build.gradle to match the tag."
+        if [ "$VERSION" != "$GRADLE_VERSION" ]; then
+          echo "::error::VERSION MISMATCH! Git tag ($VERSION) does not match build.gradle ($GRADLE_VERSION)"
           exit 1
         fi
 
-        echo "✅ Version match confirmed!"
+        echo "✅ Version match confirmed ($VERSION)"
 
     # Decode keystore for later signing (do NOT set RELEASE_KEYSTORE env var here
     # to ensure build.gradle builds unsigned APK)
