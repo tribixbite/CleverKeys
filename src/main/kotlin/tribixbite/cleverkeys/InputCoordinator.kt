@@ -421,6 +421,9 @@ class InputCoordinator(
      *   ctc mode's non-served-language fallthrough is tagged GEOMETRIC).
      *   Null falls back to the old mode-derived approximation
      *   ([SuggestionOrigin.forSwipeEngineMode]) for callers predating the threading.
+     * @param languages CK-150-024 — optional per-word source language parallel to [predictions],
+     *   supplied ONLY by the dual-language CTC decode whose merged slate mixes lexicons. Null
+     *   (every other path) leaves the language-wide possessive gate in charge.
      */
     fun handlePredictionResults(
         predictions: List<String>?,
@@ -430,7 +433,8 @@ class InputCoordinator(
         resources: Resources,
         shiftActive: Boolean = wasShiftActiveAtSwipeStart,
         shiftLocked: Boolean = wasShiftLockedAtSwipeStart,
-        origin: SuggestionOrigin? = null
+        origin: SuggestionOrigin? = null,
+        languages: List<String>? = null
     ) {
         // Keep the fields in sync with the request-carried state (single source of truth for the
         // default-param seam used by tests and the oracle).
@@ -444,7 +448,8 @@ class InputCoordinator(
             return
         }
         delegate.handleSwipePredictionResults(
-            predictions, scores, ic, editorInfo, resources, shiftActive, shiftLocked, this, origin
+            predictions, scores, ic, editorInfo, resources, shiftActive, shiftLocked, this, origin,
+            languages
         )
     }
 
@@ -754,7 +759,9 @@ class InputCoordinator(
                     result.words, result.scores, ic, editorInfo, resources,
                     wasShiftActive, wasShiftLocked,
                     // M2: this dispatch IS the CTC adapter, so the tag is exact.
-                    SuggestionOrigin.CTC
+                    SuggestionOrigin.CTC,
+                    // CK-150-024: non-null only for a dual-language merged slate.
+                    result.languages
                 )
             } else if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                 android.util.Log.d(TAG, "Dropping CTC decode: input field changed since swipe")

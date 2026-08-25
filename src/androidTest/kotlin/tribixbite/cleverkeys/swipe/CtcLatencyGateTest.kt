@@ -6,13 +6,17 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.json.JSONObject
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNotSame
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import tribixbite.cleverkeys.Defaults
 import tribixbite.cleverkeys.onnx.ModelLoader
+import tribixbite.cleverkeys.swipe.ctc.CtcBeamDecoder
 import tribixbite.cleverkeys.swipe.ctc.CtcFeaturizer
 import tribixbite.cleverkeys.swipe.ctc.CtcLayout
+import tribixbite.cleverkeys.swipe.ctc.CtcRankMerger
 import tribixbite.cleverkeys.swipe.ctc.CtcScoringParams
 import tribixbite.cleverkeys.swipe.ctc.CtcSwipeDecoder
 
@@ -54,6 +58,17 @@ class CtcLatencyGateTest {
         const val MEDIAN_BUDGET_MS = 150.0
         const val P90_BUDGET_MS = 250.0
 
+        /**
+         * CK-150-026 §4.9 asked for the dual-language decode to hold "the same budget" as the
+         * single-language case, named at the p95. Deliberately the SAME number as
+         * [P90_BUDGET_MS] rather than a relaxed one: a swipe that mixes two lexicons is still
+         * one swipe to the user, and the whole point of the finding is that nobody had measured
+         * whether two beam searches + two bounded rescue scans stay inside the single-language
+         * bar. If this fails, the remedy in §4.9 is a measured capacity/beam decision — not a
+         * bigger number here.
+         */
+        const val DUAL_P95_BUDGET_MS = 250.0
+
         /** Production preset at the validated width and the adapter's slate size. */
         const val BEAM_WIDTH = 100
         const val TOP_K = 8
@@ -63,6 +78,16 @@ class CtcLatencyGateTest {
          * bundled CTC lexicon — fr/de are 40k, es 50k), decoded at the en preset.
          */
         const val GATE_LANGUAGE = "en"
+
+        /**
+         * The secondary language of the dual-language gate. fr is the realistic pairing (the
+         * only other language with real swipe corpus rows) and, at 40k words, keeps the second
+         * trie's ~19 MB inside the 2-slot `trieMemos` LRU alongside en.
+         */
+        const val SECONDARY_LANGUAGE = "fr"
+
+        /** A third CTC language, used only to prove the en→fr→en cycle does NOT evict. */
+        const val THIRD_LANGUAGE = "de"
     }
 
     private class FixtureCase(
@@ -181,5 +206,179 @@ class CtcLatencyGateTest {
 
         adapter.shutdown()
         model.close()
+    }
+
+    /**
+     * CK-150-026 (a) — the DUAL-LANGUAGE decode must hold the single-language budget.
+     *
+     * With `enable_multilang` on, `CtcEngineAdapter.decodeAsync` runs the encoder ONCE and then
+     * decodes each active language against its own trie and preset, bounded-rescues each greedy
+     * surface, and merges the two slates by rank. That is 2 beam searches + 2 rescue scans per
+     * swipe against 1 + 1 — and until this test nobody had measured it. This mirrors that exact
+     * shape (one `emit`, two `CtcBeamDecoder.decode`, two `CtcFuzzyRescue.find`, one
+     * `CtcRankMerger.merge`) over the SHIPPING tries from [CtcEngineAdapter.trieFor], so the
+     * number it produces is the number a real en+fr swipe pays.
+     *
+     * The display overlays (`applyCanonicalDisplay` / `applyContractionDisplay`) are the one
+     * production step not replayed here: they are `Map` lookups over an ≤8-word slate and their
+     * seam is private. Everything the finding named as expensive is in.
+     */
+    @Test
+    fun dualLanguageDecodePath_meetsTheSameLatencyBudget() {
+        val target = InstrumentationRegistry.getInstrumentation().targetContext
+        val case = loadFixtureCase()
+        val env = OrtEnvironment.getEnvironment()
+
+        val adapter = CtcEngineAdapter(target)
+        val primaryTrie = adapter.trieFor(GATE_LANGUAGE)
+        val secondaryTrie = adapter.trieFor(SECONDARY_LANGUAGE)
+        assertNotNull("adapter merge path produced no '$GATE_LANGUAGE' trie", primaryTrie)
+        assertNotNull("adapter merge path produced no '$SECONDARY_LANGUAGE' trie", secondaryTrie)
+        val primaryRescue = adapter.fuzzyRescueFor(GATE_LANGUAGE)
+        val secondaryRescue = adapter.fuzzyRescueFor(SECONDARY_LANGUAGE)
+        assertNotNull("no '$GATE_LANGUAGE' rescue index", primaryRescue)
+        assertNotNull("no '$SECONDARY_LANGUAGE' rescue index", secondaryRescue)
+
+        val loaded = ModelLoader(target, env).loadModel(
+            CtcEngineAdapter.MODEL_ASSET, "CtcEncoderDualGate",
+            enableHardwareAcceleration = true,
+            xnnpackThreads = Defaults.ONNX_XNNPACK_THREADS
+        )
+        val model = OnnxCtcEmissionModel(env, loaded.session)
+        val padded = CtcFeaturizer.buildPaddedLayout(case.layout)
+        val primaryParams =
+            CtcScoringParams.presetFor(GATE_LANGUAGE, beamWidth = BEAM_WIDTH, topK = TOP_K)
+        val secondaryParams =
+            CtcScoringParams.presetFor(SECONDARY_LANGUAGE, beamWidth = BEAM_WIDTH, topK = TOP_K)
+
+        /** One dual-language swipe, in `decodeAsync`'s order. Returns the merged slate. */
+        fun decodeDual(): List<CtcRankMerger.Item> {
+            val features = CtcFeaturizer.featurize(case.px, case.py, case.pt)
+            val emissions = model.emit(features, padded)
+            val greedy = CtcBeamDecoder.greedy(emissions, case.layout.alphabet)
+            val primaryWords = CtcBeamDecoder.decode(emissions, primaryTrie!!, primaryParams)
+                .map { it.word }
+            val secondaryWords = CtcBeamDecoder.decode(emissions, secondaryTrie!!, secondaryParams)
+                .map { it.word }
+            primaryRescue!!.find(greedy, primaryWords.toHashSet())
+            secondaryRescue!!.find(greedy, secondaryWords.toHashSet())
+            return CtcRankMerger.merge(
+                GATE_LANGUAGE, primaryWords, SECONDARY_LANGUAGE, secondaryWords, TOP_K
+            )
+        }
+
+        val warmSlate = decodeDual()
+        assertTrue("dual decode returned no candidates", warmSlate.isNotEmpty())
+        assertTrue("dual decode returned an empty word", warmSlate.all { it.word.isNotEmpty() })
+        // CK-150-024's precondition: the merged slate is genuinely per-word labelled, which is
+        // what `PredictionResult.languages` carries to the possessive gate.
+        assertTrue(
+            "merged slate lost its language labels",
+            warmSlate.all { it.language == GATE_LANGUAGE || it.language == SECONDARY_LANGUAGE }
+        )
+
+        repeat(WARMUPS) { decodeDual() }
+        val samples = LongArray(ITERATIONS)
+        for (i in 0 until ITERATIONS) {
+            val t0 = System.nanoTime()
+            decodeDual()
+            samples[i] = System.nanoTime() - t0
+        }
+
+        samples.sort()
+        val medianMs = samples[ITERATIONS / 2] / 1e6
+        val p90Ms = samples[(ITERATIONS * 9) / 10 - 1] / 1e6
+        val p95Ms = samples[(ITERATIONS * 95) / 100 - 1] / 1e6
+        Log.i(TAG, "DUAL GATE [${loaded.executionProvider}] $GATE_LANGUAGE+$SECONDARY_LANGUAGE " +
+            "beam=$BEAM_WIDTH topK=$TOP_K words=${primaryTrie!!.wordCount}+" +
+            "${secondaryTrie!!.wordCount} median=${"%.1f".format(medianMs)}ms " +
+            "p90=${"%.1f".format(p90Ms)}ms p95=${"%.1f".format(p95Ms)}ms " +
+            "top=" + warmSlate.take(3).joinToString { "${it.word}/${it.language}" })
+
+        assertTrue(
+            "dual-language decode median ${medianMs} ms exceeds the $MEDIAN_BUDGET_MS ms gate",
+            medianMs < MEDIAN_BUDGET_MS
+        )
+        assertTrue(
+            "dual-language decode p90 ${p90Ms} ms exceeds the $P90_BUDGET_MS ms gate",
+            p90Ms < P90_BUDGET_MS
+        )
+        assertTrue(
+            "dual-language decode p95 ${p95Ms} ms exceeds the $DUAL_P95_BUDGET_MS ms gate " +
+                "(CK-150-026: two beams + two rescue scans must still fit one swipe)",
+            p95Ms < DUAL_P95_BUDGET_MS
+        )
+
+        adapter.shutdown()
+        model.close()
+    }
+
+    /**
+     * CK-150-026 (b) — an en→fr→en language-switch cycle must NOT rebuild a memo.
+     *
+     * `trieMemos` evicts at `size > 2`, so exactly two active languages fit and the round trip
+     * back to en has to be a HIT. The reuse signal is the same one
+     * [productionDecodePath_meetsLatencyBudget_andReusesMemos] uses — instance identity of the
+     * trie returned by the shipping merge path — because a rebuild produces a different object
+     * (and costs a fresh ~19 MB plus the build time this test also records).
+     *
+     * The third-language leg proves the boundary is REAL rather than accidentally generous: with
+     * access-ordering, the de build evicts fr (the least-recently-used of the two), en survives.
+     * That is the thrash the finding warns about, pinned as behaviour so raising the capacity is
+     * a conscious change with this test to update.
+     */
+    @Test
+    fun languageSwitchCycle_reusesMemosWithinTheTwoSlotLru() {
+        val target = InstrumentationRegistry.getInstrumentation().targetContext
+        val adapter = CtcEngineAdapter(target)
+
+        val enBuildStart = System.nanoTime()
+        val en = adapter.trieFor(GATE_LANGUAGE)
+        val enBuildMs = (System.nanoTime() - enBuildStart) / 1e6
+        assertNotNull("adapter merge path produced no '$GATE_LANGUAGE' trie", en)
+
+        val fr = adapter.trieFor(SECONDARY_LANGUAGE)
+        assertNotNull("adapter merge path produced no '$SECONDARY_LANGUAGE' trie", fr)
+        assertNotSame("two languages must not share one trie", en, fr)
+
+        // ── The switch back. Two languages fit, so this is a memo HIT: same instance, and
+        // orders of magnitude cheaper than the build it would otherwise repeat.
+        val enRefetchStart = System.nanoTime()
+        val enAgain = adapter.trieFor(GATE_LANGUAGE)
+        val enRefetchMs = (System.nanoTime() - enRefetchStart) / 1e6
+        assertSame(
+            "en→fr→en rebuilt the '$GATE_LANGUAGE' trie — the 2-slot LRU must hold both " +
+                "active languages (CK-150-026)",
+            en, enAgain
+        )
+        assertTrue(
+            "the '$GATE_LANGUAGE' re-fetch (${enRefetchMs} ms) was not cheaper than its build " +
+                "(${enBuildMs} ms) — memo reuse broken",
+            enRefetchMs < enBuildMs
+        )
+        // fr is still resident too: the cycle touched nothing else.
+        assertSame(
+            "'$SECONDARY_LANGUAGE' was evicted by a 2-language cycle",
+            fr, adapter.trieFor(SECONDARY_LANGUAGE)
+        )
+
+        // ── The documented capacity limit, so raising it is a conscious change with a test to
+        // update. `trieMemos` is access-ordered, and the fetches above leave [en, fr] with fr
+        // most-recent, so the de build evicts en — the ~19 MB the finding says gets rebuilt on
+        // any cycle involving a third language.
+        val de = adapter.trieFor(THIRD_LANGUAGE)
+        assertNotNull("adapter merge path produced no '$THIRD_LANGUAGE' trie", de)
+        val enAfterThird = adapter.trieFor(GATE_LANGUAGE)
+        assertNotSame(
+            "a third CTC language must evict the least-recently-used trie (capacity 2). If " +
+                "this now passes trivially the LRU threshold changed — re-measure the memory " +
+                "note on CtcEngineAdapter.trieMemos before accepting it",
+            en, enAfterThird
+        )
+        Log.i(TAG, "LRU CYCLE en build=${"%.1f".format(enBuildMs)}ms " +
+            "en refetch=${"%.3f".format(enRefetchMs)}ms " +
+            "en rebuilt after $THIRD_LANGUAGE: ${enAfterThird !== en}")
+
+        adapter.shutdown()
     }
 }

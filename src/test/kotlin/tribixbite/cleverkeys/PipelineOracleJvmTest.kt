@@ -69,10 +69,16 @@ class PipelineOracleJvmTest {
      * Mirror of SuggestionHandler.augmentPredictionsWithPossessives ARRAY behavior
      * (SuggestionHandler.kt:1474-1508). [possessiveOf] stands in for
      * ContractionManager.generatePossessive (null == not eligible). Mutates in place.
+     *
+     * The per-word language gate is NOT mirrored: it calls the PRODUCTION
+     * [SuggestionHandler.shouldAugmentPossessiveAt] (CK-150-024), so the rule itself is pinned
+     * here rather than a copy of it. [languages] null == every word eligible, exactly as
+     * production means it (the caller already applied the language-wide gate).
      */
     private fun augmentPredictionsWithPossessives(
         predictions: MutableList<String>,
         scores: MutableList<Int>,
+        languages: List<String>? = null,
         possessiveOf: (String) -> String?
     ) {
         if (predictions.isEmpty()) return
@@ -80,6 +86,7 @@ class PipelineOracleJvmTest {
         val possessivesToAdd = mutableListOf<String>()
         val possessiveScores = mutableListOf<Int>()
         for (i in 0 until limit) {
+            if (!SuggestionHandler.shouldAugmentPossessiveAt(languages, i)) continue
             val word = predictions[i]
             val possessive = possessiveOf(word) ?: continue
             val alreadyExists = predictions.any { it.equals(possessive, ignoreCase = true) }
@@ -213,6 +220,86 @@ class PipelineOracleJvmTest {
                 SuggestionHandler.shouldAugmentPossessives(language)
             )
         }
+    }
+
+    // =========================================================================
+    // CK-150-024 — the PER-WORD language gate for a dual-language merged slate.
+    // With enable_multilang on, CtcRankMerger interleaves en and fr candidates in
+    // ONE slate; the primary-language gate above cannot answer for it, because two
+    // adjacent words need opposite answers. These call the production helper.
+    // =========================================================================
+
+    @Test
+    fun oracle_jvm_possessiveGate_perWordLanguageOverridesThePrimary() {
+        // en-primary / fr-secondary merged slate: index 0 is English, index 1 is French.
+        val languages = listOf("en", "fr")
+        assertTrue(
+            "the English entry keeps its possessive even in a mixed slate",
+            SuggestionHandler.shouldAugmentPossessiveAt(languages, 0)
+        )
+        assertFalse(
+            "the French entry must NOT get an English \"'s\" (CK-150-024)",
+            SuggestionHandler.shouldAugmentPossessiveAt(languages, 1)
+        )
+        // fr-primary / en-secondary: the English entry still qualifies — the gate reads the
+        // WORD's language, not the keyboard's primary (the other half of the defect).
+        assertTrue(
+            "an English entry under a French primary still qualifies",
+            SuggestionHandler.shouldAugmentPossessiveAt(listOf("fr", "en"), 1)
+        )
+        // Region subtags normalize; a label list shorter than the slate yields false rather
+        // than guessing English.
+        assertTrue(SuggestionHandler.shouldAugmentPossessiveAt(listOf("en-GB"), 0))
+        assertFalse(SuggestionHandler.shouldAugmentPossessiveAt(listOf("en"), 1))
+    }
+
+    @Test
+    fun oracle_jvm_possessiveGate_nullLanguagesLeavesEveryWordEligible() {
+        // The single-language contract: no per-word labels means the language-wide gate at the
+        // call site already decided, so the augment loop must not second-guess it.
+        for (i in 0 until 3) {
+            assertTrue(
+                "index $i must stay eligible when no per-word languages were supplied",
+                SuggestionHandler.shouldAugmentPossessiveAt(null, i)
+            )
+        }
+    }
+
+    @Test
+    fun oracle_jvm_possessiveAugment_mixedLanguageSlateAugmentsOnlyTheEnglishWords() {
+        // en-primary / fr-secondary merged slate. Before CK-150-024 every word here was
+        // augmented, producing "maison's" on the bar.
+        val words = mutableListOf("book", "maison", "cat")
+        val scores = mutableListOf(1000, 920, 500)
+        augmentPredictionsWithPossessives(
+            words, scores, languages = listOf("en", "fr", "en")
+        ) { "$it's" }
+
+        assertEquals(listOf("book", "maison", "cat", "book's", "cat's"), words)
+        assertEquals(listOf(1000, 920, 500, 990, 490), scores)
+        assertFalse("no French possessive may be appended", words.contains("maison's"))
+    }
+
+    @Test
+    fun oracle_jvm_possessiveAugment_nullLanguagesIsUnchangedFromBeforeTheGate() {
+        // Byte-identical to oracle_jvm_possessiveAugment_appendsUpToThreeAtEndWithScoreMinus10:
+        // a null language list must leave the pre-CK-150-024 behavior exactly as it was.
+        val words = mutableListOf("book", "cat", "dog", "fish")
+        val scores = mutableListOf(100, 90, 80, 70)
+        augmentPredictionsWithPossessives(words, scores, languages = null) { "$it's" }
+        assertEquals(listOf("book", "cat", "dog", "fish", "book's", "cat's", "dog's"), words)
+        assertEquals(listOf(100, 90, 80, 70, 90, 80, 70), scores)
+    }
+
+    @Test
+    fun oracle_jvm_possessiveAugment_frenchRankOneDoesNotCostEnglishRankTwo() {
+        // The loop CONTINUES past a skipped word rather than breaking: the top-3 window exists
+        // to limit clutter, so a French rank 1 must not suppress the English rank 2's form.
+        val words = mutableListOf("maison", "book")
+        val scores = mutableListOf(1000, 920)
+        augmentPredictionsWithPossessives(words, scores, languages = listOf("fr", "en")) { "$it's" }
+        assertEquals(listOf("maison", "book", "book's"), words)
+        assertEquals(listOf(1000, 920, 910), scores)
     }
 
     @Test

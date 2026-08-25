@@ -11,6 +11,7 @@ import android.view.inputmethod.InputConnection
 import tribixbite.cleverkeys.ml.SwipeMLData
 import tribixbite.cleverkeys.autocorrect.AutocorrectContextGuard
 import tribixbite.cleverkeys.swipe.SwipeContextRescorer
+import tribixbite.cleverkeys.swipe.ctc.CtcLanguageSupport
 
 /**
  * Handles suggestion selection, prediction display, and text completion logic.
@@ -118,6 +119,30 @@ class SuggestionHandler(
          */
         internal fun shouldAugmentPossessives(activeLanguage: String?): Boolean =
             (activeLanguage ?: "en") == "en"
+
+        /**
+         * Whether the candidate at [index] may receive an English possessive form, given the
+         * PER-WORD source languages a dual-language decode attaches to its slate (CK-150-024).
+         *
+         * [shouldAugmentPossessives] answers the same question for a slate whose words all come
+         * from one lexicon; it cannot answer it for a merged en+fr slate, where the two candidates
+         * sitting side by side need OPPOSITE answers. With `enable_multilang` on, the
+         * `CtcRankMerger` output is exactly that slate, and gating it on the primary language
+         * gives every French word an English `'s` (en primary) or strips the English words of
+         * theirs (fr primary) — both wrong, in the same slate.
+         *
+         * A null [languages] means "no per-word information", which is every single-language path:
+         * the caller keeps using [shouldAugmentPossessives] and this function is not consulted.
+         * A non-null but short list yields false for the missing tail — a slate whose language
+         * labels ran out is not a slate to apply English morphology to on a guess.
+         *
+         * Codes are compared after [CtcLanguageSupport.normalize] so a region-tagged `en-GB`
+         * still reads as English.
+         */
+        internal fun shouldAugmentPossessiveAt(languages: List<String>?, index: Int): Boolean {
+            if (languages == null) return true
+            return CtcLanguageSupport.normalize(languages.getOrNull(index)) == "en"
+        }
     }
 
     /**
@@ -179,15 +204,18 @@ class SuggestionHandler(
      * original list references flow onward, which is what makes the learning-OFF output
      * byte-identical to today's rather than merely equal by arithmetic.
      *
-     * @return the (possibly reordered) words, their scores, and the index the promoted candidate
-     *   came from when context moved rank 1 — null when rank 1 is unchanged.
+     * @param languages optional per-word source languages parallel to [words] (CK-150-024); it is
+     *   permuted with them so the possessive gate downstream still reads each word's OWN label.
+     * @return the (possibly reordered) words, their scores, their languages, and the index the
+     *   promoted candidate came from when context moved rank 1 — null when rank 1 is unchanged.
      */
     private fun rescoreWithContext(
         words: List<String>,
         scores: List<Int>?,
-    ): Triple<List<String>, List<Int>, Int?> {
+        languages: List<String>?,
+    ): RescoredSlate {
         val originalScores = scores ?: emptyList()
-        val unchanged = Triple(words, originalScores, null)
+        val unchanged = RescoredSlate(words, originalScores, languages, null)
 
         if (!config.swipe_context_rescoring) return unchanged
         if (!fieldAllowsPersonalizedLearning) return unchanged // M5
@@ -209,12 +237,31 @@ class SuggestionHandler(
         if (order == words.indices.toList()) return unchanged
 
         vlog { "SWIPE context rescoring reordered the slate: $order" }
-        return Triple(
+        return RescoredSlate(
             order.map { words[it] },
             order.map { originalScores[it] },
+            // Same permutation, so word[i] and language[i] stay the same candidate. Only applied
+            // when the label list actually covers the slate; a mismatched-length list is dropped
+            // rather than silently re-associated (CK-150-024).
+            languages?.takeIf { it.size == words.size }?.let { labels -> order.map { labels[it] } },
             order.first().takeIf { it != 0 },
         )
     }
+
+    /**
+     * The slate as it leaves [rescoreWithContext] — words, scores and the optional per-word source
+     * languages, all in the SAME order, plus the origin index of a context-promoted rank 1.
+     *
+     * [languages] rides along because the rescorer reorders by permutation: dropping it would
+     * leave the possessive gate reading a French label against an English word two slots away
+     * (CK-150-024). Null whenever the engine supplied no per-word languages.
+     */
+    private data class RescoredSlate(
+        val words: List<String>,
+        val scores: List<Int>,
+        val languages: List<String>?,
+        val promotedIndex: Int?,
+    )
 
     private fun replaceModeContractionFor(word: String): String? {
         val mapping = contractionManager.getNonPairedMapping(word) ?: return null
@@ -565,6 +612,10 @@ class SuggestionHandler(
      *   routed engine differs per layout/language, so deriving from the MODE mislabeled e.g. a
      *   Dvorak geometric decode as CTC). Null falls back to the legacy mode-derived
      *   approximation ([SuggestionOrigin.forSwipeEngineMode]).
+     * @param languages CK-150-024 — optional per-word source languages parallel to [predictions],
+     *   supplied ONLY by the dual-language CTC decode (the one slate that mixes lexicons). It
+     *   drives the possessive gate per word; null keeps the language-wide gate
+     *   ([shouldAugmentPossessives]) in charge, which is correct for every single-language path.
      */
     fun handleSwipePredictionResults(
         predictions: List<String>?,
@@ -575,7 +626,8 @@ class SuggestionHandler(
         shiftActive: Boolean,
         shiftLocked: Boolean,
         inputCoordinator: InputCoordinator,
-        origin: SuggestionOrigin? = null
+        origin: SuggestionOrigin? = null,
+        languages: List<String>? = null
     ) {
         // Swipe results replace whatever the bar shows — any next-word display state ends here.
         nextWordSuggestionsActive = false
@@ -609,20 +661,36 @@ class SuggestionHandler(
         // not engine candidates, so rescoring after it would let a learned bigram reorder a form
         // the decoder never produced. Everything downstream — the bar, the auto-insert target,
         // the provenance metas — reads the order this returns.
-        val (rescoredPredictions, rescoredScores, promotedIndex) =
-            rescoreWithContext(transformedPredictions, scores)
+        // CK-150-024: the per-word labels are only meaningful while they line up with the words.
+        // Both transforms above are 1:1 maps (applyUserWordCaseToList / applyShiftTransformation),
+        // so alignment survives them; the rescorer is a PERMUTATION and is therefore handed the
+        // list so it can apply the same one. A caller-supplied list of the wrong length is dropped
+        // here rather than propagated — the language-wide gate is the safe fallback.
+        val engineLanguages = languages?.takeIf { it.size == predictions.size }
+        val rescored = rescoreWithContext(transformedPredictions, scores, engineLanguages)
+        val rescoredPredictions = rescored.words
+        val rescoredScores = rescored.scores
+        val promotedIndex = rescored.promotedIndex
 
         // D1: augment the bar list with possessive forms (transient-style augment reused from the tap
         // path). Kept aligned with scores; possessives appended at the end so the top prediction is
         // unchanged and the auto-insert target below is still the highest-scoring word.
         // ENGLISH ONLY (2026-07-23): see [shouldAugmentPossessives] for the rule and why the
         // gate deliberately covers the swipe path too (audit n-1).
+        //
+        // A dual-language slate (CK-150-024) carries per-word languages and is gated WORD BY WORD
+        // instead — see [shouldAugmentPossessiveAt]. That path deliberately ignores the active
+        // (primary) language: in a merged en+fr slate the primary tells you nothing about the
+        // candidate in slot 2.
         val barWords = rescoredPredictions.toMutableList()
         val barScores = rescoredScores.toMutableList()
         val activeLanguage = predictionCoordinator.getDictionaryManager()?.getCurrentLanguage()
         val engineWordCount = barWords.size
-        if (shouldAugmentPossessives(activeLanguage)) {
-            augmentPredictionsWithPossessives(barWords, barScores)
+        val barLanguages = rescored.languages
+        if (barLanguages != null) {
+            augmentPredictionsWithPossessives(barWords, barScores, barLanguages)
+        } else if (shouldAugmentPossessives(activeLanguage)) {
+            augmentPredictionsWithPossessives(barWords, barScores, null)
         }
 
         // Task B: provenance metas — engine outputs first, then any appended
@@ -2271,8 +2339,15 @@ class SuggestionHandler(
      *
      * @param predictions List of predictions to augment (modified in-place)
      * @param scores List of scores corresponding to predictions (modified in-place)
+     * @param languages CK-150-024 — per-word source languages parallel to [predictions] for a
+     *   dual-language slate, gating each word individually via [shouldAugmentPossessiveAt]. Null
+     *   means the caller already applied the language-wide gate and every word is eligible.
      */
-    private fun augmentPredictionsWithPossessives(predictions: MutableList<String>, scores: MutableList<Int>) {
+    private fun augmentPredictionsWithPossessives(
+        predictions: MutableList<String>,
+        scores: MutableList<Int>,
+        languages: List<String>?
+    ) {
         if (predictions.isEmpty()) return
 
         // Generate possessives for top 3 predictions only (avoid clutter)
@@ -2281,6 +2356,10 @@ class SuggestionHandler(
         val possessiveScores = mutableListOf<Int>()
 
         for (i in 0 until limit) {
+            // A non-English word in a merged slate must not grow an English `'s` (CK-150-024).
+            // The loop CONTINUES rather than breaking: the top-3 window is about clutter, and a
+            // French rank-1 must not cost the English rank-2 its possessive.
+            if (!shouldAugmentPossessiveAt(languages, i)) continue
             val word = predictions[i]
             val possessive = contractionManager.generatePossessive(word)
 

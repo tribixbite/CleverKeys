@@ -617,14 +617,16 @@ class PipelineCharacterizationTest {
         val possessive = h.contractionManager.generatePossessive("book")
         org.junit.Assume.assumeNotNull("'book' must be possessive-eligible", possessive)
 
+        // CK-150-024 added the per-word `languages` parameter (null == every word eligible, which
+        // is what the language-wide gate at the call site already decided).
         val method = SuggestionHandler::class.java.getDeclaredMethod(
             "augmentPredictionsWithPossessives",
-            MutableList::class.java, MutableList::class.java
+            MutableList::class.java, MutableList::class.java, List::class.java
         ).apply { isAccessible = true }
 
         val words = mutableListOf("book", "cook", "look")
         val scores = mutableListOf(300, 200, 100)
-        method.invoke(h.suggestionHandler, words, scores)
+        method.invoke(h.suggestionHandler, words, scores, null)
 
         // INVARIANT (D1 control): SH's augmentation produces the possessive form and appends it.
         assertTrue(

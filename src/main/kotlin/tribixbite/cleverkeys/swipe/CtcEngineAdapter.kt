@@ -387,6 +387,15 @@ class CtcEngineAdapter(private val context: Context) {
     internal fun trieFor(language: String): CtcLexiconTrie? = lexiconFor(language)?.trie
 
     /**
+     * [language]'s bounded rescue index — see [applyFuzzyRescue]. `internal` for the same reason
+     * as [trieFor]: the instrumented latency gate must time the SAME per-language work a real
+     * swipe pays, and under `enable_multilang` that is one bounded rescue scan PER active
+     * language on top of the two beam searches (CK-150-026). Measuring only the beams would
+     * understate the dual-language cost by exactly the part the audit flagged.
+     */
+    internal fun fuzzyRescueFor(language: String): CtcFuzzyRescue? = lexiconFor(language)?.fuzzyRescue
+
+    /**
      * The merged lexicon for [language] (bundled base + custom − disabled) plus the
      * contraction-guard ordinals and the accent-display map, memoized by
      * (language, content-hash version).
@@ -792,7 +801,16 @@ class CtcEngineAdapter(private val context: Context) {
                             secondaryResult.words,
                             TOP_K,
                         )
-                        PredictionResult(merged.map { it.word }, merged.map { it.score })
+                        // CK-150-024: carry each merged word's SOURCE LANGUAGE. The merged slate
+                        // is the one place a single result mixes languages, and the shared
+                        // pipeline's English-only possessive augmentation would otherwise append
+                        // `'s` to French candidates (it gates on the PRIMARY language alone).
+                        // Aligned 1:1 with words by construction — one Item per emitted word.
+                        PredictionResult(
+                            merged.map { it.word },
+                            merged.map { it.score },
+                            merged.map { it.language },
+                        )
                     }
                 }
                 postIfNewest(generation, result, onResult)
