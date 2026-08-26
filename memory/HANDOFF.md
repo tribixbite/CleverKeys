@@ -132,10 +132,26 @@ counted zero-trace bigrams, and decoys drawn from phantom keys silently shrank t
 plus truncated scores and a non-shipping ONNX EP; **H11** the decoder changed under the measurement;
 **H12** the floors over-generalisation; **H13** above.
 
-**Next, in order**: (1) on-device shadow mode (spec §7.2) — still the ONLY way to get the real
-favourable:adversarial exposure ratio the verdict hinges on; (2) `-PreplayMaxCtx=N` power run —
-BUILT, still never run, and it is the fix for the binding statistical limit (device CTC's 6 breaks
-are ONE trace; Ubuntu geometric has 3 exposed traces total); (3) a second language.
+**The `-PreplayMaxCtx` power run RAN (2026-08-26) and is a NEGATIVE result.** It was this file's
+own proposed remedy for the harness's binding statistical limit; it does not work. Device CTC,
+decoys 10->30 with maxCtx=2: distinct adversarial traces 926 -> 1615 (+689), but EXPOSED distinct
+traces 107 -> **111** (+4); exposure per distinct trace 11.6% -> 6.9%. The bottleneck was never
+multiplicity — the set of trace-pool words that can be exposed at all against this corpus is small
+and now **nearly enumerated at ~111**, of which exactly **one** breaks. Sampling harder cannot lift
+it. Honest safety statement: **1 of ~111 exposed distinct adversarial traces breaks (~0.9%)** — at
+least a rate in a coherent unit now, instead of "6 breaks" that were one trace counted six times.
+
+What WOULD add power (not built, recorded so the next attempt doesn't repeat this one): draw decoys
+confusable with any **hub continuation** — the function words (`the`, `to`, `a`, `and`, `it`) that
+are learned continuations of a large share of preceding words; ~35% of usable device pairs point at
+a top-10 hub — rather than only with the pair's own `word2`. That targets the damage surface
+directly instead of sampling around it.
+
+**Next**: (1) **on-device shadow mode (spec §7.2)** — now the ONLY remaining lever. The power run
+closes off the offline route to more adversarial evidence, and the real favourable:adversarial
+exposure ratio was never measurable offline. Everything else is refinement of a verdict that is
+already stable across two corpora, two counting units, a full parameter sweep and a decoder change.
+(2) a hub-confusable decoy rule, if an offline safety bound is still wanted; (3) a second language.
 The pref stays **default-OFF**.
 
 **Was: Step 5 is BUILT; its numbers were WRONG TWICE before an audit corrected them** —

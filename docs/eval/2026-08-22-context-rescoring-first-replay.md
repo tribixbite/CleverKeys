@@ -219,9 +219,10 @@ outcome count is reported beside its **distinct-trace** count (§8 H8).
 
 1. **The decode path is a moving target.** Pinned to `27eb1a11`. §9's canary now fails the build on
    drift, but a red canary means *re-baseline*, not "the decoder is broken".
-2. **Neither adversarial arm bounds a breakage rate.** Device CTC: 107 distinct exposed adversarial
-   traces, and the 6 breaks are **one** of them. Ubuntu geometric: **3** exposed traces. This is the
-   binding statistical limit and `-PreplayMaxCtx=N` (built, still unrun) is the intended remedy.
+2. **The adversarial arm cannot be powered by sampling harder — measured, not assumed.** See §9.1.
+   The exposable trace population is nearly exhausted at ~111 distinct traces, of which exactly
+   **one** breaks. Ubuntu geometric is worse: **3** exposed traces total. This is the binding
+   statistical limit, and `-PreplayMaxCtx` does not lift it.
 3. **Adversarial decoys are selected for confusability**, so the arm over-represents the damage
    surface by construction.
 4. **The two engines use their own shipping lexicons** — CTC the EN_JSON strip-loaded
@@ -282,12 +283,42 @@ It needs the never-committed local trace pool, so it skips on a fresh checkout. 
 limitation, accepted because the evaluation is written on a machine that has the corpus — the canary
 guards the place the stale numbers would actually be quoted.
 
+## 9.1 The power run — a negative result worth keeping
+
+The previous revision proposed capping contexts per adversarial trace (`-PreplayMaxCtx=N`) to
+"convert multiplicity into diversity at the same decode cost", and named it the remedy for the
+harness's binding statistical limit. **It was run on 2026-08-26 and it does not work.**
+
+```
+device corpus, CTC        decoys=10 maxCtx=off   decoys=30 maxCtx=2
+distinct adversarial traces        926                   1615   (+689)
+  ...of those, EXPOSED             107                    111   (+4)
+exposure per distinct trace      11.6 %                  6.9 %
+adversarial exposed cases          444                    145   (multiplicity removed)
+breaks                        6, from 1 trace        2, from 1 trace
+```
+
+Tripling the decoy budget bought 689 more distinct adversarial traces and **four** more exposed
+ones. The bottleneck was never multiplicity: it is that a trace is only exposed when its slate
+happens to contain a learned continuation of the context word, and the set of trace-pool words for
+which that is true — against this corpus — is **small and now nearly enumerated at ~111**.
+
+So the arm cannot be powered by sampling harder, and the honest statement of the safety evidence is:
+**1 of ~111 exposed distinct adversarial traces breaks (~0.9 %)**, which is at least now a rate in a
+coherent unit rather than "6 breaks" that were one trace counted six times.
+
+What *would* add power is a different decoy rule: draw decoys confusable with **any hub
+continuation** — the function words (`the`, `to`, `a`, `and`, `it`) that are learned continuations
+of a large share of preceding words — rather than only with this pair's own `word2`. That targets
+the damage surface directly instead of sampling around it. Not built; recorded so the next attempt
+does not repeat this one.
+
 ## 10. What would make this decisive
 
-1. **On-device shadow mode (spec §7.2)** — the only remaining question that matters, and the only
-   way to measure the real exposure ratio (§5).
-2. **An adversarial arm powered in DISTINCT TRACES.** `-PreplayMaxCtx=N` is built and unrun; device
-   CTC's 6 breaks are one trace, which bounds nothing (§7.2).
+1. **On-device shadow mode (spec §7.2)** — now the only remaining lever. §9.1 closes off the
+   offline route to more adversarial power, and §5 already showed the exposure ratio is not
+   measurable here. Everything else is refinement of a verdict that is already stable.
+2. **A hub-confusable decoy rule** (§9.1) if an offline safety bound is still wanted.
 3. **A second language.** Everything here is `en`.
 
 ## 11. Reproduce
