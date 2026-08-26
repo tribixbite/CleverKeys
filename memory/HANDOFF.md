@@ -80,58 +80,62 @@ limits to state in the results. Read it before starting.
 The usable context model is ~642 pairs, so one user's data gives a THIN signal. Any plan that
 assumed 6.5k pairs of evidence is wrong by 10x.
 
-**Step 5 is BUILT, the CTC arm has RUN on TWO corpora (2026-08-24, pinned to `6b3b8bb9`) — the
-answer is NO.** Full writeup: `docs/eval/2026-08-22-context-rescoring-first-replay.md` (§8 is the
-retraction ledger, now 12 entries).
+**Step 5 is BUILT; the CTC arm has RUN on TWO corpora (re-baselined 2026-08-26 at `27eb1a11`
+after the decoder moved twice) — the answer is NO.** Full writeup:
+`docs/eval/2026-08-22-context-rescoring-first-replay.md` (§8 is the retraction ledger, 13 entries).
 
-**CTC — the shipping default — fails the bar on BOTH corpora, and NO grid point rescues it:**
+**CTC — the shipping default — fails the bar on BOTH corpora:**
 
-| CTC @ `6b3b8bb9` | device export (no eviction) | Ubuntu |
+| CTC @ `27eb1a11` | device export (no eviction) | Ubuntu |
 |---|---|---|
-| fixed / broken | **0 / 9** | **4 / 4** |
-| errRatio (bar <0.20) | INFINITE | 1.000 |
-| Δtop-1 (bar >0) | -0.0024 | +0.0000 |
-| (WEIGHT,R_MIN) sweep | no point clears bar | no point clears bar |
+| fixed / broken | **0 / 6** | **3 / 2** |
+| errRatio (bar <0.20) | INFINITE | 0.667 |
+| Δtop-1 (bar >0) | -0.0016 | +0.0005 |
+| tune -> confirm sweep | no point clears on tune | best point LOSES on held-out: 1 fixed / 2 broken |
 
-Geometric passes on both AND its tuned point survives the held-out half (35/0 Ubuntu, 22/0 device,
-`meetsBar=true` on confirm). Strongest fact: on the device corpus — the only one whose activation
-rate is real (6,589 pairs, zero eviction, 262/262 queryable) — rescoring fixed **nothing** (0 of 481)
-and broke 9. CTC was already correct on 469/481, so its whole headroom is 12 cases.
+Geometric passes on both and its tuned point survives held-out (35/0 Ubuntu -> confirm 26/0; 22/0
+device -> confirm 21/0). Strongest fact: on the device corpus — the only one whose activation rate
+is real (6,589 pairs, zero eviction, 262/262 queryable) — rescoring fixed **nothing** (0 of 481) and
+broke 6. CTC was already correct on 469/481, so its whole headroom is 12 cases.
 
-**PIN THE COMMIT.** `20d620f4` added `CtcFuzzyRescue` AFTER the previous numbers were measured. It
-inserts a dictionary match at rank 2 scored `max(second+1, topScore/2)`, moving the median
-runner-up/top-1 ratio **0.254 -> 0.500** and slates-within-factor-of-two **24% -> 54%**. That killed
-the old "peakedness protects CTC" explanation outright. **Knife-edge worth deciding deliberately**:
-`topScore/2` is integer division against a float compare, so top-1=884 gives `442>=442.0`
-(promotable) but top-1=913 gives `456>=456.5` (blocked) — promotion eligibility turns on the PARITY
-of the top score. Flagged to whoever owns `applyFuzzyRescue`.
+**RESOLVED — the fuzzy-rescue knife-edge** (`c83d6ff2`, by the flag's owner). Verified in code:
+`CtcFuzzyRescue.mergeIntoBeam` appends rescues BELOW the beam into spare TOP_K slots, scored
+`minOf(lastReal-1, (top-1)/2)`; checked at top=884/913/800, all below `R_MIN*top`. 12 tests pin it.
+Better than the note claimed: **the hand-copy is gone** — adapter and `CtcReplayEngine` now call one
+pure function, so that drift class cannot recur. `436911d9` does not touch the harness (it changes
+`rescoreWithContext`; the replay calls `rescoreOrder`, signature intact).
 
-> **Resolved 2026-08-25 (`c83d6ff2`), by the flag's owner.** Rescued words now APPEND BELOW the
-> real beam (spare TOP_K slots only, scores strictly under `(top−1)/2` via pure
-> `CtcFuzzyRescue.mergeIntoBeam`, shared by `CtcReplayEngine`). No rescued word can reach the
-> `R_MIN=0.5` ratio, and the knife-edge is gone. Consequence for the replay: the ratio-median
-> shift 0.254→0.500 attributed to `20d620f4` should largely revert — **re-baseline the sweep
-> before quoting its numbers.** Also relevant: `436911d9` threads a per-word `languages` list
-> through `rescoreWithContext` (same `order` permutation, new `RescoredSlate` return); the
-> `CoreImeHygieneDriftTest` pin still holds.
+Its effect on the eval was total: both corpora reverted EXACTLY to their pre-`20d620f4` figures
+(median runner-up ratio 0.500 -> 0.261 device / 0.244 ubuntu). The old "peakedness protects CTC"
+explanation is retired; §3 of the doc now records the whole episode.
 
-**Two earlier conclusions of mine are RETRACTED**, both from generalising one corpus:
-- "the strict `NextWordPredictor` floors never bind" — FALSE. They bind on device data (4 CTC,
-  7 geometric). Vacuous only when the store holds 10k near-maximal-probability pairs. Keep them.
-- "all 24 breaks are one trace (`tit`)" — that pile-up was an artefact of defect H9 (below). With it
-  fixed: 4 breaks / 4 distinct traces (Ubuntu), 9 / 3 (device). No concentration.
+**`c83d6ff2` also fixed a defect the adversarial audit MISSED** (now H13): the old clamp inverted at
+`[800,800]`, scoring a rescue 801 — above rank one. The audit verified the replay's copy matched the
+shipped copy and passed it. Checking that a mirror matches is not checking the thing it mirrors.
 
-**Four more harness defects found since (an adversarial audit + a self-check), all fixed**: **H9**
-`loadTraces` created word buckets BEFORE filtering, so the pool printed 4,907 when only **2,197**
-words have a usable trace, `pairable` counted zero-trace bigrams, and decoys drawn from phantom keys
-silently shrank the adversarial arm; **H10** the harness built its English trie with
-`CtcAzProjection` (accent-folding) while shipping uses `loadStrippingNonAlphabet` — plus truncated
-scores and a different ONNX EP (now XNNPACK-first, mirroring `ModelLoader`); **H11** the decoder
-changed under the measurement; **H12** the floors over-generalisation above.
+**NEW: a drift canary** (`27eb1a11`). `CtcReplayEngineSmokeTest.slateShapeHasNotDrifted` pins the
+fraction of slates with a runner-up at/above `R_MIN*top-1` — the guard's own precondition and the
+quantity the whole eval is a function of. 6/40 = 0.150 at HEAD, band ±0.10; `20d620f4` would have
+read ~0.54. A red canary means RE-BASELINE, not "decoder broken". Skips without the local corpus.
+Verified it can actually fail (forced red; that caught a `.format()`-binding bug in its own message).
+
+**Three earlier conclusions of mine are RETRACTED**: "the strict floors never bind" (they bind on
+device data — 2 CTC, 7 geometric; vacuous only on a saturated store, so KEEP them); "all 24 breaks
+are one trace" (an H9 artefact — now 2 breaks/2 traces on Ubuntu, though device still concentrates
+at 6/1, so concentration is corpus-specific, not a law); and every number published before
+2026-08-26.
+
+**Harness defects found since the audit, all fixed**: **H9** `loadTraces` created word buckets
+BEFORE filtering — pool printed 4,907 when only **2,197** words have a usable trace, `pairable`
+counted zero-trace bigrams, and decoys drawn from phantom keys silently shrank the adversarial arm;
+**H10** English trie built with `CtcAzProjection` instead of the shipped `loadStrippingNonAlphabet`,
+plus truncated scores and a non-shipping ONNX EP; **H11** the decoder changed under the measurement;
+**H12** the floors over-generalisation; **H13** above.
 
 **Next, in order**: (1) on-device shadow mode (spec §7.2) — still the ONLY way to get the real
-favourable:adversarial exposure ratio the verdict hinges on; (2) decide `applyFuzzyRescue` vs
-`R_MIN` deliberately; (3) `-PreplayMaxCtx=N` power run (built, never run); (4) a second language.
+favourable:adversarial exposure ratio the verdict hinges on; (2) `-PreplayMaxCtx=N` power run —
+BUILT, still never run, and it is the fix for the binding statistical limit (device CTC's 6 breaks
+are ONE trace; Ubuntu geometric has 3 exposed traces total); (3) a second language.
 The pref stays **default-OFF**.
 
 **Was: Step 5 is BUILT; its numbers were WRONG TWICE before an audit corrected them** —

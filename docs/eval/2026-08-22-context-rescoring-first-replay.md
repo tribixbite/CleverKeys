@@ -1,17 +1,17 @@
 # Context rescoring — replay results (CTC primary, geometric secondary)
 
-**Run date**: 2026-08-24 · **Measured at commit**: `6b3b8bb9` · **Harness**:
+**Run date**: 2026-08-26 · **Measured at commit**: `27eb1a11` · **Harness**:
 `ContextRescoringReplayTest`
 **Invocation**: `-PgeoFull=true -PreplayDecoys=10 -PreplayCorpus={device|ubuntu}`
 **Engines**: **CTC (primary — the shipping default)** and geometric (secondary reference)
 **Corpora**: the maintainer's device export (no eviction) AND Ubuntu Dialogue derived bigrams
 **ONNX EP**: `xnnpack(2)`, mirroring `ModelLoader`
 
-> **PIN THE COMMIT WHEN QUOTING THESE.** The shipped CTC decode path is a moving target: `20d620f4`
-> added `CtcFuzzyRescue` *after* the previous revision of this document was measured, and it
-> changed the slate shape enough to invalidate that revision's central explanation. See §3.
+> **PIN THE COMMIT WHEN QUOTING THESE.** The shipped CTC decode path has moved twice under this
+> evaluation already (§3). `CtcReplayEngineSmokeTest.slateShapeHasNotDrifted` now fails the build
+> when it moves again, so a stale document should no longer be able to sit here unnoticed.
 >
-> **Every set of numbers published here before 2026-08-24 is retracted** — see §8.
+> **Every set of numbers published here before 2026-08-26 is retracted** — see §8.
 
 ---
 
@@ -22,21 +22,24 @@
 On **CTC — the engine that actually ships** — the feature does not clear the bar on *either*
 corpus, and **no point in the (WEIGHT, R_MIN) grid rescues it on either**:
 
-| CTC @ `6b3b8bb9` | device export | Ubuntu |
+| CTC @ `27eb1a11` | device export | Ubuntu |
 |---|---|---|
-| fixed / broken | **0 / 9** | **4 / 4** |
-| promotion-error ratio (bar: < 0.20) | **∞** ✗ | **1.000** ✗ |
-| net Δtop-1 (bar: > 0) | −0.0024 ✗ | **+0.0000** ✗ |
-| tune/confirm sweep | **no grid point clears the bar** | **no grid point clears the bar** |
+| fixed / broken | **0 / 6** | **3 / 2** |
+| promotion-error ratio (bar: < 0.20) | **∞** ✗ | **0.667** ✗ |
+| net Δtop-1 (bar: > 0) | −0.0016 ✗ | +0.0005 ✓ |
+| tune → confirm sweep | no grid point clears the bar on tune | selected W=0.50 R=0.50 → **confirm 1 fixed / 2 broken, `meetsBar=false`** |
 
-The geometric arm, over the identical samples, passes on both corpora *and* its tuned point
-survives the held-out half — 35 fixes / 0 breaks (Ubuntu) and 22 / 0 (device), with confirm-half
-`meetsBar=true` in both. **The two engines still give opposite verdicts, and the one that ships is
-the failing one.**
+The geometric arm, over identical samples, passes on both corpora *and* its tuned point survives
+the held-out half — 35/0 (Ubuntu, confirm 26/0) and 22/0 (device, confirm 21/0), `meetsBar=true`
+both times. **The two engines give opposite verdicts, and the one that ships is the failing one.**
 
-The strongest single fact is on the device corpus — the only one whose activation rate is real,
-because 6,589 pairs fit under `BigramStore`'s 10,000 cap with **zero eviction**: rescoring fixed
-**nothing at all** (0 of 481 favourable cases) and broke 9.
+The single strongest fact is on the device corpus — the only one whose activation rate is real,
+because 6,589 pairs fit under `BigramStore`'s 10,000 cap with **zero eviction** (262 of 262 pairable
+pairs queryable): rescoring fixed **nothing at all** (0 of 481 favourable cases) and broke 6.
+
+Ubuntu's Δtop-1 is positive, so it clears one of the two gates — but the ship bar is **both**
+conditions, and its error ratio of 0.667 is more than three times the 0.20 limit. Its own tuned
+point then *lost* on held-out traces (2 fixed / 0 broken on tune → 1 fixed / 2 broken on confirm).
 
 ---
 
@@ -46,41 +49,43 @@ because 6,589 pairs fit under `BigramStore`'s 10,000 cap with **zero eviction**:
 
 ```
 corpus     : device_bigrams.json  total=6589 usable=642 (9.7%) promotable=603 STORED=6589
-             nothing evicted: 6,589 < the 10,000 cap and no word1 exceeds the 20/word cap
-pairable   :  262 of 642 usable        queryable: 262  (100% survival — not an artefact)
-cases      : 3744 (context, trace, arm)          [NOT "swipes" — see §6]
+             nothing evicted: 6,589 < the 10,000 cap, no word1 exceeds the 20/word cap
+trace pool :  2197 distinct words with a usable trace
+pairable   :   262 of 642 usable      queryable: 262  (100 % survival — not an artefact)
+cases      :  3744 (context, trace, arm)          [NOT "swipes" — see §6]
 
 ─── PRIMARY — CTC ─────────────────────────────────────────────────────────────
-exposure   : favourable=476  adversarial=452   cases
-             favourable=171/176  adversarial=113/926   DISTINCT TRACES
-             8 of the 452 adversarial-exposed have evidence ON their own target
-             (favourable-in-fact, cannot break) -> honest break denominator 444
+exposure   : favourable=477  adversarial=444   cases
+             favourable=172/176  adversarial=107/926   DISTINCT TRACES
+             8 of the 444 adversarial-exposed have evidence ON their own target
+             (favourable-in-fact, cannot break) -> honest break denominator 436
 baseline   : engine top-1 ALREADY correct on 469/481 favourable, 2465/3263 adversarial
 
 favourable : n=481   fixed=0  broken=0  wash=0   unchanged=481   Δtop1=+0.0000
-adversarial: n=3263  fixed=0  broken=9  wash=12  unchanged=3242  Δtop1=-0.0028
-COMBINED   : n=3744  fixed=0  broken=9  wash=12  Δtop1=-0.0024   errRatio=INFINITE
+adversarial: n=3263  fixed=0  broken=6  wash=10  unchanged=3247  Δtop1=-0.0018
+COMBINED   : n=3744  fixed=0  broken=6  wash=10  Δtop1=-0.0016   errRatio=INFINITE
 
-per-exposure: fixes 0/476 = 0.00 %   breaks 9/444 = 2.03 %  (S1-corrected denominator)
-concentration: 0 fixes; 9 breaks from 3 distinct traces / 3 words (war x6, ins x2, rest x1)
-examples    : 'there'+swipe(war): war->was; 'ita'+swipe(ins): ins->its; 'rew'+swipe(rest): rest->res
+per-exposure: fixes 0/477 = 0.00 %   breaks 6/436 = 1.38 %  (S1-corrected denominator)
+concentration: 0 fixes; 6 breaks from 1 DISTINCT TRACE / 1 word (war x6) — see §3
+examples    : 'there'+swipe(war): war->was; 'is'+swipe(war): war->was; ... (all 6 are this trace)
 
-why rank 1 did or did not move, over 928 exposed cases:
-   evidence on engine top-1 only, nothing to promote :  559
-   contender below R_MIN=0.5 x top-1 (un-promotable) :  237
-   cleared ratio, failed strict evidence floors      :    4   <-- NOT zero; see §4
-   cleared BOTH rank-1 guards                        :  128
-slate shape : runner-up/top-1 median=0.500 p90=0.847; 2024/3744 (54.1 %) within factor of two
-apostrophe gap: 3 cases
+why rank 1 did or did not move, over 921 exposed cases:
+   evidence on engine top-1 only, nothing to promote :  561
+   contender below R_MIN=0.5 x top-1 (un-promotable) :  255
+   cleared ratio, failed strict evidence floors      :    2   <-- NOT zero; see §4
+   cleared BOTH rank-1 guards                        :  103
+slate shape : runner-up/top-1 median=0.261 p90=0.847; 965/3744 (25.8 %) within factor of two
+apostrophe gap: 2 cases
 SWEEP       : no grid point clears the ship bar on the tune half — nothing to confirm
 
 ─── SECONDARY — geometric ─────────────────────────────────────────────────────
-exposure   : favourable=389  adversarial=32 cases; 143/176 and 26/919 distinct traces
+exposure   : favourable=389  adversarial=32 cases
 baseline   : already correct on 324/481 favourable, 1673/3250 adversarial
 favourable : n=481   fixed=22  broken=0  unchanged=459   Δtop1=+0.0457
 adversarial: n=3250  fixed=0   broken=0  wash=1          Δtop1=+0.0000
 COMBINED   : n=3731  fixed=22  broken=0  Δtop1=+0.0059   errRatio=0.000
 per-exposure: fixes 22/389 = 5.66 %   breaks 0/25 = 0.00 %
+cleared ratio, failed strict evidence floors: 7   <-- see §4
 concentration: 22 fixes from 11 distinct traces; 0 breaks
 slate shape : median=0.720 p90=0.957; 3088/3731 (82.8 %) within factor of two
 SWEEP       : SELECTED on tune W=1.00 R=0.50 (10 fixed, 0 broken)
@@ -92,27 +97,27 @@ SWEEP       : SELECTED on tune W=1.00 R=0.50 (10 fixed, 0 broken)
 ```
 corpus     : ubuntu_bigrams.json  total=175092 usable=56923 promotable=22586 STORED=10000
              <-- the store cap discarded 46,923 usable rows
-trace pool :  2197 distinct words with a usable trace   [was misreported as 4,907; see §8 H9]
+trace pool :  2197 distinct words with a usable trace   [was misreported as 4,907; §8 H9]
 pairable   : 21392 of 56923       queryable: 133  (a store-cap artefact, NOT a device property)
 cases      :  1891 (context, trace, arm)
 
 ─── PRIMARY — CTC ─────────────────────────────────────────────────────────────
-exposure   : favourable=224 adversarial=118 cases; 110/115 and 36/673 distinct traces
+exposure   : favourable=223 adversarial=119 cases; 109/115 and 35/673 distinct traces
              0 of the adversarial-exposed have evidence on their own target
 baseline   : already correct on 220/229 favourable, 1350/1662 adversarial
-favourable : n=229   fixed=4  broken=0  unchanged=225   Δtop1=+0.0175
-adversarial: n=1662  fixed=0  broken=4  wash=29         Δtop1=-0.0024
-COMBINED   : n=1891  fixed=4  broken=4  wash=29  Δtop1=+0.0000  errRatio=1.000
-per-exposure: fixes 4/224 = 1.79 %   breaks 4/118 = 3.39 %
-concentration: 4 fixes from 4 distinct traces; 4 breaks from 4 distinct traces
-               (tuner, thy, war, ins — one each; NO concentration this time, cf. §3)
-examples    : FIX 'self-help'+swipe(advice): addie->advice
-              BREAK 'letme'+swipe(thy): thy->try; 'buts'+swipe(ins): ins->its
-decomposition over 342 exposed: topOnly 245, belowRatio 58, floors 0, clearedBoth 39
-slate shape : median=0.500 p90=0.777; 1031/1891 (54.5 %) within factor of two
-SWEEP       : no grid point clears the ship bar on the tune half — nothing to confirm
+favourable : n=229   fixed=3  broken=0  unchanged=226   Δtop1=+0.0131
+adversarial: n=1662  fixed=0  broken=2  wash=26         Δtop1=-0.0012
+COMBINED   : n=1891  fixed=3  broken=2  wash=26  Δtop1=+0.0005  errRatio=0.667
+per-exposure: fixes 3/223 = 1.35 %   breaks 2/119 = 1.68 %
+concentration: 3 fixes from 3 distinct traces; 2 breaks from 2 distinct traces (tuner, war)
+decomposition over 342 exposed: topOnly 245, belowRatio 66, floors 0, clearedBoth 31
+slate shape : median=0.244 p90=0.777; 422/1891 (22.3 %) within factor of two
+SWEEP       : SELECTED on tune W=0.50 R=0.50 (2 fixed, 0 broken)
+              CONFIRM (held out): fixed=1 broken=2 errRatio=2.000  meetsBar=FALSE
 
 ─── SECONDARY — geometric ─────────────────────────────────────────────────────
+exposure   : favourable=192 adversarial=3 cases; 92/115 and 3/665 distinct traces
+baseline   : already correct on 151/229 favourable, 936/1639 adversarial
 favourable : n=229   fixed=35 broken=0  unchanged=194   Δtop1=+0.1528
 adversarial: n=1639  fixed=0  broken=0  wash=1          Δtop1=+0.0000
 COMBINED   : n=1868  fixed=35 broken=0  Δtop1=+0.0187   errRatio=0.000
@@ -122,10 +127,6 @@ slate shape : median=0.717 p90=0.951; 1495/1868 (80.0 %) within factor of two
 SWEEP       : SELECTED on tune W=0.50 R=0.50 (9 fixed, 0 broken)
               CONFIRM (held out): fixed=26 broken=0 errRatio=0.000  meetsBar=TRUE
 ```
-
-**Self-check**: on every arm, `cleared BOTH rank-1 guards` equals `fixed + broken` plus the
-promotions the log-linear sum left in place. The decomposition is computed from the shipped guard's
-own public predicates (`R_MIN`, `promotableToRankOne`), not a restatement of them.
 
 ## 2. Why the two engines disagree
 
@@ -138,61 +139,59 @@ which both engines pass through. What differs is the base rates.
 | **fix headroom** | **12 cases** | 157 |
 | fixes achieved | **0** | 22 |
 | adversarial cases it had gotten right (what there is to lose) | 2465 | 1673 |
-| broken | **9** | **0** |
+| broken | **6** | **0** |
 
-**CTC is too accurate for this feature to help it, and now too exposed for it to be safe.** Its
-benefit ceiling on the device corpus is 2.5 % of favourable cases (the 12 it got wrong) and it
-captured **none** of them. Geometric had 157 repairable cases and captured 22.
+**CTC is too accurate for this feature to help it.** Its benefit ceiling on the device corpus is
+2.5 % of favourable cases — the 12 it got wrong — and it captured none of them. Geometric had 157
+repairable cases and captured 22. The mechanism is not worse on CTC; there is almost nothing left
+for it to repair, while the damage surface is 2,465 already-correct decodes.
 
-## 3. What changed under this measurement — and why the old explanation is dead
+## 3. The decode path moved twice under this evaluation
 
-The previous revision explained CTC's safety by **slate peakedness**: median runner-up/top-1 of
-0.254, only ~24 % of slates with a runner-up inside the guard's factor of two, therefore most
-promotions "arithmetically un-overturnable" (spec §5).
+This is the most important methodological fact in the document, and the reason §9's canary exists.
 
-**That is no longer true of the shipping code.** Commit `20d620f4` added `CtcFuzzyRescue` and
-`CtcEngineAdapter.applyFuzzyRescue`, which inserts a bounded dictionary match at rank 2 with a
-synthesised score of `max(secondScore + 1, topScore / 2)`. Measured effect:
-
-| slate shape, CTC | before `20d620f4` | at `6b3b8bb9` |
+| slate shape, CTC device arm | median ratio | within guard's 2× |
 |---|---|---|
-| median runner-up / top-1 | 0.254 | **0.500** |
-| slates with runner-up inside the guard's factor of two | 24.0 % | **54.1 %** |
+| before `20d620f4` | 0.261 | 25.8 % |
+| `20d620f4` — fuzzy rescue inserted at **rank two**, scored `topScore / 2` | **0.500** | **54.1 %** |
+| `c83d6ff2` — rescue moved **below** the beam (CK-150-025) | **0.261** | **25.8 %** |
 
-The smoke test shows it directly: `'what'` decoded `[what, whats, wheat] = [884, 28, 28]` before,
-and `[what, wat, wha] = [884, 442, 441]` now. **The rescued candidate lands exactly on the
-promotion threshold** — `442 >= 0.5 × 884`.
+The middle row was published by the previous revision of this document as though it described a
+stable decoder. It did not. `20d620f4` roughly doubled the share of slates the rank-1 guard would
+permit a promotion into, and the previous revision's central explanation — that CTC is protected
+because its slates are peaked and runners-up are "arithmetically un-overturnable" — was false of
+shipping code for as long as that commit stood.
 
-### A parity knife-edge in the shipped guard
+`c83d6ff2` reverted it exactly: both corpora returned to their pre-`20d620f4` figures to the case
+(Ubuntu 3 fixed / 2 broken; device 0 / 6). It also fixed a defect neither this evaluation nor its
+adversarial audit caught: the old clamp **inverted** when top-1 and the runner-up were close —
+`[800, 800]` produced a rescued score of 801, *above rank one*. The audit compared the replay's copy
+of that logic against the shipped copy, found them identical, and called it faithful. Checking that
+a mirror matches is not checking that the thing it mirrors is correct.
 
-`topScore / 2` is *integer* division, and the guard tests `scores[i] >= R_MIN * scores[0]` in
-floating point. So:
+Two structural improvements came out of it, and both are worth keeping:
 
-- top-1 = 884 (even) → rescue scored 442, and `442 >= 442.0` → **promotable**
-- top-1 = 913 (odd) → rescue scored 456, and `456 >= 456.5` → **blocked**
+- **The hand-copy is gone.** `CtcFuzzyRescue.mergeIntoBeam` is one pure function called by both
+  `CtcEngineAdapter` and `CtcReplayEngine`, so that class of drift cannot recur.
+- **The drift is now a red build** — §9.
 
-Whether context rescoring can overturn a fuzzy-rescued candidate currently depends on the
-**parity of the top-1 score**. That is shipped behaviour, not a harness artefact, and it is worth a
-look by whoever owns `applyFuzzyRescue` — it is exactly the knife-edge the audit's D3 rounding
-finding warned about, one layer up.
+### The concentration story is corpus-specific, not general
 
-### The concentration story is also obsolete
-
-The previous revision's §3 was built on all 24 breakages being a single trace (`tit → to`). With
-the H9 empty-bucket defect fixed (§8), the decoy pool changed and that pile-up disappeared: Ubuntu
-now shows **4 breaks from 4 distinct traces**, device **9 from 3**. The *lesson* stands — always
-report a count with its concentration — but the finding it produced does not.
+The revision before last built a section on all 24 breakages being one trace (`tit → to`). That
+pile-up was an artefact of defect H9 (§8). At HEAD the device arm still concentrates — **6 breaks,
+1 trace (`war → was`)** — but Ubuntu does not: **2 breaks, 2 distinct traces**. So concentration is
+a property of the corpus and sample, not a law. The *lesson* stands unconditionally: report a count
+with its concentration, or a reader cannot tell N failures from one failure repeated N times.
 
 ## 4. The strict evidence floors DO bind — on real device data
 
-The previous revision reported `cleared ratio, failed strict evidence floors = 0` on both engines
-and concluded that rank-1 protection was "the ratio guard alone". **That generalised from one
-corpus and was wrong.** On the device corpus the floors bind: **4** cases on CTC and **7** on
-geometric were stopped by `promotableToRankOne` after clearing the ratio test.
+An earlier revision reported `cleared ratio, failed strict evidence floors = 0` on both engines and
+concluded rank-1 protection was "the ratio guard alone". **That generalised from one corpus and was
+wrong.** On the device corpus the floors bind: **2** cases on CTC and **7** on geometric were
+stopped by `promotableToRankOne` after clearing the ratio test. On Ubuntu the count really is 0,
+because its stored 10,000 are near-maximal-probability pairs that pass the floors by construction.
 
-The floors are vacuous when the store holds 10,000 near-maximal-probability pairs (Ubuntu, where
-the count really is 0) and load-bearing on a real, thin, mostly-hapax store. Keeping them is
-vindicated; the earlier conclusion is retracted.
+Vacuous on a saturated store, load-bearing on a real thin one. Keeping them is vindicated.
 
 ## 5. What is a sampling choice and what is not
 
@@ -203,84 +202,95 @@ which `-PreplayDecoys` sets.
 **Ratio-independent — these carry the verdict:**
 
 - CTC's fix headroom is 12 of 481 on device data, and it captured **zero**.
-- The **direction** reverses between engines on both corpora, under both counting units.
-- **No grid point clears the bar on either corpus.** A parameter sweep is not a sampling choice.
+- The **direction** reverses between engines on both corpora.
+- **No grid point clears the bar on device, and Ubuntu's best point loses on held-out traces.** A
+  parameter sweep with a held-out half is not a sampling choice.
 
-**Still not measurable here**: the real favourable:adversarial exposure ratio. Only on-device
-shadow mode (spec §7.2) can supply it.
+**Still not measurable here**: the real favourable:adversarial exposure ratio. Only on-device shadow
+mode (spec §7.2) can supply it.
 
 ## 6. Units — read this before quoting any figure
 
 `n` counts **(context, trace, arm) cases**, not swipes; the same trace appears under several
 contexts and those are separate experiments because context is the independent variable. Every
-outcome count is reported beside its **distinct-trace** count, because a count without its
-concentration cannot distinguish N independent failures from one repeated N times (§8 H8).
+outcome count is reported beside its **distinct-trace** count (§8 H8).
 
 ## 7. Limitations that must travel with these numbers
 
-1. **The decode path is a moving target.** These numbers are pinned to `6b3b8bb9`. A change to the
-   beam, the lexicon, or `applyFuzzyRescue` invalidates them — as `20d620f4` already did once.
-2. **Neither adversarial arm bounds a breakage rate.** Device CTC: 113 distinct exposed adversarial
-   traces, 3 broke. Ubuntu geometric: **3** exposed traces. That is the binding statistical limit.
+1. **The decode path is a moving target.** Pinned to `27eb1a11`. §9's canary now fails the build on
+   drift, but a red canary means *re-baseline*, not "the decoder is broken".
+2. **Neither adversarial arm bounds a breakage rate.** Device CTC: 107 distinct exposed adversarial
+   traces, and the 6 breaks are **one** of them. Ubuntu geometric: **3** exposed traces. This is the
+   binding statistical limit and `-PreplayMaxCtx=N` (built, still unrun) is the intended remedy.
 3. **Adversarial decoys are selected for confusability**, so the arm over-represents the damage
-   surface by construction. It answers "when a confusable competitor exists, what happens".
+   surface by construction.
 4. **The two engines use their own shipping lexicons** — CTC the EN_JSON strip-loaded
-   `en_enhanced.json`, geometric the CKDT binary. They do not share a candidate set. This is the
-   right confound to keep: the comparison is between shipping configurations.
+   `en_enhanced.json`, geometric the CKDT binary. The right confound to keep: the comparison is
+   between shipping configurations.
 5. **`CtcEngineAdapter`'s display overlays are not applied** (they need an Android `Context`).
-   Measured cost: 0 cases (Ubuntu), 3 cases (device). Contraction alias keys and fuzzy rescue ARE
-   now mirrored in the replay; see `CtcReplayEngine`'s exhaustive fidelity list.
-6. **The trace filter is a heuristic**: 14 of the 4,064 pre-resampled 128-point rows carry a
-   monotonic third column and pass it (0.16 % residual).
-7. **Bigrams only** — trigrams are excluded from the export, so measured gain is a floor. On CTC
-   the binding constraint is the headroom, which trigrams cannot enlarge.
-8. **Ubuntu's 133/21,392 survival rate is a store-cap artefact**, not a device property. The device
-   corpus exists precisely to avoid that confound.
+   Measured cost: 2 cases (device), 0 (Ubuntu). Contraction aliases and fuzzy rescue ARE mirrored —
+   the latter by calling the shipped function, not a copy.
+6. **The trace filter is a heuristic**: 14 of the 4,064 pre-resampled 128-point rows pass it
+   (0.16 % residual).
+7. **Bigrams only** — trigrams are excluded from the export, so measured gain is a floor. On CTC the
+   binding constraint is the 12-case headroom, which trigrams cannot enlarge.
+8. **Ubuntu's 133/21,392 survival rate is a store-cap artefact.** The device corpus exists to avoid
+   that confound.
 9. **One language.**
 
 ## 8. Retractions — what was published here and why it was wrong
 
-**All numbers published before 2026-08-24 are retracted.** Do not cite "29 fixed", "51 fixed",
-"3 fixed / 24 broken", "errRatio 8.0", "21 % when it fires", or "inert on 97 % of swipes".
+**All numbers published before 2026-08-26 are retracted.** Do not cite "29 fixed", "51 fixed",
+"3 fixed / 24 broken", "errRatio 8.0", "0 / 9", "21 % when it fires", or "inert on 97 % of swipes".
 
-Headline sequence this document has carried:
-**29 → 2 → 51 → 3 fixes/24 breaks → (all retracted) → 0/9 device, 4/4 Ubuntu.**
+Headline sequence: **29 → 2 → 51 → 3/24 → 0/9 device + 4/4 Ubuntu → (all retracted) →
+0/6 device, 3/2 Ubuntu.**
 
 | # | Error | Effect | Fix |
 |---|---|---|---|
-| H1 | `take(1500)` on a **frequency-sorted** file — a size cap that was silently a *selection*. | measured only the extreme head | shuffle with the seed |
-| H2 | Hapax rows dropped **before** seeding, shrinking the store's denominator | probabilities ~doubled | emit the tail |
+| H1 | `take(1500)` on a **frequency-sorted** file — a size cap that was silently a *selection* | measured only the extreme head | shuffle with the seed |
+| H2 | Hapax rows dropped **before** seeding | probabilities ~doubled | emit the tail |
 | H3 | Denominator labelled "swipes" when it was context-trace cases | wrong unit | label correctly (§6) |
 | H4 | One global `withEvidence` counter | safety denominator inferred across runs | per-arm counters |
-| H5 | **47.1 % of the trace corpus is not raw traces** — 4,050 of 8,607 rows fail `hasUsableTimestamps`, and every one has exactly 128 points (pre-resampled elsewhere). Decoded to confident nonsense and padded denominators in every run before 2026-08-23. | inflated denominators | `TraceCorpusQuality` filter; smoke test 19/40 → 38/40 |
-| H6 | `neighboursOf` took the first N matches in **corpus-file order** — H1 one level down | arbitrary adversarial slice | seeded per-word shuffle |
-| H7 | **The geometric engine was measured and the default engine was not**, published with the limitation in prose while the headline read "benefit looks real" | published verdict was the opposite of the default engine's | CTC is the primary arm; the harness *skips* rather than reporting geometric-only |
-| H8 | **Counts reported without their concentration**, and the exposure denominators inflated by the same multiplicity | overstated harm AND the power behind it | distinct-trace counts on outcomes and exposure |
-| **H9** | **`loadTraces` created each word's bucket BEFORE filtering** (`getOrPut` then filter), so every distinct word in the file kept a key even when all its traces were rejected. Pool printed as 4,907 when only **2,197** words have a usable trace; `pairable` counted bigrams with zero traces; and `neighboursOf` drew decoys from those phantom keys, which contributed nothing — **so the adversarial arm silently ran below its requested decoy count**. | two inflated published denominators; **and the `tit`×24 pile-up that §3 was built on** | create the bucket only after a row survives every filter |
-| **H10** | **A false fidelity claim**: the harness built its English trie with `CtcAzProjection` (accent-folding, the CKDT branch) while shipping uses `loadStrippingNonAlphabet` with none. 148 surfaces reachable only in shipping, 26 only in the harness, 45 at different frequencies. Also: truncating scores instead of rounding, and a different ONNX execution provider. | none measurable on these outcome words — but exactly the class of silent divergence H1–H9 belong to | shipped strip loader; `roundToInt().coerceIn`; XNNPACK-first mirroring `ModelLoader`; `build()` now rejects non-`en` |
-| **H11** | **The shipped decoder changed under the measurement.** `20d620f4` added fuzzy rescue after the previous revision was measured, moving the median runner-up ratio 0.254 → 0.500 and invalidating that revision's entire "peakedness protects CTC" explanation. | the published *explanation* was false of shipping code, even where the verdict held | numbers are now pinned to a commit (§7.1) |
-| **H12** | **Generalising "the strict floors never bind" from one corpus.** True on Ubuntu, false on device data (4 and 7 cases). | a guard was described as vacuous when it is load-bearing | §4 |
+| H5 | **47.1 % of the trace corpus is not raw traces** — 4,050 of 8,607 rows fail `hasUsableTimestamps`, every one exactly 128 points | inflated denominators | `TraceCorpusQuality`; smoke 19/40 → 38/40 |
+| H6 | `neighboursOf` took the first N in **corpus-file order** — H1 one level down | arbitrary adversarial slice | seeded per-word shuffle |
+| H7 | **The geometric engine was measured and the default engine was not** | published verdict was the opposite of the default engine's | CTC is primary; the harness *skips* rather than reporting geometric-only |
+| H8 | **Counts without their concentration**, and exposure denominators inflated by the same multiplicity | overstated harm AND its power | distinct-trace counts on outcomes and exposure |
+| H9 | **`loadTraces` created each word's bucket BEFORE filtering**, so every distinct word kept a key even when all its traces were rejected. Pool printed 4,907 vs **2,197** real; `pairable` counted zero-trace bigrams; `neighboursOf` drew decoys from phantom keys that contributed nothing | two inflated denominators, a silently undersized adversarial arm, **and the `tit`×24 pile-up a whole section rested on** | create the bucket only after a row survives every filter |
+| H10 | **A false fidelity claim** — the harness built its English trie with `CtcAzProjection` (accent-folding) while shipping uses `loadStrippingNonAlphabet`; plus truncated scores and a different ONNX EP | none measurable on these outcome words, but exactly the class H1–H9 belong to | shipped strip loader; `roundToInt().coerceIn`; XNNPACK-first |
+| H11 | **The shipped decoder changed under the measurement** — `20d620f4`, then `c83d6ff2` reverting it | the published *explanation* was false of shipping code | numbers pinned to a commit; **drift canary** (§9) |
+| H12 | **Generalising "the strict floors never bind" from one corpus** | a load-bearing guard described as vacuous | §4 |
+| **H13** | **Auditing a mirror instead of the thing mirrored.** The adversarial audit verified the replay's fuzzy-rescue copy matched `CtcEngineAdapter` exactly and passed it. The shipped logic was itself defective — its clamp inverted at `[800, 800]`, scoring a rescue *above* rank one. Fidelity was confirmed; correctness was never asked. | a real product defect sat unflagged through a dedicated audit | fixed in `c83d6ff2` by its owner; recorded here so the audit question changes from "does it match?" to "is it right?" |
 
-**The lesson.** This harness has now produced numbers that looked fine and were not **eight**
-separate times. Not one was caught by a run failing. Every one was caught by an implausibility, an
-adversarial audit, or a denominator added on purpose. Three distinct silent-failure modes are now
-on record: a decoder that returns plausible nonsense, a harness that measures the wrong arm, and a
-count without its concentration. None of the counters that catch them should be removed as
-redundant.
+**The lesson.** This harness has produced numbers that looked fine and were not **nine** separate
+times, and not once did a run fail to signal it. Four distinct silent-failure modes are now on
+record: a decoder returning plausible nonsense; a harness measuring the wrong arm; a count without
+its concentration; and a dependency changing underneath a published result. Every counter and
+canary that catches one of these should be treated as load-bearing, not redundant.
 
-## 9. What would make this decisive
+## 9. The drift canary
+
+`CtcReplayEngineSmokeTest.slateShapeHasNotDrifted` pins the fraction of slates whose runner-up sits
+at or above `R_MIN × top-1` — the rank-1 guard's own precondition, and the quantity this entire
+evaluation is a function of. Measured **6/40 = 0.150** at `27eb1a11` (median ratio 0.164), band
+±0.10. For scale, `20d620f4` moved the comparable figure to ~0.54.
+
+A failure does **not** mean the decoder is broken. It means these numbers are stale: re-run the
+replay, re-baseline this document, then update the constant *with the commit that moved it*.
+
+It needs the never-committed local trace pool, so it skips on a fresh checkout. That is a real
+limitation, accepted because the evaluation is written on a machine that has the corpus — the canary
+guards the place the stale numbers would actually be quoted.
+
+## 10. What would make this decisive
 
 1. **On-device shadow mode (spec §7.2)** — the only remaining question that matters, and the only
    way to measure the real exposure ratio (§5).
-2. **Review `applyFuzzyRescue`'s interaction with `R_MIN`** (§3). Placing a synthesised candidate at
-   exactly `topScore / 2` puts it on the guard's threshold, with the outcome decided by integer
-   parity. Whether or not rescoring ships, that is worth deciding deliberately.
-3. **An adversarial arm powered in DISTINCT TRACES.** `-PreplayMaxCtx=N` caps contexts per
-   adversarial trace and converts multiplicity into diversity at the same decode cost; it has not
-   yet been run.
-4. **A second language.** Everything here is `en`.
+2. **An adversarial arm powered in DISTINCT TRACES.** `-PreplayMaxCtx=N` is built and unrun; device
+   CTC's 6 breaks are one trace, which bounds nothing (§7.2).
+3. **A second language.** Everything here is `en`.
 
-## 10. Reproduce
+## 11. Reproduce
 
 ```sh
 # device arm — seeds in seconds (7,815 recordBigram calls), no eviction
@@ -302,6 +312,3 @@ report prints whichever values it ran with, so every figure carries its own samp
 
 Neither corpus is committed: one is a person's typing record, the other a 552 MB third-party corpus
 with no stated licence. Place them at `~/.cache/cleverkeys-corpora/{device,ubuntu}_bigrams.json`.
-The ONNX natives come from `extractOrtNative`, which unpacks the **bionic** arm64 `.so` from the
-`onnxruntime-android` AAR — the `onnxruntime` JAR's own glibc-linked native cannot load on Termux,
-which is why the CTC arm was once believed to need an instrumented run.
