@@ -225,13 +225,18 @@ class SettingsSearchTest {
 
     @Test
     fun search_autoIndexedAutocorrectSetting_isFindableAndDoesNotCrash() {
-        // "Fuzzy Match Algorithm" had zero search coverage before the generated index.
-        searchFor("fuzzy")
+        // Was "Fuzzy Match Algorithm", which had zero search coverage before the generated
+        // index — but that control was DELETED with the neural engine (its only consumer was
+        // OptimizedVocabulary's fuzzy rescue; see AutoCorrectionSection.kt), and this test kept
+        // asserting a nonexistent control was findable — the only red in the 2026-08-27 full
+        // run (1,418 tests). "Typo Forgiveness" is a surviving auto-indexed control from the
+        // same section with an equally distinctive query token.
+        searchFor("forgiveness")
         val result = device.wait(
-            Until.findObject(By.text("Fuzzy Match Algorithm")),
+            Until.findObject(By.text("Typo Forgiveness")),
             UI_TIMEOUT
         )
-        assertNotNull("Auto-indexed 'Fuzzy Match Algorithm' should appear for query 'fuzzy'", result)
+        assertNotNull("Auto-indexed 'Typo Forgiveness' should appear for query 'forgiveness'", result)
 
         // Tapping expands the correct section and scrolls toward the control.
         result.click()

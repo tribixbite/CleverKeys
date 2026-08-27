@@ -313,11 +313,17 @@ of a large share of preceding words — rather than only with this pair's own `w
 the damage surface directly instead of sampling around it. Not built; recorded so the next attempt
 does not repeat this one.
 
-## 10. What would make this decisive
+## 10. What would make this decisive — OVERTAKEN BY DECISION
 
-1. **On-device shadow mode (spec §7.2)** — now the only remaining lever. §9.1 closes off the
-   offline route to more adversarial power, and §5 already showed the exposure ratio is not
-   measurable here. Everything else is refinement of a verdict that is already stable.
+> **2026-08-26, maintainer: the investigation is CLOSED.** `swipe_context_rescoring` stays
+> default-OFF permanently and shadow mode will not be built. The learned-context data's consumer
+> is **next-word prediction** (tap-to-accept; audited and gate-hardened the same day —
+> `b9355be1`, `ececaa73`) rather than swipe rescoring (silent auto-insert). The list below is
+> retained only for anyone who ever reopens the question.
+
+1. **On-device shadow mode (spec §7.2)** — the only lever this document identified as remaining.
+   §9.1 closes off the offline route to more adversarial power, and §5 already showed the
+   exposure ratio is not measurable here.
 2. **A hub-confusable decoy rule** (§9.1) if an offline safety bound is still wanted.
 3. **A second language.** Everything here is `en`.
 
