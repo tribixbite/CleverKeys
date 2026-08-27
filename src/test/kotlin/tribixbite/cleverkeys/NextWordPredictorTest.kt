@@ -27,6 +27,7 @@ class NextWordPredictorTest {
         assertFalse(
             NextWordPredictor.shouldShow(
                 featureEnabled = false, onDeviceLearningEnabled = true,
+                contextAwareEnabled = true,
                 wordPredictionEnabled = true,
                 isPasswordMode = false, specialPromptActive = false,
                 inTermuxApp = false, hasContext = true
@@ -41,6 +42,26 @@ class NextWordPredictorTest {
         assertFalse(
             NextWordPredictor.shouldShow(
                 featureEnabled = true, onDeviceLearningEnabled = false,
+                contextAwareEnabled = true,
+                wordPredictionEnabled = true,
+                isPasswordMode = false, specialPromptActive = false,
+                inTermuxApp = false, hasContext = true
+            )
+        )
+    }
+
+    @Test
+    fun `context-LM pref off blocks next-word even when its own toggle is stale-on`() {
+        // Audit 2026-08-26: the Settings UI HIDES the next-word toggle when
+        // `context_aware_predictions_enabled` is off, so the feature pref can sit
+        // true with no visible control. The gate — not just a downstream store
+        // check — must say no in that state, because the cursor-park path uses
+        // the gate's cheap prerequisites to decide whether it may READ the
+        // editor text at all.
+        assertFalse(
+            NextWordPredictor.shouldShow(
+                featureEnabled = true, onDeviceLearningEnabled = true,
+                contextAwareEnabled = false,
                 wordPredictionEnabled = true,
                 isPasswordMode = false, specialPromptActive = false,
                 inTermuxApp = false, hasContext = true
@@ -57,9 +78,11 @@ class NextWordPredictorTest {
             context: Boolean = true,
             wordPrediction: Boolean = true,
             master: Boolean = true,
+            contextAware: Boolean = true,
             fieldAllows: Boolean = true
         ) = NextWordPredictor.shouldShow(
             featureEnabled = true, onDeviceLearningEnabled = master,
+            contextAwareEnabled = contextAware,
             wordPredictionEnabled = wordPrediction,
             isPasswordMode = password, specialPromptActive = prompt,
             inTermuxApp = termux, hasContext = context,
@@ -73,6 +96,7 @@ class NextWordPredictorTest {
         assertFalse(show(context = false))
         assertFalse(show(wordPrediction = false))
         assertFalse(show(master = false))
+        assertFalse(show(contextAware = false))
         // M5 (review 2026-08-06): incognito fields suppress next-word surfacing.
         assertFalse(show(fieldAllows = false))
     }

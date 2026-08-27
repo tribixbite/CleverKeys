@@ -185,6 +185,7 @@ class ContextLearningBoundaryTest {
         assertFalse(
             NextWordPredictor.shouldShow(
                 featureEnabled = true, onDeviceLearningEnabled = true,
+                contextAwareEnabled = true,
                 wordPredictionEnabled = true, isPasswordMode = false,
                 specialPromptActive = false, inTermuxApp = false, hasContext = true,
                 fieldAllowsPersonalizedLearning = false

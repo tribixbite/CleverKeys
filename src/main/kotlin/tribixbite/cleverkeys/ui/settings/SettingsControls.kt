@@ -128,7 +128,16 @@ internal fun SettingsActivity.SettingsSwitch(
     description: String,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
-    highlightId: String? = null
+    highlightId: String? = null,
+    /**
+     * False renders the switch VISIBLE but inert and dimmed — for a control whose prerequisite
+     * toggle is off (audit 2026-08-26: the next-word switch was HIDDEN when the context LM was
+     * off, which left a stale-on pref with no visible owner and made the search entry a dead
+     * end). Visible-but-disabled keeps the stored state honest, keeps the control findable by
+     * search, and lets the adjacent prerequisite toggle explain itself. Still composed, so its
+     * scroll position registers either way.
+     */
+    enabled: Boolean = true
 ) {
     // Pulse animation for highlighting. Every control is reachable by its title slug
     // (the generated search entry's settingId); gated entries also highlight via highlightId.
@@ -166,26 +175,30 @@ internal fun SettingsActivity.SettingsSwitch(
                         .border(2.dp, borderColor, RoundedCornerShape(8.dp))
                 } else Modifier
             )
-            .clickable { onCheckedChange(!checked) }
+            .clickable(enabled = enabled) { onCheckedChange(!checked) }
             .padding(vertical = 8.dp, horizontal = if (isHighlighted) 8.dp else 0.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
+        // Material's disabled-content convention (38% alpha) — the row must read as inert,
+        // not merely as an off switch.
+        val contentAlpha = if (enabled) 1f else 0.38f
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
-                color = MaterialTheme.colorScheme.onBackground,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = contentAlpha),
                 fontSize = 16.sp
             )
             Text(
                 text = description,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = contentAlpha),
                 fontSize = 12.sp
             )
         }
         Switch(
             checked = checked,
-            onCheckedChange = onCheckedChange
+            onCheckedChange = onCheckedChange,
+            enabled = enabled
         )
     }
 }

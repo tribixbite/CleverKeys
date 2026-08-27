@@ -145,20 +145,25 @@ internal fun SettingsActivity.InputBehaviorSection() {
                                 }
                             )
 
-                            // Opt-in next-word prediction (audit 2026-08-06 §4.3) —
-                            // meaningless without the context LM, so gated on it.
-                            if (contextAwarePredictionsEnabled) {
-                                SettingsSwitch(
-                                    title = stringResource(R.string.input_next_word_title),
-                                    description = stringResource(R.string.input_next_word_desc),
-                                    checked = nextWordPredictionEnabled,
-                                    onCheckedChange = {
-                                        nextWordPredictionEnabled = it
-                                        saveSetting("next_word_prediction_enabled", it)
-                                        Config.globalConfig()?.next_word_prediction_enabled = it
-                                    }
-                                )
-                            }
+                            // Opt-in next-word prediction (audit 2026-08-06 §4.3) — meaningless
+                            // without the context LM, so DISABLED (not hidden) when it is off.
+                            // Audit 2026-08-26: hiding left a stale-on pref with no visible owner
+                            // and made the search entry a dead end; visible-but-inert keeps the
+                            // stored state honest, and the prerequisite toggle directly above
+                            // explains the dependency. Runtime is independently hard-gated
+                            // (NextWordPredictor.shouldShow + LearningGate.canUseLearnedContext),
+                            // so a stale-on pref can never surface a candidate either way.
+                            SettingsSwitch(
+                                title = stringResource(R.string.input_next_word_title),
+                                description = stringResource(R.string.input_next_word_desc),
+                                checked = nextWordPredictionEnabled,
+                                enabled = contextAwarePredictionsEnabled,
+                                onCheckedChange = {
+                                    nextWordPredictionEnabled = it
+                                    saveSetting("next_word_prediction_enabled", it)
+                                    Config.globalConfig()?.next_word_prediction_enabled = it
+                                }
+                            )
 
                             // Which phrase model feeds the context boost (audit §3.2-2)
                             SettingsDropdown(

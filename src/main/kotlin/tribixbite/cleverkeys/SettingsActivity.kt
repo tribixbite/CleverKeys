@@ -559,18 +559,47 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             available  // Consume all remaining velocity
     }
 
+    /**
+     * `settingSlug`s of the controls living INSIDE the collapsible "Advanced Prediction
+     * Settings" sub-panel of the Input section ([InputBehaviorSection]'s
+     * `wordPredictionAdvancedExpanded` block). Their search entries must open that panel as
+     * well as the section. Derived from the same titles the generated index uses; if a control
+     * moves in or out of the panel, update this set — a miss degrades to today's behaviour
+     * (section opens, no scroll), it does not crash.
+     */
+    private val WORD_PREDICTION_ADVANCED_SLUGS = setOf(
+        "context_aware_predictions",
+        "next_word_prediction",
+        "context_source",
+        "personalized_learning",
+        "personalization_strength",
+        "learning_aggression",
+        "context_boost_multiplier",
+        "frequency_scale",
+    )
+
     internal val searchableSettings: List<SearchableSetting> by lazy {
         listOf(
             // Auto-derived control entries — generated from the actual
             // SettingsSwitch/SettingsSlider/SettingsDropdown titles by
             // scripts/generate_settings_search_index.py (never hand-maintained).
             *GENERATED_SEARCH_ENTRIES.map { e ->
+                val slug = settingSlug(e.title)
                 SearchableSetting(
                     title = e.title,
                     keywords = e.keywords,
                     sectionName = sectionDisplayName(e.sectionKey),
-                    expandSection = expanderFor(e.sectionKey),
-                    settingId = settingSlug(e.title),
+                    // Controls inside the collapsed "Advanced Prediction Settings" sub-panel
+                    // need it OPENED too, or the target is never composed, never registers a
+                    // scroll position, and the search result silently lands nowhere (audit
+                    // 2026-08-26 — bit all eight advanced-panel entries, found via the
+                    // next-word toggle).
+                    expandSection = if (slug in WORD_PREDICTION_ADVANCED_SLUGS) {
+                        { expanderFor(e.sectionKey)(); wordPredictionAdvancedExpanded = true }
+                    } else {
+                        expanderFor(e.sectionKey)
+                    },
+                    settingId = slug,
                 )
             }.toTypedArray(),
             // ===== Hand-maintained NON-control entries (activity navigation, FAQ) =====

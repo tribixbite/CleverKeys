@@ -45,12 +45,32 @@ object NextWordPredictor {
      *
      * Inherits every existing suggestion-bar guard (§4.4): the feature pref,
      * the MASTER on-device-learning gate (Task A — next-word reads the learned
-     * store, so it must go dark with the master off), the per-field incognito
-     * flag (M5 — `IME_FLAG_NO_PERSONALIZED_LEARNING` fields must not surface
-     * personalized predictions either), password mode, special prompts
-     * (autocorrect-undo / add-to-dictionary), Termux/terminal fields, and
-     * requires non-empty committed context.
+     * store, so it must go dark with the master off), the **context-LM pref**
+     * (audit 2026-08-26 — see below), the per-field incognito flag (M5 —
+     * `IME_FLAG_NO_PERSONALIZED_LEARNING` fields must not surface personalized
+     * predictions either), password mode, special prompts (autocorrect-undo /
+     * add-to-dictionary), Termux/terminal fields, and requires non-empty
+     * committed context.
      *
+     * ## Why the context-LM pref is checked HERE and not only downstream
+     *
+     * Next-word candidates come exclusively from the learned n-gram stores, and
+     * `WordPredictor.getNextWordCandidates` already fails closed via
+     * `LearningGate.canUseLearnedContext` when `context_aware_predictions_enabled`
+     * is off. So omitting it here could not surface a candidate — but it left
+     * the settings model incoherent: the Settings UI hides this feature's
+     * toggle when the context LM is off, so a user could carry a stale
+     * `next_word_prediction_enabled = true` with NO visible control for it, and
+     * this gate — the one place that documents itself as "every guard" — would
+     * still say yes. Worse, the cursor-park path uses the CHEAP gates to decide
+     * whether it may READ the editor text at all; without this parameter it
+     * read text in a state where no candidate could ever be shown. The gate
+     * must be the single honest answer, not "true, but a downstream layer will
+     * save you".
+     *
+     * @param contextAwareEnabled the `context_aware_predictions_enabled` pref —
+     *   the learned context LM this feature draws from. Required, no default:
+     *   every caller must state it.
      * @param fieldAllowsPersonalizedLearning false when the active editor set
      *   `IME_FLAG_NO_PERSONALIZED_LEARNING` (see
      *   [LearningGate.fieldAllowsPersonalizedLearning])
@@ -58,6 +78,7 @@ object NextWordPredictor {
     fun shouldShow(
         featureEnabled: Boolean,
         onDeviceLearningEnabled: Boolean,
+        contextAwareEnabled: Boolean,
         wordPredictionEnabled: Boolean,
         isPasswordMode: Boolean,
         specialPromptActive: Boolean,
@@ -67,6 +88,7 @@ object NextWordPredictor {
     ): Boolean {
         return featureEnabled &&
             onDeviceLearningEnabled &&
+            contextAwareEnabled &&
             fieldAllowsPersonalizedLearning &&
             wordPredictionEnabled &&
             !isPasswordMode &&

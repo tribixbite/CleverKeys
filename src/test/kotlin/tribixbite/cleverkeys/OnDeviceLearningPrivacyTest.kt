@@ -122,6 +122,7 @@ class OnDeviceLearningPrivacyTest {
         assertFalse(
             NextWordPredictor.shouldShow(
                 featureEnabled = true, onDeviceLearningEnabled = false,
+                contextAwareEnabled = true,
                 wordPredictionEnabled = true, isPasswordMode = false,
                 specialPromptActive = false, inTermuxApp = false, hasContext = true
             )

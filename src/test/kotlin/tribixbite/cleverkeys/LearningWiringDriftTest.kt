@@ -117,6 +117,27 @@ class LearningWiringDriftTest {
         assertThat(shouldShowWired).isEqualTo(2)
     }
 
+    @Test
+    fun `context-LM pref reaches both shouldShow call sites and the cursor-park editor read`() {
+        // Audit 2026-08-26: `context_aware_predictions_enabled` is a required
+        // shouldShow parameter because the Settings UI hides the next-word
+        // toggle when the context LM is off — a stale-on feature pref must not
+        // pass the gate, and the cursor-park path must not READ the editor text
+        // in a state where no candidate can ever surface. Downstream
+        // `getNextWordCandidates` fails closed too (LearningGate), but the gate
+        // itself must be the honest answer, not rescued by a lower layer.
+        val handler = readSource("SuggestionHandler.kt")
+        val gateWired = Regex(
+            """contextAwareEnabled = config\.context_aware_predictions_enabled"""
+        ).findAll(handler).count()
+        assertThat(gateWired).isEqualTo(2)
+
+        // The cheap-gate set guarding the getTextBeforeCursor read includes it.
+        val parkRead = handler.substringAfter("private fun readEditorParkContext")
+            .substringBefore("getTextBeforeCursor")
+        assertThat(parkRead).contains("config.context_aware_predictions_enabled")
+    }
+
     // ---------------------------------------------------------------- M6
 
     @Test

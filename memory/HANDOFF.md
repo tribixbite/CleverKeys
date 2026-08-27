@@ -147,12 +147,20 @@ are learned continuations of a large share of preceding words; ~35% of usable de
 a top-10 hub — rather than only with the pair's own `word2`. That targets the damage surface
 directly instead of sampling around it.
 
-**Next**: (1) **on-device shadow mode (spec §7.2)** — now the ONLY remaining lever. The power run
-closes off the offline route to more adversarial evidence, and the real favourable:adversarial
-exposure ratio was never measurable offline. Everything else is refinement of a verdict that is
-already stable across two corpora, two counting units, a full parameter sweep and a decoder change.
-(2) a hub-confusable decoy rule, if an offline safety bound is still wanted; (3) a second language.
-The pref stays **default-OFF**.
+**DECIDED 2026-08-26 (maintainer): the investigation is CLOSED — no shadow mode.** Rescoring
+stays default-OFF permanently. The pivot: the learned context data's consumer is **next-word
+prediction** (tap-to-accept suggestions, where a wrong suggestion costs nothing) instead of swipe
+rescoring (silent auto-insert, where the same signal measurably overturned correct decodes). The
+2026-08-26 next-word audit landed: the `context_aware_predictions_enabled` gate added to
+`NextWordPredictor.shouldShow` as a REQUIRED param + the cursor-park editor read's cheap-gate set
+(it read editor text in a state where no candidate could surface); the next-word settings toggle is
+now VISIBLE-BUT-DISABLED (not hidden) when the context LM is off, so a stale-on pref always has a
+visible owner; search entries for all eight Advanced-Prediction-panel controls now open the panel
+(they previously landed nowhere); all pinned by drift tests (`LearningWiringDriftTest`,
+`SettingsSearchCoverageTest.advancedPanelSlugSetMatchesThePanelContents`).
+
+Still open if anyone resumes the rescoring question: a hub-confusable decoy rule (offline safety
+bound); a second language.
 
 **Was: Step 5 is BUILT; its numbers were WRONG TWICE before an audit corrected them** —
 current then: 51 fixes / 0 breaks in 243 exposed favourable cases (~21% when it fires), safety

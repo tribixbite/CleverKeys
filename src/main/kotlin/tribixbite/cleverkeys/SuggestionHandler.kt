@@ -785,8 +785,9 @@ class SuggestionHandler(
                 // (the user may still correct the swipe) and APPEND up to
                 // MAX_SWIPE_APPEND next-word candidates. Per-suggestion NEXT_WORD
                 // metas make the tap path append-after (not replace) for these
-                // entries. Store lookups are in-RAM map reads — cheap enough to
-                // run inline on the result path.
+                // entries. Generation runs on the predictionTasks executor (L3 —
+                // the first lookup of a language lazily loads its persisted
+                // n-gram blobs, which janked the UI thread when this ran inline).
                 appendNextWordToSwipeAlternates(bar, barWords, barScores, barMetas, editorInfo)
             }
         }
@@ -865,6 +866,7 @@ class SuggestionHandler(
         if (!NextWordPredictor.shouldShow(
                 featureEnabled = config.next_word_prediction_enabled,
                 onDeviceLearningEnabled = config.on_device_learning_enabled,
+                contextAwareEnabled = config.context_aware_predictions_enabled,
                 wordPredictionEnabled = config.word_prediction_enabled,
                 isPasswordMode = isPasswordMode,
                 specialPromptActive = specialPromptActive,
@@ -1404,6 +1406,7 @@ class SuggestionHandler(
         if (!NextWordPredictor.shouldShow(
                 featureEnabled = config.next_word_prediction_enabled,
                 onDeviceLearningEnabled = config.on_device_learning_enabled,
+                contextAwareEnabled = config.context_aware_predictions_enabled,
                 wordPredictionEnabled = config.word_prediction_enabled,
                 isPasswordMode = isPasswordMode,
                 specialPromptActive = specialPromptActive,
@@ -1504,8 +1507,14 @@ class SuggestionHandler(
      */
     private fun readEditorParkContext(ic: InputConnection?): List<String>? {
         if (ic == null) return null
+        // Audit 2026-08-26: `context_aware_predictions_enabled` belongs in this cheap-gate set.
+        // Without it, a stale-on feature pref (its toggle is HIDDEN in Settings when the context
+        // LM is off) meant the editor text was still read here even though downstream
+        // `getNextWordCandidates` fails closed and no candidate could ever surface — violating
+        // this method's own contract that fields which can never show candidates are never read.
         if (!config.next_word_prediction_enabled ||
             !config.on_device_learning_enabled ||
+            !config.context_aware_predictions_enabled ||
             !fieldAllowsPersonalizedLearning
         ) {
             return null

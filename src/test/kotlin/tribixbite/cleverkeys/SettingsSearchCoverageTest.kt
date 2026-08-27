@@ -95,6 +95,43 @@ class SettingsSearchCoverageTest {
         assertThat(missing).isEmpty()
     }
 
+    /**
+     * The controls inside the collapsible "Advanced Prediction Settings" sub-panel need their
+     * search entries to OPEN that panel, or the target is never composed, never registers a
+     * scroll position, and the search result silently lands nowhere (audit 2026-08-26 — bit
+     * all eight panel entries, found via the next-word toggle). `SettingsActivity` keeps the
+     * panel's slugs in `WORD_PREDICTION_ADVANCED_SLUGS`; this pins that hand-kept set to the
+     * panel's ACTUAL contents, both directions, so moving a control in or out of the panel
+     * without updating the set fails here instead of silently breaking its search entry.
+     */
+    @Test
+    fun advancedPanelSlugSetMatchesThePanelContents() {
+        val section = File(sectionsDir, "InputBehaviorSection.kt").readText()
+        // The panel body: from its AnimatedVisibility to the first control after it.
+        val start = section.indexOf("AnimatedVisibility(visible = wordPredictionAdvancedExpanded)")
+        val end = section.indexOf("settings_auto_capitalization_title")
+        check(start in 0 until end) {
+            "Panel markers not found in InputBehaviorSection.kt — the slicer needs updating, " +
+                "not a real pass."
+        }
+        val panelSlugs = literalControlTitles(section.substring(start, end))
+            .map { it.lowercase().replace(Regex("[^a-z0-9]+"), "_").trim('_') } // = settingSlug
+            .toSortedSet()
+        check(panelSlugs.isNotEmpty()) { "No controls found inside the panel — scanner broken." }
+
+        val activitySrc = settingsFile.readText()
+        val setBody = activitySrc
+            .substringAfter("WORD_PREDICTION_ADVANCED_SLUGS = setOf(", "")
+            .substringBefore(")")
+        val declaredSlugs = Regex("\"([a-z0-9_]+)\"").findAll(setBody)
+            .map { it.groupValues[1] }.toSortedSet()
+        check(declaredSlugs.isNotEmpty()) {
+            "WORD_PREDICTION_ADVANCED_SLUGS not found in SettingsActivity.kt — renamed?"
+        }
+
+        assertThat(declaredSlugs).isEqualTo(panelSlugs)
+    }
+
     @Test
     fun everyGeneratedEntryIsSearchable() {
         // An entry with no keywords would be invisible to search.
