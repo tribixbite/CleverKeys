@@ -196,44 +196,48 @@ internal fun SettingsActivity.InputBehaviorSection() {
                                 }
                             )
 
-                            if (personalizedLearningEnabled) {
-                                // Continuous personalization strength (audit §3.2-1) —
-                                // the aggression enum below stays as a preset on top.
-                                SettingsSlider(
-                                    title = stringResource(R.string.input_personalization_weight_title),
-                                    description = stringResource(R.string.input_personalization_weight_desc),
-                                    value = personalizationWeight,
-                                    valueRange = 0f..2f,
-                                    steps = 19,
-                                    onValueChange = {
-                                        personalizationWeight = it
-                                        saveSetting("personalization_weight", personalizationWeight)
-                                        Config.globalConfig()?.personalization_weight = personalizationWeight
-                                    },
-                                    displayValue = "%.1fx".format(personalizationWeight)
-                                )
+                            // Continuous personalization strength (audit §3.2-1) — the
+                            // aggression enum below stays as a preset on top. Both are
+                            // DISABLED (not hidden) when Personalized Learning is off, for
+                            // the same reasons as the next-word switch above (audit
+                            // 2026-08-26): a hidden control can't own its stored state, and
+                            // its search entry lands nowhere while it isn't composed.
+                            SettingsSlider(
+                                title = stringResource(R.string.input_personalization_weight_title),
+                                description = stringResource(R.string.input_personalization_weight_desc),
+                                value = personalizationWeight,
+                                valueRange = 0f..2f,
+                                steps = 19,
+                                enabled = personalizedLearningEnabled,
+                                onValueChange = {
+                                    personalizationWeight = it
+                                    saveSetting("personalization_weight", personalizationWeight)
+                                    Config.globalConfig()?.personalization_weight = personalizationWeight
+                                },
+                                displayValue = "%.1fx".format(personalizationWeight)
+                            )
 
-                                SettingsDropdown(
-                                    title = stringResource(R.string.input_learning_aggression_title),
-                                    description = stringResource(R.string.input_learning_aggression_desc),
-                                    options = listOf("Conservative", "Balanced", "Aggressive"),
-                                    selectedIndex = when (learningAggression) {
-                                        "CONSERVATIVE" -> 0
-                                        "BALANCED" -> 1
-                                        "AGGRESSIVE" -> 2
-                                        else -> 1
-                                    },
-                                    onSelectionChange = { index ->
-                                        learningAggression = when (index) {
-                                            0 -> "CONSERVATIVE"
-                                            1 -> "BALANCED"
-                                            2 -> "AGGRESSIVE"
-                                            else -> "BALANCED"
-                                        }
-                                        saveSetting("learning_aggression", learningAggression)
+                            SettingsDropdown(
+                                title = stringResource(R.string.input_learning_aggression_title),
+                                description = stringResource(R.string.input_learning_aggression_desc),
+                                options = listOf("Conservative", "Balanced", "Aggressive"),
+                                selectedIndex = when (learningAggression) {
+                                    "CONSERVATIVE" -> 0
+                                    "BALANCED" -> 1
+                                    "AGGRESSIVE" -> 2
+                                    else -> 1
+                                },
+                                enabled = personalizedLearningEnabled,
+                                onSelectionChange = { index ->
+                                    learningAggression = when (index) {
+                                        0 -> "CONSERVATIVE"
+                                        1 -> "BALANCED"
+                                        2 -> "AGGRESSIVE"
+                                        else -> "BALANCED"
                                     }
-                                )
-                            }
+                                    saveSetting("learning_aggression", learningAggression)
+                                }
+                            )
 
                             SettingsSlider(
                                 title = stringResource(R.string.input_context_boost_title),

@@ -211,10 +211,13 @@ internal fun SettingsActivity.SettingsSlider(
     valueRange: ClosedFloatingPointRange<Float>,
     steps: Int,
     onValueChange: (Float) -> Unit,
-    displayValue: String
+    displayValue: String,
+    /** False = visible but inert and dimmed; see [SettingsSwitch]'s `enabled` for the rationale. */
+    enabled: Boolean = true
 ) {
     // Register a scroll position by title slug so search results can scroll here.
     val regId = settingSlug(title)
+    val contentAlpha = if (enabled) 1f else 0.38f
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -238,12 +241,12 @@ internal fun SettingsActivity.SettingsSlider(
         ) {
             Text(
                 text = title,
-                color = MaterialTheme.colorScheme.onBackground,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = contentAlpha),
                 fontSize = 16.sp
             )
             Text(
                 text = displayValue,
-                color = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.primary.copy(alpha = contentAlpha),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -251,7 +254,7 @@ internal fun SettingsActivity.SettingsSlider(
 
         Text(
             text = description,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = contentAlpha),
             fontSize = 12.sp,
             modifier = Modifier.padding(vertical = 4.dp)
         )
@@ -261,6 +264,7 @@ internal fun SettingsActivity.SettingsSlider(
             onValueChange = onValueChange,
             valueRange = valueRange,
             steps = steps,
+            enabled = enabled,
             colors = SliderDefaults.colors(
                 thumbColor = MaterialTheme.colorScheme.primary,
                 activeTrackColor = MaterialTheme.colorScheme.primary,
@@ -276,12 +280,15 @@ internal fun SettingsActivity.SettingsDropdown(
     description: String,
     options: List<String>,
     selectedIndex: Int,
-    onSelectionChange: (Int) -> Unit
+    onSelectionChange: (Int) -> Unit,
+    /** False = visible but inert and dimmed; see [SettingsSwitch]'s `enabled` for the rationale. */
+    enabled: Boolean = true
 ) {
     var expanded by remember { mutableStateOf(false) }
 
     // Register a scroll position by title slug so search results can scroll here.
     val regId = settingSlug(title)
+    val contentAlpha = if (enabled) 1f else 0.38f
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -300,24 +307,27 @@ internal fun SettingsActivity.SettingsDropdown(
     ) {
         Text(
             text = title,
-            color = MaterialTheme.colorScheme.onBackground,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = contentAlpha),
             fontSize = 16.sp
         )
         Text(
             text = description,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = contentAlpha),
             fontSize = 12.sp,
             modifier = Modifier.padding(vertical = 4.dp)
         )
 
         ExposedDropdownMenuBox(
             expanded = expanded,
-            onExpandedChange = { expanded = !expanded }
+            // Gate the open gesture, not just the field: the menu box's own toggle is what
+            // expands the popup, and a disabled control must not open one.
+            onExpandedChange = { if (enabled) expanded = !expanded }
         ) {
             OutlinedTextField(
                 value = options[selectedIndex],
                 onValueChange = {},
                 readOnly = true,
+                enabled = enabled,
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                 modifier = Modifier
                     .menuAnchor()
