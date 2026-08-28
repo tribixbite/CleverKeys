@@ -1,5 +1,31 @@
 # FUTO Decoder Eval — Notes (working doc)
 
+> ## ⚠️ STALE BASELINES — read before quoting any number here (added 2026-08-28, ARC-050)
+>
+> Every measurement below is from runs that ended **2026-07-31** and therefore predates the
+> **2026-08-06 apostrophe-lexicon fix** in `scripts/futo_decoder_eval.py:236-244` (commit
+> `f29e956b`). Before that fix the FUTO lexicon **dropped** every word containing an
+> apostrophe instead of a-z-normalizing it, so `don't / didn't / you're / i've / isn't …`
+> were unreachable by the beam — while our own a-z-aliased `en_enhanced` trie hit them.
+>
+> **Direction of the error: these numbers UNDERSTATE FUTO on the contraction rows**
+> (measured 42.9 % vs our 89.3 % on that subset at the time). They are a conservative
+> floor on FUTO, not a neutral estimate, and the understatement is concentrated in
+> apostrophe-form surface words — not spread evenly across the split.
+>
+> **The corrected re-run was never performed and is not planned.** FUTO stopped being a
+> decision input once CTC shipped and beat both the FUTO ceiling and the removed neural
+> engine on the same test-2400 split (**89.31 / 93.79 / 94.50** t1/3/5,
+> `docs/specs/ctc-swipe-engine.md:402`). Re-running the ExecuTorch proot harness to move a
+> baseline that no longer gates anything is not worth the hours.
+>
+> **Consequences for anyone using these as bars:** the 79.25 floor / 84.83 ceiling /
+> +5.88 pt decoder lever quoted in `docs/guides/train-ctc-swipe-model.md` (G2, G4,
+> Appendix B) are conservative-in-the-wrong-direction — a true FUTO floor is somewhat
+> higher, so clearing G2 by a hair is weaker evidence than it looks. Treat the FUTO floor
+> as **approximate** in any future from-scratch run (e.g. per-script models); prefer the
+> shipped-CTC number as the real bar to beat.
+
 Goal: run FUTO's OWN swipe decoder on our held-out test set
 (`~/storage/shared/swipedata/test_hwsfuto.jsonl`, 2,400 rows) and measure
 top-1/3/5 word accuracy, as a third baseline vs our neural ONNX + geometric SHARK2.
