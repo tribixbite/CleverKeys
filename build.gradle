@@ -693,6 +693,10 @@ tasks.register('runMockTests', JavaExec) {
     // Audit remediation (2026-07-17) — new MockK tests
     'tribixbite.cleverkeys.InputCoordinatorReplayGuardTest',
     'tribixbite.cleverkeys.CleanupHandlerTeardownTest',
+    // ARC-016 (2026-08-28): CleanupHandlerTeardownTest above proves cleanup() CALLS
+    // shutdown() on MOCK coordinators; this proves the REAL shutdown() bodies stop the
+    // prediction executor and release both swipe-adapter threads.
+    'tribixbite.cleverkeys.ImeTeardownExecutorShutdownTest',
     'tribixbite.cleverkeys.AutocapitalisationCallbackDedupeTest',
     'tribixbite.cleverkeys.ClipboardMediaManagerZipSlipTest',
     'tribixbite.cleverkeys.BackupRestoreArchiveLimitsTest',
