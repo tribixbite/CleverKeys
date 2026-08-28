@@ -174,8 +174,26 @@ class GeometricEngineAdapter(private val context: Context) {
         val ordinals: HashMap<String, Int>,
     )
 
-    @Volatile
-    private var dictionaryMemo: DictMemo? = null
+    /**
+     * Two slots, access-ordered — the same discipline (and the same shape) as
+     * [CtcEngineAdapter]'s `trieMemos`, adopted 2026-08-28 (ARC-015).
+     *
+     * A single slot meant an en↔fr toggle re-read the CKDT `dictionary.bin` and rebuilt the
+     * ordinal map on EVERY switch, on the decode thread, in front of the user's first swipe
+     * in the new language — and bilingual toggling is exactly the traffic this adapter sees.
+     * Two slots hold the pair a bilingual user actually alternates between; a third language
+     * evicts the least recently used one, so the retained set stays bounded at the previous
+     * language's merged word array plus its ordinal map. The engine's template index is
+     * unaffected — that has its own `indexCacheCapacity=3` ceiling (spec NFR-2).
+     *
+     * Confined to the adapter's single background thread (class KDoc), like every other
+     * memo here, so the map needs no synchronization; the field is `val` so its reference
+     * is safely published.
+     */
+    private val dictionaryMemos = object : LinkedHashMap<String, DictMemo>(2, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, DictMemo>?): Boolean =
+            size > 2
+    }
 
     // ── Contraction display overlay (parity with the deleted vocabulary layer) ──────
     // Every dictionary stores contractions as apostrophe-free ALIASES ("theyd", "cest")
@@ -572,7 +590,11 @@ class GeometricEngineAdapter(private val context: Context) {
         }
         val version = contentVersion(sourceId, customJson, disabled)
 
-        dictionaryMemo?.let { memo ->
+        // The LANGUAGE is part of the memo identity, not just the content hash — the same
+        // invariant `CtcEngineAdapter.lexiconFor` states: a language switch may never reuse
+        // the previous language's dictionary, and reading the language explicitly (rather
+        // than trusting the map key alone) keeps that legible at the hit site.
+        dictionaryMemos[lang]?.let { memo ->
             if (memo.dictionary.language == lang && memo.dictionary.version == version) return memo
         }
 
@@ -587,7 +609,9 @@ class GeometricEngineAdapter(private val context: Context) {
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                 Log.d(TAG, "No geometric dictionary source for '$lang': ${e.javaClass.simpleName}")
             }
-            dictionaryMemo = null
+            // Drop only THIS language's slot: the other slot may still hold a perfectly good
+            // dictionary for the language the user toggles back to.
+            dictionaryMemos.remove(lang)
             return null
         }
 
@@ -605,7 +629,7 @@ class GeometricEngineAdapter(private val context: Context) {
             if (!ordinals.containsKey(key)) ordinals[key] = i
         }
         val built = DictMemo(merged, ordinals)
-        dictionaryMemo = built
+        dictionaryMemos[lang] = built
         return built
     }
 

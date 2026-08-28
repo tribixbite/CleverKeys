@@ -1029,4 +1029,50 @@ class CoreImeHygieneDriftTest {
                 "the shared math both adapters depend on."
         ).that(helper).doesNotContain("import android.")
     }
+
+    /**
+     * Geometric twin of [ctcMemosAreKeyedByLanguage] (ARC-015).
+     *
+     * The dictionary memo was a SINGLE slot, so an en↔fr toggle re-read the CKDT
+     * `dictionary.bin` and rebuilt the ordinal map on every switch — on the decode thread,
+     * in front of the user's first swipe in the new language. Bilingual toggling is exactly
+     * this adapter's traffic, so the memo mirrors `CtcEngineAdapter.trieMemos`: a two-slot
+     * access-ordered LRU keyed by language, with a failed load evicting only its own slot.
+     *
+     * Pinned by source-scan because the adapter needs a `Context` (and real dictionary
+     * assets) to exercise, which `runPureTests` cannot stage.
+     */
+    @Test
+    fun geometricDictionaryMemoIsATwoSlotLruKeyedByLanguage() {
+        val adapter = source("tribixbite/cleverkeys/swipe/GeometricEngineAdapter.kt")
+
+        assertWithMessage(
+            "the dictionary memo must be an access-ordered LinkedHashMap (the `true` third " +
+                "argument) — insertion order would evict the language the user is actively " +
+                "toggling back to."
+        ).that(adapter).contains("LinkedHashMap<String, DictMemo>(2, 0.75f, true)")
+        assertWithMessage(
+            "the memo must stay bounded at two slots (the bilingual pair). Unbounded " +
+                "caching retains a merged word array plus an ordinal map per language."
+        ).that(adapter).contains("size > 2")
+
+        val dictBody = adapter
+            .substringAfter("private fun dictionaryFor(")
+            .substringBefore("private fun mergeUserWords(")
+        assertWithMessage(
+            "the memo hit must require the LANGUAGE to match, not just the content-hash " +
+                "version — a language switch may never reuse the previous language's words."
+        ).that(dictBody).contains("memo.dictionary.language == lang")
+        assertWithMessage(
+            "the memo must be keyed by language on both read and write."
+        ).that(dictBody).contains("dictionaryMemos[lang] = built")
+        assertWithMessage(
+            "a failed load must evict only its OWN language's slot (remove(lang)); " +
+                "clearing the whole memo throws away the other language for nothing."
+        ).that(dictBody).contains("dictionaryMemos.remove(lang)")
+        assertWithMessage(
+            "the single-slot field must be gone — leaving it would let a stale writer " +
+                "resurrect the one-language-at-a-time behaviour."
+        ).that(adapter).doesNotContain("var dictionaryMemo:")
+    }
 }
