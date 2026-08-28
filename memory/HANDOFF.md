@@ -65,8 +65,6 @@ evidence: **`docs/audit/2026-08-28-archive-verification.md`** (IDs ARC-001..050)
 - **ARC-002** #148 root-caused: both prediction prefs off → `contentPaneContainer` null →
   clipboard/emoji/GIF `setInputView` fallback replaces the whole keyboard
   (`PredictionViewSetup.kt:75`, `KeyboardReceiver.kt:230,296,327`).
-- **ARC-004** learned-phrase delete leaves the trigram alive — deleted continuation still
-  surfaces (`TrigramStore` has no `removeTrigram`; `ContextModel` prefers trigrams).
 - **ARC-005** `finger_occlusion_offset` dead on geometric (CTC-only despite engine-agnostic UI).
 - **ARC-006** `UnigramLanguageDetector` fed every commit, read by nobody; promised test absent.
 - **ARC-007** Termux deletion strategy (WP9 R-1 step 7) never decided, branches untested.

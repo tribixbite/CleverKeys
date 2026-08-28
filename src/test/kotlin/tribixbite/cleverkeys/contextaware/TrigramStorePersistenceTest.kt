@@ -66,6 +66,59 @@ class TrigramStorePersistenceTest {
         assertTrue(predictions[0].probability > predictions[1].probability)
     }
 
+    // ------------------------------------- learned-phrase delete cascade (ARC-004)
+
+    @Test
+    fun `removeContinuationsOf removes the deleted bigram's trigram echoes across all prefixes`() {
+        // Two different prefixes both ending in "want", both continuing to "to".
+        record(3, "en", "i", "want", "to")
+        record(2, "en", "we", "want", "to")
+        record(2, "en", "i", "want", "food")
+
+        val removed = store.removeContinuationsOf("en", "want", "to")
+
+        assertEquals(2, removed)
+        assertEquals(0f, store.getProbability("en", "i", "want", "to"), 0f)
+        assertEquals(0f, store.getProbability("en", "we", "want", "to"), 0f)
+        // The sibling survives and is renormalized to own the whole prefix mass.
+        assertEquals(1.0f, store.getProbability("en", "i", "want", "food"), 1e-6f)
+        // The deleted continuation no longer appears in predictions for either prefix.
+        assertTrue(store.getPredictions("en", "i", "want", minProbability = 0f)
+            .none { it.word3 == "to" })
+        assertTrue(store.getPredictions("en", "we", "want", minProbability = 0f).isEmpty())
+    }
+
+    @Test
+    fun `removeContinuationsOf keeps trigrams where the pair is the PREFIX, not the tail`() {
+        // (want, to) -> go predicts what follows the phrase; it does not suggest "to".
+        record(3, "en", "want", "to", "go")
+        record(2, "en", "i", "want", "to")
+
+        store.removeContinuationsOf("en", "want", "to")
+
+        assertEquals(0f, store.getProbability("en", "i", "want", "to"), 0f)
+        assertTrue(store.getProbability("en", "want", "to", "go") > 0f)
+    }
+
+    @Test
+    fun `removeContinuationsOf is a no-op for unknown pairs and normalizes case`() {
+        record(3, "en", "i", "want", "to")
+
+        assertEquals(0, store.removeContinuationsOf("en", "need", "to"))
+        assertEquals(1, store.removeContinuationsOf("en", "Want", "To"))
+        assertEquals(0f, store.getProbability("en", "i", "want", "to"), 0f)
+    }
+
+    @Test
+    fun `removeContinuationsOf persists - a fresh store over the same storage stays clean`() {
+        record(3, "en", "i", "want", "to")
+        store.removeContinuationsOf("en", "want", "to")
+        store.flush()
+
+        val revived = TrigramStore(storage, 60_000, 120_000, scheduler)
+        assertEquals(0f, revived.getProbability("en", "i", "want", "to"), 0f)
+    }
+
     // ----------------------------------------------------------- persistence
 
     @Test

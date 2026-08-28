@@ -255,8 +255,12 @@ private const val BROWSE_LIMIT = 200
 /**
  * Per-phrase browse/delete dialog (audit §3.3): every learned bigram across all
  * languages, most frequent first, with per-entry delete via
- * [BigramStore.removeBigram]. NOTE: trigrams are not individually browsable —
- * they are bulk-cleared via "Forget phrases" (documented scope).
+ * [BigramStore.removeBigram] + the trigram cascade
+ * [TrigramStore.removeContinuationsOf] (ARC-004: without the cascade, a stored
+ * `(·, w1) → w2` trigram keeps suggesting the deleted continuation, because
+ * ContextModel prefers trigram evidence). NOTE: trigrams are not individually
+ * browsable — beyond the cascade they are bulk-cleared via "Forget phrases"
+ * (documented scope).
  */
 @Composable
 private fun LearnedPhraseBrowserDialog(onDismiss: () -> Unit) {
@@ -295,6 +299,11 @@ private fun LearnedPhraseBrowserDialog(onDismiss: () -> Unit) {
                                 Thread {
                                     BigramStore.getInstance(context)
                                         .removeBigram(row.language, row.word1, row.word2)
+                                    // ARC-004 cascade: also remove every (·, w1) → w2 trigram,
+                                    // or the deleted continuation keeps surfacing via the
+                                    // trigram-first next-word/boost path.
+                                    TrigramStore.getInstance(context)
+                                        .removeContinuationsOf(row.language, row.word1, row.word2)
                                     loadKey++
                                 }.start()
                             }) { Text("✕") }

@@ -320,6 +320,73 @@ class TrigramStore internal constructor(
         return true
     }
 
+    /**
+     * Cascade for a user-initiated learned-phrase delete (ARC-004): remove EVERY trigram
+     * whose bigram tail is `(word1 → word2)` — i.e. every entry `(·, word1) → word2` —
+     * so the deleted continuation cannot keep surfacing via the trigram path.
+     *
+     * [BigramStore.removeBigram] alone is not enough: `ContextModel` prefers trigram
+     * evidence, so after deleting `want → to` the stored `(i, want) → to` would still
+     * suggest "to" for the context `[i, want]`. Unlike [unrecordTrigram] (one observation),
+     * this removes the whole entry — the user said "never suggest this", not "one less".
+     *
+     * The prefix `(word1, word2) → ·` trigrams are deliberately kept: they predict what
+     * follows the phrase, they do not suggest word2 itself.
+     *
+     * @return number of trigram entries removed (across all matching prefixes)
+     */
+    fun removeContinuationsOf(language: String, word1: String, word2: String): Int {
+        val w1 = TrigramEntry.normalizeWord(word1)
+        val w2 = TrigramEntry.normalizeWord(word2)
+        if (w1.isEmpty() || w2.isEmpty()) return 0
+
+        val lang = BigramStore.normalizeLanguage(language)
+        val data = forLanguage(lang)
+        val tailSuffix = " $w1"
+        var removed = 0
+
+        synchronized(this) {
+            // Snapshot keys: we mutate the map inside the loop.
+            for (key in data.trigramMap.keys.toList()) {
+                if (!key.endsWith(tailSuffix)) continue
+                val entries = data.trigramMap[key] ?: continue
+                val entry = entries.find { it.word3 == w2 } ?: continue
+
+                entries.remove(entry)
+                removed++
+
+                // Rescale: the removed entry's observations no longer count toward the
+                // prefix total — same discipline as removeBigram/unrecordTrigram.
+                val newTotal = maxOf(0, (data.prefixFrequencies[key] ?: 0) - entry.frequency)
+                if (newTotal <= 0 || entries.isEmpty()) {
+                    if (entries.isEmpty()) data.trigramMap.remove(key)
+                    if (newTotal <= 0) {
+                        data.prefixFrequencies.remove(key)
+                    } else {
+                        data.prefixFrequencies[key] = newTotal
+                    }
+                } else {
+                    data.prefixFrequencies[key] = newTotal
+                    val renormalized = entries.map {
+                        it.copy(probability = TrigramEntry.calculateProbability(it.frequency, newTotal))
+                    }
+                    entries.clear()
+                    entries.addAll(renormalized)
+                    entries.sortByDescending { it.probability }
+                }
+            }
+        }
+
+        if (removed > 0) {
+            dirtyLanguages.add(lang)
+            persister.markDirty()
+            // Same L4 rationale as BigramStore.removeBigram: a user-initiated delete
+            // must not sit in the debounce window — process death would resurrect it.
+            persister.requestFlush()
+        }
+        return removed
+    }
+
     /** Total number of unique trigrams stored for a language. */
     fun getTotalTrigramCount(language: String): Int {
         synchronized(this) {
