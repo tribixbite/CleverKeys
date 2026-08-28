@@ -27,7 +27,7 @@ jobs:
     steps:
     - name: Auto-label bug reports
       if: github.event.action == 'opened'
-      uses: actions/github-script@v7
+      uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
       with:
         script: |
           const issue = context.payload.issue;
@@ -63,7 +63,7 @@ jobs:
 
     - name: Welcome new contributors
       if: github.event.action == 'opened'
-      uses: actions/github-script@v7
+      uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
       with:
         script: |
           const issue = context.payload.issue;
@@ -108,7 +108,7 @@ jobs:
     steps:
     - name: Auto-label PRs
       if: github.event.action == 'opened'
-      uses: actions/github-script@v7
+      uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
       with:
         script: |
           const pr = context.payload.pull_request;
@@ -159,7 +159,7 @@ jobs:
 
     - name: Check PR requirements
       if: github.event.action == 'opened'
-      uses: actions/github-script@v7
+      uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
       with:
         script: |
           const pr = context.payload.pull_request;
@@ -224,7 +224,7 @@ jobs:
 
     - name: Thank contributors on merge
       if: github.event.action == 'closed' && github.event.pull_request.merged
-      uses: actions/github-script@v7
+      uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
       with:
         script: |
           const pr = context.payload.pull_request;
@@ -265,7 +265,7 @@ jobs:
 
     steps:
     - name: Generate community health report
-      uses: actions/github-script@v7
+      uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
       with:
         script: |
           const { data: issues } = await github.rest.issues.listForRepo({
@@ -328,7 +328,7 @@ jobs:
 
     steps:
     - name: Mark stale issues
-      uses: actions/stale@v9
+      uses: actions/stale@5bef64f19d7facfb25b37b414482c7164d639639 # v9
       with:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
         stale-issue-message: |
@@ -379,7 +379,7 @@ jobs:
 
     steps:
     - name: Celebrate release
-      uses: actions/github-script@v7
+      uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
       with:
         script: |
           // This would create a celebration discussion post
@@ -397,7 +397,7 @@ jobs:
 
     steps:
     - name: Update contributor list
-      uses: actions/github-script@v7
+      uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
       with:
         script: |
           // This would automatically update the contributors section

@@ -1,0 +1,32 @@
+# Dependabot config — keeps the SHA-pinned `uses:` in .github/workflows/ current.
+#
+# Every action in this repo is pinned to a full commit SHA with a trailing `# vN`
+# comment (ARC-041). A SHA cannot be retagged out from under us, which is the
+# supply-chain risk a moving tag carries — Aqua deleting the trivy-action 0.28.0
+# tag already broke this repo's security job once. The cost of pinning is that a
+# pinned action never picks up upstream fixes on its own.
+#
+# Dependabot closes that gap: for the github-actions ecosystem it reads the
+# trailing version comment, resolves the newer release to its commit SHA, and
+# updates the SHA *and* the comment together. Without this file, SHA pinning would
+# quietly freeze every action at whatever version was current on 2026-08-28.
+#
+# Only github-actions is enabled. Gradle/Maven dependencies are governed by Gradle
+# dependency locking (gradle.lockfile) and must not be bumped by a bot — see the
+# lockfile notes in CLAUDE.md about configurations that only resolve with locks
+# active.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    # One PR per week for all action bumps rather than ~15 separate ones. The
+    # workflows are release-gating, so they get reviewed together or not at all.
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "ci"
