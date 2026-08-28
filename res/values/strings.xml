@@ -502,6 +502,11 @@
     <string name="backup_protection_status">Password protection: %1$s</string>
     <!-- %1$s = the underlying platform failure detail, which is not localized. -->
     <string name="backup_passphrase_storage_unavailable">The backup password could not be stored securely and was not saved. %1$s</string>
+    <!-- ARC-033: shown when the headless `es json_base64` inline payload exceeds the size cap.
+         Reachable only from `am start` automation (#70), never from the app's own UI.
+         TRANSLATION DEBT: English-only for now (added 2026-08-28); not in
+         TranslationCoverageDriftTest's required set. -->
+    <string name="backup_base64_too_large" tools:ignore="MissingTranslation">Import failed: the inline backup payload is too large</string>
 
     <!-- ClipboardSection -->
     <string name="clipboard_history_title">Clipboard History</string>

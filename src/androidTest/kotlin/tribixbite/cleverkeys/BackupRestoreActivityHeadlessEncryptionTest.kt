@@ -164,6 +164,72 @@ class BackupRestoreActivityHeadlessEncryptionTest {
         )
     }
 
+    /** Cache files this invocation's `json_base64` decode may have left behind. */
+    private fun base64TempFiles(): List<File> =
+        context.cacheDir.listFiles().orEmpty()
+            .filter { it.name.startsWith("import_base64_") }
+
+    /**
+     * ARC-033: the decoded `json_base64` payload lands in `cacheDir/import_base64_<ts>.json`
+     * and nothing used to delete it — every automation run left one file of UNENCRYPTED
+     * backup content there forever. [BackupRestoreActivity.onDestroy] now removes it.
+     *
+     * The REJECTED path is the one asserted here on purpose: the file is written before the
+     * plaintext-payload refusal runs, so a cleanup placed only inside the import functions
+     * would leak on exactly the hostile invocations that matter most.
+     */
+    @Test
+    fun headlessImport_rejectedBase64Payload_leavesNoTempFileBehind() {
+        install(present = true)
+        base64TempFiles().forEach { it.delete() }
+
+        val plaintextJson = """{"metadata":{},"preferences":{"keyboard_height":50}}"""
+        val b64 = android.util.Base64.encodeToString(
+            plaintextJson.toByteArray(Charsets.UTF_8), android.util.Base64.DEFAULT
+        )
+        val intent = Intent(context, BackupRestoreActivity::class.java).apply {
+            action = BackupRestoreActivity.ACTION_IMPORT_SETTINGS
+            putExtra("json_base64", b64)
+        }
+        ActivityScenario.launch<BackupRestoreActivity>(intent).use { }
+        Thread.sleep(800)
+
+        assertEquals(
+            "rejected inline import must not leave a decoded payload in cacheDir",
+            emptyList<String>(),
+            base64TempFiles().map { it.name },
+        )
+    }
+
+    /** Same cleanup on the ACCEPTED path, after the import has run to completion. */
+    @Test
+    fun headlessImport_acceptedBase64Payload_leavesNoTempFileBehind() {
+        install(present = true)
+        base64TempFiles().forEach { it.delete() }
+
+        val json = """{"metadata":{},"preferences":{"keyboard_height":50}}"""
+        val container = BackupCrypto.encrypt(
+            json.toByteArray(Charsets.UTF_8),
+            passphrase.toCharArray(),
+            EncryptedBackupFormat.SETTINGS_JSON,
+            System.currentTimeMillis(),
+        )
+        val b64 = android.util.Base64.encodeToString(container, android.util.Base64.DEFAULT)
+        val intent = Intent(context, BackupRestoreActivity::class.java).apply {
+            action = BackupRestoreActivity.ACTION_IMPORT_SETTINGS
+            putExtra("json_base64", b64)
+        }
+        ActivityScenario.launch<BackupRestoreActivity>(intent).use { }
+        Thread.sleep(800)
+
+        assertEquals("accepted inline import should have reached the manager", 1, importCalls.get())
+        assertEquals(
+            "successful inline import must not leave a decoded payload in cacheDir",
+            emptyList<String>(),
+            base64TempFiles().map { it.name },
+        )
+    }
+
     @Test
     fun headlessImport_encryptedBase64_isApplied() {
         install(present = true)

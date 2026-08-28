@@ -427,6 +427,9 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.backup.SettingsExporterTest',
     'tribixbite.cleverkeys.BackupRestoreResultMessagesTest',
     'tribixbite.cleverkeys.BackupRestorePreviewRenderTest',
+    // ARC-033 (2026-08-28): the json_base64 inline-payload size ceilings. Pure because the
+    // caps are ~64 MB — exercising them through the Activity would OOM the test process.
+    'tribixbite.cleverkeys.backup.HeadlessPayloadLimitsTest',
     'tribixbite.cleverkeys.backup.ShortSwipeDiffTest',
     'tribixbite.cleverkeys.autocorrect.KeyAdjacencyTest',
     'tribixbite.cleverkeys.autocorrect.MorphologyTest',

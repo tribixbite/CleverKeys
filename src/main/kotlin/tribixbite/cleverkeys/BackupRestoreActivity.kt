@@ -12,6 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import tribixbite.cleverkeys.backup.HeadlessPayloadLimits
 import tribixbite.cleverkeys.backup.crypto.BackupPassphraseStore
 import tribixbite.cleverkeys.backup.crypto.EncryptedBackupFormat
 
@@ -122,6 +123,9 @@ class BackupRestoreActivity : ComponentActivity() {
     private lateinit var prefs: SharedPreferences
     private lateinit var backupRestoreManager: BackupRestoreManager
     private lateinit var passphraseStore: BackupPassphraseStore
+
+    /** ARC-033: the `json_base64` scratch file this invocation wrote, deleted in [onDestroy]. */
+    private var base64TempFile: java.io.File? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -274,19 +278,70 @@ class BackupRestoreActivity : ComponentActivity() {
      * #70: Decode json_base64 intent extra to a temp file, returning its URI.
      * Bypasses scoped storage entirely — caller passes file content inline:
      *   am start -a ...IMPORT_SETTINGS --es json_base64 "$(base64 < backup.json)"
+     *
+     * ARC-033 — two fixes over the original:
+     *  1. BOUNDED. The decode used to be unbounded, so an oversized extra allocated a
+     *     decoded buffer and then WROTE it into the app's cache with no ceiling. Both the
+     *     encoded and decoded sizes are now checked against [HeadlessPayloadLimits], whose
+     *     ceiling is `BackupCrypto.MAX_IN_MEMORY_BYTES` restated — nothing the importer
+     *     would have accepted can be rejected here.
+     *  2. CLEANED UP. The written file is remembered in [base64TempFile] and deleted in
+     *     [onDestroy], mirroring the `finally`-delete discipline the `ck_decrypt_*` temp
+     *     files already get in `BackupRestoreManager.decryptToTempFile`. Previously every
+     *     inline import left an `import_base64_<ts>.json` in cacheDir FOREVER —
+     *     unencrypted backup content, accumulating one file per automation run.
      */
     private fun resolveBase64Extra(intent: Intent): Uri? {
         val b64 = intent.getStringExtra("json_base64") ?: return null
+        // Checked BEFORE decode: the decode is what allocates the second buffer.
+        if (HeadlessPayloadLimits.base64ExtraExceedsCap(b64.length)) {
+            android.util.Log.w(
+                TAG,
+                "json_base64 extra rejected: ${b64.length} chars exceeds " +
+                    "${HeadlessPayloadLimits.MAX_BASE64_CHARS}"
+            )
+            Toast.makeText(this, R.string.backup_base64_too_large, Toast.LENGTH_LONG).show()
+            return null
+        }
         return try {
             val decoded = android.util.Base64.decode(b64, android.util.Base64.DEFAULT)
+            if (HeadlessPayloadLimits.decodedExceedsCap(decoded.size)) {
+                android.util.Log.w(
+                    TAG,
+                    "json_base64 payload rejected: ${decoded.size} decoded bytes exceeds " +
+                        "${HeadlessPayloadLimits.MAX_DECODED_BYTES}"
+                )
+                Toast.makeText(this, R.string.backup_base64_too_large, Toast.LENGTH_LONG).show()
+                return null
+            }
             val tempFile = java.io.File(cacheDir, "import_base64_${System.currentTimeMillis()}.json")
             tempFile.writeBytes(decoded)
+            base64TempFile = tempFile
             Uri.fromFile(tempFile)
         } catch (e: Exception) {
             android.util.Log.e(TAG, "Failed to decode json_base64 extra", e)
             Toast.makeText(this, "Invalid base64 data: ${e.message}", Toast.LENGTH_LONG).show()
             null
         }
+    }
+
+    /**
+     * ARC-033: delete the `json_base64` scratch file once this invocation is over.
+     *
+     * [onDestroy] is the seam because it is the ONE point every path reaches: the perform*
+     * coroutines finish() from their `finally`, and so do all four pre-dispatch rejects (no
+     * passphrase / throttled / plaintext payload / no payload URI) — the last three of which
+     * run AFTER the file has already been written, so a `finally` inside the import functions
+     * alone would leak on exactly the hostile paths that matter most. The coroutine's
+     * `finish()` precedes this callback, so by the time it runs the import has completed.
+     */
+    override fun onDestroy() {
+        base64TempFile?.let { file ->
+            runCatching { file.delete() }
+                .onFailure { android.util.Log.w(TAG, "Could not delete base64 temp file", it) }
+            base64TempFile = null
+        }
+        super.onDestroy()
     }
 
     /**
