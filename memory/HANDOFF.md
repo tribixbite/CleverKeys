@@ -54,34 +54,49 @@ story. Two habits came out of it and are worth keeping:
 
 ## Open work, in priority order
 
-### 0. Audit-archive leak ledger (2026-08-28) — 46 items recovered before archiving the audit corpus
+### 0. Audit-archive leak ledger (2026-08-28) — remediation waves complete; residue below
 
-Ten line-by-line verification passes over the 26 docs archived to `docs/history/audits/`
-recovered **46 findings/optimizations that were tracked nowhere live**. Full deduped list with
-evidence: **`docs/audit/2026-08-28-archive-verification.md`** (IDs ARC-001..050). The P2s:
+The archive-verification pass (`docs/audit/2026-08-28-archive-verification.md`, ARC-001..052)
+recovered 48 untracked findings; **41 were fixed the same day** across seven implementation
+waves (commits `31685cac`..`fee6bd4d` + wave commits; every fix cites its ARC ID). Consult git
+log and the verification doc before re-deriving anything. Still open:
 
-- **ARC-005** `finger_occlusion_offset` dead on geometric (CTC-only despite engine-agnostic UI).
-- **ARC-006** `UnigramLanguageDetector` fed every commit, read by nobody; promised test absent.
-- **ARC-007** Termux deletion strategy (WP9 R-1 step 7) never decided, branches untested.
-- **ARC-008** R8/ProGuard still off behind the fossil "REPRODUCIBILITY TEST" comment.
-- **ARC-009** `.gitignore` `*.json` fixture trap — six per-script goldens land next and would be
-  silently ignored on fresh clones.
-- ~~**ARC-010** `BigramModel` 174-pair hardcoded table feeds a live ≤10× multiplier; shipped
-  bigram assets never loaded (`loadFromFile` zero callers); A/B venue deleted.~~ **DONE
-  2026-08-28** (`976ce508`) with **ARC-020** (`71f0016f`): the six assets now load async and
-  feed the next-word cold-start seed. They deliberately do NOT reach the multiplier — their
-  values are per-previous-word RANK scores, not probabilities (the 15 continuations of "i"
-  sum to 12.37), and interpolating them would pin `getContextMultiplier` at its 10× clamp
-  for every listed pair. Tap ranking unchanged. Decision + schema findings in the
-  verification doc's won't-fix section.
-- **ARC-011** clipboard provenance (`source_package`) captured but never rendered; wiki spec
-  overclaims it shipped — the injection-risk acceptance leaned on this display.
-- **ARC-012** #79 settings flicker unfixed and mis-diagnosed (screen is Column, not LazyColumn).
-- **ARC-013** UT-5 ("doesnt" rank) / UT-7 (sentence-start "I'd") never re-measured post-rework.
+- **ARC-007 (decision needed)**: Termux deletion strategy (WP9 R-1 step 7) — keep
+  `SuggestionHandler`'s key-event deletion branches (`:1092,1195,1586,1649,2220`-era sites) or
+  unify on `deleteSurroundingText`; a dedicated Termux instrumented test is owed either way.
+- **ARC-008 (soak-gated)**: R8/ProGuard still disabled (`build.gradle` "REPRODUCIBILITY TEST"
+  comment); re-enable needs a reflection-keep audit + full ew-cli soak + internal release, or a
+  recorded decision to delete `proguard-rules.pro`.
+- **ARC-012 (investigation)**: #79 settings header flicker — unreproduced; note the screen is
+  `Column`+`verticalScroll`, NOT LazyColumn, so the old diagnosis is wrong.
+- **ARC-013 (measurement)**: UT-5 "doesnt"→"doesn't" top-1 rank and UT-7 sentence-start "I'd"
+  never re-measured post-contraction-rework; no sentence-start ranking signal exists.
+- **ARC-019 (measurement)**: run `CtcReplayEngine` against LOCAL combined (8,521 traces — the
+  corpus where geometric beat neural) + the geo SLOPPY tier; corpora in `~/.cache/cleverkeys-corpora/`.
+- **ARC-044**: androidTest assertion quality — 271 `assertNotNull` / 0 `assertThat`; start with
+  the 6 curated release-gate classes.
+- **ARC-045**: ~168 raw Compose `Text("…")` literals unextracted (LearningDataSection 21,
+  IntentEditorDialog 19, CommandPaletteDialog 18, LayoutManagerActivity 18, …).
+- **ARC-048 (backlog, worsening)**: ConfigSnapshot absent (static consumers 28→33 files),
+  145-file flat package root, 6 hand-wired Initializers, WordPredictor 2636 lines no interface,
+  SettingsActivity 123 mutableStateOf + `SettingsScreen.kt:69-73` composition-body writes
+  without `SideEffect{}` (stale `composeScope` no-ops scroll-to-setting). Plan:
+  `docs/history/audits/remediation/5-architecture.md`.
+- **ARC-049 (device)**: one long-run `MemoryProbe` + `dumpsys meminfo` on a current build to
+  close the unexplained 2026-08-17 OOM.
 
-P3s (ARC-014..050) cover geo OQ backlog, backup/clipboard hardening tails, CI hygiene, the
-architecture backlog (quietly worsening: Config consumers 28→33, WordPredictor 2335→2636), and
-owed tests — see the verification doc. Doc-correction items were applied with the archive commit.
+**Instrumented/manual verification owed from the waves** (all compile-verified, none run):
+#148 visual pass (predictions off → open clipboard → keyboard stays visible); private-media
+paste refusal; ARC-005 nonzero occlusion on a geometric layout; ARC-023's 4500 ms cold-build
+bound on emulator hardware; the 5 provenance UI cases (`ClipboardPanelPrivateBadgeTest`);
+`.ckenc` SAF naming (manual export-with-password); encrypted-import 🔒 preview rendering;
+base64 temp-file/clipboard-cap/private-copy-toast instrumented tests; GIF legacy-pack rejection
+paths; next-word cold-start bar on-device.
+
+**Translation debt added by the waves** (English-only, non-blocking):
+`pref_secondary_prediction_weight` summary, `backup_base64_too_large`,
+`clipboard_private_copy_toast_title/desc`, `clipboard_provenance_via/direct_launch`,
+`privacy_on_device_learning_desc` (21-locale copies still name deleted swipe-calibration).
 
 ### 1. Contraction follow-ups, all deferred deliberately
 
