@@ -92,6 +92,16 @@ One doc verified fully clean: `2026-07-18-accessibility-implementation-plan.md` 
   drift assertion that neither names a `DEPRECATED_KEYS` member.
 
 **Won't-fix / decisions recorded**
+- **ARC-026 — both undisposed knobs DECLINED (2026-08-28).** `context_max_boost`
+  (`ContextModel.kt` `MAX_BOOST`/`BOOST_EXPONENT`) and `next_word_max_suggestions`
+  (`NextWordPredictor.MAX_SUGGESTIONS`) stay private constants. Rationale: the 2026-08-26
+  next-word audit deliberately kept the user-facing surface minimal, and a boost-SHAPE
+  control carries the same per-scale footgun as the rescoring λ — the value that helps at
+  one context-probability scale hurts at another and the user has no instrument to tell
+  which regime they are in. For the suggestion count, the failure mode is noise, which the
+  confidence floors already control better than a count would. The decision is recorded in
+  code at each constant so the next reader does not re-open it. Revisit only with an
+  offline replay showing a per-user optimum spread wide enough to justify the exposure.
 - snake_case `Config` fields mirror pref keys by design — convention, not debt.
 - fdroid `CurrentVersion` staleness is documented bot-updated behavior (`release-process.md:21,353`) — stale local copy is cosmetic.
 - Doc corrections applied with the archive commit (not tracked forward): HISTORICAL banner + license correction on `hybrid-engine-rank-fusion.md`; 4 stale rows in `ctc-architecture-and-multiscript-guide.md`; V5→V6 renumbering in the at-rest design; `CLAUDE.md` tree/geometric-wired fixes.

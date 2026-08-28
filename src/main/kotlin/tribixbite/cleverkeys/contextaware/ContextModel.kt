@@ -56,7 +56,18 @@ class ContextModel internal constructor(
     language: String
 ) {
     companion object {
-        // Boost multipliers for context probabilities
+        // Boost multipliers for context probabilities.
+        //
+        // DECLINED KNOB (2026-08-28, ledger ARC-026 — audit §3.2-3 proposed a
+        // `context_max_boost` slider over MAX_BOOST/BOOST_EXPONENT). Kept private
+        // constants on purpose:
+        //  - the 2026-08-26 next-word audit deliberately kept the user-facing surface
+        //    minimal; every extra shape knob is one more thing to explain and support;
+        //  - a boost-SHAPE control has the same per-scale footgun as the rescoring λ:
+        //    the value that helps at one context-probability scale actively hurts at
+        //    another, and the user has no instrument to tell which regime they are in.
+        // Revisit only with an offline replay that shows a per-user optimum spread wide
+        // enough to justify exposing it.
         private const val MAX_BOOST = 5.0f  // Maximum 5x boost for very likely words
         private const val MIN_BOOST = 1.0f  // No boost (neutral)
         private const val BOOST_EXPONENT = 2.0f  // Non-linear boost: boost = (1 + prob)^2

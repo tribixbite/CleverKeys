@@ -17,7 +17,16 @@ import tribixbite.cleverkeys.contextaware.ContextContinuation
  * owns the impure wiring (threads, bar posting, config reads).
  */
 object NextWordPredictor {
-    /** Maximum candidates surfaced in the bar. */
+    /**
+     * Maximum candidates surfaced in the bar.
+     *
+     * DECLINED KNOB (2026-08-28, ledger ARC-026 — audit §4.3 proposed a 1–5
+     * `next_word_max_suggestions` preference). Kept a constant on purpose: the
+     * 2026-08-26 next-word audit deliberately kept the user-facing surface minimal, and
+     * 3 is what the bar can show without displacing the prefix predictions the user is
+     * more likely to want. The interesting failure mode is noise, which the confidence
+     * floors below control far better than a count does.
+     */
     const val MAX_SUGGESTIONS = 3
 
     /** Maximum candidates APPENDED after swipe alternates (call-site 3, §4.4). */
