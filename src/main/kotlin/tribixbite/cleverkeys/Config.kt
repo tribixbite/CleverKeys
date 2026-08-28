@@ -1199,10 +1199,14 @@ class Config private constructor(
                 arrayOf("prediction_context_boost", "${Defaults.PREDICTION_CONTEXT_BOOST}"),
                 arrayOf("prediction_frequency_scale", "${Defaults.PREDICTION_FREQUENCY_SCALE}"),
                 arrayOf("personalization_weight", "${Defaults.PERSONALIZATION_WEIGHT}"),
-                arrayOf("autocorrect_char_match_threshold", "${Defaults.AUTOCORRECT_CHAR_MATCH_THRESHOLD}"),
-                arrayOf("swipe_rare_words_penalty", "${Defaults.SWIPE_RARE_WORDS_PENALTY}"),
-                arrayOf("swipe_common_words_boost", "${Defaults.SWIPE_COMMON_WORDS_BOOST}"),
-                arrayOf("swipe_top5000_boost", "${Defaults.SWIPE_TOP5000_BOOST}")
+                arrayOf("autocorrect_char_match_threshold", "${Defaults.AUTOCORRECT_CHAR_MATCH_THRESHOLD}")
+                // ARC-052: swipe_rare_words_penalty / swipe_common_words_boost /
+                // swipe_top5000_boost are NOT repaired here. All three are in
+                // SettingsValidation.DEPRECATED_KEYS, and "repair" writes the key back with
+                // editor.putFloat on any type mismatch — so the repair pass resurrected dead
+                // keys into SharedPreferences (and thus into the next backup) on devices that
+                // had already been migrated off them. Never repair a DEPRECATED_KEYS member;
+                // SettingsDefaultsDriftTest asserts this.
             )
 
             val editor = prefs.edit()

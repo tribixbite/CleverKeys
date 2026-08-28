@@ -113,4 +113,79 @@ class SettingsDefaultsDriftTest {
         assertThat(inNoDefault intersect inDeprecated).isEmpty()
         assertThat(inInternal intersect inDeprecated).isEmpty()
     }
+
+    // -------------------------------------------------------------------------------------
+    // ARC-052: nothing may WRITE a deprecated key.
+    //
+    // `DEPRECATED_KEYS` exists so legacy keys are filtered out of import previews and never
+    // written back to prefs. Two code paths defeated that by writing them from the app's own
+    // side, where no import filter runs:
+    //
+    //   - `SettingsResetPresets` wrote `swipe_fuzzy_match_mode` on "reset to defaults", so a
+    //     factory reset reintroduced a dead key into the next backup.
+    //   - `Config.repairCorruptedFloatPreferences` listed three deprecated float keys, and
+    //     "repair" ends in `editor.putFloat(key, …)` on any type mismatch — resurrecting them
+    //     on devices that had already been migrated off them.
+    //
+    // Both are fixed; these tests keep them fixed. Scanning source matches the idiom of
+    // `everyPrefReadKeyIsClassified` above and needs no Android runtime.
+    // -------------------------------------------------------------------------------------
+
+    /** Write sites: `editor.putX("key", …)` / `prefs.putX("key", …)`. */
+    private val writePattern = Regex(
+        """(?:\w*[Pp]refs(?:\.edit\(\))?|\w*[Ee]ditor)""" +
+            """\.put(?:Boolean|Int|Float|Long|String)\(\s*"([a-zA-Z_0-9]+)""""
+    )
+
+    @Test
+    fun noSourceFileWritesADeprecatedKey() {
+        val mainKotlin = File("src/main/kotlin")
+        check(mainKotlin.exists()) {
+            "Source dir not found at ${mainKotlin.absolutePath} — drift test must run with " +
+                "project root as CWD."
+        }
+
+        var writeSitesSeen = 0
+        val offenders = sortedSetOf<String>()
+        mainKotlin.walkTopDown()
+            .filter { it.isFile && it.extension == "kt" }
+            .forEach { file ->
+                writePattern.findAll(file.readText()).forEach { match ->
+                    writeSitesSeen++
+                    val key = match.groupValues[1]
+                    if (key in SettingsValidation.DEPRECATED_KEYS) {
+                        offenders += "${file.path}: $key"
+                    }
+                }
+            }
+
+        check(writeSitesSeen > 0) {
+            "Regex matched zero pref writes — pattern is broken, not a real pass."
+        }
+        assertThat(offenders).isEmpty()
+    }
+
+    @Test
+    fun repairCorruptedFloatPreferencesNamesNoDeprecatedKey() {
+        val config = File("src/main/kotlin/tribixbite/cleverkeys/Config.kt")
+        check(config.exists()) { "Config.kt not found at ${config.absolutePath}" }
+        val text = config.readText()
+
+        val start = text.indexOf("val floatPrefs = arrayOf(")
+        check(start >= 0) {
+            "Anchor 'val floatPrefs = arrayOf(' not found in Config.kt — the repair list was " +
+                "renamed or restructured. Re-point this test rather than deleting it; an " +
+                "unanchored scan would pass vacuously."
+        }
+        val end = text.indexOf("\n            )", start)
+        check(end > start) { "Could not find the end of the floatPrefs array literal." }
+
+        val repaired = Regex("""arrayOf\("([a-zA-Z_0-9]+)"""")
+            .findAll(text.substring(start, end))
+            .map { it.groupValues[1] }
+            .toList()
+
+        check(repaired.isNotEmpty()) { "Extracted zero repair keys — the scan is broken." }
+        assertThat(repaired.filter { it in SettingsValidation.DEPRECATED_KEYS }).isEmpty()
+    }
 }

@@ -120,7 +120,11 @@ internal fun SettingsActivity.resetAllSettings() {
                     // Autocorrect
                     editor.putBoolean("autocorrect_enabled", Defaults.AUTOCORRECT_ENABLED)
                     editor.putBoolean("swipe_final_autocorrect_enabled", Defaults.SWIPE_FINAL_AUTOCORRECT_ENABLED)
-                    editor.putString("swipe_fuzzy_match_mode", Defaults.SWIPE_FUZZY_MATCH_MODE)
+                    // ARC-052: swipe_fuzzy_match_mode is NOT written here. It is in
+                    // SettingsValidation.DEPRECATED_KEYS, so writing it on "reset to defaults"
+                    // resurrected a key the migration filter exists to remove — a factory reset
+                    // would reintroduce it into the next backup. Never write a DEPRECATED_KEYS
+                    // member from a preset; SettingsDefaultsDriftTest asserts this.
 
                     // Swipe trail
                     editor.putBoolean("swipe_trail_enabled", Defaults.SWIPE_TRAIL_ENABLED)
