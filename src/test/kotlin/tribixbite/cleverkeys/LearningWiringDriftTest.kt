@@ -93,6 +93,64 @@ class LearningWiringDriftTest {
         assertThat(threaded).isEqualTo(2)
     }
 
+    // ------------------------------------------- ARC-021 (audit 2026-08-28)
+
+    @Test
+    fun `language-slot eviction flushes learned data BEFORE dropping the predictor`() {
+        // A language switch evicts every predictor outside the configured set to reclaim
+        // ~5-10 MB each. That predictor may hold unsaved bigrams/trigrams and user
+        // vocabulary; dropping the reference without persisting first LOSES them silently
+        // (there is no finalizer and no other flush on this path — `flushLearnedData()`
+        // fires on input-session boundaries, not on eviction). The 2026-08-06 fix put the
+        // flush in the loop; nothing pinned it until now.
+        val dictManager = readSource("DictionaryManager.kt")
+
+        val loopAnchor = "val keysToEvict = predictors.keys.filter"
+        val loopEnd = "currentPredictor = predictors.getOrPut"
+        assertThat(dictManager).contains(loopAnchor)
+        assertThat(dictManager).contains(loopEnd)
+
+        // The eviction loop only: from the evict-list computation to the get-or-create that
+        // follows it. Scoping matters — `persistLearnedData()` also appears in
+        // flushLearnedData() and cleanup(), so a whole-file `contains` would pass even with
+        // the eviction flush deleted (exactly the gap this test closes).
+        val evictionLoop = dictManager.substringAfter(loopAnchor).substringBefore(loopEnd)
+
+        val persistIdx = evictionLoop.indexOf("persistLearnedData()")
+        val removeIdx = evictionLoop.indexOf("predictors.remove(k)")
+        assertThat(persistIdx).isGreaterThan(-1)
+        assertThat(removeIdx).isGreaterThan(-1)
+        // Ordering is the invariant: persist, THEN release. Reversed, the flush would run
+        // against a map entry that is already gone.
+        assertThat(persistIdx).isLessThan(removeIdx)
+        // The observer must be detached before the drop too, or an orphaned dictionary
+        // observer outlives the evicted predictor.
+        assertThat(evictionLoop).contains("stopObservingDictionaryChanges()")
+    }
+
+    @Test
+    fun `every predictor-releasing path persists learned data first`() {
+        // The three release points that can strand unsaved learning: eviction (above),
+        // the session-boundary flush, and full teardown. Named together so a NEW release
+        // path is an obvious omission rather than an invisible one.
+        val dictManager = readSource("DictionaryManager.kt")
+
+        val flush = dictManager.substringAfter("fun flushLearnedData()").substringBefore("fun cleanup()")
+        assertThat(flush).contains("predictor.persistLearnedData()")
+        assertThat(flush).contains("predictor.clearContext()")
+
+        val cleanup = dictManager.substringAfter("fun cleanup()").substringBefore("companion object")
+        val cleanupPersistIdx = cleanup.indexOf("predictor.persistLearnedData()")
+        val cleanupClearIdx = cleanup.indexOf("predictors.clear()")
+        assertThat(cleanupPersistIdx).isGreaterThan(-1)
+        assertThat(cleanupClearIdx).isGreaterThan(-1)
+        assertThat(cleanupPersistIdx).isLessThan(cleanupClearIdx)
+
+        // Eviction + flush + cleanup = three; fewer means a path lost its flush.
+        val persistSites = Regex("""persistLearnedData\(\)""").findAll(dictManager).count()
+        assertThat(persistSites).isAtLeast(3)
+    }
+
     // ---------------------------------------------------------------- M5
 
     @Test
