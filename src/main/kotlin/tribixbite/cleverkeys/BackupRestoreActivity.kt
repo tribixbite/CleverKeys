@@ -212,8 +212,10 @@ class BackupRestoreActivity : ComponentActivity() {
             // perform* coroutines call finish() in their finally block.
         } else {
             // No known action — redirect to the inline section in SettingsActivity.
-            // Reachable when a stale shortcut, the launcher icon, or an unknown
-            // intent action lands here.
+            // Still reachable after ARC-031 dropped the MAIN/DEFAULT intent-filter: an
+            // EXPLICIT component start needs no filter, which covers the in-app
+            // SettingsNavigation.openBackupRestore(), a stale launcher shortcut, and a
+            // known action that arrived without the URI/base64 payload it needs.
             startActivity(Intent(this, SettingsActivity::class.java).apply {
                 putExtra("scroll_to", "backup_restore")
             })

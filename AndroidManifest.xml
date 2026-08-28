@@ -111,11 +111,14 @@
     <!-- Ghost activities removed (no source files); SwipeCalibrationActivity + the swipe-engine
          settings screen for the removed transformer went on 2026-08-18 (ADR-011) -->
 
+    <!-- Headless-only Intent target. exported="true" is REQUIRED (#70 Termux automation) but the
+         exported surface is scoped to the six custom backup actions below: the MAIN/DEFAULT filter
+         that used to sit here (ARC-022 audit item ARC-031) let ANY app resolve this component with
+         a bare ACTION_MAIN, and that path does nothing but redirect to SettingsActivity. The
+         redirect code path stays — an action-less explicit start (the in-app
+         SettingsNavigation.openBackupRestore, or a stale launcher shortcut) still degrades
+         gracefully — it just is no longer implicitly resolvable from outside the app. -->
     <activity android:name="tribixbite.cleverkeys.BackupRestoreActivity" android:label="Backup &amp; Restore" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true" tools:targetApi="24">
-      <intent-filter>
-        <action android:name="android.intent.action.MAIN"/>
-        <category android:name="android.intent.category.DEFAULT"/>
-      </intent-filter>
       <!-- #70: Intent filters for programmatic backup/restore automation (Termux, scripts) -->
       <intent-filter>
         <action android:name="tribixbite.cleverkeys.action.EXPORT_SETTINGS"/>
