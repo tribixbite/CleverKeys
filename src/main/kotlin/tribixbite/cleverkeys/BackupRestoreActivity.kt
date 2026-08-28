@@ -139,12 +139,16 @@ class BackupRestoreActivity : ComponentActivity() {
 
         val action = intent.action
         val isKnownBackupAction = action in KNOWN_BACKUP_ACTIONS
+        // ARC-032: every headless accept/reject below carries the caller's identity so the
+        // audit trail can answer "which app drove this backup action?" — previously the log
+        // recorded only the action, which is unattributable on an exported component.
+        val caller = if (isKnownBackupAction) callerIdentity() else ""
 
         if (isKnownBackupAction) {
             // Design §4.3: on the exported-activity path, encryption is MANDATORY.
             // No stored passphrase → fail closed (nothing written, nothing applied).
             if (!passphraseStore.hasPassphrase()) {
-                android.util.Log.w(TAG, "Headless $action rejected: no backup password set")
+                android.util.Log.w(TAG, "Headless $action rejected: no backup password set [$caller]")
                 Toast.makeText(
                     this,
                     "Set a backup password in Settings → Backup & Restore first",
@@ -157,7 +161,7 @@ class BackupRestoreActivity : ComponentActivity() {
             val now = android.os.SystemClock.elapsedRealtime()
             val sinceLast = now - lastHeadlessActionMs
             if (lastHeadlessActionMs != 0L && sinceLast < MIN_HEADLESS_ACTION_SPACING_MS) {
-                android.util.Log.w(TAG, "Headless $action throttled (${sinceLast}ms since last)")
+                android.util.Log.w(TAG, "Headless $action throttled (${sinceLast}ms since last) [$caller]")
                 Toast.makeText(this, "Backup action throttled — try again in a moment", Toast.LENGTH_SHORT).show()
                 finish()
                 return
@@ -179,7 +183,7 @@ class BackupRestoreActivity : ComponentActivity() {
         if (isImport && prefs.getBoolean(PREF_ALLOW_INTENT_PASSPHRASE, false)) {
             intent.getStringExtra("passphrase")?.let { p ->
                 if (p.isNotEmpty()) {
-                    android.util.Log.i(TAG, "Using --es passphrase override for $action (toggle on)")
+                    android.util.Log.i(TAG, "Using --es passphrase override for $action (toggle on) [$caller]")
                     backupRestoreManager.setImportPassphraseOverride(p.toCharArray())
                 }
             }
@@ -187,7 +191,7 @@ class BackupRestoreActivity : ComponentActivity() {
 
         // Headless IMPORT of a plaintext (legacy) payload → reject (closes injection).
         if (isImport && importUri != null && payloadIsPlaintext(importUri)) {
-            android.util.Log.w(TAG, "Headless $action rejected: plaintext payload not accepted")
+            android.util.Log.w(TAG, "Headless $action rejected: plaintext payload not accepted [$caller]")
             Toast.makeText(
                 this,
                 "Import failed: plaintext backups are not accepted via automation — use the app's Import button",
@@ -208,9 +212,15 @@ class BackupRestoreActivity : ComponentActivity() {
         }
 
         if (actionFn != null) {
+            android.util.Log.i(TAG, "Headless $action accepted [$caller]")
             actionFn()
             // perform* coroutines call finish() in their finally block.
         } else {
+            if (isKnownBackupAction) {
+                // A known action that carried neither `intent.data` nor a decodable
+                // `json_base64` extra — unusable, so it falls through to the redirect.
+                android.util.Log.w(TAG, "Headless $action rejected: no payload URI [$caller]")
+            }
             // No known action — redirect to the inline section in SettingsActivity.
             // Still reachable after ARC-031 dropped the MAIN/DEFAULT intent-filter: an
             // EXPLICIT component start needs no filter, which covers the in-app
@@ -221,6 +231,34 @@ class BackupRestoreActivity : ComponentActivity() {
             })
             finish()
         }
+    }
+
+    /**
+     * ARC-032: who drove this headless invocation, for the log line only.
+     *
+     * Two sources, deliberately reported separately because they have DIFFERENT trust:
+     *  - `callingPackage` is kernel-attested, but non-null ONLY for a `startActivityForResult`
+     *    launch. A plain `am start` / `startActivity` reports `unknown` — that is the normal
+     *    case for Termux automation, not a red flag.
+     *  - `referrer` (API 22+) is a best-effort hint that a caller can SPOOF via
+     *    `EXTRA_REFERRER`. It is logged because it is often the only identity available, and
+     *    labelled so nobody mistakes it for attestation.
+     *
+     * This is an AUDIT TRAIL, not an access-control input: nothing branches on the result.
+     * The real gates stay `passphraseStore.hasPassphrase()`, the rate limit, and the
+     * plaintext-payload refusal. Package names and a referrer URI carry no user content,
+     * so this is safe to log unconditionally (no PII gate needed).
+     */
+    private fun callerIdentity(): String {
+        val pkg = callingPackage ?: "unknown"
+        val ref = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP_MR1) {
+            // getReferrer() reads the intent/extras and can throw on a malformed URI extra;
+            // an identity read must never abort the action it is only annotating.
+            runCatching { referrer?.toString() }.getOrNull()
+        } else {
+            null
+        }
+        return if (ref.isNullOrEmpty()) "caller=$pkg" else "caller=$pkg referrer(unattested)=$ref"
     }
 
     /** Toast the actual output path so headless callers see a real file location. */
