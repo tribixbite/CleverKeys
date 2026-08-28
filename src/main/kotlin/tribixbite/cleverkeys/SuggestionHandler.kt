@@ -1714,14 +1714,11 @@ class SuggestionHandler(
         predictionCoordinator.getWordPredictor()
             ?.addWordToContext(word, fieldAllowsPersonalizedLearning)
 
-        // Track word for multi-language detection. Re-homed onto PredictionCoordinator
-        // 2026-08-18 (was SwipePredictorOrchestrator, which is being deleted with the
-        // engine): the detector is fed by EVERY commit, not just swipes.
-        try {
-            predictionCoordinator.trackCommittedWord(word)
-        } catch (e: Exception) {
-            Log.w(TAG, "Failed to track word for language detection", e)
-        }
+        // ARC-006: the UnigramLanguageDetector feed that used to live here was deleted
+        // 2026-08-28. It had been write-only since OptimizedVocabulary was removed — every
+        // commit paid a lazy 5k-word-per-language asset load and a sliding-window update
+        // whose scores nothing read. Re-adding it requires a real CONSUMER first (plus the
+        // pure test ADR-011 §E promised), not just the feed.
     }
 
     /**

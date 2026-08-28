@@ -210,7 +210,7 @@ data class LanguageState(
 | `DictionaryManager` | Singleton holding active WordPredictor instances, handles language lifecycle |
 | `MultiLanguageManager` | Manages ONNX sessions, handles auto-detection logic |
 | `SuggestionRanker` | Merges candidates from multiple dictionaries with unified scoring |
-| `UnigramLanguageDetector` | Word-based language detection using frequency lists |
+| `LanguageDetector` | Word/character-pattern language detection (the unigram-frequency `UnigramLanguageDetector` was deleted 2026-08-28 — ARC-006, write-only after `OptimizedVocabulary` went) |
 | `AccentNormalizer` | Unicode normalization (NFD) + accent stripping |
 
 ### Performance Considerations

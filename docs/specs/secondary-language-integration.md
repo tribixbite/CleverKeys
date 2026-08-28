@@ -13,7 +13,7 @@ Multi-language typing system that allows users to type in two languages simultan
 | `src/main/kotlin/tribixbite/cleverkeys/BinaryDictionaryLoader.kt` | V1/V2 loading | Dictionary loading |
 | `src/main/kotlin/tribixbite/cleverkeys/WordPredictor.kt` | `loadSecondaryDictionary()`, `secondaryIndex` | Primary + secondary dictionary management for tap typing (`OptimizedVocabulary`, the neural-era owner of this role, was deleted 2026-08-18 — ADR-011) |
 | `src/main/kotlin/tribixbite/cleverkeys/SuggestionRanker.kt` | Merging | Combines results with scoring |
-| `src/main/kotlin/tribixbite/cleverkeys/UnigramLanguageDetector.kt` | Detection | Word-based language detection |
+| `src/main/kotlin/tribixbite/cleverkeys/LanguageDetector.kt` | `detectLanguageFromWordsWithConfidence()` | Word/char-pattern language detection behind `MultiLanguageManager.detectAndSwitch` (`UnigramLanguageDetector`, the unigram-profile detector this row used to name, was deleted 2026-08-28 — ARC-006, write-only) |
 | `src/main/kotlin/tribixbite/cleverkeys/langpack/LanguagePackManager.kt` | Pack import | Language pack storage |
 
 ## Architecture
@@ -39,11 +39,14 @@ Multi-language typing system that allows users to type in two languages simultan
         │                                    │
         └────────────────┬───────────────────┘
                          ▼
-┌─────────────────────────────────────────────────────────────┐
-│                UnigramLanguageDetector                       │
-│  Sliding window of 10 words, adjusts scoring multiplier     │
-└─────────────────────────────────────────────────────────────┘
+                  merged slate
 ```
+
+> The diagram used to end in a `UnigramLanguageDetector` box ("sliding window of 10 words,
+> adjusts scoring multiplier"). That class was **deleted 2026-08-28 (ARC-006)**: it never
+> adjusted any multiplier after `OptimizedVocabulary` was removed — it was fed on every
+> commit and read by nobody. Auto-detection runs through `LanguageDetector` +
+> `MultiLanguageManager.detectAndSwitch`.
 
 ## Configuration
 

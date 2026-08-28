@@ -635,15 +635,9 @@ class CleverKeysService : InputMethodService(),
             refresh_config()
         }
 
-        // Clear language detection history when switching to a new text field (not restarting)
-        // This resets the language detector's word tracking for fresh context
-        if (!restarting) {
-            try {
-                _predictionCoordinator?.clearLanguageHistory()
-            } catch (e: Exception) {
-                // Ignore - the coordinator may not be initialized yet
-            }
-        }
+        // ARC-006: the per-field `clearLanguageHistory()` call that stood here was deleted
+        // 2026-08-28 along with UnigramLanguageDetector — it cleared a word window nothing
+        // read. The remaining per-field resets live in KeyEventHandler.started(info) below.
 
         // Check if the current view was created with a stale theme
         val latestThemeId = _config?.theme ?: 0
