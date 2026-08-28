@@ -3,6 +3,7 @@ package tribixbite.cleverkeys.swipe.geometric
 import com.google.common.truth.Truth.assertWithMessage
 import java.io.File
 import org.junit.Test
+import tribixbite.cleverkeys.PackagePurityScan
 
 /**
  * NFR-3 purity enforcement: the geometric swipe engine package must contain ZERO
@@ -15,26 +16,29 @@ import org.junit.Test
  * no import line (`Keyboard2View.kt:1124`), which an import-only scan would miss.
  * Comments are stripped first so that a KDoc mentioning "android" in prose does not
  * false-positive.
+ *
+ * The scan itself lives in [PackagePurityScan], shared with the CTC engine's
+ * equivalent guard ([tribixbite.cleverkeys.swipe.ctc.CtcPurityDriftTest], NFR-1);
+ * this class keeps the stripper's own unit test, which it originally owned.
  */
 class GeoPurityDriftTest {
 
     private val engineDir = File("src/main/kotlin/tribixbite/cleverkeys/swipe/geometric")
 
     /** Matches an `android.` or `androidx.` token at a word boundary. */
-    private val androidToken = Regex("""\bandroidx?\.""")
+    private val androidToken = PackagePurityScan.ANDROID_TOKEN
 
     @Test
     fun engineSourcesContainNoAndroidTokens() {
         assertWithMessage("engine package dir must exist: ${engineDir.absolutePath}")
             .that(engineDir.isDirectory).isTrue()
 
-        val ktFiles = engineDir.walkTopDown().filter { it.isFile && it.extension == "kt" }.toList()
+        val ktFiles = PackagePurityScan.kotlinSources(engineDir)
         assertWithMessage("engine package must contain Kotlin sources")
             .that(ktFiles).isNotEmpty()
 
         for (file in ktFiles) {
-            val stripped = stripComments(file.readText())
-            val match = androidToken.find(stripped)
+            val match = PackagePurityScan.firstAndroidToken(file)
             assertWithMessage(
                 "PURITY VIOLATION in ${file.name}: found an android/androidx token " +
                     "'${match?.value}' near index ${match?.range?.first}. The engine package " +
@@ -64,59 +68,5 @@ class GeoPurityDriftTest {
             .isTrue()
     }
 
-    /**
-     * Remove `//` line comments and `/* ... */` block comments (Kotlin allows
-     * nesting) so that prose mentioning android does not trip the token scan, while
-     * real code references still do. STRING-LITERAL-AWARE: a block- or line-comment
-     * opener inside a `"..."` / `"""..."""` literal does NOT open a comment (which
-     * would silently exclude following real code from the scan); string contents are
-     * emitted, so a literal `"android."` in engine code is (correctly) still flagged.
-     */
-    private fun stripComments(src: String): String {
-        val out = StringBuilder(src.length)
-        var i = 0
-        var blockDepth = 0
-        var inLineComment = false
-        var inString = false
-        var tripleQuoted = false
-        while (i < src.length) {
-            val c = src[i]
-            val next = if (i + 1 < src.length) src[i + 1] else ' '
-            when {
-                blockDepth > 0 -> {
-                    if (c == '/' && next == '*') { blockDepth++; i += 2 }
-                    else if (c == '*' && next == '/') { blockDepth--; i += 2 }
-                    else i++
-                }
-                inLineComment -> {
-                    if (c == '\n') { inLineComment = false; out.append(c) }
-                    i++
-                }
-                inString -> {
-                    out.append(c)
-                    if (!tripleQuoted && c == '\\' && i + 1 < src.length) {
-                        // Escaped char inside a normal string (\" does not close it).
-                        out.append(src[i + 1]); i += 2
-                    } else if (tripleQuoted && c == '"' && i + 2 < src.length &&
-                        src[i + 1] == '"' && src[i + 2] == '"'
-                    ) {
-                        out.append("\"\""); inString = false; i += 3
-                    } else if (!tripleQuoted && c == '"') {
-                        inString = false; i++
-                    } else {
-                        i++
-                    }
-                }
-                c == '"' -> {
-                    inString = true
-                    tripleQuoted = i + 2 < src.length && src[i + 1] == '"' && src[i + 2] == '"'
-                    if (tripleQuoted) { out.append("\"\"\""); i += 3 } else { out.append(c); i++ }
-                }
-                c == '/' && next == '*' -> { blockDepth = 1; i += 2 }
-                c == '/' && next == '/' -> { inLineComment = true; i += 2 }
-                else -> { out.append(c); i++ }
-            }
-        }
-        return out.toString()
-    }
+    private fun stripComments(src: String): String = PackagePurityScan.stripComments(src)
 }

@@ -528,6 +528,9 @@ tasks.register('runPureTests', JavaExec) {
     // + module unit tests + the adapter's merge/ordinal + contraction-display oracles
     // (CTC integration audit H1/L3, 2026-08-14).
     'tribixbite.cleverkeys.swipe.ctc.CtcParityTest',
+    // NFR-1 purity: swipe/ctc/ must stay android-free or every pure CTC test below
+    // dies at once with NoClassDefFoundError (ARC-024). Geometric's NFR-3 twin.
+    'tribixbite.cleverkeys.swipe.ctc.CtcPurityDriftTest',
     'tribixbite.cleverkeys.swipe.ctc.CtcModuleTest',
     'tribixbite.cleverkeys.swipe.ctc.CtcLexiconMergeTest',
     'tribixbite.cleverkeys.swipe.ctc.CtcContractionDisplayTest',
