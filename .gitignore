@@ -178,6 +178,15 @@ pal_generated.code
 # without this exception a newly generated one is silently never committed and the
 # feature dies on CI while working locally.
 !src/main/assets/dictionaries/*.json
+# Test fixtures are SOURCE, not scratch output. Golden files (ctc_golden.json,
+# the futo_*.json layout captures, and the per-script goldens the multiscript
+# plan adds) live under these two roots and must be tracked without `git add -f`;
+# a force-add is invisible to the next contributor, so the next fixture is
+# silently never committed and only fails on CI. Verified with `git check-ignore`
+# that both negations take effect: neither tree has a directory-level exclusion
+# above it, which is the usual reason a gitignore negation quietly does nothing.
+!src/test/resources/**/*.json
+!src/androidTest/assets/**/*.json
 generated_*.kt
 .env
 

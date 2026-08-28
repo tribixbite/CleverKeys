@@ -1,13 +1,11 @@
 package tribixbite.cleverkeys
 
-import android.content.Context
-import org.json.JSONObject
-import java.io.BufferedReader
-import java.io.InputStreamReader
-
 /**
- * Helper class to load a small test dictionary for instrumented tests.
- * Avoids OOM by using a minimal dictionary instead of the full production dictionary.
+ * Small in-memory dictionary for instrumented tests.
+ *
+ * Instrumented tests must not load the production `en_enhanced.json` (1.8 MB) — it OOMs the
+ * test process. [TEST_WORDS] is the substitute: a fixed, hard-coded word→frequency map with
+ * no I/O and no asset dependency.
  */
 object TestDictionaryHelper {
 
@@ -83,45 +81,7 @@ object TestDictionaryHelper {
     )
 
     /**
-     * Load test dictionary from androidTest assets.
-     * Uses a minimal JSON dictionary to avoid OOM.
-     */
-    fun loadTestDictionary(context: Context): Map<String, Int> {
-        return try {
-            val inputStream = context.assets.open("dictionaries/en_enhanced.json")
-            val reader = BufferedReader(InputStreamReader(inputStream))
-            val jsonBuilder = StringBuilder()
-            reader.useLines { lines ->
-                lines.forEach { jsonBuilder.append(it) }
-            }
-            reader.close()
-
-            val jsonDict = JSONObject(jsonBuilder.toString())
-            val result = mutableMapOf<String, Int>()
-            val keys = jsonDict.keys()
-            while (keys.hasNext()) {
-                val word = keys.next().lowercase()
-                val frequency = jsonDict.getInt(word)
-                // Scale frequency from 128-255 to 100-10000 range
-                val scaledFreq = 100 + ((frequency - 128) / 127.0 * 9900).toInt()
-                result[word] = scaledFreq
-            }
-            result
-        } catch (e: Exception) {
-            // Fallback to hardcoded test words if asset loading fails
-            TEST_WORDS
-        }
-    }
-
-    /**
-     * Get the hardcoded test dictionary (no I/O needed).
+     * Get the hard-coded test dictionary (no I/O needed).
      */
     fun getTestWords(): Map<String, Int> = TEST_WORDS
-
-    /**
-     * Check if a word should be in the test dictionary.
-     */
-    fun isTestWord(word: String): Boolean {
-        return TEST_WORDS.containsKey(word.lowercase())
-    }
 }
