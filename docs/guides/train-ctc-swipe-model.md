@@ -2,9 +2,9 @@
 
 **Date:** 2026-08-06
 **Status:** Runnable end-to-end recipe (documentation only — no app code changed by this guide).
-**Decision basis:** `docs/audit/2026-08-06-futo-engine-integration-decision.md` (option D:
+**Decision basis:** `docs/history/audits/2026-08-06-futo-engine-integration-decision.md` (option D:
 retrain-to-ONNX; gates G2/G3/G4), architecture ground truth
-`docs/audit/2026-08-06-futo-decoder-integration-study.md` ("study"), consuming decoder
+`docs/history/audits/2026-08-06-futo-decoder-integration-study.md` ("study"), consuming decoder
 `src/main/kotlin/tribixbite/cleverkeys/swipe/ctc/` + spec `docs/specs/ctc-swipe-engine.md`.
 
 This guide takes a fresh CUDA machine from zero to a trained, ONNX-exported CTC
@@ -1007,7 +1007,7 @@ Recipe sketch:
 A third optional lever, independent of this guide: the `hungry_jellyfish`-style
 context-LM reranker (`alpha·lm` over top-200, keep CTC top-1) — modular, layers on
 `CtcCandidate`, and has its own recommendation doc
-(`docs/audit/2026-08-06-context-lm-nextword-rec.md`).
+(`docs/history/audits/2026-08-06-context-lm-nextword-rec.md`).
 
 ---
 

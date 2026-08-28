@@ -16,8 +16,8 @@ less coverage than geometric. The two-model ensemble, the rescorer, and contract
 future options recorded in the plan.
 **Package:** `tribixbite.cleverkeys.swipe.ctc` (`src/main/kotlin/.../swipe/ctc/`), with the
 Android-side adapter at `swipe/CtcEngineAdapter.kt` + `swipe/OnnxCtcEmissionModel.kt`.
-**Origin:** Track (ii) of `docs/audit/2026-08-06-futo-upgrade-plan.md`; algorithm ground
-truth is the integration study `docs/audit/2026-08-06-futo-decoder-integration-study.md`
+**Origin:** Track (ii) of `docs/history/audits/2026-08-06-futo-upgrade-plan.md`; algorithm ground
+truth is the integration study `docs/history/audits/2026-08-06-futo-decoder-integration-study.md`
 (cited "study §N") + the Python port `scripts/futo_decoder_{eval,ceiling}.py` and FUTO C++
 `~/.cache/cleverkeys-test/swipe-library-src` (`resampler.cpp`, `beam_search.cpp`).
 

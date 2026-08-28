@@ -67,7 +67,7 @@ old biased numbers, and compute the fusion go/no-go inputs:
    restricted to the common trace set: top-1/3/5 per stratum (≤3 vs 4+; finer if cheap),
    micro + macro over words with ≥5 examples, **union@1/@3 per stratum** (fusion
    go/no-go: if union headroom over max(engine) < ~2 pts on a stratum → fusion no-go
-   there, per docs/audit/remediation-plans/hybrid-engine-rank-fusion.md).
+   there, per docs/history/audits/remediation-plans/hybrid-engine-rank-fusion.md).
 3. **Report**: fill `docs/eval/2026-07-23-futo100k-head2head.md` (currently a 1-line
    stub): provenance (dataset, seed, N per engine, corrected-path flags), the metric
    tables, the comparison table old-8.5k (~54% neural, position-only+defective) vs

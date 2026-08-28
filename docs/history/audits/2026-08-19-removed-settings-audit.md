@@ -11,7 +11,7 @@ deprecated. Consumer behaviour was recovered from git history (`64f401d2^`, `018
 not inferred from names.
 
 **Method note:** the pre-removal parity audit
-`docs/audit/2026-08-17-neural-vs-ctc-parity.md` (§1.4, §"Is CTC genuinely universal?")
+`docs/history/audits/2026-08-17-neural-vs-ctc-parity.md` (§1.4, §"Is CTC genuinely universal?")
 already listed most of these as MISSING in CTC — the removal plan then dropped them
 anyway (`docs/plans/2026-08-18-neural-engine-removal.md:179`: *"`finger_occlusion_offset`
 — dropped; swipe tuning becomes `ctc_beam_width` + geo knobs"*). So the per-pref evidence

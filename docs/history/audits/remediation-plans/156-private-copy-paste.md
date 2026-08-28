@@ -77,7 +77,7 @@ New activity `tribixbite.cleverkeys.PrivateCopyProcessTextActivity`:
 
 ```xml
 <!-- #156 Private copy: selection-toolbar receiver. Exported BY DESIGN (threat
-     review: docs/audit/remediation-plans/156-private-copy-paste.md §6) but
+     review: docs/history/audits/remediation-plans/156-private-copy-paste.md §6) but
      android:enabled="false" until the user opts in via Settings → Clipboard.
      Inbound-only: reads EXTRA_PROCESS_TEXT, stores locally, returns no result. -->
 <activity

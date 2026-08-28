@@ -69,7 +69,7 @@ large unification (#1/#2) last behind its own test gate.
   cursor-sync pass can no longer clobber an SH prompt — no shared mutable state added. Deterministic
   `oracle_cursorSync_doesNotClobberAutocorrectUndoPrompt` pins it. Legacy IC path (flag off) retains
   the old unguarded `triggerPredictionsForPrefix`. See
-  `docs/audit/remediation-plans/wp9-pipeline-unification-oracle.md` §"Step 5 — LANDED".
+  `docs/history/audits/remediation-plans/wp9-pipeline-unification-oracle.md` §"Step 5 — LANDED".
 - **File:** `InputCoordinator.kt:342–350` (post block) and `triggerPredictionsForPrefix` 214–357.
 - **Change:** IC must not clobber a special prompt owned by SH. The `specialPromptActive` flag lives on SH (SuggestionHandler 174–175). Two options:
   1. **Preferred (post-unification):** once one pipeline owns suggestions (R-1), this race disappears; sequence R-7 to fold into R-1.
@@ -149,7 +149,7 @@ Each step compiles, passes `runPureTests` + targeted instrumented tests, and is 
    `CKS→bridge→SH.handlePredictionResults` legacy chain deleted. Deliberate deltas (#82-for-swipe
    preserved from production, mid-sentence/no-URL-leading-space/case-preserving-autocorrect
    adopted from SH) + full details in
-   `docs/audit/remediation-plans/wp9-pipeline-unification-oracle.md` §"Step 6 — LANDED".
+   `docs/history/audits/remediation-plans/wp9-pipeline-unification-oracle.md` §"Step 6 — LANDED".
    Step 6 deliberately did NOT touch the Termux-deletion decision (step 7 below): SH's Termux
    branches are live for taps as before; the swipe auto-insert path cannot reach the replace
    branch. Per the Addendum below, the geo-engine steps 7-9 slot in next — the

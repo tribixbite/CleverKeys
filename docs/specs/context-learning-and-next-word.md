@@ -17,7 +17,7 @@ browse/delete manager over everything the keyboard has learned.
 The pre-existing bigram LM learned in-RAM only and forgot everything on IME restart; the
 `UserAdaptationManager` selection store had NO preference gate at all; and users had no way
 to see, control, or delete what the keyboard learned. Independent review findings are in
-`docs/audit/2026-08-06-context-lm-review-findings.md` (H1–H3, M1–M7, L1–L10 — all resolved
+`docs/history/audits/2026-08-06-context-lm-review-findings.md` (H1–H3, M1–M7, L1–L10 — all resolved
 in `f6824477`).
 
 ---
@@ -328,7 +328,7 @@ Existing related prefs (unchanged keys, now composed with the master gate):
 
 ## Related Documentation
 
-- Audit that drove the design: `docs/audit/2026-08-06-context-lm-review-findings.md`
+- Audit that drove the design: `docs/history/audits/2026-08-06-context-lm-review-findings.md`
 - Recommendation doc: `dbd3843a` (`docs/audit/`, context-LM control/transparency/next-word)
 - User guide: `docs/wiki/typing/next-word-prediction.md`
 - Paired wiki spec: `docs/wiki/specs/typing/next-word-prediction-spec.md`

@@ -190,7 +190,7 @@ SettingsSwitch(
 > **Canonical spec:** [`docs/wiki/specs/clipboard/private-copy-spec.md`](../wiki/specs/clipboard/private-copy-spec.md)
 > (renders at <https://cleverkeys.app/specs/clipboard/private-copy-spec/>).
 > **User guide:** [`docs/wiki/clipboard/private-copy.md`](../wiki/clipboard/private-copy.md).
-> **Design doc:** [`docs/audit/remediation-plans/156-private-copy-paste.md`](../audit/remediation-plans/156-private-copy-paste.md).
+> **Design doc:** [`docs/history/audits/remediation-plans/156-private-copy-paste.md`](../audit/remediation-plans/156-private-copy-paste.md).
 > This section is an engineering-notes summary; see the canonical spec for full detail.
 
 Private copy adds a copy path that stores selected text directly into `ClipboardDatabase`

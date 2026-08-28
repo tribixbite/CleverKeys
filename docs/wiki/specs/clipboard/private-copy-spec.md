@@ -14,7 +14,7 @@ Private copy (#156) adds a copy path that stores selected text directly into Cle
 
 The baseline gap this fills: **paste from the panel was already private** (`KeyEventHandler.paste_from_clipboard_pane` commits text directly through the `InputConnection`, no `ClipboardManager`), but **every copy path went through the OS clipboard**. Private copy is the missing acquisition half — get selected text into `ClipboardDatabase` without the OS clipboard ever holding it.
 
-Design source: `docs/audit/remediation-plans/156-private-copy-paste.md`.
+Design source: `docs/history/audits/remediation-plans/156-private-copy-paste.md`.
 
 ## Key Components
 

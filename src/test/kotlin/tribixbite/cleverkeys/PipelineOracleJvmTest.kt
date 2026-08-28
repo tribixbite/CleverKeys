@@ -8,7 +8,7 @@ import java.util.Locale
 
 /**
  * Pure-JVM twin of the WP9 pipeline-unification characterization oracle
- * (`docs/audit/remediation-plans/wp9-pipeline-unification-oracle.md`).
+ * (`docs/history/audits/remediation-plans/wp9-pipeline-unification-oracle.md`).
  *
  * The instrumented [PipelineCharacterizationTest] is the authority — it wires the
  * real SuggestionHandler / InputCoordinator / SuggestionBar over an InputConnection.

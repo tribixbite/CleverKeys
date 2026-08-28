@@ -4,7 +4,7 @@
 **Audit finding:** 2026-07-17 code-quality audit, finding #2 (P1): `BackupRestoreActivity`
 exported with 6 IMPORT/EXPORT actions and no caller authentication
 (`AndroidManifest.xml:140-157`, `BackupRestoreActivity.kt:82-106`).
-**Companion doc:** `docs/audit/remediation/2-data-security.md` R1 (proposed a
+**Companion doc:** `docs/history/audits/remediation/2-data-security.md` R1 (proposed a
 signature-permission gate — **rejected** by constraint: #70 Termux `am start`
 automation must keep working from the shell, which cannot hold a signature permission).
 **Related issue:** #156 "[Feature]: Encrypted Clipboard".

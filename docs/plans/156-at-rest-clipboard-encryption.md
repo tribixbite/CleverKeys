@@ -2,7 +2,7 @@
 
 **Status:** PROPOSED (design only — no code changes). Verified against source at commit `4ad8a536d`, 2026-07-17.
 **Issue:** #156 "[Feature]: Encrypted Clipboard" (EsterWings, open; owner reply confirms it's on the wish list and invites architecture input).
-**Predecessor:** `docs/audit/remediation-plans/security-backup-encryption.md` — shipped 2026-07-17 in `1114bb749` with the reusable substrate `src/main/kotlin/tribixbite/cleverkeys/backup/crypto/` (`Pbkdf2Sha256`, `EncryptedBackupFormat` CKENC1, `BackupCrypto`, `BackupPassphraseStore`). §10.6 of that doc resolved sequencing: export-channel first, at-rest clipboard (this doc) second.
+**Predecessor:** `docs/history/audits/remediation-plans/security-backup-encryption.md` — shipped 2026-07-17 in `1114bb749` with the reusable substrate `src/main/kotlin/tribixbite/cleverkeys/backup/crypto/` (`Pbkdf2Sha256`, `EncryptedBackupFormat` CKENC1, `BackupCrypto`, `BackupPassphraseStore`). §10.6 of that doc resolved sequencing: export-channel first, at-rest clipboard (this doc) second.
 
 ---
 

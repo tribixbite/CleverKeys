@@ -5,7 +5,7 @@ test-2400); geometric covers what CTC cannot serve. Cost today: 10.3 MB of APK
 (`swipe_encoder_android.onnx` 5,317,537 B + `swipe_decoder_android.onnx` 4,975,510 B) plus
 ~30–45 MB of heap when built.
 
-Evidence base: `docs/audit/2026-08-17-neural-vs-ctc-parity.md` — **preserve verbatim**, it is
+Evidence base: `docs/history/audits/2026-08-17-neural-vs-ctc-parity.md` — **preserve verbatim**, it is
 cited throughout and is the record of what this removal gives up.
 
 ## A. Load-bearing decisions (do these first; the rest is mechanical)

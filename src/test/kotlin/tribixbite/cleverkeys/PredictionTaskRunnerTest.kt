@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  *
  * The `background*` tests pin the WP9 audit M-2 fix: a prewarm (background slot) must never
  * cancel an in-flight swipe decode (foreground slot), while a decode still supersedes both an
- * older decode and an in-flight prewarm. See `docs/audit/remediation/3-core-ime.md` M-2.
+ * older decode and an in-flight prewarm. See `docs/history/audits/remediation/3-core-ime.md` M-2.
  */
 class PredictionTaskRunnerTest {
 

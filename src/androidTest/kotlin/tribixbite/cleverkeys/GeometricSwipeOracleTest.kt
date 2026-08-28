@@ -294,7 +294,7 @@ class GeometricSwipeOracleTest {
             // SWIPE because the commit-source enum is engine-agnostic. This
             // asserts TODAY's behavior, not the desired one — the provenance refactor
             // (SuggestionOrigin.GEOMETRIC already exists for BAR provenance) is tracked in
-            // docs/audit/remediation/3-core-ime.md m-1. Update this pin WITH that refactor,
+            // docs/history/audits/remediation/3-core-ime.md m-1. Update this pin WITH that refactor,
             // never on its own.
             assertEquals(PredictionSource.SWIPE, h.contextTracker.getLastCommitSource())
             assertTrue(h.suggestionBar.getCurrentSuggestions().isNotEmpty())

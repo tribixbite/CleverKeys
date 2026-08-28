@@ -53,7 +53,7 @@ Verify with `git ls-files` after commit.
 | D7 | VALID. Default stays `neural`; `fromPref` fallback protects downgrade. |
 | D8 | **VERIFIED.** ModelLoader signature accommodates the second model incl. the parity test's `enableHardwareAcceleration=false, xnnpackThreads=1` call. Proguard `-keep ai.onnxruntime.**` at :193 — no new rules. |
 
-## 3. Interaction requirements (audit `docs/audit/remediation/3-core-ime.md` §2026-08-11)
+## 3. Interaction requirements (audit `docs/history/audits/remediation/3-core-ime.md` §2026-08-11)
 
 - **M-2 (warmUp/decode cancellation race) — REQUIRED, born-fixed.** The plan's `CtcEngineAdapter` clones the geo bug exactly: ONE `PredictionTaskRunner`, `warmUpAsync` AND `decodeAsync` both via `cancelAndSubmit`, prewarm fired from `onStartInputView` (CleverKeysService:687) → prewarm can cancel an in-flight decode; the result callback also replays captured `ic`/`editorInfo` with no stale-field guard. Since this is a NEW file, do not inherit a catalogued bug: (a) make warmUp submit-only-if-idle (skip if a task is queued/running) instead of `cancelAndSubmit`; (b) guard the replay like the neural path's `isReplayInputStillCurrent` precedent (InputCoordinator:461). Leave GeometricEngineAdapter to the audit's own remediation.
 - **n-2 (untagged ML corpus) — DEFERRED-with-filing.** `performCtcSwipeTyping` calls the shared `beginSwipeCapture` (:487) whose `SwipeMLData("", "user_selection", …)` carries no engine/layout field — CTC traces will be indistinguishable from neural QWERTY traces in ML exports. Acceptable while `ctc` is opt-in-dark; MUST extend the audit's n-2 item to name CTC, and n-2's engine/layout tagging is a **hard gate before any default flip (O6)**.

@@ -587,7 +587,7 @@ class SuggestionHandler(
      * same engine the manual-tap path uses. InputCoordinator's divergent commit engine was deleted.
      *
      * This is also the seam the geometric engine feeds in R-1 steps 7-9 (see
-     * `docs/audit/remediation/3-core-ime.md` Addendum 2026-07-21): any engine producing a
+     * `docs/history/audits/remediation/3-core-ime.md` Addendum 2026-07-21): any engine producing a
      * prediction list routes through here, inheriting the guard/augment/commit stack.
      *
      * Swipe-commit deltas landed by step 6 (deliberate, previously divergent from tap):

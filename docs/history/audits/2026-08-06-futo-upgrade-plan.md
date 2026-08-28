@@ -1,7 +1,7 @@
 # FUTO Upgrade Plan — Offline Harness Now, In-App Engine Later
 
 **Date:** 2026-08-06
-**Ground truth:** `docs/audit/2026-08-06-futo-decoder-integration-study.md` (cited as "study §N")
+**Ground truth:** `docs/history/audits/2026-08-06-futo-decoder-integration-study.md` (cited as "study §N")
 and `docs/eval/futo-decoder-eval-notes.md` ("notes").
 **Scope:** PLAN ONLY. Track (i) = offline decoder/eval harness work we can do now.
 Track (ii) = DESIGN for a future in-app "FUTO-style" CTC engine, selectable via the

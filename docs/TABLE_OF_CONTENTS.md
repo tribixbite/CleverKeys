@@ -91,22 +91,24 @@
 |------|---------|--------|
 | `train-ctc-swipe-model.md` | End-to-end CTC swipe-model training → ONNX export guide (for a GPU box) | ✅ Active |
 
-### `/docs/audit/` Key Decision Records (2026-08-06)
+### `/docs/audit/` Live audit ledger
+
+Only in-force audit records live here; everything superseded is under `docs/history/audits/`.
 
 | File | Purpose | Status |
 |------|---------|--------|
-| `2026-08-06-futo-engine-integration-decision.md` | FUTO engine adoption decision — .pte→ONNX infeasible; ExecuTorch-in-app costly; **recommended: retrain own CTC model → ONNX** (license-clean) | ✅ Decided |
-| `2026-08-06-futo-decoder-integration-study.md` | Algorithm ground truth for the CTC decode port | ✅ Complete |
-| `2026-08-06-context-lm-review-findings.md` | Independent review of context-LM/privacy wave (H1-H3, M1-M7, L1-L10 — all resolved) | ✅ Resolved |
 | `2026-08-23-v1.5-delta-audit.md` | Complete post-v1.5 P0–P3 change audit | ✅ Complete |
 | `2026-08-23-v1.5-delta-evidence.md` | Commands, inventories, and evidence supporting the post-v1.5 audit | ✅ Complete |
 | `2026-08-23-v1.5-delta-remediation.md` | Finding-by-finding fixes, validation, and remaining release evidence | 🚧 Release evidence pending |
+| `2026-08-25-remediation-verification.md` | Verification of the remediation wave; residual findings CK-150-019..036 | 🚧 Residuals open |
+| `2026-08-28-archive-verification.md` | Pre-archive verification of the July–August audit corpus; leaked-item ledger ARC-001..050 | 🚧 ARC items open |
 
 ### `/docs/history/` History
 | File | Purpose | Status |
 |------|---------|--------|
 | `session_log_dec_2025.md` | December 2025 Work Log | ✅ Archived |
 | `neural-engine/` | The removed ONNX transformer engine: specs, decode pipeline, settings docs (ADR-011) | 📚 Archived |
+| `audits/` | July–August 2026 audit corpus (15 audits + `remediation/` 1–6 + `remediation-plans/`), archived 2026-08-28 after line-by-line verification (`docs/audit/2026-08-28-archive-verification.md`). Notable: `2026-08-06-futo-decoder-integration-study.md` remains the CTC decode-port algorithm ground truth; `2026-08-06-futo-engine-integration-decision.md` §2 is the FUTO licensing analysis | 📚 Archived |
 | `PRODUCTION_READY_NOV_16_2025.md` | Production readiness report | 📚 Reference |
 
 ## 🔄 Consolidation Status

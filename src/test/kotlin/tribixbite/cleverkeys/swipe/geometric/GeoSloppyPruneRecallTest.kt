@@ -3,7 +3,7 @@ package tribixbite.cleverkeys.swipe.geometric
 import org.junit.Test
 
 /**
- * STEP-0 MEASUREMENT (research doc `docs/audit/2026-07-20-geo-sloppy-research.md` §0):
+ * STEP-0 MEASUREMENT (research doc `docs/history/audits/2026-07-20-geo-sloppy-research.md` §0):
  * decompose the SLOPPY top-3 shortfall on the two failing layouts (en/Dvorak,
  * en/weird-custom) into a **pruning loss** (the true word never reaches the scorer)
  * vs a **scoring loss** (the true word is scored but out-ranked) — with en/QWERTY as a

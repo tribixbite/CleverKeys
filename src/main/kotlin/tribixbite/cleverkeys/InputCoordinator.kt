@@ -151,7 +151,7 @@ class PredictionTaskRunner(
  * [SuggestionHandler] — THE single pipeline (possessive augmentation, password guard,
  * contraction injection, exact-add, `specialPromptActive` prompt guard, and the one
  * deletion/spacing/tracking commit engine). InputCoordinator's divergent duplicates were
- * deleted in R-1 step 6 (see docs/audit/remediation/3-core-ime.md).
+ * deleted in R-1 step 6 (see docs/history/audits/remediation/3-core-ime.md).
  *
  * This is also the planned insertion site for the R-1 step 7 SwipeEngineRouter (geometric
  * engine for non-QWERTY layouts): any engine's prediction list feeds the same

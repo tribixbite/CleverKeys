@@ -23,7 +23,7 @@ committed coordination over working-tree edits.
 
 **PREVIOUS STATUS (2026-07-17):**
 - Feature-complete and released (v1.5.x on F-Droid).
-- Latest code-quality audit: `docs/audit/2026-07-17-code-quality-audit.md`.
+- Latest code-quality audit: `docs/history/audits/2026-07-17-code-quality-audit.md`.
 - Tier-1/Tier-2 remediation from that audit is in progress (clipboard PII log
   gating, migration rollback, Config null-safety, docs accuracy).
 - Features shipped: Short Swipe Customization, Profile System, Media Clipboard (v4).

@@ -3,7 +3,7 @@
 ## Feature Overview
 **Feature Name**: Geometric Swipe Engine (`swipe.geometric`) — dictionary-driven, zero-training swipe decoder for arbitrary layouts and scripts
 **Priority**: P1
-**Status**: Implemented AND WIRED (WP9 R-1 steps 7-9 landed 2026-07-21: `swipe/SwipeEngineRouter` + `swipe/GeometricEngineAdapter` + `swipe_engine_mode` pref (ctc|geometric, default ctc since 2026-08-18 — ADR-011; Settings → Swipe Typing → Prediction Engine); see `docs/audit/remediation/3-core-ime.md` § "Steps 7-9 — LANDED") — all 6 phases committed and green; as-built deltas in § As-Built Notes (2026-07-20)
+**Status**: Implemented AND WIRED (WP9 R-1 steps 7-9 landed 2026-07-21: `swipe/SwipeEngineRouter` + `swipe/GeometricEngineAdapter` + `swipe_engine_mode` pref (ctc|geometric, default ctc since 2026-08-18 — ADR-011; Settings → Swipe Typing → Prediction Engine); see `docs/history/audits/remediation/3-core-ime.md` § "Steps 7-9 — LANDED") — all 6 phases committed and green; as-built deltas in § As-Built Notes (2026-07-20)
 **Target Version**: v1.6.x (engine + pure-JVM tests only; router/wiring deferred to WP9)
 
 ### Summary
@@ -23,7 +23,7 @@ A pure-JVM SHARK2-style template matcher that decodes swipe traces against per-l
 - **Correction (verified)**: Greek QWERTY does *not* currently lose swipe — `srcs/layouts/grek_qwerty.xml:2` declares `script="latin"` with name `"QWERTY (Greek)"`, so the allowlist returned TRUE and the QWERTY-trained transformer ran on Greek text (moot since 2026-08-18: that engine and the allowlist are both gone). That is a mis-gating bug (the `Config.kt:1155-1156` comment says "exclude Greek/Georgian QWERTY" but the layout's own metadata defeats it) — **file it as a separate issue**; it is evidence that layout `script` attributes are untrustworthy metadata (see Script Abstraction), not a premise of this spec.
 - `ROADMAP.md:51-60` mandates the dual-path plan: keep the transformer for QWERTY+Latin; add a geometric/template matcher (Urik/AnySoftKeyboard family) for everything else; first target Russian ЙЦУКЕН, then AZERTY/QWERTZ/Dvorak/Colemak/Neo2; ship behind a feature flag with per-layout auto-routing.
 - Neural per-layout retraining cannot cover **user-authored arbitrary XML layouts** (arbitrary key widths/shifts/row counts/row scale, `KeyboardData.kt:228-241,269`) — only a geometric engine generalizes there. (Swipe corpora for Russian now exist — FUTO ~1.04M swipes, Yandex Cup 2023 — so issue #6's "no datasets" is stale; those corpora become free *evaluation* data, never training data.)
-- **WP9 pipeline unification is DEFERRED** (`docs/audit/2026-07-18-grade-a-roadmap.md:89-91`). This work package builds the engine and its test suite only. Zero modifications to `SuggestionHandler`, `InputCoordinator` (gate at `:1124-1126`), `onnx/SwipePredictorOrchestrator`, `CleverKeysService`, or `Config.isSwipeTypingSupportedForLayout`. *(Overtaken by events: WP9 wiring later landed — see Status line — and `SwipePredictorOrchestrator` plus the `isSwipeTypingSupportedForLayout` allowlist were deleted with the neural engine on 2026-08-18, ADR-011. The live router is `swipe/SwipeEngineRouter`.)*
+- **WP9 pipeline unification is DEFERRED** (`docs/history/audits/2026-07-18-grade-a-roadmap.md:89-91`). This work package builds the engine and its test suite only. Zero modifications to `SuggestionHandler`, `InputCoordinator` (gate at `:1124-1126`), `onnx/SwipePredictorOrchestrator`, `CleverKeysService`, or `Config.isSwipeTypingSupportedForLayout`. *(Overtaken by events: WP9 wiring later landed — see Status line — and `SwipePredictorOrchestrator` plus the `isSwipeTypingSupportedForLayout` allowlist were deleted with the neural engine on 2026-08-18, ADR-011. The live router is `swipe/SwipeEngineRouter`.)*
 - Dictionary-scale note: the shipped default English dictionary is **98,140 words** (`memory/todo.md:171-174`, verified: `en_enhanced.json` has 98,140 entries; `README.md`'s "52,000" table row is stale). **98,140 is the primary sizing case for every English budget in this spec.**
 
 ## Requirements
@@ -521,7 +521,7 @@ Non-QWERTY layouts: same floors − 3 pts initially (ЙЦУКЕН: 31 center let
 | — | Draft citation fixes found during verification | Orchestrator is `onnx/SwipePredictorOrchestrator.kt:297` returning `PredictionPostProcessor.Result` (noted at router seam); README swipe warning at 234-247; JCUKEN letter rows 11/11/9 confirmed (31 center letters); dedupe semantics path corrected to `onnx/PredictionPostProcessor.kt:119-137`. *(The two `onnx/` citations describe the neural pipeline as then-built; both files were deleted 2026-08-18 — ADR-011.)* |
 
 ---
-**Created**: 2026-07-20 (revised same day post-critique) · **Owner**: swipe.geometric work package · **Sources**: 5 research reports + 3-lens adversarial critique; primary refs `ROADMAP.md:51-60`, `README.md:234-247,395-408`, `docs/audit/2026-07-18-grade-a-roadmap.md:89-91`, `Config.kt:1146-1163`, `memory/todo.md:171-174`, SHARK2 (UIST 2004), FlorisBoard `StatisticalGlideTypingClassifier`, AnySoftKeyboard `GestureTypingDetector`, Urik, FUTO (arXiv 2606.25247). All disputed repo facts re-verified against the working tree on 2026-07-20.
+**Created**: 2026-07-20 (revised same day post-critique) · **Owner**: swipe.geometric work package · **Sources**: 5 research reports + 3-lens adversarial critique; primary refs `ROADMAP.md:51-60`, `README.md:234-247,395-408`, `docs/history/audits/2026-07-18-grade-a-roadmap.md:89-91`, `Config.kt:1146-1163`, `memory/todo.md:171-174`, SHARK2 (UIST 2004), FlorisBoard `StatisticalGlideTypingClassifier`, AnySoftKeyboard `GestureTypingDetector`, Urik, FUTO (arXiv 2606.25247). All disputed repo facts re-verified against the working tree on 2026-07-20.
 ---
 
 ## As-Built Notes (2026-07-20)
@@ -570,7 +570,7 @@ lives in its commit message / phase report. Deltas vs the tables above:
 
 ## As-Built Notes — SLOPPY-tier fix (2026-07-20, addendum)
 
-Resolves the open OQ-1 SLOPPY item (`docs/audit/2026-07-20-geo-sloppy-research.md`):
+Resolves the open OQ-1 SLOPPY item (`docs/history/audits/2026-07-20-geo-sloppy-research.md`):
 `sloppy_underGeoFull` was red on en/weird (64.5%) and en/Dvorak (75.8%) vs the 0.78 floor.
 
 **Step 0 (measurement, `GeoSloppyPruneRecallTest`, -PgeoFull) — the decision maker.**

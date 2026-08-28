@@ -23,8 +23,8 @@ import java.util.concurrent.TimeUnit
 /**
  * WP9 — Pipeline-Unification Characterization Oracle (step 2 of R-1).
  *
- * Spec: `docs/audit/remediation-plans/wp9-pipeline-unification-oracle.md`.
- * Parent: `docs/audit/remediation/3-core-ime.md` (R-1 unification).
+ * Spec: `docs/history/audits/remediation-plans/wp9-pipeline-unification-oracle.md`.
+ * Parent: `docs/history/audits/remediation/3-core-ime.md` (R-1 unification).
  *
  * Records the exact suggestion + COMMIT behavior for both live pipelines —
  *   - InputCoordinator (swipe auto-insert front-end + cursor-sync bookkeeping), and

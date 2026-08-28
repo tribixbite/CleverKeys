@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-18
 **Base commit:** `1db22cd6b` (11 commits past the 2026-07-17 audit's `4ad8a536d`)
-**Source audit:** `docs/audit/2026-07-17-code-quality-audit.md` (overall **C+**)
+**Source audit:** `docs/history/audits/2026-07-17-code-quality-audit.md` (overall **C+**)
 **Author:** Fable-planned, verified against HEAD, executed via Opus implementers.
 
 This roadmap sequences the work to raise the overall grade. It records what

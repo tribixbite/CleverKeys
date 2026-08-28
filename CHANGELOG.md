@@ -110,7 +110,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   unaffected). Italian, Portuguese and Swedish swipes on QWERTY move from the transformer to
   the geometric engine and may be slightly less accurate until CTC is validated for them.
   The full comparison, including what was given up, is
-  `docs/audit/2026-08-17-neural-vs-ctc-parity.md`.
+  `docs/history/audits/2026-08-17-neural-vs-ctc-parity.md`.
 - The ~25 `neural_*` preferences, the "Beam Autocorrect" and raw-beam debug toggles, and the
   Finger Occlusion Compensation slider — every one of them was read only by the removed
   engine.

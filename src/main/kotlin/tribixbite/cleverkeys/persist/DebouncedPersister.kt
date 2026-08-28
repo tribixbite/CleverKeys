@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit
 /**
  * Dirty-flag + debounced asynchronous write-back helper for learned-data stores.
  *
- * Design (see docs/audit/2026-08-06-context-lm-nextword-rec.md §1.3):
+ * Design (see docs/history/audits/2026-08-06-context-lm-nextword-rec.md §1.3):
  * - [markDirty] sets a dirty flag and (re)schedules a flush [debounceMs] in the
  *   future — each new mark within the window pushes the deadline out, so a burst
  *   of records coalesces into a single storage write.

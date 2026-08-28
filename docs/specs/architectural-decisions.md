@@ -208,7 +208,7 @@ SHARK2-style decoder (`swipe/geometric/`) everywhere else. `swipe_engine_mode` b
 
 **Rationale**:
 - **It lost on its own measured ground.** 74.62 vs CTC's 89.31 top-1 on test-2400 — the
-  full comparison is `docs/audit/2026-08-17-neural-vs-ctc-parity.md`, which is the record of
+  full comparison is `docs/history/audits/2026-08-17-neural-vs-ctc-parity.md`, which is the record of
   exactly what this removal gives up and is preserved verbatim for that reason.
 - **It only worked on QWERTY.** The transformer was trained on QWERTY-US key positions, so
   every other layout was routed to "no swipe engine at all" in the default mode — the
@@ -241,7 +241,7 @@ models are republishable from CleverKeys-ML. Nothing about the surviving pipelin
 adding a third engine later; `SwipeEngineRouter` is still the single insertion point.
 
 **References**: `docs/plans/2026-08-18-neural-engine-removal.md` (the implementation plan),
-`docs/audit/2026-08-17-neural-vs-ctc-parity.md` (the evidence),
+`docs/history/audits/2026-08-17-neural-vs-ctc-parity.md` (the evidence),
 `docs/history/neural-engine/` (the archived specs).
 
 

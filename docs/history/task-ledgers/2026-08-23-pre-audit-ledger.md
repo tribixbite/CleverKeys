@@ -45,7 +45,7 @@ P3 (the trie is gone); issue #9 (no layout is swipe-disabled any more).
 ## ✅ DONE — WP9 geo-wiring audit remediation (2026-08-11, `fb86a641`)
 
 Closed the open findings of the steps 6-9 implementation audit
-(`docs/audit/remediation/3-core-ime.md` → "Review findings (2026-08-11)"; the status table
+(`docs/history/audits/remediation/3-core-ime.md` → "Review findings (2026-08-11)"; the status table
 now carries per-row FIXED/PARTIAL entries and a "Remediation LANDED" section with the design
 detail).
 
@@ -220,7 +220,7 @@ OOMs are gone (Dalvik alloc 184.1 → 114.0 MiB, headroom 26% → 55%, crash buf
 with the replace/append split intact and every engine entering alias keys at its scale's
 floor. GIF subsystem refuted as the memory cause three ways. Neural NOT removed — it is the
 audit-M1 fallthrough for languages CTC does not serve. Gates: lint 0 errors, runPureTests
-**1996**, both compiles clean. Full findings: `docs/audit/2026-08-17-neural-vs-ctc-parity.md`.
+**1996**, both compiles clean. Full findings: `docs/history/audits/2026-08-17-neural-vs-ctc-parity.md`.
 
 Outstanding, in priority order:
 
@@ -538,7 +538,7 @@ Outstanding, in priority order:
       `docs/eval/2026-08-06-offline-decoder-speedup.md`.
 - [x] FUTO engine integration decision: .pte→ONNX infeasible; ExecuTorch-in-app costly;
       **retrain own CTC → ONNX recommended** (license-clean).
-      `docs/audit/2026-08-06-futo-engine-integration-decision.md`.
+      `docs/history/audits/2026-08-06-futo-engine-integration-decision.md`.
 - [x] `swipe/ctc/` design-only module landed (decode+featurize+trie, pure-JVM tested, NOT
       wired; blocked on CTC model export) — `docs/specs/ctc-swipe-engine.md`; training
       guide for GPU box: `docs/guides/train-ctc-swipe-model.md`.
@@ -668,7 +668,7 @@ pure-JVM `swipe.geometric` package; NOT wired into live pipeline — WP9 stays d
       spec As-Built Notes appendix + Status flip. Deviations noted: SLOPPY top-5 0.82,
       whole-pruner recall floors (see spec § As-Built Notes).
 - [x] RESOLVED 2026-07-20 — geoFull SLOPPY decision (was: en/weird 64.5% + en/Dvorak
-      75.8% vs 0.78). Executed `docs/audit/2026-07-20-geo-sloppy-research.md`:
+      75.8% vs 0.78). Executed `docs/history/audits/2026-07-20-geo-sloppy-research.md`:
       **Step 0** (new `GeoSloppyPruneRecallTest`, -PgeoFull) measured the attribution —
       weird PRUNER-limited (recall 80.2% vs 93.3% QWERTY), Dvorak SCORER-limited
       (recall 92.9% healthy, short same-row reordering). **Fix = 3 levers, all
@@ -830,7 +830,7 @@ pure-JVM `swipe.geometric` package; NOT wired into live pipeline — WP9 stays d
   into the SH transform. Needs its own oracle round (hot typing path; multilang
   primary/secondary matrix; BackspaceUndoTest scans reference the injection patterns).
 - **PROPOSED**: hybrid engine rank fusion (per-swipe RRF merge on QWERTY, wait-both timing,
-  neural-timeout→geo fallback) — `docs/audit/remediation-plans/hybrid-engine-rank-fusion.md`;
+  neural-timeout→geo fallback) — `docs/history/audits/remediation-plans/hybrid-engine-rank-fusion.md`;
   offline corpus-replay go/no-go gate BEFORE wiring; awaiting user sign-off.
 - **NEXT (R-1)**: Termux-deletion DECISION (user-visible, separate) remains open.
 - **WP8 FULLY COMPLETE** (bd8aafb3): the deferred index-sensitive batch — 285 control
@@ -897,14 +897,14 @@ Big multi-agent session (Fable audits/reviews/planning, Opus implementation). 16
 - **Fable remediation re-eval** (7/8 commits SOLID, crypto hand-verified): found + fixed F1 headless
   plaintext-import TOCTOU/fail-open (649441968), and F2/F3/F4 neural init-retry-backoff-never-engaged +
   post-shutdown session leak + stale-IC replay (2352989f1).
-- **Grade-A batch** (roadmap docs/audit/2026-07-18-grade-a-roadmap.md): Turkish-i key mislocation,
+- **Grade-A batch** (roadmap docs/history/audits/2026-07-18-grade-a-roadmap.md): Turkish-i key mislocation,
   moveCursorSel guard, supportsRtl, PII log gating (de097df8a); ~4,120 LOC verified-dead-code deletion
   (de097df8a + 4c3d7ab72); Python dictionary-pipeline integrity — spell-oracle fail-loud, V2 truncation,
   reproducible langpack ZIPs (457a30d3b); eng-practices — lint gate abortOnError=true + baseline regen,
   versionCode overflow guard, AutoSpaceLogicTest→real seam, CI dedup (b7dfd5279).
 - **TalkBack accessibility** (the audit's #1 grade lever, UI a11y 1/10): ExploreByTouchHelper virtual
   view tree, pure geometry + labeller (22 pure tests), ACTION_CLICK via Pointers for modifier latching,
-  removed dead sticky_keys/voice_guidance toggles — commit 73315ece6. Plan: docs/audit/2026-07-18-accessibility-implementation-plan.md.
+  removed dead sticky_keys/voice_guidance toggles — commit 73315ece6. Plan: docs/history/audits/2026-07-18-accessibility-implementation-plan.md.
 - **ew-cli full run**: first pass 1395/1405, 10 failures ALL pre-existing test-drift (V4→V5 asserts,
   a leaked backup passphrase making later exports encrypt, reflection signature drift, a >512KB payload
   over the Binder limit) — zero production regressions; fixed in 11988e519. Second full pass 1408/1410,
@@ -917,7 +917,7 @@ Big multi-agent session (Fable audits/reviews/planning, Opus implementation). 16
   smaller: WP5 scope-cancel, WP6 SuggestionBar perf, WP8 i18n/theming.
 - **User rule recorded** (memory): Opus 4.8 subagents for code implementation, Fable for audits/reviews/planning.
 
-## ✅ Encrypted backups SHIPPED (2026-07-17, commit 1114bb749) → docs/audit/remediation-plans/security-backup-encryption.md
+## ✅ Encrypted backups SHIPPED (2026-07-17, commit 1114bb749) → docs/history/audits/remediation-plans/security-backup-encryption.md
 Closes the exported-BackupRestoreActivity exfil/injection vector (audit #2) WITHOUT breaking
 Termux `am start` automation — backups are AES-256-GCM encrypted so an attacker triggering an
 export gets ciphertext and injection fails the GCM tag. Two-stage Fable-plan→Opus-code→verify:
@@ -932,7 +932,7 @@ Full suite green: **1440 pure / 261 MockK**; instrumented E2E **9/9 green on emu
 (Pixel7/API34, verified real Keystore wrap + headless fail-closed/plaintext-reject).
 REMAINING: optional Argon2id upgrade (kdf_id reserved); wire ew-cli into CI (EW_API_TOKEN).
 
-## ✅ #156 Private copy/paste SHIPPED (2026-07-17, commits 520658ff5 + 168a2df9d) → docs/audit/remediation-plans/156-private-copy-paste.md
+## ✅ #156 Private copy/paste SHIPPED (2026-07-17, commits 520658ff5 + 168a2df9d) → docs/history/audits/remediation-plans/156-private-copy-paste.md
 User picked private-copy/paste over at-rest DB encryption. Copy selection into CleverKeys' clipboard
 WITHOUT it reaching the OS clipboard. Two entry points: in-IME COPY_PRIVATE key ("copy_private" 🔒⎘,
 KeyEventHandler + Keyboard2View) and a PROCESS_TEXT toolbar activity (PrivateCopyProcessTextActivity,
@@ -948,7 +948,7 @@ large blind-index/V5-vs-V6 refactor). Clipboard DB has NO FTS (search is in-memo
 is 32-bit hashCode. Follow-ups for private-copy: private-only-tab UX, whether to exclude private from
 history-monitoring entirely.
 
-## ✅ Audit-remediation Tier 1–2 EXECUTED (2026-07-17) → docs/audit/2026-07-17-code-quality-audit.md
+## ✅ Audit-remediation Tier 1–2 EXECUTED (2026-07-17) → docs/history/audits/2026-07-17-code-quality-audit.md
 Fresh 7-agent code-quality audit (grade C+) then Fable-5-plan / Opus-4.8-code / central-verify
 pipeline across 5 disjoint work-streams + a trimmed security stream. Verified compile-clean,
 **1405 pure + 245 MockK tests green**, then committed as 6 conventional commits (bb5c1e8e0 neural,
@@ -969,7 +969,7 @@ pipeline across 5 disjoint work-streams + a trimmed security stream. Verified co
 - **Audit correction:** finding #4 (ew-cli) was overstated — the 1,371-test instrumented suite is
   real and run manually via ew-cli/emulator.wtf; the gap is CI-gating only (P1→P2).
 - **DEFERRED (need decisions / larger):** backup-ENCRYPTION implementation
-  (docs/audit/remediation-plans/security-backup-encryption.md — AES-256-GCM+PBKDF2, keeps `am start`
+  (docs/history/audits/remediation-plans/security-backup-encryption.md — AES-256-GCM+PBKDF2, keeps `am start`
   automation; open Qs: mandatory-vs-opt-out plaintext, PBKDF2-vs-Argon2id, #156 at-rest sequencing);
   ew-cli CI job (needs EW_API_TOKEN secret); git-history rewrite EXECUTION (strip script gated on
   F-Droid publish of v1.5.0); R8 re-enable (needs soak); TalkBack a11y; UI i18n; pipeline

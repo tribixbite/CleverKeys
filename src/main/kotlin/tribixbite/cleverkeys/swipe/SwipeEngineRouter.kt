@@ -14,7 +14,7 @@ import tribixbite.cleverkeys.KeyboardData
  *
  * The QWERTY-trained transformer ("neural") that used to own the QWERTY-Latin family was
  * removed on 2026-08-18 — CTC beats it (89.31 vs 74.62 top-1 on test-2400, see
- * `docs/audit/2026-08-17-neural-vs-ctc-parity.md`) and geometric covers what CTC cannot
+ * `docs/history/audits/2026-08-17-neural-vs-ctc-parity.md`) and geometric covers what CTC cannot
  * serve, so no (layout, language) cell is left without a swipe engine. Legacy pref values
  * (`"neural"`, `"hybrid"`) and anything else unrecognised land on the [Mode.CTC] default via
  * [Mode.fromPref] — backup import accepts arbitrary strings, so this must never crash.

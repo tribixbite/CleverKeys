@@ -17,9 +17,9 @@ do not start Milestone A on the release branch. The open CK-150 items in
 
 | ML checklist item | Status 2026-08-20 | Status now | Evidence / where it went |
 |---|---|---|---|
-| 1.1 banner the execution brief (MEDIUM-3) | open | **CLOSED 2026-08-25** | banner added atop `docs/audit/remediation-plans/ctc-integration-execution-brief.md` |
+| 1.1 banner the execution brief (MEDIUM-3) | open | **CLOSED 2026-08-25** | banner added atop `docs/history/audits/remediation-plans/ctc-integration-execution-brief.md` |
 | 1.2 emission check runs nowhere automatic (HIGH-4 residue) | open, 3-class gate | **CLOSED 2026-08-25** (`0bcce870`) | `CtcEmissionModelParityTest` appended to the gate (6 classes), fixture verified to ship in the androidTest APK, list pinned by `CuratedInstrumentationListTest`, `OK (0 tests)` regex hole closed |
-| 1.3 two unmarked `sw2345` citations (HIGH-2 residue) | open | **CLOSED 2026-08-25** | finding 13 struck in `docs/audit/2026-08-17-neural-vs-ctc-parity.md`; superseded-figure notes added at `docs/eval/2026-08-15-ctc-per-language-lambda.md` (both sites) |
+| 1.3 two unmarked `sw2345` citations (HIGH-2 residue) | open | **CLOSED 2026-08-25** | finding 13 struck in `docs/history/audits/2026-08-17-neural-vs-ctc-parity.md`; superseded-figure notes added at `docs/eval/2026-08-15-ctc-per-language-lambda.md` (both sites) |
 | 1.4 app CTC references a generation behind (NEW-6) | open | **CLOSED 2026-08-25** | `memory/HANDOFF.md` (both paragraphs) and `docs/specs/ctc-swipe-engine.md:786` updated to `ru_synth_v3_ch80_fp16w` / sha `8fffa75c…` / 85.07; guide mirror refreshed |
 | 1.5 11 MB superseded ONNX in androidTest (MEDIUM-4) | open | **already closed pre-verification** | `src/androidTest/assets/ctc_bench/` holds only a README (2026-08-20) explaining the deletion and the "ship candidate" history; restoration steps included |
 | 1.6 LOW-6 dev absolute path in fixtures | open | **closed** | `rg kd_fp16w src/` → no matches |

@@ -16,7 +16,7 @@ suggestion pipeline.
 
 > The ONNX transformer ("neural") engine that used to be the default was removed on
 > 2026-08-18. CTC replaced it on measured accuracy (89.31 vs 74.62 top-1 on test-2400,
-> `docs/audit/2026-08-17-neural-vs-ctc-parity.md`) while geometric covers every cell CTC does
+> `docs/history/audits/2026-08-17-neural-vs-ctc-parity.md`) while geometric covers every cell CTC does
 > not serve. The archived spec is `docs/history/neural-engine/neural-prediction-spec.md`.
 
 ## Key Components

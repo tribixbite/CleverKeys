@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-18 · **Target:** audit finding #3 (P1), UI accessibility subscore 1/10 —
 the single biggest overall grade lever. **Status:** planned, not yet implemented.
-**Base:** grounded in source at HEAD; corrects the `docs/audit/remediation/4-ui-layer.md:141-256`
+**Base:** grounded in source at HEAD; corrects the `docs/history/audits/remediation/4-ui-layer.md:141-256`
 skeleton in three places (marked ⚠ below).
 
 ## Ground truth

@@ -5,11 +5,11 @@
 **Question:** Should CleverKeys add a FUTO-style CTC engine as a user-selectable swipe
 engine, and if so HOW — which runtime, whose model weights, and in what product posture
 (replace / route / fuse)?
-**Inputs:** `docs/audit/2026-08-06-futo-decoder-integration-study.md` ("study"),
-`docs/audit/2026-08-06-futo-upgrade-plan.md` ("plan"),
+**Inputs:** `docs/history/audits/2026-08-06-futo-decoder-integration-study.md` ("study"),
+`docs/history/audits/2026-08-06-futo-upgrade-plan.md` ("plan"),
 `docs/specs/ctc-swipe-engine.md` ("ctc spec"),
 `docs/eval/2026-07-24-test2400-head2head.md` ("head2head"),
-`docs/audit/remediation-plans/hybrid-engine-rank-fusion.md` ("fusion proposal"),
+`docs/history/audits/remediation-plans/hybrid-engine-rank-fusion.md` ("fusion proposal"),
 `swipe/SwipeEngineRouter.kt`, `onnx/SwipePredictorOrchestrator.kt`, `Config.kt`,
 plus **primary-source license verification performed for this audit** (HF
 `futo-org/futo-swipe` `LICENSE.md` full text + HF API license metadata, fetched

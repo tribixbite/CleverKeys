@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-20
 **Author:** Fable (design), Opus (implementation)
-**Parent plan:** `docs/audit/remediation/3-core-ime.md` → "Pipeline Unification Plan"
+**Parent plan:** `docs/history/audits/remediation/3-core-ime.md` → "Pipeline Unification Plan"
 **Status of prerequisites:** R-2 (IC dead code) DONE (WP4, 2026-07-18); R-4 (logged catch) DONE;
 R-5/R-6 lifecycle DONE (WP5). This doc specifies **step 2**: the regression oracle that must be
 green against CURRENT code before any logic moves (steps 3–7).
