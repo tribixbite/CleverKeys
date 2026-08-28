@@ -2,6 +2,10 @@ package tribixbite.cleverkeys
 
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.TimeZone
+import tribixbite.cleverkeys.backup.BackupSourceInfo
 import tribixbite.cleverkeys.backup.ChangeType
 import tribixbite.cleverkeys.backup.PrefValue
 import tribixbite.cleverkeys.backup.SettingsChange
@@ -19,6 +23,7 @@ import tribixbite.cleverkeys.backup.SettingsChange
  *     unchanged) + extra_keys-style objects + non-matching shapes.
  *   - `renderDelta` integration when both sides are JsonBlob.
  *   - Truncation of long name lists.
+ *   - ARC-036 `renderBackupSourceNotice` for encrypted vs plaintext sources.
  */
 class BackupRestorePreviewRenderTest {
 
@@ -194,6 +199,70 @@ class BackupRestorePreviewRenderTest {
         assertThat(out).contains("(none)")
         assertThat(out).contains("\u2192")
         assertThat(out).contains("[1 layout: qwerty]")
+    }
+
+    // ── ARC-036: import-source provenance notice ─────────────────────────
+
+    /** Fixed-zone formatter so the assertion is independent of the runner's timezone. */
+    private val utcFormat: (Long) -> String = { ms ->
+        SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US)
+            .apply { timeZone = TimeZone.getTimeZone("UTC") }
+            .format(java.util.Date(ms))
+    }
+
+    @Test
+    fun sourceNotice_encrypted_showsLockBadgeAndExportTimestamp() {
+        // The replay-risk acceptance (backup-encryption design §7 residual #2) rests on the
+        // user SEEING how old the backup is before applying it. 2026-07-17 12:34:00 UTC.
+        val notice = renderBackupSourceNotice(
+            BackupSourceInfo.encrypted(1_784_291_640_000L), utcFormat
+        )
+        assertThat(notice).contains("\uD83D\uDD12")
+        assertThat(notice).contains("Encrypted backup")
+        assertThat(notice).contains("2026-07-17 12:34")
+    }
+
+    @Test
+    fun sourceNotice_plaintext_showsTheReExportAdvisory() {
+        // Design §9: "Plaintext legacy file via UI → today's flow, plus a one-line notice."
+        val notice = renderBackupSourceNotice(BackupSourceInfo.PLAINTEXT, utcFormat)
+        assertThat(notice).isEqualTo("Unencrypted backup — consider re-exporting encrypted.")
+    }
+
+    @Test
+    fun sourceNotice_plaintext_neverClaimsEncryption() {
+        val notice = renderBackupSourceNotice(BackupSourceInfo.PLAINTEXT, utcFormat)
+        assertThat(notice).doesNotContain("\uD83D\uDD12")
+        assertThat(notice).doesNotContain("Encrypted")
+    }
+
+    @Test
+    fun sourceNotice_encryptedWithoutTimestamp_degradesToTheBadgeAlone() {
+        // Defensive branch: never render the literal "null" where a date belongs.
+        val notice = renderBackupSourceNotice(
+            BackupSourceInfo(encrypted = true, exportTimestampMs = null), utcFormat
+        )
+        assertThat(notice).isEqualTo("\uD83D\uDD12 Encrypted backup")
+        assertThat(notice).doesNotContain("null")
+    }
+
+    @Test
+    fun sourceNotice_defaultFormatter_rendersAMinutePrecisionDate() {
+        // The production call site uses the default (device-timezone) formatter; assert its
+        // SHAPE without pinning a timezone, so this can't pass vacuously either.
+        val notice = renderBackupSourceNotice(BackupSourceInfo.encrypted(1_784_291_640_000L))
+        assertThat(notice).containsMatch("""exported \d{4}-\d{2}-\d{2} \d{2}:\d{2}$""")
+    }
+
+    @Test
+    fun backupTimestampFormatter_isStableForAFixedInstantAndZone() {
+        val prior = TimeZone.getDefault()
+        try {
+            TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
+            assertThat(formatBackupTimestamp(1_784_291_640_000L)).isEqualTo("2026-07-17 12:34")
+        } finally {
+            TimeZone.setDefault(prior)
+        }
     }
 
     @Test

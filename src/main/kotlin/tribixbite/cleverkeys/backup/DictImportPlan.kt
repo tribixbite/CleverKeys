@@ -29,4 +29,9 @@ data class DictImportPlan(
     val perLanguage: Map<String, LangChanges>,
     val mergedCustomWordsByLang: Map<String, Map<String, Int>>,
     val mergedDisabledWordsByLang: Map<String, Set<String>>,
+    /**
+     * ARC-036: encrypted-vs-plaintext + export timestamp of the source file. See
+     * [SettingsImportPlan.source] — same contract, same default, set by the manager after read.
+     */
+    val source: BackupSourceInfo = BackupSourceInfo.PLAINTEXT,
 )

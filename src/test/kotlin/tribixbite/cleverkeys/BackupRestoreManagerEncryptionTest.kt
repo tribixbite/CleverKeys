@@ -14,6 +14,7 @@ import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
+import tribixbite.cleverkeys.backup.BackupSourceInfo
 import tribixbite.cleverkeys.backup.ShortSwipeImporter
 import tribixbite.cleverkeys.backup.crypto.BackupCrypto
 import tribixbite.cleverkeys.backup.crypto.BackupPassphraseStore
@@ -171,11 +172,28 @@ class BackupRestoreManagerEncryptionTest {
 
         // SettingsImportPlan is a data class — structural equality proves the pure
         // preview engine sees exactly the same input for encrypted vs plaintext.
+        //
+        // ARC-036: `source` is the deliberate exception — it describes the CONTAINER, not the
+        // payload, so it must differ. Normalizing it here keeps this test's original claim
+        // (identical payload-derived plan) exact rather than weakening it to a field subset.
         assertEquals(
             "Encrypted import must build the identical SettingsImportPlan as plaintext",
-            plainPlan, encPlan,
+            plainPlan, encPlan.copy(source = plainPlan.source),
         )
         assertTrue("plan should carry changes", encPlan.changes.isNotEmpty() || encPlan.parseSkippedKeys.isNotEmpty())
+
+        // ARC-036: the header timestamp reaches the preview model instead of being discarded.
+        // This is what the backup-encryption design's replay-risk acceptance (§7 residual #2)
+        // leaned on — a replayed old backup must be visibly stale before the user taps Apply.
+        assertEquals(
+            "a plaintext source carries no export timestamp",
+            BackupSourceInfo.PLAINTEXT, plainPlan.source,
+        )
+        assertTrue("an encrypted source is flagged as encrypted", encPlan.source.encrypted)
+        assertEquals(
+            "the CKENC1 header's AAD-covered export timestamp is preserved verbatim",
+            java.lang.Long.valueOf(1_700_000_000_000L), encPlan.source.exportTimestampMs,
+        )
     }
 
     // ── headless mandatory-encryption import gate (TOCTOU fix, 2026-07-18) ─────────

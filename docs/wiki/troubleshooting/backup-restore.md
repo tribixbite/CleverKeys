@@ -207,6 +207,11 @@ Go to **Settings → 💾 Backup & Restore → Backup Password** and tap **Set P
   magic bytes decide. (Automation exports write to whatever path *you* pass on the
   `am start` command line, so the suffix is yours to add there.)
 - **Restoring on another device** works by entering the *same* password there.
+- **The settings and dictionary import previews tell you what you are about to apply
+  *from*:** an encrypted file shows `🔒 Encrypted backup — exported <date/time>`, read
+  out of the container's authenticated header, so you can spot a file that is much
+  older than you expected before tapping Apply. A plaintext file shows *"Unencrypted
+  backup — consider re-exporting encrypted."* instead.
 
 **A Backup Password is REQUIRED for automation.** The `am start` export/import commands
 below fail closed with *"Set a backup password in Settings → Backup & Restore first"*

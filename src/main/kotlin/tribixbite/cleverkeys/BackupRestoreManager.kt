@@ -26,6 +26,7 @@ import java.util.*
 import kotlin.math.abs
 import android.provider.UserDictionary
 import tribixbite.cleverkeys.customization.ShortSwipeCustomizationManager
+import tribixbite.cleverkeys.backup.BackupSourceInfo
 import tribixbite.cleverkeys.backup.DictImportApplier
 import tribixbite.cleverkeys.backup.DictImportPlan
 import tribixbite.cleverkeys.backup.DictImportPlanBuilder
@@ -283,6 +284,10 @@ open class BackupRestoreManager(
                         "import action (expected one of $expectedContentTypes)."
                 )
             }
+            // ARC-036: same import-time provenance record as the JSON seam. The archive imports
+            // (full backup, clipboard ZIP) apply directly with no preview dialog to render it in,
+            // so the log is the only surface here.
+            logEncryptedImport(header.contentType, header.timestampMillis)
             return tempFile
         } catch (e: javax.crypto.AEADBadTagException) {
             tempFile.delete()
@@ -635,7 +640,25 @@ open class BackupRestoreManager(
      * @param expectedContentTypes if non-empty, the decrypted container's content-type
      *   must be one of these (binds a settings backup to IMPORT_SETTINGS, etc.).
      */
-    fun readJsonFromUri(uri: Uri, expectedContentTypes: Set<Byte>): String {
+    fun readJsonFromUri(uri: Uri, expectedContentTypes: Set<Byte>): String =
+        readJsonWithSource(uri, expectedContentTypes).first
+
+    /**
+     * ARC-036: [readJsonFromUri] plus the provenance of the FILE — whether it was a `CKENC1`
+     * container and, for one, the AAD-covered export timestamp from its header.
+     *
+     * That timestamp was already decoded here and immediately discarded, which quietly hollowed
+     * out the backup-encryption design's replay-risk acceptance (§7 residual #2): replay is
+     * tolerated *because* a stale export date is shown in the preview and logged on import. This
+     * overload is the seam that carries it to the preview plans.
+     *
+     * The timestamp is informational only. It is authenticated (any edit breaks the GCM tag) but
+     * it is chosen by whoever produced the container, so it establishes staleness, not identity.
+     */
+    fun readJsonWithSource(
+        uri: Uri,
+        expectedContentTypes: Set<Byte>,
+    ): Pair<String, BackupSourceInfo> {
         val bytes = readAllBytesFromUri(uri)
         val kind = EncryptedBackupFormat.sniff(bytes)
         // Fail-closed policy gate on the SAME bytes we're about to parse (TOCTOU fix).
@@ -644,10 +667,27 @@ open class BackupRestoreManager(
             EncryptedBackupFormat.PayloadKind.ENCRYPTED -> {
                 // Cap enforced by BackupCrypto.decrypt (container-length guard).
                 val payload = decryptContainer(bytes, expectedContentTypes)
-                String(payload.bytes, Charsets.UTF_8)
+                logEncryptedImport(payload.contentType, payload.timestampMillis)
+                String(payload.bytes, Charsets.UTF_8) to
+                    BackupSourceInfo.encrypted(payload.timestampMillis)
             }
-            else -> String(bytes, Charsets.UTF_8)
+            else -> String(bytes, Charsets.UTF_8) to BackupSourceInfo.PLAINTEXT
         }
+    }
+
+    /**
+     * Record that an authenticated encrypted backup was accepted, with its header timestamp
+     * (design §7 residual #2: "AAD-covered timestamp is logged on import"). Metadata only —
+     * never any payload bytes, per §7 residual #7.
+     */
+    private fun logEncryptedImport(contentType: Byte, timestampMillis: Long) {
+        Log.i(
+            TAG,
+            "Encrypted backup accepted: contentType=$contentType exported=" +
+                java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.US)
+                    .format(java.util.Date(timestampMillis)) +
+                " ($timestampMillis)"
+        )
     }
 
     /** Read the entire contents of a URI as bytes, applying the scoped-storage fallbacks. */
@@ -843,7 +883,7 @@ open class BackupRestoreManager(
      * the SAF-flow preview UI displays before the user accepts.
      */
     open fun buildSettingsImportPlan(uri: Uri, prefs: SharedPreferences): SettingsImportPlan {
-        val jsonString = readJsonFromUri(uri, setOf(EncryptedBackupFormat.SETTINGS_JSON))
+        val (jsonString, source) = readJsonWithSource(uri, setOf(EncryptedBackupFormat.SETTINGS_JSON))
         val snapshot: Map<String, Any?> = prefs.all.toMap()
         val dm = context.resources.displayMetrics
         val screen = ScreenMetrics(dm.widthPixels, dm.heightPixels, dm.density)
@@ -862,13 +902,15 @@ open class BackupRestoreManager(
         // SETTINGS_DEFAULTS suppresses preview rows where the proposed value
         // equals the compile-time default the user already experiences on
         // unset keys (fresh-install over-report fix, 2026-05-14).
+        // ARC-036: the pure planner knows nothing about the crypto layer, so the file's
+        // provenance is attached here rather than threaded through its signature.
         return SettingsImportPlanBuilder.fromJson(
             jsonString,
             currentSnapshot = snapshot,
             screen = screen,
             defaultSnapshot = SETTINGS_DEFAULTS,
             currentShortSwipeRawJson = currentShortSwipeJson,
-        )
+        ).copy(source = source)
     }
 
     /**
@@ -1239,10 +1281,13 @@ open class BackupRestoreManager(
      * thread to populate the preview dialog before the user confirms.
      */
     fun buildDictImportPlan(uri: Uri, prefs: SharedPreferences): DictImportPlan {
-        val jsonString = readJsonFromUri(uri, setOf(EncryptedBackupFormat.DICTIONARIES_JSON))
+        val (jsonString, source) =
+            readJsonWithSource(uri, setOf(EncryptedBackupFormat.DICTIONARIES_JSON))
         val currentCustom = readCurrentCustomWordsByLang(prefs)
         val currentDisabled = readCurrentDisabledWordsByLang(prefs)
+        // ARC-036: see buildSettingsImportPlan — provenance attached outside the pure planner.
         return DictImportPlanBuilder.fromJson(jsonString, currentCustom, currentDisabled)
+            .copy(source = source)
     }
 
     /**

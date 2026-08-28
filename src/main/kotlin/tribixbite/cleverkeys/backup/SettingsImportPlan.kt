@@ -41,4 +41,12 @@ data class SettingsImportPlan(
      * falls back to just the count + radio buttons.
      */
     val currentShortSwipeRawJson: String? = null,
+    /**
+     * ARC-036: whether the file this plan was built from was an encrypted `CKENC1` container and,
+     * if so, when it was exported. Rendered by the preview dialog — the backup-encryption design
+     * accepted the replay risk (§7 residual #2) precisely because a stale export date is visible
+     * before the user accepts. Defaults to [BackupSourceInfo.PLAINTEXT] so the pure planner and
+     * its tests need no knowledge of the crypto layer; the manager overwrites it after reading.
+     */
+    val source: BackupSourceInfo = BackupSourceInfo.PLAINTEXT,
 )

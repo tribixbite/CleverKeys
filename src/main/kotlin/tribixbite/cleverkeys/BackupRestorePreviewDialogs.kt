@@ -131,6 +131,51 @@ private fun SettingsPreviewTopBar(
     )
 }
 
+/**
+ * ARC-036: the one-line notice describing the FILE a preview was built from.
+ *
+ * Pure (no Compose, no Android) so both branches are unit-tested: the backup-encryption design
+ * accepted the replay risk (§7 residual #2) on the basis that an encrypted import shows its
+ * header's export timestamp — a replayed old backup is then visibly stale before the user taps
+ * Apply — and §9 owes a plaintext import the "re-export encrypted" advisory. Both were absent.
+ *
+ * [formatTimestamp] is injectable purely so tests are timezone-independent.
+ */
+internal fun renderBackupSourceNotice(
+    source: BackupSourceInfo,
+    formatTimestamp: (Long) -> String = ::formatBackupTimestamp,
+): String = if (source.encrypted) {
+    val ts = source.exportTimestampMs
+    // A CKENC1 header always carries a timestamp; the null branch is defensive, not reachable
+    // through readJsonWithSource, and degrades to the badge alone rather than printing "null".
+    if (ts == null) "🔒 Encrypted backup"
+    else "🔒 Encrypted backup — exported ${formatTimestamp(ts)}"
+} else {
+    "Unencrypted backup — consider re-exporting encrypted."
+}
+
+/** Default rendering of a container's export timestamp: device timezone, minute precision. */
+internal fun formatBackupTimestamp(timestampMs: Long): String =
+    java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault())
+        .format(java.util.Date(timestampMs))
+
+/**
+ * ARC-036: renders [renderBackupSourceNotice]. Encrypted sources read as neutral information;
+ * a plaintext source is an advisory, so it takes the theme's error color like the neighbouring
+ * screen-size warning does.
+ */
+@Composable
+internal fun BackupSourceNotice(source: BackupSourceInfo, modifier: Modifier = Modifier) {
+    Text(
+        text = renderBackupSourceNotice(source),
+        modifier = modifier,
+        fontSize = 12.sp,
+        fontWeight = if (source.encrypted) FontWeight.SemiBold else FontWeight.Normal,
+        color = if (source.encrypted) MaterialTheme.colorScheme.onSurface
+            else MaterialTheme.colorScheme.error,
+    )
+}
+
 @Composable
 private fun SettingsPreviewHeaderCard(plan: SettingsImportPlan) {
     Card(
@@ -138,6 +183,9 @@ private fun SettingsPreviewHeaderCard(plan: SettingsImportPlan) {
         shape = RoundedCornerShape(12.dp),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
+            // ARC-036: file provenance first — it qualifies everything below it.
+            BackupSourceNotice(plan.source)
+            Spacer(Modifier.height(8.dp))
             Text("Source: ${plan.sourceVersion}", fontWeight = FontWeight.SemiBold)
             val s = plan.sourceScreen
             val c = plan.currentScreen
@@ -713,6 +761,12 @@ fun DictionaryImportPreviewDialog(
                             Text("Apply ($applyCount)")
                         }
                     },
+                )
+                // ARC-036: file provenance. The dictionary preview has no header card, so the
+                // notice sits directly under the bar, above the per-language sections.
+                BackupSourceNotice(
+                    source = plan.source,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 )
                 LazyColumn(modifier = Modifier.weight(1f)) {
                     items(plan.perLanguage.entries.toList(), key = { it.key }) { (lang, changes) ->
