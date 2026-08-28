@@ -128,7 +128,9 @@ Everything is in git history and these references — do not re-derive:
   ("5 Robolectric / 6 instrumented" vs its own later 987/176/887); a `SwipeDetector` box and a
   `DATABASE_VERSION = 1` claim in `ARCHITECTURE_MASTER.md` §9/§7.2 (clipboard schema is V4); and
   an unverified file tree + "~3000 lines" in `settings-system.md`.
-- Translations owed: `swipe_context_rescoring_*`, `collision_warning_*`, `swipe_engine_fallback_*`, `gesture_touch_smoothing_*`,
+- Translations owed: `pref_secondary_prediction_weight` summary (English rescoped to tap-only
+  2026-08-28/ARC-018; 21 locales still carry the unscoped wording), plus
+  `swipe_context_rescoring_*`, `collision_warning_*`, `swipe_engine_fallback_*`, `gesture_touch_smoothing_*`,
   `gesture_finger_occlusion_*`, `dict_word_too_long_for_swipe_*` ship English-only behind
   `tools:ignore="MissingTranslation"`. The 21 `swipe_engine_mode_desc` translations were
   machine-extended and want a native reviewer.
