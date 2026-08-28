@@ -130,7 +130,9 @@ internal fun SettingsActivity.resetAllSettings() {
                     editor.putBoolean("swipe_trail_enabled", Defaults.SWIPE_TRAIL_ENABLED)
                     editor.putString("swipe_trail_effect", Defaults.SWIPE_TRAIL_EFFECT)
 
-                    // Clipboard — all settings in sync with ClipboardSettingsActivity reset
+                    // Clipboard — keys kept in sync with ui/settings/sections/ClipboardSection.kt
+                    // (was "ClipboardSettingsActivity reset"; that activity was unreachable dead
+                    // code and was deleted 2026-08-28).
                     editor.putBoolean("clipboard_history_enabled", Defaults.CLIPBOARD_HISTORY_ENABLED)
                     editor.putInt("clipboard_pane_height_percent", Defaults.CLIPBOARD_PANE_HEIGHT_PERCENT)
                     editor.putInt("clipboard_history_limit", Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK)

@@ -18,15 +18,18 @@ class ClipboardFixesJvmTest {
     // =========================================================================
     // Slider unlimited mapping — commit a9010cb84
     //
-    // ClipboardSettingsActivity saves 0 when slider is at 100 (unlimited),
-    // and maps 0 back to 100 on load. Values 1-99 pass through unchanged.
+    // The settings UI saves 0 when the slider is at 100 (unlimited), and maps 0 back
+    // to 100 on load. Values 1-99 pass through unchanged. The live surface is
+    // `ui/settings/sections/ClipboardSection.kt` (`:71` renders the 0 -> "Unlimited"
+    // label); the original ClipboardSettingsActivity was unreachable dead code and was
+    // deleted 2026-08-28.
     // =========================================================================
 
-    /** Replicate the save logic from ClipboardSettingsActivity onValueChange */
+    /** Replicate the save logic from the history-limit slider's onValueChange. */
     private fun sliderSaveValue(sliderValue: Int): Int =
         if (sliderValue >= 100) 0 else sliderValue
 
-    /** Replicate the load logic from ClipboardSettingsActivity loadCurrentSettings */
+    /** Replicate the load logic that reads the persisted history limit back. */
     private fun sliderLoadValue(savedValue: Int): Int =
         if (savedValue <= 0) 100 else savedValue
 

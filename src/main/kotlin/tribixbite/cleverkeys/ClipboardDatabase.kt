@@ -1116,7 +1116,11 @@ class ClipboardDatabase private constructor(context: Context) :
     }
 
     /**
-     * Get database statistics as a Map (for ClipboardSettingsActivity compatibility)
+     * Get database statistics as a Map (Map-shaped view over [getStorageStats]).
+     *
+     * The "for ClipboardSettingsActivity compatibility" note was stale: that activity was
+     * unreachable dead code and was deleted 2026-08-28. Live callers are the storage-stats
+     * readers in the settings Clipboard section.
      */
     fun getDatabaseStats(): Result<Map<String, Any>> {
         return try {

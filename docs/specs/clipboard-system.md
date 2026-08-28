@@ -97,7 +97,7 @@ Additionally, support non-text clipboard content (images, videos, GIFs, PDFs) an
 5. **`ClipboardMediaManager.kt`**: File I/O for media. MIME-aware thumbnail generation. Partitioned storage (`{id/1000}`). Orphan cleanup.
 6. **`ClipboardTagDialog.kt`** (`ClipboardTagPanel` object): Inline programmatic tag panel — chips, suggestions, new-tag EditText. FlowLayout inner class for chip wrapping.
 7. **`ClipboardEntry.kt`** / **`TodoEntry.kt`**: Data classes with mime/thumbnail/media fields plus derived `isMedia`/`isImage`/`isVideo`/`isPdf` helpers.
-8. **`ClipboardSettingsActivity.kt`**: User toggles — password manager exclusion, media enabled, text-only, max-media-size, storage stats.
+8. **`ui/settings/sections/ClipboardSection.kt`**: User toggles — password manager exclusion, media enabled, text-only, max-media-size, storage stats. (The old standalone `ClipboardSettingsActivity.kt` listed here was never declared in the manifest and never launched; deleted 2026-08-28.)
 
 ### Data Structures
 

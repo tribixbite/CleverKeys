@@ -21,7 +21,6 @@ For the underlying database schema, pinned/todo tables, and overall clipboard da
 | `src/main/kotlin/tribixbite/cleverkeys/ClipboardHistoryService.kt` | `getForegroundAppPackage()` | Detects current foreground app (ClipboardHistoryService.kt:480) |
 | `src/main/kotlin/tribixbite/cleverkeys/ClipboardHistoryService.kt` | `isPasswordManagerApp()` | Checks if package is excluded (ClipboardHistoryService.kt:525) |
 | `src/main/kotlin/tribixbite/cleverkeys/ClipboardHistoryService.kt` | `addCurrentClip()` | Skips storage if excluded app or sensitive flag set (ClipboardHistoryService.kt:541) |
-| `src/main/kotlin/tribixbite/cleverkeys/ClipboardSettingsActivity.kt` | Clipboard section | UI toggle for feature |
 | `src/main/kotlin/tribixbite/cleverkeys/SettingsActivity.kt` | Clipboard section | UI toggle for feature |
 
 ## Architecture
