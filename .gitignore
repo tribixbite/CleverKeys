@@ -193,6 +193,13 @@ tools/gif_pipeline/*.log
 tools/gif_pipeline/pipeline_history.json
 assets/gifs.db
 
+# Local checkout of the Squoosh fork used by tools/gif_pipeline/pipeline.py for WebP
+# optimization. It was previously recorded as a bare gitlink (mode 160000) with no
+# .gitmodules entry, which made `git submodule status` fail and broke
+# `git clone --recursive`. It is a developer-side tool, not a build input — keep it
+# out of the index entirely.
+squoosh/
+
 # Dead scratch artifacts (deleted from the tree; keep them from creeping back)
 archive/
 /cli_test_10_output.txt
