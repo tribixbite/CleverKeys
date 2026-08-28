@@ -180,6 +180,46 @@ class PrivateCopyProcessTextActivityTest {
         assertTrue(hasEntry("readonly sel"))
     }
 
+    /**
+     * ARC-037: the confirmation toast became suppressible. This locks the part that MATTERS —
+     * suppressing the acknowledgement must not suppress the work. A gate placed one line too
+     * early would turn "don't tell me" into "don't copy", and the user would have no way to
+     * notice, because the whole feature's premise is that nothing reaches the OS clipboard
+     * where they could otherwise check.
+     *
+     * The toast's absence itself is not asserted: toasts are not readable from instrumentation
+     * on API 30+ (same limitation already recorded on the OVER_CAP test below).
+     */
+    @Test
+    fun toastSuppressed_stillStoresTheEntry() {
+        val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
+        prefs.edit().putBoolean(PrivateCopyProcessTextActivity.PREF_TOAST_ENABLED, false).commit()
+        try {
+            ActivityScenario.launch<PrivateCopyProcessTextActivity>(
+                processTextIntent("quiet note", readonly = false)
+            ).use { }
+            assertTrue("suppressing the toast must not suppress the copy", hasEntry("quiet note"))
+        } finally {
+            // Restore the opt-out default for every other test in the class.
+            prefs.edit().remove(PrivateCopyProcessTextActivity.PREF_TOAST_ENABLED).commit()
+        }
+    }
+
+    /** And the default (pref unset) path still stores — the gate defaults to SHOWING the toast. */
+    @Test
+    fun toastPrefUnset_defaultsToEnabled_andStillStores() {
+        val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
+        prefs.edit().remove(PrivateCopyProcessTextActivity.PREF_TOAST_ENABLED).commit()
+        assertTrue(
+            "unset must read as true (opt-out), matching SettingsDefaults",
+            prefs.getBoolean(PrivateCopyProcessTextActivity.PREF_TOAST_ENABLED, true)
+        )
+        ActivityScenario.launch<PrivateCopyProcessTextActivity>(
+            processTextIntent("loud note", readonly = false)
+        ).use { }
+        assertTrue(hasEntry("loud note"))
+    }
+
     // ── Hostile / empty intents ───────────────────────────────────────────────
 
     @Test

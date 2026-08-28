@@ -246,6 +246,21 @@ internal fun SettingsActivity.ClipboardSection() {
                     }
                 )
 
+                // ARC-037: sub-row of the toggle above — that toolbar entry is the only surface
+                // whose confirmation is a Toast, so this only has meaning while it is on.
+                // VISIBLE-but-disabled, not hidden (audit 2026-08-26 convention): hiding it would
+                // leave a stored value with no visible owner and make its search entry a dead end.
+                SettingsSwitch(
+                    title = stringResource(R.string.clipboard_private_copy_toast_title),
+                    description = stringResource(R.string.clipboard_private_copy_toast_desc),
+                    checked = clipboardPrivateCopyToastEnabled,
+                    onCheckedChange = {
+                        clipboardPrivateCopyToastEnabled = it
+                        saveSetting(PrivateCopyProcessTextActivity.PREF_TOAST_ENABLED, it)
+                    },
+                    enabled = clipboardPrivateCopyToolbarEnabled,
+                )
+
                 Text(
                     text = "In-app: the \"Private copy\" editing action can be bound to a short swipe or extra key (Short Swipe Customization). It stores the current selection into CleverKeys' private clipboard without touching the system clipboard. Private entries show a 🔒 badge; exporting one to the system clipboard always asks first, and plaintext backups exclude them (encrypted backups include them).",
                     modifier = Modifier.padding(16.dp),

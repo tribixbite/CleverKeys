@@ -155,8 +155,23 @@ class PrivateCopyProcessTextActivity : Activity() {
         // NEVER touches the OS clipboard (privateCopy → addPrivateClip → rewriteOsClipboard=false).
         val stored = ClipboardHistoryService.privateCopy(applicationContext, result.text, callerPkg)
         if (stored) {
-            // Activities may toast (the Android-13 IME toast suppression does not apply here).
-            Toast.makeText(applicationContext, R.string.private_copy_toast, Toast.LENGTH_SHORT).show()
+            // ARC-037: the confirmation is suppressible. It was unconditional, which the design
+            // had promised it would not be — this toast interrupts the HOST app (a selection in
+            // someone else's editor), so a user who copies privately many times a day has no way
+            // to stop it from covering their work. Opt-OUT (default true): a first-time user must
+            // see that something happened, since the whole point is that nothing reaches the OS
+            // clipboard where they could otherwise verify it.
+            //
+            // `prefs` is the same handle read for the feature gate above (no second load).
+            // Read here rather than through Config: this activity is a cold-start entry point and
+            // already talks to SharedPreferences directly for PREF_TOOLBAR_ENABLED.
+            //
+            // FAILURE toasts are deliberately NOT gated — see the OVER_CAP branch above. This
+            // pref suppresses a "worked as expected" acknowledgement, never a report of data loss.
+            if (prefs.getBoolean(PREF_TOAST_ENABLED, true)) {
+                // Activities may toast (the Android-13 IME toast suppression does not apply here).
+                Toast.makeText(applicationContext, R.string.private_copy_toast, Toast.LENGTH_SHORT).show()
+            }
         } else {
             Log.w(TAG, "Private copy: service unavailable, entry not stored")
         }
@@ -176,6 +191,16 @@ class PrivateCopyProcessTextActivity : Activity() {
 
         /** Pref that gates + reflects the component-enabled state (default false — opt-in). */
         const val PREF_TOOLBAR_ENABLED = "clipboard_private_copy_toolbar_enabled"
+
+        /**
+         * ARC-037: gates the SUCCESS confirmation toast (default true — opt-out).
+         *
+         * Scoped to THIS entry point on purpose. Entry point A (the in-IME key / editing-pane
+         * action) reports through `PrivateCopyDispatch`'s suggestion-bar callback, not a Toast,
+         * because Toasts are IME-suppressed on Android 13+ — that channel is in-keyboard and
+         * transient, so it does not have the "covers another app's UI" problem this one has.
+         */
+        const val PREF_TOAST_ENABLED = "clipboard_private_copy_toast_enabled"
 
         /** Recorded as `source_package` when launched without `forResult` (a strong injection tell). */
         private const val DIRECT_LAUNCH = "direct-launch"

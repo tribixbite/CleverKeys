@@ -208,6 +208,11 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     // A normal exportable UI toggle. The component-enabled state is derived from this pref
     // (single source of truth); re-applied on load via setPrivateCopyToolbarComponentEnabled.
     "clipboard_private_copy_toolbar_enabled" to PrefValue.Bool(false),
+    // ARC-037: the PROCESS_TEXT confirmation toast. Same bucket and same nature as the toggle
+    // above — a normal exportable UI preference with a compile-time default — but opt-OUT
+    // (true): suppressing a confirmation is a preference, not a security decision, so it must
+    // not silently become the default the way an unset opt-in key would.
+    "clipboard_private_copy_toast_enabled" to PrefValue.Bool(true),
 
     // ── GIF panel ────────────────────────────────────────────────────
     "gif_enabled" to PrefValue.Bool(Defaults.GIF_ENABLED),

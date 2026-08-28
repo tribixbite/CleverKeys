@@ -508,6 +508,13 @@
          TranslationCoverageDriftTest's required set. -->
     <string name="backup_base64_too_large" tools:ignore="MissingTranslation">Import failed: the inline backup payload is too large</string>
 
+    <!-- ARC-037: sub-row under "Private copy in other apps". Gates only the SUCCESS toast on the
+         PROCESS_TEXT path; failure messages are never suppressed.
+         TRANSLATION DEBT: English-only for now (added 2026-08-28). Note the sibling string
+         private_copy_toast IS translated in all 21 locales; these two are not yet. -->
+    <string name="clipboard_private_copy_toast_title" tools:ignore="MissingTranslation">Confirm private copies</string>
+    <string name="clipboard_private_copy_toast_desc" tools:ignore="MissingTranslation">Show a brief message after copying privately from another app\'s selection menu. Warnings are always shown.</string>
+
     <!-- ClipboardSection -->
     <string name="clipboard_history_title">Clipboard History</string>
     <string name="clipboard_history_desc">Remember copied text for quick pasting</string>
