@@ -66,8 +66,14 @@ evidence: **`docs/audit/2026-08-28-archive-verification.md`** (IDs ARC-001..050)
 - **ARC-008** R8/ProGuard still off behind the fossil "REPRODUCIBILITY TEST" comment.
 - **ARC-009** `.gitignore` `*.json` fixture trap — six per-script goldens land next and would be
   silently ignored on fresh clones.
-- **ARC-010** `BigramModel` 174-pair hardcoded table feeds a live ≤10× multiplier; shipped
-  bigram assets never loaded (`loadFromFile` zero callers); A/B venue deleted.
+- ~~**ARC-010** `BigramModel` 174-pair hardcoded table feeds a live ≤10× multiplier; shipped
+  bigram assets never loaded (`loadFromFile` zero callers); A/B venue deleted.~~ **DONE
+  2026-08-28** (`976ce508`) with **ARC-020** (`71f0016f`): the six assets now load async and
+  feed the next-word cold-start seed. They deliberately do NOT reach the multiplier — their
+  values are per-previous-word RANK scores, not probabilities (the 15 continuations of "i"
+  sum to 12.37), and interpolating them would pin `getContextMultiplier` at its 10× clamp
+  for every listed pair. Tap ranking unchanged. Decision + schema findings in the
+  verification doc's won't-fix section.
 - **ARC-011** clipboard provenance (`source_package`) captured but never rendered; wiki spec
   overclaims it shipped — the injection-risk acceptance leaned on this display.
 - **ARC-012** #79 settings flicker unfixed and mis-diagnosed (screen is Column, not LazyColumn).
