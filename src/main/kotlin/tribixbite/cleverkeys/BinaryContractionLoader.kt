@@ -4,8 +4,6 @@ import android.content.Context
 import android.util.Log
 import java.io.IOException
 import java.nio.ByteBuffer
-import java.nio.ByteOrder
-import java.nio.channels.Channels
 import java.nio.charset.StandardCharsets
 
 /**
@@ -69,15 +67,11 @@ object BinaryContractionLoader {
 
         try {
             context.assets.open(filename).use { inputStream ->
-                val channel = Channels.newChannel(inputStream)
-
-                // Read entire file into byte buffer for fast access
-                val buffer = ByteBuffer.allocate(inputStream.available()).apply {
-                    order(ByteOrder.LITTLE_ENDIAN)
-                }
-                channel.read(buffer)
-                buffer.flip()
-                channel.close()
+                // Read the entire file into a byte buffer for fast access. Must be a read-fully
+                // (see readBinaryAssetFully) — an available()-sized single read can truncate.
+                val buffer = readBinaryAssetFully(
+                    inputStream, filename, MIN_BINARY_CONTRACTION_BYTES
+                )
 
                 // Parse header
                 val magic = buffer.int

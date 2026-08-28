@@ -3,9 +3,79 @@ package tribixbite.cleverkeys
 import android.content.Context
 import android.util.Log
 import java.io.IOException
+import java.io.InputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import java.nio.channels.Channels
+
+/**
+ * Smallest byte count that can hold a complete binary-dictionary header.
+ *
+ * V1 (`DICT`) headers are 32 bytes and V2 (`CKDT`) headers are 48. Which format a file uses is
+ * only known after its magic has been read, so the larger of the two is the floor for both.
+ * Nothing usable is rejected by that: a V1 file of 32–47 bytes declares section offsets that
+ * necessarily point past its own EOF, so it could never have parsed.
+ */
+internal const val MIN_BINARY_DICT_BYTES = 48
+
+/** Smallest byte count that can hold a complete `CTRB` contraction header. */
+internal const val MIN_BINARY_CONTRACTION_BYTES = 16
+
+/**
+ * Fully read a binary asset into a little-endian [ByteBuffer], failing loudly when the stream is
+ * too short to be a valid file of its kind.
+ *
+ * Replaces the `ByteBuffer.allocate(stream.available())` + single `channel.read(buffer)` idiom,
+ * which was unsound twice over: [InputStream.available] is documented as an *estimate* that may
+ * under-report, and `ReadableByteChannel.read` is explicitly permitted to return fewer bytes than
+ * the destination buffer has room for. Neither was checked, so a short read produced a buffer
+ * whose limit stopped early and the parser then either walked off the end (`BufferUnderflowException`,
+ * or `IllegalArgumentException` from `ByteBuffer.position` — neither of which the loaders'
+ * `catch (IOException)` handlers catch) or read a garbage length prefix and allocated a huge array.
+ * For a 2.5 MB dictionary that failure was silent.
+ *
+ * [InputStream.readBytes] loops until EOF, so the result is either the whole stream or an
+ * exception — never a partial buffer that looks complete.
+ *
+ * @param stream Source stream (NOT closed here — caller owns the lifecycle).
+ * @param sourceDescription Human-readable origin used in error messages.
+ * @param minSizeBytes Smallest byte count that could possibly be a valid file of this kind.
+ * @throws IOException if fewer than [minSizeBytes] bytes were read.
+ */
+internal fun readBinaryAssetFully(
+    stream: InputStream,
+    sourceDescription: String,
+    minSizeBytes: Int
+): ByteBuffer {
+    val bytes = stream.readBytes()
+    if (bytes.size < minSizeBytes) {
+        throw IOException(
+            "Binary asset '$sourceDescription' is implausibly small (${bytes.size} bytes < " +
+                "$minSizeBytes) — truncated or corrupt stream"
+        )
+    }
+    return ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN)
+}
+
+/**
+ * Position the buffer at a file-declared absolute section [offset], rejecting one that falls
+ * outside the buffer.
+ *
+ * Section offsets are read out of the file header and are therefore untrusted: a truncated or
+ * corrupt asset yields an offset past the limit, and a bare `ByteBuffer.position(int)` would then
+ * throw `IllegalArgumentException` — an unchecked exception that the loaders' `catch (IOException)`
+ * handlers do not catch, so it escapes as a crash rather than a clean load failure.
+ *
+ * @throws IOException if [offset] is negative or beyond the buffer limit.
+ */
+internal fun ByteBuffer.seekSection(offset: Int, sectionName: String) {
+    if (offset < 0 || offset > limit()) {
+        throw IOException(
+            "$sectionName section offset $offset lies outside the ${limit()}-byte buffer — " +
+                "truncated or corrupt binary dictionary"
+        )
+    }
+    position(offset)
+}
 
 /**
  * Fast binary dictionary loader with pre-built prefix index.
@@ -108,17 +178,11 @@ object BinaryDictionaryLoader {
             val startTime = System.currentTimeMillis()
 
             try {
-                val inputStream = context.assets.open(filename)
-                val channel = Channels.newChannel(inputStream)
-
-                // Read entire file into byte buffer for fast access
-                val buffer = ByteBuffer.allocate(inputStream.available()).apply {
-                    order(ByteOrder.LITTLE_ENDIAN)
+                // Read the entire file into a byte buffer for fast access. Must be a read-fully
+                // (see readBinaryAssetFully) — an available()-sized single read can truncate.
+                val buffer = context.assets.open(filename).use { stream ->
+                    readBinaryAssetFully(stream, filename, MIN_BINARY_DICT_BYTES)
                 }
-                channel.read(buffer)
-                buffer.flip()
-                channel.close()
-                inputStream.close()
 
                 // Parse header - check magic to determine format version
                 val magic = buffer.int
@@ -174,7 +238,7 @@ object BinaryDictionaryLoader {
         buffer.position(buffer.position() + 8) // Skip reserved bytes
 
         // Load dictionary words
-        buffer.position(dictOffset)
+        buffer.seekSection(dictOffset, "dictionary")
         val words = Array(wordCount) {
             val wordLen = buffer.short.toInt() and 0xFFFF // Unsigned short
             val wordBytes = ByteArray(wordLen)
@@ -183,7 +247,7 @@ object BinaryDictionaryLoader {
         }
 
         // Load frequencies
-        buffer.position(freqOffset)
+        buffer.seekSection(freqOffset, "frequency")
         val dictionary = mutableMapOf<String, Int>()
         for (i in 0 until wordCount) {
             val frequency = buffer.int
@@ -216,7 +280,7 @@ object BinaryDictionaryLoader {
         buffer.position(buffer.position() + 20) // Skip reserved
 
         // Load canonical words with frequency ranks
-        buffer.position(canonicalOffset)
+        buffer.seekSection(canonicalOffset, "canonical")
         val dictionary = mutableMapOf<String, Int>()
 
         for (i in 0 until wordCount) {
@@ -264,17 +328,11 @@ object BinaryDictionaryLoader {
             val startTime = System.currentTimeMillis()
 
             try {
-                val inputStream = context.assets.open(filename)
-                val channel = Channels.newChannel(inputStream)
-
-                // Read entire file into byte buffer for fast access
-                val buffer = ByteBuffer.allocate(inputStream.available()).apply {
-                    order(ByteOrder.LITTLE_ENDIAN)
+                // Read the entire file into a byte buffer for fast access. Must be a read-fully
+                // (see readBinaryAssetFully) — an available()-sized single read can truncate.
+                val buffer = context.assets.open(filename).use { stream ->
+                    readBinaryAssetFully(stream, filename, MIN_BINARY_DICT_BYTES)
                 }
-                channel.read(buffer)
-                buffer.flip()
-                channel.close()
-                inputStream.close()
 
                 // Parse header - check magic to determine format version
                 val magic = buffer.int
@@ -343,16 +401,11 @@ object BinaryDictionaryLoader {
             val startTime = System.currentTimeMillis()
 
             try {
-                val inputStream = java.io.FileInputStream(file)
-                val channel = Channels.newChannel(inputStream)
-
-                val buffer = ByteBuffer.allocate(file.length().toInt()).apply {
-                    order(ByteOrder.LITTLE_ENDIAN)
+                // file.length() sizes the buffer correctly, but a single channel.read() may still
+                // return short; readBinaryAssetFully loops to EOF and fails loudly if truncated.
+                val buffer = java.io.FileInputStream(file).use { stream ->
+                    readBinaryAssetFully(stream, file.name, MIN_BINARY_DICT_BYTES)
                 }
-                channel.read(buffer)
-                buffer.flip()
-                channel.close()
-                inputStream.close()
 
                 // Parse header - check magic to determine format version
                 val magic = buffer.int
@@ -411,7 +464,7 @@ object BinaryDictionaryLoader {
         buffer.position(buffer.position() + 8) // Skip reserved bytes
 
         // Load dictionary words
-        buffer.position(dictOffset)
+        buffer.seekSection(dictOffset, "dictionary")
         val words = Array(wordCount) {
             val wordLen = buffer.short.toInt() and 0xFFFF // Unsigned short
             val wordBytes = ByteArray(wordLen)
@@ -420,14 +473,14 @@ object BinaryDictionaryLoader {
         }
 
         // Load frequencies
-        buffer.position(freqOffset)
+        buffer.seekSection(freqOffset, "frequency")
         for (i in 0 until wordCount) {
             val frequency = buffer.int
             outDictionary[words[i]] = frequency
         }
 
         // Load prefix index
-        buffer.position(prefixOffset)
+        buffer.seekSection(prefixOffset, "prefix index")
         val prefixCount = buffer.int
 
         for (i in 0 until prefixCount) {
@@ -472,7 +525,7 @@ object BinaryDictionaryLoader {
         buffer.position(buffer.position() + 28) // Skip normalized/accent offsets + reserved
 
         // Load canonical words with frequency ranks
-        buffer.position(canonicalOffset)
+        buffer.seekSection(canonicalOffset, "canonical")
 
         for (i in 0 until wordCount) {
             val wordLen = buffer.short.toInt() and 0xFFFF
@@ -540,16 +593,10 @@ object BinaryDictionaryLoader {
             val startTime = System.currentTimeMillis()
 
             try {
-                val inputStream = context.assets.open(filename)
-                val channel = Channels.newChannel(inputStream)
-
-                val buffer = ByteBuffer.allocate(inputStream.available()).apply {
-                    order(ByteOrder.LITTLE_ENDIAN)
+                // Read-fully; an available()-sized single read can truncate silently.
+                val buffer = context.assets.open(filename).use { stream ->
+                    readBinaryAssetFully(stream, filename, MIN_BINARY_DICT_BYTES)
                 }
-                channel.read(buffer)
-                buffer.flip()
-                channel.close()
-                inputStream.close()
 
                 // Check magic number to determine format version
                 val magic = buffer.int
@@ -613,16 +660,11 @@ object BinaryDictionaryLoader {
             val startTime = System.currentTimeMillis()
 
             try {
-                val inputStream = java.io.FileInputStream(file)
-                val channel = Channels.newChannel(inputStream)
-
-                val buffer = ByteBuffer.allocate(file.length().toInt()).apply {
-                    order(ByteOrder.LITTLE_ENDIAN)
+                // file.length() sizes the buffer correctly, but a single channel.read() may still
+                // return short; readBinaryAssetFully loops to EOF and fails loudly if truncated.
+                val buffer = java.io.FileInputStream(file).use { stream ->
+                    readBinaryAssetFully(stream, file.name, MIN_BINARY_DICT_BYTES)
                 }
-                channel.read(buffer)
-                buffer.flip()
-                channel.close()
-                inputStream.close()
 
                 // Check magic number - only V2 format supported for language packs
                 val magic = buffer.int
@@ -663,7 +705,7 @@ object BinaryDictionaryLoader {
         buffer.position(buffer.position() + 12) // Skip prefix offset + reserved
 
         // Load dictionary words
-        buffer.position(dictOffset)
+        buffer.seekSection(dictOffset, "dictionary")
         val words = Array(wordCount) {
             val wordLen = buffer.short.toInt() and 0xFFFF
             val wordBytes = ByteArray(wordLen)
@@ -672,7 +714,7 @@ object BinaryDictionaryLoader {
         }
 
         // Load frequencies and find max for rank conversion
-        buffer.position(freqOffset)
+        buffer.seekSection(freqOffset, "frequency")
         val frequencies = IntArray(wordCount)
         var maxFreq = 1
         for (i in 0 until wordCount) {
@@ -733,7 +775,7 @@ object BinaryDictionaryLoader {
         buffer.position(buffer.position() + 20) // Skip reserved
 
         // Load canonical words with frequency ranks
-        buffer.position(canonicalOffset)
+        buffer.seekSection(canonicalOffset, "canonical")
         val canonicals = Array(wordCount) { "" }
         val ranks = IntArray(wordCount)
 
@@ -746,7 +788,7 @@ object BinaryDictionaryLoader {
         }
 
         // Load normalized words
-        buffer.position(normalizedOffset)
+        buffer.seekSection(normalizedOffset, "normalized")
         val normalizedCount = buffer.int
         val normalizeds = Array(normalizedCount) { "" }
 
@@ -758,7 +800,7 @@ object BinaryDictionaryLoader {
         }
 
         // Load accent map and populate index
-        buffer.position(accentMapOffset)
+        buffer.seekSection(accentMapOffset, "accent map")
         for (i in 0 until normalizedCount) {
             val canonicalCount = buffer.get().toInt() and 0xFF
             for (j in 0 until canonicalCount) {
