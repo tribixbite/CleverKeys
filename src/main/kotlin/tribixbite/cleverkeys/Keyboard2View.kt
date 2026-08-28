@@ -690,7 +690,7 @@ class Keyboard2View @JvmOverloads constructor(
      * This is called from Pointers when a custom mapping is found for a short swipe gesture.
      */
     override fun onCustomShortSwipe(mapping: ShortSwipeMapping) {
-        Log.d("Keyboard2View", "Executing custom short swipe: ${mapping.keyCode}:${mapping.direction} -> ${mapping.actionType}:${mapping.actionValue}")
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Executing custom short swipe: ${mapping.keyCode}:${mapping.direction} -> ${mapping.actionType}:${mapping.actionValue}")
 
         val service = _keyboard2
         if (service == null) {
@@ -730,18 +730,18 @@ class Keyboard2View @JvmOverloads constructor(
                     KeyValue.Kind.Event -> {
                         // Event-type commands require keyboard service handling
                         val event = keyValue.getEvent()
-                        Log.d("Keyboard2View", "Executing Event command via service: $actionValue -> $event")
+                        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Executing Event command via service: $actionValue -> $event")
                         service.triggerKeyboardEvent(event)
                     }
                     KeyValue.Kind.Editing -> {
                         // Editing-type commands use context menu actions
                         val editing = keyValue.getEditing()
-                        Log.d("Keyboard2View", "Executing Editing command: $actionValue -> $editing")
+                        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Executing Editing command: $actionValue -> $editing")
                         executeEditingCommand(editing, inputConnection)
                     }
                     KeyValue.Kind.String -> {
                         // String keys that aren't our custom commands - fall through to legacy handling
-                        Log.d("Keyboard2View", "String KeyValue, falling through to legacy handler")
+                        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "String KeyValue, falling through to legacy handler")
                     }
                     else -> {
                         Log.w("Keyboard2View", "Unhandled KeyValue kind for custom swipe: ${keyValue.getKind()}")
@@ -753,47 +753,47 @@ class Keyboard2View @JvmOverloads constructor(
             val command = mapping.getCommand()
             when (command) {
                 AvailableCommand.SWITCH_IME -> {
-                    Log.d("Keyboard2View", "Executing SWITCH_IME via InputMethodManager")
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Executing SWITCH_IME via InputMethodManager")
                     val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
                     imm?.showInputMethodPicker()
                 }
                 AvailableCommand.VOICE_INPUT -> {
-                    Log.d("Keyboard2View", "Executing VOICE_INPUT via keyboard service")
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Executing VOICE_INPUT via keyboard service")
                     service.triggerKeyboardEvent(KeyValue.Event.SWITCH_VOICE_TYPING)
                 }
                 AvailableCommand.SWITCH_FORWARD -> {
-                    Log.d("Keyboard2View", "Executing SWITCH_FORWARD via keyboard service")
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Executing SWITCH_FORWARD via keyboard service")
                     service.triggerKeyboardEvent(KeyValue.Event.SWITCH_FORWARD)
                 }
                 AvailableCommand.SWITCH_BACKWARD -> {
-                    Log.d("Keyboard2View", "Executing SWITCH_BACKWARD via keyboard service")
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Executing SWITCH_BACKWARD via keyboard service")
                     service.triggerKeyboardEvent(KeyValue.Event.SWITCH_BACKWARD)
                 }
                 AvailableCommand.TEXT_ASSIST -> {
-                    Log.d("Keyboard2View", "Executing TEXT_ASSIST")
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Executing TEXT_ASSIST")
                     launchTextAssistActivity(inputConnection)
                 }
                 AvailableCommand.REPLACE_TEXT -> {
-                    Log.d("Keyboard2View", "Executing REPLACE_TEXT")
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Executing REPLACE_TEXT")
                     launchReplaceTextActivity(inputConnection)
                 }
                 AvailableCommand.SHOW_TEXT_MENU -> {
-                    Log.d("Keyboard2View", "Executing SHOW_TEXT_MENU")
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Executing SHOW_TEXT_MENU")
                     showTextContextMenu(inputConnection)
                 }
                 AvailableCommand.PRIMARY_LANG_TOGGLE -> {
-                    Log.d("Keyboard2View", "Executing PRIMARY_LANG_TOGGLE")
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Executing PRIMARY_LANG_TOGGLE")
                     togglePrimaryLanguage()
                 }
                 AvailableCommand.SECONDARY_LANG_TOGGLE -> {
-                    Log.d("Keyboard2View", "Executing SECONDARY_LANG_TOGGLE")
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Executing SECONDARY_LANG_TOGGLE")
                     toggleSecondaryLanguage()
                 }
                 // #156: Legacy PRIVATE_COPY actionValue (SCREAMING_SNAKE) — CommandRegistry uses the
                 // "copy_private" name which already routes via the KeyValue.Kind.Editing branch above,
                 // but honor the AvailableCommand form too so both surfaces reach executePrivateCopy.
                 AvailableCommand.PRIVATE_COPY -> {
-                    Log.d("Keyboard2View", "Executing PRIVATE_COPY")
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Executing PRIVATE_COPY")
                     executeEditingCommand(KeyValue.Editing.COPY_PRIVATE, inputConnection)
                 }
                 else -> {
@@ -874,7 +874,7 @@ class Keyboard2View @JvmOverloads constructor(
         // Get selected text
         val selectedText = inputConnection.getSelectedText(0)?.toString()
         if (selectedText.isNullOrEmpty()) {
-            Log.d("Keyboard2View", "No text selected for text assist")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "No text selected for text assist")
             showNoTextSelectedMessage("Text Assist")
             return
         }
@@ -895,7 +895,7 @@ class Keyboard2View @JvmOverloads constructor(
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                 Log.d("Keyboard2View", "Launched text assist chooser for: $selectedText")
             } else {
-                Log.d("Keyboard2View", "Launched text assist chooser (len=${selectedText.length})")
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Launched text assist chooser (len=${selectedText.length})")
             }
         } catch (e: Exception) {
             Log.e("Keyboard2View", "Failed to launch text assist", e)
@@ -916,7 +916,7 @@ class Keyboard2View @JvmOverloads constructor(
         // Get selected text
         val selectedText = inputConnection.getSelectedText(0)?.toString()
         if (selectedText.isNullOrEmpty()) {
-            Log.d("Keyboard2View", "No text selected for replace")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "No text selected for replace")
             showNoTextSelectedMessage("Replace Text")
             return
         }
@@ -937,7 +937,7 @@ class Keyboard2View @JvmOverloads constructor(
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                 Log.d("Keyboard2View", "Launched replace text chooser for: $selectedText")
             } else {
-                Log.d("Keyboard2View", "Launched replace text chooser (len=${selectedText.length})")
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Launched replace text chooser (len=${selectedText.length})")
             }
         } catch (e: Exception) {
             Log.e("Keyboard2View", "Failed to launch replace text", e)
@@ -961,7 +961,7 @@ class Keyboard2View @JvmOverloads constructor(
             val existingSelection = inputConnection.getSelectedText(0)?.toString()
             if (!existingSelection.isNullOrEmpty()) {
                 // Already have selection, show message indicating menu should appear
-                Log.d("Keyboard2View", "Text already selected, toolbar should be visible")
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Text already selected, toolbar should be visible")
                 _keyboard2?.showSuggestionBarMessage("Selection menu available")
                 return
             }
@@ -1014,7 +1014,7 @@ class Keyboard2View @JvmOverloads constructor(
 
                 // Select the word using absolute positions
                 inputConnection.setSelection(wordStart, wordEnd)
-                Log.d("Keyboard2View", "Selected word at positions: $wordStart to $wordEnd")
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Selected word at positions: $wordStart to $wordEnd")
                 _keyboard2?.showSuggestionBarMessage("Word selected")
             } else {
                 // Fallback: try double-tap simulation via ctrl+shift+left then shift+right
@@ -1048,12 +1048,12 @@ class Keyboard2View @JvmOverloads constructor(
      * Swaps the current primary language with the alternate primary language.
      */
     private fun togglePrimaryLanguage() {
-        Log.d("Keyboard2View", "togglePrimaryLanguage() called")
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "togglePrimaryLanguage() called")
         try {
             val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
             val currentPrimary = prefs.getString("pref_primary_language", "en") ?: "en"
             val alternatePrimary = prefs.getString("pref_primary_language_alt", "es") ?: "es"
-            Log.d("Keyboard2View", "Toggle primary: $currentPrimary -> $alternatePrimary")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Toggle primary: $currentPrimary -> $alternatePrimary")
 
             // Swap the languages
             prefs.edit()
@@ -1068,7 +1068,7 @@ class Keyboard2View @JvmOverloads constructor(
             // Show feedback in suggestion bar (Toast suppressed on Android 13+ IME)
             val langName = getLanguageDisplayName(alternatePrimary)
             _keyboard2?.showSuggestionBarMessage("Primary: $langName")
-            Log.d("Keyboard2View", "Primary language toggled to: $langName")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Primary language toggled to: $langName")
         } catch (t: Throwable) {
             // Catch Throwable (not just Exception) to prevent OOM/Error from killing IME
             Log.e("Keyboard2View", "Failed to toggle primary language", t)
@@ -1081,12 +1081,12 @@ class Keyboard2View @JvmOverloads constructor(
      * Swaps the current secondary language with the alternate secondary language.
      */
     private fun toggleSecondaryLanguage() {
-        Log.d("Keyboard2View", "toggleSecondaryLanguage() called")
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "toggleSecondaryLanguage() called")
         try {
             val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
             val currentSecondary = prefs.getString("pref_secondary_language", "none") ?: "none"
             val alternateSecondary = prefs.getString("pref_secondary_language_alt", "none") ?: "none"
-            Log.d("Keyboard2View", "Toggle secondary: $currentSecondary -> $alternateSecondary")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Toggle secondary: $currentSecondary -> $alternateSecondary")
 
             // Swap the languages
             prefs.edit()
@@ -1097,7 +1097,7 @@ class Keyboard2View @JvmOverloads constructor(
             // Show feedback in suggestion bar (Toast suppressed on Android 13+ IME)
             val langName = if (alternateSecondary == "none") "None" else getLanguageDisplayName(alternateSecondary)
             _keyboard2?.showSuggestionBarMessage("Secondary: $langName")
-            Log.d("Keyboard2View", "Secondary language toggled to: $langName")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Secondary language toggled to: $langName")
             // PreferenceUIUpdateHandler will automatically reload dictionaries on preference change
         } catch (t: Throwable) {
             // Catch Throwable (not just Exception) to prevent OOM/Error from killing IME

@@ -12,6 +12,7 @@ import android.widget.Toast
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import tribixbite.cleverkeys.BuildConfig
 import tribixbite.cleverkeys.ClipboardDatabase
 import tribixbite.cleverkeys.KeyValue
 import tribixbite.cleverkeys.TerminalUtils
@@ -67,7 +68,7 @@ class CustomShortSwipeExecutor(private val context: Context) {
             val formatter = SimpleDateFormat(pattern, Locale.getDefault())
             val formatted = formatter.format(Date())
             val committed = ic.commitText(formatted, 1)
-            Log.d(TAG, "Executed TIMESTAMP action: pattern='$pattern' -> '$formatted' (committed=$committed)")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Executed TIMESTAMP action: pattern='$pattern' -> '$formatted' (committed=$committed)")
             committed
         } catch (e: IllegalArgumentException) {
             Log.e(TAG, "Invalid SimpleDateFormat pattern: '$pattern'", e)
@@ -166,7 +167,7 @@ class CustomShortSwipeExecutor(private val context: Context) {
                 IntentTargetType.BROADCAST -> context.sendBroadcast(intent)
             }
 
-            Log.d(TAG, "Executed INTENT action: ${intentDef.name}")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Executed INTENT action: ${intentDef.name}")
             true
         } catch (e: android.content.ActivityNotFoundException) {
             Log.e(TAG, "Activity not found for intent", e)
@@ -377,7 +378,7 @@ class CustomShortSwipeExecutor(private val context: Context) {
                     // Return the KeyValue result which will be processed by Keyboard2View
                     val keyValue = KeyValue.getKeyByName(command.name)
                     if (keyValue != null) {
-                        Log.d(TAG, "Command ${command.name} -> KeyValue routing")
+                        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Command ${command.name} -> KeyValue routing")
                         // Signal that this needs keyboard-level handling
                         // The actual execution happens in Keyboard2View.executeCustomShortSwipeMapping()
                         false // Return false to indicate keyboard-level handling needed
@@ -413,7 +414,7 @@ class CustomShortSwipeExecutor(private val context: Context) {
                     }
                 }
             }
-            Log.d(TAG, "Executed registry command: ${command.name} -> $success")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Executed registry command: ${command.name} -> $success")
             success
         } catch (e: Exception) {
             Log.e(TAG, "Failed to execute registry command: ${command.name}", e)
@@ -427,7 +428,7 @@ class CustomShortSwipeExecutor(private val context: Context) {
     private fun executeTextInput(text: String, inputConnection: InputConnection): Boolean {
         return try {
             inputConnection.commitText(text, 1)
-            Log.d(TAG, "Executed TEXT action: $text")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Executed TEXT action: $text")
             true
         } catch (e: Exception) {
             Log.e(TAG, "Failed to execute TEXT action", e)
@@ -463,7 +464,7 @@ class CustomShortSwipeExecutor(private val context: Context) {
                 // Keyboard2View.onCustomShortSwipe falls back to the copy_private KeyValue and
                 // routes to executeEditingCommand(COPY_PRIVATE) → executePrivateCopy.
                 AvailableCommand.PRIVATE_COPY -> {
-                    Log.d(TAG, "PRIVATE_COPY command - requires keyboard service handling")
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "PRIVATE_COPY command - requires keyboard service handling")
                     false
                 }
                 AvailableCommand.PASTE -> {
@@ -552,49 +553,49 @@ class CustomShortSwipeExecutor(private val context: Context) {
                 // System commands - these return KeyValue for special handling
                 AvailableCommand.SWITCH_IME -> {
                     // This needs to be handled at a higher level (KeyEventHandler)
-                    Log.d(TAG, "SWITCH_IME command - requires IME service handling")
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "SWITCH_IME command - requires IME service handling")
                     false
                 }
                 AvailableCommand.VOICE_INPUT -> {
-                    Log.d(TAG, "VOICE_INPUT command - requires IME service handling")
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "VOICE_INPUT command - requires IME service handling")
                     false
                 }
 
                 // Layout switching commands - require keyboard service handling
                 AvailableCommand.SWITCH_FORWARD -> {
-                    Log.d(TAG, "SWITCH_FORWARD command - requires keyboard service handling")
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "SWITCH_FORWARD command - requires keyboard service handling")
                     false
                 }
                 AvailableCommand.SWITCH_BACKWARD -> {
-                    Log.d(TAG, "SWITCH_BACKWARD command - requires keyboard service handling")
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "SWITCH_BACKWARD command - requires keyboard service handling")
                     false
                 }
 
                 // Text processing commands - require keyboard view handling
                 AvailableCommand.TEXT_ASSIST -> {
-                    Log.d(TAG, "TEXT_ASSIST command - requires keyboard view handling")
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "TEXT_ASSIST command - requires keyboard view handling")
                     false
                 }
                 AvailableCommand.REPLACE_TEXT -> {
-                    Log.d(TAG, "REPLACE_TEXT command - requires keyboard view handling")
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "REPLACE_TEXT command - requires keyboard view handling")
                     false
                 }
                 AvailableCommand.SHOW_TEXT_MENU -> {
-                    Log.d(TAG, "SHOW_TEXT_MENU command - selecting word to show toolbar")
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "SHOW_TEXT_MENU command - selecting word to show toolbar")
                     false
                 }
 
                 // Language switching commands - require keyboard service handling
                 AvailableCommand.PRIMARY_LANG_TOGGLE -> {
-                    Log.d(TAG, "PRIMARY_LANG_TOGGLE command - requires keyboard service handling")
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "PRIMARY_LANG_TOGGLE command - requires keyboard service handling")
                     false
                 }
                 AvailableCommand.SECONDARY_LANG_TOGGLE -> {
-                    Log.d(TAG, "SECONDARY_LANG_TOGGLE command - requires keyboard service handling")
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "SECONDARY_LANG_TOGGLE command - requires keyboard service handling")
                     false
                 }
             }
-            Log.d(TAG, "Executed COMMAND action: ${command.name} -> $success")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Executed COMMAND action: ${command.name} -> $success")
             success
         } catch (e: Exception) {
             Log.e(TAG, "Failed to execute COMMAND action: ${command.name}", e)
@@ -613,7 +614,7 @@ class CustomShortSwipeExecutor(private val context: Context) {
 
         return try {
             sendKeyEvent(inputConnection, keyCode)
-            Log.d(TAG, "Executed KEY_EVENT action: $keyCode")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Executed KEY_EVENT action: $keyCode")
             true
         } catch (e: Exception) {
             Log.e(TAG, "Failed to execute KEY_EVENT action", e)
@@ -652,11 +653,11 @@ class CustomShortSwipeExecutor(private val context: Context) {
                     inputConnection.commitText(text, 1)
                     true
                 } else {
-                    Log.d(TAG, "Clipboard is empty")
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Clipboard is empty")
                     false
                 }
             } else {
-                Log.d(TAG, "No clipboard data available")
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "No clipboard data available")
                 false
             }
         } catch (e: Exception) {
@@ -733,7 +734,7 @@ class CustomShortSwipeExecutor(private val context: Context) {
 
             val entry = pinnedEntries[index - 1] // Convert to 0-based
             inputConnection.commitText(entry.content, 1)
-            Log.d(TAG, "Pasted pinned entry #$index: ${entry.content.take(30)}...")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Pasted pinned entry #$index: ${entry.content.take(30)}...")
             true
         } catch (e: Exception) {
             Log.e(TAG, "Failed to paste pinned entry #$index", e)

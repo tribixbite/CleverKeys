@@ -56,7 +56,7 @@ class EmojiSearchManager {
         setupCloseButton()
 
         isInitialized = true
-        Log.d(TAG, "EmojiSearchManager initialized")
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "EmojiSearchManager initialized")
     }
 
     /**
@@ -97,7 +97,7 @@ class EmojiSearchManager {
      */
     private fun setupCloseButton() {
         closeButton?.setOnClickListener {
-            Log.d(TAG, "Close button clicked")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Close button clicked")
             onCloseCallback?.invoke()
         }
     }
@@ -106,7 +106,7 @@ class EmojiSearchManager {
      * Handle search query changes.
      */
     private fun onSearchQueryChanged(query: String) {
-        Log.d(TAG, "Search query changed: '$query'")
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Search query changed: '$query'")
 
         // Show/hide clear button
         clearButton?.visibility = if (query.isNotEmpty()) View.VISIBLE else View.GONE
@@ -154,7 +154,7 @@ class EmojiSearchManager {
         clearButton?.visibility = View.GONE
         showGrid()
         emojiGrid?.setEmojiGroup(EmojiGridView.GROUP_LAST_USE)
-        Log.d(TAG, "Search cleared")
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Search cleared")
     }
 
     /**
@@ -170,7 +170,7 @@ class EmojiSearchManager {
 
         // #41 v6: Activate search routing (like ClipboardManager.searchMode)
         searchActive = true
-        Log.d(TAG, "Search active = true, searchInput=$searchInput")
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Search active = true, searchInput=$searchInput")
 
         // Reset state
         showGrid()
@@ -183,13 +183,13 @@ class EmojiSearchManager {
             // Pre-fill search with detected word
             searchInput?.setText(initialQuery)
             searchInput?.setSelection(initialQuery.length)
-            Log.d(TAG, "Pane opened with initial query: '$initialQuery'")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Pane opened with initial query: '$initialQuery'")
         } else {
             // No initial query - show last used emojis
             searchInput?.setText("")
             clearButton?.visibility = View.GONE
             emojiGrid?.setEmojiGroup(EmojiGridView.GROUP_LAST_USE)
-            Log.d(TAG, "Pane opened (no initial query)")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Pane opened (no initial query)")
         }
     }
 
@@ -200,14 +200,14 @@ class EmojiSearchManager {
     fun onPaneClosed() {
         // #41 v5: Deactivate search routing (like ClipboardManager.searchMode)
         searchActive = false
-        Log.d(TAG, "Search active = false")
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Search active = false")
 
         // Clear search state when pane closes
         searchInput?.setText("")
         searchInput?.clearFocus()
         clearButton?.visibility = View.GONE
         showGrid()
-        Log.d(TAG, "Pane closed, search reset")
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Pane closed, search reset")
     }
 
     /**
@@ -219,7 +219,7 @@ class EmojiSearchManager {
             searchInput?.setText("")
             clearButton?.visibility = View.GONE
             showGrid()
-            Log.d(TAG, "Category selected, search cleared")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Category selected, search cleared")
         }
     }
 
@@ -231,7 +231,7 @@ class EmojiSearchManager {
     fun onEmojiSelected() {
         // Deactivate routing so the emoji goes to InputConnection, not search
         searchActive = false
-        Log.d(TAG, "Emoji selected, searchActive temporarily disabled")
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Emoji selected, searchActive temporarily disabled")
     }
 
     /**
@@ -242,7 +242,7 @@ class EmojiSearchManager {
         // Re-enable routing for continued searching
         if (isInitialized) {
             searchActive = true
-            Log.d(TAG, "Emoji inserted, searchActive re-enabled")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Emoji inserted, searchActive re-enabled")
         }
     }
 
@@ -252,7 +252,7 @@ class EmojiSearchManager {
      * #41 v6: Simple flag like ClipboardManager.searchMode
      */
     fun isEmojiPaneOpen(): Boolean {
-        Log.d(TAG, "isEmojiPaneOpen() called, searchActive=$searchActive")
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "isEmojiPaneOpen() called, searchActive=$searchActive")
         return searchActive
     }
 
@@ -267,7 +267,7 @@ class EmojiSearchManager {
         val newText = current + text
         input.setText(newText)
         input.setSelection(newText.length)
-        Log.d(TAG, "Appended to search: '$text' -> '$newText'")
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Appended to search: '$text' -> '$newText'")
     }
 
     /**
@@ -281,7 +281,7 @@ class EmojiSearchManager {
             val newText = current.dropLast(1)
             input.setText(newText)
             input.setSelection(newText.length)
-            Log.d(TAG, "Backspace in search: '$current' -> '$newText'")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Backspace in search: '$current' -> '$newText'")
         }
     }
 
@@ -335,7 +335,7 @@ class EmojiSearchManager {
         groupButtonsBar = null
         onCloseCallback = null
         isInitialized = false
-        Log.d(TAG, "EmojiSearchManager cleaned up")
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "EmojiSearchManager cleaned up")
     }
 
     companion object {

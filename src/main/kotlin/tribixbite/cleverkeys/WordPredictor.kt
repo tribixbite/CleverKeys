@@ -189,7 +189,7 @@ class WordPredictor {
         @JvmStatic
         fun signalReloadNeeded() {
             needsReload = true
-            Log.d(TAG, "Reload signal set - all instances will reload on next prediction")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Reload signal set - all instances will reload on next prediction")
         }
     }
 
@@ -258,14 +258,14 @@ class WordPredictor {
         // (language-keyed view over the singleton BigramStore — 2026-08-06 persistence fix)
         if (contextModel == null) {
             contextModel = ContextModel(context, currentLanguage)
-            Log.d(TAG, "ContextModel initialized for dynamic N-gram predictions (lang=$currentLanguage)")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "ContextModel initialized for dynamic N-gram predictions (lang=$currentLanguage)")
         }
 
         // Phase 7.2: Initialize PersonalizationEngine for personalized learning
         if (personalizationEngine == null) {
             personalizationEngine = PersonalizationEngine(context)
             personalizedScorer = PersonalizedScorer(personalizationEngine!!)
-            Log.d(TAG, "PersonalizationEngine and PersonalizedScorer initialized for adaptive predictions")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "PersonalizationEngine and PersonalizedScorer initialized for adaptive predictions")
         }
 
         // Phase 8.3: Initialize Multi-Language support if enabled.
@@ -277,7 +277,7 @@ class WordPredictor {
             if (multiLanguageManager == null) {
                 val primaryLang = config?.primary_language ?: "en"
                 multiLanguageManager = MultiLanguageManager(context, primaryLang)
-                Log.d(TAG, "MultiLanguageManager initialized (primary: $primaryLang)")
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "MultiLanguageManager initialized (primary: $primaryLang)")
             }
         }
 
@@ -383,7 +383,7 @@ class WordPredictor {
         val disabledSet = prefs.getStringSet(disabledWordsKey, emptySet()) ?: emptySet()
         // Create a new HashSet to avoid modifying the original
         disabledWords = disabledSet.toMutableSet()
-        Log.d(TAG, "Loaded ${disabledWords.size} disabled words for '$currentLanguage'")
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Loaded ${disabledWords.size} disabled words for '$currentLanguage'")
     }
 
     /**
@@ -438,7 +438,7 @@ class WordPredictor {
             reloadDisabledWords()
             reloadCustomAndUserWords()
             // Don't clear flag - let all instances reload
-            Log.d(TAG, "Auto-reloaded dictionaries due to signal")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Auto-reloaded dictionaries due to signal")
         }
     }
 
@@ -517,7 +517,7 @@ class WordPredictor {
         currentLanguage = language
         bigramModel?.let {
             it.setLanguage(language)
-            Log.d(TAG, "N-gram language set to: $language")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "N-gram language set to: $language")
         }
 
         // Keep the learned context LM language-isolated (2026-08-06 keying fix)
@@ -527,7 +527,7 @@ class WordPredictor {
         multiLanguageManager?.let {
             val switched = it.switchLanguage(language)
             if (switched) {
-                Log.d(TAG, "MultiLanguageManager switched to: $language")
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "MultiLanguageManager switched to: $language")
             } else {
                 Log.w(TAG, "Failed to switch MultiLanguageManager to: $language")
             }
@@ -922,7 +922,7 @@ class WordPredictor {
 
         if (!loadedBinary) {
             // Fall back to JSON format if binary not available
-            Log.d(TAG, "Binary dictionary not available, falling back to JSON")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Binary dictionary not available, falling back to JSON")
 
             val jsonFilename = "dictionaries/${language}_enhanced.json"
             try {
@@ -942,7 +942,7 @@ class WordPredictor {
                     val scaledFreq = 100 + ((frequency - 128) / 127.0 * 9900).toInt()
                     dictionary.get()[word] = scaledFreq
                 }
-                Log.d(TAG, "Loaded JSON dictionary: $jsonFilename with ${dictionary.get().size} words")
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Loaded JSON dictionary: $jsonFilename with ${dictionary.get().size} words")
             } catch (e: Exception) {
                 Log.w(TAG, "JSON dictionary not found, trying text format: ${e.message}")
 
@@ -958,7 +958,7 @@ class WordPredictor {
                             }
                         }
                     }
-                    Log.d(TAG, "Loaded text dictionary: $textFilename with ${dictionary.get().size} words")
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Loaded text dictionary: $textFilename with ${dictionary.get().size} words")
                 } catch (e2: Exception) {
                     Log.e(TAG, "Failed to load dictionary: ${e2.message}")
                 }
@@ -966,7 +966,7 @@ class WordPredictor {
 
             // Build prefix index for fast lookup (only needed if JSON/text was loaded)
             buildPrefixIndex()
-            Log.d(TAG, "Built prefix index: ${prefixIndex.get().size} prefixes for ${dictionary.get().size} words")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Built prefix index: ${prefixIndex.get().size} prefixes for ${dictionary.get().size} words")
         }
 
         // Load custom words and user dictionary (additive to main dictionary)
@@ -1024,7 +1024,7 @@ class WordPredictor {
         asyncLoader.loadDictionaryAsync(context, language, object : AsyncDictionaryLoader.LoadCallback {
             override fun onLoadStarted(lang: String) {
                 isLoadingState = true
-                Log.d(TAG, "Started async dictionary load: $lang")
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Started async dictionary load: $lang")
             }
 
             override fun onLoadCustomWords(
@@ -1047,7 +1047,7 @@ class WordPredictor {
                 // This allows typing "dont" or "cant" to find "don't" or "can't"
                 val contractionKeys = loadContractionKeysIntoMaps(ctx, dictionary, prefixIndex, language)
                 if (contractionKeys > 0) {
-                    Log.d(TAG, "Added $contractionKeys contraction keys during async load for '$language'")
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Added $contractionKeys contraction keys during async load for '$language'")
                 }
 
                 return customWords
@@ -1089,7 +1089,7 @@ class WordPredictor {
                 Log.e(TAG, "Async dictionary load failed: $lang", error)
 
                 // Fall back to synchronous loading
-                Log.d(TAG, "Falling back to synchronous dictionary load")
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Falling back to synchronous dictionary load")
                 loadDictionary(context, lang)
 
                 callback?.run()
@@ -1216,7 +1216,7 @@ class WordPredictor {
                 }
 
                 if (count > 0) {
-                    Log.d(TAG, "Added $count custom words to secondary index for '$language'")
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Added $count custom words to secondary index for '$language'")
                 }
             }
         } catch (e: Exception) {
@@ -1320,7 +1320,7 @@ class WordPredictor {
                     context.assets.open("dictionaries/contractions_$language.json")
                 } catch (e: Exception) {
                     // No contractions file for this language - that's OK
-                    Log.d(TAG, "No contractions file for primary language '$language'")
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "No contractions file for primary language '$language'")
                     return 0
                 }
             }
@@ -1370,7 +1370,7 @@ class WordPredictor {
             }
 
             if (count > 0) {
-                Log.d(TAG, "Added $count contraction keys to primary prefix index for '$language'")
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Added $count contraction keys to primary prefix index for '$language'")
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to load primary contraction keys for '$language'", e)
@@ -1410,7 +1410,7 @@ class WordPredictor {
                     context.assets.open("dictionaries/contractions_$language.json")
                 } catch (e: Exception) {
                     // No contractions file for this language - that's OK
-                    Log.d(TAG, "No contractions file for secondary language '$language'")
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "No contractions file for secondary language '$language'")
                     return 0
                 }
             }
@@ -1439,7 +1439,7 @@ class WordPredictor {
             }
 
             if (count > 0) {
-                Log.d(TAG, "Added $count contraction keys to secondary index for '$language'")
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Added $count contraction keys to secondary index for '$language'")
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to load secondary contraction keys for '$language'", e)
@@ -1848,7 +1848,7 @@ class WordPredictor {
 
             // OPTIMIZATION: Verbose logging disabled in release builds for performance
             // v1.2.0: Always log prediction language for debugging language toggle issues
-            Log.d(TAG, "Predicting for: '$lowerSequence' (lang=$currentLanguage, dictSize=${dictionary.get().size})")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Predicting for: '$lowerSequence' (lang=$currentLanguage, dictSize=${dictionary.get().size})")
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                 Log.d(TAG, "Predicting for: $lowerSequence (len=${lowerSequence.length}) with context: $context")
             }
@@ -2165,7 +2165,7 @@ class WordPredictor {
             } else {
                 preserveCapitalization(typedWord, contractionTarget)
             }
-            Log.d(TAG, "AUTO-CORRECT (contraction): '$typedWord' → '$corrected'")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "AUTO-CORRECT (contraction): '$typedWord' → '$corrected'")
             return corrected
         }
 
@@ -2231,7 +2231,7 @@ class WordPredictor {
                 } else {
                     preserveCapitalization(typedWord, outputWord)
                 }
-                Log.d(TAG, "AUTO-CORRECT (elongation collapse): '$typedWord' → '$corrected'")
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "AUTO-CORRECT (elongation collapse): '$typedWord' → '$corrected'")
                 return corrected
             }
         }
@@ -2252,7 +2252,7 @@ class WordPredictor {
         if (!typedWordDisabled &&
             Morphology.inflectionStems(lowerTypedWord).any { it.length >= 4 && dict.containsKey(it) }
         ) {
-            Log.d(TAG, "AUTO-CORRECT skip (valid inflection): '$typedWord'")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "AUTO-CORRECT skip (valid inflection): '$typedWord'")
             return typedWord
         }
 
@@ -2292,7 +2292,7 @@ class WordPredictor {
                 if (!baseDisabled &&
                     (dict.containsKey(base) || customAndUserWords.contains(base))
                 ) {
-                    Log.d(TAG, "AUTO-CORRECT skip (possessive of '$base'): '$typedWord'")
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "AUTO-CORRECT skip (possessive of '$base'): '$typedWord'")
                     return typedWord
                 }
                 // AC-4: base is a typo — correct it alone, keep the suffix.
@@ -2300,10 +2300,10 @@ class WordPredictor {
                 val correctedBase = autoCorrect(originalBase)
                 if (correctedBase != originalBase) {
                     val corrected = correctedBase + typedWord.substring(apostropheIdx)
-                    Log.d(TAG, "AUTO-CORRECT (possessive base): '$typedWord' → '$corrected'")
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "AUTO-CORRECT (possessive base): '$typedWord' → '$corrected'")
                     return corrected
                 }
-                Log.d(TAG, "AUTO-CORRECT skip (uncorrectable possessive base): '$typedWord'")
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "AUTO-CORRECT skip (uncorrectable possessive base): '$typedWord'")
                 return typedWord
             }
         }
@@ -2531,7 +2531,7 @@ class WordPredictor {
             } else {
                 preserveCapitalization(typedWord, outputWord)
             }
-            Log.d(TAG, "AUTO-CORRECT: '$typedWord' → '$corrected' " +
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "AUTO-CORRECT: '$typedWord' → '$corrected' " +
                 "(winner=$winnerWord score=${"%.3f".format(bestCandidate.score)} " +
                 "freq=${bestCandidate.frequency})")
             return corrected
@@ -2548,7 +2548,7 @@ class WordPredictor {
                     "best='${bestCandidate.word}' freq=${bestCandidate.frequency} < floor=$frequencyFloor"
                 else -> "?"
             }
-            Log.d(TAG, "AUTO-CORRECT-REJECT: '$typedWord' [$reason]  top=[$top]")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "AUTO-CORRECT-REJECT: '$typedWord' [$reason]  top=[$top]")
         }
 
         return typedWord // No suitable correction found

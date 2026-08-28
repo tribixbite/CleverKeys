@@ -105,7 +105,7 @@ class ClipboardDatabase private constructor(context: Context) :
         if (oldVersion < 2) {
             try {
                 db.execSQL("ALTER TABLE $TABLE_CLIPBOARD ADD COLUMN is_todo INTEGER DEFAULT 0")
-                Log.d(TAG, "Database upgraded v1→v2: added is_todo column")
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Database upgraded v1→v2: added is_todo column")
             } catch (e: Exception) {
                 if (e.message?.contains("duplicate column", ignoreCase = true) == true) {
                     // Column already exists — migration is idempotent, treat as already applied
@@ -202,7 +202,7 @@ class ClipboardDatabase private constructor(context: Context) :
             db.execSQL(CREATE_INDEX_TODO_POS)
             db.execSQL(CREATE_INDEX_TODO_STATUS)
 
-            Log.d(TAG, "Database upgraded v2→v3: independent pinned/todo tables created")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Database upgraded v2→v3: independent pinned/todo tables created")
         } catch (e: Exception) {
             Log.e(TAG, "Error upgrading v2→v3: ${e.message}", e)
             throw e  // Re-throw so SQLiteOpenHelper rolls back the transaction
@@ -233,7 +233,7 @@ class ClipboardDatabase private constructor(context: Context) :
             db.execSQL("ALTER TABLE $TABLE_TODO ADD COLUMN $COLUMN_THUMBNAIL_BLOB BLOB")
             db.execSQL("ALTER TABLE $TABLE_TODO ADD COLUMN $COLUMN_MEDIA_PATH TEXT")
 
-            Log.d(TAG, "Database upgraded v3→v4: media columns added to all tables")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Database upgraded v3→v4: media columns added to all tables")
         } catch (e: Exception) {
             Log.e(TAG, "Error upgrading v3→v4: ${e.message}", e)
             throw e  // Re-throw so SQLiteOpenHelper rolls back the transaction
@@ -253,7 +253,7 @@ class ClipboardDatabase private constructor(context: Context) :
                 db.execSQL("ALTER TABLE $table ADD COLUMN $COLUMN_IS_PRIVATE INTEGER NOT NULL DEFAULT 0")
                 db.execSQL("ALTER TABLE $table ADD COLUMN $COLUMN_SOURCE_PACKAGE TEXT")
             }
-            Log.d(TAG, "Database upgraded v4→v5: is_private + source_package added to all tables")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Database upgraded v4→v5: is_private + source_package added to all tables")
         } catch (e: Exception) {
             Log.e(TAG, "Error upgrading v4→v5: ${e.message}", e)
             throw e  // Re-throw so SQLiteOpenHelper rolls back the transaction
@@ -413,7 +413,7 @@ class ClipboardDatabase private constructor(context: Context) :
         } catch (e: Exception) {
             Log.e(TAG, "Error retrieving clipboard entries: ${e.message}")
         }
-        Log.d(TAG, "Retrieved ${entries.size} active clipboard entries")
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Retrieved ${entries.size} active clipboard entries")
         return entries
     }
 
@@ -462,7 +462,7 @@ class ClipboardDatabase private constructor(context: Context) :
                 }
             }
             val deletedRows = db.delete(TABLE_CLIPBOARD, null, null)
-            Log.d(TAG, "Cleared $deletedRows history entries (${mediaPaths.size} with media, pinned/todo unaffected)")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Cleared $deletedRows history entries (${mediaPaths.size} with media, pinned/todo unaffected)")
             Result.success(Pair(deletedRows, mediaPaths))
         } catch (e: Exception) {
             Log.e(TAG, "Error clearing clipboard entries: ${e.message}")
@@ -493,7 +493,7 @@ class ClipboardDatabase private constructor(context: Context) :
                 "$COLUMN_EXPIRY_TIMESTAMP <= ?",
                 arrayOf(currentTime.toString())
             )
-            if (deletedRows > 0) Log.d(TAG, "Cleaned up $deletedRows expired entries (${mediaPaths.size} with media)")
+            if (deletedRows > 0 && BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Cleaned up $deletedRows expired entries (${mediaPaths.size} with media)")
             Pair(deletedRows, mediaPaths)
         } catch (e: Exception) {
             Log.e(TAG, "Error cleaning up expired entries: ${e.message}")
@@ -709,7 +709,7 @@ class ClipboardDatabase private constructor(context: Context) :
         } catch (e: Exception) {
             Log.e(TAG, "Error retrieving pinned entries: ${e.message}")
         }
-        Log.d(TAG, "Retrieved ${entries.size} pinned entries")
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Retrieved ${entries.size} pinned entries")
         return entries
     }
 
@@ -1033,7 +1033,7 @@ class ClipboardDatabase private constructor(context: Context) :
         } catch (e: Exception) {
             Log.e(TAG, "Error retrieving todo entries: ${e.message}")
         }
-        Log.d(TAG, "Retrieved ${entries.size} todo entries")
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Retrieved ${entries.size} todo entries")
         return entries
     }
 
@@ -1192,7 +1192,7 @@ class ClipboardDatabase private constructor(context: Context) :
                     ORDER BY $COLUMN_TIMESTAMP ASC LIMIT ?
                 )
             """.trimIndent(), arrayOf(currentTime, entriesToDelete))
-            Log.d(TAG, "Applied size limit: removed $entriesToDelete oldest history entries (limit=$maxSize)")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Applied size limit: removed $entriesToDelete oldest history entries (limit=$maxSize)")
             entriesToDelete
         } catch (e: Exception) {
             Log.e(TAG, "Error applying size limit: ${e.message}")
@@ -1252,7 +1252,7 @@ class ClipboardDatabase private constructor(context: Context) :
             for (chunk in idsToDelete.chunked(500)) {
                 db.execSQL("DELETE FROM $TABLE_CLIPBOARD WHERE $COLUMN_ID IN (${chunk.joinToString(",")})")
             }
-            Log.d(TAG, "Applied size limit (bytes): removed ${idsToDelete.size} oldest entries (${mediaPaths.size} with media)")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Applied size limit (bytes): removed ${idsToDelete.size} oldest entries (${mediaPaths.size} with media)")
             Pair(idsToDelete.size, mediaPaths)
         } catch (e: Exception) {
             Log.e(TAG, "Error applying size limit (bytes): ${e.message}")
@@ -1552,7 +1552,7 @@ class ClipboardDatabase private constructor(context: Context) :
             }.also {
                 val mediaSuffix = if (textOnly) " (text-only, $mediaSkipped media skipped)" else ""
                 val privSuffix = if (privateSkipped > 0) " ($privateSkipped private excluded)" else ""
-                Log.d(TAG, "Exported $activeCount active, $pinnedCount pinned, $todoCount todo entries (v5)$mediaSuffix$privSuffix")
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Exported $activeCount active, $pinnedCount pinned, $todoCount todo entries (v5)$mediaSuffix$privSuffix")
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error exporting clipboard data: ${e.message}")
@@ -1609,7 +1609,7 @@ class ClipboardDatabase private constructor(context: Context) :
         } finally {
             db.endTransaction()
         }
-        Log.d(TAG, "Import complete: $activeAdded active, $pinnedAdded pinned, $todoAdded todo, $duplicatesSkipped dupes skipped")
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Import complete: $activeAdded active, $pinnedAdded pinned, $todoAdded todo, $duplicatesSkipped dupes skipped")
         return intArrayOf(activeAdded, pinnedAdded, todoAdded, duplicatesSkipped)
     }
 

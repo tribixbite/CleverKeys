@@ -56,10 +56,21 @@ class CoreImeHygieneDriftTest {
     @Test
     fun hotPathDebugLogsAreGated() {
         // Files whose Log.d calls may carry user-typed text and therefore must all be gated.
+        // Widened 2026-08-28 (ARC-003): the original list omitted the files the R3 PII fix
+        // actually touched (ClipboardDatabase, Keyboard2View) plus six files with ungated
+        // user-text sites (autocorrect verbatim words, emoji search queries, custom words,
+        // macro text) — release builds ship with minify off, so these survive to logcat.
         val piiSensitiveFiles = listOf(
             "tribixbite/cleverkeys/SuggestionHandler.kt",
             "tribixbite/cleverkeys/Pointers.kt",
             "tribixbite/cleverkeys/Autocapitalisation.kt",
+            "tribixbite/cleverkeys/WordPredictor.kt",
+            "tribixbite/cleverkeys/ClipboardDatabase.kt",
+            "tribixbite/cleverkeys/Keyboard2View.kt",
+            "tribixbite/cleverkeys/EmojiSearchManager.kt",
+            "tribixbite/cleverkeys/DictionaryManager.kt",
+            "tribixbite/cleverkeys/customization/CustomShortSwipeExecutor.kt",
+            "tribixbite/cleverkeys/ml/SwipeMLDataStore.kt",
         )
         val gateToken = "ENABLE_VERBOSE_LOGGING"
         val logDPattern = Regex("""\bLog\.d\s*\(""")

@@ -177,7 +177,7 @@ class DictionaryManager(private val context: Context) {
 
         userWords.add(word)
         saveUserWords()
-        Log.d(TAG, "Added '$word' to custom words for '$currentLanguage'")
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Added '$word' to custom words for '$currentLanguage'")
     }
 
     /**
@@ -226,7 +226,7 @@ class DictionaryManager(private val context: Context) {
                 Log.e(TAG, "Failed to parse custom words JSON", e)
             }
         }
-        Log.d(TAG, "Loaded ${userWords.size} custom words for '$currentLanguage'")
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Loaded ${userWords.size} custom words for '$currentLanguage'")
     }
 
     /**
