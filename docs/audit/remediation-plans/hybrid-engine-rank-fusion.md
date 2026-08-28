@@ -1,5 +1,16 @@
 # Hybrid Engine Rank Fusion — Phase-2 Proposal (WP9 follow-on)
 
+> **HISTORICAL — superseded 2026-08-18; banner added 2026-08-28 (archive verification ARC pass).**
+> The host `hybrid` mode and the neural engine were deleted by ADR-011; `SwipeEngineRouter.Mode`
+> is `{GEOMETRIC, CTC}` and `"hybrid"` prefs funnel to CTC. The rank-merge technique survives in
+> `CtcRankMerger` (dual-language, single-engine); cross-engine fusion remains a phase-2 option
+> per `SwipeEngineRouter.kt:41-44` and would need its own oracle round.
+> **LICENSING CORRECTION** for the §Strategic-alternative below: the FUTO *model weights* are NOT
+> MIT — they are FUTO Model Weights License 1.0 (non-sublicensable, attribution-mandatory); only
+> the 1M-swipe *dataset* is MIT. Fine-tuning from those weights produces a licence-encumbered
+> Derivative Model. See `2026-08-06-futo-engine-integration-decision.md` §2c.1 and
+> `memory/HANDOFF.md` rule 2 (no FUTO weights or outputs in anything we train or ship).
+
 **Date:** 2026-07-23
 **Status:** PROPOSAL (amended 2026-07-23 after adversarial review vs FUTO, arXiv 2606.25247)
 — needs user sign-off + its own oracle round before any wiring

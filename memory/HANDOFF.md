@@ -54,6 +54,39 @@ story. Two habits came out of it and are worth keeping:
 
 ## Open work, in priority order
 
+### 0. Audit-archive leak ledger (2026-08-28) — 46 items recovered before archiving the audit corpus
+
+Ten line-by-line verification passes over the 26 docs archived to `docs/history/audits/`
+recovered **46 findings/optimizations that were tracked nowhere live**. Full deduped list with
+evidence: **`docs/audit/2026-08-28-archive-verification.md`** (IDs ARC-001..050). The P2s:
+
+- **ARC-001** private media rows can reach the OS clipboard — media-paste `setPrimaryClip`
+  fallback ungated for `is_private` (`KeyEventHandler.kt:204-217`); the promised §5.6 gate absent.
+- **ARC-002** #148 root-caused: both prediction prefs off → `contentPaneContainer` null →
+  clipboard/emoji/GIF `setInputView` fallback replaces the whole keyboard
+  (`PredictionViewSetup.kt:75`, `KeyboardReceiver.kt:230,296,327`).
+- **ARC-003** 12 ungated user-text `Log.d` sites in release (WordPredictor ×7, EmojiSearch ×2,
+  DictionaryManager, CustomShortSwipeExecutor ×2) + `CoreImeHygieneDriftTest` doesn't guard the
+  files the original PII fix touched.
+- **ARC-004** learned-phrase delete leaves the trigram alive — deleted continuation still
+  surfaces (`TrigramStore` has no `removeTrigram`; `ContextModel` prefers trigrams).
+- **ARC-005** `finger_occlusion_offset` dead on geometric (CTC-only despite engine-agnostic UI).
+- **ARC-006** `UnigramLanguageDetector` fed every commit, read by nobody; promised test absent.
+- **ARC-007** Termux deletion strategy (WP9 R-1 step 7) never decided, branches untested.
+- **ARC-008** R8/ProGuard still off behind the fossil "REPRODUCIBILITY TEST" comment.
+- **ARC-009** `.gitignore` `*.json` fixture trap — six per-script goldens land next and would be
+  silently ignored on fresh clones.
+- **ARC-010** `BigramModel` 174-pair hardcoded table feeds a live ≤10× multiplier; shipped
+  bigram assets never loaded (`loadFromFile` zero callers); A/B venue deleted.
+- **ARC-011** clipboard provenance (`source_package`) captured but never rendered; wiki spec
+  overclaims it shipped — the injection-risk acceptance leaned on this display.
+- **ARC-012** #79 settings flicker unfixed and mis-diagnosed (screen is Column, not LazyColumn).
+- **ARC-013** UT-5 ("doesnt" rank) / UT-7 (sentence-start "I'd") never re-measured post-rework.
+
+P3s (ARC-014..050) cover geo OQ backlog, backup/clipboard hardening tails, CI hygiene, the
+architecture backlog (quietly worsening: Config consumers 28→33, WordPredictor 2335→2636), and
+owed tests — see the verification doc. Doc-correction items were applied with the archive commit.
+
 ### 1. Contraction follow-ups, all deferred deliberately
 
 - **Owed translations** for `collision_warning_title/body/examples` — English-only behind

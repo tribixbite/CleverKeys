@@ -759,12 +759,11 @@ Every script fixture is 10 cases (5 pure-featurizer branch probes, 1 word-path f
 `CtcParityTest` grows a **row**, not a new mechanism.
 
 **No model change is pending.** Phase N is terminal (`CleverKeys-ML` @ `85c0c58`); its 91.25
-headline is a different corpus, trie and preset and is explicitly not comparable. Anything you
-find that says otherwise — in particular
-`docs/audit/remediation-plans/ctc-integration-execution-brief.md`, which still reads
-*"Q1 model choice: SUPERSEDED-PENDING — a new model is training"* and names four candidates —
-is a pre-decision planning document that nobody bannered. **That file is the single likeliest
-source of the "which ONNX?" question.**
+headline is a different corpus, trie and preset and is explicitly not comparable. The
+pre-decision planning document that used to claim otherwise
+(`ctc-integration-execution-brief.md`, now archived at
+`docs/history/audits/remediation-plans/`) received its HISTORICAL banner in `e882d7e7`
+(2026-08-25) — the "which ONNX?" confusion source is closed.
 
 ---
 
@@ -787,15 +786,16 @@ probes are gone — latency numbers from a `LOCAL_BUILD=true` build are quotable
 including all 22 locale strings), MEDIUM-9, NEW-1 (the spec rewritten around `ctc`-as-default),
 NEW-2 (the `grek_qwerty` script tag, plus `LayoutScriptDeclarationTest`), NEW-4.
 
-**Still open, and the short list is now genuinely short:**
+**Still open, and the short list is now genuinely short** *(rows 1/2/3/5 verified CLOSED by the
+2026-08-28 archive-verification pass — struck below with closing evidence)*:
 
 | # | item | why it is still here |
 |---|---|---|
-| 1 | **MEDIUM-3** — `docs/audit/remediation-plans/ctc-integration-execution-brief.md` has no superseded banner; `:86` still says *"Q1 model choice: SUPERSEDED-PENDING — a new model is training"*, `:74` still *"Default engine stays `neural`"* | One paragraph. Unchanged across all three audit passes, and now the **only** anti-confusion finding left. It is the single likeliest source of the "which ONNX?" question. |
-| 2 | **HIGH-4's residue** — CI now runs instrumented tests (real, green on API 21/29/34), but the curated class list omits `CtcEmissionModelParityTest` | So the fixture's *header* sha is checked on every push and its *emission matrices* are checked nowhere automatic — the exact swap failure HIGH-4 was written about. One string edit to `.github/scripts/emulator-ci.sh`. Also note `ui-testing.yml` runs on PR + nightly, **not on push to `main`**. Detail in `APP_INTEGRATION_AUDIT.md` §6.2. |
-| 3 | **HIGH-2's residue** — two unmarked `sw2345` citations in `docs/`, at `docs/audit/2026-08-17-neural-vs-ctc-parity.md:619-623` (finding 13, unstruck) and `docs/eval/2026-08-15-ctc-per-language-lambda.md:101, 112` | The drift guard was widened to `src/test` and `src/androidTest` (`f172bb8e`), which caught the test-side copy. It still does not scan `docs/`, which is where both survivors are. |
-| 4 | **NEW-6** — the app's guide mirror and `memory/HANDOFF.md` still cite generation-1 ru artifacts (`ru_synth_ch80_fp16w.onnx`, `84ac284d…`, 77.41) | `APP_WIRING_CHECKLIST.md` §3 enumerates the sections to bring across. |
-| 5 | **MEDIUM-4** — 11 MB of superseded ONNX in `src/androidTest/assets/ctc_bench/`, one labelled "the ship candidate" | Item 2 of the app's own `HANDOFF.md`. |
+| 1 | ~~**MEDIUM-3** — execution brief has no superseded banner~~ | **CLOSED 2026-08-25** — HISTORICAL banner landed in `e882d7e7`; the brief itself is archived at `docs/history/audits/remediation-plans/` as of 2026-08-28. |
+| 2 | ~~**HIGH-4's residue** — curated class list omits `CtcEmissionModelParityTest`~~ | **CLOSED 2026-08-25** (`0bcce870`) — the class is in the curated gate (`.github/scripts/emulator-ci.sh:132`) and `CuratedInstrumentationListTest` pins the list. |
+| 3 | ~~**HIGH-2's residue** — two unmarked `sw2345` citations in `docs/`~~ | **CLOSED 2026-08-25** — finding 13 struck in the parity audit (now archived); superseded-figure notes at `docs/eval/2026-08-15-ctc-per-language-lambda.md:101,115`. |
+| 4 | **NEW-6** — the app's guide mirror and `memory/HANDOFF.md` still cite generation-1 ru artifacts (`ru_synth_ch80_fp16w.onnx`, `84ac284d…`, 77.41) | `APP_WIRING_CHECKLIST.md` §3 enumerates the sections to bring across. (HANDOFF's Russian paragraph was updated 2026-08-25 to the `_v3_` generation-4 bytes; verify the guide mirror before closing.) |
+| 5 | ~~**MEDIUM-4** — 11 MB of superseded ONNX in `ctc_bench/`~~ | **CLOSED** (`3fcbf7b8`) — the dir holds only `README.md`; the latency benchmark now fails loudly when models are unstaged (expected reds, see HANDOFF). |
 | 6 | **MEDIUM-5, MEDIUM-6, LOW-9 (half), LOW-1..LOW-8, LOW-10** | Cleanup. LOW-9's remaining half — a `supportsLayout` negative for a Cyrillic `KeyboardData` — stops being cosmetic the moment per-script routing removes gate 1. |
 
 ---

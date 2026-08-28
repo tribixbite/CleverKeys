@@ -23,7 +23,7 @@ All facts below were verified in-source; several diverge from folklore (includin
 
 ### 2.1 Database (`ClipboardDatabase.kt`, 1745 lines)
 
-- `clipboard_history.db`, **schema V4** (`DATABASE_VERSION = 4`, `ClipboardDatabase.kt:1633`). There is **no V5 in the clipboard DB** — "V5" is the *GIF* database (`gif/GifDatabase.kt`).
+- `clipboard_history.db`, ~~schema V4~~ **schema V5 as of the #156 private-copy ship** (`DATABASE_VERSION = 5`; V5 added `is_private` + `source_package` to all three tables — see `156-private-copy-paste.md` §5.2, which reserved V5 for private copy and **renumbered this design's migration to V6**). *(Original 2026-07-17 text said "no V5 in the clipboard DB"; corrected 2026-08-28.)*
 - Three tables (`:1658-1727`): `clipboard_entries` (id, **content TEXT**, timestamp, expiry_timestamp, **content_hash TEXT**, mime_type, **thumbnail_blob BLOB**, **media_path TEXT**), `pinned_entries` (+ created/pinned timestamps, position REAL, tags JSON TEXT), `todo_entries` (+ status, tags, position).
 - **`content_hash` for text rows is `String.hashCode().toString()`** (`:225,496,675,825`) — a 32-bit non-cryptographic hash of the plaintext. For media rows it is the SHA-256 hex of the file (`ClipboardMediaManager.kt:465`).
 - **Nearly every mutation is content-keyed**: `removeClipboardEntry`/`unpinEntry`/`removeTodoEntry`/`setTodoEntryStatus`/`setPinnedEntryTags`/`updateEntryContentInTable` all do `WHERE content = ?` (via `resolveContentKey`, `:769`), and dedup checks use `content_hash = ? AND content = ?`. This is the single largest refactoring constraint (§5.4).
@@ -127,9 +127,9 @@ Overhead: **29 bytes/cell**. AAD = 2 bytes `{table_id, column_id}` (binds a blob
 
 Version byte reserves format evolution (e.g., XChaCha or key rotation) without a schema migration.
 
-### 5.2 Schema V5
+### 5.2 Schema V6 *(was "V5" in the 2026-07-17 draft; private copy took V5 per its §5.2 — renumbered 2026-08-28)*
 
-`DATABASE_VERSION → 5`; `migrateV4toV5` uses the existing O(1) `ALTER TABLE ADD COLUMN` pattern (like v3→v4) on all three tables:
+`DATABASE_VERSION → 6`; `migrateV5toV6` uses the existing O(1) `ALTER TABLE ADD COLUMN` pattern (like v3→v4 and v4→v5) on all three tables:
 
 - `enc INTEGER NOT NULL DEFAULT 0` — per-row marker. Per-row (not global) so a mid-migration crash leaves a readable mixed-state DB; the read path branches per row.
 - `content_enc BLOB` — sealed content when `enc=1`; `content` is then set to `''`. (Kept as a separate column rather than stuffing BLOBs into the TEXT column — type-affinity games are legal in SQLite but hostile to every existing `LENGTH(CAST(content AS BLOB))` size query and to debuggability.)

@@ -105,7 +105,7 @@ CleverKeys is a **complete Kotlin rewrite** of `Julow/Unexpected-Keyboard` featu
 
 ```
 src/main/kotlin/tribixbite/cleverkeys/       # package tribixbite.cleverkeys
-├── *.kt                            # ~158 files flat at the package root
+├── *.kt                            # ~145 files flat at the package root
 │                                   #   (IME service, keyboard views, Config,
 │                                   #    ClipboardDatabase, predictors, etc.)
 ├── onnx/                           # ONNX session loader (ModelLoader.kt — CTC only)
@@ -114,9 +114,12 @@ src/main/kotlin/tribixbite/cleverkeys/       # package tribixbite.cleverkeys
 │       ├── sections/               #     Per-section composables (17 files)
 │       └── io/                     #     Import/export UI (7 files)
 ├── backup/                         # Backup & restore, import-plan diff (13 files)
-├── swipe/geometric/                # Geometric swipe decoder (20 files, pure JVM,
-│                                   #   standalone — NOT wired; spec: docs/specs/
-│                                   #   geometric-swipe-engine.md; WP9 = future router)
+├── swipe/                          # Engine routing + CTC (SwipeEngineRouter,
+│   ├── ctc/                        #   CtcEngineAdapter, pure-JVM CTC beam decode)
+│   └── geometric/                  # Geometric decoder (pure JVM) — WIRED since
+│                                   #   2026-07-21 (WP9 steps 7-9): the fallback for
+│                                   #   non-Latin/incomplete layouts + user-selectable
+│                                   #   mode; spec: docs/specs/geometric-swipe-engine.md
 ├── customization/                  # Short Swipes, Profiles (14 files)
 ├── theme/                          # Theming (8 files)
 ├── gif/                            # GIF panel (7 files)
@@ -130,7 +133,8 @@ src/main/kotlin/tribixbite/cleverkeys/       # package tribixbite.cleverkeys
 └── autofill/                       # Autofill integration
 ```
 
-> Counts derived via `rg --files … -g '*.kt'` on 2026-07-17. The old
+> Counts re-derived 2026-08-28 (313 total .kt, 145 flat; post-ADR-011). Subdirs not shown:
+> `a11y/` (TalkBack), `persist/` (DebouncedPersister). The old
 > `tribixbite/keyboard2/` tree with `core/swipe/data/config/…` never existed —
 > the package is `tribixbite.cleverkeys` with a large flat root plus the
 > subpackages above.
