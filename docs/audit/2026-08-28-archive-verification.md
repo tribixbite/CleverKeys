@@ -83,6 +83,14 @@ One doc verified fully clean: `2026-07-18-accessibility-implementation-plan.md` 
 - ARC-049 unexplained 2026-08-17 post-fix OOM (4.87 h, no app frames) — one long-run `MemoryProbe` + `dumpsys meminfo` on a current build closes or reopens it.
 - ARC-050 FUTO eval-notes baselines (79.25/84.83/+5.88) predate the apostrophe-lexicon fix and are quoted as G2/G4 gate bars (`train-ctc-swipe-model.md:965,968,1066`) — annotate; re-run not worthwhile.
 
+**Late additions (dropped during consolidation, restored 2026-08-28)**
+- ARC-051 deprecated-pref plumbing survives: `SettingsPersistence.kt:183-206,:355-362` still parse
+  six `DEPRECATED_KEYS` into `SettingsActivity.kt:394-401` fields with zero readers — delete both
+  halves.
+- ARC-052 deprecated keys can be resurrected: `SettingsResetPresets.kt:123` writes
+  `swipe_fuzzy_match_mode`; `Config.kt:1203-1205` repairs three deprecated float keys. Fix + add a
+  drift assertion that neither names a `DEPRECATED_KEYS` member.
+
 **Won't-fix / decisions recorded**
 - snake_case `Config` fields mirror pref keys by design — convention, not debt.
 - fdroid `CurrentVersion` staleness is documented bot-updated behavior (`release-process.md:21,353`) — stale local copy is cosmetic.
