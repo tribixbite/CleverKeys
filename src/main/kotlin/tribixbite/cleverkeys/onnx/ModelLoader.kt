@@ -51,15 +51,19 @@ internal fun readModelBytes(stream: InputStream, sourceDescription: String): Byt
  * Responsibilities:
  * - Load model files from assets or external URIs
  * - Create optimized ONNX sessions with hardware acceleration
- * - Configure execution providers (NNAPI, QNN, XNNPACK, CPU)
+ * - Configure execution providers (XNNPACK, NNAPI, CPU)
  * - Session options optimization (graph optimization, memory patterns, caching)
  * - Validation of loaded sessions
  *
- * Hardware Acceleration Fallback Chain:
- * 1. NNAPI (Neural Networks API) - NPU/DSP/GPU on Android
- * 2. QNN (Qualcomm Neural Network) - Qualcomm hardware
- * 3. XNNPACK - Optimized CPU inference
- * 4. CPU - Basic fallback
+ * Hardware Acceleration Fallback Chain (see [tryEnableHardwareAcceleration] for the
+ * authoritative order — XNNPACK is tried FIRST, not NNAPI):
+ * 1. XNNPACK - optimized CPU inference; the most stable provider on the devices we ship to
+ * 2. NNAPI (Neural Networks API) - NPU/DSP/GPU; faster in principle but prone to 'Session ID'
+ *    crashes, so it is only reached when XNNPACK fails to attach
+ * 3. CPU - basic fallback
+ *
+ * QNN (Qualcomm Neural Network) is NOT implemented: it would require the QNN AAR plus the
+ * per-SoC backend libraries, none of which are bundled.
  *
  * Thread Safety: This class is stateless and thread-safe.
  */
@@ -225,10 +229,14 @@ class ModelLoader(
      * Try to enable hardware acceleration with fallback chain.
      *
      * Attempts execution providers in order:
-     * 1. NNAPI (NPU/DSP/GPU)
-     * 2. QNN (Qualcomm hardware)
-     * 3. XNNPACK (optimized CPU)
-     * 4. CPU (fallback)
+     * 1. XNNPACK (optimized CPU) — first because it is the most stable of the three; it attaches
+     *    on every device and never produces the NNAPI session failures below.
+     * 2. NNAPI (NPU/DSP/GPU) — only reached if XNNPACK could not attach. It can be faster, but
+     *    is prone to 'Session ID' crashes on some vendor drivers, which is why it is not first.
+     * 3. CPU (fallback)
+     *
+     * QNN is deliberately absent: implementing it needs the QNN AAR and per-SoC backend
+     * libraries that are not bundled, so there is nothing to attempt.
      *
      * @param sessionOptions Session options to configure
      * @param sessionName Session name for logging
@@ -250,10 +258,7 @@ class ModelLoader(
             return "NNAPI"
         }
 
-        // Try QNN (Qualcomm Neural Network SDK)
-        if (tryQnn(sessionOptions, sessionName)) {
-            return "QNN"
-        }
+        // QNN: not implemented — would need the QNN AAR + per-SoC backend libs, neither bundled.
 
         // Fallback to CPU
         Log.w(TAG, "⚠️ Hardware acceleration unavailable for $sessionName, using CPU")
@@ -270,21 +275,6 @@ class ModelLoader(
             true
         } catch (e: Exception) {
             Log.d(TAG, "NNAPI not available for $sessionName: ${e.message}")
-            false
-        }
-    }
-
-    /**
-     * Try to enable QNN execution provider.
-     */
-    private fun tryQnn(sessionOptions: OrtSession.SessionOptions, sessionName: String): Boolean {
-        return try {
-            // QNN setup would go here if available
-            // sessionOptions.addQnn()
-            Log.d(TAG, "QNN not implemented for $sessionName")
-            false
-        } catch (e: Exception) {
-            Log.d(TAG, "QNN not available for $sessionName: ${e.message}")
             false
         }
     }
