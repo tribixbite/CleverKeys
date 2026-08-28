@@ -45,7 +45,7 @@ One doc verified fully clean: `2026-07-18-accessibility-implementation-plan.md` 
 - ARC-017 owed `KeyEventHandlerSliderTest` for `moveCursorSel` d==0 (`KeyEventHandler.kt:817-819`).
 - ARC-018 `pref_secondary_prediction_weight` tap-only; `CtcRankMerger.kt:20-27` hard-codes 1000/920 — thread pref or fix slider copy.
 - ARC-019 CTC never contested on LOCAL combined (8,521 traces; geometric beat neural there) nor any robustness tier — now cheap via `CtcReplayEngine`.
-- ARC-020 next-word has no cold-start source (learned-only; dead until phrase typed ≥2× at ≥5%) — §4.2-2 static seed unadopted (see ARC-010).
+- ~~ARC-020 next-word has no cold-start source (learned-only; dead until phrase typed ≥2× at ≥5%) — §4.2-2 static seed unadopted (see ARC-010).~~ **RESOLVED 2026-08-28** — `BigramModel.getPredictions` → `WordPredictor.getStaticNextWordSeed` → `NextWordPredictor.generate(staticSeed=…)`, a FILL-ONLY tier appended after the learned list is sorted, with scores capped below the learned floor so it can never displace real evidence. Runs inside the existing gate (no new gate read); seeded entries say "built-in, not learned" in the provenance sheet rather than reporting `seen 0×, 0%`, and the `NEXT_WORD` origin label dropped its now-inaccurate `(learned)` suffix.
 - ARC-021 no test pins `DictionaryManager.kt:136` eviction-time `persistLearnedData()` (drift test pins the *other* flush path).
 - ARC-022 backup drops learned trigrams (`BackupRestoreManager.kt:1124-1149`); spec `:272-274` overclaims "n-grams ride backup". Decide: export or state the loss.
 - ARC-023 ~2 s EN trie cold build unbudgeted (`CtcEngineAdapter.kt:448-458`; `CtcLatencyGateTest` asserts no ceiling); precompiled-blob option untracked.

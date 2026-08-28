@@ -191,6 +191,130 @@ class NextWordPredictorTest {
         assertEquals("phone", out[1].word)
     }
 
+    // --------------------------------------------- static cold-start seed (ARC-020)
+
+    private fun seed(vararg pairs: Pair<String, Float>) =
+        pairs.map { StaticBigramSeed.Continuation(it.first, it.second) }
+
+    @Test
+    fun `cold store falls back to the shipped seed - the day-one case`() {
+        // Before ARC-020 this returned an empty list until the user typed a
+        // phrase twice at >=5% conditional probability, so a freshly enabled
+        // next-word feature was dead for days.
+        val out = NextWordPredictor.generate(
+            learned = emptyList(),
+            lastCommittedWord = "the",
+            personalizationBoost = noBoost,
+            isWordAllowed = allowAll,
+            staticSeed = seed("same" to 0.85f, "best" to 0.83f, "first" to 0.82f)
+        )
+        assertEquals(listOf("same", "best", "first"), out.map { it.word })
+        assertTrue(out.all { it.fromStaticSeed })
+        // No fabricated learned statistics ride along.
+        assertTrue(out.all { it.frequency == 0 && it.probability == 0f && !it.fromTrigram })
+    }
+
+    @Test
+    fun `learned evidence outranks the seed and the seed only fills what is left`() {
+        val learned = listOf(entry("cat", 9, 0.60f))
+        val out = NextWordPredictor.generate(
+            learned = learned,
+            lastCommittedWord = null,
+            personalizationBoost = noBoost,
+            isWordAllowed = allowAll,
+            staticSeed = seed("same" to 0.85f, "best" to 0.83f)
+        )
+        assertEquals(listOf("cat", "same", "best"), out.map { it.word })
+        assertFalse(out[0].fromStaticSeed)
+        assertTrue(out[1].fromStaticSeed && out[2].fromStaticSeed)
+        // Every seeded score sits below the learned floor, so the debug-score
+        // column reads monotonically with the displayed order.
+        assertTrue(out[0].score > out[1].score)
+        assertTrue(out[1].score <= NextWordPredictor.STATIC_SEED_SCORE_CEILING)
+        assertTrue(out[2].score >= 1)
+    }
+
+    @Test
+    fun `a seed rank never beats a weak learned candidate`() {
+        // The seed's top rank (0.94) is numerically larger than the weakest
+        // learned probability (0.05), so the tiers MUST be concatenated rather
+        // than merged and re-sorted.
+        val out = NextWordPredictor.generate(
+            learned = listOf(entry("weak", 2, 0.05f)),
+            lastCommittedWord = null,
+            personalizationBoost = noBoost,
+            isWordAllowed = allowAll,
+            staticSeed = seed("strong" to 0.94f)
+        )
+        assertEquals(listOf("weak", "strong"), out.map { it.word })
+        assertTrue(out[0].score > out[1].score)
+    }
+
+    @Test
+    fun `a full learned slate never consults the seed`() {
+        val learned = (1..3).map { entry("c$it", 5, 0.5f) }
+        val out = NextWordPredictor.generate(
+            learned = learned,
+            lastCommittedWord = null,
+            personalizationBoost = noBoost,
+            isWordAllowed = allowAll,
+            staticSeed = seed("unused" to 0.9f)
+        )
+        assertEquals(listOf("c1", "c2", "c3"), out.map { it.word })
+        assertFalse(out.any { it.fromStaticSeed })
+    }
+
+    @Test
+    fun `the seed inherits dedup, self-repetition, and the allow filter`() {
+        val out = NextWordPredictor.generate(
+            learned = listOf(entry("best", 9, 0.6f)),
+            lastCommittedWord = "same",
+            personalizationBoost = noBoost,
+            isWordAllowed = { it != "garbage" },
+            staticSeed = seed(
+                "best" to 0.83f,     // already surfaced by the learned tier
+                "same" to 0.85f,     // self-repetition of the committed word
+                "garbage" to 0.80f,  // not allowed (disabled / non-dictionary)
+                "first" to 0.78f
+            )
+        )
+        assertEquals(listOf("best", "first"), out.map { it.word })
+        assertFalse(out[0].fromStaticSeed)
+        assertTrue(out[1].fromStaticSeed)
+    }
+
+    @Test
+    fun `personalization does not reorder the shipped seed`() {
+        // Personalization is a learned signal; letting it reorder shipped
+        // content would blur the two tiers the provenance sheet distinguishes.
+        val boost: (String) -> Float = { if (it == "second") 6f else 0f }
+        val out = NextWordPredictor.generate(
+            learned = emptyList(),
+            lastCommittedWord = null,
+            personalizationBoost = boost,
+            isWordAllowed = allowAll,
+            staticSeed = seed("first" to 0.90f, "second" to 0.80f)
+        )
+        assertEquals(listOf("first", "second"), out.map { it.word })
+    }
+
+    @Test
+    fun `no learned data and no seed still yields nothing`() {
+        assertTrue(
+            NextWordPredictor.generate(emptyList(), null, noBoost, allowAll, emptyList()).isEmpty()
+        )
+        assertTrue(
+            NextWordPredictor.generate(
+                learned = emptyList(),
+                lastCommittedWord = null,
+                personalizationBoost = noBoost,
+                isWordAllowed = allowAll,
+                staticSeed = seed("x" to 0.9f),
+                maxSuggestions = 0
+            ).isEmpty()
+        )
+    }
+
     // -------------------------------------------------- trigram continuations
 
     @Test
@@ -317,5 +441,21 @@ class NextWordPredictorTest {
             listOf("i", "want", "to")
         )
         assertTrue(trigramNote.contains("want to"))
+    }
+
+    @Test
+    fun `a seeded candidate says built-in instead of faking learned stats`() {
+        val note = NextWordPredictor.provenanceNote(
+            NextWordPredictor.Candidate(
+                "best", 42, frequency = 0, probability = 0f,
+                fromTrigram = false, fromStaticSeed = true
+            ),
+            listOf("i", "want", "the")
+        )
+        assertTrue(note.contains("the"))
+        assertTrue(note.contains("built-in"))
+        // "seen 0×, 0%" would read as real evidence that does not exist.
+        assertFalse(note.contains("seen"))
+        assertFalse(note.contains("0%"))
     }
 }

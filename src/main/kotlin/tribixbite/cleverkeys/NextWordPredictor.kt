@@ -39,14 +39,33 @@ object NextWordPredictor {
     const val MIN_LEARNED_FREQUENCY = 2
     const val MIN_LEARNED_PROBABILITY = 0.05f
 
+    /**
+     * Score ceiling for static-seed candidates (ARC-020), one below the lowest
+     * score a LEARNED candidate can reach (`MIN_LEARNED_PROBABILITY × 1000`,
+     * with the personalization multiplier at its 1.0 floor).
+     *
+     * Derived rather than picked so the debug-score column reads monotonically
+     * with the displayed order: a seeded entry always shows a smaller number
+     * than any learned entry above it, which is exactly the confidence
+     * relationship between the two tiers.
+     */
+    val STATIC_SEED_SCORE_CEILING: Int = (MIN_LEARNED_PROBABILITY * 1000).toInt() - 1
+
     /** A ranked next-word candidate ready for the suggestion bar. */
     data class Candidate(
         val word: String,
         val score: Int,
-        /** Learned statistics carried into the provenance meta (Task B). */
+        /**
+         * Learned statistics carried into the provenance meta (Task B).
+         * Both are 0 when [fromStaticSeed] — a shipped pair has no observation
+         * count and no conditional probability, and inventing one would put a
+         * fabricated "seen N×, P%" in front of the user.
+         */
         val frequency: Int,
         val probability: Float,
-        val fromTrigram: Boolean
+        val fromTrigram: Boolean,
+        /** ARC-020: filled from the shipped static bigram table, not learned data. */
+        val fromStaticSeed: Boolean = false
     )
 
     /**
@@ -107,8 +126,10 @@ object NextWordPredictor {
     }
 
     /**
-     * Generate ranked next-word candidates from learned continuations.
+     * Generate ranked next-word candidates: learned continuations first, the
+     * shipped static seed only to fill what is left.
      *
+     * ## Tier 1 — learned (unchanged)
      * Filters (§4.2-4):
      * - confidence floor: learned frequency ≥ [MIN_LEARNED_FREQUENCY] AND
      *   conditional probability ≥ [MIN_LEARNED_PROBABILITY]
@@ -122,10 +143,33 @@ object NextWordPredictor {
      * (`1 + boost/4`, the same conversion as WordPredictor.calculateUnifiedScore),
      * scaled to an int for the bar's parallel score list.
      *
+     * ## Tier 2 — static cold start (ARC-020)
+     * Next-word used to be dead on a fresh install: the learned store carries
+     * nothing until a phrase has been typed twice at ≥5% conditional
+     * probability, so a user who enabled the feature saw an empty bar for days.
+     * [staticSeed] — the shipped `assets/bigrams/<lang>_bigrams.json` pairs,
+     * ranked best-first by [StaticBigramSeed] — fills the slots tier 1 left
+     * empty and nothing more:
+     * - it is appended AFTER the learned candidates have been sorted, so
+     *   learned ordering is untouched and a seeded entry can never outrank
+     *   real evidence;
+     * - it reuses the self-repetition, dedup, and [isWordAllowed] filters (the
+     *   learned confidence floors do not apply — a shipped pair has no
+     *   observation count to floor);
+     * - it gets NO personalization multiplier: personalization is a learned
+     *   signal, and letting it reorder shipped content would blur the two
+     *   tiers the provenance sheet is about to tell the user apart;
+     * - its scores sit in a band below [STATIC_SEED_SCORE_CEILING].
+     *
+     * When the learned store fills every slot, [staticSeed] is never consulted —
+     * which is the steady state for any established user.
+     *
      * @param learned probability-ranked continuations for the current context
      * @param lastCommittedWord the word just committed (self-repetition filter)
      * @param personalizationBoost word → 0..6 boost (0 when disabled/unknown)
      * @param isWordAllowed word → allowed in suggestions for the active language
+     * @param staticSeed shipped continuations of the last context word, ranked
+     *   best-first; empty disables the cold-start tier entirely
      * @param maxSuggestions bar slot cap
      */
     fun generate(
@@ -133,9 +177,11 @@ object NextWordPredictor {
         lastCommittedWord: String?,
         personalizationBoost: (String) -> Float,
         isWordAllowed: (String) -> Boolean,
+        staticSeed: List<StaticBigramSeed.Continuation> = emptyList(),
         maxSuggestions: Int = MAX_SUGGESTIONS
     ): List<Candidate> {
-        if (learned.isEmpty() || maxSuggestions <= 0) return emptyList()
+        if (maxSuggestions <= 0) return emptyList()
+        if (learned.isEmpty() && staticSeed.isEmpty()) return emptyList()
 
         val lastLower = lastCommittedWord?.lowercase()?.trim()
         val seen = HashSet<String>()
@@ -157,9 +203,42 @@ object NextWordPredictor {
             out.add(Candidate(word, score, entry.frequency, entry.probability, entry.fromTrigram))
         }
 
-        // Personalization can reorder within the surfaced set
+        // Personalization can reorder within the surfaced set. Sorted BEFORE the
+        // static tier is appended so the cold-start fill never displaces learned
+        // evidence — the two tiers are concatenated, not merged.
         out.sortByDescending { it.score }
+
+        for (entry in staticSeed) {
+            if (out.size >= maxSuggestions) break
+            val word = entry.word.lowercase()
+            if (word.isEmpty()) continue
+            if (word == lastLower) continue // self-repetition
+            if (!seen.add(word)) continue // also dedups against the learned tier
+            if (!isWordAllowed(word)) continue
+
+            out.add(
+                Candidate(
+                    word = word,
+                    score = staticSeedScore(entry.rank),
+                    frequency = 0,
+                    probability = 0f,
+                    fromTrigram = false,
+                    fromStaticSeed = true
+                )
+            )
+        }
+
         return out
+    }
+
+    /**
+     * Map a [StaticBigramSeed.Continuation] rank (a curated 0..1 ordering score,
+     * not a probability) into the sub-learned score band. Always ≥ 1 so a seeded
+     * candidate never shows a zero score in the debug column.
+     */
+    private fun staticSeedScore(rank: Float): Int {
+        val scaled = (rank.coerceIn(0f, 1f) * STATIC_SEED_SCORE_CEILING).toInt()
+        return scaled.coerceIn(1, STATIC_SEED_SCORE_CEILING)
     }
 
     /**
@@ -221,12 +300,18 @@ object NextWordPredictor {
     /**
      * Provenance note for a next-word candidate (Task B): the learned
      * statistics behind the suggestion, e.g. `after "want to": seen 14×, 63%`.
+     *
+     * A static-seed candidate (ARC-020) says so instead of reporting `seen 0×,
+     * 0%` — it has no learned statistics, and the sheet must not imply it does.
      */
     fun provenanceNote(candidate: Candidate, contextWords: List<String>): String {
         val contextShown = if (candidate.fromTrigram && contextWords.size >= 2) {
             contextWords.takeLast(2).joinToString(" ")
         } else {
             contextWords.lastOrNull() ?: ""
+        }
+        if (candidate.fromStaticSeed) {
+            return "After “$contextShown”: common continuation (built-in, not learned)"
         }
         val pct = (candidate.probability * 100).toInt()
         return "After “$contextShown”: seen ${candidate.frequency}×, $pct%"

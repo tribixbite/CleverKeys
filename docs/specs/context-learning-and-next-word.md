@@ -162,6 +162,31 @@ conversion as `WordPredictor.calculateUnifiedScore`); personalization can reorde
 the surfaced set. Caps: `MAX_SUGGESTIONS = 3` (whole-bar), `MAX_SWIPE_APPEND = 2`
 (appended after swipe alternates).
 
+### Cold-start tier (static seed, ARC-020 — as built 2026-08-28)
+
+Until 2026-08-28 the section above was the whole story, and it made the feature dead on a
+fresh install: the learned store yields nothing until a phrase has been typed twice at ≥5%
+conditional probability, so a user who turned next-word on saw an empty bar for days. The
+`staticSeed` argument to `NextWordPredictor.generate` closes that. It carries the shipped
+`assets/bigrams/<lang>_bigrams.json` continuations of the last context word — read through
+`WordPredictor.getStaticNextWordSeed` → `BigramModel.getPredictions`, ranked by
+`StaticBigramSeed` — and it fills ONLY the bar slots the learned tier left empty. The two
+tiers are concatenated, never merged and re-sorted: the learned list is scored and sorted
+first, then seeded entries are appended, so a curated 0.94 rank can never displace a
+learned 0.05-probability candidate. Seeded entries reuse the self-repetition, dedup, and
+`isWordAllowed` filters, skip the learned confidence floors (a shipped pair has no
+observation count to floor), take no personalization multiplier, and score inside a band
+below `STATIC_SEED_SCORE_CEILING = 49` — one below the lowest score a learned candidate can
+reach — so the debug-score column stays monotonic with the displayed order. An established
+user whose learned store fills all three slots never consults the seed at all.
+
+Gating is unchanged and unweakened: the seed is not personal data, so
+`getStaticNextWordSeed` adds no gate read of its own; instead both call sites invoke it only
+after `NextWordPredictor.shouldShow`, so it inherits the full gate (feature pref, master
+learning gate, context-LM pref, incognito field, password/prompt/Termux). `next_word_prediction_enabled`
+is still default-OFF, so nothing appears for a user who has not opted in.
+`LearningWiringDriftTest` pins the placement.
+
 ### The four call-sites (audit §4.4)
 
 | # | Trigger | Behavior |
@@ -214,15 +239,21 @@ call-site 4 may surface continuations of the current session's last committed wo
 with earlier-session text it usually shows nothing (documented L5 scope).
 
 **Transparency during all of this:** long-press any next-word candidate → provenance sheet
-shows `Source: Next-word prediction (learned)` plus the learned statistics, e.g.
+shows `Source: Next-word prediction` plus, for a learned entry, the statistics behind it —
 `After "want to": seen 14×, 63%` (trigram context shows the last two words; bigram shows
-one). With **Suggestion Origin Markers** enabled (Advanced), next-word entries carry a
-distinct colored dot distinguishing them from swipe alternates in mixed bars.
+one). A cold-start entry from the static seed says so instead —
+`After "the": common continuation (built-in, not learned)` — because it has no observation
+count and printing `seen 0×, 0%` would read as evidence that does not exist. The origin
+label dropped its `(learned)` suffix for the same reason: the tier is a per-suggestion fact,
+not a per-origin one. With **Suggestion Origin Markers** enabled (Advanced), next-word
+entries carry a distinct colored dot distinguishing them from swipe alternates in mixed bars.
 
 **When next-word will NOT appear:** feature pref off (default); master learning gate off;
 password fields; incognito fields (`IME_FLAG_NO_PERSONALIZED_LEARNING`); Termux; while an
-autocorrect-undo or add-to-dictionary prompt is showing; empty session context; nothing
-learned above the floor; word prediction disabled.
+autocorrect-undo or add-to-dictionary prompt is showing; empty session context; word
+prediction disabled; or nothing learned above the floor AND no shipped continuation for the
+last word (the static seed covers de/en/es/fr/it/pt only, and only the ~100–320 previous
+words each asset lists).
 
 ---
 
@@ -313,7 +344,8 @@ Existing related prefs (unchanged keys, now composed with the master gate):
 |-------|-------|
 | `LearningGateTest` | Gate matrix, IME flag value pinned against platform |
 | `OnDeviceLearningPrivacyTest` | Funnel wired to real stores over in-memory storage — asserts nothing recorded/persisted with master off |
-| `NextWordPredictorTest` | Gating matrix, floors, self-repetition, dedup, personalization reorder |
+| `NextWordPredictorTest` | Gating matrix, floors, self-repetition, dedup, personalization reorder, static cold-start tier (fill-only, sub-floor scores, no faked stats) |
+| `StaticBigramSeedTest` | Shipped `assets/bigrams/*` schema against the real files, asset-wins merge, hardcoded fallback index |
 | `SuggestionProvenanceTest` | UnifiedScore combine + breakdown + formatter |
 | `BigramStorePersistenceTest`, `TrigramStorePersistenceTest`, `UserVocabularyPersistenceTest` | Language keying, legacy migration, debounced write-back |
 | `UserVocabularyCapTest` | Configurable `personalization_max_words` cap: default, live provider changes, least-value eviction at capacity, lower-cap trim (enforceCap/on-load/import), floor clamp |
@@ -330,6 +362,11 @@ Existing related prefs (unchanged keys, now composed with the master gate):
   in the table above. Residual limitation: the scan reads only
   `EDITOR_PARK_CONTEXT_CHARS` before the cursor and falls back to session context when
   the InputConnection is unavailable.
+- ~~Next-word has no cold-start source: learned-only, so it is dead until a phrase has been
+  typed twice at ≥5% conditional probability (audit §4.2-2's static seed unadopted).~~
+  **RESOLVED 2026-08-28 (ARC-020)** — see "Cold-start tier" above. Residual limitation: the
+  seed covers six languages and only the previous words those hand-curated assets list
+  (~100–320 each), so it thins out quickly outside common openers.
 - Trigrams not individually browsable in the Learned-Data manager (bulk clear only).
 - Backup restore repopulates learned stores even with the master gate off (documented
   out-of-scope, L7).

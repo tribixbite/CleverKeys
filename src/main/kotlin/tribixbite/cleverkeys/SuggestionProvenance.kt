@@ -41,7 +41,10 @@ enum class SuggestionOrigin {
     /** #42 exact-typed-word tap-to-add entry. */
     EXACT_ADD,
 
-    /** Context-only next-word prediction from the learned n-gram LM. */
+    /**
+     * Context-only next-word prediction: learned n-gram LM first, shipped
+     * static bigram seed for the slots it cannot fill (ARC-020 cold start).
+     */
     NEXT_WORD,
 
     /** Autocorrect undo prompt (original + corrected word after an autocorrect). */
@@ -215,7 +218,11 @@ object ProvenanceFormatter {
         SuggestionOrigin.CONTRACTION -> "Contraction injection"
         SuggestionOrigin.POSSESSIVE -> "Possessive form"
         SuggestionOrigin.EXACT_ADD -> "Exact typed word (tap to add)"
-        SuggestionOrigin.NEXT_WORD -> "Next-word prediction (learned)"
+        // ARC-020: no longer "(learned)" — the same origin now also carries
+        // shipped cold-start entries. Which tier a given candidate came from is
+        // stated in its NOTE (learned statistics vs "built-in, not learned"),
+        // because that distinction is per-suggestion, not per-origin.
+        SuggestionOrigin.NEXT_WORD -> "Next-word prediction"
         SuggestionOrigin.AUTOCORRECT -> "Autocorrect prompt"
     }
 

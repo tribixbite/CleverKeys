@@ -1,6 +1,6 @@
 ---
 title: Next-Word Prediction
-description: Suggest your next word from learned phrases before you type a letter
+description: Suggest your next word from learned phrases (plus a built-in starter list) before you type a letter
 category: Typing
 difficulty: intermediate
 related_spec: ../specs/typing/next-word-prediction-spec.md
@@ -9,23 +9,26 @@ related_spec: ../specs/typing/next-word-prediction-spec.md
 # Next-Word Prediction
 
 Next-word prediction suggests what you are likely to type next — before you press a single
-letter — based on phrases the keyboard has learned from your own typing. It is fully
+letter — from phrases the keyboard has learned from your own typing, plus a small built-in
+list of common word pairs that fills the gap before it has learned anything. It is fully
 on-device, opt-in, and off by default.
 
 ## Quick Summary
 
 | What | Description |
 |------|-------------|
-| **Purpose** | Suggest the next word from your learned phrases |
+| **Purpose** | Suggest the next word from your learned phrases (built-in pairs cover the gap until it has learned some) |
 | **Access** | Settings > Input Behavior > Word Prediction > Next-Word Prediction |
 | **Default** | Off (opt-in) |
-| **Data source** | Your own learned phrase patterns — nothing built-in, nothing downloaded |
+| **Data source** | Your own learned phrase patterns first; a small shipped list of common word pairs fills leftover slots. Nothing downloaded, nothing leaves the device |
 
 ## How It Works
 
 As you type, CleverKeys privately learns which words you use after which (word pairs and
 three-word sequences). With next-word prediction on, those learned phrases fill the
-suggestion bar at moments when it would otherwise be empty:
+suggestion bar at moments when it would otherwise be empty. Learned phrases always come
+first; if they do not fill all the slots, CleverKeys tops them up from a small built-in list
+of common word pairs, so the feature is useful on day one instead of after a week of typing:
 
 - **After you finish a word with a space** — the bar offers up to 3 likely next words.
 - **After you tap a suggestion** — the bar refills from the new context, so you can chain
@@ -35,11 +38,13 @@ suggestion bar at moments when it would otherwise be empty:
 - **When you tap into text** — parking the cursor at the end of what you typed this
   session can offer continuations, similar to other modern keyboards.
 
-Suggestions only appear when the keyboard is reasonably confident: a phrase must have been
-seen at least twice, and the continuation must be likely (at least a 5% chance given your
-history). **An empty bar is normal**, especially in the first days — showing nothing beats
-showing noise. Suggestions are also filtered against your dictionary, so a typo you made
-twice will not haunt the bar.
+Learned suggestions only appear when the keyboard is reasonably confident: a phrase must
+have been seen at least twice, and the continuation must be likely (at least a 5% chance
+given your history). The built-in pairs have no such history to judge, so they are only ever
+used to fill slots your own data did not — they can never push a learned suggestion aside.
+**An empty bar is still normal** — showing nothing beats showing noise. Every suggestion,
+built-in or learned, is filtered against your dictionary, so a typo you made twice will not
+haunt the bar.
 
 ## Walkthrough: typing a sentence
 
@@ -65,9 +70,12 @@ Say you often type "I want to go home", and next-word prediction is on.
    see which kind it is.
 
 **Seeing why a word was suggested:** long-press any next-word suggestion. A small sheet
-shows its source ("Next-word prediction (learned)") and the statistics behind it, e.g.
-*After "want to": seen 14×, 63%*. You can also enable colored origin dots for every
-suggestion under Settings > Advanced > Suggestion Origin Markers.
+shows its source ("Next-word prediction") and, for a word learned from your own typing, the
+statistics behind it, e.g. *After "want to": seen 14×, 63%*. Before the keyboard has learned
+anything about a phrase it can fall back to a small built-in list of common continuations;
+those say *After "the": common continuation (built-in, not learned)* instead of quoting
+statistics they do not have. You can also enable colored origin dots for every suggestion
+under Settings > Advanced > Suggestion Origin Markers.
 
 ## When suggestions will NOT appear
 
@@ -79,7 +87,7 @@ suggestion under Settings > Advanced > Suggestion Origin Markers.
 | Private/incognito fields (apps that request no personalized learning, e.g. browser private tabs) | The app asked the keyboard not to personalize |
 | Terminal (Termux) | Terminal input is not prose |
 | An autocorrect-undo or add-to-dictionary prompt is showing | Prompts take priority |
-| Nothing learned yet above the confidence floor | Empty bar by design |
+| Nothing learned yet above the confidence floor, and no built-in pair for the last word | Empty bar by design. The built-in list covers English, French, German, Italian, Portuguese and Spanish, and only the most common opening words in each |
 
 ## Configuration
 
@@ -94,8 +102,9 @@ suggestion under Settings > Advanced > Suggestion Origin Markers.
 ## Tips and Tricks
 
 > [!TIP]
-> Give it a few days. The confidence floor (a phrase must be seen at least twice) means
-> the feature starts quiet and gets better the more you type.
+> Give it a few days. The built-in pairs cover common openers from the start, but the
+> confidence floor on your own data (a phrase must be seen at least twice) means the
+> suggestions get noticeably more personal the more you type.
 
 > [!TIP]
 > You can inspect and delete anything the keyboard has learned under

@@ -14,7 +14,8 @@ Opt-in (default OFF) context-only word suggestions generated from the on-device 
 n-gram store (`BigramStore` + `TrigramStore` via `ContextModel`), surfaced in the
 suggestion bar at moments it would otherwise be empty. Landed 2026-08-06 alongside the
 persistent context LM, the master on-device-learning privacy gate, and suggestion
-provenance. Internal engineering spec:
+provenance; a shipped static bigram seed was added 2026-08-28 (ARC-020) to fill the
+slots learned data cannot on a fresh install. Internal engineering spec:
 `docs/specs/context-learning-and-next-word.md` (repo source tree).
 
 ## Key Components
@@ -27,6 +28,8 @@ provenance. Internal engineering spec:
 | LearningGate | `src/main/kotlin/tribixbite/cleverkeys/LearningGate.kt` | Master privacy gate; incognito-field flag handling |
 | SuggestionHandler | `src/main/kotlin/tribixbite/cleverkeys/SuggestionHandler.kt` | Impure wiring: the four call-sites, executor, bar posting |
 | SuggestionProvenance | `src/main/kotlin/tribixbite/cleverkeys/SuggestionProvenance.kt` | `SuggestionOrigin.NEXT_WORD` metas + long-press sheet formatting |
+| StaticBigramSeed | `src/main/kotlin/tribixbite/cleverkeys/StaticBigramSeed.kt` | Pure parse/merge/rank over the shipped `assets/bigrams/<lang>_bigrams.json` cold-start pairs |
+| BigramModel | `src/main/kotlin/tribixbite/cleverkeys/BigramModel.kt` | Loads those assets (async) and serves `getPredictions(prevWord)` |
 
 ## Architecture
 
@@ -43,6 +46,11 @@ ContextModel.recordCommit ──▶ BigramStore / TrigramStore   (RAM + debounce
                               filters: self-repetition, dictionary/user-vocab membership,
                                        not disabled, dedup
                               score = prob × (1 + personalizationBoost/4) × 1000
+                                        │
+                              THEN, only for slots still empty:
+                              BigramModel.getPredictions(last context word)
+                              (shipped assets; same filters, no floors, no personalization,
+                               scores capped below the learned floor so learned always wins)
                                         │  (≤3 whole-bar; ≤2 appended after swipe alternates)
                                         ▼
                           SuggestionBar (NEXT_WORD metas, generation-guarded post)
@@ -86,7 +94,9 @@ Constants: `MAX_SUGGESTIONS = 3`, `MAX_SWIPE_APPEND = 2`, `MIN_LEARNED_FREQUENCY
 
 Each candidate carries `SuggestionMeta(SuggestionOrigin.NEXT_WORD, note = provenanceNote)`
 where the note renders the learned statistics, e.g. `After "want to": seen 14×, 63%`
-(trigram context shows two words, bigram one). Long-press opens the provenance sheet
+(trigram context shows two words, bigram one). A static-seed candidate has no such
+statistics and says so — `After "the": common continuation (built-in, not learned)` — which
+is also why the origin label is `Next-word prediction` rather than `… (learned)`. Long-press opens the provenance sheet
 (`ProvenanceFormatter.format`); the opt-in origin-marker dot uses a per-origin color
 (`SuggestionBar.originMarkerColor`).
 
@@ -94,7 +104,8 @@ where the note renders the learned statistics, e.g. `After "want to": seen 14×,
 
 | Suite | File | Focus |
 |-------|------|-------|
-| Pure JVM | `src/test/kotlin/tribixbite/cleverkeys/NextWordPredictorTest.kt` | Gate matrix, floors, filters, ranking |
+| Pure JVM | `src/test/kotlin/tribixbite/cleverkeys/NextWordPredictorTest.kt` | Gate matrix, floors, filters, ranking, static cold-start tier |
+| Pure JVM | `src/test/kotlin/tribixbite/cleverkeys/StaticBigramSeedTest.kt` | Shipped asset schema, merge policy, fallback index |
 | Pure JVM | `src/test/kotlin/tribixbite/cleverkeys/OnDeviceLearningPrivacyTest.kt` | Master-gate-off ⇒ nothing recorded/persisted |
 | Pure JVM | `src/test/kotlin/tribixbite/cleverkeys/contextaware/ContextModelTrigramTest.kt` | Trigram→bigram backoff |
 | Pure JVM | `src/test/kotlin/tribixbite/cleverkeys/LearningWiringDriftTest.kt` | Forbids ungated learn-path regrowth |

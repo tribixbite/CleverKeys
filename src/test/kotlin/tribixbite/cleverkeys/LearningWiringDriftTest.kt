@@ -1,6 +1,7 @@
 package tribixbite.cleverkeys
 
 import com.google.common.truth.Truth.assertThat
+import com.google.common.truth.Truth.assertWithMessage
 import org.junit.Test
 import java.io.File
 
@@ -259,6 +260,56 @@ class LearningWiringDriftTest {
         assertThat(handler).containsMatch(
             """(?s)fun readEditorParkContext.{0,600}next_word_prediction_enabled.{0,200}on_device_learning_enabled.{0,200}fieldAllowsPersonalizedLearning"""
         )
+    }
+
+    // ------------------------------------------- ARC-020 (2026-08-28)
+
+    @Test
+    fun `the static next-word seed is read only inside the already-gated path`() {
+        // ARC-020's cold-start tier reads SHIPPED data, so `getStaticNextWordSeed`
+        // deliberately carries no LearningGate check of its own. What keeps that
+        // honest is placement: it may only be called from the two helpers that
+        // already ran `NextWordPredictor.shouldShow`. A third call site — or a
+        // call moved above the gate — would surface next-word content in a state
+        // the user's prefs say must show nothing.
+        val handler = readSource("SuggestionHandler.kt")
+        val seedReads = Regex("""predictor\.getStaticNextWordSeed\(""").findAll(handler).count()
+        assertThat(seedReads).isEqualTo(2)
+
+        for (fn in listOf("generateNextWordCandidates", "maybeShowNextWordPredictions")) {
+            val body = handler.substringAfter("private fun $fn")
+                .substringBefore("getStaticNextWordSeed")
+            assertWithMessage("$fn must run shouldShow before reading the static seed")
+                .that(body).contains("NextWordPredictor.shouldShow(")
+        }
+
+        // WordPredictor's accessor exists and does NOT re-derive a gate.
+        val predictor = readSource("WordPredictor.kt")
+        assertThat(predictor).contains("fun getStaticNextWordSeed(")
+        val accessor = predictor.substringAfter("fun getStaticNextWordSeed(")
+            .substringBefore("\n    }")
+        assertThat(accessor).doesNotContain("LearningGate")
+        assertThat(accessor).contains("bigramModel?.getPredictions(")
+    }
+
+    @Test
+    fun `the shipped bigram assets are actually loaded (ARC-010)`() {
+        // These six assets shipped in 2025-11 and were read by nothing until
+        // ARC-010, because the only loader referencing them had zero callers.
+        // Pin both trigger points so they cannot go dead again.
+        val predictor = readSource("WordPredictor.kt")
+        val loads = Regex("""loadStaticContinuationsAsync\(""").findAll(predictor).count()
+        assertThat(loads).isEqualTo(2) // setContext + setLanguage
+
+        val model = readSource("BigramModel.kt")
+        assertThat(model).contains("""fun assetNameFor(language: String): String = "bigrams/${'$'}{language}_bigrams.json"""")
+        // The asset must NOT reach the scoring tables: its values are curated
+        // rank scores, and interpolating them in getContextualProbability would
+        // pin getContextMultiplier at its 10x clamp for every listed pair.
+        val loader = model.substringAfter("fun loadStaticContinuations(")
+            .substringBefore("fun loadStaticContinuationsAsync")
+        assertThat(loader).doesNotContain("languageUnigramProbs")
+        assertThat(loader).contains("seedIndexes[language] = index")
     }
 
     // ------------------------------- autocorrect-undo learning rollback (2026-08-06)

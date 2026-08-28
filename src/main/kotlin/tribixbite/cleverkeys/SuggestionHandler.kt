@@ -887,7 +887,13 @@ class SuggestionHandler(
             isWordAllowed = { w ->
                 !predictor.isWordDisabled(w) &&
                     (predictor.isInDictionary(w) || predictor.isInUserVocabulary(w))
-            }
+            },
+            // ARC-020 cold start: shipped continuations fill only the slots the
+            // learned store could not. Read here, INSIDE the gate above.
+            staticSeed = predictor.getStaticNextWordSeed(
+                contextWords,
+                NextWordPredictor.MAX_SUGGESTIONS
+            )
         )
         return candidates.ifEmpty { null }
     }
@@ -1436,7 +1442,13 @@ class SuggestionHandler(
                 isWordAllowed = { w ->
                     !predictor.isWordDisabled(w) &&
                         (predictor.isInDictionary(w) || predictor.isInUserVocabulary(w))
-                }
+                },
+                // ARC-020 cold start: shipped continuations fill only the slots the
+                // learned store could not. Read here, INSIDE the gate above.
+                staticSeed = predictor.getStaticNextWordSeed(
+                    contextWords,
+                    NextWordPredictor.MAX_SUGGESTIONS
+                )
             )
             if (candidates.isEmpty()) return@cancelAndSubmit
 
