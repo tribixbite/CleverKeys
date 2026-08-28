@@ -265,6 +265,36 @@ class BackupRestoreActivity : ComponentActivity() {
         return if (ref.isNullOrEmpty()) "caller=$pkg" else "caller=$pkg referrer(unattested)=$ref"
     }
 
+    /**
+     * Sanitized failure label for a headless toast (archive-verification incidental,
+     * 2026-08-28). Replaces the previous `e.message?.take(60)`.
+     *
+     * The raw message of a parse failure QUOTES THE OFFENDING INPUT — `org.json` throws
+     * `Value <fragment> of type java.lang.String cannot be converted to JSONObject`, which
+     * embeds bytes of the imported file. That file arrives on an EXPORTED, caller-supplied
+     * `Uri` (or a `json_base64` extra), so its content is not the user's own by
+     * construction; and a Toast renders on the DEVICE OWNER's screen over whatever app is
+     * foreground. Echoing attacker-chosen bytes there is a display-surface the caller
+     * should not get for free.
+     *
+     * So the toast gets the exception CLASS plus a short static reason. The full message
+     * and stack trace still go to logcat at every call site — developer-visible, not
+     * shoulder-visible. Counts and output paths are unaffected: they are our own data.
+     */
+    private fun sanitizedFailureLabel(e: Throwable): String {
+        val kind = e::class.java.simpleName.ifEmpty { "Exception" }
+        // Ordered: FileNotFoundException before its IOException supertype.
+        val reason = when (e) {
+            is org.json.JSONException -> "malformed backup data"
+            is java.io.FileNotFoundException -> "file not readable"
+            is SecurityException -> "access denied"
+            is java.io.IOException -> "I/O error"
+            is IllegalArgumentException -> "invalid input"
+            else -> "see logcat"
+        }
+        return "$kind ($reason)"
+    }
+
     /** Toast the actual output path so headless callers see a real file location. */
     private fun headlessToast(label: String) {
         val path = backupRestoreManager.lastOutputPath
@@ -320,7 +350,7 @@ class BackupRestoreActivity : ComponentActivity() {
             Uri.fromFile(tempFile)
         } catch (e: Exception) {
             android.util.Log.e(TAG, "Failed to decode json_base64 extra", e)
-            Toast.makeText(this, "Invalid base64 data: ${e.message}", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Invalid base64 data: ${sanitizedFailureLabel(e)}", Toast.LENGTH_LONG).show()
             null
         }
     }
@@ -398,7 +428,7 @@ class BackupRestoreActivity : ComponentActivity() {
                 android.util.Log.i(TAG, "Export successful: $count preferences -> $uri")
             } catch (e: Exception) {
                 android.util.Log.e(TAG, "Export failed", e)
-                headlessToast("Export failed: ${e.message?.take(60)}")
+                headlessToast("Export failed: ${sanitizedFailureLabel(e)}")
             } finally {
                 finish()
             }
@@ -425,7 +455,7 @@ class BackupRestoreActivity : ComponentActivity() {
                 )
             } catch (e: Exception) {
                 android.util.Log.e(TAG, "Import failed", e)
-                headlessToast("Import failed: ${e.message?.take(60)}")
+                headlessToast("Import failed: ${sanitizedFailureLabel(e)}")
             } finally {
                 finish()
             }
@@ -447,7 +477,7 @@ class BackupRestoreActivity : ComponentActivity() {
                 )
             } catch (e: Exception) {
                 android.util.Log.e(TAG, "Dictionary export failed", e)
-                headlessToast("Dict export failed: ${e.message?.take(60)}")
+                headlessToast("Dict export failed: ${sanitizedFailureLabel(e)}")
             } finally {
                 finish()
             }
@@ -475,7 +505,7 @@ class BackupRestoreActivity : ComponentActivity() {
                 )
             } catch (e: Exception) {
                 android.util.Log.e(TAG, "Dictionary import failed", e)
-                headlessToast("Dict import failed: ${e.message?.take(60)}")
+                headlessToast("Dict import failed: ${sanitizedFailureLabel(e)}")
             } finally {
                 finish()
             }
@@ -492,7 +522,7 @@ class BackupRestoreActivity : ComponentActivity() {
                 android.util.Log.i(TAG, "Clipboard export successful: $uri")
             } catch (e: Exception) {
                 android.util.Log.e(TAG, "Clipboard export failed", e)
-                headlessToast("Clipboard export failed: ${e.message?.take(60)}")
+                headlessToast("Clipboard export failed: ${sanitizedFailureLabel(e)}")
             } finally {
                 finish()
             }
@@ -512,7 +542,7 @@ class BackupRestoreActivity : ComponentActivity() {
                 )
             } catch (e: Exception) {
                 android.util.Log.e(TAG, "Clipboard import failed", e)
-                headlessToast("Clipboard import failed: ${e.message?.take(60)}")
+                headlessToast("Clipboard import failed: ${sanitizedFailureLabel(e)}")
             } finally {
                 finish()
             }
