@@ -448,9 +448,11 @@ class ContextModel internal constructor(
      * Export the active language's context data as JSON.
      */
     fun exportToJson(): String {
-        // NOTE: the backup payload format carries bigrams only
-        // (`learned_bigrams_by_language`); trigrams re-learn quickly from typing
-        // and are deliberately excluded to keep the format stable.
+        // NOTE: THIS method returns bigrams only — it is the per-language analysis/debug
+        // export, not the backup payload. The BACKUP path does carry both n-gram orders
+        // since ARC-022: `BackupRestoreManager.buildDictionariesJson` writes
+        // `learned_bigrams_by_language` AND `learned_trigrams_by_language`, reading each
+        // store directly rather than going through here.
         return bigramStore.exportToJson(language)
     }
 

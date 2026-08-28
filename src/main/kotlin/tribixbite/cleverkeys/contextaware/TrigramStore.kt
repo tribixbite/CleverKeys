@@ -535,4 +535,100 @@ class TrigramStore internal constructor(
             data.prefixFrequencies.clear()
         }
     }
+
+    /**
+     * Export one language's trigram data as a JSON string for backup (ARC-022).
+     *
+     * Same array-of-objects shape [serialize] persists, pretty-printed — the mirror of
+     * [BigramStore.exportToJson]. Consumed by `BackupRestoreManager.buildDictionariesJson`
+     * under the `learned_trigrams_by_language` key.
+     */
+    fun exportToJson(language: String): String {
+        synchronized(this) {
+            val json = JSONArray()
+            forLanguage(language).trigramMap.values.flatten().forEach { entry ->
+                json.put(
+                    JSONObject().apply {
+                        put("word1", entry.word1)
+                        put("word2", entry.word2)
+                        put("word3", entry.word3)
+                        put("frequency", entry.frequency)
+                        put("probability", entry.probability.toDouble())
+                    }
+                )
+            }
+            return json.toString(2) // Pretty print with 2-space indent (matches BigramStore)
+        }
+    }
+
+    /**
+     * Import trigram data for one language from a JSON string (ARC-022).
+     *
+     * MERGE semantics, exactly like [BigramStore.importFromJson]: frequencies ADD to any
+     * existing entry (a direct O(entries) merge, not an O(total frequency) replay), then
+     * conditional probabilities are recomputed against the merged prefix totals and both
+     * caps ([MAX_TRIGRAMS_PER_PREFIX], [MAX_TOTAL_TRIGRAMS]) are re-enforced.
+     *
+     * Applies the same record-time guards as [recordTrigram] so a hand-edited or hostile
+     * backup cannot inject entries the learning path would never produce: empty words are
+     * dropped, non-positive frequencies are dropped, and `word2 == word3` self-references
+     * are dropped.
+     *
+     * Invalid JSON is ignored (no partial mutation beyond whatever parsed before the throw,
+     * which the outer try covers) — an absent/garbage section must never fail an import.
+     */
+    fun importFromJson(language: String, jsonString: String) {
+        val lang = BigramStore.normalizeLanguage(language)
+        try {
+            val json = JSONArray(jsonString)
+            val data = forLanguage(lang)
+
+            synchronized(this) {
+                for (i in 0 until json.length()) {
+                    val obj = json.getJSONObject(i)
+                    val w1 = TrigramEntry.normalizeWord(obj.getString("word1"))
+                    val w2 = TrigramEntry.normalizeWord(obj.getString("word2"))
+                    val w3 = TrigramEntry.normalizeWord(obj.getString("word3"))
+                    val frequency = obj.getInt("frequency")
+                    if (w1.isEmpty() || w2.isEmpty() || w3.isEmpty() || frequency <= 0) continue
+                    if (w2 == w3) continue // Same guard recordTrigram applies
+
+                    val key = prefixKey(w1, w2)
+                    data.prefixFrequencies[key] = (data.prefixFrequencies[key] ?: 0) + frequency
+
+                    val entries = data.trigramMap.getOrPut(key) { mutableListOf() }
+                    val existing = entries.find { it.word3 == w3 }
+                    if (existing != null) {
+                        entries.remove(existing)
+                        entries.add(existing.copy(frequency = existing.frequency + frequency))
+                    } else {
+                        entries.add(TrigramEntry(w1, w2, w3, frequency, 0f))
+                    }
+                }
+
+                // Recompute probabilities against the merged prefix totals + enforce caps.
+                for ((key, entries) in data.trigramMap) {
+                    val total = data.prefixFrequencies[key] ?: continue
+                    val recomputed = entries.map {
+                        it.copy(probability = TrigramEntry.calculateProbability(it.frequency, total))
+                    }
+                    entries.clear()
+                    entries.addAll(recomputed)
+                    entries.sortByDescending { it.probability }
+                    if (entries.size > MAX_TRIGRAMS_PER_PREFIX) {
+                        entries.subList(MAX_TRIGRAMS_PER_PREFIX, entries.size).clear()
+                    }
+                }
+                pruneIfNeeded(data)
+            }
+
+            dirtyLanguages.add(lang)
+            persister.markDirty()
+            // Synchronous checkpoint: an import is a user-initiated bulk write that must
+            // survive process death immediately (same rationale as BigramStore.importFromJson).
+            persister.flush()
+        } catch (e: Exception) {
+            // Invalid JSON, ignore
+        }
+    }
 }

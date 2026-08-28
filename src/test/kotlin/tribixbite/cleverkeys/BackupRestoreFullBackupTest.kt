@@ -366,6 +366,57 @@ class BackupRestoreFullBackupTest {
         assertEquals(2, dict.get("metadata").asJsonObject.get("format_version").asInt)
     }
 
+    // ── ARC-022: learned n-grams ride the dictionaries payload ─────────────────
+
+    /**
+     * Both n-gram orders must be present in the exported dictionaries payload. Before
+     * ARC-022 only `learned_bigrams_by_language` was written, so a device migration
+     * carried the blunter half of the context LM and dropped the trigrams — which
+     * `ContextModel` PREFERS for both boosting and next-word.
+     */
+    @Test
+    fun exportFullBackup_dictionariesCarryBothLearnedNgramOrders() {
+        val mgr = newManager()
+        val result = mgr.exportFullBackup(fakeUriForOutput(), prefs)
+        assertTrue(result.success)
+
+        val entries = zipEntries(capturedOutput.toByteArray())
+        val dict = JsonParser
+            .parseString(String(entries[BackupRestoreManager.ENTRY_DICTIONARIES]!!, Charsets.UTF_8))
+            .asJsonObject
+
+        assertTrue("learned bigrams section present", dict.has("learned_bigrams_by_language"))
+        assertTrue("learned trigrams section present", dict.has("learned_trigrams_by_language"))
+        assertTrue(dict.get("learned_trigrams_by_language").isJsonObject)
+    }
+
+    /**
+     * BACKWARD COMPATIBILITY: a dictionaries payload written before ARC-022 has no
+     * `learned_trigrams_by_language` key. The importer must treat it as a no-op and
+     * still apply everything else, rather than failing the whole restore.
+     */
+    @Test
+    fun importFullBackup_legacyDictionariesWithoutTrigramSectionStillImports() {
+        val legacyDict = """
+            {"metadata":{"format_version":2},
+             "custom_words_by_language":{"en":{"kotlin":5}},
+             "learned_bigrams_by_language":{},
+             "user_vocabulary":[]}
+        """.trimIndent()
+        val zipBytes = buildZip(listOf(
+            BackupRestoreManager.ENTRY_MANIFEST to
+                """{"format":"cleverkeys_full_backup","format_version":1,"app_version":"1.4.0-test"}"""
+                    .toByteArray(Charsets.UTF_8),
+            BackupRestoreManager.ENTRY_DICTIONARIES to legacyDict.toByteArray(Charsets.UTF_8),
+        ))
+
+        val mgr = newManager()
+        val result = mgr.importFullBackup(fakeUriForInput(zipBytes), prefs)
+
+        assertTrue("legacy payload must import: err=${result.errorMessage}", result.success)
+        assertEquals(1, result.customWordsImported)
+    }
+
     @Test
     fun exportFullBackup_includesClipboardHistoryJson() {
         // Override clipboard mock to return a non-empty payload so the section is non-empty.

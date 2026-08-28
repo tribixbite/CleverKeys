@@ -227,6 +227,158 @@ class TrigramStorePersistenceTest {
         assertEquals(20, entries.first().frequency)
     }
 
+    // ------------------------------------------- backup export/import (ARC-022)
+
+    /**
+     * The field names below are a FORMAT CONTRACT, not an implementation detail:
+     * `BackupRestoreManager.buildDictionariesJson` embeds this array verbatim under
+     * `learned_trigrams_by_language`, and [TrigramStore.importFromJson] on a different
+     * device is what has to read it back. Renaming a key here silently breaks migration.
+     */
+    @Test
+    fun `exportToJson emits the backup payload's field names`() {
+        record(3, "en", "i", "want", "to")
+
+        val arr = org.json.JSONArray(store.exportToJson("en"))
+        assertEquals(1, arr.length())
+        val obj = arr.getJSONObject(0)
+        assertEquals("i", obj.getString("word1"))
+        assertEquals("want", obj.getString("word2"))
+        assertEquals("to", obj.getString("word3"))
+        assertEquals(3, obj.getInt("frequency"))
+        assertEquals(1.0, obj.getDouble("probability"), 1e-6)
+    }
+
+    @Test
+    fun `export then import into a fresh store reproduces frequencies and probabilities`() {
+        record(3, "en", "i", "want", "to")
+        record(1, "en", "i", "want", "food")
+        record(2, "en", "see", "you", "tomorrow")
+
+        val payload = store.exportToJson("en")
+
+        val destination = TrigramStore(InMemoryLearnedStorage(), 60_000, 120_000, scheduler)
+        destination.importFromJson("en", payload)
+
+        assertEquals(3, destination.getTotalTrigramCount("en"))
+        assertEquals(0.75f, destination.getProbability("en", "i", "want", "to"), 1e-6f)
+        assertEquals(0.25f, destination.getProbability("en", "i", "want", "food"), 1e-6f)
+        assertEquals(1.0f, destination.getProbability("en", "see", "you", "tomorrow"), 1e-6f)
+        assertEquals(
+            3,
+            destination.getPredictions("en", "i", "want", minProbability = 0f)
+                .single { it.word3 == "to" }.frequency
+        )
+    }
+
+    @Test
+    fun `import MERGES frequencies with existing data and renormalizes the prefix`() {
+        // Destination already knows the phrase; the imported backup saw it more often.
+        val destination = TrigramStore(InMemoryLearnedStorage(), 60_000, 120_000, scheduler)
+        repeat(2) { destination.recordTrigram("en", "i", "want", "to") }
+
+        record(4, "en", "i", "want", "to")
+        record(2, "en", "i", "want", "food")
+        destination.importFromJson("en", store.exportToJson("en"))
+
+        // 2 local + 4 imported = 6 for "to"; 2 imported for "food"; prefix total 8.
+        val merged = destination.getPredictions("en", "i", "want", minProbability = 0f)
+        assertEquals(6, merged.single { it.word3 == "to" }.frequency)
+        assertEquals(2, merged.single { it.word3 == "food" }.frequency)
+        assertEquals(0.75f, destination.getProbability("en", "i", "want", "to"), 1e-6f)
+        assertEquals(0.25f, destination.getProbability("en", "i", "want", "food"), 1e-6f)
+    }
+
+    @Test
+    fun `import persists immediately - a fresh store over the same storage sees it`() {
+        record(3, "en", "good", "morning", "sunshine")
+        val payload = store.exportToJson("en")
+
+        val destinationStorage = InMemoryLearnedStorage()
+        TrigramStore(destinationStorage, 60_000, 120_000, scheduler)
+            .importFromJson("en", payload)
+
+        // No explicit flush: an import is a bulk user-initiated write and checkpoints itself.
+        val revived = TrigramStore(destinationStorage, 60_000, 120_000, scheduler)
+        assertEquals(1, revived.getTotalTrigramCount("en"))
+        assertTrue(revived.getProbability("en", "good", "morning", "sunshine") > 0f)
+    }
+
+    @Test
+    fun `import drops entries the learn path would never produce`() {
+        val hostile = """
+            [
+              {"word1":"a","word2":"very","word3":"very","frequency":9,"probability":1.0},
+              {"word1":"","word2":"x","word3":"y","frequency":9,"probability":1.0},
+              {"word1":"i","word2":"want","word3":"","frequency":9,"probability":1.0},
+              {"word1":"i","word2":"want","word3":"to","frequency":0,"probability":1.0},
+              {"word1":"i","word2":"want","word3":"food","frequency":-5,"probability":1.0},
+              {"word1":"i","word2":"want","word3":"pizza","frequency":4,"probability":1.0}
+            ]
+        """.trimIndent()
+
+        store.importFromJson("en", hostile)
+
+        assertEquals(1, store.getTotalTrigramCount("en"))
+        assertEquals(1.0f, store.getProbability("en", "i", "want", "pizza"), 1e-6f)
+    }
+
+    @Test
+    fun `import normalizes case so a mixed-case backup merges with lowercase data`() {
+        record(2, "en", "i", "want", "to")
+
+        store.importFromJson(
+            "en",
+            """[{"word1":"I","word2":"Want","word3":"To","frequency":3,"probability":1.0}]"""
+        )
+
+        assertEquals(1, store.getTotalTrigramCount("en"))
+        assertEquals(
+            5,
+            store.getPredictions("en", "i", "want", minProbability = 0f).single().frequency
+        )
+    }
+
+    @Test
+    fun `import enforces the per-prefix cap`() {
+        val entries = (1..25).joinToString(",") { i ->
+            """{"word1":"fixed","word2":"prefix","word3":"w$i","frequency":$i,"probability":1.0}"""
+        }
+        store.importFromJson("en", "[$entries]")
+
+        val kept = store.getPredictions("en", "fixed", "prefix", maxResults = 50, minProbability = 0f)
+        assertEquals(10, kept.size)
+        // Probability-ranked cap → the most frequent continuations survive.
+        assertEquals("w25", kept.first().word3)
+    }
+
+    @Test
+    fun `import of invalid JSON is a no-op, not a wipe`() {
+        record(3, "en", "i", "want", "to")
+
+        store.importFromJson("en", "{not json[")
+
+        assertEquals(1, store.getTotalTrigramCount("en"))
+        assertEquals(1.0f, store.getProbability("en", "i", "want", "to"), 1e-6f)
+    }
+
+    @Test
+    fun `import is language-keyed - a backup restored under fr never leaks into en`() {
+        record(3, "en", "i", "want", "to")
+        val payload = store.exportToJson("en")
+
+        val destination = TrigramStore(InMemoryLearnedStorage(), 60_000, 120_000, scheduler)
+        destination.importFromJson("fr", payload)
+
+        assertTrue(destination.getProbability("fr", "i", "want", "to") > 0f)
+        assertEquals(0f, destination.getProbability("en", "i", "want", "to"), 0f)
+    }
+
+    @Test
+    fun `export of an unknown language is an empty array, not a crash`() {
+        assertEquals(0, org.json.JSONArray(store.exportToJson("de")).length())
+    }
+
     // ------------------------------------------------- concurrent first touch
 
     /**

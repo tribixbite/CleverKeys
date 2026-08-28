@@ -270,8 +270,12 @@ Prediction block of `InputBehaviorSection` ("Learning & Data").
   (debounced, off the main thread, via `UserVocabulary.enforceCap`).
 - **Forget phrases / Forget words**: count-bearing confirm dialogs, off-main-thread clears.
 - **Backup**: learned n-grams + vocabulary ride the standard Backup & Restore dictionary
-  payload (`learned_bigrams_by_language` / `user_vocabulary` keys in
-  `BackupRestoreManager`).
+  payload (`learned_bigrams_by_language` / `learned_trigrams_by_language` /
+  `user_vocabulary` keys in `BackupRestoreManager`). Trigrams were added by ARC-022
+  (2026-08-28) — before that the claim above was true for bigrams only, which migrated the
+  blunter half of the model. Import treats every key as optional, so a pre-ARC-022 export
+  (no `learned_trigrams_by_language`) still imports; both n-gram orders MERGE (frequencies
+  add, probabilities recompute), the vocabulary is REPLACED.
 
 ## 6. Supporting changes (review fixes, `f6824477`)
 
