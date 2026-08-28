@@ -697,6 +697,9 @@ tasks.register('runMockTests', JavaExec) {
     // shutdown() on MOCK coordinators; this proves the REAL shutdown() bodies stop the
     // prediction executor and release both swipe-adapter threads.
     'tribixbite.cleverkeys.ImeTeardownExecutorShutdownTest',
+    // ARC-017 (2026-08-28): the selection slider's d==0 guard. Without it a zero-repeat
+    // slider spins the IME main thread forever on an empty selection.
+    'tribixbite.cleverkeys.KeyEventHandlerSliderTest',
     'tribixbite.cleverkeys.AutocapitalisationCallbackDedupeTest',
     'tribixbite.cleverkeys.ClipboardMediaManagerZipSlipTest',
     'tribixbite.cleverkeys.BackupRestoreArchiveLimitsTest',
