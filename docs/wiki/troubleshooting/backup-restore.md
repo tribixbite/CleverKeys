@@ -199,9 +199,13 @@ Go to **Settings → 💾 Backup & Restore → Backup Password** and tap **Set P
 
 - **All exports are encrypted** into a `CKENC1` container (AES-256-GCM, key derived
   from your password via PBKDF2-HMAC-SHA256 @ 600,000 iterations).
-- Encrypted files get a `.ckenc` suffix appended to their normal name
-  (`cleverkeys_settings_2026-07-17.json.ckenc`, `..._clipboard.zip.ckenc`). Detection
-  never trusts the extension — the file's magic bytes decide.
+- Encrypted files get a `.ckenc` suffix appended to their normal name — the Export
+  buttons pre-fill the file picker with `cleverkeys-config.json.ckenc`,
+  `cleverkeys-dictionary.json.ckenc`, `cleverkeys-clipboard-full.zip.ckenc`,
+  `cleverkeys_full_backup_<date>.zip.ckenc`, and so on. You can rename the file in the
+  picker; nothing depends on the name. Detection never trusts the extension — the file's
+  magic bytes decide. (Automation exports write to whatever path *you* pass on the
+  `am start` command line, so the suffix is yours to add there.)
 - **Restoring on another device** works by entering the *same* password there.
 
 **A Backup Password is REQUIRED for automation.** The `am start` export/import commands

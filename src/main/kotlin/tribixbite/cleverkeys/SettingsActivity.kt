@@ -31,6 +31,7 @@ import tribixbite.cleverkeys.ui.settings.expanderFor
 import tribixbite.cleverkeys.ui.settings.scrollToSetting
 import tribixbite.cleverkeys.ui.settings.sectionDisplayName
 import tribixbite.cleverkeys.ui.settings.settingSlug
+import tribixbite.cleverkeys.ui.settings.io.CreateBackupDocument
 import tribixbite.cleverkeys.ui.settings.io.applyPlannedDictionaries
 import tribixbite.cleverkeys.ui.settings.io.applyPlannedSettings
 import tribixbite.cleverkeys.ui.settings.io.handleCustomRulesPicked
@@ -141,9 +142,14 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         return v
     }
 
-    // SAF file pickers for backup/restore
+    // SAF file pickers for backup/restore.
+    //
+    // ARC-035: the five ENCRYPTABLE exports use CreateBackupDocument (per-launch MIME) rather
+    // than CreateDocument (MIME fixed at registration), because an encrypted export must ask for
+    // application/octet-stream or the DocumentsProvider rewrites the `.ckenc` suffix away. The
+    // swipe-ML / perf-stats exports below are never encrypted and keep the plain contract.
     internal val configExportLauncher = registerForActivityResult(
-        ActivityResultContracts.CreateDocument("application/json")
+        CreateBackupDocument()
     ) { uri: Uri? ->
         uri?.let { performConfigExport(it, consumePlaintextOptOut()) }
     }
@@ -155,7 +161,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     }
 
     internal val dictionaryExportLauncher = registerForActivityResult(
-        ActivityResultContracts.CreateDocument("application/json")
+        CreateBackupDocument()
     ) { uri: Uri? ->
         uri?.let { performDictionaryExport(it, consumePlaintextOptOut()) }
     }
@@ -167,7 +173,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     }
 
     internal val clipboardExportLauncher = registerForActivityResult(
-        ActivityResultContracts.CreateDocument("application/json")
+        CreateBackupDocument()
     ) { uri: Uri? ->
         uri?.let { performClipboardExport(it, consumePlaintextOptOut()) }
     }
@@ -180,7 +186,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     // ZIP variants — full clipboard backup including media files
     internal val clipboardZipExportLauncher = registerForActivityResult(
-        ActivityResultContracts.CreateDocument("application/zip")
+        CreateBackupDocument()
     ) { uri: Uri? ->
         uri?.let { performClipboardZipExport(it, consumePlaintextOptOut()) }
     }
@@ -193,7 +199,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     // GitHub #142: one-click full backup ZIP — manifest + config + dicts + clipboard + media
     internal val fullBackupExportLauncher = registerForActivityResult(
-        ActivityResultContracts.CreateDocument("application/zip")
+        CreateBackupDocument()
     ) { uri: Uri? ->
         uri?.let { performFullBackupExport(it, consumePlaintextOptOut()) }
     }

@@ -103,7 +103,7 @@ internal fun SettingsActivity.handleCustomRulesPicked(uri: Uri) {
 
 internal fun SettingsActivity.exportClipboardHistory() {
     try {
-        clipboardExportLauncher.launch("cleverkeys-clipboard.json")
+        clipboardExportLauncher.launch(exportName("cleverkeys-clipboard.json", "application/json"))
     } catch (e: Exception) {
         Toast.makeText(this, "Could not open file picker: ${e.message}", Toast.LENGTH_SHORT).show()
     }
@@ -119,7 +119,9 @@ internal fun SettingsActivity.importClipboardHistory() {
 
 internal fun SettingsActivity.exportClipboardZip() {
     try {
-        clipboardZipExportLauncher.launch("cleverkeys-clipboard-full.zip")
+        clipboardZipExportLauncher.launch(
+            exportName("cleverkeys-clipboard-full.zip", "application/zip")
+        )
     } catch (e: Exception) {
         Toast.makeText(this, "Could not open file picker: ${e.message}", Toast.LENGTH_SHORT).show()
     }

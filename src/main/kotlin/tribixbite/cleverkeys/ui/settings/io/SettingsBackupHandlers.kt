@@ -16,6 +16,8 @@ import tribixbite.cleverkeys.DirectBootAwarePreferences
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.ui.settings.loadCurrentSettings
 import tribixbite.cleverkeys.BackupRestoreManager
+import tribixbite.cleverkeys.backup.BackupExportName
+import tribixbite.cleverkeys.backup.BackupExportNaming
 import tribixbite.cleverkeys.backup.SettingsImportPlan
 import tribixbite.cleverkeys.backup.ShortSwipeImportMode
 import tribixbite.cleverkeys.buildSettingsResultMessage
@@ -30,6 +32,28 @@ internal fun SettingsActivity.exportPolicy(plaintextOptOut: Boolean): BackupRest
     else BackupRestoreManager.EncryptionPolicy.UI_DEFAULT
 
 /**
+ * ARC-035: seed the SAF create-document picker with the name and MIME type this export will
+ * actually produce, so an encrypted export lands as `<name>.ckenc` — which the troubleshooting
+ * wiki has promised since encryption shipped.
+ *
+ * The prediction must match [BackupRestoreManager]'s own `willEncrypt` exactly: encryption
+ * happens when the policy wants it AND a passphrase exists. Both inputs are known here —
+ * [SettingsActivity.pendingPlaintextExport] is armed by the "Export unencrypted…" confirm
+ * *before* the export button is tapped (it is consumed by the launcher callback, so reading it
+ * here does not clear it), and the passphrase check is the same prefs read the Backup & Restore
+ * section already performs to decide whether to offer that opt-out at all.
+ *
+ * A mismatch is cosmetic, never corrupting: the container's `CKENC1` magic — not the extension —
+ * is what import sniffs.
+ */
+internal fun SettingsActivity.exportName(plainName: String, plainMime: String): BackupExportName =
+    BackupExportNaming.forExport(
+        plainName = plainName,
+        plainMime = plainMime,
+        willEncrypt = backupPassphraseStore.hasPassphrase() && !pendingPlaintextExport,
+    )
+
+/**
  * Prime the manager for an interactive IMPORT: UI_DEFAULT policy + the stored
  * passphrase (any one-shot override is cleared unless a retry sets it).
  */
@@ -41,7 +65,7 @@ internal fun SettingsActivity.primeImport() {
 // Inline backup/restore functions - launch SAF file pickers
 internal fun SettingsActivity.exportConfiguration() {
     try {
-        configExportLauncher.launch("cleverkeys-config.json")
+        configExportLauncher.launch(exportName("cleverkeys-config.json", "application/json"))
     } catch (e: Exception) {
         Toast.makeText(this, "Could not open file picker: ${e.message}", Toast.LENGTH_SHORT).show()
     }
@@ -63,7 +87,9 @@ internal fun SettingsActivity.importConfiguration() {
 internal fun SettingsActivity.exportFullBackup() {
     try {
         val date = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
-        fullBackupExportLauncher.launch("cleverkeys_full_backup_$date.zip")
+        fullBackupExportLauncher.launch(
+            exportName("cleverkeys_full_backup_$date.zip", "application/zip")
+        )
     } catch (e: Exception) {
         Toast.makeText(this, "Could not open file picker: ${e.message}", Toast.LENGTH_SHORT).show()
     }

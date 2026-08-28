@@ -16,7 +16,9 @@ import tribixbite.cleverkeys.buildDictResultMessage
 
 internal fun SettingsActivity.exportCustomDictionary() {
     try {
-        dictionaryExportLauncher.launch("cleverkeys-dictionary.json")
+        dictionaryExportLauncher.launch(
+            exportName("cleverkeys-dictionary.json", "application/json")
+        )
     } catch (e: Exception) {
         Toast.makeText(this, "Could not open file picker: ${e.message}", Toast.LENGTH_SHORT).show()
     }
