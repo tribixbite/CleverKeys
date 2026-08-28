@@ -125,8 +125,16 @@ object CtcFeaturizer {
      * Full featurization of a normalized ([0,1]) touch path into the encoder's `[2, 64]`
      * tensor, flattened row-major as `[x0..x63, y0..y63]` (float32).
      *
-     * Input points must already be in the layout's [0,1] coordinate frame — apply
-     * [normalizeRawX]/[normalizeRawY] first for raw device pixels.
+     * Input points must already be in the layout's [0,1] coordinate frame. For raw device
+     * pixels that frame is the LETTER-KEY BOUNDING BOX affine built by
+     * `CtcEngineAdapter.buildMappedLayout` — `(raw − origin) * inv` per axis, the exact
+     * frame the `layout_keys` centers handed to [buildPaddedLayout] are expressed in.
+     *
+     * Do NOT normalize with [normalizeRawX]/[normalizeRawY] here (ARC-025): that is FUTO's
+     * 4/3-aspect DEVICE-frame mapping, it is production-dead in this repo (zero production
+     * callers — reference/eval-harness only, `docs/specs/ctc-swipe-engine.md`), and the
+     * shipped encoder was trained on letter-box-normalized paths, so feeding it a
+     * 4/3-corrected trace mis-places every sample.
      *
      * @param px normalized x per raw sample.
      * @param py normalized y per raw sample.
@@ -155,7 +163,11 @@ object CtcFeaturizer {
         )
 
     /**
-     * Map a raw device x-pixel into the model's [0,1] frame:
+     * **PRODUCTION-DEAD** (ARC-025) — reference/eval-harness only, kept so the FUTO
+     * integration study stays reproducible. The shipping path normalizes over the
+     * letter-key bounding box in `CtcEngineAdapter.buildMappedLayout`; see [featurize].
+     *
+     * Map a raw device x-pixel into FUTO's device [0,1] frame:
      * `rawX / keyboardWidth * sx + ox` (integration study §4c). `sx`/`ox` are the layout
      * affine from FUTO's `SpecialDecoder.matchLayout`; identity (`1,0`) for a layout that
      * matches the canonical frame directly.
@@ -164,7 +176,11 @@ object CtcFeaturizer {
         rawX / keyboardWidth * sx + ox
 
     /**
-     * Map a raw device y-pixel into the model's [0,1] frame WITH the 4/3 vertical aspect
+     * **PRODUCTION-DEAD** (ARC-025) — reference/eval-harness only, same rationale as
+     * [normalizeRawX]. Wiring this into a decode path (multiscript included) would feed the
+     * letter-box-trained encoder a 4/3-corrected trace.
+     *
+     * Map a raw device y-pixel into FUTO's device [0,1] frame WITH the 4/3 vertical aspect
      * correction, clamped to 1: `min(1, rawY / keyboardHeight * (4/3) * sy + oy)`
      * (integration study §3c / §4c — the "tapping Q must pass Q's center" contract).
      */
