@@ -121,7 +121,7 @@ class BackupRestoreDbFailureTest {
         mockkObject(ClipboardDatabase.Companion)
         every { ClipboardDatabase.getInstance(any()) } returns clipboardDb
         every { clipboardDb.getAllReferencedMediaPaths() } returns emptySet()
-        every { clipboardDb.importFromJSON(any()) } returns intArrayOf(0, 0, 0, 0)
+        every { clipboardDb.importFromJSON(any()) } returns intArrayOf(0, 0, 0, 0, 0)
 
         mockkObject(ShortSwipeCustomizationManager.Companion)
         every { ShortSwipeCustomizationManager.getInstance(any()) } returns shortSwipeManager

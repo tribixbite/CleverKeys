@@ -164,7 +164,7 @@ class BackupRestoreFullBackupTest {
         }
         every { clipboardDb.getAllReferencedMediaPaths() } returns emptySet()
         every { clipboardDb.getReferencedMediaPaths(any()) } returns emptySet()
-        every { clipboardDb.importFromJSON(any()) } returns intArrayOf(0, 0, 0, 0)
+        every { clipboardDb.importFromJSON(any()) } returns intArrayOf(0, 0, 0, 0, 0)
 
         // Stub ShortSwipeCustomizationManager.getInstance + return empty mappings.
         mockkObject(ShortSwipeCustomizationManager.Companion)

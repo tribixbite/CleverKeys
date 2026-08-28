@@ -1571,11 +1571,30 @@ class ClipboardDatabase private constructor(context: Context) :
      * rollback + `success = false` result. Returning partial counts after a rolled-back
      * transaction told the user a failed import had succeeded and orphaned the media commit.
      *
-     * @return IntArray of [activeAdded, pinnedAdded, todoAdded, duplicatesSkipped]
+     * @return IntArray of [activeAdded, pinnedAdded, todoAdded, duplicatesSkipped,
+     *         truncatedByCap] — the fifth slot was added by ARC-034 and counts entries
+     *         dropped by [MAX_IMPORT_ENTRIES_PER_ARRAY]; it is 0 for every real payload.
      * @throws Exception any SQLite/JSON failure; the DB transaction is already rolled back.
      */
     fun importFromJSON(importData: JSONObject): IntArray {
         var activeAdded = 0; var pinnedAdded = 0; var todoAdded = 0; var duplicatesSkipped = 0
+        var truncatedByCap = 0
+
+        // ARC-034: how many of [entries] to iterate. Accumulates the drop count and logs it
+        // once per over-cap section, so a truncated import is never silent in logcat.
+        fun capped(entries: JSONArray, section: String): Int {
+            val length = entries.length()
+            if (length <= MAX_IMPORT_ENTRIES_PER_ARRAY) return length
+            val dropped = length - MAX_IMPORT_ENTRIES_PER_ARRAY
+            truncatedByCap += dropped
+            Log.w(
+                TAG,
+                "Clipboard import: '$section' declares $length entries — importing the first " +
+                    "$MAX_IMPORT_ENTRIES_PER_ARRAY, dropping $dropped (per-array cap)"
+            )
+            return MAX_IMPORT_ENTRIES_PER_ARRAY
+        }
+
         val db = writableDatabase
         db.beginTransaction()
         try {
@@ -1586,21 +1605,30 @@ class ClipboardDatabase private constructor(context: Context) :
 
             // Import active/history entries (same format in v2 and v3)
             if (importData.has("active_entries")) {
-                val result = importHistoryEntries(db, importData.getJSONArray("active_entries"), freshExpiry)
+                val entries = importData.getJSONArray("active_entries")
+                val result = importHistoryEntries(
+                    db, entries, freshExpiry, capped(entries, "active_entries")
+                )
                 activeAdded = result.first
                 duplicatesSkipped += result.second
             }
 
             // Import pinned entries
             if (importData.has("pinned_entries")) {
-                val result = importPinnedEntries(db, importData.getJSONArray("pinned_entries"), exportVersion, freshExpiry)
+                val entries = importData.getJSONArray("pinned_entries")
+                val result = importPinnedEntries(
+                    db, entries, exportVersion, freshExpiry, capped(entries, "pinned_entries")
+                )
                 pinnedAdded = result.first
                 duplicatesSkipped += result.second
             }
 
             // Import todo entries
             if (importData.has("todo_entries")) {
-                val result = importTodoEntries(db, importData.getJSONArray("todo_entries"), exportVersion, freshExpiry)
+                val entries = importData.getJSONArray("todo_entries")
+                val result = importTodoEntries(
+                    db, entries, exportVersion, freshExpiry, capped(entries, "todo_entries")
+                )
                 todoAdded = result.first
                 duplicatesSkipped += result.second
             }
@@ -1609,16 +1637,19 @@ class ClipboardDatabase private constructor(context: Context) :
         } finally {
             db.endTransaction()
         }
-        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Import complete: $activeAdded active, $pinnedAdded pinned, $todoAdded todo, $duplicatesSkipped dupes skipped")
-        return intArrayOf(activeAdded, pinnedAdded, todoAdded, duplicatesSkipped)
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Import complete: $activeAdded active, $pinnedAdded pinned, $todoAdded todo, $duplicatesSkipped dupes skipped, $truncatedByCap truncated")
+        return intArrayOf(activeAdded, pinnedAdded, todoAdded, duplicatesSkipped, truncatedByCap)
     }
 
     /** Import history entries into clipboard_entries.
      *  Uses exported content_hash when available (preserves SHA-256 for media entries).
      *  Falls back to String.hashCode() for text entries or old exports without hash. */
-    private fun importHistoryEntries(db: SQLiteDatabase, entries: JSONArray, freshExpiry: Long): Pair<Int, Int> {
+    private fun importHistoryEntries(
+        db: SQLiteDatabase, entries: JSONArray, freshExpiry: Long, limit: Int
+    ): Pair<Int, Int> {
         var added = 0; var skipped = 0
-        for (i in 0 until entries.length()) {
+        // ARC-034: `limit` is entries.length() capped at MAX_IMPORT_ENTRIES_PER_ARRAY.
+        for (i in 0 until limit) {
             val entry = entries.getJSONObject(i)
             val content = entry.getString("content")
             val mimeType = entry.optString("mime_type", ClipboardEntry.MIME_TEXT_PLAIN)
@@ -1664,11 +1695,12 @@ class ClipboardDatabase private constructor(context: Context) :
      * Also inserts into history (COPY semantics) for v2 imports.
      */
     private fun importPinnedEntries(
-        db: SQLiteDatabase, entries: JSONArray, exportVersion: Int, freshExpiry: Long
+        db: SQLiteDatabase, entries: JSONArray, exportVersion: Int, freshExpiry: Long, limit: Int
     ): Pair<Int, Int> {
         var added = 0; var skipped = 0
         var maxPosition = getMaxPinnedPosition(db)
-        for (i in 0 until entries.length()) {
+        // ARC-034: `limit` is entries.length() capped at MAX_IMPORT_ENTRIES_PER_ARRAY.
+        for (i in 0 until limit) {
             val entry = entries.getJSONObject(i)
             val content = entry.getString("content")
             val mimeType = entry.optString("mime_type", ClipboardEntry.MIME_TEXT_PLAIN)
@@ -1745,11 +1777,12 @@ class ClipboardDatabase private constructor(context: Context) :
      * Also inserts into history (COPY semantics) for v2 imports.
      */
     private fun importTodoEntries(
-        db: SQLiteDatabase, entries: JSONArray, exportVersion: Int, freshExpiry: Long
+        db: SQLiteDatabase, entries: JSONArray, exportVersion: Int, freshExpiry: Long, limit: Int
     ): Pair<Int, Int> {
         var added = 0; var skipped = 0
         var maxPosition = getMaxTodoPosition(db)
-        for (i in 0 until entries.length()) {
+        // ARC-034: `limit` is entries.length() capped at MAX_IMPORT_ENTRIES_PER_ARRAY.
+        for (i in 0 until limit) {
             val entry = entries.getJSONObject(i)
             val content = entry.getString("content")
             val mimeType = entry.optString("mime_type", ClipboardEntry.MIME_TEXT_PLAIN)
@@ -1837,6 +1870,26 @@ class ClipboardDatabase private constructor(context: Context) :
         private const val COLUMN_EXPIRY_TIMESTAMP = "expiry_timestamp"
         private const val COLUMN_CONTENT_HASH = "content_hash"
         private const val TAG = "ClipboardDatabase"
+
+        /**
+         * Per-ARRAY ceiling on [importFromJSON] (ARC-034).
+         *
+         * `BackupRestoreManager.MAX_IMPORT_ENTRIES` bounds how many entries a backup ZIP may
+         * contain; it says nothing about what is INSIDE `clipboard_history.json`, whose three
+         * arrays were iterated unbounded. Each imported row costs a `rawQuery` dedup probe plus
+         * an `INSERT` inside one transaction, so a hand-built export with millions of entries
+         * in one array is a cheap way to wedge the app on an import the user asked for.
+         *
+         * Deliberately the same 10,000 as the ZIP cap — the two bound different things but there
+         * is no reason for the numbers to differ, and a single remembered figure is likelier to
+         * stay right. Far above any real history: `clipboard_history_limit` tops out in the
+         * hundreds, so only a synthetic payload can reach this.
+         *
+         * TRUNCATES rather than rejects (unlike the ZIP cap, which refuses outright): a clipboard
+         * import is additive and partially-applied history is still useful, whereas a ZIP over
+         * the entry cap is structurally suspect. The drop is logged and counted into the result.
+         */
+        const val MAX_IMPORT_ENTRIES_PER_ARRAY = 10_000
 
         // ─── v3 schema: independent pinned/todo tables ───
         private const val TABLE_PINNED = "pinned_entries"

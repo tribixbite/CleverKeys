@@ -116,7 +116,7 @@ class BackupRestoreArchiveLimitsTest {
         mockkObject(ClipboardDatabase.Companion)
         every { ClipboardDatabase.getInstance(any()) } returns clipboardDb
         every { clipboardDb.getAllReferencedMediaPaths() } returns emptySet()
-        every { clipboardDb.importFromJSON(any()) } returns intArrayOf(0, 0, 0, 0)
+        every { clipboardDb.importFromJSON(any()) } returns intArrayOf(0, 0, 0, 0, 0)
 
         mockkObject(ShortSwipeCustomizationManager.Companion)
         every { ShortSwipeCustomizationManager.getInstance(any()) } returns shortSwipeManager
@@ -636,5 +636,41 @@ class BackupRestoreArchiveLimitsTest {
         assertEquals(512L * 1024 * 1024, BackupRestoreManager.MAX_IMPORT_TOTAL_BYTES)
         assertEquals(512L * 1024 * 1024, BackupRestoreManager.MAX_ARCHIVE_CONTAINER_BYTES)
         assertEquals(10_000, BackupRestoreManager.MAX_IMPORT_ENTRIES)
+        // ARC-034: the ZIP cap above bounds how many MEMBERS an archive may hold; this one
+        // bounds how many entries each JSON ARRAY *inside* clipboard_history.json may hold —
+        // previously unbounded, so a single-member archive could still flood the DB.
+        assertEquals(10_000, ClipboardDatabase.MAX_IMPORT_ENTRIES_PER_ARRAY)
+    }
+
+    // ── ARC-034: per-array truncation is reported, not silently absorbed ────────
+
+    /**
+     * The truncation count must reach [BackupRestoreManager.ClipboardImportResult] as its OWN
+     * field. Folding it into `skippedCount` would be worse than dropping it: that field means
+     * "duplicate" at every read site, so a flooded import would look like a deduplicated one.
+     */
+    @Test
+    fun clipboardImport_surfacesTheCapTruncationCountSeparatelyFromDuplicates() {
+        // [activeAdded, pinnedAdded, todoAdded, duplicatesSkipped, truncatedByCap]
+        every { clipboardDb.importFromJSON(any()) } returns intArrayOf(4, 1, 0, 2, 7)
+
+        val json = """{"export_version":5,"export_date":"2026-08-28 00:00:00","active_entries":[]}"""
+        val result = newManager().importClipboardHistory(fakeUriForInput(json.toByteArray(Charsets.UTF_8)))
+
+        assertEquals("active + pinned + todo", 5, result.importedCount)
+        assertEquals("duplicates only", 2, result.skippedCount)
+        assertEquals("cap-dropped entries, kept distinct from duplicates", 7, result.truncatedCount)
+    }
+
+    @Test
+    fun clipboardImport_uncappedPayloadReportsZeroTruncation() {
+        // The guard must not false-positive: an ordinary import reports 0.
+        every { clipboardDb.importFromJSON(any()) } returns intArrayOf(3, 0, 0, 0, 0)
+
+        val json = """{"export_version":5,"export_date":"2026-08-28 00:00:00","active_entries":[]}"""
+        val result = newManager().importClipboardHistory(fakeUriForInput(json.toByteArray(Charsets.UTF_8)))
+
+        assertEquals(3, result.importedCount)
+        assertEquals(0, result.truncatedCount)
     }
 }

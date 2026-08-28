@@ -1628,16 +1628,23 @@ open class BackupRestoreManager(
                 throw e
             }
 
-            // importResult = [activeAdded, pinnedAdded, todoAdded, duplicatesSkipped]
+            // importResult = [activeAdded, pinnedAdded, todoAdded, duplicatesSkipped, truncatedByCap]
             val result = ClipboardImportResult()
             result.importedCount = importResult[0] + importResult[1] + importResult[2]  // active + pinned + todo
             result.skippedCount = importResult[3]  // duplicates skipped
+            // ARC-034: entries dropped by ClipboardDatabase.MAX_IMPORT_ENTRIES_PER_ARRAY.
+            // Kept OUT of skippedCount, which means "duplicate" everywhere it is read.
+            result.truncatedCount = importResult[4]
 
             if (importData.has("export_date")) {
                 result.sourceVersion = importData.getString("export_date")
             }
 
-            Log.i(TAG, "Imported clipboard history: ${result.importedCount} imported, ${result.skippedCount} skipped")
+            Log.i(
+                TAG,
+                "Imported clipboard history: ${result.importedCount} imported, " +
+                    "${result.skippedCount} skipped, ${result.truncatedCount} truncated by cap"
+            )
             result
         } catch (e: BackupDecryptException) {
             // Preserve the decrypt-specific type so the UI can prompt for a passphrase.
@@ -1667,9 +1674,12 @@ open class BackupRestoreManager(
      */
     data class ClipboardImportResult(
         @JvmField var importedCount: Int = 0,
-        @JvmField var skippedCount: Int = 0,
+        @JvmField var skippedCount: Int = 0,       // duplicates, NOT cap-dropped entries
         @JvmField var sourceVersion: String = "unknown",
-        @JvmField var mediaFilesRestored: Int = 0
+        @JvmField var mediaFilesRestored: Int = 0,
+        // ARC-034: dropped by ClipboardDatabase.MAX_IMPORT_ENTRIES_PER_ARRAY. 0 for every
+        // real export (history caps out in the hundreds); non-zero means a synthetic payload.
+        @JvmField var truncatedCount: Int = 0,
     )
 
     /**
@@ -2080,6 +2090,11 @@ open class BackupRestoreManager(
                     val importResult = clipboardDb.importFromJSON(json)
                     clipboardEntriesImported = importResult[0] + importResult[1] + importResult[2]
                     clipboardEntriesSkipped = importResult[3]
+                    // ARC-034: FullBackupImportResult has no truncation field; a cap hit is
+                    // impossible for any real export, so log it rather than widen the result.
+                    if (importResult[4] > 0) {
+                        Log.w(TAG, "Full-backup clipboard import truncated ${importResult[4]} entries at the per-array cap")
+                    }
                 }
             } catch (e: Exception) {
                 // Undo the prefs half of a partially-applied import. The rethrow reaches the

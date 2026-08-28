@@ -1037,6 +1037,74 @@ class ClipboardDatabaseTest {
         assertEquals("Duplicates", 0, result[3])
     }
 
+    /**
+     * ARC-034: the three import loops used to run `0 until entries.length()` with no ceiling,
+     * so a hand-built export could make one array drive unbounded INSERT+dedup work inside a
+     * single transaction. Each array is now capped at
+     * [ClipboardDatabase.MAX_IMPORT_ENTRIES_PER_ARRAY]; the overflow is DROPPED (a clipboard
+     * import is additive, so a partial one is still useful) and reported in result slot 4.
+     *
+     * Deliberately +3 over the cap rather than a large multiple: the assertion is about the
+     * boundary, and every extra element is a real INSERT on the emulator.
+     */
+    @Test
+    fun testImportCapsEachArrayAndReportsTheTruncation() {
+        val overCap = ClipboardDatabase.MAX_IMPORT_ENTRIES_PER_ARRAY + 3
+        val now = System.currentTimeMillis()
+        val json = JSONObject().apply {
+            put("export_version", 2)
+            put("active_entries", JSONArray().apply {
+                for (i in 0 until overCap) {
+                    put(JSONObject().apply {
+                        // Distinct content → distinct hash → nothing is skipped as a duplicate,
+                        // so `added` isolates the cap from the dedup path.
+                        put("content", "flood entry $i")
+                        put("timestamp", now + i)
+                    })
+                }
+            })
+            put("pinned_entries", JSONArray())
+            put("todo_entries", JSONArray())
+        }
+
+        val result = db.importFromJSON(json)
+
+        assertEquals(
+            "active import stops at the per-array cap",
+            ClipboardDatabase.MAX_IMPORT_ENTRIES_PER_ARRAY, result[0]
+        )
+        assertEquals("no duplicates in this payload", 0, result[3])
+        assertEquals("the 3 over-cap entries are reported as truncated", 3, result[4])
+        assertEquals(
+            "and nothing beyond the cap reached the table",
+            ClipboardDatabase.MAX_IMPORT_ENTRIES_PER_ARRAY, db.getTotalEntryCount()
+        )
+    }
+
+    @Test
+    fun testImportAtExactlyTheArrayCapIsNotTruncated() {
+        // The cap must be inclusive: a payload of exactly MAX must import whole, with 0
+        // truncated. An off-by-one here would silently drop a user's last entry.
+        val atCap = ClipboardDatabase.MAX_IMPORT_ENTRIES_PER_ARRAY
+        val now = System.currentTimeMillis()
+        val json = JSONObject().apply {
+            put("export_version", 2)
+            put("active_entries", JSONArray().apply {
+                for (i in 0 until atCap) {
+                    put(JSONObject().apply {
+                        put("content", "at-cap entry $i")
+                        put("timestamp", now + i)
+                    })
+                }
+            })
+        }
+
+        val result = db.importFromJSON(json)
+
+        assertEquals("a payload of exactly the cap imports whole", atCap, result[0])
+        assertEquals("and reports no truncation", 0, result[4])
+    }
+
     @Test
     fun testImportPreservesExistingEntries() {
         // Existing entry should not be overwritten by import
