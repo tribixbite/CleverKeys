@@ -329,8 +329,10 @@ android {
     baseline = file("lint-baseline.xml")
     // Lint gate phase 2 (2026-07-20): all 656 error/fatal issues fixed for real
     // (unused-resource purge, NewApi guards, LongLogTag, backup rules, 21-locale
-    // translations). The baseline now suppresses only the remaining ~400 warnings
-    // + ~100 informational; any NEW error fails the build.
+    // translations). Corrected 2026-08-28: lint-baseline.xml is EMPTY — it suppresses
+    // ZERO issues (the earlier "~400 warnings + ~100 informational" claim was wrong).
+    // It is kept as a live gate anchor: any NEW error fails the build, and a
+    // regenerated non-empty baseline would be a visible diff rather than a silent one.
     abortOnError = true
     checkReleaseBuilds = false
   }
