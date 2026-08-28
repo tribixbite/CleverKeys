@@ -31,7 +31,7 @@ One doc verified fully clean: `2026-07-18-accessibility-implementation-plan.md` 
 | ARC-007 | **Termux deletion strategy never decided** (WP9 R-1 step 7): `SuggestionHandler.kt:1092,1195,1586,1649,2220` retain key-event deletion branches, untested either way; the owed dedicated Termux instrumented test covers only the auto-space half. Decide keep-vs-unify + write the test. | 3-core-ime step 7 |
 | ARC-008 | **R8/ProGuard still off behind the 2025 "REPRODUCIBILITY TEST" comment** (`build.gradle:284-286`); `proguard-rules.pro` (244 lines) dormant. Size motive is spent (APK 33 MB post-ADR-011); what remains is dormant tooling + shrink headroom. Re-enable behind the full ew-cli soak + reflection-keep audit, or delete the rules and record the decision. | 3 docs independently |
 | ARC-009 | **`.gitignore` fixture trap**: `:170` global `*.json` still swallows test fixtures (current goldens were `git add -f`'d; `src/androidTest/assets/dictionaries/en_enhanced.json` is silently ignored today). The multiscript plan requires six new per-script fixtures ×2 copies; nothing records the force-add requirement. Add `!src/test/resources/**/*.json` + `!src/androidTest/assets/**/*.json` before those land. | ctc exec brief |
-| ARC-010 | **`BigramModel` is a 174-pair hardcoded table feeding a live ≤10× tap-ranking multiplier** (`BigramModel.kt:62,184,228,271` → `WordPredictor.kt:2020`); `loadFromFile` (`:342`) has zero callers so the six shipped `assets/bigrams/*.json` are never read; the planned A/B venue (`SwipeCalibrationActivity`) was deleted. Load the assets or delete both. Related: the next-word cold-start gap (ARC-020) wants exactly a `BigramModel.getPredictions(context)`. | 07-17 audit + roadmap WP4 |
+| ARC-010 | ~~**`BigramModel` is a 174-pair hardcoded table feeding a live ≤10× tap-ranking multiplier** (`BigramModel.kt:62,184,228,271` → `WordPredictor.kt:2020`); `loadFromFile` (`:342`) has zero callers so the six shipped `assets/bigrams/*.json` are never read; the planned A/B venue (`SwipeCalibrationActivity`) was deleted. Load the assets or delete both.~~ **RESOLVED 2026-08-28** — assets loaded as the next-word seed's source of truth (`StaticBigramSeed.kt` + `BigramModel.loadStaticContinuationsAsync`); the multiplier keeps its hardcoded table for a measured reason, see the decision entry below. | 07-17 audit + roadmap WP4 |
 | ARC-011 | **Provenance captured, never shown**: `source_package` written everywhere, zero UI consumers — no "via ⟨app⟩" line; the injection risk in the private-copy design §6.2/§6.6 was accepted *because of* this display. `docs/wiki/specs/clipboard/private-copy-spec.md:31,:62` claims it shipped. Render it + correct the spec. | private-copy design §6 |
 | ARC-012 | **#79 settings header flicker**: unfixed, and the audit's "LazyColumn recomposition" diagnosis is wrong — the screen is `Column`+`verticalScroll` (`SettingsScreen.kt:92-99`). Re-diagnose before fixing. | gh-issue audit #79 |
 | ARC-013 | **UT-5 / UT-7 contraction-ranking deferrals never re-measured**: "doesnt"→"doesn't" top-1 rank post-contraction-rework unknown; no sentence-start ranking signal exists at all (0 hits for `sentenceStart|afterPeriod`; `capitalizeIWord` fixes casing only). | v1.5.0 UT round |
@@ -92,6 +92,26 @@ One doc verified fully clean: `2026-07-18-accessibility-implementation-plan.md` 
   drift assertion that neither names a `DEPRECATED_KEYS` member.
 
 **Won't-fix / decisions recorded**
+- **ARC-010 — the shipped assets load, but they do NOT reach the scoring multiplier (2026-08-28).**
+  The six `assets/bigrams/<lang>_bigrams.json` files are now read (async, at `setContext` and
+  every language switch) and are the source of truth for the next-word cold-start seed. They are
+  deliberately kept OUT of `getContextualProbability` → `getContextMultiplier`, which keeps its
+  hardcoded per-language table. Reason, found by reading the files rather than assuming: the
+  asset values are **per-previous-word rank scores, not probabilities** — the 15 continuations of
+  `"i"` in `en_bigrams.json` sum to 12.37, and every group descends from ~0.92 to a 0.75 floor.
+  The multiplier's interpolation (`λ·P(w|prev) + (1−λ)·P(w)`, λ=0.95) needs `P(w|prev)` on the
+  same scale as the unigram table (0.008–0.07); feeding it a 0.9 rank score makes
+  `contextProb/baseProb` exceed the 10× clamp for **every** listed pair, converting today's mixed
+  boosts-and-penalties into a flat max boost and silently rewriting live tap ranking. So the two
+  data sets stay on the two jobs their scales fit. Two further schema facts, both pinned in
+  `StaticBigramSeedTest`: the never-called `loadFromFile` parsed whitespace-delimited PLAIN TEXT
+  and would have thrown an uncaught `NumberFormatException` on the first JSON line (the assets
+  could never have loaded through it); and 8 of the 794 shipped entries are not bigrams at all
+  (`fr`: `"c'est"`, `"il y a"`, `"s'il vous plaît"`; `it`: `"c'è"`, `"nel"`, `"nella"`, `"del"`,
+  `"della"`) and are dropped. Merge policy: asset wins on conflict, the hardcoded table fills the
+  16 en / 6 es / 2 fr / 1 de pairs the assets never listed. `it`/`pt` gain static data they never
+  had; the seed language therefore tracks the requested language instead of the multiplier's
+  fall-back-to-English rule.
 - **ARC-026 — both undisposed knobs DECLINED (2026-08-28).** `context_max_boost`
   (`ContextModel.kt` `MAX_BOOST`/`BOOST_EXPONENT`) and `next_word_max_suggestions`
   (`NextWordPredictor.MAX_SUGGESTIONS`) stay private constants. Rationale: the 2026-08-26

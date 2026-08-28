@@ -620,6 +620,11 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.swipe.ContextRescoringReplayTest',
     'tribixbite.cleverkeys.swipe.CtcReplayEngineSmokeTest',
     'tribixbite.cleverkeys.swipe.ContractionCollisionDataTest',
+    // ARC-010 (2026-08-28): the six shipped assets/bigrams/*.json tables were read by
+    // NOTHING for nine months — the only loader referencing them had zero callers AND
+    // parsed a different format. Pins their schema against the real files plus the
+    // asset-wins/hardcoded-fills-gaps merge that makes them the seed's source of truth.
+    'tribixbite.cleverkeys.StaticBigramSeedTest',
     // SwipePrunerTest excluded: requires android.util.Log (MockK + Robolectric)
   ]
 

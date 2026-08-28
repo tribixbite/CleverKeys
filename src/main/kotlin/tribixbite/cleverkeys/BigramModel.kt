@@ -2,16 +2,32 @@ package tribixbite.cleverkeys
 
 import android.content.Context
 import android.util.Log
-import java.io.BufferedReader
 import java.io.IOException
-import java.io.InputStreamReader
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 import kotlin.math.ln
 import kotlin.math.max
 import kotlin.math.min
 
 /**
  * Word-level bigram model for contextual predictions.
- * Provides P(word | previous_word) probabilities.
+ *
+ * Two INDEPENDENT products, deliberately kept on separate data (ARC-010):
+ *
+ *  1. **The scoring multiplier** ([getContextualProbability] → [getContextMultiplier],
+ *     consumed live by `WordPredictor.resolveScoreBreakdown`) runs off the
+ *     hardcoded per-language tables below. Their bigram values sit on the same
+ *     joint/marginal scale as the unigram table (`0.005…0.05` vs `0.008…0.07`),
+ *     which is what the `λ·P(w|prev) + (1−λ)·P(w)` interpolation requires.
+ *  2. **The static next-word seed** ([getPredictions], ARC-020's cold start)
+ *     runs off the SHIPPED `assets/bigrams/<lang>_bigrams.json` files, whose
+ *     values are per-previous-word RANK scores, not probabilities (they sum
+ *     well past 1 inside a group — see [StaticBigramSeed]).
+ *
+ * Feeding (2)'s rank scores into (1)'s interpolation would pin
+ * [getContextMultiplier] at its 10× clamp for every listed pair and rewrite the
+ * live tap ranking, so the assets deliberately do NOT reach the multiplier.
  */
 class BigramModel private constructor() {
     companion object {
@@ -20,6 +36,29 @@ class BigramModel private constructor() {
         // Smoothing parameters
         private const val LAMBDA = 0.95f // Interpolation weight for bigram
         private const val MIN_PROB = 0.0001f // Minimum probability for unseen words
+
+        /** Default seed size when a caller does not state one. */
+        const val DEFAULT_SEED_RESULTS = 5
+
+        /** Shipped static bigram asset for a language, e.g. `bigrams/en_bigrams.json`. */
+        @JvmStatic
+        fun assetNameFor(language: String): String = "bigrams/${language}_bigrams.json"
+
+        /**
+         * Background loader for the static seed assets.
+         *
+         * Mirrors [AsyncDictionaryLoader]'s single-thread, below-normal-priority
+         * executor: the seed is never needed synchronously (an unloaded language
+         * simply falls back to the hardcoded pairs), so it must never contend
+         * with, or block, the prediction path. Daemon so it cannot hold the
+         * process alive.
+         */
+        private val SEED_LOADER: ExecutorService = Executors.newSingleThreadExecutor { r ->
+            Thread(r, "BigramSeedLoader").apply {
+                priority = Thread.NORM_PRIORITY - 1
+                isDaemon = true
+            }
+        }
 
         @Volatile
         private var instance: BigramModel? = null
@@ -38,11 +77,49 @@ class BigramModel private constructor() {
     // Language-specific unigram models: "language" -> word -> probability
     private val languageUnigramProbs: MutableMap<String, MutableMap<String, Float>> = mutableMapOf()
 
-    // Current active language
+    // Current active language for the SCORING tables. Rewritten to "en" by
+    // [setLanguage] when the requested language has no hardcoded table, because
+    // the multiplier must always have a unigram denominator to divide by.
     private var currentLanguage: String = "en" // Default to English
+
+    /**
+     * Active language for the STATIC SEED, recorded verbatim by [setLanguage].
+     *
+     * Deliberately NOT folded into [currentLanguage]: the seed's language
+     * coverage is the six shipped assets (de/en/es/fr/it/pt), which is a
+     * superset of the four hardcoded tables. Falling `it`/`pt` back to "en" —
+     * as the multiplier must — would offer English continuations while the user
+     * types Italian.
+     */
+    @Volatile
+    private var seedLanguage: String = "en"
+
+    /**
+     * language → active seed index (ARC-010). Seeded at construction with the
+     * hardcoded pairs so the seed works BEFORE any asset load, and overwritten
+     * with the asset-merged index once [loadStaticContinuations] succeeds. A
+     * failed or absent asset therefore leaves the hardcoded index in place as
+     * the permanent fallback.
+     */
+    private val seedIndexes = ConcurrentHashMap<String, StaticBigramSeed.Index>()
+
+    /** Languages whose asset load has been attempted (success or failure). */
+    private val seedLoadAttempted: MutableSet<String> =
+        java.util.Collections.newSetFromMap(ConcurrentHashMap<String, Boolean>())
 
     init {
         initializeLanguageModels()
+        initializeSeedFallbacks()
+    }
+
+    /**
+     * Pre-load state for the static seed: an index over the hardcoded pairs
+     * alone. Superseded per language by the shipped asset when it loads.
+     */
+    private fun initializeSeedFallbacks() {
+        for ((language, pairs) in languageBigramProbs) {
+            seedIndexes[language] = StaticBigramSeed.build(emptyMap(), pairs)
+        }
     }
 
     /**
@@ -313,6 +390,10 @@ class BigramModel private constructor() {
      * Set the active language for predictions
      */
     fun setLanguage(language: String) {
+        // The seed follows the requested language exactly — its asset coverage
+        // (6 languages) is wider than the hardcoded tables' (4), so the "fall
+        // back to English" rule below must not reach it.
+        seedLanguage = language
         if (languageBigramProbs.containsKey(language)) {
             currentLanguage = language
             Log.d(TAG, "Language set to: $language")
@@ -337,35 +418,98 @@ class BigramModel private constructor() {
     }
 
     /**
-     * Load bigram data from a file (future enhancement)
+     * Load the shipped static bigram asset for [language] into the seed index
+     * (ARC-010 — this replaces the never-called `loadFromFile`, whose
+     * whitespace-delimited plain-text parser did not match the JSON files that
+     * have shipped since 2025-11).
+     *
+     * Blocking asset I/O — call from [loadStaticContinuationsAsync], not the
+     * main thread. Idempotent and attempt-once: a language whose asset is
+     * missing or malformed keeps its hardcoded pre-load index forever rather
+     * than re-reading a file that will not appear.
+     *
+     * The asset does NOT reach the scoring tables ([languageBigramProbs]); see
+     * the class doc for why the two scales must not mix.
+     *
+     * @return true when the asset was parsed and installed
      */
-    fun loadFromFile(context: Context, filename: String) {
-        // Load comprehensive bigram data from assets for current language
-        // Format: prev_word current_word probability
-        var bigramProbs = languageBigramProbs[currentLanguage]
-        if (bigramProbs == null) {
-            bigramProbs = mutableMapOf()
-            languageBigramProbs[currentLanguage] = bigramProbs
+    fun loadStaticContinuations(context: Context, language: String): Boolean {
+        if (!seedLoadAttempted.add(language)) {
+            // Already attempted; a successful load left its index in place.
+            return seedIndexes.containsKey(language)
         }
 
-        try {
-            val reader = BufferedReader(
-                InputStreamReader(context.assets.open(filename))
-            )
-            reader.useLines { lines ->
-                lines.forEach { line ->
-                    val parts = line.split("\\s+".toRegex())
-                    if (parts.size >= 3) {
-                        val bigram = "${parts[0].lowercase()}|${parts[1].lowercase()}"
-                        val prob = parts[2].toFloat()
-                        bigramProbs[bigram] = prob
-                    }
-                }
-            }
-            Log.d(TAG, "Loaded ${bigramProbs.size} bigrams for $currentLanguage from $filename")
+        val asset = assetNameFor(language)
+        val json = try {
+            context.assets.open(asset).use { it.readBytes().decodeToString() }
         } catch (e: IOException) {
-            Log.e(TAG, "Failed to load bigram file: $filename", e)
+            Log.d(TAG, "No static bigram asset for $language ($asset); keeping hardcoded pairs")
+            return false
         }
+
+        val parsed = try {
+            StaticBigramSeed.parseAsset(json)
+        } catch (e: RuntimeException) {
+            Log.e(TAG, "Malformed static bigram asset $asset; keeping hardcoded pairs", e)
+            return false
+        }
+        if (parsed.isEmpty()) {
+            Log.w(TAG, "Static bigram asset $asset held no usable pairs; keeping hardcoded pairs")
+            return false
+        }
+
+        // Asset wins on conflict, hardcoded pairs fill the gaps (ARC-010 merge policy).
+        val index = StaticBigramSeed.build(parsed, languageBigramProbs[language] ?: emptyMap())
+        seedIndexes[language] = index
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+            Log.d(
+                TAG,
+                "Static bigram seed for $language: ${index.pairCount} pairs over " +
+                    "${index.prevWordCount} previous words (asset ${parsed.size})"
+            )
+        }
+        return true
+    }
+
+    /**
+     * Queue [loadStaticContinuations] on the shared background loader.
+     *
+     * Returns immediately. Until the load lands, [getPredictions] serves the
+     * hardcoded pairs, so there is no loading state for callers to observe.
+     */
+    fun loadStaticContinuationsAsync(context: Context, language: String) {
+        if (seedLoadAttempted.contains(language)) return
+        val appContext = context.applicationContext ?: context
+        SEED_LOADER.execute { loadStaticContinuations(appContext, language) }
+    }
+
+    /** True once [language]'s shipped asset has been parsed and installed. */
+    fun isStaticSeedLoaded(language: String): Boolean =
+        seedLoadAttempted.contains(language) && seedIndexes.containsKey(language)
+
+    /**
+     * Static next-word seed (ARC-020): the most common continuations of the last
+     * word of [context], best first.
+     *
+     * Cold-start data ONLY — this is shipped, non-personal content, and it is
+     * the caller's job to run it inside the next-word gate (see
+     * `WordPredictor.getStaticNextWordSeed`). Returns an empty list for a
+     * language with neither an asset nor a hardcoded table, and for an unknown
+     * previous word.
+     *
+     * @param context the preceding text; only its last whitespace-separated
+     *   token is used, so both `"the"` and `"i want the"` resolve to `the`
+     * @param maxResults hard cap on the returned continuations
+     */
+    fun getPredictions(
+        context: String,
+        maxResults: Int = DEFAULT_SEED_RESULTS
+    ): List<StaticBigramSeed.Continuation> {
+        if (maxResults <= 0) return emptyList()
+        val prevWord = context.trim().substringAfterLast(' ').trim().lowercase()
+        if (prevWord.isEmpty()) return emptyList()
+        val index = seedIndexes[seedLanguage] ?: return emptyList()
+        return index.top(prevWord, maxResults)
     }
 
     /**

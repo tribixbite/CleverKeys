@@ -254,6 +254,12 @@ class WordPredictor {
         this.context = context
         loadDisabledWords()
 
+        // ARC-010: the shipped static bigram asset for the active language is
+        // the next-word cold-start seed. Loaded off the main thread — until it
+        // lands, BigramModel serves its hardcoded pairs, so there is no state
+        // to wait on. Idempotent per language.
+        bigramModel?.loadStaticContinuationsAsync(context, currentLanguage)
+
         // Phase 7.1: Initialize ContextModel for dynamic N-gram predictions
         // (language-keyed view over the singleton BigramStore — 2026-08-06 persistence fix)
         if (contextModel == null) {
@@ -517,6 +523,9 @@ class WordPredictor {
         currentLanguage = language
         bigramModel?.let {
             it.setLanguage(language)
+            // ARC-010: pull in the new language's shipped static bigram asset
+            // (async). No-op when it has already been attempted.
+            context?.let { ctx -> it.loadStaticContinuationsAsync(ctx, language) }
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "N-gram language set to: $language")
         }
 
@@ -837,6 +846,32 @@ class WordPredictor {
         )
         if (!canUse) return emptyList()
         return contextModel?.getNextWordCandidates(contextWords, maxResults) ?: emptyList()
+    }
+
+    /**
+     * ARC-020 cold start: the SHIPPED static continuations of the last context
+     * word, used only to FILL next-word slots the learned store could not.
+     *
+     * Deliberately carries NO LearningGate check, unlike every read above it.
+     * This is not learned or personal data — it is the same read-only asset for
+     * every install, so gating it on the learning prefs would be theatre. What
+     * keeps it honest is the CALLER: both call sites
+     * (`SuggestionHandler.generateNextWordCandidates` and
+     * `maybeShowNextWordPredictions`) invoke it only after
+     * `NextWordPredictor.shouldShow`, so the seed inherits the full next-word
+     * gate — feature pref, master learning gate, context-LM pref, incognito
+     * field, password/prompt/Termux — without adding a gate read of its own.
+     * Pinned by `LearningWiringDriftTest`.
+     *
+     * @return continuations ranked best-first; empty when the context is empty,
+     *   the language has no static data, or the previous word is unknown
+     */
+    fun getStaticNextWordSeed(
+        contextWords: List<String>,
+        maxResults: Int
+    ): List<StaticBigramSeed.Continuation> {
+        val prevWord = contextWords.lastOrNull() ?: return emptyList()
+        return bigramModel?.getPredictions(prevWord, maxResults) ?: emptyList()
     }
 
     /**
