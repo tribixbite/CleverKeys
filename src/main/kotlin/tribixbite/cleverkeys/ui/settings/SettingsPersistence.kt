@@ -180,30 +180,17 @@ internal fun SettingsActivity.handlePreferenceChanged(sharedPreferences: SharedP
             "swipe_correction_preset" -> {
                 swipeCorrectionPreset = prefs.getSafeString(key, "balanced")
             }
-            "swipe_fuzzy_match_mode" -> {
-                swipeFuzzyMatchMode = prefs.getSafeString(key, Defaults.SWIPE_FUZZY_MATCH_MODE)
-            }
             "autocorrect_max_length_diff" -> {
                 autocorrectMaxLengthDiff = Config.safeGetInt(prefs, key, Defaults.AUTOCORRECT_MAX_LENGTH_DIFF)
             }
             "autocorrect_prefix_length" -> {
                 autocorrectPrefixLength = Config.safeGetInt(prefs, key, Defaults.AUTOCORRECT_PREFIX_LENGTH)
             }
-            "autocorrect_max_beam_candidates" -> {
-                autocorrectMaxBeamCandidates = Config.safeGetInt(prefs, key, Defaults.AUTOCORRECT_MAX_BEAM_CANDIDATES)
-            }
-            "swipe_prediction_source" -> {
-                swipePredictionSource = Config.safeGetInt(prefs, key, Defaults.SWIPE_PREDICTION_SOURCE)
-            }
-            "swipe_common_words_boost" -> {
-                swipeCommonWordsBoost = Config.safeGetFloat(prefs, key, Defaults.SWIPE_COMMON_WORDS_BOOST)
-            }
-            "swipe_top5000_boost" -> {
-                swipeTop5000Boost = Config.safeGetFloat(prefs, key, Defaults.SWIPE_TOP5000_BOOST)
-            }
-            "swipe_rare_words_penalty" -> {
-                swipeRareWordsPenalty = Config.safeGetFloat(prefs, key, Defaults.SWIPE_RARE_WORDS_PENALTY)
-            }
+            // ARC-051: no branches for swipe_fuzzy_match_mode, autocorrect_max_beam_candidates,
+            // swipe_prediction_source, swipe_common_words_boost, swipe_top5000_boost or
+            // swipe_rare_words_penalty. All six are in SettingsValidation.DEPRECATED_KEYS and
+            // their SettingsActivity backing fields are gone; parsing them here only produced a
+            // write no one read.
         }
 }
 
@@ -354,14 +341,10 @@ internal fun SettingsActivity.loadCurrentSettings() {
         // Swipe Corrections settings
         swipeFinalAutocorrectEnabled = prefs.getSafeBoolean("swipe_final_autocorrect_enabled", Defaults.SWIPE_FINAL_AUTOCORRECT_ENABLED)
         swipeCorrectionPreset = prefs.getSafeString("swipe_correction_preset", "balanced")
-        swipeFuzzyMatchMode = prefs.getSafeString("swipe_fuzzy_match_mode", Defaults.SWIPE_FUZZY_MATCH_MODE)
         autocorrectMaxLengthDiff = Config.safeGetInt(prefs, "autocorrect_max_length_diff", Defaults.AUTOCORRECT_MAX_LENGTH_DIFF)
         autocorrectPrefixLength = Config.safeGetInt(prefs, "autocorrect_prefix_length", Defaults.AUTOCORRECT_PREFIX_LENGTH)
-        autocorrectMaxBeamCandidates = Config.safeGetInt(prefs, "autocorrect_max_beam_candidates", Defaults.AUTOCORRECT_MAX_BEAM_CANDIDATES)
-        swipePredictionSource = Config.safeGetInt(prefs, "swipe_prediction_source", Defaults.SWIPE_PREDICTION_SOURCE)
-        swipeCommonWordsBoost = Config.safeGetFloat(prefs, "swipe_common_words_boost", Defaults.SWIPE_COMMON_WORDS_BOOST)
-        swipeTop5000Boost = Config.safeGetFloat(prefs, "swipe_top5000_boost", Defaults.SWIPE_TOP5000_BOOST)
-        swipeRareWordsPenalty = Config.safeGetFloat(prefs, "swipe_rare_words_penalty", Defaults.SWIPE_RARE_WORDS_PENALTY)
+        // ARC-051: the six DEPRECATED_KEYS that used to be read here are not loaded at all —
+        // see the note on the removed SettingsActivity fields.
 
         // Swipe trail appearance settings
         swipeTrailEnabled = prefs.getSafeBoolean("swipe_trail_enabled", Defaults.SWIPE_TRAIL_ENABLED)

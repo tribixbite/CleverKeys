@@ -392,14 +392,14 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     // Swipe Corrections settings (migrated from XML)
     internal var swipeFinalAutocorrectEnabled by mutableStateOf(true)
     internal var swipeCorrectionPreset by mutableStateOf("balanced")
-    internal var swipeFuzzyMatchMode by mutableStateOf("edit_distance")
     internal var autocorrectMaxLengthDiff by mutableIntStateOf(2)
     internal var autocorrectPrefixLength by mutableIntStateOf(1)
-    internal var autocorrectMaxBeamCandidates by mutableIntStateOf(3)
-    internal var swipePredictionSource by mutableIntStateOf(80)
-    internal var swipeCommonWordsBoost by mutableFloatStateOf(1.0f)
-    internal var swipeTop5000Boost by mutableFloatStateOf(1.0f)
-    internal var swipeRareWordsPenalty by mutableFloatStateOf(1.0f)
+    // swipeFuzzyMatchMode / autocorrectMaxBeamCandidates / swipePredictionSource /
+    // swipeCommonWordsBoost / swipeTop5000Boost / swipeRareWordsPenalty are GONE (ARC-051).
+    // Their keys are in SettingsValidation.DEPRECATED_KEYS: the only consumers died with
+    // OptimizedVocabulary in the neural-engine removal, so the fields were loaded on every
+    // settings open and rewritten on every preference change while being read by nothing.
+    // Do not re-add them — a backing field here is what makes a dead key look alive.
 
     // Swipe trail appearance settings
     internal var swipeTrailEnabled by mutableStateOf(true)
