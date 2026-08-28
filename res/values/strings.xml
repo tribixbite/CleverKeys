@@ -691,7 +691,15 @@
 
     <!-- PrivacySection -->
     <string name="privacy_on_device_learning_title">Learn From My Typing</string>
-    <string name="privacy_on_device_learning_desc">Build private on-device phrase and word-usage models from what you type. Turn off to stop all automatic recording of typing behavior — nothing new is stored while off. Data you explicitly create is separate: swipe-calibration sessions you run, prediction performance statistics, and learned data restored from a backup.</string>
+    <!-- Corrected 2026-08-28: the copy used to list "swipe-calibration sessions you run" as a
+         third master-gate exception. SwipeCalibrationActivity was DELETED on 2026-08-18 with the
+         neural engine, so no such session exists; every remaining SwipeMLDataStore write goes
+         through MLDataCollector -> PrivacyManager.canCollectSwipeData -> LearningGate, i.e. it is
+         INSIDE the gate. (ShortSwipeCalibrationActivity is unrelated — gesture tuning, no trace
+         collection.) The claim was user-visible and wrong in the direction that matters: it told
+         the user data was collected outside the off switch when it is not.
+         Translation debt: the 21 localized copies still carry the stale exception. -->
+    <string name="privacy_on_device_learning_desc">Build private on-device phrase and word-usage models from what you type. Turn off to stop all automatic recording of typing behavior — nothing new is stored while off. Data you explicitly create is separate: prediction performance statistics and learned data restored from a backup.</string>
     <string name="privacy_swipe_pattern_title">Swipe Pattern Data</string>
     <string name="privacy_swipe_pattern_desc">Store swipe trajectories locally for on-device learning</string>
     <string name="privacy_performance_metrics_title">Performance Metrics</string>

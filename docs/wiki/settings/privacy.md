@@ -54,9 +54,13 @@ When OFF:
 
 > [!NOTE]
 > The switch covers *automatic* recording of typing behavior. Data you explicitly create
-> is governed separately: swipe-calibration sessions you start yourself, prediction
-> performance statistics (a separate toggle, no text content), and learned data you
-> restore from your own backup.
+> is governed separately: prediction performance statistics (a separate toggle, no text
+> content) and learned data you restore from your own backup.
+>
+> *Corrected 2026-08-28:* this note used to also list "swipe-calibration sessions you
+> start yourself". The activity that collected those traces was removed on 2026-08-18
+> with the neural engine — swipe-trace storage now sits **inside** the switch, not
+> outside it. (The Short Swipe Calibration screen is unrelated and collects nothing.)
 
 ### Private/incognito fields
 

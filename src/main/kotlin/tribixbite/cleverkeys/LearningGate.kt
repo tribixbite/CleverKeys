@@ -28,12 +28,20 @@ package tribixbite.cleverkeys
  * OUT OF SCOPE — deliberate (L7, review 2026-08-06; the settings toggle copy is
  * scoped to match): the master gate covers AUTOMATIC recording of typing
  * behavior. Data the user EXPLICITLY creates is governed by its own controls:
- * - `SwipeCalibrationActivity` traces — recorded only during a calibration
- *   session the user starts, behind its own consent flow.
  * - `SwipePerformanceStats` — prediction latency/accuracy aggregates behind
  *   the separate performance-stats preference (no text content).
  * - Backup restore — importing a backup repopulates learned stores even with
  *   the master off; restoring one's own exported data is an explicit act.
+ *
+ * Corrected 2026-08-28: this list used to name `SwipeCalibrationActivity` traces as a
+ * third exception. That activity was DELETED on 2026-08-18 with the neural engine, so
+ * there is no user-started trace-collection session any more — every remaining write to
+ * `SwipeMLDataStore` goes through `MLDataCollector`, which checks
+ * `PrivacyManager.canCollectSwipeData` → [canCollectSwipeMl] and is therefore INSIDE the
+ * master gate, not an exception to it. (`ShortSwipeCalibrationActivity` still exists but
+ * is unrelated: short-swipe gesture tuning, zero `SwipeMLDataStore` references.)
+ * `strings.xml`'s `privacy_on_device_learning_desc` carried the same stale exception and
+ * was corrected with it — see the translation-debt note there.
  */
 object LearningGate {
 
