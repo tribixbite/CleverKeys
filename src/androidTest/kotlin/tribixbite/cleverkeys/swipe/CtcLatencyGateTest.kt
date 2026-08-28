@@ -59,6 +59,35 @@ class CtcLatencyGateTest {
         const val P90_BUDGET_MS = 250.0
 
         /**
+         * Ceiling on the COLD path — trie build + ONNX session load + first decode, i.e.
+         * everything the first un-prewarmed swipe of a session pays (audit ARC-023: the
+         * cold build was measured but left unbudgeted, so only the memo-reuse comparison
+         * `secondMs < coldMs` guarded it — which a 10× slower cold path still satisfies).
+         *
+         * Provenance: `CtcLexiconTrie` build from `en_enhanced.json` was measured at
+         * **2,001 ms ON-DEVICE** (vs 90 ms desktop — the 22× gap is `org.json` parsing the
+         * 1.8 MB file plus `loadStrippingNonAlphabet`; see the CTC integration execution
+         * brief, "Trie build cost"). That build dominates this number; the session load and
+         * the single decode are tens of ms.
+         *
+         * The budget is that on-device measurement with ~2× headroom. It is deliberately
+         * loose: this test runs on an x86_64 cloud emulator, which sits somewhere between
+         * the 90 ms desktop and the 2,001 ms phone and has been characterised at neither, so
+         * a tight bound would be a flake generator. What it catches is an ORDER-OF-MAGNITUDE
+         * regression — a quadratic insert, a per-swipe re-parse, a lost memo — which is
+         * exactly the class of bug the old `secondMs < coldMs` check could not see.
+         *
+         * The test logs the ACTUAL cold time on every run (see `TAG`); once a few emulator
+         * numbers exist, tighten this toward that observed value.
+         *
+         * If this ever trips, the real fix is a PRECOMPILED trie blob shipped as an asset
+         * (the web demo's front-coded format from `tools/build_ctc_vocab.py` is the
+         * precedent), not a larger constant: 2 s of first-swipe latency is already the worst
+         * number on the CTC path and is only tolerable because the prewarm usually hides it.
+         */
+        const val COLD_BUDGET_MS = 4500.0
+
+        /**
          * CK-150-026 §4.9 asked for the dual-language decode to hold "the same budget" as the
          * single-language case, named at the p95. Deliberately the SAME number as
          * [P90_BUDGET_MS] rather than a relaxed one: a swipe that mixes two lexicons is still
@@ -158,6 +187,15 @@ class CtcLatencyGateTest {
         val coldCandidates = decoder.decode(case.px, case.py, case.pt)
         val coldMs = (System.nanoTime() - coldStart) / 1e6
         assertTrue("cold decode returned no candidates", coldCandidates.isNotEmpty())
+        Log.i(TAG, "cold path (trie build + session load + first decode) = ${"%.0f".format(coldMs)} ms")
+        assertTrue(
+            "cold path (${"%.0f".format(coldMs)} ms) exceeded the first-swipe budget " +
+                "($COLD_BUDGET_MS ms). This is the un-prewarmed first swipe: the en trie " +
+                "build dominates it. If this trips, the fix is a PRECOMPILED trie blob " +
+                "(ship the built trie as an asset instead of parsing + inserting 98k words " +
+                "at runtime) — not a bigger number here.",
+            coldMs < COLD_BUDGET_MS
+        )
 
         // ── Second decode: same trace, memoized trie re-fetched through the adapter.
         // Must be cheaper than the cold pass (trie build + session load skipped) —
