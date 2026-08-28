@@ -188,13 +188,102 @@ class PredictionViewSetup(
             // Determine which view to use as input view
             val inputView = inputViewContainer ?: keyboardView
 
+            // #148: if this container was first built while predictions were disabled, the
+            // suggestion strip is collapsed to 0 height — restore it now (only in suggestion
+            // mode; a showing content pane owns the height until it closes).
+            topPane?.let { top ->
+                if (scrollView?.parent == top && top.layoutParams != null &&
+                    top.layoutParams.height != suggestionBarStripHeight()
+                ) {
+                    top.layoutParams.height = suggestionBarStripHeight()
+                    top.requestLayout()
+                }
+            }
+
             // topPane and scrollView are now tracked throughout the method
             return SetupResult(inputView, suggestionBar, inputViewContainer, contentPaneContainer, topPane, scrollView)
         } else {
-            // Clean up if predictions are disabled
-            return SetupResult(keyboardView, null, null, null, null, null)
+            // #148 (ARC-002): predictions disabled must NOT collapse the whole container to the
+            // bare keyboard view. With no contentPaneContainer, every pane opener
+            // (KeyboardReceiver SWITCH_EMOJI/SWITCH_CLIPBOARD/SWITCH_GIF) takes its
+            // `setInputView(pane)` fallback and REPLACES the keyboard until the pane closes —
+            // deterministic on every device, not the "HyperOS-specific" mystery #148 was filed
+            // as. Build the same hierarchy with the suggestion strip collapsed to 0 height so
+            // panes overlay above a still-visible keyboard exactly as in the enabled mode.
+            var suggestionBar = existingSuggestionBar
+            var inputViewContainer: LinearLayout? = existingInputViewContainer
+            var contentPaneContainer = existingContentPaneContainer
+            var topPane: android.widget.FrameLayout? = existingTopPane
+            var scrollView: android.widget.HorizontalScrollView? = existingScrollView
+
+            if (suggestionBar == null) {
+                val theme = keyboardView.getTheme()
+                val result = SuggestionBarInitializer.initialize(
+                    keyboard2,
+                    theme,
+                    config.suggestion_bar_opacity,
+                    config.clipboard_pane_height_percent
+                )
+                inputViewContainer = result.inputViewContainer
+                suggestionBar = result.suggestionBar
+                contentPaneContainer = result.contentPaneContainer
+                topPane = result.topPane
+                scrollView = result.scrollView
+                suggestionBar.setOnSuggestionSelectedListener(keyboard2)
+
+                (keyboardView.parent as? android.view.ViewGroup)?.removeView(keyboardView)
+                inputViewContainer.addView(
+                    keyboardView,
+                    LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    )
+                )
+            }
+
+            // Propagate with suggestionBarHeight = 0: hideContentPane restores the strip to
+            // this stored height, so pane close returns to a 0-height (invisible) strip
+            // rather than an empty 40 dp suggestion row.
+            val contentPaneHeight = SuggestionBarInitializer.calculateContentPaneHeight(
+                keyboard2,
+                config.clipboard_pane_height_percent
+            )
+            SuggestionBarPropagator.create(
+                inputCoordinator,
+                suggestionHandler,
+                keyboardDimensionsHelper,
+                receiver
+            ).propagateAll(
+                suggestionBar,
+                emojiPane,
+                contentPaneContainer,
+                topPane,
+                scrollView,
+                0,
+                contentPaneHeight
+            )
+
+            // Collapse the strip now unless a content pane currently owns topPane.
+            topPane?.let { top ->
+                if (scrollView?.parent == top && top.layoutParams != null &&
+                    top.layoutParams.height != 0
+                ) {
+                    top.layoutParams.height = 0
+                    top.requestLayout()
+                }
+            }
+
+            val inputView: View = inputViewContainer ?: keyboardView
+            return SetupResult(inputView, suggestionBar, inputViewContainer, contentPaneContainer, topPane, scrollView)
         }
     }
+
+    /** The suggestion strip's height in enabled mode (the 40 dp row topPane starts with). */
+    private fun suggestionBarStripHeight(): Int = android.util.TypedValue.applyDimension(
+        android.util.TypedValue.COMPLEX_UNIT_DIP,
+        40f,
+        keyboard2.resources.displayMetrics
+    ).toInt()
 
     companion object {
         /**

@@ -62,9 +62,6 @@ evidence: **`docs/audit/2026-08-28-archive-verification.md`** (IDs ARC-001..050)
 
 - **ARC-001** private media rows can reach the OS clipboard — media-paste `setPrimaryClip`
   fallback ungated for `is_private` (`KeyEventHandler.kt:204-217`); the promised §5.6 gate absent.
-- **ARC-002** #148 root-caused: both prediction prefs off → `contentPaneContainer` null →
-  clipboard/emoji/GIF `setInputView` fallback replaces the whole keyboard
-  (`PredictionViewSetup.kt:75`, `KeyboardReceiver.kt:230,296,327`).
 - **ARC-005** `finger_occlusion_offset` dead on geometric (CTC-only despite engine-agnostic UI).
 - **ARC-006** `UnigramLanguageDetector` fed every commit, read by nobody; promised test absent.
 - **ARC-007** Termux deletion strategy (WP9 R-1 step 7) never decided, branches untested.
