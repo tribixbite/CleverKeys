@@ -22,7 +22,10 @@ import java.util.zip.ZipInputStream
  * Pack ZIP format:
  *   manifest.json     — {pack_id, name, version, gif_count, description}
  *   pack.db           — Mini SQLite with this pack's gifs/categories/FTS rows
- *   thumbs/{part}/    — Thumbnails partitioned by id÷1000
+ *   thumbs/{part}/    — Thumbnails partitioned by id÷1000, named `{id:06d}.webp`.
+ *                       REQUIRED whenever the pack carries GIFs: the grid renders
+ *                       thumbnails, so a pack without them installs to blank tiles
+ *                       (#149). Enforced at import — see [ERROR_MISSING_THUMBNAILS].
  *
  * Follows the same pattern as LanguagePackManager for consistency.
  */
@@ -69,6 +72,18 @@ class GifPackManager private constructor(private val context: Context) {
                 return@withContext GifPackImportResult.Error("Missing or empty pack.db")
             }
 
+            // Step 3b: Validate thumbs/ (ARC-038 / #149).
+            // The grid renders THUMBNAILS; a pack whose DB rows have no thumbnail file behind
+            // them installs "successfully" and then shows a wall of blank tiles, with no way for
+            // the user to tell that the pack — not the app — is the problem. Checked HERE, before
+            // the duplicate check and before Step 5's replace-removal, so a rejected import never
+            // writes a DB row and never destroys an already-installed pack.
+            val thumbsDir = File(tempDir, THUMBS_DIR)
+            if (manifest.gifCount > 0 && !hasImportableThumbnails(thumbsDir)) {
+                Log.w(TAG, "Pack '${manifest.packId}' declares ${manifest.gifCount} GIFs but carries no thumbnails")
+                return@withContext GifPackImportResult.Error(ERROR_MISSING_THUMBNAILS)
+            }
+
             // Step 4: Check for duplicate
             if (database.isPackInstalled(manifest.packId) && !replaceExisting) {
                 return@withContext GifPackImportResult.AlreadyInstalled(
@@ -100,11 +115,23 @@ class GifPackManager private constructor(private val context: Context) {
             )
 
             // Step 8: Copy thumbnails to app storage
-            val thumbsDir = File(tempDir, THUMBS_DIR)
             val thumbCount = if (thumbsDir.exists()) {
                 assetManager.importThumbnails(thumbsDir)
             } else {
                 0
+            }
+
+            // Step 8b (ARC-038 safety net): Step 3b can only act on what the manifest DECLARES,
+            // and `gif_count` is optional (`optInt(…, 0)`) — a hand-built or truncated manifest
+            // that omits it reads as an empty pack and slips through. Here the real numbers are
+            // known, so catch the same defect from the other side and UNDO the DB write rather
+            // than leave rows the grid cannot render.
+            if (imported > 0 && thumbCount == 0) {
+                Log.w(TAG, "Pack '${manifest.packId}' imported $imported rows with 0 thumbnails — rolling back")
+                val removal = database.removePack(manifest.packId)
+                assetManager.removeThumbnails(removal.orphanedThumbIds)
+                assetManager.removeFullGifs(removal.orphanedFullIds)
+                return@withContext GifPackImportResult.Error(ERROR_MISSING_THUMBNAILS)
             }
 
             // Step 9: Copy full animated GIFs if present
@@ -272,6 +299,36 @@ class GifPackManager private constructor(private val context: Context) {
         private const val PACK_DB_FILE = "pack.db"
         private const val THUMBS_DIR = "thumbs"
         private const val FULL_DIR = "full"
+
+        /**
+         * ARC-038 / #149: rejection message for a pack that declares GIFs but ships no
+         * importable thumbnails. Named so the wording is pinned by test rather than
+         * duplicated at the two rejection sites.
+         */
+        /**
+         * ARC-038: does [thumbsDir] hold at least one thumbnail
+         * [GifAssetManager.importThumbnails] would actually copy?
+         *
+         * The predicate mirrors that importer EXACTLY — a `.webp` file whose base name parses
+         * as a numeric id (`thumbs/{partition}/{id:06d}.webp`, per
+         * `tools/gif_pipeline/make_pack.py`). An approximation would be worse than nothing
+         * here: "the directory exists" and "the directory is non-empty" both pass for a pack
+         * whose thumbnails are named in some other scheme, which imports zero and lands the
+         * user right back at the blank tiles this is meant to prevent.
+         *
+         * `walkTopDown().any {}` short-circuits on the first hit, so this does not enumerate a
+         * multi-thousand-file pack. In the companion (and `internal`) so the rule is testable
+         * against real directory layouts without constructing a manager.
+         */
+        @androidx.annotation.VisibleForTesting
+        internal fun hasImportableThumbnails(thumbsDir: File): Boolean =
+            thumbsDir.isDirectory && thumbsDir.walkTopDown().any {
+                it.isFile && it.extension == "webp" && it.nameWithoutExtension.toLongOrNull() != null
+            }
+
+        const val ERROR_MISSING_THUMBNAILS =
+            "Legacy pack format — this pack has no thumbnails, so its GIFs cannot be shown. " +
+                "Download a current pack."
 
         const val GITHUB_RELEASES_URL =
             "https://github.com/tribixbite/CleverKeys/releases/tag/CleverKeys-GIF"
