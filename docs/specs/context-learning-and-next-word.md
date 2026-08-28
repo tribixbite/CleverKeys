@@ -169,7 +169,7 @@ the surfaced set. Caps: `MAX_SUGGESTIONS = 3` (whole-bar), `MAX_SWIPE_APPEND = 2
 | 1 | Typed word completed with a **space** (`SuggestionHandler` single-char commit path, `text == " "` only) | Bar would otherwise clear → show up to 3 context-only candidates. After sentence-final punctuation the context was just cleared, so nothing shows. |
 | 2 | **Manual tap** on a suggestion (`onSuggestionSelected`, `isManualSelection` only — review H2) | Context just grew → chain another round ("want" → tap "to" → suggests "go/see/be"). The swipe AUTO-insert must NOT route here (it would replace the alternates bar and break swipe correction) — it composes via call-site 3 instead. |
 | 3 | **Swipe auto-insert** results displayed (`appendNextWordToSwipeAlternates`) | KEEP the swipe alternates (user may still correct the swipe) and APPEND ≤2 next-word candidates after them, tagged with per-suggestion `NEXT_WORD` metas so a tap APPENDS the word instead of replacing the auto-inserted swipe word. Runs on the shared `predictionTasks` executor (review L3 — first lookup lazily loads persisted n-gram blobs; inline it caused first-swipe jank). |
-| 4 | **Cursor parked** after existing text with no partial word under it (`handleCursorParkPrediction`, routed from InputCoordinator's empty-prefix cursor-sync branch) | Gboard-style tap-into-text predictions. SCOPE (review L5, accepted): candidates derive from the SESSION's committed-word context, not the editor text before the cursor — parking into text typed in an earlier session usually shows nothing (safe, not Gboard-complete; editor-scan deferred). |
+| 4 | **Cursor parked** after existing text with no partial word under it (`handleCursorParkPrediction`, routed from InputCoordinator's empty-prefix cursor-sync branch) | Gboard-style tap-into-text predictions. **L5 RESOLVED — the editor scan SHIPPED**: `SuggestionHandler.readEditorParkContext` (`:1508-1529`) does a guarded `getTextBeforeCursor(EDITOR_PARK_CONTEXT_CHARS, 0)` and tokenizes it with the pure `NextWordPredictor.contextFromEditorText` (`:182-219`, sentence-boundary aware, last `LearningGate.CONTEXT_WINDOW` tokens), so parking into an unrelated paragraph predicts from THAT paragraph — including text typed in an earlier session. The read is gated on the CHEAP prerequisites first (`next_word_prediction_enabled`, `on_device_learning_enabled`, `context_aware_predictions_enabled`, per-field incognito) so a field that could never surface a candidate is never even read; `null` on read failure falls back to session context, while an empty list is a real "parked at a sentence start → show nothing". Pinned by `LearningWiringDriftTest` (`:189-204`, `:255`, `:260`). |
 
 ### Staleness + dismissal
 - Bar-generation guard (review M6): the async post aborts if `SuggestionBar.contentGeneration()`
@@ -323,8 +323,13 @@ Existing related prefs (unchanged keys, now composed with the master gate):
 
 ## Deferred / known limitations
 
-- Cursor-park next-word reads session context only, not editor text (review L5) — an
-  InputConnection editor scan per park is deferred until the (default-OFF) feature earns it.
+- ~~Cursor-park next-word reads session context only, not editor text (review L5) — an
+  InputConnection editor scan per park is deferred until the (default-OFF) feature earns
+  it.~~ **RESOLVED — shipped.** `readEditorParkContext` +
+  `NextWordPredictor.contextFromEditorText` do the per-park editor scan; see call-site 4
+  in the table above. Residual limitation: the scan reads only
+  `EDITOR_PARK_CONTEXT_CHARS` before the cursor and falls back to session context when
+  the InputConnection is unavailable.
 - Trigrams not individually browsable in the Learned-Data manager (bulk clear only).
 - Backup restore repopulates learned stores even with the master gate off (documented
   out-of-scope, L7).

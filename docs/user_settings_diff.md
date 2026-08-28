@@ -3,6 +3,14 @@
 > **HISTORICAL SNAPSHOT (2025-12-10)** — the `neural_*` preferences and the Neural
 > Settings screen described below were removed on 2026-08-18 (ADR-011). This file is
 > a dated record and is deliberately not rewritten.
+>
+> Disposition clarified 2026-08-28 (ARC-050 incidental): none of the `neural_*` rows
+> below is a live setting. `neural_beam_width`, `neural_beam_alpha`,
+> `neural_beam_score_gap` and `neural_beam_prune_confidence` survive **only** as members
+> of `SettingsValidation.DEPRECATED_KEYS` (`:97-115`) — recognized on backup import so an
+> old backup's rows are labelled deprecated instead of silently written into prefs. They
+> have no UI, no reader and no effect. `neural_use_quantized` is not even that: it has
+> zero references in `src/` and would import as an unknown key.
 
 ## Settings Differing from Default
 

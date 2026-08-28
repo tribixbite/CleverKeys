@@ -62,7 +62,7 @@ not password mode ∧ no special prompt active ∧ not Termux ∧ non-empty comm
 | 1 | Word completed with space (`text == " "` only) | Show up to 3 candidates in the otherwise-empty bar |
 | 2 | Manual suggestion tap (`isManualSelection` only) | Chain: regenerate from the grown context |
 | 3 | Swipe auto-insert results | Keep alternates, APPEND ≤2 `NEXT_WORD`-tagged candidates; tap on those APPENDS instead of replacing the swipe word; generation runs on the shared prediction executor |
-| 4 | Cursor parked with empty prefix (`handleCursorParkPrediction`) | Session-context-only prediction (editor-text scan deliberately deferred) |
+| 4 | Cursor parked with empty prefix (`handleCursorParkPrediction`) | Reads the text actually before the parked cursor (`readEditorParkContext` → `NextWordPredictor.contextFromEditorText`, sentence-boundary aware), so parking into an older paragraph predicts from it; the editor read is gated on the feature pref, master learning gate, context-LM pref and the per-field incognito flag, and falls back to session context if the editor cannot be read |
 
 Staleness: async posts abort when `SuggestionBar.contentGeneration()` changed since submit.
 Dismissal: any selection consumes the state; backspace with no partial word clears the
