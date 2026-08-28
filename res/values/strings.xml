@@ -252,6 +252,14 @@
     <string name="clipboard_media_thumbnail">Media thumbnail</string>
     <string name="clipboard_animated">Animated</string>
     <string name="clipboard_private_entry">Private entry</string>
+    <!-- #156 / ARC-011: provenance line in the expanded entry. %1$s is the source app's label
+         (or its raw package name when that app is no longer installed). English-only for now;
+         translation debt tracked in the commit that introduced it. -->
+    <string name="clipboard_provenance_via" tools:ignore="MissingTranslation">Private copy · via %1$s</string>
+    <!-- Label substituted into clipboard_provenance_via when the entry was created by an app that
+         launched the PROCESS_TEXT activity directly instead of through the text-selection menu —
+         a strong tell that the entry was injected programmatically (design §6.3). -->
+    <string name="clipboard_provenance_direct_launch" tools:ignore="MissingTranslation">direct launch (not a selection menu)</string>
 
     <!-- ══════════════════════════════════════════════════════════════════
          Clipboard tag panel (ClipboardTagDialog / ClipboardManager)

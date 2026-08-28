@@ -28,7 +28,8 @@ Design source: `docs/history/audits/remediation-plans/156-private-copy-paste.md`
 | V5 migration + schema | `ClipboardDatabase.kt:244` (`onUpgrade` branch), `:1802` (`DATABASE_VERSION = 5`) | `ALTER TABLE ADD COLUMN` on all three tables |
 | Export exclusion | `ClipboardDatabase.kt:1397` (`exportToJSON(textOnly, includePrivate)`) | Option B: exclude from plaintext, include in encrypted, marker round-trips |
 | Confirm gate (read path) | `ClipboardHistoryView.kt:761` (`copyEntryToSystemClipboard`) | Confirm dialog before pushing a private entry to the OS clipboard |
-| Panel badge + provenance | `ClipboardHistoryView.kt:967, :1060` (`privateBadge`) | Lock badge visible for `entry.isPrivate` |
+| Panel badge | `ClipboardHistoryView.kt:1078, :1174` (`privateBadge`) | Lock badge visible for `entry.isPrivate` |
+| Panel provenance line | `ClipboardHistoryView.kt:108` (`provenanceText`), `:1285` (render), `clipboard/ClipboardProvenance.kt` (pure label rule) | "Private copy · via ⟨app label⟩" in the **expanded** row only. Label resolved via `PackageManager`, falling back to the raw package name when the source app is gone (or invisible under API-30+ package filtering); `"direct-launch"` renders as an injection tell. NULL `source_package` renders no line. |
 | Editing key (entry point A) | `KeyValue.kt:103` (`Editing.COPY_PRIVATE`), `:719` (`"copy_private"` → `🔒⎘`) | Named key + glyph, `FLAG_SMALLER_FONT` |
 | Editing-key dispatch | `KeyEventHandler.kt:645` (`handleEditingKey`), `Keyboard2View.kt:763` (`executeEditingCommand`) | `getSelectedText(0)` → `privateCopy`; edit-mode no-op |
 | Settings toggle + component flip | `ClipboardSection.kt:238` (toggle), `:351` (`setPrivateCopyToolbarComponentEnabled`) | Flips the manifest-disabled component via `PackageManager` |
@@ -59,7 +60,8 @@ KeyEventHandler.handleEditingKey          PrivateCopyProcessTextActivity.onCreat
                              → INSERT is_private=1, source_package
                                     │
                                     ▼
-                 Panel: lock badge + provenance; paste stays private (panel-paste path);
+                 Panel: lock badge (row) + provenance line (expanded row);
+                 paste stays private (panel-paste path);
                  copyEntryToSystemClipboard() confirms before any OS-clipboard push.
 ```
 
@@ -165,7 +167,7 @@ The activity is exported by design but ships **`android:enabled="false"`** in th
 | **Confidentiality** | No read path exists. The activity **never** calls `setResult` — default `RESULT_CANCELED`, no result extras, so a caller learns nothing and the host app's text/selection is never mutated. |
 | **Confused deputy** | The pure-JVM parser is the only intent-reading code and cannot receive `clipData`/URIs — no `ContentResolver`, no file paths, no granted permissions. |
 | **Rate / spam** | `PrivateCopyRateLimiter`: 10 accepts/caller/min + 30/min global, excess dropped silently with `Log.w` (no toast — no UI channel for a flooder). Layered on top of platform background-activity-launch restrictions. |
-| **Provenance** | `getCallingPackage()` (kernel-attested, unspoofable) recorded as `source_package`; a `forResult`-less launch (which the real toolbar never does) is recorded as `"direct-launch"` — an injection tell. |
+| **Provenance** | `getCallingPackage()` (kernel-attested, unspoofable) recorded as `source_package` **and rendered** in the expanded panel row as "Private copy · via ⟨app⟩"; a `forResult`-less launch (which the real toolbar never does) is recorded as `"direct-launch"` and rendered as an explicit injection tell. This display is what converts the unanswerable prevention question into a detection answer — it is load-bearing for the §6 risk acceptance, not decoration. |
 | **Direct Boot** | `directBootAware="false"` + an `isUserUnlocked()` guard — the DB lives in Credential-Encrypted storage. |
 | **Windowless** | `Theme.NoDisplay`; `finish()` runs inside `onCreate`'s `finally`, satisfying the "must finish before onResume" contract. |
 

@@ -463,6 +463,7 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.clipboard.PrivateCopyIntentParserTest',
     'tribixbite.cleverkeys.clipboard.PrivateCopyRateLimiterTest',
     'tribixbite.cleverkeys.clipboard.PrivateClipMergeRuleTest',
+    'tribixbite.cleverkeys.clipboard.ClipboardProvenanceTest',
     'tribixbite.cleverkeys.customization.PrivateCopyCommandTest',
     // TalkBack accessibility (a11y) — pure geometry + labeller
     'tribixbite.cleverkeys.a11y.KeyboardGeometryTest',

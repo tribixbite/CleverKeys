@@ -49,12 +49,39 @@
       android:visibility="gone"
       android:contentDescription="@string/clipboard_private_entry" />
 
+  <!-- Text column: the entry body, its inline editor, and (expanded only) the #156
+       provenance line. These three are mutually exclusive/stacked, so they share one
+       weighted column instead of competing for width as root-level siblings. -->
+  <LinearLayout
+      android:id="@+id/clipboard_entry_text_column"
+      android:orientation="vertical"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:layout_weight="1">
+
   <!-- Normal text display (hidden during edit) -->
   <TextView
       android:id="@+id/clipboard_entry_text"
       style="@style/clipboardEntry"
+      android:layout_weight="0"
       android:maxLines="1"
       android:ellipsize="end"/>
+
+  <!-- #156 provenance line — VISIBLE only when the row is expanded AND the entry carries a
+       source_package. Design §8: "entry expanded/detail view adds the provenance line".
+       Attribution for privately-copied entries; absent for pre-V5 rows and ordinary captures. -->
+  <TextView
+      android:id="@+id/clipboard_entry_provenance"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:layout_marginStart="14dp"
+      android:layout_marginEnd="14dp"
+      android:layout_marginBottom="12dp"
+      android:textSize="12sp"
+      android:textColor="?attr/colorSubLabel"
+      android:maxLines="2"
+      android:ellipsize="end"
+      android:visibility="gone"/>
 
   <!-- Inline edit field: overlays TextView when editing. Uses inputType="none"
        (TYPE_NULL) per IME best practice — prevents framework from calling restartInput()
@@ -69,6 +96,7 @@
   <EditText
       android:id="@+id/clipboard_entry_edit_field"
       style="@style/clipboardEntry"
+      android:layout_weight="0"
       android:visibility="gone"
       android:inputType="none"
       android:importantForAutofill="no"
@@ -81,6 +109,8 @@
       android:textColor="#FFFFFFFF"
       android:textColorHint="#99FFFFFF"
       tools:ignore="LabelFor"/>
+
+  </LinearLayout>
 
   <!-- ─── Button column: stacked vertically on the right side ─── -->
   <LinearLayout

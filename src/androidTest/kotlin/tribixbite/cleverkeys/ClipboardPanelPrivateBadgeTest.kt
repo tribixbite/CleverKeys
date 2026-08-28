@@ -83,6 +83,24 @@ class ClipboardPanelPrivateBadgeTest {
     }
 
     /**
+     * ARC-011: render a row in its EXPANDED state — the surface the private-copy design (§8)
+     * assigned the provenance line to. Seeds `expandedStates[timestamp] = true` the same way a
+     * user tap does, then drives the real adapter so the actual inflated layout is asserted.
+     */
+    private fun renderExpandedRow(entry: ClipboardEntry): View {
+        val chv = ClipboardHistoryView(themedContext(), null)
+        setField(chv, "paginatedHistory", listOf(entry))
+        @Suppress("UNCHECKED_CAST")
+        val expanded = getField<MutableMap<Long, Boolean>>(chv, "expandedStates")!!
+        expanded[entry.timestamp] = true
+        val adapter = getField<BaseAdapter>(chv, "clipboardAdapter")!!
+        return adapter.getView(0, null, FrameLayout(context))
+    }
+
+    private fun provenanceOf(row: View): TextView =
+        row.findViewById(R.id.clipboard_entry_provenance)
+
+    /**
      * Drive the REAL filter pipeline: inject [entries] as the view's backing `history`, run the
      * private [applyFilter], and read back the resulting `filteredHistory`. Mirrors how the live
      * filter dialog mutates state — exercises the actual predicate, not a re-implementation.
@@ -182,6 +200,90 @@ class ClipboardPanelPrivateBadgeTest {
             val row = renderRow(listOf(entry), 0)
             val badge = row.findViewById<TextView>(R.id.clipboard_entry_private_badge)
             assertEquals("badge visible for private entry", View.VISIBLE, badge.visibility)
+        }
+    }
+
+    // ── ARC-011: the provenance line the §6.2/§6.6 risk acceptance depends on ──────────────
+
+    @Test
+    fun privateEntry_expanded_showsProvenanceWithResolvedAppLabel() {
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            // The test APK's own package is guaranteed installed, so PackageManager resolves it.
+            val ownPkg = context.packageName
+            val ownLabel = context.packageManager
+                .getApplicationLabel(context.packageManager.getApplicationInfo(ownPkg, 0))
+                .toString()
+            val entry = ClipboardEntry(
+                "secret", System.currentTimeMillis(), isPrivate = true, sourcePackage = ownPkg
+            )
+            val prov = provenanceOf(renderExpandedRow(entry))
+            assertEquals("provenance visible on an expanded private row", View.VISIBLE, prov.visibility)
+            assertTrue(
+                "provenance names the resolved app label, was: '${prov.text}'",
+                prov.text.toString().contains(ownLabel)
+            )
+        }
+    }
+
+    @Test
+    fun privateEntry_collapsed_hidesProvenance() {
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            // Design §8 puts the line in the expanded/detail view only — the collapsed row keeps
+            // its single-line body plus the 🔒 badge.
+            val entry = ClipboardEntry(
+                "secret", System.currentTimeMillis(), isPrivate = true, sourcePackage = context.packageName
+            )
+            val row = renderRow(listOf(entry), 0)
+            assertEquals("provenance hidden while collapsed", View.GONE, provenanceOf(row).visibility)
+        }
+    }
+
+    @Test
+    fun entryWithoutSourcePackage_expanded_showsNoProvenanceLine() {
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            // Pre-V5 rows and ordinary OS-clipboard captures carry NULL source_package — they must
+            // render no line at all rather than an empty "via".
+            val entry = ClipboardEntry("public", System.currentTimeMillis(), isPrivate = false)
+            val prov = provenanceOf(renderExpandedRow(entry))
+            assertEquals("no provenance without a source package", View.GONE, prov.visibility)
+        }
+    }
+
+    @Test
+    fun directLaunchEntry_expanded_showsTheInjectionTell() {
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            // §6.3: a launch without startActivityForResult is recorded as "direct-launch"; the
+            // panel must surface it as such, not silently resolve it like a package name.
+            val entry = ClipboardEntry(
+                "planted", System.currentTimeMillis(), isPrivate = true, sourcePackage = "direct-launch"
+            )
+            val prov = provenanceOf(renderExpandedRow(entry))
+            assertEquals("provenance visible for a direct launch", View.VISIBLE, prov.visibility)
+            assertEquals(
+                "direct launches render the sentinel label, not the raw sentinel string",
+                context.getString(
+                    R.string.clipboard_provenance_via,
+                    context.getString(R.string.clipboard_provenance_direct_launch)
+                ),
+                prov.text.toString()
+            )
+        }
+    }
+
+    @Test
+    fun uninstalledSourcePackage_expanded_fallsBackToRawPackageName() {
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            // Attribution must survive the source app being uninstalled.
+            val gone = "com.example.definitely.not.installed"
+            val entry = ClipboardEntry(
+                "secret", System.currentTimeMillis(), isPrivate = true, sourcePackage = gone
+            )
+            val prov = provenanceOf(renderExpandedRow(entry))
+            assertEquals("provenance visible for an uninstalled source", View.VISIBLE, prov.visibility)
+            assertTrue(
+                "falls back to the raw package, was: '${prov.text}'",
+                prov.text.toString().contains(gone)
+            )
         }
     }
 

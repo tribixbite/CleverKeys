@@ -6,6 +6,7 @@ import android.content.ClipData
 // tribixbite.cleverkeys.ClipboardManager (same-package takes priority in Kotlin resolution).
 import android.content.ClipboardManager as SystemClipboardManager
 import android.content.Context
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.AttributeSet
@@ -26,6 +27,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import tribixbite.cleverkeys.clipboard.ClipboardProvenance
 import java.util.regex.PatternSyntaxException
 
 /**
@@ -66,6 +68,50 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     // Avoids re-decoding BitmapFactory.decodeByteArray on every getView() scroll.
     private val thumbnailCache = object : LruCache<Long, Bitmap>(30) {
         override fun sizeOf(key: Long, value: Bitmap): Int = 1  // count-based, not byte-based
+    }
+
+    // #156 / ARC-011: memo for PackageManager label lookups behind the provenance line.
+    // getView() runs per scroll frame, and getApplicationInfo() is a binder round-trip; the
+    // distinct source-package set is tiny (apps the user privately copies from), so an
+    // unbounded map is bounded in practice. A null VALUE is a cached "not installed" — hence
+    // containsKey rather than getOrPut, which would re-query on every frame for that case.
+    private val appLabelCache = mutableMapOf<String, String?>()
+
+    /**
+     * Resolve a package name to its user-visible app label, or `null` when the app is not
+     * installed (the caller then shows the raw package name so attribution survives uninstall).
+     *
+     * API 30+ package-visibility filtering makes `NameNotFoundException` also mean "installed but
+     * not visible to us". We deliberately do NOT widen the manifest `<queries>` (let alone request
+     * QUERY_ALL_PACKAGES) to close that: a keyboard enumerating installed apps to prettify a label
+     * is a worse trade than the raw-package fallback, and the two packages that actually reach
+     * this path are ones the platform already makes visible — the app that launched our
+     * PROCESS_TEXT activity (entry point B) and the app whose editor the IME is bound to
+     * (entry point A). Either way the entry stays attributable, which is what design §6.3 needs.
+     */
+    private fun resolveAppLabel(pkg: String): String? {
+        if (appLabelCache.containsKey(pkg)) return appLabelCache[pkg]
+        val label = try {
+            val pm = context.packageManager
+            pm.getApplicationLabel(pm.getApplicationInfo(pkg, 0)).toString()
+        } catch (e: PackageManager.NameNotFoundException) {
+            null
+        }
+        appLabelCache[pkg] = label
+        return label
+    }
+
+    /**
+     * The provenance text for [entry], or `null` when the row has no provenance to show
+     * (pre-V5 rows and ordinary OS-clipboard captures carry a null `source_package`).
+     */
+    private fun provenanceText(entry: ClipboardEntry): String? {
+        val label = ClipboardProvenance.label(
+            sourcePackage = entry.sourcePackage,
+            directLaunchLabel = context.getString(R.string.clipboard_provenance_direct_launch),
+            resolveAppLabel = ::resolveAppLabel,
+        ) ?: return null
+        return context.getString(R.string.clipboard_provenance_via, label)
     }
 
     // Date filter state
@@ -1030,6 +1076,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             val playBadge = view.findViewById<ImageView>(R.id.clipboard_entry_play_badge)
             // #156: 🔒 badge — VISIBLE only for entries copied privately (never on the OS clipboard).
             val privateBadge = view.findViewById<TextView>(R.id.clipboard_entry_private_badge)
+            // #156 / ARC-011: "Private copy · via <app>" — expanded rows only (design §8).
+            val provenanceView = view.findViewById<TextView>(R.id.clipboard_entry_provenance)
 
             // Secondary row buttons (shown on tap-expand, tab-specific)
             val pinButton = view.findViewById<View>(R.id.clipboard_entry_addpin)
@@ -1055,6 +1103,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 thumbnailContainer.visibility = GONE
                 playBadge.visibility = GONE
                 privateBadge.visibility = GONE  // #156: hidden during edit
+                provenanceView.visibility = GONE  // ARC-011: hidden during edit
 
                 // Bug #3 fix: use in-progress text (not DB content) to survive view recreation.
                 // Always set text+visibility — needed for correct height during measurement.
@@ -1227,6 +1276,19 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
 
             // ── Secondary buttons: VISIBLE when expanded, GONE otherwise ──
             secondaryButtons.visibility = if (isExpanded && !isEditingThis) VISIBLE else GONE
+
+            // ── #156 / ARC-011: provenance line, expanded rows only ──
+            // The private-copy threat review (§6.2/§6.3/§6.6) accepted the content-injection
+            // risk of the exported PROCESS_TEXT activity BECAUSE the entry detail names the
+            // app that produced the row. Rendering it here is what makes that acceptance true.
+            // Null source_package (pre-V5 rows, ordinary OS-clipboard captures) → no line at all.
+            val provenance = if (isExpanded) provenanceText(entry) else null
+            if (provenance != null) {
+                provenanceView.text = provenance
+                provenanceView.visibility = VISIBLE
+            } else {
+                provenanceView.visibility = GONE
+            }
 
             // ── Tab-aware button visibility in secondary row ──
             // Delete is NOT here — it's gated behind edit mode in the edit_buttons row
