@@ -971,4 +971,62 @@ class CoreImeHygieneDriftTest {
                 "found $rescans. A new selector needs one too; a removed one should drop its call."
         ).that(rescans).isEqualTo(selectors.size)
     }
+
+    /**
+     * ARC-005 — `finger_occlusion_offset` describes the FINGER, not a decoder, and its
+     * slider says so ("Shifts where swipes are read relative to your fingertip"). Until
+     * 2026-08-28 only the CTC adapter applied it, so the knob was dead for every
+     * geometric-served cell: non-Latin script, letter-incomplete layout, CTC-unsupported
+     * language, or `swipe_engine_mode=geometric`. A user who calibrated it on English
+     * QWERTY lost the correction the moment they switched to a layout CTC cannot serve —
+     * invisible, because both engines still return plausible words.
+     *
+     * Both adapters must therefore read the pref at ingest and route it through the shared
+     * [tribixbite.cleverkeys.swipe.FingerOcclusion] math (unit-pinned in
+     * `FingerOcclusionTest`); the pure engine packages must stay knob-free.
+     */
+    @Test
+    fun fingerOcclusionIsAppliedByBothSwipeAdaptersThroughTheSharedMath() {
+        for (relative in listOf(
+            "tribixbite/cleverkeys/swipe/CtcEngineAdapter.kt",
+            "tribixbite/cleverkeys/swipe/GeometricEngineAdapter.kt",
+        )) {
+            val decodeBody = source(relative)
+                .substringAfter("fun decodeAsync(")
+                .substringBefore("fun postIfNewest(")
+            assertWithMessage(
+                "$relative.decodeAsync must read Config.finger_occlusion_offset — the " +
+                    "slider is engine-agnostic and an engine that ignores it is a dead knob " +
+                    "for every cell it serves."
+            ).that(decodeBody).contains("finger_occlusion_offset")
+            assertWithMessage(
+                "$relative.decodeAsync must convert the pref through " +
+                    "FingerOcclusion.yShiftPx — a second hand-rolled percent-of-a-key-row " +
+                    "formula is how one slider position becomes two different corrections."
+            ).that(decodeBody).contains("FingerOcclusion.yShiftPx(")
+        }
+
+        // The knob crosses the impurity boundary at the adapter, exactly like the geometric
+        // engine's other user knobs: the pure decoders never see a preference.
+        for (pkg in listOf("swipe/geometric", "swipe/ctc")) {
+            val dir = File(mainKotlin, "tribixbite/cleverkeys/$pkg")
+            assertWithMessage("expected ${dir.path} (run from project root)")
+                .that(dir.isDirectory).isTrue()
+            val leaked = dir.walkTopDown()
+                .filter { it.isFile && it.extension == "kt" }
+                .filter { it.readText().contains("finger_occlusion") }
+                .map { it.name }
+                .toList()
+            assertWithMessage(
+                "the pure $pkg engine must stay knob-free — the occlusion shift is applied " +
+                    "by the adapter before the trace is handed over. Leaked into: $leaked"
+            ).that(leaked).isEmpty()
+        }
+
+        val helper = source("tribixbite/cleverkeys/swipe/FingerOcclusion.kt")
+        assertWithMessage(
+            "FingerOcclusion must stay pure (no android imports) so runPureTests can pin " +
+                "the shared math both adapters depend on."
+        ).that(helper).doesNotContain("import android.")
+    }
 }

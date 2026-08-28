@@ -752,16 +752,19 @@ class CtcEngineAdapter(private val context: Context) {
                     PredictionResult(emptyList(), emptyList())
                 } else {
                     // Finger-occlusion compensation, applied to RAW Y before the letter-box
-                    // affine — the fingertip hides the target, so touches land above the key the
-                    // user aimed at. Expressed as a signed percent of ONE KEY ROW so it means
-                    // the same thing at any keyboard height; the letter box spans three letter
-                    // rows, hence the /3. Signed because the correction runs both ways.
+                    // affine — the fingertip hides the target, so touches land above the key
+                    // the user aimed at. The percent-of-one-key-row math lives in
+                    // [FingerOcclusion] so the geometric adapter applies the IDENTICAL shift
+                    // (ARC-005); `1/invH` is this layout's letter-box height in view px, and
+                    // the a–z gate guarantees those letters occupy three rows.
                     //
                     // Default 0: see Defaults.FINGER_OCCLUSION_OFFSET for why the neural
-                    // engine's 12.5% is NOT carried over. At 0 this costs one float multiply.
-                    val occlusionPct = Config.globalConfig().finger_occlusion_offset
-                    val rowHeightPx = (1f / mapped.invH) / 3f
-                    val yShift = rowHeightPx * (occlusionPct / 100f)
+                    // engine's 12.5% is NOT carried over. At 0 this costs nothing.
+                    val yShift = FingerOcclusion.yShiftPx(
+                        Config.globalConfig().finger_occlusion_offset,
+                        letterBoxHeightPx = 1f / mapped.invH,
+                        letterRowCount = FingerOcclusion.LATIN_LETTER_ROWS,
+                    )
 
                     val px = DoubleArray(n) { ((rawX[it] - mapped.originX) * mapped.invW).toDouble() }
                     val py = DoubleArray(n) {

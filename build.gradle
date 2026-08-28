@@ -482,6 +482,9 @@ tasks.register('runPureTests', JavaExec) {
     // task reads (PHASE_O §3.3 makes this a prerequisite for multi-script work).
     'tribixbite.cleverkeys.swipe.LayoutScriptDeclarationTest',
     'tribixbite.cleverkeys.swipe.ContractionOverlayTest',
+    // ARC-005: the finger-occlusion shift both swipe adapters apply at ingest — one
+    // slider position must be one correction whichever engine serves the swipe.
+    'tribixbite.cleverkeys.swipe.FingerOcclusionTest',
     // Contraction language isolation (2026-08-16): English morphology must not leak into
     // a non-English swipe slate (the fr "franco" → "franco's" regression). Runs the real
     // ContractionOverlay over the shipped contraction assets + CKDT frequency ordinals.

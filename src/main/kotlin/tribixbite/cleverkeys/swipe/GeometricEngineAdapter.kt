@@ -42,7 +42,9 @@ import java.util.concurrent.atomic.AtomicLong
  *     the SAME view-pixel frame the swipe trace is measured in. Memoized per immutable
  *     KeyboardData instance + frame; fingerprint churn on orientation change is by-design
  *     (a rotation genuinely changes geometry).
- *  2. `PointF` trace → [TracePoint] (key-area-local px + the frame extents).
+ *  2. `PointF` trace → [TracePoint] (key-area-local px + the frame extents), with the
+ *     `finger_occlusion_offset` Y shift applied at ingest via the shared [FingerOcclusion]
+ *     math so the engine-agnostic slider means the same thing here as on CTC (ARC-005).
  *  3. Dictionary words → [GeometricDictionary]: reads the SAME source the production
  *     dictionary pipeline uses (imported langpack `files/langpacks/{code}/dictionary.bin`,
  *     else the bundled `dictionaries/{code}_enhanced.bin` asset — both V2 CKDT), MERGES
@@ -136,12 +138,26 @@ class GeometricEngineAdapter(private val context: Context) {
     }
 
     // ── Geometry memo (per immutable KeyboardData instance + frame + params) ────────
+
+    /**
+     * The pure [LayoutGeometry] plus the two VIEW-PIXEL facts the pure model deliberately
+     * does not carry: the letter keys' bounding-box height and how many keyboard rows they
+     * occupy. [FingerOcclusion] turns those into the ingest Y shift (ARC-005) — the same
+     * pair [CtcEngineAdapter] derives from its letter-box affine, so one knob means one
+     * thing on both engines.
+     */
+    private class MappedGeometry(
+        val geometry: LayoutGeometry,
+        val letterBoxHeightPx: Float,
+        val letterRowCount: Int,
+    )
+
     private class GeometryMemo(
         val source: WeakReference<KeyboardData>,
         val params: KeyboardGeometry.Params,
         val frameWidthPx: Float,
         val frameHeightPx: Float,
-        val geometry: LayoutGeometry?,
+        val mapped: MappedGeometry?,
     )
 
     @Volatile
@@ -268,14 +284,32 @@ class GeometricEngineAdapter(private val context: Context) {
         val generation = decodeGeneration.incrementAndGet()
         tasks.cancelAndSubmit {
             try {
-                val geometry = geometryFor(keyboard, params, frameWidthPx, frameHeightPx)
-                val memo = if (geometry != null) dictionaryFor(language) else null
-                val result = if (geometry == null || memo == null) {
+                val mapped = geometryFor(keyboard, params, frameWidthPx, frameHeightPx)
+                val memo = if (mapped != null) dictionaryFor(language) else null
+                val result = if (mapped == null || memo == null) {
                     PredictionResult(emptyList(), emptyList())
                 } else {
+                    // Finger-occlusion compensation at ingest, in RAW view px, before the
+                    // pure engine normalizes over the frame — the same shift, from the same
+                    // pref and the same letter-box math, that CtcEngineAdapter applies
+                    // (ARC-005: the slider is engine-agnostic, so a geometric-served cell
+                    // must not silently ignore it). Off by default, and at 0 the original
+                    // trace list is passed through untouched.
+                    val yShift = FingerOcclusion.yShiftPx(
+                        Config.globalConfig().finger_occlusion_offset,
+                        letterBoxHeightPx = mapped.letterBoxHeightPx,
+                        letterRowCount = mapped.letterRowCount,
+                    )
+                    val trace = if (yShift == 0f) points else {
+                        ArrayList<TracePoint>(points.size).also { shifted ->
+                            for (p in points) shifted.add(TracePoint(p.x, p.y + yShift, p.tMillis))
+                        }
+                    }
                     applyContractionDisplay(
                         engineFor().decode(
-                            GeometricSwipeRequest(points, frameWidthPx, frameHeightPx, geometry, memo.dictionary)
+                            GeometricSwipeRequest(
+                                trace, frameWidthPx, frameHeightPx, mapped.geometry, memo.dictionary
+                            )
                         ),
                         language,
                         memo.ordinals
@@ -324,10 +358,10 @@ class GeometricEngineAdapter(private val context: Context) {
         if (frameWidthPx <= 0f || frameHeightPx <= 0f) return
         tasks.submitBackground {
             try {
-                val geometry = geometryFor(keyboard, params, frameWidthPx, frameHeightPx)
+                val mapped = geometryFor(keyboard, params, frameWidthPx, frameHeightPx)
                     ?: return@submitBackground
                 val memo = dictionaryFor(language) ?: return@submitBackground
-                val warm = engineFor().warmUp(geometry, memo.dictionary)
+                val warm = engineFor().warmUp(mapped.geometry, memo.dictionary)
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                     Log.d(
                         TAG,
@@ -356,12 +390,12 @@ class GeometricEngineAdapter(private val context: Context) {
         params: KeyboardGeometry.Params,
         frameWidthPx: Float,
         frameHeightPx: Float,
-    ): LayoutGeometry? {
+    ): MappedGeometry? {
         geometryMemo?.let { memo ->
             if (memo.source.get() === keyboard && memo.params == params &&
                 memo.frameWidthPx == frameWidthPx && memo.frameHeightPx == frameHeightPx
             ) {
-                return memo.geometry
+                return memo.mapped
             }
         }
         val built = try {
@@ -384,13 +418,19 @@ class GeometricEngineAdapter(private val context: Context) {
      *  - case folding per codepoint via [Locale.ROOT] lowercase.
      * `loc` resolution already happened upstream (the live KeyboardData is post
      * LayoutModifier.modify_layout), so surviving corners are real KeyValues here.
+     *
+     * Also measures the LETTER-KEY BOUNDING BOX in view px and the number of keyboard rows
+     * its letter keys occupy — [FingerOcclusion]'s two inputs (ARC-005). Measured over the
+     * same letter-node rects the geometry is built from, which is the union
+     * [CtcEngineAdapter.buildMappedLayout] takes over its a–z keys, so both engines shift a
+     * trace identically on any layout both can serve.
      */
     private fun buildGeometry(
         keyboard: KeyboardData,
         params: KeyboardGeometry.Params,
         frameWidthPx: Float,
         frameHeightPx: Float,
-    ): LayoutGeometry? {
+    ): MappedGeometry? {
         val rects = KeyboardGeometry.computeKeyRects(keyboard, params)
         if (rects.isEmpty()) return null
 
@@ -399,6 +439,10 @@ class GeometricEngineAdapter(private val context: Context) {
         val aliases = HashMap<Int, Int>()
         var letterWidthSum = 0f
         var letterCount = 0
+        // Letter-key bounding box in view px + the distinct rows those letters live in.
+        var letterTopPx = Float.MAX_VALUE
+        var letterBottomPx = -Float.MAX_VALUE
+        val letterRows = HashSet<Int>(4)
 
         // computeKeyRects walks rows row-major, emitting one rect per key with a non-null
         // center (placeholders excluded). Recover (row, col) by walking the same order.
@@ -445,6 +489,9 @@ class GeometricEngineAdapter(private val context: Context) {
                 if (isLetterNode) {
                     letterWidthSum += wU
                     letterCount++
+                    if (rect.bounds.top < letterTopPx) letterTopPx = rect.bounds.top
+                    if (rect.bounds.bottom > letterBottomPx) letterBottomPx = rect.bounds.bottom
+                    letterRows.add(rowIdx)
                     // chars: tier-1 (single-codepoint center) and tier-2 (multi-codepoint
                     // component fallback) entries both map each codepoint → this key.
                     var i = 0
@@ -463,12 +510,16 @@ class GeometricEngineAdapter(private val context: Context) {
 
         if (letterCount == 0) return null // nothing swipeable on this layout
 
-        return LayoutGeometry(
-            keys = keys,
-            chars = chars.mapValues { (_, ids) -> ids.toIntArray() },
-            aliases = aliases,
-            aspect = frameWidthPx / frameHeightPx,
-            meanKeyWidth = letterWidthSum / letterCount,
+        return MappedGeometry(
+            geometry = LayoutGeometry(
+                keys = keys,
+                chars = chars.mapValues { (_, ids) -> ids.toIntArray() },
+                aliases = aliases,
+                aspect = frameWidthPx / frameHeightPx,
+                meanKeyWidth = letterWidthSum / letterCount,
+            ),
+            letterBoxHeightPx = letterBottomPx - letterTopPx,
+            letterRowCount = letterRows.size,
         )
     }
 
