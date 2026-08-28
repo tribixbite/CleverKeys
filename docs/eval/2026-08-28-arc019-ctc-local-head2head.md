@@ -59,8 +59,32 @@ is frequency-appropriate for a 2-letter trace, not the UT-5 defect. The slate su
 a–z alias form; the apostrophe display (`don't`) is applied by the adapter overlay downstream.
 **The contraction rework fixed UT-5's ranking complaint outright.**
 
-(UT-7 — sentence-start `I'd` on the TAP path — is measured separately by the instrumented
-`ContractionSentenceStartMeasureTest` in the ew-cli run; see its logcat `UT7Measure` lines.)
+## 4. UT-7 (v1.5.0 deferral): sentence-start `I'd`, tap path — MEASURED, root cause isolated
+
+Instrumented `ContractionSentenceStartMeasureTest` (real SuggestionHandler + SuggestionBar
+wiring, ew-cli run `1a851d40`, Pixel7/API34). Ordering is position-independent by construction
+(no sentence-start signal exists in main), so one measurement covers both positions:
+
+| typed | user-visible bar | verdict |
+|---|---|---|
+| `im` | `[I'm, image, impact, …]` | contraction **leads** (literal absent) |
+| `ill` | `[I'll, I'll, ill, illegal, …]` | contraction **leads** — but note the **duplicate I'll** at ranks 0+1 |
+| `id` | `[id, idea, ideas, ideal, idiot]` | **`i'd` is ABSENT from the bar entirely** |
+
+**UT-7's complaint was never a ranking problem.** Two of the three I-contractions already lead.
+The real defect is isolated to `id`: it receives **no contraction injection at all** — neither
+REPLACE (correct: "id" is a real word) nor PAIRED (the its→it's pattern that should apply).
+The fix is a contraction-DATA decision (add `id → i'd` as a paired contraction, subject to the
+four guards in `.claude/skills/contraction-system.md`), not a ranking signal. A sentence-start
+boost would fix nothing here.
+
+Secondary finding: the doubled `I'll` at ranks 0 and 1 for typed `ill` — two injection paths
+producing the same surface without dedup. Small, user-visible, worth its own look.
+
+A first revision of this measurement asserted at the WordPredictor layer and failed usefully:
+the apostrophe surfaces are produced by SuggestionHandler's injection layer, not the predictor
+(`im`/`ill`/`id` are real dictionary words, so the alias-skip guard excludes their alias keys
+from the prefix index). The committed test measures the user-visible bar.
 
 ## Provenance
 

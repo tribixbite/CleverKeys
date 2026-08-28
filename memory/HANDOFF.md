@@ -13,16 +13,17 @@ what was done; this file is only what is left. Anything below is open.
 Swipe is **CTC (default) + geometric**; the neural engine was deleted 2026-08-18
 (`a7d03bc8`..`83220634`), −26.4 MB APK. `CtcLanguageSupport.SUPPORTED` is **seven** languages:
 en/fr/de/es test-validated, it/pt/sv `PROVISIONAL` (scale-transferred, no per-language bar).
-Gates: `runPureTests` **1778**, `lintDebug` 0 errors, both compiles, debug+androidTest APKs build.
-Last full instrumented run (ew-cli, Pixel7 API 34, 2026-08-27, at `ececaa73`): **1,418 tests,
-3 red — all explained, none a code regression**: 1 stale test (`SettingsSearchTest` asserted the
-neural-era "Fuzzy Match Algorithm" control was findable; control deleted 2026-08-18, test
-repointed at "Typo Forgiveness" and re-verified green 7/7 on-device) + 2
-`CtcOnnxLatencyBenchmarkTest` reds that are BY DESIGN whenever the ctc_bench models are not
-staged (`3fcbf7b8` removed the 11 MB duplicates from the repo; the benchmark fails loudly
-rather than silently skipping — restore via `cp` from CleverKeys-ML/ctc/artifacts/ into
-src/androidTest/assets/ctc_bench/ only when actually benchmarking). Expect those 2 reds in any
-full run; do not chase them.
+Gates: `runPureTests` **1866**, `runMockTests` **325**, `lintDebug` 0 errors, both compiles.
+Last full instrumented run (ew-cli, Pixel7 API 34, 2026-08-28, run `2ca8b7c9` at `6d67a7c8`):
+**1,430 tests, 3 red — all explained, none a code regression**: 2 `CtcOnnxLatencyBenchmarkTest`
+reds that are BY DESIGN whenever the ctc_bench models are not staged (`3fcbf7b8`; restore via
+`cp` from CleverKeys-ML/ctc/artifacts/ into src/androidTest/assets/ctc_bench/ only when actually
+benchmarking — expect these 2 reds in any full run, do not chase them) + 1 first-revision
+`ContractionSentenceStartMeasureTest` red (asserted at the wrong layer; rewritten against the
+real SuggestionHandler+SuggestionBar wiring and re-verified green 3/3 on-device, run `1a851d40`).
+Every wave-added instrumented test passed its first device execution, including
+`CtcLatencyGateTest` (cold build **3,162 ms** vs the 4,500 ms budget — real margin, not
+vacuous) and the dual-language latency tests CK-150-026 had left unexecuted.
 
 **Contractions**: the whole system is now documented as-built in
 `.claude/skills/contraction-system.md` — data model, the four guards, the regressions each one
@@ -69,11 +70,12 @@ log and the verification doc before re-deriving anything. Still open:
   recorded decision to delete `proguard-rules.pro`.
 - **ARC-012 (investigation)**: #79 settings header flicker — unreproduced; note the screen is
   `Column`+`verticalScroll`, NOT LazyColumn, so the old diagnosis is wrong.
-- **ARC-013 (half-closed 2026-08-28)**: UT-5 CLOSED — all contraction aliases decode at rank 0
-  on real + synthetic traces (`docs/eval/2026-08-28-arc019-ctc-local-head2head.md` §3). UT-7
-  (sentence-start "I'd", tap path) measured by the instrumented
-  `ContractionSentenceStartMeasureTest` — read its `UT7Measure` logcat from the next ew-cli run,
-  then decide on a post-period boost; no sentence-start ranking signal exists today.
+- **ARC-013 MEASURED 2026-08-28** (`docs/eval/2026-08-28-arc019-ctc-local-head2head.md` §3-4):
+  UT-5 CLOSED (all aliases rank 0). UT-7 was never a ranking problem — `im`/`ill` contraction
+  already LEADS the bar; the defect is `id` gets NO injection at all (`i'd` absent — needs a
+  paired `id → i'd` contraction-data decision per `.claude/skills/contraction-system.md`, NOT a
+  sentence-start boost). NEW small finding from the same run: typed `ill` shows `I'll` TWICE
+  (ranks 0+1) — two injection paths, no dedup.
 - **ARC-019 CLOSED 2026-08-28**: same-inputs head-to-head on LOCAL combined (4,526 traces):
   CTC 90.7/95.4/96.1 vs geometric 63.0/75.2/78.3 top-1/3/5; geo-only recoveries 1.5%. The last
   accuracy argument for geometric-on-Latin is gone. Synthetic tiers: CTC degrades more
@@ -91,13 +93,17 @@ log and the verification doc before re-deriving anything. Still open:
 - **ARC-049 (device)**: one long-run `MemoryProbe` + `dumpsys meminfo` on a current build to
   close the unexplained 2026-08-17 OOM.
 
-**Instrumented/manual verification owed from the waves** (all compile-verified, none run):
-#148 visual pass (predictions off → open clipboard → keyboard stays visible); private-media
-paste refusal; ARC-005 nonzero occlusion on a geometric layout; ARC-023's 4500 ms cold-build
-bound on emulator hardware; the 5 provenance UI cases (`ClipboardPanelPrivateBadgeTest`);
-`.ckenc` SAF naming (manual export-with-password); encrypted-import 🔒 preview rendering;
-base64 temp-file/clipboard-cap/private-copy-toast instrumented tests; GIF legacy-pack rejection
-paths; next-word cold-start bar on-device.
+**Verified by the 2026-08-28 full ew-cli run** (all green): ARC-023 cold-build budget
+(3,162 ms), the provenance UI cases (14/14 `ClipboardPanelPrivateBadgeTest`), base64
+temp-file / clipboard-cap / private-copy-toast instrumented tests, dual-language latency
+(CK-150-026's device half).
+
+**Still owed — manual on the maintainer's device or unwritten instrumented coverage**:
+#148 visual pass (predictions off → open clipboard → keyboard stays visible below the pane);
+private-media paste refusal behavior; ARC-005 nonzero occlusion on a geometric-served layout;
+`.ckenc` SAF naming (one manual export-with-password); encrypted-import 🔒 preview rendering
+(Compose dialog cases unwritten); GIF legacy-pack rejection paths (need a real ZIP +
+GifDatabase); next-word cold-start bar on-device (opt into next-word, empty learned store).
 
 **Translation debt added by the waves** (English-only, non-blocking):
 `pref_secondary_prediction_weight` summary, `backup_base64_too_large`,
