@@ -3,7 +3,12 @@
  * convert_test2400_aligned.mjs — convert the FUTO test split
  *   ~/storage/shared/swipedata/test_hwsfuto.jsonl  ({"word","points":[{"t","x","y"}]})
  * into the {word, w, h, idx, pts:[[nx,ny,t]]} gzipped cache that
- * tools/test_cli_predict.py --corpus --frame-remap identity consumes.
+ * tools/test_cli_predict.py --corpus --frame-remap identity consumed.
+ *
+ * NOTE (2026-08-28, ARC-047): that neural harness was DELETED — its
+ * swipe_{encoder,decoder}_android.onnx models went with ADR-011. This converter is
+ * kept because the same idx-aligned cache still feeds the FUTO reference-decoder
+ * side (scripts/futo_decoder_eval.py, scripts/test2400_metrics.py).
  *
  * DIFFERENT from convert_swipedata_futo.mjs on purpose: that script SEED-SHUFFLES
  * and word-FILTERS a random sample. Here we need an EXACT, order-preserving 3-way

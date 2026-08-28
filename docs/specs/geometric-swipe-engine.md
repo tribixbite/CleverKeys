@@ -839,9 +839,9 @@ which was a 100-sample smoke over a different file (`swype-model-training/swipes
   actual_src_length [1] i32 → log_probs [beams,20,30]` (pre-log-softmaxed) — no drift vs
   the runner; broadcast batched beam search (web_demo `stepBatched` semantics: score = sum
   log-probs, EOS carry, early-stop when all finished or step≥10 ∧ ≥3 finished). The
-  standalone Kotlin runner (`tools/standalone_tests/test_onnx_cli.kt`) targets the OLD
-  `swipe_model_character_quant` models (150-len, `src_mask`/`target_mask` bool, int64) and
-  was NOT used. Decode settings: **beam=8, max-len 19 (decoder seq cap), position-only
+  standalone Kotlin runner (`tools/standalone_tests/test_onnx_cli.kt`, deleted 2026-08-28
+  per ARC-047) targeted the OLD `swipe_model_character_quant` models (150-len,
+  `src_mask`/`target_mask` bool, int64) and was NOT used. Decode settings: **beam=8, max-len 19 (decoder seq cap), position-only
   features** (below); same in-dict filter as the geo test (word ∈ 98,140-word
   `en_enhanced.json`) → identical n=8,521 @ 99.0% coverage; 0 decode errors; 106 min CPU.
 - **TIMESTAMP HANDICAP (stated per protocol)**: this corpus has corrupt timestamps

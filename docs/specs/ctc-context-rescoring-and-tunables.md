@@ -238,7 +238,8 @@ Rescoring can promote a plausible-in-context wrong word. Bounds, in order of for
 **What exists cannot measure this.** All current accuracy evidence is context-free
 isolated words:
 
-- the FUTO replay corpus runs (`scripts/run_futo100k_fixed.sh`, the per-language λ sweep
+- the FUTO replay corpus runs (`scripts/run_futo100k_fixed.sh` — deleted 2026-08-28 per
+  ARC-047, its neural models went with ADR-011; the per-language λ sweep
   in `docs/eval/2026-08-15-ctc-per-language-lambda.md`) — single `{word, trace}` rows;
 - the local combined-corpus replay (`scripts/build_local_corpus_replay.mjs`) — emits
   `{word, w, h, pts}` lines, by design (`:31-40` of the script);

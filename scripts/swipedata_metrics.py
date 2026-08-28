@@ -2,6 +2,11 @@
 """swipedata_metrics.py — aggregate top-1/3/5 metrics from the harness --out
 per-trace cache(s) produced by tools/test_cli_predict.py over swipedata.
 
+HISTORICAL (2026-08-28, ARC-047): the producing harness was DELETED — its
+swipe_{encoder,decoder}_android.onnx models went with ADR-011. This aggregator
+only reads already-written caches under ~/.cache/cleverkeys-test/; no new ones
+can be produced.
+
 Each record: {"word","len_stratum","raw_top5","raw_rank","filt_top5","filt_rank",
               "prod_top5","prod_rank"}   (rank 0 = top-1 correct, -1 = miss)
 

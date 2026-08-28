@@ -33,9 +33,9 @@ import org.junit.Test
  *
  * ## Geometry source (DOCUMENTED, per spec deliverable — reconciled with evidence)
  * The `qwerty_english` grid geometry is defined in the repo at
- * `tools/test_cli_predict.py` / `tools/test_cli_predict.ts` (the `QWERTY_KEYS` centroid
- * table) and `model/train_character_model.py` (`KeyboardGrid`, loading
- * `data/data_preprocessed/gridname_to_grid.json`). All three agree on the SAME per-key
+ * `tools/test_cli_predict.ts` (the `QWERTY_KEYS` centroid table) and
+ * `model/train_character_model.py` (`KeyboardGrid`, loading
+ * `data/data_preprocessed/gridname_to_grid.json`). Both agree on the SAME per-key
  * PIXEL centroids, laid out on a 36 px horizontal / 59 px vertical pitch:
  * ```
  *   q(18,34) w(54,34) e(90,34) r(126,34) t(162,34) y(198,34) u(234,34) i(270,34) o(306,34) p(342,34)
@@ -50,10 +50,12 @@ import org.junit.Test
  * ### Canvas reconciliation (evidence-checked, per the GEOMETRY CAUTION)
  * Measured extents across all 8,607 traces: x ∈ [0.87, 360.00], y ∈ [0.00, 215.00].
  * The canonical grid canvas is therefore **360 × 215 px** (bottom-row centroid 152 +
- * half key height). The `/280` divisor in `test_cli_predict.py`'s `extractFeatures` is an
+ * half key height). The `/280` divisor in `test_cli_predict.ts`'s `extractFeatures` is an
  * unrelated NEURAL-MODEL input squash (it just maps px into a [0,1)-ish band the encoder
  * was trained on) — it is NOT the geometric coordinate frame and is deliberately ignored
- * here. Geometry validated by two independent evidence checks BEFORE the full grid run:
+ * here. (The `.py` twin of that runner was deleted 2026-08-28, ARC-047 — its models went
+ * with ADR-011. The `.ts` copy is retained precisely because it carries this table.)
+ * Geometry validated by two independent evidence checks BEFORE the full grid run:
  *  - START-key nearest-match 73.0% / END-key 66.1% — LOWER than FUTO's 94.7% start match,
  *    but the median start-point distance to the true first-key centroid is only 14.3 px
  *    (< the 36 px key pitch) and the misses are to ADJACENT keys (`d`→`f`, `e`→`r`). This

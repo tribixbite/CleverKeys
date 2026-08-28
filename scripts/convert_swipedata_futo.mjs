@@ -5,10 +5,14 @@
  *   schema: {"word", "points":[{"t","x","y"}], "id", "session", "timestamp", "source"}
  *   coords already normalized to ~[0,1] over the FUTO qwerty canvas; t = real ms.
  *
- * → the {word, w, h, id, pts:[[nx,ny,t],...]} gzipped cache the existing harness
- *   (tools/test_cli_predict.py --corpus --frame-remap futo) consumes. --frame-remap
- *   futo ignores w/h for coordinates (x=360*nx, y=4.5+177*ny), so w/h are provenance
+ * → the {word, w, h, id, pts:[[nx,ny,t],...]} gzipped cache the neural harness
+ *   (tools/test_cli_predict.py --corpus --frame-remap futo) consumed. --frame-remap
+ *   futo ignored w/h for coordinates (x=360*nx, y=4.5+177*ny), so w/h are provenance
  *   only; we pass nominal 360x189.
+ *
+ * NOTE (2026-08-28, ARC-047): that harness was DELETED — its
+ * swipe_{encoder,decoder}_android.onnx models went with ADR-011. The cache format is
+ * still the corpus interchange shape for the FUTO reference-decoder scripts.
  *
  * SEEDED random sample (mulberry32) with the SAME filters as fetch_futo_train100k.mjs:
  *   word lowercases to /^[a-z']+$/ (a-z + apostrophe), >= 3 points, non-empty.

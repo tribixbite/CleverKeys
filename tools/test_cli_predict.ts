@@ -4,7 +4,16 @@
  * Uses onnxruntime-web (WASM) for cross-platform execution
  * Updated for Android model architecture (250 seq len, actual_length)
  *
- * Run: bun tools/test_cli_predict.ts
+ * ⚠️ CANNOT RUN since ADR-011 (2026-08-18): it loads
+ * `swipe_{encoder,decoder}_android.onnx`, which were deleted with the neural engine
+ * (`src/main/assets/models/` now holds only `ctc_swipe_encoder.onnx`). Its Python twin
+ * `tools/test_cli_predict.py` and the shell drivers around it were deleted 2026-08-28
+ * (ARC-047). This file is RETAINED as the repo-authoritative record of the
+ * `qwerty_english` per-key pixel centroids (`QWERTY_KEYS` below) and the `/280`
+ * model-input squash — `GeoLocalCorpusReplayTest` and
+ * `scripts/build_local_corpus_replay.mjs` both cite it for that geometry.
+ *
+ * Run (historical): bun tools/test_cli_predict.ts
  */
 
 import * as ort from 'onnxruntime-web';
