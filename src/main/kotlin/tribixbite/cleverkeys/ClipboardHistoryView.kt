@@ -783,10 +783,18 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     fun paste_entry(pos: Int) {
         val entry = paginatedHistory[pos]
         if (entry.isMedia && entry.mediaPath != null) {
-            // Media entry — use commitContent to send to target app
-            val success = ClipboardHistoryService.pasteMedia(entry.mimeType, entry.mediaPath)
+            // Media entry — use commitContent to send to target app. The private marker
+            // rides along so the handler can refuse the system-clipboard fallback (ARC-001).
+            val success = ClipboardHistoryService.pasteMedia(
+                entry.mimeType, entry.mediaPath, entry.isPrivate
+            )
             if (!success) {
-                Toast.makeText(context, "Cannot paste media here", Toast.LENGTH_SHORT).show()
+                val msg = if (entry.isPrivate) {
+                    "This app doesn't accept direct media — private entries are never placed on the system clipboard"
+                } else {
+                    "Cannot paste media here"
+                }
+                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
             }
         } else {
             // Text entry — use standard commitText path

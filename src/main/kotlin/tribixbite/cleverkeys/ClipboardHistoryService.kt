@@ -843,8 +843,19 @@ class ClipboardHistoryService private constructor(ctx: Context) {
 
     interface ClipboardPasteCallback {
         fun paste_from_clipboard_pane(content: String)
-        /** Paste media content via commitContent (API 25+). Returns true if successful. */
-        fun paste_media_from_clipboard_pane(mimeType: String, mediaPath: String): Boolean = false
+        /**
+         * Paste media content via commitContent (API 25+). Returns true if successful.
+         *
+         * [isPrivate] threads the entry's #156 private marker to the implementation: for a
+         * private entry the system-clipboard fallback MUST fail rather than fall back
+         * (design §5.6 / ARC-001) — putting the media URI on the OS clipboard is exactly
+         * the exposure private copy exists to prevent.
+         */
+        fun paste_media_from_clipboard_pane(
+            mimeType: String,
+            mediaPath: String,
+            isPrivate: Boolean,
+        ): Boolean = false
     }
 
     companion object {
@@ -972,13 +983,13 @@ class ClipboardHistoryService private constructor(ctx: Context) {
 
         /** Send media content to the editor via commitContent (v4 media entries). */
         @JvmStatic
-        fun pasteMedia(mimeType: String, mediaPath: String): Boolean {
+        fun pasteMedia(mimeType: String, mediaPath: String, isPrivate: Boolean): Boolean {
             val cb = _service?._pasteCallback
             if (cb == null) {
                 android.util.Log.w("ClipboardHistory", "Cannot paste media - callback not initialized")
                 return false
             }
-            return cb.paste_media_from_clipboard_pane(mimeType, mediaPath)
+            return cb.paste_media_from_clipboard_pane(mimeType, mediaPath, isPrivate)
         }
 
         /**

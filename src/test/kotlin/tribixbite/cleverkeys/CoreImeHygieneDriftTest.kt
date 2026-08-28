@@ -102,6 +102,68 @@ class CoreImeHygieneDriftTest {
         ).that(violations).isEmpty()
     }
 
+    /**
+     * #148 / ARC-002: with word prediction AND swipe typing both disabled, the input view
+     * must still be the container hierarchy (with the suggestion strip collapsed to 0 height)
+     * — NOT the bare keyboard view. When `contentPaneContainer` is null, every pane opener in
+     * KeyboardReceiver (SWITCH_EMOJI / SWITCH_CLIPBOARD / SWITCH_GIF) takes its
+     * `setInputView(pane)` fallback and REPLACES the whole keyboard until the pane closes.
+     * Behavioral coverage needs a real view hierarchy (instrumented); this pins the shape.
+     */
+    @Test
+    fun predictionsDisabledStillBuildsTheContentPaneContainer() {
+        val setup = source("tribixbite/cleverkeys/PredictionViewSetup.kt")
+
+        assertWithMessage(
+            "PredictionViewSetup's predictions-disabled branch must not return the bare " +
+                "keyboard view with a null contentPaneContainer — that re-opens #148 " +
+                "(panes replace the keyboard instead of overlaying above it)."
+        ).that(setup).doesNotContain("SetupResult(keyboardView, null, null, null, null, null)")
+
+        val disabledBranch = setup.substringAfterLast("} else {").substringBefore("companion object")
+        assertWithMessage(
+            "The disabled branch must build the same container hierarchy via " +
+                "SuggestionBarInitializer.initialize (strip collapsed to 0 height)."
+        ).that(disabledBranch).contains("SuggestionBarInitializer.initialize")
+        assertWithMessage(
+            "The disabled branch must propagate the container/heights to the receiver " +
+                "(suggestionBarHeight = 0), or showContentPane/hideContentPane cannot work."
+        ).that(disabledBranch).contains(".propagateAll(")
+    }
+
+    /**
+     * #156 §5.6 / ARC-001: a PRIVATE media entry must never reach the system-clipboard
+     * fallback. commitContent is the only permitted delivery; when it fails (or on
+     * API < 25) the paste must FAIL for private entries — `setPrimaryClip` would hand the
+     * content to the foreground app, system processes and other clipboard managers, the
+     * exact exposure private copy exists to prevent. Behavioral coverage needs a real
+     * InputConnection (instrumented); this pins the guard's presence and ordering.
+     */
+    @Test
+    fun privateMediaEntriesNeverReachTheSystemClipboardFallback() {
+        val handler = source("tribixbite/cleverkeys/KeyEventHandler.kt")
+        val body = handler
+            .substringAfter("override fun paste_media_from_clipboard_pane(")
+            .substringBefore("private fun updateMetaState(")
+
+        val guardIdx = body.indexOf("if (isPrivate)")
+        assertWithMessage(
+            "paste_media_from_clipboard_pane must guard the fallback with `if (isPrivate)` " +
+                "(returning false) — removing it re-opens the private-media clipboard leak."
+        ).that(guardIdx).isAtLeast(0)
+        val clipIdx = body.indexOf("setPrimaryClip")
+        assertWithMessage(
+            "the isPrivate guard must run BEFORE the setPrimaryClip fallback."
+        ).that(clipIdx).isGreaterThan(guardIdx)
+
+        val view = source("tribixbite/cleverkeys/ClipboardHistoryView.kt")
+        val pasteEntry = view.substringAfter("fun paste_entry(").substringBefore("\n    }")
+        assertWithMessage(
+            "paste_entry must thread entry.isPrivate into ClipboardHistoryService.pasteMedia " +
+                "— dropping the argument silently restores the unconditional fallback."
+        ).that(pasteEntry).contains("entry.isPrivate")
+    }
+
     @Test
     fun noThreadSleepInPredictionCoordinator() {
         val text = source("tribixbite/cleverkeys/PredictionCoordinator.kt")

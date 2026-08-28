@@ -60,8 +60,6 @@ Ten line-by-line verification passes over the 26 docs archived to `docs/history/
 recovered **46 findings/optimizations that were tracked nowhere live**. Full deduped list with
 evidence: **`docs/audit/2026-08-28-archive-verification.md`** (IDs ARC-001..050). The P2s:
 
-- **ARC-001** private media rows can reach the OS clipboard — media-paste `setPrimaryClip`
-  fallback ungated for `is_private` (`KeyEventHandler.kt:204-217`); the promised §5.6 gate absent.
 - **ARC-005** `finger_occlusion_offset` dead on geometric (CTC-only despite engine-agnostic UI).
 - **ARC-006** `UnigramLanguageDetector` fed every commit, read by nobody; promised test absent.
 - **ARC-007** Termux deletion strategy (WP9 R-1 step 7) never decided, branches untested.

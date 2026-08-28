@@ -162,7 +162,11 @@ class KeyEventHandler(
      * then sends it to the target app via commitContent. Falls back to placing
      * the media URI on the system clipboard if commitContent fails.
      */
-    override fun paste_media_from_clipboard_pane(mimeType: String, mediaPath: String): Boolean {
+    override fun paste_media_from_clipboard_pane(
+        mimeType: String,
+        mediaPath: String,
+        isPrivate: Boolean,
+    ): Boolean {
         if (recv.isClipboardSearchMode()) {
             recv.exitClipboardSearchMode()
         }
@@ -199,6 +203,15 @@ class KeyEventHandler(
                     return true
                 }
                 Log.d(TAG, "commitContent returned false, falling back to system clipboard")
+            }
+
+            // #156 §5.6 / ARC-001: a PRIVATE entry must FAIL here, never fall back — the
+            // whole point of private copy is that the OS clipboard (readable by the
+            // foreground app, system processes and other clipboard managers) never sees
+            // the content. The caller surfaces "can't paste here" feedback.
+            if (isPrivate) {
+                Log.w(TAG, "commitContent unavailable for private media entry; refusing system-clipboard fallback")
+                return false
             }
 
             // Fallback: place media URI on system clipboard with read permission
