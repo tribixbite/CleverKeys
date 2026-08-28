@@ -69,10 +69,16 @@ log and the verification doc before re-deriving anything. Still open:
   recorded decision to delete `proguard-rules.pro`.
 - **ARC-012 (investigation)**: #79 settings header flicker — unreproduced; note the screen is
   `Column`+`verticalScroll`, NOT LazyColumn, so the old diagnosis is wrong.
-- **ARC-013 (measurement)**: UT-5 "doesnt"→"doesn't" top-1 rank and UT-7 sentence-start "I'd"
-  never re-measured post-contraction-rework; no sentence-start ranking signal exists.
-- **ARC-019 (measurement)**: run `CtcReplayEngine` against LOCAL combined (8,521 traces — the
-  corpus where geometric beat neural) + the geo SLOPPY tier; corpora in `~/.cache/cleverkeys-corpora/`.
+- **ARC-013 (half-closed 2026-08-28)**: UT-5 CLOSED — all contraction aliases decode at rank 0
+  on real + synthetic traces (`docs/eval/2026-08-28-arc019-ctc-local-head2head.md` §3). UT-7
+  (sentence-start "I'd", tap path) measured by the instrumented
+  `ContractionSentenceStartMeasureTest` — read its `UT7Measure` logcat from the next ew-cli run,
+  then decide on a post-period boost; no sentence-start ranking signal exists today.
+- **ARC-019 CLOSED 2026-08-28**: same-inputs head-to-head on LOCAL combined (4,526 traces):
+  CTC 90.7/95.4/96.1 vs geometric 63.0/75.2/78.3 top-1/3/5; geo-only recoveries 1.5%. The last
+  accuracy argument for geometric-on-Latin is gone. Synthetic tiers: CTC degrades more
+  gracefully than geometric (11.3 vs 19.6 pt TYPICAL→SLOPPY drop) but absolute synthetic levels
+  carry a timing artifact — full record in `docs/eval/2026-08-28-arc019-ctc-local-head2head.md`.
 - **ARC-044**: androidTest assertion quality — 271 `assertNotNull` / 0 `assertThat`; start with
   the 6 curated release-gate classes.
 - **ARC-045**: ~168 raw Compose `Text("…")` literals unextracted (LearningDataSection 21,

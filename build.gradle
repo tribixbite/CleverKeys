@@ -517,6 +517,9 @@ tasks.register('runPureTests', JavaExec) {
     // Real-corpus REPLAY on the (removed) transformer model's held-out combined-corpus test set
     // — kept as an evidence corpus (local-only, geoFull-gated)
     'tribixbite.cleverkeys.swipe.geometric.GeoLocalCorpusReplayTest',
+    // ARC-019 measurement — CTC vs geometric same-inputs head-to-head on the local corpus,
+    // CTC on the synthetic degradation tiers, UT-5 alias ranks (geoFull + cache + ORT gated)
+    'tribixbite.cleverkeys.swipe.geometric.CtcVsGeoLocalCorpusTest',
     // Phase 5 — synthetic traces + accuracy harness (PROVISIONAL floors)
     'tribixbite.cleverkeys.swipe.geometric.GeoTraceSynthesizerTest',
     'tribixbite.cleverkeys.swipe.geometric.GeoAccuracyQwertyEnTest',
