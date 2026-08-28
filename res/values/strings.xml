@@ -646,8 +646,14 @@
     <string name="multilang_primary_title">Primary Language</string>
     <string name="multilang_primary_desc">Main language for predictions and swipe decoding</string>
     <string name="multilang_secondary_title">Secondary Language</string>
+    <!-- ARC-018: the weight is TAP-ONLY on purpose. It multiplies a secondary-dictionary tap
+         candidate's unified score (WordPredictor), which competes in the same score domain as
+         the primary candidates. Swipe slates have no such domain: CtcRankMerger interleaves the
+         two decoders by RANK with fixed 1000/920 constants, and the geometric engine decodes a
+         single language. The scoping below is therefore a copy fix, not a behaviour change.
+         Translation debt: the 21 localized copies still carry the old unscoped wording. -->
     <string name="multilang_secondary_weight_title">Secondary Language Weight</string>
-    <string name="multilang_secondary_weight_desc">Prediction weight for secondary dictionary (0.5–1.5)</string>
+    <string name="multilang_secondary_weight_desc">Prediction weight for the secondary dictionary while typing (0.5–1.5). Swipe suggestions are unaffected.</string>
     <string name="multilang_auto_detect_title">Auto-Detect Language</string>
     <string name="multilang_auto_detect_desc">Automatically detect and switch languages while typing</string>
     <string name="multilang_detection_sensitivity_title">Detection Sensitivity</string>
