@@ -63,6 +63,26 @@ class GeoAccuracyDvorakEnTest {
         }
         val full = harness.stratifiedSample(GeoAccuracyHarness.FULL_SAMPLE_SIZE)
         val sloppy = harness.runGrid(full, GeoTraceSynthesizer.Tier.SLOPPY, GeoAccuracyHarness.FULL_SEEDS)
+
+        // ARC-030 — RECALL FIRST, deliberately: it is the ATTRIBUTION guard, and it is what
+        // makes the top-3 known-partial BELOW it honest. Asserting it first means a pruning
+        // regression is reported AS a pruning regression, instead of surfacing as one more
+        // point of the top-3 gap the known-partial narrative already excuses.
+        // Dvorak's SLOPPY gap is documented as SCORER-limited on the evidence
+        // that its prune-recall is HEALTHY (92.9% at Step-0, ≈ the 93.3% QWERTY control;
+        // 96.8% re-measured at HEAD 2026-08-28 after the inset + cap levers) — but nothing
+        // asserted that number. The shared
+        // SLOPPY floor (0.90) applies unmodified: Dvorak is a real shipping layout and gets
+        // no per-layout relief (research doc §3).
+        val recall = harness.pruneRecall(full, GeoTraceSynthesizer.Tier.SLOPPY, GeoAccuracyHarness.FULL_SEEDS)
+        println("[arc-030] en/Dvorak SLOPPY prune-recall = ${"%.1f".format(recall * 100)}% " +
+            "(floor ${GeoAccuracyThresholds.PruneRecall.SLOPPY})")
+        assertWithMessage(
+            "en/Dvorak SLOPPY prune recall (FINAL, shared floor — no per-layout relief). " +
+                "A failure here reclassifies the documented top-3 known-partial from " +
+                "SCORER-limited to PRUNER-limited and invalidates the OQ-8 follow-up plan"
+        ).that(recall).isAtLeast(GeoAccuracyThresholds.PruneRecall.SLOPPY)
+
         // KNOWN PARTIAL (see class KDoc): Dvorak SLOPPY top-3 (77.0% measured after the
         // 2026-07-20 fix, up from 75.4%) is ~1 pt below the shared 0.78 target. Dvorak is a
         // REAL shipping layout, so — per research doc §3 — its floor is NOT lowered and NO

@@ -204,6 +204,31 @@ object GeoAccuracyThresholds {
         const val CLEAN = 0.97
         const val TYPICAL = 0.97
         const val SLOPPY = 0.90
+
+        /**
+         * weird_custom SLOPPY — DOCUMENTED PER-LAYOUT FLOOR (same rationale as
+         * [Floors.WEIRD_SLOPPY_TOP3], and the reason the shared [SLOPPY] 0.90 above was
+         * only ever verified against en/QWERTY 93.4%).
+         *
+         * Step-0 measured this fixture at **80.2%** — 13 pts under the QWERTY control,
+         * the PRUNER-limited signature that selected the endpoint-inset fix. The inset
+         * (`endpointInsetKw = 0.30`) recovered it to **87.6%**. That recovery is the
+         * whole justification for the knob, and until ARC-030 NOTHING asserted it: both
+         * layouts that exercise it (weird, Dvorak) asserted TYPICAL recall only, so
+         * setting `endpointInsetKw = 0.0` would have gone green.
+         *
+         * Re-measured at HEAD on 2026-08-28 (full grid, n=2499): **90.3%** — the later
+         * levers (direction channel, `maxCandidatesScored` 1200) carried it a further 2.7 pts
+         * past the 87.6% recorded in the spec. It therefore now clears the shared 0.90 by
+         * 0.3 pt, which is far too thin a margin to hold an adversarial fixture to.
+         *
+         * Floor 0.85 sits between the un-inset 80.2% it must catch and the 90.3% it must
+         * tolerate. It stays below the shared 0.90 because this fixture is a deliberately
+         * hostile `scale="7"` column-misaligned grid no real user types on — it exists to
+         * prove the engine does not collapse on pathological geometry. NEVER apply it to a
+         * real layout.
+         */
+        const val WEIRD_SLOPPY = 0.85
     }
 
     /**

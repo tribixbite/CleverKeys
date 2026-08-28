@@ -78,6 +78,27 @@ class GeoAccuracyWeirdLayoutTest {
         }
         val full = harness.stratifiedSample(GeoAccuracyHarness.FULL_SAMPLE_SIZE)
         val sloppy = harness.runGrid(full, GeoTraceSynthesizer.Tier.SLOPPY, GeoAccuracyHarness.FULL_SEEDS)
+
+        // ARC-030 — RECALL FIRST, deliberately. This fixture is the PRUNER-limited one
+        // (Step-0: recall 80.2% vs the 93.3% QWERTY control), and `endpointInsetKw = 0.30`
+        // exists to recover it (→ 87.6% then; 90.3% measured at HEAD 2026-08-28 after the
+        // direction channel + cap levers). Until now only top-3 was asserted here, which is
+        // the WRONG instrument for a pruner regression twice over: it is bounded by this
+        // fixture's intrinsic 74.3% top-5 ceiling, and it cannot distinguish "the true word
+        // never reached the scorer" from "the scorer mis-ranked it" — the exact attribution
+        // question that drove the whole 2026-07-20 investigation. Measured empirically:
+        // zeroing endpointInsetKw drops top-3 to 65.9%, i.e. it clears the 0.66 floor's
+        // shoulder by 0.14 pt — one tuning tweak away from silently passing.
+        // Asserting recall BEFORE top-3 means a pruner regression is REPORTED as one.
+        val recall = harness.pruneRecall(full, GeoTraceSynthesizer.Tier.SLOPPY, GeoAccuracyHarness.FULL_SEEDS)
+        println("[arc-030] en/weird SLOPPY prune-recall = ${"%.1f".format(recall * 100)}% " +
+            "(floor ${GeoAccuracyThresholds.PruneRecall.WEIRD_SLOPPY})")
+        assertWithMessage(
+            "en/weird SLOPPY prune recall (documented per-layout fixture floor) — a drop " +
+                "here means the endpoint-inset dual-anchor bucketing stopped recovering " +
+                "this pruner-limited fixture: the true word is not reaching the scorer at all"
+        ).that(recall).isAtLeast(GeoAccuracyThresholds.PruneRecall.WEIRD_SLOPPY)
+
         // DOCUMENTED PER-LAYOUT FLOOR (research doc §3): the weird-custom fixture is a
         // deliberately hostile, `scale="7"` column-misaligned grid whose SLOPPY top-5
         // CEILING (even a perfect ranker) is 74.3%, so the shared 0.78 top-3 is
