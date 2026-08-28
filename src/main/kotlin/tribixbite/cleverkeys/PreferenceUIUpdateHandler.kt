@@ -67,10 +67,16 @@ class PreferenceUIUpdateHandler(
      * Reload language dictionaries if language settings changed.
      *
      * When the user changes pref_primary_language or pref_secondary_language, this reloads
-     * the tap-typing dictionaries and the contraction mappings. The swipe engines need no
-     * hook: the CTC adapter re-derives its merged lexicon from a content hash (so a language
-     * change invalidates it automatically) and the geometric engine rebuilds its template
-     * index per (layout, language).
+     * the tap-typing dictionaries and the contraction mappings, then asks the swipe engines
+     * to re-warm.
+     *
+     * The swipe engines are CORRECT without that last step — the CTC adapter re-derives its
+     * merged lexicon from a content hash and the geometric engine rebuilds its template
+     * index per (layout, language) — but they are not FAST: the rebuild happens lazily
+     * inside the first post-switch swipe, so the user pays the geometric engine's 150-400 ms
+     * Tier-A build (or the CTC session + trie build) on the decode thread, right after a
+     * deliberate mid-session toggle (ARC-014). `onStartInputView`'s prewarm does not cover
+     * it: the keyboard is already up and no new field is being started.
      *
      * @param key The preference key that changed
      * @since v1.1.86
@@ -139,6 +145,26 @@ class PreferenceUIUpdateHandler(
                     }
                     Log.i(TAG, "Multilang toggle changed - secondary dictionaries reloaded")
                 }
+            }
+
+            // ARC-014: re-warm the SERVING swipe engine after a mid-session language switch.
+            // Ordered after the reloads on purpose — reloadWordPredictorDictionary sets
+            // DictionaryManager.currentLanguage synchronously, and the prewarm reads exactly
+            // that to decide which (layout, language) pair to build. Called for the same
+            // three keys the reloads above handle, since each changes what the next swipe
+            // decodes against: primary is the geometric/CTC decode language, and secondary +
+            // the multilang master switch decide whether CTC builds a second trie.
+            //
+            // requestGeometricRewarm is the existing entry point (the Full Geometric
+            // Settings sliders use it): it no-ops when the service is not running, when
+            // swipe typing is off, when the router picks neither engine, or when the view is
+            // not laid out yet, and the warm-up itself runs in the adapter's BACKGROUND task
+            // slot so it can never cancel an in-flight decode. Repeats are cheap — a warm
+            // engine's warmUp is a cache hit, and a newer prewarm supersedes an older one.
+            if (key == "pref_primary_language" || key == "pref_secondary_language" ||
+                key == "pref_enable_multilang"
+            ) {
+                CleverKeysService.requestGeometricRewarm()
             }
         } catch (t: Throwable) {
             // Catch Throwable (not just Exception) to prevent OOM/Error from killing IME

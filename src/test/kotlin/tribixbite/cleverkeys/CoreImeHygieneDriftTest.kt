@@ -1075,4 +1075,58 @@ class CoreImeHygieneDriftTest {
                 "resurrect the one-language-at-a-time behaviour."
         ).that(adapter).doesNotContain("var dictionaryMemo:")
     }
+
+    /**
+     * ARC-014 — a mid-session language switch must re-warm the swipe engine.
+     *
+     * `prewarmGeometricEngine` had exactly two triggers: `onStartInputView` and the Full
+     * Geometric Settings knobs. Neither fires when the user toggles language from the
+     * keyboard itself (`Keyboard2View.togglePrimaryLanguage` writes prefs; the settings
+     * language selectors write the same prefs), so the engine kept the PREVIOUS language's
+     * index and the first swipe after the toggle paid the 150-400 ms Tier-A build
+     * synchronously on the decode thread — the exact cost the prewarm exists to remove.
+     *
+     * The hook belongs on the pref-change seam rather than in the toggle handlers: every
+     * route to a language change goes through it, and it is the point where the tap
+     * dictionaries have already been switched, so the prewarm reads the NEW language.
+     */
+    @Test
+    fun aMidSessionLanguageSwitchRewarmsTheSwipeEngine() {
+        val handler = source("tribixbite/cleverkeys/PreferenceUIUpdateHandler.kt")
+        val body = handler
+            .substringAfter("private fun reloadLanguageDictionaryIfNeeded(")
+            .substringBefore("companion object")
+
+        val reloadIdx = body.indexOf("reloadWordPredictorDictionary(")
+        val rewarmIdx = body.indexOf("CleverKeysService.requestGeometricRewarm()")
+        assertWithMessage(
+            "reloadLanguageDictionaryIfNeeded must ask the swipe engine to re-warm after a " +
+                "language change — otherwise the first swipe after a mid-session toggle " +
+                "rebuilds the template index in front of the user."
+        ).that(rewarmIdx).isAtLeast(0)
+        assertWithMessage(
+            "the re-warm must come AFTER the dictionary reload: reloadWordPredictorDictionary " +
+                "sets DictionaryManager.currentLanguage synchronously and the prewarm reads " +
+                "it — warming first would warm the language the user just left."
+        ).that(rewarmIdx).isGreaterThan(reloadIdx)
+
+        // The guard is anchored on the ARC-014 marker comment; keep them together.
+        val guard = body.substringAfter("// ARC-014").substringBefore("} catch (")
+        for (pref in listOf(
+            "pref_primary_language", "pref_secondary_language", "pref_enable_multilang",
+        )) {
+            assertWithMessage(
+                "the re-warm guard must cover '$pref' — it changes which (layout, language) " +
+                    "pair the next swipe decodes against."
+            ).that(guard).contains(pref)
+        }
+
+        val service = source("tribixbite/cleverkeys/CleverKeysService.kt")
+        assertWithMessage(
+            "requestGeometricRewarm must remain the single entry point and must delegate to " +
+                "InputCoordinator.prewarmGeometricEngine, which warms the SERVING engine " +
+                "(ctcPrewarmWarmsTheServingEngine) in the adapter's BACKGROUND slot. A " +
+                "direct warmUpAsync call here would bypass both properties."
+        ).that(service).contains("instance._inputCoordinator.prewarmGeometricEngine()")
+    }
 }
