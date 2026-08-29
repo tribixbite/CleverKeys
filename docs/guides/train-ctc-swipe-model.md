@@ -962,27 +962,25 @@ milestone for the reportable number.
 
 | Gate | Command | Bar | On miss |
 |---|---|---|---|
-| **G2 — training feasibility (the program go/no-go)** | `eval_beam.py --ckpt ckpt/best.pt --test data/val_hwsfuto.jsonl` (full, then confirm on test) | top-1 **within ~2 pt of the FUTO floor ≈ 77–79 %** (FUTO enc-only floor on test-2400: 79.25 t1 / 87.71 t3 / 89.58 t5; greedy anchor 43.96 %) — **see the ⚠ note under this table before treating that as an exact bar** | Iterate the recipe (ch/blocks, augmentation strength, lr, more data via §3b). A large miss means recipe, not idea — do not proceed to export. |
+| **G2 — training feasibility (the program go/no-go)** | `eval_beam.py --ckpt ckpt/best.pt --test data/val_hwsfuto.jsonl` (full, then confirm on test) | top-1 **within ~2 pt of the FUTO floor ≈ 77–79 %** (FUTO enc-only floor on test-2400: 79.25 t1 / 87.71 t3 / 89.58 t5, re-measured 79.29 post-apostrophe-fix — ⚠ note below; greedy anchor 43.96 %) | Iterate the recipe (ch/blocks, augmentation strength, lr, more data via §3b). A large miss means recipe, not idea — do not proceed to export. |
 | **Export parity** | `export_onnx.py` then `eval_beam.py --onnx ...` | <1e-4 max-abs vs torch, 100 % argmax agreement, val top-1 within ±0.1 pt of ckpt run | Fix export (op decomposition, fp32 everywhere) before anything downstream. |
 | **G3 — on-device latency** (app-side, post-guide) | commit-phase decode: 1 ONNX call + Kotlin beam 300 over the `en_enhanced`-derived trie | ≤ our neural engine's 100–300 ms/swipe (expected far under: one small NN call + pure-CPU beam) | Profile Kotlin beam; JNI beam only if it genuinely misses (spec open decision 4). |
-| **G4 — refinement head (phase 2, §11)** | ceiling-style eval with refined emissions + `CtcScoringParams.encoderDecoder` params | **≥ +4 pt** top-1 over our own enc-only on the same split (FUTO's measured lever: +5.88 pt — **approximate, see the ⚠ note below**) | Ship enc-only as long-word complement behind a router instead of as replacement (decision §3b). |
+| **G4 — refinement head (phase 2, §11)** | ceiling-style eval with refined emissions + `CtcScoringParams.encoderDecoder` params | **≥ +4 pt** top-1 over our own enc-only on the same split (FUTO's measured lever: +5.88 pt, pre-apostrophe-fix — see the ⚠ note below) | Ship enc-only as long-word complement behind a router instead of as replacement (decision §3b). |
 | **Golden-trace check** | `make_golden.py` output vs the committed Kotlin decode path | top-k words exact, scores within 1e-4 (CtcParityTest tolerances) | Any mismatch = contract violation (class order, blank index, softmax) — fix before shipping. |
 
-> **⚠ Every FUTO number on this page is CONSERVATIVE IN THE WRONG DIRECTION** (added
-> 2026-08-28, ARC-050). The 79.25 floor, the 84.83 ceiling and the +5.88 pt decoder lever
-> were all measured before the **2026-08-06 apostrophe-lexicon fix**
-> (`scripts/futo_decoder_eval.py:236-244`, commit `f29e956b`): the FUTO lexicon used to
-> *drop* apostrophe words rather than a-z-normalize them, making `don't / didn't / you're
-> / i've` unreachable to its beam while our a-z-aliased trie hit them. So the real FUTO
-> floor is **somewhat higher** than 79.25 — clearing G2 "by a hair" is weaker evidence
-> than the bar suggests. The corrected re-run was never performed and is not planned
-> (`docs/eval/futo-decoder-eval-notes.md` banner explains why).
+> **⚠ CORRECTED 2026-08-29 (second-pass verification): these bars are MEASURED-STABLE.**
+> The 2026-08-28 revision of this note claimed the post-apostrophe-fix re-run "was never
+> performed" — that was **false**. It was measured on 2026-08-06 (commit `3b94b2b2`,
+> recorded at `docs/eval/2026-07-24-test2400-head2head.md:144-157`): overall floor
+> **79.25 → 79.29**, ceiling **84.83 unchanged**. The apostrophe fix moved the contraction
+> subset dramatically (42.9 → 67.9 floor / 53.6 → 85.7 ceiling) but ~29k a-z possessive
+> forms entering the lexicon offset it — net +0.04 pt overall. **Clearing G2 means what it
+> says**; the FUTO floor is a sound gate for from-scratch runs (per-script models
+> included). The +5.88 pt G4 lever predates the fix but G4's own bar (≥ +4 pt over OUR
+> enc-only on OUR split) is self-referential and unaffected.
 >
-> It did not matter for the shipped model: the CTC encoder in the APK scored **89.31 t1**
-> (93.79 t3 / 94.50 t5) on the same test-2400 split — clear of both the stale floor and
-> the stale ceiling by margins far larger than any apostrophe correction. **Next
-> from-scratch runs (e.g. per-script models) should treat the FUTO floor as APPROXIMATE**
-> and gate against the shipped-CTC number instead.
+> The shipped CTC encoder scored **89.31 t1** (93.79 t3 / 94.50 t5) on the same test-2400
+> split — clear of both bars by a wide margin; it remains the better number to beat.
 
 Context for the bars: at floor-equivalent quality (~79 %) the engine already beats our
 shipped neural overall (74.62) and crushes it on 4+-char words (77.6 vs 67.0) but loses
@@ -1089,11 +1087,12 @@ original file also carries `rx`/`ry` half-extents of 0.05/0.1667 per key, unused
 | our removed neural engine (beam 6) | 74.62 | 89.45 | 67.00 | — |
 | our geometric SHARK2 | 67.50 | 69.33 | 66.56 | — |
 
-⚠ **stale** = pre-apostrophe-fix (2026-08-06, `scripts/futo_decoder_eval.py:236-244`); both
-FUTO rows understate FUTO on the contraction subset and the corrected re-run was never
-performed (§10 ⚠ note; `docs/eval/futo-decoder-eval-notes.md` banner). Treat them as
-approximate floors, not exact bars. The shipped-CTC row cleared them regardless and is the
-number a from-scratch replacement has to beat.
+⚠ **pre-apostrophe-fix** (2026-08-06, `scripts/futo_decoder_eval.py:236-244`) — but the
+post-fix re-run WAS measured (`3b94b2b2`; overall floor 79.25 → 79.29, ceiling unchanged;
+head2head `:144-157`), so these rows are stable exact bars: the contraction-subset shift is
+offset by the possessive forms the fix admits (§10 ⚠ note, corrected 2026-08-29). The
+shipped-CTC row cleared them regardless and is the number a from-scratch replacement has to
+beat.
 
 Source: `docs/eval/2026-07-24-test2400-head2head.md` via the decision doc §3; shipped-CTC
 row from the same file's 2026-08-08 addendum (`:185`) / `docs/specs/ctc-swipe-engine.md:402`.

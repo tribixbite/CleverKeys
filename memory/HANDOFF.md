@@ -69,13 +69,24 @@ story. Two habits came out of it and are worth keeping:
 The 2026-08-28 archive-verification pass recovered 52 findings (ARC-001..052); the 2026-08-28/29
 remediation waves (A–N, commits `31685cac..b12c4365`) fixed 45 of them plus the CI security-gate
 hardening, multiscript CTC (ru + imported Latin packs), R8, the reorg and the i18n extraction —
-every fix cites its ARC ID in its commit. **The ledger's "Backlog additions" section
-(ARC-053..078) is the complete open list with evidence**; this is the priority order:
+every fix cites its ARC ID in its commit. A **second line-by-line pass over all 27 archived
+docs (2026-08-29, ~900 instances re-verified by symbol)** added **ARC-079..098** and corrected
+two earlier ledger entries (ARC-050's annotation was false — fixed in both live docs; ARC-043
+is closed). **The open set = the ledger's ARC-053..078 + ARC-079..098 sections PLUS the
+unstruck earlier items ARC-027/028/029 (geo OQ backlog) and ARC-046 (web-demo regression gate +
+Tailwind vendoring — both halves confirmed untouched)**; this is the priority order:
 
 **Release-gated — must close before any v1.6.0 tag**
 - **ARC-053** maintainer soak of the MINIFIED release APK (R8 on since `37ed9804`; ew-cli does
-  NOT discharge this — it builds unminified debug). Pair with **ARC-062** (delete the dead
-  coroutines `META-INF/services` excludes in the same soak-covered change).
+  NOT discharge this — it builds unminified debug). SCHEDULE it, don't just intend it (the M-1
+  lesson). Pair with **ARC-062** (delete the dead coroutines `META-INF/services` excludes) and
+  **ARC-096** (lint has never seen the release variant — flip `checkReleaseBuilds` or add
+  `lintVitalRelease`) in the same soak-covered change. **ARC-090** (NOTICE must enumerate the
+  ru model) rides with the ARC-054 notes decision.
+- **ARC-079 (P2, new)** duplicate full-dictionary residency: `DictionaryManager`'s per-language
+  `WordPredictor` cache re-loads what `PredictionCoordinator` already loaded (~5-10 MB × up to
+  4 languages) with zero prediction consumers — plausible ARC-070 OOM contributor; delete or
+  unify, measure with the existing MemoryProbe mark.
 - **ARC-054** release-notes decision: main serves 8+ languages (ru val-only + eligible packs),
   the notes say seven. Pinned by `SERVED_BUT_NOT_YET_ANNOUNCED = {ru}`.
 
@@ -92,6 +103,17 @@ every fix cites its ARC ID in its commit. **The ledger's "Backlog additions" sec
   nonzero occlusion on a geometric layout, the collision-warning DIALOG rendering, Italian
   swipe, first-swipe warm-up, pre-v1.6.0 backup import, pre-v1.1.86 upgrade.
 - **ARC-070** long-run `MemoryProbe` + `dumpsys meminfo` (the unexplained 2026-08-17 OOM).
+
+**Second-pass P3 batch (ARC-080..089, evidence in the ledger's second-pass section)** —
+n-gram totals not persisted (probability inflation after restart, ARC-080); platform
+UserDictionary words invisible to swipe (081); dictionary-mutation trie-rebuild stall (082);
+transient CTC exception clears the bar with no geo retry (083); dead CGR plumbing ships (084);
+dead `swipe_correction_preset` control (085); layout-axis fallback invisible + unwritten layout
+authoring requirements (086); provenance sheet English-only ×21 (087); `KeyModifier.modify`
+unmemoized per frame (088); geometric spec pre-regeneration tables (089 — annotate only).
+LOW tail: ARC-091..095 (zip-slip-through-importer test, private-copy pins, legacy occlusion
+import decision, learned-data preview row, SuggestionBar recycling test), ARC-097
+(forRoutedEngine wire-or-delete), ARC-098 (finish reorg + phantom-keyboard2 tooling sweep).
 
 **Backlog (agent-executable, roughly by value)**
 - **ARC-067** the 21-locale translation pass (317 ARC-045 strings + wave strings + the two

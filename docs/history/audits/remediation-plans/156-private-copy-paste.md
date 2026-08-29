@@ -1,5 +1,17 @@
 # #156 Private Copy/Paste — Design Document
 
+> **✅ RESOLVED — IMPLEMENTED IN FULL (banner added 2026-08-29, second-pass archive
+> verification).** The "PROPOSED" status line below is historical. All six §10 "decisions
+> needed from the user" were decided and shipped: (1) exported activity, `enabled="false"`
+> until opt-in; (2) export exclusion = Option B with excluded-count notice; (3) schema V5
+> here / V6 reserved for at-rest encryption; (4) private copy has its OWN gate, independent
+> of `clipboard_history_enabled`; (5) sticky `is_private` OR-merge; (6) toolbar label
+> "CleverKeys: Private copy". **One correction:** §1's claim that the media-paste
+> `setPrimaryClip` fallback is "unreachable for private entries" was refuted — private
+> media rows ARE constructible, and the promised §5.6 gate was missing until ARC-001
+> (2026-08-28) added it, drift-pinned by `CoreImeHygieneDriftTest`. Verification residue:
+> ARC-095 (unpinned Decision-#4/sanitizer/listener assertions + the hostile-clipData test).
+
 **Status:** PROPOSED (design only — no code changes). Verified against source at commit `4ad8a536d`, 2026-07-17.
 **Issue:** #156 "[Feature]: Encrypted Clipboard" (EsterWings). The author's *primary* worry is ask (1): a normal copy puts plaintext on the Android OS clipboard, where the foreground app and system processes can read it. This doc designs the chosen first deliverable: **a copy path that stores selected text directly into CleverKeys' private clipboard history and never calls `setPrimaryClip`.**
 **Predecessors:** `156-at-rest-clipboard-encryption.md` (§7 sketched this feature; the user chose to build it FIRST), `security-backup-encryption.md` (shipped — encrypted exports exist, which §7 of this doc leans on).

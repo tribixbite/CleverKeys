@@ -315,3 +315,147 @@ the waves surfaced, deferred, or left gated — the complete open backlog for th
   sequence and are retracted here: "lockfile scoping healed the bloat" (refuted by the worktree
   experiment) — the durable lesson stands: AGP packages the FILESYSTEM, not the index; when an
   APK size jumps, `unzip -l` immediately, before theorizing.
+
+---
+
+## Second-pass verification — 2026-08-29, HEAD `26b1d820` (ARC-079..098 + corrections)
+
+**Method:** ten parallel line-by-line full re-reads of all 27 archived docs (7,470 lines),
+every item re-verified BY SYMBOL against live source (the reorg staled all archived line refs),
+with ARC-001..078 + CK-150 residuals as the tracked-baseline. ~900 finding-instances checked.
+**Result: zero P0/P1, one P2, ~20 P3/LOW misses — and two corrections to this ledger's own
+earlier entries.** Three docs verified fully clean twice (a11y plan, backup-encryption design,
+memory-phase table); the context-LM review-findings' 20/20 held under independent re-check.
+
+**Corrections to earlier ledger entries (the second pass auditing the first)**
+- **ARC-050's annotation was FALSE and has been fixed in both live docs**: the post-apostrophe
+  re-run WAS measured (`3b94b2b2`; overall floor 79.25→79.29, ceiling unchanged —
+  `2026-07-24-test2400-head2head.md:144-157` + val leg `:115-135`). The "never performed /
+  treat as approximate" wording actively mis-instructed the G2 gate for per-script runs;
+  `futo-decoder-eval-notes.md` and `train-ctc-swipe-model.md` now carry the measured result.
+- **ARC-043 is CLOSED** (verified: both `ModelLoader` EP docstrings match the XNNPACK-first
+  code; QNN stub replaced with an honest not-implemented note).
+- **The HANDOFF §0 "complete open list" claim was wrong**: ARC-027/028/029 (geo OQ backlog)
+  and **ARC-046** (web-demo regression gate + Tailwind vendoring — confirmed untouched by any
+  wave, both halves open) are open ARC-001..052 items the index omitted. §0 now says so.
+- Upgrades to archived docs' own records: 3-core-ime m-1 fully closed (not PARTIAL), m-4 fixed
+  at the root; Tier-1.1's 27-child trie fix is now *exercised in production* by ru's 31-letter
+  alphabet; custom-word fuzzy rescue (an ADR-011 accepted loss) was incidentally restored.
+
+**P2**
+- **ARC-079 — duplicate full-dictionary residency.** `DictionaryManager.setLanguage`
+  (`:150-174`) keeps a per-language `WordPredictor` cache that RE-loads the dictionary
+  `PredictionCoordinator` (`:124-135`) already loaded (~5–10 MB × up to 4 languages, the
+  file's own estimate). The cache has **no prediction consumer** — readers are `isLoading`,
+  `flushLearnedData`, `cleanup`, and the zero-caller `preloadLanguages()`. Instrumented by
+  `MemoryProbe.mark("wordPredictor.dictionaryManager")` but never adjudicated; plausible
+  ARC-070 OOM contributor. Fix: delete the cache (route isLoading/flush through the
+  coordinator's predictor) or make the coordinator source from the manager; measure.
+
+**P3**
+- **ARC-080 — n-gram denominators are not persisted; probabilities inflate after restart.**
+  `BigramStore.serialize` writes entries only; `loadInto` reconstructs the prefix total as the
+  SUM OF SURVIVORS, but caps (20 bigram / 10 trigram continuations) drop entries while
+  `word1Frequencies` counted all observations — so post-restart renormalization inflates
+  sibling probabilities (concrete: 4.95%→~7% crosses `MIN_LEARNED_PROBABILITY` 0.05). The
+  concurrency test deliberately stays under the cap. Fix: persist a totals map (absent ⇒
+  legacy summing) + a >cap round-trip test.
+- **ARC-081 — platform `UserDictionary.Words` entries are tap-only.** `WordPredictor` merges
+  provider+pref (`loadCustomAndUserWords`), but both swipe adapters read only the
+  `custom_words_<lang>` pref — a word added to the Android user dictionary completes on tap
+  and cannot be swiped on either engine, while the adapter KDoc reads as covering it. Decide:
+  feed a provider snapshot into `CtcLexiconMerge` (fingerprint must include it; use observed
+  frequency, not the 255 clamp) or document the exclusion in KDocs + spec.
+- **ARC-082 — post-dictionary-mutation trie rebuild stall.** The exec brief required
+  "background rebuild on mutation OR accept-and-document the one-swipe ~2 s stall"; neither
+  happened. Add-to-dictionary writes `custom_words_<lang>` → memo invalidates → next swipe
+  pays the full build on the decode thread. Fix: re-warm on the custom/disabled-words write
+  (mirror ARC-014) or record acceptance in the spec.
+- **ARC-083 — transient CTC decode exception clears the bar with no retry.**
+  `CtcEngineAdapter.decodeAsync`'s catch posts an empty slate; the dispatcher's fallbacks
+  cover latched-only failures, and its own comment names this exact gap. Fix: route a caught
+  decode exception to `performGeometricSwipeTyping`.
+- **ARC-084 — dead CGR plumbing ships.** `storeCGRPredictions` (`Keyboard2View`) has zero
+  callers; `_cgrPredictions` is permanently empty; the chain (getters,
+  `KeyboardDimensionsHelper.updateCGR/checkCGR`, two `CleverKeysService` hatches) is kept by
+  blanket `-keep {*;}` so R8 ships it — while CLAUDE.md/ADR-011 assert "no CGR". Delete
+  (~60 lines, 3 files).
+- **ARC-085 — `swipe_correction_preset` is a fully dead control.** The "Correction Style"
+  dropdown writes a pref NOTHING reads (UI plumbing only; zero hits in Config/predictors/
+  adapters). Predates the neural removal, so both sweeps' scopes missed it — the exact
+  responds-to-touch-changes-nothing class, 30 lines above the tombstone of the one they
+  caught. Delete (dropdown + 2 strings + state field) or wire.
+- **ARC-086 — layout-caused CTC→geometric fallback is invisible.** The fallback card gates on
+  LANGUAGE only; script-missing, a–z-incomplete (`latn_qwerty_az.xml` is live) and
+  corner-letter custom layouts fall back silently. AND no authoring doc anywhere states the
+  `script="latin"` + 26-center-letters requirement. Extend the card's predicate to the layout
+  axis + one authoring paragraph in the layout docs.
+- **ARC-087 — the provenance sheet is hardcoded English in 21 locales.** Every string the
+  long-press sheet renders is pure-Kotlin (`ProvenanceFormatter`, `provenanceNote`,
+  `explainBoost`) — invisible to the coverage drift test, not in ARC-045/067's scope, while
+  the *translated* marker description advertises the sheet. Extract via an Android-layer
+  label pass (the formatter takes pre-resolved strings).
+- **ARC-088 — `KeyModifier.modify()` unmemoized per label per frame** — the un-fixed second
+  half of the onDraw-allocation finding: `drawLabel`/`drawSubLabel` call it for every label
+  (1+≤8 per key) on every frame with no cache; with Shift latched the whole `applyShift`
+  chain re-runs. Memoize per (KeyValue, Modifiers) as the sibling fix did.
+- **ARC-089 — geometric spec quotes pre-regeneration accuracy.**
+  `geometric-swipe-engine.md:617-625` + `:700-721` carry the superseded fr/de/ru tables and
+  25k-lexicon figures; the corrected numbers live only in `GeoAccuracyThresholds.kt:26-52`
+  (fr SLOPPY top-3 85.5→80.6). Annotate — the re-measurement already exists (same class as
+  the ARC-050 lesson).
+- **ARC-090 — NOTICE under-enumerates shipped models.** Attribution names only
+  `ctc_swipe_encoder.onnx`; `ru_synth_v3_ch80_fp16w.onnx` ships since `da012ded` (same MIT
+  corpora — no rule violated). Additive fix per script model; do NOT alter the `:46-64` FUTO
+  lineage wording. Release-relevant beside ARC-054.
+
+**LOW / test-and-doc debt**
+- **ARC-091 — zip-slip is never exercised through an importer**: every importer test stubs
+  `getMediaFile` with an UNCHECKED pass-through, so the validation call and its
+  ordering-before-write have no regression guard (re-opens CK-150-034's exact gap); the
+  prescribed `clipboard_media/../evil`-through-`importClipboardHistoryZip` test was never
+  written.
+- **ARC-092 — private-copy unpinned assertions**: Decision #4's outcome (private copy works
+  with `clipboard_history_enabled=false` — zero test hits), sanitizer-on-private-path,
+  listener-fired, plus the hostile-clipData/EXTRA_STREAM PROCESS_TEXT case.
+- **ARC-093 — legacy fractional `finger_occlusion_offset` import** (v1.5.x float 12.5/40.0)
+  bypasses the −25..25 guard (`validateFloat` has no int-key branch) and silently clamps at
+  Config read. Fix is a DECISION: coerce fractional→`IntV(round)` to preserve calibrated
+  values, don't mechanically reject.
+- **ARC-094 — learned-data restore is invisible to the import preview**: bigrams/trigrams/
+  vocabulary merge with no count row while the flow's purpose is showing what changes.
+- **ARC-095 — no regression test for SuggestionBar view recycling** (`rebindSuggestionViews`
+  hot path; six legitimate `removeAllViews` sites would mask a re-introduced rebuild).
+- **ARC-096 — lint has never seen the release variant** (`checkReleaseBuilds = false`; both CI
+  invocations are debug) — material now that release is the only minified variant. Flip it or
+  add `lintVitalRelease` to the release gate; pair with the ARC-053 soak.
+- **ARC-097 — `SuggestionOrigin.forRoutedEngine` has zero production callers** while its KDoc
+  + 3 live docs claim it is the production mechanism (production passes enum literals). Wire
+  it from the two router branches or delete it and fix the four citations.
+- **ARC-098 — finish the R4 reorg + tooling sweep**: the `gesture/` cluster (7 files) and
+  Bridges/Initializers→`wiring/` (folds into ARC-072 R5) toward the <100-root milestone
+  (now 114); plus the phantom-`keyboard2` tooling sweep — 18 scripts + 
+  `tools/generate_compose_data.py` cite the never-existed tree (`verify_pipeline.sh` greps a
+  deleted file 16×, so it verifies nothing; `run-pure-tests.sh:39` carries an UNPINNED second
+  pure-test list naming deleted classes; `test-runtime.sh` probes deleted neural assets;
+  `strip-repo-history.sh` is a spent one-shot) — batch with ARC-076.
+
+**Appends to existing entries**
+- ARC-069 += the two never-tracked visual-approval gates: #35 light-mode pass of the Compose
+  settings screens; UT-1 Dictionary Manager in light + dark.
+- ARC-072 += `Keyboard2View` (1,968 ln, +178 since audit; pref writes + `startActivity` in the
+  render View), the `WordPredictor` size trend (2,335→2,671; the `Predictor` seam is unused
+  for decomposition), and the preview/receiver-extension halves (previewability is R4§2D's own
+  acceptance criterion).
+- ARC-073 += the doc-drift micro-bucket: CLAUDE.md:27-28 stale "in progress" block; ctc spec
+  FR-1's phantom `weight` term + ":1009 plan §7.3" cite; hybrid banner "§2c.1" + stale
+  `SwipeEngineRouter:41-44` ref; head2head `:165` invokes the ARC-047-deleted script; wp9
+  KDoc "IC:539"; 5 stale clipboard-doc source paths; unanchored "study §N" CTC KDocs; the
+  unreachable `len=` else-arm at the two Keyboard2View redaction sites; ARC-067 += the
+  provenance sheet (ARC-087), 3 raw `AutoCorrectionSection` sub-headers, and the
+  private-copy/backup feature strings.
+- Recorded as DECLINED (won't-fix): clipboard text dedup stays 32-bit `hashCode` (dedup SQL
+  also matches full content; note at the hash sites is the cheap disposition — and delete the
+  stale PENDING entry at `memory/clipboard-analysis.md:25-31`); `SECURITY.md`'s v1.0.0
+  example placeholder (inside a fenced sample report); `BackupPassphraseStore.PREF_WRAPPED`
+  absent from `INTERNAL_KEYS` (own prefs file, unread by exports — one-line note optional).

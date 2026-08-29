@@ -13,18 +13,21 @@
 > floor on FUTO, not a neutral estimate, and the understatement is concentrated in
 > apostrophe-form surface words — not spread evenly across the split.
 >
-> **The corrected re-run was never performed and is not planned.** FUTO stopped being a
-> decision input once CTC shipped and beat both the FUTO ceiling and the removed neural
-> engine on the same test-2400 split (**89.31 / 93.79 / 94.50** t1/3/5,
-> `docs/specs/ctc-swipe-engine.md:402`). Re-running the ExecuTorch proot harness to move a
-> baseline that no longer gates anything is not worth the hours.
+> **CORRECTION (2026-08-29, second-pass verification):** the 2026-08-28 revision of this
+> banner claimed "the corrected re-run was never performed" — **that was false.** The
+> post-fix re-run WAS measured on 2026-08-06 (commit `3b94b2b2`, caches
+> `~/.cache/cleverkeys-test/futo_decoder_test2400_{floor,ceiling}_fixed.jsonl`), recorded
+> in `docs/eval/2026-07-24-test2400-head2head.md:144-157`: overall floor **79.25 → 79.29**
+> and ceiling **84.83 → 84.83 (unchanged)** — the contraction subset moved 42.9 → 67.9
+> (floor) / 53.6 → 85.7 (ceiling), but ~29k a-z possessive forms entering the lexicon
+> offset it almost exactly. A corrected-lexicon val leg (9,918 rows: floor 78.84 /
+> ceiling 85.52) is at `:115-135` of the same doc.
 >
-> **Consequences for anyone using these as bars:** the 79.25 floor / 84.83 ceiling /
-> +5.88 pt decoder lever quoted in `docs/guides/train-ctc-swipe-model.md` (G2, G4,
-> Appendix B) are conservative-in-the-wrong-direction — a true FUTO floor is somewhat
-> higher, so clearing G2 by a hair is weaker evidence than it looks. Treat the FUTO floor
-> as **approximate** in any future from-scratch run (e.g. per-script models); prefer the
-> shipped-CTC number as the real bar to beat.
+> **Consequence: the G2/G4 bars in `docs/guides/train-ctc-swipe-model.md` are
+> MEASURED-STABLE, not "approximate"** — the apostrophe fix moved the overall floor by
+> +0.04 pt. Clearing G2 means what it says. The shipped-CTC row (**89.31 / 93.79 / 94.50**
+> t1/3/5, `docs/specs/ctc-swipe-engine.md`) remains the better bar to beat, but the FUTO
+> floor is a sound gate for from-scratch runs (per-script models included).
 
 Goal: run FUTO's OWN swipe decoder on our held-out test set
 (`~/storage/shared/swipedata/test_hwsfuto.jsonl`, 2,400 rows) and measure
