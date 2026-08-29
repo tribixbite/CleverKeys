@@ -522,7 +522,11 @@ implementation (evidence quoted in each commit's report). Fixed and reviewed:
   themselves have zero callers) — the exact ARC-084 shape, found during that deletion and
   deliberately left out of a shared-tree commit. Delete with `DeadPlumbingDriftTest` pins.
 - **ARC-100 (LOW)** — `NON_DEFAULTED_KEYS` stale rationale (see ARC-079 residual above).
-- **ENV (build infra, worth one commit when the tree is quiet)** — `gradle.properties` sets
+- **ENV — RESOLVED same day**: `scripts/gradle-guard.sh` landed (`0765473d`, concurrent
+  session) — device-wide flock singleton, bounded memory, `--no-daemon` + in-process Kotlin;
+  mandatory for ALL Gradle invocations per CLAUDE.md. Effect measured by the ARC-083 agent:
+  the same suites that took 20–45 min under daemon contention ran in ~2 min.
+- **ENV (superseded by the above, kept for the record)** — `gradle.properties` sets
   `org.gradle.jvmargs` WITHOUT `-Xmx`, so when the Kotlin daemon cannot start under memory
   pressure the in-process fallback runs in Gradle's small default heap and OOMs
   ("Not enough memory to run compilation"). Proven workaround:
@@ -530,3 +534,76 @@ implementation (evidence quoted in each commit's report). Fixed and reviewed:
   -Dkotlin.compiler.execution.strategy=in-process --max-workers=1`. Also recorded: under
   saturation, Kotlin `internal` visibility in an out-of-Gradle harness needs
   `-module-name CleverKeys_release` + `-Xfriend-paths`.
+
+---
+
+## Remediation wave R2 — 2026-08-29 (continuation; TDD, Fable-reviewed)
+
+- **ARC-083 FIXED** (`dbe9c0dc`) — new pure `swipe/CtcDecodeDelivery` seam classifies every
+  decode outcome DELIVER / DROP / FALL_BACK: cancellation (incl. interrupts surfacing through
+  native ORT as arbitrary exceptions — the disposition reads the thread's interrupt flag AFTER
+  the catch) drops silently instead of racing the newer swipe; transient failures fall back to
+  `performGeometricSwipeTyping` WITHOUT touching the per-asset latch (pinned); the previously
+  non-throwing empty-slate paths now raise `DecodeInputsUnavailable` and take the same route.
+  After the change no path inside the decode task answers with an empty slate. Rider
+  (`e4b01c54`): `CtcMultiLanguageInstrumentedTest.decodeBlocking` asserts `onDecodeFailure`
+  instead of waiting out a 60 s latch — compiled, runs on the next ew-cli pass.
+- **ARC-057 CLOSED** (`eac7594f`) — 32-frame emit-budget sweep over the EMISSION SURFACE
+  (post-projection: STRIP for en-JSON, `CtcAzProjection` for CKDT — ß→ss EXPANDS, `CtcScriptProjection`
+  for ru) of all 8 bundled lexicons + 4 contraction alias tables: **zero over-budget**.
+  Tightest headroom: it alias `dellelettroencefalogramma` 28/32; tightest real word de
+  `wirtschaftswissenschaften` 26/32. `MAX_FRAMES_EARLY_WARNING = 30` band makes the next
+  erosion a deliberate decision; negative controls cover both failure shapes (length AND the
+  CTC collapse rule) + anti-vacuous-green minimums + a ru-is-actually-Cyrillic assertion.
+- **ARC-072 slice 2 DONE** (`b081ee5c`) — per-POINTER capture at `onTouchDown` (each finger
+  captures its own snapshot; a latched-modifier pseudo-pointer must not freeze config
+  unboundedly, so no inheritance), Keyboard2View per-unit capture in measure/draw/geometry.
+  Slice 1's union missed `_config?.` reads → snapshot 28→35 fields (`swipe_trail_*`,
+  slider-speed). **`Config.edit {}`** is now the sanctioned direct-mutation form (bumps
+  `version`, republishes via the single `publishSnapshot()` write site); the
+  `InputBehaviorSection` hole is closed at the write site and
+  `noDirectWriteToASnapshotMirroredConfigField` reds any future one. Ratchet ceiling 31→30;
+  enumerated 22 direct-write sites — exactly one touched the read-model. Owed: instrumented
+  T13 `configChangeMidGesture_doesNotAffectTheGestureInFlight` (next ew-cli run). Residue
+  recorded in the plan doc (Theme.Computed live-Config per measure; two androidTest baseline
+  blocks that diverge snapshot from live fields).
+- **Contraction user-word guard TOTAL** (`6733f25d`, HANDOFF §1 deferral resolved) — read-side
+  `Locale.ROOT` fold consulted only by the REPLACE guard (`isUserWordIgnoringCase`); persisted
+  set semantics provably unchanged (the case-sensitivity pin was green before AND after);
+  every `userWords` write routed through one invalidating helper, structurally pinned; the
+  `CoreImeHygieneDriftTest` guard pin strengthened to require the folded accessor. Skill doc
+  §5/§11 updated in the same commit.
+- **ARC-081 + ARC-082 FIXED** (`732fd95e`, one commit — the re-warm trigger set IS the
+  invalidation set the fingerprint widens) — platform `UserDictionary` words now reach BOTH
+  swipe engines via pure `swipe/UserDictionarySnapshot` (provider read extracted from
+  WordPredictor's two near-identical private copies into `UserDictionaryWords` — tap and swipe
+  can no longer disagree); observed provider frequency passes through the existing
+  `coerceIn(1,255)` custom-word treatment, preference wins collisions; both adapters' formerly
+  byte-identical private memo-key hashers unified into `swipe/LexiconContentVersion` with the
+  provider fingerprint as a new input. Mutation re-warm: `SwipeRewarmScheduler` (400 ms
+  latest-wins window mirroring `REWARM_DEBOUNCE_MS`) fires from the pref keys AND the provider
+  observer into the existing ARC-014 prewarm path; mid-rebuild swipe behavior unchanged by
+  design (FOREGROUND decode cancels the prewarm — cited contract).
+
+**New items from wave R2**
+- **ARC-101 (LOW, decision)** — two sibling exact-match `isUserWord` sites left deliberately:
+  `SuggestionHandler:1923` (add-to-dictionary prompt re-prompts for a differently-cased stored
+  word) and `:2213` (EXACT_ADD lets a second casing be added). Both additive, not destructive;
+  folding them changes when UI appears — a UX decision, not a guard bug.
+- **ARC-102 (LOW, perf decision)** — the user-dictionary provider snapshot is read per lexicon
+  build (one binder query per decode, two under multilang): correctness-over-cache chosen
+  because any stale cache reintroduces ARC-081. Safe cache design recorded in `TODO(perf)` on
+  `UserDictionaryWords.snapshot` (epoch bumped by the descendant-registered observer; disabled
+  while the observer is not running). Unmeasured — pure JVM has no provider.
+- Cross-reference: `DictionaryManager.userWords` (and the new folded view derived from it) keep
+  their pre-existing absence of thread-safety; revisit if user-dictionary writes move off the
+  main thread (relevant to the ARC-081 threading).
+- Pre-existing, inherited not worsened: `GeometricEngineAdapter.dictionaryFor` region-subtag
+  TODO (`fr-CA` → `custom_words_fr-ca` vs CTC's normalization) now also covers the provider
+  locale query — latent, every producer feeds a bare code.
+
+**Verification owed on the next ew-cli run (adds to the standing list)**: T13 mid-gesture
+config-change test; the ARC-083 rider's `onDecodeFailure` assertion; an instrumented pass
+through the injectable `userDictionarySource` seam (adapter wiring is currently source-scan
+pinned only); an end-to-end typing test for the total user-word guard (mock-tier pinned today).
+Gates after R2: `runPureTests` **2034**, `runMockTests` **342**.

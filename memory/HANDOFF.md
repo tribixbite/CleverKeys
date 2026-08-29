@@ -18,8 +18,9 @@ geometric-removal section below for what is and is not established about it). **
 longer the whole membership**: since `05c0c25d` an imported LATIN language pack that measures
 a–z-typeable is served too (`CtcImportedPackSupport`), so `SUPPORTED.keys` is a lower bound and
 `CtcLanguageSupport.sourceFor`/`isSupported` is the answer.
-Gates: `runPureTests` **2006**, `runMockTests` **330** as of wave R1 2026-08-29 (was 1954/325
-at `aadb45d3`), `lintDebug` 0 errors, both compiles;
+Gates: `runPureTests` **2034**, `runMockTests` **342** as of waves R1+R2 2026-08-29 (was
+1954/325 at `aadb45d3`), `lintDebug` 0 errors, both compiles; ALL Gradle invocations now go
+through `scripts/gradle-guard.sh` (mandatory, see CLAUDE.md);
 `assembleRelease` builds minified (R8 on since `37ed9804`) and byte-deterministic.
 Last full instrumented run (ew-cli, Pixel7 API 34, 2026-08-29, run `30e9cd42` at `20ef0dae`):
 **1,449 tests, 6 red — all explained, none a code regression**: the 2 permanent by-design
@@ -103,25 +104,27 @@ Tailwind vendoring — both halves confirmed untouched)**; this is the priority 
   swipe, first-swipe warm-up, pre-v1.6.0 backup import, pre-v1.1.86 upgrade.
 - **ARC-070** long-run `MemoryProbe` + `dumpsys meminfo` (the unexplained 2026-08-17 OOM).
 
-**Second-pass P3 batch — wave R1 (2026-08-29, ledger §"Remediation wave R1") closed 079, 080,
-084, 085, 097.** Still open: platform UserDictionary words invisible to swipe (081);
-dictionary-mutation trie-rebuild stall (082); transient CTC exception clears the bar with no
-geo retry (083 — in flight); layout-axis fallback invisible + unwritten layout authoring
-requirements (086); provenance sheet English-only ×21 (087); `KeyModifier.modify` unmemoized
-per frame (088); geometric spec pre-regeneration tables (089 — annotate only); **ARC-099
-(new)** the dead `updateSwipePredictions`/`completeSwipePredictions`/`clearSwipePredictions`
-chain + its 3 `CleverKeysService` pass-throughs (~30 lines, ARC-084's exact shape).
+**Second-pass P3 batch — waves R1+R2 (2026-08-29, ledger §"Remediation wave R1"/"R2") closed
+079, 080, 081, 082, 083, 084, 085, 097, plus ARC-057 and the §1 user-word-guard deferral.**
+Still open: layout-axis fallback invisible + unwritten layout authoring requirements (086);
+provenance sheet English-only ×21 (087); `KeyModifier.modify` unmemoized per frame (088);
+geometric spec pre-regeneration tables (089 — annotate only); **ARC-099** the dead
+`updateSwipePredictions`/`completeSwipePredictions`/`clearSwipePredictions` chain + its 3
+`CleverKeysService` pass-throughs (~30 lines, ARC-084's exact shape).
 LOW tail: ARC-091..095 (zip-slip-through-importer test, private-copy pins, legacy occlusion
 import decision, learned-data preview row, SuggestionBar recycling test), ARC-098 (finish
-reorg + phantom-keyboard2 tooling sweep), **ARC-100 (new)** `NON_DEFAULTED_KEYS` stale
-rationale, and the `gradle.properties` missing-`-Xmx` build-infra fix (ledger §ENV).
+reorg + phantom-keyboard2 tooling sweep), **ARC-100** `NON_DEFAULTED_KEYS` stale rationale,
+**ARC-101** two sibling exact-match `isUserWord` UI sites (UX decision), **ARC-102**
+user-dictionary snapshot per-decode binder read (perf decision, safe-cache design in
+`TODO(perf)`). The `-Xmx` build-infra gap is RESOLVED by `scripts/gradle-guard.sh` (`0765473d`).
 
 **Backlog (agent-executable, roughly by value)**
 - **ARC-067** the 21-locale translation pass (317 ARC-045 strings + wave strings + the two
   stale-content fixes; details in the ledger and §3 below).
 - **ARC-064** wave-J untested edges: pack dual-decode, pack-on-non-Latin board, pack
-  contractions→trie injection. **ARC-057** 32-frame sweep for BUNDLED lexicons.
-  **ARC-058** trie-memo `size > 2` + second-ORT-session memory under 3-language rotation.
+  contractions→trie injection. (ARC-057 CLOSED — `eac7594f`, zero over-budget, 30-frame
+  early-warning band.) **ARC-058** trie-memo `size > 2` + second-ORT-session memory under
+  3-language rotation.
 - **ARC-044 (rest)** ~85 non-curated androidTest classes are still assertion-weak (curated six
   done, 141→223; NOTE: do NOT add Truth to androidTest — dependency-locked configs feed the
   Trivy gate; use JUnit+messages). **ARC-074** the unexercisable `catch (Throwable)` guard.
@@ -131,10 +134,10 @@ rationale, and the `gradle.properties` missing-`-Xmx` build-infra fix (ledger §
   `swipedata_metrics.py`. **ARC-066** `swipe_engine_mode_desc` reword (invalidates 21 locales
   deliberately).
 - **ARC-072** — live plan `docs/plans/2026-08-29-arc072-config-snapshot-and-composition-root.md`
-  (supersedes the archived R3/R5 where they disagree). Slice 1 DONE (`caee60dc`:
-  `ConfigSnapshot` read-model + Gesture/GestureClassifier, `ConfigSnapshotRatchetTest` ceiling
-  33→31); slice 2 (Pointers gesture-scoped + Keyboard2View frame-scoped capture) in flight;
-  slice 3 = Initializer collapse into `wiring/KeyboardComponentGraph` (+ ARC-098 fold-in).
+  (supersedes the archived R3/R5 where they disagree). Slices 1+2 DONE (`caee60dc`,
+  `b081ee5c`: read-model + per-pointer/per-frame capture + `Config.edit{}`; ratchet ceiling
+  33→30). NEXT: slice 3 = Initializer collapse into `wiring/KeyboardComponentGraph`
+  (+ ARC-098 fold-in). Owed from slice 2: instrumented T13 on the next ew-cli run.
   Later: SettingsActivity's 123 `mutableStateOf`, `CleverKeysService` static escape hatches,
   Keyboard2View pref-write extraction.
 - **ARC-063** narrow the blanket Compose/lifecycle/savedstate/coroutines keeps AFTER the first
@@ -393,6 +396,12 @@ strong — but "Colemak ≥ geometric" is an inference, not a measurement. Say i
    hyphen extraction that would have destroyed 73 native French words.
 
 ## Verification owed
+
+- **Added by waves R1+R2 (2026-08-29), for the NEXT ew-cli run**: `PointersGestureRoutingTest`
+  T13 (`configChangeMidGesture_doesNotAffectTheGestureInFlight`); the ARC-083 rider's
+  `onDecodeFailure` assertion in `CtcMultiLanguageInstrumentedTest`; an instrumented pass
+  through the injectable `userDictionarySource` seam (ARC-081 adapter wiring is source-scan
+  pinned only today); an end-to-end typing test for the case-total user-word guard.
 
 - **The ru CTC path has never run on a device.** `da012ded` ships the Russian encoder and routes
   Cyrillic, and every gate that could be checked without hardware is green — but no instrumented

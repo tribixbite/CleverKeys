@@ -53,12 +53,21 @@ ground truth at `3f92dfe0`; the archived plan's premises had drifted).
 
 ## Slices (each independently shippable, TDD-gated)
 
-- **Slice 1 (dispatched 2026-08-29):** create `ConfigSnapshot` + builder + `Config.snapshot`;
-  migrate `Gesture` + `GestureClassifier`; tests: hand-built snapshot drives both classes with
-  NO global Config init (testability proof), refresh-rebuild coherence, the ratchet test.
-- **Slice 2:** `Pointers` gesture-scoped capture + `Keyboard2View` frame-scoped capture.
-  **BLOCKED until the ARC-084 CGR deletion in Keyboard2View lands** (same file, concurrent
-  agent). Review by Fable before merge — this is the touch hot loop.
+- **Slice 1 DONE** (`caee60dc`): `ConfigSnapshot` (28 fields) + `Config.snapshot` rebuilt at
+  refresh() tail; `Gesture` (per-gesture constructor capture) + `GestureClassifier` (per-call
+  arg; Context param deleted) migrated; `ConfigSnapshotRatchetTest` ceiling 33→31.
+- **Slice 2 DONE** (`b081ee5c`): per-POINTER capture at `onTouchDown` (each finger captures its
+  own snapshot — a latched modifier pseudo-pointer must not freeze config unboundedly, so no
+  inheritance); `Keyboard2View` per-unit capture in onMeasure/onDraw/geometry paths. Slice 1's
+  union missed `_config?.` reads — snapshot 28→35 fields (`swipe_trail_*`, slider-speed).
+  **`Config.edit {}`** added: the sanctioned direct-mutation form — applies the write, bumps
+  `version`, republishes via the single `publishSnapshot()` write site; the
+  `InputBehaviorSection` stale-write hole is closed at the write site and
+  `noDirectWriteToASnapshotMirroredConfigField` reds any future one. Ceiling 31→30 (Pointers'
+  two static slider-speed helpers deleted). Owed: instrumented T13
+  (`configChangeMidGesture_doesNotAffectTheGestureInFlight`) runs on the next ew-cli pass;
+  later-slice residue recorded: `Theme.Computed(_theme, _config, …)` per-measure, androidTest
+  direct-write baseline blocks (GeometricSwipeOracleTest:211, PipelineCharacterizationTest:169).
 - **Slice 3 (R5 + ARC-098 fold-in):** retire the 6 `*Initializer` files (841 ln) into
   `wiring/KeyboardComponentGraph` (lazy-built, dependency-ordered, one readable file); move the
   4 kept Bridges into `wiring/` in the same change (they remain — genuine delegation seams).
