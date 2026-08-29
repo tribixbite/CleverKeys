@@ -13,7 +13,7 @@ what was done; this file is only what is left. Anything below is open.
 Swipe is **CTC (default) + geometric**; the neural engine was deleted 2026-08-18
 (`a7d03bc8`..`83220634`), −26.4 MB APK. `CtcLanguageSupport.SUPPORTED` is **seven** languages:
 en/fr/de/es test-validated, it/pt/sv `PROVISIONAL` (scale-transferred, no per-language bar).
-Gates: `runPureTests` **1866**, `runMockTests` **325**, `lintDebug` 0 errors, both compiles.
+Gates: `runPureTests` **1882**, `runMockTests` **325**, `lintDebug` 0 errors, both compiles.
 Last full instrumented run (ew-cli, Pixel7 API 34, 2026-08-28, run `2ca8b7c9` at `6d67a7c8`):
 **1,430 tests, 3 red — all explained, none a code regression**: 2 `CtcOnnxLatencyBenchmarkTest`
 reds that are BY DESIGN whenever the ctc_bench models are not staged (`3fcbf7b8`; restore via
@@ -62,20 +62,27 @@ recovered 48 untracked findings; **41 were fixed the same day** across seven imp
 waves (commits `31685cac`..`fee6bd4d` + wave commits; every fix cites its ARC ID). Consult git
 log and the verification doc before re-deriving anything. Still open:
 
-- **ARC-007 (decision needed)**: Termux deletion strategy (WP9 R-1 step 7) — keep
-  `SuggestionHandler`'s key-event deletion branches (`:1092,1195,1586,1649,2220`-era sites) or
-  unify on `deleteSurroundingText`; a dedicated Termux instrumented test is owed either way.
 - **ARC-008 (soak-gated)**: R8/ProGuard still disabled (`build.gradle` "REPRODUCIBILITY TEST"
   comment); re-enable needs a reflection-keep audit + full ew-cli soak + internal release, or a
   recorded decision to delete `proguard-rules.pro`.
 - **ARC-012 (investigation)**: #79 settings header flicker — unreproduced; note the screen is
   `Column`+`verticalScroll`, NOT LazyColumn, so the old diagnosis is wrong.
-- **ARC-013 MEASURED 2026-08-28** (`docs/eval/2026-08-28-arc019-ctc-local-head2head.md` §3-4):
-  UT-5 CLOSED (all aliases rank 0). UT-7 was never a ranking problem — `im`/`ill` contraction
-  already LEADS the bar; the defect is `id` gets NO injection at all (`i'd` absent — needs a
-  paired `id → i'd` contraction-data decision per `.claude/skills/contraction-system.md`, NOT a
-  sentence-start boost). NEW small finding from the same run: typed `ill` shows `I'll` TWICE
-  (ranks 0+1) — two injection paths, no dedup.
+- **ARC-013 FIXED 2026-08-29, awaiting device confirmation.** UT-5 closed 2026-08-28; UT-7's two
+  measured defects are fixed in code and both root causes turned out NOT to be what the
+  measurement doc guessed. (a) `id → i'd` was never missing from the DATA —
+  `contraction_pairings.json` has carried it all along; the tap path's inline
+  `partial.length >= 3` paired-injection floor excluded the only two-letter I-contraction base.
+  The floor now lives in `ContractionInjectionPolicy`, which admits first-person contractions at
+  two characters and nothing else — verified against the shipped table as **exactly one** base
+  changing. No data change, so no regeneration and no new collision sidecar. (b) the doubled
+  `I'll` was not two injection paths but ONE list holding the variant twice:
+  `ContractionManager.loadPairedContractions` merged `contraction_pairings.json` on top of the
+  binary-derived pairs with a blind `add()`, and the two sources overlap on **599** of 2,258
+  bases (every doubled possessive too: `times → time's` twice). Deduped at the loader plus a
+  final-list guard in `SuggestionHandler`. **Next ew-cli run must confirm on-device**:
+  `ContractionSentenceStartMeasureTest` (now PINS `i'd` present for typed `id`, the literal `id`
+  surviving alongside it, and no duplicate surface for typed `ill`) and
+  `ContractionFlickerTest`'s rewritten prefix-guard cases.
 - **ARC-019 CLOSED 2026-08-28**: same-inputs head-to-head on LOCAL combined (4,526 traces):
   CTC 90.7/95.4/96.1 vs geometric 63.0/75.2/78.3 top-1/3/5; geo-only recoveries 1.5%. The last
   accuracy argument for geometric-on-Latin is gone. Synthetic tiers: CTC degrades more
@@ -92,6 +99,11 @@ log and the verification doc before re-deriving anything. Still open:
   `docs/history/audits/remediation/5-architecture.md`.
 - **ARC-049 (device)**: one long-run `MemoryProbe` + `dumpsys meminfo` on a current build to
   close the unexplained 2026-08-17 OOM.
+
+**Written 2026-08-29, never executed on a device** — the next ew-cli run is their first:
+`TermuxDeletionInstrumentedTest` (7 cases; ARC-007's owed test — Termux vs ordinary-app control
+for REPLACE deletion, typed-partial deletion and delete-last-word) and the flipped
+`ContractionSentenceStartMeasureTest` / `ContractionFlickerTest` contraction cases above.
 
 **Verified by the 2026-08-28 full ew-cli run** (all green): ARC-023 cold-build budget
 (3,162 ms), the provenance UI cases (14/14 `ClipboardPanelPrivateBadgeTest`), base64

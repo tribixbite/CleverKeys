@@ -53,6 +53,12 @@ class SuggestionHandler(
         private const val TAG = "SuggestionHandler"
 
         /**
+         * The Termux terminal's package name — the single detection point for every
+         * key-event deletion branch. See [isTermuxEditor] for the ARC-007 decision record.
+         */
+        const val TERMUX_PACKAGE = "com.termux"
+
+        /**
          * L5: how many chars to read before a parked cursor for next-word
          * context — enough for the [LearningGate.CONTEXT_WINDOW] trailing
          * words plus the sentence tail they sit in.
@@ -262,6 +268,46 @@ class SuggestionHandler(
         val languages: List<String>?,
         val promotedIndex: Int?,
     )
+
+    /**
+     * True when the editor we are typing into is the Termux terminal.
+     *
+     * ## ARC-007 — the Termux deletion strategy, DECIDED 2026-08-29: KEEP the key-event branches
+     *
+     * WP9 R-1 step 7 (`docs/history/audits/remediation/3-core-ime.md:157`) deferred a
+     * keep-vs-unify decision: every other app has its typed text removed with
+     * `InputConnection.deleteSurroundingText`, while five sites in this class branch to key
+     * events when this returns true — four `KEYCODE_DEL` deletions ([onSuggestionSelected]'s
+     * swipe-REPLACE and typed-partial branches, [handleExactWordAdd], [handleAutocorrectUndo])
+     * plus [handleDeleteLastWord]'s Ctrl+W. The decision is **keep**, and the reason is that the
+     * two cases are not the same operation wearing different clothes:
+     *
+     *  - A terminal has **no editable text buffer**. `deleteSurroundingText` is defined against a
+     *    document with a cursor and surrounding characters; behind a pty there is no document to
+     *    delete from — the "text" is whatever the foreground program echoed, and only that program
+     *    (shell line editor, vim, less) decides what a deletion means. Termux synthesizes an
+     *    InputConnection over that, so the surrounding-text contract is best-effort at most.
+     *  - A `KEYCODE_DEL` event **is** the terminal's native vocabulary. It travels the same route
+     *    as a hardware backspace, reaches the pty as the erase character, and the line editor
+     *    applies it with the semantics the user already expects from that program.
+     *
+     * Unifying would therefore trade a path that works for one that is untested against every
+     * program a user can run inside the terminal, for no user-visible benefit. The branches are
+     * cheap (five `if`s over one detection point), self-contained, and now covered by
+     * `TermuxDeletionInstrumentedTest`, which is the test step 7 demanded.
+     *
+     * **Reversible**: if a future Termux release documents real `deleteSurroundingText` support,
+     * the decision can be revisited — the evidence needed is a Termux run showing the IC path
+     * deleting correctly under a line editor, not just in the default shell prompt.
+     *
+     * The `try`/`catch` is retained from the six hand-rolled copies this replaced: [EditorInfo]
+     * arrives from another process and a hostile/broken one must not take the IME down.
+     */
+    private fun isTermuxEditor(editorInfo: EditorInfo?): Boolean = try {
+        editorInfo?.packageName == TERMUX_PACKAGE
+    } catch (e: Exception) {
+        false
+    }
 
     private fun replaceModeContractionFor(word: String): String? {
         val mapping = contractionManager.getNonPairedMapping(word) ?: return null
@@ -857,11 +903,7 @@ class SuggestionHandler(
      * Termux, empty context) or nothing clears the confidence floor.
      */
     private fun generateNextWordCandidates(editorInfo: EditorInfo?): List<NextWordPredictor.Candidate>? {
-        val inTermuxApp = try {
-            editorInfo?.packageName == "com.termux"
-        } catch (e: Exception) {
-            false
-        }
+        val inTermuxApp = isTermuxEditor(editorInfo)
         val contextWords = contextTracker.getContextWords().toList()
         if (!NextWordPredictor.shouldShow(
                 featureEnabled = config.next_word_prediction_enabled,
@@ -1042,11 +1084,7 @@ class SuggestionHandler(
         ic?.let { inputConnection ->
             try {
                 // Detect if we're in Termux for special handling
-                val inTermuxApp = try {
-                    editorInfo?.packageName == "com.termux"
-                } catch (e: Exception) {
-                    false
-                }
+                val inTermuxApp = isTermuxEditor(editorInfo)
 
                 // #151: URI/email/password/number fields never get cursor-sync
                 // (shouldSyncForInputType skips them), so deletion counts from the
@@ -1403,11 +1441,7 @@ class SuggestionHandler(
         editorInfo: EditorInfo?,
         contextOverride: List<String>? = null
     ) {
-        val inTermuxApp = try {
-            editorInfo?.packageName == "com.termux"
-        } catch (e: Exception) {
-            false
-        }
+        val inTermuxApp = isTermuxEditor(editorInfo)
         val contextWords = contextOverride ?: contextTracker.getContextWords().toList()
         if (!NextWordPredictor.shouldShow(
                 featureEnabled = config.next_word_prediction_enabled,
@@ -1589,11 +1623,7 @@ class SuggestionHandler(
         val currentWord = contextTracker.getCurrentWord()
         if (currentWord.isNotEmpty() && ic != null) {
             // Detect Termux
-            val inTermuxApp = try {
-                editorInfo?.packageName == "com.termux"
-            } catch (e: Exception) {
-                false
-            }
+            val inTermuxApp = isTermuxEditor(editorInfo)
 
             if (inTermuxApp) {
                 // Termux: Use backspace key events
@@ -1649,11 +1679,7 @@ class SuggestionHandler(
 
         ic?.let { inputConnection ->
             // Detect Termux
-            val inTermuxApp = try {
-                editorInfo?.packageName == "com.termux"
-            } catch (e: Exception) {
-                false
-            }
+            val inTermuxApp = isTermuxEditor(editorInfo)
 
             // Delete the autocorrected word + trailing space
             val deleteCount = correctedWord.length + 1 // Word + space
@@ -1780,11 +1806,7 @@ class SuggestionHandler(
 
                     // Auto-correct the typed word if feature is enabled
                     // DISABLED in Termux app due to erratic behavior with terminal input
-                    val inTermuxApp = try {
-                        editorInfo?.packageName == "com.termux"
-                    } catch (e: Exception) {
-                        false
-                    }
+                    val inTermuxApp = isTermuxEditor(editorInfo)
 
                     // Issue #72: Auto-capitalize "I" words when completed
                     // Check BEFORE autocorrect so this works even if autocorrect is disabled
@@ -2248,15 +2270,12 @@ class SuggestionHandler(
         if (ic == null) return
 
         // Check if we're in Termux - if so, use Ctrl+Backspace fallback
-        val inTermux = try {
-            editorInfo?.packageName == "com.termux"
-        } catch (e: Exception) {
-            Log.e(TAG, "DELETE_LAST_WORD: Error detecting Termux", e)
-            false
-        }
+        val inTermux = isTermuxEditor(editorInfo)
 
         // For Termux, use Ctrl+W key event which Termux handles correctly
         // Termux doesn't support InputConnection methods, but processes terminal control sequences
+        // (ARC-007: this is the fifth key-event branch the KEEP decision covers — see
+        // [isTermuxEditor]. Ctrl+W is the terminal's own kill-word, not an approximation of it.)
         if (inTermux) {
             vlog { "DELETE_LAST_WORD: Using Ctrl+W (^W) for Termux" }
             // Send Ctrl+W which is the standard terminal "delete word backward" sequence
