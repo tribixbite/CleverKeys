@@ -661,6 +661,12 @@ tasks.register('runPureTests', JavaExec) {
     // every real langpack in scripts/dictionaries/ (nl/id/ms/sw/tl 100%, tr 73%), and the
     // reimport-invalidates-everything fingerprint.
     'tribixbite.cleverkeys.swipe.ctc.CtcImportedPackSupportTest',
+    // ARC-057 (2026-08-29): the 32-frame emission budget swept over every BUNDLED lexicon —
+    // en's JSON under the strip policy, the six CKDT bins under the a-z projection, ru's pack
+    // under the Cyrillic projection, plus the injected contraction alias keys. A word needing
+    // more frames than the encoder emits is undecodable with NO error. Carries its own negative
+    // control, so a green sweep is evidence rather than a tautology.
+    'tribixbite.cleverkeys.swipe.ctc.CtcBundledLexiconEmitBudgetTest',
     // Context-LM persistence fix (audit 2026-08-06) — debounced write-back substrate,
     // language-keyed singleton BigramStore, UserVocabulary save-storm fix
     'tribixbite.cleverkeys.persist.DebouncedPersisterTest',
