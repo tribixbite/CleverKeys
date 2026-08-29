@@ -960,10 +960,20 @@ class CoreImeHygieneDriftTest {
                 "destroys a word the user explicitly added, in its own slot."
         ).that(direct).isEqualTo(0)
 
+        // Strengthened 2026-08-29: the read must be the CASE-FOLDED one. The exact-match
+        // `isUserWord` was probed in three casings (word / lowercase / capitalised), which a
+        // word stored as `DONT` and predicted as `dont` matched none of — so the guard read as
+        // present while a custom word was still destroyed in its own slot. Naming the total
+        // accessor here means reverting to the exact one fails this test instead of silently
+        // reopening the hole; it also still covers the original "the helper must actually
+        // consult the user dictionary" property, since there is no way to call it and not.
         assertWithMessage(
-            "the helper must actually consult the user dictionary — without this it is a " +
-                "pass-through and the pin above would be enforcing nothing"
-        ).that(helperBody).contains("isUserWord(")
+            "the helper must consult the user dictionary through the case-folded " +
+                "`isUserWordIgnoringCase` — with the exact-match `isUserWord` the guard is " +
+                "case-partial and a custom word stored in any other casing is rewritten by a " +
+                "contraction file (see DictionaryManager.isUserWordIgnoringCase for why the " +
+                "fold is read-side and the stored set stays case-sensitive)"
+        ).that(helperBody).contains("isUserWordIgnoringCase(")
     }
 
     /**

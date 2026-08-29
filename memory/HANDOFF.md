@@ -161,10 +161,11 @@ rationale, and the `gradle.properties` missing-`-Xmx` build-infra fix (ledger §
 
 - **Owed translations** for `collision_warning_title/body/examples` — English-only behind
   `tools:ignore="MissingTranslation"`.
-- **User-word guard is case-partial by design.** `replaceModeContractionFor` probes the word plus
-  its lowercase and capitalised forms, not a full case-insensitive match. Making it total means
-  giving `userWords` case-insensitive membership, which changes add/remove/dedup semantics for a
-  persisted user-owned set — its own change, not a side effect.
+- **RESOLVED 2026-08-29 — the user-word guard is now case-TOTAL** via a read-side fold
+  (`DictionaryManager.isUserWordIgnoringCase`, invalidated on every set mutation); the persisted
+  `userWords` keeps its exact case-sensitive add/remove/dedup semantics, pinned by
+  `ContractionUserWordGuardTest.storedUserWordsStayCaseSensitive`. Commit
+  `fix(contractions): make the user-word REPLACE guard case-total via a read-side fold`.
 - **Verb inversions** (`est-elle`, `a-t-on`) deferred with named landmines: `estelle` is a native
   word @16343, `aton` is ASK-attested, `entretemps` is a classifier misfire needing
   `FORCED_APPEND`.

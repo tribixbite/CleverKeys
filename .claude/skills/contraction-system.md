@@ -99,7 +99,10 @@ language (`loadLanguageContractions`); the bundled one is skipped entirely, not 
    that is a real word of another **active** language into the PAIRED bucket.
 3. **Selection time, imported packs** — `ContractionCollisionScanner.scan()` (§8).
 4. **Per lookup, user words** — `SuggestionHandler.replaceModeContractionFor()` refuses to REPLACE
-   a word in the personal dictionary.
+   a word in the personal dictionary. **Case-TOTAL since 2026-08-29**: it asks
+   `DictionaryManager.isUserWordIgnoringCase`, a `Locale.ROOT` fold derived from the word set and
+   invalidated on every mutation of it. The fold is READ-SIDE only — `userWords` still stores,
+   dedups and removes case-sensitively, so `Foo` and `foo` remain two user-owned entries.
 
 ### The measured casualties each guard prevents
 
@@ -265,7 +268,8 @@ guard.
 | a monolingual user is unaffected | `ContractionManagerTest` (instrumented) |
 | cache scope rejects a different language set | `ContractionCollisionScannerTest` (instrumented) |
 | every language selector rescans | `CoreImeHygieneDriftTest` |
-| no REPLACE lookup bypasses the user-word guard | `CoreImeHygieneDriftTest` |
+| no REPLACE lookup bypasses the user-word guard, and the guard reads the FOLDED accessor | `CoreImeHygieneDriftTest` |
+| the guard is case-total; the stored user-word set is still case-sensitive | `ContractionUserWordGuardTest` (mock) |
 | tap-path paired injection: floor + the one first-person exception, and the merged variant list holds no repeat | `ContractionInjectionPolicyTest` (pure) + `ContractionFlickerTest` (instrumented) |
 | `i'd` reaches the bar for typed `id`, `id` survives beside it, no duplicate surface for `ill` | `ContractionSentenceStartMeasureTest` (instrumented) |
 | injected key surfaces but never outranks a real word | `CtcContractionRankingTest` |

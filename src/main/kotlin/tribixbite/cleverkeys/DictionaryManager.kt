@@ -40,6 +40,20 @@ class DictionaryManager(private val context: Context) {
     private val userWords = mutableSetOf<String>()
     private var currentLanguage: String = "en"
 
+    /**
+     * Case-folded shadow of [userWords] — a READ-SIDE view, never the storage.
+     *
+     * [userWords] keeps exact, case-sensitive membership: a user who added both `Foo` and `foo`
+     * owns two entries, removing one leaves the other, and both persist verbatim. This view
+     * exists so [isUserWordIgnoringCase] can answer "did the user claim ANY casing of this
+     * string?" as a set lookup, without changing what is stored, added, removed or written back.
+     *
+     * `null` means "not computed" — which is also the state of a freshly allocated instance —
+     * so [mutateUserWords] can invalidate by assignment and the worst case of a missed read is a
+     * rebuild, never a stale answer.
+     */
+    private var foldedUserWordsCache: Set<String>? = null
+
     init {
         // Pre-v1.1.86 GLOBAL custom_words/disabled_words → the per-language `_en` keys.
         // Re-homed here 2026-08-18: this ran inside OptimizedVocabulary's load, which is
@@ -155,7 +169,7 @@ class DictionaryManager(private val context: Context) {
     fun addUserWord(word: String?) {
         if (word.isNullOrEmpty()) return
 
-        userWords.add(word)
+        mutateUserWords { add(word) }
         saveUserWords()
         if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Added '$word' to custom words for '$currentLanguage'")
     }
@@ -164,22 +178,72 @@ class DictionaryManager(private val context: Context) {
      * Remove a word from the user dictionary
      */
     fun removeUserWord(word: String) {
-        userWords.remove(word)
+        mutateUserWords { remove(word) }
         saveUserWords()
     }
 
     /**
-     * Check if a word is in the user dictionary
+     * Check if a word is in the user dictionary, EXACTLY as stored.
+     *
+     * This is the storage's own semantics and the right question for "is this string, as
+     * written, one the user added". For "did the user claim this word at all", which is what a
+     * destructive rewrite must ask, use [isUserWordIgnoringCase].
      */
     fun isUserWord(word: String): Boolean = word in userWords
+
+    /**
+     * True when the user dictionary holds [word] in ANY casing.
+     *
+     * The one consumer is `SuggestionHandler.replaceModeContractionFor`, guard #4 of the
+     * contraction system: a REPLACE-mode mapping SUBSTITUTES the display form and takes the
+     * typed word's slot, so it must not fire on a word the user added by hand. That question is
+     * about the word, not about its casing — someone who added `DONT` in caps has claimed the
+     * string just as firmly as someone who added `dont`, and rewriting either to `don't`
+     * destroys it in its own slot.
+     *
+     * It reads [foldedUserWordsCache] rather than folding the set on every lookup because the
+     * call sits on the typing hot path (every prediction, every keystroke); the fold is built
+     * once per mutation of the set, which happens only when the user adds, removes or clears a
+     * word, or the active language reloads.
+     *
+     * **Why [Locale.ROOT] and not the user's locale.** Locale-sensitive case pairs — Turkish
+     * dotless `ı`/`I`, Lithuanian accented `i` — would make the fold disagree with itself
+     * depending on the device locale, so `Foo` could be found under one locale and missed under
+     * another for the SAME stored set. `Locale.ROOT` is deterministic, and the languages that
+     * ship REPLACE-mode contraction data (en, fr, it, de, nl) contain no such pair, so nothing
+     * is lost by it. Do not "fix" this into a per-locale fold: it would make the answer depend
+     * on state that is not the word set.
+     */
+    fun isUserWordIgnoringCase(word: String): Boolean =
+        word.lowercase(Locale.ROOT) in foldedUserWords()
 
     /**
      * Clear the user dictionary
      */
     fun clearUserDictionary() {
-        userWords.clear()
+        mutateUserWords { clear() }
         saveUserWords()
     }
+
+    /**
+     * Mutate [userWords] and drop the derived case-folded view, together.
+     *
+     * Every write to the set goes through here so the two cannot drift. A new write site that
+     * skipped it would leave [isUserWordIgnoringCase] describing the previous contents —
+     * protecting a word the user deleted, or failing to protect one they just added — with no
+     * behavioural test necessarily noticing, which is why `ContractionUserWordGuardTest` also
+     * pins this structurally.
+     */
+    private fun mutateUserWords(block: MutableSet<String>.() -> Unit) {
+        userWords.block()
+        foldedUserWordsCache = null
+    }
+
+    /** The case-folded view, rebuilt on first read after any mutation. */
+    private fun foldedUserWords(): Set<String> =
+        foldedUserWordsCache
+            ?: userWords.mapTo(HashSet<String>(userWords.size)) { it.lowercase(Locale.ROOT) }
+                .also { foldedUserWordsCache = it }
 
     /**
      * Get the custom words key for current language.
@@ -195,15 +259,20 @@ class DictionaryManager(private val context: Context) {
     private fun loadUserWords() {
         val key = getCustomWordsKey()
         val jsonString = prefs.getString(key, null)
-        userWords.clear()
 
-        if (jsonString != null) {
-            try {
-                val type = object : TypeToken<MutableMap<String, Int>>() {}.type
-                val wordsMap: MutableMap<String, Int>? = gson.fromJson(jsonString, type)
-                wordsMap?.keys?.let { userWords.addAll(it) }
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to parse custom words JSON", e)
+        // Clear + repopulate is ONE mutation as far as the folded view is concerned: it is
+        // invalidated once, at the end, so a language switch cannot leave the previous
+        // language's words visible to the contraction guard.
+        mutateUserWords {
+            clear()
+            if (jsonString != null) {
+                try {
+                    val type = object : TypeToken<MutableMap<String, Int>>() {}.type
+                    val wordsMap: MutableMap<String, Int>? = gson.fromJson(jsonString, type)
+                    wordsMap?.keys?.let { addAll(it) }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to parse custom words JSON", e)
+                }
             }
         }
         if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Loaded ${userWords.size} custom words for '$currentLanguage'")

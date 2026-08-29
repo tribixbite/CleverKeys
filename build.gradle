@@ -840,6 +840,10 @@ tasks.register('runMockTests', JavaExec) {
     // ARC-079 (2026-08-29): with DictionaryManager's duplicate predictor cache deleted, the
     // coordinator's flush/shutdown are the ONLY learned-data checkpoints left in the process.
     'tribixbite.cleverkeys.PredictionCoordinatorLifecycleTest',
+    // Contractions guard #4 (2026-08-29): the REPLACE-mode user-word guard is now CASE-TOTAL
+    // via a read-side fold. Mock-tier because both SuggestionHandler and DictionaryManager
+    // reach android.jar (Handler / SharedPreferences) even when allocated without constructors.
+    'tribixbite.cleverkeys.ContractionUserWordGuardTest',
   ]
 
   mainClass = 'org.junit.runner.JUnitCore'

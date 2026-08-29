@@ -186,14 +186,16 @@ class DictionaryManagerTest {
     // =========================================================================
 
     /**
-     * `replaceModeContractionFor` refuses to REPLACE a word the user added by hand, and it
-     * decides that by calling [DictionaryManager.isUserWord] on the word plus its lowercase and
-     * capitalised forms. This pins the behaviour that decision depends on.
+     * `replaceModeContractionFor` refuses to REPLACE a word the user added by hand, and since
+     * 2026-08-29 it decides that with the single case-folded [DictionaryManager.isUserWordIgnoringCase]
+     * (it used to probe [DictionaryManager.isUserWord] in three casings, which missed a word
+     * stored as `DAngle`). This pins the behaviour that decision depends on, against real
+     * on-device SharedPreferences.
      *
      * It matters because the shipped French REPLACE table holds ~18k `d'X` aliases — `dangle`,
      * `dalliance` and so on — that are ordinary strings someone may add as a name or a term of
-     * art. If `isUserWord` ever stopped matching the stored form, the guard would silently
-     * become a no-op and the contraction file would start rewriting user-owned words again.
+     * art. If the lookup ever stopped matching the stored form, the guard would silently become
+     * a no-op and the contraction file would start rewriting user-owned words again.
      *
      * `dangle` is used deliberately: it is a real `contractions_fr.json` key (`d'angle`), so
      * this is the actual collision shape rather than a synthetic one. It is also inert — no
@@ -211,8 +213,22 @@ class DictionaryManagerTest {
                 manager.isUserWord(stored)
             )
             assertTrue(
-                "the capitalised form is one of the three the guard probes",
+                "the capitalised form must match too",
                 manager.isUserWord(stored.lowercase().replaceFirstChar { it.uppercaseChar() })
+            )
+            assertTrue(
+                "the folded lookup the guard actually calls must match EVERY casing — this is " +
+                    "the one that turned the guard from case-partial into total",
+                manager.isUserWordIgnoringCase(stored.uppercase())
+            )
+            assertTrue(
+                "…including the all-lowercase form the decoder normally produces",
+                manager.isUserWordIgnoringCase(stored.lowercase())
+            )
+            assertFalse(
+                "a word that was never added must NOT report as user-owned, or the guard " +
+                    "would suppress every contraction rather than just the user's own",
+                manager.isUserWordIgnoringCase("notaddedbyanyone98765")
             )
             assertFalse(
                 "a word that was never added must NOT report as user-owned, or the guard " +
@@ -223,5 +239,9 @@ class DictionaryManagerTest {
             manager.removeUserWord(stored)
         }
         assertFalse("cleanup must leave no residue for later tests", manager.isUserWord(stored))
+        assertFalse(
+            "cleanup must leave no residue in the folded view either",
+            manager.isUserWordIgnoringCase(stored)
+        )
     }
 }
