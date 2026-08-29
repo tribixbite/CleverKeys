@@ -392,10 +392,17 @@ internal fun SettingsActivity.InputBehaviorSection() {
                         title = stringResource(R.string.input_backspace_only_repeat_title),
                         description = stringResource(R.string.input_backspace_only_repeat_desc),
                         checked = keyRepeatBackspaceOnly,
-                        onCheckedChange = {
-                            keyRepeatBackspaceOnly = it
-                            saveSetting("keyrepeat_backspace_only", it)
-                            Config.globalConfig()?.keyrepeat_backspace_only = it
+                        onCheckedChange = { backspaceOnly ->
+                            keyRepeatBackspaceOnly = backspaceOnly
+                            saveSetting("keyrepeat_backspace_only", backspaceOnly)
+                            // ARC-072: `keyrepeat_backspace_only` is mirrored into the
+                            // ConfigSnapshot the touch path captures at pointer-down, so a
+                            // raw field write would leave every gesture running on the old
+                            // value until the preference listener's refresh landed. edit{}
+                            // applies the write and re-publishes the read-model together.
+                            Config.globalConfig()?.edit {
+                                keyrepeat_backspace_only = backspaceOnly
+                            }
                         }
                     )
                 }

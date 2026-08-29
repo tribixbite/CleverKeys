@@ -32,6 +32,7 @@ import tribixbite.cleverkeys.customization.CustomShortSwipeExecutor
 import tribixbite.cleverkeys.customization.ShortSwipeCustomizationManager
 import tribixbite.cleverkeys.customization.ShortSwipeMapping
 import tribixbite.cleverkeys.customization.SwipeDirection
+import tribixbite.cleverkeys.prefs.ConfigSnapshot
 import tribixbite.cleverkeys.theme.ThemeProvider
 import java.util.ArrayList
 
@@ -160,18 +161,23 @@ class Keyboard2View @JvmOverloads constructor(
     }
 
     init {
+        // The ONE acquisition of the live Config in this file (ARC-072). A View inflated
+        // from XML has no constructor to inject one into, so the static accessor is the
+        // seam; everything downstream reads either the captured snapshot or the two
+        // members the read-model deliberately excludes (`handler`, a dispatch callback).
         _config = Config.globalConfig()
+        val snap = _config.snapshot
         // Load theme: use ThemeProvider for runtime themes (decorative/custom),
         // otherwise use XML-based Theme constructor
-        _theme = if (_config.isRuntimeTheme()) {
-            ThemeProvider.getInstance(context).getTheme(_config.themeName)
+        _theme = if (snap.isRuntimeTheme) {
+            ThemeProvider.getInstance(context).getTheme(snap.themeName)
         } else {
             Theme(getContext(), attrs)
         }
         // Fix #92: For runtime themes (custom/decorative), the XML attribute
         // ?attr/colorKeyboard resolves to the hardcoded base style (CleverKeysDark).
         // Override with the actual keyboard background from the Theme's color scheme.
-        if (_config.isRuntimeTheme() && _theme.colorKeyboardBackground != 0) {
+        if (snap.isRuntimeTheme && _theme.colorKeyboardBackground != 0) {
             setBackgroundColor(_theme.colorKeyboardBackground)
         }
 
@@ -266,23 +272,26 @@ class Keyboard2View @JvmOverloads constructor(
     }
 
     private fun initSwipeTrailPaint() {
-        val config = _config
+        // One capture for the whole paint build: colour, width, effect and glow radius must
+        // describe the same configuration or the trail can end up (say) a "solid" alpha with
+        // a glow mask filter.
+        val snap = _config.snapshot
         val density = resources.displayMetrics.density
 
         _swipeTrailPaint = Paint().apply {
-            color = config?.swipe_trail_color ?: 0xFF9B59B6.toInt()
-            strokeWidth = (config?.swipe_trail_width ?: 8.0f) * density
+            color = snap.swipe_trail_color
+            strokeWidth = snap.swipe_trail_width * density
             style = Paint.Style.STROKE
             isAntiAlias = true
             strokeCap = Paint.Cap.ROUND
             strokeJoin = Paint.Join.ROUND
 
             // Apply effect based on setting
-            when (config?.swipe_trail_effect ?: "glow") {
+            when (snap.swipe_trail_effect) {
                 "glow" -> {
                     // GPU-efficient glow using blur mask filter
                     // Use SOLID blur type for crisp center with soft edges
-                    val glowRadius = (config.swipe_trail_glow_radius ?: 8.0f) * density * 0.5f
+                    val glowRadius = snap.swipe_trail_glow_radius * density * 0.5f
                     maskFilter = android.graphics.BlurMaskFilter(
                         glowRadius.coerceAtLeast(1f),
                         android.graphics.BlurMaskFilter.Blur.SOLID // SOLID gives crisp center
@@ -291,7 +300,7 @@ class Keyboard2View @JvmOverloads constructor(
                 }
                 "sparkle" -> {
                     // Sparkle effect uses glow base + particles
-                    val glowRadius = (config.swipe_trail_glow_radius ?: 8.0f) * density * 0.5f
+                    val glowRadius = snap.swipe_trail_glow_radius * density * 0.5f
                     maskFilter = android.graphics.BlurMaskFilter(
                         glowRadius.coerceAtLeast(1f),
                         android.graphics.BlurMaskFilter.Blur.SOLID
@@ -396,15 +405,19 @@ class Keyboard2View @JvmOverloads constructor(
         // This ensures getKeyAtPosition works immediately for swipes before onMeasure() runs
         // Always recalculate because layout or screen dims might have changed (view reuse)
         run {
+            // One capture for this geometry pass: the margins and the cache generation must
+            // describe the same configuration, or a layout computed from new margins gets
+            // filed (and later served) under the previous generation's key.
+            val snap = _config.snapshot
             val dm = resources.displayMetrics
             val screenWidth = dm.widthPixels
-            val marginLeft = maxOf(_config.margin_left, _insets_left.toFloat())
-            val marginRight = maxOf(_config.margin_right, _insets_right.toFloat())
+            val marginLeft = maxOf(snap.margin_left, _insets_left.toFloat())
+            val marginRight = maxOf(snap.margin_right, _insets_right.toFloat())
             _keyWidth = (screenWidth - marginLeft - marginRight) / kw.keysWidth
 
             // Ensure theme cache is initialized for key detection
             // Include config.version to invalidate cache when any config changes (e.g., keyboard height)
-            val cacheKey = "${kw.name ?: ""}_${_keyWidth}_${_config.version}"
+            val cacheKey = "${kw.name ?: ""}_${_keyWidth}_${snap.version}"
             _tc = _themeCache.get(cacheKey) ?: run {
                 val computed = Theme.Computed(_theme, _config, _keyWidth, kw)
                 _themeCache.put(cacheKey, computed)
@@ -616,7 +629,7 @@ class Keyboard2View @JvmOverloads constructor(
                     return false
                 }
 
-                var rowTop = _config.marginTop.toFloat()
+                var rowTop = _config.snapshot.marginTop
                 for (row in _keyboard!!.rows) {
                     if (row == targetRow) break
                     rowTop += (row.height + row.shift) * tc.row_height
@@ -1143,7 +1156,7 @@ class Keyboard2View @JvmOverloads constructor(
             return keyPositions
         }
 
-        var y = _config.marginTop.toFloat()
+        var y = _config.snapshot.marginTop
 
         for (row in keyboard.rows) {
             var x = _marginLeft
@@ -1221,11 +1234,14 @@ class Keyboard2View @JvmOverloads constructor(
     // LayoutGeometry from the exact same rect math the a11y tree and hit-testing use.
     internal fun geometryParams(): KeyboardGeometry.Params? {
         val tc = _tc ?: return null
+        // One capture per hit-test query: marginTop and marginLeft must come from the same
+        // configuration or a tap can be resolved against a rect that never existed.
+        val snap = _config.snapshot
         return KeyboardGeometry.Params(
             keyWidth = _keyWidth,
             rowHeight = tc.row_height,
-            marginTop = _config.marginTop.toFloat(),
-            marginLeft = maxOf(_config.margin_left, _insets_left.toFloat()),
+            marginTop = snap.marginTop,
+            marginLeft = maxOf(snap.margin_left, _insets_left.toFloat()),
         )
     }
 
@@ -1362,6 +1378,13 @@ class Keyboard2View @JvmOverloads constructor(
             return
         }
 
+        // ARC-072 FRAME-SCOPED CAPTURE. Every config-derived dimension this measure pass
+        // produces — margins, the theme-cache generation, the label sizes, the measured
+        // height — comes from one immutable copy, so a Config.refresh() landing halfway
+        // through cannot size the labels from the new configuration and the keyboard from
+        // the old one. It applies from the next measure instead.
+        val snap = _config.snapshot
+
         var width = MeasureSpec.getSize(wSpec)
 
         // CRITICAL FIX: If measure returns 0, preserve existing valid keyWidth
@@ -1397,9 +1420,9 @@ class Keyboard2View @JvmOverloads constructor(
             }
         }
 
-        _marginLeft = maxOf(_config.margin_left, _insets_left.toFloat())
-        _marginRight = maxOf(_config.margin_right, _insets_right.toFloat())
-        _marginBottom = _config.margin_bottom + _insets_bottom.toFloat()
+        _marginLeft = maxOf(snap.margin_left, _insets_left.toFloat())
+        _marginRight = maxOf(snap.margin_right, _insets_right.toFloat())
+        _marginBottom = snap.margin_bottom + _insets_bottom.toFloat()
 
         // Only recalculate keyWidth if we have a valid new width
         if (width > 0) {
@@ -1407,7 +1430,7 @@ class Keyboard2View @JvmOverloads constructor(
         }
 
         // Include config.version to invalidate cache when any config changes (e.g., keyboard height)
-        val cacheKey = "${keyboard.name ?: ""}_${_keyWidth}_${_config.version}"
+        val cacheKey = "${keyboard.name ?: ""}_${_keyWidth}_${snap.version}"
         _tc = _themeCache.get(cacheKey) ?: run {
             val computed = Theme.Computed(_theme, _config, _keyWidth, keyboard)
             _themeCache.put(cacheKey, computed)
@@ -1420,13 +1443,13 @@ class Keyboard2View @JvmOverloads constructor(
         val labelBaseSize = minOf(
             tc.row_height - tc.vertical_margin,
             (width / 10 - tc.horizontal_margin) * 3 / 2
-        ) * _config.characterSize
-        _mainLabelSize = labelBaseSize * _config.labelTextSize
+        ) * snap.characterSize
+        _mainLabelSize = labelBaseSize * snap.labelTextSize
         // #133: secondary (flick) labels scale independently of the primary
         // label via secondary_label_size_scale (default 1.0 = unchanged).
-        _subLabelSize = labelBaseSize * _config.sublabelTextSize * _config.secondary_label_size_scale
+        _subLabelSize = labelBaseSize * snap.sublabelTextSize * snap.secondary_label_size_scale
 
-        val height = (tc.row_height * keyboard.keysHeight + _config.marginTop + _marginBottom).toInt()
+        val height = (tc.row_height * keyboard.keysHeight + snap.marginTop + _marginBottom).toInt()
         setMeasuredDimension(width, height)
         // Key geometry (bounds) just changed — rebuild the a11y virtual-view tree.
         invalidateAccessibilityRoot()
@@ -1440,7 +1463,7 @@ class Keyboard2View @JvmOverloads constructor(
             // is a layout op, lint DrawAllocation applies)
             _gestureExclusionRect.set(
                 left + _marginLeft.toInt(),
-                top + _config.marginTop.toInt(),
+                top + _config.snapshot.marginTop.toInt(),
                 right - _marginRight.toInt(),
                 bottom - _marginBottom.toInt()
             )
@@ -1517,8 +1540,14 @@ class Keyboard2View @JvmOverloads constructor(
         val keyboard = _keyboard ?: return
         val tc = _tc ?: return
 
+        // ARC-072 FRAME-SCOPED CAPTURE. One snapshot for the whole frame, threaded into
+        // every helper that needs a config value (sub-label padding, the swipe trail), so a
+        // Config.refresh() landing mid-frame cannot draw the first rows at one opacity or
+        // padding and the rest at another. It applies from the next frame.
+        val snap = _config.snapshot
+
         // Set keyboard background opacity
-        background?.alpha = _config.keyboardOpacity
+        background?.alpha = snap.keyboardOpacity
         // R2: only walk the custom-short-swipe overlay when any mapping exists (the common case
         // has none). Hoisted out of the per-key loop so the whole drawCustomMappings pass — call +
         // index lookup per key — is skipped entirely when the feature is unused.
@@ -1541,12 +1570,12 @@ class Keyboard2View @JvmOverloads constructor(
                     drawLabel(canvas, k.keys[0]!!, keyW / 2f + x, y, keyH, isKeyDown, tc_key)
                 for (i in 1..8) {
                     if (k.keys[i] != null)
-                        drawSubLabel(canvas, k.keys[i]!!, x, y, keyW, keyH, i, isKeyDown, tc_key)
+                        drawSubLabel(canvas, k.keys[i]!!, x, y, keyW, keyH, i, isKeyDown, tc_key, snap)
                 }
                 // Draw custom short swipe mappings (override existing sublabels with accent color).
                 // Skip the whole overlay when no custom mappings are configured (R2 early-out).
                 if (hasCustomMappings)
-                    drawCustomMappings(canvas, k, x, y, keyW, keyH, tc)
+                    drawCustomMappings(canvas, k, x, y, keyW, keyH, tc, snap)
                 drawIndication(canvas, k, x, y, keyW, keyH, tc)
                 x += _keyWidth * k.width
             }
@@ -1554,8 +1583,8 @@ class Keyboard2View @JvmOverloads constructor(
         }
 
         // Draw swipe trail if swipe typing is enabled and active
-        if (_config.swipe_typing_enabled && _swipeRecognizer != null && _swipeRecognizer!!.isSwipeTyping()) {
-            drawSwipeTrail(canvas)
+        if (snap.swipe_typing_enabled && _swipeRecognizer != null && _swipeRecognizer!!.isSwipeTyping()) {
+            drawSwipeTrail(canvas, snap)
         }
     }
 
@@ -1564,9 +1593,9 @@ class Keyboard2View @JvmOverloads constructor(
      * Reuses _swipeTrailPath and directly accesses swipe path to avoid copying.
      * Supports glow, solid, fade, rainbow, and none effects.
      */
-    private fun drawSwipeTrail(canvas: Canvas) {
+    private fun drawSwipeTrail(canvas: Canvas, snap: ConfigSnapshot) {
         // Check if trail is enabled
-        if (_config?.swipe_trail_enabled == false) return
+        if (!snap.swipe_trail_enabled) return
 
         val recognizer = _swipeRecognizer ?: return
         val swipePath = recognizer.getSwipePath()
@@ -1587,7 +1616,7 @@ class Keyboard2View @JvmOverloads constructor(
         val paint = _swipeTrailPaint ?: return
 
         // Handle rainbow effect with cycling colors
-        if (_config?.swipe_trail_effect == "rainbow") {
+        if (snap.swipe_trail_effect == "rainbow") {
             val hue = (System.currentTimeMillis() % 3600) / 10f // 0-360 cycling
             paint.color = android.graphics.Color.HSVToColor(200, floatArrayOf(hue, 0.8f, 1.0f))
         }
@@ -1595,7 +1624,7 @@ class Keyboard2View @JvmOverloads constructor(
         canvas.drawPath(_swipeTrailPath, paint)
 
         // Handle sparkle effect
-        if (_config?.swipe_trail_effect == "sparkle") {
+        if (snap.swipe_trail_effect == "sparkle") {
             val time = System.currentTimeMillis()
             val originalColor = paint.color
             val originalStrokeWidth = paint.strokeWidth
@@ -1703,13 +1732,14 @@ class Keyboard2View @JvmOverloads constructor(
         canvas.drawText(modifiedKv.getString(), x, (keyH - p.ascent() - p.descent()) / 2f + y, p)
     }
 
-    private fun drawSubLabel(canvas: Canvas, kv: KeyValue, x: Float, y: Float, keyW: Float, keyH: Float, sub_index: Int, isKeyDown: Boolean, tc: Theme.Computed.Key) {
+    /** [snap] is the frame's captured configuration — see [onDraw]. */
+    private fun drawSubLabel(canvas: Canvas, kv: KeyValue, x: Float, y: Float, keyW: Float, keyH: Float, sub_index: Int, isKeyDown: Boolean, tc: Theme.Computed.Key, snap: ConfigSnapshot) {
         val a = LABEL_POSITION_H[sub_index]
         val v = LABEL_POSITION_V[sub_index]
         val modifiedKv = modifyKey(kv, _mods) ?: return
         val textSize = scaleTextSize(modifiedKv, false)
         val p = tc.sublabel_paint(modifiedKv.hasFlagsAny(KeyValue.FLAG_KEY_FONT), labelColor(modifiedKv, isKeyDown, true), textSize, a)
-        val subPadding = _config.keyPadding
+        val subPadding = snap.keyPadding
         var yPos = y
         var xPos = x
 
@@ -1764,7 +1794,9 @@ class Keyboard2View @JvmOverloads constructor(
         y: Float,
         keyW: Float,
         keyH: Float,
-        tc: Theme.Computed
+        tc: Theme.Computed,
+        /** The frame's captured configuration — see [onDraw]. */
+        snap: ConfigSnapshot
     ) {
         // Get the pre-lowercased key identifier (cached per Key in setKeyboard) instead of
         // allocating a String via mainKey.getString().lowercase() every frame. Empty string is
@@ -1791,6 +1823,7 @@ class Keyboard2View @JvmOverloads constructor(
                 subIndex,
                 sublabelColor,
                 tc.key,
+                snap,
                 mapping.useKeyFont
             )
         }
@@ -1827,6 +1860,8 @@ class Keyboard2View @JvmOverloads constructor(
         sub_index: Int,
         color: Int,
         tc_key: Theme.Computed.Key,
+        /** The frame's captured configuration — see [onDraw]. */
+        snap: ConfigSnapshot,
         useKeyFont: Boolean = false
     ) {
         val a = LABEL_POSITION_H[sub_index]
@@ -1837,7 +1872,7 @@ class Keyboard2View @JvmOverloads constructor(
         // Use the theme's sublabel_paint for consistent font selection
         val paint = tc_key.sublabel_paint(useKeyFont, color, textSize, a)
 
-        val subPadding = _config.keyPadding
+        val subPadding = snap.keyPadding
         var yPos = y
         var xPos = x
 

@@ -929,6 +929,39 @@ class Config private constructor(
         // MUST stay the last statement: every field the hot paths read has now been written,
         // so the published snapshot can never lag the vars it mirrors. refresh() has a single
         // exit by design — an early return here would publish a stale read-model.
+        publishSnapshot()
+    }
+
+    /**
+     * Apply a direct field mutation and re-publish the read-model in one step.
+     *
+     * Most settings changes reach `Config` through the preference listener, which calls
+     * [refresh] and rebuilds the snapshot at its tail. A few callers instead assign a field
+     * straight onto the live config (a settings toggle wanting the change to take effect
+     * before the listener fires; an instrumented test pinning a threshold). Such a write
+     * leaves [snapshot] holding the OLD value until the next refresh, so the touch and draw
+     * hot paths keep running on configuration the user already changed. Routing the write
+     * through here closes that window — `config?.edit { keyrepeat_backspace_only = value }`.
+     *
+     * [version] is bumped as well, because a mutation that reached the read-model must be
+     * distinguishable from the one before it — `Keyboard2View` keys its rendered-layout and
+     * theme caches on [version], so a silent edit would otherwise be served a stale layout.
+     *
+     * `ConfigSnapshotRatchetTest` forbids the raw `config.<field> = …` shape for any field
+     * the snapshot mirrors; the bare receiver-scoped assignment inside this block is the
+     * sanctioned form.
+     */
+    fun edit(block: Config.() -> Unit) {
+        block(this)
+        version++
+        publishSnapshot()
+    }
+
+    /**
+     * The single write site for [snapshot]. Publication has one implementation and several
+     * callers ([refresh], [edit]) rather than several assignment sites that could drift.
+     */
+    private fun publishSnapshot() {
         snapshot = buildSnapshot()
     }
 
@@ -954,6 +987,8 @@ class Config private constructor(
         swipe_dist_px = swipe_dist_px,
         slide_step_px = slide_step_px,
         swipe_typing_enabled = swipe_typing_enabled,
+        slider_speed_smoothing = slider_speed_smoothing,
+        slider_speed_max = slider_speed_max,
         marginTop = marginTop,
         margin_bottom = margin_bottom,
         margin_left = margin_left,
@@ -965,6 +1000,11 @@ class Config private constructor(
         characterSize = characterSize,
         keyboardOpacity = keyboardOpacity,
         themeName = themeName,
+        swipe_trail_enabled = swipe_trail_enabled,
+        swipe_trail_effect = swipe_trail_effect,
+        swipe_trail_color = swipe_trail_color,
+        swipe_trail_width = swipe_trail_width,
+        swipe_trail_glow_radius = swipe_trail_glow_radius,
         version = version
     )
 

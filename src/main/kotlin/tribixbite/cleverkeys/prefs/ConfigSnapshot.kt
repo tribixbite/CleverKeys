@@ -74,6 +74,10 @@ data class ConfigSnapshot(
     /** Slider step size in px. */
     val slide_step_px: Float,
     val swipe_typing_enabled: Boolean,
+    /** Exponential-smoothing factor for the slider's speed estimate (0..1). */
+    val slider_speed_smoothing: Float,
+    /** Ceiling on the slider's speed multiplier. */
+    val slider_speed_max: Float,
 
     // ---- Measure/draw — Keyboard2View.kt ----
     val marginTop: Float,
@@ -87,6 +91,17 @@ data class ConfigSnapshot(
     val characterSize: Float,
     val keyboardOpacity: Int,
     val themeName: String,
+
+    // ---- Swipe trail — Keyboard2View.kt (per-frame while a swipe is in flight) ----
+    val swipe_trail_enabled: Boolean,
+    /** One of `none|solid|glow|rainbow|fade|sparkle`. */
+    val swipe_trail_effect: String,
+    val swipe_trail_color: Int,
+    /** Trail stroke width in dp. */
+    val swipe_trail_width: Float,
+    /** Glow radius in dp. */
+    val swipe_trail_glow_radius: Float,
+
     /**
      * Config generation counter, bumped by every `Config.refresh()`. Keyboard2View mixes it
      * into its rendered-layout cache keys; it doubles as the identity of this snapshot.
@@ -99,6 +114,31 @@ data class ConfigSnapshot(
      * `Config.isRuntimeTheme()` and every snapshot consumer share one definition.
      */
     val isRuntimeTheme: Boolean get() = isRuntimeThemeName(themeName)
+
+    /**
+     * Minimum displacement (px) for a short swipe on a key whose diagonal is
+     * [keyDiagonalPx]: the user's [short_gesture_min_distance] (a PERCENT of the key
+     * diagonal) converted through that diagonal, capped by the absolute [swipe_dist_px]
+     * `* 0.8` so wide keys (backspace/shift/space) don't demand uncomfortably long swipes.
+     *
+     * Lives on the snapshot rather than in `Pointers` because it is a pure function of
+     * configuration and geometry, it is the single source of truth for four call sites
+     * (the deferred nav/backspace touch-up pre-checks, the short-gesture decision and the
+     * selection-delete entry), and here it is reachable from a pure JVM test.
+     */
+    fun shortGestureMinDistancePx(keyDiagonalPx: Float): Float {
+        val percentMin = short_gesture_min_distance.toPx(keyDiagonalPx)
+        val cap = if (swipe_dist_px > 0) swipe_dist_px * 0.8f else Float.MAX_VALUE
+        return minOf(percentMin, cap)
+    }
+
+    /**
+     * Maximum displacement (px) still counted as a short swipe on a key whose diagonal is
+     * [keyDiagonalPx]. The same threshold defines "the pointer has left its starting key",
+     * so the touch-move boundary test and the touch-up short/long decision cannot drift.
+     */
+    fun shortGestureMaxDistancePx(keyDiagonalPx: Float): Float =
+        short_gesture_max_distance.toPx(keyDiagonalPx)
 
     companion object {
         /** The single definition of "this theme is resolved at runtime". */

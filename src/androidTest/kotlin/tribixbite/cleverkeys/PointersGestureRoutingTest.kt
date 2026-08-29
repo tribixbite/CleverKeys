@@ -100,19 +100,26 @@ class PointersGestureRoutingTest {
         TestConfigHelper.ensureConfigInitialized(context)
         config = Config.globalConfig()
         // Deterministic thresholds regardless of device metrics.
-        config.short_gestures_enabled = true
-        config.swipe_typing_enabled = true
-        config.short_gesture_min_distance = PercentOfKey(28)
-        config.short_gesture_max_distance = PercentOfKey(141)
-        config.swipe_min_distance = 72f
-        config.swipe_min_key_distance = 15f
-        config.swipe_noise_threshold = 1.26f
-        config.swipe_min_dwell_time = 7L
-        config.swipe_high_velocity_threshold = 1000f
-        config.swipe_smoothing_window = 1
-        config.tap_duration_threshold = 150L
-        config.keyrepeat_enabled = false
-        config.swipe_dist_px = 100f // -> short-gesture minDistance = min(56, 80) = 56px (percentage wins)
+        //
+        // ARC-072: these must go through edit{}, not raw field writes. Pointers captures
+        // Config.snapshot at pointer-down and every threshold below is mirrored into that
+        // read-model, so a raw write would leave the snapshot holding the DEVICE defaults
+        // and this test would measure the wrong configuration. edit{} re-publishes.
+        config.edit {
+            short_gestures_enabled = true
+            swipe_typing_enabled = true
+            short_gesture_min_distance = PercentOfKey(28)
+            short_gesture_max_distance = PercentOfKey(141)
+            swipe_min_distance = 72f
+            swipe_min_key_distance = 15f
+            swipe_noise_threshold = 1.26f
+            swipe_min_dwell_time = 7L
+            swipe_high_velocity_threshold = 1000f
+            swipe_smoothing_window = 1
+            tap_duration_threshold = 150L
+            keyrepeat_enabled = false
+            swipe_dist_px = 100f // -> short-gesture minDistance = min(56, 80) = 56px (percentage wins)
+        }
 
         handler = FakeHandler()
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
@@ -231,7 +238,7 @@ class PointersGestureRoutingTest {
      *  onSwipeEnd (a no-op without word candidacy) then returned early — the letter was lost. */
     @Test
     fun longGesture_swipeTypingDisabled_fallsBackToTap() {
-        config.swipe_typing_enabled = false
+        config.edit { swipe_typing_enabled = false }
         // Diagonal off the keyboard (y >= 160 -> no key): only keyA registers, but
         // displacement 432px crosses the 282px boundary -> classify() returns SWIPE.
         val moves = (1..12).map { i -> Pair(60f + i * 24f, 80f + i * 27f) }
@@ -318,6 +325,60 @@ class PointersGestureRoutingTest {
         assertTrue(
             "must emit the NE subkey \"2\"",
             handler.upValues.any { it?.getString() == "2" }
+        )
+    }
+
+    /**
+     * T13 (ARC-072): a `Config` change that lands MID-GESTURE must not alter the gesture in
+     * flight. [Pointers] captures `Config.snapshot` at pointer-down and every later decision
+     * for that pointer reads the captured copy, so a settings edit applies from the NEXT
+     * pointer-down.
+     *
+     * Driven with T1's overshoot (displacement 130px, EAST toward keyA's assigned subkey
+     * "1"), because the two configurations disagree about it outright: under the captured
+     * config it is a short swipe (min 56px, max 282px) and emits "1"; under the configuration
+     * published mid-gesture the minimum rises to 240px, which would reject the short gesture
+     * and let the word/tap path take it instead. Same samples, two possible verdicts — so if
+     * any read had stayed live, this assertion would see the wrong one.
+     *
+     * The second half of the test then proves the change is not merely ignored: the SAME
+     * gesture repeated after the edit does follow the new configuration.
+     */
+    @Test
+    fun configChangeMidGesture_doesNotAffectTheGestureInFlight() {
+        val inst = InstrumentationRegistry.getInstrumentation()
+        inst.runOnMainSync { pointers.onTouchDown(60f, 80f, 0, keyA) }
+
+        // Halfway through the gesture, raise the short-swipe minimum out of its reach.
+        // 120% of the 200px diagonal = 240px, well above this gesture's 130px.
+        inst.runOnMainSync { config.edit { short_gesture_min_distance = PercentOfKey(120) } }
+        assertEquals(
+            "sanity: the edit must actually be published to the read-model",
+            120, config.snapshot.short_gesture_min_distance.v
+        )
+
+        for ((mx, my) in hMoves(60f, 190f, 80f)) {
+            Thread.sleep(12)
+            inst.runOnMainSync { pointers.onTouchMove(mx, my, 0) }
+        }
+        Thread.sleep(12)
+        inst.runOnMainSync { pointers.onTouchUp(0) }
+
+        assertTrue(
+            "the gesture must be decided by the configuration captured at ITS pointer-down " +
+                "(min 56px), so the East subkey \"1\" still fires",
+            handler.upValues.any { it?.getString() == "1" }
+        )
+
+        // Now the same gesture, started AFTER the change: it captures the new configuration
+        // at its own pointer-down and the 130px displacement no longer reaches the minimum.
+        handler.upValues.clear()
+        handler.swipeEndCount = 0
+        drive(keyA, 60f, 80f, hMoves(60f, 190f, 80f))
+        assertTrue(
+            "a gesture started after the change must honour it — 130px is below the new " +
+                "240px minimum, so the subkey must NOT fire",
+            handler.upValues.none { it?.getString() == "1" }
         )
     }
 }

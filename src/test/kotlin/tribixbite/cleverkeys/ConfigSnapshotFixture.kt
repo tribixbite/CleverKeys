@@ -31,6 +31,8 @@ internal fun testConfigSnapshot(
     swipe_dist_px: Float = 30f,
     slide_step_px: Float = 30f,
     swipe_typing_enabled: Boolean = true,
+    slider_speed_smoothing: Float = 0.7f,
+    slider_speed_max: Float = 4f,
     marginTop: Float = 4f,
     margin_bottom: Float = 8f,
     margin_left: Float = 0f,
@@ -42,6 +44,11 @@ internal fun testConfigSnapshot(
     characterSize: Float = 1f,
     keyboardOpacity: Int = 100,
     themeName: String = "cleverkeysdark",
+    swipe_trail_enabled: Boolean = true,
+    swipe_trail_effect: String = "glow",
+    swipe_trail_color: Int = 0x11223344,
+    swipe_trail_width: Float = 8f,
+    swipe_trail_glow_radius: Float = 6f,
     version: Int = 1
 ): ConfigSnapshot = ConfigSnapshot(
     circle_sensitivity = circle_sensitivity,
@@ -59,6 +66,8 @@ internal fun testConfigSnapshot(
     swipe_dist_px = swipe_dist_px,
     slide_step_px = slide_step_px,
     swipe_typing_enabled = swipe_typing_enabled,
+    slider_speed_smoothing = slider_speed_smoothing,
+    slider_speed_max = slider_speed_max,
     marginTop = marginTop,
     margin_bottom = margin_bottom,
     margin_left = margin_left,
@@ -70,5 +79,10 @@ internal fun testConfigSnapshot(
     characterSize = characterSize,
     keyboardOpacity = keyboardOpacity,
     themeName = themeName,
+    swipe_trail_enabled = swipe_trail_enabled,
+    swipe_trail_effect = swipe_trail_effect,
+    swipe_trail_color = swipe_trail_color,
+    swipe_trail_width = swipe_trail_width,
+    swipe_trail_glow_radius = swipe_trail_glow_radius,
     version = version
 )

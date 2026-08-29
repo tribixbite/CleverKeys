@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 import tribixbite.cleverkeys.customization.ShortSwipeCustomizationManager
 import tribixbite.cleverkeys.customization.ShortSwipeMapping
 import tribixbite.cleverkeys.customization.SwipeDirection
+import tribixbite.cleverkeys.prefs.ConfigSnapshot
 import java.util.NoSuchElementException
 import kotlin.math.abs
 import kotlin.math.atan2
@@ -22,6 +23,34 @@ import kotlin.math.sqrt
 /**
  * Manage pointers (fingers) on the screen and long presses.
  * Call back to IPointerEventHandler.
+ *
+ * ## Gesture-scoped configuration (ARC-072)
+ *
+ * `Config.refresh()` rewrites 157 fields **in place**, one assignment at a time, on
+ * whatever thread asked for the change — a settings edit, a fold, a rotation, a theme
+ * broadcast. A gesture already in flight does not stop for that, so reading the live
+ * config from `onTouchMove`/`onTouchUp` can decide the second half of a swipe against a
+ * configuration the first half never saw (a min-distance from the old settings, a
+ * max-distance from the new). Nothing crashes; the gesture is simply classified against a
+ * state that never existed.
+ *
+ * So each [Pointer] captures the published [ConfigSnapshot] **once, when it is created**,
+ * and every decision for that pointer — thresholds, key-repeat, long-press timing, short
+ * gesture bounds, slide/swipe distances, selection-delete speed — reads that captured
+ * copy. A refresh landing mid-gesture therefore applies from the NEXT pointer-down.
+ *
+ * **Multi-touch:** a second finger landing while another is down captures its OWN
+ * snapshot rather than inheriting the first pointer's. Two reasons. Every
+ * configuration-driven decision in this class is scoped to a single pointer's lifecycle,
+ * so per-pointer capture already gives each gesture one internally consistent
+ * configuration — there is no decision that mixes two pointers' config values. And
+ * inheritance would have no bound: a latched modifier is a `Pointer` with `pointerId == -1`
+ * that survives arbitrarily many config changes, so a Shift latched before a settings
+ * change would freeze that setting for every key pressed afterwards until it was released.
+ *
+ * The live [_config] survives for exactly one purpose — taking the snapshot at capture
+ * time. `ConfigSnapshotRatchetTest` pins that: `snapshot` is the only member of it this
+ * file may touch.
  */
 class Pointers(
     private val _handler: IPointerEventHandler,
@@ -128,11 +157,14 @@ class Pointers(
 
     /** The key must not be already latched. */
     internal fun add_fake_pointer(key: KeyboardData.Key, kv: KeyValue, locked: Boolean) {
-        var flags = pointer_flags_of_kv(kv) or FLAG_P_FAKE or FLAG_P_LATCHED
+        // Not part of any gesture (auto-capitalisation synthesises this), so it captures the
+        // configuration current at the moment it is added.
+        val snap = _config.snapshot
+        var flags = pointer_flags_of_kv(kv, snap) or FLAG_P_FAKE or FLAG_P_LATCHED
         if (locked) {
             flags = flags or FLAG_P_LOCKED
         }
-        val ptr = Pointer(-1, key, kv, 0f, 0f, Modifiers.EMPTY, flags)
+        val ptr = Pointer(-1, key, kv, 0f, 0f, Modifiers.EMPTY, flags, snap)
         _ptrs.add(ptr)
         _handler.onPointerFlagsChanged(null)
     }
@@ -183,8 +215,11 @@ class Pointers(
 
         if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "=== onTouchUp START: ptr_value=${ptr.value}, flags=0x${ptr.flags.toString(16)}, pointerId=$pointerId ===")
 
+        // ARC-072: the configuration this gesture began under, captured at its pointer-down.
+        val snap = ptr.snap
+
         // Handle swipe typing completion
-        if (_config.swipe_typing_enabled && ptr.hasFlagsAny(FLAG_P_SWIPE_TYPING)) {
+        if (snap.swipe_typing_enabled && ptr.hasFlagsAny(FLAG_P_SWIPE_TYPING)) {
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Path: SWIPE_TYPING completion")
             _handler.onSwipeEnd(_swipeRecognizer)
             _swipeRecognizer.reset()
@@ -226,7 +261,7 @@ class Pointers(
             // If barely moved (tap), output the primary key
             // If moved significantly, fall through to gesture classification for short swipe
             // (short_gesture_min_distance is % of key diagonal — convert, don't compare raw)
-            if (movementDist < shortGestureMinDistancePx(ptr.key)) {
+            if (movementDist < shortGestureMinDistancePx(ptr.key, snap)) {
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Path: Deferred nav-subkey key TAP, outputting primary key")
                 if (ptr.value != null) {
                     _handler.onPointerDown(ptr.value, false)
@@ -270,7 +305,7 @@ class Pointers(
             // If barely moved (tap), output the backspace key
             // If moved significantly, fall through to gesture classification for short swipe (e.g., delete_last_word)
             // (short_gesture_min_distance is % of key diagonal — convert, don't compare raw)
-            if (movementDist < shortGestureMinDistancePx(ptr.key)) {
+            if (movementDist < shortGestureMinDistancePx(ptr.key, snap)) {
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Path: Deferred backspace TAP, outputting backspace")
                 _handler.onPointerDown(ptr.value, false)
                 ptr.flags = ptr.flags and FLAG_P_DEFERRED_DOWN.inv()
@@ -297,8 +332,8 @@ class Pointers(
         // This eliminates race conditions between multiple prediction systems
         // Allow entry if either Swipe Typing (Char keys) OR Short Gestures (Any key) is enabled
         val isCharKey = ptr_value != null && ptr_value.getKind() == KeyValue.Kind.Char
-        val canSwipeType = _config.swipe_typing_enabled && isCharKey
-        val canShortGesture = _config.short_gestures_enabled && ptr_value != null
+        val canSwipeType = snap.swipe_typing_enabled && isCharKey
+        val canShortGesture = snap.short_gestures_enabled && ptr_value != null
 
         if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Gesture check: isCharKey=$isCharKey, canSwipeType=$canSwipeType, canShortGesture=$canShortGesture, " +
             "gesture=${ptr.gesture}, hasExcludedFlags=${ptr.hasFlagsAny(FLAG_P_SLIDING or FLAG_P_SWIPE_TYPING or FLAG_P_LATCHED)}, hasKey=${ptr.key != null}")
@@ -341,10 +376,10 @@ class Pointers(
                 keyWidth
             )
 
-            // ARC-072: the classifier takes its thresholds from a captured ConfigSnapshot.
-            // Captured at the call site for now; slice 2 replaces this with the snapshot
-            // captured at pointer-DOWN so the whole gesture is decided by one configuration.
-            val gestureType = _gestureClassifier.classify(gestureData, _config.snapshot)
+            // The classifier takes its thresholds from the snapshot this gesture captured
+            // at pointer-DOWN, so a Config.refresh() mid-swipe cannot change the verdict for
+            // a gesture that is already under way.
+            val gestureType = _gestureClassifier.classify(gestureData, snap)
 
             // Only swipe-typing-eligible gestures may route to the swipe decoder:
             // - non-Char keys (like Backspace): a long gesture must still be treated as a
@@ -377,7 +412,7 @@ class Pointers(
             } else {
                 // This is a TAP - check for short gesture (within-key directional swipe)
                 vlog {
-                    "TAP path: short_gestures=${_config.short_gestures_enabled} " +
+                    "TAP path: short_gestures=${snap.short_gestures_enabled} " +
                         "hasLeftKey=${ptr.hasLeftStartingKey} " +
                         "pathSize=${swipePath?.size ?: 0} " +
                         "modifiers=${ptr.modifiers.size()}"
@@ -404,7 +439,7 @@ class Pointers(
                 // UPDATED v1.32.926: Check custom mappings BEFORE blocking check
                 // Custom user-defined mappings should ALWAYS work, even with shift active
                 // Only built-in sublabel gestures are blocked when modifiers are active on char keys
-                if (_config.short_gestures_enabled && (!ptr.hasLeftStartingKey || allowLeftKey) &&
+                if (snap.short_gestures_enabled && (!ptr.hasLeftStartingKey || allowLeftKey) &&
                     distance > 0 // Basic check that we moved
                 ) {
                     
@@ -413,18 +448,18 @@ class Pointers(
                     // MIN threshold: percent-of-diagonal with the wide-key absolute cap —
                     // single source of truth shared with the deferred nav/backspace and
                     // selection-delete pre-checks.
-                    val minDistance = shortGestureMinDistancePx(ptr.key)
+                    val minDistance = shortGestureMinDistancePx(ptr.key, snap)
 
                     // v1.2.3 FIX: Restore max distance check that was removed in 7c2131f7
                     // The hasLeftStartingKey flag alone creates a gap where medium swipes (e.g., 140px)
                     // that don't exceed max_distance still trigger short gestures instead of a word swipe.
                     // By checking max explicitly here, swipes exceeding max fall through to word prediction.
-                    val maxDistance = _config.short_gesture_max_distance.toPx(keyHypotenuse)
+                    val maxDistance = snap.shortGestureMaxDistancePx(keyHypotenuse)
 
                     vlog {
                         "Short gesture check: distance=$distance " +
                             "minDistance=$minDistance maxDistance=$maxDistance " +
-                            "(min=${_config.short_gesture_min_distance} max=${_config.short_gesture_max_distance} of $keyHypotenuse) " +
+                            "(min=${snap.short_gesture_min_distance} max=${snap.short_gesture_max_distance} of $keyHypotenuse) " +
                             "hasLeftKey=${ptr.hasLeftStartingKey}"
                     }
 
@@ -478,7 +513,7 @@ class Pointers(
                         // fuzz-only matches lose to the word fallback below. Non-candidates
                         // (single-key flicks, non-char keys e.g. backspace nw=delete_last_word)
                         // keep the full +/-1 forgiveness.
-                        val isWordCandidate = isCharKey && _config.swipe_typing_enabled &&
+                        val isWordCandidate = isCharKey && snap.swipe_typing_enabled &&
                             _swipeRecognizer.promoteWordCandidacy()
                         var gestureValue = if (isWordCandidate) {
                             _handler.modifyKey(getKeyAtDirection(ptr.key, direction), ptr.modifiers)
@@ -519,7 +554,7 @@ class Pointers(
 
                             // v1.1.88: Handle latchable keys (modifiers/dead keys) correctly
                             // Dead keys like accent_aigu should LATCH, not output immediately
-                            val gestureFlags = pointer_flags_of_kv(gestureValue)
+                            val gestureFlags = pointer_flags_of_kv(gestureValue, snap)
                             if ((gestureFlags and FLAG_P_LATCHABLE) != 0) {
                                 // This is a latchable key (dead key/modifier) - create a latched pointer
                                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "SHORT_GESTURE: Latchable key detected, creating latched pointer")
@@ -529,7 +564,9 @@ class Pointers(
                                 }
                                 // Create a new latched pointer for this modifier
                                 val latchedFlags = gestureFlags or FLAG_P_LATCHED
-                                val latchedPtr = Pointer(-1, ptr.key, gestureValue, ptr.downX, ptr.downY, Modifiers.EMPTY, latchedFlags)
+                                // Synthesised BY this gesture: it carries the same snapshot,
+                                // so the flags above and the pointer that holds them agree.
+                                val latchedPtr = Pointer(-1, ptr.key, gestureValue, ptr.downX, ptr.downY, Modifiers.EMPTY, latchedFlags, snap)
                                 _ptrs.add(latchedPtr)
                                 _handler.onPointerFlagsChanged(null)
                                 _swipeRecognizer.reset()
@@ -571,7 +608,7 @@ class Pointers(
                         if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "SHORT_GESTURE SKIP: distance $distance < minDistance $minDistance")
                     }
                 } else {
-                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "SHORT_GESTURE BLOCKED: short_gestures_enabled=${_config.short_gestures_enabled} " +
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "SHORT_GESTURE BLOCKED: short_gestures_enabled=${snap.short_gestures_enabled} " +
                         "hasLeftStartingKey=${ptr.hasLeftStartingKey} allowLeftKey=$allowLeftKey " +
                         "distance=$distance")
                 }
@@ -584,8 +621,8 @@ class Pointers(
                 // Straight gestures (taps, overshoots, flicks) have displacement ~= path and
                 // can never satisfy the ratio; fast grazes fail the duration check. This
                 // restores the pre-boundary-gate behavior for exactly this gesture class.
-                if (isCharKey && _config.swipe_typing_enabled && _swipeRecognizer.promoteWordCandidacy() &&
-                    timeElapsed > _config.tap_duration_threshold &&
+                if (isCharKey && snap.swipe_typing_enabled && _swipeRecognizer.promoteWordCandidacy() &&
+                    timeElapsed > snap.tap_duration_threshold &&
                     distance < totalDistance / 2
                 ) {
                     if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "RETURN_TRIP_WORD: disp=$distance path=$totalDistance time=${timeElapsed}ms -> word")
@@ -677,10 +714,18 @@ class Pointers(
             return
         }
 
+        // ARC-072 CAPTURE POINT. This is the one place a gesture reads the live config:
+        // every later decision for this pointer — here, in onTouchMove, in onTouchUp and in
+        // the long-press/repeat timers — reads this immutable copy, so a Config.refresh()
+        // that lands mid-gesture applies from the next pointer-down instead of rewriting
+        // the thresholds under a swipe already in progress. See the class KDoc for the
+        // multi-touch rule (each finger captures at its own down).
+        val snap = _config.snapshot
+
         // Initialize swipe recognizer if swipe typing OR short gestures enabled
         // Short gestures (e.g. arrow key SW/NW for home/end) also need path tracking
         // Use countActivePointers() == 0 instead of _ptrs.isEmpty() to handle latched Shift
-        if ((_config.swipe_typing_enabled || _config.short_gestures_enabled) &&
+        if ((snap.swipe_typing_enabled || snap.short_gestures_enabled) &&
             countActivePointers() == 0 && key != null) {
             // v1.2.8: Capture shift state at swipe START for proper autocap after period
             // This must happen BEFORE the swipe, when autocap shift is still active
@@ -694,7 +739,7 @@ class Pointers(
         // The other key already "own" the latched modifiers and will clear them.
         val mods = getModifiers(isOtherPointerDown())
         val value = _handler.modifyKey(key.keys[0], mods)
-        val ptr = make_pointer(pointerId, key, value, x, y, mods)
+        val ptr = make_pointer(pointerId, key, value, x, y, mods, snap)
         _ptrs.add(ptr)
 
         // CRITICAL FIX: Detect if this might be the start of a swipe gesture
@@ -702,15 +747,15 @@ class Pointers(
         // This allows holding space/letters to repeat while still supporting swipe typing
         // Use countActivePointers() instead of _ptrs.size to handle latched modifiers (Shift)
         val firstKey = key?.keys?.get(0)
-        val mightBeSwipe = _config.swipe_typing_enabled && countActivePointers() == 1 &&
+        val mightBeSwipe = snap.swipe_typing_enabled && countActivePointers() == 1 &&
             key != null && firstKey != null &&
             firstKey.getKind() == KeyValue.Kind.Char
 
         // Also check if this key has nav subkeys for potential TrackPoint mode
-        val hasNavSubkeys = _config.keyrepeat_enabled && hasNavigationSubkeys(ptr)
+        val hasNavSubkeys = snap.keyrepeat_enabled && hasNavigationSubkeys(ptr)
 
         // Check if this is a backspace key for potential selection-delete mode
-        val isBackspace = _config.keyrepeat_enabled && isBackspaceKey(value)
+        val isBackspace = snap.keyrepeat_enabled && isBackspaceKey(value)
 
         if (mightBeSwipe || hasNavSubkeys || isBackspace) {
             ptr.flags = ptr.flags or FLAG_P_DEFERRED_DOWN
@@ -719,7 +764,7 @@ class Pointers(
         // Start long press timer for key repeat - even for potential swipe keys
         // The handleLongPress will check if swipe typing has been activated and skip repeat if so
         // This allows holding space/letters to trigger key repeat when not moving
-        if (!(_config.swipe_typing_enabled && _swipeRecognizer.isSwipeTyping())) {
+        if (!(snap.swipe_typing_enabled && _swipeRecognizer.isSwipeTyping())) {
             startLongPress(ptr)
         }
 
@@ -734,19 +779,15 @@ class Pointers(
     }
 
     /**
-     * Minimum displacement (px) for a short swipe on [key]: the user's
-     * short_gesture_min_distance (PERCENT of the key diagonal) converted through the
-     * key's actual diagonal, capped by the absolute swipe_dist_px * 0.8 so wide keys
-     * (backspace/shift/space) don't demand uncomfortably long swipes. Single source
-     * of truth for every "did the finger move enough for a short swipe" pre-check —
-     * three call sites previously compared px displacement against the raw percent
-     * value (28 treated as 28px, ~half the intended threshold).
+     * Minimum displacement (px) for a short swipe on [key] under the gesture's captured
+     * [snap]. Resolves the key's actual diagonal through [_handler] and defers the
+     * threshold arithmetic to [ConfigSnapshot.shortGestureMinDistancePx], which is the
+     * single source of truth for every "did the finger move enough for a short swipe"
+     * pre-check — three call sites previously compared px displacement against the raw
+     * percent value (28 treated as 28px, ~half the intended threshold).
      */
-    private fun shortGestureMinDistancePx(key: KeyboardData.Key): Float {
-        val percentMin = _config.short_gesture_min_distance.toPx(_handler.getKeyHypotenuse(key))
-        val cap = if (_config.swipe_dist_px > 0) _config.swipe_dist_px * 0.8f else Float.MAX_VALUE
-        return min(percentMin, cap)
-    }
+    private fun shortGestureMinDistancePx(key: KeyboardData.Key, snap: ConfigSnapshot): Float =
+        snap.shortGestureMinDistancePx(_handler.getKeyHypotenuse(key))
 
     /**
      * [direction] is an int between [0] and [15] that represent 16 sections of a
@@ -804,6 +845,10 @@ class Pointers(
                 "flags=${ptr.flags}"
         }
 
+        // ARC-072: every decision below belongs to the gesture this pointer started, so it
+        // reads the snapshot captured at that pointer's down event, never the live config.
+        val snap = ptr.snap
+
         if (ptr.hasFlagsAny(FLAG_P_SLIDING)) {
             ptr.sliding?.onTouchMove(ptr, x, y)
             return
@@ -828,7 +873,7 @@ class Pointers(
         // Higher values = more lenient, allows swipes further from key center
         if (ptr.key != null && !ptr.hasLeftStartingKey) {
             val keyHypotenuse = _handler.getKeyHypotenuse(ptr.key)
-            val maxAllowedDistance = _config.short_gesture_max_distance.toPx(keyHypotenuse)
+            val maxAllowedDistance = snap.shortGestureMaxDistancePx(keyHypotenuse)
 
             // Calculate distance from key center
             val keyCenterX = ptr.downX  // Approximation: touch down point is roughly key center
@@ -850,7 +895,7 @@ class Pointers(
         val dy = adjustedY - ptr.downY
         val dist = abs(dx) + abs(dy)
 
-        if (dist >= _config.swipe_dist_px && ptr.gesture == null) {
+        if (dist >= snap.swipe_dist_px && ptr.gesture == null) {
             // Pointer moved significantly - check for special key activation FIRST
             val a = atan2(dy, dx) + Math.PI
             val direction = ((a * 8 / Math.PI).toInt() + 12) % 16
@@ -861,9 +906,9 @@ class Pointers(
                     KeyValue.Kind.Slider -> {
                         // Slider key detected - enter sliding mode instead of swipe typing
                         if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Slider detected at direction $direction, starting sliding mode")
-                        ptr.gesture = Gesture(direction, _config.snapshot)
+                        ptr.gesture = Gesture(direction, snap)
                         ptr.value = subkeyValue
-                        ptr.flags = pointer_flags_of_kv(subkeyValue)
+                        ptr.flags = pointer_flags_of_kv(subkeyValue, snap)
                         startSliding(ptr, x, adjustedY, dx, dy, subkeyValue)
                         _handler.onPointerDown(subkeyValue, true)
                         return
@@ -872,9 +917,9 @@ class Pointers(
                         // Event key detected (e.g., switch_forward, switch_backward)
                         // Trigger immediately and prevent swipe typing from intercepting
                         if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Event key detected at direction $direction: ${subkeyValue.getEvent()}")
-                        ptr.gesture = Gesture(direction, _config.snapshot)
+                        ptr.gesture = Gesture(direction, snap)
                         ptr.value = subkeyValue
-                        ptr.flags = pointer_flags_of_kv(subkeyValue)
+                        ptr.flags = pointer_flags_of_kv(subkeyValue, snap)
                         _handler.onPointerDown(subkeyValue, true)
                         return
                     }
@@ -893,15 +938,15 @@ class Pointers(
         // TrackPoint mode only activates on HOLD, not short swipe
         val ptrValue = ptr.value
         val activePointers = countActivePointers()
-        val isSwipeTypingKey = _config.swipe_typing_enabled && activePointers == 1 &&
+        val isSwipeTypingKey = snap.swipe_typing_enabled && activePointers == 1 &&
             ptrValue != null && ptrValue.getKind() == KeyValue.Kind.Char
-        val isShortGestureKey = _config.short_gestures_enabled && activePointers == 1 && ptrValue != null
+        val isShortGestureKey = snap.short_gestures_enabled && activePointers == 1 && ptrValue != null
         val shouldCollectPath = isSwipeTypingKey || isShortGestureKey
 
         vlog {
             "Path collection check: " +
-                "swipeEnabled=${_config.swipe_typing_enabled} " +
-                "shortGesturesEnabled=${_config.short_gestures_enabled} " +
+                "swipeEnabled=${snap.swipe_typing_enabled} " +
+                "shortGesturesEnabled=${snap.short_gestures_enabled} " +
                 "ptrsSize=${_ptrs.size} " +
                 "hasValue=${ptrValue != null} " +
                 "isChar=${ptrValue != null && ptrValue.getKind() == KeyValue.Kind.Char} " +
@@ -927,7 +972,7 @@ class Pointers(
             // could latch FLAG_P_SWIPE_TYPING with swipe typing OFF and then be excluded
             // from BOTH the completion path (:163 requires the setting) and the touch-up
             // gesture block (flag exclusion).
-            if (_config.swipe_typing_enabled && _swipeRecognizer.isSwipeTyping() && ptr.hasLeftStartingKey) {
+            if (snap.swipe_typing_enabled && _swipeRecognizer.isSwipeTyping() && ptr.hasLeftStartingKey) {
                 ptr.flags = ptr.flags or FLAG_P_SWIPE_TYPING
                 stopLongPress(ptr)
             }
@@ -1041,7 +1086,7 @@ class Pointers(
     private fun startLongPress(ptr: Pointer) {
         val what = uniqueTimeoutWhat++
         ptr.timeoutWhat = what
-        _longpress_handler.sendEmptyMessageDelayed(what, _config.longPressTimeout.toLong())
+        _longpress_handler.sendEmptyMessageDelayed(what, ptr.snap.longPressTimeout.toLong())
     }
 
     private fun stopLongPress(ptr: Pointer) {
@@ -1102,7 +1147,7 @@ class Pointers(
         val maxDistance = keyHypotenuse * 0.5f
 
         // Vertical dead zone is configurable (% of key height)
-        val verticalDeadZone = keyHeight * (_config.selection_delete_vertical_threshold / 100.0f)
+        val verticalDeadZone = keyHeight * (ptr.snap.selection_delete_vertical_threshold / 100.0f)
 
         // Create modifiers with SHIFT for selection
         val shiftMod = KeyValue.makeInternalModifier(KeyValue.Modifier.SHIFT)
@@ -1161,7 +1206,7 @@ class Pointers(
             movedHorizontal && movedVertical -> {
                 // Both axes moved - use faster of the two (horizontal dominates)
                 val horizDelay = TRACKPOINT_MAX_DELAY - (maxHorizNormalizedDist * (TRACKPOINT_MAX_DELAY - TRACKPOINT_MIN_DELAY))
-                val vertDelay = (TRACKPOINT_MAX_DELAY - (maxVertNormalizedDist * (TRACKPOINT_MAX_DELAY - TRACKPOINT_MIN_DELAY))) / _config.selection_delete_vertical_speed
+                val vertDelay = (TRACKPOINT_MAX_DELAY - (maxVertNormalizedDist * (TRACKPOINT_MAX_DELAY - TRACKPOINT_MIN_DELAY))) / ptr.snap.selection_delete_vertical_speed
                 minOf(horizDelay, vertDelay).toLong()
             }
             movedHorizontal -> {
@@ -1170,7 +1215,7 @@ class Pointers(
             }
             movedVertical -> {
                 // Vertical only - slower speed using multiplier (lower multiplier = slower)
-                ((TRACKPOINT_MAX_DELAY - (maxVertNormalizedDist * (TRACKPOINT_MAX_DELAY - TRACKPOINT_MIN_DELAY))) / _config.selection_delete_vertical_speed).toLong()
+                ((TRACKPOINT_MAX_DELAY - (maxVertNormalizedDist * (TRACKPOINT_MAX_DELAY - TRACKPOINT_MIN_DELAY))) / ptr.snap.selection_delete_vertical_speed).toLong()
             }
             else -> {
                 // Finger is in dead zone - check again after a short delay
@@ -1281,13 +1326,17 @@ class Pointers(
         val dy = ptr.lastY - ptr.downY
         val movementDist = kotlin.math.sqrt(dx * dx + dy * dy)
 
+        // The repeat/TrackPoint/selection decisions belong to the press that is already in
+        // flight, so they read the configuration captured when that press began.
+        val snap = ptr.snap
+
         if (ptr.hasFlagsAny(FLAG_P_DEFERRED_DOWN)) {
             val hasNavSubkeys = hasNavigationSubkeys(ptr)
 
             // TrackPoint mode: If key has nav subkeys and long press fires, ALWAYS enter TrackPoint
             // This allows: quick swipe+release = short gesture, hold past longPressTimeout = TrackPoint
             // Movement doesn't prevent TrackPoint - user can move finger then hold to activate
-            if (_config.keyrepeat_enabled && hasNavSubkeys) {
+            if (snap.keyrepeat_enabled && hasNavSubkeys) {
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "TRACKPOINT: Entering TrackPoint mode for key with nav subkeys ${ptr.value}, movement=$movementDist")
                 ptr.flags = (ptr.flags and FLAG_P_DEFERRED_DOWN.inv()) or FLAG_P_TRACKPOINT_MODE
                 // Store CURRENT finger position as joystick center (not initial touch point)
@@ -1305,9 +1354,9 @@ class Pointers(
             // Short swipe + hold → selection mode (Shift+arrows)
             // No movement + hold → normal key repeat
             val isBackspace = isBackspaceKey(ptr.value)
-            if (_config.keyrepeat_enabled && isBackspace) {
+            if (snap.keyrepeat_enabled && isBackspace) {
                 // (short_gesture_min_distance is % of key diagonal — convert, don't compare raw)
-                if (movementDist >= shortGestureMinDistancePx(ptr.key)) {
+                if (movementDist >= shortGestureMinDistancePx(ptr.key, snap)) {
                     // User did a short swipe then held - enter selection-delete mode
                     // Determine direction based on horizontal movement (left/right selection)
                     val direction = if (dx > 0) 1 else -1  // 1 = right, -1 = left
@@ -1360,7 +1409,7 @@ class Pointers(
         // For every other keys, key-repeat
         // #81: If keyrepeat_backspace_only is enabled, skip repeat for non-backspace/nav keys
         val isBackspaceOrNav = isBackspaceKey(kv) || hasNavigationSubkeys(ptr)
-        if (_config.keyrepeat_enabled && (!_config.keyrepeat_backspace_only || isBackspaceOrNav)) {
+        if (snap.keyrepeat_enabled && (!snap.keyrepeat_backspace_only || isBackspaceOrNav)) {
             // If this was a deferred down (potential swipe), output the initial character first
             // This handles holding space/letters without moving - outputs initial char then repeats
             if (ptr.hasFlagsAny(FLAG_P_DEFERRED_DOWN)) {
@@ -1370,7 +1419,7 @@ class Pointers(
             _handler.onPointerHold(kv, ptr.modifiers)
             _longpress_handler.sendEmptyMessageDelayed(
                 ptr.timeoutWhat,
-                _config.longPressInterval.toLong()
+                snap.longPressInterval.toLong()
             )
         }
     }
@@ -1387,11 +1436,15 @@ class Pointers(
         val diry = if (dy < 0) -r else r
         stopLongPress(ptr)
         ptr.flags = ptr.flags or FLAG_P_SLIDING
-        ptr.sliding = Sliding(x, y, dirx, diry, kv.getSlider())
+        ptr.sliding = Sliding(x, y, dirx, diry, kv.getSlider(), ptr.snap)
     }
 
-    /** Return the [FLAG_P_*] flags that correspond to pressing [kv]. */
-    internal fun pointer_flags_of_kv(kv: KeyValue): Int {
+    /**
+     * Return the [FLAG_P_*] flags that correspond to pressing [kv] under the captured
+     * [snap]. Taking the snapshot as a parameter (rather than reading the live config)
+     * keeps a pointer's flags consistent with every other decision made for it.
+     */
+    internal fun pointer_flags_of_kv(kv: KeyValue, snap: ConfigSnapshot): Int {
         var flags = 0
         if (kv.hasFlagsAny(KeyValue.FLAG_LATCH)) {
             // Non-special latchable key must clear modifiers and can't be locked
@@ -1400,7 +1453,7 @@ class Pointers(
             }
             flags = flags or FLAG_P_LATCHABLE
         }
-        if (_config.double_tap_lock_shift &&
+        if (snap.double_tap_lock_shift &&
             kv.hasFlagsAny(KeyValue.FLAG_DOUBLE_TAP_LOCK)
         ) {
             flags = flags or FLAG_P_DOUBLE_TAP_LOCK
@@ -1489,10 +1542,11 @@ class Pointers(
         v: KeyValue?,
         x: Float,
         y: Float,
-        m: Modifiers
+        m: Modifiers,
+        snap: ConfigSnapshot
     ): Pointer {
-        val flags = if (v == null) 0 else pointer_flags_of_kv(v)
-        return Pointer(p, k, v, x, y, m, flags)
+        val flags = if (v == null) 0 else pointer_flags_of_kv(v, snap)
+        return Pointer(p, k, v, x, y, m, flags, snap)
     }
 
     internal class Pointer(
@@ -1507,7 +1561,13 @@ class Pointers(
         /** Modifier flags at the time the key was pressed. */
         val modifiers: Modifiers,
         /** See [FLAG_P_*] flags. */
-        var flags: Int
+        var flags: Int,
+        /**
+         * The configuration this pointer was created under (ARC-072). Immutable and never
+         * re-read from `Config`, so every decision from this pointer's down to its up sees
+         * one coherent configuration even if `Config.refresh()` runs in between.
+         */
+        val snap: ConfigSnapshot
     ) {
         /** Last known X position. */
         var lastX: Float = downX
@@ -1557,7 +1617,9 @@ class Pointers(
         val direction_x: Int,
         val direction_y: Int,
         /** The property which is being slided. */
-        val slider: KeyValue.Slider
+        val slider: KeyValue.Slider,
+        /** The owning pointer's captured configuration — a slide is one gesture. */
+        val snap: ConfigSnapshot
     ) {
         /** Accumulated distance since last event. */
         var d = 0f
@@ -1581,14 +1643,14 @@ class Pointers(
             // much easier to initiate cursor movement.
             val travelled = abs(x - last_x) + abs(y - last_y)
             if (last_move_ms == -1L) {
-                if (travelled < _config.slide_step_px) {
+                if (travelled < snap.slide_step_px) {
                     return
                 }
                 last_move_ms = System.currentTimeMillis()
             }
             d += ((x - last_x) * speed * direction_x +
                 (y - last_y) * speed * SLIDING_SPEED_VERTICAL_MULT * direction_y) /
-                _config.slide_step_px
+                snap.slide_step_px
             update_speed(travelled, x, y)
             // Send an event when [abs(d)] exceeds [1].
             val d_ = d.toInt()
@@ -1615,8 +1677,8 @@ class Pointers(
          */
         private fun update_speed(travelled: Float, x: Float, y: Float) {
             val now = System.currentTimeMillis()
-            val instant_speed = min(getSlidingSpeedMax(), travelled / (now - last_move_ms) + 1f)
-            speed = speed + (instant_speed - speed) * getSlidingSpeedSmoothing()
+            val instant_speed = min(snap.slider_speed_max, travelled / (now - last_move_ms) + 1f)
+            speed = speed + (instant_speed - speed) * snap.slider_speed_smoothing
             last_move_ms = now
             last_x = x
             last_y = y
@@ -1851,15 +1913,11 @@ class Pointers(
         //  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15
         )
 
-        // Sliding constants - use Config where available, fallback to defaults
-        // These are used in Sliding class which may not have direct Config access
+        // ARC-072: slider_speed_smoothing / slider_speed_max used to be read here straight
+        // off the global on every move event. They now travel with the sliding pointer's
+        // captured ConfigSnapshot (see Sliding.snap), so a settings change cannot alter a
+        // slide's acceleration curve halfway through it.
         const val SLIDING_SPEED_VERTICAL_MULT = 0.5f
-
-        // Helper functions to get configurable slider values
-        @JvmStatic
-        fun getSlidingSpeedSmoothing(): Float = Config.globalConfig().slider_speed_smoothing
-        @JvmStatic
-        fun getSlidingSpeedMax(): Float = Config.globalConfig().slider_speed_max
 
         /**
          * Maps 16-direction index to 8-direction SwipeDirection.

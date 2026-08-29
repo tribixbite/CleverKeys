@@ -150,6 +150,89 @@ class ConfigSnapshotBehaviorTest {
     }
 
     // =========================================================================
+    // Slice 2 — the short-swipe thresholds a Pointer decides against, and the
+    // capture semantics that make them stable for a gesture already in flight.
+    // =========================================================================
+
+    /**
+     * The min threshold is `min(percent-of-diagonal, swipe_dist_px * 0.8)`: the percentage
+     * wins on ordinary keys, the absolute cap wins on wide ones (backspace/shift/space),
+     * which is what stops a wide key from demanding an uncomfortably long swipe.
+     */
+    @Test
+    fun `short swipe minimum takes the percentage until the wide-key cap bites`() {
+        val snap = testConfigSnapshot(
+            short_gesture_min_distance = PercentOfKey(28),
+            swipe_dist_px = 100f // cap = 80px
+        )
+
+        // Ordinary key: 28% of a 200px diagonal = 56px, below the 80px cap.
+        assertThat(snap.shortGestureMinDistancePx(200f)).isWithin(0.01f).of(56f)
+        // Wide key: 28% of a 400px diagonal would be 112px — the cap wins.
+        assertThat(snap.shortGestureMinDistancePx(400f)).isWithin(0.01f).of(80f)
+    }
+
+    @Test
+    fun `an unset swipe distance leaves the percentage uncapped`() {
+        // swipe_dist_px == 0 means "no absolute threshold configured"; the cap must not
+        // then collapse to 0 and classify every micro-jitter as a short swipe.
+        val snap = testConfigSnapshot(
+            short_gesture_min_distance = PercentOfKey(28),
+            swipe_dist_px = 0f
+        )
+        assertThat(snap.shortGestureMinDistancePx(400f)).isWithin(0.01f).of(112f)
+    }
+
+    @Test
+    fun `the max threshold is the percent of the key diagonal`() {
+        val snap = testConfigSnapshot(short_gesture_max_distance = PercentOfKey(141))
+        assertThat(snap.shortGestureMaxDistancePx(200f)).isWithin(0.01f).of(282f)
+    }
+
+    /**
+     * The capture property, stated as behaviour on the decision itself.
+     *
+     * `Pointers` cannot be constructed off-device (it needs an `android.os.Handler`, a
+     * `Context` and the `ShortSwipeCustomizationManager` singleton), so this asserts the
+     * property at the level where the decision is actually made: a `ConfigSnapshot` held by
+     * an in-flight gesture keeps answering with the configuration it captured, no matter
+     * what a later `Config.refresh()` publishes. `Pointer.snap` is a `val` assigned at
+     * pointer-down — `ConfigSnapshotRatchetTest` pins that shape, and this pins that the
+     * shape is worth having: the two configurations genuinely disagree about the same
+     * gesture.
+     */
+    @Test
+    fun `a captured snapshot keeps deciding by the configuration it captured`() {
+        val atPointerDown = testConfigSnapshot(
+            short_gesture_min_distance = PercentOfKey(28),
+            short_gesture_max_distance = PercentOfKey(141),
+            swipe_dist_px = 100f
+        )
+        // What a settings change publishes mid-gesture: short swipes now need much more
+        // travel and give up much sooner.
+        val publishedMidGesture = testConfigSnapshot(
+            short_gesture_min_distance = PercentOfKey(60),
+            short_gesture_max_distance = PercentOfKey(70),
+            swipe_dist_px = 400f
+        )
+
+        val diagonal = 200f
+        val travelled = 100f // between 56 and 282: a short swipe under the captured config
+
+        // The gesture in flight commits a short swipe...
+        assertThat(travelled).isAtLeast(atPointerDown.shortGestureMinDistancePx(diagonal))
+        assertThat(travelled).isAtMost(atPointerDown.shortGestureMaxDistancePx(diagonal))
+
+        // ...even though the configuration that landed mid-gesture would have rejected it
+        // as too short (min 120px) — proving the two answers really differ, so holding the
+        // captured reference is what keeps the gesture coherent rather than a no-op.
+        assertThat(travelled).isLessThan(publishedMidGesture.shortGestureMinDistancePx(diagonal))
+
+        // And the captured value object cannot have been mutated under its holder.
+        assertThat(atPointerDown.shortGestureMinDistancePx(diagonal)).isWithin(0.01f).of(56f)
+    }
+
+    // =========================================================================
     // The testability proof itself
     // =========================================================================
 
