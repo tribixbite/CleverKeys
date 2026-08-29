@@ -522,6 +522,9 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.ConfigSnapshotBehaviorTest',
     'tribixbite.cleverkeys.CoreImeHygieneDriftTest',
     'tribixbite.cleverkeys.ReleaseMetadataDriftTest',
+    // Append-only release record book (docs/RELEASE_RECORD.md): anchors resolve, every
+    // published fastlane changelog has a section, released sections are hash-pinned.
+    'tribixbite.cleverkeys.ReleaseRecordDriftTest',
     'tribixbite.cleverkeys.SourceTextHygieneTest',
     // Pins the curated instrumented gate in .github/scripts/emulator-ci.sh (CK-150-028):
     // a renamed/deleted curated class used to false-green the release device gate.
