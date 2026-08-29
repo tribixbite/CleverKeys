@@ -1,14 +1,17 @@
 package tribixbite.cleverkeys.swipe
 
 import tribixbite.cleverkeys.KeyboardData
+import tribixbite.cleverkeys.swipe.ctc.CtcScriptSupport
 
 /**
  * WP9 R-1 step 7 — swipe engine selection, mode-based (v1.2).
  *
  * The user-facing `swipe_engine_mode` pref (Settings → Swipe Typing → "Prediction Engine")
  * selects a [Mode]; routing then depends only on the layout:
- *  - [Mode.CTC] (default): ANY Latin-script layout → [Engine.CTC]; non-Latin/unknown-script
- *    layouts → [Engine.GEOMETRIC] (so selecting CTC never removes swipe anywhere).
+ *  - [Mode.CTC] (default): any layout whose script has a COMPLETE CTC wiring
+ *    ([tribixbite.cleverkeys.swipe.ctc.CtcScriptSupport] — Latin, plus every script whose row
+ *    has reached `ROUTED`) → [Engine.CTC]; every other script, and unknown scripts →
+ *    [Engine.GEOMETRIC] (so selecting CTC never removes swipe anywhere).
  *  - [Mode.GEOMETRIC]: ALL layouts → [Engine.GEOMETRIC] (including QWERTY — measured ~84%
  *    top-1 on synthetic QWERTY in the spec; useful for comparison and battery-lean decoding).
  *
@@ -112,14 +115,16 @@ object SwipeEngineRouter {
         // Gate widening 2026-08-15: the CTC encoder is layout-agnostic (key geometry is a
         // model input) and was validated on alt-layouts (dvorak 91.82 top-1 — see the class
         // KDoc), so ANY known-Latin layout routes CTC. The dispatch-time
-        // CtcEngineAdapter.supportsLayout check guards letter-incomplete Latin layouts back
-        // to geometric. Non-Latin/unknown scripts can never build an a–z CtcLayout →
+        // CtcEngineAdapter.supportsLayout check guards letter-incomplete layouts back to
         // geometric. `layoutName` is deliberately unused: it only ever mattered for the
         // QWERTY predicate the removed neural engine needed.
-        return if (isLatinScript(script)) Engine.CTC else Engine.GEOMETRIC
+        //
+        // Gate widening 2026-08-29 (multi-script): the predicate is no longer "is this Latin"
+        // but "does this script have a COMPLETE wiring" — a per-script model, a per-script trie
+        // at the app's own frequency scale, and a golden fixture at the shipping preset. That
+        // question is answered by CtcScriptSupport's table and nowhere else, so a script can
+        // never be widened into CTC by editing this file; it is widened by a table row reaching
+        // Status.ROUTED, which its own `init` refuses unless the artifacts are named.
+        return if (CtcScriptSupport.isRoutableScript(script)) Engine.CTC else Engine.GEOMETRIC
     }
-
-    /** Script-metadata Latin check. */
-    private fun isLatinScript(script: String?): Boolean =
-        script != null && script.equals("latin", ignoreCase = true)
 }

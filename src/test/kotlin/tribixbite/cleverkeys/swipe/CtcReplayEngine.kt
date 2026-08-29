@@ -9,6 +9,7 @@ import tribixbite.cleverkeys.swipe.ctc.CtcScoringParams
 import tribixbite.cleverkeys.swipe.ctc.CtcSwipeDecoder
 import tribixbite.cleverkeys.swipe.ctc.CtcContractionKeys
 import tribixbite.cleverkeys.swipe.ctc.CtcFuzzyRescue
+import tribixbite.cleverkeys.swipe.ctc.CtcScriptSupport
 import java.io.File
 
 /**
@@ -206,7 +207,9 @@ class CtcReplayEngine private constructor(
             val params = CtcScoringParams.presetFor(language, topK = TOP_K)
             return CtcReplayEngine(
                 CtcSwipeDecoder(OnnxCtcEmissionModel(env, session), layout, trie, params),
-                CtcFuzzyRescue.fromFrequencies(canonical),
+                // Alphabet-scoped, mirroring CtcEngineAdapter: the replay harness must build the
+                // SAME rescue index the app does or its measurements describe a different engine.
+                CtcFuzzyRescue.fromFrequencies(canonical, CtcScriptSupport.alphabetFor(language).toHashSet()),
                 env, session,
             )
         }

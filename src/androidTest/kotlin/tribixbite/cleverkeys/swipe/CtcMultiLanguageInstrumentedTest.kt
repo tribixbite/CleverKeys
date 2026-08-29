@@ -30,6 +30,7 @@ import tribixbite.cleverkeys.swipe.ctc.CtcLanguageSupport
 import tribixbite.cleverkeys.swipe.ctc.CtcLexiconMerge
 import tribixbite.cleverkeys.swipe.ctc.CtcLexiconTrie
 import tribixbite.cleverkeys.swipe.ctc.CtcScoringParams
+import tribixbite.cleverkeys.swipe.ctc.CtcScriptSupport
 import tribixbite.cleverkeys.swipe.geometric.CkdtDictionaryReader
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -500,7 +501,7 @@ class CtcMultiLanguageInstrumentedTest {
         try {
             assertTrue(
                 "CTC must accept the bundled $LAYOUT layout (all 26 a–z keys present)",
-                adapter.supportsLayout(kd, params, FRAME_W, FRAME_H)
+                adapter.supportsLayout(kd, params, FRAME_W, FRAME_H, "en")
             )
             for (language in CKDT_LANGUAGES) {
                 val target = TARGETS.getValue(language)
@@ -530,19 +531,28 @@ class CtcMultiLanguageInstrumentedTest {
     }
 
     /**
-     * LOW-9 / `docs/plans/2026-08-25-ctc-multiscript-wiring-plan.md` step A0 — the NEGATIVE
-     * half of the layout gate: `supportsLayout` must return **false** for the bundled
-     * Cyrillic and Greek layouts as the code stands today.
+     * LOW-9 / `docs/plans/2026-08-25-ctc-multiscript-wiring-plan.md` step A0/A4 — the layout
+     * gate, now asserted as the **per-language** predicate it became.
      *
-     * ## Why this pin matters
-     * Gate 3 (`CtcEngineAdapter.buildMappedLayout`'s "all 26 a–z centre keys present" rule)
-     * is what actually keeps a non-Latin board off the CTC engine — the router's script gate
-     * in front of it is metadata-only, and `grek_qwerty.xml` shipped for months declaring
-     * `script="latin"` with nobody noticing precisely because this gate caught it
-     * (see `LayoutScriptDeclarationTest`). Milestone A4 of the multi-script plan replaces the
-     * hardcoded a–z `ALPHABET` with a per-script one, at which point these two verdicts
-     * flip. Pinning them now makes that flip a deliberate, visible edit to this test rather
-     * than a silent widening nobody reviews.
+     * ## The deliberate flip
+     * This test used to assert `supportsLayout(cyrl_jcuken_ru) == false` and
+     * `supportsLayout(grek_qwerty) == false`, full stop, and its own KDoc said: "Milestone A4
+     * replaces the hardcoded a-z ALPHABET with a per-script one, at which point these two
+     * verdicts flip. Pinning them now makes that flip a deliberate, visible edit to this test
+     * rather than a silent widening nobody reviews." **This is that edit.**
+     *
+     * What flipped is narrow and worth stating exactly: `supportsLayout` no longer asks "are all
+     * 26 a-z centre keys present", it asks "are all of THIS LANGUAGE's alphabet keys present".
+     * So a Cyrillic board still fails for `en` — the enduring half of the old assertion — and
+     * now passes for `ru`, whose 31-letter alphabet is exactly that board's 31 centre keys.
+     *
+     * ## What this gate does and does NOT decide
+     * Passing here does not mean a swipe reaches CTC. Three other gates still apply, and the
+     * language one is what holds an unwired script back: `grek_qwerty` + `el` builds a layout
+     * fine, but `el` is absent from [CtcLanguageSupport.SUPPORTED], so
+     * `InputCoordinator.performCtcSwipeTyping` hands the swipe to the geometric engine. That
+     * separation is the point of rule 4 — the layout gate is about KEYS, not about whether the
+     * model, the trie and the fixture exist.
      *
      * ## Why instrumented and not pure (the CK-150-032 feasibility ruling)
      * Both halves of the call are Android-bound and neither is reachable from `runPureTests`:
@@ -560,32 +570,92 @@ class CtcMultiLanguageInstrumentedTest {
      * Faking either half would test the fake, not the gate, so the assertion lives here.
      *
      * The Latin positive control is asserted in the same method on purpose: without it a
-     * `supportsLayout` that returned false unconditionally would pass this test.
+     * `supportsLayout` that returned false unconditionally would pass the negative assertions.
      */
     @Test
-    fun nonLatinLayoutsAreRejectedByTheAlphabetGate() {
+    fun theLayoutGateIsPerLanguage() {
         val adapter = CtcEngineAdapter(context)
         try {
             val latin = loadLayout(LAYOUT)
             assertTrue(
-                "positive control: CTC must still accept $LAYOUT — without this a gate that " +
-                    "rejects everything would satisfy the negative assertions below",
-                adapter.supportsLayout(latin, paramsFor(latin), FRAME_W, FRAME_H)
+                "positive control: CTC must still accept $LAYOUT for en — without this a gate " +
+                    "that rejects everything would satisfy the negative assertions below",
+                adapter.supportsLayout(latin, paramsFor(latin), FRAME_W, FRAME_H, "en")
             )
+
+            // The enduring negative: a Latin language's a-z alphabet is not on a non-Latin
+            // board, so an en/fr/de user who switches to one of these layouts still falls
+            // through to geometric. This half never flips.
             for (layoutName in NON_LATIN_LAYOUTS) {
                 val kd = loadLayout(layoutName)
-                val params = paramsFor(kd)
                 assertFalse(
-                    "$layoutName must NOT be CTC-eligible today: the shipped encoder emits " +
-                        "a–z only, and buildMappedLayout has no 26-letter mapping for it, so " +
-                        "the caller has to fall through to the geometric engine. If this " +
-                        "started passing, the multi-script router (plan §A4) landed — update " +
-                        "this test deliberately, do not delete it.",
-                    adapter.supportsLayout(kd, params, FRAME_W, FRAME_H)
+                    "$layoutName must never be CTC-eligible for a LATIN language: none of the " +
+                        "26 a-z keys is on that board, so buildMappedLayout cannot produce a " +
+                        "CtcLayout and the caller has to hand the swipe to geometric.",
+                    adapter.supportsLayout(kd, paramsFor(kd), FRAME_W, FRAME_H, "en")
                 )
+            }
+
+            // The flip: each script layout DOES expose its own language's alphabet. Read off
+            // CtcScriptSupport rather than hard-coded, so adding a script row extends this
+            // assertion automatically instead of leaving the new script unchecked.
+            for ((language, wiring) in CtcScriptSupport.SCRIPTS) {
+                val name = wiring.layoutXml.removeSuffix(".xml")
+                val kd = loadLayout(name)
+                assertTrue(
+                    "$name must expose every one of $language's ${wiring.alphabet.length} " +
+                        "alphabet letters as CENTRE keys — that is what makes the alphabet the " +
+                        "model's emission slot order. A miss means either the table's alphabet " +
+                        "string or the layout XML is wrong, and a decode built on it would be " +
+                        "silently permuted rather than failing.",
+                    adapter.supportsLayout(kd, paramsFor(kd), FRAME_W, FRAME_H, language)
+                )
+                // And the converse: a script board is not eligible for a DIFFERENT script's
+                // language. ru and uk are both `cyrillic` and both 31 letters, but they are
+                // different 31 letters (uk has no ы/э/ъ, ru has no є/і), so the boards are not
+                // interchangeable and the gate must say so.
+                for ((other, otherWiring) in CtcScriptSupport.SCRIPTS) {
+                    if (other == language || otherWiring.alphabet == wiring.alphabet) continue
+                    assertFalse(
+                        "$name must NOT be eligible for '$other' — different alphabet, " +
+                            "different slot order, silently permuted decode if admitted",
+                        adapter.supportsLayout(kd, paramsFor(kd), FRAME_W, FRAME_H, other)
+                    )
+                }
             }
         } finally {
             adapter.shutdown()
+        }
+    }
+
+    /**
+     * Rule 4, on device: a script may only be routed when its model, its trie and its fixture
+     * all exist. The pure `CtcScriptSupportTest` checks the table against the repo tree; this
+     * checks it against the PACKAGED APK, which is the artifact that actually ships.
+     */
+    @Test
+    fun everyRoutedScriptShipsItsModelAssetInTheApk() {
+        val target = InstrumentationRegistry.getInstrumentation().targetContext
+        val models = target.assets.list("models")?.toSet().orEmpty()
+        for ((language, wiring) in CtcScriptSupport.SCRIPTS) {
+            if (wiring.status != CtcScriptSupport.Status.ROUTED) {
+                assertFalse(
+                    "$language is not ROUTED, so CtcLanguageSupport must not serve it — the " +
+                        "language gate is what holds an unwired script back",
+                    CtcLanguageSupport.isSupported(language)
+                )
+                continue
+            }
+            val asset = wiring.modelAsset!!.removePrefix("models/")
+            assertTrue(
+                "$language is ROUTED but $asset is not packaged under assets/models — the " +
+                    "router would send swipes to an encoder that cannot load. Packaged: $models",
+                asset in models
+            )
+            assertTrue(
+                "$language is ROUTED so CtcLanguageSupport must serve it",
+                CtcLanguageSupport.isSupported(language)
+            )
         }
     }
 

@@ -586,6 +586,15 @@ tasks.register('runPureTests', JavaExec) {
     // and accent-display map, verified against the REAL bundled dictionaries.
     'tribixbite.cleverkeys.swipe.ctc.CtcLanguagePresetTest',
     'tribixbite.cleverkeys.swipe.ctc.CtcCkdtLexiconTest',
+    // Multi-script wiring (2026-08-29): the per-script table's own invariants — codepoint-sorted
+    // alphabets pinned against each shipped golden fixture's `layout.letters` (a permuted
+    // alphabet does not throw, it silently permutes every decode), rule 4's all-three check, and
+    // the two-table consistency between CtcScriptSupport.Status and CtcLanguageSupport.SUPPORTED.
+    'tribixbite.cleverkeys.swipe.ctc.CtcScriptSupportTest',
+    // The per-script projection rules (PHASE_O §3.4): ru/bg/mk character folds and NO NFD (it
+    // decomposes й and destroys the alphabet), el mark-stripping + word-final sigma repair —
+    // both halves or neither — uk's ї/ґ rejection, he niqqud stripping.
+    'tribixbite.cleverkeys.swipe.ctc.CtcScriptProjectionTest',
     // Context-LM persistence fix (audit 2026-08-06) — debounced write-back substrate,
     // language-keyed singleton BigramStore, UserVocabulary save-storm fix
     'tribixbite.cleverkeys.persist.DebouncedPersisterTest',

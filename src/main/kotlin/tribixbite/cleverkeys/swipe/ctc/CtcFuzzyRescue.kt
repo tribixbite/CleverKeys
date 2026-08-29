@@ -6,9 +6,19 @@ import kotlin.math.abs
  * Bounded dictionary rescue for a greedy CTC surface that the constrained beam did not return.
  * [find] locates the matches; [Companion.mergeIntoBeam] merges them into a slate by APPENDING
  * them below every real beam word, so a rescue can never displace or outrank one.
+ *
+ * ## The index is alphabet-scoped, and that used to be hard-coded
+ *
+ * Both the index build ([Companion.fromFrequencies]) and the greedy admissibility check in
+ * [find] filter on the ACTIVE EMISSION ALPHABET. Until the multi-script wiring both filtered on
+ * `'a'..'z'` literally, which for a Cyrillic/Greek/Hebrew lexicon drops **every** word: the index
+ * builds empty and rescue is silently inert — no exception, no log, just a feature that never
+ * fires. The alphabet is therefore a required constructor input, not a defaulted one, so a new
+ * script cannot forget it.
  */
 class CtcFuzzyRescue private constructor(
     private val byLengthAndInitial: Map<Pair<Int, Char>, List<Entry>>,
+    private val alphabet: Set<Char>,
 ) {
     data class Entry(val word: String, val frequency: Double)
 
@@ -18,7 +28,7 @@ class CtcFuzzyRescue private constructor(
         limit: Int = 2,
         scanBudget: Int = MAX_SCAN_WORDS,
     ): List<String> {
-        if (limit <= 0 || greedy.length < MIN_WORD_LENGTH || greedy.any { it !in 'a'..'z' }) {
+        if (limit <= 0 || greedy.length < MIN_WORD_LENGTH || greedy.any { it !in alphabet }) {
             return emptyList()
         }
         val maxDistance = if (greedy.length <= 5) 1 else 2
@@ -127,9 +137,17 @@ class CtcFuzzyRescue private constructor(
         /** Floor for an appended rescue score; see [mergeIntoBeam]'s tie note. */
         private const val MIN_RESCUE_SCORE = 1
 
-        fun fromFrequencies(frequencies: Map<String, Double>): CtcFuzzyRescue {
+        /**
+         * Builds the rescue index over [frequencies], keeping only words spelled entirely in
+         * [alphabet] — the emission alphabet the beam actually decodes over. See the class KDoc
+         * for why this is required rather than defaulted to a–z.
+         */
+        fun fromFrequencies(
+            frequencies: Map<String, Double>,
+            alphabet: Set<Char>,
+        ): CtcFuzzyRescue {
             val buckets = frequencies.entries
-                .filter { (word, _) -> word.isNotEmpty() && word.all { it in 'a'..'z' } }
+                .filter { (word, _) -> word.isNotEmpty() && word.all { it in alphabet } }
                 .groupBy(
                     keySelector = { it.key.length to it.key.first() },
                     valueTransform = { Entry(it.key, it.value) },
@@ -137,7 +155,7 @@ class CtcFuzzyRescue private constructor(
                 .mapValues { (_, entries) ->
                     entries.sortedWith(compareByDescending<Entry> { it.frequency }.thenBy { it.word })
                 }
-            return CtcFuzzyRescue(buckets)
+            return CtcFuzzyRescue(buckets, alphabet)
         }
 
         /** Levenshtein distance with row-min early exit. */

@@ -36,10 +36,56 @@ class CtcLanguagePresetTest {
         // Defense-in-depth only: the adapter never decodes an unsupported language.
         // `it`/`pt`/`sv` were in this list until 2026-08-18, when they were enabled
         // provisionally — they are now KNOWN CKDT-scale languages and are asserted below to
-        // take λ 2.0, not the English fallback.
-        for (lang in listOf("ru", "zz", "", "nl", "xx-YY")) {
+        // take λ 2.0, not the English fallback. `ru` was in this list until 2026-08-29; it now
+        // has a CtcScriptSupport row and takes the SCRIPT preset (below), not the fallback.
+        for (lang in listOf("zz", "", "nl", "xx-YY")) {
             assertThat(CtcScoringParams.presetFor(lang).lambda)
                 .isEqualTo(CtcScoringParams.tunedV2().lambda)
+        }
+    }
+
+    // ── The script footing ─────────────────────────────────────────────────────────
+
+    @Test
+    fun `every script language decodes at tunedRuCkdt, verbatim`() {
+        // The reachability fix (plan §A5). `tunedRuCkdt` existed for months and `presetFor`
+        // could never return it, so the constants the six script models were trained, gated and
+        // fixture-generated against were unreachable from the decoder. A golden fixture is only
+        // meaningful at the preset that will actually ship (guide §7.4), and every script
+        // fixture stores [1.05, 2.0, 0.2, 0.3734, 0.9882].
+        //
+        // Applies to every row in the table, ROUTED or not: an infrastructure-only script that
+        // somehow reached a decode must still decode at the preset its fixture pins.
+        for (language in CtcScriptSupport.SCRIPTS.keys) {
+            assertWithMessage("script language '$language' must decode at the script footing")
+                .that(CtcScoringParams.presetFor(language, beamWidth = 100, topK = 4))
+                .isEqualTo(CtcScoringParams.tunedRuCkdt(beamWidth = 100, topK = 4))
+        }
+    }
+
+    @Test
+    fun `the script footing differs from the latin one in more than lambda`() {
+        // Guards against a future "simplification" that folds the script branch into a λ swap
+        // on tunedV2. The two footings disagree on γ, β and γ_prune as well; λ alone would
+        // decode Russian at the app footing, which no ru number was ever measured at.
+        val script = CtcScoringParams.presetFor("ru")
+        val latin = CtcScoringParams.presetFor("fr")
+        assertThat(script.lambda).isEqualTo(latin.lambda)          // both CKDT scale
+        assertThat(script.gamma).isEqualTo(1.05)
+        assertThat(latin.gamma).isEqualTo(0.9)
+        assertThat(script.beta).isEqualTo(0.2)
+        assertThat(latin.beta).isEqualTo(0.25)
+        assertThat(script.gammaPrune).isEqualTo(0.3734)
+        assertThat(latin.gammaPrune).isEqualTo(0.25)
+        assertThat(script.betaPrune).isEqualTo(latin.betaPrune)    // 0.9882 in both
+    }
+
+    @Test
+    fun `script preset selection is case and region insensitive`() {
+        for (tag in listOf("RU", "ru-RU", "ru_RU")) {
+            assertWithMessage(tag)
+                .that(CtcScoringParams.presetFor(tag))
+                .isEqualTo(CtcScoringParams.tunedRuCkdt())
         }
     }
 
@@ -203,28 +249,30 @@ class CtcLanguagePresetTest {
     }
 
     @Test
-    fun `the ru preset is on a different footing than the shipping axis`() {
+    fun `the ru preset is on a different footing than the latin shipping axis`() {
         // The two sweeps agree on lambda and on NOTHING ELSE, because they were run
         // around different base presets (E1 = benchmark footing, tunedV2 = app footing).
         // Pinned so the disagreement stays a documented decision instead of decaying
-        // into a bug the first time someone enables a Cyrillic path: shipping ru starts
-        // with a FOOTING choice, not a lambda lookup.
+        // into a bug: shipping a script starts with a FOOTING choice, not a lambda lookup.
+        //
+        // UPDATED 2026-08-29. This test previously asserted the opposite of what it asserts
+        // now, and the change is deliberate: `presetFor("ru")` used to fall through to the
+        // ENGLISH lambda because ru had no table row, and the comment described that as correct
+        // defense-in-depth. It was correct only while ru was unreachable. ru now has a
+        // CtcScriptSupport row, so `presetFor` returns tunedRuCkdt BY NAME — which is the whole
+        // point of the reachability fix, since every ru artifact was gated and fixture-generated
+        // at exactly those five constants.
         val ru = CtcScoringParams.tunedRuCkdt()
         val axis = CtcScoringParams.presetFor("ru")
+        val latin = CtcScoringParams.presetFor("fr")
 
-        // ru is absent from SUPPORTED, so the axis cannot know it is a CKDT-scale
-        // language: presetFor falls through to the ENGLISH lambda, not the Cyrillic one.
-        // That is correct defense-in-depth, and it is also exactly why tunedRuCkdt has to
-        // be requested by name rather than reached through the axis.
-        assertThat(axis.lambda).isEqualTo(CtcScoringParams.LAMBDA_EN_JSON_SCALE)
+        assertThat(axis).isEqualTo(ru)
         assertThat(ru.lambda).isEqualTo(CtcScoringParams.LAMBDA_CKDT_SCALE)
-        assertThat(ru).isNotEqualTo(axis)
-
-        // The bases differ too — E1 vs tunedV2 on gamma, beta and gammaPrune.
+        // Same λ as the Latin CKDT languages — λ is a property of the frequency SCALE, and
+        // every script lexicon rides the same CKDT `255 − rank` scale fr/de/es already use.
+        assertThat(latin.lambda).isEqualTo(ru.lambda)
+        // The bases still differ — E1 vs tunedV2 on gamma, beta and gammaPrune.
         assertThat(listOf(ru.gamma, ru.beta, ru.gammaPrune))
-            .isNotEqualTo(listOf(axis.gamma, axis.beta, axis.gammaPrune))
-
-        // And ru is NOT decodable today, so the adapter can never build either one.
-        assertThat(CtcLanguageSupport.isSupported("ru")).isFalse()
+            .isNotEqualTo(listOf(latin.gamma, latin.beta, latin.gammaPrune))
     }
 }

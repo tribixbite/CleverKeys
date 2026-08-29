@@ -150,15 +150,28 @@ data class CtcScoringParams(
          * unrelated scripts converging on the same value for the same scale.
          *
          * Everything else (γ 0.9, β 0.25, α 0.0, γ_prune 0.25, β_prune 0.9882) is
-         * language-INVARIANT — λ is the only constant the sweep varied.
+         * language-INVARIANT for the LATIN footing — λ is the only constant that sweep varied.
+         *
+         * **A non-Latin script language is a different footing entirely** and takes
+         * [tunedRuCkdt] verbatim, not `tunedV2` with a λ swap: the script models were trained,
+         * gated and fixture-generated on the E1-derived operating point, and a golden fixture is
+         * only meaningful at the preset that will actually ship (guide §7.4). The branch is
+         * keyed off [CtcScriptSupport], so a script row is the only thing that can select it.
          */
         fun presetFor(
             language: String?,
             beamWidth: Int = 100,
             topK: Int = 4,
         ): CtcScoringParams {
+            // Script languages: the fixture preset, verbatim. Applies to every row in
+            // CtcScriptSupport.SCRIPTS, routed or not — an infrastructure-only script that
+            // somehow reached a decode must still decode at the preset its fixture pins.
+            if (CtcScriptSupport.wiringFor(language) != null) {
+                return tunedRuCkdt(beamWidth = beamWidth, topK = topK)
+            }
             val lambda = when (CtcLanguageSupport.sourceFor(language)) {
-                CtcLanguageSupport.LexiconSource.CKDT_BIN -> LAMBDA_CKDT_SCALE
+                CtcLanguageSupport.LexiconSource.CKDT_BIN,
+                CtcLanguageSupport.LexiconSource.CKDT_LANGPACK -> LAMBDA_CKDT_SCALE
                 CtcLanguageSupport.LexiconSource.EN_JSON, null -> LAMBDA_EN_JSON_SCALE
             }
             return tunedV2(beamWidth = beamWidth, topK = topK).copy(lambda = lambda)
@@ -168,16 +181,31 @@ data class CtcScoringParams(
          * The Cyrillic λ datapoint, recorded on ITS OWN FOOTING: benchmark preset **E1**
          * (`1.05 / 1.1 / 0.2 / 0.3734 / 0.9882`) with **λ raised 1.1 → 2.0**.
          *
-         * **This is deliberately NOT what [presetFor] returns for any language, and it is
-         * not reachable from the decoder.** [presetFor] builds on [tunedV2] (the app
+         * **This IS what [presetFor] returns for every language with a [CtcScriptSupport] row,
+         * and only for those.** [presetFor]'s Latin branch builds on [tunedV2] (the app
          * footing); this builds on E1 (the benchmark footing), and the two disagree on
          * γ (0.9 vs 1.05), β (0.25 vs 0.2) and γ_prune (0.25 vs 0.3734). Both sweeps
          * moved λ and only λ — but around different operating points, so neither result
-         * transfers to the other's base. Shipping a Cyrillic path therefore starts with a
-         * FOOTING decision (which base preset the ru trie is decoded at), not with a λ
-         * lookup. It is kept here because the λ it establishes is the independent
-         * corroboration cited by [LAMBDA_CKDT_SCALE], and that evidence should not live
-         * only in a sibling repo.
+         * transfers to the other's base. A Cyrillic path therefore starts with a FOOTING
+         * decision (which base preset the ru trie is decoded at), not with a λ lookup, and the
+         * ML side made that decision: **all six script lexicons decode here verbatim**
+         * (`APP_WIRING_CHECKLIST.md` §2.2). Every script golden fixture was generated at
+         * exactly these five constants, which is what makes the fixtures meaningful —
+         * a fixture at a preset nothing runs validates a ranking that never happens.
+         *
+         * λ = [LAMBDA_CKDT_SCALE] is a **frequency-scale** constant, not a Russian one: every
+         * script lexicon here is on the CKDT `255 − rank` scale, the same scale fr/de/es/it/pt/sv
+         * already run at in production. Making this reachable was therefore "make one existing
+         * preset reachable", not "add six presets".
+         *
+         * **Do not change λ.** It was re-swept in the Phase-Q closing round: on the ru real
+         * probe's tune half, in-dict t1 is monotone DECREASING across λ ∈ {1.1 … 4.0}
+         * (85.65 → 80.69), so the optimum lies below the grid and the pre-registered
+         * interior-optimum rule refused adoption. λ 2.0 was fitted against a greedy-37 model
+         * while the generation-4 decoder reads greedy 66, so it carries a **measured,
+         * unconfirmed −0.63 t1 shortfall**. Deciding it is an ML-side phase, not an app change,
+         * and if it ever lands it changes ru's fixture too (the fixture-and-preset rule).
+         * γ, β and the prune constants are E1's, carried.
          *
          * **Evidence** — CleverKeys-ML `ctc/PHASE_J.md` §6.9 / `ctc/APP_INTEGRATION_PLAN.md`
          * §7.1: tuned on ru val rows `0:4708`, confirmed on the untouched `4708:9416`,
@@ -191,16 +219,16 @@ data class CtcScoringParams(
          * (`ctc/PHASE_I.md` §7.4).
          *
          * **Evidence tier — read before quoting.** These are **val-only** numbers
-         * (`eval_cyrillic.py`). No Cyrillic model was ever decoded on test-2400 and the
-         * seal is spent permanently, so this can never be upgraded to test-validated.
+         * (`eval_cyrillic.py`), and Russian CTC is val-only **permanently**: the only real
+         * non-Latin probe in existence is the Yandex valid-10k, which is eval-only by licence
+         * (HANDOFF rule 1), and the test-2400 seal is spent. No Russian number may ever be
+         * called "test-validated" — that phrase means decoded on a sealed split whose read was
+         * spent from the ledger, and no Cyrillic model ever was.
          *
          * **Caveat that travels with λ:** no campaign evaluation included a user
          * dictionary, and λ multiplies the frequency term, so a larger λ amplifies
-         * top-of-scale injected competitors. λ = 2.0 must be re-confirmed with user
-         * dictionary entries present before any ru path ships (plan §7.1, §7.3).
-         *
-         * No Cyrillic CTC encoder ships today and `ru` is absent from
-         * [CtcLanguageSupport.SUPPORTED], so the adapter can never build this preset.
+         * top-of-scale injected competitors. λ = 2.0 has still not been re-confirmed with user
+         * dictionary entries present (plan §7.1, §7.3).
          */
         fun tunedRuCkdt(beamWidth: Int = 100, topK: Int = 4): CtcScoringParams =
             CtcScoringParams(

@@ -700,12 +700,12 @@ class InputCoordinator(
                 ?.takeIf { it != "none" && it != language && CtcEngineAdapter.supportsLanguage(it) }
         } else null
         if (!CtcEngineAdapter.supportsLanguage(language)) {
-            // M1: CTC serves only the languages in CtcLanguageSupport (en/fr/de/es, plus
-            // the provisional it/pt/sv since 2026-08-18), so any other language falls
-            // through to the geometric engine, which decodes ANY layout in ANY language.
-            // Before 2026-08-18 the QWERTY-Latin family fell through to the neural
+            // M1: CTC serves only the languages in CtcLanguageSupport (en/fr/de/es, the
+            // provisional it/pt/sv since 2026-08-18, and ru since 2026-08-29), so any other
+            // language falls through to the geometric engine, which decodes ANY layout in ANY
+            // language. Before 2026-08-18 the QWERTY-Latin family fell through to the neural
             // transformer instead; with that engine removed this is unconditional. This
-            // is the cell a Dutch- or Russian-on-QWERTY user lands in — it must never
+            // is the cell a Dutch- or Ukrainian-on-QWERTY user lands in — it must never
             // return without dispatching.
             performGeometricSwipeTyping(
                 swipedKeys, swipePath, timestamps, ic, editorInfo, resources,
@@ -720,20 +720,30 @@ class InputCoordinator(
         val frameH = keyboardView.height.toFloat()
         if (frameW <= 0f || frameH <= 0f) return
 
-        // Two reasons to hand this swipe to geometric, checked together because they have the
+        // Three reasons to hand this swipe to geometric, checked together because they have the
         // same remedy:
-        //  1. the router gates on layout METADATA (Latin script), but this layout may still
-        //     lack an a–z key, so no CtcLayout can be built and the bar would be left empty.
-        //     Geometric decodes it fine. Memoized — the decode below reuses this geometry build;
-        //  2. the ONNX session failed to load MAX_MODEL_LOAD_ATTEMPTS times and latched. Without
-        //     this second check the decode returns an EMPTY slate, which the shared pipeline
-        //     cannot distinguish from "no candidates" — the bar clears and swipe silently stops
-        //     working, with nothing logged at the point of failure and nothing for the user to
-        //     act on. That was the app's only remaining path to no engine at all once `ctc`
-        //     became the default and neural was deleted.
+        //  1. the router gates on layout METADATA (the script attribute), but this layout may
+        //     still lack one of the ACTIVE LANGUAGE's alphabet keys, so no CtcLayout can be built
+        //     and the bar would be left empty. Geometric decodes it fine. Memoized — the decode
+        //     below reuses this geometry build. Since the multi-script wiring the alphabet is
+        //     per language, so the language has to be passed in: `cyrl_jcuken_ru` supports ru and
+        //     not en, `latn_qwerty_us` the reverse;
+        //  2. the ONNX session for THIS LANGUAGE'S encoder failed to load
+        //     MAX_MODEL_LOAD_ATTEMPTS times and latched. Without this check the decode returns
+        //     an EMPTY slate, which the shared pipeline cannot distinguish from "no candidates"
+        //     — the bar clears and swipe silently stops working, with nothing logged at the
+        //     point of failure and nothing for the user to act on. That was the app's only
+        //     remaining path to no engine at all once `ctc` became the default and neural was
+        //     deleted. The latch is per model asset, so a dead script graph cannot disable
+        //     English;
+        //  3. the language's lexicon SOURCE is absent. New with the multi-script wiring: a
+        //     langpack-sourced language (ru) is served only while its pack is installed, and
+        //     `pref_primary_language` is a plain string a backup import can set to a language
+        //     whose pack was never imported. Same empty-slate failure as (2) if unchecked.
         val ctcAdapter = ctcAdapterOrCreate()
-        if (ctcAdapter.isModelPermanentlyUnavailable() ||
-            !ctcAdapter.supportsLayout(keyboard, params, frameW, frameH)
+        if (ctcAdapter.isModelPermanentlyUnavailable(language) ||
+            !ctcAdapter.hasLexiconSource(language) ||
+            !ctcAdapter.supportsLayout(keyboard, params, frameW, frameH, language)
         ) {
             performGeometricSwipeTyping(
                 swipedKeys, swipePath, timestamps, ic, editorInfo, resources,
@@ -803,9 +813,10 @@ class InputCoordinator(
                     // Same three conditions the dispatcher applies, so prewarm never warms an
                     // engine the next swipe will not use: a dead session means geometric serves
                     // it, and warming CTC would leave geometric cold for the swipe that follows.
-                    val ctcServes = !ctc.isModelPermanentlyUnavailable() &&
+                    val ctcServes = !ctc.isModelPermanentlyUnavailable(language) &&
                         CtcEngineAdapter.supportsLanguage(language) &&
-                        ctc.supportsLayout(keyboard, params, frameW, frameH)
+                        ctc.hasLexiconSource(language) &&
+                        ctc.supportsLayout(keyboard, params, frameW, frameH, language)
                     when {
                         ctcServes -> {
                             val prefs = DirectBootAwarePreferences.get_shared_preferences(context)

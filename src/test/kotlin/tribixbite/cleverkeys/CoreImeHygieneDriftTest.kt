@@ -382,14 +382,20 @@ class CoreImeHygieneDriftTest {
 
         val supportsIdx = adapter.indexOf("fun supportsLayout(")
         assertWithMessage(
-            "CtcEngineAdapter must expose supportsLayout(keyboard, params, frameW, frameH) " +
-                "for the dispatch-time gate."
+            "CtcEngineAdapter must expose supportsLayout(keyboard, params, frameW, frameH, " +
+                "language) for the dispatch-time gate."
         ).that(supportsIdx).isAtLeast(0)
         val body = adapter.substring(supportsIdx).substringBefore("private fun")
         assertWithMessage(
+            "supportsLayout must take the LANGUAGE. The emission alphabet is per language " +
+                "since the multi-script wiring, so 'can this board be decoded' has no " +
+                "language-free answer: cyrl_jcuken_ru supports ru and not en, latn_qwerty_us " +
+                "the reverse. A language-free overload would answer the wrong question silently."
+        ).that(body).contains("language: String?")
+        assertWithMessage(
             "supportsLayout must delegate to the memoized layoutFor (the layout memo " +
-                "already computes exactly 'can a full a–z CtcLayout be built') — not a " +
-                "fresh buildMappedLayout."
+                "already computes exactly 'can a CtcLayout be built over this alphabet') — " +
+                "not a fresh buildMappedLayout."
         ).that(body).contains("layoutFor(")
         assertWithMessage(
             "supportsLayout must NOT call buildMappedLayout directly (that would bypass " +
@@ -503,8 +509,13 @@ class CoreImeHygieneDriftTest {
             "CtcEngineAdapter must bound model-load retries via MAX_MODEL_LOAD_ATTEMPTS."
         ).that(adapter).contains("MAX_MODEL_LOAD_ATTEMPTS")
         assertWithMessage(
-            "modelOrNull must stop attempting once the retry budget is exhausted."
-        ).that(adapter).contains("modelLoadAttempts >= MAX_MODEL_LOAD_ATTEMPTS")
+            "modelOrNull must stop attempting once the retry budget is exhausted. The counter " +
+                "is per ASSET since per-language encoders landed, so a script graph's failures " +
+                "cannot exhaust the Latin encoder's budget."
+        ).that(adapter).contains("attempts >= MAX_MODEL_LOAD_ATTEMPTS")
+        assertWithMessage(
+            "the retry counter must be keyed by asset, not a single Int."
+        ).that(adapter).contains("modelLoadAttempts[asset] = failed")
         assertWithMessage(
             "The permanent first-failure latch (modelLoadFailed) must not return."
         ).that(adapter).doesNotContain("modelLoadFailed")
@@ -719,18 +730,26 @@ class CoreImeHygieneDriftTest {
     @Test
     fun aDeadCtcSessionFallsThroughToGeometricRatherThanClearingTheBar() {
         val adapter = source("tribixbite/cleverkeys/swipe/CtcEngineAdapter.kt")
+        // Anchor moved forward 2026-08-29, not weakened: the latch is now PER MODEL ASSET and
+        // therefore queried per language, because a language can resolve to a per-script
+        // encoder. A single global latch would let one dead Cyrillic graph disable CTC for
+        // English, which is the same "no engine at all" outcome this test exists to prevent.
         assertWithMessage(
-            "CtcEngineAdapter must expose the latch. Without an accessor the dispatcher cannot " +
-                "tell a dead session from a working one, and an empty decode is indistinguishable " +
-                "from 'no candidates' downstream."
-        ).that(adapter).contains("fun isModelPermanentlyUnavailable()")
+            "CtcEngineAdapter must expose the latch, keyed by LANGUAGE. Without an accessor the " +
+                "dispatcher cannot tell a dead session from a working one, and an empty decode " +
+                "is indistinguishable from 'no candidates' downstream."
+        ).that(adapter).contains("fun isModelPermanentlyUnavailable(language: String?)")
         assertWithMessage(
-            "the latch must be @Volatile — it is written on the decode thread and read on the " +
-                "main thread by the dispatcher"
-        ).that(adapter).contains("@Volatile")
+            "the latch must be shared safely across threads — it is written on the decode " +
+                "thread and read on the main thread by the dispatcher"
+        ).that(adapter).contains("java.util.Collections.synchronizedSet")
         assertWithMessage(
             "exhausting the retry budget must SET the latch, not merely log it"
-        ).that(adapter).contains("if (latched) modelPermanentlyUnavailable = true")
+        ).that(adapter).contains("if (latched) deadModelAssets.add(asset)")
+        assertWithMessage(
+            "the latch must be per ASSET, so a dead per-script encoder cannot disable the Latin " +
+                "one (guide §2: per-language assets need per-language failure semantics)"
+        ).that(adapter).contains("modelAssetFor(language) in deadModelAssets")
         assertWithMessage(
             "the log line must not claim 'ctc mode disabled this session' — nothing disables the " +
                 "mode, and that wording sent readers looking for a mode change that never happens"
@@ -743,7 +762,14 @@ class CoreImeHygieneDriftTest {
         assertWithMessage(
             "the CTC dispatch guard must consult the latch BEFORE decoding, alongside the " +
                 "existing supportsLayout check — both have the same remedy (hand to geometric)"
-        ).that(dispatch).contains("isModelPermanentlyUnavailable()")
+        ).that(dispatch).contains("isModelPermanentlyUnavailable(language)")
+        assertWithMessage(
+            "the CTC dispatch guard must also require the language's lexicon SOURCE to be " +
+                "present. A langpack-sourced language (ru) is served only while its pack is " +
+                "installed, and pref_primary_language is a plain string a backup import can set " +
+                "to a language whose pack was never imported — same empty-bar failure as a dead " +
+                "session, same remedy."
+        ).that(dispatch).contains("hasLexiconSource(language)")
 
         val prewarm = coordinator
             .substringAfter("fun prewarmGeometricEngine(")
@@ -751,7 +777,10 @@ class CoreImeHygieneDriftTest {
         assertWithMessage(
             "prewarm must apply the same condition, or it warms CTC while the next swipe goes " +
                 "to a cold geometric engine"
-        ).that(prewarm).contains("isModelPermanentlyUnavailable()")
+        ).that(prewarm).contains("isModelPermanentlyUnavailable(language)")
+        assertWithMessage(
+            "prewarm must apply the lexicon-source condition too, for the same reason"
+        ).that(prewarm).contains("hasLexiconSource(language)")
     }
 
     /**

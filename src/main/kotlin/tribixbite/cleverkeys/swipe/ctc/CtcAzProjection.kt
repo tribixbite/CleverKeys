@@ -63,7 +63,12 @@ object CtcAzProjection {
     }
 
     /**
-     * A canonical lexicon projected onto a–z.
+     * A canonical lexicon projected onto its emission alphabet.
+     *
+     * Shared with [CtcScriptProjection] (the non-Latin twin), which is why the name's `Az` is
+     * narrower than the type: both projections resolve collisions identically and there is one
+     * loop, in [CtcScriptProjection.projectLexicon]. Kept here rather than moved so the three
+     * test call sites that name `CtcAzProjection.Projected` stay valid.
      *
      * @property freqs stripped surface → frequency, insertion-ordered (the trie's child
      *   ordering, which only affects beam tie-breaks). This is what the trie is built from.
@@ -93,26 +98,13 @@ object CtcAzProjection {
      * the deterministic tie-break. The winner owns both the frequency and the display
      * form — an unaccented winner clears any earlier accented display entry, so the map
      * can never disagree with the frequency it was chosen for.
+     *
+     * The loop itself lives in [CtcScriptProjection.projectLexicon] — one implementation for
+     * both projections. This function is the Latin binding of it and its behaviour is
+     * unchanged (the delegation is a move, not a rewrite: `CtcCkdtLexiconTest` pins the
+     * projected surfaces, the collision counts and the display map on the real bundled
+     * dictionaries).
      */
-    fun projectLexicon(canonical: Map<String, Double>): Projected {
-        val freqs = LinkedHashMap<String, Double>(canonical.size * 2)
-        val display = HashMap<String, String>()
-        var untypeable = 0
-        var collisions = 0
-        for ((word, freq) in canonical) {
-            val surface = project(word)
-            if (surface == null) {
-                untypeable++
-                continue
-            }
-            val existing = freqs[surface]
-            if (existing != null) {
-                collisions++
-                if (freq <= existing) continue
-            }
-            freqs[surface] = freq
-            if (word == surface) display.remove(surface) else display[surface] = word
-        }
-        return Projected(freqs, display, canonical.size, untypeable, collisions)
-    }
+    fun projectLexicon(canonical: Map<String, Double>): Projected =
+        CtcScriptProjection.projectLexicon(canonical, ::project)
 }

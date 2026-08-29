@@ -4,12 +4,19 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
 class CtcFuzzyRescueTest {
+    /**
+     * The emission alphabet the index is scoped to. Required rather than defaulted since the
+     * multi-script wiring: on an a-z-only index a Cyrillic lexicon filters to nothing and rescue
+     * goes silently inert (CtcFuzzyRescue class KDoc).
+     */
+    private val LATIN_AZ: Set<Char> = ('a'..'z').toSet()
+
     private val rescue = CtcFuzzyRescue.fromFrequencies(linkedMapOf(
         "proximity" to 220.0,
         "property" to 210.0,
         "proximal" to 100.0,
         "hello" to 255.0,
-    ))
+    ), LATIN_AZ)
 
     @Test
     fun recoversNearestDictionarySurface() {
@@ -145,7 +152,7 @@ class CtcFuzzyRescueTest {
         "house" to 300.0,
         "hours" to 200.0,
         "houses" to 100.0,
-    ))
+    ), LATIN_AZ)
 
     @Test
     fun atMostTwoRescuedWordsAreAppendedEvenWithSpareSlots() {

@@ -56,6 +56,31 @@ object CtcLanguageSupport {
          * with the canonical accented form retained for display ([CtcAzProjection]).
          */
         CKDT_BIN,
+
+        /**
+         * `langpacks/<code>/dictionary.bin` in the app's files dir — the SAME CKDT v2 container
+         * and the SAME `freq = max(1, 255 − rank)` scale as [CKDT_BIN], read by the same
+         * [tribixbite.cleverkeys.swipe.geometric.CkdtDictionaryReader], but delivered by the
+         * user's language-pack import rather than bundled in the APK.
+         *
+         * **Why a separate constant rather than "asset, else langpack".** Two reasons, both
+         * load-bearing:
+         *
+         *  1. It keeps the existing six CKDT languages on the BUNDLED asset. The geometric
+         *     engine already prefers an installed pack over the asset; CTC does not, and
+         *     silently switching fr/de/es/it/pt/sv over would change the decode vocabulary for
+         *     every user who has imported one of those packs — a behaviour change with no
+         *     measurement behind it, smuggled in under a multi-script commit.
+         *  2. It makes "the lexicon may be absent" a property of the TABLE rather than a
+         *     surprise. A langpack-sourced language is CTC-supported only while its pack is
+         *     installed, so the dispatcher has to consult
+         *     `CtcEngineAdapter.hasLexiconSource` before routing — see its KDoc.
+         *
+         * `en` is deliberately NOT eligible for this: an installed en langpack stores the
+         * inverted 255−rank scale, and en's tuned λ = 4.0 was fitted on `en_enhanced.json`'s
+         * compressed 134–255 byte scores. Same container, wrong scale.
+         */
+        CKDT_LANGPACK,
     }
 
     /**
@@ -145,16 +170,34 @@ object CtcLanguageSupport {
     fun isSupported(language: String?): Boolean = sourceFor(language) != null
 
     /**
-     * The bundled asset path holding [language]'s CTC lexicon, or null when unsupported.
+     * The BUNDLED asset path holding [language]'s CTC lexicon, or null when the language is
+     * unsupported **or** its lexicon is not bundled ([LexiconSource.CKDT_LANGPACK]).
      * Keeping the path here (rather than in the adapter) is what makes adding a language
      * a single table edit.
+     *
+     * A null return is therefore no longer equivalent to "unsupported" — use [isSupported] for
+     * that question and [langpackRelativePath] for the other source.
      */
     fun assetFor(language: String?): String? {
         val code = normalize(language)
         return when (SUPPORTED[code]) {
             LexiconSource.EN_JSON -> "dictionaries/${code}_enhanced.json"
             LexiconSource.CKDT_BIN -> "dictionaries/${code}_enhanced.bin"
-            null -> null
+            LexiconSource.CKDT_LANGPACK, null -> null
+        }
+    }
+
+    /**
+     * The files-dir-relative path of [language]'s imported language pack dictionary, or null
+     * when [language] does not read one. The same layout `LanguagePackManager` installs and
+     * `GeometricEngineAdapter.dictionaryFor` reads, so both engines see one file.
+     */
+    fun langpackRelativePath(language: String?): String? {
+        val code = normalize(language)
+        return if (SUPPORTED[code] == LexiconSource.CKDT_LANGPACK) {
+            "langpacks/$code/dictionary.bin"
+        } else {
+            null
         }
     }
 }
