@@ -433,6 +433,15 @@ to CTC — the same fall-through contract the dead-session and missing-lexicon g
 blocking dictionary parse on the swipe path. Measurement is also triggered at import time and at
 language selection (the settings card), which is where a refusal can be explained to the user.
 
+**Word LENGTH is deliberately not part of eligibility, because it was measured and is a
+non-issue.** A word needing more than the 32 emission frames is silently unemittable — the second,
+independent way a pack's vocabulary can be unreachable, and the one `memory/HANDOFF.md` lists as
+never checked against a real pack lexicon. It is checked now: **zero** words over budget across all
+five serveable packs, worst case Dutch `gemeenteraadsverkiezingen` at 27 of 32 frames. A threshold
+on a quantity no real word list approaches would be machinery pretending to be a check;
+`CtcImportedPackSupportTest` holds the measurement, and a red there is the evidence that the length
+dimension needs its own gate.
+
 **Reimport invalidates everything through one fingerprint.** `CtcImportedPackSupport.packFingerprint`
 (length + mtime) keys both the eligibility verdict and `CtcEngineAdapter`'s trie content-hash, so a
 replaced pack can neither be served by the previous file's trie nor admitted by its measurement.

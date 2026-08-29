@@ -319,10 +319,13 @@ needs a new `hebrew` branch (0x0590–0x05FF) in `build_wordlist._is_script_word
 raises on any script but latin/greek/cyrillic. Their models and fixtures are also unshipped. Each
 row in `CtcScriptSupport` states its own gap; that table is the live list, not this paragraph.
 
-**Still true of every script including ru**: the 32-frame budget has never been checked against a
+**Still true of every SCRIPT including ru**: the 32-frame budget has never been checked against a
 real script lexicon. `CtcDecodableLength` computes it and a test covers `en_enhanced.json`; no
 script pack has been swept, and Greek and Ukrainian carry long inflected forms. A word over
-budget is unemittable with no error.
+budget is unemittable with no error. **The Latin half of that question is now closed**
+(`CtcImportedPackSupportTest`, 2026-08-29): zero words over budget in nl/id/ms/sw/tl, worst case
+`gemeenteraadsverkiezingen` at 27 of 32 frames — which is why imported-pack eligibility gates on
+spelling and not on length. The sweep for the script packs is the same six lines of test.
 
 Geometric is removable **script by script**, ~an hour of GPU each plus a lexicon plus wiring. It
 cannot be removed first: deleting it today does not downgrade a Bulgarian user, it removes their

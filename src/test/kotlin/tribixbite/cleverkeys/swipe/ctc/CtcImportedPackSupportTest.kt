@@ -320,6 +320,33 @@ class CtcImportedPackSupportTest {
         }
     }
 
+    /**
+     * The OTHER way a pack's word can be unswipeable, measured rather than assumed: the emission
+     * head produces 32 frames, so a word needing more (one frame per character plus a separating
+     * blank per adjacent duplicate) has no alignment and is silently unemittable.
+     *
+     * `memory/HANDOFF.md` lists this budget as never checked against a real pack lexicon. It is
+     * checked here for every pack the engine will actually serve, and the answer is that it is a
+     * non-issue for real Latin word lists: **zero** words over budget in all five, with Dutch's
+     * worst case `gemeenteraadsverkiezingen` at 27 frames — five to spare. That is why
+     * eligibility gates on spelling alone and not on length: a threshold on a quantity no real
+     * pack approaches is machinery pretending to be a check. If this test ever goes red, THAT is
+     * the evidence that the length dimension needs its own gate.
+     */
+    @Test
+    fun `every serveable langpack fits the 32-frame emission budget`() {
+        for (code in listOf("nl", "id", "ms", "sw", "tl")) {
+            val surfaces = packWords(code).mapNotNull { CtcAzProjection.project(it) }
+            val overBudget = surfaces.filterNot { CtcDecodableLength.isDecodable(it) }
+            assertWithMessage(
+                "$code has ${overBudget.size} words needing more than " +
+                    "${CtcDecodableLength.EMISSION_FRAMES} frames, e.g. ${overBudget.take(3)} — " +
+                    "those are unemittable with no error, so the eligibility check would be " +
+                    "admitting a pack whose long words silently cannot be swiped"
+            ).that(overBudget).isEmpty()
+        }
+    }
+
     /** Canonical section of `scripts/dictionaries/langpack-<code>.zip`, most frequent first. */
     private fun packWords(code: String): List<String> {
         val zip = File("scripts/dictionaries/langpack-$code.zip")

@@ -91,6 +91,19 @@ package tribixbite.cleverkeys.swipe.ctc
  * projectable rate means nothing, and a truncated or half-written `dictionary.bin` that happened
  * to parse would sail through. It is 20× below the smallest real pack in the repo (`sw`, 20,000),
  * so it rejects only degenerate files.
+ *
+ * ## What this check deliberately does NOT measure: word LENGTH
+ *
+ * A word can also be unswipeable by being too long — the emission head produces
+ * [CtcDecodableLength.EMISSION_FRAMES] frames, and a word needing more has no alignment and is
+ * silently unemittable. That is a second, independent way for a pack's vocabulary to be
+ * unreachable, and it is not part of eligibility because it was MEASURED and found not to
+ * happen: across all five serveable packs, **zero** words exceed the budget, and the worst case in
+ * the language most likely to produce one — Dutch compounding — is `gemeenteraadsverkiezingen` at
+ * 27 of 32 frames. A threshold on a quantity no real word list approaches would be machinery
+ * pretending to be a check. `CtcImportedPackSupportTest.every serveable langpack fits the 32-frame
+ * emission budget` holds that measurement; if it ever goes red, THAT is the evidence that the
+ * length dimension needs its own gate.
  */
 object CtcImportedPackSupport {
 
