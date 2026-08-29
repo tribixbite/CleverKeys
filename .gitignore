@@ -166,6 +166,14 @@ src/main/assets/prefix_boosts/*.json
 
 # MCP tool generated code
 pal_generated.code
+# A LITERAL `~` directory, not a home reference: bun under Termux does not expand
+# `~` when it resolves its install cache, so `bun install` inside site/ creates
+# site/~/.bun/install/cache instead of $HOME/.bun/…. Every site build recreates it.
+# The directory exclusion has to come before the `!site/**/*.json` re-includes below
+# and stay a DIRECTORY pattern — git never descends into an excluded directory, so a
+# negation cannot resurrect the cached package.json files inside it.
+site/~/
+
 # Temp emoji data files
 *.json
 !site/**/*.json

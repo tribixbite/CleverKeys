@@ -219,11 +219,51 @@ log and the verification doc before re-deriving anything. Still open:
   `stringResource` control titles (index unchanged at 128 entries), and the Compose
   instrumented tests match on RENDERED text, which is byte-identical because every extracted
   value reproduces its literal exactly.
-- **ARC-048 (backlog, worsening)**: ConfigSnapshot absent (static consumers 28→33 files),
-  145-file flat package root, 6 hand-wired Initializers, WordPredictor 2636 lines no interface,
-  SettingsActivity 123 mutableStateOf + `SettingsScreen.kt:69-73` composition-body writes
-  without `SideEffect{}` (stale `composeScope` no-ops scroll-to-setting). Plan:
-  `docs/history/audits/remediation/5-architecture.md`.
+- **ARC-048 — the cheap three-quarters is DONE (2026-08-29); the two expensive items are
+  now explicitly deferred as their own projects, not backlog rot.**
+  - **DONE — R4 package reorg** (`63fcb797`): 32 files moved into `activities/` (14),
+    `clipboard/` (12), `emoji/` (6). Flat package root **145 → 113**. Directory-only: every
+    moved file still declares `package tribixbite.cleverkeys`, so `git diff -M` is 32×R100
+    and no import, manifest entry, proguard keep or `pureTestClasses` FQCN changed. The real
+    cost was the eight things that address a file by REPO PATH (build.gradle's
+    `generateSettingsSearchIndex` input, `scripts/generate_settings_search_index.py`, and six
+    source-scanning drift tests) — all updated in the same commit. If you move more clusters,
+    that list is the checklist; `GesturePrefAccessDriftTest` is safe because it matches on
+    `File.name`.
+  - **DONE — R6 `interface Predictor`** (`Predictor.kt`): the CONSUMED surface of the
+    2,636-line `WordPredictor` (25 members, not all of its public API — construction-only
+    members like `setContext`/`startObservingDictionaryChanges` are off it on purpose).
+    `PredictionCoordinator.getWordPredictor()` and `Keyboard2View.setSwipeTypingComponents`
+    now hand out `Predictor?`. `DictionaryManager` deliberately keeps the concrete type: it
+    is the owner, not a consumer. Milestone met with a real fake —
+    `PredictorContractTest` (pure, 7 cases) drives the next-word pipeline through a
+    `FakePredictor`, which was impossible before (it needed a device, a dictionary load and
+    ~5-10 MB of heap). Two drift pins keep the seam from silently closing again.
+  - **DONE — the `SideEffect{}` gap** (`df396f86`); see the ARC-048 addendum in
+    `docs/audit/2026-08-28-archive-verification.md:137` for why it was never a flicker source
+    and what the actual damage was.
+  - **DEFERRED (own project) — R3 `ConfigSnapshot` read-model.** Static
+    `Config.globalConfig()` consumers are 33 files / 90 call sites. Plan is written and
+    phased: `5-architecture.md` §"Config Immutability Migration Plan" steps 1-3 (snapshot type
+    → `Gesture.kt` first → `Pointers`+`Keyboard2View`), with the CI grep count as the single
+    progress metric and an explicit guardrail against freezing `Config` itself. Medium risk
+    because it touches the touch hot loop — do not fold it into an unrelated commit.
+  - **DEFERRED (own project) — R5 Initializer collapse.** 6 `*Initializer` files (841 lines)
+    hand-wired in `onCreate`; plan is `5-architecture.md` §R5 + §"Bridge Consolidation" —
+    one `KeyboardComponentGraph` composition root, keeping the 4 Bridges (they are genuine
+    adapter seams, not wiring). No DI framework.
+  - Also still open from the original entry: `SettingsActivity`'s 123 `mutableStateOf` fields
+    and the `CleverKeysService` static escape hatches (`:153,:176,:212`).
+- **CtcLatencyGateTest measures a class release no longer ships — needs a decision.**
+  `src/androidTest/.../swipe/CtcLatencyGateTest.kt:183` constructs `CtcSwipeDecoder`, but
+  `CtcSwipeDecoder` has **zero** consumers in `src/main` (only `CtcModuleTest`,
+  `CtcReplayEngine` and this gate use it); production decodes via `CtcBeamDecoder`, reached
+  from `CtcEngineAdapter`. Since R8 went on for release (`37ed9804`) it is stripped from the
+  release APK as test-only-in-main. The gate still runs and passes — androidTest builds
+  against debug, where R8 is off — so this is silent: a green latency gate over code the
+  shipped APK does not contain. Two candidate fixes, pick one: move `CtcSwipeDecoder` to
+  `src/test` (honest about what it is), or repoint the gate at `CtcBeamDecoder` (measures
+  what ships). Don't do both.
 - **ARC-049 (device)**: one long-run `MemoryProbe` + `dumpsys meminfo` on a current build to
   close the unexplained 2026-08-17 OOM.
 
