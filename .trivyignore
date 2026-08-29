@@ -1,0 +1,10 @@
+# Trivy suppressions — every entry needs a rationale and an unblocking condition.
+#
+# astro 5.18.1 (site/bun.lock): both HIGHs are fixed only in astro 6.4.6 — a MAJOR
+# upgrade that also demands vite 7+, conflicting with the vite 6.4.3 CVE-fix pin.
+# Exposure is nil in this repo: astro is a BUILD-TIME static-site generator for the
+# docs wiki, run only inside CI and on the dev box; no astro code ships or serves.
+# Unblock: schedule the astro 5→6 migration (drop these two lines + the vite
+# override together). Tracked in memory/HANDOFF.md §0.
+CVE-2026-54299
+CVE-2026-50146

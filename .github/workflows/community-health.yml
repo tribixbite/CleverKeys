@@ -198,7 +198,7 @@ jobs:
 
             message += "\n### 🧠 Swipe Keyboard Testing\n";
             message += "For swipe/UI changes, please run:\n";
-            message += "```bash\n./testing/run-ui-tests.sh\n```\n\n";
+            message += "```bash\n./gradlew runPureTests runMockTests\n```\n\n";
             message += "Our automated CI will also validate:\n";
             message += "- 🧪 Performance benchmarks (<200ms swipe-decode latency)\n";
             message += "- 📸 Visual regression testing\n";

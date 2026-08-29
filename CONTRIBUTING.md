@@ -82,12 +82,12 @@ git checkout -b fix/bug-description
 
 #### 3. Test Your Changes
 ```bash
-# Run automated tests
-./testing/run-ui-tests.sh
+# Pure JVM test suite (the fast gate)
+./gradlew runPureTests runMockTests
 
-# Build and test APK
-./gradlew assembleDebug
-adb install build/outputs/apk/debug/tribixbite.cleverkeys.debug.apk
+# Instrumented tests run on emulator.wtf (ew-cli) or via the CI emulator job;
+# build the APKs they need with:
+./gradlew assembleDebug assembleDebugAndroidTest
 ```
 
 #### 4. Submit Pull Request
@@ -357,8 +357,8 @@ Before submitting a PR, manually test:
 
 ### Performance Validation
 ```bash
-# Run comprehensive test suite
-./testing/run-ui-tests.sh
+# Run the full JVM suite (includes latency-adjacent pure tests)
+./gradlew runPureTests runMockTests
 
 # Check specific performance metrics
 adb logcat | grep "PERFORMANCE_METRIC"

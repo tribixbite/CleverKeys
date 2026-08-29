@@ -67,6 +67,11 @@ log and the verification doc before re-deriving anything. Still open:
   recorded decision to delete `proguard-rules.pro`.
 - **ARC-012 (investigation)**: #79 settings header flicker — unreproduced; note the screen is
   `Column`+`verticalScroll`, NOT LazyColumn, so the old diagnosis is wrong.
+- **Astro 5→6 migration owed** (2026-08-29): the site's two remaining HIGH CVEs are fixed only
+  in astro 6.4.6, which needs vite 7+ — conflicting with the vite 6.4.3 CVE pin in
+  `site/package.json` overrides. Suppressed in `.trivyignore` with rationale (build-time-only
+  static generator). When migrating: bump astro, drop the vite/js-yaml overrides, delete the
+  two `.trivyignore` lines, rebuild (84 pages expected).
 - **ARC-013 FIXED 2026-08-29, awaiting device confirmation.** UT-5 closed 2026-08-28; UT-7's two
   measured defects are fixed in code and both root causes turned out NOT to be what the
   measurement doc guessed. (a) `id → i'd` was never missing from the DATA —
