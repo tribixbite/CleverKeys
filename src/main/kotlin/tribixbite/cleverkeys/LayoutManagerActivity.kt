@@ -18,6 +18,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -129,12 +131,12 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Keyboard Layouts") },
+                title = { Text(stringResource(R.string.layout_manager_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.common_back)
                         )
                     }
                 },
@@ -147,8 +149,13 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = { showAddDialog = true },
-                icon = { Icon(Icons.Filled.Add, contentDescription = "Add Layout") },
-                text = { Text("Add Layout") }
+                icon = {
+                    Icon(
+                        Icons.Filled.Add,
+                        contentDescription = stringResource(R.string.layout_manager_add)
+                    )
+                },
+                text = { Text(stringResource(R.string.layout_manager_add)) }
             )
         }
     ) { paddingValues ->
@@ -167,7 +174,11 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
                 )
             ) {
                 Text(
-                    text = "Drag to reorder • Tap to edit • ${layoutsWithIds.size} layout${if (layoutsWithIds.size != 1) "s" else ""}",
+                    text = pluralStringResource(
+                        R.plurals.layout_manager_hint,
+                        layoutsWithIds.size,
+                        layoutsWithIds.size
+                    ),
                     modifier = Modifier.padding(16.dp),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -274,9 +285,9 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
     showDeleteConfirmDialog?.let { index ->
         AlertDialog(
             onDismissRequest = { showDeleteConfirmDialog = null },
-            title = { Text("Remove Layout?") },
+            title = { Text(stringResource(R.string.layout_manager_remove_title)) },
             text = {
-                Text("Are you sure you want to remove this layout?")
+                Text(stringResource(R.string.layout_manager_remove_body))
             },
             confirmButton = {
                 TextButton(
@@ -288,12 +299,12 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
                         showDeleteConfirmDialog = null
                     }
                 ) {
-                    Text("Remove")
+                    Text(stringResource(R.string.common_remove))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirmDialog = null }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.common_cancel))
                 }
             }
         )
@@ -351,7 +362,7 @@ fun LayoutItem(
             // Drag handle (using Menu icon as fallback)
             Icon(
                 imageVector = Icons.Filled.Menu,
-                contentDescription = "Drag to reorder",
+                contentDescription = stringResource(R.string.layout_manager_drag_desc),
                 modifier = Modifier
                     .detectReorderAfterLongPress(reorderState)
                     .padding(end = 12.dp),
@@ -363,7 +374,7 @@ fun LayoutItem(
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = "Layout ${index + 1}",
+                    text = stringResource(R.string.layout_manager_item_index, index + 1),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -394,7 +405,7 @@ fun LayoutItem(
                 IconButton(onClick = onEdit) {
                     Icon(
                         imageVector = Icons.Default.Edit,
-                        contentDescription = "Edit",
+                        contentDescription = stringResource(R.string.common_edit),
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
@@ -403,7 +414,7 @@ fun LayoutItem(
                 IconButton(onClick = onDelete) {
                     Icon(
                         imageVector = Icons.Default.Delete,
-                        contentDescription = "Delete",
+                        contentDescription = stringResource(R.string.common_delete),
                         tint = MaterialTheme.colorScheme.error
                     )
                 }
@@ -435,7 +446,7 @@ fun AddLayoutDialog(
             Column {
                 // Title
                 Text(
-                    text = "Add Layout",
+                    text = stringResource(R.string.layout_manager_add),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(16.dp)
@@ -446,17 +457,17 @@ fun AddLayoutDialog(
                     Tab(
                         selected = selectedTab == 0,
                         onClick = { selectedTab = 0 },
-                        text = { Text("System") }
+                        text = { Text(stringResource(R.string.layout_manager_tab_system)) }
                     )
                     Tab(
                         selected = selectedTab == 1,
                         onClick = { selectedTab = 1 },
-                        text = { Text("Predefined") }
+                        text = { Text(stringResource(R.string.layout_manager_tab_predefined)) }
                     )
                     Tab(
                         selected = selectedTab == 2,
                         onClick = { selectedTab = 2 },
-                        text = { Text("Custom") }
+                        text = { Text(stringResource(R.string.layout_manager_tab_custom)) }
                     )
                 }
 
@@ -466,7 +477,7 @@ fun AddLayoutDialog(
                         // System layout option
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text(
-                                text = "Use device's default keyboard layout",
+                                text = stringResource(R.string.layout_manager_system_desc),
                                 style = MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier.padding(bottom = 16.dp)
                             )
@@ -474,7 +485,7 @@ fun AddLayoutDialog(
                                 onClick = onSelectSystem,
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Text("Add System Layout")
+                                Text(stringResource(R.string.layout_manager_add_system))
                             }
                         }
                     }
@@ -514,7 +525,7 @@ fun AddLayoutDialog(
                         // Custom layout option
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text(
-                                text = "Create a custom keyboard layout using XML format",
+                                text = stringResource(R.string.layout_manager_custom_desc),
                                 style = MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier.padding(bottom = 16.dp)
                             )
@@ -522,7 +533,7 @@ fun AddLayoutDialog(
                                 onClick = onSelectCustom,
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Text("Create Custom Layout")
+                                Text(stringResource(R.string.layout_manager_create_custom))
                             }
                         }
                     }
@@ -536,7 +547,7 @@ fun AddLayoutDialog(
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.common_cancel))
                     }
                 }
             }
@@ -615,7 +626,7 @@ fun CustomLayoutEditorDialog(
             Column(modifier = Modifier.fillMaxSize()) {
                 // Title
                 Text(
-                    text = "Custom Layout Editor",
+                    text = stringResource(R.string.layout_manager_editor_title),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(16.dp)
@@ -629,7 +640,7 @@ fun CustomLayoutEditorDialog(
                         .weight(1f)
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
-                    label = { Text("Layout XML") },
+                    label = { Text(stringResource(R.string.layout_manager_xml_label)) },
                     isError = validationError != null,
                     supportingText = validationError?.let { { Text(it, color = MaterialTheme.colorScheme.error) } }
                 )
@@ -645,7 +656,7 @@ fun CustomLayoutEditorDialog(
                         onClick = { importLauncher.launch(arrayOf("text/xml", "*/*")) },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Import XML")
+                        Text(stringResource(R.string.layout_manager_import_xml))
                     }
                     OutlinedButton(
                         onClick = {
@@ -656,7 +667,7 @@ fun CustomLayoutEditorDialog(
                         },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Export XML")
+                        Text(stringResource(R.string.layout_manager_export_xml))
                     }
                 }
 
@@ -675,7 +686,7 @@ fun CustomLayoutEditorDialog(
                                 contentColor = MaterialTheme.colorScheme.error
                             )
                         ) {
-                            Text("Remove")
+                            Text(stringResource(R.string.common_remove))
                         }
                     } else {
                         Spacer(modifier = Modifier.width(1.dp))
@@ -683,14 +694,14 @@ fun CustomLayoutEditorDialog(
 
                     Row {
                         TextButton(onClick = onDismiss) {
-                            Text("Cancel")
+                            Text(stringResource(R.string.common_cancel))
                         }
                         Spacer(modifier = Modifier.width(8.dp))
                         Button(
                             onClick = { onSave(xmlText) },
                             enabled = validationError == null && xmlText.isNotBlank()
                         ) {
-                            Text("Save")
+                            Text(stringResource(R.string.common_save))
                         }
                     }
                 }

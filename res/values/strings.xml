@@ -1071,4 +1071,32 @@
     <string name="command_palette_ts_long_date" tools:ignore="MissingTranslation">Long date</string>
     <string name="command_palette_ts_iso" tools:ignore="MissingTranslation">ISO 8601</string>
     <string name="command_palette_ts_slash_mdy" tools:ignore="MissingTranslation">Slash MDY</string>
+
+    <!-- LayoutManagerActivity.kt — reorderable keyboard-layout list, add-layout
+         picker and the custom-XML editor -->
+    <string name="common_edit" tools:ignore="MissingTranslation">Edit</string>
+    <string name="layout_manager_title" tools:ignore="MissingTranslation">Keyboard Layouts</string>
+    <string name="layout_manager_add" tools:ignore="MissingTranslation">Add Layout</string>
+    <!-- Info card above the list. %1$d = configured layouts. A real <plurals> rather than
+         a "(s)" suffix so the English rendering is unchanged from the literal it replaced. -->
+    <plurals name="layout_manager_hint" tools:ignore="MissingTranslation">
+        <item quantity="one">Drag to reorder • Tap to edit • %1$d layout</item>
+        <item quantity="other">Drag to reorder • Tap to edit • %1$d layouts</item>
+    </plurals>
+    <string name="layout_manager_remove_title" tools:ignore="MissingTranslation">Remove Layout?</string>
+    <string name="layout_manager_remove_body" tools:ignore="MissingTranslation">Are you sure you want to remove this layout?</string>
+    <string name="layout_manager_drag_desc" tools:ignore="MissingTranslation">Drag to reorder</string>
+    <!-- %1$d = 1-based position of the layout in the list -->
+    <string name="layout_manager_item_index" tools:ignore="MissingTranslation">Layout %1$d</string>
+    <string name="layout_manager_tab_system" tools:ignore="MissingTranslation">System</string>
+    <string name="layout_manager_tab_predefined" tools:ignore="MissingTranslation">Predefined</string>
+    <string name="layout_manager_tab_custom" tools:ignore="MissingTranslation">Custom</string>
+    <string name="layout_manager_system_desc" tools:ignore="MissingTranslation">Use device\'s default keyboard layout</string>
+    <string name="layout_manager_add_system" tools:ignore="MissingTranslation">Add System Layout</string>
+    <string name="layout_manager_custom_desc" tools:ignore="MissingTranslation">Create a custom keyboard layout using XML format</string>
+    <string name="layout_manager_create_custom" tools:ignore="MissingTranslation">Create Custom Layout</string>
+    <string name="layout_manager_editor_title" tools:ignore="MissingTranslation">Custom Layout Editor</string>
+    <string name="layout_manager_xml_label" tools:ignore="MissingTranslation">Layout XML</string>
+    <string name="layout_manager_import_xml" tools:ignore="MissingTranslation">Import XML</string>
+    <string name="layout_manager_export_xml" tools:ignore="MissingTranslation">Export XML</string>
 </resources>
