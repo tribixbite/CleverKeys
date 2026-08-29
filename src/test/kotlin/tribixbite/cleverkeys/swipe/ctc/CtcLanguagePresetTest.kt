@@ -152,9 +152,29 @@ class CtcLanguagePresetTest {
     // ── The language table ─────────────────────────────────────────────────────────
 
     @Test
-    fun `supported languages are every bundled dictionary language`() {
+    fun `the served set is the seven latin languages plus ru`() {
+        // Seven bundled Latin dictionaries, plus ru — the first non-Latin language, whose
+        // lexicon is NOT bundled (it rides the importable langpack, which is the exact pack
+        // every published Russian number was measured on).
         assertThat(CtcLanguageSupport.SUPPORTED.keys)
-            .containsExactly("en", "fr", "de", "es", "it", "pt", "sv")
+            .containsExactly("en", "fr", "de", "es", "it", "pt", "sv", "ru")
+    }
+
+    @Test
+    fun `ru is flagged val-only, and val-only is disjoint from provisional`() {
+        // Two different kinds of thin evidence and they must not be conflated. PROVISIONAL =
+        // no per-language bar at all, enabled by frequency-scale transfer. VAL_ONLY = a real
+        // measured number (85.07 in-dict top-1) that can NEVER be upgraded to test-validated,
+        // because the only real non-Latin corpus is eval-only by licence and the test-2400
+        // seal is spent.
+        assertThat(CtcLanguageSupport.VAL_ONLY).containsExactly("ru")
+        assertThat(CtcLanguageSupport.VAL_ONLY)
+            .containsNoneIn(CtcLanguageSupport.PROVISIONAL)
+        assertThat(CtcLanguageSupport.SUPPORTED.keys)
+            .containsAtLeastElementsIn(CtcLanguageSupport.VAL_ONLY)
+        // The test-validated four must never acquire either flag.
+        assertThat(CtcLanguageSupport.VAL_ONLY)
+            .containsNoneIn(listOf("en", "fr", "de", "es"))
     }
 
     @Test
@@ -199,7 +219,11 @@ class CtcLanguagePresetTest {
             assertThat(CtcLanguageSupport.sourceFor(lang))
                 .isEqualTo(CtcLanguageSupport.LexiconSource.CKDT_BIN)
         }
-        assertThat(CtcLanguageSupport.sourceFor("ru")).isNull()
+        // ru reads the SAME CKDT container and the SAME 255-rank scale, delivered by the
+        // language-pack import rather than bundled — which is why it is its own constant and
+        // not just "asset, else langpack" on CKDT_BIN. See the enum's KDoc.
+        assertThat(CtcLanguageSupport.sourceFor("ru"))
+            .isEqualTo(CtcLanguageSupport.LexiconSource.CKDT_LANGPACK)
     }
 
     @Test
@@ -208,7 +232,15 @@ class CtcLanguagePresetTest {
         assertThat(CtcLanguageSupport.assetFor("fr")).isEqualTo("dictionaries/fr_enhanced.bin")
         assertThat(CtcLanguageSupport.assetFor("de")).isEqualTo("dictionaries/de_enhanced.bin")
         assertThat(CtcLanguageSupport.assetFor("es")).isEqualTo("dictionaries/es_enhanced.bin")
+        // ru has NO bundled asset: a null here means "not bundled", not "unsupported".
         assertThat(CtcLanguageSupport.assetFor("ru")).isNull()
+        assertThat(CtcLanguageSupport.langpackRelativePath("ru"))
+            .isEqualTo("langpacks/ru/dictionary.bin")
+        // …and the converse, so the two resolutions can never both answer for one language.
+        for (lang in listOf("en", "fr", "de", "es", "it", "pt", "sv")) {
+            assertThat(CtcLanguageSupport.langpackRelativePath(lang)).isNull()
+        }
+        assertThat(CtcLanguageSupport.langpackRelativePath("zz")).isNull()
     }
 
     @Test
@@ -218,7 +250,9 @@ class CtcLanguagePresetTest {
         assertThat(CtcLanguageSupport.isSupported("es_MX")).isTrue()
         assertThat(CtcLanguageSupport.isSupported(null)).isFalse()
         assertThat(CtcLanguageSupport.isSupported("")).isFalse()
-        assertThat(CtcLanguageSupport.isSupported("ru")).isFalse()
+        assertThat(CtcLanguageSupport.isSupported("ru")).isTrue()
+        assertThat(CtcLanguageSupport.isSupported("RU-ru")).isTrue()
+        assertThat(CtcLanguageSupport.isSupported("uk")).isFalse()
     }
 
     @Test
@@ -226,7 +260,12 @@ class CtcLanguagePresetTest {
         // Adding a language must be a TABLE ENTRY, not a refactor: this asserts the
         // table stays internally total.
         for (lang in CtcLanguageSupport.SUPPORTED.keys) {
-            assertThat(CtcLanguageSupport.assetFor(lang)).isNotNull()
+            // Exactly ONE lexicon resolution must answer for each language — a bundled asset
+            // or an imported langpack, never both and never neither.
+            val asset = CtcLanguageSupport.assetFor(lang)
+            val langpack = CtcLanguageSupport.langpackRelativePath(lang)
+            assertWithMessage("$lang must resolve to exactly one lexicon source")
+                .that(listOfNotNull(asset, langpack)).hasSize(1)
             assertThat(CtcScoringParams.presetFor(lang).lambda).isGreaterThan(0.0)
         }
     }

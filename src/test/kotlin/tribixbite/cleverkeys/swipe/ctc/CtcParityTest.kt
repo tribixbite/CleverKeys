@@ -31,33 +31,74 @@ import tribixbite.cleverkeys.swipe.CtcEngineAdapter
  */
 class CtcParityTest {
 
-    private companion object {
-        /** Project-root-relative (runPureTests runs with cwd = project root, per GeoLayoutFixtures). */
-        const val GOLDEN_PATH = "src/test/resources/ctc/ctc_golden.json"
-
-        /** The instrumented copy the on-device parity gate reads from test assets. */
-        const val GOLDEN_ASSET_PATH = "src/androidTest/assets/ctc/ctc_golden.json"
-
-        /**
-         * The shipped emission encoder the fixture was generated from.
-         *
-         * DERIVED from `CtcEngineAdapter.MODEL_ASSET` rather than hardcoded: the whole point of
-         * this test is that the fixture, the model and the preset move together, so a fixture
-         * check that reads a DIFFERENT path than the app loads can pass while the app ships a
-         * different model. Renaming the asset must break this test, not slip past it.
-         */
-        val MODEL_ASSET_PATH = "src/main/assets/" + CtcEngineAdapter.MODEL_ASSET
-
-        /** Score parity: word order is exact; scores tolerate libm pow/log drift. */
-        const val SCORE_TOL = 1e-4
+    /**
+     * One fixture ↔ model ↔ preset triple: the unit this test iterates.
+     *
+     * A wired script is a ROW here, never a new mechanism (checklist §2.4.3). Every fixture has
+     * the same shape — 5 pure-featurizer branch probes, 1 word-path featurizer case, 4
+     * model-backed beam cases — so the three assertions below are alphabet-agnostic already:
+     * the beam cases carry their own `alphabet`, `lexicon` and `params`, and the featurizer is
+     * pure geometry with no alphabet at all.
+     *
+     * @property language the language whose ship preset this fixture must equal.
+     * @property goldenPath the pure-JVM copy (read as a file from the project root).
+     * @property goldenAssetPath the instrumented copy, which must be byte-identical.
+     * @property modelAssetPath the ONNX the fixture's `source_onnx_sha256` must match, DERIVED
+     *   from the adapter's own resolution so a rename breaks this test rather than slipping past.
+     */
+    private class FixtureRow(
+        val language: String,
+        val goldenPath: String,
+        val goldenAssetPath: String,
+        val modelAssetPath: String,
+    ) {
+        override fun toString(): String = language
     }
 
-    private fun loadGolden(): JSONObject {
-        val f = File(GOLDEN_PATH)
-        assertWithMessage("golden fixture must exist at $GOLDEN_PATH — it is COMMITTED, so " +
-            "a miss means the file was deleted, not that it needs regenerating. The original " +
-            "generator was a throwaway in an ephemeral scratchpad and is gone; recover the file " +
-            "from git history rather than trying to rebuild it.").that(f.exists()).isTrue()
+    private companion object {
+        /** Score parity: word order is exact; scores tolerate libm pow/log drift. */
+        const val SCORE_TOL = 1e-4
+
+        /**
+         * The rows, built from the SAME tables the app dispatches through.
+         *
+         * en is the Latin family's row: the shipped `ctc_swipe_encoder.onnx` serves every a–z
+         * layout in all seven Latin languages, so one row covers them. Each wired script
+         * contributes its own row automatically — adding a script to [CtcScriptSupport] with a
+         * fixture is all it takes to be parity-checked here, and a ROUTED script that forgot its
+         * fixture fails `CtcScriptSupportTest` first.
+         */
+        val ROWS: List<FixtureRow> = buildList {
+            add(
+                FixtureRow(
+                    language = "en",
+                    goldenPath = "src/test/resources/ctc/ctc_golden.json",
+                    goldenAssetPath = "src/androidTest/assets/ctc/ctc_golden.json",
+                    modelAssetPath = "src/main/assets/" + CtcEngineAdapter.MODEL_ASSET,
+                )
+            )
+            for ((language, wiring) in CtcScriptSupport.SCRIPTS) {
+                val fixture = wiring.goldenFixture ?: continue
+                add(
+                    FixtureRow(
+                        language = language,
+                        goldenPath = "src/test/resources/ctc/$fixture",
+                        goldenAssetPath = "src/androidTest/assets/ctc/$fixture",
+                        modelAssetPath = "src/main/assets/" +
+                            CtcEngineAdapter.modelAssetFor(language),
+                    )
+                )
+            }
+        }
+    }
+
+    private fun loadGolden(row: FixtureRow): JSONObject {
+        val f = File(row.goldenPath)
+        assertWithMessage("${row.language}: golden fixture must exist at ${row.goldenPath} — it " +
+            "is COMMITTED, so a miss means the file was deleted, not that it needs regenerating. " +
+            "The en generator was a throwaway in an ephemeral scratchpad and is gone; the script " +
+            "fixtures come from CleverKeys-ML `ctc/make_golden.py`. Recover from git history " +
+            "rather than trying to rebuild.").that(f.exists()).isTrue()
         return JSONObject(f.readText())
     }
 
@@ -65,12 +106,16 @@ class CtcParityTest {
 
     @Test
     fun featurizer_matchesPythonPort_bitIdentical() {
-        val cases = loadGolden().getJSONArray("cases")
+        for (row in ROWS) featurizerRow(row)
+    }
+
+    private fun featurizerRow(row: FixtureRow) {
+        val cases = loadGolden(row).getJSONArray("cases")
         var checked = 0
         for (i in 0 until cases.length()) {
             val c = cases.getJSONObject(i)
             if (c.getString("kind") != "featurize") continue
-            val name = c.getString("name")
+            val name = "${row.language}/" + c.getString("name")
             val pts = c.getJSONObject("points")
             val px = pts.getJSONArray("x").toDoubleArray()
             val py = pts.getJSONArray("y").toDoubleArray()
@@ -87,19 +132,24 @@ class CtcParityTest {
             }
             checked++
         }
-        assertWithMessage("must have exercised featurizer cases").that(checked).isGreaterThan(0)
+        assertWithMessage("${row.language}: must have exercised featurizer cases")
+            .that(checked).isGreaterThan(0)
     }
 
     // ── Beam + greedy parity ──────────────────────────────────────────────────────
 
     @Test
     fun beam_matchesPythonPort_greedyAndTopK() {
-        val cases = loadGolden().getJSONArray("cases")
+        for (row in ROWS) beamRow(row)
+    }
+
+    private fun beamRow(row: FixtureRow) {
+        val cases = loadGolden(row).getJSONArray("cases")
         var checked = 0
         for (i in 0 until cases.length()) {
             val c = cases.getJSONObject(i)
             if (c.getString("kind") != "beam") continue
-            val name = c.getString("name")
+            val name = "${row.language}/" + c.getString("name")
 
             val alphabet = c.getString("alphabet").toCharArray()
             val frames = c.getInt("frames")
@@ -126,7 +176,8 @@ class CtcParityTest {
             }
             checked++
         }
-        assertWithMessage("must have exercised beam cases").that(checked).isGreaterThan(0)
+        assertWithMessage("${row.language}: must have exercised beam cases")
+            .that(checked).isGreaterThan(0)
     }
 
     // ── The fixture-and-preset rule (CleverKeys-ML MODEL_COMPARISON.md §5.1) ──────
@@ -146,41 +197,59 @@ class CtcParityTest {
      * fourth thing only a device can check — that the artifact actually *produces* the
      * fixture's emissions through ORT.
      *
-     * Current ship state (CleverKeys-ML `ctc/UNSEALING_4.md`, `ctc/PHASE_M.md` §11.1):
-     * `phaseM_kd_fresh_w1_s1234_fp16w.onnx` sha `84718e6e…`, fixture
-     * `phaseM_kd_fresh_w1_fp16w_golden.json` sha `2a449c4f…`, preset
-     * `0.9 / 4.0 / 0.25 / 0.25 / 0.9882` = [CtcScoringParams.tunedV2].
+     * Current ship state:
+     *  - **Latin** (en/fr/de/es/it/pt/sv, CleverKeys-ML `ctc/UNSEALING_4.md`, `PHASE_M.md`
+     *    §11.1): `phaseM_kd_fresh_w1_s1234_fp16w.onnx` sha `84718e6e…`, fixture
+     *    `ctc_golden.json`, preset `0.9 / 4.0 / 0.25 / 0.25 / 0.9882` = [CtcScoringParams.tunedV2].
+     *  - **ru** (generation 4, `PHASE_Q.md` §7.3): `ru_synth_v3_ch80_fp16w.onnx` sha
+     *    `8fffa75c…`, fixture `ru_synth_v3_ch80_fp16w_golden.json` sha `2e8de3c5…`, preset
+     *    `1.05 / 2.0 / 0.2 / 0.3734 / 0.9882` = [CtcScoringParams.tunedRuCkdt].
+     *
+     * The preset is read through [CtcScoringParams.presetFor] rather than named per row, which
+     * is what makes this a rule-4 check and not a restatement of the fixture: it asserts the
+     * fixture matches the preset the DISPATCHER will actually select for that language.
      */
     @Test
     fun fixture_model_and_shipPreset_travelTogether() {
-        val golden = loadGolden()
+        assertWithMessage(
+            "the Latin row must always be present — a table edit that dropped it would leave " +
+                "the shipped English encoder unchecked"
+        ).that(ROWS.map { it.language }).contains("en")
+        for (row in ROWS) tripleRow(row)
+    }
 
-        // 1. The fixture's preset IS the runtime ship preset (tunedV2), term by term.
-        //    The fixture stores the five scoring terms alpha omits (it is unused by the
-        //    CTC core): [gamma, lambda, beta, gammaPrune, betaPrune].
+    private fun tripleRow(row: FixtureRow) {
+        val golden = loadGolden(row)
+
+        // 1. The fixture's preset IS the preset the dispatcher selects for this language, term
+        //    by term. The fixture stores the five scoring terms alpha omits (it is unused by
+        //    the CTC core): [gamma, lambda, beta, gammaPrune, betaPrune].
         val preset = golden.getJSONArray("preset")
-        val ship = CtcScoringParams.tunedV2()
-        assertWithMessage("fixture preset must have the 5 scoring terms").that(preset.length())
-            .isEqualTo(5)
-        assertWithMessage("fixture gamma vs tunedV2").that(preset.getDouble(0)).isEqualTo(ship.gamma)
-        assertWithMessage("fixture lambda vs tunedV2").that(preset.getDouble(1)).isEqualTo(ship.lambda)
-        assertWithMessage("fixture beta vs tunedV2").that(preset.getDouble(2)).isEqualTo(ship.beta)
-        assertWithMessage("fixture gammaPrune vs tunedV2").that(preset.getDouble(3))
-            .isEqualTo(ship.gammaPrune)
-        assertWithMessage("fixture betaPrune vs tunedV2").that(preset.getDouble(4))
-            .isEqualTo(ship.betaPrune)
+        val ship = CtcScoringParams.presetFor(row.language)
+        assertWithMessage("${row.language}: fixture preset must have the 5 scoring terms")
+            .that(preset.length()).isEqualTo(5)
+        assertWithMessage("${row.language}: fixture gamma vs presetFor")
+            .that(preset.getDouble(0)).isEqualTo(ship.gamma)
+        assertWithMessage("${row.language}: fixture lambda vs presetFor")
+            .that(preset.getDouble(1)).isEqualTo(ship.lambda)
+        assertWithMessage("${row.language}: fixture beta vs presetFor")
+            .that(preset.getDouble(2)).isEqualTo(ship.beta)
+        assertWithMessage("${row.language}: fixture gammaPrune vs presetFor")
+            .that(preset.getDouble(3)).isEqualTo(ship.gammaPrune)
+        assertWithMessage("${row.language}: fixture betaPrune vs presetFor")
+            .that(preset.getDouble(4)).isEqualTo(ship.betaPrune)
 
         // 1b. beamWidth is NOT one of the five scoring terms, and until 2026-08-20 nothing
         //     pinned it — so the fixture could be generated at a different width from the one
         //     the app decodes at and this test would still pass. That gap matters because
         //     width changes which candidates survive pruning, i.e. exactly what parity is
-        //     supposed to be checking. The fixture is deliberately narrow (cheap to generate
+        //     supposed to be checking. The fixtures are deliberately narrow (cheap to generate
         //     over a 7-word lexicon); what must hold is that the SHIP width is the validated
         //     one, since every campaign accuracy number was decoded at it.
         assertWithMessage(
-            "the ship preset's beamWidth must equal Defaults.CTC_BEAM_WIDTH — that is the " +
-                "width every published accuracy number was decoded at, and the settings " +
-                "default must not drift away from it"
+            "${row.language}: the ship preset's beamWidth must equal Defaults.CTC_BEAM_WIDTH — " +
+                "that is the width every published accuracy number was decoded at, and the " +
+                "settings default must not drift away from it"
         ).that(ship.beamWidth).isEqualTo(Defaults.CTC_BEAM_WIDTH)
 
         // 2. Every beam case decodes at that same preset (a case generated at another
@@ -190,30 +259,53 @@ class CtcParityTest {
             val c = cases.getJSONObject(i)
             if (c.getString("kind") != "beam") continue
             val p = readParams(c.getJSONObject("params"))
-            assertWithMessage("${c.getString("name")}: beam case must use the ship preset")
-                .that(listOf(p.gamma, p.lambda, p.beta, p.gammaPrune, p.betaPrune))
+            assertWithMessage(
+                "${row.language}/${c.getString("name")}: beam case must use the ship preset"
+            ).that(listOf(p.gamma, p.lambda, p.beta, p.gammaPrune, p.betaPrune))
                 .isEqualTo(listOf(ship.gamma, ship.lambda, ship.beta, ship.gammaPrune, ship.betaPrune))
         }
 
-        // 3. The bundled ONNX asset IS the artifact the fixture was generated from.
-        val model = File(MODEL_ASSET_PATH)
-        assertWithMessage("shipped encoder must exist at $MODEL_ASSET_PATH")
+        // 3. The bundled ONNX asset IS the artifact the fixture was generated from. All six
+        //    script graphs are 589,406 B and byte-size-identical to each other, so the sha is
+        //    the ONLY thing that can tell a Russian encoder from a Greek one.
+        val model = File(row.modelAssetPath)
+        assertWithMessage("${row.language}: shipped encoder must exist at ${row.modelAssetPath}")
             .that(model.exists()).isTrue()
         val expectedSha = golden.getJSONArray("source_onnx_sha256").getString(0).lowercase()
         assertWithMessage(
-            "sha256($MODEL_ASSET_PATH) must equal the fixture's source_onnx_sha256 — the " +
-                "shipped model and the golden fixture must be the same artifact"
+            "${row.language}: sha256(${row.modelAssetPath}) must equal the fixture's " +
+                "source_onnx_sha256 — the shipped model and the golden fixture must be the " +
+                "same artifact"
         ).that(sha256(model)).isEqualTo(expectedSha)
 
         // 4. The instrumented copy is byte-identical, so the device gate asserts the
         //    same contract this one does.
-        val asset = File(GOLDEN_ASSET_PATH)
-        assertWithMessage("instrumented fixture copy must exist at $GOLDEN_ASSET_PATH")
-            .that(asset.exists()).isTrue()
+        val asset = File(row.goldenAssetPath)
         assertWithMessage(
-            "$GOLDEN_ASSET_PATH must be byte-identical to $GOLDEN_PATH (one fixture, two " +
-                "consumers: runPureTests reads resources, the device gate reads test assets)"
-        ).that(sha256(asset)).isEqualTo(sha256(File(GOLDEN_PATH)))
+            "${row.language}: instrumented fixture copy must exist at ${row.goldenAssetPath}"
+        ).that(asset.exists()).isTrue()
+        assertWithMessage(
+            "${row.goldenAssetPath} must be byte-identical to ${row.goldenPath} (one fixture, " +
+                "two consumers: runPureTests reads resources, the device gate reads test assets)"
+        ).that(sha256(asset)).isEqualTo(sha256(File(row.goldenPath)))
+    }
+
+    /**
+     * Every ROUTED script contributes a row — the rule-4 tie between the two tables and this
+     * gate. A script that reached ROUTED without a fixture would otherwise be parity-unchecked,
+     * which is precisely "two of three" and a silently wrong decode.
+     */
+    @Test
+    fun everyRoutedScriptHasAParityRow() {
+        val rowLanguages = ROWS.map { it.language }.toSet()
+        for ((language, wiring) in CtcScriptSupport.SCRIPTS) {
+            if (wiring.status != CtcScriptSupport.Status.ROUTED) continue
+            assertWithMessage(
+                "$language is ROUTED but contributes no CtcParityTest row — its fixture is " +
+                    "missing from the table, so nothing checks that the shipped bytes are the " +
+                    "ones the fixture was generated from"
+            ).that(rowLanguages).contains(language)
+        }
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────────

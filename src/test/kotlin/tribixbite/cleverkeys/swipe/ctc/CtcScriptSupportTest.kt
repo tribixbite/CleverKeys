@@ -193,10 +193,46 @@ class CtcScriptSupportTest {
     }
 
     // ── Gate 1: slot order IS the alphabet ────────────────────────────────────────
-    //
-    // The pin against each script's shipped golden fixture (`layout.letters` character for
-    // character) lands with the first script's assets, in the commit that ships them. It cannot
-    // be written first: with no fixture in the tree it would assert nothing and read green.
+
+    @Test
+    fun `each shipped fixture's letters are exactly the app's alphabet for that script`() {
+        var checked = 0
+        for ((language, wiring) in CtcScriptSupport.SCRIPTS) {
+            val fixture = wiring.goldenFixture ?: continue
+            val file = File(FIXTURE_DIR, fixture)
+            assertWithMessage("$language: $fixture must ship").that(file.isFile).isTrue()
+            val letters = JSONObject(file.readText()).getJSONObject("layout").getString("letters")
+            assertWithMessage(
+                "$language: THE footgun. The model's emission slot order IS this string — " +
+                    "column c is letters[c] — and a permutation does not throw, it silently " +
+                    "permutes every decode. app='${wiring.alphabet}' fixture='$letters'"
+            ).that(wiring.alphabet).isEqualTo(letters)
+            checked++
+        }
+        assertWithMessage(
+            "no script fixture ships, so this gate asserted nothing. If that is deliberate " +
+                "(all scripts are INFRASTRUCTURE), delete the assertion deliberately rather " +
+                "than leaving a vacuous green."
+        ).that(checked).isGreaterThan(0)
+    }
+
+    @Test
+    fun `each shipped fixture decodes at the preset its language will actually ship at`() {
+        for ((language, wiring) in CtcScriptSupport.SCRIPTS) {
+            val fixture = wiring.goldenFixture ?: continue
+            val preset = JSONObject(File(FIXTURE_DIR, fixture).readText()).getJSONArray("preset")
+            val ship = CtcScoringParams.presetFor(language)
+            assertWithMessage("$language: fixture stores the 5 scoring terms")
+                .that(preset.length()).isEqualTo(5)
+            assertWithMessage("$language: fixture gamma").that(preset.getDouble(0)).isEqualTo(ship.gamma)
+            assertWithMessage("$language: fixture lambda").that(preset.getDouble(1)).isEqualTo(ship.lambda)
+            assertWithMessage("$language: fixture beta").that(preset.getDouble(2)).isEqualTo(ship.beta)
+            assertWithMessage("$language: fixture gammaPrune")
+                .that(preset.getDouble(3)).isEqualTo(ship.gammaPrune)
+            assertWithMessage("$language: fixture betaPrune")
+                .that(preset.getDouble(4)).isEqualTo(ship.betaPrune)
+        }
+    }
 
     // ── Gate 2: the 32-frame budget ───────────────────────────────────────────────
 

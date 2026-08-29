@@ -4,14 +4,17 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import tribixbite.cleverkeys.swipe.SwipeEngineRouter.Engine
 import tribixbite.cleverkeys.swipe.SwipeEngineRouter.Mode
+import tribixbite.cleverkeys.swipe.ctc.CtcLanguageSupport
 
 /**
  * WP9 R-1 step 9 (JVM leg) — routing table for the mode-based [SwipeEngineRouter] (v1.2:
  * the neural engine and its `neural`/`hybrid` modes were removed 2026-08-18).
  *
- * Routing is (mode, layout)-based: CTC (default) = CTC trie-beam on ANY Latin-script layout
- * + geometric on non-Latin/unknown scripts; GEOMETRIC = geometric on ALL layouts. The
- * router is TOTAL — there is no "no engine" outcome, so no layout can lose swipe.
+ * Routing is (mode, layout)-based: CTC (default) = CTC trie-beam on any layout whose SCRIPT
+ * has a complete wiring (`CtcScriptSupport` — Latin, plus every script whose row has reached
+ * ROUTED; Cyrillic since 2026-08-29) + geometric on every other and on unknown scripts;
+ * GEOMETRIC = geometric on ALL layouts. The router is TOTAL — there is no "no engine"
+ * outcome, so no layout can lose swipe.
  */
 class SwipeEngineRouterTest {
 
@@ -41,13 +44,49 @@ class SwipeEngineRouterTest {
             .isEqualTo(Engine.CTC)
     }
 
+    /**
+     * Per-script routing (2026-08-29). Gate 1 is no longer "is this Latin" but "does this
+     * script have a COMPLETE wiring" — a per-script model, a per-script trie at the app's own
+     * frequency scale, and a golden fixture at the shipping preset (HANDOFF rule 4).
+     *
+     * Cyrillic flipped when ru's artifacts landed; Greek has not, and asserting BOTH directions
+     * here is the point: the router is driven by a table, so a script cannot be widened by
+     * editing the router, and an unwired script cannot drift into CTC by accident.
+     */
     @Test
-    fun `cyrillic and greek route geometric in ctc mode`() {
+    fun `a wired script routes ctc and an unwired one stays geometric`() {
         assertThat(SwipeEngineRouter.route("ЙЦУКЕН", "cyrillic", Mode.CTC))
-            .isEqualTo(Engine.GEOMETRIC)
-        // The Greek QWERTY trap: script wins over the QWERTY-shaped name.
+            .isEqualTo(Engine.CTC)
+        // The Greek QWERTY trap still holds, now for a different reason: script wins over the
+        // QWERTY-shaped name, and `greek` has no ROUTED row (its model and fixture are not
+        // shipped), so it stays on the geometric engine.
         assertThat(SwipeEngineRouter.route("QWERTY (Ελληνικά)", "greek", Mode.CTC))
             .isEqualTo(Engine.GEOMETRIC)
+        // Scripts with no table row at all can never reach CTC.
+        for (script in listOf("arabic", "hebrew", "devanagari", "hangul", "georgian")) {
+            assertThat(SwipeEngineRouter.route("board", script, Mode.CTC))
+                .isEqualTo(Engine.GEOMETRIC)
+        }
+    }
+
+    /**
+     * The router is layout-metadata-only, so a Cyrillic board routes CTC for EVERY language —
+     * including uk/bg/mk, whose lexicons do not exist. That is correct and is not a leak: the
+     * language gate in `InputCoordinator.performCtcSwipeTyping` reads
+     * `CtcLanguageSupport.SUPPORTED` before dispatch and hands those swipes to the geometric
+     * engine. Pinned so the division of labour stays explicit — the router must NOT grow a
+     * language parameter to compensate.
+     */
+    @Test
+    fun `routing is per script while serving is per language`() {
+        // All eleven bundled Cyrillic boards route CTC at gate 1 …
+        assertThat(SwipeEngineRouter.route("ЙЦУКЕН (Українська)", "cyrillic", Mode.CTC))
+            .isEqualTo(Engine.CTC)
+        // … but only ru is actually served.
+        assertThat(CtcLanguageSupport.isSupported("ru")).isTrue()
+        for (language in listOf("uk", "bg", "mk", "sr", "kk")) {
+            assertThat(CtcLanguageSupport.isSupported(language)).isFalse()
+        }
     }
 
     @Test

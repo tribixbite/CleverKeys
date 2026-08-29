@@ -84,8 +84,48 @@ class ReleaseMetadataDriftTest {
             assertTrue("${file.path} must explain fallback", text.contains("geometric fallback"))
             assertFalse("${file.path} must not call CTC opt-in", text.contains("CTC engine (opt-in)"))
         }
-        assertEquals(setOf("en", "fr", "de", "es", "it", "pt", "sv"), CtcLanguageSupport.SUPPORTED.keys)
+        // The seven languages the notes above actually describe.
+        val announced = setOf("en", "fr", "de", "es", "it", "pt", "sv")
+        assertEquals(
+            "the CTC language table must be exactly the announced set plus the languages " +
+                "deliberately held back from these notes",
+            announced + SERVED_BUT_NOT_YET_ANNOUNCED,
+            CtcLanguageSupport.SUPPORTED.keys,
+        )
         assertEquals(setOf("it", "pt", "sv"), CtcLanguageSupport.PROVISIONAL)
+        assertEquals(setOf("ru"), CtcLanguageSupport.VAL_ONLY)
+        // The two halves must not silently disagree: a language listed as unannounced must
+        // genuinely be absent from the notes.
+        for ((file, text) in releaseFiles.zip(texts)) {
+            for (language in SERVED_BUT_NOT_YET_ANNOUNCED) {
+                assertFalse(
+                    "${file.path} mentions '$language', which is listed as NOT yet announced. " +
+                        "Either remove it from SERVED_BUT_NOT_YET_ANNOUNCED (and say so " +
+                        "properly, with its evidence tier) or take it out of the notes.",
+                    text.contains(" $language ") || text.contains("/$language") ||
+                        text.contains("$language/")
+                )
+            }
+        }
         assertEquals("ctc", Defaults.SWIPE_ENGINE_MODE)
+    }
+
+    private companion object {
+        /**
+         * Languages the CTC engine SERVES at HEAD but which these release notes deliberately do
+         * not claim, because they landed after the notes' version was written.
+         *
+         * `ru` (2026-08-29) is the first non-Latin language and is post-v1.6 work by the
+         * multi-script plan's own sequencing ("this is **post-v1.6** work … do not start
+         * Milestone A on the release branch"). v1.6.0 is not tagged, so main now carries a
+         * language its pending notes do not mention.
+         *
+         * # TODO(release): before the v1.6.0 tag, DECIDE — either announce Russian in
+         * RELEASE_NOTES.md and all three ABI changelogs (at its real evidence tier: val-only,
+         * eval-only corpus, no on-device latency or memory measurement, and served only when the
+         * ru language pack is imported) and empty this set, or hold the ru wiring back from that
+         * release. This set exists so the decision cannot be made by forgetting.
+         */
+        val SERVED_BUT_NOT_YET_ANNOUNCED = setOf("ru")
     }
 }

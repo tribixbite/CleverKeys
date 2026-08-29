@@ -9,9 +9,9 @@ import java.util.Locale
  *
  * ## Why a table and not a single constant
  *
- * The shipped encoder (`models/ctc_swipe_encoder.onnx`) is layout- and language-agnostic
- * — it emits a–z posteriors from geometry alone — so a language is "supported" exactly
- * when BOTH of these exist for it:
+ * The Latin encoder (`models/ctc_swipe_encoder.onnx`) is layout- and language-agnostic
+ * — it emits posteriors over whatever key geometry it is handed — so a LATIN language is
+ * "supported" exactly when BOTH of these exist for it:
  *
  *  1. **Model-level validation**: an alt-layout accuracy bar from the training campaign
  *     (CleverKeys-ML `ctc/MODELS_TABLE.md:113`). For the model we actually ship
@@ -38,6 +38,23 @@ import java.util.Locale
  * 15–22 points worse wherever both engines were measured, so withholding CTC was protecting
  * an evidence standard the alternative never met. Read [PROVISIONAL] before quoting any
  * number for these three.
+ *
+ * ## Non-Latin languages need a third thing, and it is not negotiable
+ *
+ * A SCRIPT language additionally needs its own encoder, because a Latin-trained model does not
+ * zero-shot another script well enough on its own — motor statistics and the learned
+ * character-transition prior are trained even though geometry is an input. The rule
+ * (`memory/HANDOFF.md` rule 4, guide §7.4) is all three of a per-script **model**, a per-script
+ * **trie on the app's own lexicon at the app's own frequency scale**, and a **golden fixture at
+ * the preset that will actually ship**. Two of three is a silently wrong decode, not a partial
+ * feature. That rule is enforced by [CtcScriptSupport], which is where a script's alphabet,
+ * layout, artifacts and status live; this table only records the LEXICON, which is the leg of
+ * rule 4 that is language-shaped rather than script-shaped.
+ *
+ * `ru` is the first, added 2026-08-29 and flagged [VAL_ONLY]. Its lexicon is
+ * [LexiconSource.CKDT_LANGPACK] — the importable `langpack-ru` pack, which is the EXACT lexicon
+ * every published Russian number was measured on, so it is served when that pack is installed
+ * and not otherwise.
  */
 object CtcLanguageSupport {
 
@@ -97,6 +114,9 @@ object CtcLanguageSupport {
         "it" to LexiconSource.CKDT_BIN,
         "pt" to LexiconSource.CKDT_BIN,
         "sv" to LexiconSource.CKDT_BIN,
+        // 2026-08-29, the first NON-LATIN language — see [VAL_ONLY] before quoting any number
+        // for it, and [CtcScriptSupport] for the alphabet, the layout and the model.
+        "ru" to LexiconSource.CKDT_LANGPACK,
     )
 
     /**
@@ -131,6 +151,42 @@ object CtcLanguageSupport {
      * of this set only by adding its own bar, never by familiarity.
      */
     val PROVISIONAL: Set<String> = setOf("it", "pt", "sv")
+
+    /**
+     * Languages whose accuracy evidence is **val-only and can never be upgraded**, as distinct
+     * from [PROVISIONAL] (no evidence at all, enabled by scale transfer).
+     *
+     * ## ru, and exactly what may be said about it
+     *
+     * Russian is the first non-Latin language the CTC engine serves, and it is the ONLY script
+     * with a real-swipe probe of any kind. Its number is **85.07 in-dict top-1**, and every
+     * clause of the following matters:
+     *
+     *  * It was measured on the **Yandex valid-10k**, the only real non-Latin swipe corpus in
+     *    existence, which is **eval-only by licence** — no training row, distilled teacher,
+     *    fine-tune, or artifact whose pipeline touched it may ever ship (HANDOFF rule 1). The
+     *    corpus is a protected database under ГК РФ ст. 1334 whose ст. 1335.1 research carve-out
+     *    does not cover a shipped product.
+     *  * It is therefore **val-only, permanently**. The test-2400 seal is spent and no Cyrillic
+     *    model was ever decoded on it, so no Russian number may be called "test-validated" —
+     *    that phrase means decoded on a sealed split whose read was spent from the ledger.
+     *  * The model was trained on **license-clean synthesis only** (a learned generator fitted to
+     *    MIT data — FUTO t3 + HWS — and conditioned on pure geometry). It saw zero real Cyrillic
+     *    rows. A sealed twin fitted to Yandex residuals put the upper bound at 85.95 and produced
+     *    one number and no bytes; if an accuracy for Russian sounds too good, check whether it is
+     *    that model or the permanently-unusable 89.64 `ru-real`.
+     *  * The **model** is three seeds (real-probe 85.30 ± 0.207; the shipped s1234 bytes are the
+     *    LOWEST of the three, so 85.07 is not a favourable pick). The generator, the synthesis
+     *    caches and the ceiling arms are single-seed.
+     *  * **Nothing on-device has ever been measured** — no latency number, no memory number, for
+     *    any script model. The graphs are a fifth of the Latin encoder's bytes so the expectation
+     *    is favourable, and expectation is not measurement.
+     *
+     * The decode constants carry their own caveat: λ = 2.0 was fitted against a greedy-37 model
+     * while the generation-4 decoder reads greedy 66, a **measured, unconfirmed −0.63 t1
+     * shortfall**; γ, β and the prune terms are E1's, carried. See [CtcScoringParams.tunedRuCkdt].
+     */
+    val VAL_ONLY: Set<String> = setOf("ru")
 
     /**
      * Bundled-dictionary languages CTC does not serve. **Empty since 2026-08-18** — every

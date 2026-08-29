@@ -137,14 +137,12 @@ object CtcScriptSupport {
             // (`key1` on е and ь) and `KeyboardGeometry.computeKeyRects` only emits `keys[0]`,
             // so they never become emission slots. The projection folds them away instead.
             alphabet = "абвгдежзийклмнопрстуфхцчшщыьэюя",
-            modelAsset = null,
-            goldenFixture = null,
-            status = Status.INFRASTRUCTURE,
-            gap = "ru_synth_v3_ch80_fp16w.onnx (sha 8fffa75c…) and its golden fixture " +
-                "(sha 2e8de3c5…) are not shipped in this commit — the shared wiring lands " +
-                "first, deliberately behaviour-neutral, so that a slot-order or projection " +
-                "mistake shows up as worse decoding in the NEXT commit rather than hiding " +
-                "inside a model swap.",
+            // Generation 4, sha 8fffa75c722eb61e9e8c80d919fbca3e73eb698ebe3e3909cb766b3b8489962c,
+            // 589,406 B. Fixture sha 2e8de3c5a15e5874366f44f725aeec2eb72befd89b503d4b24b8b4a8d82fdde5.
+            modelAsset = "models/ru_synth_v3_ch80_fp16w.onnx",
+            goldenFixture = "ru_synth_v3_ch80_fp16w_golden.json",
+            status = Status.ROUTED,
+            gap = null,
         ),
         "el" to ScriptWiring(
             language = "el",
