@@ -265,6 +265,7 @@ class CtcMultiLanguageInstrumentedTest {
     ): PredictionResult {
         val (path, times) = traceFor(kd, params, word)
         var result: PredictionResult? = null
+        var failed = false
         val latch = CountDownLatch(1)
         onMain {
             adapter.decodeAsync(
@@ -276,6 +277,15 @@ class CtcMultiLanguageInstrumentedTest {
                 timestamps = times,
                 language = language,
                 secondaryLanguage = secondaryLanguage,
+                // ARC-083 gave decodeAsync a THIRD outcome: a transient failure calls back here
+                // instead of onResult, and defaults to a no-op for callers with no fallback
+                // engine to offer. Without this the failure would be indistinguishable from a
+                // hang and surface 60 seconds later as a latch timeout — the same "empty is not
+                // failure" confusion the production dispatcher was fixed for.
+                onDecodeFailure = {
+                    failed = true
+                    latch.countDown()
+                },
             ) {
                 result = it
                 latch.countDown()
@@ -284,6 +294,11 @@ class CtcMultiLanguageInstrumentedTest {
         assertTrue(
             "$language: decode of '$word' must complete",
             latch.await(60, TimeUnit.SECONDS)
+        )
+        assertTrue(
+            "$language: decode of '$word' FAILED (CtcEngineAdapter routed it to the geometric " +
+                "fallback) — see the CtcEngineAdapter error in logcat for the cause",
+            !failed
         )
         return result!!
     }
