@@ -24,7 +24,7 @@ class GestureClassifierTest {
         context = InstrumentationRegistry.getInstrumentation().targetContext
         TestConfigHelper.ensureConfigInitialized(context)
         config = Config.globalConfig()
-        classifier = GestureClassifier(context)
+        classifier = GestureClassifier()
     }
 
     // =========================================================================
@@ -39,7 +39,7 @@ class GestureClassifierTest {
             timeElapsed = 50L,
             keyWidth = 100f
         )
-        assertEquals("Short tap should be TAP", GestureClassifier.GestureType.TAP, classifier.classify(gesture))
+        assertEquals("Short tap should be TAP", GestureClassifier.GestureType.TAP, classifier.classify(gesture, config.snapshot))
     }
 
     @Test
@@ -50,7 +50,7 @@ class GestureClassifierTest {
             timeElapsed = 100L,
             keyWidth = 100f
         )
-        assertEquals("Tap within key should be TAP", GestureClassifier.GestureType.TAP, classifier.classify(gesture))
+        assertEquals("Tap within key should be TAP", GestureClassifier.GestureType.TAP, classifier.classify(gesture, config.snapshot))
     }
 
     @Test
@@ -61,7 +61,7 @@ class GestureClassifierTest {
             timeElapsed = 10L,
             keyWidth = 100f
         )
-        assertEquals("Zero distance should be TAP", GestureClassifier.GestureType.TAP, classifier.classify(gesture))
+        assertEquals("Zero distance should be TAP", GestureClassifier.GestureType.TAP, classifier.classify(gesture, config.snapshot))
     }
 
     @Test
@@ -72,7 +72,7 @@ class GestureClassifierTest {
             timeElapsed = 0L,
             keyWidth = 100f
         )
-        assertEquals("Zero time tap should be TAP", GestureClassifier.GestureType.TAP, classifier.classify(gesture))
+        assertEquals("Zero time tap should be TAP", GestureClassifier.GestureType.TAP, classifier.classify(gesture, config.snapshot))
     }
 
     // =========================================================================
@@ -87,7 +87,7 @@ class GestureClassifierTest {
             timeElapsed = 100L,
             keyWidth = 100f
         )
-        assertEquals("Long distance should be SWIPE", GestureClassifier.GestureType.SWIPE, classifier.classify(gesture))
+        assertEquals("Long distance should be SWIPE", GestureClassifier.GestureType.SWIPE, classifier.classify(gesture, config.snapshot))
     }
 
     @Test
@@ -100,7 +100,7 @@ class GestureClassifierTest {
             timeElapsed = 100L,
             keyWidth = keyWidth
         )
-        assertEquals("Distance at threshold should be SWIPE", GestureClassifier.GestureType.SWIPE, classifier.classify(gesture))
+        assertEquals("Distance at threshold should be SWIPE", GestureClassifier.GestureType.SWIPE, classifier.classify(gesture, config.snapshot))
     }
 
     @Test
@@ -112,7 +112,7 @@ class GestureClassifierTest {
             timeElapsed = 100L,
             keyWidth = keyWidth
         )
-        assertEquals("Distance above threshold should be SWIPE", GestureClassifier.GestureType.SWIPE, classifier.classify(gesture))
+        assertEquals("Distance above threshold should be SWIPE", GestureClassifier.GestureType.SWIPE, classifier.classify(gesture, config.snapshot))
     }
 
     // =========================================================================
@@ -127,7 +127,7 @@ class GestureClassifierTest {
             timeElapsed = 100L,
             keyWidth = 100f
         )
-        assertEquals("Long distance without leaving key should be TAP", GestureClassifier.GestureType.TAP, classifier.classify(gesture))
+        assertEquals("Long distance without leaving key should be TAP", GestureClassifier.GestureType.TAP, classifier.classify(gesture, config.snapshot))
     }
 
     @Test
@@ -138,7 +138,7 @@ class GestureClassifierTest {
             timeElapsed = 5000L,  // Very long time
             keyWidth = 100f
         )
-        assertEquals("Long time without leaving key should be TAP", GestureClassifier.GestureType.TAP, classifier.classify(gesture))
+        assertEquals("Long time without leaving key should be TAP", GestureClassifier.GestureType.TAP, classifier.classify(gesture, config.snapshot))
     }
 
     // =========================================================================
@@ -154,7 +154,7 @@ class GestureClassifierTest {
             timeElapsed = tapThreshold + 100,  // Exceeds tap duration
             keyWidth = 100f
         )
-        assertEquals("Long duration should be SWIPE", GestureClassifier.GestureType.SWIPE, classifier.classify(gesture))
+        assertEquals("Long duration should be SWIPE", GestureClassifier.GestureType.SWIPE, classifier.classify(gesture, config.snapshot))
     }
 
     @Test
@@ -167,7 +167,7 @@ class GestureClassifierTest {
             keyWidth = 100f
         )
         // Short time AND small distance with left key = TAP
-        assertEquals("Short duration with small distance should be TAP", GestureClassifier.GestureType.TAP, classifier.classify(gesture))
+        assertEquals("Short duration with small distance should be TAP", GestureClassifier.GestureType.TAP, classifier.classify(gesture, config.snapshot))
     }
 
     // =========================================================================
@@ -182,7 +182,7 @@ class GestureClassifierTest {
             timeElapsed = 100L,
             keyWidth = 10f  // Small key, threshold = 5f
         )
-        assertEquals("10f distance with 5f threshold should be SWIPE", GestureClassifier.GestureType.SWIPE, classifier.classify(gesture))
+        assertEquals("10f distance with 5f threshold should be SWIPE", GestureClassifier.GestureType.SWIPE, classifier.classify(gesture, config.snapshot))
     }
 
     @Test
@@ -193,7 +193,7 @@ class GestureClassifierTest {
             timeElapsed = 100L,
             keyWidth = 500f  // Large key, threshold = 250f
         )
-        assertEquals("100f distance with 250f threshold should be TAP", GestureClassifier.GestureType.TAP, classifier.classify(gesture))
+        assertEquals("100f distance with 250f threshold should be TAP", GestureClassifier.GestureType.TAP, classifier.classify(gesture, config.snapshot))
     }
 
     @Test

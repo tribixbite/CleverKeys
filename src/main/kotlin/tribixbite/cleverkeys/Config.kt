@@ -7,6 +7,7 @@ import android.os.Build
 import android.util.DisplayMetrics
 import android.util.Log
 import android.util.TypedValue
+import tribixbite.cleverkeys.prefs.ConfigSnapshot
 import tribixbite.cleverkeys.prefs.CustomExtraKeysPreference
 import tribixbite.cleverkeys.prefs.ExtraKeysPreference
 import tribixbite.cleverkeys.prefs.LayoutsPreference
@@ -644,6 +645,24 @@ class Config private constructor(
     private var current_layout_narrow = 0
     private var current_layout_wide = 0
 
+    /**
+     * Immutable capture of the fields the touch and draw hot paths read (ARC-072).
+     *
+     * [refresh] rewrites the vars above one assignment at a time, on whatever thread asked
+     * for the config change; a gesture or frame already in flight keeps reading them as they
+     * change and can mix old and new values. Hot-path consumers therefore capture this
+     * reference ONCE per unit of work (a gesture at pointer-down, a frame at draw start) and
+     * read every value from the captured object, so a refresh applies cleanly from the next
+     * unit onward. See `prefs/ConfigSnapshot.kt`.
+     *
+     * Seeded here from the declared field defaults purely so the property is non-null for the
+     * whole of `init`; the [refresh] call below immediately replaces it with the real
+     * preferences-backed capture. Rebuilt only on config change — never per touch or frame.
+     */
+    @Volatile
+    var snapshot: ConfigSnapshot = buildSnapshot()
+        private set
+
     init {
         repairCorruptedFloatPreferences(_prefs)
         refresh(res, foldableUnfolded)
@@ -906,7 +925,48 @@ class Config private constructor(
 
         val screen_width_dp = dm.widthPixels / dm.density
         wide_screen = screen_width_dp >= WIDE_DEVICE_THRESHOLD
+
+        // MUST stay the last statement: every field the hot paths read has now been written,
+        // so the published snapshot can never lag the vars it mirrors. refresh() has a single
+        // exit by design — an early return here would publish a stale read-model.
+        snapshot = buildSnapshot()
     }
+
+    /**
+     * Capture the hot-path fields into an immutable [ConfigSnapshot]. Called at construction
+     * and at the end of every [refresh] — i.e. once per configuration change, never per
+     * keystroke. `ConfigSnapshot` has no default values, so adding a field to the read-model
+     * fails to compile here rather than silently publishing a placeholder.
+     */
+    private fun buildSnapshot(): ConfigSnapshot = ConfigSnapshot(
+        circle_sensitivity = circle_sensitivity,
+        tap_duration_threshold = tap_duration_threshold,
+        double_tap_lock_shift = double_tap_lock_shift,
+        keyrepeat_enabled = keyrepeat_enabled,
+        keyrepeat_backspace_only = keyrepeat_backspace_only,
+        longPressTimeout = longPressTimeout,
+        longPressInterval = longPressInterval,
+        selection_delete_vertical_speed = selection_delete_vertical_speed,
+        selection_delete_vertical_threshold = selection_delete_vertical_threshold,
+        short_gestures_enabled = short_gestures_enabled,
+        short_gesture_min_distance = short_gesture_min_distance,
+        short_gesture_max_distance = short_gesture_max_distance,
+        swipe_dist_px = swipe_dist_px,
+        slide_step_px = slide_step_px,
+        swipe_typing_enabled = swipe_typing_enabled,
+        marginTop = marginTop,
+        margin_bottom = margin_bottom,
+        margin_left = margin_left,
+        margin_right = margin_right,
+        keyPadding = keyPadding,
+        labelTextSize = labelTextSize,
+        sublabelTextSize = sublabelTextSize,
+        secondary_label_size_scale = secondary_label_size_scale,
+        characterSize = characterSize,
+        keyboardOpacity = keyboardOpacity,
+        themeName = themeName,
+        version = version
+    )
 
     fun get_current_layout(): Int {
         return if (wide_screen) current_layout_wide else current_layout_narrow
@@ -1105,9 +1165,7 @@ class Config private constructor(
      * Check if current theme is a runtime theme (decorative or custom).
      * Runtime themes use KeyboardColorScheme instead of XML attributes.
      */
-    fun isRuntimeTheme(): Boolean {
-        return themeName.startsWith("decorative_") || themeName.startsWith("custom_")
-    }
+    fun isRuntimeTheme(): Boolean = ConfigSnapshot.isRuntimeThemeName(themeName)
 
     interface IKeyEventHandler {
         fun key_down(key: KeyValue?, isSwipe: Boolean)

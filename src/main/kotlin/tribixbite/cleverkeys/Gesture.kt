@@ -1,8 +1,18 @@
 package tribixbite.cleverkeys
 
+import tribixbite.cleverkeys.prefs.ConfigSnapshot
 import kotlin.math.abs
 
-class Gesture(startingDirection: Int) {
+/**
+ * Rotation/roundtrip state machine for one directional gesture.
+ *
+ * @param startingDirection the quadrant (0..15) the pointer left the key in.
+ * @param snapshot the configuration captured when this gesture began (ARC-072). Held for the
+ *   gesture's lifetime, so a settings change, rotation or fold landing mid-rotation cannot
+ *   move the threshold under a rotation already in progress — the new value applies to the
+ *   next gesture. Replaces a per-call read of the mutable global [Config].
+ */
+class Gesture(startingDirection: Int, private val snapshot: ConfigSnapshot) {
     /** The pointer direction that caused the last state change.
      * Integer from 0 to 15 (included). */
     var currentDir: Int = startingDirection
@@ -62,7 +72,7 @@ class Gesture(startingDirection: Int) {
         val clockwise = d > 0
         return when (state) {
             State.Swiped -> {
-                if (abs(d) < Config.globalConfig().circle_sensitivity) {
+                if (abs(d) < snapshot.circle_sensitivity) {
                     return false
                 }
                 // Start a rotation

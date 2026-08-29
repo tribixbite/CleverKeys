@@ -31,7 +31,7 @@ class Pointers(
 
     private val _longpress_handler: Handler = Handler(this)
     private val _ptrs = ArrayList<Pointer>()
-    private val _gestureClassifier = GestureClassifier(context)
+    private val _gestureClassifier = GestureClassifier()
     val _swipeRecognizer = EnhancedSwipeGestureRecognizer()
 
     /** Custom short swipe manager for user-defined gesture mappings */
@@ -341,7 +341,10 @@ class Pointers(
                 keyWidth
             )
 
-            val gestureType = _gestureClassifier.classify(gestureData)
+            // ARC-072: the classifier takes its thresholds from a captured ConfigSnapshot.
+            // Captured at the call site for now; slice 2 replaces this with the snapshot
+            // captured at pointer-DOWN so the whole gesture is decided by one configuration.
+            val gestureType = _gestureClassifier.classify(gestureData, _config.snapshot)
 
             // Only swipe-typing-eligible gestures may route to the swipe decoder:
             // - non-Char keys (like Backspace): a long gesture must still be treated as a
@@ -858,7 +861,7 @@ class Pointers(
                     KeyValue.Kind.Slider -> {
                         // Slider key detected - enter sliding mode instead of swipe typing
                         if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Slider detected at direction $direction, starting sliding mode")
-                        ptr.gesture = Gesture(direction)
+                        ptr.gesture = Gesture(direction, _config.snapshot)
                         ptr.value = subkeyValue
                         ptr.flags = pointer_flags_of_kv(subkeyValue)
                         startSliding(ptr, x, adjustedY, dx, dy, subkeyValue)
@@ -869,7 +872,7 @@ class Pointers(
                         // Event key detected (e.g., switch_forward, switch_backward)
                         // Trigger immediately and prevent swipe typing from intercepting
                         if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Event key detected at direction $direction: ${subkeyValue.getEvent()}")
-                        ptr.gesture = Gesture(direction)
+                        ptr.gesture = Gesture(direction, _config.snapshot)
                         ptr.value = subkeyValue
                         ptr.flags = pointer_flags_of_kv(subkeyValue)
                         _handler.onPointerDown(subkeyValue, true)

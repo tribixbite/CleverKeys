@@ -513,6 +513,13 @@ tasks.register('runPureTests', JavaExec) {
     // Audit remediation (2026-07-17) — new pure JVM tests
     'tribixbite.cleverkeys.ClipboardSearchRegexTest',
     'tribixbite.cleverkeys.ConfigNullSafetyTest',
+    // ARC-072 (2026-08-29): the ConfigSnapshot read-model. The ratchet pins migrated
+    // hot-path files off the mutable global + the structural refresh-rebuild coherence
+    // (Config needs Android bits, so it cannot be exercised behaviourally in pure JVM);
+    // the behaviour test drives Gesture + GestureClassifier from a hand-built snapshot
+    // with NO Config.initGlobalConfig at all.
+    'tribixbite.cleverkeys.ConfigSnapshotRatchetTest',
+    'tribixbite.cleverkeys.ConfigSnapshotBehaviorTest',
     'tribixbite.cleverkeys.CoreImeHygieneDriftTest',
     'tribixbite.cleverkeys.ReleaseMetadataDriftTest',
     'tribixbite.cleverkeys.SourceTextHygieneTest',

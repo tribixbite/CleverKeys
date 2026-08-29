@@ -14,12 +14,15 @@ import org.junit.Test
  * - pointer_up() state transitions
  * - ROTATION_THRESHOLD constant
  *
- * NOTE: changed_direction() is NOT tested here because it calls
- * Config.globalConfig().circle_sensitivity, which requires Android
- * SharedPreferences initialization. That path needs Robolectric or
- * an instrumented test.
+ * NOTE: changed_direction() is covered in ConfigSnapshotBehaviorTest, not here — since
+ * ARC-072 it reads its rotation threshold from the ConfigSnapshot handed to the constructor
+ * instead of Config.globalConfig(), so it is finally testable in pure JVM. The tests below
+ * are the config-independent half of the state machine and pass any snapshot through.
  */
 class GestureTest {
+
+    /** Config-independent tests: none of them cross the circle-sensitivity threshold. */
+    private val snap = testConfigSnapshot()
 
     // =========================================================================
     // A. dirDiff() — modular shortest-path on 0..15 ring
@@ -129,20 +132,20 @@ class GestureTest {
 
     @Test
     fun `new gesture starts in Swiped state`() {
-        val g = Gesture(0)
+        val g = Gesture(0, snap)
         assertThat(g.state).isEqualTo(Gesture.State.Swiped)
     }
 
     @Test
     fun `new gesture preserves starting direction`() {
-        val g = Gesture(7)
+        val g = Gesture(7, snap)
         assertThat(g.currentDir).isEqualTo(7)
         assertThat(g.current_direction()).isEqualTo(7)
     }
 
     @Test
     fun `get_gesture returns Swipe for initial Swiped state`() {
-        val g = Gesture(0)
+        val g = Gesture(0, snap)
         assertThat(g.get_gesture()).isEqualTo(Gesture.Name.Swipe)
     }
 
@@ -152,20 +155,20 @@ class GestureTest {
 
     @Test
     fun `is_in_progress returns true for Swiped state`() {
-        val g = Gesture(0)
+        val g = Gesture(0, snap)
         assertThat(g.is_in_progress()).isTrue()
     }
 
     @Test
     fun `is_in_progress returns false after pointer_up from Swiped`() {
-        val g = Gesture(0)
+        val g = Gesture(0, snap)
         g.pointer_up()
         assertThat(g.is_in_progress()).isFalse()
     }
 
     @Test
     fun `is_in_progress returns false after moved_to_center from Swiped`() {
-        val g = Gesture(0)
+        val g = Gesture(0, snap)
         g.moved_to_center()
         assertThat(g.is_in_progress()).isFalse()
     }
@@ -176,7 +179,7 @@ class GestureTest {
 
     @Test
     fun `moved_to_center from Swiped transitions to Ended_center and returns true`() {
-        val g = Gesture(0)
+        val g = Gesture(0, snap)
         val changed = g.moved_to_center()
         assertThat(changed).isTrue()
         assertThat(g.state).isEqualTo(Gesture.State.Ended_center)
@@ -185,7 +188,7 @@ class GestureTest {
 
     @Test
     fun `moved_to_center from Ended_center returns false`() {
-        val g = Gesture(0)
+        val g = Gesture(0, snap)
         g.moved_to_center() // Swiped -> Ended_center
         val changed = g.moved_to_center() // Already in Ended state
         assertThat(changed).isFalse()
@@ -198,7 +201,7 @@ class GestureTest {
 
     @Test
     fun `pointer_up from Swiped transitions to Ended_swipe`() {
-        val g = Gesture(0)
+        val g = Gesture(0, snap)
         g.pointer_up()
         assertThat(g.state).isEqualTo(Gesture.State.Ended_swipe)
         assertThat(g.get_gesture()).isEqualTo(Gesture.Name.Swipe)
@@ -206,7 +209,7 @@ class GestureTest {
 
     @Test
     fun `pointer_up from Ended_swipe stays in Ended_swipe`() {
-        val g = Gesture(0)
+        val g = Gesture(0, snap)
         g.pointer_up()
         g.pointer_up() // Second call should be no-op
         assertThat(g.state).isEqualTo(Gesture.State.Ended_swipe)
@@ -214,7 +217,7 @@ class GestureTest {
 
     @Test
     fun `pointer_up from Ended_center stays in Ended_center`() {
-        val g = Gesture(0)
+        val g = Gesture(0, snap)
         g.moved_to_center()
         g.pointer_up()
         assertThat(g.state).isEqualTo(Gesture.State.Ended_center)
@@ -226,21 +229,21 @@ class GestureTest {
 
     @Test
     fun `get_gesture maps Swiped to Swipe`() {
-        val g = Gesture(0)
+        val g = Gesture(0, snap)
         // Initial state is Swiped
         assertThat(g.get_gesture()).isEqualTo(Gesture.Name.Swipe)
     }
 
     @Test
     fun `get_gesture maps Ended_swipe to Swipe`() {
-        val g = Gesture(0)
+        val g = Gesture(0, snap)
         g.pointer_up()
         assertThat(g.get_gesture()).isEqualTo(Gesture.Name.Swipe)
     }
 
     @Test
     fun `get_gesture maps Ended_center to Roundtrip`() {
-        val g = Gesture(0)
+        val g = Gesture(0, snap)
         g.moved_to_center()
         assertThat(g.get_gesture()).isEqualTo(Gesture.Name.Roundtrip)
     }
@@ -251,14 +254,14 @@ class GestureTest {
 
     @Test
     fun `gesture with direction 0 works correctly`() {
-        val g = Gesture(0)
+        val g = Gesture(0, snap)
         assertThat(g.currentDir).isEqualTo(0)
         assertThat(g.get_gesture()).isEqualTo(Gesture.Name.Swipe)
     }
 
     @Test
     fun `gesture with direction 15 works correctly`() {
-        val g = Gesture(15)
+        val g = Gesture(15, snap)
         assertThat(g.currentDir).isEqualTo(15)
         assertThat(g.get_gesture()).isEqualTo(Gesture.Name.Swipe)
     }
@@ -266,7 +269,7 @@ class GestureTest {
     @Test
     fun `gesture with each direction 0 to 15 initializes correctly`() {
         for (d in 0..15) {
-            val g = Gesture(d)
+            val g = Gesture(d, snap)
             assertThat(g.currentDir).isEqualTo(d)
             assertThat(g.state).isEqualTo(Gesture.State.Swiped)
             assertThat(g.get_gesture()).isEqualTo(Gesture.Name.Swipe)
@@ -281,7 +284,7 @@ class GestureTest {
 
     @Test
     fun `full lifecycle - swipe then release`() {
-        val g = Gesture(3)
+        val g = Gesture(3, snap)
         // Start in Swiped
         assertThat(g.is_in_progress()).isTrue()
         assertThat(g.get_gesture()).isEqualTo(Gesture.Name.Swipe)
@@ -295,7 +298,7 @@ class GestureTest {
 
     @Test
     fun `full lifecycle - swipe then return to center`() {
-        val g = Gesture(10)
+        val g = Gesture(10, snap)
         // Start in Swiped
         assertThat(g.is_in_progress()).isTrue()
 

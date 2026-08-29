@@ -1,16 +1,21 @@
 package tribixbite.cleverkeys
 
-import android.content.Context
-import android.util.TypedValue
+import tribixbite.cleverkeys.prefs.ConfigSnapshot
 
 /**
- * Unified gesture classifier that determines if a touch gesture is a TAP or SWIPE
- * Eliminates race conditions by providing single source of truth for gesture classification
+ * Unified gesture classifier that determines if a touch gesture is a TAP or SWIPE.
+ * Eliminates race conditions by providing single source of truth for gesture classification.
+ *
+ * Stateless: the decision is a pure function of the [GestureData] and the [ConfigSnapshot]
+ * the caller captured for that gesture (ARC-072). The snapshot is a per-call argument rather
+ * than a constructor field because one classifier instance lives as long as the keyboard view
+ * and classifies many gestures — capturing at construction would freeze the threshold at
+ * keyboard-creation time and never see a settings change.
+ *
+ * The former `Context` constructor parameter is gone along with the global-[Config] read:
+ * its only remaining user was a `dpToPx` helper that had no callers.
  */
-class GestureClassifier(private val context: Context) {
-    // Use configurable tap duration threshold from settings
-    private val maxTapDurationMs: Long
-        get() = Config.globalConfig().tap_duration_threshold
+class GestureClassifier {
 
     enum class GestureType {
         TAP,
@@ -35,8 +40,11 @@ class GestureClassifier(private val context: Context) {
      * - (Distance exceeds minimum threshold OR time exceeds tap duration)
      *
      * Otherwise it's a TAP
+     *
+     * @param config the configuration captured for this gesture; supplies the configurable
+     *   tap-duration threshold.
      */
-    fun classify(gesture: GestureData): GestureType {
+    fun classify(gesture: GestureData, config: ConfigSnapshot): GestureType {
         // Calculate dynamic threshold based on key size
         // Use half the key width as minimum swipe distance
         // Note: gesture.keyWidth is already in pixels (from key.width * _keyWidth)
@@ -45,21 +53,10 @@ class GestureClassifier(private val context: Context) {
         // Clear criteria: SWIPE if left starting key AND (distance OR time threshold met)
         return if (gesture.hasLeftStartingKey &&
             (gesture.totalDistance >= minSwipeDistance ||
-             gesture.timeElapsed > maxTapDurationMs)) {
+             gesture.timeElapsed > config.tap_duration_threshold)) {
             GestureType.SWIPE
         } else {
             GestureType.TAP
         }
-    }
-
-    /**
-     * Convert dp to pixels using display density
-     */
-    private fun dpToPx(dp: Float): Float {
-        return TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_DIP,
-            dp,
-            context.resources.displayMetrics
-        )
     }
 }
