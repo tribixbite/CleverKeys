@@ -6,17 +6,19 @@ import android.util.Log
 import android.view.WindowManager
 
 /**
- * Helper class for keyboard dimension calculation and CGR prediction display.
+ * Helper class for keyboard dimension calculation.
  *
  * This class centralizes logic for:
  * - Calculating dynamic keyboard dimensions based on user preferences
- * - Managing CGR (Continuous Gesture Recognition) prediction display
  * - Updating suggestion bar with swipe predictions (legacy methods)
  *
  * Responsibilities:
  * - Dynamic keyboard height calculation (orientation/foldable-aware)
- * - CGR prediction integration with suggestion bar
  * - Legacy swipe prediction display methods
+ *
+ * The CGR (Continuous Gesture Recognition) prediction-display half was deleted on
+ * 2026-08-29 (ARC-084): its producer in Keyboard2View had never had a caller, so the two
+ * polling methods here could only ever read an empty list.
  *
  * The neural-engine half (reflection-based key-position extraction, QWERTY-bounds and
  * touch-Y-offset configuration) was deleted with that engine on 2026-08-18. CTC and
@@ -161,37 +163,11 @@ class KeyboardDimensionsHelper(
         }
     }
 
-    /**
-     * Update swipe predictions by checking keyboard view for CGR results.
-     */
-    fun updateCGRPredictions() {
-        if (_suggestionBar != null && _keyboardView != null) {
-            val cgrPredictions = _keyboardView!!.getCGRPredictions()
-            if (cgrPredictions.isNotEmpty()) {
-                _suggestionBar!!.setSuggestions(cgrPredictions)
-            }
-        }
-    }
-
-    /**
-     * Check and update CGR predictions (call this periodically or on swipe events).
-     */
-    fun checkCGRPredictions() {
-        if (_keyboardView != null && _suggestionBar != null) {
-            // Enable always visible mode to prevent UI flickering
-            _suggestionBar!!.setAlwaysVisible(true)
-
-            val cgrPredictions = _keyboardView!!.getCGRPredictions()
-            val areFinal = _keyboardView!!.areCGRPredictionsFinal()
-
-            if (cgrPredictions.isNotEmpty()) {
-                _suggestionBar!!.setSuggestions(cgrPredictions)
-            } else {
-                // Show empty suggestions but keep bar visible
-                _suggestionBar!!.setSuggestions(emptyList())
-            }
-        }
-    }
+    // ARC-084 (2026-08-29): updateCGRPredictions/checkCGRPredictions polled
+    // Keyboard2View for CGR results here. Their producer (`storeCGRPredictions`) had no
+    // callers, so the polled list was permanently empty and both methods were dead —
+    // reachable only through two equally dead CleverKeysService hatches. Deleted with the
+    // rest of the chain; pinned by DeadPlumbingDriftTest.
 
     /**
      * Update swipe predictions in real-time during gesture (legacy method).

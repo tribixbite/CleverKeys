@@ -486,16 +486,11 @@ class SuggestionBar : LinearLayout {
         super.onDetachedFromWindow()
     }
 
-    /**
-     * Set whether the suggestion bar should always remain visible
-     * This prevents UI rerendering issues from constant appear/disappear
-     */
-    fun setAlwaysVisible(alwaysVisible: Boolean) {
-        this.alwaysVisible = alwaysVisible
-        if (this.alwaysVisible) {
-            visibility = VISIBLE
-        }
-    }
+    // ARC-084 (2026-08-29): setAlwaysVisible was here. Its ONLY caller was
+    // KeyboardDimensionsHelper.checkCGRPredictions, deleted with the rest of the dead CGR
+    // chain, and it only ever passed `true` — which [alwaysVisible] already defaults to.
+    // Removing the setter is therefore behaviour-identical; the field stays because both
+    // visibility branches below read it.
 
     /**
      * Set the opacity of the suggestion bar
@@ -612,7 +607,7 @@ class SuggestionBar : LinearLayout {
     }
 
     /**
-     * Clear all suggestions (MODIFIED: always keep bar visible when CGR active)
+     * Clear all suggestions (the bar stays visible while [alwaysVisible] is set).
      */
     fun clearSuggestions() {
         // L1 (review 2026-08-06): the provenance sheet must never outlive its

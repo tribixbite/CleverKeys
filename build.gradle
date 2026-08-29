@@ -483,6 +483,10 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.backup.SettingsDefaultsDriftTest',
     'tribixbite.cleverkeys.SettingsSearchCoverageTest',
     'tribixbite.cleverkeys.GesturePrefAccessDriftTest',
+    // ARC-084/085/097 (2026-08-29): pins the deletions of the dead CGR chain and the dead
+    // swipe_correction_preset control, and that both routed-engine dispatches derive their
+    // suggestion origin from SuggestionOrigin.forRoutedEngine rather than an enum literal.
+    'tribixbite.cleverkeys.DeadPlumbingDriftTest',
     // ARC-048 R6 (2026-08-29): drives the prediction contract through a FakePredictor
     // instead of the real 2,600-line WordPredictor — the milestone the plan asked for.
     'tribixbite.cleverkeys.PredictorContractTest',

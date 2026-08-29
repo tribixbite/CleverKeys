@@ -118,9 +118,6 @@ class Keyboard2View @JvmOverloads constructor(
     // Swipe typing integration
     private var _wordPredictor: Predictor? = null
 
-    // CGR prediction storage
-    private val _cgrPredictions = ArrayList<String>()
-    private var _cgrFinalPredictions = false
     private var _keyboard2: CleverKeysService? = null
 
     // Custom short swipe executor for user-defined gesture mappings
@@ -1880,65 +1877,14 @@ class Keyboard2View @JvmOverloads constructor(
         return _theme
     }
 
-    /**
-     * CGR Prediction Support Methods
-     */
-
-    /**
-     * Store CGR predictions and immediately display them
-     */
-    private fun storeCGRPredictions(predictions: List<String>?, isFinal: Boolean) {
-        _cgrPredictions.clear()
-        if (predictions != null) {
-            _cgrPredictions.addAll(predictions)
-        }
-        _cgrFinalPredictions = isFinal
-
-        if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-            android.util.Log.d("Keyboard2View", "Stored ${_cgrPredictions.size} CGR predictions (final: $isFinal): $_cgrPredictions")
-        }
-
-        // Immediately trigger display update
-        post {
-            try {
-                // Find the parent CleverKeysService service and update predictions
-                var context: Context = getContext()
-                while (context is ContextWrapper && context !is CleverKeysService) {
-                    context = context.baseContext
-                }
-                if (context is CleverKeysService) {
-                    context.checkCGRPredictions()
-                }
-            } catch (e: Exception) {
-                android.util.Log.e("Keyboard2View", "Failed to update CGR predictions: ${e.message}")
-            }
-        }
-    }
-
-    /**
-     * Clear CGR predictions
-     */
-    private fun clearCGRPredictions() {
-        _cgrPredictions.clear()
-        _cgrFinalPredictions = false
-        if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-            android.util.Log.d("Keyboard2View", "Cleared CGR predictions")
-        }
-    }
-
-    /**
-     * Get current CGR predictions (for access by keyboard service)
-     */
-    fun getCGRPredictions(): List<String> {
-        return ArrayList(_cgrPredictions)
-    }
-
-    /**
-     * Check if CGR predictions are final (persisting)
-     */
-    fun areCGRPredictionsFinal(): Boolean {
-        return _cgrFinalPredictions
-    }
+    // ARC-084 (2026-08-29): the CGR prediction chain lived here — storeCGRPredictions /
+    // clearCGRPredictions plus the two getters KeyboardDimensionsHelper polled. Nothing ever
+    // CALLED the store, so `_cgrPredictions` was permanently empty and every consumer was
+    // dead; only the blanket `-keep class ... {*;}` rule kept R8 from noticing, so it shipped
+    // in every release while CLAUDE.md and ADR-011 state the project has no CGR. Swipe
+    // predictions reach the bar through InputCoordinator.handlePredictionResults →
+    // SuggestionHandler.handleSwipePredictionResults; there is no second path.
+    // Pinned by DeadPlumbingDriftTest.
 
     companion object {
         private var _currentWhat = 0

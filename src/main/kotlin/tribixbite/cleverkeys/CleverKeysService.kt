@@ -1028,10 +1028,9 @@ class CleverKeysService : InputMethodService(),
         return View.inflate(ContextThemeWrapper(this, themeId), layout, null)
     }
 
-    // CGR prediction display (called from Keyboard2View's CGR store/clear path).
-    fun updateCGRPredictions() = _keyboardDimensionsHelper.updateCGRPredictions()
-
-    fun checkCGRPredictions() = _keyboardDimensionsHelper.checkCGRPredictions()
+    // ARC-084 (2026-08-29): updateCGRPredictions/checkCGRPredictions were re-exported here
+    // for "Keyboard2View's CGR store/clear path" — a path whose store had no caller. The
+    // whole chain is deleted; pinned by DeadPlumbingDriftTest.
 
     fun updateSwipePredictions(predictions: List<String>) =
         _keyboardDimensionsHelper.updateSwipePredictions(predictions)

@@ -11,7 +11,8 @@ import android.widget.HorizontalScrollView
  * to managers that need them:
  * - InputCoordinator: Needs SuggestionBar for prediction display
  * - SuggestionHandler: Needs SuggestionBar for suggestion management
- * - KeyboardDimensionsHelper: Needs SuggestionBar for the CGR display path
+ * - KeyboardDimensionsHelper: Needs SuggestionBar for the legacy swipe-prediction
+ *   display methods (its CGR consumers were deleted in ARC-084)
  * - KeyboardReceiver: Needs emoji/clipboard pane references
  *
  * @since v1.32.394
