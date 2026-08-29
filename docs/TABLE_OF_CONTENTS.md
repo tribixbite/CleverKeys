@@ -8,6 +8,9 @@
 ### Essential Documents
 - **Primary Instructions**: `CLAUDE.md` - Main development workflow and commands
 - **Project Status**: `README.md` - Production status and overview
+- **Release Record**: `docs/RELEASE_RECORD.md` - Append-only book of every published release-note
+  claim, anchored to live code + pinning test; guarded by `ReleaseRecordDriftTest` (hash-pinned
+  history, completeness forced from the fastlane changelog dir)
 - **Current Tasks**: `memory/todo.md` - Active todo list
 - **History**: `docs/history/session_log_dec_2025.md` - Recent completed work
 

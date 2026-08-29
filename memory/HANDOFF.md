@@ -18,7 +18,8 @@ geometric-removal section below for what is and is not established about it). **
 longer the whole membership**: since `05c0c25d` an imported LATIN language pack that measures
 a–z-typeable is served too (`CtcImportedPackSupport`), so `SUPPORTED.keys` is a lower bound and
 `CtcLanguageSupport.sourceFor`/`isSupported` is the answer.
-Gates: `runPureTests` **1954**, `runMockTests` **325**, `lintDebug` 0 errors, both compiles;
+Gates: `runPureTests` **2006**, `runMockTests` **330** as of wave R1 2026-08-29 (was 1954/325
+at `aadb45d3`), `lintDebug` 0 errors, both compiles;
 `assembleRelease` builds minified (R8 on since `37ed9804`) and byte-deterministic.
 Last full instrumented run (ew-cli, Pixel7 API 34, 2026-08-29, run `30e9cd42` at `20ef0dae`):
 **1,449 tests, 6 red — all explained, none a code regression**: the 2 permanent by-design
@@ -83,12 +84,10 @@ Tailwind vendoring — both halves confirmed untouched)**; this is the priority 
   **ARC-096** (lint has never seen the release variant — flip `checkReleaseBuilds` or add
   `lintVitalRelease`) in the same soak-covered change. **ARC-090** (NOTICE must enumerate the
   ru model) rides with the ARC-054 notes decision.
-- **ARC-079 (P2, new)** duplicate full-dictionary residency: `DictionaryManager`'s per-language
-  `WordPredictor` cache re-loads what `PredictionCoordinator` already loaded (~5-10 MB × up to
-  4 languages) with zero prediction consumers — plausible ARC-070 OOM contributor; delete or
-  unify, measure with the existing MemoryProbe mark.
 - **ARC-054** release-notes decision: main serves 8+ languages (ru val-only + eligible packs),
-  the notes say seven. Pinned by `SERVED_BUT_NOT_YET_ANNOUNCED = {ru}`.
+  the notes say seven. Pinned by `SERVED_BUT_NOT_YET_ANNOUNCED = {ru}`. Note: tagging v1.6.0
+  now also freezes its `docs/RELEASE_RECORD.md` section (`PENDING_RELEASES` in
+  `ReleaseRecordDriftTest`).
 
 **Decisions (cheap, one sitting each)**
 - **ARC-059** `CtcLatencyGateTest` measures `CtcSwipeDecoder`, which release R8 strips (zero
@@ -104,16 +103,18 @@ Tailwind vendoring — both halves confirmed untouched)**; this is the priority 
   swipe, first-swipe warm-up, pre-v1.6.0 backup import, pre-v1.1.86 upgrade.
 - **ARC-070** long-run `MemoryProbe` + `dumpsys meminfo` (the unexplained 2026-08-17 OOM).
 
-**Second-pass P3 batch (ARC-080..089, evidence in the ledger's second-pass section)** —
-n-gram totals not persisted (probability inflation after restart, ARC-080); platform
-UserDictionary words invisible to swipe (081); dictionary-mutation trie-rebuild stall (082);
-transient CTC exception clears the bar with no geo retry (083); dead CGR plumbing ships (084);
-dead `swipe_correction_preset` control (085); layout-axis fallback invisible + unwritten layout
-authoring requirements (086); provenance sheet English-only ×21 (087); `KeyModifier.modify`
-unmemoized per frame (088); geometric spec pre-regeneration tables (089 — annotate only).
+**Second-pass P3 batch — wave R1 (2026-08-29, ledger §"Remediation wave R1") closed 079, 080,
+084, 085, 097.** Still open: platform UserDictionary words invisible to swipe (081);
+dictionary-mutation trie-rebuild stall (082); transient CTC exception clears the bar with no
+geo retry (083 — in flight); layout-axis fallback invisible + unwritten layout authoring
+requirements (086); provenance sheet English-only ×21 (087); `KeyModifier.modify` unmemoized
+per frame (088); geometric spec pre-regeneration tables (089 — annotate only); **ARC-099
+(new)** the dead `updateSwipePredictions`/`completeSwipePredictions`/`clearSwipePredictions`
+chain + its 3 `CleverKeysService` pass-throughs (~30 lines, ARC-084's exact shape).
 LOW tail: ARC-091..095 (zip-slip-through-importer test, private-copy pins, legacy occlusion
-import decision, learned-data preview row, SuggestionBar recycling test), ARC-097
-(forRoutedEngine wire-or-delete), ARC-098 (finish reorg + phantom-keyboard2 tooling sweep).
+import decision, learned-data preview row, SuggestionBar recycling test), ARC-098 (finish
+reorg + phantom-keyboard2 tooling sweep), **ARC-100 (new)** `NON_DEFAULTED_KEYS` stale
+rationale, and the `gradle.properties` missing-`-Xmx` build-infra fix (ledger §ENV).
 
 **Backlog (agent-executable, roughly by value)**
 - **ARC-067** the 21-locale translation pass (317 ARC-045 strings + wave strings + the two
@@ -129,9 +130,13 @@ import decision, learned-data preview row, SuggestionBar recycling test), ARC-09
   match. **ARC-076** relocate the QWERTY geometry table, then delete `test_cli_predict.ts` +
   `swipedata_metrics.py`. **ARC-066** `swipe_engine_mode_desc` reword (invalidates 21 locales
   deliberately).
-- **ARC-072** the two deferred architecture projects (ConfigSnapshot read-model; Initializer
-  collapse) — own efforts, plans in `5-architecture.md`; also SettingsActivity's 123
-  `mutableStateOf` and the `CleverKeysService` static escape hatches.
+- **ARC-072** — live plan `docs/plans/2026-08-29-arc072-config-snapshot-and-composition-root.md`
+  (supersedes the archived R3/R5 where they disagree). Slice 1 DONE (`caee60dc`:
+  `ConfigSnapshot` read-model + Gesture/GestureClassifier, `ConfigSnapshotRatchetTest` ceiling
+  33→31); slice 2 (Pointers gesture-scoped + Keyboard2View frame-scoped capture) in flight;
+  slice 3 = Initializer collapse into `wiring/KeyboardComponentGraph` (+ ARC-098 fold-in).
+  Later: SettingsActivity's 123 `mutableStateOf`, `CleverKeysService` static escape hatches,
+  Keyboard2View pref-write extraction.
 - **ARC-063** narrow the blanket Compose/lifecycle/savedstate/coroutines keeps AFTER the first
   minified soak. **ARC-065** out-of-band pack import first-swipe behavior (documented; optional).
 - ML-side: **ARC-056** uk/bg/mk/he lexicons (+ hebrew branch), **ARC-060** ru layout-JSON

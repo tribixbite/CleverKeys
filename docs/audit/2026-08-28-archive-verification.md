@@ -459,3 +459,74 @@ memory-phase table); the context-LM review-findings' 20/20 held under independen
   stale PENDING entry at `memory/clipboard-analysis.md:25-31`); `SECURITY.md`'s v1.0.0
   example placeholder (inside a fenced sample report); `BackupPassphraseStore.PREF_WRAPPED`
   absent from `INTERNAL_KEYS` (own prefs file, unread by exports — one-line note optional).
+
+---
+
+## Remediation wave R1 — 2026-08-29 (TDD, fail-first evidence per commit)
+
+Six parallel Opus implementers under Fable review; every fix ran and FAILED its test before
+implementation (evidence quoted in each commit's report). Fixed and reviewed:
+
+- **ARC-079 FIXED** (`f77a6d52`) — DictionaryManager's per-language `WordPredictor` cache
+  deleted (~5-10 MB × up to 4 slots, zero prediction consumers, redundant per-language
+  UserDictionary observers, a wasted device-locale predictor per construction). Learned data
+  provably unaffected: the stores are process singletons. `LearningWiringDriftTest` now pins
+  residency (word-boundary anchored — `getWordPredictor()` contains the substring
+  `WordPredictor(`, a general hazard for source-scan pins); `LanguageSlotCoverageDriftTest`
+  repointed from the deleted retention set to the surviving slot-wiring seams;
+  `PredictionCoordinatorLifecycleTest` (new, mock tier) pins persist→clearContext→stopObserving.
+  MemoryProbe mark renamed `dictionaryManager.userWordsOnly`; ARC-070 still adjudicates on
+  device. **Residual (new, LOW): `NON_DEFAULTED_KEYS` rationale is stale** — it documents a
+  null-default read site (`getConfiguredLanguages()`) that no longer exists; reclassifying
+  changes backup-preview behavior, so it is a small deliberate follow-up, not a mechanical one.
+- **ARC-080 FIXED** (`84139e01`) — n-gram denominators persisted (v2 `{version,entries,totals}`
+  blob; STRUCTURAL legacy detection: bare array = v1 keeps sum-of-survivors; lenient v2 read;
+  p>1 clamp for truncated blobs). Fail-first reproduced the exact predicted inflation
+  (0.0495→0.061 bigram / 0.049→0.119 trigram across the 0.05 floor). Backup contract untouched.
+  **Residual (LOW, documented in-code): totals for fully-pruned contexts are deliberately not
+  persisted** (unbounded-blob risk), so live vs restored state can differ for that narrow case.
+- **ARC-083** — in flight (transient CTC decode exception → geometric retry).
+- **ARC-084 FIXED** (`ae4d04c4`) — CGR chain deleted (112 lines, 5 files; zero-caller proof per
+  symbol; `SuggestionBar.setAlwaysVisible` orphan removed behavior-identically; no CGR-specific
+  proguard rules existed, confirming the blanket-keep diagnosis). Pinned by
+  `DeadPlumbingDriftTest` (fail-first 4/4 red).
+- **ARC-085 FIXED** (`51e7da52`) — `swipe_correction_preset` control deleted (78 deletions,
+  27 files incl. 22 locale string files). Deliberate deviation from "absent from src/main":
+  the key moves to `DEPRECATED_KEYS` because every released backup carries it — the ARC-051
+  tombstone precedent; drift test exempts comment-only mentions.
+- **ARC-097 FIXED — WIRED** (`cb7f7f62`) — both decode callbacks now derive origin via
+  `forRoutedEngine(Engine.…)`; the KDoc + 3 doc citations became TRUE, so no doc edits needed.
+- **ARC-072 slice 1 DONE** (`caee60dc`, plan `docs/plans/2026-08-29-arc072-config-snapshot-and-composition-root.md`) —
+  `prefs/ConfigSnapshot` (28 mirrored fields, no defaults so a new field breaks the builder at
+  compile time), `Config.snapshot` @Volatile rebuilt as the last statement of single-exit
+  `refresh()`, Gesture (per-gesture constructor capture) + GestureClassifier (per-call arg;
+  Context param deleted — only user was a caller-less dpToPx) migrated;
+  `ConfigSnapshotRatchetTest` pins per-file zero-use + global static-consumer ceiling
+  (33→31, ratchets down only). Slice 2 (Pointers gesture-scoped, Keyboard2View frame-scoped)
+  in flight. Noted for slice 2: `InputBehaviorSection.kt:398` writes a Config field directly
+  outside refresh() (snapshot-staleness source); `Gesture`'s state-machine methods have no
+  production callers beyond construction (test-only — candidate wire-or-delete).
+- **Release record book NEW** (`3eb46757`) — `docs/RELEASE_RECORD.md`: 32 releases, 265
+  published claims mapped (**148 GUARDED / 82 PRESENT-UNTESTED / 25 REMOVED / 10
+  UNATTRIBUTABLE**), append-only with per-block SHA-256 pins in `ReleaseRecordDriftTest`,
+  completeness forced from the fastlane changelog dir, unreleased v1.6.0 held un-pinned in
+  `PENDING_RELEASES` until tagged. The 82 PRESENT-UNTESTED rows are a ready-made test backlog
+  (extends ARC-044). One superseded claim found: v1.3.0's "swipe auto-disabled on non-QWERTY"
+  is contradicted by the layout-agnostic router → recorded REMOVED.
+
+**New items surfaced by the wave**
+
+- **ARC-099 (P3)** — `KeyboardDimensionsHelper.updateSwipePredictions` /
+  `completeSwipePredictions` / `clearSwipePredictions` + their three `CleverKeysService`
+  pass-throughs are fully dead (~30 lines, zero callers outside the pass-throughs, which
+  themselves have zero callers) — the exact ARC-084 shape, found during that deletion and
+  deliberately left out of a shared-tree commit. Delete with `DeadPlumbingDriftTest` pins.
+- **ARC-100 (LOW)** — `NON_DEFAULTED_KEYS` stale rationale (see ARC-079 residual above).
+- **ENV (build infra, worth one commit when the tree is quiet)** — `gradle.properties` sets
+  `org.gradle.jvmargs` WITHOUT `-Xmx`, so when the Kotlin daemon cannot start under memory
+  pressure the in-process fallback runs in Gradle's small default heap and OOMs
+  ("Not enough memory to run compilation"). Proven workaround:
+  `-Dorg.gradle.jvmargs="-Xmx2048m -XX:MaxMetaspaceSize=384m"
+  -Dkotlin.compiler.execution.strategy=in-process --max-workers=1`. Also recorded: under
+  saturation, Kotlin `internal` visibility in an out-of-Gradle harness needs
+  `-module-name CleverKeys_release` + `-Xfriend-paths`.
