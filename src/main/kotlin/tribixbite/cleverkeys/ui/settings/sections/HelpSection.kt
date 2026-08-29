@@ -38,7 +38,7 @@ internal fun SettingsActivity.HelpSection() {
                         containerColor = MaterialTheme.colorScheme.primary
                     )
                 ) {
-                    Text("Open Full Wiki")
+                    Text(stringResource(R.string.help_open_wiki))
                 }
             }
 }

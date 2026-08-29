@@ -101,8 +101,7 @@ internal fun SettingsActivity.MultiLanguageSection() {
 
                     if (secondaryLanguage != "none") {
                         Text(
-                            text = "Secondary dictionary will be loaded on next keyboard open. " +
-                                   "Words from both languages will appear in predictions.",
+                            text = stringResource(R.string.multilang_secondary_note),
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(start = 16.dp, top = 4.dp, bottom = 8.dp)
@@ -160,14 +159,13 @@ internal fun SettingsActivity.MultiLanguageSection() {
 
                     // Quick Language Toggle Section (v1.2.0)
                     Text(
-                        text = "Quick Language Toggle",
+                        text = stringResource(R.string.multilang_quick_toggle_header),
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp,
                         modifier = Modifier.padding(bottom = 4.dp)
                     )
                     Text(
-                        text = "Configure alternate languages for quick toggle commands. " +
-                               "Assign PRIMARY_LANG_TOGGLE or SECONDARY_LANG_TOGGLE to any key's short swipe.",
+                        text = stringResource(R.string.multilang_quick_toggle_desc),
                         fontSize = 11.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 8.dp)
@@ -217,21 +215,20 @@ internal fun SettingsActivity.MultiLanguageSection() {
 
                     // Language Packs Section
                     Text(
-                        text = "Language Packs",
+                        text = stringResource(R.string.multilang_packs_header),
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp,
                         modifier = Modifier.padding(bottom = 4.dp)
                     )
                     Text(
-                        text = "Import additional language dictionaries from ZIP files. " +
-                               "Download packs externally and import here (no internet permission needed).",
+                        text = stringResource(R.string.multilang_packs_desc),
                         fontSize = 11.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 4.dp)
                     )
                     // Link to the prebuilt packs folder on GitHub (opens the browser; SAF import below).
                     Text(
-                        text = "Browse available packs ↗",
+                        text = stringResource(R.string.multilang_browse_packs),
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier
@@ -243,7 +240,7 @@ internal fun SettingsActivity.MultiLanguageSection() {
 
                     // Installed packs count
                     Text(
-                        text = "Installed: ${installedLanguagePacks.size} language pack(s)",
+                        text = stringResource(R.string.multilang_installed_count, installedLanguagePacks.size),
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(bottom = 8.dp)
@@ -257,13 +254,13 @@ internal fun SettingsActivity.MultiLanguageSection() {
                             onClick = { importLanguagePack() },
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("Import Pack")
+                            Text(stringResource(R.string.multilang_import_pack))
                         }
                         OutlinedButton(
                             onClick = { showLanguagePackDialog = true },
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("Manage")
+                            Text(stringResource(R.string.multilang_manage))
                         }
                     }
 
@@ -316,7 +313,7 @@ internal fun SettingsActivity.MultiLanguageSection() {
                                 )
                                 collisionWarningExamples.forEach { (key, display) ->
                                     Text(
-                                        text = "  $key → $display",
+                                        text = stringResource(R.string.multilang_collision_example, key, display),
                                         fontSize = 12.sp,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -336,13 +333,12 @@ internal fun SettingsActivity.MultiLanguageSection() {
             if (showLanguagePackDialog) {
                 AlertDialog(
                     onDismissRequest = { showLanguagePackDialog = false },
-                    title = { Text("Installed Language Packs") },
+                    title = { Text(stringResource(R.string.multilang_packs_dialog_title)) },
                     text = {
                         Column {
                             if (installedLanguagePacks.isEmpty()) {
                                 Text(
-                                    text = "No language packs installed.\n\n" +
-                                           "Use 'Browse available packs' to download a ZIP, then 'Import Pack' to add it.",
+                                    text = stringResource(R.string.multilang_packs_dialog_empty),
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             } else {
@@ -365,7 +361,7 @@ internal fun SettingsActivity.MultiLanguageSection() {
                                                     fontWeight = FontWeight.Medium
                                                 )
                                                 Text(
-                                                    text = "Code: ${pack.code} • ${pack.wordCount} words",
+                                                    text = stringResource(R.string.multilang_pack_stats, pack.code, pack.wordCount),
                                                     fontSize = 11.sp,
                                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                                 )
@@ -373,7 +369,7 @@ internal fun SettingsActivity.MultiLanguageSection() {
                                             TextButton(
                                                 onClick = { deleteLanguagePack(pack.code) }
                                             ) {
-                                                Text("Delete", color = MaterialTheme.colorScheme.error)
+                                                Text(stringResource(R.string.common_delete), color = MaterialTheme.colorScheme.error)
                                             }
                                         }
                                     }
@@ -383,7 +379,7 @@ internal fun SettingsActivity.MultiLanguageSection() {
                     },
                     confirmButton = {
                         TextButton(onClick = { showLanguagePackDialog = false }) {
-                            Text("Close")
+                            Text(stringResource(R.string.common_close))
                         }
                     }
                 )

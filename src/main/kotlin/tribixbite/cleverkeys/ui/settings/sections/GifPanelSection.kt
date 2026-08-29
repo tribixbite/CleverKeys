@@ -27,6 +27,9 @@ import tribixbite.cleverkeys.ui.settings.io.performGifRemoveAll
 import tribixbite.cleverkeys.ui.settings.io.performGifRemovePack
 import tribixbite.cleverkeys.ui.settings.saveSetting
 
+/** Per-pack remove affordance. A glyph, not English copy — deliberately not a resource. */
+private const val REMOVE_PACK_GLYPH = "X"
+
 @Composable
 internal fun SettingsActivity.GifPanelSection() {
             // GIF Panel Section (Collapsible) — opt-in, off by default
@@ -36,7 +39,7 @@ internal fun SettingsActivity.GifPanelSection() {
                 onExpandChange = { gifSectionExpanded = it }
             ) {
                 Text(
-                    text = "Offline GIF reactions. Import packs from ZIP files (download from GitHub Releases).",
+                    text = stringResource(R.string.gif_section_intro),
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 12.dp)
@@ -68,12 +71,12 @@ internal fun SettingsActivity.GifPanelSection() {
                                     android.net.Uri.parse(tribixbite.cleverkeys.gif.GifPackManager.GITHUB_RELEASES_URL)
                                 ))
                             } catch (e: Exception) {
-                                android.widget.Toast.makeText(this@GifPanelSection, "Could not open browser", android.widget.Toast.LENGTH_SHORT).show()
+                                android.widget.Toast.makeText(this@GifPanelSection, getString(R.string.gif_toast_no_browser), android.widget.Toast.LENGTH_SHORT).show()
                             }
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Get GIF Packs (opens browser)")
+                        Text(stringResource(R.string.gif_get_packs))
                     }
 
                     Spacer(modifier = Modifier.height(4.dp))
@@ -84,7 +87,7 @@ internal fun SettingsActivity.GifPanelSection() {
                             try {
                                 gifPackImportLauncher.launch(arrayOf("application/zip", "application/x-zip-compressed", "*/*"))
                             } catch (e: Exception) {
-                                android.widget.Toast.makeText(this@GifPanelSection, "Could not open file picker", android.widget.Toast.LENGTH_SHORT).show()
+                                android.widget.Toast.makeText(this@GifPanelSection, getString(R.string.gif_toast_no_file_picker), android.widget.Toast.LENGTH_SHORT).show()
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),
@@ -96,9 +99,9 @@ internal fun SettingsActivity.GifPanelSection() {
                                 strokeWidth = 2.dp
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Importing...")
+                            Text(stringResource(R.string.gif_importing))
                         } else {
-                            Text("Import Pack from ZIP")
+                            Text(stringResource(R.string.gif_import_pack))
                         }
                     }
 
@@ -117,7 +120,7 @@ internal fun SettingsActivity.GifPanelSection() {
                     if (installedGifPacks.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            text = "Installed Packs",
+                            text = stringResource(R.string.gif_installed_packs),
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp
                         )
@@ -131,7 +134,11 @@ internal fun SettingsActivity.GifPanelSection() {
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(pack.name, fontSize = 14.sp)
                                     Text(
-                                        "${pack.gifCount} GIFs | ${tribixbite.cleverkeys.gif.GifPackManager.formatBytes(pack.sizeBytes)}",
+                                        stringResource(
+                                            R.string.gif_pack_stats,
+                                            pack.gifCount,
+                                            tribixbite.cleverkeys.gif.GifPackManager.formatBytes(pack.sizeBytes)
+                                        ),
                                         fontSize = 11.sp,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -139,14 +146,17 @@ internal fun SettingsActivity.GifPanelSection() {
                                 androidx.compose.material3.IconButton(
                                     onClick = { showGifRemovePackDialog = pack.packId }
                                 ) {
-                                    Text("X", color = MaterialTheme.colorScheme.error, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                    Text(REMOVE_PACK_GLYPH, color = MaterialTheme.colorScheme.error, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                                 }
                             }
                         }
 
                         // Total storage
                         Text(
-                            text = "Total: ${tribixbite.cleverkeys.gif.GifPackManager.formatBytes(gifStorageUsed)}",
+                            text = stringResource(
+                                R.string.gif_total_storage,
+                                tribixbite.cleverkeys.gif.GifPackManager.formatBytes(gifStorageUsed)
+                            ),
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(top = 4.dp)
@@ -164,7 +174,7 @@ internal fun SettingsActivity.GifPanelSection() {
                             gifThumbnailColumns = it.toInt()
                             saveSetting("gif_thumbnail_columns", gifThumbnailColumns)
                         },
-                        displayValue = "$gifThumbnailColumns columns"
+                        displayValue = stringResource(R.string.gif_grid_columns_display, gifThumbnailColumns)
                     )
 
                     // Remove all GIF data (destructive, with confirmation)
@@ -177,7 +187,7 @@ internal fun SettingsActivity.GifPanelSection() {
                                 contentColor = MaterialTheme.colorScheme.error
                             )
                         ) {
-                            Text("Remove All GIF Data")
+                            Text(stringResource(R.string.gif_remove_all))
                         }
                     }
                 }
@@ -187,16 +197,16 @@ internal fun SettingsActivity.GifPanelSection() {
             if (showGifRemoveAllDialog) {
                 androidx.compose.material3.AlertDialog(
                     onDismissRequest = { showGifRemoveAllDialog = false },
-                    title = { Text("Remove All GIF Data?") },
-                    text = { Text("This will delete all imported GIF packs, thumbnails, and database. This cannot be undone.") },
+                    title = { Text(stringResource(R.string.gif_remove_all_title)) },
+                    text = { Text(stringResource(R.string.gif_remove_all_body)) },
                     confirmButton = {
                         androidx.compose.material3.TextButton(onClick = {
                             showGifRemoveAllDialog = false
                             performGifRemoveAll()
-                        }) { Text("Remove All", color = MaterialTheme.colorScheme.error) }
+                        }) { Text(stringResource(R.string.gif_remove_all_confirm), color = MaterialTheme.colorScheme.error) }
                     },
                     dismissButton = {
-                        androidx.compose.material3.TextButton(onClick = { showGifRemoveAllDialog = false }) { Text("Cancel") }
+                        androidx.compose.material3.TextButton(onClick = { showGifRemoveAllDialog = false }) { Text(stringResource(R.string.common_cancel)) }
                     }
                 )
             }
@@ -206,15 +216,15 @@ internal fun SettingsActivity.GifPanelSection() {
                 androidx.compose.material3.AlertDialog(
                     onDismissRequest = { showGifRemovePackDialog = null },
                     title = { Text(stringResource(R.string.gif_remove_pack_confirm, packName)) },
-                    text = { Text("This will delete all GIFs from this pack and reclaim storage space.") },
+                    text = { Text(stringResource(R.string.gif_remove_pack_body)) },
                     confirmButton = {
                         androidx.compose.material3.TextButton(onClick = {
                             showGifRemovePackDialog = null
                             performGifRemovePack(packId)
-                        }) { Text("Remove", color = MaterialTheme.colorScheme.error) }
+                        }) { Text(stringResource(R.string.common_remove), color = MaterialTheme.colorScheme.error) }
                     },
                     dismissButton = {
-                        androidx.compose.material3.TextButton(onClick = { showGifRemovePackDialog = null }) { Text("Cancel") }
+                        androidx.compose.material3.TextButton(onClick = { showGifRemovePackDialog = null }) { Text(stringResource(R.string.common_cancel)) }
                     }
                 )
             }

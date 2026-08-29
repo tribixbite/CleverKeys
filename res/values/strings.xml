@@ -780,4 +780,204 @@
          21 locales and pinned by TranslationCoverageDriftTest. -->
     <string name="swipe_context_rescoring_title">Use context to rank swipes</string>
     <string name="swipe_context_rescoring_desc">Reorders swipe suggestions using the word pairs you have already typed on this device. Only breaks near-ties — a clearly decoded swipe is never overridden. Does nothing until the keyboard has learned from your typing, which requires on-device learning to be enabled.</string>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         ARC-045 (2026-08-29) — Compose literal extraction wave.
+
+         Every string below was a raw `Text("…")` or named-argument literal
+         (`title = "…"`, `label = "…"`, …) inside a Compose file. They are all
+         ENGLISH-ONLY and carry tools:ignore="MissingTranslation": the 21-locale
+         translation pass is a deliberate follow-up, recorded as translation debt
+         in memory/HANDOFF.md. Do NOT add these names to
+         TranslationCoverageDriftTest's `required` set until they are actually
+         translated — that test asserts real per-locale values, so listing an
+         untranslated name there would fail honestly rather than protect anything.
+
+         Format arguments are positional (%1$s/%1$d) so translators can reorder.
+         Values wrapped in literal double quotes preserve interior double spaces
+         that aapt2 would otherwise collapse.
+         ══════════════════════════════════════════════════════════════════ -->
+
+    <string name="common_done" tools:ignore="MissingTranslation">Done</string>
+
+    <!-- LearningDataSection.kt — on-device learning stats + browse/forget dialogs -->
+    <string name="learning_data_title" tools:ignore="MissingTranslation">Learning &amp; Data</string>
+    <string name="learning_data_privacy_note" tools:ignore="MissingTranslation">All learning stays on this device. Learned phrase patterns and word usage are included in dictionary exports (Backup &amp; Restore).</string>
+    <string name="learning_data_loading" tools:ignore="MissingTranslation">Loading…</string>
+    <!-- %1$s = language code, %2$d = learned word-pair count -->
+    <string name="learning_data_pairs_for_language" tools:ignore="MissingTranslation,PluralsCandidate">%1$s: %2$d pairs</string>
+    <!-- %1$d = learned word-triple count; appended after learning_data_pairs_for_language -->
+    <string name="learning_data_triples_suffix" tools:ignore="MissingTranslation,PluralsCandidate">, %1$d triples</string>
+    <string name="learning_data_no_pairs" tools:ignore="MissingTranslation">No learned word pairs yet</string>
+    <string name="learning_data_no_words" tools:ignore="MissingTranslation">No learned words yet</string>
+    <!-- %1$d = number of words. Also the personalization word-cap slider's display value. -->
+    <string name="learning_data_word_count" tools:ignore="MissingTranslation,PluralsCandidate">%1$d words</string>
+    <!-- %1$s = the most-used learned word, %2$d = its usage count -->
+    <string name="learning_data_most_used" tools:ignore="MissingTranslation">most used: “%1$s” (%2$d×)</string>
+    <!-- %1$s = the per-language phrase-pattern summary -->
+    <string name="learning_data_phrase_patterns" tools:ignore="MissingTranslation">Phrase patterns — %1$s</string>
+    <!-- %1$s = the word-usage summary -->
+    <string name="learning_data_word_usage" tools:ignore="MissingTranslation">Word usage — %1$s</string>
+    <string name="learning_data_browse_phrases" tools:ignore="MissingTranslation">Browse phrases</string>
+    <string name="learning_data_browse_words" tools:ignore="MissingTranslation">Browse words</string>
+    <string name="learning_data_forget_phrases" tools:ignore="MissingTranslation">Forget phrases</string>
+    <string name="learning_data_forget_words" tools:ignore="MissingTranslation">Forget words</string>
+    <string name="learning_data_forget_phrases_title" tools:ignore="MissingTranslation">Forget phrase patterns?</string>
+    <!-- %1$d = number of learned pairs and triples that will be deleted -->
+    <string name="learning_data_forget_phrases_body" tools:ignore="MissingTranslation,PluralsCandidate">Delete %1$d learned word pairs and triples across all languages? Context-aware suggestions will relearn from your typing.</string>
+    <string name="learning_data_forget_words_title" tools:ignore="MissingTranslation">Forget word usage?</string>
+    <!-- %1$d = number of learned words that will be deleted -->
+    <string name="learning_data_forget_words_body" tools:ignore="MissingTranslation,PluralsCandidate">Delete %1$d learned words? Personalized boosting will relearn from your typing.</string>
+    <string name="learning_data_phrases_dialog_title" tools:ignore="MissingTranslation">Learned phrases</string>
+    <string name="learning_data_phrases_dialog_empty" tools:ignore="MissingTranslation">No learned phrases.</string>
+    <!-- %1$s = first word, %2$s = learned continuation, %3$d = frequency, %4$s = language code -->
+    <string name="learning_data_phrase_row" tools:ignore="MissingTranslation">"%1$s → %2$s  (%3$d×, %4$s)"</string>
+    <string name="learning_data_words_dialog_title" tools:ignore="MissingTranslation">Learned words</string>
+    <string name="learning_data_words_dialog_empty" tools:ignore="MissingTranslation">No learned words.</string>
+    <!-- %1$s = learned word, %2$d = usage count -->
+    <string name="learning_data_word_row" tools:ignore="MissingTranslation">"%1$s  (%2$d×)"</string>
+
+    <!-- BackupPasswordBlock.kt — backup-encryption passphrase block and its dialogs -->
+    <string name="backup_password_title" tools:ignore="MissingTranslation">Backup Password</string>
+    <string name="backup_password_not_set_desc" tools:ignore="MissingTranslation">Not set. Required for automation (am start) export/import; encrypts all backups.</string>
+    <string name="backup_password_set" tools:ignore="MissingTranslation">Set Password</string>
+    <string name="backup_password_change" tools:ignore="MissingTranslation">Change Password</string>
+    <string name="backup_password_remove" tools:ignore="MissingTranslation">Remove</string>
+    <string name="backup_password_allow_intent_title" tools:ignore="MissingTranslation">Allow password via automation intent</string>
+    <string name="backup_password_allow_intent_desc" tools:ignore="MissingTranslation">Off by default. When on, IMPORT via am start may pass --es passphrase. Leaks via shell history — use HISTIGNORE / a leading space.</string>
+    <string name="backup_password_set_dialog_title" tools:ignore="MissingTranslation">Set Backup Password</string>
+    <string name="backup_password_change_dialog_title" tools:ignore="MissingTranslation">Change Backup Password</string>
+    <string name="backup_password_remove_dialog_title" tools:ignore="MissingTranslation">Remove Backup Password</string>
+    <string name="backup_password_remove_dialog_body" tools:ignore="MissingTranslation">Automation backup/restore will stop working, and new exports will be unencrypted only via the manual opt-out. Enter the current password to confirm.</string>
+    <string name="backup_password_current_label" tools:ignore="MissingTranslation">Current password</string>
+    <string name="backup_password_new_label" tools:ignore="MissingTranslation">New password</string>
+    <string name="backup_password_confirm_label" tools:ignore="MissingTranslation">Confirm password</string>
+    <string name="backup_password_show" tools:ignore="MissingTranslation">Show password</string>
+    <!-- %1$d = the weak-passphrase length threshold (WEAK_LEN) -->
+    <string name="backup_password_weak_warning" tools:ignore="MissingTranslation">Weak: under %1$d characters is easier to brute-force. Consider a longer passphrase.</string>
+    <string name="backup_password_error_incorrect" tools:ignore="MissingTranslation">Current password is incorrect.</string>
+    <!-- %1$d = the minimum passphrase length (MIN_LEN) -->
+    <string name="backup_password_error_too_short" tools:ignore="MissingTranslation">Password must be at least %1$d characters.</string>
+    <string name="backup_password_error_mismatch" tools:ignore="MissingTranslation">Passwords do not match.</string>
+
+    <!-- BackupPassphrasePromptDialog.kt — passphrase prompt for an encrypted import -->
+    <string name="backup_passphrase_prompt_title" tools:ignore="MissingTranslation">Encrypted Backup</string>
+    <string name="backup_passphrase_prompt_body" tools:ignore="MissingTranslation">This backup is encrypted. Enter its backup password.</string>
+    <string name="backup_passphrase_prompt_label" tools:ignore="MissingTranslation">Backup password</string>
+    <string name="backup_passphrase_prompt_decrypt" tools:ignore="MissingTranslation">Decrypt</string>
+
+    <!-- BackupRestoreSection.kt — the Backup &amp; Restore settings section body -->
+    <string name="backup_section_intro" tools:ignore="MissingTranslation">Export and import keyboard settings, dictionary, and clipboard history.</string>
+    <string name="backup_section_configuration" tools:ignore="MissingTranslation">Configuration</string>
+    <string name="backup_section_export_config" tools:ignore="MissingTranslation">Export Config</string>
+    <string name="backup_section_import_config" tools:ignore="MissingTranslation">Import Config</string>
+    <string name="backup_section_custom_dictionary" tools:ignore="MissingTranslation">Custom Dictionary</string>
+    <string name="backup_section_export_dict" tools:ignore="MissingTranslation">Export Dict</string>
+    <string name="backup_section_import_dict" tools:ignore="MissingTranslation">Import Dict</string>
+    <string name="backup_section_clipboard_history" tools:ignore="MissingTranslation">Clipboard History</string>
+    <string name="backup_section_clipboard_text_only" tools:ignore="MissingTranslation">Text only (JSON)</string>
+    <string name="backup_section_export_clip" tools:ignore="MissingTranslation">Export Clip</string>
+    <string name="backup_section_import_clip" tools:ignore="MissingTranslation">Import Clip</string>
+    <string name="backup_section_clipboard_zip" tools:ignore="MissingTranslation">Full backup (ZIP with media)</string>
+    <string name="backup_section_export_zip" tools:ignore="MissingTranslation">Export ZIP</string>
+    <string name="backup_section_import_zip" tools:ignore="MissingTranslation">Import ZIP</string>
+    <string name="backup_section_full_backup" tools:ignore="MissingTranslation">Full Backup</string>
+    <string name="backup_section_full_backup_desc" tools:ignore="MissingTranslation">Export everything (settings, dictionary, clipboard, media) into one dated ZIP file.</string>
+    <string name="backup_section_export_full" tools:ignore="MissingTranslation">Export Full Backup</string>
+    <string name="backup_section_import_full" tools:ignore="MissingTranslation">Import Full Backup</string>
+    <string name="backup_section_plaintext_armed" tools:ignore="MissingTranslation">Next export will be UNENCRYPTED — tap an Export button</string>
+    <string name="backup_section_plaintext_offer" tools:ignore="MissingTranslation">Export unencrypted…</string>
+    <string name="backup_section_plaintext_dialog_title" tools:ignore="MissingTranslation">Export without encryption?</string>
+    <string name="backup_section_plaintext_dialog_body" tools:ignore="MissingTranslation">The next export you start will be written as PLAINTEXT — anyone who obtains the file can read your settings, dictionary, or clipboard contents. Only do this if you will post-process the file yourself. Continue?</string>
+    <string name="backup_section_plaintext_dialog_confirm" tools:ignore="MissingTranslation">I understand — arm plaintext export</string>
+    <string name="backup_section_preview_note" tools:ignore="MissingTranslation">Settings + dictionary imports show a preview so you can deselect entries before applying. Clipboard imports merge non-destructively (duplicates are skipped).</string>
+
+    <!-- More reusable button/label words. English-only for now (unlike the
+         translated common_* block above) — folded into the 21-locale follow-up. -->
+    <string name="common_remove" tools:ignore="MissingTranslation">Remove</string>
+    <string name="common_view" tools:ignore="MissingTranslation">View</string>
+    <string name="common_export" tools:ignore="MissingTranslation">Export</string>
+    <string name="common_import" tools:ignore="MissingTranslation">Import</string>
+    <string name="common_off" tools:ignore="MissingTranslation">Off</string>
+
+    <!-- GifPanelSection.kt — GIF pack import/management block -->
+    <string name="gif_section_intro" tools:ignore="MissingTranslation">Offline GIF reactions. Import packs from ZIP files (download from GitHub Releases).</string>
+    <string name="gif_toast_no_browser" tools:ignore="MissingTranslation">Could not open browser</string>
+    <string name="gif_toast_no_file_picker" tools:ignore="MissingTranslation">Could not open file picker</string>
+    <string name="gif_get_packs" tools:ignore="MissingTranslation">Get GIF Packs (opens browser)</string>
+    <string name="gif_importing" tools:ignore="MissingTranslation">Importing...</string>
+    <string name="gif_import_pack" tools:ignore="MissingTranslation">Import Pack from ZIP</string>
+    <string name="gif_installed_packs" tools:ignore="MissingTranslation">Installed Packs</string>
+    <!-- %1$d = number of GIFs in the pack, %2$s = human-readable pack size -->
+    <string name="gif_pack_stats" tools:ignore="MissingTranslation,PluralsCandidate">%1$d GIFs | %2$s</string>
+    <!-- %1$s = human-readable total storage used by all installed packs -->
+    <string name="gif_total_storage" tools:ignore="MissingTranslation">Total: %1$s</string>
+    <!-- %1$d = number of thumbnail grid columns -->
+    <string name="gif_grid_columns_display" tools:ignore="MissingTranslation,PluralsCandidate">%1$d columns</string>
+    <string name="gif_remove_all" tools:ignore="MissingTranslation">Remove All GIF Data</string>
+    <string name="gif_remove_all_title" tools:ignore="MissingTranslation">Remove All GIF Data?</string>
+    <string name="gif_remove_all_body" tools:ignore="MissingTranslation">This will delete all imported GIF packs, thumbnails, and database. This cannot be undone.</string>
+    <string name="gif_remove_all_confirm" tools:ignore="MissingTranslation">Remove All</string>
+    <string name="gif_remove_pack_body" tools:ignore="MissingTranslation">This will delete all GIFs from this pack and reclaim storage space.</string>
+
+    <!-- PrivacySection.kt — privacy/telemetry-free data controls -->
+    <string name="privacy_section_intro" tools:ignore="MissingTranslation">CleverKeys is fully offline — no data ever leaves your device. These optional settings store local data for potential future on-device model fine-tuning.</string>
+    <string name="privacy_on_device_learning_header" tools:ignore="MissingTranslation">On-Device Learning</string>
+    <string name="privacy_forget_learned_title" tools:ignore="MissingTranslation">Also forget learned data?</string>
+    <string name="privacy_forget_learned_body" tools:ignore="MissingTranslation">Learning is now off — nothing new will be recorded. Do you also want to delete everything already learned (phrase patterns, word usage, and selection history)? This cannot be undone.</string>
+    <string name="privacy_forget_learned_confirm" tools:ignore="MissingTranslation">Delete learned data</string>
+    <string name="privacy_forget_learned_keep" tools:ignore="MissingTranslation">Keep it</string>
+    <string name="privacy_local_collection_header" tools:ignore="MissingTranslation">Local Data Collection (Optional)</string>
+    <string name="privacy_collected_data_header" tools:ignore="MissingTranslation">Collected Data</string>
+    <!-- %1$d = stored swipe traces, %2$d = distinct words among them -->
+    <string name="privacy_swipe_stats" tools:ignore="MissingTranslation">Total swipes: %1$d • Unique words: %2$d</string>
+    <string name="privacy_export_json" tools:ignore="MissingTranslation">Export JSON</string>
+    <string name="privacy_export_ndjson" tools:ignore="MissingTranslation">Export NDJSON</string>
+    <string name="privacy_no_swipe_data" tools:ignore="MissingTranslation">No swipe data collected yet. Enable collection above to start storing patterns for future on-device learning.</string>
+    <string name="privacy_performance_header" tools:ignore="MissingTranslation">Performance Metrics</string>
+    <!-- %1$d = predictions made, %2$d = mean inference time in ms, %3$d = top-1 accuracy percent -->
+    <string name="privacy_perf_stats" tools:ignore="MissingTranslation">Predictions: %1$d • Avg: %2$dms • Top-1: %3$d%%</string>
+    <string name="privacy_no_perf_data" tools:ignore="MissingTranslation">No performance data collected yet. Enable collection above and use swipe typing.</string>
+
+    <!-- MultiLanguageSection.kt — secondary language, quick toggle, language packs -->
+    <string name="multilang_secondary_note" tools:ignore="MissingTranslation">Secondary dictionary will be loaded on next keyboard open. Words from both languages will appear in predictions.</string>
+    <string name="multilang_quick_toggle_header" tools:ignore="MissingTranslation">Quick Language Toggle</string>
+    <string name="multilang_quick_toggle_desc" tools:ignore="MissingTranslation">Configure alternate languages for quick toggle commands. Assign PRIMARY_LANG_TOGGLE or SECONDARY_LANG_TOGGLE to any key\'s short swipe.</string>
+    <string name="multilang_packs_header" tools:ignore="MissingTranslation">Language Packs</string>
+    <string name="multilang_packs_desc" tools:ignore="MissingTranslation">Import additional language dictionaries from ZIP files. Download packs externally and import here (no internet permission needed).</string>
+    <string name="multilang_browse_packs" tools:ignore="MissingTranslation">Browse available packs ↗</string>
+    <!-- %1$d = number of installed language packs -->
+    <string name="multilang_installed_count" tools:ignore="MissingTranslation,PluralsCandidate">Installed: %1$d language pack(s)</string>
+    <string name="multilang_import_pack" tools:ignore="MissingTranslation">Import Pack</string>
+    <string name="multilang_manage" tools:ignore="MissingTranslation">Manage</string>
+    <!-- One contraction-collision example row. %1$s = the shortcut key, %2$s = what it
+         would have rewritten to. Quoted to keep the leading indent aapt2 would collapse. -->
+    <string name="multilang_collision_example" tools:ignore="MissingTranslation">"  %1$s → %2$s"</string>
+    <string name="multilang_packs_dialog_title" tools:ignore="MissingTranslation">Installed Language Packs</string>
+    <string name="multilang_packs_dialog_empty" tools:ignore="MissingTranslation">No language packs installed.\n\nUse \'Browse available packs\' to download a ZIP, then \'Import Pack\' to add it.</string>
+    <!-- %1$s = ISO 639-1 language code, %2$d = words in the pack\'s dictionary -->
+    <string name="multilang_pack_stats" tools:ignore="MissingTranslation,PluralsCandidate">Code: %1$s • %2$d words</string>
+
+    <!-- InputBehaviorSection.kt -->
+    <string name="input_manage_layouts" tools:ignore="MissingTranslation">Manage Keyboard Layouts</string>
+    <string name="input_configure_extra_keys" tools:ignore="MissingTranslation">Configure Extra Keys</string>
+    <string name="input_advanced_prediction" tools:ignore="MissingTranslation">Advanced Prediction Settings</string>
+
+    <!-- SwipeTypingSection.kt -->
+    <string name="swipe_full_geometric_settings" tools:ignore="MissingTranslation">Full Geometric Settings</string>
+    <string name="swipe_full_ctc_settings" tools:ignore="MissingTranslation">Full CTC Settings</string>
+
+    <!-- HelpSection.kt -->
+    <string name="help_open_wiki" tools:ignore="MissingTranslation">Open Full Wiki</string>
+
+    <!-- GestureTuningSection.kt — subsection headers and guidance copy -->
+    <string name="gesture_section_intro" tools:ignore="MissingTranslation">Fine-tune tap, swipe, and slider behavior for your typing style.</string>
+    <string name="gesture_short_gestures_header" tools:ignore="MissingTranslation">Short Gestures</string>
+    <string name="gesture_open_calibration" tools:ignore="MissingTranslation">📐 Open Calibration Tool</string>
+    <string name="gesture_selection_delete_header" tools:ignore="MissingTranslation">Selection-Delete Mode</string>
+    <string name="gesture_selection_delete_desc" tools:ignore="MissingTranslation">Short swipe + hold on backspace to select text, then release to delete.</string>
+    <string name="gesture_tap_typing_header" tools:ignore="MissingTranslation">Tap and Typing</string>
+    <string name="gesture_swipe_recognition_header" tools:ignore="MissingTranslation">Swipe Recognition</string>
+    <string name="gesture_slider_key_header" tools:ignore="MissingTranslation">Slider Key Behavior</string>
+    <string name="gesture_tuning_tip" tools:ignore="MissingTranslation">If gestures feel laggy, reduce dwell time and noise threshold. If taps register as swipes, increase tap duration.</string>
 </resources>

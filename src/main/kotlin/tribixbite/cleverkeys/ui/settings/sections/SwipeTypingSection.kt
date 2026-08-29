@@ -213,7 +213,7 @@ internal fun SettingsActivity.SwipeTypingSection() {
                             .fillMaxWidth()
                             .padding(top = 8.dp)
                     ) {
-                        Text("Full Geometric Settings")
+                        Text(stringResource(R.string.swipe_full_geometric_settings))
                     }
 
                     // Context rescoring (docs/specs/ctc-context-rescoring-and-tunables.md).
@@ -248,7 +248,7 @@ internal fun SettingsActivity.SwipeTypingSection() {
                                 .fillMaxWidth()
                                 .padding(top = 8.dp)
                         ) {
-                            Text("Full CTC Settings")
+                            Text(stringResource(R.string.swipe_full_ctc_settings))
                         }
                     }
                 }

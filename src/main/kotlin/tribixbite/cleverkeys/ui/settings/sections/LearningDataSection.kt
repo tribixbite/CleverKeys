@@ -39,6 +39,16 @@ import tribixbite.cleverkeys.ui.settings.SettingsSlider
 import tribixbite.cleverkeys.ui.settings.saveSetting
 
 /**
+ * Separator between the clauses of a stats summary line. Layout punctuation, not
+ * translatable copy — kept in Kotlin so the per-clause resources stay standalone
+ * sentences a translator can reorder freely.
+ */
+private const val SUMMARY_SEPARATOR = "  ·  "
+
+/** Per-row delete affordance. A glyph, not English text — deliberately not a resource. */
+private const val DELETE_ROW_GLYPH = "✕"
+
+/**
  * Learning & Data manager (audit 2026-08-06 §3.3): shows what the keyboard has
  * learned on-device (context-LM bigram/trigram counts per language,
  * personalization vocabulary stats), lets the user BROWSE and DELETE individual
@@ -53,9 +63,12 @@ import tribixbite.cleverkeys.ui.settings.saveSetting
  */
 @Composable
 internal fun SettingsActivity.LearningDataManagerBlock() {
-    var bigramSummary by remember { mutableStateOf("Loading…") }
+    // Hoisted out of the `remember { }` calculation lambdas — those are not
+    // @Composable, so stringResource cannot be called inside them.
+    val loadingLabel = stringResource(R.string.learning_data_loading)
+    var bigramSummary by remember { mutableStateOf(loadingLabel) }
     var bigramTotal by remember { mutableIntStateOf(0) }
-    var vocabSummary by remember { mutableStateOf("Loading…") }
+    var vocabSummary by remember { mutableStateOf(loadingLabel) }
     var vocabTotal by remember { mutableIntStateOf(0) }
     var refreshKey by remember { mutableIntStateOf(0) }
     var showClearBigrams by remember { mutableStateOf(false) }
@@ -67,13 +80,20 @@ internal fun SettingsActivity.LearningDataManagerBlock() {
         val stats = withContext(Dispatchers.IO) {
             val store = BigramStore.getInstance(this@LearningDataManagerBlock)
             val trigrams = TrigramStore.getInstance(this@LearningDataManagerBlock)
+            val activity = this@LearningDataManagerBlock
             val perLang = store.getKnownLanguages().sorted().mapNotNull { lang ->
                 val s = store.getStatistics(lang)
                 val triples = trigrams.getTotalTrigramCount(lang)
                 if (s.totalBigrams > 0 || triples > 0) {
                     buildString {
-                        append("$lang: ${s.totalBigrams} pairs")
-                        if (triples > 0) append(", $triples triples")
+                        append(
+                            activity.getString(
+                                R.string.learning_data_pairs_for_language, lang, s.totalBigrams
+                            )
+                        )
+                        if (triples > 0) {
+                            append(activity.getString(R.string.learning_data_triples_suffix, triples))
+                        }
                     }
                 } else {
                     null
@@ -81,15 +101,28 @@ internal fun SettingsActivity.LearningDataManagerBlock() {
             }
             val total = store.getKnownLanguages().sumOf { store.getTotalBigramCount(it) } +
                 trigrams.getKnownLanguages().sumOf { trigrams.getTotalTrigramCount(it) }
-            val bigramText = if (perLang.isEmpty()) "No learned word pairs yet"
-            else perLang.joinToString("  ·  ")
+            val bigramText = if (perLang.isEmpty()) {
+                activity.getString(R.string.learning_data_no_pairs)
+            } else {
+                perLang.joinToString(SUMMARY_SEPARATOR)
+            }
 
             val vocab = UserVocabulary.getInstance(this@LearningDataManagerBlock)
             val vStats = vocab.getStats()
-            val vocabText = if (vStats.totalWords == 0) "No learned words yet"
-            else buildString {
-                append("${vStats.totalWords} words")
-                vStats.mostUsedWord?.let { append("  ·  most used: “${it.word}” (${it.usageCount}×)") }
+            val vocabText = if (vStats.totalWords == 0) {
+                activity.getString(R.string.learning_data_no_words)
+            } else {
+                buildString {
+                    append(activity.getString(R.string.learning_data_word_count, vStats.totalWords))
+                    vStats.mostUsedWord?.let {
+                        append(SUMMARY_SEPARATOR)
+                        append(
+                            activity.getString(
+                                R.string.learning_data_most_used, it.word, it.usageCount
+                            )
+                        )
+                    }
+                }
             }
             LearnedDataSummary(bigramText, total, vocabText, vStats.totalWords)
         }
@@ -116,14 +149,19 @@ internal fun SettingsActivity.LearningDataManagerBlock() {
             .padding(top = 4.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text("Learning & Data", fontWeight = FontWeight.SemiBold)
+        Text(stringResource(R.string.learning_data_title), fontWeight = FontWeight.SemiBold)
         Text(
-            "All learning stays on this device. Learned phrase patterns and word " +
-                "usage are included in dictionary exports (Backup & Restore).",
+            stringResource(R.string.learning_data_privacy_note),
             style = MaterialTheme.typography.bodySmall
         )
-        Text("Phrase patterns — $bigramSummary", style = MaterialTheme.typography.bodySmall)
-        Text("Word usage — $vocabSummary", style = MaterialTheme.typography.bodySmall)
+        Text(
+            stringResource(R.string.learning_data_phrase_patterns, bigramSummary),
+            style = MaterialTheme.typography.bodySmall
+        )
+        Text(
+            stringResource(R.string.learning_data_word_usage, vocabSummary),
+            style = MaterialTheme.typography.bodySmall
+        )
 
         // User-configurable learned-vocabulary size cap (personalization_max_words).
         // Lowering below the current word count evicts least-valuable words first
@@ -142,7 +180,7 @@ internal fun SettingsActivity.LearningDataManagerBlock() {
                     Config.globalConfig()?.personalization_max_words = snapped
                 }
             },
-            displayValue = "$personalizationMaxWords words"
+            displayValue = stringResource(R.string.learning_data_word_count, personalizationMaxWords)
         )
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -150,24 +188,24 @@ internal fun SettingsActivity.LearningDataManagerBlock() {
                 onClick = { showBrowsePhrases = true },
                 enabled = bigramTotal > 0,
                 modifier = Modifier.weight(1f)
-            ) { Text("Browse phrases") }
+            ) { Text(stringResource(R.string.learning_data_browse_phrases)) }
             OutlinedButton(
                 onClick = { showBrowseWords = true },
                 enabled = vocabTotal > 0,
                 modifier = Modifier.weight(1f)
-            ) { Text("Browse words") }
+            ) { Text(stringResource(R.string.learning_data_browse_words)) }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(
                 onClick = { showClearBigrams = true },
                 enabled = bigramTotal > 0,
                 modifier = Modifier.weight(1f)
-            ) { Text("Forget phrases") }
+            ) { Text(stringResource(R.string.learning_data_forget_phrases)) }
             OutlinedButton(
                 onClick = { showClearVocab = true },
                 enabled = vocabTotal > 0,
                 modifier = Modifier.weight(1f)
-            ) { Text("Forget words") }
+            ) { Text(stringResource(R.string.learning_data_forget_words)) }
         }
     }
 
@@ -192,12 +230,9 @@ internal fun SettingsActivity.LearningDataManagerBlock() {
     if (showClearBigrams) {
         AlertDialog(
             onDismissRequest = { showClearBigrams = false },
-            title = { Text("Forget phrase patterns?") },
+            title = { Text(stringResource(R.string.learning_data_forget_phrases_title)) },
             text = {
-                Text(
-                    "Delete $bigramTotal learned word pairs and triples across all " +
-                        "languages? Context-aware suggestions will relearn from your typing."
-                )
+                Text(stringResource(R.string.learning_data_forget_phrases_body, bigramTotal))
             },
             confirmButton = {
                 TextButton(onClick = {
@@ -207,10 +242,12 @@ internal fun SettingsActivity.LearningDataManagerBlock() {
                         TrigramStore.getInstance(this@LearningDataManagerBlock).clearAll()
                         runOnUiThread { refreshKey++ }
                     }.start()
-                }) { Text("Delete") }
+                }) { Text(stringResource(R.string.common_delete)) }
             },
             dismissButton = {
-                TextButton(onClick = { showClearBigrams = false }) { Text("Cancel") }
+                TextButton(onClick = { showClearBigrams = false }) {
+                    Text(stringResource(R.string.common_cancel))
+                }
             }
         )
     }
@@ -218,12 +255,9 @@ internal fun SettingsActivity.LearningDataManagerBlock() {
     if (showClearVocab) {
         AlertDialog(
             onDismissRequest = { showClearVocab = false },
-            title = { Text("Forget word usage?") },
+            title = { Text(stringResource(R.string.learning_data_forget_words_title)) },
             text = {
-                Text(
-                    "Delete $vocabTotal learned words? Personalized boosting will " +
-                        "relearn from your typing."
-                )
+                Text(stringResource(R.string.learning_data_forget_words_body, vocabTotal))
             },
             confirmButton = {
                 TextButton(onClick = {
@@ -232,10 +266,12 @@ internal fun SettingsActivity.LearningDataManagerBlock() {
                         UserVocabulary.getInstance(this@LearningDataManagerBlock).clearAll()
                         runOnUiThread { refreshKey++ }
                     }.start()
-                }) { Text("Delete") }
+                }) { Text(stringResource(R.string.common_delete)) }
             },
             dismissButton = {
-                TextButton(onClick = { showClearVocab = false }) { Text("Cancel") }
+                TextButton(onClick = { showClearVocab = false }) {
+                    Text(stringResource(R.string.common_cancel))
+                }
             }
         )
     }
@@ -279,10 +315,10 @@ private fun LearnedPhraseBrowserDialog(onDismiss: () -> Unit) {
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Learned phrases") },
+        title = { Text(stringResource(R.string.learning_data_phrases_dialog_title)) },
         text = {
             if (rows.isEmpty()) {
-                Text("No learned phrases.")
+                Text(stringResource(R.string.learning_data_phrases_dialog_empty))
             } else {
                 LazyColumn(modifier = Modifier.heightIn(max = 400.dp)) {
                     items(rows, key = { "${it.language}|${it.word1}|${it.word2}" }) { row ->
@@ -291,7 +327,10 @@ private fun LearnedPhraseBrowserDialog(onDismiss: () -> Unit) {
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                "${row.word1} → ${row.word2}  (${row.frequency}×, ${row.language})",
+                                stringResource(
+                                    R.string.learning_data_phrase_row,
+                                    row.word1, row.word2, row.frequency, row.language
+                                ),
                                 style = MaterialTheme.typography.bodySmall,
                                 modifier = Modifier.weight(1f)
                             )
@@ -306,14 +345,14 @@ private fun LearnedPhraseBrowserDialog(onDismiss: () -> Unit) {
                                         .removeContinuationsOf(row.language, row.word1, row.word2)
                                     loadKey++
                                 }.start()
-                            }) { Text("✕") }
+                            }) { Text(DELETE_ROW_GLYPH) }
                         }
                     }
                 }
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) { Text("Done") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_done)) }
         }
     )
 }
@@ -338,10 +377,10 @@ private fun LearnedWordBrowserDialog(onDismiss: () -> Unit) {
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Learned words") },
+        title = { Text(stringResource(R.string.learning_data_words_dialog_title)) },
         text = {
             if (rows.isEmpty()) {
-                Text("No learned words.")
+                Text(stringResource(R.string.learning_data_words_dialog_empty))
             } else {
                 LazyColumn(modifier = Modifier.heightIn(max = 400.dp)) {
                     items(rows, key = { it.first }) { (word, count) ->
@@ -350,7 +389,7 @@ private fun LearnedWordBrowserDialog(onDismiss: () -> Unit) {
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                "$word  ($count×)",
+                                stringResource(R.string.learning_data_word_row, word, count),
                                 style = MaterialTheme.typography.bodySmall,
                                 modifier = Modifier.weight(1f)
                             )
@@ -359,14 +398,14 @@ private fun LearnedWordBrowserDialog(onDismiss: () -> Unit) {
                                     UserVocabulary.getInstance(context).removeWord(word)
                                     loadKey++
                                 }.start()
-                            }) { Text("✕") }
+                            }) { Text(DELETE_ROW_GLYPH) }
                         }
                     }
                 }
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) { Text("Done") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_done)) }
         }
     )
 }

@@ -46,7 +46,7 @@ internal fun SettingsActivity.BackupRestoreSection() {
                 sectionId = "backup_restore"
             ) {
                 Text(
-                    text = "Export and import keyboard settings, dictionary, and clipboard history.",
+                    text = stringResource(R.string.backup_section_intro),
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 12.dp)
@@ -58,7 +58,7 @@ internal fun SettingsActivity.BackupRestoreSection() {
 
                 // Configuration backup/restore
                 Text(
-                    text = "Configuration",
+                    text = stringResource(R.string.backup_section_configuration),
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
@@ -70,13 +70,13 @@ internal fun SettingsActivity.BackupRestoreSection() {
                         onClick = { exportConfiguration() },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Export Config")
+                        Text(stringResource(R.string.backup_section_export_config))
                     }
                     Button(
                         onClick = { importConfiguration() },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Import Config")
+                        Text(stringResource(R.string.backup_section_import_config))
                     }
                 }
 
@@ -84,7 +84,7 @@ internal fun SettingsActivity.BackupRestoreSection() {
 
                 // Custom dictionary backup/restore
                 Text(
-                    text = "Custom Dictionary",
+                    text = stringResource(R.string.backup_section_custom_dictionary),
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
@@ -96,13 +96,13 @@ internal fun SettingsActivity.BackupRestoreSection() {
                         onClick = { exportCustomDictionary() },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Export Dict")
+                        Text(stringResource(R.string.backup_section_export_dict))
                     }
                     Button(
                         onClick = { importCustomDictionary() },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Import Dict")
+                        Text(stringResource(R.string.backup_section_import_dict))
                     }
                 }
 
@@ -110,12 +110,12 @@ internal fun SettingsActivity.BackupRestoreSection() {
 
                 // Clipboard history backup/restore — JSON (text-only) + ZIP (full backup with media)
                 Text(
-                    text = "Clipboard History",
+                    text = stringResource(R.string.backup_section_clipboard_history),
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
                 Text(
-                    text = "Text only (JSON)",
+                    text = stringResource(R.string.backup_section_clipboard_text_only),
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 4.dp)
@@ -128,20 +128,20 @@ internal fun SettingsActivity.BackupRestoreSection() {
                         onClick = { exportClipboardHistory() },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Export Clip")
+                        Text(stringResource(R.string.backup_section_export_clip))
                     }
                     Button(
                         onClick = { importClipboardHistory() },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Import Clip")
+                        Text(stringResource(R.string.backup_section_import_clip))
                     }
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "Full backup (ZIP with media)",
+                    text = stringResource(R.string.backup_section_clipboard_zip),
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 4.dp)
@@ -154,13 +154,13 @@ internal fun SettingsActivity.BackupRestoreSection() {
                         onClick = { exportClipboardZip() },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Export ZIP")
+                        Text(stringResource(R.string.backup_section_export_zip))
                     }
                     Button(
                         onClick = { importClipboardZip() },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Import ZIP")
+                        Text(stringResource(R.string.backup_section_import_zip))
                     }
                 }
 
@@ -168,12 +168,12 @@ internal fun SettingsActivity.BackupRestoreSection() {
 
                 // GitHub #142: one-click full backup as dated ZIP (config + dicts + clipboard + media).
                 Text(
-                    text = "Full Backup",
+                    text = stringResource(R.string.backup_section_full_backup),
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
                 Text(
-                    text = "Export everything (settings, dictionary, clipboard, media) into one dated ZIP file.",
+                    text = stringResource(R.string.backup_section_full_backup_desc),
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 4.dp)
@@ -186,13 +186,13 @@ internal fun SettingsActivity.BackupRestoreSection() {
                         onClick = { exportFullBackup() },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Export Full Backup")
+                        Text(stringResource(R.string.backup_section_export_full))
                     }
                     Button(
                         onClick = { importFullBackup() },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Import Full Backup")
+                        Text(stringResource(R.string.backup_section_import_full))
                     }
                 }
 
@@ -204,8 +204,10 @@ internal fun SettingsActivity.BackupRestoreSection() {
                     var showPlaintextConfirm by remember { mutableStateOf(false) }
                     TextButton(onClick = { showPlaintextConfirm = true }) {
                         Text(
-                            if (pendingPlaintextExport) "Next export will be UNENCRYPTED — tap an Export button"
-                            else "Export unencrypted…",
+                            stringResource(
+                                if (pendingPlaintextExport) R.string.backup_section_plaintext_armed
+                                else R.string.backup_section_plaintext_offer
+                            ),
                             color = MaterialTheme.colorScheme.error,
                             fontSize = 12.sp,
                         )
@@ -213,30 +215,33 @@ internal fun SettingsActivity.BackupRestoreSection() {
                     if (showPlaintextConfirm) {
                         AlertDialog(
                             onDismissRequest = { showPlaintextConfirm = false },
-                            title = { Text("Export without encryption?") },
+                            title = { Text(stringResource(R.string.backup_section_plaintext_dialog_title)) },
                             text = {
                                 Text(
-                                    "The next export you start will be written as PLAINTEXT — " +
-                                        "anyone who obtains the file can read your settings, " +
-                                        "dictionary, or clipboard contents. Only do this if you " +
-                                        "will post-process the file yourself. Continue?"
+                                    stringResource(R.string.backup_section_plaintext_dialog_body)
                                 )
                             },
                             confirmButton = {
                                 TextButton(onClick = {
                                     pendingPlaintextExport = true
                                     showPlaintextConfirm = false
-                                }) { Text("I understand — arm plaintext export") }
+                                }) {
+                                    Text(
+                                        stringResource(
+                                            R.string.backup_section_plaintext_dialog_confirm
+                                        )
+                                    )
+                                }
                             },
                             dismissButton = {
-                                TextButton(onClick = { showPlaintextConfirm = false }) { Text("Cancel") }
+                                TextButton(onClick = { showPlaintextConfirm = false }) { Text(stringResource(R.string.common_cancel)) }
                             },
                         )
                     }
                 }
 
                 Text(
-                    text = "Settings + dictionary imports show a preview so you can deselect entries before applying. Clipboard imports merge non-destructively (duplicates are skipped).",
+                    text = stringResource(R.string.backup_section_preview_note),
                     fontSize = 11.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 12.dp)

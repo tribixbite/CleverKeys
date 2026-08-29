@@ -58,7 +58,7 @@ internal fun SettingsActivity.BackupPasswordBlock() {
     }
 
     Text(
-        text = "Backup Password",
+        text = stringResource(R.string.backup_password_title),
         fontWeight = FontWeight.Bold,
         modifier = Modifier.padding(bottom = 4.dp),
     )
@@ -72,8 +72,7 @@ internal fun SettingsActivity.BackupPasswordBlock() {
         )
     } else {
         Text(
-            text = "Not set. Required for automation (am start) export/import; " +
-                "encrypts all backups.",
+            text = stringResource(R.string.backup_password_not_set_desc),
             fontSize = 12.sp,
             color = MaterialTheme.colorScheme.error,
             modifier = Modifier.padding(bottom = 4.dp),
@@ -88,14 +87,19 @@ internal fun SettingsActivity.BackupPasswordBlock() {
             onClick = { isChange = false; showSetDialog = true },
             modifier = Modifier.weight(1f),
         ) {
-            Text(if (hasPassphrase) "Change Password" else "Set Password")
+            Text(
+                stringResource(
+                    if (hasPassphrase) R.string.backup_password_change
+                    else R.string.backup_password_set
+                )
+            )
         }
         if (hasPassphrase) {
             OutlinedButton(
                 onClick = { showRemoveDialog = true },
                 modifier = Modifier.weight(1f),
             ) {
-                Text("Remove")
+                Text(stringResource(R.string.backup_password_remove))
             }
         }
     }
@@ -108,10 +112,9 @@ internal fun SettingsActivity.BackupPasswordBlock() {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text("Allow password via automation intent", fontSize = 13.sp)
+            Text(stringResource(R.string.backup_password_allow_intent_title), fontSize = 13.sp)
             Text(
-                text = "Off by default. When on, IMPORT via am start may pass " +
-                    "--es passphrase. Leaks via shell history — use HISTIGNORE / a leading space.",
+                text = stringResource(R.string.backup_password_allow_intent_desc),
                 fontSize = 11.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -197,19 +200,32 @@ private fun BackupPasswordSetDialog(
     var show by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
 
+    // Validation messages are assigned from a non-composable onClick lambda, so they
+    // must be resolved here, in composable scope.
+    val errIncorrect = stringResource(R.string.backup_password_error_incorrect)
+    val errTooShort = stringResource(R.string.backup_password_error_too_short, MIN_LEN)
+    val errMismatch = stringResource(R.string.backup_password_error_mismatch)
+
     val transform: VisualTransformation =
         if (show) VisualTransformation.None else PasswordVisualTransformation()
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (isChange) "Change Backup Password" else "Set Backup Password") },
+        title = {
+            Text(
+                stringResource(
+                    if (isChange) R.string.backup_password_change_dialog_title
+                    else R.string.backup_password_set_dialog_title
+                )
+            )
+        },
         text = {
             Column {
                 if (isChange) {
                     OutlinedTextField(
                         value = current,
                         onValueChange = { current = it; error = null },
-                        label = { Text("Current password") },
+                        label = { Text(stringResource(R.string.backup_password_current_label)) },
                         singleLine = true,
                         visualTransformation = transform,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -220,7 +236,7 @@ private fun BackupPasswordSetDialog(
                 OutlinedTextField(
                     value = pass,
                     onValueChange = { pass = it; error = null },
-                    label = { Text("New password") },
+                    label = { Text(stringResource(R.string.backup_password_new_label)) },
                     singleLine = true,
                     visualTransformation = transform,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -230,7 +246,7 @@ private fun BackupPasswordSetDialog(
                 OutlinedTextField(
                     value = confirm,
                     onValueChange = { confirm = it; error = null },
-                    label = { Text("Confirm password") },
+                    label = { Text(stringResource(R.string.backup_password_confirm_label)) },
                     singleLine = true,
                     visualTransformation = transform,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -238,11 +254,11 @@ private fun BackupPasswordSetDialog(
                 )
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Switch(checked = show, onCheckedChange = { show = it })
-                    Text("Show password", fontSize = 13.sp)
+                    Text(stringResource(R.string.backup_password_show), fontSize = 13.sp)
                 }
                 if (pass.isNotEmpty() && pass.length in MIN_LEN until WEAK_LEN) {
                     Text(
-                        "Weak: under $WEAK_LEN characters is easier to brute-force. Consider a longer passphrase.",
+                        stringResource(R.string.backup_password_weak_warning, WEAK_LEN),
                         fontSize = 11.sp,
                         color = MaterialTheme.colorScheme.error,
                     )
@@ -255,18 +271,15 @@ private fun BackupPasswordSetDialog(
         confirmButton = {
             TextButton(onClick = {
                 when {
-                    isChange && !verifyCurrent(current.toCharArray()) ->
-                        error = "Current password is incorrect."
-                    pass.length < MIN_LEN ->
-                        error = "Password must be at least $MIN_LEN characters."
-                    pass != confirm ->
-                        error = "Passwords do not match."
+                    isChange && !verifyCurrent(current.toCharArray()) -> error = errIncorrect
+                    pass.length < MIN_LEN -> error = errTooShort
+                    pass != confirm -> error = errMismatch
                     else -> onConfirm(pass.toCharArray())?.let { error = it }
                 }
-            }) { Text("Save") }
+            }) { Text(stringResource(R.string.common_save)) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
         },
     )
 }
@@ -284,25 +297,26 @@ private fun BackupPasswordRemoveDialog(
     var show by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
 
+    // Assigned from the non-composable confirm lambda — resolve in composable scope.
+    val errIncorrect = stringResource(R.string.backup_password_error_incorrect)
+
     val transform: VisualTransformation =
         if (show) VisualTransformation.None else PasswordVisualTransformation()
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Remove Backup Password") },
+        title = { Text(stringResource(R.string.backup_password_remove_dialog_title)) },
         text = {
             Column {
                 Text(
-                    "Automation backup/restore will stop working, and new exports will " +
-                        "be unencrypted only via the manual opt-out. Enter the current " +
-                        "password to confirm.",
+                    stringResource(R.string.backup_password_remove_dialog_body),
                     fontSize = 12.sp,
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
                     value = current,
                     onValueChange = { current = it; error = null },
-                    label = { Text("Current password") },
+                    label = { Text(stringResource(R.string.backup_password_current_label)) },
                     singleLine = true,
                     visualTransformation = transform,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -310,7 +324,7 @@ private fun BackupPasswordRemoveDialog(
                 )
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Switch(checked = show, onCheckedChange = { show = it })
-                    Text("Show password", fontSize = 13.sp)
+                    Text(stringResource(R.string.backup_password_show), fontSize = 13.sp)
                 }
                 error?.let {
                     Text(it, fontSize = 12.sp, color = MaterialTheme.colorScheme.error)
@@ -320,12 +334,12 @@ private fun BackupPasswordRemoveDialog(
         confirmButton = {
             TextButton(onClick = {
                 if (!onConfirm(current.toCharArray())) {
-                    error = "Current password is incorrect."
+                    error = errIncorrect
                 }
-            }) { Text("Remove") }
+            }) { Text(stringResource(R.string.backup_password_remove)) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
         },
     )
 }

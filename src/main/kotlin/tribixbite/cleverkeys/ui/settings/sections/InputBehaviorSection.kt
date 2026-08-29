@@ -42,7 +42,7 @@ internal fun SettingsActivity.InputBehaviorSection() {
                     onClick = { openLayoutManager() },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Manage Keyboard Layouts")
+                    Text(stringResource(R.string.input_manage_layouts))
                 }
 
                 // Extra Keys Configuration button
@@ -50,7 +50,7 @@ internal fun SettingsActivity.InputBehaviorSection() {
                     onClick = { openExtraKeysConfig() },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Configure Extra Keys")
+                    Text(stringResource(R.string.input_configure_extra_keys))
                 }
 
                 // Phase 1: Typing/Prediction Settings
@@ -126,7 +126,7 @@ internal fun SettingsActivity.InputBehaviorSection() {
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Advanced Prediction Settings", fontWeight = FontWeight.SemiBold)
+                        Text(stringResource(R.string.input_advanced_prediction), fontWeight = FontWeight.SemiBold)
                         Icon(
                             imageVector = if (wordPredictionAdvancedExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                             contentDescription = null

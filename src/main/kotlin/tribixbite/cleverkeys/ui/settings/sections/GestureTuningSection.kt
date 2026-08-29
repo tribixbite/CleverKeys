@@ -32,7 +32,7 @@ internal fun SettingsActivity.GestureTuningSection() {
                 onExpandChange = { gestureTuningSectionExpanded = it }
             ) {
                 Text(
-                    text = "Fine-tune tap, swipe, and slider behavior for your typing style.",
+                    text = stringResource(R.string.gesture_section_intro),
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -40,7 +40,7 @@ internal fun SettingsActivity.GestureTuningSection() {
 
                 // Short Gestures subsection (moved from Input section)
                 Text(
-                    text = "Short Gestures",
+                    text = stringResource(R.string.gesture_short_gestures_header),
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
                 )
@@ -92,19 +92,19 @@ internal fun SettingsActivity.GestureTuningSection() {
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("📐 Open Calibration Tool")
+                        Text(stringResource(R.string.gesture_open_calibration))
                     }
                     // Customize Per-Key Actions button moved to Activities section at top
                 }
 
                 // Selection-Delete Mode subsection (backspace swipe+hold)
                 Text(
-                    text = "Selection-Delete Mode",
+                    text = stringResource(R.string.gesture_selection_delete_header),
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
                 )
                 Text(
-                    text = "Short swipe + hold on backspace to select text, then release to delete.",
+                    text = stringResource(R.string.gesture_selection_delete_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -138,7 +138,7 @@ internal fun SettingsActivity.GestureTuningSection() {
 
                 // Tap and Typing subsection
                 Text(
-                    text = "Tap and Typing",
+                    text = stringResource(R.string.gesture_tap_typing_header),
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
                 )
@@ -183,7 +183,7 @@ internal fun SettingsActivity.GestureTuningSection() {
 
                 // Swipe Recognition subsection
                 Text(
-                    text = "Swipe Recognition",
+                    text = stringResource(R.string.gesture_swipe_recognition_header),
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
                 )
@@ -268,7 +268,7 @@ internal fun SettingsActivity.GestureTuningSection() {
 
                 // Slider Key Behavior subsection
                 Text(
-                    text = "Slider Key Behavior",
+                    text = stringResource(R.string.gesture_slider_key_header),
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
                 )
@@ -332,11 +332,12 @@ internal fun SettingsActivity.GestureTuningSection() {
                         fingerOcclusionOffset = it.toInt()
                         saveSetting("finger_occlusion_offset", fingerOcclusionOffset)
                     },
-                    displayValue = if (fingerOcclusionOffset == 0) "Off" else "$fingerOcclusionOffset%"
+                    displayValue = if (fingerOcclusionOffset == 0) stringResource(R.string.common_off)
+                    else "$fingerOcclusionOffset%"
                 )
 
                 Text(
-                    text = "If gestures feel laggy, reduce dwell time and noise threshold. If taps register as swipes, increase tap duration.",
+                    text = stringResource(R.string.gesture_tuning_tip),
                     fontSize = 11.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 12.dp)

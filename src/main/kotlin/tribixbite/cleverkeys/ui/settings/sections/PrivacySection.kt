@@ -49,8 +49,7 @@ internal fun SettingsActivity.PrivacySection() {
                 onExpandChange = { privacySectionExpanded = it }
             ) {
                 Text(
-                    text = "CleverKeys is fully offline — no data ever leaves your device. " +
-                           "These optional settings store local data for potential future on-device model fine-tuning.",
+                    text = stringResource(R.string.privacy_section_intro),
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -62,7 +61,7 @@ internal fun SettingsActivity.PrivacySection() {
                 // vocabulary, selection adaptation, and swipe-ML collection.
                 var showForgetLearnedDialog by remember { mutableStateOf(false) }
                 Text(
-                    text = "On-Device Learning",
+                    text = stringResource(R.string.privacy_on_device_learning_header),
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
                 )
@@ -83,14 +82,9 @@ internal fun SettingsActivity.PrivacySection() {
                 if (showForgetLearnedDialog) {
                     AlertDialog(
                         onDismissRequest = { showForgetLearnedDialog = false },
-                        title = { Text("Also forget learned data?") },
+                        title = { Text(stringResource(R.string.privacy_forget_learned_title)) },
                         text = {
-                            Text(
-                                "Learning is now off — nothing new will be recorded. " +
-                                    "Do you also want to delete everything already learned " +
-                                    "(phrase patterns, word usage, and selection history)? " +
-                                    "This cannot be undone."
-                            )
+                            Text(stringResource(R.string.privacy_forget_learned_body))
                         },
                         confirmButton = {
                             TextButton(onClick = {
@@ -103,18 +97,18 @@ internal fun SettingsActivity.PrivacySection() {
                                     UserVocabulary.getInstance(appContext).clearAll()
                                     UserAdaptationManager.getInstance(appContext).resetAdaptation()
                                 }.start()
-                            }) { Text("Delete learned data") }
+                            }) { Text(stringResource(R.string.privacy_forget_learned_confirm)) }
                         },
                         dismissButton = {
                             TextButton(onClick = { showForgetLearnedDialog = false }) {
-                                Text("Keep it")
+                                Text(stringResource(R.string.privacy_forget_learned_keep))
                             }
                         }
                     )
                 }
 
                 Text(
-                    text = "Local Data Collection (Optional)",
+                    text = stringResource(R.string.privacy_local_collection_header),
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
                 )
@@ -149,7 +143,7 @@ internal fun SettingsActivity.PrivacySection() {
 
                 // Collected Data Stats and Export
                 Text(
-                    text = "Collected Data",
+                    text = stringResource(R.string.privacy_collected_data_header),
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
                 )
@@ -165,7 +159,11 @@ internal fun SettingsActivity.PrivacySection() {
 
                 if (stats != null && stats.totalCount > 0) {
                     Text(
-                        text = "Total swipes: ${stats.totalCount} • Unique words: ${stats.uniqueWords}",
+                        text = stringResource(
+                            R.string.privacy_swipe_stats,
+                            stats.totalCount,
+                            stats.uniqueWords
+                        ),
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 8.dp)
@@ -180,13 +178,13 @@ internal fun SettingsActivity.PrivacySection() {
                             onClick = { exportSwipeDataJSON() },
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("Export JSON")
+                            Text(stringResource(R.string.privacy_export_json))
                         }
                         OutlinedButton(
                             onClick = { exportSwipeDataNDJSON() },
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("Export NDJSON")
+                            Text(stringResource(R.string.privacy_export_ndjson))
                         }
                     }
 
@@ -201,7 +199,7 @@ internal fun SettingsActivity.PrivacySection() {
                             onClick = { viewCollectedData() },
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("View")
+                            Text(stringResource(R.string.common_view))
                         }
                         OutlinedButton(
                             onClick = { deleteCollectedData() },
@@ -210,12 +208,12 @@ internal fun SettingsActivity.PrivacySection() {
                                 contentColor = MaterialTheme.colorScheme.error
                             )
                         ) {
-                            Text("Delete")
+                            Text(stringResource(R.string.common_delete))
                         }
                     }
                 } else {
                     Text(
-                        text = "No swipe data collected yet. Enable collection above to start storing patterns for future on-device learning.",
+                        text = stringResource(R.string.privacy_no_swipe_data),
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 8.dp)
@@ -224,7 +222,7 @@ internal fun SettingsActivity.PrivacySection() {
 
                 // Performance Metrics Section
                 Text(
-                    text = "Performance Metrics",
+                    text = stringResource(R.string.privacy_performance_header),
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
                 )
@@ -239,7 +237,12 @@ internal fun SettingsActivity.PrivacySection() {
 
                 if (perfStats != null && perfStats.hasStats()) {
                     Text(
-                        text = "Predictions: ${perfStats.getTotalPredictions()} • Avg: ${perfStats.getAverageInferenceTime()}ms • Top-1: ${perfStats.getTop1Accuracy()}%",
+                        text = stringResource(
+                            R.string.privacy_perf_stats,
+                            perfStats.getTotalPredictions(),
+                            perfStats.getAverageInferenceTime(),
+                            perfStats.getTop1Accuracy()
+                        ),
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 8.dp)
@@ -253,18 +256,18 @@ internal fun SettingsActivity.PrivacySection() {
                             onClick = { viewPerfStats() },
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("View")
+                            Text(stringResource(R.string.common_view))
                         }
                         OutlinedButton(
                             onClick = { exportPerfStats() },
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("Export")
+                            Text(stringResource(R.string.common_export))
                         }
                     }
                 } else {
                     Text(
-                        text = "No performance data collected yet. Enable collection above and use swipe typing.",
+                        text = stringResource(R.string.privacy_no_perf_data),
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 8.dp)

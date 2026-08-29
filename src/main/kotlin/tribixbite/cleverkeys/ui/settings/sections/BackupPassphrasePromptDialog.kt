@@ -19,12 +19,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import tribixbite.cleverkeys.BackupRestoreViewModel
+import tribixbite.cleverkeys.R
 
 /**
  * Stage B: prompts for a backup passphrase when an encrypted import cannot be decrypted
@@ -44,18 +46,18 @@ internal fun BackupPassphrasePromptDialog(vm: BackupRestoreViewModel) {
 
     AlertDialog(
         onDismissRequest = { vm.dismissPassphrasePrompt() },
-        title = { Text("Encrypted Backup") },
+        title = { Text(stringResource(R.string.backup_passphrase_prompt_title)) },
         text = {
             Column {
                 Text(
-                    "This backup is encrypted. Enter its backup password.",
+                    stringResource(R.string.backup_passphrase_prompt_body),
                     fontSize = 13.sp,
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
                     value = pass,
                     onValueChange = { pass = it },
-                    label = { Text("Backup password") },
+                    label = { Text(stringResource(R.string.backup_passphrase_prompt_label)) },
                     singleLine = true,
                     visualTransformation = transform,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -63,7 +65,7 @@ internal fun BackupPassphrasePromptDialog(vm: BackupRestoreViewModel) {
                 )
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Switch(checked = show, onCheckedChange = { show = it })
-                    Text("Show password", fontSize = 13.sp)
+                    Text(stringResource(R.string.backup_password_show), fontSize = 13.sp)
                 }
                 vm.passphrasePromptError?.let {
                     Text(it, fontSize = 12.sp, color = MaterialTheme.colorScheme.error)
@@ -74,10 +76,12 @@ internal fun BackupPassphrasePromptDialog(vm: BackupRestoreViewModel) {
             TextButton(
                 enabled = pass.isNotEmpty(),
                 onClick = { retry(pass.toCharArray()) },
-            ) { Text("Decrypt") }
+            ) { Text(stringResource(R.string.backup_passphrase_prompt_decrypt)) }
         },
         dismissButton = {
-            TextButton(onClick = { vm.dismissPassphrasePrompt() }) { Text("Cancel") }
+            TextButton(onClick = { vm.dismissPassphrasePrompt() }) {
+                Text(stringResource(R.string.common_cancel))
+            }
         },
     )
 }
