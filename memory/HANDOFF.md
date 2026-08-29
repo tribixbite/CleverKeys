@@ -8,7 +8,7 @@ priority.
 **Completed work is DELETED from this file, not struck through.** Git history is the record of
 what was done; this file is only what is left. Anything below is open.
 
-## State at `05c0c25d`
+## State at `aadb45d3`
 
 Swipe is **CTC (default) + geometric**; the neural engine was deleted 2026-08-18
 (`a7d03bc8`..`83220634`), −26.4 MB APK. `CtcLanguageSupport.SUPPORTED` is **eight** languages:
@@ -18,17 +18,21 @@ geometric-removal section below for what is and is not established about it). **
 longer the whole membership**: since `05c0c25d` an imported LATIN language pack that measures
 a–z-typeable is served too (`CtcImportedPackSupport`), so `SUPPORTED.keys` is a lower bound and
 `CtcLanguageSupport.sourceFor`/`isSupported` is the answer.
-Gates: `runPureTests` **1946**, `runMockTests` **325**, `lintDebug` 0 errors, both compiles.
-Last full instrumented run (ew-cli, Pixel7 API 34, 2026-08-28, run `2ca8b7c9` at `6d67a7c8`):
-**1,430 tests, 3 red — all explained, none a code regression**: 2 `CtcOnnxLatencyBenchmarkTest`
-reds that are BY DESIGN whenever the ctc_bench models are not staged (`3fcbf7b8`; restore via
-`cp` from CleverKeys-ML/ctc/artifacts/ into src/androidTest/assets/ctc_bench/ only when actually
-benchmarking — expect these 2 reds in any full run, do not chase them) + 1 first-revision
-`ContractionSentenceStartMeasureTest` red (asserted at the wrong layer; rewritten against the
-real SuggestionHandler+SuggestionBar wiring and re-verified green 3/3 on-device, run `1a851d40`).
-Every wave-added instrumented test passed its first device execution, including
-`CtcLatencyGateTest` (cold build **3,162 ms** vs the 4,500 ms budget — real margin, not
-vacuous) and the dual-language latency tests CK-150-026 had left unexecuted.
+Gates: `runPureTests` **1954**, `runMockTests` **325**, `lintDebug` 0 errors, both compiles;
+`assembleRelease` builds minified (R8 on since `37ed9804`) and byte-deterministic.
+Last full instrumented run (ew-cli, Pixel7 API 34, 2026-08-29, run `30e9cd42` at `20ef0dae`):
+**1,449 tests, 6 red — all explained, none a code regression**: the 2 permanent by-design
+`CtcOnnxLatencyBenchmarkTest` reds (ctc_bench models unstaged, `3fcbf7b8` — expect them in every
+full run, do not chase) + 4 `TermuxDeletionInstrumentedTest` reds caused by the TEST harness
+(a directly-constructed `BaseInputConnection` edits its own empty fake editable, so seeded
+EditText text was invisible to every read; fixed in `aadb45d3` by overriding `getEditable()` —
+re-run `76bbbeb4` is **7/7 green**, every originally-pinned DEL count correct once reads saw
+real text). On-device confirmations from this run: **UT-7 fixed** (typed `id` →
+`[I'd, id, idea…]`, single `I'll`, `im` leads — ARC-013's device half DONE); the ru
+`CtcEmissionModelParityTest` row green (packaged Cyrillic ONNX reproduces its fixture);
+`CtcImportedPackInstrumentedTest` 4/4 (pack import → CTC serving + the collision-scanner branch
+finally reached on emulator); Wave K's 223 strengthened release-gate assertions all green.
+CI is green on `github/main` (blocking Trivy gate operational after the SARIF-severity split).
 
 **Contractions**: the whole system is now documented as-built in
 `.claude/skills/contraction-system.md` — data model, the four guards, the regressions each one
