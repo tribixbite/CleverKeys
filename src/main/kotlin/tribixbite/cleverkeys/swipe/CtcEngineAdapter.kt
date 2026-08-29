@@ -916,17 +916,29 @@ class CtcEngineAdapter(private val context: Context) {
 
     /**
      * Decode a completed swipe on the background thread and deliver a
-     * [PredictionResult] to [onResult] ON THE MAIN THREAD. Empty result when the
-     * layout/model/lexicon is unavailable or [language] is not CTC-supported
-     * ([supportsLanguage]) — the caller treats that as a no-prediction swipe.
+     * [PredictionResult] to [onResult] ON THE MAIN THREAD. Empty result when the swipe is not
+     * decodable at all — a degenerate trace, a zero-sized frame, or a [language] this engine
+     * does not serve ([supportsLanguage]) — which the caller treats as a no-prediction swipe.
+     *
+     * A decode that FAILS is a different outcome and gets a different callback: [onDecodeFailure]
+     * fires ON THE MAIN THREAD instead of [onResult] (ARC-083). See [CtcDecodeDelivery] for the
+     * three-way classification and why an empty slate is the wrong answer to a failure — the
+     * shared pipeline cannot tell it apart from "no candidates", so the bar simply clears while
+     * the geometric engine sits idle. The failure is TRANSIENT by construction: nothing on this
+     * path latches, so CTC is eligible again on the very next swipe (the only latch is
+     * [modelOrNull]'s per-asset one, which the dispatcher consults before routing here).
      *
      * Runs in the runner's FOREGROUND slot: it supersedes both an older decode and
      * any in-flight prewarm, and only the newest decode may deliver (see the class
-     * KDoc's concurrency contract). A superseded decode calls back NOT AT ALL —
-     * callers must not treat "no callback" as an error.
+     * KDoc's concurrency contract). A superseded decode calls back NOT AT ALL — neither
+     * callback — so callers must not treat "no callback" as an error.
      *
      * Must be called on the main thread (snapshots the mutable PointF trace before
      * hopping threads).
+     *
+     * @param onDecodeFailure invoked on the main thread when this swipe could not be decoded but
+     *   another engine could serve it. Defaults to a no-op for callers with no fallback to offer
+     *   (an instrumented harness); the production dispatcher always supplies one.
      */
     fun decodeAsync(
         keyboard: KeyboardData,
@@ -937,6 +949,7 @@ class CtcEngineAdapter(private val context: Context) {
         timestamps: List<Long>,
         language: String,
         secondaryLanguage: String? = null,
+        onDecodeFailure: () -> Unit = {},
         onResult: (PredictionResult) -> Unit,
     ) {
         if (frameWidthPx <= 0f || frameHeightPx <= 0f || swipePath.isEmpty() ||
@@ -961,25 +974,33 @@ class CtcEngineAdapter(private val context: Context) {
         // generation when the work finishes is the only one allowed to post.
         val generation = decodeGeneration.incrementAndGet()
         tasks.cancelAndSubmit {
-            try {
-                val mapped = layoutFor(keyboard, params, frameWidthPx, frameHeightPx, language)
-                val primaryLexicon = if (mapped != null) lexiconFor(language) else null
-                val secondary = secondaryLanguage
-                    ?.takeIf { it != "none" && it != language && supportsLanguage(it) }
-                    // The encoder runs ONCE and both tries decode the SAME emission matrix, so a
-                    // secondary language is only expressible when it shares the primary's
-                    // emission alphabet — which also means it shares the primary's encoder. A
-                    // Latin secondary alongside a Cyrillic primary is not a dual-language slate
-                    // the app declined to build; it is a slate whose words have no keys on the
-                    // board being swiped.
-                    ?.takeIf { sharesEmissionAlphabet(it, language) }
-                val secondaryLexicon = if (mapped != null && secondary != null) {
-                    lexiconFor(secondary)
-                } else null
-                val model = if (primaryLexicon != null) modelOrNull(language) else null
-                val result = if (mapped == null || primaryLexicon == null || model == null) {
-                    PredictionResult(emptyList(), emptyList())
-                } else {
+            CtcDecodeDelivery.deliver(
+                decode = {
+                    // Every input this decode needs. The dispatcher pre-checked all three
+                    // (supportsLayout / hasLexiconSource / isModelPermanentlyUnavailable), so a
+                    // miss here means the state moved under the swipe or a session load failed
+                    // for the first time — transient, and the swipe belongs to geometric rather
+                    // than to an empty bar (ARC-083).
+                    val mapped = layoutFor(keyboard, params, frameWidthPx, frameHeightPx, language)
+                        ?: throw CtcDecodeDelivery.DecodeInputsUnavailable("layout for '$language'")
+                    val primaryLexicon = lexiconFor(language)
+                        ?: throw CtcDecodeDelivery.DecodeInputsUnavailable("lexicon for '$language'")
+                    val secondary = secondaryLanguage
+                        ?.takeIf { it != "none" && it != language && supportsLanguage(it) }
+                        // The encoder runs ONCE and both tries decode the SAME emission matrix,
+                        // so a secondary language is only expressible when it shares the
+                        // primary's emission alphabet — which also means it shares the primary's
+                        // encoder. A Latin secondary alongside a Cyrillic primary is not a
+                        // dual-language slate the app declined to build; it is a slate whose
+                        // words have no keys on the board being swiped.
+                        ?.takeIf { sharesEmissionAlphabet(it, language) }
+                    // A missing SECONDARY lexicon is not a failure — the slate is simply
+                    // single-language, which is what a user with no secondary gets anyway.
+                    val secondaryLexicon = secondary?.let { lexiconFor(it) }
+                    val model = modelOrNull(language)
+                        ?: throw CtcDecodeDelivery.DecodeInputsUnavailable(
+                            "ONNX session ${modelAssetFor(language)}"
+                        )
                     // Finger-occlusion compensation, applied to RAW Y before the letter-box
                     // affine — the fingertip hides the target, so touches land above the key
                     // the user aimed at. The percent-of-one-key-row math lives in
@@ -1045,14 +1066,34 @@ class CtcEngineAdapter(private val context: Context) {
                             merged.map { it.language },
                         )
                     }
-                }
-                postIfNewest(generation, result, onResult)
-            } catch (e: InterruptedException) {
-                // Cancelled by a newer swipe — drop silently.
-            } catch (e: Exception) {
-                Log.e(TAG, "CTC decode failed", e)
-                postIfNewest(generation, PredictionResult(emptyList(), emptyList()), onResult)
-            }
+                },
+                onSuccess = { result -> postIfNewest(generation, result, onResult) },
+                onFallback = { e ->
+                    // ARC-083: a TRANSIENT failure — an ORT fault, a decode racing a
+                    // layout/trie swap, a first-time session load failure. Nothing latches, so
+                    // CTC is eligible again on the next swipe; this swipe goes to the engine
+                    // that can still serve it. Posting an empty slate here instead is what used
+                    // to clear the bar, indistinguishably from "no candidates".
+                    Log.e(TAG, "CTC decode failed — handing this swipe to the geometric engine", e)
+                    postIfNewest(generation) { onDecodeFailure() }
+                },
+                // Superseded by a newer swipe: silence. A geometric re-decode of an abandoned
+                // gesture would race the newer decode for the bar.
+            )
+        }
+    }
+
+    /**
+     * Runs [action] on the main thread iff [generation] is still the newest decode — the
+     * generation guard from the class KDoc, shared by slate delivery and by the ARC-083 failure
+     * hand-off so a superseded decode can neither post nor trigger a fallback.
+     */
+    private fun postIfNewest(generation: Long, action: () -> Unit) {
+        if (decodeGeneration.get() != generation) return
+        mainHandler.post {
+            // Re-check on the main thread: a newer swipe can land between the background
+            // check and this runnable, and the newest decode always owns the bar.
+            if (decodeGeneration.get() == generation) action()
         }
     }
 
@@ -1061,14 +1102,7 @@ class CtcEngineAdapter(private val context: Context) {
         generation: Long,
         result: PredictionResult,
         onResult: (PredictionResult) -> Unit,
-    ) {
-        if (decodeGeneration.get() != generation) return
-        mainHandler.post {
-            // Re-check on the main thread: a newer swipe can land between the background
-            // check and this runnable, and the newest decode always owns the bar.
-            if (decodeGeneration.get() == generation) onResult(result)
-        }
-    }
+    ) = postIfNewest(generation) { onResult(result) }
 
     /** Engine-relative scores: softmax over final scores × 1000 (geometric parity). */
     private fun toPredictionResult(candidates: List<CtcCandidate>): PredictionResult {

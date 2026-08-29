@@ -673,8 +673,10 @@ class InputCoordinator(
      * into the SAME pipeline as geometric results — [handlePredictionResults]
      * → [SuggestionHandler.handleSwipePredictionResults] — inheriting the password
      * guard, possessive augmentation, shift/caps transform, and THE commit engine.
-     * An empty decode (no model, degenerate trace) flows through as an empty
-     * prediction list → the pipeline clears the bar.
+     * A degenerate trace flows through as an empty prediction list → the pipeline clears the bar.
+     * A decode that FAILS does not: since ARC-083 the adapter reports it through
+     * `onDecodeFailure` and this swipe is re-dispatched to [performGeometricSwipeTyping],
+     * because an empty slate is indistinguishable from "no candidates" downstream.
      *
      * Audit M1 — the CTC model is layout-agnostic but the lexicon + λ preset are
      * per-language, and only the languages [tribixbite.cleverkeys.swipe.ctc.CtcLanguageSupport]
@@ -768,7 +770,33 @@ class InputCoordinator(
         beginSwipeCapture(swipedKeys, swipePath, timestamps, resources, SwipeMLData.ENGINE_CTC)
 
         ctcAdapterOrCreate().decodeAsync(
-            keyboard, params, frameW, frameH, swipePath, timestamps, language, secondaryLanguage
+            keyboard, params, frameW, frameH, swipePath, timestamps, language, secondaryLanguage,
+            onDecodeFailure = {
+                // ARC-083 — the fourth reason to hand this swipe to geometric, and the only one
+                // that cannot be checked before dispatch: the decode itself failed. The three
+                // gates above cover state that is knowable up front (unserved language,
+                // letter-incomplete layout, LATCHED session, absent lexicon source); this covers
+                // a TRANSIENT fault — an ORT hiccup inside session.run, a decode racing a
+                // layout/trie swap, an encoder load failing for the first time. Nothing latched,
+                // so CTC serves the next swipe as usual; this one gets the engine that can still
+                // decode it, instead of the empty slate that used to clear the bar
+                // indistinguishably from "no candidates". Runs on the main thread (the adapter
+                // posts it), which is where performGeometricSwipeTyping must be called.
+                //
+                // Terminal: the geometric path never routes back here, so a failure costs at
+                // most one extra decode per swipe, and a geometric failure falls through to its
+                // own empty result — the final fallback.
+                if (isReplayInputStillCurrent(ic, editorInfo)) {
+                    performGeometricSwipeTyping(
+                        swipedKeys, swipePath, timestamps, ic, editorInfo, resources,
+                        wasShiftActive, wasShiftLocked
+                    )
+                } else if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                    android.util.Log.d(
+                        TAG, "Dropping CTC geometric fallback: input field changed since swipe"
+                    )
+                }
+            },
         ) { result ->
             // The decode callback replays the InputConnection/EditorInfo captured at swipe
             // time. A decode can land after the field changed (cold path builds the ONNX

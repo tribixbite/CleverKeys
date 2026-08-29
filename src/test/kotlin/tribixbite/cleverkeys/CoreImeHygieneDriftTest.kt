@@ -784,6 +784,77 @@ class CoreImeHygieneDriftTest {
     }
 
     /**
+     * ARC-083 — the TRANSIENT twin of
+     * [aDeadCtcSessionFallsThroughToGeometricRatherThanClearingTheBar].
+     *
+     * That test pins the LATCHED failure: a session that exhausted its load budget is known
+     * dead before dispatch, so the dispatcher never routes to CTC at all. The gap it leaves is
+     * the failure that has NOT latched — an ORT hiccup inside `session.run`, a decode racing a
+     * trie/layout swap, a load attempt that failed for the first time. Those throw (or leave the
+     * decode inputs unassembled) INSIDE the submitted decode task, where the only fallback used
+     * to be `PredictionResult(emptyList(), emptyList())` — an empty slate the shared pipeline
+     * cannot distinguish from "no candidates", so the bar clears for that swipe while a working
+     * geometric decoder sits idle.
+     *
+     * The fix routes a caught decode failure to the SAME remedy the three dispatch-time gates
+     * already use: `performGeometricSwipeTyping`. Two halves, both pinned here:
+     *
+     *  1. the adapter must classify the outcome through the pure [CtcDecodeDelivery] seam and
+     *     report a failure to the caller instead of posting an empty slate; and
+     *  2. the dispatcher must supply a failure callback that dispatches geometric.
+     *
+     * The no-latch half matters as much as the fallback: a transient failure must leave CTC
+     * eligible for the NEXT swipe, so nothing on this path may write the per-asset dead set.
+     * Source-scanned for the same reason as its latched twin — reproducing an ORT fault in a
+     * unit test would mean shipping a deliberately broken model.
+     */
+    @Test
+    fun aTransientCtcDecodeFailureFallsBackToGeometricRatherThanClearingTheBar() {
+        val adapter = source("tribixbite/cleverkeys/swipe/CtcEngineAdapter.kt")
+        val decodeAsync = adapter
+            .substringAfter("fun decodeAsync(")
+            .substringBefore("fun postIfNewest(")
+        // Everything the decode THREAD runs. The degenerate-input guard above it legitimately
+        // still answers with an empty slate (it is the documented "not a decodable swipe"
+        // contract and the dispatcher has already gated on the same conditions).
+        val decodeTask = decodeAsync.substringAfter("tasks.cancelAndSubmit")
+
+        assertWithMessage(
+            "decodeAsync must accept a failure callback — without one the adapter has no way " +
+                "to tell the dispatcher that this swipe needs the geometric engine, and an " +
+                "empty slate is indistinguishable from 'no candidates' downstream."
+        ).that(decodeAsync).contains("onDecodeFailure")
+        assertWithMessage(
+            "the decode task must classify its outcome through the pure CtcDecodeDelivery seam " +
+                "(deliver / cancelled / fall back), which is where that decision is unit-tested."
+        ).that(decodeTask).contains("CtcDecodeDelivery.deliver(")
+        assertWithMessage(
+            "no path inside the decode task may answer a failure with an empty slate any more " +
+                "— that IS the cleared bar this test exists to prevent. Both the caught " +
+                "exception and the unassembled-inputs branch must reach onDecodeFailure."
+        ).that(decodeTask).doesNotContain("PredictionResult(emptyList(), emptyList())")
+        assertWithMessage(
+            "a TRANSIENT failure must not latch: the decode task may never write the per-asset " +
+                "dead set, or one ORT hiccup would disable CTC for the rest of the session " +
+                "(the latch is modelOrNull's alone, after MAX_MODEL_LOAD_ATTEMPTS)."
+        ).that(decodeTask).doesNotContain("deadModelAssets")
+
+        val coordinator = source("tribixbite/cleverkeys/InputCoordinator.kt")
+        val dispatch = coordinator
+            .substringAfter("private fun performCtcSwipeTyping(")
+            .substringBefore("fun prewarmGeometricEngine(")
+        val failureIdx = dispatch.indexOf("onDecodeFailure")
+        assertWithMessage(
+            "the CTC dispatch must pass a failure callback to decodeAsync; the adapter cannot " +
+                "reach the geometric engine itself and must not try to."
+        ).that(failureIdx).isAtLeast(0)
+        assertWithMessage(
+            "the failure callback must dispatch performGeometricSwipeTyping — the same remedy " +
+                "the language/layout/latch gates already use. Anything else leaves the bar empty."
+        ).that(dispatch.indexOf("performGeometricSwipeTyping(", failureIdx)).isAtLeast(0)
+    }
+
+    /**
      * Accuracy figures quoted in source must belong to the model we actually ship.
      *
      * ### The bug this pins
