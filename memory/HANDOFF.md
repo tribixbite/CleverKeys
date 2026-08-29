@@ -117,8 +117,23 @@ log and the verification doc before re-deriving anything. Still open:
   accuracy argument for geometric-on-Latin is gone. Synthetic tiers: CTC degrades more
   gracefully than geometric (11.3 vs 19.6 pt TYPICAL→SLOPPY drop) but absolute synthetic levels
   carry a timing artifact — full record in `docs/eval/2026-08-28-arc019-ctc-local-head2head.md`.
-- **ARC-044**: androidTest assertion quality — 271 `assertNotNull` / 0 `assertThat`; start with
-  the 6 curated release-gate classes.
+- **ARC-044 (curated six DONE 2026-08-29, rest open)**: the 6 release-gate classes went
+  141 → 223 assertions (`fe976d0e`), strengthening only — no test exercises anything new.
+  Biggest win `CrashGuardInstrumentedTest` 1 → 35 (it asserted literally nothing before; now
+  pins "ConfigPropagator is a pusher, never a mutator" via a reflective before/after snapshot of
+  all 141 public `Config` fields, plus the builder's fluent contract). **Truth was deliberately
+  NOT added to `androidTestImplementation`**: those configurations are dependency-locked and
+  Trivy reads `gradle.lockfile` as one flat production tree, so truth would drag guava,
+  checker-qual, asm and auto-value into the security gate's scope — the exact failure that made
+  it go red on ~48 build-tooling CVEs and forced the current narrow lock scope (`build.gradle`
+  header). Use JUnit assertions with explicit messages in androidTest. Still open: the other
+  ~85 androidTest classes, and `CrashGuardInstrumentedTest`'s `catch (Throwable)` guard is
+  still not EXERCISED (all eight collaborator types are final Kotlin classes — needs a
+  production seam; TODO recorded in the class KDoc).
+  Owed on the next ew-cli run: three new assertions are device-unverified by construction —
+  the hard non-empty French control in `secondaryLanguageDecode_…` (was conditional, which
+  silently skipped the rank-one pin), the per-decode non-empty check inside the geometric p95
+  perf loop, and slate-distinctness on the geometric paired-base decode.
 - **ARC-045**: ~168 raw Compose `Text("…")` literals unextracted (LearningDataSection 21,
   IntentEditorDialog 19, CommandPaletteDialog 18, LayoutManagerActivity 18, …).
 - **ARC-048 (backlog, worsening)**: ConfigSnapshot absent (static consumers 28→33 files),
