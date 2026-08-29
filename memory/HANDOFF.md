@@ -8,14 +8,17 @@ priority.
 **Completed work is DELETED from this file, not struck through.** Git history is the record of
 what was done; this file is only what is left. Anything below is open.
 
-## State at `da012ded`
+## State at `05c0c25d`
 
 Swipe is **CTC (default) + geometric**; the neural engine was deleted 2026-08-18
 (`a7d03bc8`..`83220634`), −26.4 MB APK. `CtcLanguageSupport.SUPPORTED` is **eight** languages:
 en/fr/de/es test-validated, it/pt/sv `PROVISIONAL` (scale-transferred, no per-language bar), and
 **ru** `VAL_ONLY` since 2026-08-29 (`1561dbaf`, `da012ded` — the first non-Latin script; see the
-geometric-removal section below for what is and is not established about it).
-Gates: `runPureTests` **1920**, `runMockTests` **325**, `lintDebug` 0 errors, both compiles.
+geometric-removal section below for what is and is not established about it). **The table is no
+longer the whole membership**: since `05c0c25d` an imported LATIN language pack that measures
+a–z-typeable is served too (`CtcImportedPackSupport`), so `SUPPORTED.keys` is a lower bound and
+`CtcLanguageSupport.sourceFor`/`isSupported` is the answer.
+Gates: `runPureTests` **1946**, `runMockTests` **325**, `lintDebug` 0 errors, both compiles.
 Last full instrumented run (ew-cli, Pixel7 API 34, 2026-08-28, run `2ca8b7c9` at `6d67a7c8`):
 **1,430 tests, 3 red — all explained, none a code regression**: 2 `CtcOnnxLatencyBenchmarkTest`
 reds that are BY DESIGN whenever the ctc_bench models are not staged (`3fcbf7b8`; restore via
@@ -182,7 +185,10 @@ Everything is in git history and these references — do not re-derive:
   an unverified file tree + "~3000 lines" in `settings-system.md`.
 - Translations owed: `pref_secondary_prediction_weight` summary (English rescoped to tap-only
   2026-08-28/ARC-018; 21 locales still carry the unscoped wording), plus
-  `swipe_context_rescoring_*`, `collision_warning_*`, `swipe_engine_fallback_*`, `gesture_touch_smoothing_*`,
+  `swipe_context_rescoring_*`, `collision_warning_*`,
+  `swipe_engine_pack_not_typeable` / `swipe_engine_pack_head_not_typeable` /
+  `swipe_engine_pack_unusable` (added `05c0c25d`; the imported-pack refusal reasons on the
+  swipe-engine fallback card), `gesture_touch_smoothing_*`,
   `gesture_finger_occlusion_*`, `dict_word_too_long_for_swipe_*` ship English-only behind
   `tools:ignore="MissingTranslation"`. The 21 `swipe_engine_mode_desc` translations were
   machine-extended and want a native reviewer.
@@ -193,15 +199,17 @@ Everything is in git history and these references — do not re-derive:
 
 ## The geometric-removal question
 
-The **language** dimension is closed for Latin. **Cyrillic is now half-open**: the wiring is
-generic and Russian is routed. What remains is the other five scripts' lexicons, and layout.
+The **language** dimension is closed for Latin — including, since `05c0c25d`, the imported-pack
+cell that used to be the loudest counterexample: a user with `langpack-nl.zip` got geometric for a
+language CTC decodes fine. **Cyrillic is now half-open**: the wiring is generic and Russian is
+routed. What remains is the other five scripts' lexicons, and layout.
 
 Layout census (`src/main/layouts/`, 86 XML — the tree `copyLayoutDefinitions` ships;
 `srcs/layouts/` is divergent and read by no build task):
 
 | bucket | count | routing |
 |---|---|---|
-| `script="latin"` and a–z-complete | 46 | CTC |
+| `script="latin"` and a–z-complete | 46 | CTC — for the eight table languages AND for any imported Latin pack that measures a–z-typeable (`05c0c25d`); a pack that does not (Turkish: 73 %) stays geometric, deliberately |
 | `script="latin"` but a–z-incomplete | 2 | geometric, via the alphabet gate |
 | `script="cyrillic"` | 11 | **CTC at gate 1** since 2026-08-29; only `ru` is served, so ten of the eleven fall through at the LANGUAGE gate |
 | other non-Latin declared (14 scripts) | 25 | geometric at gate 1 |
@@ -241,6 +249,30 @@ The infrastructure is generic and Russian is routed end to end. What exists now:
   not be selected. λ/γ/β and both prune terms are unchanged.
 - **Router** — gate 1 consults `CtcScriptSupport.ROUTABLE_SCRIPTS`, not `isLatinScript`. Routing
   stays per SCRIPT; serving stays per LANGUAGE, and that division is test-pinned.
+
+### Imported Latin packs — `05c0c25d`, 2026-08-29
+
+`CtcLanguageSupport.sourceFor` consults the static table first and the installed packs on a miss,
+so an imported pack that measures a–z-typeable resolves to `CKDT_LANGPACK` and everything
+downstream follows with **no new branch** — dispatcher, prewarm, `presetFor`'s λ,
+`hasLexiconSource`, settings card. The precedent is it/pt/sv verbatim: the encoder never sees a
+language, and λ calibrates to the lexicon's frequency SCALE, which an imported pack shares exactly
+with the bundled six.
+
+The gate is **measured a–z projectability**, not a manifest field (the manifest has no script), and
+it is not ceremonial. Over every `scripts/dictionaries/langpack-*.zip`: nl/id/ms/sw/tl **100.00 %**,
+ru/el **0.00 %**, tr **73.34 %** overall and **81.7 %** of the frequency head — dotless `ı` has no
+NFD decomposition, so a quarter of Turkish cannot be spelled on an a–z board. Those words ARE
+typeable on geometric, so serving Turkish would be a regression, not a gap. Thresholds 0.98 / 0.99
+(head, top 1,000 by rank) sit in a 25-point empty band; the 1,000-word floor is a power floor on
+the ratio.
+
+State to respect: the verdict is cached in the single pref `ctc_langpack_verdicts`, keyed by the
+pack file's length+mtime, and an UNMEASURED pack answers false and schedules the read — so the
+first swipe after an import can go to geometric and every later one to CTC. `INTERNAL_KEYS`
+excludes the pref from backups (a per-device measurement of per-device files). Tier: `PROVISIONAL`
+by construction and permanently; **no accuracy number may ever be quoted for an imported pack**,
+because there is no corpus and not even a fixed vocabulary.
 
 **Russian, exactly.** Ship bytes `src/main/assets/models/ru_synth_v3_ch80_fp16w.onnx`
 sha `8fffa75c…` (589,406 B), fixture `ru_synth_v3_ch80_fp16w_golden.json` sha `2e8de3c5…`
@@ -346,11 +378,25 @@ strong — but "Colemak ≥ geometric" is an inference, not a measurement. Say i
   — the graph is a fifth of the Latin encoder's bytes so the expectation is favourable, and
   expectation is not measurement. Also worth watching: the trie memo evicts at `size > 2`, and a
   ru primary now pulls a SECOND ORT session alongside the Latin one.
-- **The collision-warning dialog has never been SEEN.** Its logic is instrumented-tested, but the
-  dialog only appears when an imported language pack contributes a collision, and no pack is
-  installed on the emulator — so the pack-collision path cannot be reached on emulator.wtf at all.
-  Needs a device with a pack imported (nl is the bundled-adjacent one) alongside a bundled
-  language, then a language re-selection to trigger the scan.
+- **The imported-pack CTC path has never run on a device.** `05c0c25d` ships it and every
+  hardware-free gate is green. The next ew-cli run must confirm
+  `CtcImportedPackInstrumentedTest` (4 cases, written 2026-08-29, never executed): it builds a
+  real CKDT v2 pack for the unassigned code `zz`, imports it through the shipping
+  `LanguagePackManager`, and checks (1) the file lands where `candidateLangpackRelativePath` says,
+  (2) `CtcInstalledPacks` measures it out of the real `filesDir` and the verdict reaches the
+  STATIC `CtcEngineAdapter.supportsLanguage` gate, (3) the production merge path builds a trie
+  from it, (4) deleting the pack unserves the language in the same process, and (5) a reimport
+  with different content is re-measured. Watch for: `Uri.fromFile` through `contentResolver`
+  (works in-process, but it is the one assumption that is device-shaped), and the trie memo
+  evicting at `size > 2` if a pack language is active alongside two others.
+- **The collision-warning dialog has still never been SEEN — but its precondition is now
+  reachable in CI.** `CtcImportedPackInstrumentedTest.theCollisionScanSeesAnImportedPacksContractions`
+  builds a fixture pack whose `contractions.json` rewrites a real English word (`were` → `we're`)
+  and asserts `ContractionCollisionScanner.scan(…).hasPackCollisions`, which is the exact branch
+  the dialog gates on and which no emulator could reach before (none has ever had a pack
+  installed). What is still owed on the maintainer's device is the DIALOG itself — Compose
+  rendering after a language re-selection with a real pack (nl is the bundled-adjacent one)
+  alongside a bundled language.
 - **Manual, on the maintainer's device**: the 2026-08-26 disabled-not-hidden settings rendering
   (Settings → Input → Advanced Prediction Settings: toggle Context-Aware off → Next-Word switch
   should DIM, not vanish; toggle Personalized Learning off → strength slider + aggression dropdown

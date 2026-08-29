@@ -10,12 +10,14 @@ every stratum; UNSEALING_4). Integration per `CleverKeys-ML/ctc/APP_INTEGRATION_
 (commits 3b9dd666..d99dd41f, seam-audit fixes fb77b422): `OnnxCtcEmissionModel` +
 `CtcEngineAdapter` + `SwipeEngineRouter.Mode.CTC` (any layout whose script has a complete
 wiring, and which exposes the active language's alphabet → CTC; everything else → geometric).
-**Languages: en, fr, de, es, it, pt, sv, ru** — eight, where `it`/`pt`/`sv` are `PROVISIONAL`
-and `ru` is `VAL_ONLY` (see "Per-language enablement"). Russian, added 2026-08-29, is the first
-non-Latin script and reads its lexicon from the IMPORTED language pack, so it is served only
-while that pack is installed. Any other language, and every layout whose script has no complete
-wiring, is served by the GEOMETRIC engine, so selecting CTC never yields less coverage than
-geometric. The two-model ensemble, the rescorer, and contract-v2 remain
+**Languages: en, fr, de, es, it, pt, sv, ru** in the static table — eight, where `it`/`pt`/`sv`
+are `PROVISIONAL` and `ru` is `VAL_ONLY` (see "Per-language enablement") — **plus, since
+2026-08-29, any imported LATIN language pack the device has measured as a–z-typeable**
+(`nl`, `id`, `ms`, … — `PROVISIONAL` by construction; see "Imported language packs"). Russian,
+added the same day, is the first non-Latin script and also reads its lexicon from an IMPORTED
+pack, so it too is served only while that pack is installed. Any other language, and every layout
+whose script has no complete wiring, is served by the GEOMETRIC engine, so selecting CTC never
+yields less coverage than geometric. The two-model ensemble, the rescorer, and contract-v2 remain
 future options recorded in the plan.
 **Package:** `tribixbite.cleverkeys.swipe.ctc` (`src/main/kotlin/.../swipe/ctc/`), with the
 Android-side adapter at `swipe/CtcEngineAdapter.kt` + `swipe/OnnxCtcEmissionModel.kt`.
@@ -35,7 +37,7 @@ truth is the integration study `docs/history/audits/2026-08-06-futo-decoder-inte
 
 ---
 
-## As-Built (default since 2026-08-18; wired 2026-08-08, commits 3b9dd666..743b58fa; layout gate widened 2026-08-15; languages fr/de/es added 2026-08-16; it/pt/sv added provisionally 2026-08-18)
+## As-Built (default since 2026-08-18; wired 2026-08-08, commits 3b9dd666..743b58fa; layout gate widened 2026-08-15; languages fr/de/es added 2026-08-16; it/pt/sv added provisionally 2026-08-18; ru + the script wiring 2026-08-29; imported Latin packs 2026-08-29)
 
 ### Routing: mode × layout × language → engine
 
@@ -69,9 +71,13 @@ to geometric:
    geometric *before any CTC work starts*. All three are per-language since the multi-script
    wiring (2026-08-29): the alphabet, the lexicon and the ONNX asset all vary by language.
 
-"Served language" = `swipe/ctc/CtcLanguageSupport.SUPPORTED` = **en, fr, de, es, it, pt, sv, ru**
-(evidence and tiers in "Per-language enablement" below; `ru` is `VAL_ONLY` and its lexicon is the
-IMPORTED langpack, so it is served only while that pack is installed). Net `ctc` semantics:
+"Served language" = whatever `swipe/ctc/CtcLanguageSupport.sourceFor` resolves — the STATIC table
+`SUPPORTED` = **en, fr, de, es, it, pt, sv, ru** (evidence and tiers in "Per-language enablement"
+below; `ru` is `VAL_ONLY` and its lexicon is the IMPORTED langpack, so it is served only while that
+pack is installed), **plus any imported LATIN language pack this device has measured as
+a–z-typeable** (2026-08-29, `CtcImportedPackSupport` — see "Imported language packs" below). The
+table is therefore a lower bound on coverage and `SUPPORTED.keys` may not be quoted as the served
+set; ask `isSupported`. Net `ctc` semantics:
 CTC(served language on a layout exposing that language's alphabet, with a live model and a
 present lexicon) / geometric(everything else) —
 **the router is TOTAL and no cell is left without an engine**. Unknown/legacy pref values —
@@ -224,10 +230,15 @@ unreachable. Pure JVM, pinned by `CtcContractionKeysTest`.
    onto a–z (`CtcAzProjection`). Both merge the ACTIVE LANGUAGE's user custom words (freq
    clamped 1..255; custom overrides disabled) minus its disabled words
    (`CtcLexiconMerge.merge`, unit-tested), read from the per-language pref keys.
-   **Langpack swap is deliberately unsupported** (audit L2): an installed en langpack's CKDT
-   `dictionary.bin` stores the INVERTED 255−rank scale the en λ was NOT fitted for —
-   swapping THAT source requires its own λ validation round (plan §7.1). Known limitation:
-   the CTC en vocabulary can diverge from the en dictionary source the other engines see.
+   **An imported LATIN pack** (2026-08-29) reads `langpacks/<lang>/dictionary.bin` through the
+   same reader, the same `255 − rank` scale and the same `CtcAzProjection` — the only difference
+   is that its membership is decided by MEASUREMENT rather than a table row (see "Imported
+   language packs").
+   **Langpack swap is deliberately unsupported for a BUNDLED language** (audit L2): an installed
+   en langpack's CKDT `dictionary.bin` stores the INVERTED 255−rank scale the en λ was NOT fitted
+   for — swapping THAT source requires its own λ validation round (plan §7.1) — and the same
+   lookup order keeps fr/de/es/it/pt/sv on their bundled binaries. Known limitation: the CTC en
+   vocabulary can diverge from the en dictionary source the other engines see.
 3. **Per-decode trie freshness.** The trie memo is keyed by (LANGUAGE, SHA-256
    content-hash over source id + custom-words JSON + disabled-words set), recomputed per
    `lexiconFor(language)` call — any user dictionary mutation rebuilds the trie on the next
@@ -284,6 +295,7 @@ the `LexiconSource` column.
 | `de` | qwertz **83.97** / german **81.30** | sweep tune-half winner, confirm 87.85 / **81.66** | `dictionaries/de_enhanced.bin` | **2.0** | test-validated model, val-tier λ |
 | `es` | spanish **89.53** | sweep tune-half winner, confirm 89.33 | `dictionaries/es_enhanced.bin` | **2.0** | test-validated model, val-tier λ |
 | `it`, `pt`, `sv` | **none — and none is possible today** | **scale-transferred, not swept** | `dictionaries/<lang>_enhanced.bin` | **2.0** | **`PROVISIONAL`** |
+| any imported LATIN pack (`nl`, `id`, …) | **none, and none is possible in principle** | **scale-transferred, not swept** | `langpacks/<lang>/dictionary.bin` (CKDT, `255 − rank`), admitted by measurement — see below | **2.0** | **`PROVISIONAL` by construction** |
 
 #### Why it/pt/sv are enabled without a bar (2026-08-18)
 
@@ -353,6 +365,84 @@ on both halves, while λ 4.0 is never a tune-half winner for a CKDT-scale corpus
 sweep (CleverKeys-ML `PHASE_J.md` §6.9). **Everything else in `tunedV2` (γ 0.9, β 0.25,
 α 0.0, γ_prune 0.25, β_prune 0.9882, beam 100) is language-invariant** —
 `CtcScoringParams.presetFor(language, …)` varies λ and nothing else.
+
+#### Imported language packs (2026-08-29) — the dynamic half of the table
+
+Until this date `SUPPORTED` was the whole membership, so a user who imported `langpack-nl.zip`
+got the geometric engine for a language CTC decodes perfectly well — not because anything was
+measured, but because the table had no row. `CtcLanguageSupport.sourceFor` now consults the static
+table FIRST and, on a miss, the installed packs: a pack whose vocabulary is a–z-typeable resolves
+to `LexiconSource.CKDT_LANGPACK` like `ru` does, and everything downstream follows with no new
+branch — the dispatcher, the prewarm, `presetFor`'s λ, `hasLexiconSource` and the settings card all
+already resolve through `sourceFor`.
+
+**The precedent is it/pt/sv above, unchanged.** The encoder never sees a language, and λ is
+calibrated against the lexicon's frequency SCALE — an imported pack is the same CKDT v2 container
+on the same `freq = max(1, 255 − rank)` scale as the bundled six, read by the same
+`CkdtDictionaryReader`, so λ = 2.0 transfers for exactly the reason it transferred to Italian.
+`CtcImportedPackSupportTest` asserts that equality rather than restating it.
+
+**Order is load-bearing: the static row wins.** An imported `fr` pack must not displace the
+bundled `fr_enhanced.bin` the tuned decode was validated on (the geometric engine does prefer the
+pack; CTC deliberately does not). `en` is excluded outright — an en pack stores the inverted
+`255 − rank` scale while en's λ = 4.0 was fitted on the JSON asset's compressed byte scores — and
+so is every language with a `CtcScriptSupport` row, which needs its own encoder, trie and fixture
+(HANDOFF rule 4). `ru` is unaffected: it reaches `CKDT_LANGPACK` through the static table.
+
+**The gate is measured a–z projectability, not a manifest field.** `LanguagePackManifest` carries
+no script (`code`, `name`, `version`, `author`, `wordCount`, `hasPrefixBoost` is the whole of it),
+and it does not need to: the beam walks a trie over the 26 emission columns, so a word with no a–z
+spelling is absent from the trie and **unswipeable**, which makes one measurement answer both "is
+this Latin" and "can this be decoded". Applying `CtcAzProjection.project` to every
+`scripts/dictionaries/langpack-*.zip` (2026-08-29, pinned by
+`CtcImportedPackSupportTest.realLangpacksSplitCleanlyAcrossTheThreshold`):
+
+| pack | words | a–z-projectable | top-1,000 by rank | verdict |
+|---|---:|---:|---:|---|
+| `nl` | 40,000 | **100.00 %** | 100.0 % | eligible |
+| `id` | 28,637 | **100.00 %** | 100.0 % | eligible |
+| `ms` | 25,861 | **100.00 %** | 100.0 % | eligible |
+| `sw` | 20,000 | **100.00 %** | 100.0 % | eligible |
+| `tl` | 27,922 | **100.00 %** | 100.0 % | eligible |
+| `tr` | 40,000 | 73.34 % | 81.7 % | **rejected** |
+| `ru` | 50,000 | 0.00 % | 0.0 % | rejected here (served by the SCRIPT path instead) |
+| `el` | 39,860 | 0.00 % | 0.0 % | rejected (Greek, and unrouted anyway) |
+
+Turkish is why the check is load-bearing rather than ceremonial: **ı (U+0131) has no NFD
+decomposition**, so a quarter of the vocabulary — and a sixth of the thousand most frequent words
+(`nasıl`, `artık`, `mı`, `aynı`) — cannot be spelled on an a–z board at all. Those words ARE
+typeable on the geometric engine, so routing Turkish to CTC would be a **regression on the most
+common words in the language**, not a gap. Polish `ł`, Vietnamese `đ` and Icelandic `þ`/`ð` fail
+the same way; the check does not need to know their names.
+
+Thresholds: **0.98 of the whole lexicon and 0.99 of the top 1,000 by rank**, with a 1,000-word
+floor. The two real outcomes sit at 1.00 and 0.73, so the thresholds live in a 25-point empty band
+and are not fitted to the sample; the 2 % slack tolerates the stray homoglyph entry real word lists
+carry (`langpack-en-opensubtitles-50k` holds 49 words spelled with a Greek omicron). The head check
+is separate because a gap CONCENTRATED in common words is invisible to the overall ratio on a large
+pack. The word floor is a POWER floor on the ratio — 20 words at 100 % is not evidence — and sits
+20× below the smallest real pack.
+
+**Where the work happens.** `swipe/ctc/CtcImportedPackSupport` is the pure policy plus a resolver
+seam; `swipe/CtcInstalledPacks` is its impurity boundary — it finds the pack through
+`LanguagePackManager`, measures it OFF the main thread, and caches the verdict in the single
+preference `ctc_langpack_verdicts` keyed by the file's length+mtime (an `INTERNAL_KEYS` entry: a
+per-device derived cache must never ride in a settings backup). An unmeasured pack answers **false**
+and schedules the read, so the first swipe after an import may go to geometric and every later one
+to CTC — the same fall-through contract the dead-session and missing-lexicon gates keep, never a
+blocking dictionary parse on the swipe path. Measurement is also triggered at import time and at
+language selection (the settings card), which is where a refusal can be explained to the user.
+
+**Reimport invalidates everything through one fingerprint.** `CtcImportedPackSupport.packFingerprint`
+(length + mtime) keys both the eligibility verdict and `CtcEngineAdapter`'s trie content-hash, so a
+replaced pack can neither be served by the previous file's trie nor admitted by its measurement.
+
+**Evidence tier, stated exactly.** An imported-pack language is `PROVISIONAL` **by construction and
+permanently** — the lexicon is a file the user brought, so there is no corpus, no bar, and no fixed
+vocabulary to measure one against. **No accuracy number may ever be quoted for one.** What is
+claimed is narrower and checkable: it decodes at the preset its lexicon's scale was fitted for, and
+its vocabulary is a–z-typeable on the board being swiped. `CtcLanguageSupport.isProvisional` is the
+API for this; testing `in PROVISIONAL` would silently report a dynamic language as validated.
 
 #### Accent display (the CKDT duty)
 
@@ -511,6 +601,16 @@ wrong-artifact swap survives every eyeball check and only a hash catches it.
   on the next swipe.
 - "Full Geometric Settings" is always visible: geometric mode uses it everywhere, and `ctc`
   mode uses it for every language and layout CTC does not serve.
+- **The fallback card** (`swipe_engine_fallback_title/desc`) appears under the dropdown when
+  `ctc` is selected but the primary language is not served. Since 2026-08-29 it lists
+  `SUPPORTED.keys` **plus the imported packs this device actually serves** — listing the table
+  alone would tell a Dutch user with an eligible pack that CTC does not serve Dutch while CTC is
+  serving it — and, when the user's OWN imported pack was refused, it adds the measured reason
+  (`swipe_engine_pack_not_typeable`, with the percentage) instead of the useless "CTC has no
+  dictionary for TR" while a Turkish pack sits installed. The measurement runs there, on
+  `Dispatchers.IO`, keyed on the primary language: selection time is where the user made the
+  choice and the only place a refusal can be explained. The three new strings are English-only
+  (translation debt tracked in `memory/HANDOFF.md`).
 - Settings search: "CTC Settings" entry (keywords ctc/futo/swipe engine/beam/trie) is
   deliberately UNGATED by the current engine mode — gating made "ctc" unfindable exactly
   when the user is setting swipe up (`SettingsActivity.kt`).
@@ -543,6 +643,7 @@ counts are `@Test` counts at 2026-08-19 and move with the suites:
 | `swipe/ctc/CtcLanguagePresetTest` | 23 | `presetFor` λ-by-lexicon-scale (en 4.0 / the CKDT six 2.0 / unknown→en) and the SCRIPT footing (`tunedRuCkdt` verbatim for every `CtcScriptSupport` row), language-invariance of every other Latin constant, the `CtcLanguageSupport` table (the eight-language supported set, the `PROVISIONAL` three, the `VAL_ONLY` one, the empty `NEEDS_VALIDATION`, asset **and langpack** paths — exactly one resolution per language — and normalization) |
 | `swipe/ctc/CtcScriptSupportTest` | 13 | The per-script table: codepoint-sorted alphabets pinned against each shipped fixture's `layout.letters` character for character (a permutation is silent), rule 4's all-three check for ROUTED rows, a stated gap for every unrouted one, the two-table agreement with `CtcLanguageSupport`, the routable-script set, layout existence, and the 32-frame budget constants |
 | `swipe/ctc/CtcScriptProjectionTest` | 15 | PHASE_O §3.4 one rule at a time: ru/bg/mk folds with NO NFD (asserted via the premise that `й` really does decompose), el mark-strip + word-final sigma in that order with medial `σσ` preserved, uk's ї/ґ rejection, he niqqud with final forms kept, shared joiners/case/collision rules, and that the Latin projection is unchanged by the shared loop |
+| `swipe/ctc/CtcImportedPackSupportTest` | 24 | The DYNAMIC half of membership: lookup order (an imported `fr`/`en` pack never displaces a bundled source), the scripted-language refusal, the λ-by-scale precedent asserted as an equality against `fr`, the projectability thresholds on synthetic boundaries AND on every real `scripts/dictionaries/langpack-*.zip` (nl/id/ms/sw/tl 100 %, tr 73 %, ru/el 0 %), verdict-cache round-trip and malformed-line tolerance, the reimport fingerprint, and the two gates composing (same board → CTC with the pack, geometric without) |
 | `swipe/ctc/CtcCkdtLexiconTest` | 19 | The a–z projection policy (folding, fixed-head expansions, joiners) + the REAL bundled fr/de/es dictionaries: record/untypeable/word/collision counts, the `255 − rank` scale, canonical display, deterministic collisions, and trie totality |
 | `swipe/ContractionOverlayTest` | 12 | The shared pure overlay decision matrix (geometric + ctc twin duty) |
 | `swipe/SwipeEngineRouterTest` | 10 | Routing table incl. `Mode.CTC` rows + `fromPref` canonicalization |
@@ -559,6 +660,7 @@ Instrumented (ew-cli, Pixel7/API34 — all green on-device 2026-08-08; the full 
 | `swipe/CtcEmissionModelParityTest` | 3 | EVERY shipped ONNX asset's on-device emissions/decodes match its own golden fixture (en + ru rows), plus a sha256 check on the PACKAGED asset — the only gate that actually executes the graphs, so a fixture with a fresh header and stale emission matrices is caught here and nowhere else |
 | `swipe/CtcLatencyGateTest` | 1 | Production-path decode budget: median < 150 ms / p90 < 250 ms (ModelLoader+XNNPACK, real `trieFor("en")` merge path — en is the largest bundled lexicon at 98k words vs fr/de 40k and es 50k — `presetFor("en")` beam 100 topK 8, worst-case golden trace) |
 | `swipe/ctc/CtcOnnxLatencyBenchmarkTest` | 2 | Loose-bound measurement harness (informational, not the gate) |
+| `swipe/CtcImportedPackInstrumentedTest` | 4 | The imported-pack path end to end on a device: build a real CKDT v2 pack for the unassigned code `zz`, import it through the shipping `LanguagePackManager`, and check the file lands where the pure table says, that `CtcInstalledPacks` measures it out of the real `filesDir`, that the verdict reaches the STATIC `CtcEngineAdapter.supportsLanguage` gate the dispatcher consults, that the production merge path really builds a trie from it, and that deleting the pack unserves the language in the same process. Also the reimport case (an eligible pack replaced by an unswipeable one must be re-measured) and — new coverage, not a CTC concern — `ContractionCollisionScanner`'s PACK branch, whose precondition had never been reachable on an emulator because no emulator has ever had a pack installed |
 
 > **Latency measurements are trustworthy again as of `716f7be9`** (audit MEDIUM-2). Three
 > `settle = true` `MemoryProbe` marks used to sit on the CTC decode thread and added

@@ -35,6 +35,23 @@ languages, the neural engine deleted, and the 2026-08-20 remediation wave landed
 >   en/fr/de/es/it/pt/sv — adding a script language will trip `ReleaseMetadataDriftTest` by
 >   design.
 >
+> **Second app-state addendum — 2026-08-29.** Two waves landed and §2's routing rule below is
+> now stale in both of its gates:
+>
+> - `1561dbaf` + `da012ded`: the wiring is script-generic (`CtcScriptSupport` is the per-script
+>   table; gate 1 consults `ROUTABLE_SCRIPTS`, not `isLatinScript`) and **ru** is routed —
+>   `SUPPORTED` is eight, with ru `VAL_ONLY` and its lexicon the imported `langpack-ru`.
+> - `05c0c25d`: gate 2 is no longer a map lookup. `CtcLanguageSupport.sourceFor` consults
+>   `SUPPORTED` first and, on a miss, the device's installed language packs — an imported
+>   **Latin** pack measuring ≥98 % a–z-projectable (and ≥99 % over its top-1,000 by rank) is
+>   served as `CKDT_LANGPACK`. Policy in `swipe/ctc/CtcImportedPackSupport`, device side in
+>   `swipe/CtcInstalledPacks`, full write-up in `docs/specs/ctc-swipe-engine.md` §"Imported
+>   language packs".
+>   **Correction to the MEDIUM-7 line further down**: the fallback card no longer formats its
+>   list from `SUPPORTED.keys` alone — that would understate coverage on a device with an
+>   eligible pack — it appends `CtcInstalledPacks.servedCodes`, and adds the measured refusal
+>   reason when the user's own pack was the thing rejected.
+>
 > App-side wiring work is planned in `docs/plans/2026-08-25-ctc-multiscript-wiring-plan.md`.
 
 This document exists to kill four recurring confusions permanently:
