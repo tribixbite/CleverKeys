@@ -23,10 +23,18 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.viewinterop.AndroidView
 import android.content.ClipboardManager
 import android.content.Context
+import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.Theme
+
+/** How many characters of a custom-text action are echoed back in the confirmation dialog. */
+private const val TEXT_PREVIEW_CHARS = 30
+
+/** Stand-in shown when a timestamp pattern cannot be formatted for preview. */
+private const val UNKNOWN_PREVIEW = "?"
 
 /**
  * Data class to hold the complete mapping selection with separate label and action.
@@ -106,11 +114,22 @@ fun CommandPaletteDialog(
                 else -> ""
             },
             actionDescription = when {
-                pendingCommand != null -> "Command: ${pendingCommand!!.displayName}"
-                pendingText != null -> "Text: \"${pendingText!!.take(30)}${if (pendingText!!.length > 30) "..." else ""}\""
-                pendingIntentDef != null -> "Intent: ${pendingIntentDef!!.name}"
-                pendingTimestampPattern != null ->
-                    "Timestamp: ${pendingTimestampPattern} (now → \"${timestampPreview ?: "?"}\")"
+                pendingCommand != null -> stringResource(
+                    R.string.command_palette_action_command, pendingCommand!!.displayName
+                )
+                pendingText != null -> stringResource(
+                    R.string.command_palette_action_text,
+                    pendingText!!.take(TEXT_PREVIEW_CHARS) +
+                        if (pendingText!!.length > TEXT_PREVIEW_CHARS) "..." else ""
+                )
+                pendingIntentDef != null -> stringResource(
+                    R.string.command_palette_action_intent, pendingIntentDef!!.name
+                )
+                pendingTimestampPattern != null -> stringResource(
+                    R.string.command_palette_action_timestamp,
+                    pendingTimestampPattern!!,
+                    timestampPreview ?: UNKNOWN_PREVIEW
+                )
                 else -> ""
             },
             currentLabel = customLabel,
@@ -233,7 +252,10 @@ fun CommandPaletteDialog(
                 TopAppBar(
                     title = {
                         Text(
-                            if (showTextInput) "Enter Custom Text" else "Select Command",
+                            stringResource(
+                                if (showTextInput) R.string.command_palette_title_custom_text
+                                else R.string.command_palette_title_select
+                            ),
                             fontWeight = FontWeight.Bold
                         )
                     },
@@ -247,7 +269,10 @@ fun CommandPaletteDialog(
                         }) {
                             Icon(
                                 imageVector = if (showTextInput) Icons.Filled.ArrowBack else Icons.Filled.Close,
-                                contentDescription = if (showTextInput) "Back" else "Close"
+                                contentDescription = stringResource(
+                                    if (showTextInput) R.string.common_back
+                                    else R.string.common_close
+                                )
                             )
                         }
                     },
@@ -319,7 +344,7 @@ private fun LabelConfirmationDialog(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    "Customize Label",
+                    stringResource(R.string.command_palette_customize_label),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -347,19 +372,25 @@ private fun LabelConfirmationDialog(
                         if (it.length <= ShortSwipeMapping.MAX_DISPLAY_LENGTH) onLabelChange(it)
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Display Label") },
+                    label = { Text(stringResource(R.string.command_palette_display_label)) },
                     placeholder = {
                         if (isIconMode && iconPreviewText != null) {
-                            Text("[Icon: $iconPreviewText]")
+                            Text(stringResource(R.string.command_palette_icon_placeholder, iconPreviewText))
                         } else {
                             Text(defaultLabel)
                         }
                     },
                     supportingText = {
                         if (isIconMode) {
-                            Text("Leave blank to use default icon. Type text for a custom label.")
+                            Text(stringResource(R.string.command_palette_icon_hint))
                         } else {
-                            Text("What shows on the key (max ${ShortSwipeMapping.MAX_DISPLAY_LENGTH} chars). Leave blank for default: $defaultDescription")
+                            Text(
+                                stringResource(
+                                    R.string.command_palette_label_hint,
+                                    ShortSwipeMapping.MAX_DISPLAY_LENGTH,
+                                    defaultDescription
+                                )
+                            )
                         }
                     },
                     singleLine = true
@@ -382,7 +413,10 @@ private fun LabelConfirmationDialog(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Preview: ", color = MaterialTheme.colorScheme.onPrimaryContainer)
+                        Text(
+                            stringResource(R.string.command_palette_preview_prefix),
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
                         // Show actual icon using special font when in icon mode with default label
                         when {
                             currentLabel.isNotBlank() -> {
@@ -432,14 +466,14 @@ private fun LabelConfirmationDialog(
                         onClick = onCancel,
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.common_cancel))
                     }
 
                     Button(
                         onClick = onConfirm,
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Confirm")
+                        Text(stringResource(R.string.command_palette_confirm))
                     }
                 }
             }
@@ -466,14 +500,14 @@ private fun CommandSearchSection(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp),
-            placeholder = { Text("Search commands (e.g., copy, paste, home, esc)") },
+            placeholder = { Text(stringResource(R.string.command_palette_search_hint)) },
             leadingIcon = {
-                Icon(Icons.Filled.Search, contentDescription = "Search")
+                Icon(Icons.Filled.Search, contentDescription = stringResource(R.string.common_search))
             },
             trailingIcon = {
                 if (searchQuery.isNotEmpty()) {
                     IconButton(onClick = { onSearchChange("") }) {
-                        Icon(Icons.Filled.Clear, contentDescription = "Clear")
+                        Icon(Icons.Filled.Clear, contentDescription = stringResource(R.string.common_clear))
                     }
                 }
             },
@@ -508,12 +542,12 @@ private fun CommandSearchSection(
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        "Custom Text",
+                        stringResource(R.string.command_palette_custom_text_title),
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                     Text(
-                        "Enter any text to insert (macros, snippets, etc.)",
+                        stringResource(R.string.command_palette_custom_text_desc),
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
                     )
@@ -550,12 +584,12 @@ private fun CommandSearchSection(
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        "Send Intent",
+                        stringResource(R.string.command_palette_send_intent_title),
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onTertiaryContainer
                     )
                     Text(
-                        "Create advanced Android intent (activity, service, broadcast)",
+                        stringResource(R.string.command_palette_send_intent_desc),
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
                     )
@@ -592,12 +626,12 @@ private fun CommandSearchSection(
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        "Timestamp",
+                        stringResource(R.string.command_palette_timestamp_title),
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                     Text(
-                        "Insert formatted date/time (e.g. yyyy-MM-dd HH:mm)",
+                        stringResource(R.string.command_palette_timestamp_desc),
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
                     )
@@ -613,9 +647,13 @@ private fun CommandSearchSection(
         // Stats
         Text(
             text = if (searchQuery.isBlank()) {
-                "${CommandRegistry.totalCount} commands available"
+                stringResource(R.string.command_palette_count_available, CommandRegistry.totalCount)
             } else {
-                "${filteredCommands.values.sumOf { it.size }} results for \"$searchQuery\""
+                stringResource(
+                    R.string.command_palette_count_results,
+                    filteredCommands.values.sumOf { it.size },
+                    searchQuery
+                )
             },
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
             fontSize = 12.sp,
@@ -763,7 +801,7 @@ private fun CommandItem(
 
             Icon(
                 Icons.Filled.Add,
-                contentDescription = "Select",
+                contentDescription = stringResource(R.string.command_palette_select_desc),
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(20.dp)
             )
@@ -792,7 +830,7 @@ private fun CustomTextInputSection(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            "Enter the text that will be inserted when you swipe in this direction.",
+            stringResource(R.string.command_palette_custom_text_intro),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -805,9 +843,9 @@ private fun CustomTextInputSection(
             modifier = Modifier
                 .fillMaxWidth()
                 .focusRequester(focusRequester),
-            label = { Text("Text to insert") },
-            placeholder = { Text("e.g., Hello, World!") },
-            supportingText = { Text("${text.length} characters") },
+            label = { Text(stringResource(R.string.command_palette_text_to_insert)) },
+            placeholder = { Text(stringResource(R.string.command_palette_text_placeholder)) },
+            supportingText = { Text(stringResource(R.string.command_palette_char_count, text.length)) },
             trailingIcon = {
                 // Paste button — Compose text fields don't reliably receive
                 // performContextMenuAction(paste) from the IME, so provide
@@ -826,7 +864,7 @@ private fun CustomTextInputSection(
                     // Create icon (page+pencil) — ContentPaste requires extended icons lib
                     Icon(
                         imageVector = Icons.Filled.Create,
-                        contentDescription = "Paste from clipboard",
+                        contentDescription = stringResource(R.string.command_palette_paste_desc),
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
@@ -839,7 +877,7 @@ private fun CustomTextInputSection(
 
         // Quick insert suggestions
         Text(
-            "Quick suggestions:",
+            stringResource(R.string.command_palette_quick_suggestions),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
@@ -869,7 +907,7 @@ private fun CustomTextInputSection(
         ) {
             Icon(Icons.Filled.Check, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Use This Text")
+            Text(stringResource(R.string.command_palette_use_text))
         }
     }
 }
@@ -904,7 +942,7 @@ fun QuickCommandPicker(
 
     Column(modifier = modifier) {
         Text(
-            "Quick Commands",
+            stringResource(R.string.command_palette_quick_commands),
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = 8.dp)
         )
@@ -944,7 +982,7 @@ fun QuickCommandPicker(
         ) {
             Icon(Icons.Filled.Search, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Browse All ${CommandRegistry.totalCount} Commands")
+            Text(stringResource(R.string.command_palette_browse_all, CommandRegistry.totalCount))
         }
     }
 }
@@ -968,35 +1006,43 @@ private fun TimestampPatternDialog(
     onConfirm: (pattern: String) -> Unit
 ) {
     // Preset patterns. The first is also the default text the input starts with.
-    data class TimestampPreset(val label: String, val pattern: String)
+    // Only the chip LABEL is localized; the SimpleDateFormat pattern each chip applies
+    // is an API contract and stays a literal.
+    data class TimestampPreset(@androidx.annotation.StringRes val labelRes: Int, val pattern: String)
     val presets = remember {
         listOf(
-            TimestampPreset("Date", "yyyy-MM-dd"),
-            TimestampPreset("Date + Time", "yyyy-MM-dd HH:mm"),
-            TimestampPreset("Time", "HH:mm"),
-            TimestampPreset("Time + sec", "HH:mm:ss"),
-            TimestampPreset("12h time", "h:mm a"),
-            TimestampPreset("Day Mon d", "EEE MMM d"),
-            TimestampPreset("Long date", "EEEE, MMMM d, yyyy"),
-            TimestampPreset("ISO 8601", "yyyy-MM-dd'T'HH:mm:ss"),
-            TimestampPreset("Slash MDY", "MM/dd/yy")
+            TimestampPreset(R.string.command_palette_ts_date, "yyyy-MM-dd"),
+            TimestampPreset(R.string.command_palette_ts_date_time, "yyyy-MM-dd HH:mm"),
+            TimestampPreset(R.string.command_palette_ts_time, "HH:mm"),
+            TimestampPreset(R.string.command_palette_ts_time_sec, "HH:mm:ss"),
+            TimestampPreset(R.string.command_palette_ts_12h, "h:mm a"),
+            TimestampPreset(R.string.command_palette_ts_day_mon_d, "EEE MMM d"),
+            TimestampPreset(R.string.command_palette_ts_long_date, "EEEE, MMMM d, yyyy"),
+            TimestampPreset(R.string.command_palette_ts_iso, "yyyy-MM-dd'T'HH:mm:ss"),
+            TimestampPreset(R.string.command_palette_ts_slash_mdy, "MM/dd/yy")
         )
     }
 
     var pattern by remember { mutableStateOf(presets.first().pattern) }
 
+    // The validity computation runs inside `remember`, which is not @Composable —
+    // resolve its three failure messages here first.
+    val blankMsg = stringResource(R.string.command_palette_pattern_blank)
+    val invalidFormatMsg = stringResource(R.string.command_palette_pattern_invalid_format)
+    val formatFailedMsg = stringResource(R.string.command_palette_pattern_format_failed)
+
     // Re-evaluate preview + validity on every pattern change.
-    val (isValid, preview, errorMsg) = remember(pattern) {
+    val (isValid, preview, errorMsg) = remember(pattern, blankMsg, invalidFormatMsg, formatFailedMsg) {
         when {
-            pattern.isBlank() -> Triple(false, "", "Pattern cannot be blank")
+            pattern.isBlank() -> Triple(false, "", blankMsg)
             else -> try {
                 val formatted = java.text.SimpleDateFormat(pattern, java.util.Locale.getDefault())
                     .format(java.util.Date())
                 Triple(true, formatted, null)
             } catch (e: IllegalArgumentException) {
-                Triple(false, "", e.message ?: "Invalid SimpleDateFormat pattern")
+                Triple(false, "", e.message ?: invalidFormatMsg)
             } catch (e: Exception) {
-                Triple(false, "", e.message ?: "Failed to format pattern")
+                Triple(false, "", e.message ?: formatFailedMsg)
             }
         }
     }
@@ -1015,7 +1061,7 @@ private fun TimestampPatternDialog(
                 modifier = Modifier.padding(20.dp)
             ) {
                 Text(
-                    "Timestamp Pattern",
+                    stringResource(R.string.command_palette_timestamp_dialog_title),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -1023,8 +1069,7 @@ private fun TimestampPatternDialog(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    "Uses java.text.SimpleDateFormat patterns. " +
-                        "Letters: y M d H h m s a E. Quote literal text in single quotes.",
+                    stringResource(R.string.command_palette_timestamp_dialog_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -1038,15 +1083,15 @@ private fun TimestampPatternDialog(
                         if (it.length <= ShortSwipeMapping.MAX_ACTION_LENGTH) pattern = it
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Pattern") },
+                    label = { Text(stringResource(R.string.command_palette_pattern_label)) },
                     placeholder = { Text("yyyy-MM-dd HH:mm") },
                     isError = !isValid,
                     supportingText = {
                         if (isValid) {
-                            Text("Preview: $preview")
+                            Text(stringResource(R.string.command_palette_pattern_preview, preview))
                         } else {
                             Text(
-                                errorMsg ?: "Invalid pattern",
+                                errorMsg ?: stringResource(R.string.command_palette_pattern_invalid),
                                 color = MaterialTheme.colorScheme.error
                             )
                         }
@@ -1057,7 +1102,7 @@ private fun TimestampPatternDialog(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
-                    "Presets",
+                    stringResource(R.string.command_palette_presets),
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -1076,7 +1121,7 @@ private fun TimestampPatternDialog(
                                 onClick = { pattern = preset.pattern },
                                 label = {
                                     Text(
-                                        preset.label,
+                                        stringResource(preset.labelRes),
                                         fontSize = 11.sp,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
@@ -1103,7 +1148,7 @@ private fun TimestampPatternDialog(
                         onClick = onDismiss,
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.common_cancel))
                     }
 
                     Button(
@@ -1113,7 +1158,7 @@ private fun TimestampPatternDialog(
                     ) {
                         Icon(Icons.Filled.Check, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Use Pattern")
+                        Text(stringResource(R.string.command_palette_use_pattern))
                     }
                 }
             }

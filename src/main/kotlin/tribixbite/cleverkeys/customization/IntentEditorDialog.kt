@@ -10,11 +10,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import tribixbite.cleverkeys.R
 
 /**
  * Dialog for creating or editing an IntentDefinition.
@@ -67,10 +69,17 @@ fun IntentEditorDialog(
             Column(modifier = Modifier.fillMaxSize()) {
                 // Header
                 TopAppBar(
-                    title = { Text(if (isEditMode) "Edit Intent Action" else "Create Intent Action") },
+                    title = {
+                        Text(
+                            stringResource(
+                                if (isEditMode) R.string.intent_editor_title_edit
+                                else R.string.intent_editor_title_create
+                            )
+                        )
+                    },
                     navigationIcon = {
                         IconButton(onClick = onDismiss) {
-                            Icon(Icons.Filled.Close, contentDescription = "Close")
+                            Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.common_close))
                         }
                     },
                     actions = {
@@ -90,7 +99,7 @@ fun IntentEditorDialog(
                             },
                             enabled = name.isNotBlank() && (action.isNotBlank() || packageName.isNotBlank())
                         ) {
-                            Text("Save")
+                            Text(stringResource(R.string.common_save))
                         }
                     }
                 )
@@ -103,7 +112,7 @@ fun IntentEditorDialog(
                     // Presets section (only for new intents)
                     if (showPresets && !isEditMode) {
                         Text(
-                            "Quick Presets",
+                            stringResource(R.string.intent_editor_quick_presets),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -140,7 +149,7 @@ fun IntentEditorDialog(
                             onClick = { showPresets = false },
                             modifier = Modifier.align(Alignment.End)
                         ) {
-                            Text("Create Custom")
+                            Text(stringResource(R.string.intent_editor_create_custom))
                         }
 
                         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
@@ -150,7 +159,7 @@ fun IntentEditorDialog(
                     OutlinedTextField(
                         value = name,
                         onValueChange = { name = it },
-                        label = { Text("Macro Name (Required)") },
+                        label = { Text(stringResource(R.string.intent_editor_name_label)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
@@ -162,11 +171,16 @@ fun IntentEditorDialog(
                         OutlinedTextField(
                             value = targetType.name,
                             onValueChange = {},
-                            label = { Text("Target Type") },
+                            label = { Text(stringResource(R.string.intent_editor_target_type_label)) },
                             readOnly = true,
                             trailingIcon = {
                                 IconButton(onClick = { expandedTypeDropdown = true }) {
-                                    Icon(Icons.Filled.ArrowDropDown, contentDescription = "Select target type")
+                                    Icon(
+                                        Icons.Filled.ArrowDropDown,
+                                        contentDescription = stringResource(
+                                            R.string.intent_editor_select_target_type_desc
+                                        )
+                                    )
                                 }
                             },
                             modifier = Modifier.fillMaxWidth()
@@ -188,13 +202,16 @@ fun IntentEditorDialog(
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
-                    Text("Intent Details", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        stringResource(R.string.intent_editor_details_header),
+                        style = MaterialTheme.typography.titleMedium
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
 
                     OutlinedTextField(
                         value = packageName,
                         onValueChange = { packageName = it },
-                        label = { Text("Package Name") },
+                        label = { Text(stringResource(R.string.intent_editor_package_label)) },
                         placeholder = { Text("com.example.app") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
@@ -205,7 +222,7 @@ fun IntentEditorDialog(
                     OutlinedTextField(
                         value = className,
                         onValueChange = { className = it },
-                        label = { Text("Class Name (Optional)") },
+                        label = { Text(stringResource(R.string.intent_editor_class_label)) },
                         placeholder = { Text("com.example.app.MainActivity") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
@@ -216,7 +233,7 @@ fun IntentEditorDialog(
                     OutlinedTextField(
                         value = action,
                         onValueChange = { action = it },
-                        label = { Text("Action") },
+                        label = { Text(stringResource(R.string.intent_editor_action_label)) },
                         placeholder = { Text("android.intent.action.VIEW") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
@@ -227,7 +244,7 @@ fun IntentEditorDialog(
                     OutlinedTextField(
                         value = data,
                         onValueChange = { data = it },
-                        label = { Text("Data URI (Optional)") },
+                        label = { Text(stringResource(R.string.intent_editor_data_label)) },
                         placeholder = { Text("https://google.com") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
@@ -238,14 +255,17 @@ fun IntentEditorDialog(
                     OutlinedTextField(
                         value = type,
                         onValueChange = { type = it },
-                        label = { Text("MIME Type (Optional)") },
+                        label = { Text(stringResource(R.string.intent_editor_mime_label)) },
                         placeholder = { Text("text/plain") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
-                    Text("Extras (Key-Value Strings)", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        stringResource(R.string.intent_editor_extras_header),
+                        style = MaterialTheme.typography.titleMedium
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
 
                     // Add Extra Row
@@ -256,14 +276,14 @@ fun IntentEditorDialog(
                         OutlinedTextField(
                             value = newExtraKey,
                             onValueChange = { newExtraKey = it },
-                            label = { Text("Key") },
+                            label = { Text(stringResource(R.string.intent_editor_extra_key_label)) },
                             modifier = Modifier.weight(1f)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         OutlinedTextField(
                             value = newExtraValue,
                             onValueChange = { newExtraValue = it },
-                            label = { Text("Value") },
+                            label = { Text(stringResource(R.string.intent_editor_extra_value_label)) },
                             modifier = Modifier.weight(1f)
                         )
                         IconButton(
@@ -277,7 +297,10 @@ fun IntentEditorDialog(
                                 }
                             }
                         ) {
-                            Icon(Icons.Filled.Add, contentDescription = "Add Extra")
+                            Icon(
+                                Icons.Filled.Add,
+                                contentDescription = stringResource(R.string.intent_editor_add_extra_desc)
+                            )
                         }
                     }
 
@@ -289,9 +312,15 @@ fun IntentEditorDialog(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("$k : $v", modifier = Modifier.weight(1f))
+                            Text(
+                                stringResource(R.string.intent_editor_extra_row, k, v),
+                                modifier = Modifier.weight(1f)
+                            )
                             IconButton(onClick = { extrasList = extrasList - (k to v) }) {
-                                Icon(Icons.Filled.Delete, contentDescription = "Remove")
+                                Icon(
+                                    Icons.Filled.Delete,
+                                    contentDescription = stringResource(R.string.common_remove)
+                                )
                             }
                         }
                     }

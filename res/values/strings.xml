@@ -980,4 +980,95 @@
     <string name="gesture_swipe_recognition_header" tools:ignore="MissingTranslation">Swipe Recognition</string>
     <string name="gesture_slider_key_header" tools:ignore="MissingTranslation">Slider Key Behavior</string>
     <string name="gesture_tuning_tip" tools:ignore="MissingTranslation">If gestures feel laggy, reduce dwell time and noise threshold. If taps register as swipes, increase tap duration.</string>
+
+    <!-- IntentEditorDialog.kt — build a custom Android intent for a short-swipe action.
+         The placeholder values (com.example.app, android.intent.action.VIEW, text/plain, …)
+         stay Kotlin literals on purpose: they are Android identifiers, not copy. -->
+    <string name="intent_editor_title_create" tools:ignore="MissingTranslation">Create Intent Action</string>
+    <string name="intent_editor_title_edit" tools:ignore="MissingTranslation">Edit Intent Action</string>
+    <string name="intent_editor_quick_presets" tools:ignore="MissingTranslation">Quick Presets</string>
+    <string name="intent_editor_create_custom" tools:ignore="MissingTranslation">Create Custom</string>
+    <string name="intent_editor_name_label" tools:ignore="MissingTranslation">Macro Name (Required)</string>
+    <string name="intent_editor_target_type_label" tools:ignore="MissingTranslation">Target Type</string>
+    <string name="intent_editor_select_target_type_desc" tools:ignore="MissingTranslation">Select target type</string>
+    <string name="intent_editor_details_header" tools:ignore="MissingTranslation">Intent Details</string>
+    <string name="intent_editor_package_label" tools:ignore="MissingTranslation">Package Name</string>
+    <string name="intent_editor_class_label" tools:ignore="MissingTranslation">Class Name (Optional)</string>
+    <string name="intent_editor_action_label" tools:ignore="MissingTranslation">Action</string>
+    <string name="intent_editor_data_label" tools:ignore="MissingTranslation">Data URI (Optional)</string>
+    <string name="intent_editor_mime_label" tools:ignore="MissingTranslation">MIME Type (Optional)</string>
+    <string name="intent_editor_extras_header" tools:ignore="MissingTranslation">Extras (Key-Value Strings)</string>
+    <string name="intent_editor_extra_key_label" tools:ignore="MissingTranslation">Key</string>
+    <string name="intent_editor_extra_value_label" tools:ignore="MissingTranslation">Value</string>
+    <string name="intent_editor_add_extra_desc" tools:ignore="MissingTranslation">Add Extra</string>
+    <!-- One intent-extra row. %1$s = extra key, %2$s = extra value. -->
+    <string name="intent_editor_extra_row" tools:ignore="MissingTranslation">%1$s : %2$s</string>
+
+    <!-- CommandPaletteDialog.kt — searchable command picker, label confirmation,
+         custom-text entry and the timestamp-pattern builder -->
+    <string name="command_palette_title_select" tools:ignore="MissingTranslation">Select Command</string>
+    <string name="command_palette_title_custom_text" tools:ignore="MissingTranslation">Enter Custom Text</string>
+    <string name="command_palette_select_desc" tools:ignore="MissingTranslation">Select</string>
+    <!-- %1$s = the chosen command's display name -->
+    <string name="command_palette_action_command" tools:ignore="MissingTranslation">Command: %1$s</string>
+    <!-- %1$s = the entered text, already truncated by the caller -->
+    <string name="command_palette_action_text" tools:ignore="MissingTranslation">Text: \"%1$s\"</string>
+    <!-- %1$s = the intent definition's name -->
+    <string name="command_palette_action_intent" tools:ignore="MissingTranslation">Intent: %1$s</string>
+    <!-- %1$s = the SimpleDateFormat pattern, %2$s = what it formats to right now -->
+    <string name="command_palette_action_timestamp" tools:ignore="MissingTranslation">Timestamp: %1$s (now → \"%2$s\")</string>
+    <string name="command_palette_customize_label" tools:ignore="MissingTranslation">Customize Label</string>
+    <string name="command_palette_display_label" tools:ignore="MissingTranslation">Display Label</string>
+    <!-- %1$s = a readable name for the icon that would be used by default -->
+    <string name="command_palette_icon_placeholder" tools:ignore="MissingTranslation">[Icon: %1$s]</string>
+    <string name="command_palette_icon_hint" tools:ignore="MissingTranslation">Leave blank to use default icon. Type text for a custom label.</string>
+    <!-- %1$d = max key-label length, %2$s = the default label shown when left blank -->
+    <string name="command_palette_label_hint" tools:ignore="MissingTranslation">What shows on the key (max %1$d chars). Leave blank for default: %2$s</string>
+    <!-- Trailing space is significant (the preview value follows inline), hence the quotes. -->
+    <string name="command_palette_preview_prefix" tools:ignore="MissingTranslation">"Preview: "</string>
+    <string name="command_palette_confirm" tools:ignore="MissingTranslation">Confirm</string>
+    <string name="command_palette_search_hint" tools:ignore="MissingTranslation">Search commands (e.g., copy, paste, home, esc)</string>
+    <string name="command_palette_custom_text_title" tools:ignore="MissingTranslation">Custom Text</string>
+    <string name="command_palette_custom_text_desc" tools:ignore="MissingTranslation">Enter any text to insert (macros, snippets, etc.)</string>
+    <string name="command_palette_send_intent_title" tools:ignore="MissingTranslation">Send Intent</string>
+    <string name="command_palette_send_intent_desc" tools:ignore="MissingTranslation">Create advanced Android intent (activity, service, broadcast)</string>
+    <string name="command_palette_timestamp_title" tools:ignore="MissingTranslation">Timestamp</string>
+    <string name="command_palette_timestamp_desc" tools:ignore="MissingTranslation">Insert formatted date/time (e.g. yyyy-MM-dd HH:mm)</string>
+    <!-- %1$d = total commands in the registry -->
+    <string name="command_palette_count_available" tools:ignore="MissingTranslation,PluralsCandidate">%1$d commands available</string>
+    <!-- %1$d = matching commands, %2$s = the search query -->
+    <string name="command_palette_count_results" tools:ignore="MissingTranslation,PluralsCandidate">%1$d results for \"%2$s\"</string>
+    <!-- %1$d = total commands in the registry -->
+    <string name="command_palette_browse_all" tools:ignore="MissingTranslation">Browse All %1$d Commands</string>
+    <string name="command_palette_quick_commands" tools:ignore="MissingTranslation">Quick Commands</string>
+    <string name="command_palette_custom_text_intro" tools:ignore="MissingTranslation">Enter the text that will be inserted when you swipe in this direction.</string>
+    <string name="command_palette_text_to_insert" tools:ignore="MissingTranslation">Text to insert</string>
+    <string name="command_palette_text_placeholder" tools:ignore="MissingTranslation">e.g., Hello, World!</string>
+    <!-- %1$d = characters typed so far -->
+    <string name="command_palette_char_count" tools:ignore="MissingTranslation,PluralsCandidate">%1$d characters</string>
+    <string name="command_palette_paste_desc" tools:ignore="MissingTranslation">Paste from clipboard</string>
+    <string name="command_palette_quick_suggestions" tools:ignore="MissingTranslation">Quick suggestions:</string>
+    <string name="command_palette_use_text" tools:ignore="MissingTranslation">Use This Text</string>
+    <string name="command_palette_timestamp_dialog_title" tools:ignore="MissingTranslation">Timestamp Pattern</string>
+    <string name="command_palette_timestamp_dialog_desc" tools:ignore="MissingTranslation">Uses java.text.SimpleDateFormat patterns. Letters: y M d H h m s a E. Quote literal text in single quotes.</string>
+    <string name="command_palette_pattern_label" tools:ignore="MissingTranslation">Pattern</string>
+    <!-- %1$s = the pattern formatted against the current time -->
+    <string name="command_palette_pattern_preview" tools:ignore="MissingTranslation">Preview: %1$s</string>
+    <string name="command_palette_pattern_blank" tools:ignore="MissingTranslation">Pattern cannot be blank</string>
+    <string name="command_palette_pattern_invalid_format" tools:ignore="MissingTranslation">Invalid SimpleDateFormat pattern</string>
+    <string name="command_palette_pattern_format_failed" tools:ignore="MissingTranslation">Failed to format pattern</string>
+    <string name="command_palette_pattern_invalid" tools:ignore="MissingTranslation">Invalid pattern</string>
+    <string name="command_palette_presets" tools:ignore="MissingTranslation">Presets</string>
+    <string name="command_palette_use_pattern" tools:ignore="MissingTranslation">Use Pattern</string>
+    <!-- Timestamp preset chip labels. Only the LABEL is localized; the SimpleDateFormat
+         pattern each chip applies stays a Kotlin literal. -->
+    <string name="command_palette_ts_date" tools:ignore="MissingTranslation">Date</string>
+    <string name="command_palette_ts_date_time" tools:ignore="MissingTranslation">Date + Time</string>
+    <string name="command_palette_ts_time" tools:ignore="MissingTranslation">Time</string>
+    <string name="command_palette_ts_time_sec" tools:ignore="MissingTranslation">Time + sec</string>
+    <string name="command_palette_ts_12h" tools:ignore="MissingTranslation">12h time</string>
+    <string name="command_palette_ts_day_mon_d" tools:ignore="MissingTranslation">Day Mon d</string>
+    <string name="command_palette_ts_long_date" tools:ignore="MissingTranslation">Long date</string>
+    <string name="command_palette_ts_iso" tools:ignore="MissingTranslation">ISO 8601</string>
+    <string name="command_palette_ts_slash_mdy" tools:ignore="MissingTranslation">Slash MDY</string>
 </resources>
