@@ -32,10 +32,13 @@ import tribixbite.cleverkeys.swipe.ctc.CtcScriptSupport
  * key inventories.
  *
  * LANGUAGE dimension (audit M1): the CTC model is language-agnostic but the LEXICON and the λ
- * preset are per-language, so only served languages reach it —
- * `swipe/ctc/CtcLanguageSupport.SUPPORTED` = en, fr, de, es (2026-08-16) plus it, pt, sv
- * (2026-08-18, `CtcLanguageSupport.PROVISIONAL` — enabled on scale-transferred evidence, with
- * no per-language accuracy bar; read that KDoc before quoting a number for them). Language is runtime
+ * preset are per-language, so only served languages reach it — ask
+ * `swipe/ctc/CtcLanguageSupport.isSupported`, never a table: the STATIC rows are en, fr, de, es
+ * (2026-08-16) plus it, pt, sv (2026-08-18, `CtcLanguageSupport.PROVISIONAL` — enabled on
+ * scale-transferred evidence, with no per-language accuracy bar; read that KDoc before quoting a
+ * number for them) plus ru (2026-08-29, `VAL_ONLY`), and since 2026-08-29 an imported LATIN
+ * language pack measured a–z-typeable is served too (`CtcImportedPackSupport`), which is a
+ * per-DEVICE answer no constant can carry. Language is runtime
  * state the layout-only router deliberately doesn't see —
  * `InputCoordinator.performCtcSwipeTyping` reads the active language BEFORE dispatch and falls
  * through to the geometric engine for every other language. Net ctc semantics:
@@ -68,8 +71,9 @@ object SwipeEngineRouter {
         GEOMETRIC,
 
         /**
-         * CTC on ANY Latin-script layout when the active language is one CTC serves
-         * (en/fr/de/es plus the provisional it/pt/sv — `swipe/ctc/CtcLanguageSupport`;
+         * CTC on ANY layout whose script has a complete wiring, when the active language is one
+         * CTC serves (en/fr/de/es, the provisional it/pt/sv, the val-only ru, and any
+         * a–z-typeable imported Latin pack — `swipe/ctc/CtcLanguageSupport.isSupported`;
          * the encoder is layout-agnostic
          * and was validated on alt-layouts: dvorak 91.82 / dvorak-app-geometry 91.10
          * top-1, 3 seeds, the shipped en lexicon+λ; azerty 84.53 / qwertz 83.97 /

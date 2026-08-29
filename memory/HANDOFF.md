@@ -191,7 +191,11 @@ Everything is in git history and these references — do not re-derive:
   swipe-engine fallback card), `gesture_touch_smoothing_*`,
   `gesture_finger_occlusion_*`, `dict_word_too_long_for_swipe_*` ship English-only behind
   `tools:ignore="MissingTranslation"`. The 21 `swipe_engine_mode_desc` translations were
-  machine-extended and want a native reviewer.
+  machine-extended and want a native reviewer — **and the English is now CONTENT-stale** as well
+  as unreviewed: it names seven languages, predating both `ru` (2026-08-29) and imported-pack
+  membership (`05c0c25d`), which is a per-device answer a fixed list cannot carry. Rewording it
+  invalidates all 21 locales, so it wants one deliberate pass (probably: drop the enumeration and
+  point at the fallback card, which is measured and always right).
 - `finger_occlusion_offset` ships at default 0. A nonzero default needs a device-trace A/B at
   {0, 8, 12.5, 16}% — the old 12.5% was never measured anywhere in this repo's history.
 
