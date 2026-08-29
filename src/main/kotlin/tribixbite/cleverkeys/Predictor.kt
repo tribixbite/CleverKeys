@@ -16,8 +16,9 @@ import tribixbite.cleverkeys.swipe.SwipeContextRescorer
  *
  * ```
  * rg -o 'predictor\??\.\w+|wordPredictor\??\.\w+' SuggestionHandler.kt PredictionCoordinator.kt \
- *    Keyboard2View.kt DictionaryManager.kt
+ *    Keyboard2View.kt
  * ```
+ * (DictionaryManager was a fourth caller until ARC-079 deleted its predictor cache.)
  *
  * Anything WordPredictor exposes that no consumer calls (scoring internals, dictionary
  * bookkeeping, `isReady`, the `signalReloadNeeded` companion) stays off the interface on
@@ -28,7 +29,7 @@ import tribixbite.cleverkeys.swipe.SwipeContextRescorer
  *
  * | Group | Called by | Notes |
  * |---|---|---|
- * | Lifecycle | `PredictionCoordinator`, `DictionaryManager` | dictionary load/unload, persistence, teardown |
+ * | Lifecycle | `PredictionCoordinator` | dictionary load/unload, persistence, teardown |
  * | Query | `SuggestionHandler` | per-keystroke; must be cheap |
  * | Context/learning | `SuggestionHandler` | word commit, undo, sentence boundary |
  * | Next word | `SuggestionHandler` → `NextWordPredictor` | learned + shipped-seed continuations |

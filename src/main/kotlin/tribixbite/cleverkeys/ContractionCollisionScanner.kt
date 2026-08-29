@@ -30,7 +30,8 @@ import java.io.File
  *    imports packs they do not immediately enable. The answer would go stale the next time they
  *    changed languages.
  *  - **At every keystroke** — wrong cost. The other language's lexicon is not even resident
- *    while typing ([DictionaryManager] holds one predictor, for the current language).
+ *    while typing (the process holds ONE predictor, loaded for the current language — see
+ *    [PredictionCoordinator]; ARC-079 removed the last per-language predictor cache).
  *  - **At language selection** — right on both counts. It is exactly the event that determines
  *    which languages are active, it happens in Settings where a few hundred milliseconds and a
  *    transient lexicon are affordable, and it is the one moment the user is present to be TOLD.

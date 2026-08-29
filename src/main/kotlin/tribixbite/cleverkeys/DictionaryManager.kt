@@ -3,32 +3,42 @@ package tribixbite.cleverkeys
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
-import androidx.preference.PreferenceManager
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.util.Locale
 
 /**
- * Manages word dictionaries for different languages and user custom words
+ * The active prediction language and the user's custom words for it.
  *
  * v1.2.2: Uses same storage as CustomDictionarySource (custom_words_{lang} in DirectBootAwarePreferences)
  * so words added here appear in Dictionary Manager UI and can be deleted.
+ *
+ * ## What this class is NOT (ARC-079, 2026-08-29)
+ *
+ * It used to also keep a per-language [WordPredictor] cache, retaining one predictor for each
+ * of the up-to-4 configured language slots so a slot toggle would not pay an async reload.
+ * Each of those predictors loaded a **full dictionary** — the same ~5-10 MB
+ * `PredictionCoordinator` had already loaded for the language actually being typed in — and
+ * **no consumer ever read a prediction out of them**: nothing here handed a predictor out, and
+ * every consumer gets theirs from `PredictionCoordinator.getWordPredictor()`. The cache's only
+ * readers were its own bookkeeping (`isLoading`/`flushLearnedData`/`cleanup`) plus a
+ * `preloadLanguages()` with zero callers. It also started a redundant UserDictionary
+ * ContentObserver per cached language.
+ *
+ * The learned data those predictors appeared to protect is not per-instance: `ContextModel`
+ * goes through `BigramStore`/`TrigramStore.getInstance`, and `PersonalizationEngine` through
+ * `UserVocabulary.getInstance` — process singletons. So the coordinator's single predictor
+ * flushes exactly the same stores, and the deletion loses no user learning. See
+ * `PredictionCoordinatorLifecycleTest` for the surviving flush/teardown contract and
+ * `LearningWiringDriftTest` for the residency pin that keeps a predictor out of this class.
  */
 class DictionaryManager(private val context: Context) {
 
     // Use DirectBootAwarePreferences for consistency with CustomDictionarySource
     private val prefs: SharedPreferences = DirectBootAwarePreferences.get_shared_preferences(context)
     private val gson = Gson()
-    // Deliberately the CONCRETE type, not the [Predictor] interface (ARC-048 R6). This class
-    // is the owner, not a consumer: it constructs each predictor and wires it with members
-    // that are construction-only and therefore off the contract on purpose —
-    // `setContext()` and `startObservingDictionaryChanges()` in setLanguage()'s `apply` block.
-    // Nothing here hands a predictor out; consumers get theirs from
-    // `PredictionCoordinator.getWordPredictor()`, which returns `Predictor?`.
-    private val predictors = mutableMapOf<String, WordPredictor>()
     private val userWords = mutableSetOf<String>()
     private var currentLanguage: String = "en"
-    private var currentPredictor: WordPredictor? = null
 
     init {
         // Pre-v1.1.86 GLOBAL custom_words/disabled_words → the per-language `_en` keys.
@@ -116,61 +126,25 @@ class DictionaryManager(private val context: Context) {
     }
 
     /**
-     * Set the active language for prediction.
+     * Set the active prediction language.
      *
-     * OPTIMIZATION v3 (perftodos3.md Todo 1): Uses async loading to prevent UI freezes.
+     * Pure bookkeeping since ARC-079: it records the language and swaps in that language's
+     * user-word set. The dictionary behind it is loaded by the ONE predictor the process
+     * owns — `PredictionCoordinator.reloadWordPredictorDictionary` / `setConfig` call
+     * `wordPredictor.loadDictionaryAsync(...)` and this method together, so there is no path
+     * that moves the active language without reloading the serving dictionary.
+     *
+     * Callers rely on this being SYNCHRONOUS: `PreferenceUIUpdateHandler` re-warms the swipe
+     * engine immediately afterwards and the prewarm reads [getCurrentLanguage].
      */
     fun setLanguage(languageCode: String?) {
         val code = languageCode ?: "en"
         val languageChanged = currentLanguage != code
-        val previousLanguage = currentLanguage
         currentLanguage = code
 
         // Reload user words if language changed
         if (languageChanged) {
             loadUserWords()
-
-            // Evict stale predictors to free memory (~5-10MB per instance).
-            // Keep all configured languages: primary, secondary, and their alternates
-            // (up to 4). Users can toggle between primary↔alt_primary and
-            // secondary↔alt_secondary without paying async reload penalty.
-            val keepSet = getConfiguredLanguages()
-            val keysToEvict = predictors.keys.filter { it !in keepSet }
-            for (k in keysToEvict) {
-                // Flush learned data (context LM + user vocabulary) BEFORE eviction —
-                // otherwise the evicted language's unsaved learning is lost (2026-08-06 fix)
-                predictors[k]?.persistLearnedData()
-                predictors[k]?.stopObservingDictionaryChanges()
-                predictors.remove(k)
-                Log.i(TAG, "Evicted predictor for '$k' (learned data flushed, memory freed)")
-            }
-        }
-
-        // Get or create predictor for this language
-        currentPredictor = predictors.getOrPut(code) {
-            WordPredictor().apply {
-                setContext(context) // Enable disabled words filtering
-
-                // M2 (review 2026-08-06): thread the global Config in so this
-                // predictor's learning/read gates reflect the user's REAL
-                // preferences. Config.refresh() mutates the same instance, so the
-                // reference stays current. Without a config the gates fail
-                // CLOSED (WordPredictor defaults `?: false`), never open.
-                Config.globalConfigOrNull()?.let { setConfig(it) }
-
-                // CRITICAL: Use async loading to prevent UI freeze during language switching
-                val capturedCode = code
-                loadDictionaryAsync(context, capturedCode) {
-                    // Prevent orphaned observer: if this predictor was evicted before
-                    // loading finished, don't start an observer on a dead instance
-                    if (predictors[capturedCode] === this) {
-                        startObservingDictionaryChanges()
-                        Log.i(TAG, "Dictionary loaded and observer activated for: $capturedCode")
-                    } else {
-                        Log.w(TAG, "Predictor for '$capturedCode' evicted before load finished, skipping observer")
-                    }
-                }
-            }
         }
     }
 
@@ -252,94 +226,18 @@ class DictionaryManager(private val context: Context) {
      */
     fun getCurrentLanguage(): String? = currentLanguage
 
-    /**
-     * Check if the current predictor is loading.
-     *
-     * @return true if dictionary is loading asynchronously, false otherwise
-     */
-    fun isLoading(): Boolean = currentPredictor?.isLoading() == true
-
-    /**
-     * Preload dictionaries for given languages.
-     *
-     * OPTIMIZATION v3 (perftodos3.md Todo 1): Uses async loading for all languages.
-     */
-    fun preloadLanguages(languageCodes: Array<String>) {
-        for (code in languageCodes) {
-            predictors.getOrPut(code) {
-                val capturedCode = code
-                WordPredictor().apply {
-                    setContext(context) // Enable disabled words filtering
-
-                    // M2: same global-config threading as setLanguage — without a
-                    // config, learning/read gates fail CLOSED.
-                    Config.globalConfigOrNull()?.let { setConfig(it) }
-
-                    // CRITICAL: Use async loading to prevent UI freeze during preloading
-                    loadDictionaryAsync(context, capturedCode) {
-                        // Prevent orphaned observer if predictor was evicted before load finished
-                        if (predictors[capturedCode] === this) {
-                            startObservingDictionaryChanges()
-                            Log.i(TAG, "Preloaded dictionary and activated observer for: $capturedCode")
-                        } else {
-                            Log.w(TAG, "Predictor for '$capturedCode' evicted before preload finished, skipping observer")
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Returns the set of all configured language codes that should be retained.
-     * Includes primary, secondary, and their alternates (up to 4 languages).
-     * "none" and empty strings are excluded.
-     *
-     * NOTE (resolved TODO, 2026-08-06): if more simultaneous language slots are
-     * added beyond the current 4 (primary, secondary, alt_primary,
-     * alt_secondary), their pref keys MUST be added to the setOfNotNull() call
-     * below — the eviction logic in setLanguage() only retains predictors in
-     * this set. This invariant is now ENFORCED by
-     * [tribixbite.cleverkeys.LanguageSlotCoverageDriftTest], which scans the
-     * codebase for `pref_*_language(_alt)` slot keys and fails when one is not
-     * read here.
-     */
-    private fun getConfiguredLanguages(): Set<String> {
-        val langPrefs = PreferenceManager.getDefaultSharedPreferences(context)
-        return setOfNotNull(
-            langPrefs.getString("pref_primary_language", "en"),
-            langPrefs.getString("pref_secondary_language", null),
-            langPrefs.getString("pref_primary_language_alt", null),
-            langPrefs.getString("pref_secondary_language_alt", null)
-        ).filter { it != "none" && it.isNotEmpty() }.toSet()
-    }
-
-    /**
-     * Flush all live predictors' learned data (context LM bigrams + user
-     * vocabulary) to persistent storage. Cheap no-op when nothing is dirty.
-     *
-     * Called at input-session boundaries (PredictionCoordinator.flushLearnedData);
-     * H1 (review 2026-08-06): also clears each predictor's rolling recent-words
-     * window so no learned bigram can span a field/app boundary.
-     */
-    fun flushLearnedData() {
-        for ((_, predictor) in predictors) {
-            predictor.persistLearnedData()
-            predictor.clearContext()
-        }
-    }
-
-    /** Release all predictor instances and their observers. */
-    fun cleanup() {
-        for ((_, predictor) in predictors) {
-            // Checkpoint learned data before teardown (2026-08-06 persistence fix)
-            predictor.persistLearnedData()
-            predictor.stopObservingDictionaryChanges()
-        }
-        predictors.clear()
-        currentPredictor = null
-        Log.i(TAG, "Cleaned up all predictors")
-    }
+    // ARC-079 (2026-08-29) — deleted with the per-language predictor cache:
+    //
+    //   isLoading()             had no production caller (one instrumented smoke test only);
+    //                           load state belongs to the serving predictor, which consumers
+    //                           reach via PredictionCoordinator.getWordPredictor().
+    //   preloadLanguages()      had NO callers at all — it existed solely to warm the cache.
+    //   getConfiguredLanguages() served only the cache's eviction retention set.
+    //   flushLearnedData()      \ both fanned out to cached predictors that were never fed a
+    //   cleanup()               / word; the coordinator flushes the same singleton stores.
+    //
+    // PredictionCoordinator.flushLearnedData/shutdown are now the sole learned-data
+    // checkpoints (PredictionCoordinatorLifecycleTest).
 
     companion object {
         private const val TAG = "DictionaryManager"

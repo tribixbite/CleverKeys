@@ -903,8 +903,9 @@ class WordPredictor : Predictor {
      * to persistent storage. Asynchronous flush of the debounced write-back stores;
      * cheap no-op when nothing is dirty.
      *
-     * Called from lifecycle boundaries: input-view finish (CleverKeysService),
-     * predictor eviction (DictionaryManager.setLanguage), and coordinator shutdown
+     * Called from the two lifecycle boundaries that remain after ARC-079 deleted
+     * DictionaryManager's predictor cache: input-view finish (CleverKeysService →
+     * PredictionCoordinator.flushLearnedData) and coordinator shutdown
      * (PredictionCoordinator.shutdown).
      */
     override fun persistLearnedData() {

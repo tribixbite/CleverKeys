@@ -30,9 +30,8 @@ class LearningWiringDriftTest {
         val service = readSource("CleverKeysService.kt")
         assertThat(service).contains("_predictionCoordinator?.flushLearnedData()")
 
-        // Every per-language predictor's window is cleared too.
-        val dictManager = readSource("DictionaryManager.kt")
-        assertThat(dictManager).contains("predictor.clearContext()")
+        // (Until ARC-079 this also checked DictionaryManager's per-language predictors. There
+        // is only one predictor in the process now, and the line above is its window clear.)
 
         // Entering a password field drops the window immediately.
         val handler = readSource("SuggestionHandler.kt")
@@ -86,70 +85,92 @@ class LearningWiringDriftTest {
     }
 
     @Test
-    fun `M2 - DictionaryManager threads the global config into its predictors`() {
-        val dictManager = readSource("DictionaryManager.kt")
-        // Both construction sites (setLanguage + preloadLanguages).
-        val threaded = Regex("""Config\.globalConfigOrNull\(\)\?\.let \{ setConfig\(it\) \}""")
-            .findAll(dictManager).count()
-        assertThat(threaded).isEqualTo(2)
+    fun `M2 - the live predictor is constructed with the real Config`() {
+        // M2's original subject was DictionaryManager's two predictor construction sites,
+        // which threaded `Config.globalConfigOrNull()` in because a predictor without a config
+        // fails its learning/read gates CLOSED. ARC-079 deleted both sites along with the
+        // cache; the invariant now applies to the single predictor that remains, which gets
+        // the coordinator's own live Config directly (no global fallback needed).
+        val coordinator = readSource("PredictionCoordinator.kt")
+        val init = coordinator.substringAfter("private fun initializeWordPredictor()")
+            .substringBefore("fun ensureInitialized()")
+        assertThat(init).contains("wordPredictor = WordPredictor().apply {")
+        assertThat(init).contains("setConfig(config)")
+        // A config swap must reach it too, or the gates go stale after a settings change.
+        assertThat(coordinator).contains("wordPredictor?.setConfig(config)")
     }
 
     // ------------------------------------------- ARC-021 (audit 2026-08-28)
 
+    // ARC-021's two tests pinned the predictor-EVICTION flush inside
+    // `DictionaryManager.setLanguage` and the three release paths that cache had
+    // (eviction / flushLearnedData / cleanup). ARC-079 deleted the cache, so all three
+    // release paths and the invariant they protected are gone with it — there is nothing
+    // left in DictionaryManager that can strand unsaved learning, because it holds no
+    // predictor. The surviving release path is the coordinator's, and its "persist before
+    // release" ordering is pinned by
+    // `the coordinator flushes its own predictor and delegates learning to no one` below
+    // plus the behavioural `PredictionCoordinatorLifecycleTest`.
+
+    // ------------------------------------------- ARC-079 (audit 2026-08-29)
+
     @Test
-    fun `language-slot eviction flushes learned data BEFORE dropping the predictor`() {
-        // A language switch evicts every predictor outside the configured set to reclaim
-        // ~5-10 MB each. That predictor may hold unsaved bigrams/trigrams and user
-        // vocabulary; dropping the reference without persisting first LOSES them silently
-        // (there is no finalizer and no other flush on this path — `flushLearnedData()`
-        // fires on input-session boundaries, not on eviction). The 2026-08-06 fix put the
-        // flush in the loop; nothing pinned it until now.
+    fun `DictionaryManager owns no predictor - the coordinator's is the only one`() {
+        // ARC-079: `DictionaryManager` used to keep a per-language `WordPredictor` cache that
+        // RE-loaded the very dictionary `PredictionCoordinator` had already loaded — ~5-10 MB
+        // of duplicate residency per configured language, for a cache with zero prediction
+        // consumers (its only readers were isLoading/flushLearnedData/cleanup and a
+        // zero-caller preloadLanguages). It is deleted; this pins the residency guarantee,
+        // because nothing about the class NAME stops someone re-adding a predictor to it.
         val dictManager = readSource("DictionaryManager.kt")
 
-        val loopAnchor = "val keysToEvict = predictors.keys.filter"
-        val loopEnd = "currentPredictor = predictors.getOrPut"
-        assertThat(dictManager).contains(loopAnchor)
-        assertThat(dictManager).contains(loopEnd)
+        // Word-boundary anchored: a bare `contains("WordPredictor(")` also matches the
+        // *method* name `getWordPredictor(` that this file's own KDoc cites, which would make
+        // the pin fire on prose. `\b` requires a non-word char before the type name, so it
+        // matches construction (`= WordPredictor()`) and not `getWordPredictor(`.
+        assertWithMessage(
+            "DictionaryManager must not CONSTRUCT a WordPredictor — the process holds exactly " +
+                "one, built by PredictionCoordinator.initializeWordPredictor."
+        ).that(dictManager).doesNotContainMatch("""\bWordPredictor\(""")
 
-        // The eviction loop only: from the evict-list computation to the get-or-create that
-        // follows it. Scoping matters — `persistLearnedData()` also appears in
-        // flushLearnedData() and cleanup(), so a whole-file `contains` would pass even with
-        // the eviction flush deleted (exactly the gap this test closes).
-        val evictionLoop = dictManager.substringAfter(loopAnchor).substringBefore(loopEnd)
-
-        val persistIdx = evictionLoop.indexOf("persistLearnedData()")
-        val removeIdx = evictionLoop.indexOf("predictors.remove(k)")
-        assertThat(persistIdx).isGreaterThan(-1)
-        assertThat(removeIdx).isGreaterThan(-1)
-        // Ordering is the invariant: persist, THEN release. Reversed, the flush would run
-        // against a map entry that is already gone.
-        assertThat(persistIdx).isLessThan(removeIdx)
-        // The observer must be detached before the drop too, or an orphaned dictionary
-        // observer outlives the evicted predictor.
-        assertThat(evictionLoop).contains("stopObservingDictionaryChanges()")
+        for (token in listOf("WordPredictor>", "WordPredictor?")) {
+            assertWithMessage(
+                "DictionaryManager must not hold a WordPredictor-typed field. Found: $token"
+            ).that(dictManager).doesNotContain(token)
+        }
+        // The cache's own API surface must be gone with it, not left as an empty shell.
+        // `fun `-anchored for the same prose-safety reason as the regex above: the class
+        // KDoc names these members to explain why they were deleted, so only a DECLARATION
+        // may fail the pin. Predictor-driving calls (loadDictionaryAsync,
+        // startObservingDictionaryChanges, persistLearnedData) need no separate check —
+        // with no construction site and no predictor-typed field there is no receiver to
+        // call them on.
+        assertThat(dictManager).doesNotContain("fun preloadLanguages(")
+        assertThat(dictManager).doesNotContain("fun isLoading(")
+        assertThat(dictManager).doesNotContain("fun flushLearnedData(")
+        assertThat(dictManager).doesNotContain("fun cleanup(")
     }
 
     @Test
-    fun `every predictor-releasing path persists learned data first`() {
-        // The three release points that can strand unsaved learning: eviction (above),
-        // the session-boundary flush, and full teardown. Named together so a NEW release
-        // path is an obvious omission rather than an invisible one.
-        val dictManager = readSource("DictionaryManager.kt")
+    fun `the coordinator flushes its own predictor and delegates learning to no one`() {
+        // The flip side of the pin above: with the manager's cache gone, every learned-data
+        // path has to terminate on the coordinator's predictor. A leftover
+        // `dictionaryManager?.flushLearnedData()` / `?.cleanup()` would not compile, but a
+        // future re-introduction would — and would silently re-open ARC-079.
+        val coordinator = readSource("PredictionCoordinator.kt")
 
-        val flush = dictManager.substringAfter("fun flushLearnedData()").substringBefore("fun cleanup()")
-        assertThat(flush).contains("predictor.persistLearnedData()")
-        assertThat(flush).contains("predictor.clearContext()")
+        assertThat(coordinator).doesNotContain("dictionaryManager?.flushLearnedData()")
+        assertThat(coordinator).doesNotContain("dictionaryManager?.cleanup()")
 
-        val cleanup = dictManager.substringAfter("fun cleanup()").substringBefore("companion object")
-        val cleanupPersistIdx = cleanup.indexOf("predictor.persistLearnedData()")
-        val cleanupClearIdx = cleanup.indexOf("predictors.clear()")
-        assertThat(cleanupPersistIdx).isGreaterThan(-1)
-        assertThat(cleanupClearIdx).isGreaterThan(-1)
-        assertThat(cleanupPersistIdx).isLessThan(cleanupClearIdx)
-
-        // Eviction + flush + cleanup = three; fewer means a path lost its flush.
-        val persistSites = Regex("""persistLearnedData\(\)""").findAll(dictManager).count()
-        assertThat(persistSites).isAtLeast(3)
+        // Teardown ordering: persist BEFORE the reference is dropped, or the flush runs
+        // against an instance nothing can reach (same invariant the deleted eviction loop had).
+        val shutdown = coordinator.substringAfter("fun shutdown()").substringBefore("fun getDebugState()")
+        val flushIdx = shutdown.indexOf("flushLearnedData()")
+        val releaseIdx = shutdown.indexOf("wordPredictor = null")
+        assertThat(flushIdx).isGreaterThan(-1)
+        assertThat(releaseIdx).isGreaterThan(-1)
+        assertThat(flushIdx).isLessThan(releaseIdx)
+        assertThat(shutdown).contains("wordPredictor?.stopObservingDictionaryChanges()")
     }
 
     // ---------------------------------------------------------------- M5

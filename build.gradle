@@ -828,6 +828,9 @@ tasks.register('runMockTests', JavaExec) {
     // ARC-038 (2026-08-28): the GIF-pack thumbnail precondition (#149 blank tiles).
     // Mock-tier, not pure: real File IO but an Android-typed enclosing class.
     'tribixbite.cleverkeys.gif.GifPackThumbnailValidationTest',
+    // ARC-079 (2026-08-29): with DictionaryManager's duplicate predictor cache deleted, the
+    // coordinator's flush/shutdown are the ONLY learned-data checkpoints left in the process.
+    'tribixbite.cleverkeys.PredictionCoordinatorLifecycleTest',
   ]
 
   mainClass = 'org.junit.runner.JUnitCore'

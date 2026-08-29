@@ -10,8 +10,9 @@ import tribixbite.cleverkeys.ml.SwipeMLDataStore
  * Coordinates prediction engines and manages prediction lifecycle.
  *
  * This class centralizes the management of:
- * - DictionaryManager (dictionary loading and management)
- * - WordPredictor (typing predictions and context)
+ * - DictionaryManager (active prediction language + the user's custom words)
+ * - WordPredictor (typing predictions and context) — the process's ONLY predictor
+ *   since ARC-079; it is the sole holder of loaded dictionaries and learned data.
  *
  * Responsibilities:
  * - Initialize and configure prediction engines
@@ -119,7 +120,13 @@ class PredictionCoordinator(
         dictionaryManager = DictionaryManager(context).apply {
             setLanguage(primaryLang)
         }
-        MemoryProbe.mark("wordPredictor.dictionaryManager", settle = true) { "lang=$primaryLang" }
+        // ARC-079: this phase used to be named `wordPredictor.dictionaryManager` because the
+        // manager built a full second predictor here. It no longer holds a dictionary at all —
+        // just the active language and the user's custom words — so a near-zero delta is now
+        // the EXPECTED reading, and is itself the on-device evidence that the duplicate
+        // residency is gone. (Adjudicating the total startup footprint remains ARC-070's
+        // device measurement, not this mark's job.)
+        MemoryProbe.mark("dictionaryManager.userWordsOnly", settle = true) { "lang=$primaryLang" }
 
         wordPredictor = WordPredictor().apply {
             setContext(context) // Enable disabled words filtering
@@ -270,7 +277,8 @@ class PredictionCoordinator(
     }
 
     /**
-     * Gets the DictionaryManager instance.
+     * Gets the DictionaryManager instance — the active language and the user's custom words
+     * for it. Not a source of predictions or predictors (ARC-079).
      *
      * @return Dictionary manager, or null if not initialized
      */
@@ -307,12 +315,21 @@ class PredictionCoordinator(
 
     /**
      * Checkpoint all learned data (context LM bigrams + personalization
-     * vocabulary) held by the primary predictor and every per-language predictor
-     * in [DictionaryManager]. Asynchronous debounced-store flush — cheap no-op
-     * when nothing is dirty. Called from CleverKeysService.onFinishInputView and
-     * from [shutdown] — i.e. exactly at input-session boundaries.
+     * vocabulary) held by the predictor. Asynchronous debounced-store flush —
+     * cheap no-op when nothing is dirty. Called from
+     * CleverKeysService.onFinishInputView and from [shutdown] — i.e. exactly at
+     * input-session boundaries.
      *
-     * H1 (review 2026-08-06): after the flush, every predictor's rolling
+     * ARC-079: this used to fan out to [DictionaryManager]'s per-language
+     * predictor cache as well. That cache is deleted, so [wordPredictor] is the
+     * only holder left — which makes this method the ONLY checkpoint on the way
+     * to disk. Losing the call loses everything learned since the last boundary.
+     * (No user learning was lost with the cache: `ContextModel` and
+     * `PersonalizationEngine` sit on process singletons — BigramStore /
+     * TrigramStore / UserVocabulary `getInstance` — so the cached predictors were
+     * flushing the very same stores this line flushes.)
+     *
+     * H1 (review 2026-08-06): after the flush, the predictor's rolling
      * recent-words window is CLEARED. Without this, the learn funnel's window
      * straddled the field/app boundary — the last words typed in app A were
      * joined to the first word committed in app B, learned as a bigram, and
@@ -323,7 +340,6 @@ class PredictionCoordinator(
         try {
             wordPredictor?.persistLearnedData()
             wordPredictor?.clearContext()
-            dictionaryManager?.flushLearnedData()
         } catch (e: Exception) {
             Log.e(TAG, "Error flushing learned data", e)
         }
@@ -342,9 +358,8 @@ class PredictionCoordinator(
         // Stop observing dictionary changes
         wordPredictor?.stopObservingDictionaryChanges()
 
-        // Clean up all predictor instances held by DictionaryManager
-        dictionaryManager?.cleanup()
-
+        // ARC-079: the manager is not torn down here any more — it owns no predictor and no
+        // dictionary observer, so it has nothing to release beyond ordinary GC.
         wordPredictor = null
         dictionaryManager = null
 

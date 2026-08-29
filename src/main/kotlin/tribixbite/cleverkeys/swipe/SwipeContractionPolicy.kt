@@ -13,8 +13,8 @@ import tribixbite.cleverkeys.swipe.ctc.CtcLanguageSupport
  *
  * The gate is therefore the **ACTIVE DECODE LANGUAGE**, not "en is somewhere in the
  * configured set": `DictionaryManager.getCurrentLanguage()` can only ever return a
- * CONFIGURED language (both the manual switch and auto-detect select from
- * `getConfiguredLanguages()`), so an active-language gate already satisfies the rule — and
+ * CONFIGURED language (both the manual switch and auto-detect select from the
+ * `pref_*_language[_alt]` slots), so an active-language gate already satisfies the rule — and
  * it additionally fixes the fr+en bilingual case, where an "en ∈ configured" gate would
  * still leak English forms into French sentences.
  *

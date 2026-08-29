@@ -124,14 +124,36 @@ class DictionaryManagerTest {
     }
 
     // =========================================================================
-    // Loading state tests
+    // Language switching
     // =========================================================================
 
+    /**
+     * ARC-079 removed `isLoading()` (and the per-language predictor cache behind it): load
+     * state belongs to the one predictor the process owns, reached through
+     * `PredictionCoordinator.getWordPredictor()`. What the manager still owns is the active
+     * language and the user-word set scoped to it, so that is what this covers on device.
+     */
     @Test
-    fun testIsLoading() {
-        // Just verify it returns a boolean without crashing
-        val loading = manager.isLoading()
-        // Can be true or false
+    fun testSetLanguageScopesUserWords() {
+        val original = manager.getCurrentLanguage()
+        try {
+            manager.setLanguage("en")
+            manager.addUserWord("testword123")
+            assertTrue("Word should be present in its own language", manager.isUserWord("testword123"))
+
+            manager.setLanguage("fr")
+            assertFalse(
+                "An English custom word must not be treated as user-owned in French",
+                manager.isUserWord("testword123")
+            )
+
+            manager.setLanguage("en")
+            assertTrue("Switching back restores the language's words", manager.isUserWord("testword123"))
+        } finally {
+            manager.setLanguage("en")
+            manager.removeUserWord("testword123")
+            manager.setLanguage(original)
+        }
     }
 
     // =========================================================================

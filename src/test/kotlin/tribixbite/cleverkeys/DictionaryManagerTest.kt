@@ -20,9 +20,10 @@ import java.util.Locale
  *
  * Tests user word operations (add, remove, isUserWord, clear) and language switching.
  *
- * NOTE: DictionaryManager's constructor calls setLanguage() which creates WordPredictor →
- * AsyncDictionaryLoader → Handler(Looper.getMainLooper()) — all android.jar stubs.
- * mockkConstructor can't intercept Handler from android.jar on JVM.
+ * NOTE: the constructor still reaches android.jar stubs — `DirectBootAwarePreferences` and the
+ * legacy-custom-words migration. (Until ARC-079 it also built a `WordPredictor` per language,
+ * whose `AsyncDictionaryLoader` → `Handler(Looper.getMainLooper())` chain was the hard blocker;
+ * `setLanguage` is now pure bookkeeping and is exercised directly below.)
  *
  * Strategy: Create DictionaryManager via Objenesis (without calling constructor),
  * then set private fields via reflection. This tests the user word CRUD methods
@@ -108,10 +109,8 @@ class DictionaryManagerTest {
         setField(manager, clazz, "context", mockContext)
         setField(manager, clazz, "prefs", mockPrefs)
         setField(manager, clazz, "gson", Gson())
-        setField(manager, clazz, "predictors", mutableMapOf<String, Any>())
         setField(manager, clazz, "userWords", mutableSetOf<String>())
         setField(manager, clazz, "currentLanguage", language)
-        setField(manager, clazz, "currentPredictor", null)
 
         // Load user words from prefs (mimics what loadUserWords() does)
         invokeLoadUserWords(manager)
@@ -310,6 +309,44 @@ class DictionaryManagerTest {
         val manager = buildManager(language = "fr", existingWords = """{"bonjour":100}""")
         assertThat(manager.getCurrentLanguage()).isEqualTo("fr")
         assertThat(manager.isUserWord("bonjour")).isTrue()
+    }
+
+    /**
+     * ARC-079 — `setLanguage` is pure bookkeeping: current language + the user-word set for
+     * that language. It must NOT build a predictor.
+     *
+     * Before ARC-079 this test could not exist: `setLanguage` constructed a `WordPredictor`,
+     * whose `AsyncDictionaryLoader` reaches `Handler(Looper.getMainLooper())` — an android.jar
+     * stub that throws on the JVM (the reason this whole file goes through Objenesis in the
+     * first place, see the class KDoc). That the call now completes here IS the assertion that
+     * the duplicate full-dictionary residency is gone; the source-level pin lives in
+     * [LearningWiringDriftTest].
+     */
+    @Test
+    fun `setLanguage swaps the user-word set without constructing a predictor`() {
+        val manager = buildManager(language = "en", existingWords = """{"hello":100}""")
+        assertThat(manager.isUserWord("hello")).isTrue()
+
+        every { mockPrefs.getString("custom_words_fr", null) } returns """{"bonjour":100}"""
+
+        manager.setLanguage("fr")
+
+        assertThat(manager.getCurrentLanguage()).isEqualTo("fr")
+        assertThat(manager.isUserWord("bonjour")).isTrue()
+        // The previous language's custom words are not carried over — a French field must not
+        // treat an English-only custom word as user-owned.
+        assertThat(manager.isUserWord("hello")).isFalse()
+    }
+
+    @Test
+    fun `setLanguage with null falls back to English`() {
+        val manager = buildManager(language = "fr")
+        every { mockPrefs.getString("custom_words_en", null) } returns """{"hello":100}"""
+
+        manager.setLanguage(null)
+
+        assertThat(manager.getCurrentLanguage()).isEqualTo("en")
+        assertThat(manager.isUserWord("hello")).isTrue()
     }
 
     // =========================================================================
