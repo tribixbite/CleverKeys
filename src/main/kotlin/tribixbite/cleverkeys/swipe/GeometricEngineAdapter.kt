@@ -15,20 +15,20 @@ import tribixbite.cleverkeys.LanguagePreferenceKeys
 import tribixbite.cleverkeys.PredictionResult
 import tribixbite.cleverkeys.PredictionTaskRunner
 import tribixbite.cleverkeys.a11y.KeyboardGeometry
-import tribixbite.cleverkeys.swipe.geometric.ArrayBackedDictionary
 import tribixbite.cleverkeys.Config
 import tribixbite.cleverkeys.GeoKnobRanges
+import tribixbite.cleverkeys.UserDictionaryWords
 import tribixbite.cleverkeys.swipe.geometric.CkdtDictionaryReader
 import tribixbite.cleverkeys.swipe.geometric.GeometricDictionary
 import tribixbite.cleverkeys.swipe.geometric.GeometricEngineConfig
 import tribixbite.cleverkeys.swipe.geometric.GeometricSwipeEngine
 import tribixbite.cleverkeys.swipe.geometric.GeometricSwipeRequest
+import tribixbite.cleverkeys.swipe.geometric.GeometricUserWordMerge
 import tribixbite.cleverkeys.swipe.geometric.LayoutGeometry
 import tribixbite.cleverkeys.swipe.geometric.SwipeKey
 import tribixbite.cleverkeys.swipe.geometric.TracePoint
 import java.io.File
 import java.lang.ref.WeakReference
-import java.security.MessageDigest
 import java.util.Locale
 import java.util.concurrent.atomic.AtomicLong
 
@@ -47,13 +47,20 @@ import java.util.concurrent.atomic.AtomicLong
  *     math so the engine-agnostic slider means the same thing here as on CTC (ARC-005).
  *  3. Dictionary words → [GeometricDictionary]: reads the SAME source the production
  *     dictionary pipeline uses (imported langpack `files/langpacks/{code}/dictionary.bin`,
- *     else the bundled `dictionaries/{code}_enhanced.bin` asset — both V2 CKDT), MERGES
- *     custom words (prepended — user-added words get favorable frequency rank; custom
- *     overrides disabled, matching WordPredictor semantics) and FILTERS disabled words.
- *     The `version` generation token is a content hash of (source id, custom-words JSON,
- *     disabled set), recomputed on every ensure — any custom/disabled mutation therefore
- *     changes the engine cache key and forces a template-index rebuild without this class
- *     having to participate in the ContentObserver plumbing.
+ *     else the bundled `dictionaries/{code}_enhanced.bin` asset — both V2 CKDT), MERGES the
+ *     user's words (prepended — user-added words get favorable frequency rank; user words
+ *     override disabled, matching WordPredictor semantics) and FILTERS disabled words.
+ *     "User words" means BOTH stores the tap path merges (ARC-081): the app's own
+ *     `custom_words_<lang>` preference AND the platform `UserDictionary.Words` provider rows
+ *     for this language, combined by [UserDictionarySnapshot.mergeWithCustom] with the
+ *     preference winning a collision. Until 2026-08-29 only the preference was read, so a word
+ *     added to the SYSTEM user dictionary completed on tap and could never be swiped.
+ *     The `version` generation token is [LexiconContentVersion] over (source id, custom-words
+ *     JSON, disabled set, provider-snapshot fingerprint), recomputed on every ensure — any
+ *     custom/disabled/provider mutation therefore changes the engine cache key and forces a
+ *     template-index rebuild without this class having to participate in the ContentObserver
+ *     plumbing. That rebuild is re-warmed in the background by [SwipeRewarmScheduler]
+ *     (ARC-082) rather than being paid by the next swipe.
  *  4. Background [warmUpAsync] on layout/language switch so the first swipe avoids the
  *     150-400 ms synchronous Tier-A build. Memory ceiling is the engine's own
  *     `indexCacheCapacity=3` (≤ ~7.5 MB, spec NFR-2).
@@ -85,7 +92,17 @@ import java.util.concurrent.atomic.AtomicLong
  * KeyboardData is immutable and safe to read off-main; the PointF trace is snapshotted
  * into pure [TracePoint]s on the caller thread before hopping.
  */
-class GeometricEngineAdapter(private val context: Context) {
+class GeometricEngineAdapter(
+    private val context: Context,
+    /**
+     * ARC-081 seam: the platform user-dictionary rows for a language. Injectable so a harness
+     * can drive the merge with a fixed snapshot instead of whatever the device's real personal
+     * dictionary happens to hold. Reads a ContentProvider, so it runs on the adapter's
+     * background thread with every other dictionary load.
+     */
+    private val userDictionarySource: (String) -> UserDictionarySnapshot =
+        { language -> UserDictionaryWords.snapshot(context, language) },
+) {
 
     companion object {
         private const val TAG = "GeometricEngineAdapter"
@@ -582,13 +599,19 @@ class GeometricEngineAdapter(private val context: Context) {
         val disabled = prefs.getStringSet(LanguagePreferenceKeys.disabledWordsKey(lang), emptySet())
             ?: emptySet()
 
+        // ARC-081: the platform user dictionary is the SECOND user-word store, and it is
+        // mutable outside this app entirely, so it has to be read here (not cached across
+        // builds) and folded into the version below.
+        val userDictionary = userDictionarySource(lang)
+
         val langpackFile = File(context.filesDir, "langpacks/$lang/dictionary.bin")
         val sourceId = if (langpackFile.isFile) {
             "langpack:${langpackFile.path}:${langpackFile.length()}:${langpackFile.lastModified()}"
         } else {
             "asset:dictionaries/${lang}_enhanced.bin"
         }
-        val version = contentVersion(sourceId, customJson, disabled)
+        val version =
+            LexiconContentVersion.of(sourceId, customJson, disabled, userDictionary.fingerprint)
 
         // The LANGUAGE is part of the memo identity, not just the content hash — the same
         // invariant `CtcEngineAdapter.lexiconFor` states: a language switch may never reuse
@@ -615,7 +638,7 @@ class GeometricEngineAdapter(private val context: Context) {
             return null
         }
 
-        val merged = mergeUserWords(base, customJson, disabled, lang, version)
+        val merged = mergeUserWords(base, customJson, disabled, lang, version, userDictionary)
         // Lowercase word → ordinal rank, for ContractionOverlay's real-word guard. First
         // occurrence wins (ties can only come from case-variant duplicates).
         val ordinals = HashMap<String, Int>(merged.size * 2)
@@ -634,11 +657,10 @@ class GeometricEngineAdapter(private val context: Context) {
     }
 
     /**
-     * Overlay user state on the CKDT base: custom words are PREPENDED in (frequency desc,
-     * word asc) order — ordinal rank feeds the engine's `−λ_f·ln(1+rank)` prior only
-     * logarithmically, so front-loading a handful of user words is a mild, deliberate
-     * boost and never buries the head of the base dictionary. Disabled words are removed
-     * (custom overrides disabled, matching WordPredictor's customAndUserWords semantics).
+     * Overlay user state on the CKDT base. The Android half only: parse the custom-words JSON
+     * and combine it with the platform provider snapshot (ARC-081); the ordering and filtering
+     * policy lives in the pure [GeometricUserWordMerge], which is where its rationale and its
+     * unit tests are.
      */
     private fun mergeUserWords(
         base: GeometricDictionary,
@@ -646,6 +668,7 @@ class GeometricEngineAdapter(private val context: Context) {
         disabled: Set<String>,
         language: String,
         version: Long,
+        userDictionary: UserDictionarySnapshot,
     ): GeometricDictionary {
         val custom = ArrayList<Pair<String, Int>>()
         if (customJson != "{}") {
@@ -660,37 +683,7 @@ class GeometricEngineAdapter(private val context: Context) {
                 Log.w(TAG, "Malformed custom-words JSON for '$language' — ignoring", e)
             }
         }
-        if (custom.isEmpty() && disabled.isEmpty()) return base
-
-        custom.sortWith(compareByDescending<Pair<String, Int>> { it.second }.thenBy { it.first })
-        val customLower = custom.mapTo(HashSet()) { it.first.lowercase(Locale.ROOT) }
-        val disabledLower = disabled.mapTo(HashSet()) { it.lowercase(Locale.ROOT) }
-
-        val words = ArrayList<String>(base.size + custom.size)
-        custom.mapTo(words) { it.first }
-        for (i in 0 until base.size) {
-            val w = base.word(i)
-            val lower = w.lowercase(Locale.ROOT)
-            if (lower in customLower || lower in disabledLower) continue
-            words.add(w)
-        }
-        return ArrayBackedDictionary(language, version, words.toTypedArray())
-    }
-
-    /** Stable 64-bit content version over (source identity, custom JSON, disabled set). */
-    private fun contentVersion(sourceId: String, customJson: String, disabled: Set<String>): Long {
-        val md = MessageDigest.getInstance("SHA-256")
-        md.update(sourceId.toByteArray(Charsets.UTF_8))
-        md.update(0)
-        md.update(customJson.toByteArray(Charsets.UTF_8))
-        md.update(0)
-        for (w in disabled.sorted()) {
-            md.update(w.toByteArray(Charsets.UTF_8))
-            md.update(1)
-        }
-        val d = md.digest()
-        var v = 0L
-        for (i in 0 until 8) v = (v shl 8) or (d[i].toLong() and 0xFF)
-        return v
+        val userWords = UserDictionarySnapshot.mergeWithCustom(custom, userDictionary)
+        return GeometricUserWordMerge.merge(base, userWords, disabled, language, version)
     }
 }

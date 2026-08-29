@@ -78,6 +78,10 @@ class PreferenceUIUpdateHandler(
      * deliberate mid-session toggle (ARC-014). `onStartInputView`'s prewarm does not cover
      * it: the keyboard is already up and no new field is being started.
      *
+     * The same latency argument applies to a DICTIONARY mutation — `custom_words_<lang>` and
+     * `disabled_words_<lang>` are both inputs to the swipe lexicon's content version — so this
+     * method also schedules a coalesced re-warm for those keys (ARC-082).
+     *
      * @param key The preference key that changed
      * @since v1.1.86
      */
@@ -165,6 +169,25 @@ class PreferenceUIUpdateHandler(
                 key == "pref_enable_multilang"
             ) {
                 CleverKeysService.requestGeometricRewarm()
+            }
+
+            // ARC-082: re-warm after a DICTIONARY mutation, for the same reason ARC-014 does
+            // after a language switch. Adding a word writes `custom_words_<lang>` and toggling
+            // one writes `disabled_words_<lang>`; either changes the swipe lexicon's content
+            // version, which invalidates the memoized trie / template index. Correctness is
+            // unaffected (both adapters re-derive from that version) but without this hook the
+            // rebuild happens lazily inside the NEXT swipe, on the decode thread, immediately
+            // after the user deliberately edited their dictionary — the worst possible moment.
+            //
+            // Routed through SwipeRewarmScheduler rather than calling requestGeometricRewarm
+            // directly: DictionaryManager.saveUserWords rewrites the whole preference per add,
+            // so adding five words fires five callbacks, and the scheduler coalesces the burst
+            // into one rebuild against the FINAL state (it then delegates to the same single
+            // entry point, which keeps the serving-engine selection and the background slot).
+            if (LanguagePreferenceKeys.languageFromCustomWordsKey(key) != null ||
+                LanguagePreferenceKeys.languageFromDisabledWordsKey(key) != null
+            ) {
+                SwipeRewarmScheduler.requestRewarm()
             }
         } catch (t: Throwable) {
             // Catch Throwable (not just Exception) to prevent OOM/Error from killing IME

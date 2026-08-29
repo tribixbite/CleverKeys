@@ -3,7 +3,6 @@ package tribixbite.cleverkeys
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
-import android.provider.UserDictionary
 import android.util.Log
 import tribixbite.cleverkeys.autocorrect.FrequencyFloor
 import tribixbite.cleverkeys.autocorrect.KeyAdjacency
@@ -293,6 +292,13 @@ class WordPredictor : Predictor {
                 setChangeListener(object : UserDictionaryObserver.ChangeListener {
                     override fun onUserDictionaryChanged(addedWords: Map<String, Int>, removedWords: Set<String>) {
                         handleIncrementalUpdate(addedWords, removedWords)
+                        // ARC-081/ARC-082: since the platform user dictionary now also feeds the
+                        // SWIPE lexicons, a provider change invalidates their memoized trie /
+                        // template index too. This listener is the only place the ContentObserver
+                        // surfaces, so it owns that trigger; the custom-words half is owned by the
+                        // preference seam (PreferenceUIUpdateHandler), and the scheduler coalesces
+                        // the two so a single "add word" that writes both costs one rebuild.
+                        SwipeRewarmScheduler.requestRewarm()
                     }
 
                     override fun onCustomWordsChanged(addedOrModified: Map<String, Int>, removed: Set<String>) {
@@ -1601,59 +1607,21 @@ class WordPredictor : Predictor {
             }
 
             // 2. Load Android user dictionary
-            // v1.1.90: Filter by locale to prevent English contamination in non-English modes
-            // v1.1.91: Use LIKE for partial locale match (e.g., "fr" matches "fr", "fr_FR", "fr_CA")
-            // v1.2.0: Only include null-locale words for English (untagged words are typically English)
-            try {
-                // Match: exact language code, or locale starting with language code (e.g., fr_FR)
-                // Only include null locale (untagged words) for English to prevent contamination
-                val selection: String
-                val selectionArgs: Array<String>
-                if (language == "en") {
-                    // For English: include untagged words (likely English anyway)
-                    selection = "${UserDictionary.Words.LOCALE} = ? OR ${UserDictionary.Words.LOCALE} LIKE ? OR ${UserDictionary.Words.LOCALE} IS NULL"
-                    selectionArgs = arrayOf(language, "$language%")
-                } else {
-                    // For other languages: exclude untagged words to prevent English contamination
-                    selection = "${UserDictionary.Words.LOCALE} = ? OR ${UserDictionary.Words.LOCALE} LIKE ?"
-                    selectionArgs = arrayOf(language, "$language%")
+            // The locale-filtered read lives in UserDictionaryWords (ARC-081) — the same rows
+            // the swipe adapters now merge into their lexicons, so tap and swipe can never
+            // disagree about which personal words exist. Its KDoc owns the filter rationale.
+            val userRows = UserDictionaryWords.read(context, language)
+            for ((originalWord, frequency) in userRows) {
+                val lowerWord = originalWord.lowercase()
+                targetMap[lowerWord] = frequency  // Write to target map, not dictionary
+                loadedWords.add(lowerWord)
+                // v1.2.7: Preserve original case for proper nouns (Issue #72)
+                if (originalWord != lowerWord) {
+                    userWordOriginalCase[lowerWord] = originalWord
                 }
-
-                val cursor = context.contentResolver.query(
-                    UserDictionary.Words.CONTENT_URI,
-                    arrayOf(
-                        UserDictionary.Words.WORD,
-                        UserDictionary.Words.FREQUENCY
-                    ),
-                    selection,
-                    selectionArgs,
-                    null
-                )
-
-                cursor?.use {
-                    val wordIndex = it.getColumnIndex(UserDictionary.Words.WORD)
-                    val freqIndex = it.getColumnIndex(UserDictionary.Words.FREQUENCY)
-                    var userCount = 0
-
-                    while (it.moveToNext()) {
-                        val originalWord = it.getString(wordIndex)
-                        val lowerWord = originalWord.lowercase()
-                        val frequency = if (freqIndex >= 0) it.getInt(freqIndex) else 1000
-                        targetMap[lowerWord] = frequency  // Write to target map, not dictionary
-                        loadedWords.add(lowerWord)
-                        // v1.2.7: Preserve original case for proper nouns (Issue #72)
-                        if (originalWord != lowerWord) {
-                            userWordOriginalCase[lowerWord] = originalWord
-                        }
-                        userCount++
-                    }
-
-                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                        Log.d(TAG, "Loaded $userCount user dictionary words for locale '$language' into new map")
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to load user dictionary", e)
+            }
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                Log.d(TAG, "Loaded ${userRows.size} user dictionary words for locale '$language' into new map")
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error loading custom/user words into new map", e)
@@ -1733,59 +1701,21 @@ class WordPredictor : Predictor {
             }
 
             // 2. Load Android user dictionary
-            // v1.1.90: Filter by locale to prevent English contamination in non-English modes
-            // v1.1.91: Use LIKE for partial locale match (e.g., "fr" matches "fr", "fr_FR", "fr_CA")
-            // v1.2.0: Only include null-locale words for English (untagged words are typically English)
-            try {
-                // Match: exact language code, or locale starting with language code (e.g., fr_FR)
-                // Only include null locale (untagged words) for English to prevent contamination
-                val selection: String
-                val selectionArgs: Array<String>
-                if (language == "en") {
-                    // For English: include untagged words (likely English anyway)
-                    selection = "${UserDictionary.Words.LOCALE} = ? OR ${UserDictionary.Words.LOCALE} LIKE ? OR ${UserDictionary.Words.LOCALE} IS NULL"
-                    selectionArgs = arrayOf(language, "$language%")
-                } else {
-                    // For other languages: exclude untagged words to prevent English contamination
-                    selection = "${UserDictionary.Words.LOCALE} = ? OR ${UserDictionary.Words.LOCALE} LIKE ?"
-                    selectionArgs = arrayOf(language, "$language%")
+            // The locale-filtered read lives in UserDictionaryWords (ARC-081) — the same rows
+            // the swipe adapters now merge into their lexicons, so tap and swipe can never
+            // disagree about which personal words exist. Its KDoc owns the filter rationale.
+            val userRows = UserDictionaryWords.read(context, language)
+            for ((originalWord, frequency) in userRows) {
+                val lowerWord = originalWord.lowercase()
+                dictionary.get()[lowerWord] = frequency
+                loadedWords.add(lowerWord)  // Track loaded word
+                // v1.2.7: Preserve original case for proper nouns (Issue #72)
+                if (originalWord != lowerWord) {
+                    userWordOriginalCase[lowerWord] = originalWord
                 }
-
-                val cursor = context.contentResolver.query(
-                    UserDictionary.Words.CONTENT_URI,
-                    arrayOf(
-                        UserDictionary.Words.WORD,
-                        UserDictionary.Words.FREQUENCY
-                    ),
-                    selection,
-                    selectionArgs,
-                    null
-                )
-
-                cursor?.use {
-                    val wordIndex = it.getColumnIndex(UserDictionary.Words.WORD)
-                    val freqIndex = it.getColumnIndex(UserDictionary.Words.FREQUENCY)
-                    var userCount = 0
-
-                    while (it.moveToNext()) {
-                        val originalWord = it.getString(wordIndex)
-                        val lowerWord = originalWord.lowercase()
-                        val frequency = if (freqIndex >= 0) it.getInt(freqIndex) else 1000
-                        dictionary.get()[lowerWord] = frequency
-                        loadedWords.add(lowerWord)  // Track loaded word
-                        // v1.2.7: Preserve original case for proper nouns (Issue #72)
-                        if (originalWord != lowerWord) {
-                            userWordOriginalCase[lowerWord] = originalWord
-                        }
-                        userCount++
-                    }
-
-                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                        Log.d(TAG, "Loaded $userCount user dictionary words for locale '$language'")
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to load user dictionary", e)
+            }
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                Log.d(TAG, "Loaded ${userRows.size} user dictionary words for locale '$language'")
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error loading custom/user words", e)

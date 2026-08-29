@@ -18,6 +18,7 @@ import tribixbite.cleverkeys.MemoryProbe
 import tribixbite.cleverkeys.LanguagePreferenceKeys
 import tribixbite.cleverkeys.PredictionResult
 import tribixbite.cleverkeys.PredictionTaskRunner
+import tribixbite.cleverkeys.UserDictionaryWords
 import tribixbite.cleverkeys.a11y.KeyboardGeometry
 import tribixbite.cleverkeys.onnx.ModelLoader
 import tribixbite.cleverkeys.swipe.ctc.CtcAzProjection
@@ -38,7 +39,6 @@ import tribixbite.cleverkeys.swipe.ctc.CtcScriptProjection
 import tribixbite.cleverkeys.swipe.ctc.CtcScriptSupport
 import tribixbite.cleverkeys.swipe.geometric.CkdtDictionaryReader
 import java.lang.ref.WeakReference
-import java.security.MessageDigest
 import java.util.Locale
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.math.exp
@@ -64,10 +64,16 @@ import kotlin.math.roundToInt
  *     bundled CKDT `dictionaries/<lang>_enhanced.bin` via the
  *     geometric engine's [CkdtDictionaryReader] at `freq = max(1, 255 − rank)`
  *     ([CtcCkdtLexicon]) and project it onto a–z ([CtcAzProjection]), keeping the
- *     canonical accented form for display. Both merge the language's user custom words
- *     (freq clamped 1..255; custom overrides disabled) minus its disabled words.
- *     Content-hash `version` (plus the language) keys the memo, so any user dictionary
- *     mutation rebuilds the trie without ContentObserver plumbing.
+ *     canonical accented form for display. Both merge the language's USER WORDS — the
+ *     `custom_words_<lang>` preference AND the platform `UserDictionary.Words` provider rows
+ *     for that language (ARC-081; the preference wins a collision, see
+ *     [UserDictionarySnapshot.mergeWithCustom]) — each freq clamped 1..255 with user words
+ *     overriding disabled, minus its disabled words. Until 2026-08-29 only the preference was
+ *     read, so a word added to the SYSTEM user dictionary completed on tap and could never be
+ *     swiped. [LexiconContentVersion] `version` (plus the language) keys the memo, and the
+ *     provider snapshot's fingerprint is one of its inputs, so any user-dictionary mutation
+ *     rebuilds the trie without this class doing ContentObserver plumbing — re-warmed in the
+ *     background by `SwipeRewarmScheduler` (ARC-082) instead of by the next swipe.
  *  4. ONNX session via the existing [ModelLoader] (XNNPACK-first,
  *     `onnx_xnnpack_threads` pref), built lazily on the decode thread, ONE PER MODEL ASSET
  *     ([modelAssetFor] — the Latin encoder plus any wired per-script graph);
@@ -98,7 +104,17 @@ import kotlin.math.roundToInt
  * Scores are engine-relative (softmax over final scores × 1000) — never compared
  * across engines (router KDoc contract).
  */
-class CtcEngineAdapter(private val context: Context) {
+class CtcEngineAdapter(
+    private val context: Context,
+    /**
+     * ARC-081 seam: the platform user-dictionary rows for a language. Injectable so a harness
+     * can drive the merge with a fixed snapshot instead of whatever the device's real personal
+     * dictionary happens to hold. Reads a ContentProvider, so it runs on the decode thread with
+     * the rest of the lexicon load.
+     */
+    private val userDictionarySource: (String) -> UserDictionarySnapshot =
+        { language -> UserDictionaryWords.snapshot(context, language) },
+) {
 
     init {
         // Dynamic membership needs a device-side resolver behind the pure table
@@ -595,7 +611,11 @@ class CtcEngineAdapter(private val context: Context) {
         } else {
             "asset:$asset"
         }
-        val version = contentVersion(sourceId, customJson, disabled)
+        // ARC-081: the platform user dictionary is the SECOND user-word store and is mutable
+        // outside this app entirely, so it is read per build and folded into the memo key.
+        val userDictionary = userDictionarySource(lang)
+        val version =
+            LexiconContentVersion.of(sourceId, customJson, disabled, userDictionary.fingerprint)
         trieMemos[lang]?.let { if (it.language == lang && it.version == version) return it }
 
         val start = System.currentTimeMillis()
@@ -650,6 +670,10 @@ class CtcEngineAdapter(private val context: Context) {
                 Log.w(TAG, "Malformed custom-words JSON for '$lang' — ignoring", e)
             }
         }
+        // ARC-081: the preference and the platform provider are ONE user-word list from here
+        // on, so the provider's rows get exactly the treatment custom words already got —
+        // 1..255 clamp on the observed frequency, and override-disabled semantics.
+        val userWordPairs = UserDictionarySnapshot.mergeWithCustom(customPairs, userDictionary)
         // These three marks are deliberately UNSETTLED, unlike the startup ones. They run on
         // the CTC decode thread, and a settled mark costs 2 forced GCs plus 2x120 ms — roughly
         // 720 ms across the three, landing squarely inside the first decode. That inflates
@@ -659,7 +683,7 @@ class CtcEngineAdapter(private val context: Context) {
         // not what it retains after collection.
         MemoryProbe.mark("ctc.baseParse") { "lang=$lang entries=${basePairs.size}" }
 
-        val merged = CtcLexiconMerge.merge(basePairs, customPairs, disabled)
+        val merged = CtcLexiconMerge.merge(basePairs, userWordPairs, disabled)
         val ordinals = CtcLexiconMerge.ordinals(merged)
         MemoryProbe.mark("ctc.mergeAndOrdinals") { "merged=${merged.size}" }
 
@@ -783,20 +807,6 @@ class CtcEngineAdapter(private val context: Context) {
             CtcLanguageSupport.LexiconSource.CKDT_BIN -> true
             CtcLanguageSupport.LexiconSource.CKDT_LANGPACK -> langpackFileFor(lang) != null
         }
-    }
-
-    /** Stable 64-bit content version over (source id, custom JSON, disabled set). */
-    private fun contentVersion(sourceId: String, customJson: String, disabled: Set<String>): Long {
-        val md = MessageDigest.getInstance("SHA-256")
-        md.update(sourceId.toByteArray(Charsets.UTF_8)); md.update(0)
-        md.update(customJson.toByteArray(Charsets.UTF_8)); md.update(0)
-        for (w in disabled.sorted()) {
-            md.update(w.toByteArray(Charsets.UTF_8)); md.update(1)
-        }
-        val d = md.digest()
-        var v = 0L
-        for (i in 0 until 8) v = (v shl 8) or (d[i].toLong() and 0xFF)
-        return v
     }
 
     // ── Display overlays (audit H1 — parity with GeometricEngineAdapter) ─────────────

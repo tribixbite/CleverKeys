@@ -563,6 +563,10 @@ tasks.register('runPureTests', JavaExec) {
     // ARC-083 (2026-08-29): the CTC decode/dispatch seam. A TRANSIENT decode failure must
     // reach the geometric engine; only a SUPERSEDED decode is silent, and neither latches.
     'tribixbite.cleverkeys.swipe.CtcDecodeDeliveryTest',
+    // ARC-081/082 (2026-08-29): the platform UserDictionary provider must reach BOTH swipe
+    // engines (it previously reached only tap), must be in the lexicon memo fingerprint, and a
+    // dictionary mutation must re-warm in the background instead of stalling the next swipe.
+    'tribixbite.cleverkeys.swipe.UserDictionaryReachesSwipeTest',
     // script="latin" is gate 1 of 3 in swipe routing and is a hand-written XML attribute.
     // grek_qwerty.xml shipped declaring latin; the fix landed in srcs/layouts/, which no build
     // task reads (PHASE_O §3.3 makes this a prerequisite for multi-script work).
