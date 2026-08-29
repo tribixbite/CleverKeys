@@ -14,7 +14,9 @@
     "@astrojs/svelte": "^7.1.0",
     "@tailwindcss/vite": "^4.1.13",
     "astro": "^5.14.0",
+    "postcss": "8.5.26",
     "svelte": "^5.39.4",
+    "svgo": "4.1.0",
     "tailwindcss": "^4.1.13"
   },
   "devDependencies": {
