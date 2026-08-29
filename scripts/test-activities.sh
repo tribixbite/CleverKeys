@@ -101,7 +101,9 @@ mkdir -p test-screenshots
 # Step 1: Build APK
 echo ""
 print_status "Step 1: Building APK..."
-if ./gradlew assembleDebug 2>&1 | tail -5; then
+# PIPESTATUS, not the pipe's rc: `if cmd | tail` would test tail's exit code.
+"$(dirname "$0")/gradle-guard.sh" assembleDebug 2>&1 | tail -5
+if [ "${PIPESTATUS[0]}" -eq 0 ]; then
     print_success "APK built successfully"
 else
     print_error "Failed to build APK"

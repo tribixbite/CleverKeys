@@ -21,10 +21,10 @@ if ! command -v proot-distro &>/dev/null; then
     exit 1
 fi
 
-# Ensure classes are compiled
+# Ensure classes are compiled (gradle-guard: device-wide singleton, no daemons)
 echo -e "${YELLOW}Compiling test classes...${NC}"
 cd "$PROJECT_DIR"
-./gradlew compileDebugUnitTestKotlin -Pandroid.aapt2FromMavenOverride="/data/data/com.termux/files/usr/bin/aapt2" --no-daemon -q 2>/dev/null
+"$SCRIPT_DIR/gradle-guard.sh" compileDebugUnitTestKotlin -Pandroid.aapt2FromMavenOverride="/data/data/com.termux/files/usr/bin/aapt2" -q
 
 if [ $? -ne 0 ]; then
     echo -e "${RED}Compilation failed${NC}"

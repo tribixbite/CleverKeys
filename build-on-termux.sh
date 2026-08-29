@@ -3,13 +3,17 @@
 # Build script for CleverKeys on Termux ARM64.
 # Handles JDK/SDK env, Termux-native aapt2, optional ADB install.
 #
+# ALL Gradle execution goes through scripts/gradle-guard.sh (device-wide
+# build singleton, no daemons, bounded memory, bounded retries). Never call
+# gradlew directly — see the 2026-08-29 incident notes in that wrapper.
+#
 # Usage:
 #   build-on-termux.sh [debug|release] [flags...]
 #
 # Flags (any order):
 #   --clean        Force clean build (default: incremental)
-#   --slow         Disable daemon, lowest CPU/IO priority, single worker
-#   --low-mem      Constrain JVM memory further (-Xmx768m, single worker)
+#   --slow         Lowest CPU/IO priority (daemon is always off via gradle-guard)
+#   --low-mem      Constrain JVM memory further (-Xmx768m)
 #   --no-install   Build only; skip ADB install step
 #   --suspend-tmx  Suspend other tmx sessions to reclaim RAM
 #                  (opt-in: interrupts user shells, so off by default)
@@ -92,13 +96,13 @@ if [ "$SUSPEND_TMX" -eq 1 ] && command -v tmx >/dev/null 2>&1; then
     tmx suspend-others cleverkeys 2>/dev/null || true
 fi
 
-# --- Clean / daemon stop ------------------------------------------------------
+# --- Clean --------------------------------------------------------------------
+# gradle-guard sweeps stale daemons itself; no separate `gradlew --stop` needed.
+GRADLE_GUARD="$SCRIPT_DIR/scripts/gradle-guard.sh"
 say "Step 3: Build setup..."
 if [ "$CLEAN" -eq 1 ] || [ ! -d "$SCRIPT_DIR/build" ]; then
-    say "  Stopping any stale gradle daemons..."
-    ./gradlew --stop >/dev/null 2>&1 || true
     say "  Cleaning previous builds..."
-    ./gradlew clean || say "  Warning: clean failed, continuing"
+    "$GRADLE_GUARD" clean || say "  Warning: clean failed, continuing"
 else
     say "  Incremental build (use --clean to force)."
 fi
@@ -134,32 +138,26 @@ else
     say "Step 4: Building Debug APK..."
 fi
 
-# --- Memory + worker tuning ---------------------------------------------------
-# CPU/worker cap is intentional: this device OOMs with concurrent multi-app builds.
-JVM_MEM="-Xmx1536m -XX:MaxMetaspaceSize=384m"
-WORKERS_MAX=2
+# --- Memory tuning --------------------------------------------------------------
+# gradle-guard enforces the hard caps (--no-daemon, --max-workers=1, in-process
+# Kotlin, -Xmx1024m default); we only pick the heap size within those bounds.
 if [ "$LOW_MEM" -eq 1 ]; then
-    JVM_MEM="-Xmx768m -XX:MaxMetaspaceSize=256m"
-    WORKERS_MAX=1
+    export GRADLE_GUARD_XMX="768m"
 fi
 
 # --- Speed vs. reproducibility -----------------------------------------------
 # Distribution build (real keystore in env) → byte-deterministic output, slow.
-# Local iteration (debug or test-signed release) → speed flags on.
-DAEMON_FLAG=""
-SPEED_FLAGS=(--parallel --build-cache)
-DAEMON_IDLE=900000  # 15 min — saves ~250 MB resident vs the 3h default
+# Local iteration (debug or test-signed release) → build cache on.
+# (--parallel is pointless under gradle-guard's --max-workers=1.)
+SPEED_FLAGS=(--build-cache)
 if [ "$USER_SUPPLIED_KEYSTORE" -eq 1 ]; then
-    say "  Distribution build: reproducibility flags ON (no daemon, no parallel, no cache)"
-    DAEMON_FLAG="--no-daemon"
-    SPEED_FLAGS=(--no-parallel --no-build-cache)
+    say "  Distribution build: reproducibility flags ON (no cache; daemon is always off)"
+    SPEED_FLAGS=(--no-build-cache)
 fi
 
 NICE_PREFIX=()
 if [ "$SLOW" -eq 1 ]; then
-    say "  Slow mode: daemon disabled, lowest CPU/IO priority, single worker"
-    DAEMON_FLAG="--no-daemon"
-    WORKERS_MAX=1
+    say "  Slow mode: lowest CPU/IO priority"
     NICE_PREFIX=(nice -n 19 ionice -c 3)
 fi
 
@@ -168,14 +166,10 @@ LOG_FILE="build-${BUILD_TYPE}-$(date +%Y%m%d-%H%M%S).log"
 say "  Logging to $LOG_FILE"
 say "  This may take a few minutes on first run..."
 
-# pipefail propagates gradle's exit through the tee pipe.
+# pipefail propagates gradle-guard's exit through the tee pipe.
 "${NICE_PREFIX[@]}" \
-    ./gradlew "$GRADLE_TASK" \
-    -Dorg.gradle.jvmargs="$JVM_MEM" \
-    -Dorg.gradle.workers.max="$WORKERS_MAX" \
-    -Dorg.gradle.daemon.idletimeout="$DAEMON_IDLE" \
+    "$GRADLE_GUARD" "$GRADLE_TASK" \
     -Pandroid.aapt2FromMavenOverride="/data/data/com.termux/files/usr/bin/aapt2" \
-    ${DAEMON_FLAG} \
     "${SPEED_FLAGS[@]}" \
     --warning-mode=none \
     --console=plain \
@@ -186,10 +180,14 @@ if [ "$GRADLE_RC" -ne 0 ]; then
     echo
     echo "=== BUILD FAILED (gradle exit $GRADLE_RC) ==="
     echo "Log: $LOG_FILE"
-    echo "Common issues:"
-    echo "  1. aapt2 missing (pacman -S aapt2)"
-    echo "  2. OOM (re-run with --slow or --low-mem)"
-    echo "  3. SDK version drift (verify build-tools/$BUILD_TOOLS_VERSION exists)"
+    case "$GRADLE_RC" in
+        75) echo "Another build holds the device-wide lock (gradle-guard). Wait for it; never start a parallel build." ;;
+        76) echo "MemAvailable below the gradle-guard floor. Free memory first; do NOT retry under pressure." ;;
+        *)  echo "Common issues:"
+            echo "  1. aapt2 missing (pacman -S aapt2)"
+            echo "  2. OOM (re-run with --low-mem)"
+            echo "  3. SDK version drift (verify build-tools/$BUILD_TOOLS_VERSION exists)" ;;
+    esac
     exit "$GRADLE_RC"
 fi
 

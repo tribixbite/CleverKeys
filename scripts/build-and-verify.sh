@@ -132,7 +132,7 @@ if [ "$CLEAN_BUILD" = true ]; then
     echo ""
 
     echo "Cleaning build directories..."
-    ./gradlew clean
+    "$(dirname "$0")/gradle-guard.sh" clean
 
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}✅ Clean completed${NC}"
@@ -160,7 +160,7 @@ echo ""
 echo "Running: ./gradlew compileDebugKotlin"
 echo ""
 
-./gradlew compileDebugKotlin --console=plain
+"$(dirname "$0")/gradle-guard.sh" compileDebugKotlin --console=plain
 
 if [ $? -eq 0 ]; then
     echo ""
@@ -188,7 +188,7 @@ echo ""
 echo -e "${YELLOW}⏱️  This may take 20-30 seconds...${NC}"
 echo ""
 
-./gradlew assembleDebug --console=plain
+"$(dirname "$0")/gradle-guard.sh" assembleDebug --console=plain
 
 if [ $? -eq 0 ]; then
     echo ""

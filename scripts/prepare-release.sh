@@ -112,7 +112,9 @@ echo -e "${YELLOW}Syncing changelog from RELEASE_NOTES.md...${NC}"
 echo ""
 echo -e "${YELLOW}Testing compilation...${NC}"
 cd "$PROJECT_DIR"
-if ./gradlew compileDebugKotlin 2>&1 | tail -5; then
+# PIPESTATUS, not the pipe's rc: `if cmd | tail` would test tail's exit code.
+"$SCRIPT_DIR/gradle-guard.sh" compileDebugKotlin 2>&1 | tail -5
+if [ "${PIPESTATUS[0]}" -eq 0 ]; then
     echo -e "${GREEN}Compilation successful${NC}"
 else
     echo -e "${RED}Compilation failed - aborting${NC}"

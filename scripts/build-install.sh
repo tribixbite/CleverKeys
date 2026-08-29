@@ -9,9 +9,10 @@ echo "CleverKeys Build & Install"
 echo "========================================="
 echo ""
 
-# Step 1: Clean build
+# Step 1: Clean build (gradle-guard: device-wide singleton, no daemons)
+GRADLE_GUARD="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/gradle-guard.sh"
 echo "🧹 Cleaning build artifacts..."
-./gradlew clean > /dev/null 2>&1
+"$GRADLE_GUARD" clean > /dev/null 2>&1
 
 # Step 2: Generate layouts
 echo "📐 Generating keyboard layouts..."
@@ -23,7 +24,9 @@ fi
 echo "📦 Building APK..."
 echo ""
 
-if ! ./gradlew assembleDebug --console=plain 2>&1 | tail -20; then
+# PIPESTATUS, not the pipe's rc: `if cmd | tail` would test tail's exit code.
+"$GRADLE_GUARD" assembleDebug --console=plain 2>&1 | tail -20
+if [ "${PIPESTATUS[0]}" -ne 0 ]; then
     echo ""
     echo "❌ Build failed!"
     exit 1

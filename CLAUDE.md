@@ -156,15 +156,27 @@ src/main/kotlin/tribixbite/cleverkeys/       # package tribixbite.cleverkeys
 ## 🚀 **DEVELOPMENT COMMANDS**
 
 ### **BUILD:**
+
+**🚨 ALL Gradle invocations MUST go through `scripts/gradle-guard.sh`** — never call
+`gradlew`/`sh gradlew` directly, including from retry loops, background monitors, and
+one-off "just check" builds. Written after the 2026-08-29 incident: ~21 concurrent
+monitors stacked 8+ daemon JVMs, 12GB into swap, load average 40. The wrapper enforces:
+a device-wide flock singleton (`$HOME/.cache/cleverkeys-build.lock`; queued builds wait,
+exit 75 on timeout), `--no-daemon` + in-process Kotlin + leaked-JVM sweep on exit,
+bounded memory (`-Xmx1024m`, SerialGC, 1 worker, exit 76 if MemAvailable < 1.5GB), and
+retries capped at 3 with 60/300/900s backoff on *environmental* failures only. Env
+knobs (`GRADLE_GUARD_XMX`, `GRADLE_GUARD_RETRIES`, …) are documented in its header.
+Run at most ONE monitor loop per build and always kill it when the build ends.
+
 ```bash
 # Test compilation
-./gradlew compileDebugKotlin
+scripts/gradle-guard.sh compileDebugKotlin
 
-# Full build & install (ALWAYS use this for testing)
+# Full build & install (ALWAYS use this for testing; routes through gradle-guard)
 ./build-on-termux.sh
 
 # Run tests
-./gradlew test
+scripts/gradle-guard.sh test
 ```
 
 **On the WSL/Linux checkout** (not Termux) Gradle needs both of these exported first,

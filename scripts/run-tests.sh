@@ -19,13 +19,15 @@ echo "
 📱 Connected device:"
 adb devices
 
+GRADLE_GUARD="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/gradle-guard.sh"
+
 echo "
 🏗️  Building and installing test APK..."
-./gradlew assembleDebugAndroidTest
+"$GRADLE_GUARD" assembleDebugAndroidTest
 
 echo "
 📦 Installing app and test APKs..."
-./gradlew installDebugAndroidTest
+"$GRADLE_GUARD" installDebugAndroidTest
 
 echo "
 🧪 Running ONNX prediction tests..."
