@@ -36,7 +36,7 @@ class AutocorrectDefaultsDriftTest {
 
     @Test
     fun autoCorrectionSettingsActivity_prefDefaults_matchConfigDefaults() {
-        val src = read("AutoCorrectionSettingsActivity.kt")
+        val src = read("activities/AutoCorrectionSettingsActivity.kt")
         // Every prefs read-default and Reset literal for these keys must equal
         // the corresponding Config.Defaults value.
         val intChecks = mapOf(

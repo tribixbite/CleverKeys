@@ -89,7 +89,7 @@ class ClipboardProvenanceTest {
         // cannot be referenced) and read here. A silent divergence would make every injected
         // entry render as a bogus "app label", quietly defeating the §6.3 detection answer.
         val writer = File(
-            "src/main/kotlin/tribixbite/cleverkeys/PrivateCopyProcessTextActivity.kt"
+            "src/main/kotlin/tribixbite/cleverkeys/activities/PrivateCopyProcessTextActivity.kt"
         )
         check(writer.exists()) {
             "PrivateCopyProcessTextActivity.kt not found at ${writer.absolutePath} — " +

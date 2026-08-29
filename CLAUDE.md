@@ -105,9 +105,13 @@ CleverKeys is a **complete Kotlin rewrite** of `Julow/Unexpected-Keyboard` featu
 
 ```
 src/main/kotlin/tribixbite/cleverkeys/       # package tribixbite.cleverkeys
-├── *.kt                            # ~145 files flat at the package root
+├── *.kt                            # ~113 files flat at the package root
 │                                   #   (IME service, keyboard views, Config,
-│                                   #    ClipboardDatabase, predictors, etc.)
+│                                   #    predictors, gesture recognisers, etc.)
+├── activities/                     # 14 *Activity.kt (Settings, Launcher, managers)
+├── clipboard/                      # Clipboard history/db/views (12 files) + the
+│   └── sanitize/                   #   private-copy plumbing and PII sanitizers
+├── emoji/                          # Emoji panel: grid, search, keyword index (6 files)
 ├── onnx/                           # ONNX session loader (ModelLoader.kt — CTC only)
 ├── ui/                             # UI (36 files)
 │   └── settings/                   #   Settings screens
@@ -124,7 +128,6 @@ src/main/kotlin/tribixbite/cleverkeys/       # package tribixbite.cleverkeys
 ├── theme/                          # Theming (8 files)
 ├── gif/                            # GIF panel (7 files)
 ├── prefs/                          # Preference helpers (6 files)
-├── clipboard/sanitize/            # Clipboard PII sanitizers (4 files)
 ├── personalization/               # Personalization
 ├── contextaware/                  # Context-aware prediction
 ├── autocorrect/                    # Autocorrect
@@ -133,11 +136,20 @@ src/main/kotlin/tribixbite/cleverkeys/       # package tribixbite.cleverkeys
 └── autofill/                       # Autofill integration
 ```
 
-> Counts re-derived 2026-08-28 (313 total .kt, 145 flat; post-ADR-011). Subdirs not shown:
-> `a11y/` (TalkBack), `persist/` (DebouncedPersister). The old
+> Counts re-derived 2026-08-29 (313 total .kt, 113 flat; post-ADR-011, post-ARC-048 R4).
+> Subdirs not shown: `a11y/` (TalkBack), `persist/` (DebouncedPersister). The old
 > `tribixbite/keyboard2/` tree with `core/swipe/data/config/…` never existed —
 > the package is `tribixbite.cleverkeys` with a large flat root plus the
 > subpackages above.
+>
+> **`activities/`, `clipboard/` and `emoji/` are DIRECTORY-ONLY groupings** (ARC-048 R4):
+> the files inside them still declare `package tribixbite.cleverkeys`, because Kotlin
+> does not couple directory to package. That is deliberate — it bought the tidier tree
+> for zero import churn. Do not "fix" the package statements without also fixing every
+> importer. Consequence to remember: a source-scanning drift test that addresses a file
+> by repo path must use the new path (e.g. `activities/SettingsActivity.kt`), while
+> anything addressing it by FQCN (AndroidManifest, `proguard-rules.pro` keeps,
+> `pureTestClasses` in build.gradle) is unaffected.
 
 ---
 

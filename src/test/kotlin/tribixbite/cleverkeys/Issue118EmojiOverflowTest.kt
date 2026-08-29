@@ -98,7 +98,7 @@ class Issue118EmojiOverflowTest {
     // ─────────────────────────────────────────────────────────────────────────
     @Test
     fun emojiView_init_doesNotSetUnconditionalEllipsize() {
-        val source = readSource("EmojiGridView.kt")
+        val source = readSource("emoji/EmojiGridView.kt")
         val initBody = emojiViewInitBlock(source)
         // The buggy line that affects every cell — must be gone or moved to the
         // emoticon-only branch in setEmoji().
@@ -113,7 +113,7 @@ class Issue118EmojiOverflowTest {
     // ─────────────────────────────────────────────────────────────────────────
     @Test
     fun emojiView_setEmoji_clearsEllipsizeForRegularEmoji() {
-        val source = readSource("EmojiGridView.kt")
+        val source = readSource("emoji/EmojiGridView.kt")
         val regularBranch = regularEmojiBranch(source)
         // Either explicit `ellipsize = null` or any sentinel that clears the
         // truncation behavior for real emojis.
@@ -131,7 +131,7 @@ class Issue118EmojiOverflowTest {
     // ─────────────────────────────────────────────────────────────────────────
     @Test
     fun emojiView_isEmoticon_classifiesRealEmojiAsNonEmoticon() {
-        val source = readSource("EmojiGridView.kt")
+        val source = readSource("emoji/EmojiGridView.kt")
         val funIdx = source.indexOf("private fun isEmoticon(str: String): Boolean")
         assertThat(funIdx).isAtLeast(0)
         // Sanity-check that the heuristic still uses the surrogate-pair /

@@ -24,7 +24,7 @@ import java.io.File
  */
 class SettingsSearchCoverageTest {
 
-    private val settingsFile = File("src/main/kotlin/tribixbite/cleverkeys/SettingsActivity.kt")
+    private val settingsFile = File("src/main/kotlin/tribixbite/cleverkeys/activities/SettingsActivity.kt")
     // Controls were moved here during the 2026-07 decomposition (mirrors generate_settings_search_index.py)
     private val sectionsDir = File("src/main/kotlin/tribixbite/cleverkeys/ui/settings/sections")
 

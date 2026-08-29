@@ -11,7 +11,7 @@ collapsible section the control lives in, and emits a generated Kotlin file that
 activity consumes directly.
 
 Inputs:
-  - src/main/kotlin/tribixbite/cleverkeys/SettingsActivity.kt  (control definitions)
+  - src/main/kotlin/tribixbite/cleverkeys/activities/SettingsActivity.kt  (control definitions)
   - res/values/strings.xml                                     (resolves stringResource titles)
 
 Output (argv[1], default build/generated/search/kotlin/.../SettingsSearchIndex.kt):
@@ -26,7 +26,7 @@ import os
 import re
 import sys
 
-ACTIVITY = "src/main/kotlin/tribixbite/cleverkeys/SettingsActivity.kt"
+ACTIVITY = "src/main/kotlin/tribixbite/cleverkeys/activities/SettingsActivity.kt"
 SECTIONS_DIR = "src/main/kotlin/tribixbite/cleverkeys/ui/settings/sections"
 STRINGS = "res/values/strings.xml"
 DEFAULT_OUT = "build/generated/search/kotlin/tribixbite/cleverkeys/SettingsSearchIndex.kt"

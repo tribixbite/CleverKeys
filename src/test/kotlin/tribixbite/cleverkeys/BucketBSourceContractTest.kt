@@ -47,7 +47,7 @@ class BucketBSourceContractTest {
     fun `issue 94 — VersionInfoCard supports long-press copy`() {
         // VersionInfoCard was extracted to ui/settings/SettingsInfoCards.kt by Task 2 refactor.
         val source = File("src/main/kotlin/tribixbite/cleverkeys/ui/settings/SettingsInfoCards.kt")
-            .takeIf { it.exists() }?.readText() ?: readSource("SettingsActivity.kt")
+            .takeIf { it.exists() }?.readText() ?: readSource("activities/SettingsActivity.kt")
         // Locate VersionInfoCard definition and check for long-click support.
         val cardStart = source.indexOf("fun SettingsActivity.VersionInfoCard")
             .takeIf { it >= 0 } ?: source.indexOf("fun VersionInfoCard")
@@ -66,7 +66,7 @@ class BucketBSourceContractTest {
     fun `issue 94 — copy-to-clipboard side effect referenced near VersionInfoCard`() {
         // VersionInfoCard was extracted to ui/settings/SettingsInfoCards.kt by Task 2 refactor.
         val source = File("src/main/kotlin/tribixbite/cleverkeys/ui/settings/SettingsInfoCards.kt")
-            .takeIf { it.exists() }?.readText() ?: readSource("SettingsActivity.kt")
+            .takeIf { it.exists() }?.readText() ?: readSource("activities/SettingsActivity.kt")
         val cardStart = source.indexOf("fun SettingsActivity.VersionInfoCard")
             .takeIf { it >= 0 } ?: source.indexOf("fun VersionInfoCard")
         assertThat(cardStart).isAtLeast(0)
@@ -88,7 +88,7 @@ class BucketBSourceContractTest {
 
     @Test
     fun `issue 93 — ThemeSettingsActivity has hex color input field`() {
-        val source = readSource("ThemeSettingsActivity.kt")
+        val source = readSource("activities/ThemeSettingsActivity.kt")
         // Expected: an OutlinedTextField/TextField with "hex" semantics
         val hasHexInput = source.contains("OutlinedTextField", ignoreCase = false) ||
             (source.contains("TextField", ignoreCase = false) && source.lowercase().contains("hex"))
@@ -97,7 +97,7 @@ class BucketBSourceContractTest {
 
     @Test
     fun `issue 93 — hex parse logic exists for color input`() {
-        val source = readSource("ThemeSettingsActivity.kt")
+        val source = readSource("activities/ThemeSettingsActivity.kt")
         // Expected: a regex/match that accepts "#RRGGBB" or similar
         val hasHexParse = source.contains("Regex(\"#") ||
             source.contains("\"\"\"#") ||
@@ -116,7 +116,7 @@ class BucketBSourceContractTest {
 
     @Test
     fun `issue 134 — ShortSwipeCustomizationActivity has a show-keyboard button`() {
-        val source = readSource("ShortSwipeCustomizationActivity.kt")
+        val source = readSource("activities/ShortSwipeCustomizationActivity.kt")
         val lower = source.lowercase()
         // Expected: text or content description hint indicating "show keyboard"
         val hasShowKeyboard = lower.contains("show keyboard") ||
@@ -127,7 +127,7 @@ class BucketBSourceContractTest {
 
     @Test
     fun `issue 134 — InputMethodManager showSoftInput referenced for re-open`() {
-        val source = readSource("ShortSwipeCustomizationActivity.kt")
+        val source = readSource("activities/ShortSwipeCustomizationActivity.kt")
         // Expected: imm.showSoftInput(targetView, ...) call to bring the IME back
         val hasShowSoftInput = source.contains("showSoftInput")
         assertThat(hasShowSoftInput).isTrue()  // RED until #134 fix lands
@@ -147,7 +147,7 @@ class BucketBSourceContractTest {
 
     @Test
     fun `issue 130 — ClipboardHistoryView resolves colors from theme attrs`() {
-        val source = readSource("ClipboardHistoryView.kt")
+        val source = readSource("clipboard/ClipboardHistoryView.kt")
         val resolvesTheme = source.contains("resolveAttribute") ||
             source.contains("obtainStyledAttributes") ||
             source.contains("ContextThemeWrapper") ||
@@ -157,7 +157,7 @@ class BucketBSourceContractTest {
 
     @Test
     fun `issue 130 — ClipboardHistoryView contains no hardcoded Material purple`() {
-        val source = readSource("ClipboardHistoryView.kt")
+        val source = readSource("clipboard/ClipboardHistoryView.kt")
         // Material default purple variants: 6200EE, BB86FC, 3700B3
         val hasHardcodedPurple = listOf("6200EE", "BB86FC", "3700B3", "#6200ee", "#bb86fc")
             .any { source.contains(it, ignoreCase = true) }
@@ -172,7 +172,7 @@ class BucketBSourceContractTest {
 
     @Test
     fun `issue 71 — ClipboardHistoryView dispatches DB load to Dispatchers IO`() {
-        val source = readSource("ClipboardHistoryView.kt")
+        val source = readSource("clipboard/ClipboardHistoryView.kt")
         val isAsync = source.contains("Dispatchers.IO") ||
             source.contains("withContext(Dispatchers.IO)") ||
             source.contains("launch(Dispatchers.IO)")
@@ -181,13 +181,13 @@ class BucketBSourceContractTest {
 
     @Test
     fun `issue 71 — loadDataAsync function exists`() {
-        val source = readSource("ClipboardHistoryView.kt")
+        val source = readSource("clipboard/ClipboardHistoryView.kt")
         assertThat(source).contains("fun loadDataAsync")
     }
 
     @Test
     fun `issue 71 — async load cancels previous job to avoid stale data`() {
-        val source = readSource("ClipboardHistoryView.kt")
+        val source = readSource("clipboard/ClipboardHistoryView.kt")
         // Pattern: loadJob?.cancel() before starting a new load
         val hasCancellation = source.contains("loadJob?.cancel()") ||
             source.contains("loadJob = ") && source.contains(".cancel()")

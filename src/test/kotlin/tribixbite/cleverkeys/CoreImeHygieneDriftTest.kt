@@ -65,9 +65,9 @@ class CoreImeHygieneDriftTest {
             "tribixbite/cleverkeys/Pointers.kt",
             "tribixbite/cleverkeys/Autocapitalisation.kt",
             "tribixbite/cleverkeys/WordPredictor.kt",
-            "tribixbite/cleverkeys/ClipboardDatabase.kt",
+            "tribixbite/cleverkeys/clipboard/ClipboardDatabase.kt",
             "tribixbite/cleverkeys/Keyboard2View.kt",
-            "tribixbite/cleverkeys/EmojiSearchManager.kt",
+            "tribixbite/cleverkeys/emoji/EmojiSearchManager.kt",
             "tribixbite/cleverkeys/DictionaryManager.kt",
             "tribixbite/cleverkeys/customization/CustomShortSwipeExecutor.kt",
             "tribixbite/cleverkeys/ml/SwipeMLDataStore.kt",
@@ -156,7 +156,7 @@ class CoreImeHygieneDriftTest {
             "the isPrivate guard must run BEFORE the setPrimaryClip fallback."
         ).that(clipIdx).isGreaterThan(guardIdx)
 
-        val view = source("tribixbite/cleverkeys/ClipboardHistoryView.kt")
+        val view = source("tribixbite/cleverkeys/clipboard/ClipboardHistoryView.kt")
         val pasteEntry = view.substringAfter("fun paste_entry(").substringBefore("\n    }")
         assertWithMessage(
             "paste_entry must thread entry.isPrivate into ClipboardHistoryService.pasteMedia " +
@@ -1180,7 +1180,7 @@ class CoreImeHygieneDriftTest {
     fun everyProcessEntryPointBindsTheImportedLanguagePackResolver() {
         val sites = mapOf(
             "tribixbite/cleverkeys/CleverKeysService.kt" to "the IME service",
-            "tribixbite/cleverkeys/SettingsActivity.kt" to "the settings activity",
+            "tribixbite/cleverkeys/activities/SettingsActivity.kt" to "the settings activity",
             "tribixbite/cleverkeys/swipe/CtcEngineAdapter.kt" to "the CTC adapter's constructor",
         )
         for ((relative, what) in sites) {
