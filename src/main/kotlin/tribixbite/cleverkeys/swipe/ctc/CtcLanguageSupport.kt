@@ -55,6 +55,22 @@ import java.util.Locale
  * [LexiconSource.CKDT_LANGPACK] — the importable `langpack-ru` pack, which is the EXACT lexicon
  * every published Russian number was measured on, so it is served when that pack is installed
  * and not otherwise.
+ *
+ * ## The table is no longer the whole membership
+ *
+ * [SUPPORTED] is the STATIC half. Since 2026-08-29 an **imported Latin language pack** (`nl`,
+ * `id`, `ms`, … — any code the user brings) can also be served, decided per device by
+ * [CtcImportedPackSupport] and reached through [sourceFor], which consults the static table FIRST
+ * and the installed packs only on a miss. Read [CtcImportedPackSupport]'s KDoc before touching
+ * either: it carries the precedent (the encoder never sees a language; λ calibrates to the
+ * lexicon's frequency SCALE, and an imported pack is the same CKDT v2 scale as the bundled six),
+ * the a–z-projectability measurement that gates it, and why `en` and every scripted language are
+ * refused on that path.
+ *
+ * Consequence for anything that ENUMERATES served languages: `SUPPORTED.keys` is now a lower
+ * bound, not the answer. Use [isSupported] to ask about one language; a UI that lists them must
+ * add the device's eligible packs (`swipe.CtcInstalledPacks.servedCodes`) or it will tell a Dutch
+ * user with a pack installed that CTC does not serve Dutch while CTC is serving it.
  */
 object CtcLanguageSupport {
 
@@ -149,8 +165,27 @@ object CtcLanguageSupport {
      * **Consequence to respect:** anything measured on these languages is val-tier at best and
      * may never be quoted beside en/fr/de/es's test-validated numbers. Promote a language out
      * of this set only by adding its own bar, never by familiarity.
+     *
+     * This set is the STATIC membership of the tier. Every imported-pack language is provisional
+     * too and can never leave the tier — see [isProvisional] and [CtcImportedPackSupport].
      */
     val PROVISIONAL: Set<String> = setOf("it", "pt", "sv")
+
+    /**
+     * True when [language] is served on SCALE-TRANSFERRED evidence rather than its own measured
+     * accuracy bar — the static [PROVISIONAL] three, plus every language served from an imported
+     * pack.
+     *
+     * An imported pack is provisional **by construction and permanently**: the lexicon is a file
+     * the user supplied, so there is no corpus, no bar, and no fixed vocabulary to measure one
+     * against. Any surface that distinguishes evidence tiers must call this rather than testing
+     * `in PROVISIONAL`, which would silently report a dynamic language as validated.
+     */
+    fun isProvisional(language: String?): Boolean {
+        val code = normalize(language)
+        return code in PROVISIONAL ||
+            (SUPPORTED[code] == null && CtcImportedPackSupport.servesImportedPack(code))
+    }
 
     /**
      * Languages whose accuracy evidence is **val-only and can never be upgraded**, as distinct
@@ -219,8 +254,28 @@ object CtcLanguageSupport {
         return if (cut >= 0) lower.substring(0, cut) else lower
     }
 
-    /** The lexicon source for [language], or null when CTC does not serve it. */
-    fun sourceFor(language: String?): LexiconSource? = SUPPORTED[normalize(language)]
+    /**
+     * The lexicon source for [language], or null when CTC does not serve it.
+     *
+     * **THE membership function**, and the only place the static table and the dynamic
+     * imported-pack path meet. [isSupported], [assetFor], [langpackRelativePath],
+     * `CtcScoringParams.presetFor` and `CtcEngineAdapter.hasLexiconSource` all resolve through it,
+     * so there is exactly one answer to "does CTC serve this language" no matter who asks.
+     *
+     * Order is load-bearing: the STATIC row wins. An imported `fr` pack must not displace the
+     * bundled `fr_enhanced.bin` — the tuned decode was validated on that vocabulary, and swapping
+     * it under a user who imported a pack for the geometric engine would be an unmeasured
+     * behaviour change (the reasoning is in [LexiconSource.CKDT_LANGPACK]).
+     */
+    fun sourceFor(language: String?): LexiconSource? {
+        val code = normalize(language)
+        SUPPORTED[code]?.let { return it }
+        return if (CtcImportedPackSupport.servesImportedPack(code)) {
+            LexiconSource.CKDT_LANGPACK
+        } else {
+            null
+        }
+    }
 
     /** True when the CTC engine may decode [language]. */
     fun isSupported(language: String?): Boolean = sourceFor(language) != null
@@ -236,7 +291,7 @@ object CtcLanguageSupport {
      */
     fun assetFor(language: String?): String? {
         val code = normalize(language)
-        return when (SUPPORTED[code]) {
+        return when (sourceFor(code)) {
             LexiconSource.EN_JSON -> "dictionaries/${code}_enhanced.json"
             LexiconSource.CKDT_BIN -> "dictionaries/${code}_enhanced.bin"
             LexiconSource.CKDT_LANGPACK, null -> null
@@ -247,13 +302,33 @@ object CtcLanguageSupport {
      * The files-dir-relative path of [language]'s imported language pack dictionary, or null
      * when [language] does not read one. The same layout `LanguagePackManager` installs and
      * `GeometricEngineAdapter.dictionaryFor` reads, so both engines see one file.
+     *
+     * Covers both langpack-sourced kinds — the static `ru` row and any dynamically eligible
+     * imported Latin pack — because both resolve to [LexiconSource.CKDT_LANGPACK] through
+     * [sourceFor]. This function is also what makes the path a single constant: the eligibility
+     * check, the trie build and the geometric engine must all agree on one file, and they do
+     * because they all ask here.
      */
     fun langpackRelativePath(language: String?): String? {
         val code = normalize(language)
-        return if (SUPPORTED[code] == LexiconSource.CKDT_LANGPACK) {
+        return if (sourceFor(code) == LexiconSource.CKDT_LANGPACK) {
             "langpacks/$code/dictionary.bin"
         } else {
             null
         }
+    }
+
+    /**
+     * The files-dir-relative dictionary path a pack for [language] WOULD occupy, whether or not
+     * that language is currently served.
+     *
+     * [langpackRelativePath] deliberately answers only for a language CTC serves, which makes it
+     * useless to the eligibility check — that has to open the file of a language that is not yet
+     * eligible in order to decide whether it becomes so. Split rather than relaxed, so the
+     * serving path can never accidentally read a pack for a language it does not serve.
+     */
+    fun candidateLangpackRelativePath(language: String?): String? {
+        val code = normalize(language)
+        return if (code.isEmpty()) null else "langpacks/$code/dictionary.bin"
     }
 }

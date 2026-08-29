@@ -704,6 +704,13 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             }
 
             backupRestoreManager = testBackupRestoreManagerOverride ?: BackupRestoreManager(this)
+
+            // Settings can be the first component in the process, and the swipe-engine fallback
+            // card asks CtcLanguageSupport whether CTC serves the primary language — which for an
+            // imported pack is a per-device answer only this resolver can give. Without it the
+            // card would claim CTC does not serve a language the IME is happily serving.
+            // Pinned by CoreImeHygieneDriftTest.
+            tribixbite.cleverkeys.swipe.CtcInstalledPacks.bind(this)
         } catch (e: Exception) {
             android.util.Log.e(TAG, "Error initializing settings", e)
             fallbackEncrypted()

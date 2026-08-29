@@ -3,13 +3,16 @@ package tribixbite.cleverkeys.ui.settings.io
 import android.net.Uri
 import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import tribixbite.cleverkeys.Config
 import tribixbite.cleverkeys.Defaults
 import tribixbite.cleverkeys.DirectBootAwarePreferences
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.langpack.ImportResult
 import tribixbite.cleverkeys.langpack.LanguagePackManager
+import tribixbite.cleverkeys.swipe.CtcInstalledPacks
 
 /**
  * Detect available V2 binary dictionaries for secondary language selection.
@@ -115,6 +118,13 @@ internal fun SettingsActivity.performLanguagePackImport(uri: Uri) {
                         "Language pack imported: ${result.manifest.name}",
                         Toast.LENGTH_SHORT
                     ).show()
+                    // Measure the new pack for CTC eligibility now, off the main thread, rather
+                    // than leaving it to the first swipe's background scheduler: the user is
+                    // here, the file is hot, and the swipe-engine card can then tell them the
+                    // truth immediately. Idempotent — the swipe path reads the same cached
+                    // verdict. See CtcImportedPackSupport for what is being measured and why.
+                    val code = result.manifest.code
+                    withContext(Dispatchers.IO) { CtcInstalledPacks.evaluateNow(_self, code) }
                 }
                 is ImportResult.Error -> {
                     languagePackImportStatus = "Error: ${result.message}"
@@ -138,6 +148,10 @@ internal fun SettingsActivity.deleteLanguagePack(code: String) {
         try {
             val manager = LanguagePackManager.getInstance(_self)
             if (manager.deletePack(code)) {
+                // Drop the CTC eligibility verdict with the pack. A later reimport of the same
+                // language could otherwise restore identical bytes whose mtime happens to match
+                // the stored fingerprint and inherit a stale measurement.
+                CtcInstalledPacks.invalidate(_self, code)
                 refreshInstalledLanguagePacks()
                 refreshAvailableSecondaryLanguages()
                 Toast.makeText(_self, "Language pack deleted", Toast.LENGTH_SHORT).show()

@@ -376,6 +376,13 @@ class CleverKeysService : InputMethodService(),
         // Prewarm emoji keyword index for fast search (loads in background on IO thread)
         EmojiKeywordIndex.prewarm(this)
 
+        // Let the pure CTC language table see this device's imported language packs. Must run
+        // before the first swipe: `performCtcSwipeTyping` asks CtcEngineAdapter.supportsLanguage
+        // BEFORE it creates the adapter, so without this the first swipe in an
+        // imported-pack language would fall to geometric even with a measured-eligible pack.
+        // Cheap — it registers a resolver and touches no file. Pinned by CoreImeHygieneDriftTest.
+        tribixbite.cleverkeys.swipe.CtcInstalledPacks.bind(this)
+
         // Initialize configuration manager (v1.32.345: extracted configuration management)
         _configManager = ConfigurationManager(this, Config.globalConfig(), foldStateTracker)
         _config = _configManager.getConfig() // Cache reference for convenience

@@ -1158,4 +1158,62 @@ class CoreImeHygieneDriftTest {
                 "direct warmUpAsync call here would bypass both properties."
         ).that(service).contains("instance._inputCoordinator.prewarmGeometricEngine()")
     }
+
+    /**
+     * 2026-08-29 — imported Latin language packs are served by CTC only while a device-side
+     * resolver is registered behind the pure table
+     * ([tribixbite.cleverkeys.swipe.ctc.CtcImportedPackSupport]). The seam fails CLOSED (no
+     * resolver ⇒ no pack language is served ⇒ geometric), which is safe but silent: a dropped
+     * `bind` call would look exactly like "nobody imported a pack", with nothing logged.
+     *
+     * All three call sites are required and each covers a distinct entry into the process:
+     *
+     *  * `CleverKeysService.onCreate` — the IME. It must bind BEFORE the first swipe, because
+     *    `performCtcSwipeTyping` asks `CtcEngineAdapter.supportsLanguage` before it ever creates
+     *    the adapter.
+     *  * `SettingsActivity` — settings can be the first component in the process, and the
+     *    swipe-engine fallback card asks the same question.
+     *  * `CtcEngineAdapter`'s constructor — the only caller with neither of the above is an
+     *    instrumented test that builds an adapter directly.
+     */
+    @Test
+    fun everyProcessEntryPointBindsTheImportedLanguagePackResolver() {
+        val sites = mapOf(
+            "tribixbite/cleverkeys/CleverKeysService.kt" to "the IME service",
+            "tribixbite/cleverkeys/SettingsActivity.kt" to "the settings activity",
+            "tribixbite/cleverkeys/swipe/CtcEngineAdapter.kt" to "the CTC adapter's constructor",
+        )
+        for ((relative, what) in sites) {
+            assertWithMessage(
+                "$what must call CtcInstalledPacks.bind(...) — without it the pure CTC language " +
+                    "table cannot see this device's imported packs, and every pack language " +
+                    "silently falls back to the geometric engine with nothing logged."
+            ).that(source(relative)).contains("CtcInstalledPacks.bind(")
+        }
+    }
+
+    /**
+     * One membership answer, one lookup. `CtcLanguageSupport.sourceFor` is where the static table
+     * and the dynamic imported-pack path meet; a direct `SUPPORTED[…]` lookup in the adapter would
+     * silently answer only the static half — the trie would refuse to build for a pack language
+     * the dispatcher had already routed to CTC, and the user would get an empty suggestion bar
+     * that the shared pipeline cannot distinguish from "no candidates".
+     */
+    @Test
+    fun theCtcAdapterAsksSourceForRatherThanIndexingTheStaticTable() {
+        val adapter = source("tribixbite/cleverkeys/swipe/CtcEngineAdapter.kt")
+            // Strip KDoc/line comments: the table is legitimately NAMED in prose.
+            .lines()
+            .filterNot { it.trimStart().startsWith("*") || it.trimStart().startsWith("//") }
+            .joinToString("\n")
+        assertWithMessage(
+            "CtcEngineAdapter must resolve membership through CtcLanguageSupport.sourceFor(), " +
+                "never by indexing SUPPORTED directly — the imported-pack half of membership " +
+                "does not live in that map."
+        ).that(adapter).doesNotContain("CtcLanguageSupport.SUPPORTED[")
+        for (expected in listOf("CtcLanguageSupport.sourceFor(lang)")) {
+            assertWithMessage("expected the adapter to resolve membership via `$expected`")
+                .that(adapter).contains(expected)
+        }
+    }
 }

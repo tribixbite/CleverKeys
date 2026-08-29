@@ -595,6 +595,12 @@ tasks.register('runPureTests', JavaExec) {
     // decomposes й and destroys the alphabet), el mark-stripping + word-final sigma repair —
     // both halves or neither — uk's ї/ґ rejection, he niqqud stripping.
     'tribixbite.cleverkeys.swipe.ctc.CtcScriptProjectionTest',
+    // Imported Latin language packs (2026-08-29): the DYNAMIC half of CTC membership. Lookup
+    // order (the static table always wins), the en/scripted-language refusals, the λ-by-scale
+    // precedent made executable, the a-z-projectability thresholds on synthetic boundaries AND on
+    // every real langpack in scripts/dictionaries/ (nl/id/ms/sw/tl 100%, tr 73%), and the
+    // reimport-invalidates-everything fingerprint.
+    'tribixbite.cleverkeys.swipe.ctc.CtcImportedPackSupportTest',
     // Context-LM persistence fix (audit 2026-08-06) — debounced write-back substrate,
     // language-keyed singleton BigramStore, UserVocabulary save-storm fix
     'tribixbite.cleverkeys.persist.DebouncedPersisterTest',

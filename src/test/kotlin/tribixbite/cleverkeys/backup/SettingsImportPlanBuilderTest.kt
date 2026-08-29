@@ -228,6 +228,9 @@ class SettingsImportPlanBuilderTest {
             "backup_passphrase_iv",            // GCM IV for the wrapped passphrase
             "backup_allow_intent_passphrase",  // headless --es passphrase opt-in
             "backup_last_headless_action_ms",  // in-prefs rate-limit timestamp
+            // 2026-08-29: derived per-device cache of imported-langpack CTC eligibility,
+            // fingerprinted by local file length+mtime — meaningless on any other device.
+            "ctc_langpack_verdicts",
         )
         assertThat(SettingsValidation.INTERNAL_KEYS).isEqualTo(expected)
     }

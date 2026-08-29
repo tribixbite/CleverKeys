@@ -46,6 +46,12 @@ object SettingsValidation {
         "backup_passphrase_iv",             // GCM IV for the wrapped passphrase (base64)
         "backup_allow_intent_passphrase",   // Opt-in: accept --es passphrase on headless IMPORT
         "backup_last_headless_action_ms",   // In-prefs rate-limit timestamp for headless actions
+        // CTC imported-language-pack eligibility verdicts (2026-08-29). A DERIVED cache keyed by
+        // the length+mtime of files in THIS device's filesDir — exporting it would restore one
+        // device's measurement of one device's packs onto another, where the fingerprints cannot
+        // match and the entries are at best dead weight. Recomputed on demand; see
+        // swipe.CtcInstalledPacks.PREF_KEY.
+        "ctc_langpack_verdicts",
     )
 
     fun isInternalPreference(key: String): Boolean = key in INTERNAL_KEYS

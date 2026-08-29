@@ -27,6 +27,7 @@ import tribixbite.cleverkeys.swipe.ctc.CtcCkdtLexicon
 import tribixbite.cleverkeys.swipe.ctc.CtcContractionKeys
 import tribixbite.cleverkeys.swipe.ctc.CtcFeaturizer
 import tribixbite.cleverkeys.swipe.ctc.CtcFuzzyRescue
+import tribixbite.cleverkeys.swipe.ctc.CtcImportedPackSupport
 import tribixbite.cleverkeys.swipe.ctc.CtcLanguageSupport
 import tribixbite.cleverkeys.swipe.ctc.CtcLayout
 import tribixbite.cleverkeys.swipe.ctc.CtcLexiconMerge
@@ -99,6 +100,14 @@ import kotlin.math.roundToInt
  */
 class CtcEngineAdapter(private val context: Context) {
 
+    init {
+        // Dynamic membership needs a device-side resolver behind the pure table
+        // (CtcImportedPackSupport). Binding here as well as in CleverKeysService/SettingsActivity
+        // covers the one caller that has neither: an instrumented test that constructs an adapter
+        // directly. Idempotent. Pinned by CoreImeHygieneDriftTest.
+        CtcInstalledPacks.bind(context)
+    }
+
     companion object {
         private const val TAG = "CtcEngineAdapter"
 
@@ -126,9 +135,18 @@ class CtcEngineAdapter(private val context: Context) {
             CtcScriptSupport.modelAssetFor(language, MODEL_ASSET)
 
         /**
-         * True when the CTC engine serves [language] — the table lives in
-         * [CtcLanguageSupport]: en, the 2026-08-15 validated additions fr/de/es, and the
-         * 2026-08-18 provisional it/pt/sv. Seven in all; never hard-code the list here.
+         * True when the CTC engine serves [language] — the membership lives in
+         * [CtcLanguageSupport.sourceFor]: the static table (en, the 2026-08-15 validated
+         * additions fr/de/es, the 2026-08-18 provisional it/pt/sv, and ru since 2026-08-29)
+         * PLUS, since 2026-08-29, any imported Latin language pack this device has measured as
+         * a–z-typeable ([tribixbite.cleverkeys.swipe.ctc.CtcImportedPackSupport]). Never
+         * hard-code the list here.
+         *
+         * **Not a constant any more.** It can flip from false to true for one language when a
+         * pack is imported or when its background measurement lands, so callers must READ it at
+         * the moment they need it rather than caching it at construction. It only ever moves in
+         * the widening direction for a given pack file, and both `performCtcSwipeTyping` and the
+         * prewarm already re-read it per swipe.
          *
          * [decodeAsync]/[warmUpAsync] gate on this as defense-in-depth; the PRIMARY gate
          * is upstream — `InputCoordinator.performCtcSwipeTyping` reads the active language
@@ -536,6 +554,13 @@ class CtcEngineAdapter(private val context: Context) {
      *    **`langpack-ru.zip` is the exact lexicon every published ru number was measured on**
      *    (`eval_cyrillic.build_trie` reads that zip), so building the ru trie from any other
      *    word list would void 85.07 / 76.32.
+     *  - **an imported LATIN pack (nl, id, …) → `langpacks/<lang>/dictionary.bin`**, the same
+     *    constant and the same reader as ru, but admitted by MEASUREMENT rather than by a table
+     *    row: [CtcImportedPackSupport] requires the pack's vocabulary to project onto a–z (head
+     *    and tail) before [CtcLanguageSupport.sourceFor] reports it as CKDT_LANGPACK. Projected by
+     *    [CtcAzProjection] like the bundled CKDT languages, decoded at the same λ = 2.0 CKDT
+     *    preset — which it reaches through `presetFor`'s existing `sourceFor` lookup, with no
+     *    imported-pack branch anywhere in the decoder.
      *
      * User custom/disabled words are read from the PER-LANGUAGE preference keys
      * ([LanguagePreferenceKeys.customWordsKey] / [LanguagePreferenceKeys.disabledWordsKey]),
@@ -543,7 +568,9 @@ class CtcEngineAdapter(private val context: Context) {
      */
     private fun lexiconFor(language: String): TrieMemo? {
         val lang = CtcLanguageSupport.normalize(language)
-        val source = CtcLanguageSupport.SUPPORTED[lang]
+        // sourceFor, not SUPPORTED[…]: an imported Latin pack is CKDT_LANGPACK by measurement
+        // rather than by table row, and every gate has to agree on ONE membership answer.
+        val source = CtcLanguageSupport.sourceFor(lang)
         val asset = CtcLanguageSupport.assetFor(lang)
         val langpack = langpackFileFor(lang)
         if (source == null || (asset == null && langpack == null)) {
@@ -558,9 +585,13 @@ class CtcEngineAdapter(private val context: Context) {
             ?: emptySet()
         // A langpack is mutable on disk (import/re-import/removal), so its identity carries
         // length + mtime the way GeometricEngineAdapter's does; a bundled asset is immutable
-        // within an APK and needs only its path.
+        // within an APK and needs only its path. The fingerprint is built by the SAME pure
+        // helper the eligibility cache keys on ([CtcImportedPackSupport.packFingerprint]), so a
+        // reimport invalidates the verdict and the trie together — a pack that is re-measured
+        // and found ineligible can never keep serving a trie built from the previous file.
         val sourceId = if (langpack != null) {
-            "langpack:${langpack.path}:${langpack.length()}:${langpack.lastModified()}"
+            "langpack:${langpack.path}:" +
+                CtcImportedPackSupport.packFingerprint(langpack.length(), langpack.lastModified())
         } else {
             "asset:$asset"
         }
@@ -746,7 +777,7 @@ class CtcEngineAdapter(private val context: Context) {
      */
     fun hasLexiconSource(language: String?): Boolean {
         val lang = CtcLanguageSupport.normalize(language)
-        return when (CtcLanguageSupport.SUPPORTED[lang]) {
+        return when (CtcLanguageSupport.sourceFor(lang)) {
             null -> false
             CtcLanguageSupport.LexiconSource.EN_JSON,
             CtcLanguageSupport.LexiconSource.CKDT_BIN -> true

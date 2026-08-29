@@ -139,6 +139,15 @@
     <string name="gesture_touch_smoothing_desc">Points used for moving-average smoothing of the swipe path. 1 = raw input, 3 = recommended. Applies to both swipe engines.</string>
     <string name="swipe_engine_fallback_title">Geometric engine will be used</string>
     <string name="swipe_engine_fallback_desc">CTC does not have a dictionary for %1$s, so swipes will be decoded by the geometric engine instead. CTC currently serves: %2$s.</string>
+    <!-- 2026-08-29: shown UNDER swipe_engine_fallback_desc when the user HAS imported a language
+         pack for their primary language and CTC measured it as unusable, so the card says why
+         instead of only "no dictionary". English-only for now (translation debt is tracked in
+         memory/HANDOFF.md); the reason text is measured per device, never a fixed language list.
+         %1$s is the language code, %2$d the percentage of the pack's words that can be spelled
+         with the a-z keys. -->
+    <string name="swipe_engine_pack_not_typeable" tools:ignore="MissingTranslation">The %1$s language pack you imported cannot be decoded by CTC: only %2$d%% of its words can be spelled with the a–z keys. Letters such as ı, ł and đ have no a–z form, so those words could not be swiped at all. Geometric decodes them instead.</string>
+    <string name="swipe_engine_pack_head_not_typeable" tools:ignore="MissingTranslation">The %1$s language pack you imported cannot be decoded by CTC: too many of its most common words use letters with no a–z form, so they could not be swiped at all. Geometric decodes them instead.</string>
+    <string name="swipe_engine_pack_unusable" tools:ignore="MissingTranslation">The %1$s language pack you imported does not contain a readable word list, so CTC cannot use it. Try importing the pack again.</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 Appearance</string>

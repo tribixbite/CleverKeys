@@ -674,13 +674,20 @@ class InputCoordinator(
      * prediction list → the pipeline clears the bar.
      *
      * Audit M1 — the CTC model is layout-agnostic but the lexicon + λ preset are
-     * per-language and only the seven in
-     * [tribixbite.cleverkeys.swipe.ctc.CtcLanguageSupport] are served (en/fr/de/es, plus
-     * it/pt/sv on the provisional tier), so the active language is
-     * read BEFORE dispatch: an unsupported-language swipe falls through to
-     * [performGeometricSwipeTyping]. Net ctc-mode semantics: CTC(supported language,
-     * a–z-complete Latin layout) / geometric(everything else) — every cell keeps swipe.
+     * per-language, and only the languages [tribixbite.cleverkeys.swipe.ctc.CtcLanguageSupport]
+     * reports are served (en/fr/de/es, it/pt/sv on the provisional tier, ru on the val-only tier,
+     * **plus any imported Latin language pack this device measured as a–z-typeable** —
+     * [tribixbite.cleverkeys.swipe.ctc.CtcImportedPackSupport], 2026-08-29), so the active
+     * language is read BEFORE dispatch: an unserved-language swipe falls through to
+     * [performGeometricSwipeTyping]. Net ctc-mode semantics: CTC(served language,
+     * alphabet-complete layout) / geometric(everything else) — every cell keeps swipe.
      * The adapter keeps its own language gate as defense-in-depth.
+     *
+     * The dynamic half deliberately flows through the SAME `supportsLanguage` gate rather than a
+     * parallel check: `CtcLanguageSupport.sourceFor` consults the static table first and the
+     * installed packs on a miss, so the dispatcher, the prewarm, `CtcScoringParams.presetFor` and
+     * the settings fallback card all resolve one membership answer. Nothing below changed when
+     * imported packs became serveable, which is the point.
      */
     private fun performCtcSwipeTyping(
         swipedKeys: List<KeyboardData.Key>,
@@ -700,13 +707,14 @@ class InputCoordinator(
                 ?.takeIf { it != "none" && it != language && CtcEngineAdapter.supportsLanguage(it) }
         } else null
         if (!CtcEngineAdapter.supportsLanguage(language)) {
-            // M1: CTC serves only the languages in CtcLanguageSupport (en/fr/de/es, the
-            // provisional it/pt/sv since 2026-08-18, and ru since 2026-08-29), so any other
-            // language falls through to the geometric engine, which decodes ANY layout in ANY
-            // language. Before 2026-08-18 the QWERTY-Latin family fell through to the neural
-            // transformer instead; with that engine removed this is unconditional. This
-            // is the cell a Dutch- or Ukrainian-on-QWERTY user lands in — it must never
-            // return without dispatching.
+            // M1: CTC serves only the languages CtcLanguageSupport reports (en/fr/de/es, the
+            // provisional it/pt/sv since 2026-08-18, ru since 2026-08-29, and since the same day
+            // any imported Latin pack measured a–z-typeable), so any other language falls through
+            // to the geometric engine, which decodes ANY layout in ANY language. Before
+            // 2026-08-18 the QWERTY-Latin family fell through to the neural transformer instead;
+            // with that engine removed this is unconditional. This is the cell a Ukrainian- or
+            // Turkish-on-QWERTY user lands in — Dutch left it when its pack became serveable, and
+            // it must never return without dispatching.
             performGeometricSwipeTyping(
                 swipedKeys, swipePath, timestamps, ic, editorInfo, resources,
                 wasShiftActive, wasShiftLocked

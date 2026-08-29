@@ -8,13 +8,22 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
+import tribixbite.cleverkeys.swipe.CtcInstalledPacks
+import tribixbite.cleverkeys.swipe.ctc.CtcImportedPackSupport
 import tribixbite.cleverkeys.swipe.ctc.CtcLanguageSupport
 import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
 import tribixbite.cleverkeys.ui.settings.SettingsDropdown
@@ -23,8 +32,22 @@ import tribixbite.cleverkeys.ui.settings.openCtcSettings
 import tribixbite.cleverkeys.ui.settings.openGeometricSettings
 import tribixbite.cleverkeys.ui.settings.saveSetting
 
+/**
+ * What the swipe-engine fallback card needs from disk, read once per primary-language change on
+ * [Dispatchers.IO] rather than during composition: the imported pack's eligibility measurement
+ * (null when this language has no pack, or is served from a bundled asset) and the full list of
+ * languages CTC serves on THIS device.
+ */
+private class CtcFallbackSurface(
+    val report: CtcImportedPackSupport.Report?,
+    val servedCodes: List<String>,
+)
+
 @Composable
 internal fun SettingsActivity.SwipeTypingSection() {
+            // Captured for the IO block below: inside `produceState` the receiver is
+            // ProduceStateScope, not the activity.
+            val activity = this
             CollapsibleSettingsSection(
                 title = stringResource(R.string.settings_section_swipe_typing),
                 expanded = swipeTypingSectionExpanded,
@@ -69,14 +92,36 @@ internal fun SettingsActivity.SwipeTypingSection() {
                     )
 
                     // MEDIUM-7: tell the user when the engine they picked is not the one that
-                    // will run. CTC serves only the languages in CtcLanguageSupport.SUPPORTED;
-                    // everything else falls through to geometric silently. Without this card the
-                    // dropdown says "CTC" while geometric does the work, and the only way to
-                    // find out is to notice the accuracy difference.
+                    // will run. CTC serves the languages in CtcLanguageSupport.SUPPORTED plus any
+                    // imported language pack this device measured as a-z-typeable; everything
+                    // else falls through to geometric silently. Without this card the dropdown
+                    // says "CTC" while geometric does the work, and the only way to find out is
+                    // to notice the accuracy difference.
                     //
                     // This existed once and was lost with NeuralPredictionSection in the engine
                     // removal, so it is stated positively — name the engine that WILL run rather
                     // than only what will not.
+                    //
+                    // The measurement runs HERE, at selection time, on Dispatchers.IO: this is
+                    // where the user chose the language and where a refusal can be explained. It
+                    // writes through to the same cached verdict the swipe path reads, so the
+                    // answer this card gives is the answer the keyboard will act on. Keyed on the
+                    // primary language, so re-selecting re-measures a pack that changed.
+                    // `remember(primaryLanguage)` resets to null on a language switch, so the
+                    // card can never show the PREVIOUS language's refusal reason while the new
+                    // one is still being measured.
+                    var ctcSurface by remember(primaryLanguage) {
+                        mutableStateOf<CtcFallbackSurface?>(null)
+                    }
+                    LaunchedEffect(primaryLanguage) {
+                        ctcSurface = withContext(Dispatchers.IO) {
+                            CtcFallbackSurface(
+                                report = CtcInstalledPacks.evaluateNow(activity, primaryLanguage),
+                                servedCodes = CtcLanguageSupport.SUPPORTED.keys.toList() +
+                                    CtcInstalledPacks.servedCodes(activity),
+                            )
+                        }
+                    }
                     if (swipeEngineMode != "geometric" &&
                         !CtcLanguageSupport.isSupported(primaryLanguage)
                     ) {
@@ -94,13 +139,54 @@ internal fun SettingsActivity.SwipeTypingSection() {
                                     text = stringResource(
                                         R.string.swipe_engine_fallback_desc,
                                         primaryLanguage.uppercase(),
-                                        CtcLanguageSupport.SUPPORTED.keys.joinToString(", ") {
-                                            it.uppercase()
-                                        }
+                                        // SUPPORTED.keys alone would UNDERSTATE coverage on a
+                                        // device with an eligible imported pack — that language
+                                        // is served, and listing only the table would tell the
+                                        // user otherwise. Falls back to the table until the
+                                        // background read lands.
+                                        (ctcSurface?.servedCodes
+                                            ?: CtcLanguageSupport.SUPPORTED.keys.toList())
+                                            .distinct()
+                                            .joinToString(", ") { it.uppercase() }
                                     ),
                                     fontSize = 12.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
+                                // The measured reason, when there IS an imported pack for this
+                                // language and it was refused. Without this the user sees "CTC has
+                                // no dictionary for TR" while a Turkish pack sits installed and
+                                // working on the geometric engine — true but useless.
+                                ctcSurface?.report?.let { report ->
+                                    val reason = when (report.verdict) {
+                                        CtcImportedPackSupport.Verdict.NOT_AZ_PROJECTABLE ->
+                                            stringResource(
+                                                R.string.swipe_engine_pack_not_typeable,
+                                                primaryLanguage.uppercase(),
+                                                report.projectablePercent
+                                            )
+                                        CtcImportedPackSupport.Verdict.HEAD_NOT_AZ_PROJECTABLE ->
+                                            stringResource(
+                                                R.string.swipe_engine_pack_head_not_typeable,
+                                                primaryLanguage.uppercase()
+                                            )
+                                        CtcImportedPackSupport.Verdict.TOO_FEW_WORDS ->
+                                            stringResource(
+                                                R.string.swipe_engine_pack_unusable,
+                                                primaryLanguage.uppercase()
+                                            )
+                                        // ELIGIBLE cannot reach here (the card is hidden for a
+                                        // served language) and NOT_AN_IMPORT_CANDIDATE never
+                                        // produces a report at all.
+                                        else -> null
+                                    }
+                                    if (reason != null) {
+                                        Text(
+                                            text = reason,
+                                            fontSize = 12.sp,
+                                            color = MaterialTheme.colorScheme.error
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
