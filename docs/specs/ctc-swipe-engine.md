@@ -8,11 +8,14 @@ configuration: en_enhanced STRIP trie at preset 0.9/4.0/0.25/0.25/0.9882 → tes
 seed-mean 89.31/93.79/94.50 t1/3/5, beating FUTO's ceiling and the removed neural engine on
 every stratum; UNSEALING_4). Integration per `CleverKeys-ML/ctc/APP_INTEGRATION_PLAN.md`
 (commits 3b9dd666..d99dd41f, seam-audit fixes fb77b422): `OnnxCtcEmissionModel` +
-`CtcEngineAdapter` + `SwipeEngineRouter.Mode.CTC` (any a–z-complete Latin layout → CTC,
-everything else → geometric). **Languages: en, fr, de, es, it, pt, sv** — seven, where
-`it`/`pt`/`sv` are `PROVISIONAL` (see "Per-language enablement"). Any other language, and
-every non-Latin layout, is served by the GEOMETRIC engine, so selecting CTC never yields
-less coverage than geometric. The two-model ensemble, the rescorer, and contract-v2 remain
+`CtcEngineAdapter` + `SwipeEngineRouter.Mode.CTC` (any layout whose script has a complete
+wiring, and which exposes the active language's alphabet → CTC; everything else → geometric).
+**Languages: en, fr, de, es, it, pt, sv, ru** — eight, where `it`/`pt`/`sv` are `PROVISIONAL`
+and `ru` is `VAL_ONLY` (see "Per-language enablement"). Russian, added 2026-08-29, is the first
+non-Latin script and reads its lexicon from the IMPORTED language pack, so it is served only
+while that pack is installed. Any other language, and every layout whose script has no complete
+wiring, is served by the GEOMETRIC engine, so selecting CTC never yields less coverage than
+geometric. The two-model ensemble, the rescorer, and contract-v2 remain
 future options recorded in the plan.
 **Package:** `tribixbite.cleverkeys.swipe.ctc` (`src/main/kotlin/.../swipe/ctc/`), with the
 Android-side adapter at `swipe/CtcEngineAdapter.kt` + `swipe/OnnxCtcEmissionModel.kt`.
@@ -57,14 +60,20 @@ to geometric:
    (`DictionaryManager.getCurrentLanguage()`, falling back to `config.primary_language`)
    BEFORE dispatch; `CtcEngineAdapter.decodeAsync`/`warmUpAsync` re-check as defense in
    depth.
-3. **Alphabet completeness + model availability** — `CtcEngineAdapter.supportsLayout`
-   returns false on the first missing a–z letter (no `CtcLayout` can be built), and
-   `isModelPermanentlyUnavailable()` returns true once the bounded ONNX-load retry budget is
-   spent. Either one hands the swipe to geometric *before any CTC work starts*.
+3. **Alphabet completeness + lexicon presence + model availability** —
+   `CtcEngineAdapter.supportsLayout(…, language)` returns false on the first missing letter of
+   THAT LANGUAGE'S alphabet (no `CtcLayout` can be built); `hasLexiconSource(language)` returns
+   false when a langpack-sourced language's pack is not installed; and
+   `isModelPermanentlyUnavailable(language)` returns true once the bounded ONNX-load retry
+   budget for that language's encoder is spent. Any one of the three hands the swipe to
+   geometric *before any CTC work starts*. All three are per-language since the multi-script
+   wiring (2026-08-29): the alphabet, the lexicon and the ONNX asset all vary by language.
 
-"Served language" = `swipe/ctc/CtcLanguageSupport.SUPPORTED` = **en, fr, de, es, it, pt, sv**
-(evidence and tiers in "Per-language enablement" below). Net `ctc` semantics: CTC(served
-language on an a–z-complete Latin layout with a live model) / geometric(everything else) —
+"Served language" = `swipe/ctc/CtcLanguageSupport.SUPPORTED` = **en, fr, de, es, it, pt, sv, ru**
+(evidence and tiers in "Per-language enablement" below; `ru` is `VAL_ONLY` and its lexicon is the
+IMPORTED langpack, so it is served only while that pack is installed). Net `ctc` semantics:
+CTC(served language on a layout exposing that language's alphabet, with a live model and a
+present lexicon) / geometric(everything else) —
 **the router is TOTAL and no cell is left without an engine**. Unknown/legacy pref values —
 including the removed `"neural"` and `"hybrid"` — parse to `Mode.CTC` (`Mode.fromPref`), so a
 pre-v1.6.0 backup imports without error; the pref is case-canonicalized at read (`Config.kt`
@@ -456,24 +465,34 @@ scale — see "Per-language enablement" above and `CtcScoringParams.presetFor`.
 shipping the model at one preset and the fixture at another makes the parity gate assert
 against a configuration nothing runs. Current triple:
 
-| corner | value |
-|---|---|
-| model asset | `src/main/assets/models/ctc_swipe_encoder.onnx` sha256 `84718e6ebc8020176f27b9668e50922a765c96838307b640a8db9ab0549e88e5` |
-| fixture (both copies) | `src/test/resources/ctc/ctc_golden.json` + `src/androidTest/assets/ctc/ctc_golden.json`, byte-identical, sha256 `2a449c4f2de19505131b396655ae01d3e3c325e40249446ff6e7a40c2b27559c` (= ML `artifacts/phaseM_kd_fresh_w1_fp16w_golden.json`, regenerated 2026-08-14 at the **ship** preset — the first cut was generated at E1 and is superseded, `PHASE_M.md` §11.1) |
-| runtime preset | `CtcScoringParams.tunedV2()` = `0.9 / 4.0 / 0.25 / 0.25 / 0.9882`, beam 100, top-4 — the en-scale λ, which is what the fixture's `en_enhanced` trie is on |
+**There are two triples since 2026-08-29** — one per shipped encoder — and each is a ROW in the
+same test, never a second mechanism.
 
-All three corners are pinned by `CtcParityTest.fixture_model_and_shipPreset_travelTogether`
-(pure JVM, no device: hashes the asset, compares the fixture preset term-by-term against
-`tunedV2`, asserts every beam case decodes at that preset, and pins the two fixture copies
-byte-identical). The device half — "the artifact actually *produces* those emissions
-through ORT" — is `CtcEmissionModelParityTest` (see Testing Strategy).
+| corner | Latin (en/fr/de/es/it/pt/sv) | ru |
+|---|---|---|
+| model asset | `models/ctc_swipe_encoder.onnx` sha256 `84718e6ebc8020176f27b9668e50922a765c96838307b640a8db9ab0549e88e5` | `models/ru_synth_v3_ch80_fp16w.onnx` sha256 `8fffa75c722eb61e9e8c80d919fbca3e73eb698ebe3e3909cb766b3b8489962c` (589,406 B) |
+| fixture (both copies) | `ctc/ctc_golden.json`, byte-identical, sha256 `2a449c4f2de19505131b396655ae01d3e3c325e40249446ff6e7a40c2b27559c` (= ML `artifacts/phaseM_kd_fresh_w1_fp16w_golden.json`, regenerated 2026-08-14 at the **ship** preset — the first cut was generated at E1 and is superseded, `PHASE_M.md` §11.1) | `ctc/ru_synth_v3_ch80_fp16w_golden.json`, byte-identical, sha256 `2e8de3c5a15e5874366f44f725aeec2eb72befd89b503d4b24b8b4a8d82fdde5` (160,384 B) |
+| runtime preset | `CtcScoringParams.tunedV2()` = `0.9 / 4.0 / 0.25 / 0.25 / 0.9882`, beam 100, top-4 — the en-scale λ, which is what the fixture's `en_enhanced` trie is on | `CtcScoringParams.tunedRuCkdt()` = `1.05 / 2.0 / 0.2 / 0.3734 / 0.9882`, beam 100, top-4 — the CKDT-scale λ on the E1 footing |
+
+All corners of every row are pinned by
+`CtcParityTest.fixture_model_and_shipPreset_travelTogether` (pure JVM, no device: hashes each
+asset, compares each fixture's preset term-by-term against what **`presetFor` returns for that
+language** — not against a named constant, so the check is "the fixture matches what the
+DISPATCHER will select" — asserts every beam case decodes at that preset, and pins each
+fixture's two copies byte-identical). `everyRoutedScriptHasAParityRow` ties the script table to
+this gate, so a script cannot reach `ROUTED` without appearing here. The device half — "the
+artifact actually *produces* those emissions through ORT" — is `CtcEmissionModelParityTest`,
+likewise row-driven, plus a sha check on the PACKAGED asset (all six script graphs are 589,406 B
+and byte-size-identical to each other, so nothing but a hash can tell a Russian encoder from a
+Greek one).
 
 **Known gap (audit HIGH-4):** no workflow runs `connectedAndroidTest`/ew-cli, so the
 behavioural half of this rule **never runs in CI** — it is device-only, on demand.
-`CtcParityTest`'s `MODEL_ASSET_PATH` also hardcodes the asset path instead of deriving it
-from `CtcEngineAdapter.MODEL_ASSET`, and the preset pin compares only the five scoring
-terms, so `beamWidth` and `topK` are unpinned (fixture beam 32 over a 7-word lexicon vs
-ship beam 100).
+The asset-path half of that gap is closed — each row derives its path from
+`CtcEngineAdapter.modelAssetFor(language)`, so a rename breaks the test rather than slipping
+past it — and the ship `beamWidth` is pinned against `Defaults.CTC_BEAM_WIDTH`. The fixtures'
+own beam width (32 over a 7-word lexicon) is still not compared to the ship width, deliberately:
+the fixtures are narrow so they are cheap to generate.
 
 The decoy this guards against is real: the superseded `resbn192i_s1234_fp16w` is
 **byte-size-identical** to the ship artifact at 3,052,318 B but hashes `d55624cc…`, so a
@@ -516,12 +535,14 @@ counts are `@Test` counts at 2026-08-19 and move with the suites:
 
 | Suite | Cases | What it pins |
 |---|---|---|
-| `swipe/ctc/CtcParityTest` | 3 | Golden parity vs the Python port: featurizer tensor bit-identical; beam top-k words identical, scores within 1e-4. Plus `fixture_model_and_shipPreset_travelTogether` — the device-free half of the fixture-and-preset rule above (asset sha256 vs the fixture's `source_onnx_sha256`, fixture preset vs `tunedV2` term-by-term, every beam case at the ship preset, both fixture copies byte-identical) |
+| `swipe/ctc/CtcParityTest` | 4 | Golden parity vs the Python port, **once per shipped encoder** (en + ru): featurizer tensor bit-identical; beam top-k words identical, scores within 1e-4. Plus `fixture_model_and_shipPreset_travelTogether` — the device-free half of the fixture-and-preset rule above (asset sha256 vs the fixture's `source_onnx_sha256`, fixture preset vs `presetFor(language)` term-by-term, every beam case at that preset, both fixture copies byte-identical) — and `everyRoutedScriptHasAParityRow` |
 | `swipe/ctc/CtcModuleTest` | 14 | Emissions slice, trie loaders, preset constants, featurizer branches, beam behavior, facade seam |
 | `swipe/ctc/CtcLexiconMergeTest` | 10 | Merge policy: custom-first, 1..255 clamp, custom-overrides-disabled, case-folded dedupe, ordinals |
 | `swipe/ctc/CtcContractionDisplayTest` | 7 | Alias→apostrophe display over the real merged-lexicon ordinals (H1) |
 | `swipe/ctc/CtcContractionKeysTest` | 7 | Alias-key injection: injectability over the trie alphabet, the MIN_FREQ floor, native-key skip |
-| `swipe/ctc/CtcLanguagePresetTest` | 19 | `presetFor` λ-by-lexicon-scale (en 4.0 / the CKDT six 2.0 / unknown→en), language-invariance of every other constant, the `CtcLanguageSupport` table (the seven-language supported set, the `PROVISIONAL` three, the empty `NEEDS_VALIDATION`, asset paths, normalization). Plus `tunedRuCkdt`'s E1 constants and the pinned fact that it is on a DIFFERENT footing than the shipping axis (see "Recorded, not wired" below) |
+| `swipe/ctc/CtcLanguagePresetTest` | 23 | `presetFor` λ-by-lexicon-scale (en 4.0 / the CKDT six 2.0 / unknown→en) and the SCRIPT footing (`tunedRuCkdt` verbatim for every `CtcScriptSupport` row), language-invariance of every other Latin constant, the `CtcLanguageSupport` table (the eight-language supported set, the `PROVISIONAL` three, the `VAL_ONLY` one, the empty `NEEDS_VALIDATION`, asset **and langpack** paths — exactly one resolution per language — and normalization) |
+| `swipe/ctc/CtcScriptSupportTest` | 13 | The per-script table: codepoint-sorted alphabets pinned against each shipped fixture's `layout.letters` character for character (a permutation is silent), rule 4's all-three check for ROUTED rows, a stated gap for every unrouted one, the two-table agreement with `CtcLanguageSupport`, the routable-script set, layout existence, and the 32-frame budget constants |
+| `swipe/ctc/CtcScriptProjectionTest` | 15 | PHASE_O §3.4 one rule at a time: ru/bg/mk folds with NO NFD (asserted via the premise that `й` really does decompose), el mark-strip + word-final sigma in that order with medial `σσ` preserved, uk's ї/ґ rejection, he niqqud with final forms kept, shared joiners/case/collision rules, and that the Latin projection is unchanged by the shared loop |
 | `swipe/ctc/CtcCkdtLexiconTest` | 19 | The a–z projection policy (folding, fixed-head expansions, joiners) + the REAL bundled fr/de/es dictionaries: record/untypeable/word/collision counts, the `255 − rank` scale, canonical display, deterministic collisions, and trie totality |
 | `swipe/ContractionOverlayTest` | 12 | The shared pure overlay decision matrix (geometric + ctc twin duty) |
 | `swipe/SwipeEngineRouterTest` | 10 | Routing table incl. `Mode.CTC` rows + `fromPref` canonicalization |
@@ -535,7 +556,7 @@ Instrumented (ew-cli, Pixel7/API34 — all green on-device 2026-08-08; the full 
 
 | Suite | Cases | What it gates |
 |---|---|---|
-| `swipe/CtcEmissionModelParityTest` | 2 | The SHIPPED ONNX asset's on-device emissions/decodes match the golden fixture |
+| `swipe/CtcEmissionModelParityTest` | 3 | EVERY shipped ONNX asset's on-device emissions/decodes match its own golden fixture (en + ru rows), plus a sha256 check on the PACKAGED asset — the only gate that actually executes the graphs, so a fixture with a fresh header and stale emission matrices is caught here and nowhere else |
 | `swipe/CtcLatencyGateTest` | 1 | Production-path decode budget: median < 150 ms / p90 < 250 ms (ModelLoader+XNNPACK, real `trieFor("en")` merge path — en is the largest bundled lexicon at 98k words vs fr/de 40k and es 50k — `presetFor("en")` beam 100 topK 8, worst-case golden trace) |
 | `swipe/ctc/CtcOnnxLatencyBenchmarkTest` | 2 | Loose-bound measurement harness (informational, not the gate) |
 
@@ -580,7 +601,8 @@ The measured levers (study §5a, plan "Framing"):
   (plan Key open decision 3, O7). (Outcome: the trained encoder led every stratum, the
   router posture shipped anyway, and on 2026-08-18 the router's default moved to `ctc` when
   the neural engine was deleted. The router itself — and the geometric hedge behind it —
-  remains, because it is what serves every non-Latin script.)
+  remains, because it is what serves every script that is not wired — which since 2026-08-29
+  is every non-Latin script except Cyrillic-for-Russian.)
 
 ---
 
@@ -725,9 +747,11 @@ the deltas: a dropdown instead of a hidden pref; commit beam default 100, not 30
 The design note that "a mature model can serve ALL layouts" (the encoder is
 layout-parameterized, study D2) has largely landed: the layout gate was widened to any
 a–z-complete Latin layout (2026-08-15) and the language gate to en/fr/de/es (2026-08-16),
-then to seven with the provisional it/pt/sv (2026-08-18). Non-Latin scripts still need
-their own per-script alphabet, model, trie and fixture — the recipe and the delivered
-Russian worked example are in the architecture guide §3–§4.
+then to seven with the provisional it/pt/sv (2026-08-18), and finally off Latin altogether on
+2026-08-29 — the layout gate is now per-language and the router consults a per-script table.
+A non-Latin script still needs its own alphabet, model, trie and fixture; `ru` has all four,
+the other five scripts have a table row and a stated gap. The recipe is in the architecture
+guide §3–§4.
 
 ### Implementation plan (historical)
 
@@ -761,37 +785,46 @@ Russian worked example are in the architecture guide §3–§4.
 
 ## Recorded, not wired — options the app deliberately did not take
 
-Written down so each choice stays visible instead of being rediscovered. Nothing in this
-section is reachable from the decoder.
+Written down so each choice stays visible instead of being rediscovered. Everything in this
+section is unreachable from the decoder **except** the Cyrillic preset immediately below, which
+was wired on 2026-08-29 and is kept in place until the next spec pass relocates it — moving it
+would have obscured the diff that made it reachable.
 
-### The Cyrillic λ datapoint (`CtcScoringParams.tunedRuCkdt`)
+### The Cyrillic λ datapoint (`CtcScoringParams.tunedRuCkdt`) — WIRED 2026-08-29
 
-`ru` is **not** in `CtcLanguageSupport.SUPPORTED`, so the adapter can never build this
-preset. It is kept because it is the independent corroboration behind
-`LAMBDA_CKDT_SCALE`: a Cyrillic λ sweep (CleverKeys-ML `ctc/PHASE_J.md` §6.9 — tuned on ru
-val rows `0:4708`, confirmed on `4708:9416`, over both ru models, worth ≈ +1.2 in-dict
-top-1) landed on **λ 2.0** for the CKDT `255 − rank` scale, the same value the Latin sweep
-(`docs/eval/2026-08-15-ctc-per-language-lambda.md`) reached for fr/de/es.
+**This subsection is no longer "recorded, not wired" and is kept here only until the next spec
+pass moves it.** `presetFor` returns `tunedRuCkdt` for every language with a
+`CtcScriptSupport` row, and `ru` is in `CtcLanguageSupport.SUPPORTED` (`1561dbaf`, `da012ded`).
+
+The preset is the independent corroboration behind `LAMBDA_CKDT_SCALE`: a Cyrillic λ sweep
+(CleverKeys-ML `ctc/PHASE_J.md` §6.9 — tuned on ru val rows `0:4708`, confirmed on `4708:9416`,
+over both ru models, worth ≈ +1.2 in-dict top-1) landed on **λ 2.0** for the CKDT `255 − rank`
+scale, the same value the Latin sweep (`docs/eval/2026-08-15-ctc-per-language-lambda.md`)
+reached for fr/de/es.
 
 **The two sweeps agree on λ and nothing else**, because they were run around different base
-presets — E1 (benchmark footing) for ru, `tunedV2` (app footing) for the shipping axis — so
-they differ on γ, β and γ_prune. Enabling a Cyrillic path therefore starts with a **footing
-decision**, not a λ lookup, and the disagreement is pinned by test so it cannot decay into a
-bug. Evidence tier: **val-only, permanently** — no Cyrillic model was decoded on test-2400
-and the seal is spent. The λ also needs re-confirming with user-dictionary entries present
-(λ multiplies the frequency term, so a larger λ amplifies top-of-scale injected
-competitors) before any ru ship.
+presets — E1 (benchmark footing) for ru, `tunedV2` (app footing) for the Latin axis — so they
+differ on γ, β and γ_prune. A Cyrillic path therefore started with a **footing decision**, not a
+λ lookup, and the ML side made it: all six script lexicons decode at `tunedRuCkdt` verbatim
+(`APP_WIRING_CHECKLIST.md` §2.2), which is also the preset every script golden fixture was
+generated at. `CtcParityTest` asserts each fixture's preset equals what `presetFor` returns for
+that language, so the two can never drift apart.
 
-A Russian encoder now EXISTS — the current generation-4 ship bytes are
-`CleverKeys-ML/ctc/artifacts/ru_synth_v3_ch80_fp16w.onnx` (589,406 B, sha `8fffa75c…`,
-learned-generator synthesis, in-dict top-1 **85.07** on eval-only Yandex rows; the earlier
-`ru_synth_ch80_fp16w.onnx` at 77.41 is two generations superseded) — but it is **not
-wired**: the adapter has exactly one `MODEL_ASSET`, one a–z `ALPHABET`, and `presetFor`
-can never return `tunedRuCkdt`. Wiring plan:
-`docs/plans/2026-08-25-ctc-multiscript-wiring-plan.md`. Its evidence tier is **val-only,
-permanently, single-seed, Yandex-eval-only** and it may never be described as
-"test-validated". The full picture — and the four rules that must hold before any non-Latin
-script is routed to CTC — is the architecture guide §3–§4 and §7.
+Evidence tier: **val-only, permanently** — no Cyrillic model was decoded on test-2400 and the
+seal is spent, so no Russian number may ever be called "test-validated". The λ still needs
+re-confirming with user-dictionary entries present (λ multiplies the frequency term, so a larger
+λ amplifies top-of-scale injected competitors); that was true before ru shipped and is still
+true. λ = 2.0 additionally carries a **measured, unconfirmed −0.63 t1 shortfall** — it was fitted
+against a greedy-37 model while the generation-4 decoder reads greedy 66, and the Phase-Q re-sweep
+was monotone decreasing with the optimum off-grid low, so the pre-registered interior-optimum
+rule refused adoption. Changing it is an ML-side phase and would move ru's fixture too.
+
+**What shipped**: `src/main/assets/models/ru_synth_v3_ch80_fp16w.onnx` (589,406 B, sha
+`8fffa75c…`, learned-generator synthesis, in-dict top-1 **85.07** on eval-only Yandex rows; the
+earlier `ru_synth_ch80_fp16w.onnx` at 77.41 is two generations superseded), its golden fixture in
+both copies, the 31-letter alphabet, and the langpack-sourced trie. The other five scripts remain
+unwired with their gaps stated in `CtcScriptSupport`; the four rules that must hold before any of
+them is routed are the architecture guide §3–§4 and §7.
 
 ### "Max accuracy" pair mode — FUTURE-OPTIONAL, **not implemented**
 
