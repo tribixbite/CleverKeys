@@ -230,8 +230,9 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     // NOTE: sticky_keys_* and voice_guidance_enabled were removed in the TalkBack
     // release — they are now in SettingsValidation.DEPRECATED_KEYS (no reader).
 
-    // ── Presets (string-valued UI selections) ────────────────────────
-    "swipe_correction_preset" to PrefValue.Str("balanced"),
+    // NOTE: swipe_correction_preset (the "Correction Style" preset, the sole member of the
+    // former "Presets" group) was removed in ARC-085 — it is now in
+    // SettingsValidation.DEPRECATED_KEYS (it never had a reader).
 
     // ── Misc / runtime ───────────────────────────────────────────────
     "termux_mode_enabled" to PrefValue.Bool(Defaults.TERMUX_MODE_ENABLED),

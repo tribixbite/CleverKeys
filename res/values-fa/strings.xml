@@ -400,8 +400,6 @@
     <string name="autocorrect_min_word_frequency_desc">فقط به واژه‌هایی با بسامد بزرگ‌تر یا برابر این مقدار تصحیح کنید</string>
     <string name="autocorrect_final_title">تصحیح خودکار نهایی</string>
     <string name="autocorrect_final_desc">تصحیحات مبتنی بر واژه‌نامه را بر خروجی نهایی اعمال کنید</string>
-    <string name="autocorrect_style_title">سبک تصحیح</string>
-    <string name="autocorrect_style_desc">پیش‌تنظیم کلی تهاجمی بودن تصحیح</string>
     <string name="autocorrect_typo_forgiveness_title">بخشودگی اشتباه تایپی</string>
     <string name="autocorrect_typo_forgiveness_desc">حداکثر تفاوت نویسه مجاز (۰ تا ۵)</string>
     <string name="autocorrect_starting_letter_title">دقت حرف ابتدایی</string>

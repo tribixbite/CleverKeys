@@ -393,8 +393,6 @@
     <string name="autocorrect_min_word_frequency_desc">Chỉ sửa sang các từ có tần suất &gt;= giá trị này</string>
     <string name="autocorrect_final_title">Tự động sửa cuối</string>
     <string name="autocorrect_final_desc">Áp dụng sửa lỗi dựa trên từ điển cho đầu ra cuối</string>
-    <string name="autocorrect_style_title">Kiểu sửa lỗi</string>
-    <string name="autocorrect_style_desc">Cài đặt trước mức độ tích cực sửa lỗi tổng thể</string>
     <string name="autocorrect_typo_forgiveness_title">Độ khoan nhượng lỗi đánh</string>
     <string name="autocorrect_typo_forgiveness_desc">Cho phép chênh lệch ký tự tối đa (0–5)</string>
     <string name="autocorrect_starting_letter_title">Độ chính xác chữ cái đầu</string>

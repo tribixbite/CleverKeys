@@ -93,6 +93,13 @@ object SettingsValidation {
         // pipeline, removed together with the legacy InputCoordinator-only path — the
         // SuggestionHandler pipeline is the only one. v1.5.x backups may still carry it.
         "unified_swipe_pipeline",
+        // ARC-085 (2026-08-29): the "Correction Style" dropdown (Strict/Balanced/Lenient)
+        // wrote this on every selection and NOTHING ever read it — not Config, not a
+        // predictor, not an engine adapter — so the control responded to touch and changed
+        // nothing. It shipped in SETTINGS_DEFAULTS, which means every export from every
+        // released version carries it; without this tombstone those backups would surface a
+        // meaningless import-preview row and write the dead key straight back into prefs.
+        "swipe_correction_preset",
         // Neural swipe engine removal (2026-08-18). Every key below was READ ONLY by the
         // transformer decoder, its vocabulary or its settings screen, all deleted. They are
         // MOVED here rather than copied: SettingsDefaultsDriftTest asserts the four

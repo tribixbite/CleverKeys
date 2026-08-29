@@ -374,8 +374,6 @@
     <string name="autocorrect_min_word_frequency_desc">Itama lamang sa mga salitang may dalas &gt;= ito</string>
     <string name="autocorrect_final_title">Final na Autocorrect</string>
     <string name="autocorrect_final_desc">Mag-apply ng mga pagwawasto batay sa diksyunaryo sa final na output</string>
-    <string name="autocorrect_style_title">Estilo ng Pagwawasto</string>
-    <string name="autocorrect_style_desc">Overall na preset ng aggressiveness ng pagwawasto</string>
     <string name="autocorrect_typo_forgiveness_title">Typo Forgiveness</string>
     <string name="autocorrect_typo_forgiveness_desc">Maximum na pinapayagang pagkakaiba ng karakter (0–5)</string>
     <string name="autocorrect_starting_letter_title">Kawastuhan ng Unang Titik</string>

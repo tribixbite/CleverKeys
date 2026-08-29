@@ -177,9 +177,6 @@ internal fun SettingsActivity.handlePreferenceChanged(sharedPreferences: SharedP
             "swipe_final_autocorrect_enabled" -> {
                 swipeFinalAutocorrectEnabled = prefs.getBoolean(key, Defaults.SWIPE_FINAL_AUTOCORRECT_ENABLED)
             }
-            "swipe_correction_preset" -> {
-                swipeCorrectionPreset = prefs.getSafeString(key, "balanced")
-            }
             "autocorrect_max_length_diff" -> {
                 autocorrectMaxLengthDiff = Config.safeGetInt(prefs, key, Defaults.AUTOCORRECT_MAX_LENGTH_DIFF)
             }
@@ -190,7 +187,8 @@ internal fun SettingsActivity.handlePreferenceChanged(sharedPreferences: SharedP
             // swipe_prediction_source, swipe_common_words_boost, swipe_top5000_boost or
             // swipe_rare_words_penalty. All six are in SettingsValidation.DEPRECATED_KEYS and
             // their SettingsActivity backing fields are gone; parsing them here only produced a
-            // write no one read.
+            // write no one read. ARC-085 removed swipe_correction_preset for the same reason
+            // (its "Correction Style" dropdown never had a reader at all).
         }
 }
 
@@ -340,11 +338,11 @@ internal fun SettingsActivity.loadCurrentSettings() {
 
         // Swipe Corrections settings
         swipeFinalAutocorrectEnabled = prefs.getSafeBoolean("swipe_final_autocorrect_enabled", Defaults.SWIPE_FINAL_AUTOCORRECT_ENABLED)
-        swipeCorrectionPreset = prefs.getSafeString("swipe_correction_preset", "balanced")
         autocorrectMaxLengthDiff = Config.safeGetInt(prefs, "autocorrect_max_length_diff", Defaults.AUTOCORRECT_MAX_LENGTH_DIFF)
         autocorrectPrefixLength = Config.safeGetInt(prefs, "autocorrect_prefix_length", Defaults.AUTOCORRECT_PREFIX_LENGTH)
-        // ARC-051: the six DEPRECATED_KEYS that used to be read here are not loaded at all —
-        // see the note on the removed SettingsActivity fields.
+        // ARC-051 (six keys) + ARC-085 (swipe_correction_preset): the DEPRECATED_KEYS that used
+        // to be read here are not loaded at all — see the note on the removed SettingsActivity
+        // fields.
 
         // Swipe trail appearance settings
         swipeTrailEnabled = prefs.getSafeBoolean("swipe_trail_enabled", Defaults.SWIPE_TRAIL_ENABLED)

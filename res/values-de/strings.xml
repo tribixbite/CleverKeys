@@ -384,8 +384,6 @@
     <string name="autocorrect_min_word_frequency_desc">Nur zu Wörtern mit Häufigkeit ≥ diesem Wert korrigieren</string>
     <string name="autocorrect_final_title">Finale Autokorrektur</string>
     <string name="autocorrect_final_desc">Wörterbuchbasierte Korrekturen auf die endgültige Ausgabe anwenden</string>
-    <string name="autocorrect_style_title">Korrekturstil</string>
-    <string name="autocorrect_style_desc">Allgemeine Voreinstellung für die Korrekturaggressivität</string>
     <string name="autocorrect_typo_forgiveness_title">Tippfehlertoleranz</string>
     <string name="autocorrect_typo_forgiveness_desc">Maximal erlaubter Zeichenunterschied (0–5)</string>
     <string name="autocorrect_starting_letter_title">Genauigkeit des Anfangsbuchstabens</string>

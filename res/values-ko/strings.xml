@@ -365,8 +365,6 @@
     <string name="autocorrect_min_word_frequency_desc">이 빈도 이상의 단어로만 수정합니다</string>
     <string name="autocorrect_final_title">최종 자동 수정</string>
     <string name="autocorrect_final_desc">최종 출력에 사전 기반 수정을 적용합니다</string>
-    <string name="autocorrect_style_title">수정 스타일</string>
-    <string name="autocorrect_style_desc">전반적인 수정 적극성 프리셋</string>
     <string name="autocorrect_typo_forgiveness_title">오타 허용 범위</string>
     <string name="autocorrect_typo_forgiveness_desc">허용하는 최대 문자 차이（0~5）</string>
     <string name="autocorrect_starting_letter_title">시작 문자 정확도</string>

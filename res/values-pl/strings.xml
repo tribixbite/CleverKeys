@@ -375,8 +375,6 @@
     <string name="autocorrect_min_word_frequency_desc">Poprawiaj tylko do słów o częstotliwości >= tej wartości</string>
     <string name="autocorrect_final_title">Końcowa autokorekta</string>
     <string name="autocorrect_final_desc">Stosuj korekty słownikowe do ostatecznego wyniku</string>
-    <string name="autocorrect_style_title">Styl korekty</string>
-    <string name="autocorrect_style_desc">Ogólne ustawienie agresywności korekty</string>
     <string name="autocorrect_typo_forgiveness_title">Tolerancja literówek</string>
     <string name="autocorrect_typo_forgiveness_desc">Maksymalna dozwolona różnica znaków (0–5)</string>
     <string name="autocorrect_starting_letter_title">Dokładność pierwszej litery</string>

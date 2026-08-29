@@ -376,8 +376,6 @@
     <string name="autocorrect_min_word_frequency_desc">Hanya koreksi ke kata dengan frekuensi &gt;= ini</string>
     <string name="autocorrect_final_title">Autokoreksi Akhir</string>
     <string name="autocorrect_final_desc">Terapkan koreksi berbasis kamus pada keluaran akhir</string>
-    <string name="autocorrect_style_title">Gaya Koreksi</string>
-    <string name="autocorrect_style_desc">Preset agresivitas koreksi keseluruhan</string>
     <string name="autocorrect_typo_forgiveness_title">Toleransi Typo</string>
     <string name="autocorrect_typo_forgiveness_desc">Perbedaan karakter maksimum yang diizinkan (0–5)</string>
     <string name="autocorrect_starting_letter_title">Akurasi Huruf Awal</string>

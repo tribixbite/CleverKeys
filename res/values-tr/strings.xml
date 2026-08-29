@@ -373,8 +373,6 @@
     <string name="autocorrect_min_word_frequency_desc">Yalnızca sıklığı bu değere &gt;= olan sözcüklere düzelt</string>
     <string name="autocorrect_final_title">Son Otomatik Düzeltme</string>
     <string name="autocorrect_final_desc">Son çıktıya sözlük tabanlı düzeltmeler uygula</string>
-    <string name="autocorrect_style_title">Düzeltme Stili</string>
-    <string name="autocorrect_style_desc">Genel düzeltme agresifliği ön ayarı</string>
     <string name="autocorrect_typo_forgiveness_title">Yazım Hatası Hoşgörüsü</string>
     <string name="autocorrect_typo_forgiveness_desc">İzin verilen maksimum karakter farkı (0–5)</string>
     <string name="autocorrect_starting_letter_title">Başlangıç Harfi Doğruluğu</string>

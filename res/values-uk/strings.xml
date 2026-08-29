@@ -376,8 +376,6 @@
     <string name="autocorrect_min_word_frequency_desc">Виправляти лише на слова з частотою >= цього значення</string>
     <string name="autocorrect_final_title">Фінальне автовиправлення</string>
     <string name="autocorrect_final_desc">Застосовувати словникові виправлення до фінального результату</string>
-    <string name="autocorrect_style_title">Стиль виправлення</string>
-    <string name="autocorrect_style_desc">Загальний пресет агресивності виправлення</string>
     <string name="autocorrect_typo_forgiveness_title">Допуск помилок</string>
     <string name="autocorrect_typo_forgiveness_desc">Максимальна різниця символів (0–5)</string>
     <string name="autocorrect_starting_letter_title">Точність початкової літери</string>

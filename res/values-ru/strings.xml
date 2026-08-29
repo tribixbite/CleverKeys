@@ -365,8 +365,6 @@
     <string name="autocorrect_min_word_frequency_desc">Исправлять только на слова с частотой >= этого значения</string>
     <string name="autocorrect_final_title">Финальная автокоррекция</string>
     <string name="autocorrect_final_desc">Применять словарные исправления к финальному результату</string>
-    <string name="autocorrect_style_title">Стиль коррекции</string>
-    <string name="autocorrect_style_desc">Общий пресет агрессивности коррекции</string>
     <string name="autocorrect_typo_forgiveness_title">Допуск опечаток</string>
     <string name="autocorrect_typo_forgiveness_desc">Максимальная разница символов (0–5)</string>
     <string name="autocorrect_starting_letter_title">Точность начальной буквы</string>

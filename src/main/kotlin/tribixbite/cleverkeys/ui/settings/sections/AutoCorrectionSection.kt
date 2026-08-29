@@ -11,7 +11,6 @@ import tribixbite.cleverkeys.Config
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
-import tribixbite.cleverkeys.ui.settings.SettingsDropdown
 import tribixbite.cleverkeys.ui.settings.SettingsSlider
 import tribixbite.cleverkeys.ui.settings.SettingsSwitch
 import tribixbite.cleverkeys.ui.settings.saveSetting
@@ -118,26 +117,15 @@ internal fun SettingsActivity.AutoCorrectionSection() {
                         modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
                     )
 
-                    SettingsDropdown(
-                        title = stringResource(R.string.autocorrect_style_title),
-                        description = stringResource(R.string.autocorrect_style_desc),
-                        options = listOf("Strict (High Accuracy)", "Balanced (Default)", "Lenient (Flexible)"),
-                        selectedIndex = when (swipeCorrectionPreset) {
-                            "strict" -> 0
-                            "balanced" -> 1
-                            "lenient" -> 2
-                            else -> 1
-                        },
-                        onSelectionChange = { index ->
-                            swipeCorrectionPreset = when (index) {
-                                0 -> "strict"
-                                1 -> "balanced"
-                                2 -> "lenient"
-                                else -> "balanced"
-                            }
-                            saveSetting("swipe_correction_preset", swipeCorrectionPreset)
-                        }
-                    )
+                    // ARC-085 (2026-08-29): the "Correction Style" dropdown
+                    // (Strict/Balanced/Lenient) lived here. It wrote `swipe_correction_preset`,
+                    // which NOTHING read — no Config field, no predictor, no engine adapter —
+                    // so the three presets were indistinguishable at runtime. It predates the
+                    // neural-engine removal, which is why the ARC-051 sweep 20 lines below
+                    // missed it. Deleted rather than wired: no spec defines what strict or
+                    // lenient would mean for a lexicon-trie-constrained decoder, so wiring it
+                    // would require inventing behaviour. Key tombstoned in
+                    // SettingsValidation.DEPRECATED_KEYS; pinned by DeadPlumbingDriftTest.
 
                     // The fuzzy-algorithm dropdown (edit-distance vs positional) lived here.
                     // Its only consumer was OptimizedVocabulary's fuzzy rescue, deleted with the

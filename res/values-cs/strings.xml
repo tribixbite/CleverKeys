@@ -365,8 +365,6 @@
     <string name="autocorrect_min_word_frequency_desc">Opravovat pouze na slova s frekvencí >= tato hodnota</string>
     <string name="autocorrect_final_title">Konečná automatická oprava</string>
     <string name="autocorrect_final_desc">Použít opravy ze slovníku na konečný výstup</string>
-    <string name="autocorrect_style_title">Styl oprav</string>
-    <string name="autocorrect_style_desc">Celkový preset agresivity oprav</string>
     <string name="autocorrect_typo_forgiveness_title">Tolerance překlepů</string>
     <string name="autocorrect_typo_forgiveness_desc">Maximální povolený rozdíl znaků (0–5)</string>
     <string name="autocorrect_starting_letter_title">Přesnost počátečního písmene</string>

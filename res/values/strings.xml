@@ -501,8 +501,6 @@
     <string name="autocorrect_min_word_frequency_desc">Only correct to words with frequency &gt;= this</string>
     <string name="autocorrect_final_title">Final Autocorrect</string>
     <string name="autocorrect_final_desc">Apply dictionary-based corrections to final output</string>
-    <string name="autocorrect_style_title">Correction Style</string>
-    <string name="autocorrect_style_desc">Overall correction aggressiveness preset</string>
     <string name="autocorrect_typo_forgiveness_title">Typo Forgiveness</string>
     <string name="autocorrect_typo_forgiveness_desc">Max character difference allowed (0–5)</string>
     <string name="autocorrect_starting_letter_title">Starting Letter Accuracy</string>

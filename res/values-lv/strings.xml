@@ -376,8 +376,6 @@
     <string name="autocorrect_min_word_frequency_desc">Labot tikai uz vārdiem ar biežumu >= šai vērtībai</string>
     <string name="autocorrect_final_title">Galīgā autokorektūra</string>
     <string name="autocorrect_final_desc">Lietot vārdnīcas labojumus galīgajam rezultātam</string>
-    <string name="autocorrect_style_title">Labošanas stils</string>
-    <string name="autocorrect_style_desc">Vispārīgs labošanas agresivitātes priekšiestatījums</string>
     <string name="autocorrect_typo_forgiveness_title">Drukas kļūdu piedošana</string>
     <string name="autocorrect_typo_forgiveness_desc">Maksimālā atļautā rakstzīmju starpība (0–5)</string>
     <string name="autocorrect_starting_letter_title">Sākuma burta precizitāte</string>

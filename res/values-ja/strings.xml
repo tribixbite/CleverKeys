@@ -364,8 +364,6 @@
     <string name="autocorrect_min_word_frequency_desc">この頻度以上の単語にのみ修正します</string>
     <string name="autocorrect_final_title">最終自動修正</string>
     <string name="autocorrect_final_desc">最終出力に辞書ベースの修正を適用します</string>
-    <string name="autocorrect_style_title">修正スタイル</string>
-    <string name="autocorrect_style_desc">修正の積極性プリセット</string>
     <string name="autocorrect_typo_forgiveness_title">誤字許容範囲</string>
     <string name="autocorrect_typo_forgiveness_desc">許容する最大文字差（0〜5）</string>
     <string name="autocorrect_starting_letter_title">先頭文字の精度</string>

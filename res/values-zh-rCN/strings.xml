@@ -363,8 +363,6 @@
     <string name="autocorrect_min_word_frequency_desc">仅纠正到频率不低于此值的单词。</string>
     <string name="autocorrect_final_title">最终纠错</string>
     <string name="autocorrect_final_desc">对最终输出应用基于词典的纠错。</string>
-    <string name="autocorrect_style_title">纠错风格</string>
-    <string name="autocorrect_style_desc">整体纠错积极性预设。</string>
     <string name="autocorrect_typo_forgiveness_title">错别字容忍度</string>
     <string name="autocorrect_typo_forgiveness_desc">允许的最大字符差异（0~5）。</string>
     <string name="autocorrect_starting_letter_title">首字母精度</string>

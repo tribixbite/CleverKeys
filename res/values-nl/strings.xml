@@ -365,8 +365,6 @@
     <string name="autocorrect_min_word_frequency_desc">Alleen corrigeren naar woorden met frequentie >= dit</string>
     <string name="autocorrect_final_title">Definitieve autocorrectie</string>
     <string name="autocorrect_final_desc">Woordenboekgebaseerde correcties toepassen op de uiteindelijke uitvoer</string>
-    <string name="autocorrect_style_title">Correctiestijl</string>
-    <string name="autocorrect_style_desc">Algemene voorinstelling voor correctie-agressiviteit</string>
     <string name="autocorrect_typo_forgiveness_title">Typvergevingsgezindheid</string>
     <string name="autocorrect_typo_forgiveness_desc">Maximaal toegestaan tekenverschil (0–5)</string>
     <string name="autocorrect_starting_letter_title">Nauwkeurigheid beginletter</string>

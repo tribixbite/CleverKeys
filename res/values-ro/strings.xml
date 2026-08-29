@@ -387,8 +387,6 @@
     <string name="autocorrect_min_word_frequency_desc">Corectează doar cu cuvinte cu frecvență >= această valoare</string>
     <string name="autocorrect_final_title">Autocorectare finală</string>
     <string name="autocorrect_final_desc">Aplică corecții bazate pe dicționar la rezultatul final</string>
-    <string name="autocorrect_style_title">Stil de corectare</string>
-    <string name="autocorrect_style_desc">Presetare generală de agresivitate a corecției</string>
     <string name="autocorrect_typo_forgiveness_title">Toleranță erori de scriere</string>
     <string name="autocorrect_typo_forgiveness_desc">Diferența maximă de caractere permisă (0–5)</string>
     <string name="autocorrect_starting_letter_title">Acuratețe literă inițială</string>

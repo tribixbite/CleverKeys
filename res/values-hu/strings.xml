@@ -370,8 +370,6 @@
     <string name="autocorrect_min_word_frequency_desc">Csak olyan szavakra javítson, amelyek gyakorisága &gt;= ennyi</string>
     <string name="autocorrect_final_title">Végső automatikus javítás</string>
     <string name="autocorrect_final_desc">Szótáralapú javítások alkalmazása a végső kimenetre</string>
-    <string name="autocorrect_style_title">Javítási stílus</string>
-    <string name="autocorrect_style_desc">Az általános javítási agresszivitás előbeállítása</string>
     <string name="autocorrect_typo_forgiveness_title">Elgépelési tolerancia</string>
     <string name="autocorrect_typo_forgiveness_desc">Maximálisan megengedett karaktereltérés (0–5)</string>
     <string name="autocorrect_starting_letter_title">Kezdőbetű pontossága</string>

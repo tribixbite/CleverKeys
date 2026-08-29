@@ -8,7 +8,7 @@ import java.io.File
  * Drift guards for the dead/unwired-plumbing findings of the 2026-08-29 second-pass audit
  * (`docs/audit/2026-08-28-archive-verification.md`).
  *
- * The finding below has a failure mode that no compiler warning catches: code that is
+ * These findings share a failure mode that no compiler warning catches: code that is
  * reachable-by-linker but unreachable-by-execution, kept alive by blanket ProGuard keeps or
  * by a settings screen that writes a preference nothing reads. Deleting it once is not
  * enough — a later refactor can reintroduce the same shape. These scans pin the deletions.
@@ -16,6 +16,9 @@ import java.io.File
  *  - **ARC-084** — the CGR chain (`storeCGRPredictions` and everything it fed) had zero
  *    callers while CLAUDE.md and ADR-011 assert the project has no CGR. R8 shipped it
  *    anyway because `Keyboard2View`/`CleverKeysService` are covered by `-keep {*;}`.
+ *  - **ARC-085** — the "Correction Style" dropdown wrote `swipe_correction_preset`, which
+ *    no `Config`, predictor or engine adapter ever read: a control that responded to touch
+ *    and changed nothing.
  *
  * Source-scan convention (project root as CWD) matches [CoreImeHygieneDriftTest] and
  * [LearningWiringDriftTest].
@@ -81,6 +84,60 @@ class DeadPlumbingDriftTest {
                 "the project has no CGR. Do not reintroduce it; the swipe pipeline delivers " +
                 "predictions through InputCoordinator.handlePredictionResults.\nFound:\n" +
                 hits.joinToString("\n")
+        ).that(hits).isEmpty()
+    }
+
+    // ---------------------------------------------------------------- ARC-085
+
+    @Test
+    fun `ARC-085 - the dead swipe_correction_preset control is gone`() {
+        // The key survives in exactly ONE place: SettingsValidation.DEPRECATED_KEYS. That
+        // list is what stops a v1.5.x backup (which exported the key, because it was in
+        // SETTINGS_DEFAULTS) from showing a meaningless import-preview row and writing a
+        // dead key back into prefs. Anything BEYOND the tombstone is live plumbing again.
+        val tombstone = "tribixbite/cleverkeys/backup/SettingsValidation.kt"
+        val prefHits = occurrences(Regex("swipe_correction_preset"), allowedFiles = setOf(tombstone))
+        assertWithMessage(
+            "ARC-085: `swipe_correction_preset` is read by nothing — no Config field, no " +
+                "predictor, no engine adapter. The \"Correction Style\" dropdown that wrote it " +
+                "responded to touch and changed nothing. Only the " +
+                "SettingsValidation.DEPRECATED_KEYS tombstone may name it.\nFound:\n" +
+                prefHits.joinToString("\n")
+        ).that(prefHits).isEmpty()
+
+        // The Compose state field is what makes a dead key look alive (same reasoning the
+        // ARC-051 comment in SettingsActivity records for the six keys deleted before it).
+        val fieldHits = occurrences(Regex("\\bswipeCorrectionPreset\\b"))
+        assertWithMessage(
+            "ARC-085: the `swipeCorrectionPreset` Compose state field must go with the " +
+                "dropdown — a backing field loaded on every settings open and rewritten on " +
+                "every preference change is exactly what disguises a dead pref as a live one." +
+                "\nFound:\n" + fieldHits.joinToString("\n")
+        ).that(fieldHits).isEmpty()
+    }
+
+    @Test
+    fun `ARC-085 - the Correction Style strings are gone from every locale`() {
+        // Left behind, these are unused-translation lint warnings in 21 locales plus the
+        // default. res/ is scanned directly (the strings never had a Kotlin reference once
+        // the dropdown went).
+        val resDir = File("res")
+        check(resDir.isDirectory) {
+            "res/ not found at ${resDir.absolutePath} — drift test must run with project root as CWD."
+        }
+        val styleStrings = Regex("""<string name="autocorrect_style_(title|desc)"""")
+        val hits = resDir.walkTopDown()
+            .filter { it.isFile && it.name == "strings.xml" }
+            .flatMap { file ->
+                file.readLines().mapIndexedNotNull { index, line ->
+                    if (styleStrings.containsMatchIn(line)) "${file.path}:${index + 1}" else null
+                }
+            }
+            .toList()
+        assertWithMessage(
+            "ARC-085: `autocorrect_style_title` / `autocorrect_style_desc` labelled the deleted " +
+                "\"Correction Style\" dropdown. Every locale copy must go too, or lint reports " +
+                "unused translations.\nFound:\n" + hits.joinToString("\n")
         ).that(hits).isEmpty()
     }
 

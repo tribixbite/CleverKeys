@@ -382,8 +382,6 @@
     <string name="autocorrect_min_word_frequency_desc">Solo corregir con palabras con frecuencia ≥ este valor</string>
     <string name="autocorrect_final_title">Corrección automática final</string>
     <string name="autocorrect_final_desc">Aplica correcciones basadas en el diccionario a la salida final</string>
-    <string name="autocorrect_style_title">Estilo de corrección</string>
-    <string name="autocorrect_style_desc">Ajuste preestablecido general de agresividad de corrección</string>
     <string name="autocorrect_typo_forgiveness_title">Tolerancia a errores tipográficos</string>
     <string name="autocorrect_typo_forgiveness_desc">Diferencia máxima de caracteres permitida (0–5)</string>
     <string name="autocorrect_starting_letter_title">Precisión de letra inicial</string>
