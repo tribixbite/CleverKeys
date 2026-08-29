@@ -53,11 +53,22 @@ class TermuxDeletionInstrumentedTest {
      * `sendKeyEvent` does NOT delegate — a detached EditText has no terminal on the far end, and
      * the assertion is about which vocabulary the IME chose, not about what a pty would do with it.
      */
-    private class RecordingInputConnection(view: View) : BaseInputConnection(view, true) {
+    private class RecordingInputConnection(private val editText: EditText) :
+        BaseInputConnection(editText, true) {
         /** Key codes of ACTION_DOWN events only — one entry per logical key press. */
         val keyPresses = mutableListOf<Pair<Int, Int>>()
         val deleteSurroundingCalls = mutableListOf<Pair<Int, Int>>()
         val commits = mutableListOf<String>()
+
+        /**
+         * CRITICAL (first ew-cli run, 2026-08-29): a directly-constructed [BaseInputConnection]
+         * edits its OWN empty fake editable — the EditText's `setText` content was invisible to
+         * every `getTextBeforeCursor`/cursor-sync read, so the typed-partial branch found no
+         * prefix (0 deletions) and the leading-space probe read an empty buffer (6-vs-7 REPLACE
+         * count). Returning the EditText's real editable makes reads AND
+         * `deleteSurroundingText` operate on the text the tests seeded.
+         */
+        override fun getEditable(): android.text.Editable = editText.text
 
         override fun sendKeyEvent(event: KeyEvent): Boolean {
             if (event.action == KeyEvent.ACTION_DOWN) {
