@@ -671,6 +671,19 @@ class ContractionManager(private val context: Context) {
      * These are base words that ARE valid English words but also have
      * contraction variants. Both forms should appear in predictions.
      * Example: "well" (adverb) and "we'll" (we will) are both valid.
+     *
+     * ADDITIVE and EARLIER-WINS on the variant list, mirroring
+     * [loadLanguagePairedContractions]. The dedup is not cosmetic: this loader runs AFTER
+     * [loadBinaryContractions], which derives its own paired map from `contractions.bin`
+     * (every known contraction that is not a non-paired VALUE becomes `variant-without-
+     * apostrophes -> variant`). The two sources overlap on 599 of 2,258 bases — including
+     * `ill -> i'll` and `id -> i'd` — so a blind `add()` produced `["i'll", "i'll"]`, which
+     * `SuggestionHandler` injected verbatim and the user saw as `I'll` at bar ranks 0 AND 1
+     * (measured 2026-08-28, `docs/eval/2026-08-28-arc019-ctc-local-head2head.md` §4). The
+     * possessive bases (`times -> time's`, `boards -> board's`, …) doubled the same way.
+     *
+     * The swipe path was already immune — `ContractionOverlay.apply` dedups on emit — so this
+     * only ever surfaced on the tap path.
      */
     private fun loadPairedContractions() {
         val inputStream = assetManager.open("dictionaries/contraction_pairings.json")
@@ -690,8 +703,11 @@ class ContractionManager(private val context: Context) {
                 val contraction = contractionObj.getString("contraction").lowercase()
 
                 knownContractions.add(contraction)
-                pairedContractions.getOrPut(lowerBase) { mutableListOf() }.add(contraction)
-                pairedCount++
+                val existing = pairedContractions.getOrPut(lowerBase) { mutableListOf() }
+                if (contraction !in existing) {
+                    existing.add(contraction)
+                    pairedCount++
+                }
             }
         }
 

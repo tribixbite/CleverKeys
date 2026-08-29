@@ -298,37 +298,74 @@ class ContractionFlickerTest {
         assertTrue("Must include 'he's'", "he's" in variants!!)
     }
 
+    /**
+     * These call the REAL [ContractionInjectionPolicy] rather than re-implementing the floor
+     * inline. The inline copies silently kept asserting the pre-2026-08-29 rule after
+     * SuggestionHandler moved on, which is how a mirror test becomes coverage theatre.
+     */
     @Test
     fun prefixGuard_pipelineSkipsSingleCharPairedInjection() {
-        // Simulate the pipeline logic: for prefix "t" (len < 3),
-        // paired contraction injection should be skipped
         val prefix = "t"
-        val pairedVariants = if (prefix.length >= 3) contractionManager.getPairedContractions(prefix) else null
-        assertNull(
-            "Paired contractions must be skipped for single-char prefix 't'",
-            pairedVariants
+        val pairedVariants = ContractionInjectionPolicy.injectableVariants(
+            prefix, contractionManager.getPairedContractions(prefix)
+        )
+        assertTrue(
+            "Paired contractions must be skipped for single-char prefix 't'. Got: $pairedVariants",
+            pairedVariants.isEmpty()
         )
     }
 
     @Test
-    fun prefixGuard_pipelineSkipsTwoCharPairedInjection() {
+    fun prefixGuard_pipelineSkipsTwoCharPronounPairedInjection() {
+        // Two-letter PRONOUN bases stay blocked: `he` is a very high-frequency literal and
+        // three injected variants would bury it.
         val prefix = "he"
-        val pairedVariants = if (prefix.length >= 3) contractionManager.getPairedContractions(prefix) else null
-        assertNull(
-            "Paired contractions must be skipped for two-char prefix 'he'",
-            pairedVariants
+        val pairedVariants = ContractionInjectionPolicy.injectableVariants(
+            prefix, contractionManager.getPairedContractions(prefix)
+        )
+        assertTrue(
+            "Paired contractions must be skipped for two-char prefix 'he'. Got: $pairedVariants",
+            pairedVariants.isEmpty()
+        )
+    }
+
+    /** UT-7's fix: `id` is the only two-letter base whose contraction may inject. */
+    @Test
+    fun prefixGuard_pipelineAllowsTwoCharFirstPersonPairedInjection() {
+        val prefix = "id"
+        val pairedVariants = ContractionInjectionPolicy.injectableVariants(
+            prefix, contractionManager.getPairedContractions(prefix)
+        )
+        assertEquals(
+            "Two-char first-person base 'id' must inject exactly [i'd]",
+            listOf("i'd"), pairedVariants
         )
     }
 
     @Test
     fun prefixGuard_pipelineAllowsThreeCharPairedInjection() {
         val prefix = "its"
-        val pairedVariants = if (prefix.length >= 3) contractionManager.getPairedContractions(prefix) else null
-        assertNotNull(
-            "Paired contractions must be allowed for three-char prefix 'its'",
-            pairedVariants
+        val pairedVariants = ContractionInjectionPolicy.injectableVariants(
+            prefix, contractionManager.getPairedContractions(prefix)
         )
-        assertTrue("Must include 'it's'", "it's" in pairedVariants!!)
+        assertTrue("Must include 'it's'. Got: $pairedVariants", "it's" in pairedVariants)
+    }
+
+    /**
+     * The doubled `I'll`: the binary-derived pairs and `contraction_pairings.json` both carry
+     * `ill -> i'll`, and before the loader dedup the merged list held it twice — which the tap
+     * path injected verbatim (bar ranks 0 AND 1, measured 2026-08-28).
+     */
+    @Test
+    fun pairedContractions_holdNoDuplicateVariants() {
+        for (base in listOf("ill", "id", "its", "well", "times", "boards")) {
+            val variants = contractionManager.getPairedContractions(base) ?: continue
+            assertEquals(
+                "'$base' must hold no repeated paired variant. Got: $variants",
+                variants.size,
+                variants.map { it.lowercase() }.toSet().size
+            )
+        }
     }
 
     @Test

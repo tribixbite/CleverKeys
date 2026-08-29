@@ -2089,25 +2089,46 @@ class SuggestionHandler(
                 val contractionWords = mutableListOf<String>()
                 val contractionScores = mutableListOf<Int>()
 
+                // Final-list dedup for the injection block. Every injected surface goes
+                // through here, so no two injection routes can put the SAME user-visible
+                // string in the bar twice. Keyed on the post-[capitalizeIWord] surface
+                // (case-sensitive) because that is exactly what the user reads: `i'll` from
+                // one route and `I'll` from another are one suggestion, not two. Distinct
+                // words are untouched, so ordering semantics are unchanged.
+                fun injectContraction(surface: String, score: Int) {
+                    if (contractionWords.any { it == surface }) return
+                    contractionWords.add(surface)
+                    contractionScores.add(score)
+                }
+
                 // Check if the exact partial is a non-paired contraction key (e.g., dont → don't)
                 val contractionMapping = replaceModeContractionFor(partial)
                 if (contractionMapping != null) {
                     // Add contraction as first suggestion with high score
                     // Issue #72: Also capitalize I-contractions (im → I'm, ill → I'll)
-                    contractionWords.add(capitalizeIWord(contractionMapping))
-                    contractionScores.add(prediction.scores.firstOrNull()?.plus(1000) ?: 10000)
+                    injectContraction(
+                        capitalizeIWord(contractionMapping),
+                        prediction.scores.firstOrNull()?.plus(1000) ?: 10000
+                    )
                 }
 
-                // Check if the exact partial is a paired contraction base (e.g., its → it's)
-                // Paired contractions are words where BOTH the base and contraction are valid
-                // Only inject paired contractions for prefixes >= 3 chars to avoid
-                // corrupting frequency ranking with possessive forms (t→t's, a→a's)
-                val pairedVariants = if (partial.length >= 3) contractionManager.getPairedContractions(partial) else null
-                if (pairedVariants != null && contractionMapping == null) {
+                // Check if the exact partial is a paired contraction base (e.g., its → it's).
+                // Paired contractions are words where BOTH the base and the contraction are
+                // valid, so the variants are APPENDED alongside the literal, never in place of
+                // it. Which variants are eligible — and the length floor that keeps possessive
+                // noise (t→t's, a→a's) and the high-frequency two-letter pronoun bases
+                // (it/we/he/do) out of the bar, while letting `id → i'd` through — is
+                // [ContractionInjectionPolicy]; read its KDoc before changing the rule.
+                val pairedVariants = ContractionInjectionPolicy.injectableVariants(
+                    partial, contractionManager.getPairedContractions(partial)
+                )
+                if (contractionMapping == null) {
                     // Add paired variants as high-priority suggestions alongside the base word
                     for (variant in pairedVariants) {
-                        contractionWords.add(capitalizeIWord(variant))
-                        contractionScores.add(prediction.scores.firstOrNull()?.plus(500) ?: 5000)
+                        injectContraction(
+                            capitalizeIWord(variant),
+                            prediction.scores.firstOrNull()?.plus(500) ?: 5000
+                        )
                     }
                 }
 

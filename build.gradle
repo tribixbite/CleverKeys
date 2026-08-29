@@ -501,6 +501,10 @@ tasks.register('runPureTests', JavaExec) {
     // a word the beam can emit, values may differ from their key by apostrophes/hyphens
     // only, and the empty files (es/pt/sv) are pinned as linguistically correct.
     'tribixbite.cleverkeys.swipe.BundledContractionDataTest',
+    // ARC-013 / UT-7 (2026-08-29): which PAIRED variants the TAP path may inject. Pins the
+    // `id -> i'd` relaxation to exactly one shipped base, and pins the two English paired
+    // sources' overlap (the doubled `I'll` at bar ranks 0+1) as deduped after the merge.
+    'tribixbite.cleverkeys.ContractionInjectionPolicyTest',
     'tribixbite.cleverkeys.swipe.geometric.GeoPurityDriftTest',
     'tribixbite.cleverkeys.swipe.geometric.CkdtReaderTest',
     'tribixbite.cleverkeys.swipe.geometric.GeoProjectionTest',

@@ -86,6 +86,40 @@ the apostrophe surfaces are produced by SuggestionHandler's injection layer, not
 (`im`/`ill`/`id` are real dictionary words, so the alias-skip guard excludes their alias keys
 from the prefix index). The committed test measures the user-visible bar.
 
+### Addendum 2026-08-29 — both defects fixed, and BOTH root-cause guesses above were wrong
+
+The measurement stands; the two diagnoses attached to it did not survive contact with the code.
+Recording the miss, because both errors have the same shape — *inferring a cause from a symptom
+without reading the layer that produces it*:
+
+1. **"needs a paired `id → i'd` contraction-data decision"** — there was nothing to decide.
+   `contraction_pairings.json` has carried `id → [{"contraction": "i'd", "frequency": 200}]` all
+   along, and `contractions.bin` derives the same pair independently. The absence was a CODE
+   guard: `SuggestionHandler` injected paired variants only for `partial.length >= 3`, and `id`
+   is two letters. So the fix touched no data — no regeneration, no collision-sidecar rebuild, no
+   new REPLACE key, and none of the four guards had anything to say about it. The floor now lives
+   in `ContractionInjectionPolicy`, which admits a first-person contraction (`i'…`, excluding the
+   letter-possessive `i's`) at two characters and nothing else; verified against the full shipped
+   table, **exactly one** base changes behaviour. The two-letter pronoun bases (`it`, `we`, `he`,
+   `do`) stay blocked deliberately — injecting three or four variants ahead of those very
+   high-frequency literals is a ranking change that would need its own measurement.
+
+2. **"two injection paths producing the same surface without dedup"** — there is only one
+   injection path. `ContractionManager.loadPairedContractions` merged
+   `contraction_pairings.json` on top of the pairs `loadBinaryContractions` had already derived,
+   using a blind `add()` where the sibling per-language loader had always checked membership. The
+   two English sources overlap on **599 of 2,258 bases**, so `getPairedContractions("ill")`
+   returned `["i'll", "i'll"]` and the single injection loop emitted it twice. Every doubled
+   possessive (`times → time's` twice, `boards → board's` twice) came from the same line. Fixed at
+   the loader, with a final-list guard in the injection block so a future third source cannot
+   re-open it. The swipe path was never affected — `ContractionOverlay.apply` dedups on emit.
+
+Pinned by `ContractionInjectionPolicyTest` (pure, incl. the one-base blast-radius check),
+`ContractionFlickerTest`'s rewritten prefix-guard cases, and
+`ContractionSentenceStartMeasureTest`, which keeps logging ranks but now asserts presence and
+no-duplicate-surface — the `id` case flipped from documenting the absence to pinning the fix.
+Device confirmation is owed on the next ew-cli run.
+
 ## Provenance
 
 - Corpus: `~/.cache/cleverkeys-test/combined_english_swipes.jsonl.gz` (local-only, never

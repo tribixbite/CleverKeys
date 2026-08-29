@@ -134,6 +134,17 @@ class ContractionSentenceStartMeasureTest {
      * One case per test method: the harness has no public typed-word reset, and a fresh
      * [SuggestionHandler] per `@Before` (the [ContractionFlickerIntegrationTest] pattern)
      * is the clean isolation. Bar may capitalize (I'm) — matched case-insensitively.
+     *
+     * Still a MEASUREMENT — the ranks are logged, not asserted, because ordering is a product
+     * question this test does not decide. What IS asserted are the two defects the 2026-08-28
+     * run found and 2026-08-29 fixed, so neither can come back silently:
+     *
+     *  - **presence**: the contraction must reach the bar. `id` produced
+     *    `[id, idea, ideas, ideal, idiot]` — `i'd` absent — because the paired-injection floor
+     *    was `length >= 3` and `id` is two letters ([ContractionInjectionPolicy]).
+     *  - **no duplicate surface**: `ill` produced `[I'll, I'll, ill, illegal, …]` — the two
+     *    English paired-contraction sources overlap and the variant list carried `i'll` twice
+     *    (`ContractionManager.loadPairedContractions`).
      */
     private fun measure(typed: String, contraction: String) {
         val bar = barAfterTyping(typed)
@@ -160,9 +171,39 @@ class ContractionSentenceStartMeasureTest {
                 "(wiring sanity; the ranks above are the measurement)",
             bar.isNotEmpty()
         )
+        assertTrue(
+            "contraction '$contraction' must be PRESENT in the bar for typed '$typed' " +
+                "(was absent for 'id' before the ContractionInjectionPolicy fix). Got: $bar",
+            cRank >= 0
+        )
+        val duplicated = bar.groupBy { it }.filterValues { it.size > 1 }.keys
+        assertTrue(
+            "bar must hold no duplicate surface for typed '$typed' " +
+                "(I'll appeared at ranks 0 AND 1 before the loader dedup). Duplicated: " +
+                "$duplicated in $bar",
+            duplicated.isEmpty()
+        )
     }
 
     @Test fun rank_im() = measure("im", "i'm")
     @Test fun rank_ill() = measure("ill", "i'll")
+
+    /**
+     * Was the absence-tell: this case documented `i'd` missing from the bar entirely. It now
+     * PINS the presence — the literal "id" is a real word and keeps its slot (PAIRED mode), and
+     * `i'd` is injected alongside it.
+     */
     @Test fun rank_id() = measure("id", "i'd")
+
+    /** PAIRED mode's other half: the literal must never be destroyed by the injection. */
+    @Test
+    fun literalIdSurvivesTheInjection() {
+        val bar = barAfterTyping("id")
+        android.util.Log.i("UT7Measure", "typed='id' bar=${bar.take(6)} (literal-survival check)")
+        assertTrue(
+            "'id' is a real word — PAIRED injection must keep it in the bar, not replace it. " +
+                "Got: $bar",
+            bar.any { it.equals("id", ignoreCase = true) }
+        )
+    }
 }

@@ -146,6 +146,37 @@ not a bug.
 
 ---
 
+## 6b. The TAP path has its own injection floor — and the data being present proves nothing
+
+`ContractionManager` decides *what a key maps to*. `ContractionInjectionPolicy` decides *whether
+the tap path offers it at all*, and the two disagree on purpose:
+
+- **`length >= 3`** for PAIRED bases. `contraction_pairings.json` is 1,178 possessives out of
+  1,744 bases, and a possessive's apostrophe-free key is often one or two letters (`t → t's`,
+  `as → a's`, `cd → cd's`). Injected at `top score + 500` those outrank `the`.
+- The floor also blocks the two-letter PRONOUN bases (`it`, `we`, `he`, `do`) — not accidental
+  fallout. Those literals are far more likely than their contractions, and three or four injected
+  variants would bury them. Unblocking them is a ranking decision that needs a measurement.
+- **One exception**: a first-person contraction at two characters. The I-contractions are a closed
+  set (`i'm`, `i'll`, `i've`, `i'd`); three have three-letter bases and always injected, `id` is
+  the only two-letter one and was silently absent from the bar for the whole life of the floor
+  (measured 2026-08-28). The predicate excludes `i's` specifically, or typing `is` would surface
+  the plural of the letter I.
+
+**The trap this closes**: `id → i'd` was in the shipped data the entire time. A grep of the data
+files "proves" a mapping exists while the user never sees it, because reachability is decided two
+layers away — in the CTC trie (§6) for swipe, and here for tap. When a mapping is reported
+missing, check the injection layer BEFORE touching data; a data change that was never needed
+costs a regeneration plus a collision-sidecar rebuild (§10) for nothing.
+
+**Second trap, same area**: `loadPairedContractions` (English) and `loadLanguagePairedContractions`
+(per-language) merge into the SAME map, and only the second had a membership check. English loads
+`contraction_pairings.json` on top of the pairs `loadBinaryContractions` already derived from
+`contractions.bin`, and the two overlap on 599 of 2,258 bases — so `getPairedContractions("ill")`
+returned `["i'll", "i'll"]` and the bar showed `I'll` at ranks 0 AND 1. Both loaders are now
+earlier-wins with a membership check. The swipe path never showed it: `ContractionOverlay.apply`
+dedups on emit.
+
 ## 7. Empty files are CORRECT, not unfinished
 
 `es`, `pt`, `sv` ship zero contractions, and the tests assert the positive linguistic evidence:
@@ -235,6 +266,8 @@ guard.
 | cache scope rejects a different language set | `ContractionCollisionScannerTest` (instrumented) |
 | every language selector rescans | `CoreImeHygieneDriftTest` |
 | no REPLACE lookup bypasses the user-word guard | `CoreImeHygieneDriftTest` |
+| tap-path paired injection: floor + the one first-person exception, and the merged variant list holds no repeat | `ContractionInjectionPolicyTest` (pure) + `ContractionFlickerTest` (instrumented) |
+| `i'd` reaches the bar for typed `id`, `id` survives beside it, no duplicate surface for `ill` | `ContractionSentenceStartMeasureTest` (instrumented) |
 | injected key surfaces but never outranks a real word | `CtcContractionRankingTest` |
 | language isolation (no code-switched output) | `SwipeContractionLanguageIsolationTest` |
 

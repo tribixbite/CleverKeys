@@ -314,8 +314,19 @@ class BackspaceUndoTest {
     fun `pipeline has minimum prefix length for paired contractions`() {
         // Paired contraction injection for 1-2 char prefixes corrupts frequency
         // ranking (e.g., "t" → "t's" outranks "the"). The single pipeline must guard.
+        //
+        // 2026-08-29: the floor moved out of an inline `partial.length >= 3` into
+        // ContractionInjectionPolicy, which owns the whole rule — the floor PLUS its one
+        // documented exception (`id → i'd`, the only two-letter first-person base; UT-7).
+        // So this now pins two things: the pipeline delegates rather than hand-rolling, and the
+        // floor still exists in the policy. `ContractionInjectionPolicyTest` pins the behaviour.
         val sugHandler = readSource("SuggestionHandler.kt")
-        assertThat(sugHandler).contains("partial.length >= 3")
+        assertThat(sugHandler).contains("ContractionInjectionPolicy.injectableVariants(")
+        assertThat(sugHandler).doesNotContain("partial.length >= 3")
+
+        val policy = readSource("ContractionInjectionPolicy.kt")
+        assertThat(policy).contains("MIN_BASE_LENGTH = 3")
+        assertThat(policy).contains("partial.length >= MIN_BASE_LENGTH")
     }
 
     @Test
