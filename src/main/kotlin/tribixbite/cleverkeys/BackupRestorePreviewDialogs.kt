@@ -12,6 +12,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -52,7 +54,11 @@ fun SettingsImportPreviewDialog(
 
                     val modified = plan.changes.filter { it.type == ChangeType.MODIFIED }
                     if (modified.isNotEmpty()) {
-                        item { SectionHeader("Modified (${modified.size})") }
+                        item {
+                            SectionHeader(
+                                stringResource(R.string.import_preview_modified, modified.size)
+                            )
+                        }
                         items(modified, key = { it.key }) { change ->
                             SettingsChangeRow(
                                 change = change,
@@ -64,7 +70,11 @@ fun SettingsImportPreviewDialog(
 
                     val added = plan.changes.filter { it.type == ChangeType.ADDED }
                     if (added.isNotEmpty()) {
-                        item { SectionHeader("Added (${added.size})") }
+                        item {
+                            SectionHeader(
+                                stringResource(R.string.import_preview_added, added.size)
+                            )
+                        }
                         items(added, key = { it.key }) { change ->
                             SettingsChangeRow(
                                 change = change,
@@ -75,7 +85,7 @@ fun SettingsImportPreviewDialog(
                     }
 
                     if (plan.shortSwipeImportSize > 0) {
-                        item { SectionHeader("Short-swipe customizations") }
+                        item { SectionHeader(stringResource(R.string.import_preview_short_swipe_header)) }
                         // Diff section (above the radio) shows exactly which
                         // key+direction mappings change. Null when current
                         // state couldn't be captured — radio still works.
@@ -115,17 +125,20 @@ private fun SettingsPreviewTopBar(
     onApply: () -> Unit,
 ) {
     TopAppBar(
-        title = { Text("Import preview") },
+        title = { Text(stringResource(R.string.import_preview_title)) },
         navigationIcon = {
             IconButton(onClick = onCancel) {
-                Icon(Icons.Filled.ArrowBack, contentDescription = "Cancel preview")
+                Icon(
+                        Icons.Filled.ArrowBack,
+                        contentDescription = stringResource(R.string.import_preview_cancel_desc)
+                    )
             }
         },
         actions = {
             // Always enabled — empty selection means "Nothing imported" result
             // (see spec §Error handling).
             TextButton(onClick = onApply) {
-                Text("Apply ($appliedCount)")
+                Text(stringResource(R.string.import_preview_apply, appliedCount))
             }
         }
     )
@@ -186,15 +199,28 @@ private fun SettingsPreviewHeaderCard(plan: SettingsImportPlan) {
             // ARC-036: file provenance first — it qualifies everything below it.
             BackupSourceNotice(plan.source)
             Spacer(Modifier.height(8.dp))
-            Text("Source: ${plan.sourceVersion}", fontWeight = FontWeight.SemiBold)
+            Text(
+                stringResource(R.string.import_preview_source_version, plan.sourceVersion),
+                fontWeight = FontWeight.SemiBold
+            )
             val s = plan.sourceScreen
             val c = plan.currentScreen
-            Text("Source screen: ${s.width}\u00d7${s.height}@${s.density}", fontSize = 12.sp)
-            Text("Current screen: ${c.width}\u00d7${c.height}@${c.density}", fontSize = 12.sp)
+            Text(
+                stringResource(
+                    R.string.import_preview_source_screen, s.width, s.height, s.density
+                ),
+                fontSize = 12.sp
+            )
+            Text(
+                stringResource(
+                    R.string.import_preview_current_screen, c.width, c.height, c.density
+                ),
+                fontSize = 12.sp
+            )
             if (s.width != c.width || s.height != c.height) {
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    text = "Screen-size mismatch — some visual settings may need adjustment.",
+                    text = stringResource(R.string.import_preview_screen_mismatch),
                     color = MaterialTheme.colorScheme.error,
                     fontSize = 12.sp,
                 )
@@ -481,10 +507,18 @@ private fun ShortSwipeDiffSummary(diff: ShortSwipeDiff) {
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
         // Headline counts on one line for at-a-glance reading.
         val countParts = buildList {
-            if (diff.added.isNotEmpty())    add("+${diff.added.size} new")
-            if (diff.removed.isNotEmpty())  add("\u2212${diff.removed.size} removed")
-            if (diff.changed.isNotEmpty())  add("~${diff.changed.size} changed")
-            if (diff.unchanged > 0)         add("(${diff.unchanged} unchanged)")
+            if (diff.added.isNotEmpty()) {
+                add(stringResource(R.string.import_preview_diff_new, diff.added.size))
+            }
+            if (diff.removed.isNotEmpty()) {
+                add(stringResource(R.string.import_preview_diff_removed, diff.removed.size))
+            }
+            if (diff.changed.isNotEmpty()) {
+                add(stringResource(R.string.import_preview_diff_changed, diff.changed.size))
+            }
+            if (diff.unchanged > 0) {
+                add(stringResource(R.string.import_preview_diff_unchanged, diff.unchanged))
+            }
         }
         Text(
             countParts.joinToString("  "),
@@ -525,7 +559,7 @@ private fun ShortSwipeModeRadio(
 ) {
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
         Text(
-            "$size short-swipe mappings in this backup",
+            stringResource(R.string.import_preview_short_swipe_count, size),
             fontWeight = FontWeight.SemiBold,
         )
         ShortSwipeImportMode.entries.forEach { mode ->
@@ -542,18 +576,18 @@ private fun ShortSwipeModeRadio(
             ) {
                 RadioButton(selected = (mode == selected), onClick = null)
                 Spacer(Modifier.width(8.dp))
-                Text(when (mode) {
-                    ShortSwipeImportMode.SKIP -> "Skip — don't import"
-                    ShortSwipeImportMode.MERGE -> "Merge — fill gaps, preserve existing (recommended)"
-                    ShortSwipeImportMode.REPLACE -> "Replace — wipe existing, install file's set"
-                })
+                Text(stringResource(when (mode) {
+                    ShortSwipeImportMode.SKIP -> R.string.import_preview_short_swipe_skip
+                    ShortSwipeImportMode.MERGE -> R.string.import_preview_short_swipe_merge
+                    ShortSwipeImportMode.REPLACE -> R.string.import_preview_short_swipe_replace
+                }))
             }
         }
         // Warning only when REPLACE is the active selection — see spec
         // "Red warning text shown only when REPLACE is selected".
         if (selected == ShortSwipeImportMode.REPLACE) {
             Text(
-                text = "This will REPLACE all your existing short-swipe customizations with the file's $size mappings.",
+                text = stringResource(R.string.import_preview_short_swipe_warning, size),
                 color = MaterialTheme.colorScheme.error,
                 fontSize = 11.sp,
                 modifier = Modifier.padding(start = 48.dp, top = 4.dp),
@@ -568,8 +602,11 @@ private fun SkippedSection(skipped: List<SkippedKey>) {
     Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
         TextButton(onClick = { expanded = !expanded }) {
             Text(
-                if (expanded) "\u25bc Invalid/skipped (${skipped.size}) — tap to collapse"
-                else "\u25b6 Invalid/skipped (${skipped.size}) — tap to expand",
+                stringResource(
+                    if (expanded) R.string.import_preview_skipped_collapse
+                    else R.string.import_preview_skipped_expand,
+                    skipped.size,
+                ),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
@@ -602,6 +639,9 @@ private fun LanguageSection(
     onToggleAll: (lang: String, allOn: Boolean) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
+    // `metadata` is a plain (String) -> String lambda handed to LangSubgroup, so it cannot
+    // call stringResource; it formats through the Context instead.
+    val ctx = LocalContext.current
     val totalCount = changes.newCustomWords.size + changes.newDisabledWords.size
     val excludedCount = changes.newCustomWords.keys.count { LangWord(lang, it) in excludedCustom } +
         changes.newDisabledWords.count { LangWord(lang, it) in excludedDisabled }
@@ -634,26 +674,35 @@ private fun LanguageSection(
                 modifier = Modifier.weight(1f),
             )
             Text(
-                text = "$selectedCount of $totalCount selected",
+                text = stringResource(R.string.import_preview_selected_count, selectedCount, totalCount),
                 fontSize = 12.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.width(8.dp))
             TextButton(onClick = { expanded = !expanded }) {
-                Text(if (expanded) "Hide" else "Expand")
+                Text(
+                    stringResource(
+                        if (expanded) R.string.import_preview_hide
+                        else R.string.import_preview_expand
+                    )
+                )
             }
         }
 
         if (expanded) {
             LangSubgroup(
-                title = "Custom words (${changes.newCustomWords.size})",
+                title = stringResource(R.string.import_preview_custom_words, changes.newCustomWords.size),
                 words = changes.newCustomWords.keys.toList(),
                 isExcluded = { word -> LangWord(lang, word) in excludedCustom },
                 onToggle = { word -> onToggleWord(LangWord(lang, word), true) },
-                metadata = { word -> changes.newCustomWords[word]?.let { "freq $it" } ?: "" },
+                metadata = { word ->
+                    changes.newCustomWords[word]
+                        ?.let { freq -> ctx.getString(R.string.import_preview_word_freq, freq) }
+                        ?: ""
+                },
             )
             LangSubgroup(
-                title = "Disabled words (${changes.newDisabledWords.size})",
+                title = stringResource(R.string.import_preview_disabled_words, changes.newDisabledWords.size),
                 words = changes.newDisabledWords,
                 isExcluded = { word -> LangWord(lang, word) in excludedDisabled },
                 onToggle = { word -> onToggleWord(LangWord(lang, word), false) },
@@ -681,7 +730,7 @@ private fun LangSubgroup(
         OutlinedTextField(
             value = query,
             onValueChange = { query = it },
-            placeholder = { Text("Search\u2026") },
+            placeholder = { Text(stringResource(R.string.import_preview_search_hint)) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -748,7 +797,7 @@ fun DictionaryImportPreviewDialog(
         Surface(modifier = Modifier.fillMaxSize()) {
             Column(modifier = Modifier.fillMaxSize()) {
                 TopAppBar(
-                    title = { Text("Dictionary import preview") },
+                    title = { Text(stringResource(R.string.import_preview_dict_title)) },
                     navigationIcon = {
                         IconButton(onClick = onCancel) {
                             Icon(Icons.Filled.ArrowBack, contentDescription = "Cancel preview")
@@ -758,7 +807,7 @@ fun DictionaryImportPreviewDialog(
                         TextButton(onClick = {
                             onApply(excludedCustom.value, excludedDisabled.value)
                         }) {
-                            Text("Apply ($applyCount)")
+                            Text(stringResource(R.string.import_preview_apply, applyCount))
                         }
                     },
                 )

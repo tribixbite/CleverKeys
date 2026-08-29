@@ -29,6 +29,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -92,25 +93,23 @@ class GeometricSettingsActivity : ComponentActivity() {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = "Geometric Engine Settings",
+                text = stringResource(R.string.geo_settings_title),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
             )
 
             Text(
-                text = "Tune the geometric (shape-matching) swipe engine used on non-QWERTY " +
-                    "layouts in Hybrid mode, or on all layouts in Geometric mode. Other engine " +
-                    "parameters are calibrated against measured accuracy and are not adjustable.",
+                text = stringResource(R.string.geo_settings_intro),
                 fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 lineHeight = 20.sp
             )
 
-            ParameterSection("Decoding") {
+            ParameterSection(stringResource(R.string.geo_settings_decoding_section)) {
                 ParameterSlider(
-                    title = "Max Suggestions",
-                    description = "Ranked candidates emitted per swipe (suggestion bar shows the top few).",
+                    title = stringResource(R.string.geo_settings_max_suggestions_title),
+                    description = stringResource(R.string.geo_settings_max_suggestions_desc),
                     value = maxResults.toFloat(),
                     // Ranges come from GeoKnobRanges (shared with the adapter's clamps, m-2).
                     valueRange = GeoKnobRanges.MAX_RESULTS.first.toFloat()..
@@ -124,9 +123,8 @@ class GeometricSettingsActivity : ComponentActivity() {
                 )
 
                 ParameterSlider(
-                    title = "Frequency Weight",
-                    description = "Bias toward common words vs. exact shape fidelity. Higher = " +
-                        "common words win more often; 0 = pure shape matching.",
+                    title = stringResource(R.string.geo_settings_freq_weight_title),
+                    description = stringResource(R.string.geo_settings_freq_weight_desc),
                     value = frequencyWeight,
                     valueRange = GeoKnobRanges.FREQUENCY_WEIGHT,
                     steps = 39,
@@ -138,9 +136,8 @@ class GeometricSettingsActivity : ComponentActivity() {
                 )
 
                 ParameterSlider(
-                    title = "Endpoint Tolerance",
-                    description = "Forgiveness for sloppy swipe start/end positions, in key widths. " +
-                        "Higher = more forgiving; too high can surface wrong first/last letters.",
+                    title = stringResource(R.string.geo_settings_endpoint_title),
+                    description = stringResource(R.string.geo_settings_endpoint_desc),
                     value = endpointInsetKw,
                     valueRange = GeoKnobRanges.ENDPOINT_INSET_KW,
                     steps = 15,
@@ -161,7 +158,7 @@ class GeometricSettingsActivity : ComponentActivity() {
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Reset to Calibrated Defaults")
+                Text(stringResource(R.string.geo_settings_reset))
             }
         }
     }

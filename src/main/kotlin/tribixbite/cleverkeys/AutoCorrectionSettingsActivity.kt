@@ -16,6 +16,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -138,10 +139,13 @@ class AutoCorrectionSettingsActivity : ComponentActivity(), SharedPreferences.On
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("Auto-Correction Settings") },
+                    title = { Text(stringResource(R.string.autocorrect_settings_title)) },
                     navigationIcon = {
                         IconButton(onClick = { finish() }) {
-                            Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                            Icon(
+                                Icons.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.common_back)
+                            )
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -179,13 +183,13 @@ class AutoCorrectionSettingsActivity : ComponentActivity(), SharedPreferences.On
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "Enable Auto-Correction",
+                                    text = stringResource(R.string.autocorrect_enable_title),
                                     color = MaterialTheme.colorScheme.onSurface,
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.SemiBold
                                 )
                                 Text(
-                                    text = "Automatically correct misspelled words while typing",
+                                    text = stringResource(R.string.autocorrect_activity_enable_desc),
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 12.sp
                                 )
@@ -214,16 +218,13 @@ class AutoCorrectionSettingsActivity : ComponentActivity(), SharedPreferences.On
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = "About Auto-Correction",
+                            text = stringResource(R.string.autocorrect_about_title),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Auto-correction compares typed words against the dictionary using " +
-                                    "Levenshtein distance algorithm. Words are corrected if they match " +
-                                    "closely enough (character match threshold) and appear frequently " +
-                                    "in the dictionary (minimum frequency).",
+                            text = stringResource(R.string.autocorrect_about_body),
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             lineHeight = 16.sp
@@ -245,7 +246,7 @@ class AutoCorrectionSettingsActivity : ComponentActivity(), SharedPreferences.On
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             Text(
-                                text = "Correction Parameters",
+                                text = stringResource(R.string.autocorrect_params_title),
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onSurface
@@ -253,8 +254,8 @@ class AutoCorrectionSettingsActivity : ComponentActivity(), SharedPreferences.On
 
                             // Min Word Length Slider
                             SliderSetting(
-                                title = "Minimum Word Length",
-                                description = "Only correct words with at least this many characters",
+                                title = stringResource(R.string.autocorrect_min_word_length_title),
+                                description = stringResource(R.string.autocorrect_activity_min_length_desc),
                                 value = minWordLength.toFloat(),
                                 valueRange = 2f..10f,
                                 steps = 8,
@@ -267,8 +268,8 @@ class AutoCorrectionSettingsActivity : ComponentActivity(), SharedPreferences.On
 
                             // Char Match Threshold Slider
                             SliderSetting(
-                                title = "Character Match Threshold",
-                                description = "Minimum similarity ratio for correction (higher = stricter)",
+                                title = stringResource(R.string.autocorrect_char_match_threshold_title),
+                                description = stringResource(R.string.autocorrect_activity_match_threshold_desc),
                                 value = charMatchThreshold,
                                 valueRange = 0.5f..1.0f,
                                 steps = 50,
@@ -282,8 +283,8 @@ class AutoCorrectionSettingsActivity : ComponentActivity(), SharedPreferences.On
 
                             // Min Frequency Slider
                             SliderSetting(
-                                title = "Minimum Frequency",
-                                description = "Only suggest words that appear at least this often in the dictionary",
+                                title = stringResource(R.string.autocorrect_activity_min_freq_title),
+                                description = stringResource(R.string.autocorrect_activity_min_freq_desc),
                                 value = minFrequency.toFloat(),
                                 valueRange = 100f..2000f,
                                 steps = 19,
@@ -315,7 +316,7 @@ class AutoCorrectionSettingsActivity : ComponentActivity(), SharedPreferences.On
                             containerColor = MaterialTheme.colorScheme.surfaceVariant
                         )
                     ) {
-                        Text("Reset to Defaults")
+                        Text(stringResource(R.string.autocorrect_reset))
                     }
                 }
             }

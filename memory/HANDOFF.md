@@ -134,8 +134,34 @@ log and the verification doc before re-deriving anything. Still open:
   the hard non-empty French control in `secondaryLanguageDecode_…` (was conditional, which
   silently skipped the rank-one pin), the per-decode non-empty check inside the geometric p95
   perf loop, and slate-distinctness on the geometric paired-base decode.
-- **ARC-045**: ~168 raw Compose `Text("…")` literals unextracted (LearningDataSection 21,
-  IntentEditorDialog 19, CommandPaletteDialog 18, LayoutManagerActivity 18, …).
+- **ARC-045 — DONE 2026-08-29** (4 commits: settings sections / customization dialogs /
+  LayoutManagerActivity / tail). 317 new resources across 30 files. The audit's "~168" counted
+  only single-line `Text("…")`; the real surface was larger once multiline `Text(\n "…")`,
+  `text = "…"`, `label`/`placeholder`, and every hardcoded `contentDescription` were included —
+  the accessibility strings in CommandPaletteDialog, LayoutManagerActivity and LauncherActivity
+  were the least visible and arguably the worst of it. Three previously-untranslated activity
+  strings now reuse the already-translated `autocorrect_*` keys (identical English), so those
+  gained 21 locales for free. Wave E's "preview dialog copy is English by convention" is ended.
+  Deliberately NOT extracted, each for a stated reason:
+  - `GestureTuningSection` `listOf("Low","Medium","High","Custom")` — identity strings
+    round-tripped through `applySwipeSensitivityPreset`/`getSwipeSensitivityPreset`
+    (`SettingsResetPresets.kt`), not labels. Localizing breaks preset selection.
+  - The pure-JVM renderers in `BackupRestorePreviewDialogs.kt` — `renderJsonBlobSummary`,
+    `renderArraySummary`, `renderBackupSourceNotice`, the `+`/`−`/`~` diff markers, `TypeChip`'s
+    type names. They take no Context, which is precisely what lets
+    `BackupRestorePreviewRenderTest` assert them in the PURE suite; extracting would force
+    Context injection into pure code and demote that coverage to instrumented.
+  - Glyph-only `Text` ("✕", "X", "⌨", "↺", "◀", "▶") — promoted to named consts where they
+    were inline, left as glyphs otherwise.
+  - Technical placeholder values (`com.example.app`, `android.intent.action.VIEW`, `text/plain`,
+    `yyyy-MM-dd HH:mm`) and unit-only display formats (`"%.0f px"`, `"${x}ms"`, `"$x%"`).
+  - `GifPanelSection`'s `status.startsWith("Error")` branch — the status string is produced
+    elsewhere; extracting only the comparison would silently break the match. Left as a known
+    English-anchored coupling.
+  No drift-test anchor had to move: `SettingsSearchCoverageTest` already resolves
+  `stringResource` control titles (index unchanged at 128 entries), and the Compose
+  instrumented tests match on RENDERED text, which is byte-identical because every extracted
+  value reproduces its literal exactly.
 - **ARC-048 (backlog, worsening)**: ConfigSnapshot absent (static consumers 28→33 files),
   145-file flat package root, 6 hand-wired Initializers, WordPredictor 2636 lines no interface,
   SettingsActivity 123 mutableStateOf + `SettingsScreen.kt:69-73` composition-body writes
@@ -165,6 +191,10 @@ GifDatabase); next-word cold-start bar on-device (opt into next-word, empty lear
 `pref_secondary_prediction_weight` summary, `backup_base64_too_large`,
 `clipboard_private_copy_toast_title/desc`, `clipboard_provenance_via/direct_launch`,
 `privacy_on_device_learning_desc` (21-locale copies still name deleted swipe-calibration).
+317 strings extracted from Compose literals 2026-08-29 (ARC-045), all English-only — the
+21-locale pass is a follow-up. None are in `TranslationCoverageDriftTest.required`, which is
+correct: that test asserts real per-locale values, so listing an untranslated name there would
+fail rather than protect anything.
 
 ### 1. Contraction follow-ups, all deferred deliberately
 

@@ -948,7 +948,7 @@ fun ColorPickerDialog(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    "Select $attributeName",
+                    stringResource(R.string.theme_select_attribute, attributeName),
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )

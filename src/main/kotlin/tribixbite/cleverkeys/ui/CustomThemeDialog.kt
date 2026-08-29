@@ -10,6 +10,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import tribixbite.cleverkeys.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
@@ -50,7 +52,7 @@ fun CustomThemeDialog(
             ) {
                 // Header
                 Text(
-                    text = "Create Custom Theme",
+                    text = stringResource(R.string.custom_theme_title),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
@@ -59,15 +61,15 @@ fun CustomThemeDialog(
                 OutlinedTextField(
                     value = themeName,
                     onValueChange = { themeName = it },
-                    label = { Text("Theme Name") },
-                    placeholder = { Text("My Theme") },
+                    label = { Text(stringResource(R.string.custom_theme_name_label)) },
+                    placeholder = { Text(stringResource(R.string.custom_theme_name_placeholder)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
 
                 // Palette selection
                 Text(
-                    text = "Color Palette",
+                    text = stringResource(R.string.custom_theme_palette),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -79,7 +81,7 @@ fun CustomThemeDialog(
 
                 // Preview
                 Text(
-                    text = "Preview",
+                    text = stringResource(R.string.custom_theme_preview),
                     style = MaterialTheme.typography.titleSmall
                 )
 
@@ -91,7 +93,7 @@ fun CustomThemeDialog(
                     horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.End)
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.common_cancel))
                     }
 
                     Button(
@@ -104,7 +106,7 @@ fun CustomThemeDialog(
                         },
                         enabled = themeName.isNotBlank()
                     ) {
-                        Text("Create")
+                        Text(stringResource(R.string.custom_theme_create))
                     }
                 }
             }

@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -110,7 +111,7 @@ private fun ShortSwipeCalibrationScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Short Swipe Calibration") },
+                title = { Text(stringResource(R.string.calibration_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.ArrowBack, "Back")
@@ -215,7 +216,7 @@ private fun TutorialSection() {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "How Short Swipes Work",
+                text = stringResource(R.string.calibration_how_title),
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp,
                 color = MaterialTheme.colorScheme.onSurface
@@ -233,8 +234,7 @@ private fun TutorialSection() {
             Spacer(Modifier.height(16.dp))
 
             Text(
-                text = "Short swipes trigger up to 8 subkey actions per key based on direction. " +
-                       "Move your finger a small distance to activate.",
+                text = stringResource(R.string.calibration_how_body),
                 fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -376,7 +376,7 @@ private fun ConfigurationSection(
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Text(
-                text = "Distance Thresholds",
+                text = stringResource(R.string.calibration_thresholds_title),
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp,
                 color = MaterialTheme.colorScheme.onSurface
@@ -386,12 +386,12 @@ private fun ConfigurationSection(
 
             // Minimum Distance Slider
             Text(
-                text = "Tap / Swipe Threshold",
+                text = stringResource(R.string.calibration_tap_swipe_title),
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = "Gestures shorter than this (% of key diagonal) are taps",
+                text = stringResource(R.string.calibration_tap_swipe_desc),
                 fontSize = 12.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -419,12 +419,12 @@ private fun ConfigurationSection(
 
             // Maximum Distance Slider
             Text(
-                text = "Short / Long Swipe Boundary",
+                text = stringResource(R.string.calibration_boundary_title),
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = "At or below = short swipe (subkey); beyond = swipe-typed word (% of key diagonal)",
+                text = stringResource(R.string.calibration_boundary_desc),
                 fontSize = 12.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -479,12 +479,12 @@ fun PerKeyCustomizationButton() {
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Customize Per-Key Actions",
+                    text = stringResource(R.string.calibration_customize_title),
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )
                 Text(
-                    text = "Short swipes, custom commands per key direction",
+                    text = stringResource(R.string.calibration_customize_desc),
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
                 )
@@ -527,7 +527,7 @@ private fun PracticeSection(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Practice Area",
+                text = stringResource(R.string.calibration_practice_title),
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp,
                 color = MaterialTheme.colorScheme.onSurface
@@ -536,7 +536,7 @@ private fun PracticeSection(
             Spacer(Modifier.height(8.dp))
 
             Text(
-                text = "Touch and drag to test your settings",
+                text = stringResource(R.string.calibration_practice_desc),
                 fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -645,7 +645,7 @@ private fun PracticeSection(
 
                 if (!isDragging) {
                     Text(
-                        text = "👆 Touch here",
+                        text = stringResource(R.string.calibration_touch_here),
                         fontSize = 16.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -660,12 +660,12 @@ private fun PracticeSection(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Min: ${minDistance.toInt()}%",
+                    text = stringResource(R.string.calibration_min_readout, minDistance.toInt()),
                     fontSize = 12.sp,
                     color = Color.White.copy(alpha = 0.7f)
                 )
                 Text(
-                    text = "Max: ${maxDistance.toInt()}%",
+                    text = stringResource(R.string.calibration_max_readout, maxDistance.toInt()),
                     fontSize = 12.sp,
                     color = Color(0xFF4CAF50).copy(alpha = 0.7f)
                 )

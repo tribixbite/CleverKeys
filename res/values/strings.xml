@@ -1099,4 +1099,131 @@
     <string name="layout_manager_xml_label" tools:ignore="MissingTranslation">Layout XML</string>
     <string name="layout_manager_import_xml" tools:ignore="MissingTranslation">Import XML</string>
     <string name="layout_manager_export_xml" tools:ignore="MissingTranslation">Export XML</string>
+
+    <!-- BackupRestorePreviewDialogs.kt — the settings/dictionary import preview sheets.
+         Wave E left this copy hardcoded "by convention"; ARC-045 ends that convention.
+         Values are byte-identical to the literals they replaced, because
+         SettingsImportPreviewDialogComposeTest / DictionaryImportPreviewDialogComposeTest
+         match on the RENDERED text ("Apply (2)", "Expand", "Search…", "Cancel preview").
+         The pure-JVM summary renderers (renderJsonBlobSummary / renderArraySummary and the
+         +/−/~ diff markers) stay Kotlin literals: they take no Context, which is exactly
+         what lets BackupRestorePreviewRenderTest cover them in the pure suite. -->
+    <string name="import_preview_title" tools:ignore="MissingTranslation">Import preview</string>
+    <string name="import_preview_cancel_desc" tools:ignore="MissingTranslation">Cancel preview</string>
+    <!-- %1$d = entries that will be written if the user confirms -->
+    <string name="import_preview_apply" tools:ignore="MissingTranslation">Apply (%1$d)</string>
+    <!-- %1$s = app version the backup was written by -->
+    <string name="import_preview_source_version" tools:ignore="MissingTranslation">Source: %1$s</string>
+    <!-- %1$d = width px, %2$d = height px, %3$s = density bucket -->
+    <string name="import_preview_source_screen" tools:ignore="MissingTranslation">Source screen: %1$d×%2$d@%3$s</string>
+    <string name="import_preview_current_screen" tools:ignore="MissingTranslation">Current screen: %1$d×%2$d@%3$s</string>
+    <string name="import_preview_screen_mismatch" tools:ignore="MissingTranslation">Screen-size mismatch — some visual settings may need adjustment.</string>
+    <!-- Short-swipe diff headline parts. %1$d is the count in each. -->
+    <string name="import_preview_diff_new" tools:ignore="MissingTranslation,PluralsCandidate">+%1$d new</string>
+    <string name="import_preview_diff_removed" tools:ignore="MissingTranslation,PluralsCandidate">−%1$d removed</string>
+    <string name="import_preview_diff_changed" tools:ignore="MissingTranslation,PluralsCandidate">~%1$d changed</string>
+    <string name="import_preview_diff_unchanged" tools:ignore="MissingTranslation,PluralsCandidate">(%1$d unchanged)</string>
+    <!-- %1$d = short-swipe mappings present in the backup file -->
+    <string name="import_preview_short_swipe_count" tools:ignore="MissingTranslation,PluralsCandidate">%1$d short-swipe mappings in this backup</string>
+    <string name="import_preview_short_swipe_skip" tools:ignore="MissingTranslation">Skip — don\'t import</string>
+    <string name="import_preview_short_swipe_merge" tools:ignore="MissingTranslation">Merge — fill gaps, preserve existing (recommended)</string>
+    <string name="import_preview_short_swipe_replace" tools:ignore="MissingTranslation">Replace — wipe existing, install file\'s set</string>
+    <!-- %1$d = mappings in the file that would overwrite everything the user has -->
+    <string name="import_preview_short_swipe_warning" tools:ignore="MissingTranslation,PluralsCandidate">This will REPLACE all your existing short-swipe customizations with the file\'s %1$d mappings.</string>
+    <!-- %1$d = words kept selected, %2$d = words offered -->
+    <string name="import_preview_selected_count" tools:ignore="MissingTranslation">%1$d of %2$d selected</string>
+    <string name="import_preview_expand" tools:ignore="MissingTranslation">Expand</string>
+    <string name="import_preview_hide" tools:ignore="MissingTranslation">Hide</string>
+    <!-- %1$d = words in the group -->
+    <string name="import_preview_custom_words" tools:ignore="MissingTranslation,PluralsCandidate">Custom words (%1$d)</string>
+    <string name="import_preview_disabled_words" tools:ignore="MissingTranslation,PluralsCandidate">Disabled words (%1$d)</string>
+    <!-- %1$d = the word's stored frequency -->
+    <string name="import_preview_word_freq" tools:ignore="MissingTranslation">freq %1$d</string>
+    <string name="import_preview_search_hint" tools:ignore="MissingTranslation">Search…</string>
+    <string name="import_preview_dict_title" tools:ignore="MissingTranslation">Dictionary import preview</string>
+    <!-- Section headers in the settings preview. %1$d = rows in the section. -->
+    <string name="import_preview_modified" tools:ignore="MissingTranslation,PluralsCandidate">Modified (%1$d)</string>
+    <string name="import_preview_added" tools:ignore="MissingTranslation,PluralsCandidate">Added (%1$d)</string>
+    <string name="import_preview_short_swipe_header" tools:ignore="MissingTranslation">Short-swipe customizations</string>
+    <!-- %1$d = entries the importer could not apply. The leading glyph is the disclosure state. -->
+    <string name="import_preview_skipped_collapse" tools:ignore="MissingTranslation,PluralsCandidate">▼ Invalid/skipped (%1$d) — tap to collapse</string>
+    <string name="import_preview_skipped_expand" tools:ignore="MissingTranslation,PluralsCandidate">▶ Invalid/skipped (%1$d) — tap to expand</string>
+
+    <!-- CtcSettingsActivity.kt -->
+    <string name="ctc_settings_title" tools:ignore="MissingTranslation">CTC Engine Settings</string>
+    <string name="ctc_settings_intro" tools:ignore="MissingTranslation">Tuning for the CTC swipe engine (Latin layouts under the CTC prediction engine). Scoring constants are calibrated offline and not user-tunable.</string>
+    <string name="ctc_settings_beam_section" tools:ignore="MissingTranslation">Beam Search</string>
+    <string name="ctc_settings_beam_width_title" tools:ignore="MissingTranslation">Beam Width</string>
+    <string name="ctc_settings_beam_width_desc" tools:ignore="MissingTranslation">Hypotheses kept per frame in the trie beam. 100 is the validated default; higher costs CPU per swipe for marginal accuracy.</string>
+    <string name="ctc_settings_inference_section" tools:ignore="MissingTranslation">Inference</string>
+    <string name="ctc_settings_threads_title" tools:ignore="MissingTranslation">ONNX Threads</string>
+    <string name="ctc_settings_threads_desc" tools:ignore="MissingTranslation">CPU threads for XNNPACK inference in the ONNX Runtime session that runs the CTC encoder. Applies when the session is next built (restart the keyboard).</string>
+    <string name="ctc_settings_reset" tools:ignore="MissingTranslation">Reset to Validated Default</string>
+
+    <!-- GeometricSettingsActivity.kt -->
+    <string name="geo_settings_title" tools:ignore="MissingTranslation">Geometric Engine Settings</string>
+    <string name="geo_settings_intro" tools:ignore="MissingTranslation">Tune the geometric (shape-matching) swipe engine used on non-QWERTY layouts in Hybrid mode, or on all layouts in Geometric mode. Other engine parameters are calibrated against measured accuracy and are not adjustable.</string>
+    <string name="geo_settings_decoding_section" tools:ignore="MissingTranslation">Decoding</string>
+    <string name="geo_settings_max_suggestions_title" tools:ignore="MissingTranslation">Max Suggestions</string>
+    <string name="geo_settings_max_suggestions_desc" tools:ignore="MissingTranslation">Ranked candidates emitted per swipe (suggestion bar shows the top few).</string>
+    <string name="geo_settings_freq_weight_title" tools:ignore="MissingTranslation">Frequency Weight</string>
+    <string name="geo_settings_freq_weight_desc" tools:ignore="MissingTranslation">Bias toward common words vs. exact shape fidelity. Higher = common words win more often; 0 = pure shape matching.</string>
+    <string name="geo_settings_endpoint_title" tools:ignore="MissingTranslation">Endpoint Tolerance</string>
+    <string name="geo_settings_endpoint_desc" tools:ignore="MissingTranslation">Forgiveness for sloppy swipe start/end positions, in key widths. Higher = more forgiving; too high can surface wrong first/last letters.</string>
+    <string name="geo_settings_reset" tools:ignore="MissingTranslation">Reset to Calibrated Defaults</string>
+
+    <!-- AutoCorrectionSettingsActivity.kt -->
+    <string name="autocorrect_settings_title" tools:ignore="MissingTranslation">Auto-Correction Settings</string>
+    <string name="autocorrect_activity_enable_desc" tools:ignore="MissingTranslation">Automatically correct misspelled words while typing</string>
+    <string name="autocorrect_about_title" tools:ignore="MissingTranslation">About Auto-Correction</string>
+    <string name="autocorrect_about_body" tools:ignore="MissingTranslation">Auto-correction compares typed words against the dictionary using Levenshtein distance algorithm. Words are corrected if they match closely enough (character match threshold) and appear frequently in the dictionary (minimum frequency).</string>
+    <string name="autocorrect_params_title" tools:ignore="MissingTranslation">Correction Parameters</string>
+    <string name="autocorrect_activity_min_length_desc" tools:ignore="MissingTranslation">Only correct words with at least this many characters</string>
+    <string name="autocorrect_activity_match_threshold_desc" tools:ignore="MissingTranslation">Minimum similarity ratio for correction (higher = stricter)</string>
+    <string name="autocorrect_activity_min_freq_title" tools:ignore="MissingTranslation">Minimum Frequency</string>
+    <string name="autocorrect_activity_min_freq_desc" tools:ignore="MissingTranslation">Only suggest words that appear at least this often in the dictionary</string>
+    <string name="autocorrect_reset" tools:ignore="MissingTranslation">Reset to Defaults</string>
+
+    <!-- ShortSwipeCalibrationActivity.kt -->
+    <string name="calibration_title" tools:ignore="MissingTranslation">Short Swipe Calibration</string>
+    <string name="calibration_how_title" tools:ignore="MissingTranslation">How Short Swipes Work</string>
+    <string name="calibration_how_body" tools:ignore="MissingTranslation">Short swipes trigger up to 8 subkey actions per key based on direction. Move your finger a small distance to activate.</string>
+    <string name="calibration_thresholds_title" tools:ignore="MissingTranslation">Distance Thresholds</string>
+    <string name="calibration_tap_swipe_title" tools:ignore="MissingTranslation">Tap / Swipe Threshold</string>
+    <string name="calibration_tap_swipe_desc" formatted="false" tools:ignore="MissingTranslation">Gestures shorter than this (% of key diagonal) are taps</string>
+    <string name="calibration_boundary_title" tools:ignore="MissingTranslation">Short / Long Swipe Boundary</string>
+    <string name="calibration_boundary_desc" formatted="false" tools:ignore="MissingTranslation">At or below = short swipe (subkey); beyond = swipe-typed word (% of key diagonal)</string>
+    <string name="calibration_customize_title" tools:ignore="MissingTranslation">Customize Per-Key Actions</string>
+    <string name="calibration_customize_desc" tools:ignore="MissingTranslation">Short swipes, custom commands per key direction</string>
+    <string name="calibration_practice_title" tools:ignore="MissingTranslation">Practice Area</string>
+    <string name="calibration_practice_desc" tools:ignore="MissingTranslation">Touch and drag to test your settings</string>
+    <string name="calibration_touch_here" tools:ignore="MissingTranslation">👆 Touch here</string>
+    <!-- %1$d = threshold as a percentage of key diagonal -->
+    <string name="calibration_min_readout" tools:ignore="MissingTranslation">Min: %1$d%%</string>
+    <string name="calibration_max_readout" tools:ignore="MissingTranslation">Max: %1$d%%</string>
+
+    <!-- LauncherActivity.kt — first-run setup screen -->
+    <string name="launcher_logo_desc" tools:ignore="MissingTranslation">CleverKeys Logo</string>
+    <string name="launcher_tagline" tools:ignore="MissingTranslation">Privacy, power, and control— with a brain.</string>
+    <string name="launcher_step_enable" tools:ignore="MissingTranslation">Enable Keyboard</string>
+    <string name="launcher_step_select" tools:ignore="MissingTranslation">Select Keyboard</string>
+    <string name="launcher_step_calibrate" tools:ignore="MissingTranslation">Calibrate Per-Key Gestures</string>
+    <string name="launcher_test_field_label" tools:ignore="MissingTranslation">Test your new keyboard here</string>
+    <string name="launcher_footer" tools:ignore="MissingTranslation">An uncompromising open source keyboard.</string>
+    <string name="launcher_step_completed_desc" tools:ignore="MissingTranslation">Completed</string>
+
+    <!-- ThemeSelector.kt / CustomThemeDialog.kt -->
+    <string name="theme_selector_title" tools:ignore="MissingTranslation">Keyboard Themes</string>
+    <string name="theme_selector_create_desc" tools:ignore="MissingTranslation">Create</string>
+    <string name="theme_selector_custom" tools:ignore="MissingTranslation">Custom</string>
+    <string name="theme_selector_more_options_desc" tools:ignore="MissingTranslation">More options</string>
+    <string name="theme_selector_selected_desc" tools:ignore="MissingTranslation">Selected</string>
+    <string name="custom_theme_title" tools:ignore="MissingTranslation">Create Custom Theme</string>
+    <string name="custom_theme_name_label" tools:ignore="MissingTranslation">Theme Name</string>
+    <string name="custom_theme_name_placeholder" tools:ignore="MissingTranslation">My Theme</string>
+    <string name="custom_theme_palette" tools:ignore="MissingTranslation">Color Palette</string>
+    <string name="custom_theme_preview" tools:ignore="MissingTranslation">Preview</string>
+    <string name="custom_theme_create" tools:ignore="MissingTranslation">Create</string>
+    <!-- %1$s = the theme attribute being edited (e.g. "Key background") -->
+    <string name="theme_select_attribute" tools:ignore="MissingTranslation">Select %1$s</string>
 </resources>

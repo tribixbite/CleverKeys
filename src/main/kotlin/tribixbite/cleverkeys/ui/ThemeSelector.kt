@@ -18,6 +18,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import tribixbite.cleverkeys.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -64,7 +66,7 @@ fun ThemeSelector(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Keyboard Themes",
+                text = stringResource(R.string.theme_selector_title),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -76,9 +78,12 @@ fun ThemeSelector(
                     containerColor = MaterialTheme.colorScheme.primaryContainer
                 )
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Create")
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = stringResource(R.string.theme_selector_create_desc)
+                )
                 Spacer(Modifier.width(8.dp))
-                Text("Custom")
+                Text(stringResource(R.string.theme_selector_custom))
             }
         }
 
@@ -266,7 +271,7 @@ fun ThemePreviewCard(
                         ) {
                             Icon(
                                 Icons.Default.MoreVert,
-                                contentDescription = "More options",
+                                contentDescription = stringResource(R.string.theme_selector_more_options_desc),
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -277,7 +282,7 @@ fun ThemePreviewCard(
                         ) {
                             onExport?.let { export ->
                                 DropdownMenuItem(
-                                    text = { Text("Export") },
+                                    text = { Text(stringResource(R.string.common_export)) },
                                     onClick = {
                                         export()
                                         showMenu = false
@@ -290,7 +295,7 @@ fun ThemePreviewCard(
 
                             onDelete?.let { delete ->
                                 DropdownMenuItem(
-                                    text = { Text("Delete") },
+                                    text = { Text(stringResource(R.string.common_delete)) },
                                     onClick = {
                                         delete()
                                         showMenu = false
@@ -322,7 +327,7 @@ fun ThemePreviewCard(
                 ) {
                     Icon(
                         Icons.Default.CheckCircle,
-                        contentDescription = "Selected",
+                        contentDescription = stringResource(R.string.theme_selector_selected_desc),
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(20.dp)
                     )

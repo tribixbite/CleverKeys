@@ -26,6 +26,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -79,27 +80,23 @@ class CtcSettingsActivity : ComponentActivity() {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = "CTC Engine Settings",
+                text = stringResource(R.string.ctc_settings_title),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
             )
 
             Text(
-                text = "Tuning for the CTC swipe engine (Latin layouts under the " +
-                    "CTC prediction engine). Scoring constants are calibrated " +
-                    "offline and not user-tunable.",
+                text = stringResource(R.string.ctc_settings_intro),
                 fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 lineHeight = 20.sp
             )
 
-            ParameterSection("Beam Search") {
+            ParameterSection(stringResource(R.string.ctc_settings_beam_section)) {
                 ParameterSlider(
-                    title = "Beam Width",
-                    description = "Hypotheses kept per frame in the trie beam. " +
-                        "100 is the validated default; higher costs CPU per swipe " +
-                        "for marginal accuracy.",
+                    title = stringResource(R.string.ctc_settings_beam_width_title),
+                    description = stringResource(R.string.ctc_settings_beam_width_desc),
                     value = beamWidth.toFloat(),
                     valueRange = 10f..300f,
                     steps = 28,
@@ -111,12 +108,10 @@ class CtcSettingsActivity : ComponentActivity() {
                 )
             }
 
-            ParameterSection("Inference") {
+            ParameterSection(stringResource(R.string.ctc_settings_inference_section)) {
                 ParameterSlider(
-                    title = "ONNX Threads",
-                    description = "CPU threads for XNNPACK inference in the ONNX Runtime " +
-                        "session that runs the CTC encoder. Applies when the session is " +
-                        "next built (restart the keyboard).",
+                    title = stringResource(R.string.ctc_settings_threads_title),
+                    description = stringResource(R.string.ctc_settings_threads_desc),
                     value = onnxThreads.toFloat(),
                     valueRange = 1f..8f,
                     steps = 6,
@@ -136,7 +131,7 @@ class CtcSettingsActivity : ComponentActivity() {
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Reset to Validated Default")
+                Text(stringResource(R.string.ctc_settings_reset))
             }
         }
     }

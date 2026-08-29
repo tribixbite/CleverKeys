@@ -48,6 +48,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -339,7 +340,7 @@ fun LauncherScreen(
                 if (raccoonBitmap != null) {
                     Image(
                         bitmap = raccoonBitmap.asImageBitmap(),
-                        contentDescription = "CleverKeys Logo",
+                        contentDescription = stringResource(R.string.launcher_logo_desc),
                         modifier = Modifier.size(120.dp) // Fixed size
                     )
                 } else {
@@ -359,7 +360,7 @@ fun LauncherScreen(
                         color = Color.White
                     )
                     Text(
-                        text = "Privacy, power, and control— with a brain.",
+                        text = stringResource(R.string.launcher_tagline),
                         style = MaterialTheme.typography.titleMedium,
                         color = Color(0xFFB0B0E0),
                         textAlign = TextAlign.Center
@@ -374,7 +375,7 @@ fun LauncherScreen(
             ) {
                 SetupCard(
                     number = "1",
-                    title = "Enable Keyboard",
+                    title = stringResource(R.string.launcher_step_enable),
                     description = "Turn on CleverKeys in system settings",
                     icon = Icons.Default.Settings,
                     isCompleted = isKeyboardEnabled,
@@ -383,7 +384,7 @@ fun LauncherScreen(
 
                 SetupCard(
                     number = "2",
-                    title = "Select Keyboard",
+                    title = stringResource(R.string.launcher_step_select),
                     description = "Switch your default input method",
                     icon = Icons.Default.CheckCircle,
                     isCompleted = isKeyboardSelected,
@@ -392,7 +393,7 @@ fun LauncherScreen(
 
                 SetupCard(
                     number = "3",
-                    title = "Calibrate Per-Key Gestures",
+                    title = stringResource(R.string.launcher_step_calibrate),
                     description = "Configure up to 8 subkey actions per key",
                     icon = Icons.Default.Edit,
                     isCompleted = hasVisitedCalibration,
@@ -411,7 +412,7 @@ fun LauncherScreen(
             OutlinedTextField(
                 value = testText,
                 onValueChange = { testText = it },
-                label = { Text("Test your new keyboard here") },
+                label = { Text(stringResource(R.string.launcher_test_field_label)) },
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(
                     capitalization = KeyboardCapitalization.Sentences
@@ -433,7 +434,7 @@ fun LauncherScreen(
             // Footer text - with nav bar padding when keyboard not visible
             if (!isKeyboardVisible) {
                 Text(
-                    text = "An uncompromising open source keyboard.",
+                    text = stringResource(R.string.launcher_footer),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color(0xFFB0B0E0).copy(alpha = 0.5f),
                     textAlign = TextAlign.Center,
@@ -529,7 +530,7 @@ fun SetupCard(
                 if (isCompleted) {
                     Icon(
                         imageVector = Icons.Default.CheckCircle,
-                        contentDescription = "Completed",
+                        contentDescription = stringResource(R.string.launcher_step_completed_desc),
                         tint = Color.White,
                         modifier = Modifier.size(20.dp)
                     )
