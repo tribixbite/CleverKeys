@@ -39,14 +39,23 @@ internal fun SettingsActivity.CollapsibleSettingsSection(
     sectionId: String? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    // Track scroll offset so SearchableSetting can target a section header.
-    val scrollOffset = mainScrollState?.value ?: 0
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .let { m ->
                 if (sectionId != null) m.onGloballyPositioned { coords ->
+                    // Track scroll offset so SearchableSetting can target a section header.
+                    //
+                    // The read MUST stay inside this layout lambda (issue #79). `ScrollState.value`
+                    // is snapshot-backed, so hoisting it into the composition body — as this did
+                    // between d2d0e456 and now — subscribes every one of the 18 sections to it and
+                    // recomposes them on each scroll PIXEL. Worse, the lambda then captures the
+                    // changed offset, so the Card's modifier is a fresh instance every frame and
+                    // the whole node chain re-diffs and re-lays-out mid-scroll: visible jitter.
+                    // The other three call sites (SettingsSwitch/Slider/Dropdown) always read it
+                    // here; this one is now consistent with them.
                     val positionInParent = coords.positionInRoot()
+                    val scrollOffset = mainScrollState?.value ?: 0
                     recordSettingPosition(sectionId, (positionInParent.y + scrollOffset).toInt())
                 } else m
             },

@@ -35,6 +35,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,10 +68,20 @@ import tribixbite.cleverkeys.ui.settings.sections.VersionActionsSection
 @Composable
 internal fun SettingsActivity.SettingsScreen() {
         val scrollState = rememberScrollState()
-        // Store references for scroll-to-setting functionality
-        // composeScope has MonotonicFrameClock needed for animateScrollTo
-        mainScrollState = scrollState
-        composeScope = rememberCoroutineScope()
+        // Store references for scroll-to-setting functionality.
+        // composeScope has MonotonicFrameClock needed for animateScrollTo.
+        //
+        // Published from SideEffect, not from the composition body (ARC-048): a body write
+        // also runs for compositions that are later ABANDONED, and the scope from an
+        // abandoned composition is cancelled — so the Activity kept a dead CoroutineScope
+        // and every later scrollToSetting() silently no-opped. SideEffect runs only after a
+        // composition is successfully applied, and still before this frame's layout pass, so
+        // the onGloballyPositioned readers in SettingsControls see the same values as before.
+        val scope = rememberCoroutineScope()
+        SideEffect {
+            mainScrollState = scrollState
+            composeScope = scope
+        }
 
         // Collected Data Viewer Dialog
         if (showCollectedDataViewer) {

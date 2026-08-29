@@ -91,6 +91,62 @@ One doc verified fully clean: `2026-07-18-accessibility-implementation-plan.md` 
   `swipe_fuzzy_match_mode`; `Config.kt:1203-1205` repairs three deprecated float keys. Fix + add a
   drift assertion that neither names a `DEPRECATED_KEYS` member.
 
+**Dated addenda to the records above**
+
+- **ARC-012 — #79 re-diagnosed and fixed (2026-08-29); the old diagnosis was wrong twice.**
+  The archived audit blamed "LazyColumn recomposition". Not only is the screen
+  `Column`+`verticalScroll`, `git show v1.2.5:src/main/kotlin/tribixbite/cleverkeys/SettingsActivity.kt`
+  shows it was that at the REPORTED version too — zero `LazyColumn` anywhere in
+  `src/main/kotlin` at tag `ce562816`. A second surprise: **there is no header component at
+  all.** The "header" is two plain `Text` composables inside the scrolling `Column`
+  (`SettingsScreen.kt:102-115`); `rg` finds no `TopAppBar`, `scrollBehavior`, `stickyHeader`,
+  `derivedStateOf`, `animateDpAsState`, `Modifier.shadow` or `tonalElevation` anywhere under
+  `ui/settings/`. Nothing is pinned and nothing animates on scroll.
+  **Actual defect:** `SettingsControls.kt:43` hoisted `mainScrollState?.value` into
+  `CollapsibleSettingsSection`'s composition body, unconditionally (before the
+  `if (sectionId != null)` guard, so all 18 sections paid it). `ScrollState.value` is
+  snapshot-backed, so each scroll pixel invalidated all 18 section restart scopes; and since the
+  `onGloballyPositioned` lambda **captured** the changed offset, each `Card`'s modifier was a new
+  instance every frame, forcing a node-chain diff and a relayout inside the scrolling content —
+  per-frame LAYOUT churn, not just recomposition, scaling with sections on screen. That matches
+  the reporter's "specifically when interacting with the sections". Fixed by moving the read into
+  the layout lambda, exactly as the other three call sites (`:167`, `:225`, `:296`) always did;
+  the recorded value is byte-identical, so scroll-to-setting is unchanged. Amplifier also fixed:
+  `SettingsSearch.kt:73` compiled a `Regex` on every `settingSlug` call, and `settingSlug` runs in
+  the composition body of every switch/slider/dropdown — now a file-level constant.
+  **Caveat, stated because it matters:** the offending hoist was introduced by `d2d0e456`
+  (2026-07-03, the SettingsControls extraction), so it POSTDATES the January v1.2.5 report. It is
+  a genuine defect in shipping code and plausibly what a user sees today, but it is not an
+  explanation of the original report. #79 should not be closed on this fix alone — manual visual
+  confirmation on a current build is owed. The one v1.2.5-era, top-edge-specific candidate left
+  standing is a three-way inset conflict — `styles.xml:53-57` (`settingsTheme` sets
+  `android:fitsSystemWindows=true`) vs `SettingsActivity.kt:674`
+  (`WindowCompat.setDecorFitsSystemWindows(w, false)`) vs `SettingsScreen.kt:96`
+  (`.statusBarsPadding()`), with decor and `android.R.id.content` backgrounds both blanked to
+  TRANSPARENT at `:686-687`, leaving the status-bar band painted only by the Compose `Column`.
+  The conflict is provable from source; that it produces a per-FRAME artifact is not (insets
+  dispatch on window events). `adb shell setprop debug.hwui.show_dirty_regions true` while
+  scrolling separates the two: status-bar strip only = insets, whole content area = the
+  recomposition storm now fixed.
+  Ruled out during the pass, so nobody re-checks them: `settingPositions` is a **plain**
+  `mutableMapOf` (`SettingsActivity.kt:553`), not `mutableStateMapOf`, so the
+  `onGloballyPositioned` → `recordSettingPosition` writes are not a layout-write-read loop; no
+  `snapshotFlow`, scroll-driven `LaunchedEffect`, `animateContentSize`, `graphicsLayer` or custom
+  overscroll exists in the settings tree; and there is no `AndroidView`/`SurfaceView` on the
+  screen.
+- **ARC-048's `SettingsScreen.kt:69-73` gap is NOT a flicker source — and is now closed
+  (2026-08-29).** Its two targets, `mainScrollState` and `composeScope`
+  (`SettingsActivity.kt:554-555`), are plain non-snapshot `var`s, so writing them from a
+  composition body invalidates nothing and cannot recompose anything. The bug is purely the
+  lifecycle one ARC-048 describes: the write also runs for ABANDONED compositions, whose
+  `rememberCoroutineScope()` is cancelled, so the Activity retained a dead scope and later
+  `scrollToSetting()` calls silently no-opped. Wrapped in `SideEffect {}` (safe: `rg` confirms
+  the only readers are `SettingsSearch.kt:22,25` inside the event handler and the layout lambdas
+  in `SettingsControls.kt` — nothing reads either field during composition, and `SideEffect` runs
+  after composition is applied but before the frame's layout pass). Worth recording: the ARC-048
+  line was the harmless composition-body write; the damaging one was 30 lines away in a different
+  file and no audit had flagged it.
+
 **Won't-fix / decisions recorded**
 - **ARC-010 — the shipped assets load, but they do NOT reach the scoring multiplier (2026-08-28).**
   The six `assets/bigrams/<lang>_bigrams.json` files are now read (async, at `setContext` and

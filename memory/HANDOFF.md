@@ -70,8 +70,27 @@ log and the verification doc before re-deriving anything. Still open:
 - **ARC-008 (soak-gated)**: R8/ProGuard still disabled (`build.gradle` "REPRODUCIBILITY TEST"
   comment); re-enable needs a reflection-keep audit + full ew-cli soak + internal release, or a
   recorded decision to delete `proguard-rules.pro`.
-- **ARC-012 (investigation)**: #79 settings header flicker — unreproduced; note the screen is
-  `Column`+`verticalScroll`, NOT LazyColumn, so the old diagnosis is wrong.
+- **ARC-012 ROOT-CAUSED + FIXED 2026-08-29, manual visual confirmation owed.** #79 settings
+  header flicker. The old "LazyColumn recomposition" diagnosis was wrong twice: the screen is
+  `Column`+`verticalScroll`, and `git show v1.2.5:` confirms it was at the reported version too
+  (zero `LazyColumn` anywhere in `src/main/kotlin` at that tag). There is also **no header
+  component** — the "header" is two plain `Text`s inside the scrolling `Column`
+  (`SettingsScreen.kt:102-115`); no `TopAppBar`, no sticky header, no scroll-derived elevation
+  anywhere under `ui/settings/`. **Real cause:** `SettingsControls.kt:43` read
+  `mainScrollState?.value` in `CollapsibleSettingsSection`'s COMPOSITION BODY.
+  `ScrollState.value` is snapshot-backed, so all 18 sections re-composed on every scroll pixel,
+  and because the `onGloballyPositioned` lambda captured the changed offset the `Card`'s modifier
+  was a fresh instance each frame → node re-diff + relayout mid-scroll. Fixed by moving the read
+  into the layout lambda, which is what the other three call sites (`:167`, `:225`, `:296`) always
+  did. **Caveat that must stay attached:** that hoist was introduced by `d2d0e456` (2026-07-03),
+  so it postdates the January v1.2.5 report — it is a real defect in shipping code and plausibly
+  the symptom users see today, but it cannot be what the original reporter saw. Before closing
+  #79, ask the user to re-check on a current build. Remaining v1.2.5-era candidate, unverified:
+  a three-way inset conflict at the top edge (`styles.xml:53-57` `fitsSystemWindows=true` vs
+  `SettingsActivity.kt:674` `setDecorFitsSystemWindows(false)` vs `SettingsScreen.kt:96`
+  `.statusBarsPadding()`), with both decor and content backgrounds blanked at `:686-687`.
+  Disambiguate with `setprop debug.hwui.show_dirty_regions true` — status-bar strip only = insets,
+  whole content area = the (now fixed) recomposition storm.
 - **Astro 5→6 migration owed** (2026-08-29): the site's two remaining HIGH CVEs are fixed only
   in astro 6.4.6, which needs vite 7+ — conflicting with the vite 6.4.3 CVE pin in
   `site/package.json` overrides. Suppressed in `.trivyignore` with rationale (build-time-only

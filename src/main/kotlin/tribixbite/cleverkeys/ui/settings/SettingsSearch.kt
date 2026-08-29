@@ -67,11 +67,16 @@ internal data class SearchableSetting(
     val settingId: String = ""    // For highlighting
 )
 
+/** Compiled once. [settingSlug] runs in the composition body of every switch, slider and
+ *  dropdown, so an inline `Regex(...)` here is a `Pattern.compile` on every recomposition
+ *  of every one of them (issue #79's amplifier). */
+private val SETTING_SLUG_SEPARATORS = Regex("[^a-z0-9]+")
+
 /** Stable scroll/highlight key for a control, derived from its visible title.
  *  MUST match scripts/generate_settings_search_index.py's slugify so an auto-derived
  *  search entry's settingId equals the key the control registers its position under. */
 internal fun SettingsActivity.settingSlug(title: String): String =
-    title.lowercase().replace(Regex("[^a-z0-9]+"), "_").trim('_')
+    title.lowercase().replace(SETTING_SLUG_SEPARATORS, "_").trim('_')
 
 /** Display name shown as "in <section>" for an auto-derived (generated) search result. */
 internal fun SettingsActivity.sectionDisplayName(sectionKey: String): String = when (sectionKey) {
