@@ -146,9 +146,31 @@ class KeyboardAccessibilityInstrumentedTest {
             val r = android.graphics.Rect()
             node.getBoundsInScreen(r)
             assertTrue("bounds must be non-empty for '${node.contentDescription}'", !r.isEmpty)
+            // Offset-independent (screen origin varies with attachment), so this is a safe
+            // sanity bound: no single key may be bigger than the whole keyboard.
+            assertTrue(
+                "key '${node.contentDescription}' is ${r.width()}×${r.height()}, larger than " +
+                    "the laid-out ${view.width}×${view.height} view — the geometry projection " +
+                    "is wrong and touch exploration would land on the wrong key",
+                r.width() <= view.width && r.height() <= view.height
+            )
             assertTrue("every key node must advertise ACTION_CLICK",
                 (node.actions and AccessibilityNodeInfo.ACTION_CLICK) != 0)
         }
+
+        // The tree must cover the WHOLE alphabet, not merely "several" keys: a projection
+        // that dropped a row would still leave 20+ nodes. `KeyLabels.describe` echoes the
+        // payload symbol for an ordinary letter, so each a–z key announces as its own
+        // single character (unshifted → lowercase, which `shiftClickedTwiceTogglesLatchOnThenOff`
+        // depends on).
+        val singleCharLabels = nodes
+            .map { it.contentDescription.toString() }
+            .filter { it.length == 1 }
+        val letters = singleCharLabels.filter { it[0] in 'a'..'z' }.map { it[0] }.sorted()
+        assertEquals(
+            "every a–z key of latn_qwerty_us must be announced exactly once. Got: $letters",
+            ('a'..'z').toList(), letters
+        )
     }
 
     // ── ACTION_CLICK routes a real tap through Pointers → handler ──────────────
@@ -199,6 +221,9 @@ class KeyboardAccessibilityInstrumentedTest {
     fun hoverEventIsNotConsumedWhenTouchExplorationOff() {
         // On CI emulators touch-exploration is off, so dispatchHoverEvent must NOT
         // consume the event (the fast path stays intact).
+        val downsBefore = recorder.downs.size
+        val upsBefore = recorder.ups.size
+        val modsBefore = recorder.modsChanged
         var consumed = true
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
             val e = MotionEvent.obtain(0, 0, MotionEvent.ACTION_HOVER_ENTER, 100f, 100f, 0)
@@ -206,6 +231,11 @@ class KeyboardAccessibilityInstrumentedTest {
             e.recycle()
         }
         assertFalse("hover must not be consumed while touch-exploration is off", consumed)
+        // And it must be inert: hovering is not typing. Deltas rather than absolute
+        // emptiness, so a future setup step that emits a key cannot make this vacuous.
+        assertEquals("a hover must not emit key_down", downsBefore, recorder.downs.size)
+        assertEquals("a hover must not emit key_up", upsBefore, recorder.ups.size)
+        assertEquals("a hover must not change modifiers", modsBefore, recorder.modsChanged)
     }
 
     // ── swipe still fires with the a11y tree present ──────────────────────────
@@ -233,9 +263,16 @@ class KeyboardAccessibilityInstrumentedTest {
             send(MotionEvent.ACTION_DOWN, cx, cy, downTime)
             send(MotionEvent.ACTION_UP, cx, cy, downTime + 40)
         }
-        // The real onTouch tap produced a key_up for 'a' (down may be deferred for
+        // The real onTouch tap produced a key event for 'a' (down may be deferred for
         // swipe detection, but the up path always emits the tapped key).
-        assertTrue("real onTouch tap should still emit a key event",
-            recorder.ups.isNotEmpty() || recorder.downs.isNotEmpty())
+        val emitted = recorder.downs + recorder.ups
+        assertTrue("real onTouch tap should still emit a key event", emitted.isNotEmpty())
+        // WHICH key, not merely "some key": an a11y helper that swallowed onTouch and let
+        // the virtual tree re-dispatch could emit a *different* key and still be non-empty.
+        val expected = KeyValue.makeCharKey('a')
+        assertEquals(
+            "every key event from a stationary tap on 'a' must BE 'a'. Got: $emitted",
+            List(emitted.size) { expected }, emitted
+        )
     }
 }

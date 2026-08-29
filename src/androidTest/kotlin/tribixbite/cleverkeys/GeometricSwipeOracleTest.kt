@@ -13,6 +13,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -96,8 +98,34 @@ class GeometricSwipeOracleTest {
         val id = context.resources.getIdentifier(layoutName, "raw", context.packageName)
         assertTrue("layout resource $layoutName must exist", id != 0)
         val kd = KeyboardData.load(context.resources, id)
-        assertTrue("layout $layoutName must parse", kd != null)
-        return kd!!
+        assertNotNull("layout $layoutName must parse", kd)
+        // A layout that parsed to zero extent would make every trace below collapse onto
+        // one point and still "decode" — paramsFor divides the frame by these.
+        assertTrue(
+            "layout $layoutName parsed to a degenerate ${kd!!.keysWidth}×${kd.keysHeight} extent",
+            kd.keysWidth > 0f && kd.keysHeight > 0f
+        )
+        return kd
+    }
+
+    /**
+     * Invariants every geometric slate must satisfy, whatever the trace: one score per word,
+     * scores inside the engine-relative 0..1000 band the adapter documents, and no blank
+     * entry (a blank suggestion is a bar slot the user cannot act on).
+     */
+    private fun assertSlateIsWellFormed(result: PredictionResult) {
+        assertEquals(
+            "one score per word (the bar zips them)",
+            result.words.size, result.scores.size
+        )
+        for ((i, word) in result.words.withIndex()) {
+            assertFalse("slate entry #$i is blank: ${result.words}", word.isBlank())
+            val score = result.scores[i]
+            assertTrue(
+                "score #$i for '$word' is $score, outside the engine-relative 0..1000 band",
+                score in 0..1000
+            )
+        }
     }
 
     private fun paramsFor(kd: KeyboardData) = KeyboardGeometry.Params(
@@ -263,7 +291,14 @@ class GeometricSwipeOracleTest {
                 result.words.take(3).any { it.equals("world", ignoreCase = true) }
             )
             // Engine-relative scores are softmax×1000 and sorted descending.
-            assertEquals(result.words.size, result.scores.size)
+            assertSlateIsWellFormed(result)
+            // A slate that offered the same word twice would burn a bar slot for nothing;
+            // case-insensitive because the display overlay may re-case an entry.
+            val lowered = result.words.map { it.lowercase() }
+            assertEquals(
+                "the geo slate must not repeat a word: ${result.words}",
+                lowered.distinct(), lowered
+            )
         } finally {
             adapter.shutdown()
         }
@@ -288,8 +323,26 @@ class GeometricSwipeOracleTest {
             }
             drainMainThread()
 
-            val top = h.suggestionBar.getCurrentSuggestions().firstOrNull() ?: result.words.first()
-            assertEquals("$top ", h.inputConnection.bufferText())
+            // Asserted BEFORE `top` is derived, so the bar can no longer be silently empty:
+            // the old `?: result.words.first()` fallback let a bar that never re-displayed
+            // still satisfy the commit assertion below.
+            val barWords = h.suggestionBar.getCurrentSuggestions()
+            assertTrue(
+                "the bar must be re-displayed with the geo slate (CTC parity)",
+                barWords.isNotEmpty()
+            )
+            val top = barWords.first()
+            assertFalse("the bar's top entry must not be blank", top.isBlank())
+
+            val buffer = h.inputConnection.bufferText()
+            assertEquals("$top ", buffer)
+            // auto_space_after_suggestion = true, auto_space_before_suggestion = true and an
+            // EMPTY buffer: exactly one trailing space, and no leading one at buffer start.
+            assertFalse("auto-space must not prepend a space at buffer start", buffer.startsWith(" "))
+            assertEquals(
+                "exactly one trailing space after a swipe commit (auto_space_after_suggestion)",
+                1, buffer.length - buffer.trimEnd().length
+            )
             // DELIBERATE MISLABEL PIN (audit m-1): geometric commits are tracked as
             // SWIPE because the commit-source enum is engine-agnostic. This
             // asserts TODAY's behavior, not the desired one — the provenance refactor
@@ -297,7 +350,11 @@ class GeometricSwipeOracleTest {
             // docs/history/audits/remediation/3-core-ime.md m-1. Update this pin WITH that refactor,
             // never on its own.
             assertEquals(PredictionSource.SWIPE, h.contextTracker.getLastCommitSource())
-            assertTrue(h.suggestionBar.getCurrentSuggestions().isNotEmpty())
+            assertTrue(
+                "the bar must still hold the slate after the commit (it is re-displayed, " +
+                    "not cleared — CTC parity)",
+                h.suggestionBar.getCurrentSuggestions().isNotEmpty()
+            )
         } finally {
             adapter.shutdown()
         }
@@ -355,6 +412,21 @@ class GeometricSwipeOracleTest {
                 "shift+geo-swipe must commit a capitalized word. Got: '$buffer'",
                 buffer.isNotEmpty() && buffer.first().isUpperCase()
             )
+            // Same auto-space contract as the unshifted commit — the shift transform must
+            // change the CASING only, never the spacing.
+            assertEquals(
+                "shift must not change the auto-space contract: exactly one trailing space",
+                1, buffer.length - buffer.trimEnd().length
+            )
+            val committed = buffer.trimEnd()
+            // shiftActive (not shiftLocked) is title case, not upper case: a shiftLocked
+            // regression that upper-cased the whole word would pass the first-char check.
+            assertTrue("committed word must be longer than one character: '$committed'", committed.length > 1)
+            assertNotEquals(
+                "shiftActive must TITLE-case the commit, not upper-case it (that is " +
+                    "shiftLocked's job, and it was passed false here). Got: '$committed'",
+                committed.uppercase(), committed
+            )
         } finally {
             adapter.shutdown()
         }
@@ -383,6 +455,9 @@ class GeometricSwipeOracleTest {
                 "the raw alias \"theyd\" must NOT appear post-mapping. Got: ${result.words.take(8)}",
                 result.words.any { it.equals("theyd", ignoreCase = true) }
             )
+            // The REPLACE mapping rewrites in place, so the mapped form must keep the
+            // alias's score slot rather than arriving score-less.
+            assertSlateIsWellFormed(result)
         } finally {
             adapter.shutdown()
         }
@@ -409,6 +484,15 @@ class GeometricSwipeOracleTest {
             assertTrue(
                 "geo results must inject the paired variant \"it's\". Got: ${result.words.take(8)}",
                 result.words.any { it.equals("it's", ignoreCase = true) }
+            )
+            assertSlateIsWellFormed(result)
+            // The paired path APPENDS a variant beside the base; appending it twice (the
+            // 2026-08-29 doubled-`I'll` class of bug, where one variant list held the same
+            // form twice) would burn a bar slot and read as a rendering fault to the user.
+            val lowered = result.words.map { it.lowercase() }
+            assertEquals(
+                "paired injection must not duplicate an entry: ${result.words}",
+                lowered.distinct(), lowered
             )
         } finally {
             adapter.shutdown()
@@ -507,8 +591,11 @@ class GeometricSwipeOracleTest {
             repeat(20) { i ->
                 val word = words[i % words.size]
                 val startNs = System.nanoTime()
-                decodeBlocking(adapter, kd, params, word)
+                val sample = decodeBlocking(adapter, kd, params, word)
                 samples.add((System.nanoTime() - startNs) / 1_000_000)
+                // A decode that returns NOTHING returns fast, so an engine that silently
+                // stopped producing candidates would sail through the p95 gate below.
+                assertGeoDecodeNonEmpty(sample)
             }
             samples.sort()
             val p95 = samples[18] // 19th of 20

@@ -227,8 +227,10 @@ class CtcEmissionModelParityTest {
     @Test
     fun packagedModelIsTheArtifactEachFixtureWasGeneratedFrom() {
         val target = InstrumentationRegistry.getInstrumentation().targetContext
+        val shaByLanguage = LinkedHashMap<String, String>()
         for (row in ROWS) {
             val bytes = target.assets.open(row.modelAsset).use { it.readBytes() }
+            assertTrue("${row.language}: ${row.modelAsset} packaged empty", bytes.isNotEmpty())
             val digest = MessageDigest.getInstance("SHA-256").digest(bytes)
             val sha = digest.joinToString("") { "%02x".format(it) }
             val expected = goldens.getValue(row.language)
@@ -238,6 +240,36 @@ class CtcEmissionModelParityTest {
                     "fixture's source_onnx_sha256",
                 expected, sha
             )
+            shaByLanguage[row.language] = sha
         }
+        // Every language must have its OWN graph. The script encoders are byte-size
+        // identical, so a `modelAssetFor` that fell back to the Latin encoder — or two
+        // fixtures regenerated from one artifact — would satisfy every per-row assertion
+        // above and still route a script's swipes to the wrong graph.
+        assertEquals(
+            "two languages resolved to the same packaged encoder: $shaByLanguage",
+            shaByLanguage.size, shaByLanguage.values.toSet().size
+        )
+    }
+
+    /**
+     * The parity gate must not be able to go vacuous. [ROWS] is derived from
+     * [CtcScriptSupport.SCRIPTS], so a table edit that dropped a fixture reference would
+     * silently shrink the set this class runs over — and every loop above would still pass.
+     */
+    @Test
+    fun everyRoutedScriptIsParityChecked() {
+        assertTrue("ROWS must never be empty — en is unconditional", ROWS.isNotEmpty())
+        val checked = ROWS.map { it.language }.toSet()
+        assertTrue("en must always be a parity row", "en" in checked)
+        val routed = CtcScriptSupport.SCRIPTS
+            .filterValues { it.status == CtcScriptSupport.Status.ROUTED }
+            .keys
+        assertTrue(
+            "every ROUTED script must be model-parity checked here — rule 4 guarantees it " +
+                "has a fixture, so a missing row means ROWS stopped picking them up. " +
+                "ROUTED=$routed checked=$checked",
+            checked.containsAll(routed)
+        )
     }
 }

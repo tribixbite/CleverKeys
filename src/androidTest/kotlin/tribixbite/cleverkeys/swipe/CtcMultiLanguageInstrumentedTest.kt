@@ -317,8 +317,27 @@ class CtcMultiLanguageInstrumentedTest {
         display: Map<String, String>,
     ) {
         val englishPossessiveExemption = language == "en"
-        assertEquals("$language: one score per word", result.words.size, result.scores.size)
-        for (word in result.words) {
+        assertEquals(
+            "$language: one score per word — the bar zips the two lists",
+            result.words.size, result.scores.size
+        )
+        // Case-insensitive: the display overlay may re-case an entry, and a slate that
+        // offers the same word twice burns a bar slot the user cannot act on.
+        val lowered = result.words.map { it.lowercase() }
+        assertEquals(
+            "$language: the slate must not repeat a word: ${result.words}",
+            lowered.distinct(), lowered
+        )
+        for ((i, word) in result.words.withIndex()) {
+            assertFalse("$language: slate entry #$i is blank: ${result.words}", word.isBlank())
+            // `CtcEngineAdapter.toPredictionResult` softmaxes to 0..1000 and coerces; the
+            // overlay and the fuzzy rescue only ever copy or floor those values.
+            val score = result.scores[i]
+            assertTrue(
+                "$language: score #$i for '$word' is $score, outside the engine-relative " +
+                    "0..1000 band the adapter documents",
+                score in 0..1000
+            )
             val surface = CtcAzProjection.project(word)
             assertNotNull("$language: '$word' has no a–z surface — it cannot be a beam result", surface)
             val apostrophe = word.contains('\'') || word.contains('’')
@@ -457,10 +476,32 @@ class CtcMultiLanguageInstrumentedTest {
                         "means user custom/disabled words leaked in, or the two paths diverged)",
                     expected.words + injected, trie.wordCount
                 )
+                // Injection may only ADD, and may only add keys drawn from the alias set —
+                // `injected >= 0` used to stand here, which a count can never violate.
+                val injectable = aliasKeys.count { CtcContractionKeys.isInjectable(it, trie.alphabet) }
                 assertTrue(
-                    "$language: injection must only ADD keys the lexicon lacks, never remove " +
-                        "or replace one (injected=$injected)",
-                    injected >= 0 && trie.wordCount >= expected.words
+                    "$language: injected $injected keys but only $injectable of " +
+                        "${aliasKeys.size} alias keys are spellable from the trie alphabet — " +
+                        "injection invented paths",
+                    injected <= injectable
+                )
+                assertTrue(
+                    "$language: injection must never remove or replace a lexicon word " +
+                        "(projection had ${expected.words}, trie has ${trie.wordCount})",
+                    trie.wordCount >= expected.words
+                )
+                // The POINT of injection: after it, every spellable alias key is a beam-
+                // reachable path. The count equality above is satisfied by any set of the
+                // right size; this pins the actual keys.
+                val unreachable = aliasKeys
+                    .filter { CtcContractionKeys.isInjectable(it, trie.alphabet) }
+                    // Locale.ROOT to match CtcContractionKeys' own case-folding policy.
+                    .filterNot { trie.contains(it.lowercase(java.util.Locale.ROOT)) }
+                assertTrue(
+                    "$language: ${unreachable.size} spellable alias keys are not trie paths, " +
+                        "so ContractionOverlay can never fire for them — the beam cannot " +
+                        "produce a surface the lexicon lacks. First 5: ${unreachable.take(5)}",
+                    unreachable.isEmpty()
                 )
 
                 val target = TARGETS.getValue(language)
@@ -637,6 +678,16 @@ class CtcMultiLanguageInstrumentedTest {
     fun everyRoutedScriptShipsItsModelAssetInTheApk() {
         val target = InstrumentationRegistry.getInstrumentation().targetContext
         val models = target.assets.list("models")?.toSet().orEmpty()
+        assertTrue(
+            "assets/models is empty in the packaged APK — the CTC encoders did not ship",
+            models.isNotEmpty()
+        )
+        // Without this the loop below would exercise only its not-ROUTED branch and read
+        // as coverage of a rule it never checked.
+        assertTrue(
+            "no ROUTED script in CtcScriptSupport — the ROUTED half of this test is vacuous",
+            CtcScriptSupport.SCRIPTS.values.any { it.status == CtcScriptSupport.Status.ROUTED }
+        )
         for ((language, wiring) in CtcScriptSupport.SCRIPTS) {
             if (wiring.status != CtcScriptSupport.Status.ROUTED) {
                 assertFalse(
@@ -700,13 +751,32 @@ class CtcMultiLanguageInstrumentedTest {
                     trie.wordCount > 10_000
                 )
 
+                assertEquals(
+                    "$language: alphabet must be the a–z the projection targets",
+                    26, trie.alphabet.size
+                )
+
                 // Contraction injection is a headline reason these moved to CTC: geometric
                 // has none, so after the neural removal only 18 of 21,214 Italian alias keys
-                // were reachable. Prove the trie can hold an injected alias at all.
+                // were reachable. The alphabet check above does NOT prove that (it was the
+                // only assertion under this comment until ARC-044); this does — every alias
+                // key the alphabet can spell must be a beam-reachable trie path, because the
+                // overlay can only rewrite a surface the beam actually produced.
+                val aliasKeys = ContractionManager(context)
+                    .apply { loadSwipeDisplayMappings(language) }
+                    .getAliasKeys()
+                val spellable = aliasKeys
+                    .filter { CtcContractionKeys.isInjectable(it, trie.alphabet) }
+                val unreachable = spellable
+                    .filterNot { trie.contains(it.lowercase(java.util.Locale.ROOT)) }
                 assertTrue(
-                    "$language: alphabet must be the a–z the projection targets",
-                    trie.alphabet.size == 26
+                    "$language: ${unreachable.size} of ${spellable.size} spellable alias keys " +
+                        "are not trie paths — injection did not run on the provisional path. " +
+                        "First 5: ${unreachable.take(5)}",
+                    unreachable.isEmpty()
                 )
+                Log.i(TAG, "provisional $language: ${aliasKeys.size} alias keys, " +
+                    "${spellable.size} spellable, all reachable")
 
                 Log.i(TAG, "provisional $language: ${trie.wordCount} words, " +
                     "${trie.nodeCount} nodes, λ=${CtcScoringParams.presetFor(language).lambda}")
@@ -888,6 +958,15 @@ class CtcMultiLanguageInstrumentedTest {
             assertTrue("fixture: '$probe' must be present in English", adapter.trieFor("en")!!.contains(probe))
 
             val primaryOnly = decodeBlocking(adapter, kd, params, probe, "fr")
+            // HARD, not conditional (the audit m-5 precedent): an EMPTY control decode makes
+            // the assertion below vacuous AND silently drops the rank-one pin at the end of
+            // this test. A French beam over ~38k words must produce something for a
+            // nine-letter trace; nothing at all means the fr path regressed.
+            assertTrue(
+                "the French-only control decoded nothing — it cannot control anything, and " +
+                    "an empty slate would silently skip the rank-one assertion below",
+                primaryOnly.words.isNotEmpty(),
+            )
             assertFalse(
                 "French-only control unexpectedly surfaced '$probe': ${primaryOnly.words}",
                 primaryOnly.words.contains(probe),
@@ -899,10 +978,22 @@ class CtcMultiLanguageInstrumentedTest {
                 "French-primary + English-secondary must surface '$probe'. Got: ${dual.words}",
                 dual.words.contains(probe),
             )
-            if (primaryOnly.words.isNotEmpty()) {
+            assertEquals(
+                "secondary decoding must not replace the primary language's rank one",
+                primaryOnly.words.first(), dual.words.first(),
+            )
+            // The rank merger interleaves two independently scored slates, which is exactly
+            // where a word can arrive twice (once per lane) or lose its score partner.
+            for ((label, slate) in listOf("primary-only" to primaryOnly, "dual" to dual)) {
                 assertEquals(
-                    "secondary decoding must not replace the primary language's rank one",
-                    primaryOnly.words.first(), dual.words.first(),
+                    "$label: one score per word after the merge",
+                    slate.words.size, slate.scores.size
+                )
+                val lowered = slate.words.map { it.lowercase() }
+                assertEquals(
+                    "$label: rank-merging two lexicons must not offer the same word twice: " +
+                        "${slate.words}",
+                    lowered.distinct(), lowered
                 )
             }
         } finally {
