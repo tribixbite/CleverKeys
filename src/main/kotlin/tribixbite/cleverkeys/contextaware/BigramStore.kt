@@ -2,7 +2,9 @@ package tribixbite.cleverkeys.contextaware
 
 import android.content.Context
 import org.json.JSONArray
+import org.json.JSONException
 import org.json.JSONObject
+import org.json.JSONTokener
 import tribixbite.cleverkeys.persist.DebouncedPersister
 import tribixbite.cleverkeys.persist.LearnedDataStorage
 import tribixbite.cleverkeys.persist.SharedPrefsLearnedStorage
@@ -52,6 +54,29 @@ class BigramStore internal constructor(
         const val DEFAULT_MIN_FREQUENCY = 2  // Ignore hapax legomena (single occurrences)
         private const val MAX_BIGRAMS_PER_WORD = 20  // Top 20 predictions per previous word
         private const val MAX_TOTAL_BIGRAMS = 10000  // Overall storage limit (per language)
+
+        /**
+         * Persisted-blob format version (ARC-080).
+         *
+         * v1 (implicit, no marker) was a BARE JSON ARRAY of entries. It could not
+         * express [LanguageBigrams.word1Frequencies], so [loadInto] reconstructed
+         * each denominator as the sum of the SURVIVING entries — and
+         * [MAX_BIGRAMS_PER_WORD] drops continuations that the observed total still
+         * counts, so every survivor's conditional probability inflated at the next
+         * observation after a restart (a 4.95% continuation, correctly suppressed
+         * below `NextWordPredictor.MIN_LEARNED_PROBABILITY`, resurfaced at ~6%).
+         *
+         * v2 wraps the same entry array in an object and adds the true totals.
+         * Version detection is STRUCTURAL — a bare array is v1 — so blobs already
+         * on users' devices keep loading with exactly their previous behaviour.
+         * This is the ONLY versioning this file has ever had; the backup payload
+         * ([exportToJson]/[importFromJson]) is a separate, still-unversioned
+         * contract and is deliberately untouched.
+         */
+        private const val FORMAT_VERSION = 2
+        private const val KEY_VERSION = "version"
+        private const val KEY_ENTRIES = "entries"
+        private const val KEY_TOTALS = "totals"
 
         @Volatile
         private var instance: BigramStore? = null
@@ -600,9 +625,12 @@ class BigramStore internal constructor(
         failure?.let { throw it }
     }
 
-    /** Serialize a language table to the persisted JSON-array format. Caller holds the lock. */
+    /**
+     * Serialize a language table to the persisted [FORMAT_VERSION] blob.
+     * Caller holds the lock.
+     */
     private fun serialize(data: LanguageBigrams): String {
-        val json = JSONArray()
+        val entries = JSONArray()
         data.bigramMap.values.flatten().forEach { entry ->
             val obj = JSONObject().apply {
                 put("word1", entry.word1)
@@ -610,23 +638,60 @@ class BigramStore internal constructor(
                 put("frequency", entry.frequency)
                 put("probability", entry.probability.toDouble())
             }
-            json.put(obj)
+            entries.put(obj)
         }
-        return json.toString()
+
+        // ARC-080: the TRUE denominators, which the entry list cannot express once
+        // MAX_BIGRAMS_PER_WORD has dropped continuations. Only context words that
+        // still have entries are written: a total whose entries were all pruned
+        // away normalizes nothing, and persisting those orphans would grow the
+        // blob without bound over a long-lived install.
+        val totals = JSONObject()
+        for ((word1, total) in data.word1Frequencies) {
+            if (data.bigramMap.containsKey(word1)) totals.put(word1, total)
+        }
+
+        return JSONObject().apply {
+            put(KEY_VERSION, FORMAT_VERSION)
+            put(KEY_ENTRIES, entries)
+            put(KEY_TOTALS, totals)
+        }.toString()
     }
 
     /**
      * Load a persisted JSON blob into a language table.
      * Invalid JSON falls back to an empty table.
+     *
+     * Accepts BOTH persisted formats (ARC-080):
+     * - v2 object — entries plus the recorded [LanguageBigrams.word1Frequencies]
+     *   denominators, which are restored verbatim.
+     * - v1 bare array (everything written before ARC-080, and the legacy un-keyed
+     *   migration blob) — no totals section, so each denominator falls back to the
+     *   sum of the surviving entries, exactly as it always did.
      */
     private fun loadInto(data: LanguageBigrams, jsonString: String) {
         try {
-            val json = JSONArray(jsonString)
+            val entriesArray: JSONArray
+            val persistedTotals: JSONObject?
+            when (val root = JSONTokener(jsonString).nextValue()) {
+                is JSONArray -> {
+                    entriesArray = root
+                    persistedTotals = null
+                }
+                is JSONObject -> {
+                    // Read leniently rather than on an exact version match so a blob
+                    // written by a future version still yields its entries.
+                    entriesArray = root.optJSONArray(KEY_ENTRIES) ?: JSONArray()
+                    persistedTotals = root.optJSONObject(KEY_TOTALS)
+                }
+                else -> throw JSONException("unrecognized bigram blob root: ${root?.javaClass}")
+            }
+
             data.bigramMap.clear()
             data.word1Frequencies.clear()
 
-            for (i in 0 until json.length()) {
-                val obj = json.getJSONObject(i)
+            for (i in 0 until entriesArray.length()) {
+                val obj = entriesArray.getJSONObject(i)
                 val entry = BigramEntry(
                     word1 = obj.getString("word1"),
                     word2 = obj.getString("word2"),
@@ -636,9 +701,14 @@ class BigramStore internal constructor(
 
                 data.bigramMap.getOrPut(entry.word1) { mutableListOf() }.add(entry)
 
-                // Reconstruct word1 frequencies (non-null Int values → `?: 0` == getOrDefault).
+                // Sum of survivors — the v1 denominator, and the floor for the v2 one
+                // (non-null Int values → `?: 0` == getOrDefault).
                 val currentFreq = data.word1Frequencies[entry.word1] ?: 0
                 data.word1Frequencies[entry.word1] = currentFreq + entry.frequency
+            }
+
+            if (persistedTotals != null) {
+                restoreTotals(data, persistedTotals)
             }
 
             // Sort all lists by probability
@@ -649,6 +719,37 @@ class BigramStore internal constructor(
             // Invalid JSON, start fresh
             data.bigramMap.clear()
             data.word1Frequencies.clear()
+        }
+    }
+
+    /**
+     * Replace the sum-of-survivors denominators with the persisted ones and
+     * renormalize against them (ARC-080). Reached only from [loadInto] while the
+     * table is still under construction ([loadLock], not yet published), so no
+     * other thread can observe the intermediate state.
+     *
+     * For data this store wrote the renormalization is an identity — each entry's
+     * persisted probability was already `frequency / total`, and the float survives
+     * the JSON round-trip exactly — but recomputing unconditionally makes the loaded
+     * table self-consistent BY CONSTRUCTION, so a hand-edited blob cannot leave a
+     * probability that disagrees with its own denominator. (A v1 array carries no
+     * denominator to derive from, which is why that path keeps its stored
+     * probabilities untouched instead.)
+     */
+    private fun restoreTotals(data: LanguageBigrams, persistedTotals: JSONObject) {
+        for ((word1, entries) in data.bigramMap) {
+            val survivorSum = data.word1Frequencies[word1] ?: 0
+            // A recorded total can never legitimately be SMALLER than the entries that
+            // survived the cap, so clamp: a truncated or edited blob must not produce
+            // a conditional probability above 1.
+            val total = maxOf(persistedTotals.optInt(word1, 0), survivorSum)
+
+            data.word1Frequencies[word1] = total
+            val renormalized = entries.map {
+                it.copy(probability = BigramEntry.calculateProbability(it.frequency, total))
+            }
+            entries.clear()
+            entries.addAll(renormalized)
         }
     }
 

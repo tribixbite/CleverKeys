@@ -2,7 +2,9 @@ package tribixbite.cleverkeys.contextaware
 
 import android.content.Context
 import org.json.JSONArray
+import org.json.JSONException
 import org.json.JSONObject
+import org.json.JSONTokener
 import tribixbite.cleverkeys.persist.DebouncedPersister
 import tribixbite.cleverkeys.persist.LearnedDataStorage
 import tribixbite.cleverkeys.persist.SharedPrefsLearnedStorage
@@ -43,6 +45,28 @@ class TrigramStore internal constructor(
         const val DEFAULT_MIN_FREQUENCY = 2 // Ignore single occurrences (same floor as bigrams)
         private const val MAX_TRIGRAMS_PER_PREFIX = 10 // Trigram contexts are sharper than bigram ones
         private const val MAX_TOTAL_TRIGRAMS = 10000 // Overall storage limit (per language)
+
+        /**
+         * Persisted-blob format version (ARC-080) — the mirror of
+         * [BigramStore]'s, with the totals keyed by the composite `"word1 word2"`
+         * prefix instead of a single context word.
+         *
+         * v1 (implicit, no marker) was a BARE JSON ARRAY of entries, which could
+         * not express [LanguageTrigrams.prefixFrequencies]; [loadInto] rebuilt each
+         * denominator as the sum of the SURVIVING entries. Since
+         * [MAX_TRIGRAMS_PER_PREFIX] is only 10, a busy prefix loses most of its
+         * observations to the cap and the reconstructed denominator was far too
+         * small, inflating every survivor at the next observation after a restart.
+         *
+         * Version detection is STRUCTURAL — a bare array is v1 — so blobs already on
+         * users' devices keep loading with exactly their previous behaviour. The
+         * backup payload ([exportToJson]/[importFromJson]) is a separate, still
+         * array-shaped contract and is deliberately untouched.
+         */
+        private const val FORMAT_VERSION = 2
+        private const val KEY_VERSION = "version"
+        private const val KEY_ENTRIES = "entries"
+        private const val KEY_TOTALS = "totals"
 
         @Volatile
         private var instance: TrigramStore? = null
@@ -491,11 +515,14 @@ class TrigramStore internal constructor(
         failure?.let { throw it }
     }
 
-    /** Serialize a language table to the persisted JSON-array format. Caller holds the lock. */
+    /**
+     * Serialize a language table to the persisted [FORMAT_VERSION] blob.
+     * Caller holds the lock.
+     */
     private fun serialize(data: LanguageTrigrams): String {
-        val json = JSONArray()
+        val entries = JSONArray()
         data.trigramMap.values.flatten().forEach { entry ->
-            json.put(
+            entries.put(
                 JSONObject().apply {
                     put("word1", entry.word1)
                     put("word2", entry.word2)
@@ -505,18 +532,54 @@ class TrigramStore internal constructor(
                 }
             )
         }
-        return json.toString()
+
+        // ARC-080: the TRUE denominators, which the entry list cannot express once
+        // MAX_TRIGRAMS_PER_PREFIX has dropped continuations. Only prefixes that still
+        // have entries are written — see BigramStore.serialize for why the orphans
+        // are dropped rather than persisted.
+        val totals = JSONObject()
+        for ((key, total) in data.prefixFrequencies) {
+            if (data.trigramMap.containsKey(key)) totals.put(key, total)
+        }
+
+        return JSONObject().apply {
+            put(KEY_VERSION, FORMAT_VERSION)
+            put(KEY_ENTRIES, entries)
+            put(KEY_TOTALS, totals)
+        }.toString()
     }
 
-    /** Load a persisted JSON blob into a language table. Invalid JSON falls back to empty. */
+    /**
+     * Load a persisted JSON blob into a language table. Invalid JSON falls back to empty.
+     *
+     * Accepts BOTH persisted formats (ARC-080): the v2 object, whose recorded
+     * [LanguageTrigrams.prefixFrequencies] are restored verbatim, and the v1 bare
+     * array written before ARC-080, whose denominators fall back to the sum of the
+     * surviving entries exactly as they always did.
+     */
     private fun loadInto(data: LanguageTrigrams, jsonString: String) {
         try {
-            val json = JSONArray(jsonString)
+            val entriesArray: JSONArray
+            val persistedTotals: JSONObject?
+            when (val root = JSONTokener(jsonString).nextValue()) {
+                is JSONArray -> {
+                    entriesArray = root
+                    persistedTotals = null
+                }
+                is JSONObject -> {
+                    // Lenient rather than an exact version match, so a blob written by
+                    // a future version still yields its entries.
+                    entriesArray = root.optJSONArray(KEY_ENTRIES) ?: JSONArray()
+                    persistedTotals = root.optJSONObject(KEY_TOTALS)
+                }
+                else -> throw JSONException("unrecognized trigram blob root: ${root?.javaClass}")
+            }
+
             data.trigramMap.clear()
             data.prefixFrequencies.clear()
 
-            for (i in 0 until json.length()) {
-                val obj = json.getJSONObject(i)
+            for (i in 0 until entriesArray.length()) {
+                val obj = entriesArray.getJSONObject(i)
                 val entry = TrigramEntry(
                     word1 = obj.getString("word1"),
                     word2 = obj.getString("word2"),
@@ -526,13 +589,39 @@ class TrigramStore internal constructor(
                 )
                 val key = prefixKey(entry.word1, entry.word2)
                 data.trigramMap.getOrPut(key) { mutableListOf() }.add(entry)
+                // Sum of survivors — the v1 denominator, and the floor for the v2 one.
                 data.prefixFrequencies[key] = (data.prefixFrequencies[key] ?: 0) + entry.frequency
+            }
+
+            if (persistedTotals != null) {
+                restoreTotals(data, persistedTotals)
             }
 
             data.trigramMap.values.forEach { it.sortByDescending { e -> e.probability } }
         } catch (e: Exception) {
             data.trigramMap.clear()
             data.prefixFrequencies.clear()
+        }
+    }
+
+    /**
+     * Replace the sum-of-survivors denominators with the persisted ones and
+     * renormalize against them (ARC-080) — mirror of [BigramStore.restoreTotals],
+     * including the clamp that stops a truncated or edited blob producing a
+     * conditional probability above 1. Reached only from [loadInto] while the table
+     * is still under construction ([loadLock], not yet published).
+     */
+    private fun restoreTotals(data: LanguageTrigrams, persistedTotals: JSONObject) {
+        for ((key, entries) in data.trigramMap) {
+            val survivorSum = data.prefixFrequencies[key] ?: 0
+            val total = maxOf(persistedTotals.optInt(key, 0), survivorSum)
+
+            data.prefixFrequencies[key] = total
+            val renormalized = entries.map {
+                it.copy(probability = TrigramEntry.calculateProbability(it.frequency, total))
+            }
+            entries.clear()
+            entries.addAll(renormalized)
         }
     }
 
