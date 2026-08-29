@@ -16,9 +16,27 @@ plugins {
 //
 // Regenerate after ANY dependency change (else resolution fails with "Did not resolve … which
 // is part of the lock state"):
-//   ./gradlew dependencies --write-locks       # add -Pandroid.aapt2FromMavenOverride=… on Termux
-dependencyLocking {
-  lockAllConfigurations()
+//   ./gradlew assembleDebug assembleDebugAndroidTest compileReleaseKotlin --write-locks
+//   (real tasks, not `dependencies` — it resolves configurations differently; add
+//    -Pandroid.aapt2FromMavenOverride=… on Termux. Afterwards re-check that
+//    kotlin-stdlib-common still carries debugAndroidTestRuntimeClasspath — that line only
+//    resolves with locks ACTIVE and must be re-added by hand if a regeneration drops it.)
+//
+// SCOPE (2026-08-29, first real blocking Trivy run): lock ONLY the configurations whose
+// contents can reach a user — app compile/runtime plus androidTest (the ew-cli lock saga,
+// 8e2dd63d). The original lockAllConfigurations() also locked AGP's internal UTP test-runner
+// configurations and the unit-test classpaths, which put netty/bouncycastle/protobuf BUILD
+// TOOLING coordinates into gradle.lockfile — and Trivy reads a Gradle lockfile as one flat
+// production tree, so the gate went red on ~48 CVEs in code that never ships. Trivy's view
+// of the lockfile IS the gate's scope; keep the lockfile to shipped-or-installed bytes.
+configurations.matching {
+  it.name in [
+    'debugCompileClasspath', 'debugRuntimeClasspath',
+    'releaseCompileClasspath', 'releaseRuntimeClasspath',
+    'debugAndroidTestCompileClasspath', 'debugAndroidTestRuntimeClasspath',
+  ]
+}.configureEach {
+  resolutionStrategy.activateDependencyLocking()
 }
 
 dependencies {
