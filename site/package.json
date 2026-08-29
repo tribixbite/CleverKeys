@@ -29,6 +29,7 @@
   },
   "overrides": {
     "js-yaml": "4.3.1",
-    "vite": "6.4.3"
+    "vite": "6.4.3",
+    "devalue": "5.8.1"
   }
 }
