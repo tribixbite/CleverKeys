@@ -192,7 +192,34 @@ android {
       // Kotlin coroutines debug probes (non-deterministic)
       excludes += "DebugProbesKt.bin"
 
-      // Kotlin coroutines service files (non-deterministic order)
+      // Kotlin coroutines service files (non-deterministic order).
+      //
+      // WARNING: THESE TWO EXCLUDES DO NOT WORK, AND THAT IS NOW LOAD-BEARING.
+      // Verified 2026-08-29 (ARC-008): both entries are still present in the
+      // packaged APK — in the R8-off baseline AND in the minified build. Do NOT
+      // "fix" the patterns to make them take effect. Here is why:
+      //
+      //   proguard-rules.pro carries `-assumenosideeffects MainDispatcherLoader
+      //   { boolean FAST_SERVICE_LOADER_ENABLED return false; }`. That rule was
+      //   inert while minifyEnabled was false, but with R8 on it now folds the
+      //   flag to false, and the shipped DEX (baksmali'd to confirm) takes the
+      //   `java.util.ServiceLoader.load(...)` branch — the FastServiceLoader
+      //   path is gone from the bytecode entirely.
+      //
+      //   That branch resolves Dispatchers.Main by READING
+      //   META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory
+      //   out of the APK. It works today only because this exclude is a no-op
+      //   and the file ships (contents: kotlinx.coroutines.android.
+      //   AndroidDispatcherFactory, a name kept un-obfuscated by the
+      //   `-keep class kotlinx.coroutines.**` rule).
+      //
+      //   Make the exclude effective and Dispatchers.Main initialises to
+      //   MissingMainCoroutineDispatcher — every withContext(Dispatchers.Main)
+      //   in the IME throws, in release only. The ew-cli suite would not catch
+      //   it: instrumented tests run against the unminified debug variant.
+      //
+      // To genuinely drop these files, first delete the -assumenosideeffects
+      // rule so the FastServiceLoader (Class.forName) path returns.
       excludes += "META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory"
       excludes += "META-INF/services/kotlinx.coroutines.CoroutineExceptionHandler"
 
@@ -299,9 +326,22 @@ android {
     release {
       // REPRODUCIBILITY: Disable VCS info to prevent version-control-info.textproto (AGP 8.3+)
       vcsInfo.include = false
-      // REPRODUCIBILITY TEST: Disable R8 to isolate if it causes non-deterministic DEX
-      minifyEnabled false
-      shrinkResources false
+      // R8 code+resource shrinking, ENABLED 2026-08-29 (ARC-008). This replaces
+      // a 2025 "REPRODUCIBILITY TEST: disable R8 to isolate non-deterministic
+      // DEX" comment that had long outlived its experiment — R8 was never
+      // re-tested and proguard-rules.pro sat dormant for a year.
+      //
+      // Re-enabled after a full reflection/keep audit (every Class.forName,
+      // Gson reflective bind, getIdentifier, XML-inflated View and JNI surface
+      // in src/main was enumerated against proguard-rules.pro) and a two-run
+      // clean-build DEX hash comparison that confirmed R8 output is byte-identical,
+      // so F-Droid reproducibility is preserved.
+      //
+      // GATE: no v1.6.0 tag until a maintainer sideloads a MINIFIED release APK
+      // and soaks it by hand. The ew-cli instrumented suite does NOT cover this
+      // — it runs against the debug variant, which stays unminified below.
+      minifyEnabled true
+      shrinkResources true
       debuggable false
       proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
       resValue "string", "app_name", "CleverKeys"

@@ -67,9 +67,66 @@ recovered 48 untracked findings; **41 were fixed the same day** across seven imp
 waves (commits `31685cac`..`fee6bd4d` + wave commits; every fix cites its ARC ID). Consult git
 log and the verification doc before re-deriving anything. Still open:
 
-- **ARC-008 (soak-gated)**: R8/ProGuard still disabled (`build.gradle` "REPRODUCIBILITY TEST"
-  comment); re-enable needs a reflection-keep audit + full ew-cli soak + internal release, or a
-  recorded decision to delete `proguard-rules.pro`.
+- **ARC-008 — R8 ENABLED for release 2026-08-29. ONE MANUAL SOAK IS OWED BEFORE ANY v1.6.0 TAG.**
+  `minifyEnabled true` + `shrinkResources true` in the release block only; debug is untouched and
+  stays unminified. Landed after a full reflection/keep audit and a determinism proof.
+
+  **OWED before tagging v1.6.0 — a maintainer must sideload the MINIFIED release APK and soak it
+  by hand**: install it, type, swipe (both engines), open the clipboard / emoji / GIF panes,
+  import a backup, toggle languages, and open every settings screen. **A full ew-cli run is NOT
+  sufficient and does not discharge this gate** — the instrumented suite builds and runs the
+  *debug* variant, which has R8 off, so it exercises none of the obfuscated/shrunk code. The pure
+  gates likewise prove nothing here (`runPureTests` OK (1947), `runMockTests` OK (325) — both
+  green, both debug/JVM).
+
+  Evidence recorded at enable time:
+  - **Size** (same commit, R8 off → on): arm64-v8a 33,908,757 → 29,092,480 (-4,816,277, -14.2%);
+    armeabi-v7a -14.4%; x86_64 -13.8%. Uncompressed DEX 26,226,416 → 12,038,564 (-54%, 3 dex → 2).
+    Resource entries 1007 → 892.
+  - **Determinism: PASS, byte-identical.** Two `clean assembleRelease` runs produced identical
+    APK sha256 on all three ABIs (arm64 `38aa814fbea0489c…`, v7a `93329f71a63c4234…`,
+    x86_64 `6ee317a71f1b942e…`); `classes.dex` `5a20f58cd6478973…` and `classes2.dex`
+    `ddaf66dfa3c1b997…` matched across both runs and across ABIs, as did `resources.arsc`
+    `5439bf627bfa9575…`. **F-Droid reproducibility is preserved**, which was the original 2025
+    fear behind the "REPRODUCIBILITY TEST" comment — that fear is now measured and refuted.
+    The versioned release workflow uses the same AGP/R8, so determinism transfers; still, watch
+    the FIRST published minified release for an F-Droid reproducibility mismatch.
+  - **shrinkResources stripped nothing production-critical.** Zero `raw:` and zero `xml:`
+    resources removed (all 86 keyboard layouts, `numeric`, `pin`, `emojis`, `version_info`,
+    `method.xml` all retained). The 115 removed resources are Material/AndroidX leftovers plus
+    six app layouts + four app strings that all belong to the **dormant androidx.preference
+    widget layer** (`prefs/*Preference`, `CustomLayoutEditDialog`) — dead since Settings became
+    Compose: there is no `PreferenceFragmentCompat`, no preference XML screen, and nothing
+    constructs those Preference objects.
+  - **Retention smoke on the shipped DEX**: `CleverKeysService` kept un-obfuscated (required —
+    `CleverKeysService.kt:1059` feeds `javaClass.name` to the enabled-IME comparison),
+    `ai.onnxruntime.*` classes, Gson bind targets (`IntentDefinition`,
+    `ShortSwipeCustomizations`, `UserWordUsage`), all XML-inflated custom Views, and both ONNX
+    JNI `.so`s all present.
+
+  **Two traps recorded for whoever touches this next:**
+  1. **`build.gradle` coroutines `META-INF/services` excludes are no-ops, and that is now
+     load-bearing.** With R8 on, `-assumenosideeffects … FAST_SERVICE_LOADER_ENABLED return false`
+     finally takes effect, and the shipped DEX (confirmed by baksmali) resolves `Dispatchers.Main`
+     through `java.util.ServiceLoader` — which reads a file those excludes *claim* to remove.
+     Making the excludes work would break every `Dispatchers.Main` dispatch in release only.
+     Full explanation is in a comment at the exclude site.
+  2. **`usage.txt` is not a list of deleted functionality.** R8 writes bare class names for
+     classes that were inlined or merged away, and `mapping.txt` shows them as
+     `R8$$REMOVED$$CLASS$$N`. `CtcCkdtLexicon`, `CtcLexiconMerge`, `ContractionInjectionPolicy`
+     etc. all appear "removed" while their code demonstrably ships (string literals present,
+     callers live). Only two classes are genuinely gone — `CtcSwipeDecoder` and
+     `SuggestionRanker` — and both have **zero** production callers; they are referenced only
+     from `src/test`/`src/androidTest`. Worth a follow-up: `CtcLatencyGateTest` is an
+     *instrumented* gate measuring `CtcSwipeDecoder`, a class the release APK no longer ships,
+     while production decodes via `CtcBeamDecoder` (`CtcEngineAdapter.kt:1012`).
+
+  **Remaining shrink headroom (deferred, needs its own soak):** `proguard-rules.pro` still carries
+  blanket `-keep class androidx.compose.**`, `androidx.lifecycle.**`, `androidx.savedstate.**` and
+  `kotlinx.coroutines.** { *; }`. lifecycle and savedstate ship correct consumer rules in their
+  own AARs, so those two are redundant; `androidx.compose.**` is the largest retained blob. They
+  were kept deliberately so this first minified release does not ask one manual soak to cover
+  both "R8 on" and "Compose narrowed" at once.
 - **ARC-012 ROOT-CAUSED + FIXED 2026-08-29, manual visual confirmation owed.** #79 settings
   header flicker. The old "LazyColumn recomposition" diagnosis was wrong twice: the screen is
   `Column`+`verticalScroll`, and `git show v1.2.5:` confirms it was at the reported version too

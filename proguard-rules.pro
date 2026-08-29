@@ -1,11 +1,28 @@
-# CleverKeys ProGuard Rules
-# NOTE: R8 in AGP 8.x is deterministic by default. No special flags needed.
+# CleverKeys ProGuard Rules — LIVE as of 2026-08-29 (ARC-008).
 #
-# WARNING (2026-07-20 R8 audit): shrinkResources must stay FALSE unless a
-# res/raw keep.xml is added — R.raw.numeric / R.raw.pin / R.raw.version_info
-# are loaded via resources.getIdentifier() and look unused to the shrinker.
+# These rules are consumed by the RELEASE build only (`minifyEnabled true` +
+# `shrinkResources true`, build.gradle release block). Debug stays unminified so
+# the ew-cli instrumented suite keeps testing un-obfuscated code.
+#
+# R8 in AGP 8.x is deterministic by default; determinism was re-verified on
+# 2026-08-29 by hashing classes*.dex across two clean `assembleRelease` runs.
+#
+# CORRECTION (supersedes the 2026-07-20 note that blocked shrinkResources):
+# the claim that R.raw.numeric / R.raw.pin / R.raw.version_info are reached via
+# `resources.getIdentifier()` is FALSE. The only `getIdentifier` calls in
+# production are Keyboard2View.kt:244/:263 and they resolve *framework*
+# (`"android"` package) identifiers — `config_showNavigationBar`,
+# `navigation_bar_height` — which the app resource shrinker never touches.
+# Every app raw resource is reached by a real `R.raw.*` constant
+# (LayoutManager.kt:206/:209, KeyboardReceiver.kt:198, Emoji.kt:27,
+# SettingsInfoCards.kt:231, LayoutsPreference.kt:143) or by an `@raw/…` entry in
+# the generated `res/values/layouts.xml` `layout_ids` integer-array, so no
+# keep.xml is required. Retention is asserted empirically after each release
+# build — see the ARC-008 entry in memory/HANDOFF.md.
 
-# Theory #3: Ensure InputMethodService subclasses aren't stripped
+# =============================================================================
+# Android entry points
+# =============================================================================
 
 # Keep all InputMethodService implementations
 -keep class * extends android.inputmethodservice.InputMethodService {
@@ -13,8 +30,21 @@
     protected *;
 }
 
-# Keep our specific services (FIXED: was tribixbite.keyboard2)
+# Keep our specific services (FIXED: was tribixbite.keyboard2).
+# LOAD-BEARING, not belt-and-braces: CleverKeysService.kt:1059 passes
+# `javaClass.name` into IMEStatusHelper.checkAndPromptDefaultIME, which compares
+# it against the InputMethodManager's enabled-IME list. That list carries the
+# manifest name, so an obfuscated class name would silently break the
+# "set CleverKeys as your default keyboard" prompt.
 -keep class tribixbite.cleverkeys.CleverKeysService { *; }
+
+# Custom Views inflated by name from res/layout/*.xml. aapt2 auto-generates
+# constructor keeps for these, but they are the IME's own panes — pin them so a
+# future aapt2/AGP change cannot quietly drop the inflation constructors.
+-keep class tribixbite.cleverkeys.ClipboardHistoryView { *; }
+-keep class tribixbite.cleverkeys.EmojiGridView { *; }
+-keep class tribixbite.cleverkeys.EmojiGroupButtonsBar { *; }
+-keep class tribixbite.cleverkeys.gif.GifGroupButtonsBar { *; }
 
 # Keep the ONNX session loader (onnx/ModelLoader) — the CTC encoder builds its
 # OrtSession through it. The rest of the onnx package was deleted with the transformer
@@ -57,8 +87,7 @@
 -keep class tribixbite.cleverkeys.ProbabilisticKeyDetector { *; }
 
 # Keep swipe processing classes
--keep class tribixbite.cleverkeys.SwipeResampler { *; }
--keep class tribixbite.cleverkeys.SwipeResampler$** { *; }
+# (SwipeResampler deleted before 2026-08-29 — dead rule removed, ARC-008)
 -keep class tribixbite.cleverkeys.KeyboardDimensionsHelper { *; }
 
 # CRITICAL: Keep KeyboardGrid - used for nearest key detection during swipe
@@ -72,10 +101,9 @@
 # Keep gesture recognizer classes
 # (SwipeGestureRecognizer/ContinuousSwipeGestureRecognizer deleted in the
 #  2026-07-18 dead-code purge — rules removed)
+# (SwipeDetector deleted before 2026-08-29 — dead rule removed, ARC-008)
 -keep class tribixbite.cleverkeys.EnhancedSwipeGestureRecognizer { *; }
 -keep class tribixbite.cleverkeys.ImprovedSwipeGestureRecognizer { *; }
--keep class tribixbite.cleverkeys.SwipeDetector { *; }
--keep class tribixbite.cleverkeys.SwipeDetector$** { *; }
 
 # Keep Pointers class and nested classes (critical for touch handling)
 -keep class tribixbite.cleverkeys.Pointers { *; }
@@ -115,6 +143,19 @@
     <fields>;
 }
 -keepnames class tribixbite.cleverkeys.Keyboard2View { *; }
+
+# -----------------------------------------------------------------------------
+# CONSERVATIVE BLANKET KEEPS — deliberately retained for the FIRST minified
+# release (ARC-008, 2026-08-29), not because they are required.
+#
+# androidx.lifecycle and androidx.savedstate both ship their own correct
+# consumer proguard.txt inside their AARs (verified 2026-08-29), so these
+# `**{*;}` keeps are redundant; androidx.compose.** is the single largest
+# retained blob in the DEX. Narrowing them is the remaining shrink headroom,
+# but each one widens what the one-maintainer soak has to cover, so it is
+# deferred to a follow-up with its own soak rather than folded into the
+# enable-R8 change. See memory/HANDOFF.md ARC-008.
+# -----------------------------------------------------------------------------
 
 # Keep AndroidX Lifecycle components
 -keep class androidx.lifecycle.** { *; }
@@ -208,9 +249,12 @@
 # Keep LauncherActivity inner classes (animation data classes)
 -keep class tribixbite.cleverkeys.LauncherActivity$** { *; }
 
-# CRITICAL: Keep enums used in swipe detection
--keep enum tribixbite.cleverkeys.SwipeDirection { *; }
--keep enum tribixbite.cleverkeys.ActionType { *; }
+# CRITICAL: Keep enums used in swipe detection.
+# SwipeDirection and ActionType were listed here under the ROOT package and
+# matched nothing — both actually live in `tribixbite.cleverkeys.customization`
+# (customization/SwipeDirection.kt:7, customization/ActionType.kt:6) and are
+# already covered by the `customization.**` keep further down. Dead rules
+# removed 2026-08-29 (ARC-008).
 -keep enum tribixbite.cleverkeys.PredictionSource { *; }
 -keep enum tribixbite.cleverkeys.NumberLayout { *; }
 
@@ -222,20 +266,29 @@
 -keep class tribixbite.cleverkeys.ComposeKeyData { *; }
 
 # ========== JNI/ONNX SPECIFIC RULES ==========
+#
+# The onnxruntime-android 1.20.0 AAR ships NO consumer proguard.txt (verified
+# 2026-08-29 by listing the AAR: only jni/*/lib*.so + R.txt). The
+# `-keep class ai.onnxruntime.** { *; }` above is therefore the ONLY thing
+# standing between R8 and libonnxruntime4j_jni.so's FindClass/GetFieldID
+# lookups. Do not narrow it without re-running the soak.
+#
+# The three rules that used to live here were all redundant or dead and were
+# removed 2026-08-29 (ARC-008):
+#   - a verbatim duplicate of the `native <methods>` keep above;
+#   - `-keepnames`/`-keepclassmembers` on `onnx.**`, subsumed by the
+#     `-keep class tribixbite.cleverkeys.onnx.** { *; }` near the top;
+#   - `onnx.SessionConfigurator`, a class deleted with the transformer engine
+#     on 2026-08-18 (the package holds only ModelLoader.kt today).
 
-# Prevent R8 from breaking JNI method links with ONNX Runtime
--keepclassmembers class * {
-    native <methods>;
-}
-
-# Keep all classes that interact with ONNX tensors (prevent JNI obfuscation)
--keepnames class tribixbite.cleverkeys.onnx.**
--keepclassmembers class tribixbite.cleverkeys.onnx.** {
-    *;
-}
-
-# Keep ONNX session configurator
--keep class tribixbite.cleverkeys.onnx.SessionConfigurator { *; }
+# =============================================================================
+# Audit artifacts — regenerated on every release build, all under build/ so
+# nothing lands in the repo. `full-r8-config.txt` is the MERGED configuration
+# (our rules + the AGP default file + every AAR's consumer rules + aapt2's
+# generated manifest/layout keeps); AGP additionally writes usage.txt (what was
+# stripped), seeds.txt (what matched a keep) and mapping.txt beside it.
+# =============================================================================
+-printconfiguration build/outputs/mapping/release/full-r8-config.txt
 
 # Ensure Kotlin metadata is preserved for proper reflection
 -keepattributes *Annotation*
