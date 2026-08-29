@@ -8,7 +8,7 @@ import java.io.File
  * Drift guards for the dead/unwired-plumbing findings of the 2026-08-29 second-pass audit
  * (`docs/audit/2026-08-28-archive-verification.md`).
  *
- * These findings share a failure mode that no compiler warning catches: code that is
+ * All three findings share a failure mode that no compiler warning catches: code that is
  * reachable-by-linker but unreachable-by-execution, kept alive by blanket ProGuard keeps or
  * by a settings screen that writes a preference nothing reads. Deleting it once is not
  * enough — a later refactor can reintroduce the same shape. These scans pin the deletions.
@@ -19,6 +19,9 @@ import java.io.File
  *  - **ARC-085** — the "Correction Style" dropdown wrote `swipe_correction_preset`, which
  *    no `Config`, predictor or engine adapter ever read: a control that responded to touch
  *    and changed nothing.
+ *  - **ARC-097** — `SuggestionOrigin.forRoutedEngine` had zero production callers while its
+ *    own KDoc and three shipped docs named it THE production mechanism; the two dispatch
+ *    sites passed enum literals instead.
  *
  * Source-scan convention (project root as CWD) matches [CoreImeHygieneDriftTest] and
  * [LearningWiringDriftTest].
@@ -32,6 +35,13 @@ class DeadPlumbingDriftTest {
             "Source dir not found at ${mainKotlin.absolutePath} — drift test must run with project root as CWD."
         }
         return mainKotlin.walkTopDown().filter { it.isFile && it.extension == "kt" }.toList()
+    }
+
+    private fun source(relative: String): String {
+        val f = File(mainKotlin, relative)
+        assertWithMessage("expected source file to exist: ${f.path} (run from project root)")
+            .that(f.isFile).isTrue()
+        return f.readText()
     }
 
     /**
@@ -141,4 +151,45 @@ class DeadPlumbingDriftTest {
         ).that(hits).isEmpty()
     }
 
+    // ---------------------------------------------------------------- ARC-097
+
+    @Test
+    fun `ARC-097 - both routed-engine dispatches derive their origin from forRoutedEngine`() {
+        // The documented contract (SuggestionProvenance KDoc, docs/ARCHITECTURE_MASTER.md,
+        // docs/specs/ctc-swipe-engine.md, docs/wiki/specs/typing/swipe-typing-spec.md) is
+        // that the origin attached to a swipe suggestion is the ROUTED engine's, derived via
+        // SuggestionOrigin.forRoutedEngine. SuggestionProvenanceTest pins what that function
+        // ANSWERS for each engine; this pins that production actually asks it. Passing the
+        // enum literal instead produces the same tag today but leaves the mapping duplicated
+        // in three places, so a future engine (or a remap) silently diverges — which is the
+        // whole reason the helper exists.
+        val coordinator = source("tribixbite/cleverkeys/InputCoordinator.kt")
+
+        assertWithMessage(
+            "ARC-097: the geometric decode callback must tag its results with " +
+                "SuggestionOrigin.forRoutedEngine(SwipeEngineRouter.Engine.GEOMETRIC)."
+        ).that(coordinator)
+            .contains("SuggestionOrigin.forRoutedEngine(SwipeEngineRouter.Engine.GEOMETRIC)")
+
+        assertWithMessage(
+            "ARC-097: the CTC decode callback must tag its results with " +
+                "SuggestionOrigin.forRoutedEngine(SwipeEngineRouter.Engine.CTC)."
+        ).that(coordinator)
+            .contains("SuggestionOrigin.forRoutedEngine(SwipeEngineRouter.Engine.CTC)")
+
+        // No dispatch site may fall back to a bare literal — that is the bypass this finding
+        // is about. (SuggestionProvenance.kt itself and the bar's colour table legitimately
+        // name the enum constants; only the dispatcher is constrained.)
+        val bareLiteral = Regex("""SuggestionOrigin\.(GEOMETRIC|CTC)\b""")
+        val literalHits = coordinator.lines().mapIndexedNotNull { index, line ->
+            if (!isCommentOnly(line) && bareLiteral.containsMatchIn(line)) {
+                "InputCoordinator.kt:${index + 1}: ${line.trim()}"
+            } else null
+        }
+        assertWithMessage(
+            "ARC-097: InputCoordinator must not pass a bare SuggestionOrigin enum literal as a " +
+                "swipe origin — route it through forRoutedEngine so the engine→origin mapping " +
+                "has exactly one implementation.\nFound:\n" + literalHits.joinToString("\n")
+        ).that(literalHits).isEmpty()
+    }
 }

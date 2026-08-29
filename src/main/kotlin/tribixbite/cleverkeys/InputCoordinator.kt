@@ -650,7 +650,10 @@ class InputCoordinator(
                     wasShiftActive, wasShiftLocked,
                     // M2: tag with the engine that ACTUALLY decoded (a hybrid/ctc-mode
                     // non-QWERTY swipe is geometric, not the mode's namesake engine).
-                    SuggestionOrigin.GEOMETRIC
+                    // ARC-097: derived from the routed Engine rather than written as an
+                    // origin literal, so the engine→origin mapping has exactly ONE
+                    // implementation — the one SuggestionProvenanceTest pins for totality.
+                    SuggestionOrigin.forRoutedEngine(SwipeEngineRouter.Engine.GEOMETRIC)
                 )
             } else if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                 android.util.Log.d(TAG, "Dropping geometric decode: input field changed since swipe")
@@ -777,7 +780,8 @@ class InputCoordinator(
                     result.words, result.scores, ic, editorInfo, resources,
                     wasShiftActive, wasShiftLocked,
                     // M2: this dispatch IS the CTC adapter, so the tag is exact.
-                    SuggestionOrigin.CTC,
+                    // ARC-097: same single-implementation rule as the geometric callback.
+                    SuggestionOrigin.forRoutedEngine(SwipeEngineRouter.Engine.CTC),
                     // CK-150-024: non-null only for a dual-language merged slate.
                     result.languages
                 )
