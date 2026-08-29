@@ -121,6 +121,16 @@ log and the verification doc before re-deriving anything. Still open:
      *instrumented* gate measuring `CtcSwipeDecoder`, a class the release APK no longer ships,
      while production decodes via `CtcBeamDecoder` (`CtcEngineAdapter.kt:1012`).
 
+  **Re-verified at `20ef0dae`** (after ARC-048 R4/R6 landed on top): release still builds with R8
+  on, output 29,092,559 B, and the full DEX retention sweep still passes. **Trap for the next
+  keep-audit: in Kotlin the directory does NOT determine the package.** ARC-048 R4 moved
+  `ClipboardHistoryView`, `EmojiGridView` and `EmojiGroupButtonsBar` into `clipboard/` and
+  `emoji/` directories while leaving `package tribixbite.cleverkeys` intact, so the FQNs — and
+  therefore the `-keep` rules and the `<tribixbite.cleverkeys.…>` tags in `res/layout/*.xml` — are
+  all still correct. Judge a keep rule by the file's `package` line, never by its path; inferring
+  from the path produces a convincing false alarm. A checker for this lives at
+  `scratchpad/stale-keeps.sh` in the ARC-008 session (52 FQ targets, all resolving).
+
   **Remaining shrink headroom (deferred, needs its own soak):** `proguard-rules.pro` still carries
   blanket `-keep class androidx.compose.**`, `androidx.lifecycle.**`, `androidx.savedstate.**` and
   `kotlinx.coroutines.** { *; }`. lifecycle and savedstate ship correct consumer rules in their
