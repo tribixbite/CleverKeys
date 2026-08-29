@@ -25,7 +25,7 @@ import kotlin.math.min
 /**
  * Word prediction engine that matches swipe patterns to dictionary words
  */
-class WordPredictor {
+class WordPredictor : Predictor {
     companion object {
         private const val TAG = "WordPredictor"
         private const val MAX_PREDICTIONS_TYPING = 5
@@ -325,7 +325,7 @@ class WordPredictor {
      * Stop observing dictionary changes.
      * Call this when WordPredictor is no longer needed.
      */
-    fun stopObservingDictionaryChanges() {
+    override fun stopObservingDictionaryChanges() {
         dictionaryObserver?.let {
             if (observerActive) {
                 it.stop()
@@ -397,7 +397,7 @@ class WordPredictor {
      * Public (2026-07-15): the add-to-dictionary prompt guard (UT-2) needs it
      * so a possessive of a DISABLED base is not suppressed as "known".
      */
-    fun isWordDisabled(word: String): Boolean {
+    override fun isWordDisabled(word: String): Boolean {
         val lower = word.lowercase()
         // Custom/user-added words override disabled status — if user explicitly added
         // "Boston" after disabling "boston", the custom word wins
@@ -418,7 +418,7 @@ class WordPredictor {
      *
      * v1.1.90: Uses currentLanguage to filter UserDictionary by locale.
      */
-    fun reloadCustomAndUserWords() {
+    override fun reloadCustomAndUserWords() {
         context?.let {
             // Issue #72: Clear proper noun case map before reloading
             userWordOriginalCase.clear()
@@ -451,7 +451,7 @@ class WordPredictor {
     /**
      * Set the config for weight access
      */
-    fun setConfig(config: Config) {
+    override fun setConfig(config: Config) {
         this.config = config
 
         // H3 (review 2026-08-06): keep the selection-adaptation store's enabled
@@ -570,7 +570,7 @@ class WordPredictor {
      * @param word The word to check (case-insensitive)
      * @return true if word is in dictionary, false otherwise
      */
-    fun isInDictionary(word: String): Boolean {
+    override fun isInDictionary(word: String): Boolean {
         if (word.isEmpty()) return false
         val lowerWord = word.lowercase()
         // Check main dictionary
@@ -603,7 +603,7 @@ class WordPredictor {
      * @param words List of predicted words
      * @return List with proper noun case restored where applicable
      */
-    fun applyUserWordCaseToList(words: List<String>): List<String> {
+    override fun applyUserWordCaseToList(words: List<String>): List<String> {
         return words.map { applyUserWordCase(it) }
     }
 
@@ -616,7 +616,7 @@ class WordPredictor {
      *   language-detection window still updates (detection is not learning),
      *   but NO learn path runs.
      */
-    fun addWordToContext(word: String?, fieldAllowsPersonalizedLearning: Boolean = true) {
+    override fun addWordToContext(word: String?, fieldAllowsPersonalizedLearning: Boolean) {
         if (word.isNullOrBlank()) return
 
         val normalizedWord = word.lowercase().trim()
@@ -717,7 +717,7 @@ class WordPredictor {
     /**
      * Clear the recent words context
      */
-    fun clearContext() {
+    override fun clearContext() {
         recentWords.clear()
     }
 
@@ -745,7 +745,7 @@ class WordPredictor {
      * @param fieldAllowsPersonalizedLearning the active field's incognito flag,
      *   as passed to [addWordToContext] for the original commit
      */
-    fun rollbackCommittedWord(word: String, fieldAllowsPersonalizedLearning: Boolean = true) {
+    override fun rollbackCommittedWord(word: String, fieldAllowsPersonalizedLearning: Boolean) {
         val normalized = word.lowercase().trim()
         if (recentWords.isEmpty() || recentWords.last() != normalized) return
 
@@ -765,7 +765,7 @@ class WordPredictor {
      * sentence boundary (cross-boundary pairs are noise for both context boosting
      * and next-word generation).
      */
-    fun onSentenceBoundary() {
+    override fun onSentenceBoundary() {
         recentWords.clear()
     }
 
@@ -803,7 +803,7 @@ class WordPredictor {
      * @param words the slate, already in display form (`"don't"`, `"café"`).
      * @param contextWords preceding words, oldest first, as the stores key them.
      */
-    fun getSwipeContextEvidence(
+    override fun getSwipeContextEvidence(
         words: List<String>,
         contextWords: List<String>,
     ): List<SwipeContextRescorer.Evidence>? {
@@ -833,9 +833,9 @@ class WordPredictor {
         }
     }
 
-    fun getNextWordCandidates(
+    override fun getNextWordCandidates(
         contextWords: List<String>,
-        maxResults: Int = 10
+        maxResults: Int
     ): List<tribixbite.cleverkeys.contextaware.ContextContinuation> {
         // Task A: the master gate makes the learned store inert for READS too —
         // next-word candidates come exclusively from learned data. Null config
@@ -866,7 +866,7 @@ class WordPredictor {
      * @return continuations ranked best-first; empty when the context is empty,
      *   the language has no static data, or the previous word is unknown
      */
-    fun getStaticNextWordSeed(
+    override fun getStaticNextWordSeed(
         contextWords: List<String>,
         maxResults: Int
     ): List<StaticBigramSeed.Continuation> {
@@ -879,7 +879,7 @@ class WordPredictor {
      * master on-device-learning gate is off, or the word is unknown. Used by
      * next-word re-ranking.
      */
-    fun getPersonalizationBoostFor(word: String): Float {
+    override fun getPersonalizationBoostFor(word: String): Float {
         // Null config fails CLOSED (M2).
         val canUse = LearningGate.canLearnPersonalization(
             config?.on_device_learning_enabled ?: false,
@@ -894,7 +894,7 @@ class WordPredictor {
      * Next-word filter: membership here OR in the dictionary is required so
      * typo'd garbage absorbed by the bigram store never surfaces.
      */
-    fun isInUserVocabulary(word: String): Boolean {
+    override fun isInUserVocabulary(word: String): Boolean {
         return personalizationEngine?.hasWord(word) ?: false
     }
 
@@ -907,7 +907,7 @@ class WordPredictor {
      * predictor eviction (DictionaryManager.setLanguage), and coordinator shutdown
      * (PredictionCoordinator.shutdown).
      */
-    fun persistLearnedData() {
+    override fun persistLearnedData() {
         contextModel?.save()
         personalizationEngine?.persist()
     }
@@ -1048,7 +1048,7 @@ class WordPredictor {
      * @param language Language code (e.g., "en")
      * @param callback Callback for load completion (optional, can be null)
      */
-    fun loadDictionaryAsync(context: Context, language: String, callback: Runnable?) {
+    override fun loadDictionaryAsync(context: Context, language: String, callback: Runnable?) {
         // v1.2.0: Don't ignore reload requests - AsyncDictionaryLoader will cancel previous task
         // This fixes language toggle not reloading dictionary when initial load is in progress
         if (isLoadingState) {
@@ -1137,7 +1137,7 @@ class WordPredictor {
      *
      * @return true if dictionary is loading asynchronously
      */
-    fun isLoading(): Boolean {
+    override fun isLoading(): Boolean {
         return isLoadingState
     }
 
@@ -1161,7 +1161,7 @@ class WordPredictor {
      * @param language Language code (e.g., "es", "fr", "de")
      * @return true if loaded successfully
      */
-    fun loadSecondaryDictionary(language: String): Boolean {
+    override fun loadSecondaryDictionary(language: String): Boolean {
         if (language == "none" || language.isEmpty()) {
             unloadSecondaryDictionary()
             return true
@@ -1216,7 +1216,7 @@ class WordPredictor {
     /**
      * Unload the secondary dictionary to free memory.
      */
-    fun unloadSecondaryDictionary() {
+    override fun unloadSecondaryDictionary() {
         secondaryIndex = null
         secondaryLanguageCode = "none"
         Log.i(TAG, "Unloaded secondary dictionary for touch typing")
@@ -1796,7 +1796,7 @@ class WordPredictor {
     /**
      * Reset the predictor state - called after space/punctuation
      */
-    fun reset() {
+    override fun reset() {
         // This method will be called from CleverKeysService to reset state
         // Dictionary remains loaded, just clears any internal state if needed
         if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
@@ -1845,7 +1845,7 @@ class WordPredictor {
     /**
      * Predict words with context (PUBLIC API - delegates to internal unified method)
      */
-    fun predictWordsWithContext(keySequence: String, context: List<String>): PredictionResult {
+    override fun predictWordsWithContext(keySequence: String, context: List<String>): PredictionResult {
         return predictInternal(keySequence, context)
     }
 
@@ -2099,7 +2099,7 @@ class WordPredictor {
      * recomputed on demand (long-press provenance sheet). Returns null when the
      * word is not in the primary dictionary or does not match the sequence.
      */
-    fun explainScore(word: String, keySequence: String, context: List<String>): ScoreBreakdown? {
+    override fun explainScore(word: String, keySequence: String, context: List<String>): ScoreBreakdown? {
         val lower = word.lowercase()
         val frequency = dictionary.get()[lower] ?: return null
         return resolveScoreBreakdown(lower, keySequence.lowercase(), frequency, context)
@@ -2109,7 +2109,7 @@ class WordPredictor {
      * Transparency API (Task B): wires the previously dead
      * `PersonalizationEngine.explainBoost()` into the provenance sheet.
      */
-    fun explainPersonalization(word: String): tribixbite.cleverkeys.personalization.BoostExplanation? {
+    override fun explainPersonalization(word: String): tribixbite.cleverkeys.personalization.BoostExplanation? {
         return personalizationEngine?.explainBoost(word.lowercase())
     }
 
@@ -2179,7 +2179,7 @@ class WordPredictor {
         return cachedMaxFreq
     }
 
-    fun autoCorrect(typedWord: String): String {
+    override fun autoCorrect(typedWord: String): String {
         if (config?.autocorrect_enabled != true || typedWord.isEmpty()) {
             return typedWord
         }

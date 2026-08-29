@@ -19,6 +19,12 @@ class DictionaryManager(private val context: Context) {
     // Use DirectBootAwarePreferences for consistency with CustomDictionarySource
     private val prefs: SharedPreferences = DirectBootAwarePreferences.get_shared_preferences(context)
     private val gson = Gson()
+    // Deliberately the CONCRETE type, not the [Predictor] interface (ARC-048 R6). This class
+    // is the owner, not a consumer: it constructs each predictor and wires it with members
+    // that are construction-only and therefore off the contract on purpose —
+    // `setContext()` and `startObservingDictionaryChanges()` in setLanguage()'s `apply` block.
+    // Nothing here hands a predictor out; consumers get theirs from
+    // `PredictionCoordinator.getWordPredictor()`, which returns `Predictor?`.
     private val predictors = mutableMapOf<String, WordPredictor>()
     private val userWords = mutableSetOf<String>()
     private var currentLanguage: String = "en"

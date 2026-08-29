@@ -483,6 +483,9 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.backup.SettingsDefaultsDriftTest',
     'tribixbite.cleverkeys.SettingsSearchCoverageTest',
     'tribixbite.cleverkeys.GesturePrefAccessDriftTest',
+    // ARC-048 R6 (2026-08-29): drives the prediction contract through a FakePredictor
+    // instead of the real 2,600-line WordPredictor — the milestone the plan asked for.
+    'tribixbite.cleverkeys.PredictorContractTest',
     'tribixbite.cleverkeys.backup.DictImportPlanBuilderTest',
     'tribixbite.cleverkeys.backup.SettingsExporterTest',
     'tribixbite.cleverkeys.BackupRestoreResultMessagesTest',

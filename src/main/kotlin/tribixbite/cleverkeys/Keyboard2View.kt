@@ -116,7 +116,7 @@ class Keyboard2View @JvmOverloads constructor(
     private val _swipeTrailPath = Path()
 
     // Swipe typing integration
-    private var _wordPredictor: WordPredictor? = null
+    private var _wordPredictor: Predictor? = null
 
     // CGR prediction storage
     private val _cgrPredictions = ArrayList<String>()
@@ -1127,7 +1127,7 @@ class Keyboard2View @JvmOverloads constructor(
         }
     }
 
-    fun setSwipeTypingComponents(predictor: WordPredictor?, keyboard2: CleverKeysService?) {
+    fun setSwipeTypingComponents(predictor: Predictor?, keyboard2: CleverKeysService?) {
         _wordPredictor = predictor
         _keyboard2 = keyboard2
     }

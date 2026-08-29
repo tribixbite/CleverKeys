@@ -37,7 +37,7 @@ class PredictionCoordinator(
 
     // Prediction engines
     private var dictionaryManager: DictionaryManager? = null
-    private var wordPredictor: WordPredictor? = null
+    private var wordPredictor: Predictor? = null
 
     // Supporting services
     private var mlDataStore: SwipeMLDataStore? = null
@@ -265,7 +265,7 @@ class PredictionCoordinator(
      *
      * @return WordPredictor for typing predictions, or null if not initialized
      */
-    fun getWordPredictor(): WordPredictor? {
+    fun getWordPredictor(): Predictor? {
         return wordPredictor
     }
 
