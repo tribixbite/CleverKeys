@@ -13,6 +13,63 @@ do not start Milestone A on the release branch. The open CK-150 items in
 
 ---
 
+## STATUS — Milestone A landed 2026-08-29, ru only
+
+**Commits:** `1561dbaf` (shared wiring, behaviour-neutral) → `da012ded` (ru assets + routing).
+**Gates at `da012ded`:** `runPureTests` OK (1920, from 1882) · `runMockTests` OK (325) ·
+`compileDebugAndroidTestKotlin` green. **No instrumented run yet** — see the ew-cli list in
+`memory/HANDOFF.md` "Verification owed".
+
+| item | plan says | status |
+|---|---|---|
+| A0 negative routing test | pin gate 3's `false` for cyrl/grek | **flipped deliberately** — `CtcMultiLanguageInstrumentedTest.theLayoutGateIsPerLanguage` keeps the enduring half (a Latin language cannot use a non-Latin board) and adds the per-(script, language) half |
+| A1 per-script alphabet | map in `CtcLanguageSupport` | **done, in a new `CtcScriptSupport`** — a per-script TABLE (alphabet + layout + artifacts + status + gap), not just a map. Pinned against each shipped fixture's `layout.letters` |
+| A2 `buildMappedLayout` generalization | size by `alphabet.size` | **done**; Latin path unchanged (featurizer parity cases pin it) |
+| A3 per-language model asset | "add the seam only, fill in Milestone B" | **done AND filled for ru** — the staging was collapsed for one script because the ru bytes were available and rule 4 forbids routing without them |
+| A4 routing | membership check against wired scripts | **done** — `CtcScriptSupport.ROUTABLE_SCRIPTS`; `LayoutScriptDeclarationTest` extended per-script, not weakened |
+| A5 reachable `tunedRuCkdt` | script branch in `presetFor` | **done**; λ/γ/β/prunes untouched |
+| A6 fuzzy rescue must not go silently dead | parametrize by alphabet | **done** — required argument, not defaulted |
+| A7 projection module | new `CtcScriptProjection` | **done for all six scripts**, unit-tested; `CtcAzProjection` now delegates its lexicon loop so there is one implementation |
+| A8 trie width / memo capacity | measure before changing `size > 2` | **not changed** — deliberately. Still unmeasured, and now more urgent: a ru primary pulls a second ORT session as well |
+| A9 32-frame budget per lexicon | sweep each script trie | **NOT DONE** — no script lexicon has been checked, ru included. Needs the pack on a device or an ML-side sweep |
+| A10 tests and drift pins | parity row, release metadata | **done** — `CtcParityTest` and `CtcEmissionModelParityTest` are both row-driven; `ReleaseMetadataDriftTest` gained `SERVED_BUT_NOT_YET_ANNOUNCED = {ru}` with a release TODO |
+
+**Milestone A exit criteria, honestly:** ru decodes on `cyrl_jcuken_ru.xml` — through its OWN
+generation-4 encoder, not the English one, because rule 4 does not permit routing a script
+without its model. The zero-shot-first staging in §1 was therefore not executed as written; the
+model-free half of the risk (slot order, projection, preset scale) is instead carried by
+`1561dbaf` being provably behaviour-neutral (`ROUTABLE_SCRIPTS == {latin}` in that commit) and by
+the pure gates. The measured 76.3 zero-shot figure was never reproduced in-app and now cannot be
+without deliberately mis-wiring the model asset.
+
+**Three deviations from this plan, all deliberate:**
+
+1. **The ru lexicon is the imported langpack, not a bundled asset** (`LexiconSource.CKDT_LANGPACK`
+   reading `filesDir/langpacks/ru/dictionary.bin`). The guide §4.6 offers "bundle **or** gate on"
+   as equal options; gating costs 0 APK bytes against 2.09 MB, and ru is only selectable as a
+   language when a ru dictionary source exists anyway. The residual hole — a backup import
+   writing `pref_primary_language=ru` with no pack — is closed by a new `hasLexiconSource`
+   dispatch gate, without which the bar would silently clear.
+2. **el was not routed**, though its lexicon path turned out to be genuinely cheap (both
+   projection halves are implemented and tested, `grek_qwerty.xml` is complete, the CKDT bin is
+   built). What stopped it is evidence, not code: Greek has no real-swipe probe at any tier, so
+   an on-device run is the only evidence that will ever exist, and this session could not perform
+   one. Its `CtcScriptSupport` row states the two missing artifacts by sha.
+3. **The ONNX session and its failure latch are per ASSET.** Not in the plan; the guide §2 flags
+   it — gate 4 was a single global latch, and with per-language encoders a dead Cyrillic graph
+   would have disabled CTC for English too.
+
+**One thing this plan asserted that is false.** §0's row *"1.6 LOW-6 dev absolute path in
+fixtures | open | **closed** | `rg kd_fp16w src/` → no matches"* is wrong: `src/test/resources/ctc/ctc_golden.json:2`
+and its androidTest twin still read `"source_onnx": "/home/will/ctc-train/ckpt/v2kd-fresh-w1/kd_fp16w.onnx"`.
+The ru fixture carries the same shape of dev path. **Leave them.** The fixtures are byte-identical
+copies of the ML artifacts and `CtcParityTest` ties the shipped ONNX to the fixture's recorded
+sha; editing the JSON would break that byte-identity and make every future re-copy show a
+spurious diff, to remove a string that is not a secret. If it must go, it goes in
+`make_golden.py` ML-side and both copies are regenerated together.
+
+---
+
 ## 0. Checklist §1 re-verification at `9f3b6b94`
 
 | ML checklist item | Status 2026-08-20 | Status now | Evidence / where it went |

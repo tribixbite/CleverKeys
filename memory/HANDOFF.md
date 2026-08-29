@@ -8,12 +8,14 @@ priority.
 **Completed work is DELETED from this file, not struck through.** Git history is the record of
 what was done; this file is only what is left. Anything below is open.
 
-## State at `ececaa73`
+## State at `da012ded`
 
 Swipe is **CTC (default) + geometric**; the neural engine was deleted 2026-08-18
-(`a7d03bc8`..`83220634`), −26.4 MB APK. `CtcLanguageSupport.SUPPORTED` is **seven** languages:
-en/fr/de/es test-validated, it/pt/sv `PROVISIONAL` (scale-transferred, no per-language bar).
-Gates: `runPureTests` **1882**, `runMockTests` **325**, `lintDebug` 0 errors, both compiles.
+(`a7d03bc8`..`83220634`), −26.4 MB APK. `CtcLanguageSupport.SUPPORTED` is **eight** languages:
+en/fr/de/es test-validated, it/pt/sv `PROVISIONAL` (scale-transferred, no per-language bar), and
+**ru** `VAL_ONLY` since 2026-08-29 (`1561dbaf`, `da012ded` — the first non-Latin script; see the
+geometric-removal section below for what is and is not established about it).
+Gates: `runPureTests` **1920**, `runMockTests` **325**, `lintDebug` 0 errors, both compiles.
 Last full instrumented run (ew-cli, Pixel7 API 34, 2026-08-28, run `2ca8b7c9` at `6d67a7c8`):
 **1,430 tests, 3 red — all explained, none a code regression**: 2 `CtcOnnxLatencyBenchmarkTest`
 reds that are BY DESIGN whenever the ctc_bench models are not staged (`3fcbf7b8`; restore via
@@ -191,8 +193,8 @@ Everything is in git history and these references — do not re-derive:
 
 ## The geometric-removal question
 
-The **language** dimension is closed — all seven bundled dictionary languages run on CTC. What
-remains is script and layout.
+The **language** dimension is closed for Latin. **Cyrillic is now half-open**: the wiring is
+generic and Russian is routed. What remains is the other five scripts' lexicons, and layout.
 
 Layout census (`src/main/layouts/`, 86 XML — the tree `copyLayoutDefinitions` ships;
 `srcs/layouts/` is divergent and read by no build task):
@@ -201,52 +203,94 @@ Layout census (`src/main/layouts/`, 86 XML — the tree `copyLayoutDefinitions` 
 |---|---|---|
 | `script="latin"` and a–z-complete | 46 | CTC |
 | `script="latin"` but a–z-incomplete | 2 | geometric, via the alphabet gate |
-| non-Latin declared (15 scripts) | 36 | geometric at gate 1 |
+| `script="cyrillic"` | 11 | **CTC at gate 1** since 2026-08-29; only `ru` is served, so ten of the eleven fall through at the LANGUAGE gate |
+| other non-Latin declared (14 scripts) | 25 | geometric at gate 1 |
 | no `script` attribute | 2 | `numeric.xml`, `pin.xml` — not letter layouts |
 
-**"Non-Latin can only be served by geometric" is false.** Per-script models are required — a
-Latin-trained encoder does not zero-shot another script, because motor statistics and the learned
-character-transition prior are trained even though geometry is an input — but they are cheap and
-proven: ~94k steps of `resbn:80`, under an hour on one GPU, from a word list and layout geometry
-alone. `phaseIB-ru-synth` saw zero real Cyrillic rows and decoded real Russian at 77.41 in-dict
-top-1; the generation-4 successor (`ru_synth_v3_ch80`, learned-generator synthesis, Phase Q)
-reads **85.07** on the same eval-only probe.
+**"Non-Latin can only be served by geometric" is false, and is now also disproven in the app.**
+Per-script models are required — a Latin-trained encoder does not zero-shot another script well
+enough on its own, because motor statistics and the learned character-transition prior are
+trained even though geometry is an input — but they are cheap and proven: ~94k steps of
+`resbn:80`, under an hour on one GPU, from a word list and layout geometry alone.
+`phaseIB-ru-synth` saw zero real Cyrillic rows and decoded real Russian at 77.41 in-dict top-1;
+the generation-4 successor (`ru_synth_v3_ch80`, learned-generator synthesis, Phase Q) reads
+**85.07** on the same eval-only probe.
 
-Equally, "the ALPHABET is hardcoded a–z" is true of two constants in one adapter file and false
-of everything else: the model has no alphabet (64 geometry-conditioned slots plus blank,
-`keyEmbed` a function of `(cx, cy)` never of slot index), and `CtcLayout`, `CtcLexiconTrie`
-(bounded by `MAX_KEYS`=64) and `CtcEmissions.sliceFromHead` are already script-generic.
+"The ALPHABET is hardcoded a–z" **was** true of two constants in one adapter file and false of
+everything else. Both are gone (`1561dbaf`).
 
-**Russian is delivered** (updated 2026-08-25 — the 2026-08-18 paragraph named the generation-2
-bytes, since twice superseded): the current ship bytes are
-`CleverKeys-ML/ctc/artifacts/ru_synth_v3_ch80_fp16w.onnx`, 589,406 B, sha `8fffa75c…`, at
-**85.07** in-dict top-1, plus its golden fixture `ru_synth_v3_ch80_fp16w_golden.json`. All six
-scripts (ru/el/uk/bg/mk/he) now have uniform `_v3_` generation-4 artifacts; hashes in
-`CleverKeys-ML/ctc/APP_WIRING_CHECKLIST.md` §2.2 and the app plan
-`docs/plans/2026-08-25-ctc-multiscript-wiring-plan.md`.
+### As built — 2026-08-29, `1561dbaf` + `da012ded`
 
-### The multi-script wiring plan — `CleverKeys-ML/ctc/PHASE_O.md` §3
+The infrastructure is generic and Russian is routed end to end. What exists now:
 
-Six scripts specified end to end (ru, el, uk, bg, mk, he) with per-script alphabets, K, lexicon
-status and presets. Read §3.2 before designing anything. The essentials:
+- **`swipe/ctc/CtcScriptSupport.kt`** — THE per-script table: alphabet (codepoint-sorted, the
+  model's emission slot order), layout XML, `script` attribute, model asset, golden fixture,
+  status, and for the unrouted five the exact gap and its unblocking condition. All six scripts
+  have a row. Only `Status.ROUTED` widens the router, and the row's `init` refuses ROUTED unless
+  both artifacts are named — rule 4 as a type invariant.
+- **`swipe/ctc/CtcScriptProjection.kt`** — PHASE_O §3.4 mirrored exactly, for all six scripts,
+  unit-tested (ru/bg/mk folds and NO NFD, el mark-strip + final sigma, uk ї/ґ rejection, he
+  niqqud). It also owns the single collision-resolving lexicon loop `CtcAzProjection` now
+  delegates to.
+- **Adapter** — per-language alphabet, per-language model asset, per-ASSET ONNX session and
+  failure latch (a dead script graph can no longer disable English), `supportsLayout(…,
+  language)`, a `hasLexiconSource` gate, an alphabet-scoped `CtcFuzzyRescue`, and a
+  layout-derived finger-occlusion row count.
+- **`presetFor`** returns `tunedRuCkdt` for any language with a script row. It was unreachable
+  for months, so the constants all six script models were gated and fixture-generated at could
+  not be selected. λ/γ/β and both prune terms are unchanged.
+- **Router** — gate 1 consults `CtcScriptSupport.ROUTABLE_SCRIPTS`, not `isLatinScript`. Routing
+  stays per SCRIPT; serving stays per LANGUAGE, and that division is test-pinned.
 
-- **Slot order IS the alphabet array**, codepoint-sorted; emission column `c` is `letters[c]`. A
-  mismatch **silently permutes every decode** rather than failing. Sharpest footgun in the plan.
-- **The geometry needs no app-side change** — `app_layout.py` reproduces `en_qwerty.json` from the
-  app's own XML to 4.7e-4.
-- **Eight changes enumerated; two already done** — the trie width (`d671d19e`) and `CtcLayout`'s
-  generic alphabet. Live: per-script `ALPHABET`, per-script routing, a per-language model asset
-  (`MODEL_ASSET` is one constant), runtime-extensible `SUPPORTED`, a reachable `tunedRuCkdt`
-  (exists but `presetFor` can never return it), a per-script fixture↔model↔preset row.
-- **Per-script projection rules the app must mirror** (§3.4): all scripts lowercase and strip
-  `- ' ’ ʼ ‘ \``; el/he NFD + drop marks + NFC; **ru/bg/mk must NOT use NFD** (it decomposes
-  й into и + breve) — character folds instead; el word-final σ→ς; uk rejects ї/ґ words (4.03%).
-- Lexicons: ru importable today, el needs the sigma repair (shipped in `6f30d60f`, not yet
-  wired), **uk/bg/mk/he must be built**, and he needs a new `hebrew` branch in
-  `build_wordlist._is_script_word`.
+**Russian, exactly.** Ship bytes `src/main/assets/models/ru_synth_v3_ch80_fp16w.onnx`
+sha `8fffa75c…` (589,406 B), fixture `ru_synth_v3_ch80_fp16w_golden.json` sha `2e8de3c5…`
+(160,384 B, two byte-identical copies), preset `tunedRuCkdt`, layout `cyrl_jcuken_ru.xml`,
+alphabet `абвгдежзийклмнопрстуфхцчшщыьэюя` (31 — ё and ъ are CORNER values and are folded away by
+the projection, never emission slots).
 
-Geometric is removable **script by script**, ~an hour of GPU each plus wiring. It cannot be
-removed first: deleting it today does not downgrade a Cyrillic user, it removes their swipe.
+**The ru lexicon is the imported langpack, not a bundled asset.** `LexiconSource.CKDT_LANGPACK`
+reads `filesDir/langpacks/ru/dictionary.bin`, which is byte-identical (sha `2bd8f244…`,
+2,088,865 B, CKDT v2, 50,000 words) to `scripts/dictionaries/ru/ru_enhanced.bin` and to
+`langpack-ru.zip`'s payload — the file `eval_cyrillic.build_trie` reads, so every published
+Russian number is on exactly this lexicon. Consequence to state plainly: **Russian CTC only
+works once the user imports `langpack-ru.zip`**; without it ru is not even selectable, and the
+`hasLexiconSource` gate hands the swipe to geometric if a backup import sets the pref anyway.
+
+**Evidence tier — say it exactly this way.** 85.07 in-dict top-1, measured on the Yandex
+valid-10k, which is **eval-only by licence**. Russian CTC is **val-only permanently**: the
+test-2400 seal is spent and no Cyrillic model was ever decoded on it, so no Russian number may
+ever be called "test-validated". The model is license-clean synthesis (learned generator, MIT
+data only) and saw zero real Cyrillic rows; a sealed twin puts the upper bound at 85.95 and
+produced one number and no bytes. The model arm is three seeds (85.30 ± 0.207) and the shipped
+s1234 bytes are the LOWEST of the three; the generator and the ceiling arms are single-seed.
+**Nothing on-device has ever been measured for any script model** — no latency, no memory.
+λ = 2.0 carries a measured, unconfirmed −0.63 t1 shortfall; γ, β and the prune terms are E1's.
+
+### What is left, per script
+
+`el` is the cheapest by a distance and was deliberately NOT routed in this wave. Everything is
+ready except two files and a decision: `grek_qwerty.xml` exposes all 25 letters as centre keys,
+`langpack-el.zip` exists on the same CKDT scale (and `scripts/dictionaries/el/el_enhanced.bin`
+is already built), and **both halves** of the el projection are implemented and unit-tested. The
+gap is `el_synth_v3_ch80_fp16w.onnx` (sha `7083794c…`) + its fixture (sha `d08d5501…`), plus the
+fact that **Greek has no real-swipe probe at any tier** — its 92.12 is a synthesis-holdout level
+and may never be quoted as accuracy — so the ew-cli run would be the only evidence Greek swipe
+works at all. Wiring it is a table row, an asset copy and a `SUPPORTED` line.
+
+`uk`, `bg`, `mk`, `he` are infrastructure-ready and blocked on LEXICONS, which must be built
+ML-side (`build_wordlist.py --lang <code>` and packaged as CKDT v2 langpacks); `he` additionally
+needs a new `hebrew` branch (0x0590–0x05FF) in `build_wordlist._is_script_word`, which currently
+raises on any script but latin/greek/cyrillic. Their models and fixtures are also unshipped. Each
+row in `CtcScriptSupport` states its own gap; that table is the live list, not this paragraph.
+
+**Still true of every script including ru**: the 32-frame budget has never been checked against a
+real script lexicon. `CtcDecodableLength` computes it and a test covers `en_enhanced.json`; no
+script pack has been swept, and Greek and Ukrainian carry long inflected forms. A word over
+budget is unemittable with no error.
+
+Geometric is removable **script by script**, ~an hour of GPU each plus a lexicon plus wiring. It
+cannot be removed first: deleting it today does not downgrade a Bulgarian user, it removes their
+swipe.
 
 **Tier note**: Colemak and arbitrary user XML were never benchmarked. Covered by design; the
 worst *measured* layout is german at 81.30 against geometric's ~77, so the expected-value case is
@@ -285,6 +329,23 @@ strong — but "Colemak ≥ geometric" is an inference, not a measurement. Say i
 
 ## Verification owed
 
+- **The ru CTC path has never run on a device.** `da012ded` ships the Russian encoder and routes
+  Cyrillic, and every gate that could be checked without hardware is green — but no instrumented
+  run has happened since. The next ew-cli run must confirm, in this order: (1)
+  `CtcEmissionModelParityTest` passes its NEW ru row, i.e. the packaged
+  `ru_synth_v3_ch80_fp16w.onnx` actually loads through ORT and reproduces the fixture's emission
+  matrices within 2e-3 and its top-k within 1e-3 — this is the only gate that executes the graph,
+  and a stale-matrix fixture passes everything else; (2)
+  `CtcMultiLanguageInstrumentedTest.theLayoutGateIsPerLanguage` — the deliberate flip: a Cyrillic
+  board is now eligible for ru and still rejected for en, and no script board is eligible for
+  another script's language; (3) `everyRoutedScriptShipsItsModelAssetInTheApk` — that aapt really
+  packaged the new asset (589,406 B of ONNX is easy to lose to a packaging rule); (4) a ru decode
+  end to end WITH `langpack-ru.zip` imported, which no emulator has today — the pack-installed
+  path is unreachable on a clean emulator, so this half needs the maintainer's device; (5) the
+  latency gate on a ru swipe, because **no script model has ever been timed or memory-profiled**
+  — the graph is a fifth of the Latin encoder's bytes so the expectation is favourable, and
+  expectation is not measurement. Also worth watching: the trie memo evicts at `size > 2`, and a
+  ru primary now pulls a SECOND ORT session alongside the Latin one.
 - **The collision-warning dialog has never been SEEN.** Its logic is instrumented-tested, but the
   dialog only appears when an imported language pack contributes a collision, and no pack is
   installed on the emulator — so the pack-collision path cannot be reached on emulator.wtf at all.
