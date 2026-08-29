@@ -114,6 +114,14 @@ jobs:
       #
       # Accepted: unfixed upstream CVEs do not block the PR path; fixed HIGH/CRITICAL do.
       # Revisit alongside the release gate's identical note.
+      # SPLIT (2026-08-29): trivy IGNORES --severity in SARIF mode — the SARIF always
+      # carries every severity, and exit-code then fires on the unfiltered set, so this
+      # step was red on unfixable MEDIUM/LOW findings the policy above explicitly accepts
+      # (observed: 11 medium/low results, zero HIGH/CRITICAL, exit 1). The documented
+      # pattern is two invocations: SARIF for code-scanning upload with no exit code,
+      # then a table-format gate that honors the severity filter AND prints its findings
+      # into the job log (the SARIF step never showed WHAT failed). release.yml's
+      # security-gate is already table-format and needs no split.
       uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
       with:
         scan-type: 'fs'
@@ -122,15 +130,27 @@ jobs:
         output: 'trivy-results.sarif'
         severity: 'HIGH,CRITICAL'
         ignore-unfixed: true
-        # Without this the action always exits 0 and removing continue-on-error alone
-        # would leave the step decorative.
-        exit-code: '1'
+        exit-code: '0'
 
     - name: Upload security results
       uses: github/codeql-action/upload-sarif@6f5948dfacef28e207b48d0905cf90c03365536d # v3
       if: always() && hashFiles('trivy-results.sarif') != ''
       with:
         sarif_file: 'trivy-results.sarif'
+
+    - name: Gate on fixed HIGH/CRITICAL vulnerabilities
+      # The BLOCKING half (CK-150-023): identical policy to release.yml's security-gate —
+      # same severity, same unfixed policy, same exit-code. Keep the two in sync.
+      # Table format = severity filter is honored AND findings print in this log.
+      uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'table'
+        severity: 'HIGH,CRITICAL'
+        ignore-unfixed: true
+        # Without this the action always exits 0 and the step would be decorative.
+        exit-code: '1'
 
   # Per-ABI APK size report (folded in from the former build.yml, which duplicated
   # assembleDebug). Consumes the debug APKs uploaded by the "Build and Test" job.
