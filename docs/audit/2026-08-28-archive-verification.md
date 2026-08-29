@@ -203,3 +203,115 @@ One doc verified fully clean: `2026-07-18-accessibility-implementation-plan.md` 
   editor-scan cursor-park "deferred" (`context-learning-and-next-word.md:172,:322`,
   wiki `next-word-prediction-spec.md:65`); `LearningGate.kt:31-33` + `strings.xml:668` still
   name the deleted `SwipeCalibrationActivity` trace collection as a master-gate exception.
+
+---
+
+## Backlog additions — 2026-08-29 remediation waves (ARC-053..078)
+
+**Context:** waves A–N plus the CI-hardening pass fixed 45 of the original 52 items same-day
+(see git history `31685cac..b12c4365`; every fix cites its ARC ID). What follows is everything
+the waves surfaced, deferred, or left gated — the complete open backlog for the next agent.
+`memory/HANDOFF.md` §0 is the prioritized index; this section is the evidence.
+
+**Release-gated (block v1.6.0 tagging)**
+- ARC-053 — **Maintainer soak of the MINIFIED release APK.** R8 on since `37ed9804` (−14% APK,
+  −54% DEX, byte-deterministic). ew-cli does NOT discharge this (it builds unminified debug).
+  Soak: install, type, swipe, clipboard/emoji/GIF panes, backup import, language toggle.
+- ARC-054 — **Release-notes decision**: main serves ru + eligible imported packs; the v1.6.0
+  notes say seven languages. `ReleaseMetadataDriftTest.SERVED_BUT_NOT_YET_ANNOUNCED = {ru}`
+  pins the mismatch. Announce at real evidence tier (ru = val-only) or hold the wiring back.
+
+**Multiscript follow-ons**
+- ARC-055 — el routing: copy `el_synth_v3_ch80_fp16w.onnx` (`7083794c…`) + fixture
+  (`d08d5501…`), flip the `CtcScriptSupport` row, add `el` to `SUPPORTED`, run the parity row.
+  Blocked on evidence-tier appetite only (no Greek probe exists at any tier).
+- ARC-056 (ML-side) — uk/bg/mk/he lexicons via `build_wordlist.py --lang`; `he` additionally
+  needs a `hebrew` branch (0x0590–0x05FF) in `_is_script_word`.
+- ARC-057 — 32-frame emit-budget sweep for the BUNDLED lexicons (en/fr/de/es/it/pt/sv + ru);
+  `7cb98645` closed it for imported packs only. An over-budget word is unemittable, silently.
+- ARC-058 — trie-memo capacity (`size > 2`) + second-ORT-session memory under a 3-language
+  rotation with ru primary — never measured (extends CK-150-026).
+- ARC-059 — `CtcLatencyGateTest:183` measures `CtcSwipeDecoder`, which release R8 now strips
+  (zero prod callers; production decodes via `CtcBeamDecoder`). Move it to `src/test` or
+  repoint the gate.
+- ARC-060 (ML-side) — `ru_jcuken_default.json` lacks `source.app_xml` provenance and carries
+  1080-px rasterization artifacts; regenerate via `app_layout.py --code ru` and diff (en's
+  agreement was measured at 4.7e-4; ru's never was).
+- ARC-061 (ML-side) — LOW-6 is falsely closed: both `ctc_golden.json` copies embed
+  `source_onnx: /home/will/...` (non-secret). Fix belongs in `make_golden.py`; editing the JSON
+  in-app breaks byte-identity + sha ties.
+
+**R8 follow-ons**
+- ARC-062 — the coroutines `META-INF/services` packaging excludes have NEVER worked, and under
+  R8 that accident is load-bearing: `-assumenosideeffects` folds
+  `FAST_SERVICE_LOADER_ENABLED=false`, so `Dispatchers.Main` resolves via
+  `java.util.ServiceLoader` reading the very file the excludes claim to delete
+  (baksmali-verified). Delete the dead excludes + keep the comment, in the same change as the
+  soak so one test run covers it.
+- ARC-063 — narrow the blanket `androidx.compose.**`/lifecycle/savedstate/coroutines keeps
+  AFTER the first minified soak passes — deliberately not bundled with ARC-053.
+
+**Langpack-CTC follow-ons (Wave J gaps)**
+- ARC-064 — unasserted: secondary-language dual decode with an imported pack;
+  pack language on a non-Latin board (generic gate assumed to catch it); pack
+  `contractions.json` alias injection into the CTC trie.
+- ARC-065 — out-of-band pack arrival (file restore / older-build import) → first swipe goes
+  geometric while the background a-z measurement runs. Documented behavior; optional
+  measure-on-boot if it ever bites.
+- ARC-066 — `swipe_engine_mode_desc` is content-stale in English + 21 locales (predates ru and
+  packs). One deliberate reword pass, accepting the full-locale invalidation.
+
+**Translation debt (consolidated)**
+- ARC-067 — the 21-locale pass: 317 ARC-045 extractions + wave C/E/J strings
+  (`backup_base64_too_large`, `clipboard_private_copy_toast_*`, `clipboard_provenance_*`,
+  pack-serving card strings) + `privacy_on_device_learning_desc` (21 locales still name deleted
+  swipe-calibration) + `pref_secondary_prediction_weight` summary rescope.
+
+**Verification owed**
+- ARC-068 — #79: manual visual pass on a current build. If flicker persists, the v1.2.5-era
+  candidate is the top-edge three-way inset conflict (`styles.xml:53-57` vs
+  `setDecorFitsSystemWindows(false)` vs `.statusBarsPadding()`); the
+  `debug.hwui.show_dirty_regions` discriminator is recorded under ARC-012 above.
+- ARC-069 — maintainer-device checklist (consolidated): #148 visual (predictions off → pane
+  overlays visible keyboard); `.ckenc` export-with-password; next-word cold-start bar
+  (opt in, empty learned store); ARC-005 nonzero occlusion on a geometric-served layout;
+  the collision-warning DIALOG rendering (the scanner branch is now emulator-covered by
+  `CtcImportedPackInstrumentedTest`; the dialog itself is still unseen); plus the carried
+  items: Italian swipe, first-swipe warm-up, pre-v1.6.0 backup import, pre-v1.1.86 upgrade.
+- ARC-070 — one long-run `MemoryProbe` + `dumpsys meminfo` on a current build to close the
+  unexplained 2026-08-17 OOM (was ARC-049).
+- ARC-077 — CK-150-027 (a11y dense hit-region parity sweep) and CK-150-029
+  (touch-exploration-ON smoke incl. a `dispatchKeyEvent` non-swallow assertion) remain open
+  from the 2026-08-25 ledger.
+
+**Hygiene / small**
+- ARC-071 — astro 5→6 migration: bump astro past 6.4.6, drop the vite/js-yaml overrides in
+  `site/package.json`, delete the two `.trivyignore` lines, rebuild (84 pages expected).
+- ARC-073 — doc-path drift: ~25 spec/wiki citations to pre-reorg source paths (deliberately
+  skipped by the rename-pure Wave N commit) + `scripts/verify-production-ready.sh:66,98,99`
+  citing a `tribixbite/keyboard2/` tree that never existed.
+- ARC-074 — `CrashGuardInstrumentedTest`'s `catch (Throwable)` guard is never exercised (all
+  eight collaborators are final); needs a production seam to inject a throwing collaborator.
+- ARC-075 — `GifPanelSection` couples on `status.startsWith("Error")` — an English-anchored
+  match against a message produced elsewhere.
+- ARC-076 — `tools/test_cli_predict.ts` (unrunnable; kept only for the authoritative
+  `QWERTY_KEYS` geometry table cited by `GeoLocalCorpusReplayTest`) and the orphaned
+  `scripts/swipedata_metrics.py`: move the geometry table into a test fixture, then delete both.
+
+**Architecture projects (each its own effort; plans in `docs/history/audits/remediation/5-architecture.md`)**
+- ARC-072 — R3 `ConfigSnapshot` hot-path read-model (static `Config.globalConfig()` consumers:
+  33 files / 90 call sites) and R5 Initializer collapse into a composition root (6 files,
+  841 lines). Done already from that plan: R4 reorg (root 145→114, dir-only), R6 `Predictor`
+  interface, the `SideEffect{}` fix.
+
+**Process note (recorded so it isn't re-litigated)**
+- ARC-078 — the 2026-08-28 androidTest APKs (13.79 MB uploaded) carried **~10.3 MB of
+  UNTRACKED filesystem payload** that no longer exists: a worktree build of the same SHA from
+  tracked files yields 3.52 MB, and today's builds are 3.44 MB with all test classes and
+  fixtures verified present. The size signature (stored-uncompressed, `noCompress 'onnx'`)
+  matches leftover ONNX models parked under `src/androidTest/assets/` under names the bench
+  test doesn't probe (its 2 by-design reds fired on BOTH days, so the *expected* bench models
+  were never staged). The deleter left no commit record. Two session claims were WRONG in
+  sequence and are retracted here: "lockfile scoping healed the bloat" (refuted by the worktree
+  experiment) — the durable lesson stands: AGP packages the FILESYSTEM, not the index; when an
+  APK size jumps, `unzip -l` immediately, before theorizing.

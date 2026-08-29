@@ -82,6 +82,7 @@
 | `2026-07-23-futo100k-head2head.md` | FUTO 100k corpus head-to-head | ✅ Complete |
 | `2026-08-06-offline-decoder-speedup.md` | Offline ONNX decode speedup investigation — verdict: adopt neither (XNNPACK 0.80× slower; decoder already int8-dynamic-quantized) | ✅ Complete |
 | `2026-07-24-harness-conversion-audit.md` | Eval harness conversion fixes | ✅ Complete |
+| `2026-08-28-arc019-ctc-local-head2head.md` | CTC vs geometric same-inputs head-to-head (90.7 vs 63.0 top-1); UT-5/UT-7 closure record | ✅ Complete |
 | `2026-07-24-swipedata-onnx-validation.md` | Swipedata → ONNX input validation | ✅ Complete |
 | `futo-decoder-eval-notes.md` | FUTO reference decoder porting notes (floor + Viterbi-beam ceiling) | ✅ Complete |
 

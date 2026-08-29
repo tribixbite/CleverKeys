@@ -64,248 +64,71 @@ story. Two habits came out of it and are worth keeping:
 
 ## Open work, in priority order
 
-### 0. Audit-archive leak ledger (2026-08-28) — remediation waves complete; residue below
+### 0. The ARC backlog — full index in `docs/audit/2026-08-28-archive-verification.md`
 
-The archive-verification pass (`docs/audit/2026-08-28-archive-verification.md`, ARC-001..052)
-recovered 48 untracked findings; **41 were fixed the same day** across seven implementation
-waves (commits `31685cac`..`fee6bd4d` + wave commits; every fix cites its ARC ID). Consult git
-log and the verification doc before re-deriving anything. Still open:
+The 2026-08-28 archive-verification pass recovered 52 findings (ARC-001..052); the 2026-08-28/29
+remediation waves (A–N, commits `31685cac..b12c4365`) fixed 45 of them plus the CI security-gate
+hardening, multiscript CTC (ru + imported Latin packs), R8, the reorg and the i18n extraction —
+every fix cites its ARC ID in its commit. **The ledger's "Backlog additions" section
+(ARC-053..078) is the complete open list with evidence**; this is the priority order:
 
-- **ARC-008 — R8 ENABLED for release 2026-08-29. ONE MANUAL SOAK IS OWED BEFORE ANY v1.6.0 TAG.**
-  `minifyEnabled true` + `shrinkResources true` in the release block only; debug is untouched and
-  stays unminified. Landed after a full reflection/keep audit and a determinism proof.
+**Release-gated — must close before any v1.6.0 tag**
+- **ARC-053** maintainer soak of the MINIFIED release APK (R8 on since `37ed9804`; ew-cli does
+  NOT discharge this — it builds unminified debug). Pair with **ARC-062** (delete the dead
+  coroutines `META-INF/services` excludes in the same soak-covered change).
+- **ARC-054** release-notes decision: main serves 8+ languages (ru val-only + eligible packs),
+  the notes say seven. Pinned by `SERVED_BUT_NOT_YET_ANNOUNCED = {ru}`.
 
-  **OWED before tagging v1.6.0 — a maintainer must sideload the MINIFIED release APK and soak it
-  by hand**: install it, type, swipe (both engines), open the clipboard / emoji / GIF panes,
-  import a backup, toggle languages, and open every settings screen. **A full ew-cli run is NOT
-  sufficient and does not discharge this gate** — the instrumented suite builds and runs the
-  *debug* variant, which has R8 off, so it exercises none of the obfuscated/shrunk code. The pure
-  gates likewise prove nothing here (`runPureTests` OK (1947), `runMockTests` OK (325) — both
-  green, both debug/JVM).
+**Decisions (cheap, one sitting each)**
+- **ARC-059** `CtcLatencyGateTest` measures `CtcSwipeDecoder`, which release R8 strips (zero
+  prod callers) — move it to `src/test` or repoint the gate at `CtcBeamDecoder`; pick ONE.
+- **ARC-055** route Greek: two file copies + one table row + a parity run; blocked only on
+  evidence-tier appetite (no Greek probe exists at any tier).
 
-  Evidence recorded at enable time:
-  - **Size** (same commit, R8 off → on): arm64-v8a 33,908,757 → 29,092,480 (-4,816,277, -14.2%);
-    armeabi-v7a -14.4%; x86_64 -13.8%. Uncompressed DEX 26,226,416 → 12,038,564 (-54%, 3 dex → 2).
-    Resource entries 1007 → 892.
-  - **Determinism: PASS, byte-identical.** Two `clean assembleRelease` runs produced identical
-    APK sha256 on all three ABIs (arm64 `38aa814fbea0489c…`, v7a `93329f71a63c4234…`,
-    x86_64 `6ee317a71f1b942e…`); `classes.dex` `5a20f58cd6478973…` and `classes2.dex`
-    `ddaf66dfa3c1b997…` matched across both runs and across ABIs, as did `resources.arsc`
-    `5439bf627bfa9575…`. **F-Droid reproducibility is preserved**, which was the original 2025
-    fear behind the "REPRODUCIBILITY TEST" comment — that fear is now measured and refuted.
-    The versioned release workflow uses the same AGP/R8, so determinism transfers; still, watch
-    the FIRST published minified release for an F-Droid reproducibility mismatch.
-  - **shrinkResources stripped nothing production-critical.** Zero `raw:` and zero `xml:`
-    resources removed (all 86 keyboard layouts, `numeric`, `pin`, `emojis`, `version_info`,
-    `method.xml` all retained). The 115 removed resources are Material/AndroidX leftovers plus
-    six app layouts + four app strings that all belong to the **dormant androidx.preference
-    widget layer** (`prefs/*Preference`, `CustomLayoutEditDialog`) — dead since Settings became
-    Compose: there is no `PreferenceFragmentCompat`, no preference XML screen, and nothing
-    constructs those Preference objects.
-  - **Retention smoke on the shipped DEX**: `CleverKeysService` kept un-obfuscated (required —
-    `CleverKeysService.kt:1059` feeds `javaClass.name` to the enabled-IME comparison),
-    `ai.onnxruntime.*` classes, Gson bind targets (`IntentDefinition`,
-    `ShortSwipeCustomizations`, `UserWordUsage`), all XML-inflated custom Views, and both ONNX
-    JNI `.so`s all present.
+**Maintainer-device verification (consolidated)**
+- **ARC-068** #79 visual pass (fix landed `df396f86`, but the defect postdates the original
+  report; the v1.2.5-era inset-conflict candidate + hwui discriminator are in the ledger).
+- **ARC-069** the device checklist: #148 visual, `.ckenc` export, next-word cold-start bar,
+  nonzero occlusion on a geometric layout, the collision-warning DIALOG rendering, Italian
+  swipe, first-swipe warm-up, pre-v1.6.0 backup import, pre-v1.1.86 upgrade.
+- **ARC-070** long-run `MemoryProbe` + `dumpsys meminfo` (the unexplained 2026-08-17 OOM).
 
-  **Two traps recorded for whoever touches this next:**
-  1. **`build.gradle` coroutines `META-INF/services` excludes are no-ops, and that is now
-     load-bearing.** With R8 on, `-assumenosideeffects … FAST_SERVICE_LOADER_ENABLED return false`
-     finally takes effect, and the shipped DEX (confirmed by baksmali) resolves `Dispatchers.Main`
-     through `java.util.ServiceLoader` — which reads a file those excludes *claim* to remove.
-     Making the excludes work would break every `Dispatchers.Main` dispatch in release only.
-     Full explanation is in a comment at the exclude site.
-  2. **`usage.txt` is not a list of deleted functionality.** R8 writes bare class names for
-     classes that were inlined or merged away, and `mapping.txt` shows them as
-     `R8$$REMOVED$$CLASS$$N`. `CtcCkdtLexicon`, `CtcLexiconMerge`, `ContractionInjectionPolicy`
-     etc. all appear "removed" while their code demonstrably ships (string literals present,
-     callers live). Only two classes are genuinely gone — `CtcSwipeDecoder` and
-     `SuggestionRanker` — and both have **zero** production callers; they are referenced only
-     from `src/test`/`src/androidTest`. Worth a follow-up: `CtcLatencyGateTest` is an
-     *instrumented* gate measuring `CtcSwipeDecoder`, a class the release APK no longer ships,
-     while production decodes via `CtcBeamDecoder` (`CtcEngineAdapter.kt:1012`).
+**Backlog (agent-executable, roughly by value)**
+- **ARC-067** the 21-locale translation pass (317 ARC-045 strings + wave strings + the two
+  stale-content fixes; details in the ledger and §3 below).
+- **ARC-064** wave-J untested edges: pack dual-decode, pack-on-non-Latin board, pack
+  contractions→trie injection. **ARC-057** 32-frame sweep for BUNDLED lexicons.
+  **ARC-058** trie-memo `size > 2` + second-ORT-session memory under 3-language rotation.
+- **ARC-044 (rest)** ~85 non-curated androidTest classes are still assertion-weak (curated six
+  done, 141→223; NOTE: do NOT add Truth to androidTest — dependency-locked configs feed the
+  Trivy gate; use JUnit+messages). **ARC-074** the unexercisable `catch (Throwable)` guard.
+- **ARC-071** astro 5→6. **ARC-073** doc-path drift (~25 citations) + the phantom
+  `verify-production-ready.sh` paths. **ARC-075** GifPanelSection English-anchored status
+  match. **ARC-076** relocate the QWERTY geometry table, then delete `test_cli_predict.ts` +
+  `swipedata_metrics.py`. **ARC-066** `swipe_engine_mode_desc` reword (invalidates 21 locales
+  deliberately).
+- **ARC-072** the two deferred architecture projects (ConfigSnapshot read-model; Initializer
+  collapse) — own efforts, plans in `5-architecture.md`; also SettingsActivity's 123
+  `mutableStateOf` and the `CleverKeysService` static escape hatches.
+- **ARC-063** narrow the blanket Compose/lifecycle/savedstate/coroutines keeps AFTER the first
+  minified soak. **ARC-065** out-of-band pack import first-swipe behavior (documented; optional).
+- ML-side: **ARC-056** uk/bg/mk/he lexicons (+ hebrew branch), **ARC-060** ru layout-JSON
+  provenance regeneration, **ARC-061** `make_golden.py` home-path leak (LOW-6 falsely closed).
+- Older residuals still open: **ARC-077** = CK-150-027 (a11y dense parity) + CK-150-029
+  (touch-exploration-ON smoke incl. `dispatchKeyEvent` non-swallow).
 
-  **Re-verified at `20ef0dae`** (after ARC-048 R4/R6 landed on top): release still builds with R8
-  on, output 29,092,559 B, and the full DEX retention sweep still passes. **Trap for the next
-  keep-audit: in Kotlin the directory does NOT determine the package.** ARC-048 R4 moved
-  `ClipboardHistoryView`, `EmojiGridView` and `EmojiGroupButtonsBar` into `clipboard/` and
-  `emoji/` directories while leaving `package tribixbite.cleverkeys` intact, so the FQNs — and
-  therefore the `-keep` rules and the `<tribixbite.cleverkeys.…>` tags in `res/layout/*.xml` — are
-  all still correct. Judge a keep rule by the file's `package` line, never by its path; inferring
-  from the path produces a convincing false alarm. A checker for this lives at
-  `scratchpad/stale-keeps.sh` in the ARC-008 session (52 FQ targets, all resolving).
-
-  **Remaining shrink headroom (deferred, needs its own soak):** `proguard-rules.pro` still carries
-  blanket `-keep class androidx.compose.**`, `androidx.lifecycle.**`, `androidx.savedstate.**` and
-  `kotlinx.coroutines.** { *; }`. lifecycle and savedstate ship correct consumer rules in their
-  own AARs, so those two are redundant; `androidx.compose.**` is the largest retained blob. They
-  were kept deliberately so this first minified release does not ask one manual soak to cover
-  both "R8 on" and "Compose narrowed" at once.
-- **ARC-012 ROOT-CAUSED + FIXED 2026-08-29, manual visual confirmation owed.** #79 settings
-  header flicker. The old "LazyColumn recomposition" diagnosis was wrong twice: the screen is
-  `Column`+`verticalScroll`, and `git show v1.2.5:` confirms it was at the reported version too
-  (zero `LazyColumn` anywhere in `src/main/kotlin` at that tag). There is also **no header
-  component** — the "header" is two plain `Text`s inside the scrolling `Column`
-  (`SettingsScreen.kt:102-115`); no `TopAppBar`, no sticky header, no scroll-derived elevation
-  anywhere under `ui/settings/`. **Real cause:** `SettingsControls.kt:43` read
-  `mainScrollState?.value` in `CollapsibleSettingsSection`'s COMPOSITION BODY.
-  `ScrollState.value` is snapshot-backed, so all 18 sections re-composed on every scroll pixel,
-  and because the `onGloballyPositioned` lambda captured the changed offset the `Card`'s modifier
-  was a fresh instance each frame → node re-diff + relayout mid-scroll. Fixed by moving the read
-  into the layout lambda, which is what the other three call sites (`:167`, `:225`, `:296`) always
-  did. **Caveat that must stay attached:** that hoist was introduced by `d2d0e456` (2026-07-03),
-  so it postdates the January v1.2.5 report — it is a real defect in shipping code and plausibly
-  the symptom users see today, but it cannot be what the original reporter saw. Before closing
-  #79, ask the user to re-check on a current build. Remaining v1.2.5-era candidate, unverified:
-  a three-way inset conflict at the top edge (`styles.xml:53-57` `fitsSystemWindows=true` vs
-  `SettingsActivity.kt:674` `setDecorFitsSystemWindows(false)` vs `SettingsScreen.kt:96`
-  `.statusBarsPadding()`), with both decor and content backgrounds blanked at `:686-687`.
-  Disambiguate with `setprop debug.hwui.show_dirty_regions true` — status-bar strip only = insets,
-  whole content area = the (now fixed) recomposition storm.
-- **Astro 5→6 migration owed** (2026-08-29): the site's two remaining HIGH CVEs are fixed only
-  in astro 6.4.6, which needs vite 7+ — conflicting with the vite 6.4.3 CVE pin in
-  `site/package.json` overrides. Suppressed in `.trivyignore` with rationale (build-time-only
-  static generator). When migrating: bump astro, drop the vite/js-yaml overrides, delete the
-  two `.trivyignore` lines, rebuild (84 pages expected).
-- **ARC-013 FIXED 2026-08-29, awaiting device confirmation.** UT-5 closed 2026-08-28; UT-7's two
-  measured defects are fixed in code and both root causes turned out NOT to be what the
-  measurement doc guessed. (a) `id → i'd` was never missing from the DATA —
-  `contraction_pairings.json` has carried it all along; the tap path's inline
-  `partial.length >= 3` paired-injection floor excluded the only two-letter I-contraction base.
-  The floor now lives in `ContractionInjectionPolicy`, which admits first-person contractions at
-  two characters and nothing else — verified against the shipped table as **exactly one** base
-  changing. No data change, so no regeneration and no new collision sidecar. (b) the doubled
-  `I'll` was not two injection paths but ONE list holding the variant twice:
-  `ContractionManager.loadPairedContractions` merged `contraction_pairings.json` on top of the
-  binary-derived pairs with a blind `add()`, and the two sources overlap on **599** of 2,258
-  bases (every doubled possessive too: `times → time's` twice). Deduped at the loader plus a
-  final-list guard in `SuggestionHandler`. **Next ew-cli run must confirm on-device**:
-  `ContractionSentenceStartMeasureTest` (now PINS `i'd` present for typed `id`, the literal `id`
-  surviving alongside it, and no duplicate surface for typed `ill`) and
-  `ContractionFlickerTest`'s rewritten prefix-guard cases.
-- **ARC-019 CLOSED 2026-08-28**: same-inputs head-to-head on LOCAL combined (4,526 traces):
-  CTC 90.7/95.4/96.1 vs geometric 63.0/75.2/78.3 top-1/3/5; geo-only recoveries 1.5%. The last
-  accuracy argument for geometric-on-Latin is gone. Synthetic tiers: CTC degrades more
-  gracefully than geometric (11.3 vs 19.6 pt TYPICAL→SLOPPY drop) but absolute synthetic levels
-  carry a timing artifact — full record in `docs/eval/2026-08-28-arc019-ctc-local-head2head.md`.
-- **ARC-044 (curated six DONE 2026-08-29, rest open)**: the 6 release-gate classes went
-  141 → 223 assertions (`fe976d0e`), strengthening only — no test exercises anything new.
-  Biggest win `CrashGuardInstrumentedTest` 1 → 35 (it asserted literally nothing before; now
-  pins "ConfigPropagator is a pusher, never a mutator" via a reflective before/after snapshot of
-  all 141 public `Config` fields, plus the builder's fluent contract). **Truth was deliberately
-  NOT added to `androidTestImplementation`**: those configurations are dependency-locked and
-  Trivy reads `gradle.lockfile` as one flat production tree, so truth would drag guava,
-  checker-qual, asm and auto-value into the security gate's scope — the exact failure that made
-  it go red on ~48 build-tooling CVEs and forced the current narrow lock scope (`build.gradle`
-  header). Use JUnit assertions with explicit messages in androidTest. Still open: the other
-  ~85 androidTest classes, and `CrashGuardInstrumentedTest`'s `catch (Throwable)` guard is
-  still not EXERCISED (all eight collaborator types are final Kotlin classes — needs a
-  production seam; TODO recorded in the class KDoc).
-  Owed on the next ew-cli run: three new assertions are device-unverified by construction —
-  the hard non-empty French control in `secondaryLanguageDecode_…` (was conditional, which
-  silently skipped the rank-one pin), the per-decode non-empty check inside the geometric p95
-  perf loop, and slate-distinctness on the geometric paired-base decode.
-- **ARC-045 — DONE 2026-08-29** (4 commits: settings sections / customization dialogs /
-  LayoutManagerActivity / tail). 317 new resources across 30 files. The audit's "~168" counted
-  only single-line `Text("…")`; the real surface was larger once multiline `Text(\n "…")`,
-  `text = "…"`, `label`/`placeholder`, and every hardcoded `contentDescription` were included —
-  the accessibility strings in CommandPaletteDialog, LayoutManagerActivity and LauncherActivity
-  were the least visible and arguably the worst of it. Three previously-untranslated activity
-  strings now reuse the already-translated `autocorrect_*` keys (identical English), so those
-  gained 21 locales for free. Wave E's "preview dialog copy is English by convention" is ended.
-  Deliberately NOT extracted, each for a stated reason:
-  - `GestureTuningSection` `listOf("Low","Medium","High","Custom")` — identity strings
-    round-tripped through `applySwipeSensitivityPreset`/`getSwipeSensitivityPreset`
-    (`SettingsResetPresets.kt`), not labels. Localizing breaks preset selection.
-  - The pure-JVM renderers in `BackupRestorePreviewDialogs.kt` — `renderJsonBlobSummary`,
-    `renderArraySummary`, `renderBackupSourceNotice`, the `+`/`−`/`~` diff markers, `TypeChip`'s
-    type names. They take no Context, which is precisely what lets
-    `BackupRestorePreviewRenderTest` assert them in the PURE suite; extracting would force
-    Context injection into pure code and demote that coverage to instrumented.
-  - Glyph-only `Text` ("✕", "X", "⌨", "↺", "◀", "▶") — promoted to named consts where they
-    were inline, left as glyphs otherwise.
-  - Technical placeholder values (`com.example.app`, `android.intent.action.VIEW`, `text/plain`,
-    `yyyy-MM-dd HH:mm`) and unit-only display formats (`"%.0f px"`, `"${x}ms"`, `"$x%"`).
-  - `GifPanelSection`'s `status.startsWith("Error")` branch — the status string is produced
-    elsewhere; extracting only the comparison would silently break the match. Left as a known
-    English-anchored coupling.
-  No drift-test anchor had to move: `SettingsSearchCoverageTest` already resolves
-  `stringResource` control titles (index unchanged at 128 entries), and the Compose
-  instrumented tests match on RENDERED text, which is byte-identical because every extracted
-  value reproduces its literal exactly.
-- **ARC-048 — the cheap three-quarters is DONE (2026-08-29); the two expensive items are
-  now explicitly deferred as their own projects, not backlog rot.**
-  - **DONE — R4 package reorg** (`63fcb797`): 32 files moved into `activities/` (14),
-    `clipboard/` (12), `emoji/` (6). Flat package root **145 → 113**. Directory-only: every
-    moved file still declares `package tribixbite.cleverkeys`, so `git diff -M` is 32×R100
-    and no import, manifest entry, proguard keep or `pureTestClasses` FQCN changed. The real
-    cost was the eight things that address a file by REPO PATH (build.gradle's
-    `generateSettingsSearchIndex` input, `scripts/generate_settings_search_index.py`, and six
-    source-scanning drift tests) — all updated in the same commit. If you move more clusters,
-    that list is the checklist; `GesturePrefAccessDriftTest` is safe because it matches on
-    `File.name`.
-  - **DONE — R6 `interface Predictor`** (`Predictor.kt`): the CONSUMED surface of the
-    2,636-line `WordPredictor` (25 members, not all of its public API — construction-only
-    members like `setContext`/`startObservingDictionaryChanges` are off it on purpose).
-    `PredictionCoordinator.getWordPredictor()` and `Keyboard2View.setSwipeTypingComponents`
-    now hand out `Predictor?`. `DictionaryManager` deliberately keeps the concrete type: it
-    is the owner, not a consumer. Milestone met with a real fake —
-    `PredictorContractTest` (pure, 7 cases) drives the next-word pipeline through a
-    `FakePredictor`, which was impossible before (it needed a device, a dictionary load and
-    ~5-10 MB of heap). Two drift pins keep the seam from silently closing again.
-  - **DONE — the `SideEffect{}` gap** (`df396f86`); see the ARC-048 addendum in
-    `docs/audit/2026-08-28-archive-verification.md:137` for why it was never a flicker source
-    and what the actual damage was.
-  - **DEFERRED (own project) — R3 `ConfigSnapshot` read-model.** Static
-    `Config.globalConfig()` consumers are 33 files / 90 call sites. Plan is written and
-    phased: `5-architecture.md` §"Config Immutability Migration Plan" steps 1-3 (snapshot type
-    → `Gesture.kt` first → `Pointers`+`Keyboard2View`), with the CI grep count as the single
-    progress metric and an explicit guardrail against freezing `Config` itself. Medium risk
-    because it touches the touch hot loop — do not fold it into an unrelated commit.
-  - **DEFERRED (own project) — R5 Initializer collapse.** 6 `*Initializer` files (841 lines)
-    hand-wired in `onCreate`; plan is `5-architecture.md` §R5 + §"Bridge Consolidation" —
-    one `KeyboardComponentGraph` composition root, keeping the 4 Bridges (they are genuine
-    adapter seams, not wiring). No DI framework.
-  - Also still open from the original entry: `SettingsActivity`'s 123 `mutableStateOf` fields
-    and the `CleverKeysService` static escape hatches (`:153,:176,:212`).
-- **CtcLatencyGateTest measures a class release no longer ships — needs a decision.**
-  `src/androidTest/.../swipe/CtcLatencyGateTest.kt:183` constructs `CtcSwipeDecoder`, but
-  `CtcSwipeDecoder` has **zero** consumers in `src/main` (only `CtcModuleTest`,
-  `CtcReplayEngine` and this gate use it); production decodes via `CtcBeamDecoder`, reached
-  from `CtcEngineAdapter`. Since R8 went on for release (`37ed9804`) it is stripped from the
-  release APK as test-only-in-main. The gate still runs and passes — androidTest builds
-  against debug, where R8 is off — so this is silent: a green latency gate over code the
-  shipped APK does not contain. Two candidate fixes, pick one: move `CtcSwipeDecoder` to
-  `src/test` (honest about what it is), or repoint the gate at `CtcBeamDecoder` (measures
-  what ships). Don't do both.
-- **ARC-049 (device)**: one long-run `MemoryProbe` + `dumpsys meminfo` on a current build to
-  close the unexplained 2026-08-17 OOM.
-
-**Written 2026-08-29, never executed on a device** — the next ew-cli run is their first:
-`TermuxDeletionInstrumentedTest` (7 cases; ARC-007's owed test — Termux vs ordinary-app control
-for REPLACE deletion, typed-partial deletion and delete-last-word) and the flipped
-`ContractionSentenceStartMeasureTest` / `ContractionFlickerTest` contraction cases above.
-
-**Verified by the 2026-08-28 full ew-cli run** (all green): ARC-023 cold-build budget
-(3,162 ms), the provenance UI cases (14/14 `ClipboardPanelPrivateBadgeTest`), base64
-temp-file / clipboard-cap / private-copy-toast instrumented tests, dual-language latency
-(CK-150-026's device half).
-
-**Still owed — manual on the maintainer's device or unwritten instrumented coverage**:
-#148 visual pass (predictions off → open clipboard → keyboard stays visible below the pane);
-private-media paste refusal behavior; ARC-005 nonzero occlusion on a geometric-served layout;
-`.ckenc` SAF naming (one manual export-with-password); encrypted-import 🔒 preview rendering
-(Compose dialog cases unwritten); GIF legacy-pack rejection paths (need a real ZIP +
-GifDatabase); next-word cold-start bar on-device (opt into next-word, empty learned store).
-
-**Translation debt added by the waves** (English-only, non-blocking):
-`pref_secondary_prediction_weight` summary, `backup_base64_too_large`,
-`clipboard_private_copy_toast_title/desc`, `clipboard_provenance_via/direct_launch`,
-`privacy_on_device_learning_desc` (21-locale copies still name deleted swipe-calibration).
-317 strings extracted from Compose literals 2026-08-29 (ARC-045), all English-only — the
-21-locale pass is a follow-up. None are in `TranslationCoverageDriftTest.required`, which is
-correct: that test asserts real per-locale values, so listing an untranslated name there would
-fail rather than protect anything.
+**Process notes that must survive compaction**
+- **ARC-078**: the 2026-08-28 androidTest APKs carried ~10.3 MB of UNTRACKED filesystem payload
+  (signature = stored-uncompressed ONNX under names the bench doesn't probe); a worktree build
+  of the same SHA from tracked files is 3.5 MB, matching today. AGP packages the FILESYSTEM,
+  not the index — when an APK size jumps, `unzip -l` first. (Two in-session theories about this
+  were wrong before the worktree experiment settled it; both are retracted in the ledger.)
+- The Termux-deletion harness lesson (`aadb45d3`): a directly-constructed `BaseInputConnection`
+  edits its OWN empty fake editable — override `getEditable()` or seeded EditText text is
+  invisible to every read.
+- R8 traps recorded in the ledger + `proguard-rules.pro` comments: `usage.txt` bare names mean
+  inlined-not-deleted; Kotlin package ≠ directory (judge keep rules by the `package` line);
+  the ServiceLoader/`-assumenosideeffects` interaction (ARC-062).
 
 ### 1. Contraction follow-ups, all deferred deliberately
 
