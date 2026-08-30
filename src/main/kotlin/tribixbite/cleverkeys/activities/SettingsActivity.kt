@@ -301,7 +301,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var gifImportInProgress: Boolean
         get() = settingsViewModel.gifImportInProgress
         set(value) { settingsViewModel.gifImportInProgress = value }
-    internal var gifImportStatus: String?
+    internal var gifImportStatus: tribixbite.cleverkeys.ui.settings.io.GifImportStatus?
         get() = settingsViewModel.gifImportStatus
         set(value) { settingsViewModel.gifImportStatus = value }
     // showGifRemoveAllDialog/showGifRemovePackDialog delegated to settingsViewModel (survive rotation)

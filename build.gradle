@@ -473,6 +473,9 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.SmartAutoSpaceLogicTest',
     'tribixbite.cleverkeys.gif.GifTest',
     'tribixbite.cleverkeys.gif.GifCategoryTest',
+    // ARC-075 (2026-08-30): the GIF import status is a typed value, so the settings section
+    // never classifies a failure by matching English message text.
+    'tribixbite.cleverkeys.ui.settings.io.GifImportStatusTest',
     'tribixbite.cleverkeys.BackspaceUndoTest',
     'tribixbite.cleverkeys.ClipboardPaginationTest',
     'tribixbite.cleverkeys.ClipboardFixesJvmTest',

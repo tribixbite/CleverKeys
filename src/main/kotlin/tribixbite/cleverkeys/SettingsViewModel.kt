@@ -96,6 +96,9 @@ class SettingsViewModel : ViewModel() {
     // ── Import-in-progress status (GIF / language pack) ──────────────────────
 
     var gifImportInProgress by mutableStateOf(false)
-    var gifImportStatus by mutableStateOf<String?>(null)
+    // ARC-075: typed, so the settings section branches on the variant instead of matching
+    // English message text (`startsWith("Error")`).
+    var gifImportStatus by
+        mutableStateOf<tribixbite.cleverkeys.ui.settings.io.GifImportStatus?>(null)
     var languagePackImportStatus by mutableStateOf<String?>(null)
 }

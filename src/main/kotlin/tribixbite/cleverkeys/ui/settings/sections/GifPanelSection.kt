@@ -23,6 +23,7 @@ import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
 import tribixbite.cleverkeys.ui.settings.SettingsSlider
 import tribixbite.cleverkeys.ui.settings.SettingsSwitch
+import tribixbite.cleverkeys.ui.settings.io.GifImportStatus
 import tribixbite.cleverkeys.ui.settings.io.performGifRemoveAll
 import tribixbite.cleverkeys.ui.settings.io.performGifRemovePack
 import tribixbite.cleverkeys.ui.settings.saveSetting
@@ -105,13 +106,17 @@ internal fun SettingsActivity.GifPanelSection() {
                         }
                     }
 
-                    // Import status message
+                    // Import status message. ARC-075: the colour comes from the status VARIANT,
+                    // never from the message text — a failure reported in the user's language
+                    // (or reworded upstream) must still render as a failure.
                     gifImportStatus?.let { status ->
                         Text(
-                            text = status,
+                            text = status.message,
                             fontSize = 12.sp,
-                            color = if (status.startsWith("Error")) MaterialTheme.colorScheme.error
-                                   else MaterialTheme.colorScheme.primary,
+                            color = when (status) {
+                                is GifImportStatus.Failed -> MaterialTheme.colorScheme.error
+                                is GifImportStatus.Ok -> MaterialTheme.colorScheme.primary
+                            },
                             modifier = Modifier.padding(vertical = 4.dp)
                         )
                     }
