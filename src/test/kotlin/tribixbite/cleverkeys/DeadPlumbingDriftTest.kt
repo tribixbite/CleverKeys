@@ -97,6 +97,31 @@ class DeadPlumbingDriftTest {
         ).that(hits).isEmpty()
     }
 
+    // ---------------------------------------------------------------- ARC-099
+
+    @Test
+    fun `ARC-099 - the dead legacy swipe-prediction chain is gone`() {
+        // Same shape as ARC-084, found during that deletion: three KeyboardDimensionsHelper
+        // "legacy" methods that pushed a caller-supplied list straight into the suggestion
+        // bar, plus three CleverKeysService pass-throughs that re-exported them. Nothing
+        // called the pass-throughs and nothing called the helpers directly, so no list could
+        // ever reach the bar through this path — the live route is
+        // InputCoordinator.handlePredictionResults. R8 shipped it regardless: both classes
+        // are covered by blanket `-keep class ... { *; }` rules (proguard-rules.pro:39, :91),
+        // which is exactly why no build-time signal ever flagged it.
+        val legacyChain = Regex(
+            "\\b(updateSwipePredictions|completeSwipePredictions|clearSwipePredictions)\\b"
+        )
+        val hits = occurrences(legacyChain)
+        assertWithMessage(
+            "ARC-099: the legacy swipe-prediction chain has zero callers — the three " +
+                "KeyboardDimensionsHelper methods were reachable only through three " +
+                "CleverKeysService pass-throughs that nothing called. Do not reintroduce it; " +
+                "swipe predictions reach the suggestion bar through " +
+                "InputCoordinator.handlePredictionResults.\nFound:\n" + hits.joinToString("\n")
+        ).that(hits).isEmpty()
+    }
+
     // ---------------------------------------------------------------- ARC-085
 
     @Test

@@ -169,34 +169,17 @@ class KeyboardDimensionsHelper(
     // reachable only through two equally dead CleverKeysService hatches. Deleted with the
     // rest of the chain; pinned by DeadPlumbingDriftTest.
 
-    /**
-     * Update swipe predictions in real-time during gesture (legacy method).
-     *
-     * @param predictions List of prediction strings
-     */
-    fun updateSwipePredictions(predictions: List<String>?) {
-        if (_suggestionBar != null && predictions != null && predictions.isNotEmpty()) {
-            _suggestionBar!!.setSuggestions(predictions)
-        }
-    }
-
-    /**
-     * Complete swipe predictions after gesture ends (legacy method).
-     *
-     * @param finalPredictions Final list of prediction strings
-     */
-    fun completeSwipePredictions(finalPredictions: List<String>?) {
-        if (_suggestionBar != null && finalPredictions != null && finalPredictions.isNotEmpty()) {
-            _suggestionBar!!.setSuggestions(finalPredictions)
-        }
-    }
-
-    /**
-     * Clear swipe predictions (legacy method).
-     */
-    fun clearSwipePredictions() {
-        _suggestionBar?.setSuggestions(emptyList())
-    }
+    // ARC-099 (2026-08-30): updateSwipePredictions/completeSwipePredictions/
+    // clearSwipePredictions ("legacy methods") pushed a caller-supplied list straight into
+    // _suggestionBar. Nothing called them directly and their three CleverKeysService
+    // pass-throughs had no callers either, so no list ever reached the bar this way — the
+    // live route is InputCoordinator.handlePredictionResults. Same shape as the ARC-084 CGR
+    // chain, and invisible to the build for the same reason: proguard-rules.pro keeps this
+    // class with a blanket `{ *; }`. Deleted; pinned by DeadPlumbingDriftTest.
+    //
+    // Residual: with these gone, `_suggestionBar` and its `setSuggestionBar` setter are
+    // write-only here (sole writer: SuggestionBarPropagator). Left in place because that
+    // file is outside this change's scope; recorded as a follow-on.
 
     companion object {
         private const val TAG = "KbdDimensionsHelper"

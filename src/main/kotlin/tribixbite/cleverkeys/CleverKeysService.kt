@@ -1032,13 +1032,10 @@ class CleverKeysService : InputMethodService(),
     // for "Keyboard2View's CGR store/clear path" — a path whose store had no caller. The
     // whole chain is deleted; pinned by DeadPlumbingDriftTest.
 
-    fun updateSwipePredictions(predictions: List<String>) =
-        _keyboardDimensionsHelper.updateSwipePredictions(predictions)
-
-    fun completeSwipePredictions(finalPredictions: List<String>) =
-        _keyboardDimensionsHelper.completeSwipePredictions(finalPredictions)
-
-    fun clearSwipePredictions() = _keyboardDimensionsHelper.clearSwipePredictions()
+    // ARC-099 (2026-08-30): three pass-throughs to the KeyboardDimensionsHelper "legacy"
+    // swipe-prediction methods were re-exported here with zero callers of their own — the
+    // only thing that made those helpers reachable by the linker. Whole chain deleted;
+    // pinned by DeadPlumbingDriftTest.
 
     /**
      * Show a temporary message in the suggestion bar.
