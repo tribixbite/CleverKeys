@@ -31,11 +31,23 @@ interface CtcEmissionModel {
  * End-to-end CTC swipe decoder facade: featurize raw touch → run the
  * [CtcEmissionModel] → beam-search the lexicon.
  *
- * **This runs on every CTC swipe.** `swipe/CtcEngineAdapter` builds the layout, the
- * per-language trie and the preset on the Android side, memoizes an instance of this class
- * per (layout, trie, beam width), and calls [decode] from its decode thread — so this is
- * the pure-JVM core of the default swipe engine, not a prototype. See
- * `docs/specs/ctc-swipe-engine.md` for how it slots behind `swipe_engine_mode`.
+ * ## NOT the production decode path — read this before wiring anything to it
+ * `swipe/CtcEngineAdapter.decodeAsync` does NOT use this class. It inlines the same three
+ * steps itself ([CtcFeaturizer.featurize] → `emit` → [CtcBeamDecoder]) because a real swipe
+ * runs the encoder ONCE and then beams each active language against its own trie and preset,
+ * which this single-lexicon facade cannot express. Consequently this class has zero
+ * production callers and release R8 deletes it from the shipped DEX.
+ *
+ * What it IS: the convenience wrapper the pure-JVM harnesses decode through — `CtcReplayEngine`
+ * (corpus replay / A-B scoring) and `CtcModuleTest` (the golden featurize→beam chain against
+ * frozen emission matrices, no model and no device). Keep it in `main` rather than a test
+ * source set only so those harnesses share the exact scoring composition the adapter uses.
+ *
+ * Corollary (ARC-059): do not measure or benchmark this class as a stand-in for swipe latency —
+ * time [CtcBeamDecoder] in `decodeAsync`'s order instead, as `CtcLatencyGateTest` now does. And
+ * if it ever diverges from what the adapter does, the adapter is right.
+ *
+ * See `docs/specs/ctc-swipe-engine.md` for how the CTC engine slots behind `swipe_engine_mode`.
  *
  * @property model the CTC emission source — `OnnxCtcEmissionModel` in production.
  * @property layout the on-screen layout geometry (alphabet + key centers).

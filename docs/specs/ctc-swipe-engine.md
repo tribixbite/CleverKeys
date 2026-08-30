@@ -819,7 +819,12 @@ surface form (max), truncate to `topK`.
   `buildPaddedLayout(layout)`, `normalizeRawX/Y` (4/3 aspect + affine — **production-dead**:
   the adapter deliberately uses letter-box normalization instead, audit LOW-3).
 - `CtcBeamDecoder.decode(emissions, trie, params): List<CtcCandidate>`, `greedy(...)`.
-- `CtcSwipeDecoder(model, layout, trie, params).decode(px,py,pt)` — the end-to-end call.
+- `CtcSwipeDecoder(model, layout, trie, params).decode(px,py,pt)` — the end-to-end call, but
+  **production-dead** (ARC-059): `CtcEngineAdapter.decodeAsync` inlines featurize → `emit` →
+  `CtcBeamDecoder` itself, because a real swipe runs the encoder once and beams one lexicon
+  PER ACTIVE LANGUAGE, which this single-lexicon facade cannot express. Release R8 strips it.
+  Its live callers are the pure-JVM harnesses (`CtcReplayEngine`, `CtcModuleTest`); do not
+  benchmark it as a stand-in for swipe latency.
 
 ---
 

@@ -18,7 +18,6 @@ import tribixbite.cleverkeys.swipe.ctc.CtcFeaturizer
 import tribixbite.cleverkeys.swipe.ctc.CtcLayout
 import tribixbite.cleverkeys.swipe.ctc.CtcRankMerger
 import tribixbite.cleverkeys.swipe.ctc.CtcScoringParams
-import tribixbite.cleverkeys.swipe.ctc.CtcSwipeDecoder
 
 /**
  * The G3 latency GATE (integration plan §3, new test 2) — unlike the loose-bound
@@ -36,6 +35,20 @@ import tribixbite.cleverkeys.swipe.ctc.CtcSwipeDecoder
  *    beam-expensive case) at `presetFor("en", beamWidth = 100, topK = 8)` — the
  *    adapter's production preset and slate size for the largest bundled lexicon
  *    (en 98k words; fr/de are 40k and es 50k, so en is the worst case).
+ *
+ * ## ARC-059 — what "the production decode path" means here
+ * Both gates call [CtcBeamDecoder] directly, in `CtcEngineAdapter.decodeAsync`'s order
+ * (featurize → one `emit` → `greedy` → `decode` → bounded `CtcFuzzyRescue.find`). Until
+ * 2026-08-30 the single-language gate instead timed `CtcSwipeDecoder`, the pure-JVM
+ * end-to-end facade — which has ZERO production callers and is deleted outright by
+ * release R8. It measured a superset of the same work, so the numbers were never wrong,
+ * but the gate could not fail on a regression the shipping path took alone (a change to
+ * `decodeAsync`'s emit/greedy/rescue sequencing), and would have kept passing had the
+ * facade drifted away from the adapter. The two gates now differ only in language count.
+ *
+ * The display overlays (`applyCanonicalDisplay` / `applyContractionDisplay`) are the one
+ * production step neither gate replays: they are `Map` lookups over an ≤8-word slate and
+ * their seam is private.
  *
  * Budget: G3's bar was "≤ the then-current transformer's ~100–300 ms". Expected actuals are
  * ~1 ms encoder + a trie beam in the tens of ms on an emulator core, so
@@ -173,6 +186,8 @@ class CtcLatencyGateTest {
         assertNotNull("adapter merge path produced no trie", trieOrNull)
         val trie = trieOrNull!!
         assertTrue("bundled trie looks empty (${trie.wordCount} words)", trie.wordCount > 50_000)
+        val rescue = adapter.fuzzyRescueFor(GATE_LANGUAGE)
+        assertNotNull("no '$GATE_LANGUAGE' rescue index", rescue)
 
         val loaded = ModelLoader(target, env).loadModel(
             CtcEngineAdapter.MODEL_ASSET, "CtcEncoderGate",
@@ -180,11 +195,25 @@ class CtcLatencyGateTest {
             xnnpackThreads = Defaults.ONNX_XNNPACK_THREADS
         )
         val model = OnnxCtcEmissionModel(env, loaded.session)
-        val decoder = CtcSwipeDecoder(
-            model, case.layout, trie,
-            CtcScoringParams.presetFor(GATE_LANGUAGE, beamWidth = BEAM_WIDTH, topK = TOP_K)
-        )
-        val coldCandidates = decoder.decode(case.px, case.py, case.pt)
+        val padded = CtcFeaturizer.buildPaddedLayout(case.layout)
+        val params = CtcScoringParams.presetFor(GATE_LANGUAGE, beamWidth = BEAM_WIDTH, topK = TOP_K)
+
+        /**
+         * One single-language swipe in `CtcEngineAdapter.decodeAsync`'s exact order: featurize
+         * the raw path, run the encoder ONCE, take the unconstrained greedy surface, beam the
+         * lexicon, then bounded-rescue that surface against the beam's words. This IS the
+         * shipping decode (ARC-059) — [CtcBeamDecoder] is what `decodeLexicon` calls.
+         */
+        fun decodeSingle(): List<tribixbite.cleverkeys.swipe.ctc.CtcCandidate> {
+            val features = CtcFeaturizer.featurize(case.px, case.py, case.pt)
+            val emissions = model.emit(features, padded)
+            val greedy = CtcBeamDecoder.greedy(emissions, case.layout.alphabet)
+            val candidates = CtcBeamDecoder.decode(emissions, trie, params)
+            rescue!!.find(greedy, candidates.map { it.word }.toHashSet())
+            return candidates
+        }
+
+        val coldCandidates = decodeSingle()
         val coldMs = (System.nanoTime() - coldStart) / 1e6
         assertTrue("cold decode returned no candidates", coldCandidates.isNotEmpty())
         Log.i(TAG, "cold path (trie build + session load + first decode) = ${"%.0f".format(coldMs)} ms")
@@ -203,7 +232,7 @@ class CtcLatencyGateTest {
         val secondStart = System.nanoTime()
         val trie2 = adapter.trieFor(GATE_LANGUAGE)
         assertTrue("trieFor did not memoize (rebuilt a different trie)", trie2 === trie)
-        val secondCandidates = decoder.decode(case.px, case.py, case.pt)
+        val secondCandidates = decodeSingle()
         val secondMs = (System.nanoTime() - secondStart) / 1e6
         assertTrue("second decode returned no candidates", secondCandidates.isNotEmpty())
         assertTrue(
@@ -213,12 +242,12 @@ class CtcLatencyGateTest {
         )
 
         // ── The gate: 5 warmups then 30 timed production decodes.
-        repeat(WARMUPS) { decoder.decode(case.px, case.py, case.pt) }
+        repeat(WARMUPS) { decodeSingle() }
         val samples = LongArray(ITERATIONS)
         var last = emptyList<tribixbite.cleverkeys.swipe.ctc.CtcCandidate>()
         for (i in 0 until ITERATIONS) {
             val t0 = System.nanoTime()
-            last = decoder.decode(case.px, case.py, case.pt)
+            last = decodeSingle()
             samples[i] = System.nanoTime() - t0
         }
         assertTrue("gate decode returned no candidates", last.isNotEmpty())
