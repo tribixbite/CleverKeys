@@ -8,7 +8,10 @@ superseding the build-install-only policy for its duration; Saga hard rules stan
 `stop;start`/framework restart EVER, avoid reboot, leave no trace, restore any changed
 setting). Maintainer manual soak (ARC-053) happens AFTER the backlog is cleared.
 
-**Method:** waves of Opus implementers under the proven shared-tree protocol (file fences,
+**Method (model routing updated 2026-08-30, maintainer mid-flight):** implementer subagents run
+on FABLE, not Opus, until the maintainer says their weekly Fable limit is reached (orchestrator
+cannot observe limits; maintainer will flip the switch verbally). Waves of implementers under
+the proven shared-tree protocol (file fences,
 `scripts/gradle-guard.sh` for every Gradle call, fail-first TDD with captured evidence,
 partial staging of shared files, immediate commits, Fable review of every diff). Ultracode is
 authorized. This file is the continuity artifact — update the status column as waves land.
@@ -32,11 +35,25 @@ authorized. This file is the continuity artifact — update the status column as
 
 - ARC-053 minified-release soak (yours, after campaign) — ARC-062/096 land NOW so one soak covers them.
 - ARC-054 release-notes decision (announce ru or hold the wiring).
-- ARC-055 Greek routing — evidence-tier appetite + the el ONNX/fixture artifacts live ML-side.
+- ARC-054 now also covers el: Greek WIRING is executing (see below); ANNOUNCING it is yours.
 - ARC-063 keep-narrowing — explicitly AFTER your first minified soak.
 - `finger_occlusion_offset` nonzero default — needs YOUR device-trace A/B.
-- ML-side (likely not runnable from Termux; verified in Wave I): ARC-056 uk/bg/mk/he lexicons,
-  ARC-060 ru layout provenance regen, ARC-061 make_golden home-path fix.
+
+## Wave-I probe RESULT (2026-08-30): the ML repo IS on this device
+
+`~/git/swype/CleverKeys-ML` exists locally, including `ctc/artifacts/el_synth_v3_ch80_fp16w.onnx`
++ golden fixture; `~/git/swype/AnySoftKeyboard` (the ASK checkout) and `scripts/build_wordlist.py`
+are present too. Consequences:
+- **ARC-055 EXECUTABLE — dispatched** (agent EL): wire Greek per the ru precedent, most
+  conservative tier (synthesis-holdout only, NO accuracy quotable), `SERVED_BUT_NOT_YET_ANNOUNCED
+  += el`. Maintainer decides announcement (ARC-054) and can veto at soak.
+- **ARC-056 ATTEMPTABLE on-device**: build uk/bg/mk/he lexicons + CKDT langpacks (immediate value:
+  those packs serve TAP + GEOMETRIC users today; CTC models for them remain GPU-side/blocked).
+  `he` needs the `hebrew` branch in `_is_script_word`. Toolchain deps (hunspell dicts, wordfreq)
+  to be probed by the executing agent; report BLOCKED honestly if a dep is missing.
+- **ARC-060/061 EXECUTABLE**: scripts live in CleverKeys-ML — commits go to THAT repo (no push).
+- **Verb inversions FEASIBLE**: extraction pipeline + data deps present; late wave, strict
+  landmine pins (`estelle` @16343 native, `aton` ASK-attested, `entretemps` needs FORCED_APPEND).
 
 ## Waves
 
