@@ -392,7 +392,18 @@ android {
     // It is kept as a live gate anchor: any NEW error fails the build, and a
     // regenerated non-empty baseline would be a visible diff rather than a silent one.
     abortOnError = true
-    checkReleaseBuilds = false
+    // ARC-096: release is the ONLY minified variant and the one users install, and until
+    // 2026-08-30 NOTHING linted it — ci.yml's bare `lint` resolves to the DEFAULT (debug)
+    // variant and release.yml runs `lintDebug`. This flag was `false`, which does two things:
+    // it drops the `lintVitalRelease` dependency from `assembleRelease`, AND it stops AGP
+    // REGISTERING the task at all (verified: `Task 'lintVitalRelease' not found`), so the
+    // release variant could not even be linted on demand.
+    //
+    // At `true`, `assembleRelease` runs lint-vital — fatal-severity issues only, not the full
+    // analysis — so the release path gates itself everywhere it is built (release.yml AND the
+    // F-Droid recipe, which invokes `assembleRelease` on their builders). ci.yml additionally
+    // calls `lintVitalRelease` directly so PRs get the same gate without assembling release.
+    checkReleaseBuilds = true
   }
 
   testOptions {
