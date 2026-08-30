@@ -53,7 +53,21 @@ jobs:
     - name: Run lint checks
       # Lint gate phase 1: abortOnError=true in build.gradle + baseline suppresses
       # pre-existing issues, so this fails only on NEW lint regressions.
+      # NOTE: bare `lint` resolves to the DEFAULT variant, i.e. DEBUG. Release is linted
+      # by the next step — do not assume this one covers it.
       run: ./gradlew lint --stacktrace
+
+    - name: Run release lint checks
+      # ARC-096: release is the ONLY minified variant and the one users install, and until
+      # now NOTHING linted it — this job's `lint` is debug, and release.yml runs `lintDebug`.
+      # Release-only issues (R8/shrinker-visible, `release` sourceSet, minify-dependent
+      # manifest merges) were therefore invisible to every gate.
+      #
+      # lintVitalRelease is AGP's minimal release gate — fatal-severity issues only — which is
+      # what keeps this cheap alongside the full debug lint above. build.gradle deliberately
+      # keeps checkReleaseBuilds=false so `assembleRelease` (and the F-Droid recipe, which
+      # invokes it on their builders) does not pay for lint; the gate lives HERE instead.
+      run: ./gradlew lintVitalRelease --stacktrace
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

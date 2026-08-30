@@ -192,36 +192,34 @@ android {
       // Kotlin coroutines debug probes (non-deterministic)
       excludes += "DebugProbesKt.bin"
 
-      // Kotlin coroutines service files (non-deterministic order).
+      // DO NOT ADD `META-INF/services/kotlinx.coroutines.**` EXCLUDES HERE.
       //
-      // WARNING: THESE TWO EXCLUDES DO NOT WORK, AND THAT IS NOW LOAD-BEARING.
-      // Verified 2026-08-29 (ARC-008): both entries are still present in the
-      // packaged APK — in the R8-off baseline AND in the minified build. Do NOT
-      // "fix" the patterns to make them take effect. Here is why:
+      // Two such excludes lived at this spot for the "non-deterministic order"
+      // reason and NEVER took effect (verified 2026-08-29, ARC-008: both service
+      // files were still present in the packaged APK, R8-off baseline and
+      // minified build alike). ARC-062 deleted the dead lines; this comment
+      // exists so nobody re-adds them in a working form, because the release
+      // build now DEPENDS on those files shipping:
       //
       //   proguard-rules.pro carries `-assumenosideeffects MainDispatcherLoader
-      //   { boolean FAST_SERVICE_LOADER_ENABLED return false; }`. That rule was
-      //   inert while minifyEnabled was false, but with R8 on it now folds the
-      //   flag to false, and the shipped DEX (baksmali'd to confirm) takes the
-      //   `java.util.ServiceLoader.load(...)` branch — the FastServiceLoader
-      //   path is gone from the bytecode entirely.
+      //   { boolean FAST_SERVICE_LOADER_ENABLED return false; }`. With R8 on,
+      //   that folds the flag to false, and the shipped DEX (baksmali'd to
+      //   confirm) takes the `java.util.ServiceLoader.load(...)` branch — the
+      //   FastServiceLoader (Class.forName) path is gone from the bytecode.
       //
       //   That branch resolves Dispatchers.Main by READING
       //   META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory
-      //   out of the APK. It works today only because this exclude is a no-op
-      //   and the file ships (contents: kotlinx.coroutines.android.
+      //   out of the APK (contents: kotlinx.coroutines.android.
       //   AndroidDispatcherFactory, a name kept un-obfuscated by the
       //   `-keep class kotlinx.coroutines.**` rule).
       //
-      //   Make the exclude effective and Dispatchers.Main initialises to
+      //   Exclude it and Dispatchers.Main initialises to
       //   MissingMainCoroutineDispatcher — every withContext(Dispatchers.Main)
       //   in the IME throws, in release only. The ew-cli suite would not catch
       //   it: instrumented tests run against the unminified debug variant.
       //
       // To genuinely drop these files, first delete the -assumenosideeffects
       // rule so the FastServiceLoader (Class.forName) path returns.
-      excludes += "META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory"
-      excludes += "META-INF/services/kotlinx.coroutines.CoroutineExceptionHandler"
 
       // License files and kotlin modules (reduce APK noise)
       excludes += "META-INF/DEPENDENCIES"
@@ -473,6 +471,9 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.SmartAutoSpaceLogicTest',
     'tribixbite.cleverkeys.gif.GifTest',
     'tribixbite.cleverkeys.gif.GifCategoryTest',
+    // ARC-075 (2026-08-30): the GIF import status is a typed value, so the settings section
+    // never classifies a failure by matching English message text.
+    'tribixbite.cleverkeys.ui.settings.io.GifImportStatusTest',
     'tribixbite.cleverkeys.BackspaceUndoTest',
     'tribixbite.cleverkeys.ClipboardPaginationTest',
     'tribixbite.cleverkeys.ClipboardFixesJvmTest',
@@ -525,6 +526,8 @@ tasks.register('runPureTests', JavaExec) {
     // Append-only release record book (docs/RELEASE_RECORD.md): anchors resolve, every
     // published fastlane changelog has a section, released sections are hash-pinned.
     'tribixbite.cleverkeys.ReleaseRecordDriftTest',
+    // ARC-090: every packaged .onnx must carry a NOTICE provenance line, and vice versa.
+    'tribixbite.cleverkeys.NoticeModelAttributionDriftTest',
     'tribixbite.cleverkeys.SourceTextHygieneTest',
     // Pins the curated instrumented gate in .github/scripts/emulator-ci.sh (CK-150-028):
     // a renamed/deleted curated class used to false-green the release device gate.
